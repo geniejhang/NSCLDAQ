@@ -11,9 +11,9 @@ include $(INSTDIR)/etc/scriptedreadout_Makefile.include
 #   them below:
 #
 #    If you are using CAMAC you will need to add:
-#     -DCESCAMAC
+#     -DCESCAMAC     for CES 8210.
 # or
-#     -DWIENERCAMAC
+#     -DVC32CAMAC    for wiener
 # to select the type of CAMAC interface you are using.
 #
 USERCXXFLAGS=

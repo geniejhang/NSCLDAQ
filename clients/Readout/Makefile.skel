@@ -15,9 +15,10 @@ USERCXXFLAGS=
 #
 #  If you are using CAMAC, you will need to add:
 #
-#      -DCESCAMAC
+#      -DCESCAMAC    (CES 8210 branch highway driver).
 # or
-#      -DWIENERCAMAC
+#      -DVC32CAMAC   (Wiener interface).
+#
 # To select your camac interface.
 
 USERCCFLAGS=$(USERCXXFLAGS)

@@ -133,4 +133,6 @@ Week of November 1:
        m_pBusy was intended.
      - In the readout makefiles comment about how to select between the
        CAMAC controllers.
-     - Fix type on n568panel makefile
+     - Fix typo on n568panel makefile
+     - Correct documentation in skeleton Makefiles; to get the Wiener
+       VC32 interface, use -DVC32CAMAC not -DWIENERCAMAC
