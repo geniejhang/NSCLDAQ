@@ -370,7 +370,7 @@ CVmeModule::CVmeModule(Space space, UInt_t base, UInt_t length, int nCrate)
       throw 1;			// Force the catch below to complain.
     }
   }
-  catch(...) {
+  catch(int i) {
     throw string("Invalid address space in CVMEModule constructor");
   }
 #endif
