@@ -41,3 +41,9 @@
   as a result of user code.
 - Issue 112: If sclclient is started with a local data source. Warn using
   X11 if possible or stderr if not.
+- VMEPtr.cpp -was ignoring the crate parameter.
+- For TCL 8.4 and later it's not so safe to call free(), for stuff
+  that came from Tcl_SplitList, better to call Tcl_Free, otherwise I have
+  seen segfaults.
+- Fix some doxygen errors in Framework.
+- CIntConfigParam.cpp - suport unsigned 32 bits as well as signed.

@@ -63,6 +63,7 @@ namespace DesignByContract
     };
 
     // Source, location and description of exception
+    inline
     std::ostream& operator<<(std::ostream& stream, const DesignByContractException& e)
     {
         return stream << "File: " << e.file() << "\nLine: " << e.line() << "\n" << e.errorPrefix() << ". " << e.what() << "\n";
