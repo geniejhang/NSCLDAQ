@@ -182,7 +182,7 @@ VisitorTests::LookupTest()
     c2.FailUpdate();		// This way we don't need to know the retry count.
   }
 
-  CLookupVisitor l(2.0);	// The parameters here and on the next line are
+  CLookupVisitor l(2.0,5.0);	// The parameters here and on the next line are
   CSingleUpdater u(2.0);	// timeouts.
 
   // See about resurrecting the dead one and relooking up the live one:
