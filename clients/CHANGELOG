@@ -107,3 +107,10 @@
    - Fixed an incompatibility with tcl 8.4 and cratelocator.tcl
    - Fixed controlpush - plc channels need extra time to connect
    - Added # escaping to controlpush and to production readout
+7.3-009 4/18/04
+   - Modify Stager so that it can record tape on a different node than
+     it records ftp data.
+   - Issue 112: Warn the user if the scaler client is started with the default
+     data source.  At the NSCL this is an unusual occurence.  Note that
+     the warning will be sent via an Xwindows window if possible or if not
+     via stderr.
