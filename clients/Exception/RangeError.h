@@ -290,11 +290,6 @@ DAMAGES.
 //
 /////////////////////////////////////////////////////////////
 
-/********************** WARNING - this file is obsolete, include 
-                        CrangeError.h from now on
-*/
-
-
 #ifndef __CRANGEERROR_H  //Required for current class
 #define __CRANGEERROR_H
                                //Required for base classes
@@ -312,7 +307,7 @@ class CRangeError  : public CException
   Int_t m_nHigh;		// Highest allowed value for range.
   Int_t m_nRequested;		// Actual requested value which is outside
 				// of the range.
-  STD(string) m_ReasonText;            // Reason text will be built up  here.
+  std::string m_ReasonText;            // Reason text will be built up  here.
 public:
   //   The type below is intended to allow the client to categorize the
   //   exception:
@@ -331,7 +326,7 @@ public:
     m_nRequested (nRequested)
   { UpdateReason(); }
   CRangeError(Int_t nLow, Int_t nHigh, Int_t nRequested,
-	  const STD(string)& rDoing) :
+	  const std::string& rDoing) :
     CException(rDoing),
     m_nLow(nLow),
     m_nHigh(nHigh),

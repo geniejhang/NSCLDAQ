@@ -117,3 +117,11 @@ Week of October 25, 2004
 
 Week of November 1:
    Create branch to maintain DAQ 7.4 version.
+---- Fixes:
+
+7.4-001 : 
+    - Add RangeError.h to Exception... required by build.
+    - Autodetect existence of spectrodaq_main() and supply a main()
+      in production readout if there else TCL++'s main confuses stuff.
+
+7.4-002 :
