@@ -44,6 +44,11 @@ class CTCLInterpreter;
   - card  b   - "on" to enable the card "off" to disable it.
   - enable i[32] - 32 channel enables.  Nonzero is enabled, 
                   zero disabled.
+  - fastclearwindow n - N is the width of the fast clear window in
+                    ns.  Note that the current module has a width
+		    window width granularity of 31.25ns.  The software
+		    will choose the closest value, and enforce a 
+		    minimum of 0 and a maximum of 2ms (2,000,000 ns).
   - multievent b - True to run the module in multievent mode.
   in multievent mode, the module is note cleared after each readout 
   in Prepare()
