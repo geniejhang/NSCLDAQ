@@ -283,6 +283,9 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
    
    Modification History:
    $Log$
+   Revision 3.4.4.4  2004/09/23 15:33:23  ron-fox
+   Ensure that scaler initialization is called at start of run (defect repair).
+
    Revision 3.4.4.3  2004/05/17 17:12:32  ron-fox
    Bracket call outs to user code with design by contract exception handling
    code.
@@ -682,6 +685,7 @@ CExperiment::Start(CStateTransitionCommand& rCommand)
 
   try {
     m_EventReadout.Initialize();	// Initialize the event readout...
+    m_Scalers.Initialize();
     m_Scalers.Clear();
     m_EventReadout.Clear();	// Clear digitizers prior to start.
   }
