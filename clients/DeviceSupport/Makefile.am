@@ -22,8 +22,9 @@ include_HEADERS = VmeModule.h CVME.h CVMEptr.h MmapError.h CSIS3820.h \
 	CTrigger.h CVMEScalerCAENV830.h CVMEScalerLRS1151.h \
 	CVMEStatusModule.h CVMETrigger.h CBD8210.h
 
-libDeviceSupport_la_LDFLAGS = -version-info $(SOVERSION):0 -L@top_srcdir@/VMEApi \
-	-lVmeAPI $(SPECTRODAQ_LDFLAGS) -g
+libDeviceSupport_la_LDFLAGS = -version-info $(SOVERSION):0 \
+	-L@top_srcdir@/VMEApi \
+	-lVmeAPI $(SPECTRODAQ_LDFLAGS) -g -Wl,"-rpath-link=$(libdir)"
 
 INCLUDES = $(VMEBUILDHEADERS) \
 	-I@top_srcdir@/Headers \
