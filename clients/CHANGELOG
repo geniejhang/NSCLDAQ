@@ -142,3 +142,7 @@ Week of November 1:
        document the need to run this in an spdaq system.
      - Make all the sample .cfd files valid.
 7.4-003
+     - Fix timestamp inconsistencies with month numbering that are scattered
+	all over the place.
+     - Scripted readout- conditionalize main on HAVE_SPECTRODAQ_MAIN
+     - Delay spectcldaq with usleep a short time between write tries if blocked.7.4-004
