@@ -5,7 +5,16 @@ AM_CONFIG_HEADER(config.h)
 
 #    Separate device libraries.
 
-AM_INIT_AUTOMAKE(nscldaq, 7.3-003)  
+AM_INIT_AUTOMAKE(nscldaq, 7.3-013)  
+
+#
+#   The variable below should track the
+#   version number above to ensure that
+#   all the .so's get appropriately versioned:
+#
+SOVERSION="7:3"
+
+
 
 #  Checks for parameters:
 
@@ -157,7 +166,7 @@ AC_MSG_CHECKING([for tcl headers])
 
 AC_ARG_WITH(tcl-header-dir,
 	[  --with-tcl-header-dir=path Path to tcl headers],
-	[tcl_header_dir=$withval
+	[tcl_header_dir="$withval"
 	tcl_headers_found="yes"],[tcl_headers_found="no"])
 
 
@@ -180,9 +189,9 @@ fi
 	# /usr/include/tcl<version>
 
 if test $tcl_headers_found == "no" ; then
- for version in ${tcl_versions};  do
+ for version in $tcl_versions;  do
    if test $tcl_headers_found == "no" ; then   # stop at first match
-      testdir=/usr/include/tcl${versions}
+      testdir=/usr/include/tcl$version
       AC_CHECK_FILE([${testdir}/tcl.h],
 	[tcl_header_dir=${testdir}
 	 tcl_headers_found="yes"])
@@ -275,7 +284,7 @@ AC_MSG_CHECKING([ for VME device ])
 
 VMEDEVICE="SBSBIT3"     # Support for Nikhef drv dropped
 
-if test $VMEDEVICE == "SBSBIT3" 
+if test $VMEDEVICE = "SBSBIT3" 
 then
    VMEBUILDHEADERS="-I$(pwd)/btdriver/include"
    VMEBUILDLIBS="-L$(pwd)/btdriver/lib -lbtp"
@@ -304,11 +313,11 @@ X11LIBS="${X_LIBS} ${X_EXTRA_LIBS} -lXm -lXt -lX11"
 #  Latex, dvips, kpathsea and the existence of hyperlatex.sty findable by
 #  kpathsea:
 #
-if test $HAVELATEX == "yes" -a $HAVEDVIPS == "yes" -a \
-	$HAVEKPATHSEA == "yes"
+if test $HAVELATEX = "yes" -a $HAVEDVIPS == "yes" -a \
+	$HAVEKPATHSEA = "yes"
 then
 	stylefile=$(kpsewhich hyperlatex.sty)
-	if test $stylefile != ""
+	if test "$stylefile" != ""
 	then
 	   AC_PATH_PROG(LATEX, latex)
 	   AC_PATH_PROG(DVIPS, dvips)
@@ -333,22 +342,22 @@ AC_ARG_WITH(kernel-headers,
 	[--with-kernel-headers=location of linux kernel headers],
 	[KERNEL_INCS="-I$withval"],[KERNEL_INCS="-"])
 
-if test $KERNEL_INCS == "-" ; then
+if test $KERNEL_INCS = "-" ; then
   AC_CHECK_FILE(/usr/src/kernel-headers-$(uname -r)/include/linux/module.h,
     [KERNEL_INCS="-I/usr/src/kernel-headers-$(uname -r)/include"])
 fi
 
-if test $KERNEL_INCS == "-" ; then
+if test $KERNEL_INCS = "-" ; then
   AC_CHECK_FILE(/usr/src/linux-$(uname -r)/include/linux/module.h,
       [KERNEL_INCS="-I/usr/src/linux-$(uname -r)/include"])
 fi
 
-if test $KERNEL_INCS == "-" ; then
+if test $KERNEL_INCS = "-" ; then
   AC_CHECK_FILE(/usr/src/linux/include/linux/module.h,
       [KERNEL_INCS="-I/usr/src/linux-$(uname -r)/include"])
 fi
 
-if test $KERNEL_INCS == "-"; then
+if test $KERNEL_INCS = "-"; then
 	AC_MSG_ERROR([Could not find kernel headers. Try the --with-kernel-headers switch])
 fi
 
@@ -366,7 +375,81 @@ else
   AC_MSG_RESULT([System is not running an SMP kernel])
 fi
 
+#
+#   Look for epics in:
+#    /usr/local/epics
+#    /opt/epics
+#    /soft/intel/epics   [nscl].
+#    --with-epics-rootdir=
+# Underneath that we have (we require intel linux remember):
+#    include                  - the include directory
+#    include/os/linux-x86     - os specific includes.
+#    lib/linux-x86            - libs
+#    bin/linux-x86/caRepeater - The caRepeater program.
+#
+
+epicstestdirs="/usr/local/epics /opt/epics /soft/intel/epics"
+haveepics="no"
+
+AC_MSG_CHECKING([ for epics includes, libs and binaries])
+
+#  Check for --with-epics-rootdir....
+
+AC_ARG_WITH(epics-rootdir,
+	[  --with-epics-rootdir=top level directory of EPICS install],
+	[haveepics="yes"
+	 epicsroot="$withval"],
+	[haveepics="no"])
+
+
+
+if test $haveepics == "no"
+then
+   for dir in $epicstestdirs
+   do
+      if test $haveepics == "no"
+      then
+        AC_CHECK_FILE([${dir}/include/cadef.h],
+	              [haveepics="yes"
+                       epicsroot=$dir])
+      fi
+   done
+fi
+
+#  If we found epics we can build the software that needs it.
+#  otherwise it's optional.
+
+if test $haveepics == "yes"
+then
+	# Have epics:
+
+   EPICSSOFTWARE="controlpush" # Add this directory to build.
+   EPICS_INCLUDES="-I$epicsroot/include -I$epicsroot/include/os/Linux"
+   EPICS_LDFLAGS="-L$epicsroot/lib/linux-x86 -lca -Wl,\"-rpath=$epicsroot/lib/linux-x86\""
+   EPICS_BIN="-DEPICS_BIN=\"\\\"$epicsroot/bin/linux-x86\\\"\""
+else
+	# No epics.. provide blank variables:
+
+   EPICSSOFTWARE=""	# no directories to add to make.
+   EPICS_LDFLAGS=""	# No ldflags.	
+   EPICS_INCLUDES=""	# No includes.
+   EPICS_BIN=""
+fi
+
 # define substitutions:
+
+#  Go for a strict linguistic interpretation:
+
+#       CXXFLAGS="-std=c++98 -pedantic"
+
+#   someday:   AC_SUBST(CXXFLAGS)
+
+	# EPICS if it exists.
+
+AC_SUBST(EPICSSOFTWARE)
+AC_SUBST(EPICS_LDFLAGS)
+AC_SUBST(EPICS_INCLUDES)
+AC_SUBST(EPICS_BIN)
 
 	# Spectrodaq:
 
@@ -415,9 +498,13 @@ AC_SUBST(KERNEL_INCS)
 AC_SUBST(SMP_FLAG)
 
 
+#   The base part of the .so version:
+
+AC_SUBST(SOVERSION)
+
 #  Create output files:
 
-AC_OUTPUT(Makefile Headers/Makefile CopyrightTools/Makefile \
+AC_OUTPUT( Makefile Headers/Makefile CopyrightTools/Makefile \
 	Exception/Makefile  TCL/Makefile Security/Makefile Ftp/Makefile \
 	VMEApi/Makefile cvt/Makefile \
 	SpecTclOnline/Makefile DeviceSupport/Makefile \
@@ -425,11 +512,12 @@ AC_OUTPUT(Makefile Headers/Makefile CopyrightTools/Makefile \
 	EventLog/Makefile  Scaler/Makefile contrib/Makefile \
 	contrib/lecroy/Makefile contrib/whedco/Makefile \
 	contrib/caenv812/Makefile contrib/scriptedReadout/Makefile \
-	contrib/scalerdisplay/Makefile vmetcl/Makefile \
+	contrib/scalerdisplay/Makefile  \
+	vmetcl/Makefile \
 	vmetcl/camactcl/Makefile vmetcl/vhq202m/Makefile bufdump/Makefile \
 	TclServer/Makefile bcnaf/Makefile TcpHoister/Makefile Stager/Makefile \
 	Scripts/Makefile framework/Makefile AlarmDisplay/Makefile \
 	LogDisplay/Makefile ProductionReadout/Makefile \
 	ProductionReadout/hyperlatex/Makefile \
 	btdriver/Makefile btdriver/dd/Makefile btdriver/lib/Makefile \
-	btdriver/include/Makefile)
+	btdriver/include/Makefile  controlpush/Makefile )
