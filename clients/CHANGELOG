@@ -56,3 +56,4 @@
   spectcldaq process.
 - Issue 109 Provide mechanism to hide ReadoutShell's parameters.
 - Added support for CAENV1190/1290 TDC module.
+  o Correct the bad info about the leading/trailing edge detect Carlo gave me.

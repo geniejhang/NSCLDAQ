@@ -45,6 +45,9 @@ software.
 Change Log:
 
 $Log$
+Revision 1.1.2.4  2004/07/06 13:39:08  ron-fox
+Fix the experimentally determined error in leading/trailing edge detection.
+
 Revision 1.1.2.3  2004/07/01 12:31:05  ron-fox
 Correct edge discrimination enum problems due to error in manual.
 
@@ -112,8 +115,8 @@ public:
   };
   typedef enum _EdgeMode {
     EdgeMode_Pair       = 0 ,
-    EdgeMode_Leading    = 1,
-    EdgeMode_Trailing   = 2,
+    EdgeMode_Leading    = 2,
+    EdgeMode_Trailing   = 1,
     EdgeMode_Both       = 3
 
   } EdgeMode;
