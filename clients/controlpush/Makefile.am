@@ -291,7 +291,8 @@ include_HEADERS= cmdline.h CApplication.h CChannelList.h \
 			CTCPNoSuchService.h \
 			CSGBuilder.h CSingleUpdater.h CAllOk.h \
 			CLookupVisitor.h CChannel.h CNoUnitsException.h \
-			CApplicationSerializer.h CBuildChannelData.h cmdline.h
+			CApplicationSerializer.h CBuildChannelData.h 
+
 
 controlpush_LDADD   = -L@top_srcdir@/Exception -lException \
 			-L@top_srcdir@/CopyrightTools -lLicense \
