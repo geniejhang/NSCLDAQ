@@ -96,3 +96,5 @@ Week of August 30
 - Added eventlog manpage.
 - Added log of run start time in ascii end of run report for ScalerDisplay
 - Import vhqpanel from see and make it multicrate clean.
+Week of Sept. 6
+- Added man page for Vme TCL loadable package.
