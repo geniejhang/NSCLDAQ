@@ -117,3 +117,7 @@
 7.3-010 
    - Modify VMEPtr.cpp - was ignoring the crate number.!!!
    - TCLList.cpp - needs to use Tcl_Free not free() for TCL 8.4 and higher.
+   - DiskRun - Had an error with strlen that clobbered stack occaisonally.
+   - Recover lost version of sis3300 software.
+   - Add -p to untar that creates ~/experiment/runx directories..
+     otherwise the file permissions are governed by umask.
