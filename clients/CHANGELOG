@@ -121,3 +121,8 @@
    - Recover lost version of sis3300 software.
    - Add -p to untar that creates ~/experiment/runx directories..
      otherwise the file permissions are governed by umask.
+
+7.3-011
+   - Fix defect 139 - non numerics in readoutgui run number field cause
+     failure in status line; added validator to prevent run number field
+     from becoming non-numeric.

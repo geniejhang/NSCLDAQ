@@ -287,9 +287,9 @@ exec wish ${0} ${@}
 #
 # Revision History:
 #  $Log$
-#  Revision 3.3.2.1  2004/05/19 16:37:41  ron-fox
-#  Incorporate fix from 7.4 for issue 112: sclclient without -s will usually
-#  silently fail.
+#  Revision 3.3.2.2  2004/07/22 14:16:51  ron-fox
+#  Fix Defect 139 Non numerics in ReadoutGui.tcl's run number field cause
+#    status line failure.   Add validator.
 #
 #  Revision 3.3.4.1  2004/05/12 19:38:10  ron-fox
 #  differentiate between tape and ftp hosts so that they can be different
