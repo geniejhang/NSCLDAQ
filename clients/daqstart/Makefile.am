@@ -19,10 +19,13 @@ AM_CXXFLAGS	= -D_GNU_SOURCE
 cmdline.c: daqstart.ggo
 	gengetopt --unamed-opts <daqstart.ggo
 
-EXTRA_DIST=daqstart.ggo popup.tcl
+EXTRA_DIST=daqstart.ggo popup.tcl daqstart.1
+
+man_MANS = daqstart.1
 
 install-exec-local:
 	$(mkinstalldirs) $(prefix)/Scripts
 	$(INSTALL_SCRIPT) popup.tcl $(prefix)/Scripts
+	rm -f $(bindir)/PopUp
 	$(LN_S)  $(prefix)/Scripts/popup.tcl $(bindir)/PopUp
 
