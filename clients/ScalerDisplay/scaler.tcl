@@ -373,15 +373,16 @@ proc SetupGui {top} {
     global RunNumber RunTitle RunState
     global HMStime ScalerDeltaTime
     set stat      [frame $top.status]
-	set title     [frame $stat.title]
-	
-	set leftstat  [frame $stat.left]
-	set runnum    [frame $leftstat.runnum]
-	set duration  [frame $leftstat.duration]
-	
-	set rightstat [frame $stat.right]
-	set state     [frame $rightstat.state]
-	set interval  [frame $rightstat.interval]
+    set topstat   [frame $stat.top]
+    set title     [frame $stat.title]
+    
+    set leftstat  [frame $topstat.left]
+    set runnum    [frame $leftstat.runnum]
+    set duration  [frame $leftstat.duration]
+    
+    set rightstat [frame $topstat.right]
+    set state     [frame $rightstat.state]
+    set interval  [frame $rightstat.interval]
 	
     set book [frame $top.notebook]
 
@@ -402,36 +403,41 @@ proc SetupGui {top} {
     label $interval.dtl  -text "Scaler interval: "
     label $interval.dt   -textvariable ScalerDeltaTime
 
- 
+    #  Notebook frame contents:
+
+
+    set notebook [tabnotebook_create $book.pages]
+    pack $book.pages -side bottom -fill both -expand 1 
+    pack $book       -side bottom -fill both -expand 1 
+
  	# Set up the geometry of the top part of the display
  	#
  	#      Low level widgets...	
   
- 	pack $title.tl     $title.title    -side left
- 	pack $runnum.rl    $runnum.run     -side left
- 	pack $state.sl     $state.state    -side left
- 	pack $duration.atl $duration.atime -side left
- 	pack $interval.dtl $interval.dt    -side left
+ 	pack $title.tl     $title.title    -side left -anchor w -fill x -expand 1
+ 	pack $runnum.rl    $runnum.run     -side left -anchor w
+ 	pack $state.sl     $state.state    -side left -anchor w
+ 	pack $duration.atl $duration.atime -side left -anchor w
+ 	pack $interval.dtl $interval.dt    -side left -anchor w
  	
  	# Pack the subframes of the left frame:
  	
- 	pack $runnum $duration -side top
- 	pack $state  $interval -side top
+ 	pack $runnum $duration -side top  -anchor w
+ 	pack $state  $interval -side top  -anchor w
  	
- 	# Pack the left and right frames then the title frame:
+ 	# Pack the left and right frames.
  	
- 	pack $leftstat $rightstat -side left
- 	pack $title               -side top
+ 	pack $leftstat $rightstat -side left -fill both -expand 1 -anchor w
+
+        # Pack the top and title frames:
+
+        pack $topstat $title -side top -fill x -expand 1 -anchor w
  	
- 	# finally pack the status frame:
+ 	# finally pack the top and bottom frames, and the stat frame.
  	
  	pack $stat -side top
 
-    #  Notebook frame contents:
 
-    set notebook [tabnotebook_create $book.pages]
-    pack $book.pages -side top -fill both -expand 1
-    pack $book       -side top -fill both -expand 1
 
     return $notebook
     
