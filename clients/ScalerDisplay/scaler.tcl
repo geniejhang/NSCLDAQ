@@ -24,10 +24,6 @@ exec tclserver  -p2700  ${0} ${@}
 #
 #    Iteration 6:   Support end of run filing of data.
 #
-# Planned enhancements: 
-#    Iteration 7:   Support alarms on scaler bounds.
-#    Iteration 8:   Support external callout based user extensions
-#                    [e.g. interface with elog].
 #
 # Ensure that initially required variables exist:
 
@@ -376,30 +372,60 @@ proc UpdateTable {widget} {
 proc SetupGui {top} {
     global RunNumber RunTitle RunState
     global HMStime ScalerDeltaTime
-    set stat [frame $top.status]
+    set stat      [frame $top.status]
+	set title     [frame $stat.title]
+	
+	set leftstat  [frame $stat.left]
+	set runnum    [frame $leftstat.runnum]
+	set duration  [frame $leftstat.duration]
+	
+	set rightstat [frame $stat.right]
+	set state     [frame $rightstat.state]
+	set interval  [frame $rightstat.interval]
+	
     set book [frame $top.notebook]
 
     # Title frame contents:
 
-    label $stat.tl    -text "Title: "
-    label $stat.title -textvariable RunTitle
+    label $title.tl    -text "Title: "
+    label $title.title -textvariable RunTitle
 
-    label $stat.rl    -text "Run Number: "
-    label $stat.run   -textvariable RunNumber
+    label $runnum.rl    -text "Run Number: "
+    label $runnum.run   -textvariable RunNumber
 
-    label $stat.sl    -text "Run state: "
-    label $stat.state -textvariable RunState
+    label $state.sl    -text "Run state: "
+    label $state.state -textvariable RunState
 
-    label $stat.atl  -text "Length of run: "
-    label $stat.atime -textvariable HMStime
+    label $duration.atl   -text "Length of run: "
+    label $duration.atime -textvariable HMStime
 
-    label $stat.dtl  -text "Scaler interval: "
-    label $stat.dt   -textvariable ScalerDeltaTime
+    label $interval.dtl  -text "Scaler interval: "
+    label $interval.dt   -textvariable ScalerDeltaTime
 
-    pack $stat.tl $stat.title $stat.rl $stat.run \
-	 $stat.sl $stat.state $stat.atl $stat.atime \
-	 $stat.dtl $stat.dt -side left
-    pack $stat
+ 
+ 	# Set up the geometry of the top part of the display
+ 	#
+ 	#      Low level widgets...	
+  
+ 	pack $title.tl     $title.title    -side left
+ 	pack $runnum.rl    $runnum.run     -side left
+ 	pack $state.sl     $state.state    -side left
+ 	pack $duration.atl $duration.atime -side left
+ 	pack $interval.dtl $interval.dt    -side left
+ 	
+ 	# Pack the subframes of the left frame:
+ 	
+ 	pack $runnum $duration -side top
+ 	pack $state  $interval -side top
+ 	
+ 	# Pack the left and right frames then the title frame:
+ 	
+ 	pack $leftstat $rightstat -side left
+ 	pack $title               -side top
+ 	
+ 	# finally pack the status frame:
+ 	
+ 	pack $stat -side top
 
     #  Notebook frame contents:
 
