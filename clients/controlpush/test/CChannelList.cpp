@@ -56,7 +56,7 @@ patent must be licensed for everyone's free use or not licensed at all.
 
   The precise terms and conditions for copying, distribution and
 modification follow.
-
+ 
 		    GNU GENERAL PUBLIC LICENSE
    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
@@ -111,7 +111,7 @@ above, provided that you also meet all of these conditions:
     License.  (Exception: if the Program itself is interactive but
     does not normally print such an announcement, your work based on
     the Program is not required to print an announcement.)
-
+ 
 These requirements apply to the modified work as a whole.  If
 identifiable sections of that work are not derived from the Program,
 and can be reasonably considered independent and separate works in
@@ -169,7 +169,7 @@ access to copy from a designated place, then offering equivalent
 access to copy the source code from the same place counts as
 distribution of the source code, even though third parties are not
 compelled to copy the source along with the object code.
-
+ 
   4. You may not copy, modify, sublicense, or distribute the Program
 except as expressly provided under this License.  Any attempt
 otherwise to copy, modify, sublicense or distribute the Program is
@@ -226,7 +226,7 @@ impose that choice.
 
 This section is intended to make thoroughly clear what is believed to
 be a consequence of the rest of this License.
-
+ 
   8. If the distribution and/or use of the Program is restricted in
 certain countries either by patents or by copyrighted interfaces, the
 original copyright holder who places the Program under this License
@@ -275,253 +275,254 @@ DAMAGES.
 
 		     END OF TERMS AND CONDITIONS
 */
-static const char* Copyright = "(C) Copyright Michigan State University 2002, All rights reserved";
-//////////////////////////CTCLServer.cpp file////////////////////////////////////
 
-#include "CTCLServer.h"    
-#include <CSocket.h>     
-#include <TCLInterpreter.h>
-#include "CReaper.h"     
-#include <Exception.h>
-#include <CTCPConnectionLost.h> 
-#include "CReadoutMain.h"
-#include <CInterpreterStartup.h>
-#include "CInterpreterShell.h"
-#include "CInterpreterCore.h"
-#include <assert.h>
-#include <tcl.h>   
-#include <iostream.h>
+////////////////////////// FILE_NAME.cpp /////////////////////////////////////////////////////
 
-// Local data:
+#include "CChannelList.h"    				
+#include "CChannel.h"
+#include "CChannelVisitor.h"
+#include "CSGBuilder.h"
+#include "CSingleUpdater.h"
+#include "CAllOk.h"
 
-static const int MAXLINE=80;
+#include <algorithm>
 
-	//Default constructor alternative to compiler provided default constructor
-	//Association object data member pointers initialized to null association object 
+#include <cadef.h>		// EPICS
+
+// Note epics defines assert for now.
+
+
 /*!
-   Default constructor.  This is called when declarations of the form e.g.:
-   \verbatim
-	   CTCLServer server(pSocket);
-   \endverbatim
-   
-   \param pSocket - CSocket* Pointer to the socket on which we will be conversing with
-				our client.
+   Constructs a channel list.  The channel list doesn't need anything special for
+   construction.  
 */
-CTCLServer::CTCLServer (CSocket* pSocket) :
-	CServerInstance(pSocket)     // Anonymous socket object.
+CChannelList::CChannelList ()
  
-{
-
-}
-int
-CTCLServer::operator==(const CTCLServer& rhs) const
-{
-  return (int)false;
+{   
 } 
-// Functions for class CTCLServer
-
-
 /*!
-    Called each time data is readable on a server. 
-    -  Read the data append it to the tcl command being built.  
-    -  Check to see if we have a complete command.
-    -  If the command is complete submit it to the interpreter.
-    -  Return the interpreter result string to the peer.
-    -  If the socket indicatse that it is closing, shutdown and
-       exit.  The reaper will take care of deleting our object.
-    
+  The destructor for a channel list must destroy all channels.
+  Channels are assumed to be dynamically allocated.  This reduces
+  the re-usability of this somewhat.  
+  \bug Later maybe make the push_back copy construct the channel
+         and then we know for sure the channel is dynamically created.
+         for now we want to get a working piece of software.
+*/
+ CChannelList::~CChannelList ( )  //Destructor - Delete dynamic objects
+{
 
-	\param CSocket* pPeer
+  // Destroy all the channels in the list... incidently this also empties
+  // the list as well.
+
+  while(size() != 0) {
+    CChannel* pChannel = m_Channels.front();
+    delete    pChannel;	
+    m_Channels.pop_front();
+  }
+}
+
+
+// Functions for class CChannelList
+
+/*!  Function: 	
+
+Attempts to update the channels
+as a channel group.
+- A new sg_group is created.
+- A CSGBuilder is created and dispatched to 
+  visit each channel, adding its ids to the 
+  get's associated with the synchronous group.
+- The group is blocked for for a specified timeout.
+- Regardless of success or failure, the synchronous
+group is destroyed before we return.
+
+\param Timeout (float)
+   Number of seconds to wait for channels to respond
+   before timing out.
+
+\return bool
+- true   - the group update succeeded.
+- false  - the group update failed.
+
 
 */
-void 
-CTCLServer::OnRequest(CSocket* pPeer)  
+bool 
+CChannelList::UpdateGroup(float Timeout)  
 {
-  try {
-    string  chunk = GetChunk();
-    m_Command += chunk;
-    if(isComplete()) {
-      CTCLInterpreter* pInterp = getInterpreter();
-      string result;
-      try {
-	result = pInterp->GlobalEval(m_Command);
-      }
-      catch(...) {                      // Probably a CTCLException.
-	result = pInterp->GetResultString();
-	cerr << "Error on TCL server received Command: " 
-	     << m_Command
-	     << " " << result << endl;
-      }
-      // Clean up from command execution:
-      
-      m_Command = "";              // Empty the command string.
-      result         += '\n';          // Make result a 'line'.
-      try {
-	CSocket* pSocket = getSocket();
-	pSocket->Write((char*)result.c_str(), 
-		       result.size());
-      }
-      catch(...) {
-	// If disconnected, the next read will catch that immediately.
+
+  // Validate the timeout.
+
+  if(Timeout <= 0.0) {
+    throw string("CChannelList::UpdateGroup Timeout negative or zero");
+  }
+
+  // Create a synchronous group and visit the channels to populate
+  // it with a bunch of gets (one for each channel).  
+  // we'll then wait for the group to complete.
+ 
+  CA_SYNC_GID EpicsGroup;
+  int         epicsstatus;
+  bool        ok(true);
+
+  // Create the group, if we can't that's cause to return false.
+  
+  epicsstatus = ca_sg_create(&EpicsGroup);
+  if(epicsstatus != ECA_NORMAL) {
+    ok = false;
+  } 
+  else {
+    CSGBuilder GroupBuildingVisitor(EpicsGroup);
+    try {
+      foreach(GroupBuildingVisitor);	// visit channels, building up the group.
+      epicsstatus = ca_sg_block(EpicsGroup, Timeout);
+      if(epicsstatus != ECA_NORMAL) {
+	ok = false;
       }
     }
-    
+    catch(...) {		// Any exception from group building ok->false.
+      ok = false;
+    }
+    // Reset any requests that are still pending after the timeout and
+    // delete the group.  Note that the actual status must be ok or 
+    // it's a program bug...
+    //  \bug More graceful way to handle/report in case ca_sg_reset/delete fail?
+    //
+    assert(ca_sg_reset(EpicsGroup)  == ECA_NORMAL);
+    assert(ca_sg_delete(EpicsGroup) == ECA_NORMAL);
   }
-  // Deal with common exception types.
-  //
-  catch (CTCPConnectionLost& rExcept) {
-    string prefix("Lost tcl client connection ");
-    prefix += m_Peer;
-    string suffix(" Shutting down server instance");
-    ReadException(prefix.c_str(), rExcept.ReasonText(),
-		  suffix.c_str());		
+
+  return ok;			// Hopefully still true !.
+}  
+
+/*!  Function: 	
+
+
+Attempts to update all the channels in the
+group one at a time.  This is done by
+Instantiating a CSingleUpdator visitor
+and dispatching it to all channels in the list.
+
+Presumably for each channel in the list, the visitor
+asks the channel to do a ca_get() call and then 
+does a ca_pend_io.  Since this is done one channel at a time,
+we can identify which channels have failed the group update.
+
+There is no return value since either some channels will sucessfully 
+update or none will, either is a 'valid' result.. if potentially disappointing
+to the user.
+\param Timeout (float)
+    Number of seconds to wait for the I/O to complete before timing out.
+*/
+void
+CChannelList::Update1AtATime(float Timeout)  
+{
+  // Validate the timeout.
+
+  if(Timeout <= 0.0) {
+    throw string("CChannelList;:Update1AtATime - negegative or 0 timeout");
   }
-  catch (CException& rExcept) {
-    ReadException("NSCL Exception caught in TCLserver read",
-		  rExcept.ReasonText(),
-		  "Shutting down server instance");
+
+  // Visit the channels with a one-at-a-time
+  // updater.
+ 
+  CSingleUpdater EpicsUpdater(Timeout);
+  foreach(EpicsUpdater);
+}  
+
+/*!  Function: 	
+
+Attempts to update the set of managed 
+channels first by calling UpdateGroup
+If that fails, then Update1AtATime is called
+to update the channel values individually.
+\param GroupTimeout (float):
+   Number of seconds to wait for the synchronous group to timeout.
+ \param InidvidualTimeout (float)
+    Number of seconds to wait for individual requests to timeout.
+*/
+void 
+CChannelList::Update(float GroupTimeout, float IndividualTimeout)  
+{
+  if(!UpdateGroup(GroupTimeout)) {
+    Update1AtATime(IndividualTimeout);
   }
-  catch (string& rExcept) {
-    ReadException("TCLServer read: string exception in read",
-		  rExcept.c_str(),
-		  "Shutting down server instance");
+  else {
+    // tell the channels they updated ok:
+
+    CAllOk Updater;
+    foreach(Updater);
   }
-  catch (char* pExcept) {
-    ReadException("TCLServer read: char* exception in read",
-		  pExcept,
-		  "Shutting down server instance");
-    
-  }
-  catch (...) {
-    ReadException("TCLServer: Unanticipated exception in read",
-		  "- unknown reason -",
-		  "Shutting down server instance");
-  }
+
 }  
 
 /*!
-    Add ourselves to the CReaper thread's table
-    and invoke the base class's operator() to get
-    started.   The Reaper object ensures that our
-    object and its exit status will be deleted when the 
-    thread exits.
 
-	\param int nArgs, char** pArgs
+Returns an iterator to the begin point of the channel list.
+
+*/
+CChannelList::ChannelIterator 
+CChannelList::begin()  
+{ 
+  return m_Channels.begin();
+}  
+
+/*!  
+
+Returns an end iterator to the channel list.
+
+
+*/
+CChannelList::ChannelIterator 
+CChannelList::end()  
+{
+  return m_Channels.end();
+}  
+
+/*!  
+
+Returns the number of elements in the channel list.
 
 */
 int 
-CTCLServer::operator()(int nArgs, char** pArgs)  
+CChannelList::size()  
 {
-	 CReaper* pReaper(CReaper::getInstance());
-	assert(pReaper);
-	
-	pReaper->Add(this);      // Add us as an instance.
-	m_Peer = getPeername();
+  return m_Channels.size();
+}  
 
-	cout << "Accepted tcl client connection from " 
-	        << m_Peer << endl;
-		
-	// Delegate the main loop to our parent class. it does all the
-	// right stuff already.
-	
-	CServerInstance::operator()(nArgs, pArgs);
+/*!  
 
-}
 
-// Implementation of local utility functions:
-//
-/*!     Determines if the command buffer contains a complete command yet.
-     \return true  - m_Command is a complete tcl command.
-     \return false - m_Command is not a complete tcl command.
+Dispatches a CChannelVisitor to each elelment 
+of the channel list.  The CHannelVisitor's
+operator() will be called with a pointer to each of the
+channels in the list.
+\param rVisitor (CChannelVisitor&):
+   Visitor object that will visit each node in the channel list.
+
+
 */
-bool
-CTCLServer::isComplete()
+void 
+CChannelList::foreach(CChannelVisitor& rVisitor)  
 {
-	return (bool)Tcl_CommandComplete((char*)m_Command.c_str());
-	
-}
-/*!
-     Gets the interpreter object for the application.
-     
-     \return CTCLInterpreter*  Pointer to the application's interpreter object.
-     
-     */
-CTCLInterpreter*
-CTCLServer::getInterpreter()
-{
-	CReadoutMain*         pMain    = CReadoutMain::getInstance();
-	CInterpreterShell*    pStartup = pMain->getInterpreter();
-	CInterpreterCore*     pCore    = pStartup->getInterpreterCore();
-	CInterpreterStartup*  pIStartup= pCore->getStartup();
-	CTCLInterpreter*      pInterp  = pIStartup->getInterpreter();
-	return pInterp;
-}
+  for(ChannelIterator i = begin(); i != end(); i++) {
+    CChannel* p = *i;
+    rVisitor(p);
+  }
+}  
 
-/*!
-     Provides common handling of exceptions thrown while reading
-     the socket:
-     - A message is emitted on stderr,
-     - The socket is shutdown preventing further communication and
-        releasing socket resources.
-     - The enable flag is set false scheduling the interpreter thread
-         to exit. 
-	 
-	\note
-	    The interpreter thread has been registered with a reaper thread
-	     once the active flag goes false, the reaper will join and delete this
-	     object
+/*!  Function: 	
+   void push_back(CChannel& rChannel) 
+ Operation Type:
+    
+Purpose: 	
 
-	\param pPrefix - const char* [in] 
-	                        Prefixes the error message.
-	\param pReason - const char* [in]
-	                        Contains the error message corresponding to the exception.
-	\param pSuffix - const char* [in]
-	                        Contains a suffix to the error message.
+Adds a pointer to a channel to the back of the channel list.
+\pram rChannel CChannel
+  Reference to the channel to add to the channel list.
+  The channel is assuemd to be dynmically allocated.
 */
-void
-CTCLServer::ReadException(const char* pPrefix,
-				      const char* pReason,
-				      const char* pSuffix)
+void 
+CChannelList::push_back(CChannel& rChannel)  
 {
-  cerr << pPrefix <<endl << pReason << endl << pSuffix << endl;
-  try {
-    getSocket()->Shutdown(); // This will throw if already shutdown...
-  }
-  catch(...) {		// So ignore the exception.
-  }
-  setEnable(false);
-}
-	                        
-/*!
-   Utility function to get a chunk of data from the socket.
-   We will read from the socket until either:
-   - We received a newline (\n) (which is appended to the string).
-   - We understand there is no more data waiting for us.
-   When either of these two conditions is met, the string retrieved from
-   the socket up until then is returned.
-   \return string
-      data gotten from socket.
-*/
-string
-CTCLServer::GetChunk()
-{
-  CSocket*      pSocket(getSocket());
-  int           fd = pSocket->getSocketFd(); // For poll..
-  struct pollfd pollinfo;	        // Struct in poll.
-  string        result;		        // Result is built up here.
-  char          c;		        // Characters are read into this.
-
-  pollinfo.fd    = fd;
-  pollinfo.events= POLLIN;	// Only interested in readability.
-  while(poll(&pollinfo, 1, 1) == 1) { // as long as pollable.
-    if(pollinfo.revents & POLLIN) {
-      pSocket->Read(&c, 1);	// Exceptions are handled by our caller.
-      result += c;
-    }
-    else {			// Not readable.
-      break;
-    }
-  }
-  return result;
-  
+  m_Channels.push_back(&rChannel);
 }

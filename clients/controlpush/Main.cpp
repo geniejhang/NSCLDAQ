@@ -56,7 +56,7 @@ patent must be licensed for everyone's free use or not licensed at all.
 
   The precise terms and conditions for copying, distribution and
 modification follow.
-
+ 
 		    GNU GENERAL PUBLIC LICENSE
    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
@@ -111,7 +111,7 @@ above, provided that you also meet all of these conditions:
     License.  (Exception: if the Program itself is interactive but
     does not normally print such an announcement, your work based on
     the Program is not required to print an announcement.)
-
+ 
 These requirements apply to the modified work as a whole.  If
 identifiable sections of that work are not derived from the Program,
 and can be reasonably considered independent and separate works in
@@ -169,7 +169,7 @@ access to copy from a designated place, then offering equivalent
 access to copy the source code from the same place counts as
 distribution of the source code, even though third parties are not
 compelled to copy the source along with the object code.
-
+ 
   4. You may not copy, modify, sublicense, or distribute the Program
 except as expressly provided under this License.  Any attempt
 otherwise to copy, modify, sublicense or distribute the Program is
@@ -226,7 +226,7 @@ impose that choice.
 
 This section is intended to make thoroughly clear what is believed to
 be a consequence of the rest of this License.
-
+ 
   8. If the distribution and/or use of the Program is restricted in
 certain countries either by patents or by copyrighted interfaces, the
 original copyright holder who places the Program under this License
@@ -273,255 +273,137 @@ THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
 EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
 DAMAGES.
 
-		     END OF TERMS AND CONDITIONS
+'		     END OF TERMS AND CONDITIONS
 */
-static const char* Copyright = "(C) Copyright Michigan State University 2002, All rights reserved";
-//////////////////////////CTCLServer.cpp file////////////////////////////////////
+/*!
+  \file Main.cpp
+   This file contains the unbound functions and the program entry point.
+   The inventory of functions includes:
+   - main          - Program entry point.
+   - EpicsInit     - Perform whatever initialization EPICS requires.
+   - startRepeater - Workaround to properly start/stop the caRepeater
+                     process when it is not started by the system startup
+                     scripts.
+*/
 
-#include "CTCLServer.h"    
-#include <CSocket.h>     
-#include <TCLInterpreter.h>
-#include "CReaper.h"     
+
+#include "cmdline.h"
+#include "CApplication.h"
+#include <cadef.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <CopyrightNotice.h>
+#include <iostream>
+#include <string>
 #include <Exception.h>
-#include <CTCPConnectionLost.h> 
-#include "CReadoutMain.h"
-#include <CInterpreterStartup.h>
-#include "CInterpreterShell.h"
-#include "CInterpreterCore.h"
-#include <assert.h>
-#include <tcl.h>   
-#include <iostream.h>
 
-// Local data:
-
-static const int MAXLINE=80;
-
-	//Default constructor alternative to compiler provided default constructor
-	//Association object data member pointers initialized to null association object 
-/*!
-   Default constructor.  This is called when declarations of the form e.g.:
-   \verbatim
-	   CTCLServer server(pSocket);
-   \endverbatim
-   
-   \param pSocket - CSocket* Pointer to the socket on which we will be conversing with
-				our client.
-*/
-CTCLServer::CTCLServer (CSocket* pSocket) :
-	CServerInstance(pSocket)     // Anonymous socket object.
- 
-{
-
-}
-int
-CTCLServer::operator==(const CTCLServer& rhs) const
-{
-  return (int)false;
-} 
-// Functions for class CTCLServer
 
 
 /*!
-    Called each time data is readable on a server. 
-    -  Read the data append it to the tcl command being built.  
-    -  Check to see if we have a complete command.
-    -  If the command is complete submit it to the interpreter.
-    -  Return the interpreter result string to the peer.
-    -  If the socket indicatse that it is closing, shutdown and
-       exit.  The reaper will take care of deleting our object.
-    
+   This function kludges around a problem with epics.  It's supposed
+   to start up caRepeater, but evidently:
+   - It does that by forking and making caRepeater the parent process.
+   - the resulting caRepeater identifies to ps as us.
+   - After our process exits, the resulting caRepeater doesn't work quite
+     right but hangs around.
 
-	\param CSocket* pPeer
 
-*/
-void 
-CTCLServer::OnRequest(CSocket* pPeer)  
-{
-  try {
-    string  chunk = GetChunk();
-    m_Command += chunk;
-    if(isComplete()) {
-      CTCLInterpreter* pInterp = getInterpreter();
-      string result;
-      try {
-	result = pInterp->GlobalEval(m_Command);
-      }
-      catch(...) {                      // Probably a CTCLException.
-	result = pInterp->GetResultString();
-	cerr << "Error on TCL server received Command: " 
-	     << m_Command
-	     << " " << result << endl;
-      }
-      // Clean up from command execution:
-      
-      m_Command = "";              // Empty the command string.
-      result         += '\n';          // Make result a 'line'.
-      try {
-	CSocket* pSocket = getSocket();
-	pSocket->Write((char*)result.c_str(), 
-		       result.size());
-      }
-      catch(...) {
-	// If disconnected, the next read will catch that immediately.
-      }
-    }
-    
-  }
-  // Deal with common exception types.
-  //
-  catch (CTCPConnectionLost& rExcept) {
-    string prefix("Lost tcl client connection ");
-    prefix += m_Peer;
-    string suffix(" Shutting down server instance");
-    ReadException(prefix.c_str(), rExcept.ReasonText(),
-		  suffix.c_str());		
-  }
-  catch (CException& rExcept) {
-    ReadException("NSCL Exception caught in TCLserver read",
-		  rExcept.ReasonText(),
-		  "Shutting down server instance");
-  }
-  catch (string& rExcept) {
-    ReadException("TCLServer read: string exception in read",
-		  rExcept.c_str(),
-		  "Shutting down server instance");
-  }
-  catch (char* pExcept) {
-    ReadException("TCLServer read: char* exception in read",
-		  pExcept,
-		  "Shutting down server instance");
-    
-  }
-  catch (...) {
-    ReadException("TCLServer: Unanticipated exception in read",
-		  "- unknown reason -",
-		  "Shutting down server instance");
-  }
-}  
-
-/*!
-    Add ourselves to the CReaper thread's table
-    and invoke the base class's operator() to get
-    started.   The Reaper object ensures that our
-    object and its exit status will be deleted when the 
-    thread exits.
-
-	\param int nArgs, char** pArgs
-
-*/
-int 
-CTCLServer::operator()(int nArgs, char** pArgs)  
-{
-	 CReaper* pReaper(CReaper::getInstance());
-	assert(pReaper);
-	
-	pReaper->Add(this);      // Add us as an instance.
-	m_Peer = getPeername();
-
-	cout << "Accepted tcl client connection from " 
-	        << m_Peer << endl;
-		
-	// Delegate the main loop to our parent class. it does all the
-	// right stuff already.
-	
-	CServerInstance::operator()(nArgs, pArgs);
-
-}
-
-// Implementation of local utility functions:
-//
-/*!     Determines if the command buffer contains a complete command yet.
-     \return true  - m_Command is a complete tcl command.
-     \return false - m_Command is not a complete tcl command.
-*/
-bool
-CTCLServer::isComplete()
-{
-	return (bool)Tcl_CommandComplete((char*)m_Command.c_str());
-	
-}
-/*!
-     Gets the interpreter object for the application.
-     
-     \return CTCLInterpreter*  Pointer to the application's interpreter object.
-     
-     */
-CTCLInterpreter*
-CTCLServer::getInterpreter()
-{
-	CReadoutMain*         pMain    = CReadoutMain::getInstance();
-	CInterpreterShell*    pStartup = pMain->getInterpreter();
-	CInterpreterCore*     pCore    = pStartup->getInterpreterCore();
-	CInterpreterStartup*  pIStartup= pCore->getStartup();
-	CTCLInterpreter*      pInterp  = pIStartup->getInterpreter();
-	return pInterp;
-}
-
-/*!
-     Provides common handling of exceptions thrown while reading
-     the socket:
-     - A message is emitted on stderr,
-     - The socket is shutdown preventing further communication and
-        releasing socket resources.
-     - The enable flag is set false scheduling the interpreter thread
-         to exit. 
-	 
-	\note
-	    The interpreter thread has been registered with a reaper thread
-	     once the active flag goes false, the reaper will join and delete this
-	     object
-
-	\param pPrefix - const char* [in] 
-	                        Prefixes the error message.
-	\param pReason - const char* [in]
-	                        Contains the error message corresponding to the exception.
-	\param pSuffix - const char* [in]
-	                        Contains a suffix to the error message.
 */
 void
-CTCLServer::ReadException(const char* pPrefix,
-				      const char* pReason,
-				      const char* pSuffix)
+startRepeater(int argc, char** argv)
 {
-  cerr << pPrefix <<endl << pReason << endl << pSuffix << endl;
-  try {
-    getSocket()->Shutdown(); // This will throw if already shutdown...
-  }
-  catch(...) {		// So ignore the exception.
-  }
-  setEnable(false);
-}
-	                        
-/*!
-   Utility function to get a chunk of data from the socket.
-   We will read from the socket until either:
-   - We received a newline (\n) (which is appended to the string).
-   - We understand there is no more data waiting for us.
-   When either of these two conditions is met, the string retrieved from
-   the socket up until then is returned.
-   \return string
-      data gotten from socket.
-*/
-string
-CTCLServer::GetChunk()
-{
-  CSocket*      pSocket(getSocket());
-  int           fd = pSocket->getSocketFd(); // For poll..
-  struct pollfd pollinfo;	        // Struct in poll.
-  string        result;		        // Result is built up here.
-  char          c;		        // Characters are read into this.
+  string repeatername(EPICS_BIN);
+  repeatername += "/caRepeater";
 
-  pollinfo.fd    = fd;
-  pollinfo.events= POLLIN;	// Only interested in readability.
-  while(poll(&pollinfo, 1, 1) == 1) { // as long as pollable.
-    if(pollinfo.revents & POLLIN) {
-      pSocket->Read(&c, 1);	// Exceptions are handled by our caller.
-      result += c;
-    }
-    else {			// Not readable.
-      break;
-    }
+  int pid = fork();
+  if(pid < 0) {			// Fork failed.
+    perror("Failed to fork in startRepeater()");
+    exit(errno);
   }
-  return result;
+  else if (pid == 0) {		// child process
+    if(daemon(0,0) < 0) {
+      perror("Child could not setsid");
+      exit(errno);
+    }
+    argv[0]  = "caRepeater";
+    int stat = execlp(repeatername.c_str(),
+		      repeatername.c_str(), NULL);
+    perror("Child: execlp failed!!");
+    exit(errno);
+  }
+  else {			// Fork parent process..
+    usleep(1000);			// Let it startup.
+  }
+}
+
+/*!
+  Initializes access to EPICS
+  \throw fatal exception caught by epics
+        on error.
+*/
+void EpicsInit(int argc, char** argv)
+{
+
+  startRepeater(argc, argv);
+  int status = ca_task_initialize();
+  SEVCHK(status, "Initialization failed");
   
 }
+
+
+/*!
+  Actual program entry point.  We parse the commands and, if that's
+  successful, creat an application object and invoke it.
+*/
+int
+main(int argc, char** argv)
+{
+  try {
+    gengetopt_args_info args;
+    cmdline_parser(argc, argv, &args); // exits on error.
+
+    // Ensure the user supplied a filename.
+
+    if(args.inputs_num != 1) {
+      cerr << "Missing channel input file.\n";
+      cmdline_parser_print_help();
+      exit(-1);
+    }
+
+    CopyrightNotice::Notice(cout, argv[0], 
+			    "1.0", "2004");
+    CopyrightNotice::AuthorCredit(cout, argv[0],
+				  "Ron Fox", NULL);
+    EpicsInit(argc, argv);
+    CApplication app;
+    int status =  app(args);
+    
+    // In the future, maybe app can exit correctly... so...
+
+    if(status != 0) {
+      cerr << "Main application object exiting due to error\n";
+    }
+    return status;
+  }
+  catch (string message) {
+    cerr << "Main caught a string exception: " << message << endl;
+    cerr << "Exiting due to string exception " << endl;
+  }
+  catch (CException& failure) {
+    cerr << "Main caught an NSCL Exception object: " << failure.ReasonText()
+         << endl;
+    cerr << "Exiting due to an NSCL Exception object\n";
+  }
+  catch (char* msg) {
+    cerr << "Main caught a char* exception: " << msg << endl;
+    cerr << "Exiting due to a char* exception " << endl;
+  }
+  catch (...) {
+    cerr << "Main caught an unanticipated exception type ... exiting \n";
+  }
+  exit(-1);			// Exit due to exception.
+}
+   

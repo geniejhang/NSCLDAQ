@@ -56,7 +56,7 @@ patent must be licensed for everyone's free use or not licensed at all.
 
   The precise terms and conditions for copying, distribution and
 modification follow.
-
+ 
 		    GNU GENERAL PUBLIC LICENSE
    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
@@ -111,7 +111,7 @@ above, provided that you also meet all of these conditions:
     License.  (Exception: if the Program itself is interactive but
     does not normally print such an announcement, your work based on
     the Program is not required to print an announcement.)
-
+ 
 These requirements apply to the modified work as a whole.  If
 identifiable sections of that work are not derived from the Program,
 and can be reasonably considered independent and separate works in
@@ -169,7 +169,7 @@ access to copy from a designated place, then offering equivalent
 access to copy the source code from the same place counts as
 distribution of the source code, even though third parties are not
 compelled to copy the source along with the object code.
-
+ 
   4. You may not copy, modify, sublicense, or distribute the Program
 except as expressly provided under this License.  Any attempt
 otherwise to copy, modify, sublicense or distribute the Program is
@@ -226,7 +226,7 @@ impose that choice.
 
 This section is intended to make thoroughly clear what is believed to
 be a consequence of the rest of this License.
-
+ 
   8. If the distribution and/or use of the Program is restricted in
 certain countries either by patents or by copyrighted interfaces, the
 original copyright holder who places the Program under this License
@@ -274,254 +274,456 @@ EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGES.
 
 		     END OF TERMS AND CONDITIONS
-*/
-static const char* Copyright = "(C) Copyright Michigan State University 2002, All rights reserved";
-//////////////////////////CTCLServer.cpp file////////////////////////////////////
+' 
+*/ 
 
-#include "CTCLServer.h"    
-#include <CSocket.h>     
-#include <TCLInterpreter.h>
-#include "CReaper.h"     
-#include <Exception.h>
-#include <CTCPConnectionLost.h> 
-#include "CReadoutMain.h"
-#include <CInterpreterStartup.h>
-#include "CInterpreterShell.h"
-#include "CInterpreterCore.h"
-#include <assert.h>
-#include <tcl.h>   
-#include <iostream.h>
+#include "CChannel.h"    				
+#include "CNoUnitsException.h"
 
-// Local data:
-
-static const int MAXLINE=80;
-
-	//Default constructor alternative to compiler provided default constructor
-	//Association object data member pointers initialized to null association object 
 /*!
-   Default constructor.  This is called when declarations of the form e.g.:
-   \verbatim
-	   CTCLServer server(pSocket);
-   \endverbatim
+  Initializes a channel object.  This implies:
+  - Setting the channel name.
+  - Initializing the state to Disconnected.
+  - Setting m_nFailures to 0. and m_nDeadThreshold as desired.
+  - Initializing m_szLastValue, and m_szLastUnits  to -not-updated-
+  - Initializing m_fUnitsGotten to false.
+
+    \param rName   (string&)
+       Name fo the channel this object is connected to.
+    \param nRetries (int default = 2):
+      Number of consecutive retries after which to declare the channel
+      dead.
+    \throw string
+         Error message if the channel lookup failed.
+ */
+CChannel::CChannel (const string& rName,
+		    int           nRetries) :
+  m_sName(rName),
+  m_eState(CChannel::Disconnected),
+  m_nFailures(0),
+  m_nDeadThreshold(nRetries),
+  m_nLastUpdate(0),		// The epoch.
+  m_fUnitsGotten(false),
+  m_nCaMessage(ECA_NORMAL),	// no hint of trouble yet.
+  m_fSeenDead(false)
+{
+  // Ensure that retries is +:
+
+  if(nRetries < 0) {		//  no retries is ok.
+    throw string("CChannel::CChannel nRetries is < 0");
+  }
    
-   \param pSocket - CSocket* Pointer to the socket on which we will be conversing with
-				our client.
-*/
-CTCLServer::CTCLServer (CSocket* pSocket) :
-	CServerInstance(pSocket)     // Anonymous socket object.
- 
-{
+  // Initialize the response strings for the channel and its units:
 
-}
-int
-CTCLServer::operator==(const CTCLServer& rhs) const
-{
-  return (int)false;
+  strcpy(m_szLastValue,"-not-updated-");
+  strcpy(m_szLastUnits,"-not-updated-");
+
 } 
-// Functions for class CTCLServer
+
+/*!
+  In the destructor:
+  - If the channel is dead do nothing.
+  - If the channel is live, it's channel id must be cleared.
+  - If the channel is live and has units, the units id must also be cleared.
+  
+  \note All error codes are ignored in the destructor.
+*/
+ CChannel::~CChannel ( )  //Destructor - Delete dynamic objects
+{
+  if((m_eState != Dead) && (m_eState != Disconnected)) {
+    ca_clear_channel(m_nId);
+    if(m_fHaveUnits) {
+      ca_clear_channel(m_nUnitId);
+    }
+    ca_pend_io(0.0);		// Wait for clears forever.
+  }
+}
+
+
+
+// Functions for class CChannel
 
 
 /*!
-    Called each time data is readable on a server. 
-    -  Read the data append it to the tcl command being built.  
-    -  Check to see if we have a complete command.
-    -  If the command is complete submit it to the interpreter.
-    -  Return the interpreter result string to the peer.
-    -  If the socket indicatse that it is closing, shutdown and
-       exit.  The reaper will take care of deleting our object.
-    
+   Returns the name of the channel.
+   \return string
+      Name of the channel as stroed in m_sName.
+*/
+string
+CChannel::GetName()
+{
+  return m_sName;
+}
+/*!
 
-	\param CSocket* pPeer
+Returns the current value of the m_eState variable.
+\return CChannel::ChannelState  - current state of the channel.
 
 */
-void 
-CTCLServer::OnRequest(CSocket* pPeer)  
-{
-  try {
-    string  chunk = GetChunk();
-    m_Command += chunk;
-    if(isComplete()) {
-      CTCLInterpreter* pInterp = getInterpreter();
-      string result;
-      try {
-	result = pInterp->GlobalEval(m_Command);
-      }
-      catch(...) {                      // Probably a CTCLException.
-	result = pInterp->GetResultString();
-	cerr << "Error on TCL server received Command: " 
-	     << m_Command
-	     << " " << result << endl;
-      }
-      // Clean up from command execution:
-      
-      m_Command = "";              // Empty the command string.
-      result         += '\n';          // Make result a 'line'.
-      try {
-	CSocket* pSocket = getSocket();
-	pSocket->Write((char*)result.c_str(), 
-		       result.size());
-      }
-      catch(...) {
-	// If disconnected, the next read will catch that immediately.
-      }
-    }
-    
+
+CChannel::ChannelState 
+CChannel::GetState()  
+{ 
+  return m_eState;
+}  
+
+/*!  
+
+Returns true if the channel has an associated units
+channel.
+\return bool - true if the channel has an associated units field.
+*/
+bool 
+CChannel::HaveUnits()  
+{ 
+  return m_fHaveUnits;
+}  
+
+/*!  
+Returns a string that contains the current last
+known value of the channel.  This string will be:
+- "-not-updated-" if the channel value has not yet been
+  successfully fetched.
+- "-dead-" if the channel declared itself dead
+   as a result of an excessive number of
+   retry failures.
+- The last successfully retrieved value of the channel
+  if the channel was successfully retrieved some time 
+  in the past and has not been marked dead.
+\return string
+    last updated value.
+
+
+*/
+string 
+CChannel::GetValue()  
+{ 
+  return string(m_szLastValue);	// contents will be maintained in accordance
+                                // with the channel's state. 
+}  
+
+/*!  
+
+Get the current value of the units.
+\return string
+   Value of the units field.
+\throw CNoUnitsException
+   If the channel has no units.
+
+*/
+string 
+CChannel::GetUnits()  
+{ 
+  if(!m_fHaveUnits) {
+    throw CNoUnitsException(m_sName);
   }
-  // Deal with common exception types.
-  //
-  catch (CTCPConnectionLost& rExcept) {
-    string prefix("Lost tcl client connection ");
-    prefix += m_Peer;
-    string suffix(" Shutting down server instance");
-    ReadException(prefix.c_str(), rExcept.ReasonText(),
-		  suffix.c_str());		
-  }
-  catch (CException& rExcept) {
-    ReadException("NSCL Exception caught in TCLserver read",
-		  rExcept.ReasonText(),
-		  "Shutting down server instance");
-  }
-  catch (string& rExcept) {
-    ReadException("TCLServer read: string exception in read",
-		  rExcept.c_str(),
-		  "Shutting down server instance");
-  }
-  catch (char* pExcept) {
-    ReadException("TCLServer read: char* exception in read",
-		  pExcept,
-		  "Shutting down server instance");
-    
-  }
-  catch (...) {
-    ReadException("TCLServer: Unanticipated exception in read",
-		  "- unknown reason -",
-		  "Shutting down server instance");
+  else {
+    return string(m_szLastUnits);
   }
 }  
 
 /*!
-    Add ourselves to the CReaper thread's table
-    and invoke the base class's operator() to get
-    started.   The Reaper object ensures that our
-    object and its exit status will be deleted when the 
-    thread exits.
 
-	\param int nArgs, char** pArgs
+
+Returns the system time of the last sucessful update.
+\return time_t
+   Time of last update or 0 if never updated.
+*/
+time_t 
+CChannel::GetUpdateTime()  
+{ 
+  return m_nLastUpdate;
+}  
+
+/*!  
+
+
+Called to indicate that an update failed.  
+- m_nFailures is incremented.
+- If m_nFailures > m_nDeadThreshold,
+  The channel id's associated with the 
+  device are ca_cleared, but no ca_pend_io is done.
+  Presumably the next go-round will catch that.
+
+  The channel is marked dead.
+  When the channel is marked dead, it is disconnected.  Further attempts
+  to ask it to either add itself to a synch group (AddGetToSg) or to just 
+  queue a get (Get) are met with string exception throws.
+*/
+void 
+CChannel::FailUpdate()  
+{
+  m_eState = FailedUpdate;
+  m_nFailures++;
+  if(m_nFailures > m_nDeadThreshold) {
+
+    // Mark the channel dead, and close its channels.
+
+    MarkDead();
+    strcpy(m_szLastValue, "-dead-");
+    strcpy(m_szLastUnits, "-dead-");
+
+    ClearChannels();
+  }
+}  
+
+/*!  	
+
+Called to indicate a successful update.
+- The m_nFailures member is reset to zero.
+- The state is set to Updated
+- The last update time is set to now.
 
 */
-int 
-CTCLServer::operator()(int nArgs, char** pArgs)  
+void 
+CChannel::Update()  
+{ 
+  m_nFailures = 0;		// 0 consecutive failures.
+  m_eState    = Updated;	// Indicate proper state.
+  if(m_fHaveUnits) {
+    m_fUnitsGotten = true;	// Got the units if we needed them.
+  }
+
+  m_nLastUpdate = time(0);	// Update last update time.
+}  
+
+/*!  
+
+The channel is resurrected from dead:
+- If the state is not dead the channels are
+  disconnected via ca_clear_channel and ca_pend_io.
+- Failures are zeroed.
+- State is disconnected.
+
+*/
+void 
+CChannel::Revive()  
+{ 
+  // If necessary, clear the channel connection(s).
+  if(m_eState != Dead) {
+    ClearChannels();
+    ca_pend_io(0.0);
+  }
+  // Reset state information:
+  
+  m_eState      = Disconnected;
+  m_nFailures   = 0;
+  m_nLastUpdate = 0;
+  m_fSeenDead   = false;
+  strcpy(m_szLastValue, "-not-updated-");
+  strcpy(m_szLastUnits, "-not-updated-");
+
+}  
+
+
+/*!  
+
+Attempts a synchronous lookup of the channel 
+and its associated units.
+\param Timeout (float)
+   Number of seconds to Timeout in the lookup.
+*/
+void 
+CChannel::Lookup(float Timeout)  
+{ 
+
+  // validate the parameter.
+  
+  if(Timeout <= 0.0) {
+    throw string("CChannel::Looiup Timeout is negative or zero");
+  }
+
+  // Now attempt the lookup.
+
+  int epicsstatus;
+  string units(m_sName);
+  units += ".EGU";		// Engineering units field.
+  m_fHaveUnits = true;		// Assume we have units..
+
+  // First try to ca_search both problems;
+  // errors in channel value result in a dead
+  // channel. 
+  // errors in units results in a unit-less
+  // channel:
+
+  epicsstatus = ca_search(m_sName.c_str(), &m_nId);
+  m_nCaMessage = epicsstatus;
+  if(epicsstatus == ECA_NORMAL) {
+    m_nCaMessage = epicsstatus = ca_search(units.c_str(), &m_nUnitId);
+    if(epicsstatus != ECA_NORMAL) {
+
+      // Can't get to first base with the units field.
+
+      m_fHaveUnits = false;
+    }
+    // Wait for the nodes to answer:
+    
+    m_nCaMessage = epicsstatus = ca_pend_io(Timeout);
+    
+    // Figure out which chids are valid:
+
+    if(ca_state(m_nId) == cs_conn) {
+      m_eState = LookedUp;	// Found the value...
+      if(m_fHaveUnits && (ca_state(m_nUnitId) != cs_conn)) {
+	m_fHaveUnits = false;   // But not units.
+      }
+    }
+    else {			// Failed connection
+      m_nCaMessage = epicsstatus;
+      MarkDead();
+    }
+    
+  }
+  else {
+    // Can't even get to first base with the channel value.
+    m_nCaMessage = epicsstatus;
+    MarkDead();
+  }
+}  
+
+/*!
+
+
+Asks the channel to add itself to an associated synchronous group.
+The channel adds its id to the group and, if the channel's units
+have not yet been fetched, the units id is added as well.
+\param gid  (CA_SYNC_GID)
+  The id of the group to add to.
+
+\throw string
+    If the channel is not connected, or dead we throw a descriptive string.
+\throw string
+    If the ca_sg_get fails, then a descriptive error message is emitted.
+
+*/
+void 
+CChannel::AddGetToSg(CA_SYNC_GID gid)  
+{ 
+  // Build up the common part of the error string just in case.
+
+  int epicsstatus;
+  string error("Error getting channel: ");
+  error += m_sName;
+  error += " ";
+
+  if((m_eState == Disconnected) || (m_eState == Dead)) {
+    error += " Channel is disconnected or dead!!";
+    throw error;
+  }
+  else {
+    m_nCaMessage = 
+    epicsstatus = ca_sg_array_get(gid,
+				  DBR_STRING,
+				  1,
+				  m_nId,
+				  m_szLastValue);
+    if(epicsstatus != ECA_NORMAL) {
+      error += ca_message(epicsstatus);
+      throw error;
+    }
+    if(!m_fUnitsGotten && m_fHaveUnits) {
+      m_nCaMessage = 
+      epicsstatus = ca_sg_array_get(gid,
+				    DBR_STRING,
+				    1,
+				    m_nUnitId,
+				    m_szLastUnits);
+      if(epicsstatus != ECA_NORMAL) {
+	error += ca_message(epicsstatus);
+	throw error;
+      }
+    }
+				
+  }
+  
+}  
+
+/*!  
+
+Requests that the channel issue gets for itself.
+The channel unconditionally issues a get for m_nId.
+If m_fHaveUnits is true, and m_fUnitsGotten is false,
+the units are also asked for.
+
+If the units value ca_get fails then the channel is marked as unit-less.
+
+\throw string
+   String error is thrown if the channel is either disconnected or dead.
+\throw string
+   String error is thrown if the channel value could not have a ca_get done.
+
+*/
+void 
+CChannel::Get()  
 {
-	 CReaper* pReaper(CReaper::getInstance());
-	assert(pReaper);
-	
-	pReaper->Add(this);      // Add us as an instance.
-	m_Peer = getPeername();
 
-	cout << "Accepted tcl client connection from " 
-	        << m_Peer << endl;
-		
-	// Delegate the main loop to our parent class. it does all the
-	// right stuff already.
-	
-	CServerInstance::operator()(nArgs, pArgs);
+  // Format common part of error string in case we need it.
 
+  string error("Get failed for channel ");
+  error += m_sName;
+  error += " : ";
+
+  // Throw if dead or disconnected:
+
+  if((m_eState == Disconnected) || (m_eState == Dead)) {
+    error += "Channel is either dead or disconnected";
+    throw error;
+  }
+  // First get the units.. since their failure is of little consequence:
+
+  if(m_fHaveUnits && !m_fUnitsGotten) {
+    m_nCaMessage = ca_get(DBR_STRING, m_nUnitId, m_szLastUnits);
+    if(m_nCaMessage != ECA_NORMAL) {
+      m_fHaveUnits = false;
+    }
+  }
+  // Now the real part of the show. Get the value.. .if this fails,
+  // we throw.
+
+  m_nCaMessage = ca_get(DBR_STRING, m_nId, m_szLastValue);
+  if(m_nCaMessage != ECA_NORMAL) {
+    error += ca_message(m_nCaMessage);
+    throw error;
+  }
+  // Success!!
 }
 
-// Implementation of local utility functions:
-//
-/*!     Determines if the command buffer contains a complete command yet.
-     \return true  - m_Command is a complete tcl command.
-     \return false - m_Command is not a complete tcl command.
+/*!
+   Returns the current state of m_fSeenDead, and sets that flag to true.
+   This is used to determine whether or not the channel has been seen
+   as dead before or if it has just transitioned to dead.
+   \return bool
+   - false - If never seen as dead.
+   - true  - If already noticed as dead.
 */
 bool
-CTCLServer::isComplete()
+CChannel::DidISeeYouDead()
 {
-	return (bool)Tcl_CommandComplete((char*)m_Command.c_str());
-	
-}
-/*!
-     Gets the interpreter object for the application.
-     
-     \return CTCLInterpreter*  Pointer to the application's interpreter object.
-     
-     */
-CTCLInterpreter*
-CTCLServer::getInterpreter()
-{
-	CReadoutMain*         pMain    = CReadoutMain::getInstance();
-	CInterpreterShell*    pStartup = pMain->getInterpreter();
-	CInterpreterCore*     pCore    = pStartup->getInterpreterCore();
-	CInterpreterStartup*  pIStartup= pCore->getStartup();
-	CTCLInterpreter*      pInterp  = pIStartup->getInterpreter();
-	return pInterp;
+  bool seen   = m_fSeenDead;
+  m_fSeenDead = true;
+  return seen;
 }
 
+// Private utilities
 /*!
-     Provides common handling of exceptions thrown while reading
-     the socket:
-     - A message is emitted on stderr,
-     - The socket is shutdown preventing further communication and
-        releasing socket resources.
-     - The enable flag is set false scheduling the interpreter thread
-         to exit. 
-	 
-	\note
-	    The interpreter thread has been registered with a reaper thread
-	     once the active flag goes false, the reaper will join and delete this
-	     object
-
-	\param pPrefix - const char* [in] 
-	                        Prefixes the error message.
-	\param pReason - const char* [in]
-	                        Contains the error message corresponding to the exception.
-	\param pSuffix - const char* [in]
-	                        Contains a suffix to the error message.
+  Clear the device channels.  ca_clear_channel() is called for the value,
+and if necessary the units channel. It is the caller's responsibility to 
+ensure that at some point I/O is flushed with e.g. ca_pend_io.
 */
 void
-CTCLServer::ReadException(const char* pPrefix,
-				      const char* pReason,
-				      const char* pSuffix)
+CChannel::ClearChannels()
 {
-  cerr << pPrefix <<endl << pReason << endl << pSuffix << endl;
-  try {
-    getSocket()->Shutdown(); // This will throw if already shutdown...
+  m_nCaMessage = ca_clear_channel(m_nId);
+  if(m_fHaveUnits) {
+    m_nCaMessage = ca_clear_channel(m_nUnitId);
   }
-  catch(...) {		// So ignore the exception.
-  }
-  setEnable(false);
 }
-	                        
 /*!
-   Utility function to get a chunk of data from the socket.
-   We will read from the socket until either:
-   - We received a newline (\n) (which is appended to the string).
-   - We understand there is no more data waiting for us.
-   When either of these two conditions is met, the string retrieved from
-   the socket up until then is returned.
-   \return string
-      data gotten from socket.
+   Mark a channel as dead:: Set the state to dead and clear m_fSeenDead.
 */
-string
-CTCLServer::GetChunk()
+void 
+CChannel::MarkDead()
 {
-  CSocket*      pSocket(getSocket());
-  int           fd = pSocket->getSocketFd(); // For poll..
-  struct pollfd pollinfo;	        // Struct in poll.
-  string        result;		        // Result is built up here.
-  char          c;		        // Characters are read into this.
-
-  pollinfo.fd    = fd;
-  pollinfo.events= POLLIN;	// Only interested in readability.
-  while(poll(&pollinfo, 1, 1) == 1) { // as long as pollable.
-    if(pollinfo.revents & POLLIN) {
-      pSocket->Read(&c, 1);	// Exceptions are handled by our caller.
-      result += c;
-    }
-    else {			// Not readable.
-      break;
-    }
-  }
-  return result;
-  
+  m_eState    = Dead;
+  m_fSeenDead = false;
 }

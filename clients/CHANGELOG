@@ -74,3 +74,15 @@
        $(prefix)/contrib/caenv812.
     - Incorporate scripted readout engine developed initially for
       LLNL, LBL then SEE and RPI by Ron Fox.
+    - Added bunches of stuff to the contrib directory for scriptable readout.
+
+
+7.3-005 3/2/04
+    - Did a merge with the 7.4 branch for:
+       framework
+       controlpush ...
+       ProductionReadout
+       configure.in
+       Makefile.am
+     in order to get the controlpush functionality and readout fixes that
+     go along with it.

@@ -1,3 +1,4 @@
+
 /*
 		    GNU GENERAL PUBLIC LICENSE
 		       Version 2, June 1991
@@ -273,255 +274,106 @@ THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
 EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
 DAMAGES.
 
-		     END OF TERMS AND CONDITIONS
+		     END OF TERMS AND CONDITIONS '
 */
-static const char* Copyright = "(C) Copyright Michigan State University 2002, All rights reserved";
-//////////////////////////CTCLServer.cpp file////////////////////////////////////
-
-#include "CTCLServer.h"    
-#include <CSocket.h>     
-#include <TCLInterpreter.h>
-#include "CReaper.h"     
-#include <Exception.h>
-#include <CTCPConnectionLost.h> 
-#include "CReadoutMain.h"
-#include <CInterpreterStartup.h>
-#include "CInterpreterShell.h"
-#include "CInterpreterCore.h"
-#include <assert.h>
-#include <tcl.h>   
-#include <iostream.h>
-
-// Local data:
-
-static const int MAXLINE=80;
-
-	//Default constructor alternative to compiler provided default constructor
-	//Association object data member pointers initialized to null association object 
-/*!
-   Default constructor.  This is called when declarations of the form e.g.:
-   \verbatim
-	   CTCLServer server(pSocket);
-   \endverbatim
-   
-   \param pSocket - CSocket* Pointer to the socket on which we will be conversing with
-				our client.
-*/
-CTCLServer::CTCLServer (CSocket* pSocket) :
-	CServerInstance(pSocket)     // Anonymous socket object.
- 
-{
-
-}
-int
-CTCLServer::operator==(const CTCLServer& rhs) const
-{
-  return (int)false;
-} 
-// Functions for class CTCLServer
 
 
-/*!
-    Called each time data is readable on a server. 
-    -  Read the data append it to the tcl command being built.  
-    -  Check to see if we have a complete command.
-    -  If the command is complete submit it to the interpreter.
-    -  Return the interpreter result string to the peer.
-    -  If the socket indicatse that it is closing, shutdown and
-       exit.  The reaper will take care of deleting our object.
-    
-
-	\param CSocket* pPeer
-
-*/
-void 
-CTCLServer::OnRequest(CSocket* pPeer)  
-{
-  try {
-    string  chunk = GetChunk();
-    m_Command += chunk;
-    if(isComplete()) {
-      CTCLInterpreter* pInterp = getInterpreter();
-      string result;
-      try {
-	result = pInterp->GlobalEval(m_Command);
-      }
-      catch(...) {                      // Probably a CTCLException.
-	result = pInterp->GetResultString();
-	cerr << "Error on TCL server received Command: " 
-	     << m_Command
-	     << " " << result << endl;
-      }
-      // Clean up from command execution:
-      
-      m_Command = "";              // Empty the command string.
-      result         += '\n';          // Make result a 'line'.
-      try {
-	CSocket* pSocket = getSocket();
-	pSocket->Write((char*)result.c_str(), 
-		       result.size());
-      }
-      catch(...) {
-	// If disconnected, the next read will catch that immediately.
-      }
-    }
-    
-  }
-  // Deal with common exception types.
-  //
-  catch (CTCPConnectionLost& rExcept) {
-    string prefix("Lost tcl client connection ");
-    prefix += m_Peer;
-    string suffix(" Shutting down server instance");
-    ReadException(prefix.c_str(), rExcept.ReasonText(),
-		  suffix.c_str());		
-  }
-  catch (CException& rExcept) {
-    ReadException("NSCL Exception caught in TCLserver read",
-		  rExcept.ReasonText(),
-		  "Shutting down server instance");
-  }
-  catch (string& rExcept) {
-    ReadException("TCLServer read: string exception in read",
-		  rExcept.c_str(),
-		  "Shutting down server instance");
-  }
-  catch (char* pExcept) {
-    ReadException("TCLServer read: char* exception in read",
-		  pExcept,
-		  "Shutting down server instance");
-    
-  }
-  catch (...) {
-    ReadException("TCLServer: Unanticipated exception in read",
-		  "- unknown reason -",
-		  "Shutting down server instance");
-  }
-}  
-
-/*!
-    Add ourselves to the CReaper thread's table
-    and invoke the base class's operator() to get
-    started.   The Reaper object ensures that our
-    object and its exit status will be deleted when the 
-    thread exits.
-
-	\param int nArgs, char** pArgs
-
-*/
-int 
-CTCLServer::operator()(int nArgs, char** pArgs)  
-{
-	 CReaper* pReaper(CReaper::getInstance());
-	assert(pReaper);
-	
-	pReaper->Add(this);      // Add us as an instance.
-	m_Peer = getPeername();
-
-	cout << "Accepted tcl client connection from " 
-	        << m_Peer << endl;
-		
-	// Delegate the main loop to our parent class. it does all the
-	// right stuff already.
-	
-	CServerInstance::operator()(nArgs, pArgs);
-
-}
-
-// Implementation of local utility functions:
+//! \class: CBuildChannelData           
+//! \file:  .h
+// Author:
+//   Ron Fox
+//   NSCL
+//   Michigan State University
+//   East Lansing, MI 48824-1321
+//   mailto:fox@nscl.msu.edu
 //
-/*!     Determines if the command buffer contains a complete command yet.
-     \return true  - m_Command is a complete tcl command.
-     \return false - m_Command is not a complete tcl command.
-*/
-bool
-CTCLServer::isComplete()
-{
-	return (bool)Tcl_CommandComplete((char*)m_Command.c_str());
-	
-}
+// Copyright 
 /*!
-     Gets the interpreter object for the application.
-     
-     \return CTCLInterpreter*  Pointer to the application's interpreter object.
-     
-     */
-CTCLInterpreter*
-CTCLServer::getInterpreter()
-{
-	CReadoutMain*         pMain    = CReadoutMain::getInstance();
-	CInterpreterShell*    pStartup = pMain->getInterpreter();
-	CInterpreterCore*     pCore    = pStartup->getInterpreterCore();
-	CInterpreterStartup*  pIStartup= pCore->getStartup();
-	CTCLInterpreter*      pInterp  = pIStartup->getInterpreter();
-	return pInterp;
-}
-
-/*!
-     Provides common handling of exceptions thrown while reading
-     the socket:
-     - A message is emitted on stderr,
-     - The socket is shutdown preventing further communication and
-        releasing socket resources.
-     - The enable flag is set false scheduling the interpreter thread
-         to exit. 
-	 
-	\note
-	    The interpreter thread has been registered with a reaper thread
-	     once the active flag goes false, the reaper will join and delete this
-	     object
-
-	\param pPrefix - const char* [in] 
-	                        Prefixes the error message.
-	\param pReason - const char* [in]
-	                        Contains the error message corresponding to the exception.
-	\param pSuffix - const char* [in]
-	                        Contains a suffix to the error message.
+Collects the data from each channel 
+in the vector m_ChannelData. Each 
+vector element is a pair<string,ChannelData>>
+where the first element is the channel name and the
+second a struct containing:
+- m_sValue - The string value of the channel.
+- m_sUnits - The string units of the channel or string("") if the channel has
+             no units field.
+- m_Updated- a time_t describing the last time the channel had a successful
+             update.
 */
-void
-CTCLServer::ReadException(const char* pPrefix,
-				      const char* pReason,
-				      const char* pSuffix)
-{
-  cerr << pPrefix <<endl << pReason << endl << pSuffix << endl;
-  try {
-    getSocket()->Shutdown(); // This will throw if already shutdown...
-  }
-  catch(...) {		// So ignore the exception.
-  }
-  setEnable(false);
-}
-	                        
-/*!
-   Utility function to get a chunk of data from the socket.
-   We will read from the socket until either:
-   - We received a newline (\n) (which is appended to the string).
-   - We understand there is no more data waiting for us.
-   When either of these two conditions is met, the string retrieved from
-   the socket up until then is returned.
-   \return string
-      data gotten from socket.
-*/
-string
-CTCLServer::GetChunk()
-{
-  CSocket*      pSocket(getSocket());
-  int           fd = pSocket->getSocketFd(); // For poll..
-  struct pollfd pollinfo;	        // Struct in poll.
-  string        result;		        // Result is built up here.
-  char          c;		        // Characters are read into this.
+#ifndef __CBUILDCHANNELDATA_H  //Required for current class
+#define __CBUILDCHANNELDATA_H
 
-  pollinfo.fd    = fd;
-  pollinfo.events= POLLIN;	// Only interested in readability.
-  while(poll(&pollinfo, 1, 1) == 1) { // as long as pollable.
-    if(pollinfo.revents & POLLIN) {
-      pSocket->Read(&c, 1);	// Exceptions are handled by our caller.
-      result += c;
-    }
-    else {			// Not readable.
-      break;
-    }
-  }
-  return result;
+//
+// Include files:
+//
+
+                               //Required for base classes
+#ifndef __CCHANNELVISITOR_H     //CChannelVisitor
+#include "CChannelVisitor.h"
+#endif
+ 
+#ifndef __STL_STRING
+#include <string>
+#define __STL_STRING
+#endif
+
+#ifndef __STL_LIST
+#include <list>
+#define __STL_LIST
+#endif
+
+
+#ifndef __CRT_TIME_H
+#include <time.h>
+#define __CRT_TIME_H
+#endif
+
+// Forward class definitions:
+class CChannel;
+
+class CBuildChannelData  : public CChannelVisitor        
+{
+
+public:
+
+  // Data type definitions.
+
+  typedef struct _ChannelData {
+    string m_sValue;
+    string m_sUnits;
+    time_t m_Updated;
+    struct _ChannelData& operator=(const struct _ChannelData& rhs) {
+      m_sValue = rhs.m_sValue;
+      m_sUnits = rhs.m_sUnits;
+      m_Updated= rhs.m_Updated;
+    }                           //!< Ensure strings are copied properly, not just bitwise.
+  } ChannelData;		//!< Information about a channel.
+
+  typedef pair<string, ChannelData> ChannelItem;	//!< Info about a chan.
+  typedef list<ChannelItem>         ChannelItems;	//!< List of channel info.
+  typedef ChannelItems::iterator    ChannelItemIterator; //!< Iterator to list.
+private:
+  // Member data
+
+  ChannelItems  m_ChannelData;	//!< Data about each channel..
+   
+  // Constructors and other cannonical operations:
+
+public:
+  CBuildChannelData ();		//!< object construction
+  ~ CBuildChannelData ( );	//!< object destruction.
+  CBuildChannelData(const CBuildChannelData& that); //!< Copy construction.
+  CBuildChannelData& operator=(const CBuildChannelData& rhs); //!< Assignment
+
+  // Class operations:
+
+public:
+
+  virtual   void operator() (CChannel* pChannel); //!< per channel operation
+  ChannelItemIterator begin ()   ;                       //!< Return begin iterator.
+  ChannelItemIterator end ()   ;                         //!< Return end iterator.
+  int          size ()   ;                        //!< Return number of items in the list.
   
-}
+};
+
+#endif

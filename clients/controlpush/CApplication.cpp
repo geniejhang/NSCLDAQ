@@ -56,7 +56,7 @@ patent must be licensed for everyone's free use or not licensed at all.
 
   The precise terms and conditions for copying, distribution and
 modification follow.
-
+ 
 		    GNU GENERAL PUBLIC LICENSE
    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
@@ -111,7 +111,7 @@ above, provided that you also meet all of these conditions:
     License.  (Exception: if the Program itself is interactive but
     does not normally print such an announcement, your work based on
     the Program is not required to print an announcement.)
-
+ 
 These requirements apply to the modified work as a whole.  If
 identifiable sections of that work are not derived from the Program,
 and can be reasonably considered independent and separate works in
@@ -169,7 +169,7 @@ access to copy from a designated place, then offering equivalent
 access to copy the source code from the same place counts as
 distribution of the source code, even though third parties are not
 compelled to copy the source along with the object code.
-
+ 
   4. You may not copy, modify, sublicense, or distribute the Program
 except as expressly provided under this License.  Any attempt
 otherwise to copy, modify, sublicense or distribute the Program is
@@ -226,7 +226,7 @@ impose that choice.
 
 This section is intended to make thoroughly clear what is believed to
 be a consequence of the rest of this License.
-
+ 
   8. If the distribution and/or use of the Program is restricted in
 certain countries either by patents or by copyrighted interfaces, the
 original copyright holder who places the Program under this License
@@ -273,255 +273,569 @@ THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
 EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
 DAMAGES.
 
-		     END OF TERMS AND CONDITIONS
+		     END OF TERMS AND CONDITIONS '
 */
-static const char* Copyright = "(C) Copyright Michigan State University 2002, All rights reserved";
-//////////////////////////CTCLServer.cpp file////////////////////////////////////
 
-#include "CTCLServer.h"    
-#include <CSocket.h>     
-#include <TCLInterpreter.h>
-#include "CReaper.h"     
-#include <Exception.h>
-#include <CTCPConnectionLost.h> 
-#include "CReadoutMain.h"
-#include <CInterpreterStartup.h>
-#include "CInterpreterShell.h"
-#include "CInterpreterCore.h"
-#include <assert.h>
-#include <tcl.h>   
-#include <iostream.h>
-
-// Local data:
-
-static const int MAXLINE=80;
-
-	//Default constructor alternative to compiler provided default constructor
-	//Association object data member pointers initialized to null association object 
 /*!
-   Default constructor.  This is called when declarations of the form e.g.:
-   \verbatim
-	   CTCLServer server(pSocket);
-   \endverbatim
-   
-   \param pSocket - CSocket* Pointer to the socket on which we will be conversing with
-				our client.
+  \file CApplication.cpp
+
+  This file is an implementation of the CApplication class.  
+See the documentation about that class for the exported
+member inventory and documentation.
+The application object encapsulates the top level logic
+of the application. This logic can be expressed in the
+pseudo code:
+\verbatim
+Process command arguments
+Read channel file, Populating channel list.
+While true {
+   Connect to Tcl Server
+   Connect channels in channel list.
+   while connected {
+      Update channels to server.
+      Wait for interval seconds.
+   }
+}
+
+\endverbatim
+
+
+ */
+
+
+
+#include "CApplication.h"    				
+#include "CSocket.h"
+#include "CChannel.h"
+#include "CChannelList.h"
+#include "cmdline.h"
+#include "CBuildChannelData.h"
+#include "CLookupVisitor.h"
+#include "CStrings.h"
+
+#include <Exception.h>
+
+
+#include <utility>
+#include <fstream>  
+#include <iostream> 
+#include <sstream>
+
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+
+static const int    YEARBASE(1900);           // Base year of struct tm.tm_year
+
+static const int    DEFAULTPORT(2701);        // Default tcp/ip port.
+static const string DEFAULTHOST("localhost"); // Default host to connect with.
+static const int    INTERVAL(10);             // Default update interval.
+static const float  TIMEOUT(0.35);             // Default EPICS timeout we'll use.
+
+static const int    CONNECTRETRYINTERVAL(10); // Seconds between retry attempts.
+static const int    CONNECTRETRIES(1000);     // Number of retries allowed. 
+static const int    MININTERVAL(5);     // Minimum update interval
+
+static const string DataArrayName("EPICS_DATA"); // Name of data tcl array.
+static const string UnitsArrayName("EPICS_UNITS"); // Name of units tcl array.
+static const string UpdateArrayName("EPICS_UPDATED"); // when last updated.
+
+/*!
+    Construct the application.  We only fill in the default
+    values for the setup file, port, host and interval. Much
+    of the real work of getting this class ready to roll
+    is done by the operator() entry point.
 */
-CTCLServer::CTCLServer (CSocket* pSocket) :
-	CServerInstance(pSocket)     // Anonymous socket object.
- 
+CApplication::CApplication ()
+  : m_sSetupFile(""),		// That's a required parameter.
+    m_nPort(DEFAULTPORT),
+    m_sHost(DEFAULTHOST),
+    m_nInterval(INTERVAL)
+{ 
+  
+} 
+
+/*!
+   This is a no-op.
+*/
+ CApplication::~CApplication ( ) 
 {
 
 }
-int
-CTCLServer::operator==(const CTCLServer& rhs) const
-{
-  return (int)false;
-} 
-// Functions for class CTCLServer
 
 
-/*!
-    Called each time data is readable on a server. 
-    -  Read the data append it to the tcl command being built.  
-    -  Check to see if we have a complete command.
-    -  If the command is complete submit it to the interpreter.
-    -  Return the interpreter result string to the peer.
-    -  If the socket indicatse that it is closing, shutdown and
-       exit.  The reaper will take care of deleting our object.
-    
+// Functions for class CApplication
 
-	\param CSocket* pPeer
+/*! 
 
-*/
-void 
-CTCLServer::OnRequest(CSocket* pPeer)  
-{
-  try {
-    string  chunk = GetChunk();
-    m_Command += chunk;
-    if(isComplete()) {
-      CTCLInterpreter* pInterp = getInterpreter();
-      string result;
-      try {
-	result = pInterp->GlobalEval(m_Command);
-      }
-      catch(...) {                      // Probably a CTCLException.
-	result = pInterp->GetResultString();
-	cerr << "Error on TCL server received Command: " 
-	     << m_Command
-	     << " " << result << endl;
-      }
-      // Clean up from command execution:
-      
-      m_Command = "";              // Empty the command string.
-      result         += '\n';          // Make result a 'line'.
-      try {
-	CSocket* pSocket = getSocket();
-	pSocket->Write((char*)result.c_str(), 
-		       result.size());
-      }
-      catch(...) {
-	// If disconnected, the next read will catch that immediately.
-      }
-    }
-    
-  }
-  // Deal with common exception types.
-  //
-  catch (CTCPConnectionLost& rExcept) {
-    string prefix("Lost tcl client connection ");
-    prefix += m_Peer;
-    string suffix(" Shutting down server instance");
-    ReadException(prefix.c_str(), rExcept.ReasonText(),
-		  suffix.c_str());		
-  }
-  catch (CException& rExcept) {
-    ReadException("NSCL Exception caught in TCLserver read",
-		  rExcept.ReasonText(),
-		  "Shutting down server instance");
-  }
-  catch (string& rExcept) {
-    ReadException("TCLServer read: string exception in read",
-		  rExcept.c_str(),
-		  "Shutting down server instance");
-  }
-  catch (char* pExcept) {
-    ReadException("TCLServer read: char* exception in read",
-		  pExcept,
-		  "Shutting down server instance");
-    
-  }
-  catch (...) {
-    ReadException("TCLServer: Unanticipated exception in read",
-		  "- unknown reason -",
-		  "Shutting down server instance");
-  }
-}  
+Entry point for the program.
+- Parse the parameters
+- Read the channel file to build the channel list.
+- Connect to the serverand as long as the connection
+  is alive, update the channels in the server.
+  If the server dies, we try to reconnect.
 
-/*!
-    Add ourselves to the CReaper thread's table
-    and invoke the base class's operator() to get
-    started.   The Reaper object ensures that our
-    object and its exit status will be deleted when the 
-    thread exits.
+  \param Parameters (getgetopt_args_info& [in]):
+     The massaged program parameters from cmdline_parser.  Note that
+     all validation is done either by the caller or the command line
+     parser before we are even called.
 
-	\param int nArgs, char** pArgs
+  \return int
+     -1  (since really we should not be exiting if we functioned correctly.
 
 */
 int 
-CTCLServer::operator()(int nArgs, char** pArgs)  
-{
-	 CReaper* pReaper(CReaper::getInstance());
-	assert(pReaper);
-	
-	pReaper->Add(this);      // Add us as an instance.
-	m_Peer = getPeername();
+CApplication::operator()(gengetopt_args_info& Parameters)  
+{ 
+  // We'll just throw an exception if there's an error.
+  // that prevents us from dealing with nasty nested ifs.
 
-	cout << "Accepted tcl client connection from " 
-	        << m_Peer << endl;
-		
-	// Delegate the main loop to our parent class. it does all the
-	// right stuff already.
-	
-	CServerInstance::operator()(nArgs, pArgs);
-
-}
-
-// Implementation of local utility functions:
-//
-/*!     Determines if the command buffer contains a complete command yet.
-     \return true  - m_Command is a complete tcl command.
-     \return false - m_Command is not a complete tcl command.
-*/
-bool
-CTCLServer::isComplete()
-{
-	return (bool)Tcl_CommandComplete((char*)m_Command.c_str());
-	
-}
-/*!
-     Gets the interpreter object for the application.
-     
-     \return CTCLInterpreter*  Pointer to the application's interpreter object.
-     
-     */
-CTCLInterpreter*
-CTCLServer::getInterpreter()
-{
-	CReadoutMain*         pMain    = CReadoutMain::getInstance();
-	CInterpreterShell*    pStartup = pMain->getInterpreter();
-	CInterpreterCore*     pCore    = pStartup->getInterpreterCore();
-	CInterpreterStartup*  pIStartup= pCore->getStartup();
-	CTCLInterpreter*      pInterp  = pIStartup->getInterpreter();
-	return pInterp;
-}
-
-/*!
-     Provides common handling of exceptions thrown while reading
-     the socket:
-     - A message is emitted on stderr,
-     - The socket is shutdown preventing further communication and
-        releasing socket resources.
-     - The enable flag is set false scheduling the interpreter thread
-         to exit. 
-	 
-	\note
-	    The interpreter thread has been registered with a reaper thread
-	     once the active flag goes false, the reaper will join and delete this
-	     object
-
-	\param pPrefix - const char* [in] 
-	                        Prefixes the error message.
-	\param pReason - const char* [in]
-	                        Contains the error message corresponding to the exception.
-	\param pSuffix - const char* [in]
-	                        Contains a suffix to the error message.
-*/
-void
-CTCLServer::ReadException(const char* pPrefix,
-				      const char* pReason,
-				      const char* pSuffix)
-{
-  cerr << pPrefix <<endl << pReason << endl << pSuffix << endl;
   try {
-    getSocket()->Shutdown(); // This will throw if already shutdown...
-  }
-  catch(...) {		// So ignore the exception.
-  }
-  setEnable(false);
-}
-	                        
-/*!
-   Utility function to get a chunk of data from the socket.
-   We will read from the socket until either:
-   - We received a newline (\n) (which is appended to the string).
-   - We understand there is no more data waiting for us.
-   When either of these two conditions is met, the string retrieved from
-   the socket up until then is returned.
-   \return string
-      data gotten from socket.
-*/
-string
-CTCLServer::GetChunk()
-{
-  CSocket*      pSocket(getSocket());
-  int           fd = pSocket->getSocketFd(); // For poll..
-  struct pollfd pollinfo;	        // Struct in poll.
-  string        result;		        // Result is built up here.
-  char          c;		        // Characters are read into this.
-
-  pollinfo.fd    = fd;
-  pollinfo.events= POLLIN;	// Only interested in readability.
-  while(poll(&pollinfo, 1, 1) == 1) { // as long as pollable.
-    if(pollinfo.revents & POLLIN) {
-      pSocket->Read(&c, 1);	// Exceptions are handled by our caller.
-      result += c;
+    // Process the command line parameters:
+    
+    // --port=tcp-ip-port
+    
+    if(Parameters.port_given) {		// Override the default port.
+      ValidatePort(Parameters.port_arg); 
+      m_nPort = Parameters.port_arg;
     }
-    else {			// Not readable.
+    // --interval=seconds
+    
+    if(Parameters.interval_given) {
+      ValidateInterval(Parameters.interval_arg);
+      m_nInterval = Parameters.interval_arg;
+    }
+    // --host=name.
+    
+    if(Parameters.node_given) {
+      m_sHost = string(Parameters.node_arg);
+    }
+    // Setup file:
+    
+    m_sSetupFile = string(Parameters.inputs[0]); // Required parameter.
+
+
+    // Create the channel list.
+    
+    if(m_sSetupFile == string("-")) { //  Setup file is stdin:
+      ReadChannelFile(cin);
+      
+    } else {			// Setup file is from a file:
+
+      ifstream  ChannelFile(m_sSetupFile.c_str());
+      if(ChannelFile) {
+	ReadChannelFile(ChannelFile); // Read in the channels.
+      } else {			// File open failed...
+	ostringstream error;
+	error << "Failed to open file: " << m_sSetupFile 
+	      << " reason: " << strerror(errno);
+	throw string(error.str());	
+      }
+    }
+    // Note if there are no channels in the channel list we can just
+    // give up now rather than wasting time and resources:
+
+    if(m_Channels.size() == 0) {
+      throw 
+	string("There are no non-comment channel lines in the channel file");
+
+    }
+
+    // Main loop.
+
+    while(1) {
+      ConnectToServer(CONNECTRETRYINTERVAL,
+		      CONNECTRETRIES);
+      cerr << "Connected to TCL server looking up channels\n";
+      CLookupVisitor ChannelInitializer(TIMEOUT);
+      m_Channels.foreach(ChannelInitializer);	// Lookup channels and revive.
+      cerr << "Channel lookup complete\n";
+      while(m_Socket.getState() == CSocket::Connected) {
+	Update();
+	Delay(m_nInterval);
+      }
+    }
+    throw "Unable to form a connection to the server";
+    
+    // Exit implies an error:
+    
+  }
+  catch(string msg) {		// Exit with error message.
+    cerr << msg << endl;
+  }
+  catch (...) {
+    cerr << "An unanticipated exception was caught in CApplication::operator() "
+	 << " -- exiting\n";
+  }
+  return -1;
+
+}  
+
+/*! 
+
+
+Reads the channel file, building up
+the channel list.  As each channel is
+created and added to the channel list
+it is asked to look itself up in epics.
+The following are ignored as comments:
+- Blank lines
+- Lines whose first nonblank character is a #
+- Anything after the first `word' on the line.
+
+Channels that fail their lookup are discarded noisily.
+The noise comes out on stderr.
+
+\param Input (istream& [in]):
+   Input file.
+
+*/
+void 
+CApplication::ReadChannelFile(istream& Input)  
+{ 
+  int nLineNumber = 0;
+  string ChannelName; 
+  while(!Input.eof()) {
+    char line[1000];
+    Input.getline(line, sizeof(line));
+    if(Input.fail() && !Input.eof()) {
+      throw string("Input line is longer than maximum allowed (1000 chars)");
+    }
+    if(Input.fail() && Input.eof()) {
+      return;
+    }
+    nLineNumber++;
+    if(strlen(line) == 0) {
+      continue;			// Ignore empty lines.
+    }
+    int nlBlanks = strspn(line, " \t\r");	// count leading whitespace.
+    if(nlBlanks == strlen(line)) {
+      continue;			// Line all blanks.
+    }
+    char* WordStart = &(line[nlBlanks]); // Pointer to the start of the word...
+    if(*WordStart == '#') {
+      continue;			// First nonblank is a # 
+    }
+    int nInWord = strcspn(WordStart, "\t \r"); // Chars in the word...
+    ChannelName = "";		// Init the name to empty.
+    for(int i =0; i < nInWord; i++) {
+      ChannelName += WordStart[i]; // Fill in the name.
+    }
+    // ChannelName  is now a channel name. create the channel.
+    // If a channel cannot be created we yell and continue.
+    //
+    try {
+      CChannel* pChannel = new CChannel(ChannelName);
+      m_Channels.push_back(*pChannel);
+    }
+    catch(string error) {
+      cerr << "Failed to connect to channel " <<  ChannelName  << " in: " 
+	   << m_sSetupFile << ":" << nLineNumber << endl;
+      cerr << "According to channel layer this is because: "
+	   << error << endl;
+    }
+    catch(...) {
+      cerr << "Unanticipated failure type in CApplication::ReadChannelFile"
+	   << "Reading file: " << m_sSetupFile << ":" << nLineNumber 
+	   << "Channel name (empty if not a channel) '" << ChannelName << "'"
+	   << endl;
+    }
+					       
+    
+  }
+}  
+
+/*!  
+
+- Invokes the Update member function of 
+  m_Channels, to update the current control system
+  values.
+- Creates a CBuildChannelData visitor object and
+  passes it to  m_Channels.foreach to collect the
+  current data.
+- Passes the CBuildChannelData object to 
+  ChannelsToServer to update the TCLserver's
+  idea of what the channel values etc. are.
+
+*/
+void 
+CApplication::Update()  
+{
+  m_Channels.Update(TIMEOUT, TIMEOUT);
+  CBuildChannelData collector;
+  m_Channels.foreach(collector);
+  ChannelsToServer(collector);
+  
+}  
+
+/*! 
+
+Takes the channels parameter and iterates through
+the pairs of channel name/value information.
+For each channel name/value, a TCL command is
+created and the value appropriately quoted/escaped.
+The TCL Command is sent to the TCL server for execution.
+
+\param chans (CBuildChannelData&)
+   The visitor that has been building up channel data.
+
+*/
+void 
+CApplication::ChannelsToServer(CBuildChannelData& chans)  
+{ 
+  CBuildChannelData::ChannelItemIterator i = chans.begin();
+  while(i != chans.end()) {
+
+    // Fetch the data out of the channel data block:
+
+    string name     = i->first;
+    string value    = i->second.m_sValue;
+    string units    = i->second.m_sUnits;
+    string updated  = FormatTime(i->second.m_Updated);
+
+    // Format the commands and send them on to the server.
+    // If we lose the connection then break from the loop.
+    // the main loop will take care of any reconnection stuff.
+    //
+    try {
+      m_Socket.Flush();
+      string command;
+      command = GenerateSet(DataArrayName, name, value);
+      m_Socket.Write((void*)command.c_str(), command.size());
+      
+      if(units != string("")) {
+	command = GenerateSet(UnitsArrayName, name, units);
+	m_Socket.Write((void*)command.c_str(), command.size());
+      }
+      
+      command = GenerateSet(UpdateArrayName, name, updated);
+      m_Socket.Write((void*)command.c_str(), command.size());
+    }
+    catch (CException& problem) {
+      cerr << ">>>WARNING<<< failed to write all channels to server: " 
+	   << problem.ReasonText() << endl;
+      cerr << "              Will attempt to retry server connection\n";
       break;
     }
+    i++;
   }
-  return result;
+}  
+
+/*! 
+
+
+Attempts to connect to the TCLserver specified by 
+the member variables. If the connection fails, 
+it will be retried periodically until a connection is
+established, or until the retry count is exceeded.
+\param nRetryInterval  (int) Seconds between retries.
+\param nRetries        (int) Maximum number of retries.
+
+\throw string
+   Throws a string if the connection could not be established.
+
+*/
+void 
+CApplication::ConnectToServer(int nRetryInterval, int nNumRetries)  
+{
+  ostringstream p;
+  p << m_nPort;
+  string port(p.str());
+
+  // Validate the parameters.
+  
+  if(nRetryInterval <= 0) {
+    throw string("CApplication::ConnectToServer - invalid nRetryInterval");
+  }
+  if(nNumRetries <= 0) {
+    throw string("CApplication::ConnectToServer - invalid nNumRetries");
+  }
+
+
+  // Now loop on connection attempts until connected or the
+  // retry count is exceeded.
+
+
+  while(m_Socket.getState() != CSocket::Connected  && nNumRetries) {
+    try {
+      m_Socket.Connect(m_sHost, port);
+      if(m_Socket.getState() == CSocket::Connected) {
+	break;			// Success!
+      }
+    } 
+    catch (CException& Except) {
+      nNumRetries--;
+      cerr << "Connection to tclserver failed..." 
+	   << Except.ReasonText()
+	   << " " << nNumRetries << "Retries remaining " << endl;
+    }
+    sleep(nRetryInterval);
+  }
+  if((nNumRetries == 0) && (m_Socket.getState() != CSocket::Connected)) {
+    ostringstream error;
+    error << "Unable to connect to " << m_sHost << ":" << m_nPort;
+    throw string(error.str());
+  }
+}
+//// Utility functions:
+
+/*!  
+   Ensure a port number is valid.
+   \param int - port number.
+   \throw string 
+      If the port is invalid a descriptive error message is thrown.
+*/
+void
+CApplication::ValidatePort(int port)
+{
+  // Ports are positive.
+
+  ostringstream error;
+  int maxport = ((1 << (sizeof(short)*8)) -1);
+  
+  if(port < 0) {
+    error << "Invalid port number: " << port 
+          << " Port numbers must be positive integers.";
+    throw string(error.str());
+  }
+  // Ports fit into shorts.
+
+  if(port > maxport)  {
+    error << "Invalid port number. "  << port
+	  << " Port numbers must be <= " << maxport;
+    throw string(error.str());
+ 
+  }
   
 }
+/*!
+   Validate the time interval over which we allow the channels to update.
+   The interval is unbounded on the upper end, however it must be
+   greater than MININTERVAL.  
+   \param interval - the interval in seconds.
+   \throw string 
+      if the interval is not valid.
+*/
+void
+CApplication::ValidateInterval(int interval)
+{
+  if(interval < MININTERVAL) {
+    ostringstream error;
+    error << "Invalid interval value: " << interval
+	  << " Intervals must be >= " << MININTERVAL;
+    throw string(error.str());
+  }
+}
+
+/*!
+   Construct a time from the time_t array in cannonical time form.
+   We steal the time format from sql's concept of time.  A time is 
+   formatted as:
+   /verbatim
+   yyyy-mm-dd hh:mm:ss
+  /endverbatim
+  - yyyy is a four digit year number.
+  - mm   is the two digit month number.
+  - dd   Is the two digit day number.
+  - hh  is the two digit hour.
+  - mm  is the two digit minutes.
+  - ss  is the two digit second.
+
+  This format supports date comparisons as simple lexical string compares.
+  Note that the date 0000-00-00 00:00:00 is used to represent the epoch start
+  time.
+  \param time_t t
+      The time value to convert
+  \return string
+     The formatted time.
+*/
+string
+CApplication::FormatTime(time_t t)
+{
+  if(t == 0) {
+    return string("0000-00-00 00:00:00");
+  } 
+  else {
+    char timestamp[100];
+    struct tm* timestruct = localtime(&t);
+    sprintf(timestamp, "%04d-%02d-%02d %02d:%02d:%02d",
+	    timestruct->tm_year+YEARBASE,
+	    timestruct->tm_mon,
+	    timestruct->tm_mday,
+	    timestruct->tm_hour,
+	    timestruct->tm_min,
+	    timestruct->tm_sec);
+    return string(timestamp);
+  }
+}
+/*!
+   Creates the Set command for a variable, its index and 
+   value.  Note that the value will be quoted and escaped so that
+   the command is always legal.
+   \param arrayname   (const string&)
+     name of the array to do the set command for.
+   \param index       (const string&)
+     index string for the array.
+   \param value       (const string&)
+     value to set the array element to.
+
+*/
+string
+CApplication::GenerateSet(const string& arrayname, const string& index, 
+		     const string& value)
+{
+  if(arrayname == string("")) {
+    // There must be a variable name!!!
+
+    throw string("CApplication::GenerateSet called with a blank arrayname");
+  }
+  if(index == string("")) {
+    // there must be an index...
+    throw string("CApplication::GenerateSet called with a blank index");
+  }
+
+  // Construct the value string escaped and quoted so that 
+  // all possible values will be legal...
+
+  string escaped = CStrings::EscapeString(value.c_str(), 
+					  "\"[$", "\\");
+  string quotedvalue = "\"";
+  quotedvalue += escaped;
+  quotedvalue += "\"";
+
+  // Now construct the command:
+
+  string command("set ");
+  command  += arrayname;
+  command  += "(";
+  command  += index;
+  command  += ") ";
+  command  += quotedvalue;
+  command  += "\n"; 
+
+  return command;
+}
+
+
+/*!
+   Delay for the specified number of seconds.
+   - Check that there are no pending IO's  This should be true since
+     I/O according to EPICS are outstanding get/search requests and we have
+     finished those.  An error is emitted if there are outstanding I/O's.
+     This is informative, not fatal.
+   - Call ca_pend_event for the indicated timeout. According to my reading
+     of the book, this will block me but allow EPICS to continue to do whatever
+     background processing it needs to do.
+   \param seconds (int):
+      Number of seconds to delay.
+
+*/
+void
+CApplication::Delay(int seconds)
+{
+  if(ca_test_io()) {
+    ca_pend_io((float)seconds);
+  }
+    ca_pend_event((float)seconds);
+
+} 
