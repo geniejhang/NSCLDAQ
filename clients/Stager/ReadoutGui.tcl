@@ -288,6 +288,9 @@
 #   Change log:
 #
 # $Log$
+# Revision 3.2.4.2  2004/04/06 13:18:13  ron-fox
+# fix for issue 108 GUI allows overwrite of event file without prompt
+#
 # Revision 3.2.4.1  2004/03/31 18:30:10  ron-fox
 # Address issue 108 - Event files can be ovewritten without any prompts.
 #                     added issue - contrast of disabled entries is bad.
@@ -334,7 +337,13 @@ namespace eval ReadoutGui {
     #  color.  Entry widgets have a disbled background color which provides
     #  sufficient contrast.
     proc ImproveEntryContrast {widget} {
-	$widget config -disabledforeground [$widget cget -foreground]
+	global tk_version
+	scan $tk_version "%d.%d" major minor
+	# Ensure we have the functionality we need for this...
+
+	if { ($major > 8) || (($major == 8) && ($minor >= 4)) } {
+	    $widget config -disabledforeground [$widget cget -foreground]
+	}
     }
 
     #  When called, this proc:

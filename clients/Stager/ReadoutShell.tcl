@@ -438,7 +438,7 @@ proc CheckStageArea {} {
     set targettype  0
     set type [file type $salink]
     if {$type == "link"} {
-	set target [file link $salink]
+	set target [file readlink $salink]
     }
     if {$target != 0} {
 	catch {set targettype [file type $target]}
