@@ -10,7 +10,7 @@ libVme_la_LDFLAGS =  -L@top_srcdir@/VMEApi \
 	-version-info $(SOVERSION):0 -Wl,"-rpath=$(libdir)"
 
 libVme_la_LIBADD =  -lTclPlus -lException  \
-	$(TCL_LDFLAGS)	$(X11LIBS) -lVmeAPI $(VMELIBRARY) -lLicense -lpthread \
+	$(TCL_LDFLAGS)	$(X11LIBS) -lVmeAPI $(VMEBUILDLIBS) -lLicense -lpthread \
 	-lm -lstdc++ -lgcc -lc 
 
 

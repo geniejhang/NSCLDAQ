@@ -5,7 +5,7 @@ AM_CONFIG_HEADER(config.h)
 
 #    Separate device libraries.
 
-AM_INIT_AUTOMAKE(nscldaq, 7.3-013)  
+AM_INIT_AUTOMAKE(nscldaq, 7.3-015)  
 
 #
 #   The variable below should track the
@@ -145,6 +145,26 @@ SPECTRODAQ_LDFLAGS=$($spectrodaq_conf_dir/spectrodaq-conf --libs)
 AC_MSG_RESULT([ found in $spectrodaq_conf_dir ])
 fi
 
+
+#  Now that we have spectrodaq, we need to see if it has a 
+#  spectrodaq_main defined... if so, some of our stuff needs
+#  to implement main().
+#
+AC_LANG_PUSH(C++)
+AC_MSG_CHECKING([spectrodaq has spectrodaq_main() separable])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM[[#include "$spectrodaq_conf_dir/../include/spectrodaq.h"
+main(int argc, char**argv, char** envp)
+{
+  return spectrodaq_main(argc, argv, envp);
+}]]], [separate="yes" ], [separate="no"])
+  
+
+if test "$separate" == "yes"
+then
+   AC_DEFINE([HAVE_SPECTRODAQ_MAIN], 1, [spectrodaq has separable main])
+fi
+AC_MSG_RESULT([$separate])
+AC_LANG_POP(C++)
 
 # Locate Tcl/Tk and setup compile/link switches for them too:
 

@@ -282,6 +282,10 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
   
   Change Log:
    $Log$
+   Revision 3.2.2.2  2004/11/11 15:54:55  ron-fox
+   Support spectrodaq_main separable in production readout with
+   detection at config time.
+
    Revision 3.2.2.1  2004/03/10 13:43:03  ron-fox
    Merged with 7.4 to fix issue 116 (long title, runvar and statevar values
    can cause all sorts of buffer packing grief).
@@ -322,6 +326,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
 //
    */
 
+#include <config.h>
 #include <spectrodaq.h>
 #include "CReadoutMain.h"                  
 #include "cmdline.h"
@@ -695,3 +700,17 @@ CReadoutMain::Exit()
   CReaper::getInstance()->clear(); // Don't reap threads that are being
   m_fExit = true;		// destroyed.
 }
+
+// If spectrodaq main is separable, then I need to define main
+// here to ensure that TCL++'s main is not pulled in by mistake.
+//
+
+#ifdef HAVE_SPECTRODAQ_MAIN
+int
+main(int argc, char** argv, char** envp) 
+{
+  return spectrodaq_main(argc, argv, envp);
+}
+
+
+#endif

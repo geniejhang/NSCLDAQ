@@ -136,3 +136,7 @@
      rather than build dirs.
    - Increase controlpush connection timeouts, had some intermittent
      connection failures.
+7.3-016
+   - ProductionReadout/CReadoutMain.cpp must define main() if spectrodaq_main()
+     is defined, otherwise, TCL++'s main get's pulled in first since
+     main was separated into a different module of spectrodaq.

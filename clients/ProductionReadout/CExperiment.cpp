@@ -282,6 +282,10 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
    
    Modification History:
    $Log$
+   Revision 3.4.2.3  2004/11/11 15:54:55  ron-fox
+   Support spectrodaq_main separable in production readout with
+   detection at config time.
+
    Revision 3.4.2.2  2004/03/24 14:49:22  ron-fox
    Incorporate merges from 7.4 line to fix problem with elapsed time keeping.
 
@@ -678,6 +682,7 @@ CExperiment::Start(CStateTransitionCommand& rCommand)
   // Prepare the hardware for readout:
 
   m_EventReadout.Initialize();	// Initialize the event readout...
+  m_Scalers.Initialize();
   m_Scalers.Clear();
   m_EventReadout.Clear();	// Clear digitizers prior to start.
 
