@@ -15,3 +15,5 @@ noinst_HEADERS = TclAuthorizer.h \
 	serverinstance.h
 	
 man_MANS = tclserver.1
+
+EXTRA_DIST = tclserver.1

@@ -7,3 +7,5 @@ eventlog_LDADD=-L@top_srcdir@/CopyrightTools -L@top_srcdir@/Ftp -lftp \
 eventlog_LDFLAGS=-Wl,"-rpath=$(libdir)"
 
 man_MANS = eventlog.1
+
+EXTRA_DIST = eventlog.1
