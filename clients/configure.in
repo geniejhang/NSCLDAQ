@@ -512,6 +512,7 @@ AC_OUTPUT( Makefile Headers/Makefile CopyrightTools/Makefile \
 	contrib/lecroy/Makefile contrib/whedco/Makefile \
 	contrib/caenv812/Makefile contrib/scriptedReadout/Makefile \
 	contrib/scalerdisplay/Makefile contrib/N568Panel/Makefile \
+	contrib/vhqpanel/Makefile \
 	vmetcl/Makefile \
 	vmetcl/camactcl/Makefile vmetcl/vhq202m/Makefile bufdump/Makefile \
 	TclServer/Makefile bcnaf/Makefile TcpHoister/Makefile Stager/Makefile \

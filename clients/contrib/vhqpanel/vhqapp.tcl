@@ -7,6 +7,8 @@ set mydir [file dirname $me]
 
 source $mydir/vhqpanel.ui.tcl
 
+set crate 0;           # Default vme crate number.
+
 
 #
 #  Set default channel values (e.g. if raw config file).
@@ -52,6 +54,9 @@ proc ReadConfig {file} {
     global ILimit
     global base maxv maxi resi description
     global name
+    global crate
+    
+    set   crate 0;    # Default crate is 0.
 
     Unset SetPoint 
     Unset RampSpeed 
@@ -73,6 +78,7 @@ proc ReadConfig {file} {
     bind .$name <Destroy> exit
 
 
+	set $name\(crate) $crate
     set $name\(base) $base
     set $name\(maxv) $maxv
     set $name\(maxi) $maxi
