@@ -7,6 +7,6 @@ install-exec-local:
 
 EXTRA_DIST = ScalerDisplay.tcl mwutil.tcl notebook.tcl scaler.tcl \
 	tablelist.tcl tablelistSortByColumn.tcl tablelistWidget.tcl \
-	tabnbook.tcl ScalerDisplay scalerdisplay.1
+	tabnbook.tcl ScalerDisplay.in scalerdisplay.1
 
 man_MANS = scalerdisplay.1
