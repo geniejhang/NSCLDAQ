@@ -304,11 +304,12 @@ class CLookupVisitor  : public CChannelVisitor
 {
 private:
   float m_fTimeout;		//!< How long to give the lookup.
+  float m_fLongTimeout;		//!< How long to give slow lookups.
 
 
 
 public:
-  CLookupVisitor(float t);
+  CLookupVisitor(float tfast, float tslow);
   void operator() (CChannel* pChannel)   ; //!< Per channel action.
 
 };

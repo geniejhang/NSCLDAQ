@@ -157,7 +157,7 @@ const string Names[]={
   "Z001DV", "Z002DH",
   "STRCHAN50", "STRCHAN40",
   "FLTCHAN59", "FLTCHAN67",
-  "FLTCHAN70"};
+  "FLTCHAN70","P#3:42502#f"};
 const int nNames = (sizeof(Names)/sizeof(string));
 
 void

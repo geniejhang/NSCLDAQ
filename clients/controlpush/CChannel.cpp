@@ -549,14 +549,20 @@ CChannel::Lookup(float Timeout)
   epicsstatus = ca_search(m_sName.c_str(), &m_nId);
   m_nCaMessage = epicsstatus;
   if(epicsstatus == ECA_NORMAL) {
-    m_nCaMessage = epicsstatus = ca_search(units.c_str(), &m_nUnitId);
-    if(epicsstatus != ECA_NORMAL) {
-
-      // Can't get to first base with the units field.
-
+    if((m_sName[0] == 'P') && (m_sName[1] == '#')) { // PLC - no units.
       m_fHaveUnits = false;
+
+    } 
+    else {
+      m_nCaMessage = epicsstatus = ca_search(units.c_str(), &m_nUnitId);
+      if(epicsstatus != ECA_NORMAL) {
+	
+	// Can't get to first base with the units field.
+	
+	m_fHaveUnits = false;
+      }
     }
-    // Wait for the nodes to answer:
+      // Wait for the nodes to answer:
     
     m_nCaMessage = epicsstatus = ca_pend_io(Timeout);
     

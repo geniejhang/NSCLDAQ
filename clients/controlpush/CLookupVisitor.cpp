@@ -286,8 +286,9 @@ DAMAGES.
    \param fTimeout (float);
       Number of seconds to allow the lookup to take.
 */
-CLookupVisitor::CLookupVisitor(float fTimeout) :
-  m_fTimeout(fTimeout)
+CLookupVisitor::CLookupVisitor(float tfast, float tslow) :
+  m_fTimeout(tfast),
+  m_fLongTimeout(tslow)
 {
 }
 
@@ -308,7 +309,12 @@ CLookupVisitor::operator()(CChannel* pChannel)
   if(pChannel->GetState() == CChannel::Dead) {
     pChannel->Revive();
   }
-  pChannel->Lookup(m_fTimeout);
+  float timeout = m_fTimeout;	// Use fast timeout by default.
+  string ChannelName = pChannel->GetName();
+  if((ChannelName[0] == 'P') && (ChannelName[1] == '#')) {
+    timeout = m_fLongTimeout;
+  }
+  pChannel->Lookup(timeout);
   if(pChannel->GetState() == CChannel::Dead) {
     cerr << "Unable to connect to channel: " << pChannel->GetName()
 	 << " I will retry next connection to tclserver " << endl;
