@@ -48,3 +48,6 @@
 - Fix some doxygen errors in Framework.
 - CIntConfigParam.cpp - suport unsigned 32 bits as well as signed.
 - CCAENModule.cpp - make "waitloops" for data ready adjustable.
+- Fix DiskRun stack clobber problem.
+- Add -p to tar in Experiment.tcl that creates the ~/experiment/runn dirs.
+  otherwise user's umask can modify the output permissions.
