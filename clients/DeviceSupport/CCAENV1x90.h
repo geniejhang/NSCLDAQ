@@ -45,8 +45,8 @@ software.
 Change Log:
 
 $Log$
-Revision 1.1.2.1  2004/06/18 11:17:41  ron-fox
-Add support for CAEN v1190/1290 TDC's.
+Revision 1.1.2.2  2004/06/29 14:50:15  ron-fox
+Merge in development line for the CAENV1x90 module.
 
 */
 #ifndef __CCAENV1x90_H
