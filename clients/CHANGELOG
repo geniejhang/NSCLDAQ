@@ -57,3 +57,8 @@
 - Issue 109 Provide mechanism to hide ReadoutShell's parameters.
 - Added support for CAENV1190/1290 TDC module.
   o Correct the bad info about the leading/trailing edge detect Carlo gave me.
+- Repair defect 138: Scripted Readout leaks file descriptors.  I had
+  had problems getting rid of the old configuration at begin of run and
+  had decided to live with the memory leak, but it turns out that also
+  leaks file descriptors as module objects stay around and those run out
+  first.
