@@ -279,6 +279,10 @@ DAMAGES.
 /*
   Change Log:
   $Log$
+  Revision 1.3.4.2  2004/08/17 20:38:09  ron-fox
+  Fix error in #ifdef/#else without #endif in code to selectively enable
+  the copying functionality.
+
   Revision 1.3.4.1  2004/08/17 09:00:54  ron-fox
   Use CopyIn again where it's possible.. the assumption is that
   everyone has a good spectrodaq!!!
@@ -1201,10 +1205,11 @@ int CAENcard::readEvent(DAQWordBufferPtr& wp)
     wp.CopyIn(localBuffer, 0, nWords);
     wp += nWords;
 #else
-	for(int i =0; i < nWords; i++) {
-		*wp = *pBuf++;
-		++wp;
-	}
+    for(int i =0; i < nWords; i++) {
+      *wp = *pBuf++;
+      ++wp;
+    }
+#endif
     return nWords;
   }
   return 0;
