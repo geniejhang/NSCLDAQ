@@ -54,3 +54,5 @@
 - Issue 115: do non-blocked writes to spectcldaq's output pipe, and \
   analyze the returns thoroughly to try to remove the occaisional hung
   spectcldaq process.
+- Issue 109 Provide mechanism to hide ReadoutShell's parameters.
+- Added support for CAENV1190/1290 TDC module.
