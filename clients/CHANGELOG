@@ -128,4 +128,5 @@
      from becoming non-numeric.
 7.3-012
    - Allow caennet controllers to live in any VME crate (caennet.tcl).
+   - Fix defect 143 - last scaler has incorrect value from sclclient.
 
