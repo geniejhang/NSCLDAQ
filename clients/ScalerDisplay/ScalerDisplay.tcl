@@ -1,7 +1,11 @@
-#!/bin/sh
-#   NOTE:: tclserver must live in the path.
-#   start tclserver on us. \
-exec tclserver  -p2700  ${0} ${@}
+# Meant to be run on Tclserver.
+#
+
+puts "---------------------------------"
+
+
+puts $argc
+puts $argv
 
 #  We require DAQHOST to be an environment
 #  variable that is the name of the spdaq system.
@@ -9,7 +13,7 @@ exec tclserver  -p2700  ${0} ${@}
 
 if {[array names env DAQHOST] == ""} {
 	tk_dialog .failure "No DAQ HOST" \
-	"The DAQHOST environment variable must be set to the spdaq system you are using"
+	"The DAQHOST environment variable must be set to the spdaq system you're using" \
 	error 0 Dismiss
 	exit -1
 }
@@ -21,17 +25,19 @@ set spdaqurl tcp://$spdaq:2602/
 #  which is the name of their setup file.
 #
 
-if {[llength $argv] != 1} {
-   tk_dialog .failure "No setup file"
-   "You must supply a command argument that is your scaler config file"
+if {[llength $argv] != 2} {
+   tk_dialog .failure "No setup file" \
+   "You must supply a command argument that is your scaler config file" \
    error 0 Dismiss
    exit -1
 }
+set file [lindex $argv 0]
+
 #  And the file must be readable...
 #
-if {![file readable $argv]} {
-	tk_dialog .failure "Unreadable setup file"
-	"The setup file $argv is not readable by me and must be"
+if {![file readable $file]} {
+	tk_dialog .failure "Unreadable setup file" \
+	"The setup file $file  is not readable by me and must be" \
 	error 0 Dismiss
 	exit -1
 }
@@ -46,16 +52,16 @@ if {![file readable $argv]} {
 set me [info script]
 set mydirectory [file dirname $me]
 set bindir     $mydirectory/../bin
-set scriptdir  $mydirectory../Scripts
+set scriptdir  $mydirectory/../Scripts
 source $scriptdir/scaler.tcl
 
 #
 #  Source the user's setup file:
 #
 
-if {[catch source $argv msg]} {
-   tk_dialog .failure "Setup file failure"
-   "There is an error in the setup file $argv : $msg"
+if {[catch "source $file" msg]} {
+   tk_dialog .failure "Setup file failure" \
+   "There is an error in the setup file $argv : $msg" \
    error 0 Dismiss
    exit -1
 }
