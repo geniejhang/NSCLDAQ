@@ -32,9 +32,7 @@ libScriptedRdo_la_SOURCES = CBoolConfigParam.cpp \
 	CScalerModule.cpp \
 	CStringArrayparam.cpp \
 	CStringConfigParam.cpp \
-	CTriggerCommand.cpp \
-	CConfigurableObject.cpp
-
+	CTriggerCommand.cpp 
 libScriptedRdo_la_LDFLAGS = -version-info $(SOVERSION):0
 
 noinst_HEADERS=CBoolConfigParam.h \
@@ -63,8 +61,7 @@ noinst_HEADERS=CBoolConfigParam.h \
 	CScalerModule.h \
 	CStringArrayparam.h \
 	CStringConfigParam.h \
-	CTriggerCommand.h  \
-	CConfigurableObject.h
+	CTriggerCommand.h 
  
 
 INCLUDES=  $(VMEBUILDEADERS) \
