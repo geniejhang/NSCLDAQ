@@ -343,12 +343,23 @@ proc SourceExperimentFiles {} {
     }
 }
 
-if {$argc != 4} Usage
+if {$argc < 3} Usage
 
 set host [lindex $argv 0]
 set path [lindex $argv 1]
 set ftphost [lindex $argv 2]
 set pass [lindex $argv 3]
+
+# modification to avoid password display on command line
+# 2004-02-17 09:53 AS
+if {$pass == ""} {
+ set passwordfile $env(HOME)/.password
+ if {[file exist $passwordfile]} {
+  set fd [open $passwordfile]
+  set pass [gets $fd]
+  close $fd
+ }
+}
 
 SourceExperimentFiles
 
