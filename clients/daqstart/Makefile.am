@@ -19,7 +19,7 @@ AM_CXXFLAGS	= -D_GNU_SOURCE
 cmdline.c: daqstart.ggo
 	gengetopt --unamed-opts <daqstart.ggo
 
-EXTRA_DIST=daqstart.ggo popup.tcl daqstart.1
+EXTRA_DIST=daqstart.ggo popup.tcl daqstart.1 Makefile.am
 
 man_MANS = daqstart.1
 

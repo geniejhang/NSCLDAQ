@@ -284,7 +284,7 @@
 #
 #   Lives in the namespace ::camac::
 #   Exported procs:
-#       cdreg  b c n             - Produce a handle to a camac module.
+#       cdreg  b c n [vmecrate]  - Produce a handle to a camac module.
 #       cfsa   reg f a ?d?       - Perform a 24 bit camac operation.
 #       cssa   reg f a ?d?       - perform a 16 bit camac operation
 #       qstop  reg f a ?maxn?    - Perform a qstop read.
@@ -293,16 +293,19 @@
 # 
 #  The following functions have no corresponding operation in the standard:
 #
-#       isOnline b c             - Tests for crate online.
-#       getGl    b               - Reads the branch graded lam register.
+#       isOnline b c [vmecrate]  - Tests for crate online.
+#       getGl    b [vmecrate]    - Reads the branch graded lam register.
 #
 #  The following functions assume that the crate controller is a BiRa 1302
 #
-#       C        b c             - C cycle a crate
-#       Z        b c             - Z cycle a crate.
-#       isInhibited b c          - Check inhibit status of crate.
-#       Inhibit  b c  bool       - Set crate inhibit.
-#       ReadLams b c             - Read controller lam mask.
+#       C        b c [vmecrate]       - C cycle a crate
+#       Z        b c                  - Z cycle a crate.
+#       isInhibited b c [vmecrate]    - Check inhibit status of crate.
+#       Inhibit  b c  bool [vmecrate] - Set crate inhibit.
+#       ReadLams b c  [vmecrate]      - Read controller lam mask.
+# NOTE:
+#   the optional vmecrate parameter in the functions below defaults to 0 
+#   for compatibility with existing software.
 #
 
 package provide camac 1.0
@@ -313,6 +316,12 @@ namespace eval camac {
 #    camac will describe a mapping of the entire branch highway space.
 
     variable camac [vme create ces8210 -device /dev/vme24d16 0x800000 0x400000]
+#
+#    Camac is an array that will be idexed by branch/vme crate.
+#    Each element of the array will select the mapping for a single
+#    branch highway module.
+#
+    variable camac
 
     namespace export cdreg cfsa cssa qstop qscan cblock
     namespace export isOnline getGl
