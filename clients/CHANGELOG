@@ -87,3 +87,4 @@ Week of August 16, 2004
 - Bring scaler display software into mainline part of distribution.
 - Add man page for sclclient.
 - Add man page for bufdump.
+- Add man page for tclserver

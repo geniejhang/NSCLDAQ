@@ -13,3 +13,5 @@ INCLUDES = -I@top_srcdir@/Headers -I@top_srcdir@/Exception \
 noinst_HEADERS = TclAuthorizer.h \
 	server.h \
 	serverinstance.h
+	
+man_MANS = tclserver.1
