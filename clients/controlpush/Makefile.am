@@ -295,7 +295,8 @@ include_HEADERS= cmdline.h CApplication.h CChannelList.h \
 
 controlpush_LDADD   = -L@top_srcdir@/Exception -lException \
 			-L@top_srcdir@/CopyrightTools -lLicense \
-			$(EPICS_LDFLAGS)
+			$(EPICS_LDFLAGS) 
+controlpush_LDFLAGS= -Wl,"-rpath=$(libdir)"
 INCLUDES            =   -I@top_srcdir@/Exception \
 			-I@top_srcdir@/CopyrightTools \
 			-I@top_srcdir@/Headers        \

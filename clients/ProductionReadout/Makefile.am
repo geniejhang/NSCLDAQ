@@ -138,7 +138,7 @@ libPReadout_la_LDFLAGS = -g -version-info $(SOVERSION):0 \
 	-L@top_srcdir@/VMEApi \
 	-L@top_srcdir@/Exception \
 	-lEventFramework -lVmeAPI -lException -lrt  $(SPECTRODAQ_LDFLAGS) \
-	$(TCL_LDFLAGS) $(X11LIBS) 
+	$(TCL_LDFLAGS) $(X11LIBS) -Wl,"-rpath-link=$(libdir)"
 
 INCLUDES =  $(CAMAC) -I@top_srcdir@/Headers \
 	$(VMEBUILDHEADERS)        \

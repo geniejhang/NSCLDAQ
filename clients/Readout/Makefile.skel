@@ -12,7 +12,7 @@ CC = gcc
 
 
 LDFLAGS=-L$(LIBDIR) -lReadout -lDeviceSupport -lException  $(VMELIBRARY) \
-	$(SPECTRO_LDFLAGS)
+	$(SPECTRO_LDFLAGS) -Wl,"-rpath=$(LIBDIR)"
 
 CXXFLAGS = -c -D__UNIX__ $(SPECTRO_FLAGS) -I$(INCLUDEDIR) \
 	-I$(VMELIBRARYHEADERS) $(CAMAC)

@@ -24,3 +24,5 @@
   the actual timer trigger so that the latency is unimportant.
 - Fix issue 108: Event data files can be overwritten without any prompts.
                  Added to this fix for disabled entry widget poor contrast.
+- Put -rpaths in all the Makefiles so we don't need LD_LIBRARY_PATH
+  and we always get the right directory.

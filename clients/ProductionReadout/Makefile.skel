@@ -26,7 +26,8 @@ LDFLAGS=-g
 LIBFLAGS=-L. -L$(LIBDIR)  -L/usr/X11R6/lib -lPReadout \
 	-lEventFramework -lDeviceSupport -lVmeAPI $(VMELIBRARY) \
 	 -lTclPlus  -lException  \
-	$(SPECTRO_LDFLAGS) -ltk -ltcl -lXm -lXt -lX11 -lm -lLicense
+	$(SPECTRO_LDFLAGS) -ltk -ltcl -lXm -lXt -lX11 -lm -lLicense \
+	-Wl,"-rpath=$(LIBDIR)"
 
 #
 #  Add any additional compiler flages you need here.
