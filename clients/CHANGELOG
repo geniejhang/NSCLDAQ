@@ -88,3 +88,7 @@ Week of August 16, 2004
 - Add man page for sclclient.
 - Add man page for bufdump.
 - Add man page for tclserver
+- Fix defect 140: Support multiple VME crates for shaper GUI:  
+  Also did a whole bunch of common code factorization out into shaperapp.tcl.
+  the GUI's are now only shadows of their former selves, and shaperapp16.tcl
+  is as well
