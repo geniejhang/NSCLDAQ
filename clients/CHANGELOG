@@ -146,3 +146,5 @@
      have any undefs from pthread.
    - Need to fix some ExprLong's that should be strtol's to work with
      TCL-8.4 where ExprLong limits at signed longs.
+   - Fix long standing uncaught typo in Readout/Reader.cpp where the
+     m_pTrigger member was used where m_pBusy was intended at init.
