@@ -69,3 +69,4 @@
 Week of July 26, 2004:
 - Added man page for daqstart -> $prefix/man/man1.
 - Added daqman command to retrieve daq man-pages.
+- Support caennet controllers in any crate number.
