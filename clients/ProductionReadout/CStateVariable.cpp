@@ -401,7 +401,7 @@ CStateVariable::FormatForBuffer(int nMaxchars)
       result += " \"";
       minlen  = result.size();	// set varname \"
       result += CStrings::EscapeString(pValue, 
-				       "\"[$", "\\");
+				       "\"[$#", "\\");
     }
   }
   else {			// Array value.
@@ -414,7 +414,7 @@ CStateVariable::FormatForBuffer(int nMaxchars)
       result += ") \"";
       const char* pValue  = Get(TCL_GLOBAL_ONLY, 
 				(char*)(i->first).c_str());
-      result += CStrings::EscapeString(pValue, "\"[$", "\\");
+      result += CStrings::EscapeString(pValue, "\"[$#", "\\");
       i++;
     }
     minlen=result.size() + 2;	// Not quite sure what to do here.

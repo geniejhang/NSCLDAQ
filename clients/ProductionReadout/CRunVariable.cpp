@@ -385,7 +385,7 @@ CRunVariable::FormatForBuffer(int nMaxchars)
     result += getVariableName();
     result += " \"";
     minlen = result.size();
-    result += CStrings::EscapeString(pValue, "\"[$", "\\");
+    result += CStrings::EscapeString(pValue, "\"[$i#", "\\");
   } 
   else {			// Variable has become undefined:
     result = "# ";
