@@ -24,5 +24,5 @@ EXTRA_DIST=daqstart.ggo popup.tcl
 install-exec-local:
 	$(mkinstalldirs) $(prefix)/Scripts
 	$(INSTALL_SCRIPT) popup.tcl $(prefix)/Scripts
-	$(LN_S)  $(prefix)/Scripts/popup.tcl $(bindir)/popup
+	$(LN_S)  $(prefix)/Scripts/popup.tcl $(bindir)/PopUp
 

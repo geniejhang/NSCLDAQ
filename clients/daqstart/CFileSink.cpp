@@ -131,7 +131,7 @@ bool
 CFileSink::Log(const string& Message)  
 {
   string line = FormatLine(Message);
-  write(m_nFd, Message.c_str(), Message.size());
+  write(m_nFd, line.c_str(), line.size());
   
 }
 /*!

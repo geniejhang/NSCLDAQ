@@ -18,6 +18,7 @@
 #include "CSink.h"    				
 
 #include <time.h>
+#include <string.h>
 
 /*!
     Create an object of type CSink
@@ -69,7 +70,7 @@ CSink& CSink::operator= (const CSink& rhs)
 int 
 CSink::operator== (const CSink& rhs) const
 {
-  m_sCommand == rhs.m_sCommand;
+  return m_sCommand == rhs.m_sCommand;
 }
 
 
@@ -101,7 +102,10 @@ CSink::FormatLine(string sMessage)
   time_t t;
   time(&t);
   output += '[';
-  output += ctime(&t);
+  char* pTime = strdup(ctime(&t));
+  pTime[strlen(pTime)-1] = '\0'; // Kill \n.
+  output += pTime;
+  free(pTime);
   output += "] ";
   
   // Put in the command string too:
@@ -114,5 +118,6 @@ CSink::FormatLine(string sMessage)
 
   output += sMessage;
 
+  return output;
 }
 

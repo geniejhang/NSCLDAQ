@@ -1,6 +1,6 @@
 package "daqstart"
 version "1.0"
-purpose "Command line parse description for gengetopt for daqstart use --unamed-opts"
+purpose "Start a program with loggin of stdout, stderr and exit notification"
 
 option "error"   e "Error log sink (e.g. file:myfile.log)" string no
 option "output" o "Output log sink (e.g. file:myfile.log)" string no

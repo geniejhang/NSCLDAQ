@@ -12,12 +12,14 @@
 #include <DesignByContract.h>
 #include <ErrnoException.h>
 
+#include <iostream>
 
 #include <fcntl.h>
 #include <unistd.h>   				
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -113,8 +115,8 @@ CLocalMonitoredProgram::Start()
     throw CErrnoException("Forking subprocess failed");
   }
   if(m_nPid > 0) {		// Parent process.
-    close(StdOutPipes[1]);	// Close the write side of stdout
-    close(StdErrPipes[1]);	// and stderr pipes.
+    //    close(StdOutPipes[1]);	// Close the write side of stdout
+    //    close(StdErrPipes[1]);	// and stderr pipes.
     m_fRunning = true;		// The subprocess is running.
     m_sStdoutLine = "";		// Empty the input buffers.
     m_sStderrLine = "";
@@ -126,16 +128,18 @@ CLocalMonitoredProgram::Start()
     // Dup the pipes to stderr and stdout.
 
     close(STDOUT_FILENO);
-    CHECK(dup2(StdOutPipes[1], STDOUT_FILENO), "Stdout dup failed");
+    dup2(StdOutPipes[1], STDOUT_FILENO);
     close(STDERR_FILENO);
-    CHECK(dup2(StdErrPipes[1], STDERR_FILENO), "Stderr dup failed");
+    dup2(StdErrPipes[1], STDERR_FILENO);
 
     // Now exec the subprocess:
 
     char** argv = GetArgs();	// This is null terminated so just:
     execvp(argv[0], argv);	// Should not return!!
-    CHECK(0, "Execvp failed!!");
-    
+    cerr << "Unable to run " << argv[0] 
+	 << " : " 
+	 << errno << " : " << strerror(errno) << endl;
+    exit(-1);
   }
   else {			// BUG!!
     CHECK(0, "fork evidently failed, but we didn't exit");
@@ -200,7 +204,12 @@ CLocalMonitoredProgram::PollIO(int nMs)
   // 0's just a timeout and is ignored.
 
   if(nPollStatus < 0) {		// Error from poll
-    throw CErrnoException("PollIO poll failed");
+    if(errno != EINTR) {
+      throw CErrnoException("PollIO poll failed");
+    }
+    else {
+      ;				// EINTR is a no-op.
+    }
   } 
   else if(nPollStatus > 0) {	// At least one fd with stuff.
     // Flag checks:
@@ -261,7 +270,8 @@ CLocalMonitoredProgram::PollStatus()
   pid_t pid = waitpid(m_nPid, &nExitStatus, WNOHANG);
 
   if(pid > 0) {			// Info on pid returned.. could be stopped.
-    if(WIFEXITED(nExitStatus)) { // So be sure the process exited before
+    if(WIFEXITED(nExitStatus) ||
+       WIFSIGNALED(nExitStatus)) { // So be sure the process exited before
       m_fRunning = false;	// and indicating the process is not running
       SetFinalStatus(nExitStatus); // Save status in base class.
       return true;
@@ -336,7 +346,7 @@ CLocalMonitoredProgram::ProcessInputFd(int nFd, string& sOutline,
 				     short nPollFlags)
 {
   if(nPollFlags & (POLLERR | POLLHUP | POLLNVAL)) {
-    throw string(" Poll succeeded but with flags showing errors");
+    StdErr("Poll returned flags other than POLLIN, POLLOUT");
   }
   if(nPollFlags & (POLLIN | POLLPRI)) {
     //

@@ -157,17 +157,19 @@ CDAQStart::operator()(int argc , char** argv)
 
     m_pProgram = new CLocalMonitoredProgram(pArgs->inputs_num,
 					    pArgs->inputs);
+    CSink* pOutSink(0);
+    CSink* pErrSink(0);
 
     if(pArgs->output_given) {
-      CSink* pSink =  CreateSink(pArgs->output_arg);
-      if(pSink) {
-	m_pProgram->AttachOutput(pSink);
+      pOutSink =  CreateSink(pArgs->output_arg);
+      if(pOutSink) {
+	m_pProgram->AttachOutput(pOutSink);
       }
     }
     if(pArgs->error_given) {
-      CSink* pSink = CreateSink(pArgs->error_arg);
-      if(pSink) {
-	m_pProgram->AttachError(pSink);
+      pErrSink = CreateSink(pArgs->error_arg);
+      if(pErrSink) {
+	m_pProgram->AttachError(pErrSink);
       }
     }
     if(pArgs->notify_given) {
@@ -178,7 +180,10 @@ CDAQStart::operator()(int argc , char** argv)
     }
 
     StartSubprocess();
-    return MainLoop();
+    int stat = MainLoop();
+    delete pOutSink;
+    delete pErrSink;
+    return stat;
   }
   else {
     Usage();
@@ -209,6 +214,7 @@ CDAQStart::MainLoop()
   while(!MonitorExit()) {
     MonitorOutput(OUTPUTTIMEOUT);
   }
+  MonitorOutput(OUTPUTTIMEOUT);	// Get the last drips from the pipe.
   if(m_fNotifyExit) {
     ReportExit();
   }
@@ -349,7 +355,7 @@ CDAQStart::CreateSink(const char* name)
     return (CSink*)NULL;	// The only failure we can provide
   }
   string sType = pType;
-  string sName(SinkType(name2));
+  string sName(SinkName(name2));
 
     free(name1);
     free(name2);
@@ -364,10 +370,18 @@ CDAQStart::CreateSink(const char* name)
 void
 CDAQStart::ReportExit()
 {
-  string ExitMessage("Program exited.  Final status: ");
+  string ExitMessage;
   char   formatted[100];
-  
   int status = m_pProgram->GetFinalStatus();
+
+  for(int i =0; i < m_nArgc; i++) {
+    ExitMessage += m_pArgv[i];
+    ExitMessage += ' ';
+  }
+
+  ExitMessage += ": Program exited.  Final status: ";
+
+
   sprintf(formatted, " %d ", WEXITSTATUS(status));
   ExitMessage += formatted;
   
@@ -378,6 +392,7 @@ CDAQStart::ReportExit()
 	    "Unknown signal");
     ExitMessage += formatted;
   }
+  ExitMessage+="\n";
   m_pProgram->StdErr(ExitMessage);
   
   // If the Display env var is present, pop up a dialog:
