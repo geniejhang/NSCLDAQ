@@ -5,7 +5,7 @@ SUBDIRS = btdriver \
 	vmetcl  \
 	bufdump TclServer bcnaf TcpHoister Stager Scripts framework \
 	AlarmDisplay LogDisplay ProductionReadout  \
-	contrib dvdburn daqstart $(EPICSSOFTWARE)
+	contrib dvdburn daqstart $(EPICSSOFTWARE) ScalerDisplay
 
 EXTRA_DIST =  config/install-sh config/config.sub config/config.guess \
 	config/ltmain.sh config/missing config/mkinstalldirs  \
