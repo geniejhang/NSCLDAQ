@@ -29,3 +29,4 @@
 - Use includes in skeleton makefiles to try to isolate stuff we might modify
   from stuff the user might modify.
 - Add a build stamp to the installation procedure.
+- Fix incompatibility (bug 121) with Tcl 8.4 for cratelocator.tcl
