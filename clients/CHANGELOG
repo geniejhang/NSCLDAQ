@@ -138,3 +138,5 @@ Week of November 1:
        VC32 interface, use -DVC32CAMAC not -DWIENERCAMAC
      - Correct mis-spelled macro name is Production readout skeleton Makefile
        clean target.
+     - Fix some typos in contrib/N568Panel goShaper goShaper16 as well as
+       document the need to run this in an spdaq system.
