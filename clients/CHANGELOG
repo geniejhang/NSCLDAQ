@@ -114,3 +114,6 @@
      data source.  At the NSCL this is an unusual occurence.  Note that
      the warning will be sent via an Xwindows window if possible or if not
      via stderr.
+7.3-010 
+   - Modify VMEPtr.cpp - was ignoring the crate number.!!!
+   - TCLList.cpp - needs to use Tcl_Free not free() for TCL 8.4 and higher.
