@@ -319,6 +319,7 @@ CCAENModule::CCAENModule(const string & rName,
   AddIntArrayParam(string("enable"), CHANNELS, 1);
   AddIntParam(string("base"), 0);
   AddBoolParam(string("multievent"), false);
+  AddIntParam(string("fastclearwindow"), 0);
 
   // This parameter is added to allow us to source in 
   // SpecTcl configuration scripts too!!
@@ -367,6 +368,13 @@ CCAENModule::CCAENModule(const string & rName,
   assert(i != end());
   pArray = (CIntArrayParam*)*i;
   pArray->setRange(0,1);
+
+  // Fast clear window runs from 0, 2000000:
+
+  i = Find(string("fastclearwindow"));
+  assert(i != end());
+  pInt = (CIntConfigParam*)*i;
+  pInt->setRange(0, 2000000);
   
 }
 /*!
@@ -480,6 +488,16 @@ CCAENModule::Initialize()
     pBool = (CBoolConfigParam*)*i;
     m_fMultiEvent = pBool->getOptionValue();
 
+
+    // Fast clear window:
+    
+    i = Find("fastclearwindow");
+    assert(i != end());
+    pInt = (CIntConfigParam*)*i;
+    float ns = (float)(pInt->getOptionValue());
+    int   registervalue = (int)((ns/31.25) + 0.5);
+    m_pCAENcard->setFastClearWindow(registervalue);
+    
     // Finally set the begin run state:
     
     m_pCAENcard->resetEventCounter();
