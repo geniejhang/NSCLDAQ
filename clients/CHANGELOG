@@ -15,5 +15,7 @@
    restarts soon.
 - Fix incorrect base address of VME trigger/status module was 0xf000 s.b.
   0x444400 (production readout)
+- Fix issue 076: Elapsed time from readout classic is not correct.
 - Fix issue 116: Titles, runvars and statevars that don't fit can cause
   a great deal of grief.
+- Fix issue 106: Elapsed time from runs is not correct for production rdo.
