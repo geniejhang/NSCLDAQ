@@ -320,6 +320,7 @@ CCAENModule::CCAENModule(const string & rName,
   AddIntParam(string("base"), 0);
   AddBoolParam(string("multievent"), false);
   AddIntParam(string("fastclearwindow"), 0);
+  AddIntParam(string("waitloops"), WAITLOOPS);
 
   // This parameter is added to allow us to source in 
   // SpecTcl configuration scripts too!!
@@ -339,6 +340,15 @@ CCAENModule::CCAENModule(const string & rName,
   ParameterIterator i;
   CIntConfigParam*  pInt;
   CIntArrayParam*   pArray;
+
+  // waitloops in the range 1-1000 (that's big, 1000, I really
+  // want to make sure no joker sets it to 0 or negative.
+  //
+
+  i = Find("waitloops");
+  assert(i != end());
+  pInt = (CIntConfigParam*)*i;
+  pInt->setRange(1, 1000);
 
   // Crate numbers are in the range [0-7]:
 
@@ -497,7 +507,14 @@ CCAENModule::Initialize()
     float ns = (float)(pInt->getOptionValue());
     int   registervalue = (int)((ns/31.25) + 0.5);
     m_pCAENcard->setFastClearWindow(registervalue);
-    
+
+    // How long should we wait for data ready:
+
+    i = Find("waitloops");
+    assert(i != end());
+    pInt = (CIntConfigParam*)*i;
+    m_nLoopTime = pInt->getOptionValue();
+
     // Finally set the begin run state:
     
     m_pCAENcard->resetEventCounter();
@@ -530,7 +547,7 @@ void CCAENModule::Read(DAQWordBufferPtr& rBuffer)
 {
 
   if(m_pCAENcard){
-    for(int i = 0; i < WAITLOOPS; i++) {
+    for(int i = 0; i < m_nLoopTime; i++) {
       if(m_pCAENcard->dataPresent()) break;
     }
     if(m_pCAENcard->dataPresent()) 

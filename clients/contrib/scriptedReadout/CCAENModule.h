@@ -59,6 +59,7 @@ class CCAENModule : public CDigitizerModule
 private:
   CAENcard* m_pCAENcard;	//!< Pointer to the underlying driver
   bool      m_fMultiEvent;	//!< If true Prepare does not clear.
+  int       m_nLoopTime;         //!< # times to wait for data ready.
 public:
   // Constructors:
   CCAENModule(const string& rCommand,

@@ -453,7 +453,7 @@ CIntConfigParam::SetValue(CTCLInterpreter& rInterp,
     return TCL_ERROR;
   }
   else {
-    nNewValue = rInterp.ExprLong(pValue);
+    nNewValue = llnewvalue;
   }
   if(m_fCheckrange) {
     if((nNewValue < m_nLow) || 

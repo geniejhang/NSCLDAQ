@@ -26,9 +26,9 @@ USERCCFLAGS=$(USERCXXFLAGS)
 USERLDFLAGS=
 
 
-#  The default trigger is a CES CBD8210 camac driver.  If you want to use
-#  A VME trigger (CAEN V262) instead, uncomment the following line:
-#VMETRIGGER=-DVME=1
+#  The default trigger is a  A VME trigger (CAEN V262) 
+#  If you want to use a CES CBD 8210, instead, comment the following line:
+VMETRIGGER=-DVME=1
 
 #
 #   If you have any object files that must be made, add them to the 

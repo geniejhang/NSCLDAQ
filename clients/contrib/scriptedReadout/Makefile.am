@@ -84,7 +84,7 @@ INCLUDES=  $(VMEBUILDEADERS) \
 	-I@top_srcdir@/Headers -I@top_srcdir@/Exception \
 	-I@top_srcdir@/VMEApi -I@top_srcdir@/DeviceSupport\
 	-I@top_srcdir@/Readout \
-	$(TCL_FLAGS) \
+	-DVME $(TCL_FLAGS) \
 	$(SPECTRODAQ_FLAGS) -DINSTDIR=\"$(prefix)\" $(CAMAC) -g
 
 

@@ -411,7 +411,7 @@ CTCLList::Split(StringArray& rElements)
       rElements.push_back(pElements[i]);
     }
 #if defined(WIN32) || (TCL_MAJOR_VERSION > 8) || \
-                ((TCL_MAJOR_VERSION ==8) && (TCL_MINORO_VERSION > 3))
+                ((TCL_MAJOR_VERSION ==8) && (TCL_MINOR_VERSION > 3))
 	Tcl_Free((char*)pElements);
 #else
     free(pElements);		// Early versions of Tcl_Free on unix failed.
