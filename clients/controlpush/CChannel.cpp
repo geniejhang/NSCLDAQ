@@ -330,7 +330,7 @@ CChannel::CChannel (const string& rName,
 */
  CChannel::~CChannel ( )  //Destructor - Delete dynamic objects
 {
-  if(m_eState != Dead) {
+  if((m_eState != Dead) && (m_eState != Disconnected)) {
     ca_clear_channel(m_nId);
     if(m_fHaveUnits) {
       ca_clear_channel(m_nUnitId);

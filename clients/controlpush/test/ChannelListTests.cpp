@@ -69,7 +69,12 @@ void
 ChannelListTests::Stock(CChannelList& l)
 {
   for(int i =0; i < nNames; i++) {
-    l.push_back(*(new CChannel(string(Names[i]))));
+    // The lookup below ensures that regardless of what we do to 
+    // the channel it will be destroyable.
+    //
+    CChannel* p = new CChannel(string(Names[i]));
+    p->Lookup();
+    l.push_back(*p);
   }
 }
 

@@ -168,6 +168,7 @@ ApplicationTests::ReadTest()
     CApplication app;
     
     app.ReadChannelFile(infile);
+
     EQ(nNames, app.m_Channels.size());
     
     CChannelList::ChannelIterator p = app.m_Channels.begin();
