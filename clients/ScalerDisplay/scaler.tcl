@@ -41,6 +41,9 @@ set Fakename     >>><<<
 set HMStime        "0 00:00:00"
 set ScalerLogDir  "."		;# Default is to log in current directory.
 
+set InitialRunNumber unknown
+set StartTime
+
 # Establish my location so that I can source in additional scripts:
 
 
@@ -94,10 +97,19 @@ proc Update {} {
 #   Called when the run begins.
 #   We will reset the HMStime (hours/min/sec elapsed run time)
 #   back to 0.
+#   We store the run start time and the "initial run nubmer"
+#   So that end run knows when the run started and that we
+#   did see the begin run buffer for this run.
 #
 proc BeginRun {} {
     global HMStime
+    global InitialRunNumber
+    global StartTime
+    global RunNumber
     set HMStime "0 00:00:00"
+    
+    set InitialRunNumber $RunNumber
+    set StartTime [clock format [clock seconds]]
 
     if {[info proc UserBeginRun] != "" } {
 	UserBeginRun
@@ -112,11 +124,16 @@ proc BeginRun {} {
 #  It will have the form:
 #               $RunTitle
 #               Run: $RunNumber
+#               Started: $StartTime
+#               Ended:   <NOW>
 #               Duration $HMStime
 #    Scalername              Scaler Totals
 #    -------------------------------------
 #    name                     total
 #    ...                      ...
+#
+#   Note that if InitialRunNumber != RunNumber
+#   Start time is given as Unknown.
 #
 proc EndRun   {} {
     global RunNumber
@@ -126,7 +143,8 @@ proc EndRun   {} {
     global Scaler_Totals
     global ScalerMap
     global Fakename
-
+	global InitialRunNumber
+	global StartTime
     #  Construct the log filename:
 
     set filename $ScalerLogDir/run$RunNumber.scalers
@@ -134,6 +152,12 @@ proc EndRun   {} {
 
     puts $fd "                     $RunTitle"
     puts $fd "                     Run: $RunNumber"
+    if {$RunNumber == $StartTime} {
+    	puts $fd "                     Started: $StartTime"
+    } else {
+    	puts $fd "                     Started: >Unknown<"
+    }  
+    puts $fd "                     Ended:  [clock format [clock seconds]]"
     puts $fd "                     Duration: $HMStime"
     puts $fd " Scaler Name                         Scaler Total"
     puts $fd "-------------------------------------------------"
