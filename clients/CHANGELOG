@@ -114,3 +114,6 @@ Week of October 25, 2004
   against the tcl stub library.
 - Link the vme access extension against the stub lib to make it starkit compatible.
 - Allow a find on static tcl libs without requiring dynamic libs.
+
+Week of November 1:
+   Create branch to maintain DAQ 7.4 version.
