@@ -140,3 +140,4 @@ Week of November 1:
        clean target.
      - Fix some typos in contrib/N568Panel goShaper goShaper16 as well as
        document the need to run this in an spdaq system.
+     - Make all the sample .cfd files valid.
