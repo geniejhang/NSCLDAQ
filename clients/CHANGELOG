@@ -39,3 +39,5 @@
 - Add design by contract headers (Headers/DesignByContract.h).
   In readout software catch DesignByContractException s that may be thrown
   as a result of user code.
+- Issue 112: If sclclient is started with a local data source. Warn using
+  X11 if possible or stderr if not.

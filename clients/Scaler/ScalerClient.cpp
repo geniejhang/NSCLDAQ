@@ -295,6 +295,12 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 /*
   Modification history:
     $Log$
+    Revision 3.4.4.2  2004/05/19 16:28:01  ron-fox
+    Issue 112- If sclclient is started up with the default data source
+    (no -s switch), warn the user that this may be not what they intended.
+    The warning will be delivered via an X11 window if DISPLAY is defined or
+    stderr if not.
+
     Revision 3.4.4.1  2004/02/09 17:50:46  ron-fox
     Invoke the update member even if no scalers are transmitted in the buffer... there is still useful
     elapsed time information that should be transmitted to the tclserver.
@@ -339,6 +345,8 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include  <unistd.h>
 #include <iostream.h>   				
 #include <CopyrightNotice.h>
+
+#include <stdlib.h>
 
 
 #ifndef FALSE
@@ -649,6 +657,9 @@ int CScalerClient::operator()(int argc, char** pargv)
   int    RemotePort = GetRemotePort(argc, pargv);
   string DataSource = GetDataSourceURL(argc, pargv);
 
+  if(m_fDefaultSource) {
+    WarnDefaultSource();	// Warn if no -s switch.
+  }
 
   m_Connection = new TclServerConnection(RemoteHost, RemotePort);
   m_Connection->SetConnectCallback(ConnectionRelay, (void*)this);
@@ -941,8 +952,35 @@ CScalerClient::GetDataSourceURL(int nArgs, char** pArgs)
   //
   string url(kDefaultURL);
 
-  GetSwitchParameter(url, "s:", nArgs, pArgs);
+  if(GetSwitchParameter(url, "s:", nArgs, pArgs)) {
+    m_fDefaultSource = false;
+  }
   return url;
+}
+
+/*!
+  Warn the user that the default data source is being used (locahost).
+  If the DISPLAY env. variable is defined, then this warnign is done
+  via the scalerlocal.tk script to pop up an xwindows warning.
+  Otherwise, the warning will go out stderr.
+
+ */
+void
+CScalerClient::WarnDefaultSource()
+{
+  if(getenv("DISPLAY")) {	// X11 display defined...
+    cerr << "Xwindows environment" << endl;
+    string program(INSTDIR);
+    program += "/bin/scalerlocal.tk";
+    system(program.c_str());
+
+  } else {			// Text console only.
+    cerr << "sclclient - WARNING: the default data source is being\n";
+    cerr << "                     used (localhost).  Please be sure\n";
+    cerr << "                     this system is actually the one  \n";
+    cerr << "                     connected to the hardware\n";
+
+  }
 }
 
 //  Declare the application so that Spectrodaq client libraries can start it

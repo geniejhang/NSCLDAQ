@@ -12,6 +12,8 @@ sclclient_LDADD = -L@top_srcdir@/CopyrightTools -lLicense \
 	-L@top_srcdir@/cvt -lcvt $(SPECTRODAQ_LDFLAGS) 
 sclclient_LDFLAGS=-Wl,"-rpath=$(libdir)"
 
+AM_CXXFLAGS= -DINSTDIR=\"$(prefix)\"
+
 noinst_HEADERS = Consumer.h \
 	DataSource.h \
 	EventIterator.h \
@@ -29,3 +31,10 @@ noinst_HEADERS = Consumer.h \
 	TcpClient.h \
 	buftypes.h \
 	nsclbuffer.h	
+
+install-exec-local:
+	$(mkinstalldirs) $(bindir)
+	$(INSTALL_SCRIPT) scalerlocal.tk $(bindir)
+
+
+EXTRA_DIST = scalerlocal.tk
