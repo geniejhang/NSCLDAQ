@@ -136,3 +136,5 @@ Week of November 1:
      - Fix typo on n568panel makefile
      - Correct documentation in skeleton Makefiles; to get the Wiener
        VC32 interface, use -DVC32CAMAC not -DWIENERCAMAC
+     - Correct mis-spelled macro name is Production readout skeleton Makefile
+       clean target.
