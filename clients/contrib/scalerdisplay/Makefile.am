@@ -2,7 +2,9 @@ lib_LTLIBRARIES=libScalerServer.la
 bin_PROGRAMS=ScalerServer
 ScalerServer_DEPENDENCIES = libScalerServer.la
 
-libScalerServer_la_LDFLAGS = -version-info $(SOVERSION):0
+libScalerServer_la_LDFLAGS = -version-info $(SOVERSION):0 
+
+ScalerServer_LDFLAGS = 	-Wl,"-rpath=$(prefix)/lib"
 
 libScalerServer_la_SOURCES =  CBoolConfigParam.cpp \
 	CCAENModule.cpp \

@@ -402,7 +402,6 @@ INCLUDE FILES
 #include <iostream.h>
 #include <CAENcard.h>
 
-#define SEE_PACKETID   0x8000     // SEE Packet id from Bazin.
 
 
 /*

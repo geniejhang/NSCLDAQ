@@ -17,10 +17,10 @@ SPECTRO_LDFLAGS=$(shell $(spectrodaq_conf_dir)/spectrodaq-conf --libs)
 LDFLAGS=-L$(LIBDIR) -lScriptedRdo \
 	 -lReadout -lDeviceSupport -lTclPlus -lException $(VMELIBRARY) \
 	$(SPECTRO_LDFLAGS) \
-	$(TCL_LDFLAGS)
+	$(TCL_LDFLAGS) -Wl,"-rpath=$(LIBDIR)"
 
 CXXFLAGS = -c -D__UNIX__ $(SPECTRO_FLAGS) -I$(INCLUDEDIR) -I$(SCRIPTEDINCLUDE) \
-	-I$(VMELIBRARYHEADERS) $(CAMAC) $(TCL_FLAGS)
+	-I$(VMELIBRARYHEADERS) $(CAMAC) $(TCL_FLAGS) -DVME
 
 
 

@@ -39,7 +39,10 @@ libScriptedRdo_la_SOURCES = CBoolConfigParam.cpp \
 	CPacketCreator.cpp
 
 
-libScriptedRdo_la_LDFLAGS = -version-info $(SOVERSION):0
+libScriptedRdo_la_LDFLAGS = -version-info $(SOVERSION):0 
+
+ScriptedReadout_LDFLAGS = -Wl,"-rpath=$(prefix)/lib"
+
 
 noinst_HEADERS=CBoolConfigParam.h \
 	CCAENModule.h \
