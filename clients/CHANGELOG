@@ -101,3 +101,5 @@
 7.3-008 3/31/04
    - Merge in the fixes to the Stager/ReadoutGui that constitute the fix
      for issue 108: Event files can be ovewritten with no prompt.
+   - Merge in fix for production readout - stabilization of scaler readout timings.
+
