@@ -10,3 +10,7 @@
 - Framework CSocket::Bind - prior to bind(), enable 
    SO_REUSEADDR to deal with lingering sockets if e.g. readout exits and then
    restarts soon.
+- Fix incorrect base address of VME trigger/status module was 0xf000 s.b.
+  0x444400
+- Fix issue 116: Titles, runvars and statevars that don't fit can cause
+  a great deal of grief.
