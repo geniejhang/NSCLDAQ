@@ -129,3 +129,5 @@ Week of November 1:
        is defined.
      - Some ExprLongs in the contrib software still need to be switched over to 
        strtoll's.
+     - Fix typo in Readout/Reader.cpp - where m_pTrigger is used where
+       m_pBusy was intended.
