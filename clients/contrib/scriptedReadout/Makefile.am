@@ -32,7 +32,13 @@ libScriptedRdo_la_SOURCES = CBoolConfigParam.cpp \
 	CScalerModule.cpp \
 	CStringArrayparam.cpp \
 	CStringConfigParam.cpp \
-	CTriggerCommand.cpp 
+	CTriggerCommand.cpp \
+	CConfigurableObject.cpp \
+	CReadableObject.cpp 	\
+	CReadException.cpp	\
+	CPacketCreator.cpp
+
+
 libScriptedRdo_la_LDFLAGS = -version-info $(SOVERSION):0
 
 noinst_HEADERS=CBoolConfigParam.h \
@@ -61,7 +67,12 @@ noinst_HEADERS=CBoolConfigParam.h \
 	CScalerModule.h \
 	CStringArrayparam.h \
 	CStringConfigParam.h \
-	CTriggerCommand.h 
+	CTriggerCommand.h  \
+	CConfigurableObject.h	\
+	CReadableObject.h	\
+	CReadException.h	\
+	CPacketCreator.h        
+
  
 
 INCLUDES=  $(VMEBUILDEADERS) \
@@ -84,7 +95,7 @@ ScriptedReadout_LDADD = -L@top_srcdir@/contrib/scriptedReadout -lScriptedRdo  \
 	$(VMELIBRARY)            \
 	-L@top_srcdir@/TCL -lTclPlus	\
 	-L@top_srcdir@/Exception -lException \
- 	$(SPECTRODAQ_LDFLAGS)	$(TCL_LDFLAGS) 
+	$(SPECTRODAQ_LDFLAGS) $(TCL_LDFLAGS) 
 
 
 EXTRA_DIST=Makefile.skel

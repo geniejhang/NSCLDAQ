@@ -694,8 +694,7 @@ void InitializeConfigurator()
   pDictionary = new CDigitizerDictionary;
   pReader     = new CReadOrder(pInterp, pDictionary);
   pCreator    = new CModuleCommand(pInterp,
-				   pDictionary,
-				   pReader);
+				   pDictionary);
 
   // Register the event module creators with the module command:
 
@@ -711,7 +710,6 @@ void InitializeConfigurator()
 				  string("scalerbank"));
   pScalerCreator = new CModuleCommand(pInterp,
 				      pScalers,
-				      pScalerRead,
 				      string("scaler"));
 
   // Register the scaler modules with the scaler command.
@@ -1108,7 +1106,7 @@ readevt (WORD* bufpt)
 
       if(pReader) {
 	VPacket(SEE_PACKETID);
-	bufpt = pReader->Read(bufpt);
+	pReader->Read(bufpt);
 	EndVPacket;
       }
 

@@ -328,7 +328,7 @@ public:
   
 public:
   
-  virtual   CDigitizerModule* Create (CTCLInterpreter& rInterp, 
+  virtual   CReadableObject* Create (CTCLInterpreter& rInterp, 
 				      CTCLResult& rResult, 
 				      int nArgs, char** pArgs)   ; 
   virtual   string  Help (); 

@@ -657,7 +657,7 @@ ReadoutStateMachine::RouteBuffer(DAQWordBuffer* pBuffer)
 unsigned 
 ReadoutStateMachine::GetRunTime() 
 {
-// Returns the number of seconds since the 
+// Returns the number of seconds since the <
 // start of the run.
 //
 // Exceptions:  

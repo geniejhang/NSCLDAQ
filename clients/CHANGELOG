@@ -1,3 +1,6 @@
+
+7.4:y
+
 - Added program controlpush to push EPICS controls data into tcl server
   programs (e.g. ProductionReadout too).
 - Fixed several issues with Production Reaodut's tcl server:
@@ -11,6 +14,6 @@
    SO_REUSEADDR to deal with lingering sockets if e.g. readout exits and then
    restarts soon.
 - Fix incorrect base address of VME trigger/status module was 0xf000 s.b.
-  0x444400
+  0x444400 (production readout)
 - Fix issue 116: Titles, runvars and statevars that don't fit can cause
   a great deal of grief.
