@@ -10,7 +10,7 @@ SUBDIRS = btdriver \
 EXTRA_DIST =  config/install-sh config/config.sub config/config.guess \
 	config/ltmain.sh config/missing config/mkinstalldirs  \
 	Directories.include CompilationRules.include \
-	CHANGELOG
+	CHANGELOG daqman
 
 install-data-local:
 	rm -f $(prefix)/Bin
