@@ -84,5 +84,4 @@ Week of August 16, 2004
   (Missing is not so bad as conditional compilations will
    fall back to word by word copy... broken is bad since
    it segfaults).
-- Added support for CES8210's in crates other than 0 for camac.tcl.
-
+- Bring scaler display software into mainline part of distribution.
