@@ -350,6 +350,7 @@ INCLUDE FILES
 #include "CCAENV785Creator.h"
 #include "CCAENV792Creator.h"
 #include "CCAENV775Creator.h"
+#include "CPacketCreator.h"
 #include "CAENcard.h"
 
 #include "CCAENV830.h"
@@ -616,6 +617,7 @@ CModuleCommand*       pCreator(0);      // Module creational.
 CCAENV775Creator*     p775(0);	        // Creator for V775.
 CCAENV785Creator*     p785(0);          // Creator for V785.
 CCAENV792Creator*     p792(0);	        // Creator for V792.
+CPacketCreator*       pPacket(0);       // Creator for subpackets.
 
 // The following constitute the configurable scaler readout engine.
 
@@ -652,6 +654,7 @@ void DestroyConfigurator()
   p775        = 0;
   p785        = 0;
   p792        = 0;
+  pPacket     = 0;
 
 
   // The Scaler readout infrastructure
@@ -701,7 +704,7 @@ void InitializeConfigurator()
   pCreator->AddCreator(p775 = new CCAENV775Creator);
   pCreator->AddCreator(p785 = new CCAENV785Creator);
   pCreator->AddCreator(p792 = new CCAENV792Creator);
-  
+  pCreator->AddCreator(pPacket = new CPacketCreator("packet",pDictionary));
 
   // Create the scaler module creation/readout infrastructure:
 
@@ -1105,9 +1108,10 @@ readevt (WORD* bufpt)
 **  End of instructions for now...				*/
 
       if(pReader) {
-	VPacket(SEE_PACKETID);
+
+	// If he wants to he can turn on packetization in the reader!!
+
 	pReader->Read(bufpt);
-	EndVPacket;
       }
 
 
