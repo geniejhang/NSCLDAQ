@@ -317,6 +317,7 @@ private:
   unsigned int m_nAccumulatedMs; //!< # milliseconds run pior to start since reset.
   unsigned int m_nStartTimeMs;   //!< # Time of Start.
   unsigned int m_nLatency;   //!< Latency estimate for scheduling.
+  unsigned int m_nLastTick;  //!< Time of last tick.
 
   TimerList m_Events;		//!< STL List containing the managed events. 
   

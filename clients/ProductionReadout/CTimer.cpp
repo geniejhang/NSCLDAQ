@@ -338,6 +338,7 @@ CTimer::Start(unsigned int ms, unsigned int latency, bool doReset=false)
   clock_gettime(CLOCK_REALTIME, &now);
 
   m_nStartTimeMs = now.tv_sec*1000 + now.tv_nsec/1000000;
+  m_nLastTick    = m_nStartTimeMs;
 
 }  
 
@@ -442,8 +443,17 @@ void
 CTimer::OnTimer()  
 {
   TimerListIterator i = begin();
+
+  // compute how long we were really sleeping:
+  
+  timespec now;
+  clock_gettime(CLOCK_REALTIME, &now);
+  unsigned  ms  = now.tv_sec*1000 + now.tv_nsec/1000000;
+  unsigned  elapsedms = ms - m_nLastTick;
+  m_nLastTick   = ms;
+
   while(i != end()) {
-    (*i)->Tick(m_nIntervalms+m_nLatency);
+    (*i)->Tick(elapsedms);
     i++;
   }
 }
