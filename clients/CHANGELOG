@@ -19,3 +19,5 @@
 - Fix issue 116: Titles, runvars and statevars that don't fit can cause
   a great deal of grief.
 - Fix issue 106: Elapsed time from runs is not correct for production rdo.
+- Added -rpath on Makefiles for scripted readout and scaler server so user
+  does not need to worry about the location of shared libs.
