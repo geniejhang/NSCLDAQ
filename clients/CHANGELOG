@@ -105,3 +105,5 @@
 7.3-008 4/12/04
    - Added build stamp to the installation procedure
    - Fixed an incompatibility with tcl 8.4 and cratelocator.tcl
+   - Fixed controlpush - plc channels need extra time to connect
+   - Added # escaping to controlpush and to production readout
