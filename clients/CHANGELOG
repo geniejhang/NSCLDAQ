@@ -125,3 +125,7 @@ Week of November 1:
       in production readout if there else TCL++'s main confuses stuff.
 
 7.4-002 :
+     - Ensure that scripted readout supplies a main too if HAVE_SPECTRODAQ_MAIN
+       is defined.
+     - Some ExprLongs in the contrib software still need to be switched over to 
+       strtoll's.
