@@ -45,6 +45,9 @@ software.
 Change Log:
 
 $Log$
+Revision 1.1.2.3  2004/07/01 12:31:05  ron-fox
+Correct edge discrimination enum problems due to error in manual.
+
 Revision 1.1.2.2  2004/06/29 14:50:15  ron-fox
 Merge in development line for the CAENV1x90 module.
 
@@ -109,8 +112,8 @@ public:
   };
   typedef enum _EdgeMode {
     EdgeMode_Pair       = 0 ,
-    EdgeMode_Trailing   = 1,
-    EdgeMode_Leading    = 2,
+    EdgeMode_Leading    = 1,
+    EdgeMode_Trailing   = 2,
     EdgeMode_Both       = 3
 
   } EdgeMode;
