@@ -279,6 +279,10 @@ DAMAGES.
 /*
   Change Log:
   $Log$
+  Revision 1.3.4.1  2004/08/17 09:00:54  ron-fox
+  Use CopyIn again where it's possible.. the assumption is that
+  everyone has a good spectrodaq!!!
+
   Revision 1.3  2004/01/14 17:45:09  ron-fox
   Remove code for spectrodaq copyin that
   crept back in by mistake.
@@ -1193,10 +1197,14 @@ int CAENcard::readEvent(DAQWordBufferPtr& wp)
     short *pBuf((short*)localBuffer);
     int nbytes = readEvent(localBuffer); // Read to temp buffer.
     int nWords = nbytes / sizeof(short);
-    for(int i = 0; i < nWords; i++) {
-      *wp = *pBuf++;
-      ++wp;
-    }
+#ifdef CLIENT_HAS_POINTER_COPYIN
+    wp.CopyIn(localBuffer, 0, nWords);
+    wp += nWords;
+#else
+	for(int i =0; i < nWords; i++) {
+		*wp = *pBuf++;
+		++wp;
+	}
     return nWords;
   }
   return 0;
