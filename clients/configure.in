@@ -374,7 +374,16 @@ else
   AC_MSG_RESULT([System is not running an SMP kernel])
 fi
 
+
+
+
 # define substitutions:
+
+#  Go for a strict linguistic interpretation:
+
+#       CXXFLAGS="-std=c++98 -pedantic"
+
+#   someday:   AC_SUBST(CXXFLAGS)
 
 	# Spectrodaq:
 
@@ -429,7 +438,7 @@ AC_SUBST(SOVERSION)
 
 #  Create output files:
 
-AC_OUTPUT(Makefile Headers/Makefile CopyrightTools/Makefile \
+AC_OUTPUT( Makefile Headers/Makefile CopyrightTools/Makefile \
 	Exception/Makefile  TCL/Makefile Security/Makefile Ftp/Makefile \
 	VMEApi/Makefile cvt/Makefile \
 	SpecTclOnline/Makefile DeviceSupport/Makefile \
@@ -437,11 +446,12 @@ AC_OUTPUT(Makefile Headers/Makefile CopyrightTools/Makefile \
 	EventLog/Makefile  Scaler/Makefile contrib/Makefile \
 	contrib/lecroy/Makefile contrib/whedco/Makefile \
 	contrib/caenv812/Makefile contrib/scriptedReadout/Makefile \
-	contrib/scalerdisplay/Makefile vmetcl/Makefile \
+	contrib/scalerdisplay/Makefile contrib/N568Panel/Makefile \
+	vmetcl/Makefile \
 	vmetcl/camactcl/Makefile vmetcl/vhq202m/Makefile bufdump/Makefile \
 	TclServer/Makefile bcnaf/Makefile TcpHoister/Makefile Stager/Makefile \
 	Scripts/Makefile framework/Makefile AlarmDisplay/Makefile \
 	LogDisplay/Makefile ProductionReadout/Makefile \
 	ProductionReadout/hyperlatex/Makefile \
 	btdriver/Makefile btdriver/dd/Makefile btdriver/lib/Makefile \
-	btdriver/include/Makefile)
+	btdriver/include/Makefile )
