@@ -235,7 +235,10 @@ those countries, so that distribution is permitted only in or among
 countries not thus excluded.  In such case, this License incorporates
 the limitation as if written in the body of this License.
 
-  9. The Free Software Foundation may publish revised and/or new versions of the General Public License from time to time.  Such new versions will be similar in spirit to the present version, but may differ in detail to address new problems or concerns.
+  9. The Free Software Foundation may publish revised and/or new versions
+     of the General Public License from time to time.  Such new versions 
+     will be similar in spirit to the present version, but may differ in 
+     detail to address new problems or concerns.
 
 Each version is given a distinguishing version number.  If the Program
 specifies a version number of this License which applies to it and "any
@@ -273,186 +276,108 @@ THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
 EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
 DAMAGES.
 
-		     END OF TERMS AND CONDITIONS
+		     END OF TERMS AND CONDITIONS '
 */
-static const char* Copyright = "(C) Copyright Michigan State University 1977, All rights reserved";
-  
-/*! \class CConfigurationParameter  abstract 
-           This is the base class for all configuration parameter parsers.
-           Configuration parameter parsers accept pair of 
-           - keyword int
-           - keyword arrays of ints.
-           - keyword bool
-           
-    Author: Ron Fox
-            Ron's DAQ software.
-            (c) 2002, All rights reserved.
-    Revision History:
-      $Log$
-      Revision 1.1.4.1  2004/04/12 17:33:03  ron-fox
-      - Packet creation added.
 
-      Revision 1.1  2003/12/09 21:16:27  ron-fox
-      Incorporated ScriptedReadout software into the build.
-
-      Revision 1.1.1.1  2003/10/23 11:59:16  see
-      Initial CVS repository import
-
-           
-*/
-////////////////////////// FILE_NAME.cpp /////////////////////////////////////////////////////
-#include "CConfigurationParameter.h"    				
-#include <TCLInterpreter.h>
-#include <TCLResult.h>
-#include <string>
-
+   
 /*!
-   Constructor.  The configuration parameter is constructed
-   by assigning a keyword to the object. This keyword will
-   be recognized by the Match member function.  At this time
-   we cannot define a default for the value since that needs
-   to be correlated with any internal representation maintained
-   by the derive classes, and virtual functions essentially
-   don't work virtually in constructors.
-*/   
-CConfigurationParameter::CConfigurationParameter (const string& keyword)
-   : m_sSwitch(keyword)
-{   
-    
-         //Initialization of array of 1:M association objects to null association objects
-    
-} 
+  \class CReadableObject
+  \file CReadableObject.h
+This class defines a readable object.  Readable
+objects are are objects that can be stuck into a
+CReadOrder object to be read out during an event.
 
-/*!
-    Destructor.  No action is required. Since derived classes
-    may need class specific destruction, we provide a virtual
-    base class destructor as a placeholder to support 
-    destructor virtualization.
+The ReadableObjerct class:
+- Provides interface definitions for the readout code
+  that all readable objects must support and no-op'd
+  default implementatiouns.
+- Provides support for linking the object into a CReadOrder
+  object and unlinking it later.
 */
- CConfigurationParameter::~CConfigurationParameter ( ) 
-{
-}
+
+// Author:
+//   Ron Fox
+//   NSCL
+//   Michigan State University
+//   East Lansing, MI 48824-1321
+//   mailto:fox@nscl.msu.edu
+//
+// Copyright 
+
+#ifndef __CREADABLEOBJECT_H  //Required for current class
+#define __CREADABLEOBJECT_H
 
 
-/*!
-   Copy constructor.  This constructor is used by the compiler
-  to create temporaries (e.g. in pass by value to function
-  situtations.
+//
+// Include files:
+//
 
-  \param rhs const CConfigurationParameter& [in]
-            the object that will be cloned into us.
-*/
-CConfigurationParameter::CConfigurationParameter (const CConfigurationParameter& rhs ) :
-  m_sSwitch(rhs.m_sSwitch),
-  m_sValue(rhs.m_sValue)
-{
+                               //Required for base classes
+#ifndef __CCONFIGURABLEOBJECT_H     //CConfigurableObject
+#include "CConfigurableObject.h"
+#endif
+
+
+#ifndef __SPECTRODAQ_H
+#include <spectrodaq.h>
+#ifndef __SPECTRODAQ_H
+#define __SPECTRODAQ_H
+#endif
+#endif
  
-} 
+#ifndef __STL_STRING
+#include <string>        //Required for include files  
+#define __STL_STRING
+#endif
 
-/*
-   Assignment.  'this' will be made into a copy of the
-  \em rhs parameter.  This function differs from copy 
-  construction in that it is invoked in expressions of the
-  form
-  \verbatim
-  lhs = rhs;
-  \endverbatim
 
-  \param rhs const CConfigurationParameter& rhs [in]
-          The object that will be copied to this.
 
-  \return *this.
-*/
-CConfigurationParameter& 
-CConfigurationParameter::operator= (const CConfigurationParameter& rhs)
-{ 
-  if(this != &rhs) {
-    m_sSwitch = rhs.m_sSwitch;
-    m_sValue  = rhs.m_sValue;
-  }
-  return *this;
-}
+// Forward class definitions:
 
-/*!
-   Determins if this is functionally equivalent to the \em rhs
-  parameter. This will be true if all member data are equal.
+class CReadOrder;
+class CTCLInterpreter;
 
-  \param rhs const CConfigurationParameter& rhs [in]
-              The object to be compared with *this.
+class CReadableObject  : public CConfigurableObject       
+{
+private:
+  
+  // Private Member data:
+  
+  CReadOrder* m_pOwner;		//!< Pointer to our reader.
 
-  \return Either of:
-  - true if there is functional equivalence.
-  - false if there is not functional equivalence.
-*/
-int 
-CConfigurationParameter::operator== (const CConfigurationParameter& rhs) const
-{ 
-  return ( (m_sSwitch == rhs.m_sSwitch)    &&
-           (m_sValue  == rhs.m_sValue));
+public:
 
-}
+  // Constructors and other canonical objects:
+  //
+  CReadableObject (const string& rName,
+		   CTCLInterpreter& rInterp); //!< constructor.
+ ~ CReadableObject ( ); 	//!< Destructor...
 
-// Functions for class CConfigurationParameter
 
-/*!  Function: 	
-  Returns true if the input string matches m_sSwitch.
-  typically intended to be used in detecting which of
-  several configuration parameters should be parsed.
+  // Copy construction etc. is illegal.
+private:
+  CReadableObject            (const CReadableObject& aCReadableObject );
+  CReadableObject& operator= (const CReadableObject& aCReadableObject);
+  int              operator==(const CReadableObject& aCReadableObject) const;
+  int              operator!=(const CReadableObject& aCReadableObject) const;
+public:
 
-  \param rSwitch - const string& [in]
-          The string to match against m_sSwitch.
+  // Class operations:
 
-*/
-bool 
-CConfigurationParameter::Match(const string & rSwitch)  
-{ 
-  return (m_sSwitch == rSwitch);
-}  
+public:
 
-/*!  Function: 	
+  virtual   void   Initialize ()   = 0 ; //!< Initialize the readable (pure virt.).
+  virtual   void   Prepare ()   = 0 ;    //!< Prepare module for readout (pure virt.). 
+  virtual   void   Read (DAQWordBufferPtr& rBuffer)   = 0 ; //!< Read to buffer.
+  virtual   int    Read (void*  pBuffer)   = 0 ; //!< Read to memory. (pure virt)
+  virtual   void   Clear ()   = 0 ;      //!< Clear (after read e.g.).(Pure virt)
+  void             Link (CReadOrder* pReader)   ; //!< Link to a reader/packet. 
+  void             Unlink ()   ;         //!< Unlink from reader/packet.
+  bool             isLinked ()   ;       //!< Query am I linked? 
+  virtual   string getType () const  = 0 ;    //!< Return module type string (pure virt).
 
-Called when our keyword matches an option keyword. 
-The new value of the parameter is saved.  This is a virtual
-member function.  The action is as follows:
-- Call SetValue
-- If SetValue returned TCL_OK, update the stringified value.
-- If SetValue failed, return to the caller without update.
+  virtual   void   OnDelete ()   ; // 
 
-\param rInterp CTCLInterpreter& [in] Interpreter that is runinng
-              this command.
-\param rResult CTCLResult& [in] The result object that will
-              hold any error string if there is a problem.
-\param parameter const char* [in] the string containing the
-            candidate new value.
+};
 
-\return This function can return:
-      TCL_OK - if SetValue claims the parameter string was 
-                properl parsed.
-      TCL_ERROR - if not.
-
-*/
-int 
-CConfigurationParameter::operator()(CTCLInterpreter& rInterp,
-                                    CTCLResult& rResult, 
-                                    const char* parameter)  
-{ 
-  int status = SetValue(rInterp, rResult, parameter);
-  if(status == TCL_OK) {
-    setValue(parameter);
-  }
-  return status;
-}  
-
-/*!  Function: 	
-
-Returns the current value of the
-parameter value as a string.  We delegate to 
-getValue.
-
-*/
-string 
-CConfigurationParameter::getOptionString() const  
-{ 
-  return getValue();
-}  
-
+#endif

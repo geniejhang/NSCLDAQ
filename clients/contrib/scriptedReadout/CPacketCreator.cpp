@@ -235,7 +235,10 @@ those countries, so that distribution is permitted only in or among
 countries not thus excluded.  In such case, this License incorporates
 the limitation as if written in the body of this License.
 
-  9. The Free Software Foundation may publish revised and/or new versions of the General Public License from time to time.  Such new versions will be similar in spirit to the present version, but may differ in detail to address new problems or concerns.
+  9. The Free Software Foundation may publish revised and/or new versions of
+     the General Public License from time to time.  Such new versions will
+     be similar in spirit to the present version, but may differ in detail 
+     to address new problems or concerns.
 
 Each version is given a distinguishing version number.  If the Program
 specifies a version number of this License which applies to it and "any
@@ -273,186 +276,179 @@ THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
 EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
 DAMAGES.
 
-		     END OF TERMS AND CONDITIONS
+		     END OF TERMS AND CONDITIONS '
 */
-static const char* Copyright = "(C) Copyright Michigan State University 1977, All rights reserved";
-  
-/*! \class CConfigurationParameter  abstract 
-           This is the base class for all configuration parameter parsers.
-           Configuration parameter parsers accept pair of 
-           - keyword int
-           - keyword arrays of ints.
-           - keyword bool
-           
-    Author: Ron Fox
-            Ron's DAQ software.
-            (c) 2002, All rights reserved.
-    Revision History:
-      $Log$
-      Revision 1.1.4.1  2004/04/12 17:33:03  ron-fox
-      - Packet creation added.
 
-      Revision 1.1  2003/12/09 21:16:27  ron-fox
-      Incorporated ScriptedReadout software into the build.
 
-      Revision 1.1.1.1  2003/10/23 11:59:16  see
-      Initial CVS repository import
 
-           
-*/
 ////////////////////////// FILE_NAME.cpp /////////////////////////////////////////////////////
-#include "CConfigurationParameter.h"    				
+#include "CPacketCreator.h"    				
+#include "CDigitizerDictionary.h"
+#include "CReadOrder.h"
 #include <TCLInterpreter.h>
 #include <TCLResult.h>
-#include <string>
+#include <assert.h>
+
 
 /*!
-   Constructor.  The configuration parameter is constructed
-   by assigning a keyword to the object. This keyword will
-   be recognized by the Match member function.  At this time
-   we cannot define a default for the value since that needs
-   to be correlated with any internal representation maintained
-   by the derive classes, and virtual functions essentially
-   don't work virtually in constructors.
-*/   
-CConfigurationParameter::CConfigurationParameter (const string& keyword)
-   : m_sSwitch(keyword)
-{   
-    
-         //Initialization of array of 1:M association objects to null association objects
-    
-} 
+   Construct a module creator for the packetizing operator.
+   \param rType   (const string&) 
+      The type of the 'module' this class creates.  
+   \param rDictionary (CDigitizerDictionary&)
+      A reference to a dictionary of modules that have been
+      constructed.  We need this to construct ReadOrder modules.
 
-/*!
-    Destructor.  No action is required. Since derived classes
-    may need class specific destruction, we provide a virtual
-    base class destructor as a placeholder to support 
-    destructor virtualization.
 */
- CConfigurationParameter::~CConfigurationParameter ( ) 
+CPacketCreator::CPacketCreator (const string& rType,
+				CDigitizerDictionary* pDictionary) :
+  CModuleCreator(rType),
+  m_pModules(pDictionary)
+ 
+{  
+  // If they try to jinx us with a null dictionary throw a string to
+  // return the favor:
+
+  if(!m_pModules) {
+    throw
+      string("CPacketCreator::CPacketCreator got  a null dictionary ptr");
+  }
+} 
+/*!
+  Destructor.
+ */
+ CPacketCreator::~CPacketCreator ( )
 {
 }
 
-
 /*!
-   Copy constructor.  This constructor is used by the compiler
-  to create temporaries (e.g. in pass by value to function
-  situtations.
+   Copy constructor.  Construct copy of an existing creator: 
+   \param aCPacketCreator (const CPacketCreator&)
+      Reference to the module creational we are copying.
 
-  \param rhs const CConfigurationParameter& [in]
-            the object that will be cloned into us.
 */
-CConfigurationParameter::CConfigurationParameter (const CConfigurationParameter& rhs ) :
-  m_sSwitch(rhs.m_sSwitch),
-  m_sValue(rhs.m_sValue)
-{
+CPacketCreator::CPacketCreator (const CPacketCreator& aCPacketCreator ) : 
+  CModuleCreator (aCPacketCreator),
+  m_pModules(aCPacketCreator.m_pModules)
  
+{
 } 
-
-/*
-   Assignment.  'this' will be made into a copy of the
-  \em rhs parameter.  This function differs from copy 
-  construction in that it is invoked in expressions of the
-  form
-  \verbatim
-  lhs = rhs;
-  \endverbatim
-
-  \param rhs const CConfigurationParameter& rhs [in]
-          The object that will be copied to this.
-
-  \return *this.
-*/
-CConfigurationParameter& 
-CConfigurationParameter::operator= (const CConfigurationParameter& rhs)
-{ 
-  if(this != &rhs) {
-    m_sSwitch = rhs.m_sSwitch;
-    m_sValue  = rhs.m_sValue;
+/*!
+  Assignment: An existing (fully constructed)
+  object becomes a copy of another existing
+  object.
+  \param aCPacketCreator (Const CPacketCreator&)
+    reference to the guy we're being assigned from.
+  \return *this
+     To support assignment chaining.
+ */
+CPacketCreator& 
+CPacketCreator::operator= (const CPacketCreator& aCPacketCreator)
+{
+  if(this != &aCPacketCreator) {
+    CModuleCreator::operator=(aCPacketCreator);
+    m_pModules = aCPacketCreator.m_pModules;
   }
   return *this;
 }
 
+
 /*!
-   Determins if this is functionally equivalent to the \em rhs
-  parameter. This will be true if all member data are equal.
-
-  \param rhs const CConfigurationParameter& rhs [in]
-              The object to be compared with *this.
-
-  \return Either of:
-  - true if there is functional equivalence.
-  - false if there is not functional equivalence.
+   Equality comparison operator.
+   \param aCPacketCreator (const CPacketCreator&)
+      Reference to the object to which we are being compared.
+   \return int
+     - 0 If *this is \em not the same as aCPacketCreator.
+     - 1 If *this \em is the same as aCPacketCreator
 */
 int 
-CConfigurationParameter::operator== (const CConfigurationParameter& rhs) const
-{ 
-  return ( (m_sSwitch == rhs.m_sSwitch)    &&
-           (m_sValue  == rhs.m_sValue));
-
+CPacketCreator::operator== (const CPacketCreator& aCPacketCreator) const
+{
+  return (CModuleCreator::operator==(aCPacketCreator)     &&
+	  (m_pModules == aCPacketCreator.m_pModules));
+}
+/*!
+   Inequality comparison operator.
+   \param aCPacketCreator (const CPacketCreator&)
+      Reference to the object to which we are being compared.
+   \return int
+     - 1 If *this is \em not the same as aCPacketCreator.
+     - 0 If *this \em is the same as aCPacketCreator
+*/
+int
+CPacketCreator::operator!=(const CPacketCreator& aCPacketCreator) const
+{
+  return !(operator==(aCPacketCreator));
 }
 
-// Functions for class CConfigurationParameter
 
-/*!  Function: 	
-  Returns true if the input string matches m_sSwitch.
-  typically intended to be used in detecting which of
-  several configuration parameters should be parsed.
 
-  \param rSwitch - const string& [in]
-          The string to match against m_sSwitch.
 
-*/
-bool 
-CConfigurationParameter::Match(const string & rSwitch)  
-{ 
-  return (m_sSwitch == rSwitch);
-}  
+/*! 
 
-/*!  Function: 	
+Returns a pointer to a readable object that is actually a CReadOrder
+module.
+\param rInterp (CTCLInterpreter& )
+    Reference to the interpreter that is running the creational command.
+\param rResult (CTCLResult&)
+    Reference to the result of the interpreter.  This is the 'return value'
+    of the command.
+\param nArgs (int):
+   Number of remaining command line parameters after the command string.
+\param pArgs (char**)
+   The remaining command line parameters after the command string.
+   There must be at least two: 
+   - name  - The name of the module being created.
+   - type  - The type of module being created (asserted for equality 
+             against getModuleType().
+   Any remaining parameters are treated as configuration parameters
+   and passed to the module's Configure member function.
 
-Called when our keyword matches an option keyword. 
-The new value of the parameter is saved.  This is a virtual
-member function.  The action is as follows:
-- Call SetValue
-- If SetValue returned TCL_OK, update the stringified value.
-- If SetValue failed, return to the caller without update.
-
-\param rInterp CTCLInterpreter& [in] Interpreter that is runinng
-              this command.
-\param rResult CTCLResult& [in] The result object that will
-              hold any error string if there is a problem.
-\param parameter const char* [in] the string containing the
-            candidate new value.
-
-\return This function can return:
-      TCL_OK - if SetValue claims the parameter string was 
-                properl parsed.
-      TCL_ERROR - if not.
+\return CReadableObject*
+    Pointer to the read order that was created.
 
 */
-int 
-CConfigurationParameter::operator()(CTCLInterpreter& rInterp,
-                                    CTCLResult& rResult, 
-                                    const char* parameter)  
+CReadableObject* 
+CPacketCreator::Create(CTCLInterpreter& rInterp,
+		       CTCLResult&      rResult,
+		       int              nArgs,
+		       char**           pArgs)  
 { 
-  int status = SetValue(rInterp, rResult, parameter);
-  if(status == TCL_OK) {
-    setValue(parameter);
+  assert(nArgs >= 2);		// Our caller should have checked this.
+  string Name(*pArgs);		// Module name.
+  pArgs++;
+  nArgs--;
+
+  string Type(*pArgs);		// Module type.
+  pArgs++;
+  nArgs--;
+
+  assert(Type == getModuleType()); // A real interesting bug if false.
+
+  CReadOrder* pModule = new CReadOrder(&rInterp,
+				       m_pModules,
+				       Name);
+
+  //  Configure from the remaining params if there are any:
+
+  if(nArgs) {
+    int status = pModule->Configure(rInterp, rResult, nArgs, pArgs);
+    if(status != TCL_OK) {	// Configure failed!!
+      delete pModule;		// Configure will have filled in rResult.
+      pModule = (CReadOrder*)NULL;
+    }
   }
-  return status;
+  return pModule;
+  
 }  
 
-/*!  Function: 	
+/*! 	
 
-Returns the current value of the
-parameter value as a string.  We delegate to 
-getValue.
+Returns the help string associated with the module
+creational.
 
 */
 string 
-CConfigurationParameter::getOptionString() const  
-{ 
-  return getValue();
-}  
-
+CPacketCreator::Help()  
+{
+  return string("Creates a packet (can have modules added to it)"); 
+}

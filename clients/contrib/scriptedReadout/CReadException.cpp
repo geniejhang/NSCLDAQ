@@ -235,7 +235,10 @@ those countries, so that distribution is permitted only in or among
 countries not thus excluded.  In such case, this License incorporates
 the limitation as if written in the body of this License.
 
-  9. The Free Software Foundation may publish revised and/or new versions of the General Public License from time to time.  Such new versions will be similar in spirit to the present version, but may differ in detail to address new problems or concerns.
+  9. The Free Software Foundation may publish revised and/or new versions of
+     the General Public License from time to time.  Such new versions will
+     be similar in spirit to the present version, but may differ in detail 
+     to address new problems or concerns.
 
 Each version is given a distinguishing version number.  If the Program
 specifies a version number of this License which applies to it and "any
@@ -273,186 +276,204 @@ THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
 EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
 DAMAGES.
 
-		     END OF TERMS AND CONDITIONS
+		     END OF TERMS AND CONDITIONS '
 */
-static const char* Copyright = "(C) Copyright Michigan State University 1977, All rights reserved";
-  
-/*! \class CConfigurationParameter  abstract 
-           This is the base class for all configuration parameter parsers.
-           Configuration parameter parsers accept pair of 
-           - keyword int
-           - keyword arrays of ints.
-           - keyword bool
+
+
+
+/*! \class CReadException   
+           CLASS_PACKAGE
+           Aggregates the exceptions that can be thrown by 
+           readout objects contained wthin a ReadOrder.
+           In a read order object, each item read can do
+           any of the following:
+           - Return a count if succesful.
+           - Throw a string exception if a primitive.
+           - Throw a CReadException if another read order.
+           In the event exceptions are thrown, the read order
+           objects aggregate the exception strings into a list
+           of exception strings and keep track of the number of
+           words that were actually read.  
+           This aggregation is done within a CReadException which
+           is then thrown if any exceptions occured.
            
-    Author: Ron Fox
-            Ron's DAQ software.
-            (c) 2002, All rights reserved.
-    Revision History:
-      $Log$
-      Revision 1.1.4.1  2004/04/12 17:33:03  ron-fox
-      - Packet creation added.
-
-      Revision 1.1  2003/12/09 21:16:27  ron-fox
-      Incorporated ScriptedReadout software into the build.
-
-      Revision 1.1.1.1  2003/10/23 11:59:16  see
-      Initial CVS repository import
-
            
 */
+
 ////////////////////////// FILE_NAME.cpp /////////////////////////////////////////////////////
-#include "CConfigurationParameter.h"    				
-#include <TCLInterpreter.h>
-#include <TCLResult.h>
-#include <string>
+#include "CReadException.h"    				
+#include <TCLString.h>
 
-/*!
-   Constructor.  The configuration parameter is constructed
-   by assigning a keyword to the object. This keyword will
-   be recognized by the Match member function.  At this time
-   we cannot define a default for the value since that needs
-   to be correlated with any internal representation maintained
-   by the derive classes, and virtual functions essentially
-   don't work virtually in constructors.
-*/   
-CConfigurationParameter::CConfigurationParameter (const string& keyword)
-   : m_sSwitch(keyword)
-{   
-    
-         //Initialization of array of 1:M association objects to null association objects
-    
-} 
 
+    
+ 
 /*!
-    Destructor.  No action is required. Since derived classes
-    may need class specific destruction, we provide a virtual
-    base class destructor as a placeholder to support 
-    destructor virtualization.
+   Parameterized constructor.   This constructs a CReadException with
+   optoinal non default initial values for the aggregate exception string and, optionally
+   the number of words read.
+   \param rInitialReason (const string& default ="")
+      An initial value for the aggregate exception string.
+   \param nWordsRead   (int default=0):
+      An initial value for m_nWordsRead.
+
 */
- CConfigurationParameter::~CConfigurationParameter ( ) 
+CReadException::CReadException(const string& rInitialReason,
+			       int           nWords) :
+  CException("Reading an Event"),
+  m_sAggregateException(rInitialReason),
+  m_nWordsRead(nWords)
+{
+  
+}
+//! Destroy a read exception.  No action required.
+
+CReadException::~CReadException ( )
 {
 }
 
-
 /*!
-   Copy constructor.  This constructor is used by the compiler
-  to create temporaries (e.g. in pass by value to function
-  situtations.
+   Construct a temp copy of a reference object.
+   \param aCReadException  (const CReadException&)
+      The reference object that we are copy constructing.
 
-  \param rhs const CConfigurationParameter& [in]
-            the object that will be cloned into us.
 */
-CConfigurationParameter::CConfigurationParameter (const CConfigurationParameter& rhs ) :
-  m_sSwitch(rhs.m_sSwitch),
-  m_sValue(rhs.m_sValue)
+CReadException::CReadException (const CReadException& aCReadException ) :
+  CException(aCReadException),
+  m_sAggregateException(aCReadException.m_sAggregateException),
+  m_nWordsRead(aCReadException.m_nWordsRead)
 {
- 
+
+  
 } 
-
-/*
-   Assignment.  'this' will be made into a copy of the
-  \em rhs parameter.  This function differs from copy 
-  construction in that it is invoked in expressions of the
-  form
-  \verbatim
-  lhs = rhs;
-  \endverbatim
-
-  \param rhs const CConfigurationParameter& rhs [in]
-          The object that will be copied to this.
-
-  \return *this.
+/*!
+   Assigns *this to contain a copy of aCReadException.
+   \param aCReadException (const CReadException&)
+      The rhs of the assignment operator.
+   \return CReadException& 
+   *this  in order to support operator chaining.
 */
-CConfigurationParameter& 
-CConfigurationParameter::operator= (const CConfigurationParameter& rhs)
+CReadException& CReadException::operator= (const CReadException& aCReadException)
 { 
-  if(this != &rhs) {
-    m_sSwitch = rhs.m_sSwitch;
-    m_sValue  = rhs.m_sValue;
+  if(this != &aCReadException) { 
+    CException::operator=(aCReadException);
+    m_sAggregateException = aCReadException.m_sAggregateException;
+    m_nWordsRead          = aCReadException.m_nWordsRead;
   }
   return *this;
 }
 
 /*!
-   Determins if this is functionally equivalent to the \em rhs
-  parameter. This will be true if all member data are equal.
-
-  \param rhs const CConfigurationParameter& rhs [in]
-              The object to be compared with *this.
-
-  \return Either of:
-  - true if there is functional equivalence.
-  - false if there is not functional equivalence.
+  \return int
+   Return nonzero if *this is the same as aCReadException.
+   \param aCReadException (CreadException&)
+      The object we compare *this to.
 */
-int 
-CConfigurationParameter::operator== (const CConfigurationParameter& rhs) const
-{ 
-  return ( (m_sSwitch == rhs.m_sSwitch)    &&
-           (m_sValue  == rhs.m_sValue));
 
+int 
+CReadException::operator== (const CReadException& aCReadException)
+{
+  return (CException::operator==(aCReadException)                          &&
+	  (m_sAggregateException == aCReadException.m_sAggregateException) &&
+	  (m_nWordsRead          == aCReadException.m_nWordsRead));
+}
+/*!
+    \return int
+    returns the inverse of operator==.
+    \param aCReadException (CreadException&)
+      The object we compare *this to.
+*/
+int
+CReadException::operator!=(const CReadException& aCReadException) 
+{
+  return !operator==(aCReadException);
 }
 
-// Functions for class CConfigurationParameter
+/*!  
 
-/*!  Function: 	
-  Returns true if the input string matches m_sSwitch.
-  typically intended to be used in detecting which of
-  several configuration parameters should be parsed.
+\return m_nWordsRead
 
-  \param rSwitch - const string& [in]
-          The string to match against m_sSwitch.
-
-*/
-bool 
-CConfigurationParameter::Match(const string & rSwitch)  
-{ 
-  return (m_sSwitch == rSwitch);
-}  
-
-/*!  Function: 	
-
-Called when our keyword matches an option keyword. 
-The new value of the parameter is saved.  This is a virtual
-member function.  The action is as follows:
-- Call SetValue
-- If SetValue returned TCL_OK, update the stringified value.
-- If SetValue failed, return to the caller without update.
-
-\param rInterp CTCLInterpreter& [in] Interpreter that is runinng
-              this command.
-\param rResult CTCLResult& [in] The result object that will
-              hold any error string if there is a problem.
-\param parameter const char* [in] the string containing the
-            candidate new value.
-
-\return This function can return:
-      TCL_OK - if SetValue claims the parameter string was 
-                properl parsed.
-      TCL_ERROR - if not.
 
 */
 int 
-CConfigurationParameter::operator()(CTCLInterpreter& rInterp,
-                                    CTCLResult& rResult, 
-                                    const char* parameter)  
+CReadException::GetCount() const  
 { 
-  int status = SetValue(rInterp, rResult, parameter);
-  if(status == TCL_OK) {
-    setValue(parameter);
-  }
-  return status;
+  return m_nWordsRead;
 }  
 
-/*!  Function: 	
+/*!  
 
-Returns the current value of the
-parameter value as a string.  We delegate to 
-getValue.
+  \return m_sAggregateException
+
 
 */
 string 
-CConfigurationParameter::getOptionString() const  
+CReadException::GetString() const  
 { 
-  return getValue();
+  return m_sAggregateException;
+}
+
+
+/*! 
+
+Adds an exception string to the current list in m_sAggregateException.
+Exception strings are added in such a way that this member remains
+a valid TCL list.
+\param rMessage (const string&)
+    The string to append as a list element to the aggregate message.
+    
+
+*/
+void 
+CReadException::AddItem(const string& rMessage)  
+{
+  CTCLString aggregate(m_sAggregateException);
+  aggregate.AppendElement(rMessage);
+
+  m_sAggregateException = (const char*)aggregate;
 }  
+
+/*!  
+
+Adds the paramter to the m_nWordsRead field.
+\param nWords (int)
+   Number of words read to add to m_nWordsRead.
+*/
+void 
+CReadException::AddCount(int nWords)  
+{
+  m_nWordsRead += nWords;
+}  
+/*!
+   Adds an item and a count.
+   \param rMessage (const string&)
+      appended as a list element to the aggregate message
+   \param nWords (int)
+      added to m_nWordsRead.
+*/
+void
+CReadException::Add(const string& rMessage,
+		    int           nWords)
+{
+  AddItem(rMessage);
+  AddCount(nWords);
+}
+/*!
+  \return string
+     Returns the aggregate reason message.
+*/
+const char* 
+CReadException::ReasonText() const
+{
+  return m_sAggregateException.c_str();
+}
+/*!
+  \return int
+      Return the reason code, which in this case is the total number
+      of words read.
+*/
+int
+CReadException::ReasonCode() const
+{
+  return m_nWordsRead;
+}
 

@@ -273,186 +273,130 @@ THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
 EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
 DAMAGES.
 
-		     END OF TERMS AND CONDITIONS
+		     END OF TERMS AND CONDITIONS '
 */
-static const char* Copyright = "(C) Copyright Michigan State University 1977, All rights reserved";
-  
-/*! \class CConfigurationParameter  abstract 
-           This is the base class for all configuration parameter parsers.
-           Configuration parameter parsers accept pair of 
-           - keyword int
-           - keyword arrays of ints.
-           - keyword bool
-           
-    Author: Ron Fox
-            Ron's DAQ software.
-            (c) 2002, All rights reserved.
-    Revision History:
-      $Log$
-      Revision 1.1.4.1  2004/04/12 17:33:03  ron-fox
-      - Packet creation added.
 
-      Revision 1.1  2003/12/09 21:16:27  ron-fox
-      Incorporated ScriptedReadout software into the build.
 
-      Revision 1.1.1.1  2003/10/23 11:59:16  see
-      Initial CVS repository import
 
-           
-*/
+
 ////////////////////////// FILE_NAME.cpp /////////////////////////////////////////////////////
-#include "CConfigurationParameter.h"    				
+
+#include "CReadableObject.h"    				
+#include "CReadOrder.h"
+#include <spectrodaq.h>
 #include <TCLInterpreter.h>
-#include <TCLResult.h>
-#include <string>
-
-/*!
-   Constructor.  The configuration parameter is constructed
-   by assigning a keyword to the object. This keyword will
-   be recognized by the Match member function.  At this time
-   we cannot define a default for the value since that needs
-   to be correlated with any internal representation maintained
-   by the derive classes, and virtual functions essentially
-   don't work virtually in constructors.
-*/   
-CConfigurationParameter::CConfigurationParameter (const string& keyword)
-   : m_sSwitch(keyword)
-{   
-    
-         //Initialization of array of 1:M association objects to null association objects
-    
-} 
-
-/*!
-    Destructor.  No action is required. Since derived classes
-    may need class specific destruction, we provide a virtual
-    base class destructor as a placeholder to support 
-    destructor virtualization.
-*/
- CConfigurationParameter::~CConfigurationParameter ( ) 
-{
-}
-
-
-/*!
-   Copy constructor.  This constructor is used by the compiler
-  to create temporaries (e.g. in pass by value to function
-  situtations.
-
-  \param rhs const CConfigurationParameter& [in]
-            the object that will be cloned into us.
-*/
-CConfigurationParameter::CConfigurationParameter (const CConfigurationParameter& rhs ) :
-  m_sSwitch(rhs.m_sSwitch),
-  m_sValue(rhs.m_sValue)
-{
- 
-} 
 
 /*
-   Assignment.  'this' will be made into a copy of the
-  \em rhs parameter.  This function differs from copy 
-  construction in that it is invoked in expressions of the
-  form
-  \verbatim
-  lhs = rhs;
-  \endverbatim
+   Construct a readable object.  Note this class is abstract.  While our
+   constructor can be called as a result of a subclass construction, we will never
+   be constructing a CReadableObject directly.
+   - Construct our base class.
+   - Initialize m_pOwner to null.
 
-  \param rhs const CConfigurationParameter& rhs [in]
-          The object that will be copied to this.
-
-  \return *this.
+   \param rName (const string&)
+      Name of the object (also gets registered as our manipulation command).
+   \param rInterp (CTCLInterpreter&)
+       Interpreter object that will run our command.
 */
-CConfigurationParameter& 
-CConfigurationParameter::operator= (const CConfigurationParameter& rhs)
-{ 
-  if(this != &rhs) {
-    m_sSwitch = rhs.m_sSwitch;
-    m_sValue  = rhs.m_sValue;
-  }
-  return *this;
+CReadableObject::CReadableObject (const string& rName,
+				  CTCLInterpreter& rInterp) :
+  CConfigurableObject(rName, rInterp),
+  m_pOwner(0)
+{
 }
+ 
+/*!
+   Destructor is a no-op.
+*/
+
+CReadableObject::~CReadableObject ( )
+{
+}
+
 
 /*!
-   Determins if this is functionally equivalent to the \em rhs
-  parameter. This will be true if all member data are equal.
 
-  \param rhs const CConfigurationParameter& rhs [in]
-              The object to be compared with *this.
+Links a readable object into its read order.
+Read order objects contain ordered lists 
+of modules to read.  
 
-  \return Either of:
-  - true if there is functional equivalence.
-  - false if there is not functional equivalence.
+The entire readout
+scheme can be though of as a hierarchy
+consisting of a top level readout object
+that is an ordered list of CDigitizerModule
+and CReadOrder objects.  Each object
+is allowed to only be controlled by one
+ReadOrder module.  This member connects
+a module to its read order.
+
+\throw string
+    A string exception describing the problem is
+thrown e.g. if the module is already linked.
+
 */
-int 
-CConfigurationParameter::operator== (const CConfigurationParameter& rhs) const
+void 
+CReadableObject::Link(CReadOrder* pReader)  
+{
+  if(m_pOwner) {
+    throw string("CReadableObject::Link - object is already linked.");
+  }
+  else {
+    m_pOwner = pReader;
+  }
+}  
+
+/*!  
+
+Unlinks a module from its reader (see the Link member function).
+It is an error to unlink a module that is not alread linked.
+
+\throw string
+     The function throws a descriptive error message if there
+is a problem.
+
+*/
+void 
+CReadableObject::Unlink()  
 { 
-  return ( (m_sSwitch == rhs.m_sSwitch)    &&
-           (m_sValue  == rhs.m_sValue));
+  if(m_pOwner) {
+    m_pOwner = (CReadOrder*)NULL;
+  } 
+  else {
+    throw string("CReadableObject::Unlink - object is not linked");
+  }
+}  
 
-}
+/*! 
 
-// Functions for class CConfigurationParameter
 
-/*!  Function: 	
-  Returns true if the input string matches m_sSwitch.
-  typically intended to be used in detecting which of
-  several configuration parameters should be parsed.
+\return bool
+   - true if the module has been linked to a reader.
+   - false if the module is not currently linked to a reader.
 
-  \param rSwitch - const string& [in]
-          The string to match against m_sSwitch.
 
 */
 bool 
-CConfigurationParameter::Match(const string & rSwitch)  
+CReadableObject::isLinked()  
 { 
-  return (m_sSwitch == rSwitch);
+  return (m_pOwner != (CReadOrder*)NULL);
 }  
 
-/*!  Function: 	
+/*!
 
-Called when our keyword matches an option keyword. 
-The new value of the parameter is saved.  This is a virtual
-member function.  The action is as follows:
-- Call SetValue
-- If SetValue returned TCL_OK, update the stringified value.
-- If SetValue failed, return to the caller without update.
 
-\param rInterp CTCLInterpreter& [in] Interpreter that is runinng
-              this command.
-\param rResult CTCLResult& [in] The result object that will
-              hold any error string if there is a problem.
-\param parameter const char* [in] the string containing the
-            candidate new value.
+Called prior to object deletion (destruction).  If the module
+The object must remove itself from its reader.  If it has any submodules
+it must unlink them from itself.
 
-\return This function can return:
-      TCL_OK - if SetValue claims the parameter string was 
-                properl parsed.
-      TCL_ERROR - if not.
-
+If we are still linked, we remove ourselves from our reader...
 */
-int 
-CConfigurationParameter::operator()(CTCLInterpreter& rInterp,
-                                    CTCLResult& rResult, 
-                                    const char* parameter)  
+void 
+CReadableObject::OnDelete()  
 { 
-  int status = SetValue(rInterp, rResult, parameter);
-  if(status == TCL_OK) {
-    setValue(parameter);
+  if(m_pOwner) {
+    m_pOwner->Remove(this);
+    m_pOwner = (CReadOrder*)NULL; // In case we  don't really get deleted.
+                                  // Although in fact, our owner will unlink. 
   }
-  return status;
-}  
-
-/*!  Function: 	
-
-Returns the current value of the
-parameter value as a string.  We delegate to 
-getValue.
-
-*/
-string 
-CConfigurationParameter::getOptionString() const  
-{ 
-  return getValue();
 }  
 
