@@ -152,7 +152,7 @@ proc EndRun   {} {
 
     puts $fd "                     $RunTitle"
     puts $fd "                     Run: $RunNumber"
-    if {$RunNumber == $StartTime} {
+    if {$RunNumber == $RunNumber} {
     	puts $fd "                     Started: $StartTime"
     } else {
     	puts $fd "                     Started: >Unknown<"
