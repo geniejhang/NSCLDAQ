@@ -338,7 +338,7 @@ CTimer::Start(unsigned int ms, unsigned int latency, bool doReset=false)
   clock_gettime(CLOCK_REALTIME, &now);
 
   m_nStartTimeMs = now.tv_sec*1000 + now.tv_nsec/1000000;
-  m_nAccumulatedMs = 0;		// probably already is but can't hurt to go again.
+
 }  
 
 /*!
@@ -359,7 +359,9 @@ CTimer::Stop()
   timespec  now;
   clock_gettime(CLOCK_REALTIME, &now);
   int ms = now.tv_sec*1000 + now.tv_nsec/1000000; // Time since epoch in ms.
-  m_nAccumulatedMs = ms - m_nStartTimeMs;         // ms in the segment.
+  if(m_nStartTimeMs) {		// In case its already stopped.
+    m_nAccumulatedMs += (ms - m_nStartTimeMs);         // ms in the segment.
+  }
   m_nStartTimeMs  = 0;
 
 }  

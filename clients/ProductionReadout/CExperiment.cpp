@@ -283,6 +283,9 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
    
    Modification History:
    $Log$
+   Revision 3.4.4.2  2004/03/24 14:45:00  ron-fox
+   Get the pause logic correct
+
    Revision 3.4.4.1  2004/03/10 13:01:23  ron-fox
    - Ensure that all buffer types are created with m_nBufferSize words of size.
    - (issue116): Ensure that runvariables and statevariables get truncated so that
@@ -658,7 +661,7 @@ CExperiment::Start(CStateTransitionCommand& rCommand)
     
   }
   catch (bad_cast& rbad) {
-    m_LastScalerTime = 0;	// Snaps will not have been read out at resume.
+    m_LastSnapTime = 0;	// Snaps will not have been read out at resume.
     EmitResume();		// Emit a resume without zeroing the run elapsed time.
   }
 
