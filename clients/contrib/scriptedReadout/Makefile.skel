@@ -10,20 +10,18 @@
 SPECTRO_FLAGS=$(shell $(spectrodaq_conf_dir)/spectrodaq-conf --cflags)
 SPECTRO_LDFLAGS=$(shell $(spectrodaq_conf_dir)/spectrodaq-conf --libs)
 
-CC = gcc
 
 
 
 
 LDFLAGS=-L$(LIBDIR) -lScriptedRdo \
-	 -lReadout -lDeviceSupport -lTclPlus -lException $(SPECTRO_LDFLAGS) \
-	$(VMELIBRARY) $(TCL_LDFLAGS)
+	 -lReadout -lDeviceSupport -lTclPlus -lException $(VMELIBRARY) \
+	$(SPECTRO_LDFLAGS) \
+	$(TCL_LDFLAGS)
 
 CXXFLAGS = -c -D__UNIX__ $(SPECTRO_FLAGS) -I$(INCLUDEDIR) -I$(SCRIPTEDINCLUDE) \
 	-I$(VMELIBRARYHEADERS) $(CAMAC) $(TCL_FLAGS)
 
-
-CPP = g++ $(CXXFLAGS)
 
 
 PROGOBJS=ReadoutMain.o skeleton.o
@@ -31,12 +29,12 @@ PROGOBJS=ReadoutMain.o skeleton.o
 all : Program
 
 Program: $(PROGOBJS)
-	g++ -o Readout $(PROGOBJS) $(LDFLAGS)
+	$(LD) -o Readout $(PROGOBJS) $(LDFLAGS)
 
 ReadoutMain.o: ReadoutMain.cpp
-	$(CPP)  $<
+	$(CXX) $(CXXFLAGS)  $<
 skeleton.o: skeleton.cpp
-	$(CPP)  $<
+	$(CXX) $(CXXFLAGS)  $<
 
 
 clean: 
