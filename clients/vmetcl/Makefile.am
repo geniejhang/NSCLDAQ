@@ -4,7 +4,7 @@ SUBDIRS = camactcl vhq202m
 lib_LTLIBRARIES = libVme.la
 libVme_la_SOURCES = VMECommand.cpp VMEMapCommand.cpp VMEPackage.cpp
 
-libVme_la_LDFLAGS = -static   -L@top_srcdir@/VMEApi \
+libVme_la_LDFLAGS =  -L@top_srcdir@/VMEApi \
 	 -L@top_srcdir@/TCL -L@top_srcdir@/Exception  \
 	-L@top_srcdir@/CopyrightTools\
 	-version-info $(SOVERSION):0 -Wl,"-rpath=$(libdir)"
