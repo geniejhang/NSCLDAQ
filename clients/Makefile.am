@@ -38,3 +38,4 @@ install-data-local:
 	$(INSTALL_PROGRAM)  daqman $(prefix)/bin
  
 	echo "Version: " $(VERSION) build on `hostname` `date` > $(prefix)/VERSION
+	mandb $(prefix)/man
