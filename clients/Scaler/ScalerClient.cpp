@@ -295,6 +295,14 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 /*
   Modification history:
     $Log$
+    Revision 3.4.2.1  2004/03/24 14:50:06  ron-fox
+    Merge with 7.4 line in order to pick up fixe to update not being called
+    when there are no scalers.
+
+    Revision 3.4.4.1  2004/02/09 17:50:46  ron-fox
+    Invoke the update member even if no scalers are transmitted in the buffer... there is still useful
+    elapsed time information that should be transmitted to the tclserver.
+
     Revision 3.4  2003/09/03 12:35:31  ron-fox
     Escape quotes in the title. This deals with two cases:
     - If the user is not using the production readout system, then
@@ -464,8 +472,9 @@ void CScalerClient::OnScalerBuffer(CNSCLScalerBuffer& rScalerBuffer)
     UpdateScalers(scalers, rScalerBuffer.isSnapshot());
     sCommand=cmd;
     m_Connection->SendCommand(sCommand);
-    m_Connection->SendCommand(string("Update"));
   }
+  m_Connection->SendCommand(string("Update"));
+
 }
 //////////////////////////////////////////////////////////////////////////////
 //
