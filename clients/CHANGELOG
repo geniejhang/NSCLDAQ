@@ -74,3 +74,36 @@
        $(prefix)/contrib/caenv812.
     - Incorporate scripted readout engine developed initially for
       LLNL, LBL then SEE and RPI by Ron Fox.
+    - Added bunches of stuff to the contrib directory for scriptable readout.
+
+
+7.3-005 3/3/04
+    - Did a merge with the 7.4 branch for:
+       framework
+       controlpush ...
+       ProductionReadout
+       configure.in
+       Makefile.am
+     in order to get the controlpush functionality and readout fixes that
+     go along with it.
+    - Fix incorrect base address for vme trigger/status module was
+      0xf000 sb. 0x444400
+7.3-006 3/10/04
+   - Merge production readout with 7.4 branch to incorporate fix for
+     issue 116: Title, run variable and state variable values that are too
+     large cause all sorts of grief.
+7.3-007 3/24/04
+   - Merge Scaler client from 7.4 to catch a long standing issue I'd
+     forgotton about: Update needs to be called even if there are no
+     scalers (if only to keep track of run time).
+   - Merge Production readout with 7.4 branch to incorporate fix for
+     issue 106: Elapsed run time incorrect.
+7.3-008 3/31/04
+   - Merge in the fixes to the Stager/ReadoutGui that constitute the fix
+     for issue 108: Event files can be ovewritten with no prompt.
+   - Merge in fix for production readout - stabilization of scaler readout timings.
+7.3-008 4/12/04
+   - Added build stamp to the installation procedure
+   - Fixed an incompatibility with tcl 8.4 and cratelocator.tcl
+   - Fixed controlpush - plc channels need extra time to connect
+   - Added # escaping to controlpush and to production readout

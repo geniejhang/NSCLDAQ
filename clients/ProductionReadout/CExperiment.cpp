@@ -279,10 +279,22 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
       Implementation of the CEXperiment class.  See CExperiment.h for detailes.
       */
 /*
-   $Header$
    
    Modification History:
    $Log$
+   Revision 3.4.2.2  2004/03/24 14:49:22  ron-fox
+   Incorporate merges from 7.4 line to fix problem with elapsed time keeping.
+
+   Revision 3.4.2.1  2004/03/10 13:43:03  ron-fox
+   Merged with 7.4 to fix issue 116 (long title, runvar and statevar values
+   can cause all sorts of buffer packing grief).
+
+
+   Revision 3.4.4.1  2004/03/10 13:01:23  ron-fox
+   - Ensure that all buffer types are created with m_nBufferSize words of size.
+   - (issue116): Ensure that runvariables and statevariables get truncated so that
+     at worst case a single scriptlet will fit in a whole buffer.
+
    Revision 3.4  2003/12/05 17:35:42  ron-fox
    Fix sloppy handling of the buffer
    sequence number that was throwing off
@@ -653,7 +665,7 @@ CExperiment::Start(CStateTransitionCommand& rCommand)
     
   }
   catch (bad_cast& rbad) {
-    m_LastScalerTime = 0;	// Snaps will not have been read out at resume.
+    m_LastSnapTime = 0;	// Snaps will not have been read out at resume.
     EmitResume();		// Emit a resume without zeroing the run elapsed time.
   }
 
@@ -974,7 +986,7 @@ CExperiment::TriggerRunVariableBuffer()
   // Multiple buffers may be required:
 
   while(i != Vars->end()) {
-    CRunVariableBuffer buf;
+    CRunVariableBuffer buf(m_nBufferSize);
     i = EmitRunVariableBuffer(buf, i, Vars->end());
     buf.SetRun(GetRunNumber());
     buf.Route();		// Increment else SpecTcl's eff is wrong.
@@ -1224,7 +1236,9 @@ CExperiment::EmitRunVariableBuffer(CRunVariableBuffer& rBuffer,
 				   RunVariableIterator end)
 {
   while(start != end) {
-    string item = (start->second)->FormatForBuffer();
+    string item = 
+      (start->second)->FormatForBuffer(m_nBufferSize*sizeof(short) - 
+				       sizeof(bheader)-2);
     if(!rBuffer.PutEntityString(item)) break; // Won't fit if break.
     start++;
   }
@@ -1252,7 +1266,8 @@ CExperiment::EmitStateVariableBuffer(CStateVariableBuffer& rBuffer,
   while(start != end) {
     CStateVariable* pv = start->second;
 
-    string item = pv->FormatForBuffer();
+    string item = pv->FormatForBuffer((m_nBufferSize*sizeof(short) - 
+				       sizeof(bheader)-2));
     if(!rBuffer.PutEntityString(item)) break;
     start++;
   }
