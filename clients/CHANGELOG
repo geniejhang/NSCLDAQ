@@ -1,3 +1,4 @@
+<<<<<<< CHANGELOG
 7.1-005 3/31/03
     -  Allow Readout/Active.cpp Active::EndRun to be harmlessly called
        when the run is not in progress.
@@ -77,7 +78,7 @@
     - Added bunches of stuff to the contrib directory for scriptable readout.
 
 
-7.3-005 3/2/04
+7.3-005 3/3/04
     - Did a merge with the 7.4 branch for:
        framework
        controlpush ...
@@ -86,3 +87,9 @@
        Makefile.am
      in order to get the controlpush functionality and readout fixes that
      go along with it.
+    - Fix incorrect base address for vme trigger/status module was
+      0xf000 sb. 0x444400
+7.3-006 3/10/04
+   - Merge production readout with 7.4 branch to incorporate fix for
+     issue 116: Title, run variable and state variable values that are too
+     large cause all sorts of grief.
