@@ -142,3 +142,7 @@
      main was separated into a different module of spectrodaq.
 
 7.3-017
+   - Ensure that -lbtp is prior to spectrodaq ld flags so that we don't
+     have any undefs from pthread.
+   - Need to fix some ExprLong's that should be strtol's to work with
+     TCL-8.4 where ExprLong limits at signed longs.
