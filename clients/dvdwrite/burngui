@@ -8,7 +8,7 @@ set mypath  [file dirname $me]
 
 
 source $mypath/TopGUi.ui.tcl
-source $mypath/seeburnoutput.ui.tcl
+source $mypath/dvdburnoutput.ui.tcl
 
 set burning 0
 set burnfd ""

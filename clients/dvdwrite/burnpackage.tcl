@@ -4,14 +4,14 @@
 #
 #  
 
-package provide SEETFDvd 1.0
+package provide DvdBurn 1.0
 
-namespace eval  SEETFDvd {
+namespace eval  DvdBurn {
     #
     #   Package/namespace global variables:
     #
     variable ExperimentRoot "~/experiment"; # Root of experiment files.
-    variable ISOFSroot      "/scratch/seetfisos"; # Where ISO temp data lives.
+    variable ISOFSroot      "/scratch/$tcl_platform(user)"; # Where ISO temp data lives.
     variable MarshallDir    $ISOFSroot/tmp; # Where runs get marshalled.
 
     variable DVDSize        4000;	# Mbytes in a DVD.
@@ -226,38 +226,7 @@ namespace eval  SEETFDvd {
 	    error "MarshallRun: Bulk data tar failed: $msg"
 	}
 
-	# Now get all the little niggly stuff too:
 
-	# Spectrum files:
-
-	set pattern see.*run$Run.spec
-	cd  $SourceRoot/../savedspectra
-	set spectra [glob -nocomplain $pattern]
-	if {[catch "file mkdir $Target/spectra"]} {
-	    cd $wd
-	    error  "MarshallRun: Could not make directory $Target/spectra"
-	}
-	foreach spectrum $spectra {
-	    if {[catch "file copy $spectrum $Target/spectra"]} {
-		cd $wd
-		error "MarshallRun: Could not copy $spectrum to $Target/spectra"
-	    }
-	}
-	#   Scaler files:
-	
-	cd $SourceRoot/../scalerfiles
-	set scalers [glob -nocomplain run$Run*.scalers]
-	if {[catch "file mkdir $Target/scalers"]} {
-	    cd $wd
-	    error "MarshallRun: Could not create $Target/scalers"
-	}
-
-	foreach file $scalers {
-	    if {[catch "file copy $file $Target/scalers"]} {
-		cd $wd
-		error "MarshallRun: Could not copy $file to $Target/scalers"
-	    }
-	}
 	cd $wd;				# Restore working directory.
 
 	# Size the result with du and return the size of the result.

@@ -5,7 +5,7 @@ exec tclsh ${0} ${@}
 
 proc Usage {} {
     puts  "Usage: "
-    puts  {   seeburn [firstrun [lastrun]]}
+    puts  {   dvdburn [firstrun [lastrun]]}
     puts  "      firstrun - An optional lowest run number to burn."
     puts  "      lastrun  - An optional last run number to burn.  "
     puts  "    If neither firstrun nor lastrun is present, all runs "
@@ -23,9 +23,9 @@ set mypath [file dirname $me]
 
 source $mypath/burnpackage.tcl
 
-package require SEETFDvd
+package require DvdBurn
 
-namespace import SEETFDvd::CreateDvds
+namespace import DvdBurn::CreateDvds
 
 set range "";				# Assume there's no range information.
 
