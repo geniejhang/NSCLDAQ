@@ -1,4 +1,4 @@
-isntall-exec-local:
+install-exec-local:
 	$(mkinstalldirs) $(prefix)/contrib
 	$(mkinstalldirs) $(prefix)/N568Panel
 	$(INSTALL_PROGRAM) $(srcdir) *.tcl  $(prefix)/N568Panel

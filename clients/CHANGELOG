@@ -131,3 +131,6 @@ Week of November 1:
        strtoll's.
      - Fix typo in Readout/Reader.cpp - where m_pTrigger is used where
        m_pBusy was intended.
+     - In the readout makefiles comment about how to select between the
+       CAMAC controllers.
+     - Fix type on n568panel makefile
