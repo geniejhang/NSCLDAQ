@@ -329,7 +329,6 @@ DAMAGES.
 #include <CTimerEvent.h>
 #include <CTimerMonitor.h>
 #include <CXtEventLoop.h>
-#include <CLocationMonitor.h>
 #include <SpectroFramework.h>
 #include <TCLApplication.h>
 #include <TCLCommandPackage.h>

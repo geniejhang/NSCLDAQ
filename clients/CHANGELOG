@@ -100,3 +100,7 @@ Week of Sept. 6
 - Added man page for Vme TCL loadable package.
 - Added man page for caennet TCL loadable package.
 - Added man page for vhq TCL loadable package.
+Week of Sept. 20
+- Fix defect in Production readout: CExperiment never invokes the scaler
+  initialization function.
+- Add manpage for camac package (CES 8210).

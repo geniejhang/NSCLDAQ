@@ -251,7 +251,7 @@ Database Class:	\\fB\\$3\\fR
 .BS
 .SH NAME
 camac \- TCL loadable package to access CAMAC via CES CBD8210
->SH SYNOPSIS
+.SH SYNOPSIS
 \fBpackage require camac\fR
 .sp
 \fB::camac::cdreg\fR  \fIb c n ?vmecrate?\fR
@@ -312,42 +312,42 @@ set module [cdreg 0 1 2];    # instead of e.g. ::camac::cdreg
 .SH COMMANDS
 .TP
 \fB::camac::cdreg\fP  \fIb c n ?vmecrate\fR
-Creates and returns a handle to a module.  The handle can be used as the /fImodule/fR
+Creates and returns a handle to a module.  The handle can be used as the \fImodule\fR
 argument of commands described later in this section.
 .RS
 .TP
 \fIb\fP
-   The number of the branch the module is installed in.  Note that this
-   number is the number on the front panel dial of the CES CBD8210 module.
+The number of the branch the module is installed in.  Note that this
+number is the number on the front panel dial of the CES CBD8210 module.
 .TP
 \fIc\fP
- 	The number of the CAMAC crate in which the module is installed. Note that
- 	this is the number in the thumbwheel on the crate controller's front panel.
+The number of the CAMAC crate in which the module is installed. Note that
+this is the number in the thumbwheel on the crate controller's front panel.
 .TP
 \fIn\fP
-	The number of the slot in which the module is inserted.
+The number of the slot in which the module is inserted.
 .TP
 \fIvmecrate\fP
-	The optional number of the VME crate in which the CES CBD 8210 is 
-	installed.  Note that if omitted, this value defaults to 0 which is 
-	sufficient for systems with a single VME crate.
+The optional number of the VME crate in which the CES CBD 8210 is 
+installed.  Note that if omitted, this value defaults to 0 which is 
+sufficient for systems with a single VME crate.
 .RE
 .TP
 \fB::camac::cfsa\fP  \fImodule f a ?d?\fR
 Peforms a CAMAC transaction on \fImodule\fR.  If a data transfer is required, it
 is performed at the full 24 bit width of the CAMAC dataway.  The return value of a
-successfully executed command is a three element list.  The list elements are the data way Q and X 
+successfully executed command is a three element list.  The list elements are the dataway Q and X 
 responses, and any data that has been transferred (either in or out).
 .RS
 .TP
 \fImodule\fP
-   A  module handle that was returned from camac::cdreg.
+A  module handle that was returned from camac::cdreg.
 \fIf\fP
-   The CAMAC function code to execute on the module.
+The CAMAC function code to execute on the module.
 \fIa\fP
-   The module subaddress the function code is targeted to.
+The module subaddress the function code is targeted to.
 \fI?data?\fP
-   Optional data that is required for write function codes (15 < \fIf\fR < 24).
+Optional data that is required for write function codes (15 < \fIf\fR < 24).
 .RE
 .TP
 \fB::camac::cssa\fP  \fImodule f a ?data?\fR
@@ -362,39 +362,44 @@ does not return a Q response to the operation.  This operation only supports rea
 .RS
 .TP
 \fImodule\fP
-   Is the module targeted by this operation.   The module is a handle returned by the
-   \fB::camac::cdreg\fR command.
+Is the module targeted by this operation.   The module is a handle returned by the
+\fB::camac::cdreg\fR command.
+.TP
 \fIf\fP
-   Is the function code to repeat.  The operation fails if this
-   function code is not in the range \[0,7\].
+Is the function code to repeat.  The operation fails if this
+function code is not in the range 0 <= \fIf\fR <= 7.
+.TP
 \fIa\fP
-   Is the subaddress of the module this operation is targeted at.  In most cases, this will
-   represent a data channel.
+Is the subaddress of the module this operation is targeted at.  In most cases, this will
+represent a data channel.
+.TP
 \fImaxn\fP
-   If present, represents the maximum number of transfers that are allowed to occur with a 
-   Q response before terminating.  By default this is MAXINT.  
+If present, represents the maximum number of transfers that are allowed to occur with a 
+Q response before terminating.  By default this is MAXINT.  
 .RE
 .TP
 \fB::camac::qscan\fP  \fImodule f a ?maxn?\fR
 Performs a Q scan starting at the indicated module and subaddress.   A Q-scan is a block
 transfer operation that repeatedly performs the indicated function.  After each repetition, the 
 module subaddress is incremented.  When a module stops returning a Q, the slot is incremented.
-The scan continues until the data way X response is false indicating the scan has entered an
-empty slot.  This implementation only supports read operations (0< = \fIf\fR < 8).
+The scan continues until the dataway X response is false indicating the scan has entered an
+empty slot.  This implementation only supports read operations (0<= \fIf\fR < 8).
 .RS
 .TP
 \fImodule\fP
-   Is the module targeted by this operation.   The module is a handle returned by the
-   \fB::camac::cdreg\fR command.
+Is the module targeted by this operation.   The module is a handle returned by the
+\fB::camac::cdreg\fR command.
+.TP
 \fIf\fP
-   Is the function code to repeat.  The operation fails if this
-   function code is not in the range \[0,7\].
+Is the function code to repeat.  The operation fails if this
+function code is not in the range \[0,7\].
+.TP
 \fIa\fP
-   Is the subaddress of the module this operation is targeted at.  In most cases, this will
-   represent a data channel.
+Is the subaddress of the module this operation is targeted at.  In most cases, this will
+represent a data channel.
 \fImaxn\fP
-   If present, represents the maximum number of transfers that are allowed to occur with a 
-   before terminating.  By default this is MAXINT.  
+If present, represents the maximum number of transfers that are allowed to occur with a 
+before terminating.  By default this is MAXINT.  
 .RE
 .TP
 \fB::camac::cblock\fR \fImodule f a num\fR
@@ -403,19 +408,19 @@ only supports block reads.  The same function is repeated as indicated by the \f
 .RS
 .TP
 \fImodule\fP
-   Is the module targeted by this operation.   The module is a handle returned by the
-   \fB::camac::cdreg\fR command.
+Is the module targeted by this operation.   The module is a handle returned by the
+\fB::camac::cdreg\fR command.
 .TP
 \fIf\fP
-   Is the function code to repeat.  The operation fails if this
-   function code is not in the range \[0,7\].
+Is the function code to repeat.  The operation fails if this
+function code is not in the range \[0,7\].
 .TP
 \fIa\fP
-   Is the subaddress of the module this operation is targeted at.  In most cases, this will
-   represent a data channel.
+Is the subaddress of the module this operation is targeted at.  In most cases, this will
+represent a data channel.
 .TP
 \fInum\fP
-   The number of transfers to perform.
+The number of transfers to perform.
 .RE
 .TP
 \fB::camac::isOnline\fP  \fIb c ?v?\fR
@@ -425,14 +430,14 @@ fail if the VME crate \fIv\fR is offline.
 .RS
 .TP
 \fIb\fR
-    The branch to check.
+The branch to check.
 .TP
 \fIc\fR
-    The crate to check.
+The crate to check.
 .TP
 \fIv\fR
-    The VME crate in which to check.  If omitted, this optional parameter defaults to crate
-    0 which is suitable for systems with a single VME crate.
+The VME crate in which to check.  If omitted, this optional parameter defaults to crate
+0 which is suitable for systems with a single VME crate.
 .RE
 .TP
 \fB::camac::GetGL\fP \fIb ?v?\fR
@@ -445,11 +450,11 @@ the slots within each crate.
 .RS
 .TP
 \fIb\fR
-	The branch to interrogate for its graded lam mask.
+The branch to interrogate for its graded lam mask.
 .TP
 \fIv\fR
-     The optional VME crate in which the branch controller is installed.  If this parameter
-     is omitted, then it defaults to 0 which is suitable for a system with a single VME crate.
+The optional VME crate in which the branch controller is installed.  If this parameter
+is omitted, then it defaults to 0 which is suitable for a system with a single VME crate.
 .RE
 .TP
 \fB::camac::C\fP \fIb c ?v?\fR
@@ -457,14 +462,14 @@ Performs a C cycle (clear) on the indicated CAMAC crate.
 .RS
 .TP
 \fIb\fR
-   Selects the branch to operate on.
+Selects the branch to operate on.
 .TP
 \fIc\fR
-	Selects the crate to operate on.
+Selects the crate to operate on.
 .TP
 \fIv\fR
-    Optional parameter to select the VME crate in which the branch controller is installed.
-    This parameter defaults to zero which is appropriate in a single VME crate system.
+ Optional parameter to select the VME crate in which the branch controller is installed.
+ This parameter defaults to zero which is appropriate in a single VME crate system.
 .RE
 .TP
 \fB::camac::Z\fP  \fIb c ?v?\fR
@@ -472,14 +477,14 @@ Performs a Z cycle on the selected CAMAC crate.
 .RS
 .TP
 \fIb\fR
-	Selects the branch in which the crate lives.
+Selects the branch in which the crate lives.
 .TP
 \fIc\fR
-	Selects the crate to operate on.
+Selects the crate to operate on.
 .TP
 \fIv\fR
-	Optional parameter that indicates which VME crate the branch controller lives in. This
-	parameter defaults to 0 which is appropriate in single VME crate systems.
+Optional parameter that indicates which VME crate the branch controller lives in. This
+parameter defaults to 0 which is appropriate in single VME crate systems.
 .RE
 .TP
 \fB::camac::isInhibited\fP \fIb c ?v?\fR
@@ -487,14 +492,14 @@ Returns a boolean flag indicating the state of the dataway inhibit on the select
 .RS
 .TP
 \fBb\fR
-	The branch containing the crate to check.
+The branch containing the crate to check.
 .TP
 \fBc\fR
-	Selects the crate to check.
+Selects the crate to check.
 .TP
 \fBv\fR
-	Optional parameter that indicates which VME crate the branch highway controller is installed in.
-	This parameter defaults to zero which is appropriate in a single VME crate system.
+Optional parameter that indicates which VME crate the branch highway controller is installed in.
+This parameter defaults to zero which is appropriate in a single VME crate system.
 .RE
 .TP
 \fB::camac::Inhibit\fP \fIb c state ?v?\fR
@@ -502,18 +507,18 @@ Sets or clears the state of the dataway inhibit in the selected CAMAC crate.
 .RS
 .TP 
 \fIb\fR
-	The branch the crate lives in.
+The branch the crate lives in.
 .TP
 \fIc\fR
-	The crate to inhibit or uninhibit.
+The crate to inhibit or uninhibit.
 .TP
 \fIstate\fR
-	The desired state of the inhibit.  Nonzero sets the inhibit (inhibits the crate), while
-	zero removes the inhibit (uninhibits the crate).
+The desired state of the inhibit.  Nonzero sets the inhibit (inhibits the crate), while
+zero removes the inhibit (uninhibits the crate).
 .TP
 \fIv\fR
-	Optional parameter that indicates which VME crate the branch controller lives in. This
-	parameter defaults to 0 which is appropriate in single VME crate systems.
+Optional parameter that indicates which VME crate the branch controller lives in. This
+parameter defaults to 0 which is appropriate in single VME crate systems.
 .RE
 .TP
 \fB::camac::ReadLams\fP \fIb c ?v?\fR
@@ -525,14 +530,14 @@ are using a completely passive LAM grader that maps each slot into a correspondi
 .RS
 .TP
 \fIb\fR
-	The branch in which the crate lives.
+The branch in which the crate lives.
 .TP
 \fIc\fR
-	The number of the crate to read the lam mask from.
+The number of the crate to read the lam mask from.
 .TP
 \fIv\fR
-	Optional parameter that indicates which VME crate the branch controller lives in. This
-	parameter defaults to 0 which is appropriate in single VME crate systems.
+Optional parameter that indicates which VME crate the branch controller lives in. This
+parameter defaults to 0 which is appropriate in single VME crate systems.
 .RE
 .SH "SEE ALSO"
 vmetcl(3tcl), wienercamac(3tcl)
