@@ -76,3 +76,13 @@ Week of August 9, 2004
 - Added support for Wiener VC/CC32 camac controllers in multiple
   VME crates to tcl support.  This completes the fix for
   Enhancement request BZ 136 (http://daqbugs.nscl.msu.edu/show_bug.cgi?id=136).
+Week of August 16, 2004
+- Put CopyIn support back into CAENcard.cpp to improve
+  performance for e.g. scripted readout.  NOTE: Users
+  must have Spectrodaq 0.8.1-001 at the earliest as prior
+  versions of Spectrodaq have CopyIn broken or missing.
+  (Missing is not so bad as conditional compilations will
+   fall back to word by word copy... broken is bad since
+   it segfaults).
+- Added support for CES8210's in crates other than 0 for camac.tcl.
+
