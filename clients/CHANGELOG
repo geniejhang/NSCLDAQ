@@ -26,3 +26,5 @@
                  Added to this fix for disabled entry widget poor contrast.
 - Put -rpaths in all the Makefiles so we don't need LD_LIBRARY_PATH
   and we always get the right directory.
+- Use includes in skeleton makefiles to try to isolate stuff we might modify
+  from stuff the user might modify.
