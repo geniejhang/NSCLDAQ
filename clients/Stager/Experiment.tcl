@@ -462,7 +462,7 @@ namespace eval  Experiment {
 
 	    catch {
 		 exec \
-   	       sh << "(cd $current; tar chf - .)|(cd $root/run$nrun; tar xf -)"
+   	       sh << "(cd $current; tar chf - .)|(cd $root/run$nrun; tar xpf -)"
 	    }
 	    #
 	    # Create a new links to the event data in the runnum dir.
