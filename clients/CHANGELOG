@@ -148,3 +148,5 @@
      TCL-8.4 where ExprLong limits at signed longs.
    - Fix long standing uncaught typo in Readout/Reader.cpp where the
      m_pTrigger member was used where m_pBusy was intended at init.
+   - Fix typos in goShaper{16} and document need to run in spdaq system.
+
