@@ -1014,6 +1014,6 @@ CSIS3300::haveHiRAFirmware() const
   unsigned int major = getFirmwareMajor();
   unsigned int minor = getFirmwareMinor();
 
-  return ((HIRAFWMAJOR == major) && (HIRAFWMINOR == minor));
+  return ((HIRAFWMAJOR == major));
 
 }
