@@ -27,7 +27,8 @@ LIBDIRS = -L$(LIBDIR)
 
 #   Libs I need:
 
-LIBS = -lScalerServer -lTclPlus -lException -lLicense $(TCL_LDFLAGS)
+LIBS = -lScalerServer -lTclPlus -lException -lLicense $(TCL_LDFLAGS) \
+	-Wl,"-rpath=$(LIBDIR)"
 
 
 #

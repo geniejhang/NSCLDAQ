@@ -63,7 +63,8 @@ libPReadout_la_SOURCES = AccessListCheck.cpp \
 	TclAuthorizer.cpp \
 	UnixUserCheck.cpp \
 	cmdline.c \
-	CTKListener.cpp CTKServerInstance.cpp
+	CTKListener.cpp CTKServerInstance.cpp \
+	CStrings.cpp
 
 include_HEADERS = AccessListCheck.h \
 	AuthTokenCheck.h \
@@ -129,14 +130,14 @@ include_HEADERS = AccessListCheck.h \
 	UnixUserCheck.h \
 	cmdline.h  \
 	CTKServerInstance.h \
-	CTKListener.h 
+	CTKListener.h  CStrings.h
 
 
 libPReadout_la_LDFLAGS = -g -version-info $(SOVERSION):0 \
 	-L@top_srcdir@/framework \
 	-L@top_srcdir@/VMEApi \
 	-L@top_srcdir@/Exception \
-	-lEventFramework -lVmeAPI -lException  $(SPECTRODAQ_LDFLAGS) \
+	-lEventFramework -lVmeAPI -lException -lrt  $(SPECTRODAQ_LDFLAGS) \
 	$(TCL_LDFLAGS) $(X11LIBS) 
 
 INCLUDES =  $(CAMAC) -I@top_srcdir@/Headers \

@@ -1,0 +1,25 @@
+
+7.4:
+
+- Added program controlpush to push EPICS controls data into tcl server
+  programs (e.g. ProductionReadout too).
+- Fixed several issues with Production Reaodut's tcl server:
+  o Added tcl command error reporting.
+  o Correctly handled the case where multiple lines are available on the
+    socket.
+- ProductionReadout - quote and escape the contents of runvariables and
+  statevariables so that arbitrary characters like [ can appear in the
+  variable values.
+- Framework CSocket::Bind - prior to bind(), enable 
+   SO_REUSEADDR to deal with lingering sockets if e.g. readout exits and then
+   restarts soon.
+- Fix incorrect base address of VME trigger/status module was 0xf000 s.b.
+  0x444400 (production readout)
+- Fix issue 076: Elapsed time from readout classic is not correct.
+- Fix issue 116: Titles, runvars and statevars that don't fit can cause
+  a great deal of grief.
+- Fix issue 106: Elapsed time from runs is not correct for production rdo.
+- Added -rpath on Makefiles for scripted readout and scaler server so user
+  does not need to worry about the location of shared libs.
+- Fix issue 108: Event data files can be overwritten without any prompts.
+                 Added to this fix for disabled entry widget poor contrast.

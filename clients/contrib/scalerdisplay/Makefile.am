@@ -2,7 +2,9 @@ lib_LTLIBRARIES=libScalerServer.la
 bin_PROGRAMS=ScalerServer
 ScalerServer_DEPENDENCIES = libScalerServer.la
 
-libScalerServer_la_LDFLAGS = -version-info $(SOVERSION):0
+libScalerServer_la_LDFLAGS = -version-info $(SOVERSION):0 
+
+ScalerServer_LDFLAGS = 	-Wl,"-rpath=$(prefix)/lib"
 
 libScalerServer_la_SOURCES =  CBoolConfigParam.cpp \
 	CCAENModule.cpp \
@@ -27,6 +29,8 @@ libScalerServer_la_SOURCES =  CBoolConfigParam.cpp \
 	Server.cpp \
 	TclAuthorizer.cpp \
 	serverinstance.cpp \
+	CPacketCreator.cpp	\
+	CPacket.cpp	\
 	tclAppInit.cpp 
 
 ScalerServer_SOURCES =	tkAppInit.cpp 
@@ -53,6 +57,8 @@ noinst_HEADERS = CBoolConfigParam.h \
 	CStringConfigParam.h \
 	TclAuthorizer.h \
 	server.h \
+	CPacketCreator.h	\
+	CPacket.h	\
 	serverinstance.h 
 
 EXTRA_DIST= mwutil.tcl \
