@@ -61,6 +61,8 @@ void
 VisitorTests::AllOkTest()
 {
   CChannel c(RealName);
+  c.Lookup();
+
   c.FailUpdate();
   EQ(c.GetState(), CChannel::FailedUpdate);
 
@@ -84,6 +86,9 @@ VisitorTests::SGBuilderTest()
 {
   CChannel c1(RealName);
   CChannel c2(GoodName);
+  c1.Lookup();
+  c2.Lookup();
+
 
   CA_SYNC_GID gid;
   int status = ca_sg_create(&gid);
@@ -125,6 +130,9 @@ VisitorTests::UpdaterTest()
 {
   CChannel c1(RealName);
   CChannel c2(GoodName);
+  c1.Lookup();
+  c2.Lookup();
+
 
   CSingleUpdater v(2.0);	// Single updaters need a timeout.
 
@@ -166,6 +174,9 @@ VisitorTests::LookupTest()
 {
   CChannel c1(RealName);
   CChannel c2(GoodName);
+  c1.Lookup();
+  c2.Lookup();
+
 
   while(c2.GetState() != CChannel::Dead) {
     c2.FailUpdate();		// This way we don't need to know the retry count.
@@ -218,6 +229,9 @@ VisitorTests::GetDataTest()
 {
   CChannel c1(RealName);
   CChannel c2(GoodName);
+  c1.Lookup();
+  c2.Lookup();
+
   string   names[2] = {RealName, GoodName};
 
   CSingleUpdater    u(2.0);

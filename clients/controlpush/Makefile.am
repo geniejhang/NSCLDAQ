@@ -284,14 +284,14 @@ controlpush_SOURCES = cmdline.c CApplication.cpp CChannelList.cpp \
 			CLookupVisitor.cpp CChannel.cpp CNoUnitsException.cpp \
 			Main.cpp CApplicationSerializer.cpp CBuildChannelData.cpp
 
-controlpush_INCLUDES= cmdline.h CApplication.h CChannelList.h \
+include_HEADERS= cmdline.h CApplication.h CChannelList.h \
 			CChannelVisitor.h CSocket.h CStrings.h \
 			CTCPBadSocketState.h CTCPConnectionFailed.h \
 			CTCPConnectionLost.h CTCPNoSuchHost.h \
 			CTCPNoSuchService.h \
 			CSGBuilder.h CSingleUpdater.h CAllOk.h \
 			CLookupVisitor.h CChannel.h CNoUnitsException.h \
-			CApplicationSerializer.h CBuildChannelData.h
+			CApplicationSerializer.h CBuildChannelData.h cmdline.h
 
 controlpush_LDADD   = -L@top_srcdir@/Exception -lException \
 			-L@top_srcdir@/CopyrightTools -lLicense \
@@ -304,3 +304,5 @@ INCLUDES            =   -I@top_srcdir@/Exception \
 
 cmdline.c: options.ggo
 	gengetopt --unamed-opts <options.ggo
+
+EXTRA_DIST=options.ggo

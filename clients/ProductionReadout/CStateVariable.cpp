@@ -282,7 +282,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
 #include "CReadoutMain.h"
 #include "CRunState.h"
 #include <assert.h>
-
+#include <CStrings.h>
 
 CRunState* CStateVariable::m_pState = 0; //Static data member initialization
 
@@ -389,9 +389,10 @@ CStateVariable::FormatForBuffer()
     else {
       result += "set ";
       result += getVariableName();
-      result += " ";
-      result += "\"";
-      result += Get(TCL_GLOBAL_ONLY);   
+      const char* pValue = Get(TCL_GLOBAL_ONLY);   
+      result += " \"";
+      result += CStrings::EscapeString(pValue, 
+				       "\"[$", "\\");
       result += '"';
       result += "\n";
     }
@@ -404,8 +405,9 @@ CStateVariable::FormatForBuffer()
       result += '(';
       result += i->first;
       result += ") \"";
-      
-      result += Get(TCL_GLOBAL_ONLY, (char*)(i->first).c_str());
+      const char* pValue  = Get(TCL_GLOBAL_ONLY, 
+				(char*)(i->first).c_str());
+      result += CStrings::EscapeString(pValue, "\"[$", "\\");
       result += '"';
       result += '\n';
       i++;

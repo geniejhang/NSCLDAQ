@@ -279,6 +279,8 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
 //////////////////////////CRunVariable.cpp file////////////////////////////////////
 
 #include "CRunVariable.h"                  
+#include "CStrings.h"
+
 
 /*!
   Construct a run variable.  Run Variables may be modified 
@@ -373,7 +375,7 @@ CRunVariable::FormatForBuffer()
     result  = "set ";
     result += getVariableName();
     result += " \"";
-    result += pValue;
+    result += CStrings::EscapeString(pValue, "\"[$", "\\");
     result += '"';
     result += '\n';
   } 

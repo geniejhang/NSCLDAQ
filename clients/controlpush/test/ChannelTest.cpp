@@ -54,6 +54,7 @@ void
 ChannelTest::MakeGood()
 {
   CChannel good(GoodName);
+  good.Lookup();
 
   EQ(good.GetState(), CChannel::LookedUp);
 }
@@ -61,17 +62,9 @@ ChannelTest::MakeGood()
 void 
 ChannelTest::MakeBad()
 {
-  bool ok=true;
-  try {
-    CChannel bad(BadName);	// Should throw.
-    ok = false;
-  } 
-  catch (string msg) {
-    cerr << "Ok!  caught string: " << msg << endl;
-    ok = true;
-  }
-       
-  ASSERT(ok);
+  CChannel bad(BadName); 
+  bad.Lookup();
+  EQ(bad.GetState(), CChannel::Dead); // Bad name...
 
 }
 //
@@ -80,7 +73,8 @@ ChannelTest::MakeBad()
 void
 ChannelTest::HaveUnits()
 {
-  CChannel units(RealName);	// Probably volts!!
+  CChannel units(RealName);
+  units.Lookup();
 
   ASSERT(units.HaveUnits());
 
@@ -93,6 +87,8 @@ ChannelTest::HaveUnits()
   }
   // With goodname we should get the throw:
   CChannel noUnits(GoodName);
+  noUnits.Lookup();
+  ASSERT(!noUnits.HaveUnits());
   good = false;
   try {
     noUnits.GetUnits();
@@ -111,6 +107,8 @@ void
 ChannelTest::SingleUpdate()
 {
   CChannel units(RealName);
+  units.Lookup();
+
   units.Get();
   int status = ca_pend_io(2.0);	// This should be normal...
   EQ(status, (int)ECA_NORMAL);
@@ -127,6 +125,8 @@ void
 ChannelTest::NoUnits()
 {
   CChannel nounits(GoodName);	// Channel without associated units...
+  nounits.Lookup();
+
   nounits.Get();		// Queue the get...
   int status = ca_pend_io(2.0);	// This should be normal:
 
@@ -155,6 +155,8 @@ void
 ChannelTest::LastUpdated()
 {
   CChannel c(RealName);
+  c.Lookup();
+
   c.Get();
 
   int status = ca_pend_io(2.0);
@@ -179,6 +181,9 @@ ChannelTest::SGUpdate()
 {
   CChannel c1(RealName);
   CChannel c2(GoodName);
+  c1.Lookup();
+  c2.Lookup();
+
 
   CA_SYNC_GID gid;
   int status = ca_sg_create(&gid);
@@ -221,6 +226,8 @@ ChannelTest::Failure()
   // Test straightforward failure.
   {
     CChannel c1(RealName);	// Create a channel...
+    c1.Lookup();
+
     c1.FailUpdate();
     ASSERT(c1.GetState() == CChannel::FailedUpdate);
     c1.FailUpdate();
@@ -232,6 +239,8 @@ ChannelTest::Failure()
   
   {
     CChannel c1(RealName);
+    c1.Lookup();
+
     c1.FailUpdate();
     c1.FailUpdate();
     ASSERT(c1.GetState() == CChannel::FailedUpdate);
