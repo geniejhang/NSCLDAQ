@@ -355,10 +355,12 @@ proc UpdateTable {widget} {
     for {set line 0} {$line < $lines} {incr line} {
 	set numerator   [$widget cellcget $line,0 -text]
 	set denominator [$widget cellcget $line,1 -text]
-	if {$denominator == "" } {
-	    UpdateSingle $widget $line $numerator
-	} else {
-	    UpdateRatio $widget $line $numerator $denominator
+	if {$numerator != ""} {		# Numerator is blank on blank line.
+	    if {$denominator == "" } {
+		UpdateSingle $widget $line $numerator
+	    } else {
+		UpdateRatio $widget $line $numerator $denominator
+	    }
 	}
     }
 }
@@ -403,14 +405,7 @@ proc SetupGui {top} {
     label $interval.dtl  -text "Scaler interval: "
     label $interval.dt   -textvariable ScalerDeltaTime
 
-    #  Notebook frame contents:
-
-
-    set notebook [tabnotebook_create $book.pages]
-    pack $book.pages -side bottom -fill both -expand 1 
-    pack $book       -side bottom -fill both -expand 1 
-
- 	# Set up the geometry of the top part of the display
+	# Set up the geometry of the top part of the display
  	#
  	#      Low level widgets...	
   
@@ -438,7 +433,14 @@ proc SetupGui {top} {
  	pack $stat -side top
 
 
+    #  Notebook frame contents:
 
+
+    set notebook [tabnotebook_create $book.pages]
+    pack $book.pages -side bottom -fill both -expand 1 
+    pack $book       -side bottom -fill both -expand 1 
+
+ 
     return $notebook
     
 }
@@ -530,6 +532,23 @@ proc channel {name id} {
     } else {
 	set ScalerMap($name) $id
     }
+}
+
+#
+#  Display a blank line on the page at the current position.
+#
+proc blank {page} {
+    global Pages
+    
+    if {[array names Pages $page] != $page} {
+	puts "blank: page $page does not exist... ignored"
+	return
+    }
+
+    set page $Pages($page)
+    set table $page.lines.table
+    set entry ""
+    $table insert end $entry
 }
 
 #
