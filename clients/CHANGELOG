@@ -92,3 +92,9 @@
    - Merge production readout with 7.4 branch to incorporate fix for
      issue 116: Title, run variable and state variable values that are too
      large cause all sorts of grief.
+7.3-007 3/24/04
+   - Merge Scaler client from 7.4 to catch a long standing issue I'd
+     forgotton about: Update needs to be called even if there are no
+     scalers (if only to keep track of run time).
+   - Merge Production readout with 7.4 branch to incorporate fix for
+     issue 106: Elapsed run time incorrect.
