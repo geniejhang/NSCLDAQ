@@ -93,3 +93,4 @@ Week of August 16, 2004
   the GUI's are now only shadows of their former selves, and shaperapp16.tcl
   is as well
 - Added eventlog manpage.
+- Added log of run start time in ascii end of run report for ScalerDisplay
