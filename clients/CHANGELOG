@@ -35,3 +35,7 @@
 - In both controlpush and production readout, add # to the set of 
   characters escaped when writing TCL scripts.
 - Added dvdburn product shamelessly stolen from what I did for SEE.
+- Support writing tape on a different host than ftp'd to.
+- Add design by contract headers (Headers/DesignByContract.h).
+  In readout software catch DesignByContractException s that may be thrown
+  as a result of user code.

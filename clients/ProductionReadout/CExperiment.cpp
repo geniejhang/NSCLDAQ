@@ -283,6 +283,10 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
    
    Modification History:
    $Log$
+   Revision 3.4.4.3  2004/05/17 17:12:32  ron-fox
+   Bracket call outs to user code with design by contract exception handling
+   code.
+
    Revision 3.4.4.2  2004/03/24 14:45:00  ron-fox
    Get the pause logic correct
 
@@ -372,6 +376,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
 #include "buftypes.h"
 #include "buffer.h"
 
+#include <DesignByContract.h>
 #include <spectrodaq.h>
 #include <time.h>
 #include <sys/time.h>
@@ -381,6 +386,8 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
 #include <iostream.h>
 #include <algorithm>
 #include <tcl.h>
+
+using namespace DesignByContract;
 
 extern CReadoutMain MyApp;
 
@@ -673,9 +680,17 @@ CExperiment::Start(CStateTransitionCommand& rCommand)
 
   // Prepare the hardware for readout:
 
-  m_EventReadout.Initialize();	// Initialize the event readout...
-  m_Scalers.Clear();
-  m_EventReadout.Clear();	// Clear digitizers prior to start.
+  try {
+    m_EventReadout.Initialize();	// Initialize the event readout...
+    m_Scalers.Clear();
+    m_EventReadout.Clear();	// Clear digitizers prior to start.
+  }
+  catch (DesignByContractException& rContractViolation) {
+    string msg(rContractViolation);
+
+    cerr << "Interface contract violation: " << msg << endl;
+    cerr << "Detected in user's code called by CExperiment::Start" << endl;
+  }
 
 
   // Start the trigger process and clock.
@@ -766,8 +781,15 @@ CExperiment::ReadEvent()
   DAQWordBufferPtr hdr = ptr;
    
   CVMEInterface::Lock();
-  ptr = m_EventReadout.Read(ptr);
-  m_EventReadout.Clear();
+  try {
+    ptr = m_EventReadout.Read(ptr);
+    m_EventReadout.Clear();
+  }
+  catch (DesignByContractException& rContractViolation) {
+    string msg(rContractViolation);
+    cerr << "Interface contract violation: " << msg << endl;
+    cerr << "Detected in CExperiment::ReadEvent" << endl;
+  }
   PostEvent();
   CVMEInterface::Unlock();
 
@@ -931,8 +953,16 @@ CExperiment::TriggerScalerReadout()
   }
 
   //
-  vector<unsigned long> scalers = m_Scalers.Read();
-  m_Scalers.Clear();
+  vector<unsigned long> scalers;
+  try {
+    scalers = m_Scalers.Read();
+    m_Scalers.Clear();
+  }
+  catch (DesignByContractException& rViolation) {
+    string msg(rViolation);
+    cerr << "Interface contract violation: " << msg << endl;
+    cerr << "Detected in user code called by CExperiment::TriggerScalerReadout\n";
+  }
   CNSCLScalerBuffer buffer(m_nBufferSize);
 
   // If a snapshot scaler has been readout, the values
@@ -1018,8 +1048,16 @@ CExperiment::TriggerSnapshotScaler()
 {
   
   CNSCLScalerBuffer buffer(m_nBufferSize);
-  vector<unsigned long> scalers = m_Scalers.Read();
-  m_Scalers.Clear();
+  vector<unsigned long> scalers;
+  try {
+    scalers = m_Scalers.Read();
+    m_Scalers.Clear();
+  }
+  catch( DesignByContractException& rContractViolation) {
+    string msg(rContractViolation);
+    cerr << "Interface contract violation: " << msg << endl;
+    cerr << "Detected in user code called by CExperiment::TriggerSnapshotScaler\n";
+  }
   
   // Sum the scalers into the snapshot scaler totals vector.
   // If necessary, the scaler vector is extended.
