@@ -104,3 +104,4 @@
    - Merge in fix for production readout - stabilization of scaler readout timings.
 7.3-008 4/12/04
    - Added build stamp to the installation procedure
+   - Fixed an incompatibility with tcl 8.4 and cratelocator.tcl
