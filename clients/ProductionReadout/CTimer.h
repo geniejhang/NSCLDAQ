@@ -314,7 +314,8 @@ class CTimer : public CTimerEvent
 { 
 private:
   unsigned int m_nIntervalms; //!< Timer interval in milliseconds.
-  unsigned int m_nElapsedms; //!< Elapsed time since Reset in ms
+  unsigned int m_nAccumulatedMs; //!< # milliseconds run pior to start since reset.
+  unsigned int m_nStartTimeMs;   //!< # Time of Start.
   unsigned int m_nLatency;   //!< Latency estimate for scheduling.
 
   TimerList m_Events;		//!< STL List containing the managed events. 
@@ -340,9 +341,8 @@ public:
     return m_nIntervalms;
   }
   
-  unsigned int getElapsedms() const {
-    return m_nElapsedms;
-  }
+  unsigned int getElapsedms() const;
+
   TimerListIterator begin() {
     return m_Events.begin();
   }
