@@ -74,9 +74,10 @@ proc KillBurn {} {
 proc BurnRange {range} {
     global burning
     global burnfd
+    global mypath
 
 
-    set burnfd [open "| dvdburn [lindex $range 0] [lindex $range 1]" r+]
+    set burnfd [open "| $mypath/dvdburn [lindex $range 0] [lindex $range 1]" r+]
     fconfigure $burnfd -blocking 0
     fileevent $burnfd readable CaptureOutput
     set burning 1

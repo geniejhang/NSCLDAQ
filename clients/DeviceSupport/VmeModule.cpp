@@ -275,6 +275,9 @@ DAMAGES.
 
 		     END OF TERMS AND CONDITIONS
 */
+#ifndef VMEMODULE_H
+#define VMEMODULE_H
+
 static const char* Copyright= "(C) Copyright Michigan State University 2002, All rights reserved";/*
   \class CVmeModule
   \file CVmeModule.cpp
@@ -610,3 +613,5 @@ CVmeModule::CopyToMe(const CVmeModule& rModule)
   m_CVME = rModule.m_CVME;
 #endif
 }
+
+#endif
