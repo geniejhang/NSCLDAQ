@@ -382,14 +382,16 @@ CRunVariable::FormatForBuffer(int nMaxchars)
 
   if(pValue) {			// Variable is still defined.
     result  = "set ";
-    result += getVariableName();
+    result += CStrings::EscapeString(getVariableName().c_str(), 
+				     "\"[$#;", "\\");
     result += " \"";
+    result += CStrings::EscapeString(pValue, "\"[$#;", "\\");
     minlen = result.size();
-    result += CStrings::EscapeString(pValue, "\"[$i#", "\\");
+
   } 
   else {			// Variable has become undefined:
     result = "# ";
-    result += getVariableName();
+    result += CStrings::EscapeString(getVariableName().c_str(), "\"[$#;", "\\");
     result += " \"--not set--";
     minlen = 3;			// #\"\n
   }

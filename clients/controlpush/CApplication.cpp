@@ -799,7 +799,7 @@ CApplication::GenerateSet(const string& arrayname, const string& index,
   // all possible values will be legal...
 
   string escaped = CStrings::EscapeString(value.c_str(), 
-					  "\"[$#", "\\");
+					  "\"[$#;", "\\");
   string quotedvalue = "\"";
   quotedvalue += escaped;
   quotedvalue += "\"";
@@ -809,7 +809,7 @@ CApplication::GenerateSet(const string& arrayname, const string& index,
   string command("set ");
   command  += arrayname;
   command  += "(";
-  command  += index;
+  command  += CStrings::EscapeString(index.c_str(), "\"[$#;", "\\");
   command  += ") ";
   command  += quotedvalue;
   command  += "\n"; 
