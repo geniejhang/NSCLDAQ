@@ -129,4 +129,10 @@
 7.3-012
    - Allow caennet controllers to live in any VME crate (caennet.tcl).
    - Fix defect 143 - last scaler has incorrect value from sclclient.
-
+7.3-014
+   - Fix defect in production readout. was not calling scaler initializtions.
+7.3-015
+   - Fix defect in vmetcl build - was linking vmelibs from install dir
+     rather than build dirs.
+   - Increase controlpush connection timeouts, had some intermittent
+     connection failures.
