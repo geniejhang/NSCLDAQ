@@ -330,7 +330,7 @@ static const int    YEARBASE(1900);           // Base year of struct tm.tm_year
 static const int    DEFAULTPORT(2701);        // Default tcp/ip port.
 static const string DEFAULTHOST("localhost"); // Default host to connect with.
 static const int    INTERVAL(10);             // Default update interval.
-static const float  TIMEOUT(0.3);             // Default EPICS timeout we'll use.
+static const float  TIMEOUT(0.35);             // Default EPICS timeout we'll use.
 
 static const int    CONNECTRETRYINTERVAL(10); // Seconds between retry attempts.
 static const int    CONNECTRETRIES(1000);     // Number of retries allowed. 
@@ -452,7 +452,7 @@ CApplication::operator()(gengetopt_args_info& Parameters)
       cerr << "Channel lookup complete\n";
       while(m_Socket.getState() == CSocket::Connected) {
 	Update();
-	sleep(m_nInterval);	                // Until the next update.
+	Delay(m_nInterval);
       }
     }
     throw "Unable to form a connection to the server";
@@ -817,3 +817,25 @@ CApplication::GenerateSet(const string& arrayname, const string& index,
 }
 
 
+/*!
+   Delay for the specified number of seconds.
+   - Check that there are no pending IO's  This should be true since
+     I/O according to EPICS are outstanding get/search requests and we have
+     finished those.  An error is emitted if there are outstanding I/O's.
+     This is informative, not fatal.
+   - Call ca_pend_event for the indicated timeout. According to my reading
+     of the book, this will block me but allow EPICS to continue to do whatever
+     background processing it needs to do.
+   \param seconds (int):
+      Number of seconds to delay.
+
+*/
+void
+CApplication::Delay(int seconds)
+{
+  if(ca_test_io()) {
+    ca_pend_io((float)seconds);
+  }
+    ca_pend_event((float)seconds);
+
+} 

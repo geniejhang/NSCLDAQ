@@ -378,7 +378,7 @@ public:
   void         FailUpdate ()   ;             //!< Inform of update failure
   void         Update ()   ;                 //!< Inform of update success
   void         Revive ()   ;                 //!< Revive dead channel
-  void         Lookup (float timeout=0.3)   ;//!< Lookup chid from name.
+  void         Lookup (float timeout=0.35)   ;//!< Lookup chid from name.
   void         AddGetToSg (CA_SYNC_GID gid); //!< Add to sync group.
   void         Get ()   ;                    //!< Do a ca_get.
   bool         DidISeeYouDead();             //!< Set I see you are dead flag.

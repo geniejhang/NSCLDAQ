@@ -381,6 +381,7 @@ private:
   string FormatTime(time_t t);
   string GenerateSet(const string& arrayname, const string& index, 
 		     const string& value);
+  void   Delay(int seconds);
 };
 
 #endif
