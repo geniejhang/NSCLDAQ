@@ -42,7 +42,7 @@ set HMStime        "0 00:00:00"
 set ScalerLogDir  "."		;# Default is to log in current directory.
 
 set InitialRunNumber unknown
-set StartTime
+set StartTime        unknown
 
 # Establish my location so that I can source in additional scripts:
 
