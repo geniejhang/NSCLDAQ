@@ -48,4 +48,4 @@ install-data-local:
 	$(mkinstalldirs) $(prefix)/Docs/vmetcl
 	$(INSTALL_DATA) Readme.txt $(prefix)/Docs/vmetcl/VmeTcl.txt
 
-man_MANS vme.3tcl # caennet.3tcl vhq.3tcl camac.3tcl wienercamac.3tcl
+man_MANS =  vme.3tcl # caennet.3tcl vhq.3tcl camac.3tcl wienercamac.3tcl
