@@ -325,7 +325,7 @@ public:
   CErrnoException(const char* pszAction) :
     m_nErrno(errno),
     CException(pszAction) {}
-  CErrnoException(const std::string& rsAction) :
+  CErrnoException(const STD(string)& rsAction) :
     m_nErrno(errno),
     CException(rsAction) {}
   ~CErrnoException ( ) { }       //Destructor

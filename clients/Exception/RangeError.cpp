@@ -297,6 +297,7 @@ DAMAGES.
 //
 
 
+#include <config.h>
 #include "RangeError.h"                               
 #include <stdio.h>
 #include <assert.h>
