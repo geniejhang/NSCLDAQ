@@ -51,3 +51,6 @@
 - Fix DiskRun stack clobber problem.
 - Add -p to tar in Experiment.tcl that creates the ~/experiment/runn dirs.
   otherwise user's umask can modify the output permissions.
+- Issue 115: do non-blocked writes to spectcldaq's output pipe, and \
+  analyze the returns thoroughly to try to remove the occaisional hung
+  spectcldaq process.
