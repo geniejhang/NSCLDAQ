@@ -104,3 +104,14 @@ Week of Sept. 20
 - Fix defect in Production readout: CExperiment never invokes the scaler
   initialization function.
 - Add manpage for camac package (CES 8210).
+Week of Sept. 27
+- Fix defect in build: vmetcl was linking btp e.g. from the install dirs
+  rather than the build dirs causing errors for make (not make install) on
+  systems that had never been installed on before.
+- Increase connection timeouts of controlpush. some were intermittently not
+  connecting.
+Week of October 25, 2004
+- Add TCL_STUBFLAGS make variable that is the link flags to link a tcl extension
+  against the tcl stub library.
+- Link the vme access extension against the stub lib to make it starkit compatible.
+- Allow a find on static tcl libs without requiring dynamic libs.
