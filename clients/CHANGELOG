@@ -126,3 +126,6 @@
    - Fix defect 139 - non numerics in readoutgui run number field cause
      failure in status line; added validator to prevent run number field
      from becoming non-numeric.
+7.3-012
+   - Allow caennet controllers to live in any VME crate (caennet.tcl).
+
