@@ -371,30 +371,37 @@ CStateVariable::operator==(const CStateVariable& rhs) const
      which for now we ignore.  If the total size of the returned string
      is larger than the buffersize-headersize, it's not possible to
      fit this into a single buffer.
+     \param nMaxchars (int):
+         If > 0, the maximum characters this string is allowed to occupy
+         If <=0 the string will never be truncated.
 
-\bug - Large arrays may be impossible to fit into single buffers.  In the
-future, it will be necessary to fix this in the caller or in the functional interface.
+ \note Even if the string is truncated, the resulting string will be a valid
+        TCL set command (with a closing \"\n).
+   \note If nMaxchars is really too small, I'll return an empty string.
+
+
    */
 string 
-CStateVariable::FormatForBuffer()
+CStateVariable::FormatForBuffer(int nMaxchars)
 {
   string result;
+  int    minlen;
   if(m_ArrayValues.empty()) {	// Scalar value
     const char* value = Get(TCL_GLOBAL_ONLY);
     if(value == (char*)NULL) {
       result += "# ";
       result += getVariableName();
-      result += "\" --not set--\"\n";
+      result += "\" --not set--";
+      minlen  = 3;		// #\"\n
     }
     else {
       result += "set ";
       result += getVariableName();
       const char* pValue = Get(TCL_GLOBAL_ONLY);   
       result += " \"";
+      minlen  = result.size();	// set varname \"
       result += CStrings::EscapeString(pValue, 
 				       "\"[$", "\\");
-      result += '"';
-      result += "\n";
     }
   }
   else {			// Array value.
@@ -408,11 +415,25 @@ CStateVariable::FormatForBuffer()
       const char* pValue  = Get(TCL_GLOBAL_ONLY, 
 				(char*)(i->first).c_str());
       result += CStrings::EscapeString(pValue, "\"[$", "\\");
-      result += '"';
-      result += '\n';
       i++;
     }
+    minlen=result.size() + 2;	// Not quite sure what to do here.
   }
+  // If necessary, and requested, truncate the string before
+  // closing off the command:
+  //
+  if(nMaxchars > 0) {
+    nMaxchars -= 2;
+    if(nMaxchars <= minlen) {
+      return string("");
+    }
+    else {
+      if(result.size() > nMaxchars) {
+	result = result.substr(0, nMaxchars-1);
+      }
+    }
+  }
+  result += "\"\n";
   return result;
 }
 
