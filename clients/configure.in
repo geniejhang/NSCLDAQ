@@ -519,4 +519,5 @@ AC_OUTPUT( Makefile Headers/Makefile CopyrightTools/Makefile \
 	LogDisplay/Makefile ProductionReadout/Makefile \
 	ProductionReadout/hyperlatex/Makefile \
 	btdriver/Makefile btdriver/dd/Makefile btdriver/lib/Makefile \
-	btdriver/include/Makefile  controlpush/Makefile dvdburn/Makefile )
+	btdriver/include/Makefile  controlpush/Makefile dvdburn/Makefile \
+	daqstart/Makefile )
