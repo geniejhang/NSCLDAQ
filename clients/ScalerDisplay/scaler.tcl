@@ -62,7 +62,60 @@ source $mydirectory/tablelistWidget.tcl
 
 package require Tablelist
 
+# Clear the statistics:
+#
+proc ClearStatistics {} {
+	global SumSquares
+	global IntervalCount
+	
+	catch {unset SumSquares}
+	catch {unset IntervalCount}
+}
+
+#  Update the running statistics
+#  We maintain SumSquares, the sum of the
+#  squares  of the rates.
+#
+proc UpdateStatistics {} {
+	global SumSquares
+	global IntervalCount
+	global Scaler_Increments
+	global ScalerDeltaTime
+
+	
+	if {[info var IntervalCount] == ""} {
+		set IntervalCount 1
+	} else {
+		incr IntervalCount
+	}
+	foreach element [array names Scaler_Increments] {
+		set rate [expr 1.0$Scaler_Increments($element)/$ScalerDeltaTime]
+		set square [expr $rate*$rate]
+		if {[array names SumSquares($element)] == ""} {
+			set SumSquares($element) $square;           # First time set.
+		} else {
+			set SumSquares($element) [expr $SumSquares($element) + $square]; #Accumulate
+		}
+	}
+}
+#
+#   Compute the standard deviation from the average
+#  for scaler i
+#
+proc StdDev {i} {
+	global SumSquares
+	global Scaler_Totals
+	global ElapsedTime
+	global IntervalCount
+	
+	set mean [expr 1.0*$Scaler_Totals($i)/$ElapsedTime]
+	set smean [expr $mean*$mean]
+	set sqr  [expr $SumSquares($i)/$IntervalCount]
+	
+	return [expr sqrt(abs($sqr - $smean))]
+}
 # Procedures required by the client:
+
 
 #
 #   Updates the contents of the tables.  
@@ -72,6 +125,8 @@ proc Update {} {
     global Pages
     global ElapsedRunTime
     global HMStime
+   
+    UpdateStatistics
     
     set sec [expr round($ElapsedRunTime)]
     set min [expr $sec/60]
@@ -106,6 +161,9 @@ proc BeginRun {} {
     global InitialRunNumber
     global StartTime
     global RunNumber
+
+	ClearStatistics
+    
     set HMStime "0 00:00:00"
     
     set InitialRunNumber $RunNumber
@@ -145,6 +203,7 @@ proc EndRun   {} {
     global Fakename
 	global InitialRunNumber
 	global StartTime
+	global ElapsedTime
     #  Construct the log filename:
 
     set filename $ScalerLogDir/run$RunNumber.scalers
@@ -159,16 +218,18 @@ proc EndRun   {} {
     }  
     puts $fd "                     Ended:  [clock format [clock seconds]]"
     puts $fd "                     Duration: $HMStime"
-    puts $fd " Scaler Name                         Scaler Total"
-    puts $fd "-------------------------------------------------"
-    set fmt  " %11s                             %11d"
+    puts $fd " Scaler Name        Scaler Total  Avg Rate     Std. Dev           "
+    puts $fd "------------------------------------------------------------------"
+    set fmt  " %11s  %11d  %11.2f  %11.2f"
     
     # Get the alphabetized list of scaler channels and put them out.
     set channels [lsort [array names ScalerMap]]
     foreach channel $channels {
 	if {$channel != $Fakename} {
 	    set   id $ScalerMap($channel)
-	    catch {set line [format $fmt $channel $Scaler_Totals($id)]}
+	    set   Average [expr $Scaler_Totals($id)/$ElapsedTime]
+	    set   sigma [StdDev $id]
+	    catch {set line [format $fmt $channel $Scaler_Totals($id) $Average $sigma]}
 	    if {$line != ""} {puts $fd $line}
 	}
     }
