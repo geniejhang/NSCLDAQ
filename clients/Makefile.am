@@ -35,5 +35,6 @@ install-data-local:
 	echo X11LIBS=$(X11LIBS)       >> Directories.include.final
 	cat Directories.include       >> Directories.include.final
 	$(INSTALL_DATA) Directories.include.final $(prefix)/etc/Directories.include
+	$(INSTALL_PROGRAM)  daqman $(prefix)/bin
  
 	echo "Version: " $(VERSION) build on `hostname` `date` > $(prefix)/VERSION
