@@ -85,3 +85,4 @@ Week of August 16, 2004
    fall back to word by word copy... broken is bad since
    it segfaults).
 - Bring scaler display software into mainline part of distribution.
+- Add man page for sclclient.
