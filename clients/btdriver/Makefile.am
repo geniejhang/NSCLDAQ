@@ -1,2 +1,0 @@
-SUBDIRS = dd lib include
-
