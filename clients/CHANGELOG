@@ -1,5 +1,5 @@
 
-7.4:y
+7.4:
 
 - Added program controlpush to push EPICS controls data into tcl server
   programs (e.g. ProductionReadout too).
@@ -21,3 +21,5 @@
 - Fix issue 106: Elapsed time from runs is not correct for production rdo.
 - Added -rpath on Makefiles for scripted readout and scaler server so user
   does not need to worry about the location of shared libs.
+- Fix issue 108: Event data files can be overwritten without any prompts.
+                 Added to this fix for disabled entry widget poor contrast.
