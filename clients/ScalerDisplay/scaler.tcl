@@ -4,7 +4,6 @@
 exec tclserver  -p2700  ${0} ${@}
 
 
-puts "Scaler running!!!"
 #
 #   Simple TCL scaler display:
 #    Iteration 1:  Support creation of tabbed notebook containing scaler pages.
@@ -50,6 +49,8 @@ set StartTime        unknown
 set me [info script]
 set mydirectory [file dirname $me]
 
+set IntervalCount 0
+
 #  Source in the notebook and tabbed notebook sources:
 
 
@@ -69,7 +70,7 @@ proc ClearStatistics {} {
 	global IntervalCount
 	
 	catch {unset SumSquares}
-	catch {unset IntervalCount}
+    set IntervalCount 0
 }
 
 #  Update the running statistics
@@ -82,19 +83,19 @@ proc UpdateStatistics {} {
 	global Scaler_Increments
 	global ScalerDeltaTime
 
+    if {$ScalerDeltaTime == 0} {
+	return;				# End of run.
+    }
 	
-	if {[info var IntervalCount] == ""} {
-		set IntervalCount 1
-	} else {
-		incr IntervalCount
-	}
+    incr IntervalCount
 	foreach element [array names Scaler_Increments] {
-		set rate [expr 1.0$Scaler_Increments($element)/$ScalerDeltaTime]
+		set rate [expr 1.0*$Scaler_Increments($element)/$ScalerDeltaTime]
 		set square [expr $rate*$rate]
-		if {[array names SumSquares($element)] == ""} {
+		if {[array names SumSquares $element] == ""} {
 			set SumSquares($element) $square;           # First time set.
 		} else {
-			set SumSquares($element) [expr $SumSquares($element) + $square]; #Accumulate
+			set SumSquares($element) \
+			    [expr $SumSquares($element) + $square]; #Accumulate
 		}
 	}
 }
@@ -105,12 +106,15 @@ proc UpdateStatistics {} {
 proc StdDev {i} {
 	global SumSquares
 	global Scaler_Totals
-	global ElapsedTime
+	global ElapsedRunTime
 	global IntervalCount
-	
-	set mean [expr 1.0*$Scaler_Totals($i)/$ElapsedTime]
+
+
+
+	set mean [expr 1.0*$Scaler_Totals($i)/$ElapsedRunTime]
 	set smean [expr $mean*$mean]
 	set sqr  [expr $SumSquares($i)/$IntervalCount]
+
 	
 	return [expr sqrt(abs($sqr - $smean))]
 }
@@ -203,8 +207,9 @@ proc EndRun   {} {
     global Fakename
 	global InitialRunNumber
 	global StartTime
-	global ElapsedTime
+	global ElapsedRunTime
     #  Construct the log filename:
+
 
     set filename $ScalerLogDir/run$RunNumber.scalers
     set fd [open $filename w]
@@ -227,7 +232,7 @@ proc EndRun   {} {
     foreach channel $channels {
 	if {$channel != $Fakename} {
 	    set   id $ScalerMap($channel)
-	    set   Average [expr $Scaler_Totals($id)/$ElapsedTime]
+	    set   Average [expr $Scaler_Totals($id)/$ElapsedRunTime]
 	    set   sigma [StdDev $id]
 	    catch {set line [format $fmt $channel $Scaler_Totals($id) $Average $sigma]}
 	    if {$line != ""} {puts $fd $line}
