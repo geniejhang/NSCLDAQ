@@ -7,7 +7,7 @@ CXXFLAGS= -c -ggdb -I.. -I../../Headers  -I../../Exception
 LDFLAGS= -L/usr/opt/daq/lib -lException -lpub
 
 .cpp.o:
-	$(CXX) $(CXXFLAGS) $(EPICS_INCLUDES) $<
+	$(CXX) $(CXXFLAGS)  $<
 
 
 TESTS=     CFileSinkTests.o SinkCreatorTests.o FactoryTests.o grep.o \
