@@ -7,7 +7,7 @@ TcpHoist_LDFLAGS=-Wl,"-rpath=$(libdir)"
 
 noinst_HEADERS = TcpClient.h
 
-EXTRA_DIST = 0README.txt
+EXTRA_DIST = 0README.txt systest.sh
 
 install-data-local:
 	$(mkinstalldirs) $(prefix)/Docs
