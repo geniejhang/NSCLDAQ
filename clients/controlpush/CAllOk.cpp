@@ -294,5 +294,7 @@ Update member.
 void 
 CAllOk::operator()(CChannel* pChannel)  
 { 
-  pChannel->Update();
+  if(pChannel->GetState() != CChannel::Dead) {
+    pChannel->Update();
+  }
 }
