@@ -98,3 +98,5 @@ Week of August 30
 - Import vhqpanel from see and make it multicrate clean.
 Week of Sept. 6
 - Added man page for Vme TCL loadable package.
+- Added man page for caennet TCL loadable package.
+- Added man page for vhq TCL loadable package.
