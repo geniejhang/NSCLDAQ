@@ -109,6 +109,9 @@ proc StdDev {i} {
 	global ElapsedRunTime
 	global IntervalCount
 
+    if {($ElapsedRunTime == 0) || ($IntervalCount == 0)} {
+	return 0
+    }
 
 
 	set mean [expr 1.0*$Scaler_Totals($i)/$ElapsedRunTime]
@@ -232,7 +235,11 @@ proc EndRun   {} {
     foreach channel $channels {
 	if {$channel != $Fakename} {
 	    set   id $ScalerMap($channel)
-	    set   Average [expr $Scaler_Totals($id)/$ElapsedRunTime]
+	    if {$ElapsedRunTime != 0} {
+		set   Average [expr $Scaler_Totals($id)/$ElapsedRunTime]
+	    } else { 
+		set Average 0
+	    }
 	    set   sigma [StdDev $id]
 	    catch {set line [format $fmt $channel $Scaler_Totals($id) $Average $sigma]}
 	    if {$line != ""} {puts $fd $line}
