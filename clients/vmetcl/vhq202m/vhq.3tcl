@@ -354,7 +354,7 @@ True if some error is present in status register 2 for the channel.
 .TP
 \fB::vhq::stat2\fR \fImodule\fR
 Returns information from status register 2 of \fImodule\fR.  The format of
-the returned value is similar to that of \bf::vhq::stat1\fR, however the 
+the returned value is similar to that of \fB::vhq::stat1\fR, however the 
 list is a three element list.  The first element of the list is gives 
 the status of the timeout bit as {tot 0|1}.  The second element of the list
 gives channel 0 specific status while the third element of the list goves

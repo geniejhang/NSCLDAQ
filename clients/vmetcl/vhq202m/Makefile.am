@@ -8,5 +8,5 @@ install-data-local:
 	$(mkinstalldirs) $(prefix)/Docs
 	$(mkinstalldirs) $(prefix)/Docs/vmetcl
 	$(INSTALL_DATA) AAReadme.txt $(prefix)/Docs/vmetcl/vhq202m.txt
-	
-	man_MANS = vhq.3tcl
+
+man_MANS = vhq.3tcl
