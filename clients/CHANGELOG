@@ -62,3 +62,7 @@
   had decided to live with the memory leak, but it turns out that also
   leaks file descriptors as module objects stay around and those run out
   first.
+- Repair defect 139 - Non numerics in run number cause status line of
+  readout gui to blow up.
+- Added daqstart program... support starting a program with logging and
+  exit notification.
