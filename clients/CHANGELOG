@@ -30,3 +30,7 @@
   from stuff the user might modify.
 - Add a build stamp to the installation procedure.
 - Fix incompatibility (bug 121) with Tcl 8.4 for cratelocator.tcl
+- Allow plc channels longer to connect in controlpush, and the heck
+  with looking for units for them.
+- In both controlpush and production readout, add # to the set of 
+  characters escaped when writing TCL scripts.
