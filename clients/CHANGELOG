@@ -146,3 +146,4 @@ Week of November 1:
 	all over the place.
      - Scripted readout- conditionalize main on HAVE_SPECTRODAQ_MAIN
      - Delay spectcldaq with usleep a short time between write tries if blocked.7.4-004
+     - Backport use of absolute times in ReadoutGui to 7.4 from 8.0
