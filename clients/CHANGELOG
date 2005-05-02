@@ -147,3 +147,5 @@ Week of November 1:
      - Scripted readout- conditionalize main on HAVE_SPECTRODAQ_MAIN
      - Delay spectcldaq with usleep a short time between write tries if blocked.7.4-004
      - Backport use of absolute times in ReadoutGui to 7.4 from 8.0
+     - Use cerr for ftp errors in eventlog because ftp lib does not set
+       errno to a useful value.
