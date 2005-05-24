@@ -155,3 +155,4 @@ Week of November 1:
        DISTROOT.
      - Fix error in burngui - sent 2 \n's at the child causing it to not
        wait for the next dvd.
+7.4-005
