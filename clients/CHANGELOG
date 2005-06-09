@@ -440,3 +440,6 @@ May 13, 2005
        epicsdisplay
 8.0-002 
      - Make vmetcl error messages on access failure more intelligible.
+     - DeviceSupport - fix initialization of sis3300 to give complete control
+       over gate mode and source, RCM in both acq and event control register.
+       and update buffer pointer on read.
