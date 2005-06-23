@@ -443,3 +443,5 @@ May 13, 2005
      - DeviceSupport - fix initialization of sis3300 to give complete control
        over gate mode and source, RCM in both acq and event control register.
        and update buffer pointer on read.
+8.0-003
+     - Fix defect in DeviceSupportMakefile: did not integrate sis3600 support
