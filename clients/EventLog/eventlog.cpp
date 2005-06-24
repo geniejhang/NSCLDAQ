@@ -825,25 +825,25 @@ DAQBuff::OpenEventFile(int nRun, int nBufferSize, int nSegment)
     string Directory(ftpurl.GetPath().Get());
     
     if(!FtpConnect(Host.c_str(), &pControl)) { // Connect to ftp server
-      perror("Failed to connect to ftp host");
+      cerr << "Failed to connect to ftp host\n";
       daq_link_mgr.DeleteSink(m_lUnsampledSink);
       exit(errno);
     }
     if(!FtpLogin(Username.c_str(), Password.c_str(), pControl)) { // login
-      perror("Failed to login to ftp host.");
+      cerr << "Failed to login to ftp host -- check username and passssord\n";
       daq_link_mgr.DeleteSink(m_lUnsampledSink);
       exit(errno);
     }
     cerr << "Setting the directory for transfer to: " << Directory << endl;
 
     if(!FtpChdir(Directory.c_str(), pControl)) { // CD to login directory.
-      perror("Failed to set directory");
+      cerr << "Failed to set directory - double check your ftp URL\n";
       daq_link_mgr.DeleteSink(m_lUnsampledSink);
       exit(errno);
     }
     if(!FtpAccess(FileName, FTPLIB_FILE_WRITE, FTPLIB_IMAGE, pControl,
 		  &pData)) {
-      perror("Failed to start the ftp put");
+      cerr << "Failed to start the ftp put - Make sure there's space on the disk.";
       daq_link_mgr.DeleteSink(m_lUnsampledSink);
       exit(errno);
     }

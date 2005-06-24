@@ -275,88 +275,149 @@ DAMAGES.
 
 		     END OF TERMS AND CONDITIONS
 */
-static const char* Copyright = "(C) Copyright Michigan State University 2002, All rights reserved";
-//////////////////////////CNSCLControlBuffer.cpp file////////////////////////////////////
+//  CRangeError.h:
+//
+//    This file defines the CRangeError class.
+//
+// Author:
+//    Ron Fox
+//    NSCL
+//    Michigan State University
+//    East Lansing, MI 48824-1321
+//    mailto:fox@nscl.msu.edu
+//
+//  Copyright 1999 NSCL, All Rights Reserved.
+//
+/////////////////////////////////////////////////////////////
 
-#include "CNSCLControlBuffer.h"                  
-#include <time.h>
+#ifndef __CRANGEERROR_H  //Required for current class
+#define __CRANGEERROR_H
+                               //Required for base classes
+#ifndef __CEXCEPTION_H
+#include "Exception.h"
+#endif                             
+#ifndef __STL_STRING
+#include <string>
+#define __STL_STRING
+#endif  
+                               
+class CRangeError  : public CException        
+{
+  Int_t m_nLow;			// Lowest allowed value for range (inclusive).
+  Int_t m_nHigh;		// Highest allowed value for range.
+  Int_t m_nRequested;		// Actual requested value which is outside
+				// of the range.
+  std::string m_ReasonText;            // Reason text will be built up  here.
+public:
+  //   The type below is intended to allow the client to categorize the
+  //   exception:
 
-// Manifest constants:
+  enum {
+    knTooLow,			// CRangeError::knTooLow  - below m_nLow
+    knTooHigh			// CRangeError::knTooHigh - above m_nHigh
+  };
+			//Constructors with arguments
 
-static unsigned int offBTITLE = 16;
-static unsigned int offLTIME  = 56;
-static unsigned int offSBFTIME= 58;
-static unsigned int BufferSize(offSBFTIME + 8);
-/*!
-   Default constructor.  This is called when declarations of the form e.g.:
-   -  CNSCLControlBuffer  object;
-   are performed.
-*/
-CNSCLControlBuffer::CNSCLControlBuffer (unsigned int nWords=4096) :
-  CNSCLOutputBuffer(nWords)
+  CRangeError (  Int_t nLow,  Int_t nHigh,  Int_t nRequested,
+		 const char* pDoing) :       
+    CException(pDoing),
+    m_nLow (nLow),  
+    m_nHigh (nHigh),  
+    m_nRequested (nRequested)
+  { UpdateReason(); }
+  CRangeError(Int_t nLow, Int_t nHigh, Int_t nRequested,
+	  const std::string& rDoing) :
+    CException(rDoing),
+    m_nLow(nLow),
+    m_nHigh(nHigh),
+    m_nRequested(nRequested)
+  { UpdateReason(); }
+  virtual ~ CRangeError ( ) { }       //Destructor
+
+			//Copy constructor
+
+  CRangeError (const CRangeError& aCRangeError )   : 
+    CException (aCRangeError) 
+  {
+    m_nLow = aCRangeError.m_nLow;
+    m_nHigh = aCRangeError.m_nHigh;
+    m_nRequested = aCRangeError.m_nRequested;
+    UpdateReason();
+  }                                     
+
+			//Operator= Assignment Operator
+
+  CRangeError operator= (const CRangeError& aCRangeError)
+  { 
+    if (this != &aCRangeError) {
+      CException::operator= (aCRangeError);
+      m_nLow = aCRangeError.m_nLow;
+      m_nHigh = aCRangeError.m_nHigh;
+      m_nRequested = aCRangeError.m_nRequested;
+      UpdateReason();
+    }
+
+    return *this;
+  }                                     
+
+			//Operator== Equality Operator
+
+  int operator== (const CRangeError& aCRangeError)
+  { 
+    return (
+	    (CException::operator== (aCRangeError)) &&
+	    (m_nLow == aCRangeError.m_nLow) &&
+	    (m_nHigh == aCRangeError.m_nHigh) &&
+	    (m_nRequested == aCRangeError.m_nRequested) 
+	    );
+  }
+  // Selectors - Don't use these unless you're a derived class
+  //             or you need some special exception type specific
+  //             data.  Generic handling should be based on the interface
+  //             for CException.
+public:                             
+
+  Int_t getLow() const
+  {
+    return m_nLow;
+  }
+  Int_t getHigh() const
+  {
+    return m_nHigh;
+  }
+  Int_t getRequested() const
+  {
+    return m_nRequested;
+  }
+  // Mutators - These can only be used by derived classes:
+
+protected:
+  void setLow (Int_t am_nLow)
+  { 
+    m_nLow = am_nLow;
+    UpdateReason();
+  }
+  void setHigh (Int_t am_nHigh)
+  { 
+    m_nHigh = am_nHigh;
+    UpdateReason();
+  }
+  void setRequested (Int_t am_nRequested)
+  { 
+    m_nRequested = am_nRequested;
+    UpdateReason();
+  }
+  //
+  //  Interfaces implemented from the CException class.
+  //
+public:                    
+  virtual   const char* ReasonText () const  ;
+  virtual   Int_t ReasonCode () const  ;
  
-{
-  getBuffer().SetTag(CNSCLOutputBuffer::m_ControlTag);
-  SetTime();
-} 
+  // Protected utilities:
+  //
+protected:
+  void UpdateReason();
+};
 
-// Functions for class CNSCLControlBuffer
-
-/*!
-    Puts the title string in the buffer:
-    - If the title string is less than 79 characters
-      it is blank padded.
-    - If the  title string is more than 79 characters
-      it is truncated.
-    - The 80'th character of the title string will always
-       be a null ensuring the title can be used as a
-       C Null terminated string.
-
-	\param const string& rTitle.
-
-*/
-void 
-CNSCLControlBuffer::PutTitle(const string& rTitle)  
-{
-  Seek(offBTITLE);
-  PutString(rTitle.c_str(), 80); // Insert the title string.
-  Seek(BufferSize);
-
-}  
-
-/*!
-    Sets the time offset field in 10'ths of a second
-    from the run start.
-    \param nTime - longword time offset.
-
-	\param unsigned long nTime
-
-*/
-void 
-CNSCLControlBuffer::PutTimeOffset(unsigned long nTime)  
-{
-  Seek(offLTIME);
-  PutLong(nTime);
-  Seek(BufferSize);
-}
-/*!
-  Put the current time in the buffer in NSCL DAQ format.
-  */
-void
-CNSCLControlBuffer::SetTime()
-{
-  time_t t;
-  time(&t);
-  struct tm st;
-  st = *(localtime(&t));
-  
-  Seek(offSBFTIME);
-  PutWord(st.tm_mon+1);
-  PutWord(st.tm_mday);
-  PutWord(st.tm_year+1900);	// Unix years are relative to 1900.
-  PutWord(st.tm_hour);
-  PutWord(st.tm_min);
-  PutWord(st.tm_sec);
-  PutWord(0);			// Unix doesnt' give up 1/10'ths.
-  Seek(BufferSize);
-}
+#endif
