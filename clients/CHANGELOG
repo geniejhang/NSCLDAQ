@@ -447,3 +447,6 @@ May 13, 2005
      - Fix defect in DeviceSupportMakefile: did not integrate sis3600 support
      - Fix defect in scaler display: Pathalogical names like:
        {this is a "pathalogical" name} can cause problems.
+8.0-004
+     - Fix defect in HP production readout:  CDocumentedPacket did not
+       get converted to use ushort* instead of DAQWordBufferPtr&
