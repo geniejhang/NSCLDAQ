@@ -449,4 +449,6 @@ May 13, 2005
        {this is a "pathalogical" name} can cause problems.
 8.0-004
      - Fix defect in HP production readout:  CDocumentedPacket did not
-       get converted to use ushort* instead of DAQWordBufferPtr&
+       get converted to use ushort* instead of DAQWordBufferPtr&  
+     - Remove lock button from shaper gui until we can get it implemented
+       correctly.
