@@ -452,3 +452,11 @@ May 13, 2005
        get converted to use ushort* instead of DAQWordBufferPtr&  
      - Remove lock button from shaper gui until we can get it implemented
        correctly.
+8.0-005
+     - Fix defect 187 - eventlog crashes when joining in the middle of a run.
+     - Fix defect (unnumbered) - (HP)ProductionReadout can emit the first
+       data buffer with the wrong sequence number.  This happens if at the
+       end of a run the Event data buffer did not yet have any events
+       in it... in that case it would not be destroyed and the first events
+       of the next run would be assigned the next sequence number in the
+       prior run.
