@@ -460,3 +460,5 @@ May 13, 2005
        in it... in that case it would not be destroyed and the first events
        of the next run would be assigned the next sequence number in the
        prior run.
+     - Fix defect, unnumbered with Vme Tcl loadable package processing
+       offsets.
