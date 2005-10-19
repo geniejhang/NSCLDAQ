@@ -461,4 +461,8 @@ May 13, 2005
        of the next run would be assigned the next sequence number in the
        prior run.
      - Fix defect, unnumbered with Vme Tcl loadable package processing
-       offsets.
+       offsets.>
+8.0-006
+     - Fix defect with CSIS3600 support: Needed to add the 
+       functions to enable/disable and check the enable state of
+       external latch next event.
