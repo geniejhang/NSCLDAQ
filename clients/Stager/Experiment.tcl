@@ -532,6 +532,7 @@ namespace eval  Experiment {
     #
     proc CleanOrphans {} {
 	set Eventdir [ExpFileSystem::WhereisCurrentEventData]
+	set completeEventDir [ExpFileSystem::WhereareCompleteEventFiles]
 	set orphanfiles [glob -nocomplain $Eventdir/run*.evt]
 	set root [ExpFileSystem::GetRoot]
 	file mkdir $root/orphans
@@ -583,34 +584,27 @@ namespace eval  Experiment {
 	foreach file $orphanfiles {
 	    set name [file tail $file]
 	    if {[scan $name "run%d-%d.evt" run size] == 2} {
-#		puts "Decoded $name"
+		set destdir [ExpFileSystem::WhereisRun $run]
+
 		#
 		# Note, non event files are considered to belong
 		# in the current dir.  This file, however is an
 		# Event file or link.
 		#
 		if {[file type $file] == "link"} {
-		    # 
-		    # Event files must be links..
-		    #
-		    if {[catch {set eventfile [file readlink $file]}] == 0} {
-			# link is traversable.. attempt to relocate link.
-			set destdir [ExpFileSystem::WhereisRun $run]
-			if {![file exists $destdir/$name]} {
-			    # Destination doesn't exist yet.
+		    file delete $file;	# Either way it's out of current.
+
+		    # Translate the link if it's not in the destdir yet.
+
+		    if {![file exists [file join $destdir $name]]} {
+			set eventFile [file join $completeEventDir $name]
+			if {[file exists $eventFile]} {
+			    # Make new link in run directory.
+			    set linkname [file join $destdir $name]
 			    file mkdir $destdir
-			    catch {
-				puts "trying mv $file $destdir/$name"
-				exec mv -f $file $destdir/$name
-				puts "Mv done ok"
-			    }
-			} else {
-			    puts "Dest File exists..deleting $file"
-			    file delete $file
+			    exec ln -s $eventFile $linkname
+			    puts "Created link: $linkname -> $eventFile"
 			}
-		    } else {
-			# link is dead end... delete it..
-			file delete $file
 		    }
 		}
 	    }

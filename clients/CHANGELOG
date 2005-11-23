@@ -466,3 +466,6 @@ May 13, 2005
      - Fix defect with CSIS3600 support: Needed to add the 
        functions to enable/disable and check the enable state of
        external latch next event.
+     - Fix defect with Stager/Experiment.tcl ; orphaned event file
+       links were just mv'd had to be regenerated since the event
+       file got moved to the stagearea/complete dir not stagearea/current.
