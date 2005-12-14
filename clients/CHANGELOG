@@ -469,3 +469,8 @@ May 13, 2005
      - Fix defect with Stager/Experiment.tcl ; orphaned event file
        links were just mv'd had to be regenerated since the event
        file got moved to the stagearea/complete dir not stagearea/current.
+     - Fix defect in controlpush: It is not sufficient to rely on 
+       epics to provide correct stringified versions of the channel values,
+       back port of fix for defect 189 : Added type sensitive channel
+       fetching and let controlpush figure out how to convert the result
+       into strings.
