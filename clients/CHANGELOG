@@ -155,4 +155,9 @@ Week of November 1:
        DISTROOT.
      - Fix error in burngui - sent 2 \n's at the child causing it to not
        wait for the next dvd.
-7.4-005
+7.4-006
+    - Make this work with newer autoconfs that try to put deps in the
+      dist.  This has problems with variable builds like VMEAPi
+      if they are expressed as $(VMEAPI) not @VMEAPI@ etc.
+    - Remove lines from Makefiles.am which are ^I# as these make
+      automake/autconf stop.
