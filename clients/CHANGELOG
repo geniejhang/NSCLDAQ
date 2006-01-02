@@ -152,3 +152,5 @@
 7.3-018
 February 23, 2005  Fix inconsistent timestamp treatments of tm_month: 
 	January will now be month 1 everywhere.
+7-3-019
+January 2, 2006 - Make this work with newer versions of auto tools
