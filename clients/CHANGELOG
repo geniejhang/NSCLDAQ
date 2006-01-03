@@ -474,3 +474,4 @@ May 13, 2005
        back port of fix for defect 189 : Added type sensitive channel
        fetching and let controlpush figure out how to convert the result
        into strings.
+     - fix string->std(STRING) in controlpush/CChannel.h.
