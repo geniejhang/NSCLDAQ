@@ -475,3 +475,7 @@ May 13, 2005
        fetching and let controlpush figure out how to convert the result
        into strings.
      - fix string->std(STRING) in controlpush/CChannel.h.
+     - Work around exception handling problems in g++-3.3 when exceptions
+       get rethrown around and between shared libs.
+     - Added TclLibs link so that .so's don't need LD_LIBRARY_PATH if
+       auto_path points to $(prefix).
