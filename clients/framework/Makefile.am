@@ -90,7 +90,6 @@ include_HEADERS= CAlarmLogger.h \
 	CTypeFreeBinding.h \
 	CVariableBinding.h \
 	CXtEventLoop.h \
-	ClocationMonitor.h \
 	SpectroFramework.h \
 	XMCallback.h \
 	XMDialogs.h \
@@ -135,7 +134,7 @@ EXTRA_DIST=Doxyfile BufferEvent.oxy \
 	docexamples/TkExample.mak   docexamples/configtest.cpp  \
 	docexamples/minimal.mak     docexamples/subclass.cpp
 
-libEventFramework_la_LDFLAGS = -version-info 1:0:0
+libEventFramework_la_LDFLAGS = -version-info $(SOVERSION):0
 #
 # Doxygen documentation.
 #
