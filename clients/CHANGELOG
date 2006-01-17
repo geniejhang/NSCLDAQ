@@ -479,3 +479,6 @@ May 13, 2005
        get rethrown around and between shared libs.
      - Added TclLibs link so that .so's don't need LD_LIBRARY_PATH if
        auto_path points to $(prefix).
+8.0-007
+     - Fix incorrect parameter type declaration in CCAMACScalerLRS2551::Read
+       member.
