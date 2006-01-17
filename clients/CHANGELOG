@@ -114,3 +114,52 @@ Week of October 25, 2004
   against the tcl stub library.
 - Link the vme access extension against the stub lib to make it starkit compatible.
 - Allow a find on static tcl libs without requiring dynamic libs.
+
+Week of November 1:
+   Create branch to maintain DAQ 7.4 version.
+---- Fixes:
+
+7.4-001 : 
+    - Add RangeError.h to Exception... required by build.
+    - Autodetect existence of spectrodaq_main() and supply a main()
+      in production readout if there else TCL++'s main confuses stuff.
+
+7.4-002 :
+     - Ensure that scripted readout supplies a main too if HAVE_SPECTRODAQ_MAIN
+       is defined.
+     - Some ExprLongs in the contrib software still need to be switched over to 
+       strtoll's.
+     - Fix typo in Readout/Reader.cpp - where m_pTrigger is used where
+       m_pBusy was intended.
+     - In the readout makefiles comment about how to select between the
+       CAMAC controllers.
+     - Fix typo on n568panel makefile
+     - Correct documentation in skeleton Makefiles; to get the Wiener
+       VC32 interface, use -DVC32CAMAC not -DWIENERCAMAC
+     - Correct mis-spelled macro name is Production readout skeleton Makefile
+       clean target.
+     - Fix some typos in contrib/N568Panel goShaper goShaper16 as well as
+       document the need to run this in an spdaq system.
+     - Make all the sample .cfd files valid.
+7.4-003
+     - Fix timestamp inconsistencies with month numbering that are scattered
+	all over the place.
+     - Scripted readout- conditionalize main on HAVE_SPECTRODAQ_MAIN
+     - Delay spectcldaq with usleep a short time between write tries if blocked.
+7.4-004
+     - Backport use of absolute times in ReadoutGui to 7.4 from 8.0
+     - Use cerr for ftp errors in eventlog because ftp lib does not set
+       errno to a useful value.
+     - Fix error in loadcfd.tcl - make it add its installation dir
+       to auto_path rather than some SEE-ish abomination relative to
+       DISTROOT.
+     - Fix error in burngui - sent 2 \n's at the child causing it to not
+       wait for the next dvd.
+7.4-006
+    - Make this work with newer autoconfs that try to put deps in the
+      dist.  This has problems with variable builds like VMEAPi
+      if they are expressed as $(VMEAPI) not @VMEAPI@ etc.
+    - Remove lines from Makefiles.am which are ^I# as these make
+      automake/autconf stop.
+7.4-007
+    - CCAMACScalerLRS2551::Read does not have correct parameter declarations.
