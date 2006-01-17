@@ -161,3 +161,5 @@ Week of November 1:
       if they are expressed as $(VMEAPI) not @VMEAPI@ etc.
     - Remove lines from Makefiles.am which are ^I# as these make
       automake/autconf stop.
+7.4-007
+    - CCAMACScalerLRS2551::Read does not have correct parameter declarations.
