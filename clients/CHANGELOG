@@ -482,3 +482,4 @@ May 13, 2005
 8.0-007
      - Fix incorrect parameter type declaration in CCAMACScalerLRS2551::Read
        member.
+     - Do direct event logging..not ftp.
