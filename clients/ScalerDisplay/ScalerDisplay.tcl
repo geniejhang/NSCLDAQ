@@ -64,15 +64,24 @@ source $scriptdir/scaler.tcl
 
 puts "exec $bindir/sclclient -p $TclServerPort  -s $spdaqurl "
  
-set clientpid [exec $bindir/sclclient -p $TclServerPort  -s $spdaqurl & ]
+set clientpid 0
 
 proc Cleanup {widget pid} {
     if {$widget != "."} return
     exec kill $pid
 }
+proc StartClient {} {
+    global bindir
+    global TclServerPort
+    global clientpid
+    global spdaqurl
+    set clientpid [exec $bindir/sclclient -p $TclServerPort  -s $spdaqurl & ]
+    bind . <Destroy> "Cleanup %W $clientpid"
 
-bind . <Destroy> "Cleanup %W $clientpid"
+}
 
+
+after 2000 StartClient
 
 
 #

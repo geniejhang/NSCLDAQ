@@ -483,3 +483,7 @@ May 13, 2005
      - Fix incorrect parameter type declaration in CCAMACScalerLRS2551::Read
        member.
      - Do direct event logging..not ftp.
+     - Fix race condition between sclclient and ScalerDisplay script.
+       Evidently there are cases where the connection can be accepted in
+       the Tcp/IP sense by not correctly setup to receive data in te Tcl sense.
+       Thanks to Kevin Carnes who ran into this.
