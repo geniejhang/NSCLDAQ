@@ -5,7 +5,7 @@ SUBDIRS = btdriver \
 	vmetcl  \
 	bufdump TclServer bcnaf TcpHoister Stager Scripts framework \
 	AlarmDisplay LogDisplay ProductionReadout  \
-	contrib
+	contrib $(EPICSSOFTWARE)
 
 EXTRA_DIST =  config/install-sh config/config.sub config/config.guess \
 	config/ltmain.sh config/missing config/mkinstalldirs  CHANGELOG
@@ -19,3 +19,4 @@ install-data-local:
 	$(LN_S) $(prefix)/lib $(prefix)/Lib
 	$(LN_S) $(prefix)/include $(prefix)/Include
 	$(LN_S) $(prefix)/etc     $(prefix)/Etc
+	echo "Version: " $(VERSION) build on `hostname` `date` > $(prefix)/VERSION

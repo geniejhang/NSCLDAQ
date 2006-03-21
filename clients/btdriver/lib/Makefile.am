@@ -13,7 +13,7 @@ libbtp_la_SOURCES =  bt_rdwr.c \
 	 bt_name.c \
 	bt_serr.c \
 	bt_icbr.c \
- 	bt_reset.c \
+	bt_reset.c \
 	bt_string.c \
 	 bt_ior.c \
 	bt_iow.c \

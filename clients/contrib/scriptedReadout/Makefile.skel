@@ -16,8 +16,9 @@ CC = gcc
 
 
 LDFLAGS=-L$(LIBDIR) -lScriptedRdo \
-	 -lReadout -lDeviceSupport -lTclPlus -lException $(SPECTRO_LDFLAGS) \
-	$(VMELIBRARY) $(TCL_LDFLAGS)
+	 -lReadout -lDeviceSupport -lTclPlus -lException $(VMELIBRARY) \
+	$(SPECTRO_LDFLAGS) \
+	 $(TCL_LDFLAGS)
 
 CXXFLAGS = -c -D__UNIX__ $(SPECTRO_FLAGS) -I$(INCLUDEDIR) -I$(SCRIPTEDINCLUDE) \
 	-I$(VMELIBRARYHEADERS) $(CAMAC) $(TCL_FLAGS)
