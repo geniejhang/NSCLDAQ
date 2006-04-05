@@ -163,3 +163,5 @@ Week of November 1:
       automake/autconf stop.
 7.4-007
     - CCAMACScalerLRS2551::Read does not have correct parameter declarations.
+    - Fix configure.in to provide a reasonable VMELIBRARY VMELIBRARYHEADERS
+      when the prefix is defaulted.
