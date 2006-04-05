@@ -1,0 +1,167 @@
+7.4:
+
+- Added program controlpush to push EPICS controls data into tcl server
+  programs (e.g. ProductionReadout too).
+- Fixed several issues with Production Reaodut's tcl server:
+  o Added tcl command error reporting.
+  o Correctly handled the case where multiple lines are available on the
+    socket.
+- ProductionReadout - quote and escape the contents of runvariables and
+  statevariables so that arbitrary characters like [ can appear in the
+  variable values.
+- Framework CSocket::Bind - prior to bind(), enable 
+   SO_REUSEADDR to deal with lingering sockets if e.g. readout exits and then
+   restarts soon.
+- Fix incorrect base address of VME trigger/status module was 0xf000 s.b.
+  0x444400 (production readout)
+- Fix issue 076: Elapsed time from readout classic is not correct.
+- Fix issue 116: Titles, runvars and statevars that don't fit can cause
+  a great deal of grief.
+- Fix issue 106: Elapsed time from runs is not correct for production rdo.
+- Added -rpath on Makefiles for scripted readout and scaler server so user
+  does not need to worry about the location of shared libs. Stabilized
+  the actual timer trigger so that the latency is unimportant.
+- Fix issue 108: Event data files can be overwritten without any prompts.
+                 Added to this fix for disabled entry widget poor contrast.
+- Put -rpaths in all the Makefiles so we don't need LD_LIBRARY_PATH
+  and we always get the right directory.
+- Use includes in skeleton makefiles to try to isolate stuff we might modify
+  from stuff the user might modify.
+- Add a build stamp to the installation procedure.
+- Fix incompatibility (bug 121) with Tcl 8.4 for cratelocator.tcl
+- Allow plc channels longer to connect in controlpush, and the heck
+  with looking for units for them.
+- In both controlpush and production readout, add # to the set of 
+  characters escaped when writing TCL scripts.
+- Added dvdburn product shamelessly stolen from what I did for SEE.
+- Support writing tape on a different host than ftp'd to.
+- Add design by contract headers (Headers/DesignByContract.h).
+  In readout software catch DesignByContractException s that may be thrown
+  as a result of user code.
+- Issue 112: If sclclient is started with a local data source. Warn using
+  X11 if possible or stderr if not.
+- VMEPtr.cpp -was ignoring the crate parameter.
+- For TCL 8.4 and later it's not so safe to call free(), for stuff
+  that came from Tcl_SplitList, better to call Tcl_Free, otherwise I have
+  seen segfaults.
+- Fix some doxygen errors in Framework.
+- CIntConfigParam.cpp - suport unsigned 32 bits as well as signed.
+- CCAENModule.cpp - make "waitloops" for data ready adjustable.
+- Fix DiskRun stack clobber problem.
+- Add -p to tar in Experiment.tcl that creates the ~/experiment/runn dirs.
+  otherwise user's umask can modify the output permissions.
+- Issue 115: do non-blocked writes to spectcldaq's output pipe, and \
+  analyze the returns thoroughly to try to remove the occaisional hung
+  spectcldaq process.
+- Issue 109 Provide mechanism to hide ReadoutShell's parameters.
+- Added support for CAENV1190/1290 TDC module.
+  o Correct the bad info about the leading/trailing edge detect Carlo gave me.
+- Repair defect 138: Scripted Readout leaks file descriptors.  I had
+  had problems getting rid of the old configuration at begin of run and
+  had decided to live with the memory leak, but it turns out that also
+  leaks file descriptors as module objects stay around and those run out
+  first.
+- Repair defect 139 - Non numerics in run number cause status line of
+  readout gui to blow up.
+- Added daqstart program... support starting a program with logging and
+  exit notification.
+Week of July 26, 2004:
+- Added man page for daqstart -> $prefix/man/man1.
+- Added daqman command to retrieve daq man-pages.
+- Support caennet controllers in any crate number.
+Week of August 2, 2004:
+- Added support for CES8210's in crates other than 0 for camac.tcl.
+Week of August 9, 2004
+- Added support for Wiener VC/CC32 camac controllers in multiple
+  VME crates to tcl support.  This completes the fix for
+  Enhancement request BZ 136 (http://daqbugs.nscl.msu.edu/show_bug.cgi?id=136).
+Week of August 16, 2004
+- Put CopyIn support back into CAENcard.cpp to improve
+  performance for e.g. scripted readout.  NOTE: Users
+  must have Spectrodaq 0.8.1-001 at the earliest as prior
+  versions of Spectrodaq have CopyIn broken or missing.
+  (Missing is not so bad as conditional compilations will
+   fall back to word by word copy... broken is bad since
+   it segfaults).
+- Bring scaler display software into mainline part of distribution.
+- Add man page for sclclient.
+- Add man page for bufdump.
+- Add man page for tclserver
+- Fix defect 140: Support multiple VME crates for shaper GUI:  
+  Also did a whole bunch of common code factorization out into shaperapp.tcl.
+  the GUI's are now only shadows of their former selves, and shaperapp16.tcl
+  is as well
+Week of August 30
+- Added eventlog manpage.
+- Added log of run start time in ascii end of run report for ScalerDisplay
+- Import vhqpanel from see and make it multicrate clean.
+Week of Sept. 6
+- Added man page for Vme TCL loadable package.
+- Added man page for caennet TCL loadable package.
+- Added man page for vhq TCL loadable package.
+Week of Sept. 20
+- Fix defect in Production readout: CExperiment never invokes the scaler
+  initialization function.
+- Add manpage for camac package (CES 8210).
+Week of Sept. 27
+- Fix defect in build: vmetcl was linking btp e.g. from the install dirs
+  rather than the build dirs causing errors for make (not make install) on
+  systems that had never been installed on before.
+- Increase connection timeouts of controlpush. some were intermittently not
+  connecting.
+Week of October 25, 2004
+- Add TCL_STUBFLAGS make variable that is the link flags to link a tcl extension
+  against the tcl stub library.
+- Link the vme access extension against the stub lib to make it starkit compatible.
+- Allow a find on static tcl libs without requiring dynamic libs.
+
+Week of November 1:
+   Create branch to maintain DAQ 7.4 version.
+---- Fixes:
+
+7.4-001 : 
+    - Add RangeError.h to Exception... required by build.
+    - Autodetect existence of spectrodaq_main() and supply a main()
+      in production readout if there else TCL++'s main confuses stuff.
+
+7.4-002 :
+     - Ensure that scripted readout supplies a main too if HAVE_SPECTRODAQ_MAIN
+       is defined.
+     - Some ExprLongs in the contrib software still need to be switched over to 
+       strtoll's.
+     - Fix typo in Readout/Reader.cpp - where m_pTrigger is used where
+       m_pBusy was intended.
+     - In the readout makefiles comment about how to select between the
+       CAMAC controllers.
+     - Fix typo on n568panel makefile
+     - Correct documentation in skeleton Makefiles; to get the Wiener
+       VC32 interface, use -DVC32CAMAC not -DWIENERCAMAC
+     - Correct mis-spelled macro name is Production readout skeleton Makefile
+       clean target.
+     - Fix some typos in contrib/N568Panel goShaper goShaper16 as well as
+       document the need to run this in an spdaq system.
+     - Make all the sample .cfd files valid.
+7.4-003
+     - Fix timestamp inconsistencies with month numbering that are scattered
+	all over the place.
+     - Scripted readout- conditionalize main on HAVE_SPECTRODAQ_MAIN
+     - Delay spectcldaq with usleep a short time between write tries if blocked.
+7.4-004
+     - Backport use of absolute times in ReadoutGui to 7.4 from 8.0
+     - Use cerr for ftp errors in eventlog because ftp lib does not set
+       errno to a useful value.
+     - Fix error in loadcfd.tcl - make it add its installation dir
+       to auto_path rather than some SEE-ish abomination relative to
+       DISTROOT.
+     - Fix error in burngui - sent 2 \n's at the child causing it to not
+       wait for the next dvd.
+7.4-006
+    - Make this work with newer autoconfs that try to put deps in the
+      dist.  This has problems with variable builds like VMEAPi
+      if they are expressed as $(VMEAPI) not @VMEAPI@ etc.
+    - Remove lines from Makefiles.am which are ^I# as these make
+      automake/autconf stop.
+7.4-007
+    - CCAMACScalerLRS2551::Read does not have correct parameter declarations.
+    - Fix configure.in to provide a reasonable VMELIBRARY VMELIBRARYHEADERS
+      when the prefix is defaulted.
