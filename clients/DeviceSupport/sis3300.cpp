@@ -568,15 +568,7 @@ CSIS3300::InitDaq()
   if(m_fGateMode) {
     csrmask |= DAQEnableGateMode;
   }
-  /* Added by M. Famiano  to Enable the HiRA RCM */
-
-  if(m_fRandomClock) {
-    csrmask |= DAQEnableRandomClock;
-    csrmask |= (Internal100Mhz << DAQClockSetShiftCount);
-  }
-  else {
     csrmask |= (m_eClock << DAQClockSetShiftCount) ;
-  }
 
 
 
