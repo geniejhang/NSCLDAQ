@@ -487,3 +487,9 @@ May 13, 2005
        Evidently there are cases where the connection can be accepted in
        the Tcp/IP sense by not correctly setup to receive data in te Tcl sense.
        Thanks to Kevin Carnes who ran into this.
+     - Revert the assumption that CAEN 785 (e.g.) firmware 8.08 and higher
+       don't corrupt the word count in the header... 8.08 does in any event.
+     - bcnaf.tcl : it and its dependent scripts get installed with the .tcl
+       removed from their names, bcnaf.tcl was looking for e.g.
+       cesbcnaf.tcl not cesbcnaf... fix that... Thanks to Alexandra Gade
+       for pointing that one out.
