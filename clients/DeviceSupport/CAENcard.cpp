@@ -279,6 +279,10 @@ DAMAGES.
 /*
   Change Log:
   $Log$
+  Revision 4.6.2.1  2006/05/15 14:24:55  ron-fox
+  Revert the assumption that 8.08 and higher firmware don't corrupt
+  the word count..as they do
+
   Revision 4.6  2005/05/24 11:08:00  ron-fox
   Minor commits and open 8.0-001 edit level
 
@@ -1486,9 +1490,9 @@ void CAENcard::MapCard()
    m_nHardwareRev = pRom->peekw(ShortOffset(ROM, Revision));
    delete pRom;
 #else   
-   m_nCardType = pRom->BoardIdMSB << 16 |
-                 pRom->BoardId    <<  8 |
-                 pRom->BoardIdLSB;
+   m_nCardType = (pRom->BoardIdMSB & 0xff) << 16 |
+                 (pRom->BoardId & 0xff)    <<  8 |
+                 (pRom->BoardIdLSB & 0xff);
    m_nSerialno  = pRom->SerialMSB << 8 |
                  pRom->SerialLSB;
    m_nHardwareRev = pRom->Revision;
