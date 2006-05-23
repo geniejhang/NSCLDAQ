@@ -165,3 +165,6 @@ Week of November 1:
     - CCAMACScalerLRS2551::Read does not have correct parameter declarations.
     - Fix configure.in to provide a reasonable VMELIBRARY VMELIBRARYHEADERS
       when the prefix is defaulted.
+7.4-JumboBuffers 
+      Start daqclients-7_4_jumbobufs to play with readouts that can take
+      buffers that are larger than 64K-1 words.
