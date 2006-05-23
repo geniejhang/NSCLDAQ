@@ -283,6 +283,9 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
   
   Change Log:
    $Log$
+   Revision 3.5.2.1  2004/11/19 14:12:47  ron-fox
+   Setup for edit level -002
+
    Revision 3.5  2004/10/29 20:32:55  ron-fox
    Merge the 7.4 development into the main line
 
@@ -322,6 +325,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
  Stamp with copyright/gpl license notice
 
    */
+#include <config.h>
 
 #include <spectrodaq.h>
 #include "CReadoutMain.h"                  
@@ -696,3 +700,18 @@ CReadoutMain::Exit()
   CReaper::getInstance()->clear(); // Don't reap threads that are being
   m_fExit = true;		// destroyed.
 }
+
+
+// If spectrodaq main is separable, then I need to define main
+// here to ensure that TCL++'s main is not pulled in by mistake.
+//
+
+#ifdef HAVE_SPECTRODAQ_MAIN
+int
+main(int argc, char** argv, char** envp) 
+{
+  return spectrodaq_main(argc, argv, envp);
+}
+
+
+#endif
