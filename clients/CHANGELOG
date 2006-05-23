@@ -166,6 +166,4 @@ Week of November 1:
     - Fix configure.in to provide a reasonable VMELIBRARY VMELIBRARYHEADERS
       when the prefix is defaulted.
 
-7.4-JumboBuffers:
-     Start branch to create Readout that can make Jumbo buffers (buffers
-     bigger than 64K-1 words.
+
