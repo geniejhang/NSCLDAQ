@@ -284,6 +284,9 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
       
       Modification History:
       $Log$
+      Revision 3.7.4.1  2006/05/23 20:30:44  ron-fox
+      Support buffer sizes > 64Kwords -1.
+
       Revision 3.7  2004/10/29 20:32:55  ron-fox
       Merge the 7.4 development into the main line
 
@@ -350,13 +353,14 @@ static const int hdrWUNUSED2 = 9; // Decomisioned bitregister count.
 static const int hdrWBUFFMT = 10; // Buffer format indicator.
 static const int hdrWSIG   = 11; // Short signature.
 static const int hdrLSIG   = 12; // Long signature.
-static const int hdrWUNUSED3 =14; // 14,15, are both unused.
+static const int hdrWSIZEH = 14;
+static const int hdrWUNUSED3 =15; // 15, are both unused.
 static const int BODYOFFSET = 16;
 
 static const short SSIGNATURE = 0x0102;
 static const long  LSIGNATURE = 0x01020304;
 
-static const short REVLEVEL = 5; // lvl 5 - removes unused header items.
+static const short REVLEVEL = 6; // lvl 6 - removes unused header items.
 
 // Static class members.
 
@@ -392,7 +396,10 @@ CNSCLOutputBuffer::CNSCLOutputBuffer (unsigned nWords)
 void 
 CNSCLOutputBuffer::ComputeSize()  
 {
-  m_Buffer[hdrWSIZE] = m_BufferPtr.GetIndex();
+  int wordCount      = m_BufferPtr.GetIndex();
+ 
+  m_Buffer[hdrWSIZE] = (wordCount & 0xffff); // Little endian assumption.
+  m_Buffer[hdrWSIZEH]= (wordCount >> 16) & 0xffff; 
 }  
 
 /*!
@@ -419,14 +426,14 @@ CNSCLOutputBuffer::SetType(int nType)
     there is a performance loss in doing so.. You are best off letting
     Route() do that for you.
 
-    \note It is assumed that m_Buffer[hdrWSIZE] is correct.
+    \note It is assumed that m_Buffer[hdrWSIZE], m_Buffer[hdrWSIZEH] are correct.
 
 */
 void 
 CNSCLOutputBuffer::ComputeChecksum()  
 {
   m_Buffer[hdrWCKS] = 0;	// Don't let old cks contribute if set.
-  int nWords = m_Buffer[hdrWSIZE];
+  unsigned int nWords = m_Buffer[hdrWSIZE] | (m_Buffer[hdrWSIZEH] << 16);
   short cks(0);
 
   DAQWordBufferPtr p(&m_Buffer); // Pointer iteration much better than idx.

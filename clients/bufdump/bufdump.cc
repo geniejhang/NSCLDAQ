@@ -393,7 +393,12 @@ class DAQBuff : public DAQROCNode {
       
         if(pHeader->nevt != 0) {
 	   cout << "-------------------------- Event (first Event) -------------------\n";
-	   unsigned short size    = pLocalBuffer[16];
+	   unsigned int size    = pLocalBuffer[16];
+	   if (pHeader->buffmt >= 6) {
+	     // Event sizes are actually 32 bits in this rev and higher.
+	     // 
+	     size = size | (pLocalBuffer[17] << 16);
+	   }
 	   cout << dec <<   " Header: \n";
 	   for(int i =0; i < 16; i ++) {
 	     cout << pLocalBuffer[i] << " "; 

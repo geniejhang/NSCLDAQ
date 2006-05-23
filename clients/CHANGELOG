@@ -166,5 +166,20 @@ Week of November 1:
     - Fix configure.in to provide a reasonable VMELIBRARY VMELIBRARYHEADERS
       when the prefix is defaulted.
 7.4-JumboBuffers 
+      Note
       Start daqclients-7_4_jumbobufs to play with readouts that can take
       buffers that are larger than 64K-1 words.
+      Headers/
+      - buffer.h -committed another word for the most significant word of the
+                 -incremented revision level.-> 6.
+      Readout/
+      - ReadoutStateMachine.{cpp,h} - FormatHeader needs to handle 32 bit size
+      - Reader.cpp - Make event size  32 bits not 16 bits.
+                   - Make OverFlow understand event sizes are 32 bits.
+      contrib/scripted
+      - CReadOrder - Make packet sizes longwords.
+      ProductionReadout/
+      - CNSCLPhysicsBuffer.cpp   - 32 bit event word count.
+      - CNSCLOutputBuffer.{cpp,h} - 32 bit event size.
+      bufdump/bufdump.cc  - understand 32 bit event sizes.
+      
