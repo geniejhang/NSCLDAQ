@@ -29,7 +29,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <fcntl.h>
 #include <unistd.h>
 #include <CopyrightNotice.h>
-
+#include <string>
 
 #ifndef SPECTRODAQ_H
 #include <spectrodaq.h>
@@ -105,6 +105,22 @@ class DAQBuff : public DAQROCNode {
       cerr << "Using URL: " << argv[1] << endl;
       sinkurl = argv[1];
     } 
+    argv++; argc--;
+    argv++; argc--;
+    int eventMode = COS_UNRELIABLE;
+    int scalerMode= COS_RELIABLE;
+    string eventModeString = "unreliable";
+    string scalerModeString = "reliable";
+    if (argc > 0) {
+      if (strcmp(argv[0], "-everything") == 0) {
+	eventMode = COS_RELIABLE;
+	eventModeString = "reliable";
+      }
+      if (strcmp(argv[0], "-sampleall") == 0) {
+	scalerMode = COS_UNRELIABLE;
+	scalerModeString = "unreliable";
+      }
+    }
 
     // Tag this buffer so we know what type of buffer to receive.
     bbuf.SetTag(2);
@@ -112,17 +128,17 @@ class DAQBuff : public DAQROCNode {
 
     // Add a sink for this tag
 
-    sinkid = daq_link_mgr.AddSink(sinkurl,2, ALLBITS_MASK, COS_UNRELIABLE);
+    sinkid = daq_link_mgr.AddSink(sinkurl,2, ALLBITS_MASK, eventMode);
     if(sinkid <= 0) {
-      cerr << "Failed to add unreliable sink\n";
+      cerr << "Failed to add " << eventModeString << "  sink\n";
       exit(-1);
     }
-    cerr << "Added unreliable sink " << sinkid << endl;
-    sinkid = daq_link_mgr.AddSink(sinkurl,3, ALLBITS_MASK, COS_RELIABLE);
+    cerr << "Added " << eventModeString << " sink " << sinkid << endl;
+    sinkid = daq_link_mgr.AddSink(sinkurl,3, ALLBITS_MASK, scalerMode);
 
 
     // If the sinkid == 0, then the AddSink failed.
-    cerr << "Added Reliable Sink Id " << sinkid << endl;
+    cerr << "Added " << scalerModeString << "  Sink Id " << sinkid << endl;
     if (sinkid <= 0) {
       cerr << "Failed to add a sink." << endl;
       exit(-1);
