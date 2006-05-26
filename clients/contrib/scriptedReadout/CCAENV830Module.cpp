@@ -539,7 +539,7 @@ CCAENV830Module::Read(DAQWordBufferPtr& rBuffer)
   //                 + 1  Their header (long)
   //                 + 5  My max header size (words).
 
-  short Buffer[ 32+1*sizeof(long)/sizeof(short) + 5];
+  short Buffer[ 32+1*sizeof(long)/sizeof(short) + 10];
 
   int nBytes = Read(Buffer);
   int nWords = nBytes/sizeof(short);
@@ -561,9 +561,9 @@ CCAENV830Module::Read(void* pBuffer)
 
   // Fill in what we can of the event header:
 
-  short*  pwc = p;
+  unsigned int*  pwc = (unsigned int*)p;
   if(m_fPacketize) {		// Put in packet header...
-    ++p;			// Leave room for word count.
+    p+=2;
     *p = m_nId;		// Id of the packet.
     ++p;
     UShort_t hdr = 0;

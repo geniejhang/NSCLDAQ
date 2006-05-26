@@ -216,7 +216,7 @@ CReadOrder::Read(void* pBuf)
   if(m_fPacketize) {
     p+=2;
     *p++ = m_nPacketId;
-    nRead = 2;			// Packet overhead is 2 words.
+    nRead = 3;			// Packet overhead is 3 words.
   }
 
   try {
