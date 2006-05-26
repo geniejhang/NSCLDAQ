@@ -36,7 +36,9 @@ libScriptedRdo_la_SOURCES = CBoolConfigParam.cpp \
 	CConfigurableObject.cpp \
 	CReadableObject.cpp 	\
 	CReadException.cpp	\
-	CPacketCreator.cpp
+	CPacketCreator.cpp     \
+	CEnumParameter.cpp     \
+	CSIS3300Creator.cpp CSIS3300Module.cpp
 
 
 libScriptedRdo_la_LDFLAGS = -version-info $(SOVERSION):0 
@@ -74,7 +76,9 @@ noinst_HEADERS=CBoolConfigParam.h \
 	CConfigurableObject.h	\
 	CReadableObject.h	\
 	CReadException.h	\
-	CPacketCreator.h        
+	CPacketCreator.h        \
+	CEnumParameter.h        \
+	CSIS3300Creator.cpp CSIS3300Module.cpp
 
  
 
