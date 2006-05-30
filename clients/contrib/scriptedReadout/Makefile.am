@@ -78,7 +78,7 @@ noinst_HEADERS=CBoolConfigParam.h \
 	CReadException.h	\
 	CPacketCreator.h        \
 	CEnumParameter.h        \
-	CSIS3300Creator.cpp CSIS3300Module.cpp
+	CSIS3300Creator.h CSIS3300Module.h
 
  
 
