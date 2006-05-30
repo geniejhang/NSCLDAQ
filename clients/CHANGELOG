@@ -493,3 +493,4 @@ May 13, 2005
        removed from their names, bcnaf.tcl was looking for e.g.
        cesbcnaf.tcl not cesbcnaf... fix that... Thanks to Alexandra Gade
        for pointing that one out.
+     - CCAMACScalerLRS4434 - Correct signature on Read members.
