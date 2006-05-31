@@ -32,7 +32,7 @@ private:
 public:
   void setUp() {
     m_pModule = new CCAENV1x90(1, 0, ModuleBase);
-    m_pModule->Reset();
+    m_pModule->Reset()
 
   }
   void tearDown() {

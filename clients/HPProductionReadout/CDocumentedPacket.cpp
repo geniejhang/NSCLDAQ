@@ -293,6 +293,12 @@ using namespace std;
    
    Modification History:
    $Log$
+   Revision 1.1.2.2  2005/07/14 20:23:33  ron-fox
+   Correct ushort* documented packet first crack.
+
+   Revision 8.2  2005/06/24 11:30:50  ron-fox
+   Bring the entire world onto the 8.2 line
+
    Revision 1.1  2005/02/07 19:50:46  ron-fox
    Break off branch for HPProduction readout (using transparent copyin).
 
@@ -336,6 +342,7 @@ CDocumentedPacket::CDocumentedPacket (unsigned short nTag,
   m_nTag(nTag),
   m_sName(rName),
   m_sDescription(rDescription),
+  m_pHeaderPtr(0),
   m_sVersion(rVersion),
   m_fPacketInProgress(false)
 {
@@ -402,8 +409,8 @@ CDocumentedPacket::Format()
 	\returns Pointer to body of packet.
 
 */
-DAQWordBufferPtr 
-CDocumentedPacket::Begin(DAQWordBufferPtr& rPointer)  
+unsigned short* 
+CDocumentedPacket::Begin(unsigned short* rPointer)  
 {
   if(m_fPacketInProgress) {
     throw CInvalidPacketStateException(m_fPacketInProgress, 
@@ -412,7 +419,7 @@ CDocumentedPacket::Begin(DAQWordBufferPtr& rPointer)
   m_fPacketInProgress = true;
   m_pHeaderPtr        = rPointer;
   
-  DAQWordBufferPtr p  = m_pHeaderPtr;
+  unsigned short* p  = m_pHeaderPtr;
   *p = 0;			// Don't know word count yet.
   ++p;
   *p = m_nTag;			// The packet is tagged with our id.
@@ -437,14 +444,14 @@ CDocumentedPacket::Begin(DAQWordBufferPtr& rPointer)
 		 this allows for a trailer as well as a header to be inserted.
 
 */
-DAQWordBufferPtr 
-CDocumentedPacket::End(DAQWordBufferPtr& rBuffer)  
+unsigned short* 
+CDocumentedPacket::End(unsigned short* rBuffer)  
 {
   if(!m_fPacketInProgress) {
     throw CInvalidPacketStateException(m_fPacketInProgress,
 			      "Packet must be open to be ended.");
   }
-  *m_pHeaderPtr = rBuffer.GetIndex() - m_pHeaderPtr.GetIndex();
+  *m_pHeaderPtr = (unsigned short)(rBuffer - m_pHeaderPtr);
   m_fPacketInProgress = false;
   return rBuffer;
 }
@@ -452,7 +459,7 @@ CDocumentedPacket::End(DAQWordBufferPtr& rBuffer)
     Get a pointer to the current packet.  This throws  CInvalidPacketState if there is not
    an open packet, and is therefore not a trivial selector.
 */
-DAQWordBufferPtr 
+unsigned short* 
 CDocumentedPacket::getHeaderPtr() const
 {
    if(!m_fPacketInProgress) {
