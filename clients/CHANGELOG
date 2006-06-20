@@ -166,4 +166,4 @@ Week of November 1:
     - Fix configure.in to provide a reasonable VMELIBRARY VMELIBRARYHEADERS
       when the prefix is defaulted.
 
-
+7.4-008
