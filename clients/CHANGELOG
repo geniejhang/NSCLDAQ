@@ -160,3 +160,5 @@ January 17, 2006 Fix error in declaraion of CCAMACScalerLRS2551::Read
      parameters (defect 191).
 March 21,2006  Fix an error in the way that VME library defs were made
      by configure.in
+
+7.3-021
