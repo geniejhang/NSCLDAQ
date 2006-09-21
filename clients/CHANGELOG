@@ -183,3 +183,4 @@ Week of November 1:
       - CNSCLOutputBuffer.{cpp,h} - 32 bit event size.
       bufdump/bufdump.cc  - understand 32 bit event sizes.
       
+7.4-007jumbo-001
