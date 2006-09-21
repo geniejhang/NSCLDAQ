@@ -494,5 +494,8 @@ May 13, 2005
        cesbcnaf.tcl not cesbcnaf... fix that... Thanks to Alexandra Gade
        for pointing that one out.
      - CCAMACScalerLRS4434 - Correct signature on Read members.
-
+     - Added replaceState to Readout's StateMachine class.
 8.0-008
+     Released to the public in Sept. 21, 2006
+
+8.0-009
