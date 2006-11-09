@@ -37,5 +37,6 @@ install-data-local:
 	$(INSTALL_DATA) Directories.include.final $(prefix)/etc/Directories.include
 	$(INSTALL_PROGRAM)  daqman $(prefix)/bin
 	echo "Version: " $(VERSION) build on `hostname` `date` > $(prefix)/VERSION
+	$(INSTALL_DATA) CHANGELOG $(prefix)
 	mandb $(prefix)/man
 
