@@ -20,3 +20,4 @@ install-data-local:
 	$(LN_S) $(prefix)/include $(prefix)/Include
 	$(LN_S) $(prefix)/etc     $(prefix)/Etc
 	echo "Version: " $(VERSION) build on `hostname` `date` > $(prefix)/VERSION
+	$(INSTALL_DATA) CHANGELOG $(prefix)
