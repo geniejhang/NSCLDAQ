@@ -13,9 +13,6 @@
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
-
-static const char* versionString = "V1.0";
-
 #include <config.h>
 #include "CTheApplication.h"
 #include "Globals.h"
@@ -53,7 +50,7 @@ static const int tclServerPort(27000);
 static const string daqConfigBasename("daqconfig.tcl");
 static const string ctlConfigBasename("controlconfig.tcl");
 static const uint32_t bufferCount(32); // Number of buffers that can be inflight.
-static const uint32_t bufferSize(13*1024*sizeof(uint16_t)); // 13kword buffers...+pad
+static const uint32_t bufferSize(13*1024*sizeof(uint16_t)+1024); // 13kword buffers...+pad
 
 
 // Static member variables and initialization.
@@ -99,9 +96,6 @@ int CTheApplication::operator()(int argc, char** argv)
 {
   m_Argc   = argc;		// In case someone else wants them.
   m_Argv   = argv; 
-
-
-  cerr << "VM-USB scriptable readout version " << versionString << endl;
 
   try {				// Last chance exception catching...
     
