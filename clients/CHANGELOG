@@ -500,3 +500,5 @@ May 13, 2005
 
 8.0-009
      Install CHANGELOG to top level directories.
+     Fix defect 231 - missing gdbm.h or libgdbm should cause
+     config to fail rather than emitting broken Makefiles.
