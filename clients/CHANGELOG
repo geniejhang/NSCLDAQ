@@ -502,3 +502,4 @@ May 13, 2005
      Install CHANGELOG to top level directories.
      Fix defect 231 - missing gdbm.h or libgdbm should cause
      config to fail rather than emitting broken Makefiles.
+     Fix defect 233 - CCAMACScalerLRS4434 did not read channels correctly.
