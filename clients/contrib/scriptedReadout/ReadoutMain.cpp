@@ -299,6 +299,7 @@ DAMAGES.
 static char* Copyright =
 "(c) Copyright NSCL All rights reserved 1999 ReadoutMain.cpp\n";
 
+
 //
 // Include files:
 //
@@ -407,3 +408,11 @@ DAQBuff::operator()(int argc, char**argv)
 DAQBuff mydaq;
   
 void* gpTCLApplication(0);
+
+
+int
+main(int argc, char** argv, char** env)
+{
+  return spectrodaq_main(argc, argv, env);
+}
+
