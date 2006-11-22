@@ -168,3 +168,5 @@ March 21,2006  Fix an error in the way that VME library defs were made
   November 17, 2006 - Fix defect 231 by failing the
     configure if gdbm.h or libgdbm are missing, rather than
     generating broken Makefiles that will fail later on.
+  November 22, 2006 - fix defect 233 - CCAMACScalerLRS4434 was not
+     correctly reading.
