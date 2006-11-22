@@ -174,3 +174,5 @@ Week of November 1:
    November 17, 2006 - Fix defect 231, missing gdbm.h or libgdbm
       should just fail at configure time, rather than making broken
       Makefiles that will fail later.
+   November 22, 2006 - Fix defect 233 - CCAMACScalerLRS4434 was not
+      programming contro lregister to correctlyr ead.

@@ -371,7 +371,7 @@ CCAMACScalerLRS4434::Read(vector<unsigned int>& Scalers)
   // construct and write the control register so that latch the data,
   // start reading at channel zero and for 32 channels.
 
-  unsigned short creg = (0x1f << FINshift) | LD; // FA = 0.
+  unsigned short creg = (0x1f << FINshift) | BD | RD | LD; // FA = 0.
   m_Scaler.Write(16, 0, creg);
  
   // Now read the scalers. Note we assume that since CAMAC cycles require
@@ -379,7 +379,7 @@ CCAMACScalerLRS4434::Read(vector<unsigned int>& Scalers)
   // latch operation above and the scaler being ready for readout.
 
   for(unsigned int i = 0; i < nChannels; i++) {
-    Scalers.push_back(m_Scaler.Read(0, 0));
+    Scalers.push_back(m_Scaler.Read(2, 0));
   }
  
 }  
