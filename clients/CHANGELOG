@@ -184,3 +184,4 @@ Week of November 1:
       bufdump/bufdump.cc  - understand 32 bit event sizes.
       
 7.4-007jumbo-001
+     Fix errors in the build for readouts... needed -lVmeAPI.
