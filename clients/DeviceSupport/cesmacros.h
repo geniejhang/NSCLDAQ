@@ -736,30 +736,25 @@ extern void CESBranchAccess(int nBranch);
 
 		/* Fixed size sub event packet. */
 
-#define Packet(size, type) { putbufw(size); putbufw(type);
+#define Packet(size, type) { putbufl(size); putbufw(type);
 #define EndPacket          }
 
 		/* Variable sized sub event packet */
 
-#ifdef __unix__
+
 #define VPacket(type)     {                                           \
                             DAQWordBufferPtr _pktstart = bufpt;     \
-			    ++bufpt;                                  \
+                            UINT32           _packetsize;            \
+			    bufpt += 2;                                  \
 			    putbufw(type);
-#else
-#define VPacket(type)     {                                            \
-                            INT16 *_pktstart = bufpt; ++bufpt;         \
-                            putbufw(type);
-#endif
-#ifdef __unix__
-#define EndVPacket          *_pktstart = (INT16)(bufpt.GetIndex() -     \
-                                                 _pktstart.GetIndex()); \
-                           }
-#else
-#define EndVPacket          *_pktstart = (INT16)(bufpt - _pktstart);    \
 
-                           }
-#endif
+#define EndVPacket          _packetsize = bufpt.GetIndex() - _pktstart.GetIndex();   \
+                            *_pktstart = _packetsize & 0xffff;                          \
+                            ++_pktstart;                                               \
+                            *_pktstart = (_packetsize >> 16) & 0xffff;                \
+                         }
+
+
 /*
 **   Reserve a fixed length chunk of buffer which will be filled in
 **   later.  ptr will point to the start of this buffer. 

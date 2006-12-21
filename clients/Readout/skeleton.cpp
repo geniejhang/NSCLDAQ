@@ -883,7 +883,7 @@ clrscl ()
 **++
 **  FUNCTIONAL DESCRIPTION:
 **
-**      readevt	- This function is called to read an event.
+**      readevt- This function is called to read an event.
 **
 **  FORMAL PARAMETERS:
 **
@@ -896,7 +896,7 @@ clrscl ()
 **
 **--
 */
-WORD
+UINT32
 #ifdef __unix__
 readevt (DAQWordBufferPtr& bufpt)
 #else 
@@ -1033,7 +1033,7 @@ readevt (WORD* bufpt)
 **
 **--
 */
-UINT16
+UINT32
 readscl (UINT32* buffer,int numscalers)
 {
     UINT32* _sbufpt = buffer;

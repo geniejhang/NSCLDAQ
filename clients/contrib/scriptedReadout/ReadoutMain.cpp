@@ -302,6 +302,7 @@ static char* Copyright =
 //
 // Include files:
 //
+
 #include <daqdatatypes.h>
 #include <ReadoutStateMachine.h>
 #include <daqinterface.h>
@@ -407,3 +408,12 @@ DAQBuff::operator()(int argc, char**argv)
 DAQBuff mydaq;
   
 void* gpTCLApplication(0);
+
+#ifdef HAVE_SPECTRODAQ_MAIN
+
+int
+main(int argc, char** argv, char** env) 
+{
+  return spectrodaq_main(argc, argv, env);
+}
+#endif
