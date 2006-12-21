@@ -329,7 +329,7 @@ then
 #  Since the bt library is part of the build:
 
    VMELIBRARYHEADERS="-I${includedir}"
-   VMELIBRARY="-L${libdir}/lib -lbtp"
+   VMELIBRARY="-L${libdir} -lbtp"
 fi
 
 AC_MSG_RESULT([hard coded to SBSBIT3: BUILDHEADERS: $VMEBUILDHEADERS])

@@ -31,7 +31,7 @@ install-data-local:
 	echo TCLLIBS=$(TCL_LDFLAGS)  >>Directories.include.final
 	echo SPECTRODAQBINDIR=$(spectrodaq_conf_dir) >> Directories.include.final
 	echo VMEHEADERS=$(VMELIBRARYHEADERS) >> Directories.include.final
-	echo VMELIBRARY=$(VMELIBRARY) >> Directories.include.final
+	echo VMELIBRARY=-lVmeAPI $(VMELIBRARY) >> Directories.include.final
 	echo X11LIBS=$(X11LIBS)       >> Directories.include.final
 	cat Directories.include       >> Directories.include.final
 	$(INSTALL_DATA) Directories.include.final $(prefix)/etc/Directories.include

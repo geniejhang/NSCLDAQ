@@ -175,4 +175,7 @@ Week of November 1:
       should just fail at configure time, rather than making broken
       Makefiles that will fail later.
    November 22, 2006 - Fix defect 233 - CCAMACScalerLRS4434 was not
-      programming contro lregister to correctlyr ead.
+      programming control register to correctlyr read.
+   December 21, 2006 - Makefile.am at top level did not ensure that
+      Directories.include specified that -lVmeAPI needed to be
+      linked.
