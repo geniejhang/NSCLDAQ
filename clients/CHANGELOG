@@ -503,3 +503,5 @@ May 13, 2005
      Fix defect 231 - missing gdbm.h or libgdbm should cause
      config to fail rather than emitting broken Makefiles.
      Fix defect 233 - CCAMACScalerLRS4434 did not read channels correctly.
+     Fix error in skeleton makefiles for Readout branch.. need to know
+     about the VME api library.
