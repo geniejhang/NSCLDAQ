@@ -508,3 +508,5 @@ May 13, 2005
      Fix issue with bcnaf.tcl - the load of vmetcl was causing exec
      to think there was a child process failure because the
      license notice was output to stderr.
+     Fix error in burngui - was not locating its gui script
+     when installed.

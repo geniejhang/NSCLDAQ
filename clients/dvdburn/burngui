@@ -6,6 +6,10 @@ exec wish ${0} ${@}
 set me      $argv0
 set mypath  [file dirname $me]
 
+# Because of links, need to explicitly go up and over to Scripts:
+
+set mypath [file join $mypath .. Scripts]
+
 
 source $mypath/TopGUi.ui.tcl
 source $mypath/dvdburnoutput.ui.tcl
