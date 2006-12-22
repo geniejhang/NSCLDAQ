@@ -10,6 +10,8 @@ set mypath  [file dirname $me]
 source $mypath/TopGUi.ui.tcl
 source $mypath/dvdburnoutput.ui.tcl
 
+set mypath [file join $mypath .. Scripts]
+
 set burning 0
 set burnfd ""
 

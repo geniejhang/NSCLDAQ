@@ -179,3 +179,5 @@ Week of November 1:
    December 21, 2006 - Makefile.am at top level did not ensure that
       Directories.include specified that -lVmeAPI needed to be
       linked.
+   December 22, 2006 - burngui was not correctl locating its gui
+      scripts when installed.
