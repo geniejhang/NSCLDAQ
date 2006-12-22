@@ -10,6 +10,8 @@ set mypath  [file dirname $me]
 source $mypath/TopGUi.ui.tcl
 source $mypath/dvdburnoutput.ui.tcl
 
+set mypath [file join $mypath .. Scripts]
+
 set burning 0
 set burnfd ""
 
@@ -111,7 +113,7 @@ proc CaptureOutput {} {
 	    
 	    tk_dialog .next "Next DVD" "Put a blank DVD in the burner" \
 		questhead 0 "Ready to Burn"
-	    puts $burnfd "\n"
+	    puts -nonewline $burnfd "\n"
 	    flush $burnfd
 	}
     }

@@ -279,6 +279,10 @@ DAMAGES.
 /*
   Change Log:
   $Log$
+  Revision 1.4.2.1  2004/12/28 21:36:08  ron-fox
+  Use strtol where used to use ExprLong for unsigned values since
+  as of Tcl 8.4, ExprLong is signed only.
+
   Revision 1.4  2004/10/29 20:32:54  ron-fox
   Merge the 7.4 development into the main line
 
@@ -1294,7 +1298,7 @@ void CAENcard::setIped(int value)
 */
 int CAENcard::getIped()
 {
-  if((cardType() == 792) || (cardType() != 862)) {
+  if((cardType() == 792) || (cardType() == 862)) {
     return ((volatile Registers*)m_pModule)->QDCIPedestal;
   } else {
     throw string("getIped - Module is not a V792 or V862 QDC");
