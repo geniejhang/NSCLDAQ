@@ -20,10 +20,12 @@ install-data-local:
 	rm -f $(prefix)/Lib
 	rm -f $(prefix)/Include
 	rm -f $(prefix)/Etc
+	rm -rf $(prefix)/TclLibs
 	$(LN_S) $(prefix)/bin $(prefix)/Bin
 	$(LN_S) $(prefix)/lib $(prefix)/Lib
 	$(LN_S) $(prefix)/include $(prefix)/Include
 	$(LN_S) $(prefix)/etc     $(prefix)/Etc
+	$(LN_S) $(prefix)/lib $(prefix)/TclLibs
 	echo CXX=$(CXX)                 > CompilationRules.include.final
 	echo CC=$(CC)                  >> CompilationRules.include.final
 	echo CXXLD=$(CXX)              >> CompilationRules.include.final
@@ -34,13 +36,14 @@ install-data-local:
 	echo TCLLIBS=$(TCL_LDFLAGS)  >>Directories.include.final
 	echo SPECTRODAQBINDIR=$(spectrodaq_conf_dir) >> Directories.include.final
 	echo VMEHEADERS=$(VMELIBRARYHEADERS) >> Directories.include.final
-	echo VMELIBRARY=$(VMELIBRARY) >> Directories.include.final
+	echo VMELIBRARY=-lVmeAPI $(VMELIBRARY) >> Directories.include.final
 	echo X11LIBS=$(X11LIBS)       >> Directories.include.final
 	cat Directories.include       >> Directories.include.final
 	$(INSTALL_DATA) Directories.include.final $(prefix)/etc/Directories.include
 	$(INSTALL_DATA) config.h $(prefix)/include
 	$(INSTALL_PROGRAM)  daqman $(prefix)/bin
 	echo "Version: " $(VERSION) build on `hostname` `date` > $(prefix)/VERSION
+	$(INSTALL_DATA) CHANGELOG $(prefix)
 	mandb $(prefix)/man
 	tclsh mkpackage.tcl $(prefix)/Scripts "*.tcl"
 	- tclsh mkpackage.tcl $(prefix)/lib  libVme.so libWait.so 2>/dev/null
