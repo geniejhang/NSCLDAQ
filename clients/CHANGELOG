@@ -170,3 +170,7 @@ March 21,2006  Fix an error in the way that VME library defs were made
     generating broken Makefiles that will fail later on.
   November 22, 2006 - fix defect 233 - CCAMACScalerLRS4434 was not
      correctly reading.
+
+Released January 15, 2007
+
+7.3-023
