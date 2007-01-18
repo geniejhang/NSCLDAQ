@@ -510,3 +510,7 @@ May 13, 2005
      license notice was output to stderr.
      Fix error in burngui - was not locating its gui script
      when installed.
+
+Released January 15, 2007
+
+8.0-010
