@@ -185,3 +185,4 @@ Week of November 1:
 Released January 15, 2007
 
 7.4-010
+  March 8, 2007 - Make event files readonly during finalization.

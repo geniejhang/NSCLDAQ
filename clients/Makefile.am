@@ -13,6 +13,7 @@ EXTRA_DIST =  config/install-sh config/config.sub config/config.guess \
 	CHANGELOG daqman
 
 install-data-local:
+	$(mkinstalldirs)  $(prefix)/etc
 	rm -f $(prefix)/Bin
 	rm -f $(prefix)/Lib
 	rm -f $(prefix)/Include
