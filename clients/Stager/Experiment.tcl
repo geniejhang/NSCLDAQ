@@ -188,8 +188,12 @@ namespace eval  Experiment {
 	    #  Move the event data:
 	    
 	    foreach file $files {
-		file rename -force $file [ExpFileSystem::WhereareCompleteEventFiles]
-	    }
+		set basefile [file tail $file]
+		set destfile [file join [ExpFileSystem::WhereareCompleteEventFiles] $basefile]
+		file rename -force $file $destfile
+		puts "Setting $destfile permissions to 0440"
+		file attributes $destfile -permissions 0440;    # Make file readonly.
+	    } 
 
 	    #
 	    # Copy 'current' dir.
@@ -205,8 +209,8 @@ namespace eval  Experiment {
 	    #
 	    foreach segment $files {
 		set name [file tail $segment]
-		set target [ExpFileSystem::WhereareCompleteEventFiles]/$name
-		set source $root/run$nrun/$name
+		set target [file join [ExpFileSystem::WhereareCompleteEventFiles] $name]
+		set source [file join $root run$nrun $name]
 		catch {
 		    exec ln -s $target $source
 		}

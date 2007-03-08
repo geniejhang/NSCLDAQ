@@ -514,3 +514,4 @@ May 13, 2005
 Released January 15, 2007
 
 8.0-010
+  March 8, 2007 - Make event files readonly as they get finalized.
