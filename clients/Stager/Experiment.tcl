@@ -186,15 +186,17 @@ namespace eval  Experiment {
 	    foreach link $links {file delete -force $link}
 	    
 	    #  Move the event data:
-	    
+	    set destdir [ExpFileSystem::WhereareCompleteEventFiles]
+	    file attributes $destdir -permissions 0750;     #  Directory mode to rwxr-x---
 	    foreach file $files {
 		set basefile [file tail $file]
-		set destfile [file join [ExpFileSystem::WhereareCompleteEventFiles] $basefile]
+		set destfile [file join $destdir  $basefile]
 		file rename -force $file $destfile
 		puts "Setting $destfile permissions to 0440"
 		file attributes $destfile -permissions 0440;    # Make file readonly.
 	    } 
 
+	    file attributes $destdir -permissions 0550;   # Dir mode to r-xr-x---
 	    #
 	    # Copy 'current' dir.
 	    #
@@ -209,7 +211,7 @@ namespace eval  Experiment {
 	    #
 	    foreach segment $files {
 		set name [file tail $segment]
-		set target [file join [ExpFileSystem::WhereareCompleteEventFiles] $name]
+		set target [file join $destdir $name]
 		set source [file join $root run$nrun $name]
 		catch {
 		    exec ln -s $target $source
