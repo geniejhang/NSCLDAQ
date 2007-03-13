@@ -275,6 +275,7 @@ namespace eval  Experiment {
     proc CleanOrphans {} {
 	set Eventdir [ExpFileSystem::WhereisCurrentEventData]
 	set completeEventDir [ExpFileSystem::WhereareCompleteEventFiles]
+	file attributes $completeEventDir -permissions 0750;    # rwxr-x---
 	set orphanfiles [glob -nocomplain $Eventdir/run*.evt]
 	set root [ExpFileSystem::GetRoot]
 	file mkdir $root/orphans
@@ -316,6 +317,7 @@ namespace eval  Experiment {
 		    exec mv $file $stage/orphan/$name
 		}
 	    }
+	    file attributes $completeEventDir -permissions 0550
 	}
 	# Take care of orphans in experiment current dir.
 	
