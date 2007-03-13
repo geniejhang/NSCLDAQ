@@ -188,13 +188,16 @@ namespace eval  Experiment {
 	    
 	    #  Move the event data:
 	    
+	    set destdir [ExpFileSystem::WhereareCompleteEventFiles] 
+	    file attributes $destdir -permissions 0750;         #rwxr-x---....
 	    foreach file $files {
 		set basename [file tail $file]
-		set destfile [file join [ExpFileSystem::WhereareCompleteEventFiles] $basename]
+		set destfile [file join $destdir t $basename]
 		file rename -force $file $destfile
 		file attributes $destfile -permissions 0440;    #Write protect the final file.
 	    
 	    }
+	    file attributes $destdir -permissions 0550;        # r-xr-x---.
 
 	    #
 	    # Copy 'current' dir.
@@ -279,12 +282,14 @@ namespace eval  Experiment {
 
 	# Take care of orphans in Stage current dir.
 
+	set dest [ExpFileSystem::WhereareCompleteEventFiles]
+	file attributes $dest -permissions 0750;     # rwxr-x---
+
 	foreach file $orphanfiles {
 	    set name [file tail $file]
 	    if {[scan $name "run%d-%d.evt" run size] == 2} {
 		# Valid run file name.  Copy to completed:
 		
-		set dest [ExpFileSystem::WhereareCompleteEventFiles]
 		exec mv $file $dest/$name
 		set  eventfile $dest/$name
 
@@ -315,6 +320,7 @@ namespace eval  Experiment {
 		}
 	    }
 	}
+	file attributes $dest -permissions 0550;   # r-xr-x---
 	# Take care of orphans in experiment current dir.
 	
 	set Currentdir [ExpFileSystem::WhereisCurrentData]
