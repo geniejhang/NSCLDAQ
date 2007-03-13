@@ -173,4 +173,8 @@ March 21,2006  Fix an error in the way that VME library defs were made
 
 Released January 15, 2007
 
-7.3-023
+7.3-023 
+  Week of March 5, 2007:
+      Remove write access from event files after finalization.
+  Week of March 12, 2007:
+      Only allow write access to stagearea/complete when changing its contents.
