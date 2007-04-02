@@ -443,6 +443,7 @@ case "$vmeinterface" in
 	    VME_DRIVERDIR="btdriver2.6"
 	    VMEBUILDHEADERS=-I$(pwd)/btdriver2.6/include
 	    VMEBUILDLIBS="-L$(pwd)/btdriver2.6/lib -lbtp -lpthread"
+
 	    ;;
 	*)
 	    AC_MSG_ERROR([SBS bit3 driver can only be built on 2.4 or 2.6 kernel this is $kernel_version])
@@ -760,6 +761,8 @@ AC_OUTPUT( Makefile Headers/Makefile CopyrightTools/Makefile \
 	ProductionReadout/hyperlatex/Makefile \
 	btdriver/Makefile btdriver/dd/Makefile btdriver/lib/Makefile \
 	btdriver/include/Makefile  \
+	btdriver2.6/Makefile btdriver2.6/lib/Makefile \
+	btdriver2.6/include/Makefile  \
 	controlpush/Makefile  dvdburn/Makefile epicsdisplay/Makefile \
 	epicsdisplay/epicsdisplay \
 	daqstart/Makefile ScalerDisplay/Makefile ScalerDisplay/ScalerDisplay \

@@ -28,7 +28,7 @@ fi
 BTDRIVER=$(pwd)
 
 pushd dd
-make -C $Linuxsrc SUBDIRS=$(pwd) modules BTDRIVER=${BTDRIVER}
+make -C $Linuxsrc SUBDIRS=$(pwd) modules  BTDRIVER=${BTDRIVER}
 
 
 

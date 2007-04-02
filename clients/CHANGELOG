@@ -517,3 +517,8 @@ Released January 15, 2007
   March 8, 2007 - Make event files readonly as they get finalized.
   March 13, 2007 - Make ~stagearea/complete write protected except when
                    it has to be.
+  April 2, 2007 - Fix up 2.6 build so that lib and include get installed...
+                  and can be cleaned.
+                - Fix a bunch of stuff with the 2.6 build that arises
+                  on make dist and building from the tarball.
+                  (mostly copying stuff from the 8.1 build files.
