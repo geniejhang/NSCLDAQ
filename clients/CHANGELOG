@@ -178,3 +178,7 @@ Released January 15, 2007
       Remove write access from event files after finalization.
   Week of March 12, 2007:
       Only allow write access to stagearea/complete when changing its contents.
+  Week of April 2, 2007:
+       Fix som eissues in the skeleton Makefiles ..where
+       gcc and g++ are used, rather than the actual compiler commands
+       at config time.
