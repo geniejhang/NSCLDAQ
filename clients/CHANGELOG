@@ -522,3 +522,4 @@ Released January 15, 2007
                 - Fix a bunch of stuff with the 2.6 build that arises
                   on make dist and building from the tarball.
                   (mostly copying stuff from the 8.1 build files.
+  April 3, 2007 - Make sure the right compilers link the readout skels.
