@@ -169,6 +169,8 @@ install-data-local:
 	echo VMELIBRARYHEADERS="$(VMELIBRARYHEADERS)"    >> Makefile.user
 	echo spectrodaq_conf_dir=$(spectrodaq_conf_dir)  >> Makefile.user
 	echo CAMAC=$(CAMAC)                              >> Makefile.user
+	echo CXX=$(CXX)                                  >> Makefile.user
+	echo CC=$(CC)                                    >> Makefile.user
 	cat  Makefile.skel    >> Makefile.user
 	$(INSTALL_DATA) Makefile.user $(prefix)/pReadoutSkeleton/Makefile
 	$(INSTALL_DATA) CTraditionalEventSegment.cpp \
