@@ -10,7 +10,6 @@
 SPECTRO_FLAGS=$(shell $(spectrodaq_conf_dir)/spectrodaq-conf --cflags)
 SPECTRO_LDFLAGS=$(shell $(spectrodaq_conf_dir)/spectrodaq-conf --libs)
 
-CC = gcc
 
 
 
@@ -24,7 +23,7 @@ CXXFLAGS = -c -D__UNIX__ $(SPECTRO_FLAGS) -I$(INCLUDEDIR) -I$(SCRIPTEDINCLUDE) \
 	-I$(VMELIBRARYHEADERS) $(CAMAC) $(TCL_FLAGS)
 
 
-CPP = g++ $(CXXFLAGS)
+CPP = $(CXX)  $(CXXFLAGS)
 
 
 PROGOBJS=ReadoutMain.o skeleton.o
