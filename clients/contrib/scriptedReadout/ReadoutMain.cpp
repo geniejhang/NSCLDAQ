@@ -409,11 +409,9 @@ DAQBuff mydaq;
   
 void* gpTCLApplication(0);
 
-#ifdef HAVE_SPECTRODAQ_MAIN
 
 int
 main(int argc, char** argv, char** env) 
 {
   return spectrodaq_main(argc, argv, env);
 }
-#endif
