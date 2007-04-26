@@ -300,6 +300,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 // How big a buffer do we want?
 
 #define BUFLEN 0
+static const int NOTRANSFERDELAY(10*1000); // Delay time before retry if write gave EAGAIN
 
 int Write(int fd, void* pBuffer, size_t nLength)
 {
@@ -314,7 +315,7 @@ int Write(int fd, void* pBuffer, size_t nLength)
 	  return nLength;	// Don't transfer to client.
 	} else {		// Something written
 	                        // so write the rest. 
-    
+	  usleep(NOTRANSFERDELAY); // Let SpecTcl process a bit before trying again.
 	}
       }
       else {			// Not due to blocking...

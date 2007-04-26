@@ -13,6 +13,7 @@ EXTRA_DIST =  config/install-sh config/config.sub config/config.guess \
 	CHANGELOG daqman
 
 install-data-local:
+	$(mkinstalldirs)  $(prefix)/etc
 	rm -f $(prefix)/Bin
 	rm -f $(prefix)/Lib
 	rm -f $(prefix)/Include
@@ -31,11 +32,12 @@ install-data-local:
 	echo TCLLIBS=$(TCL_LDFLAGS)  >>Directories.include.final
 	echo SPECTRODAQBINDIR=$(spectrodaq_conf_dir) >> Directories.include.final
 	echo VMEHEADERS=$(VMELIBRARYHEADERS) >> Directories.include.final
-	echo VMELIBRARY=$(VMELIBRARY) >> Directories.include.final
+	echo VMELIBRARY=-lVmeAPI $(VMELIBRARY) >> Directories.include.final
 	echo X11LIBS=$(X11LIBS)       >> Directories.include.final
 	cat Directories.include       >> Directories.include.final
 	$(INSTALL_DATA) Directories.include.final $(prefix)/etc/Directories.include
 	$(INSTALL_PROGRAM)  daqman $(prefix)/bin
 	echo "Version: " $(VERSION) build on `hostname` `date` > $(prefix)/VERSION
+	$(INSTALL_DATA) CHANGELOG $(prefix)
 	mandb $(prefix)/man
 
