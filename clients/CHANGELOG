@@ -527,3 +527,5 @@ Released January 15, 2007
                   class implementations will get installed in the
                   include directory to allow them to be used in application
                   software.
+                - Ensure the SBS driver is identical to the 2.6 version
+                  of the drive in the 8.1 branch.
