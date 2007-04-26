@@ -74,3 +74,118 @@
        $(prefix)/contrib/caenv812.
     - Incorporate scripted readout engine developed initially for
       LLNL, LBL then SEE and RPI by Ron Fox.
+    - Added bunches of stuff to the contrib directory for scriptable readout.
+
+
+7.3-005 3/3/04
+    - Did a merge with the 7.4 branch for:
+       framework
+       controlpush ...
+       ProductionReadout
+       configure.in
+       Makefile.am
+     in order to get the controlpush functionality and readout fixes that
+     go along with it.
+    - Fix incorrect base address for vme trigger/status module was
+      0xf000 sb. 0x444400
+7.3-006 3/10/04
+   - Merge production readout with 7.4 branch to incorporate fix for
+     issue 116: Title, run variable and state variable values that are too
+     large cause all sorts of grief.
+7.3-007 3/24/04
+   - Merge Scaler client from 7.4 to catch a long standing issue I'd
+     forgotton about: Update needs to be called even if there are no
+     scalers (if only to keep track of run time).
+   - Merge Production readout with 7.4 branch to incorporate fix for
+     issue 106: Elapsed run time incorrect.
+7.3-008 3/31/04
+   - Merge in the fixes to the Stager/ReadoutGui that constitute the fix
+     for issue 108: Event files can be ovewritten with no prompt.
+   - Merge in fix for production readout - stabilization of scaler readout timings.
+7.3-008 4/12/04
+   - Added build stamp to the installation procedure
+   - Fixed an incompatibility with tcl 8.4 and cratelocator.tcl
+   - Fixed controlpush - plc channels need extra time to connect
+   - Added # escaping to controlpush and to production readout
+7.3-009 4/18/04
+   - Modify Stager so that it can record tape on a different node than
+     it records ftp data.
+   - Issue 112: Warn the user if the scaler client is started with the default
+     data source.  At the NSCL this is an unusual occurence.  Note that
+     the warning will be sent via an Xwindows window if possible or if not
+     via stderr.
+7.3-010 
+   - Modify VMEPtr.cpp - was ignoring the crate number.!!!
+   - TCLList.cpp - needs to use Tcl_Free not free() for TCL 8.4 and higher.
+   - DiskRun - Had an error with strlen that clobbered stack occaisonally.
+   - Recover lost version of sis3300 software.
+   - Add -p to untar that creates ~/experiment/runx directories..
+     otherwise the file permissions are governed by umask.
+
+7.3-011
+   - Fix defect 139 - non numerics in readoutgui run number field cause
+     failure in status line; added validator to prevent run number field
+     from becoming non-numeric.
+7.3-012
+   - Allow caennet controllers to live in any VME crate (caennet.tcl).
+   - Fix defect 143 - last scaler has incorrect value from sclclient.
+7.3-014
+   - Fix defect in production readout. was not calling scaler initializtions.
+7.3-015
+   - Fix defect in vmetcl build - was linking vmelibs from install dir
+     rather than build dirs.
+   - Increase controlpush connection timeouts, had some intermittent
+     connection failures.
+7.3-016
+   - ProductionReadout/CReadoutMain.cpp must define main() if spectrodaq_main()
+     is defined, otherwise, TCL++'s main get's pulled in first since
+     main was separated into a different module of spectrodaq.
+
+7.3-017
+   - Ensure that -lbtp is prior to spectrodaq ld flags so that we don't
+     have any undefs from pthread.
+   - Need to fix some ExprLong's that should be strtol's to work with
+     TCL-8.4 where ExprLong limits at signed longs.
+   - Fix long standing uncaught typo in Readout/Reader.cpp where the
+     m_pTrigger member was used where m_pBusy was intended at init.
+   - Fix typos in goShaper{16} and document need to run in spdaq system.
+7.3-018
+February 23, 2005  Fix inconsistent timestamp treatments of tm_month: 
+	January will now be month 1 everywhere.
+7-3-019
+January 2, 2006 - Make this work with newer versions of auto tools
+
+7.3-020
+January 17, 2006 Fix error in declaraion of CCAMACScalerLRS2551::Read
+     parameters (defect 191).
+March 21,2006  Fix an error in the way that VME library defs were made
+     by configure.in
+
+7.3-021
+  Release September 21, 2006
+7.3-022
+  November 9, 2006 - Install the CHANGELOG 
+  November 17, 2006 - Fix defect 231 by failing the
+    configure if gdbm.h or libgdbm are missing, rather than
+    generating broken Makefiles that will fail later on.
+  November 22, 2006 - fix defect 233 - CCAMACScalerLRS4434 was not
+     correctly reading.
+
+Released January 15, 2007
+
+7.3-023 
+  Week of March 5, 2007:
+      Remove write access from event files after finalization.
+  Week of March 12, 2007:
+      Only allow write access to stagearea/complete when changing its contents.
+  Week of April 2, 2007:
+       Fix som eissues in the skeleton Makefiles ..where
+       gcc and g++ are used, rather than the actual compiler commands
+       at config time.
+  Week of April 9, 2007
+       Fix issues in scripted makefiles where again gcc/g++ were used rather than
+       $(CC) $(CXX)
+  Week of April 23, 2007
+       Ensure that framework's Makefile installs the implementations of
+       template classes so that compilation against template
+       class headers (which include the implementations) will not fail.
