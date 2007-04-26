@@ -523,3 +523,7 @@ Released January 15, 2007
                   on make dist and building from the tarball.
                   (mostly copying stuff from the 8.1 build files.
   April 3, 2007 - Make sure the right compilers link the readout skels.
+  April 26,2007 - Adjust the framework makefile so that template
+                  class implementations will get installed in the
+                  include directory to allow them to be used in application
+                  software.
