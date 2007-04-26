@@ -190,3 +190,7 @@ Released January 15, 2007
                    not making changes.
   April 10      - main() should be there unconditionally as config.h
                   is not installed until 8.0.
+  April 26, 2007- Ensure framework installs the implementation files
+                  for its template classes in the include directory so that
+                  compilations against the headers (which include them)
+                  will not fail.
