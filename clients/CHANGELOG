@@ -529,3 +529,4 @@ Released January 15, 2007
                   software.
                 - Ensure the SBS driver is identical to the 2.6 version
                   of the drive in the 8.1 branch.
+                - Make sure top level Makefile builds the dir hierarchy.
