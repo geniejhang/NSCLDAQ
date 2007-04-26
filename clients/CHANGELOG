@@ -185,3 +185,7 @@ Released January 15, 2007
   Week of April 9, 2007
        Fix issues in scripted makefiles where again gcc/g++ were used rather than
        $(CC) $(CXX)
+  Week of April 23, 2007
+       Ensure that framework's Makefile installs the implementations of
+       template classes so that compilation against template
+       class headers (which include the implementations) will not fail.
