@@ -196,3 +196,10 @@ Released January 15, 2007
                   will not fail.
 Released April 26, 2007
 7.4-011
+  May  4, 2007  - Put -f's on mv's in Experiment.tcl so that
+                  they'll work without prompting in spite of permissions issues
+                - Remove stray (typo) t from a file join that was
+                  constructing bad destination filenames for
+                  installing event files in their final resting places.
+                  This was probably introduced when I added the
+                  permissions games to try to protect from ovewrites.
