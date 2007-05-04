@@ -192,7 +192,7 @@ namespace eval  Experiment {
 	    file attributes $destdir -permissions 0750;         #rwxr-x---....
 	    foreach file $files {
 		set basename [file tail $file]
-		set destfile [file join $destdir t $basename]
+		set destfile [file join $destdir  $basename]
 		file rename -force $file $destfile
 		file attributes $destfile -permissions 0440;    #Write protect the final file.
 	    
@@ -290,7 +290,7 @@ namespace eval  Experiment {
 	    if {[scan $name "run%d-%d.evt" run size] == 2} {
 		# Valid run file name.  Copy to completed:
 		
-		exec mv $file $dest/$name
+		exec mv -f $file $dest/$name
 		set  eventfile $dest/$name
 
 		set  current [ExpFileSystem::WhereisCurrentData]
@@ -316,7 +316,7 @@ namespace eval  Experiment {
 		set stage [ExpFileSystem::GetStage]
 		file mkdir $stage/orphan
 		catch {
-		    exec mv $file $stage/orphan/$name
+		    exec mv -f $file $stage/orphan/$name
 		}
 	    }
 	}
@@ -347,7 +347,7 @@ namespace eval  Experiment {
 			    # Destination doesn't exist yet.
 			    file mkdir $destdir
 			    catch {
-				puts "trying mv $file $destdir/$name"
+				puts "trying mv -f $file $destdir/$name"
 				exec mv -f $file $destdir/$name
 				puts "Mv done ok"
 			    }

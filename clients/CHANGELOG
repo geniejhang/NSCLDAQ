@@ -190,3 +190,10 @@ Released January 15, 2007
        template classes so that compilation against template
        class headers (which include the implementations) will not fail.
  7.3-024
+  Week of April 30, 2007
+       - add -f to all the mv commands in Experiment.tcl so that they don't
+         try to prompt for y/n if they are replacing a write protected file.. 
+         as I assume I know what I'm doing.
+       - Remove extraneous t from file join that constructs the final resting
+         place of event files. This probably crept in when I did the
+         permissions stuff.
