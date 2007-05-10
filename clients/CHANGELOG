@@ -533,3 +533,5 @@ Released January 15, 2007
 Released April 26, 2007
 
 8.0-011
+  May 10, 2007  - Initialize errno in VMECommand.cpp 'cause strtoul doesn't
+                  do it correctly.
