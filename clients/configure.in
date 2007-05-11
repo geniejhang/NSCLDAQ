@@ -543,7 +543,8 @@ case "$vmeinterface" in
 
 	    VME_DRIVERDIR="btdriver"
 	    VMEBUILDHEADERS="-I$(pwd)/btdriver/include"
-	    VMEBUILDLIBS="-L$(pwd)/btdriver/lib -lbtp -lpthread"
+	    VMEBUILDLIBS="$(pwd)/btdriver/lib/libbtp.la -lpthread"
+#	    VMEBUILDLIBS="-L$(pwd)/btdriver/lib -lbtp -lpthread"
 						
             # Build/install the 2.4 driver (you must be root).
 
@@ -556,8 +557,9 @@ case "$vmeinterface" in
 	    ;;
 	 2.6)
 	    VME_DRIVERDIR="btdriver2.6"
-	    VMEBUILDHEADERS=-I$(pwd)/btdriver2.6/include
-	    VMEBUILDLIBS="-L$(pwd)/btdriver2.6/lib -lbtp -lpthread"
+	    VMEBUILDHEADERS="-I$(pwd)/btdriver2.6/include"
+	    VMEBUILDLIBS="$(pwd)/btdriver2.6/lib/libbtp.la -lpthread"
+#	    VMEBUILDLIBS="-L$(pwd)/btdriver2.6/lib -lbtp -lpthread"	
 
 	    # build/install the 2.6 driver (you must be root)
 
