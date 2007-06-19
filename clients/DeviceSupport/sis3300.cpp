@@ -415,7 +415,7 @@ CSIS3300::SetSampleSize(SampleSize ePagesize)
     m_nPagesize = 128*K;
     break;
   case Sample16K:
-    m_nPagesize = 64*K;
+    m_nPagesize = 16*K;
     break;
   case Sample4K:
     m_nPagesize = 4*K;
@@ -973,7 +973,7 @@ CSIS3300:: ReadAGroup(DAQWordBufferPtr& pBuffer,
   if(nWords > 0) {
 #ifdef CLIENT_HAS_POINTER_COPYIN
     pBuffer.CopyIn((unsigned short*)Samples, 0,  nWords);
-    pBuffer += nWords;
+    pBuffer += nWord
 #else
     unsigned short* pSrc = (unsigned short*)Samples;
     for(int i =0; i < nWords; i++) {
