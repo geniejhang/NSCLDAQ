@@ -203,3 +203,5 @@ Released April 26, 2007
                   installing event files in their final resting places.
                   This was probably introduced when I added the
                   permissions games to try to protect from ovewrites.
+  June 19, 2007 - Fix error in sis3300.cpp 16k samples were being
+                  treated like 64k
