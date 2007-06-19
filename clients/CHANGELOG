@@ -197,3 +197,5 @@ Released January 15, 2007
        - Remove extraneous t from file join that constructs the final resting
          place of event files. This probably crept in when I did the
          permissions stuff.
+  Week of June 18, 2007
+       - Fix sis3300.cpp 16k samples were being treated like 64k
