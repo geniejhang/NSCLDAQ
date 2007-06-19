@@ -191,3 +191,5 @@ Released Jan 15, 2007
 7.4-007jumbo-002
     - Unconditionally use the main/spectrodaq_main chain
       as config.h isn't installed this version.
+7.4-007jumbo-003
+    - Fix error in pagesize computatino in sis3300.cpp
