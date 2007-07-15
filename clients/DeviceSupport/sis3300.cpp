@@ -973,7 +973,7 @@ CSIS3300:: ReadAGroup(DAQWordBufferPtr& pBuffer,
   if(nWords > 0) {
 #ifdef CLIENT_HAS_POINTER_COPYIN
     pBuffer.CopyIn((unsigned short*)Samples, 0,  nWords);
-    pBuffer += nWord
+    pBuffer += nWords;
 #else
     unsigned short* pSrc = (unsigned short*)Samples;
     for(int i =0; i < nWords; i++) {

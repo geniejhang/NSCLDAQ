@@ -278,6 +278,9 @@ DAMAGES.
 /*
   Change Log:
   $Log$
+  Revision 4.4.2.1  2007/07/15 14:35:14  ron-fox
+  Add emptyEnable/Disable to CAENcard.
+
   Revision 4.4  2005/02/03 18:15:36  ron-fox
   Just adjustmets of newline conditions mostly after eclipse futz-up.
 
@@ -453,6 +456,8 @@ public:
     void discardOverflowData();	//!< Discard channels below overflow value.
     void keepInvalidData();	//!< Keep conversions in the midst of reset.
     void discardInvalidData();	//!< Discard data in midst of reset.
+    void emptyEnable();         //!< Enable header/trailer if gate but no conv.
+    void emptyDisable();        //!< reverse of the above.
     void commonStart();		//!< If TDC, use in common start mode.
     void commonStop();		//!< IF TDC use in common stop mode.
     void setRange(int range);	//!< If TDC Set range (from 140 to 1200 ns).

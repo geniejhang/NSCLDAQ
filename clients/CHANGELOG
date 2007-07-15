@@ -537,3 +537,6 @@ Released April 26, 2007
                   do it correctly.
   June 19, 2007 - Fix error in sis3300.cpp 16k samples were treated like
 			64k.
+  July 15, 2007 - Add emptyEnable/Disable functions to CAENcard.cpp
+                - Fix error in copyin #ifdef branch of SIS3300.. wonder how
+                  that managed to stay there.
