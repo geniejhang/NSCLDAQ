@@ -844,6 +844,16 @@ Released April 26, 2007
  June 19, 2007  - Fix error in sis3300.cpp - 16k samples were being
                   treated like 64k
  July 15, 2007  - Add emptyEnable/Disable to CAENcard.
+ July 17, 2007  - Another catch by Dave Caussyn at FSU, HPPReadout,
+                  CNSCLPhysisBuffer and CExperiment conspire to randomly
+                  drop partial event buffers forced out by scalers
+                  because the entity count in the spectrodaq buffer is
+                  uninitialized (and therefore sometimes zero), not updated
+                  until the buffer is routed, but checked to determine
+                  if there's a partial buffer to submit...so if the
+                  uninitialized entity count happens to be zero, the 
+                  buffer will get dropped.
+
 
 
 

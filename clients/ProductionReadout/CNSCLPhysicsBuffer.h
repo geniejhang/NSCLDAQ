@@ -109,6 +109,9 @@ public:
      void RetractEvent (unsigned short* p)  ;
      virtual void Route();
      int  WordsInBody() const;
+     unsigned short getEntityCount() const {
+       return m_nEntityCount;
+     }
 #endif /* HIGH_PERFORMANCE */
 };
 
