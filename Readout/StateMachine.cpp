@@ -243,9 +243,7 @@ StateMachine::GetCurrentState()
 //  Operation Type:
 //     Mutator.
 //
-bool
-StateMachine::AddState(State* pNewState, const string& rStateName) 
-{
+/*
 // Adds a new state to the m_StateList,
 // The state is given a sequential state Id.
 //  The state name is saved in the m_StateDictionary
@@ -267,6 +265,10 @@ StateMachine::AddState(State* pNewState, const string& rStateName)
 //            The state was added correctly.
 //       false:
 //             State could not be added (duplicate state name).
+*/
+bool
+StateMachine::AddState(State* pNewState, const string& rStateName) 
+{
 
   //  First check to ensure that the state is not defined already.
   //  The user is allowed to make a single State object do double duty
