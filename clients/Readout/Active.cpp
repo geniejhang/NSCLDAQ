@@ -265,9 +265,6 @@ Active::OnInitialize(StateMachine& rMachine)
       m_pTrigger->Initialize();
     }
 
-    
-  
-
     // If we are using VME instead of CAMAC, all we have to do is
     // construct a new CNimout object and a new CCaenIO object and
     // initialize all of their outputs to zero.
