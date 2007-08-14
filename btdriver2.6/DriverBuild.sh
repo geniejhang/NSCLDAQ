@@ -18,7 +18,8 @@
 Linuxsrc=$1
 
 version="$(uname -r)"
-Debiansrc="/usr/src/kernel-source-${version}"
+Debiansrc1="/usr/src/kernel-source-${version}"
+Debiansrc2="/usr/src/linux-source-${version}"
 RedHatsrc="/usr/src/linux-${version}"
 
 #  Figure out which it is:
@@ -26,15 +27,26 @@ RedHatsrc="/usr/src/linux-${version}"
 if [ "$Linuxsrc" == "" ]
 then
 
-    if [ -d $Debiansrc ] 
+    echo checking $Debiansrc1
+    if [ -d $Debiansrc1 ] 
     then
-	Linuxsrc="$Debiansrc"
+	echo found
+	Linuxsrc="$Debiansrc1"
     fi
-
+    echo checking $Debiansrc2
+    if [ -d $Debiansrc2 ]
+    then
+	echo found
+       Linuxsrc="$Debiansrc2"
+    fi
+    echo checking $RedHatsrc
     if [ -d $RedHatsrc ]
     then
+	echo found
 	Linuxsrc="RedHatsrc"
     fi
+else
+    echo linux source provided: $Linuxsrc
 fi
 
 #-------------------------------------------------
