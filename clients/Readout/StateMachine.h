@@ -75,8 +75,8 @@ class StateMachine
 {
 				// Class attributes.
 public:
-  typedef STD(map)<STD(string), unsigned, STD(less)<STD(string)> > IdDictionary;
-  typedef STD(map)<unsigned, Transition*, STD(less)<unsigned> > TransitionList;
+  typedef STD(map)<STD(string), unsigned > IdDictionary;
+  typedef STD(map)<unsigned, Transition* > TransitionList;
 private:
   IdDictionary m_StateDictionary;  // Lookup dictionary of state names 
 				   // to state ID's.			    
