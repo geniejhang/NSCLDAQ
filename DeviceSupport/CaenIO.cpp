@@ -235,9 +235,9 @@ controllers that support memory mapping.
 
 */
 short*
-CCaenIO::getInputPointer() const
+CCaenIO::getInputPointer()
 {
-  CVME<UShort_t> map = getCVME();
+  CVME<UShort_t>& map(getCVME());
   return ((short*)(map.getStart())+5);
 
 }
@@ -247,9 +247,9 @@ CCaenIO::getInputPointer() const
   memory mapping.
 */
 short* 
-CCaenIO::getPulsedOutputPointer() const
+CCaenIO::getPulsedOutputPointer()
 {
-  CVME<UShort_t> map = getCVME();
+  CVME<UShort_t>& map(getCVME());
   return ((short*)(map.getStart()) + 4);
 }
 /*!
@@ -258,9 +258,9 @@ CCaenIO::getPulsedOutputPointer() const
    memory mapping.
 */
 short* 
-CCaenIO::getLatchedOutputPointer() const
+CCaenIO::getLatchedOutputPointer() 
 {
-  CVME<UShort_t> map = getCVME();
+  CVME<UShort_t>& map(getCVME());
   return ((short*)(map.getStart()) + 3);
 }
 /*!
@@ -270,9 +270,9 @@ CCaenIO::getLatchedOutputPointer() const
 
 */
 short* 
-CCaenIO::getECLOutputPointer() const
+CCaenIO::getECLOutputPointer() 
 {
-  CVME<UShort_t> map = getCVME();
+  CVME<UShort_t>& map(getCVME());
   return ((short*)(map.getStart()) + 2);
 }
 
