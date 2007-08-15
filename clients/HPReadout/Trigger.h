@@ -293,11 +293,16 @@ DAMAGES.
 //
 /* Change log:
       $Log$
-      Revision 8.2  2005/06/24 11:31:17  ron-fox
-      Bring the entire world onto the 8.2 line
+      Revision 8.2.2.1  2007/08/15 18:51:05  ron-fox
+      Propagated the trigger fix to these dirs too.
 
-      Revision 1.1  2005/02/04 19:33:35  ron-fox
-      Initial split off Readout -> HPReadout, high performance Readout Classic.
+      Revision 8.2.2.1  2007/08/15 18:37:07  ron-fox
+      BZ 319 - Collisions in class names between the trigger class
+      hierachy defined here and that prmoted into the device support
+      directory caused segfaluts for some users
+
+      Revision 8.2  2005/06/24 11:32:04  ron-fox
+      Bring the entire world onto the 8.2 line
 
       Revision 4.2  2004/11/16 18:51:37  ron-fox
       Port to gcc/g++ 3.x
@@ -335,13 +340,13 @@ DAMAGES.
 #ifndef __TRIGGER_H
 #define __TRIGGER_H
 
-class CTrigger
+class Trigger
 {
   // Destructor must be virtual to provide for destructor
   // chaining:
 public:  
-  CTrigger() {}
-  virtual ~CTrigger() {}
+  Trigger() {}
+  virtual ~Trigger() {}
 
   // Interface definition (pure virtual functions):
 public:
