@@ -291,11 +291,16 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 //
 /* Change log:
       $Log$
-      Revision 8.2  2005/06/24 11:31:18  ron-fox
-      Bring the entire world onto the 8.2 line
+      Revision 8.2.2.1  2007/08/15 18:51:06  ron-fox
+      Propagated the trigger fix to these dirs too.
 
-      Revision 1.1  2005/02/04 19:33:35  ron-fox
-      Initial split off Readout -> HPReadout, high performance Readout Classic.
+      Revision 8.2.2.1  2007/08/15 18:37:07  ron-fox
+      BZ 319 - Collisions in class names between the trigger class
+      hierachy defined here and that prmoted into the device support
+      directory caused segfaluts for some users
+
+      Revision 8.2  2005/06/24 11:32:04  ron-fox
+      Bring the entire world onto the 8.2 line
 
       Revision 4.3  2004/12/07 15:20:21  ron-fox
       - Fix some CVS errors with the wiener driver.
@@ -364,7 +369,7 @@ using namespace std;
 /*!
    Constructor just saves the trigger module pointer as a reference.
    */
-CVMETrigger::CVMETrigger(CCaenIO* pTrigger) :
+VMETrigger::VMETrigger(CCaenIO* pTrigger) :
   m_rTriggerModule(*pTrigger)
 {
 #ifdef HAVE_VME_MAPPING
@@ -377,7 +382,7 @@ CVMETrigger::CVMETrigger(CCaenIO* pTrigger) :
    Initialization involves clearing all outputs:
    */
 void
-CVMETrigger::Initialize()
+VMETrigger::Initialize()
 {
   m_rTriggerModule.ClearAll();
 }
@@ -388,7 +393,7 @@ CVMETrigger::Initialize()
   active, this is a No-op.
   */
 void
-CVMETrigger::Enable()
+VMETrigger::Enable()
 {
   m_rTriggerModule.ClearAll();
 }
@@ -397,7 +402,7 @@ CVMETrigger::Enable()
    Disable - Disable the trigger.  No action required.
    */
 void
-CVMETrigger::Disable()
+VMETrigger::Disable()
 {}
 /*!
    Chec for a trigger (bit on 0 on the inputs):
@@ -405,7 +410,7 @@ CVMETrigger::Disable()
         bool - True if trigger else false.
 	*/
 bool
-CVMETrigger::Check()
+VMETrigger::Check()
 {
 #ifdef HAVE_VME_MAPPING
   volatile register UShort_t* pTriggerRegister(m_pTriggerRegister);
@@ -433,7 +438,7 @@ CVMETrigger::Check()
 indicate that the trigger has been accepted.
   */
 void
-CVMETrigger::Clear()
+VMETrigger::Clear()
 {
 #ifdef HAVE_VME_MAPPING
   *m_pPulseRegister = 4;

@@ -295,11 +295,16 @@ DAMAGES.
    
   Modifications:
     $Log$
-    Revision 8.2  2005/06/24 11:31:15  ron-fox
-    Bring the entire world onto the 8.2 line
+    Revision 8.2.2.1  2007/08/15 18:51:01  ron-fox
+    Propagated the trigger fix to these dirs too.
 
-    Revision 1.1  2005/02/04 19:33:33  ron-fox
-    Initial split off Readout -> HPReadout, high performance Readout Classic.
+    Revision 8.2.2.1  2007/08/15 18:37:01  ron-fox
+    BZ 319 - Collisions in class names between the trigger class
+    hierachy defined here and that prmoted into the device support
+    directory caused segfaluts for some users
+
+    Revision 8.2  2005/06/24 11:32:01  ron-fox
+    Bring the entire world onto the 8.2 line
 
     Revision 4.2  2004/11/16 18:51:36  ron-fox
     Port to gcc/g++ 3.x
@@ -392,7 +397,7 @@ private:
   UINT16 m_nEventsRead;
   CNimout* m_pNimout;
   CCaenIO* m_pCaen;
-  CTrigger* m_pTrigger;
+  Trigger* m_pTrigger;
   CBusy*    m_pBusy;
   CReader*  m_pReader;
   bool     m_EndRunRequested;
@@ -453,7 +458,7 @@ public:
   virtual   unsigned Run (StateMachine& rMachine)  ;
   virtual   void     OnInitialize (StateMachine& rMachine)  ;
   static void EndRun();
-  void SetTrigger(CTrigger* pNewTrigger);
+  void SetTrigger(Trigger* pNewTrigger);
   void SetBusy(CBusy*  pNewBusy);
 
   // Internal functions:

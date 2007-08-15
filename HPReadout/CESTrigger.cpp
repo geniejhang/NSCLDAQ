@@ -293,11 +293,16 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 //
 /* Change log:
       $Log$
-      Revision 8.2  2005/06/24 11:31:15  ron-fox
-      Bring the entire world onto the 8.2 line
+      Revision 8.2.2.1  2007/08/15 18:51:01  ron-fox
+      Propagated the trigger fix to these dirs too.
 
-      Revision 1.1  2005/02/04 19:33:34  ron-fox
-      Initial split off Readout -> HPReadout, high performance Readout Classic.
+      Revision 8.2.2.1  2007/08/15 18:37:01  ron-fox
+      BZ 319 - Collisions in class names between the trigger class
+      hierachy defined here and that prmoted into the device support
+      directory caused segfaluts for some users
+
+      Revision 8.2  2005/06/24 11:32:01  ron-fox
+      Bring the entire world onto the 8.2 line
 
       Revision 4.2  2004/11/16 18:51:36  ron-fox
       Port to gcc/g++ 3.x
@@ -355,7 +360,7 @@ using namespace std;
                 the trigger will be accepted.
 */
 CESTrigger::CESTrigger(unsigned int nBranch) :
-  CTrigger()
+  Trigger()
 {
   branchinit(nBranch);		// Ensure branch mapped.
   m_pCSR = CBDPTR(nBranch, 0, 29, 0, 0, CAM16);

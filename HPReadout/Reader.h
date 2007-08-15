@@ -300,6 +300,9 @@ DAMAGES.
 //
 /* Change log:
       $Log$
+      Revision 8.2.2.1  2007/08/15 18:51:04  ron-fox
+      Propagated the trigger fix to these dirs too.
+
       Revision 8.2  2005/06/24 11:31:17  ron-fox
       Bring the entire world onto the 8.2 line
 
@@ -357,7 +360,7 @@ using namespace std;
 // Forward classes.
 
 class ReadoutStateMachine;
-class CTrigger;
+class Trigger;
 class CBusy;
 
 
@@ -379,7 +382,7 @@ private:
   unsigned int             m_nWords;   //!< Current word count.
   unsigned int             m_nBufferSize; //!< System buffersize (High w.mrk).
 
-  mutable CTrigger*        m_pTrigger; //!< Trigger manager.
+  mutable Trigger*        m_pTrigger; //!< Trigger manager.
   mutable CBusy*	   m_pBusy;    //!< Dead-time module.
   // Constructors and other canonical functions.
 
@@ -414,7 +417,7 @@ public:
   unsigned int getBufferSize() const {
     return m_nBufferSize;
   }
-  CTrigger* getTrigger() const {
+  Trigger* getTrigger() const {
     return m_pTrigger;
   }
   CBusy* getBusy() const {
@@ -440,7 +443,7 @@ protected:
     m_nBufferSize;
   }
 public:
-  void setTrigger(CTrigger* pTrigger) {
+  void setTrigger(Trigger* pTrigger) {
     m_pTrigger = pTrigger;
   }
   void setBusy(CBusy* pBusy) {
