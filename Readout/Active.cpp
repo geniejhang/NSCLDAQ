@@ -275,7 +275,7 @@ Active::OnInitialize(StateMachine& rMachine)
       if(!m_pCaen)
 	m_pCaen = new CCaenIO(0x444400); // so does this.
       if(!m_pTrigger) {
-	m_pTrigger = new CVMETrigger(m_pCaen);
+	m_pTrigger = new VMETrigger(m_pCaen);
       }
       if(!m_pBusy) {
 	m_pBusy    = new CVMEBusy(m_pNimout, m_pCaen);
@@ -494,7 +494,7 @@ void Active::EndRun()
 
 */
 void
-Active::SetTrigger(CTrigger* pNewTrigger) 
+Active::SetTrigger(Trigger* pNewTrigger) 
 {
   m_pTrigger = pNewTrigger;
   m_pReader->setTrigger(pNewTrigger);
