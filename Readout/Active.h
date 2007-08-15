@@ -295,6 +295,9 @@ DAMAGES.
    
   Modifications:
     $Log$
+    Revision 8.2.2.2  2007/08/15 22:48:25  ron-fox
+    Get some orders of deletion correct
+
     Revision 8.2.2.1  2007/08/15 18:37:01  ron-fox
     BZ 319 - Collisions in class names between the trigger class
     hierachy defined here and that prmoted into the device support
@@ -414,13 +417,14 @@ public:
     { } 
   ~ Active ( )       //Destructor
     {
+      delete m_pTrigger;
+      delete m_pBusy;
+      delete m_pReader;
       if(m_pNimout)
 	delete m_pNimout;
       if(m_pCaen)
 	delete m_pCaen;
-      delete m_pTrigger;
-      delete m_pBusy;
-      delete m_pReader;
+
     }
 
 			//Constructor with arguments
