@@ -365,7 +365,7 @@ private:
     }
 
 
-  CVME<UShort_t> getCVME() const
+  CVME<UShort_t>& getCVME()
     {
       return m_CVME;
     }

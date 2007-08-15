@@ -91,10 +91,10 @@ class CCaenIO : public CVmeModule
   void SetECL(UShort_t value);
   void ClearECL();
 #ifdef HAVE_VME_MAPPING
-  short* getInputPointer() const;
-  short* getPulsedOutputPointer() const;
-  short* getLatchedOutputPointer() const;
-  short* getECLOutputPointer() const;
+  short* getInputPointer();
+  short* getPulsedOutputPointer();
+  short* getLatchedOutputPointer();
+  short* getECLOutputPointer();
 #endif
 };
 
