@@ -293,6 +293,11 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 //
 /* Change log:
       $Log$
+      Revision 8.2.2.1  2007/08/15 18:37:01  ron-fox
+      BZ 319 - Collisions in class names between the trigger class
+      hierachy defined here and that prmoted into the device support
+      directory caused segfaluts for some users
+
       Revision 8.2  2005/06/24 11:32:01  ron-fox
       Bring the entire world onto the 8.2 line
 
@@ -352,7 +357,7 @@ using namespace std;
                 the trigger will be accepted.
 */
 CESTrigger::CESTrigger(unsigned int nBranch) :
-  CTrigger()
+  Trigger()
 {
   branchinit(nBranch);		// Ensure branch mapped.
   m_pCSR = CBDPTR(nBranch, 0, 29, 0, 0, CAM16);

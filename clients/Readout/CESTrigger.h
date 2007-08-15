@@ -291,6 +291,11 @@ DAMAGES.
 //
 /* Change log:
       $Log$
+      Revision 8.2.2.1  2007/08/15 18:37:02  ron-fox
+      BZ 319 - Collisions in class names between the trigger class
+      hierachy defined here and that prmoted into the device support
+      directory caused segfaluts for some users
+
       Revision 8.2  2005/06/24 11:32:01  ron-fox
       Bring the entire world onto the 8.2 line
 
@@ -337,7 +342,7 @@ DAMAGES.
 #include <Trigger.h>
 #endif
 
-class CESTrigger : public CTrigger
+class CESTrigger : public Trigger
 {
 private:
   volatile INT16* m_pCSR;	//!< Pointer to Branch control status reg.

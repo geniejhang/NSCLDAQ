@@ -853,6 +853,11 @@ Released April 26, 2007
                   if there's a partial buffer to submit...so if the
                   uninitialized entity count happens to be zero, the 
                   buffer will get dropped.
+ August 15, 2007  BZ 319 - Class name collisions between the trigger class
+                  hierarchy in Readout classic and those promoted to 
+                  DeviceSupport caused Readout to segfault for some 
+                  users/situtations.  Renamed the trigger class hierarchy
+                  for readout classic..need to do that for HPReadout too.
 
 
 
