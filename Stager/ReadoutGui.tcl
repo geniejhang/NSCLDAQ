@@ -52,7 +52,7 @@ namespace eval ReadoutGui {
 proc ReadoutGui::timestampOutput text {
 	set stamp [clock format [clock seconds]]
 	set output [format $text $stamp]
-	ReadougGuiPanel::outputText $output
+	ReadougGUIPanel::outputText "$output\n"
 	
 }
 # ReadoutGui::setGuiBuiltCallback callback
