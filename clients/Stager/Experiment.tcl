@@ -35,6 +35,8 @@ namespace eval  Experiment {
     namespace export EmergencyEnd
     namespace export CleanOrphans
     namespace export RunFileExists
+
+
 }
 #-------------- The procs below should be considered local to Experiment:: ---
 
@@ -243,38 +245,41 @@ proc Experiment::finalizeEventData run {
 # If the proc OnBegin is defined invoke it.
 #
 proc Experiment::RunBeginning {} {
-	variable Logrecorder
-	variable EventlogPid
-        variable fileWaitTimeout
+    variable Logrecorder
+    variable EventlogPid
+    variable fileWaitTimeout
 
-	set      nrun [ReadoutControl::GetRun]
-	if {[ReadoutControl::isTapeOn]} {
-	    #
-	    # Start the event logger.
-	    #
-	    set Stagedir     [ExpFileSystem::WhereisCurrentEventData]
-	    set currentdata  [ExpFileSystem::WhereisCurrentData]
-	    set user         $::tcl_platform(user)
-            set sourceHost   [DAQParameters::getSourceHost]
-            set SourceURL    [Experiment::spectrodaqURL $sourceHost]
-            set ftpLoghost   [DAQParameters::getFtpHost]
-            set ftpLogpasswd [DAQParameters::getPassword]
-	    
-	    cd $Stagedir
+    puts "Event logger is $Logrecorder"
 
-
-	    set EventlogPid [exec $Logrecorder -one -source $SourceURL &]
-
-            Experiment::makeEventLink $nrun
-
-            Experiment::waitFile .ready 1000 $fileWaitTimeout
-            if {![file exists .ready]} {
-                Error "The event logger is not yet ready after a very long time"
-            }
-	    file delete -force .ready
+    set ::Diagnostics::isTk 1;   #Ugly but works... forces tk dialogs from warning
+    set      nrun [ReadoutControl::GetRun]
+    if {[ReadoutControl::isTapeOn]} {
+	#
+	# Start the event logger.
+	#
+	set Stagedir     [ExpFileSystem::WhereisCurrentEventData]
+	set currentdata  [ExpFileSystem::WhereisCurrentData]
+	set user         $::tcl_platform(user)
+	set sourceHost   [DAQParameters::getSourceHost]
+	set SourceURL    [Experiment::spectrodaqURL $sourceHost]
+	set ftpLoghost   [DAQParameters::getFtpHost]
+	set ftpLogpasswd [DAQParameters::getPassword]
+	
+	cd $Stagedir
+	
+	
+	set EventlogPid [exec $Logrecorder -one -source $SourceURL &]
+	
+	Experiment::makeEventLink $nrun
+	
+	Experiment::waitFile .ready 1000 $fileWaitTimeout
+	if {![file exists .ready]} {
+	    Error "The event logger is not yet ready after a very long time"
 	}
-        Experiment::callback OnBegin $nrun
+	file delete -force .ready
     }
+    Experiment::callback OnBegin $nrun
+}
     # Experiment::RunEnded
     #    Run has ended.
     # If taping is on:
@@ -293,22 +298,28 @@ proc Experiment::RunEnded {} {
     set nrun [ReadoutControl::GetRun]
     # IF OnEnd is defined, call it:
     #
+    puts "Calling callback"
     Experiment::callback OnEnd $nrun
+    puts "back from callback"
 
     if {[ReadoutControl::isTapeOn]} {
         #
         # Wait for eventlog to finish.
+	puts "Waiting for done"
         Experiment::waitFile .done 1000 $fileWaitTimeout
         if {![file exists .done]} {
             Diagnostics::Warning "eventlog may not have finished normally continuing with post run actions"
         }
+	puts "waited"
         #  TODO:   Perhaps we should force event log to end if .done is not present yet?
 
         file delete -force  .done
 	set EventlogPid     0
 
-        Experiment::finalizeEventData $nrun
+	puts "Finalizing"
 
+        Experiment::finalizeEventData $nrun
+	puts "Finalized"
 
 
     }
@@ -349,7 +360,10 @@ proc Experiment::EmergencyEnd {} {
     set nrun [ReadoutControl::GetRun]
     set rundir [file dirname [ExpFileSystem::WhereisRunFile $nrun]]
     file mkdir  $rundir
+    file attributes $rundir -permissions 0750
     exec touch $rundir/000RunAbnormallyEnded
+    file attributes $rundir/000RunAbnormallyEnded 0440
+    file attributes $rundir -permissions 0550
 }
 #Experiment::CleanOrphans
 #  Clean up orphaned event files in the stage area's current

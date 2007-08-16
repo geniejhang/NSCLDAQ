@@ -859,6 +859,9 @@ Released April 26, 2007
                   users/situtations.  Renamed the trigger class hierarchy
                   for readout classic..need to do that for HPReadout too.
                   - Took care of HPRedout and scripted readout too.
+ Aug 16, 2007     - BZ 318 - Add timestamps to significant events in the
+                    Readout GUI output pane.
+                  - Fix permissions issues with emergency end runs and cleanup
 
 
 
