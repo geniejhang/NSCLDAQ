@@ -97,15 +97,12 @@ proc Experiment::waitFile {name {granularity 1000} {timeout 0}} {
     set passes 0
     set done   0
 
-    puts "Waiting for file $name to exist"
     while {1} {
         if {[file exists $name]} {
-	    puts "Found file $name"
             return 1
         }
         incr passes
         if {($passes > $timeout) && ($timeout != 0)} {
-	    puts "Failed to fine $name"
             return 0
         }
         after $granularity
@@ -249,7 +246,6 @@ proc Experiment::RunBeginning {} {
     variable EventlogPid
     variable fileWaitTimeout
 
-    puts "Event logger is $Logrecorder"
 
     set ::Diagnostics::isTk 1;   #Ugly but works... forces tk dialogs from warning
     set      nrun [ReadoutControl::GetRun]
@@ -298,28 +294,22 @@ proc Experiment::RunEnded {} {
     set nrun [ReadoutControl::GetRun]
     # IF OnEnd is defined, call it:
     #
-    puts "Calling callback"
     Experiment::callback OnEnd $nrun
-    puts "back from callback"
 
     if {[ReadoutControl::isTapeOn]} {
         #
         # Wait for eventlog to finish.
-	puts "Waiting for done"
         Experiment::waitFile .done 1000 $fileWaitTimeout
         if {![file exists .done]} {
             Diagnostics::Warning "eventlog may not have finished normally continuing with post run actions"
         }
-	puts "waited"
         #  TODO:   Perhaps we should force event log to end if .done is not present yet?
 
         file delete -force  .done
 	set EventlogPid     0
 
-	puts "Finalizing"
 
         Experiment::finalizeEventData $nrun
-	puts "Finalized"
 
 
     }
