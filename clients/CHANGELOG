@@ -838,6 +838,32 @@ April 26, 2007 - Ensure that framework template implementations get installed
 Released April 26, 2007
 
 8.1-003     
- May 2, 2007   - Fix typo for touch of sequencer.3tcl in sequencer/Makefile.am
+ May  2, 2007   - Fix typo for touch of sequencer.3tcl in sequencer/Makefile.am
+ May 10, 2007   - Ensure that dists don't include old stale stuff from
+                  the btdriver dirs (e.g. clean any old builds).
+ June 19, 2007  - Fix error in sis3300.cpp - 16k samples were being
+                  treated like 64k
+ July 15, 2007  - Add emptyEnable/Disable to CAENcard.
+ July 17, 2007  - Another catch by Dave Caussyn at FSU, HPPReadout,
+                  CNSCLPhysisBuffer and CExperiment conspire to randomly
+                  drop partial event buffers forced out by scalers
+                  because the entity count in the spectrodaq buffer is
+                  uninitialized (and therefore sometimes zero), not updated
+                  until the buffer is routed, but checked to determine
+                  if there's a partial buffer to submit...so if the
+                  uninitialized entity count happens to be zero, the 
+                  buffer will get dropped.
+ August 15, 2007  - BZ 319 - Class name collisions between the trigger class
+                  hierarchy in Readout classic and those promoted to 
+                  DeviceSupport caused Readout to segfault for some 
+                  users/situtations.  Renamed the trigger class hierarchy
+                  for readout classic..need to do that for HPReadout too.
+                  - Took care of HPRedout and scripted readout too.
+ Aug 16, 2007     - BZ 318 - Add timestamps to significant events in the
+                    Readout GUI output pane.
+                  - Fix permissions issues with emergency end runs and cleanup
+ Aug 21, 2007     Add buffer management thread(s) to overlap buffer allocation
+                  with data taking.
+
 
 

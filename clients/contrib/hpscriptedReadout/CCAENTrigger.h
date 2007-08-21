@@ -290,7 +290,7 @@ class CAENcard;
    when a particular CAENcard module has a DReady condition (has at
    least on event in its MEB.
 */
-class CCAENTrigger : public CTrigger
+class CCAENTrigger : public Trigger
 {
   CAENcard* m_pTriggerModule;	// Module to trigger on.
 public:

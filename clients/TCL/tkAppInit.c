@@ -273,85 +273,90 @@ THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
 EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH 
 DAMAGES.
 
-		     END OF TERMS AND CONDITIONS '
+		     END OF TERMS AND CONDITIONS
 */
-/*!
-   Defines a test trigger class.  
-   The test trigger is always true when enabled.   This allows simple
-   tests of the readout system to be performed by the developers (me).
+static const char* Copyright = "(C) Copyright Michigan State University 2016, All rights reserved";
+/* 
+ * tkAppInit.c --
+ *
+ *	Provides a default version of the Tcl_AppInit procedure for
+ *	use in wish and similar Tk-based applications.
+ *
+ * Copyright (c) 1993 The Regents of the University of California.
+ * Copyright (c) 1994 Sun Microsystems, Inc.
+ *
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * SCCS: @(#) tkAppInit.c 1.22 96/05/29 09:47:08
+ */
 
-   */
-// Author:
-//        Ron Fox
-//        NSCL
-//        Michigan State University
-//        East Lansing, MI 48824-1321
-//        fox@nscl.msu.edu
-//
-// Version information:
-//    $Header$
-//
-/* Change log:
- *      $Log$
- *      Revision 8.2.2.1  2007/08/15 18:51:05  ron-fox
- *      Propagated the trigger fix to these dirs too.
- *
- *      Revision 8.2.2.1  2007/08/15 18:37:05  ron-fox
- *      BZ 319 - Collisions in class names between the trigger class
- *      hierachy defined here and that prmoted into the device support
- *      directory caused segfaluts for some users
- *
- *      Revision 8.2  2005/06/24 11:32:04  ron-fox
- *      Bring the entire world onto the 8.2 line
- *
- *      Revision 4.2  2004/11/16 18:51:37  ron-fox
- *      Port to gcc/g++ 3.x
- *
- *      Revision 4.1  2004/11/08 17:37:40  ron-fox
- *      bring to mainline
- *
- *      Revision 3.1  2003/03/22 04:03:40  ron-fox
- *      Added SBS/Bit3 device driver.
- *
- *      Revision 2.1  2003/02/11 16:44:57  ron-fox
- *      Retag to version 2.1 to remove the weird branch I accidently made.
- *
- *      Revision 1.1.1.1  2003/02/05 14:04:53  ron-fox
- *      Initial import of the NSCL Daq clients version 7.0-000 to sourceforge.
- *
- *
- *      Revision 2.3  2002/10/09 11:27:44  fox
- *      Add copyright/license stamp.
- *
- * Revision 2.2  2002/07/02  15:12:20  fox
- * Go to 2.xx based releases (recover from client crash too).
- *
- * Revision 2.1  2002/07/02  15:05:27  fox
- * Transition to 2.1 releases
- *
- * Revision 1.1  2002/06/27  15:55:08  fox
- * - Debug tight packed buffer Readout (note still problems with Spectrodaq)
- * - Support SBS/Bit3 device driver in vmetcl et seq.
- *
- *
-*/
-#ifndef __TESTTRIGGER_H
-#define __TESTTRIGGER_H
-#include "Trigger.h"
+#include "tk.h"
 
-class CTestTrigger : public Trigger
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tcl_AppInit --
+ *
+ *	This procedure performs application-specific initialization.
+ *	Most applications, especially those that incorporate additional
+ *	packages, will have their own version of this procedure.
+ *
+ * Results:
+ *	Returns a standard Tcl completion code, and leaves an error
+ *	message in interp->result if an error occurs.
+ *
+ * Side effects:
+ *	Depends on the startup script.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+Tcl_AppInit(interp)
+    Tcl_Interp *interp;		/* Interpreter for application. */
 {
-public:
-  CTestTrigger() {}
-  virtual ~CTestTrigger() {}
+    if (Tcl_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    if (Tk_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
+#ifdef TK_TEST
+    if (Tktest_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    Tcl_StaticPackage(interp, "Tktest", Tktest_Init,
+            (Tcl_PackageInitProc *) NULL);
+#endif /* TK_TEST */
 
-  // Interface definition (pure virtual functions):
-public:
-  virtual void Initialize();	//!< Initialize the class.
-  virtual void Enable();	//!< Enable the trigger hardware.
-  virtual void Disable();	//!< Disable the trigger hardware.
-  virtual bool Check();		//!< Check for a trigger.
-  virtual void Clear();		//!< Clear existing trigger.};
 
-};
-#endif
+    /*
+     * Call the init procedures for included packages.  Each call should
+     * look like this:
+     *
+     * if (Mod_Init(interp) == TCL_ERROR) {
+     *     return TCL_ERROR;
+     * }
+     *
+     * where "Mod" is the name of the module.
+     */
+
+    /*
+     * Call Tcl_CreateCommand for application-specific commands, if
+     * they weren't already created by the init procedures called above.
+     */
+
+    /*
+     * Specify a user-specific startup file to invoke if the application
+     * is run interactively.  Typically the startup file is "~/.apprc"
+     * where "app" is the name of the application.  If this line is deleted
+     * then no user-specific startup file will be run under any conditions.
+     */
+
+    Tcl_SetVar(interp, "tcl_rcFileName", "~/.wishrc", TCL_GLOBAL_ONLY);
+    return TCL_OK;
+}
+

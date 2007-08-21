@@ -76,7 +76,11 @@ libPReadout_la_SOURCES = \
 	../CCAENV977Trigger.cpp \
 	../CCBDCES8210ScalerTrigger.cpp \
 	../CCAENV262ScalerTrigger.cpp \
-	../CCAENV977ScalerTrigger.cpp
+	../CCAENV977ScalerTrigger.cpp \
+	../CBufferManager.cpp		\
+	../CBufferQueue.cpp	\
+	../CGaurdedObject.cpp
+
 
 
 include_HEADERS = \
@@ -151,7 +155,10 @@ include_HEADERS = \
 	../CCAENV977Trigger.h \
 	../CCBDCES8210ScalerTrigger.h \
 	../CCAENV262ScalerTrigger.h \
-	../CCAENV977ScalerTrigger.h
+	../CCAENV977ScalerTrigger.h	\
+	../CBufferManager.h		\
+	../CBufferQueue.h	\
+	../CGaurdedObject.h
 
 
 
