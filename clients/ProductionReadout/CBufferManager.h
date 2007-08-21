@@ -27,6 +27,7 @@ using namespace std;
 
 #ifndef __CBUFFERQUEUE_H
 #include <CBufferQueue.h>
+#endif
 
 #ifndef __CRT_UNISTD_H
 #include <unistd.h>
@@ -53,8 +54,8 @@ class CBufferManager : public DAQThread
 	
 	/*! Operations that can be queued to the manager thread: */
 		
-	typdef enum _CommandCode {   
-			route,
+	typedef enum _CommandCode {   
+			routeBuffer,
 			free,
 			resize,
 			changecount
@@ -65,10 +66,10 @@ class CBufferManager : public DAQThread
 	typedef struct _CommandElement {
 		CommandCode    s_Command;
 		union {
-			size_t          u_Size
-			DAQWordBuffer*  u_pBuffer;
+		  size_t          u_Size;
+		  DAQWordBuffer*  u_pBuffer;
 			
-		}              s_Data
+		}   s_Data;
 	
 		
 	} CommandElement;
@@ -80,7 +81,7 @@ class CBufferManager : public DAQThread
 private:
 	size_t     m_bufferSize;          //!< Size of buffers created by this manager (bytes)
 	size_t     m_nInitialBufferCount; //!< Number of buffers to maintain.
-	DAQTrheadId m_Tid;                //!< Manager's thread id.
+	DAQThreadId m_Tid;                //!< Manager's thread id.
 	bool        m_fRunning;           //!< Manager is running.
 	
 	BufferQueue  m_Buffers;
@@ -121,7 +122,7 @@ public:
 	
 	// The thread entry is internal.
 protected:
-	int operator()(int argc, char** argv);
+	virtual int operator()(int argc, char** argv);
 	
 	// Utilities:
 private:

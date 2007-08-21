@@ -54,7 +54,7 @@ static const short REVLEVEL = 5; // lvl 5 - removes unused header items.
 
 
 unsigned long CNSCLOutputBuffer::m_nSequence = 0; //Static data member initialization
-BufferManager CNSCLOutputBuffer::m_Managers;
+CNSCLOutputBuffer::BufferManagers CNSCLOutputBuffer::m_Managers;
 
 int CNSCLOutputBuffer::m_ControlTag = 3;
 int CNSCLOutputBuffer::m_EventTag   = 2;
@@ -67,7 +67,7 @@ int CNSCLOutputBuffer::m_EventTag   = 2;
   are performed.
   */
 CNSCLOutputBuffer::CNSCLOutputBuffer (unsigned nWords)
-   : m_Buffer(*CNSCLOutputBuffer::getBuffer(nWords), this),   
+   : m_Buffer(*CNSCLOutputBuffer::getBuffer(nWords, this)),   
      m_BufferPtr(&m_Buffer),   
      m_nWords(nWords) 
 {
@@ -435,7 +435,7 @@ CNSCLOutputBuffer::Route()
 {
   ComputeSize();
   ComputeChecksum();
-  m_myManager->route(&m_Buffer);   // Route via manager thread.
+  m_myManager->route(m_pBuffer);   // Route via manager thread.
 
 
 }  
@@ -598,14 +598,15 @@ CNSCLOutputBuffer::getBuffer(int nWords, CNSCLOutputBuffer* object)
 {
 	// If necessary, make the manager:
 	
-	BufferManager::iterator f = m_Managers.find(nWords);
+	BufferManagers::iterator f = m_Managers.find(nWords);
 	if (f == m_Managers.end()) {
 		CBufferManager* pNewManager = new CBufferManager(nWords*sizeof(uint16_t));
-		pNewManager.start();
+		pNewManager->start();
 		m_Managers[nWords] = pNewManager;
 		
 	}
 	CBufferManager* pManager = m_Managers[nWords];
 	object->m_myManager = pManager;
-	return pManager->allocateBuffer();           // May block while manager is starting up... or if out of bufs.
+	object->m_pBuffer   = pManager->allocateBuffer();
+	return object->m_pBuffer;           // May block while manager is starting up... or if out of bufs.
 }

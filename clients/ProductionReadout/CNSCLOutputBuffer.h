@@ -40,7 +40,7 @@ using namespace std;
 
 // Forward classes:
 
-CBufferManager;
+class CBufferManager;
                                
 /*!
    CNSCLOutputBuffer is the base class of a class
@@ -59,13 +59,14 @@ CBufferManager;
 class CNSCLOutputBuffer      
 { 
 private:
-	typedef std::map<int, CBufferManager*>  BufferManagers;
+  typedef std::map<int, CBufferManager*>  BufferManagers;
 protected:
   static int             m_ControlTag;
   static int             m_EventTag;
-  static BufferManager   m_Managers;
+  static BufferManagers   m_Managers;
 protected:
   DAQWordBuffer& m_Buffer; //!< Spectrodaq Buffer to hold the data being emitted.
+  DAQWordBuffer* m_pBuffer; // Real address of the buffer.
 private:
   DAQWordBufferPtr m_BufferPtr; //!< 'pointer' to the current slot of the buffer.
   int m_nWords; //!< Number of words the buffer can hold.
@@ -153,7 +154,7 @@ public:
      static void ClearSequence ()  ;
 protected:
      void InitializeHeader();
-     static DAQWordBuffer* getBuffer(int nWords = 4096, CNSCLOutputBuffer* object);
+     static DAQWordBuffer* getBuffer(int nWords, CNSCLOutputBuffer* object);
 };
 
 #endif
