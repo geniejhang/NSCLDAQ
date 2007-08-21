@@ -21,6 +21,8 @@
 #include <string>
 #include <unistd.h>
 #include <RangeError.h>
+#include "CBufferManager.h"
+#include <stdint.h>
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
@@ -52,6 +54,7 @@ static const short REVLEVEL = 5; // lvl 5 - removes unused header items.
 
 
 unsigned long CNSCLOutputBuffer::m_nSequence = 0; //Static data member initialization
+BufferManager CNSCLOutputBuffer::m_Managers;
 
 int CNSCLOutputBuffer::m_ControlTag = 3;
 int CNSCLOutputBuffer::m_EventTag   = 2;
@@ -64,7 +67,9 @@ int CNSCLOutputBuffer::m_EventTag   = 2;
   are performed.
   */
 CNSCLOutputBuffer::CNSCLOutputBuffer (unsigned nWords)
-   : m_Buffer(nWords),   m_BufferPtr(&m_Buffer),   m_nWords(nWords) 
+   : m_Buffer(*CNSCLOutputBuffer::getBuffer(nWords), this),   
+     m_BufferPtr(&m_Buffer),   
+     m_nWords(nWords) 
 {
   InitializeHeader();
 } 
@@ -430,7 +435,7 @@ CNSCLOutputBuffer::Route()
 {
   ComputeSize();
   ComputeChecksum();
-  m_Buffer.Route();
+  m_myManager->route(&m_Buffer);   // Route via manager thread.
 
 
 }  
@@ -576,4 +581,31 @@ unsigned short
 CNSCLOutputBuffer::getBufferType()
 {
   return m_Buffer[1];
+}
+/*
+ *   Get an appropriately sized buffer.  The system will usually use
+ * a pair of buffersizes one that is the actual buffersize (control buffers e.g.),
+ * and one that is twice that size for physics buffers which are filled to overflowing
+ * and then shrunk and routed.  This is accomodated by using a map of buffer managers
+ * indexed by buffersize. .. a general set of pre-allocated buffers.
+ * The function below allocates a buffer, if necessary creating and starting the
+ * buffer manager.  A pointer to the buffer is returned (so the constructor can 
+ * initialize the refrence member, and the object's m_myManager pointer is set with
+ * the manager that created the buffer so Route knows how to work.
+ */
+DAQWordBuffer*
+CNSCLOutputBuffer::getBuffer(int nWords, CNSCLOutputBuffer* object)
+{
+	// If necessary, make the manager:
+	
+	BufferManager::iterator f = m_Managers.find(nWords);
+	if (f == m_Managers.end()) {
+		CBufferManager* pNewManager = new CBufferManager(nWords*sizeof(uint16_t));
+		pNewManager.start();
+		m_Managers[nWords] = pNewManager;
+		
+	}
+	CBufferManager* pManager = m_Managers[nWords];
+	object->m_myManager = pManager;
+	return pManager->allocateBuffer();           // May block while manager is starting up... or if out of bufs.
 }
