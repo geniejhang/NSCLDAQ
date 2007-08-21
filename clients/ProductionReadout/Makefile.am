@@ -69,7 +69,9 @@ PRODUCTIONSOURCES = AccessListCheck.cpp \
 	CCAENV977Status.cpp CCAENV977Trigger.cpp \
 	CCBDCES8210ScalerTrigger.cpp             \
 	CCAENV262ScalerTrigger.cpp             \
-	CCAENV977ScalerTrigger.cpp
+	CCAENV977ScalerTrigger.cpp	\
+	CBufferManager.cpp		\
+	CBufferQueue.cpp
 
 
 PRODUCTIONHEADERS = AccessListCheck.h \
@@ -140,7 +142,9 @@ PRODUCTIONHEADERS = AccessListCheck.h \
 	CCAENV977Status.h CCAENV977Trigger.h \
 	CCBDCES8210ScalerTrigger.h \
 	CCAENV262ScalerTrigger.h   \
-	CCAENV977ScalerTrigger.h
+	CCAENV977ScalerTrigger.h  \
+	CBufferManager.h		\
+	CBufferQueue.h
 
 
 OTHER_STUFF  = 	MyExperiment.cpp \
