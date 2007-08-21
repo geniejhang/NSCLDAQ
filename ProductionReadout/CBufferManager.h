@@ -74,7 +74,7 @@ class CBufferManager : public DAQThread
 		
 	} CommandElement;
 	
-	typedef CBufferQueue<DAQWordBuffer>  BufferQueue;
+	typedef CBufferQueue<DAQWordBuffer*>  BufferQueue;
 	typedef CBufferQueue<CommandElement> CommandQueue;
 	
 		// Object member data:

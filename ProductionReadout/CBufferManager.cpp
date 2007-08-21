@@ -34,7 +34,6 @@ using namespace std;
 CBufferManager::CBufferManager(size_t size, size_t count) :
 	m_bufferSize(size),
 	m_nInitialBufferCount(count),
-	m_Tid(0),
 	m_fRunning(false)
 {
 	
@@ -45,7 +44,7 @@ CBufferManager::CBufferManager(size_t size, size_t count) :
  */
 CBufferManager::~CBufferManager()
 {
-	throw string("Buffer managers in general can't be destroyed!!!")
+  throw string("Buffer managers in general can't be destroyed!!!");
 }
 /*!
  * Return the current buffersize.  This can be done in the 
@@ -68,7 +67,7 @@ CBufferManager::getBufferSize() const
  *   a good thing to ask about the buffersize.
  * \param newSize  The new buffersize.
  */
-size_t
+void
 CBufferManager::setBufferSize(size_t newSize)
 {
 	CommandElement cmd;
@@ -177,6 +176,7 @@ CBufferManager::operator()(int argc, char** argv)
 		CommandElement cmd = m_Commands.get();  // blocks.
 		switch (cmd.s_Command) {
 		case routeBuffer:
+		  {
 			// The buffer must be routed,
 			// destroyed, and a new one created to replace it.
 			
@@ -184,8 +184,10 @@ CBufferManager::operator()(int argc, char** argv)
 			pBuffer->Route();
 			delete pBuffer;
 			create();
+		  }
 			break;
 		case free:
+		  {
 			// If the buffer has the right size, just put it in the
 			// queue...else destroy and make a new one:
 			
@@ -197,17 +199,21 @@ CBufferManager::operator()(int argc, char** argv)
 				delete pBuffer;
 				create();
 			}
+		  }
 			break;
 		case resize:
+		  {
 			// Resizing the buffer requires killing off the existing buffer
 			// queue and allocating a whole new set of buffers:
-			
+		  
 			m_bufferSize = cmd.s_Data.u_Size;
 			clear();
 			create(m_nInitialBufferCount);
+		  }
 			break;
 			
 		case changecount:
+		  {
 			// Change the number of buffers that are pre-allocated.
 			// If we're getting fewer buffers (not likely) we 
 			// get buffers from the queue and free them.
@@ -232,6 +238,7 @@ CBufferManager::operator()(int argc, char** argv)
 					delete pBuffer;
 				}
 			}
+		  }
 			break;
 		default:
 			// Really bad thing... ignore with a cerr.
@@ -250,7 +257,7 @@ CBufferManager::operator()(int argc, char** argv)
 void
 CBufferManager::clear()
 {
-	list<DAQBWordBuffer*> buffers = m_Buffers.getAll();
+	list<DAQWordBuffer*> buffers = m_Buffers.getAll();
 	list<DAQWordBuffer*>::iterator i = buffers.begin();
 	while (i != buffers.end()) {
 		delete *i;
