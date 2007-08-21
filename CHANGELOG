@@ -862,6 +862,8 @@ Released April 26, 2007
  Aug 16, 2007     - BZ 318 - Add timestamps to significant events in the
                     Readout GUI output pane.
                   - Fix permissions issues with emergency end runs and cleanup
+ Aug 21, 2007     Add buffer management thread(s) to overlap buffer allocation
+                  with data taking.
 
 
 

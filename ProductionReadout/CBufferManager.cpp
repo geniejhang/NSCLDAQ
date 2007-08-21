@@ -145,7 +145,7 @@ void
 CBufferManager::route(DAQWordBuffer* pBuffer)
 {
 	CommandElement cmd;
-	cmd.s_Command         = route;
+	cmd.s_Command         = routeBuffer;
 	cmd.s_Data.u_pBuffer  = pBuffer;
 	m_Commands.queue(cmd);
 }
@@ -176,7 +176,7 @@ CBufferManager::operator()(int argc, char** argv)
 	while (1) {
 		CommandElement cmd = m_Commands.get();  // blocks.
 		switch (cmd.s_Command) {
-		case route:
+		case routeBuffer:
 			// The buffer must be routed,
 			// destroyed, and a new one created to replace it.
 			
