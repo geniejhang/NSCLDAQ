@@ -159,9 +159,7 @@ protected:
 
 #endif /* ! HIGH_PERFORMANCE */
 public:
-  void setBufferSize(unsigned nBufferSize) {
-    m_nBufferSize = nBufferSize;
-  }
+  void setBufferSize(unsigned nBufferSize);
   
   // Class operations:
 public:
