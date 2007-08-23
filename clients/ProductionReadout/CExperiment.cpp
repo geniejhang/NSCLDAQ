@@ -1247,12 +1247,22 @@ CExperiment::Overflow(unsigned short*  header,
    // reasonably sized events.
    
    int eventSize = pEnd.GetIndex() - pSrc.GetIndex(); // (words).
+#ifdef COPYOUT_GOOD
    uint16_t* tempData = new uint16_t[eventSize];   // Copy Out target.
    pSrc.CopyOut(tempData, 0, eventSize);           // Get the partial event...
    pDest.CopyIn(tempData, 0, eventSize);           // Insert the new event.
    pDest += eventSize;
    delete []tempData;                              // Get rid of the temp storage.
-   
+#else
+   /// COPYOUT is broken evidently.
+   for (int i=0; i < eventSize; i++) {
+     *pDest = *pSrc;
+     pSrc += 1;
+     pDest+= 1;			//  probably faster than ++
+   }
+#endif
+
+
    pNewBuffer->EndEvent(pDest);
 #else /* HIGH_PERFORMANCE */
    unsigned short*    pDest      = pNewBuffer->StartEvent();

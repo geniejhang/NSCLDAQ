@@ -289,11 +289,20 @@ CReader::OverFlow(DAQWordBufferPtr& rLastEventPtr)
   // copy construction.
   
   // Use copy in/copy out to do this.. most quickly...
-  
+
+#ifdef COPYIN_WORKS  
   uint16_t *pTempBuffer = new uint16_t[nWords];
   rLastEventPtr.CopyOut(pTempBuffer, 0, nWords);
   EventPtr.CopyIn(pTempBuffer, 0, nWords);
   delete []pTempBuffer;
+
+#else
+  for (int i= 0; i < nWords; i++) {
+    *EventPtr = *rLastEventPtr;
+    EventPtr += 1;
+    rLastEventPtr += 1;
+  }
+#endif
 
   // Flush the existing buffer:
 
