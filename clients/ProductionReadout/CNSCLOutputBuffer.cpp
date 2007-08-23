@@ -607,6 +607,6 @@ CNSCLOutputBuffer::getBuffer(int nWords, CNSCLOutputBuffer* object)
 	}
 	CBufferManager* pManager = m_Managers[nWords];
 	object->m_myManager = pManager;
-	object->m_pBuffer   = pManager->allocateBuffer();
-	return object->m_pBuffer;           // May block while manager is starting up... or if out of bufs.
+	object->m_pBuffer   = pManager->allocateBuffer(); // May block
+	return object->m_pBuffer;           
 }
