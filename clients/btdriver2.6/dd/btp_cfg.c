@@ -156,7 +156,10 @@ unsigned int icbr_q_size[BT_MAX_UNITS+1] = {
 #ifdef MODULE_PARM
 MODULE_PARM(icbr_q_size, "i");
 #else
-module_param(icbr_q_size, int, DEFAULT_Q_SIZE);
+/* This fails on 2.6.22 - not sure how to fix this but can just leave it
+   unconfigurable ...
+*/
+/*  module_param(icbr_q_size, int, DEFAULT_Q_SIZE);      */ 
 #endif
 MODULE_PARM_DESC(icbr_q_size, "Number of entries to create in the interrupt callback routine (ICBR) queue.");
 
@@ -171,7 +174,7 @@ unsigned long lm_size[BT_MAX_UNITS+1] = {
 MODULE_PARM(lm_size,"0-" __MODULE_STRING(BT_MAX_UNITS) "l");
 MODULE_PARM_DESC(lm_size, "Per unit array given the size of the local memory device. Default " __MODULE_STRING(DEFAULT_LMEM_SIZE) ".");
 #else
-/*   Not quite sure how to fix this, but can just leave it unconfigured. */
+/*   Not quite sure how to fix this, but can just leave it unconfigurable. */
 #endif
 
 MODULE_AUTHOR("SBS Technologies, Inc.");
@@ -1933,7 +1936,9 @@ static int init_isr (
     /* 
     ** Register the ISR 
     */
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)              /* Need to refine the actual minor version */
+    ret_val = request_irq((unsigned int)unit_p->irq, btk_isr, (unsigned long)IRQF_SHARED, bt_name_gp, (void *) unit_p);
+#elif     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
     ret_val = request_irq((unsigned int)unit_p->irq, btk_isr, (unsigned long)SA_SHIRQ, bt_name_gp, (void *) unit_p);
 #else
     ret_val = request_irq(unit_p->irq, btk_isr, SA_SHIRQ, bt_name_gp, (void *) unit_p);
