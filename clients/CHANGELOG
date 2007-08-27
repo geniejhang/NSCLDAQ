@@ -870,3 +870,4 @@ Released April 26, 2007
                     event from the oversized buffer to the next buffer.
 
 
+August 27, 2007  - Get btdriver2.6 to compile on 2.6.22.4
