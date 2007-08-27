@@ -1,4 +1,4 @@
-SUBDIRS=lib include dd
+SUBDIRS=lib include
 all-local:
 	./DriverBuild.sh  $(KERNEL_SRC)
 
