@@ -37,6 +37,16 @@ then
     fi
 fi
 
+#  Still can't find kernel sources.. ask for one:
+
+
+if [ "$LinuxSrc" == "" ]
+then
+    echo -n Unable to locate the kernel source directory where is it:
+    read Linuxsrc
+fi
+
+
 #-------------------------------------------------
 #
 #  At this point, Linuxsrc must point to the

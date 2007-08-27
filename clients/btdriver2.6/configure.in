@@ -7,6 +7,8 @@ AC_CONFIG_HEADER(config.h)
 #
 AM_INIT_AUTOMAKE(btdriver26, 2.0)
 
+SOVERSION="8:0"
+
 #  This must be a 2.6 kernel.. and linux too.
 
 AC_MSG_CHECKING([operating system])
@@ -31,5 +33,7 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_LIBTOOL
+
+AC_SUBST(SOVERSION)
 
 AC_OUTPUT(Makefile lib/Makefile)
