@@ -549,3 +549,4 @@ Released April 26, 2007
                   if there's a partial buffer to submit...so if the
                   uninitialized entity count happens to be zero, the 
                   buffer will get dropped.
+  August 27,2007 - Fix bt driver to compile correctly on 2.6.22
