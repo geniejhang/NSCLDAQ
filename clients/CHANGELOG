@@ -552,3 +552,5 @@ Released April 26, 2007
   August 27,2007 - Fix bt driver to compile correctly on 2.6.22
                  - Make DriverBuild prompt for kernel src dir if it 
                    can't auto find it.
+  August 28, 2007 - add <stdio.h> to contropush/CApplication.cpp so that
+                   it compiles on 2.95
