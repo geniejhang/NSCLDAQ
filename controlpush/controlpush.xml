@@ -78,6 +78,17 @@ controlpush <replaceable>[options...] files...</replaceable>
                     </listitem>
 
                 </varlistentry>
+		<varlistentry>
+		   <term><option>-a</option> (<option>--authorize</option>)</term>
+		   <listitem>
+		      <para>
+		         Specifies that controlpush is connecting to a Tcl
+   		         server that requires user authentication.  This should
+   		         be used when controlpush is connecting to a tclserver at
+   		         nscldaq 8.1 or later.
+                      </para>
+                   </listitem>
+               </varlistentry>
             </variablelist>
         </para>
     </refsect1>
