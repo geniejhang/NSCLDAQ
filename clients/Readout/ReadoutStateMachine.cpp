@@ -134,8 +134,8 @@ ReadoutStateMachine::ReadoutStateMachine() :
     m_pPaused   = new Paused;
     m_pExiting  = new Exiting;
     
+    AddState(m_pInactive, string("INACTIVE")); // must be first!
     AddState(m_pPaused,   string("PAUSED"));
-    AddState(m_pInactive, string("INACTIVE"));
     AddState(m_pActive,   string("ACTIVE"));
     AddState(m_pExiting,  string("EXITING"));
     
