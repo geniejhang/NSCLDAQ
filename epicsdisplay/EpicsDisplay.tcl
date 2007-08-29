@@ -58,7 +58,7 @@ proc restartControlPush file {
    exec kill -9 $clientpid
 
    set clientpid [exec $bindir/controlpush --port=$TclServerPort --node=localhost \
-                  --interval=5 $file &]
+                  --interval=5 --authorize $file &]
    bind . <Destroy> "Cleanup %W $clientpid"
 }
 
@@ -69,7 +69,7 @@ proc restartControlPush file {
 
 puts "Channel setup file: $file"
 puts "exec $bindir/controlpush --port=$TclServerPort --node=localhost --interval=5 $file &"
-set clientpid [exec $bindir/controlpush --port=$TclServerPort --node=localhost  --interval=5 $file &]
+set clientpid [exec $bindir/controlpush --port=$TclServerPort --node=localhost  --interval=5 --authorize $file &]
 
 
 proc Cleanup {widget pid} {
