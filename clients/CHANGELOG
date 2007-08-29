@@ -873,3 +873,6 @@ Released April 26, 2007
 August 27, 2007  - Get btdriver2.6 to compile on 2.6.22.4
 August 28, 2007  - controlpush/CApplication needs to include
                    <stdio.h> if compiled on 2.95 e.g
+August 29, 2007  - Make controlpush able to authorize with tcl server.
+                 - Make epicsdisplay start up controlpush with --authorize.
+                 - Document new controlpush --authorize flag.

@@ -64,6 +64,8 @@ While true {
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
@@ -95,7 +97,8 @@ CApplication::CApplication ()
   : m_sSetupFile(""),		// That's a required parameter.
     m_nPort(DEFAULTPORT),
     m_sHost(DEFAULTHOST),
-    m_nInterval(INTERVAL)
+    m_nInterval(INTERVAL),
+    m_fMustAuthorize(false)
 { 
   
 } 
@@ -155,6 +158,9 @@ CApplication::operator()(gengetopt_args_info& Parameters)
     if(Parameters.node_given) {
       m_sHost = string(Parameters.node_arg);
     }
+
+    m_fMustAuthorize = Parameters.authorize_given;
+
     // Setup file:
     
     m_sSetupFile = string(Parameters.inputs[0]); // Required parameter.
@@ -378,6 +384,11 @@ established, or until the retry count is exceeded.
 \throw string
    Throws a string if the connection could not be established.
 
+
+If m_fMustAuthorize is true our current username is sent to the
+server for authentication purposes.
+
+
 */
 void 
 CApplication::ConnectToServer(int nRetryInterval, int nNumRetries)  
@@ -419,6 +430,22 @@ CApplication::ConnectToServer(int nRetryInterval, int nNumRetries)
     ostringstream error;
     error << "Unable to connect to " << m_sHost << ":" << m_nPort;
     throw string(error.str());
+  }
+  else {
+    // Connected if necessary authorize:
+
+    if (m_fMustAuthorize) {
+      uid_t euid = geteuid();             // We'll use effective uid for username.
+      struct passwd* pwdEntry = getpwuid(euid);
+
+      if (pwdEntry) {
+	string authString = pwdEntry->pw_name;
+	authString += "\n";
+	void *pData = const_cast<char*>(authString.c_str());
+	m_Socket.Write(pData, authString.size());
+      }
+
+    }
   }
 }
 //// Utility functions:
