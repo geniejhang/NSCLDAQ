@@ -290,7 +290,7 @@ CReader::OverFlow(DAQWordBufferPtr& rLastEventPtr)
   
   // Use copy in/copy out to do this.. most quickly...
 
-#ifdef COPYIN_WORKS  
+#ifdef COPYOUT_WORKS  
   uint16_t *pTempBuffer = new uint16_t[nWords];
   rLastEventPtr.CopyOut(pTempBuffer, 0, nWords);
   EventPtr.CopyIn(pTempBuffer, 0, nWords);
