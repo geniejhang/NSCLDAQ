@@ -177,7 +177,7 @@ INCLUDES = -I..  $(CAMAC) -I@top_srcdir@/Headers \
 	-I@top_srcdir@/framework  \
 	-I@top_srcdir@/Exception \
 	-I@top_srcdir@/TCL \
-	$(TCL_FLAGS) $(SPECTRODAQ_FLAGS)
+	$(TCL_FLAGS) $(SPECTRODAQ_FLAGS) -DCOPYOUT_GOOD
 
 
 
