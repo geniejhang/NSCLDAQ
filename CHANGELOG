@@ -876,3 +876,7 @@ August 28, 2007  - controlpush/CApplication needs to include
 August 29, 2007  - Make controlpush able to authorize with tcl server.
                  - Make epicsdisplay start up controlpush with --authorize.
                  - Document new controlpush --authorize flag.
+Sept 3, 2007     - Fix error in buffer manager buffer allocation...size
+                   in the member data are the number of bytes per buffer,
+                   this was incorrectly not scaled to number of words when
+                   DAQWordBuffers were created.
