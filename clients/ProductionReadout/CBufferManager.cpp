@@ -21,6 +21,7 @@ using namespace std;
 #include <string>
 #include <stdint.h>
 #include <Iostream.h>
+#include <stdint.h>
 
 /*!
  *   Create the buffer manager. It is not the responsibility
@@ -273,7 +274,7 @@ void
 CBufferManager::create(size_t n)
 {
 	for (int i =0; i < n; i++) {
-		m_Buffers.queue(new DAQWordBuffer(m_bufferSize));
+		m_Buffers.queue(new DAQWordBuffer(m_bufferSize/sizeof(uint16_t)));
 	}
 }
 /*
