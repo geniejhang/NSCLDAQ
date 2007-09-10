@@ -880,3 +880,7 @@ Sept 3, 2007     - Fix error in buffer manager buffer allocation...size
                    in the member data are the number of bytes per buffer,
                    this was incorrectly not scaled to number of words when
                    DAQWordBuffers were created.
+Sept. 10,2007    - BZ320 - Added conditional compilations to the xxxmacros.h headers
+                           so VPacket etc. work for HP readouts.
+                         - Added -DHP to makefile includes for HPReadout and HPPreadout
+                           so they get the right macros.

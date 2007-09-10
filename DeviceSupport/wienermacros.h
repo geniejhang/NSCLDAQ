@@ -1,8 +1,13 @@
+/* This software was contributed by Dave Caussyn of Florida State
+   University.
+*/
+
 /*
  * macros_vc32.h  - Macro definitions for data acquisition user programming
  *                  assumed variables: INT16 *buffer -> buffer.  Modifications
  *                  to macros.h for using Wiener vc32.
  */
+
 
     /* CAMAC and buffer manipulation. */
 
@@ -505,25 +510,27 @@ F<16, write for F>=16). So, we replace the camctl macro. --ddc
 
               /* Variable sized sub event packet */
 
-#ifdef __unix__
-#define VPacket(type)   {                                           \
-                            DAQWordBufferPtr _pktstart = bufpt;     \
-                            ++bufpt;                                \
-                            putbufw(type);
-#else
-#define VPacket(type)   {                                            \
-                          INT16 *_pktstart = bufpt; ++bufpt;         \
-                            putbufw(type);
-#endif
-#ifdef __unix__
-#define EndVPacket        *_pktstart = (INT16)(bufpt.GetIndex() -     \
-                                               _pktstart.GetIndex()); \
-                        }
-#else
-#define EndVPacket        *_pktstart = (INT16)(bufpt - _pktstart);    \
 
-                        }
+#ifdef HP
+#define VPacket(type)     {                                            \
+                            UINT16 *_pktstart = bufpt; ++bufpt;         \
+                            putbufw(type);
+#else
+#define VPacket(type)     {                                           \
+                            DAQWordBufferPtr _pktstart = bufpt;     \
+			    ++bufpt;                                  \
+			    putbufw(type);
 #endif
+#ifdef HP
+#define EndVPacket          *_pktstart = (INT16)(bufpt - _pktstart);    \
+                           }
+#else
+#define EndVPacket          *_pktstart = (INT16)(bufpt.GetIndex() -     \
+                                                 _pktstart.GetIndex()); \
+                           }
+#endif
+
+
 /*
 **   Reserve a fixed length chunk of buffer which will be filled in
 **   later.  ptr will point to the start of this buffer. 

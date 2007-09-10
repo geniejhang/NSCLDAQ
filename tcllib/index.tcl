@@ -1,1 +1,1 @@
-pkg_mkIndex -verbose /scratch/fox/daq/8.1test/TclLibs/widgets *.tcl
+pkg_mkIndex -verbose /usr/opt/daq/8.1/TclLibs/widgets *.tcl
