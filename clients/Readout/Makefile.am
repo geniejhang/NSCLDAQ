@@ -45,7 +45,7 @@ INCLUDES = $(VMEBUILDEADERS) \
 	-I@top_srcdir@/Headers -I@top_srcdir@/Exception \
 	-I@top_srcdir@/VMEApi -I@top_srcdir@/DeviceSupport\
 	$(SPECTRODAQ_FLAGS) -DINSTDIR=\"$(prefix)\" $(CAMAC) -g \
-	-DCOPYOUT_WORKSx3
+	-DCOPYOUT_WORKS
 
 EXTRA_DIST = runstate.tran Makefile.skel ReadoutMain.cpp skeleton.cpp  \
 	Readout_Makefile.include
