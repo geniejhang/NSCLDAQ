@@ -74,6 +74,15 @@ CNSCLOutputBuffer::CNSCLOutputBuffer (unsigned nWords)
   InitializeHeader();
 } 
 
+
+CNSCLOutputBuffer::~CNSCLOutputBuffer()
+{
+#ifndef USE_BUFFER_MANAGER
+  delete m_pBuffer;
+#endif
+}
+
+
 // Functions for class CNSCLOutputBuffer
 
 /*!
@@ -435,7 +444,11 @@ CNSCLOutputBuffer::Route()
 {
   ComputeSize();
   ComputeChecksum();
+#ifdef USE_BUFFER_MANAGER
   m_myManager->route(m_pBuffer);   // Route via manager thread.
+#else
+  m_Buffer.Route();
+#endif
 
 
 }  
@@ -596,6 +609,7 @@ CNSCLOutputBuffer::getBufferType()
 DAQWordBuffer*
 CNSCLOutputBuffer::getBuffer(int nWords, CNSCLOutputBuffer* object)
 {
+#ifdef USE_BUFFER_MANAGER
 	// If necessary, make the manager:
 	
 	BufferManagers::iterator f = m_Managers.find(nWords);
@@ -609,4 +623,8 @@ CNSCLOutputBuffer::getBuffer(int nWords, CNSCLOutputBuffer* object)
 	object->m_myManager = pManager;
 	object->m_pBuffer   = pManager->allocateBuffer(); // May block
 	return object->m_pBuffer;           
+#else
+	object->m_pBuffer = new DAQWordBuffer(nWords);
+	return object->m_pBuffer;
+#endif
 }

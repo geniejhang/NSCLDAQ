@@ -78,11 +78,7 @@ public:
 	// Constructors, destructors and other cannonical operations: 
 
     CNSCLOutputBuffer (unsigned nWords=4096); //!< Default constructor.
-#ifndef HIGH_PERFORMANCE
-     ~ CNSCLOutputBuffer ( ) { } //!< Destructor.
-#else /* HIGH_PERFORMANCE */
-    virtual  ~ CNSCLOutputBuffer ( ) { } //!< Destructor.
-#endif /* HIGH_PERFORMANCE */
+    virtual  ~ CNSCLOutputBuffer ( );         //!< Destructor.
 
   // Copying DAQ buffers is not legal so the various copy stuff is
   // illegal too.
