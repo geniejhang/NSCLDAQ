@@ -193,3 +193,5 @@ Released Jan 15, 2007
       as config.h isn't installed this version.
 7.4-007jumbo-003
     - Fix error in pagesize computatino in sis3300.cpp
+
+October 10, 2007 - released 7.4-007jumbo-003 end of life announced.
