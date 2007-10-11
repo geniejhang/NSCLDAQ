@@ -409,6 +409,9 @@ proc gui_ui {root args} {
 		-command "ToggleLock \"$base\"" \
 		-text Lock
 
+	button $base.exit \
+	    -text Exit    \
+	    -command exit
         # Geometry management
 
 	grid $base.label#15 -in $root	-row 1 -column 3 
@@ -490,6 +493,7 @@ proc gui_ui {root args} {
 	grid $base.save -in $root	-row 13 -column 2 
 	grid $base.restore -in $root    -row 13 -column 4
         grid $base.lock -in $root       -row 13 -column 6
+	grid $base.exit -in $root       -row 13 -column 8
 
 	# Resize behavior management
 

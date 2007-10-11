@@ -36,7 +36,9 @@ libScriptedRdo_la_SOURCES = CBoolConfigParam.cpp \
 	CConfigurableObject.cpp \
 	CReadableObject.cpp 	\
 	CReadException.cpp	\
-	CPacketCreator.cpp
+	CPacketCreator.cpp     \
+	CEnumParameter.cpp     \
+	CSIS3300Creator.cpp CSIS3300Module.cpp
 
 
 libScriptedRdo_la_LDFLAGS = -version-info $(SOVERSION):0 
@@ -74,7 +76,9 @@ noinst_HEADERS=CBoolConfigParam.h \
 	CConfigurableObject.h	\
 	CReadableObject.h	\
 	CReadException.h	\
-	CPacketCreator.h        
+	CPacketCreator.h        \
+	CEnumParameter.h        \
+	CSIS3300Creator.h CSIS3300Module.h
 
  
 
@@ -120,25 +124,15 @@ EXTRA_DIST=Makefile.skel scriptedreadout_Makefile.include
 #  in                                     .../skel
 #
 install-exec-local:
-	#
-	#  Make my directory hierarchy.
-	#
 	$(mkinstalldirs)     $(prefix)/contrib
 	$(mkinstalldirs)     $(prefix)/contrib/scriptedReadout
 	$(mkinstalldirs)     $(prefix)/contrib/scriptedReadout/include
 	$(mkinstalldirs)     $(prefix)/contrib/scriptedReadout/skel
 	$(mkinstalldirs)     $(prefix)/contrib/scriptedReadout/src
-	#
-	#   put the raw files where they belong:
-	#
 	$(INSTALL_DATA)   *.cpp $(prefix)/contrib/scriptedReadout/src
 	$(INSTALL_DATA)   *.h   $(prefix)/contrib/scriptedReadout/include
 	$(INSTALL_DATA)  skeleton.cpp  ReadoutMain.cpp \
 				$(prefix)/contrib/scriptedReadout/skel
-	#
-	#   Now build Makefile from Makefile.skel along with other stuff
-	#   that autoconf has figured out for us:
-	#
 	echo INSTDIR=$(prefix)                                 > Makefile.user
 	cat  Makefile.skel                                    >> Makefile.user
 	$(INSTALL_DATA) Makefile.user \
