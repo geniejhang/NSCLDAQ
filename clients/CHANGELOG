@@ -884,3 +884,6 @@ Sept. 10,2007    - BZ320 - Added conditional compilations to the xxxmacros.h hea
                            so VPacket etc. work for HP readouts.
                          - Added -DHP to makefile includes for HPReadout and HPPreadout
                            so they get the right macros.
+Oct 11, 2007     - Correct offsets to entities in scaler buffers in docs.
+
+Oct 11, 2007  - 8.1-004 released.
