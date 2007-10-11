@@ -16,7 +16,7 @@ SPECTRO_LDFLAGS=$(shell $(spectrodaq_conf_dir)/spectrodaq-conf --libs)
 
 VME=$(shell $(BINDIR)/VmeDevice)
 OS=$(shell uname | sed s/-//)
-LD=g++
+LD=$(CXX)
 LDFLAGS=-g 
 
 
@@ -34,19 +34,17 @@ LIBFLAGS=-L. -L$(LIBDIR)  -L/usr/X11R6/lib -lPReadout \
 COMPILEFLAGS=  -c -ggdb -I. -I$(INCLUDEDIR) $(CAMAC) \
 	-D$(OS) -I/usr/include/tcl  $(SPECTRO_FLAGS) 
 
-CPP=g++ $(COMPILEFLAGS)
-CC=gcc $(COMPILEFLAGS)
 
 #
 #   Default rule to build an object from a C++ file.
 #
 .cpp.o:
-	$(CPP) $<
+	$(CXX) $(COMPILEFLAGS) $<
 #
 #  Default rule to build an object from a C file.
 #
 .c.o:
-	$(CC) $<
+	$(CC) $(COMPILEFLAGS) $<
 
 #
 #  Add any additional objects you need to build to this line.
