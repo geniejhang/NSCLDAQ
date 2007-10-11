@@ -1,4 +1,4 @@
-INSTDIR=/scratch/fox/daq/8.0test
+INSTDIR=/usr/opt/daq/8.0
 #  The line above is written by the installation procedure.
 #
 #  Makefile to build a readout program given the stuff in the standard
@@ -44,7 +44,7 @@ PROGOBJS=ReadoutMain.o skeleton.o
 ###################
 
 Program: $(PROGOBJS)
-	g++ -o Readout $(PROGOBJS) $(USERLDFLAGS) $(LDFLAGS)
+	$(CXXLD) -o Readout $(PROGOBJS) $(USERLDFLAGS) $(LDFLAGS)
 
 
 clean: 

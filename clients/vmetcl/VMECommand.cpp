@@ -281,6 +281,8 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <config.h>
 #include "VMECommand.h"    				
 #include "TCLString.h"
+
+#include <MmapError.h>
 #include <vector>
 #include <unistd.h>
 #include <fcntl.h>
@@ -527,12 +529,32 @@ int CVmeCommand::AddMap(CTCLInterpreter& rInterp,
 
   CVmeModule::Space space = UserToLogical(devname);
 
-  CVMEMapCommand* pMap = new CVMEMapCommand(mapname,
-					    &rInterp,
-					    nBase, nSize, nCrate,
-					    space);
-  m_Spaces[mapname] = pMap;
-  rResult = mapname;
+  try {
+    CVMEMapCommand* pMap = new CVMEMapCommand(mapname,
+					      &rInterp,
+					      nBase, nSize, nCrate,
+					      space);
+    m_Spaces[mapname] = pMap;
+    rResult = mapname;
+    
+  }
+  catch (CMmapError& error) {
+    rResult = error.ReasonText();
+    return TCL_ERROR;
+  }
+  catch (string& msg) {
+    rResult = msg;
+    return TCL_ERROR;
+  }
+  catch (char* pmsg) {
+    rResult = pmsg;
+    return TCL_ERROR;
+  }
+  catch (...) {
+    rResult = "Unexpected exception caught while mapping";
+    return TCL_ERROR;
+  }
+
 
   return TCL_OK;
 }
@@ -718,6 +740,7 @@ CVmeCommand::MatchSwitch(const char* pSwitch)
 unsigned long
 CVmeCommand::TextToULong(const char* text)
 {
+  errno = 0;
   unsigned long result = strtoul(text, NULL, 0);
   if(errno) {
     string message = strerror(errno);

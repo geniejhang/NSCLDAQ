@@ -283,6 +283,11 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
    
    Modification History:
    $Log$
+   Revision 1.3.2.1  2005/08/25 22:41:01  ron-fox
+   Fix issue where if (HP)ProductionReadout has an empty event buffer at
+   the end of a run, it emits that at the beginning of the next run with the
+   incorrect sequence number.
+
    Revision 1.3  2005/05/02 14:16:43  ron-fox
    Fix defect 158: Events with empty body are included in buffer.  In
    Readout Classic, this was not the case.  Fixed in ProductionReadout
@@ -985,9 +990,9 @@ CExperiment::TriggerScalerReadout()
       m_EventBuffer->SetRun(GetRunNumber());
       m_EventBuffer->Resize(m_nBufferSize);
       m_EventBuffer->Route();
-      delete m_EventBuffer;
-      m_EventBuffer = 0;
     }
+    delete m_EventBuffer;
+    m_EventBuffer = 0;
   }
 
   //

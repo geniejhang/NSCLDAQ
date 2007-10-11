@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libSecurity.la
-libSecurity_la_SOURCES = AccessListCheck.cpp AuthTokenCheck.cpp \
-	DAQAuthTokenInteractor.cpp FdInteractor.cpp HostListCheck.cpp \
+libSecurity_la_SOURCES = AccessListCheck.cpp  \
+	FdInteractor.cpp HostListCheck.cpp \
 	IOInteractor.cpp Interactor.cpp PasswordCheck.cpp  \
 	StringInteractor.cpp TclAccessListCheck.cpp UnixUserCheck.cpp
 include_HEADERS = AccessListCheck.h AuthTokenCheck.h Authenticator.h \
@@ -16,10 +16,12 @@ if CPPUNIT
 
 noinst_PROGRAMS = unittests
 
-unittests_SOURCES = test.cpp AccessListCheck.cpp AuthTokenCheck.cpp \
-	DAQAuthTokenInteractor.cpp FdInteractor.cpp HostListCheck.cpp \
-	IOInteractor.cpp Interactor.cpp PasswordCheck.cpp  \
-	StringInteractor.cpp TclAccessListCheck.cpp UnixUserCheck.cpp
+unittests_SOURCES = test.cpp 
+
+unittests_DEPENDENCIES = AccessListCheck.$(OBJEXT)  \
+	 FdInteractor.$(OBJEXT) HostListCheck.$(OBJEXT) \
+	IOInteractor.$(OBJEXT) Interactor.$(OBJEXT) PasswordCheck.$(OBJEXT)  \
+	StringInteractor.$(OBJEXT) TclAccessListCheck.$(OBJEXT) UnixUserCheck.$(OBJEXT)
 
 unittests_LDADD = -L@top_srcdir@/TCL -lTclPlus -L@top_srcdir@/Exception -lException \
 	$(SPECTRODAQ_LDFLAGS) $(TCL_LDFLAGS)

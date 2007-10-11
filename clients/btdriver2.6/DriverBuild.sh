@@ -9,26 +9,65 @@
 #    Redhat:  /usr/src/linux-<version>
 #
 
-version="$(uname -r | cut -f1 -d-)"
+#  Note that you may need to edit
+#  the code below up to the ---- line so that the
+#  symbol Linuxsrc points to the directory
+#  that has to kernel sources.. configured as per the running kernel
+#
+
+Linuxsrc=$1
+
+version="$(uname -r)"
 Debiansrc="/usr/src/kernel-source-${version}"
 RedHatsrc="/usr/src/linux-${version}"
 
 #  Figure out which it is:
 
-if [ -d $Debiansrc ] 
+if [ "$Linuxsrc" == "" ]
 then
-Linuxsrc="$Debiansrc"
+
+    if [ -d $Debiansrc ] 
+    then
+	Linuxsrc="$Debiansrc"
+    fi
+
+    if [ -d $RedHatsrc ]
+    then
+	Linuxsrc="RedHatsrc"
+    fi
 fi
 
-if [ -d $RedHatsrc ]
+#  Still can't find kernel sources.. ask for one:
+
+
+if [ "$LinuxSrc" == "" ]
 then
-Linuxsrc="RedHatsrc"
+    echo -n Unable to locate the kernel source directory where is it:
+    read Linuxsrc
 fi
 
+
+#-------------------------------------------------
+#
+#  At this point, Linuxsrc must point to the
+#  directory that contains the kernel sources configured
+#  for the running kernel.
+#  As a last resort, uncomment the line below and fill in 
+# the correct definition:
+#Linuxsrc=replace-this-with-the-correct-directory
+
+#
+#  Everything below should be relatively system independent.
+#
+#------------------------------------------------------------
 BTDRIVER=$(pwd)
 
 pushd dd
-make -C $Linuxsrc SUBDIRS=$(pwd) modules BTDRIVER=${BTDRIVER}
+
+# Always make from scratch:
+
+rm -f *.o
+make -C $Linuxsrc SUBDIRS=$(pwd) modules BTDRIVER=${BTDRIVER} 
 
 
 

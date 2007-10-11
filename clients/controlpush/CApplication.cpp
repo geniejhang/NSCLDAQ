@@ -63,6 +63,7 @@ While true {
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;

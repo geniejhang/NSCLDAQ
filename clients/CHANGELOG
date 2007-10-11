@@ -438,4 +438,121 @@ May 9, 2005
 May 13, 2005
      - Deal with improper lists in comment lines of channel files for 
        epicsdisplay
-8.0-001
+8.0-002 
+     - Make vmetcl error messages on access failure more intelligible.
+     - DeviceSupport - fix initialization of sis3300 to give complete control
+       over gate mode and source, RCM in both acq and event control register.
+       and update buffer pointer on read.
+8.0-003
+     - Fix defect in DeviceSupportMakefile: did not integrate sis3600 support
+     - Fix defect in scaler display: Pathalogical names like:
+       {this is a "pathalogical" name} can cause problems.
+8.0-004
+     - Fix defect in HP production readout:  CDocumentedPacket did not
+       get converted to use ushort* instead of DAQWordBufferPtr&  
+     - Remove lock button from shaper gui until we can get it implemented
+       correctly.
+8.0-005
+     - Fix defect 187 - eventlog crashes when joining in the middle of a run.
+     - Fix defect (unnumbered) - (HP)ProductionReadout can emit the first
+       data buffer with the wrong sequence number.  This happens if at the
+       end of a run the Event data buffer did not yet have any events
+       in it... in that case it would not be destroyed and the first events
+       of the next run would be assigned the next sequence number in the
+       prior run.
+     - Fix defect, unnumbered with Vme Tcl loadable package processing
+       offsets.>
+8.0-006
+     - Fix defect with CSIS3600 support: Needed to add the 
+       functions to enable/disable and check the enable state of
+       external latch next event.
+     - Fix defect with Stager/Experiment.tcl ; orphaned event file
+       links were just mv'd had to be regenerated since the event
+       file got moved to the stagearea/complete dir not stagearea/current.
+     - Fix defect in controlpush: It is not sufficient to rely on 
+       epics to provide correct stringified versions of the channel values,
+       back port of fix for defect 189 : Added type sensitive channel
+       fetching and let controlpush figure out how to convert the result
+       into strings.
+     - fix string->std(STRING) in controlpush/CChannel.h.
+     - Work around exception handling problems in g++-3.3 when exceptions
+       get rethrown around and between shared libs.
+     - Added TclLibs link so that .so's don't need LD_LIBRARY_PATH if
+       auto_path points to $(prefix).
+8.0-007
+     - Fix incorrect parameter type declaration in CCAMACScalerLRS2551::Read
+       member.
+     - Do direct event logging..not ftp.
+     - Fix race condition between sclclient and ScalerDisplay script.
+       Evidently there are cases where the connection can be accepted in
+       the Tcp/IP sense by not correctly setup to receive data in te Tcl sense.
+       Thanks to Kevin Carnes who ran into this.
+     - Revert the assumption that CAEN 785 (e.g.) firmware 8.08 and higher
+       don't corrupt the word count in the header... 8.08 does in any event.
+     - bcnaf.tcl : it and its dependent scripts get installed with the .tcl
+       removed from their names, bcnaf.tcl was looking for e.g.
+       cesbcnaf.tcl not cesbcnaf... fix that... Thanks to Alexandra Gade
+       for pointing that one out.
+     - CCAMACScalerLRS4434 - Correct signature on Read members.
+     - Added replaceState to Readout's StateMachine class.
+8.0-008
+     Released to the public in Sept. 21, 2006
+
+8.0-009
+     Install CHANGELOG to top level directories.
+     Fix defect 231 - missing gdbm.h or libgdbm should cause
+     config to fail rather than emitting broken Makefiles.
+     Fix defect 233 - CCAMACScalerLRS4434 did not read channels correctly.
+     Fix error in skeleton makefiles for Readout branch.. need to know
+     about the VME api library.
+     Fix issue with bcnaf.tcl - the load of vmetcl was causing exec
+     to think there was a child process failure because the
+     license notice was output to stderr.
+     Fix error in burngui - was not locating its gui script
+     when installed.
+
+Released January 15, 2007
+
+8.0-010
+  March 8, 2007 - Make event files readonly as they get finalized.
+  March 13, 2007 - Make ~stagearea/complete write protected except when
+                   it has to be.
+  April 2, 2007 - Fix up 2.6 build so that lib and include get installed...
+                  and can be cleaned.
+                - Fix a bunch of stuff with the 2.6 build that arises
+                  on make dist and building from the tarball.
+                  (mostly copying stuff from the 8.1 build files.
+  April 3, 2007 - Make sure the right compilers link the readout skels.
+  April 26,2007 - Adjust the framework makefile so that template
+                  class implementations will get installed in the
+                  include directory to allow them to be used in application
+                  software.
+                - Ensure the SBS driver is identical to the 2.6 version
+                  of the drive in the 8.1 branch.
+                - Make sure top level Makefile builds the dir hierarchy.
+Released April 26, 2007
+
+8.0-011
+  May 10, 2007  - Initialize errno in VMECommand.cpp 'cause strtoul doesn't
+                  do it correctly.
+  June 19, 2007 - Fix error in sis3300.cpp 16k samples were treated like
+			64k.
+  July 15, 2007 - Add emptyEnable/Disable functions to CAENcard.cpp
+                - Fix error in copyin #ifdef branch of SIS3300.. wonder how
+                  that managed to stay there.
+  July 17, 2007 - Another catch by Dave Caussyn at FSU, HPPReadout,
+                  CNSCLPhysisBuffer and CExperiment conspire to randomly
+                  drop partial event buffers forced out by scalers
+                  because the entity count in the spectrodaq buffer is
+                  uninitialized (and therefore sometimes zero), not updated
+                  until the buffer is routed, but checked to determine
+                  if there's a partial buffer to submit...so if the
+                  uninitialized entity count happens to be zero, the 
+                  buffer will get dropped.
+  August 27,2007 - Fix bt driver to compile correctly on 2.6.22
+                 - Make DriverBuild prompt for kernel src dir if it 
+                   can't auto find it.
+  August 28, 2007 - add <stdio.h> to contropush/CApplication.cpp so that
+                   it compiles on 2.95
+  Sept 10, 2007  - Ensure that VPacket is correctly generated for HP versions.
+  Oct 11, 2007   - Correct documentation on offsets in to scaler buffers.

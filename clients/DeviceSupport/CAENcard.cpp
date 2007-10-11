@@ -279,6 +279,13 @@ DAMAGES.
 /*
   Change Log:
   $Log$
+  Revision 4.6.2.2  2007/07/15 14:35:13  ron-fox
+  Add emptyEnable/Disable to CAENcard.
+
+  Revision 4.6.2.1  2006/05/15 14:24:55  ron-fox
+  Revert the assumption that 8.08 and higher firmware don't corrupt
+  the word count..as they do
+
   Revision 4.6  2005/05/24 11:08:00  ron-fox
   Minor commits and open 8.0-001 edit level
 
@@ -407,6 +414,10 @@ using namespace std;
 #define KEEPINVALID 0x020
 #define COMMONSTOP  0x400
 #define STEPTHR     0x100
+#define AUTOIN      0x800
+#define EMPTY       0x1000
+#define SLIDESUB    0x2000
+#define ALLTRG      0x4000
 
 // Control register1:
 
@@ -882,7 +893,27 @@ CAENcard::discardInvalidData()
     throw string("discardInvalidData - Module is not a V775 TDC");
   }
 }
-
+/*!
+ * Enable the production of a header/trailer if the module was 
+ * gated but had no channels with valid conversions.
+ * (e.g. set the EMPTY bit in the BIS2 register.
+ */
+void
+CAENcard::emptyEnable()
+{
+	Bitset2(EMPTY);
+}
+/*!
+ * Disable the production of header/trailer if the module
+ * was  gated but had no channels with valid conversions
+ * This is the power up default.
+ * (clear the EMPTY bit in the BIC2 register.
+ */
+void
+CAENcard::emptyDisable()
+{
+	Bitclear2(EMPTY);
+}
 /*!
 
   Sets a TDC to common start mode.  In this mode, time is measured
@@ -1486,9 +1517,9 @@ void CAENcard::MapCard()
    m_nHardwareRev = pRom->peekw(ShortOffset(ROM, Revision));
    delete pRom;
 #else   
-   m_nCardType = pRom->BoardIdMSB << 16 |
-                 pRom->BoardId    <<  8 |
-                 pRom->BoardIdLSB;
+   m_nCardType = (pRom->BoardIdMSB & 0xff) << 16 |
+                 (pRom->BoardId & 0xff)    <<  8 |
+                 (pRom->BoardIdLSB & 0xff);
    m_nSerialno  = pRom->SerialMSB << 8 |
                  pRom->SerialLSB;
    m_nHardwareRev = pRom->Revision;

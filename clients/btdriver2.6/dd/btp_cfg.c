@@ -38,6 +38,10 @@ static const char driver_version[] = "$Name$";
 #include <linux/interrupt.h>
 #endif
 
+#if  LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,11) 
+#define pci_find_class pci_get_class
+#endif
+
 #if     0 && !defined(NDEBUG)
 
 #define DEBUG_INIT_SEQUENCE 1   /* For when you need the init_fail() routine */
@@ -126,11 +130,20 @@ struct file_operations btp_fops = {
 ******************************************************************************/
 
 unsigned int bt_major = 0;      /* Default major device number */
+#ifdef MODULE_PARM
 MODULE_PARM(bt_major, "i");
+#else
+module_param(bt_major, int, 0);
+#endif
+
 MODULE_PARM_DESC(bt_major, "Default major device number, 0 == auto configure it.");
 
 unsigned long trace = 0;        /* Device driver trace level */
+#ifdef MODULE_PARM
 MODULE_PARM(trace, "l");
+#else
+module_param(trace, long, 0);
+#endif
 MODULE_PARM_DESC(trace, "Bit mask of module tracing flags.");
 
 unsigned int icbr_q_size[BT_MAX_UNITS+1] = {
@@ -140,7 +153,14 @@ unsigned int icbr_q_size[BT_MAX_UNITS+1] = {
     DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE,
 
 };
+#ifdef MODULE_PARM
 MODULE_PARM(icbr_q_size, "i");
+#else
+/* This fails on 2.6.22 - not sure how to fix this but can just leave it
+   unconfigurable ...
+*/
+/*  module_param(icbr_q_size, int, DEFAULT_Q_SIZE);      */ 
+#endif
 MODULE_PARM_DESC(icbr_q_size, "Number of entries to create in the interrupt callback routine (ICBR) queue.");
 
 unsigned long lm_size[BT_MAX_UNITS+1] = {
@@ -150,9 +170,12 @@ unsigned long lm_size[BT_MAX_UNITS+1] = {
     DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE,
     
 };
-
+#ifdef MODULE_PARM
 MODULE_PARM(lm_size,"0-" __MODULE_STRING(BT_MAX_UNITS) "l");
 MODULE_PARM_DESC(lm_size, "Per unit array given the size of the local memory device. Default " __MODULE_STRING(DEFAULT_LMEM_SIZE) ".");
+#else
+/*   Not quite sure how to fix this, but can just leave it unconfigurable. */
+#endif
 
 MODULE_AUTHOR("SBS Technologies, Inc.");
 MODULE_DESCRIPTION("Device driver for SBS Technologies Connectivity Products PCI-VMEbus adapters.");
@@ -1913,7 +1936,9 @@ static int init_isr (
     /* 
     ** Register the ISR 
     */
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)              /* Need to refine the actual minor version */
+    ret_val = request_irq((unsigned int)unit_p->irq, btk_isr, (unsigned long)IRQF_SHARED, bt_name_gp, (void *) unit_p);
+#elif     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
     ret_val = request_irq((unsigned int)unit_p->irq, btk_isr, (unsigned long)SA_SHIRQ, bt_name_gp, (void *) unit_p);
 #else
     ret_val = request_irq(unit_p->irq, btk_isr, SA_SHIRQ, bt_name_gp, (void *) unit_p);
@@ -2344,7 +2369,7 @@ static int init_swapping (
 #endif  /* EAS_A64_CODE */
               unit_p->swap_bits[inx] = BT_SWAP_NONE;
             } else {
-              unit_p->swap_bits[inx] = BT_SWAP_VMEBUS;
+              unit_p->swap_bits[inx] = BT_SWAP_NONE;    // Don't know why but this is right.
             }
             break;
         }
