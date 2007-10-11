@@ -1,4 +1,17 @@
 lib_LTLIBRARIES= libEventFramework.la
+TEMPLATE_IMPLEMENTATIONS= CArrayBinding.cpp                      \
+	CAssocArrayBinding.cpp	                        \
+	CBufferEvent.cpp                                \
+	CBufferMonitor.cpp                              \
+	CBufferReactor.cpp                              \
+	CChangedPredicate.cpp                           \
+	CLocationMonitor.cpp                            \
+	CLocationEvent.cpp                             \
+	CLocationReactor.cpp                           \
+	CMaskedValuePredicate.cpp                       \
+	CPointerPredicate.cpp                           \
+	CVariableBinding.cpp      
+
 libEventFramework_la_SOURCES= CThreadRecursiveMutex.cpp  \
 	CEventLoop.cpp CXtEventLoop.cpp \
 	CApplicationSerializer.cpp  \
@@ -150,3 +163,6 @@ install-data-local:
 	  $(INSTALL_DATA) $$f $(prefix)/Docs/Framework; \
         done) \
 	fi
+	$(mkinstalldirs) $(prefix)/include
+	$(INSTALL_DATA) $(TEMPLATE_IMPLEMENTATIONS) $(prefix)/include
+
