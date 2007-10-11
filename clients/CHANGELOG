@@ -205,3 +205,5 @@ Released April 26, 2007
                   permissions games to try to protect from ovewrites.
   June 19, 2007 - Fix error in sis3300.cpp 16k samples were being
                   treated like 64k
+
+October 11, 2007 7.4-011 released, end of life announced
