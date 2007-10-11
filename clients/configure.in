@@ -6,7 +6,7 @@ AM_CONFIG_HEADER(config.h)
 
 #    Separate device libraries.
 
-AM_INIT_AUTOMAKE(nscldaq, 8.1-003)  
+AM_INIT_AUTOMAKE(nscldaq, 8.1-004)  
 
 #
 #   The variable below should track the
@@ -543,7 +543,8 @@ case "$vmeinterface" in
 
 	    VME_DRIVERDIR="btdriver"
 	    VMEBUILDHEADERS="-I$(pwd)/btdriver/include"
-	    VMEBUILDLIBS="-L$(pwd)/btdriver/lib -lbtp -lpthread"
+	    VMEBUILDLIBS="$(pwd)/btdriver/lib/libbtp.la -lpthread"
+#	    VMEBUILDLIBS="-L$(pwd)/btdriver/lib -lbtp -lpthread"
 						
             # Build/install the 2.4 driver (you must be root).
 
@@ -556,12 +557,13 @@ case "$vmeinterface" in
 	    ;;
 	 2.6)
 	    VME_DRIVERDIR="btdriver2.6"
-	    VMEBUILDHEADERS=-I$(pwd)/btdriver2.6/include
-	    VMEBUILDLIBS="-L$(pwd)/btdriver2.6/lib -lbtp -lpthread"
+	    VMEBUILDHEADERS="-I$(pwd)/btdriver2.6/include"
+	    VMEBUILDLIBS="$(pwd)/btdriver2.6/lib/libbtp.la -lpthread"
+#	    VMEBUILDLIBS="-L$(pwd)/btdriver2.6/lib -lbtp -lpthread"	
 
 	    # build/install the 2.6 driver (you must be root)
 
-	    (cd btdriver2.6;./configure --prefix=$prefix;make clean;make; make -k install)
+	    (cd btdriver2.6;./configure --prefix=$prefix;make clean;make; make -k install KERNEL_SRC=$KERNEL_SRC)
 	    ;;
 	*)
 	    AC_MSG_ERROR([SBS bit3 driver can only be built on 2.4 or 2.6 kernel this is $kernel_version])

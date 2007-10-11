@@ -32,6 +32,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <string>
 #include <buftypes.h>
 #include <CVMEInterface.h>
+#include <stdint.h>
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
 #endif
@@ -287,12 +288,22 @@ CReader::OverFlow(DAQWordBufferPtr& rLastEventPtr)
   // because in general they will be faster for objects since they avoid
   // copy construction.
   
-  while(nWords) {
+  // Use copy in/copy out to do this.. most quickly...
+
+#ifdef COPYOUT_WORKS  
+  uint16_t *pTempBuffer = new uint16_t[nWords];
+  rLastEventPtr.CopyOut(pTempBuffer, 0, nWords);
+  EventPtr.CopyIn(pTempBuffer, 0, nWords);
+  delete []pTempBuffer;
+
+#else
+  for (int i= 0; i < nWords; i++) {
     *EventPtr = *rLastEventPtr;
-    ++EventPtr;
-    ++rLastEventPtr;
-    nWords--;
+    EventPtr += 1;
+    rLastEventPtr += 1;
   }
+#endif
+
   // Flush the existing buffer:
 
   FlushBuffer();

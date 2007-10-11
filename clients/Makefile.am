@@ -60,4 +60,15 @@ install-data-local:
 
 
 
+#
+#  Need to be sure that the btdriver directories are cleaned up:
+#
 
+dist-hook:
+	rm -f $(distdir)/btdriver/dd/*.o
+	rm -f $(distdir)/btdriver/lib/*.lo 
+	rm -rf $(distdir)/btdriver/lib/.libs
+	rm -f $(distdir)/btdriver2.6/dd/.bt*.o.*
+	rm -rf $(distdir)/btdriver2.6/dd/.tmp_versions
+	rm -f  $(distdir)/btdriver2.6/lib/*.lo
+	rm -rf $(distdir)/btdriver2.6/lib/.libs

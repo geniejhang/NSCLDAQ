@@ -134,9 +134,9 @@ ReadoutStateMachine::ReadoutStateMachine() :
     m_pPaused   = new Paused;
     m_pExiting  = new Exiting;
     
-    AddState(m_pInactive, string("INACTIVE"));
-    AddState(m_pActive,   string("ACTIVE"));
+    AddState(m_pInactive, string("INACTIVE")); // must be first!
     AddState(m_pPaused,   string("PAUSED"));
+    AddState(m_pActive,   string("ACTIVE"));
     AddState(m_pExiting,  string("EXITING"));
     
     char filename[100];
@@ -392,10 +392,10 @@ ReadoutStateMachine::GetBuffer(unsigned nWords)
 
   DAQWordBuffer* pBuffer;
   
-  mydaq.SetProcessTitle("Readout - Get");
+  //  mydaq.SetProcessTitle("Readout - Get");
   pBuffer =  new DAQWordBuffer(nWords);
   pBuffer->SetTag(DAQ_EVENTS);	// Tag by default as event data.
-  mydaq.SetProcessTitle("Readout");
+  // mydaq.SetProcessTitle("Readout");
   return pBuffer;
 
 
@@ -726,9 +726,9 @@ ReadoutStateMachine::EmitControlBuffer(INT16 nBufferType)
 
   FormatHeader(Buf, pBuf.GetIndex() - pStart.GetIndex(),
 	       nBufferType, 0);
-  mydaq.SetProcessTitle("Readout Route");
+  //  mydaq.SetProcessTitle("Readout Route");
   Buf->Route();
-  mydaq.SetProcessTitle("Readout");
+  //  mydaq.SetProcessTitle("Readout");
   delete Buf;
   
 }
@@ -803,9 +803,9 @@ ReadoutStateMachine::EmitScalerBuffer(INT16 nBufferType, unsigned nLastTime)
   FormatHeader(Buf, pBuf.GetIndex() - pStart.GetIndex(), 
 	       nBufferType, nScalers);
 
-  mydaq.SetProcessTitle("Readout Routing");
+  //  mydaq.SetProcessTitle("Readout Routing");
   Buf->Route();
-  mydaq.SetProcessTitle("Readout");
+  //  mydaq.SetProcessTitle("Readout");
 
   // Done with the buffers.
 

@@ -38,7 +38,7 @@ class CCAENV977;
     use this.
 */
 
-class CTraditionalV977Trigger : public CTrigger
+class CTraditionalV977Trigger : public Trigger
 {
 private:
   CCAENV977& m_Module;

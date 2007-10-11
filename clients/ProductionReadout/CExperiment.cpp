@@ -74,7 +74,7 @@ using namespace std;		// need this here for spectrodaq.
 #include <Iostream.h>
 #include <algorithm>
 #include <tcl.h>
-
+#include <stdint.h>
 
 
 using namespace DesignByContract;
@@ -1241,10 +1241,28 @@ CExperiment::Overflow(unsigned short*  header,
    DAQWordBufferPtr    pDest      = pNewBuffer->StartEvent();
    DAQWordBufferPtr    pSrc       = header;
    DAQWordBufferPtr    pEnd       = end;
-   while(pSrc != pEnd) {
-      *pDest = *pSrc;
-      ++pDest; ++pSrc;                // Preinccrement is fastest.
+   
+   // Use copyout/copyin to move the partial event to the
+   // new buffer.  This is faster than a copy loop for 
+   // reasonably sized events.
+   
+   int eventSize = pEnd.GetIndex() - pSrc.GetIndex(); // (words).
+#ifdef COPYOUT_GOOD
+   uint16_t* tempData = new uint16_t[eventSize];   // Copy Out target.
+   pSrc.CopyOut(tempData, 0, eventSize);           // Get the partial event...
+   pDest.CopyIn(tempData, 0, eventSize);           // Insert the new event.
+   pDest += eventSize;
+   delete []tempData;                              // Get rid of the temp storage.
+#else
+   /// COPYOUT is broken evidently.
+   for (int i=0; i < eventSize; i++) {
+     *pDest = *pSrc;
+     pSrc += 1;
+     pDest+= 1;			//  probably faster than ++
    }
+#endif
+
+
    pNewBuffer->EndEvent(pDest);
 #else /* HIGH_PERFORMANCE */
    unsigned short*    pDest      = pNewBuffer->StartEvent();
@@ -1306,4 +1324,21 @@ CExperiment::GetElapsedTime() const
   // Note that CTimer::GetElapsedTime's units are ms.
 
   return (MyApp.getClock().GetElapsedTime()) / 100;
+}
+/*!
+ *   Set a new buffer size.  Should not be done when
+ * the run is active.
+ */
+void
+CExperiment::setBufferSize(unsigned nBufferSize)
+{
+   m_nBufferSize = nBufferSize;
+   // Toss any existing event buffer...
+   //
+   if (m_EventBuffer) {
+	   cerr << "Buffer size reset while CExperiment had a buffer\n";
+	   cerr << "The buffer will be deleted without routing\n";
+	   delete m_EventBuffer;
+	   m_EventBuffer = static_cast<CNSCLPhysicsBuffer*>(NULL);
+   }
 }

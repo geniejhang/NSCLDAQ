@@ -319,7 +319,7 @@ public:
     Paused
   } RunState;
 private:
-  enum RunState m_eState; //!< Value of the state
+  RunState m_eState; //!< Value of the state
   STD(map)<enum RunState,STD(string)> 
          m_StatesByValue; //!< State names looked up by state value.
   STD(map)<STD(string),enum RunState> 

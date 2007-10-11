@@ -279,6 +279,9 @@ DAMAGES.
 /*
   Change Log:
   $Log$
+  Revision 8.6.2.1  2007/07/15 14:33:57  ron-fox
+  Add emptyEnable/Disable to CAENcard.
+
   Revision 8.6  2006/05/15 14:29:45  ron-fox
   Little misc. changes..
 
@@ -425,6 +428,11 @@ using namespace std;
 #define KEEPINVALID 0x020
 #define COMMONSTOP  0x400
 #define STEPTHR     0x100
+#define AUTOIN      0x800
+#define EMPTY       0x1000
+#define SLIDESUB    0x2000
+#define ALLTRG      0x4000
+
 
 // Control register1:
 
@@ -924,6 +932,27 @@ CAENcard::discardInvalidData()
   {
     throw string("discardInvalidData - Module is not a V775 TDC");
   }
+}
+/*!
+ * Enable the production of a header/trailer if the module was 
+ * gated but had no channels with valid conversions.
+ * (e.g. set the EMPTY bit in the BIS2 register.
+ */
+void
+CAENcard::emptyEnable()
+{
+	Bitset2(EMPTY);
+}
+/*!
+ * Disable the production of header/trailer if the module
+ * was  gated but had no channels with valid conversions
+ * This is the power up default.
+ * (clear the EMPTY bit in the BIC2 register.
+ */
+void
+CAENcard::emptyDisable()
+{
+	Bitclear2(EMPTY);
 }
 
 /*!

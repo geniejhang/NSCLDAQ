@@ -31,7 +31,16 @@ using namespace std;
 #endif
 #endif
 
+#ifndef __STL_MAP
+#include <map>
+#ifndef __STL_MAP
+#define __STL_MAP
+#endif
+#endif
 
+// Forward classes:
+
+class CBufferManager;
                                
 /*!
    CNSCLOutputBuffer is the base class of a class
@@ -49,25 +58,27 @@ using namespace std;
  */		
 class CNSCLOutputBuffer      
 { 
+private:
+  typedef std::map<int, CBufferManager*>  BufferManagers;
 protected:
-  static int m_ControlTag;
-  static int m_EventTag;
+  static int             m_ControlTag;
+  static int             m_EventTag;
+  static BufferManagers   m_Managers;
 protected:
-  DAQWordBuffer m_Buffer; //!< Spectrodaq Buffer to hold the data being emitted.
+  DAQWordBuffer& m_Buffer; //!< Spectrodaq Buffer to hold the data being emitted.
+  DAQWordBuffer* m_pBuffer; // Real address of the buffer.
 private:
   DAQWordBufferPtr m_BufferPtr; //!< 'pointer' to the current slot of the buffer.
   int m_nWords; //!< Number of words the buffer can hold.
   static  unsigned long m_nSequence; //!< Sequence number for the buffer.
+  CBufferManager*       m_myManager; // Manager for my buffer.
+  
  
 public:
 	// Constructors, destructors and other cannonical operations: 
 
     CNSCLOutputBuffer (unsigned nWords=4096); //!< Default constructor.
-#ifndef HIGH_PERFORMANCE
-     ~ CNSCLOutputBuffer ( ) { } //!< Destructor.
-#else /* HIGH_PERFORMANCE */
-    virtual  ~ CNSCLOutputBuffer ( ) { } //!< Destructor.
-#endif /* HIGH_PERFORMANCE */
+    virtual  ~ CNSCLOutputBuffer ( );         //!< Destructor.
 
   // Copying DAQ buffers is not legal so the various copy stuff is
   // illegal too.
@@ -139,6 +150,7 @@ public:
      static void ClearSequence ()  ;
 protected:
      void InitializeHeader();
+     static DAQWordBuffer* getBuffer(int nWords, CNSCLOutputBuffer* object);
 };
 
 #endif
