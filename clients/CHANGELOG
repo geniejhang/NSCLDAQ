@@ -556,3 +556,7 @@ Released April 26, 2007
                    it compiles on 2.95
   Sept 10, 2007  - Ensure that VPacket is correctly generated for HP versions.
   Oct 11, 2007   - Correct documentation on offsets in to scaler buffers.
+
+Oct 11, 2007 8.0-011 released
+
+8.0-012:
