@@ -391,7 +391,7 @@ CSIS3300::SetSampleSize(SampleSize ePagesize)
     m_nPagesize = 128*K;
     break;
   case Sample16K:
-    m_nPagesize = 64*K;
+    m_nPagesize = 16*K;
     break;
   case Sample4K:
     m_nPagesize = 4*K;
@@ -568,15 +568,7 @@ CSIS3300::InitDaq()
   if(m_fGateMode) {
     csrmask |= DAQEnableGateMode;
   }
-  /* Added by M. Famiano  to Enable the HiRA RCM */
-
-  if(m_fRandomClock) {
-    csrmask |= DAQEnableRandomClock;
-    csrmask |= (Internal100Mhz << DAQClockSetShiftCount);
-  }
-  else {
     csrmask |= (m_eClock << DAQClockSetShiftCount) ;
-  }
 
 
 
