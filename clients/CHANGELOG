@@ -560,3 +560,5 @@ Released April 26, 2007
 Oct 11, 2007 8.0-011 released
 
 8.0-012:
+   October 20, 2007 - Set bytes swap mode on open to 
+                      BT_SWAP_NONE
