@@ -887,3 +887,6 @@ Sept. 10,2007    - BZ320 - Added conditional compilations to the xxxmacros.h hea
 Oct 11, 2007     - Correct offsets to entities in scaler buffers in docs.
 
 Oct 11, 2007  - 8.1-004 released.
+8.1-005   
+October 20, 2007 - Set the byte swap mode on the SBS interface to
+                   BT_SWAP_NONE on open
