@@ -160,6 +160,7 @@ protected:
 #endif /* ! HIGH_PERFORMANCE */
 public:
   void setBufferSize(unsigned nBufferSize);
+  unsigned getBufferSize() const;
   
   // Class operations:
 public:
