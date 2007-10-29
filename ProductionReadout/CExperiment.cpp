@@ -99,7 +99,7 @@ tooBigAnEvent(unsigned int eventSize, unsigned int bufferSize)
   cerr << "Experiment's readout code attempted to read an event that "
        << " would not fit in a buffer\n";
   cerr << "Event size: " << eventSize << " buffer Size: " << bufferSize << endl;
-  cerr << "The event will be discared.  If you get a lot of thse message, ";
+  cerr << "The event will be discared.  If you get a lot of these messages, ";
   cerr << "you should consider increasing the buffer size\n";
 }
 
