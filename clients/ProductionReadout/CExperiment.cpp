@@ -1342,3 +1342,13 @@ CExperiment::setBufferSize(unsigned nBufferSize)
 	   m_EventBuffer = static_cast<CNSCLPhysicsBuffer*>(NULL);
    }
 }
+
+/*!
+  \return unsigned int
+  \retval the number of words in the current buffer.
+*/
+unsigned int
+CExperiment::getBufferSize() const
+{
+  return m_nBufferSize;
+}
