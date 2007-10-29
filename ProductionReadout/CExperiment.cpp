@@ -91,6 +91,18 @@ static const unsigned int msPerClockTick = 100;   //!< Time between run time
 static const unsigned int SECOND     = 1000000;    //!< usec /seconds.
 static const unsigned int MILISECOND = 1000; //!< usec/msec.
 
+// Error message function:
+
+static void
+tooBigAnEvent(unsigned int eventSize, unsigned int bufferSize)
+{
+  cerr << "Experiment's readout code attempted to read an event that "
+       << " would not fit in a buffer\n";
+  cerr << "Event size: " << eventSize << " buffer Size: " << bufferSize << endl;
+  cerr << "The event will be discared.  If you get a lot of thse message, ";
+  cerr << "you should consider increasing the buffer size\n";
+}
+
 
 /*!
    >>>LOCAL CLASS TO CEXPERIMENT<<< Encapsulates the thread which
@@ -577,11 +589,23 @@ CExperiment::ReadEvent()
   CVMEInterface::Unlock();
 
   m_nEventsAcquired++;
+  unsigned int eventSize;
 #ifndef HIGH_PERFORMANCE
-  m_nWordsAcquired += ptr.GetIndex() - hdr.GetIndex();
+  eventSize = ptr.GetIndex() - hdr.GetIndex();
+  if (eventSize > (m_nBufferSize - sizeof(bheader)/sizeof(unsigned short))) { //  Buffer too big to fit
+    tooBigAnEvent(eventSize, m_nBufferSize);
+    ptr = hdr;
+    eventSize = 0;
+  }
+  m_nWordsAcquired += eventSize;
   if(ptr.GetIndex() > m_nBufferSize) {
 #else /* HIGH_PERFORMANCE */
   int nEventSize = ptr - hdr + 1;
+  if (nEventSize > (m_nBufferSize - sizeof(bheader)/sizeof(unsigned short))) {
+    tooBigAnEvent(eventSize, m_nBufferSize);
+    ptr = hdr;
+    nEventSize = 0;
+  }
   m_nWordsAcquired += nEventSize;
   if((m_EventBuffer->WordsInBody() + nEventSize) > (m_nBufferSize - sizeof(bheader)/sizeof(unsigned short))) {
 #endif /* HIGH_PERFORMANCE */
