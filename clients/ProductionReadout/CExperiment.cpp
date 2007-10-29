@@ -601,6 +601,7 @@ CExperiment::ReadEvent()
     if (ptr == hdr) {
 #ifndef HIGH_PERFORMANCE
       m_EventBuffer->RetractEvent(ptr);	// No data read actually.
+      m_nEventsAcquired--;	        // No Event read either.
     } 
 #else /* HIGH_PERFORMANCE */
       m_EventBuffer->RetractEvent(ptr);
