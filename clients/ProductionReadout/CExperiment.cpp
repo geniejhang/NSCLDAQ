@@ -592,7 +592,7 @@ CExperiment::ReadEvent()
   unsigned int eventSize;
 #ifndef HIGH_PERFORMANCE
   eventSize = ptr.GetIndex() - hdr.GetIndex();
-  if (eventSize > (m_nBufferSize - sizeof(bheader)/sizeof(unsigned short))) { //  Buffer too big to fit
+  if (eventSize >= (m_nBufferSize - sizeof(bheader)/sizeof(unsigned short))) { //  Buffer too big to fit
     tooBigAnEvent(eventSize, m_nBufferSize);
     ptr = hdr;
     eventSize = 0;
@@ -601,7 +601,7 @@ CExperiment::ReadEvent()
   if(ptr.GetIndex() > m_nBufferSize) {
 #else /* HIGH_PERFORMANCE */
   int nEventSize = ptr - hdr + 1;
-  if (nEventSize > (m_nBufferSize - sizeof(bheader)/sizeof(unsigned short))) {
+  if (nEventSize >= (m_nBufferSize - sizeof(bheader)/sizeof(unsigned short))) {
     tooBigAnEvent(eventSize, m_nBufferSize);
     ptr = hdr;
     nEventSize = 0;
@@ -1248,6 +1248,8 @@ CExperiment::EmitDocBuffer(DocumentationPacketIterator s,
    \param end   - DAQWordBufferPtr[in]& - Pointer past the last word of the event
                                 that overflows the buffer.
 */
+
+static string where;
 void
 #ifndef HIGH_PERFORMANCE
 CExperiment::Overflow(DAQWordBufferPtr& header,
@@ -1258,6 +1260,7 @@ CExperiment::Overflow(unsigned short*  header,
 #endif /* HIGH_PERFORMANCE */
 {
    
+  where = "Overflow";
    // Copy the overflowing event to a new buffer:
    
    CNSCLOutputBuffer::IncrementSequence();
@@ -1310,6 +1313,7 @@ CExperiment::Overflow(unsigned short*  header,
    
    m_EventBuffer = pNewBuffer;
 
+   where = "";
 }
 /*!
    Get the run number from the run state variables.
