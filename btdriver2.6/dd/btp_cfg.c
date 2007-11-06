@@ -21,7 +21,7 @@
 #ifndef LINT
 static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #endif  /* LINT */
-static const char driver_version[] = "$Name$";
+static const char driver_version[] = "$Name:  $";
 
 /* Used by btpdd.h to know if it should define __NO_VERSION__ or not */
 
@@ -2347,7 +2347,7 @@ static int init_swapping (
 	  case BT_PN_VME64:	/* 2866 may not be supported by this driver. */
 	  case BT_PN_VME_NBDG:	/* NBDG may not be supported by this driver. */
           case BT_PN_VME_FIBER_D64:
-            unit_p->swap_bits[inx] = BT_SWAP_VMEBUS;
+            unit_p->swap_bits[inx] = BT_SWAP_NONE;
             break;
           case BT_PN_QBUS:
             unit_p->swap_bits[inx] = BT_SWAP_QBUS;
