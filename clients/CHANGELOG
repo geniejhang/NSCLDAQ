@@ -562,3 +562,5 @@ Oct 11, 2007 8.0-011 released
 8.0-012:
    October 20, 2007 - Set bytes swap mode on open to 
                       BT_SWAP_NONE
+   November 8, 2007 - Get the missing contrib/vhqpanel in the svn reopository for
+                      this branch by copying it from the 8.1 branch.
