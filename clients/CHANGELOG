@@ -564,3 +564,5 @@ Oct 11, 2007 8.0-011 released
                       BT_SWAP_NONE
    November 8, 2007 - Get the missing contrib/vhqpanel in the svn reopository for
                       this branch by copying it from the 8.1 branch.
+  November 18, 2007 - Fix CCAENV830Module.cpp in scripted readout.
+                      was returning bytes read not words read.

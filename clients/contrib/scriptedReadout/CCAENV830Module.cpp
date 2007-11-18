@@ -602,7 +602,7 @@ CCAENV830Module::Read(void* pBuffer)
   if(m_fPacketize) {		// Wordcount if packetizing.
     *pwc = nWords + nHeaderWords;
   }
-  return (nWords + nHeaderWords )*sizeof(short);
+  return (nWords + nHeaderWords );
     
 }
 /*!
