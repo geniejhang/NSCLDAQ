@@ -893,3 +893,5 @@ October 20, 2007 - Set the byte swap mode on the SBS interface to
 October 29, 2007 - Add getBufferSize() member function to production readout
  		   CExperiment so code can see how big a buffer is.
                  - Don't count null events.. they're not real.
+November 18, 2007 - Fix scripted readout CAENV830Module.. was returning bytes
+                     read needed to return words read.
