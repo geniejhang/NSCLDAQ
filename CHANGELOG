@@ -895,3 +895,5 @@ October 29, 2007 - Add getBufferSize() member function to production readout
                  - Don't count null events.. they're not real.
 November 18, 2007 - Fix scripted readout CAENV830Module.. was returning bytes
                      read needed to return words read.
+December 4, 2007  - Add CCAENChain::lastModuleEmptyEnable/Disable functions so that
+                    we unambiguously know where chain data ends.
