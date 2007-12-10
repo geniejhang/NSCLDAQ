@@ -28,6 +28,7 @@ using namespace std;
 #include "CInterpreterCore.h"
 #include "CStateVariableCommand.h"
 #include "CStateVariable.h"
+#include "CRunVariableDumpTrigger.h"
 
 #include "CVMETrigger.h"
 #include "CCAMACTrigger.h"
@@ -226,6 +227,11 @@ CReadoutMain::CreateExperiment()
     m_Experiment.EstablishBusy(new CCAMACStatusModule(0,2, 19));
   }
   m_Experiment.setScalerTrigger(new CTimedScalerTrigger(&m_Experiment));
+
+  // Create and add the run/state variable dumper to the clock queue:
+
+  m_pRunVariableTrigger = new CRunVariableDumpTrigger(m_Experiment);
+  m_TimerQueue.EstablishEvent(*m_pRunVariableTrigger);
 
   // Now invoke the experiment specific overrides:
 

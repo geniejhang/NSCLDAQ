@@ -292,9 +292,21 @@ DAMAGES.
 
 #ifndef __CTCLEXCEPTION_H  //Required for current class
 #define __CTCLEXCEPTION_H
-                               //Required for base classes
+        
+
+#ifndef __TCL_H
+#include <tcl.h>
+#ifndef __TCL_H
+#define __TCL_H
+#endif
+#endif
+                       //Required for base classes
 #ifndef __TCLINTERPRETEROBJECT_H
 #include "TCLInterpreterObject.h"
+#endif
+
+#ifndef __TCLINTERPRETER_H
+#include "TCLInterpreter.h"
 #endif
 
 #ifndef __TCLRESULT_H
@@ -338,7 +350,7 @@ public:
     CException(pString),
     m_nReason(am_nReason)
   {
-    m_ResultText = STD(string)(GetResult());
+    m_ResultText = STD(string)(Tcl_GetStringResult(am_rInterpreter.getInterpreter()));
   }
   CTCLException(CTCLInterpreter& am_rInterpreter,
 		Int_t am_nReason,
@@ -347,7 +359,7 @@ public:
     CException(rString),
     m_nReason(am_nReason)
   {
-    m_ResultText = STD(string)(GetResult());
+    m_ResultText = STD(string)(Tcl_GetStringResult(am_rInterpreter.getInterpreter()));
   }
   virtual ~CTCLException ( ) { }       //Destructor
 	
