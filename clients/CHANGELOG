@@ -897,3 +897,4 @@ November 18, 2007 - Fix scripted readout CAENV830Module.. was returning bytes
                      read needed to return words read.
 December 4, 2007  - Add CCAENChain::lastModuleEmptyEnable/Disable functions so that
                     we unambiguously know where chain data ends.
+December 7, 2007 - Add back in the trigger for run/state variable reads.

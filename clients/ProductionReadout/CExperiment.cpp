@@ -44,7 +44,7 @@
 #include "CDocumentedPacket.h"
 #include "CInterpreterCore.h"
 #include "CInterpreterShell.h"
-
+#include "CRunVariableDumpTrigger.h"
 
 #include "CTimer.h"
 #include "CScalerTrigger.h"
@@ -421,9 +421,12 @@ CExperiment::Start(CStateTransitionCommand& rCommand)
     }
     
     
-    // Start the trigger process and clock.
-    
+    // Start the trigger process and clock, and set the run variable trigger interval..
+
     StartTrigger();
+
+    MyApp.getRunVariableTrigger()->SetInterval(MyApp.getScalerPeriod()*1000);
+
     MyApp.getClock().Start(msPerClockTick, nTriggerDwellTime/2);
     m_pScalerTrigger->Initialize();
     ClearBusy();
@@ -472,6 +475,11 @@ CExperiment::Stop(CStateTransitionCommand& rCommand)
     // Do the pre actions.
     
     rCommand.ExecutePreFunction();
+
+    // stop the clock:
+
+    MyApp.getClock().Stop();
+    usleep(1000);		// 1ms should be enough time to complete.
     
     
     // Emit documentation and variable list buffers.
@@ -500,7 +508,6 @@ CExperiment::Stop(CStateTransitionCommand& rCommand)
     
     // Do the post actions.
     
-    MyApp.getClock().Stop();
     rCommand.ExecutePostFunction();
   } 
   catch (string reason) {
