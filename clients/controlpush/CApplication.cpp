@@ -316,6 +316,8 @@ While true {
 #include <Exception.h>
 
 
+#include <stdio.h>
+
 #include <utility>
 #include <fstream>  
 #include <iostream> 
