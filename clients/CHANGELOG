@@ -201,3 +201,7 @@ Released January 15, 2007
        - Fix sis3300.cpp 16k samples were being treated like 64k
 
 October 11, 2007 - Released 7.3-024 Announce end of life
+
+December 18, 2007 - Make compatible with spectrodaq-pregt2:
+         1. Make pointer/daqbuffer only word buffers in framework.
+         2. Destroy the AuthToken stuff.

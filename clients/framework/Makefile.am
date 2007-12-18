@@ -1,8 +1,6 @@
 lib_LTLIBRARIES= libEventFramework.la
 TEMPLATE_IMPLEMENTATIONS= CArrayBinding.cpp                      \
 	CAssocArrayBinding.cpp	                        \
-	CBufferEvent.cpp                                \
-	CBufferMonitor.cpp                              \
 	CBufferReactor.cpp                              \
 	CChangedPredicate.cpp                           \
 	CLocationMonitor.cpp                            \
@@ -22,10 +20,11 @@ libEventFramework_la_SOURCES= CThreadRecursiveMutex.cpp  \
 	CTCLSynchronizeCommand.cpp \
 	CTCLInterpreterStartup.cpp CTKInterpreterStartup.cpp \
 	CLocationReactor.cpp \
-	CBufferReactor.cpp CEventMonitor.cpp CBufferMonitor.cpp\
+	CBufferReactor.cpp CEventMonitor.cpp \
 	CFdMonitor.cpp CTimerMonitor.cpp CEvent.cpp CLocationMonitor.cpp \
 	CPointerPredicate.cpp CChangedPredicate.cpp \
 	CMaskedValuePredicate.cpp  \
+	CBufferMonitor.cpp \
 	CFileEvent.cpp CLocationEvent.cpp CBufferEvent.cpp CTimerEvent.cpp \
 	CServerConnectionEvent.cpp CServerInstance.cpp \
 	CVariableBinding.cpp CArrayBinding.cpp CAssocArrayBinding.cpp \
@@ -39,6 +38,8 @@ libEventFramework_la_SOURCES= CThreadRecursiveMutex.cpp  \
 	CDuplicateNameException.cpp \
 	CDuplicateSingleton.cpp \
 	CIncompatibleMonitor.cpp \
+	CLinkFailedException.cpp \
+	CNoSuchLinkException.cpp \
 	XMCallback.cpp \
 	XMDialogs.cpp    \
 	XMManagers.cpp   \

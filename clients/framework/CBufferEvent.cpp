@@ -307,10 +307,8 @@ DAMAGES.
 which is associated with a CBufferEvent.
 \param Owner   - Owning event.
 */
-template <class T>
-template <class U>
-CBufferEvent<T>::CGenericBufferReactor<U>::
-CGenericBufferReactor<U>(CBufferEvent<U>& Owner)  :
+CBufferEvent::CGenericBufferReactor::
+CGenericBufferReactor(CBufferEvent& Owner)  :
   m_rOwner(Owner)
 {}
 /*!
@@ -320,15 +318,14 @@ CGenericBufferReactor<U>(CBufferEvent<U>& Owner)  :
    \param rMonitor - reference to the monitor which fired the event.
    \param pBuffer  - `Pointer' to the event buffer.
  */
-template <class T>
-template <class U>
+
 void
-CBufferEvent<T>::CGenericBufferReactor<U>::
-OnBuffer(CBufferMonitor<T>& rMonitor,
-	 Pointer<DAQBuffer<T>,T> pBuffer)
+CBufferEvent::CGenericBufferReactor::
+OnBuffer(CBufferMonitor& rMonitor,
+	 DAQWordBufferPtr pBuffer)
 {
   m_rOwner.OnBuffer(pBuffer);	// Relay to event.
-  pBuffer->Release();		// Release the underlying buffer in order
+  pBuffer.Get()->Release();		// Release the underlying buffer in order
 				// to avoid deadlock in spectrodaq.
 }
 /*!
@@ -337,10 +334,8 @@ OnBuffer(CBufferMonitor<T>& rMonitor,
   is relayed to the Event's OnTimeout function.
   \param rMonitor - Reference to the event monitor (unused).
   */
-template <class T>
-template <class U>
 void
-CBufferEvent<T>::CGenericBufferReactor<U>::
+CBufferEvent::CGenericBufferReactor::
 OnTimeout(CEventMonitor& rMonitor)
 {
   m_rOwner.OnTimeout();
@@ -355,44 +350,40 @@ OnTimeout(CEventMonitor& rMonitor)
   the event readctor is a CGenericBufferReactor.
 
   */
-template <class T>
-CBufferEvent<T>::CBufferEvent() :
-  CEvent(*(new CBufferMonitor<T>),
-	 *(new CGenericBufferReactor<T>(*this))),
-  m_rMonitor((CBufferMonitor<T>&)CEvent::getMonitor()),
-  m_rReactor((CGenericBufferReactor<T>&)CEvent::getReactor())
+CBufferEvent::CBufferEvent() :
+  CEvent(*(new CBufferMonitor),
+	 *(new CGenericBufferReactor(*this))),
+  m_rMonitor((CBufferMonitor&)CEvent::getMonitor()),
+  m_rReactor((CGenericBufferReactor&)CEvent::getReactor())
 {
   
 }
 /*!
    Called to create a named buffer event when the name is a char* string:
    */
-template <class T>
-CBufferEvent<T>::CBufferEvent(const char* pName) :
+CBufferEvent::CBufferEvent(const char* pName) :
  CEvent(pName,
-	*(new CBufferMonitor<T>),
-	 *(new CGenericBufferReactor<T>(*this))),
-  m_rMonitor((CBufferMonitor<T>&)CEvent::getMonitor()),
-  m_rReactor((CGenericBufferReactor<T>&)CEvent::getReactor())
+	*(new CBufferMonitor),
+	 *(new CGenericBufferReactor(*this))),
+  m_rMonitor((CBufferMonitor&)CEvent::getMonitor()),
+  m_rReactor((CGenericBufferReactor&)CEvent::getReactor())
 {
 }
 /*!
    Called to create a named buffer event when the name is an stl string.
    */
-template <class T>
-CBufferEvent<T>::CBufferEvent(const string& rName) :
+CBufferEvent::CBufferEvent(const string& rName) :
  CEvent(rName,
-	*(new CBufferMonitor<T>),
-	 *(new CGenericBufferReactor<T>(*this))),
-  m_rMonitor((CBufferMonitor<T>&)CEvent::getMonitor()),
-  m_rReactor((CGenericBufferReactor<T>&)CEvent::getReactor())
+	*(new CBufferMonitor),
+	 *(new CGenericBufferReactor(*this))),
+  m_rMonitor((CBufferMonitor&)CEvent::getMonitor()),
+  m_rReactor((CGenericBufferReactor&)CEvent::getReactor())
 {
 }    
 /*!
   Destroy the buffer event:
   */
-template <class T>
-CBufferEvent<T>::~CBufferEvent()
+CBufferEvent::~CBufferEvent()
 {
   delete &m_rMonitor;
   delete &m_rReactor;
@@ -410,12 +401,11 @@ CBufferEvent<T>::~CBufferEvent()
   - COS_RELIABLE - Indicates the link should recieve all buffers.
   - COS_UNRELIABLE - Indicates the link need not receive all buffers.
   */
-template <class T>
 void
-CBufferEvent<T>::AddLink(const string& url,unsigned int tag, 
+CBufferEvent::AddLink(const string& url,unsigned int tag, 
 			 unsigned int mask, int reliability)
 {
-  CBufferEvent<T>::AddLinkRequest AddQueue;
+  CBufferEvent::AddLinkRequest AddQueue;
   
   AddQueue.s_url = url;
   AddQueue.s_tag = tag;
@@ -446,9 +436,8 @@ CBufferEvent<T>::AddLink(const string& url,unsigned int tag,
       - COS_UNRELIABLE - Matching buffers are only deliverd if receive has
                          no 'active' buffers.
  */ 
-template <class T>
 void
-CBufferEvent<T>::DeleteLink(const string& url, unsigned int tag, unsigned int mask,
+CBufferEvent::DeleteLink(const string& url, unsigned int tag, unsigned int mask,
 			    int reliability)
 {
   AddLinkRequest DelQel;
@@ -456,7 +445,7 @@ CBufferEvent<T>::DeleteLink(const string& url, unsigned int tag, unsigned int ma
   DelQel.s_url         = url;
   DelQel.s_tag         = tag;
   DelQel.s_mask        = mask;
-  DelQel.s_reliability = reliability;
+  DelQel.s_linktype = reliability;
 
   // Synchronize and queue the connection:
 
@@ -472,9 +461,8 @@ CBufferEvent<T>::DeleteLink(const string& url, unsigned int tag, unsigned int ma
 
    \param pBuffer - A `pointer' into the DAQBuffer<T>
 */
-template <class T>
 void
-CBufferEvent<T>::OnBuffer(Pointer<DAQBuffer<T>,T>& pBuffer)
+CBufferEvent::OnBuffer(DAQWordBufferPtr& pBuffer)
 {
 }
 
@@ -482,9 +470,8 @@ CBufferEvent<T>::OnBuffer(Pointer<DAQBuffer<T>,T>& pBuffer)
   This member function is the default (no-op) action when waiting for buffers
   has timed out and timeout delivery is enabled.
 */
-template <class T>
 void
-CBufferEvent<T>::OnTimeout()
+CBufferEvent::OnTimeout()
 {
 }
 /*!
@@ -498,9 +485,8 @@ CBufferEvent<T>::OnTimeout()
   queue a deletion on an add request which has not yet been processed.  
   Therefore, the add queue is processed first and then the delete queue.
   */
-template <class T>
 void
-CBufferEvent<T>::ProcessQueues()
+CBufferEvent::ProcessQueues()
 {
   ProcessAddQueue();
   ProcessDelQueue();
@@ -510,9 +496,8 @@ CBufferEvent<T>::ProcessQueues()
   Add queue and create links corresponding to them.
   It should be called only in the context of the executing event thread.
   */
-template <class T>
 void
-CBufferEvent<T>::ProcessAddQueue()
+CBufferEvent::ProcessAddQueue()
 {
   CApplicationSerializer::getInstance()->Lock();
   while(!m_AddQueue.empty()) {
@@ -530,9 +515,8 @@ CBufferEvent<T>::ProcessAddQueue()
    event thread.  It dequeues each element from the delete link request queue
    and deletes the corresponding link.
    */
-template <class T>
 void
-CBufferEvent<T>::ProcessDelQueue()
+CBufferEvent::ProcessDelQueue()
 {
   CApplicationSerializer::getInstance()->Lock();
   while(!m_DelQueue.empty()) {
@@ -551,12 +535,11 @@ CBufferEvent<T>::ProcessDelQueue()
 /*!
   Called to get a description of this type of event.
   */
-template <class T>
 string
-CBufferEvent<T>::DescribeSelf()
+CBufferEvent::DescribeSelf()
 {
   string result(" Buffer event\n");
-  list<CBufferEvent<T>::AddLinkRequest>::iterator i;
+  list<CBufferEvent::AddLinkRequest>::iterator i;
 
   result += CEvent::DescribeSelf();
   if(m_AddQueue.empty()) {
@@ -587,9 +570,8 @@ CBufferEvent<T>::DescribeSelf()
  a string.  This is intended to be used by DescribSelf() when dumping the
  queues.
  */
-template <class T>
 string
-CBufferEvent<T>::QueueEntryToString(CBufferEvent<T>::AddLinkRequest& rEntry)
+CBufferEvent::QueueEntryToString(CBufferEvent::AddLinkRequest& rEntry)
 {
   string result("URL: ");
   char   val[10];

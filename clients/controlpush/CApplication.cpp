@@ -324,6 +324,8 @@ While true {
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
+
 
 static const int    YEARBASE(1900);           // Base year of struct tm.tm_year
 

@@ -5,14 +5,14 @@ AM_CONFIG_HEADER(config.h)
 
 #    Separate device libraries.
 
-AM_INIT_AUTOMAKE(nscldaq, 7.3-024)  
+AM_INIT_AUTOMAKE(nscldaq, 7.3-025)  
 
 #
 #   The variable below should track the
 #   version number above to ensure that
 #   all the .so's get appropriately versioned:
 #
-SOVERSION="7:3"
+SOVERSION="7:4"
 
 
 
