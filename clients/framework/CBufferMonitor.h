@@ -320,7 +320,6 @@ DAMAGES.
 
 //
 // Forward class declaration
-template<class T>
 class CBufferMonitor;
 
 struct LinkInfo {
@@ -368,10 +367,9 @@ class MatchAll {
   }
 };
 
-template<class T>
 class CBufferMonitor : public CEventMonitor
 {
-  DAQBuffer<T> m_Buffer;    /*!  Encapsulated buffer */
+  DAQWordBuffer m_Buffer;    /*!  Encapsulated buffer */
   list<LinkInfo> m_lLinks;   /*!  List of links. */
   DAQLinkMgr daq_link_mgr;   /*!  A link manager */
   int          m_nTag;
@@ -382,7 +380,7 @@ class CBufferMonitor : public CEventMonitor
 
   // Default constructor
   
-  CBufferMonitor<T> (bool am_fTimedWait = true) :
+  CBufferMonitor(bool am_fTimedWait = true) :
     m_Buffer(0),
     CEventMonitor(am_fTimedWait),
     m_nTag(COS_MAXBUFTAG),
@@ -393,7 +391,7 @@ class CBufferMonitor : public CEventMonitor
     AppendClassInfo();
   }
 
-  CBufferMonitor<T> (const string& rName, 
+  CBufferMonitor (const string& rName, 
 		     bool am_fTimedWait = true) :
     CEventMonitor(rName, am_fTimedWait),
        m_nTag(COS_MAXBUFTAG),
@@ -404,7 +402,7 @@ class CBufferMonitor : public CEventMonitor
       AppendClassInfo();
     }
   
-  CBufferMonitor<T> (const char* pName, 
+  CBufferMonitor (const char* pName, 
 		     bool am_fTimedWait = true) :
     CEventMonitor(pName, am_fTimedWait),
        m_nTag(COS_MAXBUFTAG),
@@ -417,19 +415,19 @@ class CBufferMonitor : public CEventMonitor
     }
 
   // Destructor
-  ~CBufferMonitor<T> ( ) { }
+  ~CBufferMonitor ( ) { }
 
   //
   // Copy constructor and assignment may not be allowed
   //
  private:
-  CBufferMonitor<T>(const CBufferMonitor<T>& aCBufferMonitor);
-  CBufferMonitor<T> operator= (const CBufferMonitor<T>& aCBufferMonitor);
+  CBufferMonitor(const CBufferMonitor& aCBufferMonitor);
+  CBufferMonitor operator= (const CBufferMonitor& aCBufferMonitor);
 
   // Selectors:
  public:
   
-  DAQBuffer<T>& getBuffer() 
+  DAQWordBuffer& getBuffer() 
     { 
       return m_Buffer;
     }  
@@ -447,7 +445,7 @@ class CBufferMonitor : public CEventMonitor
   // Attribute mutators:
  protected:
   
-  void setBuffer (const DAQBuffer<T> am_Buffer)
+  void setBuffer (const DAQWordBuffer am_Buffer)
     { 
       m_Buffer = am_Buffer;
     }
@@ -475,15 +473,44 @@ class CBufferMonitor : public CEventMonitor
 			   LinkIterator startat);
   LinkIterator beginLinks ();
   LinkIterator endLinks ();
-  Pointer<DAQBuffer<T>, T> getBufferPointer (int nOffset=0);
+  DAQWordBufferPtr getBufferPointer (int nOffset=0);
   void SetBufferTag (int tag=COS_ALLBITS);
   void SetBufferMask (int nMask);
   string DescribeSelf ();
 };
-typedef CBufferMonitor<Byte> CByteBufferMonitor;
-typedef CBufferMonitor<Word> CWordBufferMonitor;
-typedef CBufferMonitor<DWord> CLongBufferMonitor;
 
-#include <CBufferMonitor.cpp>
+typedef CBufferMonitor CWordBufferMonitor;
+
+// This must be here since it's a template implementation:
+
+/*!
+  \fn LinkIterator CBufferMonitor::FindLink (LinkMatchPredicate& rPredicate,
+                                             LinkIterator startat)
+
+ Operation Type:
+    Selector
+ 
+ Purpose:
+    Locates the first link that satisfies a given
+    predicate. Predefined predicates include:
+    MatchURL - matches URL only
+    MatchAll - Matches URL, tag and mask.
+    A LinkMatchPredicate is a function object implementing:
+    bool operator()(LinkInfo) which returns TRUE if the link
+    satisfies the predicate. Returns an iterator 'pointing'
+    to the first match, or end() if there is no match.
+*/
+template<class LinkMatchPredicate>
+LinkIterator
+CBufferMonitor::FindLink (LinkMatchPredicate& rPredicate, 
+			     LinkIterator startat)
+{
+  for(LinkIterator link = startat; link != m_lLinks.end(); link++) {
+    if(rPredicate(*link))
+      return link;
+  }
+  return m_lLinks.end();
+}
+
 
 #endif

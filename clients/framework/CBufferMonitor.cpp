@@ -295,9 +295,8 @@ DAMAGES.
     received during the timeout interval.
 
 */
-template<class T>
 CEventMonitor::result
-CBufferMonitor<T>::operator() ()
+CBufferMonitor::operator() ()
 { 
   m_Buffer.SetTag(m_nTag);
   m_Buffer.SetMask(m_nMask);
@@ -305,7 +304,7 @@ CBufferMonitor<T>::operator() ()
   if(getTimedWait()) {
     struct timeval timeout = getTimeout();
     // Accept a buffer
-    m_BufferOnAccept(&timeout);
+    m_Buffer.Accept(&timeout);
     if(m_Buffer.GetLen() != 0)
       return CEventMonitor::Occurred;
     else
@@ -332,9 +331,9 @@ CBufferMonitor<T>::operator() ()
     Adds a link to the link manager. The link id is returned.
     On failure, a CLinkFailedException is thrown.
 */
-template<class T>
+
 int
-CBufferMonitor<T>::AddLink (const string& URL, int tag, int mask, 
+CBufferMonitor::AddLink (const string& URL, int tag, int mask, 
 			    bool fReliable)
 {
   LinkInfo info;
@@ -347,7 +346,7 @@ CBufferMonitor<T>::AddLink (const string& URL, int tag, int mask,
 				     : COS_UNRELIABLE);
   if(info.linkid == 0) {
     throw CLinkFailedException
-      ("CBufferMonitor<T>::AddLink Adding link to list", info.linkid);
+      ("CBufferMonitor::AddLink Adding link to list", info.linkid);
   }
   m_lLinks.push_back(info);
   return info.linkid;
@@ -365,24 +364,23 @@ CBufferMonitor<T>::AddLink (const string& URL, int tag, int mask,
     If the link does not exist, a CNoSuchLinkException
     is thrown.
 */
-template<class T>
 void
-CBufferMonitor<T>::RemoveLink (int linkid)
+CBufferMonitor::RemoveLink (int linkid)
 {
   LinkIterator linkIt;
   for(linkIt = m_lLinks.begin(); linkIt != m_lLinks.end(); linkIt++) {
     if ((*linkIt).linkid == linkid) {
       if(!(daq_link_mgr.DeleteSink(linkid))) {
 	throw CNoSuchLinkException
-	  ("CBufferMonitor<T>::RemoveLink Removing link from list", 
-	   info.linkid);
+	  ("CBufferMonitor::RemoveLink Removing link from list", 
+	   linkid);
       }
       m_lLinks.erase(linkIt);
     }
   }
   if(linkIt == m_lLinks.end())
     throw CNoSuchLinkException
-      ("CBufferMonitor<T>::RemoveLink Removing link from list", info.linkid);
+      ("CBufferMonitor::RemoveLink Removing link from list", linkid);
 }
 
 /*!
@@ -396,52 +394,22 @@ CBufferMonitor<T>::RemoveLink (int linkid)
     in the link list. If the iterator is end(), a
     CNoSuchLinkException is thrown.
 */
-template<class T>
 void
-CBufferMonitor<T>::RemoveLink (LinkIterator link)
+CBufferMonitor::RemoveLink (LinkIterator link)
 {
   if(link != m_lLinks.end()) {
     if(!(daq_link_mgr.DeleteSink((*link).linkid))) {
       throw CNoSuchLinkException
-	("CBufferMonitor<T>::Remove Removing link from list", (*link).linkid);
+	("CBufferMonitor::Remove Removing link from list", (*link).linkid);
     }
     m_lLinks.erase(link);
   }
   else {
     throw CNoSuchLinkException
-      ("CBufferMonitor<T>::Remove Removing link from list", (*link).linkid);
+      ("CBufferMonitor::Remove Removing link from list", (*link).linkid);
   }
 }
 
-/*!
-  \fn LinkIterator CBufferMonitor::FindLink (LinkMatchPredicate& rPredicate,
-                                             LinkIterator startat)
-
- Operation Type:
-    Selector
- 
- Purpose:
-    Locates the first link that satisfies a given
-    predicate. Predefined predicates include:
-    MatchURL - matches URL only
-    MatchAll - Matches URL, tag and mask.
-    A LinkMatchPredicate is a function object implementing:
-    bool operator()(LinkInfo) which returns TRUE if the link
-    satisfies the predicate. Returns an iterator 'pointing'
-    to the first match, or end() if there is no match.
-*/
-template<class T>
-template<class LinkMatchPredicate>
-LinkIterator
-CBufferMonitor<T>::FindLink (LinkMatchPredicate& rPredicate, 
-			     LinkIterator startat)
-{
-  for(LinkIterator link = startat; link != m_lLinks.end(); link++) {
-    if(rPredicate(*link))
-      return link;
-  }
-  return m_lLinks.end();
-}
 
 /*!
   \fn LinkIterator CBufferMonitor::beginLinks()
@@ -453,9 +421,8 @@ CBufferMonitor<T>::FindLink (LinkMatchPredicate& rPredicate,
     Returns an iterator to the beginning of the
     link list.
 */
-template<class T>
 LinkIterator
-CBufferMonitor<T>::beginLinks()
+CBufferMonitor::beginLinks()
 {
   return m_lLinks.begin();
 }
@@ -470,9 +437,8 @@ CBufferMonitor<T>::beginLinks()
     Returns an iterator suitable for determining
     end of iteration through the link list.
 */
-template<class T>
 LinkIterator
-CBufferMonitor<T>::endLinks()
+CBufferMonitor::endLinks()
 {
   return m_lLinks.end();
 }
@@ -487,11 +453,10 @@ CBufferMonitor<T>::endLinks()
     Returns a pointer to the DAQ Buffer.
 
 */
-template<class T>
-Pointer<DAQBuffer<T>, T>
-CBufferMonitor<T>::getBufferPointer (int nOffset = 0)
+DAQWordBufferPtr
+CBufferMonitor::getBufferPointer (int nOffset = 0)
 {
-  Pointer<DAQBuffer<T>, T> p(&m_Buffer);
+  DAQWordBufferPtr p(&m_Buffer);
   p += nOffset;
   return p;
 }
@@ -517,9 +482,8 @@ CBufferMonitor<T>::getBufferPointer (int nOffset = 0)
     ((rbuffer.tag & link.mask) == link.tag) &&
     ((rbuffer.tag & buffer.mask) == buffer.tag)
 */
-template<class T>
 void 
-CBufferMonitor<T>::SetBufferTag (int tag = COS_ALLBITS)
+CBufferMonitor::SetBufferTag (int tag = COS_ALLBITS)
 {
   try {
     m_Buffer.SetTag(tag);
@@ -542,9 +506,8 @@ CBufferMonitor<T>::SetBufferTag (int tag = COS_ALLBITS)
     and how they interact with link tags and masks and the tag
     of the incomming buffer to determine receipt.
 */
-template<class T>
 void
-CBufferMonitor<T>::SetBufferMask (int nMask)
+CBufferMonitor::SetBufferMask (int nMask)
 {
   try {
     m_Buffer.SetMask(nMask);
@@ -567,9 +530,8 @@ CBufferMonitor<T>::SetBufferMask (int nMask)
     2. Putting out the tag and mask of the buffer.
     3. Listing the links and their information.
 */
-template<class T>
 string
-CBufferMonitor<T>::DescribeSelf()
+CBufferMonitor::DescribeSelf()
 {
   string Result;
   int count = 0;

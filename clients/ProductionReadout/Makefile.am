@@ -3,7 +3,6 @@ SUBDIRS = hyperlatex
 
 lib_LTLIBRARIES=libPReadout.la
 libPReadout_la_SOURCES = AccessListCheck.cpp \
-	AuthTokenCheck.cpp \
 	CBadTransitionException.cpp \
 	CBeginCommand.cpp \
 	CCompoundEventSegment.cpp \
@@ -51,7 +50,6 @@ libPReadout_la_SOURCES = AccessListCheck.cpp \
 	CTimedEvent.cpp \
 	CTimer.cpp \
 	CTkInterpreterShell.cpp \
-	DAQAuthTokenInteractor.cpp \
 	FdInteractor.cpp \
 	HostListCheck.cpp \
 	IOInteractor.cpp \
@@ -67,7 +65,6 @@ libPReadout_la_SOURCES = AccessListCheck.cpp \
 	CStrings.cpp
 
 include_HEADERS = AccessListCheck.h \
-	AuthTokenCheck.h \
 	Authenticator.h \
 	CBadTransitionException.h \
 	CBeginCommand.h \
@@ -118,7 +115,6 @@ include_HEADERS = AccessListCheck.h \
 	CTkInterpreterShell.h \
 	CTraditionalEventSegment.h \
 	CTraditionalScalerReadout.h \
-	DAQAuthTokenInteractor.h \
 	FdInteractor.h \
 	HostListCheck.h \
 	IOInteractor.h \

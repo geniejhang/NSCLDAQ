@@ -385,7 +385,8 @@ class DAQBuff : public DAQROCNode {
       
       {
 	DAQString process;
-	process << "dumper - piping fd=" << fileno(stdout);
+	process += "dumper - piping fd=";
+	process +=  fileno(stdout);
 	SetProcessTitle(process);
       }
       struct bheader* pHeader = (struct bheader*)pLocalBuffer;

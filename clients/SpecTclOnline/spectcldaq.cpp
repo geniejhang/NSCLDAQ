@@ -435,7 +435,9 @@ class DAQBuff : public DAQROCNode {
       
       {
 	DAQString process;
-	process << "spectcldaq - piping fd=" << fileno(stdout);
+	process +=  "spectcldaq - piping fd=";
+	process +=  fileno(stdout);
+
 	SetProcessTitle(process);
       }
       if(Write(fileno(stdout), pLocalBuffer, nLength*sizeof(short)) <= 0)

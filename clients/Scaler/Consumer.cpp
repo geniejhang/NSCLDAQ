@@ -340,7 +340,7 @@ CConsumer::~CConsumer()
     if(!pSource->Disconnect()) {
       DAQURL srcurl(pSource->getURL());
       cerr << "Unable to form connection for Data source: " << endl;
-      cerr << " URL - " << srcurl  << endl;
+      cerr << " URL - " << srcurl.Get().str()  << endl;
     }
     delete pSource;
   }

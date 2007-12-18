@@ -323,7 +323,6 @@ This object must be subclassed to provide
 application specific processing.
 */
 
-template <class T>
 class CBufferReactor  : public CReactor        
 {
   // Constructors and related functions.
@@ -343,23 +342,21 @@ public:
 private:
   CBufferReactor& operator= (const CBufferReactor& aCBufferReactor);
 public:
-  template <class U>
-  int operator== (const CBufferReactor<U>& aCBufferReactor) const;
+  int operator== (const CBufferReactor& aCBufferReactor) const;
  
   // operations on the class:
 public:
   virtual void OnEvent(CEventMonitor& rMonitor);
-  virtual void OnBuffer(CBufferMonitor<T>& rMonitor, 
-			Pointer<DAQBuffer<T>,T> pBuffer);
+  virtual void OnBuffer(CBufferMonitor& rMonitor, 
+			DAQWordBufferPtr pBuffer);
 
 };
 
 // For most compilers, the implementation file must be accessible from the
 // header to instantiate particular classes.
 //
-#include <CBufferReactor.cpp>
-typedef CBufferReactor<Byte>  CByteBufferReactor;
-typedef CBufferReactor<Word>  CWordBufferReactor;
-typedef CBufferReactor<DWord> CLongBufferReactor;
+
+typedef CBufferReactor  CWordBufferReactor;
+
 
 #endif
