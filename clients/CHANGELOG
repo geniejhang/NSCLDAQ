@@ -898,3 +898,12 @@ November 18, 2007 - Fix scripted readout CAENV830Module.. was returning bytes
 December 4, 2007  - Add CCAENChain::lastModuleEmptyEnable/Disable functions so that
                     we unambiguously know where chain data ends.
 December 7, 2007 - Add back in the trigger for run/state variable reads.
+December 19, 2007 - Make this work on spectrodaq-pregt2
+                    1. Require that the framework's buffer arrival event subsystem
+                       work explicitly only with DAQWordBuffers as the buffer/pointer
+                       classes are no longer templated.
+                    2. Remove the DAQAuthorizer stuff as that's no longer supported
+                       (good riddance).
+                    3. Misc stuff related to deprecated methods in DAQString and
+                       DAQURL.
+
