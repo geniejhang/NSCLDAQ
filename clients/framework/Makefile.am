@@ -3,8 +3,6 @@ lib_LTLIBRARIES= libEventFramework.la
 TEMPLATE_IMPLEMENTATIONS= CArrayBinding.cpp                      \
 	CAssocArrayBinding.cpp	                        \
 	CBufferEvent.cpp                                \
-	CBufferMonitor.cpp                              \
-	CBufferReactor.cpp                              \
 	CChangedPredicate.cpp                           \
 	CLocationMonitor.cpp                            \
 	CLocationEvent.cpp                             \
@@ -38,6 +36,8 @@ libEventFramework_la_SOURCES= CThreadRecursiveMutex.cpp  \
 	CTCPNoSuchHost.cpp \
 	CTCPNoSuchService.cpp \
 	CNoSuchObjectException.cpp \
+	CLinkFailedException.cpp	\
+	CNoSuchLinkException.cpp	\
 	CDuplicateNameException.cpp \
 	CDuplicateSingleton.cpp \
 	CIncompatibleMonitor.cpp \

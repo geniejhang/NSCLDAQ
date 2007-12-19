@@ -566,3 +566,9 @@ Oct 11, 2007 8.0-011 released
                       this branch by copying it from the 8.1 branch.
   November 18, 2007 - Fix CCAENV830Module.cpp in scripted readout.
                       was returning bytes read not words read.
+December 19, 2007   - Get this to compile with spectrodaq-pregt2:
+                     1. Remove DAQAuth token usage.
+                     2. Untemplate the framework buffer acceptance subsystem
+                        so that we only deal with DAQWordBuffers.
+                     3. Misc. things involving DAQString, DAQURL
+
