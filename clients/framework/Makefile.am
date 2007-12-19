@@ -26,6 +26,8 @@ libEventFramework_la_SOURCES= CThreadRecursiveMutex.cpp  \
 	CDuplicateNameException.cpp \
 	CDuplicateSingleton.cpp \
 	CIncompatibleMonitor.cpp \
+	CLinkFailedException.cpp \
+	CNoSuchLinkException.cpp \
 	XMCallback.cpp \
 	XMDialogs.cpp    \
 	XMManagers.cpp   \

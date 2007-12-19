@@ -195,3 +195,11 @@ Released Jan 15, 2007
     - Fix error in pagesize computatino in sis3300.cpp
 
 October 10, 2007 - released 7.4-007jumbo-003 end of life announced.
+
+December 19, 2007
+   - Make it possible to compile with spdectrodaq-pregt2:
+    1. Remove templating from framework items that no longer are templated in pregt2
+       (use word size explicitly).
+    2. Remove use of DAQ Authenticators with spectrodaq tokens.. they are gone.
+    3. Misc. changes based on DAQString and DAQURL differences.
+

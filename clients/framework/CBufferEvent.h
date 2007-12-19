@@ -275,6 +275,7 @@ DAMAGES.
 
 		     END OF TERMS AND CONDITIONS
 */
+//! \class: CBufferEvent           
 //! \file:  CBufferEvent.h
 // Author:
 //   Ron Fox
@@ -337,7 +338,6 @@ The object can handle alarm events instead
 of data buffers.
 
 */
-template <class T>
 class CBufferEvent  : public CEvent        
 {
   // Private data structures:
@@ -355,15 +355,15 @@ class CBufferEvent  : public CEvent
       this allows the presentation of a monolithic model for managing the 
       events.
   */
-  template <class U>
-  class CGenericBufferReactor : public CBufferReactor<U>
-  {
-    CBufferEvent<U>& m_rOwner;
-  public:
-    CGenericBufferReactor(CBufferEvent<U>& owner);
 
-    virtual void OnBuffer(CBufferMonitor<T>& rMonitor,
-			 Pointer<DAQBuffer<T>,T> pBuffer);
+  class CGenericBufferReactor : public CBufferReactor
+  {
+    CBufferEvent& m_rOwner;
+  public:
+    CGenericBufferReactor(CBufferEvent& owner);
+
+    virtual void OnBuffer(CBufferMonitor& rMonitor,
+			 DAQWordBufferPtr pBuffer);
     virtual void OnTimeout(CEventMonitor& rMonitor);
   };
 
@@ -374,8 +374,8 @@ class CBufferEvent  : public CEvent
   list<AddLinkRequest> m_AddQueue; //!< Requests to add links go here.
   list<AddLinkRequest> m_DelQueue;  //!< Requests to delete links go here.
 
-  CBufferMonitor<T>&   m_rMonitor; //!< Monitors the input links.
-  CGenericBufferReactor<T>&   m_rReactor; //!< Reacts to the input links.
+  CBufferMonitor&   m_rMonitor; //!< Monitors the input links.
+  CGenericBufferReactor&   m_rReactor; //!< Reacts to the input links.
 
 
 public:
@@ -408,10 +408,10 @@ public:
     CApplicationSerializer::getInstance()->UnLock();
     return result;
   }
-  CBufferMonitor<T>& getMonitor() {
+  CBufferMonitor& getMonitor() {
     return m_rMonitor;
   }
-  CBufferReactor<T>& getReactor() {
+  CBufferReactor& getReactor() {
     return m_rReactor;
   }
 
@@ -424,7 +424,7 @@ public:
 		  unsigned int mask = ALLBITS_MASK,
 		  int reliability = COS_RELIABLE);
 
-  virtual void OnBuffer(Pointer<DAQBuffer<T>,T>& pBuffer);
+  virtual void OnBuffer(DAQWordBufferPtr& pBuffer);
   virtual void OnTimeout();
 
   virtual void setBufferTag(int tag) {
@@ -441,7 +441,6 @@ protected:
   string QueueEntryToString(AddLinkRequest& rEntry);
 };
 
-#include "CBufferEvent.cpp"
 
 #endif
 

@@ -306,8 +306,7 @@ DAMAGES.
    Note that buffer reactors are templated by the type of data
    contained in the buffer.
  */
-template <class T>
-CBufferReactor<T> :: CBufferReactor () :
+CBufferReactor :: CBufferReactor () :
   CReactor()
 {
   AppendClassInfo();
@@ -318,8 +317,7 @@ CBufferReactor<T> :: CBufferReactor () :
    \param rName - the name of the reactor.
  */
 
-template<class T>
-CBufferReactor<T>::CBufferReactor(const string& rName) :
+CBufferReactor::CBufferReactor(const string& rName) :
   CReactor(rName)
 {
   AppendClassInfo();
@@ -330,23 +328,19 @@ CBufferReactor<T>::CBufferReactor(const string& rName) :
   \param pName - Pointer to an ASCIZ string naming the buffer.
  
   */
-template <class T>
-CBufferReactor<T>::CBufferReactor(const char* pName) :
+CBufferReactor::CBufferReactor(const char* pName) :
   CReactor(pName)
 {
   AppendClassInfo();
 }
-template <class T>
- CBufferReactor<T>::~CBufferReactor ( )  //Destructor - Delete dynamic objects
+ CBufferReactor::~CBufferReactor ( )  //Destructor - Delete dynamic objects
 {
 }
 
 
       //! Operator== Equality comparison:
-template <class T>
-template <class U>
 int 
-CBufferReactor<T>::operator== (const CBufferReactor<U>& aCBufferReactor) const
+CBufferReactor::operator== (const CBufferReactor& aCBufferReactor) const
 { 
   return ( (CReactor::operator== (aCBufferReactor)));
 }
@@ -360,13 +354,12 @@ CBufferReactor<T>::operator== (const CBufferReactor<U>& aCBufferReactor) const
     The OnBuffer virtual member is called with a pointer to the buffer.
    \param rMonitor - Reference to the monitor which declared the event.
  */
-template <class T>
 void 
-CBufferReactor<T>::OnEvent(CEventMonitor& rMonitor)
+CBufferReactor::OnEvent(CEventMonitor& rMonitor)
 {
-  CBufferMonitor<T>* pMonitor;
+  CBufferMonitor* pMonitor;
   try {
-    pMonitor = dynamic_cast<CBufferMonitor<T>*>(&rMonitor);
+    pMonitor = dynamic_cast<CBufferMonitor*>(&rMonitor);
   }
   catch (bad_cast& rexcept) {
     throw
@@ -384,10 +377,9 @@ CBufferReactor<T>::OnEvent(CEventMonitor& rMonitor)
  \param pBuffer  - A DAQBufferPtr of the appropriate type into the
                    buffer received.
   */
-template <class T>
 void 
-CBufferReactor<T>::OnBuffer(CBufferMonitor<T>& rMonitor, 
-			    Pointer<DAQBuffer<T>,T> pBuffer)
+CBufferReactor::OnBuffer(CBufferMonitor& rMonitor, 
+			 DAQWordBufferPtr pBuffer)
 {
 }
 
