@@ -4,7 +4,6 @@ SUBDIRS = hyperlatex direct HP
 
 
 PRODUCTIONSOURCES = AccessListCheck.cpp \
-	AuthTokenCheck.cpp \
 	CBadTransitionException.cpp \
 	CBeginCommand.cpp \
 	CCompoundEventSegment.cpp \
@@ -52,7 +51,6 @@ PRODUCTIONSOURCES = AccessListCheck.cpp \
 	CTimedEvent.cpp \
 	CTimer.cpp \
 	CTkInterpreterShell.cpp \
-	DAQAuthTokenInteractor.cpp \
 	FdInteractor.cpp \
 	HostListCheck.cpp \
 	IOInteractor.cpp \
@@ -76,7 +74,6 @@ PRODUCTIONSOURCES = AccessListCheck.cpp \
 
 
 PRODUCTIONHEADERS = AccessListCheck.h \
-	AuthTokenCheck.h \
 	Authenticator.h \
 	CBadTransitionException.h \
 	CBeginCommand.h \
@@ -127,7 +124,6 @@ PRODUCTIONHEADERS = AccessListCheck.h \
 	CTkInterpreterShell.h \
 	CTraditionalEventSegment.h \
 	CTraditionalScalerReadout.h \
-	DAQAuthTokenInteractor.h \
 	FdInteractor.h \
 	HostListCheck.h \
 	IOInteractor.h \
