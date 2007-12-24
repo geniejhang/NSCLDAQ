@@ -14,6 +14,10 @@
 
 
 #include <config.h>
+#ifdef HAVE_STD_NAMESPACE
+using namespace std;
+#endif
+
 #include "CBufferReactor.h"    				
 #include <spectrodaq.h>
 #include <CEventMonitor.h>
@@ -22,9 +26,6 @@
 #include <string.h>
 #include <typeinfo>
 
-#ifdef HAVE_STD_NAMESPACE
-using namespace std;
-#endif
 
 // Constructors.
 
