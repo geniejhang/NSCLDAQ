@@ -909,5 +909,7 @@ December 19, 2007 - Make this work on spectrodaq-pregt2
 January 2, 2008 - Fix permissions problems in orphan cleanup in Stager/Experiment.tcl
                   found testing DUKE-VM-USB software.
 
-
+January 2, 2008 - If a CCAENChain is created ensure that all modules in the chain have
+                  firmware 9.04 or higher..otherwise throw a string exception
+                  describing the first module that fails that test.
 
