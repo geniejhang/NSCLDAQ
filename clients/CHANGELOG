@@ -912,4 +912,9 @@ January 2, 2008 - Fix permissions problems in orphan cleanup in Stager/Experimen
 January 2, 2008 - If a CCAENChain is created ensure that all modules in the chain have
                   firmware 9.04 or higher..otherwise throw a string exception
                   describing the first module that fails that test.
+                - (BZ 315) Allow the scaler display strip charts to trim the least recent data 
+		  logarithmically.  If the data series grows beyond some fixed length, 
+		  1/2 the points in the least recent 1/2 of each series is deleted.
+
+
 
