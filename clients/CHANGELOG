@@ -906,4 +906,8 @@ December 19, 2007 - Make this work on spectrodaq-pregt2
                        (good riddance).
                     3. Misc stuff related to deprecated methods in DAQString and
                        DAQURL.
+January 2, 2008 - Fix permissions problems in orphan cleanup in Stager/Experiment.tcl
+                  found testing DUKE-VM-USB software.
+
+
 
