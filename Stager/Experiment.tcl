@@ -352,7 +352,7 @@ proc Experiment::EmergencyEnd {} {
     file mkdir  $rundir
     file attributes $rundir -permissions 0750
     exec touch $rundir/000RunAbnormallyEnded
-    file attributes $rundir/000RunAbnormallyEnded 0440
+    file attributes $rundir/000RunAbnormallyEnded -permissions 0440
     file attributes $rundir -permissions 0550
 }
 #Experiment::CleanOrphans
