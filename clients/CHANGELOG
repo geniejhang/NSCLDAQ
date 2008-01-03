@@ -916,5 +916,7 @@ January 2, 2008 - If a CCAENChain is created ensure that all modules in the chai
 		  logarithmically.  If the data series grows beyond some fixed length, 
 		  1/2 the points in the least recent 1/2 of each series is deleted.
 
+Finalized Jan 3, 2008
 
+Open edit level 8.1-006
 
