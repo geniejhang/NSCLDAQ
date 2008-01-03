@@ -13,7 +13,7 @@ AM_INIT_AUTOMAKE(nscldaq, 8.0-012)
 #   version number above to ensure that
 #   all the .so's get appropriately versioned:
 #
-SOVERSION="8:0"
+SOVERSION="8:1"
 
 
 #  Checks for parameters:
