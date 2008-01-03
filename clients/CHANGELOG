@@ -208,9 +208,14 @@ Released April 26, 2007
 
 October 11, 2007 7.4-011 released, end of life announced
 
+Start edit level 7.4-012
 December 18, 2007 
       - Make this work with spectrodaq-pregt2:
        1. Map templated Pointer/DAQWordBuffer -> DAQWordBufferPtr,
           DAQWordBuffer.
        2. Get rid of DAQAuth stuff.
        A few other miserably misc. things.
+
+Finalized January 3, 2008
+
+Start edit level 7.4-013
