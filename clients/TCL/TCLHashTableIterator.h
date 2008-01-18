@@ -449,7 +449,7 @@ public:
   //  Protected utility functions:
 protected:
   void Initialize() {
-    m_pCurrentEntry = Tcl_FirstHashEntry(m_pTable, &m_Current);
+    m_pCurrentEntry = Tcl_FirstHashEntry(m_pHashTable, &m_Context);
   }
 };
 

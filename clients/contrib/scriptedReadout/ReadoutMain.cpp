@@ -385,8 +385,8 @@ DAQBuff::operator()(int argc, char**argv)
     catch(char* pErrorMessage) {
       cerr << "Exception caught at main level: " << pErrorMessage << endl;
     }
-    catch(string exception) {
-      cerr << "Exception caught at main level: " << exception << endl;
+    catch(string e) {
+      cerr << "Exception caught at main level: " << e << endl;
     }
     catch(NSCLException& except) {
       cerr << "NSCLException caught at main level " <<

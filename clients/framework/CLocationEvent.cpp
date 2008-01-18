@@ -308,8 +308,7 @@ using namespace std;
   \param rOwner - Reference to our owner object.
   */
 template <class T>
-template <class U>
-CLocationEvent<T>::CGenericLocationReactor<U>::
+CLocationEvent<T>::CGenericLocationReactor::
 CGenericLocationReactor(CLocationEvent<T>& rOwner) :
   m_rOwner(rOwner)
 {}
@@ -325,9 +324,8 @@ CGenericLocationReactor(CLocationEvent<T>& rOwner) :
 
   */
 template <class T>
-template <class U>
 void
-CLocationEvent<T>::CGenericLocationReactor<U>::
+CLocationEvent<T>::CGenericLocationReactor::
 OnLocationChanged(CLocationMonitor<T>& rEvent, T NewValue)
 {
   m_rOwner.OnLocationChanged(NewValue);
@@ -341,9 +339,8 @@ OnLocationChanged(CLocationMonitor<T>& rEvent, T NewValue)
   \param rEvent  - Reference to the monitor which timed out. (unused).
   */
 template <class T>
-template <class U>
 void
-CLocationEvent<T>::CGenericLocationReactor<U>::
+CLocationEvent<T>::CGenericLocationReactor::
 OnTimeout(CEventMonitor& rEvent)
 {
   m_rOwner.OnTimeout();
@@ -360,11 +357,11 @@ OnTimeout(CEventMonitor& rEvent)
    \param pred     - Reference to the prediate which defines an eventworthy
                      change in *Location.
  */
-template <class T>
+template <typename T>
 CLocationEvent<T>::CLocationEvent(volatile T* Location, 
 				      CPointerPredicate<T>& pred) :
   CEvent(*(new CLocationMonitor<T>(Location, &pred)),
-	 *(new CLocationEvent<T>::CGenericLocationReactor<T>(*this))),
+	 *(new CGenericLocationReactor(*this))),
   m_rPredicate(pred),
   m_rMonitor((CLocationMonitor<T>&)CEvent::getMonitor()),
   m_rReactor((CLocationReactor<T>&)CEvent::getReactor())
@@ -379,10 +376,10 @@ CLocationEvent<T>::CLocationEvent(volatile T* Location,
                     change in *Location.
   */
 template <class T>
-CLocationEvent<T>::CLocationEvent<T>(const char* pName, volatile T* Location,
+CLocationEvent<T>::CLocationEvent(const char* pName, volatile T* Location,
 				     CPointerPredicate<T>& pred) :
   CEvent(pName, *(new CLocationMonitor<T>(Location, &pred)),
-	 *(new CLocationEvent<T>::CGenericLocationReactor<T>(*this))),
+	 *(new CGenericLocationReactor(*this))),
   m_rPredicate(pred),
   m_rMonitor((CLocationMonitor<T>&)CEvent::getMonitor()),
   m_rReactor((CLocationReactor<T>&)CEvent::getReactor())
@@ -396,10 +393,10 @@ CLocationEvent<T>::CLocationEvent<T>(const char* pName, volatile T* Location,
 
   */
 template <class T>
-CLocationEvent<T>::CLocationEvent<T>(const string& rName, volatile T* Location,
+CLocationEvent<T>::CLocationEvent(const string& rName, volatile T* Location,
 				     CPointerPredicate<T>& pred) :
   CEvent(rName, *(new CLocationMonitor<T>(Location, &pred)),
-	 *(new CLocationEvent<T>::CGenericLocationReactor<T>(*this))),
+	 *(new CGenericLocationReactor(*this))),
   m_rPredicate(pred),
   m_rMonitor((CLocationMonitor<T>&)CEvent::getMonitor()),
   m_rReactor((CLocationReactor<T>&)CEvent::getReactor())

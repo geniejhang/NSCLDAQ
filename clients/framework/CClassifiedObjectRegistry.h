@@ -319,6 +319,7 @@ DAMAGES.
 #endif
 
 typedef STD(map)<STD(string), CObjectRegistry>::iterator RegistryIterator;
+typedef STD(map)<STD(string), CObjectRegistry>::const_iterator constRegistryIterator;
 typedef STD(list)<CNamedObject*> ObjectList;
 
 class CClassifiedObjectRegistry : public CNamedObject
@@ -359,7 +360,7 @@ public:
   void DeleteRegistry (const STD(string)& RegistryName);
   void Add (const STD(string)& RegistryName, CNamedObject& rObject);
   void Remove (const STD(string)& RegistryName, CNamedObject& Object);
-  ObjectIterator Find (const STD(string)& RegistryName, const STD(string)& ObjectName);
+  constObjectIterator Find (const STD(string)& RegistryName, const STD(string)& ObjectName) ; 
   CRefcountedPtr<ObjectList> Find (const STD(string)& ObjectName);
   RegistryIterator beginregistry ();
   RegistryIterator endregistry ();

@@ -7,7 +7,8 @@ TEMPLATE_IMPLEMENTATIONS= CArrayBinding.cpp                      \
 	CLocationReactor.cpp                           \
 	CMaskedValuePredicate.cpp                       \
 	CPointerPredicate.cpp                           \
-	CVariableBinding.cpp      
+	CVariableBinding.cpp      			\
+	CNamedObject.cpp
 
 libEventFramework_la_SOURCES= CThreadRecursiveMutex.cpp  \
 	CEventLoop.cpp CXtEventLoop.cpp \
