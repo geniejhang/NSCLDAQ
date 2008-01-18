@@ -417,13 +417,13 @@ CClassifiedObjectRegistry::Remove (const string& RegistryName,
   \param RegistryName The name of the registry to search for the object in.
   \param ObjectName The name of the object to search for.
 */
-ObjectIterator
+constObjectIterator
 CClassifiedObjectRegistry::Find (const string& RegistryName,
 				 const string& ObjectName)
 {
   RegistryIterator It = m_Registries.find(RegistryName);
   if(It != m_Registries.end()) {
-    ObjectIterator objIt = ((*It).second).Find(ObjectName);
+    constObjectIterator objIt = ((*It).second).Find(ObjectName);
     if(objIt != ((*It).second).end()) {
       return objIt;
     }
