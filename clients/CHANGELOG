@@ -577,3 +577,4 @@ December 19, 2007   - Get this to compile with spectrodaq-pregt2:
 Finalized Jan 3, 2007
 
 Open edit level 8.0-013
+January 21, 2008   - Get clean compilation on gcc/g++-4.1.

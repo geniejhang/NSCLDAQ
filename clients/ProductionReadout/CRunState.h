@@ -319,12 +319,12 @@ public:
     Paused
   } RunState;
 private:
-  enum RunState m_eState; //!< Value of the state
-  STD(map)<enum RunState,STD(string)> 
+  RunState m_eState; //!< Value of the state
+  STD(map)<RunState,STD(string)> 
          m_StatesByValue; //!< State names looked up by state value.
-  STD(map)<STD(string),enum RunState> 
+  STD(map)<STD(string),RunState> 
          m_StatesByName; //!< State Values looked up by run state.
-  STD(map)<enum RunState, STD(set)<RunState> > 
+  STD(map)<RunState, STD(set)<RunState> > 
          m_Transitions; //!< For each state, allowed transitions.
   
 public:
@@ -343,19 +343,19 @@ public:
 	// Selectors for class attributes:
 public:
 
-    enum RunState getState() const {
+    RunState getState() const {
        return m_eState;
     }
 
-    STD(map)<enum RunState,STD(string)> getStatesByValue() const {
+    STD(map)<RunState,STD(string)> getStatesByValue() const {
        return m_StatesByValue;
     }
 
-    STD(map)<STD(string),enum RunState> getStatesByName() const {
+    STD(map)<STD(string),RunState> getStatesByName() const {
        return m_StatesByName;
     }
 
-    STD(map)<enum RunState, STD(set)<RunState> > getTransitions() const {
+    STD(map)<RunState, STD(set)<RunState> > getTransitions() const {
        return m_Transitions;
     }
 
@@ -371,8 +371,8 @@ public:
   bool Allowed(RunState newstate);
   
   STD(string) getStateName ()  ;
-  STD(string) getStateName(enum RunState state);
-  void   SetStateVariable(enum RunState state);	
+  STD(string) getStateName(RunState state);
+  void   SetStateVariable(RunState state);	
 };
 
 #endif

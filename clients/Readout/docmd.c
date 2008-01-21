@@ -33,6 +33,7 @@
 #include    "daqinterface.h"
 #include    "cmdio.h"
 #include    "daqerrno.h"
+#include    <string.h>
 
 static char* pCopyright = 
 "docmd.c: (c) Copyright NSCL 1999, All rights reserved\n";

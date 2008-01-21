@@ -344,8 +344,7 @@ private:
     rather than forcing them to be aware of the relationship between monitors
     and reactors.
     */
-  template <class U>
-  class  CGenericLocationReactor : public CLocationReactor<U>
+  class  CGenericLocationReactor : public CLocationReactor<T>
   {
   private:
     CLocationEvent<T>&  m_rOwner;
