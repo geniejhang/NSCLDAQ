@@ -16,7 +16,7 @@ install-data-local:
 	$(mkinstalldirs) $(prefix)/bin
 	$(mkinstalldirs) $(prefix)/lib
 	$(mkinstalldirs) $(prefix)/includes
-	$(mksintalldirs) $(prefix)/etc
+	$(mkinstalldirs) $(prefix)/etc
 	rm -f $(prefix)/Bin
 	rm -f $(prefix)/Lib
 	rm -f $(prefix)/Include
