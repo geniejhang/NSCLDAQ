@@ -28,7 +28,7 @@ package provide spdaqstat 1.0
 #  spdaqstat::spdaqhome  - Location of the spdaq home directory (variable)
 #
 
-namespace eval spdaqstat {
+namespace eval ::spdaqstat {
     variable spdaqhome /usr/opt/spectrodaq
     variable Domain
 }
@@ -56,7 +56,7 @@ incr period
 set domain [string range $nameserver $period end]
 
 dns::configure -search $domain
-set spdaqstat::Domain $domain;     # tcllib dns does not yet use -search >sigh<
+set ::spdaqstat::Domain $domain;     # tcllib dns does not yet use -search >sigh<
 
 
 #-------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ set spdaqstat::Domain $domain;     # tcllib dns does not yet use -search >sigh<
 #
 #   ProgramPath returns path to a spectrodaq utility:
 
-proc spdaqstat::ProgramPath utility {
+proc ::spdaqstat::ProgramPath utility {
     return [file join $spdaqstat::spdaqhome bin $utility]
 }
 
@@ -73,7 +73,7 @@ proc spdaqstat::ProgramPath utility {
 # StatPort returns the status port for spectrodaq by analyzing
 # /etc/services, looking for the service sdaq-stat.
 #
-proc spdaqstat::StatPort {} {
+proc ::spdaqstat::StatPort {} {
     set f [open "/etc/services" r]
     set services [read $f]
     close $f
@@ -92,14 +92,14 @@ proc spdaqstat::StatPort {} {
 #
 #  Constructs a status url to specific host.
 #
-proc spdaqstat::StatusUrl host {
+proc ::spdaqstat::StatusUrl host {
     return "tcp://$host:[spdaqstat::StatPort]"
 }
 #
 #  Resolve a host id (name or IP to a name) localhost is resolved to
 #  the resolution of hostname.
 #
-proc spdaqstat::DNSResolve host {
+proc ::spdaqstat::DNSResolve host {
     
     set token [dns::resolve $host]
     dns::wait $token
@@ -126,13 +126,13 @@ proc spdaqstat::DNSResolve host {
 
 #++
 #
-#   spdaqstat::freepages - Returns the number of free pages in a spectrodaq running host.
+#   ::spdaqstat::freepages - Returns the number of free pages in a spectrodaq running host.
 #               It is an error to ask the status of a host not running spectrodaq.
 # Parameters:
 #   host      - host of which to ask this information, defaults to localhost
 #
 #--
-proc spdaqstat::freepages {{host localhost}} {
+proc ::spdaqstat::freepages {{host localhost}} {
     set url [spdaqstat::StatusUrl $host]
     set program [spdaqstat::ProgramPath freepages]
     
@@ -142,14 +142,14 @@ proc spdaqstat::freepages {{host localhost}} {
 }
 
 #++
-# spdaqstat::usedpages - Returns the number of pages in use in a spectrodaq
+# ::spdaqstat::usedpages - Returns the number of pages in use in a spectrodaq
 #              running host.  It is an error to ask the status of a host that is
 #              not running spectrodaq.
 # Parameters:
 #   host   -  Host of which to ask this information.  Defaults to localhost.
 #
 #--
-proc spdaqstat::usedpages {{host localhost}} {
+proc ::spdaqstat::usedpages {{host localhost}} {
     set url     [spdaqstat::StatusUrl $host]
     set program [spdaqstat::ProgramPath usedpages]
     set result  [exec $program -u $url |& tail -1]
@@ -158,7 +158,7 @@ proc spdaqstat::usedpages {{host localhost}} {
 
 
 #++
-# spdaqstat::totalpages - Returns a good estimate of the total  number of
+# ::spdaqstat::totalpages - Returns a good estimate of the total  number of
 #             pages available to a host's spectrodaq.  This is done by
 #             totalling used and free pages for that host and, since the
 #             number of used/free pages can change between calls, this can
@@ -167,7 +167,7 @@ proc spdaqstat::usedpages {{host localhost}} {
 #  Host    - The host from which to get these statistics. Defaults to localhost
 #
 #--
-proc spdaqstat::totalpages {{host localhost}} {
+proc ::spdaqstat::totalpages {{host localhost}} {
     set used [spdaqstat::usedpages $host]
     set free [spdaqstat::freepages $host]
     
@@ -176,7 +176,7 @@ proc spdaqstat::totalpages {{host localhost}} {
 
 
 #++
-# spdaqstat::usagebypid - Returns a list that describes the usage
+# ::spdaqstat::usagebypid - Returns a list that describes the usage
 #             of spectrodaq pages by pid in a host.
 #             We do this by looking for the Owner=PID expression in each
 #             line of the output of usedpages.
@@ -187,7 +187,7 @@ proc spdaqstat::totalpages {{host localhost}} {
 #   host   - Host for which to inquire this. Defaults to localhost.
 #
 #--
-proc spdaqstat::usagebypid {{host localhost}} {
+proc ::spdaqstat::usagebypid {{host localhost}} {
     set url     [spdaqstat::StatusUrl $host]
     set program [spdaqstat::ProgramPath usedpages]
     set usage   [exec $program -u $url]
@@ -214,7 +214,7 @@ proc spdaqstat::usagebypid {{host localhost}} {
 }
 
 #++
-#  spdaqstat::links  - Returns a list of the systems to which data are
+#  ::spdaqstat::links  - Returns a list of the systems to which data are
 #                      being sent by the host.
 #                      Where possible, host ip addresses are translated to
 #                      host name.  This can lead to a peculiarity with
@@ -228,7 +228,7 @@ proc spdaqstat::usagebypid {{host localhost}} {
 #   host   - Name of the host to query.  Defaults to local host.
 #
 #--
-proc spdaqstat::links {{host localhost}} {
+proc ::spdaqstat::links {{host localhost}} {
     set url     [spdaqstat::StatusUrl $host]
     set program [spdaqstat::ProgramPath linkstat]
     set links   [exec $program -u $url]
@@ -254,9 +254,9 @@ proc spdaqstat::links {{host localhost}} {
 #                      
 #-------------------------------------------------------------------------------
 #
-#   Exports from the spdaqstat namespace:
+#   Exports from the ::spdaqstat namespace:
 #
-namespace eval spdaqstat {
+namespace eval ::spdaqstat {
     namespace export freepages
     namespace export usedpages
     namespace export usedbypid

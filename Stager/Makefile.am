@@ -40,7 +40,8 @@ TCLPACKAGES=Configuration.tcl \
 	selectReadout.tcl selectReadout_ui.tcl \
 	selectReadoutDialog.tcl \
 	warning.tcl \
-	bells.tcl
+	bells.tcl   \
+	Monitor.tcl
 
 TCLAPPS=ReadoutShell.tcl \
 	StagerGui.tcl
