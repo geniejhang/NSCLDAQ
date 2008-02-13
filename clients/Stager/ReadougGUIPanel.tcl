@@ -97,6 +97,7 @@ proc ReadougGUIPanel::addUserFrame ident {
     return $framename
 }
 
+
 #
 #  procs to set the callbacks for the run control buttons.
 #
@@ -301,6 +302,9 @@ proc ReadougGUIPanel::setHost host {
     set base $::ReadougGUIPanel::ROOT
     append w $base . host
     $w configure -text $host
+
+    append status $base . monitor
+    $status configure -host $host
 }
 #  ReadougGUIPanel::setPath    $path
 #     Set the readout path for the gui.
@@ -757,7 +761,7 @@ proc ReadougGUIPanel::path_xscrollcommand args {}
 #    <NONE>
 #
 proc ReadougGUIPanel::pauseres_command args {
-    append button $ReadougGUIPanel::ROOT . pauseres
+    append button $::ReadougGUIPanel::ROOT . pauseres
     if {[$button cget -text] == "Pause"} {
         if {[info commands $::ReadougGUIPanel::pauseCallback] != ""} {
             $::ReadougGUIPanel::pauseCallback

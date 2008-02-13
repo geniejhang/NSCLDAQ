@@ -17,7 +17,7 @@
 #
 
 #   start wish \
-exec tclsh ${0} ${@}
+exec wish  ${0} ${@}
 #
 #  Script which is a readout shell for the readout
 #  GUI.
@@ -45,9 +45,12 @@ if {[lsearch -exact $auto_path $libdir] == -1} {
     set auto_path [concat $here $libdir $auto_path]
 }
 puts $auto_path
-package require Tcl
+package require Tk
 
 puts [package version ReadoutGui]
+
+
+namespace eval ReadougGUIPanel {}
 
 package require ReadoutGui
 package require Experiment
@@ -55,6 +58,9 @@ package require ExpFileSystem
 package require Configuration
 package require DAQParameters
 package require InitializeConfiguration
+package require spdaqwidgets
+
+
 
 proc Usage {} {
     puts "Usage:"
@@ -393,10 +399,12 @@ if {$CanWrite} {
     Experiment::CleanOrphans
 }
 
+
+
+
 # Register the experiment and start the
 # readoutgui.
 
 Experiment::Register
 ReadoutGui::ReadoutController {}
-
 

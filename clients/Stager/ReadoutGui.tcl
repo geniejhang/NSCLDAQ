@@ -1,4 +1,4 @@
-
+#
 #    This software is Copyright by the Board of Trustees of Michigan
 #    State University (c) Copyright 2005.
 #
@@ -34,6 +34,7 @@ package require ReadoutState
 package require DAQParameters
 package require Experiment
 package require bells
+package require spdaqwidgets
 
 namespace eval ReadoutGui {
     variable ElapsedTimer     0;        #Number of seconds in run so far.
@@ -402,11 +403,13 @@ proc ReadoutGui::ReadoutExited {RunStateonExit} {
 # ReadoutGui::EmergencyExit
 #    Callback hooked to widget deletion.
 #
-proc ReadoutGui::EmergencyExit {} {
-    ReadoutGui::CleanupRun [ReadoutControl::getReadoutState]
-    ReadoutControl::SetOnExit ::ReadoutGui::NoOp
-    ReadoutControl::ExitReadoutProgram
-    exit
+proc ReadoutGui::EmergencyExit {widget top} {
+    if {$widget eq $top} {
+	ReadoutGui::CleanupRun [ReadoutControl::getReadoutState]
+	ReadoutControl::SetOnExit ::ReadoutGui::NoOp
+	ReadoutControl::ExitReadoutProgram
+	exit
+    }
 }
 # ReadoutGui::Start
 #  Starts/restarts the front end program.
@@ -420,9 +423,13 @@ proc ReadoutGui::Start {} {
     if {![ReadoutGui::SaveSettings]} {
 	return
     }
-    ReadoutControl::SetReadoutProgram [DAQParameters::getSourceHost] \
+    set host [DAQParameters::getSourceHost]
+    ReadoutControl::SetReadoutProgram $host            \
 				      [DAQParameters::getReadoutPath]
 	timestampOutput "%s : Starting the Readout program."
+
+    
+
     ReadoutControl::StartReadoutProgram
     ReadougGUIPanel::readoutRunning
     ReadougGUIPanel::runIsHalted
@@ -533,7 +540,6 @@ proc ReadoutGui::Begin {} {
     # increment the elapsed run time.
 
     if {[ReadougGUIPanel::isTimed]} {
-	puts "Timed"
 	ReadoutState::TimedRun
 	ReadoutState::setTimedLength [ReadougGUIPanel::getRequestedRunTime]
     } else {
@@ -615,10 +621,10 @@ proc ReadoutGui::ReadoutController {topname} {
     #
     if {$topname ne ""} {
 	toplevel $topname
-	bind $topname <Destroy> ::ReadoutGui::EmergencyExit
+	bind $topname <Destroy> [list ::ReadoutGui::EmergencyExit %W $topname]
 	set topprefix $topname
     } else {
-	bind . <Destroy> ::ReadoutGui::EmergencyExit
+	bind . <Destroy> [list ::ReadoutGui::EmergencyExit  %W .]
 	set topprefix ""
 	set topname .
     }
@@ -696,6 +702,10 @@ proc ReadoutGui::ReadoutController {topname} {
 
     # If a readout program has been unambiguously defined, start it.
 
+
+    
+
+
     if {[::ReadoutGui::HaveReadout]} {
 	::ReadoutGui::Start
     } else {
@@ -704,6 +714,7 @@ proc ReadoutGui::ReadoutController {topname} {
     }
 
 
+   
 }
 
     # Exported functions:
@@ -715,5 +726,7 @@ namespace eval ReadoutGui {
     namespace export  DisableEventRecording
     namespace export  EnableEventRecording
 }
+
+
 
 

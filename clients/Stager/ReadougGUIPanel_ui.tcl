@@ -360,6 +360,13 @@ proc ReadougGUIPanel::ui {root args} {
 	    -rowspan 1 \
 	    -sticky ew
 
+    # Install the monitor widget:
+
+    package require spdaqMonitor
+
+    spdaqMonitor $base.monitor
+    grid x $base.monitor -in $root -columnspan 4
+
     # Resize Behavior
     grid rowconfigure $root 1 -weight 0 -minsize 2 -pad 0
     grid rowconfigure $root 2 -weight 0 -minsize 40 -pad 0
