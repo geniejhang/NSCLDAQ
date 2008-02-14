@@ -23,6 +23,7 @@ package provide Experiment 1.0
 package require ExpFileSystem
 package require ReadoutControl
 package require InstallRoot
+package require ReadoutGui
 
 namespace eval  Experiment {
     variable ftpLoghost
@@ -31,6 +32,7 @@ namespace eval  Experiment {
     variable SourceURL
     variable EventFilePath
     variable EventlogPid 0
+
 
     proc SetFtpLogInfo {host passwd} {
 	variable ftpLoghost
@@ -41,7 +43,12 @@ namespace eval  Experiment {
     }
     proc SetSourceHost {host} {
 	variable SourceURL
+
 	set SourceURL tcp://$host:2602/
+
+	if {[winfo exists $ReadoutGui::monitor]} {
+	    $ReadoutGUI::monitor config -host $host
+	}
     }
     #
     #  Biggest run returns the number of the biggest run number

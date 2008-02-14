@@ -38,7 +38,8 @@ EXTRA_DIST =  Experiment.tcl \
 	directories.tcl \
 	rsh.tcl \
 	warning.tcl \
-	installpkg
+	installpkg  \
+	Monitor.tcl
 
 bin_PROGRAMS =  SecretTk
 

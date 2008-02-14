@@ -298,7 +298,6 @@
 # Revision 3.6  2004/11/08 17:31:41  ron-fox
 # mainline
 #
-# Revision 3.2.4.3  2004/07/22 14:05:10  ron-fox
 # Add a validator to ensure that run numbers are actually numbers
 # otherwise the status line can blow up trying to format a textual
 # run number into the filenames it looks for.
@@ -346,6 +345,8 @@ namespace eval ReadoutGui {
     variable PauseButton
     variable RecordToggle
     variable RunStartedTime
+    variable monitor [list]
+
 
     # Run number entry edit validation proc.
     # This procedure ensures that any edit string
@@ -757,9 +758,12 @@ namespace eval ReadoutGui {
     # Called to do an emergency exit if the window is being destroyed.
     # We don't get to confirm this alas.
     #
-    proc EmergencyExit {} {
-	ReadoutControl::SetOnExit ReadoutGui::NoOp
-	ReadoutControl::ExitReadoutProgram
+    proc EmergencyExit {widget Top} {
+
+	if {$widget eq $Top} {
+	    ReadoutControl::SetOnExit ReadoutGui::NoOp
+	    ReadoutControl::ExitReadoutProgram
+	}
 
 	# Exit will happen automatically.
     }
@@ -1059,12 +1063,11 @@ namespace eval ReadoutGui {
 	if {$topname != "."} {
 	    set toplevelname $topname
 	    toplevel $toplevelname
-	    bind $toplevelname <Destroy> EmergencyExit
 	} else {
 	    set toplevelname ""
-	    bind . <Destroy> EmergencyExit
 	}
 	wm title $topname "Run Control"
+
 
 	#
 	#  Build the program frame:
@@ -1144,6 +1147,15 @@ namespace eval ReadoutGui {
 	pack $rctlframe.output -side left -fill x
 	pack $rctlframe.scrollbar -side right -fill y
 	pack  $toplevelname.evstatusline  -side top -fill x
+
+	# Here we are going to put in a status line for spectrodaq.
+	#
+
+	package require spdaqMonitor
+	set ReadoutGui::monitor [spdaqMonitor $toplevelname.spdaqmonitor]
+	pack $toplevelname.spdaqmonitor -side top -fill x
+
+
 	#
 	# build the menubar`:
 	#
@@ -1217,6 +1229,7 @@ namespace eval ReadoutGui {
 	ReadoutControl::SetOnExit "ReadoutGui::ReadoutExited"
 	ReadoutControl::SetOnCommand "ReadoutGui::RdoCommand"
 
+	bind $topname <Destroy> [list ::ReadoutGui::EmergencyExit %W $topname]
 
 
 
