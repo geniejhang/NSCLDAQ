@@ -186,6 +186,7 @@ snit::widget  spdaqwidgets::bufferusage {
     #
     method update {} {
         set currentLinks [spdaqstat::links $options(-host)]
+
         
         #  One special case is that if $options(-host) has no local clients,
         #  but is the data source node as it should be, it won't appear
@@ -197,6 +198,8 @@ snit::widget  spdaqwidgets::bufferusage {
             lappend currentLinks $sourceHost
         }
         
+
+
         set knownNodes   [array names nodeInfo]
         foreach node $currentLinks {
             if {[lsearch -exact $knownNodes $node] == -1} {
