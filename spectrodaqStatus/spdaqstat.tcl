@@ -101,6 +101,14 @@ proc ::spdaqstat::StatusUrl host {
 #
 proc ::spdaqstat::DNSResolve host {
     
+
+    # If the host has no periods in it and is not localhost,
+    # we need to append the domain name:
+
+    if {([string first "." $host] == -1) && ($host ne "localhost")} {
+	append host .  $spdaqstat::Domain
+    }
+
     set token [dns::resolve $host]
     dns::wait $token
     set name  [dns::name    $token]
@@ -233,7 +241,7 @@ proc ::spdaqstat::links {{host localhost}} {
     set program [spdaqstat::ProgramPath linkstat]
     set links   [exec $program -u $url]
     set linkList [split $links "\n"]
-    set result [list]
+    set result ""
     foreach link $linkList {
         if {[regexp {TCP://.*$} $link url]} {
             set urlparts [split $url /]
