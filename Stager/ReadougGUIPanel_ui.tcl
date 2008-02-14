@@ -365,7 +365,7 @@ proc ReadougGUIPanel::ui {root args} {
     package require spdaqMonitor
 
     spdaqMonitor $base.monitor
-    grid x $base.monitor -in $root -columnspan 4
+    grid x $base.monitor -in $root -column 3 -columnspan 8
 
     # Resize Behavior
     grid rowconfigure $root 1 -weight 0 -minsize 2 -pad 0
