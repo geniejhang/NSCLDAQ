@@ -29,7 +29,7 @@ package provide spdaqstat 1.0
 #
 
 namespace eval ::spdaqstat {
-    variable spdaqhome /usr/opt/spectrodaq
+    variable spdaqhome $::SPDAQHOME
     variable Domain
 }
 #-------------------------------------------------------------------------------
