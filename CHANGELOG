@@ -923,3 +923,6 @@ Open edit level 8.1-006
 January 18, 2008 - Get a clean compile on g++-4.1/gcc-4.1
 February 13, 2008- Added widgets that provide spectrodaq page use information.
 February 13, 2008- Instrument the readout GUI with spectrodaq page monitoring.
+February 14, 2008- Fix some host resolution issues with spectrodaq status
+                   code
+                 - Adjust appearance of readout gui so it's less wide.
