@@ -926,3 +926,5 @@ February 13, 2008- Instrument the readout GUI with spectrodaq page monitoring.
 February 14, 2008- Fix some host resolution issues with spectrodaq status
                    code
                  - Adjust appearance of readout gui so it's less wide.
+                 - Use configs idea of spectrodaq-home to locate
+                   e.g. free pages in spdaqstat.tcl
