@@ -927,4 +927,8 @@ February 14, 2008- Fix some host resolution issues with spectrodaq status
                    code
                  - Adjust appearance of readout gui so it's less wide.
                  - Use configs idea of spectrodaq-home to locate
-                   e.g. free pages in spdaqstat.tcl
+                   e.g. free pages in spdaqstat.tcl\
+February 15, 2008- Make the spectrodaq page monitors somwehat robust
+                   in the presence of spectrodaq exits.
+                 - Have spdaqstat.tcl get the domain from dnsdomainname
+                   if possible.
