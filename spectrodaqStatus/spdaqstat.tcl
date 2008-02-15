@@ -43,21 +43,31 @@ set nameserver [lindex [dns::nameservers] 0]
 
 dns::configure -nameserver $nameserver
 
-# Now resolve the nameserver and extract the last parts of the
-# name to set the domain search list
+#  Figure out the domain name.  If we can get a non-blank
+# string from exec dnsdomainname we'll use it otherwise
+# extract the back end of the dns resolution of the
+# nameserver under the assumption it's in the same domain as us.
+#
 
-set token [dns::resolve $nameserver]
-dns::wait $token
-set nameserver [lindex [dns::name $token] 0]
-dns::cleanup $token
 
-set period [string first "." $nameserver ]
-incr period
-set domain [string range $nameserver $period end]
+if {![catch {exec dnsdomainname} name]} {
+    dns::configure -search $name;	#  Unfortunately this is ignored now so..
+    set ::spdaqstat::Domain $name
+} else {
+    set token [dns::resolve $nameserver]
+    dns::wait $token
+    set nameserver [lindex [dns::name $token] 0]
+    dns::cleanup $token
+    
+    set period [string first "." $nameserver ]
+    incr period
+    set domain [string range $nameserver $period end]
+    
+    dns::configure -search $domain
+    set ::spdaqstat::Domain $domain;     # tcllib dns does not yet use -search >sigh<
+}
 
-dns::configure -search $domain
-set ::spdaqstat::Domain $domain;     # tcllib dns does not yet use -search >sigh<
-
+    
 
 #-------------------------------------------------------------------------------
 # Private methods:
@@ -143,9 +153,14 @@ proc ::spdaqstat::DNSResolve host {
 proc ::spdaqstat::freepages {{host localhost}} {
     set url [spdaqstat::StatusUrl $host]
     set program [spdaqstat::ProgramPath freepages]
+
+    set result [exec $program -u $url | tail -1]
     
-    set result [exec $program -u $url |& tail -1]
-    return [lindex $result 1]
+    if {$result eq ""} {
+	return 0
+    } else {
+	return [lindex $result 1]
+    }
 
 }
 
@@ -160,8 +175,15 @@ proc ::spdaqstat::freepages {{host localhost}} {
 proc ::spdaqstat::usedpages {{host localhost}} {
     set url     [spdaqstat::StatusUrl $host]
     set program [spdaqstat::ProgramPath usedpages]
-    set result  [exec $program -u $url |& tail -1]
-    return [lindex $result 1]
+
+    set result [exec $program -u $url |& tail -1 ]
+
+    if {$result eq ""} {
+	return 0
+    } else {
+	return [lindex $result 1]
+    }
+
 }
 
 
@@ -178,8 +200,13 @@ proc ::spdaqstat::usedpages {{host localhost}} {
 proc ::spdaqstat::totalpages {{host localhost}} {
     set used [spdaqstat::usedpages $host]
     set free [spdaqstat::freepages $host]
-    
-    return [expr ${free} + ${used}]
+
+    set total [expr {$free + $used}]
+    if {$total == 0} {
+	set total 100;			# fake number.
+    }
+
+    return $total
 }
 
 
@@ -198,7 +225,11 @@ proc ::spdaqstat::totalpages {{host localhost}} {
 proc ::spdaqstat::usagebypid {{host localhost}} {
     set url     [spdaqstat::StatusUrl $host]
     set program [spdaqstat::ProgramPath usedpages]
-    set usage   [exec $program -u $url]
+
+    if {[catch {exec $program -u $url} usage} {
+	return [list]
+    }
+
     set usageLines [split $usage "\n"]
     foreach line $usageLines {
         if {[regexp {Owner=\d+} $line itemstring]} {
@@ -239,7 +270,11 @@ proc ::spdaqstat::usagebypid {{host localhost}} {
 proc ::spdaqstat::links {{host localhost}} {
     set url     [spdaqstat::StatusUrl $host]
     set program [spdaqstat::ProgramPath linkstat]
-    set links   [exec $program -u $url]
+
+    if {[catch {exec $program -u $url} links]} {
+	return [list]
+    }
+
     set linkList [split $links "\n"]
     set result ""
     foreach link $linkList {
