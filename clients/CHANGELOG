@@ -578,3 +578,13 @@ Finalized Jan 3, 2007
 
 Open edit level 8.0-013
 January 21, 2008   - Get clean compilation on gcc/g++-4.1.
+February 13, 2008  - Add spectrodaqStatus support for getting spectrodaq
+                     free page information and widgets in which to display 
+                     this info.
+February 14, 2008  - Integrate status with the readout gui.
+                   - Fix a few edge cases in the spdaqstat host resolution 
+                     software.
+February 15, 2008- Make the spectrodaq page monitors somwehat robust
+                   in the presence of spectrodaq exits.
+                 - Have spdaqstat.tcl get the domain from dnsdomainname
+                   if possible.

@@ -40,6 +40,27 @@ snit::widget  detailsMonitor {
     option -host    localhost
     option -destroy {}
 
+
+
+
+    method update {} {
+	$win.usage update
+	set afterId [after 2000 [mymethod update]]
+    }
+    method onDismiss {} {
+	destroy $win
+    }
+    method onDestroy widget {
+	if {$widget eq $win} {
+	    if {$options(-destroy) ne ""} {
+		eval $options(-destroy)
+	    }
+	}
+    }
+    onconfigure -host host {
+	set options(-host) $host
+	$win.usage configure -host $host
+    }
     constructor args {
 	message $win.legend -width 512 \
 	    -text {
@@ -65,7 +86,7 @@ bar graph is pegged, you probably have a problem with that client.}
 
 	$self configurelist $args
 
-	$self update
+#	$self update
 
     }
 
@@ -73,26 +94,6 @@ bar graph is pegged, you probably have a problem with that client.}
 	if {$afterId > 0} {
 	    after cancel $afterId
 	}
-    }
-
-
-    method update {} {
-	$win.usage update
-	set afterId [after 2000 [mymethod update]]
-    }
-    method onDismiss {} {
-	destroy $win
-    }
-    method onDestroy widget {
-	if {$widget eq $win} {
-	    if {$options(-destroy) ne ""} {
-		eval $options(-destroy)
-	    }
-	}
-    }
-    onconfigure -host host {
-	set options(-host) $host
-	$win.usage configure -host $host
     }
 }
 

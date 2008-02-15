@@ -767,4 +767,4 @@ AC_OUTPUT( Makefile Headers/Makefile CopyrightTools/Makefile \
 	epicsdisplay/epicsdisplay \
 	daqstart/Makefile ScalerDisplay/Makefile ScalerDisplay/ScalerDisplay \
 	wienerdriver/Makefile wienerdriver/driver/Makefile \
-	wienerdriver/lib/Makefile PowerCheck/Makefile)
+	wienerdriver/lib/Makefile PowerCheck/Makefile spectrodaqStatus/Makefile)
