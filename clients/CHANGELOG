@@ -934,3 +934,6 @@ February 15, 2008- Make the spectrodaq page monitors somwehat robust
                    if possible.
 February 19, 2008- Fix typo introduced when adding error recovery.
                    Missing bracket in usagebypid.
+                 - Re-enable update of monitor widget (readoutGUI).
+                 - Put titles over the buffer usage details widget
+                   columns.
