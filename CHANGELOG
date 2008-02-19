@@ -932,3 +932,5 @@ February 15, 2008- Make the spectrodaq page monitors somwehat robust
                    in the presence of spectrodaq exits.
                  - Have spdaqstat.tcl get the domain from dnsdomainname
                    if possible.
+February 19, 2008- Fix typo introduced when adding error recovery.
+                   Missing bracket in usagebypid.
