@@ -118,6 +118,8 @@ snit::widget spdaqwidgets::freepagegraph {
 #   The table will look something like this:
 #
 #   +---------------------+----------------+----------------+
+#   | Host                | Free/Pid       | Usage          |
+#   +---------------------+----------------+----------------+
 #   |spdaq22.nscl.msu.edu | [***********]  |                |
 #   +---------------------+----------------+----------------+
 #   |                     |   1234         | [*   ]         |
@@ -169,10 +171,14 @@ snit::widget  spdaqwidgets::bufferusage {
     constructor args {
         install scrolledWindow as ScrolledWindow $win.sw -auto both -scrollbar both
         install table          as table $scrolledWindow.table -cols 3       \
-                                                              -rows 1       \
+                                                              -rows 2       \
                                                               -colstretchmode all \
                                                               -colwidth 22     \
-                                                              -rowheight -25
+                                                              -rowheight -25 \
+	                                                      -titlerows 1 \
+	                                                      -cache 1
+	$table set row 0,0 [list Host Free/Pid Usage]
+
         $scrolledWindow setwidget $table
         grid $scrolledWindow -sticky nsew
         $self configurelist $args
@@ -234,7 +240,7 @@ snit::widget  spdaqwidgets::bufferusage {
     #
     method NewNode node {
         set existingNodes [array names nodeInfo]
-        set row 0
+        set row 1
         foreach n $existingNodes {
             set info $nodeInfo($n)
             set r    [lindex $info 0]
@@ -249,7 +255,7 @@ snit::widget  spdaqwidgets::bufferusage {
                 incr row 2
             }
         }
-        if {$row != 0} {
+        if {$row != 1} {
             $table insert rows [expr $row-2] 2
         }
         
@@ -344,7 +350,7 @@ snit::widget  spdaqwidgets::bufferusage {
         # The list will be sorted by descending index so deletions will not
         # affect the position of other items in the list.
         set rowsToDelete [list]
-        set pidrow       0
+        set pidrow       1
         set itemCount    0
         
         foreach pid $currentPids {
@@ -359,8 +365,8 @@ snit::widget  spdaqwidgets::bufferusage {
         # that hold their widgets:
         
         foreach item $rowsToDelete {
-            
-            set currentPids [lreplace $currentPids $item $item]
+            set listItem [expr $item - 1]
+            set currentPids [lreplace $currentPids $listItem $listItem]
             $table delete rows [expr $item + $firstRow +1 ] 1
         }
         
@@ -403,7 +409,8 @@ snit::widget  spdaqwidgets::bufferusage {
                 ProgressBar $table.usage$widgetIndex -orient horizontal \
                                                          -type   normal     \
                                                          -variable ${selfns}::usages(usage$widgetIndex) \
-                                                         -maximum $totalPages
+                                                         -maximum $totalPages 
+
                 $table insert rows $row 1
                 $table window configure $row,1 -window $table.label$widgetIndex
                 $table window configure $row,2 -window $table.usage$widgetIndex
