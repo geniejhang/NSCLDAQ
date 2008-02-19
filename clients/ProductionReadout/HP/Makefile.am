@@ -62,6 +62,7 @@ libHPPreadout_la_SOURCES = \
 	../PasswordCheck.cpp \
 	../Skeleton.cpp \
 	../StringInteractor.cpp \
+	../AccessListCheck.cpp	\
 	../TclAccessListCheck.cpp \
 	../TclAuthorizer.cpp \
 	../UnixUserCheck.cpp \
