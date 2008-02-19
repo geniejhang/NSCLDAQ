@@ -937,3 +937,5 @@ February 19, 2008- Fix typo introduced when adding error recovery.
                  - Re-enable update of monitor widget (readoutGUI).
                  - Put titles over the buffer usage details widget
                    columns.
+                 - Get rid of a couple of files (from the repository)
+                   that are products of Make.
