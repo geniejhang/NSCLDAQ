@@ -395,6 +395,7 @@ setupConfiguration $argv
 #}
 
 if {$CanWrite} {
+    ExpFileSystem::Convert
     ExpFileSystem::CreateHierarchy
     Experiment::CleanOrphans
 }
