@@ -273,6 +273,8 @@ proc Experiment::RunBeginning {} {
 	    Error "The event logger is not yet ready after a very long time"
 	}
 	file delete -force .ready
+    } else {
+	set EventlogPid 0;		# So emergency end won't make abnormal end file.
     }
     Experiment::callback OnBegin $nrun
 }
