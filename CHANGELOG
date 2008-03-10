@@ -945,3 +945,5 @@ March 6, 2008    - Convert old style directory structures.
 March 10, 2008   - See above, but note that since if ~/experiment is a link
                    and exists, the system thought the old struct was
 		   still in use. Fix that.
+                 - Manage the permissions on ~/stagearea/complete so links can be made to
+                   the event files.
