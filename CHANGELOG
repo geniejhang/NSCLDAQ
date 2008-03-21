@@ -947,4 +947,6 @@ March 10, 2008   - See above, but note that since if ~/experiment is a link
 		   still in use. Fix that.
                  - Manage the permissions on ~/stagearea/complete so links can be made to
                    the event files.
-
+March 21, 2008   - Make sure the bcnaf scripts add 
+                   [file dirname [info script]]/../TclLibs to their auto_path
+                   so they can locate the associated camac package.

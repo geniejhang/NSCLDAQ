@@ -285,7 +285,7 @@ proc setupConfiguration arglist {
         set value  [lindex $flagvalue 1]
         switch -exact -- $flag {
             -host {
-		DAQParameter::sourceHostIs $value
+		DAQParameters::sourceHostIs $value
              }
             -path {
                if {[catch {DAQParameters::readoutPathIs $value} msg]} {

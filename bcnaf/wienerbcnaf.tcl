@@ -23,7 +23,7 @@ exec tclsh ${0} ${@}
 #  We assume we're one down from the top.
 
 set here [file dirname [info script]]
-set libdir [file join $here ..]
+set libdir [file join $here .. TclLibs]
 #
 # Canonicalize $here/..
 #
