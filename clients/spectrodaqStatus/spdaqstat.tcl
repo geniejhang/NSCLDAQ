@@ -226,7 +226,7 @@ proc ::spdaqstat::usagebypid {{host localhost}} {
     set url     [spdaqstat::StatusUrl $host]
     set program [spdaqstat::ProgramPath usedpages]
 
-    if {[catch {exec $program -u $url} usage} {
+    if {[catch {exec $program -u $url} usage]} {
 	return [list]
     }
 

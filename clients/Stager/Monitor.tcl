@@ -86,7 +86,7 @@ bar graph is pegged, you probably have a problem with that client.}
 
 	$self configurelist $args
 
-#	$self update
+	after 100 [mymethod  update]
 
     }
 

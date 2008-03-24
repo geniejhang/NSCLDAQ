@@ -588,3 +588,6 @@ February 15, 2008- Make the spectrodaq page monitors somwehat robust
                    in the presence of spectrodaq exits.
                  - Have spdaqstat.tcl get the domain from dnsdomainname
                    if possible.
+March 24, 2008 Tag 8.0-013
+Start development on 8.0-014
+
