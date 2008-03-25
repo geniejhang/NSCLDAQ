@@ -26,6 +26,8 @@ namespace eval ReadoutControl {
     variable State   NotLoaded
     variable PipeFd   " "
     variable Taping   0
+    
+    variable sclclientPid 0
 
     #
     #   Callback procs for state change.
@@ -212,6 +214,10 @@ proc ReadoutControl::SetReadoutProgram {host path} {
 #
 proc ReadoutControl::ExitReadoutProgram {} {
 
+    if {$::ReadoutControl::sclclientPid != 0} {
+	catch {exec kill -9 $::ReadoutControl::sclclientPid}
+    }
+
     if {$::ReadoutControl::State == "NotLoaded"} return
     if {$::ReadoutControl::State != "NotRunning"}  {
 	flush stdout
@@ -233,6 +239,7 @@ proc ReadoutControl::ExitReadoutProgram {} {
 #      Starts the readout program.
 #
 proc ::ReadoutControl::StartReadoutProgram {} {
+
     if {$::ReadoutControl::State != "NotLoaded"} {
         ::ReadoutControl::ExitReadoutProgram
     }
@@ -280,6 +287,25 @@ proc ::ReadoutControl::StartReadoutProgram {} {
 	fileevent $::ReadoutControl::PipeFd readable ReadoutControl::ReadoutFileEvent
         $::ReadoutControl::LoadCallback
 	set ::ReadoutControl::State NotRunning
+
+	# Stop the current scclient and start a new one taking data from
+	# ReadoutHost and connected to us at TclServerPort
+	# This is probably the simplest as I don't think the
+	# readout program will get restarted all that much.. and this
+	# allows the software to deal with the host changing or not being known
+	# when we start.
+	# Assumptions:
+	#   ::TclServerPort  - The port we're listening on.
+	#   ::bindir         - the directory in which sclclient lives.
+	#   The correct url is tcp://$ReadoutHost:2602/
+	#
+
+	if {$::ReadoutControl::sclclientPid != 0} {
+	    catch {exec kill -9 $::ReadoutControl::sclclientPid};  # Kill and errors don't matter.
+	}
+	set ::ReadoutControl::sclclientPid \
+	    [exec $::bindir/sclclient -p $::TclServerPort -s tcp://$ReadoutHost:2602/ &]
+	
     } else {
         close $fd
     }

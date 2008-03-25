@@ -28,6 +28,8 @@ namespace eval  Experiment {
     variable Logrecorder "[InstallRoot::Where]/bin/eventlog"
     variable EventlogPid 0
     variable fileWaitTimeout 45
+
+
     #  Define exports:
 
     namespace export Register
@@ -334,6 +336,7 @@ proc Experiment::RunResuming {} {
     Experiment::callback OnResume $nrun
 }
 # Experiment::ReadoutStarting
+#
 #    If the OnStart proc is defined call it.
 #
 proc Experiment::ReadoutStarting {} {

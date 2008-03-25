@@ -35,9 +35,14 @@ proc EndRun {} {
     ::RunTime::stopClock
 }
 proc ResumeRun {} {
+    ::RunTime::startClock
 }
 proc PauseRun {} {
+    ::RunTime::stopClock
 }
+
+# Since we start/stop the clock this should not happen.
+
 proc RunInprogress {} {
 }
 
