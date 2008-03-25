@@ -950,3 +950,10 @@ March 10, 2008   - See above, but note that since if ~/experiment is a link
 March 21, 2008   - Make sure the bcnaf scripts add 
                    [file dirname [info script]]/../TclLibs to their auto_path
                    so they can locate the associated camac package.
+
+March 24, 2008 Tag 8.1-006
+Start development 8.1-007
+
+March 25, 2008   - Work Order 2529-004-cp-016:
+                   Synchronize the Readout GUI time with the 'scaler
+                   display elapsed time'.

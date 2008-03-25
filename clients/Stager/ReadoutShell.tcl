@@ -30,6 +30,7 @@ exec wish  ${0} ${@}
 
 set here [file dirname [info script]]
 set libdir [file join $here .. TclLibs]
+set bindir $here
 #
 # Canonicalize $here/../TclLibs
 #
@@ -280,6 +281,18 @@ proc SourceExperimentFiles {} {
 #
 proc setupConfiguration arglist {
     foreach item $arglist {
+
+	#  If we're running in a tcl server, 
+	#  we need to discard the -p and -a switches.
+	#  as they are for the Tcl server not us.
+
+
+
+	set threechars [string range $item 0 2]
+	if {($threechars eq "-pM") || ($threechars eq {-aR})} {
+	    continue
+	}
+
         set flagvalue [split $item =]
         set flag   [lindex $flagvalue 0]
         set value  [lindex $flagvalue 1]
@@ -351,6 +364,7 @@ proc getPassword {} {
 
     return $Password
 }
+
 #  Set up the configuration subsystem
 
 InitializeConfiguration::addSubsystem DAQParameters
