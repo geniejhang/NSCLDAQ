@@ -954,6 +954,6 @@ March 21, 2008   - Make sure the bcnaf scripts add
 March 24, 2008 Tag 8.1-006
 Start development 8.1-007
 
-March 25, 2008   - Work Order 2529-004-cp-016:
+March 25, 2008   - Work Order 2529-004-cp-016 (DJM):
                    Synchronize the Readout GUI time with the 'scaler
                    display elapsed time'.
