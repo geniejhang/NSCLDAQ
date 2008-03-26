@@ -7,8 +7,8 @@ exec wish ${0} ${@}
 
 tk_messageBox -type ok -icon warning -title {Obsolete software} \
     -message {You are running an obsolete version of the shaperapp.tcl script 
-The current versions of the shaper application software are now stored in
-$DAQROOT/Scripts/ControlApplications}
+The current version of the shaper control panel is:
+$DAQROOT/bin/n568Control}
 #
 #  SEE application for shaper control.
 #  Source in configuration files build the appropriate set of GUI's.
