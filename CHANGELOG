@@ -959,3 +959,5 @@ March 25, 2008   - Work Order 2529-004-cp-016 (DJM):
                    display elapsed time'.
 March 26,2008    - Fix redirection in old shaper application.
                    Was pointing at wrong place for replacement script.
+                 - Fix incorrect HREF= for the anchor for the config file help page
+                   in the main help page of the n568 control panel application.
