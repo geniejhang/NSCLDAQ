@@ -957,3 +957,5 @@ Start development 8.1-007
 March 25, 2008   - Work Order 2529-004-cp-016 (DJM):
                    Synchronize the Readout GUI time with the 'scaler
                    display elapsed time'.
+March 26,2008    - Fix redirection in old shaper application.
+                   Was pointing at wrong place for replacement script.
