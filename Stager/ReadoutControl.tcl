@@ -216,6 +216,7 @@ proc ReadoutControl::ExitReadoutProgram {} {
 
     if {$::ReadoutControl::sclclientPid != 0} {
 	catch {exec kill -9 $::ReadoutControl::sclclientPid}
+	set sclclientPid 0
     }
 
     if {$::ReadoutControl::State == "NotLoaded"} return
