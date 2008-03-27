@@ -388,8 +388,9 @@ proc Experiment::CleanOrphans {} {
         scan [file tail [lindex $orphans 0]] run%d run
         finalizeEventData $run
 
-	file attributes $target -permissions 0750
         set target [ExpFileSystem::WhereisRun $run]
+	file attributes $target -permissions 0750
+
         set fd [open [file join $target 000orphaned] w]
         close $fd
 	file attributes $target -permissions 0440
