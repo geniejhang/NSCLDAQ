@@ -45,10 +45,8 @@ cd $wd
 if {[lsearch -exact $auto_path $libdir] == -1} {
     set auto_path [concat $here $libdir $auto_path]
 }
-puts $auto_path
 package require Tk
 
-puts [package version ReadoutGui]
 
 
 namespace eval ReadougGUIPanel {}
@@ -371,6 +369,10 @@ InitializeConfiguration::addSubsystem DAQParameters
 InitializeConfiguration::addSubsystem ReadoutState
 InitializeConfiguration::addSubsystem ExpFileSystemConfig
 
+InitializeConfiguration::initialize;   # Define packages and defaults...
+InitializeConfiguration::processEnv;   # Override defaults with env.
+
+
 #
 #  Configuration files include:
 #    ~/.daqconfig
@@ -389,12 +391,16 @@ if {[file exists $homeconfig]} {
 if {[file exists $cwdconfig]} {
     InitializeConfiguration::addConfigFile $cwdconfig
 }
-InitializeConfiguration::initialize
 
 set sessionconfig [file join [ExpFileSystem::GetStage] .readoutconfig]
 if {[file exists $sessionconfig]} {
-    Configuration::readConfigFile $sessionconfig
+    InitializeConfiguration::addConfigFile $sessionconfig
 }
+
+# Process the configuration files and then override again with the env:
+
+InitializeConfiguration::processConfigFiles
+InitializeConfiguration::processEnv
 
 set CanWrite 1;				# By default events can be recorded.
 

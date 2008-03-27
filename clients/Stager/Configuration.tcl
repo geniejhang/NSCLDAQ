@@ -72,7 +72,9 @@ proc Configuration::readEnvironment {confname envname {default {}}} {
     global env
 
     if {[array names env $envname] == "" } {
-        set ::configuration::$confname $default
+        if {$default ne ""} {
+	    set ::configuration::$confname $default
+	}
     } else {
         set ::configuration::$confname $env($envname)
     }
