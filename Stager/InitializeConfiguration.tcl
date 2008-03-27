@@ -75,6 +75,7 @@ proc InitializeConfiguration::addConfigFile path {
         error InitializeConfiguration::FileNotReadable
     }
     lappend InitializeConfiguration::configurationFiles $path
+
 }
 
 # initialize
@@ -83,21 +84,43 @@ proc InitializeConfiguration::addConfigFile path {
 #
 proc InitializeConfiguration::initialize {} {
 
-    # Init each package's defaults and override as
-    # needed with environment vars.
 
+    # First bring the configuration namespaces online.
+    # and set defaults:
     foreach pkg $InitializeConfiguration::packageList {
-        package require $pkg
+	package require $pkg
         set def ""
         append def $pkg :: setDefaults
         $def
+    }
+
+
+
+}
+
+					   
+# Process the configuration files for each pacakge:
+
+proc InitializeConfiguration::processConfigFiles {} {
+    # Read the configuration files.
+
+    foreach f $InitializeConfiguration::configurationFiles {
+	Configuration::readConfigFile $f
+    }
+}
+
+#
+#  Process the env variables for each configuration.
+#
+proc InitializeConfiguration::processEnv {} {
+    # Finally process env vars.
+
+
+    foreach pkg $InitializeConfiguration::packageList {
+
         set envo ""
         append envo $pkg :: environmentOverrides
         $envo
     }
-    # Source the config files:
 
-    foreach f $InitializeConfiguration::configurationFiles {
-        Configuration::readConfigFile $f
-    }
 }

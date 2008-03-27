@@ -962,3 +962,15 @@ March 26,2008    - Fix redirection in old shaper application.
                  - Fix incorrect HREF= for the anchor for the config file help page
                    in the main help page of the n568 control panel application.
 March 27, 2080   - Set permissions when dealing with orphans.
+                 - Fix the ordering of configuration file reads, env processing
+                   etc.  It was previously the case that .readoutconfig
+                   and other configuration files could not be overridden
+                   by env variables.  Now:
+                   - Set defaults
+                   - Set env vars.
+                   - Read config files
+                   - Set env vars again.
+                      setting env vars twice is needed so that we can
+                   deal with e.g. the stage area being overridden which affects
+                   where the config files live, but the config files could
+                   override env vars if not processed yet again.

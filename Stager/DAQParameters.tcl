@@ -59,10 +59,10 @@ proc DAQParameters::environmentOverrides {} {
     global env
 
 
-    Configuration::readEnvironment SourceHost  DAQHOST localhost
+    Configuration::readEnvironment SourceHost  DAQHOST
     Configuration::readEnvironment ReadoutPath RDOFILE
     Configuration::readEnvironment FtpHost     EVTHOST
-    Configuration::readEnvironment BufferSize  BUFFERSIZE 8192
+    Configuration::readEnvironment BufferSize  BUFFERSIZE
 
 
     #  Passwd is handled strangely since it must be encrypted.
