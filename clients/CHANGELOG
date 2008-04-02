@@ -995,5 +995,12 @@ April 2, 2008    - Add jumbo buffer capability for the Readouts.  This is
                          buffer ref is JUMBO_BUFFER_REVISION
                        - Provides a member size32() which is true if
                          the buffer rev is JUMBO_BUFFER_REVISION.
-
+                 - Factored out the device independent macros from the
+                   wienermacros.h/cesmacros.h -> camac.h
+                   Note that this file will honor the VC32CAMAC and
+                   CESCAMAC definitions to include the appropriate
+                   device specific *macros.h   This is driven by
+                   maintainability.  It's a bad thing to have
+                   several copies of these as I'll miss one if I add,
+                   fix or otherwise modify one of the macros.
 
