@@ -52,6 +52,8 @@ using namespace std;
 
 static const long VMETRIGGERBASE(0x444400);
 
+static const unsigned int JUMBOTHRESHOLD(32*1024-1);
+
 
 extern CReadoutMain MyApp;
 
@@ -423,6 +425,19 @@ CReadoutMain::Exit()
 }
 
 
+
+/*--------------------------------------------------------------
+ * 
+ * Return true if the buffers are jumbo:
+ */
+bool
+daq_isJumboBuffer()
+{
+  CExperiment* pExp = CReadoutMain::getInstance()->getExperiment();
+  unsigned     size = pExp->getBufferSize();
+  return size > JUMBOTHRESHOLD;
+}
+
 // If spectrodaq main is separable, then I need to define main
 // here to ensure that TCL++'s main is not pulled in by mistake.
 //
@@ -433,6 +448,7 @@ main(int argc, char** argv, char** envp)
 {
   return spectrodaq_main(argc, argv, envp);
 }
+
 
 
 #endif

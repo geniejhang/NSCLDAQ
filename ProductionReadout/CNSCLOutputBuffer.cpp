@@ -23,6 +23,7 @@
 #include <RangeError.h>
 #include "CBufferManager.h"
 #include <stdint.h>
+#include <CReadoutMain.h>
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
@@ -42,13 +43,22 @@ static const int hdrWUNUSED2 = 9; // Decomisioned bitregister count.
 static const int hdrWBUFFMT = 10; // Buffer format indicator.
 static const int hdrWSIG   = 11; // Short signature.
 static const int hdrLSIG   = 12; // Long signature.
-static const int hdrWUNUSED3 =14; // 14,15, are both unused.
+static const int hdrWJUMBOHIGH = 14;
+static const int hdrWUNUSED3=15; // 15, are both unused.
 static const int BODYOFFSET = 16;
 
 static const short SSIGNATURE = 0x0102;
 static const long  LSIGNATURE = 0x01020304;
 
-static const short REVLEVEL = 5; // lvl 5 - removes unused header items.
+static const short REVLEVEL    = 5; // lvl 5 - removes unused header items.
+static const short JUMBOLEVEL  = 6; // Buffer bigger than word sized counts can hold.
+
+// Convert int <-> shorts.
+
+union intConvert {
+  unsigned int   l;
+  unsigned short w[2];
+};
 
 // Static class members.
 
@@ -96,7 +106,15 @@ CNSCLOutputBuffer::~CNSCLOutputBuffer()
 void 
 CNSCLOutputBuffer::ComputeSize()  
 {
-  m_Buffer[hdrWSIZE] = m_BufferPtr.GetIndex();
+  if (daq_isJumboBuffer()) {
+    union intConvert lw;
+    lw.l = m_BufferPtr.GetIndex();
+    m_Buffer[hdrWSIZE]       = lw.w[0];
+    m_Buffer[hdrWJUMBOHIGH] = lw.w[1];
+  }
+  else {
+    m_Buffer[hdrWSIZE] = m_BufferPtr.GetIndex();
+  }
 }  
 
 /*!
@@ -130,7 +148,16 @@ void
 CNSCLOutputBuffer::ComputeChecksum()  
 {
   m_Buffer[hdrWCKS] = 0;	// Don't let old cks contribute if set.
-  int nWords = m_Buffer[hdrWSIZE];
+  int nWords;
+  if (daq_isJumboBuffer()) {
+    intConvert lw;
+    lw.w[0] = m_Buffer[hdrWSIZE];
+    lw.w[1] = m_Buffer[hdrWJUMBOHIGH];
+    nWords = lw.l;
+  }
+  else {
+    nWords = m_Buffer[hdrWSIZE];
+  }
   short cks(0);
 
   DAQWordBufferPtr p(&m_Buffer); // Pointer iteration much better than idx.
@@ -268,10 +295,8 @@ CNSCLOutputBuffer::PutEntity(void* pEntity, unsigned int nWords)
 void 
 CNSCLOutputBuffer::PutLong(const unsigned long& rLong)  
 {
-  union {
-    unsigned long l;
-    unsigned short w[2];
-  } d;
+  union intConvert d;
+
   d.l = rLong;
 
   *m_BufferPtr = d.w[0];
@@ -314,7 +339,7 @@ CNSCLOutputBuffer::PutWords(const unsigned short* pWords, unsigned int nWords)
     ++m_BufferPtr;
     nWords--;
   }
-#else /* HIGH_PERFORMANCE */
+#else /* (Not) HIGH_PERFORMANCE */
   m_BufferPtr.CopyIn((unsigned short*)pWords, 0, nWords);
   m_BufferPtr += nWords;
 
@@ -547,7 +572,12 @@ CNSCLOutputBuffer::InitializeHeader()
   longbuffer.l         = m_nSequence;
   m_Buffer[hdrLSEQ]    = longbuffer.w[0];
   m_Buffer[hdrLSEQ+1]  = longbuffer.w[1];
-  m_Buffer[hdrWBUFFMT] = REVLEVEL;
+  if (daq_isJumboBuffer()) {
+    m_Buffer[hdrWBUFFMT]= JUMBOLEVEL;
+  }
+  else {
+    m_Buffer[hdrWBUFFMT] = REVLEVEL;
+  }
   m_Buffer[hdrWSIG]    = SSIGNATURE;
   longbuffer.l         = LSIGNATURE;
   m_Buffer[hdrLSIG]    = longbuffer.w[0];
@@ -593,7 +623,7 @@ CNSCLOutputBuffer::Resize(int newsize)
 unsigned short
 CNSCLOutputBuffer::getBufferType()
 {
-  return m_Buffer[1];
+  return m_Buffer[hdrWTYPE];
 }
 /*
  *   Get an appropriately sized buffer.  The system will usually use

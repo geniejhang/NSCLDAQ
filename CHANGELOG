@@ -961,7 +961,7 @@ March 26,2008    - Fix redirection in old shaper application.
                    Was pointing at wrong place for replacement script.
                  - Fix incorrect HREF= for the anchor for the config file help page
                    in the main help page of the n568 control panel application.
-March 27, 2080   - Set permissions when dealing with orphans.
+March 27, 2008   - Set permissions when dealing with orphans.
                  - Fix the ordering of configuration file reads, env processing
                    etc.  It was previously the case that .readoutconfig
                    and other configuration files could not be overridden
@@ -974,3 +974,26 @@ March 27, 2080   - Set permissions when dealing with orphans.
                    deal with e.g. the stage area being overridden which affects
                    where the config files live, but the config files could
                    override env vars if not processed yet again.
+April 2, 2008    - Add jumbo buffer capability for the Readouts.  This is
+                   driven by MoNA's cosmics program, it provides a path
+                   for that group to be able to function when nscldaq-7.4
+                   is decomissioned Jan 2009 (they use a specialized version
+                   of 7.4).  This is now integrated with the mainline:
+                   - for buffers < 32Kwords, the buffer format is not changed.
+                   - for buffers >= 32KWords, the buffer format is changed:
+                     o The buffer revision level is set to 
+                        JUMBO_BUFFER_REVISION (6).
+                     o Word 14 of the header is the high order bits of
+                       the used size.
+                     o Event sizes are 32 bits.
+                     o Packet sizes produced by VPacket and
+                        CDocumentedPacket are 32 bits.
+                     NOTE SpecTcl provides a CNSCLJumboBufferDecoder
+                          that can be registered by the user to 
+                          that is aware of this, and:
+                       - Uses the full 32 bit size in the header, if the
+                         buffer ref is JUMBO_BUFFER_REVISION
+                       - Provides a member size32() which is true if
+                         the buffer rev is JUMBO_BUFFER_REVISION.
+
+

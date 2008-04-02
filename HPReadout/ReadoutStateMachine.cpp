@@ -885,13 +885,13 @@ ReadoutStateMachine::GetBody(DAQWordBuffer* pBuffer)
 //
 // Function:
 //     void FormatHeader(DAQWordBuffer* pBuffer, 
-//		         UINT16 nWords, UINT16 nType, UINT16 nEntities);
+//		         UINT32 nWords, UINT16 nType, UINT16 nEntities);
 // Operation type:
 //   Utility.
 //
 void
 ReadoutStateMachine::FormatHeader(DAQWordBuffer* pBuffer, 
-				  UINT16 nWords, 
+				  UINT32 nWords, 
 				  UINT16 nType, 
 				  UINT16 nEntities)
 {
@@ -901,7 +901,7 @@ ReadoutStateMachine::FormatHeader(DAQWordBuffer* pBuffer,
   // Formal Parameters:
   //    DaqWordBuffer* pBuffer:
   //      Pointer to the DAQ buffer.
-  //    UINT16 nWords:
+  //    UINT32 nWords:
   //      Number of words stuffed in the buffer body.
   //    UINT16 nType:
   //      Type of the buffer.
@@ -909,8 +909,17 @@ ReadoutStateMachine::FormatHeader(DAQWordBuffer* pBuffer,
   //      Number of 'things' in the buffer.
   //
 
+
+  union longword {
+    UINT32  l;
+    UINT16  w[2];
+  } lw;;
+
+  bool    jumbo     = daq_isJumboBuffer();
+  UINT32  usedWords = sizeof(bheader)/sizeof(INT16) + nWords;
+  lw.l  = usedWords;
   DAQWordBufferPtr p = pBuffer->operator&();
-  *p++ = (INT16)(nWords + (sizeof(bheader)/sizeof(INT16))); // Size of buffer.
+  *p++ = lw.w[0];
   *p++ = nType;			// Type of buffer.
   *p++ = 0;			// For now checksum is not computed.
   *p++ = daq_GetRunNumber();
@@ -920,9 +929,16 @@ ReadoutStateMachine::FormatHeader(DAQWordBuffer* pBuffer,
   *p++ = 1;			// Lam count.
   *p++ = 1;			// CPU number.
   *p++ = 1;			// Number of bit registers.
-  *p++ = BUFFER_REVISION;	// Buffer revision level.
+  *p++ = jumbo ? JUMBO_BUFFER_REVISION : BUFFER_REVISION;
   *p++ = 0x0102;		// Word Signature.
   INT32 lsig = 0x01020304;
   CopyIn(p, &lsig, sizeof(INT32)/sizeof(INT16));
+
+  if (jumbo) {
+    *p = lw.w[1];
+  }
+
+
+
 }
 
