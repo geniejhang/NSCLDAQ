@@ -161,6 +161,8 @@ public:
   void Exit();
 };
 
+
+extern bool daq_isJumboBuffer();
 #endif
 
 

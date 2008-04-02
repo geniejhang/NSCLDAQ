@@ -1,4 +1,21 @@
 /*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2005.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Ron Fox
+	     NSCL
+	     Michigan State University
+	     East Lansing, MI 48824-1321
+*/
+
+
+/*
 ** command.c:
 **   Provides stubs for interfaces to the data acquisition command distribution
 **   and processing facility.
@@ -47,6 +64,10 @@ static char* Copyright =
 #ifndef FALSE
 #define FALSE     0
 #endif
+
+#define JUMBOTHRESHOLD (1024*32-1) /* buffers bigger than this are jumbo. */
+
+
 /*
 **  Local data types:
 */
@@ -986,4 +1007,14 @@ void daq_SetBufferSize(int newsize)
 int daq_GetBufferSize()
 {
   return daqBufferSize;
+}
+/*----------------------------------------------------------
+** 
+** daq_isJumboBuffer:
+**   Returns true if the buffer size indicates this is a jumbo buffer.
+*/
+bool
+daq_isJumboBuffer() 
+{
+  return (daqBufferSize > JUMBOTHRESHOLD);
 }
