@@ -393,7 +393,7 @@ proc Experiment::CleanOrphans {} {
 
         set fd [open [file join $target 000orphaned] w]
         close $fd
-	file attributes $target -permissions 0440
+	file attributes $target -permissions 0550
     }
     #  If current has dangling event data links, they will be destroyed.
 
