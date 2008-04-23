@@ -220,4 +220,7 @@ Finalized January 3, 2008
 
 Start edit level 7.4-013
 
-March 24, 2080 Start edit level 7.4-014
+March 24, 2008 Start edit level 7.4-014
+April 23, 2008
+	- Fix edge case in readout classic.  When a buffer gets exactl filled,
+          the next buffer gets an entity count that's too large by one.
