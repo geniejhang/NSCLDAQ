@@ -590,4 +590,7 @@ February 15, 2008- Make the spectrodaq page monitors somwehat robust
                    if possible.
 March 24, 2008 Tag 8.0-013
 Start development on 8.0-014
-
+April 23, 2008
+ 	- Fix nasty edge case in readout classic.  If the last event
+	  in a buffer exactly filled it, overflow gets called too soon,
+   	  and the next buffer has an entity count that's too large by 1.
