@@ -208,3 +208,6 @@ December 19, 2007
 7.4-007jumbo-005 started
 
 7.4-007jumbo-006 started.
+April 23, 2008
+ 	- Fix edge case error in classic readout.  If prior buffer exactly
+          filled, next buffer has an event count one too large.
