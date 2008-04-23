@@ -189,7 +189,7 @@ CReader::ReadSomeEvents(unsigned int nPasses)
 
 	// If necessary, flush the buffer:
 
-	if(m_nWords >= m_nBufferSize) {
+	if(m_nWords > m_nBufferSize) {
 	  CVMEInterface::Unlock();
 	  OverFlow(hdr);
 	  CVMEInterface::Lock();
