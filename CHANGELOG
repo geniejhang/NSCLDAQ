@@ -1003,4 +1003,11 @@ April 2, 2008    - Add jumbo buffer capability for the Readouts.  This is
                    maintainability.  It's a bad thing to have
                    several copies of these as I'll miss one if I add,
                    fix or otherwise modify one of the macros.
+April 23, 2008  - Fix edge case defect in Classic readout... if 
+		  the last event exactly fit in the buffer, 
+		  the next buffer would see one more event than it actually had
+May 15, 2008    - Integrate Eric Kasten's CNADC2530 class with the device
+                  support code to provide support for the Hytec NADC 2530 ADC.
+
+
 
