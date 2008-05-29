@@ -34,6 +34,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2008, Al
 #include "CStackMapCommand.h"
 #include "CStackUnpacker.h"
 #include "CRateCommand.h"
+#include "CRateEventProcessor.h"
 #include "CFitButton.h"
 
 #ifdef HAVE_STD_NAMESPACE
@@ -93,7 +94,7 @@ void
 CMySpecTclApp::CreateAnalysisPipeline(CAnalyzer& rAnalyzer)  
 { 
   RegisterEventProcessor(*(new CStackUnpacker), "adc-data");
-  RegisterEventProcessor(*(new CScalerProcessor), "scalers");
+  RegisterEventProcessor(*(new CRateEventProcessor), "rate-stripchart");
   
 }  
 
@@ -214,13 +215,7 @@ CMySpecTclApp::SelectDisplayer(UInt_t nDisplaySize, CHistogrammer& rHistogrammer
   CTclGrammerApp::SelectDisplayer(nDisplaySize, rHistogrammer);
 
 
-  // Hook in the button box and ensure that it gets re-hooked on exit.
 
-  CXamineEventHandler* pEventHandler = getXamineEvents();
-  CButtonBoxSetup*     pSetup        = new CButtonBoxSetup;
-  pEventHandler->addRestartHandler(*pSetup);
-  
-  (*pSetup)();			// Get it set up the first time.
 
 }  
 
@@ -306,7 +301,7 @@ CMySpecTclApp::AddCommands(CTCLInterpreter& rInterp)
   CTclGrammerApp::AddCommands(rInterp);
   new CParamMapCommand(rInterp);
   new CStackMapCommand(rInterp);
-  new CRateCommand(rInterp);
+
 }  
 
 //  Function: 	
