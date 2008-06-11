@@ -947,7 +947,7 @@ proc UpdateRatio {widget line numerator denominator page {average 0}} {
 	    }
 	    $widget cellconfigure $line,2 -text  "$rn $rd"
 	    $widget cellconfigure $line,3 -text  "$tn $td"
-	    $widget cellconfigure $line,4 -text [format "%.2f %.2f" $qr $qt]
+	    $widget cellconfigure $line,4 -text [list $qr $qt]
 
             # Check the alarms:
 
