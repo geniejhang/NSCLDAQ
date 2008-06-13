@@ -114,9 +114,10 @@ CMADC32Unpacker::operator()(CEvent&                       rEvent,
   //
   // Get the 'header' and be sure it actually is a header and for our module id.
 
-  unsigned long header = getLong(event, offset);
-  if (header == 0xffffffff) {	// ADC had no data there will be 35 words of ffff
-    return offset + 35;
+  uint32_t header = getLong(event, offset);
+
+  if (header == 0xffffffff) {	// ADC had no data there will be just the two words of 0xffffffff
+    return offset + 2;
   }
 
 
@@ -164,9 +165,8 @@ CMADC32Unpacker::operator()(CEvent&                       rEvent,
     longsRead--;		// Really should not happen!!
   }
     
-  // There will be an unconditional 35 transfers, but the BERR's
-  // will only put a word in the buffer, rather than a long >sigh<
+  // There will be a 0xffffffff longword for the BERR at the end of the
+  // readout.
 
-  int residual = 35 - longsRead;
-  return offset + residual;
+  return offset + 2;
 }
