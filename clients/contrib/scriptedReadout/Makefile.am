@@ -41,7 +41,8 @@ libScriptedRdo_la_SOURCES = CBoolConfigParam.cpp \
 	CPacketCreator.cpp	\
 	CTraditionalV977Trigger.cpp \
 	CTraditionalV977Busy.cpp  \
-	CEnumParameter.cpp
+	CEnumParameter.cpp	\
+	CV1x90Creator.cpp CV1x90Module.cpp
 
 
 
@@ -85,7 +86,8 @@ noinst_HEADERS=CBoolConfigParam.h \
 	CPacketCreator.h       \
 	CTraditionalV977Trigger.h \
 	CTraditionalV977Busy.h   \
-	CEnumParameter.h
+	CEnumParameter.h	\
+	CV1x90Creator.h CV1x90Module.h
 
 
 

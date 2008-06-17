@@ -1013,6 +1013,7 @@ June 11, 2008   - Remove double formatting of ratios.. was  being formated
                   script formatted to %10.3f which resulted in an extra
                   always zero digit.  Removed the UpdateRatio format, giving
                   3 significant figures.
+June 17, 2008   - Added support for CAEN V1190/V1290 to scripted readout.
 
 
 

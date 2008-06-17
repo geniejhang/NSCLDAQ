@@ -137,6 +137,9 @@ public:
 				      int nDefault=0)   ; //!< Create array of ints.
   ParameterIterator AddStringArrayParam (const STD(string)& rName, 
 					 int nArraySize)   ; //!< Create array of strings.
+  ParameterIterator AddEnumParam(STD(string) name,
+				 STD(vector)<STD(pair)<STD(string), int> > values,
+				 STD(string) defaultValue);
   ParameterIterator Find (const STD(string)& rKeyword)   ; //!< Find a param 
   ParameterIterator begin ()   ; //!< Config param start iterator.
   ParameterIterator end ()   ;   //!< Config param end iterator.
@@ -149,6 +152,7 @@ public:
   int getIntegerValue(STD(string) name); //!< Get value of an integer config param.
   bool getBoolValue(STD(string) name); //!< Get value of a bollean config param.
   CIntArrayParam* getIntArray(STD(string) name); //!< Get ptr to int array param.
+  int             getEnumValue(STD(string) name);
 protected:
   STD(string) Usage();
 private:
