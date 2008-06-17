@@ -1014,6 +1014,8 @@ June 11, 2008   - Remove double formatting of ratios.. was  being formated
                   always zero digit.  Removed the UpdateRatio format, giving
                   3 significant figures.
 June 17, 2008   - Added support for CAEN V1190/V1290 to scripted readout.
+                - Added V977 trigger/busy module...the module itself holds
+                  the computer busy stuff.
 
 
 
