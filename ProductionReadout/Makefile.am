@@ -70,7 +70,8 @@ PRODUCTIONSOURCES = AccessListCheck.cpp \
 	CCAENV977ScalerTrigger.cpp	\
 	CBufferManager.cpp		\
 	CBufferQueue.cpp	\
-	CGaurdedObject.cpp
+	CGaurdedObject.cpp	\
+	CV977TriggerStatus.cpp
 
 
 PRODUCTIONHEADERS = AccessListCheck.h \
@@ -142,7 +143,8 @@ PRODUCTIONHEADERS = AccessListCheck.h \
 	CCAENV977ScalerTrigger.h  \
 	CBufferManager.h		\
 	CBufferQueue.h	\
-	CGaurdedObject.h
+	CGaurdedObject.h	\
+	CV977TriggerStatus.h
 
 
 OTHER_STUFF  = 	MyExperiment.cpp \

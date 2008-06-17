@@ -77,7 +77,8 @@ libHPPreadout_la_SOURCES = \
 	../CCAENV977ScalerTrigger.cpp \
 	../CBufferManager.cpp		\
 	../CBufferQueue.cpp		\
-	../CGaurdedObject.cpp
+	../CGaurdedObject.cpp	\
+	../CV977TriggerStatus.cpp
 
 
 
@@ -154,7 +155,9 @@ noinst_HEADERS = \
 	../CCAENV977ScalerTrigger.h
 	../CBufferManager.h		\
 	../CBufferQueue.h	\
-	../CGaurdedObject.h
+	../CGaurdedObject.h	\
+	../CV977TriggerStatus.h
+
 
 
 
