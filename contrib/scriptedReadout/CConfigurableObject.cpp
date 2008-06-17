@@ -25,6 +25,7 @@
 #include <CBoolConfigParam.h>
 #include <CStringConfigParam.h>
 #include <CStringArrayparam.h>
+#include <CEnumParameter.h>
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
@@ -388,8 +389,25 @@ CConfigurableObject::AddStringArrayParam(const string& rName,
   return AddParameter(p);
 
 }
-
-
+/*!
+  Adds an enumerated parameter to the set of parameters.
+  \param name    - Name of the configuration parameter.
+  \param values  - Possible enumerated values and the integer values corresponding to them.
+  \param default - The default value string.
+*/
+CConfigurableObject::ParameterIterator
+CConfigurableObject::AddEnumParam(string                    name,
+				  vector<pair<string, int> > values,
+				  string                     Default)
+{
+  vector<CEnumParameter::enumeratorValue>  validValues;
+  for(int i=0; i < values.size(); i++) {
+    validValues.push_back(CEnumParameter::enumeratorValue(values[i].first, values[i].second));
+  }
+  CEnumParameter* p = new CEnumParameter(name, validValues, Default);
+  return AddParameter(p);
+				       
+}
 
 /*!
 
@@ -583,7 +601,16 @@ CConfigurableObject::getIntArray(string name)
   ParameterIterator p = FindOrThrow(name, "integer []");
   return (CIntArrayParam*)*p;
 }
-   
+/*!
+  Return the value associated with an enumerated config parameter.
+*/
+int
+CConfigurableObject::getEnumValue(string name)
+{
+  ParameterIterator p = FindOrThrow(name, "enum");
+  CEnumParameter* pConfig = reinterpret_cast<CEnumParameter*>(*p);
+  return pConfig->GetEnumValue();
+}
 
 
 /////////////////////// Utility functions.

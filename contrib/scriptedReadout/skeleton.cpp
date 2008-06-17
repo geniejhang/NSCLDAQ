@@ -357,7 +357,7 @@ INCLUDE FILES
 #include "CPacketCreator.h"
 #include "CSIS3300Creator.h"
 #include "CAENcard.h"
-
+#include "CV1x90Creator.h"
 
 #include "CCAENV830.h"
 #include "CCAENV830Creator.h"
@@ -625,6 +625,7 @@ CCAENV785Creator*     p1785(0);         // Creator for V785
 CCAENV792Creator*     p792(0);	        // Creator for V792.
 CSIS3300Creator*      p3300(0);         // SIS3300 FADC.
 CPacketCreator*       pPacket(0);       // Creator for subpackets.
+CV1x90Creator*        pV1x90(0);
 
 // The following constitute the configurable scaler readout engine.
 
@@ -653,7 +654,9 @@ void DestroyConfigurator()
    if(p1785)       delete p1785;
    if(p792)        delete p792;
    if(p3300)       delete p3300;
+   if(pV1x90)      delete pV1x90;
    if(pInterp)     delete pInterp;
+
 
 
   pCreator    = 0;
@@ -665,6 +668,7 @@ void DestroyConfigurator()
   p1785       = 0;
   p792        = 0;
   p3300       = 0;
+  pV1x90      = 0;
   pPacket     = 0;
 
 
@@ -717,6 +721,7 @@ void InitializeConfigurator()
   pCreator->AddCreator(p1785 = new CCAENV785Creator("caenv1785"));
   pCreator->AddCreator(p792 = new CCAENV792Creator);
   pCreator->AddCreator(p3300 = new CSIS3300Creator);
+  pCreator->AddCreator(pV1x90 = new CV1x90Creator("caenv1x90"));
 
   pCreator->AddCreator(pPacket = new CPacketCreator("packet",pDictionary));
 
