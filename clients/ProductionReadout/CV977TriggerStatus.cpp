@@ -150,7 +150,7 @@ CV977TriggerStatus::Register(CExperiment& rExperiment,
 {
   // Create the module.
 
-  CCAENV977* pHardware = new CCAENV977(crate, baseAddress);
+  CCAENV977* pHardware = new CCAENV977(baseAddress, crate);
   rExperiment.EstablishTrigger(new CV977Private::Trigger(pHardware));
   rExperiment.EstablishBusy(new CV977Private::Busy(pHardware));
 
