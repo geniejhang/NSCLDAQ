@@ -262,7 +262,7 @@ CCAENV977::interruptMask(UShort_t mask)
 void 
 CCAENV977::outputClear()
 {
-  m_Module.peekw(CLEAR_OUTPUT);
+  m_Module.pokew(0, CLEAR_OUTPUT);
 }
 
 
