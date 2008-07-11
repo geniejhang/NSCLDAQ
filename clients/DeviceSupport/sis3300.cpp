@@ -43,11 +43,13 @@ using namespace std;		// Needed here for spectrodaq
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
-
+#include <stdio.h>
 
 
 #include <Iostream.h>
 #include <Iomanip.h>
+
+
 
 const char* sDevice="/dev/vme32d32";
 const unsigned long nDeviceSize = 0x383000;
@@ -225,6 +227,22 @@ CSIS3300::CSIS3300(unsigned long nBaseAddress,
   // CSR Block:
 
   m_pModuleId    = m_pCsrs + (4/sizeof(long));
+
+  // If the module is not an SIS 3300 or 3301 according to the
+  // module Id register throw a hissy fit:
+
+  unsigned long id    = *m_pModuleId;
+  unsigned long model = (id >> 16) & 0xffff;
+  if ((model != 0x3300) && (model != 0x3301)) {
+    CVMEInterface::Unmap(m_nFd, (void*)m_pCsrs, 0x3000);
+    CVMEInterface::Close(m_nFd);
+    char error[1024];
+    sprintf(error, "CSIS3300: Module at %08x is not a 3300 nor a 3301\n",
+	    m_nBase);
+    throw string(error);
+  }
+  
+
   m_pCsr         = m_pCsrs;
   m_pAcqReg      = m_pCsrs + (0x10/sizeof(long));
   m_pResetKey    = m_pCsrs + (0x20/sizeof(long));
@@ -270,10 +288,15 @@ CSIS3300::CSIS3300(unsigned long nBaseAddress,
   m_pEventDirectory4= m_pEi4 + (0x1000/sizeof(long));
 
 
+  
+
+
   // Set module modes which should be done via internal functions to
   // ensure internal self consistency.
 
   SetSampleSize(Sample128K);
+
+  
 }
 
 /*!
