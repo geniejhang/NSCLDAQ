@@ -1021,5 +1021,7 @@ June 27, 2008   - Fix defect in tclserver - if using -pManaged -aAppname
                   'TclServer' name.
                 - Set the scaler display appname to ScalerDisplay rather than the more
                   problematic "Scaler Display"
+July 11, 2008   - sis3300.cpp - throw an exception if the id register
+                  says the module is neither a 3300 nor a 3301.
 
 
