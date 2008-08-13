@@ -31,6 +31,11 @@
 #include <TreeParameter.h>
 #endif
 
+#ifndef __CRT_STDINT_H
+#include <stdint.h>
+#endif
+
+
 /*!
    This is a trivial event processor.  All it does it
    set rEvent[0] to 1.  That allows a strip chart spectrum
@@ -47,6 +52,8 @@ private:
   CTreeParameter m_milliseconds;
   CTreeParameter m_timestamp;
   double         m_calibrationFactor;
+  int32_t        m_timeBase;
+  bool           m_needTimeBase;
 public:
   CRateEventProcessor();
   virtual ~CRateEventProcessor();

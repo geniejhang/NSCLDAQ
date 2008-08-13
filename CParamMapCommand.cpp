@@ -100,16 +100,21 @@ CParamMapCommand::operator()(CTCLInterpreter& interp,
 
   for (int i =0; i < parameterList.size(); i++) {
     parameterList[i].Bind(interp);
-
-    CParameter* pParam  = api->FindParameter(string(parameterList[i]));
-    if (!pParam) {
-      string error = string(parameterList[i]);
-      error       += " is not a defined parameter";
-      error       += Usage();
-      interp.setResult(error);
-      return TCL_ERROR;
+    string name = string(parameterList[i]);
+    if (name != string("")) {
+      CParameter* pParam  = api->FindParameter(name);
+      if (!pParam) {
+	string error = string(parameterList[i]);
+	error       += " is not a defined parameter";
+	error       += Usage();
+	interp.setResult(error);
+	return TCL_ERROR;
+      }
+      mapping.map[i] = pParam->getNumber();
     }
-    mapping.map[i] = pParam->getNumber();
+    else {
+      mapping.map[i] = -1;
+    }
   }
   // If we survived this far, we have a mapping.  create/replace the 
   // mapping for moduleName

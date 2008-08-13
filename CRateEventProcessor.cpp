@@ -35,11 +35,15 @@ using namespace std;
   parameter so that we can get it's value for our computation.
 
 */
-CRateEventProcessor::CRateEventProcessor() {
-  m_milliseconds.Initialize(string("cTime"), 3600000, (double)0.0, (double)3600000.0, 
-			    string("Ms"), true);
-  m_timestamp.Initialize(string("timestamp"), 10000000, (double)0.0, (double)10000000.0, 
-			 string("Ticks"), true);
+CRateEventProcessor::CRateEventProcessor() :
+  m_milliseconds(string("cTime"), 3600000, (double)0.0, (double)3600000.0, 
+		 string("Ms"), true),
+  m_timestamp(string("timestamp"), 10000000, (double)0.0, (double)10000000.0, 
+	      string("Ticks"), true),
+   m_timeBase(0),
+   m_needTimeBase(true) 
+{
+
 }
 //! The destructor just needs to chain to the base class destructor by being virtual.
 CRateEventProcessor::~CRateEventProcessor() {}
@@ -93,6 +97,7 @@ CRateEventProcessor::OnBegin(CAnalyzer& rAnalyzer,
     }
  
   }
+  m_needTimeBase = true;
   return kfTRUE;
 }
 
@@ -106,8 +111,14 @@ CRateEventProcessor:: operator()(const Address_t pEvent,
 				 CAnalyzer&      rAnalyzer,
 				 CBufferDecoder& rDecoder)
 {
-  rEvent[0] = 1;
-  m_milliseconds = m_timestamp * m_calibrationFactor;
+  if (m_needTimeBase) {
+    m_timeBase = m_timestamp;
+    m_needTimeBase = false;
+  }
+
+
+  m_timestamp = m_timestamp - m_timeBase;
+  m_milliseconds = (m_timestamp)/m_calibrationFactor;
 
   return kfTRUE;
 }
