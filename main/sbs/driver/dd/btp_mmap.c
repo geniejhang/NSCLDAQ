@@ -28,6 +28,7 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision: 2330 $";
 
 #include <linux/module.h>       /* Must be after btdd.h */
 #include <linux/sched.h> 
+#include <linux/sched/signal.h>
 
 #if     !defined(MAP_NR)
 #define MAP_NR(addr) (__pa(addr) >> PAGE_SHIFT)
