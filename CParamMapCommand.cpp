@@ -95,8 +95,10 @@ CParamMapCommand::operator()(CTCLInterpreter& interp,
 
   SpecTcl* api = SpecTcl::getInstance();
   AdcMapping mapping;
-  mapping.vsn = slot;
-  mapping.type= type;
+  mapping.name      = moduleName;
+  mapping.vsn       = slot;
+  mapping.type      = type;
+  mapping.extraData = NULL;
 
   for (int i =0; i < parameterList.size(); i++) {
     parameterList[i].Bind(interp);

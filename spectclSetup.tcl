@@ -22,7 +22,9 @@
 # As a bonus we set up raw parameter spectra for each parameter that is defined.
 #
 # 
-
+# TODO:  Make TDC1x90
+ parameters/spectra appropriately given the depth for each
+#        TDC channel
 
 set here [file dirname [info script]]
 source [file join $here configFile.tcl]
@@ -34,7 +36,7 @@ configRead [file join $here daqconfig.tcl]
 set channelCount($typeCAEN)   4096
 set channelCount($typeHYTEC)  8192
 set channelCount($typeMADC32) 4096;	# Currently only 12 chans.
-
+set channelCount($typeTDC1x90) 16384;   # for now this is the # of channels in a tdc spec
 
 #-----------------------------------------------------------------------------
 # Creates a 1-d spectrum.

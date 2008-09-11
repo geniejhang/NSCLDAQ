@@ -45,6 +45,7 @@
 set typeCAEN  0;			# CAEN V775,785,792,862
 set typeHYTEC 1;			# Hytec NADC 2530.
 set typeMADC32 2;			# Mesytec MADC 32.
+set typeTDC1x90 3;                      # CAEN V1x90.
 
 
 #  We create as well spectra for each single parameter, and corresponding
@@ -152,10 +153,74 @@ proc madc args {
     }
 }
 #---------------------------------------------------------------
+#
+#  The tdc1x90 command processes the creation and
+#  configuration of CAEN V1x90 modules.
+#  In addition to the standard processing,
+#  we will look for the following:
+#   -refchannel - the channel number that contains the
+#                 digitized gate (default 0), 
+#   -depth      - The number of hits to retain for each channel.
+#                  (default 16)
+#   -channelcount - The number of channels the TDC has.
+#                   This could be 16, 32, 64, or 128
+#                   and determines the width of the channel field
+#                   and data fields in the TDC data words.
+#
+#  These get put in the array:
+#   CAENV1x90(name) as a list [list $refchannel $depth $channelcount]
+#
+proc tdc1x90 args {
+    set subcommand [lindex $args 0]
+    set name       [lindex $args 1]
+
+    # Default the -depth/-refchannel if needed:
+
+    if {[array names ::CAENV1x90 $name] eq ""} {
+	set ::CAENV1x90($name) [list 0 16 128]
+    }
+    
+    set ::readoutDeviceType($name) $::typeTDC1x90
+
+    #  Both the create and the config commands can configure:
+
+    if {($subcommand eq "create") || ($subcommand eq "config")} {
+	set ididx  [lsearch -exact $args "-id"]
+	set refidx [lsearch -exact $args "-refchannel"]
+	set depthidx [lsearch -exact $args "-depth"]
+	set chansidx [lsearch -exact $args "-channelcount"]
+
+	if {$ididx != -1} {
+	    incr ididx
+	    set ::adcConfiguration($name) [lindex $args $ididx]
+	}
+
+	if {$refidx != -1} {
+	    incr refidx
+	    set refchan [lindex $args $refidx]
+	    set ::CAENV1x90($name) [lreplace $::CAENV1x90($name) 0 $refchan]
+	} 
+
+	if {$depthidx != -1} {
+	    incr depthidx
+	    set  depth [lindex $args $depthidx]
+	    set ::CAENV1x90($name) [lreplace $::CAENV1x90($name) 1 $depth]
+	}
+	if {$chansidx != -1} {
+	    incr chansidx
+	    set  chans [lindex $args $chansidx]
+	    set ::CAENV1x90($name) [lreplace $::CAENV1x90($name) 2 $chans]
+    }
+
+    
+}
+
+
+#---------------------------------------------------------------
 #  We need to use this command to fill in the chainOrder array of 
 #  the order of modules in the chain.  This allows the stack command
 #  to accurately figure out the module order in the presence of
-#  chains that aggregate several V785 readout 'devices'.
+#  chains that aggregate several V785 readout 
 #
 #  - Extract the chain name.
 #  - If the args contains -modules extract the next list item

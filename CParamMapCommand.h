@@ -77,9 +77,11 @@ class CParamMapCommand : public CTCLObjectProcessor
 public:
   struct AdcMapping
   {
+    std::string name;		// Allows clients to know who they are.
     int vsn;
     int type;
     int map[128];		// big enough to handle CAEN V1190's.
+    void* extraData;            // Pointer for data the unpacker can hang on this.
 
     AdcMapping() :
        vsn(-1), type(-1) { for(int i=0; i < 128; i++) map[i] = -1;}
