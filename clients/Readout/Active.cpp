@@ -226,6 +226,7 @@ Active::Run(StateMachine& rMachine)
       m_pBusy->ScalerSet();
       CVMEInterface::Unlock();
       rRun.UpdateRunTime();
+      ::endrun();
       return rRun.NameToEventId("END");
     }
   }
