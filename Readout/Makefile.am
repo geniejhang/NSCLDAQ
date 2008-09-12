@@ -7,7 +7,8 @@ libReadout_la_SOURCES = Active.cpp   \
 	State.cpp StateMachine.cpp TestBusy.cpp TestTrigger.cpp VMEBusy.cpp \
 	VMETrigger.cpp   \
 	CTraditionalV977Busy.cpp CTraditionalV977Trigger.cpp \
-	cmdio.c command.c diagnose.c docmd.c
+	cmdio.c command.c diagnose.c docmd.c compatibility.cpp
+
 
 include_HEADERS = Active.h Busy.h   CAMACBusy.h \
 	 CESTrigger.h CException.h  \

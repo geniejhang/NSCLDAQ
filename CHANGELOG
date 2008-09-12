@@ -1023,5 +1023,11 @@ June 27, 2008   - Fix defect in tclserver - if using -pManaged -aAppname
                   problematic "Scaler Display"
 July 11, 2008   - sis3300.cpp - throw an exception if the id register
                   says the module is neither a 3300 nor a 3301.
+September 12, 2008 - Added support for end of run callout into skeleton.
+                   - Updated copyright notice for 2008.
+                   - Updated computer generated copy right output to
+                     2002-2008
+                   - Opportunistic license trimming.
+
 
 

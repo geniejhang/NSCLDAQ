@@ -10,7 +10,7 @@ CopyrightNotice::Notice(ostream& out, const char* program,
 			const char* version, const char* year)
 {
   out << program << " version " << version;
-  out << " (C) Copyright 2002 Michigan State University all rights reserved\n";
+  out << " (C) Copyright 2002-2008 Michigan State University all rights reserved\n";
   out << program << " comes with ABSOLUTELY NO WARRANTY;\n";
   out << "This is free software, and you are welcome to redistribute it\n";
   out << "under certain conditions; See http://www.gnu.org/licenses/gpl.txt\n";
