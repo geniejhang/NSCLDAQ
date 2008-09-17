@@ -1028,6 +1028,8 @@ September 12, 2008 - Added support for end of run callout into skeleton.
                    - Updated computer generated copy right output to
                      2002-2008
                    - Opportunistic license trimming.
+September 17,2008  - Explained the N series of CAEN modules in the
+                     doxygen comments. (per M. Hausman).
 
 
 
