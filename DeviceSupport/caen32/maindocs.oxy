@@ -12,6 +12,16 @@
     - V792 Charge integrating adc.
     - V862 Individually gated charge integrating adc.
 
+    With the exception of the V862, each of these modules has an N variant
+    (e.g. V785N).  The N variants feature NIM inputs and only appear to have
+    16 channels.  In fact they are 32 channel modules with every other channel
+    cabled from the front end to the ADC main board.   This can be confusing.
+    The best way to think about the N modules is to ignore figure 4.6 in the
+    manual and to treat it like a 32 channel module for which you are only 
+    using channels 0, 2, 4, 6...30.  In that way you will understand how to set
+    the channel enables, and thresholds correctly, and unpack the data from the 
+    module in a uniform way.
+
     When reading the software documentation, please keep in mind that these
     modules are built on a common core module, a 32 channel peak sensing ADC
     with different front end boards that modify the digitization functionality.
