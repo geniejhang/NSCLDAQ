@@ -128,7 +128,7 @@ CV1x90Unpacker::operator() (CEvent&                      rEvent,
 			    CParamMapCommand::AdcMapping* pMap)
 {
 
-  vector<uint32_t> rawTimes[128]; //  Raw times are stored here pending ref time subtraction.
+  vector<int32_t> rawTimes[128]; //  Raw times are stored here pending ref time subtraction.
 
 
   // If this chunk of the event is for us, there should be a TDC global header,
@@ -157,6 +157,7 @@ CV1x90Unpacker::operator() (CEvent&                      rEvent,
   uint32_t    referenceTime = 0;
   while((offset < maxoffset) && !done) {
     uint32_t datum = getLong(event, offset);
+    if (datum == 0xffffffff) break; // premature end of event.
     offset += 2;
     switch (datum & ITEM_TYPE) {
       // Ignored types:
@@ -191,7 +192,7 @@ CV1x90Unpacker::operator() (CEvent&                      rEvent,
   // values into the tree parameters.
 
   if (rawTimes[info.s_refchannel].size() > 0) {
-    uint32_t reftime = rawTimes[info.s_refchannel][0];
+    int32_t reftime = rawTimes[info.s_refchannel][0];
     for (int i = 0; i < info.s_channelCount; i++) {
       int hits = rawTimes[i].size();
       if (hits > info.s_depth) hits = info.s_depth;
@@ -199,7 +200,10 @@ CV1x90Unpacker::operator() (CEvent&                      rEvent,
       if (pArray) {		// No parameter defined.
 	CTreeParameterArray&  Array(*pArray);
 	for (int hit =0; hit < hits; hit++) {
-	  Array[hit] = reftime - rawTimes[i][hit];	// common stop assumption.
+	  double triggerRelative = static_cast<double>(rawTimes[i][hit] - reftime);
+	  triggerRelative        = triggerRelative*info.s_chansToNs;
+
+	  Array[hit] = triggerRelative;	// common stop assumption.
 	}
       }
     }
@@ -255,13 +259,14 @@ CV1x90Unpacker::reportError(uint32_t errorWord, int slot)
 	    << " in vsn " << slot << std::endl;
 
   std::cerr << "The following error bits were set:\n";
-  uint32_t bitnum;
-  while (errorWord) {
+  uint32_t bitnum = 0;
+  while (errors) {
     uint32_t bit = 1 << bitnum;
     if (errors & bit) {
-      std::cerr << ERROR_STRINGS[bit] << std::endl;
+      std::cerr << ERROR_STRINGS[bitnum] << std::endl;
       errors &= ~bit;
     }
+    bitnum++;
   }
   std::cerr << "-----------------------------------\n";
 }
@@ -400,7 +405,7 @@ CV1x90Unpacker::makeTreeParams(CTCLInterpreter&           interp,
     std::cerr << "WARNING SpecTcl misconfigured, adcChannels(" << name.c_str() << ")\n";
     std::cerr << "      is undefined. Set that up in you daqconfig file\n";
     std::cerr << "      this TDC will not be unpacked.\n";
-    return;
+    exit(-1);
   }
 
  
@@ -410,10 +415,29 @@ CV1x90Unpacker::makeTreeParams(CTCLInterpreter&           interp,
   StringArray baseNames;
   adcBaseList.Split(baseNames);
 
-  // Now create the tree parameters.  For now we'll just make all
-  // parameters run in the rang 0 - through 1<<20.
+  // The V1x90Windows parameter contains the window width,
+  // the window offset, and the resolution in floating point ns.
+  // this is used to determine the limits and channel count.
+  //
 
-  double low  = 0.0;
+  CTCLVariable window(string("V1x90Windows"), false);
+  window.Bind(interp);
+  const char* windowInfo = window.Get(TCL_GLOBAL_ONLY,
+				      const_cast<char*>(name.c_str()));
+  if (!windowInfo) {
+    std::cerr << "WARNING:: SpecTcl misconfigured, V1x90Windows(" 
+	      << name << ") is undefined.\n";
+    exit(-1);
+  }
+
+  double junk, resolution;
+  sscanf(windowInfo, "%lf %lf %lf", &junk, &junk, &(info.s_chansToNs));
+
+
+  // Let spectcl do the mapping at histogram time, rather than having the
+  // tree parameter do it for us.
+
+  double low = 0.0;
   double high = static_cast<double>(1 << 20);
 
   // For now it's not an error to have too many adcBaseList elements.

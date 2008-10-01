@@ -85,14 +85,17 @@ public:
 
     AdcMapping() :
        vsn(-1), type(-1) { for(int i=0; i < 128; i++) map[i] = -1;}
-    AdcMapping(const AdcMapping& rhs) : vsn(rhs.vsn), type(rhs.type) {
+    AdcMapping(const AdcMapping& rhs) : name(rhs.name), vsn(rhs.vsn), type(rhs.type) {
       
       for(int i =0; i < 128; i++) map[i] = rhs.map[i];
+      extraData = rhs.extraData;
     }
     AdcMapping& operator=(const AdcMapping& rhs) {
+      name = rhs.name;
       vsn = rhs.vsn;
       type= rhs.type;
       for (int i =0; i < 128; i++) map[i] = rhs.map[i];
+      extraData = rhs.extraData;
     }
     int& operator[](int i) { return map[i]; }
 

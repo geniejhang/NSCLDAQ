@@ -23,7 +23,7 @@
 #
 # 
 # TODO:  Make TDC1x90
- parameters/spectra appropriately given the depth for each
+# parameters/spectra appropriately given the depth for each
 #        TDC channel
 
 set here [file dirname [info script]]
@@ -49,6 +49,77 @@ proc makeSpectrum {paramname channels} {
     spectrum $paramname 1 $paramname  [list [list $low $high $channels]]
 }
 
+
+#----------------------------------------------------------------------------
+#
+#   The V1x90 maps are a bit special.
+#   Each 'parameter' is really a parameter array.
+#
+#  Two additional lists are used to describe how to set up the module
+#
+#   CAENV1x90(name) is a three element list consisting of
+#                   in order : reference channel number, 
+#                              depth (number of elements in each parameter array)
+#                              channelcount - Number of channels in the TDC.
+#   V1x90Windows(name) is a three element list that describes the module timing
+#                      all values are floating point ns.  These are used
+#                      to define the limits and channel counts in each spectrum.
+#                      The list elements are in order:
+#                            The window width
+#                            The window offset relative to the trigger.
+#                            The resolution of each channel.
+#
+#                      the low limit of the spectrum is the offset.
+#                      the high limit of the spectrum is offset+width-1
+#                      The number of channels is width/resolution
+#
+#  Parameters:
+#       baseparam  - number of the first parameter we can create.
+#       name       - Name of the module we're processing
+#  Returns:
+#       next free parameter number.
+#                     
+proc buildV1x90Maps {baseparam name} {
+    puts "BuildV1x90Maps"
+    set tdcInfo    $::CAENV1x90($name)
+    set tdcRes     $::V1x90Windows($name)
+    set vsn        $::adcConfiguration($name)
+    set parameters $::adcChannels($name)
+
+    # Figure out spectrum low/hi and channel count:
+
+    set width  [lindex $tdcRes 0]
+    set offset [lindex $tdcRes 1]
+    set res    [lindex $tdcRes 2]
+
+    puts "List : $tdcRes"
+
+    set low $offset
+    set hi  [expr $offset + $width - 1.0]
+    set chans [expr int($width/$res)]
+    puts "Spectrum: $low $hi $chans"
+
+    # Pull out the stuff we need from the CAENV1x90 list:
+
+    set depth [lindex $tdcInfo 1]
+
+    #  Now loop over the parameters, making the arrays
+    #  and spectra.  Parameter arrays are tree parameters in the decoder
+    #  so they have names like basename.%d  That's good for depth 1-9.
+    #
+
+    foreach basename $parameters  {
+	for {set i 0} {$i < $depth} {incr i} {
+	    set pname [format "$basename.%d" $i]
+	    parameter $pname $baseparam
+	    incr baseparam
+	    spectrum $pname 1 $pname "{[list $low $hi $chans]}"
+	}
+	
+    }
+    paramMap $name $::readoutDeviceType($name) $vsn [list]
+    return $baseparam
+}
 #----------------------------------------------------------------------------
 # Build the channel maps, spectcl parameters and raw spectra from 
 # the adcConfigurtion, readoutDeviceType and adcChannels information.
@@ -58,22 +129,29 @@ proc makeSpectrum {paramname channels} {
 #   param  - the number of the first parameter.
 
 proc buildChannelMaps param {
+    puts "Building channel maps"
     foreach module [array names ::adcChannels] {
-	set vsn        $::adcConfiguration($module)
-	set type       $::readoutDeviceType($module)
-	set resolution $::channelCount($type)
-	set channels   $::adcChannels($module)
+	puts "Processing $module"
+	if {$::readoutDeviceType($module) ne $::typeTDC1x90} { 
+	    set vsn        $::adcConfiguration($module)
+	    set type       $::readoutDeviceType($module)
+	    set resolution $::channelCount($type)
+	    set channels   $::adcChannels($module)
+	    
+	    # Make the parameters and spectra:
+	    
+	    foreach parameter $channels {
+		parameter $parameter $param
+		incr param
+		makeSpectrum $parameter $resolution
+	    }
+	    paramMap $module $type $vsn $channels
 
-	# Make the parameters and spectra:
-
-	foreach parameter $channels {
-	    parameter $parameter $param
-	    incr param
-	    makeSpectrum $parameter $resolution
+	    #  Give SpecTcl the parameter map for the module:
+	} else {
+	    puts "V1x90 $module"
+	    set param [buildV1x90Maps $param $module]
 	}
-	#  Give SpecTcl the parameter map for the module:
-
-	paramMap $module $type $vsn $channels
     }
 }
 

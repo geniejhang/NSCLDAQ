@@ -125,6 +125,18 @@ CStackUnpacker::operator()(const Address_t pEvent,
     offset = (*pUnpacker)(rEvent, event, offset, pMap);
   }
 
+
+  // Burn up any remaining 0xfff's at the end of the event:
+
+  while(offset < event.size()) {
+    if (event[offset] == 0xffff) {
+      offset++;
+    }
+    else {
+      break;
+    }
+  }
+
   // Something went wrong if we didn't burn up the entire event:
 
   if (offset != event.size()) {

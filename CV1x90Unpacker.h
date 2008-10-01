@@ -77,6 +77,7 @@ private:
     uint32_t                  s_chanmask;   // Mask for channel number.
     uint32_t                  s_chanshift;  // shift for channel number.
     uint32_t                  s_datamask;   // Time field mask.
+    double                    s_chansToNs;  // Channels -> ns conversion factor.
     CTreeParameterArray**     s_parameters; // An array per channel
   } TdcInfo;
 

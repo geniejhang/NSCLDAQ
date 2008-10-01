@@ -94,7 +94,7 @@ void
 CMySpecTclApp::CreateAnalysisPipeline(CAnalyzer& rAnalyzer)  
 { 
   RegisterEventProcessor(*(new CStackUnpacker), "adc-data");
-  RegisterEventProcessor(*(new CRateEventProcessor), "rate-stripchart");
+  //  RegisterEventProcessor(*(new CRateEventProcessor), "rate-stripchart");
   
 }  
 

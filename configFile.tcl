@@ -166,9 +166,17 @@ proc madc args {
 #                   This could be 16, 32, 64, or 128
 #                   and determines the width of the channel field
 #                   and data fields in the TDC data words.
+#   -vsn             The virtual slot numbger.
+#   -window         Width of the trigger matching window (in ticks).
+#   -offset         Offset from the trigger to star tof window (in ticks)
+#   -edgeresolution Resolution of LSB (enumerated as nnnps).
 #
-#  These get put in the array:
+#  These get saved for SpecTcl as follows:
+#   
 #   CAENV1x90(name) as a list [list $refchannel $depth $channelcount]
+#   adcConfiguration(name) the virtual slot.
+#   V1x90Widnwos(name) a list containing the width, offset and resolution
+#                      in floating point ns.
 #
 proc tdc1x90 args {
     set subcommand [lindex $args 0]
@@ -179,37 +187,78 @@ proc tdc1x90 args {
     if {[array names ::CAENV1x90 $name] eq ""} {
 	set ::CAENV1x90($name) [list 0 16 128]
     }
+
+    # Default the trigger window and offset for now
+
+    if {[array names ::V1x90Windows $name] eq ""} {
+	puts "Making v1x90windows for $name"
+	set ::V1x90Windows($name) [list 1000.0 -1000.0 0.1]
+	puts "$::V1x90Windows($name)"
+    }
     
     set ::readoutDeviceType($name) $::typeTDC1x90
 
     #  Both the create and the config commands can configure:
 
     if {($subcommand eq "create") || ($subcommand eq "config")} {
-	set ididx  [lsearch -exact $args "-id"]
 	set refidx [lsearch -exact $args "-refchannel"]
 	set depthidx [lsearch -exact $args "-depth"]
 	set chansidx [lsearch -exact $args "-channelcount"]
 
-	if {$ididx != -1} {
-	    incr ididx
-	    set ::adcConfiguration($name) [lindex $args $ididx]
-	}
+	set winidx   [lsearch -exact $args "-window"]
+	set offidx   [lsearch -exact $args "-offset"]
+	set residx   [lsearch -exact $args "-edgeresolution"]
+
+	set slotidx  [lsearch -exact $args "-vsn"]
 
 	if {$refidx != -1} {
 	    incr refidx
 	    set refchan [lindex $args $refidx]
-	    set ::CAENV1x90($name) [lreplace $::CAENV1x90($name) 0 $refchan]
+	    set ::CAENV1x90($name) [lreplace $::CAENV1x90($name) 0 0 $refchan]
 	} 
 
 	if {$depthidx != -1} {
 	    incr depthidx
 	    set  depth [lindex $args $depthidx]
-	    set ::CAENV1x90($name) [lreplace $::CAENV1x90($name) 1 $depth]
+	    set ::CAENV1x90($name) [lreplace $::CAENV1x90($name) 1 1 $depth]
 	}
 	if {$chansidx != -1} {
 	    incr chansidx
 	    set  chans [lindex $args $chansidx]
-	    set ::CAENV1x90($name) [lreplace $::CAENV1x90($name) 2 $chans]
+	    set ::CAENV1x90($name) [lreplace $::CAENV1x90($name) 2 2 $chans]
+	}
+
+	#  The timing information; all is in nsec.
+
+	if {$winidx != -1} {
+	    incr winidx
+	    set windowticks [lindex $args $winidx]
+	    set windowns    [expr $windowticks * 25.0]
+	    set ::V1x90Windows($name) \
+		[lreplace $::V1x90Windows($name) 0 0 $windowns]
+	}
+
+	if {$offidx != -1} {
+	    incr offidx
+	    set offsetTicks [lindex $args $offidx]
+	    set offsetNs    [expr $offsetTicks * 25.0]
+	    puts "replacing v1x90windows $name element1"
+	    set ::V1x90Windows($name) \
+		[lreplace $::V1x90Windows($name) 1 1 $offsetNs]
+	}
+
+	if {$residx != -1} {
+	    incr residx
+	    set restext [lindex $args $residx]
+	    scan $restext "%fps" resps
+	    set resns [expr $resps/1000.0]
+	    set ::V1x90Windows($name) \
+		[lreplace $::V1x90Windows($name) 2 2 $resns]
+	}
+	if {$slotidx != -1} {
+	    incr slotidx
+	    set ::adcConfiguration($name) [lindex $args $slotidx]
+	}
     }
 
     
