@@ -104,10 +104,10 @@ proc DAQParameters::getReadoutPath {} {
 proc DAQParameters::readoutPathIs path {
 
     if {![file exists $path]} {
-        error DAQParameters::NotFound
+        error "DAQParameters::NotFound - There is no readout program at $path"
     }
     if {![file executable $path]} {
-        error DAQParameters::NotExecutable
+        error "DAQParameters::NotExecutable - $path is not executable therefore not a readout program"
     }
     Configuration::Set ReadoutPath $path
 }
@@ -134,7 +134,7 @@ proc DAQParameters::ftpHostIs {host} {
         close $sock
         Configuration::Set FtpHost $host
     } else {
-        error DAQParameters::HostNotFTPServer
+        error "DAQParameters::HostNotFTPServer $host is not listening on the ftpd socket"
     }
 }
 # DAQParameters::passwordIs passwd
@@ -197,7 +197,7 @@ proc DAQParameters::getEncryptedPasswd {} {
 #   InvalidSize  - value < 128.
 proc DAQParameters::setBufferSize value {
     if {$value < 128} {
-        error DAQParameters::InvalidSize
+        "error DAQParameters::InvalidSize - Buffer sizes less than 128 are not allowed value was: $value"
     }
     Configuration::Set BufferSize $value
 }

@@ -1035,5 +1035,6 @@ September 12, 2008 - Added support for end of run callout into skeleton.
 September 17,2008  - Explained the N series of CAEN modules in the
                      doxygen comments. (per M. Hausman).
 
-
+October 2, 2008 - Per helpme ticket  (LSS-393221) improved error messages from the readout
+                  GUI.
 

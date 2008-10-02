@@ -53,7 +53,7 @@ namespace eval InitializeConfiguration {
 #
 proc InitializeConfiguration::addSubsystem name {
     if {[catch {package require $name}]} {
-        error InitializeConfiguration::NoSuchPackage
+        error "InitializeConfiguration::NoSuchPackage - configuration package $name could not be found in tcl library path"
     }
     lappend InitializeConfiguration::packageList $name
 }
@@ -69,10 +69,10 @@ proc InitializeConfiguration::addSubsystem name {
 #
 proc InitializeConfiguration::addConfigFile path {
     if {![file exists $path]} {
-        error InitializeConfiguration::FileNotFound
+        error "InitializeConfiguration::FileNotFound - Configuration file $path could not be found"
     }
     if {![file readable $path]} {
-        error InitializeConfiguration::FileNotReadable
+        error "InitializeConfiguration::FileNotReadable - Configuration file $path is not readable by this user"
     }
     lappend InitializeConfiguration::configurationFiles $path
 
