@@ -51,13 +51,13 @@ proc ExpRunRetension::ListRetained {} {
 #
 proc ExpRunRetension::AddToPending {run} {
     if {![string is integer -strict $run]} {
-	error ExpRunRetension::NotInteger
+	error "ExpRunRetension::NotInteger - Run to retain must be an integer but was $run"
     }
     if {$run < 0} {
-	error ExpRunRetension::TooSmall
+	error "ExpRunRetension::TooSmall - Run to retain was less than zero : $run"
     }
     if {[ExpRunRetension::isPending $run]} {
-	error ExpRunRetension::DuplicateRun
+	error "ExpRunRetension::DuplicateRun - Run to retain: $run - is already on the retain list"
     }
     lappend ExpRunRetension::PendingRetensions $run
     return [ExpRunRetension::ListPending]
@@ -71,7 +71,7 @@ proc ExpRunRetension::AddToPending {run} {
 proc ExpRunRetension::RemoveFromPending {run} {
     set pindex [lsearch -exact $ExpRunRetension::PendingRetensions $run]
     if {$pindex < 0} {
-	error ExpRunRetension::NotPending
+	error "ExpRunRetension::NotPending - Run $run is not on retension list, can't remove"
     }
     set ExpRunRetension::PendingRetensions \
 	    [lreplace $ExpRunRetension::PendingRetensions $pindex $pindex]
@@ -101,7 +101,7 @@ proc ExpRunRetension::isRetained {run} {
 proc ExpRunRetension::MoveToRetained {run} {
 #	puts "Moving $run to retained pending are $PendingRetensions"
     if {![isPending $run]} {
-        error ExpRunRetension::NotPending
+        error "ExpRunRetension::NotPending - Run $run is not pending and therefore cannot be retained."
     }
     set pindex [lsearch -exact $ExpRunRetension::PendingRetensions $run]
     StagerConfiguration::appendRetainList [lindex $ExpRunRetension::PendingRetensions $pindex]

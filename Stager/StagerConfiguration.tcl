@@ -46,10 +46,10 @@ package require Configuration
 #
 proc StagerConfiguration::isOkInteger {value {limit 0}} {
     if {![string is integer -strict $value]} {
-        error StagerConfiguration::NotInteger
+        error "StagerConfiguration::NotInteger Looking for an integer got: $value"
     }
     if {$value < $limit} {
-        error StagerConfiguration::TooSmall
+        error "StagerConfiguration::TooSmall Looking for an integer >= $limit, got $value"
     }
 
 }
@@ -96,7 +96,7 @@ proc StagerConfiguration::getTapeHost {} {
 #
 proc StagerConfiguration::tapeHostIs host {
     if {[catch [list socket $host shell] sock]} {
-        error StagerConfiguration::NoRshServer
+        error "StagerConfiguration::NoRshServer - Could not connec to rsh server on $host"
     } else {
         close $sock
         Configuration::Set TapeHost $host
@@ -186,13 +186,13 @@ proc StagerConfiguration::getStageThreshold {} {
 #
 proc StagerConfiguration::stageThresholdIs value {
     if {![string is double -strict $value]} {
-        error StagerConfiguration::NotFloat
+        error "StagerConfiguration::NotFloat Stage threshold must be a floating point value was $value"
     }
     if {$value <= 0.1} {
-        error StagerConfiguration::TooSmall
+        error "StagerConfiguration::TooSmall - Stage threshold must be greater than .1 was $value"
     }
     if {$value >= 0.9} {
-        error StagerConfiguration::TooBig
+        error "StagerConfiguration::TooBig - Stage threshold must be less than 0.9 was $value"
     }
     Configuration::Set StageThreshold $value
 }
@@ -255,7 +255,7 @@ proc StagerConfiguration::setStageList intlist {
             if {[llength $oldList] > 0} {
                 StagerConfiguration::setStageList $oldList; # Presumably this is an ok list.
             }
-            error StagerConfiguration::InvalidParameter
+            error "StagerConfiguration::InvalidParameter - The run $run cannot be appended to the stage list"
         }
     }
 }
@@ -290,7 +290,7 @@ proc StagerConfiguration::setRetainList values {
             if {[llength $oldList] > 0} {
                 Configuration::SetRetainList $oldlist
             }
-            error StagerConfiguration::InvalidParameter
+            error "StagerConfiguration::InvalidParameter -The run $run cannot be added to the retension list"
         }
     }
 }

@@ -76,10 +76,10 @@ proc ReadoutState::getTitle {} {
 #
 proc ReadoutState::setRun number {
     if {![string is integer -strict $number]} {
-        error ReadoutState::NotInteger
+        error "ReadoutState::NotInteger run number value was: $number"
     }
     if {$number < 0} {
-        error ReadoutState::Negative
+        error "ReadoutState::Negative Run number must be an integer greater than zero was: $number"
     }
 
     Configuration::Set RunNumber $number
@@ -110,10 +110,10 @@ proc ReadoutState::incRun {} {
 #     Negative    - scalesr is < 0.
 proc ReadoutState::setScalerCount scalers {
     if {![string is integer -strict $scalers]} {
-        error ReadoutState::NotInteger
+        error "ReadoutState::NotInteger - Scaler count was not an integer was: $scalers"
     }
     if {$scalers < 0} {
-        error ReadoutState::Negative
+        error "ReadoutState::Negative - Scaler count was negative: $scalers"
     }
     Configuration::Set ScalerCount $scalers
 }
@@ -135,10 +135,10 @@ proc ReadoutState::getScalerCount {} {
 #
 proc ReadoutState::setScalerPeriod time {
     if {![string is integer -strict $time]} {
-        error ReadoutState::NotInteger
+        error "ReadoutState::NotInteger - Seconds  between scaler reads was not an integer was: $time"
     }
     if {$time <= 0} {
-        error ReadoutState::LeZero
+        error "ReadoutState::LeZero - Seconds between scaler reads was not greater than 0 was: $time"
     }
     Configuration::Set ScalerInterval $time
 }

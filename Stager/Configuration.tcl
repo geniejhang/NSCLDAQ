@@ -45,10 +45,10 @@ namespace eval Configuration {
 #
 proc Configuration::readConfigFile {path} {
     if {![file exists $path]} {
-        error Configuration::FileNotFound
+        error "Configuration::FileNotFound - Attempting to read configurationfile: $path"
     }
     if {![file readable $path]} {
-        error Configuration::FileNotReadable
+        error "Configuration::FileNotReadable - $path was not readable by this user"
     }
     set Configuration::ConfigFile $path
     uplevel #0 {
