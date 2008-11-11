@@ -289,6 +289,13 @@ DAMAGES.
 #include <CaenIO.h>
 #endif
 
+#ifndef __DAQDATATYPES_H
+#include <daqdatatypes.h>
+#ifndef __DAQDATATYPES_H
+#define __DAQDATATYPES_H
+#endif
+#endif
+
 /*!
    Encpasulates a VME trigger module based on the 
    CAEN Multipurpose I/O module.  The NIM in level 0
