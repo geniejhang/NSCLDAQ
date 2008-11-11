@@ -1042,3 +1042,4 @@ November 11, 2008 - BZ 335 - In production readout, spectrodaq
                    pregt-2.3/2.3 can misorder/duplicate buffers if
                    they are emitted from more than one application thread.
                    Workaround by emitting all buffers from the trigger thread.
+                  - Added alarm enable checkbutton to scaler display. (Dirk)
