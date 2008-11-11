@@ -114,7 +114,8 @@ class CTriggerThread : public DAQThread
 {
   CExperiment* m_pExperiment;	//!< Points to our experiment object.
   CTrigger*    m_pTrigger;	//!< Points to the trigger check object
-  bool         m_Exiting;	//!< True if asked to exit (stop called).
+  volatile bool         m_pauseInvolved; //!< True if start/stop is due to resume/pause.
+  volatile bool         m_Exiting;	//!< True if asked to exit (stop called).
   DAQThreadId    m_Id;		//!< Our thread ID if running.
   unsigned int m_msHoldTime;	//!< ms to hold the global mutex.
   unsigned int m_nTriggerdwell; //!< triggers betweeen time polls.
@@ -123,6 +124,11 @@ public:
 
   void Start();			// Start execution.
   void Stop();			// Stop execution.
+  void Begin();			// Begin run
+  void End();			// End run
+  void Pause();			// Pause run.
+  void Resume();		// Resume run.
+
 protected:
   virtual int operator()(int argc, char** argv);
   virtual void MainLoop();
@@ -170,7 +176,34 @@ CTriggerThread::Stop()
     mutex.Lock();
   }
 }
-//! Entry point for thread.. just calls MainLoop(), and returns 0.
+
+void
+CTriggerThread::Begin()
+{
+  m_pauseInvolved = false;
+  Start();
+}
+
+void 
+CTriggerThread::End()
+{
+  m_pauseInvolved = false;
+  Stop();
+}
+void
+CTriggerThread::Pause()
+{
+  m_pauseInvolved = true;
+  Stop();
+}
+void
+CTriggerThread::Resume()
+{
+  m_pauseInvolved = false;
+  Start();
+}
+
+//! Entry point for thread.. just calls MainLoop), and returns 0.
 //
 int
 CTriggerThread::operator()(int argc, char** argv)
@@ -219,19 +252,40 @@ CTriggerThread::operator()(int argc, char** argv)
 void
 CTriggerThread::MainLoop() 
 {
+
+    // Output the initial buffers:
+
+  CApplicationSerializer::getInstance()->Lock();
+  
+  if (m_pauseInvolved) {
+    m_pExperiment->EmitResume();
+  }
+  else {
+    m_pExperiment->EmitStart();
+  }
+  m_pExperiment->TriggerDocBuffer();
+  m_pExperiment->TriggerRunVariableBuffer();
+  m_pExperiment->TriggerStateVariableBuffer();
+
+  CApplicationSerializer::getInstance()->UnLock();
+
+
   CScalerTrigger* pScaler = m_pExperiment->getScalerTrigger();
   while(!m_Exiting) {
     struct timeval mutexstart;
     struct timeval mutexend;
     struct timezone tz;		// Unused but required for gettimeofday(2).
-    int dwell;
+    unsigned int dwell;
     //
     // Lock the mutex and process triggers for the dwell time.
     // The trigger is checked several times to amortize gettimeofday().
     //
     sched_yield();		// Let other threads run.
     CApplicationSerializer::getInstance()->Lock();
-    gettimeofday(&mutexstart, &tz);
+
+   
+    //    gettimeofday(&mutexstart, &tz);
+    dwell = 0;
     do {
       int triggers=0;
       for(int i = 0; i < 500; i++) {
@@ -249,13 +303,38 @@ CTriggerThread::MainLoop()
       // If we've held the mutex for longer than m_msHoldTime,
       // release the mutex so that other threads get a chance to run.
       //
-      gettimeofday(&mutexend, &tz);
-      int secdif = mutexend.tv_sec - mutexstart.tv_sec;
-      mutexend.tv_usec += SECOND*secdif;
-      dwell = (mutexend.tv_usec - mutexstart.tv_usec)/MILISECOND;
+
+      //      gettimeofday(&mutexend, &tz);
+      //      int secdif = mutexend.tv_sec - mutexstart.tv_sec;
+      //      mutexend.tv_usec += SECOND*secdif;
+      //      dwell = (mutexend.tv_usec - mutexstart.tv_usec)/MILISECOND;
+      dwell++;
     } while(dwell < m_msHoldTime);
+
+    
     CApplicationSerializer::getInstance()->UnLock();
   }
+  CApplicationSerializer::getInstance()->Lock();
+
+  // Depending on exit or pause.. need to emit the appropriate stuff.. 
+
+  m_pExperiment->TriggerDocBuffer();
+  m_pExperiment->TriggerRunVariableBuffer();
+  m_pExperiment->TriggerStateVariableBuffer();  
+  m_pExperiment->TriggerScalerReadout();
+
+
+  if (m_pauseInvolved) {
+    m_pExperiment->EmitPause();
+
+  }
+  else {
+    m_pExperiment->EmitEnd();
+  }
+
+  CApplicationSerializer::getInstance()->UnLock();
+
+
 }
 
 
@@ -361,7 +440,7 @@ CExperiment::Start(CStateTransitionCommand& rCommand)
   // Wrap the entire function in a try catch block to nail the 
   // exceptions that may come up:
   //
-
+  bool resuming;
   try {
 
     // Execute pre-actions:
@@ -371,9 +450,9 @@ CExperiment::Start(CStateTransitionCommand& rCommand)
     // Figure out what kind of buffer to emit and emit it.
     
     try {
+      resuming = false;
       CBeginCommand& rBegin(dynamic_cast<CBeginCommand&>(rCommand)); // Throws if resume.
       MyApp.getClock().Reset();	// Reset the run elapsed time.
-      EmitStart();		// and emit a begin buffer.
       m_LastScalerTime = 0;	// Neither scalers have been readout yet this run.
       m_LastSnapTime   = 0;
       
@@ -395,16 +474,13 @@ CExperiment::Start(CStateTransitionCommand& rCommand)
       
     }
     catch (bad_cast& rbad) {
+      resuming = true;
       m_LastSnapTime = 0;	// Snaps will not have been read out at resume.
-      EmitResume();		// Emit a resume without zeroing the run elapsed time.
     }
     
     // Emit documentation and runstate variable buffers.
     
-    TriggerDocBuffer();
-    TriggerRunVariableBuffer();
-    TriggerStateVariableBuffer();
-    
+   
     // Prepare the hardware for readout:
     
     try {
@@ -418,12 +494,13 @@ CExperiment::Start(CStateTransitionCommand& rCommand)
       
       cerr << "Interface contract violation: " << msg << endl;
       cerr << "Detected in user's code called by CExperiment::Start" << endl;
+      exit(-1);
     }
     
     
     // Start the trigger process and clock, and set the run variable trigger interval..
 
-    StartTrigger();
+    StartTrigger(resuming);
 
     MyApp.getRunVariableTrigger()->SetInterval(MyApp.getScalerPeriod()*1000);
 
@@ -471,6 +548,7 @@ CExperiment::Stop(CStateTransitionCommand& rCommand)
 {
   // Wrap the entire body of the Stop function in a try catch block
   // to attempt to describe any problems encountered.
+
   try {
     // Do the pre actions.
     
@@ -484,26 +562,26 @@ CExperiment::Stop(CStateTransitionCommand& rCommand)
     
     // Emit documentation and variable list buffers.
     
-    TriggerDocBuffer();
-    TriggerRunVariableBuffer();
-    TriggerStateVariableBuffer();  
     m_pScalerTrigger->Cleanup();
-    
-    // Stop the trigger and clock processes.  Note that the stop trigger function
-    // synchronizes with the exit of the trigger thread.
-    
-    StopTrigger();		//<--------- At this point we can't take data.
-    TriggerScalerReadout();	// Closing scaler buffers.
     
     // Figure out what kind of event this is and emit the appropriate buffer
     //  (End or Pause).
     
     try {
       CEndCommand& rend(dynamic_cast<CEndCommand&>( rCommand));
-      EmitEnd();
+      
+      // Stop the trigger and clock processes.  Note that the stop trigger function
+      // synchronizes with the exit of the trigger thread.
+      
+      StopTrigger(false);		//<--------- At this point we can't take data.
+
+
     }
     catch (bad_cast& rbad) {
-      EmitPause();
+      // Stop the trigger and clock processes.  Note that the stop trigger function
+      // synchronizes with the exit of the trigger thread.
+      
+      StopTrigger(true);		//<--------- At this point we can't take data.
     }
     
     // Do the post actions.
@@ -1125,14 +1203,14 @@ CExperiment::EmitResume()
 
    */
 void
-CExperiment::StartTrigger()
+CExperiment::StartTrigger(bool resume)
 {
   if(m_pTThread) {		// Should be null...else running.
     throw CDuplicateSingleton("Creating trigger thread",
 			      "TriggerThreadObject");
   }
   m_pTThread = new CTriggerThread(this, m_pTrigger);
-  m_pTThread->Start();
+  resume ? m_pTThread->Resume() : m_pTThread->Begin();
 
 }
 /*!
@@ -1145,10 +1223,10 @@ CExperiment::StartTrigger()
 
 */
 void
-CExperiment::StopTrigger()
+CExperiment::StopTrigger(bool pause)
 {
   if(m_pTThread) {
-    m_pTThread->Stop();
+    pause ? m_pTThread->Pause() : m_pTThread->End();
     delete m_pTThread;
     m_pTThread = (CTriggerThread*)NULL;   
   }

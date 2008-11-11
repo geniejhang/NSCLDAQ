@@ -190,13 +190,13 @@ public:
   CScalerTrigger* getScalerTrigger();
   void            setScalerTrigger(CScalerTrigger* pTrigger);
   unsigned long GetElapsedTime() const;
-protected:
   void EmitStart();
   void EmitEnd();
   void EmitPause();
   void EmitResume();
-  void StartTrigger();
-  void StopTrigger();
+public:
+  void StartTrigger(bool resume);
+  void StopTrigger(bool pause);
   unsigned short GetRunNumber() const;
   void EmitScalerBuffer(unsigned int nBufferType, 
 			vector<unsigned long>& scalers,

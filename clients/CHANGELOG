@@ -1038,3 +1038,7 @@ September 17,2008  - Explained the N series of CAEN modules in the
 October 2, 2008 - Per helpme ticket  (LSS-393221) improved error messages from the readout
                   GUI.
 
+November 11, 2008 - BZ 335 - In production readout, spectrodaq
+                   pregt-2.3/2.3 can misorder/duplicate buffers if
+                   they are emitted from more than one application thread.
+                   Workaround by emitting all buffers from the trigger thread.
