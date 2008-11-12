@@ -292,6 +292,8 @@ int init_module(
 
 #ifdef SET_MODULE_OWNER
     SET_MODULE_OWNER(&btp_fops);
+#else
+    (&btp_fops)->owner = THIS_MODULE;
 #endif
 
     /* 
