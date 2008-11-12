@@ -288,7 +288,11 @@ int init_module(
     TRC_MSG(BT_TRC_CFG|BT_TRC_DETAIL, (LOG_FMT "Trace level = 0x%lx.\n",
         LOG_ARG, bt_trace_lvl_g));
 
+    /* SET_MODULE_OWNER gets deprecated at some point */
+
+#ifdef SET_MODULE_OWNER
     SET_MODULE_OWNER(&btp_fops);
+#endif
 
     /* 
     ** Initialize our memory handling routines 
