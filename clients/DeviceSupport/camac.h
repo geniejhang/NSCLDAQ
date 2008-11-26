@@ -45,7 +45,9 @@
  */
 
 
-extern bool daq_isJumboBuffer();
+extern "C" { 
+bool daq_isJumboBuffer();
+}
 
 /*
 ** Need to define getlong and putlong to support the 24 bit operations.

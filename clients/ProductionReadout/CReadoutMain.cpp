@@ -430,6 +430,7 @@ CReadoutMain::Exit()
  * 
  * Return true if the buffers are jumbo:
  */
+extern "C" {
 bool
 daq_isJumboBuffer()
 {
@@ -437,7 +438,7 @@ daq_isJumboBuffer()
   unsigned     size = pExp->getBufferSize();
   return size > JUMBOTHRESHOLD;
 }
-
+}
 // If spectrodaq main is separable, then I need to define main
 // here to ensure that TCL++'s main is not pulled in by mistake.
 //

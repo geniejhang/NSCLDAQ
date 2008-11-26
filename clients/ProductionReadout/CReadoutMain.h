@@ -162,7 +162,7 @@ public:
 };
 
 
-extern bool daq_isJumboBuffer();
+extern "C" { bool daq_isJumboBuffer(); }
 #endif
 
 
