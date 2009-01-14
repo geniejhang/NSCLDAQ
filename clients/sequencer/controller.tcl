@@ -117,6 +117,9 @@ proc planAborted {} {
         }
 
     }
+    # No longer planning a run:
+
+    set ::seqController::plannedRun 0
 }
 
 
