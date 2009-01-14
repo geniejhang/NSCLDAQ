@@ -145,6 +145,7 @@ CReader::ReadSomeEvents(unsigned int nPasses)
   try {
     for (unsigned int i = 0; i < nPasses; i++) {
       unsigned int nEventSize;
+      unsigned int rawEventSize;
       if(m_pTrigger->Check()) {	// Event fired.
 	m_pTrigger->Clear();
 	unsigned short*  hdr = m_pRawCursor;
@@ -152,23 +153,23 @@ CReader::ReadSomeEvents(unsigned int nPasses)
 	if (jumbo) m_pRawCursor++;
 	
 	CVMEInterface::Lock();
-	nEventSize = ::readevt(m_pRawCursor);
+        rawEventSize = ::readevt(m_pRawCursor);
 	CVMEInterface::Unlock();
-	if(nEventSize > 0) {
+	if(rawEventSize > 0) {
 	  if (jumbo) {
-	    nEventSize += 2;
+	    nEventSize = rawEventSize + 2;
 	    union longword lw;
 	    lw.l = nEventSize;
 	    hdr[0]   = lw.s[0];
 	    hdr[1]   = lw.s[1];
 	  }
 	  else {
-	    nEventSize += 1;
+	    nEventSize = rawEventSize +  1;
 	    *hdr       = nEventSize; // Fill in the size header.
 	  }
 	  m_nWords  += nEventSize;   // Fill in the buffer index.
 	  m_nEvents++;
-	  m_pRawCursor += nEventSize;
+	  m_pRawCursor += rawEventSize;
 	}
 	else {			// Rejected (zero length) event.
 	  m_pRawCursor  = hdr;	// Retract buffer ptr on rejected event.
