@@ -1046,3 +1046,9 @@ November 11, 2008 - BZ 335 - In production readout, spectrodaq
 8.1-008
 November 24, 2008 - Make the definitions of daq_isJumboBuffer consistent
                     across all components.
+January 14, 2009  - TclServer - make port processing for numeric params work.
+                  - Fix size error on events in high performance
+                    readout classic...an extra word (non jumbo) or two
+                    (jumbo) was being put between events.
+                  - Ensure aborting run plans does not leave the system
+                    stuck in the state where it thinks it's executing a plan.
