@@ -160,5 +160,6 @@ proc startPlannedRun {button table} {
 #
 proc stopPlannedRun {} {
     ReadoutGui::End
+    set ::seqController::plannedRun 0
 
 }

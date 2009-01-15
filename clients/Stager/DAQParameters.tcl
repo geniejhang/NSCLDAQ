@@ -129,13 +129,12 @@ proc DAQParameters::getFtpHost {} {
 # Errors
 #    HostNotFTPServer
 #
+#  NOTES: THIS IS OBSOLETE!!!  so don't require an ftp host.
+#
 proc DAQParameters::ftpHostIs {host} {
-    if {[catch [list socket $host ftp] sock] == 0} {
-        close $sock
-        Configuration::Set FtpHost $host
-    } else {
-        error "DAQParameters::HostNotFTPServer $host is not listening on the ftpd socket"
-    }
+    Configuration::Set FtpHost $host
+    return
+
 }
 # DAQParameters::passwordIs passwd
 #    Sets a new password.  As this is assumed to come from the
