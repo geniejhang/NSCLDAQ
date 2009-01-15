@@ -314,7 +314,10 @@ proc setupConfiguration arglist {
 
             }
             -ftphost {
+		#
+		#  NOTE -ftp is obsolete!!!
                 DAQParameters::ftpHostIs $value
+		puts stderr "You are using the -ftp switch which is no longer needed"
             }
             -passwd {
                 DAQParameters::passwordIs $value
