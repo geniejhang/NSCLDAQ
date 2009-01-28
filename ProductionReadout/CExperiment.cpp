@@ -75,7 +75,7 @@ using namespace std;		// need this here for spectrodaq.
 #include <algorithm>
 #include <tcl.h>
 #include <stdint.h>
-
+#include <stdio.h>
 
 using namespace DesignByContract;
 
@@ -116,6 +116,8 @@ class CTriggerThread : public DAQThread
   CTrigger*    m_pTrigger;	//!< Points to the trigger check object
   volatile bool         m_pauseInvolved; //!< True if start/stop is due to resume/pause.
   volatile bool         m_Exiting;	//!< True if asked to exit (stop called).
+  volatile bool         m_Started;
+  volatile bool         m_Restart;
   DAQThreadId    m_Id;		//!< Our thread ID if running.
   unsigned int m_msHoldTime;	//!< ms to hold the global mutex.
   unsigned int m_nTriggerdwell; //!< triggers betweeen time polls.
@@ -139,6 +141,8 @@ CTriggerThread::CTriggerThread(CExperiment* pExp, CTrigger* pTrig) :
   m_pExperiment(pExp),
   m_pTrigger(pTrig),
   m_Exiting(false),
+  m_Started(false),
+  m_Restart(false),
   m_msHoldTime(nTriggerDwellTime),
   m_nTriggerdwell(nTriggersPerPoll)
 {}
@@ -147,7 +151,12 @@ void
 CTriggerThread::Start()
 {
   m_Exiting = false;
-  m_Id = daq_dispatcher.Dispatch(*this, 0, 0);
+  m_Restart = true;
+  if (!m_Started) {
+    m_Started = true;
+    m_Id = daq_dispatcher.Dispatch(*this, 0, 0);
+  }
+
 }
 /*! Schedule stop of trigger thread.
     \note This function assumes the calling thread is not 
@@ -159,7 +168,8 @@ CTriggerThread::Stop()
 {
   if(m_Exiting) return;	// Already exiting or done.
 
-  DAQThreadId id( m_Id);
+  //  DAQThreadId id( m_Id);
+
   m_Exiting = true;
 
   // We have the mutex, we need to release it so the triger thread
@@ -170,11 +180,15 @@ CTriggerThread::Stop()
   unsigned nLockLevel = mutex.getLockLevel();
   mutex.UnLockCompletely();
 
-  Join(m_Id);			// Wait for trigger to exit.
+  //  Join(m_Id);			// Wait for trigger to exit.
+
+  while (m_Restart) {
+    usleep(1000);
+  }
 
   for(unsigned i =0; i < nLockLevel; i++) {
     mutex.Lock();
-  }
+ } 
 }
 
 void
@@ -209,7 +223,13 @@ int
 CTriggerThread::operator()(int argc, char** argv)
 {
   try {
-    MainLoop();
+    while(1) {
+      MainLoop();
+      m_Restart = false;
+      while (!m_Restart) {
+	usleep(1000);
+      }
+    }
   } 
   catch(char* pReason) {
     cerr << "Main loop of trigger failed: " << pReason << endl;
@@ -1134,17 +1154,23 @@ CExperiment::setScalerTrigger(CScalerTrigger* pTrigger)
 void
 CExperiment::EmitStart()
 {
+
   CNSCLOutputBuffer::ClearSequence(); // Begin run always has zero for sequence number.
 
   // Need a bunch of stuff:
   // Title run number, time offset and time of day.
 
-  CNSCLControlBuffer buffer(m_nBufferSize);
-  buffer.PutTitle(MyApp.getTitle());
-  buffer.PutTimeOffset(GetElapsedTime());
-  buffer.SetRun(GetRunNumber());
-  buffer.SetType(BEGRUNBF);
-  buffer.Route();
+  {
+    CNSCLControlBuffer buffer(m_nBufferSize);
+    buffer.PutTitle(MyApp.getTitle());
+    buffer.PutTimeOffset(GetElapsedTime());
+    buffer.SetRun(GetRunNumber());
+    buffer.SetType(BEGRUNBF);
+    buffer.Route();
+  }
+  printf( "Begin run buffer emitted run %d title: %s \n",
+	 GetRunNumber(), MyApp.getTitle().c_str());
+  fflush(stdout);
 
 }
 /*!
@@ -1154,12 +1180,19 @@ CExperiment::EmitStart()
 void 
 CExperiment::EmitEnd()
 {
-  CNSCLControlBuffer buffer(m_nBufferSize);
-  buffer.PutTitle(MyApp.getTitle());
-  buffer.PutTimeOffset(GetElapsedTime()/10);
-  buffer.SetRun(GetRunNumber());
-  buffer.SetType(ENDRUNBF);
-  buffer.Route();
+  {
+    CNSCLControlBuffer buffer(m_nBufferSize);
+    buffer.PutTitle(MyApp.getTitle());
+    buffer.PutTimeOffset(GetElapsedTime()/10);
+    buffer.SetRun(GetRunNumber());
+    buffer.SetType(ENDRUNBF);
+    buffer.Route();
+  }
+  printf( "End run buffer emitted run %d title: %s\n",
+	 GetRunNumber(), MyApp.getTitle().c_str());
+  fflush(stdout);
+
+
 }
 /*!
   Emits a pause run buffer.  Pause run buffers also look like Begin buffers with
@@ -1168,12 +1201,15 @@ CExperiment::EmitEnd()
 void
 CExperiment::EmitPause()
 {
-  CNSCLControlBuffer buffer(m_nBufferSize);
-  buffer.PutTitle(MyApp.getTitle());
-  buffer.PutTimeOffset(GetElapsedTime()/10);
-  buffer.SetRun(GetRunNumber());
-  buffer.SetType(PAUSEBF);
-  buffer.Route();
+  {
+    CNSCLControlBuffer buffer(m_nBufferSize);
+    buffer.PutTitle(MyApp.getTitle());
+    buffer.PutTimeOffset(GetElapsedTime()/10);
+    buffer.SetRun(GetRunNumber());
+    buffer.SetType(PAUSEBF);
+    buffer.Route();
+  }
+
   
 }
 /*!
@@ -1183,12 +1219,15 @@ CExperiment::EmitPause()
 void
 CExperiment::EmitResume()
 {
-  CNSCLControlBuffer buffer(m_nBufferSize);
-  buffer.PutTitle(MyApp.getTitle());
-  buffer.PutTimeOffset(GetElapsedTime()/10);
-  buffer.SetRun(GetRunNumber());
-  buffer.SetType(RESUMEBF);
-  buffer.Route();
+  {
+    CNSCLControlBuffer buffer(m_nBufferSize);
+    buffer.PutTitle(MyApp.getTitle());
+    buffer.PutTimeOffset(GetElapsedTime()/10);
+    buffer.SetRun(GetRunNumber());
+    buffer.SetType(RESUMEBF);
+    buffer.Route();
+  }
+
 
 }
 /*!
@@ -1205,11 +1244,13 @@ CExperiment::EmitResume()
 void
 CExperiment::StartTrigger(bool resume)
 {
-  if(m_pTThread) {		// Should be null...else running.
-    throw CDuplicateSingleton("Creating trigger thread",
-			      "TriggerThreadObject");
+  //  if(m_pTThread) {		// Should be null...else running.
+  //    throw CDuplicateSingleton("Creating trigger thread",
+  //			      "TriggerThreadObject");
+  // }
+  if(!m_pTThread) {
+    m_pTThread = new CTriggerThread(this, m_pTrigger);
   }
-  m_pTThread = new CTriggerThread(this, m_pTrigger);
   resume ? m_pTThread->Resume() : m_pTThread->Begin();
 
 }
@@ -1227,8 +1268,8 @@ CExperiment::StopTrigger(bool pause)
 {
   if(m_pTThread) {
     pause ? m_pTThread->Pause() : m_pTThread->End();
-    delete m_pTThread;
-    m_pTThread = (CTriggerThread*)NULL;   
+    // delete m_pTThread;
+    // m_pTThread = (CTriggerThread*)NULL;   
   }
 }
 /*!
