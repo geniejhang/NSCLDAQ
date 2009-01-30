@@ -1054,3 +1054,6 @@ January 14, 2009  - TclServer - make port processing for numeric params work.
                     stuck in the state where it thinks it's executing a plan.
 January 15, 2009  - Stop ReadoutShell from paying attention to the -ftphost
                    switch.
+
+Start 8.2 development branch.
+============================
