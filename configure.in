@@ -6,7 +6,7 @@ AM_CONFIG_HEADER(config.h)
 
 #    Separate device libraries.
 
-AM_INIT_AUTOMAKE(nscldaq, 8.1-008)  
+AM_INIT_AUTOMAKE(nscldaq, 8.2)  
 
 #
 #   The variable below should track the
@@ -848,6 +848,7 @@ AC_OUTPUT( Makefile tcllib/Makefile \
 	Exception/Makefile PortManager/Makefile \
 	TCL/Makefile Security/Makefile Ftp/Makefile \
 	VMEApi/Makefile cvt/Makefile \
+	CAENV1495Loader/Makefile     \
 	SpecTclOnline/Makefile DeviceSupport/Makefile \
 	HPReadout/Makefile \
 	Readout/Makefile diskrun/Makefile \
