@@ -1057,3 +1057,6 @@ January 15, 2009  - Stop ReadoutShell from paying attention to the -ftphost
 
 Start 8.2 development branch.
 ============================
+January 30, 2009 - Added CAENV1495 loader to the build modified from 
+                   CAEN's code and licensed for free redistrib.
+

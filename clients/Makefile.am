@@ -2,14 +2,16 @@
 
 SUBDIRS = tcllib  \
 	Headers CopyrightTools Exception PortManager TCL Security Ftp \
-	VMEApi VMEApi cvt SpecTclOnline DeviceSupport\
+	VMEApi VMEApi \
+	CAENV1495Loader \
+	cvt SpecTclOnline DeviceSupport\
 	Readout HPReadout diskrun EventLog Scaler  \
 	vmetcl  \
 	bufdump TclServer bcnaf TcpHoister Stager Scripts framework \
 	AlarmDisplay LogDisplay ProductionReadout  \
 	contrib dvdburn daqstart @EPICSSOFTWARE@ \
 	ScalerDisplay @DEPENDSON_VME@ wienerusbd \
-	slowControls sequencer spectrodaqStatus
+	slowControls sequencer spectrodaqStatus	
 
 
 EXTRA_DIST =  config/install-sh config/config.sub config/config.guess \
