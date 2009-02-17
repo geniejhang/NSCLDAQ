@@ -473,7 +473,7 @@ proc ::ReadougGUIPanel::normalColors {} {
 
     if {$ReadougGUIPanel::UseTestColors} {
 	set bgcolor [$title cget -background]
-	set fgcolor $ReadougGUIPanel::TestNonRecordingFg
+	set fgcolor $ReadougGUIPanel::TestRecordingFg
     } else {
 
 	set bgcolor [$title cget -background]
