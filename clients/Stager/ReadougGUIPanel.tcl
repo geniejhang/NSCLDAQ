@@ -19,6 +19,12 @@ namespace eval ReadougGUIPanel {
     variable RecordData        0
     variable ScalerChannels    0
     variable ScalerPeriod      2
+    variable UseTestColors     0
+    variable TestNonRecordingBg red
+    variable TestRecordingBg    blue
+    variable TestNonRecordingFg blue
+    variable TestRecordingFg    red
+
     variable sourceDefaultPath ./
 
     #  Callbacks:
@@ -49,6 +55,12 @@ if {[info var ::argv] == ""} {
     set ::argv ""
 }
 
+#
+#  Call to require that the test colors be used
+#
+proc ReadougGUIPanel::runInTestVersion {} {
+    set ReadougGUIPanel::UseTestColors 1
+}
 # ReadougGUIPanel::addUserMenu ident label
 #     Adds a user menu to the menubar of the
 #     GUI. The caller is then responsible
@@ -412,8 +424,16 @@ proc ::ReadougGUIPanel::isRecording {} {
     append text   $::ReadougGUIPanel::ROOT . output
     append status $::ReadougGUIPanel::ROOT . statusline
 
-    $text configure -background {dark green} -foreground {white}
-    $status configure -background {dark green} -foreground {white}
+    if {$ReadougGUIPanel::UseTestColors} {
+	set bg $ReadougGUIPanel::TestRecordingBg
+	set fg $ReadougGUIPanel::TestRecordingFg
+    }    else {
+	set bg {dark green}
+	set fg {white}
+    }
+    puts "setting $fg $bg"
+    $text configure -background $bg  -foreground $fg
+    $status configure -background $bg -foreground $fg
 
 }
 # ReadougGUIPanel::notRecording
@@ -427,8 +447,16 @@ proc ::ReadougGUIPanel::notRecording {} {
     append text   $::ReadougGUIPanel::ROOT . output
     append status $::ReadougGUIPanel::ROOT . statusline
 
-    $text   config  -background black -foreground {dark green}
-    $status config  -background black -foreground {dark green}
+    if {$ReadougGUIPanel::UseTestColors} {
+	set bg $ReadougGUIPanel::TestNonRecordingBg
+	set fg $ReadougGUIPanel::TestNonRecordingFg
+    }    else {
+	set bg black
+	set fg {dark green}
+    }
+    puts "setting $fg $bg"
+    $text   config  -background $bg -foreground $fg
+    $status config  -background $bg -foreground $fg
 }
 
 # ReadougGUIPanel::normalColors
@@ -443,8 +471,15 @@ proc ::ReadougGUIPanel::normalColors {} {
 
 
 
-    set bgcolor [$title cget -background]
-    set fgcolor [$host              cget -foreground]
+    if {$ReadougGUIPanel::UseTestColors} {
+	set bgcolor [$title cget -background]
+	set fgcolor $ReadougGUIPanel::TestRecordingFg
+    } else {
+
+	set bgcolor [$title cget -background]
+	set fgcolor [$host              cget -foreground]
+    }
+    puts "setting normal"
 
     $text   config  -background $bgcolor -foreground $fgcolor
     $status config  -background $bgcolor -foreground $fgcolor

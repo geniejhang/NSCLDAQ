@@ -45,6 +45,17 @@ namespace eval ReadoutGui {
     variable guiBuiltCallback {};        # Callback when GUI is built.
 
 }
+#
+#  Local proc.. is true if the installation is a TEST system:
+#  This assumes the standard NSCL installation directory of;
+#  /usr/opt/daq/someversion
+#  And that in test systems, there's a file /usr/opt/TEST_VERSION
+#
+proc ReadoutGui::isTestSystem {} {
+    set daqbase [InstallRoot::Where]
+
+    return [file exists [file join $daqbase .. .. TEST_VERSION]]
+}
 # ReadoutGui::timestampOutput text
 #    Called to write a timestamped string to the
 #    gui text widget.  The string is of the form
@@ -544,7 +555,12 @@ proc ReadoutGui::Begin {} {
 	ReadoutState::notTimedRun
     }
     ReadoutGui::ClearElapsedTime;    # NO paused segments, new run.
-#    ::ReadoutGui::StartRunTimers
+
+    if {[ReadoutControl::isTapeOn]} {
+	ReadougGUIPanel::isRecording
+    } else {
+	ReadougGUIPanel::notRecording
+    }
 
 }
 # ReadoutGui::Pause
@@ -625,8 +641,16 @@ proc ReadoutGui::ReadoutController {topname} {
 	set topprefix ""
 	set topname .
     }
-    wm title $topname "Run Control"
     ::ReadougGUIPanel::init $topname
+    if {[ReadoutGui::isTestSystem]} {
+	set theGuiTitle "Run Control - TEST VERSION OF SOFTWARE"
+	::ReadougGUIPanel::runInTestVersion
+    } else {
+	set theGuiTitle "Run Control"
+    }
+    wm title $topname $theGuiTitle
+
+
     if {$::ReadoutGui::guiBuiltCallback != ""} {
 	$::ReadoutGui::guiBuiltCallback $topname
     }
