@@ -36,6 +36,8 @@ package require Experiment
 package require bells
 package require spdaqwidgets
 package require RunTime
+package require InstallRoot
+
 
 namespace eval ReadoutGui {
     variable ElapsedTimer     0;        #Number of seconds in run so far.
@@ -45,6 +47,18 @@ namespace eval ReadoutGui {
     variable guiBuiltCallback {};        # Callback when GUI is built.
 
 }
+#
+#  Local proc.. is true if the installation is a TEST system:
+#  This assumes the standard NSCL installation directory of;
+#  /usr/opt/daq/someversion
+#  And that in test systems, there's a file /usr/opt/TEST_VERSION
+#
+proc ReadoutGui::isTestSystem {} {
+    set daqbase [InstallRoot::Where]
+
+    return [file exists [file join $daqbase .. .. TEST_VERSION]]
+}
+
 # ReadoutGui::timestampOutput text
 #    Called to write a timestamped string to the
 #    gui text widget.  The string is of the form
@@ -479,7 +493,7 @@ proc ReadoutGui::Restart {} {
 #
 proc ReadoutGui::StartRunTimers {} {
 
-
+    puts "Starting Run timers."
     ReadoutGui::StartElapsedTimer
     ReadougGUIPanel::outputText "Run Starting\n"
     ReadoutGui::SaveSettings
@@ -544,6 +558,14 @@ proc ReadoutGui::Begin {} {
 	ReadoutState::notTimedRun
     }
     ReadoutGui::ClearElapsedTime;    # NO paused segments, new run.
+    if {[ReadoutControl::isTapeOn]} {
+	ReadougGUIPanel::isRecording
+	# $EventStatusLineWidget config -bg green
+	# $OutputWidget config -bg green
+    } else {
+	ReadougGUIPanel::notRecording
+	# set EventFileStatusLine ""
+    }
 #    ::ReadoutGui::StartRunTimers
 
 }
@@ -625,8 +647,18 @@ proc ReadoutGui::ReadoutController {topname} {
 	set topprefix ""
 	set topname .
     }
-    wm title $topname "Run Control"
+
     ::ReadougGUIPanel::init $topname
+
+    # Re-title the window depending on the testedness of this:
+
+    if {[ReadoutGui::isTestSystem]} {
+	set theGuiTitle "Run Control - TEST VERSION OF SOFTWARE"
+	::ReadougGUIPanel::runInTestVersion
+    } else {
+	set theGuiTitle "Run Control"
+    }
+    wm title $topname $theGuiTitle
     if {$::ReadoutGui::guiBuiltCallback != ""} {
 	$::ReadoutGui::guiBuiltCallback $topname
     }
