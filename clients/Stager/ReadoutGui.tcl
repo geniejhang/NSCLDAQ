@@ -347,7 +347,22 @@ namespace eval ReadoutGui {
     variable RunStartedTime
     variable monitor [list]
 
+    variable normalTapeBg green
+    variable testTapeBg   red
+    variable testBg       blue
 
+    #
+    #  Local proc.. is true if the installation is a TEST system:
+    #  This assumes the standard NSCL installation directory of;
+    #  /usr/opt/daq/someversion
+    #  And that in test systems, there's a file /usr/opt/TEST_VERSION
+    #
+    proc isTestSystem {} {
+    set daqbase [InstallRoot::Where]
+	
+	return [file exists [file join $daqbase .. .. TEST_VERSION]]
+    }
+    
     # Run number entry edit validation proc.
     # This procedure ensures that any edit string
     # inserted will be entirely numeric.
@@ -936,8 +951,12 @@ namespace eval ReadoutGui {
 	OutputText "Run Starting"
 	SaveSettings
 	if {[ReadoutControl::isTapeOn]} {
-	    $EventStatusLineWidget config -bg green
-	    $OutputWidget config -bg green
+	    set bg $ReadoutGui::normalTapeBg
+	    if {[isTestSystem]} {
+		set bg $ReadoutGui::testTapeBg
+	    }
+	    $EventStatusLineWidget config -bg $bg
+	    $OutputWidget config -bg $bg
 	} else {
 	    set EventFileStatusLine ""
 	}
@@ -1015,8 +1034,13 @@ namespace eval ReadoutGui {
 		-command "ReadoutGui::Begin $beginbutton $pausebutton" \
 		-state normal
 	$pausebutton config -text "Pause" -state disabled -command ""
-	$EventStatusLineWidget config -bg [. cget -bg]
-	$OutputWidget config -bg [. cget -bg]
+
+	set bg [. cget -bg]
+	if {[isTestSystem]} {
+	    set bg $ReadoutGui::testBg
+	}
+	$EventStatusLineWidget config -bg $bg
+	$OutputWidget config -bg $bg
     }
     proc End {beginbutton pausebutton} {
 	RunEnding $beginbutton $pausebutton
@@ -1201,6 +1225,13 @@ namespace eval ReadoutGui {
 	ImproveEntryContrast $titleframe.titlestring
 	ImproveEntryContrast $rnotape.runnumber
 	ImproveEntryContrast $timeframe.reqtime
+
+	set bg [. cget -bg]
+	if {[isTestSystem]} {
+	    set bg $ReadoutGui::testBg
+	}
+	$EventStatusLineWidget config -bg $bg
+	$OutputWidget config -bg $bg
 
 
 	if {[HaveReadout]} {

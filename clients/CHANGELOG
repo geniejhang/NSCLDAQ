@@ -594,3 +594,10 @@ April 23, 2008
  	- Fix nasty edge case in readout classic.  If the last event
 	  in a buffer exactly filled it, overflow gets called too soon,
    	  and the next buffer has an entity count that's too large by 1.
+
+8.0-015
+February 17, 2009
+         - Make ReadoutGUI colors garish if the system has a test software load.
+
+
+         
