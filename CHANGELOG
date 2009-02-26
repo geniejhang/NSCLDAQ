@@ -1057,3 +1057,8 @@ January 15, 2009  - Stop ReadoutShell from paying attention to the -ftphost
 8.1-009
 February 17, 2009 - Add coloric indication to ReadoutGUI that the system has
                     a test software load.
+
+8.1-010
+Feb 26, 2009 - Remove attempts by spdaqstat.tcl to map localhost to a 
+               meaningful hostname as there are cases where that can't work.
+
