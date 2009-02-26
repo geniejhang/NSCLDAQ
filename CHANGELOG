@@ -1064,3 +1064,7 @@ Edit level 001:
     (--prefix/../../TEST_VERSION exists), change the colors of the readout GUI to 
      something rather garish.
 
+Edit level 002:
+   - In spdaqstat don't try to map localhost to a meaningful hostname
+     there are strange places out there where that does not work.
+

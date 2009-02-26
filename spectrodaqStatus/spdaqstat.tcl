@@ -124,15 +124,7 @@ proc ::spdaqstat::DNSResolve host {
     set name  [dns::name    $token]
     set name [lindex $name 0]
     dns::cleanup $token
-    if {$name eq "localhost"} {
-        set uqname [exec hostname]
-        append uqname . $spdaqstat::Domain
-        set token  [dns::resolve $uqname]
-        dns::wait $token
-        set name   [dns::name $token]
-        set name [lindex $name 0]
-        dns::cleanup $token
-    }
+
     return $name
     
 }
