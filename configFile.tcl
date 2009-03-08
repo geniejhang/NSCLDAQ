@@ -337,7 +337,10 @@ proc stack args {
 # deal with in SpecTcl...
 # these are defined as procs that do nothing:
 #
+
+
 proc sis3820 args {
+
 }
 proc v830 args {
 }

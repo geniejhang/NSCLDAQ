@@ -187,6 +187,10 @@ CV1x90Unpacker::operator() (CEvent&                      rEvent,
       
     }
   }
+  // If the next longword is a 0xffffffff that's due to the BERR
+  // at the end of our readout:
+
+  if(getLong(event, offset)) offset++;
 
   // Now we need to get the reference time and put the reftime subtracted
   // values into the tree parameters.

@@ -36,5 +36,6 @@ CModuleUnpacker::getLong(std::vector<unsigned short>& event,
   unsigned long low = event[offset];
   unsigned long hi  = event[offset+1];
 
+
   return low | (hi << 16);
 }

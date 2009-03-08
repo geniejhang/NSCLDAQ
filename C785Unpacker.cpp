@@ -138,14 +138,16 @@ C785Unpacker::operator()(CEvent&                       rEvent,
       int id      = pMap->map[channel];
       if (id != -1) {
 	rEvent[id] = value;
-      }
-      
+      }      
     }
 
     datum = getLong(event, offset);
     offset += 2;
   }
   // An extra 32 bits was read...
-  
-  return offset+2;
+
+  while ((getLong(event,offset) == 0xffffffff) && (offset < event.size())) {
+    offset+=2;
+  }
+  return offset;
 }

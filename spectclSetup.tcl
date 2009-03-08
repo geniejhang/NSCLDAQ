@@ -159,15 +159,18 @@ proc buildChannelMaps param {
 #--------------------------------------------------------------------------
 # Build the stack order maps.  These define, for each stack,
 # the order in which the modules read by that stack appear.
-#
+# The assumption is that stack 1 is a scaler stack always if used at all.
 #
 proc buildStackMaps {} {
-    #
-    # Drive off the stack number since stacks that can't be assigned a number
-    # can't actually be decoded.
-    #
+    puts "In buildStackMaps!!"
+
     foreach stack [array names ::stackNumber] {
-	stackMap $::stackNumber($stack) $::stackOrder($stack)
+	
+	set stackno $::stackNumber($stack)
+	if {$stackno != 1} {
+	    puts "Stackmap for $stack : $stackno list: $::stackOrder($stack)"
+	    stackMap $stackno  $::stackOrder($stack)
+	}
     }
 }
 
