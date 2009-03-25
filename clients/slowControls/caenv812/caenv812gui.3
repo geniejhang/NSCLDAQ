@@ -270,6 +270,15 @@ Required option at construction time.  The argument to this option is the
 base address of the module.  There is no default.  The \fB-base\fR option
 must be supplied at construction time and cannot be reconfigured after the
 widget is initially constructed.
+.OP -disable "" ""
+Creating or configuring with this switch allows parts of the user interface
+to be disabled.  The \fB-disable\fR option accepts as an argument
+a list of the interface items to disable.
+These are not cumulative across multiple uses of \fB-disable\fR.  Legitimate
+list items are \fBwidths\fR, \fBmajority\fR, and \fBdeadtimes\fR  This
+configuration option allows the GUI to be used for other compatible
+discrimnator modules that don't have all of these controls.  For example, the
+CAEN V895 leading edge discriminator by definition does not have a deadtime.
 .OP -name "" ""
 Required option at construction time.  The argument to this option is the
 name of the module.  This module name is associated with the module address
