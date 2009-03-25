@@ -75,6 +75,12 @@ package provide caenv812Gui 1.0
 #      -alarmscript  Supplies a script that will be invoked if the module has any alarms to report.
 #                    Note that this module has no alarm conditions however this option is provided
 #                    to unify the interface of all control widgets
+#      -disable thing Allows elements of the display to be disabled (ghosted).  thing can be a list of
+#                      widths   - Disable width settings
+#                      majority - Disable majority settings.
+#                      deadtimes- Disable dead time settings.
+#                     typically only deadtimes is used as that's needed for the V895 leading edge
+#                     discriminator. 
 #
 # Properties:
 #     threshold0 .. threshold15  - The thresholds of the module's 16 channels.
@@ -92,6 +98,7 @@ snit::widget cfdv812Gui {
     option -name  {}
     option -command {}
     option -alarmscript {}
+    option -disable {}
 
 
     variable cfd;        # holds the handle to the cfd object.
@@ -210,7 +217,7 @@ snit::widget cfdv812Gui {
 
         $self selectChannel 0
 
-
+	$self setDisables;		# Disable any elements requested.
     }
     # destructor:
     #    Called when one of these widgets is destroyed.
@@ -221,6 +228,53 @@ snit::widget cfdv812Gui {
         catch {$self destroyState}
 
     }
+    #
+    # Process the -disable switch only if the constructor has completed.. otherwise
+    # the constructor will process that switch
+    #
+    onconfigure -disable value {
+	set options(-disable) $value
+
+	if {[winfo exists $win.majority]} {
+	    $self setDisables
+	}
+    }
+
+    # Private method to modify the GUI to match the set of disables programmed
+    # by the -disable option.  This can be a list containing any of the
+    # following words:
+    #    widths     - Disables the width widget set.
+    #    majority   - Disables the majority widget set.
+    #    deadtimes  - Disables the deadtime widget set.
+    #
+    method setDisables {} {
+	foreach word [list widths majority deadtimes] {
+	    if {[lsearch -exact $options(-disable) $word] != -1} {
+		set state normal
+	    } else {
+		set state disabled
+	    }
+	    $self  set${word}State $state
+	}
+    }
+
+    # State setting methods setwidthsState, setmajorityState and setdeadtimesState
+    # each takes a state setting to apply to the specified widget cluster.
+    #
+    method setwidthsState setting {
+	$win.widths.w07  config  -state $setting
+	$win.widths.w815 config  -state $setting
+    }
+
+    method setmajorityState setting {
+	$win.majority config -state $setting
+    }
+
+    method setdeadtimesState setting {
+	$win.deadtimes.d07  config -state $setting
+	$win.deadtimes.d815 config -state $setting
+    }
+
     # setThreshold channel threshold
     #        Sets the threshold to a new value.
     # Parameters:
