@@ -249,7 +249,7 @@ snit::widget cfdv812Gui {
     #
     method setDisables {} {
 	foreach word [list widths majority deadtimes] {
-	    if {[lsearch -exact $options(-disable) $word] != -1} {
+	    if {[lsearch -exact $options(-disable) $word] == -1} {
 		set state normal
 	    } else {
 		set state disabled
@@ -271,8 +271,8 @@ snit::widget cfdv812Gui {
     }
 
     method setdeadtimesState setting {
-	$win.deadtimes.d07  config -state $setting
-	$win.deadtimes.d815 config -state $setting
+	$win.deadtime.d07  config -state $setting
+	$win.deadtime.d815 config -state $setting
     }
 
     # setThreshold channel threshold
