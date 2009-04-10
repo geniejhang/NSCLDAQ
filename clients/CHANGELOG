@@ -1068,3 +1068,10 @@ Edit level 002:
    - In spdaqstat don't try to map localhost to a meaningful hostname
      there are strange places out there where that does not work.
 
+  - In slowcontrols/caenv812/caenv812Gui.tcl - support selectively disabling parts
+    of the user interface.  This allows the software to be used for compatible CAEN
+    leading edge discfriminators that don't have e.g. dead times.
+
+  - In sequencer/sequencerGui.tcl - allow for start of run to end in an error.
+    if it does, this is now caught and results in a run-plan abort.
+ - In epics display remove debugging output about color setting.

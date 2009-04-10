@@ -50,6 +50,11 @@
 /*                                 short names                              */
 /****************************************************************************/
 
+
+// Linux defines these in modern compilers now:
+
+#ifndef LINUX
+
 #ifndef ulong
 #define ulong unsigned long 
 #endif
@@ -61,6 +66,10 @@
 #endif
 #ifndef uchar
 #define uchar unsigned char
+#endif
+
+#else 
+#include <stdlib.h>
 #endif
 
 
