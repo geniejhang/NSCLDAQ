@@ -939,7 +939,7 @@ proc cancelAlarm {name value actions} {
 	set request [lindex $action 0]
 	switch -exact -- $request {
 	    color {
-		puts "clearing color for $name"
+
 		set line [getTableLine $name]
 		if {$line > 0} {
 		    set bgcolor [$tableWidget cget -background]
