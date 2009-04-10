@@ -375,7 +375,7 @@ proc nextStep {button table} {
         set name    [lindex $columnInfo($i) 0]
         set action  [lindex $columnInfo($i) 1]
         if {$action ne ""} {
-            if {[$action $name $setting]} {
+            if {[catch {$action $name $setting} value] || $value ne "0"} {
 		# 
 		# Action returning nonzero is an error
 		#
