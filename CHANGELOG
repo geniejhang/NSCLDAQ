@@ -1063,3 +1063,6 @@ Feb 26, 2009 - Remove attempts by spdaqstat.tcl to map localhost to a
                meaningful hostname as there are cases where that can't work.
 
 April 10, 2009 -Remove epics display debugging output
+
+8.1-001
+April 14, 2009 - Ensure that spectcldaq.server gets deployed on build.
