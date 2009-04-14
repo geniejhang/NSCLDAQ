@@ -18,7 +18,7 @@ EXTRA_DIST =  config/install-sh config/config.sub config/config.guess \
 	config/ltmain.sh config/missing config/mkinstalldirs mkpackage.tcl \
 	Directories.include CompilationRules.include \
 	CHANGELOG daqman Makefile.am wienerdriver btdriver controlpush/Makefile.am \
-	controlpush/Makefile.in LICENSE btdriver2.6
+	controlpush/Makefile.in LICENSE btdriver2.6 spectcldaq.server
 
 install-data-local:
 	$(mkinstalldirs) $(prefix)/etc
@@ -59,7 +59,7 @@ install-data-local:
 	-rm -f $(prefix)/lib/libTclPlus*
 	$(LN_S) $(prefix)/lib/libtclPlus.so $(prefix)/lib/libTclPlus.so
 	$(LN_S) $(prefix)/lib/libtclPlus.a  $(prefix)/lib/libTclPlus.a
-
+	$(INSTALL_SCRIPT) spectcldaq.server $(prefix)/..
 
 
 #

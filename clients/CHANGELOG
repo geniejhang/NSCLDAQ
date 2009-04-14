@@ -1075,3 +1075,6 @@ Edit level 002:
   - In sequencer/sequencerGui.tcl - allow for start of run to end in an error.
     if it does, this is now caught and results in a run-plan abort.
  - In epics display remove debugging output about color setting.
+
+Edit level003
+ - Add spectcldaq.server and ensure it gets installed.
