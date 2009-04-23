@@ -21,6 +21,7 @@
 
 #include <time.h>
 #include <string.h>
+#include <stdlib.h>
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;

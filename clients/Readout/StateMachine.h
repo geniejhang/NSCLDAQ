@@ -38,22 +38,30 @@
                    
 #ifndef _STL_MAP_H_            
 #include <map>   
+#ifndef _STL_MAP_H
 #define _STL_MAP_H
+#endif
 #endif
 
 #ifndef _STL_STRING_H
 #include <string>
+#ifndef _STL_STRING_H
 #define _STL_STRING_H
+#endif
 #endif
 
 #ifndef _STL_VECTOR_H
 #include <vector>
+#ifndef _STL_VECTOR_H
 #define _STL_VECTOR_H
+#endif
 #endif
 
 #ifndef _CPP_IOSTREAM_H
 #include <Iostream.h>
+#ifndef _CPP_IOSTREAM_H
 #define _CPP_IOSTREAM_H
+#endif
 #endif
 
 class State;			// We only reference these in the header

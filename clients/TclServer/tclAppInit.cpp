@@ -284,6 +284,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <Iostream.h>
 
 #include <CopyrightNotice.h>
+#include <stdlib.h>
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
@@ -317,8 +318,8 @@ Tcl_AppInit(Tcl_Interp* interp)
 			  "TclServer", "2.0", "2002");
 
    CopyrightNotice::AuthorCredit(cerr,
-				"TclServer", 
-				"Ron Fox", (char*)NULL);
+				 const_cast<char*>("TclServer"), 
+				 const_cast<char*>("Ron Fox"), (char*)NULL);
 
   //
 
