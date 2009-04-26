@@ -1078,3 +1078,5 @@ Edit level 002:
 
 Edit level003
  - Add spectcldaq.server and ensure it gets installed.
+Edit level 004
+- Port to Debian lenny.
