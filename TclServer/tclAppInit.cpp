@@ -282,6 +282,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <tk.h>
 #include "server.h"
 #include <Iostream.h>
+#include <stdlib.h>
 
 #include <CopyrightNotice.h>
 

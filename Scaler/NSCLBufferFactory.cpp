@@ -289,7 +289,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <config.h>
 #include "NSCLBufferFactory.h"    				
 #include "NSCLDaqBuffer.h"
-static char* pCopyrightNotice = 
+static const char* pCopyrightNotice = 
 "(C) Copyright 1999 NSCL, All rights reserved NSCLBufferFactory.cpp \n";
 
 map<NSCLBufferType, CNSCLBufferCreator*> CNSCLBufferFactory::m_rCreatorMap;

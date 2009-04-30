@@ -299,6 +299,7 @@ DAMAGES.
 #include <Iostream.h>
 #include <string>
 #include <Exception.h>
+#include <stdlib.h>
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
@@ -331,7 +332,7 @@ startRepeater(int argc, char** argv)
       perror("Child could not setsid");
       exit(errno);
     }
-    argv[0]  = "caRepeater";
+    argv[0]  = const_cast<char*>("caRepeater");
     int stat = execlp(repeatername.c_str(),
 		      repeatername.c_str(), NULL);
     perror("Child: execlp failed!!");

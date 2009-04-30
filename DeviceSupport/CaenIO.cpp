@@ -18,6 +18,7 @@
 #include <config.h>
 #include <CaenIO.h>
 #include <CVME.h>
+#include <stdlib.h>
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;

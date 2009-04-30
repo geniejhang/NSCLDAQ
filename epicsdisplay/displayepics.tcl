@@ -27,7 +27,6 @@
 #
 
 
-
 package require Tktable
 package require BWidget
 package require BLT
@@ -1039,6 +1038,80 @@ proc deltaToNumber {nominal delta} {
 	return $delta
     }
 }
+#-----------------------------------------------------------------------------
+#
+# parseAsymmetricRange rangeSpec
+#
+#  Parses a range specification that is asymmetric. this looks like:
+#
+#   nominal:(+|-)end1[%](-|+)end2[%]
+#
+# Parameters
+#    rangeSpec  - The range specification.
+# Returns:
+#   Three element low, high tolerance list.
+#
+proc parseAsymmetricRange rangeSpec {
+    set rangeList [split $rangeSpec :]
+    set nominal [lindex $rangeList 0]
+    set range   [lindex $rangeList 1]
+
+    # Figure first element of range must be +/-  that determines if we
+    # are processing the high or low end of the range:
+    #
+    if {[string index $range 0] eq "+"} {
+	set firsthigh true
+	set secondhigh false
+	set nextsign -
+    } else {
+	set firsthigh false
+	set secondhigh true
+	set nextsign +
+    }
+
+
+#    set range [string range 1 end];	# strip the +/-..
+#    scan $range %f first;		# and get the first number.
+#
+#    # if there's a % and it's not the last character, this is a %
+#    # first is a % tolerance.
+#
+#    set pct [string first % $range]
+#    if {($pct != -1) && ($pct != [expr [string length $range] - 1])} {
+#	append first %
+#	set range [string range $range 1 end];
+#    }
+
+
+
+#    # The messy regsub below strips off the leading floating point number:
+#    #  \d+   - Requires at least one decimal digit (remember we stripped the sign).
+#    #  .?\d* - Allows a single . with 0 or more digits following.
+#    # The big parenthesized expression allows for scientific notation:
+#    # ([Ee]([\+-])?\d+)? :  Is allowed 0 or 1 time:=
+#    # [Ee]               - Upper or lower case E
+#    # ([\+-])?           - Optional sign.
+#    # \d+                - Required digits after the E
+#    #
+
+#    regsub {^\d+\.?\d*([Ee]([\+-])?\d+)?} $range "" range
+
+#    # There can be a leading % and there will be a leading sign to strip off too:
+#    # and the remainder of the range will be the second range item.
+
+#    regsub {^\%[\+-]} $range "" last
+    
+#    if {$firsthigh} {
+#	set high [deltaToNumber $nominal $first]
+#	set low  [deltaToNumber $nominal $second]
+#    } else {
+#	set high [deltaToNumber $nominal $second]
+#	set low  [deltaToNumber $nominal $first]
+#    }
+   
+#    return [list $low $high $nominal]
+}
+
 #------------------------------------------------------------------------------
 # getNominalRange rangeSpec
 #    Parses an alarm range specification into a low and high
@@ -1047,45 +1120,37 @@ proc deltaToNumber {nominal delta} {
 #    rangeSpec   - The range specification. See setupAlarms for more  information
 #                  about the form this can take.
 # Returns
-#   A two element list that consists of the low and high limits within which the
-#   parameter must lie in order to be considered not in alarm.
+#    Three element low, hi, nominal list.
 #
 proc getNominalRange rangeSpec {
 
-    set numberlist [string map [list : " " + " " - " "] $rangeSpec]
-    scan $rangeSpec %f nominal
+    # First try to convert the string as a %:% string in which case it's symmetric:
+    # Otherwise it's asymmetric or even illegal.
 
+    if {[scan $rangeSpec %f:%f nominal tolerance] == 2} {
+	
+	# Slap any trailing percent back on the end of the tolerance:
 
-    # figure out if likely symmetric or what...
-
-    if {[llength $numberlist] == 2} {
-	# Likely symmetric... for now we accept any sep char.
-
-	set size [deltaToNumber $nominal [lindex $numberlist 1]]
-	set low  [expr {$nominal - $size}]
-	set high [expr {$nominal + $size}]
-	return [list $low $high $nominal]
+	if {[string index $rangeSpec end] eq "%"} {
+	    append $tolerance %
+	}
+	set size [deltaToNumber $nominal $tolerance]
+	set low [expr $nominal - $size]
+	set high [expr $nominal + $size]
+	
 
     } else {
-	# Likely asymmetric...need to figure out which is + and which -.
 
-	set num1 [deltaToNumber $nominal [lindex $numberlist 1]]
-	set num2 [deltaToNumber $nominal [lindex $numberlist 2]]
+	# Most likely symmetric range.
+	# this is complicated by the fact that there may be 0, 1 2 % signs.
 
-
-	set plusIndex  [string first "+" $rangeSpec]
-	set minusIndex [string first "-" $rangeSpec]
-	if {$plusIndex > $minusIndex} {
-	    # -num1+num2
-	    set low   [expr {$nominal - $num1}]
-	    set high  [expr {$nominal + $num2}]
-	} else {
-	    #+num1-num2
-	    set low   [expr {$nominal + $num1}]
-	    set high  [expr {$nominal - $num2}]
-	}
-	return [list $low $high $nominal]
+	set rangeList [parseAsymmetricRange $rangeSpec]
+	set low     [lindex $rangeList 0]
+	set high    [lindex $rangeList 1]
+	set nominal [lindex $rangeList 2]
     }
+
+    return [list $low $high $nominal]
 
 
 }

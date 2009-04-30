@@ -362,7 +362,7 @@ class XMMessageBox : public XMManagedWidget
 		     virtual void SetText(char *txt)
 	       {
 			 XmString s = XmStringCreateLtoR(txt, 
-						     XmSTRING_DEFAULT_CHARSET);
+							 const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 			 SetAttribute(XmNmessageString, s);
 			 XmStringFree(s);
 		       }
@@ -386,14 +386,14 @@ class XMMessageBox : public XMManagedWidget
 
 		     void LabelCancelButton(char *txt) 
 		       { XmString str = XmStringCreateLtoR(txt, 
-						 XmSTRING_DEFAULT_CHARSET);
+							   const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 			 SetAttribute(XmNcancelLabelString, str);
 			 XmStringFree(str);
 		       }
 		     void LabelOkButton(char *txt)
 		       {
 			 XmString str = XmStringCreateLtoR(txt,
-						 XmSTRING_DEFAULT_CHARSET);
+							   const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 			 SetAttribute(XmNokLabelString, str);
 			 XmStringFree(str);
 		       }
@@ -449,7 +449,7 @@ class XMErrorDialog : public XMMessageBox
 								  argcount);
 					 SetText(msg);
 					 GetButtons();
-					 LabelOkButton("Dismiss");
+					 LabelOkButton(const_cast<char*>("Dismiss"));
 				         cancelbutton->Disable();
 					 helpbutton->Disable();
 					 if(cb)
@@ -470,7 +470,7 @@ class XMErrorDialog : public XMMessageBox
 								  argcount);
 					 SetText(msg);
 					 GetButtons();
-					 LabelOkButton("Dismiss");
+					 LabelOkButton(const_cast<char*>("Dismiss"));
 				         cancelbutton->Disable();
 					 helpbutton->Disable();
 					 if(cb) 
@@ -503,7 +503,7 @@ class XMInformationDialog : public XMMessageBox
 							   argcount);
 			    SetText(msg);
 			    GetButtons();
-			    LabelOkButton("Dismiss");
+			    LabelOkButton(const_cast<char*>("Dismiss"));
 			    cancelbutton->Disable();
 			    helpbutton->Disable();
 			    if(cb)
@@ -525,7 +525,7 @@ class XMInformationDialog : public XMMessageBox
 								  argcount);
 					 SetText(msg);
 					 GetButtons();
-					 LabelOkButton("Dismiss");
+					 LabelOkButton(const_cast<char*>("Dismiss"));
 				         cancelbutton->Disable();
 					 helpbutton->Disable();
 					 if(cb) 
@@ -558,7 +558,7 @@ class XMMessageDialog : public XMMessageBox
 								  argcount);
 					 SetText(msg);
 					 GetButtons();
-					 LabelOkButton("Dismiss");
+					 LabelOkButton(const_cast<char*>("Dismiss"));
 				         cancelbutton->Disable();
 					 helpbutton->Disable();
 					 if(cb)
@@ -579,7 +579,7 @@ class XMMessageDialog : public XMMessageBox
 								  argcount);
 					 SetText(msg);
 					 GetButtons();
-					 LabelOkButton("Dismiss");
+					 LabelOkButton(const_cast<char*>("Dismiss"));
 				         cancelbutton->Disable();
 					 helpbutton->Disable();
 					 if(cb) 
@@ -611,8 +611,8 @@ class XMQuestionDialog : public XMMessageBox
 								  argcount);
 					 SetText(msg);
 					 GetButtons();
-					 LabelOkButton("Yes");
-					 LabelCancelButton("No");
+					 LabelOkButton(const_cast<char*>("Yes"));
+					 LabelCancelButton(const_cast<char*>("No"));
 					 helpbutton->Disable();
 					 if(cb)
 					   AddOkCallback(cb, cbd);
@@ -632,8 +632,8 @@ class XMQuestionDialog : public XMMessageBox
 								  argcount);
 					 SetText(msg);
 					 GetButtons();
-					 LabelOkButton("Yes");
-					 LabelCancelButton("No");
+					 LabelOkButton(const_cast<char*>("Yes"));
+					 LabelCancelButton(const_cast<char*>("No"));
 					 helpbutton->Disable();
 					 if(cb) 
 					   AddOkCallback(cb, cbd);
@@ -688,7 +688,7 @@ class XMWarningDialog : public XMMessageBox
 								  list,
 								  argcount);
 					 SetText(msg);
-					 LabelOkButton("Dismiss");
+					 LabelOkButton(const_cast<char*>("Dismiss"));
 					 cancelbutton->Disable();
 					 helpbutton->Disable();
 					 GetButtons();
@@ -710,7 +710,7 @@ class XMWarningDialog : public XMMessageBox
 								  argcount);
 					 SetText(msg);
 					 GetButtons();
-					 LabelOkButton("Dismiss");
+					 LabelOkButton(const_cast<char*>("Dismiss"));
 					 cancelbutton->Disable();
 					 helpbutton->Disable();
 					 GetButtons();
@@ -744,7 +744,7 @@ class XMWorkingDialog : public XMMessageBox
 								  argcount);
 					 SetText(msg);
 					 GetButtons();
-					 LabelOkButton("Dismiss");
+					 LabelOkButton(const_cast<char*>("Dismiss"));
 					 cancelbutton->Disable();
 					 helpbutton->Disable();
 					 GetButtons();
@@ -766,7 +766,7 @@ class XMWorkingDialog : public XMMessageBox
 								  argcount);
 					 SetText(msg);
 					 GetButtons();
-					 LabelOkButton("Dismiss");
+					 LabelOkButton(const_cast<char*>("Dismiss"));
 					 cancelbutton->Disable();
 					 helpbutton->Disable();
 					 GetButtons();
@@ -890,13 +890,13 @@ class XMSelection : public XMMessageBox
 	 /* Labelling functions */
 
 	 virtual void SetText(char *txt) {
-	   XmString s = XmStringCreateLtoR(txt, XmSTRING_DEFAULT_CHARSET);
+	   XmString s = XmStringCreateLtoR(txt, const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   SetAttribute(XmNtextString, s);
 	   XmStringFree(s);
 	 }
-	 virtual void SetLabelString(char *txt) {
-	   XmString s = XmStringCreateLtoR(txt, 
-					   XmSTRING_DEFAULT_CHARSET);
+	 virtual void SetLabelString(const char *txt) {
+	   XmString s = XmStringCreateLtoR(const_cast<char*>(txt), 
+					   const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   SetAttribute(XmNselectionLabelString, s);
 	   XmStringFree(s);
 	 }
@@ -904,7 +904,7 @@ class XMSelection : public XMMessageBox
 
 	 void LabelApplyButton(char *txt) {
 	   XmString str = XmStringCreateLtoR(txt,
-					     XmSTRING_DEFAULT_CHARSET);
+					     const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   SetAttribute(XmNapplyLabelString, str);
 	   XmStringFree(str);
 	 }
@@ -1174,7 +1174,7 @@ class XMFileListDialog : public XMSelection
 				      list, argcount);
 	    GetButtons();
 	    helpbutton->Disable();
-	    SetLabelString("Filename: ");
+	    SetLabelString(const_cast<char*>("Filename: "));
 	    if(cb) AddDoCallback(cb, cbd);
 
 	    /* Set the search path directory: */
@@ -1208,7 +1208,7 @@ class XMFileListDialog : public XMSelection
 	 }
 	 void DoSearch(char *dir) {
 	   XmString d;
-	   d = XmStringCreateLtoR(dir, XmSTRING_DEFAULT_CHARSET);
+	   d = XmStringCreateLtoR(dir, const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   XmFileSelectionDoSearch(id, d);
 	   XmStringFree(d);
 	 }
@@ -1226,8 +1226,8 @@ class XMFileListDialog : public XMSelection
 
 	 /* Methods to manipulate the labels: */
 
-	 virtual void SetLabelString(char *txt) {
-	   XmString s = XmStringCreateLtoR(txt, XmSTRING_DEFAULT_CHARSET);
+	 virtual void SetLabelString(const char *txt) {
+	   XmString s = XmStringCreateLtoR(const_cast<char*>(txt), const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   XtVaSetValues(XmFileSelectionBoxGetChild(id, 
 						    XmDIALOG_SELECTION_LABEL),
 			 XmNlabelString, s,
@@ -1235,9 +1235,9 @@ class XMFileListDialog : public XMSelection
 	   XmStringFree(s);
 	 }
 	 virtual void SetFilterString(char *txt) {
-	   XmString s = XmStringCreateLtoR(txt, XmSTRING_DEFAULT_CHARSET);
-	   SetAttribute(XmNfilterLabelString, s);
-	   XmStringFree(s);
+	     XmString s = XmStringCreateLtoR(txt, const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
+	     SetAttribute(XmNfilterLabelString, s);
+	     XmStringFree(s);
 	 }
 	 /* Set restrictions on the file types searched: */
 
