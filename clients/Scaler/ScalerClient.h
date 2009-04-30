@@ -382,7 +382,7 @@ private:
   static int    GetRemotePort(int nArgs, char** pArgs);
   STD(string) GetDataSourceURL(int nargs, char** pargs);
   static Bool_t GetSwitchParameter(STD(string)& rValue,
-				   char* pSwitch, int nArgs, char** pArgs);
+				   const char* pSwitch, int nArgs, char** pArgs);
   static void Usage();
   static void WarnDefaultSource();
 };

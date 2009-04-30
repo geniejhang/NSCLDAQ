@@ -10,6 +10,7 @@
 // Include files required:
 
 #include <config.h>
+#include <string.h>
 
 #include "CSinkFactory.h"    				
 #include "CSinkCreator.h"

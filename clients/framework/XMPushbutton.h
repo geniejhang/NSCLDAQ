@@ -333,7 +333,7 @@ class XMButton : public XMManagedWidget
 		       {
 			 XmString s;
 			 s = XmStringCreateLtoR(label, 
-						XmSTRING_DEFAULT_CHARSET);
+						const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 			 Label(s);
 			 XmStringFree(s);
 		       }

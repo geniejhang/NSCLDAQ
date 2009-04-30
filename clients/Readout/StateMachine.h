@@ -36,9 +36,11 @@
 #ifndef __STATEMACHINE_H  //Required for current class
 #define __STATEMACHINE_H
                    
-#ifndef _STL_MAP_H_            
+#ifndef _STL_MAP_H            
 #include <map>   
+#ifndef _STL_MAP_H
 #define _STL_MAP_H
+#endif
 #endif
 
 #ifndef _STL_STRING_H
@@ -48,7 +50,9 @@
 
 #ifndef _STL_VECTOR_H
 #include <vector>
+#ifndef _STL_VECTOR_H
 #define _STL_VECTOR_H
+#endif
 #endif
 
 #ifndef _CPP_IOSTREAM_H

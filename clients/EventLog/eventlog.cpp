@@ -366,7 +366,7 @@ static const int nswitches = sizeof(SwitchTable)/sizeof(SwitchEntry);
 
 #define BUFLEN 0
 
-static char *Months[] = {
+static const char *Months[] = {
 "January ",
 "February ",
 "March ",

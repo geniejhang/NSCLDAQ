@@ -297,7 +297,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #ifdef unix
 #pragma implementation "XMCallback.h"
 #endif
-static char *sccsinfo="@(#)helpmenu.cc	8.9 10/19/98 \n";
+static const char *sccsinfo="@(#)helpmenu.cc	8.9 10/19/98 \n";
 
 /*
 ** Include files:
@@ -322,7 +322,7 @@ using namespace std;
 ** Static local declarations of the help strings and associated dialogs. 
 */
 
-static char *About[]
+static const char *About[]
   = { "Xamine -- The NSCL X/Motif histogram display program\n",
       "               Author: Ron Fox\n",
       "                       NSCL\n",
@@ -350,11 +350,11 @@ static char *About[]
       "                      Fixed error in points prompter on client buttons\n",
 	NULL
 	};
-static char *aboutname = "About";   /* For VMS C++ compiler bug */
+static const char *aboutname = "About";   /* For VMS C++ compiler bug */
 
-XM_help_client_data XM_About = { aboutname, NULL, About };
+XM_help_client_data XM_About = { const_cast<char*>(aboutname), NULL,  const_cast<char**>(About) };
                        
-static char *Help[] 
+static const char *Help[] 
   = { "Xamine is the NSCL X/Motif histogram display program\n\n",
       "   The highlighted pane is the \"selected\" pane. All operations\n",
       " that require a pane are performed on that pane. To get a feel\n",
@@ -370,8 +370,8 @@ static char *Help[]
       NULL
       };
 
-static char *overname = "Help_Overview";
-XM_help_client_data XM_Help_Overview = {overname,  NULL, Help };
+static const char *overname = "Help_Overview";
+XM_help_client_data XM_Help_Overview = {const_cast<char*>(overname),  NULL,  const_cast<char**>(Help) };
 
 
 
