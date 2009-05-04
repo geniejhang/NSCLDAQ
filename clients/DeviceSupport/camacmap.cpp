@@ -409,7 +409,7 @@ using namespace std;
 #define CRATES_PER_BRANCH 8
 
 
-static char *pCopyright = "(c) NSCL 1999, All rights reserved\n";
+static const char *pCopyright = "(c) NSCL 1999, All rights reserved\n";
 
  
 /*===================================================================*/

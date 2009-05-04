@@ -292,6 +292,9 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <errno.h>
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
@@ -320,11 +323,11 @@ static vector<string> vSubCommands(aSubCommands, &aSubCommands[3]);
 // names.
 //
 
-typedef struct MapEntry  {
+typedef struct _MapEntry  {
   const string me_sLogicalDev;	// Name passed in by user on cmd.
   const 
   CVmeModule::Space  me_eAPIDev; // Name expected by the api.
-};
+} MapEntry;
 
 static const MapEntry kaDeviceMap[] = {
   // Short I/O space (A16):

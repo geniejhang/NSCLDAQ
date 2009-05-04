@@ -282,6 +282,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <tk.h>
 #include "server.h"
 #include <Iostream.h>
+#include <stdlib.h>
 
 #include <CopyrightNotice.h>
 
@@ -318,7 +319,7 @@ Tcl_AppInit(Tcl_Interp* interp)
 
    CopyrightNotice::AuthorCredit(cerr,
 				"TclServer", 
-				"Ron Fox", (char*)NULL);
+				 const_cast<char*>("Ron Fox"), (char*)NULL);
 
   //
 

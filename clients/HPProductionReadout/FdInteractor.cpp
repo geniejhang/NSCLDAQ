@@ -297,7 +297,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
 using namespace std;
 #endif
 
-static char* pCopyrightNotice = 
+static const char* pCopyrightNotice = 
 "(C) Copyright 1999 NSCL, All rights reserved FdInteractor.cpp \n";
 
 // Functions for class CFdInteractor

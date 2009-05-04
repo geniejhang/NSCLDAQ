@@ -95,7 +95,7 @@ extern "C" {
   int Wait_Init(Tcl_Interp* pInterp)
   {
     CopyrightNotice::Notice(cerr, "Wait", version, "2003");
-    CopyrightNotice::AuthorCredit(cerr, "Wait", "Ron Fox", NULL);
+    CopyrightNotice::AuthorCredit(cerr, "Wait", const_cast<char*>("Ron Fox"), NULL);
 
     // Wrap the interpreter into an object so we can manipulate it.:
 

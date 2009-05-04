@@ -297,7 +297,7 @@ using namespace std;
 #endif
 #include <string.h>
 
-static char* pCopyrightNotice = 
+static const char* pCopyrightNotice = 
 "(C) Copyright 1999 NSCL, All rights reserved TCLObject.cpp \n";
 
 // Functions for class CTCLObject

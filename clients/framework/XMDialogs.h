@@ -362,7 +362,7 @@ class XMMessageBox : public XMManagedWidget
 		     virtual void SetText(char *txt)
 	       {
 			 XmString s = XmStringCreateLtoR(txt, 
-						     XmSTRING_DEFAULT_CHARSET);
+							 const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 			 SetAttribute(XmNmessageString, s);
 			 XmStringFree(s);
 		       }
@@ -384,20 +384,20 @@ class XMMessageBox : public XMManagedWidget
 		       }
 		     /* Label cancel/Help/OK buttons */
 
-		     void LabelCancelButton(char *txt) 
-		       { XmString str = XmStringCreateLtoR(txt, 
-						 XmSTRING_DEFAULT_CHARSET);
+		     void LabelCancelButton(const char *txt) 
+		     { XmString str = XmStringCreateLtoR(const_cast<char*>(txt), 
+							 const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 			 SetAttribute(XmNcancelLabelString, str);
 			 XmStringFree(str);
 		       }
-		     void LabelOkButton(char *txt)
+		     void LabelOkButton(const char *txt)
 		       {
-			 XmString str = XmStringCreateLtoR(txt,
-						 XmSTRING_DEFAULT_CHARSET);
+			 XmString str = XmStringCreateLtoR(const_cast<char*>(txt),
+							   const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 			 SetAttribute(XmNokLabelString, str);
 			 XmStringFree(str);
 		       }
-		     void LabelHelpButton(char *txt)
+		     void LabelHelpButton(const char *txt)
 		       { helpbutton->Label(txt); }
 
 		     /* Set default button types: */
@@ -889,22 +889,23 @@ class XMSelection : public XMMessageBox
 	
 	 /* Labelling functions */
 
-	 virtual void SetText(char *txt) {
-	   XmString s = XmStringCreateLtoR(txt, XmSTRING_DEFAULT_CHARSET);
+	 virtual void SetText(const char *txt) {
+	   XmString s = XmStringCreateLtoR(const_cast<char*>(txt), 
+					   const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   SetAttribute(XmNtextString, s);
 	   XmStringFree(s);
 	 }
-	 virtual void SetLabelString(char *txt) {
-	   XmString s = XmStringCreateLtoR(txt, 
-					   XmSTRING_DEFAULT_CHARSET);
+	 virtual void SetLabelString(const char *txt) {
+	   XmString s = XmStringCreateLtoR(const_cast<char*>(txt), 
+					   const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   SetAttribute(XmNselectionLabelString, s);
 	   XmStringFree(s);
 	 }
 	 /* Label the apply buton: */
 
-	 void LabelApplyButton(char *txt) {
-	   XmString str = XmStringCreateLtoR(txt,
-					     XmSTRING_DEFAULT_CHARSET);
+	 void LabelApplyButton(const char *txt) {
+	   XmString str = XmStringCreateLtoR(const_cast<char*>(txt),
+					     const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   SetAttribute(XmNapplyLabelString, str);
 	   XmStringFree(str);
 	 }
@@ -1208,7 +1209,8 @@ class XMFileListDialog : public XMSelection
 	 }
 	 void DoSearch(char *dir) {
 	   XmString d;
-	   d = XmStringCreateLtoR(dir, XmSTRING_DEFAULT_CHARSET);
+	   d = XmStringCreateLtoR(dir, 
+				  const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   XmFileSelectionDoSearch(id, d);
 	   XmStringFree(d);
 	 }
@@ -1226,8 +1228,9 @@ class XMFileListDialog : public XMSelection
 
 	 /* Methods to manipulate the labels: */
 
-	 virtual void SetLabelString(char *txt) {
-	   XmString s = XmStringCreateLtoR(txt, XmSTRING_DEFAULT_CHARSET);
+	 virtual void SetLabelString(const char *txt) {
+	   XmString s = XmStringCreateLtoR(const_cast<char*>(txt), 
+					   const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   XtVaSetValues(XmFileSelectionBoxGetChild(id, 
 						    XmDIALOG_SELECTION_LABEL),
 			 XmNlabelString, s,
@@ -1235,7 +1238,8 @@ class XMFileListDialog : public XMSelection
 	   XmStringFree(s);
 	 }
 	 virtual void SetFilterString(char *txt) {
-	   XmString s = XmStringCreateLtoR(txt, XmSTRING_DEFAULT_CHARSET);
+	   XmString s = XmStringCreateLtoR(txt, 
+					   const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 	   SetAttribute(XmNfilterLabelString, s);
 	   XmStringFree(s);
 	 }

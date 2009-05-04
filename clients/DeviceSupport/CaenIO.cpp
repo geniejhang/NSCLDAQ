@@ -344,6 +344,8 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <config.h>
 #include <CaenIO.h>
 #include <CVME.h>
+#include <stdlib.h>
+
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;

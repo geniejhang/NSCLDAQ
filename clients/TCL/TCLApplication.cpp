@@ -315,7 +315,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 1936, All
 using namespace std;
 #endif
 
-static char* pCopyright =
+static const char* pCopyright =
 "TCLApplication.cpp - (c) Copyright NSCL 1999, all rights reserved\n";
 
 //

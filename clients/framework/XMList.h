@@ -399,13 +399,15 @@ class XMListBaseClass : public XMWidget {
   /*  Behavior that is actually convenience functions for list widget: */
 
   void AddItem(char *item, int position = 0) {
-    XmString s = XmStringCreateLtoR(item, XmSTRING_DEFAULT_CHARSET);
+    XmString s = XmStringCreateLtoR(item,
+				    const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
     XmListAddItem(id, s, position);
     XmStringFree(s);
   }
   void ClearItems() { XmListDeleteAllItems(id); }
   void DeleteItem(char *item) {
-    XmString s = XmStringCreateLtoR(item, XmSTRING_DEFAULT_CHARSET);
+    XmString s = XmStringCreateLtoR(item, 
+				    const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
     XmListDeleteItem(id, s);
     XmStringFree(s);
   }
@@ -419,7 +421,8 @@ class XMListBaseClass : public XMWidget {
     XmListDeselectAllItems(id);
   }
   void DeselectItem(char *item) {
-    XmString s = XmStringCreateLtoR(item, XmSTRING_DEFAULT_CHARSET);
+    XmString s = XmStringCreateLtoR(item, 
+				    const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
     XmListDeselectItem(id, s);
     XmStringFree(s);
 

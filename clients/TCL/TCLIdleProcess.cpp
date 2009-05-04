@@ -302,6 +302,6 @@ DAMAGES.
 using namespace std;
 #endif
 
-static char* Copyright=
+static const char* Copyright=
 "TCLIdleProcess.cpp - (c) Copyright NSCL 1999, All rights reserved\n";
 

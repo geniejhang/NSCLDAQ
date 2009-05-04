@@ -30,6 +30,8 @@
 
 #include    <stdio.h>
 #include    <ctype.h>
+#include    <string.h>
+
 #include    "daqinterface.h"
 #include    "cmdio.h"
 #include    "daqerrno.h"

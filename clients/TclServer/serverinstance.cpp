@@ -298,7 +298,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 using namespace std;
 #endif
 
-char *eol = "\n";
+const char *eol = "\n";
 
 //////////////////////////////////////////////////////////////////////////
 //

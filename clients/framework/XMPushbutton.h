@@ -329,11 +329,11 @@ class XMButton : public XMManagedWidget
 		       {
 			 SetAttribute(XmNlabelString, label);
 		       }
-		     virtual void Label(String label)
+		     virtual void Label(const char* label)
 		       {
 			 XmString s;
-			 s = XmStringCreateLtoR(label, 
-						XmSTRING_DEFAULT_CHARSET);
+			 s = XmStringCreateLtoR(const_cast<char*>(label), 
+						const_cast<char*>(XmSTRING_DEFAULT_CHARSET));
 			 Label(s);
 			 XmStringFree(s);
 		       }

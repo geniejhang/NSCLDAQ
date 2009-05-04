@@ -537,7 +537,7 @@ CModuleCommand::List(CTCLInterpreter& rInterp,
    // Figure out the match
    // pattern.  If none is supplied, it's *.
    
-   char* pPattern = "*";
+   const char* pPattern = "*";
    if(nArgs > 1) {
       rResult =  "Too many parameters: \n";
       rResult += Usage();
@@ -552,7 +552,7 @@ CModuleCommand::List(CTCLInterpreter& rInterp,
       // adding appropriate modules to the list>
       // Note that an empty list is an acceptable result.
       
-      ListGatherer gather(rResult, pPattern);
+      ListGatherer gather(rResult, const_cast<char*>(pPattern));
       for_each(DigitizerBegin(), DigitizerEnd(),
 	       gather);
    }

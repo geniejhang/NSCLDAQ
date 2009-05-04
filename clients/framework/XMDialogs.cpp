@@ -293,7 +293,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #ifdef unix
 #pragma implementation "XMCallback.h"
 #endif
-static char *sccsinfo = "@(#)XMDialogs.cc	8.2 9/10/96 \n";
+static const char *sccsinfo = "@(#)XMDialogs.cc	8.2 9/10/96 \n";
 /*
 ** Include files:
 */
@@ -433,7 +433,7 @@ XMFileListDialog::GetDirectory() {
 
   GetAttribute(XmNdirectory, &dir_compound);
 
-  XmStringGetLtoR(dir_compound, XmSTRING_DEFAULT_CHARSET, &directory);
+  XmStringGetLtoR(dir_compound, const_cast<char*>(XmSTRING_DEFAULT_CHARSET), &directory);
   XmStringFree(dir_compound);
   return directory;
 }
@@ -451,7 +451,7 @@ XMFileListDialog::GetFileMask()
   char    *mask;
 
   GetAttribute(XmNdirMask, &mask_compound);
-  XmStringGetLtoR(mask_compound, XmSTRING_DEFAULT_CHARSET, &mask);
+  XmStringGetLtoR(mask_compound, const_cast<char*>(XmSTRING_DEFAULT_CHARSET), &mask);
   XmStringFree(mask_compound);
   return mask;
 }
@@ -472,7 +472,7 @@ XMFileListDialog::GetFullSearchString()
   char     *mask;
 
   GetAttribute(XmNdirSpec, &search_compound);
-  XmStringGetLtoR(search_compound, XmSTRING_DEFAULT_CHARSET, &mask);
+  XmStringGetLtoR(search_compound, const_cast<char*>(XmSTRING_DEFAULT_CHARSET), &mask);
   XmStringFree(search_compound);
   return mask;
 }
@@ -520,7 +520,7 @@ XMCustomDialog::CreateDialog(char *name, Widget parent, char *title,
 
   /*  Create a form which is used to allow the modalization to be controlled */
 
-  shell_child = new XMForm("Dialog_Form", id);
+  shell_child = new XMForm(const_cast<char*>("Dialog_Form"), id);
 
   /* Create the pane manager widget which manages the dialog elements */
 
@@ -529,7 +529,7 @@ XMCustomDialog::CreateDialog(char *name, Widget parent, char *title,
   XtSetArg(pane_args[0], XmNsashWidth, 1);
   XtSetArg(pane_args[1], XmNsashHeight,1);
 
-  top_manager= new XMPanedWindow("Dialog_toplevel",
+  top_manager= new XMPanedWindow(const_cast<char*>("Dialog_toplevel"),
 				 *shell_child, pane_args, 2);
   /* Glue the pane to all corners of the form:  */
 
@@ -540,9 +540,9 @@ XMCustomDialog::CreateDialog(char *name, Widget parent, char *title,
 
   /* Create the sub region managers: */
 
-  work_area  = new XMForm("Dialog_work_area",
+  work_area  = new XMForm(const_cast<char*>("Dialog_work_area"),
 			  *top_manager);
-  action_area= new XMRowColumn("Dialog_action_area",
+  action_area= new XMRowColumn(const_cast<char*>("Dialog_action_area"),
 			       *top_manager);
 
 
@@ -551,10 +551,10 @@ XMCustomDialog::CreateDialog(char *name, Widget parent, char *title,
   action_area->SetOrientation(XmHORIZONTAL);
   action_area->SetPacking(XmPACK_COLUMN);
 
-  Ok    = new XMPushButton("Ok", *action_area);
-  Apply = new XMPushButton("Apply", *action_area);
-  Cancel= new XMPushButton("Cancel", *action_area);
-  Help  = new XMPushButton("Help", *action_area);
+  Ok    = new XMPushButton(const_cast<char*>("Ok"), *action_area);
+  Apply = new XMPushButton(const_cast<char*>("Apply"), *action_area);
+  Cancel= new XMPushButton(const_cast<char*>("Cancel"), *action_area);
+  Help  = new XMPushButton(const_cast<char*>("Help"), *action_area);
 
 
 }
@@ -619,7 +619,7 @@ XMCustomDialog::UnManage()
 ** dialog objects.
 */
 
-static char *prompter_help[] = {
+static const  char *prompter_help[] = {
   "You are being prompted for some text.  Type the text in the text window.\n",
   " When you have edited the text to look like what you want click:  \n\n",
   "   Ok    - To accept the text and remove the dialog.\n",
@@ -668,9 +668,9 @@ XMPrompter::XMPrompter(char *name, Widget parent, char *prompt,
   /* Register the default help text: */
 
 
-  help_info.name = "Prompt_Help";
+  help_info.name = const_cast<char*>("Prompt_Help");
   help_info.dialog    = NULL;
-  help_info.text      = prompter_help;
+  help_info.text      = const_cast<char**>(prompter_help);
 }
 XMPrompter::XMPrompter(char *name, XMWidget &parent, char *prompt,
 		       XtPointer calldata) :
@@ -690,9 +690,9 @@ XMPrompter::XMPrompter(char *name, XMWidget &parent, char *prompt,
   /* Register the default help text: */
 
 
-  help_info.name = "Prompt_Help";
+  help_info.name = const_cast<char*>("Prompt_Help");
   help_info.dialog    = NULL;
-  help_info.text      = prompter_help;
+  help_info.text      = const_cast<char**>(prompter_help);
 
   /* If we have help we should enable the help button: */
 
@@ -738,7 +738,7 @@ void XMPrompter::SetHelpText(char **new_help)
 */
 void XMPrompter::RevertHelpText()
 {
-  help_info.text = prompter_help;
+  help_info.text = const_cast<char**>(prompter_help);
 }
 
 /*
@@ -926,7 +926,7 @@ void XMQuestioner::Nocb(XMWidget *wid, XtPointer userd, XtPointer calld)
 ** Default help text for selection box widgets.:
 */
 
-static char *SelectionDefaultHelp[] = {
+static const char *SelectionDefaultHelp[] = {
   "  You are being asked to select an item from the list of choices\n",
   "in the list box part of the widget.  You can select an item either by\n",
   "clicking on it with the mouse or by typing it into the text input\n",
@@ -986,9 +986,9 @@ XMSelector::XMSelector(char *name, Widget parent, char *prompt,
   /* Set up the help button with the default help text.: */
 
   helpbutton->Enable();
-  helpinfo.name = "SelectionHelp";
+  helpinfo.name = const_cast<char*>("SelectionHelp");
   helpinfo.dialog = (XMInformationDialog *)NULL;
-  helpinfo.text   = SelectionDefaultHelp;
+  helpinfo.text   = const_cast<char**>(SelectionDefaultHelp);
 
   /* Set the initial list values: */
 
@@ -1018,9 +1018,9 @@ XMSelector::XMSelector(char *name, XMWidget &parent, char *prompt,
   /* Set up the help button with the default help text.: */
 
   helpbutton->Enable();
-  helpinfo.name = "SelectionHelp";
+  helpinfo.name = const_cast<char*>("SelectionHelp");
   helpinfo.dialog = (XMInformationDialog *)NULL;
-  helpinfo.text   = SelectionDefaultHelp;
+  helpinfo.text   = const_cast<char**>(SelectionDefaultHelp);
 
   /* Set up the initial list values: */
 
@@ -1078,7 +1078,7 @@ void XMSelector::SetHelpText(char **newhelp)
 */
 void XMSelector::RevertHelpText()
 {
-  helpinfo.text = SelectionDefaultHelp;
+  helpinfo.text = const_cast<char**>(SelectionDefaultHelp);
 }
 
 /*
@@ -1185,7 +1185,7 @@ Boolean XMSelector::Perform(XMWidget *wid, XtPointer cd,
 ** XMFileSelector dialog.
 */
 
-static char *FileSelectorHelp[] = // Default help text for file selector.
+static const  char *FileSelectorHelp[] = // Default help text for file selector.
 {
   "  You are being prompted a filename.  If you know the complete name of\n",
   "the file, you can type it in at the text box at the bottom of the work\n",
@@ -1277,7 +1277,7 @@ XMFileSelector::XMFileSelector(char *n, Widget parent, XtPointer calld,
 
   /* Set up the help info data structure */
 
-  helpinfo.name = "File_Selection_Help";
+  helpinfo.name = const_cast<char*>("File_Selection_Help");
   helpinfo.dialog = (XMInformationDialog *)NULL;
   RevertHelpText();
 }   
@@ -1304,7 +1304,7 @@ XMFileSelector::XMFileSelector(char *n, XMWidget &parent,
 
   /* Set up the help info data structure */
 
-  helpinfo.name = "File_Selection_Help";
+  helpinfo.name = const_cast<char*>("File_Selection_Help");
   helpinfo.dialog = (XMInformationDialog *)NULL;
   RevertHelpText();
   
@@ -1352,7 +1352,7 @@ void XMFileSelector::SetHelpText(char **text)
 
 void XMFileSelector::RevertHelpText()
 {
-  helpinfo.text = FileSelectorHelp;
+  helpinfo.text = const_cast<char**>(FileSelectorHelp);
 }   
 
 
@@ -1426,11 +1426,11 @@ void XMFileSelector::OkCb(XMWidget *wid, XtPointer ud, XtPointer cd)
 
   char *filename;
 
-  if(!XmStringGetLtoR(calldata->value, XmSTRING_DEFAULT_CHARSET,
+  if(!XmStringGetLtoR(calldata->value, const_cast<char*>(XmSTRING_DEFAULT_CHARSET),
 		      &filename)) {
-    new XMErrorDialog("Error Message",
+    new XMErrorDialog(const_cast<char*>("Error Message"),
 		      *wid,
-		      "Unable to retrieve filename string",
+		      const_cast<char*>("Unable to retrieve filename string"),
 		      XMDestroyWidget);
   }
   else {
@@ -1529,7 +1529,7 @@ void XMFileSelector::HelpCb(XMWidget *wid, XtPointer ud, XtPointer cd)
 ** it is really difficult to generically describe a custom dialog box,
 ** the user will typically have to replace this text using SetHelpText.
 */
-static char *custom_help[] = {
+static const char *custom_help[] = {
   "  This is a custom dialog box which was created by a programmer that was\n",
   "too lazy to supply detailed help text about what the dialog does.  Since\n",
   "the work area of the dialog box could be almost anything, I cannot be\n",
@@ -1637,7 +1637,7 @@ void XMCustomDialogBox::SetHelpText(char **help)
 
 void XMCustomDialogBox::RevertHelpText()
 {
-  help_info.text = custom_help;
+  help_info.text = const_cast<char**>(custom_help);
 }   
 
 /*
@@ -1787,9 +1787,9 @@ void XMCustomDialogBox::HelpPressed(XMWidget *wid, XtPointer cli,
 
 void XMCustomDialogBox::InitializeHelp()
 {
-  help_info.name   = "Custom Dialog Box";
+  help_info.name   = const_cast<char*>("Custom Dialog Box");
   help_info.dialog = (XMInformationDialog *)NULL;
-  help_info.text   = custom_help;
+  help_info.text   = const_cast<char**>(custom_help);
 }
 
 /*!

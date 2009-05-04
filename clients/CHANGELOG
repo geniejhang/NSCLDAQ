@@ -600,4 +600,6 @@ February 17, 2009
          - Make ReadoutGUI colors garish if the system has a test software load.
 
 
-         
+8.0-016
+May 4, 2009
+     - Get a good compile on debian lenny with gcc/g++ 4.3.2

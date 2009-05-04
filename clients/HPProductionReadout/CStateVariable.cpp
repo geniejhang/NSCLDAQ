@@ -465,7 +465,8 @@ CStateVariable::FormatForBuffer(int nMaxchars)
 char* 
 CStateVariable::operator()(char* pName, char* pIndex, int flags)  
 {
-  char* result(0);
+  static const char* result(0);
+  result = 0;
 
   // set command:
 
@@ -520,7 +521,7 @@ CStateVariable::operator()(char* pName, char* pIndex, int flags)
   else {
     assert(0);			// Should not land here!
   }
-  return result;
+  return const_cast<char*>(result);
 }
 
 

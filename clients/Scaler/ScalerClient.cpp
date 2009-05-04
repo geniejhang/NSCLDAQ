@@ -368,7 +368,7 @@ using namespace std;
 #define TRUE 1
 #endif
 
-static char* pCopyrightNotice = 
+static const  char* pCopyrightNotice = 
 "(C) Copyright 1999 NSCL, All rights reserved .cpp \n";
 
 static const string kDefaultHost = string("localhost");
@@ -402,7 +402,7 @@ static char* optvalue;
 static int mygetopt(int argc, char** argv, char* pSwitch) 
 {
   bool hasValue =FALSE;
-  optvalue        = "\0";
+  optvalue        = const_cast<char*>("\0");
   if(strlen(pSwitch) == 2) hasValue = TRUE; // a Bit imprecise.
   for(int i = 1; i < argc; i++) {
     if(argv[i][0] == '-' && argv[i][1] == pSwitch[0]) { // Match.
@@ -707,7 +707,7 @@ CScalerClient::GetRemoteHost(int nArgs, char** pArgs)
   // the parameter to the -h switch.
   //
   string Host = kDefaultHost;
-  GetSwitchParameter(Host, "h:", nArgs, pArgs);
+  GetSwitchParameter(Host, const_cast<char*>("h:"), nArgs, pArgs);
   return Host;
 }
 //////////////////////////////////////////////////////////////////////
@@ -730,7 +730,7 @@ CScalerClient::GetRemotePort(int nArgs, char** pArgs)
   // Now see if this is overidden on the command line.
 
   string sPort;
-  if(GetSwitchParameter(sPort, "p:", nArgs, pArgs)) {
+  if(GetSwitchParameter(sPort, const_cast<char*>("p:"), nArgs, pArgs)) {
     int np;
     if(sscanf(sPort.c_str(), "%d", &np) == 0) {
       Usage();
@@ -964,7 +964,7 @@ CScalerClient::GetDataSourceURL(int nArgs, char** pArgs)
   //
   string url(kDefaultURL);
 
-  if(GetSwitchParameter(url, "s:", nArgs, pArgs)) {
+  if(GetSwitchParameter(url, const_cast<char*>("s:"), nArgs, pArgs)) {
     m_fDefaultSource = false;
   }
   return url;

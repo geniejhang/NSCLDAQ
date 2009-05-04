@@ -295,7 +295,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2002, Al
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
 #endif
-static char* pCopyrightNotice = 
+static const  char* pCopyrightNotice = 
 "(C) Copyright 1999 NSCL, All rights reserved StringInteractor.cpp \n";
 
 // Functions for class CStringInteractor

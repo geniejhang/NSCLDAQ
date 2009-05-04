@@ -299,7 +299,7 @@ using namespace std;
 #endif
 
 
-static char* pCopyrightNotice = 
+static const char* pCopyrightNotice = 
 "(C) Copyright 1999 NSCL, All rights reserved PasswordCheck.cpp \n";
 
 // Functions for class CPasswordCheck
