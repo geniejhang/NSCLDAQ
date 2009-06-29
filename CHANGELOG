@@ -1082,3 +1082,5 @@ Edit level 004
 - Port to Debian lenny.
 - April 30, 2009 - displayepics.tcl - fix error in parsing alarm ranges when
                    expressed in scientific notation.
+- June 29, 2009 - Production readout CExperiment.cpp - when reorganized, had
+                  lost periodic trigger of run variable buffers.

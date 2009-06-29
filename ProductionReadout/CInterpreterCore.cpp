@@ -398,7 +398,8 @@ CInterpreterCore::RegisterExtensions()
   // Put out the copyright information:
 
   CopyrightNotice::Notice(cerr, "pReadout", "1.0", "2002");
-  CopyrightNotice::AuthorCredit(cerr, "pReadout", "Ron Fox", NULL);
+  CopyrightNotice::AuthorCredit(cerr, "pReadout", 
+				"Ron Fox", NULL);
 
   // From the Interpreter core, we need the actual interpreter object:
 

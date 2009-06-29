@@ -317,6 +317,7 @@ CTriggerThread::MainLoop()
       // Now try the scaler trigger:
 
       if((*pScaler)()) {
+	m_pExperiment->TriggerRunVariableBuffer();
 	m_pExperiment->TriggerScalerReadout();
       }
 

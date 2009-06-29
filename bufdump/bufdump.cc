@@ -185,7 +185,12 @@ class DAQBuff : public DAQROCNode {
   } 
 };
 
-DAQBuff mydaq;
+// DAQBuff mydaq;
+
+int main(int argc, char** argv, char** envp) {
+  DAQBuff mydaq;
+  spectrodaq_main(argc, argv, envp);
+}
 
 
 
