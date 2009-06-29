@@ -18,7 +18,7 @@ class CopyrightNotice
 public:
   static void  Notice(STD(ostream)& out,  const char* program, 
 		      const char* version,  const char* year);
-  static void  AuthorCredit(STD(ostream)& out, char* program, ...);
+  static void  AuthorCredit(STD(ostream)& out, const  char* program, ...);
 
 }; 
 
