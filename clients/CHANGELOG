@@ -1084,3 +1084,5 @@ Edit level 004
                    expressed in scientific notation.
 - June 29, 2009 - Production readout CExperiment.cpp - when reorganized, had
                   lost periodic trigger of run variable buffers.
+Edit level 005
+- October 21, 2009 - Fix problem parsing asymmetric alarm ranges.

@@ -20,4 +20,5 @@ man_MANS = EpicsDisplay.1
 
 EXTRA_DIST = channels.txt  EpicsDisplay.tcl displayepics.tcl \
 	EpicsDisplay.1 epicsdisplay.in \
+	toltest.tcl \
 	$(HELPFILES)

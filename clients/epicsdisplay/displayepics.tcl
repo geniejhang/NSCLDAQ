@@ -360,7 +360,7 @@ proc setRowAlarmText {row nominal range actions} {
     if {[llength $range] == 1 } {
 	append spec $nominal : $range
     } else {
-	append spec $nominal + [lindex $range 0] - [lindex $range 1]
+	append spec $nominal :+ [lindex $range 0] - [lindex $range 1]
     }
     # translate the actions.
 
@@ -1053,8 +1053,29 @@ proc deltaToNumber {nominal delta} {
 #
 proc parseAsymmetricRange rangeSpec {
     set rangeList [split $rangeSpec :]
+
+
+    if {[llength $rangeList] != 2} {
+
+	# form nominal+/-value-/+value
+
+	scan $rangeSpec %f%f%f nominal one two
+	set r1 [expr $nominal + $one]
+	set r2 [expr $nominal + $two]
+
+
+	if {$r1 > $r2} {
+	    set temp $r1
+	    set r1 $r2
+	    set r2 $temp
+	}
+	return [list $r1 $r2 $nominal]
+    }
+
+
     set nominal [lindex $rangeList 0]
     set range   [lindex $rangeList 1]
+
 
     # Figure first element of range must be +/-  that determines if we
     # are processing the high or low end of the range:
@@ -1062,54 +1083,28 @@ proc parseAsymmetricRange rangeSpec {
     if {[string index $range 0] eq "+"} {
 	set firsthigh true
 	set secondhigh false
-	set nextsign -
+	set secondsign -
+	set firstsign +
     } else {
 	set firsthigh false
 	set secondhigh true
-	set nextsign +
+	set secondsign +
+	set firstsign -
     }
 
-
-#    set range [string range 1 end];	# strip the +/-..
-#    scan $range %f first;		# and get the first number.
-#
-#    # if there's a % and it's not the last character, this is a %
-#    # first is a % tolerance.
-#
-#    set pct [string first % $range]
-#    if {($pct != -1) && ($pct != [expr [string length $range] - 1])} {
-#	append first %
-#	set range [string range $range 1 end];
-#    }
+    scan $range "$firstsign%f$secondsign%f" first second
 
 
-
-#    # The messy regsub below strips off the leading floating point number:
-#    #  \d+   - Requires at least one decimal digit (remember we stripped the sign).
-#    #  .?\d* - Allows a single . with 0 or more digits following.
-#    # The big parenthesized expression allows for scientific notation:
-#    # ([Ee]([\+-])?\d+)? :  Is allowed 0 or 1 time:=
-#    # [Ee]               - Upper or lower case E
-#    # ([\+-])?           - Optional sign.
-#    # \d+                - Required digits after the E
-#    #
-
-#    regsub {^\d+\.?\d*([Ee]([\+-])?\d+)?} $range "" range
-
-#    # There can be a leading % and there will be a leading sign to strip off too:
-#    # and the remainder of the range will be the second range item.
-
-#    regsub {^\%[\+-]} $range "" last
-    
-#    if {$firsthigh} {
-#	set high [deltaToNumber $nominal $first]
-#	set low  [deltaToNumber $nominal $second]
-#    } else {
-#	set high [deltaToNumber $nominal $second]
-#	set low  [deltaToNumber $nominal $first]
-#    }
-   
-#    return [list $low $high $nominal]
+    if {$firsthigh} {
+	set high $first
+	set low $second
+    } else {
+	set high $second
+	set low  $first
+    }
+    set low [expr $nominal - $low]
+    set high [expr $nominal + $high]
+    return [list $low $high $nominal]
 }
 
 #------------------------------------------------------------------------------
@@ -1127,7 +1122,9 @@ proc getNominalRange rangeSpec {
     # First try to convert the string as a %:% string in which case it's symmetric:
     # Otherwise it's asymmetric or even illegal.
 
-    if {[scan $rangeSpec %f:%f nominal tolerance] == 2} {
+    if {[scan $rangeSpec %f:%f nominal tolerance] == 2 &&
+	([string first : $rangeSpec] != -1) &&
+	([scan $rangeSpec {%f:%f%f} j1 j2 j3] != 3)} {
 	
 	# Slap any trailing percent back on the end of the tolerance:
 
@@ -1141,7 +1138,7 @@ proc getNominalRange rangeSpec {
 
     } else {
 
-	# Most likely symmetric range.
+	# Most likely asymmetric range.
 	# this is complicated by the fact that there may be 0, 1 2 % signs.
 
 	set rangeList [parseAsymmetricRange $rangeSpec]
