@@ -1071,3 +1071,5 @@ April 14, 2009 - Ensure that spectcldaq.server gets deployed on build.
 April 26, 2009 - Port to lenny.
 April 30, 2009 - Fix error in displayepics.tcl parsing alarms not correct
                 when they are expressed in scientific notation.
+8.1-013
+October 21, 2009 - Fix probelm parsing asymmetric alarm ranges (BZ380)
