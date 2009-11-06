@@ -1085,4 +1085,8 @@ Edit level 004
 - June 29, 2009 - Production readout CExperiment.cpp - when reorganized, had
                   lost periodic trigger of run variable buffers.
 Edit level 005
-- October 21, 2009 - Fix problem parsing asymmetric alarm ranges.
+- October 21, 2009 - Fix problem parsing asymmetric alarm ranges. (BZ380)
+
+Edit level 006
+- November 6, 2009  BZ 381 - Stop losing first event in a buffer due to 
+                    CopyOut not bumping the buffer pointer.
