@@ -1090,3 +1090,6 @@ Edit level 005
 Edit level 006
 - November 6, 2009  BZ 381 - Stop losing first event in a buffer due to 
                     CopyOut not bumping the buffer pointer.
+Edit level 007
+- January 15, 2010  Exit ReadoutGui with destroy . as exit seems to hang
+                    reaping children in some systems.

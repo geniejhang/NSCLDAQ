@@ -362,7 +362,7 @@ proc ReadoutGui::onExit {} {
     ReadoutGui::SaveSettings
     ReadoutControl::SetOnExit ::ReadoutGui::NoOp
     ReadoutControl::ExitReadoutProgram
-    exit 0
+    destroy .        ;# on some systems exit seems to hang on reaping children
 }
 # ReadoutGui::CleanupRun State
 #  This is called when the readout program exits.  It determines
