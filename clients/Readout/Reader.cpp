@@ -331,6 +331,7 @@ CReader::OverFlow(DAQWordBufferPtr& rLastEventPtr)
   uint16_t *pTempBuffer = new uint16_t[nWords];
   rLastEventPtr.CopyOut(pTempBuffer, 0, nWords);
   EventPtr.CopyIn(pTempBuffer, 0, nWords);
+  EventPtr  += nWords;
   delete []pTempBuffer;
 
 #else

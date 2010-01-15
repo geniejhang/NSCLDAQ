@@ -1073,3 +1073,13 @@ April 30, 2009 - Fix error in displayepics.tcl parsing alarms not correct
                 when they are expressed in scientific notation.
 8.1-013
 October 21, 2009 - Fix probelm parsing asymmetric alarm ranges (BZ380)
+
+8.1-014
+November 6, 2009 - BZ381  - Fix loss of first event in buffer, due to 
+                   spectrodaq DAQWordBufferPtr::CopyIn not avancing
+                   buffer ptr.
+8.1-015
+January 15, 2010 - Exit readout GUI with destroy . rather than exit
+                   as the latter seems to hang on some systems with
+                   unreaped child processes.
+
