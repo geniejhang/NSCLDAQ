@@ -49,7 +49,7 @@ package require Tk
 package provide CFD812   2.0;             # Hokey.
 
 
-lappend auto_path  /usr/opt/daq/8.1/TclLibs
+lappend auto_path  /usr/opt/daq/current/TclLibs
 
 
 package require caenv812Gui;             # our widget.
@@ -131,7 +131,7 @@ proc loadState name {
 
     # Deadtimes
 
-    if {!$disableDeadTtime} {
+    if {!$disableDeadtime} {
 	for {set d 0} {$d < 2} {incr d} {
 	    if {[array name ::deadtimes $d] ne ""} {
 		.panel setProperties [list [list deadtime$d $::deadtimes($d)]]
@@ -177,14 +177,15 @@ proc updateDevice sock {
 	if {$item eq "mask"} {
 	    set item inhibits
 	}
-
-	puts $sock "Set $::name $item $value"
-	flush $sock
-	set result [gets $sock]
-
-	if {[string range $result 0 4] eq "ERROR"} {
-	    tk_messageBox -icon error -title "Comm error" -type ok \
-		-message "Got an error from the device:\n $result \n Click OK to continue"
+	if {$item ne "deadtime"} {
+	    puts $sock "Set $::name $item $value"
+	    flush $sock
+	    set result [gets $sock]
+	    
+	    if {[string range $result 0 4] eq "ERROR"} {
+		tk_messageBox -icon error -title "Comm error" -type ok \
+		    -message "Got an error from the device:\n $result \n Click OK to continue"
+	    }
 	}
     }
     
@@ -220,6 +221,7 @@ proc commit {} {
 
     puts $fd "set majority [CFDState::GetMultiplicity CFD]"
     puts $fd "set enables  [CFDState::getMask CFD]"
+
 
     close $fd
 
