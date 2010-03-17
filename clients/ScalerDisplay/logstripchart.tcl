@@ -31,6 +31,7 @@ set userChannelList [list];     # list of channels to write.
 #  failed.
 #
 proc UserBeginRun {} {
+    set ::userChannelList [list]
 
     if {$::userOutputFile ne ""} {
 	UserEndRun
