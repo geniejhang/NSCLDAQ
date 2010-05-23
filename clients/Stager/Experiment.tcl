@@ -274,7 +274,7 @@ proc Experiment::RunBeginning {} {
 	
 	Experiment::waitFile .ready 1000 $fileWaitTimeout
 	if {![file exists .ready]} {
-	    Error "The event logger is not yet ready after a very long time"
+	    error "The event logger is not yet ready after a very long time"
 	}
 	file delete -force .ready
     } else {
