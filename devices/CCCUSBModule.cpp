@@ -387,6 +387,6 @@ CCCUSBModule::configureDevices(CCCUSB& controller)
 
   uint32_t registerValue = (gdgaSource << 16) | (gdgbSource << 24);
 
-  cerr << hex << "Device source: " << registerValue << endl;
+  cerr << hex << "Device source: " << registerValue << dec << endl;
   controller.writeDeviceSourceSelectors(registerValue);
 }

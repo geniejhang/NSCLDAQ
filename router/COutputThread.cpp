@@ -32,6 +32,8 @@
 #include <string.h>
 #include <time.h>
 #include <iostream>
+#include <CTheApplication.h>
+#include <tcl.h>
 
 using namespace std;
 
@@ -144,8 +146,6 @@ COutputThread::operator()(int argc, char** argv)
      size_t       copInSize          - words from pBuffer to copy to the spectrodaq
                                        buffer.
 
-    Note that the spectrodaq buffer will be created, filled and routed
-    in this function.
 */
 void
 COutputThread::bufferToSpectrodaq(void*          pBuffer,
@@ -153,18 +153,24 @@ COutputThread::bufferToSpectrodaq(void*          pBuffer,
 				  size_t         sdaqWords,
 				  size_t         copyInSize)
 {
-  if (copyInSize > sdaqWords) {
-    cerr << "COutputThread::bufferToSpectrodaq - copy in size too big: "
-	 << "buffersize: " << sdaqWords << " copyInSize: " << copyInSize << endl;
-    copyInSize = sdaqWords;	// Truncate and try to keep going.
+  // Create the event...
 
-  }
-  DAQWordBuffer sdaqBuffer(sdaqWords);
-  sdaqBuffer.SetTag(sdaqTag);
-  sdaqBuffer.CopyIn(pBuffer, 0, copyInSize);
-  sdaqBuffer.Route();
 
-  // This will finalize the buffer.
+  CTheApplication::dataEvent* pEvent = 
+    reinterpret_cast<CTheApplication::dataEvent*>(Tcl_Alloc(sizeof(CTheApplication::dataEvent)));
+  pEvent->m_Event.proc = CTheApplication::dataEventHandler;
+
+  // Create and fill the payload.
+
+  char* payload = Tcl_Alloc(copyInSize*sizeof(uint16_t));
+  memcpy(payload, pBuffer, copyInSize*sizeof(uint16_t));
+
+  // Link them and queue them to the application's tcl event loop.
+								
+  pEvent->m_pPayload = payload;
+  Tcl_ThreadQueueEvent(CTheApplication::mainThread(), 
+		       reinterpret_cast<Tcl_Event*>(pEvent), TCL_QUEUE_TAIL);
+		       
 
 }
 /*

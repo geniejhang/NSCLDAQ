@@ -141,9 +141,10 @@ CAcquisitionThread::operator()(int argc, char** argv)
   try {
     m_Running = true;		// Thread is off and running now.
     
-    beginRun();			// Emit begin run buffer.
     
     startDaq();  		        // Setup and start data taking.
+    beginRun()  ;			// Emit begin run once the system is initialized.
+
     try {
       
       mainLoop();			// Enter the main processing loop.
@@ -342,11 +343,13 @@ CAcquisitionThread::startDaq()
 
 
   // The global mode:
-  //   4kword buffer
+  //   256 word buffer.
   //   Single event seperator.
   //   Single header word.
   //
-  m_pCamac->writeGlobalMode((CCCUSB::GlobalModeRegister::bufferLen4K << CCCUSB::GlobalModeRegister::bufferLenShift));
+  // Small buffers so that we'll update in a speedy way.
+  //
+  m_pCamac->writeGlobalMode((CCCUSB::GlobalModeRegister::bufferLen256 << CCCUSB::GlobalModeRegister::bufferLenShift));
 
 
   // Set up the ouptuts, 

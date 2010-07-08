@@ -151,6 +151,7 @@ snit::widget runsetup {
 	set timerId [after 1000 [mymethod tick]]
 
 	begin
+	set state active
 	$win.startstop configure -text Stop
     }
 
@@ -201,10 +202,11 @@ snit::widget runsetup {
 	incr elapsedSeconds
 	$self updateElapsedTime
 
-	if {$elapsedSeconds >= $runDuratino} {
+	if {$elapsedSeconds >= $runDuration} {
 	    $self stop
+	    return
 	}
-	after 1000 [mymethod $tick]
+	set timerId [after 1000 [mymethod tick]]
     }
     #  Update elapsed time display:
 

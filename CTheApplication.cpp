@@ -24,15 +24,19 @@ static const char* versionString = "V2.0";
 #include <CCCUSB.h>
 
 #include <TCLInterpreter.h>
+#include <TCLList.h>
 #include <TCLException.h>
+#include <TCLObject.h>
+
 #include <CBeginRun.h>
 #include <CEndRun.h>
 #include <CPauseRun.h>
 #include <CResumeRun.h>
 #include <Exception.h>
-#include <tcl.h>
 #include <DataBuffer.h>
 #include <TclServer.h>
+#include <buftypes.h>
+#include <buffer.h>
 
 #include <vector>
 
@@ -49,6 +53,11 @@ static const char* versionString = "V2.0";
 
 using namespace std;
 
+//  Static member vars:
+
+Tcl_ThreadId      CTheApplication::m_MainThread;
+CTheApplication*  CTheApplication::m_pTheApplication(0);
+CTCLInterpreter*  CTheApplication::m_pInterpreter;
 //   Configuration constants:
 
 static const int    tclServerPort(27000);
@@ -74,6 +83,7 @@ CTheApplication::CTheApplication()
   }
   m_Exists = true;
   m_pInterpreter = static_cast<CTCLInterpreter*>(NULL);
+  m_pTheApplication = this;
 }
 /*!
    Destruction is a no-op since it happens at program exit.
@@ -201,10 +211,14 @@ CTheApplication::AppInit(Tcl_Interp* interp)
 {
   Tcl_Init(interp);
   CTCLInterpreter* pInterp = new CTCLInterpreter(interp);
+
+  m_MainThread = Tcl_GetCurrentThread(); // Interpreter's thread...
+
   new CBeginRun(*pInterp);
   new CEndRun(*pInterp);
   new CPauseRun(*pInterp);
   new CResumeRun(*pInterp);
+  m_pInterpreter = pInterp;
 
 
   // Look for readoutRC.tcl in the config directory.  If it exists, run it.
@@ -287,4 +301,215 @@ CTheApplication::startTclServer()
   TclServer* pServer = new TclServer;
   pServer->start(tclServerPort, Globals::controlConfigFilename.c_str(),
 		   *Globals::pUSBController);
+}
+/*!
+ *  Return the thread of the main interpreter.
+ *  Can be used in e.g. Tcl_ThreadQueueEvent.
+ */
+Tcl_ThreadId
+CTheApplication::mainThread()
+{
+  return m_MainThread;
+}
+
+
+/*!
+   Handle events with data from the 'router' thread.
+   @param pEvent -Tcl Event of type dataEvent.
+   @param flags - event processing flags
+   @return int
+   @retval 1
+
+
+*/
+int
+CTheApplication::dataEventHandler(Tcl_Event* pEvent, int flags)
+{
+  // Cast to the right event type.
+  // figure out the size/type output them,
+  // free the payload and return 1.
+  //
+
+  dataEvent* pMyEvent = reinterpret_cast<dataEvent*>(pEvent);
+  uint16_t*  pPayload = reinterpret_cast<uint16_t*>(pMyEvent->m_pPayload);
+
+
+  CTheApplication* pApp = CTheApplication::getApplication();
+  pApp->onVMUSBData(pPayload[1], pPayload);
+
+  Tcl_Free(reinterpret_cast<char*>(pPayload));
+
+  return 1;
+}
+/*!
+ @return CTheApplication*
+ @retval Pointer to the singleton that is the application.
+ @retval 0 the application has not yet been constructed.
+*/
+CTheApplication*
+CTheApplication::getApplication()
+{
+  return m_pTheApplication;
+}
+/*!
+   Object context handling of data from the VM_USB
+   @param type    - Data type: 1 data, 11 begin, 12 end.
+   @param pBuffer - Pointer to the raw buffer.
+*/
+void
+CTheApplication::onVMUSBData(uint16_t type, void* pBuffer)
+{
+  bheader* pHeader = reinterpret_cast<bheader*>(pBuffer);
+  switch(type) {
+  case BEGRUNBF:
+    {
+      struct ctlbody* pBody = reinterpret_cast<struct ctlbody*>(&(pHeader[1]));
+      onBegin(pHeader->run, pBody);
+    }
+    break;
+  case ENDRUNBF: 
+    {
+      struct ctlbody* pBody = reinterpret_cast<struct ctlbody*>(&(pHeader[1]));
+      onEnd(pHeader->run, pBody);
+    }
+  
+    break;
+  case DATABF:
+    {
+      struct phydata* pBody = reinterpret_cast<struct phydata*>(&(pHeader[1]));
+      onPhysics(pHeader->nevt, pBody);
+    }
+    break;
+  default:
+    break;			// Just ignore all other buffers.
+  }
+}
+/*
+ * Common code processing of a control buffer.
+ * the only differnce is which proc gets invoked.
+ */
+void
+CTheApplication::dispatchControlBuffer(const char* baseCommand,
+				       uint16_t run, 
+				       ctlbody* pBody)
+{
+  char title[81];
+  title[80]   = '\0';
+  string time = todToTimeString(pBody->tod);
+  strncpy(title, pBody->title, 80);
+  string titleString(title);
+  char runstring[100];
+  sprintf(runstring, "%d", run);
+
+  // Construct the command string and eval it in a try/catch-ignore block so that 
+  // we dont' have to worry about what happens if onBegin does not exist:
+  
+  string command = baseCommand;
+  command       += ' ';
+  command       += runstring;
+  command       += " {";
+  command       += titleString;
+  command       += "} {";
+  command       += time;
+  command       += "}";
+
+  try {
+    m_pInterpreter->GlobalEval(command);
+  }
+  catch (...) {
+  }
+
+}
+/*!
+ * Process a begin run buffer.  
+ * @param run   - Run number of the run.
+ * @param pBody - Body of the begin run buffer.
+ */
+void
+CTheApplication::onBegin(uint16_t run, ctlbody* pBody)
+{
+  dispatchControlBuffer("onBegin",
+			run, pBody);
+
+}
+/*!
+ Process an end of run buffer.
+ @param run    - Number of the run that's ending.
+ @param pBody  - Body of the end run buffer.
+*/
+void
+CTheApplication::onEnd(uint16_t run, ctlbody* pBody)
+{
+  dispatchControlBuffer("onEnd",
+			run, pBody);
+
+
+}
+/*!
+  Process a data buffer.
+  @param  count   - Number of events in the buffer.
+  @param  pEvents - POinter to the buffer body.
+*/
+void
+CTheApplication::onPhysics(uint16_t count, phydata* pEvents)
+{
+
+  uint16_t* pBuffer;		// Will step through the buffer.
+  uint32_t* pScalers;		// Will step through scalers for each event.
+
+  pBuffer = reinterpret_cast<uint16_t*>(pEvents);
+  vector<string>  eventList;
+  for (int i =0; i < count; i++) {
+    uint16_t nWords = *pBuffer++;
+    int nScalers    = nWords/2;	// Assuming 2 uint16_t's per uint32_t.
+    pScalers = reinterpret_cast<uint32_t*>(pBuffer);
+    vector<string> scalerList;
+    CTCLList       scalerTclList(m_pInterpreter);
+    for(int s = 0; s < nScalers; s++) {
+      char scalerString[100];
+      int   scaler = *pScalers++;
+      sprintf(scalerString, "%d", scaler & 0xffffff);
+      scalerList.push_back(scalerString);
+    }
+    // Make the Tcl List for this event.. get it as a string and
+    // push that string into eventList.
+
+    scalerTclList.Merge(scalerList);
+    eventList.push_back(scalerTclList.getList());
+
+    pBuffer += nWords;
+    
+  }
+  // Turn the eventList into a TclList:
+
+  CTCLList eventTclList(m_pInterpreter);
+  eventTclList.Merge(eventList);
+  
+  // Construct the command::
+
+  string command = "onEvent ";
+  command       += "{";
+  command       += eventTclList.getList();
+  command       += "}";
+
+  try {
+    m_pInterpreter->GlobalEval(command);
+  }
+  catch(...) {
+  }
+}
+
+/*!
+  Return the stringified equivalent of a tod stuct.
+  @param Tod  - the tod struct.
+  @return string
+*/
+string
+CTheApplication::todToTimeString(bftime& tod)
+{
+  char time[200];
+  sprintf(time, "%d/%d/%d %d:%d:%d",
+	  tod.month+1, tod.day, tod.year+1900,
+	  tod.hours, tod.min, tod.sec);
+  return string(time);
 }

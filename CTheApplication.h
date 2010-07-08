@@ -20,6 +20,16 @@
 using namespace std;
 #include <spectrodaq.h>
 
+#ifndef __TCL_H
+#include <tcl.h>
+#ifndef __TCL_H
+#define __TCL_H
+#endif
+#endif
+
+#ifndef __MTYPES_H
+#include <buffer.h>
+#endif
 
 class CTCLInterpreter;
 struct Tcl_Interp;
@@ -48,11 +58,19 @@ struct Tcl_Interp;
 */
 class CTheApplication : DAQROCNode // Mandatory for spectrodaq init etc.
 {
+  // Public data types:
+public:
+  struct dataEvent {
+    Tcl_Event m_Event;
+    void*     m_pPayload;
+  };
 private:
   static bool          m_Exists; //!< Enforce singletons via exceptions.
   int                  m_Argc;
   char**               m_Argv;
-  CTCLInterpreter*     m_pInterpreter;
+  static CTCLInterpreter*     m_pInterpreter;
+  static Tcl_ThreadId  m_MainThread;
+  static CTheApplication* m_pTheApplication;
 public:
   // Canonicals
 
@@ -78,11 +96,23 @@ private:
   void createUsbController();
   void setConfigFiles();
   void initializeBufferPool();
+  void dispatchControlBuffer(const char* baseCommand, 
+			     uint16_t run, ctlbody* pBody);
+
+  void onBegin(uint16_t run, ctlbody* pBody);
+  void onEnd(uint16_t run, ctlbody* pBody);
+  void onPhysics(uint16_t count, phydata* pEvents);
+  void onVMUSBData(uint16_t type, void* pBuffer);
 
   // static functions:
 
   static int AppInit(Tcl_Interp* interp);
   static std::string makeConfigFile(std::string baseName);
+  static std::string todToTimeString(bftime& Tod);
+public:
+  static Tcl_ThreadId mainThread();
+  static int dataEventHandler(Tcl_Event* pEvent, int flags);
+  static CTheApplication* getApplication();
 
 };
 #endif
