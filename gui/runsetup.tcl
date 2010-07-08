@@ -90,6 +90,12 @@ snit::widget runsetup {
 
     #Methods:
 
+    # Provide the frequency of the readout:
+
+    method getFrequency {} {
+	return [$win.period get]
+    }
+
     #  Get the current value of the run state variable
 
     method getState {} {
