@@ -4,13 +4,18 @@
 #   readout frequency, the set of scaler channels to use
 #   the run duration and to start/stop the run.
 #
-#   The entire GUI is implemented as a self contained snit widget.
+#   The entire GUI is implemented as a self contained snit widget
+#
+# OPTIONS:
+#   -startcommand - script executed just before the run is started.
+#   -stopcommand  - script executed just after then run is ended.
 #
 package require Tk
 package require snit
 
 snit::widget runsetup {
-
+    option -startcommand -default ""
+    option -stopcommand  -default ""
     # Channels is the array of variables bound to the channel enable
     # bitmask.
 
@@ -25,6 +30,8 @@ snit::widget runsetup {
     # Construction ignores args as this is not configurable.
     constructor {args} {
 	variable channels
+
+	$self configurelist $args
 
 	# Elapsed timein a run.
 
@@ -133,6 +140,7 @@ snit::widget runsetup {
 	}
 	set state halted
 	$win.startstop configure -text Start
+	$self dispatch -stopcommand
     }
     # Start a run: 
     #  Calculate the period in 10n multiples and write ~/config/runconfig.tcl
@@ -144,6 +152,8 @@ snit::widget runsetup {
 	variable elapsedSeconds
 	variable state
 	variable runDuration
+
+	$self dispatch -startcommand
 
 	set gdgdelay   [$self getPeriod]
 	set runSeconds [$self getRunDuration]
@@ -228,4 +238,18 @@ snit::widget runsetup {
 
 	$win.elapsed configure -text $elapsed
     }
+    # Dispatch a user event script at global level.
+    # @param option - the option whose value is the script to dispatch.
+    #                 the script is dispatched with no arguments.
+    #
+    method dispatch script {
+	puts "dispatch for $script"
+	set body $options($script)
+	puts "Script body: $body"
+	if {$body ne ""} {
+	    puts "Executing $body"
+	    uplevel #0 $body
+	}
+    }
+    
 }
