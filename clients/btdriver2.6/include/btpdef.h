@@ -25,9 +25,8 @@
 /*
 ** Various types used by the Mirror API
 */
-typedef bt_data32_t bt_msec_t;
 typedef bt_data32_t bt_devdata_t;
-typedef bt_data32_t bt_devaddr_t;
+typedef unsigned long  bt_devaddr_t;
 typedef bt_data8_t  bt_addr_mod_t;
 
 /*

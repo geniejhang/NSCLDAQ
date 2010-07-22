@@ -11,7 +11,7 @@
 *****************************************************************************/
 /*****************************************************************************
 **
-**            Copyright (c) 1997-1999 by SBS Technologies, Inc.
+**            Copyright (c) 1997-2005 by SBS Technologies, Inc.
 **        Copyright (c) 1990-1996 by Bit 3 Computer Corporation.
 **                     All Rights Reserved.
 **              License governs use and distribution.
@@ -30,27 +30,32 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
 
 #include "btdd.h"
 
-#if defined(__linux__)
-#include <asm/delay.h>
-#include <linux/timer.h>
-#include <linux/sched.h>
-
-static struct timer_list timeout_data;
-
-#elif   defined(__vxworks)
-#include <errno.h>
-#include <vxWorks.h>
-#include <errnoLib.h>
-#include <ioLib.h>
-#include <stdLib.h>
-#include <taskLib.h>
-
-extern int sbs_get_sys_clk_rate(void); /* proto-type for VxWorks BSP */
-                                      /* independent system clock rate call */
-
-#endif	/* defined(__linux__) */
 
 BT_FILE_NUMBER(TRACE_BT_DELAY_C);
+
+
+/*****************************************************************************
+**
+**  Protoypes 
+**
+*****************************************************************************/
+#if defined (__linux__)
+static struct timer_list timeout_data;
+#endif /* defined (__linux__) */
+
+extern void btk_delay(int usec);
+
+extern bt_error_t btk_sleep(int usec);
+
+extern btk_timeout_t btk_timeout(
+        void (*f_time_expire)(caddr_t), 
+        caddr_t arg_p, 
+        long usec);
+
+extern bt_error_t btk_untimeout(
+        void (*f_time_expire)(caddr_t), 
+        caddr_t arg_p, 
+        btk_timeout_t timeout_id);
 
 
 /****************************************************************************
@@ -160,6 +165,9 @@ void btk_delay(
     }
 }
 
+#elif defined (__lynxos)
+
+    usec_sleep(usec);
 
 #else /* _AIX & etc. */
 
@@ -245,6 +253,8 @@ bt_error_t btk_sleep(
     ** This routine can not time less then 1/HZ seconds
     ** HZ is typically 100 for most Intel32 platforms which
     ** is 10 msec.
+    **
+    ** HZ is typically 1000 in 2.6, but this code still looks o.k.
     */
     {
     unsigned long usec2;
@@ -277,6 +287,9 @@ bt_error_t btk_sleep(
 
     delay(drv_usectohz(usec));
 
+#elif defined (__lynxos)
+
+    usec_sleep(usec);
 
 #else /* Unknown OS */
 
@@ -384,6 +397,10 @@ btk_timeout_t btk_timeout(
     ** Not implemented
     */
 
+#elif defined (__lynxos)
+
+    retval = timeout(f_time_expire, arg_p, usec);
+
 #else  /* _AIX & etc. */
 
 #error Unknown Operating System
@@ -418,6 +435,9 @@ bt_error_t btk_untimeout(
 {
     /* return value- stays zero for most OSs */
     bt_error_t retval = BT_SUCCESS;  
+#if defined (__lynxos)
+    int ps; /* to remember interrupt level */
+#endif
 
     FUNCTION("btk_untimeout");
     LOG_UNKNOWN_UNIT;
@@ -470,6 +490,19 @@ bt_error_t btk_untimeout(
     ** Not implemented
     */
 
+#elif defined (__lynxos)
+
+    /* 
+     * Cancel the timeout handler for the given timeout ID.
+     *
+     * We also need to disable interrupts before issuing this command.
+     */
+    disable(ps);
+    if (timeout_id != 0) {
+        retval = cancel_timeout(timeout_id);
+    }
+    restore(ps);
+
 #else /* _AIX & etc. */
 
 #error Unknown Operating System
@@ -480,3 +513,24 @@ bt_error_t btk_untimeout(
     return(retval);
 
 }
+
+#if defined(__vxworks)
+
+bt_tck_t btk_msec2tck(bt_msec_t time) 
+{
+    return (BT_FOREVER == time) ? (WAIT_FOREVER) : 
+        ((BT_NO_WAIT == time) ? NO_WAIT : time *sbs_get_sys_clk_rate() / 1000);
+}
+
+bt_msec_t btk_tck2msec(bt_tck_t time)
+{
+    return (WAIT_FOREVER == time) ? (BT_FOREVER) :
+        ((NO_WAIT == time) ? BT_NO_WAIT : time * 1000 / sbs_get_sys_clk_rate() );
+}
+
+bt_tck_t btk_tck_get(void)
+{
+    return (bt_tck_t) tickGet();
+}
+
+#endif /* defined(__vxworks) */

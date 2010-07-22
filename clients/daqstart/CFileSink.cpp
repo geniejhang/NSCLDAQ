@@ -125,18 +125,19 @@ Parameters:
 
 
 
-\return bool
+
 \return int
 \retval  >0 The number of characters written to the file.
 \retval <=0 Is an error condition.
 
 
 */
-bool 
+int
 CFileSink::Log(const STD(string)& Message)  
 {
   STD(string)line = FormatLine(Message);
-  write(m_nFd, line.c_str(), line.size());
+  ssize_t status = write(m_nFd, line.c_str(), line.size());
+  return status == line.size();
   
 }
 /*!

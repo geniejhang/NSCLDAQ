@@ -22,10 +22,8 @@
 static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #endif /* LINT */
 
-#include "btapi.h"
-#include "btio.h"
-
-#include "btpiflib.h"
+#include    "btapi.h"
+#include    "btpiflib.h"
 
 
 /*****************************************************************************
@@ -62,7 +60,9 @@ bt_error_t bt_bind(
 {
     bt_error_t  retval = BT_SUCCESS;
     bt_bind_t   bind;
+#ifndef FCTACH
     bt_devdata_t save_swap;
+#endif  /* FCTACH */
    
     /*
     ** Check for bad descriptor or invalid pointer value
@@ -80,11 +80,22 @@ bt_error_t bt_bind(
         (buf_p == NULL) ||
         (offset_p == NULL)) {
         DBG_STR("bt_bind:Null pointer passed in");
+        DBG_MSG((stderr, "bindp=%x buf_p=%x offset_p=%x\n", 
+            (unsigned int)bind_p, (unsigned int)buf_p, (unsigned int)offset_p));
         retval = BT_EINVAL;
         goto bt_bind_end;
     }
         
-    /* 
+    /*
+    ** Verify parameters
+    */
+    if (buf_len == 0) {
+        DBG_STR("bt_bind:zero length buffer to bind");
+        retval = BT_EINVAL;
+        goto bt_bind_end;
+    }
+ 
+     /* 
     ** verify R/W permissions against the open 
     */
     if (((flags & BT_WR) && !(btd->access_flags & BT_WR))  ||
@@ -97,11 +108,15 @@ bt_error_t bt_bind(
     /*
     ** Setup ioctl structure
     */
-    bind.host_addr = (bt_devaddr_t) buf_p;
+    bind.host_addr = (bt_data64_t) ((unsigned long) buf_p);
     bind.length = buf_len;
     bind.nowait = FALSE;
-    bind.phys_addr = *offset_p;
+    bind.phys_addr = (bt_data32_t) (*offset_p);
 
+#ifdef FCTACH
+    bind.type = BT_BIND_USERVM;
+    bind.offset = 0;
+#else   /* FCTACH */
     /*
     ** Set special swapping if requested
     */
@@ -118,6 +133,7 @@ bt_error_t bt_bind(
             goto bt_bind_end;
         }
     }
+#endif  /* FCTACH */
 
     /*
     ** Do the actual bind
@@ -127,6 +143,7 @@ bt_error_t bt_bind(
         goto bt_bind_end;
     }
 
+#ifndef FCTACH
     /*
     ** Restore special swapping if required
     */
@@ -138,8 +155,11 @@ bt_error_t bt_bind(
             goto bt_bind_end;
         }
     }
-    *offset_p = bind.phys_addr;
+#endif  /* FCTACH */
+    *offset_p = (bt_devdata_t) bind.phys_addr;
     *bind_p = (bt_binddesc_t) bind.sysinfo_p;
+     DBG_MSG((stderr, "bind done bind_p=%x offset_p=%x\n", 
+         (unsigned int)*bind_p, (unsigned int)*offset_p));
 
 bt_bind_end:
     return (retval);
@@ -240,7 +260,9 @@ bt_error_t bt_hw_bind(
 {
     bt_error_t  retval = BT_SUCCESS;
     bt_bind_t   bind;
+#ifndef FCTACH
     bt_devdata_t save_swap;
+#endif  /* FCTACH */
    
     /*
     ** Check for bad descriptor or invalid pointer value
@@ -259,7 +281,15 @@ bt_error_t bt_hw_bind(
         retval = BT_EINVAL;
         goto bt_hw_bind_end;
     }
-        
+    /*
+    ** Verify parameters
+    */
+    if (buf_len == 0) {
+        DBG_STR("bt_hw_bind:zero length buffer to bind");
+        retval = BT_EINVAL;
+        goto bt_hw_bind_end;
+    }
+         
     /* 
     ** verify R/W permissions against the open 
     */
@@ -278,6 +308,10 @@ bt_error_t bt_hw_bind(
     bind.nowait = FALSE;
     bind.phys_addr = *offset_p;
 
+#ifdef FCTACH
+    bind.type = BT_BIND_USERVM;
+    bind.offset = 0;
+#else   /* FCTACH */
     /*
     ** Set special swapping if requested
     */
@@ -288,6 +322,7 @@ bt_error_t bt_hw_bind(
             goto bt_hw_bind_end;
         }
     }
+#endif   /* FCTACH */
 
     /*
     ** Do the actual bind
@@ -297,6 +332,7 @@ bt_error_t bt_hw_bind(
         goto bt_hw_bind_end;
     }
 
+#ifndef FCTACH
     /*
     ** Restore special swapping if required
     */
@@ -308,6 +344,7 @@ bt_error_t bt_hw_bind(
             goto bt_hw_bind_end;
         }
     }
+#endif   /* FCTACH */
     *offset_p = bind.phys_addr;
     *bind_p = (bt_binddesc_t) bind.sysinfo_p;
 
@@ -318,7 +355,7 @@ bt_hw_bind_end:
 
 /*****************************************************************************
 **
-**      Name:           bt_unbind
+**      Name:           bt_hw_unbind
 **
 **      Purpose:        Implement BIOC_HW_UNBIND function
 **
@@ -375,4 +412,161 @@ bt_error_t bt_hw_unbind(
 bt_hw_unbind_end:
     return (retval);
 }
+
+#if FCTACH
+/*****************************************************************************
+**
+**      Name:           bt_hw_bind
+**
+**      Purpose:        Implement BIOC_HW_BIND function which Maps a physical
+**                      bus address onto the remote bus.
+**      Args:
+**          btd         Device Descriptor
+**          bind_p      Pointer to the bind handle to init.
+**          mapped_phys_addr    (OUT) Pointer to the physical address of the virtual mapped
+**          offset_p    Pointer to offset into remote mem where buf is bound
+**          loc_addr    Physical bus address to bind
+**          buf_len     Length of buffer
+**          flags       Access rights requested on the bind
+**          swapping    Swapping methond to use on remote accesses to the buffer
+**          type        virtual buffer vs physical buffer type
+**          
+**      Returns:
+**          pass-fail
+**
+**      Notes:
+**
+*****************************************************************************/
+bt_error_t bt_fcbind(
+    bt_desc_t       btd,
+    bt_binddesc_t  *bind_p,
+    bt_devaddr_t   *mapped_phys_addr,
+    bt_devaddr_t    offset,
+    bt_devaddr_t    buf_p,
+    size_t          buf_len,
+    bt_accessflag_t flags,
+    unsigned char   type)
+{
+bt_bind_t   bind;
+
+    bt_error_t  retval = BT_SUCCESS;
+    /*
+    ** Check for bad descriptor or invalid pointer value
+    */
+    if (BT_DESC_BAD(btd)) {
+        DBG_STR("bt_fcbind:bad descriptor");
+        retval = BT_EDESC;
+        goto bt_fcbind_end;
+    }
+
+    /*
+    ** Verify parameters
+    */
+    if ((bind_p == NULL) || (mapped_phys_addr == NULL)) {
+        DBG_STR("bt_fcbind:Null pointer passed in.");
+        retval = BT_EINVAL;
+        goto bt_fcbind_end;
+    }
+        
+    /*
+    ** Verify parameters
+    */
+    if (buf_len == 0) {
+        DBG_STR("bt_bind:zero length buffer to bind");
+        retval = BT_EINVAL;
+        goto bt_fcbind_end;
+    }
+ 
+     /* 
+    ** verify R/W permissions against the open 
+    */
+    if (((flags & BT_WR) && !(btd->access_flags & BT_WR))  ||
+        ((flags & BT_RD) && !(btd->access_flags & BT_RD))) {
+        DBG_STR("bt_fcbind:Read/Write permissions don't match open.");
+        retval = BT_EACCESS;
+        goto bt_fcbind_end;
+    }
+
+    /*
+    ** Setup ioctl structure
+    */
+    bind.offset = offset;
+    bind.host_addr = buf_p;
+    bind.length = buf_len;
+    bind.nowait = FALSE;
+    bind.type = type;
+
+    /*
+    ** Do the actual bind
+    */
+    if ((retval = bt_ctrl(btd, BIOC_HW_BIND, &bind)) != BT_SUCCESS) {
+        DBG_STR("bt_fcbind:hw bind call failed.");
+        goto bt_fcbind_end;
+    }
+
+    *mapped_phys_addr = bind.phys_addr;
+    *bind_p = (bt_binddesc_t) bind.sysinfo_p;
+
+bt_fcbind_end:
+    return (retval);
+}
+
+/*****************************************************************************
+**
+**      Name:           bt_fcvbind
+**
+**      Purpose:        Implement BIOC_VBIND function which shows the binding
+**                      table entry desired.
+**      Args:
+**          btd         Device Descriptor
+**          offset      (OUT) Pointer to offset into remote mem where buf is bound
+**          mapped_phys_addr    (OUT) Pointer to the physical address of the virtual mapped
+**          length      (OUT) Length of buffer
+**          type        (OUT) virtual buffer vs physical buffer type
+**          
+**      Returns:
+**          pass-fail
+**
+**      Notes:
+**
+*****************************************************************************/
+bt_error_t bt_fcvbind(
+    bt_desc_t       btd,
+    bt_data16_t     index,
+    bt_devaddr_t   *offset,
+    bt_devaddr_t   *length,
+    bt_devaddr_t   *mapped_phys_addr,
+    bt_data8_t     *type)
+{
+bt_vbind_t   vbind;
+bt_error_t  retval;
+ 
+    /*
+    ** Verify parameters
+    */
+    if ((offset == NULL) || (mapped_phys_addr == NULL) ||
+        (length == NULL) || (type == NULL)) {
+        DBG_STR("bt_fcvbind:Null pointer passed in.");
+        retval = BT_EINVAL;
+        goto bt_fcvbind_end;
+    }
+     /*
+    ** Do the actual view bind ioctl
+    */
+    vbind.entryno = index;
+
+    if ((retval = bt_ctrl(btd, BIOC_VBIND, &vbind)) != BT_SUCCESS) {
+        DBG_STR("bt_fcvbind:fcvbind call failed.");
+    } else {
+        *offset = vbind.offset;
+        *length = vbind.length;
+        *mapped_phys_addr = vbind.phys_addr;
+        *type = vbind.type;
+    }
+bt_fcvbind_end:
+    return(retval);
+}
+
+
+#endif  /* FCTACH */
 

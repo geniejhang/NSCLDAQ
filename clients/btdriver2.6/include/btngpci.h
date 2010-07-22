@@ -23,6 +23,10 @@
 #include <stdio.h>
 #endif /* defined(__vxworks) */
 
+#ifndef _BT_TIME_H
+#include <bt_time.h>
+#endif
+
 /*****************************************************************************
 **
 **  Macro indicating that this product is from the NanoBus family
@@ -38,7 +42,6 @@ typedef struct {
     bt_data32_t             length;     /* number of elements in queue buffer array */
     volatile bt_data32_t    queue[1];   /* queue buffer, is array of vectors */
 } bt_irq_q_t;
-
 /*****************************************************************************
 **
 **  Logical Devices available. 
@@ -46,6 +49,7 @@ typedef struct {
 **  Not all avalible on all adapters.
 **
 *****************************************************************************/
+
 typedef enum BT_AXSTYPS {
     /*
     ** Original Unix definitions
@@ -234,6 +238,9 @@ typedef struct {
     
 } bt_sema_access_t;
 
+
+#define BT_DIAG_MAX_REV_INFO    30
+
 /*****************************************************************************
 **
 **  Hardware Diagnostics 
@@ -241,7 +248,7 @@ typedef struct {
 **  BIOC_LCARD_DIAG/BIOC_CABLE_DIAG/BIOC_RCARD_DIAG/BIOC_PAIR_DIAG
 **
 *****************************************************************************/
-#define BT_DIAG_MAX_REV_INFO    30
+
 typedef struct {
     bt_data32_t  error;             /* Error code */
     bt_data32_t  line_number;      /* Line number failure was discovered on */
@@ -261,6 +268,8 @@ typedef struct {
 **
 *****************************************************************************/
 typedef bt_data32_t bt_status_t;
+
+
 #define BT_STATUS_ERR_SHFT    (24)
 
     /* interface parity error */
@@ -489,6 +498,7 @@ typedef enum param_valus {
     BT_MAX_INFO		    /* Last valid BT_INFO_ value, internal use only */
 } bt_info_t;
 
+
 /* 
 ** Obsolte parameter values -- to be removed! 
 */
@@ -679,6 +689,8 @@ enum BT_ACCESS {
 #define BT_LOC_START    0
 #define BT_REM_START    80
 #define BT_RPQ_START    192
+
+
 
 typedef enum BT_REGISTERS {
     BT_LOC_CMD1 = BT_LOC_START,         /* Local Command register 1 */

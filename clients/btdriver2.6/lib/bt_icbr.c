@@ -31,7 +31,6 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #include    <sys/mman.h>
 
 #include    "btapi.h"
-#include    "btio.h"
 #include    "btpiflib.h"
 
 /*
@@ -127,6 +126,7 @@ bt_error_t bt_icbr_install(
     int                 os_ret = 0;
     bt_icbr_list_t      *new_icbr_p = NULL;
     bt_thread_add_t     thread_add_data;                     
+
 
     if (BT_DESC_BAD(btd)) {
         DBG_STR("Bad descriptor");
@@ -576,6 +576,10 @@ static void *bt_icbr_thread(
     bt_devdata_t       q_size;
     char               devname[BT_MAX_DEV_NAME];
     char               *devname_p = &(devname[0]);
+   
+#if defined (BT951)
+    void    *map_addr = NULL;
+#endif
 
     /*
     ** Grab the descriptor mutex
@@ -616,7 +620,13 @@ static void *bt_icbr_thread(
     ** Memory map the interrupt queues
     */
     irq_mmap_p = (bt_data8_t *) mmap(NULL, BTK_Q_NUM * BTK_Q_SIZE(q_size), PROT_READ, MAP_SHARED, btd->fd_diag, BT_DIAG_ISR_Q_OFFSET);
-    if (irq_mmap_p == NULL) {
+    /* Handle the error condition */
+#if defined (BT951)
+    if (irq_mmap_p == MAP_FAILED)
+#else
+    if (irq_mmap_p == NULL)
+#endif
+    {
         DBG_STR("Irq queue mmap failed");
         (void) close(btd->fd_diag);
         (void) bt_ctrl(btd, BIOC_THREAD_UNREG, &thread_reg_data);
@@ -624,8 +634,61 @@ static void *bt_icbr_thread(
         pthread_mutex_unlock(&btd->mutex);
         pthread_exit(NULL);
     }
-    btd->icbr_running = TRUE;
+#if defined (BT951)
+    else
+    {
+    /* We have an address the driver wants us to use, but first it needs to 
+     * be mapped into this virtual user space.
+     */
+        /*
+         * Open the memory device
+         */
+        btd->dev_mem_fd = open("/dev/mem", O_RDWR);
+        if (btd->dev_mem_fd < 0) {
+            DBG_MSG ((stderr, "Unable to open /dev/mem device. fd = %d errno = %d\n", btd->dev_mem_fd, errno));
+            /* Failure: cleanup the thread and close the device. */
+            (void) close(btd->fd_diag);
+            (void) bt_ctrl(btd, BIOC_THREAD_UNREG, &thread_reg_data);
+            pthread_cond_signal(&btd->icbr_started);
+            pthread_mutex_unlock(&btd->mutex);
+            pthread_exit(NULL);
+        }
+
+        /* Map the resource */
+        map_addr = (bt_data32_t*)mmap(0, BTK_Q_NUM * BTK_Q_SIZE(q_size), 
+                    (PROT_READ | PROT_WRITE | PROT_UNCACHE),
+                    (MAP_SHARED),
+                    btd->dev_mem_fd,
+                    (off_t)irq_mmap_p);
+        if (map_addr == MAP_FAILED) {
+            DBG_MSG ((stderr, "Unable to map fd (%d) with the address (%08Xh), errno = %d\n", btd->dev_mem_fd, (unsigned int)irq_mmap_p, errno));
+            /* Unmap the address and close the device*/
+            close(btd->dev_mem_fd);
+            (void) close(btd->fd_diag);
+            (void) bt_ctrl(btd, BIOC_THREAD_UNREG, &thread_reg_data);
+            pthread_cond_signal(&btd->icbr_started);
+            pthread_mutex_unlock(&btd->mutex);
+            pthread_exit(NULL);
+        }
+
+#if 0
+        map_addr = (bt_data8_t *) map_addr + (map_off % size_of_page);
+        *mmap_p = (void *) map_addr;
+#endif
+        /* Save the address from the driver and the kernel virtual address */
+        /* We will use the driver address to free the resources I think */
+        btd->driver_phys_addr = (unsigned int)irq_mmap_p;
+        btd->map_virt_addr    = (unsigned int)map_addr;
+    }
+    btd->icbr_mmap_p = map_addr;
+
+#else /* defined BT951 */
+
     btd->icbr_mmap_p = irq_mmap_p;
+
+#endif /* defined BT951 */
+
+    btd->icbr_running = TRUE;
     btd->icbr_mmap_len = BTK_Q_NUM * BTK_Q_SIZE(q_size);
 
     /*
@@ -638,14 +701,14 @@ static void *bt_icbr_thread(
     ** Setup the interrupt queue pointers and set the tails equal to 
     ** the heads
     */
-    BTK_Q_ASSIGN(irq_mmap_p, error_irq_p, prog_irq_p, vme_irq_p, q_size);
+    BTK_Q_ASSIGN(btd->icbr_mmap_p, error_irq_p, prog_irq_p, vme_irq_p, q_size);
     error_tail = error_irq_p->head;
     prog_tail = prog_irq_p->head;
     vme_tail = vme_irq_p->head;
 
     /*
     ** Signal bt_icbr_install() to continue, must do this after we have
-    ** sampled the quue heads, otherwise main program may start and begin
+    ** sampled the queue heads, otherwise main program may start and begin
     ** receiving interrupts before we have a valid head pointer, thus 
     ** missing the first couple of interrupts
     */

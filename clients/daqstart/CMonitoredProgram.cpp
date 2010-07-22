@@ -384,12 +384,13 @@ CMonitoredProgram::CopyIn(const CMonitoredProgram& rhs)
    \param sLine (string)
      The string to output, gathered from the program.
 */
-void
+int
 CMonitoredProgram::Log(int fd, CSink* pSink, string sLine)
 {
-  write(fd, sLine.c_str(), sLine.size());
+  ssize_t n = write(fd, sLine.c_str(), sLine.size());
+  if (n < 0) return n;
   if(pSink) {
-    pSink->Log(sLine);
+    return pSink->Log(sLine);
   }
 }
 /*!

@@ -176,7 +176,11 @@ main(int argc, char** argv)
   }
 
   if(!debug) {
-    daemon(0, 0);
+    if(daemon(0, 0)) {
+      int e = errno;
+      cerr << "Failed to daemonize : " << strerror(e) <<endl;
+      cerr << "Running in the foreground instead\n";
+    }
   }
   MainLoop(id, root, pollTime, debug);
 }

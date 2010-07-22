@@ -405,7 +405,9 @@ CAlarmServer::CAlarmServer()
   // We open these files so that they will be created. That way, we don't
   // have to worry about doing this later, during the actual fulfilling of
   // client requests.
-  if(!(DBFWriter = gdbm_open(".alarmcount", 512, GDBM_WRCREAT, 
+  if(!(DBFWriter = gdbm_open(
+			     const_cast<char*>(".alarmcount"), 
+			     512, GDBM_WRCREAT, 
 			     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 0))) {
     string reason = "Attempting to open .alarmcount while ";
     reason += "constructing CAlarmServer";
@@ -413,7 +415,8 @@ CAlarmServer::CAlarmServer()
     throw dbme;
   }
   gdbm_close(DBFWriter);
-  if(!(DBFWriter = gdbm_open(".alarmdb", 512, GDBM_WRCREAT,
+  if(!(DBFWriter = gdbm_open(
+			     const_cast<char*>(".alarmdb"), 512, GDBM_WRCREAT,
 			     S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 0))) {
     string reason = "Attempting to open .alarmcount while ";
     reason += "constructing CAlarmServer";
@@ -590,7 +593,7 @@ CAlarmServer::operator()()
 	  // socket that is already opened to send update information to the
 	  // client.
 	  GDBM_FILE DBFReader;
-	  if(!(DBFReader = gdbm_open(".alarmdb", 512 ,GDBM_READER, 0, 0))) {
+	  if(!(DBFReader = gdbm_open(const_cast<char*>(".alarmdb"), 512 ,GDBM_READER, 0, 0))) {
 	    string reason = "Attempting to open .alarmdb in ";
 	    reason += "CAlarmServer::Update()";
 	    CGDBMException dbme(reason, gdbm_errno);
@@ -728,7 +731,7 @@ CAlarmServer::Log(string& srFacility, string& srMessage,
   GDBM_FILE DBFWriter;
   
   // There may be problems opening the database file
-  if(!(DBFWriter = gdbm_open(".alarmdb", 0, GDBM_WRCREAT, 
+  if(!(DBFWriter = gdbm_open(const_cast<char*>(".alarmdb"), 0, GDBM_WRCREAT, 
 			     S_IRUSR | S_IWUSR | S_IRGRP | 
 			     S_IROTH, 0))) {
     string reason = "Attempting to open .alarmdb in CAlarmServer::Log()";
@@ -752,7 +755,7 @@ CAlarmServer::Log(string& srFacility, string& srMessage,
   // has in the .alarmcount file
   GDBM_FILE DBFReader;
   if(!(DBFReader = gdbm_open
-       (".alarmcount", 512, GDBM_READER, 644, 0))) {
+       (const_cast<char*>(".alarmcount"), 512, GDBM_READER, 644, 0))) {
     string reason = "Attempting to open .alarmcount in CAlarmServer::Log()";
     CGDBMException dbme(reason, gdbm_errno);
     throw dbme;
@@ -789,7 +792,7 @@ CAlarmServer::Log(string& srFacility, string& srMessage,
   gdbm_close(DBFReader);
   
   // Now we need to open a new writer to write the new entry
-  if(!(DBFWriter = gdbm_open(".alarmcount", 0, GDBM_WRCREAT,
+  if(!(DBFWriter = gdbm_open(const_cast<char*>(".alarmcount"), 0, GDBM_WRCREAT,
 			     S_IRUSR | S_IWUSR | S_IRGRP |
 			     S_IROTH, 0))) {
     string reason = "Attempting to open .alarmcount in CAlarmServer::Log()";
@@ -831,7 +834,7 @@ CAlarmServer::EditAlarm(Int_t nReason)
   
   // First open the database for reading and find the key for this
   // alarm and experiment
-  if(!(DBFReader = gdbm_open(".alarmdb", 512, GDBM_READER, 644, 0))) {
+  if(!(DBFReader = gdbm_open(const_cast<char*>(".alarmdb"), 512, GDBM_READER, 644, 0))) {
     string why = "Attempting to open .alarmdb in CAlarmServer::EditAlarm()";
     CGDBMException dbme(why, gdbm_errno);
     throw dbme;
@@ -852,7 +855,7 @@ CAlarmServer::EditAlarm(Int_t nReason)
   gdbm_close(DBFReader);
   
   // Get ready to change the datum by opening up for writing
-  if(!(DBFWriter = gdbm_open(".alarmdb", 0, GDBM_WRCREAT,
+  if(!(DBFWriter = gdbm_open(const_cast<char*>(".alarmdb"), 0, GDBM_WRCREAT,
 			     S_IRUSR | S_IWUSR | S_IRGRP |
 			     S_IROTH, 0))) {
     string why = "Attempting to open .alarmdb in CAlarmServer::EditAlarm()";
@@ -966,7 +969,7 @@ CAlarmServer::Init()
   // We open a reader to get the initial alarm count 
   // for this experiment
   GDBM_FILE DBFReader;
-  if(!(DBFReader = gdbm_open(".alarmcount", 512, GDBM_READER, 0, 0))) {
+  if(!(DBFReader = gdbm_open(const_cast<char*>(".alarmcount"), 512, GDBM_READER, 0, 0))) {
     string reason = "Attempting to open .alarmcount in CAlarmServer::Init()";
     CGDBMException dbme(reason, gdbm_errno);
     throw dbme;
@@ -1008,7 +1011,7 @@ void
 CAlarmServer::CreateExperiment() 
 {
   GDBM_FILE DBFWriter;
-  if(!(DBFWriter = gdbm_open(".alarmcount", 0, GDBM_WRCREAT,
+  if(!(DBFWriter = gdbm_open(const_cast<char*>(".alarmcount"), 0, GDBM_WRCREAT,
 			     S_IRUSR | S_IWUSR | S_IRGRP |
 			     S_IROTH, 0))) {
     string reason = "Trying to open .alarmcount in CAlarmServer::Init()";
@@ -1043,7 +1046,7 @@ CAlarmServer::GetExperimentHistory()
 {
   // Open the alarm database, so we can read the alarm information
   GDBM_FILE DBFReader;
-  if(!(DBFReader = gdbm_open(".alarmdb", 512, GDBM_READER, 0, 0))) {
+  if(!(DBFReader = gdbm_open(const_cast<char*>(".alarmdb"), 512, GDBM_READER, 0, 0))) {
     string reason = "Trying to open .alarmcount in CAlarmServer::Init()";
     CGDBMException dbme(reason, gdbm_errno);
     throw dbme;

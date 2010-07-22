@@ -154,8 +154,9 @@
 /*
 ** VxWorks specific include files
 */
+#elif defined(__vxworks)
 
-#elif     defined(BT18901)
+#if     defined(BT18901)
 #include "btvio.h"
 /* end ifdef  defined(BT18901) */
 
@@ -169,6 +170,15 @@
 #elif defined(BT17903)
 #include "btuio.h"
 /* end ifdef BT17903 */
+
+#elif defined(FCTACH_VXWORKS)
+#include "fcvxpio.h"
+
+#else
+#error Undefined VxWorks Project!
+#endif /* BT18901  */
+
+/* end ifdef __vxworks */
 
 /*
 ** Broadcast/Shared Memory specific include files
@@ -201,8 +211,29 @@
 
 #if defined(BT1003)
 #include "btpio.h"
+
+#elif defined(FCTACH_LINUX)
+#include "fclpio.h"
+
 #else /* BT1003 */
 #error Undefined Linux project!
+#endif /* BT1003 */
+
+
+/*
+** Lynxos specific include files
+*/
+
+#elif defined(__lynxos)
+
+#if defined(BT951)
+#include "btpio.h"
+
+#elif defined(FCTACH_LINUX)
+#include "fclpio.h"
+
+#else /* BT951 */
+#error Undefined Lynxos project!
 #endif /* BT1003 */
 
 /*

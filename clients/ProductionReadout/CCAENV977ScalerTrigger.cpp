@@ -60,7 +60,7 @@ CCAENV977ScalerTrigger::Initialize()
 							     CCAENV977::control_OrMask));
   // Unmask my bit and  clear it:
 
-  unsigned short mask = ~myBit;
+  unsigned short mask = static_cast<unsigned short>(~myBit);
   m_pModule->inputMask(m_pModule->inputMask() & mask);
   m_pModule->inputSet(m_pModule->inputSet() & mask);
 

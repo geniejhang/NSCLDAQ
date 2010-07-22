@@ -27,42 +27,32 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #include "btdd.h"
 
 #include <linux/module.h>       /* Must be after btdd.h */
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
 #include <linux/sched.h> 
-#endif
 
 #if     !defined(MAP_NR)
 #define MAP_NR(addr) (__pa(addr) >> PAGE_SHIFT)
 #endif  /* !defined(MAP_NR) */
 
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 #define vm_offset vm_pgoff*PAGE_SIZE
-#endif  /* LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,17)
-static inline
-int remap_page_range(struct vm_area_struct *vma, unsigned long uvaddr,
-		     unsigned long paddr, unsigned long size, pgprot_t prot)
+
+/* Reintroduce io_remap_page_range if the macro has been removed from
+   the kernel:
+*/
+
+#ifndef io_remap_page_range
+
+static inline int io_remap_page_range(struct vm_area_struct* vma, 
+				      unsigned long          start, 
+				      unsigned long          busaddr, 
+				      unsigned long          size, 
+				      pgprot_t               prot)
 {
-  return remap_pfn_range(vma, uvaddr, paddr >> PAGE_SHIFT, size, prot);
+  void * va         = (void __force*)ioremap(busaddr, size);
+  unsigned long pfn = virt_to_phys(va) >> PAGE_SHIFT;
+  return remap_pfn_range(vma, start, pfn, size, prot);
 }
 
-#endif
-
-// Don't see a def for header for this:
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,25)
- struct fault_data {
-	struct vm_area_struct *vma;
-	unsigned long address;
-	pgoff_t pgoff;
-	unsigned int flags;
-
-	int type;
-    };
-unsigned long bt_vmnopage(struct vm_area_struct *vma_p, struct fault_data* fdata);
-
-#else
-unsigned long bt_vmnopage(struct vm_area_struct *vma_p, unsigned long address, int write_access);
 #endif
 
 /*
@@ -70,7 +60,7 @@ unsigned long bt_vmnopage(struct vm_area_struct *vma_p, unsigned long address, i
 */
 void bt_vmopen(struct vm_area_struct *vma_p);
 void bt_vmclose(struct vm_area_struct *vma_p);
-
+struct page *bt_vmnopage(struct vm_area_struct *vma_p, unsigned long address, int *type_p);
 
 /*
 **  Structure to search mmap requests for
@@ -81,8 +71,6 @@ typedef struct {
     unsigned long   vm_length;
     caddr_t         vm_p;
 } search_t;
-
-
 
 /* 
 ** Structure defining the valid operations 
@@ -95,27 +83,15 @@ struct vm_operations_struct btp_vm_ops = {
     .nopage=    bt_vmnopage
 #else   /* defined(__GCC__) */
 
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     open:	bt_vmopen,
     close:	bt_vmclose,
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,25)
-    nopfn:     (void *)bt_vmnopage,
+#if    LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
+    fault:     (void *)bt_vmnopage,
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)
+    nopfn:      (void *)bt_vmnopage,
 #else
     nopage:     (void *)bt_vmnopage,
 #endif
-#else   /* LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) */
-    bt_vmopen,          /* open */
-    bt_vmclose,         /* close */
-    NULL,               /* unmap */
-    NULL,               /* protect */
-    NULL,               /* sync */
-    NULL,               /* advise */
-    bt_vmnopage,        /* nopage */
-    NULL,               /* wppage */
-    NULL,               /* swapout */
-    NULL                /* swapin */
-#endif  /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) || \
-            LINUX_VERSION_CODE <  KERNEL_VERSION(2,4,0) */
 
 #endif  /* defined(__GCC__) */
 };
@@ -198,9 +174,9 @@ int btp_mmap(
     /*
     ** Check for page alignment
     */
-    TRC_MSG(BT_TRC_MMAP | BT_TRC_DETAIL,
-	(LOG_FMT "dest_addr = 0x%lx; vma_p->vm_start = 0x%lx\n",
-        LOG_ARG, dest_addr, vma_p->vm_start));
+    TRC_MSG(BT_TRC_MMAP,
+        (LOG_FMT "length = 0x%x; vma_p->vm_start = 0x%lx\n",
+        LOG_ARG, length, vma_p->vm_start));
 
     if (0 != (dest_addr & ~PAGE_MASK)) {
         /* They must give us a page-aligned offset */
@@ -218,72 +194,6 @@ int btp_mmap(
         ret_val = -EINVAL;
         goto btp_mmap_end;
     }
-
-#if EAS_BIND_CODE 
-/* EAS BIND CODE */
-    /* check if mmap for kernel allocated bind buffer */
-    if ((dest_addr) && (dest_addr == (unsigned long)unit_p->bt_kmalloc_buf)) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
-        unsigned long offset = vma->vm_offset;
-#else
-    	unsigned long offset = vma_p->vm_pgoff<<PAGE_SHIFT;
-#endif
-        unsigned long size = vma_p->vm_end - vma_p->vm_start;
-        
-        if (offset & ~PAGE_MASK)
-        {
-            TRC_MSG(BT_TRC_BIND, 
-                   (LOG_FMT "mmap offset not aligned: %ld\n",
-                   LOG_ARG, offset));
-            ret_val = -EINVAL;
-            goto btp_mmap_end;
-        }
-        
-        if (size > unit_p->bt_kmalloc_size)
-        {
-            TRC_MSG(BT_TRC_BIND, 
-                   (LOG_FMT "mmap size too big: size=0x%x kmalloc_size=0x%x\n",
-                   LOG_ARG, (unsigned int)size, (unsigned int)unit_p->bt_kmalloc_size));
-            ret_val = -EINVAL;
-            goto btp_mmap_end;
-        }
-        
-	    /* we only support shared mappings. Copy on write mappings are
-	       rejected here. A shared mapping that is writeable must have the
-	       shared flag set.
-	    */
-	    if ((vma_p->vm_flags & VM_WRITE) && !(vma_p->vm_flags & VM_SHARED))
-	    {
-            INFO_STR("mmap writeable mappings must be shared, rejecting\n");
-            ret_val = -EINVAL;
-            goto btp_mmap_end;
-	    }
-
-	    /* we do not want to have this area swapped out, lock it */
-	    vma_p->vm_flags |= VM_LOCKED;
-        
-        /* for the virtual contiguous memory area (kmalloc)
-           we create a mapping between the physical pages and the virtual
-           addresses of the application with remap_page_range.
-        */
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
-        if (remap_page_range(vma_p, vma_p->vm_start,
-#else
-        if (remap_page_range(vma_p->vm_start,
-#endif
-                             virt_to_phys((void*)((unsigned long)unit_p->bt_kmalloc_buf)),
-                             size,
-                             PAGE_SHARED))
-        {
-            INFO_STR("mmap remap page range failed\n");
-            ret_val = -EINVAL;
-            goto btp_mmap_end;
-        }
-        goto btp_mmap_end;
-    }
-#endif  /* EAS_BIND_CODE  */
-
-
     
     /* 
     ** Reset the VM operations to our routines 
@@ -343,9 +253,9 @@ int btp_mmap(
         ** Allocate the mapping RAM
         */
         need = (length / BT_PAGE_SIZE) + ((length % BT_PAGE_SIZE) ? 1 : 0);
-        btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-        retval = btk_bit_alloc(unit_p, unit_p->mmap_aval_p, need, 1, &start);
-        btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+        btk_mutex_enter(&(unit_p->mreg_mutex));
+        retval = btk_bit_alloc(unit_p->mmap_aval_p, need, 1, &start);
+        btk_mutex_exit(&(unit_p->mreg_mutex));
         if (BT_SUCCESS != retval) {
             TRC_STR(BT_TRC_INFO|BT_TRC_MMAP, 
                 "Could not mmap area: Not enough mapping registers.\n");
@@ -357,8 +267,23 @@ int btp_mmap(
         ** Load map regs - setup vme address, address modifier, and function code
         */
         mreg_value = dest_addr & BT_MREG_ADDR_MASK;
-        btk_setup_mreg(unit_p, type, &mreg_value, TRUE);
-        btk_put_mreg_range(unit_p, start, need, BT_LMREG_PCI_2_CABLE, mreg_value);
+        btk_setup_mreg(unit_p, type, &mreg_value, BT_OP_MMAP);
+        {
+            unsigned int mr_idx;
+            for ( mr_idx = start; mr_idx < start+need; mr_idx++, mreg_value += BT_PAGE_SIZE ) {
+                btk_put_mreg(unit_p, mr_idx, BT_LMREG_PCI_2_CABLE, mreg_value);
+                if ( (btk_get_mreg(unit_p, mr_idx, BT_LMREG_PCI_2_CABLE)) != mreg_value ) {
+                    WARN_MSG((LOG_FMT "Verify Write BT_LMREG_PCI_2_CABLE mapping register mr_idx = 0x%.1X failed.\n",
+                                                                                 LOG_ARG, mr_idx));
+                    btk_put_mreg_range(unit_p, start, mr_idx+1-start, BT_LMREG_PCI_2_CABLE, BT_MREG_INVALID);
+                    btk_mutex_enter(&unit_p->mreg_mutex);
+                    btk_bit_free(unit_p->mmap_aval_p, start, need);
+                    btk_mutex_exit(&unit_p->mreg_mutex);
+                    ret_val = -BT_EIO;
+                    goto btp_mmap_end;
+                }
+            }
+        }
 
         /*
         ** Calculate the PCI address
@@ -371,18 +296,14 @@ int btp_mmap(
     /* 
     ** Now manipulate the user VMA to point directly to our device 
     */
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
-    if (remap_page_range(vma_p, vma_p->vm_start,
-#else
-    if (remap_page_range(vma_p->vm_start, 
-#endif
-        pci_addr, length, vma_p->vm_page_prot)) {
+    if (io_remap_page_range(vma_p, vma_p->vm_start,
+                            pci_addr, length, vma_p->vm_page_prot)) {
         TRC_STR(BT_TRC_INFO|BT_TRC_MMAP, "Call to remap_page_range() failed.\n");
         if (need != 0) {
             btk_put_mreg_range(unit_p, start, need, BT_LMREG_PCI_2_CABLE, BT_MREG_INVALID);
-            btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-            (void) btk_bit_free(unit_p, unit_p->mmap_aval_p, start, need);
-            btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+            btk_mutex_enter(&(unit_p->mreg_mutex));
+            (void) btk_bit_free(unit_p->mmap_aval_p, start, need);
+            btk_mutex_exit(&(unit_p->mreg_mutex));
         }
         ret_val = -ENOMEM;
         goto btp_mmap_end;
@@ -400,9 +321,9 @@ int btp_mmap(
         if (element_p == (btk_llist_elem_t *) NULL) {
             INFO_STR("Not enough resources to track mmap request");
             btk_put_mreg_range(unit_p, start, need, BT_LMREG_PCI_2_CABLE, BT_MREG_INVALID);
-            btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-            (void) btk_bit_free(unit_p, unit_p->mmap_aval_p, start, need);
-            btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+            btk_mutex_enter(&(unit_p->mreg_mutex));
+            (void) btk_bit_free(unit_p->mmap_aval_p, start, need);
+            btk_mutex_exit(&(unit_p->mreg_mutex));
             ret_val = -ENOMEM;
             goto btp_mmap_end;
         }
@@ -423,9 +344,9 @@ int btp_mmap(
         **  Note clink_un/lock are not used since the interrpt routine
         **  does not touch the queue.
         */
-        btk_mutex_enter(unit_p, &unit_p->llist_mutex);
+        btk_mutex_enter(&unit_p->llist_mutex);
         btk_llist_insert_first(&unit_p->qh_mmap_requests, element_p);
-        btk_mutex_exit(unit_p, &unit_p->llist_mutex);
+        btk_mutex_exit(&unit_p->llist_mutex);
     }
     
     if (ret_val >= 0) {
@@ -468,11 +389,6 @@ void bt_vmopen(
 
     FENTRY;
 
-#if     LINUX_VERSION_CODE >= (KERNEL_VERSION(2,5,0))
-    (void)try_module_get(THIS_MODULE);
-#else
-    MOD_INC_USE_COUNT;
-#endif
     TRC_STR(BT_TRC_MMAP|BT_TRC_DETAIL, "Incrementing use count.\n");
 
     FEXIT(0);
@@ -515,22 +431,8 @@ void bt_vmclose(
     bt_mtrack_t         *mmap_p = NULL;
     btk_llist_elem_t    *element_p;
     search_t            search_val;
-    unsigned long       dest_addr = vma_p->vm_offset;
 
     FENTRY;
-
-#if EAS_BIND_CODE 
-/* EAS BIND CODE */
-    /* check if mmap for kernel allocated bind buffer */
-    if ((dest_addr) && (dest_addr == (unsigned long)unit_p->bt_kmalloc_buf)) {
-	    vma_p->vm_flags &= ~VM_LOCKED;
-        /* nothing more to do here */
-        goto bt_vmclose_end;
-    }
-#endif /* EAS_BIND_CODE */
-
-
-
 
     /*
     ** If we are mapping driver memory or we did not have to use
@@ -554,7 +456,7 @@ void bt_vmclose(
     search_val.vm_boffset = vma_p->vm_offset;
     search_val.vm_length = vma_p->vm_end - vma_p->vm_start;
     search_val.vm_p = (caddr_t) vma_p;
-    btk_mutex_enter(unit_p, &unit_p->llist_mutex);
+    btk_mutex_enter(&unit_p->llist_mutex);
     element_p = btk_llist_find_first(&unit_p->qh_mmap_requests, mmap_search, &search_val);
     if (element_p != (btk_llist_elem_t *) NULL) {
 
@@ -562,7 +464,7 @@ void bt_vmclose(
         ** Found it
         */
         btk_llist_remove(element_p);
-        btk_mutex_exit(unit_p, &unit_p->llist_mutex);
+        btk_mutex_exit(&unit_p->llist_mutex);
         mmap_p = (bt_mtrack_t *) btk_llist_elem_data(element_p);
         TRC_MSG((BT_TRC_MMAP | BT_TRC_DETAIL), 
                 (LOG_FMT "mmap existed: start %d; need %d\n", 
@@ -572,9 +474,9 @@ void bt_vmclose(
         **  Invalidate the mapping regs and relese bit map bits
         */
         btk_put_mreg_range(unit_p, mmap_p->start_mreg, mmap_p->num_mreg, BT_LMREG_PCI_2_CABLE, BT_MREG_INVALID);
-        btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-        (void) btk_bit_free(unit_p, unit_p->mmap_aval_p, mmap_p->start_mreg, mmap_p->num_mreg);
-        btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+        btk_mutex_enter(&(unit_p->mreg_mutex));
+        (void) btk_bit_free(unit_p->mmap_aval_p, mmap_p->start_mreg, mmap_p->num_mreg);
+        btk_mutex_exit(&(unit_p->mreg_mutex));
 
         /*
         **  Release system resources
@@ -585,16 +487,11 @@ void bt_vmclose(
     ** Did not find it, nothing to do though
     */
     } else {
-        btk_mutex_exit(unit_p, &unit_p->llist_mutex);
+        btk_mutex_exit(&unit_p->llist_mutex);
         TRC_STR((BT_TRC_MMAP | BT_TRC_DETAIL), "Did not find original mmap request");
     }
 
 bt_vmclose_end:
-#if     LINUX_VERSION_CODE >= (KERNEL_VERSION(2,5,0))
-    module_put(THIS_MODULE);
-#else
-    MOD_DEC_USE_COUNT;
-#endif
     TRC_STR(BT_TRC_MMAP|BT_TRC_DETAIL, "Decrementing use count.\n");
 
     FEXIT(0);
@@ -623,34 +520,25 @@ bt_vmclose_end:
 **      Notes:
 **
 *****************************************************************************/
-
-unsigned long bt_vmnopage(
-    struct vm_area_struct *vma_p,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)
-    struct fault_data* fdata
-#else
-    unsigned long address, 
-    int write_access
+#ifndef NOPAGE_SIGBUS
+#define NOPAGE_SIGBUS NULL
 #endif
-    )
+
+struct page *bt_vmnopage(
+    struct vm_area_struct *vma_p,
+    unsigned long address, 
+    int *type_p)
 {
     FUNCTION("bt_vmnopage");
     LOG_DEVID(vma_p->vm_file);
     bt_unit_t           *unit_p = GET_UNIT_PTR(vma_p->vm_file);
     bt_dev_t            type = GET_LDEV_TYPE(vma_p->vm_file);
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,25)
-    unsigned long       dest_addr      = fdata->address - vma_p->vm_start + vma_p->vm_offset;
-#else
-    unsigned long       dest_addr = address - vma_p->vm_start + vma_p->vm_offset;
-#endif
-    unsigned long       page;
-    pgd_t               *pgd_p;
-    pmd_t               *pmd_p;
-    pte_t               *pte_p;
+    struct page         *page_p = NOPAGE_SIGBUS;
     caddr_t             kmem_p;
+    unsigned long       dest_addr = address - vma_p->vm_start + vma_p->vm_offset;
 
     FENTRY;
-
+    
     /*
     ** This function only does something for maps that try to access 
     ** driver memory like the local memory device.  Otherwise
@@ -658,69 +546,30 @@ unsigned long bt_vmnopage(
     */
     if (type == BT_DEV_LM) {
         kmem_p = unit_p->lm_kaddr + dest_addr;
+        page_p = virt_to_page(kmem_p);
     } else if ((type == BT_DEV_DIAG) &&
                (dest_addr >= BT_DIAG_ISR_Q_OFFSET)) {
         kmem_p = (caddr_t) BTK_Q_USE + (dest_addr - BT_DIAG_ISR_Q_OFFSET);
+        page_p = vmalloc_to_page(kmem_p);
     } else {
         FEXIT(0);
         return 0;
     }
 
-    /*
-    ** We need to increment the page count and return the
-    ** physical address of the page.  See book Linux Device Drivers by
-    ** Alessandro Rubini, Chapter 13 on mmap.
-    */
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-    page = (unsigned long)kmem_p;
-#else
-    page = VMALLOC_VMADDR(kmem_p);
-#endif
-
-#if EAS_BIND_CODE
-/* EAS TMP CODE */
-    if (type == BT_DEV_LM)
-    {
-        TRC_MSG((BT_TRC_BIND | BT_TRC_DETAIL), 
-                (LOG_FMT "mmap kernel buf: kernel virt=0x%x kernel phys=0x%x\n",
-                LOG_ARG, (unsigned int)kmem_p, (unsigned int)page));
+    get_page(page_p);
+    if (type_p != NULL) {
+        *type_p = VM_FAULT_MINOR;
     }
-#endif /* EAS_BIND_CODE */
 
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    spin_lock(&init_mm.page_table_lock);
-#endif  /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) */
-
-    pgd_p = pgd_offset(&init_mm, page);
-    pmd_p = pmd_offset(pgd_p, page);
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
-    pte_p = pte_offset_kernel(pmd_p, page);
-#else
-    pte_p = pte_offset(pmd_p, page);
-#endif
-    page = (unsigned long)pte_page(*pte_p);
-
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    spin_unlock(&init_mm.page_table_lock);
-    get_page((struct page *)page);
-#else   /* LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) */
-    atomic_inc(&mem_map[MAP_NR(page)].count);
-#endif  /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) || \
-            LINUX_VERSION_CODE <  KERNEL_VERSION(2,4,0) */
-
-    FEXIT(page);
-    return page;
+    FEXIT(page_p);
+    return page_p;
 }
 static void retrieve_init_mm_ptr(void)
 {
     struct task_struct *t_p;
 
 
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
     for (t_p = current; (t_p = next_task(t_p)) != current; ) {
-#else
-    for (t_p = current; (t_p = t_p->next_task) != current; ) {
-#endif
         if (t_p->pid == 0) {
             break;
         }

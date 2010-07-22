@@ -5,8 +5,8 @@ spectcldaq_SOURCES = spectcldaq.cpp
 INCLUDES=-I@top_srcdir@/Headers -I@top_srcdir@/CopyrightTools \
 	$(SPECTRODAQ_FLAGS)
 
-spectcldaq_LDADD=-L@top_srcdir@/CopyrightTools -lLicense $(SPECTRODAQ_LDFLAGS)
-spectcldaq_LDFLAGS= -Wl,"-rpath=$(libdir)"
+spectcldaq_LDADD=-L@top_srcdir@/CopyrightTools -lLicense $(SPECTRODAQ_LDFLAGS) $(SPECTRODAQ_LDFLAGS)
+spectcldaq_LDFLAGS= -Wl,"-rpath=$(libdir)" 
 
 man_MANS = spectcldaq.1
 

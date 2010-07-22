@@ -12,7 +12,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 2000 by SBS Technologies, Inc.
+**        Copyright (c) 2000-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -25,11 +25,23 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#if defined (__sun)
+#include <sys/time_impl.h>
+#endif /* defined(__sun) */
+
+#if defined (BT951)
+#include <ipc.h>
+#include <sem.h>
+#else
 #include <sys/ipc.h>
 #include <sys/sem.h>
-/* #include <semaphore.h> */
+#endif /* BT951 */
 
-#include "btio.h"
+#if !defined(__linux__)
+#include <semaphore.h>
+#endif /* __linux__ */
+
 #include "btapi.h"
 #include "btpiflib.h"
 
@@ -44,6 +56,11 @@ static size_t bt_bcopy(bt_data8_t *src_p, bt_data8_t *dst_p, size_t length, int 
 
 extern pthread_mutex_t bt_lib_mutex_g;
 extern int bt_sema_id_gp;
+
+#if defined(__sun)
+extern ssize_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
+extern ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset);
+#endif /* defined(__sun) */
 
 
 /*****************************************************************************
@@ -78,7 +95,7 @@ bt_error_t bt_read(
 {
     bt_error_t  retvalue = BT_SUCCESS;
     ssize_t     xfer_done;
-#if defined(BT1003)
+#if defined(BT1003) || defined(FCTACH) || defined (BT951)
 #else
     long        offset = xfer_addr;
     void        *mmap_p = NULL;
@@ -152,7 +169,7 @@ bt_error_t bt_read(
         /* 
         ** Use lseek to position to the correct offset
         */
-#if defined(BT1003)
+#if defined(BT1003) || defined(FCTACH) || defined (BT951)
         if (lseek(btd->fd, xfer_addr, SEEK_SET) == -1) {
             retvalue = BT_EINVAL;
             goto bt_read_end;
@@ -232,7 +249,7 @@ bt_error_t bt_write(
 {
     bt_error_t  retvalue = BT_SUCCESS;
     ssize_t     xfer_done;
-#if defined(BT1003)
+#if defined(BT1003) || defined(FCTACH) || defined (BT951)
 #else
     long        offset = xfer_addr;
     void        *mmap_p = NULL;
@@ -307,7 +324,7 @@ bt_error_t bt_write(
         /* 
         ** Use lseek to position to the correct offset
         */
-#if defined(BT1003)
+#if defined(BT1003) || defined(FCTACH) || defined (BT951)
         if (lseek(btd->fd, xfer_addr, SEEK_SET) == -1) {
             retvalue = BT_EINVAL;
             goto bt_write_end;
@@ -320,6 +337,7 @@ bt_error_t bt_write(
 #else /* BT1003 */
         xfer_done = pwrite(btd->fd, buffer_p, req_len, offset);
 #endif /* BT1003 */
+
         if (xfer_done <= 0) {
             *xfer_len_p = 0;
 #if defined(BT965)
@@ -355,6 +373,7 @@ bt_write_end:
     return retvalue;
 }
 
+#ifndef FCTACH
 /*****************************************************************************
 **
 **      Name:           bt_hw_read
@@ -488,6 +507,7 @@ bt_error_t bt_hw_write(
 bt_hw_write_end:
     return retvalue;
 }
+#endif  /* FCTACH */
 
 #if defined(BT965)
 /******************************************************************************

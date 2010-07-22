@@ -25,10 +25,166 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #include	<string.h>
 #include	<assert.h>
 
-#include	"btapi.h"
-#include	"btio.h"
+#include "btapi.h"
+#include "btpiflib.h"
 
 
+#ifdef FCTACH
+/*****************************************************************************
+**
+**	Name:		bt_gen_name_from_cardno
+**
+**	Purpose:	Creates device name from card number
+**
+**	Args:
+**	    cardno	Card number to open
+**	    name_p	Buffer to stuff name into
+**	    max_len	Maximum number of characters in name
+**
+**	Modifies:
+**	    name_p
+**	    
+**	Returns:
+**	    NULL	Error
+**	    Otherwise	Pointer to beginning of string name, will be same as
+**			value of name_p.
+**
+**	Notes:
+**	Make sure you don't overflow the buffer the user passes in. Right now,
+**	the routine is doing redundent checks for this.
+**
+*****************************************************************************/
+
+char * bt_gen_name_from_cardno(
+    int		cardno,		/* Which card number */
+    char	*name_p,	/* Pointer to buffer to hold the name */
+    size_t	max_len		/* Size of said buffer */
+    )
+{
+    char	*retvalue = NULL;	/* Assume error return */
+
+    char tmp_buf[4];    		/* Space for creating number */
+
+    const char *dev_str_p = "/dev/" BT_DRV_NAME; /* Name of the device */
+    /*  "/dev/sbsfctach" Linux FC Tachyon Name of the device */
+    const int	dev_len = strlen(dev_str_p);
+    int max_cards = (0x100 - (BT_MAX_UNITS << BT_DEV_SHFT));
+
+    memset(name_p, '\0', max_len);
+
+    if ((cardno < 0) || ((max_cards - 1) < cardno)) {
+	    /* cardno is out of range of supported cardnos */
+    	fprintf(stderr, "Cardno %d is out of range.\n", cardno);
+    	goto bt_gen_name_end;
+    }
+
+    /* Create minor number portion of the name */
+    sprintf(tmp_buf, "%d", cardno);
+
+    /* +1 for terminating null char */
+    if (max_len < (strlen(tmp_buf) + dev_len + 1)) {
+    	/* Need a longer buffer than that! */
+	    fprintf(stderr, "Device name %s%s longer than %d characters.",
+	        dev_str_p, tmp_buf, max_len);
+    	goto bt_gen_name_end;
+    }
+
+    (void) strcpy(name_p, dev_str_p);
+    (void) strcat(name_p, tmp_buf);
+
+    retvalue = name_p;
+
+bt_gen_name_end:
+     return retvalue;
+}
+
+
+/*****************************************************************************
+**
+**	Name:		bt_gen_name_from_devno_cardno
+**
+**	Purpose:	Creates device name from card number and unit number
+**
+**	Args:
+**	    cardno	Card number to open
+**	    devno	Device on card to open
+**	    name_p	Buffer to stuff name into
+**	    max_len	Maximum number of characters in name
+**
+**	Modifies:
+**	    name_p
+**	    
+**	Returns:
+**	    NULL	Error
+**	    Otherwise	Pointer to beginning of string name, will be same as
+**			value of name_p.
+**
+**	Notes:
+**	Make sure you don't overflow the buffer the user passes in. Right now,
+**	the routine is doing redundent checks for this.
+**
+*****************************************************************************/
+
+char * bt_gen_name_from_devno_cardno(
+    int		cardno,		/* Which card number */
+    int		devno,		/* Which device number */
+    char	*name_p,	/* Pointer to buffer to hold the name */
+    size_t	max_len		/* Size of said buffer */
+    )
+{
+    char	*retvalue = NULL;	/* Assume error return */
+
+    char tmp_buf[4];    		/* Space for creating number */
+
+    const char *dev_str_p = "/dev/" BT_DRV_NAME; /* Name of the device */
+    /*  "/dev/sbsfctach" Linux FC Tachyon Name of the device */
+    const int	dev_len = strlen(dev_str_p);
+    int max_cards = (0x100 - (BT_MAX_UNITS << BT_DEV_SHFT));
+
+    memset(name_p, '\0', max_len);
+
+    if ((cardno < 0) || ((max_cards - 1) < cardno)) {
+	    /* cardno is out of range of supported cardnos */
+    	fprintf(stderr, "Cardno %d is out of range.\n", cardno);
+    	goto bt_gen_name_end;
+    }
+
+    if ((devno <= 0) || (BT_MAX_UNITS < cardno)) {
+        if (devno == 0) {
+    	    /* devno zero is reserved for card only access */
+        	fprintf(stderr, "Device number 0 is reserved for adapter only access.\n");
+        } else {
+    	    /* devno is out of range of supported cardnos */
+        	fprintf(stderr, "Device number %d is out of range.\n", devno);
+        }
+    	goto bt_gen_name_end;
+    }
+
+    /* Create minor number portion of the name */
+    sprintf(tmp_buf, "%d", (cardno + (devno << BT_DEV_SHFT)));
+
+    /* +1 for terminating null char */
+    if (max_len < (strlen(tmp_buf) + dev_len + 1)) {
+    	/* Need a longer buffer than that! */
+	    fprintf(stderr, "Device name %s%s longer than %d characters.",
+	        dev_str_p, tmp_buf, max_len);
+    	goto bt_gen_name_end;
+    }
+
+    (void) strcpy(name_p, dev_str_p);
+    (void) strcat(name_p, tmp_buf);
+
+    retvalue = name_p;
+
+bt_gen_name_end:
+     return retvalue;
+}
+
+
+#else /* FCTACH */
+/* DATA BLIZZARD */
+
+
 /*****************************************************************************
 **
 **	Name:		bt_gen_name
@@ -103,7 +259,7 @@ char * bt_gen_name(
 	/* Need a longer buffer than that! */
 #if	defined(DEBUG)
 	fprintf(stderr, "Device name %s%s longer than %d characters.",
-	    dev_str_p, &tmp_buf[0], max_len);
+	    dev_str_p, &tmp_buf[0], (int) max_len);
 #endif	/* defined(DEBUG) */
 	goto bt_gen_name_end;
     }
@@ -116,5 +272,7 @@ char * bt_gen_name(
 bt_gen_name_end:
      return retvalue;
 }
+#endif /* FCTACH */
+
 #undef	BUF_LEN
 #undef	BUF_LIMIT

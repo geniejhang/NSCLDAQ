@@ -25,6 +25,8 @@
 #include <CopyrightNotice.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <errno.h>
+#include <string.h>
 
 #include <stdlib.h>
 
@@ -39,7 +41,7 @@ using namespace std;
 #define TRUE 1
 #endif
 
-static char* pCopyrightNotice = 
+static const char* pCopyrightNotice = 
 "(C) Copyright 1999 NSCL, All rights reserved .cpp \n";
 
 static const string kDefaultHost = string("localhost");
@@ -69,8 +71,8 @@ static const string kZeroScript =
 // resets optindex ->1) and ignores switches which don't match, continuing
 // to the next switch.
 //
-static char* optvalue;
-static int mygetopt(int argc, char** argv, char* pSwitch) 
+static const char* optvalue;
+static int mygetopt(int argc, char** argv, const char* pSwitch) 
 {
   bool hasValue =FALSE;
   optvalue        = "\0";
@@ -451,7 +453,7 @@ CScalerClient::GetRemotePort(int nArgs, char** pArgs)
 //   Static utility.
 //
 Bool_t
-CScalerClient::GetSwitchParameter(string& rValue, char* pSwitch, 
+CScalerClient::GetSwitchParameter(string& rValue, const char* pSwitch, 
 				  int nArgs, char** pArgs)
 {
   // Look for a particular switch and return its value.
@@ -683,7 +685,11 @@ CScalerClient::WarnDefaultSource()
     cerr << "Xwindows environment" << endl;
     string program(INSTDIR);
     program += "/bin/scalerlocal.tk";
-    system(program.c_str());
+    int status = system(program.c_str());
+    if (status) {
+      int e = errno;
+      cerr << "Failed to system(" << program << ") : " << strerror(errno) << endl;
+    }
 
   } else {			// Text console only.
     cerr << "sclclient - WARNING: the default data source is being\n";

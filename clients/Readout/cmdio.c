@@ -33,6 +33,8 @@
 #include    <ctype.h>
 #include    <time.h>
 #include    <stdio.h>
+#include    <string.h>
+
 #include    "daqdatatypes.h"
 #include    "cmdio.h"
 
@@ -168,7 +170,7 @@ char*
 getlin(FILE* fin, char* str, int cnt)
 {
   int n;
-  fgets(str, cnt, fin);
+  char* result = fgets(str, cnt, fin);
   n = strlen(str);
   
   /*  Need to trim any newline off the string. */
@@ -240,7 +242,7 @@ strtoken(const char* str, const char* sep, char* token)
 {
     /*		External functions	    */
 
-    int    strchr();			/* Is character in string	*/
+
 
 
     while (*str && strchr(sep, *str))
@@ -283,7 +285,7 @@ fndkey(const char* key, const char** tbl, unsigned nkeys)
     int    i;
     int    lastfnd, numfound;
     int    len;
-    int    strcmp();
+
 
     lastfnd = -1;			    /* Most recent match.	 */
     numfound = 0;			    /* Number of matches	 */
@@ -337,7 +339,6 @@ fndkey(const char* key, const char** tbl, unsigned nkeys)
 int    fndkeyex(const char* key, const char** tbl,  unsigned nkeys)
 {
     int    i;
-    int    strcmp();
 
     for (i=0;  i < nkeys;  i++)
 	if (strcmp(key, *tbl) == 0)	    /* Return index when match	*/

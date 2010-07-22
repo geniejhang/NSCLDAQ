@@ -2,7 +2,7 @@
 **
 **      Filename:       bt_setup.c
 **
-**      Purpose:        Bit 3 PCI Adaptor device driver module.
+**      Purpose:        PCI Adaptor device driver module.
 **                      Initializes adapter.
 **
 **      $Revision$
@@ -10,7 +10,7 @@
 ****************************************************************************/
 /****************************************************************************
 **
-**        Copyright (c) 2000 by SBS Technologies, Inc.
+**        Copyright (c) 2000-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -42,14 +42,9 @@ extern void btk_peer2peer_init(bt_unit_t *unit_p);
 bt_data32_t btk_get_io(bt_unit_t *unit_p, bt_reg_t reg); 
 void btk_put_io(bt_unit_t *unit_p, bt_reg_t reg, bt_data32_t value); 
 
-/* 
+/*
 ** Local defines
 */
-#define LOCK_DEVICE(u_p)    btk_mutex_enter((u_p), &(u_p)->dma_mutex); \
-                            btk_rwlock_wr_enter((u_p), &(u_p)->hw_rwlock);
-
-#define UNLOCK_DEVICE(u_p)  btk_rwlock_wr_exit((u_p), &(u_p)->hw_rwlock); \
-                            btk_mutex_exit((u_p), &(u_p)->dma_mutex);
 
 /*
 **  List local variables here
@@ -69,13 +64,17 @@ BT_FILE_NUMBER(TRACE_BT_SETUP_C);
 **      Returns:        void
 **
 **      Notes:  Must be called with the unit completely locked.
+**                Must hold dma_mutex
+**                          hw_rwlock
+**                          mreg_mutex
+**                          BTK_ISR_LOCK
 **
 ******************************************************************************/
 void btk_setup( 
   bt_unit_t *unit_p)
 {
     FUNCTION("btk_setup");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     int                 bad_combo;
     bt_data32_t         tmp_reg;
@@ -234,10 +233,14 @@ void btk_setup(
 #if  EAS_A64_CODE
 /* EAS A64 */
         if ((unit_p->loc_id == BT_PN_PCI_DB) ||
-            (unit_p->loc_id == BT_PN_PCI_DBA64_RPQ)) {
+            (unit_p->loc_id == BT_PN_PCI_DBA64_RPQ))
 #else
-        if (unit_p->loc_id == BT_PN_PCI_DB) {
+        if (unit_p->loc_id == BT_PN_PCI_DB)
 #endif  /* EAS_A64_CODE */
+        /* Moved the open bracket outside of the the #if statement to improve
+         * readability of the the opening and closing braces.
+         */
+        {
 
             unit_p->kern_addr[BT_AXSLDP] = unit_p->mreg_p + BT_CMR_DP_OFFSET;
             unit_p->kern_length[BT_AXSLDP] = BT_CMR_DP_SIZE;
@@ -261,19 +264,6 @@ void btk_setup(
         unit_p->kern_addr[BT_AXSRE] = NULL;
         unit_p->kern_length[BT_AXSRE] = 0;
         unit_p->logstat[BT_AXSRE] = STAT_ONLINE;
-				/* VME-P Geographical addressing. */
-        unit_p->kern_addr[BT_AXSGEO] = NULL;
-        unit_p->kern_length[BT_AXSGEO] = 0;
-        unit_p->logstat[BT_AXSGEO] = STAT_ONLINE;
-				/* VME-P Multicast control addressing */
-	unit_p->kern_addr[BT_AXSMCCTL]   = NULL;
-	unit_p->kern_length[BT_AXSMCCTL] = 0;
-	unit_p->logstat[BT_AXSMCCTL]     = STAT_ONLINE;
-				/* VME-P Chained block transfer. */
-	unit_p->kern_addr[BT_AXSCBLT]    = NULL;
-	unit_p->kern_length[BT_AXSCBLT]  = 0;
-	unit_p->logstat[BT_AXSCBLT]      = STAT_ONLINE;
-
         
     } else if (IS_SET(unit_p->bt_status, BT_PCI2PCI) &&
                IS_SET(unit_p->bt_status, BT_NEXT_GEN)) {
@@ -298,24 +288,7 @@ void btk_setup(
         unit_p->kern_length[BT_AXSRE] = 0;
         unit_p->logstat[BT_AXSRE] = STAT_ONLINE | STAT_READ | STAT_WRITE | STAT_DMA | STAT_BIND | STAT_MMAP;
 
-
-				/* VME-P Geographical addressing */
-        unit_p->kern_addr[BT_AXSGEO] = NULL;
-        unit_p->kern_length[BT_AXSGEO] = 0;
-        unit_p->logstat[BT_AXSGEO] = STAT_ONLINE;
-				/* VME-P multicast control addressing */
-	unit_p->kern_addr[BT_AXSMCCTL]   = NULL;
-	unit_p->kern_length[BT_AXSMCCTL] = 0;
-	unit_p->logstat[BT_AXSMCCTL]     = STAT_ONLINE;
-				/* VME-P Chained block transfer */
-	unit_p->kern_addr[BT_AXSCBLT]    = NULL;
-	unit_p->kern_length[BT_AXSCBLT]  = 0;
-	unit_p->kern_length[BT_AXSCBLT]  = STAT_ONLINE;
- 
-
-        btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-        btk_map_half(unit_p, unit_p->mmap_aval_p);
-        btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+        btk_map_half(unit_p->mmap_aval_p);
       
     } else if (IS_SET(unit_p->bt_status, BT_PCI2PCI) &&
                IS_CLR(unit_p->bt_status, BT_NEXT_GEN)) {
@@ -336,22 +309,7 @@ void btk_setup(
         unit_p->kern_addr[BT_AXSRE] = unit_p->rmem_p;
         unit_p->kern_length[BT_AXSRE] = 0;
         unit_p->logstat[BT_AXSRE] = STAT_ONLINE | STAT_READ | STAT_WRITE | STAT_DMA | STAT_BIND | STAT_MMAP;
-				/* VME-P Geographical addressing. */
-        unit_p->kern_addr[BT_AXSGEO] = NULL;
-        unit_p->kern_length[BT_AXSGEO] = 0;
-        unit_p->logstat[BT_AXSGEO] = STAT_ONLINE;
-				/* VME-P Multicast control addressing. */
-        unit_p->kern_addr[BT_AXSMCCTL] = NULL;
-        unit_p->kern_length[BT_AXSMCCTL] = 0;
-        unit_p->logstat[BT_AXSMCCTL] = STAT_ONLINE;
- 				/* VME-P Chained block transfer. */
-        unit_p->kern_addr[BT_AXSCBLT] = NULL;
-        unit_p->kern_length[BT_AXSCBLT] = 0;
-        unit_p->logstat[BT_AXSCBLT] = STAT_ONLINE;
-
-        btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-        btk_map_half(unit_p, unit_p->mmap_aval_p);
-        btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+        btk_map_half(unit_p->mmap_aval_p);
         
     } else if (IS_CLR(unit_p->bt_status, BT_PCI2PCI) &&
                IS_SET(unit_p->bt_status, BT_NEXT_GEN)) {
@@ -374,24 +332,7 @@ void btk_setup(
         unit_p->kern_addr[BT_AXSRE] = unit_p->rmem_p;
         unit_p->kern_length[BT_AXSRE] = 0;
         unit_p->logstat[BT_AXSRE] = STAT_ONLINE | STAT_READ | STAT_WRITE | STAT_DMA | STAT_BIND | STAT_MMAP;
-
-				/* VME-P Geographical addressing. */
-        unit_p->kern_addr[BT_AXSGEO] = unit_p->rmem_p;
-        unit_p->kern_length[BT_AXSGEO] = 0;
-        unit_p->logstat[BT_AXSGEO] = STAT_ONLINE | STAT_READ | STAT_WRITE | STAT_DMA | STAT_BIND | STAT_MMAP;
-				/* VME-P Multicast control addressing. */
-        unit_p->kern_addr[BT_AXSMCCTL] = unit_p->rmem_p;
-        unit_p->kern_length[BT_AXSMCCTL] = 0;
-        unit_p->logstat[BT_AXSMCCTL] = STAT_ONLINE | STAT_READ | STAT_WRITE | STAT_DMA | STAT_BIND | STAT_MMAP;
-				/* VME-P Chained block transfer addressing. */
-        unit_p->kern_addr[BT_AXSCBLT] = unit_p->rmem_p;
-        unit_p->kern_length[BT_AXSCBLT] = 0;
-        unit_p->logstat[BT_AXSCBLT] = STAT_ONLINE | STAT_READ | STAT_WRITE | STAT_DMA | STAT_BIND | STAT_MMAP;
-
- 
-        btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-        btk_map_restore(unit_p, unit_p->mmap_aval_p);
-        btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+        btk_map_restore(unit_p->mmap_aval_p);
         
     } else {
         /* PCI to VME, but old Nanobus product */
@@ -412,23 +353,7 @@ void btk_setup(
         unit_p->kern_addr[BT_AXSRE] = unit_p->rmem_p;
         unit_p->kern_length[BT_AXSRE] = 0;
         unit_p->logstat[BT_AXSRE] = STAT_ONLINE | STAT_READ | STAT_WRITE | STAT_DMA | STAT_BIND | STAT_MMAP;
-				/* VME-P Geographical addressing */
-        unit_p->kern_addr[BT_AXSGEO] = unit_p->rmem_p;
-        unit_p->kern_length[BT_AXSGEO] = 0;
-        unit_p->logstat[BT_AXSGEO] = STAT_ONLINE | STAT_READ | STAT_WRITE | STAT_DMA | STAT_BIND | STAT_MMAP;
-				/* VME-P Multicast control  addressing */
-        unit_p->kern_addr[BT_AXSMCCTL] = unit_p->rmem_p;
-        unit_p->kern_length[BT_AXSMCCTL] = 0;
-        unit_p->logstat[BT_AXSMCCTL] = STAT_ONLINE | STAT_READ | STAT_WRITE | STAT_DMA | STAT_BIND | STAT_MMAP;
-				/* VME-P Chained block transfer addressing */
-        unit_p->kern_addr[BT_AXSCBLT] = unit_p->rmem_p;
-        unit_p->kern_length[BT_AXSCBLT] = 0;
-        unit_p->logstat[BT_AXSCBLT] = STAT_ONLINE | STAT_READ | STAT_WRITE | STAT_DMA | STAT_BIND | STAT_MMAP;
-
-
-        btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-        btk_map_restore(unit_p, unit_p->mmap_aval_p);
-        btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+        btk_map_restore(unit_p->mmap_aval_p);
     }
 
     /*
@@ -535,9 +460,7 @@ void btk_setup(
                 ** Release map regs allocated in btk_setpage()
                 */
                 if (save_page.mreg_need != 0) {
-                    btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-                    btk_bit_free(unit_p, unit_p->mmap_aval_p, save_page.mreg_start, save_page.mreg_need);
-                    btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+                    btk_bit_free(unit_p->mmap_aval_p, save_page.mreg_start, save_page.mreg_need);
                 }
             } else {
                 CLR_BIT(unit_p->logstat[BT_AXSDP], STAT_ONLINE);
@@ -579,7 +502,7 @@ bool_t btk_invalid_op(
     bt_operation_t op)
 {
     FUNCTION("btk_invalid_op");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bool_t              invalid = FALSE;
     BTK_LOCK_RETURN_T   isr_pl;
@@ -607,7 +530,9 @@ bool_t btk_invalid_op(
         /*
         ** Prevent PIO and DMA from occuring
         */
-        LOCK_DEVICE(unit_p);
+        btk_mutex_enter(&(unit_p)->dma_mutex); \
+        btk_rwlock_wr_enter(&(unit_p)->hw_rwlock);
+        btk_mutex_enter(&(unit_p->mreg_mutex));
 
         /*
         ** Again lock out the interrupt handler while we do a setup
@@ -619,7 +544,9 @@ bool_t btk_invalid_op(
         /*
         ** Release the unit lock
         */
-        UNLOCK_DEVICE(unit_p);
+        btk_mutex_exit(&(unit_p->mreg_mutex));
+        btk_rwlock_wr_exit(&(unit_p)->hw_rwlock); \
+        btk_mutex_exit(&(unit_p)->dma_mutex);
     }
 
     /*
@@ -714,7 +641,7 @@ bool_t btk_invalid_offset(
     bt_data32_t length)
 {
     FUNCTION("btk_invalid_offset");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bool_t          invalid = FALSE;
     bt_data64_t     max_off;
@@ -755,13 +682,9 @@ bool_t btk_invalid_offset(
       case BT_DEV_A16:
         max_off = BT_AMOD_A16_MAX;
         break;
-    case BT_DEV_GEO:
       case BT_DEV_A24:
         max_off = BT_AMOD_A24_MAX;
         break;
-
-    case BT_DEV_MCCTL:
-    case BT_DEV_CBLT:
       case BT_DEV_A32:
       case BT_AXSRE:
 #if defined(__vxworks)
@@ -832,3 +755,172 @@ bool_t btk_invalid_offset(
     return invalid;
 }
 
+/******************************************************************************
+**
+**      Function:       btk_init_swapping()
+**
+**      Purpose:        Initializes default swapping modes.
+**
+**      Args:           unit_p      Unit pointer
+**
+**      Returns:        TRUE        Success
+**                      FALSE       
+**
+**      Notes:
+**
+******************************************************************************/
+
+int btk_init_swapping (bt_unit_t * unit_p)
+{
+    FUNCTION("btk_init_swapping");
+    LOG_UNIT(unit_p->unit_number);
+    
+    int     inx = 0;
+    int     ret_val = 0;
+
+    FENTRY;
+    
+    /*
+    **  Setup swapping bits for logical unit_p->dev_vertexs depending on what 
+    **  type of Adaptor we have
+    */
+    for (inx = 0; inx < BT_MAX_AXSTYPS; inx++) 
+    {
+        switch (unit_p->rem_id) 
+        {
+            /*
+             * The remote side is a PCI bus based card.
+             */
+            case BT_PN_PCI_DMA:
+            case BT_PN_PCI_NODMA:
+            case BT_PN_PCI_FIBER:
+            case BT_PN_PCI_DB:
+
+#if  EAS_A64_CODE /* EAS A64 */
+            case BT_PN_PCI_DBA64_RPQ:
+#endif  /* EAS_A64_CODE */
+
+                unit_p->swap_bits[inx] = BT_SWAP_VMEBUS;
+
+#if defined (BT965) 
+                unit_p->window.default_swap = BT_SWAP_VMEBUS;
+#elif defined (BT993)
+                unit_p->window.default_swap = BT_SWAP_VMEBUS;
+#if (CPU_FAMILY == PPC) 
+                unit_p->swap_bits[inx] = BT_SWAP_BSBD;
+                unit_p->window.default_swap = BT_SWAP_BSBD;
+#endif /* (CPU_FAMILY == PPC) */
+#endif /* defined(BT965) */
+
+                break;
+
+            /*
+             * The remote side is a VMEbus based card.
+             */
+            case BT_PN_VME_NOINC:
+            case BT_PN_VME_NODMA:
+            case BT_PN_VME_SDMA:
+            /* case BT_PN_VME_SDMA_64:BT_PN_VME_SDMA_64 == BT_PN_VME_FIBER_D64 */
+            case BT_PN_VME2_DMA:
+            case BT_PN_VME_DMA:
+            case BT_PN_VME:
+            /* case BT_PN_VME2:  BT_PN_VME2 == BT_PN_VME_NODMA above.     */
+            case BT_PN_VME_FIBER:
+            case BT_PN_VME_A24:
+            case BT_PN_VME_PCI:	/* EXPN may not be supported by this driver. */
+            case BT_PN_VME64:	/* 2866 may not be supported by this driver. */
+            case BT_PN_VME_NBDG:/* NBDG may not be supported by this driver. */
+            case BT_PN_VME_DB:
+                unit_p->swap_bits[inx] = BT_SWAP_VMEBUS;
+
+#if defined (BT965) 
+                unit_p->window.default_swap = BT_SWAP_VMEBUS;
+#elif defined (BT993)
+                unit_p->window.default_swap = BT_SWAP_VMEBUS;
+#endif
+
+                break;
+
+            /*
+             * The remote side is a Qbus based card.
+             */
+            case BT_PN_QBUS:
+                unit_p->swap_bits[inx] = BT_SWAP_QBUS;
+
+#if defined (BT965) 
+                unit_p->window.default_swap = BT_SWAP_QBUS;
+#elif defined (BT993)
+                unit_p->window.default_swap = BT_SWAP_QBUS;
+#endif
+
+                break;
+
+            /*
+             * The remote side is a Multibus based card.
+             */
+            case BT_PN_MB:
+                unit_p->swap_bits[inx] = BT_SWAP_MULTIBUS;
+
+#if defined (BT965)
+                unit_p->window.default_swap = BT_SWAP_MULTIBUS;
+#elif defined (BT993)
+                unit_p->window.default_swap = BT_SWAP_MULTIBUS;
+#endif
+
+                break;
+
+            /*
+             * The remote side is an unknown bus based card.
+             */
+            case BT_PN_UNKNOWN:
+            default:
+            /*
+            ** For next gen assume PCI to PCI
+            */
+
+#if  EAS_A64_CODE /* EAS A64 */
+
+                if ((unit_p->loc_id == BT_PN_PCI_DB) ||
+                    (unit_p->loc_id == BT_PN_PCI_DBA64_RPQ))
+
+#else
+
+                if (unit_p->loc_id == BT_PN_PCI_DB)
+
+#endif  /* EAS_A64_CODE */
+
+                {
+                    unit_p->swap_bits[inx] = BT_SWAP_NONE;
+
+#if defined (BT965) 
+                    unit_p->window.default_swap = BT_SWAP_NONE;
+#elif defined (BT993)
+                    unit_p->window.default_swap = BT_SWAP_NONE;
+#endif
+
+                } else {
+                    unit_p->swap_bits[inx] = BT_SWAP_VMEBUS;
+
+#if defined (BT965) 
+                    unit_p->window.default_swap = BT_SWAP_VMEBUS;
+#elif defined (BT993)
+                    unit_p->window.default_swap = BT_SWAP_VMEBUS;
+#if (CPU_FAMILY == PPC) 
+                    unit_p->swap_bits[inx] = BT_SWAP_BSBD;
+                    unit_p->window.default_swap = BT_SWAP_BSBD;
+#endif /* (CPU_FAMILY == PPC) */
+#endif /* end defined(BT965) */
+
+                }
+
+                break;
+
+        } /* End switch statement */
+    } /* End for loop */
+
+    /* Take care of the local memory device */
+    unit_p->swap_bits[BT_DEV_LM] = BT_SWAP_NONE;
+
+    FEXIT(ret_val);
+    return ret_val;
+}

@@ -42,17 +42,17 @@ static const char file_rev[] = "$Revision$";
 #undef  BIT_ERROR
 #define BIT_ERROR(bit_no, exp, rec) INFO_MSG((LOG_FMT \
           "Data error: bit #%8d,  expected = 0x%8x  received = 0x%8x\n", \
-          LOG_ARG, (int) bit_no, (bt_devaddr_t) (exp & 0xffff), (bt_data32_t) rec));
+          LOG_ARG, (int) bit_no, (bt_data32_t) (exp & 0xffff), (bt_data32_t) rec));
 
 
 #undef  ADDR_ERROR
 #define ADDR_ERROR(bit_no, hi_lo, addr1, addr2) INFO_MSG((LOG_FMT \
-          "Address error: bit #%8d is stuck %s,  zero addr = 0x%8x  test addr = 0x%8x\n", \
+          "Address error: bit #%8d is stuck %s,  zero addr = 0x%8lx  test addr = 0x%8lx\n", \
           LOG_ARG, (int) bit_no, hi_lo, (bt_devaddr_t) addr1, (bt_devaddr_t) addr2));
 
 #undef  ADDRS_ERROR
 #define ADDRS_ERROR(bit_no, addr1, addr2) INFO_MSG((LOG_FMT \
-          "Address error: bit #%8d is shorted,  bad addr = 0x%8x  test addr = 0x%8x\n", \
+          "Address error: bit #%8d is shorted,  bad addr = 0x%8lx  test addr = 0x%8lx\n", \
           LOG_ARG, (int) bit_no, (bt_devaddr_t) addr1, (bt_devaddr_t) addr2));
 
 #define DO_DMA (1)
@@ -69,15 +69,16 @@ static const char file_rev[] = "$Revision$";
 #define FULL_TEST_LEN   (8 * SIZE_1K) /* Check all lengths up to 8K */
 #define POWER_TEST_LEN  (16 * SIZE_1K) /* Go by powers of two from 16K up */
 #define MAX_TEST_OFFSET (16)
+#define MAX_ADJ_TABLE 128
 
+
+/* Memory test */
+#define DEF_MEM_TEST_LEN    0x10000 /* 65536 */
 
 /* Sanity check the #defines */
 #if (POWER_TEST_LEN & (POWER_TEST_LEN - 1))
 #error POWER_TEST_LEN needs to be a power of 2!
 #endif /* POWER_TEST_LEN */
-
-#define MAX_ADJ_TABLE 128
-
 
 #if (POWER_TEST_LEN <= (FULL_TEST_LEN + MAX_ADJ_TABLE))
 #error POWER_TEST_LEN needs to be larger than FULL_TEST_LEN + MAX_ADJ_TABLE
@@ -183,6 +184,10 @@ extern void btk_put_mreg_range(bt_unit_t *unit_p, unsigned int mre_start, unsign
 */
 BT_FILE_NUMBER(TRACE_BT_DIAG_C);
   
+/* Memory print gate */
+int phys_addr_print_len = DEF_MEM_TEST_LEN;
+
+
 /******************************************************************************
 **
 **      Function:       btk_driver_version()
@@ -209,7 +214,7 @@ bt_error_t btk_driver_version(
     bt_hw_diag_t *diag_p)
 {
     FUNCTION("btk_driver_version");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     bt_data32_t           lnumber = 0;
     bt_error_t            retval = BT_SUCCESS;
@@ -220,7 +225,7 @@ bt_error_t btk_driver_version(
     **  Validate arguments
     */
     if (NULL == diag_p) {
-        INFO_STR("Diagnostic parameter sturcture is a NULL.");
+        INFO_STR("Diagnostic parameter structure is a NULL.");
         lnumber = __LINE__;
         retval = BT_EINVAL;
         goto btk_driver_version_end;
@@ -363,7 +368,7 @@ bt_error_t btk_lcard_diag(
     bt_hw_diag_t *diag_p)
 {
     FUNCTION("btk_lcard_diag");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     bt_data32_t           lnumber = 0;
     bt_error_t            retval = BT_SUCCESS;
@@ -832,11 +837,13 @@ if (0) {
         ** Make sure counts got incremented
         */
         if (unit_p->sig_count != (total_irq + 1)) {
+            lnumber = __LINE__;
             INFO_STR("Failed interrupt test, total count mismatch");
             retval = BT_ELCARD;
             goto pci_pio_end;
         } 
         if (unit_p->sig_prg_cnt != (prg_irq + 1)) {
+            lnumber = __LINE__;
             INFO_STR("Failed interrupt test, programmed count mismatch");
             retval = BT_ELCARD;
             goto pci_pio_end;
@@ -861,9 +868,9 @@ pci_pio_end:
     ** Free the mapping RAM allocated during the btk_setpage()
     */
     if (page.mreg_need != 0) {
-        btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-        btk_bit_free(unit_p, unit_p->mmap_aval_p, page.mreg_start, page.mreg_need);
-        btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+        btk_mutex_enter(&unit_p->mreg_mutex);
+        btk_bit_free(unit_p->mmap_aval_p, page.mreg_start, page.mreg_need);
+        btk_mutex_exit(&unit_p->mreg_mutex);
     }
     
 btk_lcard_diag_end:
@@ -954,7 +961,7 @@ bt_error_t btk_cable_diag(
     bt_hw_diag_t *diag_p)
 {
     FUNCTION("btk_cable_diag");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     bt_data32_t     lnumber = 0;
     bt_error_t      retval = BT_SUCCESS;
@@ -1168,9 +1175,9 @@ pci_pio_end:
     ** Free the mapping RAM allocated during the btk_setpage()
     */
     if (page.mreg_need != 0) {
-        btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-        btk_bit_free(unit_p, unit_p->mmap_aval_p, page.mreg_start, page.mreg_need);
-        btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+        btk_mutex_enter(&unit_p->mreg_mutex);
+        btk_bit_free(unit_p->mmap_aval_p, page.mreg_start, page.mreg_need);
+        btk_mutex_exit(&unit_p->mreg_mutex);
     }
     
 btk_cable_diag_end:
@@ -1240,7 +1247,7 @@ bt_error_t btk_rcard_diag(
     bt_hw_diag_t *diag_p)
 {
     FUNCTION("btk_rcard_diag");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     bt_data32_t     lnumber = 0;
     bt_error_t      retval = BT_SUCCESS;
@@ -1354,9 +1361,9 @@ bt_error_t btk_rcard_diag(
     ** Setup an mmap pointer to Remote RAM
     */
     mreg_need = (diag_p->r_len / BT_617_PAGE_SIZE) + 1;
-    btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-    retval = btk_bit_alloc(unit_p, unit_p->mmap_aval_p, mreg_need, 1, &mreg_start);
-    btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+    btk_mutex_enter(&unit_p->mreg_mutex);
+    retval = btk_bit_alloc(unit_p->mmap_aval_p, mreg_need, 1, &mreg_start);
+    btk_mutex_exit(&unit_p->mreg_mutex);
     if (retval != BT_SUCCESS) {
         INFO_STR("Unable to allocate mapping reg for remote testing");
         retval = BT_ENOMEM;
@@ -1402,9 +1409,9 @@ pci_pio_end:
     /*
     ** Free the mapping RAM allocated during the btk_setpage()
     */
-    btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-    btk_bit_free(unit_p, unit_p->mmap_aval_p, mreg_start, mreg_need);
-    btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+    btk_mutex_enter(&unit_p->mreg_mutex);
+    btk_bit_free(unit_p->mmap_aval_p, mreg_start, mreg_need);
+    btk_mutex_exit(&unit_p->mreg_mutex);
     
 btk_rcard_diag_end:
     diag_p->error = retval;
@@ -1474,7 +1481,7 @@ bt_error_t btk_pair_diag(
     bt_hw_diag_t *diag_p)
 {
     FUNCTION("btk_pair_diag");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     bt_data32_t     lnumber = 0;
     bt_error_t      retval = BT_SUCCESS;
@@ -1727,7 +1734,7 @@ int data_bus(
     int                     bit_number;
 
     FUNCTION("data_bus");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
  
     FENTRY;
   
@@ -1916,7 +1923,7 @@ int address_bus(
     int                     error = 0;
 
     FUNCTION("address_bus");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
  
     FENTRY;
 
@@ -2156,7 +2163,7 @@ int access_width(
     int                     error = 0;
 
     FUNCTION("access_width");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
  
     FENTRY;
 
@@ -2332,7 +2339,7 @@ int cell_integrity(
     int                     error = 0;
 
     FUNCTION("cell_integrity");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
  
     FENTRY;
 
@@ -2397,7 +2404,7 @@ int cell_integrity(
         read_pattern = *lword_verify_p;
         if ( read_pattern != (bt_data32_t) ALL_ZERO ) {
             error = __LINE__;
-            INFO_MSG((LOG_FMT "Data mismatch: addr = 0x%8x  expected = 0x%8x  received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_test_p, (bt_data32_t) ALL_ZERO, read_pattern));
+            INFO_MSG((LOG_FMT "Data mismatch: addr = 0x%8lx  expected = 0x%8x  received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_test_p, (bt_data32_t) ALL_ZERO, read_pattern));
             goto cell_integrity_end;
         }
 
@@ -2424,7 +2431,7 @@ int cell_integrity(
         read_pattern = *lword_verify_p;
         if ( read_pattern != (bt_data32_t) ALL_ONE ) {
             error = __LINE__;
-            INFO_MSG((LOG_FMT  "Data mismatch: addr = 0x%8x  expected = 0x%8x  received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_verify_p, (bt_data32_t) ALL_ONE, read_pattern));
+            INFO_MSG((LOG_FMT  "Data mismatch: addr = 0x%8lx  expected = 0x%8x  received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_verify_p, (bt_data32_t) ALL_ONE, read_pattern));
             goto cell_integrity_end;
 
         }
@@ -2482,7 +2489,7 @@ int find_bad_bit(
     bt_data32_t bits_different;
 
     FUNCTION("find_bad_bit");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
  
     FENTRY;
 
@@ -2569,7 +2576,7 @@ int initialize_memory(
     bt_data32_t              index;
 
     FUNCTION("initialize_memory");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
  
     FENTRY;
 
@@ -2851,7 +2858,7 @@ int check_memory(
     bt_data32_t              read_pattern_l;
 
     FUNCTION("check_memory");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
  
     FENTRY;
 
@@ -2890,7 +2897,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_b != (bt_data8_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%2x received = 0x%2x\n", LOG_ARG, (bt_devaddr_t) byte_p, (bt_data8_t) check_pattern, read_pattern_b));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%2x received = 0x%2x\n", LOG_ARG, (bt_devaddr_t) byte_p, (bt_data8_t) check_pattern, read_pattern_b));
                     goto check_memory_end;
                 }
             }
@@ -2903,7 +2910,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_w != (bt_data16_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%4x received = 0x%4x\n", LOG_ARG, (bt_devaddr_t) word_p, (bt_data16_t) check_pattern, read_pattern_w));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%4x received = 0x%4x\n", LOG_ARG, (bt_devaddr_t) word_p, (bt_data16_t) check_pattern, read_pattern_w));
                     goto check_memory_end;
                 }
             }
@@ -2916,7 +2923,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_l != (bt_data32_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%8x received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_p, (bt_data32_t) check_pattern, read_pattern_l));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%8x received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_p, (bt_data32_t) check_pattern, read_pattern_l));
                     goto check_memory_end;
                 }
             }
@@ -2943,7 +2950,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_b != (bt_data8_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%2x received = 0x%2x\n", LOG_ARG, (bt_devaddr_t) byte_p, (bt_data8_t) check_pattern, read_pattern_b));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%2x received = 0x%2x\n", LOG_ARG, (bt_devaddr_t) byte_p, (bt_data8_t) check_pattern, read_pattern_b));
                     goto check_memory_end;
                 } else {
                     check_pattern += check_inc_dec;
@@ -2958,7 +2965,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_w != (bt_data16_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%4x received = 0x%4x\n", LOG_ARG, (bt_devaddr_t) word_p, (bt_data16_t) check_pattern, read_pattern_w));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%4x received = 0x%4x\n", LOG_ARG, (bt_devaddr_t) word_p, (bt_data16_t) check_pattern, read_pattern_w));
                     goto check_memory_end;
                 } else {
                     check_pattern += check_inc_dec;
@@ -2973,7 +2980,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_l != (bt_data32_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%8x received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_p, (bt_data32_t) check_pattern, read_pattern_l));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%8x received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_p, (bt_data32_t) check_pattern, read_pattern_l));
                     goto check_memory_end;
                 } else {
                     check_pattern += check_inc_dec;
@@ -3002,7 +3009,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_b != (bt_data8_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%2x received = 0x%2x\n", LOG_ARG, (bt_devaddr_t) byte_p, (bt_data8_t) check_pattern, read_pattern_b));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%2x received = 0x%2x\n", LOG_ARG, (bt_devaddr_t) byte_p, (bt_data8_t) check_pattern, read_pattern_b));
                     goto check_memory_end;
                 } else {
                     check_pattern -= check_inc_dec;
@@ -3017,7 +3024,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_w != (bt_data16_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%4x received = 0x%4x\n", LOG_ARG, (bt_devaddr_t) word_p, (bt_data16_t) check_pattern, read_pattern_w));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%4x received = 0x%4x\n", LOG_ARG, (bt_devaddr_t) word_p, (bt_data16_t) check_pattern, read_pattern_w));
                     goto check_memory_end;
                 } else {
                     check_pattern -= check_inc_dec;
@@ -3032,7 +3039,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_l != (bt_data32_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%8x received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_p, (bt_data32_t) check_pattern, read_pattern_l));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%8x received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_p, (bt_data32_t) check_pattern, read_pattern_l));
                     goto check_memory_end;
                 } else {
                     check_pattern -= check_inc_dec;
@@ -3063,7 +3070,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_b != (bt_data8_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%2x received = 0x%2x\n", LOG_ARG, (bt_devaddr_t) byte_p, (bt_data8_t) check_pattern, read_pattern_b));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%2x received = 0x%2x\n", LOG_ARG, (bt_devaddr_t) byte_p, (bt_data8_t) check_pattern, read_pattern_b));
                     goto check_memory_end;
                 } else {
                     check_pattern += check_inc_dec;
@@ -3083,7 +3090,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_w != (bt_data16_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%4x received = 0x%4x\n", LOG_ARG, (bt_devaddr_t) word_p, (bt_data16_t) check_pattern, read_pattern_w));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%4x received = 0x%4x\n", LOG_ARG, (bt_devaddr_t) word_p, (bt_data16_t) check_pattern, read_pattern_w));
                     goto check_memory_end;
                 } else {
                     check_pattern += check_inc_dec;
@@ -3103,7 +3110,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_l != (bt_data32_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%8x received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_p, (bt_data32_t) check_pattern, read_pattern_l));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%8x received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_p, (bt_data32_t) check_pattern, read_pattern_l));
                     goto check_memory_end;
                 } else {
                     check_pattern += check_inc_dec;
@@ -3134,7 +3141,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_b != (bt_data8_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%2x received = 0x%2x\n", LOG_ARG, (bt_devaddr_t) byte_p, (bt_data8_t) check_pattern, read_pattern_b));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%2x received = 0x%2x\n", LOG_ARG, (bt_devaddr_t) byte_p, (bt_data8_t) check_pattern, read_pattern_b));
                     goto check_memory_end;
                 } else {
                     check_pattern -= check_inc_dec;
@@ -3154,7 +3161,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_w != (bt_data16_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%4x received = 0x%4x\n", LOG_ARG, (bt_devaddr_t) word_p, (bt_data16_t) check_pattern, read_pattern_w));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%4x received = 0x%4x\n", LOG_ARG, (bt_devaddr_t) word_p, (bt_data16_t) check_pattern, read_pattern_w));
                     goto check_memory_end;
                 } else {
                     check_pattern -= check_inc_dec;
@@ -3174,7 +3181,7 @@ int check_memory(
                 /* Check if the pattern in memory is the same as check pattern */
                 if (read_pattern_l != (bt_data32_t) check_pattern) {
                     error = __LINE__;
-                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8x expected = 0x%8x received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_p, (bt_data32_t) check_pattern, read_pattern_l));
+                    INFO_MSG((LOG_FMT "Data Mismatch at addr 0x%8lx expected = 0x%8x received = 0x%8x\n", LOG_ARG, (bt_devaddr_t) lword_p, (bt_data32_t) check_pattern, read_pattern_l));
                     goto check_memory_end;
                 } else {
                     check_pattern -= check_inc_dec;
@@ -3229,7 +3236,7 @@ int adator_reg_test(
     bt_data32_t           reg_value;
 
     FUNCTION("adator_reg_test");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
  
     FENTRY;
     
@@ -3332,7 +3339,7 @@ int adator_rem_reg_test(
     bt_data32_t           reg_value;
 
     FUNCTION("adator_rem_reg_test");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
  
     FENTRY;
 
@@ -3538,7 +3545,7 @@ static int btk_datachk (
     int         xfer_len;
 
     FUNCTION("btk_datachk");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
@@ -3684,3 +3691,128 @@ genrand(void)
 }
 
 
+#if defined (__lynxos)
+/*****************************************************************************
+**
+**      Function:   btp_lynxos_mem_test()
+**
+**      Purpose:    Print out the CPU physical addresses that make up a 
+**                  virtual memory segment.
+**
+**      Args:           
+**        unit_p      Unit pointer
+**        diag_p->    Diagnostic parameter structure
+**        rev_info    Text string with driver version.
+**        error       Set to appropriate return value.
+**        line_number Line number failure was discovered on.
+**          
+**      Returns:
+**          BT_EINVAL   Illegal parameter passed to function.
+**
+**          BT_SUCCESS  
+**
+*****************************************************************************/
+bt_error_t btp_lynxos_mem_test(
+    bt_unit_t *unit_p, 
+    bt_hw_diag_t *diag_p)
+{
+    FUNCTION("btp_lynxos_mem_test");
+    LOG_UNIT(unit_p);
+    
+    bt_data32_t           lnumber = 0;
+    bt_error_t            retval = BT_SUCCESS;
+
+    char *vaddr;
+    int e = 0;
+    int i = 0;
+    long len = 0;
+    int partial_pages = 0;
+    int full_pages = 0;
+    int unknown_page = 0;
+    int pid = 0;
+    int chain_len = 0;
+    struct dmachain *chain;
+
+    
+
+    FENTRY;
+
+    /*
+    **  Validate arguments
+    */
+    if (NULL == diag_p) {
+        INFO_STR("btp_lynxos_mem_test: Diagnostic parameter structure is a NULL.");
+        lnumber = __LINE__;
+        retval = BT_EINVAL;
+        goto btp_lynxos_mem_test;
+    }
+
+    vaddr = (char*)diag_p->r_addr;
+    len = diag_p->r_len;
+
+    /* Allocate the dma chain to gather the physical addresses */
+    /* ((len + PAGE_SIZE - 1) / PAGE_SIZE) + 1 */
+    chain_len = ((len + PAGE_SIZE - 1) / PAGE_SIZE) + 1;
+    KKprintf (("requesting %d chain elements from sysbrk\n", chain_len));
+    chain = (struct dmachain*)sysbrk((sizeof(struct dmachain)) * chain_len);
+    if (chain == NULL) {
+        INFO_STR("btp_lynxos_mem_test: Unable to allocate chain memory");
+        KKprintf(("btp_lynxos_mem_test: Unable to allocate chain memory\n"));
+        lnumber = __LINE__;
+        retval = BT_ENOMEM;
+        goto btp_lynxos_mem_test;
+    }
+        
+
+    /* mem_lock */
+    mem_lock((pid = getpid()), vaddr, len);
+
+    /* Get the physical addresses of the virtual memory */
+    e = mmchain(chain, vaddr, len);
+    if (e == 0) {
+        KKprintf (("No elements written to chain array\n"));
+        lnumber = __LINE__;
+        retval = BT_EINVAL;
+        goto btp_lynxos_mem_test;
+    } else {
+
+        /* Print out the CPU physical addresses and their size */
+        for (i = 0; i < e; i++) {
+            /* This could be adjustable by an ioctl */
+            if (len < phys_addr_print_len) {
+                KKprintf (("Segment[%d]: CPU phys address = %08Xh count = %d    %Xh\n", i, chain[i].address, chain[i].count, chain[i].count));
+            }
+            /* Print the first page's length */
+            if (i == 0) {
+                KKprintf (("Segment[%d]: CPU phys address = %08Xh count = %d    %Xh\n", i, chain[i].address, chain[i].count, chain[i].count));
+            }
+            /* Get a total of what we have */
+            if (chain[i].count < PAGE_SIZE) {
+                partial_pages++;
+            } else if (chain[i].count == PAGE_SIZE) {
+                full_pages++;
+            } else {
+                unknown_page++;
+            }
+        }
+        KKprintf (("Chain information: \n"));
+        KKprintf (("    Total Pages   = %d\n", e));
+        KKprintf (("    Partial Pages = %d\n", partial_pages));
+        KKprintf (("    Full Pages    = %d\n", full_pages));
+        KKprintf (("    Unknown Pages = %d\n", unknown_page));
+    }
+
+
+    /* mem_unlock */
+    mem_unlock(pid, vaddr, len, 0);
+
+    /* Free the chain memory */
+    sysfree((char*)chain, chain_len);
+
+btp_lynxos_mem_test:
+    diag_p->error = retval;
+    diag_p->line_number = lnumber;
+    FEXIT(retval);
+    return(retval);
+}
+#endif

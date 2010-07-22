@@ -21,8 +21,8 @@
 static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #endif	/* LINT */
 
-#include	"btapi.h"
-#include	"btpiflib.h"
+#include "btapi.h"
+#include "btpiflib.h"
 
 
 /*****************************************************************************

@@ -12,7 +12,7 @@
 *****************************************************************************/
 /*****************************************************************************
 **
-**            Copyright (c) 1997 - 1999 by SBS Technologies, Inc.
+**            Copyright (c) 1997 - 2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -36,19 +36,6 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
 
 #include "btdd.h"
 
-#if     defined(__sun)
-#include        <sys/kmem.h>
-#elif	defined(__linux__)
-
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-#include	<linux/slab.h>
-#else   /* LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) */
-#include	<linux/malloc.h>
-#endif  /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) || \
-            LINUX_VERSION_CODE <  KERNEL_VERSION(2,4,0) */
-
-#endif  /* defined(__sun) */
-
 
 /*****************************************************************************
 **
@@ -63,7 +50,15 @@ volatile int     btk_alloc_total_g = 0;
 ** Need a mutex to protect allocation/deallocation tracking.
 */
 
+#if defined (__lynxos)
+
+bt_mutex_t kmem_mutex = 0;     /* btk_mem() per driver (single) mutex */
+
+#else
+
 bt_mutex_t      kmem_mutex;     /* btk_mem() per driver (single) mutex */
+
+#endif
 
 #ifdef BT13908
 #ifdef ALLOC_PRAGMA
@@ -115,41 +110,60 @@ BT_FILE_NUMBER(TRACE_BT_MEM_C);
 **  NT Notes:
 **      Caller must be running at IRQL <= DISPATCH_LEVEL.
 **
+**      These routines do not take the unit pointer as a parameter 
+**      because they may be used to allocate the unit pointer.
+**
+**      btk_mem_init() 
+**      Initializes any state information needed by the kernel memory 
+**      routines. It must be called exactly once, before the first 
+**      btk_alloc() call, when the driver is loaded. Do not call it 
+**      once per unit. Return value of 0 indicates success, all others 
+**      are error value.
+**
 ******************************************************************************/
 
 int btk_mem_init(
     void
     )
 {
+    int         retvalue = 0;   /* Assume success */
+
     FUNCTION("btk_mem_init");
     LOG_UNKNOWN_UNIT;
 
-    int         retvalue = 0;   /* Assume success */
+#if defined(__sgi)
+    int    old_level = 0; /* old interrupt level */
+#endif /* defined(__sgi) */
+
+    FENTRY;
 
 #if     defined(__sun)
 
-    retvalue = btk_mutex_init(NULL, &kmem_mutex, "btk_mem mutex", NULL);
+    retvalue = btk_mutex_init(&kmem_mutex, "btk_mem mutex", NULL);
 
 #elif defined(_NTDDK_)
 
-    retvalue = btk_mutex_init(NULL, &kmem_mutex, BT_SPIN_LOCK);
+    retvalue = btk_mutex_init(&kmem_mutex, BT_SPIN_LOCK);
 
 #elif defined(__sgi)
 
-    int    old_level = 0; /* old interrupt level */
-    retvalue = btk_mutex_init(NULL, &kmem_mutex, "btk_mem_mutex");
+    retvalue = btk_mutex_init(&kmem_mutex, "btk_mem_mutex");
 
 #elif defined(BT_uCOS)
 
-    retvalue = btk_mutex_init(NULL, &kmem_mutex);
+    retvalue = btk_mutex_init(&kmem_mutex);
 
 #elif defined(__linux__)
 
-    retvalue = btk_mutex_init(NULL, &kmem_mutex, 0);
+    retvalue = btk_mutex_init(&kmem_mutex, 0);
+
+#elif defined (__lynxos)
+
+    retvalue = btk_mutex_init(&kmem_mutex);
 
 #else
 
-    retvalue = btk_mutex_init(NULL, &kmem_mutex);
+    retvalue = btk_mutex_init(&kmem_mutex);
 
 #endif  /* __sun, _NTDDK_ */
 
@@ -173,6 +187,15 @@ int btk_mem_init(
 **      Must be called exactly once, after the last btk_mem_alloc() call, when
 **      the driver is unloaded. Do not call it once per unit.
 **
+**      These routines do not take the unit pointer as a parameter 
+**      because they may be used to allocate the unit pointer.
+**
+**      btk_mem_fini()
+**      Does the inverse of btk_mem_init(), releasing any resources 
+**      in preparation for the driver unloading. It also 
+**      must be called exactly once, after all kernel memory has been 
+**      returned just before the driver unloads.
+**
 ******************************************************************************/
 
 void btk_mem_fini(
@@ -181,11 +204,10 @@ void btk_mem_fini(
 {
     FUNCTION("btk_mem_fini");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
 
-    btk_mutex_fini(NULL, &kmem_mutex);
+    btk_mutex_fini(&kmem_mutex);
 
     FEXIT(0);
 
@@ -216,6 +238,10 @@ void btk_mem_fini(
 **      Callers must be running at IRQL PASSIVE_LEVEL if BTK_ALLOC_SWAPPABLE,
 **      otherwise callers may run at IRQL <= DISPATCH_LEVEL.
 **
+**
+**      These routines do not take the unit pointer as a parameter 
+**      because they may be used to allocate the unit pointer.
+**
 ******************************************************************************/
 
 /* ARGSUSED */
@@ -225,10 +251,10 @@ void * btk_mem_alloc(
     bt_data32_t flags
     )
 {
-    FUNCTION("btk_mem_alloc");
-    LOG_UNKNOWN_UNIT;
     void * kmem_p = NULL;
 
+    FUNCTION("btk_mem_alloc");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 #if     defined (_AIX)
@@ -286,12 +312,16 @@ void * btk_mem_alloc(
 
     kmem_p = kmalloc(size, GFP_KERNEL);
 
+#elif defined(__lynxos)
+
+    kmem_p = sysbrk(size);
+
 #endif  /* _AIX, __hpux, __sun, __sgi, __vxworks, _NTDDK_ */
 
     /* Protect btk_alloc_total_g accesses.  This mutex may not be held during
        the preceeding memory allocation to avoid doing the allocations at a
        raised interrupt level. */
-    btk_mutex_enter(NULL, &kmem_mutex);
+    btk_mutex_enter(&kmem_mutex);
 
     btk_alloc_total_g += size;    /* running total of kmem */
 
@@ -302,9 +332,9 @@ void * btk_mem_alloc(
 
     TRC_MSG((BT_TRC_ALLOC), 
             (LOG_FMT "ptr " PTR_FMT "; size %d; total %d.\n",
-            LOG_ARG, kmem_p, size, btk_alloc_total_g));
+            LOG_ARG, kmem_p, (int) size, btk_alloc_total_g));
 
-    btk_mutex_exit(NULL, &kmem_mutex);
+    btk_mutex_exit(&kmem_mutex);
 
     FEXIT(kmem_p);
 
@@ -329,6 +359,26 @@ void * btk_mem_alloc(
 **      with BTK_ALLOC_SWAPPABLE, otherwise callers may run at IRQL <=
 **      DISPATCH_LEVEL.
 **
+**
+**      These routines do not take the unit pointer as a parameter 
+**      because they may be used to allocate the unit pointer.
+**
+**      btk_mem_alloc()
+**      Allocates a block of memory 'size' bytes in length from kernel 
+**      space. Passing zero for flags should always result in safe 
+**      behavior for that system. It returns either NULL (if not 
+**      enough memory) or a pointer to the allocated memory block.
+**
+**      The flags parameter gives additional OPTIONAL permissions:
+**      BTK_ALLOC_SWAPPABLE     It is allowable to allocate memory 
+**                              that can be swapped (paged) out to disk.
+**
+**      btk_mem_free()
+**      Releases memory previously allocated by btk_mem_alloc(). 
+**      Size parameter must be identical value to what was passed 
+**      in on original btk_mem_alloc() request.  Not all implementations 
+**      will need to use the size parameter.
+**
 ******************************************************************************/
 
 void btk_mem_free(
@@ -338,11 +388,11 @@ void btk_mem_free(
 {
     FUNCTION("btk_mem_free");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
+
     TRC_MSG((BT_TRC_ALLOC | BT_TRC_DETAIL), 
             (LOG_FMT "ptr: " PTR_FMT "  size %d.\n",
-            LOG_ARG, kmem_p, size));
+            LOG_ARG, kmem_p, (int) size));
 
 
 #if     defined (_AIX)
@@ -386,7 +436,7 @@ void btk_mem_free(
 #endif  /* _AIX, __hpux, __sun, __sgi, __vxworks, _NTDDK_ */
 
 
-    btk_mutex_enter(NULL, &kmem_mutex);
+    btk_mutex_enter(&kmem_mutex);
 
     btk_alloc_total_g -= size;    /* running total of kmem */
     if (btk_alloc_total_g < 0) {
@@ -395,9 +445,9 @@ void btk_mem_free(
 
     TRC_MSG((BT_TRC_ALLOC), 
             (LOG_FMT "ptr " PTR_FMT "; size %d; total %d.\n",
-            LOG_ARG, kmem_p, size, btk_alloc_total_g));
+            LOG_ARG, kmem_p, (int) size, btk_alloc_total_g));
 
-    btk_mutex_exit(NULL, &kmem_mutex);
+    btk_mutex_exit(&kmem_mutex);
 
     FEXIT(0);
     return;

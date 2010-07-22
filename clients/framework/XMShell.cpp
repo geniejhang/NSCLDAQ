@@ -290,7 +290,6 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 **    Michigan State University
 **    East Lansing, MI 48824-1321
 */
-static char *sccsinfo = "@(#)XMShell.cc	8.1 6/23/95 ";
 
 /*
 ** Include files:

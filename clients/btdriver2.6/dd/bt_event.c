@@ -12,7 +12,7 @@
 *****************************************************************************/
 /*****************************************************************************
 **
-**            Copyright (c) 1997-1999 by SBS Technologies, Inc.
+**            Copyright (c) 1997-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -35,7 +35,7 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
 **
 *****************************************************************************/
 
-#include "btdd.h" 
+#include "btdd.h"
 
 #ifdef __linux__
 
@@ -109,7 +109,6 @@ void timeout_event(
 #if	!defined(NDEBUG)
     FUNCTION("timeout_event");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 #endif	/* !defined(NDEBUG) */
 
@@ -130,8 +129,14 @@ void timeout_event(
 **
 **      Purpose:        Initializes a kernel event object.
 **
+**      Creates the object. The 'state' parameter is the initial 
+**      state of the condition, TRUE (full) or FALSE (empty). 
+**      The parameters for this routine will vary depending on the 
+**      operating system. Some operating systems may need additional 
+**      information in order to create the object.
+**
+**
 **      Args:
-**              unit_p          Pointer to unit structure. Can be NULL.
 **              event_p         Pointer to bt_event_t to be intialized
 **              state           Initial state of object:
 **                  FALSE       Create the object empty
@@ -153,17 +158,26 @@ void timeout_event(
 **              0               Success
 **              Otherwise       error value.
 **
-**      Notes:
+**  Notes:
+**      Storage for the event object pointed to by the event_p argumentmust
+**      be resident, it cannot be in pageable memory.
+**
+**      The bt_event_t is an opaque type to be defined for each operating
+**      system.
+**
+**      All of the event routines need to accept NULL for the unit pointer.
+**      This will most likey only affect tracing.
+**
+**      The basic idea is to wait for the occurance of something, with a
+**      timeout interval.  Three examples of use include creating a
+**      locking mechanism, waiting for a DMA Done interrupt, and
+**      waiting for a remote system reset to complete.
 **
 **  NT Notes:
 **      Callers must be running at IRQL PASSIVE_LEVEL.
 **      
-**      Storage for the event object pointed to by the event_p argumentmust
-**      be resident, it cannot be in pageable memory.
-**
 ******************************************************************************/
 int btk_event_init(
-    bt_unit_t   *unit_p,
     bt_event_t  *event_p,
     bool_t      state
 
@@ -177,11 +191,10 @@ int btk_event_init(
 #endif  /* __sun */
     )
 {
-    FUNCTION("btk_event_init");
-    LOG_UNIT(unit_p);
-
     int         retvalue = 0;   /* Assume success */
 
+    FUNCTION("btk_event_init");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 #if     defined(__sun)
@@ -256,6 +269,16 @@ int btk_event_init(
             LINUX_VERSION_CODE <  KERNEL_VERSION(2,4,0) */
 
     event_p->timed_out = FALSE;
+
+#elif defined (__lynxos)
+
+    /* Check to make sure the state is 0 on initializing */
+    if (state != FALSE) {
+        *event_p = 0;
+    } else {
+        *event_p = state;
+    }
+
 #else
 
 #error  Code not written yet
@@ -272,9 +295,10 @@ int btk_event_init(
 **      Function:       btk_event_fini()
 **
 **      Purpose:        Releases any resources allocated by btk_event_init().
+**                      Gets rid of objec, flushing any threads waiting,
+**                      and releases resources used by the object.
 **
 **      Args:
-**              unit_p          Pointer to unit structure. Can be NULL.
 **              event_p         Pointer to bt_event_t to be intialized
 **          
 **
@@ -284,21 +308,25 @@ int btk_event_init(
 **      Must be called exactly once, after the last btk_event_alloc() call, when
 **      the driver is unloaded. Do not call it once per unit.
 **
+**      The bt_event_t is an opaque type to be defined for each operating
+**      system.
+**
+**      All of the event routines need to accept NULL for the unit pointer.
+**      This will most likey only affect tracing.
+**
 ******************************************************************************/
 void btk_event_fini(
-    bt_unit_t   *unit_p,
     bt_event_t  *event_p
     )
 {
-    FUNCTION("btk_event_fini");
-    LOG_UNIT(unit_p);
-
 #if   defined(__vxworks)
     SEM_ID      dead_event;
     STATUS      vx_ret;
 #endif /* vxworks */
 
 
+    FUNCTION("btk_event_fini");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 
@@ -345,6 +373,10 @@ void btk_event_fini(
     /* No action required */
     ;
 
+#elif defined (__lynxos)
+
+    sreset(event_p);
+
 #else
 
 #error  Code not written yet
@@ -363,26 +395,34 @@ void btk_event_fini(
 **  Function:   btk_event_set()
 **
 **  Purpose:    Fills (sets) an event, causing exactly one of the thread
-**                  which may be waiting to wake up.
+**              which may be waiting to wake up.
+** 
+**              Forces the object set (full). If there are any threads 
+**              waiting on the object, this will cause EXACTLY ONE
+**              of those sleeping threads to wake.
 **
 **  Args:
-**      unit_p          Pointer to unit structure. Can be NULL.
 **      event_p         Pointer to bt_event_t to be set.
 **
 **  Returns:    Void
+**
+**  Notes:
+**      The bt_event_t is an opaque type to be defined for each operating
+**      system.
+**
+**      All of the event routines need to accept NULL for the unit pointer.
+**      This will most likey only affect tracing.
 **
 **  NT Notes:
 **      Callers can be running at IRQL <= DISPATCH_LEVEL.
 **
 ******************************************************************************/
 void btk_event_set(
-    bt_unit_t   *unit_p,
     bt_event_t  *event_p
     )
 {
     FUNCTION("btk_event_set");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 #if     defined(__sun)
@@ -446,6 +486,11 @@ void btk_event_set(
         up(&event_p->sem);
     }
 
+#elif defined (__lynxos)
+
+    /* Wake up one process waiting for this event */
+    ssignal(event_p);
+
 #else
 
 #error  Code not written yet
@@ -464,10 +509,13 @@ void btk_event_set(
 **  Function:   btk_event_wait()
 **
 **  Purpose:    Waits for specified timeout period or the event to
-**          become set (FULL).
+**              become set (FULL).
+**              
+**              Waits for event becomes availabe. Goes to sleep if empty.
+**              The object is empty when this routine returns with
+**              SUCCESS.
 **
 **  Args:
-**      unit_p          Pointer to unit structure. Can be NULL.
 **      event_p         Pointer to bt_event_t to wait on.
 **      timeout         How long to wait before we time out.
 **
@@ -479,13 +527,19 @@ void btk_event_set(
 **      Note:
 **          Only the return values listed above are valid.
 **
+**      The bt_event_t is an opaque type to be defined for each operating
+**      system.
+**
+**      All of the event routines need to accept NULL for the unit pointer.
+**      This will most likey only affect tracing.
+**
+**
 **  NT Notes:
 **      Callers must be running at IRQL == PASSIVE_LEVEL and in the context
 **      of a User thread.
 **
 ******************************************************************************/
 bt_error_t btk_event_wait(
-    bt_unit_t   *unit_p,
     bt_event_t  *event_p,
     bt_tck_t    timeout
     )
@@ -493,8 +547,7 @@ bt_error_t btk_event_wait(
     bt_error_t  retvalue;               /* Value to return from routine */
 
     FUNCTION("btk_event_wait");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 #if     defined (__sun)
@@ -601,7 +654,13 @@ bt_error_t btk_event_wait(
     loc_timeout.QuadPart = -timeout;
     nt_status = KeWaitForSingleObject(event_p, UserRequest, UserMode, FALSE,
         &loc_timeout);
+    TRC_MSG(BT_TRC_WARN,
+        (LOG_FMT "KeWait status = 0x%x, timeout = %d\n",
+	 LOG_ARG, nt_status, timeout));
+
+#if 0
     BTK_ASSERT(STATUS_SUCCESS == nt_status || STATUS_TIMEOUT == nt_status);
+#endif
     if(STATUS_SUCCESS == nt_status) {
         retvalue = BT_SUCCESS;
     } else {
@@ -681,6 +740,40 @@ bt_error_t btk_event_wait(
 	    } else if (down_ret) {
 		retvalue = BT_EABORT;
 	    }
+	}
+    }
+
+#elif defined (__lynxos)
+
+	retvalue = BT_SUCCESS;	/* Assume everything will work */
+    /* For timeout:
+     *   BT_NO_WAIT is okay for a value, tswait will return right away if 
+     *   the semaphore is already locked.
+     *   BT_FOREVER:
+     */
+    if (timeout) {
+        retvalue = tswait(event_p, SEM_SIGIGNORE, timeout);
+        switch (retvalue) {
+
+        /* could not register a timeout */
+            case TSWAIT_NOTOUTS:
+            /* We cannot return anything else because of the assert later
+             * on in this routine.
+             */
+            return BT_EABORT;
+
+        /* interrupted by a signal */
+            case TSWAIT_ABORTED:
+            deliversigs();
+            return BT_EABORT;
+
+        /* timed out */
+            case TSWAIT_TIMEDOUT:
+            return BT_EBUSY;
+
+        /* regular wakeup, fall through */
+            default:
+                retvalue = BT_SUCCESS;
 	}
     }
 

@@ -45,16 +45,11 @@ const char *no_parms_p = "Command should not have any parameters.";
     INFO_STR(no_parms_p); \
     retval = -EINVAL; break; }
 
-#define LOCK_DEVICE(u_p)    btk_mutex_enter((u_p), &(u_p)->dma_mutex); \
-                            btk_rwlock_wr_enter((u_p), &(u_p)->hw_rwlock);
+#define LOCK_DEVICE(u_p)    btk_mutex_enter(&(u_p)->dma_mutex); \
+                            btk_rwlock_wr_enter(&(u_p)->hw_rwlock);
 
-#define UNLOCK_DEVICE(u_p)  btk_rwlock_wr_exit((u_p), &(u_p)->hw_rwlock); \
-                            btk_mutex_exit((u_p), &(u_p)->dma_mutex);
-
-/*
-** Local functions
-*/
-static void btp_wakeup(caddr_t wake_param);
+#define UNLOCK_DEVICE(u_p)  btk_rwlock_wr_exit(&(u_p)->hw_rwlock); \
+                            btk_mutex_exit(&(u_p)->dma_mutex);
 
 /*
 ** External functions
@@ -80,8 +75,8 @@ extern bt_error_t btp_unbind(bt_unit_t *unit_p, bt_bind_t *bind_p, bt_dev_t type
 
 extern bt_error_t btk_send_irq(bt_unit_t *unit_p, bt_data32_t vector, bool_t driver);
 
-extern bt_error_t btk_set_info(bt_unit_t *unit_p, bt_dev_t ldev, bt_info_t param, bt_devdata_t value);
-extern bt_error_t btk_get_info(bt_unit_t *unit_p, bt_dev_t ldev, bt_info_t param, bt_devdata_t *value_p);
+extern bt_error_t btk_set_info(bt_unit_t *unit_p, bt_dev_t ldev, bt_info_t param, bt_data64_t value);
+extern bt_error_t btk_get_info(bt_unit_t *unit_p, bt_dev_t ldev, bt_info_t param, bt_data64_t *value_p);
 
 extern bt_error_t btk_lcard_diag(bt_unit_t *unit_p, bt_hw_diag_t *diag_p);
 extern bt_error_t btk_cable_diag(bt_unit_t *unit_p, bt_hw_diag_t *diag_p);
@@ -153,7 +148,7 @@ int btp_ioctl(
 
     TRC_MSG(BT_TRC_CTRL, 
          (LOG_FMT "logical dev = %d ioctl_cmd = 0x%x\n  len %d  copy %c%c\n",
-         LOG_ARG, type, cmd, cmd_len,
+         LOG_ARG, type, cmd, (int) cmd_len,
          (do_copyin) ? 'I' : ' ', (do_copyout) ? 'O' : ' '));
 
     if (NULL == unit_p) {
@@ -244,11 +239,9 @@ int btp_ioctl(
                 btk_put_io(unit_p, BT_REM_CMD1, RC1_RESET);
 
                 /*
-                ** Setup call back routine and use the DMA event to 
-                ** wake up
+                ** Use the DMA event and timeout feature of btk_event_wait().
                 */
-                unit_p->wakeup_id = btk_timeout(btp_wakeup, (void *) unit_p, (long) reset_time);
-                btk_event_wait(unit_p, &unit_p->dma_event, BT_FOREVER);
+                btk_event_wait(&unit_p->dma_event, btk_msec2tck(reset_time/1000));
 
             }
 
@@ -256,9 +249,12 @@ int btp_ioctl(
             /*
             ** Again lock out the interrupt handler while we do a setup
             */
+            btk_mutex_enter(&(unit_p->mreg_mutex));
             BTK_LOCK_ISR(unit_p, isr_pl);
             btk_setup(unit_p);
             BTK_UNLOCK_ISR(unit_p, isr_pl);
+            btk_mutex_exit(&(unit_p->mreg_mutex));
+
             unit_p->last_error |= btk_get_io(unit_p, BT_LOC_STATUS);
             device_status = (unit_p->last_error & LSR_CERROR_MASK) << BT_INTR_ERR_SHFT;
 
@@ -611,23 +607,22 @@ int btp_ioctl(
         {
             bt_param_t *data_p = arg_p;
 
-	    CHKPARM(bt_param_t);
+        CHKPARM(bt_param_t);
 
-	    /* D64 PIO doesn't work properly on a 32 bit PCI bus, so we       */
-            /* change BT_WIDTH_ANY to BT_WIDTH_D32 for data_size[type!=LM].   */
-	    /* D64 DMA works properly on a 32 bit bus via proper D32 accesses.*/
-	    if (BT_AXSLM != type
+        /* D64 PIO doesn't work properly on a 32 bit PCI bus, so we       */
+        /* change BT_WIDTH_ANY to BT_WIDTH_D32 for data_size[type!=LM].   */
+        /* D64 DMA works properly on a 32 bit bus via proper D32 accesses.*/
+        if (BT_AXSLM != type
                 && BT_INFO_DATAWIDTH == data_p->param
-		&& BT_WIDTH_ANY == data_p->value) {
-		data_p->value = BT_WIDTH_D32;
-	    }
+                && BT_WIDTH_ANY == data_p->value) {
+            data_p->value = BT_WIDTH_D32;
+        }
 
-	    data_p->error = btk_set_info(unit_p, type,
-					 (bt_info_t) data_p->param,
-					 data_p->value);
-	    retval = -data_p->error;
-	}
-	break;
+        data_p->error = btk_set_info(unit_p, type, (bt_info_t) data_p->param,
+                                     data_p->value);
+        retval = -data_p->error;
+        }
+        break;
 
       /*
       **  BIOC_DEV_ATTRIB
@@ -638,13 +633,12 @@ int btp_ioctl(
         {
             bt_param_t *data_p = arg_p;
 
-	    CHKPARM(bt_param_t);
-	    data_p->error = btk_get_info(unit_p, type,
-					 (bt_info_t) data_p->param,
-					 &data_p->value);
-	    retval = -data_p->error;
-	}
-	break;
+        CHKPARM(bt_param_t);
+        data_p->error = btk_get_info(unit_p, type, (bt_info_t) data_p->param,
+                                     &data_p->value);
+        retval = -data_p->error;
+        }
+        break;
 
       /*
       **  BIOC_STATUS & BIOC_CLR_STATUS
@@ -662,7 +656,7 @@ int btp_ioctl(
             ** Clear any hardware errors and clear the software error 
             ** variables
             */
-            if (cmd == BT_CTRL_STATUS) {
+            if (cmd == BT_CTRL_CLR_STATUS) {
                 unit_p->last_error = 0;
             }
             (void) btk_get_io(unit_p, BT_REM_STATUS);
@@ -683,10 +677,10 @@ int btp_ioctl(
       case BT_CTRL_SND_INTR:
         TRC_STR(BT_TRC_CTRL, "BIOC_SND_INTR");
         {
-	    NOPARM;
-	    btk_rwlock_rd_enter(unit_p, &unit_p->hw_rwlock);
-	    retval = btk_send_irq(unit_p, 0, FALSE);
-	    btk_rwlock_rd_exit(unit_p, &unit_p->hw_rwlock);
+        NOPARM;
+        btk_rwlock_rd_enter(&unit_p->hw_rwlock);
+        retval = btk_send_irq(unit_p, 0, FALSE);
+        btk_rwlock_rd_exit(&unit_p->hw_rwlock);
         }
         break;
 
@@ -816,7 +810,7 @@ int btp_ioctl(
     */
     if ((retval >= 0) && (eret_flag)) {
         /* If no errors, put our BT_EXXXX value in the structure */
-        *((bt_data32_t *) args) = bt_err_ret;
+        *((bt_data32_t *) arg_p) = bt_err_ret;
     }
 
 ioctl_end:
@@ -835,36 +829,3 @@ ioctl_end:
     FEXIT(retval);
     return retval;
 }
-
-/******************************************************************************
-**
-**  Function:   btp_wakeup()
-**
-**  Purpose:    Callback for timeout - wakeup.
-**
-**  Args:       wake_param	Parameter to feed wakeup.
-**
-**  Returns:    Void.
-**
-******************************************************************************/
-static void btp_wakeup(
-    caddr_t wake_param)
-{
-    FUNCTION("btp_wakeup");
-
-    bt_unit_t *unit_p = (bt_unit_t *) wake_param;
-    LOG_UNIT(unit_p);
-
-    FENTRY;
-
-    /*
-    **  Prevent this function from executing before the actual
-    **  sync call in the reset ioctl
-    */
-    btk_event_set(unit_p, &unit_p->dma_event);
-
-    FEXIT(0);
-    return;
-}
-
-

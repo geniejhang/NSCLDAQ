@@ -13,7 +13,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-**              Copyright (c) 2000-2002 by SBS Technologies, Inc.
+**              Copyright (c) 2000-2005 by SBS Technologies, Inc.
 **                        All Rights Reserved.
 **                 License governs use and distribution.
 **
@@ -23,13 +23,14 @@
 static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #endif /* LINT */
 
-#include <stdio.h>
-
 #include  <string.h>   /* for strncp call */
+#include <stdio.h>     /* for snprintf call */
 #include "btapi.h"
-#include "btio.h"
 #include "btpiflib.h"
 
+#if defined(__sun)
+extern size_t snprintf(char *, size_t, const char *, ...);
+#endif /* defined(__sun) */
 
 
 /*****************************************************************************
@@ -82,7 +83,7 @@ bt_error_t bt_driver_version(
     ** Verify parameters
     */
 #if defined (__vxworks)
-    ver_info_p[BT_DIAG_MAX_REV_INFO] = NULL; 
+    ver_info_p[BT_DIAG_MAX_REV_INFO] = 0; 
 #endif /* defined (__vxworks) */
 
     /*
@@ -106,7 +107,11 @@ bt_driver_version_end:
     ** Report the line number and rev info if requested
     */
     if (ver_info_p != NULL) {
+#ifdef FCTACH_LINUX
+        sprintf(model_version, (const char *) &diag.rev_info[0]);
+#else
         sscanf((const char *) &diag.rev_info[0], "$Name: %s ", model_version);
+#endif
 
 #if defined (__vxworks)
         sprintf(ver_info_p, "%s", model_version);
@@ -119,9 +124,82 @@ bt_driver_version_end:
     if (line_p != NULL) {
         *line_p = diag.line_number;
     }
-    
+
     return (retval);
 }
+
+#if defined(__lynxos)
+/*****************************************************************************
+**
+**      Name:           bt_phys_mem_test
+**
+**      Purpose:        Print out some information on physical memory.
+**
+**      Args:
+**          btd         Device Descriptor
+**          ver_info_p  Text string with file and revision number.
+**          line_p      Pointer to the line number failure was discovered.
+**
+**      Returns:
+**          BT_ENOSUP   Not supported on this hardware.
+**          BT_EINVAL   Illegal parameter passed to function.
+**          BT_EDESC    Illegal descriptor passed to function.
+**
+**          BT_SUCCESS  Testing passed, local card appears good.
+**          
+**
+**      Notes:
+**
+*****************************************************************************/
+
+bt_error_t bt_phys_mem_test(
+    bt_desc_t       btd,
+    char            *vaddr,
+    int             size,
+    int             *line_p)
+{
+    bt_error_t      retval = BT_SUCCESS;
+    bt_hw_diag_t    diag;
+
+    /*
+    ** Check for bad descriptor or invalid pointer value
+    */
+    if (BT_DESC_BAD(btd)) {
+        DBG_STR("bt_phys_mem_test:bad descriptor.");
+        retval = BT_EDESC;
+        goto bt_phys_mem_test;
+    }
+
+    /*
+    ** Setup ioctl structure
+    */
+    diag.error = (bt_data32_t) BT_SUCCESS;
+
+    diag.r_addr = (bt_data32_t)vaddr;
+    diag.r_len = size;
+
+    /*
+    ** Send the allocated memory to the driver for testing
+    */
+    if ((retval = bt_ctrl(btd, BIOC_PHYS_MEM_TEST, &diag)) != BT_SUCCESS) {
+        DBG_STR("bt_phys_mem_test: BIOC_LYNXOS_MEM_TEST failed.");
+        if (diag.error != BT_SUCCESS) {
+            retval = diag.error;
+        }
+        goto bt_phys_mem_test;
+    }
+
+
+bt_phys_mem_test:
+
+    if (line_p != NULL) {
+        *line_p = diag.line_number;
+    }
+
+
+    return (retval);
+}
+#endif  /* __lynxos */
 
 /*****************************************************************************
 **
@@ -583,3 +661,235 @@ bt_trace_init_end:
 #endif /* defined(__vxworks) */
 
 
+#if FCTACH
+/*****************************************************************************
+**
+**      Name:           bt_get_adapter_map
+**
+**      Purpose:        Returns the driver adapter maps
+**
+**      Args:
+**          btd         Device Descriptor
+**          card_info   Pointer to card wwn structs
+**
+**      Returns:
+**          BT_ENOSUP   Not supported on this hardware.
+**          BT_EINVAL   Illegal parameter passed to function.
+**          BT_EDESC    Illegal descriptor passed to function.
+**
+**          BT_SUCCESS  Testing passed, local card appears good.
+**          
+**
+**      Notes:
+**
+*****************************************************************************/
+
+bt_error_t bt_get_adapter_map(
+    bt_desc_t       btd,
+    bt_ioctl_get_cardwwns_t            *card_info)
+{
+    bt_error_t      retval = BT_SUCCESS;
+    bt_ioctl_get_cardwwns_t    diag;
+    int             i;
+
+    /*
+    ** Check for bad descriptor or invalid pointer value
+    */
+    if (BT_DESC_BAD(btd)) {
+        DBG_STR("bt_get_adapter_map:bad descriptor.");
+        retval = BT_EDESC;
+        goto bt_get_adapter_map_end;
+    }
+
+    for (i = 0; i < BT_MAX_CARDS; i++) {
+        strcpy(diag.adapterName[i], "");
+    }
+
+    /*
+    ** Setup ioctl structure
+    */
+    diag.error = (bt_data32_t) BT_SUCCESS;
+
+    /*
+    ** Retrieve the driver version number
+    */
+    if ((retval = bt_ctrl(btd, BIOC_FCTACH_GET_CARDWWNS, &diag)) != BT_SUCCESS) {
+        DBG_STR("bt_get_adapter_map:BIOC_FCTACH_GET_CARDWWNS failed.");
+        if (diag.error != BT_SUCCESS) {
+            retval = diag.error;
+        }
+        goto bt_get_adapter_map_end;
+    }
+
+bt_get_adapter_map_end:
+    /*
+    ** Return the info if requested
+    */
+    if (card_info != NULL) {
+        for (i = 0; i < BT_MAX_CARDS; i++) {
+            sprintf(card_info->adapterName[i], (const char *) diag.adapterName[i]);
+        }
+    }
+
+    return (retval);
+}
+
+/*****************************************************************************
+**
+**      Name:           bt_get_devno_map
+**
+**      Purpose:        Returns the driver device number to fc mapping
+**
+**      Args:
+**          btd         Device Descriptor
+**          map_data_p  Pointer to device number mapping structs
+**
+**      Returns:
+**          BT_ENOSUP   Not supported on this hardware.
+**          BT_EINVAL   Illegal parameter passed to function.
+**          BT_EDESC    Illegal descriptor passed to function.
+**
+**          BT_SUCCESS  Testing passed, local card appears good.
+**          
+**
+**      Notes:
+**
+*****************************************************************************/
+
+bt_error_t bt_get_devno_map(
+    bt_desc_t       btd,
+    bt_ioctl_vc_map_t            *map_data)
+{
+    bt_error_t      retval = BT_SUCCESS;
+    bt_ioctl_vc_map_t    diag;
+
+    /*
+    ** Check for bad descriptor or invalid pointer value
+    */
+    if (BT_DESC_BAD(btd)) {
+        DBG_STR("bt_get_devno_map:bad descriptor.");
+        retval = BT_EDESC;
+        goto bt_get_devno_map_end;
+    }
+
+    if (!(map_data)) {
+        DBG_STR("bt_get_devno_map:bad struct pointer.");
+        retval = BT_EINVAL;
+        goto bt_get_devno_map_end;
+    }
+
+    strcpy(diag.targetName, "");
+    diag.lun = 0;
+    diag.opened = 0;
+
+    diag.mapindex = map_data->mapindex;
+    if (diag.mapindex == 0) {
+        DBG_STR("bt_get_devno_map:bad map index.");
+        retval = BT_EINVAL;
+        goto bt_get_devno_map_end;
+    }
+
+    /*
+    ** Setup ioctl structure
+    */
+    diag.error = (bt_data32_t) BT_SUCCESS;
+
+    /*
+    ** Retrieve the driver version number
+    */
+    if ((retval = bt_ctrl(btd, BIOC_FCTACH_GET_VC_MAP, &diag)) != BT_SUCCESS) {
+        DBG_STR("bt_get_unit_map:BIOC_FCTACH_GET_VC_MAP failed.");
+        if (diag.error != BT_SUCCESS) {
+            retval = diag.error;
+        }
+        goto bt_get_devno_map_end;
+    }
+
+    /*
+    ** Return the info
+    */
+    sprintf(map_data->targetName, (const char *) diag.targetName);
+    map_data->lun = diag.lun;
+    map_data->opened = diag.opened;
+
+bt_get_devno_map_end:
+    return (retval);
+}
+
+/*****************************************************************************
+**
+**      Name:           bt_set_devno_map
+**
+**      Purpose:        Sets the driver device number to fc mapping
+**
+**      Args:
+**          btd         Device Descriptor
+**          map_data_p  Pointer to device number mapping structs
+**
+**      Returns:
+**          BT_ENOSUP   Not supported on this hardware.
+**          BT_EINVAL   Illegal parameter passed to function.
+**          BT_EDESC    Illegal descriptor passed to function.
+**
+**          BT_SUCCESS  Testing passed, local card appears good.
+**          
+**
+**      Notes:
+**
+*****************************************************************************/
+
+bt_error_t bt_set_devno_map(
+    bt_desc_t       btd,
+    bt_ioctl_vc_map_t            *map_data)
+{
+    bt_error_t      retval = BT_SUCCESS;
+    bt_ioctl_vc_map_t    diag;
+
+    /*
+    ** Check for bad descriptor or invalid pointer value
+    */
+    if (BT_DESC_BAD(btd)) {
+        DBG_STR("bt_set_devno_map:bad descriptor.");
+        retval = BT_EDESC;
+        goto bt_set_devno_map_end;
+    }
+
+    if (!(map_data)) {
+        DBG_STR("bt_set_devno_map:bad struct pointer.");
+        retval = BT_EINVAL;
+        goto bt_set_devno_map_end;
+    }
+
+    strcpy(diag.targetName, map_data->targetName);
+    diag.lun = map_data->lun;
+
+    diag.mapindex = map_data->mapindex;
+    if (diag.mapindex == 0) {
+        DBG_STR("bt_set_devno_map:bad map index.");
+        retval = BT_EINVAL;
+        goto bt_set_devno_map_end;
+    }
+
+    /*
+    ** Setup ioctl structure
+    */
+    diag.error = (bt_data32_t) BT_SUCCESS;
+
+    /*
+    ** Retrieve the driver version number
+    */
+    if ((retval = bt_ctrl(btd, BIOC_FCTACH_SET_VC_MAP, &diag)) != BT_SUCCESS) {
+        DBG_STR("bt_set_devno_map:BIOC_FCTACH_SET_VC_MAP failed.");
+        if (diag.error != BT_SUCCESS) {
+            retval = diag.error;
+        }
+        goto bt_set_devno_map_end;
+    }
+    sprintf(map_data->oldTargetName, (const char *) diag.oldTargetName);
+    map_data->oldLun = diag.oldLun;
+
+bt_set_devno_map_end:
+    return (retval);
+}
+
+#endif  /* FCTACH */

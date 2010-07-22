@@ -11,7 +11,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 2000 by SBS Technologies, Inc.
+**        Copyright (c) 2000, 2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -29,12 +29,24 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#if defined(__sun)
+#include <sys/time_impl.h>
+#endif /* defined(__sun) */
+
+#if defined (BT951)
+#include <ipc.h>
+#include <sem.h>
+#else
 #include <sys/ipc.h>
 #include <sys/sem.h>
-/* #include <semaphore.h> */
+#endif /* BT951 */
+
+#if !defined(__linux__)
+#include <semaphore.h>
+#endif /* __linux__ */
 
 #include "btapi.h"
-#include "btio.h"
 #include "btpiflib.h"
 
 #if !defined(BT965)

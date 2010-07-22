@@ -11,7 +11,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 1999 by SBS Technologies, Inc.
+**        Copyright (c) 1999-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -21,9 +21,8 @@
 static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #endif	/* LINT */
 
-#include	"btio.h"
-#include	"btapi.h"
-#include	"btpiflib.h"
+#include    "btapi.h"
+#include    "btpiflib.h"
 
 /*****************************************************************************
 **
@@ -58,7 +57,6 @@ bt_error_t bt_send_irq(
     )
 {
     bt_error_t retvalue = BT_SUCCESS;
-    bt_error_t errorval = BT_SUCCESS;
 
     if (BT_DESC_BAD(device)) {   /* Bad Descriptor */
        DBG_STR("bt_send_irq:bad descriptor.");
@@ -69,7 +67,6 @@ bt_error_t bt_send_irq(
     retvalue = bt_ctrl(device, BIOC_SND_INTR,NULL);
     if (BT_SUCCESS != retvalue) {
         DBG_STR("bt_send_irq:bt_ctrl BIOC_SND_INTR call failed.");
-	retvalue = errorval;
     }
 
     return retvalue;

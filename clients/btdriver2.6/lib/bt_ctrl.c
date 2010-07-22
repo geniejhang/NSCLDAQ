@@ -11,7 +11,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 2000 by SBS Technologies, Inc.
+**        Copyright (c) 2000-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -30,9 +30,13 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #include <ioLib.h>
 #endif /* defined __vxworks */
 
-#include "btio.h"
-#include "btapi.h"
-#include "btpiflib.h"
+#if defined(__sun)
+#include <unistd.h>
+#include <stropts.h>
+#endif /* defined(__sun) */
+
+#include    "btapi.h"
+#include    "btpiflib.h"
 
 /*****************************************************************************
 **
@@ -92,7 +96,14 @@ bt_error_t bt_ctrl(
     /*
     ** Do the ioctl
     */
+
+#if defined (__vxworks)    
+    /* arg 3 of ioctl for vxwork is an int */
+    if (-1 == (retvalue = ioctl(btd->fd, ctrl, (int) param_p))) {
+#else 	    
     if (-1 == (retvalue = ioctl(btd->fd, ctrl, (void *) param_p))) {
+#endif /* defined (__vxworks) */    
+
         switch (errno) {
           case EBADF:
             retvalue = BT_EDESC;

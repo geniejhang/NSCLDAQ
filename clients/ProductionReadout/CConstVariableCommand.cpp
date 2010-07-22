@@ -205,7 +205,7 @@ CConstVariableCommand::Create(CTCLInterpreter& rInterp, CTCLResult& rResult,
    }
    // Pull out the command variable name.
       
-   char*       pValue   = "0";
+   const char* pValue   = "0";
    const char* pName    = *pArgs++;
    nArgs--;
    
@@ -348,7 +348,7 @@ CConstVariableCommand::List(CTCLInterpreter& rInterp,
 	nStatus = TCL_ERROR;
   } 
   else {			// If no args, pattern is *:
-	char* pPattern="*";
+	const char* pPattern="*";
 	if(nArgs) pPattern = *pArgs;
      
 	// Use for_each to build up the list...

@@ -12,7 +12,7 @@
 *****************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 2000 by SBS Technologies, Inc.
+**        Copyright (c) 2000-05 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -39,6 +39,7 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
 void btk_isr(intr_arg_t arg);
 
 #elif defined(__linux__)
+/* A type return is now required for ISRs in the 2.6 kernel */
 #if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,69)
 #include <linux/interrupt.h>
 irqreturn_t btk_isr(int irq, void *vunit_p, struct pt_regs *regs);
@@ -66,6 +67,10 @@ u_int btk_isr(caddr_t isr_param_p);
 #if defined (BT946)
 extern bt_data32_t btp_user_isr(bt_unit_t *unit_p, btk_llist_t *qhead_p, bt_irq_t irq_type, bt_data32_t vector, bt_data8_t level);
 #endif /* defined(BT946) */
+
+#elif defined (__lynxos)
+
+void btk_isr(bt_unit_t *unit_p);
 
 #else /* Unknown OS */
 #error Unknown OS
@@ -109,6 +114,7 @@ BT_FILE_NUMBER(TRACE_BT_ISR_C);
 **  Args:       arg     Pointer to the unit structure.
 **
 **  Returns:    0   All the time (taken from SGI example driver).
+**              Linux returns a irqreturn_t type in the 2.6 kernel.
 **
 **  Notes:  Currently I still keep track of whether we service the interrupt
 **          eventhough IRIX does not care.
@@ -148,6 +154,10 @@ irqreturn_t btk_isr(
     int irq,
     void *vunit_p,
     struct pt_regs *regs)
+
+#elif defined (__lynxos)
+void btk_isr(
+        bt_unit_t *unit_p)
 
 #else /* Unknown OS */
 #error Unknown OS
@@ -258,6 +268,18 @@ irqreturn_t btk_isr(
     }
     SET_UNIT_NUMBER(unit_p->unit_number);
 
+#elif defined (__lynxos)
+    /*
+    **  Make sure we have a vaild unit pointer
+    */
+    if (unit_p == NULL) {
+        WARN_STR("SBS ISR called with NULL unit pointer");
+        FEXIT(0);
+        return;
+    } else {
+        SET_UNIT_NUMBER(unit_p->unit_number);
+    }
+
 #else /* Unknown OS */
 #error Unknown OS
 #endif
@@ -330,6 +352,7 @@ irqreturn_t btk_isr(
         }
     }
 
+
     /*
     ** Record which cable and error interrupts are pending
     */
@@ -385,12 +408,12 @@ irqreturn_t btk_isr(
         */
         error_irq = TRUE;
 #if !defined(BT946)
-         if (IS_SET(unit_p->bt_status, BT_ER_INTR)) {
+        if (IS_SET(unit_p->bt_status, BT_ER_INTR)) {
             vector = bt_user_isr(
                          unit_p, 
                          &unit_p->qh_err_fn, 
                          BT_IRQ_ERROR, 0);
-            }
+        }
 #else /* !defined(BT946) */
         /* Just to be safe let's first read the local status register */
         /* and then only allow user isr if the cable is on.  */
@@ -398,7 +421,7 @@ irqreturn_t btk_isr(
         if (IS_CLR(btk_get_io(unit_p, BT_LOC_STATUS), LSR_NO_CONNECT)) {
             vector = btp_user_isr(
                          unit_p, 
-                         &unit_p->qh_iack_fn, 
+                         &unit_p->qh_err_fn, 
                          BT_IRQ_ERROR, 0, 0);
         }
 #endif /* !defined(BT946) */
@@ -443,7 +466,7 @@ irqreturn_t btk_isr(
             IS_SET(dma_cmd, LDC_DMA_DONE)) {
             btk_put_io(unit_p, BT_LDMA_CMD, 0);
             CLR_BIT(unit_p->bt_status, BT_DMA_ACTIVE);
-            btk_event_set(unit_p, &unit_p->dma_event);
+            btk_event_set(&unit_p->dma_event);
 #if defined(BT_NTDRIVER) || defined(__vxworks) || defined(__sun) || defined(__linux__)
             /*
             ** We do not use watchdog function to set event for
@@ -503,9 +526,11 @@ irqreturn_t btk_isr(
                 ** If any prgm'd interrupt handlers are registered, invoke them
                 */
 #if !defined(BT946)
-                vector = bt_user_isr(unit_p, &unit_p->qh_prg_fn, BT_IRQ_PRG, 0);
+                if (IS_SET(unit_p->bt_status, BT_PT_INTR)) {
+                    vector = bt_user_isr(unit_p, &unit_p->qh_prg_fn, BT_IRQ_PRG, 0);
+                }
 #else /* !defined(BT946) */
-               vector = btp_user_isr(unit_p, &unit_p->qh_iack_fn, BT_IRQ_PRG, 0, 0);
+               vector = btp_user_isr(unit_p, &unit_p->qh_prg_fn, BT_IRQ_PRG, 0, 0);
 #endif /* !defined(BT946) */
                 if (vector == 0) {
                     vector = mreg_vector;
@@ -528,6 +553,13 @@ irqreturn_t btk_isr(
             ** Clear out the PT interrupt condition.
             */
             btk_put_io(unit_p, BT_REM_CMD1, RC1_CLR_PT_INT);
+            /*
+            ** Bug to fix loopback local card diagnostics, bt_lcard_diag()
+            ** PT interrupt was not going away till second remote register access
+            */
+            if (IS_SET(unit_p->bt_status, BT_LOOPBACK)) {
+                (void) btk_get_io(unit_p, BT_REM_STATUS);
+            }
             cint_pending = 0;
         }
 
@@ -566,7 +598,7 @@ irqreturn_t btk_isr(
                     vector = bt_user_isr(unit_p, &unit_p->qh_prg_fn, BT_IRQ_PRG, 0);
                 }
 #else /* !defined(BT946) */
-               vector = btp_user_isr(unit_p, &unit_p->qh_iack_fn, BT_IRQ_PRG, 0, 0);
+               vector = btp_user_isr(unit_p, &unit_p->qh_prg_fn, BT_IRQ_PRG, 0, 0);
 #endif /* !defined(BT946) */
                 if (vector == 0) {
                     vector = mreg_vector;
@@ -658,7 +690,16 @@ irqreturn_t btk_isr(
                     ** the actual vector to be passed back to the application level
                     ** so instead we pass back the IACK vector
                     */
+
                     (void *) btp_user_isr(unit_p, &unit_p->qh_iack_fn, BT_IRQ_IACK, vector, vme_level);
+                    /*  
+                    ** Returning a value from btp_user_isr() is a custom modification 
+                    ** for Raytheon.  This change must not be made to the SBS standard
+                    ** product.  For Raytheon build replace above line with the following.     
+                    ** vector = btp_user_isr(unit_p, &unit_p->qh_iack_fn, 
+                    **                       BT_IRQ_IACK, vector, vme_level); 
+                    */
+
 #endif /* !defined(BT946) */
                     
                     /* 
@@ -693,7 +734,7 @@ end_intr1:
             btk_put_io(unit_p, BT_LOC_CMD1, LC1_CLR_ERROR);
         } else {
             if (IS_SET(btk_get_io(unit_p,BT_LOC_INT_CTRL),LIC_INT_PENDING)) {
-	        WARN_STR("No IRQ found, IRQ still pending, IRQs being disabled");
+                WARN_STR("No IRQ found, IRQ still pending, IRQs being disabled");
                 btk_put_io(unit_p, BT_LOC_INT_CTRL, LIC_DIS_INTR);
             }
         }
@@ -744,6 +785,11 @@ end_intr:
     return;
 #endif
     
+#elif defined (__lynxos)
+
+    FEXIT(0);
+    return;
+
 #else /* Unknown OS */
 #error Unknown OS
 #endif /* Unknown OS */
@@ -770,7 +816,7 @@ void btk_dma_watchdog(
 
   bt_unit_t         *unit_p = (bt_unit_t *) arg_p;
   BTK_LOCK_RETURN_T saved_pl;
-  LOG_UNIT(unit_p);
+  LOG_UNIT(unit_p->unit_number);
 
   FUNCTION("btk_dma_watchdog");
   FENTRY;
@@ -800,7 +846,7 @@ void btk_dma_watchdog(
     */      
 #else /* defined(BT_NTDRIVER) || defined(__vxworks) || defined(__sun) || defined(__linux__) */
 
-    btk_event_set(unit_p, &unit_p->dma_event);
+    btk_event_set(&unit_p->dma_event);
 
 #endif /* defined(BT_NTDRIVER) || defined(__vxworks) || defined(__sun) || defined(__linux__) */
     
@@ -838,7 +884,7 @@ static bt_data32_t bt_user_isr(
     bt_data8_t cint)
 {
     FUNCTION("bt_user_isr");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bt_data32_t         vector = 0;
 #if !defined(BT946)
@@ -871,7 +917,7 @@ static bt_data32_t bt_user_isr(
         ** Call the registered custom Interrupt Service Routine 
         */
         TRC_STR(BT_TRC_IRQ_DISP, "custom kernel isr entry");
-        vector = (*data_p->interrupt_routine)((u_short) unit_p->unit_number, data_p->param, (u_short) irq_type);
+        vector = (*data_p->interrupt_routine)((u_short) unit_p->unit_number, data_p->param, irq_type);
         TRC_MSG(BT_TRC_IRQ_DISP, 
                 (LOG_FMT "custom kernel isr returns 0x%x\n",
                 LOG_ARG, vector));
@@ -912,7 +958,7 @@ static void bt_logerr_ints(
   u_char unit_status)
 {
     FUNCTION("bt_logerr_ints");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
@@ -980,7 +1026,7 @@ static void bt_drv_vector(
   bt_data32_t vector)
 {
     FUNCTION("bt_drv_vector");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
@@ -997,7 +1043,7 @@ static void bt_drv_vector(
       ** Other driver has released semaphore 
       */
       case BT_DRV_VECTOR_SEMA_RELEASE:
-        btk_event_set(unit_p, &unit_p->dma_event);
+        btk_event_set(&unit_p->dma_event);
         break;
 
       default:

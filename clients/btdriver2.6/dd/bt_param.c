@@ -32,27 +32,21 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
 ** Include files
 */
 #include "btdd.h"
-#if defined (BT1003)
-#if EAS_BIND_CODE
-#include <asm/io.h>
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,5)
-#include <linux/wrapper.h>
-#else
-#include <linux/page-flags.h>
-#endif
-#if USE_BIGPHYSAREA
-#include <linux/bigphysarea.h>
-#endif
-#endif /* EAS_BIND_CODE */
-#endif
 
 /*
 ** Function prototypes
 */
+#if !defined (__lynxos)
 bt_error_t btk_set_info(bt_unit_t *unit_p, bt_dev_t ldev, bt_info_t param, 
-           bt_devdata_t value);
+           bt_data64_t value);
 bt_error_t btk_get_info(bt_unit_t *unit_p, bt_dev_t ldev, bt_info_t param, 
-           bt_devdata_t *value_p);
+           bt_data64_t *value_p);
+#else
+bt_error_t btk_set_info(bt_unit_t *unit_p, bt_dev_t ldev, bt_info_t param, 
+           bt_data32_t value);
+bt_error_t btk_get_info(bt_unit_t *unit_p, bt_dev_t ldev, bt_info_t param, 
+           bt_data32_t *value_p);
+#endif
 extern void btk_setup_mreg(bt_unit_t *unit_p, bt_dev_t ldev, 
            bt_data32_t *mreg_value_p, bt_operation_t op);
 extern bt_data32_t btk_get_mreg(bt_unit_t *unit_p, unsigned int mr_idx, 
@@ -63,8 +57,14 @@ static void set_lm_swap(bt_unit_t * unit_p);
 extern bt_data32_t btk_get_io(bt_unit_t * unit_p, bt_reg_t reg);
 extern void btk_put_io(bt_unit_t * unit_p, bt_reg_t reg, bt_data32_t value);
 
-#define LOCK_DMA(u_p)    btk_mutex_enter((u_p), &(u_p)->dma_mutex);
-#define UNLOCK_DMA(u_p)  btk_mutex_exit((u_p), &(u_p)->dma_mutex);
+#ifdef BT_WDM_DRIVER
+bt_error_t btw_KeyValue_SetCreate( bt_unit_t *unit_p,
+				   PUNICODE_STRING ValKeyName,
+				   bt_devdata_t value);
+#endif
+
+#define LOCK_DMA(u_p)    btk_mutex_enter(&(u_p)->dma_mutex);
+#define UNLOCK_DMA(u_p)  btk_mutex_exit(&(u_p)->dma_mutex);
 
 /*
 **  List local variables here
@@ -92,22 +92,30 @@ bt_error_t btk_set_info(
     bt_unit_t *unit_p,
     bt_dev_t ldev,
     bt_info_t param,
-    bt_devdata_t value)
+#if !defined (__lynxos)
+    bt_data64_t value
+#else
+    bt_data32_t value
+#endif
+    )
 {
 
-    bt_error_t   retval = BT_SUCCESS;
-    char        *einval_p = "Invalid parameter value";
-    int          old_value;
-    bt_data32_t  tmp_reg;
+    bt_error_t     retval = BT_SUCCESS;
+    char          *einval_p = "Invalid parameter value";
+    int            old_value;
+    bt_data32_t    tmp_reg;
+#ifdef BT_WDM_DRIVER
+    UNICODE_STRING ValKeyName;
+#endif /* BT_WDM_DRIVER */
 
     FUNCTION("btk_set_info");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
     
     TRC_MSG(BT_TRC_CTRL, 
-	    (LOG_FMT "Setting parameter %d for device %d to value 0x%x\n",
-	     LOG_ARG, param, ldev, value));
+        (LOG_FMT "Setting parameter %d for device %d to value 0x%x\n",
+         LOG_ARG, param, ldev, (int) value));
 
     /* Don't let the array be index outside its definition */
     if (ldev > BT_MAX_AXSTYPS) {
@@ -130,82 +138,10 @@ bt_error_t btk_set_info(
         unit_p->a64_offset = value;
         break;
 #endif  /* EAS_A64_CODE */
-#if EAS_BIND_CODE
-/* EAS TMP CODE */
-      case BT_INFO_KMALLOC_SIZ:
-        /* set amount of memory to kmallock on get */
-        unit_p->bt_kmalloc_size = value;
-        break;
-      case BT_INFO_KMALLOC_BUF:
-        /* set kernel allocated buffer value, allocated by some other means i.e. another driver */
-        unit_p->bt_kmalloc_buf = (unsigned int *)value;
-        break;
-      case BT_INFO_KFREE_BUF:
-        if (unit_p->bt_kmalloc_ptr) {
-            /* valid, free driver allocated kernel buffer, don't do this if allocated by some other means i.e. bigphysarea patch */
-            unsigned long virt_addr;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
-            unsigned int i;
-#endif
-
-            /* unreserve all pages */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
-            for(i = MAP_NR(unit_p->bt_kmalloc_buf); i <= MAP_NR((void *)unit_p->bt_kmalloc_buf + unit_p->bt_kmalloc_size); i++)
-            {
-                mem_map_unreserve(i);
-            }
-#else
-            for(virt_addr = (unsigned long)unit_p->bt_kmalloc_buf; virt_addr < (unsigned long)unit_p->bt_kmalloc_buf + unit_p->bt_kmalloc_size;
-    	        virt_addr += PAGE_SIZE)
-            {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,5)
-                mem_map_unreserve(virt_to_page(virt_addr));
-#else
-                ClearPageReserved(virt_to_page(virt_addr));
-#endif
-            }
-#endif
-            kfree(unit_p->bt_kmalloc_ptr);
-            unit_p->bt_kmalloc_buf =
-            unit_p->bt_kmalloc_ptr = NULL;
-        }
-#if USE_BIGPHYSAREA
-        else if (unit_p->bt_kmalloc_buf) {
-            /* allocated kernel buffer via bigphysarea, free it */
-            unsigned long virt_addr;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
-            unsigned int i;
-#endif
-
-            /* unreserve all pages */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
-            for(i = MAP_NR(unit_p->bt_kmalloc_buf); i <= MAP_NR((void *)unit_p->bt_kmalloc_buf + unit_p->bt_kmalloc_size); i++)
-            {
-                mem_map_unreserve(i);
-            }
-#else
-            for(virt_addr = (unsigned long)unit_p->bt_kmalloc_buf; virt_addr < (unsigned long)unit_p->bt_kmalloc_buf + unit_p->bt_kmalloc_size;
-    	        virt_addr += PAGE_SIZE)
-            {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,5)
-                mem_map_unreserve(virt_to_page(virt_addr));
-#else
-                ClearPageReserved(virt_to_page(virt_addr));
-#endif
-            }
-#endif
-            bigphysarea_free((caddr_t)unit_p->bt_kmalloc_buf, (int)(unit_p->bt_kmalloc_size + (2 * PAGE_SIZE)));
-            unit_p->bt_kmalloc_buf =
-            unit_p->bt_kmalloc_ptr = NULL;
-        }
-#endif  /* USE_BIGPHYSAREA */
-        break;
-
-#endif /* EAS_BIND_CODE */
 #endif
 
       case BT_INFO_TRACE:
-        bt_trace_lvl_g = value;
+        bt_trace_lvl_g = (bt_data32_t)value;
         break;
         
       case BT_INFO_RESET_DELAY:
@@ -216,7 +152,7 @@ bt_error_t btk_set_info(
         
       case BT_INFO_PIO_AMOD:
         if (value != 0) {
-          unit_p->pio_addr_mod[ldev] = value;
+          unit_p->pio_addr_mod[ldev] = (int)value;
         } else {
           switch (ldev) {
             case BT_AXSRI:
@@ -238,7 +174,7 @@ bt_error_t btk_set_info(
         
       case BT_INFO_DMA_AMOD:
         if (value != 0) {
-          unit_p->dma_addr_mod[ldev] = value;
+          unit_p->dma_addr_mod[ldev] = (int)value;
         } else {
           switch (ldev) {
             case BT_AXSRI:
@@ -260,7 +196,7 @@ bt_error_t btk_set_info(
         
       case BT_INFO_MMAP_AMOD:
         if (value != 0) {
-          unit_p->mmap_addr_mod[ldev] = value;
+          unit_p->mmap_addr_mod[ldev] = (int)value;
         } else {
           switch (ldev) {
             case BT_AXSRI:
@@ -287,7 +223,7 @@ bt_error_t btk_set_info(
           case BT_WIDTH_D16:
           case BT_WIDTH_D8:
           case BT_WIDTH_ANY:
-            unit_p->data_size[ldev] = value;
+            unit_p->data_size[ldev] = (int)value;
             break;
           default:
             INFO_STR(einval_p);
@@ -309,7 +245,7 @@ bt_error_t btk_set_info(
             unit_p->swap_bits[ldev] = BT_SWAP_VMEBUS;
           }
         } else {
-          unit_p->swap_bits[ldev] = value;
+          unit_p->swap_bits[ldev] = (int)value;
         }
         /* The local memory device must be updated with the new swap value */
         /* for BT_AXSLM minor device and all non-PCI2PCI adapters.         */
@@ -321,7 +257,7 @@ bt_error_t btk_set_info(
         break;
         
       case BT_INFO_DMA_THRESHOLD:
-        unit_p->dma_threshold = value;
+        unit_p->dma_threshold = (int)value;
         break;
         
       case BT_INFO_GEMS_SWAP:
@@ -375,7 +311,7 @@ bt_error_t btk_set_info(
         break;
         
       case BT_INFO_DMA_POLL_CEILING:
-        unit_p->dma_poll_size = value;
+        unit_p->dma_poll_size = (int)value;
         break;
         
       case BT_INFO_DMA_WATCHDOG:
@@ -407,7 +343,21 @@ bt_error_t btk_set_info(
           CLR_BIT(unit_p->bt_status, BT_SEND_PT);
         }
         break;
-        
+
+#ifdef BT_WDM_DRIVER
+      case BT_INFO_LM_SIZE:
+	RtlInitUnicodeString(&ValKeyName, L"LocalMemorySize" );
+	retval = btw_KeyValue_SetCreate( unit_p, &ValKeyName,
+					 (bt_devdata_t)value);
+        break;
+
+      case BT_INFO_ICBR_Q_SIZE:
+	RtlInitUnicodeString(&ValKeyName, L"IrqQSize" );
+	retval = btw_KeyValue_SetCreate( unit_p, &ValKeyName, 
+					 (bt_devdata_t)value);
+        break;
+#endif
+
       case BT_MIN_INFO:
       default:                /* Default will catch all new ones  */
         INFO_STR("The IOCTL parameter isn't supported.");
@@ -440,12 +390,17 @@ bt_error_t btk_get_info(
     bt_unit_t *unit_p,
     bt_dev_t ldev,
     bt_info_t param,
-    bt_devdata_t* value_p)
+#if !defined (__lynxos)
+    bt_data64_t* value_p
+#else
+    bt_data32_t* value_p
+#endif
+    )
 {
     bt_error_t  retval = BT_SUCCESS;
 
     FUNCTION("btk_get_info");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
@@ -469,79 +424,6 @@ bt_error_t btk_get_info(
         *value_p = unit_p->a64_offset;
         break;
 #endif  /* EAS_A64_CODE */
-#if EAS_BIND_CODE
-/* EAS BIND CODE */
-      case BT_INFO_KMALLOC_SIZ:
-        /* return amount of memory to kmallock on get */
-        *value_p = unit_p->bt_kmalloc_size;
-        break;
-      case BT_INFO_KMALLOC_BUF:
-        /* return the physical address to kmalloc buf */
-        {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
-            int i;
-#endif
-            unsigned long virt_addr;
-
-            if (unit_p->bt_kmalloc_buf || unit_p->bt_kmalloc_ptr) {
-                /* buffer already allocated for this device */
-                INFO_STR("Kernel buffer already allocated for this device node\n");
-                retval = BT_EINVAL;
-                *value_p = 0;
-                break;
-            }
-
-        
-            /* get a memory area with kmalloc and aligned it to a page. This area
-               will be physically contigous */
-            virt_addr = (unsigned long)(unit_p->bt_kmalloc_ptr = kmalloc((unit_p->bt_kmalloc_size + (2 * PAGE_SIZE)), GFP_KERNEL));
-            if (!(unit_p->bt_kmalloc_ptr)) {
-#if USE_BIGPHYSAREA
-                /* unable to obtain kmalloc allocated buf, try bigphysarea */
-                virt_addr = (unsigned long)(bigphysarea_alloc(unit_p->bt_kmalloc_size + (2 * PAGE_SIZE)));
-                if (!(virt_addr)) {
-#endif  /* USE_BIGPHYSAREA */
-                    INFO_STR("Unable to obtain kernel allocated buf\n");
-                    retval = BT_EINVAL;
-                    *value_p = 0;
-                    break;
-#if USE_BIGPHYSAREA
-                }
-#endif  /* USE_BIGPHYSAREA */
-            }
-
-            /* physically (page sized) align buffer obtained if it isn't already */
-            unit_p->bt_kmalloc_buf = (int *)(((unsigned long)virt_addr + PAGE_SIZE -1) & PAGE_MASK);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
-            for(i = MAP_NR(unit_p->bt_kmalloc_buf); i <= MAP_NR((void *)unit_p->bt_kmalloc_buf + unit_p->bt_kmalloc_size); i++) {
-                /* reserve all pages to make them remapable */
-                mem_map_reserve(i);
-            }
-#else
-            for (virt_addr = (unsigned long)unit_p->bt_kmalloc_buf; 
-                 virt_addr < (unsigned long)unit_p->bt_kmalloc_buf + unit_p->bt_kmalloc_size;
-                 virt_addr += PAGE_SIZE) {
-                 /* reserve all pages to make them remapable */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,5)
-                 mem_map_reserve(virt_to_page(virt_addr));
-#else
-                 SetPageReserved(virt_to_page(virt_addr));
-#endif
-            }
-#endif
-            sprintf((char *)unit_p->bt_kmalloc_buf, "Kernel allocated buffer of size 0x%x\n", unit_p->bt_kmalloc_size);
-
-            TRC_MSG((BT_TRC_BIND), 
-                    (LOG_FMT "Kernel alloced buf: kernel virt=0x%x phys=0x%x data string=%s\n",
-                    LOG_ARG, (unsigned int)unit_p->bt_kmalloc_buf, 
-                    (unsigned int)virt_to_phys((volatile void *)unit_p->bt_kmalloc_buf), 
-                    (char *)unit_p->bt_kmalloc_buf));
-
-            *value_p = (bt_devdata_t)unit_p->bt_kmalloc_buf;
-        }
-
-        break;
-#endif /* EAS_BIND_CODE */
 #endif
 
       case BT_INFO_TRACE:
@@ -676,13 +558,13 @@ bt_error_t btk_get_info(
     }
 
     if (BT_SUCCESS == retval) {
-	TRC_MSG(BT_TRC_CTRL, 
-		(LOG_FMT "Value of parameter %d for device %d is 0x%x\n",
-		 LOG_ARG, param, ldev, *value_p));
+        TRC_MSG(BT_TRC_CTRL, 
+            (LOG_FMT "Value of parameter %d for device %d is 0x%x\n",
+             LOG_ARG, param, ldev, (int) (*value_p)));
     } else {
-	TRC_MSG(BT_TRC_CTRL, 
-		(LOG_FMT "Error getting value of parameter %d for device %d\n",
-		 LOG_ARG, param, ldev));
+        TRC_MSG(BT_TRC_CTRL, 
+            (LOG_FMT "Error getting value of parameter %d for device %d\n",
+             LOG_ARG, param, ldev));
     }
 
 exit_btk_set_info:
@@ -711,7 +593,7 @@ static void set_lm_swap(
     )
 {
     FUNCTION("init_lm");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     unsigned int    need;
     unsigned int    start;
@@ -761,3 +643,71 @@ start = unit_p->lm_start;
     FEXIT(0);
     return;
 }
+
+#ifdef BT_WDM_DRIVER
+/******************************************************************************
+**
+**      Function:   btw_KeyValue_SetCreate()
+**
+**      Purpose:    Given unit structure and key value name, set the value if it
+**                  exists, otherwise create it with the given value.  Key (path)
+**                  must already exist.
+**
+**      Args:       unit_p          Pointer to unit structure.
+**                  ValKeyName      Name of the key value to query or create
+**                  value           Info parameter value to set.
+**
+**      Returns:    BT_SUCCESS      Successful
+**                  BT_EFAIL        If there's some problem getting into the registry
+**
+******************************************************************************/
+bt_error_t btw_KeyValue_SetCreate( bt_unit_t *unit_p,
+				   PUNICODE_STRING ValKeyName,
+				   bt_devdata_t value)
+{
+  bt_error_t        retval = BT_SUCCESS;
+  NTSTATUS          local_status;
+  OBJECT_ATTRIBUTES RegObjectAttributes;
+  HANDLE            KeyHandle;
+  PKEY_VALUE_PARTIAL_INFORMATION ValKeyInfo;
+
+  FUNCTION("btw_KeyValue_SetCreate");
+  LOG_UNIT(unit_p->unit_number);
+  
+  FENTRY;
+
+  InitializeObjectAttributes(&RegObjectAttributes, &(unit_p->params_path),
+			     OBJ_KERNEL_HANDLE|OBJ_CASE_INSENSITIVE,
+			     NULL, NULL);
+  
+  local_status = ZwOpenKey( &KeyHandle, KEY_ALL_ACCESS|REG_OPTION_NON_VOLATILE,
+			    &RegObjectAttributes );
+  
+  TRC_MSG(BT_TRC_CTRL, (LOG_FMT "After Open Key.  status = %x\n",
+			LOG_ARG, local_status ));
+  
+  if( STATUS_SUCCESS == local_status )
+    {
+      
+      local_status = ZwSetValueKey( KeyHandle, ValKeyName, 0, REG_DWORD,
+				    &value, sizeof(value) );
+      if( STATUS_SUCCESS != local_status )
+	{
+	  BTW_DEBUG((LOG_FMT "%s", LOG_ARG,
+		     "Couldn't set parameters registry key value.\n"));
+	  retval = BT_EFAIL;
+	}
+      TRC_MSG(BT_TRC_CTRL, (LOG_FMT "After Set Key.  status = %d\n",
+              LOG_ARG, local_status ));
+      local_status = ZwClose( KeyHandle );
+    }
+  else
+    {
+      BTW_DEBUG((LOG_FMT "%s", LOG_ARG, "Couldn't open parameters registry key\n"));
+      retval = BT_EFAIL;
+    }  /* if local_status */
+
+  FEXIT(retval);
+  return( retval );
+}
+#endif

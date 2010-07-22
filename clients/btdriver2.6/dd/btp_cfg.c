@@ -12,7 +12,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 1999-2000 by SBS Technologies, Inc.
+**        Copyright (c) 1999-2006 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -21,26 +21,30 @@
 #ifndef LINT
 static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #endif  /* LINT */
-static const char driver_version[] = "$Name:  $";
+static const char driver_version[] = "$Name: 1003v3p1pC 1003v3p1pB $";
 
 /* Used by btpdd.h to know if it should define __NO_VERSION__ or not */
 
 #define BTP_CFG_C
 
-#include    <linux/module.h>
-#include <linux/vmalloc.h>
 
+#include <linux/types.h>
+#include <linux/kernel.h>
+#include <linux/version.h>
+#include <linux/init.h>
+#include <linux/pci.h>
 #include <asm/irq.h>
 #include <asm/io.h>
+#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26))
+#include <linux/devfs_fs_kernel.h>
+#endif
+#include <linux/module.h>
+#include <linux/moduleparam.h>
+#include <linux/stat.h>
 
 #include "btdd.h"
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,69)
-#include <linux/interrupt.h>
-#endif
 
-#if  LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,11) 
-#define pci_find_class pci_get_class
-#endif
+#include <linux/interrupt.h>
 
 #if     0 && !defined(NDEBUG)
 
@@ -52,23 +56,63 @@ static const char driver_version[] = "$Name:  $";
 
 #endif  /* 0 */
 
+static int btp_suspend(struct pci_dev *dev, u32 state);
+
+static int btp_resume(struct pci_dev *dev);
+
+static int __devinit btp_init_one(struct pci_dev *curr_dev_p, const struct pci_device_id *id);
+
+static void __devexit btp_remove_one(struct pci_dev *dev_p);
+
+static struct pci_device_id btp_ids[] __devinitdata = {
+    { PCI_DEVICE(BT_PCI_VENDOR_BIT3, BT_PCI_DEVICE_617) },
+    { PCI_DEVICE(BT_PCI_VENDOR_BIT3, BT_PCI_DEVICE_614) },
+    { PCI_DEVICE(BT_PCI_VENDOR_BIT3, BT_PCI_DEVICE_616) },
+    { PCI_DEVICE(BT_PCI_VENDOR_BIT3, BT_PCI_DEVICE_RPQ890) },
+    { PCI_DEVICE(BT_PCI_VENDOR_BIT3, BT_PCI_DEVICE_618) },
+    { PCI_DEVICE(BT_PCI_VENDOR_BIT3, BT_PCI_DEVICE_619) },
+    { PCI_DEVICE(BT_PCI_VENDOR_BIT3, BT_PCI_DEVICE_704) },
+    { PCI_DEVICE(BT_PCI_VENDOR_BIT3, BT_PCI_DEVICE_RPQ601332) },
+    { 0, },
+};
+
+MODULE_DEVICE_TABLE(pci, btp_ids);
+
+static struct pci_driver btp_pci_driver = {
+    .name       = "btp",
+    .id_table   = btp_ids,
+    .probe      = btp_init_one,
+    .remove     = __devexit_p(btp_remove_one),
+    .suspend    = btp_suspend,
+    .resume     = btp_resume,
+};
+
+
 /******************************************************************************
 **
 **      Global symbols
 **
 ******************************************************************************/
 
-EXPORT_SYMBOL(bt_trace_lvl_g);
-unsigned long bt_trace_lvl_g = BT_TRC_DEFAULT;
+bt_data32_t bt_trace_lvl_g = BT_TRC_DEFAULT;
 
-EXPORT_SYMBOL(bt_name_gp);
+EXPORT_SYMBOL(bt_trace_lvl_g);
+
 const char *bt_name_gp = BT_DRV_NAME;
 
+EXPORT_SYMBOL(bt_name_gp);
+
 unsigned int btp_major_g = 0;   /* Our major device number */
-volatile bt_data32_t *bt_trace_mreg_gp;
+
+volatile bt_data32_t *bt_trace_mreg_gp32;
+
+volatile bt_data64_t *bt_trace_mreg_gp64;
+
+volatile bt_data32_t bt_trace_mreg_size;
 
 #if     defined(DEBUG)
 EXPORT_SYMBOL(bt_unit_array_gp);
+/* EXPORT_SYMBOL(bt_num_units_g); */
 #endif  /* DEBUG */
 
 bt_unit_t *bt_unit_array_gp[BT_MAX_UNITS+1] = {
@@ -77,8 +121,12 @@ bt_unit_t *bt_unit_array_gp[BT_MAX_UNITS+1] = {
     NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL,
 
-
+    NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL,
 };
+static struct semaphore bt_units_lock_g;
 
 /* default File operations structure */
 
@@ -94,7 +142,6 @@ struct file_operations btp_fops = {
    .mmap=       btp_mmap
 #else   /* __GCC__ */
 
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
    llseek:	btp_llseek,
    read:	btp_read,
    write:	btp_write,
@@ -102,23 +149,6 @@ struct file_operations btp_fops = {
    mmap:	btp_mmap,
    open:	btp_open,
    release:	btp_close,
-#else   /* LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) */
-   btp_llseek,
-   btp_read,
-   btp_write,
-   NULL,        /* readdir */
-   NULL,        /* poll */
-   btp_ioctl,
-   btp_mmap,
-   btp_open,
-   NULL,        /* flush */
-   btp_close,   /* release */
-   NULL,        /* sync */
-   NULL,        /* check_media_change */
-   NULL,        /* revalidate */
-   NULL         /* lock */
-#endif  /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) || \
-            LINUX_VERSION_CODE <  KERNEL_VERSION(2,4,0) */
 
 #endif  /* __GCC__ */
 };
@@ -126,71 +156,90 @@ struct file_operations btp_fops = {
 /******************************************************************************
 **
 **      Module definitions and Driver loading parameters
+**  
+**      The User is allowed to pass command line arguments into this
+**      driver via the btp.conf file.   The btp.conf file is filled 
+**      with variables at run time by the insmod command in /sys/Makefile.
+**      The global variables that the user is allowed to modifed are 
+**      defined with the module_param() and MODULE_PARM_DESC() macros.
 **
 ******************************************************************************/
 
 unsigned int bt_major = 0;      /* Default major device number */
-#ifdef MODULE_PARM
-MODULE_PARM(bt_major, "i");
-#else
-module_param(bt_major, int, 0);
-#endif
+
+module_param(bt_major, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 
 MODULE_PARM_DESC(bt_major, "Default major device number, 0 == auto configure it.");
 
 unsigned long trace = 0;        /* Device driver trace level */
-#ifdef MODULE_PARM
-MODULE_PARM(trace, "l");
-#else
-module_param(trace, long, 0);
-#endif
+
+module_param(trace, long, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+
 MODULE_PARM_DESC(trace, "Bit mask of module tracing flags.");
 
+/* always give a MODULE variable an initaial default value */
 unsigned int icbr_q_size[BT_MAX_UNITS+1] = {
     DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE,
     DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE,
     DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE,
     DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE,
-
+    
+    DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE,
+    DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE,
+    DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE,
+    DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE, DEFAULT_Q_SIZE
 };
-#ifdef MODULE_PARM
-MODULE_PARM(icbr_q_size, "i");
+
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11))
+/* number of parameters for icbr_q_size */
+MODULE_PARM(icbr_q_size, "0-" __MODULE_STRING(BT_MAX_UNIT) "i");
 #else
-/* This fails on 2.6.22 - not sure how to fix this but can just leave it
-   unconfigurable ...
-*/
-/*  module_param(icbr_q_size, int, DEFAULT_Q_SIZE);      */ 
-#endif
+int icbr_q_size_cnt = 0;
+module_param_array(icbr_q_size, int, &icbr_q_size_cnt, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11)) */
+
 MODULE_PARM_DESC(icbr_q_size, "Number of entries to create in the interrupt callback routine (ICBR) queue.");
 
+/* always give a MODULE variable an initaial default value */
 unsigned long lm_size[BT_MAX_UNITS+1] = {
     DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE,
     DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE,
     DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE,
     DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE,
     
+    DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE,
+    DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE,
+    DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE,
+    DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE, DEFAULT_LMEM_SIZE
 };
-#ifdef MODULE_PARM
-MODULE_PARM(lm_size,"0-" __MODULE_STRING(BT_MAX_UNITS) "l");
-MODULE_PARM_DESC(lm_size, "Per unit array given the size of the local memory device. Default " __MODULE_STRING(DEFAULT_LMEM_SIZE) ".");
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11))
+/* number of parameters for icbr_q_size */
+MODULE_PARM(lm_size, "0-" __MODULE_STRING(BT_MAX_UNIT) "l");
 #else
-/*   Not quite sure how to fix this, but can just leave it unconfigurable. */
-#endif
+/* number of parameters for lm_size */
+int lm_size_cnt = 0;
+module_param_array(lm_size, long, &lm_size_cnt, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11)) */
+
+
+MODULE_PARM_DESC(lm_size, "Per unit array given the size of the local memory device. Default " __MODULE_STRING(DEFAULT_LMEM_SIZE) ".");
 
 MODULE_AUTHOR("SBS Technologies, Inc.");
+
 MODULE_DESCRIPTION("Device driver for SBS Technologies Connectivity Products PCI-VMEbus adapters.");
+
 MODULE_SUPPORTED_DEVICE(BT_DRV_NAME);
 
 MODULE_LICENSE("Proprietary");
 
-#if     LINUX_VERSION_CODE >= (KERNEL_VERSION(2,5,0))
 #include <linux/netdevice.h>
 #include <linux/interrupt.h>
 #include <linux/vermagic.h>
 
 MODULE_INFO(vermagic, VERMAGIC_STRING);
 
-#endif
 /*
 ** Local function prototypes
 */
@@ -203,11 +252,7 @@ static int destroy_unit(bt_unit_t *unit_p);
 extern unsigned long bt_kvm2bus(void * vm_addr_p);
 extern bt_error_t btk_irq_qs_init(bt_unit_t *unit_p, size_t q_size);
 extern void btk_irq_qs_fini(bt_unit_t *unit_p, size_t q_size);
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,69)
 extern irqreturn_t btk_isr(int irq, void *vunit_p, struct pt_regs *regs);
-#else
-extern void btk_isr(int irq, void *vunit_p, struct pt_regs *regs);
-#endif
 extern void btk_setup(bt_unit_t *unit_p);
 
 /*
@@ -215,10 +260,238 @@ extern void btk_setup(bt_unit_t *unit_p);
 */
 BT_FILE_NUMBER(TRACE_BTP_CFG_C);
 
+
+/*****************************************************************************
+**
+**      Name:           btp_init
+**
+**      Purpose:        Registers the device driver
+**
+**      Args:
+**          void
+**
+**      Modifies:
+**          None
+**          
+**      Returns:
+**          0           Success
+**          Otherwise   Error number
+**
+**      Notes:
+**
+*****************************************************************************/
+int __init btp_init(void)
+{
+    int         ret_val;
+
+    FUNCTION("btp_init");
+    LOG_UNKNOWN_UNIT;
+    
+#if !defined(CONFIG_PCI)
+    #error Must compile on a system with PCI support.
+    return -ENODEV;
+#endif
+
+    /*
+    ** Check page size for kernel
+    */
+    if (BT_PAGE_SIZE  > PAGE_SIZE) {
+        printk("Kernel page size does not match hardware page size\n");
+        WARN_STR("Kernel page size does not match hardware page size\n");
+        return -ENODEV;
+    }
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26)
+    SET_MODUE_OWNER(&btp_fops);
+#else
+    btp_fops.owner = THIS_MODULE;
+#endif
+
+    /*
+    ** Initialize unit number spinlock
+    */
+    sema_init(&bt_units_lock_g, 1);
+    
+    /* 
+    ** Initialize trace value & memory handling routines 
+    */
+    if (0 != trace) {
+        bt_trace_lvl_g = trace;
+    }
+    bt_trace_mreg_size = 32;
+    bt_trace_mreg_gp32 = (volatile bt_data32_t *) NULL;
+    bt_trace_mreg_gp64 = (volatile bt_data64_t *) NULL;
+    btk_mem_init();
+
+    /*
+    ** Register the driver to discover all the installed cards
+    */
+    if (pci_register_driver(&btp_pci_driver) < 0) {
+        TRC_STR(BT_TRC_CFG, "No boards found in system\n")
+        pci_unregister_driver (&btp_pci_driver);
+        btk_mem_fini();
+        FEXIT(-ENODEV);
+        return(-ENODEV);
+    }
+
+    /* 
+    ** Get the major device number for our card 
+    */
+    if ((ret_val = register_chrdev(bt_major, bt_name_gp, &btp_fops)) < 0) {
+        WARN_MSG((LOG_FMT "Could not register device with major number %d.\n",
+            LOG_ARG, bt_major));
+        btp_major_g = 0;
+        pci_unregister_driver(&btp_pci_driver);
+        btk_mem_fini();
+        FEXIT(ret_val);
+        return(ret_val);
+    }
+    btp_major_g = ret_val;
+    TRC_STR(BT_TRC_CFG, "Driver loaded.\n");
+
+    /*
+    ** Create all the device nodes
+    */
+#ifdef CONFIG_DEVFS_FS
+    down(&bt_units_lock_g);
+    for (unit = 0; unit < BT_MAX_UNITS; unit++) {
+        if (bt_unit_array_gp[unit] != NULL) {
+            for (minor = 0; minor < BT_MAX_AXSTYPS; minor++) {
+                sprintf(name, "btp%d", minor * (BT_MAX_UNITS + 1));
+                ret_val = devfs_mk_cdev(MKDEV(btp_major_g, minor * (BT_MAX_UNITS + 1)), S_IFCHR|S_IRUGO|S_IWUGO, name);
+            }
+        }
+    }
+    up(&bt_units_lock_g);
+#endif /* CONFIG_DEVFS_FS */
+
+    return(0);
+}
+
+/*****************************************************************************
+**
+**      Name:           btp_exit
+**
+**      Purpose:        Deregisters the device driver
+**
+**      Args:
+**          void
+**
+**      Modifies:
+**          None
+**          
+**      Returns:
+**          Void
+**
+**      Notes:
+**
+*****************************************************************************/
+void __exit btp_exit(void)
+{
+
+    FUNCTION("btp_exit");
+    LOG_UNKNOWN_UNIT;
+
+
+#ifdef CONFIG_DEVFS_FS
+    /*
+    ** Destroy all the device nodes
+    */
+    {
+    int         unit, minor;
+    char        name[256];
+    down(&bt_units_lock_g);
+    for (unit = 0; unit < BT_MAX_UNITS; unit++) {
+        if (bt_unit_array_gp[unit] != NULL) {
+            for (minor = 0; minor < BT_MAX_AXSTYPS; minor++) {
+                sprintf(name, "btp%d", minor * (BT_MAX_UNITS + 1));
+                devfs_remove(name);
+            }
+        }
+    }
+    up(&bt_units_lock_g);
+    }
+#endif /* CONFIG_DEVFS_FS */
+
+    /*
+    ** Release major number 
+    */
+    unregister_chrdev(btp_major_g, bt_name_gp);
+    btp_major_g = 0;
+    
+    /*
+    ** Unregister driver 
+    */
+    pci_unregister_driver(&btp_pci_driver);
+    
+    /* 
+    ** Clean up for our memory handling routines 
+    */
+    btk_mem_fini();
+
+    TRC_STR(BT_TRC_CFG, "Driver unloaded.\n");
+    FEXIT(0);
+    return;
+}
 
 /*****************************************************************************
 **
-**      Name:           init_module
+**      Name:           btp_suspend
+**
+**      Purpose:        Suspend the card
+**
+**      Args:
+**          void
+**
+**      Modifies:
+**          None
+**          
+**      Returns:
+**          -EBUSY
+**
+**      Notes:
+**          Not implemented since it would consume too many resources to
+**          put the device into a power save mode.
+**
+*****************************************************************************/
+static int btp_suspend(
+    struct pci_dev *dev, 
+    u32 state)
+
+{
+    return -EBUSY;
+}
+
+/*****************************************************************************
+**
+**      Name:           btp_resume
+**
+**      Purpose:        Restore from power transition
+**
+**      Args:
+**          void
+**
+**      Modifies:
+**          None
+**          
+**      Returns:
+**          SUCCESS	Should never go to sleep so nothing to resume from
+**
+**      Notes:
+**          Not implemented since it would consume too many resources to
+**          put the device into a power save mode.
+**
+*****************************************************************************/
+static int btp_resume(
+    struct pci_dev *dev)
+{
+    return 0;
+}
+module_init(btp_init);
+module_exit(btp_exit);
+
+/*****************************************************************************
+**
+**      Name:           btp_init_one
 **
 **      Purpose:        Loads and initializes the device driver
 **
@@ -235,315 +508,128 @@ BT_FILE_NUMBER(TRACE_BTP_CFG_C);
 **      Notes:
 **
 *****************************************************************************/
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,1)
-static int btp_init_module(
-#else
-int init_module(
-#endif
-    void
-    )
+
+static int __devinit btp_init_one(
+    struct pci_dev *curr_dev_p,
+    const struct pci_device_id *id)
 {
     int                 ret_val = 0;
-
-    int                 result;         /* Return value from various PCI calls */
-
-    struct pci_dev      *curr_dev_p;    /* Current PCI device we are inspecting */
-
-    u16                 vendor, device; /* PCI vendor and device ID */
-
     unsigned int        local_pn;       /* Our assembly part number */
+    bt_unit_t           *unit_p;
+    bt_data32_t         bt_status = 0;
 
-    unsigned int        dev_count;      /* How many of our device we have */
-
-    unsigned short      unit;
-
-
-    /*
-    ** First take care of the case where PCI isn't supported but they
-    ** are (for some strange reason known only to god) trying to load
-    ** the driver for our PCI device.
-    */
-
-    FUNCTION("init_module");
+    FUNCTION("btp_init_one");
     LOG_UNKNOWN_UNIT;
 
+    FENTRY;
     printk("<0>" "btp module loaded.\n");
-
-#if !defined(CONFIG_PCI)
-    #error Must compile on a system with PCI support.
-    return -ENODEV;
-#endif
-
-#if     LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
-    if (!pci_present()) {
-        printk("<0>" "No PCI support present.\n");
-        WARN_STR("No PCI support present.\n");
-        return -ENODEV;
-    }
-#endif
-
-    if (0 != trace) {
-        bt_trace_lvl_g = trace;
-    }
-    TRC_MSG(BT_TRC_CFG|BT_TRC_DETAIL, (LOG_FMT "Trace level = 0x%lx.\n",
-        LOG_ARG, bt_trace_lvl_g));
-
-    /* SET_MODULE_OWNER gets deprecated at some point */
-
-#ifdef SET_MODULE_OWNER
-    SET_MODULE_OWNER(&btp_fops);
-#else
-    (&btp_fops)->owner = THIS_MODULE;
-#endif
-
-    /* 
-    ** Initialize our memory handling routines 
+    
+    /*
+    ** Determine the local card
     */
-    btk_mem_init();
+    switch (id->device) {
+      case BT_PCI_DEVICE_617:
+        local_pn = BT_PN_PCI_DMA;
+        SET_BIT(bt_status, BT_DMA_LOCAL);
+        break;
 
-    /* 
-    ** Find our PCI devices 
-    */
-    curr_dev_p = NULL;
-    dev_count = 0;
-    do {
-        bt_unit_t *unit_p;
-        bt_data32_t bt_status = 0;
+      case BT_PCI_DEVICE_614:
+        local_pn = BT_PN_PCI;
+        break;
 
-        /* 
-        ** Find our next device 
-        */
+      case BT_PCI_DEVICE_616:
+        local_pn = BT_PN_PCI_NODMA;
+        break;
 
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-        curr_dev_p = pci_find_class(PCI_CLASS_BRIDGE_OTHER <<8, curr_dev_p);
-        /*
-        ** Nothing says this, but you have to shift the class code over
-        ** by a byte in order to account for the interface specification
-        ** field. The class that pci_find_class() matchs is really all
-        ** three bytes (Base Class, Sub Class, IF spec) of the config
-        ** space.
-        */
-        if (NULL == curr_dev_p) {
-            /* End of chain, no more devices to find */
-            break;
-        }
-       
-        /* 
-        ** Check if it is one of our cards 
-        */
-        result = pci_read_config_word(curr_dev_p, PCI_VENDOR_ID, &vendor);
-        if (PCIBIOS_SUCCESSFUL != result) {
-            /* Should always succeed, guess we ignore it and skip to the next device */
-            continue;
-        }
-        if (BT_PCI_VENDOR_BIT3 != vendor) {
-            /* Isn't our device, skip to the next device */
-            continue;
-        }
+      case BT_PCI_DEVICE_618:
+        /* Could be either the 618 or the 628, can't tell the two apart */
+        local_pn = BT_PN_PCI_FIBER;
+        SET_BIT(bt_status, BT_DMA_LOCAL);
+        break;
 
-#elif   LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
-
-        0&0&0&0; /* Untested */
-
-        curr_dev_p = pci_find_device(BT_PCI_VENDOR_BIT3, PCI_ANY_ID, curr_dev_p);
-        if (NULL == curr_dev_p) {
-            /* End of chain, no more devices to find */
-            break;
-        }
-#else   /* LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0) */
-        curr_dev_p = pci_find_class(PCI_CLASS_BRIDGE_OTHER <<8, curr_dev_p);
-        /*
-        ** Nothing says this, but you have to shift the class code over
-        ** by a byte in order to account for the interface specification
-        ** field. The class that pci_find_class() matchs is really all
-        ** three bytes (Base Class, Sub Class, IF spec) of the config
-        ** space.
-        */
-        if (NULL == curr_dev_p) {
-            /* End of chain, no more devices to find */
-            break;
-        }
-       
-        /* 
-        ** Check if it is one of our cards 
-        */
-        result = pci_read_config_word(curr_dev_p, PCI_VENDOR_ID, &vendor);
-        if (PCIBIOS_SUCCESSFUL != result) {
-            /* Should always succeed, guess we ignore it and skip to the next device */
-            continue;
-        }
-        if (BT_PCI_VENDOR_BIT3 != vendor) {
-            /* Isn't our device, skip to the next device */
-            continue;
-        }
-#endif /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) || \
-           LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0) || \
-           LINUX_VERSION_CODE <  KERNEL_VERSION(2,3,0) */
-
-        /*
-        ** Get the device id for this card */
-        result = pci_read_config_word(curr_dev_p, PCI_DEVICE_ID, &device);
-        if (PCIBIOS_SUCCESSFUL != result) {
-            /* Should always succeed, guess we ignore it and skip to the next device */
-            continue;
-        }
-        switch (device) {
-          case BT_PCI_DEVICE_617:
-            local_pn = BT_PN_PCI_DMA;
-            SET_BIT(bt_status, BT_DMA_LOCAL);
-            break;
-
-          case BT_PCI_DEVICE_614:
-            local_pn = BT_PN_PCI;
-            break;
-
-          case BT_PCI_DEVICE_616:
-            local_pn = BT_PN_PCI_NODMA;
-            break;
-
-          case BT_PCI_DEVICE_618:
-            /* Could be either the 618 or the 628, can't tell the two apart */
-            local_pn = BT_PN_PCI_FIBER;
-            SET_BIT(bt_status, BT_DMA_LOCAL);
-            break;
-
-          case BT_PCI_DEVICE_704:
-            local_pn = BT_PN_PCI_FIBER_D64;
-            SET_BIT(bt_status, BT_DMA_LOCAL);
-            SET_BIT(bt_status, BT_NEXT_GEN);
-            break;
+      case BT_PCI_DEVICE_704:
+        local_pn = BT_PN_PCI_FIBER_D64;
+        SET_BIT(bt_status, BT_DMA_LOCAL);
+        SET_BIT(bt_status, BT_NEXT_GEN);
+        break;
 
 #if  EAS_A64_CODE
 /* EAS A64 */
-          case BT_PCI_DEVICE_RPQ601332:
-            local_pn = BT_PN_PCI_DBA64_RPQ;
-            SET_BIT(bt_status, BT_DMA_LOCAL);
-            SET_BIT(bt_status, BT_NEXT_GEN);
-            break;
+      case BT_PCI_DEVICE_RPQ601332:
+        local_pn = BT_PN_PCI_DBA64_RPQ;
+        SET_BIT(bt_status, BT_DMA_LOCAL);
+        SET_BIT(bt_status, BT_NEXT_GEN);
+        break;
 #endif  /* EAS_A64_CODE */
 
-          default:
-            local_pn = BT_PN_UNKNOWN;
-            bt_status = 0;
-            break;
-        }
-        if (BT_PN_UNKNOWN == local_pn) {
-            /* Claimed to be our card, but we don't recognize the device ID */
-            continue;
-        }
-
-        /*
-        ** Make sure we are not over the allowed number of units
-        */
-        if (BT_MAX_UNITS < dev_count ) {
-            WARN_STR("Exceeded the maximum number of units allowed.\n");
-            break;
-        }
-        TRC_MSG(BT_TRC_CFG, (LOG_FMT "Found %d at bus %d.\n", 
-            LOG_ARG, local_pn, curr_dev_p->bus->number));
-
-        /* 
-        ** Got another unit to handle 
-        */
-        unit_p = btk_mem_alloc(sizeof(bt_unit_t),0);
-        if (NULL == unit_p) {
-            WARN_MSG((LOG_FMT "Not enough memory to create unit structure for device at bus %d.\n",
-                      LOG_ARG, curr_dev_p->bus->number));
-            /*
-            ** No sense in searching for more, they will just fail to
-            ** allocate memory as well.
-            */
-            break;
-        }
-        BTK_BZERO(unit_p, sizeof(bt_unit_t));
-
-        /*
-        ** Initialize this unit
-        */
-        unit_p->loc_id = local_pn;
-        unit_p->dev_p = curr_dev_p;
-        unit_p->bt_status = bt_status;
-        if (0 != create_unit(unit_p)) {
-            WARN_MSG((LOG_FMT "Could not create unit for device at bus %d.\n",
-                LOG_ARG, curr_dev_p->bus->number));
-            btk_mem_free(unit_p, sizeof(bt_unit_t));
-        }
-        dev_count++;
-        
-    } while (NULL != curr_dev_p);
-
-    /*
-    ** Check that we actually found a device
-    */
-    if (0 == dev_count) {
-      printk("<1> btp - did not find any devices\n");
-        TRC_STR(BT_TRC_CFG|BT_TRC_DETAIL, "Did not find any devices.\n");
-        goto init_module_end;
-    } else {
-      printk("<1>btp - found at least one device\n");
-    }
-
-    /* 
-    ** Get the major device number for our card 
-    */
-    ret_val = register_chrdev(bt_major, bt_name_gp, &btp_fops);
-    if (ret_val < 0) {
-        WARN_MSG((LOG_FMT "Could not register device with major number %d.\n",
-            LOG_ARG, bt_major));
-        btp_major_g = 0;
+      default:
+        WARN_MSG((LOG_FMT "Unknown card at bus %d, slot %d, function %d\n",
+                  LOG_ARG, curr_dev_p->bus->number, PCI_SLOT(curr_dev_p->devfn),
+                  PCI_FUNC(curr_dev_p->devfn)));
+        ret_val = BT_EIO;
         goto init_module_cleanup;
     }
-    btp_major_g = ret_val;
-    ret_val = 0;
 
-init_module_end:
-    TRC_MSG(BT_TRC_CFG|BT_TRC_DETAIL,
-        (LOG_FMT "Completed module initialization: returning %d.\n",
-         LOG_ARG, ret_val));
-    return ret_val;
+    /*
+    ** Inform the system we are a 32 bit DMA engine and make sure
+    ** it is ok with that for both normal and consistent DMAs
+    */
+    if (pci_set_dma_mask(curr_dev_p, (u64) DMA_32BIT_MASK)) {
+        WARN_STR("System not capable of 32 bit DMAs.\n");
+        ret_val = BT_EIO;
+        goto init_module_cleanup;
+    } else if (pci_set_consistent_dma_mask(curr_dev_p, (u64) DMA_32BIT_MASK)) {
+        WARN_STR("System not capable of 32 bit consistent DMAs.\n");
+        ret_val = BT_EIO;
+        goto init_module_cleanup;
+    }
+    TRC_MSG(BT_TRC_CFG, (LOG_FMT "Found %d at bus %d.\n", 
+        LOG_ARG, local_pn, curr_dev_p->bus->number));
+
+    /* 
+    ** Got another unit to handle 
+    */
+    unit_p = btk_mem_alloc(sizeof(bt_unit_t),0);
+    if (NULL == unit_p) {
+        WARN_MSG((LOG_FMT "Not enough memory to create unit structure for device at bus %d.\n",
+                  LOG_ARG, curr_dev_p->bus->number));
+        ret_val = BT_ENOMEM;
+        goto init_module_cleanup;
+    }
+    BTK_BZERO(unit_p, sizeof(bt_unit_t));
+
+    /*
+    ** Initialize this unit
+    */
+    unit_p->loc_id = local_pn;
+    unit_p->dev_p = curr_dev_p;
+    unit_p->bt_status = bt_status;
+    if (0 != create_unit(unit_p)) {
+        WARN_MSG((LOG_FMT "Could not create unit for device at bus %d.\n",
+            LOG_ARG, curr_dev_p->bus->number));
+        btk_mem_free(unit_p, sizeof(bt_unit_t));
+    }
+    TRC_MSG(BT_TRC_CFG,
+        (LOG_FMT "PN %d found at bus %d, slot %d - assigned unit %d\n",
+         LOG_ARG, local_pn, curr_dev_p->bus->number, 
+         PCI_SLOT(curr_dev_p->devfn), unit_p->unit_number));
+    FEXIT(0)
+    return 0;
 
 
 init_module_cleanup:
-    TRC_STR(BT_TRC_CFG|BT_TRC_DETAIL, "Failed initialization: Cleaning up.\n");
-
-    for (unit = 0; unit <= BT_MAX_UNITS; unit++) {
-        bt_unit_t *unit_p;
-
-        unit_p = bt_unit_array_gp[unit];
-        if (NULL != unit_p) {
-            ret_val = destroy_unit(unit_p);
-            if (ret_val < 0) {
-                WARN_MSG((LOG_FMT "Error %d: Could not release unit %d.\n", 
-                    LOG_ARG, -ret_val, (int) unit));
-                continue;
-            }
-            dev_count--;
-            if (0 == dev_count) {
-                break;  /* Found all of the units that we created */
-            }
-        }
-    }
-
-    /* 
-    ** Clean up for our memory handling routines 
-    */
-    btk_mem_fini();
-
     if (ret_val >= 0) {
-        TRC_STR(BT_TRC_CFG, 
-            "Overriding exit value in cleanup to make it an error value.\n");
         ret_val = -ENXIO;
     }
-
-    TRC_MSG(BT_TRC_CFG|BT_TRC_DETAIL, ( LOG_FMT 
-        "Failed initialization: return %d.\n", LOG_ARG, ret_val));
+    TRC_STR(BT_TRC_CFG,"Failed module initialization for unit.\n");
+    FEXIT(ret_val);
     return ret_val;
 }
 
 
 /*****************************************************************************
 **
-**      Name:           cleanup_module
+**      Name:           btp_remove_one
 **
 **      Purpose:        Releases resources and unloads the device driver
 **
@@ -559,31 +645,27 @@ init_module_cleanup:
 **      Notes:
 **
 *****************************************************************************/
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,1)
-static void btp_cleanup_module(
-#else
-void cleanup_module(
-#endif
-    void
-    )
+
+static void __devexit btp_remove_one(
+	struct pci_dev *dev_p)
 {
+    bt_unit_t           *unit_p;
     unsigned short      unit;
     int                 ret_val;
-    bt_unit_t           *unit_p;
 
-    FUNCTION("cleanup_module");
+    FUNCTION("btp_remove_one");
     LOG_UNKNOWN_UNIT;
 
     FENTRY;
 
-    if (btp_major_g != 0) {
-        unregister_chrdev(btp_major_g, bt_name_gp);
-        btp_major_g = 0;
-    }
-
+    /*
+    ** Search through list for matching pci_dev
+    */
+    down(&bt_units_lock_g);
     for (unit = 0; unit <= BT_MAX_UNITS; unit++) {
         unit_p = bt_unit_array_gp[unit];
-        if (NULL != unit_p) {
+        if ((unit_p != NULL) && 
+	    (dev_p == unit_p->dev_p)) {
             ret_val = destroy_unit(unit_p);
             if (ret_val < 0) {
                 WARN_MSG((LOG_FMT "Error %d: Could not release unit %d.\n", 
@@ -591,12 +673,7 @@ void cleanup_module(
             }
         }
     }
-
-    /* 
-    ** Clean up for our memory handling routines 
-    */
-    btk_mem_fini();
-    TRC_STR(BT_TRC_CFG, "Driver unloaded.\n");
+    up(&bt_units_lock_g);
 
     FEXIT(0);
     return;
@@ -751,6 +828,11 @@ static int create_unit(
     FENTRY;
 
     /*
+    ** Check ioctl structure for misalignment
+    */
+    BT_CHK_IOCTL_STRUCT;
+
+    /*
     ** We don't assign a unit number until the unit pointer is inserted
     ** in the global array.
     */
@@ -762,7 +844,7 @@ static int create_unit(
         if (ret_val < 0) {
             /* Failed to initialize the unit, need to cleanup and return */
             TRC_MSG(BT_TRC_WARN|BT_TRC_CFG, (LOG_FMT
-            "Failed on initialization function %d, error code = %d (0x%x).\n",
+                "Failed on initialization function %d, error code = %d (0x%x).\n",
                 LOG_ARG, func_idx, ret_val, ret_val));
             while (--func_idx >= 0) {
                 if (0 >= CLEANUP_FN(func_idx, unit_p)) {
@@ -777,18 +859,9 @@ static int create_unit(
             /* Don't call any more initialization functions */
             break;
         }
-	/* This can be a good place to trace what happens in init_* functions. */
-#if FALSE
-	if (IS_CLR(unit_p->bt_status, BT_DMA_AVAIL)) {
-	    TRC_MSG(BT_TRC_WARN, (LOG_FMT
-		"init%d: unit_p->bt_status = 0x%x; BT_DMA_AVAIL bit is clear.\n",
-                 LOG_ARG, func_idx, unit_p->bt_status));
-	} else {
-	    TRC_MSG(BT_TRC_WARN, (LOG_FMT
-		"init%d: unit_p->bt_status = 0x%x; BT_DMA_AVAIL bit is set.\n",
-                 LOG_ARG, func_idx, unit_p->bt_status));
-	}
-#endif  /* FALSE */
+        /* 
+        ** This can be a good place to trace what happens in init_* functions. 
+        */
     }
     
     FEXIT(ret_val);
@@ -870,7 +943,7 @@ static int init_fail (
     )
 {
     FUNCTION("init_fail");
-    LOG_UNIT(unit_p);
+    LOG_UNKNOWN_UNIT;
     int ret_val = -ENXIO;
 
     FENTRY;
@@ -939,11 +1012,10 @@ static int init_pci_config(
     u8              bd_rev;
 
     FUNCTION("init_pci_config");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     /* 
     ** Get the kernel physical address of each of the windows 
     */
@@ -953,35 +1025,11 @@ static int init_pci_config(
         & PCI_BASE_ADDRESS_MEM_MASK;
     unit_p->rr_phys_addr = pci_resource_start(curr_dev_p, 3)
         & PCI_BASE_ADDRESS_MEM_MASK;
-#elif   LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0)
     ret_val = pci_enable_device(curr_dev_p);
     if (ret_val < 0) {
         WARN_STR("Could not enable the device.\n");
         goto init_pci_config_end;
     }
-
-    /*
-    ** Under Linux 2.3.x, we are supposed to check_mem_region() and
-    ** request_mem_region() before using a portion of PCI space. I
-    ** haven't put that code in here yet.
-    */
-#error "Driver doesn't check_mem_region() or request_mem_region() yet."
-
-    0&0&0;      /* They also changed how you find your PCI windows */
-    unit_p->csr_phys_addr = 0&0&0&0;
-    unit_p->mr_phys_addr = 0&0&0&0;
-    unit_p->rr_phys_addr = 0&0&0&0;
-
-#else   /* LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0) */
-    /* 
-    ** Get the kernel physical address of each of the windows 
-    */
-    unit_p->csr_phys_addr = curr_dev_p->base_address[1] & PCI_BASE_ADDRESS_MEM_MASK;
-    unit_p->mr_phys_addr = curr_dev_p->base_address[2] & PCI_BASE_ADDRESS_MEM_MASK;
-    unit_p->rr_phys_addr = curr_dev_p->base_address[3] & PCI_BASE_ADDRESS_MEM_MASK;
-#endif /*  LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) || \
-           LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0) || \
-           LINUX_VERSION_CODE <  KERNEL_VERSION(2,3,0) */
 
     /*
     ** Rather than read it from configuration space, get the
@@ -1000,7 +1048,9 @@ static int init_pci_config(
 #error  "Need to adjust ioremap call, page size exceeds PCI window size"
 #endif  /* PAGE_SIZE < SIZE_64KB */
 
-
+    /*
+    ** Get pointer to CSR space
+    */
     phys_addr = unit_p->csr_phys_addr;
     BTK_ASSERT(0 == (phys_addr % PAGE_SIZE));
     unit_p->csr_p = (bt_pci_reg_t *) ioremap(phys_addr, PAGE_SIZE);
@@ -1010,6 +1060,9 @@ static int init_pci_config(
         goto init_pci_config_end;
     }
 
+    /*
+    ** Get pointer to Mapping RAM
+    */
     phys_addr = unit_p->mr_phys_addr;
     BTK_ASSERT(0 == (phys_addr % PAGE_SIZE));
     if (IS_SET(unit_p->bt_status, BT_NEXT_GEN)) {
@@ -1017,7 +1070,6 @@ static int init_pci_config(
     } else {
         unit_p->mreg_p = (caddr_t) ioremap(phys_addr, BT_CMR_SPACE_SIZE);
     }
-    bt_trace_mreg_gp = (volatile bt_data32_t *) (unit_p->mreg_p + 0xfffc);
     if (NULL == unit_p->mreg_p) {
         ret_val = -ENOMEM;
         WARN_STR("Could not map in mapping registers.\n");
@@ -1026,6 +1078,9 @@ static int init_pci_config(
         iounmap((void *) unit_p->csr_p);
         goto init_pci_config_end;
     }
+    bt_trace_mreg_size = 32;
+    bt_trace_mreg_gp32 = (volatile bt_data32_t *) (unit_p->mreg_p + 0xfffc);
+    bt_trace_mreg_gp64 = (volatile bt_data64_t *) NULL;
 
     /*
     ** Invalidate the PIO and DMA to PCI map regs to prevent accidentally
@@ -1034,6 +1089,9 @@ static int init_pci_config(
     btk_put_mreg_range(unit_p, 0, BT_MAX_SDMA_BIT, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
     btk_put_mreg_range(unit_p, 0, BT_MAX_SDMA_BIT, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
 
+    /*
+    ** Get pointer to Remote RAM
+    */
     phys_addr = unit_p->rr_phys_addr;
     BTK_ASSERT(0 == (phys_addr % PAGE_SIZE));
     unit_p->rmem_p = (caddr_t) ioremap(phys_addr, 32 * SIZE_1MB);
@@ -1098,11 +1156,13 @@ static int cleanup_pci_config(
     int ret_val = 0;
 
     FUNCTION("cleanup_pci_config");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
-    /* Unmap the device in the kernel virtual address space */
+    /* 
+    ** Unmap the device in the kernel virtual address space 
+    */
     iounmap((void *) unit_p->csr_p);
     iounmap((void *) unit_p->mreg_p);
     iounmap((void *) unit_p->rmem_p);
@@ -1134,11 +1194,11 @@ static int init_defaults (
     )
 {
     FUNCTION("init_defaults");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
-
+    
     /* 
     ** Set the various defaults in the unit structure. 
     */
@@ -1146,7 +1206,6 @@ static int init_defaults (
     unit_p->dma_timeout = DEFAULT_DMA_TIMEOUT;
     unit_p->dma_threshold = DEFAULT_DMA_THRESHOLD;
     unit_p->dma_poll_size = DEFAULT_DMA_POLL;
-    unit_p->dma_buf_size = SIZE_64KB;
     unit_p->a64_offset = 0;
     unit_p->bt_kmalloc_buf = NULL;
     unit_p->bt_kmalloc_ptr = NULL;
@@ -1155,7 +1214,8 @@ static int init_defaults (
     /*
     ** Set the revision info
     */
-    strncpy((char *)&unit_p->driver_version, driver_version, BT_DIAG_MAX_REV_INFO);
+    strncpy((char *)&unit_p->driver_version, driver_version, BT_DIAG_MAX_REV_INFO-1);
+    unit_p->driver_version[BT_DIAG_MAX_REV_INFO-1] = '\0';
 
     FEXIT(ret_val);
     return ret_val;
@@ -1189,7 +1249,7 @@ static int init_boot_parms (
     )
 {
     FUNCTION("init_boot_parms");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
     short unit;
 
@@ -1237,9 +1297,8 @@ static int init_unit_array (
     )
 {
     FUNCTION("init_unit_array");
-    LOG_UNIT(unit_p);
-    int ret_val = 0;
-    short unit;
+    LOG_UNKNOWN_UNIT;
+    int unit, ret_val = 0;
 
     FENTRY;
 
@@ -1251,16 +1310,20 @@ static int init_unit_array (
     ** Search for an available spot in the unit array 
     */
     ret_val = -ENODEV; /* Assume there is no room */
+    down(&bt_units_lock_g);
     for (unit = 0; unit < BT_MAX_UNITS + 1; unit++) {
         if(NULL == bt_unit_array_gp[unit]) {
             unit_p->unit_number = unit;
             bt_unit_array_gp[unit] = unit_p;
+            SET_UNIT_NUMBER(unit);
             ret_val = 0;
+            INFO_MSG((LOG_FMT "Assigning unit %d to card\n", LOG_ARG, unit));
             break;
         }
     }
+    up(&bt_units_lock_g);
     if (0 > ret_val) {
-        WARN_STR("Failed to add unit.");
+        WARN_STR("Failed to add unit to global array.");
     }
 
     FEXIT(ret_val);
@@ -1279,7 +1342,7 @@ static int init_unit_array (
 **                  else        error number
 **
 **
-**      Notes:
+**      Notes:      Calling function should hold bt_units_lock_g.
 **
 ******************************************************************************/
 
@@ -1288,13 +1351,14 @@ static int cleanup_unit_array (
     )
 {
     FUNCTION("cleanup_unit_array");
-    LOG_UNIT(unit_p);
+    LOG_UNKNOWN_UNIT;
     int ret_val = 0;
     short unit;
 
     FENTRY;
 
     unit = unit_p->unit_number;
+    SET_UNIT_NUMBER(unit);
 
     /* 
     ** Do a reasonably complete consistency check 
@@ -1334,20 +1398,20 @@ static int init_bit_maps (
     )
 {
     FUNCTION("init_bit_maps");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
     FENTRY;
 
     if (BT_SUCCESS != 
-            btk_bit_init(unit_p, BT_MAX_MMAP_BIT, &unit_p->mmap_aval_p)) {
+            btk_bit_init(BT_MAX_MMAP_BIT, &unit_p->mmap_aval_p)) {
         ret_val = -ENOMEM; /* Assume memory problem */
         goto init_bit_maps_end;
     } 
 
     if (BT_SUCCESS != 
-            btk_bit_init(unit_p, BT_MAX_SDMA_BIT, &unit_p->sdma_aval_p)) {
+            btk_bit_init(BT_MAX_SDMA_BIT, &unit_p->sdma_aval_p)) {
         ret_val = -ENOMEM; /* Assume memory problem */
-        (void) btk_bit_fini(unit_p, unit_p->mmap_aval_p);
+        (void) btk_bit_fini(unit_p->mmap_aval_p);
         goto init_bit_maps_end;
     }
 
@@ -1382,13 +1446,13 @@ static int cleanup_bit_maps (
     )
 {
     FUNCTION("cleanup_bit_maps");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
 
-    (void) btk_bit_fini(unit_p, unit_p->mmap_aval_p);
-    (void) btk_bit_fini(unit_p, unit_p->sdma_aval_p);
+    (void) btk_bit_fini(unit_p->mmap_aval_p);
+    (void) btk_bit_fini(unit_p->sdma_aval_p);
 
     FEXIT(ret_val);
     return ret_val;
@@ -1417,7 +1481,7 @@ static int init_lm(
     )
 {
     FUNCTION("init_lm");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     bt_error_t      retval = BT_SUCCESS;
@@ -1450,18 +1514,8 @@ static int init_lm(
         ** Since it is always a multiple of the page size, it is better to
         ** call vmalloc() for the buffer.
         */
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-        unit_p->lm_kaddr = vmalloc_32((unsigned long)unit_p->lm_size);
-#else
-
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-        unit_p->lm_kaddr = vmalloc_dma(unit_p->lm_size);
-#else   /* LINUX_VERSION_CODE <  KERNEL_VERSION(2,4,0) */
-        unit_p->lm_kaddr = vmalloc(unit_p->lm_size);
-#endif  /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) \
-        || LINUX_VERSION_CODE <  KERNEL_VERSION(2,4,0) */
-
-#endif  /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
+        unit_p->lm_kaddr = (caddr_t) (pci_alloc_consistent(unit_p->dev_p, 
+            (size_t) unit_p->lm_size, &(unit_p->lm_dma_handle)));
 
         if (NULL == unit_p->lm_kaddr) {
             WARN_STR("Not enough memory to allocate local memory device.\n");
@@ -1475,9 +1529,10 @@ static int init_lm(
         ** buffer in kernel space.
         */
         need = unit_p->lm_size / BT_PAGE_SIZE;
-        retval = btk_bit_alloc(unit_p, unit_p->sdma_aval_p, need, 1, &start);
+        retval = btk_bit_alloc(unit_p->sdma_aval_p, need, 1, &start);
         if (retval != BT_SUCCESS) {
-            vfree(unit_p->lm_kaddr);
+            pci_free_consistent(unit_p->dev_p, (size_t) unit_p->lm_size, unit_p->lm_kaddr,
+                                unit_p->lm_dma_handle);
             unit_p->lm_size = 0;
             WARN_STR("No open mapping regs for local memory device");
             goto init_lm_end;
@@ -1494,27 +1549,43 @@ static int init_lm(
         for (inx = 0; inx < need; inx++) {
         
             /* 
-            ** Need more than just virt_to_bus() when it is vmalloc()ed 
+            ** Get PCI physical address and program in mapping RAM
             */
-            pci_addr = (bt_data32_t) bt_kvm2bus((void *) (unit_p->lm_kaddr + inx * BT_PAGE_SIZE));
-
-            if (0 == pci_addr) {
-                WARN_STR("Local memory disabled: Could not link to PCI address.\n");
-                vfree(unit_p->lm_kaddr);
-                unit_p->lm_size = 0;
-                btk_bit_free(unit_p, unit_p->sdma_aval_p, start, need);
-                break;
-            }
+            pci_addr = (bt_data32_t) unit_p->lm_dma_handle + inx * BT_PAGE_SIZE;
             mreg_value = (mreg_value & ~ BT_MREG_ADDR_MASK) | ((bt_data32_t) pci_addr & BT_MREG_ADDR_MASK);
 
-            /*
-            ** Handle the case where PAGE_SIZE > BT_PAGE_SIZE (size of each
-            ** mapping register).
-            */
-            btk_put_mreg(unit_p, start + inx, BT_LMREG_CABLE_2_PCI, mreg_value);
-            btk_put_mreg(unit_p, start + inx, BT_LMREG_DMA_2_PCI, mreg_value);
+            btk_put_mreg(unit_p, start+inx, BT_LMREG_CABLE_2_PCI, mreg_value);
+            if ( (btk_get_mreg(unit_p, start+inx, BT_LMREG_CABLE_2_PCI)) != mreg_value ) {
+                WARN_MSG((LOG_FMT "Verify Write BT_LMREG_CABLE_2_PCI mapping register mr_idx = 0x%.1X failed.\n",
+                                                                             LOG_ARG, start+inx));
+                btk_put_mreg_range(unit_p, start, inx+1, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
+                btk_put_mreg_range(unit_p, start, inx+1, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
+                btk_bit_free(unit_p->sdma_aval_p, start, need);
+                pci_free_consistent(unit_p->dev_p, (size_t) unit_p->lm_size, 
+                    unit_p->lm_kaddr, unit_p->lm_dma_handle);
+                unit_p->lm_size = 0;
+                WARN_STR("Local memory device disabled.\n");
+                break;
+            }
+
+            btk_put_mreg(unit_p, start+inx, BT_LMREG_DMA_2_PCI, mreg_value);
+            if ( (btk_get_mreg(unit_p, start+inx, BT_LMREG_DMA_2_PCI)) != mreg_value ) {
+                WARN_MSG((LOG_FMT "Verify Write BT_LMREG_DMA_2_PCI mapping register mr_idx = 0x%.1X failed.\n",
+                                                                             LOG_ARG, start+inx));
+                btk_put_mreg_range(unit_p, start, inx+1, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
+                btk_put_mreg_range(unit_p, start, inx+1, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
+                btk_bit_free(unit_p->sdma_aval_p, start, need);
+                pci_free_consistent(unit_p->dev_p, (size_t) unit_p->lm_size, 
+                    unit_p->lm_kaddr, unit_p->lm_dma_handle);
+                unit_p->lm_size = 0;
+                WARN_STR("Local memory device disabled.\n");
+                break;
+            }
+
         }
     }
+
+init_lm_end:
 
     /*
     ** Setup logical device info for the local memory device
@@ -1532,8 +1603,6 @@ static int init_lm(
         unit_p->logstat[BT_AXSLM] = 0;
     }
         
-
-init_lm_end:
     FEXIT(ret_val);
     return ret_val;
 }
@@ -1559,7 +1628,7 @@ static int cleanup_lm(
     )
 {
     FUNCTION("cleanup_lm");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -1571,8 +1640,9 @@ static int cleanup_lm(
         (unit_p->lm_kaddr != NULL)) {
         btk_put_mreg_range(unit_p, unit_p->lm_start, unit_p->lm_need, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
         btk_put_mreg_range(unit_p, unit_p->lm_start, unit_p->lm_need, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
-        btk_bit_free(unit_p, unit_p->sdma_aval_p, unit_p->lm_start, unit_p->lm_need);
-        vfree(unit_p->lm_kaddr);
+        btk_bit_free(unit_p->sdma_aval_p, unit_p->lm_start, unit_p->lm_need);
+        pci_free_consistent(unit_p->dev_p, (size_t) unit_p->lm_size, unit_p->lm_kaddr,
+                                unit_p->lm_dma_handle);
         unit_p->lm_kaddr = NULL;
         unit_p->lm_start = 0;
         unit_p->lm_need = 0;
@@ -1604,7 +1674,7 @@ static int init_cookies (
     )
 {
     FUNCTION("init_cookies");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -1639,13 +1709,13 @@ static int init_events(
     )
 {
     FUNCTION("init_events");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
 
     /* DMA transfers */
-    ret_val = btk_event_init(unit_p, &unit_p->dma_event, FALSE, unit_p->sirq_cookie);
+    ret_val = btk_event_init(&unit_p->dma_event, FALSE, unit_p->sirq_cookie);
     if (BT_SUCCESS != ret_val) {
         WARN_STR("Could not create semaphore for DMA.\n");
         goto init_events_end;
@@ -1677,12 +1747,12 @@ static int cleanup_events (
     )
 {
     FUNCTION("cleanup_events");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
 
-    btk_event_fini(unit_p, &unit_p->dma_event);
+    btk_event_fini(&unit_p->dma_event);
 
     FEXIT(ret_val);
     return ret_val;
@@ -1710,26 +1780,19 @@ static int init_mutexs (
     )
 {
     FUNCTION("init_mutexs");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
 
-    btk_mutex_init(unit_p, &(unit_p->mreg_mutex), 0);
-    btk_mutex_init(unit_p, &(unit_p->open_mutex), 0);
-    btk_mutex_init(unit_p, &(unit_p->dma_mutex), 0);
-    btk_mutex_init(unit_p, &(unit_p->llist_mutex), 0);
-    btk_mutex_init(unit_p, &(unit_p->llist_bind_mutex), 0);
-
-#if     LINUX_VERSION_CODE < (KERNEL_VERSION(2,5,0))
-    /* don't do this for 2.6 else preempt_count() gets set to -1 */
-
-    // shouldn't have to do this, but is ending up locked in btp_bind.c's bt_bind()
-    btk_mutex_exit(unit_p, &unit_p->llist_bind_mutex);
-#endif
-
-    btk_rwlock_init(unit_p, &(unit_p->hw_rwlock));
-    btk_mutex_init(unit_p, &(unit_p->isr_lock), unit_p->hirq_cookie);
+    btk_mutex_init(&(unit_p->mreg_mutex), 0);
+    btk_mutex_init(&(unit_p->open_mutex), 0);
+    btk_mutex_init(&(unit_p->dma_mutex), 0);
+    btk_mutex_init(&(unit_p->llist_mutex), 0);
+    btk_mutex_init(&(unit_p->llist_bind_mutex), 0);
+    btk_mutex_init(&(unit_p->prg_irq_mutex), 0);
+    btk_rwlock_init(&(unit_p->hw_rwlock));
+    spin_lock_init(&unit_p->isr_lock);
 
     FEXIT(ret_val);
     return ret_val;
@@ -1756,18 +1819,18 @@ static int cleanup_mutexs (
     )
 {
     FUNCTION("cleanup_mutexs");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
 
-    btk_mutex_fini(unit_p, &(unit_p->isr_lock));
-    btk_rwlock_fini(unit_p, &(unit_p->hw_rwlock));
-    btk_mutex_fini(unit_p, &(unit_p->llist_mutex));
-    btk_mutex_fini(unit_p, &(unit_p->llist_bind_mutex));
-    btk_mutex_fini(unit_p, &(unit_p->dma_mutex));
-    btk_mutex_fini(unit_p, &(unit_p->open_mutex));
-    btk_mutex_fini(unit_p, &(unit_p->mreg_mutex));
+    btk_rwlock_fini(&(unit_p->hw_rwlock));
+    btk_mutex_fini(&(unit_p->prg_irq_mutex));
+    btk_mutex_fini(&(unit_p->llist_bind_mutex));
+    btk_mutex_fini(&(unit_p->llist_mutex));
+    btk_mutex_fini(&(unit_p->dma_mutex));
+    btk_mutex_fini(&(unit_p->open_mutex));
+    btk_mutex_fini(&(unit_p->mreg_mutex));
 
     FEXIT(ret_val);
     return ret_val;
@@ -1795,7 +1858,7 @@ static int init_lists(
     )
 {
     FUNCTION("init_lists");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -1835,7 +1898,7 @@ static int cleanup_lists (
     )
 {
     FUNCTION("cleanup_lists");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -1869,7 +1932,7 @@ static int init_irq_q(
     )
 {
     FUNCTION("init_irq_q");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -1901,7 +1964,7 @@ static int cleanup_irq_q (
     )
 {
     FUNCTION("cleanup_irq_q");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -1928,13 +1991,15 @@ static int cleanup_irq_q (
 **      Notes:
 **
 ******************************************************************************/
-
+#ifndef IRQF_SHARED
+#define IRQF_SHARED SA_SHIRQ
+#endif
 static int init_isr (
     bt_unit_t * unit_p
     )
 {
     FUNCTION("init_isr");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -1942,13 +2007,9 @@ static int init_isr (
     /* 
     ** Register the ISR 
     */
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22)              /* Need to refine the actual minor version */
-    ret_val = request_irq((unsigned int)unit_p->irq, btk_isr, (unsigned long)IRQF_SHARED, bt_name_gp, (void *) unit_p);
-#elif     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-    ret_val = request_irq((unsigned int)unit_p->irq, btk_isr, (unsigned long)SA_SHIRQ, bt_name_gp, (void *) unit_p);
-#else
-    ret_val = request_irq(unit_p->irq, btk_isr, SA_SHIRQ, bt_name_gp, (void *) unit_p);
-#endif
+    ret_val = request_irq((unsigned int)unit_p->irq, btk_isr, 
+			  (unsigned long)IRQF_SHARED, 
+			  bt_name_gp, (void *) unit_p);
     if (0 > ret_val) {
         WARN_MSG((LOG_FMT "Could not register shared interrupt on level %d.\n",
             LOG_ARG, unit_p->irq));
@@ -1981,7 +2042,7 @@ static int cleanup_isr (
     )
 {
     FUNCTION("cleanup_isr");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -1990,11 +2051,7 @@ static int cleanup_isr (
     ** Turn off interrupts on the card  & Unregister our handler
     */
     btk_put_io(unit_p, LOC_INT_CTRL, LIC_DIS_INTR);
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
     free_irq((unsigned int)unit_p->irq, (void *) unit_p);
-#else
-    free_irq(unit_p->irq, (void *) unit_p);
-#endif
 
     FEXIT(ret_val);
     return ret_val;
@@ -2022,7 +2079,7 @@ static int init_dma (
     )
 {
     FUNCTION("init_dma");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -2056,30 +2113,6 @@ static int init_dma (
     }
     SET_BIT(unit_p->bt_status, BT_DMA_BLOCK);
 
-    /*
-    ** Not using kiobuf, so we need to allocated a kernel buffer to move
-    ** the data in/out of. Since it is a large buffer that is a multiple 
-    ** of the page size, it is better to call vmalloc() for the buffer.
-    */
-
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-    unit_p->dma_buf_p = vmalloc_32(unit_p->dma_buf_size);
-#else
-
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    unit_p->dma_buf_p = vmalloc_dma(unit_p->dma_buf_size);
-#else   /* LINUX_VERSION_CODE <  KERNEL_VERSION(2,4,0) */
-    unit_p->dma_buf_p = vmalloc(unit_p->dma_buf_size);
-#endif  /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) \
-        || LINUX_VERSION_CODE <  KERNEL_VERSION(2,4,0) */
-
-#endif  /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0) */
-
-    if (NULL == unit_p->dma_buf_p) {
-        WARN_STR("Could not allocated buffer for data transfer.\n");
-        ret_val = -ENOMEM;
-    }
-
     FEXIT(ret_val);
     return ret_val;
 }
@@ -2105,12 +2138,10 @@ static int cleanup_dma (
     )
 {
     FUNCTION("cleanup_dma");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
-
-    vfree(unit_p->dma_buf_p);
 
     FEXIT(ret_val);
     return ret_val;
@@ -2138,7 +2169,7 @@ static int init_ldev (
     )
 {
     FUNCTION("init_ldev");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -2195,39 +2226,6 @@ static int init_ldev (
     unit_p->dma_addr_mod[BT_AXSRE] = BT_AMOD_A32;
     unit_p->mmap_addr_mod[BT_AXSRE] = BT_AMOD_A32;
     unit_p->data_size[BT_AXSRE] = BT_WIDTH_ANY;
-    /*
-    ** setup logical unit_p->dev_vertex information for geographical
-    ** addressing
-    */
-
-    unit_p->kern_addr[BT_AXSGEO]   = unit_p->rmem_p;
-    unit_p->kern_length[BT_AXSGEO] =  0;
-    unit_p->pio_addr_mod[BT_AXSGEO] = BT_AMOD_GEO;
-    unit_p->dma_addr_mod[BT_AXSGEO] = BT_AMOD_GEO;
-    unit_p->mmap_addr_mod[BT_AXSGEO]= BT_AMOD_GEO;
-    unit_p->data_size[BT_AXSGEO]    = BT_WIDTH_D32;
-    /*
-    ** setup logical unit_p->dev_vertex information for multicast control
-    ** addressing
-    */
-
-    unit_p->kern_addr[BT_AXSMCCTL]   = unit_p->rmem_p;
-    unit_p->kern_length[BT_AXSMCCTL] =  0;
-    unit_p->pio_addr_mod[BT_AXSMCCTL] = BT_AMOD_MCCTL;
-    unit_p->dma_addr_mod[BT_AXSMCCTL] = BT_AMOD_MCCTL;
-    unit_p->mmap_addr_mod[BT_AXSMCCTL]= BT_AMOD_MCCTL;
-    unit_p->data_size[BT_AXSMCCTL]    = BT_WIDTH_D32;
-    /*
-    ** setup logical unit_p->dev_vertex information for chained block transfer
-    ** addressing
-    */
-
-    unit_p->kern_addr[BT_AXSCBLT]   = unit_p->rmem_p;
-    unit_p->kern_length[BT_AXSCBLT] =  0;
-    unit_p->pio_addr_mod[BT_AXSCBLT] = BT_AMOD_CBLT;
-    unit_p->dma_addr_mod[BT_AXSCBLT] = BT_AMOD_CBLT;
-    unit_p->mmap_addr_mod[BT_AXSCBLT]= BT_AMOD_CBLT;
-    unit_p->data_size[BT_AXSCBLT]    = BT_WIDTH_D32;
 
     /*
     **  Setup logical unit_p->dev_vertex information for local dual port
@@ -2249,9 +2247,9 @@ static int init_ldev (
     */
     {
     unsigned int mreg_start;
-    btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-    (void) btk_bit_alloc(unit_p, unit_p->mmap_aval_p, 1, 1, &mreg_start);
-    btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+    btk_mutex_enter(&unit_p->mreg_mutex);
+    (void) btk_bit_alloc(unit_p->mmap_aval_p, 1, 1, &mreg_start);
+    btk_mutex_exit(&unit_p->mreg_mutex);
 
     btk_put_mreg(unit_p, mreg_start, BT_LMREG_PCI_2_CABLE, 0x020);
     bt_trace_mreg_gp = (volatile bt_data32_t *) (unit_p->rmem_p + mreg_start * 0x1000);
@@ -2284,7 +2282,7 @@ static int init_card (
     )
 {
     FUNCTION("init_card");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -2317,7 +2315,7 @@ static int init_swapping (
     )
 {
     FUNCTION("init_swapping");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     int     inx, ret_val = 0;
 
@@ -2339,21 +2337,21 @@ static int init_swapping (
 #endif  /* EAS_A64_CODE */
             unit_p->swap_bits[inx] = BT_SWAP_NONE;
             break;
-	  case BT_PN_VME_NOINC:
+      case BT_PN_VME_NOINC:
           case BT_PN_VME_NODMA:
           case BT_PN_VME_SDMA:
       /*  case BT_PN_VME_SDMA_64:   BT_PN_VME_SDMA_64 == BT_PN_VME_FIBER_D64 */
-	  case BT_PN_VME2_DMA:
-	  case BT_PN_VME_DMA:
-	  case BT_PN_VME:
+      case BT_PN_VME2_DMA:
+      case BT_PN_VME_DMA:
+      case BT_PN_VME:
       /*  case BT_PN_VME2:	    BT_PN_VME2 == BT_PN_VME_NODMA above.     */
           case BT_PN_VME_FIBER:
-	  case BT_PN_VME_A24:
-	  case BT_PN_VME_PCI:	/* EXPN may not be supported by this driver. */
-	  case BT_PN_VME64:	/* 2866 may not be supported by this driver. */
-	  case BT_PN_VME_NBDG:	/* NBDG may not be supported by this driver. */
+      case BT_PN_VME_A24:
+      case BT_PN_VME_PCI:	/* EXPN may not be supported by this driver. */
+      case BT_PN_VME64:	/* 2866 may not be supported by this driver. */
+      case BT_PN_VME_NBDG:	/* NBDG may not be supported by this driver. */
           case BT_PN_VME_FIBER_D64:
-            unit_p->swap_bits[inx] = BT_SWAP_NONE;
+            unit_p->swap_bits[inx] = BT_SWAP_VMEBUS;
             break;
           case BT_PN_QBUS:
             unit_p->swap_bits[inx] = BT_SWAP_QBUS;
@@ -2375,7 +2373,7 @@ static int init_swapping (
 #endif  /* EAS_A64_CODE */
               unit_p->swap_bits[inx] = BT_SWAP_NONE;
             } else {
-              unit_p->swap_bits[inx] = BT_SWAP_NONE;    // Don't know why but this is right.
+              unit_p->swap_bits[inx] = BT_SWAP_VMEBUS;
             }
             break;
         }
@@ -2407,7 +2405,7 @@ static int init_xxx (
     )
 {
     FUNCTION("init_xxx");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -2439,7 +2437,7 @@ static int cleanup_xxx (
     )
 {
     FUNCTION("cleanup_xxx");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int ret_val = 0;
 
     FENTRY;
@@ -2449,11 +2447,3 @@ static int cleanup_xxx (
 }
 
 #endif /* 0 */
-
-
-/* on 2.6, need to register the entry points with module_init and module_exit:
- */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,1)
- module_init(btp_init_module);
- module_exit(btp_cleanup_module);
-#endif

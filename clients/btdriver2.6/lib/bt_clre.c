@@ -11,7 +11,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 1999 by SBS Technologies, Inc.
+**        Copyright (c) 1999-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -21,8 +21,8 @@
 static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #endif	/* LINT */
 
-#include	"btio.h"
-#include	"btapi.h"
+#include    "btapi.h"
+#include    "btpiflib.h"
 
 /*****************************************************************************
 **
@@ -57,7 +57,10 @@ bt_error_t bt_clrerr(
     )
 {
     bt_error_t retvalue;
-    bt_status_t param;
+#ifdef FCTACH
+    retvalue = BT_SUCCESS;
+#else
+    bt_status_t param = 0;
 
     retvalue = bt_ctrl(btd, BIOC_CLR_STATUS, &param);
     if (param & BT_INTR_POWER) {
@@ -65,6 +68,7 @@ bt_error_t bt_clrerr(
     } else if (param & ((bt_status_t) LSR_ERROR_MASK << BT_INTR_ERR_SHFT) ){
         retvalue = BT_ESTATUS;
     }
+#endif
 
     return retvalue;
 }

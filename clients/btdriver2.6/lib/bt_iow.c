@@ -11,7 +11,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 1999 by SBS Technologies, Inc.
+**        Copyright (c) 1999-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -24,9 +24,8 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #include	<stddef.h>
 #include	<stdlib.h>
 
-#include	"btio.h"
-#include	"btapi.h"
-#include	"btpiflib.h"
+#include    "btapi.h"
+#include    "btpiflib.h"
 
 
 /*****************************************************************************

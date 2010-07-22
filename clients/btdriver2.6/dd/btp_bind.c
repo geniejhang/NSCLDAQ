@@ -20,11 +20,12 @@
 static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
 #endif  /* LINT */
 
-#include    "btdd.h"
-#if EAS_BIND_CODE
-/* EAS BIND CODE */
+#include <asm/uaccess.h>
 #include <asm/io.h>
-#endif /* EAS_BIND_CODE */
+#include <linux/pagemap.h>      /* Needed for page_address() */
+#include <linux/device.h>
+#include <linux/dma-mapping.h>
+#include "btdd.h"
 
 /*
 **  Imported function prototypes
@@ -80,39 +81,24 @@ bt_error_t btp_bind(
     bt_dev_t type)
 {
     FUNCTION("btp_bind");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
-#if EAS_BIND_CODE
-/* EAS BIND CODE */
-    caddr_t             addr = (caddr_t) unit_p->bt_kmalloc_buf;/* address of kernel allocated buffer */
-    caddr_t             ubuf_p;                                 /* tmp address of user space buffer for converting to physical */
+    caddr_t             addr;       /* address of kernel allocated buffer */
     unsigned int        inx;                                    /* index */
-    int                 len = (int) unit_p->bt_kmalloc_size;    /* length of kernel allocated buffer */
+    int                     len;        /* length of kernel allocated buffer */
     unsigned int        start, need;
     bt_error_t          retval = BT_SUCCESS;                    /* set retval for success initially */
     bt_dev_t            axs_type = BT_AXSTYP(type);             /* set logical device type */
-    bt_data32_t         curr_phys_addr;
     bt_data32_t         mreg_value;                             /* memory mapped register value */
     bt_btrack_t         *new_bind_p;                            /* track binding pointer */
     btk_llist_elem_t    *element_p;                             /* binding element list */
+    unsigned int nr_pages;
+    struct page **pages;
+    int ret, i;
+    bt_data32_t usr_curr_offset;
+    unsigned long pci_addr;
 
     FENTRY;
-
-    curr_phys_addr = (bt_data32_t)virt_to_phys((volatile void *)addr);
-
-    TRC_MSG((BT_TRC_BIND), 
-           (LOG_FMT "kernel phys addr 0x%x; len 0x%x; type 0x%x %s wait\n",
-           LOG_ARG, 
-           (unsigned int)curr_phys_addr, len, (unsigned int)type, ((bind_p->nowait) ? "no ":"")));
-  
-    /*
-    ** Check buffer allocated
-    */
-    if ((!addr)) {
-        INFO_STR("Kernel buffer not allocated by bt_info -p BT_INFO_KMALLOC_BUF");
-        retval = BT_EIO;
-        goto exit_bind;
-    }
 
     /*
     ** Initialize bind structure in case of fail
@@ -122,7 +108,14 @@ bt_error_t btp_bind(
         retval = BT_EIO;
         goto exit_bind;
     }
-    bind_p->sysinfo_p = (bt_devaddr_t) NULL;                    /* clear internal system info pointer */
+    bind_p->sysinfo_p = (bt_devaddr_t) NULL;
+    addr = (caddr_t) (unsigned long) (bind_p->host_addr);
+    len = (int) bind_p->length;
+
+    TRC_MSG((BT_TRC_BIND), 
+           (LOG_FMT "user buffer %p; len 0x%x; type 0x%x %s wait\n",
+           LOG_ARG, 
+           addr, len, (unsigned int) type, ((bind_p->nowait) ? "no ":"")));
 
     /* 
     ** Verify the logical device supports this operation 
@@ -137,7 +130,7 @@ bt_error_t btp_bind(
     ** Perform all necessary parameter validation here
     */
     if (len == 0) {
-        INFO_STR("Kernel buffer length zero")
+        INFO_STR("User buffer length zero")
         retval = BT_EINVAL;
         goto exit_bind;
     }
@@ -162,13 +155,17 @@ bt_error_t btp_bind(
         goto exit_bind;
     }
 
-    /* buffer good */
-    TRC_MSG((BT_TRC_BIND), 
-            (LOG_FMT "Kernel alloced buf: kernel virt=0x%x phys=0x%x data string=%s\n",
-            LOG_ARG, (unsigned int)addr, 
-            (unsigned int)virt_to_phys((volatile void *)addr), 
-            (char *)addr));
-
+    /*
+    ** Malloc a scatter/gather list
+    */
+    usr_curr_offset = (bt_data32_t) ((unsigned long) addr & (PAGE_SIZE -1));
+    nr_pages = ((len + usr_curr_offset) / PAGE_SIZE) + 1;
+    pages = kmalloc(nr_pages * sizeof(struct page *), GFP_KERNEL);
+    if (!pages) {
+        WARN_STR("Failed to kmalloc scatter/gather list.\n");
+        retval = BT_ENOMEM;
+        goto exit_bind;
+    }
 
     /* 
     ** Allocate a new bind requested list item
@@ -176,6 +173,7 @@ bt_error_t btp_bind(
     element_p = btk_llist_elem_create(sizeof(bt_btrack_t), 0);
     if (element_p == (btk_llist_elem_t *) NULL) {
         INFO_STR("Not enough resources to track bind request");
+        kfree(pages);
         retval = BT_ENOMEM;
         goto exit_bind;
     }
@@ -186,68 +184,124 @@ bt_error_t btp_bind(
     ** for the request or try to get the one specified by the user
     */
     need = (int) CALC_LEN_BITS(addr, len);
-    btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
+    btk_mutex_enter(&(unit_p->mreg_mutex));
     if (bind_p->phys_addr == BT_BIND_NO_CARE) {
-      retval = btk_bit_alloc(unit_p, unit_p->sdma_aval_p, need, 1, &start);
+      retval = btk_bit_alloc(unit_p->sdma_aval_p, need, 1, &start);
     } else {
       start = bind_p->phys_addr / BT_PAGE_SIZE;
-      retval = btk_bit_specify(unit_p, unit_p->sdma_aval_p, start, need);
+      retval = btk_bit_specify(unit_p->sdma_aval_p, start, need);
     }
-    btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+    btk_mutex_exit(&(unit_p->mreg_mutex));
     if (retval != BT_SUCCESS) {
-      INFO_STR("Not enough resources to bind buffer");
-      btk_llist_elem_destroy(element_p, sizeof(bt_btrack_t));
-      retval = BT_ENOMEM;
-      goto exit_bind;
+        INFO_STR("Not enough resources to bind buffer");
+        btk_llist_elem_destroy(element_p, sizeof(bt_btrack_t));
+        kfree(pages);
+        retval = BT_ENOMEM;
+        goto exit_bind;
     }
 #define BTP_FREE_MREG \
-        btk_mutex_enter(unit_p, &(unit_p->mreg_mutex)); \
-        (void) btk_bit_free(unit_p, unit_p->sdma_aval_p, start, need); \
-        btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+    { \
+        int i; \
+        btk_mutex_enter(&(unit_p->mreg_mutex)); \
+        (void) btk_bit_free(unit_p->sdma_aval_p, start, need); \
+        btk_mutex_exit(&(unit_p->mreg_mutex)); \
+        btk_llist_elem_destroy(element_p, sizeof(bt_btrack_t)); \
+        for (i = 0; i < nr_pages; i++) { \
+            set_page_dirty_lock(pages[i]); \
+            page_cache_release(pages[i]); \
+        } \
+        kfree(pages); \
+    }
 
     /*
      **  Setup PCI address, and function code
     */
     mreg_value = 0;
-    btk_setup_mreg(unit_p, axs_type, &mreg_value, FALSE);
+    btk_setup_mreg(unit_p, axs_type, &mreg_value, BT_OP_BIND);
 
     TRC_MSG((BT_TRC_BIND | BT_TRC_DETAIL), 
-           (LOG_FMT "Binding: phy addr=0x%x start=0x%x; need=0x%x\n",
-           LOG_ARG, 
-           (unsigned int)virt_to_phys((volatile void *)addr), start, need));
+           (LOG_FMT "Binding: phy addr=%p start=0x%x; need=0x%x\n",
+           LOG_ARG, addr, start, need));
+
+    /*
+    ** Translate the user pages to physical addresses
+    ** store in scatter/gather list
+    */
+    down_read(&current->mm->mmap_sem);
+    ret = get_user_pages(current, current->mm, (unsigned long) addr,
+        nr_pages, 1, 0, pages, NULL);
+    up_read(&current->mm->mmap_sem);
+    if (ret < nr_pages) {
+        WARN_STR("Failed to kmalloc scatter/gather list.\n");
+        btk_mutex_enter(&(unit_p->mreg_mutex));
+        (void) btk_bit_free(unit_p->sdma_aval_p, start, need);
+        btk_mutex_exit(&(unit_p->mreg_mutex));
+        btk_llist_elem_destroy(element_p, sizeof(bt_btrack_t));
+        for (i = 0; i < ret; i++) {
+            page_cache_release(pages[i]);
+        }
+        kfree(pages);
+        retval = BT_EIO;
+        goto exit_bind;
+    }
 
     /*
     ** Load the mapping registers per 4k kernel buffer range
     */
-    ubuf_p = addr;
-    for (inx = start; inx < (start + need); inx++) {
-        curr_phys_addr = (unsigned int)virt_to_phys((volatile void *)ubuf_p);
-        TRC_MSG((BT_TRC_BIND | BT_TRC_DETAIL), 
-                (LOG_FMT "prog mregs: inx=%0x; addr 0x%x; phys addr 0x%x; 4k phys len\n",
-                LOG_ARG, inx, (unsigned int)ubuf_p, curr_phys_addr));
+    for (inx = start, i = 0; inx < (start + need); inx++, i++) {
+
+        pci_addr = (unsigned long) page_to_phys(pages[i]);
+        if (0 == pci_addr) {
+            WARN_STR("Kernel to PCI address translation failed.\n");
+            btk_put_mreg_range(unit_p, start, inx+1-start, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
+            btk_put_mreg_range(unit_p, start, inx+1-start, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
+            BTP_FREE_MREG;
+            retval = BT_EIO;
+            goto exit_bind;
+        }
 
         mreg_value &= ~BT_MREG_ADDR_MASK;
-        mreg_value |= (curr_phys_addr & BT_MREG_ADDR_MASK);
+        mreg_value |= (pci_addr & BT_MREG_ADDR_MASK);
+
         btk_put_mreg(unit_p, inx, BT_LMREG_CABLE_2_PCI, mreg_value);
+        if ( (btk_get_mreg(unit_p, inx, BT_LMREG_CABLE_2_PCI)) != mreg_value ) {
+            WARN_MSG((LOG_FMT "Verify Write BT_LMREG_CABLE_2_PCI mapping register mr_idx = 0x%.1X failed.\n",
+                                                                             LOG_ARG, inx));
+            btk_put_mreg_range(unit_p, start, inx+1-start, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
+            btk_put_mreg_range(unit_p, start, inx+1-start, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
+            BTP_FREE_MREG;
+            retval = BT_EIO;
+            goto exit_bind;
+        }
+
         btk_put_mreg(unit_p, inx, BT_LMREG_DMA_2_PCI, mreg_value);
-        ubuf_p += BT_PAGE_SIZE;
+        if ( (btk_get_mreg(unit_p, inx, BT_LMREG_DMA_2_PCI)) != mreg_value ) {
+            WARN_MSG((LOG_FMT "Verify Write BT_LMREG_DMA_2_PCI mapping register mr_idx = 0x%.1X failed.\n",
+                                                                             LOG_ARG, inx));
+            btk_put_mreg_range(unit_p, start, inx+1-start, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
+            btk_put_mreg_range(unit_p, start, inx+1-start, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
+            BTP_FREE_MREG;
+            retval = BT_EIO;
+            goto exit_bind;
+        }
+
     }
 
     /* 
     ** Fill in the slave DMA tracking fields
     */
-    curr_phys_addr = (unsigned int)virt_to_phys((volatile void *)addr);
     new_bind_p->start_mreg = start;
     new_bind_p->num_mreg = need;
-    new_bind_p->phys_off = curr_phys_addr;
-                        /* start * BT_PAGE_SIZE; - old code */
+    new_bind_p->phys_off = start * BT_PAGE_SIZE;
     new_bind_p->phys_len = len;
     new_bind_p->bind_addr = addr;
     new_bind_p->axs_type = axs_type;
+    new_bind_p->page_info = pages;
+    new_bind_p->nr_pages = nr_pages;
 
     TRC_MSG(BT_TRC_BIND, 
-           (LOG_FMT "BOUND: user addr 0x%x; physical addr 0x%x; len 0x%x; start %d, need %d\n",
-           LOG_ARG, (unsigned int)addr, new_bind_p->phys_off, len, 
+           (LOG_FMT "BOUND: user addr %p; offset 0x%x; len 0x%x; start %d, need %d\n",
+           LOG_ARG, addr, new_bind_p->phys_off, len, 
            start, need));
 
     /*
@@ -255,9 +309,9 @@ bt_error_t btp_bind(
     ** Note clink_un/lock are not used since the interrpt routine
     ** does not touch the queue.
     */
-    btk_mutex_enter(unit_p, &unit_p->llist_bind_mutex);
+    btk_mutex_enter(&unit_p->llist_bind_mutex);
     btk_llist_insert_first(&unit_p->qh_bind_requests, element_p);
-    btk_mutex_exit(unit_p, &unit_p->llist_bind_mutex);
+    btk_mutex_exit(&unit_p->llist_bind_mutex);
 
     /* 
     ** Fill out bind structure to be returned to user
@@ -267,18 +321,9 @@ bt_error_t btp_bind(
     bind_p->sysinfo_p = (bt_devaddr_t) new_bind_p;
 #undef BTP_FREE_MREG
 
-
 exit_bind:
     FEXIT(retval);
     return(retval);
-
-#else
-
-    FENTRY;
-
-    FEXIT(BT_ENOSUP);
-    return(BT_ENOSUP);
-#endif  /* EAS_BIND_CODE */
 }
 
 /****************************************************************************
@@ -302,22 +347,23 @@ bt_error_t btp_unbind(
     bt_dev_t type)
 {
     FUNCTION("btp_unbind");
-    LOG_UNIT(unit_p);
-
-#if EAS_BIND_CODE
-/* EAS BIND CODE */
+    LOG_UNIT(unit_p->unit_number);
+    
     bt_error_t          retval = BT_SUCCESS;
-    unsigned int        start, need;
+    unsigned int        start, need, nr_pages;
     search_t            search_val;
-    bt_btrack_t         *found_p = (bt_btrack_t *) bind_p->sysinfo_p; 
+    bt_btrack_t         *found_p = (bt_btrack_t *) NULL; 
     btk_llist_elem_t    *element_p;
+    struct page         **pages;
+    int                 i;
 
     FENTRY;
 
     /* 
     **  Perform limited sanity checking on the buffer being unbound
     */
-    if ((void *) (bind_p->sysinfo_p) == (void *) NULL) {
+    found_p = (bt_btrack_t *) (unsigned long) (bind_p->sysinfo_p); 
+    if (found_p == (bt_btrack_t *) NULL) {
         INFO_STR("Buffer's system information is corrupted");
         retval = BT_EINVAL;
         goto exit_unbind;
@@ -336,21 +382,23 @@ bt_error_t btp_unbind(
     search_val.phys_off = found_p->phys_off;
     search_val.phys_len = found_p->phys_len;
     search_val.axs_type = found_p->axs_type;
-    btk_mutex_enter(unit_p, &unit_p->llist_bind_mutex);
+    btk_mutex_enter(&unit_p->llist_bind_mutex);
     element_p = btk_llist_find_first(&unit_p->qh_bind_requests, 
                                      bind_search,
                                      (void *) &search_val);
     if (element_p == (btk_llist_elem_t *) NULL) {
         INFO_STR("Failled to find bind tracking info");
-        btk_mutex_exit(unit_p, &unit_p->llist_bind_mutex);
+        btk_mutex_exit(&unit_p->llist_bind_mutex);
         retval = BT_EINVAL;
         goto exit_unbind;
     } else {
         btk_llist_remove(element_p);
-        btk_mutex_exit(unit_p, &unit_p->llist_bind_mutex);
+        btk_mutex_exit(&unit_p->llist_bind_mutex);
         found_p = btk_llist_elem_data(element_p);
         start = found_p->start_mreg;
         need = found_p->num_mreg;
+        pages = found_p->page_info;
+        nr_pages = found_p->nr_pages;
     }
 
     /*
@@ -358,13 +406,24 @@ bt_error_t btp_unbind(
     */
     btk_put_mreg_range(unit_p, start, need, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
     btk_put_mreg_range(unit_p, start, need, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
-    btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-    (void) btk_bit_free(unit_p, unit_p->sdma_aval_p, start, need);
-    btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+    btk_mutex_enter(&(unit_p->mreg_mutex));
+    (void) btk_bit_free(unit_p->sdma_aval_p, start, need);
+    btk_mutex_exit(&(unit_p->mreg_mutex));
 
+    /*
+    ** Flush pages, mark as dirty and release scatter/gather pages
+    */
+    for (i = 0; i < nr_pages; i++) {
+        set_page_dirty_lock(pages[i]);
+        page_cache_release(pages[i]);
+    }
+    kfree(pages);
 
+    /*
+    ** Get rid of the queue element
+    */
     btk_llist_elem_destroy(element_p, sizeof(bt_btrack_t));
-
+   
     /*
     **  Finish by invalidating the buffer we have since unbound,
     **  waking sleeping processes to race for buffer acquisition,
@@ -373,19 +432,9 @@ bt_error_t btp_unbind(
     bind_p->phys_addr = 0;
     bind_p->sysinfo_p = (bt_devaddr_t) NULL;
 
-    /* EAS TBD - free kmalloc buffer unit_p->bt_kmalloc_buf */
-
 exit_unbind:
-    FEXIT(BT_ENOSUP);
+    FEXIT(retval);
     return(retval);
-#else
-
-    FENTRY;
-
-    FEXIT(BT_ENOSUP);
-    return(BT_ENOSUP);
-
-#endif  /* EAS BIND CODE */
 }
 
 /******************************************************************************
@@ -419,13 +468,13 @@ bt_error_t btp_hw_bind(
     bt_data32_t             mreg_value;
     
     FUNCTION("btp_hw_bind");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
     
     TRC_MSG(BT_TRC_BIND, 
-            (LOG_FMT "HW_BIND: bus addr 0x%x; len 0x%x\n",
-            LOG_ARG, bind_p->host_addr, bind_p->length));
+            (LOG_FMT "HW_BIND: bus addr 0x%llx; len 0x%x\n",
+            LOG_ARG, (long long unsigned) bind_p->host_addr, bind_p->length));
 
     /*
     ** Initialize bind structure in case of fail
@@ -478,14 +527,14 @@ bt_error_t btp_hw_bind(
     ** for the request or try to get the one specified by the user
     */
     need = (int) CALC_LEN_BITS(bind_p->host_addr, bind_p->length);
-    btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
+    btk_mutex_enter(&(unit_p->mreg_mutex));
     if (bind_p->phys_addr == BT_BIND_NO_CARE) {
-        retval = btk_bit_alloc(unit_p, unit_p->sdma_aval_p, need, 1, &start);
+        retval = btk_bit_alloc(unit_p->sdma_aval_p, need, 1, &start);
     } else {
         start = bind_p->phys_addr / BT_PAGE_SIZE;
-        retval = btk_bit_specify(unit_p, unit_p->sdma_aval_p, start, need);
+        retval = btk_bit_specify(unit_p->sdma_aval_p, start, need);
     }
-    btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+    btk_mutex_exit(&(unit_p->mreg_mutex));
     if (retval != BT_SUCCESS) {
         INFO_STR("Not enough resources to bind buffer");
         goto btk_hw_bind;
@@ -495,13 +544,43 @@ bt_error_t btp_hw_bind(
     **  Setup vme address, address modifier, and function code
     */
     mreg_value = (bt_data32_t) ((bt_devaddr_t) bind_p->host_addr & BT_MREG_ADDR_MASK);
-    btk_setup_mreg(unit_p, axs_type, &mreg_value, FALSE);
+    btk_setup_mreg(unit_p, axs_type, &mreg_value, BT_OP_BIND);
 
     /*
     ** Load the mapping registers
     */
-    btk_put_mreg_range(unit_p, start, need, BT_LMREG_CABLE_2_PCI, mreg_value);
-    btk_put_mreg_range(unit_p, start, need, BT_LMREG_DMA_2_PCI, mreg_value);
+    {
+        unsigned int inx;
+        for (inx = start; inx < (start + need); inx++, mreg_value += BT_PAGE_SIZE ) {
+
+            btk_put_mreg(unit_p, inx, BT_LMREG_CABLE_2_PCI, mreg_value);
+            if ( (btk_get_mreg(unit_p, inx, BT_LMREG_CABLE_2_PCI)) != mreg_value ) {
+                WARN_MSG((LOG_FMT "Verify Write BT_LMREG_CABLE_2_PCI mapping register mr_idx = 0x%.1X failed.\n",
+                                                                                 LOG_ARG, inx));
+                btk_put_mreg_range(unit_p, start, inx+1-start, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
+                btk_put_mreg_range(unit_p, start, inx+1-start, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
+                btk_mutex_enter(&unit_p->mreg_mutex);
+                btk_bit_free(unit_p->sdma_aval_p, start, need);
+                btk_mutex_exit(&unit_p->mreg_mutex);
+                retval = BT_EIO;
+                goto btk_hw_bind;
+            }
+
+            btk_put_mreg(unit_p, inx, BT_LMREG_DMA_2_PCI, mreg_value);
+            if ( (btk_get_mreg(unit_p, inx, BT_LMREG_DMA_2_PCI)) != mreg_value ) {
+                WARN_MSG((LOG_FMT "Verify Write BT_LMREG_DMA_2_PCI mapping register mr_idx = 0x%.1X failed.\n",
+                                                                                 LOG_ARG, inx));
+                btk_put_mreg_range(unit_p, start, inx+1-start, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
+                btk_put_mreg_range(unit_p, start, inx+1-start, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
+                btk_mutex_enter(&unit_p->mreg_mutex);
+                btk_bit_free(unit_p->sdma_aval_p, start, need);
+                btk_mutex_exit(&unit_p->mreg_mutex);
+                retval = BT_EIO;
+                goto btk_hw_bind;
+            }
+
+        }
+    }
 
     /* 
     ** Allocate a new bind requested list item
@@ -509,9 +588,11 @@ bt_error_t btp_hw_bind(
     element_p = btk_llist_elem_create(sizeof(bt_btrack_t), 0);
     if (element_p == (btk_llist_elem_t *) NULL) {
         INFO_STR("Not enough resources to track bind request");
-        btk_mutex_enter(unit_p, &(unit_p->mreg_mutex)); \
-        btk_bit_free(unit_p, unit_p->sdma_aval_p, start, need); \
-        btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+        btk_put_mreg_range(unit_p, start, need, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
+        btk_put_mreg_range(unit_p, start, need, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
+        btk_mutex_enter(&(unit_p->mreg_mutex)); \
+        btk_bit_free(unit_p->sdma_aval_p, start, need); \
+        btk_mutex_exit(&(unit_p->mreg_mutex));
         retval = BT_ENOMEM;
         goto btk_hw_bind;
     }
@@ -528,8 +609,9 @@ bt_error_t btp_hw_bind(
     new_bind_p->axs_type = axs_type;
 
     TRC_MSG(BT_TRC_BIND, 
-           (LOG_FMT "HW_BIND: bus addr 0x%x; off 0x%x; len 0x%x\n",
-           LOG_ARG, bind_p->host_addr, new_bind_p->phys_off, new_bind_p->phys_len));
+           (LOG_FMT "HW_BIND: bus addr 0x%llx; off 0x%x; len 0x%x\n",
+           LOG_ARG, (long long unsigned)bind_p->host_addr, 
+		   new_bind_p->phys_off, new_bind_p->phys_len));
     TRC_MSG(BT_TRC_BIND, 
            (LOG_FMT "BIND: start %d; need %d\n", LOG_ARG, start, need));
 
@@ -538,9 +620,9 @@ bt_error_t btp_hw_bind(
     **  Note clink_un/lock are not used since the interrpt routine
     **  does not touch the queue.
     */
-    btk_mutex_enter(unit_p, &unit_p->llist_mutex);
+    btk_mutex_enter(&unit_p->llist_mutex);
     btk_llist_insert_first(&unit_p->qh_bind_requests, element_p);
-    btk_mutex_exit(unit_p, &unit_p->llist_mutex);
+    btk_mutex_exit(&unit_p->llist_mutex);
 
     /* 
     **  Fill out bind structure to be returned to user
@@ -581,17 +663,18 @@ bt_error_t btp_hw_unbind(
     unsigned int            start, need;
     search_t                search_val;
     btk_llist_elem_t        *element_p; 
-    bt_btrack_t             *found_p = (bt_btrack_t *) (bind_p->sysinfo_p); 
+    bt_btrack_t             *found_p = (bt_btrack_t *) NULL; 
     
     FUNCTION("btp_hw_unbind");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
 
     /* 
     **  Perform limited sanity checking on the buffer being unbound
     */
-    if (bind_p->sysinfo_p == (bt_data64_t) NULL) {
+    found_p = (bt_btrack_t *) (unsigned long) (bind_p->sysinfo_p); 
+    if (found_p == (bt_btrack_t *) NULL) {
       INFO_STR("Buffer's system information is corrupted");
       retval = BT_EINVAL;
       goto btk_hw_unbind;
@@ -609,17 +692,17 @@ bt_error_t btp_hw_unbind(
     */
     search_val.phys_off = found_p->phys_off;
     search_val.phys_len = found_p->phys_len;
-    btk_mutex_enter(unit_p, &unit_p->llist_mutex);
+    btk_mutex_enter(&unit_p->llist_mutex);
     element_p = btk_llist_find_first(&unit_p->qh_bind_requests, bind_search,
                                      (void *) &search_val);
     if (element_p == (btk_llist_elem_t *) NULL) {
       INFO_STR("Failled to find bind tracking info");
-      btk_mutex_exit(unit_p, &unit_p->llist_mutex);
+      btk_mutex_exit(&unit_p->llist_mutex);
       retval = BT_EINVAL;
       goto btk_hw_unbind;
     } else {
       btk_llist_remove(element_p);
-      btk_mutex_exit(unit_p, &unit_p->llist_mutex);
+      btk_mutex_exit(&unit_p->llist_mutex);
       found_p = (bt_btrack_t *) btk_llist_elem_data(element_p);
       start = found_p->start_mreg;
       need = found_p->num_mreg;
@@ -630,9 +713,9 @@ bt_error_t btp_hw_unbind(
     */
     btk_put_mreg_range(unit_p, start, need, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
     btk_put_mreg_range(unit_p, start, need, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
-    btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-    (void) btk_bit_free(unit_p, unit_p->sdma_aval_p, start, need);
-    btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+    btk_mutex_enter(&(unit_p->mreg_mutex));
+    (void) btk_bit_free(unit_p->sdma_aval_p, start, need);
+    btk_mutex_exit(&(unit_p->mreg_mutex));
     btk_llist_elem_destroy(element_p, sizeof(bt_btrack_t));
 
     /*
@@ -674,7 +757,7 @@ void bt_unbind(
     bt_dev_t axs_type)
 {
     FUNCTION("bt_unbind");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     unsigned int        start, need;
     bt_btrack_t         *bind_p;
@@ -686,7 +769,7 @@ void bt_unbind(
     /*
     ** Loop, freeing each free sdma buffer found queued.  
     */
-    btk_mutex_enter(unit_p, &unit_p->llist_mutex);
+    btk_mutex_enter(&unit_p->llist_mutex);
     search_val.axs_type = axs_type;
     while ((element_p = btk_llist_find_first(&unit_p->qh_bind_requests, bind_release, &search_val)) != (btk_llist_elem_t *) NULL) {
         btk_llist_remove(element_p);
@@ -703,12 +786,12 @@ void bt_unbind(
         */
         btk_put_mreg_range(unit_p, start, need, BT_LMREG_CABLE_2_PCI, BT_MREG_INVALID);
         btk_put_mreg_range(unit_p, start, need, BT_LMREG_DMA_2_PCI, BT_MREG_INVALID);
-        btk_mutex_enter(unit_p, &(unit_p->mreg_mutex));
-        (void) btk_bit_free(unit_p, unit_p->sdma_aval_p, start, need);
-        btk_mutex_exit(unit_p, &(unit_p->mreg_mutex));
+        btk_mutex_enter(&(unit_p->mreg_mutex));
+        (void) btk_bit_free(unit_p->sdma_aval_p, start, need);
+        btk_mutex_exit(&(unit_p->mreg_mutex));
         btk_llist_elem_destroy(element_p, sizeof(bt_btrack_t));
     }
-    btk_mutex_exit(unit_p, &unit_p->llist_mutex);
+    btk_mutex_exit(&unit_p->llist_mutex);
 
     FEXIT(0);
     return;

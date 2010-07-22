@@ -342,10 +342,10 @@ CTCLInterpreterStartup::operator()(int argc, char** argv)
 
   // If there are no parameters, at least fake up a a program name:
   //
-  static char *Defaultargv[] = { "TCLInterpreterThread", NULL };
+  static const char *Defaultargv[] = { "TCLInterpreterThread", NULL };
   if(!argc) {
     argc = 1;
-    argv = Defaultargv;
+    argv = const_cast<char**>(Defaultargv);
   }
 
   OnInitialize(argc, argv);	// Application specific setup...

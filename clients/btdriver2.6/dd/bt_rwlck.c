@@ -13,7 +13,7 @@
 *****************************************************************************/
 /*****************************************************************************
 **
-**            Copyright (c) 1997, 1998, 2000 by SBS Technologies, Inc.
+**            Copyright (c) 1997-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -64,7 +64,6 @@ BT_FILE_NUMBER(TRACE_BT_RWLCK_C);
 **  Purpose:    Initializes a kernel reader/writer lock object.
 **
 **  Args:
-**      unit_p      Pointer to unit structure.
 **      rwlock_p    Pointer to bt_rwlock_t to be intialized.
 **
 **      Solaris specific parameters:
@@ -85,7 +84,6 @@ BT_FILE_NUMBER(TRACE_BT_RWLCK_C);
 ******************************************************************************/
 
 int btk_rwlock_init(
-    bt_unit_t   *unit_p,
     bt_rwlock_t *rwlock_p
 #if     defined(__sun)
     ,
@@ -97,10 +95,10 @@ int btk_rwlock_init(
 #endif  /* defined(__sun) */
     )
 {
-    FUNCTION("btk_rwlock_init");
-    LOG_UNIT(unit_p);
     int retvalue = 0;   /* assume success */
 
+    FUNCTION("btk_rwlock_init");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 
@@ -159,6 +157,14 @@ int btk_rwlock_init(
     spin_lock_init(&rwlock_p->rw_lock);
     rwlock_p->lock = 0;
 
+#elif defined (__lynxos)
+
+    /*
+     *   Initialize the variable to a non negative value to allow someone 
+     *   to initially lock whatever they need.
+     */
+    *rwlock_p = 1;
+
 #else
 
 #error  Code not written yet
@@ -177,7 +183,6 @@ int btk_rwlock_init(
 **  Purpose:    Releases any resources allocated by btk_rwlock_init().
 **
 **  Args:
-**      unit_p      Pointer to unit structure.
 **      rwlock_p    Pointer to bt_rwlock_t to be intialized.
 **
 **  Returns:    void
@@ -187,18 +192,16 @@ int btk_rwlock_init(
 ******************************************************************************/
 
 void btk_rwlock_fini(
-    bt_unit_t   *unit_p,
     bt_rwlock_t *rwlock_p
     )
 {
-    FUNCTION("btk_rwlock_fini");
-    LOG_UNIT(unit_p);
-
 #if   defined(__vxworks)
     SEM_ID    dead_rwlock;
     STATUS    vx_ret;
 #endif  /* vxworks */
 
+    FUNCTION("btk_rwlock_fini");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 #if     defined(_NTDDK_)
@@ -257,6 +260,13 @@ void btk_rwlock_fini(
     */
     ;
     
+#elif defined (__lynxos)
+
+    /*
+     * Currently, no action required
+     */
+    ;
+
 #else
 
 #error  Code not written yet
@@ -273,7 +283,6 @@ void btk_rwlock_fini(
 **  Purpose:    Acquire the reader/writer lock for writer (exclusive) access.
 **
 **  Args:
-**      unit_p      Pointer to unit structure.
 **      rwlock_p    Pointer to bt_rwlock_t to be acquired.
 **
 **  Returns:    void
@@ -295,17 +304,15 @@ void btk_rwlock_fini(
 ******************************************************************************/
 
 void btk_rwlock_wr_enter(
-    bt_unit_t   *unit_p,
     bt_rwlock_t *rwlock_p
     )
 {
-    FUNCTION("btk_rwlock_wr_enter");
-    LOG_UNIT(unit_p);
-
 #if   defined(__vxworks)
     STATUS vx_ret;
 #endif /* vxworks */
 
+    FUNCTION("btk_rwlock_wr_enter");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 #if     defined(_NTDDK_)
@@ -348,6 +355,11 @@ void btk_rwlock_wr_enter(
         }
     }
 
+#elif defined (__lynxos)
+
+    /* Acquire the lock */
+    swait(rwlock_p, SEM_SIGIGNORE);
+
 #else
 
 #error  Code not written yet
@@ -364,7 +376,6 @@ void btk_rwlock_wr_enter(
 **  Purpose:    Acquire the reader/writer lock for reader (shared) access.
 **
 **  Args:
-**      unit_p      Pointer to unit structure.
 **      rwlock_p    Pointer to bt_rwlock_t to be acquired.
 **
 **  Returns:    void
@@ -388,18 +399,16 @@ void btk_rwlock_wr_enter(
 ******************************************************************************/
 
 void btk_rwlock_rd_enter(
-    bt_unit_t   *unit_p,
     bt_rwlock_t *rwlock_p
     )
 {
-    FUNCTION("btk_rwlock_rd_enter");
-    LOG_UNIT(unit_p);
-
 #if   defined(__vxworks)
     STATUS vx_ret;
 #endif /* vxworks */
 
 
+    FUNCTION("btk_rwlock_rd_enter");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 #if     defined(_NTDDK_)
@@ -487,6 +496,11 @@ void btk_rwlock_rd_enter(
         }
     }
 
+#elif defined (__lynxos)
+
+    /* Acquire the lock */
+    swait(rwlock_p, SEM_SIGIGNORE);
+
 #else
 
 #error  Code not written yet
@@ -507,7 +521,6 @@ exit_btk_rwlock_rd_enter:
 **  Purpose:    Releases a kernel writer lock.
 **
 **  Args:
-**      unit_p      Pointer to unit structure.
 **      rwlock_p    Pointer to bt_rwlock_t to be released.
 **
 **  Returns:    void
@@ -522,17 +535,15 @@ exit_btk_rwlock_rd_enter:
 ******************************************************************************/
 
 void btk_rwlock_wr_exit(
-    bt_unit_t   *unit_p,
     bt_rwlock_t *rwlock_p
     )
 {
-    FUNCTION("btk_rwlock_wr_exit");
-    LOG_UNIT(unit_p);
-
 #if   defined(__vxworks)
     STATUS vx_ret;
 #endif /* vxworks */
 
+    FUNCTION("btk_rwlock_wr_exit");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 #if     defined(_NTDDK_)
@@ -574,6 +585,11 @@ void btk_rwlock_wr_exit(
     rwlock_p->lock = 0;
     spin_unlock(&rwlock_p->rw_lock);
 
+#elif defined (__lynxos)
+
+    /* Release the lock */
+    ssignal(rwlock_p);
+
 #else
 
 #error  Code not written yet
@@ -590,7 +606,6 @@ void btk_rwlock_wr_exit(
 **  Purpose:    Releases a kernel reader lock.
 **
 **  Args:
-**      unit_p      Pointer to unit structure.
 **      rwlock_p    Pointer to bt_rwlock_t to be released.
 **
 **  Returns:    void
@@ -605,17 +620,15 @@ void btk_rwlock_wr_exit(
 ******************************************************************************/
 
 void btk_rwlock_rd_exit(
-    bt_unit_t   *unit_p,
     bt_rwlock_t *rwlock_p
     )
 {
-    FUNCTION("btk_rwlock_rd_exit");
-    LOG_UNIT(unit_p);
-
 #if   defined(__vxworks)
     STATUS vx_ret;
 #endif  /* vxworks */
 
+    FUNCTION("btk_rwlock_rd_exit");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
 #if     defined(_NTDDK_)
@@ -674,6 +687,11 @@ void btk_rwlock_rd_exit(
     spin_lock(&rwlock_p->rw_lock);
     rwlock_p->lock = 0;
     spin_unlock(&rwlock_p->rw_lock);
+
+#elif defined (__lynxos)
+
+    /* Release the lock */
+    ssignal(rwlock_p);
 
 #else
 

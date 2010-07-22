@@ -375,9 +375,9 @@ private:
   {
   private:
     CTCLResult& m_rResult;
-    char*       m_pMatch;
+    const char*       m_pMatch;
   public:
-    ListGatherer(CTCLResult& rResult, char* pMatch) :
+    ListGatherer(CTCLResult& rResult, const char* pMatch) :
       m_rResult(rResult),
       m_pMatch(pMatch)
     {}

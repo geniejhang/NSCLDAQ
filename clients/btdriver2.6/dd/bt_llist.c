@@ -12,7 +12,7 @@
  ***************************************************************************/
 /****************************************************************************
  **
- **               Copyright (c) 1999 by SBS Technologies, Inc.
+ **               Copyright (c) 1999-2005 by SBS Technologies, Inc.
  **                          All Rights Reserved.
  **                 License governs use and distribution.
  **
@@ -114,7 +114,6 @@ void btk_llist_init(
 {
     FUNCTION("btk_llist_init");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     list_p->first_p = NULL;
@@ -145,7 +144,6 @@ void btk_llist_elem_init(
 {
     FUNCTION("btk_llist_elem_init");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     new_p->data_p = data_p;
@@ -174,7 +172,6 @@ void * btk_llist_elem_data(
 {
     FUNCTION("btk_llist_elem_data");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     if (elem_p != NULL) {
@@ -208,10 +205,10 @@ btk_llist_elem_t * btk_llist_elem_create(
     size_t data_size,
     bt_data32_t alloc_flags) 
 {
+    btk_llist_elem_t    *llist_element_p = NULL;
+
     FUNCTION("btk_llist_elem_create");
     LOG_UNKNOWN_UNIT;
-    btk_llist_elem_t    *llist_element_p;
-
     FENTRY;
 
     /*
@@ -265,7 +262,6 @@ void btk_llist_elem_destroy(
 {
     FUNCTION("btk_llist_elem_destroy");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     btk_mem_free(elem_p->data_p, data_size);
@@ -293,7 +289,6 @@ void btk_llist_remove(
 {
     FUNCTION("btk_llist_remove");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     if (elem_p->prev_p == NULL) 
@@ -344,7 +339,6 @@ void btk_llist_insert_first (
 {
     FUNCTION("btk_llist_insert_first");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     new_p->prev_p = NULL;
@@ -387,7 +381,6 @@ void btk_llist_insert_last (
 {
     FUNCTION("btk_llist_insert_last");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     new_p->next_p = NULL;
@@ -437,7 +430,6 @@ void btk_llist_insert_after (
 {
     FUNCTION("btk_llist_insert_after");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     new_p->prev_p = old_p;
@@ -487,7 +479,6 @@ void btk_llist_insert_before (
 {
     FUNCTION("btk_llist_insert_before");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     new_p->prev_p = old_p->prev_p;
@@ -528,7 +519,6 @@ btk_llist_elem_t * btk_llist_next(
 {
     FUNCTION("btk_llist_next");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     if ((curr_p != NULL) && (curr_p->next_p != NULL)) 
@@ -562,7 +552,6 @@ btk_llist_elem_t * btk_llist_prev(
 {
     FUNCTION("btk_llist_prev");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     if ((curr_p != NULL) && (curr_p->prev_p != NULL)) 
@@ -596,7 +585,6 @@ btk_llist_elem_t * btk_llist_first(
 {
     FUNCTION("btk_llist_first");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     if ((list_p != NULL) && (list_p->first_p != NULL)) 
@@ -629,7 +617,6 @@ btk_llist_elem_t * btk_llist_last(
 {
     FUNCTION("btk_llist_last");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     if ((list_p != NULL) && (list_p->last_p != NULL)) 
@@ -672,10 +659,10 @@ btk_llist_elem_t * btk_llist_find_first(
     int (*func_p)(void *, void *),
     void * second_arg) 
 {
-    btk_llist_elem_t * curr_p;
+    btk_llist_elem_t * curr_p = NULL;
+
     FUNCTION("btk_llist_find_first");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     for (curr_p = list_p->first_p; curr_p != NULL; curr_p = curr_p->next_p) 
@@ -718,10 +705,10 @@ btk_llist_elem_t * btk_llist_find_last(
     int (*func_p)(void *, void *),
     void * second_arg) 
 {
-    btk_llist_elem_t * curr_p;
+    btk_llist_elem_t * curr_p = NULL;
+
     FUNCTION("btk_llist_find_last");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     for (curr_p = list_p->last_p; curr_p != NULL; curr_p = curr_p->prev_p) 
@@ -768,7 +755,6 @@ btk_llist_elem_t * btk_llist_find_next(
 {
     FUNCTION("btk_llist_find_next");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     for (curr_p = curr_p->next_p; curr_p != NULL; curr_p = curr_p->next_p) 
@@ -815,7 +801,6 @@ btk_llist_elem_t * btk_llist_find_prev(
 {
     FUNCTION("btk_llist_find_prev");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     for (curr_p = curr_p->prev_p; curr_p != NULL; curr_p = curr_p->prev_p) 
@@ -849,7 +834,6 @@ void * btk_llist_next_data(
 {
     FUNCTION("btk_llist_next_data");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     if ((curr_p != NULL) && (curr_p->next_p != NULL)) 
@@ -884,7 +868,6 @@ void * btk_llist_prev_data(
 {
     FUNCTION("btk_llist_prev_data");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     if ((curr_p != NULL) && (curr_p->prev_p != NULL)) 
@@ -919,7 +902,6 @@ void * btk_llist_first_data(
 {
     FUNCTION("btk_llist_first_data");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     if ((list_p != NULL) && (list_p->first_p != NULL)) 
@@ -953,7 +935,6 @@ void * btk_llist_last_data(
 {
     FUNCTION("btk_llist_last_data");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     if ((list_p != NULL) && (list_p->last_p != NULL)) 
@@ -996,10 +977,10 @@ void * btk_llist_find_first_data(
     int (*func_p)(void *, void *),
     void * second_arg) 
 {
-    btk_llist_elem_t * curr_p;
+    btk_llist_elem_t * curr_p = NULL;
+
     FUNCTION("btk_llist_find_first_data");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     for (curr_p = list_p->first_p; curr_p != NULL; curr_p = curr_p->next_p) 
@@ -1042,10 +1023,10 @@ void * btk_llist_find_last_data(
     int (*func_p)(void *, void *),
     void * second_arg) 
 {
-    btk_llist_elem_t * curr_p;
+    btk_llist_elem_t * curr_p = NULL;
+
     FUNCTION("btk_llist_find_last_data");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     for (curr_p = list_p->last_p; curr_p != NULL; curr_p = curr_p->prev_p) 
@@ -1092,7 +1073,6 @@ void * btk_llist_find_next_data(
 {
     FUNCTION("btk_llist_find_next_data");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     for (curr_p = curr_p->next_p; curr_p != NULL; curr_p = curr_p->next_p) 
@@ -1139,7 +1119,6 @@ void * btk_llist_find_prev_data(
 {
     FUNCTION("btk_llist_find_prev_data");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     for (curr_p = curr_p->prev_p; curr_p != NULL; curr_p = curr_p->prev_p) 
@@ -1183,10 +1162,10 @@ void btk_llist_onall(
     void (*func_p)(void *, void *),
     void * second_arg)
 {
-    btk_llist_elem_t * curr_p;
+    btk_llist_elem_t * curr_p = NULL;
+
     FUNCTION("btk_llist_onall");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     for (curr_p = list_p->first_p; curr_p->next_p; curr_p = curr_p->next_p) 
@@ -1220,12 +1199,11 @@ void btk_llist_onall(
 int btk_llist_count(
     btk_llist_t * list_p) 
 {
-    btk_llist_elem_t * curr_p;
+    btk_llist_elem_t * curr_p = NULL;
     int                count = 0;
 
     FUNCTION("btk_llist_count");
     LOG_UNKNOWN_UNIT;
-
     FENTRY;
 
     for (curr_p = list_p->first_p; curr_p != NULL; curr_p = curr_p->next_p) 

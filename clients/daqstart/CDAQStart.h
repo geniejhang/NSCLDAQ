@@ -97,7 +97,7 @@ protected:
   void ReportExit();
 private:
   char* SinkType(char* name);
-  char* SinkName(char* name);
+  const char* SinkName(char* name);
 
   CSink* CreateSink(const char* name);
   

@@ -429,7 +429,8 @@ class XMScrolledText : public XMText {
   void SetMaxLength(int maxlen) { max_text_length = maxlen; }
   void ClearText() {
     text_length = 0;
-    XmTextSetString(id, "");	/* Set text value to empty string. */
+    XmTextSetString(id, 
+		    const_cast<char*>(""));	/* Set text value to empty string. */
   }
   void AddText(char *string) {
     XmTextInsert(id, text_length, string);

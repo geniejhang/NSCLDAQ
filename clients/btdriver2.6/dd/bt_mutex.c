@@ -12,7 +12,7 @@
 *****************************************************************************/
 /*****************************************************************************
 **
-**            Copyright (c) 1997-2000 by SBS Technologies, Inc.
+**            Copyright (c) 1997-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -36,23 +36,68 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
 
 #include "btdd.h"
 
-#if	defined(__linux__)
-#include	<linux/interrupt.h>
-#endif	/* defined(__linux__) */
 
-/*
-**  List local variables here
-*/
+
+/*****************************************************************************
+**
+**  Protoypes
+**
+*****************************************************************************/
+
+/* Prototype for btk_mutex_init() includes OS dependent parameters */
+#if defined (_AIX)
+
+#elif defined (BT_NTDRIVER)
+int btk_mutex_init(
+        bt_mutex_t *mutex_p, 
+        bt_mutex_type_t mutex_type);
+
+#elif defined (__hpux)
+
+#elif defined (__sgi)
+int btk_mutex_init(
+        bt_mutex_t *mutex_p, 
+        char *name_p);
+
+#elif defined (__sun)
+int btk_mutex_init(
+        bt_mutex_t *mutex_p, 
+        char *name_p, 
+        ddi_iblock_cookie_t *cookie_p); 
+
+#elif defined (__vxworks)
+int btk_mutex_init(
+        bt_mutex_t *mutex_p);
+
+#elif defined (BT_uCOS)
+int btk_mutex_init(
+        bt_mutex_t *mutex_p);
+
+#elif defined (__linux__)
+
+int btk_mutex_init(
+        bt_mutex_t *mutex_p, 
+        bt_cookie_t irq_cookie);
+
+#elif defined (__lynxos)
+
+int btk_mutex_init(
+        bt_mutex_t *mutex_p);
+
+#else
+#error unknown operating system
+#endif /* operating system */
+
+void btk_mutex_fini(
+        bt_mutex_t *mutex_p);
+
+void btk_mutex_enter(
+        bt_mutex_t *mutex_p);
+
+void btk_mutex_exit(
+        bt_mutex_t *mutex_p);
+
 BT_FILE_NUMBER(TRACE_BT_MUTEX_C);
-
-#ifdef BT13908
-#ifdef ALLOC_PRAGMA
-#pragma alloc_text(PAGE, btk_mutex_init)
-#pragma alloc_text(PAGE, btk_mutex_fini)
-#pragma alloc_text(PAGE, btk_mutex_enter)
-#pragma alloc_text(PAGE, btk_mutex_exit)
-#endif /* ALLOC_PRAGMA */
-#endif /* BT13908 */
 
 
 /******************************************************************************
@@ -62,7 +107,6 @@ BT_FILE_NUMBER(TRACE_BT_MUTEX_C);
 **      Purpose:        Initializes a kernel mutual exclusion object.
 **
 **      Args:
-**              unit_p          Pointer to unit structure. Can be NULL.
 **              mutex_p         Pointer to bt_mutex_t to be intialized
 **
 **              Solaris Specific parameters:
@@ -89,15 +133,12 @@ BT_FILE_NUMBER(TRACE_BT_MUTEX_C);
 **              Otherwise       error value.
 **
 **      Notes:
-**      Called by btk_mem_init() with NULL unit_p! Must be able to handle this
-**      case.
 **
 **  NT Notes:
 **      Caller must be running at IRQL <= DISPATCH_LEVEL.
 **
 ******************************************************************************/
 int btk_mutex_init(
-    bt_unit_t   *unit_p,   /* pointer to unit structure */
     bt_mutex_t  *mutex_p   /* pointer to bt_mutex_t */
 
 #if     defined(__sun)
@@ -118,12 +159,10 @@ int btk_mutex_init(
 #endif
     )
 {
-    FUNCTION("btk_mutex_init");
-    LOG_UNKNOWN_UNIT;   /* Since unit_p can be NULL this is safer and we don't */
-                        /* lose much info */
-
     int         retvalue = BT_SUCCESS;   /* Assume success */
 
+    FUNCTION("btk_mutex_init");
+    LOG_UNKNOWN_UNIT;   
     FENTRY;
 
 #if     defined(__sun)
@@ -172,17 +211,12 @@ int btk_mutex_init(
 
 #elif	defined(__linux__)
 
-    mutex_p->irq_excl = irq_cookie;
-    spin_lock_init(&mutex_p->lock);
-#if     LINUX_VERSION_CODE >= (KERNEL_VERSION(2,5,0))
-    /* can't hold a spinlock through an interrupt in linux 2.6
-       we now use a variable in the unit_p structure
-       access is still via the dma_mutex
-    */
-    if (mutex_p == &unit_p->dma_mutex) {
-        unit_p->linux_dma_lock = 0;            
-    }
-#endif
+    sema_init(mutex_p, 1);
+
+#elif defined(__lynxos)
+
+    /* Allow anyone to acquire the mutex */
+    *mutex_p = 1;
 
 #else
 #error  Code not written yet
@@ -200,30 +234,25 @@ int btk_mutex_init(
 **      Purpose:        Releases any resources allocated by btk_mutex_init().
 **
 **      Args:
-**              unit_p          Pointer to unit structure. Can be NULL.
 **              mutex_p         Pointer to bt_mutex_t to be intialized
 **          
 **
 **      Returns:        Void
 **
 **      Notes:
-**      Called by btk_mem_fini() with NULL unit_p! Must be able to handle this
-**      case.
 **
 ******************************************************************************/
 void btk_mutex_fini(
-    bt_unit_t   *unit_p,   /* pointer to unit structure */
     bt_mutex_t  *mutex_p   /* pointer to bt_mutex_t */
     )
 {
-    FUNCTION("btk_mutex_fini");
-    LOG_UNIT(unit_p);
-
 #if     defined(__vxworks)
     SEM_ID      dead_mutex;
     STATUS      vx_ret;
 #endif  /* defined(__vxworks) */
 
+    FUNCTION("btk_mutex_fini");
+    LOG_UNKNOWN_UNIT;   
     FENTRY;
 
 
@@ -266,6 +295,11 @@ void btk_mutex_fini(
     /* no action required */
     ;
 
+#elif defined (__lynxos)
+
+    /* No action is required */
+    ;
+
 #else
 #error  Code not written yet
 #endif  /* defined(__sun, _NTDDK_) */
@@ -284,7 +318,6 @@ void btk_mutex_fini(
 **  Purpose:    Start section protected by mutex.
 **
 **  Args:
-**  unit_p              Pointer to unit structure. Can be NULL.
 **  mutex_p             Pointer to bt_mutex_t to be entered.
 **
 **  Returns:    Void
@@ -311,13 +344,11 @@ void btk_mutex_fini(
 **
 ******************************************************************************/
 void btk_mutex_enter(
-    bt_unit_t   *unit_p,    /* pointer to unit structure */
     bt_mutex_t  *mutex_p    /* pointer to bt_mutex_t */
     )
 {
     FUNCTION("btk_mutex_enter");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;   
     FENTRY;
 
 #if     defined(__sun)
@@ -370,58 +401,14 @@ void btk_mutex_enter(
     }
             
 #elif	defined(__linux__)
-#if     LINUX_VERSION_CODE >= (KERNEL_VERSION(2,5,0))
-    /* can't hold a spinlock through an interrupt in linux 2.6
-       we now use a variable in the unit_p structure
-       access is still via the dma_mutex
-    */
-    if (mutex_p == &unit_p->dma_mutex) {
-        if ( (0 == mutex_p->irq_excl) || in_interrupt() ) {
-            for (;;) {
-                spin_lock(&mutex_p->lock);
-                if (!(unit_p->linux_dma_lock)) {
-                    /* not doing a dma set the lock variable, unlock and leave */
-                    unit_p->linux_dma_lock = 1;            
-                    spin_unlock(&mutex_p->lock);
-                    break;
-                } else {
-                    /* still doing a dma unlock and relock to check again */
-                    spin_unlock(&mutex_p->lock);
-                }
-            }
-        } else {
-            for (;;) {
-                spin_lock_irqsave(&mutex_p->lock, mutex_p->flags);
-                if (!(unit_p->linux_dma_lock)) {
-                    /* not doing a dma set the lock variable, unlock and leave */
-                    unit_p->linux_dma_lock = 1;            
-                    spin_unlock_irqrestore(&mutex_p->lock, mutex_p->flags);
-                    break;
-                } else {
-                    /* still doing a dma unlock and relock to check again */
-                    spin_unlock_irqrestore(&mutex_p->lock, mutex_p->flags);
-                }
-            }
-        }
-    } else {
-        /* non-dma mutex just do spin_lock */
-        if ( (0 == mutex_p->irq_excl) || in_interrupt() ) {
-            /* Either never called from interrupt or currently in interrupt */
-            spin_lock(&mutex_p->lock);
-        } else {
-            /* Need to save interrupt state and disable interrupts */
-            spin_lock_irqsave(&mutex_p->lock, mutex_p->flags);
-        }
-    }
-#else
-    if ( (0 == mutex_p->irq_excl) || in_interrupt() ) {
-        /* Either never called from interrupt or currently in interrupt */
-        spin_lock(&mutex_p->lock);
-    } else {
-        /* Need to save interrupt state and disable interrupts */
-        spin_lock_irqsave(&mutex_p->lock, mutex_p->flags);
-    }
-#endif
+
+    (void) down(mutex_p);
+
+#elif defined (__lynxos)
+
+    /* Acquire the lock */
+    swait(mutex_p, SEM_SIGIGNORE);
+
 #else
 #error  Code not written yet
 #endif  /* __sun, __vxworks, _NTDDK_ */
@@ -440,7 +427,6 @@ void btk_mutex_enter(
 **  Purpose:    End section protected by mutex.
 **
 **  Args:
-**      unit_p          Pointer to unit structure. Can be NULL.
 **      mutex_p         Pointer to bt_mutex_t to be exited.
 **
 **  Returns:    Void
@@ -455,13 +441,11 @@ void btk_mutex_enter(
 **
 ******************************************************************************/
 void btk_mutex_exit(
-    bt_unit_t   *unit_p,  /* pointer to unit structure */
     bt_mutex_t  *mutex_p  /* pointer to bt_mutex_t */
     )
 {
     FUNCTION("btk_mutex_exit");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;   
     FENTRY;
 
 #if     defined (__sun)
@@ -521,40 +505,14 @@ void btk_mutex_exit(
 
 #elif	defined(__linux__)
 
-#if     LINUX_VERSION_CODE >= (KERNEL_VERSION(2,5,0))
-    if (mutex_p == &unit_p->dma_mutex) {
-        /* dma lock, must get spin_lock first */
-        if ( (0 == mutex_p->irq_excl) || in_interrupt() ) {
-            /* Either never called from interrupt or currently in interrupt */
-            spin_lock(&mutex_p->lock);
-            /* done doing a dma clear the lock variable, unlock and leave */
-            unit_p->linux_dma_lock = 0;
-            spin_unlock(&mutex_p->lock);
-        } else {
-            /* Need to save interrupt state and disable interrupts */
-            spin_lock_irqsave(&mutex_p->lock, mutex_p->flags);
-            /* done doing a dma clear the lock variable, unlock and leave */
-            unit_p->linux_dma_lock = 0;
-            spin_unlock_irqrestore(&mutex_p->lock, mutex_p->flags);
-        }
-    } else {
-        if ( (0 == mutex_p->irq_excl) || in_interrupt() ) {
-            /* Either never called from interrupt or currently in interrupt */
-            spin_unlock(&mutex_p->lock);
-        } else {
-            /* Need to restore interrupt state */
-            spin_unlock_irqrestore(&mutex_p->lock, mutex_p->flags);
-        }
-    }
-#else
-    if ( (0 == mutex_p->irq_excl) || in_interrupt() ) {
-        /* Either never called from interrupt or currently in interrupt */
-        spin_unlock(&mutex_p->lock);
-    } else {
-        /* Need to restore interrupt state */
-        spin_unlock_irqrestore(&mutex_p->lock, mutex_p->flags);
-    }
-#endif
+    (void) up(mutex_p);
+
+
+#elif defined (__lynxos)
+
+    /* Release the lock */
+    ssignal(mutex_p);
+
 
 #else
 #error  Code not written yet

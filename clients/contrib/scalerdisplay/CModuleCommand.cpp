@@ -313,10 +313,10 @@ using namespace std;
 class ListGatherer
 {
 private:
-   CTCLResult& m_rResult;
-   char*       m_pMatch;
+  CTCLResult& m_rResult;
+  const char*       m_pMatch;
 public:
-   ListGatherer(CTCLResult& rResult, char* pMatch) :
+   ListGatherer(CTCLResult& rResult, const char* pMatch) :
       m_rResult(rResult),
       m_pMatch(pMatch)
    {}
@@ -324,7 +324,7 @@ public:
    {
       string name((p.first));
       string type((p.second)->getType());
-      if(Tcl_StringMatch(name.c_str(), m_pMatch)) {
+      if(Tcl_StringMatch(name.c_str(), const_cast<char*>(m_pMatch))) {
 	 string element(name);
 	 element += " ";
 	 element += type;
@@ -580,7 +580,7 @@ CModuleCommand::List(CTCLInterpreter& rInterp,
    // Skip over the leading parameter and, figure out the match
    // pattern.  If none is supplied, it's *.
    
-   char* pPattern = "*";
+   const char* pPattern = "*";
    if(nArgs > 1) {
       rResult =  "Too many parameters: \n";
       rResult += Usage();

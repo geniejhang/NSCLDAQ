@@ -21,7 +21,6 @@
 #include        <linux/ioctl.h>
 
 #include        "btpdef.h"
-#include        "btngpci.h"
 
 #define BT_MAX_UNIT     15
 #define BT_DRV_NAME     "btp"
@@ -143,56 +142,5 @@ typedef enum {
 #define BIOC_PAIR_DIAG     _IOWR('b', (BT_CTRL_PAIR_DIAG|BT_IO_ERET_FLAG), bt_hw_diag_t)
 #define BIOC_DRIVER_VERSION     _IOWR('b', (BT_CTRL_DRIVER_VERSION|BT_IO_ERET_FLAG), bt_hw_diag_t)
 
-/*******************************************************************************
-**      Kernel Level Routines and structures for adding user interrupt service
-**  routines.
-*******************************************************************************/
-#if defined (__KERNEL__) 
 
-#define DMA_PKT_SIZE            256     /* adaptor DMA packet size */
-
-/*
-**  Adapter kernel map structure for accessing remote resouces
-*/
-typedef struct {
-    caddr_t     nio_p;          /* Ptr to node registers */
-    caddr_t     mreg_p;         /* Pointer to allocated mapping register */
-        caddr_t     rmem_p;         /* Pointer to section of remote memory to use */
-        bt_data32_t loc_id;         /* Id of local card */
-        bt_data32_t rem_id;         /* Id of remote card */
-    bt_data32_t nio_len;        /* Lenght of node regs */
-    bt_data32_t mreg_start;     /* Starting mapping register allocated */
-    bt_data32_t mreg_len;       /* Number of isr mapping regs */
-    bt_data32_t rmem_len;       /* Length of isr remote memory */
-    bt_swap_t   default_swap;   /* Default swapping for adaptor */
-} bt_kmap_t;                    /*   May be wrong if no remote power */
-                                /*   during load or if remote */
-                                /*   adaptor is changed without */
-                                /*   rebooting */
-
-/*
-**  User interrupt service routine definition
-*/
-typedef bt_data32_t bt_uisr_t (u_short unit, caddr_t param_p, u_short irq_type);
-
-/*
-**  Structure for registering a remote bus interrupt.
-*/
-typedef struct {
-    u_short     unit;               /* unit number of device */
-    u_short     flags;              /* bt_irq_t values - BT_IRQ_OVERFLOW is illegal */
-    int         level;              /* cable interrupt number */
-    bt_uisr_t   *interrupt_routine; /* User ISR to call */
-    caddr_t     param;              /* param passed to user ISR */
-} bt_rembus_intr_t;
-
-/*
-** Prototypes for kernel functions
-*/
-extern int bt_kmap(unsigned int unit, bt_kmap_t *kmap_p);
-extern int bt_kunmap(unsigned int unit, bt_kmap_t *kmap_p);
-extern int bt_rembus_install(unsigned int unit, bt_rembus_intr_t *handler_p);
-extern int bt_rembus_remove(unsigned int unit, bt_rembus_intr_t *handler_p);
-
-#endif /* defined(__KERNEL__) */
 #endif /* !defined(_BTPIO_H) */

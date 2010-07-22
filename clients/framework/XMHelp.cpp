@@ -297,7 +297,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #ifdef unix
 #pragma implementation "XMCallback.h"
 #endif
-static char *sccsinfo="@(#)helpmenu.cc	8.9 10/19/98 \n";
+const static char *sccsinfo="@(#)helpmenu.cc	8.9 10/19/98 \n";
 
 /*
 ** Include files:
@@ -322,7 +322,7 @@ using namespace std;
 ** Static local declarations of the help strings and associated dialogs. 
 */
 
-static char *About[]
+static const char *About[]
   = { "Xamine -- The NSCL X/Motif histogram display program\n",
       "               Author: Ron Fox\n",
       "                       NSCL\n",
@@ -350,11 +350,11 @@ static char *About[]
       "                      Fixed error in points prompter on client buttons\n",
 	NULL
 	};
-static char *aboutname = "About";   /* For VMS C++ compiler bug */
+static const char *aboutname = "About";   /* For VMS C++ compiler bug */
 
 XM_help_client_data XM_About = { aboutname, NULL, About };
                        
-static char *Help[] 
+static const char *Help[] 
   = { "Xamine is the NSCL X/Motif histogram display program\n\n",
       "   The highlighted pane is the \"selected\" pane. All operations\n",
       " that require a pane are performed on that pane. To get a feel\n",
@@ -370,7 +370,7 @@ static char *Help[]
       NULL
       };
 
-static char *overname = "Help_Overview";
+static const  char *overname = "Help_Overview";
 XM_help_client_data XM_Help_Overview = {overname,  NULL, Help };
 
 
@@ -401,10 +401,10 @@ XM_help_client_data XM_Help_Overview = {overname,  NULL, Help };
 **    XMInformationDialog *  - Pointer to the created information dialog.
 **    NULL                   - If failed.
 */
-XMInformationDialog *XM_help(char *name, XMWidget *parent, 
-				 char **help_text)
+XMInformationDialog *XM_help(const char *name, XMWidget *parent, 
+				 const char **help_text)
 {
-  char **ht;			/* Used to traverse the help text. */
+  const  char **ht;	        /* Used to traverse the help text. */
   int    ht_size;		/* Number of characters of help text. */
   char *help;			/* Points to the concatenated strings. */
   XMInformationDialog *dialog;	/* Will point to the dialog.          */

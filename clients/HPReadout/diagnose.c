@@ -55,7 +55,7 @@
 void
 panic(const char* msg)
 {
-  fprintf(stderr, msg);
+  fprintf(stderr, "%s", msg);
   abort();
 }  
 
@@ -117,5 +117,5 @@ int    errno;							       /*2*/
     else							       /*2*/
 	msg = errmsg[errno];					       /*2*/
 								       /*2*/
-    fprintf(stderr, msg);
+    fprintf(stderr, "%s", msg);
 }								       /*2*/

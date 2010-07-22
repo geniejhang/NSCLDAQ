@@ -15,7 +15,7 @@
 *****************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 2000 by SBS Technologies, Inc.
+**        Copyright (c) 2000-05 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -28,6 +28,7 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
 ** Include files
 */
 #include "btdd.h"
+
 #if defined(__linux__)
 #include <linux/vmalloc.h>
 #endif /* defined (__linux__) */
@@ -87,7 +88,7 @@ bt_error_t btk_irq_qs_init(
 {
 
     FUNCTION("btk_irq_qs_init");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bt_error_t      retval = BT_SUCCESS;
     caddr_t         q_start_p;
@@ -115,14 +116,31 @@ bt_error_t btk_irq_qs_init(
         
 #elif defined(BT_NTDRIVER)  /* defined (__linux__) */
     /*
-    ** Must use HalAllocateCommonBuffer so we can mmap it
+    ** Must use AllocateCommonBuffer so we can mmap it
     ** Comes page aligned
     */
-    if ((q_start_p = (caddr_t) HalAllocateCommonBuffer(unit_p->adapter_object, BTK_Q_NUM * BTK_Q_SIZE(q_size), &unit_p->q_paddr, FALSE)) == NULL) {
+    if ((q_start_p =
+	    (caddr_t) unit_p->adapter_object->DmaOperations->AllocateCommonBuffer(
+                                           unit_p->adapter_object,
+					   BTK_Q_NUM * BTK_Q_SIZE(q_size),
+					   &unit_p->q_paddr, TRUE))
+	== NULL)
+      {
         WARN_STR("Failed to allocate interrupt queues");
         retval = BT_ENOMEM;
-    } else {
-        q_offset_g = 0;
+      } else {
+               q_offset_g = 0;
+
+#elif defined (__lynxos)
+
+        /* Allocate a contiguous section of memory */
+        q_start_p = alloc_cmem(BTK_Q_NUM * BTK_Q_SIZE(q_size) + BT_SYS_PAGE_SIZE);
+        if (q_start_p == NULL) {
+            WARN_STR("Failed to allocate interrupt queues");
+            retval = BT_ENOMEM;
+        } else { /* This is the start of the brace and is continued after the
+                  * end of the endif statement.
+                  */
 
 #else /* defined (__linux__) */
     if ((q_start_p = btk_mem_alloc(BTK_Q_NUM * BTK_Q_SIZE(q_size) + BT_SYS_PAGE_SIZE, 0)) == NULL) {
@@ -167,7 +185,7 @@ void btk_irq_qs_fini(
     caddr_t q_start_p;
 
     FUNCTION("btk_irq_qs_fini");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
@@ -180,6 +198,11 @@ void btk_irq_qs_fini(
      vfree((void *) q_start_p);
 #elif defined(BT_NTDRIVER)  /* defined (__linux__) */
     HalFreeCommonBuffer(unit_p->adapter_object, BTK_Q_NUM * BTK_Q_SIZE(q_size), unit_p->q_paddr, (void *) q_start_p, FALSE);
+#elif defined (__lynxos)
+
+    /* Release the contiguous block of interrupt memory */
+    free_cmem(q_start_p, q_size);
+
 #else /* defined (__linux__) */
     if (q_offset_g != 0) {
         q_start_p -= q_offset_g;
@@ -214,11 +237,11 @@ bt_error_t btk_thread_register(
 {
 
     FUNCTION("btk_thread_register");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bt_error_t              retval = BT_SUCCESS;
-    btk_llist_elem_t        *element_p;
-    bt_ttrack_t             *thread_p;
+    btk_llist_elem_t        *element_p = NULL;
+    bt_ttrack_t             *thread_p = NULL;
     BTK_LOCK_RETURN_T       isr_pl;
 
     FENTRY;
@@ -237,11 +260,11 @@ bt_error_t btk_thread_register(
         */
         thread_p = (bt_ttrack_t *) btk_llist_elem_data(element_p);
 #if defined(__sun)
-        btk_event_init(unit_p, &thread_p->thread_event, FALSE, "Thread event", &unit_p->iblock_cookie);
+        btk_event_init(&thread_p->thread_event, FALSE, "Thread event", &unit_p->iblock_cookie);
 #elif defined(__linux__)
-        btk_event_init(unit_p, &thread_p->thread_event, FALSE, unit_p->hirq_cookie);
+        btk_event_init(&thread_p->thread_event, FALSE, unit_p->hirq_cookie);
 #else /* other OS */
-        btk_event_init(unit_p, &thread_p->thread_event, FALSE);
+        btk_event_init(&thread_p->thread_event, FALSE);
 #endif /* defined(__sun) */
 
         /*
@@ -270,8 +293,8 @@ bt_error_t btk_thread_register(
         */
         btk_llist_insert_last(&unit_p->icbr_thread_list, element_p);
         BTK_UNLOCK_ISR(unit_p, isr_pl);
-	TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld registered.\n", 
-	        LOG_ARG, (u_long)thread_p->thread_id));
+        TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld registered.\n", 
+                LOG_ARG, (u_long)thread_p->thread_id));
     }
         
     FEXIT(retval);
@@ -300,11 +323,11 @@ bt_error_t btk_thread_unregister(
 {
 
     FUNCTION("btk_thread_unregister");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bt_error_t              retval = BT_SUCCESS;
-    btk_llist_elem_t        *element_p;
-    bt_ttrack_t             *thread_p;
+    btk_llist_elem_t        *element_p = NULL;
+    bt_ttrack_t             *thread_p = NULL;
     BTK_LOCK_RETURN_T       isr_pl;
 
     FENTRY;
@@ -323,9 +346,9 @@ bt_error_t btk_thread_unregister(
         btk_llist_remove(element_p);
         BTK_UNLOCK_ISR(unit_p, isr_pl);
         thread_p = (bt_ttrack_t *) btk_llist_elem_data(element_p);
-        btk_event_fini(unit_p, &thread_p->thread_event);
-	TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld unregistered.\n", 
-	        LOG_ARG, (u_long)thread_p->thread_id));
+        btk_event_fini(&thread_p->thread_event);
+        TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld unregistered.\n", 
+                LOG_ARG, (u_long)thread_p->thread_id));
         btk_llist_elem_destroy(element_p, sizeof(bt_ttrack_t));
     }
             
@@ -357,11 +380,11 @@ bt_error_t btk_thread_add(
 {
 
     FUNCTION("btk_thread_add");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bt_error_t              retval = BT_SUCCESS;
-    btk_llist_elem_t        *element_p;
-    bt_ttrack_t             *thread_p;
+    btk_llist_elem_t        *element_p = NULL;
+    bt_ttrack_t             *thread_p = NULL;
     BTK_LOCK_RETURN_T       isr_pl;
 
     FENTRY;
@@ -398,8 +421,8 @@ bt_error_t btk_thread_add(
             retval = BT_EINVAL;
         }
         TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld added to irq type %d; counts %d %d %d.\n", 
-	    LOG_ARG, (u_long)thread_p->thread_id, add_p->irq_type,
-            thread_p->error_count, thread_p->prog_count, thread_p->vme_count));
+                LOG_ARG, (u_long)thread_p->thread_id, add_p->irq_type,
+                thread_p->error_count, thread_p->prog_count, thread_p->vme_count));
     }
     BTK_UNLOCK_ISR(unit_p, isr_pl);
         
@@ -429,11 +452,11 @@ bt_error_t btk_thread_delete(
 {
 
     FUNCTION("btk_thread_delete");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bt_error_t              retval = BT_SUCCESS;
-    btk_llist_elem_t        *element_p;
-    bt_ttrack_t             *thread_p;
+    btk_llist_elem_t        *element_p = NULL;
+    bt_ttrack_t             *thread_p = NULL;
     BTK_LOCK_RETURN_T       isr_pl;
 
     FENTRY;
@@ -470,8 +493,8 @@ bt_error_t btk_thread_delete(
             retval = BT_EINVAL;
         }
         TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld deleted from irq type %d; counts %d %d %d.\n", 
-	    LOG_ARG, (u_long)thread_p->thread_id, add_p->irq_type,
-            thread_p->error_count, thread_p->prog_count, thread_p->vme_count));
+                LOG_ARG, (u_long)thread_p->thread_id, add_p->irq_type,
+                thread_p->error_count, thread_p->prog_count, thread_p->vme_count));
     }
     BTK_UNLOCK_ISR(unit_p, isr_pl);
         
@@ -500,11 +523,11 @@ bt_error_t btk_thread_wait(
 {
 
     FUNCTION("btk_thread_wait");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bt_error_t              retval = BT_SUCCESS;
-    btk_llist_elem_t        *element_p;
-    bt_ttrack_t             *thread_p;
+    btk_llist_elem_t        *element_p = NULL;
+    bt_ttrack_t             *thread_p = NULL;
     BTK_LOCK_RETURN_T       isr_pl;
 
     FENTRY;
@@ -537,11 +560,11 @@ bt_error_t btk_thread_wait(
     } else {
         BTK_UNLOCK_ISR(unit_p, isr_pl);
         thread_p = (bt_ttrack_t *) btk_llist_elem_data(element_p);
-	TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld waiting...\n", 
-	        LOG_ARG, (u_long)thread_p->thread_id));
-        retval = btk_event_wait(unit_p, &thread_p->thread_event, btk_msec2tck(wait_p->wait_msec));
-	TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld woke up\n", 
-	        LOG_ARG, (u_long)thread_p->thread_id));
+        TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld waiting...\n", 
+                LOG_ARG, (u_long)thread_p->thread_id));
+        retval = btk_event_wait(&thread_p->thread_event, btk_msec2tck(wait_p->wait_msec));
+        TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld woke up\n", 
+                LOG_ARG, (u_long)thread_p->thread_id));
     }
 
 wait_end:
@@ -570,11 +593,11 @@ bt_error_t btk_thread_wake(
 {
 
     FUNCTION("btk_thread_wake");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bt_error_t              retval = BT_SUCCESS;
-    btk_llist_elem_t        *element_p;
-    bt_ttrack_t             *thread_p;
+    btk_llist_elem_t        *element_p = NULL;
+    bt_ttrack_t             *thread_p = NULL;
     BTK_LOCK_RETURN_T       isr_pl;
 
     FENTRY;
@@ -598,9 +621,9 @@ bt_error_t btk_thread_wake(
     } else {
         BTK_UNLOCK_ISR(unit_p, isr_pl);
         thread_p = (bt_ttrack_t *) btk_llist_elem_data(element_p);
-        btk_event_set(unit_p, &thread_p->thread_event);
-	TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld woke up\n", 
-	        LOG_ARG, (u_long)thread_p->thread_id));
+        btk_event_set(&thread_p->thread_event);
+        TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Thread id %ld woke up\n", 
+                LOG_ARG, (u_long)thread_p->thread_id));
     }
 
     FEXIT(retval);
@@ -629,7 +652,7 @@ void btk_insert_irq(
 {
 
     FUNCTION("btk_insert_irq");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     volatile bt_data64_t    *head_p = &(irq_q_p->head);
     bt_data32_t             *length_p = &(irq_q_p->length);
@@ -651,7 +674,7 @@ void btk_insert_irq(
     (*head_p) += 1;
 
     TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Vector 0x%x added to irq q\n", 
-	    LOG_ARG, vector));
+            LOG_ARG, vector));
 
     FEXIT(0);
     return;
@@ -684,10 +707,10 @@ void btk_wakeup_thread(
 {
 
     FUNCTION("btk_wakeup_thread");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
-    btk_llist_elem_t        *element_p;
-    bt_ttrack_t             *thread_p;
+    btk_llist_elem_t        *element_p = NULL;
+    bt_ttrack_t             *thread_p = NULL;
 
     FENTRY;
     
@@ -710,7 +733,7 @@ void btk_wakeup_thread(
             */
             TRC_MSG(BT_TRC_ICBR, (LOG_FMT "Waking thread id %ld\n", 
                     LOG_ARG, (u_long)thread_p->thread_id));
-            btk_event_set(unit_p, &thread_p->thread_event);
+            btk_event_set(&thread_p->thread_event);
         }
         element_p = btk_llist_next(element_p);
     }

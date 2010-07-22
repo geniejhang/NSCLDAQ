@@ -69,7 +69,7 @@
 #include "btvapi.h"
 /* defined(BT28801) */
 
-#elif defined(BT973) || defined(WINVER)
+#elif defined(BT973) || defined(BT984) || defined(WINVER)
 #include "btwapi.h"
 #if !defined(BT_NTDRIVER)
 #define BT_NTDRIVER
@@ -128,6 +128,15 @@
 #elif defined(BT1003)
 #include "btpapi.h"    /* Nanobus specific include file */
 
+#elif defined(FCTACH_LINUX)
+#include "fclpapi.h"    /* Tachyon Linux specific include file */
+
+#elif defined(FCTACH_VXWORKS)
+#include "fcvxpapi.h"   /* Tachyon VxWorks specific include file */
+
+#elif defined(BT951)
+#include "btpapi.h"    /* Nanobus specific include file */
+
 #else
 #error Undefined project!
 
@@ -170,12 +179,44 @@ BT_EXTERN bt_dev_t
 BT_METHOD bt_str2dev(
     const char     *name_p);
 
+#ifdef  FCTACH
+BT_EXTERN char *
+BT_METHOD bt_gen_name_from_cardno(
+    int             cardno,
+    char           *devname_p,
+    size_t          max_devname);
+BT_EXTERN char *
+BT_METHOD bt_gen_name_from_devno_cardno(
+    int             cardno,
+    int             unitno,
+    char           *devname_p,
+    size_t          max_devname);
+BT_EXTERN bt_error_t
+BT_METHOD bt_fcbind(
+    bt_desc_t       btd_p,
+    bt_binddesc_t  *bind_p,
+    bt_devaddr_t   *mapped_phys_addr,
+    bt_devaddr_t    offset,
+    bt_devaddr_t    buf_p,
+    size_t          buf_len,
+    bt_accessflag_t flags,
+    unsigned char   type);
+BT_EXTERN bt_error_t
+BT_METHOD bt_fcvbind(
+    bt_desc_t       btd_p,
+    bt_data16_t     index,
+    bt_devaddr_t   *offset,
+    bt_devaddr_t   *length,
+    bt_devaddr_t   *mapped_phys_addr,
+    bt_data8_t     *type);
+#else
 BT_EXTERN char *
 BT_METHOD bt_gen_name(
     int             unit,
     bt_dev_t        logdev,
     char           *devname_p,
     size_t          max_devname);
+#endif
 
 BT_EXTERN bt_error_t
 BT_METHOD bt_open(

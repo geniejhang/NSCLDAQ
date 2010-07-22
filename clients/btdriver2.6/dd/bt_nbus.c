@@ -15,7 +15,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 2000 by SBS Technologies, Inc.
+**        Copyright (c) 2000-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -25,6 +25,9 @@
 static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #endif  /* LINT */
 
+/*
+**  Include files
+*/
 #include        "btdd.h"
 
 
@@ -47,7 +50,7 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 **              Local routines
 **
 *****************************************************************************/
-void btk_pagecheck(bt_unit_t *unit_p, btk_page_t *page_p);
+bt_error_t btk_pagecheck(bt_unit_t *unit_p, btk_page_t *page_p);
 bt_error_t btk_setpage(bt_unit_t *unit_p, bt_dev_t ldev, bt_data32_t ldev_addr, btk_page_t *page_p);
 void btk_peer2peer_init(bt_unit_t *unit_p);
 void btk_setup_mreg(bt_unit_t *unit_p, bt_dev_t ldev, bt_data32_t *mreg_value_p, bt_operation_t op);
@@ -66,8 +69,9 @@ extern void btp_put_d16(bt_unit_t *unit_p, void *addr_p, bt_data16_t value);
 extern bt_data32_t btp_get_d32(bt_unit_t *unit_p, void *addr_p);
 extern void btp_put_d32(bt_unit_t *unit_p, void *addr_p, bt_data32_t value);
 
-#define LOCK_DMA(u_p)    btk_mutex_enter((u_p), &(u_p)->dma_mutex);
-#define UNLOCK_DMA(u_p)  btk_mutex_exit((u_p), &(u_p)->dma_mutex);
+
+#define LOCK_DMA(u_p)    btk_mutex_enter(&(u_p)->dma_mutex);
+#define UNLOCK_DMA(u_p)  btk_mutex_exit(&(u_p)->dma_mutex);
 
 /*
 **  List local variables here
@@ -109,7 +113,7 @@ bt_data32_t btk_get_io(
     void        *base_p;
 
     FUNCTION("btk_get_io");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
@@ -552,7 +556,7 @@ void btk_put_io(
     void        *base_p;
 
     FUNCTION("btk_put_io");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
@@ -996,12 +1000,13 @@ bt_data32_t btk_rem_id(
     bt_unit_t *unit_p)
 {
     FUNCTION("bt_rem_id");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bt_data8_t      rem_id, loc_status, unused;
     bt_data32_t     retvalu = BT_PN_UNKNOWN;
 
     FENTRY;
+
 
     /* The 614 dosn't have a rem-id register */
     /* so just assume the remote card is a also a 614 */
@@ -1179,7 +1184,7 @@ bt_data32_t btk_get_mreg(
     )
 {
     FUNCTION("btk_get_mreg");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     bt_data8_t   *base_p = (bt_data8_t *) unit_p->mreg_p;
     bt_data32_t  retval = 0;
@@ -1257,7 +1262,7 @@ void btk_put_mreg(
     )
 {
     FUNCTION("btk_put_mreg");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     bt_data8_t   *base_p = (bt_data8_t *) unit_p->mreg_p;
 
@@ -1340,9 +1345,9 @@ void btk_put_mreg_range(
     )
 {
     FUNCTION("btk_put_mreg_range");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
-    unsigned int mr_idx;
+    unsigned int mr_idx = 0;
     bt_data8_t   *base_p = (bt_data8_t *) unit_p->mreg_p;
 
     /* FENTRY; */
@@ -1425,7 +1430,7 @@ unsigned int btk_bind_bit_adjust(
     )
 {
     FUNCTION("btk_bind_bit_adjust");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     unsigned    int retval = bit;
 
@@ -1445,7 +1450,7 @@ unsigned int btk_bind_bit_adjust(
 **                      page_p          Pointer to page information.
 **
 **      Returns:        BT_SUCCESS      If successful.
-**                      Otherwise       Errno value from <errno.h>.
+**                      Otherwise       BT_ENOMEM or BT_EIO.
 **
 **      Notes:          The caller must release any mmap mapping ram
 **                      allocated by this routine.  mreg_need bit
@@ -1462,7 +1467,7 @@ bt_error_t btk_setpage(
   
 {
     FUNCTION("btk_setpage");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     bt_error_t  retval = BT_SUCCESS;
     bt_data32_t mreg_value = 0;
@@ -1493,9 +1498,9 @@ bt_error_t btk_setpage(
     ** Reserve mapping RAM for transfer
     */
     if (page_p->mreg_need != 0) {
-        btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-        retval = btk_bit_alloc(unit_p, unit_p->mmap_aval_p, page_p->mreg_need, 1, &(page_p->mreg_start));
-        btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+        btk_mutex_enter(&unit_p->mreg_mutex);
+        retval = btk_bit_alloc(unit_p->mmap_aval_p, page_p->mreg_need, 1, &(page_p->mreg_start));
+        btk_mutex_exit(&unit_p->mreg_mutex);
         if (retval != BT_SUCCESS) {
             INFO_STR("Unable to allocate mapping reg for PIO read/write");
             retval = BT_ENOMEM;
@@ -1513,8 +1518,8 @@ bt_error_t btk_setpage(
     }
     TRC_MSG((BT_TRC_PIO | BT_TRC_DETAIL), 
            (LOG_FMT "page size 0x%x; number 0x%x; offset 0x%x\n",
-           LOG_ARG, page_p->page_size, page_p->page_number,
-           page_p->page_offset));
+           LOG_ARG, (int) page_p->page_size, page_p->page_number,
+           (int) page_p->page_offset));
     TRC_MSG((BT_TRC_PIO | BT_TRC_DETAIL), 
            (LOG_FMT "page base 0x%p; mreg start %d; need %d\n",
            LOG_ARG, page_p->bus_base_p, page_p->mreg_start,
@@ -1526,7 +1531,15 @@ bt_error_t btk_setpage(
     if (page_p->mreg_need != 0) {
         mreg_value = page_p->page_number & BT_MREG_ADDR_MASK;
         btk_setup_mreg(unit_p, ldev, &mreg_value, BT_OP_PIO);
-        btk_put_mreg_range(unit_p, page_p->mreg_start, page_p->mreg_need, BT_LMREG_PCI_2_CABLE, mreg_value);
+        btk_put_mreg(unit_p, page_p->mreg_start, BT_LMREG_PCI_2_CABLE, mreg_value);
+        if ( (btk_get_mreg(unit_p, page_p->mreg_start, BT_LMREG_PCI_2_CABLE)) != mreg_value ) {
+            WARN_MSG((LOG_FMT "Verify Write BT_LMREG_PCI_2_CABLE mapping register mr_idx = 0x%.1X failed.\n",
+                                                                         LOG_ARG, page_p->mreg_start));
+            btk_mutex_enter(&unit_p->mreg_mutex);
+            btk_bit_free(unit_p->mmap_aval_p, page_p->mreg_start, page_p->mreg_need);
+            btk_mutex_exit(&unit_p->mreg_mutex);
+            retval = BT_EIO;
+        }
     }
   
 setpage_end:
@@ -1546,19 +1559,21 @@ setpage_end:
 **      Args:           unit_p          Pointer to unit structure.
 **                      page_p          Pointer to page control information.
 **
-**      Returns:        Void
+**      Returns:        BT_SUCCESS      If successful.
+**                      BT_EIO          If mapping register fails to update.
 **
 **      Notes:          None
 **
 ******************************************************************************/
-void btk_pagecheck(
+bt_error_t btk_pagecheck(
     bt_unit_t *unit_p, 
     register btk_page_t *page_p)
 {
     bt_data32_t   mreg_value;
-  
+    bt_error_t  retval = BT_SUCCESS;
+
     FUNCTION("btk_pagecheck");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
   
@@ -1580,11 +1595,16 @@ void btk_pagecheck(
             mreg_value &= ~ BT_MREG_ADDR_MASK;
             mreg_value |= (page_p->page_number & BT_MREG_ADDR_MASK);
             btk_put_mreg(unit_p, page_p->mreg_start, BT_LMREG_PCI_2_CABLE, mreg_value);
+            if ( (btk_get_mreg(unit_p, page_p->mreg_start, BT_LMREG_PCI_2_CABLE)) != mreg_value ) {
+                WARN_MSG((LOG_FMT "Verify Write BT_LMREG_PCI_2_CABLE mapping register mr_idx = 0x%.1X failed.\n",
+                                                                             LOG_ARG, page_p->mreg_start));
+                retval = BT_EIO;
+            }
         }
     }
   
-    FEXIT(0);
-    return;
+    FEXIT(retval);
+    return retval;
 }
 
 /******************************************************************************
@@ -1611,7 +1631,7 @@ void btk_peer2peer_init(
     bt_data32_t   count2;
   
     FUNCTION("btk_peer2peer_init");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
@@ -1811,17 +1831,21 @@ peer_send_end:
 bt_error_t btk_take_drv_sema(
     bt_unit_t *unit_p)
 {
+#if defined( HARDWARE_SEMAPHORE_PROTOCOL_FIXED_ASK_MCMILLAN_AND_RALPH )
     bt_error_t    retval = BT_SUCCESS;
     bt_data32_t   tmp_reg;
     int           timeout = 0, got_sema = FALSE;
     bt_reg_t      sema;
+#endif /* HARDWARE_SEMAPHORE_PROTOCOL_FIXED_ASK_MCMILLAN_AND_RALPH */
   
     FUNCTION("btk_take_drv_sema");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
     
+#if !defined( HARDWARE_SEMAPHORE_PROTOCOL_FIXED_ASK_MCMILLAN_AND_RALPH )
     return BT_SUCCESS;
+#else
     /*
     ** If were not peer-to-peer, then nothing to do
     */
@@ -1863,7 +1887,7 @@ bt_error_t btk_take_drv_sema(
             got_sema = TRUE;
             break;
         } else {
-            btk_event_wait(unit_p, &unit_p->dma_event, btk_msec2tck(10));
+            btk_event_wait(&unit_p->dma_event, btk_msec2tck(10));
             timeout++;
             btk_put_io(unit_p, sema, BT_SEMA_TAKE);
             tmp_reg = btk_get_io(unit_p, sema);
@@ -1887,6 +1911,7 @@ take_end:
             (retval == BT_SUCCESS) ? "Succeeded" : "Failed"))
     FEXIT(retval);
     return (retval);
+#endif
 }
   
 
@@ -1909,11 +1934,13 @@ void btk_give_drv_sema(
 {
   
     FUNCTION("btk_give_drv_sema");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
+#if !defined( HARDWARE_SEMAPHORE_PROTOCOL_FIXED_ASK_MCMILLAN_AND_RALPH )
     return;
+#else
     /*
     ** If were not peer-to-peer, then nothing to do
     */
@@ -1937,6 +1964,7 @@ give_end:
     TRC_STR(BT_TRC_KLIB, "Driver sema given")
     FEXIT(0);
     return;
+#endif
 }
   
 
@@ -1969,7 +1997,7 @@ bt_error_t btk_take_app_sema(
     bt_data32_t   tmp_reg;
   
     FUNCTION("btk_take_app_sema");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
@@ -2053,7 +2081,7 @@ void btk_give_app_sema(
     bt_error_t    retval = BT_SUCCESS;
   
     FUNCTION("btk_give_app_sema");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     FENTRY;
 
@@ -2131,7 +2159,7 @@ void btk_setup_mreg(
   
 {
     FUNCTION("btk_setup_mreg");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
 
@@ -2205,7 +2233,7 @@ bt_error_t btk_send_irq(
   
 {
     FUNCTION("btk_send_irq");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     int             pt_irq = FALSE;
     bt_data32_t     tmp_reg;
     bt_error_t      ret_val = BT_SUCCESS;
@@ -2254,7 +2282,7 @@ bt_error_t btk_send_irq(
     ** Grap the prg_irq_mutex to prevent two btk_send_irq from
     ** running concurrently
     */
-    btk_mutex_enter(unit_p, &unit_p->prg_irq_mutex);
+    btk_mutex_enter(&unit_p->prg_irq_mutex);
 
     if (IS_CLR(unit_p->bt_status, BT_NEXT_GEN)) {
         /* old cards, remote register access must synchronize lock in case dma active */
@@ -2321,7 +2349,7 @@ send_end:
     if (IS_CLR(unit_p->bt_status, BT_NEXT_GEN)) {
         UNLOCK_DMA(unit_p);
     }
-    btk_mutex_exit(unit_p, &unit_p->prg_irq_mutex);
+    btk_mutex_exit(&unit_p->prg_irq_mutex);
 
 send_no_lock_end:
     FEXIT(ret_val);

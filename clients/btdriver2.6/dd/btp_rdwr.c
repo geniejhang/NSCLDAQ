@@ -49,12 +49,6 @@ static int btp_xfer(bt_unit_t *unit_p, bt_dev_t type, bt_accessflag_t dir, void 
 static ssize_t btp_lm_rd(struct file *file_p, char *data_p, size_t length, loff_t *new_fpos_p);
 static ssize_t btp_lm_wr(struct file *file_p, const char *data_p, size_t length, loff_t *new_fpos_p);
 
-
-/*
-**  Function prototypes externally visible functions
-*/
-unsigned long bt_kvm2bus(void * vm_addr_p);
-
 /*
 **  Static variables
 */
@@ -118,7 +112,6 @@ loff_t btp_llseek(
             end_pos = 192 * SIZE_1KB;
         }
         break;
-    case BT_DEV_GEO:
       case BT_DEV_A24:
         /* 24 address bits */
         end_pos = 16 * SIZE_1MB;
@@ -128,9 +121,8 @@ loff_t btp_llseek(
         /* 16 address bits */
         end_pos = 64 * SIZE_1KB;
         break;
-    case BT_DEV_A32:
-    case BT_DEV_MCCTL:  
-    case BT_DEV_CBLT:
+
+      case BT_DEV_A32:
         /* 32 address bits */
         end_pos = ((loff_t) 1)<<32;
         break;
@@ -282,11 +274,11 @@ ssize_t btp_read(
     ** Do the transfer by either PIO or DMA 
     */
     ret_val = btp_xfer(unit_p, type, BT_RD, data_p, dest_addr, length, &amount_xferred);
-    if (amount_xferred > 0) {
+    if (BT_SUCCESS == ret_val) {
         *new_fpos_p = dest_addr + amount_xferred;
         xferred_bytes = amount_xferred;
     } else {
-        xferred_bytes = ret_val;
+        xferred_bytes = -ret_val;
     }
 
 btp_read_end:
@@ -385,11 +377,11 @@ ssize_t btp_write(
     ** Do the transfer by either PIO or DMA 
     */
     ret_val = btp_xfer(unit_p, type, BT_WR, (char *) data_p, dest_addr, length, &amount_xferred);
-    if (amount_xferred > 0) {
+    if (BT_SUCCESS == ret_val) {
         *new_fpos_p = dest_addr + amount_xferred;
         xferred_bytes = amount_xferred;
     } else {
-        xferred_bytes = ret_val;
+        xferred_bytes = -ret_val;
     }
 
 btp_write_end:
@@ -645,11 +637,10 @@ btp_lm_wr_end:
 **                      bytes transferred.
 **          
 **      Modifies:
-**          *xfer_byte_p Number of bytes transferred
+**          *xfer_byte_p     Number of bytes transferred
 **          
 **      Returns:
-**          <0          Error number
-**          Otherwise   Number of bytes transferred
+**          bt_error_t retval     BT_SUCCESS or Error number
 **
 **      Notes:
 **      Currently uses an intermediate kernel buffer to copy data in/out of.
@@ -667,22 +658,23 @@ static int btp_xfer(
     )
 {
     FUNCTION("btp_xfer");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
-    int             ret_val = 0;
     void            *data_p;
     int             dma_flag; 
     int             data_width; 
     size_t          length_remaining = length;
-    caddr_t         kbuf_p;
     unsigned int    start, need;
     bt_data32_t     mreg_value;
     bt_error_t      retval = BT_SUCCESS;
     unsigned int    inx;
     unsigned long   pci_addr;
     bt_data32_t     ldma_addr;
-	int	dummy_var;
-
+    struct page     **pages;
+    int ret, i,     write;
+    bt_data32_t     usr_curr_offset;
+    caddr_t         kbuf_p;
+    unsigned int    nr_pages;
 
     FENTRY;
 
@@ -697,6 +689,7 @@ static int btp_xfer(
     if (type == BT_AXSRE) {
         dest_addr |= RE_ADJUST;
     }
+    
 
     /*
     ** Normally you would have the while loop in the read and write routines.
@@ -705,63 +698,108 @@ static int btp_xfer(
     ** in this routine instead.
     */
     while ((length_remaining > 0) && (BT_SUCCESS == retval)) {
-        size_t local_length = length_remaining;
-        unsigned adjust = ((unsigned long) usr_data_p) % BT_WIDTH_D64;
+        int  xferred_length = 0;
+        int  requested_length = length_remaining;
 
         /*
-        ** Make sure we don't try to transfer more than fits in our
-        ** temporary buffer.
+        ** Setup direction and current offset
         */
-        if (local_length > unit_p->dma_buf_size - adjust) {
-            local_length = unit_p->dma_buf_size - adjust;
+        if (dir == BT_WR) {
+            write = 1;
+        } else {
+            write = 0;
         }
-        data_p = unit_p->dma_buf_p + adjust;
+        usr_curr_offset = (bt_data32_t) ((bt_devaddr_t) usr_data_p & (PAGE_SIZE -1));
 
-        /* 
-        ** If writing, move data from user space to kernel 
+        /*
+        ** Malloc a scatter/gather list
         */
-        if (BT_WR == dir) {
-            dummy_var = copy_from_user(data_p, usr_data_p, local_length);
+        nr_pages = (usr_curr_offset + requested_length + ~PAGE_MASK) >> PAGE_SHIFT;
+        pages = kmalloc(nr_pages * sizeof(struct page *), GFP_KERNEL);
+        if (!pages) {
+            WARN_STR("Failed to kmalloc scatter/gather list.\n");
+            retval = BT_EIO;
+            goto btp_xfer_end;
         }
 
         /*
-        ** Calculate the length, data size and whether DMA is possible
+        ** Translate the user pages to physical addresses
+        ** store in scatter/gather list
         */
-        btk_dma_pio(unit_p, type, (bt_data32_t) data_p, dest_addr, &local_length, &dma_flag, &data_width, &start, &need);
-#define BTP_FREE_MREG  btk_mutex_enter(unit_p, &unit_p->mreg_mutex); \
-                       (void) btk_bit_free(unit_p, unit_p->sdma_aval_p, start, need); \
-                       btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+        down_read(&current->mm->mmap_sem);
+        ret = get_user_pages(current, current->mm, (unsigned long) usr_data_p,
+            nr_pages, write, 1, pages, NULL);
+        up_read(&current->mm->mmap_sem);
+        if (ret < nr_pages) {
+            WARN_STR("Failed to create scatter/gather list for user buffer.\n");
+            for (i = 0; i < ret; i++) {
+                page_cache_release(pages[i]);
+            }
+            kfree(pages);
+            retval = BT_EIO;
+            goto btp_xfer_end;
+        }
+        
+        /*
+        ** Determine whether we do DMA or PIO
+        */
+        btk_dma_pio(unit_p, type, (bt_devaddr_t) usr_data_p, dest_addr, &requested_length, &dma_flag, &data_width, &start, &need);
+#define BTP_FREE_MREG  if (dma_flag) { \
+                           btk_mutex_enter(&unit_p->mreg_mutex); \
+                           (void) btk_bit_free(unit_p->sdma_aval_p, start, need); \
+                           btk_mutex_exit(&unit_p->mreg_mutex); \
+                           btk_mutex_exit(&unit_p->dma_mutex);  \
+                       } \
+                       for (i = 0; i < nr_pages; i++) { \
+                           if (BT_RD == dir) { \
+                               set_page_dirty_lock(pages[i]); \
+                           } \
+                           page_cache_release(pages[i]); \
+                       } \
+                       kfree(pages);
+                       
 
-
+        /*
+        ** Can't let PIO go past one page
+        */
+        if (!dma_flag) {
+            if ((usr_curr_offset + requested_length) > PAGE_SIZE) {
+                requested_length = PAGE_SIZE - usr_curr_offset;
+            }
+            need = 1;
+        }
+        
         TRC_MSG(BT_TRC_RD_WR, 
                 (LOG_FMT "Transferring %d bytes data to 0x%lx using %s.\n",
-                LOG_ARG, local_length, dest_addr, ((dma_flag) ? "DMA" : "PIO")));
+                LOG_ARG, requested_length, dest_addr, ((dma_flag) ? "DMA" : "PIO")));
             
         if (dma_flag) {
 
             /*
             **  Setup vme address, address modifier, and function code
             */
-	    mreg_value = 0;
-            btk_setup_mreg(unit_p, type, &mreg_value, FALSE);
+            mreg_value = 0;
+            btk_setup_mreg(unit_p, type, &mreg_value, BT_OP_DMA);
 
             /*
-            ** Load the mapping registers
+            ** Program up mapping RAM
             */
-            kbuf_p = (caddr_t) data_p;
-            for (inx = start; inx < (start + need); inx++) {
-                pci_addr = bt_kvm2bus(kbuf_p);
+            for (inx = start, i = 0; inx < (start + need); inx++, i++) {
+                pci_addr = (unsigned long) page_to_phys(pages[i]);
                 if (0 == pci_addr) {
-                    WARN_STR("Could not attach buffer to PCI bus.\n");
-                    BTP_FREE_MREG;
-                    btk_mutex_exit(unit_p, &unit_p->dma_mutex);
+                    WARN_STR("Kernel to PCI address translation failed.\n");
                     retval = BT_EIO;
-                    goto btp_xfer_end;
+                    goto end_xfer_loop;
                 }
                 mreg_value &= ~BT_MREG_ADDR_MASK;
                 mreg_value |= (pci_addr & BT_MREG_ADDR_MASK);
                 btk_put_mreg(unit_p, inx, BT_LMREG_DMA_2_PCI, mreg_value);
-                kbuf_p += BT_PAGE_SIZE;
+                if ( (btk_get_mreg(unit_p, inx, BT_LMREG_DMA_2_PCI)) != mreg_value ) {
+                    WARN_MSG((LOG_FMT "Verify Write BT_LMREG_DMA_2_PCI mapping register mr_idx = 0x%.1X failed.\n",
+                                                                                 LOG_ARG, inx));
+                    retval = BT_EIO;
+                    goto end_xfer_loop;
+                }
             }
 
             /*
@@ -770,33 +808,26 @@ static int btp_xfer(
             */
             retval = btk_take_drv_sema(unit_p);
             if (retval != BT_SUCCESS) {
-                BTP_FREE_MREG;
-                btk_mutex_exit(unit_p, &unit_p->dma_mutex);
-                goto btp_xfer_end;
+                goto end_xfer_loop;
             }
 
             /*
             ** If old Nanobus card, we must stop PIO from occuring
             */
             if (IS_CLR(unit_p->bt_status, BT_NEXT_GEN)) {
-                btk_rwlock_wr_enter(unit_p, &unit_p->hw_rwlock);
+                btk_rwlock_wr_enter(&unit_p->hw_rwlock);
             }
         
             /*
             ** Do the DMA
             */
-            ldma_addr = (bt_data32_t) ((start * BT_PAGE_SIZE) + ((unsigned long) data_p & (BT_PAGE_SIZE - 1)));
-#if defined(__linux__)
-            retval = btk_dma_xfer(unit_p, type, ldma_addr, (bt_data32_t) dest_addr, &local_length, (dir == BT_RD) ? BT_READ : BT_WRITE, data_width);
-#else
-            retval = btk_dma_xfer(unit_p, type, ldma_addr, (bt_data32_t) dest_addr, local_length, (dir == BT_RD) ? BT_READ : BT_WRITE, data_width);
-#endif
+            ldma_addr = (bt_data32_t) ((start * BT_PAGE_SIZE) + usr_curr_offset);
+            xferred_length = requested_length;
+            retval = btk_dma_xfer(unit_p, type, ldma_addr, (bt_data32_t) dest_addr, &xferred_length, (dir == BT_RD) ? BT_READ : BT_WRITE, data_width);
             if (IS_CLR(unit_p->bt_status, BT_NEXT_GEN)) {
-                btk_rwlock_wr_exit(unit_p, &unit_p->hw_rwlock);
+                btk_rwlock_wr_exit(&unit_p->hw_rwlock);
             }
             btk_give_drv_sema(unit_p);
-            BTP_FREE_MREG;
-            btk_mutex_exit(unit_p, &unit_p->dma_mutex);
 
         /*
         ** Do a PIO
@@ -806,198 +837,34 @@ static int btp_xfer(
             /* 
             ** Perform the proper direction PIO data transfer 
             */
-            retval = btk_pio_xfer(unit_p, type, data_p, (unsigned long) dest_addr,
-                                  &local_length, (dir == BT_RD) ? BT_READ : BT_WRITE);
+            kbuf_p = kmap(pages[0]);
+            if (kbuf_p == NULL) {
+                INFO_STR("Failed to get kernel pointer to PIO user buffer");
+                retval = BT_EIO;
+            } else {
+                data_p = (void *) (kbuf_p + usr_curr_offset); 
+                xferred_length = requested_length;
+                retval = btk_pio_xfer(unit_p, type, data_p, (unsigned long) dest_addr,
+                                    &xferred_length, (dir == BT_RD) ? BT_READ : BT_WRITE);
+                kunmap(pages[0]);
+            }
         }
+
+end_xfer_loop:
+        BTP_FREE_MREG;
         TRC_MSG(BT_TRC_RD_WR, 
-                (LOG_FMT "%s transfer done 0x%x bytes transferred\n",
-                LOG_ARG, ((dma_flag) ? "DMA" : "PIO"), local_length));
-  
-        /*
-        ** A DMA or PIO operation has been completed, check for errors
-        */
-        if (retval != BT_SUCCESS) {
-            /* INFO message should be printed by failing routine */
+                (LOG_FMT "%s transfer done 0x%x bytes transferred, retval %d\n",
+                LOG_ARG, ((dma_flag) ? "DMA" : "PIO"), xferred_length, retval));
 
-#if defined(__linux__)
-            /* update for partial transfer */
-            length_remaining -= local_length;
-            /* 
-            ** If reading, move data from kernel to user space 
-            */
-            if (BT_RD == dir) {
-                dummy_var = copy_to_user(usr_data_p, data_p, local_length);
-            }
-#endif
-            break;
-
-        /*
-        ** This part may not be necessary any more ???
-        ** This part may not be necessary any more ???
-        */
-        } else if (btk_get_io(unit_p, BT_LOC_STATUS) & LSR_CERROR_MASK) {
-            INFO_STR("Adaptor error during read/write operation");
-            retval = BT_EIO;
-
-#if defined(__linux__)
-            /* update for partial transfer */
-            length_remaining -= local_length;
-            /* 
-            ** If reading, move data from kernel to user space 
-            */
-            if (BT_RD == dir) {
-                dummy_var = copy_to_user(usr_data_p, data_p, local_length);
-            }
-#endif
-            break;
-        }
-
-        /* 
-        ** If reading, move data from kernel to user space 
-        */
-        if (BT_RD == dir) {
-            dummy_var = copy_to_user(usr_data_p, data_p, local_length);
-        }
-
-        usr_data_p += local_length;
-        dest_addr += local_length;
-        length_remaining -= local_length;
+        usr_data_p = (caddr_t) usr_data_p + xferred_length;
+        dest_addr += xferred_length;
+        length_remaining -= xferred_length;
     }
 
-    /* 
-    ** Need to convert from bt_error_t to an error number 
-    */
 btp_xfer_end:
     *xferred_bytes_p = length - length_remaining;
-    switch (retval) {
-      case BT_SUCCESS:
-      case BT_EIO:
-      case BT_ENXIO:
-      case BT_ENOMEM:
-      case BT_EINVAL:
-      case BT_EACCESS:
-      case BT_EDESC:
-      case BT_ENOSUP:
-        /* All of these have a POSIX equivilent number */
-        ret_val = -retval;
-        break;
 
-      case BT_ENORD:
-      case BT_ENOWR:
-        ret_val = -EACCES;
-        break;
-
-      case BT_EBUSY:
-        ret_val = -EAGAIN;
-        break;
-
-      case BT_EFAIL:
-      case BT_ESTATUS:
-      case BT_ENOPWR:
-      case BT_EPWRCYC:
-      default:
-        ret_val = -EIO;
-        break;
-    }
-
-    FEXIT(ret_val);
-    return ret_val;
-}
-
-/******************************************************************************
-**
-**      Name:           bt_kvm2bus
-**
-**      Purpose:        Converts from a vmalloc() address to the bus address.
-**
-**      Args:
-**          addr        A vmalloc()ed address in kernel virtual address space.
-**
-**      Returns:
-**          0           Failed to convert
-**          Otherwise   PCI bus address of buffer
-**
-**      Notes:
-**      Unfortunately, the virt_to_phys() routine doesn't correctly handle
-**      addresses allocated via vmalloc(). This code is based on what I 
-**      found in the drivers/char/bttv.c code.
-**
-*****************************************************************************/
-
-unsigned long bt_kvm2bus(
-    void * vm_addr_p
-)
-{
-    FUNCTION("bt_kvm2bus");
-    LOG_UNKNOWN_UNIT;
-
-    unsigned long       ret_addr = 0;
-
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
-    unsigned long       addr = (unsigned long)vm_addr_p;
-#else
-    unsigned long       addr = VMALLOC_VMADDR(vm_addr_p);
-#endif
-
-    pgd_t       *pgd_p;         /* Page Global Descriptor */
-    pmd_t       *pmd_p;         /* Page Middle Descriptor */
-    pte_t       *pte_p;         /* Page Table Descriptor */
-
-    FENTRY;
-
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0) \
-    ||  LINUX_VERSION_CODE <  KERNEL_VERSION(2,3,0)
-
-    pgd_p = pgd_offset(current->mm, addr);
-
-#else   /* LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0) \
-    &&  LINUX_VERSION_CODE >=  KERNEL_VERSION(2,3,0) */
-
-    pgd_p = pgd_offset_k(addr);
-
-#endif  /* LINUX_VERSION_CODE */
-
-    if (!pgd_none(*pgd_p)) {
-        pmd_p = pmd_offset(pgd_p, addr);
-        if (!pmd_none(*pmd_p)) {
-#if     LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20)
-            pte_p = pte_offset_kernel(pmd_p, addr);
-#else
-            pte_p = pte_offset(pmd_p, addr);
-#endif
-
-            if (pte_present(*pte_p)) {
-
-#if     LINUX_VERSION_CODE < KERNEL_VERSION(2,3,0)
-                ret_addr = virt_to_bus((void *) pte_page(*pte_p)) +
-                    (addr & (PAGE_SIZE-1));
-
-#else   /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,0) */
-	/* This code must also be used by Linux 2.4.x >= KERNEL_VERSION(2,4,0) */
-
-                /*
-                ** Note: pte_page() definition changes based on OS rev.
-                ** Ignore it if you get a compiler warning for page_address()
-                ** about convertion between integer and pointer.
-                */
-                ret_addr = virt_to_bus(
-                    (void *) page_address(pte_page(*pte_p)) ) +
-                    (addr & (PAGE_SIZE-1) );
-
-#endif  /* LINUX_VERSION_CODE */
-
-            }
-
-        }
-    }
-
-#if     defined(DEBUG)
-    TRC_MSG(BT_TRC_DMA|BT_TRC_DETAIL, (LOG_FMT
-        "Kernel VA %p = PCI addr 0x%lx.\n", LOG_ARG,
-        vm_addr_p, ret_addr));
-#endif  /* defined(DEBUG) */
-
-    FEXIT(ret_addr);
-    return ret_addr;
+    FEXIT(retval);
+    return retval;
 }
 

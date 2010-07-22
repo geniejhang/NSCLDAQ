@@ -63,8 +63,8 @@
 #error "SBS Interface requires -DLINUX"
 #endif
 
-#include <btapi.h>
 #include <btngpci.h>
+#include <btapi.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>

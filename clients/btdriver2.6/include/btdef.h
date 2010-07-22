@@ -21,6 +21,8 @@
 
 #include        <stddef.h>
 
+typedef int bt_cookie_t;	/* == 0 if not used from IRQ level */
+
 /*****************************************************************************
 **
 **  Definitions to identify the operating system.
@@ -49,6 +51,10 @@
 #if     defined(BT2345)     /* Embedded 1394 to VME */
 #define BT_uCOS
 #endif  /* defined(BT2345) */
+
+#if     defined(BT951)
+#define BT_LYNXOS
+#endif
 
 /*****************************************************************************
 **
@@ -85,13 +91,6 @@
 
 #define BT_AMOD_A16_SD      (0x2D)  /* A16 Short Supervisory Data Access    */
 #define BT_AMOD_A16_ND      (0x29)  /* A16 Short Non-Privileged Data Access */
-
-/*  NSCL Specific additions. */
-
-#define BT_AMOD_GEO         (0x2F)  /* Geographical addressing per CERN     */
-#define BT_AMOD_MCCTL       (0x09)  /* CAEN Multicast control transfers.    */
-#define BT_AMOD_CBLT        (0x0B)  /* CAEN CBLT transfer.                  */
-
 
 #define BT_AMOD_A16     BT_AMOD_A16_SD
 #define BT_AMOD_A16_MAX (0x10000)
@@ -208,6 +207,10 @@
 
 #define BT_PCI_DEVICE_PPB       0x0500  /* SBS PCI-to-PCI Bridge Expansion  */
 
+/* Reserve the PCI Device numbers 0x1000 to 0x1fff for Infiniband products  */
+#define BT_PCI_IB_DEVCIE_ID_START  0x1000
+#define BT_PCI_IB_DEVICE_ID_END    0x1fff
+
 #define BT_PCI_VENDOR_NEWBDG    0x10E3
 
 #define BT_PCI_VENDOR_TI        0x104c  /* Texas Instrument's Vendor Id     */
@@ -242,6 +245,10 @@
 #define	SEEK_CUR	1
 #define	SEEK_END	2
 
+#ifndef KERNEL_VERSION
+#include <linux/version.h>
+#endif
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,5)
 #include <linux/kernel.h>
 #define CHAR_BIT 8
@@ -257,7 +264,7 @@
 
 #elif     defined(POSIX_SOURCE) || defined(SYS_V) || defined(BSD_4_2) \
         || defined(__sun)     || defined(__sgi) || defined(__AIX)   \
-        || defined(__hpux)    || defined(__vxworks)
+        || defined(__hpux)    || defined(__vxworks) || defined (__lynxos)
 
 #if     !(defined(_KERNEL) && (defined(__sgi) || defined(__sun)))
 #include        <unistd.h>
@@ -322,15 +329,23 @@ typedef uint64_t        bt_data64_t;
 #endif  /* !defined(bool_t) */
 
 
+#ifndef __linux__
 #if     !defined(CHAR_BIT) || !defined(UINT_MAX)
 #include <limits.h>
 #endif  /* !defined(CHAR_BIT) || !defined(UINT_MAX) */
 
-
 #if     CHAR_BIT != 8
 #error  This code assumes the character type is eight bits in size.
 #endif
+#endif  /* __linux__ */
 
+#if defined(__linux__)
+typedef u_int8_t   bt_data8_t;
+typedef u_int16_t  bt_data16_t;
+typedef u_int32_t  bt_data32_t;
+typedef u_int64_t  bt_data64_t;
+
+#else /* defined(__linux__) */
 typedef unsigned char   bt_data8_t;
 typedef unsigned short  bt_data16_t;
 
@@ -380,6 +395,8 @@ typedef struct {
 
 #endif  /* defined(__osf__); defined(sgi); defined(__GNUC__);
            defined(_MSC_VER) && (_MSC_VER >= 1000); default */
+
+#endif /* defined(__linux__) */
 
 #endif  /* defined(__sun) */
 
@@ -440,6 +457,211 @@ typedef unsigned long bt_accessflag_t;
 #define BT_RD   (1<<0)
 #define BT_WR   (1<<1)
 #define BT_RDWR (BT_RD | BT_WR)
+
+/*
+** Include project specific definition file
+*/
+/*
+**  AIX specific include files
+*/
+#if defined(_AIX)
+
+#ifdef BT924
+#include    <sys/btpdef.h>
+/* end ifdef  BT924     */
+
+#elif defined(BT923)
+#include    <sys/bthdef.h>
+/* end ifdef  BT923     */
+
+#else /* BT924 || BT923 */
+#error Undefined AIX project!
+#endif /* BT924 || BT923 */
+
+
+/*
+**  SunOS specific include files
+*/
+#elif defined(__sun)
+
+#if defined(BT943) || defined(BT944)
+#include    <sys/btsdef.h>
+/* end ifdef BT943 || BT944 */
+
+#elif defined(BT945)
+#include    "btpdef.h"
+/* end ifdef BT945 */
+
+#elif defined(BT946)
+#include    "btpdef.h"
+/* end ifdef BT946 */
+
+#elif defined(BT999)
+#include    "btudef.h"
+/* end ifdef BT999 */
+
+#elif defined(BT18902)
+#include    "btqdef.h"
+/* end ifdef  BT18902 */
+
+#elif defined(BT15906)
+#include    "btmdef.h"
+/* end ifdef  BT15906 */
+
+#else /* BT943 etc. */
+#error Undefined Sun project!
+#endif /* BT943 etc. */
+
+
+/*
+**  HPUX specific include files
+*/
+#elif defined(__hpux)
+
+#ifdef BT933
+#include <sys/btedef.h>
+/* end ifdef BT933 */
+
+#elif defined(BT934)
+#include <sys/btpdef.h>
+/* end ifdef BT934 */
+
+#else /* BT933 || BT934 */
+#error Undefined HPUX Project!
+#endif /* BT933 || BT934 */
+
+
+/*
+**  SGI specific include files
+*/
+#elif defined(__sgi)
+
+#if defined(BT965)
+#include "btpdef.h"
+/* end ifdef BT965 */
+
+#elif defined(BT964) 
+#include <sys/btgdef.h>
+/* end ifdef BT964 */
+
+#elif defined(BT963) 
+#include <sys/btgdef.h>
+/* end ifdef BT963 */
+
+#elif defined(BT15904)
+#include "btmdef.h"
+/* end ifdef BT15904 */
+
+#else /* BT965 etc. */
+#error Undefined IRIX Project!
+#endif /* BT965 etc. */
+
+
+/*
+** Windows specific include files
+*/
+#elif defined(BT_NTDRIVER) || defined(BT_WDM_DRIVER)
+
+#if defined(BT13908)
+#include "btfdef.h"
+
+#elif (defined(BT983) || defined(BT984))
+#include "btwdef.h"
+
+#else /* BT13908 */
+#error Undefined Windows Project!
+#endif /* BT13908 */
+
+
+/*
+** VxWorks specific include files
+*/
+#elif defined(__vxworks)
+
+#if     defined(BT18901)
+#include "btvdef.h"
+/* end ifdef  defined(BT18901) */
+
+#elif     defined(BT993)
+#include "btpdef.h"
+/* end ifdef  defined(BT993) */
+
+
+/*
+** NanoBridge specific include files
+*/
+#elif defined(BT17903)
+#include "btudef.h"
+/* end ifdef BT17903 */
+
+/*
+** Fiber channel specific include files
+*/
+#elif defined(FCTACH_VXWORKS)
+#include "fcvxpdef.h"
+
+#else
+#error Undefined VxWorks Project!
+#endif /* BT18901  */
+
+
+/*
+** Broadcast/Shared Memory specific include files
+*/
+#elif     defined(BT15901) || defined(BT15991)
+#include "btmdef.h"
+/* end ifdef  BT15901 || BT15991 */
+
+/*
+**  uCOS specific include files
+*/
+#elif defined(BT_uCOS)
+
+#if defined(BT2345)
+/* endif BT2345 */
+
+#else /* BT2345 */
+#error Undefined uCOS project!
+#endif /* BT2345 etc. */
+
+
+/*
+** Linux specific include files
+*/
+
+#elif defined(__linux__)
+
+#if defined(BT1003)
+#include "btpdef.h"
+
+#elif defined(FCTACH_LINUX)
+#include "fclpdef.h"
+
+#else /* BT1003 */
+#error Undefined Linux project!
+#endif /* BT1003 */
+
+
+/*
+ * LynxOS specific include files
+*/
+
+#elif defined (__lynxos)
+
+#if defined(BT951)
+#include "btpdef.h"
+
+#else
+#error Undefined LynxOS project!
+
+#endif /* BT951 */
+
+/*
+** Unknown project
+*/
+#else /* _AIX etc. */
+#error Operating System!
+#endif /* _AIX etc. */
 
 #endif  /* _BTDEF_H */
 

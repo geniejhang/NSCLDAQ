@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "cmdline.h"
 
@@ -316,7 +317,7 @@ CDAQStart::SinkType(char* name)
    \retval the right half of the colon separated descriptor.
           if there is no right half, an empty string is returned.
 */
-char*
+const char*
 CDAQStart::SinkName(char* name)
 {
   char *(elements[2]);
@@ -410,6 +411,11 @@ CDAQStart::ReportExit()
     string Command("PopUp \"");
     Command += ExitMessage;
     Command += "\"";
-    system(Command.c_str());
+    int stat = system(Command.c_str());
+    if (stat) {
+      int e = errno;
+      cerr << "Unable to system(" << Command << ") : " << strerror(e) << endl;
+      exit(-1);
+    }
   }
 }

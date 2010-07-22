@@ -29,6 +29,11 @@
 #define __NO_VERSION__
 #endif /* defined(BTP_CFG_C */
 
+/*
+** This is part of the NanoBus family
+*/
+#define BT_NBUS_FAMILY
+
 #include <linux/kernel.h>
 #include <linux/types.h>
 #include <linux/errno.h>
@@ -36,8 +41,22 @@
 #include <linux/sched.h>
 #include <linux/fs.h>
 #include <linux/version.h>
+#include <linux/pm.h>
 
 #include "btio.h"
+#include "bt_trace.h"
+#include "bt_error.h"
+#include "bt_time.h"
+#include "bt_assert.h"
+#include "bt_bit.h"
+#include "bt_delay.h"
+#include "bt_event.h"
+#include "bt_llist.h"
+#include "bt_mem.h"
+#include "bt_mutex.h"
+#include "bt_rwlck.h"
+#include "btdbpci.h"
+#include "btunit.h"
 
 /******************************************************************************
 **
@@ -128,276 +147,11 @@
 #define GET_UNIT_PTR(dev_id)  (bt_unit_array_gp[GET_UNIT_NUM(dev_id)])
 #define GET_LDEV_TYPE(dev_id) (GET_MINOR_NUM(dev_id) >> BT_AXS_SHFT)
 
-/*****************************************************************************
-**
-**      Tracing macros
-**
-*****************************************************************************/
 /* 
-** Global variables used by tracing system 
+** Convert unit pointer to actual unit number 
 */
-extern unsigned long bt_trace_lvl_g;
-extern const char *bt_name_gp;
-extern volatile bt_data32_t *mreg_gp;
-extern volatile bt_data32_t *bt_trace_mreg_gp;
-
-/*
-**  Macros for tracing definitions
-**
-**  Each function must have FUNCTION() and either LOG_UNKNOWN_UNIT,
-**  LOG_UNIT or LOG_DEVID at the beginning.
-*/
-#define FUNCTION(str)  const char *t_func_name = str
-
-#define LOG_UNKNOWN_UNIT        \
-        unsigned t_unit = BT_MOCK_UNIT
-
-#define LOG_UNIT(unit_p)        \
-        unsigned t_unit = (NULL == (unit_p) ? BT_MOCK_UNIT : (unit_p)->unit_number)
-
-#define LOG_DEVID(devid)        \
-        unsigned t_unit = GET_UNIT_NUM(devid)
-
-#define LOG_UNIT_NUMBER(num)  \
-  int t_unit = num
-
-#define SET_UNIT_NUMBER(num)  \
-  t_unit = num
-
-
-#define LINE_STR        BT_STRIZE(__LINE__)
-#define BT_STRIZE(literal)      BT_STR2(literal)
-#define BT_STR2(literal)        #literal
-
-/* Formatting prefix for each call */
-#define LOG_FMT         KERN_NOTICE "%s%d: %s: " __FILE__ "#" LINE_STR ": "
-
-/* Arguments to use for each formatting prefix */
-#define LOG_ARG         (bt_name_gp), (t_unit), (t_func_name)
-
-/* Convert unit pointer to actual unit number */
 #define PTR_TO_UNITN(unit_ptr) \
     (((unit_ptr) == NULL) ? NO_UNIT : (unit_ptr)->unit_num)
-
-/* 
-** TRC_EVAL boolean check on trace level
-**
-** First section to take care of normal trace bits, allow several to be ORed.
-** Second section is if BT_TRC_DETAIL is off.
-** Third section is if BT_TRC_DETAIL is on.
-*/
-
-#define TRC_EVAL(lvl)   \
-    ( ( 0 != ( (lvl) & (~BT_TRC_DETAIL) & bt_trace_lvl_g) ) && \
-      ( ( 0 == ( (lvl) & BT_TRC_DETAIL) ) || \
-        ( 0 != ( bt_trace_lvl_g & BT_TRC_DETAIL) ) ) )
-
-
-/*      Fatal errors
-**
-** A fatal or critical error making further use of the device driver
-** impossible or very severely limited.
-*/
-#define FATAL_STR(str)  { /* system is unusable */  \
-    if (bt_trace_lvl_g) { \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xAA0000 /* AA = Fatal */ \
-	        | BT_BCD4(__LINE__); \
-        } else { \
-            printk(LOG_FMT "%s\n", LOG_ARG, (str)); \
-        } \
-    } }
-
-#define FATAL_MSG(str)  { /* system is unusable */      \
-    if (bt_trace_lvl_g) { \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xAA0000 /* AA = Fatal */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            printk str;  \
-	} \
-    } }
-
-/*      Warning messages
-**
-** An error occurred that the device driver can work around. It may
-** prevent certain functions from operating, however the device driver
-** is otherwise useable. An example would be running out of a system
-** resource.
-*/
-#define WARN_STR(str)   { /* Warning messages */ \
-    if (bt_trace_lvl_g & (BT_TRC_WARN|BT_TRC_INFO)) { \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xBB0000 /* BB = Warning */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            printk(LOG_FMT "%s\n", LOG_ARG, (str)); \
-        } \
-    } }
-
-#define WARN_MSG(str)   { /* Warning messages */ \
-    if (bt_trace_lvl_g & (BT_TRC_WARN|BT_TRC_INFO)) { \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xBB0000 /* BB = Warning */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            printk str; \
-        } \
-    } }
-
-/*      Informational messages
-**
-** Any time the device driver is about to return an error, there should
-** be a trace message at this level describing the error. This is useful
-** as an aid in debugging user applications.
-**
-** NOTE: These are errors caused by an application, not the device driver.
-** By default, this level of tracing is turned off.
-*/
-#define INFO_STR(str)   { /* Informational messages, why an error return */ \
-    if (TRC_EVAL(BT_TRC_INFO)) { \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xCC0000 /* CC = Info */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            printk(LOG_FMT "%s\n", LOG_ARG, (str)); \
-        } \
-    } }
-
-#define INFO_MSG(str)   { \
-    if (TRC_EVAL(BT_TRC_INFO)) { \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xCC0000 /* CC = Info */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            printk str; \
-        } \
-    } }
-
-
-/*****************************************************************************
-**
-**      Trace macros controlling which functions are traced
-**
-*****************************************************************************/
-
-/*      Function entry and exit tracing
-**
-**  These macros show when each routine is enterred and exitted.
-*/
-#define FENTRY          { \
-    if (TRC_EVAL(BT_TRC_FUNC)) { \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xFB0000 /* Function Beginning */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            printk(LOG_FMT "Entry.\n", LOG_ARG); \
-        } \
-    } }
-
-#define FEXIT(exit_val) { \
-    if (TRC_EVAL(BT_TRC_FUNC)) { \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xFE0000 /* Function Ending */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            long tmp_exit = (long) exit_val; \
-            printk(LOG_FMT "Exit = %ld 0x%lx.\n", LOG_ARG, \
-                tmp_exit, tmp_exit); \
-        } \
-    } }
-
-/*      Standard tracing macros
-**      
-**  Driver tracing macros that are left in the production version of the 
-**  driver. These macros can help determine exactly what is happening as
-**  the driver is running. They are not normally used by a customer, but
-**  left in the driver as an aid for customer support.
-**
-**  Only specify one of the BT_TRC_ functional bits (4-27) for each
-**  macro.
-**
-**  You can use one of the modifier bits (BT_TRC_PROFILE, BT_TRC_DETAIL,
-**  or BT_TRC_DEBUG) with any of the functional bits. This will cause the
-**  trace to occur only if both bits are set.
-*/
-#define TRC_STR(trc,str) { \
-    if (TRC_EVAL(trc)) {        /* debug messages */ \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xEE0000 /* EE = Standard Trace Macro */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            printk(LOG_FMT "%s\n", LOG_ARG, (str)); \
-        } \
-    } }
-
-#define TRC_MSG(trc,str) { \
-    if (TRC_EVAL(trc)) {        /* debug messages */ \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xEE0000 /* EE = Standard Trace Macro */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            printk str; \
-        } \
-    } }
-
-
-/*      Debugging macros
-**
-**  These macros are taken out of the production version of the device
-**  driver, either because of performance concerns or because they are
-**  only of use during actual driver development.
-*/
-#if defined (DEBUG)
-#define DBG_STR(trc,str) { \
-    if (TRC_EVAL(trc))  {  \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xDD0000 /* DD = Debugging Trace Macro */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            printk(LOG_FMT "%s\n", LOG_ARG, (str)); \
-        } \
-    } }
-
-#define DBG_MSG(trc,str) { \
-    if (TRC_EVAL(trc))  {  \
-        if ((bt_trace_lvl_g & BT_TRC_HW_DEBUG) && \
-            (bt_trace_mreg_gp != NULL)) { \
-            *bt_trace_mreg_gp = (trace_file_number_g << 24) \
-		| 0xDD0000 /* DD = Debugging Trace Macro */ \
-                | BT_BCD4(__LINE__); \
-        } else { \
-            printk str; \
-        } \
-    } }
-
-#else /* DEBUG */
-#define DBG_STR(trc,str)
-#define DBG_MSG(trc,str)
-#endif /* DEBUG */
-
 
 /* 
 ** Default tracing level 
@@ -422,11 +176,41 @@ extern volatile bt_data32_t *bt_trace_mreg_gp;
 **  NOTE:  assumes that unit_p is defined and valid
 */
 #if defined (DEBUG)
-#define HW_TRC_LINE(func) if (bt_trace_lvl_g & BT_TRC_PROFILE) *bt_trace_mreg_gp = (func << 24) | BT_BCD4(__LINE__);
-#define HW_TRC_POINT(func, point) if (bt_trace_lvl_g & BT_TRC_PROFILE) *bt_trace_mreg_gp = (func << 24) | point;
-#define HW_TRC_VALUE(value) if (bt_trace_lvl_g & BT_TRC_PROFILE) *bt_trace_mreg_gp = (bt_data32_t) value;
-#define HW_TRC_FOPEN(func) if (bt_trace_lvl_g & BT_TRC_PROFILE) *bt_trace_mreg_gp = (func << 24) | 0;
-#define HW_TRC_FCLOSE(func) if (bt_trace_lvl_g & BT_TRC_PROFILE) *bt_trace_mreg_gp = (func << 24) | 0xffu;
+#define HW_TRC_LINE(func) if (bt_trace_lvl_g & BT_TRC_HW_DEBUG) { \
+                              if (bt_trace_mreg_size == 32) { \
+                                  *bt_trace_mreg_gp32 = (func << 24) | BT_BCD4(__LINE__); \
+                              } else { \
+                                  *bt_trace_mreg_gp64 = (func << 24) | BT_BCD4(__LINE__); \
+                              } \
+                          }
+#define HW_TRC_POINT(func, point) if (bt_trace_lvl_g & BT_TRC_HW_DEBUG) { \
+                              if (bt_trace_mreg_size == 32) { \
+                                  *bt_trace_mreg_gp32 = (func << 24) | point; \
+                              } else { \
+                                  *bt_trace_mreg_gp64 = (func << 24) | point; \
+                              } \
+                          }
+#define HW_TRC_VALUE(value) if (bt_trace_lvl_g & BT_TRC_HW_DEBUG) { \
+                              if (bt_trace_mreg_size == 32) { \
+                                  *bt_trace_mreg_gp32 = (bt_data32_t) value; \
+                              } else { \
+                                  *bt_trace_mreg_gp64 = (bt_data32_t) value; \
+                              } \
+                          }
+#define HW_TRC_FOPEN(func) if (bt_trace_lvl_g & BT_TRC_HW_DEBUG) { \
+                              if (bt_trace_mreg_size == 32) { \
+                                  *bt_trace_mreg_gp32 = (func << 24) | 0; \
+                              } else { \
+                                  *bt_trace_mreg_gp64 = (func << 24) | 0; \
+                              } \
+                          }
+#define HW_TRC_FCLOSE(func) if (bt_trace_lvl_g & BT_TRC_HW_DEBUG) { \
+                              if (bt_trace_mreg_size == 32) { \
+                                  *bt_trace_mreg_gp32 = (func << 24) | 0xffu; \
+                              } else { \
+                                  *bt_trace_mreg_gp64 = (func << 24) | 0xffu; \
+                              } \
+                          }
 #else /* DEBUG */
 #define HW_TRC_LINE(func)
 #define HW_TRC_POINT(func, point)
@@ -468,6 +252,8 @@ typedef struct {
     unsigned int    num_mreg;
     caddr_t         bind_addr;
     bt_dev_t        axs_type;
+    struct page**   page_info;
+    int             nr_pages;
 } bt_btrack_t;
 
 extern bt_unit_t * bt_unit_array_gp[];

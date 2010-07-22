@@ -105,7 +105,7 @@ protected:
     void FreeArgv();
     void CopyIn(const CMonitoredProgram& rhs);
     bool ArgvSame(int argc, char**argv) const;
-    void Log(int fd, CSink* pSink, STD(string) sLine);
+    int Log(int fd, CSink* pSink, STD(string) sLine);
 
 };
 

@@ -22,8 +22,16 @@
 #include        "btapi.h"
 #endif  /* !defined(_BTAPI_H) */
 
-#include        "btpdef.h"
-#include        "btngpci.h"
+/*
+** NanoBus Family define
+*/
+#define BT_NBUS_FAMILY
+
+#include        "btio.h"
+#include        "bt_error.h"
+#include        "bt_time.h"
+#include        "btdbpci.h"
+
 #include        <stdio.h>
 
 
@@ -34,7 +42,7 @@
 ******************************************************************************/
 #define BT_MAX_DEV_NAME FILENAME_MAX
 
-typedef void *bt_binddesc_t;
+typedef bt_data64_t bt_binddesc_t;
 typedef struct bt_lib_data_s * bt_desc_t;
 
 

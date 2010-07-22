@@ -169,7 +169,7 @@ char*
 getlin(FILE* fin, char* str, int cnt)
 {
   int n;
-  fgets(str, cnt, fin);
+  char* pResult = fgets(str, cnt, fin);
   n = strlen(str);
   
   /*  Need to trim any newline off the string. */

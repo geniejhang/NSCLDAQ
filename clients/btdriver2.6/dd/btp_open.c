@@ -107,7 +107,7 @@ int btp_open(
      **  occurring with the close routine trying to determine if
      **  all devices are close
      */
-    btk_mutex_enter(unit_p, &(unit_p->open_mutex));
+    btk_mutex_enter(&(unit_p->open_mutex));
     
     /*
     ** Check for first unit open
@@ -122,12 +122,7 @@ int btp_open(
      **  Mark the associated logical unit as in use 
      */
     unit_p->open[type] = TRUE;
-
-#if     LINUX_VERSION_CODE >= (KERNEL_VERSION(2,5,0))
     (void)try_module_get(THIS_MODULE);
-#else
-    MOD_INC_USE_COUNT;
-#endif
 
     /*
     ** Increment open counts
@@ -141,26 +136,28 @@ int btp_open(
     if (new_open ||
         IS_CLR(unit_p->bt_status, BT_ONLINE) || 
         IS_SET(unit_p->bt_status, BT_POWER) ) {
-        btk_mutex_enter(unit_p, &unit_p->dma_mutex);
-        btk_rwlock_wr_enter(unit_p, &unit_p->hw_rwlock);
+        btk_mutex_enter(&unit_p->dma_mutex);
+        btk_rwlock_wr_enter(&unit_p->hw_rwlock);
+        btk_mutex_enter(&(unit_p->mreg_mutex));
         BTK_LOCK_ISR(unit_p, saved_spl);
         btk_setup(unit_p);
         BTK_UNLOCK_ISR(unit_p, saved_spl);
-        btk_rwlock_wr_exit(unit_p, &unit_p->hw_rwlock);
-        btk_mutex_exit(unit_p, &unit_p->dma_mutex);
+        btk_mutex_exit(&(unit_p->mreg_mutex));
+        btk_rwlock_wr_exit(&unit_p->hw_rwlock);
+        btk_mutex_exit(&unit_p->dma_mutex);
     }
 
     /* 
     **  Print out the bt_status value in detail 
     */
     TRC_MSG((BT_TRC_OPEN | BT_TRC_DETAIL), 
-	    (LOG_FMT "bt_status = 0x%x\n",
-	     LOG_ARG, unit_p->bt_status));
+        (LOG_FMT "bt_status = 0x%x\n",
+         LOG_ARG, unit_p->bt_status));
 
     /*
     **  Release the open mutex to allow further open and closes
     */
-    btk_mutex_exit(unit_p, &(unit_p->open_mutex));
+    btk_mutex_exit(&(unit_p->open_mutex));
 
 open_end:
     FEXIT(ret_val);
@@ -213,15 +210,15 @@ int btp_close(
     **  is trying to determine whether any devices are open and
     **  open is currently executing.
     */
-    btk_mutex_enter(unit_p, &(unit_p->open_mutex));
+    btk_mutex_enter(&(unit_p->open_mutex));
 
     /*
     **  Close this logical device 
     */
     unit_p->open[type] = FALSE;
     TRC_MSG(BT_TRC_OPEN, 
-	    (LOG_FMT "CLOSE: axs %d; logstat = 0x%x\n",
-	     LOG_ARG, type, unit_p->logstat[type]));
+        (LOG_FMT "CLOSE: axs %d; logstat = 0x%x\n",
+         LOG_ARG, type, unit_p->logstat[type]));
 
     unit_p->open_cnt[type] -= 1;
     unit_p->open_total -= 1;
@@ -260,17 +257,12 @@ int btp_close(
         */
         queue_clean(unit_p, &unit_p->icbr_thread_list);
     }
-
-#if     LINUX_VERSION_CODE >= (KERNEL_VERSION(2,5,0))
     module_put(THIS_MODULE);
-#else
-    MOD_DEC_USE_COUNT;
-#endif
 
     /* 
     **  Release the open mutex, to allow the unit to be opened again 
     */
-    btk_mutex_exit(unit_p, &(unit_p->open_mutex));
+    btk_mutex_exit(&(unit_p->open_mutex));
 
     FEXIT(ret_val);
     return ret_val;
@@ -295,7 +287,7 @@ static void queue_clean(
   btk_llist_t *qhead_p)
 {
   FUNCTION("queue_clean");
-  LOG_UNIT(unit_p);
+  LOG_UNIT(unit_p->unit_number);
 
   btk_llist_elem_t  *element_p;
   bt_ttrack_t       *thread_p;
@@ -318,7 +310,7 @@ static void queue_clean(
     /*
     ** Destroy the thread event and release the element memory
     */
-    btk_event_fini(unit_p, &thread_p->thread_event);
+    btk_event_fini(&thread_p->thread_event);
     btk_llist_elem_destroy(element_p, sizeof(bt_ttrack_t));
   }
   BTK_UNLOCK_ISR(unit_p, isr_pl);

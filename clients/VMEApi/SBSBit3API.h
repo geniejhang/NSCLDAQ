@@ -34,6 +34,12 @@ extern "C" {
 #include <btngpci.h>
 #define __SBS_BTNGPCI_H
 #endif
+
+#ifndef __SBS_BTAPI_H
+#include <btapi.h>
+#define __SBS_BTNGPCI_H
+#endif
+
 }
 class CSBSBit3VmeInterface {
 public:

@@ -12,7 +12,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-** Copyright (c) 2000 by SBS Technologies, Inc.
+** Copyright (c) 2000-2005 by SBS Technologies, Inc.
 **
 ** All Rights Reserved.
 ** License governs use and distribution.
@@ -36,6 +36,7 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
 #include <asm/io.h>
 #endif /* defined(__linux__) */
 
+
 /*
 **  Given local addr & length => number of mreg bits required
 */
@@ -43,11 +44,6 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
   (((((addr) % BT_617_PAGE_SIZE) + ((length) % BT_617_PAGE_SIZE)) / BT_617_PAGE_SIZE) ? 1 : 0) + \
   (((((addr) % BT_617_PAGE_SIZE) + ((length) % BT_617_PAGE_SIZE)) % BT_617_PAGE_SIZE) ? 1 : 0))
 
-#define LOCK_DEVICE(u_p)    btk_mutex_enter((u_p), &(u_p)->dma_mutex); \
-                            btk_rwlock_wr_enter((u_p), &(u_p)->hw_rwlock);
-
-#define UNLOCK_DEVICE(u_p)  btk_rwlock_wr_exit((u_p), &(u_p)->hw_rwlock); \
-                            btk_mutex_exit((u_p), &(u_p)->dma_mutex);
 
 
 /*****************************************************************************
@@ -106,7 +102,7 @@ void bt_print_bit_names( bt_unit_t *unit_p, bt_reg_t adapter_reg,
 /*
 ** External functions
 */
-extern void btk_pagecheck(bt_unit_t *unit_p, btk_page_t *page_p);
+extern bt_error_t btk_pagecheck(bt_unit_t *unit_p, btk_page_t *page_p);
 extern bt_error_t btk_setpage(bt_unit_t *unit_p, bt_dev_t ldev, 
             bt_data32_t ldev_addr, btk_page_t *page_p);
 extern void btk_dma_watchdog(caddr_t arg_p);
@@ -133,7 +129,7 @@ extern void  bt_print_bit_names( bt_unit_t *unit_p,
 */
 BT_FILE_NUMBER(TRACE_BT_XFER_C);
 
-
+
 /******************************************************************************
 **
 **      Function:       btk_pio_xfer()
@@ -182,13 +178,13 @@ bt_error_t btk_pio_xfer(
     BTK_LOCK_RETURN_T isr_pl;
     
     FUNCTION("btk_pio_xfer");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
     
     TRC_MSG((BT_TRC_PIO | BT_TRC_DETAIL), 
            (LOG_FMT "offset = 0x%x; dir = %c; length = 0x%x\n", 
-           LOG_ARG, ldev_addr, (xfer_dir == BT_READ) ? 'R' : 'W', data_left));
+           LOG_ARG, ldev_addr, (xfer_dir == BT_READ) ? 'R' : 'W', (int) data_left));
 
     /*
     ** Define default data width for PIO based on adapter type
@@ -197,7 +193,12 @@ bt_error_t btk_pio_xfer(
 #if defined(BT1003)
         data_width = BT_WIDTH_D32;
 #else /* defined(BT1003) */
-        if (IS_SET(unit_p->bt_status, BT_NEXT_GEN)) {
+        if (IS_SET(unit_p->bt_status, BT_NEXT_GEN)
+	    && (unit_p->rem_id != BT_PN_VME_DB))  /* when talking to a VME board */
+                                                  /* NEXT_GEN card, D64 transfers */
+                                                  /* aren't split correctly. This */
+                                                  /* is a WORKAROUND. */
+	{
             data_width = BT_WIDTH_D64;
         } else {
             data_width = BT_WIDTH_D32;
@@ -224,6 +225,16 @@ bt_error_t btk_pio_xfer(
                 LOG_ARG, unit_p->a64_offset));
         /* The remote board supports A64, program it */
         btk_put_io(unit_p, BT_RPQ_REM_A64PIO, unit_p->a64_offset);
+        if ( (btk_get_io(unit_p, BT_RPQ_REM_A64PIO)) != unit_p->a64_offset ) {
+            WARN_STR("Verify Write BT_RPQ_REM_A64PIO register failed.\n");
+            if (page_info.mreg_need != 0) {
+                btk_mutex_enter(&unit_p->mreg_mutex);
+                btk_bit_free(unit_p->mmap_aval_p, page_info.mreg_start, page_info.mreg_need);
+                btk_mutex_exit(&unit_p->mreg_mutex);
+            }
+            retval = BT_EIO;
+            goto btk_pio_exit;
+        }
     }
 #endif  /* EAS_A64_CODE */
 #endif /* defined(BT1003) */
@@ -231,7 +242,7 @@ bt_error_t btk_pio_xfer(
     /*
     ** Grab the read/write lock to indicate we are doing a PIO
     */
-    btk_rwlock_rd_enter(unit_p, &unit_p->hw_rwlock);
+    btk_rwlock_rd_enter(&unit_p->hw_rwlock);
 
     BTK_LOCK_ISR(unit_p, isr_pl);
     unit_p->pio_count++;
@@ -259,6 +270,8 @@ bt_error_t btk_pio_xfer(
 
         /* 
         ** Now it's time to actually move some data
+        **
+        ** A PIO transfer type
         */
 #if !defined(BT993)
         if (xfer_dir == BT_READ) {
@@ -311,10 +324,12 @@ bt_error_t btk_pio_xfer(
         ** Check if transfer caused us to cross a page boundary 
         */
         if (data_left > 0) {
-            btk_pagecheck(unit_p, &page_info);
+            retval = btk_pagecheck(unit_p, &page_info);
+            if( BT_SUCCESS != retval ) break;
         }
 
     }
+
 
     /*
     ** We want to determine whether this transfer is successful
@@ -324,39 +339,36 @@ bt_error_t btk_pio_xfer(
     ** we will either detect the error or the isr will have fired
     ** and set the BT_ERROR bit
     */
-    if (btk_get_io(unit_p, BT_LOC_STATUS) & LSR_CERROR_MASK) {
+    if( (btk_get_io(unit_p, BT_LOC_STATUS) & LSR_CERROR_MASK)
+                     || (IS_SET(unit_p->bt_status, BT_ERROR)) ) {
+        INFO_STR("Error detected during PIO transfer");
         retval = BT_ESTATUS;
-
-    /* 
-    ** Now check if an error occurred on the final transfer 
-    */
-    } else if (IS_SET(unit_p->bt_status, BT_ERROR)) {
-            retval = BT_ESTATUS;
     }
+
     BTK_LOCK_ISR(unit_p, isr_pl);
     unit_p->pio_count--;
     BTK_UNLOCK_ISR(unit_p, isr_pl);
 
-    btk_rwlock_rd_exit(unit_p, &unit_p->hw_rwlock);
+    btk_rwlock_rd_exit(&unit_p->hw_rwlock);
 
     /*
     ** If we had an adapter error we need to clear it
     */
     if (retval == BT_ESTATUS) {
-        btk_rwlock_wr_enter(unit_p, &unit_p->hw_rwlock);
+        btk_rwlock_wr_enter(&unit_p->hw_rwlock);
         if (IS_SET(unit_p->bt_status, BT_ERROR)) {
             CLR_BIT(unit_p->bt_status, BT_ERROR);
         }
-        btk_rwlock_wr_exit(unit_p, &unit_p->hw_rwlock);
+        btk_rwlock_wr_exit(&unit_p->hw_rwlock);
     }
 
     /* 
     ** Release map regs allocated in btk_setpage()
     */
     if (page_info.mreg_need != 0) {
-        btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-        btk_bit_free(unit_p, unit_p->mmap_aval_p, page_info.mreg_start, page_info.mreg_need);
-        btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+        btk_mutex_enter(&unit_p->mreg_mutex);
+        btk_bit_free(unit_p->mmap_aval_p, page_info.mreg_start, page_info.mreg_need);
+        btk_mutex_exit(&unit_p->mreg_mutex);
     }
     
 btk_pio_exit:
@@ -437,9 +449,10 @@ bt_error_t btk_dma_xfer(
     bt_data8_t          dma_cmd, tmp_reg, amod;
     int                 polled_dma = TRUE;
     int                 timeout_usec;
+    static unsigned int fail_count = 0;
 
     FUNCTION("btk_dma_xfer");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
     
@@ -448,11 +461,22 @@ bt_error_t btk_dma_xfer(
            LOG_ARG, laddr, raddr, xfer_length, 
            (xfer_dir == BT_READ) ? 'R' : 'W', data_width));
 
+    dma_cmd = btk_get_io(unit_p, BT_LDMA_CMD);
+    if ( IS_SET(dma_cmd, LDC_START) ) {
+        fail_count++;
+        retval = BT_EFAIL;
+        goto dma_xfer_exit;
+    }
+    if ( fail_count ) {
+        WARN_MSG((LOG_FMT "Start of DMA transfer was ABORTED %.1u times.\n", LOG_ARG, fail_count));
+        fail_count = 0;
+    }
+
     /*
     ** Clear the error bit for DMA and indicate that one is active
     */
     CLR_BIT(unit_p->bt_status, BT_DMA_ERROR);
-    
+
     /*
     **  Setup the DMA command register
     */
@@ -472,12 +496,27 @@ bt_error_t btk_dma_xfer(
         SET_BIT(dma_cmd, LDC_DMA_INT_ENABLE);
     }
     btk_put_io(unit_p, BT_LDMA_CMD, dma_cmd);
+    if ( (btk_get_io(unit_p, BT_LDMA_CMD)) != dma_cmd ) {
+        WARN_STR("Verify Write BT_LDMA_CMD register failed.\n");
+        retval = BT_EIO;
+        goto dma_xfer_exit;
+    }
 
     /*
     **  Setup the remote address reg. & remote partial packet reg.
     */
     btk_put_io(unit_p, BT_RDMA_ADDR, raddr);
+    if ( (btk_get_io(unit_p, BT_RDMA_ADDR)) != raddr ) {
+        WARN_STR("Verify Write BT_RDMA_ADDR register failed.\n");
+        retval = BT_EIO;
+        goto dma_xfer_exit;
+    }
     btk_put_io(unit_p, BT_RDMA_RMD_CNT, xfer_length & (DMA_PKT_SIZE - 1));
+    if ( (btk_get_io(unit_p, BT_RDMA_RMD_CNT)) != (xfer_length & (DMA_PKT_SIZE - 1)) ) {
+        WARN_STR("Verify Write BT_RDMA_RMD_CNT register failed.\n");
+        retval = BT_EIO;
+        goto dma_xfer_exit;
+    }
 #if defined(BT1003)
 #if  EAS_A64_CODE
 /* EAS A64 */
@@ -488,6 +527,11 @@ bt_error_t btk_dma_xfer(
                 LOG_ARG, unit_p->a64_offset));
         /* The remote board supports A64, program it */
         btk_put_io(unit_p, BT_RPQ_REM_A64DMA, unit_p->a64_offset);
+        if ( (btk_get_io(unit_p, BT_RPQ_REM_A64DMA)) != unit_p->a64_offset ) {
+            WARN_STR("Verify Write BT_RPQ_REM_A64DMA register failed.\n");
+            retval = BT_EIO;
+            goto dma_xfer_exit;
+        }
     }
 #endif  /* EAS_A64_CODE */
 #endif /* defined(BT1003) */
@@ -520,7 +564,17 @@ bt_error_t btk_dma_xfer(
             SET_BIT(tmp_reg, RC2_DMA_PAUSE);
         }
         btk_put_io(unit_p, BT_REM_CMD2, tmp_reg);
+        if ( (btk_get_io(unit_p, BT_REM_CMD2)) != tmp_reg ) {
+            WARN_STR("Verify Write BT_REM_CMD2 register failed.\n");
+            retval = BT_EIO;
+            goto dma_xfer_exit;
+        }
         btk_put_io(unit_p, BT_REM_AMOD, amod);
+        if ( (btk_get_io(unit_p, BT_REM_AMOD)) != amod ) {
+            WARN_STR("Verify Write BT_REM_AMOD register failed.\n");
+            retval = BT_EIO;
+            goto dma_xfer_exit;
+        }
         DBG_MSG((BT_TRC_DMA | BT_TRC_DETAIL), 
                 (LOG_FMT "DMA: rc2 0x%x; amod 0x%x\n", 
                 LOG_ARG, tmp_reg, amod));
@@ -532,6 +586,11 @@ bt_error_t btk_dma_xfer(
     ** are always zero
     */
     btk_put_io(unit_p, BT_LDMA_ADDR, laddr);
+    if ( (btk_get_io(unit_p, BT_LDMA_ADDR)) != laddr ) {
+        WARN_STR("Verify Write BT_LDMA_ADDR register failed.\n");
+        retval = BT_EIO;
+        goto dma_xfer_exit;
+    }
 
 #if defined(EASDEBUG)
         INFO_MSG((LOG_FMT "Read DMA transfer Start; laddr 0x%08x\n",
@@ -541,12 +600,25 @@ bt_error_t btk_dma_xfer(
     ** Setup the local packet and partial packet count
     */
     btk_put_io(unit_p, BT_LDMA_PKT_CNT, (xfer_length >> 8));
+    if ( (btk_get_io(unit_p, BT_LDMA_PKT_CNT)) != (xfer_length >> 8) ) {
+        WARN_STR("Verify Write BT_LDMA_PKT_CNT register failed.\n");
+        retval = BT_EIO;
+        goto dma_xfer_exit;
+    }
     btk_put_io(unit_p, BT_LDMA_RMD_CNT, xfer_length & (DMA_PKT_SIZE - 1));
+    if ( (btk_get_io(unit_p, BT_LDMA_RMD_CNT)) != (xfer_length & (DMA_PKT_SIZE - 1)) ) {
+        WARN_STR("Verify Write BT_LDMA_RMD_CNT register failed.\n");
+        retval = BT_EIO;
+        goto dma_xfer_exit;
+    }
 
     /*
     ** Check for errors before we actually start the DMA
     */
     if (IS_SET(unit_p->bt_status, BT_DMA_ERROR)) {
+        btk_put_io(unit_p,BT_LDMA_CMD , 0); /* ??? not sure why this is here */
+        btk_put_io(unit_p, BT_REM_CMD2, 0);
+		INFO_STR("Error detected during DMA setup.\n");
         retval = BT_ESTATUS;
         goto dma_xfer_exit;
     }
@@ -555,7 +627,7 @@ bt_error_t btk_dma_xfer(
     ** Otherwise use 5 seconds
     */
     timeout_usec = unit_p->dma_timeout * 10000;
-    if (timeout_usec < 1) {
+    if (timeout_usec < 1000) {
         INFO_MSG((LOG_FMT "Invalid DMA timeout of %d\n",
                 LOG_ARG, timeout_usec));
         timeout_usec = 5000000;
@@ -578,6 +650,8 @@ bt_error_t btk_dma_xfer(
         ** We do not use watchdog function for NT or VxWorks instead
         ** use timeout feature of btk_event_wait()
         */
+        /* Make sure the dma event semaphore is down */
+        btk_event_wait(&unit_p->dma_event, BT_NO_WAIT);
 #else /* defined(BT_NTDRIVER || __vxworks) || defined(__sun) || defined(__linux__) */
         unit_p->watchdog_id = btk_timeout(btk_dma_watchdog, (void *) unit_p, 
                                          (long) timeout_usec);
@@ -605,15 +679,25 @@ bt_error_t btk_dma_xfer(
         ** We do not use watchdog function to set event for NT or VxWorks
         ** instead use timeout feature of btk_event_wait()
         */
-        retval = btk_event_wait(unit_p, &unit_p->dma_event, btk_msec2tck(timeout_usec/1000));
-        if ((retval == BT_EBUSY ) ||
-            (retval == BT_EABORT)) {
-            btk_dma_watchdog((caddr_t) unit_p);
+
+        /* Wait for DMA to complete. */
+        retval = btk_event_wait(&unit_p->dma_event, btk_msec2tck(timeout_usec/1000));
+        if ( BT_SUCCESS != retval ) {
+            if ( BT_EABORT == retval ) {
+                INFO_STR("DMA transfer was user-interrupted.\n");
+            }
+            else if ( BT_EBUSY == retval ) {
+                INFO_STR("DMA transfer timed out waiting for completion.\n");
+            }
+            btk_dma_watchdog((caddr_t) unit_p); /* stop the DMA, and set the DMA error flag. */
+            /* Try to down the dma event semaphore in case that the ISR upped it since timed out or aborted. */
+            btk_event_wait(&unit_p->dma_event, BT_NO_WAIT);
         }
         
 #else /* defined(BT_NTDRIVER || __vxworks ) || defined(__sun) || defined(__linux__) */
 
-        btk_event_wait(unit_p, &unit_p->dma_event, BT_FOREVER);
+        /* Wait for DMA to complete. */
+        btk_event_wait(&unit_p->dma_event, BT_FOREVER);
 
 #endif /* defined(BT_NTDRIVER || __vxworks ) || defined(__sun) || defined(__linux__) */
 
@@ -629,59 +713,37 @@ bt_error_t btk_dma_xfer(
         btk_dma_poll(unit_p, xfer_length, data_width, timeout_usec);
 
     }
-    btk_put_io(unit_p,BT_LDMA_CMD , 0);     /* ??? not sure why this is here */
-    btk_put_io(unit_p, BT_REM_CMD2, 0);
-    if (IS_SET(unit_p->bt_status, BT_DMA_ERROR)) {
-        INFO_STR("DMA error detected during transfer");
-        retval = BT_ESTATUS;
 
-        /* Note - caller update count with partial xfer from DMA address registers */
-        goto dma_xfer_exit;
+    if ( IS_SET(btk_get_io(unit_p, BT_LDMA_CMD), LDC_START) ) {
+        WARN_STR("LDC_START bit in BT_LDMA_CMD register still set when DMA transfer should have stopped!\n");
+    }
+    else {
+        btk_put_io(unit_p,BT_LDMA_CMD , 0);     /* ??? not sure why this is here */
+        btk_put_io(unit_p, BT_REM_CMD2, 0);
     }
 
     /*
-    **  Clean up the DMA
-    **
-    **  As an additional sanity check for proper DMA H/W operation,
-    **  check local and remote DMA address register ending values.
-    **  The local version requires a special somewhat limited check.
-    **
-    **  The next generation hardware has a read ahead function that
-    **  messes the ending DMA ending addresses up so only do this
-    **  for writes.
+    ** We want to determine whether this transfer is successful
+    ** from a hardware perspective.  So we need to read the
+    ** status register since we can not guarantee that ISR
+    ** has started, but if we read the status register manually
+    ** we will either detect the error or the isr will have fired
+    ** and set the BT_DMA_ERROR bit
     */
-#if 0
-{
-    bt_data32_t raddr_end;
-
-    if (BT_WRITE == xfer_dir) {
-        laddr_end = btk_get_io(unit_p, BT_LDMA_ADDR);
-        if (laddr_end != (laddr + xfer_length)) {
-            INFO_MSG((LOG_FMT "Local ending DMA address wrong; expected 0x%x recevied 0x%x\n",
-                  LOG_ARG, laddr + xfer_length, laddr_end));
-            INFO_STR("Local ending DMA address wrong; H/W operation suspect");
-            retval = BT_EIO;
-        } else {
-            raddr_end = btk_get_io(unit_p, BT_RDMA_ADDR);
-            if (raddr_end != (raddr + xfer_length)) {
-                INFO_MSG((LOG_FMT "Remote ending DMA address wrong; expected 0x%x recevied 0x%x\n",
-                     LOG_ARG, raddr + xfer_length, raddr_end));
-            retval = BT_EIO;
-            }
-        }
+    if( (btk_get_io(unit_p, BT_LOC_STATUS) & LSR_CERROR_MASK)
+                     || (IS_SET(unit_p->bt_status, BT_DMA_ERROR)) ) {
+        INFO_STR("Error detected during DMA transfer");
+        retval = BT_ESTATUS;
     }
-}
-#endif
 
-dma_xfer_exit:
 #if defined(__linux__)
     /* 1003 - 2nd level - return partial transfer count on reads from DMA register */
     if (BT_WRITE == xfer_dir) {
-        if (retval != BT_SUCCESS) {
-		/* on writes if we fail, say we transferred nothing */
-	        *xfer_len = 0;
-	}
-    } else {
+        if (retval == BT_SUCCESS) {
+	        xfer_length = 0;
+	    }
+    }
+    else {
         /* Reads - update transfer count from ldma register to indicate number of bytes actually xferred */
         laddr_end = btk_get_io(unit_p, BT_LDMA_ADDR);
 #if defined(EASDEBUG)
@@ -697,8 +759,13 @@ dma_xfer_exit:
 #else
         xfer_length = ((laddr + xfer_length) - laddr_end);
 #endif
-        *xfer_len -= xfer_length;
     }
+
+dma_xfer_exit:
+        *xfer_len -= xfer_length;
+#else
+
+dma_xfer_exit:
 #endif
 
     FEXIT(retval);
@@ -745,10 +812,9 @@ bt_error_t btk_hw_xfer(
     unsigned int        mreg_need; 
     unsigned int        mreg_start;
     bt_data32_t         mreg_value;
-    bt_data8_t          loc_status;
 
     FUNCTION("btk_hw_xfer");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
     
@@ -805,11 +871,11 @@ bt_error_t btk_hw_xfer(
         retval = btk_take_drv_sema(unit_p);
         if (retval != BT_SUCCESS) {
             if (IS_CLR(unit_p->bt_status, BT_NEXT_GEN)) {
-                btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-                btk_bit_free(unit_p, unit_p->sdma_aval_p, mreg_start, mreg_need);
-                btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+                btk_mutex_enter(&unit_p->mreg_mutex);
+                btk_bit_free(unit_p->sdma_aval_p, mreg_start, mreg_need);
+                btk_mutex_exit(&unit_p->mreg_mutex);
             }
-            btk_mutex_exit(unit_p, &unit_p->dma_mutex);
+            btk_mutex_exit(&unit_p->dma_mutex);
             goto hw_xfer_exit;
         }
 
@@ -819,18 +885,40 @@ bt_error_t btk_hw_xfer(
         if (IS_CLR(unit_p->bt_status, BT_NEXT_GEN)) {
             mreg_value = curr_laddr & BT_MREG_ADDR_MASK;
             btk_setup_mreg(unit_p, ldev, &mreg_value, BT_OP_DMA);
-            btk_put_mreg_range(unit_p, mreg_start, mreg_need, BT_LMREG_DMA_2_PCI, mreg_value);
+            {
+                unsigned int inx;
+                for (inx = mreg_start; inx < (mreg_start + mreg_need); inx++, mreg_value += BT_PAGE_SIZE ) {
+                    btk_put_mreg(unit_p, inx, BT_LMREG_DMA_2_PCI, mreg_value);
+                    if ( (btk_get_mreg(unit_p, inx, BT_LMREG_DMA_2_PCI)) != mreg_value ) {
+                        WARN_MSG((LOG_FMT "Verify Write BT_LMREG_DMA_2_PCI mapping register mr_idx = 0x%.1X failed.\n",
+                                                                                         LOG_ARG, inx));
+                        btk_mutex_enter(&unit_p->mreg_mutex);
+                        btk_bit_free(unit_p->sdma_aval_p, mreg_start, mreg_need);
+                        btk_mutex_exit(&unit_p->mreg_mutex);
+                        btk_mutex_exit(&unit_p->dma_mutex);
+                        retval = BT_EIO;
+                        goto hw_xfer_exit;
+                    }
+                }
+            }
         } else {
             mreg_value = btk_get_io(unit_p, BT_LOC_MREG_CTRL);
             SET_BIT(mreg_value, LMC_DMA_BYPASS_ENABLE);
             btk_put_io(unit_p, BT_LOC_MREG_CTRL, mreg_value);
+            if ( (btk_get_io(unit_p, BT_LOC_MREG_CTRL)) != mreg_value ) {
+                CLR_BIT(unit_p->bt_status, BT_DMA_AVAIL);
+                WARN_STR("Verify Write BT_LOC_MREG_CTRL reg failed! DMA transfer capability is now disabled.\n");
+                btk_mutex_exit(&unit_p->dma_mutex);
+                retval = BT_EIO;
+                goto hw_xfer_exit;
+            }
         }
 
         /*
         ** If old Nanobus card, we must stop PIO from occuring
         */
         if (IS_CLR(unit_p->bt_status, BT_NEXT_GEN)) {
-            btk_rwlock_wr_enter(unit_p, &unit_p->hw_rwlock);
+            btk_rwlock_wr_enter(&unit_p->hw_rwlock);
         }
         
         /*
@@ -843,7 +931,7 @@ bt_error_t btk_hw_xfer(
 #else
             retval = btk_dma_xfer(unit_p, ldev, dma_addr, curr_raddr, curr_length, xfer_dir, data_width);
 #endif
-            btk_rwlock_wr_exit(unit_p, &unit_p->hw_rwlock);
+            btk_rwlock_wr_exit(&unit_p->hw_rwlock);
         } else {
 #if defined(__linux__)
             retval = btk_dma_xfer(unit_p, ldev, curr_laddr, curr_raddr, &curr_length, xfer_dir, data_width);
@@ -856,19 +944,24 @@ bt_error_t btk_hw_xfer(
         ** Release locks and mapping registers
         */
         if (IS_CLR(unit_p->bt_status, BT_NEXT_GEN)) {
-            btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-            btk_bit_free(unit_p, unit_p->sdma_aval_p, mreg_start, mreg_need);
-            btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+            btk_mutex_enter(&unit_p->mreg_mutex);
+            btk_bit_free(unit_p->sdma_aval_p, mreg_start, mreg_need);
+            btk_mutex_exit(&unit_p->mreg_mutex);
         } else {
             mreg_value = btk_get_io(unit_p, BT_LOC_MREG_CTRL);
             CLR_BIT(mreg_value, LMC_DMA_BYPASS_ENABLE);
             btk_put_io(unit_p, BT_LOC_MREG_CTRL, mreg_value);
+            if ( (btk_get_io(unit_p, BT_LOC_MREG_CTRL)) != mreg_value ) {
+                CLR_BIT(unit_p->bt_status, BT_DMA_AVAIL);
+                WARN_STR("Verify Write BT_LOC_MREG_CTRL reg failed! DMA transfer capability is now disabled.\n");
+                retval = BT_EIO;
+            }
         }
         btk_give_drv_sema(unit_p);
-        btk_mutex_exit(unit_p, &unit_p->dma_mutex);
+        btk_mutex_exit(&unit_p->dma_mutex);
   
         /*
-        ** A DMA or PIO operation has been completed, check for errors
+        ** A DMA operation has been completed, check for errors
         */
         if (retval != BT_SUCCESS) {
             /* INFO message should be printed by failing routine */
@@ -879,20 +972,6 @@ bt_error_t btk_hw_xfer(
 #endif
             break;
 
-        /*
-        ** This part may not be necessary any more ???
-        */
-        } else if ((loc_status = (bt_data8_t) btk_get_io(unit_p, BT_LOC_STATUS)) & LSR_CERROR_MASK) {
-            bt_print_bit_names(unit_p, BT_LOC_STATUS, loc_status);
-            INFO_STR("Adaptor error during read/write operation");
-            retval = BT_EIO;
-            
-#if defined(__linux__)
-            /* update for partial transfer */
-            total_length    -= curr_length;
-#endif
-            break;
-    
         /* 
         **  Else transfer ok, update while variables and continue
         */
@@ -932,11 +1011,11 @@ void btk_dma_stop(
 
 {
 
-    bt_data32_t         dma_cmd;
-    int                 loop;
+    bt_data8_t         dma_cmd, tmp_reg;
+    int                loop;
     
     FUNCTION("btk_dma_stop");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
 
@@ -948,30 +1027,54 @@ void btk_dma_stop(
     */
     SET_BIT(unit_p->bt_status, BT_DMA_ERROR);
     dma_cmd = btk_get_io(unit_p, BT_LDMA_CMD);
+    if ( IS_CLR(dma_cmd, LDC_START) ) {
+        WARN_STR("Stopping DMA. Start bit in BT_LDMA_CMD register already cleared!\n");
+    }
     CLR_BIT(dma_cmd, LDC_START);
     CLR_BIT(dma_cmd, LDC_DMA_INT_ENABLE);
-    btk_put_io(unit_p, BT_LDMA_CMD, dma_cmd);
     
     /*
-    **  Wait for the DMA done bit to be set
+    **  Wait for the DMA start bit to be cleared
     */
-    loop = 200;
-    while (--loop) {
-        if (IS_SET(btk_get_io(unit_p, BT_LDMA_CMD), LDC_DMA_DONE)) {
-            btk_delay(5);
+    btk_put_io(unit_p, BT_LDMA_CMD, dma_cmd);
+    btk_delay(5);
+    for (loop = 0; loop < 1000000; loop++) {
+        tmp_reg = btk_get_io(unit_p, BT_LDMA_CMD);
+        if ( (IS_CLR( tmp_reg, LDC_START )) && (IS_CLR( tmp_reg, LDC_DMA_INT_ENABLE )) ) {
             break;
         }
+        /* It is important to shut off the DMA irq */
+        if ( IS_SET( tmp_reg, LDC_DMA_INT_ENABLE ) ) { /* If the write obviously failed, */
+            WARN_STR("Failed Write to BT_LDMA_CMD register -- did not clear LDC_DMA_INT_ENABLE bit.\n");
+            btk_put_io(unit_p, BT_LDMA_CMD, dma_cmd);
+        }
+        btk_delay(5);
     }
 
     /*
-    ** Disable DMA and print warning if DMA can not be stopped
+    ** Print a warning if the DMA transfer can not be stopped.
+    ** Disable DMA transfer capability and print a warning if DMA Done interrupts can not be disabled.
     */
-#if 0 /* Currently HW will not set done bit */
-    if (loop == 0) {
-        WARN_STR("Could not stop DMA; Adaptor in bad state; Please reboot");
-        CLR_BIT(unit_p->bt_status, BT_DMA_AVAIL);
+    {
+        tmp_reg = btk_get_io(unit_p, BT_LDMA_CMD);
+        /*
+        ** Only give a warning if DMA is still active.
+        ** Checking the LDC_START bit in the BT_LDMA_CMD register at the start of
+        ** btk_dma_xfer() prevents starting of the next DMA transfer, if this one is still active.
+        */
+        if( IS_SET( tmp_reg, LDC_START ) ) {
+            WARN_STR("Could not stop DMA transfer!\n");
+        }
+        /*
+        ** Disable DMA and allow PIO transfers only, if disabling of DMA done interrupts failed.
+        ** This is BAD -- the ISR will disable ALL interrupts if the DMA done interrupt still occurs.
+        ** This will never happen, because up to 200 retries can be attempted (above).
+        */
+        if( IS_SET( tmp_reg, LDC_DMA_INT_ENABLE ) ) {
+            CLR_BIT(unit_p->bt_status, BT_DMA_AVAIL);
+            WARN_STR("Could not clear DMA done interrupt enable! DMA transfer capability is now disabled.\n");
+        }
     }
-#endif
 
     FEXIT(0);
     return;
@@ -1038,7 +1141,7 @@ void btk_dma_pio(
     
     
     FUNCTION("btk_dma_pio");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
 
@@ -1072,6 +1175,7 @@ void btk_dma_pio(
 	    }
         }
         break;
+
       default:
         break;
     }
@@ -1240,24 +1344,24 @@ void btk_dma_pio(
     ** the mapping RAM will be free up by the other DMA when
     ** it completes
     */
-    btk_mutex_enter(unit_p, &unit_p->dma_mutex);
-    btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
+    btk_mutex_enter(&unit_p->dma_mutex);
+    btk_mutex_enter(&unit_p->mreg_mutex);
 #if defined(BT_NTDRIVER)
     *need_p = (unsigned int) CALC_LEN_BITS((bt_data32_t) laddr, *xfer_length_p);
 #else /* BT_NTDRIVER) */
     *need_p = (unsigned int) CALC_LEN_BITS((bt_data64_t) laddr, *xfer_length_p);
 #endif /* BT_NTDRIVER) */
-    retval = btk_bit_alloc(unit_p, unit_p->sdma_aval_p, *need_p, 1, start_p);
+    retval = btk_bit_alloc(unit_p->sdma_aval_p, *need_p, 1, start_p);
     if (retval == BT_ENOMEM) {
         /*
         ** Not enough mapping regs to cover entire DMA, find max
         ** Make DMA would be over threshold with the number of regs found
         */
-        (void) btk_bit_max(unit_p, unit_p->sdma_aval_p, 1, &mreg_aval);
+        (void) btk_bit_max(unit_p->sdma_aval_p, 1, &mreg_aval);
         if ((((*need_p - mreg_aval) * BT_PAGE_SIZE) + unit_p->dma_threshold) > (unsigned int) (*xfer_length_p)) {
             TRC_STR(BT_TRC_RD_WR, "DMA mapping RAM too tight to make DMA worth it");
-            btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
-            btk_mutex_exit(unit_p, &unit_p->dma_mutex);
+            btk_mutex_exit(&unit_p->mreg_mutex);
+            btk_mutex_exit(&unit_p->dma_mutex);
             *data_width_p = orig_width;
             *xfer_length_p = orig_length;
             *dma_flag_p = FALSE;
@@ -1268,10 +1372,10 @@ void btk_dma_pio(
         ** Allocate mapping ram and adjust the length
         */
         } else {
-            retval = btk_bit_alloc(unit_p, unit_p->sdma_aval_p, mreg_aval, 1, start_p);
-            btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+            retval = btk_bit_alloc(unit_p->sdma_aval_p, mreg_aval, 1, start_p);
+            btk_mutex_exit(&unit_p->mreg_mutex);
             if (retval != BT_SUCCESS) {
-                btk_mutex_exit(unit_p, &unit_p->dma_mutex);
+                btk_mutex_exit(&unit_p->dma_mutex);
                 INFO_STR("Failed to alloc section of DMA map regs");
                 *dma_flag_p = FALSE;
                 *data_width_p = orig_width;
@@ -1288,8 +1392,8 @@ void btk_dma_pio(
     ** Unknown error from btk_bit_alloc() 
     */
     } else if (retval != BT_SUCCESS) {
-        btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
-        btk_mutex_exit(unit_p, &unit_p->dma_mutex);
+        btk_mutex_exit(&unit_p->mreg_mutex);
+        btk_mutex_exit(&unit_p->dma_mutex);
         INFO_STR("Failed to initial alloc section of DMA map regs");
         *data_width_p = orig_width;
         *xfer_length_p = orig_length;
@@ -1301,7 +1405,7 @@ void btk_dma_pio(
     ** O.K. we got the mapping RAM
     */
     } else {
-        btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+        btk_mutex_exit(&unit_p->mreg_mutex);
     }
     line_number = __LINE__;
 
@@ -1352,7 +1456,7 @@ bt_error_t btk_cas(
     BTK_LOCK_RETURN_T     isr_pl;
     
     FUNCTION("btk_cas");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
 
@@ -1402,7 +1506,8 @@ bt_error_t btk_cas(
         goto cas_end;
     }
 
-    LOCK_DEVICE(unit_p);
+    btk_mutex_enter(&(unit_p)->dma_mutex); \
+    btk_rwlock_wr_enter(&(unit_p)->hw_rwlock);
 
     BTK_LOCK_ISR(unit_p, isr_pl);
     unit_p->pio_count++;
@@ -1419,7 +1524,8 @@ bt_error_t btk_cas(
          (bt_data32_t) cas_p->addr, 
          &page_info);
     if (retval != BT_SUCCESS) {
-        UNLOCK_DEVICE(unit_p);
+        btk_rwlock_wr_exit(&(unit_p)->hw_rwlock); \
+        btk_mutex_exit(&(unit_p)->dma_mutex);
         goto cas_end;
     }
     byte_p = (volatile bt_data8_t *) page_info.bus_base_p + page_info.page_offset;
@@ -1431,7 +1537,8 @@ bt_error_t btk_cas(
     csr_p = (caddr_t)unit_p->csr_p;
     if (NULL == csr_p) {
         INFO_STR("Node register address bad");
-        UNLOCK_DEVICE(unit_p);
+        btk_rwlock_wr_exit(&(unit_p)->hw_rwlock); \
+        btk_mutex_exit(&(unit_p)->dma_mutex);
         goto cas_end;
     }
 
@@ -1521,9 +1628,9 @@ bt_error_t btk_cas(
     ** Release mapping reg aquired in btk_setpage
     */
     if (page_info.mreg_need != 0) {
-        btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-        btk_bit_free(unit_p, unit_p->mmap_aval_p, page_info.mreg_start, page_info.mreg_need);
-        btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+        btk_mutex_enter(&unit_p->mreg_mutex);
+        btk_bit_free(unit_p->mmap_aval_p, page_info.mreg_start, page_info.mreg_need);
+        btk_mutex_exit(&unit_p->mreg_mutex);
     }
 
     /*
@@ -1545,7 +1652,8 @@ bt_error_t btk_cas(
     unit_p->pio_count--;
     BTK_UNLOCK_ISR(unit_p, isr_pl);
  
-    UNLOCK_DEVICE(unit_p);
+    btk_rwlock_wr_exit(&(unit_p)->hw_rwlock); \
+    btk_mutex_exit(&(unit_p)->dma_mutex);
 
 
 cas_end:
@@ -1585,7 +1693,7 @@ bt_error_t btk_tas(
     BTK_LOCK_RETURN_T       isr_pl;
     
     FUNCTION("btk_tas");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
 
@@ -1608,7 +1716,8 @@ bt_error_t btk_tas(
         goto tas_end;
     }
     
-    LOCK_DEVICE(unit_p);
+    btk_mutex_enter(&(unit_p)->dma_mutex); \
+    btk_rwlock_wr_enter(&(unit_p)->hw_rwlock);
 
     BTK_LOCK_ISR(unit_p, isr_pl);
     unit_p->pio_count++;
@@ -1621,7 +1730,8 @@ bt_error_t btk_tas(
     */
     retval = btk_setpage(unit_p, (bt_dev_t) axs_type, (bt_data32_t) tas_p->addr, &page_info);
     if (retval != BT_SUCCESS) {
-        UNLOCK_DEVICE(unit_p);
+        btk_rwlock_wr_exit(&(unit_p)->hw_rwlock); \
+        btk_mutex_exit(&(unit_p)->dma_mutex);
         goto tas_end;
     }
     byte_p = (volatile bt_data8_t *) page_info.bus_base_p + page_info.page_offset;
@@ -1633,7 +1743,8 @@ bt_error_t btk_tas(
     csr_p = (caddr_t)unit_p->csr_p;
     if (NULL == csr_p) {
         INFO_STR("Node register address bad");
-        UNLOCK_DEVICE(unit_p);
+        btk_rwlock_wr_exit(&(unit_p)->hw_rwlock); \
+        btk_mutex_exit(&(unit_p)->dma_mutex);
         goto tas_end;
     }
 
@@ -1666,9 +1777,9 @@ bt_error_t btk_tas(
     ** Release mapping reg aquired in btk_setpage
     */
     if (page_info.mreg_need != 0) {
-        btk_mutex_enter(unit_p, &unit_p->mreg_mutex);
-        btk_bit_free(unit_p, unit_p->mmap_aval_p, page_info.mreg_start, page_info.mreg_need);
-        btk_mutex_exit(unit_p, &unit_p->mreg_mutex);
+        btk_mutex_enter(&unit_p->mreg_mutex);
+        btk_bit_free(unit_p->mmap_aval_p, page_info.mreg_start, page_info.mreg_need);
+        btk_mutex_exit(&unit_p->mreg_mutex);
     }
 
     /*
@@ -1693,7 +1804,8 @@ bt_error_t btk_tas(
     /*
     ** Release the unit lock
     */
-    UNLOCK_DEVICE(unit_p);
+    btk_rwlock_wr_exit(&(unit_p)->hw_rwlock); \
+    btk_mutex_exit(&(unit_p)->dma_mutex);
 
 tas_end:
     FEXIT(retval);
@@ -1727,7 +1839,7 @@ bt_error_t btk_ioreg(
     bt_error_t              retval = BT_SUCCESS;
     
     FUNCTION("btk_ioreg");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
     
@@ -1744,7 +1856,7 @@ bt_error_t btk_ioreg(
         retval = BT_EINVAL;
         goto ioreg_exit;
     } else if (ioreg_p->offset >= BT_REM_START) {
-        btk_rwlock_rd_enter(unit_p, &unit_p->hw_rwlock);
+        btk_rwlock_rd_enter(&unit_p->hw_rwlock);
     }
     
 
@@ -1763,7 +1875,7 @@ bt_error_t btk_ioreg(
       }
 
       if (ioreg_p->offset >= BT_REM_START) {
-          btk_rwlock_rd_exit(unit_p, &unit_p->hw_rwlock);
+          btk_rwlock_rd_exit(&unit_p->hw_rwlock);
       }
 
 ioreg_exit:
@@ -1801,7 +1913,7 @@ static void btk_dma_poll(
     bt_data32_t tmp_reg;
     int         initial_delay, delay_per_pkt, total_delay;
     FUNCTION("btk_dma_poll");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
     
     FENTRY;
 
@@ -1882,16 +1994,18 @@ static void btk_dma_poll(
     */
     total_delay = initial_delay + (xfer_length / 256) * delay_per_pkt;
     btk_delay(total_delay);
-    while (IS_SET((tmp_reg = btk_get_io(unit_p, BT_LDMA_CMD)), LDC_START) &&
+    while (IS_CLR((tmp_reg = btk_get_io(unit_p, BT_LDMA_CMD)), LDC_DMA_DONE) &&
            (total_delay < max_delay)) {
         btk_delay(delay_per_pkt);
         total_delay += delay_per_pkt;
     }
-    if (IS_SET(tmp_reg, LDC_START)) {
+    if (IS_CLR(tmp_reg, LDC_DMA_DONE)) {
         INFO_STR("Polled DMA timed out");
         btk_dma_stop(unit_p);
         SET_BIT(unit_p->bt_status, BT_DMA_ERROR);
     }
+
+    CLR_BIT(unit_p->bt_status, BT_DMA_ACTIVE);
 
     FEXIT(0);
     return;
@@ -1942,7 +2056,7 @@ static size_t btk_bcopy(
     int src_bus)
 {
     FUNCTION("btk_bcopy");
-    LOG_UNIT(unit_p);
+    LOG_UNIT(unit_p->unit_number);
 
     register volatile bt_data8_t    *sb_p, *db_p;
     register volatile bt_data16_t   *sw_p, *dw_p;
@@ -1995,6 +2109,7 @@ static size_t btk_bcopy(
                     ** NOTE: do not change to D64++ or the powerPC will
                     ** core dump.
                     */
+
                     *dll_p = PIO_READ_64(sll_p);
                     dll_p += 1;
                     sll_p += 1;
@@ -2277,7 +2392,7 @@ void bt_print_bit_names(
   char tmp_buf[BUF_LEN];
 
   FUNCTION("bt_print_bit_names");
-  LOG_UNIT(unit_p);
+  LOG_UNIT(unit_p->unit_number);
 
   FENTRY;
 

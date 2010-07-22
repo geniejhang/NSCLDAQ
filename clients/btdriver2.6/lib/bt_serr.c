@@ -11,7 +11,7 @@
 ******************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 1999 by SBS Technologies, Inc.
+**        Copyright (c) 1999-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -23,8 +23,9 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 
 #include <string.h>
 #include <stdio.h>
+
 #include "btapi.h"
-#include "btio.h"
+#include "btpiflib.h"
 
  
 
@@ -68,7 +69,7 @@ char * bt_strerror(
 {
     char        *curr_str = NULL;
     int         curr_str_len;
-    size_t      buf_remaining = buf_len;
+    size_t      buf_remaining = buf_len - 1;
 
     bt_status_t bt_stat;	/* Encoded error status value */
 

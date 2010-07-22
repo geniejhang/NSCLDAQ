@@ -17,7 +17,7 @@
 ******************************************************************************/
 /******************************************************************************
 **
-**     Copyright (c) 1997-2000 by SBS Technologies, Inc.
+**     Copyright (c) 1997-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -31,14 +31,7 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$ "__DATE__;
 /*
 **  Include files
 */
-
-#if     defined(__vxworks)
-
-#include        <string.h>
-
-#endif  /* __vxworks */
-
-#include        "btdd.h"
+#include "btdd.h"
 
 /*****************************************************************************
 **
@@ -98,7 +91,7 @@ typedef struct {
     ** of array.
     */
 
-#define BITMAP_SIZE(x)  ((x)*sizeof(WORD_T)/BPW + sizeof(bit_tracker_t))
+#define BT_BITMAP_SIZE(x)  ((x)*sizeof(WORD_T)/BPW + sizeof(bit_tracker_t))
 
 } bit_tracker_t;
 
@@ -118,6 +111,63 @@ static unsigned int find_first_zero(WORD_T word);
 #pragma alloc_text(PAGE, btk_bit_set)
 #endif /* ALLOC_PRAGMA */
 #endif /* BT13908 */
+
+
+
+/*****************************************************************************
+**
+**  Protoypes and defineitions for bt_bit.c
+**
+*****************************************************************************/
+
+bt_error_t btk_bit_init(
+        unsigned size, 
+        void **bitmap_p);
+
+bt_error_t btk_bit_reset(
+        void *bitmap_p);
+
+bt_error_t btk_bit_fini(
+        void *bitmap_p);
+
+bt_error_t btk_map_half(
+        void *bitmap_p);
+
+bt_error_t btk_map_restore(
+        void *bitmap_p);
+
+bt_error_t btk_bit_free(
+        void *bitmap_p, 
+        unsigned start, 
+        unsigned num_entries);
+
+bt_error_t btk_bit_alloc(
+        void *bitmap_p, 
+        unsigned needed,
+        unsigned align, 
+        unsigned *first_p);
+
+bt_error_t btk_bit_specify(
+        void *bitmap_p, 
+        unsigned start, 
+        unsigned needed);
+
+int btk_bit_set(
+        void * bitmap_p, 
+        unsigned bitnum);
+
+int btk_bit_clr(
+        void * bitmap_p, 
+        unsigned bitnum);
+
+int btk_bit_chk(
+        void * bitmap_p, 
+        unsigned bitnum);
+
+bt_error_t btk_bit_max(
+        void * bit_map_p, 
+        unsigned align, 
+        unsigned *size);
 
 
 /******************************************************************************
@@ -211,7 +261,6 @@ static unsigned int find_first_zero(
 **      Purpose:    Creates the bit map structure for use.
 **
 **      Args:
-**          unit_p      Pointer to the unit structure
 **          size        Number of elements that must be tracked
 **          bitmap_p    Pointer to pointer to hold bit map structure.
 **
@@ -223,7 +272,6 @@ static unsigned int find_first_zero(
 ******************************************************************************/
 
 bt_error_t btk_bit_init(
-    bt_unit_t *unit_p,
     unsigned int size,
     void **bitmap_p
     )
@@ -233,8 +281,7 @@ bt_error_t btk_bit_init(
     bt_error_t  retval = BT_SUCCESS;    /* Assume everything works */
 
     FUNCTION("btk_bit_init");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     if (NULL == bitmap_p) {
@@ -243,14 +290,14 @@ bt_error_t btk_bit_init(
         goto btk_bit_init_end;
     }
 
-    map_p = btk_mem_alloc(BITMAP_SIZE(size), 0);
+    map_p = btk_mem_alloc(BT_BITMAP_SIZE(size), 0);
     if (NULL == map_p) {
         INFO_STR("Could not allocate space for allocation structure.");
         retval = BT_ENOMEM;
         goto btk_bit_init_end;
     }
 
-    BTK_BZERO((void *) map_p, BITMAP_SIZE(size));
+    BTK_BZERO((void *) map_p, BT_BITMAP_SIZE(size));
     map_p->alloc_size = size;
     map_p->size = size;
     map_p->first_avail = 0;
@@ -271,7 +318,6 @@ btk_bit_init_end:
 **      Purpose:    Resets a bit map structure to intial state
 **
 **      Args:
-**          unit_p      Pointer to the unit structure
 **          bitmap_p    Pointer to hold bit map structure.
 **
 **      Returns:
@@ -280,7 +326,6 @@ btk_bit_init_end:
 ******************************************************************************/
 
 bt_error_t btk_bit_reset(
-    bt_unit_t *unit_p,
     void *bitmap_p
     )
 {
@@ -291,8 +336,7 @@ bt_error_t btk_bit_reset(
     bt_error_t  retval = BT_SUCCESS;    /* Assume everything works */
 
     FUNCTION("btk_bit_reset");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     if (NULL == map_p) {
@@ -303,7 +347,7 @@ bt_error_t btk_bit_reset(
 
     size = map_p->alloc_size;
 
-    BTK_BZERO((void *) map_p, BITMAP_SIZE(size));
+    BTK_BZERO((void *) map_p, BT_BITMAP_SIZE(size));
     map_p->size = size;
     map_p->alloc_size = size;
     map_p->first_avail = 0;
@@ -321,7 +365,6 @@ btk_bit_reset_end:
 **      Purpose:    Destroys the bit map structure.
 **
 **      Args:
-**          unit_p      Pointer to the unit structure
 **          map_p       Pointer to hold bit map structure.
 **
 **      Returns:
@@ -330,18 +373,15 @@ btk_bit_reset_end:
 ******************************************************************************/
 
 bt_error_t btk_bit_fini(
-    bt_unit_t *unit_p,
     void *bitmap_p
     )
 {
     bt_error_t  retval = BT_SUCCESS;    /* Assume everything works */
     bit_tracker_t *map_p = bitmap_p;
-
-    FUNCTION("btk_bit_fini");
-    LOG_UNIT(unit_p);
-
     size_t      free_size;
 
+    FUNCTION("btk_bit_fini");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     if (NULL == bitmap_p) {
@@ -350,7 +390,7 @@ bt_error_t btk_bit_fini(
         goto btk_bit_fini_end;
     }
 
-    free_size = BITMAP_SIZE(map_p->alloc_size);
+    free_size = BT_BITMAP_SIZE(map_p->alloc_size);
 
     btk_mem_free(bitmap_p, free_size);
 
@@ -366,7 +406,6 @@ btk_bit_fini_end:
 **      Purpose:    Reduces the bit map in half.
 **
 **      Args:
-**          unit_p      Pointer to the unit structure
 **          bitmap_p    Pointer to the bit map structure.
 **
 **      Returns:
@@ -375,7 +414,6 @@ btk_bit_fini_end:
 ******************************************************************************/
 
 bt_error_t btk_map_half(
-    bt_unit_t *unit_p,
     void *bitmap_p
     )
 {
@@ -383,8 +421,7 @@ bt_error_t btk_map_half(
     bit_tracker_t *map_p = bitmap_p;
 
     FUNCTION("btk_map_half");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     map_p->size = map_p->alloc_size / 2;
@@ -400,7 +437,6 @@ bt_error_t btk_map_half(
 **      Purpose:    Restores the bit map to its original size.
 **
 **      Args:
-**          unit_p      Pointer to the unit structure
 **          bitmap_p    Pointer to the bit map structure.
 **
 **      Returns:
@@ -409,7 +445,6 @@ bt_error_t btk_map_half(
 ******************************************************************************/
 
 bt_error_t btk_map_restore(
-    bt_unit_t *unit_p,
     void *bitmap_p
     )
 {
@@ -417,8 +452,7 @@ bt_error_t btk_map_restore(
     bit_tracker_t *map_p = bitmap_p;
 
     FUNCTION("btk_map_restore");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     map_p->size = map_p->alloc_size;
@@ -433,7 +467,7 @@ bt_error_t btk_map_restore(
 **
 **  Purpose:    Frees the specified bit maps.
 **
-**  Args:       unit_p      Pointer to the unit structure
+**  Args:       
 **              bitmap_p    Pointer to bit map tracking structure
 **              start       First in block to release
 **              num_entries Number to release
@@ -446,7 +480,6 @@ bt_error_t btk_map_restore(
 ******************************************************************************/
 
 bt_error_t btk_bit_free(
-    bt_unit_t *unit_p, 
     void *bitmap_p,
     unsigned int start, 
     unsigned int num_entries)
@@ -461,8 +494,7 @@ bt_error_t btk_bit_free(
     WORD_T      mask;
 
     FUNCTION("btk_bit_free");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;
     FENTRY;
   
     TRC_MSG(BT_TRC_ALLOC, (LOG_FMT "start = %d, num_entries = %d\n",
@@ -517,7 +549,6 @@ bt_error_t btk_bit_free(
 **              large enough to accomidate the request.
 **
 **      Args:
-**          unit_p      Pointer to unit structure
 **          bitmap_p    Pointer to bit map tracking structure
 **          needed      Number of bits needed
 **          align       Bit boundary request must be aligned to
@@ -542,7 +573,6 @@ bt_error_t btk_bit_free(
 ******************************************************************************/
 
 bt_error_t btk_bit_alloc(
-    bt_unit_t *unit_p,
     void *bitmap_p,
     unsigned int needed,
     unsigned int align,
@@ -573,8 +603,7 @@ bt_error_t btk_bit_alloc(
     bit_tracker_t *map_p = (bit_tracker_t *) bitmap_p;
 
     FUNCTION("btk_bit_alloc");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     /*
@@ -866,7 +895,6 @@ bt_error_t btk_bit_alloc(
 **      Purpose:    Allocate the given region of the bit map or return error.
 **
 **      Args:
-**          unit_p      Pointer to unit structure
 **          bitmap_p    Pointer to bit map tracking structure
 **          start       Starting bit of region to allocate
 **          needed      Number of bits needed
@@ -884,7 +912,6 @@ bt_error_t btk_bit_alloc(
 ******************************************************************************/
 
 bt_error_t btk_bit_specify(
-    bt_unit_t *unit_p,
     void *bitmap_p,
     unsigned int start,
     unsigned int needed
@@ -899,8 +926,7 @@ bt_error_t btk_bit_specify(
     bit_tracker_t *map_p = (bit_tracker_t *) bitmap_p;
 
     FUNCTION("btk_bit_specify");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     BTK_ASSERT(WBIT_MASK == map_p->reserved);
@@ -944,8 +970,6 @@ bt_error_t btk_bit_specify(
  **    Purpose:         Force a specific bit to be set (1).
  **
  **    Args:
- **        unit_p
- **                     Unit pointer
  **        bitmap_p
  **                     Bitmap pointer
  **        bitnum
@@ -959,17 +983,16 @@ bt_error_t btk_bit_specify(
  **
  ***************************************************************************/
 int btk_bit_set(
-    bt_unit_t * unit_p,
     void * bitmap_p,
     unsigned int bitnum)
 {
-    FUNCTION("btk_bit_set");
-    LOG_UNIT(unit_p);
     bit_tracker_t *map_p = (bit_tracker_t *) bitmap_p;
     int           retval;
     WORD_T        mask;
     unsigned int  idx;
 
+    FUNCTION("btk_bit_set");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     if ((map_p == NULL) || (bitnum >= map_p->size)) {
@@ -994,8 +1017,6 @@ int btk_bit_set(
  **    Purpose:         Force a specific bit to be clear (0).
  **
  **    Args:
- **        unit_p
- **                     Unit pointer
  **        bitmap_p
  **                     Bitmap pointer
  **        bitnum
@@ -1009,17 +1030,16 @@ int btk_bit_set(
  **
  ***************************************************************************/
 int btk_bit_clr(
-    bt_unit_t * unit_p,
     void * bitmap_p,
     unsigned int bitnum)
 {
-    FUNCTION("btk_bit_clr");
-    LOG_UNIT(unit_p);
     bit_tracker_t *map_p = (bit_tracker_t *) bitmap_p;
     int           retval;
     WORD_T        mask;
     unsigned int  idx;
 
+    FUNCTION("btk_bit_clr");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     if ((map_p == NULL) || (bitnum >= map_p->size)) {
@@ -1046,8 +1066,6 @@ int btk_bit_clr(
  **    Purpose:         Return the value of a given bit.
  **
  **    Args:
- **        unit_p
- **                     Unit pointer
  **        bitmap_p
  **                     Bitmap pointer
  **        bitnum
@@ -1060,17 +1078,16 @@ int btk_bit_clr(
  **
  ***************************************************************************/
 int btk_bit_chk(
-    bt_unit_t * unit_p,
     void * bitmap_p,
     unsigned int bitnum)
 {
-    FUNCTION("btk_bit_chk");
-    LOG_UNIT(unit_p);
     bit_tracker_t *map_p = (bit_tracker_t *) bitmap_p;
     int           retval;
     WORD_T        mask;
     unsigned int  idx;
 
+    FUNCTION("btk_bit_chk");
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     if ((map_p == NULL) || (bitnum >= map_p->size)) {
@@ -1094,7 +1111,6 @@ int btk_bit_chk(
 **      Purpose:    Locate a large section of consecutive allocation bits.
 **
 **      Args:
-**          unit_p      Pointer to unit structure
 **          bitmap_p    Pointer to bit map tracking structure
 **          align       Bit boundary request must be aligned to
 **          size_p      Pointer to location to store size of large section.
@@ -1120,7 +1136,6 @@ int btk_bit_chk(
 ******************************************************************************/
 
 bt_error_t btk_bit_max(
-    bt_unit_t *unit_p,
     void *bitmap_p,
     unsigned int align,
     unsigned int *size_p
@@ -1150,8 +1165,7 @@ bt_error_t btk_bit_max(
     bit_tracker_t *map_p = (bit_tracker_t *) bitmap_p;
 
     FUNCTION("btk_bit_max");
-    LOG_UNIT(unit_p);
-
+    LOG_UNKNOWN_UNIT;
     FENTRY;
 
     /*

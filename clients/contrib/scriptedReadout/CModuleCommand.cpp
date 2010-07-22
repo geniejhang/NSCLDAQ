@@ -537,7 +537,7 @@ CModuleCommand::List(CTCLInterpreter& rInterp,
    // Figure out the match
    // pattern.  If none is supplied, it's *.
    
-   char* pPattern = "*";
+   const char* pPattern = "*";
    if(nArgs > 1) {
       rResult =  "Too many parameters: \n";
       rResult += Usage();
@@ -804,7 +804,7 @@ CModuleCommand::ListGatherer::operator()(pair<string,CReadableObject*>p)
   CReadableObject* pModule = p.second;
   assert(pModule);
   string type(pModule->getType());
-  if(Tcl_StringMatch(name.c_str(), m_pMatch)) {
+  if(Tcl_StringMatch(name.c_str(), const_cast<char*>(m_pMatch))) {
     string element(name);
     element += " ";
     element += type;
