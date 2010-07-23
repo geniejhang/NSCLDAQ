@@ -57,6 +57,32 @@ proc createControlGui {} {
 
 createControlGui
 
+bind . <Destroy> {shutdown %W}
+
+#
+#  If . is being destroyed, then 
+#  1. end any active run.
+#  2. exit the program.
+#
+
+proc shutdown {widget} {
+    catch {
+    global runState
+
+    if {$widget ne "."} {
+	return
+    }
+    # End the run so we know the CC-USB is out of DAQ mode:
+    #
+    if {$runState ne "Halted"} {
+	catch {end};		# Could be ended but state var not set.
+    }
+    exit
+    } msg
+    puts $msg
+
+}
+
 
 #--------------------------------------------------------------------------------
 #

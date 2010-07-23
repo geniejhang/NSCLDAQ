@@ -131,6 +131,29 @@ proc scalerUpdate event {
 runsetup .setup -startcommand onStart -stopcommand onStop
 pack .setup
 
+bind . <Destroy> {shutdown %W}
+
+#
+#  If . is being destroyed, then 
+#  1. end any active run.
+#  2. exit the program.
+#
+
+proc shutdown {widget} {
+    global RunState
+
+    if {$widget ne "."} {
+	return
+    }
+    # End the run so we know the CC-USB is out of DAQ mode:
+    #
+    if {$RunState ne "Halted"} {
+	catch {end};		# Could be ended but state var not set.
+    }
+    exit
+
+}
+
 
 # Start run pre-actions.. kill the .led control panel.
 # Set up the scaler dispaly state variables.
