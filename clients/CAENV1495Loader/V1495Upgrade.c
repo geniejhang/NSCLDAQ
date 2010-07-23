@@ -444,7 +444,8 @@ int main(int argc,char *argv[])
   }
 
   strcpy(filename,argv[1]);
-  sscanf(argv[2], "%x", &vboard_base_address);
+  sscanf(argv[2], "%lx", 
+	 &vboard_base_address);
 
   image     = 0;
   fw2update = 0;

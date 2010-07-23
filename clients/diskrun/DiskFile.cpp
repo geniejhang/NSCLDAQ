@@ -362,7 +362,7 @@ void DAQBuff::Usage(ostream& rstream)
 void DAQBuff::UpdateTitle()
 {
   char title[100];
-  sprintf(title, "Replaying run %d: %d", m_nRunNumber, m_nBuffers);
+  sprintf(title, "Replaying run %d: %ld", m_nRunNumber, m_nBuffers);
   SetProcessTitle(title);
 }
 

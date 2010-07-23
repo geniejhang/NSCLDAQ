@@ -620,10 +620,10 @@ CScalerClient::UpdateScalers(vector<ULong_t>& rScalers, Bool_t isSnapshot)
 
   for(int i = 0; i < m_vTotals.size(); i++) {
     char command[100];
-    sprintf(command,"set Scaler_Increments(%d) %d  ", i, m_vIncrements[i]);
+    sprintf(command,"set Scaler_Increments(%d) %ld  ", i, m_vIncrements[i]);
     m_Connection->SendCommand(string(command));
 
-    sprintf(command,"set Scaler_Totals(%d) %d  ", i, m_vTotals[i]);
+    sprintf(command,"set Scaler_Totals(%d) %ld  ", i, m_vTotals[i]);
     m_Connection->SendCommand(string(command));
   }
 

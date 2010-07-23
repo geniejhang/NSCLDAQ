@@ -554,7 +554,8 @@ ShoFrequency(const char* pTail)
     return (int)rctl_NoOp;
   }
   else {
-    printf("Scalers read every  %u seconds.\n", snScalerInterval);
+    printf("Scalers read every  %lu seconds.\n", 
+	   snScalerInterval);
     fflush(stdout);
     return (int)rctl_NoOp;
   }

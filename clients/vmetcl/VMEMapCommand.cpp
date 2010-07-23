@@ -235,7 +235,7 @@ int CVMEMapCommand::Get(CTCLInterpreter& rInterp, CTCLResult& rResult,
   //
 
   char sValue[100];
-  sprintf(sValue, "%d", nValue);
+  sprintf(sValue, "%ld", nValue);
   rResult += sValue;
   return TCL_OK;
 }

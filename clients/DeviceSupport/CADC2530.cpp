@@ -396,7 +396,10 @@ unsigned short CADC2530::volt2uld(double volt) {
 const std::string& CADC2530::toString() {
   static string namstr;
   static char buffer[256];
-  sprintf(buffer,"ADC2530 in crate %d at base 0x%x with memory offset 0x%x",my_nCrate,my_nBase,my_nMemOffset);
+  sprintf(buffer,"ADC2530 in crate %d at base 0x%x with memory offset 0x%x",
+	  my_nCrate,
+	  static_cast<unsigned int>(my_nBase),
+	  static_cast<unsigned int>(my_nMemOffset));
   namstr = buffer;
   return namstr;
 }
@@ -685,7 +688,9 @@ void CADC2530::mapModule() {
    // Donot map the register memory more than once.
    if (my_pModule != NULL) {
      char buffer[256];
-     sprintf(buffer, "CADC2530::mapModule(): The Card in crate %d at base 0x%x already has a register memory map.\n",my_nCrate,my_nBase);
+     sprintf(buffer, "CADC2530::mapModule(): The Card in crate %d at base 0x%x already has a register memory map.\n",
+	     my_nCrate,
+	     static_cast<unsigned int>(my_nBase));
      throw string(buffer);
    }
 
@@ -719,7 +724,9 @@ void CADC2530::mapModule() {
 #endif
      my_pModule = NULL;
      char buffer[256];
-     sprintf(buffer, "CADC2530::mapModule(): Card in crate %d at base 0x%x is not a Hytec 2530 ADC or is missing type=%d id=0x%0x\n",my_nCrate,my_nBase,my_nCardType,my_nCardId);
+     sprintf(buffer, "CADC2530::mapModule(): Card in crate %d at base 0x%lx is not a Hytec 2530 ADC or is missing type=%d id=0x%0x\n",
+	     my_nCrate,my_nBase,my_nCardType,
+	     static_cast<unsigned>(my_nCardId));
      throw string(buffer);
    }
 
@@ -744,14 +751,18 @@ void CADC2530::mapMemory() {
    // We must have a register memory map first.
    if (my_pModule == NULL) {
      char buffer[256];
-     sprintf(buffer, "CADC2530::mapMemory(): Cannot map list/histogram memory without first mapping the ADC2530 registers for card in crate %d at base 0x%x.\n",my_nCrate,my_nBase);
+     sprintf(buffer, "CADC2530::mapMemory(): Cannot map list/histogram memory without first mapping the ADC2530 registers for card in crate %d at base 0x%x.\n",
+	     my_nCrate,
+	     static_cast<unsigned int>(my_nBase));
      throw string(buffer);
    } 
 
    // Donot map the list/histogram memory more than once.
    if (my_pMemory != NULL) {
      char buffer[256];
-     sprintf(buffer, "CADC2530::mapMemory(): The Card in crate %d at base 0x%x already has a list/histogram memory map.\n",my_nCrate,my_nBase);
+     sprintf(buffer, "CADC2530::mapMemory(): The Card in crate %d at base 0x%x already has a list/histogram memory map.\n",
+	     my_nCrate,
+	     static_cast<unsigned int>(my_nBase));
      throw string(buffer);
    }
 
@@ -770,7 +781,11 @@ void CADC2530::mapMemory() {
    // we should read back the setting we calculated.
    if (nmemoset != my_nMemOffset) {
      char buffer[256];
-     sprintf(buffer, "CADC2530::mapMemory(): Error setting list/histogram memory offset for ADC2530 card in crate %d at base 0x%x (written=0x%x, read=0x%x)\n",my_nCrate,my_nBase,nmemoset,my_nMemOffset);
+     sprintf(buffer, "CADC2530::mapMemory(): Error setting list/histogram memory offset for ADC2530 card in crate %d at base 0x%x (written=0x%x, read=0x%x)\n",
+	     my_nCrate,
+	     static_cast<unsigned int>(my_nBase),
+	     static_cast<unsigned int>(nmemoset),
+	     static_cast<unsigned int>(my_nMemOffset));
      throw string(buffer);
    } 
 
@@ -824,7 +839,9 @@ void CADC2530::clearMemory() {
   // We must have a memory map first.
   if (my_pMemory == NULL) {
     char buffer[256];
-    sprintf(buffer, "CADC2530::clearMemory(): Cannot clear list/histogram memory without first having a memory map for card in crate %d at base 0x%x.\n",my_nCrate,my_nBase);
+    sprintf(buffer, "CADC2530::clearMemory(): Cannot clear list/histogram memory without first having a memory map for card in crate %d at base 0x%x.\n",
+	    my_nCrate,
+	    static_cast<unsigned int>(my_nBase));
     throw string(buffer);
   } 
 
@@ -854,7 +871,8 @@ void CADC2530::clearHistogramMemory() {
   // We must have a memory map first.
   if (my_pMemory == NULL) {
     char buffer[256];
-    sprintf(buffer, "CADC2530::clearHistogramMemory(): Cannot clear histogram memory without first having a memory map for card in crate %d at base 0x%x.\n",my_nCrate,my_nBase);
+    sprintf(buffer, "CADC2530::clearHistogramMemory(): Cannot clear histogram memory without first having a memory map for card in crate %d at base 0x%x.\n",
+	    my_nCrate, static_cast<unsigned int>(my_nBase));
     throw string(buffer);
   } 
 
@@ -885,7 +903,8 @@ void CADC2530::resetCard() {
   // We must have a memory map first.
   if (my_pModule == NULL) {
     char buffer[256];
-    sprintf(buffer, "CADC2530::resetCard(): Cannot reset this card without first having a memory map for card in crate %d at base 0x%x.\n",my_nCrate,my_nBase);
+    sprintf(buffer, "CADC2530::resetCard(): Cannot reset this card without first having a memory map for card in crate %d at base 0x%x.\n",
+	    my_nCrate, static_cast<unsigned int>(my_nBase));
     throw string(buffer);
   } 
 

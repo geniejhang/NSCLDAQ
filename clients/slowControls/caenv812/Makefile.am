@@ -9,7 +9,7 @@ PACKAGES=CFD812.tcl CFDState.tcl caenv812Gui.tcl
 APPS=caenv812control.tcl loadcfd.tcl
 
 MANPAGES=loadcfd.1 caenv812control.1 CFDState.3 CFD812.3 caenv812gui.3 \
-	caenv812control.1 caen812configfile.5
+	 caen812configfile.5
 
 HELPFILES=close.html exit.html filemenu.html gui.html helpmenu.html \
 		new.html read.html write.html config.html overview.html

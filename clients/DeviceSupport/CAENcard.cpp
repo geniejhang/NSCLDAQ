@@ -1602,7 +1602,7 @@ void CAENcard::MapCard()
 #endif
      char buffer[128];
      sprintf(buffer, "Card in crate %d, slot %d is incompatible or missing %d\n",
-	     m_nCrate, m_nSlot, m_nCardType);
+	     m_nCrate, m_nSlot, static_cast<int>(m_nCardType));
      throw string(buffer);
        
        string("Card is incompatable type or not inserted");

@@ -238,7 +238,7 @@ CSIS3300::CSIS3300(unsigned long nBaseAddress,
     CVMEInterface::Close(m_nFd);
     char error[1024];
     sprintf(error, "CSIS3300: Module at %08x is not a 3300 nor a 3301\n",
-	    m_nBase);
+	    static_cast<unsigned int>(m_nBase));
     throw string(error);
   }
   
