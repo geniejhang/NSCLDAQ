@@ -243,7 +243,8 @@ SUBDIRS = ccusb 		\
 		rdothread	\
 		daqconfig	\
 		tclserver		\
-		 commands
+		 commands	\
+		gui
 
 Readout_SOURCES = CTheApplication.cpp Globals.cpp 
 include_HEADERS = CTheApplication.h Globals.h config.h

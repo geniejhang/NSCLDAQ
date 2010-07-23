@@ -501,4 +501,5 @@ AC_OUTPUT([Makefile
 	  rdothread/Makefile
 	  daqconfig/Makefile
 	  tclserver/Makefile
-	  commands/Makefile])
+	  commands/Makefile
+	  gui/Makefile])

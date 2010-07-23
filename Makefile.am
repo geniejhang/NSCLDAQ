@@ -5,7 +5,8 @@ SUBDIRS = 	ccusb 		\
 		rdothread	\
 		daqconfig	\
 		tclserver		\
-		 commands
+		 commands	\
+		gui
 
 
 bin_PROGRAMS = Readout
