@@ -104,6 +104,11 @@ snit::widget ledControl {
 	    }
 	}
     }
+    method setThresholdValue newValue {
+	variable threshold
+	set threshold $newValue
+	$self setThreshold
+    }
 
     method setThreshold {} {
 	variable threshold
