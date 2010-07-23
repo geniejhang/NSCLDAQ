@@ -115,7 +115,7 @@ snit::widget runsetup {
     method getEnables {} {
 	variable channels
 
-	return [array get $channels]
+	return [array get channels]
     }
     #  Handle the start/stop button:
 
