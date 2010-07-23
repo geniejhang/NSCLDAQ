@@ -1093,3 +1093,7 @@ Edit level 006
 Edit level 007
 - January 15, 2010  Exit ReadoutGui with destroy . as exit seems to hang
                     reaping children in some systems.
+- January 19, 2010  Turn off monitor bar.
+Edit level 008
+- March 22, 2010    Add a log script for the scaler display that will log all
+  	    	     channels. 

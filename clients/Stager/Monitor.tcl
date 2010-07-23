@@ -32,7 +32,7 @@ package require spdaqwidgets
 #  dismiss and destruction of the toplevel will invoke a -destroy
 #  callback if defined.
 #
-snit::widget  detailsMonitor {
+snit::widget  detailsMonitorWorking {
     hulltype toplevel
 
     variable afterId -1
@@ -106,7 +106,7 @@ bar graph is pegged, you probably have a problem with that client.}
 #  bring up the detailed status widget.  The widget
 #  auto updates every 2 seconds or so.
 #
-snit::widget spdaqMonitor {
+snit::widget spdaqMonitorWorking {
     variable afterId -1
     variable details false
 
@@ -152,6 +152,99 @@ snit::widget spdaqMonitor {
     }
     method onDetailsGone {} {
 	set details false
+    }
+
+}
+#---------------- stubs status display
+#  The status display is stubbed because:
+#  - There's several 100ms of dead time each update.
+#  - The connection thrashing seems to be something that can kill 
+#    spectrodaq if you keep it up long enough.
+#
+
+
+
+
+# This file contains code that manages a status display of the
+# spectrodaq page usage for the readout GUI.  We look like
+# pair of megawidgets, but only the spdaqMonitor widget should be
+# used as it has a button that will bring up the spdaqUsage widget.
+#
+
+package provide spdaqMonitor 1.0
+package require snit
+package require spdaqwidgets
+
+
+#--------------------------------------------------------------------
+#
+#  This widget provides a detailed status widget in a toplevel
+#  with some titling information, and a dimsiss box.
+#  dismiss and destruction of the toplevel will invoke a -destroy
+#  callback if defined.
+#
+snit::widget  detailsMonitor {
+    hulltype toplevel
+
+    variable afterId -1
+
+    option -host    localhost
+    option -destroy {}
+
+
+
+
+    method update {} {
+
+    }
+    method onDismiss {} {
+
+    }
+    method onDestroy widget {
+
+    }
+    onconfigure -host host {
+
+    }
+    constructor args {
+    }
+
+    destructor {
+    }
+}
+
+
+#--------------------------------------------------------------------
+#
+#  This widget provides a spectrodaq status strip. The strip
+#  consists of some text that describes the source host
+#  a freepage graph of that  host and a button that will
+#  bring up the detailed status widget.  The widget
+#  auto updates every 2 seconds or so.
+#
+snit::widget spdaqMonitor {
+    variable afterId -1
+    variable details false
+
+    option   -host    localhost
+
+
+    constructor args {
+    }
+
+    destructor {
+
+    }
+
+    onconfigure -host host {
+
+    }
+    method update {} {
+    }
+    method showDetails {} {
+
+    }
+    method onDetailsGone {} {
     }
 
 }

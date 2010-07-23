@@ -35,7 +35,7 @@ static const char driver_version[] = "$Name: 1003v3p1pC 1003v3p1pB $";
 #include <linux/pci.h>
 #include <asm/irq.h>
 #include <asm/io.h>
-#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26))
 #include <linux/devfs_fs_kernel.h>
 #endif
 #include <linux/module.h>
@@ -300,7 +300,7 @@ int __init btp_init(void)
         WARN_STR("Kernel page size does not match hardware page size\n");
         return -ENODEV;
     }
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)
     SET_MODUE_OWNER(&btp_fops);
 #else
     btp_fops.owner = THIS_MODULE;
