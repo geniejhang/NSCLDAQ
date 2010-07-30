@@ -141,6 +141,8 @@ CPH7132::Initialize(CCCUSB& controller)
   controller.simpleWrite16(slot, 0, 17, 0x30, qx);
   controller.simpleControl(slot, 4, 11, qx);
   controller.simpleControl(slot, 12, 11, qx);
+  controller.simpleWrite16(slot, 1, 17, 0, qx); // Prep for the first read.
+
   controller.uninhibit();
 }
 
@@ -164,18 +166,16 @@ CPH7132::addReadoutList(CCCUSBReadoutList& list)
 
   // Bank 0 read
 
-  list.addWrite16(slot, 1, 17, 0);
-  for (int i =0; i < 16; i++) {
-    list.addRead24(slot, i, 0);
-  }
-  // Bank 1 read
-  list.addWrite16(slot, 1, 17, 1);
-  for (int i =0; i < 16; i++) {
-    list.addRead24(slot, i, 0);
+
+
+  for(int i =0; i < 32; i++) {
+    list.addRead24(slot, 15, 4); //  block read.
   }
 
   list.addControl(slot, 4, 11);
   list.addControl(29, 9, 26);	// I off
+  list.addWrite16(slot, 1, 17, 0); //  Prep for the next read.
+
 }
 /*!
   Clone self:
