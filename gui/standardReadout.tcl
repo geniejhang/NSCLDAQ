@@ -133,6 +133,17 @@ pack .setup
 
 bind . <Destroy> {shutdown %W}
 
+# This is needed to prevent an infinite loop/recursion when exiting.
+# normal exit will eventually destroy widgets which will call exit etc.
+# Replace our exit to remove the <Destroy> event binding and then do the
+# real exit.
+
+rename exit _exit
+proc exit {} {
+    bind . <Destroy> {}
+    _exit
+}
+
 #
 #  If . is being destroyed, then 
 #  1. end any active run.

@@ -31,14 +31,14 @@ createLedControl
 set currentThreshold 0;                # holds current threshold value.
 set nextThreshold    0;                # used to throw away the first data point in each setting.
 set runState         0;                # 0 stopped, 1 active.
-set dwellTime        1;                # Seconds for each step.
+set dwellTime        3;                # Seconds for each step.
 
 set afterId         -1
 
 
 proc createControlGui {} {
     label     .dwellLabel     -text {Dwell Time}
-    spinbox   .dwell          -from 1 -to 10 -increment 1 -width 3 \
+    spinbox   .dwell          -from 3 -to 10 -increment 1 -width 3 \
                               -textvariable  dwellTime
     label     .secondsLabel   -text {seconds}
 
@@ -58,6 +58,18 @@ proc createControlGui {} {
 createControlGui
 
 bind . <Destroy> {shutdown %W}
+
+# This is needed to prevent an infinite loop/recursion when exiting.
+# normal exit will eventually destroy widgets which will call exit etc.
+# Replace our exit to remove the <Destroy> event binding and then do the
+# real exit.
+
+rename exit _exit
+proc exit {} {
+    bind  . <Destroy> {}
+    _exit
+
+}
 
 #
 #  If . is being destroyed, then 
@@ -160,7 +172,7 @@ proc startStop {} {
 	set currentThreshold 1023;                 # Ensure we don't step anymore.. next step will stop.
     } else {
 
-	set gdgbPeriod [expr int(1.0e8/100.0)];  # 100hz rate.
+	set gdgbPeriod [expr int(1.0e8/50.0)];  # 50hz rate.
 	set fd [open [file join ~ config runconfig.tcl] w]
 	puts $fd "ccusb config ccusb -gdgbdelay $gdgbPeriod"
 	close $fd
@@ -219,7 +231,6 @@ proc onEvent events {
 	    puts "onEvent failed: $msg"
 	}
     }
-
 }
 #
 #  We don't process begin run buffers.
