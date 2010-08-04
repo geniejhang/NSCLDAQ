@@ -302,11 +302,13 @@ proc startStop {} {
 	set fd [open [file join ~ config runconfig.tcl] w]
 	puts $fd "ccusb config ccusb -gdgbdelay $delay"
 	close $fd
+	destroyLedControl
 	begin
     } else {
 	# Stop the run.
 	set finalEnd 1
 	if {!$entering} {	# end data taking if active.
+	    createLedControl
 	    end
 	} else {
 	    onEnd $RunNumber "title is ignored." [clock format [clock clicks]]
