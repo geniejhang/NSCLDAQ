@@ -165,6 +165,7 @@ proc startStop {} {
     global dwellTime
     global currentThreshold
     global nextThreshold
+    global Filename
 
     if {$runState} {
 	.startstop configure -text {Start}
@@ -179,10 +180,12 @@ proc startStop {} {
 
 	clearData
 	.startstop configure -text {Stop}
+
 	set runState 1
 	set currentThreshold 0
 	set nextThreshold    0
 	startStep
+
 
     }
 }
@@ -307,16 +310,25 @@ proc createSpectra {} {
 proc processData {} {
     global sumsPerStep
     global samplesPerStep
-
+    global Filename
     puts "Creating spectra"
 
     if {[catch createSpectra msg]} {
 	puts "Create spectrum failed: $msg"
     }
 
-    puts {Writing output file}
+    set Filename [tk_getSaveFile -defaultextension .csv \
+		      -filetypes {
+			  {{Comma separated fields} .csv }
+			  {{All Files}  * }
+		      } -initialdir ~]
+    
+    
+    puts "Writing output file: $Filename"
 
-    set fd [open [file join ~ config spectrumData.csv] w]
+
+
+    set fd [open $Filename  w]
     for {set i 0} {$i < 1023} {incr i} {
 	puts $fd [csv::join $sumsPerStep($i)]
     }

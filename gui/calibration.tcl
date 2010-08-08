@@ -240,6 +240,7 @@ proc updatePositions {} {
 proc newPosition  {} {
     global entering
     global RunState
+    global finalEnd
 
     if {$RunState ne "Halted"} {
 	if {$entering} {
@@ -261,6 +262,7 @@ proc newPosition  {} {
 	    #  Set the button state:
 
 	    set entering 1
+	    set finalEnd 0
 	    .newpos configure -text {Continue}
 
 	    #  Pause the run:
@@ -286,8 +288,10 @@ proc startStop {} {
     global finalEnd
     global updatesToGo
     global frequency
-    
+    global ElapsedRunTime
+
     if {$RunState eq "Halted"} {
+	set ElapsedRunTime 0
 	set RunState "Active"
 	set entering 0
 	.start  config -text {End}
@@ -308,7 +312,6 @@ proc startStop {} {
 	# Stop the run.
 	set finalEnd 1
 	if {!$entering} {	# end data taking if active.
-	    createLedControl
 	    end
 	} else {
 	    onEnd $RunNumber "title is ignored." [clock format [clock clicks]]
@@ -382,7 +385,11 @@ proc onEnd {runNumber title time} {
 	set   tempFile -1
 
 	puts "Run $RunNumber ended.  Creating final output file"
-	set finalFile [file join ~ config run$RunNumber.csv]
+	set finalFile  [tk_getSaveFile -defaultextension .csv \
+		      -filetypes {
+			  {{Comma separated fields} .csv }
+			  {{All Files}  * }
+		      } -initialdir ~]
 	set fdo [open $finalFile w]
 	set fdi [open $tempFilename r]
 	puts $fdo $records
@@ -398,6 +405,7 @@ proc onEnd {runNumber title time} {
 	set run [incr RunNumber]; # Next run is +1 of RunNumber damnit.
 	set RunState Halted
 	Update
+	createLedControl
 
     } else {
 
@@ -477,3 +485,10 @@ proc scalerUpdate event {
 
 
 
+#
+#  Seems like this is needed to keep events flowing:
+
+proc tick {} {
+    after 1000 tick
+}
+tick

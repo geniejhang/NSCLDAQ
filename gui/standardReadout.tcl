@@ -245,7 +245,11 @@ proc onEnd {runNumber title time} {
     
     close $tempfd
     puts "temp file closed"
-    set finalFile [file join ~ config run$runNumber.csv]
+    set finalFile  [tk_getSaveFile -defaultextension .csv \
+		      -filetypes {
+			  {{Comma separated fields} .csv }
+			  {{All Files}  * }
+		      } -initialdir ~]
     set fdo [open $finalFile  w]
     puts "output file: $finalFile  opened"
     set fdi [open [file join /tmp run$runNumber.csv] r]
