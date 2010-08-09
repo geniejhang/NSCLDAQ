@@ -11,14 +11,16 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #endif
 extern "C" {
 #include <btapi.h>
-#include <btngpci.h>
+#include <bt_trace.h>
 }
 #include <string>
 #include <string.h>
+#include <limits.h>
+#include <assert.h>
+#include <unistd.h>
+#include <stdlib.h>
 
-#ifdef HAVE_STD_NAMESPACE
 using namespace std;
-#endif
 
 const char* CVMEInterface::m_szDriverName="SBSBIT3";
 
@@ -28,30 +30,108 @@ const char* CVMEInterface::m_szDriverName="SBSBIT3";
 
 // Translating address spaces to logical device specifiers:
 
-struct DeviceEntry {
+typedef struct _DeviceEntry {
   CVMEInterface::AddressMode   s_eModeId;
   bt_dev_t                     s_eLogicalDevice;
-};
+  int                          s_pioAmod; // If not UINT_MAX this is the the mmap amod.
+  int                          s_dmaAmod; // If not UINT_MAX this is the dma amod.
+} DeviceEntry, *pDeviceEntry;
 
 static const DeviceEntry kaDeviceTable[] = {
-  {CVMEInterface::A16,  BT_DEV_IO    },
-  {CVMEInterface::A24,  BT_DEV_A24   },
-  {CVMEInterface::A32,  BT_DEV_A32   },
-  {CVMEInterface::GEO,  BT_DEV_GEO   },
-  {CVMEInterface::MCST, BT_DEV_MCCTL },
-  {CVMEInterface::CBLT, BT_DEV_CBLT  }
+  {CVMEInterface::A16,  BT_DEV_IO,  UINT_MAX,       UINT_MAX    },
+  {CVMEInterface::A24,  BT_DEV_A24, UINT_MAX,       UINT_MAX   },
+  {CVMEInterface::A32,  BT_DEV_A32, UINT_MAX,       UINT_MAX   },
+  {CVMEInterface::GEO,  BT_DEV_A24, 0x2f,           UINT_MAX   }, // In general probably does not support DMA.
+  {CVMEInterface::MCST, BT_DEV_A32, BT_AMOD_A32_ND, UINT_MAX},
+  {CVMEInterface::CBLT, BT_DEV_A32, UINT_MAX,       BT_AMOD_A32_NB}
 };
+
+/*
+  This opaque struct is what is handed back to the user as a device handle.
+*/
+
+typedef struct _DevHandle {
+  bt_desc_t           s_handle;		        // SBS device handle.
+  const DeviceEntry*  s_description;		// Corresponding entry in kaDeviceTable.
+  size_t              s_fullBufferSize;         // Allocation size of transfer buffer.
+  uint8_t*            s_rawBuffer;              // Pointer to full buffer.
+  uint8_t*            s_alignedBuffer;          // page aligned buffer.
+
+  _DevHandle() :
+    s_fullBufferSize(0),
+    s_rawBuffer(0),
+    s_alignedBuffer(0) {}
+  ~_DevHandle() {
+    delete []s_rawBuffer;
+  }
+
+  int  pioAmod() {
+    return s_description->s_pioAmod;
+  }
+  int dmaAmod() {
+    return s_description->s_dmaAmod;
+  }
+  bt_dev_t device() {
+    return s_description->s_eLogicalDevice;
+  }
+  uint8_t* getBuffer(size_t nBytes);
+
+} DevHandle, *pDevHandle;
 
 static const unsigned int knDeviceTableSize = sizeof(kaDeviceTable)/
                                               sizeof(DeviceEntry);
 
 static const unsigned int BTERRORLENGTH(100); // Length of an error string.
 
+static const int      AMOD_LOCK(1);           // Semaphore number for lock when diddling the amod.
+
 // Local private 'static' functions.
+
+
+/*!
+  Return a pointer to a page aligned buffer for a handle that can 
+  hold at least the requested number of bytes.  If necessary
+  the buffer is allocated/reallocated to correct size.
+  @param nBytes - Required bytes.
+*/
+uint8_t*
+_DevHandle::getBuffer(size_t nBytes)
+{
+  int pageSize = getpagesize();
+  int pageMask = pageSize - 1;	// Assumes pageSize is a power of 2.
+
+  // Total size we need:
+
+  size_t requiredBytes  = nBytes +  pageSize;		// To  ensure we can align.
+
+  if (requiredBytes > s_fullBufferSize) {
+    s_rawBuffer        = reinterpret_cast<uint8_t*>(realloc(s_rawBuffer, requiredBytes));
+    s_fullBufferSize   = requiredBytes;
+    // Realloc is not gauranteed to give the same pointer so
+    // - recompute the page aligned buffer and size.
+    // - visit each page and make it differ so that we avoid
+    //   linux's memory compression which migh leave us with
+    //   all our pointers pointing to the same page-frame.
+    //
+    s_alignedBuffer = reinterpret_cast<uint8_t*>(reinterpret_cast<uint32_t>(s_rawBuffer + pageMask) 
+						 & ~pageMask); // Start of next page unless we're already aligned.
+    uint8_t* p     = s_rawBuffer;
+    uint8_t* e     = s_rawBuffer + s_fullBufferSize;
+    uint8_t  i     = 0;
+    while(p < e) {
+      *p   = i;
+      p   += pageSize;
+    }
+  }
+  return s_alignedBuffer;
+  
+}
+
 
 /*!
    Translate an address space selector into a logical device
-   selector.
+   selector. What is returned is a dynamically allocated stuct that
+   describes the device.
 
 Parameters:
 
@@ -59,23 +139,30 @@ Parameters:
                translate.
 
 Returns:
-\return bt_dev_t Logical device specifier for bit 3.
+\return pDevHandle dynamically allocated.  This must be destroyed on close time.
+       The s_description pointer is filled in, the s_handle is set to NULL which
+       is likely to be invalid in case it's accidently used.
 
 Exceptions:
 \throw string describing why the lookup failed.
 
 */
 
-static bt_dev_t
+static pDevHandle
 AddressModeToDevice(CVMEInterface::AddressMode eMode)
 {
   for(int i = 0; i < knDeviceTableSize; i++) {
     if(kaDeviceTable[i].s_eModeId == eMode) {
-      return kaDeviceTable[i].s_eLogicalDevice;
+      pDevHandle result = new DevHandle;
+      result->s_description = &(kaDeviceTable[i]);
+      result->s_handle      = static_cast<bt_desc_t>(0);
+
+      return result;
     }
   }
   throw string("[SBSBit3]AddressModeToDevice-no such address mode");
 }
+
 
 /*!
    If necessary throw an error from the return code generated by a
@@ -105,6 +192,63 @@ CheckError(bt_desc_t* pDevice,
   }
 }
 
+/*
+ *  Overload of the function above, but the first parameter is device handle pointer
+ */
+static inline  void 
+CheckError(pDevHandle p, bt_error_t nReturnCode, const char* pContextString)
+{
+  CheckError(&(p->s_handle), nReturnCode, pContextString);
+}
+
+
+/**
+ * Function to set the appropriate address modifier.
+ * @param pHandle   - Handle open on the device.
+ * @param which     - One of BT_INFO_PIO_AMOD or BT_INFO_DMA_AMOD
+ *
+ * @return bt_devdata_t - the old address modifier or UINT_MAX if it not modified.
+
+ */
+static bt_devdata_t 
+setAmod(pDevHandle pHandle, bt_info_t which)
+{
+  bt_devdata_t oldAmod(UINT_MAX);
+  bt_devdata_t newAmod;
+  if ((which == BT_INFO_MMAP_AMOD) || (which == BT_INFO_PIO_AMOD))  {
+    newAmod = pHandle->pioAmod();
+  }
+  else {
+    newAmod = pHandle->dmaAmod();
+  }
+  if (newAmod != UINT_MAX) {
+    bt_error_t err =  bt_get_info(pHandle->s_handle, which, &oldAmod);
+    assert(err == BT_SUCCESS);
+    CVMEInterface::Lock(AMOD_LOCK);
+    err = bt_set_info(pHandle->s_handle, which, newAmod);
+    assert(err == BT_SUCCESS);
+  }
+  return oldAmod;
+
+}
+/*
+ * Function to reverse the effect of setAmod.
+ * @param pHandle Handle open on the device.
+ * @param which   One of  BT_INFO_PIO_AMOD or BT_INFO_DMA_AMOD
+ * @param prior   Value returned from setAmod.
+ *
+ */
+static void
+restoreAmod(pDevHandle pHandle, bt_info_t which , bt_devdata_t prior)
+{
+  if (prior != UINT_MAX) {
+    bt_error_t err = bt_set_info(pHandle->s_handle, which, prior);
+    assert(err == BT_SUCCESS);
+    CVMEInterface::Unlock(AMOD_LOCK);
+  }
+
+}
+
 /*!
    Open the a device and returns a handle to it:
    - The Address space selector is translated to a device name.
@@ -127,37 +271,49 @@ void*
 CVMEInterface::Open(AddressMode eMode,
 		    unsigned short nCrate)
 {
-  bt_desc_t* pDevice = new bt_desc_t;
 
   // Validate the crate number.
 
   if(nCrate > BT_MAX_UNITS) {
     throw string("CVMEInterface::[SBS]Open - vme crate number > BT_MAX_UNITS");
   }
-
+  pDevHandle pHandle(0);
+    
   try {
     char Device[BT_MAX_DEV_NAME];
 
-    bt_dev_t LogicalDevice = AddressModeToDevice(eMode);
-    if(!bt_gen_name(nCrate, LogicalDevice, Device, sizeof(Device))) {
+
+    pHandle   = AddressModeToDevice(eMode);
+
+    if(!bt_gen_name(nCrate, pHandle->device(), Device, sizeof(Device))) {
       throw 
 	string("CVMEInterface[SBSBit3]::Open - bt_gen_name failed");
     }
 
-    bt_error_t err = bt_open(pDevice, Device, BT_RDWR);
-    CheckError(pDevice, err, "CVMEInterface[SBSBit3]::Open - Open failed ");
+    bt_error_t err = bt_open(&(pHandle->s_handle), Device, BT_RDWR);
+    CheckError(pHandle, err, "CVMEInterface[SBSBit3]::Open - Open failed ");
 
     // Set the appropriate byte swap mode for block transfers.
 
-    CSBSBit3VmeInterface::SetSwapMode(pDevice, BT_SWAP_NONE);
+    CSBSBit3VmeInterface::SetSwapMode(pHandle, BT_SWAP_NONE);
 
   }
   catch(...) {
-    delete pDevice;
+    delete pHandle;
     throw;
   }
-  
-  return (void*)pDevice;
+   CSBSBit3VmeInterface::SetTraceMask( pHandle,
+				      BT_TRC_RD_WR |
+				      BT_TRC_DMA   |
+				      BT_TRC_PIO   |
+				      BT_TRC_RD_WR |
+				      BT_TRC_INFO |
+				      BT_TRC_DETAIL |
+				      BT_TRC_LIO    |
+				      BT_TRC_MAPREG |
+				      BT_TRC_FUNC);
+ 
+  return (void*)pHandle;
 }
 /*!
   Closes a previously opened device.  Note that the device handle
@@ -174,12 +330,13 @@ Exceptions:
 void  
 CVMEInterface::Close(void* pDeviceHandle)
 {
-  bt_desc_t *p = (bt_desc_t*)pDeviceHandle;
-
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t *p = &(pHandle->s_handle);
+  
   bt_error_t err = bt_close(*p);
-
+  
   CheckError(p, err, "CVMEInterface[SBSBit3]::Close - bt_close failed:");
-  delete p;			// It's not safe to delete on throw.
+  delete pHandle;
 
 
 }
@@ -217,12 +374,24 @@ CVMEInterface::Map(void* pDeviceHandle,
 		   unsigned long nBase, 
 		   unsigned long nBytes)
 {
-  bt_desc_t* p = (bt_desc_t*)pDeviceHandle;
+  
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
   void*      pSpace;
+
+
+  // If the handle has an associated pioAMOD, we must set it and
+  // then return it.. All of this is done with the AMOD lock held.
+  //
+  bt_devdata_t oldValue;
+  oldValue = setAmod(pHandle, BT_INFO_MMAP_AMOD);
 
   bt_error_t err = bt_mmap(*p,
 			   &pSpace, nBase, nBytes,
 			   BT_RDWR, BT_SWAP_NONE);
+
+  restoreAmod(pHandle, BT_INFO_MMAP_AMOD, oldValue);
+
   CheckError(p, err, "CVMEInterface[SBSBit3]::Map - bt_mmap failed : ");
   return pSpace;
 }
@@ -251,7 +420,9 @@ CVMEInterface::Unmap(void* pDeviceHandle,
 		     void*  pBase,
 		     unsigned long lBytes)
 {
-  bt_desc_t* p = (bt_desc_t*)pDeviceHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+
+  bt_desc_t* p = &(pHandle->s_handle);
   
   bt_error_t err = bt_unmmap(*p, pBase, lBytes);
 
@@ -288,13 +459,44 @@ CVMEInterface::Read(void* pDeviceHandle,
 		    void*  pBuffer,
 		    unsigned long nBytes)
 {
-  bt_desc_t* p = (bt_desc_t*)pDeviceHandle;
+
+
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+
+  bt_desc_t* p = &(pHandle->s_handle);
+
+
+
   size_t    nTransferred;
 
-  bt_error_t err = bt_read(*p, pBuffer, nOffset, nBytes,
+  // If there is a dma address modifier associated with this 
+  // device handle, we must lock the semaphore, save the old
+  // value set the one we want, perform the I/O and
+  // restore the value before unlocking the semaphore.
+
+  bt_devdata_t oldAmod;
+  oldAmod = setAmod(pHandle, BT_INFO_DMA_AMOD);
+
+  CSBSBit3VmeInterface::SetTraceMask( pHandle,
+				      BT_TRC_RD_WR |
+				      BT_TRC_DMA   |
+				      BT_TRC_PIO   |
+				      BT_TRC_RD_WR |
+				      BT_TRC_INFO |
+				      BT_TRC_DETAIL |
+				      BT_TRC_FUNC);
+
+  // Buffer the read through a page aligned buffer:
+
+  uint8_t*     pLocalBuffer = pHandle->getBuffer(nBytes);
+  bt_error_t err = bt_read(*p, pLocalBuffer, nOffset, nBytes,
 			   &nTransferred);
 
+  restoreAmod(pHandle, BT_INFO_DMA_AMOD, oldAmod);
+
+
   CheckError(p, err, "CVMEInterface[SBSBit3]::Read - bt_read failed : ");
+  memcpy(pBuffer, pLocalBuffer, nTransferred);
   return nTransferred;
      
 
@@ -327,11 +529,30 @@ CVMEInterface::Write(void* pDeviceHandle,
 		     void* pBuffer,
 		     unsigned long nBytes)
 {
-  bt_desc_t* p = (bt_desc_t*)pDeviceHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+
+  bt_desc_t* p = &(pHandle->s_handle);
+
   size_t    nTransferred;
 
-  bt_error_t err = bt_write(*p, pBuffer, nOffset, nBytes,
+  // If there is a dma address modifier associated with this 
+  // device handle, we must lock the semaphore, save the old
+  // value set the one we want, perform the I/O and
+  // restore the value before unlocking the semaphore.
+
+  bt_devdata_t oldAmod;
+  oldAmod = setAmod(pHandle, BT_INFO_DMA_AMOD);
+
+  // Buffer the write through a page aligned buffer:
+
+  uint8_t* pLocalBuffer = pHandle->getBuffer(nBytes);
+  memcpy(pLocalBuffer, pBuffer, nBytes);
+  bt_error_t err = bt_write(*p, pLocalBuffer, nOffset, nBytes,
 			   &nTransferred);
+
+  restoreAmod(pHandle, BT_INFO_DMA_AMOD, oldAmod);
+
+
   CheckError(p, err, "CVMEInterface[SBSBit3]::Write - bt_read failed : ");
 
   return nTransferred;
@@ -360,9 +581,10 @@ CVMEInterface::Write(void* pDeviceHandle,
 
 */
 void
-CSBSBit3VmeInterface::SetDMABlockTransfer(void* pHandle, bool enable)
+CSBSBit3VmeInterface::SetDMABlockTransfer(void* pDeviceHandle, bool enable)
 {
-  bt_desc_t* p = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
 
   bt_error_t err = bt_set_info(*p, BT_INFO_BLOCK, (bt_devdata_t)enable);
   CheckError(p, err, "CSBSBit3VmeInterface::SetDMABlockTransfer failed");
@@ -381,9 +603,10 @@ CSBSBit3VmeInterface::SetDMABlockTransfer(void* pHandle, bool enable)
    - false - turns off pause mode.
 */
 void
-CSBSBit3VmeInterface::SetDMAPauseMode(void* pHandle, bool enable)
-{
-  bt_desc_t* p   = (bt_desc_t*)pHandle;
+CSBSBit3VmeInterface::SetDMAPauseMode(void* pDeviceHandle, bool enable)
+{ pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_error_t err = bt_set_info(*p, BT_INFO_PAUSE, (bt_devdata_t)enable);
   CheckError(p, err, "CSBSBit3VmeInterface::SetDMAPauseMode failed");
 } 
@@ -406,10 +629,12 @@ CSBSBit3VmeInterface::SetDMAPauseMode(void* pHandle, bool enable)
      values.
 */
 void
-CSBSBit3VmeInterface::SetMaxTransferWidth(void* pHandle, bt_width_t eWidth)
-{
-  bt_desc_t* p  = (bt_desc_t*)pHandle;
-  bt_error_t err = bt_set_info(*p, BT_INFO_DATAWIDTH, eWidth);
+CSBSBit3VmeInterface::SetMaxTransferWidth(void* pDeviceHandle, bt_width_t eWidth)
+{ 
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
+    bt_error_t err = bt_set_info(*p, BT_INFO_DATAWIDTH, eWidth);
   CheckError(p, err, "CSBSBit3VmeInterface::SetMaxTransferWidth failed");
 }
 /*!
@@ -450,9 +675,10 @@ CSBSBit3VmeInterface::SetMaxTransferWidth(void* pHandle, bt_width_t eWidth)
 
 */
 void
-CSBSBit3VmeInterface::SetDMAAddressModifier(void* pHandle, int Modifier)
+CSBSBit3VmeInterface::SetDMAAddressModifier(void* pDeviceHandle, int Modifier)
 {
-  bt_desc_t* p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
   bt_error_t  err = bt_set_info(*p, BT_INFO_DMA_AMOD, Modifier);
   CheckError(p, err, "CSBSBit3VmeInterface::SetDMAAddressModifier failed");
 }
@@ -492,9 +718,11 @@ CSBSBit3VmeInterface::SetDMAAddressModifier(void* pHandle, int Modifier)
   -  BT_AMOD_CBLT  (0x0B)  Chained block transfer (CAEN adcs).
 */
 void
-CSBSBit3VmeInterface::SetMMAPAddressModifier(void* pHandle, int Modifier)
+CSBSBit3VmeInterface::SetMMAPAddressModifier(void* pDeviceHandle, int Modifier)
 {
-  bt_desc_t* p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_error_t  err = bt_set_info(*p, BT_INFO_MMAP_AMOD, Modifier);
   CheckError(p, err, "CSBSBit3VmeInterface::SetMMAPAddressModifier failed");
 }
@@ -522,9 +750,10 @@ CSBSBit3VmeInterface::SetMMAPAddressModifier(void* pHandle, int Modifier)
 
 */
 void
-CSBSBit3VmeInterface::SetSwapMode(void* pHandle, bt_swap_t SwapMode)
+CSBSBit3VmeInterface::SetSwapMode(void* pDeviceHandle, bt_swap_t SwapMode)
 {
-  bt_desc_t* p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
   bt_error_t  err = bt_set_info(*p, BT_INFO_SWAP, SwapMode);
   CheckError(p, err, "CSBSBit3VmeInterface::SetSwapMode failed");
 }
@@ -544,9 +773,11 @@ CSBSBit3VmeInterface::SetSwapMode(void* pHandle, bt_swap_t SwapMode)
 
 */
 void
-CSBSBit3VmeInterface::SetDMAThreshold(void* pHandle, int nTransfers)
+CSBSBit3VmeInterface::SetDMAThreshold(void* pDeviceHandle, int nTransfers)
 {
-  bt_desc_t* p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_error_t  err = bt_set_info(*p, BT_INFO_DMA_THRESHOLD, nTransfers);
   CheckError(p, err, "CSBSBit3VmeInterface::SetDMAThreshold failed");
 }
@@ -565,9 +796,11 @@ CSBSBit3VmeInterface::SetDMAThreshold(void* pHandle, int nTransfers)
   \param nTransfers (int [in]): The new ceiling value.
 */
 void
-CSBSBit3VmeInterface::SetDMAPollCeiling(void* pHandle, int nTransfers)
+CSBSBit3VmeInterface::SetDMAPollCeiling(void* pDeviceHandle, int nTransfers)
 {
-  bt_desc_t* p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_error_t  err = bt_set_info(*p, BT_INFO_DMA_POLL_CEILING, nTransfers);
   CheckError(p, err, "CSBSBit3VmeInterface::SetDMAPollCeiling failed");  
 }
@@ -636,9 +869,11 @@ CSBSBit3VmeInterface::SetDMAPollCeiling(void* pHandle, int nTransfers)
      Note that the default, power up state is BT_TRC_ERROR | BT_TRC_WARN.
 */
 void
-CSBSBit3VmeInterface::SetTraceMask(void* pHandle, int nMask)
+CSBSBit3VmeInterface::SetTraceMask(void* pDeviceHandle, int nMask)
 {
-  bt_desc_t* p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_error_t  err = bt_set_info(*p, BT_INFO_TRACE, nMask);
   CheckError(p, err, "CSBSBit3VmeInterface::SetTraceMask failed");
 }
@@ -653,9 +888,10 @@ CSBSBit3VmeInterface::SetTraceMask(void* pHandle, int nMask)
     \return part number as an integer.
 */
 int
-CSBSBit3VmeInterface::GetLocalCardPartNumber(void* pHandle)
+CSBSBit3VmeInterface::GetLocalCardPartNumber(void* pDeviceHandle)
 {
-  bt_desc_t*     p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
   bt_devdata_t  Result;
   bt_error_t      err = bt_get_info(*p, BT_INFO_LOC_PN, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::GetLocalPartNumber failed");
@@ -667,9 +903,11 @@ CSBSBit3VmeInterface::GetLocalCardPartNumber(void* pHandle)
     \return part number as an integer.
 */
 int
-CSBSBit3VmeInterface::GetRemoteCardPartNumber(void* pHandle)
+CSBSBit3VmeInterface::GetRemoteCardPartNumber(void* pDeviceHandle)
 {
-  bt_desc_t*     p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_devdata_t  Result;
   bt_error_t      err = bt_get_info(*p, BT_INFO_REM_PN, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::GetRemotePartNumber failed");
@@ -683,9 +921,11 @@ CSBSBit3VmeInterface::GetRemoteCardPartNumber(void* pHandle)
     \return memory size as unsigned int.
 */
 unsigned int
-CSBSBit3VmeInterface::GetLocalMemorySize(void* pHandle)
+CSBSBit3VmeInterface::GetLocalMemorySize(void* pDeviceHandle)
 {
-  bt_desc_t*     p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_devdata_t  Result;
   bt_error_t      err = bt_get_info(*p, BT_INFO_LM_SIZE, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::GetLocalMemorySize failed");
@@ -702,9 +942,11 @@ CSBSBit3VmeInterface::GetLocalMemorySize(void* pHandle)
 
 */
 bool
-CSBSBit3VmeInterface::IsDMABlockTransfer(void* pHandle)
+CSBSBit3VmeInterface::IsDMABlockTransfer(void* pDeviceHandle)
 {
-  bt_desc_t*     p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_devdata_t  Result;
   bt_error_t      err = bt_get_info(*p, BT_INFO_BLOCK, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::IsDMABlockTransfer failed");
@@ -718,9 +960,11 @@ CSBSBit3VmeInterface::IsDMABlockTransfer(void* pHandle)
   \return true if dma will be done in pause mode.
 */
 bool
-CSBSBit3VmeInterface::IsDMAPauseMode(void* pHandle)
+CSBSBit3VmeInterface::IsDMAPauseMode(void* pDeviceHandle)
 {
-  bt_desc_t*     p   = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_devdata_t  Result;
   bt_error_t      err = bt_get_info(*p, BT_INFO_PAUSE, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::IsDMAPauseMode failed");
@@ -736,9 +980,11 @@ CSBSBit3VmeInterface::IsDMAPauseMode(void* pHandle)
    - BT_WIDTH_D64  64 bits.
 */
 bt_width_t
-CSBSBit3VmeInterface::GetMaxTransferWidth(void* pHandle)
+CSBSBit3VmeInterface::GetMaxTransferWidth(void* pDeviceHandle)
 {
-  bt_desc_t*     p      = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_devdata_t Result;
   bt_error_t      err    = bt_get_info(*p, BT_INFO_DATAWIDTH, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::GetMaxTransferWidth failed");
@@ -776,9 +1022,11 @@ CSBSBit3VmeInterface::GetMaxTransferWidth(void* pHandle)
   -  BT_AMOD_CBLT  (0x0B)  Chained block transfer (CAEN adcs).
 */
 int
-CSBSBit3VmeInterface::GetDMAAddressModifier(void* pHandle)
+CSBSBit3VmeInterface::GetDMAAddressModifier(void* pDeviceHandle)
 {
-  bt_desc_t*    p     = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_devdata_t Result;
   bt_error_t     err   = bt_get_info(*p, BT_INFO_DMA_AMOD, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::GetDMAAddressModifier failed");
@@ -817,9 +1065,11 @@ CSBSBit3VmeInterface::GetDMAAddressModifier(void* pHandle)
 
 */
 int
-CSBSBit3VmeInterface::GetMMAPAddressModifier(void* pHandle)
+CSBSBit3VmeInterface::GetMMAPAddressModifier(void* pDeviceHandle)
 {
-  bt_desc_t*        p       = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_devdata_t     Result;
   bt_error_t         err     = bt_get_info(*p, BT_INFO_PIO_AMOD, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::GetMMAPAddressModifier failed");
@@ -850,9 +1100,11 @@ CSBSBit3VmeInterface::GetMMAPAddressModifier(void* pHandle)
 
 */
 int
-CSBSBit3VmeInterface::GetSwapMode(void* pHandle)
+CSBSBit3VmeInterface::GetSwapMode(void* pDeviceHandle)
 {
-  bt_desc_t*     p        = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_devdata_t  Result;
   bt_error_t      err      = bt_get_info(*p, BT_INFO_SWAP, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::GetSwapMode failed");
@@ -872,9 +1124,11 @@ CSBSBit3VmeInterface::GetSwapMode(void* pHandle)
   \return The threshold value.
 */
 int
-CSBSBit3VmeInterface::GetDMAThreshold(void* pHandle)
+CSBSBit3VmeInterface::GetDMAThreshold(void* pDeviceHandle)
 {
-  bt_desc_t*     p      = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_devdata_t  Result;
   bt_error_t      err    = bt_get_info(*p, BT_INFO_DMA_THRESHOLD, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::GetDMAThreshold failed");
@@ -891,9 +1145,11 @@ CSBSBit3VmeInterface::GetDMAThreshold(void* pHandle)
   \return The threshold value.
 */
 int
-CSBSBit3VmeInterface::GetDMAPollCeiling(void* pHandle)
+CSBSBit3VmeInterface::GetDMAPollCeiling(void* pDeviceHandle)
 {
-  bt_desc_t*     p      = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_devdata_t  Result;
   bt_error_t      err    = bt_get_info(*p, BT_INFO_DMA_POLL_CEILING, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::GetDMAPollCeiling failed");
@@ -938,9 +1194,12 @@ CSBSBit3VmeInterface::GetDMAPollCeiling(void* pHandle)
   -  BT_TRC_HW_DEBUG  enable HW trace messages instead of console 
 */
 int
-CSBSBit3VmeInterface::GetTraceMask(void* pHandle)
+CSBSBit3VmeInterface::GetTraceMask(void* pDeviceHandle)
 {
-  bt_desc_t*    p        = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
+
   bt_devdata_t Result;
   bt_error_t     err      = bt_get_info(*p, BT_INFO_TRACE, &Result);
   CheckError(p, err, "CSBSBit3VmeInterface::GetTraceMask Failed");
@@ -955,9 +1214,11 @@ CSBSBit3VmeInterface::GetTraceMask(void* pHandle)
 
 */
 void
-CSBSBit3VmeInterface::ResetVme(void* pHandle)
+CSBSBit3VmeInterface::ResetVme(void* pDeviceHandle)
 {
-  bt_desc_t*    p      = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   bt_error_t   err    = bt_reset(*p);
   CheckError(p, err ,"CSBSBit3VmeInterface::ResetVme failed");
 }
@@ -975,9 +1236,11 @@ CSBSBit3VmeInterface::ResetVme(void* pHandle)
 
 */
 bt_error_t
-CSBSBit3VmeInterface::CheckErrors(void* pHandle)
+CSBSBit3VmeInterface::CheckErrors(void* pDeviceHandle)
 {
-  bt_desc_t* p = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   return  bt_chkerr(*p);
 }
 /*!
@@ -989,8 +1252,10 @@ CSBSBit3VmeInterface::CheckErrors(void* pHandle)
     \retval BT_IO      - I/O failure.
  */
 bt_error_t 
-CSBSBit3VmeInterface::ClearErrors(void*pHandle)
+CSBSBit3VmeInterface::ClearErrors(void* pDeviceHandle)
 {
-  bt_desc_t* p = (bt_desc_t*)pHandle;
+  pDevHandle pHandle = reinterpret_cast<pDevHandle>(pDeviceHandle);
+  bt_desc_t* p = &(pHandle->s_handle);
+
   return bt_clrerr(*p);
 }
