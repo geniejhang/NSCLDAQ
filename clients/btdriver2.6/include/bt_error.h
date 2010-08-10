@@ -62,7 +62,7 @@
 #error Unknown Operating System!
 #endif	/* defined(__vxworks) */
 
-#ifndef _BTNGPCI_H		  /* Defined there too _sigh_ */
+
 typedef enum {   /* from 993 btngpci.h  */
     BT_SUCCESS = 0,			/* Everything is just swell */
     POSIX_EQUIV(BT_EIO, EIO),		/* Input or output error */
@@ -106,6 +106,5 @@ typedef enum {   /* from 993 btngpci.h  */
     BT_MAX_ERR		/* Last Error number */
 } bt_error_t;
 
-#endif
 
 #endif  /* _BT_ERROR_H */

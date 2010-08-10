@@ -440,7 +440,7 @@ int TcpClientConnection::GetLine(string& rBuffer)
 
   Bool_t fDone = kfFALSE;
   int    nBytes= 0;
-  char   Buffer[100];		// Internal buffer for peekahead.
+  char   Buffer[1000];		// Internal buffer for peekahead.
   Bool_t fGotBytes = kfFALSE;	// To deal with empty lines.
   while(!fDone) {
     int nAvail = recv(m_nFd, Buffer, sizeof(Buffer-1), MSG_PEEK);
@@ -459,7 +459,9 @@ int TcpClientConnection::GetLine(string& rBuffer)
       rBuffer += Buffer;
     }
     nBytes += nAvail;		// Update the number of bytes read.
-    recv(m_nFd, Buffer, nAvail, 0); // Flush them from the input.
+    if (nAvail > 0) {
+      recv(m_nFd, Buffer, nAvail, 0); // Flush them from the input.
+    }
   }
   if((nBytes <= 0) && (!fGotBytes)) DisconnectSensed();
   if((nBytes == 0) && fGotBytes) { // Empty lines map to a space line.

@@ -77,6 +77,7 @@ proc mwutil::configure {win configSpecsName configValsName \
     upvar $configSpecsName configSpecs
     upvar $configValsName configVals
 
+
     #
     # Process the command-line arguments
     #
@@ -85,6 +86,7 @@ proc mwutil::configure {win configSpecsName configValsName \
     set failed no
     set count [llength $optValPairs]
     foreach {opt val} $optValPairs {
+
 	if {[catch {fullConfigOpt $opt configSpecs} result] != 0} {
 	    set failed yes
 	    break
@@ -218,6 +220,7 @@ proc mwutil::fullOpt {kind opt optList} {
 
     switch $count {
 	0 {
+
 	    return -code error \
 		   "bad $kind \"$opt\": must be [enumOpts $optList]"
 	}

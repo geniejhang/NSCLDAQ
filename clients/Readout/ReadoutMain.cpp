@@ -35,7 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-static char* Copyright =
+static const char* Copyright =
 "(c) Copyright NSCL All rights reserved 1999 ReadoutMain.cpp\n";
 
 //

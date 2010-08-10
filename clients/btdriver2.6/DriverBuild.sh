@@ -30,7 +30,7 @@ then
     echo checking $Debiansrc1
     if [ -d $Debiansrc1 ] 
     then
-	echo found
+	echo foundwhile 
 	Linuxsrc="$Debiansrc1"
     fi
     echo checking $Debiansrc2

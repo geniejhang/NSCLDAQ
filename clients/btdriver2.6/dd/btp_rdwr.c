@@ -721,7 +721,7 @@ static int btp_xfer(
             retval = BT_EIO;
             goto btp_xfer_end;
         }
-
+	memset(pages, 0, nr_pages * sizeof(struct page*));
         /*
         ** Translate the user pages to physical addresses
         ** store in scatter/gather list
@@ -729,6 +729,9 @@ static int btp_xfer(
         down_read(&current->mm->mmap_sem);
         ret = get_user_pages(current, current->mm, (unsigned long) usr_data_p,
             nr_pages, write, 1, pages, NULL);
+	TRC_MSG(BT_TRC_RD_WR,
+		(LOG_FMT "get_user_pages returned %d, for 0x%lx masked to 0x%lx\n",
+		 LOG_ARG, ret, usr_data_p, ((unsigned long)usr_data_p & PAGE_MASK)));
         up_read(&current->mm->mmap_sem);
         if (ret < nr_pages) {
             WARN_STR("Failed to create scatter/gather list for user buffer.\n");
@@ -743,7 +746,8 @@ static int btp_xfer(
         /*
         ** Determine whether we do DMA or PIO
         */
-        btk_dma_pio(unit_p, type, (bt_devaddr_t) usr_data_p, dest_addr, &requested_length, &dma_flag, &data_width, &start, &need);
+        btk_dma_pio(unit_p, type, (bt_devaddr_t) usr_data_p, dest_addr, 
+		    &requested_length, &dma_flag, &data_width, &start, &need);
 #define BTP_FREE_MREG  if (dma_flag) { \
                            btk_mutex_enter(&unit_p->mreg_mutex); \
                            (void) btk_bit_free(unit_p->sdma_aval_p, start, need); \
@@ -775,6 +779,10 @@ static int btp_xfer(
             
         if (dma_flag) {
 
+	  TRC_MSG(BT_TRC_RD_WR,
+		  (LOG_FMT "page-map and mapreg counts: %d %d starting map reg: %d\n",
+		   LOG_ARG, nr_pages, need, start));
+	  
             /*
             **  Setup vme address, address modifier, and function code
             */
@@ -793,6 +801,9 @@ static int btp_xfer(
                 }
                 mreg_value &= ~BT_MREG_ADDR_MASK;
                 mreg_value |= (pci_addr & BT_MREG_ADDR_MASK);
+		TRC_MSG(BT_TRC_RD_WR,
+			(LOG_FMT "Putting mapping register # %d with 0x%lx page %d physaddr 0x%lx\n",
+			 LOG_ARG, inx, mreg_value, i, pci_addr));
                 btk_put_mreg(unit_p, inx, BT_LMREG_DMA_2_PCI, mreg_value);
                 if ( (btk_get_mreg(unit_p, inx, BT_LMREG_DMA_2_PCI)) != mreg_value ) {
                     WARN_MSG((LOG_FMT "Verify Write BT_LMREG_DMA_2_PCI mapping register mr_idx = 0x%.1X failed.\n",
@@ -822,8 +833,13 @@ static int btp_xfer(
             ** Do the DMA
             */
             ldma_addr = (bt_data32_t) ((start * BT_PAGE_SIZE) + usr_curr_offset);
+	    TRC_MSG(BT_TRC_RD_WR,
+		    (LOG_FMT "Start 0x%x offset 0x%x ldma_addr 0x%x length %d\n",
+		     LOG_ARG, start, usr_curr_offset, ldma_addr, requested_length));
             xferred_length = requested_length;
-            retval = btk_dma_xfer(unit_p, type, ldma_addr, (bt_data32_t) dest_addr, &xferred_length, (dir == BT_RD) ? BT_READ : BT_WRITE, data_width);
+            retval = btk_dma_xfer(unit_p, type, ldma_addr, (bt_data32_t) dest_addr,
+				  &xferred_length, (dir == BT_RD) ? BT_READ : BT_WRITE, 
+				  data_width);
             if (IS_CLR(unit_p->bt_status, BT_NEXT_GEN)) {
                 btk_rwlock_wr_exit(&unit_p->hw_rwlock);
             }

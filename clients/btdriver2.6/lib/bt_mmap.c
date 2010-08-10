@@ -4,7 +4,7 @@
 **
 **      Purpose:        IRIX implementation of mmap for NanoBus hardware.       
 **
-**      $Revision$
+**      $Revision: 1.12 $
 **
 ******************************************************************************/
 /*****************************************************************************
@@ -16,7 +16,7 @@
 *****************************************************************************/
 
 #ifndef LINT
-static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
+static const char revcntrl[] = "@(#)"__FILE__"  $Revision: 1.12 $" __DATE__;
 #endif  /* LINT */
 
 #include <unistd.h>
@@ -40,8 +40,7 @@ static const char revcntrl[] = "@(#)"__FILE__"  $Revision$" __DATE__;
 #if defined(__sun)
 extern int getpagesize(void);
 #endif /* defined(__sun) */
-
-#include <unistd.h> 
+ 
 
 /******************************************************************************
 **

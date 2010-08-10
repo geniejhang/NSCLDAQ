@@ -4,12 +4,12 @@
 **
 **      Purpose:    Irix NanoBus header file, private to interface library
 **
-**      $Revision$
+**      $Revision: 1.12 $
 **
 ******************************************************************************/
 /*****************************************************************************
 **
-**        Copyright (c) 2000 by SBS Technologies, Inc.
+**        Copyright (c) 2000-2005 by SBS Technologies, Inc.
 **                     All Rights Reserved.
 **              License governs use and distribution.
 **
@@ -30,10 +30,6 @@
 
 #if	!defined(_BTQIFLIB_H)
 #define _BTPIFLIB_H
-
-#if	!defined(_BTIO_H)
-#include	"btio.h"
-#endif	/* !defined(_BTIO_H) */
 
 #if	!defined(_BTAPI_H)
 #include	"btapi.h"
@@ -92,6 +88,11 @@ typedef struct bt_lib_data_s {
     bt_data8_t          *icbr_mmap_p;   /* Thread q mmap pointer */
     size_t              icbr_mmap_len;  /* Thread q mmap length */
     bt_devaddr_t        thread_id;      /* Driver assigned thread id */
+#if defined (__lynxos)
+    int                 dev_mem_fd;     /* Memory device descriptor, bt_mmap */
+    unsigned int        driver_phys_addr; /* Driver physical address */
+    unsigned int        map_virt_addr;  /* LynxOS mapped address to use */
+#endif
 } bt_lib_data_t;
 
 /*
@@ -117,5 +118,32 @@ typedef struct bt_lib_data_s {
 #define DBG_STR(string)
 #define DBG_MSG(string)
 #endif /* DEBUG */
+
+#if defined (BT951)
+
+/*
+ * The definition of IOC_NR macro cannot be found in the LynxOS header files. 
+ * So we are defining this macro here until it is discovered in LynxOS and can 
+ * be included from the OS.
+ */
+
+
+#ifndef _IOC_NRBITS
+#define _IOC_NRBITS  8
+#endif
+
+#ifndef _IOC_NRSHIFT 
+#define _IOC_NRSHIFT 0
+#endif
+
+#ifndef _IOC_NRMASK
+#define _IOC_NRMASK  ((1 << _IOC_NRBITS) -1)
+#endif
+
+#ifndef _IOC_NR
+#define _IOC_NR(nr)  (((nr) >> _IOC_NRSHIFT) & _IOC_NRMASK)
+#endif
+
+#endif /* BT951 */
 
 #endif /* !defined(_BTPIFLIB_H) */

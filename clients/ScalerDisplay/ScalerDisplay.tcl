@@ -99,9 +99,13 @@ after 2000 StartClient
 #  Source the user's setup file:
 #
 
+source $file
+if {0} {
 if {[catch "source $file" msg]} {
    tk_dialog .failure "Setup file failure" \
    "There is an error in the setup file $argv : $msg" \
    error 0 Dismiss
    exit -1
+}
+
 }

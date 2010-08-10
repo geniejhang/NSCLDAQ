@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
-#include <btngpci.h>
+#include <btapi.h>
 #include <Exception.h>
 using namespace std;
 

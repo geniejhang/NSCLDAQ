@@ -20,20 +20,6 @@
 extern "C" {
 
 
-#ifndef __SBS_BTDEF_H
-#include <btdef.h>
-#define __SBS_BTDEF_H
-#endif
-
-#ifndef __SBS_BTPDEF_H
-#include <btpdef.h>
-#define __SBS_BTPDEF_H
-#endif
-
-#ifndef __SBS_BTNGPCI_H
-#include <btngpci.h>
-#define __SBS_BTNGPCI_H
-#endif
 
 #ifndef __SBS_BTAPI_H
 #include <btapi.h>
@@ -82,6 +68,7 @@ public:
 
   static  bt_error_t CheckErrors(void* pHandle);
   static  bt_error_t ClearErrors(void* pHandle);
+
 };
 
 

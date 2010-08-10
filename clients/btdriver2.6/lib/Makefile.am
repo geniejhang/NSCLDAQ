@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libbtp.la
 libbtp_la_SOURCES = bt_bind.c \
-bt_cas.c  \
+bt_cas.c \
 bt_chke.c \
 bt_clre.c \
 bt_ctrl.c \
@@ -20,10 +20,11 @@ bt_rdwr.c \
 bt_reset.c \
 bt_sema.c \
 bt_send_irq.c \
-bt_serr.c  \
+bt_serr.c \
 bt_stat.c \
 bt_string.c \
 bt_tas.c
+
 
 
 

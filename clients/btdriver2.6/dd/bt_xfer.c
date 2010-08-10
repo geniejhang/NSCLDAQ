@@ -461,6 +461,10 @@ bt_error_t btk_dma_xfer(
            LOG_ARG, laddr, raddr, xfer_length, 
            (xfer_dir == BT_READ) ? 'R' : 'W', data_width));
 
+    /*
+    ** Can't start a new dma if there's a dma aleady in progress 
+    */
+
     dma_cmd = btk_get_io(unit_p, BT_LDMA_CMD);
     if ( IS_SET(dma_cmd, LDC_START) ) {
         fail_count++;

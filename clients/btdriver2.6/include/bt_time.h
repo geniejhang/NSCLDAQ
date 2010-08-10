@@ -21,7 +21,7 @@
 
 #if     !defined(_BT_TIME_H)
 #define _BT_TIME_H
-#include <btdef.h>
+
 /*
 **  Define Mirror API constants that vary based on OS
 */

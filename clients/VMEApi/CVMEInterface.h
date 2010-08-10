@@ -420,6 +420,15 @@ class CVMEInterface
   static void Lock();
   static void Unlock();
 
+  // These are used so that private locks can be supported.
+  // Lock 0 is always the DMA/PIO lock.
+  // Lock 1-7 are used for driver private functions.
+  // 
+  static void Lock(int semnum);
+  static void Unlock(int semnum);
+ private:
+  static void AttachSemaphore();
+
 };
 
 

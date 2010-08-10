@@ -14,6 +14,7 @@ include_HEADERS = CVMEInterface.h SBSBit3API.h WienerAPI.h \
 
 INCLUDES = -I@top_srcdir@/Headers -I@top_srcdir@/Exception $(VMEBUILDHEADERS)
 
+
 EXTRA_DIST = NSCLBIT3API.cpp NULLAPI.cpp SBSBIT3API.cpp WIENERAPI.cpp \
 	WIENERUSBAPI.cpp Locking.cpp  NullLock.cpp
 

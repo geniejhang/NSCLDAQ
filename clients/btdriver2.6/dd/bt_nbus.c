@@ -444,7 +444,7 @@ bt_data32_t btk_get_io(
 #if  EAS_A64_CODE
 /* EAS A64 */
       case BT_RPQ_REM_A64PIO:
-        TRC_MSG(BT_TRC_LIO|BT_TRC_DETAIL, 
+        TRC_MSG(BT_TRC_RD_WR|BT_TRC_DETAIL, 
             (LOG_FMT "Set A64PIO Register %d, value 0x%x, mask = 0x%x.\n", 
             LOG_ARG, reg, value, mask));
         base_p = (void *) &(unit_p->csr_p->rem_a64pio_addr_lo);
@@ -452,7 +452,7 @@ bt_data32_t btk_get_io(
         break;
 
       case BT_RPQ_REM_A64DMA:
-        TRC_MSG(BT_TRC_LIO|BT_TRC_DETAIL, 
+        TRC_MSG(BT_TRC_RD_WR|BT_TRC_DETAIL, 
             (LOG_FMT "Set A64DMA Register %d, value 0x%x, mask = 0x%x.\n", 
             LOG_ARG, reg, value, mask));
         base_p = (void *) &(unit_p->csr_p->rem_a64dma_addr_lo);
@@ -470,14 +470,14 @@ bt_data32_t btk_get_io(
     switch (size) {
       case BT_WIDTH_D8:
         value = (bt_data32_t) btp_get_d8(unit_p, base_p);
-        TRC_MSG(BT_TRC_LIO|BT_TRC_DETAIL, 
+        TRC_MSG(BT_TRC_RD_WR|BT_TRC_DETAIL, 
             (LOG_FMT "D08 Register %d, value 0x%x, mask = 0x%x.\n", 
             LOG_ARG, reg, value, mask));
         break;
 
       case BT_WIDTH_D16:
         value = (bt_data32_t) btp_get_d16(unit_p, base_p);
-        TRC_MSG(BT_TRC_LIO|BT_TRC_DETAIL, 
+        TRC_MSG(BT_TRC_RD_WR|BT_TRC_DETAIL, 
             (LOG_FMT "D16 Register %d, value 0x%x, mask = 0x%x.\n", 
             LOG_ARG, reg, value, mask));
         break;
@@ -495,7 +495,7 @@ bt_data32_t btk_get_io(
                 value |= btp_get_d8(unit_p, (void *) ((bt_data8_t *) base_p + 2)) << BT_D16_SHFT;
             }
         }
-        TRC_MSG(BT_TRC_LIO|BT_TRC_DETAIL, 
+        TRC_MSG(BT_TRC_RD_WR|BT_TRC_DETAIL, 
             (LOG_FMT "D32 Register %d, value 0x%x, mask = 0x%x.\n", 
             LOG_ARG, reg, value, mask));
         break;
@@ -510,7 +510,7 @@ bt_data32_t btk_get_io(
   end_bt_kget_io:
 
     value &= mask;
-    TRC_MSG(BT_TRC_LIO, (LOG_FMT "Register %d, value 0x%x.\n", 
+    TRC_MSG(BT_TRC_DETAIL | BT_TRC_RD_WR, (LOG_FMT "Register %d, value 0x%x.\n", 
             LOG_ARG, reg, value));
     FEXIT(value);
     return(value);
@@ -706,7 +706,7 @@ void btk_put_io(
         break;
 
       case BT_REM_STATUS:
-        TRC_MSG(BT_TRC_LIO, (LOG_FMT "Register %d is read only.\n",
+        TRC_MSG(BT_TRC_DETAIL, (LOG_FMT "Register %d is read only.\n",
             LOG_ARG, reg));
         goto put_invalid_reg;
 
@@ -880,7 +880,7 @@ void btk_put_io(
 #if  EAS_A64_CODE
 /* EAS A64 */
       case BT_RPQ_REM_A64PIO:
-        TRC_MSG(BT_TRC_LIO|BT_TRC_DETAIL, 
+        TRC_MSG(BT_TRC_DETAIL|BT_TRC_DETAIL, 
             (LOG_FMT "Get A64PIO Register %d\n", 
             LOG_ARG, reg));
         base_p = (void *) &(unit_p->csr_p->rem_a64pio_addr_lo);
@@ -888,7 +888,7 @@ void btk_put_io(
         break;
 
       case BT_RPQ_REM_A64DMA:
-        TRC_MSG(BT_TRC_LIO|BT_TRC_DETAIL, 
+        TRC_MSG(BT_TRC_DETAIL|BT_TRC_DETAIL, 
             (LOG_FMT "Get A64DMA Register %d\n", 
             LOG_ARG, reg));
         base_p = (void *) &(unit_p->csr_p->rem_a64dma_addr_lo);
@@ -905,19 +905,19 @@ void btk_put_io(
     */
     switch (size) {
       case BT_WIDTH_D8:
-        TRC_MSG(BT_TRC_LIO, (LOG_FMT "D08 Register %d, value 0x%x.\n", 
+        TRC_MSG(BT_TRC_DETAIL | BT_TRC_RD_WR, (LOG_FMT "D08 Register %d, value 0x%x.\n", 
                 LOG_ARG, reg, value));
         btp_put_d8(unit_p, base_p, (bt_data8_t) value);
         break;
 
       case BT_WIDTH_D16:
-        TRC_MSG(BT_TRC_LIO, (LOG_FMT "D16 Register %d, value 0x%x.\n", 
+        TRC_MSG(BT_TRC_DETAIL | BT_TRC_RD_WR, (LOG_FMT "D16 Register %d, value 0x%x.\n", 
                 LOG_ARG, reg, value));
         btp_put_d16(unit_p, base_p, (bt_data16_t) value);
         break;
 
       case BT_WIDTH_D32:
-        TRC_MSG(BT_TRC_LIO, (LOG_FMT "D32 Register %d, value 0x%x.\n", 
+        TRC_MSG(BT_TRC_DETAIL | BT_TRC_RD_WR, (LOG_FMT "D32 Register %d, value 0x%x.\n", 
                 LOG_ARG, reg, value));
         if (IS_SET(unit_p->bt_status, BT_NEXT_GEN)) {
             if (reg == BT_RDMA_ADDR) {

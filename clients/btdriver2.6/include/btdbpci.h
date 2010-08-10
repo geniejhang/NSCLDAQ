@@ -24,7 +24,6 @@
 #endif /* defined(__vxworks) */
 
 
-#define  BT_TAS_MSBIT 0x80
 
 
 /*****************************************************************************
@@ -40,14 +39,14 @@
 ** Interrupt queue for storing a list of interrupts that have occured
 */
 #define BTK_Q_PAD   2
-#ifndef _BTNGPCI_H
+
 typedef struct {
     volatile bt_data64_t    head;       /* queue index at which to add next message */
     bt_data32_t             length;     /* number of elements in queue buffer array */
     bt_data32_t             unused1;
     volatile bt_data32_t queue[BTK_Q_PAD];      /* queue buffer, is array of vectors */
 } bt_irq_q_t;
-#endif
+
 /*
 ** Macro to check for proper size and packing of structures
 ** that follow
@@ -109,7 +108,6 @@ typedef struct {
 **  Not all avalible on all adapters.
 **
 *****************************************************************************/
-#ifndef _BTNGPCI_H
 typedef enum BT_AXSTYPS {
     /*
     ** Original Unix definitions
@@ -155,21 +153,15 @@ typedef enum BT_AXSTYPS {
     BT_MAX_DEV = BT_MAX_AXSTYPS
     
 } bt_dev_t;
-#endif
-#ifndef BT_DEV_SHFT
-#define BT_DEV_SHFT     (5)
-#endif
 
+#define BT_DEV_SHFT     (5)
 #define BT_AXS_SHFT     BT_DEV_SHFT     /* Older name */
 
 /*
 ** Linux requires that BT_MAX_UNITS be a simple integer with no parathesis
 ** or operators. It MUST NOT be an expression.
 */
-#ifndef BT_MAX_UNITS
 #define BT_MAX_UNITS    31      /* Don't change or you will break Linux */
-#endif
-
 #if BT_MAX_UNITS != ((1 << BT_DEV_SHFT) - 1)
 #error  "Shift and maximum values out of sync."
 #endif  /* BT_MAX_UNITS */
@@ -181,7 +173,6 @@ typedef enum BT_AXSTYPS {
 **  BIOC_PARAM & BIOC_DEV_ATTRIB
 **
 *****************************************************************************/
-#ifndef _BTNGPCI_H
 typedef struct {
     bt_data32_t    error;               /* Error code */
     bt_data32_t    vector;              /* Vector to send with irq */
@@ -223,6 +214,7 @@ typedef struct {
     bt_data32_t     unused4;
 } bt_tas_t;                             
 
+#define  BT_TAS_MSBIT 0x80
 
 /*****************************************************************************
 **
@@ -328,10 +320,7 @@ typedef struct {
 **  BIOC_LCARD_DIAG/BIOC_CABLE_DIAG/BIOC_RCARD_DIAG/BIOC_PAIR_DIAG
 **
 *****************************************************************************/
-#ifndef BT_DIAG_MAX_REV_INFO
 #define BT_DIAG_MAX_REV_INFO    28
-#endif
-
 typedef struct {
     bt_data32_t  error;        /* Error code */
     bt_data32_t  line_number;  /* Line number failure was discovered on */
@@ -341,7 +330,7 @@ typedef struct {
     bt_data8_t   rev_info[BT_DIAG_MAX_REV_INFO];      /* Text string with file and revision number */
     
 } bt_hw_diag_t;
-#endif
+
 
 /*****************************************************************************
 **
@@ -350,9 +339,7 @@ typedef struct {
 **  BIOC_RESET, BIOC_STATUS, BIOC_CLR_STATUS, BIOC_SETUP
 **
 *****************************************************************************/
-#ifndef _BTNGPCI_H
 typedef bt_data32_t bt_status_t;
-#endif
 #define BT_STATUS_ERR_SHFT    (24)
 
     /* interface parity error */
@@ -389,7 +376,6 @@ typedef bt_data32_t bt_status_t;
 **  BIOC_HW_BIND, BIOC_HW_UNBIND
 **
 *****************************************************************************/
-#ifndef _BTNGPCI_H
 typedef struct bt_bind_d {
     bt_data32_t     error;          /* Error code  */
     bt_data32_t     unused1;   
@@ -587,7 +573,6 @@ typedef enum param_valus {
 
     BT_MAX_INFO        /* Last valid BT_INFO_ value, internal use only */
 } bt_info_t;
-#endif
 
 /* 
 ** Obsolte parameter values -- to be removed! 
@@ -620,7 +605,6 @@ typedef enum param_valus {
 **  Use with SWAP_BITS parameter (BIOC_PARAM & BIOC_DEV_ATTRIB)
 **
 *****************************************************************************/
-#ifndef _BTNGPCI_H
 typedef enum BT_SWAP_BITS_VALUE {
     BT_SWAP_NONE = 0,   /* No swapping */
     BT_SWAP_BSNBD,      /* Byte swap, non byte data */
@@ -634,7 +618,6 @@ typedef enum BT_SWAP_BITS_VALUE {
     BT_MAX_SWAP
 } bt_swap_t;
 
-#endif
 
 /*****************************************************************************
 **
@@ -644,13 +627,11 @@ typedef enum BT_SWAP_BITS_VALUE {
 **  (BIOC_IOREG & BIOC_PCFG)
 **
 *****************************************************************************/
-#ifndef _BTNGPCI_H
 enum BT_ACCESS {
     BT_IOREAD,  /* Register read */
     BT_IOWRITE, /* Register write */
     BT_IOSHOT   /* Register bit set */
 };
-#endif
 
 /*****************************************************************************
 **
@@ -663,7 +644,6 @@ enum BT_ACCESS {
 #define BT_REM_START    80
 #define BT_RPQ_START    192
 
-#ifndef _BTNGPCI_H
 typedef enum BT_REGISTERS {
     BT_LOC_CMD1 = BT_LOC_START,         /* Local Command register 1 */
     BT_LOC_INT_CTRL,                    /* Local Interrupt Control */
@@ -741,7 +721,7 @@ typedef enum BT_REGISTERS {
     
     BT_MAX_REGISTER                 /* Maximum number of registers */
 } bt_reg_t;
-#endif
+
 /* The following member names have been obsoleted:
     BT_REM_LSTATUS    replaced by BT_REM_SLAVE_STATUS
     BT_REM_LCLRERR    replaced by BT_REM_SLAVE_CLRERR
@@ -758,7 +738,6 @@ typedef enum BT_REGISTERS {
 **  Use with bt_ioaccess_t structure (BIOC_IOREG)
 **
 *****************************************************************************/
-#ifndef _BTNGPCI_H
 typedef struct {
 
 /*
@@ -1122,13 +1101,13 @@ typedef struct {
         bt_data16_t        rem_a64dma_addr_hi;
 
 } bt_pci_reg_t;
-#endif
+
 /*****************************************************************************
 **
 **  Define all possible cable interrupts -- not currently useful
 **
 *****************************************************************************/
-#ifndef _BTNGPCI_H
+
 enum BT_CABLE_INTR {
     BT_CINT_1 = 1,              /* Cable interrupt one                      */
     BT_CINT_2,                  /* Cable interrupt two                      */
@@ -1139,7 +1118,7 @@ enum BT_CABLE_INTR {
     BT_CINT_7,                  /* Cable interrupt seven                    */
     BT_CINT_MAX                 /* Actually more than the maximum           */
 };
-#endif
+
 /*****************************************************************************
 **
 **  DEFINE GENERIC INTERRUPT HANDLER MACROS:
@@ -1211,9 +1190,7 @@ enum BT_CABLE_INTR {
 */
 #define BTK_Q_NUM               (BT_MAX_IRQ - 1)    /* # of irq thread queues */
 #define BTK_Q_USE               (unit_p->error_irq_q_p) /* Which queue as used for malloc */
-#ifndef BTK_Q_BYTES
 #define BTK_Q_BYTES(q_size)     (sizeof(bt_irq_q_t) + sizeof(bt_data32_t) * (q_size - BTK_Q_PAD))
-#endif
 #define BTK_Q_SIZE(qz)          ((BTK_Q_BYTES(qz) % sizeof(bt_data64_t)) ? BTK_Q_BYTES(qz) + sizeof(bt_data32_t) : BTK_Q_BYTES(qz))
 #define BTK_Q_ASSIGN(q_start_p, err_q_p, prog_q_p, vme_q_p, q_size)  \
         err_q_p = (bt_irq_q_t *) q_start_p; \
@@ -1255,14 +1232,12 @@ enum BT_CABLE_INTR {
 **  Lock device structure (for BIOC_LOCK)
 **
 *******************************************************************************/
-#ifndef _BTNGPCI_H
 typedef struct bt_lock_d {
     bt_data32_t  error;                 /* Error code                        */
     bt_msec_t    timeout;               /* Maximum lock time in milliseconds */
     bt_data32_t  signum;                /* Signal number to send on timeout  */
     bt_data32_t  nowait;                /* FALSE = wait; TRUE = don't wait   */
 } bt_lock_t;
-#endif
 
 #if defined(__osf__)
 
@@ -1291,12 +1266,11 @@ typedef uint64_t        data64_t;
 #define DATA_ANY_SIZ 0
 
 #else /* __osf__ */
-#ifndef _BTDEF_H
+
 typedef unsigned char  data8_t;
 typedef unsigned short data16_t;
 typedef unsigned long  data32_t;
 
-#endif
 #define DATA8_SIZ    sizeof(data8_t)
 #define DATA16_SIZ   sizeof(data16_t)
 #define DATA32_SIZ   sizeof(data32_t)
