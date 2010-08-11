@@ -385,7 +385,7 @@ namespace eval  DvdBurn {
     proc BurnDVD {iso} {
 	set fifo [Fifo .burndvd]
 	exec cat $fifo &
-	exec burnDVD $iso > $fifo 2> $fifo
+	exec cdrecord $iso > $fifo 2> $fifo
 	
 
 
