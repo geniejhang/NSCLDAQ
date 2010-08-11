@@ -39,7 +39,7 @@ if {[lsearch -exact $auto_path $libdir] == -1} {
     set auto_path [concat $libdir $auto_path]
 }
 
-package require camac
+package require wienercamac
 
 # usage: bcnaf.tcl b c n a f [d]
 
@@ -70,6 +70,7 @@ if {($f > 15) && ($f < 24)} {
 
 set module [wienercamac::cdreg $b $c $n]
 set output [wienercamac::cfsa $module  $f $a $d]
+
 set data [lindex $output 0]
 set q    [lindex $output 2]
 set x    [lindex $output 1]
