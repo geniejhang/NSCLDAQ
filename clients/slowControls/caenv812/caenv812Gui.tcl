@@ -530,6 +530,8 @@ snit::widget cfdv812Gui {
             set value    [::CFDState::GetThreshold $options(-name) $i]
             lappend properties [list $property $value]
         }
+	set mask [::CFDState::getMask $options(-name)]
+	lappend properties [list "enables" $mask]
         foreach i {0 1} {
             set property [format width%d $i]
             set value    [::CFDState::GetWidth $options(-name) $i]
