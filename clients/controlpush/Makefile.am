@@ -46,13 +46,13 @@ noinst_HEADERS= cmdline.h CApplication.h CChannelList.h \
 
 controlpush_LDADD   = CChannel.o -L@top_srcdir@/Exception -lException \
 			-L@top_srcdir@/CopyrightTools -lLicense \
-			$(EPICS_LDFLAGS) 
+			$(EPICS_LDFLAGS) $(THREADING)
 controlpush_LDFLAGS= -Wl,"-rpath=$(libdir)"
 INCLUDES            =   -I@top_srcdir@/Exception \
 			-I@top_srcdir@/CopyrightTools \
 			-I@top_srcdir@/Headers        \
 			-I@top_srcdir@/TCL		\
-			$(EPICS_BIN) $(EPICS_INCLUDES) $(TCL_FLAGS)
+			$(EPICS_BIN) $(EPICS_INCLUDES) $(TCL_FLAGS) $(THREADING)
 
 
 cmdline.c: options.ggo
