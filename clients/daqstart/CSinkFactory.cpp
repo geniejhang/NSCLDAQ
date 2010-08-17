@@ -168,4 +168,5 @@ CSinkFactory::SplitName(char* pName, char** ppParts)
   if(ppParts[0]) nItems++;
   if(ppParts[1]) nItems++;
 
+  return nItems;
 }
