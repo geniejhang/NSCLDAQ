@@ -37,8 +37,8 @@ package require Vme
 #
 #   Global variables:
 
-set BlinkRate 1                        ;# Blink rate in ms.
-set BlinkIntensity 10000                 ;# number of blinks.
+set BlinkRate 2                        ;# Blink rate in ms.
+set BlinkIntensity 500                 ;# number of blinks.
 set BlinkDone   0                      ;# Set nonzero to stop blinking.
 set Crate   0                          ;# Radio button seletor
 set VmeMapName  ""
