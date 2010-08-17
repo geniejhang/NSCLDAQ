@@ -146,12 +146,20 @@ class DAQBuff : public DAQROCNode {
 	   // For now assume little endian ..
 
 	   unsigned int size    = pLocalBuffer[16];
+
 	   if (jumbo) {
 	     size  |= ((unsigned int)(pLocalBuffer[17]) << 16);
 	   }
 	   cout << dec <<   " Header: \n";
 	   for(int i =0; i < 16; i ++) {
 	     cout << pLocalBuffer[i] << " "; 
+	   }
+	   // For the VM-USB it's possible for the size to look larger than the buffer
+	   // size if stacks other than zero are used.. in that case, assume it's a VM_usb
+	   // and mask the size by 0xfff and add one since size is not self-inclusive.
+	   // 
+	   if (size > bbuf.GetLen()) {
+	     size = (size & 0xfff) + 1;
 	   }
 	   cout << dec << endl  << "Event: \n";
 	   short *pEvent          = &(pLocalBuffer[16]);
