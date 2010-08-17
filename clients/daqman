@@ -1,8 +1,8 @@
 #!/bin/bash
 
 daqmanpath=`dirname $0`/../man
+daqmanpath2=`dirname $0`/../share/man
 
-echo $daqmanpath
 
 
-man -M$daqmanpath $1 $2 $3 $4 $5 $6
+man -M$daqmanpath -M$daqmanpath2 $1 $2 $3 $4 $5 $6

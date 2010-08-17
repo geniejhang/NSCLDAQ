@@ -828,6 +828,10 @@ AC_SUBST(KERNEL_INCS)
 
 AC_SUBST(SMP_FLAG)
 
+# Threading:
+THREADING=-pthread
+AC_SUBST(THREADING)
+
 
 #   The base part of the .so version:
 

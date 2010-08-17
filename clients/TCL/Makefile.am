@@ -23,7 +23,8 @@ testableSources = TCLInterpreter.cpp TCLProcessor.cpp  \
 	TCLCommandPackage.cpp TCLIdleProcess.cpp \
 	TCLObject.cpp TCLChannel.cpp TCLTracedVariable.cpp \
 	CLanguageTraceCallbacks.cpp TCLObjectProcessor.cpp \
-	TCLCompatibilityProcessor.cpp 
+	TCLCompatibilityProcessor.cpp TCLLiveEventLoop.cpp \
+	CTCLChannelCommander.cpp CTCLStdioCommander.cpp
 
 testableObjects = TCLInterpreter.o   TCLProcessor.o    \
 	TCLVariable.o   TCLString.o    \
@@ -33,7 +34,8 @@ testableObjects = TCLInterpreter.o   TCLProcessor.o    \
 	TCLCommandPackage.o   TCLIdleProcess.o   \
 	TCLObject.o   TCLChannel.o   TCLTracedVariable.o   \
 	CLanguageTraceCallbacks.o  TCLObjectProcessor.o \
-	TCLCompatibilityProcessor.o
+	TCLCompatibilityProcessor.o TCLLiveEventLoop.h \
+	CTCLChannelCommander.h CTCLStdioCommander.h
 
 libtclPlus_la_SOURCES = TCLApplication.cpp $(testableSources)
 

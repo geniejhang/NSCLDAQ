@@ -174,7 +174,7 @@ CReadoutMain::ParseSwitches(int argc, char** argv)
   }
   if(parse.window_flag) {
     cerr << "Due to some rather nasty to fix bugs, --window is not supported\n";
-    exit(-1);
+    //   exit(-1);
   }
   m_fWindowed = parse.window_flag;
   m_fVmeTrigger = ! parse.camac_trigger_flag;
