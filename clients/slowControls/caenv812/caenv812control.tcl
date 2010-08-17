@@ -62,7 +62,7 @@ proc processDestroy {widget toplevel} {
     if {$widget eq $toplevel} {
         incr livePanels -1
         if {$livePanels <= 0} {
-            exit 0
+		exit 0
         }
     }
 }
@@ -339,7 +339,7 @@ proc exitGui {} {
         -parent [focus]                                                       \
        -message {You are exiting the application.  Any currently open control panels will be closed.  Are  you sure?}]
     if {$answer eq "yes"} {
-        exit 0
+        destroy .
     }
 
 }
