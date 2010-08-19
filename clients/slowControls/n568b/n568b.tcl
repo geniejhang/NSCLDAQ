@@ -44,7 +44,7 @@ proc n568b::Id {controller node} {
     after 100
 
     set reply [caennet::send $controller $node 0]
-
+    puts "Got '$reply'"
     set error [lindex $reply 0]
     if {$error != 0} {
 

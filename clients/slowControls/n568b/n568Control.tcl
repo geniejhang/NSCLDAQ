@@ -412,7 +412,9 @@ proc fileExit {} {
     set answer [tk_messageBox -type okcancel -title "Are you sure?" -icon warning \
                  -message "Exiting the program will close all shaper control panels and lose any \
 settings that are not yet saved.  Ok to exit?"]
-    if {$answer eq "ok"} exit
+    if {$answer eq "ok"} {
+	    destroy .
+    }
 }
 #------------------------------- Entry point -----------------------------
 

@@ -301,7 +301,7 @@ proc makeGui {} {
     # Bind double clicks on the table to bring up the alarm configuration
     # menu for the corresponding channel:
 
-    bind $tableWidget <Double-Button-1> [list configureChannelAlarm %x %y]
+    bind $tableWidget <Button-3> [list configureChannelAlarm %x %y]
 }
 #---------------------------------------------------------------------------------
 # clearAlarmSetup name row
@@ -471,9 +471,11 @@ proc configureChannelAlarm {x y} {
     global tableWidget
     global channelAlarms
 
+
     set rc [$tableWidget index @$x,$y]
     set rc [split $rc ","]
     set row [lindex $rc 0]
+
     #
     #  Can't configure the title row.
     #
@@ -483,13 +485,11 @@ proc configureChannelAlarm {x y} {
     set channel [$tableWidget get $row,0]
     set value   [.value$row cget -text]
 
-
     #  Can only set alarms on numerical channels
 
     if {![string is double -strict $value]} {
 	return
     }
-
     alarmConfiguration .alarmconfig -channel $channel \
                                     -nominal $value  \
 				    -cancelcommand [list destroy .alarmconfig] \

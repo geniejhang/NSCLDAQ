@@ -48,7 +48,7 @@ package require Vme
 namespace eval caennet {
 
     variable caennetcontrollers "" ;# list of known controllers.
-    variable timeout   1000    ;# Loop passes for response timeout.
+    variable timeout   100000    ;# Loop passes for response timeout.
 
     
     proc isController { controller } {
