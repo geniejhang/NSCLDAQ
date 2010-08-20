@@ -34,8 +34,8 @@ testableObjects = TCLInterpreter.o   TCLProcessor.o    \
 	TCLCommandPackage.o   TCLIdleProcess.o   \
 	TCLObject.o   TCLChannel.o   TCLTracedVariable.o   \
 	CLanguageTraceCallbacks.o  TCLObjectProcessor.o \
-	TCLCompatibilityProcessor.o TCLLiveEventLoop.h \
-	CTCLChannelCommander.h CTCLStdioCommander.h
+	TCLCompatibilityProcessor.o 
+
 
 libtclPlus_la_SOURCES = TCLApplication.cpp $(testableSources)
 
@@ -48,7 +48,8 @@ include_HEADERS = TCLApplication.h TCLCommandPackage.h TCLException.h \
 	TCLProcessor.h TCLResult.h TCLString.h TCLTimer.h TCLVariable.h \
 	TCLChannel.h TCLVersionHacks.h TCLTracedVariable.h \
 	VariableTraceCallback.h CLanguageTraceCallbacks.h \
-	TCLObjectProcessor.h TCLCompatibilityProcessor.h 
+	TCLObjectProcessor.h TCLCompatibilityProcessor.h  \
+	TCLLiveEventLoop.h CTCLChannelCommander.h CTCLStdioCommander.h
 
 
 XMLMANSRC=CTCLApplication.xml CTCLInterpreterObject.xml \
