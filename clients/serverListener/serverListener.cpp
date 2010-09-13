@@ -19,10 +19,15 @@
 #include <unistd.h>
 #include <libgen.h>
 #include <string.h>
+#include <stdio.h>
+#include <errno.h>
+
+#include <Exception.h>
 
 #include <iostream>
 #include <string>
 #include <CSocket.h>
+
 
 /*!
  *  This file contains a simple server listener for the tcp/hoister (spectcldaq.server).
@@ -147,9 +152,21 @@ int main(int argc, char** argv)
   daemon(0,1);			// Run in the background
 #endif
 
-  std::string serverInstance = getServerInstanceName(me);
+  try {
+    std::string serverInstance = getServerInstanceName(me);
 
-  server(port, serverInstance);
+    server(port, serverInstance);
+  }
+  catch(CException& rExcept) {
+    std::cerr << "CException : " << rExcept.ReasonText() << " : " 
+	      << rExcept.WasDoing() << std::endl;
+  }
+  catch (std::string msg) {
+    std::cerr << "String exception: " << msg << std::endl;
+  }
+  catch (const char* msg) {
+    std::cerr << "const char* exception: " << msg << std::endl;
+  }
 
 }
 

@@ -1310,19 +1310,32 @@ void
 CSocket::OpenSocket()
 {
   int             protocol;
+  struct protoent Entry;
   struct protoent* pEntry;
+  char            strings[1024];
+  int             savedErrno;
   StockStateMap();		// Ensure the state name map is stocked.
-
+  int             status;
   CApplicationSerializer::getInstance()->Lock(); //--> Critical region since
   {				               // getprotoent not recursive.
-    struct protoent* pEntry = getprotobyname("TCP");
-    if(pEntry) protocol = pEntry->p_proto;
+    status = getprotobyname_r("tcp",
+				  &Entry,
+				  strings,
+				  sizeof(strings),
+				  &pEntry);
+				  
+    if(status == 0) {
+      protocol = pEntry->p_proto;
+    }
+    savedErrno = errno;
   }                                            // <-- End Critical Region.
   CApplicationSerializer::getInstance()->UnLock();
 
-  if(!pEntry) throw 
+  if(status) {
+    errno = savedErrno;
+    throw 
 	      CErrnoException("Getting TCP protocol num from getprotoent(3)");
-
+  }
   m_Fd = socket(PF_INET, SOCK_STREAM, protocol);
   if(m_Fd == -1) throw
 		   CErrnoException("Creating socket with socket(2)");
