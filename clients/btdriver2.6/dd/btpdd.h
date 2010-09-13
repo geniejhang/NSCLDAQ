@@ -160,7 +160,7 @@
 
 #if     defined(DEBUG)
 #define BT_TRC_DEFAULT  \
-        (BT_TRC_ERROR|BT_TRC_WARN|BT_TRC_INFO|BT_TRC_CFG)
+  (BT_TRC_ERROR|BT_TRC_WARN)
 
 #else   /* defined(DEBUG) */
 #define BT_TRC_DEFAULT  (BT_TRC_ERROR|BT_TRC_WARN)
