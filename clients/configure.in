@@ -5,7 +5,7 @@ AM_CONFIG_HEADER(config.h)
 
 #    Separate device libraries.
 
-AM_INIT_AUTOMAKE(nscldaq, 8.3-000)  
+AM_INIT_AUTOMAKE(nscldaq, 8.2-009)  
 
 #
 #   The variable below should track the
@@ -881,4 +881,5 @@ AC_OUTPUT( Makefile tcllib/Makefile \
 	slowControls/Makefile slowControls/caenv812/Makefile \
 	slowControls/n568b/Makefile slowControls/vhq/Makefile \
 	slowControls/widgets/Makefile sequencer/Makefile      \
-	spectrodaqStatus/Makefile)
+	spectrodaqStatus/Makefile     \
+	serverListener/Makefile)

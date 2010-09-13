@@ -11,7 +11,7 @@ SUBDIRS = tcllib  \
 	AlarmDisplay LogDisplay ProductionReadout  \
 	contrib dvdburn daqstart @EPICSSOFTWARE@ \
 	ScalerDisplay @DEPENDSON_VME@ wienerusbd \
-	slowControls sequencer spectrodaqStatus	
+	slowControls sequencer spectrodaqStatus	serverListener
 
 
 EXTRA_DIST =  config/install-sh config/config.sub config/config.guess \

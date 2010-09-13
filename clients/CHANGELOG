@@ -1097,3 +1097,5 @@ Edit level 007
 Edit level 008
 - March 22, 2010    Add a log script for the scaler display that will log all
   	    	     channels. 
+Edit Level 009
+- September 10, 2010 - Add a standalone server listener for spectcldaq.
