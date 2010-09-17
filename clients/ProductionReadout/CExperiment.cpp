@@ -83,7 +83,7 @@ extern CReadoutMain MyApp;
 
 //! Manifest constants.
 
-static const unsigned int nTriggerDwellTime = 100; //!< ms trigger holds mutexs
+static const unsigned int nTriggerDwellTime = 10; //!< ms trigger holds mutexs
 static const unsigned int nTriggersPerPoll  =  10; //!< triggers between time
                                                    // checks.
 static const unsigned int msPerClockTick = 100;   //!< Time between run time
