@@ -1099,3 +1099,9 @@ Edit level 008
   	    	     channels. 
 Edit Level 009
 - September 10, 2010 - Add a standalone server listener for spectcldaq.
+Edit level 010
+- September 17, 2010 - In prod readout trigger loop, break out of inner
+                       triggerr poll if there's a trigger.
+                       this should make command procesing more responsive
+                       if the trigger rate is rapid relative to the dead time.
+

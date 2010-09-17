@@ -311,7 +311,7 @@ CTriggerThread::MainLoop()
       for(int i = 0; i < 500; i++) {
 	if((*m_pTrigger)()) {	// Read an event...
 	  m_pExperiment->ReadEvent();
-	  if((triggers++) >= m_nTriggerdwell) break; // Check elapsed time.
+	  break; // Check elapsed time.
 	}
       }
       // Now try the scaler trigger:
@@ -334,6 +334,7 @@ CTriggerThread::MainLoop()
 
     
     CApplicationSerializer::getInstance()->UnLock();
+    sched_yield();
   }
   CApplicationSerializer::getInstance()->Lock();
 
