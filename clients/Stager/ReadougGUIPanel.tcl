@@ -452,7 +452,7 @@ proc ::ReadougGUIPanel::notRecording {} {
 	set fg $ReadougGUIPanel::TestNonRecordingFg
     }    else {
 	set bg black
-	set fg {dark green}
+	set fg {green}
     }
     puts "setting $fg $bg"
     $text   config  -background $bg -foreground $fg
@@ -477,7 +477,7 @@ proc ::ReadougGUIPanel::normalColors {} {
     } else {
 
 	set bgcolor [$title cget -background]
-	set fgcolor [$host              cget -foreground]
+	set fgcolor [$host  cget -foreground]
     }
     puts "setting normal"
 
