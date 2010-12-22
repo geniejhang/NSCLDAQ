@@ -71,6 +71,9 @@ class DAQBuff : public DAQROCNode {
     DAQWordBuffer bbuf(BUFLEN);
     DAQURL sinkurl("TCP://localhost:2602/");
     long sinkid;
+    bool vmusbData = false;
+
+
 
     // Output copyright and author credit on stderr:
 
@@ -83,6 +86,13 @@ class DAQBuff : public DAQROCNode {
 
     // In case we're running spectrodaq on something other than
     // the default URL.
+    if (argc > 1) {
+      string arg = argv[1];
+      if (arg == "-vmusb") {
+	vmusbData = true;
+	argc = 1;
+      }
+    }
     if (argc > 1) {
       cerr << "Using URL: " << argv[1] << endl;
       sinkurl = argv[1];
@@ -160,6 +170,9 @@ class DAQBuff : public DAQROCNode {
 	   // 
 	   if (size > bbuf.GetLen()) {
 	     size = (size & 0xfff) + 1;
+	   }
+	   else if (vmusbData) {
+	     size = size+1;
 	   }
 	   cout << dec << endl  << "Event: \n";
 	   short *pEvent          = &(pLocalBuffer[16]);
