@@ -2,7 +2,7 @@ bin_PROGRAMS=serverListener
 
 serverListener_SOURCES=serverListener.cpp
 
-INCLUDES= -I@top_srcdir@/framework $(SERVER_DEBUG)
+INCLUDES= -I@top_srcdir@/Exception -I@top_srcdir@/Headers  -I@top_srcdir@/framework $(SERVER_DEBUG)
 
 serverListener_LDADD= @top_srcdir@/framework/libEventFramework.la	\
 	@top_srcdir@/Exception/libException.la			\

@@ -149,7 +149,12 @@ int main(int argc, char** argv)
   // the ifdef below supports foreground debugging.
 
 #ifndef SERVER_DEBUG
-  daemon(0,1);			// Run in the background
+  int status = daemon(0,1);			// Run in the background
+  if (status == -1) {
+    int e = errno;
+    std::cerr << "Warning could not background: " << strerror(e) << std::endl;
+    std::cerr << "Runing in non daemon mode\n";
+  }
 #endif
 
   try {

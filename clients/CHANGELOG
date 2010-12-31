@@ -1104,4 +1104,7 @@ Edit level 010
                        triggerr poll if there's a trigger.
                        this should make command procesing more responsive
                        if the trigger rate is rapid relative to the dead time.
-
+Edit level 11
+- December 31, 201- - Make the links in the complete part of the stage area relative
+                      so that they will port across the backup/restore of an experiment.
+                      (TR 5966).

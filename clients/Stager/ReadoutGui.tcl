@@ -704,7 +704,7 @@ proc ReadoutGui::ReadoutController {topname} {
 
 
     ::ReadoutGui::StartRunTimers
-    ::ReadougGuiPanel::normalColors
+    ::ReadougGUIPanel::normalColors
 
     # Establish callback handlers for input from the Readout Program:
     #
