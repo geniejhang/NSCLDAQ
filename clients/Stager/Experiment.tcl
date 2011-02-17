@@ -159,6 +159,7 @@ proc Experiment::makeEventLink run {
         file delete -force $linkname
     }
     set targetAbsPath [file join $filepath $filename]
+
     ::Experiment::link $targetAbsPath $linkname
 
 
@@ -250,6 +251,7 @@ proc Experiment::finalizeEventData run {
         set linkfile [file join $complete $file]
         file rename -force $srcfile $dstfile
 	file attributes $dstfile -permissions 0440;   # Make the saved file read-only
+	file delete -force $linkfile
 	::Experiment::link $dstfile $linkfile
 
         incr segment

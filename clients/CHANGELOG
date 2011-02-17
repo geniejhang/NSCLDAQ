@@ -1105,6 +1105,7 @@ Edit level 010
                        this should make command procesing more responsive
                        if the trigger rate is rapid relative to the dead time.
 Edit level 11
-- December 31, 201- - Make the links in the complete part of the stage area relative
+- December 31, 2010 - - Make the links in the complete part of the stage area relative
                       so that they will port across the backup/restore of an experiment.
                       (TR 5966).
+- February 17, 2011 - Fix error with making links when a run is being overwritten.
