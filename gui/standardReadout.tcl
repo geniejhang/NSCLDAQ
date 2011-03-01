@@ -118,7 +118,7 @@ proc scalerUpdate event {
 	incr ElapsedRunTime
 	Update
 	set updatesToGo $frequency
-	update idletasks
+#	update idletasks
 
     }
 

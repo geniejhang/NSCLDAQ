@@ -284,7 +284,7 @@ proc createSpectra {} {
 	if {$samplesPerStep($i) != 0} {
 	    set normalized [list]
 	    foreach sum $sumsPerStep($i) {
-		set normal [expr {double($sum)/double($samplesPerStep($i))}]
+		set normal [expr {100.0*double($sum)/double($samplesPerStep($i))}]; # counts/sec.
 		lappend normalized $normal
 	    }
 	    set sumsPerStep($i) $normalized
