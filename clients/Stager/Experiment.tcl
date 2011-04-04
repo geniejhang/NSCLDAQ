@@ -303,7 +303,7 @@ proc Experiment::RunBeginning {} {
 	
 	Experiment::waitFile .ready 1000 $fileWaitTimeout
 	if {![file exists .ready]} {
-	    Error "The event logger is not yet ready after a very long time"
+	    ::Diagnostics::Error "The event logger is not yet ready after a very long time - check spectrodaq is alive"
 	}
 	file delete -force .ready
     } else {

@@ -1109,3 +1109,12 @@ Edit level 11
                       so that they will port across the backup/restore of an experiment.
                       (TR 5966).
 - February 17, 2011 - Fix error with making links when a run is being overwritten.
+
+Edit level 12
+April 4, 2011 	- In Stager/Experiment.tcl - specify that Error
+	comes from the Diagnostics namespace else errors in eventlog's
+	startup are errors in stager rather than reported.  Additionally
+	indicate that failure is probably a result of spectrodaq curling
+	up and dying.
+
+	
