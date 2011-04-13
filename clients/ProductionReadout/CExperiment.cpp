@@ -171,6 +171,7 @@ CTriggerThread::Stop()
   //  DAQThreadId id( m_Id);
 
   m_Exiting = true;
+  __sync_synchronize();		// Gcc 4.x specific full memory barrier.
 
   // We have the mutex, we need to release it so the triger thread
   // can get it to run... we'll re-acquire after the join at the same level.
@@ -308,11 +309,13 @@ CTriggerThread::MainLoop()
     dwell = 0;
     do {
       int triggers=0;
-      for(int i = 0; i < 500; i++) {
+      for(int i = 0; (i < 500) && (!m_Exiting); i++) { // Lower latency for exit.
 	if((*m_pTrigger)()) {	// Read an event...
 	  m_pExperiment->ReadEvent();
 	  break; // Check elapsed time.
 	}
+	__sync_synchronize();			     // Gcc specific memory barrier
+      
       }
       // Now try the scaler trigger:
 
@@ -330,11 +333,14 @@ CTriggerThread::MainLoop()
       //      mutexend.tv_usec += SECOND*secdif;
       //      dwell = (mutexend.tv_usec - mutexstart.tv_usec)/MILISECOND;
       dwell++;
-    } while(dwell < m_msHoldTime);
+      __sync_synchronize();			     // Gcc specific memory barrier
+    } while((dwell < m_msHoldTime) && (!m_Exiting)); // Lowest possible exit latency.
 
     
     CApplicationSerializer::getInstance()->UnLock();
     sched_yield();
+    __sync_synchronize();			     // Gcc specific memory barrier
+
   }
   CApplicationSerializer::getInstance()->Lock();
 
