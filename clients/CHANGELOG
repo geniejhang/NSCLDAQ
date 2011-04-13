@@ -1124,5 +1124,8 @@ April 13, 2011 - In eventlog.cpp - In oneshot mode wait a second before
         the link is to a remote system.  Delay while things are 
         presumably idle to decrease the already small chance data
         is sent prior to the completion of link establishment.  
-        Empirically this happnes now < 1.25% of the time. 
+        Empirically this happnes now < 1.25% of the time.
+        - Production readout - try to make end run more responsive
+          though this is very gcc specific (__sync_synchronize() and all).
+ 
 	
