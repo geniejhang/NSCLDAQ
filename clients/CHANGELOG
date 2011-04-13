@@ -1116,5 +1116,13 @@ April 4, 2011 	- In Stager/Experiment.tcl - specify that Error
 	startup are errors in stager rather than reported.  Additionally
 	indicate that failure is probably a result of spectrodaq curling
 	up and dying.
-
+Edit level 13
+April 13, 2011 - In eventlog.cpp - In oneshot mode wait a second before
+        creating the .ready file.  This is an attempt to deal with
+        TR 6216 and TR 6212.  Problem I _think_ due to asynchronous
+        nature of spectrodaq link establishment..especially if 
+        the link is to a remote system.  Delay while things are 
+        presumably idle to decrease the already small chance data
+        is sent prior to the completion of link establishment.  
+        Empirically this happnes now < 1.25% of the time. 
 	
