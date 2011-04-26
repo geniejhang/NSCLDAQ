@@ -299,7 +299,8 @@ public:
     return m_fThresholdLt[channel];
   }
   bool haveHiRAFirmware() const;
-
+  void setPollThreshold(size_t n);
+  size_t getPollThreshold();
 
   //  Data taking functions. 
 public:

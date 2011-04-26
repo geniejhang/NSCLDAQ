@@ -1127,5 +1127,11 @@ April 13, 2011 - In eventlog.cpp - In oneshot mode wait a second before
         Empirically this happnes now < 1.25% of the time.
         - Production readout - try to make end run more responsive
           though this is very gcc specific (__sync_synchronize() and all).
- 
+Edit level 14
+April 26, 2011  - In DeviceSupport/sis3300.cpp; Provide the ability to set the
+                  DMA Poll threshold because otherwise weird things happen in the
+                   3300 (intermittent buserrors doing block transfers).
+                 Provide a large default DMA threshold as well.
+
+
 	

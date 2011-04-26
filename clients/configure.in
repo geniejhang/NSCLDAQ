@@ -5,7 +5,7 @@ AM_CONFIG_HEADER(config.h)
 
 #    Separate device libraries.
 
-AM_INIT_AUTOMAKE(nscldaq, 8.2-013)  
+AM_INIT_AUTOMAKE(nscldaq, 8.2-014)  
 
 #
 #   The variable below should track the

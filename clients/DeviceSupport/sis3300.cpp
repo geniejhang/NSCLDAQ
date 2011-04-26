@@ -37,6 +37,7 @@ using namespace std;		// Needed here for spectrodaq
 #include <sis3300.h>
 #include <string>
 #include <CVMEInterface.h>
+#include <SBSBit3API.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -54,6 +55,8 @@ using namespace std;		// Needed here for spectrodaq
 const char* sDevice="/dev/vme32d32";
 const unsigned long nDeviceSize = 0x383000;
 const unsigned long K = 1024L;
+
+const int  DefaultPollCeiling = 4*K;
 
 // Bits in the control register: Each control has a set/unset bit (J/K flip
 // flop control).
@@ -217,6 +220,12 @@ CSIS3300::CSIS3300(unsigned long nBaseAddress,
 
   void *p = CVMEInterface::Open(CVMEInterface::A32, nCrate);
   m_nFd = p;
+
+  // Since there seems to be a problem with IRQ synchronization
+  // set the PollCeiling high:
+
+  CSBSBit3VmeInterface::SetDMAPollCeiling(p, DefaultPollCeiling);
+
   m_pCsrs  = (volatile unsigned long*)CVMEInterface::Map(p, m_nBase, 
 							  0x3000);
 
@@ -1195,4 +1204,25 @@ CSIS3300::haveHiRAFirmware() const
 
   return ((HIRAFWMAJOR == major));
 
+}
+/**
+ * This method provides access to the DMA Poll ceiling value.  This is needed
+ * because there seems some problem with using interrupts to synchronize end of DMA
+ * @param nTransfers   - Number of transfers above which to use IRQ synchronization.
+ */
+void
+CSIS3300::setPollThreshold(size_t n)
+{
+  CSBSBit3VmeInterface::SetDMAPollCeiling(m_nFd, n);
+}
+/**
+ * This method returns the current dma poll ceiling setting. 
+ * @return size_t
+ * @retval Number of transfers above which the SBS interface uses DMA rather than polling
+ *         to synchronize with DMA completion.
+ */
+size_t
+CSIS3300::getPollThreshold()
+{
+  return CSBSBit3VmeInterface::GetDMAPollCeiling(m_nFd);
 }
