@@ -488,22 +488,6 @@ CSIS3300::SetSampleSize(SampleSize ePagesize)
 }
 
 /*!
-  Sets the number of samples in an event.  This is reflected by both 
-m_ePagessize and m_nPagesize.   
-Modified from original version to allow any sample size.
-/param ePagesize - Sample size.  Must be less than 128K.
-*/
-/********
-void
-CSIS3300::SetSampleSize(unsigned int ePagesize)
-{
-  m_ePagesize = ePagesize;
-  if(m_ePagesize>128000) m_ePagesize = 128000;
-  m_nPagesize = m_ePagesize;
-}
-*/
-
-/*!
   Enable the page wrap.  In page wrap mode, there is no implied stop when an
 event page is full.  The event just wraps around to the start of the event
 in the event buffer.  This is used in post trigger mode:  In that mode, you
