@@ -1132,6 +1132,11 @@ April 26, 2011  - In DeviceSupport/sis3300.cpp; Provide the ability to set the
                   DMA Poll threshold because otherwise weird things happen in the
                    3300 (intermittent buserrors doing block transfers).
                  Provide a large default DMA threshold as well.
-
+April 28, 2011 - 1. Set DMA poll threshold back now that 'weird things'
+                    are understood.
+                 2. In classic readout V977 trigger, stop using
+                    pattern register mode as my recollection is that this
+                    is wht causes going ready signals to get lost 
+                    from time to time.
 
 	
