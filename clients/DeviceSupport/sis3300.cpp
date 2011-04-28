@@ -56,7 +56,7 @@ const char* sDevice="/dev/vme32d32";
 const unsigned long nDeviceSize = 0x383000;
 const unsigned long K = 1024L;
 
-const int  DefaultPollCeiling = 4*K;
+const int  DefaultPollCeiling = 64;
 
 // Bits in the control register: Each control has a set/unset bit (J/K flip
 // flop control).
