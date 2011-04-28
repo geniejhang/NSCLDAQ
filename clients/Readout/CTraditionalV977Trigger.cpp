@@ -53,6 +53,7 @@ void
 CTraditionalV977Trigger::Initialize()
 {
   m_Module.Reset();
+  m_Module.inputMask(0);
   Disable();
   m_Module.outputMask(0xffff);
   Clear();
@@ -64,7 +65,7 @@ CTraditionalV977Trigger::Initialize()
 void
 CTraditionalV977Trigger::Enable()
 {
-  m_Module.controlRegister(CCAENV977::control_Pattern);
+  m_Module.controlRegister(0);
 }
 /*!
    Disable the trigger.  This means setting the gate mask so that gates
@@ -73,8 +74,7 @@ CTraditionalV977Trigger::Enable()
 void
 CTraditionalV977Trigger::Disable()
 {
-  m_Module.controlRegister(CCAENV977::control_Pattern |
-                           CCAENV977::control_gateMask);
+  m_Module.controlRegister(CCAENV977::control_gateMask);
 }
 
 /*!

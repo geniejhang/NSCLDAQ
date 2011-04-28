@@ -79,5 +79,6 @@ void
 CTraditionalV977Busy::PulseOutputs(UShort_t mask)
 {
   m_Module.outputSet(mask);
+  m_Module.outputSet(mask);	// Force it to hold up for a bit.
   m_Module.outputSet(0);
 }
