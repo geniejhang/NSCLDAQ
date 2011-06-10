@@ -23,7 +23,7 @@ proc ReadougGUIPanel::ui {root args} {
     set base [expr {($root == ".") ? "" : $root}]
     variable ROOT $root
     variable BASE $base
-
+    global   textWidgetHeight
 
     # Widget Initialization
     labelframe $base._labelframe_1 \
@@ -109,7 +109,8 @@ proc ReadougGUIPanel::ui {root args} {
 	    -xscrollcommand [namespace code [list seconds_xscrollcommand]]
     text $base.output \
 	    -xscrollcommand [namespace code [list output_xscrollcommand]] \
-	    -yscrollcommand [list $base._scrollbar_4 set] -state disabled
+	    -yscrollcommand [list $base._scrollbar_4 set] -state disabled \
+	    -height $textWidgetHeight
     scrollbar $base._scrollbar_4 \
 	    -command [list $base.output yview]
     label $base.elapsed \

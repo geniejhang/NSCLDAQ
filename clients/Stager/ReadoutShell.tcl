@@ -27,6 +27,7 @@ exec wish  ${0} ${@}
 
 #  Setup the auto_path to include the installation root
 #  dir:
+global textWidgetHeight 24
 
 set here [file dirname [info script]]
 set libdir [file join $here .. TclLibs]
@@ -294,6 +295,7 @@ proc setupConfiguration arglist {
         set flagvalue [split $item =]
         set flag   [lindex $flagvalue 0]
         set value  [lindex $flagvalue 1]
+
         switch -exact -- $flag {
             -host {
 		DAQParameters::sourceHostIs $value
@@ -305,7 +307,7 @@ proc setupConfiguration arglist {
 		    } elseif {$msg eq "DAQParameters::NotExecutable"} {
 			set errorMsg "-path=$value : File is not executable"
 		    } else {
-			set errorMsg "-path=$value : Unanticipated error processing this flag"
+			set errorMsg "-path=$value : Unanticipated error processing this flag $msg" 
 		    }
 		    tk_messageBox -icon error -type ok -title {Error in -host} \
 			-message $errorMsg
@@ -322,6 +324,10 @@ proc setupConfiguration arglist {
             -passwd {
                 DAQParameters::passwordIs $value
             }
+	    -textheight {
+		global textWidgetHeight
+		set textWidgetHeight $value
+	    }
             default {
                 Usage
                 exit -1

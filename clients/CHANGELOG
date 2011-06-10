@@ -1138,5 +1138,7 @@ April 28, 2011 - 1. Set DMA poll threshold back now that 'weird things'
                     pattern register mode as my recollection is that this
                     is wht causes going ready signals to get lost 
                     from time to time.
-
+Edit level 15
+  June 10, 2011 - Add -textheight flag to readout shell startup ..supports starting
+                  on systems with limited screen height.
 	
