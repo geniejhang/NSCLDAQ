@@ -27,7 +27,7 @@ exec wish  ${0} ${@}
 
 #  Setup the auto_path to include the installation root
 #  dir:
-global textWidgetHeight 24
+set textWidgetHeight 24
 
 set here [file dirname [info script]]
 set libdir [file join $here .. TclLibs]
