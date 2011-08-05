@@ -1142,3 +1142,5 @@ Edit level 15
   June 10, 2011 - Add -textheight flag to readout shell startup ..supports starting
                   on systems with limited screen height.
 	
+Edit level 6
+  August 5, 2011 - Remove -lpub from daqstart makefile as there are not publib references

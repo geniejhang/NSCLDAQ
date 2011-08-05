@@ -32,7 +32,7 @@ noinst_PROGRAMS = unittests
 unittests_SOURCES = $(TESTABLEUNITS) CFileSinkTests.cpp SinkCreatorTests.cpp \
 	FactoryTests.cpp LocalMonitoredProgram.cpp  grep.cpp TestRunner.cpp
 
-unittests_LDADD = $(CPPUNIT_LDFLAGS) -L@top_srcdir@/Exception -lException -lpub
+unittests_LDADD = $(CPPUNIT_LDFLAGS) -L@top_srcdir@/Exception -lException 
 
 
 TESTS = ./unittests
