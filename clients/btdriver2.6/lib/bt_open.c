@@ -21,6 +21,8 @@
 static const char revcntrl[] = "@(#)"__FILE__"  $Revision: 1.9 $" __DATE__;
 #endif /* LINT */
 
+#define _SVID_SOURCE		/* Required by ipc.h. */
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
