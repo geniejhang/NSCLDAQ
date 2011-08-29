@@ -18,7 +18,9 @@ EXTRA_DIST =  config/install-sh config/config.sub config/config.guess \
 	config/ltmain.sh config/missing config/mkinstalldirs mkpackage.tcl \
 	Directories.include CompilationRules.include \
 	CHANGELOG daqman Makefile.am wienerdriver btdriver controlpush/Makefile.am \
-	controlpush/Makefile.in LICENSE btdriver2.6 spectcldaq.server
+	controlpush/Makefile.in LICENSE btdriver2.6 spectcldaq.server \
+	docs/packages.lucid docs/install-lucid.txt
+
 
 install-data-local:
 	$(mkinstalldirs) $(prefix)/etc

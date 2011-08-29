@@ -9,7 +9,8 @@ libDeviceSupport_la_SOURCES = VmeModule.cpp MmapError.cpp \
 	CCamacNimout.cpp CCrateController.cpp CScaler.cpp CStatusModule.cpp \
 	 CVMEScalerLRS1151.cpp \
 	CVMEStatusModule.cpp CVMETrigger.cpp CCAENV1x90.cpp  \
-	CCAENV977.cpp CSIS3600.cpp CCAENV560.cpp CADC2530.cpp
+	CCAENV977.cpp CSIS3600.cpp CCAENV560.cpp CADC2530.cpp \
+	CV1720.cpp
 
 include_HEADERS = VmeModule.h CVME.h CVMEptr.h MmapError.h CSIS3820.h \
 	sis3300.h CModule32.h CAENcard.h CCAENChain.h CaenIO.h Nimout.h \
@@ -26,7 +27,7 @@ include_HEADERS = VmeModule.h CVME.h CVMEptr.h MmapError.h CSIS3820.h \
 	 CCAENV1x90Registers.h \
 	Asserts.h \
 	CCAENV977.h CSIS3600.h CCAENV560.h CCAENV560Registers.h \
-	CADC2530.h
+	CADC2530.h CV1720.h CV1720internal.h
 
 
 libDeviceSupport_la_LIBADD= $(VMEBUILDLIBS)

@@ -1142,5 +1142,11 @@ Edit level 15
   June 10, 2011 - Add -textheight flag to readout shell startup ..supports starting
                   on systems with limited screen height.
 	
-Edit level 6
+Edit level 16
   August 5, 2011 - Remove -lpub from daqstart makefile as there are not publib references
+
+Edit level 17
+  August 29 2011 - Add support module for the CAEN V1729 FADC with charge integration
+                   firmware.
+  August 29,2011 - Select the SVID version of ipc.h in the libbtp to get rid
+                   of a #warning in ipc.h.
