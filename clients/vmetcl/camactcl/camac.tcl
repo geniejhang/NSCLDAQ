@@ -97,7 +97,8 @@ namespace eval camac {
 	    append name ces8210_ $vme _ $branch
 	    set camac($vme,$branch) \
 		[vme create $name -device standard -crate $vme \
-		     [expr 0x800000 + ($branch << 19)] 0x40000]
+		     [expr 0x800000 + ($branch << 19)] 0x80000]
+
 
 	}
 	return $camac($vme,$branch) 
@@ -307,7 +308,6 @@ namespace eval camac {
 	set base   [lindex $reg 1]
 	set offset [camac::Offset $a $f]
 	set address [expr $base + $offset +2 ]
-       
 
 
 

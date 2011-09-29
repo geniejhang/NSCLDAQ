@@ -1150,3 +1150,6 @@ Edit level 17
                    firmware.
   August 29,2011 - Select the SVID version of ipc.h in the libbtp to get rid
                    of a #warning in ipc.h.
+Edit level 18
+  September 29, 2011 - TR 6639: CES CAMAC tcl package incorrectly calculated
+                  the size of the VME address window.  Fixed.
