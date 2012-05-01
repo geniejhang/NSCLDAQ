@@ -22,8 +22,9 @@ testableSources = TCLInterpreter.cpp TCLProcessor.cpp  \
 	TCLCompatibilityProcessor.cpp TCLLiveEventLoop.cpp	\
 	CTCLChannelCommander.cpp CTCLStdioCommander.cpp	\
 	CTCLTcpServerInstance.cpp CTCLServer.cpp TCLObjectPackage.cpp \
-	TCLPackagedObjectProcessor.cpp  CItemConfiguration.cpp \
-	CConfigurableObject.cpp
+	TCLPackagedObjectProcessor.cpp 
+
+# CItemConfiguration.cpp  CConfigurableObject.cpp
 
 testableObjects = TCLInterpreter.lo   TCLProcessor.lo    \
 	TCLVariable.lo   TCLString.lo    \
@@ -63,7 +64,7 @@ bin_PROGRAMS		=	evttclsh
 evttclsh_SOURCES	= 	evttclsh.cpp
 evttclsh_DEPENDENCIES	= 	libtclPlus.la
 
-evttclsh_LDADD		= 	libtclPlus.la	\
+evttclsh_LDADD		= 	libtclPlus.la $(TCL_LDFLAGS)	\
 				@top_srcdir@/base/exception/libException.la
 evttclsh_LDFLAGS	= 	-Wl,"-rpath-link=$(libdir)" $(TCL_LDFLAGS)
 
@@ -90,7 +91,7 @@ TestLdflags = $(testableObjects) $(CPPUNIT_LDFLAGS) $(X11EXTRA_LDFLAGS) \
 	-L@top_srcdir@/base/exception -lException
 
 
-tracetests_LDADD = $(TestLdflags)
+tracetests_LDADD = $(TestLdflags) $(TCL_LDFLAGS)
 
 interptests_SOURCES=interpretertest.cpp objecttest.cpp resulttest.cpp \
 	objcommandtest.cpp compatcommand.cpp packagetests.cpp
@@ -105,7 +106,8 @@ tcpservertest_SOURCES	= 	tcpservertest.cpp
 tcpservertest_DEPENDENCIES	= 	libtclPlus.la
 
 tcpservertest_LDADD		= 	libtclPlus.la	\
-				@top_srcdir@/base/exception/libException.la
+				@top_srcdir@/base/exception/libException.la \
+			$(TCL_LDFLAGS)
 tcpservertest_LDFLAGS	= 	-Wl,"-rpath-link=$(libdir)" $(TCL_LDFLAGS)
 
 
