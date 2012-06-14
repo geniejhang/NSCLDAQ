@@ -277,11 +277,15 @@ set plotChannel 0;		# Which channel to plot.
 proc createSpectra {} {
     global sumsPerStep
     global samplesPerStep
+    global rawData
+
+    set rawData [list]
 
     # normalize...
 
     for {set i 0} {$i < 1024} {incr i} {
 	if {$samplesPerStep($i) != 0} {
+	    lappend rawData "$samplesPerStep($i) $sumsPerStep($i)"
 	    set normalized [list]
 	    foreach sum $sumsPerStep($i) {
 		set normal [expr {100.0*double($sum)/double($samplesPerStep($i))}]; # counts/sec.
@@ -311,6 +315,7 @@ proc processData {} {
     global sumsPerStep
     global samplesPerStep
     global Filename
+    global rawData
     puts "Creating spectra"
 
     if {[catch createSpectra msg]} {
@@ -326,7 +331,15 @@ proc processData {} {
     
     puts "Writing output file: $Filename"
 
+    # Write the raw data to $Filename.raw
 
+    set fd [open $Filename.raw w]
+    foreach item $rawData {
+	puts $fd [csv::join $item]
+    }
+    close $fd
+
+    # Write the cooked data...
 
     set fd [open $Filename  w]
     for {set i 0} {$i < 1023} {incr i} {
