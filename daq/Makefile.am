@@ -1,1 +1,1 @@
-SUBDIRS = format readoutgui s800callouts
+SUBDIRS = format readoutgui s800callouts eventbuilder

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(nscldaq, 10.1-004, fox@nscl.msu.edu)
+AC_INIT(nscldaq, 10.2, fox@nscl.msu.edu)
 
 AC_CONFIG_SRCDIR([/utilities/StringsToIntegers.h])
 AC_CONFIG_HEADER([config.h])
@@ -504,6 +504,7 @@ AC_CONFIG_FILES([Makefile
                  base/tclwidgets/Makefile
                  base/uri/Makefile
 		 base/dataflow/Makefile
+		 base/tcpip/Makefile
 		 servers/Makefile
 		 servers/tclserver/Makefile
                  servers/portmanager/Makefile
@@ -532,6 +533,7 @@ AC_CONFIG_FILES([Makefile
 		 daq/readoutgui/Makefile
 		 daq/readoutgui/InstallRoot.tcl
 		 daq/s800callouts/Makefile
+		 daq/eventbuilder/Makefile
 		 sbs/Makefile
 		 sbs/driver/Makefile
 		 sbs/driver/src/Makefile

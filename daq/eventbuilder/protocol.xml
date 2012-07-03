@@ -1,0 +1,123 @@
+<!-- manpage 5daq -->
+
+<refentry id="daq5-evbprotocol">
+  <refmeta>
+     <refentrytitle>eventorderer</refentrytitle>
+     <manvolnum>5daq</manvolnum>
+  </refmeta>
+  <refnamediv>
+     <refname>eventorderer</refname>
+     <refpurpose>Event orderer protocol</refpurpose>
+  </refnamediv>
+  
+  <refsynopsisdiv>
+    <cmdsynopsis>
+    <command>
+CONNECT source-name
+    </command>
+    </cmdsynopsis>
+
+  </refsynopsisdiv>
+  <refsect1>
+     <title>DESCRIPTION</title>
+     <para>
+        The NSCL event builder consists of a two stage pipeline. The first stage
+        accepts a set of event fragments from an arbitrary number of event sources
+        and produces output that is a total ordering of the event fragments
+        with respect to the value of a timestamp associated with each fragment.
+        The synchronization of the source of this timstamp is beyond the scope of the
+        event builder software as that normally must be done by the experimental
+        hardware.
+     </para>
+     <para>
+        The event orderer stage operates as a TCP/IP server.  Data sources
+        follow a well defined protocol to connect with the server, send data
+        and, eventually, disconnect from the server.
+     </para>
+     <para>
+        The server never initiates an interaction with the clients.  Only
+        clients initiate interactions through <firstterm>messages</firstterm>.
+        Messages consist of a command segment followed by an optional data segment.
+        The server responds to each message to indicate how the request has been
+        processed.
+     </para>
+     <para>
+        Messages consist of a header followed by an optional body.  The
+        Headers are pure ASCII while the bodies consist of binary data.
+        Each messages is descdribed fully in the next section: MESSAGES
+     </para>
+     <para>
+        The event orderer uses the NSCL port manager to advertise its
+        presence.  The service name used is "ORDERER"
+     </para>
+  </refsect1>
+  <refsect1>
+     <title>
+        MESSAGES
+     </title>
+     <para>
+        Each subsection describes a specific message.  Messages consist of a header
+        and an optional body.  The message type determines if there is a body.
+        Each segment consist of a 32 bit little endian size followed by its
+        contents.  For headers, the contents are an ASCII string.  For bodies,
+        the contents are message specific.  Messages that don't have bodies
+        send a body size of 0.
+     </para>
+     <para>
+        The server replies to the client are fully textual.  Each reply is a
+        single line of text.  The server replies are success and error replies:
+     </para>
+     <variablelist>
+        <varlistentry>
+            <term><literal>OK</literal></term>
+            <listitem>
+                <para>
+                    Successful completion of the request.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><literal>ERROR nn</literal></term>
+            <listitem>
+                <para>
+                    The request failed.  The <replaceable>nn</replaceable>
+                    following the <literal>ERROR</literal> return is an
+                    error code that gives the reason for the failure.
+                </para>
+                <para>
+                    See ERROR CODES below for the various failur reasons
+                    that have been anticipated.
+                </para>
+            </listitem>
+        </varlistentry>
+     </variablelist>
+     <refsect2>
+        <title>CONNECT</title>
+        <para>
+            Must be sent by the client immediately following a connection.
+            The body contains a text string that describes the connection.
+            See CONNECTION STATE below for more information about the
+            state machine that describes a connection.  The body contents
+            will appear on the GUI attached to the event 
+        </para>
+        <para>
+            This message causes a transition from the CONNECTING to the
+            CONNECTED state.
+        </para>
+     </refsect2>
+  </refsect1>
+  <refsect1>
+    <title>CONNECTION STATE</title>
+    <para>
+        Connections have well defined states.  The connection state changes
+        due to a well defined set of events.   If the state machine is violated,
+        the server will disconnect from the client immediately without reporting
+        an error.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>ERROR CODES</title>
+    <para>
+    </para>
+  </refsect1>
+</refentry>

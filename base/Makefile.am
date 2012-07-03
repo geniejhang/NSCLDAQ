@@ -1,4 +1,4 @@
 SUBDIRS = 	os cvt exception uri thread headers tclwidgets \
-		tclplus CopyrightTools security dataflow
+		tclplus CopyrightTools security dataflow tcpip
 
 

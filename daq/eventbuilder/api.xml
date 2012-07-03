@@ -1,0 +1,352 @@
+<!-- Chapter Libraries -->
+
+<chapter>
+    <title>
+        Event builder client API
+    </title>
+    <para>
+        The NSCL Event builder is made of of two distinct stages.  These
+        stages:
+        <orderedlist>
+            <listitem>
+                <para>
+                    A fragment orderer which accepts chunks of event,
+                    or <firstterm>fragments</firstterm> from the data sources
+                    and produces as output fragments that are ordered
+                    by timestamps that are associated with the fragments.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    A builder stage that clumps event fragments with timestamps
+                    that are within a coincidence window into events.
+                </para>
+            </listitem>
+        </orderedlist>
+    </para>
+    <para>
+        This chapter provides tutorial information that describes the
+        client library to this subsystem.
+        <link linkend='daq3-eventorder' endterm='daq3-ceventorder-title' />
+        provides reference material for the class we are discussing here.
+    </para>
+    <para>
+        The interface is encapsulated in a single class named
+        <classname>CEventOrderClient</classname>.  In the remainder of this
+        chapter we will describe:
+    </para>
+    <itemizedlist>
+        <listitem>
+            <para>
+                <link linkend='evb-using-client'>Making <classname>CEventOrderClient</classname> available
+            within your program.</link>
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <link linkend='evb-connecting'>
+                How to form a connection with the event orderer.
+                </link>
+            </para>
+        </listitem>
+    </itemizedlist>
+    <section>
+        <title>Incorporating the event builder client library</title>
+        <para>
+            Incorporating event builder client software in your program requires
+            that you <literal>#include</literal> the event builder client
+            header in source files that use <classname>CEventOrderClient</classname>.
+            You must also:
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        Provide the appropriate <literal>-I</literal> switch so
+                        that your compilations will locate the header.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Provide the appropriate linker switches so that your
+                        program will link with the event builder client libraries
+                        and so that the Linux dynamic loader can locate them
+                        at run-time.
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+        <para>
+            As we have done throughout this manual, assume that <literal>DAQROOT</literal>
+            is an environment variable that points to the root directory of the
+            NSCLDAQ installation.
+        </para>
+        <para>
+            The header for the event builder is named after the class as usual.
+            Your source files will need a line like:
+        </para>
+        <informalexample>
+            <programlisting>
+#include &lt;CEventOrderClient.h&gt;
+            </programlisting>
+        </informalexample>
+        <para>
+            To locate this, your compilations will need to specify
+            <literal>-I$DAQROOT/include</literal>
+        </para>
+        <para>
+            At link time you need to specify three switches:
+            <literal>-L$DAQROOT/lib -lEventBuilder -Wl,"-rpath=$DAQROOT/lib"</literal>.
+            The first of these adds the NSCLDAQ library directory to the linker
+            library search path.  The second requests that
+            <filename>libEventBuilder.so</filename> be searched to resolve
+            undefined symbols.  The last adds the NSCLDAQ library to the list
+            of libraries searched for loadable libraries when the program
+            starts.
+        </para>
+        <para>
+            If in fact you did define an environment variables DAQROOT, and this
+            is used within a Makefile you should use
+            <literal>$(DAQROOT)</literal> wherever <literal>$DAQROOT</literal>
+            is used above.
+        </para>
+    </section>
+    <section>
+        <title>Connecting to the event builder.</title>
+        <para>
+            The code below shows how to connect to the event builder as
+            a client:
+        </para>
+        <example>
+            <title>
+                Connecting to the event builder as a data source.
+            </title>
+            <programlisting>
+#include &lt;CEventOrderClient&gt;                     <co id='evbc-connect-include' />
+...
+std::string eventBuilderHost;                          <co id='evbc-connect-hostname' />
+...
+unsigned int evbPort;                                  <co id='evbc-connect-getport' />
+try {
+    evbPort = CEventOrderClient::Lookup(eventBuilderHost);
+}
+catch (CErrnoException&amp; e) {                      <co id='evbc-connect-lookuperr' />
+...
+}
+
+CEventOrderClient evb(eventBuilderHost, evbPort);    <co id='evbc-connect-create' />
+try {
+    evb.Connect();                                   <co id='evbc-connect-connect' />
+}
+catch (CErrnoException&amp; e) {                     <co id='evbc-connect-connecterr' />
+...
+}
+            </programlisting>            
+        </example>
+        <calloutlist>
+            <callout arearefs='evbc-connect-include'>
+                <para>
+                    As previously described, this <literal>#include</literal>
+                    is required to define the client class.
+                </para>
+            </callout>
+            <callout arearefs='evbc-connect-hostname'>
+                <para>
+                    To connect to the event builder you will need to know
+                    the host on which it was started.  For the sake of this
+                    example, assume thie variable will be filled in later on
+                    with the correct hostname.
+                </para>
+            </callout>
+            <callout arearefs='evbc-connect-getport'>
+                <para>
+                    This segment of code looks up the TCP/IP port
+                    on which the event builder is listening for connections.
+                    The event builder
+                    obtains a service port via the NSCLDAQ Port manager.
+                    The port manager, in turn, advertises the event buuilder service.
+                </para>
+            </callout>
+            <callout arearefs='evbc-connect-lookuperr'>
+                <para>
+                    If the port cannot be looked up an exception is thrown.
+                    Normally you would fill in some error reporting code here.
+                </para>
+            </callout>
+            <callout arearefs='evbc-connect-create'>
+                <para>
+                    The connection to the event builder will be encapsulated
+                    in a <classname>CEventOrderClient</classname> therefore
+                    one of these is created.  Note that this does
+                    <emphasis>not</emphasis> connect to the event builder.
+                </para>
+            </callout>
+            <callout arearefs='evbc-connect-connect'>
+                <para>
+                    The <methodname>Connect</methodname> method actually attempts
+                    to perform the connection to the event builder.
+                </para>
+            </callout>
+            <callout arearefs='evbc-connect-connecterr'>
+                <para>
+                    As with <methodname>Lookup</methodname> an exception is
+                    thrown if the connection could not be established.
+                </para>
+            </callout>
+        </calloutlist>
+    </section>
+    
+</chapter>
+
+
+<!-- manpage 3daq -->
+<refentry id="daq3-ceventorder">
+<refmeta>
+ <refentrytitle id="daq3-ceventorder-title">CEventOrderClient</refentrytitle>
+ <manvolnum>3daq</manvolnum>
+</refmeta>
+<refnamediv>
+ <refname>CEventOrderClient</refname>
+ <refpurpose>Client of the event orderer</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+
+   <synopsis>
+class   <ooclass><classname>CEventOrderClient</classname></ooclass> {
+  <constructorsynopsis>
+ <methodname>CEventOrderClient</methodname>
+ <methodparam><type>std::string</type> <parameter>node-name</parameter></methodparam>
+ <methodparam><type>unsigned int</type> <parameter>port</parameter></methodparam>
+  </constructorsynopsis>
+  <methodsynopsis>
+ <type>void</type>
+    <methodname>Connect</methodname>
+    <methodparam>
+        <type>std::string</type><parameter>description</parameter>
+    </methodparam>
+    <exceptionname>CErrnoException</exceptionname>
+    <modifier>
+  </methodsynopsys>
+  <methodsynopsis>
+    <modifier>static</modifier>
+    <type>int</type>
+    <methodname>Lookup</methodname>
+    <methodparam>
+        <type>std::string</type><parameter>host</parameter>
+    </methodparam>
+  </methodsynopsis>
+  <exceptionname>
+    CErrnoException
+  </exceptionname>
+};
+   </synopsis>
+</refsynopsisdiv>
+<refsect1>
+ <title>DESCRIPTION</title>
+ <para>
+    Provides the client API to the event fragment orderer component of the
+    event builder.  The normal operation sequence would be to use the
+    <methodname>Lookup</methodname> static method to locate the event builder
+    server port, create a <classname>CEventOrderClient</classname> instance
+    and invoke <methodname>Connect</methodname> to connect to the event
+    builder.
+ </para>
+ <para>
+    Once connected, <methodname>sendFragments would be used to send data to the
+    server until it's time to disconnect at which time
+    the connection is dropped either by destroying the object or by
+    calling the <methodname>Disconnect</methodname> method.
+ </para>
+</refsect1>
+<refsect1>
+ <title>
+METHODS
+ </title>
+ <variablelist>
+    <varlistentry>
+        <term>
+            <constructorsynopsis>
+                <methodname>CEventOrderClient</methodname>
+                <methodparam><type>std::string</type> <parameter>node-name</parameter></methodparam>
+                <methodparam><type>unsigned int</type> <parameter>port</parameter></methodparam>
+            </constructorsynopsis>
+        </term>
+        <listitem>
+            <para>
+                Constructs an instance of an event order client object.
+                The <parameter>node-name</parameter>
+                and <parameter>port</parameter> define the Tcp/IP
+                of the connection that will be made with the event builder.
+            </para>
+            <para>
+                The connection is not actually made until the
+                <methodname>Connect</methodname> method is invoked
+                (see below).
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <methodsynopsis>
+                <modifier>static</modifier>
+                <type>int</type>
+                <methodname>Lookup</methodname>
+                <methodparam>
+                    <type>std::string</type><parameter>host</parameter>
+                </methodparam>
+              </methodsynopsis>
+              <exceptionname>
+                CErrnoException
+              </exceptionname>
+        </term>
+        <listitem>
+            <para>
+                Attempts to look up the port on which an event builder for the
+                current user is running.  This is done by contacting the
+                NSCL port manager on the specified <parameter>host</parameter>.
+            </para>
+            <para>
+                On failure, a <classname>CErrnoException</classname> is thrown
+                which will describe the reason and context of the error.
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <methodsynopsis>
+            <type>void</type>
+               <methodname>Connect</methodname>
+               <methodparam>
+                   <type>std::string</type><parameter>description</parameter>
+               </methodparam>
+               <exceptionname>CErrnoException</exceptionname>
+             </methodsynopsis>
+        </term>
+        <listitem>
+            <para>
+                Attempts to connect to the event builder described
+                by the constructor parameters.
+                <parameter>description</parameter> will be passed to the
+                event builder as a description of the event source.
+                The description will be used on the event builder GUI.
+            </para>
+        </listitem>
+    </varlistentry>
+  
+ </variablelist>
+</refsect1>
+<refsect1>
+    <title>EXCEPTIONS</title>
+    <para>
+        The following exception types can be thrown:
+    </para>
+    <variablelist>
+        <varlistentry>
+            <term>CErrnoException</term>
+            <listitem>
+                <para>
+                    Reports Linux system service errors.
+                </para>
+            </listitem>
+        </varlistentry>
+    </variablelist>
+</refentry>     

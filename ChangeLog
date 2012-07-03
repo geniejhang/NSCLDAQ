@@ -249,3 +249,10 @@ Feb 1, 2012 - Feb 24, 2012
 	- Attempt to fix race condition between the s800 start and the
 	  polling of the s800 status.
 	
+10.2  
+	- Issue #1174 - Create development branch for nscldaq-10.2 with
+	the event builder (July 2, 2012).
+	- Issue #1193 - Factor the socket library used by epics and vmusb
+	  into a base library so it can be used by the event builder
+	client libraries.
+	
