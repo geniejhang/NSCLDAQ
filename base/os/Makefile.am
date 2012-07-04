@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libdaqshm.la
 
-libdaqshm_la_SOURCES = daqshm.cpp
-include_HEADERS      = daqshm.h
+libdaqshm_la_SOURCES = daqshm.cpp os.cpp
+include_HEADERS      = daqshm.h os.h
 
 noinst_HEADERS	     = Asserts.h
 

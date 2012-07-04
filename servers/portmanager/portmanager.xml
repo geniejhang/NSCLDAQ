@@ -298,8 +298,8 @@ tclsh DaqPortManager <replaceable>options...</replaceable>
 #include &lt;CPortManager.h&gt;
 #include &lt;CPortManagerException.h&gt;
          </programlisting>
-         <classsynopsis>
-            <ooclass><classname>CPortManager</classname></ooclass>
+         <synopsis>
+class <ooclass><classname>CPortManager</classname></ooclass> {
             <constructorsynopsis>
                 <methodname>CPortManager</methodname>
                 <methodparam>
@@ -328,7 +328,9 @@ tclsh DaqPortManager <replaceable>options...</replaceable>
                     <void />
             </methodsynopsis>
 
-         </classsynopsis>
+};
+         </synopsis>
+
       </refsynopsisdiv>
       <refsect1>
          <title>Description</title>
