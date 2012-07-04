@@ -14,9 +14,32 @@ include_HEADERS = CEventOrderClient.h
 INCLUDES = -I@top_srcdir@/base/tcpip \
 	-I@top_srcdir@/base/exception  \
 	-I@top_srcdir@/base/headers	\
+	-I@top_srcdir@/base/tcpip        \
+	-I@top_srcdir@/servers/portmanager \
+	-I@top_srcdir@/base/os
 	@THREADCXX_FLAGS@
 
-EXTRA_DIST=protocol.xml api.xml
+EXTRA_DIST=protocol.xml api.xml Asserts.h
 
 libEventBuilder_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
+	@top_builddir@/servers/portmanager/libPortManager.la   \
+	@top_builddir@/base/tcpip/libTcp.la	\
+	@top_builddir@/base/os/libdaqshm.la		\
 	@top_builddir@/base/exception/libException.la
+
+
+
+
+#-------------------------------------------
+#
+# Tests:
+
+noinst_PROGRAMS = unittests
+unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
+	connectTest.cpp
+
+unittests_LDADD = libEventBuilder.la \
+	$(libEventBuilder_la_LIBADD) \
+	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
+
+TESTS=./unittests

@@ -224,8 +224,7 @@ class   <ooclass><classname>CEventOrderClient</classname></ooclass> {
         <type>std::string</type><parameter>description</parameter>
     </methodparam>
     <exceptionname>CErrnoException</exceptionname>
-    <modifier>
-  </methodsynopsys>
+  </methodsynopsis>
   <methodsynopsis>
     <modifier>static</modifier>
     <type>int</type>
@@ -251,7 +250,7 @@ class   <ooclass><classname>CEventOrderClient</classname></ooclass> {
     builder.
  </para>
  <para>
-    Once connected, <methodname>sendFragments would be used to send data to the
+    Once connected, <methodname>sendFragments</methodname> would be used to send data to the
     server until it's time to disconnect at which time
     the connection is dropped either by destroying the object or by
     calling the <methodname>Disconnect</methodname> method.
@@ -349,4 +348,5 @@ METHODS
             </listitem>
         </varlistentry>
     </variablelist>
+ </refsect1>
 </refentry>     

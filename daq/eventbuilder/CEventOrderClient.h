@@ -31,10 +31,18 @@
 #endif
 #endif
 
+// Forward definition:
+
+class CSocket;
+
+/**
+ * Class responsible for client interaction with the event orderer.
+ */
 class CEventOrderClient {
 private:
   std::string m_host;		// Host running the event builder.
   uint16_t    m_port;		// port on which the event builder is running.
+  CSocket*    m_pConnection;	// Connectionto the server.
   
   // construction/destruction/canonicals
 public:
@@ -49,13 +57,18 @@ private:
   
 
   // Static members:
-
+public:
   static uint16_t Lookup(std::string host);
 
   // Object operations:
+public:
+  void Connect(std::string description);
 
-  void Connect();
+  // Utility functions:
 
+private:
+  static char* message(const void* request, size_t requestSize, const  void* body, size_t bodySize);
+  std::string getReplyString();	
 };
 
 
