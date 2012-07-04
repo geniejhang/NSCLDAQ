@@ -77,15 +77,15 @@ CONNECT source-name
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term><literal>ERROR nn</literal></term>
+            <term><literal>ERROR {text}</literal></term>
             <listitem>
                 <para>
-                    The request failed.  The <replaceable>nn</replaceable>
+                    The request failed.  The <replaceable>text</replaceable>
                     following the <literal>ERROR</literal> return is an
-                    error code that gives the reason for the failure.
+                    English string that gives the reason for the failure.
                 </para>
                 <para>
-                    See ERROR CODES below for the various failur reasons
+                    See ERROR STRINGS below for the various failur reasons
                     that have been anticipated.
                 </para>
             </listitem>
@@ -116,8 +116,23 @@ CONNECT source-name
     </para>
   </refsect1>
   <refsect1>
-    <title>ERROR CODES</title>
-    <para>
-    </para>
+    <title>ERROR STRINGS</title>
+    <variablelist>
+       <varlistentry>
+       <term><literal>Expected CONNECT</literal></term>
+       <listitem><para>
+         Protocol required a CONNECT message but something else was received.
+       </para></listitem>
+       </varlistentry>
+
+       <varlistentry>
+         <term><literal>Empty Body</litersl></terrm>
+         <listitem><para>
+           Protocol required a non-empty body but an empty body was received.
+         </para></listitem>
+       </varlistentry>
+
+
+    </variablelist>
   </refsect1>
 </refentry>

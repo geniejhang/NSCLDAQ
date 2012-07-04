@@ -19,7 +19,7 @@ INCLUDES = -I@top_srcdir@/base/tcpip \
 	-I@top_srcdir@/base/os
 	@THREADCXX_FLAGS@
 
-EXTRA_DIST=protocol.xml api.xml Asserts.h
+EXTRA_DIST=protocol.xml api.xml Asserts.h ConnectionManager.tcl
 
 libEventBuilder_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/servers/portmanager/libPortManager.la   \
@@ -27,6 +27,12 @@ libEventBuilder_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/base/os/libdaqshm.la		\
 	@top_builddir@/base/exception/libException.la
 
+TCL_PACKAGE_FILES=ConnectionManager.tcl
+
+install-exec-local:
+	$(mkinstalldirs) $(prefix)/TclLibs/EventBuilder
+	$(INSTALL_SCRIPT) $(TCL_PACKAGE_FILES) $(prefix)/TclLibs/EventBuilder
+	echo "pkg_mkIndex $(prefix)/TclLibs/EventBuilder *.tcl" |$(TCLSH_CMD)
 
 
 
