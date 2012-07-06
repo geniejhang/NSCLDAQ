@@ -26,7 +26,8 @@ libEventBuilder_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/base/os/libdaqshm.la		\
 	@top_builddir@/base/exception/libException.la
 
-TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl
+TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
+	connectionList.tcl
 
 TCL_TEST_FILES=tclTests.tcl managerTests.test
 
@@ -38,7 +39,7 @@ EXTRA_DIST=protocol.xml api.xml Asserts.h \
 install-exec-local:
 	$(mkinstalldirs) $(prefix)/TclLibs/EventBuilder
 	$(INSTALL_SCRIPT) $(TCL_PACKAGE_FILES) $(prefix)/TclLibs/EventBuilder
-	echo "pkg_mkIndex $(prefix)/TclLibs/EventBuilder *.tcl" |@TCLSH_CMD@
+	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl" |@TCLSH_CMD@
 
 
 
