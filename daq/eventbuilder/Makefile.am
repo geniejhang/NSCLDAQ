@@ -26,7 +26,7 @@ libEventBuilder_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/base/os/libdaqshm.la		\
 	@top_builddir@/base/exception/libException.la
 
-TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl
+TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl
 
 TCL_TEST_FILES=tclTests.tcl managerTests.test
 

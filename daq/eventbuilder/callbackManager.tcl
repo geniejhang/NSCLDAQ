@@ -1,4 +1,4 @@
-#    This software is Copyright by the Board of Trustees of Michigan
+#
 #    State University (c) Copyright 2005.
 #
 #    You may use this software under the terms of the GNU public license
@@ -84,7 +84,6 @@ snit::type EVB::CallbackManager {
     # @note The callback is invoked at the global level.
     #
     method invoke {cbName substitutions values} {
-
 	$self _CheckValidCallback $cbName
 	
 	set command $callback($cbName)

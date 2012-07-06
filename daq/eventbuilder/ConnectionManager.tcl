@@ -39,7 +39,9 @@
 #
 
 package require snit
+package require EVB::CallbackManager
 package provide EVB::ConnectionManager 1.0
+
 
 namespace eval EVB {}
 
@@ -51,7 +53,6 @@ namespace eval EVB {}
 #   -clientaddr - Client TCP/IP address (this is readonly).
 #   -description - Client description as provided in the the connection negotiation.
 #   -socket    - Socket connected to client.
-#   -clientaddr - Client TCP/IP address.
 #   -disconnectcommand - Script  to call on disconnect.
 #
 # METHODS
@@ -65,12 +66,19 @@ snit::type EVB::Connection {
     option -clientaddr -default "not-set"
     option -disconnectcommand [list]
 
+
     constructor args {
 	$self configurelist $args
 
-	fconfigure $options(-socket) -blocking 0 -buffering none -translation {binary lf}
+	fconfigure $options(-socket) -blocking 1 -buffering none -translation {binary lf}
 
 	$self _Expecting _Connect FORMING; # We are now expecting a CONNECT command.
+    }
+    destructor {
+	if {$options(-socket) != -1} {
+	    catch {$self _Close 'CLOSED'}
+	}
+
     }
     
     #------------------------------------------------------------------------------
@@ -92,21 +100,22 @@ snit::type EVB::Connection {
 	# applied to so it should work below:
 	#
 	set count [read $socket 4]; # uint32_t.
-	if {[string length $headerCount] != 4} {
+	if {[string length $count] != 4} {
 	    error "read of string length failed"
 	}
-	set stringBytes [read $socket $count]
-	if {[string length $stringBytes] != 4} {
+	binary scan $count i1 size
+	set stringBytes [read $socket $size]
+	if {[string length $stringBytes] != $size} {
 	    error "read of string itself failed"
 	}
 	#
 	# Decode the string as a tcl string via binary scan
 	#
-	binary scan $stringBytes a$count result
-
+	binary scan $stringBytes a$size result
 	return $result
 
     }
+
     ##
     # Read/Decode a message whose header and body payloads are ASCII Strings.
     #
@@ -117,8 +126,8 @@ snit::type EVB::Connection {
     #
     method _ReadTextMessage socket {
 
-	set header [$self _ReadCountedString]
-	set body   [$self _ReadCountedString]
+	set header [$self _ReadCountedString $socket]
+	set body   [$self _ReadCountedString $socket]
 
 	return [list $header $body]
 
@@ -144,14 +153,17 @@ snit::type EVB::Connection {
     # @param newState - New state to set.
     method _Close {newState} {
 	set options(-state) $newState
+	fileevent $options(-socket) readable [list]
 	close $options(-socket)
 
+	set options(-socket) -1
+
 	if {$options(-disconnectcommand) ne [list]} {
-	    uplevel #0 $options(-disconnectcommand)
+	    uplevel #0 [list $options(-disconnectcommand)]
 	}
     }
 
-
+   
     ##
     #  Input handler for when we are expecting a CONNECT message.
     #  when one is properly handled, we transition to the ACTIVE state.
@@ -163,7 +175,6 @@ snit::type EVB::Connection {
     #
     method _Connect socket {
 	
-	$
 
 	if {[catch {$self _ReadTextMessage $socket} msg ]} {
 	    $self _Close ERROR
@@ -177,18 +188,23 @@ snit::type EVB::Connection {
 
 	if {$header ne "CONNECT"} {
 	    puts $socket "ERROR {Expected CONNECT}"
+	    flush $socket
 	    $self _Close ERROR
 	}
 
 	if {[string length $body] == 0} {
 	    puts $socket "ERROR {Empty Body}"
+	    flush $socket
 	    $self _Close ERROR
 	}
 
 	# Save the description and transition to the active state:
         # Register ourself with the event builder core
 
+	puts "Setting -description: $body"
 	set options(-description) $body
+	puts "I am $self"
+	puts [$self cget -description]
 	# RegisterStub   TODO:
 	$self _Expecting _Fragments ACTIVE
 
@@ -196,7 +212,12 @@ snit::type EVB::Connection {
     #
     # Stub for fragments handler.
     #
-    method _Fragments socket {}
+    method _Fragments socket {
+	set data [read $options(-socket) 1]
+	if {[eof $options(-socket)]} {
+	    $self _Close LOST
+	}
+    }
 }
 
 
@@ -208,26 +229,57 @@ snit::type EVB::Connection {
 #
 # OPTIONS
 #   -port - port on which we are listening for connections.
-#
+#   -connectcommand - script to call when a connection has been added.
+#                    Substitutions:
+#                     %H - Host that is connecting with us.
+#                     %O - Connection object created to manage this connection.
+#   -disconnectcommand - Script to call when a connection has been lost.
+#                     %O - Connection object created to manage this connection.
+#                     %H - Host from which the client came.
+#                     %D - Connection descdription.
+#                     
 # METHODS:
 #
 snit::type EVB::ConnectionManager {
     option -port;		# Port on which we listen for connections.
 
+    option -connectcommand   -default [list]  -configuremethod _SetCallback
+    option -disconnectcommand -default [list] -configuremethod _SetCallback
+
     variable serverSocket;	# Socket run by us.
     variable connections [list]; # List of Connection objects.
+    variable callbacks;		 # Callback manager.
 
     constructor args {
 	$self configurelist $args; # To get the port.
 
-	socket -server [mymethod _NewConnection] $options(-port)
+	#
+	# Set up the callback manager.
+	#
+	set callbacks [EVB::CallbackManager %AUTO%]
+	$callbacks define -connectcommand
+	$callbacks define -disconnectcommand
+
+
+
+	set serverSocket [socket -server [mymethod _NewConnection] $options(-port)]
+    }
+    destructor {
+	puts "Destructor $::errorInfo"
+	foreach object $connections {
+	    $object destroy
+	}
+	close $serverSocket
     }
 
     #-----------------------------------------------------------------
     #  Private methods.
 
     ##
-    # Client disconnect is just removing it from the list of connections:
+    # Client disconnect is just removing it from the list of connections
+    # and invoking the disconnect callback.  Once all that dust has settled,
+    # the connection object is destroyed, and its socket closed.
+    #
     #
     # @param object - connection object name.
     # @note  Since it should not be possible for an object to disconnect that
@@ -236,7 +288,12 @@ snit::type EVB::ConnectionManager {
     method _DisconnectClient object {
 	set objectIndex [lsearch -exact $connections $object]
 	if {$objectIndex != -1} {
+	    puts "Object: $object"
+	    puts "Descripton: [$object cget -description]"
+	    $callbacks invoke -disconnectcommand [list %O %H %D] \
+		[list $object [$object cget -clientaddr] [$object cget -description]]
 	    lreplace connections $objectIndex $objectIndex
+	    close [$object cget -socket]
 	} else {
 	    error "BUG - $object not in ConnectionManager connection list (Disconnect)"
 	}
@@ -249,14 +306,32 @@ snit::type EVB::ConnectionManager {
     #  - The object is aded to the connections list.
     #  - The object's -disconnectcommand is configured to invoke
     #    _DisconnectClient
+    #  - We invoke the -connectcommand callback.
+    #
     #
     #  @param sock - socket connected to the client
     #  @param client - Client IP addrerss.
     #  @param cport - client port (we could care less).
     #
-    method _NewConnnection {sock client cport} {
+    method _NewConnection {sock client cport} {
+
 	set connection [EVB::Connection %AUTO% -socket $sock  -clientaddr $client]
 	lappend connections $connection
-	$connection configure -disconnectcommand [mymethod _DisconnectClient $connection]
+	$connection configure -disconnectcommand [$self _DisconnectClient $connection]
+
+	$callbacks invoke -connectcommand [list %H %O] [list $client $connection]
+    }
+    ## 
+    # We very carefully ensured the callbacks registered with the callback manager
+    # are the same as the options that set/get them.
+    # this ensures that we can have a single configuremethod take care of both of them.
+    # 
+    # @param option - Option being set (callback name).
+    # @param value  - New value for the option (the callback).
+    #
+    method _SetCallback {option value} {
+	$callbacks register $option $value
+	set options($option) $value
     }
 }
+

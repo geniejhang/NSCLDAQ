@@ -1,0 +1,109 @@
+#
+#  Check connection manager callbacks.
+#
+package require tcltest
+package require EVB::ConnectionManager
+
+set testPort 2999;		# Port on which our test server will run.
+set host     [list]
+set connected 0
+set sock ""
+
+#
+# Start the ball rolling for a connection;
+# do an async socket connection with a writeable callback to complete the
+# connection.
+#
+proc startConnection {} {
+    set sock [socket -async localhost $::testPort]
+
+    fconfigure $sock -blocking 0 -buffering none -translation {lf binary}
+    fileevent $sock writable [list sendConnectionRequest $sock]
+
+    set ::sock $sock
+}
+#
+# Send the connection message to the server.
+# The description will be "test connection"
+#
+proc sendConnectionRequest {sock} {
+    set hdrlen [string length "CONNECT"]
+    set bodylen [string length "test connection"]
+
+    set msg [binary format i1a${hdrlen}i1a$bodylen [string length "CONNECT"] "CONNECT" \
+		 [string length "test connection"] "test connection"]
+   
+	     
+    puts -nonewline $sock $msg
+    flush $sock
+
+    set result [gets $sock]
+}
+
+#
+# Sample connection callback.
+#
+proc Connected host {
+    set ::host $host
+    incr ::connection
+}
+
+proc Disconnect {host d} {
+    set ::host $host
+    set ::descrip $d
+
+    incr ::disconnect
+}
+##
+#  Can't do the port release quite correctly in test level.
+#
+tcltest::test connectionmanager-1 {Connection callback} \
+    -constraints false \
+    -setup {
+	set mgr [::EVB::ConnectionManager %AUTO% -port $::testPort]
+    } \
+    -cleanup {
+	$mgr destroy
+	close $::sock
+
+    } \
+    -body {
+	set ::host ""
+	$mgr configure -connectcommand [list Connected %H]
+	startConnection
+	vwait ::connection;	# Starts the event loop going.
+	list $::host
+
+    } -result [list 127.0.0.1];	# (localhost)
+
+##
+# This test seems to have problems realated to the limited use of
+# vwait in the test itself.
+#
+
+tcltest::test connectionmanager-2 {Disconnect callback} \
+    -constraints false \
+    -setup {
+
+	set mgr [::EVB::ConnectionManager %AUTO% -port $::testPort]
+    } \
+    -cleanup {	
+	puts "cleanup"
+	$mgr destroy
+	puts "cleaned"
+    } \
+    -body {
+	puts "Body"
+	set ::host ""
+	set ::descrip ""
+	$mgr configure -connectcommand [list Connected %H] \
+	    -disconnectcommand [list Disconnect %H %D]
+	startConnection
+	vwait ::connection
+	close $::sock
+	vwait ::disconnect
+	list $host $descrip
+
+    } -result [list 127.0.0.1 "test connection"]
+
+tcltest::cleanupTests

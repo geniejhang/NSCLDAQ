@@ -24,176 +24,349 @@
             </listitem>
         </orderedlist>
     </para>
-    <para>
-        This chapter provides tutorial information that describes the
-        client library to this subsystem.
-        <link linkend='daq3-eventorder' endterm='daq3-ceventorder-title' />
-        provides reference material for the class we are discussing here.
-    </para>
-    <para>
-        The interface is encapsulated in a single class named
-        <classname>CEventOrderClient</classname>.  In the remainder of this
-        chapter we will describe:
-    </para>
-    <itemizedlist>
-        <listitem>
-            <para>
-                <link linkend='evb-using-client'>Making <classname>CEventOrderClient</classname> available
-            within your program.</link>
-            </para>
-        </listitem>
-        <listitem>
-            <para>
-                <link linkend='evb-connecting'>
-                How to form a connection with the event orderer.
-                </link>
-            </para>
-        </listitem>
-    </itemizedlist>
     <section>
-        <title>Incorporating the event builder client library</title>
+        <title>C++ Client API</title>
         <para>
-            Incorporating event builder client software in your program requires
-            that you <literal>#include</literal> the event builder client
-            header in source files that use <classname>CEventOrderClient</classname>.
-            You must also:
+            This section provides tutorial information that describes the
+            client C++ API to the event orderer/builder.
+            <link linkend='daq3-eventorder' endterm='daq3-ceventorder-title' />
+            provides reference material for the class we are discussing here.
+        </para>
+        <para>
+            The interface is encapsulated in a single class named
+            <classname>CEventOrderClient</classname>.  In the remainder of this
+            chapter we will describe:
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <link linkend='evb-using-client'>Making <classname>CEventOrderClient</classname> available
+                within your program.</link>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <link linkend='evb-connecting'>
+                    How to form a connection with the event orderer.
+                    </link>
+                </para>
+            </listitem>
+        </itemizedlist>
+        <section>
+            <title>Incorporating the event builder client library</title>
+            <para>
+                Incorporating event builder client software in your program requires
+                that you <literal>#include</literal> the event builder client
+                header in source files that use <classname>CEventOrderClient</classname>.
+                You must also:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Provide the appropriate <literal>-I</literal> switch so
+                            that your compilations will locate the header.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Provide the appropriate linker switches so that your
+                            program will link with the event builder client libraries
+                            and so that the Linux dynamic loader can locate them
+                            at run-time.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                As we have done throughout this manual, assume that <literal>DAQROOT</literal>
+                is an environment variable that points to the root directory of the
+                NSCLDAQ installation.
+            </para>
+            <para>
+                The header for the event builder is named after the class as usual.
+                Your source files will need a line like:
+            </para>
+            <informalexample>
+                <programlisting>
+    #include &lt;CEventOrderClient.h&gt;
+                </programlisting>
+            </informalexample>
+            <para>
+                To locate this, your compilations will need to specify
+                <literal>-I$DAQROOT/include</literal>
+            </para>
+            <para>
+                At link time you need to specify three switches:
+                <literal>-L$DAQROOT/lib -lEventBuilder -Wl,"-rpath=$DAQROOT/lib"</literal>.
+                The first of these adds the NSCLDAQ library directory to the linker
+                library search path.  The second requests that
+                <filename>libEventBuilder.so</filename> be searched to resolve
+                undefined symbols.  The last adds the NSCLDAQ library to the list
+                of libraries searched for loadable libraries when the program
+                starts.
+            </para>
+            <para>
+                If in fact you did define an environment variables DAQROOT, and this
+                is used within a Makefile you should use
+                <literal>$(DAQROOT)</literal> wherever <literal>$DAQROOT</literal>
+                is used above.
+            </para>
+        </section>
+        <section>
+            <title>Connecting to the event builder.</title>
+            <para>
+                The code below shows how to connect to the event builder as
+                a client:
+            </para>
+            <example>
+                <title>
+                    Connecting to the event builder as a data source.
+                </title>
+                <programlisting>
+    #include &lt;CEventOrderClient&gt;                     <co id='evbc-connect-include' />
+    ...
+    std::string eventBuilderHost;                          <co id='evbc-connect-hostname' />
+    ...
+    unsigned int evbPort;                                  <co id='evbc-connect-getport' />
+    try {
+        evbPort = CEventOrderClient::Lookup(eventBuilderHost);
+    }
+    catch (CErrnoException&amp; e) {                      <co id='evbc-connect-lookuperr' />
+    ...
+    }
+    
+    CEventOrderClient evb(eventBuilderHost, evbPort);    <co id='evbc-connect-create' />
+    try {
+        evb.Connect();                                   <co id='evbc-connect-connect' />
+    }
+    catch (CErrnoException&amp; e) {                     <co id='evbc-connect-connecterr' />
+    ...
+    }
+                </programlisting>            
+            </example>
+            <calloutlist>
+                <callout arearefs='evbc-connect-include'>
+                    <para>
+                        As previously described, this <literal>#include</literal>
+                        is required to define the client class.
+                    </para>
+                </callout>
+                <callout arearefs='evbc-connect-hostname'>
+                    <para>
+                        To connect to the event builder you will need to know
+                        the host on which it was started.  For the sake of this
+                        example, assume thie variable will be filled in later on
+                        with the correct hostname.
+                    </para>
+                </callout>
+                <callout arearefs='evbc-connect-getport'>
+                    <para>
+                        This segment of code looks up the TCP/IP port
+                        on which the event builder is listening for connections.
+                        The event builder
+                        obtains a service port via the NSCLDAQ Port manager.
+                        The port manager, in turn, advertises the event buuilder service.
+                    </para>
+                </callout>
+                <callout arearefs='evbc-connect-lookuperr'>
+                    <para>
+                        If the port cannot be looked up an exception is thrown.
+                        Normally you would fill in some error reporting code here.
+                    </para>
+                </callout>
+                <callout arearefs='evbc-connect-create'>
+                    <para>
+                        The connection to the event builder will be encapsulated
+                        in a <classname>CEventOrderClient</classname> therefore
+                        one of these is created.  Note that this does
+                        <emphasis>not</emphasis> connect to the event builder.
+                    </para>
+                </callout>
+                <callout arearefs='evbc-connect-connect'>
+                    <para>
+                        The <methodname>Connect</methodname> method actually attempts
+                        to perform the connection to the event builder.
+                    </para>
+                </callout>
+                <callout arearefs='evbc-connect-connecterr'>
+                    <para>
+                        As with <methodname>Lookup</methodname> an exception is
+                        thrown if the connection could not be established.
+                    </para>
+                </callout>
+            </calloutlist>
+        </section>
+    </section>
+    <section>
+        <title>The Event orderer/event builder API</title>
+        <para>
+            The event builder itself is a loadable Tcl package rather than
+            a program.  This allows experiment designers to:
             <itemizedlist>
-                <listitem>
-                    <para>
-                        Provide the appropriate <literal>-I</literal> switch so
-                        that your compilations will locate the header.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        Provide the appropriate linker switches so that your
-                        program will link with the event builder client libraries
-                        and so that the Linux dynamic loader can locate them
-                        at run-time.
-                    </para>
-                </listitem>
+                <listitem><para>
+                    Provide application dependent user interfaces on top of
+                    and around those provided by the event builder.
+                    </para></listitem>
+                <listitem><para>
+                    Tailor the operation of the event builder to meet application
+                    specific requirements.
+                    </para></listitem>
             </itemizedlist>
         </para>
-        <para>
-            As we have done throughout this manual, assume that <literal>DAQROOT</literal>
-            is an environment variable that points to the root directory of the
-            NSCLDAQ installation.
-        </para>
-        <para>
-            The header for the event builder is named after the class as usual.
-            Your source files will need a line like:
-        </para>
-        <informalexample>
-            <programlisting>
-#include &lt;CEventOrderClient.h&gt;
-            </programlisting>
-        </informalexample>
-        <para>
-            To locate this, your compilations will need to specify
-            <literal>-I$DAQROOT/include</literal>
-        </para>
-        <para>
-            At link time you need to specify three switches:
-            <literal>-L$DAQROOT/lib -lEventBuilder -Wl,"-rpath=$DAQROOT/lib"</literal>.
-            The first of these adds the NSCLDAQ library directory to the linker
-            library search path.  The second requests that
-            <filename>libEventBuilder.so</filename> be searched to resolve
-            undefined symbols.  The last adds the NSCLDAQ library to the list
-            of libraries searched for loadable libraries when the program
-            starts.
-        </para>
-        <para>
-            If in fact you did define an environment variables DAQROOT, and this
-            is used within a Makefile you should use
-            <literal>$(DAQROOT)</literal> wherever <literal>$DAQROOT</literal>
-            is used above.
-        </para>
-    </section>
-    <section>
-        <title>Connecting to the event builder.</title>
-        <para>
-            The code below shows how to connect to the event builder as
-            a client:
-        </para>
-        <example>
-            <title>
-                Connecting to the event builder as a data source.
-            </title>
-            <programlisting>
-#include &lt;CEventOrderClient&gt;                     <co id='evbc-connect-include' />
-...
-std::string eventBuilderHost;                          <co id='evbc-connect-hostname' />
-...
-unsigned int evbPort;                                  <co id='evbc-connect-getport' />
-try {
-    evbPort = CEventOrderClient::Lookup(eventBuilderHost);
-}
-catch (CErrnoException&amp; e) {                      <co id='evbc-connect-lookuperr' />
-...
+        <section>
+            <title>Starting the event builder/orderer</title>
+            <para>
+                The example below is a Tcl script fragment that shows
+                how to start the event builder. The code assumes that the
+                environment variable DAQROOT has been set to the
+                top installation directory of the NSCLDAQ being used
+                (version 10.2 or later).
+            </para>
+            <example>
+                <title>Starting the event builder</title>
+                <programlisting>
+lappend auto_path [file join $::env(DAQROOT) TclLibs]   <co id='evb_start_ap' />
+package require EventBuilder        <co id='evb_start_require' />
+
+EVB::Start                          <co id='evb_start_start' />
+                </programlisting>
+            </example>
+            <calloutlist>
+                <callout arearefs='evb_start_ap'>
+                    <para>
+                        Adds the Tcl Library directory of the NSCLDAQ to the
+                        list of directories searched for packages.  This could
+                        also have been done by defining the
+                        <literal>TCLLIBS</literal> environment variable.
+                        <literal>TCLLIBS</literal> is a space separated list
+                        of directories trees that will be added to
+                        <varname>auto_path</varname> when
+                        <application>tclsh</application> or
+                        <application>wish</application> starts.
+                    </para>
+                </callout>
+                <callout arearefs='evb_start_require'>
+                    <para>
+                        Loads the event builder Tcl package. This package defines
+                        the <literal>::EVB::</literal> namespace.  The event
+                        builder API lives in this namespace to prevent name
+                        conflicts with your application variables and procs.
+                    </para>
+                </callout>
+                <callout arearefs='evb_start_start' >
+                    <para>
+                        Starts the event builder.  The event builder will use
+                        the DAQ Port manager to allocate a Tcp/IP server
+                        port as well as to advertise itself to potential
+                        clients.
+                    </para>
+                    <para>
+                        When this proc has returned, the event builder is listening
+                        for connections on that port and the client library will
+                        be able to find the event builder.
+                    </para>
+                    <para>
+                        This proc must be called prior to any other
+                        procs in the <literal>EVB::</literal> namespace.
+                    </para>
+                </callout>
+            </calloutlist>
+        </section>
+        <section>
+            <title>Callbacks</title>
+            <para>
+                The event builder supports wide variety of callbacks that allow
+                user code to intervene when meaningful events occur.  This
+                section describes these callbacks and how to set them up.
+            </para>
+            <section>
+                <title>Connection callbacks</title>
+                <para>
+                    The connection callback invokes user code when a new client
+                    has connected to the event builder as a source of event
+                    fragments.
+                </para>
+                <para>
+                    When you write the callback, keep in mind that the
+                    script you provide will have the host and client
+                    description appended to it.  This implies that
+                    most event builder connection callbacks wil be
+                    <command>proc</command>s
+                </para>
+                <example>
+                    <title>Establishing the connection callback</title>
+                    <programlisting>
+
+proc Connection  {host description}  {          <co id="evb_connection_cb" />
+    puts "$host just connected: $description"
 }
 
-CEventOrderClient evb(eventBuilderHost, evbPort);    <co id='evbc-connect-create' />
-try {
-    evb.Connect();                                   <co id='evbc-connect-connect' />
+EVB::setConnectionCallback Connection          <co id="evb_connection_cb_establish" />
+
+                    </programlisting>
+                </example>
+                <calloutlist>
+                    <callout arearefs="evb_connection_cb">
+                        <para>
+                            This is a sample connection callback proc.  All it
+                            does is output information about the connection
+                            that was just processed.
+                        </para>
+                    </callout>
+                    <callout arearefs='evb_connection_cb_establish'>
+                        <para>
+                            The connection callback is established using the
+                            <function>EVB::setConnectionCallback</function>
+                            procecedure.
+                        </para>
+                        <para>
+                            Note that <function>EVB:Start</function> must have been
+                            called prior to this cvall.
+                        </para>
+                    </callout>
+                </calloutlist>
+            </section>
+            <section>
+                <title>Establishing the disconnect callback</title>
+                <para>
+                    The disconnect callback is invoked when a data source disconnects.
+                    The callback is invoked for both normal and abnormal
+                    disconnects (there is a disconnect protocol prior to closing
+                    the link if the link closes without that protocol being followed,
+                    it is considered an abnormal disconnect).
+                </para>
+                <para>
+                    The disconnect callback is passed the host and description of the
+                    source that has disconnected.
+                </para>
+                <example>
+                    <title>Setting up the disconnect callback</title>
+                    <programlisting>
+proc disconnect {host description} {                    <co id='evb_disconnect_cb' />
+    puts "$description disconnected ($host)"
 }
-catch (CErrnoException&amp; e) {                     <co id='evbc-connect-connecterr' />
-...
-}
-            </programlisting>            
-        </example>
-        <calloutlist>
-            <callout arearefs='evbc-connect-include'>
-                <para>
-                    As previously described, this <literal>#include</literal>
-                    is required to define the client class.
-                </para>
-            </callout>
-            <callout arearefs='evbc-connect-hostname'>
-                <para>
-                    To connect to the event builder you will need to know
-                    the host on which it was started.  For the sake of this
-                    example, assume thie variable will be filled in later on
-                    with the correct hostname.
-                </para>
-            </callout>
-            <callout arearefs='evbc-connect-getport'>
-                <para>
-                    This segment of code looks up the TCP/IP port
-                    on which the event builder is listening for connections.
-                    The event builder
-                    obtains a service port via the NSCLDAQ Port manager.
-                    The port manager, in turn, advertises the event buuilder service.
-                </para>
-            </callout>
-            <callout arearefs='evbc-connect-lookuperr'>
-                <para>
-                    If the port cannot be looked up an exception is thrown.
-                    Normally you would fill in some error reporting code here.
-                </para>
-            </callout>
-            <callout arearefs='evbc-connect-create'>
-                <para>
-                    The connection to the event builder will be encapsulated
-                    in a <classname>CEventOrderClient</classname> therefore
-                    one of these is created.  Note that this does
-                    <emphasis>not</emphasis> connect to the event builder.
-                </para>
-            </callout>
-            <callout arearefs='evbc-connect-connect'>
-                <para>
-                    The <methodname>Connect</methodname> method actually attempts
-                    to perform the connection to the event builder.
-                </para>
-            </callout>
-            <callout arearefs='evbc-connect-connecterr'>
-                <para>
-                    As with <methodname>Lookup</methodname> an exception is
-                    thrown if the connection could not be established.
-                </para>
-            </callout>
-        </calloutlist>
+
+EVB::setDisconnectCallback disconnect                   <co id='evb_disconnect_cb_establish' />
+                    </programlisting>
+                </example>
+                <calloutlist>
+                    <callout arearefs='evb_disconnect_cb'>
+                        <para>
+                            This is a simple sample disconnecdt callback.
+                            It just prints information about the disconnect
+                            on stdout.
+                        </para>
+                    </callout>
+                    <callout arearefs='evb_disconnect_cb_establish'>
+                        <para>
+                            This call establishes the callback.  Note that
+                            prior to invoking this command,
+                            <function>EVT::Start</function> must have been
+                            called.
+                        </para>
+                    </callout>
+                </calloutlist>
+        </section>
     </section>
-    
 </chapter>
 
 

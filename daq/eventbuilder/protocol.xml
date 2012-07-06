@@ -126,7 +126,7 @@ CONNECT source-name
        </varlistentry>
 
        <varlistentry>
-         <term><literal>Empty Body</litersl></terrm>
+         <term><literal>Empty Body</literal></term>
          <listitem><para>
            Protocol required a non-empty body but an empty body was received.
          </para></listitem>
