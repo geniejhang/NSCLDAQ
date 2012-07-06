@@ -68,8 +68,8 @@ snit::type EVB::Connection {
 
 
     constructor args {
-	$self configurelist $args
 
+	$self configurelist $args
 	fconfigure $options(-socket) -blocking 1 -buffering none -translation {binary lf}
 
 	$self _Expecting _Connect FORMING; # We are now expecting a CONNECT command.
@@ -159,7 +159,7 @@ snit::type EVB::Connection {
 	set options(-socket) -1
 
 	if {$options(-disconnectcommand) ne [list]} {
-	    uplevel #0 [list $options(-disconnectcommand)]
+	    uplevel #0 $options(-disconnectcommand)
 	}
     }
 
@@ -174,10 +174,10 @@ snit::type EVB::Connection {
     #         We just transition to ERROR, and close out
     #
     method _Connect socket {
-	
 
 	if {[catch {$self _ReadTextMessage $socket} msg ]} {
 	    $self _Close ERROR
+	    return
 	}
 
 	set header [lindex $msg 0]
@@ -188,23 +188,20 @@ snit::type EVB::Connection {
 
 	if {$header ne "CONNECT"} {
 	    puts $socket "ERROR {Expected CONNECT}"
-	    flush $socket
 	    $self _Close ERROR
+	    return
 	}
 
 	if {[string length $body] == 0} {
 	    puts $socket "ERROR {Empty Body}"
-	    flush $socket
 	    $self _Close ERROR
+	    return
 	}
 
 	# Save the description and transition to the active state:
         # Register ourself with the event builder core
 
-	puts "Setting -description: $body"
 	set options(-description) $body
-	puts "I am $self"
-	puts [$self cget -description]
 	# RegisterStub   TODO:
 	$self _Expecting _Fragments ACTIVE
 
@@ -239,6 +236,7 @@ snit::type EVB::Connection {
 #                     %D - Connection descdription.
 #                     
 # METHODS:
+#  getConnections - List the connections and their states.
 #
 snit::type EVB::ConnectionManager {
     option -port;		# Port on which we listen for connections.
@@ -265,13 +263,35 @@ snit::type EVB::ConnectionManager {
 	set serverSocket [socket -server [mymethod _NewConnection] $options(-port)]
     }
     destructor {
-	puts "Destructor $::errorInfo"
 	foreach object $connections {
 	    $object destroy
 	}
 	close $serverSocket
     }
+    #-----------------------------------------------------------------
+    # Public methods:
+    #
 
+    ##
+    # Get the list of connections and their properties/status:
+    #
+    # @return list of three element sublists (possibly empty).
+    # @retval Each list element contains in order:
+    #  - Client's host.
+    #  - description of client.
+    #  - Connection state string.
+    #
+    method getConnections {} {
+	set result [list];	# possibly empty return list.
+	foreach connection $connections {
+	    set host  [$connection cget -clientaddr]
+	    set desc  [$connection cget -description]
+	    set state [$connection cget -state]
+
+	    lappend result [list $host $desc $state]
+	}
+	return $result
+    }
     #-----------------------------------------------------------------
     #  Private methods.
 
@@ -288,12 +308,11 @@ snit::type EVB::ConnectionManager {
     method _DisconnectClient object {
 	set objectIndex [lsearch -exact $connections $object]
 	if {$objectIndex != -1} {
-	    puts "Object: $object"
-	    puts "Descripton: [$object cget -description]"
+
 	    $callbacks invoke -disconnectcommand [list %O %H %D] \
 		[list $object [$object cget -clientaddr] [$object cget -description]]
-	    lreplace connections $objectIndex $objectIndex
-	    close [$object cget -socket]
+	    set connections [lreplace $connections $objectIndex $objectIndex]
+	    $object destroy
 	} else {
 	    error "BUG - $object not in ConnectionManager connection list (Disconnect)"
 	}
@@ -317,8 +336,7 @@ snit::type EVB::ConnectionManager {
 
 	set connection [EVB::Connection %AUTO% -socket $sock  -clientaddr $client]
 	lappend connections $connection
-	$connection configure -disconnectcommand [$self _DisconnectClient $connection]
-
+	$connection configure -disconnectcommand [mymethod _DisconnectClient $connection]
 	$callbacks invoke -connectcommand [list %H %O] [list $client $connection]
     }
     ## 

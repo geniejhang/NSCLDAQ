@@ -55,5 +55,5 @@ unittests_LDADD = libEventBuilder.la \
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
 check-TESTS:
-	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
-	./unittests 
+#	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
+#	./unittests 

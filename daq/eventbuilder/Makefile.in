@@ -625,8 +625,8 @@ install-exec-local:
 	echo "pkg_mkIndex $(prefix)/TclLibs/EventBuilder *.tcl" |@TCLSH_CMD@
 
 check-TESTS:
-	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
-	./unittests 
+#	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
+#	./unittests 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

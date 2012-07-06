@@ -46,6 +46,8 @@ snit::type EVB::EventBuilder {
     delegate option -connectcommand to connectionManager
     delegate option -disconnectcommand to connectionManager
 
+    delegate method getConnections to connectionManager
+
     constructor args {
 	$self configurelist $args
 	install  connectionManager using  EVB::ConnectionManager %AUTO% -port [$self _GetServerPort]
@@ -102,6 +104,17 @@ proc EVB::setConnectionCallback script {
 #
 proc EVB::setDisconnectCallback script {
     $EVB::eventBuilder configure -disconnectcommand [list $script %H %D]
+}
+##
+# Get the set of connections. The connection is returned as a list of three
+# element sublists.  The elements of each sublist are in-turn,
+# - The host of the client.
+# - The client description
+# - The state of the client connection.
+#
+#
+proc EVB::getConnections {} {
+    $EVB::eventBuilder getConnections
 }
 
 
