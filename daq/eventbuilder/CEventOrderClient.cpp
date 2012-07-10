@@ -25,6 +25,8 @@
 #include <stdio.h>
 
 #include <string.h>
+#include <iostream>
+#include <stdlib.h>
 
 static const std::string EventBuilderService("ORDERER"); // Advertised service name.
 
@@ -37,7 +39,8 @@ static const std::string EventBuilderService("ORDERER"); // Advertised service n
 CEventOrderClient::CEventOrderClient(std::string host, uint16_t port) :
   m_host(host),
   m_port(port),
-  m_pConnection(0)
+  m_pConnection(0),
+  m_fConnected(false)
 {}
 
 /**
@@ -97,15 +100,16 @@ CEventOrderClient::Connect(std::string description)
   char portNumber[32];
   sprintf(portNumber, "%u", m_port);
   m_pConnection = new CSocket();
+  void* pConnectMessage(0);
   try {
     m_pConnection->Connect(m_host, std::string(portNumber));
 
-    char* pConnectMessage = message("CONNECT", strlen("CONNECT"), 
+
+    size_t length= message(&pConnectMessage, "CONNECT", strlen("CONNECT"), 
 				    description.c_str(), description.size());
-    size_t length = strlen("CONNECT") + description.size() + 2*sizeof(uint32_t);
+
     m_pConnection->Write(pConnectMessage, length);
 
-    delete [] pConnectMessage;
 
     std::string reply = getReplyString();
     if (reply != "OK") {
@@ -115,13 +119,50 @@ CEventOrderClient::Connect(std::string description)
 			     
   }
   catch (CTCPConnectionFailed& e) {
+    free(pConnectMessage);
+
+
     // Convert to ECONNREFUSED errno
     
     errno = ECONNREFUSED;
     throw CErrnoException("Failed connection to server");
   }
+  free(pConnectMessage);
+  m_fConnected = true;
 
 }
+/**
+ * Disconnect from the server.
+ * If we are not connected this should throw a CErrnoException with
+ * ENOTCONN as the ReasonCode.
+ */
+void
+CEventOrderClient::disconnect()
+{
+  if (!m_fConnected) {
+    errno = ENOTCONN;
+    throw CErrnoException("Disconnect from server");
+  }
+  void* pDisconnectMessage(0);
+  size_t msgLength = message(&pDisconnectMessage, "DISCONNECT", strlen("DISCONNECT"), NULL, 0);
+  try {
+    m_pConnection->Write(pDisconnectMessage, msgLength);
+    free(pDisconnectMessage);
+  }
+  catch (...) {
+    free(pDisconnectMessage);
+    throw;
+  }
+  std::string  reply = getReplyString();
+  if (reply != "OK") {
+    errno = EOPNOTSUPP;
+    throw CErrnoException("ERROR - Reply from server");
+  }
+  free(pDisconnectMessage);
+  
+}
+
+
 
 /*-------------------------------------------------------------------------------------*/
 // Private methods 
@@ -131,16 +172,18 @@ CEventOrderClient::Connect(std::string description)
  * The message is dynamically allocated and must be freed by the caller as
  * delete []message.
  *
+ * @param msg     - Pointer to a pointer that will hold the message.
  * @param request - Pointer to the request part of the message.
  * @param requestSize - number of bytes in the request part of the message.
  * @param body    - Pointer to the bytes of data in the body.
  * @param bodySize - number of bytes in the body.
  *
- * @return char*
- * @retval pointer to the formatted message.
+ * @return size_t
+ * @retval  size of the message.
  */
-char*
-CEventOrderClient::message(const void*  request, size_t requestSize, const void* body , size_t bodySize)
+size_t
+CEventOrderClient::message(void** msg,
+			   const void*  request, size_t requestSize, const void* body , size_t bodySize)
 {
   // figure out the size of the message:
 
@@ -148,12 +191,12 @@ CEventOrderClient::message(const void*  request, size_t requestSize, const void*
   uint32_t bsize = bodySize;
   size_t totalSize = rsize + bsize + 2*sizeof(uint32_t);
 
-  char* pMessage = new char[totalSize];
+  void* pMessage = malloc(totalSize);
   if (!pMessage) {
     throw CErrnoException("Allocating buffer");
   }
   // There must always be a request:
-  char* p = pMessage;
+  char* p = reinterpret_cast<char*>(pMessage);
   memcpy(p, &rsize, sizeof(uint32_t));
   p += sizeof(uint32_t);
   memcpy(p, request, rsize);
@@ -166,8 +209,10 @@ CEventOrderClient::message(const void*  request, size_t requestSize, const void*
     p += sizeof(uint32_t);
     memcpy(p, body, bsize);
   }
+  *msg = pMessage;
+  return totalSize;
 
-  return pMessage;
+
 	
   
 }

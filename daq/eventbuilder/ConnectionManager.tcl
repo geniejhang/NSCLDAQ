@@ -84,6 +84,28 @@ snit::type EVB::Connection {
     #------------------------------------------------------------------------------
     # Private methods:
 
+    ##
+    # Read binary data from the socket with a leading uint32_t that contains
+    # the number of bytes in the data:
+    #
+    # @param socket - The socket to read from.
+    #
+    # @return byte array containing the data read from the socket.
+    #
+    method _ReadBinaryData socket {
+	set count [read $socket 4]; # Read the count.
+
+	if {[string length $count] != 4} {
+	    error "Read of byte array length failed"
+	}
+	binary scan $count i1 size
+
+	if {$size > 0} {
+	    return [read $socket $size]
+	} else {
+	    return ""
+	}
+    }
 
     ##
     # Reads a counted string from the socket turning it into a 
@@ -197,12 +219,12 @@ snit::type EVB::Connection {
 	    $self _Close ERROR
 	    return
 	}
+	puts $socket "OK"
 
 	# Save the description and transition to the active state:
         # Register ourself with the event builder core
 
 	set options(-description) $body
-	# RegisterStub   TODO:
 	$self _Expecting _Fragments ACTIVE
 
     }
@@ -210,10 +232,35 @@ snit::type EVB::Connection {
     # Stub for fragments handler.
     #
     method _Fragments socket {
-	set data [read $options(-socket) 1]
+	set status [catch {
+	    set header [$self _ReadCountedString $socket]
+	    set body   [$self _ReadBinaryData    $socket]
+	} msg]
 	if {[eof $options(-socket)]} {
 	    $self _Close LOST
 	}
+	# Protocol allows a DISCONNECT here:
+
+	if {$header eq "DISCONNECT"} {
+	    puts $socket "OK"
+	    $self _Close
+
+	} elseif ($header eq "FRAGMENTS"} {
+
+	    # protocol allows FRAGMENTS here:
+
+	    puts $socket "OK"
+
+	} else {
+	    # Anything else is a crime against The Protocol:
+
+	    puts $socket "ERROR {Unexpected header: $header}"
+
+	}
+
+
+
+	
     }
 }
 

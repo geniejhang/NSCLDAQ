@@ -49,12 +49,12 @@ install-exec-local:
 
 noinst_PROGRAMS = unittests
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
-	connectTest.cpp
+	connectTest.cpp 
 
 unittests_LDADD = libEventBuilder.la \
 	$(libEventBuilder_la_LIBADD) \
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
 check-TESTS:
-#	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
+	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
 #	./unittests 

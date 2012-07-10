@@ -46,7 +46,7 @@ void connectTests::noServer() {
   bool thrown = false;
   bool  rightException = false;
   try {
-    CEventOrderClient client("localhost", CEventOrderClient::Lookup("localhost"));
+    CEventOrderClient client("localhost", 11223);
     client.Connect("TestClient");
   }
   catch (CErrnoException& e) {
@@ -66,64 +66,73 @@ void connectTests::noServer() {
 //
 void connectTests::serverOk() {
   char portString[32];
-  CPortManager manager;
-  int p = manager.allocatePort("ORDERER");
-  sprintf(portString, "%u", p);
-  std::string Port(portString);
-  CSocket server;
+
 
   // Set up the server socket...
-
-  server.Bind(Port);
-  server.Listen();		// Now connect should be honored.
 
   // Fork the client off.  It will just connect and we'll expect to get the
   // connection message
 
   pid_t pid = fork();
-
+  int p;
   if (pid) {			// parent
-    std::string client;
-    CSocket* pClient = server.Accept(client);
-    EQ(std::string("localhost"), client);
-
-    // CONNECT string:
-
-    uint32_t stringSize;
-    EQ((int)sizeof(uint32_t), pClient->Read(&stringSize, sizeof(uint32_t)));
-    EQ(strlen("CONNECT"), stringSize);
-    char request[stringSize+1];
-    memset(request, 0, stringSize+1);
-
-    EQ((int)strlen("CONNECT"), pClient->Read(request, stringSize));
-    EQ(std::string("CONNECT"), std::string(request));
-    
-    // "test connecdtion" string
-
-    EQ((int)sizeof(uint32_t), pClient->Read(&stringSize, sizeof(uint32_t)));
-    EQ(strlen("test connection"), stringSize);
-    
-    char body[stringSize+1];
-    memset(body, 0, stringSize+1);
-    EQ((int)strlen("test connection"), pClient->Read(body, stringSize));
-    EQ(std::string("test connection"), std::string(body));
-
-    // Reply with "OK"
-
-    std::string reply("OK\n");
-    pClient->Write(reply.c_str(), reply.size());
-
-    // Reap the child.
-    
-    int status;
+    CPortManager manager;
+     p = manager.allocatePort("ORDERER");
+     sprintf(portString, "%u", p);
+     std::string Port(portString);    std::string client;
+     
+     CSocket* server = new CSocket;;
+     server->Bind(Port);
+     server->Listen();		// Now connect should be honored.
+     server->setLinger(false, 0);
+     
+     
+     CSocket* pClient = server->Accept(client);
+     EQ(std::string("localhost"), client);
+     
+     // CONNECT string:
+     
+     uint32_t stringSize;
+     EQ((int)sizeof(uint32_t), pClient->Read(&stringSize, sizeof(uint32_t)));
+     EQ(strlen("CONNECT"), stringSize);
+     char request[stringSize+1];
+     memset(request, 0, stringSize+1);
+     
+     EQ((int)strlen("CONNECT"), pClient->Read(request, stringSize));
+     EQ(std::string("CONNECT"), std::string(request));
+     
+     // "test connecdtion" string
+     
+     EQ((int)sizeof(uint32_t), pClient->Read(&stringSize, sizeof(uint32_t)));
+     EQ(strlen("test connection"), stringSize);
+     
+     char body[stringSize+1];
+     memset(body, 0, stringSize+1);
+     EQ((int)strlen("test connection"), pClient->Read(body, stringSize));
+     EQ(std::string("test connection"), std::string(body));
+     
+     // Reply with "OK"
+     
+     std::string reply("OK\n");
+     pClient->Write(reply.c_str(), reply.size());
+     
+     // Reap the child.
+     
+     int status;
     pid_t endpid = wait(&status);
     EQ(pid, endpid);
+    delete server;
+    pClient->Shutdown();
+    delete pClient;
 
     
   } else {			// child
-
-    CEventOrderClient client("localhost", p);
+    sleep(2);
+    try {
+    CEventOrderClient client("localhost", CEventOrderClient::Lookup("localhost"));
     client.Connect("test connection");
+    }
+    catch (...) {}
     exit(0);
   }
   
@@ -156,12 +165,15 @@ connectTests::serverError()
     sprintf(portString, "%u", p);
     std::string Port(portString);
     CSocket* server = new CSocket;
+    try {
     server->Bind(Port);
     server->Listen();		// Now connect should be honored.
     server->setLinger(false, 0);
-
+    } 
+    catch(CException& e) {
+    exit(-1);
+    }
     std::string client;
-
     CSocket* pClient = server->Accept(client);
 
     // CONNECT string:
@@ -176,11 +188,11 @@ connectTests::serverError()
     
     // "test connection" string
     pClient->Read(&stringSize, sizeof(uint32_t));
+
     
     char body[stringSize+1];
     memset(body, 0, stringSize+1);
     pClient->Read(body, stringSize);
-
      
     // Reply with "ERROR -1
 
@@ -193,13 +205,13 @@ connectTests::serverError()
     exit(0);
     
   } else {			// parent
-    sleep(1);			// let child start server.
+    sleep(3);			// let child start server.
     bool threw = false;
     bool rightError = false;
     CEventOrderClient client("localhost", CEventOrderClient::Lookup("localhost"));
      
     try {
-       client.Connect("test connection");
+      client.Connect("test connection");
     }
     catch (CErrnoException& e) {
       threw = true;

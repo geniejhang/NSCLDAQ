@@ -85,7 +85,6 @@ snit::type EVB::CallbackManager {
     #
     method invoke {cbName substitutions values} {
 	$self _CheckValidCallback $cbName
-	
 	set command $callback($cbName)
 	if {$command ne ""} {
 	    set command [$self _Substitute $command $substitutions $values]
@@ -114,7 +113,7 @@ snit::type EVB::CallbackManager {
     # @return string with substitutions applied.
     method _Substitute {string patterns values} {
 	foreach pattern $patterns value $values {
-	    set string [regsub -all $pattern $string $value]
+	    set string [regsub -all $pattern $string [list $value]]
 	}
 	return $string
     }

@@ -58,12 +58,11 @@ proc Disconnect {host d} {
 #  Can't do the port release quite correctly in test level.
 #
 tcltest::test connectionmanager-1 {Connection callback} \
-    -constraint false
      -setup {
 	set mgr [::EVB::ConnectionManager %AUTO% -port $::testPort]
     } \
     -cleanup {
-	$mgr destroy
+#	$mgr destroy
 	close $::sock
 
     } \
@@ -82,18 +81,14 @@ tcltest::test connectionmanager-1 {Connection callback} \
 #
 
 tcltest::test connectionmanager-2 {Disconnect callback} \
-    -constraint false
     -setup {
 
-	set mgr [::EVB::ConnectionManager %AUTO% -port $::testPort]
+#	set mgr1 [::EVB::ConnectionManager %AUTO% -port 2998]
     } \
     -cleanup {	
-	puts "cleanup"
-	$mgr destroy
-	puts "cleaned"
+#	$mgr destroy
     } \
     -body {
-	puts "Body"
 	set ::host ""
 	set ::descrip ""
 	$mgr configure -connectcommand [list Connected %H] \

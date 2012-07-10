@@ -195,6 +195,40 @@
                 </callout>
             </calloutlist>
         </section>
+        <section>
+            <title>Disconnecting from the event builder.</title>
+            <para>
+                The event builder defines a 'clean' disconnect protocol.  If the
+                the client simply closes the socket without following this protocol,
+                the event builder can consider this an abnormal client termination
+                and report an alarm.
+            </para>
+            <para>
+                The disconnect protocol is initiated by either
+            </para>
+            <itemizedlist>
+                <listitem><para>
+                    Destroying a connected <classname>CEventOrderClient</classname>
+                    object or
+                    </para></listitem>
+                <listitem><para>
+                    Invoking the <methodname>destroy</methodname> method on a
+                    connected <classname>CEventOrderClient</classname> object.
+                    </para></listitem>
+            </itemizedlist>
+            <para>
+                The code snippet below illustrates the first of these methods.
+                <varname>*pEvb</varname> is a pointer to a dynamically allocated
+                connected
+                <classname>CEventOrderClient</classname> at the start of the
+                snippet.
+            </para>
+            <example>
+                <title>Closing an event builder connection</title>
+                <programlisting>
+delete *pEvb;
+                </programlisting>
+            </example>
     </section>
     <section>
         <title>The Event orderer/event builder API</title>
@@ -399,6 +433,10 @@ class   <ooclass><classname>CEventOrderClient</classname></ooclass> {
     <exceptionname>CErrnoException</exceptionname>
   </methodsynopsis>
   <methodsynopsis>
+    <type>void</type><methodname>disconnect</methodname>
+    <void />
+  </methodsynopsis>
+  <methodsynopsis>
     <modifier>static</modifier>
     <type>int</type>
     <methodname>Lookup</methodname>
@@ -409,6 +447,7 @@ class   <ooclass><classname>CEventOrderClient</classname></ooclass> {
   <exceptionname>
     CErrnoException
   </exceptionname>
+  
 };
    </synopsis>
 </refsynopsisdiv>
@@ -453,6 +492,19 @@ METHODS
                 The connection is not actually made until the
                 <methodname>Connect</methodname> method is invoked
                 (see below).
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term>
+            <methodsynopsis>
+              <type>void</type><methodname>disconnect</methodname>
+              <void />
+            </methodsynopsis>
+        </term>
+        <listitem>
+            <para>
+                Disconnect a connected client object.
             </para>
         </listitem>
     </varlistentry>

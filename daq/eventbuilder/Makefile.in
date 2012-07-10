@@ -272,7 +272,7 @@ EXTRA_DIST = protocol.xml api.xml Asserts.h \
 	$(TCL_TEST_FILES)
 
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
-	connectTest.cpp
+	connectTest.cpp 
 
 unittests_LDADD = libEventBuilder.la \
 	$(libEventBuilder_la_LIBADD) \
@@ -627,7 +627,7 @@ install-exec-local:
 	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl" |@TCLSH_CMD@
 
 check-TESTS:
-#	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
+	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
 #	./unittests 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

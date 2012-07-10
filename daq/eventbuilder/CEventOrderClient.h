@@ -43,6 +43,7 @@ private:
   std::string m_host;		// Host running the event builder.
   uint16_t    m_port;		// port on which the event builder is running.
   CSocket*    m_pConnection;	// Connectionto the server.
+  bool        m_fConnected;	// True if connection is alive.
   
   // construction/destruction/canonicals
 public:
@@ -63,11 +64,12 @@ public:
   // Object operations:
 public:
   void Connect(std::string description);
+  void disconnect();
 
   // Utility functions:
 
 private:
-  static char* message(const void* request, size_t requestSize, const  void* body, size_t bodySize);
+  static size_t message(void** msg, const void* request, size_t requestSize, const  void* body, size_t bodySize);
   std::string getReplyString();	
 };
 

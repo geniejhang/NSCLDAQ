@@ -90,6 +90,7 @@ CONNECT source-name
                 </para>
             </listitem>
         </varlistentry>
+        
      </variablelist>
      <refsect2>
         <title>CONNECT</title>
@@ -103,6 +104,37 @@ CONNECT source-name
         <para>
             This message causes a transition from the CONNECTING to the
             CONNECTED state.
+        </para>
+     </refsect2>
+     <refsect2>
+        <title>DISCONNECT</title>
+        <para>
+            Indicates an orderly, alarm free, disconnect of the client from
+            the event builder.  If the client simply closes the socket, the
+            connection loss is considered abnormal, and alarms may be raised.
+            Therefore clients should properly disconnect rather than just
+            letting sockets close on exit e.g.
+        </para>
+        <para>
+            The body of the DISCONNECT message is empty.
+            Note that the actual sequence the API software imposes is:
+            <orderedlist>
+                <listitem><para>
+                    Send the DISCONNECT message.
+                    </para></listitem>
+                <listitem><para>
+                    Receive the OK message back from the server
+                    </para></listitem>
+                <listitem><para>
+                    Both close the socket.  The server closes the socket as
+                    soon as the OK message has been sent.  The client closes
+                    the socket as soon as the server reply message has been
+                    sent (note that in the future if the server can send
+                    an ERROR, the client will still close after recieving
+                    that reply).
+                    </para>
+                </listitem>
+            </orderedlist>
         </para>
      </refsect2>
   </refsect1>
