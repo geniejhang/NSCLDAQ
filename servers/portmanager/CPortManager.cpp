@@ -93,6 +93,10 @@ CPortManager::CPortManager(string host) :
   */
 CPortManager::~CPortManager()
 {
+  if (m_fisConnected) {
+    shutdown(m_nSocket, SHUT_WR);
+    m_fisConnected = false;
+  }
 }
 
 /*!

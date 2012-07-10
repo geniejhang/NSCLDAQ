@@ -7,9 +7,9 @@ lib_LTLIBRARIES=libEventBuilder.la
 #		@THREAD_LDFLAGS@
 
 
-libEventBuilder_la_SOURCES=CEventOrderClient.cpp
+libEventBuilder_la_SOURCES=CEventOrderClient.cpp fragment.c
 
-include_HEADERS = CEventOrderClient.h
+include_HEADERS = CEventOrderClient.h fragment.h 
 
 INCLUDES = -I@top_srcdir@/base/tcpip \
 	-I@top_srcdir@/base/exception  \

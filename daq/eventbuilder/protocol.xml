@@ -137,6 +137,59 @@ CONNECT source-name
             </orderedlist>
         </para>
      </refsect2>
+     <refsect2>
+        <title>FRAGMENTS</title>
+        <para>
+            A <literal>FRAGMENTS</literal> indicates the body is a set of
+            fragments from the data source.  Each fragment can be thought of
+            as a header followed immediately by its payload.  The payload
+            itself is the event fragment.  The header describes the payload.
+            Note that the size of the body is still the first 32 bits in the
+            entire body.  It is followed immediately by the first header.
+        </para>
+        <para>
+            The header has the following structure:
+        </para>
+        <informalexample>
+            <programlisting>
+typedef struct <type>_PacketHeader</type> {
+    <fieldsynopsis><type>uint64_t</type> <varname>s_timestamp</varname></fieldsynopsis>;
+    <fieldsynopsis><type>uint32_t</type> <varname>s_sourceId</varname></fieldsynopsis>;
+    <fieldsynopsis><type>uint32_t</type> <varname>s_size</varname></fieldsynopsis>;
+} <type>PacketHeader</type>, *<type>pPacketHeader</type>;
+            </programlisting>
+        </informalexample>
+        <variablelist>
+            <varlistentry>
+                <term><fieldsynopsis><type>uint64_t</type> <varname>s_timestamp</varname></fieldsynopsis></term>
+                <listitem>
+                    <para>
+                        The timestamp of the event fragment.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><fieldsynopsis><type>uint32_t</type> <varname>s_sourceId</varname></fieldsynopsis></term>
+                <listitem>
+                    <para>
+                        The unique source id of the fragment.  The sourceId is
+                        used to determine into which fragment queue the fragment
+                        is put.  At this time it is required that data from
+                        each source id come in monotonic time order.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><fieldsynopsis><type>uint32_t</type> <varname>s_size</varname></fieldsynopsis></term>
+                <listitem>
+                    <para>
+                        The number of bytes in the payload that follows this
+                        struct.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+     </refsect2>
   </refsect1>
   <refsect1>
     <title>CONNECTION STATE</title>
@@ -164,6 +217,12 @@ CONNECT source-name
          </para></listitem>
        </varlistentry>
 
+       <varlistentry>
+          <term><literal>Unexpected header: xxx</literal></term>
+          <listitem><para>
+              A header was received of a type not expected.
+          </para></listitem>
+        </varlistentry>
 
     </variablelist>
   </refsect1>
