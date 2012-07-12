@@ -71,7 +71,7 @@ pFragment newFragment(uint64_t timestamp, uint32_t sourceId, uint32_t size)
  * @param p - pointer to the fragment chain.
  */
 size_t
-fragmntChainLength(pFragmentChain p)
+fragmentChainLength(pFragmentChain p)
 {
   size_t result = 0;
   while (p) {

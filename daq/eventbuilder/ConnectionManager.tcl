@@ -40,8 +40,9 @@
 
 package require snit
 package require EVB::CallbackManager
-package provide EVB::ConnectionManager 1.0
+package require EVB::Orderer;	# C/C++ orderer.
 
+package provide EVB::ConnectionManager 1.0
 
 namespace eval EVB {}
 
@@ -229,7 +230,13 @@ snit::type EVB::Connection {
 
     }
     #
-    # Stub for fragments handler.
+    # Expecting fragments if the next message is
+    # DISCONNECT, close the socket after responding.
+    # If the next message has a FRAGMENTS header
+    # pass the socket down to the C/C++ code
+    # for further processing.
+    #
+    # @param socket - socket that is readable.
     #
     method _Fragments socket {
 	set status [catch {
@@ -249,6 +256,7 @@ snit::type EVB::Connection {
 
 	    # protocol allows FRAGMENTS here:
 
+	    EVB::handleFragment $socket
 	    puts $socket "OK"
 
 	} else {

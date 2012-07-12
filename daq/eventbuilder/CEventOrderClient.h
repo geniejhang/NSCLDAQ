@@ -31,6 +31,19 @@
 #endif
 #endif
 
+#ifndef __STL_LIST
+#include <list>
+#ifndef __STL_LIST
+#define __STL_LIST
+#endif
+#endif
+
+namespace EVB {
+  typedef struct _Fragment Fragment, *pFragment;
+  typedef struct _FragmentChain FragmentChain, *pFragmentChain;
+  typedef std::list<pFragment> FragmentPointerList;
+}
+
 // Forward definition:
 
 class CSocket;
@@ -65,12 +78,16 @@ public:
 public:
   void Connect(std::string description);
   void disconnect();
+  void submitFragments(EVB::pFragmentChain pChain);
+  void submitFragments(size_t nFragments, EVB::pFragment ppFragments);
+  void submitFragments(EVB::FragmentPointerList fragments);
 
   // Utility functions:
 
 private:
   static size_t message(void** msg, const void* request, size_t requestSize, const  void* body, size_t bodySize);
   std::string getReplyString();	
+  static void freeChain(EVB::pFragmentChain pChain);
 };
 
 

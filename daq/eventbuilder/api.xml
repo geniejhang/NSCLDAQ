@@ -231,6 +231,140 @@ delete *pEvb;
             </example>
     </section>
     <section>
+        <title>Sending data to the event builder.</title>
+        <para>
+            The event builder allows you to send <firstterm>chains</firstterm> of
+            event fragments to it.  A chain is essentially a linked list of
+            event fragments.  Each fragment itself consists of a
+            header and a body. These data structures are all described in the
+            <filename>&lt;fragment.h&gt;</filename> header file.
+        </para>
+        <para>
+            The Event builder client API in turn contains several utilities
+            that allow you to send data to the event builder from any of several
+            internal representatinos.  In all cases these representations are
+            converted to a chain which is then sent to the event builder.
+        </para>
+        <para>
+            Regardless of the representation you choose, you will need
+            to fill in the contents of each fragment header.  This data structure
+            contains the following fields.
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term><fieldsynopsis><type>uint64_t</type> <varname>s_timestamp</varname></fieldsynopsis></term>
+                <listitem>
+                    <para>
+                        Each event must have an extracted timestamp. The
+                        first stage of the event builder does an absolute
+                        total time ordering of all input fragments by increasing
+                        timestamp.
+                    </para>
+                    <para>
+                        The timestamp must be synchronized between
+                        all data sources to a high degree of accuracy if this
+                        total ordering is going to represent a true time
+                        ordering of fragments, since the second stage of the
+                        event builder builds events by matching fragments that
+                        live within a coincidence window.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><fieldsynopsis><type>uint32_t</type> <varname>s_sourceId</varname></fieldsynopsis></term>
+                <listitem>
+                    <para>
+                        Each data source has a unique id chosen by the source
+                        itself.  Furthermore, each client can represent several
+                        data sources (all sourcdes system wide must be unique).
+                        This field contains the source id that corresponds to the
+                        fragment data.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><fieldsynopsis>uint32_t</fieldsynopsis> <varname>s_size</varname></term>
+                <listitem>
+                    <para>
+                        Contains the size of the fragment payload in bytes.
+                        this size does not include the size of this fragment
+                        header.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+        <para>
+            The <filename>&lt;fragment.h&gt;</filename> header also defines
+            a <type>Fragment</type> type which contains
+            the fields <varname>s_header</varname> which is a a
+            <type>FragmentHeader</type> and a
+            <fieldsynopsis><type>void*</type> <varname>s_pBody</varname></fieldsynopsis>
+            which is a pointer to the body of the event described by
+            <varname>s_header</varname>.
+        </para>
+        <para>
+            Finally the <type>FragmentChain</type> contains the fields
+            <varname>s_pNext</varname> which is a
+            <type>pFragmentChain</type> and points to the next item in the
+            chain, and <varname>s_pFragment</varname> which points to a single
+            fragment. The last item in the chain has a
+            <varname>s_pNext</varname> that is a null pointer.  Fragment chains
+            are required to be in timestamp order by event source. 
+        </para>
+        <para>
+            Several overloaded <methodname>submitFragments</methodname> are
+            defined in the <classname>CEventOrderClient</classname> class:
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <methodsynopsis><type>void</type> <methodname>submitFragments</methodname>
+                        <methodparam><type>pFragmentChain</type>
+                            <parameter>pChain</parameter></methodparam>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        <parameter>pChain</parameter> is a pointer to the first
+                        element of the fragment chain that will be sent to the
+                        event builder
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis><type>void</type> <methodnanme>submitFragments</methodnanme>
+                    <methodparam><type>size_t</type> <parameter>nFragments</parameter></methodparam>
+                    <methodparam><type>pFragment</type> <parameter>ppFragments</parameter></methodparam>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        <parameter>nFragmnents</parameter> is the number of
+                        fragments to submit while <parameter>ppFragments</parameter>
+                        is a pointer to the first element of an array
+                        of <type>Fragment</type>s.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis><type>void</type> <methodname>submitFragments</methodname>
+                    <methodparam><type>FragmentPointerList</type> <parameter>fragments</parameter></methodparam>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        <parameter>fragments</parameter> is an STL <type>list</type>
+                        whose elements are <type>pFragment</type>, pointers to
+                        <type>Fragment</type>s.
+                    </para>
+                </listitem>
+            </varlistentry>
+            
+        </variablelist>
+    </section>
+    <section>
         <title>The Event orderer/event builder API</title>
         <para>
             The event builder itself is a loadable Tcl package rather than
@@ -418,6 +552,9 @@ EVB::setDisconnectCallback disconnect                   <co id='evb_disconnect_c
 <refsynopsisdiv>
 
    <synopsis>
+#include &lt;CEventOrderClient.h&gt;
+#include &lt;fragment.h&gt;
+
 class   <ooclass><classname>CEventOrderClient</classname></ooclass> {
   <constructorsynopsis>
  <methodname>CEventOrderClient</methodname>
@@ -436,6 +573,18 @@ class   <ooclass><classname>CEventOrderClient</classname></ooclass> {
     <type>void</type><methodname>disconnect</methodname>
     <void />
   </methodsynopsis>
+    <methodsynopsis><type>void</type> <methodname>submitFragments</methodname>
+        <methodparam><type>pFragmentChain</type>
+            <parameter>pChain</parameter></methodparam>
+    </methodsynopsis>
+    <methodsynopsis><type>void</type> <methodnanme>submitFragments</methodnanme>
+    <methodparam><type>size_t</type> <parameter>nFragments</parameter></methodparam>
+    <methodparam><type>pFragment</type> <parameter>ppFragments</parameter></methodparam>
+    </methodsynopsis>
+    <methodsynopsis><type>void</type> <methodname>submitFragments</methodname>
+    <methodparam><type>FragmentPointerList</type> <parameter>fragments</parameter></methodparam>
+    </methodsynopsis>
+     
   <methodsynopsis>
     <modifier>static</modifier>
     <type>int</type>
@@ -462,7 +611,7 @@ class   <ooclass><classname>CEventOrderClient</classname></ooclass> {
     builder.
  </para>
  <para>
-    Once connected, <methodname>sendFragments</methodname> would be used to send data to the
+    Once connected, <methodname>submitFragments</methodname> would be used to send data to the
     server until it's time to disconnect at which time
     the connection is dropped either by destroying the object or by
     calling the <methodname>Disconnect</methodname> method.
@@ -555,8 +704,112 @@ METHODS
             </para>
         </listitem>
     </varlistentry>
-  
+    <varlistentry>
+         <term>
+             <methodsynopsis><type>void</type> <methodname>submitFragments</methodname>
+                 <methodparam><type>pFragmentChain</type>
+                     <parameter>pChain</parameter></methodparam>
+             </methodsynopsis>
+         </term>
+         <listitem>
+             <para>
+                 <parameter>pChain</parameter> is a pointer to the first
+                 element of the fragment chain that will be sent to the
+                 event builder
+             </para>
+         </listitem>
+     </varlistentry>
+     <varlistentry>
+         <term>
+             <methodsynopsis><type>void</type> <methodnanme>submitFragments</methodnanme>
+             <methodparam><type>size_t</type> <parameter>nFragments</parameter></methodparam>
+             <methodparam><type>pFragment</type> <parameter>ppFragments</parameter></methodparam>
+             </methodsynopsis>
+         </term>
+         <listitem>
+             <para>
+                 <parameter>nFragmnents</parameter> is the number of
+                 fragments to submit while <parameter>ppFragments</parameter>
+                 is a pointer to the first element of an array
+                 of <type>Fragment</type>s.
+             </para>
+         </listitem>
+     </varlistentry>
  </variablelist>
+</refsect1>
+<refsect1>
+    <title>DATA STRUCTURES</title>
+    <para>
+        The <filename>fragment.h</filename> header defines several event
+        fragment related data structures:
+    </para>
+    <para>
+        The <type>FragmentHeader</type> data type is the main data type.
+        It defines the struct that contains meta-data about an event fragment:
+This data structure
+            contains the following fields.
+    </para>
+    <variablelist>
+        <varlistentry>
+            <term><fieldsynopsis><type>uint64_t</type> <varname>s_timestamp</varname></fieldsynopsis></term>
+            <listitem>
+                <para>
+                    Each event must have an extracted timestamp. The
+                    first stage of the event builder does an absolute
+                    total time ordering of all input fragments by increasing
+                    timestamp.
+                </para>
+                <para>
+                    The timestamp must be synchronized between
+                    all data sources to a high degree of accuracy if this
+                    total ordering is going to represent a true time
+                    ordering of fragments, since the second stage of the
+                    event builder builds events by matching fragments that
+                    live within a coincidence window.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><fieldsynopsis><type>uint32_t</type> <varname>s_sourceId</varname></fieldsynopsis></term>
+            <listitem>
+                <para>
+                    Each data source has a unique id chosen by the source
+                    itself.  Furthermore, each client can represent several
+                    data sources (all sourcdes system wide must be unique).
+                    This field contains the source id that corresponds to the
+                    fragment data.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><fieldsynopsis>uint32_t</fieldsynopsis> <varname>s_size</varname></term>
+            <listitem>
+                <para>
+                    Contains the size of the fragment payload in bytes.
+                    this size does not include the size of this fragment
+                    header.
+                </para>
+            </listitem>
+        </varlistentry>
+    </variablelist>
+    <para>
+        The <filename>&lt;fragment.h&gt;</filename> header also defines
+        a <type>Fragment</type> type which contains
+        the fields <varname>s_header</varname> which is a a
+        <type>FragmentHeader</type> and a
+        <fieldsynopsis><type>void*</type> <varname>s_pBody</varname></fieldsynopsis>
+        which is a pointer to the body of the event described by
+        <varname>s_header</varname>.
+    </para>
+    <para>
+        Finally the <type>FragmentChain</type> contains the fields
+        <varname>s_pNext</varname> which is a
+        <type>pFragmentChain</type> and points to the next item in the
+        chain, and <varname>s_pFragment</varname> which points to a single
+        fragment. The last item in the chain has a
+        <varname>s_pNext</varname> that is a null pointer.  Fragment chains
+        are required to be in timestamp order by event source. 
+    </para>
 </refsect1>
 <refsect1>
     <title>EXCEPTIONS</title>

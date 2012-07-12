@@ -71,26 +71,28 @@ namespace EVB {
     pFragment         s_pFragment;
   } FragmentChain, *pFragmentChain;
 
+
+#ifdef __cplusplus
+}
+#endif
   /**
    * Below are convenience functions for fragments:
    */
 
 #ifdef __cplusplus
   extern "C" {
+#define NS(type) EVB::type
+#else
+#define NS(type) type
 #endif
-  void freeFragment(pFragment p);
-  pFragment allocateFragment(pFragmentHeader pHeader);
-  pFragment newFragment(uint64_t timestamp, uint32_t sourceId, uint32_t size);
+    void freeFragment(NS(pFragment) p);
+    NS(pFragment) allocateFragment(NS(pFragmentHeader) pHeader);
+    NS(pFragment) newFragment(uint64_t timestamp, uint32_t sourceId, uint32_t size);
 
-  size_t fragmentChainLength(pFragmentChain p);
+    size_t fragmentChainLength(NS(pFragmentChain) p);
 #ifdef __cplusplus
   }
 #endif
-  
-#ifdef __cplusplus
-}
-#endif
-  
-   
+ #undef NS
 
 #endif

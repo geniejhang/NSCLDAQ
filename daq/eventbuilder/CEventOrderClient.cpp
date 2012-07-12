@@ -27,6 +27,7 @@
 #include <string.h>
 #include <iostream>
 #include <stdlib.h>
+#include <fragment.h>
 
 static const std::string EventBuilderService("ORDERER"); // Advertised service name.
 
@@ -148,6 +149,7 @@ CEventOrderClient::disconnect()
   try {
     m_pConnection->Write(pDisconnectMessage, msgLength);
     free(pDisconnectMessage);
+
   }
   catch (...) {
     free(pDisconnectMessage);
@@ -158,11 +160,138 @@ CEventOrderClient::disconnect()
     errno = EOPNOTSUPP;
     throw CErrnoException("ERROR - Reply from server");
   }
-  free(pDisconnectMessage);
   
 }
+/**
+ * Submits a chain of fragments.  (FragmentChain).  The chain is marshalled into 
+ * a body buffer, and submitted to the event builder.
+ * via 'message'.
+ *
+ * @param pChain - Pointer to the first element of the chain.
+ *
+ *  @exception CErrnoException if we are not connected or some other error occurs.
+ *
+ */
+void
+CEventOrderClient::submitFragments(EVB::pFragmentChain pChain)
+{
+  if (m_fConnected) {
 
+    // Size the body buffer, allocate it and fill it in from the chain.
 
+    size_t nBytes = fragmentChainLength(pChain);
+    char* pBodyBuffer = reinterpret_cast<char*>(
+            malloc(nBytes + sizeof(uint32_t))); // Need space for the size.
+    if (!pBodyBuffer) {
+      throw CErrnoException("Allocating body buffer memory");
+    }
+    char* pDest       = pBodyBuffer;
+    *pDest++          = nBytes;
+    while (pChain) {
+      memcpy(pDest, &(pChain->s_pFragment->s_header), sizeof(EVB::FragmentHeader));
+      pDest += sizeof(EVB::FragmentHeader);
+      uint32_t bodySize =  pChain->s_pFragment->s_header.s_size;
+      memcpy(pDest, pChain->s_pFragment->s_pBody, bodySize);
+      pDest += bodySize;
+      pChain = pChain->s_pNext;
+    }
+    // Output the buffer in a try/catch block so that we can be sure it gets freed:
+
+    try {
+      void* msg;
+      size_t msgLen = message(&msg, "FRAGMENTS", sizeof("FRAGMENTS"), pBodyBuffer, nBytes);
+      m_pConnection->Write(msg, nBytes);
+      free(pBodyBuffer);
+    
+    }
+    catch (...) {
+      free(pBodyBuffer);
+      throw;
+    }
+    // get the reply and hope it's what we expect.
+
+    std:: string reply = getReplyString();
+    if (reply != "OK") {
+      errno = ENOTSUP;
+      throw CErrnoException("Reply from 'FRAGMENTS' message");
+
+    }
+
+  } else {
+    errno = ENOTCONN;		// Not connected.
+    throw CErrnoException ("submitting fragment chain");
+  }
+}
+
+/**
+ * Given a pointer to an array of fragments, and the number of fragments,
+ * submits them to the event builder.  This is done by
+ * - marshalling the pointers into a EVB::FragmentPointerList
+ * - Invoking  void submitFragments(EVB::FragmentPointerList fragments);
+ *
+ * @param nFragments - Number of fragments in the array.
+ * @param ppFragments - Pointer to the first fragment in the array.
+ */
+void
+CEventOrderClient::submitFragments(size_t nFragments, EVB::pFragment ppFragments)
+{
+  EVB::FragmentPointerList fragments;
+
+  for (int i = 0; i < nFragments; i++) {
+    fragments.push_back(ppFragments);
+    ppFragments++;		// Next fragment (scaled arith).
+  }
+  submitFragments(fragments);
+  
+}
+/**
+ * Given an STL list of pointers to events:
+ * - Marshalls these into an event fragment chain
+ * - submits those to the event builder.
+ *
+ * @param fragments - the list of fragments to send.
+ *
+ * @note Only the fragment nodes are created dynamically.
+ *       this minimizes data movement.
+ */
+void
+CEventOrderClient::submitFragments(EVB::FragmentPointerList fragments)
+{
+  if (fragments.size() == 0) return; // degenerate edge case...empty list...don't send.
+  
+  EVB::pFragmentChain pChain = new EVB::FragmentChain;
+  try {
+
+    // Do the first one:
+    
+    EVB::FragmentPointerList::iterator src = fragments.begin();
+    EVB::pFragmentChain pPrior = pChain;
+    pPrior->s_pNext = 0;
+    pPrior->s_pFragment = *src++;
+    
+    // Do the remainder of the chain.. if there are any:'
+    
+    while (src != fragments.end()) {
+      // Allocate the new element and fill it in.
+      EVB::pFragmentChain pNext = new EVB::FragmentChain;
+      pNext->s_pNext = 0;
+      pNext->s_pFragment = *src++;
+      
+      // Link this to the previous element.
+      
+      pPrior->s_pNext = pNext;
+      pPrior = pNext;
+    }
+    submitFragments(pChain);
+  } catch(...) {
+    // Clean the chain and then rethrow.
+
+    freeChain(pChain);
+    throw;
+  }
+  freeChain(pChain);
+
+}
 
 /*-------------------------------------------------------------------------------------*/
 // Private methods 
@@ -232,5 +361,19 @@ CEventOrderClient::getReplyString()
     m_pConnection->Read(&c, sizeof(c));
     if (c == '\n') return reply;
     reply += c;
+  }
+}
+/**
+ * Free a fragment chain (the fragments themselves are not freed by this).
+ *
+ * @param pChain - Pointer to the first chain element.
+ */
+void
+CEventOrderClient::freeChain(EVB::pFragmentChain pChain)
+{
+  while (pChain) {
+    EVB::pFragmentChain pNext = pChain->s_pNext;
+    delete pChain;
+    pChain = pNext;
   }
 }
