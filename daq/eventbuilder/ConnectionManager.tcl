@@ -40,7 +40,7 @@
 
 package require snit
 package require EVB::CallbackManager
-package require EVB::Orderer;	# C/C++ orderer.
+package require EvbOrderer;	# C/C++ orderer.
 
 package provide EVB::ConnectionManager 1.0
 
@@ -255,6 +255,7 @@ snit::type EVB::Connection {
 	} elseif ($header eq "FRAGMENTS"} {
 
 	    # protocol allows FRAGMENTS here:
+	    # TODO: Handle errors as a close
 
 	    EVB::handleFragment $socket
 	    puts $socket "OK"

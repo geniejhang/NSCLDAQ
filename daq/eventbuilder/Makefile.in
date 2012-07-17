@@ -40,8 +40,8 @@ build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = unittests$(EXEEXT)
 subdir = daq/eventbuilder
-DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -76,19 +76,29 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libEventBuilder_la_DEPENDENCIES = @top_builddir@/base/tcpip/libTcp.la \
+libEventBuilder_la_DEPENDENCIES =  \
+	@top_builddir@/base/tclplus/libtclPlus.la \
+	@top_builddir@/base/exception/libException.la
+am_libEventBuilder_la_OBJECTS = OrdererPackage.lo \
+	CFragmentHandlerCommand.lo CFragmentHandler.lo
+libEventBuilder_la_OBJECTS = $(am_libEventBuilder_la_OBJECTS)
+libEventBuilderClient_la_DEPENDENCIES =  \
+	@top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/servers/portmanager/libPortManager.la \
 	@top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/base/os/libdaqshm.la \
 	@top_builddir@/base/exception/libException.la
-am_libEventBuilder_la_OBJECTS = CEventOrderClient.lo fragment.lo
-libEventBuilder_la_OBJECTS = $(am_libEventBuilder_la_OBJECTS)
+am_libEventBuilderClient_la_OBJECTS = CEventOrderClient.lo fragment.lo
+libEventBuilderClient_la_OBJECTS =  \
+	$(am_libEventBuilderClient_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_unittests_OBJECTS = TestRunner.$(OBJEXT) lookupTest.$(OBJEXT) \
 	connectTest.$(OBJEXT)
 unittests_OBJECTS = $(am_unittests_OBJECTS)
-unittests_DEPENDENCIES = libEventBuilder.la \
-	$(libEventBuilder_la_LIBADD)
+am__DEPENDENCIES_1 = @top_builddir@/base/tclplus/libtclPlus.la \
+	@top_builddir@/base/exception/libException.la
+unittests_DEPENDENCIES = libEventBuilderClient.la \
+	$(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -111,9 +121,11 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libEventBuilder_la_SOURCES) $(unittests_SOURCES)
-DIST_SOURCES = $(libEventBuilder_la_SOURCES) $(unittests_SOURCES)
-HEADERS = $(include_HEADERS)
+SOURCES = $(libEventBuilder_la_SOURCES) \
+	$(libEventBuilderClient_la_SOURCES) $(unittests_SOURCES)
+DIST_SOURCES = $(libEventBuilder_la_SOURCES) \
+	$(libEventBuilderClient_la_SOURCES) $(unittests_SOURCES)
+HEADERS = $(include_HEADERS) $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -252,25 +264,33 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-lib_LTLIBRARIES = libEventBuilder.la
+lib_LTLIBRARIES = libEventBuilder.la  libEventBuilderClient.la
 
 #eventorderer_LDFLAGS= @TCL_LDFLAGS@ \
 #		-Wl,"-rpath=@libdir@" \
 #		@THREAD_LDFLAGS@
-libEventBuilder_la_SOURCES = CEventOrderClient.cpp fragment.c
+libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp
+libEventBuilderClient_la_SOURCES = CEventOrderClient.cpp fragment.c
 include_HEADERS = CEventOrderClient.h fragment.h 
+noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h
 INCLUDES = -I@top_srcdir@/base/tcpip \
 	-I@top_srcdir@/base/exception  \
 	-I@top_srcdir@/base/headers	\
 	-I@top_srcdir@/base/tcpip        \
 	-I@top_srcdir@/servers/portmanager \
-	-I@top_srcdir@/base/os
+	-I@top_srcdir@/base/os \
+	-I@top_srcdir@/base/tclplus	\
+	@THREADCXX_FLAGS@ @TCL_FLAGS@
 
-libEventBuilder_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
+libEventBuilderClient_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/servers/portmanager/libPortManager.la   \
 	@top_builddir@/base/tcpip/libTcp.la	\
 	@top_builddir@/base/os/libdaqshm.la		\
 	@top_builddir@/base/exception/libException.la
+
+libEventBuilder_la_LIBADD = @top_builddir@/base/tclplus/libtclPlus.la \
+	@top_builddir@/base/exception/libException.la \
+	@TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 TCL_PACKAGE_FILES = ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 	connectionList.tcl
@@ -283,7 +303,7 @@ EXTRA_DIST = protocol.xml api.xml Asserts.h \
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
 	connectTest.cpp 
 
-unittests_LDADD = libEventBuilder.la \
+unittests_LDADD = libEventBuilderClient.la \
 	$(libEventBuilder_la_LIBADD) \
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
@@ -354,6 +374,8 @@ clean-libLTLIBRARIES:
 	done
 libEventBuilder.la: $(libEventBuilder_la_OBJECTS) $(libEventBuilder_la_DEPENDENCIES) 
 	$(CXXLINK) -rpath $(libdir) $(libEventBuilder_la_OBJECTS) $(libEventBuilder_la_LIBADD) $(LIBS)
+libEventBuilderClient.la: $(libEventBuilderClient_la_OBJECTS) $(libEventBuilderClient_la_DEPENDENCIES) 
+	$(CXXLINK) -rpath $(libdir) $(libEventBuilderClient_la_OBJECTS) $(libEventBuilderClient_la_LIBADD) $(LIBS)
 
 clean-noinstPROGRAMS:
 	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
@@ -374,6 +396,9 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CEventOrderClient.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CFragmentHandler.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CFragmentHandlerCommand.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OrdererPackage.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TestRunner.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/connectTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fragment.Plo@am__quote@
@@ -590,8 +615,9 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-exec-local install-libLTLIBRARIES
-
+install-exec-am: install-libLTLIBRARIES
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-am
 
 install-html-am:
@@ -632,7 +658,7 @@ ps-am:
 
 uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
 
-.MAKE: install-am install-strip
+.MAKE: install-am install-exec-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libLTLIBRARIES clean-libtool clean-noinstPROGRAMS ctags \
@@ -640,22 +666,23 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-exec-local install-html \
-	install-html-am install-includeHEADERS install-info \
-	install-info-am install-libLTLIBRARIES install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-exec-am install-exec-hook install-html install-html-am \
+	install-includeHEADERS install-info install-info-am \
+	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-includeHEADERS \
 	uninstall-libLTLIBRARIES
 
-	@THREADCXX_FLAGS@
 
-install-exec-local:
+install-exec-hook:
 	$(mkinstalldirs) $(prefix)/TclLibs/EventBuilder
 	$(INSTALL_SCRIPT) $(TCL_PACKAGE_FILES) $(prefix)/TclLibs/EventBuilder
-	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl" |@TCLSH_CMD@
+	rm -f $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
+	$(LN_S) @libdir@/libEventBuilder.so $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
+	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl *.so" |@TCLSH_CMD@
 
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl

@@ -1,7 +1,588 @@
-<!-- Chapter Libraries -->
-
+<!-- chapter frameworks -->
 <chapter>
-    <title>
+    <title>Event builder client framework</title>
+    <para>
+        <link id='evbapi_chap' endterm='evbapi_chaptitle' /> describes a low
+        level API to the NSCL Event builder.  In many cases if you write software
+        directly to this you will find that code patterns repeat over and over again.
+        The Event builder client framwework captures this and allows you to
+        concentrate on getting data from your data source, turning the
+        logic of the event builder interface to the framework itself.
+    </para>
+    <para>
+        Recall that a typical library is a set of functions and classes used
+        by a program while an application framework is a program that needs a
+        user written library to perform application specific functions.
+        This chapter will describe
+    </para>
+    <itemizedlist>
+        <listitem><para>
+            The 'library' that must be provided to the framework
+            to produce a new data source.
+            </para></listitem>
+        <listitem><para>
+            How to build a new event builder data source from your library and
+            the framework.  This section will also describe some features
+            of the framework that support slightly more advanced applications.
+            </para></listitem>
+        <listitem><para>
+            How to run an event builder client that was built on the framework.
+            </para></listitem>
+    </itemizedlist>
+    <para>
+        Reference material is also available for these and other topics:
+    </para>
+    <itemizedlist>
+        <listitem><para>
+            <link linkend='daq3-evbclientfw-usercode' endterm='daq3-evbclientfw-usercode-title' /> provides
+            reference material that describes the base class on which
+            the application code for the event builder is based.
+        </para></listitem>
+        <listitem><para>
+            <link linkend='daq1-evbclientfw-run' endterm='daq1-evbclientfw-run-title' />
+            provides reference material that desribes the event builder command
+            options and parameters.
+        </para></listitem>
+    </itemizedlist>
+    <section>
+        <title>Application specific code for the event builder</title>
+        <para>
+            The application specific code must:
+        </para>
+        <itemizedlist>
+            <listitem><para>Perform one-time initializatino</para></listitem>
+            <listitem><para>Determine if data are ready to be read from the source</para></listitem>
+            <listitem><para>Provide events to the framework along with their timestamps</para></listitem>
+            <listitem><para>Perform any required shutdown operations</para></listitem>
+        </itemizedlist>
+        <para>
+            The framework programmer provides these actions by:
+            <orderedlist>
+                <listitem><para>Subclassing the <classname>CEVBClientApp</classname>
+                    class
+                </para></listitem>
+                <listitem><para>
+                    Writing implementations for all <firstterm>pure virtual</firstterm>
+                    methods of <classname>CEVBClientApp</classname>.
+                    </para></listitem>
+                <listitem><para>
+                    Writing overrides for default implementations provided
+                    by <classname>CEVBClientApp</classname> if appropriate
+                    to the application.
+                    </para></listitem>
+            </orderedlist>
+        </para>
+        <para>
+            Below is the definition of the <classname>CEVBClientApp</classname>
+            abstract base class:
+        </para>
+        <example>
+            <title><classname>CEVBClientApp</classname> definition</title>
+            <programlisting>
+class CEVBClientApp {
+public:
+  CEVBClientApp();
+  ~CEVBClientApp();
+
+  // The interface:
+
+public:
+  virtual void initialize();        <co id="evbfw-base-initialize" />
+  virtual bool dataReady(int ms) = 0;     <co id="evbfw-base-dataready" />
+  virtual void getEvents() = 0;     <co id="evbfw-base-getevents" />
+  virtual void shutdown();          <co id="evbfw-base-shutdown" />
+};
+                
+            </programlisting>
+        </example>
+        <para>
+            In the example above, data members private to <classname>CEVBClientApp</classname>
+            are not shown for the sake of brevity.  The interface methods
+            that are application specific are virtual and are used as follows:
+        </para>
+        <calloutlist>
+            <callout arearefs="evbfw-base-initialize" >
+                <para>
+                    Called to perform one-time initialization.  This is called
+                    after the entire framework has been created and initialized.
+                    It is safe to invoke any support method at this time.
+                    This is not necessarily the case during construction.
+                </para>
+            </callout>
+            <callout arearefs="evbfw-base-dataready">
+                <para>
+                    This method is called from time to time to determine if
+                    there is any data.  It should block at most
+                    <parameter>ms</parameter> milliseconds.    If at the
+                    end of that time no data are avaialble on the data source,
+                    return <literal>false</literal>.  If data becomes available,
+                    return <literal>true</literal>.
+                </para>
+            </callout>
+            <callout arearefs="evbfw-base-getevents" >
+                <para>
+                    Called at some point after <methodname>dataReady</methodname>
+                    returns <literal>true</literal>. Events that are available
+                    from the data source should be read by this method and
+                    submitted to the framework for transmission to the
+                    event builder.
+                </para>
+                <para>
+                    The mechanism for providing events to the framework is
+                    described in the next set of examples.
+                </para>
+            </callout>
+            <callout arearefs="evbfw-base-shutdown">
+                <para>
+                    Called just prior to the framework shutting down.
+                    At this time once more, all framweork services are still
+                    avaialble.  This is not true when the object's
+                    destructor is called.
+                </para>
+            </callout>
+        </calloutlist>
+        <section>
+            <title>Sample ring <classname>EVBClientApp</classname> class.</title>
+            <para>
+                This section incrementally develops an application that
+                can take data from a ring buffer and submit it to the
+                event builder.  This  is not really a production quality effort,
+                it is designed to illustrate several points.  Little bits of code
+                and <filename>#include</filename> directives are also not shown
+                in order to keep these examples understandable.
+            </para>
+            <para>
+                Let's start by writing a definition of the
+                <classname>CEVBRingClientApp</classname> class. For this
+                example the ring URL will be gotten from the RINGURL
+                environment variable (a production version would probably
+                use a command line option but that's beyond the scope of this example.
+            </para>
+            <example>
+                <title>The <classname>CEVBRingClientApp</classname> class
+                definition.
+                </title>
+                <programlisting>
+class CRingBuffer;
+class CEVBRingClientApp : public CEVBClientApp {
+private:
+   CRingBuffer* m_pRing;
+public:
+  virtual void initialize();
+  virtual bool dataReady(int ms) = 0;
+  virtual void getEvents() = 0;
+  virtual void shutdown();
+
+};
+                </programlisting>
+            </example>
+            <para>
+                There should be no surprises here. All methods have been
+                declared as concrete rather than leaving <methodname>dataReady</methodname>
+                and <methodname>getEvents</methodname> as pure virtual. Furthermore,
+                <varname>m_pRing</varname> has been declared as a pointer to
+                a ring buffer object.  For illustrative purpose, we'll
+                create the <classname>CRingBuffer</classname> in the
+                <methodname>initialize</methodname> method and
+                destroy it in <methodname>shutdown</methodname>.
+                These operations could just as easily be done in a
+                constructor/destructor pair.
+            </para>
+            <para>
+                Having said this, the <methodname>initialize</methodname>
+                and <methodname>shutdown</methodname> methods should
+                be pretty easy to write:
+            </para>
+            <example>
+                <title>The <classname>CEVBRingClientApp</classname> <methodname>initialize</methodname>
+                and <methodname>shutdown</methodname> methods.
+                </title>
+                <programlisting>
+void
+CEVBRingClientApp::intialize()
+{
+    const char* pRingName = getenv("RINGURL");
+    m_pRing = CRingAccess::daqConsumeFrom(std::string(pRingName));
+}
+
+void
+CEVBRingClientApp::shutdown()
+{
+    delete m_pRing;
+}
+                </programlisting>
+            </example>
+            <para>
+                There should clearly be more error checking in
+                <methodname>initialize</methodname> however these should also
+                be pretty clear. <methodname>initialize</methodname>
+                translates the <literal>RINGURL</literal> environment variable
+                and opens a ring using using the URL in that environment
+                variable.
+            </para>
+            <para>
+                The <methodname>dataReady</methodname> method is a bit tricky.
+                We'd rather not burn the CPU by polling.  What we'll here is
+                first check to see if there's at least a ring header in the
+                ring.  If so, we return <literal>true</literal> if not,
+                we block for the number of requested milliseconds and
+                check again.
+            </para>
+            <example>
+                <title>The <classname>CEVBRingClientApp</classname>
+                <methodname>dataReady</methodname> method.</title>
+                <programlisting>
+bool
+CEVBRingClientApp::dataReady(int ms)
+{
+    if (haveHeader()) return true;
+    usleep(ms*1000);
+    return haveHeader();
+}
+
+// Added utility function:
+
+bool
+CEVBRingClientApp::haveHeader()
+{
+    return m_pRing->availableData() >= sizeof(RingItemHeader);
+}
+                </programlisting>
+            </example>
+            <para>
+                Note that we have invented a helper method that
+                determines if there's at least a ring header worth of
+                data in the ring for us.
+            </para>
+            <para>
+                For <methodname>getEvents</methodname> we will get the minimum
+                of <literal>100</literal> events or until there is no more
+                data left in the ring.  The events will be bundled into
+                a EventFragmentList and submitted to the event builder
+                framework using the <classname>CEVBClientFramework::submitFragmentList</classname>.
+                Note that each element of the list is a <structname>ClientEventFragment</structname>
+                and contains:
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term><fieldsynopsis><type>uint64_t</type> <varname>s_timestamp</varname></fieldsynopsis></term>
+                    <listitem>
+                        <para>
+                            The timestamp associated with the event fragment.
+                            This must be extracted from the event itself.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><fieldsynopsis><type>uint32_t</type> <varname>s_sourceId</varname></fieldsynopsis></term>
+                    <listitem>
+                        <para>
+                            The data source id associated with the fragment.
+                            A client can submit data from more than one data source.
+                            The source Id is used to tag the fragments in events
+                            that are finally assembled from the ordered event
+                            fragments.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>
+                        <fieldsynopsis><type>uint32_t</type><varname>s_size</varname></fieldsynopsis></term>
+                    <listitem>
+                        <para>
+                            The size of the event fragment payload
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><fieldsynopsis><type>void*</type> <varname>s_pPayload</varname></fieldsynopsis></term>
+                    <listitem>
+                        <para>
+                            Pointer to the payload itself.  In our case,
+                            the payload will be the full <type>RingItem</type>.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+            <para>
+                See
+                <link linkend='daq3-evbclientfw-api' endterm='daq3-evbclientfw-apititle' />
+                for reference information on the framework API methods and data
+                structures.
+            </para>
+            <para>
+                For simplicity we are not going to worry about the heterogeneous
+                nature of ring items.
+            </para>
+            <example>
+                <title>The <classname>EVBRingClientApp</classname> <methodname>getEvents</methodname>
+                implementation.
+                </title>
+                <programlisting>
+void
+CEVBRingClientApp::getEvents()
+{
+    CEVBEventList events;              <co id='evb-clientfw-get-list' />
+    int           eventCount = 0;
+    CAllButPredicate all;
+    
+    while(m_pRing->availableData()) {  <co id='evb-clientfw-get-while' />
+                                       <co id='evb-clientfw-get-itemprep' />
+        CRingItem* pItem = CRingItem::getFromRing(*m_pRing, all);
+        ClientEventFragment frag;
+        frag.s_timestamp = getTimestamp(pItem);
+        frag.s_sourceId  = 1;
+        frag.s_size      = pItem->getItemPointer()->s_header.s_size;
+        frag.s_payload   = pItem->getItemPointer();
+        events.push_back(frag);
+        
+        eventCount++;                <co id='evb-clientfw-get-limit' />
+        if (eventCount >= 100) break;
+    }
+    if (events.size()) {             <co id='evb-clientfw-get-submit' />
+        CEVBClientFramework::submitFragmentList(events);
+        
+        while(!events.empty()) {    <co id='evb-clientfw-get-cleanup' />
+            EventFragmentList fragment = events.front();
+            CRingItem* pItem = reinterpret_cast&lt;CRingItem*&gt;(fragment.s_pPayload);
+            delete pItem;
+            events.pop_front();
+        }
+    }
+}
+                </programlisting>
+            </example>
+            <para>
+                Since <methodname>getEvents</methodname> is the most complicated
+                method we've seen so far, lets break it down into its component
+                pieces.
+            </para>
+            <calloutlist>
+                <callout arearefs='evb-clientfw-get-list'>
+                    <para>
+                        The <classname>CEVBEventList</classname> is a list
+                        of <structname>ClientEventFragment</structname> structs.
+                        By list we mean list in the same sense as
+                        <classname>std::list</classname>.  Since we are using
+                        <methodname>CEVBClientFramework::submitFragmentList</methodname>
+                        we need to put our fragments into one of these.
+                    </para>
+                </callout>
+                <callout arearefs='evb-clientfw-get-while'>
+                    <para>
+                        The main loop condition for our code is to run
+                        until we've pulled all the items from the ring.
+                        See <coref linkend='evb-clientfw-get-limit' />
+                        below however.
+                    </para>
+                </callout>
+                <callout arearefs='evb-clientfw-get-itemprep'>
+                    <para>
+                        This is the heart of the loop. Each pass through the loop,
+                        an event is gotten from the ring. A
+                        <structname>ClientEventFragment</structname> is filled in.
+                        The <structfield>s_timestamp</structfield> is gotten
+                        via a utility method that we will not show here.
+                        The <structfield>s_sourceId</structfield> has been
+                        hard coded to <literal>1</literal>.
+                    </para>
+                </callout>
+                <callout arearefs='evb-clientfw-get-limit' >
+                    <para>
+                        Once the limit of <literal>100</literal> events have
+                        been added to <varname>events</varname>, we break out of
+                        the loop to submit the events to the event builder framework.
+                    </para>
+                </callout>
+                <callout arearefs='evb-clientfw-get-submit'>
+                    <para>
+                        This condition avoids doing anything if for some reason
+                        we never got any events.  The call to
+                        <methodname>CEVBClientFramework::submitFragmentList</methodname>
+                        is what actually causes the fragments to be transmitted
+                        to the eventbuilder.
+                    </para>
+                </callout>
+                <callout arearefs='evb-clientfw-get-cleanup'>
+                    <para>
+                        The <classname>CRingItem</classname> objects we got
+                        from the ring are dynamically allocated.  This
+                        loop destroys them.  The list elements themselves
+                        are destroyed automatically when the function
+                        returns.
+                    </para>
+                </callout>
+            </calloutlist>
+        </section>
+    </section>
+    <section id="evbclient-get-and-build">
+        <title id='evbclient-get-and-build-title'>Building event builder clients.</title>
+        <para>
+            Event builder clients based on the framework consist of
+            a skeleton application, user code and a Makefile that builds the
+            executable program that you run.  In the previous section we looked
+            at what is in the user code.  In this section we will look at
+            the last bits of customization you need to do in the skeleton application
+            as well as how to modify the Makefile so that it will build your
+            event builder client program correctly.
+        </para>
+        <para>
+            The framework skeleton application should be copied from
+            <filename>$DAQROOT/skeletons/evbclient</filename>.
+            <filename>$DAQROOT</filename> is the top level installation
+            directory of NSCLDAQ-10.2 or higher.
+        </para>
+        <para>
+            In the last section we saw how to write a <class>CEVBClientApp</class>
+            class that provides data source specific code to get fragments from
+            a data source and make them available to the event builder.
+            The framework skeleton application provides a file
+            <filename>Main.cpp</filename> that starts the framework code.
+            One thing we need to do is to create an instance of our data
+            source code.   The data source code's base class constructor
+            makes itself known to the framework.
+        </para>
+        <para>
+            This is shown in the highlighted parts of the code from
+            <filename>Main.cpp</filename> below.  The highlighted parts
+            must be added by you:
+        </para>
+        <example>
+            <title>Configuring the event builder client framework</title>
+            <programlisting>
+...
+#include &lt;CEVBClientFramework.h&gt;
+#include "CEVBMyClient.h"           <co id='evbclientfw-main-include' />
+...
+int
+main(char** argv, int argc)
+{
+    CEVBMyClient myCode;           <co id='evbclientfw-main-instance' />
+    CEVBClientFramework::main(argv, argc);  
+}
+            </programlisting>
+        </example>
+        <calloutlist>
+            <callout arearefs='evbclientfw-main-include'>
+                <para>
+                    You will need to include the header for your data source
+                    application.  If your program provides several data
+                    sources, you need to include the header for each of them.
+                </para>
+            </callout>
+            <callout arearefs='evbclientfw-main-instance'>
+                <para>
+                    Creating an instance of your class is sufficent to register
+                    it with the framework (the base class constructor takes
+                    care of that).
+                </para>
+            </callout>
+        </calloutlist>
+        <para>
+            Note that the call to <methodname>CEVBClientFramework::main(argv, argc)</methodname>
+            passes in the command line parameters.
+        </para>
+        <para>
+            The Makefile is organized so that you can easily add your code by
+            simply defining a few Makefile variables.  These variables are:
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term><varname>USER_OBJECTS</varname></term>
+                <para>
+                    The names of the object files generated by compiling your
+                    source files.  If you have several object files they should be
+                    separated by whitespace.
+                </para>
+            </varlistentry>
+            <varlistentry>
+                <term><varname>USER_CXXFLAGS</varname></term>
+                <listitem>
+                    <para>
+                        If you have any C++ Compilation switches you want
+                        added add them here.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><varname>USER_CCFLAGS</varname></term>
+                <listitem>
+                    <para>
+                        If you you haave any C compilation switches you want
+                        added, add them here.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><varname>USER_LDFLAGS</varname></term>
+                <listitem>
+                    <para>
+                        If you have any loader flags you want added,
+                        add them here.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+        
+    </section>
+    <section>
+        <title>Running event builder clients</title>
+        <para>
+            Once built you will have to run your event builder clients.
+            To successfully run the clients, the event builder itself must
+            also be running.  The event builder supports several command
+            line options.  These are defined by the file
+            <filename>options.ggo</filename>, and can be extended by you
+            as well.  This file is an input file to the
+            <command>gengetopt</command> command line parser package.
+        </para>
+        <para>
+            A Makefile rule to compile this file and create header is
+            already present.  The format of this file is described in the
+            <command>gengetopt</command> manual at:
+            <ulink url='http://www.gnu.org/software/gengetopt/gengetopt.html'>
+                http://www.gnu.org/software/gengetopt/gengetopt.html</ulink>.
+        </para>
+        <para>
+            The pre-defined options are:
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term><option>--help</option></term>
+                <listitem>
+                    <para>
+                        Prints the a summary of the command line options
+                        that are supported by the program.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>--evbhost</option>=<replaceable>hostname</replaceable></term>
+                <listitem>
+                    <para>
+                        Provides the name (or IP address) of the host on which
+                        the event builder is running.  This switch is mandatory.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>--evbport</option>=<replaceable>tcpport</replaceable></term>
+                <listitem>
+                    <para>
+                        Provides the port on which the event builder is listening.
+                        If not provided, the NSCLDAQ Port manager is used to
+                        automatically locate the event builder.  In general you
+                        should not need this switch.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </section>
+</chapter>
+<!-- /chapter -->
+<!-- chapter libraries -->
+<chapter id='evbapi_chap'>
+    <title id='evbapi_chaptitle'>
         Event builder client API
     </title>
     <para>
@@ -333,7 +914,7 @@ delete *pEvb;
             </varlistentry>
             <varlistentry>
                 <term>
-                    <methodsynopsis><type>void</type> <methodnanme>submitFragments</methodnanme>
+                    <methodsynopsis><type>void</type> <methodname>submitFragments</methodname>
                     <methodparam><type>size_t</type> <parameter>nFragments</parameter></methodparam>
                     <methodparam><type>pFragment</type> <parameter>ppFragments</parameter></methodparam>
                     </methodsynopsis>
@@ -537,15 +1118,337 @@ EVB::setDisconnectCallback disconnect                   <co id='evb_disconnect_c
     </section>
 </chapter>
 
+<!-- /chapter -->
 
 <!-- manpage 3daq -->
+	 <refentry id="daq3-evbclientfw-usercode">
+       <refmeta>
+          <refentrytitle id='daq3-evbclientfw-usercode-title'>CEvbClientApp</refentrytitle>
+          <manvolnum>3daq</manvolnum>
+       </refmeta>
+       <refnamediv>
+          <refname>CEvbClientApp</refname>
+          <refpurpose>Framework event builder client application.</refpurpose>
+       </refnamediv>
+       
+       <refsynopsisdiv>
+        <synopsis>
+class   <ooclass><classname>CEVBClientApp</classname></ooclass> {
+        <constructorsynopsis>
+        <methodname>CEVBClientApp</methodname>
+            <void />
+        </constructorsynopsis>
+        <methodsynopsis>
+            <modifier>virtual</modifier> <type>void</type> <methodname>initialize</methodname>
+            <void />
+        </methodsynopsis>
+        <methodsynopsis>
+            <modifier>virtual</modifier> <type>bool</type> <methodname>dataReady</methodname>
+            <methodparam><type>int</type> <parameter>ms</parameter></methodparam>
+            <modifier> = 0</modifier>
+        </methodsynopsis>
+        <methodsynopsis>
+            <modifier>virtual</modifier> <type>void</type> <methodname>getEvents</methodname>
+            <void /><modifier> = 0</modifier>
+        </methodsynopsis>
+        <methodsynopsis>
+            <modifier>virtual</modifier><type>void</type><methodname>shutdown</methodname>
+        </methodsynopsis>
+};
+        </synopsis>
+       </refsynopsisdiv>
+       <refsect1>
+          <title>DESCRIPTION</title>
+          <para>
+            <classname>CEvbClientApp</classname> is an abstract base class for
+            applications that use the Event builder data source application
+            framework.  This class conatains an interface definition
+            that consists of some methods that are pure virtual
+            and others for which there is a default implementation.
+          </para>
+          <para>
+            See METHODS below for a description of the base class methods
+            as well as the interface methods.
+            <link linkend='daq3-evbclientfw-api' endterm='daq3-evbclientfw-apititle' />
+            for more information about the methods that are available for your
+            custom code to interface with the remainder of the framework.
+          </para>
+       </refsect1>
+       <refsect1>
+          <title>
+         METHODS
+          </title>
+          <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                        <methodname>CEVBClientApp</methodname>
+                            <void />
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        The base class constructor is responsible
+                        for registering objects that are constructed with the
+                        framework.  Note that all objects of this type that are
+                        created will be registered allowing for
+                        <firstterm>super sources</firstterm> to be created.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual</modifier> <type>void</type> <methodname>initialize</methodname>
+                        <void />
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        This method is invoked by the framework exactly once.
+                        Almost all of your one-time intialization should be
+                        performed here.  The base class provides an empty
+                        default implementation so that you do not need to override
+                        this method if you do not require any one-time initialization.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual</modifier> <type>bool</type> <methodname>dataReady</methodname>
+                        <methodparam><type>int</type> <parameter>ms</parameter></methodparam>
+                        <modifier> = 0</modifier>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Called to determine if the data source you are managing
+                        has data to process.  <parameter>ms</parameter> is an
+                        estimate of the maximum amount of time you should block
+                        prior to returning.
+                    </para>
+                    <para>
+                        Return <literal>true</literal> if there is data to
+                        be read (in which case <methodname>getEvents</methodname>
+                        will soon be called),  otherwise return <literal>false</literal>.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual</modifier> <type>void</type> <methodname>getEvents</methodname>
+                        <void /><modifier> = 0</modifier>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Called to read events from the data source and
+                        submit them to the evenbuilder via one or more calls
+                        to <methodname>CEVBClientFramework::submitFragmentList</methodname>.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual</modifier><type>void</type><methodname>shutdown</methodname>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Called when the client is being properly shutdown.
+                        You should release any resources that were dynamically
+                        allocated by your event source.  This is
+                        especially important for resources that involve
+                        inter-process communications so that they don' have
+                        to close down via a timeout.
+                    </para>
+                </listitem>
+            </varlistentry>
+         </variablelist>
+       </refsect1>
+        <refsect1>
+           <title>PUBLIC VARIABLES, TYPES and CONSTANTS</title>
+           <para>
+            Two types are often used by event fragment sources:
+            <type>ClientEventFragment</type> represents the
+            metadata for an event fragment along with a pointer to the
+            fragment itself.
+            <classname>CEVBEventList</classname> is a list of
+            <type>ClietEventFragment</type> objects.  It is actually a specific
+            <type>std::list</type> and has all of the methods of that class.
+           </para>
+           <para>
+            The <type>ClientEventFragment</type> type is a struct with the
+            following members:
+           </para>
+           <variablelist>
+            <varlistentry>
+                <term><fieldsynopsis><type>uint64_t</type> <varname>s_timestamp</varname></fieldsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        The event fragment timestamp.  For event ordering/building
+                        to work, the timestamp for all sources must come from a
+                        common timebase and be synchronized.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><fieldsynopsis><type>uint32_t</type> <varname>s_sourceId</varname></fieldsynopsis></term>
+                    <listitem>
+                        <para>
+                            Identifies the source.  In the output of both the
+                            event orderer and the builder, each fragment will
+                            be tagged with its source id.  Source Ids:
+                            <itemizedlist>
+                                <listitem>
+                                    <para>
+                                        Should be unique from source to source.
+                                    </para>
+                                </listitem>
+                                <listitem>
+                                    <para>
+                                        Should produce fragments that are
+                                        time ordered.
+                                    </para>
+                                </listitem>
+                                <listitem>
+                                    <para>
+                                        Each have their own fragment queue. You
+                                        therefore do not need to order fragments
+                                        across event source only within sources.
+                                    </para>
+                                </listitem>
+                            </itemizedlist>
+                        </para>
+                    </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <fieldsynopsis><type>uint32_t</type> <varname>s_size</varname></fieldsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        The number of bytes in the fragment data.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <fieldsynopsis><type>void*</type> <varname>s_payload</varname>
+                    </fieldsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        A pointer to the event fragment.
+                    </para>
+                </listitem>
+            </varlistentry>
+           </variablelist>
+        </refsect1>
+     </refentry>     
+	 <refentry id="daq3-evbclientfw-api">
+       <refmeta>
+          <refentrytitle id='daq3-evbclientfw-apititle'>CEVBClientFramework</refentrytitle>
+          <manvolnum>3daq</manvolnum>
+       </refmeta>
+       <refnamediv>
+          <refname>CEVBClientFramework</refname>
+          <refpurpose>Event builder client framework.</refpurpose>
+       </refnamediv>
+       
+       <refsynopsisdiv>
+        <synopsis>
+class   <ooclass><classname>CEVBClientFramework</classname></ooclass> {
+    <methodsynopsis>
+        <modifier>static</modifier>
+        <type>void</type><methodname>submitFragmentList</methodname>
+        <methodparam>
+            <modifier>static</modifier>
+            <type>CEVBEventList&amp;</type> <parameter>fragmentList</parameter>
+        </methodparam>
+    </methodsynopsis>
+    <methodsynopsis>
+        <modifier>static</modifier>
+        <type>const struct gengetopt_args_info*</type>
+        <methodname>getProgramOptions</methodname>
+        <void />
+    </methodsynopsis>
+};
+        </synopsis>
+       </refsynopsisdiv>
+       <refsect1>
+          <title>DESCRIPTION</title>
+          <para>
+            The event builder framework offers services to the user code
+            via the <classname>CEVBClientFramework</classname> class.
+            Many of these interfaces are provided as static methods.
+            METHODS below describe the interfaces proviced.
+          </para>
+       </refsect1>
+       <refsect1>
+          <title>
+         METHODS
+          </title>
+          <variablelist>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <type>void</type><methodname>submitFragmentList</methodname>
+                        <methodparam>
+                            <modifier>static</modifier>
+                            <type>CEVBEventList&amp;</type> <parameter>fragmentList</parameter>
+                        </methodparam>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Allows you to submit a list of event fragments to the
+                        event orderer.  <parameter>fragmentList</parameter>
+                        containst that list of fragments.  For more information
+                        about the <classname>CEVBEventList</classname> data type,
+                        see
+                        <link endterm='daq3-ceventorder-title'
+                              linkend='daq3-ceventorder' />.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>static</modifier>
+                        <type>const struct gengetopt_args_info*</type>
+                        <methodname>getProgramOptions</methodname>
+                        <void />
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        This method is used if you extend the command option
+                        definition file.  The return value is a pointer to the
+                        struct that is created by <application>gengetopt</application>
+                        from that file.  The contents of this struct will
+                        depend on the final set of command switches, however
+                        the struct will be defined in
+                        <filename>cmdline.h</filename> which will be created
+                        when you first build your application.
+                    </para>
+                </listitem>
+            </varlistentry>
+          </variablelist>
+       </refsect1>
+
+     </refentry>     
 <refentry id="daq3-ceventorder">
 <refmeta>
  <refentrytitle id="daq3-ceventorder-title">CEventOrderClient</refentrytitle>
  <manvolnum>3daq</manvolnum>
 </refmeta>
 <refnamediv>
- <refname>CEventOrderClient</refname>
+ <refname >CEventOrderClient</refname>
  <refpurpose>Client of the event orderer</refpurpose>
 </refnamediv>
 
@@ -577,7 +1480,7 @@ class   <ooclass><classname>CEventOrderClient</classname></ooclass> {
         <methodparam><type>pFragmentChain</type>
             <parameter>pChain</parameter></methodparam>
     </methodsynopsis>
-    <methodsynopsis><type>void</type> <methodnanme>submitFragments</methodnanme>
+    <methodsynopsis><type>void</type> <methodname>submitFragments</methodname>
     <methodparam><type>size_t</type> <parameter>nFragments</parameter></methodparam>
     <methodparam><type>pFragment</type> <parameter>ppFragments</parameter></methodparam>
     </methodsynopsis>
@@ -721,7 +1624,7 @@ METHODS
      </varlistentry>
      <varlistentry>
          <term>
-             <methodsynopsis><type>void</type> <methodnanme>submitFragments</methodnanme>
+             <methodsynopsis><type>void</type> <methodname>submitFragments</methodname>
              <methodparam><type>size_t</type> <parameter>nFragments</parameter></methodparam>
              <methodparam><type>pFragment</type> <parameter>ppFragments</parameter></methodparam>
              </methodsynopsis>
@@ -782,7 +1685,7 @@ This data structure
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term><fieldsynopsis>uint32_t</fieldsynopsis> <varname>s_size</varname></term>
+            <term><fieldsynopsis><type>uint32_t</type> <varname>s_size</varname></fieldsynopsis></term>
             <listitem>
                 <para>
                     Contains the size of the fragment payload in bytes.

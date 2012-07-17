@@ -1,30 +1,42 @@
 # bin_PROGRAMS=eventorderer
 
-lib_LTLIBRARIES=libEventBuilder.la
+lib_LTLIBRARIES=libEventBuilder.la  libEventBuilderClient.la
 
 #eventorderer_LDFLAGS= @TCL_LDFLAGS@ \
 #		-Wl,"-rpath=@libdir@" \
 #		@THREAD_LDFLAGS@
 
 
-libEventBuilder_la_SOURCES=CEventOrderClient.cpp fragment.c
+libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp
 
-include_HEADERS = CEventOrderClient.h fragment.h 
+
+libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c
+
+include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h
+
+
+noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h
+
 
 INCLUDES = -I@top_srcdir@/base/tcpip \
 	-I@top_srcdir@/base/exception  \
 	-I@top_srcdir@/base/headers	\
 	-I@top_srcdir@/base/tcpip        \
 	-I@top_srcdir@/servers/portmanager \
-	-I@top_srcdir@/base/os
-	@THREADCXX_FLAGS@
+	-I@top_srcdir@/base/os \
+	-I@top_srcdir@/base/tclplus	\
+	@THREADCXX_FLAGS@ @TCL_FLAGS@
 
 
-libEventBuilder_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
+libEventBuilderClient_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/servers/portmanager/libPortManager.la   \
 	@top_builddir@/base/tcpip/libTcp.la	\
 	@top_builddir@/base/os/libdaqshm.la		\
 	@top_builddir@/base/exception/libException.la
+
+libEventBuilder_la_LIBADD = @top_builddir@/base/tclplus/libtclPlus.la \
+	@top_builddir@/base/exception/libException.la \
+	@TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 	connectionList.tcl
@@ -36,10 +48,12 @@ EXTRA_DIST=protocol.xml api.xml Asserts.h \
 	$(TCL_TEST_FILES)
 
 
-install-exec-local:
+install-exec-hook:
 	$(mkinstalldirs) $(prefix)/TclLibs/EventBuilder
 	$(INSTALL_SCRIPT) $(TCL_PACKAGE_FILES) $(prefix)/TclLibs/EventBuilder
-	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl" |@TCLSH_CMD@
+	rm -f $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
+	$(LN_S) @libdir@/libEventBuilder.so $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
+	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl *.so" |@TCLSH_CMD@
 
 
 
@@ -51,7 +65,7 @@ noinst_PROGRAMS = unittests
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
 	connectTest.cpp 
 
-unittests_LDADD = libEventBuilder.la \
+unittests_LDADD = libEventBuilderClient.la \
 	$(libEventBuilder_la_LIBADD) \
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
