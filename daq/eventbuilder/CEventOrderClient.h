@@ -80,7 +80,7 @@ public:
   void disconnect();
   void submitFragments(EVB::pFragmentChain pChain);
   void submitFragments(size_t nFragments, EVB::pFragment ppFragments);
-  void submitFragments(EVB::FragmentPointerList fragments);
+  void submitFragments(EVB::FragmentPointerList& fragments);
 
   // Utility functions:
 

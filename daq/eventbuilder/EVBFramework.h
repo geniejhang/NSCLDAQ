@@ -74,8 +74,8 @@ typedef std::list<ClientEventFragment> CEVBEventList, *pCEVBEventList;
 class CEVBClientFramework {
 public:
   static const struct gengetopt_args_info* getProgramOptions();
-  static void submitFragmentList(CEVBEventList& list);
-  static void main(int argc, char** argv);
+  static void submitFragmentList(CEVBEventList& flist);
+  static int  main(int argc, char** argv);
 };
 
 #endif

@@ -23,7 +23,7 @@
 class CEVBClientApp {
 public:
   CEVBClientApp();
-  ~CEVBClientApp();
+  virtual ~CEVBClientApp();
 
   // The interface:
 

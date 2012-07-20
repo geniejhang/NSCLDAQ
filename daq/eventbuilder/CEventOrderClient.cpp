@@ -255,7 +255,7 @@ CEventOrderClient::submitFragments(size_t nFragments, EVB::pFragment ppFragments
  *       this minimizes data movement.
  */
 void
-CEventOrderClient::submitFragments(EVB::FragmentPointerList fragments)
+CEventOrderClient::submitFragments(EVB::FragmentPointerList& fragments)
 {
   if (fragments.size() == 0) return; // degenerate edge case...empty list...don't send.
   
