@@ -1,7 +1,7 @@
 #
 #  Maintain the stuff below:
 
-package evbclient
+package "evbclient"
 version "1.0"
 purpose "Supply with a source of data from:...?"
 
@@ -11,7 +11,7 @@ purpose "Supply with a source of data from:...?"
 section "Standard Options"
 
 option "evbhost" n "Event builder host name" string required
-option "evbport" p "Event builder port" string optional default "managed"
+option "evbport" p "Event builder port" string optional default="managed"
 
 section "Application specific options"
 

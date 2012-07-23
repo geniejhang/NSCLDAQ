@@ -54,10 +54,10 @@ struct gengetopt_args_info;
  */
 
 typedef struct _ClientEventFragment {
-  uint64_t m_timestamp;
-  uint32_t m_sourceId;
-  uint32_t m_size;
-  void*    m_payload;
+  uint64_t s_timestamp;
+  uint32_t s_sourceId;
+  uint32_t s_size;
+  void*    s_payload;
   
 } ClientEventFragment, *pClientEventFragment;
 
@@ -65,7 +65,7 @@ typedef struct _ClientEventFragment {
  * The typedef below describes a CEVBEventList which is really and std::list<ClientEventFragment>
  *
  */
-typedef std::list<ClientEventFragment> CEVBEventList, *pCEVBEventList;
+typedef std::list<ClientEventFragment> CEVBFragmentList, *pCEVBFragmentList;
 
 /**
  *  CEVBClientFramework represents the API of the event builder
@@ -74,7 +74,7 @@ typedef std::list<ClientEventFragment> CEVBEventList, *pCEVBEventList;
 class CEVBClientFramework {
 public:
   static const struct gengetopt_args_info* getProgramOptions();
-  static void submitFragmentList(CEVBEventList& flist);
+  static void submitFragmentList(CEVBFragmentList& flist);
   static int  main(int argc, char** argv);
 };
 

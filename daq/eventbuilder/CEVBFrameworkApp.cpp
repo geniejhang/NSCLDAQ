@@ -13,11 +13,12 @@
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
+#include "EVBFramework.h"
 #include "CEVBFrameworkApp.h"
-#include "cmdline.h"
 #include "CEVBClientApp.h"
 #include "CEventOrderClient.h"
-#include "EVBFramework.h"
+#include "GetOpt.h"
+#include "fragment.h"
 
 
 #include <Exception.h>
@@ -29,7 +30,7 @@
 #include <algorithm>
 
 #include <stdlib.h>
-#include <netdb>
+#include <netdb.h>
 
 /**
  * CEVBFrameworkApp.cpp - implementation of the CEVBFrameworkApp class.
@@ -98,7 +99,7 @@ CEVBFrameworkApp::addSource(CEVBClientApp* pSource)
 void
 CEVBFrameworkApp::removeSource(CEVBClientApp* pSource)
 {
-  std::list<CEVBClientApp*>::iterator p = std::find(m_sources.begin(), m_sources.end());
+  std::list<CEVBClientApp*>::iterator p = std::find(m_sources.begin(), m_sources.end(), pSource);
   if (p != m_sources.end()) {
     m_sources.erase(p);
   }
@@ -112,7 +113,7 @@ CEVBFrameworkApp::removeSource(CEVBClientApp* pSource)
  * 
  */
 void
-CEVBFramework::send(CEVBFragmentList& fragmentList)
+CEVBFrameworkApp::send(CEVBFragmentList& fragmentList)
 {
   /* Marshall the data into a fragment pointer list and ship it off.
      this means:
@@ -125,7 +126,7 @@ CEVBFramework::send(CEVBFragmentList& fragmentList)
   // Build the array of fragments: 
 
   size_t nFragments      = fragmentList.size();
-  pFragment   pFragments = malloc(nFragments * sizeof(Fragment));
+  EVB::pFragment   pFragments = reinterpret_cast<EVB::pFragment>(malloc(nFragments * sizeof(EVB::Fragment)));
   if (!pFragments) {
     throw std::string("Failed to allocated fragment list buffer (send)");
   }
@@ -134,15 +135,15 @@ CEVBFramework::send(CEVBFragmentList& fragmentList)
 
 
 
-  pFragment pDest = pFragments;
+  EVB::pFragment pDest = pFragments;
   EVB::FragmentPointerList evbList;
 
-  for (CEVBFragmentList::itereator psrc = fragmentList.begin(); 
+  for (CEVBFragmentList::iterator psrc = fragmentList.begin(); 
        psrc != fragmentList.end(); psrc++) {
-    pDest->s_header.s_timestamp = psrc->s_stimestamp;
+    pDest->s_header.s_timestamp = psrc->s_timestamp;
     pDest->s_header.s_sourceId  = psrc->s_sourceId;
     pDest->s_header.s_size      = psrc->s_size;
-    pDest->pBody                = psrc->s_payload;
+    pDest->s_pBody                = psrc->s_payload;
 
     evbList.push_back(pDest);
     pDest++;
@@ -150,7 +151,7 @@ CEVBFramework::send(CEVBFragmentList& fragmentList)
 
   // Send them off to the builder:
 
-  m_pBuilder->submitFragments(pFragments);
+  m_pBuilder->submitFragments(evbList);
 
   // Free the storage.
 
@@ -202,14 +203,17 @@ CEVBFrameworkApp::main(int argc, char** argv)
  *             - return normal.
  */
 int
-CEVBFrameworkApp::operator()(int main, char** argv)
+CEVBFrameworkApp::operator()(int argc, char** argv)
 {
   /* Process arguments:
    */
-  m_pArgs = new gengetopt_args_info;
-  if (cmdline_parser(argc, argv, m_pArgs)) {
-    return EXIT_FAILURE;
-  }
+
+  GetOpt options(argc, argv);
+  std::string evbhost = options.getHost();
+  std::string evbport = options.getPort();
+  m_pArgs = options.getArgs();
+
+
 
   /**
    * Connect to the event builder:
@@ -219,7 +223,7 @@ CEVBFrameworkApp::operator()(int main, char** argv)
 
   try {
     pContext = "Connecting to the event builder";
-    EVBConnect(m_pArgs->evbhost_arg, m_pArgs->evbport_arg);
+    EVBConnect(evbhost.c_str(), evbport.c_str());
 
 
     /**
@@ -262,7 +266,7 @@ CEVBFrameworkApp::operator()(int main, char** argv)
   }
   catch(std::string msg) {
     ReportError(pContext, "std::string", msg.c_str());
-    return EXIT_FAIULRE;
+    return EXIT_FAILURE;
   }
   catch(const char* pMesg) {
     ReportError(pContext, "const char*", pMesg);
@@ -311,7 +315,7 @@ CEVBFrameworkApp::EVBConnect(const char* host, const char* port)
  *
  */
 void 
-CEVBFrameworkApp::ReportError(const char* pContext, constchar* pType,  const char* pMessage) 
+CEVBFrameworkApp::ReportError(const char* pContext, const char* pType,  const char* pMessage) 
 {
   std::string exceptionType = " (";
   exceptionType += pType;
@@ -360,7 +364,8 @@ CEVBFrameworkApp::LookupService(const char* serviceName)
  * Construction saves the number of ms to pass to the
  * objects dataReady member.
  */
-CEVBFrameworkApp::SourcePoll(int ms) :
+
+CEVBFrameworkApp::SourcePoll::SourcePoll(int ms) :
   m_ms(ms)
 {}
 /**
@@ -370,7 +375,7 @@ CEVBFrameworkApp::SourcePoll(int ms) :
  * @param pSource -Pointer to the source object.
  */
 void
-CEVBFrameworkApp::operator()(CEVBClientApp* pSource)
+CEVBFrameworkApp::SourcePoll::operator()(CEVBClientApp* pSource)
 {
   if (pSource->dataReady(m_ms)) {
     pSource->getEvents();

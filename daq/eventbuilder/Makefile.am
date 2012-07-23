@@ -10,12 +10,20 @@ lib_LTLIBRARIES=libEventBuilder.la  libEventBuilderClient.la
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp
 
 
-libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c
+libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
+	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
+	EVBFramework.cpp
 
-include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h
 
 
-noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h
+FRAMEWORK_SKELETON = GetOpt.cpp Main.cpp
+
+
+include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h \
+	CEVBFrameworkApp.h CEventOrderClient.h GetOpt.h
+
+
+noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h
 
 
 INCLUDES = -I@top_srcdir@/base/tcpip \
@@ -45,7 +53,7 @@ TCL_TEST_FILES=tclTests.tcl managerTests.test
 
 EXTRA_DIST=protocol.xml api.xml Asserts.h \
 	$(TCL_PACKAGE_FILE) \
-	$(TCL_TEST_FILES)
+	$(TCL_TEST_FILES) options.ggo
 
 
 install-exec-hook:
@@ -53,7 +61,9 @@ install-exec-hook:
 	$(INSTALL_SCRIPT) $(TCL_PACKAGE_FILES) $(prefix)/TclLibs/EventBuilder
 	rm -f $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
 	$(LN_S) @libdir@/libEventBuilder.so $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
-	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl *.so" |@TCLSH_CMD@
+	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl *.so" |@TCLSH_CMD@ \
+	$(mkinstalldirs)@Prefix@/skeletons/eventbuilder
+	$(INSTALL_DATA) $(FRAMEWORK_SKELETON) @prefi@/skeletons/evenbuilder
 
 
 
@@ -63,12 +73,25 @@ install-exec-hook:
 
 noinst_PROGRAMS = unittests
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
-	connectTest.cpp 
+	connectTest.cpp GetOpt.cpp cmdline.c
+
 
 unittests_LDADD = libEventBuilderClient.la \
 	$(libEventBuilder_la_LIBADD) \
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
+
+unittests_DEPENDENCIES = cmdline.o cmdline.h
+
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
 #	./unittests 
+
+
+cmdline.h: options.ggo
+	$(GENGETOPT) --input=options.ggo
+
+cmdline.c: options.ggo
+	$(GENGETOPT) --input=options.ggo
+
+GetOpt.o: cmdline.c cmdline.h GetOpt.cpp

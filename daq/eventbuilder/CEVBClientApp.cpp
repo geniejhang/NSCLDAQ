@@ -15,7 +15,7 @@
 */
 
 #include "CEVBClientApp.h"
-#includee "CEVBFrameworkApp.h"
+#include "CEVBFrameworkApp.h"
 
 /**
  * CEVBCleitnApp.cpp - implementation of the methods of the CEVBClientApp ABC that are

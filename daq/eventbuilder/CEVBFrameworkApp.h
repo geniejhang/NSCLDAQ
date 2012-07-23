@@ -28,8 +28,9 @@
 struct gengetopt_args_info;
 class  CEVBClientApp;
 class  CEventOrderClient;
-class  CEVBFragmentList;
-
+#ifndef __EVBFRAMEWORK_H
+class  CEVBFragmentList;	/* Could be prior defined completely. */
+#endif
 /**
  *  CEVBFrameworkApp - the application class of the frameowrk.
  *  Mainly controls the lifecycle of all of the framework

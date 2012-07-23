@@ -88,17 +88,16 @@ libEventBuilderClient_la_DEPENDENCIES =  \
 	@top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/base/os/libdaqshm.la \
 	@top_builddir@/base/exception/libException.la
-am_libEventBuilderClient_la_OBJECTS = CEventOrderClient.lo fragment.lo
+am_libEventBuilderClient_la_OBJECTS = CEventOrderClient.lo fragment.lo \
+	CEVBClientApp.lo CEVBFrameworkApp.lo EVBFramework.lo
 libEventBuilderClient_la_OBJECTS =  \
 	$(am_libEventBuilderClient_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_unittests_OBJECTS = TestRunner.$(OBJEXT) lookupTest.$(OBJEXT) \
-	connectTest.$(OBJEXT)
+	connectTest.$(OBJEXT) GetOpt.$(OBJEXT) cmdline.$(OBJEXT)
 unittests_OBJECTS = $(am_unittests_OBJECTS)
 am__DEPENDENCIES_1 = @top_builddir@/base/tclplus/libtclPlus.la \
 	@top_builddir@/base/exception/libException.la
-unittests_DEPENDENCIES = libEventBuilderClient.la \
-	$(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -270,9 +269,15 @@ lib_LTLIBRARIES = libEventBuilder.la  libEventBuilderClient.la
 #		-Wl,"-rpath=@libdir@" \
 #		@THREAD_LDFLAGS@
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp
-libEventBuilderClient_la_SOURCES = CEventOrderClient.cpp fragment.c
-include_HEADERS = CEventOrderClient.h fragment.h 
-noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h
+libEventBuilderClient_la_SOURCES = CEventOrderClient.cpp fragment.c \
+	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
+	EVBFramework.cpp
+
+FRAMEWORK_SKELETON = GetOpt.cpp Main.cpp
+include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h \
+	CEVBFrameworkApp.h CEventOrderClient.h GetOpt.h
+
+noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h
 INCLUDES = -I@top_srcdir@/base/tcpip \
 	-I@top_srcdir@/base/exception  \
 	-I@top_srcdir@/base/headers	\
@@ -298,15 +303,16 @@ TCL_PACKAGE_FILES = ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 TCL_TEST_FILES = tclTests.tcl managerTests.test
 EXTRA_DIST = protocol.xml api.xml Asserts.h \
 	$(TCL_PACKAGE_FILE) \
-	$(TCL_TEST_FILES)
+	$(TCL_TEST_FILES) options.ggo
 
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
-	connectTest.cpp 
+	connectTest.cpp GetOpt.cpp cmdline.c
 
 unittests_LDADD = libEventBuilderClient.la \
 	$(libEventBuilder_la_LIBADD) \
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
+unittests_DEPENDENCIES = cmdline.o cmdline.h
 all: all-am
 
 .SUFFIXES:
@@ -395,11 +401,16 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CEVBClientApp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CEVBFrameworkApp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CEventOrderClient.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CFragmentHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CFragmentHandlerCommand.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/EVBFramework.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GetOpt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OrdererPackage.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TestRunner.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmdline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/connectTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fragment.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lookupTest.Po@am__quote@
@@ -682,11 +693,21 @@ install-exec-hook:
 	$(INSTALL_SCRIPT) $(TCL_PACKAGE_FILES) $(prefix)/TclLibs/EventBuilder
 	rm -f $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
 	$(LN_S) @libdir@/libEventBuilder.so $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
-	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl *.so" |@TCLSH_CMD@
+	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl *.so" |@TCLSH_CMD@ \
+	$(mkinstalldirs)@Prefix@/skeletons/eventbuilder
+	$(INSTALL_DATA) $(FRAMEWORK_SKELETON) @prefi@/skeletons/evenbuilder
 
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
 #	./unittests 
+
+cmdline.h: options.ggo
+	$(GENGETOPT) --input=options.ggo
+
+cmdline.c: options.ggo
+	$(GENGETOPT) --input=options.ggo
+
+GetOpt.o: cmdline.c cmdline.h GetOpt.cpp
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
