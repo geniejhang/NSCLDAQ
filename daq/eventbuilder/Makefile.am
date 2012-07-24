@@ -15,12 +15,13 @@ libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
 	EVBFramework.cpp
 
 
+FRAMEWORK_SOURCEFILES =  GetOpt.cpp Main.cpp options.ggo
 
-FRAMEWORK_SKELETON = GetOpt.cpp Main.cpp
+FRAMEWORK_SKELETON = Makefile_Skeleton $(FRAMEWORK_SOURCEFILES)
 
 
 include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h \
-	CEVBFrameworkApp.h CEventOrderClient.h GetOpt.h
+	CEVBFrameworkApp.h  GetOpt.h
 
 
 noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h
@@ -53,18 +54,25 @@ TCL_TEST_FILES=tclTests.tcl managerTests.test
 
 EXTRA_DIST=protocol.xml api.xml Asserts.h \
 	$(TCL_PACKAGE_FILE) \
-	$(TCL_TEST_FILES) options.ggo
+	$(TCL_TEST_FILES) options.ggo \
+	$(FRAMEWORK_SOURCEFILES) \
+	Makefile_Skeleton.in
 
+
+SKELDIR=@prefix@/skeletons/eventbuilder
 
 install-exec-hook:
 	$(mkinstalldirs) $(prefix)/TclLibs/EventBuilder
 	$(INSTALL_SCRIPT) $(TCL_PACKAGE_FILES) $(prefix)/TclLibs/EventBuilder
 	rm -f $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
 	$(LN_S) @libdir@/libEventBuilder.so $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
-	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl *.so" |@TCLSH_CMD@ \
-	$(mkinstalldirs)@Prefix@/skeletons/eventbuilder
-	$(INSTALL_DATA) $(FRAMEWORK_SKELETON) @prefi@/skeletons/evenbuilder
+	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl *.so" |@TCLSH_CMD@ 
+	$(mkinstalldirs) $(SKELDIR)
+	$(INSTALL_DATA) $(FRAMEWORK_SKELETON) $(SKELDIR)
+	mv $(SKELDIR)/Makefile_Skeleton $(SKELDIR)/Makefile
 
+
+GetOpt.o: GetOpt.cpp cmdline.h
 
 
 #-------------------------------------------

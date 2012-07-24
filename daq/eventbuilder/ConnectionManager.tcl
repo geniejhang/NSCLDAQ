@@ -245,6 +245,7 @@ snit::type EVB::Connection {
 	} msg]
 	if {[eof $options(-socket)]} {
 	    $self _Close LOST
+	    return;		# Nothing else to do.
 	}
 	# Protocol allows a DISCONNECT here:
 
@@ -252,7 +253,7 @@ snit::type EVB::Connection {
 	    puts $socket "OK"
 	    $self _Close
 
-	} elseif ($header eq "FRAGMENTS"} {
+	} elseif {$header eq "FRAGMENTS"} {
 
 	    # protocol allows FRAGMENTS here:
 	    # TODO: Handle errors as a close
@@ -266,13 +267,8 @@ snit::type EVB::Connection {
 	    puts $socket "ERROR {Unexpected header: $header}"
 
 	}
-
-
-
-	
     }
 }
-
 
 ##
 #  Connection manager object.  Creating one of these

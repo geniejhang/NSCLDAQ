@@ -211,6 +211,7 @@ CEVBFrameworkApp::operator()(int argc, char** argv)
   GetOpt options(argc, argv);
   std::string evbhost = options.getHost();
   std::string evbport = options.getPort();
+  std::string description = options.getDescription();
   m_pArgs = options.getArgs();
 
 
@@ -223,7 +224,7 @@ CEVBFrameworkApp::operator()(int argc, char** argv)
 
   try {
     pContext = "Connecting to the event builder";
-    EVBConnect(evbhost.c_str(), evbport.c_str());
+    EVBConnect(evbhost.c_str(), evbport.c_str(), description.c_str());
 
 
     /**
@@ -288,10 +289,12 @@ CEVBFrameworkApp::operator()(int argc, char** argv)
  * @param port - If this is 'managed', we use the port manager to locate the server.
  *               otherwise this must be either an integer (in which case it is the port number)
  *               or a service name that can be translated by getservbyname_r
+ * @param description - Describes the connection.
+ *
  * @note If successful, a pointer to the resulting connection is stored in m_pBuilder.
  */
 void
-CEVBFrameworkApp::EVBConnect(const char* host, const char* port)
+CEVBFrameworkApp::EVBConnect(const char* host, const char* port, const char* description)
 {
   uint16_t portNum;
   if (std::string("managed") == port) {
@@ -304,6 +307,7 @@ CEVBFrameworkApp::EVBConnect(const char* host, const char* port)
   }
 
   m_pBuilder = new CEventOrderClient(std::string(host), portNum);
+  m_pBuilder->Connect(std::string(description));
 }
 
 /**

@@ -86,7 +86,7 @@ public:
 private:
   int operator()(int argc, char** argv);
 
-  void EVBConnect(const char* host, const char* port);
+  void EVBConnect(const char* host, const char* port, const char* description);
   void ReportError(const char* context, const char* pType, const char* message);
   int  LookupService(const char* serviceName);
 

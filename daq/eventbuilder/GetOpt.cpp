@@ -76,6 +76,17 @@ GetOpt::getPort() const
   return std::string(m_pArgs->evbport_arg);
 }
 /**
+ * Returns the description option value.
+ *
+ * @return std::string
+ * @retval value of --info switch
+ */
+std::string
+GetOpt::getDescription() const
+{
+  return std::string(m_pArgs->info_arg);
+}
+/**
  * The application maintains a pointer to the command line parsed into a struct.
  * Ths returns a pointer to a copy of that.  Returning a copy allows this to be 
  * destroyed without impact on the data returned.

@@ -45,6 +45,7 @@ public:
 public:
   std::string getHost() const;
   std::string getPort() const;
+  std::string getDescription() const;
   struct gengetopt_args_info* getArgs();
 
   

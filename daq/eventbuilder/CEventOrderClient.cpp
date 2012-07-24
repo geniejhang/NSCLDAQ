@@ -82,7 +82,7 @@ CEventOrderClient::Lookup(std::string host)
   // Not running.
   // Use errno = ENOENT
 
-  errno = ENOENT;
+  errno = ECONNREFUSED;
   throw CErrnoException("Looking up event builder service");
 
 }
