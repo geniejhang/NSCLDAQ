@@ -27,7 +27,8 @@ include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h 
 noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h
 
 
-INCLUDES = -I@top_srcdir@/base/tcpip \
+INCLUDES = -D__STDC_LIMIT_MACROS \
+	-I@top_srcdir@/base/tcpip \
 	-I@top_srcdir@/base/exception  \
 	-I@top_srcdir@/base/headers	\
 	-I@top_srcdir@/base/tcpip        \

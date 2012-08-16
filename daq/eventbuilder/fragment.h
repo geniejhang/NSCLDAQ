@@ -72,6 +72,11 @@ namespace EVB {
   } FragmentChain, *pFragmentChain;
 
 
+  typedef struct _FlatFragment {
+    FragmentHeader s_header;
+    int            s_body[];
+  } FlatFragment, *pFlatFragment;
+
 #ifdef __cplusplus
 }
 #endif

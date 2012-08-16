@@ -109,7 +109,10 @@ CFragmentHandlerCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObj
       interp.setResult("Message body could not be completely read");
       return TCL_ERROR;
     }
-    //  TODO: Dispatch the data to the input queue manager:
+
+    
+    unsigned char* pBody = Tcl_GetByteArrayFromObj(msgBody, NULL);
+    
 
 
   }
