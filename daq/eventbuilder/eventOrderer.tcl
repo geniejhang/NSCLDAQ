@@ -117,5 +117,27 @@ proc EVB::getConnections {} {
     $EVB::eventBuilder getConnections
 }
 
-
-
+##
+#  EVB::getInputStageStatistics
+#
+# Get the statistics about the input stage from the event builder
+# C++ code.
+# This returns directly the output of EVB::inputStats:
+#
+# \verbatim
+#    {oldestTimestamp newestTimestamp totalFragcount queue-statistics}
+#  \endverbatim
+#     Where:
+#     - oldestTimestamp is the timestamp of the oldest queued fragment and
+#     - newestTimestamp is similarly the timestamp of the newest queued fragment.
+#     - queue-statistics is itself a list of detailed queue statistics. Each element
+#       is a sublist containing in order:
+#       # id    - the source id that is putting fragments in this queue.
+#       # depth - the number of fragments queued in this queue.
+#       # oldest- the timestamp of the fragment at the front of the queue.
+#                 by the specifications of data sources, this is the
+#                oldest queued fragment from that data source.
+#
+proc EVB::getInputStageStatistics {} {
+    return [::EVB::inputStats]
+}

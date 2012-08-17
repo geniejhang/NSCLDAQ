@@ -23,6 +23,8 @@
 #include <tcl.h>
 #include <TCLInterpreter.h>
 #include "CFragmentHandlerCommand.h"
+#include "CInputStatsCommand.h"
+
 
 static const char* version = "1.0"; // package version string.
 
@@ -37,11 +39,12 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
 {
   Tcl_PkgProvide(pInterp, "EvbOrderer", version);
   
-  // Wrapt pInterp in a CTCLInterpretr object and create the command extensions:
+  // Wrap pInterp in a CTCLInterpretr object and create the command extensions:
 
   CTCLInterpreter* pInterpObject = new CTCLInterpreter(pInterp);
 
   new CFragmentHandlerCommand(*pInterpObject, "EVB::handleFragment");
+  new CInputStatsCommand(*pInterpObject, "EVB::inputStats");
 
   return TCL_OK;
 }

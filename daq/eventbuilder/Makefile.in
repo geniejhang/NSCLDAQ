@@ -81,7 +81,8 @@ libEventBuilder_la_DEPENDENCIES =  \
 	@top_builddir@/base/tclplus/libtclPlus.la \
 	@top_builddir@/base/exception/libException.la
 am_libEventBuilder_la_OBJECTS = OrdererPackage.lo \
-	CFragmentHandlerCommand.lo CFragmentHandler.lo
+	CFragmentHandlerCommand.lo CFragmentHandler.lo \
+	CInputStatsCommand.lo
 libEventBuilder_la_OBJECTS = $(am_libEventBuilder_la_OBJECTS)
 libEventBuilderClient_la_DEPENDENCIES =  \
 	@top_builddir@/base/tcpip/libTcp.la \
@@ -269,7 +270,9 @@ lib_LTLIBRARIES = libEventBuilder.la  libEventBuilderClient.la
 #eventorderer_LDFLAGS= @TCL_LDFLAGS@ \
 #		-Wl,"-rpath=@libdir@" \
 #		@THREAD_LDFLAGS@
-libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp
+libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp \
+	CInputStatsCommand.cpp
+
 libEventBuilderClient_la_SOURCES = CEventOrderClient.cpp fragment.c \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
 	EVBFramework.cpp
@@ -279,7 +282,7 @@ FRAMEWORK_SKELETON = Makefile_Skeleton $(FRAMEWORK_SOURCEFILES)
 include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h \
 	CEVBFrameworkApp.h  GetOpt.h
 
-noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h
+noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h CInputStatsCommand.h
 INCLUDES = -D__STDC_LIMIT_MACROS \
 	-I@top_srcdir@/base/tcpip \
 	-I@top_srcdir@/base/exception  \
@@ -414,6 +417,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CEventOrderClient.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CFragmentHandler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CFragmentHandlerCommand.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CInputStatsCommand.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/EVBFramework.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GetOpt.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OrdererPackage.Plo@am__quote@

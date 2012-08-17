@@ -87,11 +87,29 @@ namespace EVB {
 class CFragmentHandler
 {
 private:
+  // Private data types:
+    
   typedef std::queue<EVB::pFragment> SourceQueue, *pSourceQueue;
   typedef std::map<uint32_t, SourceQueue> Sources, *pSources;
   typedef std::pair<uint32_t, SourceQueue> SourceElement, *pSourceElement;
   typedef std::pair<const uint32_t, SourceQueue> SourceElementV;
-
+  
+  // public data types:
+public:
+    typedef struct _QueueStatistics {
+        uint32_t   s_queueId;
+        uint32_t   s_queueDepth;
+        uint64_t   s_oldestElement;
+    } QueueStatistics, *pQueueStatistics;
+    
+    typedef struct _InputStatistics {
+        uint64_t s_oldestFragment;
+        uint64_t s_newestFragment;
+        uint32_t s_totalQueuedFragments;
+        
+        std::vector<QueueStatistics> s_queueStats;
+    } InputStatistics, *pInputStatistics;
+  
 public:
 
   // Observer base class:
@@ -99,26 +117,24 @@ public:
   class Observer {
   public:
     virtual ~Observer() {}	// So we can chain destructors.
+    
+    
+    
   public:
     virtual void operator()(const std::vector<EVB::pFragment>& event) = 0; // Passed built event gather maps.
   };
-
-  // Build observer:
+  // Queue statistics accumulator:
+  
 private:
-
-  class Builder {
-  private:
-    std::vector<EVB::pFragment> m_Event;
-    uint64_t               m_nOldestNotBuilt;
-    uint64_t               m_nOldestCurrent;
-    uint64_t               m_nCoincidenceInterval;
-
-  public:
-    Builder(uint64_t interval, uint64_t oldest);
-    void                    operator()(SourceElementV& source);
-   std::vector<EVB::pFragment>& getEvent();
-    uint64_t                getOldest() const;
-  };
+    class QueueStatGetter {
+    private:
+      uint32_t                     m_nTotalFragments;
+      std::vector<QueueStatistics> m_Stats;
+    public:
+      void operator()(SourceElementV& source);
+      uint32_t totalFragments();
+      std::vector<QueueStatistics> queueStats();
+    };
 
   
 
@@ -127,12 +143,8 @@ private:
 private:
   uint64_t          m_nOldest;              //< Oldest fragment seen in terms of ticks.
   uint64_t          m_nNewest;              //< Newest fragment seen in terms of ticks.
-
   uint64_t          m_nBuildWindow;
-  uint64_t          m_nCoincidenceWindow;
-
   std::list<Observer*> m_Observers;
-
   Sources              m_FragmentQueues;
 
 
@@ -140,7 +152,8 @@ private:
 
 
 
-  // Canonicals/creationals. Note that since this is a singleton, construction is private.
+  // Canonicals/creationals. Note that since this is a singleton, construction
+  // is private.
 
 private:
   CFragmentHandler();
@@ -156,7 +169,7 @@ private:
   // The only public creational is getInstance:
 
 public:
-  CFragmentHandler* getInstance();
+  static CFragmentHandler* getInstance();
 
   // here are the operations we advertised:
 
@@ -164,18 +177,20 @@ public:
   void addFragments(size_t nSize, EVB::pFlatFragment pFragments);
 
   void setBuildWindow(uint64_t windowWidth);
-  void setCoincidenceWindow(uint64_t timeDifference);
 
   void addObserver(Observer* pObserver);
   void removeObserver(Observer* pObserver);
 
   void flush();
+  
+  // Get state of the queues etc.
 
+    InputStatistics getStatistics();
 
   // utility methods:
 
 private:
-  void   buildEvent();
+  ::EVB::pFragment popOldest();
   void   observe(const std::vector<EVB::pFragment>& event); // pass built events on down the line.
   void   addFragment(EVB::pFlatFragment pFragment);
   size_t totalFragmentSize(EVB::pFragmentHeader pHeader);

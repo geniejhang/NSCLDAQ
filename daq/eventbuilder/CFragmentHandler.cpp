@@ -45,8 +45,7 @@ static const uint64_t DefaultBuildWindow(1000000);
  */
 CFragmentHandler::CFragmentHandler() :
     m_nOldest(UINT64_MAX),
-    m_nNewest(0),
-    m_nCoincidenceWindow(0)             // Exact matching required.
+    m_nNewest(0)
 {
     m_nBuildWindow = DefaultBuildWindow;
     m_pInstance = this;
@@ -117,17 +116,19 @@ CFragmentHandler::addFragments(size_t nSize, EVB::pFlatFragment pFragments)
         pFragments  = reinterpret_cast<EVB::pFlatFragment>(pNext);
     }
     /**
-     * A bit of subtlety here:
-     * The builds are done in batches if possible (hence the window*2).
-     * We want to be sure that no events overhang the the build window
-     * hence the addition of the coincidence window to the stuff that
-     * figures out when to stop.
+    ** Using 2* the build window above forces
+    ** the builds to be batched which hopefully run the output stages
+    ** more efficiently:
      */
     if ((m_nNewest - m_nOldest) > m_nBuildWindow*2) {
-        while (!(queuesEmpty() &&
-           (m_nNewest - m_nOldest) > (m_nBuildWindow + m_nCoincidenceWindow))) {
-            buildEvent();
+        std::vector<EVB::pFragment> sortedFragments;
+        while (!(queuesEmpty()) &&
+	       ((m_nNewest - m_nOldest) > m_nBuildWindow)) {
+
+		 sortedFragments.push_back(popOldest());
+    
         }
+        observe(sortedFragments);
     }
 }
 /**
@@ -143,19 +144,7 @@ CFragmentHandler::setBuildWindow(uint64_t windowWidth)
 {
     m_nBuildWindow = windowWidth;
 }
-/**
- * setConicidenceWindow
- *
- *  Set the maximum number of ticks fragments can differ by and still live in
- *  the same event..
- *
- *  @param timeDifference - The new coincidence window width.
- */
-void
-CFragmentHandler::setCoincidenceWindow(uint64_t timeDifference)
-{
-    m_nCoincidenceWindow = timeDifference;
-}
+
 /**
  * addObserver
  *
@@ -203,52 +192,109 @@ CFragmentHandler::removeObserver(::CFragmentHandler::Observer* pObserver)
 void
 CFragmentHandler::flush()
 {
+    std::vector<EVB::pFragment> fragments;
     while(!queuesEmpty()) {
-        buildEvent();
+        fragments.push_back(popOldest());
     }
+    observe(fragments);
+    
     // reset newest/oldest to initial
     
     m_nNewest = 0;
     m_nOldest = UINT64_MAX;
 }
 
+/**
+ * getStatistics
+ *
+ *   Return information about the fragment statistics.
+ *   This can be used to drive a GUI that monitors the status
+ *   of the software.
+ *
+ *   @return CFragmentHandler::InputStatistics
+ *   @retval struct that has the following key fields:
+ *   - s_oldestFragment - The timestamp of the oldest queued fragment.
+ *   - s_newestFragment - The timestamp of the newest queued fragment.
+ *   - s_totalQueuedFragments - Total number of queued fragments.
+ *   - s_queueStats     - vector of individual queue statistics.
+ *                        each element is a struct of type
+ *                        CFragmentHandler::QueueStatistics which has the fields:
+ *                        # s_queueId - Source id of the queue.
+ *                        # s_queueDepth - number of fragments in the queue.
+ *                        # s_oldestElement - Timestamp at head of queue.
+ */
+CFragmentHandler::InputStatistics
+CFragmentHandler::getStatistics()
+{
+    InputStatistics result;
+    
+    // get the individual chunks:
+    
+    result.s_oldestFragment = m_nOldest;
+    result.s_newestFragment = m_nNewest;
+    
+    QueueStatGetter statGetter;
+    QueueStatGetter& rstatGetter(statGetter);
+    
+    for_each(m_FragmentQueues.begin(), m_FragmentQueues.end(), rstatGetter);
+    
+    result.s_totalQueuedFragments = statGetter.totalFragments();
+    result.s_queueStats           = statGetter.queueStats();
+    
+    
+    return result;
+}
 /*-------------------------------------------------------------------]
  ** Utility methods (private).
  */
 
 /**
- * Build an event.  An event is built as a gather vector of
- * pointers to event fragments that have been removed from
- * their fragment queues:
- * - all fragments in all queues whose time is different from
- *   m_nOldest by less than m_nCoincidence window are put in the event.
- * - A running new 'oldest' is computed.
- * - observe() is run to invoke the observers.
- * - The fragments are freed.
- * - life goes on ;-)
+ * popOldest
+ *
+ *   Remove an oldest fragment from the sources queue and update m_nOldest
+ *
+ *   @return ::EVB::pFragment - pointer to a fragment whose timestamp
+ *           matches m_nOldest
+ *
+ *   @note this is all very brute force.  A much quicker algorithm to find
+ *         the oldest fragment would be to retain in addtion to m_nOldest
+ *         the queue that it was put in...however we still need to iterate
+ *         over the queues to update m_nOldest.  This is a bit
+ *         short circuited by:
+ *         - Keeping track of it as we search for the first match to m_nOldest
+ *         - short circuiting the loop if we find another queue with
+ *           an m_nOldest match as there can't be anything older than that
+ *           by definition.
  */
-void
-CFragmentHandler::buildEvent()
+::EVB::pFragment
+CFragmentHandler::popOldest()
 {
-    Builder b(m_nCoincidenceWindow, m_nOldest);
-    Builder& bref(b);
-    
-    // Let the builder build up the event and adjust the 
-    
-    for_each(m_FragmentQueues.begin(), m_FragmentQueues.end(), bref);
-    
-    std::vector<EVB::pFragment>& event(b.getEvent());
-    observe(event);
-    
-    // Kill off the fragments:
-    
-    for_each(event.begin(), event.end(), freeFragment);
-    
-    // Update the oldest event (building does not change newest).
-    
-    m_nOldest = b.getOldest();
-
+    uint64_t nextOldest = m_nNewest;   // Must be older than that.
+    ::EVB::pFragment pOldest(0);
+    for(Sources::iterator p = m_FragmentQueues.begin();
+        p != m_FragmentQueues.end(); p++) {
+        ::EVB::pFragment pFrag = p->second.front();
+        uint64_t stamp = pFrag->s_header.s_timestamp;
+        if(!pOldest && (stamp == m_nOldest)) {
+            
+            // This is the one.
+            
+            pOldest  = pFrag;
+            p->second.pop();
+        }
+        // Get pFrag again  in case the test above worked.
+        // update nextOldest and break if it matches m_nOldest.
+        
+        pFrag = p->second.front();
+        stamp = pFrag->s_header.s_timestamp;
+        if (stamp < nextOldest) nextOldest = stamp;
+        if (nextOldest == m_nOldest) break;
+        
+    }
+    m_nOldest = nextOldest;
+    return pOldest;
 }
+
 /**
  * observe
  *
@@ -264,6 +310,11 @@ CFragmentHandler::observe(const std::vector<EVB::pFragment>& event)
         Observer* pObserver = *p;
         (*pObserver)(event);
         p++;
+    }
+    // Delete the fragments in the vector as we're done with them now:
+
+    for(int i =0; i < event.size(); i++) {
+      freeFragment(event[i]);
     }
 }
 /**
@@ -340,82 +391,59 @@ CFragmentHandler::queuesEmpty()
     return true;
 }
 /*-----------------------------------------------------------
- ** Locally defnie classers
+ ** Locally defined classers
+ */
+/**
+ * @class QueueStateGetter
+ *
+ * Event source queue visitor that gathers input statistics.
+ * This class is a functional and is intended to be called from
+ * a for_each loop over the set of input queues.
+ * It gathers the total number of fragments as well
+ * as the number of fragments in the queue and the oldest fragment in the queue.
  */
 
 /**
- *   @class CFragmentHandler::Builder
+ * operator()
+ *   Called for each queue to accumulate stats for that queue.
  *
- *   A visitor of each element of the Sources map.
- *   This builds up an event with each visitation by pulling
- *   off queue elements that are within a coincidence interval.
- *   The oldest fragment not added to the event is also built up
- *   during the iteration.
- */
-
-/**
- * Builder
- *
- *   Constructor:
- *       - Save the coincidence interval.
- *       - Set the oldest stamp to UINT64_MAX.
- *
- *   @param interval - Build coincidence interval.
- *   @param oldest   - The oldest fragment in all queues.
- */
-CFragmentHandler::Builder::Builder(uint64_t interval, uint64_t oldest) :
-    m_nOldestNotBuilt(UINT64_MAX),
-    m_nOldestCurrent(oldest),
-    m_nCoincidenceInterval(interval)
-{}
-
-/**
- *  operator()
- *
- *     Function call operator.  This is called for each node
- *     of the Sources map.  It removes all queue elements
- *     that are within m_nCoincidenceInterval from the queue
- *     and adds them to the event that is being built up.
- *     If necesary, m_nOldestNotBuilt is updated.
- *
- *    @param source - reference to the map source element (a pair).
+ *  @param source - reference to that data source queue.
  */
 void
-CFragmentHandler::Builder::operator()(CFragmentHandler::SourceElementV& source)
+CFragmentHandler::QueueStatGetter::operator()(SourceElementV& source)
 {
-    uint64_t latestAllowed = m_nOldestCurrent + m_nCoincidenceInterval;
-    SourceQueue& q(source.second);
+    SourceQueue&  sourceQ(source.second);
     
-    while ((!q.empty()) && (q.front()->s_header.s_timestamp < latestAllowed)) {
-        m_Event.push_back(q.front());
-        q.pop();
-        
-    }
-    // Update oldest if necessary:
+    QueueStatistics stats;
+    stats.s_queueId       = source.first;
+    stats.s_queueDepth    = sourceQ.size();
+    stats.s_oldestElement = sourceQ.front()->s_header.s_timestamp;
     
-    if (!q.empty() && (q.front()->s_header.s_timestamp < m_nOldestNotBuilt)) {
-        m_nOldestNotBuilt = q.front()->s_header.s_timestamp;
-        
-    }
+    m_nTotalFragments += stats.s_queueDepth;
+    m_Stats.push_back(stats);
 }
 /**
- * getEvent
- *    Return a reference to the built event:
+ * totalFragments()
+ * 
+ * Return the total number of queued elements.
  *
- * @return std::vector<pFragment>&
+ * @return uint32_t
  */
-std::vector<EVB::pFragment>&
-CFragmentHandler::Builder::getEvent()
+uint32_t
+CFragmentHandler::QueueStatGetter::totalFragments()
 {
-    return m_Event;
+    return m_nTotalFragments;
 }
 /**
- * Get the new oldest timestamp.
+ * queueStats
  *
- * @return uint64_t
+ * Return the queue statistics vector:
+ *
+ * @return std::vector<QueueStatistics>
+ *
  */
-uint64_t
-CFragmentHandler::Builder::getOldest() const
+std::vector<CFragmentHandler::QueueStatistics>
+CFragmentHandler::QueueStatGetter::queueStats()
 {
-    return m_nOldestNotBuilt;
+    return m_Stats;
 }
