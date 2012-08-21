@@ -34,7 +34,7 @@
  * @param command - Command name (e.g. ::EVB::inputStats).
  */
 CInputStatsCommand::CInputStatsCommand(CTCLInterpreter& interp, std::string command) :
-  CTCLObjectProcessor(interp, command, false)
+  CTCLObjectProcessor(interp, command, true)
 {}
 
 /**

@@ -404,6 +404,14 @@ CFragmentHandler::queuesEmpty()
  */
 
 /**
+ * Construction sets the total fragment count to zero.
+ */
+CFragmentHandler::QueueStatGetter::QueueStatGetter() :
+  m_nTotalFragments(0)
+{}
+
+
+/**
  * operator()
  *   Called for each queue to accumulate stats for that queue.
  *

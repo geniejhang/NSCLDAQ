@@ -24,6 +24,7 @@
 #include <TCLInterpreter.h>
 #include "CFragmentHandlerCommand.h"
 #include "CInputStatsCommand.h"
+#include "COrdererOutput.h"
 
 
 static const char* version = "1.0"; // package version string.
@@ -45,6 +46,10 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
 
   new CFragmentHandlerCommand(*pInterpObject, "EVB::handleFragment");
   new CInputStatsCommand(*pInterpObject, "EVB::inputStats");
+
+  // Setup the output stage:
+
+  new COrdererOutput(*pInterpObject, "stdout");
 
   return TCL_OK;
 }

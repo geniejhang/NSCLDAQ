@@ -8,7 +8,7 @@ lib_LTLIBRARIES=libEventBuilder.la  libEventBuilderClient.la
 
 
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp \
-	CInputStatsCommand.cpp
+	CInputStatsCommand.cpp COrdererOutput.cpp fragment.c
 
 
 libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
@@ -25,7 +25,7 @@ include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h 
 	CEVBFrameworkApp.h  GetOpt.h
 
 
-noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h CInputStatsCommand.h
+noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h CInputStatsCommand.h COrdererOutput.h
 
 
 INCLUDES = -D__STDC_LIMIT_MACROS \

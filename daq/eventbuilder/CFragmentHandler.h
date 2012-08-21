@@ -131,6 +131,7 @@ private:
       uint32_t                     m_nTotalFragments;
       std::vector<QueueStatistics> m_Stats;
     public:
+      QueueStatGetter();
       void operator()(SourceElementV& source);
       uint32_t totalFragments();
       std::vector<QueueStatistics> queueStats();
