@@ -123,6 +123,18 @@ public:
   public:
     virtual void operator()(const std::vector<EVB::pFragment>& event) = 0; // Passed built event gather maps.
   };
+
+  // Observer for dat late conditions:
+
+  class DataLateObserver {
+  public:
+    virtual ~DataLateObserver() {} // Support destructor chaining.
+
+  public:
+    virtual void operator()(const ::EVB::Fragment& fragment,  uint64_t newest);
+  };
+
+
   // Queue statistics accumulator:
   
 private:
@@ -142,11 +154,12 @@ private:
 private:
   static CFragmentHandler* m_pInstance;	     //< The unique instance of this class.
 private:
-  uint64_t          m_nOldest;              //< Oldest fragment seen in terms of ticks.
-  uint64_t          m_nNewest;              //< Newest fragment seen in terms of ticks.
-  uint64_t          m_nBuildWindow;
-  std::list<Observer*> m_Observers;
-  Sources              m_FragmentQueues;
+  uint64_t                     m_nOldest;              //< Oldest fragment seen in terms of ticks.
+  uint64_t                     m_nNewest;              //< Newest fragment seen in terms of ticks.
+  uint64_t                     m_nBuildWindow;
+  std::list<Observer*>         m_OutputObservers;
+  std::list<DataLateObserver*> m_DataLateObservers;
+  Sources                      m_FragmentQueues;
 
 
 
@@ -182,6 +195,9 @@ public:
   void addObserver(Observer* pObserver);
   void removeObserver(Observer* pObserver);
 
+  void addDataLateObserver(DataLateObserver* pObserver);
+  void removeDataLateObserver(DataLateObserver* pObserver);
+
   void flush();
   
   // Get state of the queues etc.
@@ -193,6 +209,7 @@ public:
 private:
   ::EVB::pFragment popOldest();
   void   observe(const std::vector<EVB::pFragment>& event); // pass built events on down the line.
+  void   dataLate(const ::EVB::Fragment& fragment);		    // Data late handler.
   void   addFragment(EVB::pFlatFragment pFragment);
   size_t totalFragmentSize(EVB::pFragmentHeader pHeader);
   bool   queuesEmpty();

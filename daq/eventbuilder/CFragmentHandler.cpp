@@ -162,7 +162,7 @@ CFragmentHandler::setBuildWindow(uint64_t windowWidth)
 void
 CFragmentHandler::addObserver(::CFragmentHandler::Observer* pObserver)
 {
-    m_Observers.push_back(pObserver);
+    m_OutputObservers.push_back(pObserver);
 }
 /**
  * removeObserver:
@@ -176,10 +176,43 @@ void
 CFragmentHandler::removeObserver(::CFragmentHandler::Observer* pObserver)
 {
     std::list<Observer*>::iterator p = find(
-        m_Observers.begin(), m_Observers.end(), pObserver);
-    if (p != m_Observers.end()) {
-        m_Observers.erase(p);
+        m_OutputObservers.begin(), m_OutputObservers.end(), pObserver);
+    if (p != m_OutputObservers.end()) {
+        m_OutputObservers.erase(p);
     }
+}
+/**
+ * addDataLateObserver
+ *
+ *  Add an observer to the list of objects that are invoked when 
+ *  a data late event occurs See dataLate below for information about what
+ *  that means.
+ * 
+ * @param pObserver - pointer to the  new observer.
+ */
+void
+CFragmentHandler::addDataLateObserver(CFragmentHandler::DataLateObserver* pObserver)
+{
+  m_DataLateObservers.push_back(pObserver);
+}
+/**
+ * removeDataLateObserver
+ *   
+ * Removes an existing data late observer from the observer list.
+ * note that it is not an error to attempt to remove an observer that does
+ * not actually exist.
+ *
+ * @param pObserver - Pointer to the observer to remove.
+ */
+void
+CFragmentHandler::removeDataLateObserver(CFragmentHandler::DataLateObserver* pObserver)
+{
+  std::list<DataLateObserver*>::iterator p = find(
+					  m_DataLateObservers.begin(), m_DataLateObservers.end(),
+					  pObserver);
+  if (p != m_DataLateObservers.end()) {
+    m_DataLateObservers.erase(p);
+  }
 }
 
 /**
@@ -301,12 +334,17 @@ CFragmentHandler::popOldest()
  * Invoke each observer for the event we've been passed.
  *
  * @param event - Gather vector for the event.
+ *
+ * @note - the storage associated with the fragments in the vector
+ *         is released after all observers have been called.
+ *         If observers want to maintain fragments they will therefore need
+ *         to copy them.
  */
 void
 CFragmentHandler::observe(const std::vector<EVB::pFragment>& event)
 {
-    std::list<Observer*>::iterator p = m_Observers.begin();
-    while(p != m_Observers.end()) {
+    std::list<Observer*>::iterator p = m_OutputObservers.begin();
+    while(p != m_OutputObservers.end()) {
         Observer* pObserver = *p;
         (*pObserver)(event);
         p++;
@@ -316,6 +354,29 @@ CFragmentHandler::observe(const std::vector<EVB::pFragment>& event)
     for(int i =0; i < event.size(); i++) {
       freeFragment(event[i]);
     }
+}
+/**
+ * dataLate
+ * 
+ *  This method is called by addFragment in the event a fragment timestamp
+ *  is older than m_nNewest by more than m_nBuildWindow, indicating that
+ *  the data should have been output earlier. At this time,
+ *  the data has not yet been put in the data source queue.
+ *  We will pass the fragment along with the value of the largest timestamp
+ *  to each element of the m_DataLateObservers list.
+ *
+ * @param fragment - Reference to the fragment that is late.
+ */
+void 
+CFragmentHandler::dataLate(const ::EVB::Fragment& fragment)
+{
+  std::list<DataLateObserver*>::iterator p = m_DataLateObservers.begin();
+  while (p != m_DataLateObservers.end()) {
+    DataLateObserver* pObserver = *p;
+    (*pObserver)(fragment, m_nNewest);
+    p++;
+  }
+
 }
 /**
  * addFragment
@@ -338,9 +399,16 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
     
     EVB::pFragmentHeader pHeader = &pFragment->s_header;
     EVB::pFragment pFrag         = allocateFragment(pHeader);
+    uint64_t timestamp = pHeader->s_timestamp;
     
     memcpy(&(pFrag->s_header), pHeader, sizeof(EVB::FragmentHeader));
     memcpy(pFrag->s_pBody, pFragment->s_body, pFrag->s_header.s_size);
+
+    // If the timestamp is late we need to invoke datalate on this fragment:
+
+    if ((timestamp < m_nNewest) && ((m_nNewest - timestamp) > m_nBuildWindow)) {
+      dataLate(*pFrag);
+    }
     
     // Get a reference to the fragment queue, creating it if needed:
     
@@ -350,7 +418,6 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
     // update newest/oldest if needed:
     // Since data can come out of order across sources it's possible
     // to update oldest as well as newest.
-    uint64_t timestamp = pHeader->s_timestamp;
     if (timestamp < m_nOldest) m_nOldest = timestamp;
     if (timestamp > m_nNewest) m_nNewest = timestamp;
     
