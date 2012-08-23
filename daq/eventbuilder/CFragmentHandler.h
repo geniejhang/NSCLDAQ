@@ -128,10 +128,11 @@ public:
 
   class DataLateObserver {
   public:
+    DataLateObserver() {}
     virtual ~DataLateObserver() {} // Support destructor chaining.
 
   public:
-    virtual void operator()(const ::EVB::Fragment& fragment,  uint64_t newest);
+    virtual void operator()(const ::EVB::Fragment& fragment,  uint64_t newest) = 0;
   };
 
 

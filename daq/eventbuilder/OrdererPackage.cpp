@@ -26,6 +26,7 @@
 #include "CInputStatsCommand.h"
 #include "COrdererOutput.h"
 #include "COutputStatsCommand.h"
+#include "CDLateStatsCommand.h"
 
 static const char* version = "1.0"; // package version string.
 
@@ -47,6 +48,7 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
   new CFragmentHandlerCommand(*pInterpObject, "EVB::handleFragment");
   new CInputStatsCommand(*pInterpObject, "EVB::inputStats");
   new COutputStatsCommand(*pInterpObject, "EVB::outputStats");
+  new CDLateStatsCommand(*pInterpObject, "EVB::dlatestats");
 
   // Setup the output stage:
 

@@ -107,9 +107,11 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
 #    Create a display of the statistics for a single queue:
 #
 # OPTIONS:
-#   - -id    - Queue source identifier.
-#   - -depth - Queue depth
-#   - -oldest - Timestamp at frontof queue.
+#   - -id        - Queue source identifier.
+#   - -depth     - Queue depth
+#   - -oldest    - Timestamp at frontof queue.
+#   - -late      - Number of data late fragments.
+#   - -worst     - Worst time difference data late.
 #
 # DELEGATIONS:
 #   - all other options -> hull
@@ -120,6 +122,7 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
 #   +------------------------------------------------+
 #   |               Source ID: <id>                  |
 #   |  Fragments: <depth>   Oldest: <timestamp>      |
+#   |  Late Fragments: n    Worst Diff: m            |
 #   +------------------------------------------------+
 #
 #  \endverbatim
@@ -130,6 +133,8 @@ snit::widget ::EVB::inputStatistics::queueDisplay {
     option -id     -default -1
     option -depth  -default 0
     option -oldest -default 0
+    option -late   -default 0
+    option -worst  -default 0
     
     delegate option * to innerHull
     delegate method * to innerHull
@@ -152,17 +157,22 @@ snit::widget ::EVB::inputStatistics::queueDisplay {
         ttk::label $innerHull.idlabel    -text {Source ID: }
         ttk::label $innerHull.depthlabel -text {Fragments: }
         ttk::label $innerHull.oldlabel   -text {Oldest:    }
+	ttk::label $innerHull.latelabel -text  {Late Fragments: }
+	ttk::label $innerHull.worstlabel -text {Worst Time dif: }
         
         ttk::label $innerHull.id     -textvariable ${selfns}::options(-id)
         ttk::label $innerHull.depth  -textvariable ${selfns}::options(-depth)
         ttk::label $innerHull.oldest -textvariable ${selfns}::options(-oldest)
+	ttk::label $innerHull.latecounter -textvariable ${selfns}::options(-late)
+	ttk::label $innerHull.worsttime   -textvariable ${selfns}::options(-worst)
         
         $self configurelist $args
         
         # Lay them out.
         
-        grid  x $innerHull.idlabel  $innerHull.id
-        grid $innerHull.depthlabel $innerHull.depth $innerHull.oldlabel $innerHull.oldest
+        grid  x                    $innerHull.idlabel     $innerHull.id
+        grid $innerHull.depthlabel $innerHull.depth       $innerHull.oldlabel   $innerHull.oldest
+	grid $innerHull.latelabel  $innerHull.latecounter $innerHull.worstlabel $innerHull.worsttime
         grid $innerHull -sticky nsew
     }
 }

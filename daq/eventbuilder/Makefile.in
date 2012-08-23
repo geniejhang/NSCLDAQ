@@ -83,7 +83,8 @@ libEventBuilder_la_DEPENDENCIES =  \
 am_libEventBuilder_la_OBJECTS = OrdererPackage.lo \
 	CFragmentHandlerCommand.lo CFragmentHandler.lo \
 	CInputStatsCommand.lo COrdererOutput.lo fragment.lo \
-	COutputStatsObserver.lo COutputStatsCommand.lo
+	COutputStatsObserver.lo COutputStatsCommand.lo \
+	CDataLateStatistics.lo CDLateStatsCommand.lo
 libEventBuilder_la_OBJECTS = $(am_libEventBuilder_la_OBJECTS)
 libEventBuilderClient_la_DEPENDENCIES =  \
 	@top_builddir@/base/tcpip/libTcp.la \
@@ -273,7 +274,8 @@ lib_LTLIBRARIES = libEventBuilder.la  libEventBuilderClient.la
 #		@THREAD_LDFLAGS@
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp \
 	CInputStatsCommand.cpp COrdererOutput.cpp fragment.c \
-	COutputStatsObserver.cpp COutputStatsCommand.cpp
+	COutputStatsObserver.cpp COutputStatsCommand.cpp CDataLateStatistics.cpp \
+	CDLateStatsCommand.cpp
 
 libEventBuilderClient_la_SOURCES = CEventOrderClient.cpp fragment.c \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
@@ -285,7 +287,8 @@ include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h 
 	CEVBFrameworkApp.h  GetOpt.h
 
 noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h \
-	CInputStatsCommand.h COrdererOutput.h COutputStatsObserver.h COutputStatsCommand.h
+	CInputStatsCommand.h COrdererOutput.h COutputStatsObserver.h COutputStatsCommand.h \
+	CDataLateStatistics.h CDLateStatsCommand.h
 
 INCLUDES = -D__STDC_LIMIT_MACROS \
 	-I@top_srcdir@/base/tcpip \
@@ -416,6 +419,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CDLateStatsCommand.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CDataLateStatistics.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CEVBClientApp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CEVBFrameworkApp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CEventOrderClient.Plo@am__quote@
