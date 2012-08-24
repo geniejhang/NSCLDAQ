@@ -53,6 +53,7 @@ namespace eval EVB {
 #   +-----------------------------------------------------+
 #   | Total number of queued fragments: <fragmentcount>   |
 #   | Oldest timestamp: <stamp>  Newest timestamp <stamp> |
+#   | Data Late frags:  n        Worst time diff   n      |
 #   +-----------------------------------------------------+
 #
 # \endverbatim
@@ -61,6 +62,8 @@ namespace eval EVB {
 #    - -fragments  Provides the total number of fragments.
 #    - -oldest     Provides the oldest timestamp.
 #    - -newest     Provides the newest timestamp.
+#    - -late       Provides number of data late fragments.
+#    - -worst      Worst case data late time difference.
 #
 # @note that all other options are delegated to the frame.
 # @note all methods are also delegated to the frame.
@@ -71,6 +74,8 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
     option -fragments  -default 0
     option -oldest     -default 0
     option -newest     -default 0
+    option -late       -default 0
+    option -worst      -default 0
     
     
     delegate option * to innerHull
@@ -87,17 +92,23 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
         ttk::label $innerHull.fraglabel -text "Queued Fragments: "
         ttk::label $innerHull.oldlabel  -text "Oldest Timestamp: "
         ttk::label $innerHull.newlabel  -text "Newest Timestamp: "
+	ttk::label $innerHull.latelabel -text "Data Late frags: "
+	ttk::label $innerHull.worstlabel -text "Worst time diff"
+
         
         ttk::label $innerHull.fragments -textvariable ${selfns}::options(-fragments)
         ttk::label $innerHull.oldest    -textvariable ${selfns}::options(-oldest)
         ttk::label $innerHull.newest    -textvariable ${selfns}::options(-newest)
+	ttk::label $innerHull.latecount -textvariable ${selfns}::options(-late)
+	ttk::label $innerHull.worsttime -textvariable ${selfns}::options(-worst)
         
         # Layout the widgets
         #
         
         grid x $innerHull.fraglabel $innerHull.fragments
         
-        grid $innerHull.oldlabel $innerHull.oldest $innerHull.newlabel $innerHull.newest
+        grid $innerHull.oldlabel  $innerHull.oldest    $innerHull.newlabel   $innerHull.newest
+	grid $innerHull.latelabel $innerHull.latecount $innerHull.worstlabel $innerHull.worsttime
         grid $innerHull -sticky nsew
     }
 }
