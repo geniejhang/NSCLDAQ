@@ -533,7 +533,7 @@ AC_CONFIG_FILES([Makefile
 		 daq/readoutgui/Makefile
 		 daq/readoutgui/InstallRoot.tcl
 		 daq/s800callouts/Makefile
-		 daq/eventbuilder/Makefile
+		 daq/eventbuilder/Makefile daq/eventbuilder/Makefile_Skeleton
 		 sbs/Makefile
 		 sbs/driver/Makefile
 		 sbs/driver/src/Makefile
