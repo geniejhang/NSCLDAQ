@@ -39,6 +39,7 @@ snit::widget EVB::connectionList {
 	$win.table heading #1 -text Host
 	$win.table heading #2 -text Description
 	$win.table heading #3 -text State
+	$win.table heading #4 -text Stalled
 	
 
 	grid $win.table -sticky nsew
