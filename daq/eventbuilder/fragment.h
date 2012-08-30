@@ -43,6 +43,19 @@
 #ifdef __cplusplus
 namespace EVB {
 #endif
+  /*
+   *  Below are valid barrier types.
+   *  These are #defines rather than enums so that the
+   *  known width data types are used to make data transportable
+   *  between 32/64 bit system.
+   */
+
+#define BARRIER_NOTBARRIER   0	/* Not a barrier event. */
+#define BARRIER_START        1	/* Data taking starting (BEGIN/RESUME) */
+#define BARRIER_END          2	/* Data taking endng (END/PAUSE) */
+#define BARRIER_SYNCH        3  /* time synchronization barrier */
+
+
   /**
    *  The typedef below defines a fragment header.
    */ 
@@ -51,7 +64,10 @@ namespace EVB {
     uint64_t       s_timestamp;	//< Fragment time relative to globally synchronized clock.
     uint32_t       s_sourceId ;	//< Unique source identifier.
     uint32_t       s_size;	// Bytes in fragment payload.
+    uint32_t       s_barrier;   // Non zero for barrier events - the barrier type.
   } FragmentHeader, *pFragmentHeader;
+
+
   
   /**
    * Within the event builder fragments and payloads get bundled

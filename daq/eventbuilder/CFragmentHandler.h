@@ -30,12 +30,6 @@
 #endif
 #endif
 
-#ifndef __STL_VECTOR
-#include <vector>
-#ifndef __STL_VECTOR
-#define __STL_VECTOR
-#endif
-#endif
 
 #ifndef __STL_LIST
 #include <list>
@@ -93,6 +87,10 @@ private:
   typedef std::map<uint32_t, SourceQueue> Sources, *pSources;
   typedef std::pair<uint32_t, SourceQueue> SourceElement, *pSourceElement;
   typedef std::pair<const uint32_t, SourceQueue> SourceElementV;
+  typedef struct _BarrierSummary {
+    std::vector<std::pair<uint32_t, uint32_t> > s_typesPresent;
+    std::vector<uint32_t>                        s_missingSources;
+  } BarrierSummary, *pBarrierSummary;
   
   // public data types:
 public:
@@ -124,7 +122,7 @@ public:
     virtual void operator()(const std::vector<EVB::pFragment>& event) = 0; // Passed built event gather maps.
   };
 
-  // Observer for dat late conditions:
+  // Observer for data late conditions:
 
   class DataLateObserver {
   public:
@@ -133,6 +131,25 @@ public:
 
   public:
     virtual void operator()(const ::EVB::Fragment& fragment,  uint64_t newest) = 0;
+  };
+
+  // Observer for successful barrier
+
+  class BarrierObserver {
+  public:
+    BarrierObserver() {}
+    virtual ~BarrierObserver() {}
+  public:
+    virtual void operator()(const std::vector<std::pair<uint32_t, uint32_t> >& barrierTypes) = 0;
+  };
+
+  class PartialBarrierObserver {
+  public:
+    PartialBarrierObserver() {}
+    virtual ~PartialBarrierObserver() {}
+  public:
+    virtual void operator()(const std::vector<std::pair<uint32_t, uint32_t> >& barrierTypes, 
+			    const std::vector<uint32_t>& missingSources);
   };
 
 
@@ -160,7 +177,10 @@ private:
   uint64_t                     m_nBuildWindow;
   std::list<Observer*>         m_OutputObservers;
   std::list<DataLateObserver*> m_DataLateObservers;
+  std::list<BarrierObserver*>  m_goodBarrierObservers;
+  std::list<PartialBarrierObserver*> m_partialBarrierObservers;
   Sources                      m_FragmentQueues;
+  bool                         m_fBarrierPending;      //< True if at least one queue has a barrier event.
 
 
 
@@ -193,11 +213,21 @@ public:
 
   void setBuildWindow(uint64_t windowWidth);
 
+  // Observer management:
+
+public:
+
   void addObserver(Observer* pObserver);
   void removeObserver(Observer* pObserver);
 
   void addDataLateObserver(DataLateObserver* pObserver);
   void removeDataLateObserver(DataLateObserver* pObserver);
+
+  void addBarrierObserver(BarrierObserver* pObserver);
+  void removeBarrierObserver(BarrierObserver* pObserver);
+
+  void addPartialBarrierObserver(PartialBarrierObserver* pObserver);
+  void removePartialBarrierObserver(PartialBarrierObserver* pObserver);
 
   void flush();
   
@@ -208,12 +238,23 @@ public:
   // utility methods:
 
 private:
+  void flushQueues(bool completely=false);
   ::EVB::pFragment popOldest();
   void   observe(const std::vector<EVB::pFragment>& event); // pass built events on down the line.
   void   dataLate(const ::EVB::Fragment& fragment);		    // Data late handler.
   void   addFragment(EVB::pFlatFragment pFragment);
   size_t totalFragmentSize(EVB::pFragmentHeader pHeader);
   bool   queuesEmpty();
+
+  BarrierSummary generateBarrier(std::vector<EVB::pFragment>& outputList);
+  void generateMalformedBarrier(std::vector<EVB::pFragment>& outputList);
+  void generateCompleteBarrier(std::vector<EVB::pFragment>& ouptputList); 
+  
+  void goodBarrier(std::vector<EVB::pFragment>& outptuList);
+  void partialBarrier(std::vector<std::pair<uint32_t, uint32_t> >& types, 
+		 std::vector<uint32_t>& missingSources);
+  void observeGoodBarrier(std::vector<std::pair<uint32_t, uint32_t> >& types);
+  void findOldest();
 };
 
 

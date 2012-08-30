@@ -1,4 +1,4 @@
-/*
+;/*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
 
@@ -17,10 +17,11 @@
 #include "fragment.h"
 
 #include <string.h>
+#include <assert.h>
 
 #include <sstream>
 #include <algorithm>
-
+#include <functional>
 
 /*---------------------------------------------------------------------
 ** Static  data:
@@ -45,7 +46,8 @@ static const uint64_t DefaultBuildWindow(1000000);
  */
 CFragmentHandler::CFragmentHandler() :
     m_nOldest(UINT64_MAX),
-    m_nNewest(0)
+    m_nNewest(0),
+    m_fBarrierPending(false)
 {
     m_nBuildWindow = DefaultBuildWindow;
     m_pInstance = this;
@@ -98,38 +100,33 @@ CFragmentHandler::addFragments(size_t nSize, EVB::pFlatFragment pFragments)
 {
     while (nSize) {
       EVB::pFragmentHeader pHeader = &(pFragments->s_header);
-        size_t fragmentSize = totalFragmentSize(pHeader);
-        if((pHeader->s_size + sizeof(EVB::FragmentHeader)) > nSize) {
-            std::stringstream s;
-            s << "Last fragment has too many bytes: " << nSize
-              << " bytes in fragment group but " << fragmentSize
-              << " bytes are in the last fragment!";
-            throw s.str();
-        }
-        
-        addFragment(pFragments);
-
-        // Point to the next fragment.
-        
-        char* pNext = reinterpret_cast<char*>(pFragments);
-        pNext      += fragmentSize;
-        pFragments  = reinterpret_cast<EVB::pFlatFragment>(pNext);
+      size_t fragmentSize = totalFragmentSize(pHeader);
+      if((pHeader->s_size + sizeof(EVB::FragmentHeader)) > nSize) {
+	std::stringstream s;
+	s << "Last fragment has too many bytes: " << nSize
+	  << " bytes in fragment group but " << fragmentSize
+	  << " bytes are in the last fragment!";
+	throw s.str();
+      }
+      
+      addFragment(pFragments);
+      
+      // Point to the next fragment.
+      
+      char* pNext = reinterpret_cast<char*>(pFragments);
+      pNext      += fragmentSize;
+      pFragments  = reinterpret_cast<EVB::pFlatFragment>(pNext);
     }
     /**
-    ** Using 2* the build window above forces
-    ** the builds to be batched which hopefully run the output stages
-    ** more efficiently:
-     */
+    * Using 2* the build window below forces
+    * the builds to be batched which hopefully run the output stages
+    * more efficiently. Getting a barrier event requires a build since
+    * we  may never hit the timestamp requirement.
+    */
     if ((m_nNewest - m_nOldest) > m_nBuildWindow*2) {
-        std::vector<EVB::pFragment> sortedFragments;
-        while (!(queuesEmpty()) &&
-	       ((m_nNewest - m_nOldest) > m_nBuildWindow)) {
-
-		 sortedFragments.push_back(popOldest());
-    
-        }
-        observe(sortedFragments);
+      flushQueues();
     }
+
 }
 /**
  * setBuildWindow
@@ -214,27 +211,92 @@ CFragmentHandler::removeDataLateObserver(CFragmentHandler::DataLateObserver* pOb
     m_DataLateObservers.erase(p);
   }
 }
+/**
+ * addBarrierObserver
+ *
+ *  Barrier observers are called when a successful barrier has been 
+ *  dispatched.  A successful barrier is one where all input queues
+ *  have a barrier by the time timestamps for events following the
+ *  barrier have gone past the build interval.
+ *
+ *  Observers are called passing a vector of pairs where each pair is
+ *  a source Id and the type of barrier contributed by that source.
+ *  It is really applciation dependent to know if mixed barrier types
+ *  are errors, or normal.  No judgement is passed here.
+ *
+ * @param pObserver - Pointer to a BarrierObserver class which implements
+ *                    operator()(std::vector<std::pair<uint32_t, uint32_t> >);
+ */
+void
+CFragmentHandler::addBarrierObserver(CFragmentHandler::BarrierObserver* pObserver)
+{
+  m_goodBarrierObservers.push_back(pObserver);
+}
+/**
+ * removeBarrierObserver
+ *
+ *  Remove a barrier observer from the set of observers that get called on a
+ *  completed barrier.  It is a no-op to try to remove an observer that is not
+ *  in the list.
+ *
+ * @param pObserver - pointer to the observer to remove.
+ */
+void
+CFragmentHandler::removeBarrierObserver(CFragmentHandler::BarrierObserver* pObserver)
+{
+  std::list<BarrierObserver*>::iterator p = std::find(m_goodBarrierObservers.begin(),
+						      m_goodBarrierObservers.end(), pObserver);
+  if (p != m_goodBarrierObservers.end()) {
+    m_goodBarrierObservers.erase(p);
+  }
+}
+/**
+ * addPartialBarrierObserver
+ *
+ * In the event a barrier is only partially made (some input queues are missing
+ * their barrier fragments, a list of partial barrier observers is invoked.
+ * This method adds a new partial barrier observer to the end of the list
+ * of observers for this event.
+ *
+ * @param pObserver - Pointer to the observer to add.
+ */
+void
+CFragmentHandler::addPartialBarrierObserver(CFragmentHandler::PartialBarrierObserver* pObserver)
+{
+  m_partialBarrierObservers.push_back(pObserver);
+}
+/**
+ * removePartialBarrierObserver
+ *
+ *  Removes a partial barrier observer.
+ *
+ * @param pObserver - Partial barrier
+ */
+void
+CFragmentHandler::removePartialBarrierObserver(CFragmentHandler::PartialBarrierObserver* pObserver)
+{
+  std::list<PartialBarrierObserver*>::iterator p = std::find(m_partialBarrierObservers.begin(),
+							     m_partialBarrierObservers.end(), 
+							     pObserver);
+  if (p != m_partialBarrierObservers.end()) {
+    m_partialBarrierObservers.erase(p);
+  }
+}
 
 /**
  * flush
  * 
- * There come times when it is necessar to just build event fragments
+ * There come times when it is necessary to just build event fragments
  * until there are none left. This method does that.
  *
  */
 void
 CFragmentHandler::flush()
 {
-    std::vector<EVB::pFragment> fragments;
-    while(!queuesEmpty()) {
-        fragments.push_back(popOldest());
-    }
-    observe(fragments);
-    
-    // reset newest/oldest to initial
-    
-    m_nNewest = 0;
-    m_nOldest = UINT64_MAX;
+
+  flushQueues(true);
+  m_nNewest = 0;
+  m_nOldest = UINT64_MAX;
 }
 
 /**
@@ -277,9 +339,59 @@ CFragmentHandler::getStatistics()
     
     return result;
 }
-/*-------------------------------------------------------------------]
+/*---------------------------------------------------------------------
  ** Utility methods (private).
  */
+
+/**
+ * flushQueues
+ *
+ *  Flush the output queues to the observers.  By default, this flushes
+ *  queues until the oldest queue element is 'too new' to flush.
+ *  If, however completly is true, queues are fluhsed until empty.
+ *
+ * @param completely - If true, queues are flushed until empty.
+ *                     otherwise, the build window and m_nNewest determine
+ *                     when the flush stops.
+ *                     Once the events are ordered into a vector, the
+ *                     observers are called to deal with them
+ *                     and storage associated with them deleted.
+ */
+void
+CFragmentHandler::flushQueues(bool completely)
+{
+  std::vector<EVB::pFragment> sortedFragments;
+  while (!(queuesEmpty()) &&
+	 (completely | ((m_nNewest - m_nOldest) > m_nBuildWindow))) {
+    
+    ::EVB::pFragment p = popOldest();
+    if (p) {
+      sortedFragments.push_back(p);
+    } else if (m_fBarrierPending) {
+      goodBarrier(sortedFragments); //  most likely good barrier.
+    } else {
+      assert(0);		// Should never get p == 0 wthout a barrier pending.
+    }
+    
+  }
+  // TODO: Figure out how to deal with partial barriers when data is flowing!
+  //       suggest - m_fBarrierPending is coupled to a counter of the number
+  //                 of build periods for which thats true and 
+  //                 we only allow some fixed # of build periods for barriers to stay
+  //                 pending before triggering a malformed barrier.!!
+
+  // If a complete flush and barrier is still pending we have a malformed barrier:
+  // - recurse to process the frags behind the barrier.
+  //
+  if (m_fBarrierPending && completely) {
+    generateMalformedBarrier(sortedFragments);
+    flushQueues(completely);
+  }
+  // Let the consumers deal with the fragments. 
+
+  observe(sortedFragments);
+    
+}
 
 /**
  * popOldest
@@ -288,6 +400,8 @@ CFragmentHandler::getStatistics()
  *
  *   @return ::EVB::pFragment - pointer to a fragment whose timestamp
  *           matches m_nOldest
+ *   @retval - Null is returned if there are no non-barrier events in the
+ *             queues.
  *
  *   @note this is all very brute force.  A much quicker algorithm to find
  *         the oldest fragment would be to retain in addtion to m_nOldest
@@ -306,25 +420,35 @@ CFragmentHandler::popOldest()
     ::EVB::pFragment pOldest(0);
     for(Sources::iterator p = m_FragmentQueues.begin();
         p != m_FragmentQueues.end(); p++) {
-        ::EVB::pFragment pFrag = p->second.front();
-        uint64_t stamp = pFrag->s_header.s_timestamp;
-        if(!pOldest && (stamp == m_nOldest)) {
-            
-            // This is the one.
-            
-            pOldest  = pFrag;
-            p->second.pop();
-        }
-        // Get pFrag again  in case the test above worked.
-        // update nextOldest and break if it matches m_nOldest.
-        
-        pFrag = p->second.front();
-        stamp = pFrag->s_header.s_timestamp;
-        if (stamp < nextOldest) nextOldest = stamp;
-        if (nextOldest == m_nOldest) break;
-        
+      if (!p->second.empty()) {
+	::EVB::pFragment pFrag = p->second.front();
+	
+	// We can only process non-barriers.
+	
+	if (pFrag->s_header.s_barrier == 0) {
+	  uint64_t stamp = pFrag->s_header.s_timestamp;
+	  if(!pOldest && (stamp == m_nOldest)) {
+	    
+	    // This is the one.
+	    
+	    pOldest  = pFrag;
+	    p->second.pop();
+	  }
+	  // Get pFrag again  in case the test above worked.
+	  // update nextOldest and break if it matches m_nOldest.
+	  
+	  pFrag = p->second.front();
+	  stamp = pFrag->s_header.s_timestamp;
+	  if (stamp < nextOldest) nextOldest = stamp;
+	  if (nextOldest == m_nOldest) break;
+	} else {
+	  m_fBarrierPending = true;	// There's at least on barrier fragment.
+	}
+      }
     }
-    m_nOldest = nextOldest;
+    if (pOldest) {
+      m_nOldest = nextOldest;
+    }
     return pOldest;
 }
 
@@ -400,13 +524,15 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
     EVB::pFragmentHeader pHeader = &pFragment->s_header;
     EVB::pFragment pFrag         = allocateFragment(pHeader);
     uint64_t timestamp = pHeader->s_timestamp;
-    
+    bool     isBarrier = pHeader->s_barrier != 0;
+
     memcpy(&(pFrag->s_header), pHeader, sizeof(EVB::FragmentHeader));
     memcpy(pFrag->s_pBody, pFragment->s_body, pFrag->s_header.s_size);
 
     // If the timestamp is late we need to invoke datalate on this fragment:
+    // though barrier event timestamps are meaningless:
 
-    if ((timestamp < m_nNewest) && ((m_nNewest - timestamp) > m_nBuildWindow)) {
+    if (!isBarrier && (timestamp < m_nNewest) && ((m_nNewest - timestamp) > m_nBuildWindow)) {
       dataLate(*pFrag);
     }
     
@@ -415,12 +541,14 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
     SourceQueue& destQueue(m_FragmentQueues[pHeader->s_sourceId]);
     destQueue.push(pFrag);
     
-    // update newest/oldest if needed:
+    // update newest/oldest if needed -- and not a barrier:
+    // 
     // Since data can come out of order across sources it's possible
     // to update oldest as well as newest.
-    if (timestamp < m_nOldest) m_nOldest = timestamp;
-    if (timestamp > m_nNewest) m_nNewest = timestamp;
-    
+    if (!isBarrier) {
+      if (timestamp < m_nOldest) m_nOldest = timestamp;
+      if (timestamp > m_nNewest) m_nNewest = timestamp;
+    }
 }
 /**
  * totalFragmentSize
@@ -521,4 +649,149 @@ std::vector<CFragmentHandler::QueueStatistics>
 CFragmentHandler::QueueStatGetter::queueStats()
 {
     return m_Stats;
+}
+/**
+ * generateBarrier
+ *   
+ *  Called to remove all barriers from the fronts of source
+ *  queues and add them to the output event list.
+ *  
+ * @param outputList - the output list.  This is an output parameter and
+ *                     we do it this way to avoid copy construction of the whole
+ *                     vector.
+ *
+ * @return BarrierSummary
+ * @retval A summary of the barrier fragment types for the sources that
+ *         contributed and the sources that did not have a barrier rarin' to go.
+ *
+ */
+CFragmentHandler::BarrierSummary
+CFragmentHandler::generateBarrier(std::vector<EVB::pFragment>& outputList)
+{
+  // Iterate through the output queues and add any
+  // barrier events to the outputList.
+
+
+  BarrierSummary result;
+
+  
+  for (Sources::iterator p = m_FragmentQueues.begin(); p!= m_FragmentQueues.end(); p++) {
+    if (!p->second.empty()) {
+      ::EVB::pFragment pFront = p->second.front();
+      if (pFront->s_header.s_barrier) {
+	outputList.push_back(pFront);
+	p->second.pop();
+	result.s_typesPresent.push_back(
+            std::pair<uint32_t, uint32_t>(p->first, pFront->s_header.s_barrier)
+        );
+      } else {
+	result.s_missingSources.push_back(p->first);
+      }
+    } else {
+      result.s_missingSources.push_back(p->first); // just as missing if the queue is empty.
+    }
+  }
+  m_fBarrierPending = false;
+  findOldest();
+
+  return result;
+  
+}
+/**
+ * generateMalformedBarrier
+ *
+ *  Called when we have finished processing output events but there is an 
+ *  incomplete barrier. *  this is an error...but we need to flush those
+ *  fragments.
+ *
+ * @param outputList - Output fragment list (see above).
+ */
+void
+CFragmentHandler::generateMalformedBarrier(std::vector<EVB::pFragment>& outputList)
+{
+  BarrierSummary bs = generateBarrier(outputList);
+ 
+  partialBarrier(bs.s_typesPresent, bs.s_missingSources);
+
+}
+/**
+ * goodBarrier
+ *
+ *   Generate a complete barrier and fire the observers associated with them.
+
+ * @param outputList - Output fragment list (see above).
+ */
+void
+CFragmentHandler::goodBarrier(std::vector<EVB::pFragment>& outputList)
+{
+  BarrierSummary bs = generateBarrier(outputList);
+
+  // If there's a non empty missing sources this is a partial barrier actually.
+
+  if (bs.s_missingSources.empty()) {
+    observeGoodBarrier(bs.s_typesPresent);
+  } else {
+    partialBarrier(bs.s_typesPresent, bs.s_missingSources);
+  }
+}
+/**
+ * findOldest
+ *
+ * When a barrier (even a partial one) we may not have a correct value for
+ * m_nOldest.  This method re-determines the oldest fragment by examing all
+ * nonempty fragment queue's front element.  The m_nOldest is set to the timesstamp
+ * in the oldest fragment or to m_nNewest if all queues are emtpy.
+ */
+void
+CFragmentHandler::findOldest()
+{
+  m_nOldest = m_nNewest;		// Automatically right if all queues are empty.
+
+  for (Sources::iterator p = m_FragmentQueues.begin(); p != m_FragmentQueues.end(); p++) {
+    if (!p->second.empty()) {
+      ::EVB::pFragment pf = p->second.front();
+      if (pf->s_header.s_timestamp < m_nOldest) {
+	m_nOldest = pf->s_header.s_timestamp;
+      }
+    }
+  }
+  
+
+}
+/**
+ * goodBarrier
+ *  
+ * Fire off all of the good barrier observers.
+ *
+ * @param types - Vector of pairs. Each pair contains, in order, the data source ID
+ *                and the barrier event type committed to output for that data source.
+ */
+void
+CFragmentHandler::observeGoodBarrier(std::vector<std::pair<uint32_t, uint32_t> >& types)
+{
+
+  for (std::list<BarrierObserver*>::iterator p = m_goodBarrierObservers.begin();
+       p != m_goodBarrierObservers.end(); p++) {
+    (*p)->operator()(types);
+  }
+
+}
+/**
+ * partialBarrier:
+ * 
+ * Fire off all partial barrier observers.
+ *
+ * @param types - Vector of pairs as described in goodBarrier above.
+ * @param missingSources - Vector of source ids that did not have a barrier.
+ */
+void
+CFragmentHandler::partialBarrier(std::vector<std::pair<uint32_t, uint32_t> >& types, 
+				 std::vector<uint32_t>& missingSources)
+{
+
+  for (std::list<PartialBarrierObserver*>::iterator p = m_partialBarrierObservers.begin();
+       p != m_partialBarrierObservers.end(); p++) {
+    (*p)->operator()(types, missingSources);
+  }
+
 }

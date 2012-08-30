@@ -10,7 +10,8 @@ lib_LTLIBRARIES=libEventBuilder.la  libEventBuilderClient.la
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp \
 	CInputStatsCommand.cpp COrdererOutput.cpp fragment.c \
 	COutputStatsObserver.cpp COutputStatsCommand.cpp CDataLateStatistics.cpp \
-	CDLateStatsCommand.cpp CLateScriptObserver.cpp COnLateDataCommand.cpp
+	CDLateStatsCommand.cpp CLateScriptObserver.cpp COnLateDataCommand.cpp \
+	CBarrierStatsCommand.cpp CBarrierStats.cpp CIncompleteBarrierStats.cpp
 
 
 libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
@@ -29,7 +30,8 @@ include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h 
 
 noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h \
 	CInputStatsCommand.h COrdererOutput.h COutputStatsObserver.h COutputStatsCommand.h \
-	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h COnLateDataCommand.h
+	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h COnLateDataCommand.h \
+	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h
 
 
 INCLUDES = -D__STDC_LIMIT_MACROS \
