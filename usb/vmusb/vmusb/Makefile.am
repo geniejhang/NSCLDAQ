@@ -1,6 +1,6 @@
-lib_LTLIBRARIES		= libVMUSB.la libVMUSBRemote.la libCVMUSB.la libCVMUSBReadoutList.la
+lib_LTLIBRARIES		= libVMUSB.la libVMUSBRemote.la libCVMUSB.la 
 
-libVMUSB_la_SOURCES 	= CVMUSB.cpp CVMUSBReadoutList.cpp
+libVMUSB_la_SOURCES 	= CVMUSB.cpp CVMUSBReadoutList.cpp CVMUSBEthernet.cpp
 
 
 libVMUSBRemote_la_SOURCES = CVMUSBReadoutList.cpp \
@@ -16,6 +16,7 @@ libVMUSBRemote_la_SOURCES = CVMUSBReadoutList.cpp \
 
 noinst_HEADERS		= CVMUSB.h   \
 	CVMUSBReadoutList.h  \
+	CVMUSBEthernet.h \
 	CVMUSBRemote.h       \
 	CSocket.h		\
 	CTCPBadSocketState.h	\
