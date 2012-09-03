@@ -17,7 +17,7 @@
 // Implementation of the CVMUSB class.
 
 #include <config.h>
-#include "CVMUSBRemote.h"
+#include "CVMUSBEthernet.h"
 #include "CVMUSBReadoutList.h"
 #include <TCLInterpreter.h>
 #include <TCLObject.h>
@@ -89,7 +89,7 @@ static bool usbInitialized(false);
 
 ////////////////////////////////////////////////////////////////////
 /*!
-  Construct the CVMUSBRemote object.  This involves storing the
+  Construct the CVMUSBEthernet object.  This involves storing the
   device descriptor we are given, opening the device and
   claiming it.  Any errors are signalled via const char* exceptions.
   @param deviceName - Name of the VMUSB Module in the controlconfig.tcl file.
@@ -106,7 +106,7 @@ static bool usbInitialized(false);
   @note - A Tcl server must be running else an exception is thrown.
 
 */
-CVMUSBRemote::CVMUSBRemote(string deviceName, string host, unsigned int port) :
+CVMUSBEthernet::CVMUSBEthernet(string deviceName, string host, unsigned int port) :
   m_deviceName(deviceName),
   m_pSocket(0),
   m_pInterp(0)
@@ -132,7 +132,7 @@ CVMUSBRemote::CVMUSBRemote(string deviceName, string host, unsigned int port) :
     to the server
 
 */
-CVMUSBRemote::~CVMUSBRemote()
+CVMUSBEthernet::~CVMUSBEthernet()
 {
   if (m_pSocket) {
     m_pSocket->Shutdown();
@@ -150,7 +150,7 @@ CVMUSBRemote::~CVMUSBRemote()
  *
  */
 void
-CVMUSBRemote::writeActionRegister(uint16_t value)
+CVMUSBEthernet::writeActionRegister(uint16_t value)
 {
 
   // Build up the command as a list then an \n terminated command.
@@ -181,7 +181,7 @@ CVMUSBRemote::writeActionRegister(uint16_t value)
     if (replyChar == '\n') done=true;
 
   }
-  if (replyLine != "OK: \n") {
+  if (replyLine.substr(0,3) != "OK:") {
     throw std::string("Server reply not OK in writeActionRegister");
   }
 
@@ -198,12 +198,12 @@ CVMUSBRemote::writeActionRegister(uint16_t value)
    Doing this is a matter of building a CVMUSBReadoutList to do the
    job and then submitting it for immediate execution.
 
-   \return uint16_t
+   \return int
    \retval The value of the firmware Id register.
 
 */
-uint32_t 
-CVMUSBRemote::readFirmwareID()
+int
+CVMUSBEthernet::readFirmwareID()
 {
     return readRegister(FIDRegister);
 }
@@ -216,18 +216,18 @@ CVMUSBRemote::readFirmwareID()
      The 16 bit global mode register value.
 */
 void
-CVMUSBRemote::writeGlobalMode(uint16_t value)
+CVMUSBEthernet::writeGlobalMode(uint16_t value)
 {
     writeRegister(GMODERegister, static_cast<uint32_t>(value));
 }
 
 /*!
     Read the global mode register (GMODERegistesr).
-    \return uint16_t  
+    \return int
     \retval the value of the register.
 */
-uint16_t 
-CVMUSBRemote::readGlobalMode()
+int
+CVMUSBEthernet::readGlobalMode()
 {
     return static_cast<uint16_t>(readRegister(GMODERegister));
 }
@@ -241,7 +241,7 @@ CVMUSBRemote::readGlobalMode()
      The value to write to the register
 */
 void
-CVMUSBRemote::writeDAQSettings(uint32_t value)
+CVMUSBEthernet::writeDAQSettings(uint32_t value)
 {
     writeRegister(DAQSetRegister, value);
 }
@@ -251,7 +251,7 @@ CVMUSBRemote::writeDAQSettings(uint32_t value)
   \retval The value read from the register.
 */
 uint32_t
-CVMUSBRemote::readDAQSettings()
+CVMUSBEthernet::readDAQSettings()
 {
     return readRegister(DAQSetRegister);
 }
@@ -261,8 +261,8 @@ CVMUSBRemote::readDAQSettings()
   are essentially user programmable.   The LED Source register determines
   which LEDS display what.  The register is made up of a bunch of
   3 bit fields, invert and latch bits.  These fields are defined by the
-  constants in the CVMUSBRemote::LedSourceRegister class.  For example
-  CVMUSBRemote::LedSourceRegister::topYellowInFifoFull ored in to this register
+  constants in the CVMUSBEthernet::LedSourceRegister class.  For example
+  CVMUSBEthernet::LedSourceRegister::topYellowInFifoFull ored in to this register
   will make the top yellow led light when the input fifo is full.
 
 
@@ -270,17 +270,17 @@ CVMUSBRemote::readDAQSettings()
      The value to write to the LED Src register.
 */
 void
-CVMUSBRemote::writeLEDSource(uint32_t value)
+CVMUSBEthernet::writeLEDSource(uint32_t value)
 {
     writeRegister(LEDSrcRegister, value);
 }
 /*!
    Read the LED Source register.  
-   \return uint32_t
+   \return int
    \retval The current value of the LED source register.
 */
-uint32_t
-CVMUSBRemote::readLEDSource()
+int
+CVMUSBEthernet::readLEDSource()
 {
     return readRegister(LEDSrcRegister);
 }
@@ -293,23 +293,23 @@ CVMUSBRemote::readLEDSource()
    \param value :uint32_t
       The new value to write to this register.   This is a bitmask that
       consists of code fields along with latch and invert bits.
-      These bits are defined in the CVMUSBRemote::DeviceSourceRegister
-      class.  e.g. CVMUSBRemote::DeviceSourceRegister::nimO2UsbTrigger1 
+      These bits are defined in the CVMUSBEthernet::DeviceSourceRegister
+      class.  e.g. CVMUSBEthernet::DeviceSourceRegister::nimO2UsbTrigger1 
       ored into value will cause the O2 to pulse when a USB initiated
       trigger is produced.
 */
 void
-CVMUSBRemote::writeDeviceSource(uint32_t value)
+CVMUSBEthernet::writeDeviceSource(uint32_t value)
 {
     writeRegister(DEVSrcRegister, value);
 }
 /*!
    Read the device source register.
-   \return uint32_t
+   \return int
    \retval current value of the register.
 */
-uint32_t
-CVMUSBRemote::readDeviceSource()
+int
+CVMUSBEthernet::readDeviceSource()
 {
     return readRegister(DEVSrcRegister);
 }
@@ -322,7 +322,7 @@ CVMUSBRemote::readDeviceSource()
        further modified by the value written to the DGGExtended register.
 */
 void
-CVMUSBRemote::writeDGG_A(uint32_t value)
+CVMUSBEthernet::writeDGG_A(uint32_t value)
 {
     writeRegister(DGGARegister, value);
 }
@@ -333,7 +333,7 @@ CVMUSBRemote::writeDGG_A(uint32_t value)
    \retval  register value.
 */
 uint32_t
-CVMUSBRemote::readDGG_A()
+CVMUSBEthernet::readDGG_A()
 {
     return readRegister(DGGARegister);
 }
@@ -342,7 +342,7 @@ CVMUSBRemote::readDGG_A()
   details.
 */
 void
-CVMUSBRemote::writeDGG_B(uint32_t value)
+CVMUSBEthernet::writeDGG_B(uint32_t value)
 {
     writeRegister(DGGBRegister, value);
 }
@@ -351,7 +351,7 @@ CVMUSBRemote::writeDGG_B(uint32_t value)
    for details.
 */
  uint32_t
- CVMUSBRemote::readDGG_B()
+ CVMUSBEthernet::readDGG_B()
 {
     return readRegister(DGGBRegister);
 }
@@ -362,7 +362,7 @@ CVMUSBRemote::writeDGG_B(uint32_t value)
    bits of the widths for both the A and B channels of DGG.
 */
 void
-CVMUSBRemote::writeDGG_Extended(uint32_t value)
+CVMUSBEthernet::writeDGG_Extended(uint32_t value)
 {
     writeRegister(DGGExtended, value);
 }
@@ -370,7 +370,7 @@ CVMUSBRemote::writeDGG_Extended(uint32_t value)
    Read the value of the DGG extension register.
 */
 uint32_t
-CVMUSBRemote::readDGG_Extended()
+CVMUSBEthernet::readDGG_Extended()
 {
     return readRegister(DGGExtended);
 }
@@ -382,7 +382,7 @@ CVMUSBRemote::readDGG_Extended()
    \retval the value read from the A channel.
 */
 uint32_t
-CVMUSBRemote::readScalerA()
+CVMUSBEthernet::readScalerA()
 {
     return readRegister(ScalerA);
 }
@@ -390,7 +390,7 @@ CVMUSBRemote::readScalerA()
    Read the B scaler channel
 */
 uint32_t
-CVMUSBRemote::readScalerB()
+CVMUSBEthernet::readScalerB()
 {
     return readRegister(ScalerB);
 }
@@ -414,7 +414,7 @@ CVMUSBRemote::readScalerB()
     \throw string  - if the which value is illegal.
 */
 void
-CVMUSBRemote::writeVector(int which, uint32_t value)
+CVMUSBEthernet::writeVector(int which, uint32_t value)
 {
     unsigned int regno = whichToISV(which);
     writeRegister(regno, value);
@@ -438,13 +438,56 @@ CVMUSBRemote::writeVector(int which, uint32_t value)
  
   \throw string  - if thwhich is illegal.
 */
-uint32_t 
-CVMUSBRemote::readVector(int which)
+int
+CVMUSBEthernet::readVector(int which)
 {
     unsigned int regno = whichToISV(which);
     return readRegister(regno);
 }
 
+/*!
+   Write the interrupt mask.  This 8 bit register has bits that are set for
+   each interrupt level that should be ignored by the VM-USB.
+   @param mask Interrupt mask to write.
+*/
+void
+CVMUSBEthernet::writeIrqMask(uint8_t mask)
+{
+  // Well this is a typical VM-USB abomination:
+  // - First save the global (mode?) register as we're going to wipe it out
+  // - Next write the irqmask | 0x8000 to the glboal mode register.
+  // - Write a USB trigger to the action register.
+  // - Clear the action register(?)
+  // - Write 0 to the global mode register.
+  // - restore the saved global mode register.
+
+  uint16_t oldGlobalMode = readGlobalMode();
+  uint16_t gblmask      = mask;
+  gblmask              |= 0x8000;
+  writeGlobalMode(gblmask);
+  writeActionRegister(2);	// Hopefully bit 1 numbered from zero not one.
+  uint32_t maskValue         = readFirmwareID(); // should have the mask.
+  writeGlobalMode(0);			    // Turn off this nonesense
+
+  writeGlobalMode(oldGlobalMode); // restor the old globalmode.
+
+  m_irqMask = mask;
+}
+/*!
+   Read the interrupt mask.  This 8 bit register has bits set for each
+   interrupt level that should be ignoered by the VM-USB.
+   @return uint8_t
+   @retval contents of the mask register.
+*/;
+int
+CVMUSBEthernet::readIrqMask()
+{
+  // Since the interrupt mask register appears cleverly crafted so that you
+  // can't actually read it without destroying it, we're just going to use
+  // a copy of the value:
+
+  return m_irqMask;
+}
 
 ///////////////////////////////////////////////////////////////////////
 /*!
@@ -452,20 +495,20 @@ CVMUSBRemote::readVector(int which)
     sets up a few of the late breaking data taking parameters
     that are built to allow data to flow through the USB more
     effectively.  For bit/mask/shift-count definitions of this
-    register see CVMUSBRemote::TransferSetup.
+    register see CVMUSBEthernet::TransferSetup.
     \param value : uint32_t
       The value to write to the register.
 */
 void
-CVMUSBRemote::writeBulkXferSetup(uint32_t value)
+CVMUSBEthernet::writeBulkXferSetup(uint32_t value)
 {
     writeRegister(USBSetup, value);
 }
 /*!
    Read the bulk transfer setup register.
 */
-uint32_t
-CVMUSBRemote::readBulkXferSetup()
+int
+CVMUSBEthernet::readBulkXferSetup()
 {
     return readRegister(USBSetup);
 }
@@ -495,7 +538,7 @@ CVMUSBRemote::readBulkXferSetup()
     \note In case of failure, errno, contains the reason.
 */
 int
-CVMUSBRemote::vmeWrite32(uint32_t address, uint8_t aModifier, uint32_t data)
+CVMUSBEthernet::vmeWrite32(uint32_t address, uint8_t aModifier, uint32_t data)
 {
   CVMUSBReadoutList list;
 
@@ -508,7 +551,7 @@ CVMUSBRemote::vmeWrite32(uint32_t address, uint8_t aModifier, uint32_t data)
    however the data is 16 bits wide.
 */
 int
-CVMUSBRemote::vmeWrite16(uint32_t address, uint8_t aModifier, uint16_t data)
+CVMUSBEthernet::vmeWrite16(uint32_t address, uint8_t aModifier, uint16_t data)
 {
   CVMUSBReadoutList list;
   list.addWrite16(address, aModifier, data);
@@ -518,7 +561,7 @@ CVMUSBRemote::vmeWrite16(uint32_t address, uint8_t aModifier, uint16_t data)
   Do an 8 bit write to the VME bus.
 */
 int
-CVMUSBRemote::vmeWrite8(uint32_t address, uint8_t aModifier, uint8_t data)
+CVMUSBEthernet::vmeWrite8(uint32_t address, uint8_t aModifier, uint8_t data)
 {
   CVMUSBReadoutList list;
   list.addWrite8(address, aModifier, data);
@@ -543,7 +586,7 @@ CVMUSBRemote::vmeWrite8(uint32_t address, uint8_t aModifier, uint8_t data)
     \retval -2    - The usb_bulk_read failed.
 */
 int
-CVMUSBRemote::vmeRead32(uint32_t address, uint8_t aModifier, uint32_t* data)
+CVMUSBEthernet::vmeRead32(uint32_t address, uint8_t aModifier, uint32_t* data)
 {
   CVMUSBReadoutList list;
   list.addRead32(address, aModifier);
@@ -558,7 +601,7 @@ CVMUSBRemote::vmeRead32(uint32_t address, uint8_t aModifier, uint32_t* data)
     function but the data transfer width is 16 bits.
 */
 int
-CVMUSBRemote::vmeRead16(uint32_t address, uint8_t aModifier, uint16_t* data)
+CVMUSBEthernet::vmeRead16(uint32_t address, uint8_t aModifier, uint16_t* data)
 {
   CVMUSBReadoutList list;
   list.addRead16(address, aModifier);
@@ -573,7 +616,7 @@ CVMUSBRemote::vmeRead16(uint32_t address, uint8_t aModifier, uint16_t* data)
    this.
 */
 int
-CVMUSBRemote::vmeRead8(uint32_t address, uint8_t aModifier, uint8_t* data)
+CVMUSBEthernet::vmeRead8(uint32_t address, uint8_t aModifier, uint8_t* data)
 {
   CVMUSBReadoutList list;
   list.addRead8(address, aModifier);
@@ -622,7 +665,7 @@ CVMUSBRemote::vmeRead8(uint32_t address, uint8_t aModifier, uint8_t* data)
 
 */
 int
-CVMUSBRemote::vmeBlockRead(uint32_t baseAddress, uint8_t aModifier,
+CVMUSBEthernet::vmeBlockRead(uint32_t baseAddress, uint8_t aModifier,
 		     void*    data,        size_t transferCount, 
 		     size_t*  countTransferred)
 {
@@ -644,7 +687,7 @@ CVMUSBRemote::vmeBlockRead(uint32_t baseAddress, uint8_t aModifier,
    entire block transfer.
 */
 int 
-CVMUSBRemote::vmeFifoRead(uint32_t address, uint8_t aModifier,
+CVMUSBEthernet::vmeFifoRead(uint32_t address, uint8_t aModifier,
 		    void*    data,    size_t transferCount, size_t* countTransferred)
 {
   CVMUSBReadoutList list;
@@ -669,7 +712,7 @@ CVMUSBRemote::vmeFifoRead(uint32_t address, uint8_t aModifier,
   \param amod    (uint8_t)    - Address modifier for the transfer.
 */
 int
-CVMUSBRemote::vmeReadBlockCount8(uint32_t address, uint32_t mask, uint8_t amod)
+CVMUSBEthernet::vmeReadBlockCount8(uint32_t address, uint32_t mask, uint8_t amod)
 {
   CVMUSBReadoutList list;
   uint8_t           data;
@@ -686,7 +729,7 @@ CVMUSBRemote::vmeReadBlockCount8(uint32_t address, uint32_t mask, uint8_t amod)
   \param amod    (uint8_t)    - Address modifier for the transfer.
 */
 int
-CVMUSBRemote::vmeReadBlockCount16(uint32_t address, uint32_t mask, uint8_t amod)
+CVMUSBEthernet::vmeReadBlockCount16(uint32_t address, uint32_t mask, uint8_t amod)
 {
   CVMUSBReadoutList list;
   uint8_t           data;
@@ -704,7 +747,7 @@ CVMUSBRemote::vmeReadBlockCount16(uint32_t address, uint32_t mask, uint8_t amod)
   \param amod    (uint8_t)    - Address modifier for the transfer.
 */
 int
-CVMUSBRemote::vmeReadBlockCount32(uint32_t address, uint32_t mask, uint8_t amod)
+CVMUSBEthernet::vmeReadBlockCount32(uint32_t address, uint32_t mask, uint8_t amod)
 {
   CVMUSBReadoutList list;
   uint8_t           data;
@@ -729,7 +772,7 @@ CVMUSBRemote::vmeReadBlockCount32(uint32_t address, uint32_t mask, uint8_t amod)
 
 */
 int 
-CVMUSBRemote::vmeVariableBlockRead(uint32_t address, uint8_t amod,
+CVMUSBEthernet::vmeVariableBlockRead(uint32_t address, uint8_t amod,
 			      void* data, size_t maxCount, size_t* countTransferred)
 {
   CVMUSBReadoutList list;
@@ -752,7 +795,7 @@ CVMUSBRemote::vmeVariableBlockRead(uint32_t address, uint8_t amod,
 */
 
 int 
-CVMUSBRemote::vmeVariableFifoRead(uint32_t address, uint8_t amod, 
+CVMUSBEthernet::vmeVariableFifoRead(uint32_t address, uint8_t amod, 
 			    void* data, size_t maxCount, size_t* countTransferred)
 {
   CVMUSBReadoutList list;
@@ -795,7 +838,7 @@ CVMUSBRemote::vmeVariableFifoRead(uint32_t address, uint8_t amod,
 
 */
 int
-CVMUSBRemote::executeList(CVMUSBReadoutList&     list,
+CVMUSBEthernet::executeList(CVMUSBReadoutList&     list,
 		   void*                  pReadoutBuffer,
 		   size_t                 readBufferSize,
 		   size_t*                bytesRead)
@@ -815,7 +858,7 @@ CVMUSBRemote::executeList(CVMUSBReadoutList&     list,
   CTCLObject command;		// A command is the string rep of a list after all!
   command.Bind(m_pInterp);
   command = "vmusb";
-  command += "immedatelist";
+  command += "immediatelist";
   command += static_cast<int>(readBufferSize);
   command += vmeList;
 
@@ -883,7 +926,7 @@ CVMUSBRemote::executeList(CVMUSBReadoutList&     list,
  * @return int  - 0 for success, -n for failure.
  */
 int
-CVMUSBRemote::loadList(uint8_t listNumber, CVMUSBReadoutList& list, off_t offset)
+CVMUSBEthernet::loadList(uint8_t listNumber, CVMUSBReadoutList& list, off_t offset)
 {
   string vmeList = marshallList(list); // Stringized list.
   m_lastError    = "";
@@ -927,13 +970,93 @@ CVMUSBRemote::loadList(uint8_t listNumber, CVMUSBReadoutList& list, off_t offset
   }
   // response is the entire reply msg, including \n>
 
-  if (response.substr(0,2) == "OK") {
+  if (response.substr(0,3) == "OK:") {
     return 0;
   } else {
     m_lastError = response;
     return -3;
   }
 }
+/**
+ *  usbRead
+ *
+ * Do a bulk read.
+ * This requires a subcommand of "bulkread" which has parameters
+ * size of the read and the timeout.
+ * The return is a line containing the transfer count if success.
+ * and a block of data.
+ * On failure the thing after ERROR is the errno value.
+ *
+ * @param data[out] - Buffer in which the data will be put.
+ * @param buffersize[in] - Amount of data being requested.
+ * @param transfercount[out] - Number of bytes tranferred.
+ * @param timeout[in]  - ms of timeout for the read.
+ *
+ * @return int
+ * @retval 0 - success.
+ * @retval -1 - Failed with errno containing the reason.
+ */
+int
+CVMUSBEthernet::usbRead(void* pData, size_t bufferSize, size_t* transferCount,
+			int timeout)
+{
+  CTCLObject command;
+  command.Bind(m_pInterp);
+  command += "vmusb";
+  command += "bulkread";
+  command += static_cast<int>(bufferSize);
+  command += static_cast<int>(timeout);
+
+  std::string request = command;
+  request += "\n";
+ 
+  try {
+    m_pSocket->Write(request.c_str(), request.size());
+  }
+  catch(...) {
+    return -1;
+  }
+  // Reply data should just be a line that is "OK" or "ERROR - the errormessage"
+
+  std::string response;
+  while(1) {
+    try {
+      char c;
+      int nread = m_pSocket->Read(&c, sizeof(char));
+      if (nread == 1) {
+	response += c;
+	if (c == '\n') break;
+      }
+      
+    }
+    catch(...) {
+      return -2;
+    }
+  }
+  // response is the entire reply msg, including \n>
+
+  if (response.substr(0,3) == "OK:") {
+    // The remainder of the line after "OK" is the transfer count:
+
+    std::string xferCount = response.substr(3);
+    int readBytes = atoi(xferCount.c_str());
+    *transferCount = readBytes;
+    m_pSocket->Read(pData, readBytes);
+
+    // I bet there's a terminating \r\n:
+
+    
+    return 0;
+
+  } else {
+    // Following "FAIL: " is what we should put in errno.
+    
+    errno = atoi(response.substr(5).c_str());
+    return -2;
+  } 
+  
+}
+
 ////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Utility methods ////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -943,7 +1066,7 @@ CVMUSBRemote::loadList(uint8_t listNumber, CVMUSBReadoutList& list, off_t offset
    and executing it immediatly.
 */
 uint32_t
-CVMUSBRemote::readRegister(unsigned int address)
+CVMUSBEthernet::readRegister(unsigned int address)
 {
     CVMUSBReadoutList list;
     uint32_t          data;
@@ -956,13 +1079,13 @@ CVMUSBRemote::readRegister(unsigned int address)
 			     &count);
     if (status == -1) {
 	char message[100];
-	sprintf(message, "CVMUSBRemote::readRegister USB write failed: %s",
+	sprintf(message, "CVMUSBEthernet::readRegister USB write failed: %s",
 		strerror(errno));
 	throw string(message);
     }
     if (status == -2) {
 	char message[100];
-	sprintf(message, "CVMUSBRemote::readRegister USB read failed %s",
+	sprintf(message, "CVMUSBEthernet::readRegister USB read failed %s",
 		strerror(errno));
 	throw string(message);
 
@@ -980,7 +1103,7 @@ CVMUSBRemote::readRegister(unsigned int address)
    executing it immediately:
 */
 void
-CVMUSBRemote::writeRegister(unsigned int address, uint32_t data)
+CVMUSBEthernet::writeRegister(unsigned int address, uint32_t data)
 {
     CVMUSBReadoutList list;
     uint32_t          rdstatus;
@@ -994,13 +1117,13 @@ CVMUSBRemote::writeRegister(unsigned int address, uint32_t data)
 
     if (status == -1) {
 	char message[100];
-	sprintf(message, "CVMUSBRemote::writeRegister USB write failed: %s",
+	sprintf(message, "CVMUSBEthernet::writeRegister USB write failed: %s",
 		strerror(errno));
 	throw string(message);
     }
     if (status == -2) {
 	char message[100];
-	sprintf(message, "CVMUSBRemote::writeRegister USB read failed %s",
+	sprintf(message, "CVMUSBEthernet::writeRegister USB read failed %s",
 		strerror(errno));
 	throw string(message);
 
@@ -1015,7 +1138,7 @@ CVMUSBRemote::writeRegister(unsigned int address, uint32_t data)
 
 */
 unsigned int
-CVMUSBRemote::whichToISV(int which)
+CVMUSBEthernet::whichToISV(int which)
 {
     switch (which) {
 	case 1:
@@ -1029,7 +1152,7 @@ CVMUSBRemote::whichToISV(int which)
 	default:
 	{
 	    char msg[100];
-	    sprintf(msg, "CVMUSBRemote::whichToISV - invalid isv register %d",
+	    sprintf(msg, "CVMUSBEthernet::whichToISV - invalid isv register %d",
 		    which);
 	    throw string(msg);
 	}
@@ -1039,7 +1162,7 @@ CVMUSBRemote::whichToISV(int which)
 // the appropriate status:
 //
 int
-CVMUSBRemote::doVMEWrite(CVMUSBReadoutList& list)
+CVMUSBEthernet::doVMEWrite(CVMUSBReadoutList& list)
 {
   uint16_t reply;
   size_t   replyBytes;
@@ -1053,7 +1176,7 @@ CVMUSBRemote::doVMEWrite(CVMUSBReadoutList& list)
 
 // Common code to do a single shot vme read operation:
 int
-CVMUSBRemote::doVMERead(CVMUSBReadoutList& list, uint32_t* datum)
+CVMUSBEthernet::doVMERead(CVMUSBReadoutList& list, uint32_t* datum)
 {
   size_t actualRead;
   int status = executeList(list, datum, sizeof(uint32_t), &actualRead);
@@ -1068,7 +1191,7 @@ CVMUSBRemote::doVMERead(CVMUSBReadoutList& list, uint32_t* datum)
  *  @retval the Tcl list constructed from the vme readout list.
  */
 string
-CVMUSBRemote::marshallList(CVMUSBReadoutList& list)
+CVMUSBEthernet::marshallList(CVMUSBReadoutList& list)
 {
   vector<uint32_t> listVect = list.get();
   CTCLObject       TclList;
@@ -1090,7 +1213,7 @@ CVMUSBRemote::marshallList(CVMUSBReadoutList& list)
  * @retval Actual number of bytes written to the output buffer.
  */
 size_t
-CVMUSBRemote::marshallOutputData(void* pOutputBuffer, const char* reply, size_t maxOutputSize)
+CVMUSBEthernet::marshallOutputData(void* pOutputBuffer, const char* reply, size_t maxOutputSize)
 {
   uint8_t* o = reinterpret_cast<uint8_t*>(pOutputBuffer);
 
@@ -1114,12 +1237,12 @@ CVMUSBRemote::marshallOutputData(void* pOutputBuffer, const char* reply, size_t 
 
   // Figure out how many bytes the user gets...
 
-  size_t actualSize = list.size();
+  size_t actualSize = list.size() - 1;
   if (actualSize > maxOutputSize) actualSize = maxOutputSize;
 
   // Each list element is an ascii encoded byte:
 
-  for (int i =0; i < actualSize; i++) {
+  for (int i = 1; i < actualSize; i++) {
     unsigned long aByte;
     aByte = strtoul(list[i].c_str(), NULL, 0);
     *o++ = static_cast<uint8_t>(aByte & 0xff);

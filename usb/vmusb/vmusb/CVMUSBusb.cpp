@@ -16,7 +16,7 @@
 
 // Implementation of the CVMUSB class.
 
-#include "CVMUSB.h"
+#include "CVMUSBusb.h"
 #include "CVMUSBReadoutList.h"
 #include <usb.h>
 #include <errno.h>
@@ -90,7 +90,7 @@ static bool usbInitialized(false);
   subsystem.  In that case an empty vector is returned.
 */
 vector<struct usb_device*>
-CVMUSB::enumerate()
+CVMUSBusb::enumerate()
 {
   if(!usbInitialized) {
     usb_init();
@@ -139,7 +139,7 @@ CVMUSB::enumerate()
  *        why.
  */
 string
-CVMUSB::serialNo(struct usb_device* dev)
+CVMUSBusb::serialNo(struct usb_device* dev)
 {
   usb_dev_handle* pDevice = usb_open(dev);
 
@@ -152,11 +152,11 @@ CVMUSB::serialNo(struct usb_device* dev)
     if (nBytes > 0) {
       return std::string(szSerialNo);
     } else {
-      throw std::string("usb_get_string_simple failed in CVMUSB::serialNo");
+      throw std::string("usb_get_string_simple failed in CVMUSBusb::serialNo");
     }
 				       
   } else {
-    throw std::string("usb_open failed in CVMUSB::serialNo");
+    throw std::string("usb_open failed in CVMUSBusb::serialNo");
   }
 
 }
@@ -175,14 +175,14 @@ CVMUSB::serialNo(struct usb_device* dev)
       if there is aproblem.
 
 */
-CVMUSB::CVMUSB(struct usb_device* device) :
+CVMUSBusb::CVMUSBusb(struct usb_device* device) :
     m_handle(0),
     m_device(device),
     m_timeout(DEFAULT_TIMEOUT)
 {
     m_handle  = usb_open(m_device);
     if (!m_handle) {
-	throw "CVMUSB::CVMUSB  - unable to open the device";
+	throw "CVMUSBusb::CVMUSB  - unable to open the device";
     }
     // Now claim the interface.. again this could in theory fail.. but.
 
@@ -190,11 +190,11 @@ CVMUSB::CVMUSB(struct usb_device* device) :
     int status = usb_claim_interface(m_handle, 
 				     0);
     if (status == -EBUSY) {
-	throw "CVMUSB::CVMUSB - some other process has already claimed";
+	throw "CVMUSBusb::CVMUSB - some other process has already claimed";
     }
 
     if (status == -ENOMEM) {
-	throw "CVMUSB::CMVUSB - claim failed for lack of memory";
+	throw "CVMUSBusb::CMVUSB - claim failed for lack of memory";
     }
     // Errors we don't know about:
 
@@ -219,7 +219,7 @@ CVMUSB::CVMUSB(struct usb_device* device) :
     Destruction of the interface involves releasing the claimed
     interface, followed by closing the device.
 */
-CVMUSB::~CVMUSB()
+CVMUSBusb::~CVMUSBusb()
 {
     usb_release_interface(m_handle, 0);
     usb_close(m_handle);
@@ -240,7 +240,7 @@ CVMUSB::~CVMUSB()
        The register value to write.
 */
 void
-CVMUSB::writeActionRegister(uint16_t value)
+CVMUSBusb::writeActionRegister(uint16_t value)
 {
     char outPacket[100];
 
@@ -279,7 +279,7 @@ CVMUSB::writeActionRegister(uint16_t value)
 
 */
 int
-CVMUSB::readFirmwareID()
+CVMUSBusb::readFirmwareID()
 {
     return readRegister(FIDRegister);
 }
@@ -292,7 +292,7 @@ CVMUSB::readFirmwareID()
      The 16 bit global mode register value.
 */
 void
-CVMUSB::writeGlobalMode(uint16_t value)
+CVMUSBusb::writeGlobalMode(uint16_t value)
 {
     writeRegister(GMODERegister, static_cast<uint32_t>(value));
 }
@@ -303,7 +303,7 @@ CVMUSB::writeGlobalMode(uint16_t value)
     \retval the value of the register.
 */
 int
-CVMUSB::readGlobalMode()
+CVMUSBusb::readGlobalMode()
 {
     return static_cast<uint16_t>(readRegister(GMODERegister));
 }
@@ -317,7 +317,7 @@ CVMUSB::readGlobalMode()
      The value to write to the register
 */
 void
-CVMUSB::writeDAQSettings(uint32_t value)
+CVMUSBusb::writeDAQSettings(uint32_t value)
 {
     writeRegister(DAQSetRegister, value);
 }
@@ -327,7 +327,7 @@ CVMUSB::writeDAQSettings(uint32_t value)
   \retval The value read from the register.
 */
 uint32_t
-CVMUSB::readDAQSettings()
+CVMUSBusb::readDAQSettings()
 {
     return readRegister(DAQSetRegister);
 }
@@ -337,8 +337,8 @@ CVMUSB::readDAQSettings()
   are essentially user programmable.   The LED Source register determines
   which LEDS display what.  The register is made up of a bunch of
   3 bit fields, invert and latch bits.  These fields are defined by the
-  constants in the CVMUSB::LedSourceRegister class.  For example
-  CVMUSB::LedSourceRegister::topYellowInFifoFull ored in to this register
+  constants in the CVMUSBusb::LedSourceRegister class.  For example
+  CVMUSBusb::LedSourceRegister::topYellowInFifoFull ored in to this register
   will make the top yellow led light when the input fifo is full.
 
 
@@ -346,7 +346,7 @@ CVMUSB::readDAQSettings()
      The value to write to the LED Src register.
 */
 void
-CVMUSB::writeLEDSource(uint32_t value)
+CVMUSBusb::writeLEDSource(uint32_t value)
 {
     writeRegister(LEDSrcRegister, value);
 }
@@ -356,7 +356,7 @@ CVMUSB::writeLEDSource(uint32_t value)
    \retval The current value of the LED source register.
 */
 int
-CVMUSB::readLEDSource()
+CVMUSBusb::readLEDSource()
 {
     return readRegister(LEDSrcRegister);
 }
@@ -369,13 +369,13 @@ CVMUSB::readLEDSource()
    \param value :uint32_t
       The new value to write to this register.   This is a bitmask that
       consists of code fields along with latch and invert bits.
-      These bits are defined in the CVMUSB::DeviceSourceRegister
-      class.  e.g. CVMUSB::DeviceSourceRegister::nimO2UsbTrigger1 
+      These bits are defined in the CVMUSBusb::DeviceSourceRegister
+      class.  e.g. CVMUSBusb::DeviceSourceRegister::nimO2UsbTrigger1 
       ored into value will cause the O2 to pulse when a USB initiated
       trigger is produced.
 */
 void
-CVMUSB::writeDeviceSource(uint32_t value)
+CVMUSBusb::writeDeviceSource(uint32_t value)
 {
     writeRegister(DEVSrcRegister, value);
 }
@@ -385,7 +385,7 @@ CVMUSB::writeDeviceSource(uint32_t value)
    \retval current value of the register.
 */
 int
-CVMUSB::readDeviceSource()
+CVMUSBusb::readDeviceSource()
 {
     return readRegister(DEVSrcRegister);
 }
@@ -398,7 +398,7 @@ CVMUSB::readDeviceSource()
        further modified by the value written to the DGGExtended register.
 */
 void
-CVMUSB::writeDGG_A(uint32_t value)
+CVMUSBusb::writeDGG_A(uint32_t value)
 {
     writeRegister(DGGARegister, value);
 }
@@ -409,7 +409,7 @@ CVMUSB::writeDGG_A(uint32_t value)
    \retval  register value.
 */
 uint32_t
-CVMUSB::readDGG_A()
+CVMUSBusb::readDGG_A()
 {
     return readRegister(DGGARegister);
 }
@@ -418,7 +418,7 @@ CVMUSB::readDGG_A()
   details.
 */
 void
-CVMUSB::writeDGG_B(uint32_t value)
+CVMUSBusb::writeDGG_B(uint32_t value)
 {
     writeRegister(DGGBRegister, value);
 }
@@ -427,7 +427,7 @@ CVMUSB::writeDGG_B(uint32_t value)
    for details.
 */
  uint32_t
- CVMUSB::readDGG_B()
+ CVMUSBusb::readDGG_B()
 {
     return readRegister(DGGBRegister);
 }
@@ -438,7 +438,7 @@ CVMUSB::writeDGG_B(uint32_t value)
    bits of the widths for both the A and B channels of DGG.
 */
 void
-CVMUSB::writeDGG_Extended(uint32_t value)
+CVMUSBusb::writeDGG_Extended(uint32_t value)
 {
     writeRegister(DGGExtended, value);
 }
@@ -446,7 +446,7 @@ CVMUSB::writeDGG_Extended(uint32_t value)
    Read the value of the DGG extension register.
 */
 uint32_t
-CVMUSB::readDGG_Extended()
+CVMUSBusb::readDGG_Extended()
 {
     return readRegister(DGGExtended);
 }
@@ -458,7 +458,7 @@ CVMUSB::readDGG_Extended()
    \retval the value read from the A channel.
 */
 uint32_t
-CVMUSB::readScalerA()
+CVMUSBusb::readScalerA()
 {
     return readRegister(ScalerA);
 }
@@ -466,7 +466,7 @@ CVMUSB::readScalerA()
    Read the B scaler channel
 */
 uint32_t
-CVMUSB::readScalerB()
+CVMUSBusb::readScalerB()
 {
     return readRegister(ScalerB);
 }
@@ -490,7 +490,7 @@ CVMUSB::readScalerB()
     \throw string  - if the which value is illegal.
 */
 void
-CVMUSB::writeVector(int which, uint32_t value)
+CVMUSBusb::writeVector(int which, uint32_t value)
 {
     unsigned int regno = whichToISV(which);
     writeRegister(regno, value);
@@ -515,7 +515,7 @@ CVMUSB::writeVector(int which, uint32_t value)
   \throw string  - if thwhich is illegal.
 */
 int
-CVMUSB::readVector(int which)
+CVMUSBusb::readVector(int which)
 {
     unsigned int regno = whichToISV(which);
     return readRegister(regno);
@@ -527,7 +527,7 @@ CVMUSB::readVector(int which)
    @param mask Interrupt mask to write.
 */
 void
-CVMUSB::writeIrqMask(uint8_t mask)
+CVMUSBusb::writeIrqMask(uint8_t mask)
 {
   // Well this is a typical VM-USB abomination:
   // - First save the global (mode?) register as we're going to wipe it out
@@ -556,7 +556,7 @@ CVMUSB::writeIrqMask(uint8_t mask)
    @retval contents of the mask register.
 */;
 int
-CVMUSB::readIrqMask()
+CVMUSBusb::readIrqMask()
 {
   // Since the interrupt mask register appears cleverly crafted so that you
   // can't actually read it without destroying it, we're just going to use
@@ -564,18 +564,20 @@ CVMUSB::readIrqMask()
 
   return m_irqMask;
 }
+
+
 ///////////////////////////////////////////////////////////////////////
 /*!
     write the bluk transfer setup register.  This register
     sets up a few of the late breaking data taking parameters
     that are built to allow data to flow through the USB more
     effectively.  For bit/mask/shift-count definitions of this
-    register see CVMUSB::TransferSetup.
+    register see CVMUSBusb::TransferSetup.
     \param value : uint32_t
       The value to write to the register.
 */
 void
-CVMUSB::writeBulkXferSetup(uint32_t value)
+CVMUSBusb::writeBulkXferSetup(uint32_t value)
 {
     writeRegister(USBSetup, value);
 }
@@ -583,7 +585,7 @@ CVMUSB::writeBulkXferSetup(uint32_t value)
    Read the bulk transfer setup register.
 */
 int
-CVMUSB::readBulkXferSetup()
+CVMUSBusb::readBulkXferSetup()
 {
     return readRegister(USBSetup);
 }
@@ -613,7 +615,7 @@ CVMUSB::readBulkXferSetup()
     \note In case of failure, errno, contains the reason.
 */
 int
-CVMUSB::vmeWrite32(uint32_t address, uint8_t aModifier, uint32_t data)
+CVMUSBusb::vmeWrite32(uint32_t address, uint8_t aModifier, uint32_t data)
 {
   CVMUSBReadoutList list;
 
@@ -626,7 +628,7 @@ CVMUSB::vmeWrite32(uint32_t address, uint8_t aModifier, uint32_t data)
    however the data is 16 bits wide.
 */
 int
-CVMUSB::vmeWrite16(uint32_t address, uint8_t aModifier, uint16_t data)
+CVMUSBusb::vmeWrite16(uint32_t address, uint8_t aModifier, uint16_t data)
 {
   CVMUSBReadoutList list;
   list.addWrite16(address, aModifier, data);
@@ -636,7 +638,7 @@ CVMUSB::vmeWrite16(uint32_t address, uint8_t aModifier, uint16_t data)
   Do an 8 bit write to the VME bus.
 */
 int
-CVMUSB::vmeWrite8(uint32_t address, uint8_t aModifier, uint8_t data)
+CVMUSBusb::vmeWrite8(uint32_t address, uint8_t aModifier, uint8_t data)
 {
   CVMUSBReadoutList list;
   list.addWrite8(address, aModifier, data);
@@ -661,7 +663,7 @@ CVMUSB::vmeWrite8(uint32_t address, uint8_t aModifier, uint8_t data)
     \retval -2    - The usb_bulk_read failed.
 */
 int
-CVMUSB::vmeRead32(uint32_t address, uint8_t aModifier, uint32_t* data)
+CVMUSBusb::vmeRead32(uint32_t address, uint8_t aModifier, uint32_t* data)
 {
   CVMUSBReadoutList list;
   list.addRead32(address, aModifier);
@@ -676,7 +678,7 @@ CVMUSB::vmeRead32(uint32_t address, uint8_t aModifier, uint32_t* data)
     function but the data transfer width is 16 bits.
 */
 int
-CVMUSB::vmeRead16(uint32_t address, uint8_t aModifier, uint16_t* data)
+CVMUSBusb::vmeRead16(uint32_t address, uint8_t aModifier, uint16_t* data)
 {
   CVMUSBReadoutList list;
   list.addRead16(address, aModifier);
@@ -691,7 +693,7 @@ CVMUSB::vmeRead16(uint32_t address, uint8_t aModifier, uint16_t* data)
    this.
 */
 int
-CVMUSB::vmeRead8(uint32_t address, uint8_t aModifier, uint8_t* data)
+CVMUSBusb::vmeRead8(uint32_t address, uint8_t aModifier, uint8_t* data)
 {
   CVMUSBReadoutList list;
   list.addRead8(address, aModifier);
@@ -740,7 +742,7 @@ CVMUSB::vmeRead8(uint32_t address, uint8_t aModifier, uint8_t* data)
 
 */
 int
-CVMUSB::vmeBlockRead(uint32_t baseAddress, uint8_t aModifier,
+CVMUSBusb::vmeBlockRead(uint32_t baseAddress, uint8_t aModifier,
 		     void*    data,        size_t transferCount, 
 		     size_t*  countTransferred)
 {
@@ -762,7 +764,7 @@ CVMUSB::vmeBlockRead(uint32_t baseAddress, uint8_t aModifier,
    entire block transfer.
 */
 int 
-CVMUSB::vmeFifoRead(uint32_t address, uint8_t aModifier,
+CVMUSBusb::vmeFifoRead(uint32_t address, uint8_t aModifier,
 		    void*    data,    size_t transferCount, size_t* countTransferred)
 {
   CVMUSBReadoutList list;
@@ -787,7 +789,7 @@ CVMUSB::vmeFifoRead(uint32_t address, uint8_t aModifier,
   \param amod    (uint8_t)    - Address modifier for the transfer.
 */
 int
-CVMUSB::vmeReadBlockCount8(uint32_t address, uint32_t mask, uint8_t amod)
+CVMUSBusb::vmeReadBlockCount8(uint32_t address, uint32_t mask, uint8_t amod)
 {
   CVMUSBReadoutList list;
   uint8_t           data;
@@ -804,7 +806,7 @@ CVMUSB::vmeReadBlockCount8(uint32_t address, uint32_t mask, uint8_t amod)
   \param amod    (uint8_t)    - Address modifier for the transfer.
 */
 int
-CVMUSB::vmeReadBlockCount16(uint32_t address, uint32_t mask, uint8_t amod)
+CVMUSBusb::vmeReadBlockCount16(uint32_t address, uint32_t mask, uint8_t amod)
 {
   CVMUSBReadoutList list;
   uint8_t           data;
@@ -822,7 +824,7 @@ CVMUSB::vmeReadBlockCount16(uint32_t address, uint32_t mask, uint8_t amod)
   \param amod    (uint8_t)    - Address modifier for the transfer.
 */
 int
-CVMUSB::vmeReadBlockCount32(uint32_t address, uint32_t mask, uint8_t amod)
+CVMUSBusb::vmeReadBlockCount32(uint32_t address, uint32_t mask, uint8_t amod)
 {
   CVMUSBReadoutList list;
   uint8_t           data;
@@ -847,7 +849,7 @@ CVMUSB::vmeReadBlockCount32(uint32_t address, uint32_t mask, uint8_t amod)
 
 */
 int 
-CVMUSB::vmeVariableBlockRead(uint32_t address, uint8_t amod,
+CVMUSBusb::vmeVariableBlockRead(uint32_t address, uint8_t amod,
 			      void* data, size_t maxCount, size_t* countTransferred)
 {
   CVMUSBReadoutList list;
@@ -870,7 +872,7 @@ CVMUSB::vmeVariableBlockRead(uint32_t address, uint8_t amod,
 */
 
 int 
-CVMUSB::vmeVariableFifoRead(uint32_t address, uint8_t amod, 
+CVMUSBusb::vmeVariableFifoRead(uint32_t address, uint8_t amod, 
 			    void* data, size_t maxCount, size_t* countTransferred)
 {
   CVMUSBReadoutList list;
@@ -910,7 +912,7 @@ CVMUSB::vmeVariableFifoRead(uint32_t address, uint8_t amod,
     errno global variable.
 */
 int
-CVMUSB::executeList(CVMUSBReadoutList&     list,
+CVMUSBusb::executeList(CVMUSBReadoutList&     list,
 		   void*                  pReadoutBuffer,
 		   size_t                 readBufferSize,
 		   size_t*                bytesRead)
@@ -937,25 +939,7 @@ CVMUSB::executeList(CVMUSBReadoutList&     list,
   
 }
 
-// SWIG version of the above:
 
-std::vector<uint8_t> 
-CVMUSB::executeList(CVMUSBReadoutList& list, int maxBytes)
-{
-  uint8_t data[maxBytes];
-  size_t     nRead;
-  std::vector<uint8_t> result;
-
-  int status = executeList(list, data, maxBytes, &nRead);
-
-  if (status == 0) {
-    for (int i = 0; i < nRead; i++) {
-      result.push_back(data[i]);
-    }
-  }
-
-  return result;
-}
 
 /*!
    Load a list into the VM-USB for later execution.
@@ -980,7 +964,7 @@ CVMUSB::executeList(CVMUSBReadoutList& list, int maxBytes)
       offset... I'm betting it's a longword offset.
 */
 int
-CVMUSB::loadList(uint8_t  listNumber, CVMUSBReadoutList& list, off_t listOffset)
+CVMUSBusb::loadList(uint8_t  listNumber, CVMUSBReadoutList& list, off_t listOffset)
 {
   // Need to construct the TA field, straightforward except for the list number
   // which is splattered all over creation.
@@ -1026,7 +1010,7 @@ CVMUSB::loadList(uint8_t  listNumber, CVMUSBReadoutList& list, off_t listOffset)
 
 */
 int 
-CVMUSB::usbRead(void* data, size_t bufferSize, size_t* transferCount, int timeout)
+CVMUSBusb::usbRead(void* data, size_t bufferSize, size_t* transferCount, int timeout)
 {
   int status = usb_bulk_read(m_handle, ENDPOINT_IN,
 			     static_cast<char*>(data), bufferSize,
@@ -1050,7 +1034,7 @@ CVMUSB::usbRead(void* data, size_t bufferSize, size_t* transferCount, int timeou
       New timeout in milliseconds.
 */
 void
-CVMUSB::setDefaultTimeout(int ms)
+CVMUSBusb::setDefaultTimeout(int ms)
 {
   m_timeout = ms;
 }
@@ -1083,7 +1067,7 @@ CVMUSB::setDefaultTimeout(int ms)
 
 */
 int
-CVMUSB::transaction(void* writePacket, size_t writeSize,
+CVMUSBusb::transaction(void* writePacket, size_t writeSize,
 		    void* readPacket,  size_t readSize)
 {
     int status = usb_bulk_write(m_handle, ENDPOINT_OUT,
@@ -1110,7 +1094,7 @@ CVMUSB::transaction(void* writePacket, size_t writeSize,
 
 */
 void*
-CVMUSB::addToPacket16(void* packet, uint16_t datum)
+CVMUSBusb::addToPacket16(void* packet, uint16_t datum)
 {
     uint8_t* pPacket = static_cast<uint8_t*>(packet);
 
@@ -1125,7 +1109,7 @@ CVMUSB::addToPacket16(void* packet, uint16_t datum)
   The datum is added low-endianly to the packet.
 */
 void*
-CVMUSB::addToPacket32(void* packet, uint32_t datum)
+CVMUSBusb::addToPacket32(void* packet, uint32_t datum)
 {
     uint8_t* pPacket = static_cast<uint8_t*>(packet);
 
@@ -1142,7 +1126,7 @@ CVMUSB::addToPacket32(void* packet, uint32_t datum)
     by usb definition. datum will be retrieved in host byte order.
 */
 void*
-CVMUSB::getFromPacket16(void* packet, uint16_t* datum)
+CVMUSBusb::getFromPacket16(void* packet, uint16_t* datum)
 {
     uint8_t* pPacket = static_cast<uint8_t*>(packet);
 
@@ -1158,7 +1142,7 @@ CVMUSB::getFromPacket16(void* packet, uint16_t* datum)
    Same as above but a 32 bit item is returned.
 */
 void*
-CVMUSB::getFromPacket32(void* packet, uint32_t* datum)
+CVMUSBusb::getFromPacket32(void* packet, uint32_t* datum)
 {
     uint8_t* pPacket = static_cast<uint8_t*>(packet);
 
@@ -1177,7 +1161,7 @@ CVMUSB::getFromPacket32(void* packet, uint32_t* datum)
    and executing it immediatly.
 */
 uint32_t
-CVMUSB::readRegister(unsigned int address)
+CVMUSBusb::readRegister(unsigned int address)
 {
     CVMUSBReadoutList list;
     uint32_t          data;
@@ -1190,13 +1174,13 @@ CVMUSB::readRegister(unsigned int address)
 			     &count);
     if (status == -1) {
 	char message[100];
-	sprintf(message, "CVMUSB::readRegister USB write failed: %s",
+	sprintf(message, "CVMUSBusb::readRegister USB write failed: %s",
 		strerror(errno));
 	throw string(message);
     }
     if (status == -2) {
 	char message[100];
-	sprintf(message, "CVMUSB::readRegister USB read failed %s",
+	sprintf(message, "CVMUSBusb::readRegister USB read failed %s",
 		strerror(errno));
 	throw string(message);
 
@@ -1213,7 +1197,7 @@ CVMUSB::readRegister(unsigned int address)
    executing it immediately:
 */
 void
-CVMUSB::writeRegister(unsigned int address, uint32_t data)
+CVMUSBusb::writeRegister(unsigned int address, uint32_t data)
 {
     CVMUSBReadoutList list;
     uint32_t          rdstatus;
@@ -1227,13 +1211,13 @@ CVMUSB::writeRegister(unsigned int address, uint32_t data)
 
     if (status == -1) {
 	char message[100];
-	sprintf(message, "CVMUSB::writeRegister USB write failed: %s",
+	sprintf(message, "CVMUSBusb::writeRegister USB write failed: %s",
 		strerror(errno));
 	throw string(message);
     }
     if (status == -2) {
 	char message[100];
-	sprintf(message, "CVMUSB::writeRegister USB read failed %s",
+	sprintf(message, "CVMUSBusb::writeRegister USB read failed %s",
 		strerror(errno));
 	throw string(message);
 
@@ -1248,7 +1232,7 @@ CVMUSB::writeRegister(unsigned int address, uint32_t data)
 
 */
 unsigned int
-CVMUSB::whichToISV(int which)
+CVMUSBusb::whichToISV(int which)
 {
     switch (which) {
 	case 1:
@@ -1262,7 +1246,7 @@ CVMUSB::whichToISV(int which)
 	default:
 	{
 	    char msg[100];
-	    sprintf(msg, "CVMUSB::whichToISV - invalid isv register %d",
+	    sprintf(msg, "CVMUSBusb::whichToISV - invalid isv register %d",
 		    which);
 	    throw string(msg);
 	}
@@ -1272,7 +1256,7 @@ CVMUSB::whichToISV(int which)
 // the appropriate status:
 //
 int
-CVMUSB::doVMEWrite(CVMUSBReadoutList& list)
+CVMUSBusb::doVMEWrite(CVMUSBReadoutList& list)
 {
   uint16_t reply;
   size_t   replyBytes;
@@ -1286,7 +1270,7 @@ CVMUSB::doVMEWrite(CVMUSBReadoutList& list)
 
 // Common code to do a single shot vme read operation:
 int
-CVMUSB::doVMERead(CVMUSBReadoutList& list, uint32_t* datum)
+CVMUSBusb::doVMERead(CVMUSBReadoutList& list, uint32_t* datum)
 {
   size_t actualRead;
   int status = executeList(list, datum, sizeof(uint32_t), &actualRead);
@@ -1308,7 +1292,7 @@ CVMUSB::doVMERead(CVMUSBReadoutList& list, uint32_t* datum)
 //     and must be released via delete []p e.g.
 //
 uint16_t*
-CVMUSB::listToOutPacket(uint16_t ta, CVMUSBReadoutList& list,
+CVMUSBusb::listToOutPacket(uint16_t ta, CVMUSBReadoutList& list,
 			size_t* outSize, off_t offset)
 {
     int listLongwords = list.size();

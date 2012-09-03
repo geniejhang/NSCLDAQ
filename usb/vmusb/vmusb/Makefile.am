@@ -1,6 +1,16 @@
-lib_LTLIBRARIES		= libVMUSB.la libVMUSBRemote.la libCVMUSB.la 
+lib_LTLIBRARIES		= libVMUSB.la libVMUSBRemote.la libCVMUSB.la \
+	libCVMUSBReadoutList.la
 
-libVMUSB_la_SOURCES 	= CVMUSB.cpp CVMUSBReadoutList.cpp CVMUSBEthernet.cpp
+libVMUSB_la_SOURCES 	=  CVMUSBusb.cpp CVMUSBReadoutList.cpp CVMUSBEthernet.cpp \
+	CSocket.cpp	\
+	CTCPBadSocketState.cpp \
+	CTCPConnectionFailed.cpp \
+	CTCPConnectionLost.cpp \
+	CTCPNoSuchHost.cpp \
+	CTCPNoSuchService.cpp \
+	CVMUSBFactory.cpp
+
+
 
 
 libVMUSBRemote_la_SOURCES = CVMUSBReadoutList.cpp \
@@ -16,6 +26,7 @@ libVMUSBRemote_la_SOURCES = CVMUSBReadoutList.cpp \
 
 noinst_HEADERS		= CVMUSB.h   \
 	CVMUSBReadoutList.h  \
+	CVMUSBusb.h
 	CVMUSBEthernet.h \
 	CVMUSBRemote.h       \
 	CSocket.h		\
@@ -23,7 +34,8 @@ noinst_HEADERS		= CVMUSB.h   \
 	CTCPConnectionFailed.h	\
 	CTCPConnectionLost.h	\
 	CTCPNoSuchHost.h	\
-	CTCPNoSuchService.h
+	CTCPNoSuchService.h	\
+	CVMUSBFactory.h
 
 
 
