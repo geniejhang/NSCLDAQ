@@ -28,6 +28,7 @@
 #include "COutputStatsCommand.h"
 #include "CDLateStatsCommand.h"
 #include "COnLateDataCommand.h"
+#include "CBarrierTraceCommand.h"
 
 static const char* version = "1.0"; // package version string.
 
@@ -51,6 +52,8 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
   new COutputStatsCommand(*pInterpObject, "EVB::outputStats");
   new CDLateStatsCommand(*pInterpObject, "EVB::dlatestats");
   new COnLateDataCommand(*pInterpObject, "EVB::onDataLate");
+  new CBarrierTraceCommand(*pInterpObject, "EVB::barriertrace");
+
 
   // Setup the output stage:
 

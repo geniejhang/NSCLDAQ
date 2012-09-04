@@ -18,7 +18,7 @@
 #
 
 
-package provide  observer 1.0
+package provide  Observer 1.0
 
 ##
 # This snit object provides generic support for the observer pattern

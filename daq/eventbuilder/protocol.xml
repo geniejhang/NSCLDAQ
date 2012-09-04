@@ -96,10 +96,11 @@ CONNECT source-name
         <title>CONNECT</title>
         <para>
             Must be sent by the client immediately following a connection.
-            The body contains a text string that describes the connection.
-            See CONNECTION STATE below for more information about the
-            state machine that describes a connection.  The body contents
-            will appear on the GUI attached to the event 
+            The body contains contains a null terminated string that
+            describes the connection.  This is followed by a 
+            <type>uint32_t</type> count of the number of
+            <type>uint32_t<type> items that follow and contain the source ids
+            that will be carried across this connection.
         </para>
         <para>
             This message causes a transition from the CONNECTING to the

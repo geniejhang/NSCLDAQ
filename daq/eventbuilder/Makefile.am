@@ -10,8 +10,9 @@ lib_LTLIBRARIES=libEventBuilder.la  libEventBuilderClient.la
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp \
 	CInputStatsCommand.cpp COrdererOutput.cpp fragment.c \
 	COutputStatsObserver.cpp COutputStatsCommand.cpp CDataLateStatistics.cpp \
-	CDLateStatsCommand.cpp CLateScriptObserver.cpp COnLateDataCommand.cpp \
-	CBarrierStatsCommand.cpp CBarrierStats.cpp CIncompleteBarrierStats.cpp
+	CDLateStatsCommand.cpp CLateScriptObserver.cpp COnLateDataCommand.cpp  \
+	CBarrierStatsCommand.cpp CBarrierStats.cpp CIncompleteBarrierStats.cpp \
+	CCompleteBarrierCallback.cpp CBarrierTraceCommand.cpp CPartialBarrierCallback.cpp
 
 
 libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
@@ -31,10 +32,11 @@ include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h 
 noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h \
 	CInputStatsCommand.h COrdererOutput.h COutputStatsObserver.h COutputStatsCommand.h \
 	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h COnLateDataCommand.h \
-	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h
+	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h CCompleteBarrierCallback.h \
+	CBarrierTraceCommand.h CPartialBarrierCallback.h
 
 
-INCLUDES = -D__STDC_LIMIT_MACROS \
+INCLUDES = -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS \
 	-I@top_srcdir@/base/tcpip \
 	-I@top_srcdir@/base/exception  \
 	-I@top_srcdir@/base/headers	\
@@ -56,7 +58,7 @@ libEventBuilder_la_LIBADD = @top_builddir@/base/tclplus/libtclPlus.la \
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
-	connectionList.tcl
+	connectionList.tcl observer.tcl
 
 TCL_TEST_FILES=tclTests.tcl managerTests.test
 

@@ -29,15 +29,15 @@ proc startConnection {} {
 proc sendConnectionRequest {sock} {
     set hdrlen [string length "CONNECT"]
     set bodylen [string length "test connection"]
-
-    set msg [binary format i1a${hdrlen}i1a$bodylen [string length "CONNECT"] "CONNECT" \
-		 [string length "test connection"] "test connection"]
+    set msg  [binary format i1a${hdrlen}i1a${bodylen}i1 $hdrlen "CONNECT" \
+		 [expr $bodylen + 4] "test connection" 0]
    
-	     
+   flush stdout
     puts -nonewline $sock $msg
     flush $sock
 
     set result [gets $sock]
+    flush stdout
 }
 
 #
@@ -54,6 +54,9 @@ proc Disconnect {host d} {
 
     incr ::disconnect
 }
+
+# tcltest::configure -debug 3 -verbose {body pass skip start error}
+
 ##
 #  Can't do the port release quite correctly in test level.
 #
@@ -95,7 +98,10 @@ tcltest::test connectionmanager-2 {Disconnect callback} \
 	    -disconnectcommand [list Disconnect %H %D]
 	startConnection
 	vwait ::connection
+	exit
+	flush stdout
 	close $::sock
+	exit
 	vwait ::disconnect
 	list $host $descrip
 

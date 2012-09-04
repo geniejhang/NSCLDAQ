@@ -66,7 +66,7 @@ snit::type EVB::Connection {
     option -description -default "" -readonly yes
 
     option -socket;		#  The socket connected to client.
-    option -clientaddr -default "not-set"
+    option -clientaddr;#  -default "not-set"
     option -disconnectcommand -default [list] -configuremethod _SetCallback 
     option -fragmentcommand   -default [list] -configuremethod _SetCallback
 
@@ -76,15 +76,15 @@ snit::type EVB::Connection {
 
 
     constructor args {
-
 	$self configurelist $args
 	fconfigure $options(-socket) -blocking 1 -buffering none -translation {binary lf}
-
-	set callbacks [EVB::CallbackManager %AUTO]
+	set callbacks [EVB::CallbackManager %AUTO%]
+	flush stdout
 	$callbacks define -disconnectcommand
 	$callbacks define -fragmentcommand
 
 	$self _Expecting _Connect FORMING; # We are now expecting a CONNECT command.
+
     }
     destructor {
 	if {$options(-socket) != -1} {
@@ -109,6 +109,58 @@ snit::type EVB::Connection {
 
     #------------------------------------------------------------------------------
     # Private methods:
+
+    ##
+    # _DecodeConnectBody
+    #
+    #  Decodes the body of a connect message.  This consists of a null terminated
+    #  ASCII String that is then followed by:
+    #  - A count of the source ids
+    #  - The source ids themselves.
+    #  
+    #  The count and source ids are all little endian uint32_t numbers.
+    #
+    # @param body - The body binary blob.
+    # @return list - 2 element list.
+    # @retval First list element is the description string.  The second, a list of source ids.
+    #
+    method _DecodeConnectBody body {
+       
+	# The loop below pulls the characters out of the description
+	# one at a time.  cursor is the current position in the binary 
+	# array.  Characters are appended to description until a null is seen:
+
+	set cursor 0
+	set description ""
+
+	while {1} {
+	    binary scan $body "@${cursor}c1" char
+	    incr cursor
+
+	    if {$char} {
+		append description [format %c $char]
+	    } else {
+		break
+	    }
+	}
+	# cursor now point just past the null in the string.. at the
+	# number of source ids:
+
+	binary scan $body "@${cursor}i1" sourceCount
+	incr cursor 4
+
+	set sourceList [list]
+	for {} {$sourceCount > 0} {
+	    incr sourceCount -1
+	    incr cursor 4
+	} {
+	    binary scan $body "@${cursor}i1" source
+	    lappend sourceList $source
+	}
+
+
+	return [list $description $sourceList]
+    }
 
     ##
     # Read binary data from the socket with a leading uint32_t that contains
@@ -222,13 +274,19 @@ snit::type EVB::Connection {
     #
     method _Connect socket {
 
-	if {[catch {$self _ReadTextMessage $socket} msg ]} {
+	# Get the header and get the body.
+	# The header is a string, but the body is a counted binary block:
+
+	if {[catch {$self _ReadCountedString $socket} header]} {
+	    puts $socket "ERROR {Could not read header expecting CONNECT}"
 	    $self _Close ERROR
 	    return
 	}
 
-	set header [lindex $msg 0]
-	set body   [lindex $msg 1]
+	if {[catch {$self _ReadBinaryData $socket} body]} {
+	    puts $socket "ERROR {Corrupt body in CONNECT message}"
+	    $self _Close ERROR
+	}
 
 	# Must be a CONNECT message with a non-zero body.
 	#
@@ -239,6 +297,7 @@ snit::type EVB::Connection {
 	    return
 	}
 
+
 	if {[string length $body] == 0} {
 	    puts $socket "ERROR {Empty Body}"
 	    $self _Close ERROR
@@ -246,12 +305,24 @@ snit::type EVB::Connection {
 	}
 	puts $socket "OK"
 
+	# Pull out the description and the source id list
+
+	set decodedBody [$self _DecodeConnectBody $body]
+	set description [lindex $decodedBody 0]
+	set sourceIds   [lindex $decodeBody 1]
+
+
+	puts "Body: $decodedBody"
+
 	# Save the description and transition to the active state:
         # Register ourself with the event builder core
 
-	set options(-description) $body
+	set options(-description) $description
 	$self _Expecting _Fragments ACTIVE
 
+        # TODO:  Communicate the sourceids to the fragment handler.
+	#
+ 
     }
     #
     # Expecting fragments if the next message is
@@ -325,24 +396,25 @@ snit::type EVB::ConnectionManager {
     component TimeoutObservers
 
     option -port;		# Port on which we listen for connections.
-
     option -connectcommand   -default [list]  -configuremethod _SetCallback
     option -disconnectcommand -default [list] -configuremethod _SetCallback
     option -sourcetimeout    -default 10
 
     variable serverSocket;	           # Socket run by us.
     variable connections -array {};        # Key is connection, value last received timestamp.
-    variable lastFragment [clock seconds]; # When the last fragment arrived.
+    variable lastFragment;		   # When the last fragment arrived.
     variable callbacks;		           # Callback manager.
     variable timedoutSources [list];	   # list of connections that are timed out.
    
 
-    delegate addObserver    to TimeoutObservers as addTimeoutObserver
-    delegate removeObserver to TimeoutObservers as removeTimeoutObserver
+    delegate method addObserver    to TimeoutObservers as addTimeoutObserver
+    delegate method removeObserver to TimeoutObservers as removeTimeoutObserver
 
 
     constructor args {
 	$self configurelist $args; # To get the port.
+
+	set lastFragment [clock seconds]
 
 	#
 	# Set up the callback manager.
@@ -357,7 +429,7 @@ snit::type EVB::ConnectionManager {
 
 	after [$self _TimeoutCheckInterval] [mymethod _CheckSourceTimeouts]
 
-	install TimeoutObservers using using Observer %AUTO% -partof $self
+	install TimeoutObservers using  Observer %AUTO% 
     }
     destructor {
 	foreach object [array names connections] {
@@ -366,7 +438,7 @@ snit::type EVB::ConnectionManager {
 	}
 	close $serverSocket
 	$callbacks destroy
-	$TimeoutObservers destroy
+	# $TimeoutObservers destroy
     }
     #-----------------------------------------------------------------
     # Public methods:
@@ -438,7 +510,6 @@ snit::type EVB::ConnectionManager {
     #  @param cport - client port (we could care less).
     #
     method _NewConnection {sock client cport} {
-
 	set connection [EVB::Connection %AUTO% -socket $sock  -clientaddr $client]
 	set connections($connection) [clock seconds]; # connection's last frag time to be not-timedout.
 	$connection configure -disconnectcommand [mymethod _DisconnectClient $connection]
@@ -507,6 +578,7 @@ snit::type EVB::ConnectionManager {
 	foreach source $previouslyTimedOut {
 	    if {$source ni $timedoutSources} {
 		$TimeoutObservers UNSTALLED $source
+	    }
 	}
 
 	# Reschedule:
@@ -518,7 +590,7 @@ snit::type EVB::ConnectionManager {
     #
     # @return ms to next timeout check.
     #
-    method _TimoutCheckInterval {} {
+    method _TimeoutCheckInterval {} {
 	return [expr {int(1000*$options(-sourcetimeout)/2.0)}]
     }
 }

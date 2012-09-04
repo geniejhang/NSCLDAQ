@@ -42,6 +42,7 @@ snit::type EVB::CallbackManager {
     #
     #   Public methods:
 
+    
 
     ##
     # Define a new callback.

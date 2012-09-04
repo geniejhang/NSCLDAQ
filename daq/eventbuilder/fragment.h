@@ -56,6 +56,19 @@ namespace EVB {
 #define BARRIER_SYNCH        3  /* time synchronization barrier */
 
 
+  /* Define the null timestamp as a 64 bits with all bits set. Don't use UINT64_MAX in case
+   * there are per-platform differences and we run in a mixed platform env.
+   *
+   * Older versions of stdint define __UINT64_C but UINT64_C is c99 standard so:
+   */
+
+#ifdef UINT64_C
+#define NULL_TIMESTAMP UINT64_C(0xffffffffffffffff)
+#else
+#define NULL_TIMESTAMP __UINT64_C(0xffffffffffffffff)
+#endif
+
+
   /**
    *  The typedef below defines a fragment header.
    */ 

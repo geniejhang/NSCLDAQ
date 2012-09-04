@@ -526,9 +526,17 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
     uint64_t timestamp = pHeader->s_timestamp;
     bool     isBarrier = pHeader->s_barrier != 0;
 
+
     memcpy(&(pFrag->s_header), pHeader, sizeof(EVB::FragmentHeader));
     memcpy(pFrag->s_pBody, pFragment->s_body, pFrag->s_header.s_size);
 
+    // If the timestamp is null, assign the newest timestamp to it:
+
+    if (timestamp == NULL_TIMESTAMP) {
+      timestamp = m_nNewest;
+      pFrag->s_header.s_timestamp = timestamp;
+    }
+    
     // If the timestamp is late we need to invoke datalate on this fragment:
     // though barrier event timestamps are meaningless:
 

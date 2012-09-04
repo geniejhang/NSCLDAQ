@@ -149,7 +149,7 @@ public:
     virtual ~PartialBarrierObserver() {}
   public:
     virtual void operator()(const std::vector<std::pair<uint32_t, uint32_t> >& barrierTypes, 
-			    const std::vector<uint32_t>& missingSources);
+			    const std::vector<uint32_t>& missingSources) = 0;
   };
 
 
