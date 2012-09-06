@@ -320,8 +320,7 @@ snit::type EVB::Connection {
 	set options(-description) $description
 	$self _Expecting _Fragments ACTIVE
 
-        # TODO:  Communicate the sourceids to the fragment handler.
-	#
+	EVB::source {*}$sourceIds
  
     }
     #
@@ -569,9 +568,10 @@ snit::type EVB::ConnectionManager {
 	foreach source $timedoutSources {
 	    if {$source ni $previouslyTimedOuts} {
 		$TimeoutObservers invoke STALLED $source
+		EVB::deadsource $source; # Indicate source dead to fragment handler.
 	    }
 	}
-	# Invoke observers that are no longer  stalled:
+	# invoke observers that are no longer  stalled:
 	# Invocation is of the form.
 	#    observer UNSTALLED $source
 	#

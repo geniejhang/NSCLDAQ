@@ -86,7 +86,8 @@ public:
 private:
   int operator()(int argc, char** argv);
 
-  void EVBConnect(const char* host, const char* port, const char* description);
+  void EVBConnect(const char* host, const char* port, const char* description,
+		  std::list<int> sourceIds);
   void ReportError(const char* context, const char* pType, const char* message);
   int  LookupService(const char* serviceName);
 

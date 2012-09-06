@@ -30,6 +30,13 @@
 #endif
 #endif
 
+#ifndef __STL_SET
+#include <set>
+#ifndef __STL_SET
+#define __STL_SET
+#endif
+#endif
+
 
 #ifndef __STL_LIST
 #include <list>
@@ -181,6 +188,7 @@ private:
   std::list<PartialBarrierObserver*> m_partialBarrierObservers;
   Sources                      m_FragmentQueues;
   bool                         m_fBarrierPending;      //< True if at least one queue has a barrier event.
+  std::set<uint32_t>           m_liveSources;	       //< sources that are live.
 
 
 
@@ -231,9 +239,11 @@ public:
 
   void flush();
   
-  // Get state of the queues etc.
+  // Get/set state of the queues etc.
 
-    InputStatistics getStatistics();
+  InputStatistics getStatistics();
+  void createSourceQueue(uint32_t id);  
+  void markSourceFailed(uint32_t id);
 
   // utility methods:
 
@@ -250,11 +260,12 @@ private:
   void generateMalformedBarrier(std::vector<EVB::pFragment>& outputList);
   void generateCompleteBarrier(std::vector<EVB::pFragment>& ouptputList); 
   
-  void goodBarrier(std::vector<EVB::pFragment>& outptuList);
+  void goodBarrier(std::vector<EVB::pFragment>& outputList);
   void partialBarrier(std::vector<std::pair<uint32_t, uint32_t> >& types, 
 		 std::vector<uint32_t>& missingSources);
   void observeGoodBarrier(std::vector<std::pair<uint32_t, uint32_t> >& types);
   void findOldest();
+  size_t countPresentBarriers() const;
 };
 
 

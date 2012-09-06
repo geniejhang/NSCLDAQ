@@ -1,4 +1,4 @@
-;/*
+/*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
 
@@ -126,6 +126,29 @@ CFragmentHandler::addFragments(size_t nSize, EVB::pFlatFragment pFragments)
     if ((m_nNewest - m_nOldest) > m_nBuildWindow*2) {
       flushQueues();
     }
+    // If all live queues have barriers at the front we need
+    // to flush too...the type of flush depends on whether there
+    // are dead sources:
+
+    if (countPresentBarriers() == m_liveSources.size()) {
+
+      std::vector<EVB::pFragment> barrierFrags;
+
+      // If there are no dead sources its complete
+
+      if (m_liveSources.size() == m_FragmentQueues.size()) {
+
+	generateCompleteBarrier(barrierFrags);
+	
+      } else {
+	// otherwise it's not complete.
+
+	generateMalformedBarrier(barrierFrags);
+
+      }
+      observe(barrierFrags);
+    }
+
 
 }
 /**
@@ -339,6 +362,51 @@ CFragmentHandler::getStatistics()
     
     return result;
 }
+/**
+ * createSourceQueue
+ *
+ *  Creates a fragment queue for a source id.  This is called to set up 
+ *  an  initial set of a-priori queues in order to make initial barrier
+ *  handling simpler.  If the queue already exists, this is a no-op.
+ *
+ * @param[in] id  - source id of the queue.
+ */
+void
+CFragmentHandler::createSourceQueue(uint32_t id)
+{
+  SourceQueue& queue = m_FragmentQueues[id]; // creates if needed.
+  m_liveSources.insert(id);		     // Sources start live.
+}
+
+/**
+ * markSourceFailed
+ *
+ * Marks a source as failed.  This just removes it from the live sources
+ * set but maintains its input queue.  If there are dead sources,
+ * - Barrier synchronization can proceed without them.
+ * - All barriers synchronizations are considered incomplete.
+ * 
+ * @note receipt of a fragment from a source automatically makes it live again. 
+ *
+ * @param[in] id - Id of the source to mark, as dead.
+ */
+void
+CFragmentHandler::markSourceFailed(uint32_t id)
+{
+  m_liveSources.erase(id);
+  
+  // If there's a pending barrier synchronization and all of the missing
+  // sources are dead do an incomplete barrier.
+  //
+  if(m_fBarrierPending) {
+    if (countPresentBarriers() == m_liveSources.size()) {
+      std::vector<EVB::pFragment> sortedFragments;
+      generateMalformedBarrier(sortedFragments);
+      observe(sortedFragments);
+    }
+  }
+}
+
 /*---------------------------------------------------------------------
  ** Utility methods (private).
  */
@@ -374,22 +442,18 @@ CFragmentHandler::flushQueues(bool completely)
     }
     
   }
-  // TODO: Figure out how to deal with partial barriers when data is flowing!
-  //       suggest - m_fBarrierPending is coupled to a counter of the number
-  //                 of build periods for which thats true and 
-  //                 we only allow some fixed # of build periods for barriers to stay
-  //                 pending before triggering a malformed barrier.!!
 
   // If a complete flush and barrier is still pending we have a malformed barrier:
   // - recurse to process the frags behind the barrier.
   //
   if (m_fBarrierPending && completely) {
     generateMalformedBarrier(sortedFragments);
+    observe(sortedFragments);    
     flushQueues(completely);
+  } else {
+    observe(sortedFragments);
   }
-  // Let the consumers deal with the fragments. 
 
-  observe(sortedFragments);
     
 }
 
@@ -548,6 +612,7 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
     
     SourceQueue& destQueue(m_FragmentQueues[pHeader->s_sourceId]);
     destQueue.push(pFrag);
+    m_liveSources.insert(pHeader->s_sourceId); // having a fragment makes a source live.
     
     // update newest/oldest if needed -- and not a barrier:
     // 
@@ -557,6 +622,7 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
       if (timestamp < m_nOldest) m_nOldest = timestamp;
       if (timestamp > m_nNewest) m_nNewest = timestamp;
     }
+
 }
 /**
  * totalFragmentSize
@@ -802,4 +868,23 @@ CFragmentHandler::partialBarrier(std::vector<std::pair<uint32_t, uint32_t> >& ty
     (*p)->operator()(types, missingSources);
   }
 
+}
+/**
+ * countPresentBarriers
+ *
+ *  Counts the number of queues with barriers that are at their heads.
+ *  
+ * @return size_t - number of fragment queues that have barriers at their head.
+ */
+size_t
+CFragmentHandler::countPresentBarriers() const
+{
+  size_t count;
+  for (Sources::const_iterator p = m_FragmentQueues.begin(); p != m_FragmentQueues.end(); p++) {
+    const SourceQueue& queue(p->second);
+    
+    EVB::pFragment pFront = queue.front();
+    if (pFront->s_header.s_barrier) count++;
+  }
+  return count;
 }

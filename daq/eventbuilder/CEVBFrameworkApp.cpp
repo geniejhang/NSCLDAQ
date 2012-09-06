@@ -21,6 +21,7 @@
 #include "fragment.h"
 
 
+
 #include <Exception.h>
 #include <ErrnoException.h>
 
@@ -212,8 +213,7 @@ CEVBFrameworkApp::operator()(int argc, char** argv)
   std::string evbhost = options.getHost();
   std::string evbport = options.getPort();
   std::string description = options.getDescription();
-  m_pArgs = options.getArgs();
-
+  std::list<int> sourceIds = options.getSourceIds();
 
 
   /**
@@ -223,9 +223,9 @@ CEVBFrameworkApp::operator()(int argc, char** argv)
   const char* pContext;
 
   try {
-    pContext = "Connecting to the event builder";
-    EVBConnect(evbhost.c_str(), evbport.c_str(), description.c_str());
 
+    pContext = "Connecting to the event builder";
+    EVBConnect(evbhost.c_str(), evbport.c_str(), description.c_str(), sourceIds);
 
     /**
      * Initialize all of the fragment sources in m_sources
@@ -285,16 +285,18 @@ CEVBFrameworkApp::operator()(int argc, char** argv)
 /**
  * Connect to the event builder.
  *
- * @param host - Host on which the event buidler is running.
- * @param port - If this is 'managed', we use the port manager to locate the server.
+ * @param[in] host - Host on which the event buidler is running.
+ * @param[in]  port - If this is 'managed', we use the port manager to locate the server.
  *               otherwise this must be either an integer (in which case it is the port number)
  *               or a service name that can be translated by getservbyname_r
- * @param description - Describes the connection.
+ * @param[in] description - Describes the connection.
+ * @param[in] sources - List of source ids that are being provided by this client. 
  *
  * @note If successful, a pointer to the resulting connection is stored in m_pBuilder.
  */
 void
-CEVBFrameworkApp::EVBConnect(const char* host, const char* port, const char* description)
+CEVBFrameworkApp::EVBConnect(const char* host, const char* port, const char* description,
+			     std::list<int> sources)
 {
   uint16_t portNum;
   if (std::string("managed") == port) {
@@ -307,7 +309,7 @@ CEVBFrameworkApp::EVBConnect(const char* host, const char* port, const char* des
   }
 
   m_pBuilder = new CEventOrderClient(std::string(host), portNum);
-  m_pBuilder->Connect(std::string(description));
+  m_pBuilder->Connect(std::string(description), sources);
 }
 
 /**

@@ -16,6 +16,7 @@
 #include "GetOpt.h"
 #include "cmdline.h"
 #include <string.h>
+#include <stdlib.h>
 
 /**
  * GetOpt.cpp - Implementation of the GetOpt class.  This class lives in the skeleton
@@ -86,6 +87,25 @@ GetOpt::getDescription() const
 {
   return std::string(m_pArgs->info_arg);
 }
+/**
+ * getSourceIds
+ *
+ *  returns a list of the source ids that are specified in the --ids required 
+ *  option.
+ *
+ * @return std::list<int> - the source id values.
+ */
+std::list<int>
+GetOpt::getSourceIds() const
+{
+  std::list<int> result;
+
+  for (int i = 0; i < m_pArgs->ids_given; i++) {
+    result.push_back(m_pArgs->ids_arg[i]);
+  }
+  return result;
+}
+
 /**
  * The application maintains a pointer to the command line parsed into a struct.
  * Ths returns a pointer to a copy of that.  Returning a copy allows this to be 

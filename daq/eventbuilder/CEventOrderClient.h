@@ -76,7 +76,7 @@ public:
 
   // Object operations:
 public:
-  void Connect(std::string description);
+  void Connect(std::string description, std::list<int> sources);
   void disconnect();
   void submitFragments(EVB::pFragmentChain pChain);
   void submitFragments(size_t nFragments, EVB::pFragment ppFragments);

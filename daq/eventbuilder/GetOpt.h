@@ -24,6 +24,14 @@
 #endif
 #endif
 
+#ifndef __STL_LIST
+#include <list>
+#ifndef __STL_LIST
+#define __STL_LIST
+#endif
+#endif
+
+
 struct gengetopt_args_info;
 /**
  * GetOpt.h - header for the option management class.  This class is needed
@@ -46,6 +54,7 @@ public:
   std::string getHost() const;
   std::string getPort() const;
   std::string getDescription() const;
+  std::list<int> getSourceIds() const;
   struct gengetopt_args_info* getArgs();
 
   

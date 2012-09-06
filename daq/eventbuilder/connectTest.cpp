@@ -14,6 +14,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <list>
 
 class connectTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(connectTests);
@@ -45,9 +46,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION(connectTests);
 void connectTests::noServer() {
   bool thrown = false;
   bool  rightException = false;
+  std::list<int> types;
   try {
     CEventOrderClient client("localhost", 11223);
-    client.Connect("TestClient");
+    client.Connect("TestClient", types);
   }
   catch (CErrnoException& e) {
     thrown = true;
@@ -129,8 +131,9 @@ void connectTests::serverOk() {
   } else {			// child
     sleep(2);
     try {
-    CEventOrderClient client("localhost", CEventOrderClient::Lookup("localhost"));
-    client.Connect("test connection");
+      std::list<int> types;
+      CEventOrderClient client("localhost", CEventOrderClient::Lookup("localhost"));
+      client.Connect("test connection", types);
     }
     catch (...) {}
     exit(0);
@@ -211,7 +214,8 @@ connectTests::serverError()
     CEventOrderClient client("localhost", CEventOrderClient::Lookup("localhost"));
      
     try {
-      client.Connect("test connection");
+      std::list<int> types;
+      client.Connect("test connection", types);
     }
     catch (CErrnoException& e) {
       threw = true;
