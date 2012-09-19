@@ -87,6 +87,32 @@ static bool usbInitialized(false);
 
 /////////////////////////////////////////////////////////////////////
 
+static int ReadBlock(CSocket& sock, void* pData, size_t nBytes)
+{
+  char *d = reinterpret_cast<char*>(pData);
+  int bytesRead = 0;
+
+  while (nBytes) {
+    int nRead = sock.Read(d, nBytes);
+    if (nRead > 0) {
+      nBytes    -= nRead;
+      bytesRead += nRead;
+      d         += nRead;
+    }
+    else if (nRead == 0) {
+      break;			// EOF
+    } else {
+      if ((errno != EINTR) && (errno != EAGAIN) && (errno != EWOULDBLOCK)) {
+	// return the data we have already:
+
+	if (bytesRead > 0) return bytesRead;
+	return -1;		// Error!!
+      }
+    }
+  }
+  return bytesRead;
+}
+
 ////////////////////////////////////////////////////////////////////
 /*!
   Construct the CVMUSBEthernet object.  This involves storing the
@@ -936,7 +962,7 @@ CVMUSBEthernet::loadList(uint8_t listNumber, CVMUSBReadoutList& list, off_t offs
   CTCLObject command;
   command.Bind(m_pInterp);
   command += "vmusb";
-  command += "loadlist";
+  command += "load";
   command +=  static_cast<int>(listNumber);
   command +=  static_cast<int>(offset);
   command += vmeList;
@@ -1041,19 +1067,25 @@ CVMUSBEthernet::usbRead(void* pData, size_t bufferSize, size_t* transferCount,
     std::string xferCount = response.substr(3);
     int readBytes = atoi(xferCount.c_str());
     *transferCount = readBytes;
-    m_pSocket->Read(pData, readBytes);
+    int nRead = ReadBlock(*m_pSocket, pData, readBytes);
+    if (nRead < 0) {
+      return -1;
+    }
 
-    // I bet there's a terminating \r\n:
 
     
     return 0;
 
-  } else {
+  } else if (response.substr(0,5) == "FAIL:") {
     // Following "FAIL: " is what we should put in errno.
     
     errno = atoi(response.substr(5).c_str());
     return -2;
-  } 
+  } else {
+    errno = EPROTO;
+    return -2;
+  }
+
   
 }
 
