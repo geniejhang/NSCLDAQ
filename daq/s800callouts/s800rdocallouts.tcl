@@ -137,7 +137,7 @@ proc ::s800::Exit {{status 0}} {
 	    $::s800::s800 setMaster
 	    destroy $::s800::s800
 	    set ::s800::s800 ""
-	}] msg} {
+	} msg]} {
 	    puts "Failed to end s800 run: $msg"
 	}
     }
@@ -282,7 +282,7 @@ proc s800::Initialize {{host localhost} {port 8000}} {
     checkbutton .s800.record -text {Record Crate files} -variable ::s800::record \
 	-onvalue 1 -offvalue 0
     pack .s800.record
-#    set ::s800::record 1
+    set ::s800::record 1
 
     # Status data for the s800:
 
