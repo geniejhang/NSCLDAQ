@@ -71,9 +71,9 @@ int
 CSourceCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
 {
   bindAll(interp, objv);
-
+  requireAtLeast(objv, 2);
   try {
-    if (objv.size() == 1) {
+    if (objv.size() == 2) {
       return listSources(interp);
     } else {
       return addSources(objv);
@@ -140,8 +140,10 @@ CSourceCommand::addSources(std::vector<CTCLObject>& objv)
   // Convert all objv elements to ints first so that this is all or nothing.
   // the loop will throw an exception if an objv is not an integer.
 
+  std::string socketString = static_cast<std::string>(objv[1]);
+
   std::vector<uint32_t> ids;
-  for (int i = 1; i < objv.size(); i++) {
+  for (int i = 2; i < objv.size(); i++) {
     ids.push_back(static_cast<uint32_t>(static_cast<int>(objv[i]))); 
   }
   // The remainder can't fail:
@@ -149,7 +151,7 @@ CSourceCommand::addSources(std::vector<CTCLObject>& objv)
   CFragmentHandler* pHandler = CFragmentHandler::getInstance();
 
   for (int i = 0; i < ids.size(); i++) {
-    pHandler->createSourceQueue(ids[i]);
+    pHandler->createSourceQueue(socketString, ids[i]);
   }
 
   return TCL_OK;

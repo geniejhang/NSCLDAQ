@@ -1,6 +1,7 @@
-# bin_PROGRAMS=eventorderer
+#bin_PROGRAMS=eventorderer
 
-lib_LTLIBRARIES=libEventBuilder.la  libEventBuilderClient.la
+
+lib_LTLIBRARIES=libEventBuilder.la  libEventBuilderClient.la 
 
 #eventorderer_LDFLAGS= @TCL_LDFLAGS@ \
 #		-Wl,"-rpath=@libdir@" \
@@ -13,12 +14,12 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 	CDLateStatsCommand.cpp CLateScriptObserver.cpp COnLateDataCommand.cpp  \
 	CBarrierStatsCommand.cpp CBarrierStats.cpp CIncompleteBarrierStats.cpp \
 	CCompleteBarrierCallback.cpp CBarrierTraceCommand.cpp CPartialBarrierCallback.cpp \
-	CSourceCommand.cpp CDeadSourceCommand.cpp
+	CSourceCommand.cpp CDeadSourceCommand.cpp CReviveSocketCommand.cpp
 
 
 libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
-	EVBFramework.cpp
+	EVBFramework.cpp GetOpt.cpp
 
 
 FRAMEWORK_SOURCEFILES =  GetOpt.cpp Main.cpp options.ggo
@@ -34,7 +35,8 @@ noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h \
 	CInputStatsCommand.h COrdererOutput.h COutputStatsObserver.h COutputStatsCommand.h \
 	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h COnLateDataCommand.h \
 	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h CCompleteBarrierCallback.h \
-	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h CDeadSourceCommand.h
+	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h CDeadSourceCommand.h \
+	CReviveSocketCommand.h
 
 
 INCLUDES = -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS \
@@ -83,7 +85,6 @@ install-exec-hook:
 	mv $(SKELDIR)/Makefile_Skeleton $(SKELDIR)/Makefile
 
 
-GetOpt.o: GetOpt.cpp cmdline.h
 
 
 #-------------------------------------------
@@ -92,7 +93,7 @@ GetOpt.o: GetOpt.cpp cmdline.h
 
 noinst_PROGRAMS = unittests
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
-	connectTest.cpp GetOpt.cpp cmdline.c
+	connectTest.cpp  cmdline.c
 
 
 unittests_LDADD = libEventBuilderClient.la \
@@ -113,4 +114,3 @@ cmdline.h: options.ggo
 cmdline.c: options.ggo
 	$(GENGETOPT) --input=options.ggo
 
-GetOpt.o: cmdline.c cmdline.h GetOpt.cpp

@@ -34,7 +34,7 @@ snit::widget EVB::connectionList {
 	##
 	# TODO: Put this in a scrolling box.
 	#
-	ttk::treeview $win.table -columns [list Host Description State] -displaycolumns #all \
+	ttk::treeview $win.table -columns [list Host Description State Stalled?] -displaycolumns #all \
 	    -show [list headings] -height 8
 	$win.table heading #1 -text Host
 	$win.table heading #2 -text Description

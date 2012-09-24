@@ -123,7 +123,7 @@ CEventOrderClient::Connect(std::string description, std::list<int> sources)
     uint32_t* pSourceInfo = reinterpret_cast<uint32_t*>(&(connectionBody[description.size()+1]));
     *pSourceInfo++ = sources.size();
     for (std::list<int>::iterator p = sources.begin(); p != sources.end(); p++) {
-      *pSourceInfo = static_cast<uint32_t>(*p);
+      *pSourceInfo++ = static_cast<uint32_t>(*p);
     }
 
 
@@ -203,13 +203,13 @@ CEventOrderClient::submitFragments(EVB::pFragmentChain pChain)
     // Size the body buffer, allocate it and fill it in from the chain.
 
     size_t nBytes = fragmentChainLength(pChain);
-    char* pBodyBuffer = reinterpret_cast<char*>(
-            malloc(nBytes + sizeof(uint32_t))); // Need space for the size.
+    char* pBodyBuffer = reinterpret_cast<char*>(malloc(nBytes)); // Need space for the size.
     if (!pBodyBuffer) {
       throw CErrnoException("Allocating body buffer memory");
     }
-    char* pDest       = pBodyBuffer;
-    *pDest++          = nBytes;
+
+    char* pDest       = reinterpret_cast<char*>(pBodyBuffer);
+
     while (pChain) {
       memcpy(pDest, &(pChain->s_pFragment->s_header), sizeof(EVB::FragmentHeader));
       pDest += sizeof(EVB::FragmentHeader);
@@ -222,8 +222,11 @@ CEventOrderClient::submitFragments(EVB::pFragmentChain pChain)
 
     try {
       void* msg;
-      size_t msgLen = message(&msg, "FRAGMENTS", sizeof("FRAGMENTS"), pBodyBuffer, nBytes);
-      m_pConnection->Write(msg, nBytes);
+
+      // The -1 below is because we don't realy the null terminator on the strings.
+
+      size_t msgLen = message(&msg, "FRAGMENTS", sizeof("FRAGMENTS") -1 , pBodyBuffer, nBytes);
+      m_pConnection->Write(msg, msgLen);
       free(pBodyBuffer);
     
     }

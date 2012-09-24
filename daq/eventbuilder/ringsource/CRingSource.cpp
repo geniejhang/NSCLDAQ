@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 static const size_t MAX_EVENTS(1024*1024); // Max bytes of events in a getData
 
@@ -53,6 +54,9 @@ CRingSource::CRingSource(int argc, char** argv) :
   GetOpt parsed(argc, argv);
   m_pArgs = new gengetopt_args_info;
   memcpy(m_pArgs, parsed.getArgs(), sizeof(gengetopt_args_info));
+
+
+
 }
 /**
  * destructor
@@ -102,22 +106,23 @@ CRingSource::initialize()
   // Load the DLL and look up the timestamp function (putting i in m_timestamp;
   // we never do a dlclose so the DLL remains loaded in all OS's.
 
-  void* pDLL = dlopen(dlName.c_str(), RTLD_GLOBAL );
+  void* pDLL = dlopen(dlName.c_str(), RTLD_NOW);
   if (!pDLL) {
     int e = errno;
-    std::string msg = "Failed gto load shared lib ";
+    std::string msg = "Failed to load shared lib ";
     msg += dlName;
-    msg += "";
+    msg += " ";
     msg += strerror(e);
- 
+    throw msg;
   }
   m_timestamp = reinterpret_cast<tsExtractor>(dlsym(pDLL, "timestamp"));
   if (!m_timestamp) {
     int e errno;
-    std::string msg = "Failed to locate timestamp functino in ";
+    std::string msg = "Failed to locate timestamp function in ";
     msg += dlName;
     msg += " ";
     msg += strerror(e);
+    throw msg;
   }
   
 }
@@ -193,7 +198,7 @@ CRingSource::getEvents()
     frag.s_size      = pRingItem->s_header.s_size;
     frag.s_barrierType = 0;
     frag.s_payload   = pDest;
-    memcpy(pDest, p, pRingItem->s_header.s_size);
+    memcpy(pDest, pRingItem,  pRingItem->s_header.s_size);
     pDest           += pRingItem->s_header.s_size;
     bytesPackaged   += pRingItem->s_header.s_size;
 
@@ -215,6 +220,10 @@ CRingSource::getEvents()
       break;
     }
     frags.push_back(frag);
+    delete p;
+
+
+
     
   }
   // Send those fragments to the event builder:

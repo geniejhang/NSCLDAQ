@@ -15,7 +15,7 @@
 
 @SET_MAKE@
 
-# bin_PROGRAMS=eventorderer
+#bin_PROGRAMS=eventorderer
 
 
 
@@ -89,7 +89,8 @@ am_libEventBuilder_la_OBJECTS = OrdererPackage.lo \
 	CBarrierStatsCommand.lo CBarrierStats.lo \
 	CIncompleteBarrierStats.lo CCompleteBarrierCallback.lo \
 	CBarrierTraceCommand.lo CPartialBarrierCallback.lo \
-	CSourceCommand.lo CDeadSourceCommand.lo
+	CSourceCommand.lo CDeadSourceCommand.lo \
+	CReviveSocketCommand.lo
 libEventBuilder_la_OBJECTS = $(am_libEventBuilder_la_OBJECTS)
 libEventBuilderClient_la_DEPENDENCIES =  \
 	@top_builddir@/base/tcpip/libTcp.la \
@@ -98,12 +99,12 @@ libEventBuilderClient_la_DEPENDENCIES =  \
 	@top_builddir@/base/os/libdaqshm.la \
 	@top_builddir@/base/exception/libException.la
 am_libEventBuilderClient_la_OBJECTS = CEventOrderClient.lo fragment.lo \
-	CEVBClientApp.lo CEVBFrameworkApp.lo EVBFramework.lo
+	CEVBClientApp.lo CEVBFrameworkApp.lo EVBFramework.lo GetOpt.lo
 libEventBuilderClient_la_OBJECTS =  \
 	$(am_libEventBuilderClient_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_unittests_OBJECTS = TestRunner.$(OBJEXT) lookupTest.$(OBJEXT) \
-	connectTest.$(OBJEXT) GetOpt.$(OBJEXT) cmdline.$(OBJEXT)
+	connectTest.$(OBJEXT) cmdline.$(OBJEXT)
 unittests_OBJECTS = $(am_unittests_OBJECTS)
 am__DEPENDENCIES_1 = @top_builddir@/base/tclplus/libtclPlus.la \
 	@top_builddir@/base/exception/libException.la
@@ -283,11 +284,11 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 	CDLateStatsCommand.cpp CLateScriptObserver.cpp COnLateDataCommand.cpp  \
 	CBarrierStatsCommand.cpp CBarrierStats.cpp CIncompleteBarrierStats.cpp \
 	CCompleteBarrierCallback.cpp CBarrierTraceCommand.cpp CPartialBarrierCallback.cpp \
-	CSourceCommand.cpp CDeadSourceCommand.cpp
+	CSourceCommand.cpp CDeadSourceCommand.cpp CReviveSocketCommand.cpp
 
 libEventBuilderClient_la_SOURCES = CEventOrderClient.cpp fragment.c \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
-	EVBFramework.cpp
+	EVBFramework.cpp GetOpt.cpp
 
 FRAMEWORK_SOURCEFILES = GetOpt.cpp Main.cpp options.ggo
 FRAMEWORK_SKELETON = Makefile_Skeleton $(FRAMEWORK_SOURCEFILES)
@@ -298,7 +299,8 @@ noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h \
 	CInputStatsCommand.h COrdererOutput.h COutputStatsObserver.h COutputStatsCommand.h \
 	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h COnLateDataCommand.h \
 	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h CCompleteBarrierCallback.h \
-	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h CDeadSourceCommand.h
+	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h CDeadSourceCommand.h \
+	CReviveSocketCommand.h
 
 INCLUDES = -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS \
 	-I@top_srcdir@/base/tcpip \
@@ -332,7 +334,7 @@ EXTRA_DIST = protocol.xml api.xml Asserts.h \
 
 SKELDIR = @prefix@/skeletons/eventbuilder
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
-	connectTest.cpp GetOpt.cpp cmdline.c
+	connectTest.cpp  cmdline.c
 
 unittests_LDADD = libEventBuilderClient.la \
 	$(libEventBuilder_la_LIBADD) \
@@ -449,9 +451,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/COutputStatsCommand.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/COutputStatsObserver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CPartialBarrierCallback.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CReviveSocketCommand.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CSourceCommand.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/EVBFramework.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GetOpt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GetOpt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OrdererPackage.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TestRunner.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmdline.Po@am__quote@
@@ -742,8 +745,6 @@ install-exec-hook:
 	$(INSTALL_DATA) $(FRAMEWORK_SKELETON) $(SKELDIR)
 	mv $(SKELDIR)/Makefile_Skeleton $(SKELDIR)/Makefile
 
-GetOpt.o: GetOpt.cpp cmdline.h
-
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
 #	./unittests 
@@ -753,8 +754,6 @@ cmdline.h: options.ggo
 
 cmdline.c: options.ggo
 	$(GENGETOPT) --input=options.ggo
-
-GetOpt.o: cmdline.c cmdline.h GetOpt.cpp
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

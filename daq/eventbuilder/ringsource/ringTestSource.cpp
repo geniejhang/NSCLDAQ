@@ -63,6 +63,8 @@ int main(int argc, char** argv)
 
   try {
     TestSource source(ringName, eventSize);
+    source.setTimestampIncrement(args.increment_arg);
+    source.setDelay(args.delay_arg);
     source();
 		       
   }

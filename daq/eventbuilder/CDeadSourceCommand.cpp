@@ -75,10 +75,10 @@ CDeadSourceCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>&
     requireExactly(objv, 2);
     bindAll(interp, objv);
 
-    uint32_t id = static_cast<int>(objv[1]);
+    std::string socketString = static_cast<std::string>(objv[1]);
 
     CFragmentHandler* pHandler = CFragmentHandler::getInstance();
-    pHandler->markSourceFailed(id);
+    pHandler->markSocketFailed(socketString);
 
   }
   catch(std::string msg) {

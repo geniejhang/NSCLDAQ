@@ -40,10 +40,10 @@ class CTCLObject;
  * Command syntax:
  *
  * \verbatim
- *   EVB::source ?id1? ?id2? ?id3?
+ *   EVB::source ?socket? ?id1? ?id2? ?id3?
  * \endverbatim
  *
- *  Without any source ids, the list of known source ids is provided.
+ *  Without any socket/source ids, the list of known source ids is provided.
  */
 
 class CSourceCommand : public CTCLObjectProcessor

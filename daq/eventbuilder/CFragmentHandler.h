@@ -16,6 +16,13 @@
 #ifndef __CFRAGMENTHANDLER_H
 #define __CFRAGMENTHANDLER_H
 
+#ifndef __STL_STRING
+#include <string>
+#ifndef __STL_STRING
+#define __STL_STRING
+#endif
+#endif
+
 #ifndef __STL_QUEUE
 #include <queue>
 #ifndef __STL_QUEUE
@@ -51,6 +58,21 @@
 #define __CRT_STDINT_H
 #endif
 #endif
+
+#ifndef __CRT_TIME_H
+#include <time.h>
+#ifndef __CRT_TIME_H
+#define __CRT_TIME_H
+#endif
+#endif
+
+#ifndef __TCL_H
+#include <tcl.h>
+#ifndef __TCL_H
+#define __TCL_H
+#endif
+#endif
+
 
 
 
@@ -90,7 +112,7 @@ class CFragmentHandler
 private:
   // Private data types:
     
-  typedef std::queue<EVB::pFragment> SourceQueue, *pSourceQueue;
+  typedef std::queue<std::pair<time_t, EVB::pFragment> > SourceQueue, *pSourceQueue;
   typedef std::map<uint32_t, SourceQueue> Sources, *pSources;
   typedef std::pair<uint32_t, SourceQueue> SourceElement, *pSourceElement;
   typedef std::pair<const uint32_t, SourceQueue> SourceElementV;
@@ -179,9 +201,17 @@ private:
 private:
   static CFragmentHandler* m_pInstance;	     //< The unique instance of this class.
 private:
-  uint64_t                     m_nOldest;              //< Oldest fragment seen in terms of ticks.
-  uint64_t                     m_nNewest;              //< Newest fragment seen in terms of ticks.
-  uint64_t                     m_nBuildWindow;
+  uint64_t                     m_nOldest;              //!< Oldest fragment seen in terms of ticks.
+  uint64_t                     m_nNewest;              //!< Newest fragment seen in terms of ticks.
+  uint64_t                     m_nMostRecentlyPopped;    //!< Most recently popped fragment in ticks.
+
+  time_t                       m_nBuildWindow;
+  time_t                       m_nNow;
+  time_t                       m_nOldestReceived;
+
+
+  uint32_t                     m_nFragmentsLastPeriod; //!< # fragments in last flush check interval.
+
   std::list<Observer*>         m_OutputObservers;
   std::list<DataLateObserver*> m_DataLateObservers;
   std::list<BarrierObserver*>  m_goodBarrierObservers;
@@ -189,8 +219,8 @@ private:
   Sources                      m_FragmentQueues;
   bool                         m_fBarrierPending;      //< True if at least one queue has a barrier event.
   std::set<uint32_t>           m_liveSources;	       //< sources that are live.
-
-
+  std::map<std::string, std::list<uint32_t> > m_socketSources; //< Each socket name has a list of source ids.
+  std::map<std::string, std::list<uint32_t> > m_deadSockets;   //< same as above but for dead sockets.
 
 
 
@@ -219,7 +249,7 @@ public:
 public:
   void addFragments(size_t nSize, EVB::pFlatFragment pFragments);
 
-  void setBuildWindow(uint64_t windowWidth);
+  void setBuildWindow(time_t windowWidth);
 
   // Observer management:
 
@@ -242,14 +272,16 @@ public:
   // Get/set state of the queues etc.
 
   InputStatistics getStatistics();
-  void createSourceQueue(uint32_t id);  
+  void createSourceQueue(std::string socketName, uint32_t id);  
   void markSourceFailed(uint32_t id);
+  void markSocketFailed(std::string sockName);
+  void reviveSocket(std::string sockName);
 
   // utility methods:
 
 private:
   void flushQueues(bool completely=false);
-  ::EVB::pFragment popOldest();
+  std::pair<time_t, ::EVB::pFragment>* popOldest();
   void   observe(const std::vector<EVB::pFragment>& event); // pass built events on down the line.
   void   dataLate(const ::EVB::Fragment& fragment);		    // Data late handler.
   void   addFragment(EVB::pFlatFragment pFragment);
@@ -266,6 +298,11 @@ private:
   void observeGoodBarrier(std::vector<std::pair<uint32_t, uint32_t> >& types);
   void findOldest();
   size_t countPresentBarriers() const;
+
+
+  // Static private methods:
+
+  static void IdlePoll(ClientData obj);
 };
 
 

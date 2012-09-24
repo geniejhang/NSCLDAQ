@@ -14,6 +14,9 @@
 	     East Lansing, MI 48824-1321
 */
 #include "CFragmentHandlerCommand.h"
+#include "fragment.h"
+#include "CFragmentHandler.h"
+
 #include <TCLInterpreter.h>
 #include <TCLObject.h>
 #include <tcl.h>
@@ -45,7 +48,7 @@ CFragmentHandlerCommand::~CFragmentHandlerCommand() {}
 /**
  * Command processor
  * - Ensure a channel name is present.
- * - Drain the message body from the channel (stub).
+ * - Drain the message body from the channel
  *
  * @param interp - reference to the encapsulated interpreter.
  * @param objv   - reference to a vetor of encpasulated Tcl_Obj*'s.
@@ -113,6 +116,10 @@ CFragmentHandlerCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObj
     
     unsigned char* pBody = Tcl_GetByteArrayFromObj(msgBody, NULL);
     
+    // pass the fragments to the fragment handler:
+
+    CFragmentHandler* pHandler = CFragmentHandler::getInstance();
+    pHandler->addFragments(*pMsgLength,  reinterpret_cast<EVB::pFlatFragment>(pBody));
 
 
   }

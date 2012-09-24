@@ -144,6 +144,7 @@ CEVBFrameworkApp::send(CEVBFragmentList& fragmentList)
     pDest->s_header.s_timestamp = psrc->s_timestamp;
     pDest->s_header.s_sourceId  = psrc->s_sourceId;
     pDest->s_header.s_size      = psrc->s_size;
+    pDest->s_header.s_barrier   = psrc->s_barrierType;
     pDest->s_pBody                = psrc->s_payload;
 
     evbList.push_back(pDest);
@@ -277,7 +278,10 @@ CEVBFrameworkApp::operator()(int argc, char** argv)
     ReportError(pContext, "CException", e.ReasonText());
     return EXIT_FAILURE;
   }
-
+  catch(std::exception& e) {
+    ReportError(pContext, "std::exception", e.what());
+    return EXIT_FAILURE;
+  }
   return EXIT_SUCCESS;
 }
 

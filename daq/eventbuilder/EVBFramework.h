@@ -57,6 +57,7 @@ typedef struct _ClientEventFragment {
   uint64_t s_timestamp;
   uint32_t s_sourceId;
   uint32_t s_size;
+  uint32_t s_barrierType;
   void*    s_payload;
   
 } ClientEventFragment, *pClientEventFragment;

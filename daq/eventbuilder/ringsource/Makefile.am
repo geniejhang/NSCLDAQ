@@ -1,11 +1,18 @@
 bin_PROGRAMS    = ringFragmentSource
 noinst_PROGRAMS = ringTestSource
+lib_LTLIBRARIES= libTimeExtractorTest.la libS800TimeExtractor.la
+
+libTimeExtractorTest_la_SOURCES = testTimeExtractor.c	
+
+libS800TimeExtractor_la_SOURCES = s800timestamp.c
+
+
 
 ringFragmentSource_SOURCES=cmdline.c CRingSource.cpp Main.cpp
 
 ringTestSource_SOURCES= ringTestSource.cpp ringtestoptions.c TestSource.cpp
 
-noinst_HEADERS=CRingSource.h
+noinst_HEADERS=CRingSource.h s800.h
 
 
 BUILT_SOURCES = cmdline.c GetOpt.cpp ringtestoptions.c
@@ -30,7 +37,11 @@ ringtestoptions.c: ringtestoptions.ggo
 ringTestSource_LDADD = \
 	@top_builddir@/daq/format/libdataformat.la \
 	@top_builddir@/base/dataflow/libDataFlow.la \
-	@top_builddir@/base/exception/libException.la
+	@top_builddir@/base/exception/libException.la \
+	-ldl 
+
+.PHONY: 
+	rm -rf $(BUILT_SOURCES)
 
 clean-local:
 	-rm -rf $(BUILT_SOURCES)

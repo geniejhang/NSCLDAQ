@@ -31,6 +31,7 @@
 #include "CBarrierTraceCommand.h"
 #include "CSourceCommand.h"
 #include "CDeadSourceCommand.h"
+#include "CReviveSocketCommand.h"
 
 static const char* version = "1.0"; // package version string.
 
@@ -57,6 +58,8 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
   new CBarrierTraceCommand(*pInterpObject, "EVB::barriertrace");
   new CSourceCommand(*pInterpObject, "EVB::source"); //  namespace prevents conflict with core source
   new CDeadSourceCommand(*pInterpObject,"EVB::deadsource");
+  new CReviveSocketCommand(*pInterpObject, "EVB::reviveSocket");
+
 
   // Setup the output stage:
 

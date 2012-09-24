@@ -278,7 +278,7 @@ snit::type EVB::Connection {
 	# The header is a string, but the body is a counted binary block:
 
 	if {[catch {$self _ReadCountedString $socket} header]} {
-	    puts $socket "ERROR {Could not read header expecting CONNECT}"
+	    catcl {puts $socket "ERROR {Could not read header expecting CONNECT}"}; # Might fail.
 	    $self _Close ERROR
 	    return
 	}
@@ -292,14 +292,14 @@ snit::type EVB::Connection {
 	#
 
 	if {$header ne "CONNECT"} {
-	    puts $socket "ERROR {Expected CONNECT}"
+	    catch {puts $socket "ERROR {Expected CONNECT}"}
 	    $self _Close ERROR
 	    return
 	}
 
 
 	if {[string length $body] == 0} {
-	    puts $socket "ERROR {Empty Body}"
+	    catch {puts $socket "ERROR {Empty Body}"}
 	    $self _Close ERROR
 	    return
 	}
@@ -309,10 +309,9 @@ snit::type EVB::Connection {
 
 	set decodedBody [$self _DecodeConnectBody $body]
 	set description [lindex $decodedBody 0]
-	set sourceIds   [lindex $decodeBody 1]
+	set sourceIds   [lindex $decodedBody 1]
 
 
-	puts "Body: $decodedBody"
 
 	# Save the description and transition to the active state:
         # Register ourself with the event builder core
@@ -320,7 +319,8 @@ snit::type EVB::Connection {
 	set options(-description) $description
 	$self _Expecting _Fragments ACTIVE
 
-	EVB::source {*}$sourceIds
+
+	EVB::source $socket {*}$sourceIds
  
     }
     #
@@ -335,12 +335,13 @@ snit::type EVB::Connection {
     method _Fragments socket {
 	set status [catch {
 	    set header [$self _ReadCountedString $socket]
-	    set body   [$self _ReadBinaryData    $socket]
+#	    set body   [$self _ReadBinaryData    $socket]
 	} msg]
 	if {[eof $options(-socket)]} {
 	    $self _Close LOST
 	    return;		# Nothing else to do.
 	}
+
 	# Protocol allows a DISCONNECT here:
 
 	if {$header eq "DISCONNECT"} {
@@ -354,13 +355,15 @@ snit::type EVB::Connection {
 
 	    EVB::handleFragment $socket
 
-	    $callbacks -fragmentcommand [list] [list]
+
+	    $callbacks invoke -fragmentcommand [list] [list]
 
 	    
 	    puts $socket "OK"
 
 	} else {
 	    # Anything else is a crime against The Protocol:
+
 
 	    puts $socket "ERROR {Unexpected header: $header}"
 
@@ -483,10 +486,18 @@ snit::type EVB::ConnectionManager {
     #
     method _DisconnectClient object {
 
-	if {[array names $connections $object] ne ""} {
+	if {[array names connections $object] ne ""} {
 
 	    $callbacks invoke -disconnectcommand [list %O %H %D] \
 		[list $object [$object cget -clientaddr] [$object cget -description]]
+	    
+	    # If the connection is stalled, remove it from the stalled list:
+
+	    set stallIndex [lsearch -exact $timedoutSources $object]
+	    if {$stallIndex != -1} {
+		set timedoutSources [lreplace $timedoutSources $stallIndex $stallIndex]
+	    }
+
 	    unset connections($object)
 	    $object destroy
 	} else {
@@ -535,9 +546,15 @@ snit::type EVB::ConnectionManager {
     #
     # @param connection - the connection that just got the fragment.
     #
-    method _RecordConnection connection {
+    method _RecordFragment connection {
 	set connections($connection) [clock seconds]
 	set lastFragment [clock seconds]
+
+	if {$connection in $timedoutSources} {
+	    EVB::reviveSocket [$connection cget -socket]
+	    set cindex [lsearch -exact $timedoutSources $connection]
+	    set timedoutSources [lreplace $timedoutSources $cindex $cindex]
+	}
     }
     ##
     #  Check for lack of data on data sources;
@@ -547,14 +564,15 @@ snit::type EVB::ConnectionManager {
     #
     method _CheckSourceTimeouts {} {
 
-	set previouslyTimedOut [timedoutSources]
-	set timedoutSources [list]; # Assume it's all just peachy.
+
+	set previouslyTimedOut $timedoutSources
 
 	# Only care if we're getting fragments:
 
 	set now [clock seconds]
 	if {($now - $lastFragment) < $options(-sourcetimeout)} {
-	    foreach connection [array names $connections] {
+	    set timedoutSources [list]; # Assume it's all just peachy.
+	    foreach connection [array names connections] {
 		if {($now - $connections($connection)) > $options(-sourcetimeout)} {
 		    lappend timedoutSources $connection
 		}
@@ -566,24 +584,26 @@ snit::type EVB::ConnectionManager {
 	#   observer STALLED connection
 
 	foreach source $timedoutSources {
-	    if {$source ni $previouslyTimedOuts} {
-		$TimeoutObservers invoke STALLED $source
-		EVB::deadsource $source; # Indicate source dead to fragment handler.
+	    if {$source ni $previouslyTimedOut} {
+		catch {$TimeoutObservers invoke STALLED $source} msg
+		EVB::deadsource [$source cget  -socket]; # Indicate source dead to fragment handler.
 	    }
 	}
+
 	# invoke observers that are no longer  stalled:
 	# Invocation is of the form.
 	#    observer UNSTALLED $source
 	#
 	foreach source $previouslyTimedOut {
 	    if {$source ni $timedoutSources} {
-		$TimeoutObservers UNSTALLED $source
+		catch {$TimeoutObservers invoke  UNSTALLED $source} msg
 	    }
 	}
 
+
 	# Reschedule:
 
-	after [$self _TimeoutCheckInterval] [mymethod $_CheckSourceTimeouts]
+	after [$self _TimeoutCheckInterval] [mymethod _CheckSourceTimeouts]
     }
     ##
     # compute the timeout check interval:

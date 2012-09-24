@@ -71,6 +71,8 @@ private:
   CRingBuffer* m_pBuffer;
   uint32_t     m_sourceId;
   tsExtractor  m_timestamp;
+  bool         m_stall;
+  uint32_t     m_stallCount;
 
  
   
