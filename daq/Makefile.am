@@ -1,1 +1,1 @@
-SUBDIRS = format readoutgui s800callouts eventbuilder
+SUBDIRS = format readoutgui s800callouts eventbuilder eventbuilder/ringsource
