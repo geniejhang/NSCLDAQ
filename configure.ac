@@ -24,7 +24,6 @@ AC_CHECK_PROG(MANDB, mandb, mandb, echo)
 AC_CHECK_LIB([X11], [XSetWindowBackground])
 AC_CHECK_LIB([Xt], [XtManage])
 AC_CHECK_LIB([cppunit], [_ZN7CppUnit12XmlOutputterD1Ev], [CPPUNIT_LDFLAGS=-lcppunit])
-AC_CHECK_LIB([pub], [xrealloc], [])
 
 
 
@@ -534,6 +533,7 @@ AC_CONFIG_FILES([Makefile
 		 daq/readoutgui/InstallRoot.tcl
 		 daq/s800callouts/Makefile
 		 daq/eventbuilder/Makefile daq/eventbuilder/Makefile_Skeleton
+		 daq/eventbuilder/ringsource/Makefile
 		 sbs/Makefile
 		 sbs/driver/Makefile
 		 sbs/driver/src/Makefile
