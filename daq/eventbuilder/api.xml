@@ -580,6 +580,247 @@ main(char** argv, int argc)
             </varlistentry>
         </variablelist>
     </section>
+    <section>
+        <title>ringFragmentSource - a prepackaged client for ringbuffer data sources</title>
+        <para>
+            The <filename>ringFragmentSource</filename> program provides a mostly pre-packaged
+            program that efficiently gets data from a ring buffer and efficiently
+            submits it to an event builder.  Since event data in a ring buffer
+            may have arbitrary format, the user must supply software to extract
+            the timestamp from each event. This software is supplied in the form
+            of a shared object library.
+        </para>
+        <para>
+            A pre-packaged timestamp extraction library for the S800 is supplied
+            and will be maintained in
+            <filename>$DAQROOT/lib/libS800TimeExtractor.so</filename>
+        </para>
+        <para>
+            In addition to the standard ring client framework command options,
+            the following switches are are required.
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term><option>--ring</option>=<replaceable>ring-uri</replaceable></term>
+                <listitem>
+                    <para>
+                        Defines the ring from which data will be acquired.  This can
+                        be local (<filename>tcp://localhost/</filename><replaceable>ringname</replaceable>),
+                        or remote (<filename>tcp://</filename><replaceable>somwhere</replaceable><filename>.nscl.msu.edu/</filename><replaceable>ringname</replaceable>)
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>--timestampextactor</option>=<replaceable>file-path</replaceable></term>
+                <listitem>
+                    <para>
+                        Specifies the path to the shared library you have built
+                        that extracts timestamps from ring events.
+                        For the s800 pre-built extractor this should be
+                        <filename>$DAQHOST/lib/libS800TimeExtractor.so</filename>
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+        <section>
+            <title>Writing and building timestamp extractors.</title>
+            <para>
+                This section describes how to write timestamp extractors.
+                The source code for the s800 timestamp extractor is also
+                given as an annotated example.
+            </para>
+            <para>
+                Timestamp extractors must provide an entry point named
+                <function>timestamp</function>.  This function takes a single
+                argument; the pointer to the Physics Ring Item which must
+                be analzed.  The function must return a 64 bit timestamp as
+                its result (<type>uint64_t</type>).
+            </para>
+            <para>
+                If the timestamp extractor is written in C++, you must declare
+                the <function>timestamp</function>
+                function as <literal>extern "C"</literal>. You do not need
+                to do this if <function>timestamp</function> is writte in C.
+            </para>
+            <para>
+                Let's look at the timestamp extractor for the S800.  We are not
+                going to bother with the <filename>s800.h</filename> header
+                file.  The actual values of each symbol defined in that file
+                are unimportant.  We'll just explain the meaning of the symbols
+                it defines that we need.
+            </para>
+            <example>
+                <title>S800 timestamp extractor (<filename>s800timestamp.c</filename></title>
+                <programlisting>
+#include "s800.h"                       <co id="s800tstamp_include" />
+#include &lt;DataFormat.h&gt;           <co id="s800tstamp_datafmtinclude" />
+#include &lt;assert.h&gt;
+#include &lt;stdint.h&gt;
+
+
+uint64_t
+timestamp(pPhysicsEventItem item)      <co id='s800tstamp_timestampentry' />
+{
+  pS800event pFullEvent;
+  pS800timestamp pTimestamp;
+  ppacket    pNextPacket;
+  uint16_t*  pWords;
+  int64_t   nRemaining;
+  int        nPktSize;
+
+
+  pFullEvent = (pS800event)(item-&gt;s_body);  <co id='s800tstamp_body_ptr' />
+  assert(pFullEvent-&gt;s_type == S800_PACKET);
+  uint16_t versionWord = pFullEvent-&gt;s_version;  <co id='s800tstamp_checkversion' />
+  versionWord = (versionWord &amp; S800_OUTERVSNMASK) &gt;&gt; S800_OUTERVSNSHIFT;
+  assert(versionWord == S800_OUTERVERSION);
+
+
+  nRemaining = pFullEvent-&gt;s_size * sizeof(uint16_t); <co id='s800tstamp_iterationsetup' />
+  pNextPacket= &amp;(pFullEvent-&gt;s_firstPacket);
+  nRemaining -= sizeof(S800event) - sizeof(packet);
+
+
+
+  while(nRemaining &gt; 0) {
+    if (pNextPacket-&gt;s_type == S800_TIMESTAMP_PACKET) {
+      pTimestamp = (pS800timestamp)pNextPacket;        <co id='s800tstamp_extract_ts' />
+      return (pTimestamp-&gt;s_timestamp);
+    }
+
+    nPktSize = pNextPacket-&gt;s_size;                 <co id='s800tstamp_nextpacket' />
+    pWords   = (uint16_t*)pNextPacket;
+    pNextPacket = (ppacket)(pWords + nPktSize);
+    nRemaining -= nPktSize*sizeof(uint16_t);
+  }
+
+  assert(0);                                        <co id='s800tstamp_failed' />
+
+
+}
+                </programlisting>
+            </example>
+            <para>
+                Before annotating the example, a few words about the event format.
+                The S800 ring item body leads off with a 32 bit event size.
+                The entire S800 event is encapsyualted in an S800 packet consisting
+                of a word count and a 16 bit constant:
+                <literal>S800_PACKET</literal>.  The s800 packet
+                includes a 16bit version word.   The most significant four bits
+                of that word are the overall event format while the bottom
+                12 bits are the experiment format version.
+            </para>
+            <para>
+                Following that, a set of 'packets' appear.  Each packet has
+                a 16 bit word size a 16 bit type and a payload whose size,
+                when added to the size of the packet header equals the
+                packet size word.  One of these packets of type,
+                <literal>S800_TIMESTAMP_PACKET</literal> constains
+                the timestamp.
+            </para>
+            <para>
+                The numbers in the list of comments below refer to the corresponding
+                numers in the program listing.
+            </para>
+            
+            <calloutlist>
+                <callout arearefs="s800tstamp_include">
+                    <para>
+                        The <filename>s800.h</filename> header defines the structure
+                        of the minimal set of packet definitions required to pull
+                        the timestamp out of an S800 event.  It is based on
+                        information provided by the operations technical group.
+                    </para>
+                </callout>
+                <callout arearefs="s800tstamp_datafmtinclude">
+                    <para>
+                        The <filename>DataFormat.h</filename> header defines
+                        all of the ring item data structures.  We will only be
+                        using physics event items in this code.
+                    </para>
+                </callout>
+                <callout arearefs='s800tstamp_timestampentry'>
+                    <para>
+                        This code declares the function that will be called
+                        by the event fragment data source for each physics
+                        ring item.  If this were written in C++ (or even
+                        compiled with the C++ compiler), the entire
+                        function would need to be declared <literal>extern "C"</literal>:
+                        <informalexample>
+                            <programlisting>
+extern "C" {
+uint64_t
+timestamp(pPhysicsEventItem item) 
+{
+... // function body
+}   // end function body
+}   // end extern "C" section.
+                            </programlisting>
+                        </informalexample>
+                    </para>
+                </callout>
+                <callout arearefs='s800tstamp_body_ptr'>
+                    <para>
+                        The function is given a pointer to the entire ring item.
+                        In the case of the S800, we only care about the event
+                        body.  This line of code produces a pointer to the event
+                        body.
+                    </para>
+                    <para>
+                        The typecast makes that pointer (normally a <type>void*</type>)
+                        a pointer to a struct that represents the outermost
+                        layer of an S800 event.
+                    </para>
+                </callout>
+                <callout arearefs='s800tstamp_checkversion'>
+                    <para>
+                        The outermost event structure includes a format
+                        version level.  The top four bits of this version indicate
+                        the revision level of the outer packet format.  This is
+                        checked.  If different than what was expected, the
+                        <literal>assert()</literal> call will cause the entire
+                        program to exit.
+                    </para>
+                    <para>
+                        This drastic action is taken becaus if we cannot
+                        ensure that the version is one we know about, we can't
+                        ensure that the correct timestamp can be extracted from
+                        the events.   Even worse than failing later on would be
+                        to send events with bad timestamp values.
+                    </para>
+                </callout>
+                <callout arearefs='s800tstamp_iterationsetup'>
+                    <para>
+                        This section sets up to iterate through the set of packets
+                        in the event.
+                    </para>
+                </callout>
+                <callout arearefs='s800tstamp_extract_ts'>
+                    <para>
+                        If the next packet is a timestamp packet, the timestamp is
+                        extracted from it and returned to the caller.  
+                    </para>
+                </callout>
+                <callout arearefs='s800tstamp_nextpacket'>
+                    <para>
+                        If the current packet is not the timestamp packet,
+                        the pointer to the next packet is computed and
+                        the search continues.
+                    </para>
+                </callout>
+                <callout arearefs='s800tstamp_failed'>
+                    <para>
+                        If, after all packets in the event are examined,
+                        no timestamp packet is seen, this <literal>assert</literal>
+                        exits the program.  The assumption is that something is
+                        very seriously wrong either with the event format
+                        or with the timestamp extractor.
+                    </para>
+                </callout>
+            </calloutlist> 
+            
+        </section>
+    </section>
 </chapter>
 <!-- /chapter -->
 <!-- chapter libraries -->

@@ -273,7 +273,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-lib_LTLIBRARIES = libEventBuilder.la  libEventBuilderClient.la
+lib_LTLIBRARIES = libEventBuilder.la  libEventBuilderClient.la 
 
 #eventorderer_LDFLAGS= @TCL_LDFLAGS@ \
 #		-Wl,"-rpath=@libdir@" \

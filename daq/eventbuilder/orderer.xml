@@ -1,18 +1,18 @@
 <!-- manpage 1daq -->
-      <refentry id="s800ringsource">
+      <refentry id="daq1-evbclientfw-run">
         <refmeta>
-           <refentrytitle>S800 Ring fragment data source</refentrytitle>
+           <refentrytitle id="daq1-evbclientfw-run-title">Event builder client framework</refentrytitle>
            <manvolnum>1daq</manvolnum>
         </refmeta>
         <refnamediv>
-           <refname>s800ringsource</refname>
-           <refpurpose>Event builder ring fragment source from s800</refpurpose>
+           <refname>Event builder client framework</refname>
+           <refpurpose>Event builder cilent framework</refpurpose>
         </refnamediv>
         
         <refsynopsisdiv>
-          <cmdsynopsis>
-              <command>
-$DAQROOT/bin/ringFragmentSource <replaceable>options...</replaceable>
+          <cmdsynopsis>    
+          <command>
+<replaceable>binary-name options...</replaceable>
           </command>
           </cmdsynopsis>
 
@@ -20,25 +20,25 @@ $DAQROOT/bin/ringFragmentSource <replaceable>options...</replaceable>
         <refsect1>
            <title>DESCRIPTION</title>
            <para>
-            Combination of the <command>ringFragmentSource</command> with a
-            timestamp extractor that gets the timestamp from S800 formatted
-            data.  The assumption is that the s800 data are being
-            acquired from the S800 event builder and events put in a ringbuffer
-            somewhere.
-           </para>
-           <para>
-            The main requirement is that the <option>--timestampextractor</option>
-            option be specified as <filename>$DAQROOT/lib/libs800TimeExtractor.so</filename>.
-            See OPTIONS below for a complete rundown of the command line
-            options.
+            The end result of user code build on top of the event builder
+            clienty framework is a runnable program.  The program uses
+            a .ggo file to define the set of options it supports.
+            Several options are defined for use by the framework, others
+            shared between the framework and your application code, while
+            you may add other options to the skeleton .ggo files for
+            purely application specific purposes.
            </para>
         </refsect1>
         <refsect1>
            <title>
               OPTIONS
            </title>
+           <para>
+            The options described here are those that are defined in the
+            skeleton .ggo file.
+           </para>
            <variablelist>
-                <varlistentry>
+       <varlistentry>
                     <term><option>--evbhost</option>=<replaceable>hostname</replaceable></term>
                     <listitem>
                         <para>
@@ -87,32 +87,8 @@ $DAQROOT/bin/ringFragmentSource <replaceable>options...</replaceable>
                         </para>
                     </listitem>
                 </varlistentry>
-                <varlistentry>
-                    <term><option>--ring</option>=<replaceable>ring-uri</replaceable></term>
-                    <listitem>
-                        <para>
-                            The URI describing the name of the ring from which
-                            data fragments are taken.  A ring URI is of the form:
-                            <literal>tcp://</literal><replaceable>hostname</replaceable><literal>/</literal><replaceable>ringname</replaceable>
-                            Where the <replaceable>hostname</replaceable> is the
-                            name of the host in which the ring is ultimately
-                            located and <replaceable>ringname</replaceable> is the
-                            name of that ring.
-                        </para>
-                    </listitem>
-                </varlistentry>
-                <varlistentry>
-                    <term><option>--timestampextractor</option>=<replaceable>so-path</replaceable></term>
-                    <listitem>
-                        <para>
-                            Provides the path to the shared library that contains
-                            code to extract the timestamp from each physics item
-                            packet.  For the S800 ring this should be
-                            <filename>$DAQROOT/lib/libS800TimeExtractor.so</filename>
-                        </para>
-                    </listitem>
-                </varlistentry>
-                
+          
+
            </variablelist>
         </refsect1>
 
