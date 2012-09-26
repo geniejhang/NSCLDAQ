@@ -101,17 +101,18 @@ public:
 
   static CRingItem* getFromRing(CRingBuffer& ring, CRingSelectionPredicate& predicate);
 
-  // Utilities anyone might want:
+  // Utilities derived classes might want:
 
 protected:
   static uint32_t  swal(uint32_t datum); // Swap the bytes in a longword.
+  void deleteIfNecessary();
+  void newIfNecessary(size_t size);
 
-  // Utilities.
+  // Private Utilities.
 private:
   static void blockUntilData(CRingBuffer& ring, size_t nbytes);
   void copyIn(const CRingItem& rhs);
-  void deleteIfNecessary();
-  void newIfNecessary(size_t size);
+
   
 };
 #endif

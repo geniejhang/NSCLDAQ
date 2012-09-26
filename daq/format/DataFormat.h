@@ -82,6 +82,11 @@ static const uint32_t INCREMENTAL_SCALERS = 20;
 static const uint32_t PHYSICS_EVENT = 30;
 static const uint32_t PHYSICS_EVENT_COUNT = 31;
 
+
+// Event builder related items:
+
+static const uint32_t EVB_FRAGMENT = 40; /* Event builder fragment. */
+
 // User defined item codes
 
 static const uint32_t FIRST_USER_ITEM_CODE = 32768; /* 0x8000 */
@@ -173,6 +178,19 @@ typedef struct __PhysicsEventCountItem {
   uint64_t       s_eventCount;	/* Maybe 4Gevents is too small ;-) */
 } PhysicsEventCountItem, *pPhysicsEventCountItem;
 
+/**
+ * Event builder stages can put event fragments into the
+ * ring buffer for monitoring software:
+ * (EVB_FRAGMENT):
+ */
+typedef struct _EventBuilderFragment {
+  RingItemHeader s_header;
+  uint64_t       s_timestamp;
+  uint32_t       s_sourceId;
+  uint32_t       s_barrierType;
+  uint32_t       s_payloadSize;
+  uint8_t        s_body[1];	/* Really s_payload bytes of data.. */
+} EventBuilderFragment, *pEventBuilderFragment;
 
 /**
   Below are functions that are available to format ring types.
