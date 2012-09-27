@@ -1,5 +1,5 @@
 #bin_PROGRAMS=eventorderer
-
+bin_PROGRAMS=frag2ring
 
 lib_LTLIBRARIES=libEventBuilder.la  libEventBuilderClient.la 
 
@@ -21,6 +21,7 @@ libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
 	EVBFramework.cpp GetOpt.cpp
 
+frag2ring_SOURCES=frag2ring.cpp CFragReader.cpp CFragWriter.cpp
 
 FRAMEWORK_SOURCEFILES =  GetOpt.cpp Main.cpp options.ggo
 
@@ -36,10 +37,11 @@ noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h \
 	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h COnLateDataCommand.h \
 	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h CCompleteBarrierCallback.h \
 	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h CDeadSourceCommand.h \
-	CReviveSocketCommand.h
+	CReviveSocketCommand.h CFragReader.h CFragWriter.h
 
 
 INCLUDES = -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS \
+	-I@top_srcdir@/daq/format \
 	-I@top_srcdir@/base/tcpip \
 	-I@top_srcdir@/base/exception  \
 	-I@top_srcdir@/base/headers	\
