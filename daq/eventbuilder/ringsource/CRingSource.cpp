@@ -31,7 +31,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-static const size_t MAX_EVENTS(1024*1024); // Max bytes of events in a getData
+static size_t max_event(1024*1024); // initial Max bytes of events in a getData
 
 /*----------------------------------------------------------------------
  * Canonicals
@@ -171,22 +171,25 @@ CRingSource::getEvents()
   size_t bytesPackaged(0);
   CAllButPredicate all;		// Predicate to selecdt all ring items.
   CEVBFragmentList frags;
-  uint8_t*         pFragments = new uint8_t[MAX_EVENTS*2];
+  uint8_t*         pFragments = reinterpret_cast<uint8_t*>(malloc(max_event*2));
   uint8_t*         pDest = pFragments;
   if (pFragments == 0) {
     throw std::string("CRingSource::getEvents - memory allocation failed");
   }
 
-  while ((bytesPackaged < MAX_EVENTS) && m_pBuffer->availableData()) {
+  while ((bytesPackaged < max_event) && m_pBuffer->availableData()) {
     CRingItem* p  = CRingItem::getFromRing(*m_pBuffer, all); // should not block.
     RingItem*  pRingItem = p->getItemPointer();
 
-    // If we got here but the data won't fit that's a real disaster:
-    // TODO:  We could do a malloc/realloc or we could also
-    //        do a save-the-last-item thing.
-    //
-    if (pRingItem->s_header.s_size > (MAX_EVENTS*2 - bytesPackaged)) {
-      throw std::string("Ring item bigger than remaining buffer space!");
+    // If we got here but the data is bigger than our safety margin
+    //we need to resize pFragments:
+
+    if (pRingItem->s_header.s_size > (max_event*2 - bytesPackaged)) {
+      size_t offset = pDest - pFragments; // pFragments willchange.
+      max_event = pRingItem->s_header.s_size + bytesPackaged;
+      pFragments = reinterpret_cast<uint8_t*>(realloc(pFragments, max_event*2));
+      pDest      = pFragments + offset;
+
     }
 
     // initialize the fragment -- with the assumption that the

@@ -111,8 +111,13 @@ class CFragmentHandler
 {
 private:
   // Private data types:
-    
-  typedef std::queue<std::pair<time_t, EVB::pFragment> > SourceQueue, *pSourceQueue;
+
+  typedef struct _SourceQueue {
+    uint64_t                                         s_newestTimestamp;
+    std::queue<std::pair<time_t,  EVB::pFragment> > s_queue;
+
+  } SourceQueue, *pSourceQueue;
+
   typedef std::map<uint32_t, SourceQueue> Sources, *pSources;
   typedef std::pair<uint32_t, SourceQueue> SourceElement, *pSourceElement;
   typedef std::pair<const uint32_t, SourceQueue> SourceElementV;
@@ -298,6 +303,9 @@ private:
   void observeGoodBarrier(std::vector<std::pair<uint32_t, uint32_t> >& types);
   void findOldest();
   size_t countPresentBarriers() const;
+
+
+  SourceQueue& getSourceQueue(uint32_t id);
 
 
   // Static private methods:

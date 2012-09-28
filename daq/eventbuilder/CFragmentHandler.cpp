@@ -388,8 +388,8 @@ void
 CFragmentHandler::createSourceQueue(std::string sockName, uint32_t id)
 {
 
-  SourceQueue& queue = m_FragmentQueues[id]; // creates if needed.
-  m_liveSources.insert(id);		     // Sources start live.
+  getSourceQueue(id);		// Creates too.
+  m_liveSources.insert(id);		          // Sources start live.
   m_socketSources[sockName].push_back(id);
 }
 
@@ -472,7 +472,7 @@ CFragmentHandler::reviveSocket(std::string sockname)
   if (p != m_deadSockets.end()) {
     std::list<uint32_t>::iterator pSource = p->second.begin();
     while (pSource != p->second.end()) {
-      SourceQueue& queue = m_FragmentQueues[*pSource]; // creates if needed.
+      SourceQueue& queue = getSourceQueue(*pSource);
       m_liveSources.insert(*pSource);		     // Sources start live.
       pSource++;
     }
@@ -571,8 +571,8 @@ CFragmentHandler::popOldest()
     std::pair<time_t, ::EVB::pFragment>* pOldest(0);
     for(Sources::iterator p = m_FragmentQueues.begin();
         p != m_FragmentQueues.end(); p++) {
-      if (!p->second.empty()) {
-	std::pair<time_t, ::EVB::pFragment> Frag = p->second.front();
+      if (!p->second.s_queue.empty()) {
+	std::pair<time_t, ::EVB::pFragment> Frag = p->second.s_queue.front();
 	
 	// We can only process non-barriers.
 	
@@ -590,14 +590,14 @@ CFragmentHandler::popOldest()
 	    // This is the one.
 	    
 	    pOldest  = new std::pair<time_t, EVB::pFragment>(Frag);
-	    p->second.pop();
+	    p->second.s_queue.pop();
 
 	    // Get pFrag again  in case the test above worked.
 	    // update nextOldest and break if it matches m_nOldest.
 	    
 
-	    if(!p->second.empty()) {
-	      Frag = p->second.front();
+	    if(!p->second.s_queue.empty()) {
+	      Frag = p->second.s_queue.front();
 	      
 	      received = Frag.first;
 	      stamp = Frag.second->s_header.s_timestamp;
@@ -721,17 +721,21 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
     memcpy(&(pFrag->s_header), pHeader, sizeof(EVB::FragmentHeader));
     memcpy(pFrag->s_pBody, pFragment->s_body, pFrag->s_header.s_size);
 
-    // If the timestamp is null, assign the newest timestamp to it:
+    SourceQueue& destQueue(getSourceQueue(pHeader->s_sourceId));
 
-    if (timestamp == NULL_TIMESTAMP) {
-      timestamp = m_nNewest;
+
+    // If the timestamp is null, assign the newest timestamp from that source to it:
+
+    if ((timestamp == NULL_TIMESTAMP)) {
+      timestamp = destQueue.s_newestTimestamp;
       pFrag->s_header.s_timestamp = timestamp;
     }
+    destQueue.s_newestTimestamp = timestamp; // for sure the newest 
+
     
    // Get a reference to the fragment queue, creating it if needed:
     
-    SourceQueue& destQueue(m_FragmentQueues[pHeader->s_sourceId]);
-    destQueue.push(std::pair<time_t, EVB::pFragment>(m_nNow, pFrag));
+    destQueue.s_queue.push(std::pair<time_t, EVB::pFragment>(m_nNow, pFrag));
     m_liveSources.insert(pHeader->s_sourceId); // having a fragment makes a source live.
     
     // update newest/oldest if needed -- and not a barrier:
@@ -741,7 +745,7 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
     if (!isBarrier) {
       // If the timing of receiving this fragment would result in an
       // out of order fragment, it's late:
-      // 
+      //
       if(timestamp < m_nMostRecentlyPopped) {
 	dataLate(*pFrag);
       }
@@ -781,7 +785,7 @@ CFragmentHandler::queuesEmpty()
 {
     for(Sources::iterator p = m_FragmentQueues.begin();
         p != m_FragmentQueues.end(); p++) {
-        if (!p->second.empty()) return false;
+        if (!p->second.s_queue.empty()) return false;
     }
     return true;
 }
@@ -819,8 +823,8 @@ CFragmentHandler::QueueStatGetter::operator()(SourceElementV& source)
     
     QueueStatistics stats;
     stats.s_queueId       = source.first;
-    stats.s_queueDepth    = sourceQ.size();
-    stats.s_oldestElement = sourceQ.front().second->s_header.s_timestamp;
+    stats.s_queueDepth    = sourceQ.s_queue.size();
+    stats.s_oldestElement = sourceQ.s_queue.front().second->s_header.s_timestamp;
     
     m_nTotalFragments += stats.s_queueDepth;
     m_Stats.push_back(stats);
@@ -876,11 +880,11 @@ CFragmentHandler::generateBarrier(std::vector<EVB::pFragment>& outputList)
 
   
   for (Sources::iterator p = m_FragmentQueues.begin(); p!= m_FragmentQueues.end(); p++) {
-    if (!p->second.empty()) {
-      ::EVB::pFragment pFront = p->second.front().second;
+    if (!p->second.s_queue.empty()) {
+      ::EVB::pFragment pFront = p->second.s_queue.front().second;
       if (pFront->s_header.s_barrier) {
 	outputList.push_back(pFront);
-	p->second.pop();
+	p->second.s_queue.pop();
 	result.s_typesPresent.push_back(
             std::pair<uint32_t, uint32_t>(p->first, pFront->s_header.s_barrier)
         );
@@ -948,8 +952,8 @@ CFragmentHandler::findOldest()
   m_nOldest = m_nNewest;		// Automatically right if all queues are empty.
 
   for (Sources::iterator p = m_FragmentQueues.begin(); p != m_FragmentQueues.end(); p++) {
-    if (!p->second.empty()) {
-      ::EVB::pFragment pf = p->second.front().second;
+    if (!p->second.s_queue.empty()) {
+      ::EVB::pFragment pf = p->second.s_queue.front().second;
       if (pf->s_header.s_timestamp < m_nOldest) {
 	m_nOldest = pf->s_header.s_timestamp;
       }
@@ -1008,13 +1012,37 @@ CFragmentHandler::countPresentBarriers() const
   size_t count;
   for (Sources::const_iterator p = m_FragmentQueues.begin(); p != m_FragmentQueues.end(); p++) {
     const SourceQueue& queue(p->second);
-    if (!queue.empty()) {
-      EVB::pFragment pFront = queue.front().second;
+    if (!queue.s_queue.empty()) {
+      EVB::pFragment pFront = queue.s_queue.front().second;
       if (pFront->s_header.s_barrier) count++;
     }
   }
   return count;
 }
+/**
+ * get the source queue associated with an id, creating it if needed
+ *
+ * @param id - the id of the source.
+ * 
+ * @return SourceQueue& reference to the (possibly new) source queue.
+ */
+CFragmentHandler::SourceQueue&
+CFragmentHandler::getSourceQueue(uint32_t id)
+{
+  Sources::iterator p = m_FragmentQueues.find(id);
+  if (p  == m_FragmentQueues.end()) {	       // Need to create.
+    SourceQueue& queue = m_FragmentQueues[id]; // Does most of the creation.
+    queue.s_newestTimestamp = m_nNewest;	       // Probably the best initial value.
+    return queue;
+  }  else {			              // already exists.
+    return p->second;
+  }
+}
+
+/*--------------------------------------------------------------------------------------
+ * Static methods
+ */
+
 /**
  * IdlePoll
  *
