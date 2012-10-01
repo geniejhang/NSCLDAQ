@@ -272,6 +272,8 @@ public:
   void addPartialBarrierObserver(PartialBarrierObserver* pObserver);
   void removePartialBarrierObserver(PartialBarrierObserver* pObserver);
 
+  // queue management.
+
   void flush();
   
   // Get/set state of the queues etc.

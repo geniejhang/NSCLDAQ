@@ -14,7 +14,8 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 	CDLateStatsCommand.cpp CLateScriptObserver.cpp COnLateDataCommand.cpp  \
 	CBarrierStatsCommand.cpp CBarrierStats.cpp CIncompleteBarrierStats.cpp \
 	CCompleteBarrierCallback.cpp CBarrierTraceCommand.cpp CPartialBarrierCallback.cpp \
-	CSourceCommand.cpp CDeadSourceCommand.cpp CReviveSocketCommand.cpp
+	CSourceCommand.cpp CDeadSourceCommand.cpp CReviveSocketCommand.cpp \
+	CFlushCommand.cpp
 
 
 libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
@@ -37,7 +38,7 @@ noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h \
 	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h COnLateDataCommand.h \
 	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h CCompleteBarrierCallback.h \
 	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h CDeadSourceCommand.h \
-	CReviveSocketCommand.h CFragReader.h CFragWriter.h
+	CReviveSocketCommand.h CFragReader.h CFragWriter.h CFlushCommand.h
 
 
 INCLUDES = -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS \
