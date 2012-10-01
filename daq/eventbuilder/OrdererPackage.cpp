@@ -33,6 +33,7 @@
 #include "CDeadSourceCommand.h"
 #include "CReviveSocketCommand.h"
 #include "CFlushCommand.h"
+#include "CResetCommand.h"
 
 static const char* version = "1.0"; // package version string.
 
@@ -61,6 +62,7 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
   new CDeadSourceCommand(*pInterpObject,"EVB::deadsource");
   new CReviveSocketCommand(*pInterpObject, "EVB::reviveSocket");
   new CFlushCommand(*pInterpObject, "EVB::flush");
+  new CResetCommand(*pInterpObject, "EVG::reset");
 
   // Setup the output stage:
 

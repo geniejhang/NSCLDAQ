@@ -49,15 +49,12 @@ static const uint32_t IdlePollInterval(2);  // Seconds between idle polls.
  *     default values -- they should not be left that way.
  *   - m_pInstance -> this.
  */
-CFragmentHandler::CFragmentHandler() :
-    m_nOldest(UINT64_MAX),
-    m_nNewest(0),
-    m_nMostRecentlyPopped(0),
-    m_nFragmentsLastPeriod(0),
-    m_fBarrierPending(false)
+CFragmentHandler::CFragmentHandler()
+
 {
     m_nBuildWindow = DefaultBuildWindow;
     m_pInstance = this;
+    resetTimestamps();
 
     m_nNow = time(NULL);	// Initialize the time.
     m_nOldestReceived = INT32_MAX; // Hopefully that makes it infinitely future.
@@ -484,6 +481,27 @@ CFragmentHandler::reviveSocket(std::string sockname)
     throw msg;
   }
 }
+
+/**
+ * resetTimestamps
+ *   
+ * Restes the timestamps to their contruction values.
+ */
+void
+CFragmentHandler::resetTimestamps()
+{
+  m_nOldest = (UINT64_MAX);
+  m_nNewest = (0);
+  m_nMostRecentlyPopped = (0);
+  m_nFragmentsLastPeriod = (0);
+  m_fBarrierPending = (false);
+
+  for (Sources::iterator p = m_FragmentQueues.begin(); p != m_FragmentQueues.end(); p++) {
+    p->second.s_newestTimestamp = 0;
+  }
+}
+      
+
 
 /*---------------------------------------------------------------------
  ** Utility methods (private).

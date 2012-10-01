@@ -283,6 +283,7 @@ public:
   void markSourceFailed(uint32_t id);
   void markSocketFailed(std::string sockName);
   void reviveSocket(std::string sockName);
+  void resetTimestamps();
 
   // utility methods:
 
