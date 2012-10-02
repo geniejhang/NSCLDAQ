@@ -221,6 +221,7 @@ private:
   std::list<DataLateObserver*> m_DataLateObservers;
   std::list<BarrierObserver*>  m_goodBarrierObservers;
   std::list<PartialBarrierObserver*> m_partialBarrierObservers;
+
   Sources                      m_FragmentQueues;
   bool                         m_fBarrierPending;      //< True if at least one queue has a barrier event.
   std::set<uint32_t>           m_liveSources;	       //< sources that are live.
@@ -284,6 +285,7 @@ public:
   void markSocketFailed(std::string sockName);
   void reviveSocket(std::string sockName);
   void resetTimestamps();
+  void clearQueues();
 
   // utility methods:
 

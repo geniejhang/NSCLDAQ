@@ -501,7 +501,38 @@ CFragmentHandler::resetTimestamps()
   }
 }
       
+/**
+ * clearQueues
+ *
+ *  Clears all knowledge of data sources. Specifically:
+ *  - m_deadSockets is cleared.
+ *  - m_socketSources is cleared.
+ *  - m_liveSources is cleared.
+ *  - m_FragmentQueues all fragments are deleted, the queues and the
+ *    map itsel are cleared.
+ *  - The m_fBarrierPending flag is cleared.
+ *
+ */
+void
+CFragmentHandler::clearQueues()
+{
+  m_deadSockets.clear();
+  m_socketSources.clear();
+  m_liveSources.clear();
+  m_fBarrierPending = false;
 
+  // Get rid of all queued fragments:
+
+  for (Sources::iterator s = m_FragmentQueues.begin(); s != m_FragmentQueues.end(); s++) {
+    SourceQueue& q(s->second);
+    while (!q.s_queue.empty()) {
+      delete q.s_queue.front().second;
+      q.s_queue.pop();
+      
+    }
+  }
+  m_FragmentQueues.clear();
+}
 
 /*---------------------------------------------------------------------
  ** Utility methods (private).
