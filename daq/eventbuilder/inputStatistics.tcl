@@ -132,8 +132,7 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
 #   - -id        - Queue source identifier.
 #   - -depth     - Queue depth
 #   - -oldest    - Timestamp at frontof queue.
-#   - -late      - Number of data late fragments.
-#   - -worst     - Worst time difference data late.
+#   - -outcount  - Count of output fragments from this queue.
 #
 # DELEGATIONS:
 #   - all other options -> hull
@@ -143,8 +142,8 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
 #
 #   +------------------------------------------------+
 #   |               Source ID: <id>                  |
-#   |  Fragments: <depth>   Oldest: <timestamp>      |
-#   |  Late Fragments: n    Worst Diff: m            |
+#   |  Depth      <depth>   Oldest: <timestamp>      |
+#   |  Out frags: <n-output>
 #   +------------------------------------------------+
 #
 #  \endverbatim
@@ -152,11 +151,10 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
 snit::widget ::EVB::inputStatistics::queueDisplay {
 
     
-    option -id     -default -1
-    option -depth  -default 0
-    option -oldest -default 0
-    option -late   -default 0
-    option -worst  -default 0
+    option -id       -default -1
+    option -depth    -default  0
+    option -oldest   -default  0
+    option -outcount -default  0
     
     delegate option * to innerHull
     delegate method * to innerHull
@@ -177,16 +175,14 @@ snit::widget ::EVB::inputStatistics::queueDisplay {
         # construct the UI elements.
         
         ttk::label $innerHull.idlabel    -text {Source ID: }
-        ttk::label $innerHull.depthlabel -text {Fragments: }
+        ttk::label $innerHull.depthlabel -text {depth:     }
         ttk::label $innerHull.oldlabel   -text {Oldest:    }
-	ttk::label $innerHull.latelabel -text  {Late Fragments: }
-	ttk::label $innerHull.worstlabel -text {Worst Time dif: }
-        
+        ttk::label $innerHull.outcountlbl -text {Out frags:}
+       
         ttk::label $innerHull.id     -textvariable ${selfns}::options(-id)
         ttk::label $innerHull.depth  -textvariable ${selfns}::options(-depth)
         ttk::label $innerHull.oldest -textvariable ${selfns}::options(-oldest)
-	ttk::label $innerHull.latecounter -textvariable ${selfns}::options(-late)
-	ttk::label $innerHull.worsttime   -textvariable ${selfns}::options(-worst)
+        ttk::label $innerHull.outcount -textvariable ${selfns}::options(-outcount)
         
         $self configurelist $args
         
@@ -194,7 +190,8 @@ snit::widget ::EVB::inputStatistics::queueDisplay {
         
         grid  x                    $innerHull.idlabel     $innerHull.id
         grid $innerHull.depthlabel $innerHull.depth       $innerHull.oldlabel   $innerHull.oldest
-	grid $innerHull.latelabel  $innerHull.latecounter $innerHull.worstlabel $innerHull.worsttime
+        grid $innerHull.outcountlbl $innerHull.outcount
+        
         grid $innerHull -sticky nsew
     }
 }
@@ -549,6 +546,51 @@ proc ::EVB::test::inputStatistics::summaryDisplay {} {
     }
     
 }
+
+##
+# ::EVB::test::inputStatistics::queueDisplay
+#
+#  test the queue display widget.
+#
+proc ::EVB::test::inputStatistics::queueDisplay {} {
+    
+    # Create the test panel.
+    
+    ::EVB::inputStatistics::queueDisplay .target
+    pack .target
+    
+    # Create a control panel for its parameters.
+    
+    toplevel .control
+    
+    label .control.idl -text {queue id}
+    entry .control.id  -textvariable -id
+    
+    label .control.depthl -text {depth}
+    entry .control.depth  -textvariable -depth
+    
+    label .control.oldestl -text {oldest timestamp}
+    entry .control.oldest  -textvariable -oldest
+    
+    label .control.outcountl -text {Output count}
+    entry .control.outcount  -textvariable -outcount
+    
+    grid .control.idl .control.id
+    grid .control.depthl .control.depth
+    grid .control.oldestl .control.oldest
+    grid .control.outcountl .control.outcount
+    
+    
+    
+    # Register variable traces
+    
+    foreach var [list -id -depth -oldest -outcount] {
+        trace add variable ::$var write [list ::EVB::test::updateWidgetOption .target]
+    }
+        
+    
+}
+
 
 ##
 # Testing utility to update a widget option from a trace on a variable
