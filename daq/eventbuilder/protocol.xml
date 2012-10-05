@@ -2,7 +2,7 @@
 
 <refentry id="daq5-evbprotocol">
   <refmeta>
-     <refentrytitle>eventorderer</refentrytitle>
+     <refentrytitle id='daq5-evbprotocol-title'>eventorderer</refentrytitle>
      <manvolnum>5daq</manvolnum>
   </refmeta>
   <refnamediv>

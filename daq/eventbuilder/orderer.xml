@@ -95,3 +95,517 @@
       </refentry>
 
 <!-- /manpage -->
+<!-- manpage 1evb -->
+      <refentry id='evb1_handleFragment'>
+        <refmeta>
+           <refentrytitle id='evb1_handleFragment_title'>EVB::handleFragment</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::handleFragment</refname>
+           <refpurpose>Submit event fragments.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+          <command>
+EVB::handleFragments <replaceable>file-descriptor</replaceable>           
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            The event builder orderer stage core is a loadable Tcl packge.
+            Non time-critical functions, such as connection management are
+            handled by Tcl scripts while time critical operations are compiled
+            C code with Tcl command interfaces.
+           </para>
+           <para>
+            The <command>EVB::handleFragments</command> indicates that a
+            file descriptor (usually a socket) has event fragments available.
+            The command will read an <literal>FRAGMENTS</literal> flattened fragments
+            body from the file descriptor and submit those as event fragments
+            to the event orderer core.
+           </para>
+           <para>
+            The format of the data expected on that file descriptor is described
+            in <link linkend="daq5-evbprotocol" endterm='daq5-evbprotocol-title' />.
+           </para>
+        </refsect1>
+
+      </refentry>
+      <refentry id="evb1_inputStats">
+        <refmeta>
+           <refentrytitle id='evb1_inputStats_title'>EVB::inputStats</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::inputStats</refname>
+           <refpurpose>Event builder input statistics</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+            <command>
+EVB::inputStats get
+
+            </command>
+          </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::inputStats clear
+                </command>
+            </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            The <command>get</command> subcommand
+            retrieves statistics about the input fragments the event builder has
+            seen.  The intent is that this could be periodically refreshed
+            to drive a status display written in in Tk.  The
+            <command>clear</command> command clears the counters that maintain
+            those statistics.
+           </para>
+           <para>
+            This command returns a list that contains the following members (in
+            order):
+           </para>
+           <variablelist>
+            <varlistentry>
+                <term>oldestTimestamp</term>
+                <listitem>
+                    <para>
+                        The timestamp of the oldest fragment still in the
+                        queues.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>newestTimestamp</term>
+                <listitem>
+                    <para>
+                        The largest timestamp that has been seen.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>totalFragCount</term>
+                <listitem>
+                    <para>
+                        The total number of fragments that have been
+                        submitted for ordering.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>queueStatistics</term>
+                <listitem>
+                    <para>
+                        Detailed statistics for each input queue.  For each
+                        live data sourcde, this element will itself be a list
+                        that contains the following elements:
+                    </para>
+                    <variablelist>
+                        <varlistentry>
+                            <term>id</term>
+                            <listitem>
+                                <para>
+                                    The source Id of a data source. This determines
+                                    which source's statistics are contained by this
+                                    list element.
+                                </para>
+                            </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term>depth</term>
+                            <listitem>
+                                <para>
+                                    The number of queued fragments.
+                                </para>
+                            </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term>oldest</term>
+                            <listitem>
+                                <para>
+                                    The timestamp of the element at the front
+                                    of the input queue.
+                                </para>
+                            </listitem>
+                        </varlistentry>
+                        
+                    </variablelist>
+                </listitem>
+            </varlistentry>
+            
+           </variablelist>
+        </refsect1>
+
+      </refentry>
+      <refentry id="evb1_outputstats">
+        <refmeta>
+           <refentrytitle id='evb1_outputstats_title'>EVB::outputStats</refentrytitle>
+           <manvolnum>1tcl</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::outputStats</refname>
+           <refpurpose>Get orderer output statistics</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+            <command>
+EVB::outputStatistics get
+
+            </command>
+          </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EBB::outputStatistics clear
+                </command>
+            </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            The <command>get</command> subcommand
+            eturns information about the ordered event fragments that have
+            been created and output by the event orderer. The <command>clear</command>
+            subcommand clears those statistics.
+           </para>
+           <para>
+            The <command>get</command> subcommand returns statistics as a list.
+            The first element of the list is the total number of output fragments
+            emitted by the program.  Subsequent list elements are pairs where the
+            first element of the pair is a source id and the second element the
+            number of fragments emitted from that source.
+           </para>
+        </refsect1>
+
+      </refentry>
+      <refentry id="evb1_dlatestats">
+        <refmeta>
+            <refentrytitle id='evb1_dlatestats_title'>EVB::dlatestats</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname >EVB::dlatestats</refname>
+           <refpurpose>Get the late fragment statistics.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+EVB::dlatestats
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            Returns statistics about data late fragments.  A fragment is late if,
+            due to the event ordering accumulation window, it must be emitted
+            out of order.  Specifically, if the timestamp of a fragment is earlier
+            than the the timestamp of the fragment most recently sent to the
+            output stage, the fragment is late.
+           </para>
+           <para>
+            The command takes no additional command parameters and returns
+            a list consisting of the following elements:
+           </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        The number of fragments that have been received late.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The worst time difference between a late fragment and
+                        the most recently output fragment.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        A list for each data source that contains
+                    </para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>The source id</para>
+                        </listitem>
+                        <listitem>
+                            <para>The number of late fragments from that source</para>
+                        </listitem>
+                        <listitem>
+                            <para>The worst case time difference from that source</para>
+                        </listitem>
+                    </itemizedlist>
+                </listitem>
+            </itemizedlist>
+        </refsect1>
+
+      </refentry>
+      <refentry id="evb1_ondatalate">
+        <refmeta>
+           <refentrytitle id='evb1_ondatalate_title'>EVB::onDataLate</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::onDataLate</refname>
+           <refpurpose>Bind scripts to data late events.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+            <command>
+EVB::onDataLate <replaceable>script</replaceable>
+            </command>
+          </cmdsynopsis>
+            <cmdsynopsis>
+                  <command>
+EVB::onDataLate
+                  </command>
+              </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            The first form of this command establishes a <parameter>script</parameter>
+            to be invoked when a data late fragment is received.  The script
+            has appended to it the <parameter>source id</parameter> of the
+            data source that contributed the fragment, the
+            <parameter>timestamp</parameter> of the late fragment, and
+            the <parameter>newest</parameter> timestamp emitted.
+           </para>
+           <para>
+            If the <parameter>script</parameter> is an empty string, the current
+            script will no longer receive these events.  If there is no prior
+            script this is a no-op.
+           </para>
+           <para>
+            The second form of the command does nothing.
+           </para>
+           <para>
+            Both forms return the script associated with these events prior to the
+            command execution.  If no script was associated with this event,
+            both forms return an empty strig.
+           </para>
+        </refsect1>
+      </refentry>
+
+      <refentry id="evb1_barriertrace">
+        <refmeta>
+           <refentrytitle id='evb1_barriertrace_title'>EVB::barriertrace</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::barriertrace</refname>
+           <refpurpose>Supply a script to invoke on barrier events.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+          <command>
+EVB::barriertrace complete ?<replaceable>script</replaceable>?
+          </command>
+          </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::barriertrace incomplete ?<replaceable>script</replaceable>?
+                </command>
+            </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            The first form of this command places, deletes or lists the script
+            that is associated with properly formed barrier events.
+            If a script is not supplied, the current script is returned.  If there
+            is no current script an emtpy string is returned.
+            If a script is supplied it replaces the current complete barrier
+            script. If an empty string is supplied for the new script, no script
+            will be called for future complete barriers.
+           </para>
+           <para>
+            Complete barrier scripts have appended to them a list of pairs. Each
+            pair contains the source Id of a barrier contributor and the
+            type of barrier event emitted by that source.
+           </para>
+           <para>
+            The second form of this command performs the same function for
+            incomplete barriers.  An incomplete barrier is one for which barrier
+            fragments have not been received from all sources within a timeout
+            period.
+           </para>
+           <para>
+            Incomplete barrier scripts receives two additional parameters. The
+            first additional parameter is identical to the parameter
+            passed to complete barrier scripts.  The second additional parameter
+            is a list of data source ids that did not emit a barrier fragment
+            prior to the barrier timeout.
+           </para>
+        </refsect1>
+
+      </refentry>
+      <refentry id="evb1_source">
+        <refmeta>
+           <refentrytitle id='evb1_source_title'>EVB::source</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::source</refname>
+           <refpurpose>Create event source queues.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+            <command>
+EVB::source ?<replaceable>socket id1...</replaceable>?
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            Creates a set of data source queues associated with a Tcl channel
+            name (typically  a return value from <command>socket</command>).
+            If no parameters are given the command returns  list of the
+            known source ids.
+           </para>
+           <para>
+            IF parameters are supplied on the command line there must be at
+            least two. <parameter>socket</parameter> is the name of the channel
+            that will be associated with the source queues.  <parameter>id1</parameter>
+            is the first of potentially many source ids for which to create input
+            queues.  Each source id is a separate parameter (not one parameter
+            containing a list of source ids).
+           </para>
+        </refsect1>
+
+      </refentry>
+      <refentry id="evb1_deadsource">
+        <refmeta>
+           <refentrytitle id='evb1_deadsource1_title'>EVB::deadsource</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::deadsource</refname>
+           <refpurpose>Mark a data source dead.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+
+            <command>
+EVB::deadsource <replaceable>id</replaceable>
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            Marks the data source <parameter>id</parameter> dead.  From then on
+            no fragments are expected from that source.  
+           </para>
+        </refsect1>
+      </refentry>
+      <refentry id="evb1_revivesocket">
+        <refmeta>
+           <refentrytitle id='evb1_revivesocket_title'>EVB::reviveSocket</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::reviveSocket</refname>
+           <refpurpose>Revive all dead data sources associated with a socket</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+            <command>
+EVB::reviveSocket <replaceable>sock-name</replaceable>                
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            All data sources associated with a socket that were marked as dead
+            are marked as alive.  <parameter>sock-name</parameter> is the
+            Tcl socket channel name to operate on.
+           </para>
+        </refsect1>
+
+      </refentry>
+
+      <refentry id="evb1_flush">
+        <refmeta>
+           <refentrytitle id='evb1_flush_title'>EVB::flush</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::flush</refname>
+           <refpurpose>Empty all input queues.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+EVB::flush
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            The fragments in all input queues are flushed to output in timestamp
+            order.  All observers on the output of fragments are invoked which
+            ensures that output statistics are maintained and that the fragments
+            make their way to the orderer's output stage.
+           </para>
+        </refsect1>
+
+      </refentry>
+
+      <refentry id="evb1_reset">
+        <refmeta>
+           <refentrytitle id='evb1_reset_title'>EVB::reset</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::reset</refname>
+           <refpurpose>Reset timestamp clocks.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+          <command>
+EVB::reset
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            Resets the event builder's timing information as if it had just been
+            started.  If you are using the system with a system that resets
+            timestamps back to near zero at the start of each data taking, you
+            can use this to prevent an initial set of out of order packet errors.
+           </para>
+        </refsect1>
+
+      </refentry>
+
+<!-- /manpage -->
