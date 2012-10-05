@@ -22,6 +22,9 @@ package provide EVB::inputStatistics 1.0
 #
 namespace eval EVB {
     namespace eval inputStatistics {}
+    namespace eval test {
+        namespace eval inputStatistics {}
+    }
 }
 
 ##
@@ -53,7 +56,7 @@ namespace eval EVB {
 #   +-----------------------------------------------------+
 #   | Total number of queued fragments: <fragmentcount>   |
 #   | Oldest timestamp: <stamp>  Newest timestamp <stamp> |
-#   | Data Late frags:  n        Worst time diff   n      |
+#   | Deepest queue              id : depth               |
 #   +-----------------------------------------------------+
 #
 # \endverbatim
@@ -62,8 +65,8 @@ namespace eval EVB {
 #    - -fragments  Provides the total number of fragments.
 #    - -oldest     Provides the oldest timestamp.
 #    - -newest     Provides the newest timestamp.
-#    - -late       Provides number of data late fragments.
-#    - -worst      Worst case data late time difference.
+#    - -deepestid  ID of deepest queue.
+#    - -deepestdepth Fragments in deepest queue.
 #
 # @note that all other options are delegated to the frame.
 # @note all methods are also delegated to the frame.
@@ -74,8 +77,8 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
     option -fragments  -default 0
     option -oldest     -default 0
     option -newest     -default 0
-    option -late       -default 0
-    option -worst      -default 0
+    option -deepestid  -default ""
+    option -deepestdepth -default ""
     
     
     delegate option * to innerHull
@@ -92,26 +95,34 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
         ttk::label $innerHull.fraglabel -text "Queued Fragments: "
         ttk::label $innerHull.oldlabel  -text "Oldest Timestamp: "
         ttk::label $innerHull.newlabel  -text "Newest Timestamp: "
-	ttk::label $innerHull.latelabel -text "Data Late frags: "
-	ttk::label $innerHull.worstlabel -text "Worst time diff"
+        ttk::label $innerHull.deepIdLabel -text "Deepest Queue (id : depth)"
+        ttk::label $innerHull.deepIdSepLabel -text " : "
+	
 
         
         ttk::label $innerHull.fragments -textvariable ${selfns}::options(-fragments)
         ttk::label $innerHull.oldest    -textvariable ${selfns}::options(-oldest)
         ttk::label $innerHull.newest    -textvariable ${selfns}::options(-newest)
-	ttk::label $innerHull.latecount -textvariable ${selfns}::options(-late)
-	ttk::label $innerHull.worsttime -textvariable ${selfns}::options(-worst)
+        ttk::label $innerHull.deepid    -textvariable ${selfns}::options(-deepestid)
+        ttk::label $innerHull.deepdepth -textvariable ${selfns}::options(-deepestdepth)
+	
         
         # Layout the widgets
         #
-        
-        grid x $innerHull.fraglabel $innerHull.fragments
-        
-        grid $innerHull.oldlabel  $innerHull.oldest    $innerHull.newlabel   $innerHull.newest
-	grid $innerHull.latelabel $innerHull.latecount $innerHull.worstlabel $innerHull.worsttime
+        grid $innerHull.fraglabel          $innerHull.fragments
+        grid $innerHull.oldlabel           $innerHull.oldest 
+        grid $innerHull.newlabel           $innerHull.newest
+
+        grid $innerHull.deepIdLabel    -row 3 -column 0
+        grid $innerHull.deepid         -row 3 -column 1 -sticky e
+        grid $innerHull.deepIdSepLabel -row 3 -column 2
+        grid $innerHull.deepdepth      -row 3 -column 3
+
         grid $innerHull -sticky nsew
     }
 }
+
+
 ##
 # @class EVB::inputStatistics::queueDisplay
 #
@@ -486,4 +497,70 @@ snit::widget EVB::inputStatistics::statusDisplay {
         $self _forgetSources $sourceList
         $self _regridSources 0 $sourceList
     }
+}
+
+#-----------------------------------------------------------------------------
+#
+#  Integral test procs/methods:
+
+##
+#  Demo for EVB::inputStatistics::summaryDisplay.
+#  Brings up a top level with the summary display in side and a control panel
+#  that allows you to manipulate the display.
+#
+
+proc ::EVB::test::inputStatistics::summaryDisplay {} {
+    
+  #The target widget.
+    
+    ::EVB::inputStatistics::summaryDisplay .target
+    pack .target
+    
+    # very simple controls.
+    
+    toplevel .controls
+    label .controls.fragl -text Fragments
+    entry .controls.frags -textvariable -fragments
+    
+    label .controls.oldestl -text Oldest
+    entry .controls.oldest  -textvariable -oldest
+    
+    label .controls.newestl -text Newest
+    entry .controls.newest  -textvariable -newest
+    
+    label .controls.deepestidl -text {deepest queue}
+    entry .controls.deepestid  -textvariable -deepestid
+    
+    label .controls.deepestdl -text {deepest depth}
+    entry .controls.deepestd  -textvariable -deepestdepth
+    
+    
+    grid .controls.fragl      .controls.frags
+    grid .controls.oldestl    .controls.oldest
+    grid .controls.newestl    .controls.newest
+    grid .controls.deepestidl .controls.deepestid
+    grid .controls.deepestdl  .controls.deepestd
+    
+    # set traces on the control panel vars that update the
+    # options in the control target.
+    
+    foreach var [list -fragments -oldest -newest -deepestid -deepestdepth] {
+        trace add variable ::$var write [list ::EVB::test::updateWidgetOption .target]
+    }
+    
+}
+
+##
+# Testing utility to update a widget option from a trace on a variable
+# that has a name matching the option:
+#
+# @param widget - the widget to modify.
+# @param name1  - name of the variable (and option)
+# @param name2  - index of the variable if an array.
+# @param op     - operation performed.
+#
+proc ::EVB::test::updateWidgetOption {widget name1 name2 op} {
+    upvar #0 $name1 value
+    $widget configure $name1 $value
+    return ""
 }
