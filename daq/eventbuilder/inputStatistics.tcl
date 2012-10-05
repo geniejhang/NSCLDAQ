@@ -212,7 +212,10 @@ snit::widget ::EVB::inputStatistics::queueDisplay {
 #    - -fragments - current number of in flight fragments.
 #    - -oldest    - Oldest timestamp.
 #    - -newest    - Newest timestamp.
+#    - -deepestid - Id of queue with deepest id.
+#    - -deepestdepth - Depth of deepest queue.
 #    - -columns   - Columns in the grid of queue status info.
+#
 # METHODS:
 #   - addDataSource    - adds a new data source, returns the widget.
 #   - removeDataSource - Removes  data source from the grid..
@@ -232,6 +235,8 @@ snit::widget EVB::inputStatistics::statusDisplay {
     delegate option -fragments to summary
     delegate option -oldest    to summary
     delegate option -newest    to summary
+    delegate option -deepestid to summary
+    delegate option -deepestdepth to summary
     
     delegate option * to queues
     
