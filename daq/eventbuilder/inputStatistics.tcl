@@ -606,8 +606,11 @@ proc ::EVB::test::inputStatistics::queueDisplay {} {
 # @param name2  - index of the variable if an array.
 # @param op     - operation performed.
 #
-proc ::EVB::test::updateWidgetOption {widget name1 name2 op} {
-    upvar #0 $name1 value
-    $widget configure $name1 $value
-    return ""
+
+if {[info proc ::EVB::test::updateWidgetOption] eq ""} {
+    proc ::EVB::test::updateWidgetOption {widget name1 name2 op} {
+        upvar #0 $name1 value
+        $widget configure $name1 $value
+        return ""
+    }
 }
