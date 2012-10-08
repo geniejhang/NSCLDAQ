@@ -24,6 +24,7 @@ package provide barriers 1.0
 
 package require Tk
 package require snit
+package require Iwidgets
 
 #------------------------------------------------------------------------------
 #  Establish namespaces.
@@ -63,14 +64,14 @@ snit::widget EVB::BarrierStats::Summary {
         #
         #  Create the widgets
         
-        label $win.title         -text {Barriers}
-        label $win.completel     -text {Complete}
-        label $win.incompletel   -text {Incomplete}
-        label $win.heterogenousl -text {Heterogenous}
+        ttk::label $win.title         -text {Barriers}
+        ttk::label $win.completel     -text {Complete}
+        ttk::label $win.incompletel   -text {Incomplete}
+        ttk::label $win.heterogenousl -text {Heterogenous}
         
-        label $win.complete     -textvariable ${selfns}::options(-completecount)
-        label $win.incomplete   -textvariable ${selfns}::options(-incompletecount)
-        label $win.heterogenous -textvariable ${selfns}::options(-heterogenouscount)
+        ttk::label $win.complete     -textvariable ${selfns}::options(-completecount)
+        ttk::label $win.incomplete   -textvariable ${selfns}::options(-incompletecount)
+        ttk::label $win.heterogenous -textvariable ${selfns}::options(-heterogenouscount)
         
         # Lay them out.
         
@@ -81,6 +82,161 @@ snit::widget EVB::BarrierStats::Summary {
         $self configurelist $args
     }
 }
+##
+# @class BarrierTypes
+#
+#  Displays a set of barrier type counts for a data source.
+#
+# OPTIONS
+#    none
+# METHODS
+#    setCount barrierId count - Sets the number of barrier fragments
+#                               gotten for barrierId to count.
+#    clear                    - Sets all barrier counts to zero.
+#    reinit                   - Gets rid of all 'table' elements.
+#
+#
+# LAYOUT
+#  +---------------------------------------+
+#  |   Barrier Type          Count         |
+#  |         id                count      ^|
+#  |      ...                   ...       V|
+#  +---------------------------------------+
+#
+#  Barrier ids are always maintained in sorted order (ascending).
+#
+snit::widget EVB::BarrierStats::BarrierTypes {
+    #
+    #  Array indexed by barrier id of barrier counters.
+    #  Note that corresponding widgets are
+    #   ....id$barrierid and count$barrierid
+    #  Where barrierid isn index to the array.
+    #
+    variable counters -array [list]
+    variable container;                     # Container of the counter widgets.
+    
+    ##
+    # Constructor
+    #
+    # @param args -option value pairs
+    #
+    constructor args {
+        
+        # Create the widgets and lay them out.
+        #
+
+        # The titles are above th srolling frame so that
+        # they are always visible.
+
+        ttk::label $win.typel  -text {Barrier Type}
+        ttk::label $win.countl -text {Count}
+        
+        iwidgets::scrolledframe $win.frame -hscrollmode none -vscrollmode dynamic \
+                                        -width 256 -relief groove -borderwidth 3
+        
+        set container [$win.frame childsite]
+        
+        # Layout the widgets:
+        
+        grid $win.typel $win.countl
+        grid $win.frame -columnspan 2 -sticky ews
+        
+        
+        
+    }
+    #--------------------------------------------------------------------------
+    # public methods
+    
+    ##
+    # setCount
+    #   Set the number of times a barrier type has been seen.  If necessary,
+    #   new widgets are created for the barrier type and added to the counters
+    #   array.
+    #
+    #  @param id[in]    The barrier id to dd.
+    #  @param count[in] Number of times the barrier was seen.
+    #
+    method setCount {id count} {
+        if {[array names counters $id] eq ""} {
+            $self _addId $id
+        }
+        set counters($id) $count;          # This is bound to the counter label.
+    }
+    
+    ##
+    # clear
+    #
+    #  Set all counters to zero.
+    #
+    method clear {} {
+        foreach index [array names counters] {
+            set counters($index) 0
+        }
+    }
+    ##
+    # reinit
+    #
+    #  Destroy all the existing counter widgets and the counters themselves.
+    #
+    method reinit {} {
+        foreach index [array names  counters] {
+            destroy $container.id$index
+            destroy $container.count$index
+            unset counters($index)
+        }
+    }
+    
+    #--------------------------------------------------------------------------
+    # private methods
+    
+    ##
+    # _addId
+    #
+    #  Add a new counter to the set of counters in the scrolled frame.
+    #  The counter's value starts as zero.
+    #
+    # @param id[in] - new id to add.
+    #
+    method _addId id {
+        set sortedIds [lsort -integer -increasing [array names counters]]
+        set counters($id) 0
+        
+        #  Create the new widgets
+        
+        ttk::label $container.id$id    -text $id -width 15 -anchor e
+        ttk::label $container.count$id -textvariable ${selfns}::counters($id) \
+                                       -width 20 -anchor e
+   
+        
+        set insertRow 0
+        if {$id > [lindex $sortedIds 0]} {     # else it's the first element.
+            foreach contents $sortedIds {
+                if {$sortedIds <= $id} {
+                    break
+                }
+                incr insertRow
+            }
+        }
+        
+        #  Tell grid to forget the items following insertRow in the list:
+        
+        set afterIds [lrange $sortedIds $insertRow end]
+        foreach line $afterIds {
+            grid forget $container.id$id
+            grid forget $container.count$id
+        }
+        set afterIds [linsert $afterIds 0 $id]
+        foreach line $afterIds {
+            grid $container.id$line    -row $insertRow -column 0 -sticky e
+            grid $container.count$line -row $insertRow -column 1 -sticky e
+            incr insertRow
+        }
+        
+        
+    }
+    
+}
+
 
 #------------------------------------------------------------------------------
 #   Testing stuff.
@@ -126,6 +282,30 @@ proc EVB::test::BarrierSummary {} {
         trace add variable ::$var write [list EVB::test::updateWidgetOption .target]
     }
     
+}
+
+proc EVB::test::BarrierTypes {} {
+    EVB::BarrierStats::BarrierTypes .target
+    pack .target
+    
+    # Control panel widgets and actions
+    
+    toplevel .panel
+    ttk::button .panel.clear -text Clear -command [list .target clear]
+    ttk::button .panel.reinit -text Empty -command [list .target reinit]
+    
+    ttk::label .panel.idl -text Id
+    ttk::label .panel.cl  -text Counts
+    ttk::entry .panel.id
+    ttk::entry .panel.c
+    ttk::button .panel.set -text set -command {.target setCount [.panel.id get] [.panel.c get]}
+    
+    grid .panel.idl .panel.cl
+    grid .panel.id  .panel.c .panel.set
+    grid .panel.clear .panel.reinit
+    
+    
+
 }
 
 
