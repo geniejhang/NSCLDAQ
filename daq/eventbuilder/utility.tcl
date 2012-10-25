@@ -51,7 +51,8 @@ namespace eval EVB {
 #  fragment type) as the sort key.
 #
 # OPTIONS
-# - -lefttitle - Title of the left column
+# - -title     -   Overall Title.
+# - -lefttitle -  Title of the left column
 # - -righttitle - Title of the right column
 #
 # METHODS
@@ -62,4 +63,15 @@ namespace eval EVB {
 #
 # LAYOUT
 #
-# 
+#  +---------------------------------------+
+#  |             top title                 |
+#  |   Left title        Right Title       |
+#  |         id                value      ^|
+#  |      ...                   ...       V|
+#  +---------------------------------------+
+#
+snit::widget EVB::utility::sortedPair {
+    option -title      -default ""
+    option -lefttitle  -default ""
+    option -righttitle -default ""
+}
