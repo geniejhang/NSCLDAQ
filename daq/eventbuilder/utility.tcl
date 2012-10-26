@@ -287,12 +287,8 @@ snit::widget EVB::utility::sortedPair {
 	    -width 10
 	ttk::label [lindex $widgets 1] -text "" \
 	    -width 10
-	grid [lindex $widgets 0] [lindex $widgets 1]  \
-	    -row $insertIndex
-	incr insertIndex
 
-	foreach item [lrange $values \
-			  [expr $insertIndex + 1] end] {
+	foreach item [lrange $values $insertIndex end] {
 	    set itemId [lindex $item 0]
 	    set itemWidgets [$self _widgetNames $itemId]
 
@@ -320,7 +316,5 @@ snit::widget EVB::utility::sortedPair {
 	set idWidget $container.${id}id
 	set valueWidget $container.${id}value
 	return [list $idWidget $valueWidget]
-    }
-    
-	
+    }	
 }
