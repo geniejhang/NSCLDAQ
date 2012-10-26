@@ -43,7 +43,7 @@ namespace eval EVB {
 # Useful snidgets
 
 ##
-# @class sortedPair
+# @class EVB::utility::sortedPair
 #
 #  This class maintains  a sorted pair of numbers. The left column is sorted
 #  ascending while the right column is assumed to be some associated data
@@ -331,4 +331,78 @@ snit::widget EVB::utility::sortedPair {
 	set valueWidget $container.${id}value
 	return [list $idWidget $valueWidget]
     }	
+}
+##
+# @class EVB::utility::sortedWidget
+#
+#  Incomplete class that allows you to produce a sorted list of widgets.
+#  widgets are displayed next to an identifying value (integer), and the
+#  widgets remain sorted by id.
+#
+#  This class is incomplete in that you must supply a pair of callback
+#  scripts.
+#
+# OPTIONS
+#   -title       - Title of the frame in which the list is built
+#                  (ttk::labelframe)
+#   -lefttitle   - Title of the left column of the widget.
+#   -rightttitle - Title of the widget column.
+#   -create      - Script called to create a new widget.  The
+#                  requested widget id is passed in.
+#   -update      - Script called to update an existing widget.
+#                  this is passed the widget id and the dict passed to
+#                  the setValue method.
+#   -destroy     - Script called when a widget is being destroyed.
+#                  the script is passed the widget name and the id
+#                  the widget has not yet been destroyed at this time but
+#                  will be when the script returns.
+#
+# METHODS
+#   listids       - Returns the list of known ids.
+#   getWidget id  - Get the widget corresponding to the specified id.
+#   update id valuelist - Requests an update. valuelist ia passed
+#                         without interpretation to the -update callback
+#
+# NOTE:
+#   The -create and -update callbacks are required.  If they would be called but
+#   none have been set, and error is thrown.
+#
+snit::widgetadaptor EVB::utility::sortedWidget {
+    component lefttitle
+    component righttitle
+    component container
+    
+    delegate option -title to  hull as      -text
+    delegate option -lefttitle to lefttitle as   -text
+    delegate option -righttitle to righttitle as -text
+    
+    option -create  [list]
+    option -update  [list]
+    option -destroy [list]
+    
+    variable idlist [list];     # Sorted list of ids.
+    
+    ##
+    # constructor
+    #
+    #  - Install the hull as a ttk frame.
+    #  - Build the top-level widgets.
+    #  - Lay them out in the hull.
+    #
+    # @param args - The option/value pairs that are used for the initial
+    #               configuration.
+    #
+    constructor args {
+        installhull using ttk::labelframe
+        
+        install lefttitle  using ttk::label $win.lefttitle -width 10
+        install righttitle using ttk::label $win.righttitle -width 10
+        install container  using ttk::frame $win.container
+        
+        # Layout the widgets inside the hull frame.
+        
+        grid $win.lefttitle $win.righttile
+        grid $win.container -columnspan 2 -sticky nsew
+    }
+    
 }
