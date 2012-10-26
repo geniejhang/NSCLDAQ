@@ -20,11 +20,19 @@
 #
 #  Package stuff
 
+# If this location is not in the path, add it.
+
+set here [file dirname [info script]]
+if {[lsearch -exact $auto_path $here] == -1} {
+    lappend auto_path $here
+}
+
 package provide barriers 1.0
 
 package require Tk
 package require snit
 package require Iwidgets
+package require EVBUtilities
 
 #------------------------------------------------------------------------------
 #  Establish namespaces.
@@ -106,14 +114,13 @@ snit::widget EVB::BarrierStats::Summary {
 #  Barrier ids are always maintained in sorted order (ascending).
 #
 snit::widget EVB::BarrierStats::BarrierTypes {
-    #
-    #  Array indexed by barrier id of barrier counters.
-    #  Note that corresponding widgets are
-    #   ....id$barrierid and count$barrierid
-    #  Where barrierid isn index to the array.
-    #
-    variable counters -array [list]
-    variable container;                     # Container of the counter widgets.
+    component container
+    
+    delegate method setCount to container as setItem
+    delegate method clear    to container
+    delegate method reinit   to container
+    
+    delegate option * to container
     
     ##
     # Constructor
@@ -122,119 +129,14 @@ snit::widget EVB::BarrierStats::BarrierTypes {
     #
     constructor args {
         
-        # Create the widgets and lay them out.
-        #
+        install container using EVB::utility::sortedPair $win.sp  \
+            -title {Source Stats} -lefttitle {id} -righttitle {Bar. frags.}
+        grid $win.sp  -sticky nsews
+        
+        
+        
+    }
 
-        # The titles are above th srolling frame so that
-        # they are always visible.
-
-        ttk::label $win.typel  -text {Barrier Type}
-        ttk::label $win.countl -text {Count}
-        
-        iwidgets::scrolledframe $win.frame -hscrollmode none -vscrollmode dynamic \
-                                        -width 256 -relief groove -borderwidth 3
-        
-        set container [$win.frame childsite]
-        
-        # Layout the widgets:
-        
-        grid $win.typel $win.countl
-        grid $win.frame -columnspan 2 -sticky ews
-        
-        
-        
-    }
-    #--------------------------------------------------------------------------
-    # public methods
-    
-    ##
-    # setCount
-    #   Set the number of times a barrier type has been seen.  If necessary,
-    #   new widgets are created for the barrier type and added to the counters
-    #   array.
-    #
-    #  @param id[in]    The barrier id to dd.
-    #  @param count[in] Number of times the barrier was seen.
-    #
-    method setCount {id count} {
-        if {[array names counters $id] eq ""} {
-            $self _addId $id
-        }
-        set counters($id) $count;          # This is bound to the counter label.
-    }
-    
-    ##
-    # clear
-    #
-    #  Set all counters to zero.
-    #
-    method clear {} {
-        foreach index [array names counters] {
-            set counters($index) 0
-        }
-    }
-    ##
-    # reinit
-    #
-    #  Destroy all the existing counter widgets and the counters themselves.
-    #
-    method reinit {} {
-        foreach index [array names  counters] {
-            destroy $container.id$index
-            destroy $container.count$index
-            unset counters($index)
-        }
-    }
-    
-    #--------------------------------------------------------------------------
-    # private methods
-    
-    ##
-    # _addId
-    #
-    #  Add a new counter to the set of counters in the scrolled frame.
-    #  The counter's value starts as zero.
-    #
-    # @param id[in] - new id to add.
-    #
-    method _addId id {
-        set sortedIds [lsort -integer -increasing [array names counters]]
-        set counters($id) 0
-        
-        #  Create the new widgets
-        
-        ttk::label $container.id$id    -text $id -width 15 -anchor e
-        ttk::label $container.count$id -textvariable ${selfns}::counters($id) \
-                                       -width 20 -anchor e
-   
-        
-        set insertRow 0
-        if {$id > [lindex $sortedIds 0]} {     # else it's the first element.
-            foreach contents $sortedIds {
-                if {$sortedIds <= $id} {
-                    break
-                }
-                incr insertRow
-            }
-        }
-        
-        #  Tell grid to forget the items following insertRow in the list:
-        
-        set afterIds [lrange $sortedIds $insertRow end]
-        foreach line $afterIds {
-            grid forget $container.id$id
-            grid forget $container.count$id
-        }
-        set afterIds [linsert $afterIds 0 $id]
-        foreach line $afterIds {
-            grid $container.id$line    -row $insertRow -column 0 -sticky e
-            grid $container.count$line -row $insertRow -column 1 -sticky e
-            incr insertRow
-        }
-        
-        
-    }
-    
 }
 
 
