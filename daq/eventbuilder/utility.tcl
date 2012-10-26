@@ -60,6 +60,7 @@ namespace eval EVB {
 #     created.
 #   - clear value=0 All of the values are set to the new value.
 #   - reinit All key/value pairs are deleted.
+#   - idlist Return all the ids.
 #
 # LAYOUT
 #
@@ -188,6 +189,19 @@ snit::widget EVB::utility::sortedPair {
 	    destroy [lindex $widgets 1]
 	}
 	set values [list]
+    }
+    ##
+    # idlist
+    #   Return a (possibly empty) list of the ids currently known
+    #
+    # @return list - of ids
+    #
+    method idlist {} {
+        set ids [list]
+        foreach item $values {
+            lappend ids [lindex $item 0]
+        }
+        return $ids
     }
     #----------------------------------------------
     #  Private methods.
