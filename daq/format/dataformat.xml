@@ -222,7 +222,17 @@
                             </varlistentry>
                         </variablelist>
                     </listitem>
-                </varlistentry>        
+                </varlistentry>
+                <varlistentry>
+                    <term>EVB_FRAGMENT</term>
+                    <listitem>
+                        <para>
+                            An event fragment from the ordering phase of the
+                            event builder.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                
             </variablelist>
         </para>
         <para>
@@ -2630,7 +2640,432 @@ item.commitToRing(aring);
          </para>
       </refsect1>
    </refentry>
-
+    <refentry id="manpage.cringfragmentitem">
+      <refmeta>
+         <refentrytitle id='manpage.cringfragmentitem.title'>CRingFragmentItem</refentrytitle>
+         <manvolnum>3daq</manvolnum>
+      </refmeta>
+      <refnamediv>
+         <refname>CRingFragmentItem</refname>
+         <refpurpose>Encapsulate a <literal>EVB_FRAGMENT</literal> ring item
+         </refpurpose>
+      </refnamediv>
+      
+      <refsynopsisdiv>
+        <synopsis>
+       <classsynopsis>
+           <ooclass><classname>CRingFragmentItem</classname></ooclass>
+       </classsynopsis> : public CRingItem {}
+          <constructorsynopsis>
+         <methodname>CRingFragmentItem</methodname>
+         <methodparam>
+            <type>uint64_t</type> <parameter>timestamp</parameter>
+         </methodparam>
+         <methodparam>
+            <type>uint32_t</type> <parameter>source</parameter>
+         </methodparam>
+         <methodparam>
+            <type>uint32_t</type> <parameter>payloadSize</parameter>
+         </methodparam>
+         <methodparam>
+            <modifier>const</modifier> <type>void*</type> <parameter>pBody</parameter>
+         </methodparam>
+         <methodparam>
+            <type>uint32_t</type> <parameter>barrier</parameter>
+            <initializer>0</initializer>
+         </methodparam>
+          </constructorsynopsis>
+          
+         <constructorsynopsis>
+            <methodname>CRingFragmentItem</methodname>
+            <methodparam>
+                <modifier>const</modifier> <type>CRingItem&amp;</type>
+                <parameter>rhs</parameter>
+            </methodparam>
+            <exceptionname>std::bad_cast</exceptionname>
+         </constructorsynopsis>
+         
+         <constructorsynopsis>
+            <methodname>CRingFragmentItem</methodname>
+            <methodparam>
+                <modifier>const</modifier><type>CRingFragmentItem&amp;</type>
+                <parameter>rhs</parameter>
+            </methodparam>
+         </constructorsynopsis>
+         
+         <methodsynopsis>
+            <modifier>virtual</modifier>
+            <methodname>~CRingFragmentItem</methodname>
+            <void />
+         </methodsynopsis>
+         
+         <methodsynopsis>
+            <type>CRingFragmentItem&amp;</type>
+            <methodname>operator=</methodname>
+            <methodparam>
+                <modifier>const</modifier><type>CRingFragmentItem&amp;</type>
+                <parameter>rhs</parameter>
+            </methodparam>
+         </methodsynopsis>
+         
+         <methodsynopsis>
+            <type>int</type><methodname>operator==</methodname>
+            <methodparam>
+                <modifier>const</modifier> <type>CRingFragmentItem&amp;</type>
+                <parameter>rhs</parameter>
+            </methodparam>
+            <modifier>const</modifier>
+         </methodsynopsis>
+         
+         <methodsynopsis>
+            <type>int</type> <methodname>operator!=</methodname>
+            <methodparam>
+                <modifier>const</modifier><type>CRingFragmentItem&amp;</type>
+                <parameter>rhs</parameter>
+            </methodparam>
+            <modifier>const</modifier>
+         </methodsynopsis>
+         
+         // accessors.
+         
+        <methodsynopsis>
+            <type>uint64_t</type>
+            <methodname>timestamp</methodname>
+            <void />
+            <modifier>const</modifier>
+        </methodsynopsis>
+        
+        <methodsynopsis>
+            <type>uint32_t</type>
+            <methodname>source</methodname>
+            <void /><modifier>const</modifier>
+        </methodsynopsis>
+        
+        <methodsynopsis>
+            <type>size_t</type>
+            <methodname>payloadSize</methodname>
+            <void />
+            <modifier>const</modifier>
+        </methodsynopsis>
+        
+        <methodsynopsis>
+            <modifier>const</modifier>
+            <type>void*</type>
+            <methodname>payloadPointer</methodname>
+            <void /><modifier>const</modifier>
+        </methodsynopsis>
+        
+        <methodsynopsis>
+            <type>uint32_t</type> <methodname>barrierType</methodname>
+            <void /><modifier>const</modifier>
+        </methodsynopsis>
+       };
+        </synopsis>
+      </refsynopsisdiv>
+      <refsect1>
+         <title>DESCRIPTION</title>
+         <para>
+            Objects of this class encapsulate a <literal>EVB_FRAGMENT</literal>
+            ring item.  These items are intended to be strung together into
+            events by an event builder.  Placing them in a ring allows
+            for a test point.
+         </para>
+         <para>
+            Since this class is derived from
+            <link linkend='manpage.cringitem'>CRingItem</link>,
+            you can create ring items and then commit them to an existing
+            ring via calls to
+            <classname>CRingItem</classname>::<methodname>commitToRing</methodname>.
+            Similarly calls to
+            <classname>CRingItem</classname>::<methodname>getFromRing</methodname>.
+            allow you to get a ring item and then, when you determine from the
+            item type this is an event fragment, construct a
+            <classname>CRingFragmentItem</classname> from that item.
+         </para>
+         <para>
+            For a full description of the methods available, see
+            both <link linkend='manpage.cringitem'>CRingItem</link>'s manpage, and
+            the METHODS section below.
+         </para>
+      </refsect1>
+      <refsect1>
+         <title>
+        METHODS
+         </title>
+         <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                    <methodname>CRingFragmentItem</methodname>
+                    <methodparam>
+                       <type>uint64_t</type> <parameter>timestamp</parameter>
+                    </methodparam>
+                    <methodparam>
+                       <type>uint32_t</type> <parameter>source</parameter>
+                    </methodparam>
+                    <methodparam>
+                       <type>uint32_t</type> <parameter>payloadSize</parameter>
+                    </methodparam>
+                    <methodparam>
+                       <modifier>const</modifier> <type>void*</type> <parameter>pBody</parameter>
+                    </methodparam>
+                    <methodparam>
+                       <type>uint32_t</type> <parameter>barrier</parameter>
+                       <initializer>0</initializer>
+                    </methodparam>
+                     </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Construct an event fragment ring item.  This constructor
+                        is normally used prior to inserting  fragment item
+                        into a ring buffer via
+                        <classname>CRingItem</classname>::<methodname>commitToRing</methodname>.
+                    </para>
+                    <para>
+                        The parameters are pretty much self explanatory.
+                        The default on the <parameter>barrier</parameter>
+                        parameter is correct for fragments that are not part
+                        of barrier synchronization.
+                    </para>
+                    <para>
+                        The <parameter>timestamp</parameter> parameter is the
+                        timestamp that will be associated with the fragment.
+                        The <parameter>source</parameter> parameter identifies
+                        the source of the fragment.  The <parameter>payloadSize</parameter>
+                        parameter is the number of bytes of payload data that
+                        will be copied into the ring item from
+                        <parameter>pBody</parameter>.  <parameter>barrier</parameter>
+                        is non-zero for barrier fragments and zero if
+                        'normal' non-barrier fragments.
+                    </para>
+                </listitem>
+            </varlistentry>
+            
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CRingFragmentItem</methodname>
+                       <methodparam>
+                           <modifier>const</modifier> <type>CRingItem&amp;</type>
+                           <parameter>rhs</parameter>
+                       </methodparam>
+                       <exceptionname>std::bad_cast</exceptionname>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Constructs a fragment ring item from a
+                        <classname>CRingItem</classname>.  This is normally
+                        used after a call from
+                        <classname>CRingItem</classname>::<methodname>getFromRing</methodname>
+                        that returned a <classname>CRingItem</classname> object
+                        whose type is <literal>EVB_FRAGMENT</literal>.
+                    </para>
+                    <para>
+                        The construction then allows your software to get the
+                        values of fields of the fragment ring item via
+                        the accessor methods described later in this ssection.
+                    </para>
+                </listitem>
+            </varlistentry>
+            
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CRingFragmentItem</methodname>
+                       <methodparam>
+                           <modifier>const</modifier><type>CRingFragmentItem&amp;</type>
+                           <parameter>rhs</parameter>
+                       </methodparam>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Copy constructor for ring fragment items.  If you find
+                        yourself doing a lot of copy construction, you should
+                        re-think your code and possibly have
+                        <classname>CRingFragmentItem</classname> objects
+                        passed by pointer or reference to your functions/methods.
+                    </para>
+                </listitem>
+            </varlistentry>
+            
+            
+            
+            <varlistentry>
+                <term>
+            <methodsynopsis>
+               <modifier>virtual</modifier>
+               <methodname>~CRingFragmentItem</methodname>
+               <void />
+                </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Destroys a <classname>CRingFragmentItem</classname>
+                        and frees any dynamic storage that's associated with
+                        it.
+                    </para>
+                </listitem>
+            </varlistentry>
+            
+            <varlistentry>
+                <term>
+                <methodsynopsis>
+                   <type>CRingFragmentItem&amp;</type>
+                   <methodname>operator=</methodname>
+                   <methodparam>
+                       <modifier>const</modifier><type>CRingFragmentItem&amp;</type>
+                       <parameter>rhs</parameter>
+                   </methodparam>
+                </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Assigns the <parameter>rhs</parameter> to
+                        <varname>*this</varname>.  Any dynamic storage associated
+                        with <varname>this</varname> prior to the assignment
+                        is disposed of and it is possible that additional dynamic
+                        storage will be allocated to satisfy the needs of the
+                        assignment.
+                    </para>
+                </listitem>
+            </varlistentry>
+            
+            <varlistentry>
+                <term>
+                <methodsynopsis>
+                   <type>int</type><methodname>operator==</methodname>
+                   <methodparam>
+                       <modifier>const</modifier> <type>CRingFragmentItem&amp;</type>
+                       <parameter>rhs</parameter>
+                   </methodparam>
+                   <modifier>const</modifier>
+                </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Tests for equality.  The payload is not included
+                        in the test.  If the timestamp, event source
+                        barrier type and payload size are equal the
+                        ring items are assumed to be equal.  This is
+                        because there are real problems with an experimental
+                        setup that allows more than one fragment to have
+                        the same timestamp (except for barriers and non
+                        timestamped other items).
+                    </para>
+                </listitem>
+             </varlistentry>
+            
+            <varlistentry>
+                <term>
+                <methodsynopsis>
+                   <type>int</type> <methodname>operator!=</methodname>
+                   <methodparam>
+                       <modifier>const</modifier><type>CRingFragmentItem&amp;</type>
+                       <parameter>rhs</parameter>
+                   </methodparam>
+                   <modifier>const</modifier>
+                </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Returns <literal>true</literal> if
+                        <methodname>operator==</methodname> returns
+                        <literal>false</literal> and vica versa.
+                    </para>
+                </listitem>
+             </varlistentry>
+            
+           <varlistentry>
+            <term>
+                <methodsynopsis>
+                    <type>uint64_t</type>
+                    <methodname>timestamp</methodname>
+                    <void />
+                    <modifier>const</modifier>
+                </methodsynopsis>
+                </term>
+                <listitem>
+                <para>
+                    Accessor method that returns the value of the item's timestamp.
+                </para>
+            </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+            <term>
+                <methodsynopsis>
+                    <type>uint32_t</type>
+                    <methodname>source</methodname>
+                    <void /><modifier>const</modifier>
+                </methodsynopsis>
+                </term>
+                <listitem>
+                 <para>
+                     Accessor method that returns the value of the item's
+                     source id.
+                </para>
+            </listitem>
+        </varlistentry>
+       
+        <varlistentry>
+            <term>
+                <methodsynopsis>
+                    <type>size_t</type>
+                    <methodname>payloadSize</methodname>
+                    <void />
+                    <modifier>const</modifier>
+                </methodsynopsis>
+                </term>
+                <listitem>
+                 <para>
+                    Accessor mehthod that returns the size of the item's
+                    payload. Using this and <methodname>payloadPointer</methodname>
+                    allows complete access to the object's payload.
+                </para>
+            </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+            <term>
+                <methodsynopsis>
+                    <modifier>const</modifier>
+                    <type>void*</type>
+                    <methodname>payloadPointer</methodname>
+                    <void /><modifier>const</modifier>
+                </methodsynopsis>
+                </term>
+                <listitem>
+                 <para>
+                    Accessor method that returns a pointer to the item's
+                    payload.  With this method and
+                    <methodname>payloadSize</methodname> you can access the
+                    contents of the payload.
+                </para>
+            </listitem>
+         </varlistentry>
+         
+         <varlistentry>
+            <term>
+           <methodsynopsis>
+               <type>uint32_t</type> <methodname>barrierType</methodname>
+               <void /><modifier>const</modifier>
+                </methodsynopsis>
+                </term>
+                <listitem>
+                 <para>
+                     Accessor method that returns the barrier type field
+                     of the item.
+                 </para>
+            </listitem>
+        </varlistentry>
+                
+         </variablelist>
+      </refsect1>
+    </refentry>
+    
     <refentry id="manpage.cringselectionpredicate">
       <refmeta>
          <refentrytitle>CRingSelectionPredicate</refentrytitle>
@@ -3498,7 +3933,7 @@ item.commitToRing(aring);
    </refentry>
     	 <refentry id="ref-dataformat">
            <refmeta>
-              <refentrytitle>DataFormat.h</refentrytitle>
+              <refentrytitle id='ref-dataformat-title'>DataFormat.h</refentrytitle>
               <manvolnum>3daq</manvolnum>
            </refmeta>
            <refnamediv>
@@ -4102,6 +4537,114 @@ set EPICS_DATA(Z1234) 1.234
                           </variablelist>
                       </listitem>
                   </varlistentry>
+                  <varlistentry>
+                      <term>EventBuilderFragment</term>
+                      <listitem>
+                          <para>
+                            This item contains fragments of an event from a stage
+                            of the event builder.  Normally these items represent
+                            the output of the orderer.  The following fields
+                            are defined:
+                          </para>
+                          <variablelist>
+                            <varlistentry>
+                                <term>
+                                    <fieldsynopsis>
+                                        <type>RingtItemHeader</type><varname>s_header</varname>
+                                    </fieldsynopsis>
+                                </term>
+                                <listitem>
+                                    <para>
+                                        The ring item header as for all other
+                                        ring item types described so far.
+                                    </para>
+                                </listitem>
+                            </varlistentry>
+                            <varlistentry>
+                                <term>
+                                    <fieldsynopsis>
+                                        <type>uint64_t</type> <varname>s_timestamp</varname>
+                                    </fieldsynopsis>
+                                </term>
+                                <listitem>
+                                    <para>
+                                        The 64 bit timestamp that describes when
+                                        this fragmentw as acquired by its data
+                                        source.  These will normally be unique
+                                        for all but possibly barrier events.
+                                    </para>
+                                </listitem>
+                            </varlistentry>
+                            <varlistentry>
+                                <term>
+                                    <fieldsynopsis>
+                                        <type>uint32_t</type> <varname>s_sourceId</varname>
+                                    </fieldsynopsis>
+                                </term>
+                                <listitem>
+                                    <para>
+                                        Event fragments come from data sources.
+                                        A specific data source program may represent
+                                        several data source.  Each source is
+                                        identified by a unique 32 bit integer.
+                                        <varname>s_sourceId</varname> is that
+                                        integer for this fragment.
+                                    </para>
+                                </listitem>
+                            </varlistentry>
+                            <varlistentry>
+                                <term>
+                                    <fieldsynopsis>
+                                        <type>uint32_t</type> <varname>s_barrierType</varname>
+                                    </fieldsynopsis>
+                                </term>
+                                <listitem>
+                                    <para>
+                                        Some event fragments are parts of a larger
+                                        synchronization process.  These processes
+                                        contribute <firstterm>barrier fragments</firstterm>
+                                        (named after barrier synchronization).
+                                        Barrier synchronization requires that all
+                                        data sources emit a barrier fragment.
+                                        If this field is nonzero, the fragment
+                                        is a barrier fragment emitted by one of
+                                        these processes.
+                                    </para>
+                                </listitem>
+                            </varlistentry>
+                            <varlistentry>
+                                <term>
+                                    <fieldsynopsis>
+                                        <type>uint32_t</type> <varname>s_payloadSize</varname>
+                                    </fieldsynopsis>
+                                </term>
+                                <listitem>
+                                    <para>
+                                        Then number of bytes of data in the
+                                        event fragment body. 
+                                    </para>
+                                </listitem>
+                            </varlistentry>
+                            <varlistentry>
+                                <term>
+                                    <fieldsynopsis>
+                                        <type>uint8_t</type> <varname>s_body[1]</varname>
+                                    </fieldsynopsis>
+                                </term>
+                                <listitem>
+                                    <para>
+                                        First byte of the body (payload) of the
+                                        event fragment.  This array should be
+                                        treated as being exactly
+                                        <varname>s_payloadSize</varname>
+                                        bytes long.
+                                    </para>
+                                </listitem>
+                            </varlistentry>
+                            
+                          </variablelist>
+                      </listitem>
+                  </varlistentry>
                   
               </variablelist>
            </refsect1>
@@ -4192,6 +4735,16 @@ set EPICS_DATA(Z1234) 1.234
                                 Item type for a <type>PhysicsEventCountItem</type>
                                 which contains information about how many
                                 events have been put in the ring buffer this run.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><literal>EVB_FRAGMENT</literal></term>
+                        <listitem>
+                            <para>
+                                Item type code for a <type>EventBuilderFragment</type>
+                                item.   These are fragments of events that have not
+                                yet been put together by an event builder.
                             </para>
                         </listitem>
                     </varlistentry>
