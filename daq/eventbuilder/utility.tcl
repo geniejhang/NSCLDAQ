@@ -87,6 +87,7 @@ snit::widgetadaptor EVB::utility::sortedWidget {
     delegate option -title to  hull as      -text
     delegate option -lefttitle to lefttitle as   -text
     delegate option -righttitle to righttitle as -text
+
     
     option -create  [list]
     option -update  [list]
@@ -200,6 +201,7 @@ snit::widgetadaptor EVB::utility::sortedWidget {
             destroy [$container childsite].id$id
             destroy [$self _WidgetId $id]
         }
+        set idlist [list]
     }
     
     #---------------------------------------------------------------------------
@@ -235,7 +237,7 @@ snit::widgetadaptor EVB::utility::sortedWidget {
         }
         # Create the id widget and the user's widget:
         
-        label [$container childsite].id$id -text $id
+        label [$container childsite].id$id -text $id 
         set script $options(-create)
         uplevel #0 $script [$self _WidgetId $id]
         
@@ -295,7 +297,7 @@ snit::widgetadaptor EVB::utility::sortedWidget {
         #  Get the script and execute it at the global level:
         
         set script $options(-update)
-        uplevel #0 $script $name $data
+        uplevel #0 $script $name [list $data]
         
     }
 }
