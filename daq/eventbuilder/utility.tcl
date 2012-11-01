@@ -109,7 +109,8 @@ snit::widgetadaptor EVB::utility::sortedWidget {
         
         install lefttitle  using ttk::label $win.lefttitle -width 10
         install righttitle using ttk::label $win.righttitle -width 10
-        install container  using ttk::frame $win.container
+        install container  using ::iwidgets::scrolledframe $win.container \
+            -hscrollmode none -vscrollmode dynamic
         
         # Layout the widgets inside the hull frame.
         
@@ -196,7 +197,7 @@ snit::widgetadaptor EVB::utility::sortedWidget {
             
             # Destroy the wiget pair.
             
-            destroy $container.id$id
+            destroy [$container childsite].id$id
             destroy [$self _WidgetId $id]
         }
     }
@@ -212,7 +213,7 @@ snit::widgetadaptor EVB::utility::sortedWidget {
     #
     # @param id - the id that is the key for the widget.
     method _WidgetId id  {
-        return $container.widget$id
+        return [$container childsite].widget$id
     }
     ##
     # _CreateNewWidget id
@@ -234,7 +235,7 @@ snit::widgetadaptor EVB::utility::sortedWidget {
         }
         # Create the id widget and the user's widget:
         
-        label $container.id$id -text $id
+        label [$container childsite].id$id -text $id
         set script $options(-create)
         uplevel #0 $script [$self _WidgetId $id]
         
@@ -257,7 +258,7 @@ snit::widgetadaptor EVB::utility::sortedWidget {
         
         # Unmanage the current set of slaves
         
-        set currentSlaves [grid slaves $container]
+        set currentSlaves [grid slaves [$container childsite]]
         if {[llength $currentSlaves]} {
             grid forget {*}$currentSlaves
         }
@@ -265,7 +266,7 @@ snit::widgetadaptor EVB::utility::sortedWidget {
         # Manage the widgets in the correct order:
         
         foreach id $idlist {
-            set idWidget $container.id$id
+            set idWidget [$container childsite].id$id
             set userWidget [$self _WidgetId $id]
             grid $idWidget $userWidget
         }
