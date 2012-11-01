@@ -42,296 +42,7 @@ namespace eval EVB {
 #------------------------------------------------------------------------------
 # Useful snidgets
 
-##
-# @class EVB::utility::sortedPair
-#
-#  This class maintains  a sorted pair of numbers. The left column is sorted
-#  ascending while the right column is assumed to be some associated data
-#  typical use is as a set of counters with some identifier (e.g. source id or
-#  fragment type) as the sort key.
-#
-# OPTIONS
-# - -title     -   Overall Title.
-# - -lefttitle -  Title of the left column
-# - -righttitle - Title of the right column
-#
-# METHODS
-#   - setItem key value sets a key/value pair.  If necessary the key's widgets are
-#     created.
-#   - clear value=0 All of the values are set to the new value.
-#   - reinit All key/value pairs are deleted.
-#   - idlist Return all the ids.
-#
-# LAYOUT
-#
-#  +---------------------------------------+
-#  |             top title                 |
-#  |   Left title        Right Title       |
-#  |         id                value      ^|
-#  |      ...                   ...       V|
-#  +---------------------------------------+
-#
-snit::widget EVB::utility::sortedPair {
-    component innerHull
-    component container
 
-    option -lefttitle  -default ""
-    option -righttitle -default ""
-
-    delegate option -title to innerHull as -text
-    delegate option *      to innerHull
-
-    variable container
-
-    # List of id/value pairs.  The widgets 
-    # associated with it are of the form
-    # $container.${id}id and $container.${id}value
-    #
-    # The list is maintained sorted by id.
-    #
-    variable values  [list]
-
-    ##
-    # constructor
-    #
-    #  Create and layout the widgets.  Since snit does not 
-    #  support ttk::frame hulls, innerHull is a ttk::labelframe
-    #  that is pasted to fill the hull and acts like a hull
-    #  for everything else.
-    #  
-    # The left title and right title are then gridded
-    # at the top of the frame and a scrolledframe
-    # is used to hold the ttk::text  items that
-    # make up the individual id/value pairs.
-    #
-    # 
-    constructor args {
-	#
-	# Create the inner hull, the label will be
-	# centered at the top:
-	
-	install innerHull using ttk::labelframe $win.hull \
-	    -labelanchor n
-
-	# The top title widgets .. can be gridded now.
-
-	ttk::label $innerHull.lefttitle \
-	    -textvariable ${selfns}::options(-lefttitle) \
-	    -width 10
-	ttk::label $innerHull.righttitle  \
-	    -textvariable ${selfns}::options(-righttitle) \
-	    -width 10
-
-	grid $innerHull.lefttitle $innerHull.righttitle
-
-	# Now the scrolled frame that will hold
-	# the widgets...it's glued to the entire
-	# remainder of the lable frame:
-
-	iwidgets::scrolledframe $innerHull.sf \
-	    -hscrollmode none -vscrollmode dynamic
-	grid $innerHull.sf -columnspan 2 -sticky nsew
-
-	set container [$innerHull.sf childsite]
-
-	grid $innerHull -sticky nsew
-       
-	# Process options:
-
-	$self configurelist $args
-
-
-    }
-    ##
-    # setItem id value
-    #
-    #  If necessary creates a new entry for id both 
-    #  internally and in the widget set.
-    #  the new widgets are inserted so that they
-    #  remain sorted by id in the scrolled frame.
-    #  If the id already exists, it's value widget
-    #  is just modified.
-    #
-    #  @param id - The id of the element (key).
-    #  @param value - The new value it should have
-    #
-    method setItem {id value} {
-	set widgets [$self _getWidgets $id];  # making if needed
-	$self _updateList $id $value;	     # update values
-
-	set vWidget [lindex $widgets 1]
-	$vWidget config -text $value;        # update display. 
-    }
-    ##
-    # clear ?value?
-    #
-    #  Reset all values to value or zero if not supplied.
-    #
-    # @param value - the new value to which all value widgets
-    #                will be set.
-    #
-    method clear {{value 0}} {
-	foreach item $values {
-	    set id [lindex $item 0]
-	    $self setItem $id $value
-	}
-    }
-    ##
-    # reinit
-    #
-    #  Destroys all id/value pairs in both the internal
-    #  representation and the widgets themselves.
-    #
-    method reinit {} {
-	foreach item $values {
-	    set widgets [$self _getWidgets [lindex $item 0]]
-	    destroy [lindex $widgets 0]
-	    destroy [lindex $widgets 1]
-	}
-	set values [list]
-    }
-    ##
-    # idlist
-    #   Return a (possibly empty) list of the ids currently known
-    #
-    # @return list - of ids
-    #
-    method idlist {} {
-        set ids [list]
-        foreach item $values {
-            lappend ids [lindex $item 0]
-        }
-        return $ids
-    }
-    #----------------------------------------------
-    #  Private methods.
-
-    ##
-    # _getWidgets id
-    #  
-    #  Gets the widget names associated with an id
-    #  if necessary, new widgets are created
-    #  if that is needed, placeholder values are
-    #  also created in the values list.
-    #
-    # @param id - The key we are looking up.
-    #
-    # @return list (2 elements)
-    # @retval the first list element is the
-    #         widget for the id the second for its value.
-    #
-    method _getWidgets id {
-
-	# If needed create a new widget pair
-
-	set listIndex [lsearch -index 0 -integer -exact \
-			   $values $id]
-	if {$listIndex == -1} {
-	    $self _createWidgets $id
-	}
-	# Compute the widgets:
-	
-	return [$self _widgetNames $id]
-    }
-    ##
-    # _updateList id value
-    # 
-    # Update the 'values' list with a new value for an
-    # index.  The caller must ensure that the pair for the
-    # id already exists (see _createWigets below).
-    #
-    # @param id - The id whose value will be modified.
-    # @param value - The new value associated with the id. 
-    method _updateList {id value} {
-	set listIndex [lsearch -index 0 -integer -exact \
-			   $values $id]
-	set values [lreplace $values $listIndex $listIndex \
-			[list $id $value]]
-    }
-    ##
-    # _createWidgets id
-    #
-    #   - Creates the widgets associated with id,
-    #   - Puts a placeholder value for the id
-    #     in the appropriate place in the values list.
-    #   - Puts them in the container in the appropriate place
-    #
-    # @param id - The identifier;  the caller must have
-    #             ensured this id has neither values
-    #             list elements nor widgets.
-    #
-    method _createWidgets id {
-	set widgets [$self _widgetNames $id]; # Just the names
-
-	# Figure out where to put new placeholder in the
-	# list. We insert a placeholder just before
-	# the first list element that is larger than us
-	# else we append it to the list.
-	# The index is memorized as that will be the 
-	# row number at which the new widgets will be gridded.
-	#
-	# The place holder just has an empty
-	# value:
-
-	set placeholder [list $id ""]
-	set insertIndex 0
-	foreach item $values {
-	    set elementId [lindex $item 0]
-	    if {$elementId > $id} {
-		break
-	    }
-	    incr insertIndex
-	}
-	set values [linsert $values $insertIndex $placeholder]
-
-	# Tell the gridder to forget all of the
-	# widgets that are after us in the list:
-
-	foreach item [lrange $values \
-			  [expr $insertIndex + 1] end] {
-	    set unpasteId [lindex $item 0]
-	    set unpasteWids [$self _widgetNames $unpasteId]
-	    grid forget [lindex $unpasteWids 0]
-	    grid forget [lindex $unpasteWids 1]
-	}
-	# create the new widgets, grid them and all the
-	# others we just ungridded:
-
-	ttk::label [lindex $widgets 0] -text $id \
-	    -width 10
-	ttk::label [lindex $widgets 1] -text "" \
-	    -width 10
-
-	foreach item [lrange $values $insertIndex end] {
-	    set itemId [lindex $item 0]
-	    set itemWidgets [$self _widgetNames $itemId]
-
-	    grid [lindex $itemWidgets 0] \
-		[lindex $itemWidgets 1] -row $insertIndex
-
-	    incr insertIndex
-	}
-
-
-    }
-    ##
-    # _widgetNames id
-    #
-    # returns a list of the widget names associated with
-    # the specified id.  The widget names are computed
-    # but there is no assurance the widgets actually
-    # exist yet.  That's a job for the caller to manage.
-    # 
-    # @param id - the id for which to compute the widget
-    #             names.
-    #
-    # @return 2 element list of id value widget names
-    method _widgetNames id {
-	set idWidget $container.${id}id
-	set valueWidget $container.${id}value
-	return [list $idWidget $valueWidget]
-    }	
-}
 ##
 # @class EVB::utility::sortedWidget
 #
@@ -347,12 +58,12 @@ snit::widget EVB::utility::sortedPair {
 #                  (ttk::labelframe)
 #   -lefttitle   - Title of the left column of the widget.
 #   -rightttitle - Title of the widget column.
-#   -create      - Script called to create a new widget.  The
+#   -create      - Mandatory Script called to create a new widget.  The
 #                  requested widget id is passed in.
-#   -update      - Script called to update an existing widget.
+#   -update      - Mandatory Script called to update an existing widget.
 #                  this is passed the widget id and the dict passed to
 #                  the setValue method.
-#   -destroy     - Script called when a widget is being destroyed.
+#   -destroy     - Optinonal Script called when a widget is being destroyed.
 #                  the script is passed the widget name and the id
 #                  the widget has not yet been destroyed at this time but
 #                  will be when the script returns.
@@ -362,6 +73,7 @@ snit::widget EVB::utility::sortedPair {
 #   getWidget id  - Get the widget corresponding to the specified id.
 #   update id valuelist - Requests an update. valuelist ia passed
 #                         without interpretation to the -update callback
+#   reset         - Destroy all ids/widgets.
 #
 # NOTE:
 #   The -create and -update callbacks are required.  If they would be called but
@@ -401,8 +113,288 @@ snit::widgetadaptor EVB::utility::sortedWidget {
         
         # Layout the widgets inside the hull frame.
         
-        grid $win.lefttitle $win.righttile
+        grid $win.lefttitle $win.righttitle
         grid $win.container -columnspan 2 -sticky nsew
+        
+        $self configurelist $args
+    }
+    ##
+    # destructor
+    #
+    #  Invoking reset ensures that all appropriate -delete script calls are
+    #  performed.
+    #
+    destructor  {
+        $self reset
+    }
+    ##
+    # listids
+    #   List the known ids for the widget sets.
+    #
+    # @return list - list of ids that are known to the widget
+    #
+    method listids {} {
+        return $idlist
+    }
+    ##
+    # getWidget id
+    #
+    #   Return the widget associated with the specified id.  It is an error
+    #   to request the widget of an id that is not in the idlist
+    #
+    # @param id  - id to get the widget name for.
+    # @return string - widget name.
+    #
+    method getWidget id {
+        if {$id in $idlist} {
+            return [$self _WidgetId $id]
+        } else {
+            error "$id does not have a corresponding widget"
+        }
+    }
+    ##
+    # update id client-data
+    #
+    #  Requests an update of the widget corresponding to $id.
+    #  - If the widget does not yet exist, the -create callback is called
+    #    and with the name of the desired widget, and the list both
+    #    internal and display are adjusted appropriately.
+    #  - The -update callback is given both the widget name and the client-data
+    #    and is expected to make appropriate alterations to the widget appearance.
+    #
+    # @param id          - The id of the widget to update.
+    # @param client-data - data passwd without interpretation to the update
+    #                      script.
+    #
+    method update {id clientData} {
+        
+        # If needed create the new widget and modify the layout:
+        
+        if {$id ni $idlist} {
+            $self _CreateNewWidget $id
+            $self _LayoutWidgets
+        }
+        set widgetName [$self _WidgetId $id]
+        $self _UpdateWidget $widgetName $clientData
+    }
+    ##
+    # reset
+    #
+    # Destroys all widgets and empties the idlist.
+    # If a -destroy script is defined, it is called once for each id.
+    #
+    method reset {} {
+        set destroyscript $options(-destroy)
+        foreach id $idlist {
+            set widget [$self _WidgetId $id]
+            
+            # If there's a destroy script invoke it for this id.
+            
+            if {$destroyscript ne ""} {
+                uplevel #0 $destroyscript $widget $id
+            }
+            
+            # Destroy the wiget pair.
+            
+            destroy $container.id$id
+            destroy [$self _WidgetId $id]
+        }
+    }
+    
+    #---------------------------------------------------------------------------
+    #
+    # Private methods
+    
+    ##
+    # _WidgetId id
+    #
+    #  Produces the name of a widget given the id that 'controls it.
+    #
+    # @param id - the id that is the key for the widget.
+    method _WidgetId id  {
+        return $container.widget$id
+    }
+    ##
+    # _CreateNewWidget id
+    #
+    #  Creates a widget that corresonds to the id passed in.  To do this
+    #  the -create script is called.  The id is then put into the idlist
+    #  in the correct/sorted position.
+    #
+    # @param id - The id that 'selects' the widget.
+    #
+    # @throw - It is an error not to have a -create script.
+    #
+    method _CreateNewWidget id {
+        
+        # Error out if there's no script to create widgets.
+        
+        if {$options(-create) eq ""} {
+            error "A -create script must be supplied by the time ids are added"
+        }
+        # Create the id widget and the user's widget:
+        
+        label $container.id$id -text $id
+        set script $options(-create)
+        uplevel #0 $script [$self _WidgetId $id]
+        
+        # Insert the id in the correct stop of the id list...for now
+        # just lappend and re-sort the list.  The assumptions are that:
+        # - There will be a relayout
+        # - Relayout does  a layout of all widgets in the list.
+        #
+        
+        lappend idlist $id
+        set idlist [lsort -integer $idlist]
+    }
+    ##
+    # _LayoutWidgets
+    #
+    #  Unmanages all widgets in the container then re-manages them in
+    #  the appropriate order.
+    #
+    method _LayoutWidgets {} {
+        
+        # Unmanage the current set of slaves
+        
+        set currentSlaves [grid slaves $container]
+        if {[llength $currentSlaves]} {
+            grid forget {*}$currentSlaves
+        }
+        
+        # Manage the widgets in the correct order:
+        
+        foreach id $idlist {
+            set idWidget $container.id$id
+            set userWidget [$self _WidgetId $id]
+            grid $idWidget $userWidget
+        }
+    }
+    ##
+    # _UpdateWidget name data
+    #
+    #  Updates the specified user widget.  This is done by invoking the
+    #  -update script.  It is an error for this method to be called prior to the
+    #  establishment of an update script to handle it.
+    #
+    # @param name - Name of the widget to update.
+    # @param data - Application specific data to be used by -update to determine
+    #               what changes need to be made to the widget.
+    #
+    #  @throw - if the -update script is empty.
+    #
+    method  _UpdateWidget {name data} {
+        
+        # Toss an error if the -update script is empty:
+        
+        if {$options(-update) eq ""} {
+            error "An -update script must have been supplyed to change the widgets"
+        }
+        
+        #  Get the script and execute it at the global level:
+        
+        set script $options(-update)
+        uplevel #0 $script $name $data
+        
+    }
+}
+
+
+
+##
+# @class EVB::utility::sortedPair
+#
+#  This class maintains  a sorted pair of numbers. The left column is sorted
+#  ascending while the right column is assumed to be some associated data
+#  typical use is as a set of counters with some identifier (e.g. source id or
+#  fragment type) as the sort key.
+#
+# OPTIONS
+# - -title     -   Overall Title.
+# - -lefttitle -  Title of the left column
+# - -righttitle - Title of the right column
+#
+# METHODS
+#   - setItem key value sets a key/value pair.  If necessary the key's widgets are
+#     created.
+#   - clear value=0 All of the values are set to the new value.
+#   - reinit All key/value pairs are deleted.
+#   - idlist Return all the ids.
+#
+# LAYOUT
+#
+#  +---------------------------------------+
+#  |             top title                 |
+#  |   Left title        Right Title       |
+#  |         id                value      ^|
+#  |      ...                   ...       V|
+#  +---------------------------------------+
+#
+snit::widgetadaptor EVB::utility::sortedPair {
+    delegate option -title to hull
+    delegate option -lefttitle to hull
+    delegate option -righttitle to hull
+    
+    delegate method reinit to hull as reset
+    delegate method idlist to hull as listids
+    delegate method setItem to hull as update
+
+    ##
+    # constructor
+    #
+    #  This is where the main work is done.  The hull is installed as a
+    #  EVB::utility::sortedWidget and the -create -update scripts installed
+    #  to meet our needs.
+    #
+    # @param args - option/value pairs.
+    #
+    constructor args {
+        installhull using EVB::utility::sortedWidget \
+            -create [mymethod _CreateLabel] -update [mymethod _UpdateLabel]
+        
+        $self configurelist $args
+    }
+
+    ##
+    # clear ?value = 0?
+    #
+    #  Clears all widgets.  An optional value (defaulting to 0) may be specified.
+    #  This iterates over all ids and calls the hull update method.
+    #
+    # @param value - (optional default 0) new value for all widgets.
+    #
+    method clear {{value 0}} {
+        set ids [$hull listids]
+        
+        foreach id $ids {
+            $hull update $id $value
+        }
+    }
+    #---------------------------------------------------------------------------
+    #
+    # Private methods.
+    #
+    
+    ##
+    # _CreateLabel widget
+    #
+    #   Create a label named 'widget'.
+    #
+    # @param widget - full path of widget to create.
+    #
+    method _CreateLabel widget {
+        label $widget -width 12
+    }
+    ##
+    # _UpdateLabel
+    #
+    #  Set the text in a label as directed.
+    #
+    #  @param widget - Widget to modify.
+    #  @param text   - Text to set.
+    #
+    method _UpdateLabel {widget text} {
+        $widget configure -text $text
     }
     
 }
