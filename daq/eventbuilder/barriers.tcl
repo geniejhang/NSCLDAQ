@@ -27,7 +27,7 @@ if {[lsearch -exact $auto_path $here] == -1} {
     lappend auto_path $here
 }
 
-package provide barriers 1.0
+package provide EVB::barriers 1.0
 
 package require Tk
 package require snit
@@ -63,12 +63,14 @@ namespace eval EVB {
 #   |  <complete>    <incomplete> <heterogenous> |
 #   +--------------------------------------------+
 #
-snit::widget EVB::BarrierStats::Summary {
+snit::widgetadaptor EVB::BarrierStats::Summary {
     option -completecount     -default 0
     option -incompletecount   -default 0
     option -heterogenouscount -default 0
     
+    delegate option -text to hull
     constructor args {
+        installhull using ttk::labelframe
         #
         #  Create the widgets
         

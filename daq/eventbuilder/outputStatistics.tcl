@@ -37,7 +37,7 @@ package require Tk
 package require snit
 package require EVBUtilities
 
-package provide EVB::ouputStatistics 1.0
+package provide EVB::outputStatistics 1.0
 
 ##
 #  Ensure that the EVB namespace is defined so that we can put stuff into it.
@@ -71,15 +71,18 @@ namespace eval EVB {
 #   +-----------------------------------------+
 # \endverbatim
 #
-snit::widget ::EVB::outputSummary {
+snit::widgetadaptor ::EVB::outputSummary {
     option -fragments    -default 0
     option -hottestid    -default ""
     option -hottestcount -default ""
     option -coldestid    -default ""
     option -coldestcount -default ""
     
+    delegate option -text to hull
     
     constructor args {
+        installhull using ttk::labelframe
+        
         #  Create the widgets (all ttk::label s)
         
         ttk::label $win.fragl   -text {Total fragments}

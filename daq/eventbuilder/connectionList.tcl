@@ -26,11 +26,15 @@ namespace eval EVB {}
 # each element has host, description and State colums:
 #
 #
-snit::widget EVB::connectionList {
+snit::widgetadaptor EVB::connectionList {
     option -updaterate -default 1; # Update rate in seconds.
     variable lastConnections [list]
 
+    delegate option -text to hull
+
     constructor args {
+        installhull using ttk::labelframe
+        
 	##
 	# TODO: Put this in a scrolling box.
 	#
@@ -43,6 +47,7 @@ snit::widget EVB::connectionList {
 	
 
 	grid $win.table -sticky nsew
+        $self configurelist $args
 
 	$self _update;			# Stock the table and reschedule the update periodicity.
     }

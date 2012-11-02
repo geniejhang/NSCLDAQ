@@ -85,9 +85,9 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
     delegate method * to innerHull
     
     constructor args {
-        $self configurelist $args
+
         
-        install innerHull using ttk::frame $win.hull
+        install innerHull using ttk::labelframe $win.innerhull
         
         #
         #  Define the widgets:
@@ -119,6 +119,8 @@ snit::widget ::EVB::inputStatistics::summaryDisplay {
         grid $innerHull.deepdepth      -row 3 -column 3
 
         grid $innerHull -sticky nsew
+        
+        $self configurelist $args
     }
 }
 
