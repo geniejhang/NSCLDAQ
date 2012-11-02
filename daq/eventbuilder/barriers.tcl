@@ -140,7 +140,116 @@ snit::widget EVB::BarrierStats::BarrierTypes {
     }
 
 }
-
+##
+# @class EVB::BarrierStats::queueBarriers
+#
+#   provide a per queue barrier statistics list.  This is a really
+#   spiffy keen nested use of EVB::SortedWidget  where the managed widgets
+#   are EVB::BarrierStats::BarrierTypes (a sorted pair in disguise).
+#
+# OPTIONS
+#  - -text - The entire widget (well widgetadaptor really) is wrapped in a
+#            ttk::labelframe.  This option is delegated to that frame so that
+#            the frame can be titled.
+#
+# METHODS
+#   setStatistic sourceid barriertype count
+#       - If necessary creates a new widget containing a BarrierTypes widget.
+#         if necessary creates a new barrier type label/value pair within that
+#         widget and sets the count of that widget to $count.
+#
+#   clear - Clears all values in all widgets to zero.
+#   reset - Destroys all of the existing widgets
+#
+snit::widgetadaptor EVB::BarrierStats::queueBarriers {
+    delegate option -text to hull
+    
+    delegate method reset to hull 
+    ##
+    #  The constructor installs the hull with:
+    #  - the overall title as the -text option if supplied.
+    #  - the left title as Srcid
+    #  - the right title as Statsitics
+    #  - The -create script as a script that will crate a BarrierTypes widget
+    #  - the -update script as a script that will set the BarrierTypew widget
+    #    to the specified single value.
+    #
+    constructor args {
+        installhull using ::EVB::utility::sortedWidget \
+            -lefttitle Srcid   \
+            -create [mymethod _CreateSource]           \
+            -update [mymethod _UpdateSourceElement]   \
+            -width 200 -height 400
+        
+        $self configurelist $args
+    }
+    
+    #--------------------------------------------------------------------------
+    # Public methods.
+    #
+    
+    ##
+    # setStatistic sourceid barriertype count
+    #
+    #  If necessary this creates a new source widget and even the
+    #  barrier counter item within it.  Callbacks work with the
+    #  sorted widget to do the widget specific work and the sorted widget
+    #  really does the heavy lifting.
+    #
+    #  @param sourceid - The id of the source.
+    #  @param barriertype - A barrier type.
+    #  @param count       - Number of barrier packets seen by sourceid for the
+    #                       barriertype barrier.
+    #
+    method setStatistic {sourceid barriertype count} {
+        $hull update $sourceid [list $barriertype $count]
+    }
+    ##
+    # clear
+    #
+    #   Clears the counts of all widgets to zero.
+    #   The source  widgets one by one are cleared.
+    #
+    method clear {} {
+        set idList [$hull listids]
+        foreach id $idList {
+            set widgdet [$hull getWidget $id]
+            $widget clear
+        }
+    }
+    
+    
+    #--------------------------------------------------------------------------
+    # Private methods.
+    #
+    
+    ##
+    # _CreateSource
+    #
+    #   Create a new BarrierTypes widget that is empty.
+    #
+    # @param path  - Required widget path name
+    #
+    method _CreateSource path {
+        EVB::BarrierStats::BarrierTypes $path -width 380
+    }
+    ##
+    # _UpdateSourceElement widget clientData
+    #
+    #   Called back when we're asked to update one of our source element widgets.
+    #   Just pull the barrier type and counts from the clientData and
+    #   pass them on down to the setCount method of the widget.
+    #
+    # @param widget - the widget to update (this is a BarrierTypes widget)
+    # @param clientData - Data passed along to us by the callback. This is a 2
+    #                     element list containing in order:
+    #                     - The barrier type for which we have a counter.
+    #                     - The value of the counter.
+    #
+    method _UpdateSourceElement {widget clientData} {
+        $widget setCount [lindex $clientData 0] [lindex $clientData 1]
+    }
+}
 
 #------------------------------------------------------------------------------
 #   Testing stuff.
