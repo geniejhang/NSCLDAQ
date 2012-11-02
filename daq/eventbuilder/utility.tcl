@@ -93,6 +93,9 @@ snit::widgetadaptor EVB::utility::sortedWidget {
     option -update  [list]
     option -destroy [list]
     
+    delegate option * to container
+    
+    
     variable idlist [list];     # Sorted list of ids.
     
     ##
@@ -120,15 +123,7 @@ snit::widgetadaptor EVB::utility::sortedWidget {
         
         $self configurelist $args
     }
-    ##
-    # destructor
-    #
-    #  Invoking reset ensures that all appropriate -delete script calls are
-    #  performed.
-    #
-    destructor  {
-        $self reset
-    }
+
     ##
     # listids
     #   List the known ids for the widget sets.
@@ -267,10 +262,13 @@ snit::widgetadaptor EVB::utility::sortedWidget {
         
         # Manage the widgets in the correct order:
         
+        set row 0
         foreach id $idlist {
             set idWidget [$container childsite].id$id
             set userWidget [$self _WidgetId $id]
-            grid $idWidget $userWidget
+            grid $idWidget   -row $row -sticky nsw -column 0
+            grid $userWidget -row $row -sticky nse -column 1
+            incr row
         }
     }
     ##
@@ -337,10 +335,14 @@ snit::widgetadaptor EVB::utility::sortedPair {
     delegate option -title to hull
     delegate option -lefttitle to hull
     delegate option -righttitle to hull
+
+    delegate option * to hull
     
     delegate method reinit to hull as reset
     delegate method idlist to hull as listids
     delegate method setItem to hull as update
+    
+
 
     ##
     # constructor
