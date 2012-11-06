@@ -225,7 +225,7 @@ snit::widget ::EVB::inputStatistics::queueDisplay {
 #   clear - Sets all counters in all displayed data source widgets to zero.
 #   reset - Destroys all of the widgets.
 #
-snit::widgetdapator EVB::inputStatistics::queueStats  {
+snit::widgetadaptor EVB::inputStatistics::queueStats  {
     
     delegate method reset to hull
     delegate option *     to hull
@@ -239,7 +239,8 @@ snit::widgetdapator EVB::inputStatistics::queueStats  {
     constructor args {
         installhull using EVB::utility::sortedWidget \
             -lefttitle src -create [mymethod _CreateWidget] \
-            -update [mymethod _UpdateWidget]
+            -update [mymethod _UpdateWidget] \
+            -width 250 -height 300
         
         $self configurelist $args
     }
@@ -247,6 +248,35 @@ snit::widgetdapator EVB::inputStatistics::queueStats  {
     #
     #  Public methods.
     
+    ##
+    # updateQueue source depth oldest output-count
+    #
+    #  Update the counters etc. in a queue element widget:
+    #
+    # @param source - The id of the data source queue.
+    # @param depth  - The current number of elements in the queue.
+    # @param oldest - The timestamp of the oldest element in the queue (head)
+    # @param outfrags - The number of fragments that have been removed from the
+    #                   queue for output.
+    #
+    method updateQueue {source depth oldest outfrags} {
+        $hull update $source [list $source $depth $oldest $outfrags]
+    }
+    ##
+    # clear
+    #
+    #    Clear the counters for all elements.  Specifically
+    #    - depth - set to zero.
+    #    - oldest - set to zero.
+    #    - outfrags - set to zero.
+    #
+    #
+    method clear {} {
+        set idList [$hull listids]
+        foreach id $idList {
+            $self update $id 0 0 0 0
+        }
+    }
     
     #--------------------------------------------------------------------------
     #  Private methods
@@ -259,7 +289,28 @@ snit::widgetdapator EVB::inputStatistics::queueStats  {
     #
     # @param widget - Widget path to use when creating this widget.
     #
-    method _CreateWidget 
+    method _CreateWidget widget {
+        EVB::inputStatistics::queueDisplay $widget
+    }
+    ##
+    # _UpdateWidget data
+    #
+    #   Called to update the information held by one of the sorted widgets.
+    #
+    # @param widget - path to the widget to modify.
+    # @param data   - List that contains the data to put in the widget.
+    #                 Elements in the list are, in order:
+    #                 - source : The event source id.
+    #                 - depth : The number of elements in the queue.
+    #                 - oldest : The timestamp of the oldest queue element.
+    #                 - output-count : The number of fragments that have been
+    #                   output from this queue.
+    #
+    method _UpdateWidget {widget data} {
+        $widget configure \
+            -id     [lindex $data 0] -depth    [lindex $data 1] \
+            -oldest [lindex $data 2] -outcount [lindex $data 3]
+    }
 }
 
 ##
