@@ -12,9 +12,23 @@
 #	     Michigan State University
 #	     East Lansing, MI 48824-1321
 
+##
+# @file inputStatistics.tcl
+# @brief widget collection for displaying input queue statistics.
+#
+
+#  Add here to the package include path if it's not there already:
+
+set here [file dirname [info script]]
+if {[lsearch $::auto_path $here] == -1} {
+    lappend ::auto_path $here
+}
+
 package require Tk
 package require snit
+package require EVBUtilities
 package provide EVB::inputStatistics 1.0
+
 
 
 #
@@ -197,6 +211,57 @@ snit::widget ::EVB::inputStatistics::queueDisplay {
         grid $innerHull -sticky nsew
     }
 }
+
+##
+# @class EVB::inputStatistics::queueStats 
+#
+#  Widget to show all the per queue statistics.  This is a sorted widget
+#  where each widget associated with a data source is a queueDisplay widget.
+#
+# METHODS:
+#   updateQueue source depth oldest output-count
+#       Updates the widget for the specified data source (creating a new one
+#       as needed).
+#   clear - Sets all counters in all displayed data source widgets to zero.
+#   reset - Destroys all of the widgets.
+#
+snit::widgetdapator EVB::inputStatistics::queueStats  {
+    
+    delegate method reset to hull
+    delegate option *     to hull
+    
+    ##
+    # constructor
+    #
+    #  installs the sorted widget as a hull with the appropriate connections
+    #  to support the creation and updating of the child widgets:
+    #
+    constructor args {
+        installhull using EVB::utility::sortedWidget \
+            -lefttitle src -create [mymethod _CreateWidget] \
+            -update [mymethod _UpdateWidget]
+        
+        $self configurelist $args
+    }
+    #-------------------------------------------------------------------------
+    #
+    #  Public methods.
+    
+    
+    #--------------------------------------------------------------------------
+    #  Private methods
+    #
+    
+    ##
+    # _CreateWidget widget
+    #
+    #   Create a queueDisplay widget with the specified window path.
+    #
+    # @param widget - Widget path to use when creating this widget.
+    #
+    method _CreateWidget 
+}
+
 ##
 # @class EVB::inputStatistics::statusDisplay
 #
