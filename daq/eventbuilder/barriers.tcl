@@ -162,7 +162,7 @@ snit::widget EVB::BarrierStats::BarrierTypes {
 #   reset - Destroys all of the existing widgets
 #
 snit::widgetadaptor EVB::BarrierStats::queueBarriers {
-    delegate option -text to hull
+    delegate option * to hull
     
     delegate method reset to hull 
     ##
@@ -248,6 +248,32 @@ snit::widgetadaptor EVB::BarrierStats::queueBarriers {
     #
     method _UpdateSourceElement {widget clientData} {
         $widget setCount [lindex $clientData 0] [lindex $clientData 1]
+    }
+}
+##
+# @class EVB::BarrierStats::incomplete
+#
+#  This widget provides a mechanism to display the number of times each
+#  source has failed to contribute to a barrier.
+#
+#  This is just a sortedPair widget where the key is the source id and
+#  the right hand side is the incomplete count.
+#
+#
+snit::widgetadaptor EVB::BarrierStats::incomplete {
+    delegate option * to hull
+    delegate method * to hull
+    
+    ##
+    #  constrcuctor
+    #
+    # Just specifies some reasonable default parameters for the  column titles.
+    #
+    constructor args {
+        installhull using ::EVB::utility::sortedPair \
+            -lefttitle Srcid -righttitle Missing
+        
+        $self configurelist $args
     }
 }
 

@@ -26,7 +26,7 @@ if {[lsearch $::auto_path $here] == -1} {
 #
 
 
-package provide Late 1.0
+package provide EVB::Late 1.0
 package require Tk
 package require snit
 package require EVBUtilities
