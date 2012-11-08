@@ -61,7 +61,7 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
   new CSourceCommand(*pInterpObject, "EVB::source"); //  namespace prevents conflict with core source
   new CDeadSourceCommand(*pInterpObject,"EVB::deadsource");
   new CReviveSocketCommand(*pInterpObject, "EVB::reviveSocket");
-  new CFlushCommand(*pInterpObject, "EVB::flush");
+  new CFlushCommand(*pInterpObject, "EVB::flushqueues");
   new CResetCommand(*pInterpObject, "EVG::reset");
 
   // Setup the output stage:

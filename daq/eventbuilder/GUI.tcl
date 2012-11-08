@@ -463,13 +463,47 @@ snit::widgetadaptor EVB::statusNotebook {
 # \beginverbatim
 #    EVB::createGUI .evb
 #    pack .evb
-#    EVB::maintainGUI .evb
+#    EVB::maintainGUI .evb 1000
 # \endverbatim
 #
 # @return name of widget created.
 #
 proc EVB::createGui widget {
+    package require EventBuilder
     EVB::statusNotebook $widget
     return $widget
 }
 
+##
+# EVB::maintainGUI widget ms
+#
+#   Self rescheduling proc that maintains an event builder stander UI.
+#
+# @param widget - Widget containing the event builder standard UI.
+# @param ms     - Number of ms between refresh requests.
+#                 This defaults to 2000.
+#
+proc EVB::maintainGUI {widget {ms 2000}} {
+    puts stderr Update
+
+    # Get the UI pieces:
+
+    set summary    [$widget getSummaryStats]
+    set source     [$widget getSourceStats]
+    
+    # Update the input statistics and its summaries:
+
+    set inputStats [EVB::inputStats]
+    puts stderr $inputStats
+
+    $summary configure -infragments [lindex $inputStats 2] \
+	-oldest [lindex $inputStats 0] -newest [lindex $inputStats 1]
+    set iQStats [$source getQueueStatistics]
+    foreach queue [lindex $inputStats 3] {
+	$iQStats updateQueue [lindex $queue 0] [lindex $queue 1] [lindex $queue 2] 0
+    }
+
+
+
+    after $ms [list EVB::maintainGUI $widget $ms]
+}

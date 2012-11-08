@@ -64,7 +64,8 @@ libEventBuilder_la_LIBADD = @top_builddir@/base/tclplus/libtclPlus.la \
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
-	connectionList.tcl observer.tcl
+	connectionList.tcl observer.tcl barriers.tcl GUI.tcl inputStatistics.tcl \
+	late.tcl outputStatistics.tcl utility.tcl
 
 TCL_TEST_FILES=tclTests.tcl managerTests.test
 

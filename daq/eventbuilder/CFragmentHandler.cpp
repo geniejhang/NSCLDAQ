@@ -361,9 +361,8 @@ CFragmentHandler::getStatistics()
     result.s_newestFragment = m_nNewest;
     
     QueueStatGetter statGetter;
-    QueueStatGetter& rstatGetter(statGetter);
     
-    for_each(m_FragmentQueues.begin(), m_FragmentQueues.end(), rstatGetter);
+    statGetter = for_each(m_FragmentQueues.begin(), m_FragmentQueues.end(), statGetter);
     
     result.s_totalQueuedFragments = statGetter.totalFragments();
     result.s_queueStats           = statGetter.queueStats();
@@ -868,12 +867,12 @@ CFragmentHandler::QueueStatGetter::QueueStatGetter() :
 void
 CFragmentHandler::QueueStatGetter::operator()(SourceElementV& source)
 {
-    SourceQueue&  sourceQ(source.second);
-    
+    SourceQueue&  sourceQ(source.second);    
     QueueStatistics stats;
     stats.s_queueId       = source.first;
     stats.s_queueDepth    = sourceQ.s_queue.size();
-    stats.s_oldestElement = sourceQ.s_queue.front().second->s_header.s_timestamp;
+    stats.s_oldestElement = stats.s_queueDepth ?sourceQ.s_queue.front().second->s_header.s_timestamp :
+      0;
     
     m_nTotalFragments += stats.s_queueDepth;
     m_Stats.push_back(stats);
