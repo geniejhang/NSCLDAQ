@@ -449,12 +449,27 @@ snit::widgetadaptor EVB::statusNotebook {
 #
 
 
-
-## Testing stubs
-
-proc ::EVB::getConnections {} {
-    return [list \
-            [list localhost "Dummy connection" ACTIVE No] \
-            [list remote.host.here "Second connection" FORMING "Yes"] \
-    ]
+##
+# EVB::createGui
+#
+# Creates the event builder GUI.  Note this does nothing
+# to maintain the GUI to do that you must call EVB::maintainGui
+#
+# @param widget - This is the name of the window to create.
+#                 (e.g in the main toplevel use e.g. .evbstatus)
+#                 This widget will be created.  It is up to the caller to lay
+#                 out the window in its parent.
+# @example:
+# \beginverbatim
+#    EVB::createGUI .evb
+#    pack .evb
+#    EVB::maintainGUI .evb
+# \endverbatim
+#
+# @return name of widget created.
+#
+proc EVB::createGui widget {
+    EVB::statusNotebook $widget
+    return $widget
 }
+
