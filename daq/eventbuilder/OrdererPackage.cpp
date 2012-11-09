@@ -34,6 +34,7 @@
 #include "CReviveSocketCommand.h"
 #include "CFlushCommand.h"
 #include "CResetCommand.h"
+#include "CBarrierStatsCommand.h"
 
 static const char* version = "1.0"; // package version string.
 
@@ -62,8 +63,8 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
   new CDeadSourceCommand(*pInterpObject,"EVB::deadsource");
   new CReviveSocketCommand(*pInterpObject, "EVB::reviveSocket");
   new CFlushCommand(*pInterpObject, "EVB::flushqueues");
-  new CResetCommand(*pInterpObject, "EVG::reset");
-
+  new CResetCommand(*pInterpObject, "EVB::reset");
+  new CBarrierStatsCommand(*pInterpObject, "EVB::barrierstats"); 
   // Setup the output stage:
 
   new COrdererOutput(*pInterpObject, "stdout");

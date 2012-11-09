@@ -85,7 +85,6 @@ namespace eval ::EVB {
 #
 #   - -outfragments    - Number of fragments that have been output.
 #   - -hottestoutid    - Id from which the most fragments have been written.
-
 #   - -hottestoutcount - Number of fragments written from hottestoutid.
 #   - -coldestoutid    - Id from which the fewest fragments have been written.
 #   - -coldestoutcount - Number of fragments written from coldestoutid.
@@ -484,25 +483,186 @@ proc EVB::createGui widget {
 #                 This defaults to 2000.
 #
 proc EVB::maintainGUI {widget {ms 2000}} {
-    puts stderr Update
 
     # Get the UI pieces:
 
-    set summary    [$widget getSummaryStats]
-    set source     [$widget getSourceStats]
+    set summary          [$widget getSummaryStats]
+    set source           [$widget getSourceStats]
+    set barriers         [$widget getBarrierStats]
+    set errors           [$widget getErrorStats]
+    set incompleteWidget [$errors getIncompleteStatistics]
+    set lateWidget       [$errors getLateStatistics]
+ 
     
-    # Update the input statistics and its summaries:
+    # Get the various statistics:
 
-    set inputStats [EVB::inputStats]
-    puts stderr $inputStats
 
-    $summary configure -infragments [lindex $inputStats 2] \
-	-oldest [lindex $inputStats 0] -newest [lindex $inputStats 1]
-    set iQStats [$source getQueueStatistics]
+
+    set inputStats   [EVB::inputStats]
+    set outputStats  [EVB::outputStats get]
+    set barrierStats [EVB::barrierstats]
+    set completeBarriers    [lindex $barrierStats 0]
+    set incompleteBarriers  [lindex $barrierStats 1]
+
+
+    # Organize the input/output statitics by source
+    # Each sourceid will have a dict that contains the following keys
+    # (not all dicts will have all fields!!!)
+    # inputstats   - Input statistics for that source
+    # outputstats  - Output statistics for that source
+    # barrierstats - Barrier statistics for that source.
+    # inompletebarriers - Incomplete barrier statistics.
+    # late         - Late statistics for that source.
+
+    # Add input statistics in:
+
+    array set sourceStatistics [list]
+
+
+    set deepest -1
+    set deepestCount -1
     foreach queue [lindex $inputStats 3] {
-	$iQStats updateQueue [lindex $queue 0] [lindex $queue 1] [lindex $queue 2] 0
+	set quid [lindex $queue 0]
+
+	# Create the empty dict if it does not exist yet.
+
+	if {[array names sourceStatistics $quid] eq ""} {
+	    set sourceStatistics($quid) [dict create]
+	}
+
+	dict append sourceStatistics($quid) inputstats $queue
+
+	# Figure out the deepest queuen and its depth:
+
+	set depth [lindex $queue 1]
+	if {$depth > $deepestCount} {
+	    set deepest $quid
+	    set deepestCount $depth
+	}
     }
 
+
+    # Add output tatistics in and in the meantime figure out the hottest/coldest source information
+
+    set hottestSrc   -1
+    set hottestCount -1
+    set coldestSrc   -1
+    set coldestCount 0xffffffff
+
+    foreach queue [lindex $outputStats 1] {
+	set quid [lindex $queue 0]
+
+	# Create an empty dict if it does not yet exist:
+	
+	if {[array names sourceStatistics $quid] eq ""} {
+	    set sourceStatistics($quid) [dict create]
+	}
+	dict append sourceStatistics($quid) outputstats $queue
+
+
+	
+
+	# Update the hottest/codest if appropriate.
+
+	set counts [lindex $queue 1]
+	if {$counts > $hottestCount} {
+	    set hottestSrc $quid
+	    set hottestCount $counts
+	}
+	if {$counts < $coldestCount} {
+	    set coldestSrc $quid
+	    set coldestCount $counts
+	}
+    }
+
+    # Add Barrier statistics to the dict:
+
+    #     Complete
+
+    puts stderr "-----------"
+    puts stderr $completeBarriers
+    foreach queue [lindex $completeBarriers 4] {
+	set srcId [lindex $queue 0]
+	
+	# If needed create an empty dict:
+
+	if {[array names sourceStatistics $srcId] eq ""} {
+	    set sourceStatistics($srcId) [dict create]
+	}
+	
+	dict append sourceStatistics($srcId) barrierstats $queue
+    }
+ 
+
+    #     Incomplete
+
+    foreach queue [lindex $incompleteBarriers 3] {
+	set src [lindex $queue 0]
+
+	# If needed make a cleared dict:
+
+	if {[array names sourceStatitics($src)] eq ""} {
+	    set sourceStatistics($src) [dict create]
+	}
+	dict append sourceStatistics($src) incompletebarriers $queue
+    }
+    
+    
+    
+    # Fill in the summary page statistics: 
+
+    $summary configure -infragments [lindex $inputStats 2]            \
+	-oldest [lindex $inputStats 0] -newest [lindex $inputStats 1] \
+	-deepestid $deepest -deepestdepth $deepestCount               \
+        -hottestoutid $hottestSrc -hottestoutcount $hottestCount      \
+        -coldestoutid $coldestSrc -coldestoutcount  $coldestCount     \
+	-completebarriers [lindex $completeBarriers 0]                \
+	-incompletebarriers [lindex $incompleteBarriers 0]            \
+	-mixedbarriers      [lindex $completeBarriers 2]
+
+    $barriers configure -incompletecount [lindex $incompleteBarriers 0] \
+	-completecount [lindex $completeBarriers 0] \
+	-heterogenouscount [lindex $completeBarriers 2]
+
+
+    # Fill in the source  statitics page:
+
+    set iQStats [$source getQueueStatistics]
+    puts stderr [array names sourceStatistics]
+    foreach source [array names sourceStatistics] {
+	puts stderr  $sourceStatistics($source)
+	set depth "" 
+	set oldest ""
+	set outfrags ""
+
+	# Source statistics
+
+	if {[dict exists $sourceStatistics($source) inputstats]} {
+	    set inputStats [dict get $sourceStatistics($source) inputstats]
+	    set depth [lindex $inputStats 1]
+	    set oldest [lindex $inputStats 2]
+	}
+	if {[dict exists $sourceStatistics($source) outputstats]} {
+	    set outputStats [dict get $sourceStatistics($source) outputstats]
+	    set outfrags [lindex $outputStats 1]
+	}
+
+	$iQStats updateQueue $source $depth $oldest $outfrags
+
+	# Barrier statistics.
+
+	if {[dict exists $sourceStatistics($source) barrierstats] } {
+	    set stats [dict get $sourceStatistics($source) barrierstats]
+	    foreach type [lindex $stats 2] {
+		$barriers setStatistic $source [lindex $type 0] [lindex $type 1]
+	    }
+	}
+	if {[dict exists $sourceStatistics($source)  incompletebarriers]} {
+	    set stats [dict get $sourceStatistics($source) incompletebarriers]
+	    $incompleteStats setItem $source [lindex $stats 1]
+	}
+
+    }
 
 
     after $ms [list EVB::maintainGUI $widget $ms]

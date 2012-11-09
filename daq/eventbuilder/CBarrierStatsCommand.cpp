@@ -191,7 +191,7 @@ CBarrierStatsCommand::completeStats(CTCLInterpreter& interp)
     sourceStats += source;
   }
 
-  pResult += sourceStats;
+  (*pResult) += sourceStats;
   return pResult;
 }
 
@@ -213,6 +213,8 @@ CBarrierStatsCommand::incompleteStats(CTCLInterpreter& interp)
 {
   CIncompleteBarrierStats::Statistics stats = m_pIncompleteStats->getStatistics();
   CTCLObject* pResult = new CTCLObject;
+
+  pResult->Bind(interp);
 
   (*pResult) += static_cast<int>(stats.s_totalIncomplete);
   (*pResult) += static_cast<int>(stats.s_homogeneous);
@@ -277,13 +279,12 @@ CBarrierStatsCommand::incompleteStats(CTCLInterpreter& interp)
 CTCLObject* 
 CBarrierStatsCommand::compileBarrierStats(CTCLInterpreter& interp,CBarrierStats::BarrierTypeStats& stats)
 {
-  CTCLObject* pResult;
+  CTCLObject* pResult = new CTCLObject;
   pResult->Bind(interp);
 
-  CTCLObject typeStatList;
-  typeStatList.Bind(interp);
 
-  (*pResult) += static_cast<int>(stats.s_barrierCount);
+
+  //  (*pResult) += static_cast<int>(stats.s_barrierCount);
   for (
        std::map<uint32_t, size_t>::iterator p = stats.s_typeCount.begin(); 
        p != stats.s_typeCount.end(); p++
@@ -293,9 +294,9 @@ CBarrierStatsCommand::compileBarrierStats(CTCLInterpreter& interp,CBarrierStats:
     typeStats += static_cast<int>(p->first);
     typeStats += static_cast<int>(p->second);
 
-    typeStatList += typeStats;
+    (*pResult) += typeStats;
+
   }
-  (*pResult) += typeStatList;
 
   return pResult;
 }
