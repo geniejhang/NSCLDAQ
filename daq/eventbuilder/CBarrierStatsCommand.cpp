@@ -157,18 +157,6 @@ CBarrierStatsCommand::completeStats(CTCLInterpreter& interp)
   (*pResult) += (*pFragsByType);
   delete pFragsByType;
 
-  for(
-      std::map<uint32_t, size_t>::iterator p = stats.s_barriers.s_typeCount.begin();
-      p != stats.s_barriers.s_typeCount.end(); p++) {
-    CTCLObject sourceCount;
-    sourceCount.Bind(interp);
-
-    sourceCount += static_cast<int>(p->first);
-    sourceCount += static_cast<int>(p->second);
-
-    (*pFragsByType) += sourceCount;
-  }
-  (*pResult) += *(pFragsByType);
 
   // per data source statistics:
 

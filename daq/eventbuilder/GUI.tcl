@@ -211,7 +211,7 @@ snit::widgetadaptor ::EVB::sourceStatistics {
         # Layout the components:
         
         grid $queuestats $barrierstats -sticky nsew
-        grid $connections -row 1 -column 0 -rowspan 2 -sticky ew
+        grid $connections -row 1 -column 0 -columnspan 2 -sticky ew
         
         # process the options:
         
@@ -502,7 +502,9 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     set outputStats  [EVB::outputStats get]
     set barrierStats [EVB::barrierstats]
     set completeBarriers    [lindex $barrierStats 0]
+    puts stderr "Complete: $completeBarriers"
     set incompleteBarriers  [lindex $barrierStats 1]
+    puts stderr "Incomplete $incompleteBarriers"
 
 
     # Organize the input/output statitics by source
@@ -579,8 +581,8 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 
     #     Complete
 
-    puts stderr "-----------"
-    puts stderr $completeBarriers
+    puts stderr "Building from [lindex $completeBarriers 5]"
+
     foreach queue [lindex $completeBarriers 4] {
 	set srcId [lindex $queue 0]
 	
@@ -589,6 +591,7 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	if {[array names sourceStatistics $srcId] eq ""} {
 	    set sourceStatistics($srcId) [dict create]
 	}
+	puts stderr "Adding $queue to barriers($srcId)"
 	
 	dict append sourceStatistics($srcId) barrierstats $queue
     }
@@ -601,7 +604,7 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 
 	# If needed make a cleared dict:
 
-	if {[array names sourceStatitics($src)] eq ""} {
+	if {[array names sourceStatistics($src)] eq ""} {
 	    set sourceStatistics($src) [dict create]
 	}
 	dict append sourceStatistics($src) incompletebarriers $queue
@@ -628,12 +631,13 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     # Fill in the source  statitics page:
 
     set iQStats [$source getQueueStatistics]
-    puts stderr [array names sourceStatistics]
+    set iBStats [$source getBarrierStatistics]
     foreach source [array names sourceStatistics] {
-	puts stderr  $sourceStatistics($source)
 	set depth "" 
 	set oldest ""
 	set outfrags ""
+
+	puts stderr "Dict for $source: $sourceStatistics($source)"
 
 	# Source statistics
 
@@ -653,8 +657,10 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 
 	if {[dict exists $sourceStatistics($source) barrierstats] } {
 	    set stats [dict get $sourceStatistics($source) barrierstats]
-	    foreach type [lindex $stats 2] {
+	    puts stderr "$source barrierstats: $stats"
+	    foreach type [lindex $stats 1] {
 		$barriers setStatistic $source [lindex $type 0] [lindex $type 1]
+		$iBStats  setStatistic $source [lindex $type 0] [lindex $type 1]
 	    }
 	}
 	if {[dict exists $sourceStatistics($source)  incompletebarriers]} {
