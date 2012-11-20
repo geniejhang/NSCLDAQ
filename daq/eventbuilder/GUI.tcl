@@ -502,9 +502,10 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     set outputStats  [EVB::outputStats get]
     set barrierStats [EVB::barrierstats]
     set completeBarriers    [lindex $barrierStats 0]
-    puts stderr "Complete: $completeBarriers"
     set incompleteBarriers  [lindex $barrierStats 1]
-    puts stderr "Incomplete $incompleteBarriers"
+
+    puts stderr "InputStats: $inputStats"
+    puts stderr "OutputStats: $outputStats"
 
 
     # Organize the input/output statitics by source
@@ -529,9 +530,10 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	# Create the empty dict if it does not exist yet.
 
 	if {[array names sourceStatistics $quid] eq ""} {
+	    puts stderr "inputstats - Blanking $quid"
 	    set sourceStatistics($quid) [dict create]
 	}
-
+	puts stderr "Appending $quid inputstats $queue"
 	dict append sourceStatistics($quid) inputstats $queue
 
 	# Figure out the deepest queuen and its depth:
@@ -544,7 +546,7 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     }
 
 
-    # Add output tatistics in and in the meantime figure out the hottest/coldest source information
+    # Add output statistics in and in the meantime figure out the hottest/coldest source information
 
     set hottestSrc   -1
     set hottestCount -1
@@ -581,7 +583,6 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 
     #     Complete
 
-    puts stderr "Building from [lindex $completeBarriers 5]"
 
     foreach queue [lindex $completeBarriers 4] {
 	set srcId [lindex $queue 0]
@@ -591,7 +592,6 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	if {[array names sourceStatistics $srcId] eq ""} {
 	    set sourceStatistics($srcId) [dict create]
 	}
-	puts stderr "Adding $queue to barriers($srcId)"
 	
 	dict append sourceStatistics($srcId) barrierstats $queue
     }
@@ -604,7 +604,7 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 
 	# If needed make a cleared dict:
 
-	if {[array names sourceStatistics($src)] eq ""} {
+	if {[array names sourceStatistics $src] eq ""} {
 	    set sourceStatistics($src) [dict create]
 	}
 	dict append sourceStatistics($src) incompletebarriers $queue
@@ -637,7 +637,7 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	set oldest ""
 	set outfrags ""
 
-	puts stderr "Dict for $source: $sourceStatistics($source)"
+	puts stderr "Source $source : $sourceStatistics($source)"
 
 	# Source statistics
 
@@ -650,22 +650,23 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	    set outputStats [dict get $sourceStatistics($source) outputstats]
 	    set outfrags [lindex $outputStats 1]
 	}
-
+	puts stderr "Depth $depth oldest: $oldest outfrags: $outfrags"
 	$iQStats updateQueue $source $depth $oldest $outfrags
 
 	# Barrier statistics.
 
 	if {[dict exists $sourceStatistics($source) barrierstats] } {
 	    set stats [dict get $sourceStatistics($source) barrierstats]
-	    puts stderr "$source barrierstats: $stats"
 	    foreach type [lindex $stats 1] {
 		$barriers setStatistic $source [lindex $type 0] [lindex $type 1]
 		$iBStats  setStatistic $source [lindex $type 0] [lindex $type 1]
 	    }
 	}
+	#
+
 	if {[dict exists $sourceStatistics($source)  incompletebarriers]} {
 	    set stats [dict get $sourceStatistics($source) incompletebarriers]
-	    $incompleteStats setItem $source [lindex $stats 1]
+	    $incompleteWidget setItem $source [lindex $stats 1]
 	}
 
     }
