@@ -271,6 +271,7 @@ snit::widgetadaptor EVB::BarrierStats::incomplete {
     #
     constructor args {
         installhull using ::EVB::utility::sortedPair \
+	    -title {Missing barrier frags} \
             -lefttitle Srcid -righttitle Missing
         
         $self configurelist $args

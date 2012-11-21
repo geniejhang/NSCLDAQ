@@ -611,7 +611,7 @@ snit::type EVB::ConnectionManager {
     # @return ms to next timeout check.
     #
     method _TimeoutCheckInterval {} {
-	return [expr {int(1000*$options(-sourcetimeout)/2.0)}]
+	return [expr {int(1000*$options(-sourcetimeout)*2.0)}]
     }
 }
 

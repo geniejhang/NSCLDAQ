@@ -503,9 +503,8 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     set barrierStats [EVB::barrierstats]
     set completeBarriers    [lindex $barrierStats 0]
     set incompleteBarriers  [lindex $barrierStats 1]
+    set lateStats    [EVB::dlatestats]
 
-    puts stderr "InputStats: $inputStats"
-    puts stderr "OutputStats: $outputStats"
 
 
     # Organize the input/output statitics by source
@@ -530,10 +529,8 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	# Create the empty dict if it does not exist yet.
 
 	if {[array names sourceStatistics $quid] eq ""} {
-	    puts stderr "inputstats - Blanking $quid"
 	    set sourceStatistics($quid) [dict create]
 	}
-	puts stderr "Appending $quid inputstats $queue"
 	dict append sourceStatistics($quid) inputstats $queue
 
 	# Figure out the deepest queuen and its depth:
@@ -609,6 +606,18 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	}
 	dict append sourceStatistics($src) incompletebarriers $queue
     }
+    # Late:
+    foreach item [lindex $lateStats 2] {
+	set src [lindex $item 0]
+	set count [lindex $item 1]
+	set worst [lindex $item 2]
+
+	if {[array names sourceStatistics $src] eq ""} {
+	    set sourceStatistics($src) [dict create]
+	}
+	dict append sourceStatistics($src) late $item
+	
+    }
     
     
     
@@ -621,11 +630,13 @@ proc EVB::maintainGUI {widget {ms 2000}} {
         -coldestoutid $coldestSrc -coldestoutcount  $coldestCount     \
 	-completebarriers [lindex $completeBarriers 0]                \
 	-incompletebarriers [lindex $incompleteBarriers 0]            \
-	-mixedbarriers      [lindex $completeBarriers 2]
+	-mixedbarriers      [lindex $completeBarriers 2] 
 
     $barriers configure -incompletecount [lindex $incompleteBarriers 0] \
 	-completecount [lindex $completeBarriers 0] \
 	-heterogenouscount [lindex $completeBarriers 2]
+
+    $lateWidget configure -count [lindex $lateStats 0] -worst [lindex $lateStats 1]
 
 
     # Fill in the source  statitics page:
@@ -637,7 +648,6 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	set oldest ""
 	set outfrags ""
 
-	puts stderr "Source $source : $sourceStatistics($source)"
 
 	# Source statistics
 
@@ -650,7 +660,6 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	    set outputStats [dict get $sourceStatistics($source) outputstats]
 	    set outfrags [lindex $outputStats 1]
 	}
-	puts stderr "Depth $depth oldest: $oldest outfrags: $outfrags"
 	$iQStats updateQueue $source $depth $oldest $outfrags
 
 	# Barrier statistics.
@@ -662,11 +671,17 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 		$iBStats  setStatistic $source [lindex $type 0] [lindex $type 1]
 	    }
 	}
-	#
+	# Incomplete barriers
 
 	if {[dict exists $sourceStatistics($source)  incompletebarriers]} {
 	    set stats [dict get $sourceStatistics($source) incompletebarriers]
 	    $incompleteWidget setItem $source [lindex $stats 1]
+	}
+	# Data late information:
+
+	if {[dict exists $sourceStatistics($source) late]} {
+	    set stats [dict get $sourceStatistics($source) late]
+	    $lateWidget source $source [lindex $stats 1] [lindex $stats 2]
 	}
 
     }
