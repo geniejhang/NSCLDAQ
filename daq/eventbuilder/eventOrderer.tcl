@@ -43,8 +43,9 @@ namespace eval EVB {
 snit::type EVB::EventBuilder {
     component connectionManager
 
-    delegate option -connectcommand to connectionManager
+    delegate option -connectcommand    to connectionManager
     delegate option -disconnectcommand to connectionManager
+    delegate option -sourcetimeout     to connectionManager
 
     delegate method getConnections to connectionManager
 
@@ -118,3 +119,24 @@ proc EVB::getConnections {} {
 }
 
 
+##
+# EVB::setSourceTimeout
+#
+# Set the source timeout.
+#
+# @param timeout - seconds of timeout.
+#
+proc EVB::setSourceTimeout timeout {
+    $EVB::eventBuilder configure -sourcetimeout $timeout
+}
+##
+# EVB::getSourceTimeout
+#
+# Get the source timeout.
+#
+# @return int timeout
+#
+proc EVB::getSourceTimeout {} {
+    $EVB::eventBuilder cget -sourcetimeout 
+
+}
