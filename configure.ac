@@ -534,6 +534,7 @@ AC_CONFIG_FILES([Makefile
 		 daq/s800callouts/Makefile
 		 daq/eventbuilder/Makefile daq/eventbuilder/Makefile_Skeleton
 		 daq/eventbuilder/ringsource/Makefile
+		 daq/eventbuilder/startOrderer
 		 sbs/Makefile
 		 sbs/driver/Makefile
 		 sbs/driver/src/Makefile

@@ -543,7 +543,7 @@ snit::widget EVB::inputStatistics::statusDisplay {
     #
     #  Return the widget associated with a data source.  This allows you to
     #  directly manipulate the apperance of that widget.  Do not destroy it under
-    #  penalty of likel irrational behavior.
+    #  penalty of likely irrational behavior.
     #
     # @param id - source id.
     #

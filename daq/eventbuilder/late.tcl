@@ -221,7 +221,7 @@ snit::widgetadaptor EVB::lateFragments {
     #  an ::EVB::labelpair
     #
     # @param path - the widget name path desired.
-    #
+    #E
     method _CreateSource widget {
         ::EVB::labelpair $widget
     }

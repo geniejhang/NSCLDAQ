@@ -151,6 +151,8 @@ snit::widget EVB::BarrierStats::BarrierTypes {
 #  - -text - The entire widget (well widgetadaptor really) is wrapped in a
 #            ttk::labelframe.  This option is delegated to that frame so that
 #            the frame can be titled.
+# - -lefttitle - Title for the source column.
+# - -righttitle - Title for the per source statistics widget column.
 #
 # METHODS
 #   setStatistic sourceid barriertype count

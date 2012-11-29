@@ -73,7 +73,7 @@ EXTRA_DIST=protocol.xml api.xml Asserts.h \
 	$(TCL_PACKAGE_FILE) \
 	$(TCL_TEST_FILES) options.ggo \
 	$(FRAMEWORK_SOURCEFILES) \
-	Makefile_Skeleton.in
+	Makefile_Skeleton.in startOrderer.in
 
 
 SKELDIR=@prefix@/skeletons/eventbuilder
@@ -87,6 +87,7 @@ install-exec-hook:
 	$(mkinstalldirs) $(SKELDIR)
 	$(INSTALL_DATA) $(FRAMEWORK_SKELETON) $(SKELDIR)
 	mv $(SKELDIR)/Makefile_Skeleton $(SKELDIR)/Makefile
+	$(INSTALL_SCRIPT) startOrderer @prefix@/bin
 
 
 

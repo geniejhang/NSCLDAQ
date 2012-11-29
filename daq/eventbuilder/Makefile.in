@@ -41,7 +41,7 @@ noinst_PROGRAMS = unittests$(EXEEXT)
 subdir = daq/eventbuilder
 DIST_COMMON = $(include_HEADERS) $(noinst_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/Makefile_Skeleton.in
+	$(srcdir)/Makefile_Skeleton.in $(srcdir)/startOrderer.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -51,7 +51,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = Makefile_Skeleton
+CONFIG_CLEAN_FILES = Makefile_Skeleton startOrderer
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -340,7 +340,7 @@ EXTRA_DIST = protocol.xml api.xml Asserts.h \
 	$(TCL_PACKAGE_FILE) \
 	$(TCL_TEST_FILES) options.ggo \
 	$(FRAMEWORK_SOURCEFILES) \
-	Makefile_Skeleton.in
+	Makefile_Skeleton.in startOrderer.in
 
 SKELDIR = @prefix@/skeletons/eventbuilder
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
@@ -386,6 +386,8 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 Makefile_Skeleton: $(top_builddir)/config.status $(srcdir)/Makefile_Skeleton.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+startOrderer: $(top_builddir)/config.status $(srcdir)/startOrderer.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
@@ -809,6 +811,7 @@ install-exec-hook:
 	$(mkinstalldirs) $(SKELDIR)
 	$(INSTALL_DATA) $(FRAMEWORK_SKELETON) $(SKELDIR)
 	mv $(SKELDIR)/Makefile_Skeleton $(SKELDIR)/Makefile
+	$(INSTALL_SCRIPT) startOrderer @prefix@/bin
 
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
