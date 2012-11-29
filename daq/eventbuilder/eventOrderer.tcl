@@ -31,6 +31,9 @@ package require Tk
 package require snit
 package require EVB::ConnectionManager
 package require portAllocator
+package require InstallRoot
+
+set DEBUG 0
 
 namespace eval EVB {
     variable eventBuilder
@@ -46,6 +49,7 @@ snit::type EVB::EventBuilder {
     delegate option -connectcommand    to connectionManager
     delegate option -disconnectcommand to connectionManager
     delegate option -sourcetimeout     to connectionManager
+    delegate option -port              to connectionManager
 
     delegate method getConnections to connectionManager
 
@@ -138,5 +142,76 @@ proc EVB::setSourceTimeout timeout {
 #
 proc EVB::getSourceTimeout {} {
     $EVB::eventBuilder cget -sourcetimeout 
+
+}
+
+
+##
+# EVB::_NotifyEOF
+#
+#  Called when a data source pipeline becomes readable.
+#  If an EOF is seen
+#  - the fd is closed,
+#  - an error dialog is popped up via tk_messageBox
+#
+# @param fd - The file descriptor open on the pipe.
+# @param who - Identifies who is running.
+#
+proc EVB::_NotifyEOF {fd who} {
+    if {[eof $fd]} {
+	close $fd
+	tk_messageBox -icon error -title "Pipe EOF" -message "$who exited" -type ok
+    } else {
+	if ($::DEBUG) {
+	    puts [read $fd];	# debugging.
+	} else {
+	    read $fd
+	}
+    }
+}
+
+##
+# EVB::startS800FragmentSource
+#
+#  Starts the S800 fragment data source.
+#
+# @param ringUrl - the URL of the s800 ring into which the s800 data are being 
+#                  sucked from the S800 readout system.
+#
+# @param id      - Id of the data source.
+# @param desc    - client description, defaults to "S800 USB data"
+#
+# @note - If the fragment source exits (EOF on its stdout), an error dialog
+#         is emitted.
+# @note - any data that comes on stdout/stderr is ignored.
+# @note - See http://wiki.tcl.tk/1241 for the trick used to capture both
+#         stdout and stderr.
+# @note - It is not up to us to set up the feed to the ring from the s800!!!
+#
+proc EVB::startS800FragmentSource {ringUrl id {desc {S800 USB data}}} {
+    set port [$EVB::eventBuilder cget -port]
+
+    # Figure out where the timstamp extractor is
+
+    set top [InstallRoot::Where]; # Top of installation.
+    set extractor [file join $top lib libS800TimeExtractor.so]
+    
+
+    # Create the ringfragment source command:
+
+    set fragsrcExe [file join $top bin ringFragmentSource]
+
+    set desc [regsub -all  " " $desc {\ }]
+    set fragsrc "$fragsrcExe --evbhost=localhost --evbport=$port --ids=$id --info=$desc --ring=$ringUrl \
+       --timestampextractor=$extractor"
+
+
+    # Start the command pipeline (here's where the cited wikipage comes in handy)
+
+
+    set fd [open "| $fragsrc |& cat" "r"]
+    fconfigure $fd -blocking 0
+    fileevent  $fd readable [list EVB::_NotifyEOF  $fd "S800 Fragment source"]
+    
 
 }
