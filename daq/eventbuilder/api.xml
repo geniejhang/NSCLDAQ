@@ -4892,7 +4892,7 @@ set observer [Observer %AUTO%]
         <refsect1>
             <title>EXAMPLES</title>
             <example>
-                <title>Supportig an observer in a snit type or widget</title>
+                <title>Supporting an observer in a snit type or widget</title>
                 <para>
                     Snit's delegation capability allows you to integrate
                     observers into snit class like objects (e.g.

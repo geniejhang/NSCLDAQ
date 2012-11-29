@@ -35,6 +35,7 @@
 #include "CFlushCommand.h"
 #include "CResetCommand.h"
 #include "CBarrierStatsCommand.h"
+#include "CConfigure.h"
 
 static const char* version = "1.0"; // package version string.
 
@@ -65,6 +66,8 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
   new CFlushCommand(*pInterpObject, "EVB::flushqueues");
   new CResetCommand(*pInterpObject, "EVB::reset");
   new CBarrierStatsCommand(*pInterpObject, "EVB::barrierstats"); 
+  new CConfigure(*pInterpObject, "EVB::config");
+
   // Setup the output stage:
 
   new COrdererOutput(*pInterpObject, "stdout");

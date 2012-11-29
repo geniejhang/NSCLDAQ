@@ -256,6 +256,7 @@ public:
   void addFragments(size_t nSize, EVB::pFlatFragment pFragments);
 
   void setBuildWindow(time_t windowWidth);
+  time_t getBuildWindow() const;
 
   // Observer management:
 

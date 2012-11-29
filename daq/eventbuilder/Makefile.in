@@ -90,7 +90,8 @@ am_libEventBuilder_la_OBJECTS = OrdererPackage.lo \
 	CIncompleteBarrierStats.lo CCompleteBarrierCallback.lo \
 	CBarrierTraceCommand.lo CPartialBarrierCallback.lo \
 	CSourceCommand.lo CDeadSourceCommand.lo \
-	CReviveSocketCommand.lo CFlushCommand.lo CResetCommand.lo
+	CReviveSocketCommand.lo CFlushCommand.lo CResetCommand.lo \
+	CConfigure.lo
 libEventBuilder_la_OBJECTS = $(am_libEventBuilder_la_OBJECTS)
 libEventBuilderClient_la_DEPENDENCIES =  \
 	@top_builddir@/base/tcpip/libTcp.la \
@@ -291,7 +292,7 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 	CBarrierStatsCommand.cpp CBarrierStats.cpp CIncompleteBarrierStats.cpp \
 	CCompleteBarrierCallback.cpp CBarrierTraceCommand.cpp CPartialBarrierCallback.cpp \
 	CSourceCommand.cpp CDeadSourceCommand.cpp CReviveSocketCommand.cpp \
-	CFlushCommand.cpp CResetCommand.cpp
+	CFlushCommand.cpp CResetCommand.cpp CConfigure.cpp
 
 libEventBuilderClient_la_SOURCES = CEventOrderClient.cpp fragment.c \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
@@ -308,7 +309,8 @@ noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h \
 	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h COnLateDataCommand.h \
 	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h CCompleteBarrierCallback.h \
 	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h CDeadSourceCommand.h \
-	CReviveSocketCommand.h CFragReader.h CFragWriter.h CFlushCommand.h CResetCommand.h
+	CReviveSocketCommand.h CFragReader.h CFragWriter.h CFlushCommand.h CResetCommand.h \
+	CConfigure.h
 
 INCLUDES = -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS \
 	-I@top_srcdir@/daq/format \
@@ -493,6 +495,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CBarrierStatsCommand.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CBarrierTraceCommand.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CCompleteBarrierCallback.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CConfigure.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CDLateStatsCommand.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CDataLateStatistics.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CDeadSourceCommand.Plo@am__quote@

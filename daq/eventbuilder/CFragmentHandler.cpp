@@ -173,6 +173,18 @@ CFragmentHandler::setBuildWindow(time_t windowWidth)
 {
     m_nBuildWindow = windowWidth;
 }
+/**
+ * getBuildWindow
+ *
+ * Return the value of the current build window.
+ *
+ * @return time_t - build window in seconds.
+ */
+time_t
+CFragmentHandler::getBuildWindow() const
+{
+  return m_nBuildWindow;
+}
 
 /**
  * addObserver
