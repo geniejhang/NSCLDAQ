@@ -232,11 +232,6 @@ proc EVB::startRingFragmentSource {ringUrl extractor id desc exitmsg} {
 # @param id      - Id of the data source.
 # @param desc    - client description, defaults to "S800 USB data"
 #
-# @note - If the fragment source exits (EOF on its stdout), an error dialog
-#         is emitted.
-# @note - any data that comes on stdout/stderr is ignored.
-# @note - See http://wiki.tcl.tk/1241 for the trick used to capture both
-#         stdout and stderr.
 # @note - It is not up to us to set up the feed to the ring from the s800!!!
 #
 proc EVB::startS800FragmentSource {ringUrl id {desc {S800 USB data}}} {
@@ -246,4 +241,26 @@ proc EVB::startS800FragmentSource {ringUrl id {desc {S800 USB data}}} {
     EVB::startRingFragmentSource $ringUrl $extractor  $id $desc "S800 Fragment source"
 
 
+}
+
+##
+# EVB::startGretinaFragmentSource
+#
+#  Starst a Gretina fragment data source from the ring into which the gretina
+#  tap pipeline puts data.  Doing it this way ensures that I don't have to re-start
+#  the source when Gretina runs end.
+#
+# @param ringurl - URL of the Gretina ring.  It is up to other people
+#                  (e.g. ReadoutGUI) to ensure the producer for this ring is started.
+# @param id      - Source id of the Gretina ring.
+# @param desc    - client description, defaults to "GRETINA GEB data"
+#
+proc EVB::startGretinaFragmentSource {ringurl id {desc {GRETINA GEB data}}} {
+    #
+    # Locate the timestamp extractor:
+
+    set top [InstallRoot::Where]
+    set extractor [file join $top lib libGretinaTimeExtractor.so]
+
+    EVB::startRingFragmentSource $ringurl $extractor $id $desc "GRETINA Fragment source"
 }

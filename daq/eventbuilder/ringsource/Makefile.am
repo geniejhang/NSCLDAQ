@@ -1,11 +1,12 @@
 bin_PROGRAMS    = ringFragmentSource
 noinst_PROGRAMS = ringTestSource
-lib_LTLIBRARIES= libTimeExtractorTest.la libS800TimeExtractor.la
+lib_LTLIBRARIES= libTimeExtractorTest.la libS800TimeExtractor.la libGretinaTimeExtractor.la
 
 libTimeExtractorTest_la_SOURCES = testTimeExtractor.c	
 
 libS800TimeExtractor_la_SOURCES = s800timestamp.c
 
+libGretinaTimeExtractor_la_SOURCES = gretinaTimestamp.c
 
 
 ringFragmentSource_SOURCES=cmdline.c CRingSource.cpp Main.cpp
