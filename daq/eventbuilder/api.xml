@@ -385,6 +385,19 @@ EVB::maintainGUI .test                 <co id='orderstart_maintain' />
                     </para>
                 </listitem>
             </varlistentry>
+            <varlistentry>
+                <term><literal>EVBOrderer</literal></term>
+                <listitem>
+                    <para>
+                        This package represents commands that influence the
+                        action of the event builder compiled fragment handler
+                        code. Note that many of the commands defined by this package
+                        also have Tcl jackets.  Where this is true you should
+                        use the jackets instead as they may take care of other
+                        issues that may not be trivial to deal with.
+                    </para>
+                </listitem>
+            </varlistentry>
         </variablelist>
     </section>
 </chapter>
@@ -4619,6 +4632,34 @@ EVB::Start
                 </command>
             </cmdsynopsis>
 
+<!-- New for Issues #1347, #1384, #1383, #1385 -->
+            <cmdsynopsis>
+                <command>
+EVB::setSourceTimeout <replaceable>timeout</replaceable>
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::getSourceTimeout
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::startRingFragmentSource <replaceable>url tsex id desc exitmsg</replaceable>
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::startS800FragmentSource <replaceable>url id ?desc?</replaceable>
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::startGretinaFragmentSource <replaceable>url id ?desc?</replaceable>
+                </command>
+            </cmdsynopsis>
+
+
 
         </refsynopsisdiv>
         <refsect1>
@@ -4726,6 +4767,127 @@ EVB::Start
                         Starts the event builder.  Naturally this must
                         be the first thing called as without it the event
                         builder does not yet exist.
+                    </para>
+                </listitem>
+            </varlistentry>
+<!-- New for Issues #1347, #1384, #1383, #1385 -->
+
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::setSourceTimeout <replaceable>timeout</replaceable>
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Sets the source stall timeout.  If other sources are
+                        contributing data any source that is not contributing
+                        data for more than <parameter>timeout</parameter>
+                        seconds is considered stalled.
+                    </para>
+                    <para>
+                        A source becomes un-stalled by sending a fragment.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::getSourceTimeout
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Returns the source stall timeout as the command
+                        result.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::startRingFragmentSource <replaceable>url tsex id desc exitmsg</replaceable>
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Starts an event fragment source that takes data from
+                        an NSCLDAQ ring, extracts timestamps and inserts the
+                        data into the event orderer.  The fragment source
+                        runs on the same system as the event builder but, of
+                        course the ring buffer could be remote.
+                    </para>
+                    <para>
+                        <parameter>url</parameter> speceifies the source data
+                        ring. <parameter>tsex</parameter> specifies the
+                        shared library that extracts timestamps from event
+                        fragments. <parameter>id</parameter> specifies the
+                        source id that will be used for data from this ring
+                        and <parameter>desc</parameter> specifies the description
+                        the source will provide the event builder when it starts.
+                    </para>
+                    <para>
+                        The event source runs as a child process whose
+                        stdout and stderr are a pipeline that is monitored.
+                        If an end of file is sensed on that pipe, a message
+                        including <parameter>exitmsg</parameter> is displayed
+                        as a dialog on the UI.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::startS800FragmentSource <replaceable>url id ?desc?</replaceable>
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        This is really a call to
+                        <command>EVB::startRingFragmentSource</command>
+                        with the time stamp extractor set to a library that
+                        is suitable for S800 data and an exit message that
+                        indicates the S800 event source exited.
+                    </para>
+                    <para>
+                        The larger implications of this are that the connection
+                        between the S800 DAQ and the producer for this ring
+                        are not setup by this command.  Typically that is done
+                        in readout callouts for the ReadoutGUI.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::startGretinaFragmentSource <replaceable>url id ?desc?</replaceable>
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Really a call to <command>EVB::startRingFragmentSource</command>
+                        supplying a timestamp extractor suitable for most
+                        GRETINA event data.  The exit message in this case
+                        indicates the GRETINA data source has exited.
+                    </para>
+                    <para>
+                        Typically the producer for the ring is set up by a
+                        readoucallouts extension in the Readout GUI.
+                    </para>
+                    <para>
+                        The actual timestamp used is the timestamp of the first
+                        fragment in the <literal>glomm</literal>ed data
+                        from the ring.k
                     </para>
                 </listitem>
             </varlistentry>
@@ -4959,6 +5121,574 @@ snit::type MultipleObservers {
                 </programlisting>
             </example>
         </refsect1>
+      </refentry>
+
+      <refentry id="evb1_evborderer">
+        <refmeta>
+           <refentrytitle id='evb1_evborderer_title'>EvbOrderer</refentrytitle>
+           <manvolnum>1evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EvbOrderer</refname>
+           <refpurpose>Event orderer compiled commands.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+package require EvbOrderer
+            </command>
+          </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::inputStats
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::outputStats <replaceable>get | clear</replaceable>
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::dlatestats
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::onDataLate <replaceable>?newScript?</replaceable>
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::barrierTrace <replaceable>sub-command ?script?</replaceable> 
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::source <replaceable>?socket id1...?</replaceable>
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::deadsource <replaceable>id</replaceable>   
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::reviveSocket <replaceable>socket</replaceable>
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::flushqueues
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::reset
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::barrierstats 
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::config set <replaceable>name value</replaceable>
+                </command>
+            </cmdsynopsis>
+            <cmdsynopsis>
+                <command>
+EVB::config get <replaceable>name</replaceable>
+                </command>
+            </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+                This package supplies the commands that influence the behavior
+                of the compiled fragment handling code.  Several of the
+                commands in this package are not generally intended for
+                application use.  These will be pointed out.  Other commands
+                are available to allow the user to tailor the event builder monitor
+                displays they might want to create.  
+           </para>
+           <para>
+            For the comprehensive description of the commands supplied
+            by this package see COMMANDS below.
+           </para>
+        </refsect1>
+        <refsect1>
+           <title>
+              COMMANDS
+           </title>
+           <variablelist>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::inputStats
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Returns information about input queue statistics.
+                        The data are returned as a list.  The elements of the
+                        list are in order:
+                        <itemizedlist>
+                            <listitem>
+                                <para>The oldest timestamp of all the
+                                    in-flight fragments the input queues.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>The newest timestamp of all the
+                                in-flight fragments in the input queues.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>The total number of in-flight fragments
+                                    over all input queues.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    A list of elements for each source queue.
+                                    Each element of this list is itself a sublist
+                                    that contains in order, the source id,
+                                    the number of fragments in the queue
+                                    (depth) and the oldest fragment in the queue.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::outputStats <replaceable>get | clear</replaceable>
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        The operation of this command depends on its subcommand.
+                        If the first command word after the command is
+                        <literal>clear</literal> the output queue counters held
+                        by the compiled code are all cleared.
+                    </para>
+                    <para>
+                        If the second word of this command is <literal>get</literal>
+                        The command
+                        returns statistics about the fragments that have been
+                        removed from the input queues.  Note that a fragment gets
+                        removed from an input queue because it is known how to order
+                        it into the output of the event builder.
+                    </para>
+                    <para>
+                        The return value of this command is a list that
+                        contains in order:
+                        <itemizedlist>
+                            <listitem>
+                                <para>Total number of fragments de-queued for
+                                    transmission.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    Statistics for each input queue.  This is
+                                    a list of two element sublists.  The first
+                                    element of each sublist is the source id.
+                                    The second element is the number
+                                    of fragments that have been de-queued from
+                                    this input queue.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::dlatestats
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Returns statistics about the data late fragments.
+                        A fragment is considered late if dequeueing it is
+                        gauranteed to create an error in the total ordering of
+                        the output fragments.  Normally fragments are only
+                        emitted after they have been either held in the queues
+                        for some minimum time or when there are fragments
+                        in all input queues.  If a data source is slow
+                        sending fragments fragments may arrive with timestamps
+                        that are smaller than the fragments that have already
+                        been emitted.
+                    </para>
+                    <para>
+                        A large number of data late cases implies you
+                        should change the event building window.  See
+                        the <command>config</command> command below
+                        for a description of how to do this.
+                    </para>
+                    <para>
+                        The return value of this command is a list with the
+                        following elements on it in order:
+                    </para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>Total number of data late fragments.</para>
+                        </listitem>
+                        <listitem>
+                            <para>Worst case data late (biggest difference
+                            between the arrival time of the late fragment and
+                            the end of the window in which it should have been
+                            emitted.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Per data source dta liate counts.  This is
+                                a list of two element lists containnig the
+                                data source id and the number of late fragments
+                                it emitted.  Only data sources that have been
+                                late are represented in this list (no zeroes).
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Per source worst case late time differences.
+                                For each source that has exhibited at least one
+                                data late condition, this list has a two element
+                                sublist containing the source id and the worst
+                                case time difference.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::onDataLate <replaceable>?newScript?</replaceable>
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        This command allows you to provide a script that can be
+                        notified of a data late condition.
+                    </para>
+                    <para>
+                        If <parameter>newScript</parameter> is supplied,
+                        it replaces any existing data late handler script.
+                        If <parameter>newScript</parameter> is empty
+                        any prior script is removed and there will be no
+                        data late script handler.  If <parameter>newScript</parameter>
+                        is not supplied, no change to the script is performed.
+                        Regardless, the command returns handler script
+                        (possibly empty) as it was prior to executing the command.
+                        This allows you to support multiple scripts by implementing
+                        a chaining mechanism.
+                    </para>
+                    <para>
+                        When a handler script is called the following items
+                        are appended to it:
+                        <itemizedlist>
+                            <listitem>
+                                <para>The source ide of the source that is at fault.</para>
+                            </listitem>
+                            <listitem>
+                                <para>The timestamp of th source</para>
+                            </listitem>
+                            <listitem>
+                                <para>The most recent timestamp seen</para>
+                            </listitem>
+                            <listitem>
+                                <para>A binary byte array containing the
+                                    fragment body.  You can use
+                                    <command>binary scan</command> to retrieve
+                                    elements from this item.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::barrierTrace <replaceable>sub-command ?script?</replaceable> 
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Allows you to establish a script that is executed when
+                        a barrier occurs.  The <replaceable>sub-command</replaceable>
+                        indicates whether the trace is for
+                        <literal>complete</literal> or <literal>incomplete></literal>
+                        barriers.
+                    </para>
+                    <para>
+                        If the sub-command is <literal>complete</literal> the
+                        trace on complete barriers is queried or modified.
+                        A complete barrier is one for which all sources contribute
+                        a barrier event fragment within the timeout.  It is not
+                        necessary that all barrier fragments be of the same type.
+                        If they are not, this case is called a
+                        <firstterm>heterogeneous barrier</firstterm>.
+                    </para>
+                    <para>
+                        If the sub-command is <literal>incomplete</literal> the
+                        trace on incomplete barriers is queried or modified.
+                        An incomplete barrier is one or which at least one data
+                        source did not contribute a barrier fragment within the
+                        sorting time window.
+                    </para>
+                    <para>
+                        In all cases, if the script is an empty string the
+                        corresponding barrier event will no longer have a script
+                        attached to it.  If the script is omitted completely,
+                        the trace is not changed.  All versions of the command
+                        return the selected trace script as it was prior
+                        to the command.
+                    </para>
+                    <para>
+                        Complete barrier scripts have appended to them a list
+                        of pairs.  Each pair contains a data source id and
+                        the barrier type for that source id.  Incomplete barrier
+                        scripts have two argument appended to them. The first
+                        is the same as what is appended to complete barrier
+                        scripts (but only for the source ids that actually
+                        contributed a barrier fragment), the second is
+                        a list of the sources that were missing from the
+                        barrier event.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::source <replaceable>?socket id1...?</replaceable>
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Creates new source queues associated with a socket.
+                        This is normally not intended to be used by application
+                        code.  <parameter>socket</parameter> is a file descriptor
+                        open on a client socket.  <parameter>id1..</parameter>
+                        are source ids.  An input queue is created for each
+                        source id and bound to the socket.  Note that
+                        you must be <emphasis>very</emphasis> careful using
+                        this in applications since creating sources that don't
+                        exist can result in incomplete barriers if you are using
+                        barriers.
+                    </para>
+                    <para>
+                        If the <parameter>socket</parameter> and
+                        <parameter>source</parameter> are not supplied the
+                        command returns the list of source ids..
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::deadsource <replaceable>id</replaceable>   
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Marks the event source <parameter>id</parameter> as dead.
+                        A dead source is not expected to participate in any
+                        barrier events.  A dead source will become alive again
+                        if it's client contributes any data for that source.
+                        Sources can also be resurrected if <command>revieSocket</command>
+                        is called on the socket to which they are bound.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::reviveSocket <replaceable>socket</replaceable>
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Revies a socket.  All of the event sources associated with
+                        that socket are marked alive again.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::flushqueues
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Flushes the contents of all queues to the output.
+                        This can be called when you are pretty certain there
+                        won't be any more data in the near future (e.g. the
+                        run just ended).  The command causes all remaining
+                        in-flight data to be sorted and output.  If you don't call
+                        this it doesn't really matter, the time window will
+                        eventually ensure the data are output.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::reset
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Resets timestamps back to the initial state.  This
+                        needs to be done if there's something that can cause
+                        the event sources to reset their timstamps as part of their
+                        synchronization process.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::barrierstats 
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Returns the barrier statistics.  The barrier statistics
+                        consist of a two element list.  The
+                        first element describes complete barriers and
+                        is in turn a list containing in order:
+                    </para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>The total number of barriers encountered</para>
+                        </listitem>
+                        <listitem>
+                            <para>The number of homgeneous barriers</para>
+                        </listitem>
+                        <listitem>
+                            <para>The number of heterogeneous barriers.</para>
+                        </listitem>
+                        <listitem>
+                            <para>The number of fragments of each barrier type
+                                This is a list of pairs of barrier type
+                                and number of fragments of that type.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>Statistics by event source, which is a list
+                                each item of which is a list containning
+                                in order The source id, the numbder of
+                                barrier fragments seen from this source and
+                                a list of pairs containning fragment type
+                                and number of associated fragments of that type.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                    <para>
+                        The second element describes the incomplete barriers.
+                        This is a list whose elements are in order:
+                    </para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>Number of incomplete barriers</para>
+                        </listitem>
+                        <listitem>
+                            <para>Number of homgeneous incomplete barriers</para>
+                        </listitem>
+                        <listitem>
+                            <para>Number of heterogenous incomplete barriers</para>
+                        </listitem>
+                        <listitem>
+                            <para>A list of pairs containing barrier type and
+                                the number of times it occurs.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>Source statistics which are a list of pairs.
+                                Each pair is a source id and the number of times
+                                it was absent from a barrier.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::config set <replaceable>name value</replaceable>
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>Sets a configuration variable.  <parameter>name</parameter>
+                        determines which configuration variable will be modified
+                        and <parameter>value</parameter> provides the new value.
+                    </para>
+                    <para>
+                        Currently the only supported configuration name is
+                        <literal>window</literal> which sets the time window
+                        in which fragments are accumulated before builds can
+                        occur.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <cmdsynopsis>
+                        <command>
+        EVB::config get <replaceable>name</replaceable>
+                        </command>
+                    </cmdsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Returns the value of a configuration parameter
+                        <parameter>name</parameter>.  The
+                        only name supported at this time is
+                        <literal>window</literal> which returns the build time
+                        window.
+                    </para>
+                </listitem>
+            </varlistentry>
+           </variablelist>
+        </refsect1>
+
       </refentry>
 
 
