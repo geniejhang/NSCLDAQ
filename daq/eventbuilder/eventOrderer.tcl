@@ -169,6 +169,57 @@ proc EVB::_NotifyEOF {fd who} {
 	}
     }
 }
+##
+# EVB::startRingFragmentSource
+#
+#  Starts a fragment source that gets data from a ring buffer.
+#
+#  @param ringUrl   - The URL of the ring from which data will be gotten.
+#  @param extractor - The shared object that extracts timestamps from the
+#                     event fragments that come from the ring.
+#                     (this will pass through "file normalize"
+#                      before being passed to the --timestampextractor
+#                      switch of the ringFragmentSource program
+#  @param id        - Id of the source this represents (should be a number
+#                     unique across all data sources.  The uniqueness is
+#                     not enforced at this time.
+# @param desc       - Description of the data source.
+# @param exitmsg    - Becomes part of the exit message if the data source
+#                     goes away.
+#
+#
+# @note - If the fragment source exits (EOF on its stdout), an error dialog
+#         is emitted.
+# @note - any data that comes on stdout/stderr is ignored.
+# @note - See http://wiki.tcl.tk/1241 for the trick used to capture both
+#         stdout and stderr.
+# @note - It is not up to us to set up the ring's producer.
+#
+proc EVB::startRingFragmentSource {ringUrl extractor id desc exitmsg} {
+    set port [$EVB::eventBuilder cget -port]
+
+    # Figure out where the timstamp extractor is
+
+    set top [InstallRoot::Where]; # Top of installation.
+    set extractor [file normalize $extractor]
+
+    # Create the ringfragment source command:
+
+    set fragsrcExe [file join $top bin ringFragmentSource]
+
+    set desc [regsub -all  " " $desc {\ }]
+    set fragsrc "$fragsrcExe --evbhost=localhost --evbport=$port --ids=$id --info=$desc --ring=$ringUrl \
+       --timestampextractor=$extractor"
+
+
+    # Start the command pipeline (here's where the cited wikipage comes in handy)
+
+
+    set fd [open "| $fragsrc |& cat" "r"]
+    fconfigure $fd -blocking 0
+    fileevent  $fd readable [list EVB::_NotifyEOF  $fd $exitmsg]
+    
+}
 
 ##
 # EVB::startS800FragmentSource
@@ -189,29 +240,10 @@ proc EVB::_NotifyEOF {fd who} {
 # @note - It is not up to us to set up the feed to the ring from the s800!!!
 #
 proc EVB::startS800FragmentSource {ringUrl id {desc {S800 USB data}}} {
-    set port [$EVB::eventBuilder cget -port]
-
-    # Figure out where the timstamp extractor is
-
     set top [InstallRoot::Where]; # Top of installation.
     set extractor [file join $top lib libS800TimeExtractor.so]
-    
 
-    # Create the ringfragment source command:
+    EVB::startRingFragmentSource $ringUrl $extractor  $id $desc "S800 Fragment source"
 
-    set fragsrcExe [file join $top bin ringFragmentSource]
-
-    set desc [regsub -all  " " $desc {\ }]
-    set fragsrc "$fragsrcExe --evbhost=localhost --evbport=$port --ids=$id --info=$desc --ring=$ringUrl \
-       --timestampextractor=$extractor"
-
-
-    # Start the command pipeline (here's where the cited wikipage comes in handy)
-
-
-    set fd [open "| $fragsrc |& cat" "r"]
-    fconfigure $fd -blocking 0
-    fileevent  $fd readable [list EVB::_NotifyEOF  $fd "S800 Fragment source"]
-    
 
 }
