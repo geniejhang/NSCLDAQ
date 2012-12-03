@@ -73,9 +73,9 @@ namespace io {
  * @throw int errno - An error and why.
  */
 
-void writeData (int fd, void* pData , size_t size)
+void writeData (int fd, const void* pData , size_t size)
 {
-  uint8_t* pSrc(reinterpret_cast<uint8_t*>(pData));
+  const uint8_t* pSrc(reinterpret_cast<const uint8_t*>(pData));
   size_t   residual(size);
   ssize_t  nWritten;
 
@@ -116,7 +116,7 @@ void writeData (int fd, void* pData , size_t size)
  *
  * @throw int - errno on error.
  */
-size_t readData (uint16_t* pBuffer,  size_t nBytes)
+size_t readData (void* pBuffer,  size_t nBytes)
 {
   uint8_t* pDest(reinterpret_cast<uint8_t*>(pBuffer));
   size_t    residual(nBytes);

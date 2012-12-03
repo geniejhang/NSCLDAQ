@@ -78,6 +78,8 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <string.h>
 
 #include <sys/poll.h>
+#include <io.h>
+#include <string>
 
 
 // STL includes.
@@ -564,7 +566,24 @@ CSocket::Write(const void* pBuffer, size_t nBytes)
 {
   // Require that the socket is connected:
 
-  
+  try {
+    io::writeData(m_Fd, pBuffer, nBytes);
+  }
+  catch (int err) {
+    if (err == EPIPE) {
+      m_State = Disconnected;
+      shutdown(m_Fd, SHUT_RD | SHUT_WR);
+      close(m_Fd);
+      OpenSocket();
+      throw CTCPConnectionLost(this,"CSocket::Write - first write of loop");
+   
+    } else {
+      std::string msg = "CSocket::Write failed: ";
+      msg += strerror(err);
+      m_State = Disconnected;
+      throw CErrnoException(msg.c_str());
+    }
+  }
 
   // write(2) as many times as are needed to get the data out.
 

@@ -16,6 +16,7 @@ include_HEADERS = CSocket.h \
 
 
 INCLUDES = -I@top_srcdir@/base/exception \
-	-I@top_srcdir@/base/headers
+	-I@top_srcdir@/base/headers -I@top_srcdir@/base/os
 
-libTcp_la_LIBADD = @top_builddir@/base/exception/libException.la
+libTcp_la_LIBADD = @top_builddir@/base/exception/libException.la \
+	@top_builddir@/base/os/libdaqshm.la

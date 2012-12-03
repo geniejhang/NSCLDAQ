@@ -37,8 +37,8 @@
  */
 
 namespace io {
-  void writeData (int fd, void* pData , size_t size);
-  size_t readData (uint16_t* pBuffer,  size_t nBytes);
+  void writeData (int fd, const void* pData , size_t size);
+  size_t readData (void* pBuffer,  size_t nBytes);
 }
 
 
