@@ -24,14 +24,16 @@ INCLUDES 		=	-I.. 					\
 				-I@top_srcdir@/base/uri			\
 				-I@top_srcdir@/base/exception		\
 				-I@top_srcdir@/daq/format		\
-			        -I@top_srcdir@/base/dataflow
+			        -I@top_srcdir@/base/dataflow		\
+				-I@top_srcdir@/base/os
 
 dumper_LDADD		=	dumperargs.o	\
-				@top_srcdir@/base/uri/liburl.la			\
-				@top_srcdir@/daq/format/libdataformat.la	\
-				@top_srcdir@/base/dataflow/libDataFlow.la	\
+				@top_builddir@/base/uri/liburl.la			\
+				@top_builddir@/daq/format/libdataformat.la	\
+				@top_builddir@/base/dataflow/libDataFlow.la	\
 				@top_builddir@/base/uri/liburl.la	\
-				@top_srcdir@/base/exception/libException.la	\
+				@top_builddir@/base/exception/libException.la	\
+				@top_builddir@/base/os/libdaqshm.la            \
 				$(THREADLD_FLAGS)
 
 clean-local:

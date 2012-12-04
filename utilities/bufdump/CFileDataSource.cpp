@@ -24,6 +24,7 @@
 #include <DataFormat.h>
 #include <ErrnoException.h>
 #include <CInvalidArgumentException.h>
+#include <io.h>
 
 #include <string>
 #include <string.h>
@@ -120,7 +121,7 @@ CFileDataSource::getItemFromFile()
 
   RingItemHeader header;
 
-  int nRead = read(m_fd, &header, sizeof(header));
+  int nRead = io::readData(m_fd, &header, sizeof(header));
   if (nRead != sizeof(header)) {
     return reinterpret_cast<CRingItem*>(NULL);
   }
@@ -130,7 +131,7 @@ CFileDataSource::getItemFromFile()
   // Read the remainder of the data:
 
   uint8_t* pBody = new uint8_t[bodysize];
-  nRead          = read(m_fd, pBody, bodysize);
+  nRead          = io::readData(m_fd, pBody, bodysize);
   if (nRead != bodysize) {
     delete []pBody;
     return reinterpret_cast<CRingItem*>(NULL);
