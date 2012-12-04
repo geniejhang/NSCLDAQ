@@ -21,6 +21,8 @@
 
 #include "CFragWriter.h"
 #include "fragment.h"
+#include <io.h>
+
 #include <DataFormat.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -88,40 +90,14 @@ CFragWriter::operator()(void* pFragment)
 void
 CFragWriter::Write(size_t nBytes, void* pBuffer)
 {
-  uint8_t* p = reinterpret_cast<uint8_t*>(pBuffer);
-  size_t   totalBytes(0);
-  while (nBytes) {
-    ssize_t nWritten = write(m_fd, p, nBytes);
-    if (nWritten < 0) {
-      // Error of some sort see if it's recoverable.
-
-      if ((errno == EAGAIN) ||
-	  (errno == EWOULDBLOCK) ||
-	  (errno == EINTR)) {
-	// Re-try.
-
-	continue;
-	
-      } else {
-	int er = errno;		//  in case std::string wipes out errno before using string
-	throw std::string(strerror(er)); 
-      }
-    } else if (nWritten == 0) {
-
-      // End of file:
-      
-      if(totalBytes) {		// partial read
-	throw std::string("Premature end of file");
-      } else {
-	throw int(EXIT_SUCCESS);	// Normal eof.
-      }
-      
+  try {
+    io::writeData(m_fd, pBuffer, nBytes);
+  }
+  catch(int e) {
+    if(e) {
+      throw std::string(strerror(e));
     } else {
-      // Normal completion.
-
-      totalBytes += nWritten;
-      p          += nWritten;
-      nBytes     -= nWritten;
+      throw std::string("Premature end of file");
     }
   }
 }

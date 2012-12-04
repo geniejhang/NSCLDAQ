@@ -107,11 +107,13 @@ PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_frag2ring_OBJECTS = frag2ring.$(OBJEXT) CFragReader.$(OBJEXT) \
 	CFragWriter.$(OBJEXT)
 frag2ring_OBJECTS = $(am_frag2ring_OBJECTS)
-frag2ring_LDADD = $(LDADD)
+am__DEPENDENCIES_1 =
+frag2ring_DEPENDENCIES = @top_builddir@/base/os/libdaqshm.la \
+	$(am__DEPENDENCIES_1)
 am_unittests_OBJECTS = TestRunner.$(OBJEXT) lookupTest.$(OBJEXT) \
 	connectTest.$(OBJEXT) cmdline.$(OBJEXT)
 unittests_OBJECTS = $(am_unittests_OBJECTS)
-am__DEPENDENCIES_1 = @top_builddir@/base/tclplus/libtclPlus.la \
+am__DEPENDENCIES_2 = @top_builddir@/base/tclplus/libtclPlus.la \
 	@top_builddir@/base/exception/libException.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -299,6 +301,7 @@ libEventBuilderClient_la_SOURCES = CEventOrderClient.cpp fragment.c \
 	EVBFramework.cpp GetOpt.cpp 
 
 frag2ring_SOURCES = frag2ring.cpp CFragReader.cpp CFragWriter.cpp
+frag2ring_LDADD = @top_builddir@/base/os/libdaqshm.la $(THREADLD_FLAGS)
 FRAMEWORK_SOURCEFILES = GetOpt.cpp Main.cpp options.ggo
 FRAMEWORK_SKELETON = Makefile_Skeleton $(FRAMEWORK_SOURCEFILES)
 include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h \
