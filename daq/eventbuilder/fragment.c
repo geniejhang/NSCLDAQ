@@ -44,9 +44,9 @@ void freeFragment(pFragment p)
 pFragment allocateFragment(pFragmentHeader pHeader)
 {
   pFragment p = malloc(sizeof(Fragment));
-  memcpy(p, pHeader, sizeof(FragmentHeader));
+  memcpy(&(p->s_header), pHeader, sizeof(FragmentHeader));
 
-  p->s_pBody = malloc(p->s_header.s_size);
+  p->s_pBody = malloc(pHeader->s_size);
 
   return p;
 }

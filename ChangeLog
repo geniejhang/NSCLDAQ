@@ -256,3 +256,10 @@ Feb 1, 2012 - Feb 24, 2012
 	  into a base library so it can be used by the event builder
 	  client libraries.
 	- Add timestamp based event builder to the software.
+        - Add stock fragment sources for ring buffers:
+	  * Generic source
+	  * S800 source
+	  * Gretina source.
+	- Factored out the various read/write loopy functions -> base/os
+	 (Issue #1417
+	

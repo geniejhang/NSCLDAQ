@@ -276,6 +276,7 @@ CRingFragmentItem::init(size_t size)
   newIfNecessary(size);
 
   uint8_t* pCursor = reinterpret_cast<uint8_t*>(getBodyPointer());
+  m_pFragment      = reinterpret_cast<pEventBuilderFragment>(pCursor);
   pCursor         += n;
   setBodyCursor(pCursor);
   updateSize();

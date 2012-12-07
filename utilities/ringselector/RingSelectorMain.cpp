@@ -24,6 +24,7 @@
 #include <CRingItem.h>
 #include <DataFormat.h>
 #include <ErrnoException.h>
+#include <io.h>
 
 #include <iostream>
 #include <stdlib.h>
@@ -253,29 +254,17 @@ RingSelectorMain::whoami()
 void
 RingSelectorMain::writeBlock(int fd, void* pData, size_t size)
 {
-  const char* p = reinterpret_cast<const char*>(pData);
 
-  if (m_formatted) {
-    // output the data in words one line for the item
-
-    uint16_t* p = reinterpret_cast<uint16_t*>(pData);
-    for (int i =0; i < size/sizeof(uint16_t); i++) {
-      std::cout << *p++ << ' ';
-    }
-    std::cout << std::endl;
+  try {
+    io::writeData(fd, pData, size);
   }
-  else {
-    while (size) {
-      ssize_t n = write(fd, p, size);
-      if (n < 0 ) {
-	if ((errno != EAGAIN) && (errno != EINTR)) {
-	  throw(CErrnoException("Writing data to output file"));
-	}
-      }
-      else {
-	p    += n;
-	size -= n;
-      }
+  catch(int e) {
+    if (e) {
+      errno = e;
+      throw CErrnoException("Writing data to output file");
+    } else {
+      throw std::string("Output file closed");
     }
   }
+
 }

@@ -108,6 +108,7 @@ void writeData (int fd, const void* pData , size_t size)
  * with potential buffering between the source an us (e.g. we are typically
  * on the ass end of a pipe where the pipe buffer may be smaller than an
  * event buffer.
+ * @param fd      - File descriptor to read from.
  * @param pBuffer - Pointer to a buffer big enough to hold the event buffer.
  * @param size    - Number of bytes in the buffer.
  *
@@ -116,7 +117,7 @@ void writeData (int fd, const void* pData , size_t size)
  *
  * @throw int - errno on error.
  */
-size_t readData (void* pBuffer,  size_t nBytes)
+  size_t readData (int fd, void* pBuffer,  size_t nBytes)
 {
   uint8_t* pDest(reinterpret_cast<uint8_t*>(pBuffer));
   size_t    residual(nBytes);
@@ -129,7 +130,7 @@ size_t readData (void* pBuffer,  size_t nBytes)
   //
 
   while (residual) {
-    nRead = read(STDIN_FILENO, pDest, residual);
+    nRead = read(fd, pDest, residual);
     if (nRead == 0)		// EOF
     {
       return nBytes - residual;
