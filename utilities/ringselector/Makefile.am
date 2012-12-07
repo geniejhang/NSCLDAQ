@@ -11,11 +11,13 @@ BUILT_SOURCES	= parser.h
 INCLUDES		= 	-I@top_srcdir@/base/exception	\
 				-I@top_srcdir@/base/headers	\
 				-I@top_srcdir@/daq/format	\
-			        -I@top_srcdir@/base/dataflow
+			        -I@top_srcdir@/base/dataflow \
+				-I@top_srcdir@/base/os
 
 ringselector_LDADD	=  	parser.o 					\
 				@top_srcdir@/daq/format/libdataformat.la	\
 				@top_srcdir@/base/dataflow/libDataFlow.la	\
+				@top_srcdir@/base/os/libdaqshm.la		\
 				@top_srcdir@/base/exception/libException.la	\
 				$(THREADLD_FLAGS) 
 

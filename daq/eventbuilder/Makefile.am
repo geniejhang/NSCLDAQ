@@ -116,6 +116,8 @@ check-TESTS:
 #	./unittests 
 
 
+BUILT_SOURCES=cmdline.h cmdline.c
+
 cmdline.h: options.ggo
 	$(GENGETOPT) --input=options.ggo
 
