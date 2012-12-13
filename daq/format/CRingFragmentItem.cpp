@@ -233,7 +233,7 @@ CRingFragmentItem::barrierType() const
 size_t
 CRingFragmentItem::bodySize(size_t payloadSize) const
 {
-  return sizeof(EventBuilderFragment) + (payloadSize-1) - sizeof(RingItemHeader);
+  return sizeof(EventBuilderFragment) + (payloadSize-sizeof(uint32_t)) - sizeof(RingItemHeader);
 }
 /**
  * copyPayload
@@ -252,12 +252,8 @@ CRingFragmentItem::copyPayload(const void* pPayloadSource)
 {
   memcpy(m_pFragment->s_body, pPayloadSource, m_pFragment->s_payloadSize);
 
-  size_t       s = bodySize(m_pFragment->s_payloadSize);
   uint8_t* pBody = reinterpret_cast<uint8_t*>(getBodyPointer());
-  pBody          += s;
-  
-  setBodyCursor(pBody);
-  updateSize();
+
 }
 /**
  * init
@@ -276,7 +272,7 @@ CRingFragmentItem::init(size_t size)
   newIfNecessary(size);
 
   uint8_t* pCursor = reinterpret_cast<uint8_t*>(getBodyPointer());
-  m_pFragment      = reinterpret_cast<pEventBuilderFragment>(pCursor);
+  m_pFragment      = reinterpret_cast<pEventBuilderFragment>(pCursor - sizeof(RingItemHeader));
   pCursor         += n;
   setBodyCursor(pCursor);
   updateSize();

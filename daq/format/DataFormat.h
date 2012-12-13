@@ -189,7 +189,7 @@ typedef struct _EventBuilderFragment {
   uint32_t       s_sourceId;
   uint32_t       s_payloadSize;
   uint32_t       s_barrierType;
-  uint8_t        s_body[1];	/* Really s_payload bytes of data.. */
+  uint32_t        s_body[1];	/* Really s_payload bytes of data.. */
 } EventBuilderFragment, *pEventBuilderFragment;
 
 /**
