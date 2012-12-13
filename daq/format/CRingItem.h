@@ -110,8 +110,8 @@ public:
 
   // Virtual methods that all ring items must provide:
 
-  std::string typeName() const;	// Textual type of item.
-  std::string toString() const; // Provide string dump of the item.
+  virtual std::string typeName() const;	// Textual type of item.
+  virtual std::string toString() const; // Provide string dump of the item.
 
   // Utilities derived classes might want:
 

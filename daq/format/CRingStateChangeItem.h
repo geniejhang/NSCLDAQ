@@ -96,12 +96,17 @@ public:
   void setTimestamp(time_t stamp);
   time_t getTimestamp() const;
 
+  // Virtual method overrides.
+
+  virtual std::string typeName() const;
+  virtual std::string toString() const;
 
   // Utitlity functions..
 
 private:
   void init();
   bool isStateChange();
+  static std::string timeString(time_t theTime);
 
 };
 #endif
