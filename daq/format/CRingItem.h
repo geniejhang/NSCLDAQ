@@ -31,6 +31,13 @@
 #endif
 #endif
 
+#ifndef __STL_STRING
+#include <string>
+#ifndef __STL_STRING
+#define __STL_STRING
+#endif
+#endif
+
 struct _RingItem;
 class CRingBuffer;
 class CRingSelectionPredicate;
@@ -100,6 +107,11 @@ public:
   // class level methods:
 
   static CRingItem* getFromRing(CRingBuffer& ring, CRingSelectionPredicate& predicate);
+
+  // Virtual methods that all ring items must provide:
+
+  std::string typeName() const;	// Textual type of item.
+  std::string toString() const; // Provide string dump of the item.
 
   // Utilities derived classes might want:
 
