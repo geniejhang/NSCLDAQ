@@ -64,6 +64,7 @@ libEventBuilderClient_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 
 libEventBuilder_la_LIBADD = @top_builddir@/base/tclplus/libtclPlus.la \
 	@top_builddir@/base/exception/libException.la \
+	@top_builddir@/base/os/libdaqshm.la    \
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \

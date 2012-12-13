@@ -231,7 +231,10 @@ CRingSource::getEvents()
   }
   // Send those fragments to the event builder:
 
-  CEVBClientFramework::submitFragmentList(frags);
+  if (frags.size()) {
+
+    CEVBClientFramework::submitFragmentList(frags);
+  }
 
 
   delete []pFragments;		// free storage.

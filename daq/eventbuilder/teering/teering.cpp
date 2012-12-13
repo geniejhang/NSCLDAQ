@@ -105,9 +105,12 @@ getFragment()
   EVB::pFragment pResult(0);
   try {
     EVB::FragmentHeader hdr;
-    io::readData(STDIN_FILENO, &hdr, sizeof(EVB::FragmentHeader));
+    int nread;
+    nread = io::readData(STDIN_FILENO, &hdr, sizeof(EVB::FragmentHeader));
+    if (!nread) return 0;
     pResult = allocateFragment(&hdr);
-    io::readData(STDIN_FILENO, pResult->s_pBody, hdr.s_size);
+    nread = io::readData(STDIN_FILENO, pResult->s_pBody, hdr.s_size);
+    if (!nread) return 0;
   }
   catch (int e) {
     if (pResult) {

@@ -43,12 +43,12 @@ class CTCLInterpreter;
 class COrdererOutput : public CFragmentHandler::Observer
 {
 private:
-  Tcl_Channel  m_OutputChannel;	// where we write the data.
+  int  m_OutputChannel;	// where we write the data.
 
   // canonicals:
 
 public:
-  COrdererOutput(CTCLInterpreter& interp, const char* pChannelName);
+  COrdererOutput(int chan);
   virtual ~COrdererOutput();
 
   // Unsupported  canonicals:

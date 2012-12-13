@@ -79,7 +79,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libEventBuilder_la_DEPENDENCIES =  \
 	@top_builddir@/base/tclplus/libtclPlus.la \
-	@top_builddir@/base/exception/libException.la
+	@top_builddir@/base/exception/libException.la \
+	@top_builddir@/base/os/libdaqshm.la
 am_libEventBuilder_la_OBJECTS = OrdererPackage.lo \
 	CFragmentHandlerCommand.lo CFragmentHandler.lo \
 	CInputStatsCommand.lo COrdererOutput.lo fragment.lo \
@@ -114,7 +115,8 @@ am_unittests_OBJECTS = TestRunner.$(OBJEXT) lookupTest.$(OBJEXT) \
 	connectTest.$(OBJEXT) cmdline.$(OBJEXT)
 unittests_OBJECTS = $(am_unittests_OBJECTS)
 am__DEPENDENCIES_2 = @top_builddir@/base/tclplus/libtclPlus.la \
-	@top_builddir@/base/exception/libException.la
+	@top_builddir@/base/exception/libException.la \
+	@top_builddir@/base/os/libdaqshm.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -334,6 +336,7 @@ libEventBuilderClient_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 
 libEventBuilder_la_LIBADD = @top_builddir@/base/tclplus/libtclPlus.la \
 	@top_builddir@/base/exception/libException.la \
+	@top_builddir@/base/os/libdaqshm.la    \
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 TCL_PACKAGE_FILES = ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
