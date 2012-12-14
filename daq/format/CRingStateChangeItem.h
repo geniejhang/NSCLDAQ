@@ -106,7 +106,6 @@ public:
 private:
   void init();
   bool isStateChange();
-  static std::string timeString(time_t theTime);
 
 };
 #endif

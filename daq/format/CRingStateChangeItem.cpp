@@ -327,25 +327,3 @@ CRingStateChangeItem::isStateChange()
 	  (t == PAUSE_RUN)               ||
 	  (t == RESUME_RUN));
 }
-/**
- * timeString
- *
- * Given a time_t time, returns a string that is the textual time (ctime()).
- *
- * @param theTime - time gotten from e.g. time(2).
- * 
- * @return std::string textified time
- */
-std::string
-CRingStateChangeItem::timeString(time_t theTime) 
-{
-
-  string result(ctime(&theTime));
-  
-  // For whatever reason, ctime appends a '\n' on the end.
-  // We need to remove that.
-
-  result.erase(result.size()-1);
-
-  return result;
-}
