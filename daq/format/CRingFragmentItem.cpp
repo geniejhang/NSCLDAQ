@@ -17,7 +17,7 @@
 #include "CRingFragmentItem.h"
 #include "DataFormat.h"
 #include <string.h>
-
+#include <sstream>
 
 /*-------------------------------------------------------------------------------------
  *   Canonical methods
@@ -217,6 +217,57 @@ CRingFragmentItem::barrierType() const
 {
   return m_pFragment->s_barrierType;
 }
+/**
+ * typeName 
+ *   Provide the type of the ringitem as a string.
+ *
+ * @return std::string "Event fragment ".
+ */
+std::string
+CRingFragmentItem::typeName() const
+{
+  return "Event fragment ";
+}
+/**
+ * toString
+ *
+ *  Dumps the contents of a ring fragment.
+ *  TODO:  Issue #1458 - use factory method if the body seems like a ring fragment
+ *         to dump the body.
+ * 
+ * @return std::string - the stringified version of the fragment.
+ */
+std::string
+CRingFragmentItem::toString() const
+{
+  static const int perLine = 16;
+  std::ostringstream out;
+
+  out << typeName() << ':' << std::endl;
+  out << "Fragment timestamp:    " << timestamp()   << std::endl;
+  out << "Source ID         :    " << source()      << std::endl;
+  out << "Payload size      :    " << payloadSize() << std::endl;
+  out << "Barrier type      :    " << barrierType() << std::endl;
+
+  // TODO: Issue #1458 -- see above.
+
+  out << "- - - - - -  Payload - - - - - - -\n";
+  out << std::hex;
+  const uint8_t* p = reinterpret_cast<const uint8_t*>(payloadPointer());
+  for (int i = 0; i < payloadSize(); i++) {
+    out << *p++ << ' ';
+    if (((i % perLine) == 0) && (i != 0)) {
+      out << std::endl;
+    }
+  }
+  if (payloadSize() % perLine) {
+    out << std::endl;		// if needed a trailing endl.
+  }
+    
+
+  return out.str();
+}
+
 /*---------------------------------------------------------------------------
  * Private utilities:
  */

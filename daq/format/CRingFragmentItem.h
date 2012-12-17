@@ -72,6 +72,11 @@ public:
   const void*  payloadPointer() const;
   uint32_t     barrierType() const;
 
+  // Virtual method overrides:
+
+  virtual std::string typeName() const;
+  virtual std::string toString() const;
+
   // private utilities:
 
 private:
