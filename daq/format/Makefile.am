@@ -11,6 +11,7 @@ libdataformat_la_SOURCES = CRingSelectionPredicate.cpp	\
 			CRingTextItem.cpp		\
 			CRingPhysicsEventCountItem.cpp \
 			CRingFragmentItem.cpp       \
+			CPhysicsEventItem.cpp       \
 			ringitem.c
 
 
@@ -23,6 +24,7 @@ include_HEADERS	= CRingSelectionPredicate.h	\
 			CRingTextItem.h	\
 			CRingPhysicsEventCountItem.h	\
 			CRingFragmentItem.h           \
+			CPhysicsEventItem.h
 			DataFormat.h
 
 INCLUDES	= -I@top_srcdir@/base/dataflow	\
