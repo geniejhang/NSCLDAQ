@@ -29,6 +29,9 @@
 #include <vector>
 #include <string>
 #include <string.h>
+#include <set>
+
+static std::set<uint32_t> knownItemTypes;
 
 /**
  * Create a ring item of the correct underlying type as indicated by the
@@ -126,4 +129,43 @@ CRingItemFactory::createRingItem(CRingItem& item)
   default:
     return new CRingItem(item);
   }
+}
+/**
+ * Determines if a  pointer points to something that might be a valid ring item.
+ * - Item must have at least the size of a header.
+ * - Item must be a recognized ring item.
+ *
+ * @param pItem - pointer to the data.
+ * 
+ * @return bool - true if we htink this is a valid ring item.
+ */
+bool
+CRingItemFactory::isKnownItemType(const void* pItem)
+{
+  // TODO:  Assuming native byte ordering here which is a bad assumption maybe?
+
+  const _RingItemHeader* p = reinterpret_cast<const _RingItemHeader*>(pItem);
+  if (p->s_size < sizeof(RingItemHeader)) {
+    return false;
+  }
+
+  // if necessary stock the set of known item types:
+
+  if(knownItemTypes.empty()) {
+    knownItemTypes.insert(BEGIN_RUN);
+    knownItemTypes.insert(END_RUN);
+    knownItemTypes.insert(PAUSE_RUN);
+    knownItemTypes.insert(RESUME_RUN);
+
+    knownItemTypes.insert(PACKET_TYPES);
+    knownItemTypes.insert(MONITORED_VARIABLES);
+
+    knownItemTypes.insert(INCREMENTAL_SCALERS);
+    knownItemTypes.insert(PHYSICS_EVENT);
+    knownItemTypes.insert(PHYSICS_EVENT_COUNT);
+    knownItemTypes.insert(EVB_FRAGMENT);
+  }
+
+  return knownItemTypes.count(p->s_type) > 0;
+
 }

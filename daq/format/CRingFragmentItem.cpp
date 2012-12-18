@@ -16,6 +16,8 @@
 
 #include "CRingFragmentItem.h"
 #include "DataFormat.h"
+#include "CRingItemFactory.h"
+
 #include <string.h>
 #include <sstream>
 
@@ -252,16 +254,38 @@ CRingFragmentItem::toString() const
   // TODO: Issue #1458 -- see above.
 
   out << "- - - - - -  Payload - - - - - - -\n";
-  out << std::hex;
-  const uint8_t* p = reinterpret_cast<const uint8_t*>(payloadPointer());
-  for (int i = 0; i < payloadSize(); i++) {
-    out << *p++ << ' ';
-    if (((i % perLine) == 0) && (i != 0)) {
-      out << std::endl;
+  if (CRingItemFactory::isKnownItemType(payloadPointer())) {
+    
+    // Make a low level base class ring item and then invoke the factory
+    // to make it the right type of object:
+    const _RingItemHeader* pHeader = reinterpret_cast<const _RingItemHeader*>(payloadPointer());
+    CRingItem       rawItem(pHeader->s_type, pHeader->s_size);
+
+    uint8_t* pBody = reinterpret_cast<uint8_t*>(rawItem.getBodyCursor());
+    memcpy(pBody, pHeader+1, pHeader->s_size - sizeof(RingItemHeader));
+    pBody += pHeader->s_size - sizeof(RingItemHeader);
+    rawItem.setBodyCursor(pBody);
+
+    CRingItem* pRingItem = CRingItemFactory::createRingItem(rawItem);
+
+    out << " Seems to be a ring item: " <<  pRingItem->typeName() << std::endl;
+    out << pRingItem->toString();
+    delete pRingItem;
+
+
+  } else {
+    out << "   Does not look like a ring item";
+    out << std::hex << std::endl;
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(payloadPointer());
+    for (int i = 0; i < payloadSize(); i++) {
+      out << *p++ << ' ';
+      if (((i % perLine) == 0) && (i != 0)) {
+	out << std::endl;
+      }
     }
-  }
-  if (payloadSize() % perLine) {
-    out << std::endl;		// if needed a trailing endl.
+    if (payloadSize() % perLine) {
+      out << std::endl;		// if needed a trailing endl.
+    }
   }
     
 
