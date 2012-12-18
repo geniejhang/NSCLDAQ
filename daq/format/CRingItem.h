@@ -64,7 +64,7 @@ class CRingItem {
   // Private data:
 
 private:
-  _RingItem*     m_pItem;
+  _RingItem*    m_pItem;
   uint8_t*      m_pCursor;
   uint32_t      m_storageSize;
   bool          m_swapNeeded;
