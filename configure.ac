@@ -535,6 +535,7 @@ AC_CONFIG_FILES([Makefile
 		 daq/eventbuilder/Makefile daq/eventbuilder/Makefile_Skeleton
 		 daq/eventbuilder/ringsource/Makefile
 		 daq/eventbuilder/teering/Makefile
+		 daq/eventbuilder/glom/Makefile
 		 daq/eventbuilder/startOrderer
 		 sbs/Makefile
 		 sbs/driver/Makefile
