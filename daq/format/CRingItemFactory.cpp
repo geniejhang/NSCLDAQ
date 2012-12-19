@@ -46,7 +46,7 @@ static std::set<uint32_t> knownItemTypes;
  *
  */
 CRingItem*
-CRingItemFactory::createRingItem(CRingItem& item)
+CRingItemFactory::createRingItem(const CRingItem& item)
 {
   switch (item.type()) {
     // State change:
@@ -56,7 +56,8 @@ CRingItemFactory::createRingItem(CRingItem& item)
   case PAUSE_RUN:
   case RESUME_RUN:
     {
-      pStateChangeItem pSrcBody = reinterpret_cast<pStateChangeItem>(item.getItemPointer());
+      pStateChangeItem pSrcBody = 
+	reinterpret_cast<pStateChangeItem>(const_cast<CRingItem&>(item).getItemPointer());
       return new CRingStateChangeItem(
          item.type(), pSrcBody->s_runNumber, pSrcBody->s_timeOffset, pSrcBody->s_Timestamp,
 	 std::string(pSrcBody->s_title)
@@ -68,7 +69,8 @@ CRingItemFactory::createRingItem(CRingItem& item)
   case PACKET_TYPES:
   case MONITORED_VARIABLES:
     {
-      pTextItem pSrcBody = reinterpret_cast<pTextItem>(item.getItemPointer());
+      pTextItem pSrcBody = 
+	reinterpret_cast<pTextItem>(const_cast<CRingItem&>(item).getItemPointer());
       std::vector<std::string> strings;
       char* pString = pSrcBody->s_strings;
       for (int i = 0; i < pSrcBody->s_stringCount; i++) {
@@ -83,7 +85,8 @@ CRingItemFactory::createRingItem(CRingItem& item)
 
   case INCREMENTAL_SCALERS:
     {
-      pScalerItem pSrcBody = reinterpret_cast<pScalerItem>(item.getItemPointer());
+      pScalerItem pSrcBody = 
+	reinterpret_cast<pScalerItem>(const_cast<CRingItem&>(item).getItemPointer());
       std::vector<uint32_t> scalers(
           pSrcBody->s_scalers, pSrcBody->s_scalers + pSrcBody->s_scalerCount
       );
@@ -100,7 +103,8 @@ CRingItemFactory::createRingItem(CRingItem& item)
     {
       CPhysicsEventItem* pItem = new CPhysicsEventItem(PHYSICS_EVENT, item.getStorageSize());
       uint8_t* pDest = reinterpret_cast<uint8_t*>(pItem->getBodyCursor());
-      memcpy(pDest, item.getBodyPointer(), item.getBodySize());
+      memcpy(pDest, 
+	     const_cast<CRingItem&>(item).getBodyPointer(), item.getBodySize());
       pDest += item.getBodySize();
       pItem->setBodyCursor(pDest);
       pItem->updateSize();
@@ -110,14 +114,16 @@ CRingItemFactory::createRingItem(CRingItem& item)
 
   case PHYSICS_EVENT_COUNT:
     {
-      pPhysicsEventCountItem pItem = reinterpret_cast<pPhysicsEventCountItem>(item.getItemPointer());
+      pPhysicsEventCountItem pItem = 
+	reinterpret_cast<pPhysicsEventCountItem>(const_cast<CRingItem&>(item).getItemPointer());
       return new CRingPhysicsEventCountItem(pItem->s_eventCount, pItem->s_timeOffset, pItem->s_timestamp);
       break;
     }
   // /Event builder fragment.
   case EVB_FRAGMENT:
     {
-      pEventBuilderFragment pItem = reinterpret_cast<pEventBuilderFragment>(item.getItemPointer());
+      pEventBuilderFragment pItem = 
+	reinterpret_cast<pEventBuilderFragment>(const_cast<CRingItem&>(item).getItemPointer());
       return new CRingFragmentItem(
           pItem->s_timestamp, pItem->s_sourceId, pItem->s_payloadSize, 
           pItem->s_body, pItem->s_barrierType

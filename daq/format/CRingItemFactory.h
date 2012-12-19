@@ -30,7 +30,7 @@ class CRingItem;
 class CRingItemFactory
 {
 public:
-  static CRingItem* createRingItem(CRingItem& item);
+  static CRingItem* createRingItem(const CRingItem& item);
   static bool   isKnownItemType(const void* pItem);
 };
 
