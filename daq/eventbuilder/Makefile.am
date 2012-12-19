@@ -20,7 +20,7 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 
 libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
-	EVBFramework.cpp GetOpt.cpp 
+	EVBFramework.cpp GetOpt.cpp fragio.cpp
 
 frag2ring_SOURCES=frag2ring.cpp CFragReader.cpp CFragWriter.cpp
 

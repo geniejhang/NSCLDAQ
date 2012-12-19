@@ -101,7 +101,8 @@ libEventBuilderClient_la_DEPENDENCIES =  \
 	@top_builddir@/base/os/libdaqshm.la \
 	@top_builddir@/base/exception/libException.la
 am_libEventBuilderClient_la_OBJECTS = CEventOrderClient.lo fragment.lo \
-	CEVBClientApp.lo CEVBFrameworkApp.lo EVBFramework.lo GetOpt.lo
+	CEVBClientApp.lo CEVBFrameworkApp.lo EVBFramework.lo GetOpt.lo \
+	fragio.lo
 libEventBuilderClient_la_OBJECTS =  \
 	$(am_libEventBuilderClient_la_OBJECTS)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
@@ -300,7 +301,7 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 
 libEventBuilderClient_la_SOURCES = CEventOrderClient.cpp fragment.c \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
-	EVBFramework.cpp GetOpt.cpp 
+	EVBFramework.cpp GetOpt.cpp fragio.cpp
 
 frag2ring_SOURCES = frag2ring.cpp CFragReader.cpp CFragWriter.cpp
 frag2ring_LDADD = @top_builddir@/base/os/libdaqshm.la $(THREADLD_FLAGS)
@@ -534,6 +535,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmdline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/connectTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frag2ring.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fragio.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fragment.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lookupTest.Po@am__quote@
 

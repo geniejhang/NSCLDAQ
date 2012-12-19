@@ -22,6 +22,7 @@
 
 #include "cmdline.h"
 #include <fragment.h>
+#include <fragio.h>
 #include <CRingFragmentItem.h>
 #include <CRingBuffer.h>
 #include <io.h>
@@ -102,15 +103,9 @@ fragmentToRing(CRingBuffer& ring, EVB::pFragment pFrag)
 static EVB::pFragment
 getFragment()
 {
-  EVB::pFragment pResult(0);
+  EVB::pFragment pResult;
   try {
-    EVB::FragmentHeader hdr;
-    int nread;
-    nread = io::readData(STDIN_FILENO, &hdr, sizeof(EVB::FragmentHeader));
-    if (!nread) return 0;
-    pResult = allocateFragment(&hdr);
-    nread = io::readData(STDIN_FILENO, pResult->s_pBody, hdr.s_size);
-    if (!nread) return 0;
+    return CFragIO::readFragment(STDIN_FILENO);
   }
   catch (int e) {
     if (pResult) {
@@ -119,10 +114,9 @@ getFragment()
     if (e) {			//  Only report true errors not eofs.
       std::cerr << "Read failed : " << strerror(e) << std::endl;
     }    
-    pResult = 0;
+    return  0;
 
   }
-  return pResult;
 
 }
 /**
@@ -137,8 +131,7 @@ static bool
 fragmentToStdout(EVB::pFragment pFrag)
 {
   try {
-    io::writeData(STDOUT_FILENO, &pFrag->s_header, sizeof(EVB::FragmentHeader));
-    io::writeData(STDOUT_FILENO, pFrag->s_pBody,   pFrag->s_header.s_size);
+    CFragIO::writeFragment(STDOUT_FILENO, pFrag);
   }
   catch(int e) {
     if(e)  {

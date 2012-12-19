@@ -17,7 +17,8 @@ INCLUDES = -I@top_srcdir@/daq/eventbuilder  \
 	-I@top_srcdir@/base/os
 
 
-teering_LDADD = @top_builddir@/daq/format/libdataformat.la \
+teering_LDADD = @top_builddir@/daq/eventbuilder/libEventBuilderClient.la \
+	@top_builddir@/daq/format/libdataformat.la \
 	@top_builddir@/base/dataflow/libRingBuffer.la     \
 	@top_builddir@/base/os/libdaqshm.la		 \
 	@top_builddir@/base/exception/libException.la \
