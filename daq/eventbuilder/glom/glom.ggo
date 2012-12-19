@@ -1,0 +1,7 @@
+package "glom"
+version "1.1"
+purpose "Build events given a stream of ordered fragments"
+
+option "dt" t "Coincidence time window in ticks" int required
+
+
