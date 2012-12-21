@@ -15,6 +15,9 @@
 */
 #include "COrdererOutput.h"
 #include <TCLInterpreter.h>
+#include <iostream>
+#include <io.h>
+
 #include <string>
 #include "fragment.h"
 
@@ -30,39 +33,11 @@
  *    observer so that we'll get fragments.
  *    we also ensure the -encoding is binary and the -translation binary
  *
- * @param interp       - The interpreter used to lookup the channel.
- * @param pChannelName - The channel namestring (e.g. 'stdout').
+ * @param fd  - File descriptor on which to write dta.
  */
-COrdererOutput::COrdererOutput(CTCLInterpreter& interp, const char* pChannelName)
+COrdererOutput::COrdererOutput(int fd) :
+  m_OutputChannel(fd)
 {
-  int mode;
-  m_OutputChannel = Tcl_GetChannel(interp.getInterpreter(), pChannelName, &mode);
-
-  /*
-    Several things can go wrong:
-    - Lookup failed.
-    - Mode does not allow write.
-  */
-  if (!m_OutputChannel) {
-    throw std::string("COrdererOutput observer output channel lookup failed");
-  }
-  if (!(mode & TCL_WRITABLE)) {
-    throw std::string("COrdererOutput observrer output channel is not writable");
-  }
-  // Set the channel options:
-
-  int stat = Tcl_SetChannelOption(interp.getInterpreter(), m_OutputChannel,
-				  "-encoding",    "binary");
-  if (stat != TCL_OK) {
-    throw std::string("COrdererOutput could not set output encoding binary");
-  }
-  stat =     Tcl_SetChannelOption(interp.getInterpreter(), m_OutputChannel,
-				  "-translation", "binary");
-  if (stat != TCL_OK) {
-    throw std::string("COrdererOutput could not set output translation to binary");
-  }
-
-  // Regiseter us as an observer:
 
   CFragmentHandler* pHandler = CFragmentHandler::getInstance();
   pHandler->addObserver(this);
@@ -94,25 +69,15 @@ COrdererOutput::operator()(const std::vector<EVB::pFragment>& event)
 {
   for (int i = 0; i < event.size(); i++) {
     EVB::pFragment p = event[i];
-    
-    int bytesWritten = Tcl_WriteChars(m_OutputChannel, 
-				      reinterpret_cast<const char*>(&(p->s_header)), sizeof(EVB::FragmentHeader));
-    if (bytesWritten < 0) {
-      ThrowErrnoString("COrdererOutput failed to write fragment header to output:\n");
-      
+    if (p->s_header.s_sourceId == 0x4c000000) {
+      std::cerr << "Got one\n";
     }
-    bytesWritten = Tcl_WriteChars(m_OutputChannel, 
-				  reinterpret_cast<const char*>(p->s_pBody), p->s_header.s_size);
-    if (bytesWritten < 0) {
-      ThrowErrnoString("COrdererOuptut failed to write fragment body to output:\n");
-    }
-  }
-  // Flush the output -- the event.size() check prevents a flush if we were
-  // given an empty fragment array.
+    io::writeData(m_OutputChannel, &(p->s_header), sizeof(EVB::FragmentHeader));
+    io::writeData(m_OutputChannel, p->s_pBody, p->s_header.s_size);
 
-  if(event.size() && (Tcl_Flush(m_OutputChannel) != TCL_OK)) {
-    ThrowErrnoString("COrdererOutput failed to flush channel after writing fragments.");
   }
+
+
 }
 
 /*-----------------------------------------------------------------------------

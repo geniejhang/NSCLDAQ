@@ -20,7 +20,7 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 
 libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
-	EVBFramework.cpp GetOpt.cpp 
+	EVBFramework.cpp GetOpt.cpp fragio.cpp
 
 frag2ring_SOURCES=frag2ring.cpp CFragReader.cpp CFragWriter.cpp
 
@@ -64,6 +64,7 @@ libEventBuilderClient_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 
 libEventBuilder_la_LIBADD = @top_builddir@/base/tclplus/libtclPlus.la \
 	@top_builddir@/base/exception/libException.la \
+	@top_builddir@/base/os/libdaqshm.la    \
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
@@ -115,6 +116,8 @@ check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
 #	./unittests 
 
+
+BUILT_SOURCES=cmdline.h cmdline.c
 
 cmdline.h: options.ggo
 	$(GENGETOPT) --input=options.ggo

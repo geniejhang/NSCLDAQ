@@ -596,7 +596,7 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 
     #     Incomplete
 
-    foreach queue [lindex $incompleteBarriers 3] {
+    foreach queue [lindex $incompleteBarriers 4] {
 	set src [lindex $queue 0]
 
 	# If needed make a cleared dict:

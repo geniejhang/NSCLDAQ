@@ -568,6 +568,7 @@ CSocket::Write(const void* pBuffer, size_t nBytes)
 
   try {
     io::writeData(m_Fd, pBuffer, nBytes);
+    return nBytes;
   }
   catch (int err) {
     if (err == EPIPE) {
@@ -585,40 +586,7 @@ CSocket::Write(const void* pBuffer, size_t nBytes)
     }
   }
 
-  // write(2) as many times as are needed to get the data out.
-
-
-  char* p((char* )pBuffer);	// Pointer to current write.
-  int   resid(nBytes);		// Number of remaining bytes to write.
-  int   nWritten(0);		// Number  of bytes already written.
-
-  while(resid) {
-    int n = write(m_Fd, p, resid);
-    if(n > 0) {			// Do the book-keeping for a successful write.
-      resid    -= n;
-      nWritten += n;
-      p        += n;
-    } 
-    else {			// Write failed:
-      if(nWritten > 0) {	// Assume if not first write, additional
-	break;			// Writes will give the same error.
-      }
-      if(errno == EPIPE) {	// Disconnected.
-	m_State = Disconnected;
-	shutdown(m_Fd, SHUT_RD | SHUT_WR);
-	close(m_Fd);
-	OpenSocket();
-	throw CTCPConnectionLost(this,"CSocket::Write - first write of loop");
-      }
-      else {			// Some other error:
-	m_State = Disconnected;
-	throw CErrnoException("CSocket::Write failed write(2)");
-      }
-    }
-  }
-  return nWritten;		// Indicate how many bytes were actually
-				// written. If < nBytes something unusual
-				// occured in the loop above.
+ 
 }  
 
 /*!

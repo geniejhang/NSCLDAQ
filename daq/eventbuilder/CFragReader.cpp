@@ -27,6 +27,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <io.h>
+
 #include <string>
 
 /**
@@ -85,40 +87,15 @@ CFragReader::operator()()
 void
 CFragReader::Read(size_t nBytes, void* pBuffer)
 {
-  uint8_t* p = reinterpret_cast<uint8_t*>(pBuffer);
-  size_t   totalBytes(0);
-  while (nBytes) {
-    ssize_t nRead = read(m_fd, p, nBytes);
-    if (nRead < 0) {
-      // Error of some sort see if it's recoverable.
-
-      if ((errno == EAGAIN) ||
-	  (errno == EWOULDBLOCK) ||
-	  (errno == EINTR)) {
-	// Re-try.
-
-	continue;
-	
-      } else {
-	int er = errno;		//  in case std::string wipes out errno before using string
-	throw std::string(strerror(er)); 
-      }
-    } else if (nRead == 0) {
-
-      // End of file:
-      
-      if(totalBytes) {		// partial read
-	throw std::string("Premature end of file");
-      } else {
-	throw int(EXIT_SUCCESS);	// Normal eof.
-      }
-      
+  try {
+    io::readData(m_fd, pBuffer, nBytes);
+  }
+  catch (int e) {
+    if (e == 0) {
+      throw EXIT_SUCCESS;
     } else {
-      // Normal completion.
-
-      totalBytes += nRead;
-      p          += nRead;
-      nBytes     -= nRead;
+      throw std::string(strerror(e));
     }
   }
+
 }

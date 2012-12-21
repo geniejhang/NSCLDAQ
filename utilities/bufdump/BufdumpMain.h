@@ -98,12 +98,7 @@ public:
 private:
   CRingItem* getItem(CRingBuffer& ring);
   void processItem(const CRingItem& item);
-  void dumpStateChangeItem(std::ostream& out, const CRingStateChangeItem& item);
-  void dumpStringListItem(std::ostream&  out, const CRingTextItem& item);
-  void dumpScalerItem(std::ostream& out, const CRingScalerItem& item);
-  void dumpPhysicsItem(std::ostream& out, const CRingItem& item);
-  void dumpEventCountItem(std::ostream& out, const CRingPhysicsEventCountItem& item);
-  void dumpUnknownItem(std::ostream& out, const CRingItem& item);
+
 
   std::string defaultSource() const; 
   std::string timeString(time_t theTime) const;

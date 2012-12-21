@@ -79,7 +79,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libEventBuilder_la_DEPENDENCIES =  \
 	@top_builddir@/base/tclplus/libtclPlus.la \
-	@top_builddir@/base/exception/libException.la
+	@top_builddir@/base/exception/libException.la \
+	@top_builddir@/base/os/libdaqshm.la
 am_libEventBuilder_la_OBJECTS = OrdererPackage.lo \
 	CFragmentHandlerCommand.lo CFragmentHandler.lo \
 	CInputStatsCommand.lo COrdererOutput.lo fragment.lo \
@@ -100,7 +101,8 @@ libEventBuilderClient_la_DEPENDENCIES =  \
 	@top_builddir@/base/os/libdaqshm.la \
 	@top_builddir@/base/exception/libException.la
 am_libEventBuilderClient_la_OBJECTS = CEventOrderClient.lo fragment.lo \
-	CEVBClientApp.lo CEVBFrameworkApp.lo EVBFramework.lo GetOpt.lo
+	CEVBClientApp.lo CEVBFrameworkApp.lo EVBFramework.lo GetOpt.lo \
+	fragio.lo
 libEventBuilderClient_la_OBJECTS =  \
 	$(am_libEventBuilderClient_la_OBJECTS)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
@@ -114,7 +116,8 @@ am_unittests_OBJECTS = TestRunner.$(OBJEXT) lookupTest.$(OBJEXT) \
 	connectTest.$(OBJEXT) cmdline.$(OBJEXT)
 unittests_OBJECTS = $(am_unittests_OBJECTS)
 am__DEPENDENCIES_2 = @top_builddir@/base/tclplus/libtclPlus.la \
-	@top_builddir@/base/exception/libException.la
+	@top_builddir@/base/exception/libException.la \
+	@top_builddir@/base/os/libdaqshm.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -298,7 +301,7 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 
 libEventBuilderClient_la_SOURCES = CEventOrderClient.cpp fragment.c \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
-	EVBFramework.cpp GetOpt.cpp 
+	EVBFramework.cpp GetOpt.cpp fragio.cpp
 
 frag2ring_SOURCES = frag2ring.cpp CFragReader.cpp CFragWriter.cpp
 frag2ring_LDADD = @top_builddir@/base/os/libdaqshm.la $(THREADLD_FLAGS)
@@ -334,6 +337,7 @@ libEventBuilderClient_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 
 libEventBuilder_la_LIBADD = @top_builddir@/base/tclplus/libtclPlus.la \
 	@top_builddir@/base/exception/libException.la \
+	@top_builddir@/base/os/libdaqshm.la    \
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 TCL_PACKAGE_FILES = ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
@@ -356,7 +360,10 @@ unittests_LDADD = libEventBuilderClient.la \
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
 unittests_DEPENDENCIES = cmdline.o cmdline.h
-all: all-am
+#	./unittests 
+BUILT_SOURCES = cmdline.h cmdline.c
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .cpp .lo .o .obj
@@ -528,6 +535,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cmdline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/connectTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/frag2ring.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fragio.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fragment.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lookupTest.Po@am__quote@
 
@@ -682,7 +690,8 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS)
 install-binPROGRAMS: install-libLTLIBRARIES
 
@@ -690,7 +699,8 @@ installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -715,6 +725,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
@@ -788,7 +799,7 @@ ps-am:
 uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS \
 	uninstall-libLTLIBRARIES
 
-.MAKE: install-am install-exec-am install-strip
+.MAKE: all check install install-am install-exec-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
 	clean-generic clean-libLTLIBRARIES clean-libtool \
@@ -821,7 +832,6 @@ install-exec-hook:
 
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs @TCLSH_CMD@ tclTests.tcl
-#	./unittests 
 
 cmdline.h: options.ggo
 	$(GENGETOPT) --input=options.ggo

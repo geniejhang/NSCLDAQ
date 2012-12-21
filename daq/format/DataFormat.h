@@ -63,14 +63,14 @@ be zero.
 
 // state change item type codes:
 
-static const uint32_t BEGIN_RUN = 1;
-static const uint32_t END_RUN = 2;
-static const uint32_t PAUSE_RUN = 3;
+static const uint32_t BEGIN_RUN  = 1;
+static const uint32_t END_RUN    = 2;
+static const uint32_t PAUSE_RUN  = 3;
 static const uint32_t RESUME_RUN = 4;
 
 // Documentation item type codes:
 
-static const uint32_t PACKET_TYPES = 10;
+static const uint32_t PACKET_TYPES        = 10;
 static const uint32_t MONITORED_VARIABLES = 11;
 
 // Scaler data:
@@ -79,13 +79,14 @@ static const uint32_t INCREMENTAL_SCALERS = 20;
 
 // Physics events:
 
-static const uint32_t PHYSICS_EVENT = 30;
+static const uint32_t PHYSICS_EVENT       = 30;
 static const uint32_t PHYSICS_EVENT_COUNT = 31;
 
 
 // Event builder related items:
 
-static const uint32_t EVB_FRAGMENT = 40; /* Event builder fragment. */
+static const uint32_t EVB_FRAGMENT        = 40; /* Event builder fragment. */
+static const uint32_t EVB_UNKNOWN_PAYLOAD = 41; /* Evb fragment whose payload isn't a ring item */
 
 // User defined item codes
 
@@ -189,7 +190,7 @@ typedef struct _EventBuilderFragment {
   uint32_t       s_sourceId;
   uint32_t       s_payloadSize;
   uint32_t       s_barrierType;
-  uint8_t        s_body[1];	/* Really s_payload bytes of data.. */
+  uint32_t        s_body[1];	/* Really s_payload bytes of data.. */
 } EventBuilderFragment, *pEventBuilderFragment;
 
 /**

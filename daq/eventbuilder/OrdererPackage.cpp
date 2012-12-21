@@ -70,7 +70,7 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
 
   // Setup the output stage:
 
-  new COrdererOutput(*pInterpObject, "stdout");
+  new COrdererOutput(STDOUT_FILENO);
 
   return TCL_OK;
 }

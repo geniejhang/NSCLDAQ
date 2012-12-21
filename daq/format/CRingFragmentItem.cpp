@@ -16,8 +16,10 @@
 
 #include "CRingFragmentItem.h"
 #include "DataFormat.h"
-#include <string.h>
+#include "CRingItemFactory.h"
 
+#include <string.h>
+#include <sstream>
 
 /*-------------------------------------------------------------------------------------
  *   Canonical methods
@@ -217,6 +219,79 @@ CRingFragmentItem::barrierType() const
 {
   return m_pFragment->s_barrierType;
 }
+/**
+ * typeName 
+ *   Provide the type of the ringitem as a string.
+ *
+ * @return std::string "Event fragment ".
+ */
+std::string
+CRingFragmentItem::typeName() const
+{
+  return "Event fragment ";
+}
+/**
+ * toString
+ *
+ *  Dumps the contents of a ring fragment.
+ *  TODO:  Issue #1458 - use factory method if the body seems like a ring fragment
+ *         to dump the body.
+ * 
+ * @return std::string - the stringified version of the fragment.
+ */
+std::string
+CRingFragmentItem::toString() const
+{
+  static const int perLine = 16;
+  std::ostringstream out;
+
+  out << typeName() << ':' << std::endl;
+  out << "Fragment timestamp:    " << timestamp()   << std::endl;
+  out << "Source ID         :    " << source()      << std::endl;
+  out << "Payload size      :    " << payloadSize() << std::endl;
+  out << "Barrier type      :    " << barrierType() << std::endl;
+
+  // TODO: Issue #1458 -- see above.
+
+  out << "- - - - - -  Payload - - - - - - -\n";
+  if (CRingItemFactory::isKnownItemType(payloadPointer())) {
+    
+    // Make a low level base class ring item and then invoke the factory
+    // to make it the right type of object:
+    const _RingItemHeader* pHeader = reinterpret_cast<const _RingItemHeader*>(payloadPointer());
+    CRingItem       rawItem(pHeader->s_type, pHeader->s_size);
+
+    uint8_t* pBody = reinterpret_cast<uint8_t*>(rawItem.getBodyCursor());
+    memcpy(pBody, pHeader+1, pHeader->s_size - sizeof(RingItemHeader));
+    pBody += pHeader->s_size - sizeof(RingItemHeader);
+    rawItem.setBodyCursor(pBody);
+
+    CRingItem* pRingItem = CRingItemFactory::createRingItem(rawItem);
+
+    out << " Seems to be a ring item: " <<  pRingItem->typeName() << std::endl;
+    out << pRingItem->toString();
+    delete pRingItem;
+
+
+  } else {
+    out << "   Does not look like a ring item";
+    out << std::hex << std::endl;
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(payloadPointer());
+    for (int i = 0; i < payloadSize(); i++) {
+      out << *p++ << ' ';
+      if (((i % perLine) == 0) && (i != 0)) {
+	out << std::endl;
+      }
+    }
+    if (payloadSize() % perLine) {
+      out << std::endl;		// if needed a trailing endl.
+    }
+  }
+    
+
+  return out.str();
+}
+
 /*---------------------------------------------------------------------------
  * Private utilities:
  */
@@ -233,7 +308,7 @@ CRingFragmentItem::barrierType() const
 size_t
 CRingFragmentItem::bodySize(size_t payloadSize) const
 {
-  return sizeof(EventBuilderFragment) + (payloadSize-1) - sizeof(RingItemHeader);
+  return sizeof(EventBuilderFragment) + (payloadSize-sizeof(uint32_t)) - sizeof(RingItemHeader);
 }
 /**
  * copyPayload
@@ -252,12 +327,8 @@ CRingFragmentItem::copyPayload(const void* pPayloadSource)
 {
   memcpy(m_pFragment->s_body, pPayloadSource, m_pFragment->s_payloadSize);
 
-  size_t       s = bodySize(m_pFragment->s_payloadSize);
   uint8_t* pBody = reinterpret_cast<uint8_t*>(getBodyPointer());
-  pBody          += s;
-  
-  setBodyCursor(pBody);
-  updateSize();
+
 }
 /**
  * init
@@ -276,6 +347,7 @@ CRingFragmentItem::init(size_t size)
   newIfNecessary(size);
 
   uint8_t* pCursor = reinterpret_cast<uint8_t*>(getBodyPointer());
+  m_pFragment      = reinterpret_cast<pEventBuilderFragment>(pCursor - sizeof(RingItemHeader));
   pCursor         += n;
   setBodyCursor(pCursor);
   updateSize();

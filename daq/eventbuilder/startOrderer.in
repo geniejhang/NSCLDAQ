@@ -16,3 +16,5 @@ pack .test
 
 EVB::maintainGUI .test
 
+fconfigure stdout -translation binary
+
