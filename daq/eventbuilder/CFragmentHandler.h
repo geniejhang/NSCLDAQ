@@ -301,7 +301,7 @@ private:
 
   BarrierSummary generateBarrier(std::vector<EVB::pFragment>& outputList);
   void generateMalformedBarrier(std::vector<EVB::pFragment>& outputList);
-  void generateCompleteBarrier(std::vector<EVB::pFragment>& ouptputList); 
+  //   void generateCompleteBarrier(std::vector<EVB::pFragment>& ouptputList); 
   
   void goodBarrier(std::vector<EVB::pFragment>& outputList);
   void partialBarrier(std::vector<std::pair<uint32_t, uint32_t> >& types, 
@@ -313,6 +313,9 @@ private:
 
   SourceQueue& getSourceQueue(uint32_t id);
 
+
+  void checkBarrier(bool complete);
+  time_t oldestBarrier();
 
   // Static private methods:
 

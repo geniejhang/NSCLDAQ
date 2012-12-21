@@ -134,29 +134,6 @@ CFragmentHandler::addFragments(size_t nSize, EVB::pFlatFragment pFragments)
     }
 
     flushQueues();		// flush events with received time stamps older than m_nNow - m_nBuildWindow
-  
-    // If all live queues have barriers at the front we need
-    // to flush too...the type of flush depends on whether there
-    // are dead sources:
-
-    if (countPresentBarriers() == m_liveSources.size()) {
-
-      std::vector<EVB::pFragment> barrierFrags;
-
-      // If there are no dead sources its complete
-
-      if (m_liveSources.size() == m_FragmentQueues.size()) {
-
-	goodBarrier(barrierFrags);
-	
-      } else {
-	// otherwise it's not complete.
-
-	generateMalformedBarrier(barrierFrags);
-
-      }
-      observe(barrierFrags);
-    }
 
 
 }
@@ -568,8 +545,11 @@ CFragmentHandler::flushQueues(bool completely)
 {
   m_nNow = time(NULL);
 
+
+  // Ensure there's at least one fragment available:
+
   if ((m_nNow - m_nOldestReceived > m_nBuildWindow) && 
-      (m_nNow > m_nOldestReceived)) {
+      (m_nNow > m_nOldestReceived) || completely) {
 
       std::vector<EVB::pFragment> sortedFragments;
       while (!queuesEmpty()) {
@@ -577,29 +557,31 @@ CFragmentHandler::flushQueues(bool completely)
 	std::pair<time_t, ::EVB::pFragment>* p = popOldest();
 	if (p) {
 	  sortedFragments.push_back(p->second);
-	  if (p->first >= (m_nNow - m_nBuildWindow) && !completely) {
-	    delete p;
-	    break;			// Events were received too recently.
-	  }
 	  delete p;
-	} else if (m_fBarrierPending) {
-	  goodBarrier(sortedFragments); //  most likely good barrier.
+	  if ((m_nNow - m_nOldestReceived <= m_nBuildWindow) && (!completely)) {
+	    break;		// No more genuine fragments
+	  }
 	} else {
-	  assert(0);		// Should never get p == 0 wthout a barrier pending.
+	  break;		// If there are more fragments they are barriers.
 	}
       }
+      // Observe the fragments we have now:
+
+      observe(sortedFragments);
       
-      // If a complete flush and barrier is still pending we have a malformed barrier:
-      // - recurse to process the frags behind the barrier.
-      //
-      if (m_fBarrierPending && completely) {
-	generateMalformedBarrier(sortedFragments);
-	observe(sortedFragments);    
-	flushQueues(completely);
-      } else {
-	observe(sortedFragments);
+      // If a barrier is pending check it and, if the flush was complete,
+      // tail call to continue building:
+
+      if(m_fBarrierPending) {
+	checkBarrier(completely);	// Complete forces barriers out.
       }
-    }
+      // If we still have non-empty queues and were asked to completely flush
+      // tail call:
+
+      if (!queuesEmpty() && completely) {
+	flushQueues(completely);
+      }
+  }
     
 }
 
@@ -686,8 +668,8 @@ CFragmentHandler::popOldest()
 	// In this case we emptied the queue with a non-barrier.
 	// ensure the next item will be considered oldest:
 
-	m_nOldest = UINT64_MAX;
-	m_nOldestReceived = INT32_MAX;
+	//	m_nOldest = UINT64_MAX;
+	//      m_nOldestReceived = INT32_MAX;
       }
     }
     // If we could not find one and there's no barrier pending, recompute m_nOldest and 
@@ -1069,7 +1051,7 @@ CFragmentHandler::partialBarrier(std::vector<std::pair<uint32_t, uint32_t> >& ty
 size_t
 CFragmentHandler::countPresentBarriers() const
 {
-  size_t count;
+  size_t count(0);
   for (Sources::const_iterator p = m_FragmentQueues.begin(); p != m_FragmentQueues.end(); p++) {
     const SourceQueue& queue(p->second);
     if (!queue.s_queue.empty()) {
@@ -1099,6 +1081,68 @@ CFragmentHandler::getSourceQueue(uint32_t id)
   }
 }
 
+/**
+ * checkBarrier
+ *   See if we can emit a barrier after sorted fragments have been emitted fromt he queues.
+ *   If a complete flush is underway and the queues that don't have barriers at the front
+ *   are empty, that constitutes an incomplete barrier even if timing says we shouild wait
+ *   for more fragments. Procesing assumes that barrier processing is infrequent:
+ *
+ * @param completeFlush - true if a complete flush is underway.  
+ */
+void
+CFragmentHandler::checkBarrier(bool completeFlush)
+{
+  std::vector<EVB::pFragment> outputList;
+
+  // Check for all queues having barriers:
+  if (countPresentBarriers() == m_FragmentQueues.size()) {
+    goodBarrier(outputList);
+    observe(outputList);
+    return;
+  }
+  // If we got here and a complete flush is requested, we must have an incomplete barrier:
+
+  if (completeFlush) {
+    generateMalformedBarrier(outputList);
+    observe(outputList);
+    return;
+  }
+  // If the least recently received barrier is older than the build window than
+  // m_now we also have a malformed barrier:
+
+  if ((m_nNow - oldestBarrier()) > m_nBuildWindow) {
+    generateMalformedBarrier(outputList);
+    observe(outputList);
+  }
+  // Otherwise we can wait for more fragments to come in before making any decisions.
+  // 
+}
+/**
+ * oldestBarrier
+ *
+ *  Determines which barrier was received earliest in time.
+ *
+ *  @return time_t
+ *  @retval oldest barrier.  If there are no barriers, m_nNow is returned.
+ */
+time_t
+CFragmentHandler::oldestBarrier()
+{
+  time_t result = m_nNow;
+
+  for (Sources::iterator p = m_FragmentQueues.begin(); p != m_FragmentQueues.end();
+       p++) {
+    if (!p->second.s_queue.empty()) {
+      std::pair<time_t, ::EVB::pFragment> Frag = p->second.s_queue.front();
+      if ((Frag.first < result) && Frag.second->s_header.s_barrier) {
+	result = Frag.first;
+      }
+    }
+  }
+  return result;
+}
+  
 /*--------------------------------------------------------------------------------------
  * Static methods
  */
@@ -1119,6 +1163,7 @@ CFragmentHandler::IdlePoll(ClientData data)
   CFragmentHandler* pHandler = reinterpret_cast<CFragmentHandler*>(data);
 
   if (!pHandler->m_nFragmentsLastPeriod) {
+    pHandler->m_nNow = time(NULL);	// Update tod.
     pHandler->flushQueues();
   } else {
     pHandler->m_nFragmentsLastPeriod = 0;
