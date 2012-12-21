@@ -233,8 +233,8 @@ CBarrierStatsCommand::incompleteStats(CTCLInterpreter& interp)
   missingSources.Bind(interp);
 
   for (
-       std::map<uint32_t, size_t>::iterator p = stats.s_missingHistogram.begin();
-       p != stats.s_missingHistogram.end(); p++
+       std::map<uint32_t, size_t>::iterator p = stats.s_sourceMissingCount.begin();
+       p != stats.s_sourceMissingCount.end(); p++
   ) {
     CTCLObject source;
     source.Bind(interp);
