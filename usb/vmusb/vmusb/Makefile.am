@@ -1,33 +1,40 @@
-lib_LTLIBRARIES		= libVMUSB.la libVMUSBRemote.la libCVMUSB.la libCVMUSBReadoutList.la
+lib_LTLIBRARIES		= libVMUSB.la libVMUSBRemote.la libCVMUSB.la \
+	libCVMUSBReadoutList.la
 
-libVMUSB_la_SOURCES 	= CVMUSB.cpp CVMUSBReadoutList.cpp
+libVMUSB_la_SOURCES 	=  CVMUSBusb.cpp CVMUSBReadoutList.cpp CVMUSBEthernet.cpp \
+	CVMUSBFactory.cpp \
+	CVMUSB.cpp
 
 
 libVMUSBRemote_la_SOURCES = CVMUSBReadoutList.cpp \
-	CVMUSBRemote.cpp
+	CVMUSBRemote.cpp \
+	CVMUSBEthernet.cpp
+
 
 
 noinst_HEADERS		= CVMUSB.h   \
 	CVMUSBReadoutList.h  \
-	CVMUSBRemote.h
+	CVMUSBusb.h	\
+	CVMUSBEthernet.h \
+	CVMUSBRemote.h       \
+	CVMUSBFactory.h
 
 
 
 
 libVMUSB_CXXFLAGS=@THREADCXX_FLAGS@
 
-INCLUDES		= $(USBSWITCHES) -I$(top_srcdir)/base/headers -I$(top_srcdir)/base/tclplus \
-			 -I$(top_srcdir)/base/exception -I@top_srcdir@/base/tcpip \
-			@TCL_FLAGS@ 
+INCLUDES		= $(USBSWITCHES) -I$(top_srcdir)/base/headers -I$(top_srcdir)/base/tclplus  \
+			-I@top_srcdir@/base/tcpip \
+			 -I$(top_srcdir)/base/exception @TCL_FLAGS@
 
-libVMUSB_la_LIBADD       = $(USB_LIBS)  
+libVMUSB_la_LIBADD       = @top_srcdir@/base/tcpip/libTcp.la $(USB_LIBS)  
 
-libVMUSBRemote_la_LIBADD = @TCL_LDFLAGS@ \
-	@top_builddir@/base/exception/libException.la \
-	@top_builddir@/base/tclplus/libtclPlus.la \
+libVMUSBRemote_la_LIBADD = @top_builddir@/usb/vmusb/vmusb/libVMUSB.la \
+	@TCL_LDFLAGS@ \
 	@top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/base/exception/libException.la \
-	@THREADLD_FLAGS@
+	@top_builddir@/base/tclplus/libtclPlus.la -lException @THREADLD_FLAGS@
 
 #IVP tests:
 
@@ -51,6 +58,8 @@ install-data-local:
 	$(INSTALL_DATA)  CVMUSB*.h @prefix@/vmusbdriver/includes
 
 
+clean-local:
+	rm -f $(BUILT_SOURCES)
 
 #  Stuff that needs to go int the distro:
 

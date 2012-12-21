@@ -248,7 +248,63 @@ Feb 1, 2012 - Feb 24, 2012
 	                checking for a good stagearea link.
 	- Attempt to fix race condition between the s800 start and the
 	  polling of the s800 status.
-	
+	- Turn on s800 record crate files by default per request by
+	  Daniel B. and Scott W.
+	- Turn it back off due to the potential of users to have to
+	  respond to a dialog on the s800 control panel.
+	- In S800 exit handler deal with the fact that the S800 may have
+	  exited so socket transactions with/to it may fail....correct
+	  bgerror so that it exits rather than breaking...which causes an
+	  infinite break handling loop.
+	- Issue #1195 deal with S800 bozo-ness on scalers.
+	- Ensure readoutGUI starts with correct colors.
+10.1-005
+	- Issue #1195 - Provide visual indication that runs are
+	  starting/stopping.
+	- Now that there is bandwidth and hopefully users are aware of the
+	  problems turn s800 record crate files _back_ on by default.
+	  Seems like they really just need the damned settings most of the
+	  time but they are not capable of separating the two somehow.
+10.1-006
+	- Add support for client of VM-USB server to VMUSBReadout.
+	  the --host (-h) switch if supplied selects the host on which the
+	  VMUSB server is running.
+	- Issue #1322 - Include product (NSCLDAQ) in the VERSION file.
+        - More wheezy-64 work:
+	  * Get sbs driver working/tested.
+	  * Start SBS readout checkout (sbs/vmemodules/
+	    - Make CAENcard 64/32 bit clean.
+	    - Draft code for CADC2530 (Hytec adc...can't test this 'cause we don't own the module).
+	    - Draft code for CAEN V767 multihit TDC which probably nobody will ever use again.
+	    - Draft code for CAEN 262 I/O register.
+	    - camac.h - replace the old style INT32 etc. with stdint stuff.
+	    - Draft code for CBLT CAEN 32 bit digitizer chains.
+	    - Draft code for CAEN V1x90 multihit TDC family.
+	    - Draft code for CAEN V560 Scaler.
+	    - Draft code for CAEN V820/830 scaler.
+	    - Draft code for CAEN 977 I/O register.
+	    - Draft code for CAMAC (CES)
+	    - Draft code for 32 bit module.
+	    - Draft code CSIS3600 latch module.
+	  * Add libSBSDeviceSupport.la to the Readout executable build in sbs/readout/Makefile.am
+	- Attempt to fix race condition between the s800 start and the
+	  polling of the s800 status.
+	- Turn on s800 record crate files by default per request by
+	  Daniel B. and Scott W.
+	- Turn it back off due to the potential of users to have to
+	  respond to a dialog on the s800 control panel.
+	- In S800 exit handler deal with the fact that the S800 may have
+	  exited so socket transactions with/to it may fail....correct
+	  bgerror so that it exits rather than breaking...which causes an
+	  infinite break handling loop.
+	- Issue #1195 deal with S800 bozo-ness on scalers.
+	- Ensure readoutGUI starts with correct colors.
+	- Issue #1215  Support for SIS FADC in VMUSB readout.
+	- Issue #1216  Provide XLM/SISFADC hira pseudo module that gangs
+	them together.
+	- Issue #701 Add variable injection/monitoring to VM-USB readout
+	to support EPICS monitoring.
+	- Issue #989 - document VM-USB list remote list executino.
 10.2  
 	- Issue #1174 - Create development branch for nscldaq-10.2 with
 	the event builder (July 2, 2012).
@@ -262,4 +318,11 @@ Feb 1, 2012 - Feb 24, 2012
 	  * Gretina source.
 	- Factored out the various read/write loopy functions -> base/os
 	 (Issue #1417
+        - Add event builder client framework with mechanisms to get data
+	from rings and s800 -> EVB.
+	- Add glom to get data from event sorter -> events.
+	- Add teering so that event sorter can be monitored prior to
+	building.
+
+	
 	

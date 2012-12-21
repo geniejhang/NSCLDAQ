@@ -221,9 +221,11 @@ CVMUSB::CVMUSB(struct usb_device* device) :
 */
 CVMUSB::~CVMUSB()
 {
+  if (m_handle) {
     usb_release_interface(m_handle, 0);
     usb_close(m_handle);
-    usleep(5000);
+    usleep(5000); 
+  }
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -564,6 +566,8 @@ CVMUSB::readIrqMask()
 
   return m_irqMask;
 }
+
+
 ///////////////////////////////////////////////////////////////////////
 /*!
     write the bluk transfer setup register.  This register
@@ -937,25 +941,7 @@ CVMUSB::executeList(CVMUSBReadoutList&     list,
   
 }
 
-// SWIG version of the above:
 
-std::vector<uint8_t> 
-CVMUSB::executeList(CVMUSBReadoutList& list, int maxBytes)
-{
-  uint8_t data[maxBytes];
-  size_t     nRead;
-  std::vector<uint8_t> result;
-
-  int status = executeList(list, data, maxBytes, &nRead);
-
-  if (status == 0) {
-    for (int i = 0; i < nRead; i++) {
-      result.push_back(data[i]);
-    }
-  }
-
-  return result;
-}
 
 /*!
    Load a list into the VM-USB for later execution.

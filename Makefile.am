@@ -15,7 +15,7 @@ if BUILD_USB
 endif
 
 
-SUBDIRS =	base/CopyrightTools base/exception base/tclplus servers base  \
+SUBDIRS =	 base/exception base/tclplus base/CopyrightTools servers base   \
 		daq utilities docbuild docconfig $(SBSDIRS) $(EPICSDIRS) $(USBDIR)
 
 
@@ -26,7 +26,7 @@ install-data-local:
 	$(TCLSH_CMD) <makeindex.tcl
 	$(INSTALL_SCRIPT) config.h @prefix@/include
 	$(MANDB) $(prefix)/share/man
-	echo "Version: " $(VERSION) built on `hostname` `date` > $(prefix)/VERSION
+	echo "Version: "NSCLDAQ-$(VERSION) built on `hostname` `date` > $(prefix)/VERSION
 
 
 EXTRA_DIST=dotests

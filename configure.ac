@@ -2,6 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
+
 AC_INIT(nscldaq, 10.2, fox@nscl.msu.edu)
 
 AC_CONFIG_SRCDIR([/utilities/StringsToIntegers.h])
@@ -20,6 +21,7 @@ AC_CHECK_PROG(HAVE_GENGETOPT, [gengetopt], true, false)
 AC_CHECK_PROG(HAVE_DOCBOOK2PDF, [docbook2pdf], true, false)
 AC_CHECK_PROG(HAVE_XMLTO, [xmlto], true, false)
 AC_CHECK_PROG(MANDB, mandb, mandb, echo)
+AC_CHECK_PROG(SWIG, [swig], [swig], [])
 
 AC_CHECK_LIB([X11], [XSetWindowBackground])
 AC_CHECK_LIB([Xt], [XtManage])
@@ -76,6 +78,13 @@ SOVERSION="10:0:0"
 #  Local tests:
 #
 
+# Ensure swig is installed:
+
+if test x$SWIG == x
+then
+	AC_MSG_ERROR([Can't find SWIG in your program search path.])
+fi
+
 # We use gengetopt in a few places.  Ideally it's been found by now in the
 # path if not we'll need to do the withval thing.. or prompt the user to
 # give us a --with-gengetopt-path
@@ -91,7 +100,7 @@ else
 			GENGETOPT="")
   if test x$GENGETOPT == x
   then
-	AC_MSG_ERROR([Can't find gengetop in path, install it or help me out with --with-gengetopt-path])
+	AC_MSG_ERROR([Can't find gengetopt in path, install it or help me out with --with-gengetopt-path])
   fi
 fi
 
@@ -564,6 +573,7 @@ AC_CONFIG_FILES([Makefile
 		 usb/vmusb/rdothread/Makefile usb/vmusb/tclserver/Makefile 
 		 usb/vmusb/daqconfig/Makefile  usb/vmusb/commands/Makefile
 		 usb/vmusb/driverkit/Makefile usb/vmusb/driverkit/Makefile-template
+		 usb/vmusb/tcldrivers/Makefile
 		 usb/vmusb/driverkit/VMUSBDriverIncludes
 		 usb/ccusb/Makefile
 		 usb/ccusb/ccusb/Makefile usb/ccusb/devices/Makefile 
