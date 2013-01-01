@@ -16,7 +16,7 @@ libSecurity_la_CXXFLAGS	= $(THREADCXX_FLAGS) $(AM_CXXFLAGS)
 INCLUDES = -I@top_srcdir@/base/headers -I@top_srcdir@/base/tclplus \
 	-I@top_srcdir@/base/os $(TCL_FLAGS) $(SPECTRODAQ_FLAGS)
 
-EXTRA_DIS= security.xml
+EXTRA_DIST= security.xml
 
 
 
