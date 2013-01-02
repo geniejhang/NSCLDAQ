@@ -32,6 +32,7 @@ static uint64_t firstTimestamp;
 static bool     firstEvent(true);
 uint8_t*        pAccumulatedEvent(0);
 size_t          totalEventSize(0);
+bool            nobuild;
 
 /**
  * flushEvent
@@ -124,7 +125,7 @@ accumulateEvent(uint64_t dt, EVB::pFragment pFrag)
   // See if we need to flush:
 
   uint64_t timestamp = pFrag->s_header.s_timestamp;
-  if (!firstEvent && ((timestamp - firstTimestamp) > dt)) {
+  if (nobuild || (!firstEvent && ((timestamp - firstTimestamp) > dt))) {
     flushEvent();
   }
   // If firstEvent...our timestamp starts the interval:
@@ -185,7 +186,8 @@ main(int argc, char* const* argv)
     exit(-1);
   }
   uint64_t dt = static_cast<uint64_t>(dtInt);
-  
+  nobuild      = args.nobuild_flag;
+
   /*
      main loop.. .get fragments and handle them.
      two targets for a fragment:

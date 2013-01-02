@@ -73,7 +73,7 @@ TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 
 TCL_TEST_FILES=tclTests.tcl managerTests.test
 
-EXTRA_DIST=protocol.xml api.xml Asserts.h \
+EXTRA_DIST=protocol.xml api.xml orderer.xml frag2ring.xml Asserts.h \
 	$(TCL_PACKAGE_FILE) \
 	$(TCL_TEST_FILES) options.ggo \
 	$(FRAMEWORK_SOURCEFILES) \

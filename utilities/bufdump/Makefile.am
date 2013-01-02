@@ -55,4 +55,4 @@ dumperargs.o: dumperargs.c dumperargs.h
 	$(CC) -c -I. dumperargs.c $(THREADCFLAGS)
 
 
-EXTRA_DIST=dumperargs.ggo
+EXTRA_DIST=dumperargs.ggo dumper.xml
