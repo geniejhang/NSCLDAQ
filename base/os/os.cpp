@@ -39,3 +39,31 @@ Os::whoami()
   }
   return std::string(Entry.pw_name);
 }
+/**
+ * Os::authenticateUser:  Authenticate a user given a username and password:
+ *
+ * @param sUser - the username.
+ * @param sPassword - the cleartext passwordl
+ *
+ * @return - true if the username/password authenticates in the underlying os:
+ *
+ */
+bool
+Os::authenticateUser(std::string sUser, std::string sPassword)
+{
+  struct passwd Entry;
+  struct passwd* pEntry;
+  char   dataStorage[1024];
+
+  if (getpwnam_r(sUser.c_str(), &Entry, dataStorage, sizeof(dataStorage), &pEntry)) {
+    int errorCode = errno;
+    std::string errorMsg = "Call to getpwnam_r failed at os level: ";
+    errorMsg += strerror(errorCode);
+    throw errorMsg;
+  }
+  if(!pEntry) return false;	// No such user.
+  std::string EncryptedPassword(pEntry->pw_passwd);
+  std::string EncryptedEntry(crypt(sPassword.c_str(), EncryptedPassword.c_str()));
+  
+  return EncryptedPassword == EncryptedEntry;
+}

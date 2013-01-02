@@ -326,3 +326,7 @@ Feb 1, 2012 - Feb 24, 2012
 
 	
 	
+10.2-001
+	- Issue #1147 - Refactor various whoami's to os-specific code and
+	replace locally defined methods and functions with calls to the
+	centralized one.

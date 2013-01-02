@@ -29,8 +29,9 @@
 #include <ErrnoException.h>
 #include <CInvalidArgumentException.h>
 
-#include <iostream>
+#include <os.h>
 
+#include <iostream>
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
@@ -145,7 +146,7 @@ SclClientMain::getDisplayPort(string portArg)
   if (portArg == string("managed") ) {
     // Use port manager.
 
-    string                          me(whoAmI());
+    string                          me(Os::whoami());
     CPortManager                    manager(m_Host);
     vector<CPortManager::portInfo>  ports = manager.getPortUsage();
 
@@ -386,7 +387,7 @@ SclClientMain::connectTclServer()
   }
   // Register the connection lost relay in case we lose the connection:
 
-  string name = whoAmI();
+  string name = Os::whoami();
   name += "\n";
   m_pServer->SetDisconnectCallback(ConnectionLostRelay, this);
   m_pServer->Send(const_cast<char*>(name.c_str()), name.size()); // 'authentication'.
@@ -427,20 +428,6 @@ SclClientMain::defaultRing()
 
 }
 
-/*
-** Figure out my username:
-*/
-string
-SclClientMain::whoAmI()
-{
-  // Figure out who we are:
-
-  uid_t id = getuid();
-  struct passwd* pwd = getpwuid(id);
-  string user(pwd->pw_name);
-
-  return user;
-}
 
 /*
 ** Set an integer Tcl variable in the server:

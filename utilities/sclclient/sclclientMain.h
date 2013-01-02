@@ -79,7 +79,6 @@ private:
   void ConnectionLost();
   static void ConnectionLostRelay(TcpClientConnection& connection, void* theObject);
   std::string defaultRing();
-  std::string whoAmI();
 
   void setInteger(std::string name, int value, int index = -1);
   void setDouble(std::string name,  double value, int index = -1);
