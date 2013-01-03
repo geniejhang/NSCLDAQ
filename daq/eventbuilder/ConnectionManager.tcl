@@ -353,7 +353,11 @@ snit::type EVB::Connection {
 	    # protocol allows FRAGMENTS here:
 	    # TODO: Handle errors as a close
 
-	    EVB::handleFragment $socket
+	    if {[catch {EVB::handleFragment $socket} msg]} {
+		tk_messageBox -type ok -icon error -title Fragment Handling error \
+		    -message "C++ Fragment handler reported an error: $msg"
+		exit;		# can't really continue.
+	    }
 
 
 	    $callbacks invoke -fragmentcommand [list] [list]
