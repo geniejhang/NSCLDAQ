@@ -37,6 +37,8 @@
 #include <CRingItemFactory.h>
 #include <CRingItem.h>
 
+#include "cmdline.h"
+
 // forward prototypes:
 
 static void* readEvent();
@@ -44,6 +46,8 @@ static void writeEvent(void* pEvent);
 static void writeNonPhysicsItem(CRingItem* pItem);
 static void writePhysicsItem(CRingItem* pItem);
 
+
+static uint32_t sourceId;	// Source id for non-event fragments.
 
 /**
  * glom
@@ -60,6 +64,10 @@ static void writePhysicsItem(CRingItem* pItem);
  */
 int main(int argc, char**argv)
 {
+  gengetopt_args_info args;
+  cmdline_parser(argc, argv, &args);
+  sourceId = args.id_arg;
+
   try {
     while(1) {
       void* pEvent = readEvent();
@@ -68,16 +76,24 @@ int main(int argc, char**argv)
       free(pEvent);
     }
   }
-  // TODO: exception handling.
   catch (std::string msg) {
+    std::cerr << "unglom: Exception caught: " << msg << std::endl;
   }
   catch (const char* msg) {
+    std::cerr << "unglom: Exception caught: " << msg << std::endl;
   }
   catch (CException& e) {
+    std::cerr  << "unglom: Exception caught: " << e.ReasonText() << std::endl;
   }
   catch (int err) {
+    std::cerr << "unglom: Exception caught: " << strerror(err) << std::endl;
+
   }
   catch (std::exception e) {
+    std::cerr << "unglom: Exception caught: " << e.what() << std:: endl;
+  }
+  catch(...) {
+    std::cerr << "unglom: Unrecognized exception caught\n";
   }
   
 }
@@ -167,7 +183,6 @@ static void writeEvent(void* pEvent)
     throw std::string("Unrecognized ring item in input stream");
   }
   
-  // TODO: Write this overload for creteRingItem:
 
   CRingItem* pItem = CRingItemFactory::createRingItem(pEvent);
   
@@ -198,7 +213,7 @@ static void writeNonPhysicsItem(CRingItem* pItem)
 
   EVB::FragmentHeader hdr;
   hdr.s_timestamp = NULL_TIMESTAMP;
-  hdr.s_sourceId  = 0xaaaa;	// TODO: Figure out how to really set this.
+  hdr.s_sourceId  = sourceId;
   hdr.s_size      = pRItem->s_header.s_size;
   hdr.s_barrier   = pRItem->s_header.s_type;
 
