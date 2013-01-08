@@ -25,6 +25,7 @@
 #include <io.h>
 #include <DataFormat.h>
 #include <CRingItemFactory.h>
+#include <exception>
 
 // File scoped  variables:
 
@@ -194,26 +195,48 @@ main(int argc, char* const* argv)
      accumulateEvent - for non-barriers.
      outputBarrier   - for barriers.
   */
-  while (1) {
-    EVB::pFragment p = CFragIO::readFragment(STDIN_FILENO);
 
-    // If error or EOF flush the event and break from
-    // the loop:
-
-    if (!p) {
-      flushEvent();
-      break;
-    }
-    // We have a fragment:
-
-    if (p->s_header.s_barrier) {
-      flushEvent();
-      outputBarrier(p);
-    } else {
-      accumulateEvent(dt, p);
+  try {
+    while (1) {
+      EVB::pFragment p = CFragIO::readFragment(STDIN_FILENO);
+      
+      // If error or EOF flush the event and break from
+      // the loop:
+      
+      if (!p) {
+	flushEvent();
+	break;
+      }
+      // We have a fragment:
+      
+      if (p->s_header.s_barrier) {
+	flushEvent();
+	outputBarrier(p);
+      } else {
+	accumulateEvent(dt, p);
+      }
+      freeFragment(p);
     }
   }
-  // Out of main loop because we need to exit.
+  catch (std::string msg) {
+    std::cerr << "glom: " << msg << std::endl;
+  }
+  catch (const char* msg) {
+    std::cerr << "glom: " << msg << std::endl;
+  }
+  catch (int e) {
+    std::string msg = "glom: Integer error: ";
+    msg += strerror(e);
+    std::cerr << msg << std::endl;
+  }
+  catch (std::exception& except) {
+    std::string msg = "glom: ";
+    msg += except.what();
+    std::cerr << msg << std::endl;
+  }
+  catch(...) {
+  }
+    // Out of main loop because we need to exit.
 
   return 0;
 }

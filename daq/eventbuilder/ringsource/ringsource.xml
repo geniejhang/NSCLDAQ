@@ -60,6 +60,17 @@ $DAQROOT/bin/ringFragmentSource <replaceable>options...</replaceable>
                     </listitem>
                 </varlistentry>
                 <varlistentry>
+                <term><option>--evbname</option>=<replaceable>eventbuilder-name</replaceable></term>
+                   <listitem>
+                        <para>
+                           Provides the name of the event builder to which this
+                           client will provide fragments.  If this is omitted, the
+                           client will provide fragments to the default event
+                           builder for the user.
+                        </para>
+                   </listitem>
+               </varlistentry>
+               <varlistentry>
                     <term><option>--info</option>=<replaceable>information string</replaceable></term>
                     <listitem>
                         <para>

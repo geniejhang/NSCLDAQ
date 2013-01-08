@@ -65,7 +65,22 @@
             <programlisting>
 $DAQROOT/bin/startOrderer
             </programlisting>
-        </informalexample>   
+        </informalexample> 
+        <para>
+           It is also possible to start up more than one event orderer.  Each
+           event orderer must have a unique name.  Supply that name on the
+           command line e.g.:
+        </para>
+        <informalexample>
+           <programlisting>
+$DAQROOT/bin/startOrderer  aName
+           </programlisting>
+        </informalexample>
+        <para>
+          Event orderer names are automatically qualified by your login name.
+          There is therefore no supported way to connect clients to another
+          user's event orderer.  
+        </para>
     </section>
     <section>
         <title>Writing an event orderer startup script</title>
@@ -95,7 +110,17 @@ package require EventBuilder
 package require EVB::connectionList      <co id='orderstart_pkgloads' />
 package require EVB::GUI
 
-EVB::Start                             <co id='orderstart_start' />
+
+                                <co id='orderstart_start' />
+
+if {$argc > 0} {
+    EVB::Start [lindex $argv 0]
+} else {
+    EVB::Start
+}
+
+
+
 
 
 EVB::createGui .test
@@ -177,7 +202,11 @@ EVB::maintainGUI .test                 <co id='orderstart_maintain' />
             </callout>
             <callout arearefs='orderstart_start'>
                 <para>
-                    Does everything needed to start the event ordere package.
+                    Does everything needed to start the event orderer package.
+                    Note that the first command parameter, if present is passed
+                    as an optional parameter to the 
+                    <command>EVB::Start</command> as the name of the event
+                    builder. 
                     Once started you have a pair of choices:
                 </para>
                 <itemizedlist>
@@ -980,6 +1009,17 @@ main(char** argv, int argc)
                     </para>
                 </listitem>
             </varlistentry>
+            <varlistentry>
+                <term><option>--evbname</option>=<replaceable>eventbuilder-name</replaceable></term>
+                <listitem>
+                     <para>
+                        Provides the name of the event builder to which this
+                        client will provide fragments.  If this is omitted, the
+                        client will provide fragments to the default event
+                        builder for the user.
+                     </para>
+                 </listitem>
+            </varlistentry>
         </variablelist>
     </section>
     <section>
@@ -1622,7 +1662,7 @@ delete *pEvb;
 lappend auto_path [file join $::env(DAQROOT) TclLibs]   <co id='evb_start_ap' />
 package require EventBuilder        <co id='evb_start_require' />
 
-EVB::Start                          <co id='evb_start_start' />
+EVB::Start    ?name?                      <co id='evb_start_start' />
                 </programlisting>
             </example>
             <calloutlist>
@@ -1652,7 +1692,10 @@ EVB::Start                          <co id='evb_start_start' />
                         Starts the event builder.  The event builder will use
                         the DAQ Port manager to allocate a Tcp/IP server
                         port as well as to advertise itself to potential
-                        clients.
+                        clients.  The optional <parameter>name</parameter>
+                        parameter specifies the event builder name. Note that
+                        if you provide a duplicate name,the script will attempt
+                        to pop up a Tk dialog prompting you to continue or not.
                     </para>
                     <para>
                         When this proc has returned, the event builder is listening
@@ -2119,6 +2162,10 @@ class   <ooclass><classname>CEventOrderClient</classname></ooclass> {
     <methodparam>
         <type>std::string</type><parameter>description</parameter>
     </methodparam>
+    <methodparam>
+        <type>const char*</type><parameter>pEvbName</parameter>
+        <initializer>0</initializer>
+    </methodparam>
     <exceptionname>CErrnoException</exceptionname>
   </methodsynopsis>
   <methodsynopsis>
@@ -2218,6 +2265,10 @@ METHODS
                 <methodparam>
                     <type>std::string</type><parameter>host</parameter>
                 </methodparam>
+                <methodparam>
+                    <type>const char*</type><parameter>pEvbName</parameter>
+                    <initializer>0</initializer>
+                </methodparam>
               </methodsynopsis>
               <exceptionname>
                 CErrnoException
@@ -2228,6 +2279,13 @@ METHODS
                 Attempts to look up the port on which an event builder for the
                 current user is running.  This is done by contacting the
                 NSCL port manager on the specified <parameter>host</parameter>.
+             </para>
+             <para>
+                If the optional <parameter>pEvbName</parameter> parameter is
+                supplied and is not a null pointer, it is taken to be the name
+                of the event builder to which the connection should be made.
+                If this parameter is null or missing, the port looked up is
+                that of the default event orderer for the caller's username.
             </para>
             <para>
                 On failure, a <classname>CErrnoException</classname> is thrown
@@ -4608,6 +4666,7 @@ EVB::utility::sortedWidget <replaceable>window ?options?</replaceable>
         <refsynopsisdiv>
           <cmdsynopsis>
               <command>
+package require Tk
 package require EventBuilder
              </command>
           </cmdsynopsis>
@@ -4628,7 +4687,7 @@ EVB::setConnectionCallback <replaceable>script</replaceable>
             </cmdsynopsis>
             <cmdsynopsis>
                 <command>
-EVB::Start
+EVB::Start ?name?
                 </command>
             </cmdsynopsis>
 
@@ -4758,7 +4817,7 @@ EVB::startGretinaFragmentSource <replaceable>url id ?desc?</replaceable>
                 <term>
                     <cmdsynopsis>
                         <command>
-        EVB::Start
+        EVB::Start ?name?
                         </command>
                     </cmdsynopsis>
                 </term>
@@ -4766,7 +4825,10 @@ EVB::startGretinaFragmentSource <replaceable>url id ?desc?</replaceable>
                     <para>
                         Starts the event builder.  Naturally this must
                         be the first thing called as without it the event
-                        builder does not yet exist.
+                        builder does not yet exist.  The optional
+                        <parameter>name</parameter> parameter supplies the
+                        event builder name.  <command>EVB::Start</command> will
+                        pop up a Tk dialog warning you if you choose a duplicat name.
                     </para>
                 </listitem>
             </varlistentry>

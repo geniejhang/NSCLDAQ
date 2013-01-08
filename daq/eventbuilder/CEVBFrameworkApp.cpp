@@ -216,6 +216,8 @@ CEVBFrameworkApp::operator()(int argc, char** argv)
   std::string description = options.getDescription();
   std::list<int> sourceIds = options.getSourceIds();
 
+  const char* pName = options.evbName();
+
 
   /**
    * Connect to the event builder:
@@ -226,7 +228,7 @@ CEVBFrameworkApp::operator()(int argc, char** argv)
   try {
 
     pContext = "Connecting to the event builder";
-    EVBConnect(evbhost.c_str(), evbport.c_str(), description.c_str(), sourceIds);
+    EVBConnect(evbhost.c_str(), evbport.c_str(), description.c_str(), sourceIds, pName);
 
     /**
      * Initialize all of the fragment sources in m_sources
@@ -294,17 +296,18 @@ CEVBFrameworkApp::operator()(int argc, char** argv)
  *               otherwise this must be either an integer (in which case it is the port number)
  *               or a service name that can be translated by getservbyname_r
  * @param[in] description - Describes the connection.
- * @param[in] sources - List of source ids that are being provided by this client. 
+ * @param[in] sources - List of source ids that are being provided by this client.
+ * @param[in] pName - If not null the name of the event builder to connect to. 
  *
  * @note If successful, a pointer to the resulting connection is stored in m_pBuilder.
  */
 void
 CEVBFrameworkApp::EVBConnect(const char* host, const char* port, const char* description,
-			     std::list<int> sources)
+			     std::list<int> sources, const char* pName)
 {
   uint16_t portNum;
   if (std::string("managed") == port) {
-    portNum = CEventOrderClient::Lookup(std::string(host));
+    portNum = CEventOrderClient::Lookup(std::string(host), pName);
   } 
   else if (atoi(port) != 0) {	// Port number 0 is illegal.
     portNum = atoi(port);

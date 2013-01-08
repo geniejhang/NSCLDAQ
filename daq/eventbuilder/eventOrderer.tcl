@@ -42,14 +42,19 @@ namespace eval EVB {
 #  The event builder basically ties everything together in to 
 #  a single type that represents the event building application.
 #
+#  -appsuffix - If non empty this is part of the name registered with the connection
+#               manager.
 #
 snit::type EVB::EventBuilder {
     component connectionManager
+
+    option -appsuffix -default ""
 
     delegate option -connectcommand    to connectionManager
     delegate option -disconnectcommand to connectionManager
     delegate option -sourcetimeout     to connectionManager
     delegate option -port              to connectionManager
+    
 
     delegate method getConnections to connectionManager
 
@@ -68,8 +73,32 @@ snit::type EVB::EventBuilder {
     #
     # @return int - port number.
     method _GetServerPort {} {
+	set appName ORDERER:$::tcl_platform(user)
+	if {$options(-appsuffix) ne ""} {
+	    append appName : $options(-appsuffix)
+	}
+
 	set pa [portAllocator create %AUTO%]
-	set port [$pa allocatePort ORDERER]
+
+	#
+	#  If there's already an event builder registered on this por,
+	#  Give the user a chance to not start this one:
+	#
+
+	set existingApps [$pa listPorts] 
+	foreach app $existingApps {
+	    set registeredName [lindex $app 1]
+	    if {$appName eq $registeredName} {
+		set reply [tk_messageBox -type yesno -title {Duplicate event builder} \
+			       -message "An event orderer named $appName already exists are you sure you want to start?"
+			   ]
+		if {$reply eq "no"} {
+		    exit -1
+		}
+	    }
+	}
+
+	set port [$pa allocatePort $appName]
 	$pa destroy
 
 	return $port
@@ -78,16 +107,21 @@ snit::type EVB::EventBuilder {
 }
 
 #------------------------------------------------------------------------
-#
+
 #  Unbound procs that provide a proecedural interface to the event builder.
 #
 #
 
 ##
 #  Creates and starts the event builder.
+# @para appsuffix - IF nonempty this is the application suffix passed to the event builder.
 #
-proc EVB::Start {} {
-    set EVB::eventBuilder [EVB::EventBuilder %AUTO%]
+proc EVB::Start {{appsuffix {}}} {
+    if {$appsuffix ne ""} {
+	set EVB::eventBuilder [EVB::EventBuilder %AUTO% -appsuffix $appsuffix]
+    } else {
+	set EVB::eventBuilder [EVB::EventBuilder %AUTO%]
+    }
 }
 ##
 # Set the connection callback.  The

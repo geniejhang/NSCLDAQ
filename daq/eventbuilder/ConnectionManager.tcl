@@ -354,7 +354,8 @@ snit::type EVB::Connection {
 	    # TODO: Handle errors as a close
 
 	    if {[catch {EVB::handleFragment $socket} msg]} {
-		tk_messageBox -type ok -icon error -title Fragment Handling error \
+		puts stderr "Event orderer failed call to handleFragment: : $msg"
+		tk_messageBox -type ok -icon error -title {Fragment Handling error} \
 		    -message "C++ Fragment handler reported an error: $msg"
 		exit;		# can't really continue.
 	    }
@@ -382,6 +383,7 @@ snit::type EVB::Connection {
 #  and will destroy them as they die.
 #
 # OPTIONS
+#                the port manager.
 #   -port - port on which we are listening for connections.
 #   -connectcommand - script to call when a connection has been added.
 #                    Substitutions:

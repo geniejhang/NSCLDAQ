@@ -31,6 +31,12 @@
 #endif
 #endif
 
+#ifndef __STL_STRING
+#include <string>
+#ifndef __STL_STRING
+#define __STL_STRING
+#endif
+#endif
 
 
 // Forward definitions:
@@ -95,6 +101,7 @@ public:
   virtual void shutdown();
 private:
   uint64_t timedifMs(struct timespec& tlater, struct timespec& tearlier); 
+  std::string copyLib(std::string original);
 };
 
 #endif

@@ -55,6 +55,7 @@ public:
   std::string getPort() const;
   std::string getDescription() const;
   std::list<int> getSourceIds() const;
+  const char* evbName() const;
   struct gengetopt_args_info* getArgs();
 
   

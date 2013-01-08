@@ -72,7 +72,7 @@ private:
 
   // Static members:
 public:
-  static uint16_t Lookup(std::string host);
+  static uint16_t Lookup(std::string host, const char* pName=0);
 
   // Object operations:
 public:
