@@ -205,6 +205,7 @@ main(int argc, char* const* argv)
       
       if (!p) {
 	flushEvent();
+	std::cerr << "glom: EOF on input\n";
 	break;
       }
       // We have a fragment:
@@ -235,6 +236,8 @@ main(int argc, char* const* argv)
     std::cerr << msg << std::endl;
   }
   catch(...) {
+    std::cerr << "Unanticipated exception caught\n";
+
   }
     // Out of main loop because we need to exit.
 
