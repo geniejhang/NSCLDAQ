@@ -374,6 +374,7 @@ snit::type EVB::Connection {
 
 	}
     }
+
 }
 
 ##

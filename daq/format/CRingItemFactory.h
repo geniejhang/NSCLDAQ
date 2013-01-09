@@ -31,6 +31,7 @@ class CRingItemFactory
 {
 public:
   static CRingItem* createRingItem(const CRingItem& item);
+  static CRingItem* createRingItem(const void*     pItem);
   static bool   isKnownItemType(const void* pItem);
 };
 

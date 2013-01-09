@@ -137,6 +137,36 @@ CRingItemFactory::createRingItem(const CRingItem& item)
   }
 }
 /**
+ *  createRingItem
+ *
+ *  Create a ring item object given a pointer that is believed to point to a 
+ *  ring item structure (pRingItem).
+ *
+ * @param pItem - Pointer to the pRingItem.
+ *
+ * @return CRingItem* - dynamically allocated with the underlying type matching that
+ *                      of s_header.s_type.
+ * @throw std::string if the type does not match a known ring item type.
+ */
+CRingItem*
+CRingItemFactory::createRingItem(const void* pItem)
+{
+  if (!isKnownItemType(pItem)) {
+    throw std::string("CRingItemFactory::createRingItem - unknown ring item type");
+  }
+  /* Make a 'vanilla' CRing item that we can pass into the other creator */
+
+  const RingItem* pRitem = reinterpret_cast<const RingItem*>(pItem);
+  CRingItem baseItem(pRitem->s_header.s_type, pRitem->s_header.s_size);
+  uint8_t*  pBody  = reinterpret_cast<uint8_t*>(baseItem.getBodyCursor());
+  memcpy(pBody, &(pRitem->s_body), pRitem->s_header.s_size);
+  pBody += pRitem->s_header.s_size;
+  baseItem.setBodyCursor(pBody);
+  baseItem.updateSize();
+
+  return createRingItem(baseItem);
+}
+/**
  * Determines if a  pointer points to something that might be a valid ring item.
  * - Item must have at least the size of a header.
  * - Item must be a recognized ring item.

@@ -323,6 +323,11 @@ Feb 1, 2012 - Feb 24, 2012
 	- Add glom to get data from event sorter -> events.
 	- Add teering so that event sorter can be monitored prior to
 	building.
-
-	
+	- Issue #1521 - Provide mechanism to uniquify event orderer
+	instances and name them.
+	- Issue #1522 - Provide mechanism to contact named event orderer
+	and to specify the name of an orderer in the ring fragment data
+	source.
+	- Issue #1523 - ringFragmentSource secures its timestamp extractor
+	by actually mapping a temp copy.
 	
