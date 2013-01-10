@@ -47,7 +47,8 @@ ringTestSource_LDADD = \
 clean-local:
 	-rm -rf $(BUILT_SOURCES)
 
-INCLUDES=-I.. -I@top_srcdir@/base/dataflow -I@top_srcdir@/daq/format \
+INCLUDES=-I.. -I@top_srcdir@/base/dataflow \
+	-I@top_srcdir@/daq/format \
 	-I@top_srcdir@/base/exception -I@top_srcdir@/base/headers \
 	-D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
 

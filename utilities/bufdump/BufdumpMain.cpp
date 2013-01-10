@@ -22,9 +22,8 @@
 #include <CRingItem.h>
 #include <CRingBuffer.h>
 #include <StringsToIntegers.h>
-#include "CDataSource.h"
-#include "CRingDataSource.h"
-#include "CFileDataSource.h"
+#include <CDataSource.h>
+#include <CDataSourceFactory.h>
 #include "dumperargs.h"
 
 #include <iostream>
@@ -51,8 +50,8 @@ using namespace std;
    determined by parsing the command line arguments.
 */
 BufdumpMain::BufdumpMain() :
-  m_ringSource(true),
-  m_pDataSource(0),
+  //  m_ringSource(true),
+  //  m_pDataSource(0),
   m_skipCount(0),
   m_itemCount(0)
 {
@@ -63,7 +62,7 @@ BufdumpMain::BufdumpMain() :
 */
 BufdumpMain::~BufdumpMain()
 {
-  delete m_pDataSource;
+  //  delete m_pDataSource;
 
 }
 ///////////////////////////////////////////////////////////////////////////////
@@ -147,20 +146,8 @@ BufdumpMain::operator()(int argc, char** argv)
   
   CDataSource* pSource;
   try {
-    m_pDataSource = new URL(sourceName);
-    if (m_pDataSource->getProto() == string("file")) {
-      pSource = new CFileDataSource(*m_pDataSource, exclude);
-      m_ringSource = false;
-    }
-    else if (m_pDataSource->getProto() == string("tcp")) {
-      pSource = new CRingDataSource(*m_pDataSource, sample, exclude);
-      m_ringSource = true;
-    }
-    else {
-      cerr << "--source url must be either tcp: (ringbuffer) or file: (event file) and was "
-	   << m_pDataSource->getProto() << endl;
-      return EXIT_FAILURE;
-    }
+    pSource = CDataSourceFactory::makeSource(sourceName, sample, exclude);
+
   }
   catch (CException& e) {
     std::cerr << "Failed to open data source " << sourceName << std::endl;
@@ -182,12 +169,6 @@ BufdumpMain::operator()(int argc, char** argv)
     throw;
   }
 
-  // Can't have sample and file data source:
-
-  if (parse.sample_given && !m_ringSource) {
-    cerr << "--source is a file, and --sample is given which is not allowed\n";
-    return EXIT_FAILURE;
-  }
 
   // We can now actually get stuff from the ring..but first we need to set the
   // skip and item count:

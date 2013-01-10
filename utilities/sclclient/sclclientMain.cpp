@@ -28,6 +28,8 @@
 #include <CPortManager.h>
 #include <ErrnoException.h>
 #include <CInvalidArgumentException.h>
+#include <CDataSource.h>
+#include <CDataSourceFactory.h>
 
 #include <os.h>
 
@@ -37,6 +39,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <vector>
 
 using namespace std;
 
@@ -85,7 +88,24 @@ SclClientMain::operator()(int argc, char** argv)
   if (parse.source_given) {
     url = parse.source_arg;
   }
-  m_pRing = CRingAccess::daqConsumeFrom (url);
+
+  
+
+  // Make the exclusion list and sample (none) list:
+  // then connect to the ring:
+
+
+  std::vector<uint16_t> sample;	// None sample
+  std::vector<uint16_t>  exclude;
+
+  exclude.push_back(PACKET_TYPES);
+  exclude.push_back(MONITORED_VARIABLES);
+  exclude.push_back(PHYSICS_EVENT);
+  exclude.push_back(PHYSICS_EVENT_COUNT);
+  exclude.push_back(EVB_FRAGMENT);
+  exclude.push_back(EVB_UNKNOWN_PAYLOAD);
+
+  m_pRing = CDataSourceFactory::makeSource(url, sample, exclude);
 
   // remote host initializes to "localhost"
   // port initializes to "managed"
@@ -194,17 +214,11 @@ SclClientMain::processItems()
   //  trigger counts.
   // 
 
-  CDesiredTypesPredicate predicate;
-  predicate.addDesiredType(BEGIN_RUN);
-  predicate.addDesiredType(END_RUN);
-  predicate.addDesiredType(PAUSE_RUN);
-  predicate.addDesiredType(RESUME_RUN);
-  predicate.addDesiredType(INCREMENTAL_SCALERS);
 
   bool beginSeen = false;
 
   while(1) {
-    CRingItem*  pItem = CRingItem::getFromRing(*m_pRing, predicate);
+    CRingItem*  pItem = m_pRing->getItem();
 
     // Dispatch to the correct handler:
 
@@ -224,7 +238,6 @@ SclClientMain::processItems()
 	{
 	  // If the begin run not seen.. call RunInProgres in the server
 
-	  
 	  if (!beginSeen) {
 	    m_pServer->SendCommand("set RunState Active");
 	    m_pServer->SendCommand("RunInProgress");
@@ -235,7 +248,8 @@ SclClientMain::processItems()
 	  processScalers(item);
 	}
 	break;
-	
+      default:
+	break;			// In case new ring item types we forget to exculde are added.
       }
       delete pItem;
       pItem = 0;		// See the catch block below.

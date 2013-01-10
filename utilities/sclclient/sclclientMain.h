@@ -32,7 +32,7 @@
 
 // forward class definitions:
 
-class CRingBuffer;
+class CDataSource;
 class CRingScalerItem;
 class CRingStateChangeItem;
 class TclServerConnection;
@@ -46,7 +46,7 @@ class SclClientMain {
   // Private per object data.
 
 private:
-  CRingBuffer*         m_pRing;
+  CDataSource*         m_pRing;
   std::string          m_Host;
   int                  m_Port;
   TclServerConnection* m_pServer;

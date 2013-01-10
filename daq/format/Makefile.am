@@ -13,7 +13,9 @@ libdataformat_la_SOURCES = CRingSelectionPredicate.cpp	\
 			CRingFragmentItem.cpp       \
 			CPhysicsEventItem.cpp       \
 			CRingItemFactory.cpp		\
-			ringitem.c
+			ringitem.c			\
+			CDataSource.cpp CRingDataSource.cpp CFileDataSource.cpp  \
+			CDataSourceFactory.cpp
 
 
 include_HEADERS	= CRingSelectionPredicate.h	\
@@ -27,18 +29,24 @@ include_HEADERS	= CRingSelectionPredicate.h	\
 			CRingFragmentItem.h           \
 			CPhysicsEventItem.h	\
 			CRingItemFactory.h	\
-			DataFormat.h
+			DataFormat.h	\
+			CDataSource.h CRingDataSource.h CFileDataSource.h \
+			CDataSourceFactory.cpp
 
 INCLUDES	= -I@top_srcdir@/base/dataflow	\
 		  -I@top_srcdir@/base/exception	\
-		-I@top_srcdir@/base/headers
+		-I@top_srcdir@/base/headers	\
+		-I@top_srcdir@/base/uri		\
+		-I@top_srcdir@/base/os
 
 libdataformat_la_LDFLAGS	= -version-info $(SOVERSION)	\
 				-Wl,"-rpath-link=$(libdir)" -lrt \
 				$(THREADLD_FLAGS)
 
-libdataformat_la_LIBADD	= @top_srcdir@/base/dataflow/libDataFlow.la \
-			@top_srcdir@/base/exception/
+libdataformat_la_LIBADD	= @top_builddir@/base/dataflow/libDataFlow.la \
+			@top_builddir@/base/uri/liburl.la		\
+			@top_builddir@/base/os/libdaqshm.la		\
+			@top_builddir@/base/exception/libException.la
 
 
 libdataformat_la_CXXFLAGS = $(THREADCXX_FLAGS) $(AM_CXXFLAGS)
@@ -53,9 +61,9 @@ unittests_SOURCES	= TestRunner.cpp selecttest.cpp desiredtests.cpp	\
 			formatoutputtests.cpp
 
 unittests_LDADD		= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
-			@top_srcdir@/base/dataflow/libDataFlow.la 	\
-			@top_srcdir@/daq/format/libdataformat.la	\
-			@top_srcdir@/base/exception/libException.la
+			@top_builddir@/base/dataflow/libDataFlow.la 	\
+			@top_builddir@/daq/format/libdataformat.la	\
+			@top_builddir@/base/exception/libException.la
 
 
 

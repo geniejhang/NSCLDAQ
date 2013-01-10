@@ -330,3 +330,8 @@ Feb 1, 2012 - Feb 24, 2012
 	- Issue #1147 - Refactor various whoami's to os-specific code and
 	replace locally defined methods and functions with calls to the
 	centralized one.
+        - Issue #1219 - Refactor various uri based file/ring opens into  
+	a factory object.
+	- Issue #785 - Reconnect to VM-USB at the start of each run.
+	this allows the controller to be powered off betwen runs.
+	

@@ -130,6 +130,8 @@ public:
 
     // Register I/O operations.
 public:
+    virtual void     reconnect(); /* Drop USB/open USb. */
+
     virtual void     writeActionRegister(uint16_t value);
     void     writeActionRegister(int value) { // SWIG
       writeActionRegister((uint16_t)value);

@@ -180,39 +180,7 @@ CVMUSBusb::CVMUSBusb(struct usb_device* device) :
     m_device(device),
     m_timeout(DEFAULT_TIMEOUT)
 {
-    m_handle  = usb_open(m_device);
-    if (!m_handle) {
-	throw "CVMUSBusb::CVMUSB  - unable to open the device";
-    }
-    // Now claim the interface.. again this could in theory fail.. but.
-
-    usb_set_configuration(m_handle, 1);
-    int status = usb_claim_interface(m_handle, 
-				     0);
-    if (status == -EBUSY) {
-	throw "CVMUSBusb::CVMUSB - some other process has already claimed";
-    }
-
-    if (status == -ENOMEM) {
-	throw "CVMUSBusb::CMVUSB - claim failed for lack of memory";
-    }
-    // Errors we don't know about:
-
-    if (status < 0) {
-      std::string msg("Failed to claim the interface: ");
-      msg += strerror(-status);
-      throw msg;
-    }
-    usb_clear_halt(m_handle, ENDPOINT_IN);
-    usb_clear_halt(m_handle, ENDPOINT_OUT);
-
-    usleep(100);
-    
-    // Now set the irq mask so that all bits are set..that:
-    // - is the only way to ensure the m_irqMask value matches the register.
-    // - ensures m_irqMask actually gets set:
-
-    writeIrqMask(0xff);
+  openVMUsb();
 }
 ////////////////////////////////////////////////////////////////
 /*!
@@ -224,6 +192,24 @@ CVMUSBusb::~CVMUSBusb()
     usb_release_interface(m_handle, 0);
     usb_close(m_handle);
     usleep(5000);
+}
+
+/**
+ * reconnect
+ *
+ * re open the VM-USB.
+ * this is done by closing the device and then invoking
+ * openVMUSBUsb which has code common to us and
+ * the construtor.
+ */
+void
+CVMUSBusb::reconnect()
+{
+  usb_release_interface(m_handle, 0);
+  usb_close(m_handle);
+  usleep(1000);			// Let this all happen
+  openVMUsb();
+
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -1321,4 +1307,51 @@ CVMUSBusb::listToOutPacket(uint16_t ta, CVMUSBReadoutList& list,
     }
     *outSize = packetShorts*sizeof(short);
     return outPacket;
+}
+
+/**
+ * openVMUsb
+ *
+ *   Open the VM-USB.  This contains code that is 
+ *   common to both the constructor and reconnect.
+ *
+ *   We assume that m_device is set to the
+ *   desired VM-USB device.
+ */
+void
+CVMUSBusb::openVMUsb()
+{
+    m_handle  = usb_open(m_device);
+    if (!m_handle) {
+	throw "CVMUSBusb::CVMUSB  - unable to open the device";
+    }
+    // Now claim the interface.. again this could in theory fail.. but.
+
+    usb_set_configuration(m_handle, 1);
+    int status = usb_claim_interface(m_handle, 
+				     0);
+    if (status == -EBUSY) {
+	throw "CVMUSBusb::CVMUSB - some other process has already claimed";
+    }
+
+    if (status == -ENOMEM) {
+	throw "CVMUSBusb::CMVUSB - claim failed for lack of memory";
+    }
+    // Errors we don't know about:
+
+    if (status < 0) {
+      std::string msg("Failed to claim the interface: ");
+      msg += strerror(-status);
+      throw msg;
+    }
+    usb_clear_halt(m_handle, ENDPOINT_IN);
+    usb_clear_halt(m_handle, ENDPOINT_OUT);
+
+    usleep(100);
+    
+    // Now set the irq mask so that all bits are set..that:
+    // - is the only way to ensure the m_irqMask value matches the register.
+    // - ensures m_irqMask actually gets set:
+
+    writeIrqMask(0xff);
 }

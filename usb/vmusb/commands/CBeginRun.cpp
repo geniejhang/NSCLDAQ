@@ -143,6 +143,10 @@ CBeginRun::operator()(CTCLInterpreter& interp,
   }
   cerr << "Buffer multiplier (CBegin) = " << Globals::bufferMultiplier << endl;
 
+  // Reconnect the VM-USB:
+
+  Globals::pUSBController->reconnect();
+
   CAcquisitionThread* pReadout = CAcquisitionThread::getInstance();
   pReadout->start(Globals::pUSBController);
 

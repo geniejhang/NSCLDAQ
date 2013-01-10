@@ -692,6 +692,45 @@ g++ -o myApplication src1.o src2.o ... -L$DAQROOT/lib \
             most conveniently manipulated via the
             <classname>CRingItem</classname> base class.
         </para>
+        <section>
+           <title>Generic ring data sources</title>
+           <para>
+              You may want a program to work equally well when pointed at a 
+              ring buffer and when pointed at a file of ring items, such as
+              an event file created by the event logger.
+           </para>
+           <para>
+              A set of data source classes and a data source factory allow you
+              to easily write program like this.  The key point is that 
+              ring data sources are specified by uniform resource identifiers
+              (URIs).  The first part of a URI is called the 'protocol' and
+              defines how a connection takes place.  For online rings we have
+              seen that the protocol is <literal>tcp:</literal>  For offline
+              event files, the protocol is <literal>file:</literal>.
+            </para>
+            <para>
+              The data format library provides a generic base class;
+              <classname>CDataSource</classname>.   Concrete subclasses include
+              <classname>CRingDataSource</classname> and
+              <classname>CFileDataSource</classname> provide data sources for
+              online rings and offline files respectively.  The factory class
+              is <classname>CDataSourceFactory</classname>.
+            </para>
+            <para>
+                The data sources return generic ring items.  These can be
+                upcast into specific ring item types by using methods in the
+                <classname>CRingItemFactory</classname> class.
+            </para>
+            <para>
+                Reference information on these classes is availabe at:
+                <xref linkend="daq3_cdatasource" endterm="daq3_cdatasource_title" />,
+                <xref linkend="daq3_cringdatasource" endterm="daq3_cringdatasource_title"  />,
+                <xref linkend="daq3_cfiledatasource" endterm="daq3_cfiledatasource_title"  />,
+                <xref linkend="daq3_cdatasourcefactory" endterm="daq3_cdatasourcefactory_title"  />,
+                and
+                <xref linkend="daq3_cringitemfactory" endterm="daq3_cringitemfactory_title"  />.
+            </para>
+        </section>
     </section>
     <section>
         <title>Creating ring items</title>
@@ -5101,6 +5140,530 @@ set EPICS_DATA(Z1234) 1.234
             </para>
           </refsect1>
         </refentry>
+	 <refentry id="daq3_cdatasource">
+       <refmeta>
+          <refentrytitle id=daq3_cdatasource_title>CDataSource</refentrytitle>
+          <manvolnum>3daq</manvolnum>
+       </refmeta>
+       <refnamediv>
+          <refname>CDataSource</refname>
+          <refpurpose>Abstract base class of data source for ring items.</refpurpose>
+       </refnamediv>
+       
+       <refsynopsisdiv>
+        <synopsis>
+            <ooclass><classname>CDataSource</classname></ooclass>
+           <constructorsynopsis>
+          <methodname>CDataSource</methodname>
+          <void />
 
+           </constructorsynopsis>
+           <methodsynopsis>
+          <type>CRingItem*</type>
+             <methodname>getItem</methodname>
+             <void />
+             <initializer> = 0</initializer>
+           </methodsynopsis>
+        </synopsis>
+       </refsynopsisdiv>
+       <refsect1>
+          <title>DESCRIPTION</title>
+          <para>
+            Abstract base class for a data source that returns ring items.
+            This class cannot be instantiated because the public method
+            <methodname>getItem</methodname> is pure virtual.  Normally
+            one gets a pointer to a <classname>CDataSource</classname> object
+            when creating a data source via
+            <xref endterm='daq3_cdatasourcefactory' linkend='daq3_cdatasourcefactory_title' />.
+          </para>
+       </refsect1>
+       <refsect1>
+          <title>
+         METHODS
+          </title>
+          <variablelist>
+            <varlistentry>
+            <term>
+                <methodsynopsis>
+               <type>CRingItem*</type>
+                  <methodname>getItem</methodname>
+                  <void />
+                  <initializer> = 0</initializer>
+                </methodsynopsis>
+            </term>
+            <listitem>
+                <para>
+                    This interface method will, for a concrete class, return a
+                    pointer to an item received from the data source.  In the event
+                    of an error, a <literal>NULL</literal> pointer will be
+                    returned or alternatively an integer exception will be thrown.
+                    If an integer exception is thrown its value will be a legitimate
+                    error number from <literal>&lt;errno.h&gt;</literal>.
+                    If a <literal>NULL</literal> is returned, the
+                    <varname>errno</varname> variable should be checked to
+                    determine if an end of data source condition or some other
+                    error occured.  For an end of source condition, the
+                    <varname>errno</varname> value will be <literal>ESUCCESS</literal>
+                </para>
+            </listitem>
+            </varlistentry>
+          </variablelist>
+       </refsect1>
+     </refentry>     
+
+	 <refentry id="daq3_cringdatasource">
+       <refmeta>
+          <refentrytitle id="daq3_cringdatasource_title">CRingDataSource</refentrytitle>
+          <manvolnum>3daq</manvolnum>
+       </refmeta>
+       <refnamediv>
+          <refname>CRingDataSource</refname>
+          <refpurpose>Ringbuffer data source for ring items.</refpurpose>
+       </refnamediv>
+       
+       <refsynopsisdiv>
+        <synopsis>
+            <ooclass><classname>CRingDataSource</classname></ooclass>
+           <constructorsynopsis>
+          <methodname>CRingDataSource</methodname>
+          <methodparam>
+            <type>URL&amp;</type> <parameter>url</parameter>
+          </methodparam>
+          <methodparam>
+            <type>std::vector&lt;uint16_t&gt;</type>
+            <parameter>exclusionList</parameter>
+          </methodparam>
+          <methodparam>
+            <type>std::vector&lt;uint16_t&gt;</type>
+            <parameter>sampleList</parameter>
+          </methodparam>
+           </constructorsynopsis>
+           <methodsynopsis>
+          <type>CRingItem*</type>
+             <methodname>getItem</methodname>
+             <void />
+             <modifier>
+           </methodsynopsis>
+        </synopsis>
+       </refsynopsisdiv>
+       <refsect1>
+          <title>DESCRIPTION</title>
+          <para>
+            Concrete <classname>CDataSource</classname> class that implements
+            a source of ring items from a live ring.  See the <literal>METHODS</literal>
+            section below for more information about how to create and use
+            this data source directly.  Note that a more convenient mechanism
+            for generating these data sources is via the
+            <classname>CDataSourceFactory</classname> class.
+          </para>
+       </refsect1>
+       <refsect1>
+          <title>
+         METHODS
+          </title>
+          <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                   <methodname>CRingDataSource</methodname>
+                   <methodparam>
+                     <type>URL&amp;</type> <parameter>url</parameter>
+                   </methodparam>
+                   <methodparam>
+                     <type>std::vector&lt;uint16_t&gt;</type>
+                     <parameter>exclusionList</parameter>
+                   </methodparam>
+                   <methodparam>
+                     <type>std::vector&lt;uint16_t&gt;</type>
+                     <parameter>sampleList</parameter>
+                   </methodparam>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Constructs a <classname>CRingDataSource</classname> object.
+                        <parameter>url</parameter> specifies the ring from which
+                        data is desired.  This can be a local or remote ring.
+                        The url protocol must be a <literal>tcp:</literal>.
+                    </para>
+                    <para>
+                        <parameter>exclusionList</parameter> specifies a
+                        list of ring item types that will not be passed to the
+                        client via <methodname>getItem</methodname>
+                    </para>
+                    <para>
+                        <parameter>sampleList</parameter> speicfies a list
+                        of ring item types that will be sampled from the ring.
+                        Item types in this vector may be skipped if the client
+                        application falls behind in processing the ring buffer.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                   <type>CRingItem*</type>
+                      <methodname>getItem</methodname>
+                      <void />
+                      <modifier>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Returns the next suitable item from the ring.  This method
+                        will block until a suitable item is available.  Suitability
+                        is defined by the <parameter>exclusionList</parameter>
+                        and <parameter>sampleList</parameter> of item types
+                        provided whent he data source was constructed taken with
+                        the ring backlog.
+                    </para>
+                </listitem>
+            </varlistentry>
+          </variablelist>
+       </refsect1>
+     </refentry>     
+
+      <refentry id="daq3_cfiledatasource">
+       <refmeta>
+          <refentrytitle id="daq3_cfiledatasource_title">CFileDataSource</refentrytitle>
+          <manvolnum>3daq</manvolnum>
+       </refmeta>
+       <refnamediv>
+          <refname>CFileDataSource</refname>
+          <refpurpose>Ring item data source from a file</refpurpose>
+       </refnamediv>
+       
+       <refsynopsisdiv>
+        <classsynopsis>
+            <ooclass><classname>CFileDataSource</classname></ooclass>
+           <constructorsynopsis>
+          <methodname>CFileDataSource</methodname>
+          <methodparam>
+            <type>URL&amp;</type> <parameter>url</parameter>
+          </methodparam>
+          <methodparam>
+            <type>std::vector&lt;uint16_t&gt;</type> <parameter>exclusionList</parameter>
+          </methodparam>
+          
+           </constructorsynopsis>
+           <methodsynopsis>
+          <type>CRingItem*</type>
+             <methodname>getItem</methodname>
+             <void />
+           </methodsynopsis>
+        </classsynopsis>
+       </refsynopsisdiv>
+       <refsect1>
+          <title>DESCRIPTION</title>
+          <para>
+            Provides a source of ring items from a file.  For information about
+            how to directly create and use this object see <literal>METHODS</literal>
+            below.  The normal way to create a data source object, however is to
+            use <classname>CDataSourceFactory</classname> to create the correct
+            type of data source from a URI
+          </para>
+       </refsect1>
+       <refsect1>
+          <title>
+         METHODS
+          </title>
+          <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                      <methodname>CFileDataSource</methodname>
+                      <methodparam>
+                        <type>URL&amp;</type> <parameter>url</parameter>
+                      </methodparam>
+                      <methodparam>
+                        <type>std::vector&lt;uint16_t&gt;</type> <parameter>exclusionList</parameter>
+                      </methodparam>                    
+                     </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Creates a file data source.
+                        <parameter>url</parameter> determines which file data
+                        will be read from.  The url must have a
+                        <literal>file:</literal> protocol specified.
+                    </para>
+                    <para>
+                        <parameter>exclusionList</parameter> is a list of data
+                        item types that will not be passed to the caller
+                        by <methodname>getItem</methodname>.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                    <type>CRingItem*</type>
+                       <methodname>getItem</methodname>
+                       <void />
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Gets the next ring item from the file whose type is not
+                        a type in the construtor's <paramter>exclusionList</paramter>.
+                    </para>
+                </listitem>
+            </varlistentry>             
+          </variablelist>
+       </refsect1>
+     </refentry>
+      
+     <refentry id="daq3_cdatasourcefactory">
+       <refmeta>
+          <refentrytitle id="daq3_cdatasourcefactory_title>CDataSourceFactory"</refentrytitle>
+          <manvolnum>3daq</manvolnum>
+       </refmeta>
+       <refnamediv>
+          <refname>CDataSourceFactory</refname>
+          <refpurpose>Create data sources given a URI</refpurpose>
+       </refnamediv>
+       <refsynopsisdiv>
+        <synopsis>
+            <ooclass><classname>CDataSourceFactory</classname></ooclass>
+           <methodsynopsis>
+            <modifier>static</modifier>
+            <type>CDataSource*</type>
+             <methodname>makeSource</methodname>
+             <methodparam>
+                <type>std::string</type>
+                <parameter>uri</parameter>
+             </methodparam>
+             <methodparam>
+                <type>std::vector&lt;uint16_t&gt;</type>
+                <parameter>sample</parameter>
+             </methodparam>
+             <methodparam>
+                <type>std::vector&lt;uint16_t&gt;</type>
+                <parameter>exclude</parameter>
+             </methodparam>
+           </methodsynopsis>
+        </synopsis>
+       </refsynopsisdiv>
+       <refsect1>
+          <title>DESCRIPTION</title>
+          <para>
+            This factory class contains a static method to create a ring item
+            data source given a URI.
+          </para>
+       </refsect1>
+       <refsect1>
+          <title>
+         METHODS
+          </title>
+          <variablelist>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                     <modifier>static</modifier>
+                     <type>CDataSource*</type>
+                      <methodname>makeSource</methodname>
+                      <methodparam>
+                         <type>std::string</type>
+                         <parameter>uri</parameter>
+                      </methodparam>
+                      <methodparam>
+                         <type>std::vector&lt;uint16_t&gt;</type>
+                         <parameter>sample</parameter>
+                      </methodparam>
+                      <methodparam>
+                         <type>std::vector&lt;uint16_t&gt;</type>
+                         <parameter>exclude</parameter>
+                      </methodparam>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Creates a new data source object and returns a pointer
+                        to it.  The <classname>CDataSource</classname> object
+                        created is dynamically allocated and needs to be
+                        deleted by the caller.
+                    </para>
+                    <para>
+                        <literal>uri</literal> describes the data source.
+                        For a live ring this should be of the form
+                        <literal>tcp://hostname/ringname</literal>
+                        For a file ring this shouild be of the form
+                        <literal>file:///path/to/the/file</literal>.
+                    </para>
+                    <para>
+                        <parameter>sample</parameter> is a vector of ring item
+                        types.  Ring data sources are free to skip items of this
+                        type depending on circumstances.
+                    </para>
+                    <para>
+                        <parameter>exclde</parameter> is a vector of
+                        ring item types the caller does not want to get from the
+                        data source.
+                    </para>
+                </listitem>
+            </varlistentry>
+          </variablelist>
+       </refsect1>
+        </refsect1>
+     </refentry>
+    <refentry id="daq3_cringitemfactory">
+       <refmeta>
+          <refentrytitle id="daq3_cringitemfactory_title">CRingItemFactory</refentrytitle>
+          <manvolnum>3daq</manvolnum>
+       </refmeta>
+       <refnamediv>
+          <refname>CRingItemFactory</refname>
+          <refpurpose>Upcast ring items to specific ring item objects.</refpurpose>
+       </refnamediv>
+       
+       <refsynopsisdiv>
+        <synopsis>
+            <ooclass><classname>CRingItemFactory</classname></ooclass>
+           <methodsynopsis>
+            <modifier>static</modifier>
+            <type>CRingItem*</type>
+             <methodname>createRingItem</methodname>
+             <methodparam>
+                <modifier>const</modifier><type>CRingItem&</type>
+            </methodsynopsis>
+            <methodsynopsis>
+                <modifier>static</modifier>
+                <type>CRingItem*</type>
+                <methodname>createRingItem</methodname>
+                <methodparam>
+                    <modifier>static</modifier><type>void*</type>
+                    <parameter>pItem</parameter>
+                </methodparam>
+            </methodsynopsis>
+            <methodsynopsis>
+                <modifier>static</modifier>
+                <type>bool</type>
+                <methodname>
+                    isKnownItemType
+                </methodname>
+                <methodparam>
+                   <modifier>const</modifier>
+                   <type>void*</type>
+                   <parameter>pItem</parameter>
+                </methodname>
+             </methodsynopsis>
+        </synopsis>
+       </refsynopsisdiv>
+       <refsect1>
+          <title>DESCRIPTION</title>
+          <para>
+             <classname>CRingItem</classname>
+             provides a set of static methods that
+             allow you to upcast ring items to actual
+             underlying ring item types.  In general you
+             will validate the item type via
+             <methodname>isKnownItemType</methodname>
+             and then invoke one o f the 
+             <methodname>createRingItem</methodname>
+             methods.   Finally if you need to
+             use an item specific methods, you would do a
+             <literal>reinterpret_cast</literal> to 
+             the correct subclass of <classname>CRingItem</classname>.
+          </para>
+          <para>
+             See <literal>METHODS</literal> below for more
+             information about these functions.
+       </refsect1>
+       <refsect1>
+          <title>
+         METHODS
+          </title>
+          <variablelist>
+             <varlistentry>
+                <term>
+           <methodsynopsis>
+            <modifier>static</modifier>
+            <type>CRingItem*</type>
+             <methodname>createRingItem</methodname>
+             <methodparam>
+                <modifier>const</modifier><type>CRingItem&</type>
+            </methodsynopsis>
+                 </term>
+                 <listitem>
+                    <para>
+                       Creates the appropriate ring item
+                       given a reference to a base class
+                       ring item.  A pointer is returned
+                       to the resulting object.  The
+                       object is dynamically allocated
+                       and therefore must be 
+                       deleted by the caller.
+                    </para>
+                  </listitem>
+               </varlistentry>
+               <varlistentry>
+                  <term>
+            <methodsynopsis>
+                <modifier>static</modifier>
+                <type>CRingItem*</type>
+                <methodname>createRingItem</methodname>
+                <methodparam>
+                    <modifier>static</modifier><type>void*</type>
+                    <parameter>pItem</parameter>
+                </methodparam>
+            </methodsynopsis>
+                   </term>
+                   <listitem>
+                      <para>
+                          Creates the appropriet ring item
+                          given a pointer to storage that
+                          is believed to contain a 
+                          <type>RingItem</type> struct
+                          as defined in 
+                          <filename>DataFormat.h</filename>
+                      </para>
+                      <para>
+                          The only difference between this
+                          and the previous method is the
+                          parameter type.
+                      </para>
+                   </listitem>
+                </varlistentry>
+                <varlistentry>
+                   <term>
+            <methodsynopsis>
+                <modifier>static</modifier>
+                <type>bool</type>
+                <methodname>
+                    isKnownItemType
+                </methodname>
+                <methodparam>
+                   <modifier>const</modifier>
+                   <type>void*</type>
+                   <parameter>pItem</parameter>
+                </methodname>
+             </methodsynopsis>
+                    </term>
+                    <listitem>
+                       <para>
+                           If <parameter>pItem</parameter>
+                           points to a 
+                           <type>RingItem</type>
+                           of a type known to the factory,
+                           this method returns
+                           <literal>true</literal>,
+                           otherwise, <literal>false</literal>
+                        </para>
+                        <para>
+                           The creational methods of the
+                           factory will return a generic
+                           ring item if they don't recognize
+                           the ring type.
+                        </para>
+                      </listitem>
+                  </varlistentry>
+          </variablelist>
+       </refsect1>
+        <refsect1>
+           <title>PUBLIC VARIABLES, TYPES and CONSTANTS</title>
+           <variablelist>
+           </variablelist>
+        </refsect1>
+     </refentry>        
 
 <!-- /manpage  -->

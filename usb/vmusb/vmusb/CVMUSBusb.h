@@ -116,6 +116,7 @@ private:
     int operator==(const CVMUSBusb& rhs) const;
     int operator!=(const CVMUSBusb& rhs) const;
 public:
+    virtual void reconnect();
 
     // Register I/O operations.
 public:
@@ -236,6 +237,8 @@ public:
 public: 
 
 private:
+    void openVMUsb();
+
     int transaction(void* writePacket, size_t writeSize,
 		    void* readPacket,  size_t readSize);
 
