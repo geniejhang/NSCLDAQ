@@ -334,4 +334,6 @@ Feb 1, 2012 - Feb 24, 2012
 	a factory object.
 	- Issue #785 - Reconnect to VM-USB at the start of each run.
 	this allows the controller to be powered off betwen runs.
+	- Issue #786 - Reconnect to CC-USB at the start of each run.
+	Allows the controller to be powered off between runs.
 	

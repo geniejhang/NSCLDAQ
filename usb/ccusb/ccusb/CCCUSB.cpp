@@ -164,25 +164,8 @@ CCCUSB::CCCUSB(struct usb_device* device) :
     m_device(device),
     m_timeout(DEFAULT_TIMEOUT)
 {
-    m_handle  = usb_open(m_device);
-    if (!m_handle) {
-	throw "CCCUSB::CCCUSB  - unable to open the device";
-    }
-    // Now claim the interface.. again this could in theory fail.. but.
+  openUsb();
 
-    usb_set_configuration(m_handle, 1);
-    int status = usb_claim_interface(m_handle, 0);
-    if (status == -EBUSY) {
-	throw "CCCUSB::CCCUSB - some other process has already claimed";
-    }
-
-    if (status == -ENOMEM) {
-	throw "CCCUSB::CMVUSB - claim failed for lack of memory";
-    }
-    usb_clear_halt(m_handle, ENDPOINT_IN);
-    usb_clear_halt(m_handle, ENDPOINT_OUT);
-
-    usleep(100);
 }
 ////////////////////////////////////////////////////////////////
 /*!
@@ -194,6 +177,25 @@ CCCUSB::~CCCUSB()
     usb_release_interface(m_handle, 0);
     usb_close(m_handle);
     usleep(5000);
+}
+
+
+/**
+ * reconnect
+ *   
+ * Drop connection with the CC-USB and re-open.
+ * this can be called when you suspect the CC-USB might
+ * have been power cycled.
+I*
+*/
+void
+CCCUSB::reconnect()
+{
+  usb_release_interface(m_handle, 0);
+  usb_close(m_handle);
+  usleep(1000);
+
+  openUsb();
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -1409,3 +1411,32 @@ CCCUSB::write16(int n, int a, int f, uint16_t data, uint16_t& qx)
 }
 
 
+/**
+ * openUsb
+ *
+ *  Does the common stuff required to open a connection
+ *  to a CCUSB given that the device has been filled in.
+ */
+void
+CCCUSB::openUsb()
+{
+    m_handle  = usb_open(m_device);
+    if (!m_handle) {
+	throw "CCCUSB::CCCUSB  - unable to open the device";
+    }
+    // Now claim the interface.. again this could in theory fail.. but.
+
+    usb_set_configuration(m_handle, 1);
+    int status = usb_claim_interface(m_handle, 0);
+    if (status == -EBUSY) {
+	throw "CCCUSB::CCCUSB - some other process has already claimed";
+    }
+
+    if (status == -ENOMEM) {
+	throw "CCCUSB::CMVUSB - claim failed for lack of memory";
+    }
+    usb_clear_halt(m_handle, ENDPOINT_IN);
+    usb_clear_halt(m_handle, ENDPOINT_OUT);
+   
+    usleep(100);
+}

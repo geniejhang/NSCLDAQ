@@ -111,6 +111,9 @@ CBeginRun::operator()(CTCLInterpreter& interp,
   }
   pState->setTitle(string(titleString));
   
+  // Re-establish connection to the controller:
+
+  Globals::pUSBController->reconnect();
 
   // Check that the configuration file processes correctly:
 

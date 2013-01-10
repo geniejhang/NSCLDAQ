@@ -116,6 +116,7 @@ private:
     int operator==(const CCCUSB& rhs) const;
     int operator!=(const CCCUSB& rhs) const;
 public:
+    void reconnect();
 
     // Register I/O operations.
 public:
@@ -388,6 +389,8 @@ private:
 
     int write32(int n, int a, int f, uint32_t data, uint16_t& qx);
     int write16(int n, int a, int f, uint16_t data, uint16_t& qx); /*  just for register writes */
+
+    void openUsb();
 
 
   // The following are classes that define bits/fields in the registers of the CC-USB.
