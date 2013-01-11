@@ -148,7 +148,7 @@ accumulateEvent(uint64_t dt, EVB::pFragment pFrag)
   uint8_t* pEvent  = 
     reinterpret_cast<uint8_t*>(realloc(pAccumulatedEvent, 
 					totalEventSize + fragmentSize));
-  uint8_t* pAppendPointer = pAccumulatedEvent + totalEventSize;
+  uint8_t* pAppendPointer = pEvent + totalEventSize;
   memcpy(pAppendPointer, &(pFrag->s_header), 
 	 sizeof(EVB::FragmentHeader));
   pAppendPointer += sizeof(EVB::FragmentHeader);
@@ -181,13 +181,14 @@ main(int argc, char* const* argv)
   gengetopt_args_info args;
   cmdline_parser(argc, argv, &args);
   int dtInt = static_cast<uint64_t>(args.dt_arg);
-  if (dtInt < 0) {
+  nobuild      = args.nobuild_flag;
+
+  if (!nobuild && (dtInt < 0)) {
     std::cerr << "Coincidence window must be >= 0 was "
 	      << dtInt << std::endl;
     exit(-1);
   }
   uint64_t dt = static_cast<uint64_t>(dtInt);
-  nobuild      = args.nobuild_flag;
 
   /*
      main loop.. .get fragments and handle them.
