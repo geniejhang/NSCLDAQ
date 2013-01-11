@@ -36,7 +36,7 @@ noinst_HEADERS			=	CGDG.h			\
 					ChicoTrigger.h		\
 					CWatchCommand.h
 
-INCLUDES			= 	-I$@top_srcdir@/usb/vmusb/vmusb		\
+INCLUDES			= 	-I@top_srcdir@/usb/vmusb/vmusb		\
 					-I@top_srcdir@/daq/format                 \
 					-I@top_srcdir@/usb/vmusb/devices	\
 					-I@top_srcdir@/usb/vmusb/threadcomm	\

@@ -26,6 +26,7 @@
 #include <CAcquisitionThread.h>
 #include <CRunState.h>
 #include <CConfiguration.h>
+#include <CCCUSB.h>
 
 using std::vector;
 using std::string;

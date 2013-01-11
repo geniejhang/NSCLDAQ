@@ -31,11 +31,11 @@
 #endif
 #endif
 
-
+#include <CRingBuffer.h>
 
 // Forward definitions:
 
-class CRingDataSource;
+class CRingBufferu;
 struct _PhysicsEventItem;
 typedef _PhysicsEventItem *pPhysicsEventItem;
 struct gengetopt_args_info;
@@ -68,7 +68,7 @@ class CRingSource : public CEVBClientApp
 
 private:
   struct gengetopt_args_info* m_pArgs;
-  CRingDataSource* m_pBuffer;
+  CRingBuffer*     m_pBuffer;
   uint32_t         m_sourceId;
   tsExtractor      m_timestamp;
   bool             m_stall;
