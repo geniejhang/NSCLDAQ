@@ -5142,7 +5142,7 @@ set EPICS_DATA(Z1234) 1.234
         </refentry>
 	 <refentry id="daq3_cdatasource">
        <refmeta>
-          <refentrytitle id=daq3_cdatasource_title>CDataSource</refentrytitle>
+          <refentrytitle id='daq3_cdatasource_title'>CDataSource</refentrytitle>
           <manvolnum>3daq</manvolnum>
        </refmeta>
        <refnamediv>
@@ -5162,7 +5162,6 @@ set EPICS_DATA(Z1234) 1.234
           <type>CRingItem*</type>
              <methodname>getItem</methodname>
              <void />
-             <initializer> = 0</initializer>
            </methodsynopsis>
         </synopsis>
        </refsynopsisdiv>
@@ -5188,7 +5187,6 @@ set EPICS_DATA(Z1234) 1.234
                <type>CRingItem*</type>
                   <methodname>getItem</methodname>
                   <void />
-                  <initializer> = 0</initializer>
                 </methodsynopsis>
             </term>
             <listitem>
@@ -5242,7 +5240,6 @@ set EPICS_DATA(Z1234) 1.234
           <type>CRingItem*</type>
              <methodname>getItem</methodname>
              <void />
-             <modifier>
            </methodsynopsis>
         </synopsis>
        </refsynopsisdiv>
@@ -5305,7 +5302,6 @@ set EPICS_DATA(Z1234) 1.234
                    <type>CRingItem*</type>
                       <methodname>getItem</methodname>
                       <void />
-                      <modifier>
                     </methodsynopsis>
                 </term>
                 <listitem>
