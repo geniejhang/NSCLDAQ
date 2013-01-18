@@ -4920,7 +4920,7 @@ set EPICS_DATA(Z1234) 1.234
              </title>
              <para>
                 These functions produce dynamically allocated ring items
-                that reflect the paramters that have been passed to them.      
+                that reflect the parameters that have been passed to them.      
              </para>
              <variablelist>
                 <varlistentry>
@@ -5401,7 +5401,7 @@ set EPICS_DATA(Z1234) 1.234
                 <listitem>
                     <para>
                         Gets the next ring item from the file whose type is not
-                        a type in the construtor's <paramter>exclusionList</paramter>.
+                        a type in the construtor's <parameter>exclusionList</parameter>.
                     </para>
                 </listitem>
             </varlistentry>             
@@ -5411,7 +5411,7 @@ set EPICS_DATA(Z1234) 1.234
       
      <refentry id="daq3_cdatasourcefactory">
        <refmeta>
-          <refentrytitle id="daq3_cdatasourcefactory_title>CDataSourceFactory"</refentrytitle>
+          <refentrytitle id="daq3_cdatasourcefactory_title">CDataSourceFactory"</refentrytitle>
           <manvolnum>3daq</manvolnum>
        </refmeta>
        <refnamediv>
@@ -5500,7 +5500,6 @@ set EPICS_DATA(Z1234) 1.234
             </varlistentry>
           </variablelist>
        </refsect1>
-        </refsect1>
      </refentry>
     <refentry id="daq3_cringitemfactory">
        <refmeta>
@@ -5520,7 +5519,9 @@ set EPICS_DATA(Z1234) 1.234
             <type>CRingItem*</type>
              <methodname>createRingItem</methodname>
              <methodparam>
-                <modifier>const</modifier><type>CRingItem&</type>
+                <modifier>const</modifier><type>CRingItem&amp;</type>
+                <parameter>item</parameter>
+              </methodparam>
             </methodsynopsis>
             <methodsynopsis>
                 <modifier>static</modifier>
@@ -5541,7 +5542,7 @@ set EPICS_DATA(Z1234) 1.234
                    <modifier>const</modifier>
                    <type>void*</type>
                    <parameter>pItem</parameter>
-                </methodname>
+                </methodparam>
              </methodsynopsis>
         </synopsis>
        </refsynopsisdiv>
@@ -5564,6 +5565,7 @@ set EPICS_DATA(Z1234) 1.234
           <para>
              See <literal>METHODS</literal> below for more
              information about these functions.
+          </para>
        </refsect1>
        <refsect1>
           <title>
@@ -5577,7 +5579,9 @@ set EPICS_DATA(Z1234) 1.234
             <type>CRingItem*</type>
              <methodname>createRingItem</methodname>
              <methodparam>
-                <modifier>const</modifier><type>CRingItem&</type>
+                <modifier>const</modifier><type>CRingItem&amp;</type>
+                <parameter>item</parameter>
+             </methodparam>
             </methodsynopsis>
                  </term>
                  <listitem>
@@ -5632,7 +5636,7 @@ set EPICS_DATA(Z1234) 1.234
                    <modifier>const</modifier>
                    <type>void*</type>
                    <parameter>pItem</parameter>
-                </methodname>
+                </methodparam>
              </methodsynopsis>
                     </term>
                     <listitem>
@@ -5655,11 +5659,7 @@ set EPICS_DATA(Z1234) 1.234
                   </varlistentry>
           </variablelist>
        </refsect1>
-        <refsect1>
-           <title>PUBLIC VARIABLES, TYPES and CONSTANTS</title>
-           <variablelist>
-           </variablelist>
-        </refsect1>
+
      </refentry>        
 
 <!-- /manpage  -->

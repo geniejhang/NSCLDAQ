@@ -367,7 +367,7 @@ CAcquisitionThread::startDaq()
 
     m_pCamac->writeOutputSelector(CCCUSB::OutputSourceRegister::nimO1Busy |
   				CCCUSB::OutputSourceRegister::nimO2Acquire |
-  				CCCUSB::OutputSourceRegister::nimO3EndOfBusy);
+  				CCCUSB::OutputSourceRegister::nimO3BusyEnd);
 
  
 

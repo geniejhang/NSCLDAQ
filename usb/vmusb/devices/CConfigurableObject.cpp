@@ -432,10 +432,13 @@ CConfigurableObject::getEnumParameter(std::string name, const char** pValues)
 {
   std::string value = cget(name);
   
-  for (int i = 0; *pValues != 0; i++, pValues++) {
+  int i = 0;
+  while(*pValues) {
     if(value == std::string(*pValues)) {
       return i;
     }
+    i++;
+    pValues++;
   }
 
   std::string msg("Enum parameter ");
