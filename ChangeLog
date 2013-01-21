@@ -330,4 +330,19 @@ Feb 1, 2012 - Feb 24, 2012
 	source.
 	- Issue #1523 - ringFragmentSource secures its timestamp extractor
 	by actually mapping a temp copy.
+	-Provide CEventSegment in sbs/Readout with the following methods:
+	    reject -Rejects the event afer running all subsequent event
+	            segments.
+	    rejectImmediately - Rejects without running any more event
+	            segments.
+	    keep - Keep the event unless a subsequent event segment
+	           invokes one of the above.  Note that normally keep
+	           is called by the event segment's caller to user event 
+	           segments only need to invoke this if they've initially
+	           decided to reject(Immeditely) and then changed their
+	           mind e.g.:
+	            reject();
+	             ...
+	            if(ok) keep();
+
 	

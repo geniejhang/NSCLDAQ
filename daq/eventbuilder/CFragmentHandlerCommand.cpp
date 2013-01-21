@@ -28,7 +28,7 @@
 #include <string.h>
 
 #include <string>
-
+#include <iostream>
 
 /**
  * Construct the object:
@@ -87,53 +87,36 @@ CFragmentHandlerCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObj
     interp.setResult(std::string("Tcl does not know about this channel name"));
     return TCL_ERROR;
     }
-    // Read the size of the body:
-    
-    Tcl_Obj* msgLength = Tcl_NewObj();
-    Tcl_Obj* msgBody   = Tcl_NewObj();
-    
-    Tcl_IncrRefCount(msgLength);
-    Tcl_IncrRefCount(msgBody);
-    
-    
-    // Read the message length and get it from the byte array.
-    // The protocol requires data in low endian order 
-    // The channnel is assumed to be blocking mode so if we don't get the full
-    // size it's an error:
-    //
-    int n = Tcl_ReadChars(pChannel, msgLength, sizeof(uint32_t), 0);
-    if (n != sizeof(uint32_t)) {
-      interp.setResult(std::string("Message length read failed"));
-      Tcl_DecrRefCount(msgLength);
-      Tcl_DecrRefCount(msgBody);
+
+
+    // Read the message length:
+
+    uint32_t msgLength;
+    int n = Tcl_Read(pChannel, reinterpret_cast<char*>(&msgLength), sizeof(msgLength));
+    if (n != sizeof(msgLength))  {
+      interp.setResult("Messge Lnegth read failed");
       return TCL_ERROR;
     }
-    uint32_t* pMsgLength = reinterpret_cast<uint32_t*>(Tcl_GetByteArrayFromObj(msgLength, NULL));
-    
-    // A msg length of 0 is fine that means nothing to do otherwise, read the full message from
-    // the pipe...again it's an error not to be able to get the full message:
-    
-    if (*pMsgLength > 0) {
-      n = Tcl_ReadChars(pChannel, msgBody, *pMsgLength, 0);
-      if (n != *pMsgLength) {
-	Tcl_DecrRefCount(msgLength);
-	Tcl_DecrRefCount(msgBody);
-	interp.setResult("Message body could not be completely read");
+
+    // ..and the body itself.
+
+
+    if (msgLength > 0) {
+      uint8_t msgBody[msgLength];
+      n    = Tcl_Read(pChannel, reinterpret_cast<char*>(msgBody), msgLength);
+      if(n != msgLength) {
+	interp.setResult("Message Body could not be completely read");
 	return TCL_ERROR;
       }
       
-      
-      unsigned char* pBody = Tcl_GetByteArrayFromObj(msgBody, NULL);
-      
-      // pass the fragments to the fragment handler:
+      // Dispatch the body as the flattened fragments they are:
       
       CFragmentHandler* pHandler = CFragmentHandler::getInstance();
-      pHandler->addFragments(*pMsgLength,  reinterpret_cast<EVB::pFlatFragment>(pBody));
-      
-      
+      pHandler->addFragments(msgLength, reinterpret_cast<EVB::pFlatFragment>(msgBody));
     }
-    Tcl_DecrRefCount(msgLength);
-    Tcl_DecrRefCount(msgBody);
+    
+
+
     
     
     

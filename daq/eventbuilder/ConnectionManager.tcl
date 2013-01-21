@@ -77,7 +77,8 @@ snit::type EVB::Connection {
 
     constructor args {
 	$self configurelist $args
-	fconfigure $options(-socket) -blocking 1 -buffering none -translation {binary lf}
+	fconfigure $options(-socket) -blocking 1 -buffering none -translation {binary lf} \
+	    -encoding binary
 	set callbacks [EVB::CallbackManager %AUTO%]
 	flush stdout
 	$callbacks define -disconnectcommand

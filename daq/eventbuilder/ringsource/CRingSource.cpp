@@ -23,6 +23,7 @@
 #include <CRemoteAccess.h>
 #include <EVBFramework.h>
 #include <CAllButPredicate.h>
+#include <CRingItemFactory.h>
 #include <fragment.h>
 #include <string.h>
 #include <dlfcn.h>
@@ -37,6 +38,11 @@
 #include <errno.h>
 #include <stdio.h>
 #include <io.h>
+#include <fstream>
+
+static std::ofstream log;
+static uint64_t lastTimestamp(NULL_TIMESTAMP);
+
 
 static size_t max_event(1024*1024); // initial Max bytes of events in a getData
 
@@ -104,8 +110,13 @@ CRingSource::initialize()
   }
   m_sourceId = static_cast<uint32_t>(m_pArgs->ids_arg[0]);
 
+
   std::string dlName = m_pArgs->timestampextractor_arg;
 
+  char logName[1000];
+  sprintf(logName, "source%d.txt", m_sourceId);
+  log.open(logName);
+  log << std::hex;
 
   // Attach the ring.
 
@@ -228,10 +239,22 @@ CRingSource::getEvents()
     case PAUSE_RUN:
     case RESUME_RUN:
       frag.s_barrierType = pRingItem->s_header.s_type;
+    case INCREMENTAL_SCALERS:	// not a barrier but no timestamp either.
       break;
     case PHYSICS_EVENT:
-      frag.s_timestamp = (*m_timestamp)(reinterpret_cast<pPhysicsEventItem>(pRingItem));
-      break;
+      // kludge for now - filter out null events:
+      if (pRingItem->s_header.s_size > (sizeof(RingItemHeader) + sizeof(uint32_t))) {
+	  frag.s_timestamp = (*m_timestamp)(reinterpret_cast<pPhysicsEventItem>(pRingItem));
+	  if (((frag.s_timestamp - lastTimestamp) > 0x100000000ll)  &&
+	      (lastTimestamp != NULL_TIMESTAMP)) {
+	    CRingItem* pSpecificItem = CRingItemFactory::createRingItem(*p);
+	    log << "Timestamp skip from "  << lastTimestamp << " to " << frag.s_timestamp << std::endl;
+	    log << "Ring item: " << pSpecificItem->toString() << std::endl;
+	    delete pSpecificItem;
+	  }
+	  lastTimestamp = frag.s_timestamp;
+	  break;
+	}
     default:
       // default is to leave things alone
 

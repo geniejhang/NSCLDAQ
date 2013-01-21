@@ -942,6 +942,26 @@ CVMUSB::executeList(CVMUSBReadoutList&     list,
 }
 
 
+// SWIG version of the above:
+
+std::vector<uint8_t> 
+CVMUSB::executeList(CVMUSBReadoutList& list, int maxBytes)
+{
+  uint8_t data[maxBytes];
+  size_t     nRead;
+  std::vector<uint8_t> result;
+
+  int status = this->executeList(list, data, maxBytes, &nRead); // Force vir. method call
+
+  if (status == 0) {
+    for (int i = 0; i < nRead; i++) {
+      result.push_back(data[i]);
+    }
+  }
+
+  return result;
+}
+
 
 /*!
    Load a list into the VM-USB for later execution.

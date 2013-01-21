@@ -233,18 +233,22 @@ CEventOrderClient::submitFragments(EVB::pFragmentChain pChain)
     }
     // Output the buffer in a try/catch block so that we can be sure it gets freed:
 
+    void* msg(0);
+
     try {
-      void* msg;
+
 
       // The -1 below is because we don't realy the null terminator on the strings.
 
       size_t msgLen = message(&msg, "FRAGMENTS", sizeof("FRAGMENTS") -1 , pBodyBuffer, nBytes);
       m_pConnection->Write(msg, msgLen);
       free(pBodyBuffer);
+      free(msg);		// Don't leak messages
     
     }
     catch (...) {
       free(pBodyBuffer);
+      free(msg);
       throw;
     }
     // get the reply and hope it's what we expect.

@@ -69,9 +69,7 @@ COrdererOutput::operator()(const std::vector<EVB::pFragment>& event)
 {
   for (int i = 0; i < event.size(); i++) {
     EVB::pFragment p = event[i];
-    if (p->s_header.s_sourceId == 0x4c000000) {
-      std::cerr << "Got one\n";
-    }
+
     io::writeData(m_OutputChannel, &(p->s_header), sizeof(EVB::FragmentHeader));
     io::writeData(m_OutputChannel, p->s_pBody, p->s_header.s_size);
 

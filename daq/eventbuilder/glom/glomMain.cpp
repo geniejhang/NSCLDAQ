@@ -69,7 +69,7 @@ flushEvent()
  *    it is output as is.
  *  - If the payload can't be determined to be a ring item,
  *    the entire fragment, header and all is bundled
- *    into a rig item of type EVB_UNKNOWN_PAYLOAD
+ *    into a ring item of type EVB_UNKNOWN_PAYLOAD
  *    this is an extension that hopefully helps us deal with
  *    non NSCL DAQ things.
  *
@@ -215,7 +215,21 @@ main(int argc, char* const* argv)
 	flushEvent();
 	outputBarrier(p);
       } else {
-	accumulateEvent(dt, p);
+
+	// If we can determine this is a valid ring item other than
+	// an event fragment it goes out out of band but without flushing
+	// the event.
+
+	if (CRingItemFactory::isKnownItemType(p->s_pBody)) {
+	  pRingItemHeader pH = reinterpret_cast<pRingItemHeader>(p->s_pBody);
+	  if (pH->s_type == PHYSICS_EVENT) {
+	    accumulateEvent(dt, p); // Ring item physics event.
+	  } else {
+	    outputBarrier(p);	// Ring item non-physics event.
+	  }
+	} else {		// non ring item..treat like event.
+	  accumulateEvent(dt, p);
+	}
       }
       freeFragment(p);
     }
