@@ -345,4 +345,7 @@ Feb 1, 2012 - Feb 24, 2012
 	             ...
 	            if(ok) keep();
 
-	
+        - Fix error in tclserver's managed port stuff which prematurely
+	  closed the connection to the port manager allowing double
+	  allocation.
+	- Add ReadoutCallouts for event builder/ReadoutGUI.
