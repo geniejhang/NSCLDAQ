@@ -71,11 +71,14 @@ TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 	connectionList.tcl observer.tcl barriers.tcl GUI.tcl inputStatistics.tcl \
 	late.tcl outputStatistics.tcl utility.tcl
 
+TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl
+
 TCL_TEST_FILES=tclTests.tcl managerTests.test
 
 EXTRA_DIST=protocol.xml api.xml orderer.xml frag2ring.xml Asserts.h \
 	$(TCL_PACKAGE_FILE) \
 	$(TCL_TEST_FILES) options.ggo \
+        $(TCL_EVB_PACKAGE_FILES)       \
 	$(FRAMEWORK_SOURCEFILES) \
 	Makefile_Skeleton.in startOrderer.in
 
@@ -92,7 +95,9 @@ install-exec-hook:
 	$(INSTALL_DATA) $(FRAMEWORK_SKELETON) $(SKELDIR)
 	mv $(SKELDIR)/Makefile_Skeleton $(SKELDIR)/Makefile
 	$(INSTALL_SCRIPT) startOrderer @prefix@/bin
-
+	$(mkinstalldirs) @prefix@/TclLibs/EVBCallouts
+	$(INSTALL_SCRIPT) $(TCL_EVB_PACKAGE_FILES) @prefix@/TclLibs/EVBCallouts
+	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EVBCallouts *.tcl *.so" |@TCLSH_CMD@ 
 
 
 

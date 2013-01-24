@@ -47,7 +47,7 @@ EVBC::initialize options
   Options are:
   -gui false - Does not provide an event builder parameter gui (see below).
   -restart false - Implies -gui false if not provided, the event builder is not restarted by 
-   EVBC::onBegin
+   EVBC::onBegin, however an EVBC::reset is done.
   Any option accepted by EVBC::start which sets the initial values in the GUI if its
   Provided or the actual EVBC::start parameters if -gui false is used.
 
