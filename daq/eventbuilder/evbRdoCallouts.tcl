@@ -21,6 +21,8 @@ package provide evbcallouts 1.0
 package require snit
 package require portAllocator
 package require ReadoutGUIPanel
+package require Experiment 2.0
+package require ring
 
 namespace eval ::EVBC {
     set initialized 0
@@ -47,7 +49,7 @@ namespace eval ::EVBC {
     set buildEvents          ""
     set intermediateRing     ""
     set intermediateRingName ""
-    set destRing             ""
+    set destRing             $::tcl_platform(user)
 }
 #-------------------------------------------------------------------------------
 ##
@@ -349,6 +351,22 @@ proc EVBC::initialize args {
     #  If the app is being destroyed kill the event builder too:
     
     bind . <Destroy> +[list EVBC::_Exiting %W]
+    
+    
+    #  This is a bit of dirt that should replace the Method used to get
+    #  the ring URL.  We can't just set env(RINGNAME) because we also
+    #  want to force the system to localhost:
+    
+    namespace eval ::Experiment {
+        proc spectrodaqURL system {
+            
+            puts "Calling the right url getter: $EVBC::destRing"
+            catch [list ringbuffer create $EVBC::destRing] msg;  #ensure ring exists first.
+            puts "Ringmsg $EVBC::destRing: $msg"
+ 
+            return "tcp://localhost/$EVBC::destRing"
+        }
+    }
 }
 #------------------------------------------------------------------------------
 ##
@@ -367,6 +385,9 @@ proc EVBC::onBegin {} {
         EVBC::stop
         vwait EVBC::pipefd;      # Will become empty on exit.
     }
+    catch [list ringbuffer create $EVBC::destRing] msg;  #ensure ring exists first.
+    puts "Ringmsg $EVBC::destRing: $msg"
+    
     
     #  If needed restart the EVB and disable the GUI...if it exists
     
