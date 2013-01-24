@@ -422,6 +422,8 @@ snit::type EVB::ConnectionManager {
 
 
     constructor args {
+        set result [catch {
+        puts stderr "CM Constructor"
 	$self configurelist $args; # To get the port.
 
 	set lastFragment [clock seconds]
@@ -433,13 +435,20 @@ snit::type EVB::ConnectionManager {
 	$callbacks define -connectcommand
 	$callbacks define -disconnectcommand
 
+        puts stderr "setting up server socket $options(-port)"
 	set serverSocket [socket -server [mymethod _NewConnection] $options(-port)]
+        puts stderr "Setup"
 
 	# watch timeouts at 1/2 the timeout interval:
 
 	after [$self _TimeoutCheckInterval] [mymethod _CheckSourceTimeouts]
 
-	install TimeoutObservers using  Observer %AUTO% 
+	install TimeoutObservers using  Observer %AUTO%
+        } msg]
+        if {$result} {
+            puts stderr "$msg\n $::errorInfo"
+            exit
+        }
     }
     destructor {
 	foreach object [array names connections] {

@@ -20,8 +20,10 @@
 package provide evbcallouts 1.0
 package require snit
 package require portAllocator
+package require ReadoutGUIPanel
 
 namespace eval ::EVBC {
+    set initialized 0
     set pipefd    "";            # Holds the fd to the pipe inot the evbpipeline
     
     # Figure out where we are and hence the root of the daq system:
@@ -161,10 +163,10 @@ proc EVBC::start args {
     }
     append pipecommand " | $glom"
     #
-    #  Ground the pipeline in the -destring:
+    #  Ground the pipeline in the -destring 
     #
     set stdintoring "[file join $bindir stdintoring] [$options cget -destring]"
-    append pipecommand " | $stdintoring"
+    append pipecommand " | $stdintoring "
     
     #
     #  Create the pipeline:
@@ -180,9 +182,12 @@ proc EVBC::start args {
     
     set infd [open $orderer r]
     while {![eof $infd]} {
-        puts $EVBC::pipefd [gets $infd]
+        set line [gets $infd]
+        puts $EVBC::pipefd $line
     }
-    close $infd 
+    ::flush $EVBC::pipefd
+    close $infd
+        
 
 }
 
@@ -324,20 +329,26 @@ proc EVBC::initialize args {
     #
     # Create and optionally configure the application objects.
     #
-    set EVBC::applicationOptions [EVBC::AppOptions %AUTO%]
-    
-    if {[llength $args] > 0} {
-        $EVBC::applicationOptions configure {*}$args
+    if {!$EVBC::initialized} {
+        set EVBC::initialized true
+        set EVBC::applicationOptions [EVBC::AppOptions %AUTO%]
+        
+        if {[llength $args] > 0} {
+            $EVBC::applicationOptions configure {*}$args
+        }
+        EVBC::_ValidateOptions $EVBC::applicationOptions
+        
+        # if -gui is true, start it and paste it:
+        
+        if {[$EVBC::applicationOptions cget -gui] && [$EVBC::applicationOptions cget -restart]} {
+            EVBC::_StartGui
+        }
+        
     }
-    EVBC::_ValidateOptions $EVBC::applicationOptions
+    #
+    #  If the app is being destroyed kill the event builder too:
     
-    # if -gui is true, start it and paste it:
-    
-    if {[$EVBC::applicationOptions cget -gui] && [$EVBC::applicationOptions cget -restart]} {
-        EVBC::_StartGui
-    }
-    
-    
+    bind . <Destroy> +[list EVBC::_Exiting %W]
 }
 #------------------------------------------------------------------------------
 ##
@@ -384,7 +395,7 @@ proc EVBC::onBegin {} {
 #   - reenables the gui if it exists.
 #
 proc EVBC::onEnd {} {
-    EVBC::flush
+    catch {EVBC::flush} ;  # Catch in case the evb exited badly.
     
     if {$EVBC::guiFrame ne ""} {
             EVBC::_EnableGUI
@@ -440,14 +451,14 @@ proc EVBC::_PipeInputReady {} {
 # @param id   - Source id (numeric)
 #
 proc EVBC::_HandleDataSourceInput {fd info id} {
-    set text "[clock format [clock seconds]] $info ($id) "
+    set text "$info ($id) "
     if {[eof $fd]} {
         close $fd
         append text "exited"
     } else {
         append text [gets $fd]
     }
-    EVBC::_Output [clock format [clock seconds]] $text
+    EVBC::_Output $text
 }
 #-------------------------------------------------------------------------------
 ##
@@ -460,7 +471,7 @@ proc EVBC::_HandleDataSourceInput {fd info id} {
 # @param msg - the message to output.
 #
 proc EVBC::_Output msg {
-    puts $msg
+    ReadougGUIPanel::outputText "[clock format [clock seconds]] $msg"
 }
 #-----------------------------------------------------------------------------
 ##
@@ -505,7 +516,7 @@ proc EVBC::_StartGui {} {
     #       gridded into the bottom  most row.
     
     
-    set window [toplevel .evb]
+    set window [frame .evbgui]
     
     # The Glom control frame:
     
@@ -564,11 +575,18 @@ proc EVBC::_StartGui {} {
     ttk::entry $destringWin.ringname -textvariable EVBC::destRing -width 15
     set EVBC::destRing [$EVBC::applicationOptions cget -destring]
     trace add variable  EVBC::destRing  write \
-        {$EVBC::applicationOptions configure -destring $EVBC::destRing}
+        [list EVBC::_ChangeDestRing]
     
     grid $destringWin.ringname
     grid $destringWin -row 0 -column 2
     
+    # Figure out where to grid the GUI:
+    
+    set dimensions [grid size .]
+    set rows       [lindex $dimensions 1]
+    set cols       [lindex $dimensions 0]
+    incr rows
+    grid $window  -row $rows -column 0 -columnspan $cols
     
     set EVBC::guiFrame $window
     
@@ -630,6 +648,8 @@ proc EVBC::_IntermediateEnableDisable {enable ring} {
 #  Trace called when the intermediate ring name has changed.
 #  EVBC::intermedateRingName has the new value
 #
+#  This is a variable trace handler.
+#
 proc EVBC::_IntermediateRingChanged {name index op} {
     $EVBC::applicationOptions configure -teering $EVBC::intermediateRingName   
 }
@@ -679,5 +699,31 @@ proc EVBC::_SetGuiState {widget state} {
         } else {
             $w configure -state $state
         }
+    }
+}
+#----------------------------------------------------------------------------
+##
+# @fn EVBC::_ChangeDestRing
+#
+#  Called when the name of the destination ring changes.
+#
+#  This is a variable trace handler.
+#
+proc EVBC::_ChangeDestRing {name index op} {
+    $EVBC::applicationOptions configure -destring $EVBC::destRing
+}
+#------------------------------------------------------------------------------
+##
+# @fn EVBC::_Exiting
+#
+#   Called when we're exiting.. if the event builder is running
+#   kill it off:
+# @param w - the widget that's being destroyed.
+#             We wish we could care about . but that's caught by the main stuff.
+#
+proc EVBC::_Exiting w {
+    if {($w eq ".runnumber") && ($EVBC::pipefd ne "")} {
+        EVBC::stop
+
     }
 }
