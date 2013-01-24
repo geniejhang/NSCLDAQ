@@ -121,9 +121,9 @@ static void GetServerPort(int argc, char** argv)
   // Port == Managed - use the port manager:
 
   if (thePort == string("Managed")) {
-    CPortManager manager("localhost");
+    CPortManager* manager = new CPortManager("localhost");
     cerr << "Allocating a port for " << AppName << endl;
-    serverport = manager.allocatePort(AppName);
+    serverport = manager->allocatePort(AppName);
     return;
   }
 
