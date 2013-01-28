@@ -260,6 +260,9 @@ CRingSource::getEvents()
 
       break;
     }
+    if (frag.s_timestamp == 0ll) {
+      log << "Zero timestamp in source!?!\n";
+    }
     frags.push_back(frag);
     delete p;
 
