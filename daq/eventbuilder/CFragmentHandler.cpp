@@ -436,7 +436,8 @@ CFragmentHandler::markSourceFailed(uint32_t id)
   // sources are dead do an incomplete barrier.
   //
   if(m_fBarrierPending) {
-    if (countPresentBarriers() == m_liveSources.size()) {
+    if (countPresentBarriers() == m_liveSources.size()) {	
+      std::cerr << "markSourceFailed -- generating barrier on source dead\n";
       std::vector<EVB::pFragment> sortedFragments;
       generateMalformedBarrier(sortedFragments);
       observe(sortedFragments);
@@ -587,10 +588,9 @@ CFragmentHandler::flushQueues(bool completely)
 
 
   std::vector<EVB::pFragment> sortedFragments;
-  while (!queuesEmpty() && 
-	 ((m_nNow - m_nOldestReceived > m_nBuildWindow) && 
-	  (m_nNow > m_nOldestReceived) || completely) ) {
-    
+  while (noEmptyQueue() || (m_nNow - m_nOldestReceived > m_nBuildWindow)
+	  || completely ) {
+    if (queuesEmpty()) break;	// Done if there are no more frags.
     std::pair<time_t, ::EVB::pFragment>* p = popOldest();
     if (p) {
       sortedFragments.push_back(p->second);
@@ -1007,6 +1007,23 @@ CFragmentHandler::queuesEmpty()
     }
     return true;
 }
+/**
+ * noEmptyQueue
+ *
+ *  @return bool 
+ *  @retval true if all queues have some data.
+ *  @retval false if at least one queue is empty.
+ */
+
+bool
+CFragmentHandler::noEmptyQueue()
+{
+    for(Sources::iterator p = m_FragmentQueues.begin();
+        p != m_FragmentQueues.end(); p++) {
+        if (p->second.s_queue.empty()) return false;
+    }
+    return true;
+}
 /*-----------------------------------------------------------
  ** Locally defined classers
  */
@@ -1096,6 +1113,7 @@ CFragmentHandler::generateBarrier(std::vector<EVB::pFragment>& outputList)
 
   BarrierSummary result;
 
+  std::cerr << "Generating a barrier\n";
   
   for (Sources::iterator p = m_FragmentQueues.begin(); p!= m_FragmentQueues.end(); p++) {
     if (!p->second.s_queue.empty()) {
@@ -1107,15 +1125,15 @@ CFragmentHandler::generateBarrier(std::vector<EVB::pFragment>& outputList)
             std::pair<uint32_t, uint32_t>(p->first, pFront->s_header.s_barrier)
         );
       } else {
+	std::cerr << "Missing barrier fragment from queue: " << p->first << std::endl;
 	result.s_missingSources.push_back(p->first);
       }
     } else {
+      std::cerr << "Empty queue in barrier check: " << p->first << std::endl;
       result.s_missingSources.push_back(p->first); // just as missing if the queue is empty.
     }
   }
-#ifdef DEBUG
-  std::cerr << "outputting a barrier\n";
-#endif
+  std::cerr << "outputting a barrier\n";  
   m_fBarrierPending = false;
   findOldest();
 
@@ -1134,6 +1152,7 @@ CFragmentHandler::generateBarrier(std::vector<EVB::pFragment>& outputList)
 void
 CFragmentHandler::generateMalformedBarrier(std::vector<EVB::pFragment>& outputList)
 {
+  std::cerr << "Was asked to make a malformed barrier\n";
   BarrierSummary bs = generateBarrier(outputList);
  
   partialBarrier(bs.s_typesPresent, bs.s_missingSources);
@@ -1315,9 +1334,9 @@ CFragmentHandler::checkBarrier(bool completeFlush)
   // m_now we also have a malformed barrier:
 
   if ((nBarriers != 0) && ((m_nNow - oldestBarrier()) > m_nBuildWindow)) {
-    std::cerr << "Generating malformed barrier oldest: "
+    std::cerr << "Generating malformed barrier oldest received: "
 	      << std::hex << oldestBarrier() 
-	      << " m_nNow " << m_nNow << std::dec << std::endl;
+	      << " unix time(m_nNow) " << m_nNow << std::dec << std::endl;
     generateMalformedBarrier(outputList);
     observe(outputList);
   }
@@ -1342,7 +1361,7 @@ CFragmentHandler::oldestBarrier()
        p++) {
     if (!p->second.s_queue.empty()) {
       std::pair<time_t, ::EVB::pFragment> Frag = p->second.s_queue.front();
-      if ((Frag.first < result) && Frag.second->s_header.s_barrier) {
+      if ((Frag.first < result) && (Frag.second->s_header.s_barrier != 0)) {
 	result = Frag.first;
       }
     }
