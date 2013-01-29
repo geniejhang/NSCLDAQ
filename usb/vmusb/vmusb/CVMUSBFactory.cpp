@@ -114,5 +114,7 @@ CVMUSBFactory::createRemoteController(const char* pHost)
     pHost = "localhost";
   }
 
-  return new CVMUSBEthernet("vmusb", std::string(pHost));
+  CVMUSBEthernet* pController =  new CVMUSBEthernet("vmusb", std::string(pHost));
+  pController->reconnect();                // Force server to reconnect.
+  return pController;
 }

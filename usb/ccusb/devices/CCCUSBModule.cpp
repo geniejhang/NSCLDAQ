@@ -207,12 +207,6 @@ CCCUSBModule::onAttach(CReadoutModule& configuration)
   configuration.addEnumParameter("-scalera", scalerAInputs, "disabled");
   configuration.addEnumParameter("-scalerb", scalerBInputs, "disabled");
 
-  // scaler readout parameters:
-
-  configuration.addBooleanParameter("-readscalers", false);
-  configuration.addBooleanParameter("-incremental", true);
-  
-
   // Outputs:
 
 

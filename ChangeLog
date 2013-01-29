@@ -339,3 +339,7 @@ Feb 1, 2012 - Feb 24, 2012
 	- Issue #427 - Make VM-USB output buffer auto-resize on
 	overflow...event size only limited by dynamic memory.
 	- Issue #1382 - Qualify s800 ring with username if defaulted.
+        - Issue #1326 - reconnect server's VM-USB controller when ethernet
+          controller is created by VMUSBReadout (this is done in the
+          controller factory creation method).
+          

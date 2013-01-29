@@ -104,8 +104,6 @@ CVMUSBControl::CVMUSBControl() :
   m_pConfiguration(0),
   m_nDeviceSourceSelector(  CVMUSB::DeviceSourceRegister::nimO1Busy       |
 			    CVMUSB::DeviceSourceRegister::nimO2VMEAS      |
-			    CVMUSB::DeviceSourceRegister::scalerADisabled |
-			    CVMUSB::DeviceSourceRegister::scalerBDisabled |
 			    CVMUSB::DeviceSourceRegister::dggADisabled    |
 			    CVMUSB::DeviceSourceRegister::dggBDisabled
 			    ),
@@ -156,7 +154,7 @@ CVMUSBControl::onAttach(CReadoutModule& configuration)
 
   m_pConfiguration->addEnumParameter("-nimo2", nimo2Enum, "vmeas");
   m_pConfiguration->addBooleanParameter("-latcho2", false);
-  m_pConfiguration->addBooleanParameter("inverto2", false);
+  m_pConfiguration->addBooleanParameter("-inverto2", false);
 
   // top yellow LED configuration:
 
