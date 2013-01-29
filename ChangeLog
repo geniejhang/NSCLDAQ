@@ -349,3 +349,8 @@ Feb 1, 2012 - Feb 24, 2012
 	  closed the connection to the port manager allowing double
 	  allocation.
 	- Add ReadoutCallouts for event builder/ReadoutGUI.
+	- Catch up on missing documentation for:
+	  *  teering
+	  *  glom
+	  *  readout callouts package for the event builder.
+	

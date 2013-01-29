@@ -1156,6 +1156,7 @@ CFragmentHandler::goodBarrier(std::vector<EVB::pFragment>& outputList)
   if (bs.s_missingSources.empty()) {
     observeGoodBarrier(bs.s_typesPresent);
   } else {
+    std::cerr << "Though I had a good barrier but there are missing sources\n";
     partialBarrier(bs.s_typesPresent, bs.s_missingSources);
   }
 }
@@ -1290,9 +1291,12 @@ void
 CFragmentHandler::checkBarrier(bool completeFlush)
 {
   std::vector<EVB::pFragment> outputList;
+  m_nNow = time(NULL);		// Update the time.
+  size_t nBarriers = countPresentBarriers();
+
 
   // Check for all queues having barriers:
-  if (countPresentBarriers() == m_FragmentQueues.size()) {
+  if (nBarriers == m_FragmentQueues.size()) {
     goodBarrier(outputList);
     observe(outputList);
     findOldest();
@@ -1301,6 +1305,7 @@ CFragmentHandler::checkBarrier(bool completeFlush)
   // If we got here and a complete flush is requested, we must have an incomplete barrier:
 
   if (completeFlush) {
+    std::cerr << "Complete flush requested ..malformed barrier\n";
     generateMalformedBarrier(outputList);
     observe(outputList);
     findOldest();
@@ -1309,7 +1314,10 @@ CFragmentHandler::checkBarrier(bool completeFlush)
   // If the least recently received barrier is older than the build window than
   // m_now we also have a malformed barrier:
 
-  if ((m_nNow - oldestBarrier()) > m_nBuildWindow) {
+  if ((nBarriers != 0) && ((m_nNow - oldestBarrier()) > m_nBuildWindow)) {
+    std::cerr << "Generating malformed barrier oldest: "
+	      << std::hex << oldestBarrier() 
+	      << " m_nNow " << m_nNow << std::dec << std::endl;
     generateMalformedBarrier(outputList);
     observe(outputList);
   }

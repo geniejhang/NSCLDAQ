@@ -405,6 +405,8 @@ proc EVBC::onBegin {} {
         if {[info commands startEVBSources] ne ""} {
             startEVBSources
         }
+    } else {
+	EVBC::reset
     }
 }
 #------------------------------------------------------------------------------

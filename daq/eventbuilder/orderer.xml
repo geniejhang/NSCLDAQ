@@ -1,3 +1,602 @@
+<!-- chapter frameworks -->
+<chapter>
+    <title>Event builder Readout Callouts</title>
+    <para>
+        Event builder readout callouts allow you to integrate the event builder
+        with the Readout GUI.   There are two layers of callouts;
+        <itemizedlist>
+            <listitem>
+                <para>
+                    An API layer provides the highest level of flexbility by
+                    providing you witha set of Tcl procs you can use from inside
+                    your ReadoutCallouts Extensions to manage the event builder
+                    and its pipeline.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    An EZBuilder layer provides a set of simple calls you can
+                    make that handle the most common use cases for the event builder.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </para>
+    <para>
+        Both the API and EZBuilder procs are part of the Tcl package
+        <literal>evbcallouts</literal>
+    </para>
+    <section>
+        <title>API layer</title>
+        <para>
+            The API layer of the readout callouts library provides low level
+            calls that let you start and stop the event builder as well as to
+            reset its timestamp knowledge.
+        </para>
+        <para>
+            Procedures have also been provided to help you start standard
+            event sources.  Specifically <function>startRingSource</function>
+            starts a ring buffer data source while <function>startS800Source</function>
+            starts the S800 data source.
+        </para>
+        <para>
+            Reference information for the API layer is provided in the
+            3evb manpage section.
+        </para>
+    </section>
+    <section>
+        <title>EZBuilder</title>
+        <para>
+            The EZBuilder procs provide directly usable functionality for
+            initializing the package, starting a run and ending a run.
+            Use of the EZBuilder API is significantly simpler that direct use of
+            the API layer, and is recommended.
+        </para>
+        <para>
+            See the 3evb manpage section for EZBuilder information as well.
+        </para>
+    </section>
+
+</chapter>
+<!-- manpage 3evb -->
+
+<preface>
+    <title>Preface</title>
+    <para>
+        The pages below consist of the API layer.
+    </para>
+</preface>
+<!--  Event builder API layer. -->
+      <refentry id="evb3_start">
+        <refmeta>
+           <refentrytitle id="evb3_start_title">EVBC::start</refentrytitle>
+           <manvolnum>3evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVBC::start</refname>
+           <refpurpose>Start the event builder pipeline.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+EVBC::start <replaceable>options</replaceable>
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            <command>EVBC::start</command> starts the event builder pipeline.
+            It is an error to start the pipeline if it is already started.
+            The <replaceable>options</replaceable> described in the command
+            synopsis above are option value pairs which are described in the
+            <literal>OPTIONS</literal> section below.
+           </para>
+           <para>
+            This proc is part of the API layer.  Rather than using it directly,
+            you may want to consider using the procs in the EZBuilder layer.
+           </para>
+        </refsect1>
+        <refsect1>
+           <title>
+              OPTIONS
+           </title>
+           <variablelist>
+            <varlistentry>
+                <term><option>-teering</option> <replaceable>ringname</replaceable></term>
+                <listitem>
+                    <para>
+                        If present with a non empty value, this option inserts
+                        an element in the pipeline that tees off the ordered
+                        fragments into a ring buffer.  The value of this option
+                        is the name of the ring (not the URL) which will receive
+                        the ordered fragments.
+                    </para>
+                    <para>
+                        Defaults to an empty string which disables the production
+                        of an intermediate data ring.
+                    </para> 
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>-glombuild</option> <replaceable>yes | no</replaceable></term>
+                <listitem>
+                    <para>
+                        If <literal>yes</literal> the glom stage of the pipline
+                        builds events using a coincidence interval specified
+                        by the <option>-glomdt</option> option.
+                    </para>
+                    <para>
+                        If <literal>no</literal> the glom stage only passes
+                        fragments on with minimal re-formatting to turn them into
+                        proper event ring items.
+                    </para>
+                    <para>
+                        Defaults to no
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>-glomdt</option> <replaceable>ticks</replaceable></term>
+                <listitem>
+                    <para>
+                        If <option>-glombuild</option> is yes, this sets the
+                        number of timestamp clock ticks that define a coincidence
+                        interval for event building.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>-destring</option> <replaceable>ringname</replaceable></term>
+                <listitem>
+                    <para>
+                        Specifies the ring in which the output of <literal>glom</literal>
+                        is put.  If not provided, this default to the username
+                        of the logged in account.
+                    </para>
+                </listitem>
+            </varlistentry>
+           </variablelist>
+        </refsect1>
+        <refsect1>
+            <title>EXAMPLES</title>
+            <para>
+                The example below starts up the event building pipline without
+                merging the data into events.  The output ring is named
+                <literal>built</literal>
+            </para>
+            <informalexample>
+                <programlisting>
+EVBC::start -glombuild off -destring built
+                </programlisting>
+            </informalexample>
+            <para>
+                The example below starts up the event building pipeline merging
+                the data from adjacent fragments into event when the difference
+                timestamp is less than <literal>300</literal>.
+                Output data is put in the ring <literal>built</literal>, the orderered
+                fragments are put in the ring <literal>fragments</literal>
+            </para>
+            <informalexample>
+                <programlisting>
+EVBC::start -glombuild on -glomdt 300 -destring built -teering fragments
+                </programlisting>
+            </informalexample>
+        </refsect1>
+      </refentry>
+      <refentry id="evb3_stop">
+        <refmeta>
+           <refentrytitle id="evb3_stop_title">EVBC::stop</refentrytitle>
+           <manvolnum>3evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVBC::stop</refname>
+           <refpurpose>Stop the event builder pipeline.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+EVBC::stop
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            Requests that the running event builder pipeline shut down.
+            Note that the actual shutdown can take some time.  It is an error
+            to call this when no event builder pipeline is running.
+           </para>
+        </refsect1>
+
+      </refentry>
+      <refentry id="evb3_reset">
+        <refmeta>
+           <refentrytitle id="evb3_resetcmd">EVBC::reset</refentrytitle>
+           <manvolnum>3evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVB::reset</refname>
+           <refpurpose>Reset timestamp history</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+EVB::reset
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            The event builder maintains an idea of what the oldest timestamp is.
+            This allows it to detect and complain about data which received
+            late, and will therefore be emitted out of order, as well as to
+            provide that information to the statistics displays.
+           </para>
+           <para>
+            It is strongly recommended that this only be called when the event
+            builder has become quiescent.  That is after the run has ended.
+           </para>
+        </refsect1>
+      </refentry>
+      <refentry id="evb3_flush">
+        <refmeta>
+           <refentrytitle id="evb3_flush_title">EVBC::flush</refentrytitle>
+           <manvolnum>evb3</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVBC::flush</refname>
+           <refpurpose>Flush event builder event queues.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+EBC::flush
+              </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            Requests that the event builder order data until all of its input
+            queues are empty.  This should not be done unless you know that
+            the event builder  is not likely to receive any new data for a while
+            (e.g. run has halted).  The actual flush is performed asynchronously
+            and may require some time to perform depending on how backed up the
+            input queues are.
+           </para>
+        </refsect1>
+
+      </refentry>
+
+      <refentry id="evb3_startringsource">
+        <refmeta>
+           <refentrytitle id='evb3_startringsource_title'>EVBC::startRingSource</refentrytitle>
+           <manvolnum>3evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVBC::startRingSource</refname>
+           <refpurpose>Start a ring fragment source for the event builder.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+EVBC::startRingSource <replaceable>source-uri extractor-lib source-id info</replaceable>
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            Starts a fragment source that gets is data from a ring buffer.  For
+            more on ring fragment sources see:
+            <link linkend='sec_ringfragsrc' endterm='sec_ringfragsrc_title' />
+            elsewhere in the documentation.  That discussion will provide more
+            information about the meaning of the parameters on the command line.
+           </para>
+           <para>
+            Note that the fragment source requires the event builder pipeline be
+            up and running.  If the event builder pipeline exits, the fragment source
+            will too as soon as it is required to send data to the event builder.
+           </para>
+           <para>
+            See <literal>PARAMETERS</literal> below for a brief explanation of
+            the command line parameters, as well as the reference cited above.
+           </para>
+        </refsect1>
+        <refsect1>
+           <title>
+              PARAMETERS
+           </title>
+            <variablelist>
+                <varlistentry>
+                    <term><replaceable>source-uri</replaceable></term>
+                    <listitem>
+                        <para>
+                            The URI of the ring buffer from which the data
+                            will be taken.  If the ring is local to the
+                            system that ReadoutGUI is running in, you should
+                            specify <filename>tcp://localhost/ring-name</filename>
+                            where <replaceable>ring-name</replaceable> is the name
+                            of the ring buffer.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><replaceable>extractor-lib</replaceable></term>
+                    <listitem>
+                        <para>
+                            Specifies the file system path to the shared object
+                            that contains code that can extract  the timestamp
+                            from the incoming ring data.
+                            <link linkend='sec_tsextractors' endterm='sec_tsextractors_title' />
+                            describes how to write timestamp extractors and how
+                            to build them in to shared libraries.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><replaceable>source-id</replaceable></term>
+                    <listitem>
+                        <para>
+                            The source id to be associated with the ring buffer.
+                            Data flowing to an event builder is placed in several
+                            input queues.  The input queue selected is described by
+                            the <firstterm>source Id</firstterm> which is an integer.
+                        </para>
+                        <para>
+                            The data from a specific source Id need not all come from
+                            the same client, but it must be received by the event
+                            builder in strict time order.  Data from a specific
+                            ring is assumed to constitute data from a single
+                            event source.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><replaceable>info</replaceable></term>
+                    <listitem>
+                        <para>
+                            This parameter is arbitrary text that is used to
+                            label the data source client in the event builder
+                            GUI connection list window.  It is intended to allow
+                            humans to better understand what each source
+                            represents.  It is not used by the event builder
+                            itself other than to label sources.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect1>
+
+      </refentry>
+      <refentry id="evb3_starts800source">
+        <refmeta>
+           <refentrytitle id='evb3_starts800source_title'>EVBC::startS800Source</refentrytitle>
+           <manvolnum>3evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVBC::startS800Source</refname>
+           <refpurpose>Start S800 data source</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+            <command>
+EVBC::startS800Source <replaceable>ring-uri source-id ?info?</replaceable>
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            This is actually a wrapper for a call to
+            <command>EVBC::startRingSource</command> using a timestamp
+            extractor built for S800 data.  The parameters have the same
+            meaning as for <command>EVBC::startRingSource</command>.  If the
+            <parameter>info</parameter> parameters is not supplied it defaults
+            to <literal>S800 USB data</literal>.
+           </para>
+        </refsect1>
+
+      </refentry>
+
+<!-- Event builder EZBuilder layer. -->
+<preface>
+    <title>Preface</title>
+    <para>
+        The pages below provide reference material for the EZBuilder
+        layer of software.  Conceptually, this layer provides a single
+        initialization proc (called from <command>OnStart</command>),
+        a proc to call from <command>OnBegin</command> and another proc to call
+        from <command>OnEnd</command>.
+    </para>
+</preface>
+
+      <refentry id="evb3_initialize">
+        <refmeta>
+           <refentrytitle id='evb3_initiailze_title'>EVBC::initialize</refentrytitle>
+           <manvolnum>3evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVBC::initialize</refname>
+           <refpurpose>Initialize the EZBuilder layer.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+            <command>
+EVBC::initialize <replaceable>options</replaceable>
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            Intended to be called from your <command>OnStart</command> proc.
+            This initializes the EZBuilder and controls how it will behave.
+            The parameters to this command are option value pairs.
+            See <literal>EXAMPLES</literal> below for some typical option
+            sets.
+           </para>
+           <para>
+            For information about the specific options, see
+            <literal>OPTIONS</literal> below and
+            <link linkend='evb3_start' endterm='evb3_start_title' />.
+           </para>
+        </refsect1>
+        <refsect1>
+           <title>
+              OPTIONS
+           </title>
+           <para>
+            The <command>EVBC::initialize</command> command accepts all options
+            that the <link endterm='evb3_start_title' linkend='evb3_start' />
+            understands as  well as the following additional options:
+           </para>
+            <variablelist>
+                <varlistentry>
+                    <term><option>-gui</option> <replaceable>on | off</replaceable></term>
+                    <listitem>
+                        <para>
+                            If <option>-gui</option> is
+                            <literal>true</literal>, EZBuilder will
+                            add a control strip to the bottom of the ReadoutGUI
+                            control panel. This control strip will give you
+                            dynamic control over the options controlled by
+                            <command>EVBC::initialize</command>.
+                        </para>
+                        <para>
+                            Only do this if you trust your users to be able to
+                            set sensible values in this user interface.  If you
+                            don't you will sleep better at night choosing the
+                            options you want and disabling the GUI strip.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><option>-restart</option> <replaceable>yes | no</replaceable></term>
+                    <listitem>
+                        <para>
+                            If <option>-restart</option> is <literal>yes</literal>,
+                            the event builder pipeline is restarted at the beginning
+                            of each run (See <link linkend='evb3_onbegin' endterm='evb3_onbegin_title' />).
+                            Otherwise, the event builder timstamp memory is just
+                            reset at the beginning of each run and the
+                            event builder pipline is only started at the beginning
+                            of the first run.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect1>
+        <refsect1>
+            <title>EXAMPLES</title>
+            <para>
+                The example below does not allow event builder parameters
+                to be modified between runs.  It requests a new instance of the
+                event builder for each run.  Note that this implies that the
+                begin run will invoke <command>startEVBSources</command> if
+                that command/proc has been defined.  That allows you to start
+                fragment sources after the event builder pipeline has been
+                started.
+            </para>
+            <informalexample>
+                <programlisting>
+EVBC::initialize -glombuild yes -glomdt 200 -destring built -restart yes -gui off
+                </programlisting>
+            </informalexample>
+            <para>
+                The exmple below initially requests a restart before each run but,
+                since the GUI is enabled, this can be modified by the user.
+            </para>
+            <informalexample>
+                <programlisting>
+EVBC::initialize -glombuild yes -glomdt 200 -destrign built -restart yes -gui on
+                </programlisting>
+            </informalexample>
+            
+        </refsect1>
+      </refentry>
+      <refentry id="evb3_onbegin">
+        <refmeta>
+           <refentrytitle id='evb3_onbegin_title'>EVBC::onBegin</refentrytitle>
+           <manvolnum>3evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVBC::onBegin</refname>
+           <refpurpose>EZBuilder begin run actions</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+EVBC::onBegin
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            Call <command>EVBC::onBegin</command> from your <command>OnBegin</command>
+            callout.  If <option>-restart</option> is on, a new instance of the event
+            builder will be started (and the old one killed off).  If the Event
+            builder is being started, if you have defined a proc or command named
+            <literal>startEVBSources</literal> that will be invoked
+            after the event builder pipeline has been started.
+           </para>
+           <para>
+            If the event builder pipeline is not restarted, this command will
+            also call <command>EVBC::reset</command> preparing the event builder
+            for the potential that the timestamps in the data acquisition
+            hosts have been reset.
+           </para>
+        </refsect1>
+
+      </refentry>
+      <refentry id="evb3_onend">
+        <refmeta>
+           <refentrytitle id='evb3_onend_title'>EVBC::onEnd</refentrytitle>
+           <manvolnum>3evb</manvolnum>
+        </refmeta>
+        <refnamediv>
+           <refname>EVBC::onEnd</refname>
+           <refpurpose>EZBuilder end run actions.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            Invoked at the end of the run from your <command>OnEnd</command>
+            proc.  This initiates a flush of the events queued.
+           </para>
+        </refsect1>
+
+      </refentry>
+
+
+
+<!-- /manpage     -->
 <!-- manpage 1daq -->
       <refentry id="daq1-evbclientfw-run">
         <refmeta>

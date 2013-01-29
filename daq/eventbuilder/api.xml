@@ -1022,8 +1022,8 @@ main(char** argv, int argc)
             </varlistentry>
         </variablelist>
     </section>
-    <section>
-        <title>ringFragmentSource - a prepackaged client for ringbuffer data sources</title>
+    <section id='sec_ringfragsrc'>
+        <title id='sec_ringfragsrc_title'>ringFragmentSource - a prepackaged client for ringbuffer data sources</title>
         <para>
             The <filename>ringFragmentSource</filename> program provides a mostly pre-packaged
             program that efficiently gets data from a ring buffer and efficiently
@@ -1064,8 +1064,8 @@ main(char** argv, int argc)
                 </listitem>
             </varlistentry>
         </variablelist>
-        <section>
-            <title>Writing and building timestamp extractors.</title>
+        <section id='sec_tsextractors'>
+            <title id='sec_tsextractors_title'>Writing and building timestamp extractors.</title>
             <para>
                 This section describes how to write timestamp extractors.
                 The source code for the s800 timestamp extractor is also
