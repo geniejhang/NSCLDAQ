@@ -588,7 +588,7 @@ CFragmentHandler::flushQueues(bool completely)
 
 
   std::vector<EVB::pFragment> sortedFragments;
-  while (noEmptyQueue() || (m_nNow - m_nOldestReceived > m_nBuildWindow)
+  while (noEmptyQueue() // || (m_nNow - m_nOldestReceived > m_nBuildWindow)
 	  || completely ) {
     if (queuesEmpty()) break;	// Done if there are no more frags.
     std::pair<time_t, ::EVB::pFragment>* p = popOldest();
@@ -1195,7 +1195,7 @@ CFragmentHandler::findOldest()
   for (Sources::iterator p = m_FragmentQueues.begin(); p != m_FragmentQueues.end(); p++) {
     if (!p->second.s_queue.empty()) {
       ::EVB::pFragment pf = p->second.s_queue.front().second;
-      if (pf->s_header.s_timestamp < oldest) {
+      if ((pf->s_header.s_timestamp < oldest) && (pf->s_header.s_barrier ==0)) { // nonbarriers only counted
 #ifdef DEBUG
 	std::cerr << "Find oldest changing from "
 		  << std::hex << oldest << " to " << pf->s_header.s_timestamp
@@ -1333,7 +1333,7 @@ CFragmentHandler::checkBarrier(bool completeFlush)
   // If the least recently received barrier is older than the build window than
   // m_now we also have a malformed barrier:
 
-  if ((nBarriers != 0) && ((m_nNow - oldestBarrier()) > m_nBuildWindow)) {
+  if ((nBarriers != 0) && ((m_nNow - oldestBarrier()) > (m_nBuildWindow*4))) {
     std::cerr << "Generating malformed barrier oldest received: "
 	      << std::hex << oldestBarrier() 
 	      << " unix time(m_nNow) " << m_nNow << std::dec << std::endl;
@@ -1390,6 +1390,7 @@ CFragmentHandler::IdlePoll(ClientData data)
 
   if (!pHandler->m_nFragmentsLastPeriod) {
     pHandler->m_nNow = time(NULL);	// Update tod.
+    pHandler->findOldest();		// Update oldest fragment time.
     pHandler->flushQueues();
   } else {
     pHandler->m_nFragmentsLastPeriod = 0;

@@ -581,7 +581,6 @@ snit::type EVB::ConnectionManager {
     #
     method _CheckSourceTimeouts {} {
 
-
 	set previouslyTimedOut $timedoutSources
 
 	# Only care if we're getting fragments:
