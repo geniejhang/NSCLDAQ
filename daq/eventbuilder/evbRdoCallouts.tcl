@@ -388,15 +388,25 @@ proc EVBC::onBegin {} {
     catch [list ringbuffer create $EVBC::destRing] msg;  #ensure ring exists first.
     puts "Ringmsg $EVBC::destRing: $msg"
     
+    # IF needed, create the destination and the intermediate ring:
+
+    set teering [$EVBC::applicationOptions cget -teering]
+    if {$teering ne ""} {
+	catch {ringbuffer create $teering}
+    }
+    set destring [$EVBC::applicationOptions cget -destring]
+    if {$destring ne ""} {
+        catch {ringbuffer create $destring}
+    }
     
     #  If needed restart the EVB and disable the GUI...if it exists
     
     if {$EVBC::pipefd eq ""} {
         EVBC::start \
-            -teering   [$EVBC::applicationOptions cget -teering]   \
+            -teering   $teering   \
             -glombuild [$EVBC::applicationOptions cget -glombuild] \
             -glomdt    [$EVBC::applicationOptions cget -glomdt]    \
-            -destring  [$EVBC::applicationOptions cget -destring]
+            -destring  $destring
         
         if {$EVBC::guiFrame ne ""} {
             EVBC::_DisableGUI 
