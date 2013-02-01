@@ -58,6 +58,7 @@ flushEvent()
     free(pAccumulatedEvent);
     pAccumulatedEvent = 0;
     totalEventSize    = 0;
+    firstEvent        = true;
   }
 }
 /**
@@ -181,7 +182,9 @@ main(int argc, char* const* argv)
   gengetopt_args_info args;
   cmdline_parser(argc, argv, &args);
   int dtInt = static_cast<uint64_t>(args.dt_arg);
-  nobuild      = args.nobuild_flag;
+  nobuild      = args.nobuild_given;
+
+  std::cerr << (nobuild ? " glom: not building " : "glom: building") << std::endl;
 
   if (!nobuild && (dtInt < 0)) {
     std::cerr << "Coincidence window must be >= 0 was "
