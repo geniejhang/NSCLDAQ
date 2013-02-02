@@ -49,10 +49,12 @@ flushEvent()
 {
   if (totalEventSize) {
     RingItemHeader header;
-    header.s_size = totalEventSize + sizeof(header);
+    header.s_size = totalEventSize + sizeof(header) + sizeof(uint32_t);
     header.s_type = PHYSICS_EVENT;
+    uint32_t eventSize = totalEventSize + sizeof(uint32_t);
 
     io::writeData(STDOUT_FILENO, &header, sizeof(header));
+    io::writeData(STDOUT_FILENO, &eventSize,  sizeof(uint32_t));
     io::writeData(STDOUT_FILENO, pAccumulatedEvent, 
 		  totalEventSize);
     free(pAccumulatedEvent);
