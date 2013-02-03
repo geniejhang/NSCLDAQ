@@ -20,7 +20,8 @@ libVMUSBConfig_la_SOURCES	= 	CADCCommand.cpp		\
 				CV1495scCommand.cpp	\
 				CUserCommand.cpp	\
 				CAddTclDriver.cpp	\
-				CHiRACommand.cpp
+				CHiRACommand.cpp        \
+				CGSTriggerCommand.cpp
 
 
 libVMUSBConfig_la_CXXFLAGS=@THREADCXX_FLAGS@
@@ -47,7 +48,8 @@ noinst_HEADERS		=	CADCCommand.h  		\
 				CV1495scCommand.h	\
 				CUserCommand.h		\
 				CAddTclDriver.h		\
-				CHiRACommand.h
+				CHiRACommand.h		\
+				CGSTriggerCommand.h
 
 
 
