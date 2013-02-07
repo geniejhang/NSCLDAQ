@@ -37,6 +37,7 @@
 #include "CV1495scCommand.h"
 #include "CAddTclDriver.h"
 #include "CHiRACommand.h"
+#include "CVMUSBCommand.h"
 
 #include <CReadoutModule.h>
 #include <TCLInterpreter.h>
@@ -93,6 +94,7 @@ CConfiguration::CConfiguration() :
   m_Commands.push_back(new CV1495scCommand(*m_pInterp, *this));
   m_Commands.push_back(new CAddTclDriver(*m_pInterp, *this));
   m_Commands.push_back(new CHiRACommand(*m_pInterp, *this));
+  m_Commands.push_back(new CVMUSBCommand(*m_pInterp, *this));
 
 }
 /*!

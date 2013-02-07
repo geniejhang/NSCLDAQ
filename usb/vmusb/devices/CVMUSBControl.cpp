@@ -225,10 +225,10 @@ CVMUSBControl::Initialize(CVMUSB& controller)
     CVMUSB::LedSourceRegister::bottomYellowShift;
 
   uint32_t ledSourceSelect = topYellow | red | green | bottomYellow; // base values.
-  if (m_pConfiguration->getBoolParameter("-latchTopYellow")) {
+  if (m_pConfiguration->getBoolParameter("-latchtopyellow")) {
     ledSourceSelect |= CVMUSB::LedSourceRegister::topYellowLatch;
   }
-  if (m_pConfiguration->getBoolParameter("-invertTopYellow")) {
+  if (m_pConfiguration->getBoolParameter("-inverttopyellow")) {
     ledSourceSelect |= CVMUSB::LedSourceRegister::topYellowInvert;
   }
   
@@ -249,7 +249,7 @@ CVMUSBControl::Initialize(CVMUSB& controller)
   if (m_pConfiguration->getBoolParameter("-latchbottomyellow")) {
     ledSourceSelect |= CVMUSB::LedSourceRegister::bottomYellowLatch;
   }
-  if (m_pConfiguration->getBoolParameter("-invertbottom yellow")) {
+  if (m_pConfiguration->getBoolParameter("-invertbottomyellow")) {
     ledSourceSelect |= CVMUSB::LedSourceRegister::bottomYellowInvert;
   }
 
@@ -284,11 +284,22 @@ CVMUSBControl::Initialize(CVMUSB& controller)
     devSource |= CVMUSB::DeviceSourceRegister::nimO2Invert;
   }
 
+
+  // Enable scalers;
+
   devSource |= CVMUSB::DeviceSourceRegister::scalerAEnable 
     | CVMUSB::DeviceSourceRegister::scalerBEnable;
 
-  controller.writeDeviceSource(devSource);
 
+  // Setup and clear:
+  
+  controller.writeDeviceSource(devSource 
+    | CVMUSB::DeviceSourceRegister::scalerAReset
+    | CVMUSB::DeviceSourceRegister::scalerBReset);
+
+  // Reassert setup without the clear:
+
+  controller.writeDeviceSource(devSource);
 
   // Compute and set the DGGA width/fine delay register.
   
@@ -300,7 +311,7 @@ CVMUSBControl::Initialize(CVMUSB& controller)
   // Compute and set the DGGB width/fine delay register.
 
   width = m_pConfiguration->getIntegerParameter("-widthb");
-  uint32_t delayb = m_pConfiguration->getIntegerParameter("delayb");
+  uint32_t delayb = m_pConfiguration->getIntegerParameter("-delayb");
 
   controller.writeDGG_B((width << 16) | (delayb & 0xffff));
 
@@ -338,8 +349,7 @@ CVMUSBControl::addReadoutList(CVMUSBReadoutList& list)
 
     uint32_t disable = m_nDeviceSourceSelector &
       (~(CVMUSB::DeviceSourceRegister::scalerAEnable |
-	 CVMUSB::DeviceSourceRegister::scalerBEnable))
-      | CVMUSB::DeviceSourceRegister::freezeScalers;
+	 CVMUSB::DeviceSourceRegister::scalerBEnable));
 
     list.addRegisterWrite(CVMUSB::RegisterOffsets::DEVSrcRegister,
 			  disable);
@@ -363,6 +373,8 @@ CVMUSBControl::addReadoutList(CVMUSBReadoutList& list)
 
     list.addRegisterWrite(CVMUSB::RegisterOffsets::DEVSrcRegister,
 			  m_nDeviceSourceSelector);
+    list.addRegisterWrite(CVMUSB::RegisterOffsets::DEVSrcRegister,
+			  m_nDeviceSourceSelector);
   }
 }
 /**
@@ -374,5 +386,7 @@ CVMUSBControl::addReadoutList(CVMUSBReadoutList& list)
 CReadoutHardware*
 CVMUSBControl::clone() const
 {
-  return 0;
+  CVMUSBControl* pClone = new CVMUSBControl();
+  if (m_pConfiguration) pClone->m_pConfiguration = m_pConfiguration;
+  return pClone;
 }

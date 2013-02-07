@@ -541,16 +541,16 @@ public:
 	static const uint32_t scalerANIMI1              = (1   << 16);
 	static const uint32_t scalerANIMI2              = (2   << 16);
 	static const uint32_t scalerAEvent              = (3   << 16);
-	static const uint32_t scalerAEnable             = (8   << 16);
-	static const uint32_t scalerAReset              = (0x10 << 16);
+	static const uint32_t scalerAEnable             = (4   << 16);
+	static const uint32_t scalerAReset              = (8 << 16);
 	static const uint32_t scalerAShift              = 16;
 
 	static const uint32_t scalerBCarryA           = (0   << 20);
 	static const uint32_t scalerBNIMI1              = (1   << 20);
 	static const uint32_t scalerBNIMI2              = (2   << 20);
 	static const uint32_t scalerBEvent              = (3   << 20);
-	static const uint32_t scalerBEnable             = (8   << 20);
-	static const uint32_t scalerBReset              = (0x10 << 20);
+	static const uint32_t scalerBEnable             = (4   << 20);
+	static const uint32_t scalerBReset              = (8 << 20);
 	static const uint32_t scalerBShift              = 20;
 
 	static const uint32_t dggADisabled              = (0   << 24);
