@@ -92,6 +92,7 @@ private:
     struct usb_device*      m_device;   // Device we are open on.
     int                     m_timeout; // Timeout used when user doesn't give one.
     uint16_t                m_irqMask; // interrupt mask shadow register.
+    std::string             m_serial;  // Attached serial number.
 
     // Static functions.
 public:

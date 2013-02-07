@@ -180,6 +180,7 @@ CVMUSBusb::CVMUSBusb(struct usb_device* device) :
     m_device(device),
     m_timeout(DEFAULT_TIMEOUT)
 {
+  m_serial = serialNo(device);                  // Set the desired serial number.
   openVMUsb();
 }
 ////////////////////////////////////////////////////////////////
@@ -1315,12 +1316,33 @@ CVMUSBusb::listToOutPacket(uint16_t ta, CVMUSBReadoutList& list,
  *   Open the VM-USB.  This contains code that is 
  *   common to both the constructor and reconnect.
  *
- *   We assume that m_device is set to the
- *   desired VM-USB device.
+ *   We assume that m_serial is set to the
+ *   desired VM-USB serial number.
+ *
+ *   @throw std::string on errors.
  */
 void
 CVMUSBusb::openVMUsb()
 {
+    // Since we might be re-opening the device we're going to
+    // assume only the serial number is right and re-enumerate
+    
+    std::vector<struct usb_device*> devices = enumerate();
+    m_device = 0;
+    for (int i = 0; i < devices.size(); i++) {
+        if (serialNo(devices[i]) == m_serial) {
+            m_device = devices[i];
+            break;
+        }
+    }
+    if (!m_device) {
+        std::string msg = "The VM-USB with serial number ";
+        msg += m_serial;
+        msg += " could not be enumerated";
+        throw msg;
+    }
+    
+    
     m_handle  = usb_open(m_device);
     if (!m_handle) {
 	throw "CVMUSBusb::CVMUSB  - unable to open the device";

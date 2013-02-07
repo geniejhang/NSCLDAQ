@@ -92,6 +92,7 @@ private:
     struct usb_dev_handle*  m_handle;	// Handle open on the device.
     struct usb_device*      m_device;   // Device we are open on.
     int                     m_timeout; // Timeout used when user doesn't give one.
+    std::string             m_serial;  // Connected device serial number.
 
     // Static functions.
 public:

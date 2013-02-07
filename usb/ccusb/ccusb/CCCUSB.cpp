@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
+
 using namespace std;
 
 // Constants:
@@ -164,6 +165,7 @@ CCCUSB::CCCUSB(struct usb_device* device) :
     m_device(device),
     m_timeout(DEFAULT_TIMEOUT)
 {
+  m_serial = serialNo(m_device);
   openUsb();
 
 }
@@ -1416,10 +1418,34 @@ CCCUSB::write16(int n, int a, int f, uint16_t data, uint16_t& qx)
  *
  *  Does the common stuff required to open a connection
  *  to a CCUSB given that the device has been filled in.
+ *
+ *  Since the point of this is that it can happen after a power cycle
+ *  on the CAMAC crate, we are only going to rely on m_serial being
+ *  right and re-enumerate.
+ *
+ *  @throw std::string - on errors.
  */
 void
 CCCUSB::openUsb()
 {
+  // Re-enumerate and get the right value in m_device or throw
+  // if our serial number is no longer there:
+
+  std::vector<struct usb_device*> devices = enumerate();
+  m_device = 0;
+  for (int i = 0; i < devices.size(); i++) {
+    if (serialNo(devices[i]) == m_serial) {
+      m_device = devices[i];
+      break;
+    }
+  }
+  if (!m_device) {
+    std::string msg = "CC-USB with serial number ";
+    msg += m_serial;
+    msg += " cannot be located";
+    throw msg;
+  }
+
     m_handle  = usb_open(m_device);
     if (!m_handle) {
 	throw "CCCUSB::CCCUSB  - unable to open the device";
