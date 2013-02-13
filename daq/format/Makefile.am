@@ -31,7 +31,7 @@ include_HEADERS	= CRingSelectionPredicate.h	\
 			CRingItemFactory.h	\
 			DataFormat.h	\
 			CDataSource.h CRingDataSource.h CFileDataSource.h \
-			CDataSourceFactory.cpp
+			CDataSourceFactory.h
 
 INCLUDES	= -I@top_srcdir@/base/dataflow	\
 		  -I@top_srcdir@/base/exception	\

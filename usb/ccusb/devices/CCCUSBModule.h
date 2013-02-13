@@ -112,6 +112,9 @@ Name             Type        Default         Meaning
 */
 class CCCUSBModule : public CReadoutHardware
 {
+private:
+  uint32_t m_deviceSource;
+
   // class canonicals:
   //    Implemented:
 

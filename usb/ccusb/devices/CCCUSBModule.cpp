@@ -102,8 +102,8 @@ static CConfigurableObject::Limits WidthLimits(minwidth, maxwidth);
 // gdga delay:
 
 static CConfigurableObject::limit mindelay(0);
-static CConfigurableObject::limit maxdelaya(0xffffffff);
-static CConfigurableObject::limit maxdelayb(0xffffffff);
+static CConfigurableObject::limit maxdelaya(0x7fffffff);
+static CConfigurableObject::limit maxdelayb(0x7fffffff);
 static CConfigurableObject::Limits DelayA(mindelay, maxdelaya);
 static CConfigurableObject::Limits DelayB(mindelay, maxdelayb);
 
@@ -214,7 +214,7 @@ CCCUSBModule::onAttach(CReadoutModule& configuration)
   configuration.addBooleanParameter("-out1latch", false);
   configuration.addBooleanParameter("-out1invert", false);
 
-  configuration.addEnumParameter("-out2", Out2Values, "trigger");
+  configuration.addEnumParameter("-out2", Out2Values, "event");
   configuration.addBooleanParameter("-out2latch", false);
   configuration.addBooleanParameter("-out2invert", false);
 
@@ -245,8 +245,10 @@ CCCUSBModule::Initialize(CCCUSB& controller)
   configureDevices(controller);
   configureOutput(controller);
   configureLED(controller);
-}
 
+
+}
+ 
 /*!
   The module reads the scalers if -readscaler is set and clears them if -incremental is set.
   Note that the scalers are disabled for the time the read and optional clear is performed 
@@ -259,15 +261,11 @@ void
 CCCUSBModule::addReadoutList(CCCUSBReadoutList& list)
 {
 
-  if (m_pConfiguration->getBoolParameter("-readscaler")) {
-    
-    // Disable/freeze the scalers/device source selector:
-    // the freeze bits allow us to manipulate the enable and clear bits without
-    // affecting the rest of the register.  Thank you Jan.
+  if (m_pConfiguration->getBoolParameter("-readscalers")) {
+    list.addWrite24(25, 6, 16, m_deviceSource & ~(
+		    (CCCUSB::DeviceSourceSelectorsRegister::scalerAEnable
+		     | CCCUSB::DeviceSourceSelectorsRegister::scalerBEnable)));
 
-    list.addWrite24(25, 6, 16, 
-		    CCCUSB::DeviceSourceSelectorsRegister::scalerAFreeze 
-		    | CCCUSB::DeviceSourceSelectorsRegister::scalerBFreeze);
    
     // Read the scalers:
 
@@ -276,23 +274,16 @@ CCCUSBModule::addReadoutList(CCCUSBReadoutList& list)
 
     if (m_pConfiguration->getBoolParameter("-incremental")) {
 
-      // Rather than do the individual clears, do them via the device
-      // select register and simultaneously enable:
-      
-      list.addWrite24(25, 6, 16,
-		      CCCUSB::DeviceSourceSelectorsRegister::scalerAFreeze
-		      | CCCUSB::DeviceSourceSelectorsRegister::scalerBFreeze
+      list.addWrite24(25, 6, 16, m_deviceSource 
 		      | CCCUSB::DeviceSourceSelectorsRegister::scalerAReset
-		      | CCCUSB::DeviceSourceSelectorsRegister::scalerBReset
-		      | CCCUSB::DeviceSourceSelectorsRegister::scalerAEnable
-		      | CCCUSB::DeviceSourceSelectorsRegister::scalerBEnable);
-
-      // Freeze can stay on until the next time we initialize at which time it will automatically 
-      // go off.
+		      | CCCUSB::DeviceSourceSelectorsRegister::scalerBReset);
     }
+    list.addWrite24(25, 6, 16, m_deviceSource);
 
-    
+
   }
+
+
 }
 
 /*!
@@ -392,6 +383,7 @@ CCCUSBModule::configureGdg1(CCCUSB& controller)
 
   uint32_t registerValue = (width << 16) | delay;
   controller.writeDGGA(registerValue);
+
 }
 /**
  * Configure the gate and delay for GDGB.. this resource has a 24 bit
@@ -411,6 +403,7 @@ CCCUSBModule::configureGdg2(CCCUSB& controller)
 
   controller.writeDGGB(fineValue);
   controller.writeDGGExt(coarseValue);
+
 }
 /**
  * Configure the sourcdes for the various devices.  At this point in time
@@ -430,7 +423,7 @@ CCCUSBModule::configureDevices(CCCUSB& controller)
 
   // Scaler B:
 
-  registerValue |= (m_pConfiguration->getEnumParameter("-scalers", scalerBInputs)
+  registerValue |= (m_pConfiguration->getEnumParameter("-scalerb", scalerBInputs)
     << CCCUSB::DeviceSourceSelectorsRegister::scalerBShift)
     |  CCCUSB::DeviceSourceSelectorsRegister::scalerBEnable;
 
@@ -444,7 +437,28 @@ CCCUSBModule::configureDevices(CCCUSB& controller)
   registerValue |= m_pConfiguration->getEnumParameter("-gdgbsource", GdgSourceValues)
     << CCCUSB::DeviceSourceSelectorsRegister::DGGBShift;
 
+  // Clear the scalers first...
+
+
+  controller.writeDeviceSourceSelectors(CCCUSB::DeviceSourceSelectorsRegister::scalerAReset
+					|  CCCUSB::DeviceSourceSelectorsRegister::scalerAEnable
+					| CCCUSB::DeviceSourceSelectorsRegister::scalerBReset
+					| CCCUSB::DeviceSourceSelectorsRegister::scalerBEnable
+					);
+  controller.writeDeviceSourceSelectors(0);
+
+  uint32_t data;
+  uint16_t qx;
+  controller.simpleControl(25,12,15, qx);
   controller.writeDeviceSourceSelectors(registerValue);
+
+
+
+  m_deviceSource = registerValue;
+  
+  
+
+
 }
 /**
  * configureLED
@@ -461,7 +475,7 @@ CCCUSBModule::configureLED(CCCUSB& controller)
 
   // red:
 
-  registerValue |= m_pConfiguration->getEnumParameter("-redled", redValues) 
+  registerValue |= m_pConfiguration->getEnumParameter("-red", redValues) 
     << CCCUSB::LedSourceRegister::redShift;
   if (m_pConfiguration->getBoolParameter("-redinvert")) {
     registerValue |= CCCUSB::LedSourceRegister::redInvert;
@@ -471,7 +485,7 @@ CCCUSBModule::configureLED(CCCUSB& controller)
   }
   // green:
 
-  registerValue |= m_pConfiguration->getEnumParameter("-greenled", greenValues)
+  registerValue |= m_pConfiguration->getEnumParameter("-green", greenValues)
     << CCCUSB::LedSourceRegister::greenShift;
   if (m_pConfiguration->getBoolParameter("-greeninvert")) {
     registerValue |= CCCUSB::LedSourceRegister::greenInvert;
@@ -481,7 +495,7 @@ CCCUSBModule::configureLED(CCCUSB& controller)
   }
   // yellow:
 
-  registerValue |= m_pConfiguration->getEnumParameter("-yellowled", yellowValues);
+  registerValue |= m_pConfiguration->getEnumParameter("-yellow", yellowValues);
   if (m_pConfiguration->getBoolParameter("-yellowinvert")) {
     registerValue |= CCCUSB::LedSourceRegister::yellowInvert;
   }

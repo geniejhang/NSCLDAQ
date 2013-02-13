@@ -46,7 +46,7 @@ static const int ENDPOINT_IN(0x86);
 static const uint16_t TAVcsWrite(4);  // Operation writes.
 static const uint16_t TAVcsDATA(2);   // DAQ event Data stack.
 static const uint16_t TAVcsSCALER(3); // DAQ scaler data stack.
-static const uint16_t TAVcsCNAF(8);   // Immediate execution of a CNAF list.
+static const uint16_t TAVcsCNAF(0xc);   // Immediate execution of a CNAF list.
 static const uint16_t TAVcsIMMED(TAVcsCNAF);
 
 
@@ -456,7 +456,11 @@ CCCUSB::readFirmware(uint32_t& value)
 int
 CCCUSB::readGlobalMode(uint16_t& value)
 {
-  return read16(25, 1, 0, value);
+  uint32_t d;
+  // return read16(25, 1, 0, value);
+ int status = read32(25, 1, 0, d);
+ value = d;
+ return status;
 
 }
 /****************************************************************************/
@@ -1191,6 +1195,44 @@ CCCUSB::setDefaultTimeout(int ms)
 ////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Utility methods ////////////////////////
 ////////////////////////////////////////////////////////////////////////
+
+// Debug methods:
+
+// #define TRACE			// Comment out if not tracing
+
+
+void dumpWords(void* pWords, size_t readSize)
+{
+  readSize = readSize / sizeof(uint16_t);
+  uint16_t* s = reinterpret_cast<uint16_t*>(pWords);
+
+ 
+  for (int i =0; i < readSize; i++) {
+    fprintf(stderr, "%04x ", *s++);
+    if (((i % 8) == 0) && (i != 0)) {
+      fprintf(stderr, "\n");
+    }
+  }
+  fprintf(stderr, "\n");
+}
+
+static void dumpRequest(void* pWrite, size_t writeSize, size_t readSize)
+{
+#ifdef TRACE
+  fprintf(stderr, "%d write, %d read\n", writeSize, readSize);
+  dumpWords(pWrite, writeSize);
+#endif
+}
+
+static void dumpResponse(void* pData, size_t readSize)
+{
+#ifdef TRACE
+  fprintf(stderr, "%d bytes in response\n", readSize);
+  dumpWords(pData, readSize);
+#endif
+}
+
+
 /*
    Utility function to perform a 'symmetric' transaction.
    Most operations on the VM-USB are 'symmetric' USB operations.
@@ -1221,16 +1263,24 @@ CCCUSB::transaction(void* writePacket, size_t writeSize,
     int status = usb_bulk_write(m_handle, ENDPOINT_OUT,
 				static_cast<char*>(writePacket), writeSize, 
 				m_timeout);
+    dumpRequest(writePacket, writeSize, readSize);
     if (status < 0) {
 	errno = -status;
 	return -1;		// Write failed!!
     }
     status    = usb_bulk_read(m_handle, ENDPOINT_IN,
-			      static_cast<char*>(readPacket), readSize, m_timeout);
+				static_cast<char*>(readPacket), readSize, m_timeout);
     if (status < 0) {
 	errno = -status;
 	return -2;
     }
+#ifdef TRACE
+    if (status == 0) {
+      fprintf(stderr, "usb_bulk_read returned 0\n");
+    } else {
+      dumpResponse(readPacket, status);
+    }
+#endif
     return status;
 }
 
@@ -1387,6 +1437,7 @@ CCCUSB::write32(int n, int a, int f, uint32_t data, uint16_t& qx)
   CCCUSBReadoutList l;
   size_t            nRead;
   
+
   l.addWrite24(n,a,f, data);
   int status  = executeList(l,
 			    &qx,
@@ -1403,6 +1454,9 @@ CCCUSB::write16(int n, int a, int f, uint16_t data, uint16_t& qx)
 {
   CCCUSBReadoutList l;
   size_t nRead;
+
+  return write32(n, a, f, (uint32_t)data, qx);
+  
 
   l.addWrite16(n,a,f, data);
   return executeList(l,
