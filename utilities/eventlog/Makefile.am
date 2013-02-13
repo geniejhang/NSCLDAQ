@@ -50,4 +50,5 @@ fakeruns_SOURCES	= 	fakeruns.cpp
 
 fakeruns_LDADD		=	@top_srcdir@/daq/format/libdataformat.la	\
 				@top_srcdir@/base/dataflow/libDataFlow.la	\
+				@top_builddir@/base/os/libdaqshm.la              \
 				@top_srcdir@/base/exception/libException.la

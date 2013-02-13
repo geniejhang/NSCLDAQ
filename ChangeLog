@@ -326,3 +326,20 @@ Feb 1, 2012 - Feb 24, 2012
 
 	
 	
+10.2-001
+	- Issue #1147 - Refactor various whoami's to os-specific code and
+	replace locally defined methods and functions with calls to the
+	centralized one.
+        - Issue #1219 - Refactor various uri based file/ring opens into  
+	a factory object.
+	- Issue #785 - Reconnect to VM-USB at the start of each run.
+	this allows the controller to be powered off betwen runs.
+	- Issue #786 - Reconnect to CC-USB at the start of each run.
+	Allows the controller to be powered off between runs.
+	- Issue #427 - Make VM-USB output buffer auto-resize on
+	overflow...event size only limited by dynamic memory.
+	- Issue #1382 - Qualify s800 ring with username if defaulted.
+        - Issue #1326 - reconnect server's VM-USB controller when ethernet
+          controller is created by VMUSBReadout (this is done in the
+          controller factory creation method).
+          

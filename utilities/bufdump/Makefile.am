@@ -1,19 +1,13 @@
 bin_PROGRAMS	=	dumper
 
 
-dumper_SOURCES	=	CDataSource.cpp 	\
-			CRingDataSource.cpp	\
-			CFileDataSource.cpp	\
-			BufdumpMain.cpp		\
+dumper_SOURCES	=	BufdumpMain.cpp		\
 			../StringsToIntegers.cpp	\
 			dumper.cpp
 
 dumper_DEPENDENCIES = 	dumperargs.o
 
-noinst_HEADERS	=	CDataSource.h		\
-			CRingDataSource.h	\
-			CFileDataSource.h	\
-			BufdumpMain.h		\
+noinst_HEADERS	=	BufdumpMain.h		\
 			../StringsToIntegers.h
 
 BUILT_SOURCES	=	dumperargs.h dumperargs.c

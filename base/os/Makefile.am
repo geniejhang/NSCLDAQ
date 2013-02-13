@@ -5,7 +5,7 @@ include_HEADERS      = daqshm.h os.h io.h
 
 noinst_HEADERS	     = Asserts.h
 
-libdaqshm_la_LD_ADD = @THREADLD_FLAGS@
+libdaqshm_la_LIBADD = @THREADLD_FLAGS@ -lcrypt
 INCLUDES            = @THREADCXX_FLAGS@
 
 

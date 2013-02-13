@@ -26,6 +26,8 @@
 #include <ErrnoException.h>
 #include <io.h>
 
+#include <os.h>
+
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
@@ -226,21 +228,6 @@ RingSelectorMain::processData()
 //
 // Utilities
 
-/*
-** Return the name of the running user.
-*/
-std::string
-RingSelectorMain::whoami()
-{
-  uid_t id = getuid();
-
-  struct passwd* pwent =   getpwuid(id);
-  
-  if (pwent == (struct passwd*)NULL) {
-    throw std::string("Could not figure out my username!!");
-  }
-  return std::string(pwent->pw_name);
-}
 
 /*
 ** Write a chunk of data to an output file...looping as needed until either

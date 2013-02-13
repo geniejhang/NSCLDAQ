@@ -31,6 +31,7 @@
 class Os {
 public:
   static std::string whoami();		//< Logged in userm
+  static bool authenticateUser(std::string sUser, std::string sPassword);
 };
 
 #endif
