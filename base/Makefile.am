@@ -1,5 +1,5 @@
-SUBDIRS = 	os cvt exception uri thread headers tclwidgets \
-		tclplus CopyrightTools security dataflow tcpip
+SUBDIRS = 	os  exception tclplus CopyrightTools cvt uri thread headers tclwidgets \
+		security  tcpip
 
 
 

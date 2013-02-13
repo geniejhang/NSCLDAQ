@@ -298,6 +298,7 @@ private:
   void   addFragment(EVB::pFlatFragment pFragment);
   size_t totalFragmentSize(EVB::pFragmentHeader pHeader);
   bool   queuesEmpty();
+  bool   noEmptyQueue();
 
   BarrierSummary generateBarrier(std::vector<EVB::pFragment>& outputList);
   void generateMalformedBarrier(std::vector<EVB::pFragment>& outputList);

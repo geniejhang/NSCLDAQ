@@ -21,9 +21,14 @@
 #include <TCLObject.h>
 #include <tcl.h>
 #include <stdint.h>
+#include <Exception.h>
+#include <stdexcept>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
 #include <string>
-
+#include <iostream>
 
 /**
  * Construct the object:
@@ -63,70 +68,89 @@ int
 CFragmentHandlerCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
 {
   // objv must have the command name and a socket name:
+  
+  int status = TCL_OK;
 
-  if (objv.size() != 2) {
-    interp.setResult(std::string("Incorrect number of parameters"));
-    return TCL_ERROR;
-  }
-  // Translate the channel name to a Tcl_Channel: 
-
-  objv[1].Bind(interp);
-  std::string channelName = objv[1];
-
-  Tcl_Channel pChannel = Tcl_GetChannel(interp.getInterpreter(), channelName.c_str(), NULL);
-  if (pChannel == NULL) {
+  try {
+    
+    if (objv.size() != 2) {
+      interp.setResult(std::string("Incorrect number of parameters"));
+      return TCL_ERROR;
+    }
+    // Translate the channel name to a Tcl_Channel: 
+    
+    objv[1].Bind(interp);
+    std::string channelName = objv[1];
+    
+    Tcl_Channel pChannel = Tcl_GetChannel(interp.getInterpreter(), channelName.c_str(), NULL);
+    if (pChannel == NULL) {
     interp.setResult(std::string("Tcl does not know about this channel name"));
     return TCL_ERROR;
-  }
-  // Read the size of the body:
-
-  Tcl_Obj* msgLength = Tcl_NewObj();
-  Tcl_Obj* msgBody   = Tcl_NewObj();
-
-  Tcl_IncrRefCount(msgLength);
-  Tcl_IncrRefCount(msgBody);
+    }
 
 
-  // Read the message length and get it from the byte array.
-  // The protocol requires data in low endian order 
-  // The channnel is assumed to be blocking mode so if we don't get the full
-  // size it's an error:
-  //
-  int n = Tcl_ReadChars(pChannel, msgLength, sizeof(uint32_t), 0);
-  if (n != sizeof(uint32_t)) {
-    interp.setResult(std::string("Message length read failed"));
-    Tcl_DecrRefCount(msgLength);
-    Tcl_DecrRefCount(msgBody);
-    return TCL_ERROR;
-  }
-  uint32_t* pMsgLength = reinterpret_cast<uint32_t*>(Tcl_GetByteArrayFromObj(msgLength, NULL));
+    // Read the message length:
 
-  // A msg length of 0 is fine that means nothing to do otherwise, read the full message from
-  // the pipe...again it's an error not to be able to get the full message:
-
-  if (*pMsgLength > 0) {
-    n = Tcl_ReadChars(pChannel, msgBody, *pMsgLength, 0);
-    if (n != *pMsgLength) {
-      Tcl_DecrRefCount(msgLength);
-      Tcl_DecrRefCount(msgBody);
-      interp.setResult("Message body could not be completely read");
+    uint32_t msgLength;
+    int n = Tcl_Read(pChannel, reinterpret_cast<char*>(&msgLength), sizeof(msgLength));
+    if (n != sizeof(msgLength))  {
+      interp.setResult("Messge Lnegth read failed");
       return TCL_ERROR;
     }
 
-    
-    unsigned char* pBody = Tcl_GetByteArrayFromObj(msgBody, NULL);
-    
-    // pass the fragments to the fragment handler:
-
-    CFragmentHandler* pHandler = CFragmentHandler::getInstance();
-    pHandler->addFragments(*pMsgLength,  reinterpret_cast<EVB::pFlatFragment>(pBody));
+    // ..and the body itself.
 
 
-  }
-  Tcl_DecrRefCount(msgLength);
-  Tcl_DecrRefCount(msgBody);
-
+    if (msgLength > 0) {
+      uint8_t msgBody[msgLength];
+      n    = Tcl_Read(pChannel, reinterpret_cast<char*>(msgBody), msgLength);
+      if(n != msgLength) {
+	interp.setResult("Message Body could not be completely read");
+	return TCL_ERROR;
+      }
       
+      // Dispatch the body as the flattened fragments they are:
+      
+      CFragmentHandler* pHandler = CFragmentHandler::getInstance();
+      pHandler->addFragments(msgLength, reinterpret_cast<EVB::pFlatFragment>(msgBody));
+    }
+    
+
+
+    
+    
+    
+  }
+  catch (const char* m) {
+    interp.setResult(m);
+    status = TCL_ERROR;
+  }
+  catch (std::string msg) {
+    interp.setResult(msg);
+    status = TCL_ERROR;
+  }
+  catch (CException& e) {
+    std::string msg = e.ReasonText();
+    msg += ": ";
+    msg += e.WasDoing();
+    interp.setResult(msg);
+    status = TCL_ERROR;
+  }
+  catch (std::exception& e) {
+    interp.setResult(e.what());
+    status = TCL_ERROR;
+  }
+  catch (int i) {
+    char msg[1000];
+    sprintf(msg, "Integer exception: %d if errno: %s\n", i, strerror(i));
+    interp.setResult(msg);
+    status = TCL_ERROR;
+  }
+  catch (...) {
+    interp.setResult("Unanticipated exception in fragment handler");
+    status = TCL_ERROR;
+  }
+
+  return status;
   
-  return TCL_OK;
 }

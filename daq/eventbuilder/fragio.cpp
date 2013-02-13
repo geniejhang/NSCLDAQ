@@ -17,6 +17,7 @@
 #include "fragio.h"
 #include <fragment.h>
 #include <io.h>
+#include <errno.h>
 
 /**
  * readFragment
@@ -40,6 +41,9 @@ CFragIO::readFragment(int fd)
   nread = io::readData(fd, &hdr, sizeof(EVB::FragmentHeader));
   if (!nread) return 0;
   pResult = allocateFragment(&hdr);
+  if (!pResult) {
+    throw errno;		// Allocation failed.
+  }
   nread = io::readData(fd, pResult->s_pBody, hdr.s_size);
   if (!nread) return 0;
 

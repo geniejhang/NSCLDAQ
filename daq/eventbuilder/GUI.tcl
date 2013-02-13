@@ -468,8 +468,11 @@ snit::widgetadaptor EVB::statusNotebook {
 # @return name of widget created.
 #
 proc EVB::createGui widget {
+
+
     package require EventBuilder
     EVB::statusNotebook $widget
+
     return $widget
 }
 

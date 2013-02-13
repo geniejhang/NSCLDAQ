@@ -77,7 +77,8 @@ snit::type EVB::Connection {
 
     constructor args {
 	$self configurelist $args
-	fconfigure $options(-socket) -blocking 1 -buffering none -translation {binary lf}
+	fconfigure $options(-socket) -blocking 1 -buffering none -translation {binary lf} \
+	    -encoding binary
 	set callbacks [EVB::CallbackManager %AUTO%]
 	flush stdout
 	$callbacks define -disconnectcommand
@@ -353,7 +354,12 @@ snit::type EVB::Connection {
 	    # protocol allows FRAGMENTS here:
 	    # TODO: Handle errors as a close
 
-	    EVB::handleFragment $socket
+	    if {[catch {EVB::handleFragment $socket} msg]} {
+		puts stderr "Event orderer failed call to handleFragment: : $msg"
+		tk_messageBox -type ok -icon error -title {Fragment Handling error} \
+		    -message "C++ Fragment handler reported an error: $msg"
+		exit;		# can't really continue.
+	    }
 
 
 	    $callbacks invoke -fragmentcommand [list] [list]
@@ -369,6 +375,7 @@ snit::type EVB::Connection {
 
 	}
     }
+
 }
 
 ##
@@ -378,6 +385,7 @@ snit::type EVB::Connection {
 #  and will destroy them as they die.
 #
 # OPTIONS
+#                the port manager.
 #   -port - port on which we are listening for connections.
 #   -connectcommand - script to call when a connection has been added.
 #                    Substitutions:
@@ -414,6 +422,8 @@ snit::type EVB::ConnectionManager {
 
 
     constructor args {
+        set result [catch {
+        puts stderr "CM Constructor"
 	$self configurelist $args; # To get the port.
 
 	set lastFragment [clock seconds]
@@ -425,13 +435,20 @@ snit::type EVB::ConnectionManager {
 	$callbacks define -connectcommand
 	$callbacks define -disconnectcommand
 
+        puts stderr "setting up server socket $options(-port)"
 	set serverSocket [socket -server [mymethod _NewConnection] $options(-port)]
+        puts stderr "Setup"
 
 	# watch timeouts at 1/2 the timeout interval:
 
 	after [$self _TimeoutCheckInterval] [mymethod _CheckSourceTimeouts]
 
-	install TimeoutObservers using  Observer %AUTO% 
+	install TimeoutObservers using  Observer %AUTO%
+        } msg]
+        if {$result} {
+            puts stderr "$msg\n $::errorInfo"
+            exit
+        }
     }
     destructor {
 	foreach object [array names connections] {
@@ -563,7 +580,6 @@ snit::type EVB::ConnectionManager {
     #  - It's timed out.
     #
     method _CheckSourceTimeouts {} {
-
 
 	set previouslyTimedOut $timedoutSources
 

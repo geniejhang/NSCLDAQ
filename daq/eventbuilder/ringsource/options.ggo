@@ -12,6 +12,7 @@ section "Standard Options"
 
 option "evbhost" n "Event builder host name" string required
 option "evbport" p "Event builder port" string optional default="managed"
+option "evbname" q "Event builder name" string optional
 option "info" i "Description string when connecting to server" string required
 option "ids"  s "Source ids emitted by this client" int required multiple
 

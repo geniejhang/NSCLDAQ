@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT(nscldaq, 10.2-001, fox@nscl.msu.edu)
+AC_INIT(nscldaq, 10.2-002, fox@nscl.msu.edu)
 
 AC_CONFIG_SRCDIR([/utilities/StringsToIntegers.h])
 AC_CONFIG_HEADER([config.h])
@@ -545,6 +545,7 @@ AC_CONFIG_FILES([Makefile
 		 daq/eventbuilder/ringsource/Makefile
 		 daq/eventbuilder/teering/Makefile
 		 daq/eventbuilder/glom/Makefile
+		 daq/eventbuilder/unglom/Makefile
 		 daq/eventbuilder/startOrderer
 		 sbs/Makefile
 		 sbs/driver/Makefile

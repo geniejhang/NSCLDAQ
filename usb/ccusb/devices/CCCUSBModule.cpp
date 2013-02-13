@@ -447,7 +447,6 @@ CCCUSBModule::configureDevices(CCCUSB& controller)
 					);
   controller.writeDeviceSourceSelectors(0);
 
-  uint32_t data;
   uint16_t qx;
   controller.simpleControl(25,12,15, qx);
   controller.writeDeviceSourceSelectors(registerValue);

@@ -314,7 +314,7 @@ CRingItem::toString() const
   dump << std::hex << std::setw(2) << std::setfill('0');
 
   for (int i = 0; i < n; i++) {
-    dump << *p++ << " ";
+    dump << static_cast<unsigned int>(*p++) << " ";
     if ((i > 0) && ((i % nPerLine) == 0)) {
       dump << std::endl;
     }

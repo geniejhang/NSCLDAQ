@@ -299,12 +299,7 @@ Feb 1, 2012 - Feb 24, 2012
 	  infinite break handling loop.
 	- Issue #1195 deal with S800 bozo-ness on scalers.
 	- Ensure readoutGUI starts with correct colors.
-	- Issue #1215  Support for SIS FADC in VMUSB readout.
-	- Issue #1216  Provide XLM/SISFADC hira pseudo module that gangs
-	them together.
-	- Issue #701 Add variable injection/monitoring to VM-USB readout
-	to support EPICS monitoring.
-	- Issue #989 - document VM-USB list remote list executino.
+
 10.2  
 	- Issue #1174 - Create development branch for nscldaq-10.2 with
 	the event builder (July 2, 2012).
@@ -323,23 +318,63 @@ Feb 1, 2012 - Feb 24, 2012
 	- Add glom to get data from event sorter -> events.
 	- Add teering so that event sorter can be monitored prior to
 	building.
-
-	
+	- Issue #1521 - Provide mechanism to uniquify event orderer
+	instances and name them.
+	- Issue #1522 - Provide mechanism to contact named event orderer
+	and to specify the name of an orderer in the ring fragment data
+	source.
+	- Issue #1523 - ringFragmentSource secures its timestamp extractor
+	by actually mapping a temp copy.
+	-Provide CEventSegment in sbs/Readout with the following methods:
+	    reject -Rejects the event afer running all subsequent event
+	            segments.
+	    rejectImmediately - Rejects without running any more event
+	            segments.
+	    keep - Keep the event unless a subsequent event segment
+	           invokes one of the above.  Note that normally keep
+	           is called by the event segment's caller to user event 
+	           segments only need to invoke this if they've initially
+	           decided to reject(Immeditely) and then changed their
+	           mind e.g.:
+	            reject();
+	             ...
+	            if(ok) keep();
+	- Issue #1215  Support for SIS FADC in VMUSB readout.
+	- Issue #1216  Provide XLM/SISFADC hira pseudo module that gangs
+	them together.
+	- Issue #701 Add variable injection/monitoring to VM-USB readout
+	to support EPICS monitoring.
+	- Issue #989 - document VM-USB list remote list executino.
+        - Fix error in tclserver's managed port stuff which prematurely
+	  closed the connection to the port manager allowing double
+	  allocation.
+	- Add ReadoutCallouts for event builder/ReadoutGUI.
+	- Catch up on missing documentation for:
+	  *  teering
+	  *  glom
+	  *  readout callouts package for the event builder.
 	
 10.2-001
 	- Issue #1147 - Refactor various whoami's to os-specific code and
-	replace locally defined methods and functions with calls to the
-	centralized one.
+	  replace locally defined methods and functions with calls to the
+	  centralized one.
         - Issue #1219 - Refactor various uri based file/ring opens into  
-	a factory object.
+  	  a factory object.
 	- Issue #785 - Reconnect to VM-USB at the start of each run.
-	this allows the controller to be powered off betwen runs.
+	  this allows the controller to be powered off betwen runs.
 	- Issue #786 - Reconnect to CC-USB at the start of each run.
-	Allows the controller to be powered off between runs.
+	  Allows the controller to be powered off between runs.
 	- Issue #427 - Make VM-USB output buffer auto-resize on
-	overflow...event size only limited by dynamic memory.
+	  overflow...event size only limited by dynamic memory.
 	- Issue #1382 - Qualify s800 ring with username if defaulted.
         - Issue #1326 - reconnect server's VM-USB controller when ethernet
           controller is created by VMUSBReadout (this is done in the
           controller factory creation method).
           
+10.2-002 Support for HiRA VM-USB module:
+	- Issue #1215  Support for SIS FADC in VMUSB readout.
+	- Issue #1216  Provide XLM/SISFADC hira pseudo module that gangs
+	  them together.
+	- Issue #701 Add variable injection/monitoring to VM-USB readout
+	  to support EPICS monitoring.
+	- Issue #989 - document VM-USB list remote list executino.

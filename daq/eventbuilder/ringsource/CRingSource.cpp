@@ -23,6 +23,7 @@
 #include <CRemoteAccess.h>
 #include <EVBFramework.h>
 #include <CAllButPredicate.h>
+#include <CRingItemFactory.h>
 #include <fragment.h>
 #include <string.h>
 #include <dlfcn.h>
@@ -30,9 +31,22 @@
 #include <string.h>
 #include <time.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <stdio.h>
+#include <io.h>
+#include <fstream>
 
 
-static size_t max_event(1024*1024); // initial Max bytes of events in a getData
+static std::ofstream log;
+static uint64_t lastTimestamp(NULL_TIMESTAMP);
+
+
+
+static size_t max_event(1024*128); // initial Max bytes of events in a getData
 
 /*----------------------------------------------------------------------
  * Canonicals
@@ -98,11 +112,23 @@ CRingSource::initialize()
   }
   m_sourceId = static_cast<uint32_t>(m_pArgs->ids_arg[0]);
 
+
   std::string dlName = m_pArgs->timestampextractor_arg;
+
+  char logName[1000];
+  sprintf(logName, "source%d.txt", m_sourceId);
+  log.open(logName);
+  log << std::hex;
 
   // Attach the ring.
 
   m_pBuffer = CRingAccess::daqConsumeFrom(url);
+
+  // note that in order to allow the .so to be rebuilt while we're running without
+  // us potentially dying, the .so will be copied to a temporary file.
+  // Once the image is mapped it is unlinked so that it vanishes once the source exits.
+
+  dlName = copyLib(dlName);
 
   // Load the DLL and look up the timestamp function (putting i in m_timestamp;
   // we never do a dlclose so the DLL remains loaded in all OS's.
@@ -125,6 +151,7 @@ CRingSource::initialize()
     msg += strerror(e);
     throw msg;
   }
+  unlink(dlName.c_str());	// Marks this for destruction.
   
 }
 /**
@@ -214,14 +241,29 @@ CRingSource::getEvents()
     case PAUSE_RUN:
     case RESUME_RUN:
       frag.s_barrierType = pRingItem->s_header.s_type;
+    case INCREMENTAL_SCALERS:	// not a barrier but no timestamp either.
       break;
     case PHYSICS_EVENT:
-      frag.s_timestamp = (*m_timestamp)(reinterpret_cast<pPhysicsEventItem>(pRingItem));
-      break;
+      // kludge for now - filter out null events:
+      if (pRingItem->s_header.s_size > (sizeof(RingItemHeader) + sizeof(uint32_t))) {
+	  frag.s_timestamp = (*m_timestamp)(reinterpret_cast<pPhysicsEventItem>(pRingItem));
+	  if (((frag.s_timestamp - lastTimestamp) > 0x100000000ll)  &&
+	      (lastTimestamp != NULL_TIMESTAMP)) {
+	    CRingItem* pSpecificItem = CRingItemFactory::createRingItem(*p);
+	    log << "Timestamp skip from "  << lastTimestamp << " to " << frag.s_timestamp << std::endl;
+	    log << "Ring item: " << pSpecificItem->toString() << std::endl;
+	    delete pSpecificItem;
+	  }
+	  lastTimestamp = frag.s_timestamp;
+	  break;
+	}
     default:
       // default is to leave things alone
 
       break;
+    }
+    if (frag.s_timestamp == 0ll) {
+      log << "Zero timestamp in source!?!\n";
     }
     frags.push_back(frag);
     delete p;
@@ -301,4 +343,101 @@ CRingSource::timedifMs(struct timespec& later, struct timespec& earlier)
   return result;
   
 
+}
+/**
+ * copyLib
+ *
+ *  In order to allow the shared library that is the timestamp extractor to be
+ * altered as we run (e.g. via make), it is copied to a temporary file and
+ * that tempfile is what's mapped.
+ * There are some timing holes we need to accept here:
+ *  - Between the time the temp name is created and we actually create the file 
+ *    someon else could duplicate the filename and we'll smash that file.
+ *  - Between the time we copy the .so into the tempfile and actually map it
+ *    someone else could come along and smash the copied so.
+ *  - Between the time we create the file and finish copying it someone could be
+ *    altering our source file.
+ *
+ * Life's truly a bitch if you think too hard about it.
+ *
+ * @param original - the name of the shared object to copy.
+ *
+ * @return std::string - name of the copied file.
+ *
+ * @throw std::string on any error.
+ */
+std::string
+CRingSource::copyLib(std::string original)
+{
+  std::string destName;
+  int dest;
+
+  // First try to open the original.  If that's not possible throw up.
+
+  int from = open(original.c_str(), O_RDONLY);
+  if (from < 0) {
+    int err = errno;   // In case string ops smash errno.
+    std::string msg("CRingSource: Time extractor shared library: ");
+    msg += original;
+    msg += " cannot be opened: ";
+    msg += strerror(err);
+    throw msg;
+  }
+
+  // All of the try/catch things here are intended to be sure that any open 
+  // fds also get closed.  This prevents fd leakage in the unlikely event
+  // the caller tries to continue after failure.
+
+  try {
+    // Make the temp name:
+    
+    char* pDestName = tmpnam(NULL);
+    if (!pDestName) {
+      int err = errno;
+      std::string msg("CRingSource: Failed to create temporary shared library filename: ");
+      msg += strerror(err);
+      throw msg;
+    }
+    destName = pDestName;
+
+    
+    // Open the dest.
+    
+    int dest = open(destName.c_str(), O_CREAT | O_WRONLY, S_IRWXU);
+    if (!dest) {
+      int err;
+      std::string msg = "CRingSource: Faile to create a temp file for the shared  library: ";
+      msg += strerror(err);
+      throw msg;
+    }
+    
+    // Copy the file.
+    try {
+      char buffer[8192];	// Or some such suitably large block  of storage.
+
+      while (1) {
+
+	// For reads we just get what we can but for writes we ensure the write is total.
+	
+	ssize_t nRead = read(from, buffer, sizeof(buffer));
+	if (nRead == 0) break;
+
+	io::writeData(dest, buffer, nRead);
+
+      }
+	  
+    }
+    catch(...) {
+      close(dest);
+      throw;
+    }
+    // Return the result if we survived all of this:
+  }
+  catch(...) {
+    close(from);
+    throw;
+  }
+  close(from);
+  close(dest);
+  return destName;
 }

@@ -50,6 +50,7 @@ clean-local:
 INCLUDES=-I.. -I@top_srcdir@/base/dataflow \
 	-I@top_srcdir@/daq/format \
 	-I@top_srcdir@/base/exception -I@top_srcdir@/base/headers \
+	-I@top_srcdir@/base/os \
 	-D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
 
 ringFragmentSource_LDADD=  		 \
@@ -57,6 +58,7 @@ ringFragmentSource_LDADD=  		 \
 	@top_builddir@/daq/format/libdataformat.la \
 	@top_builddir@/base/dataflow/libDataFlow.la \
 	@top_builddir@/base/dataflow/libRingBuffer.la \
+	@top_builddir@/base/os/libdaqshm.la	\
 	GetOpt.lo \
 	$(THREAD_LDFLAGS) 
 

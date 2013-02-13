@@ -124,4 +124,16 @@ GetOpt::getArgs()
   return pArgs;
 }
 
+/**
+ * evbName
+ *   returns a pointer to the event buider name string or a null if that was not provided.
+ *
+ * @return const char*
+ */
+const char*
+GetOpt::evbName() const
+{
+  return m_pArgs->evbname_given ? m_pArgs->evbname_arg : 0;
+}
+
 void* gpTCLApplication=0;

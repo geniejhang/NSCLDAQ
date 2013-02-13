@@ -59,22 +59,35 @@ CEventOrderClient::~CEventOrderClient()
  * the port on which its server is listening for connections.
  * 
  * @param host - the host in which to perform the inquiry.
+ * @param pName - If not null, points to the name of the event builder.
  * 
  * @return uint16_t
  * @retval - the port on which the event builder is listening for our username.
  *
+ * @note for name-less event builders, the name is qualified by the username.
+ *       for named it is qualified by the username and the evbname.
+ *
  */
 uint16_t
-CEventOrderClient::Lookup(std::string host)
+CEventOrderClient::Lookup(std::string host, const char* pName)
 {
   CPortManager manager(host);
   std::vector<CPortManager::portInfo> services = manager.getPortUsage();
   std::string me  = Os::whoami();
 
+  std::string serviceName = EventBuilderService;
+  serviceName += ":";
+  serviceName += me;
+
+  if (pName) {
+    serviceName += ":";
+    serviceName += pName;
+  }
+
   // Look for the first match for my username and the correct service.
 
   for (int i =0; i < services.size(); i++) {
-    if (services[i].s_Application == EventBuilderService &&
+    if (services[i].s_Application == serviceName &&
 	services[i].s_User        == me) {
       return services[i].s_Port;
     }
@@ -220,18 +233,22 @@ CEventOrderClient::submitFragments(EVB::pFragmentChain pChain)
     }
     // Output the buffer in a try/catch block so that we can be sure it gets freed:
 
+    void* msg(0);
+
     try {
-      void* msg;
+
 
       // The -1 below is because we don't realy the null terminator on the strings.
 
       size_t msgLen = message(&msg, "FRAGMENTS", sizeof("FRAGMENTS") -1 , pBodyBuffer, nBytes);
       m_pConnection->Write(msg, msgLen);
       free(pBodyBuffer);
+      free(msg);		// Don't leak messages
     
     }
     catch (...) {
       free(pBodyBuffer);
+      free(msg);
       throw;
     }
     // get the reply and hope it's what we expect.
