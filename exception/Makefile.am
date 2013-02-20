@@ -32,11 +32,12 @@ libException_la_CXXFLAGS	= $(THREADCXX_FLAGS) 	\
 INCLUDES = -I@top_srcdir@/include -I@top_srcdir@/include/exception
 
 install-data-local:
-	$(mkinstalldirs) $(prefix)/include
-	rm -f $(prefix)/include/CErrnoException.h
-	$(INSTALL_HEADER) @top_srcdir@/include/exception/ErrnoException.h $(prefix)/include
-	$(LN_S) $(prefix)/include/ErrnoException.h \
-	        $(prefix)/include/CErrnoException.h
+	$(mkinstalldirs) $(DESTDIR)/$(prefix)/include
+	rm -f $(DESTDIR)/$(prefix)/include/CErrnoException.h
+	$(INSTALL_HEADER) @top_srcdir@/include/exception/ErrnoException.h $(DESTDIR)/$(prefix)/include
+	(cd $(DESTDIR)/$(prefix)/include && $(LN_S) ErrnoException.h CErrnoException.h)
+#	$(LN_S) $(DESTDIR)/$(prefix)/include/ErrnoException.h \
+#	        $(DESTDIR)/$(prefix)/include/CErrnoException.h
 
 ### disabled for now, will have fox hook these back up
 # noinst_PROGRAMS = unittests
