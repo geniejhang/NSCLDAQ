@@ -18,7 +18,8 @@ include_HEADERS = \
 	@top_srcdir@/include/exception/CDuplicateSingleton.h \
 	@top_srcdir@/include/exception/CNoSuchObjectException.h
 
-noinst_HEADERS = @top_srcdir@/include/exception/Asserts.h
+noinst_HEADERS = @top_srcdir@/include/exception/Asserts.h \
+	$(top_srcdir)/include/daqdatatypes.h
 
 EXTRA_DIST=exceptions.xml
 
