@@ -16,6 +16,7 @@ AC_PROG_LIBTOOL
 
 # what to generate
 AC_CONFIG_FILES([Makefile
+                 exception/Makefile
                  tclplus/Makefile])
 
 # do it
