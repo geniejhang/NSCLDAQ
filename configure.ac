@@ -384,7 +384,19 @@ AC_ARG_ENABLE([usb],
 if test "$enableusb" == "yes"
 then
 	headerdirs="/usr/include /usr/local/include"
-	libdirs="/lib /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu"
+	libdirs="/lib /usr/lib /usr/local/lib"
+
+        # Based on the arch (64 bit or 32 bit) figure out which
+        # additiona paths to to libdirs:
+
+	if test `uname -m` = "x86_64"
+        then
+           libdirs="$libdirs /usr/lib/x86_64-linux-gnu"
+           libdirs="$libdirs /lib/x86_64-linux-gnu"
+        else
+           libdirs="$libdirs /usr/lib/i386-linux-gnu"
+           libdirs="$libdirs /lib/i386-linux-gnu"    
+        fi       
 
 	usbheaderdir=""
 	usblibdir=""

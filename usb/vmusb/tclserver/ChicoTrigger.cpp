@@ -37,10 +37,25 @@ using namespace std;
 
 static const uint8_t  am (CVMUSBReadoutList::a32UserData); // Address modifier.
 
-Const(ShortWidth) 0x1010;
-Const(LongWidth)  0x1014;
-Const(EnableMask) 0x1018;
-Const(Control)    0x101c;
+Const(ShortWidth)   0x1010;
+Const(LongWidth)    0x1014;
+Const(EnableMask)   0x1018;
+Const(Control)      0x101c;
+Const(DelayA)       0x1020;
+Const(DelayB)       0x1024;
+Const(MonoStableT3) 0x1028;
+Const(MonoStableT4) 0x102c;
+Const(DownscaleA)   0x1034;
+Const(DownscaleB)   0x1038;
+
+
+// For All operations, this is the order in which to do the I/O:
+
+static const uint32_t IOOrder[] = {
+    ShortWidth, LongWidth, EnableMask, Control, DelayA, DelayB, MonoStableT3,
+    MonoStableT4, DownscaleA, DownscaleB
+};
+static const size_t IoCount = sizeof(IOOrder)/sizeof(uint32_t);
 
 /**
  * Construction pretty much does nothing
@@ -178,20 +193,21 @@ ChicoTrigger::Set(CVMUSB& vme, string parameter, string value)
   // cause errors so wrap this in a try /catch block.
 
   try {
-    if(valueList.llength() != 4) {
-      return "ERROR - Parameter list has wrong number of values";
+    // We allow subset lists to support the old GUI.
+    // It's only an error if the list lenght is larger than
+    // the number of IOs we can do:
+    
+    if(valueList.llength() > IoCount) {
+        return std::string("ERROR - too many parameters in list (Set)");
     }
+    
     // Use a list of VME operations to set the module:
     
     CVMUSBReadoutList l;
-    l.addWrite32(base() + ShortWidth, am,
-		 (uint32_t)(int)valueList.lindex(0));
-    l.addWrite32(base() + LongWidth, am,
-		 (uint32_t)(int)valueList.lindex(1));
-    l.addWrite32(base() + EnableMask, am,
-		 (uint32_t)(int)valueList.lindex(2));
-    l.addWrite32(base() + Control, am,
-		 (uint32_t)(int)valueList.lindex(3));
+    for (int i =0;  i < valueList.llength(); i++) {
+        l.addWrite32(base() + IOOrder[i], am,
+                   (uint32_t)(int)valueList.lindex(i));
+    }
 
     // execute the list:
 
@@ -235,14 +251,13 @@ ChicoTrigger::Get(CVMUSB& vme, string parameter)
   //
 
   CVMUSBReadoutList l;
-  l.addRead32(base() + ShortWidth, am);
-  l.addRead32(base() + LongWidth, am);
-  l.addRead32(base() + EnableMask, am);
-  l.addRead32(base() + Control, am);
-
+  for (int i = 0; i < IoCount; i++) {
+    l.addRead32(base() + IOOrder[i], am);
+  }
+  
   // Execute the list:
 
-  uint32_t buffer[4];		// Expecting to read 4 longs.
+  uint32_t buffer[IoCount];		// Expecting to read 4 longs.
   size_t   actuallyRead;
 
   int status = vme.executeList(l, buffer, sizeof(buffer), &actuallyRead);
@@ -258,7 +273,7 @@ ChicoTrigger::Get(CVMUSB& vme, string parameter)
   // is fine as a way to build it up.
 
   string reply = "OK {";
-  for (int i =0; i < 4; i++) {
+  for (int i =0; i < IoCount; i++) {
     char value[100];
     sprintf(value, "%d", buffer[i]);
     reply += value;
