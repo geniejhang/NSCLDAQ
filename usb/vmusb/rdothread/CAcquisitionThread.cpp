@@ -149,12 +149,29 @@ CAcquisitionThread::operator()()
   try {
     m_Running = true;		// Thread is off and running now.
     
+    // Exceptions will be reported but we need to get to the
+    // main loop so that we can be told to exit..;
+    //
+    try {
+      startDaq();  		        // Setup and start data taking.
+    }
+    catch (string msg) {
+      cerr << "CAcquisition thread initialization caught a string exception: " << msg << endl;
+    }
+    catch (char* msg) {
+      cerr << "CAcquisition thread initialization caught a char* exception: " << msg << endl;
+    }
+    catch (CException& err) {
+      cerr << "CAcquisition thread initialization caught a daq exception: "
+	   << err.ReasonText() << " while " << err.WasDoing() << endl;
+    }
+    catch (...) {
+      cerr << "CAcquisition thread initialization caught some other exception type.\n";
+    }
     
-    startDaq();  		        // Setup and start data taking.
     CRunState* pState = CRunState::getInstance();
     pState->setState(CRunState::Active);
-
-
+    
     beginRun();			// Emit begin run buffer.
     try {
       
@@ -584,7 +601,7 @@ CAcquisitionThread::bootToTheHead()
 {
 	uint32_t junk;
 	cerr << "Desperate measures being employed to attempt final drain\n";
-	m_pVme->writeActionRegister(CVMUSB::ActionRegister::sysReset);
+	//	m_pVme->writeActionRegister(CVMUSB::ActionRegister::sysReset);
 	m_pVme->writeActionRegister(0);
 	usleep(100);
 	m_pVme->vmeRead32(0, CVMUSBReadoutList::a32UserData, &junk);

@@ -67,14 +67,10 @@ class CVMUSBReadoutList;
  *
  *  * -base   - Configures the moodule base address.  This must match the module
  *              DIP switch settings and is an A24 address (range 0 -0x00ffffff).
- *  * -passtrigger - Boolean true if triggers are to be passed to DGS or
- *                False if not.
- *                
- *  * -readmode - How the timestamp is read from this module.  This can be one of
- *                'event' in which case the timestamp is read from the event trigger
- *                latched register set or 'scaler' in which case a software latch
- *                operation is performed and the timestamp is read from the software
- *                latched register.
+ *  * -chicodelay - Length of chico trigger delay.
+ *  * -window     - Length of matching window.
+ *  * -chicolatch - True chico triggers latch timstamp.
+ *  * -triggersel - nim | ecl selects source of trigger
  */
 
 class CGSTriggerModule : public CReadoutHardware {
