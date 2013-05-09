@@ -24,12 +24,12 @@ noinst_HEADERS = @top_srcdir@/include/exception/Asserts.h \
 EXTRA_DIST=exceptions.xml
 
 libException_la_LDFLAGS = -version-info $(SOVERSION) \
-	-Wl,"-rpath-link=$(libdir)" $(THREADLD_FLAGS)
+	-Wl,"-rpath-link=$(libdir)" @PTHREAD_LIBS@
 
-libException_la_CXXFLAGS	= $(THREADCXX_FLAGS) 	\
+libException_la_CXXFLAGS	= @PTHREAD_CFLAGS@ 	\
 				$(AM_CXXFLAGS)
 
-INCLUDES = -I@top_srcdir@/include -I@top_srcdir@/include/exception
+INCLUDES = -I@top_srcdir@/include -I@top_srcdir@/include/exception @CPPUNIT_CFLAGS@
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)/$(prefix)/include
@@ -39,10 +39,10 @@ install-data-local:
 #	$(LN_S) $(DESTDIR)/$(prefix)/include/ErrnoException.h \
 #	        $(DESTDIR)/$(prefix)/include/CErrnoException.h
 
-### disabled for now, will have fox hook these back up
-# noinst_PROGRAMS = unittests
-# unittests_SOURCES = TestRunner.cpp testException.cpp testErrnoException.cpp \
-# 	testStreamIOError.cpp testRangeError.cpp
-# unittests_LDADD   = $(CPPUNIT_LDFLAGS) -lException
-# TESTS=./unittests
+
+noinst_PROGRAMS = unittests
+unittests_SOURCES = TestRunner.cpp testException.cpp testErrnoException.cpp \
+	testStreamIOError.cpp testRangeError.cpp
+unittests_LDADD   = @CPPUNIT_LIBS@ -lException
+TESTS=./unittests
 
