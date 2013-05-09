@@ -19,7 +19,7 @@ LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
 
 # Makefile exports:
-SOVERSION="10:0:0"
+SOVERSION="1:0:0"
 AC_SUBST(SOVERSION)
 
 # specfic checks
