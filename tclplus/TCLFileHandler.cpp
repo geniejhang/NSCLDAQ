@@ -303,7 +303,6 @@ static const char* Copyright = "(C) Copyright Michigan State University 2015, Al
 
 #include "TCLFileHandler.h"                               
 #include <tcl.h>
-#include <tk.h>
 
 using namespace std;
 
@@ -359,11 +358,9 @@ CTCLFileHandler::Set(int mask)
 //           callback database.  This is supposed to be more efficient
 //           than a call to Clear().
 
-#ifdef HAVE_WINDOWS_H
-  assert(0);			// CYGWIN's does not implement this.
-#else
-  Tk_CreateFileHandler(m_nFid, mask, CallbackRelay, (ClientData)this);
-#endif
+
+  Tcl_CreateFileHandler(m_nFid, mask, CallbackRelay, (ClientData)this);
+
 }
 //////////////////////////////////////////////////////////////////////////
 //
@@ -381,10 +378,8 @@ CTCLFileHandler::Clear()
 // Note:  That the only one file handler can be
 //             associated with a file descriptor.
 // 
-#ifdef HAVE_WINDOWS_H
-  assert(0);			// CYGWIn's tcl does not implement this.
-#else
-  Tk_DeleteFileHandler(m_nFid);
-#endif
+
+  Tcl_DeleteFileHandler(m_nFid);
+
 
 }
