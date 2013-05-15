@@ -37,6 +37,7 @@
 #include <CBusy.h>
 #include <vector>
 #include <string>
+#include <pthread.h>
 
 using namespace std;
 
@@ -583,6 +584,7 @@ CExperiment::ScheduleEndRunBuffer(bool pause)
 {
 
   pEndRunEvent pEvent = reinterpret_cast<pEndRunEvent>(Tcl_Alloc(sizeof(EndRunEvent)));
+  
   pEvent->tclEvent.proc = CExperiment::HandleEndRunEvent;
   pEvent->pause         = pause;
   pEvent->pExperiment   = this;
@@ -590,9 +592,15 @@ CExperiment::ScheduleEndRunBuffer(bool pause)
   CTCLInterpreter* pInterp = gpTCLApplication->getInterpreter();
   Tcl_ThreadId     thread  = gpTCLApplication->getThread();
 
-  Tcl_ThreadQueueEvent(thread, 
-		       reinterpret_cast<Tcl_Event*>(pEvent),
-		       TCL_QUEUE_TAIL);
+   Tcl_ThreadQueueEvent(thread, 
+  		       reinterpret_cast<Tcl_Event*>(pEvent),
+  		       TCL_QUEUE_TAIL);
+
+   // TODO: This should really be a cond wait on the end run buffer being done
+   //       so that the thread and its thread local storage stays alive for the duration
+   //       of the event handling...for now kludge it up this way.
+
+   usleep(1000);		       
 
 }
 /*!
