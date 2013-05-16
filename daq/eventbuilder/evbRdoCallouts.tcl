@@ -290,7 +290,7 @@ proc EVBC::startRingSource {sourceRingUrl timestampExtractorLib id info} {
     #
     set fd [open "| $ringSource |& cat" r]
     fconfigure $fd -buffering line
-    flieevent $fd readable [list EVBC::_HandleDataSourceInput $fd $info $id]
+    fileevent $fd readable [list EVBC::_HandleDataSourceInput $fd $info $id]
 }
 ##
 # @fn EVBC::startS800Source
@@ -413,7 +413,7 @@ proc EVBC::onBegin {} {
         }
             
         if {[info commands startEVBSources] ne ""} {
-            startEVBSources
+	    after 1000 startEVBSources
         }
     } else {
 	EVBC::reset
