@@ -280,6 +280,7 @@ CExperiment::syncEndRun(bool pause)
   }
   if (m_pReadout) {
     m_pReadout->disable();
+    m_pReadout->onEnd(this);
   }
     
   // 
@@ -583,6 +584,8 @@ void
 CExperiment::ScheduleEndRunBuffer(bool pause)
 {
 
+
+  sleep(1);
   pEndRunEvent pEvent = reinterpret_cast<pEndRunEvent>(Tcl_Alloc(sizeof(EndRunEvent)));
   
   pEvent->tclEvent.proc = CExperiment::HandleEndRunEvent;
@@ -600,7 +603,7 @@ CExperiment::ScheduleEndRunBuffer(bool pause)
    //       so that the thread and its thread local storage stays alive for the duration
    //       of the event handling...for now kludge it up this way.
 
-   usleep(1000);		       
+   sleep(1);		       
 
 }
 /*!
