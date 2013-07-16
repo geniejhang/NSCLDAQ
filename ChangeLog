@@ -378,3 +378,6 @@ Feb 1, 2012 - Feb 24, 2012
 	- Issue #701 Add variable injection/monitoring to VM-USB readout
 	  to support EPICS monitoring.
 	- Issue #989 - document VM-USB list remote list executino.
+10.2-003 
+	- Support CEvent segment onEnd method.
+	
