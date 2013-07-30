@@ -380,4 +380,5 @@ Feb 1, 2012 - Feb 24, 2012
 	- Issue #989 - document VM-USB list remote list executino.
 10.2-003 
 	- Support CEvent segment onEnd method.
-	
+10.2-004
+	- Some clean up of dead code.

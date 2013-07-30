@@ -1,6 +1,7 @@
 #bin_PROGRAMS=eventorderer
 bin_PROGRAMS=frag2ring
 
+
 lib_LTLIBRARIES=libEventBuilder.la  libEventBuilderClient.la 
 
 #eventorderer_LDFLAGS= @TCL_LDFLAGS@ \
