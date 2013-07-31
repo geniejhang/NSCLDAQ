@@ -382,3 +382,5 @@ Feb 1, 2012 - Feb 24, 2012
 	- Support CEvent segment onEnd method.
 10.2-004
 	- Some clean up of dead code.
+        - Ensure SBSReadout exits when stdin gets lost.
+	- Migrate the service wait code into the evbcallouts standard script.
