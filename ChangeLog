@@ -384,3 +384,12 @@ Feb 1, 2012 - Feb 24, 2012
 	- Some clean up of dead code.
         - Ensure SBSReadout exits when stdin gets lost.
 	- Migrate the service wait code into the evbcallouts standard script.
+        - Let event sources settle before allowing the run to start.
+	- In event builder rdo callouts ensure end run will wait longer
+	  for the eventlogger to finish since there's much deeper
+	  buffering/longer latencies.
+	- eventlogger - Fix bad memory leak that happens when the
+	  first item seen is not a begin run (of course the stuff above
+	  among other things tries to prevent this).
+
+	
