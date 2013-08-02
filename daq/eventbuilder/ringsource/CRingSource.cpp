@@ -153,6 +153,9 @@ CRingSource::initialize()
     throw msg;
   }
   unlink(dlName.c_str());	// Marks this for destruction.
+
+  // Connect to the event builder:
+
   
 }
 /**

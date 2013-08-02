@@ -21,7 +21,7 @@ package provide evbcallouts 1.0
 package require snit
 package require portAllocator
 package require ReadoutGUIPanel
-package require Experiment 2.0
+package require Experiment
 package require ring
 
 namespace eval ::EVBC {
@@ -367,6 +367,11 @@ proc EVBC::initialize args {
             return "tcp://localhost/$EVBC::destRing"
         }
     }
+    #
+    #  The timeout for waiting on the event logger needs to be longer than
+    #  normal due to the deeper buffering.
+
+    set Experiment::fileWaitTimeout 120; # 2 minutes for now.
 }
 #------------------------------------------------------------------------------
 ##
@@ -421,6 +426,12 @@ proc EVBC::onBegin {} {
     } else {
 	EVBC::reset
     }
+    #  Sit here for a bit to ensure that everything has settled before letting 
+    #  data taking begin.  This is done because we see cases where event sources
+    #  are missing the begin run otherwise.
+    #
+
+    after 2000
 }
 #------------------------------------------------------------------------------
 ##
