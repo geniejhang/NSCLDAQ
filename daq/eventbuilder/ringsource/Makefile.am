@@ -13,10 +13,11 @@ ringFragmentSource_SOURCES=cmdline.c CRingSource.cpp Main.cpp
 
 ringTestSource_SOURCES= ringTestSource.cpp ringtestoptions.c TestSource.cpp
 
-noinst_HEADERS=CRingSource.h s800.h
+noinst_HEADERS=CRingSource.h s800.h TestSource.h
 
 
-BUILT_SOURCES = cmdline.c GetOpt.cpp ringtestoptions.c
+BUILT_SOURCES = cmdline.c GetOpt.cpp ringtestoptions.h
+
 
 #
 #  This is a bit funky.  We copy the options.ggo skeleton file and add to it
@@ -31,6 +32,8 @@ cmdline.c: ../options.ggo
 GetOpt.cpp: ../GetOpt.cpp ../GetOpt.h
 	cp ../GetOpt.{cpp,h} .
 
+ringtestoptions.h: ringtestoptions.ggo
+	$(GENGETOPT) --input=ringtestoptions.ggo --file=ringtestoptions
 
 ringtestoptions.c: ringtestoptions.ggo
 	$(GENGETOPT) --input=ringtestoptions.ggo --file=ringtestoptions
@@ -62,4 +65,4 @@ ringFragmentSource_LDADD=  		 \
 	GetOpt.lo \
 	$(THREAD_LDFLAGS) 
 
-EXTRA_DIST=ringsource.xml
+EXTRA_DIST=ringsource.xml ringtestoptions.ggo
