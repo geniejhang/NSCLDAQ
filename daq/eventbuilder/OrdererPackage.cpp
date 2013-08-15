@@ -22,6 +22,7 @@
 
 #include <tcl.h>
 #include <TCLInterpreter.h>
+#inculde <unistd.h>
 #include "CFragmentHandlerCommand.h"
 #include "CInputStatsCommand.h"
 #include "COrdererOutput.h"
