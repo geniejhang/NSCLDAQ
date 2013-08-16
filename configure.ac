@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT(nscldaq, 10.2-004, fox@nscl.msu.edu)
+AC_INIT(nscldaq, 10.2-005, fox@nscl.msu.edu)
 
 AC_CONFIG_SRCDIR([/utilities/StringsToIntegers.h])
 AC_CONFIG_HEADER([config.h])
@@ -328,6 +328,16 @@ fi
 
 #  If we found epics we can build the software that needs it.
 #  otherwise it's optional.
+bits=`arch`
+kernel=`uname |tr [A-Z] [a-z]`
+
+case $bits in
+   i686 | i386)
+   	bits=x86
+   ;;
+esac
+
+epicsarch=$kernel-$bits
 
 if test $haveepics == "yes"
 then
@@ -335,8 +345,8 @@ then
 
    epics=true
    EPICS_INCLUDES="-I$epicsroot/include -I$epicsroot/include/os/Linux"
-   EPICS_LDFLAGS="-L$epicsroot/lib/linux-x86 -lca -Wl,\"-rpath=$epicsroot/lib/linux-x86\""
-   EPICS_BIN="-DEPICS_BIN=\"\\\"$epicsroot/bin/linux-x86\\\"\""
+   EPICS_LDFLAGS="-L$epicsroot/lib/$epicsarch -lca -Wl,\"-rpath=$epicsroot/lib/$epicsarch\""
+   EPICS_BIN="-DEPICS_BIN=\"\\\"$epicsroot/bin/$epicsarch\\\"\""
 else
    epics=false
 fi

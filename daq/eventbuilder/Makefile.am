@@ -67,6 +67,9 @@ libEventBuilderClient_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 libEventBuilder_la_LIBADD = @top_builddir@/base/tclplus/libtclPlus.la \
 	@top_builddir@/base/exception/libException.la \
 	@top_builddir@/base/os/libdaqshm.la    \
+	@top_builddir@/servers/portmanager/libPortManager.la \
+	@top_builddir@/base/tcpip/libTcp.la \
+	@top_builddir@/base/os/libdaqshm.la \
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
@@ -78,7 +81,7 @@ TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl
 TCL_TEST_FILES=tclTests.tcl cbmanagerTests.test cmanagerCallbacks.test
 
 EXTRA_DIST=protocol.xml api.xml orderer.xml frag2ring.xml Asserts.h \
-	$(TCL_PACKAGE_FILE) \
+	$(TCL_PACKAGE_FILES) \
 	$(TCL_TEST_FILES) options.ggo \
         $(TCL_EVB_PACKAGE_FILES)       \
 	$(FRAMEWORK_SOURCEFILES) \

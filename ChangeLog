@@ -393,3 +393,8 @@ Feb 1, 2012 - Feb 24, 2012
 	  among other things tries to prevent this).
 
 	
+10.2-005
+	- Added __align__((__packed__)) to fragment header which is
+	  vulnerable to padding in 64 bit or larger architectures.
+        - Fix up headers in base/os/os.cpp for crypt and getuid.
+	
