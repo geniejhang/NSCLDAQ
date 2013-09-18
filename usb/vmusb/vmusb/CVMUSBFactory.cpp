@@ -53,7 +53,7 @@ CVMUSBFactory::createUSBController(CVMUSBFactory::ControllerType type, const cha
 }
 /**
  * createLocalController
-u *
+ *
  *  Connect with a local controller:
  *  - Enumerate the controllers.
  *  - If serialNumber is 0 instantiatee a CVMUSBusb on the first one enumerated.

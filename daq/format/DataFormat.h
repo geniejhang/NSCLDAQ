@@ -76,6 +76,7 @@ static const uint32_t MONITORED_VARIABLES = 11;
 // Scaler data:
 
 static const uint32_t INCREMENTAL_SCALERS = 20;
+static const uint32_t TIMESTAMPED_NONINCR_SCALERS =21;
 
 // Physics events:
 
@@ -140,10 +141,27 @@ typedef struct _ScalerItem {
   RingItemHeader  s_header;
   uint32_t        s_intervalStartOffset;
   uint32_t        s_intervalEndOffset;
-  uint32_t          s_timestamp;
+  uint32_t        s_timestamp;
   uint32_t        s_scalerCount;
   uint32_t        s_scalers[1];
 } ScalerItem, *pScalerItem;
+
+/*
+  Nonincremental timestamped scalers are scalers that dont' get 
+  reset on reads and have a 64 bit timestamp.  The timing information
+  put in those scalers includes both the raw time and a divisor that
+  can be used to support sub-second timing information
+*/
+typedef struct _NonIncrTimestampedScaler {
+  RingItemHeader  s_header;
+  uint64_t        s_eventTimestamp; /* For event building. */
+  uint32_t        s_intervalStartOffset;
+  uint32_t        s_intervalEndOffset;
+  uint32_t        s_intervalDivisor;
+  uint32_t        s_clockTimestamp; /* unix time */
+  uint32_t        s_scalerCount;
+  uint32_t        s_scalers[1];
+} NonIncrTimestampedScaler, *pNonIncrTimestampedScaler;
 
 /*!
   The various documentation Events are just a bunch of null terminated strings that
@@ -158,13 +176,14 @@ typedef struct _TextItem {
   char           s_strings[1];
 } TextItem, *pTextItem;
 
+
 /*!
   For now a physics event is just a header and a body of uint16_t's.
 */
 
 typedef struct _PhysicsEventItem {
   RingItemHeader s_header;
-  uint16_t       s_body[1];
+  uint16_t       s_body[];
 } PhysicsEventItem, *pPhysicsEventItem;
 
 /*!
@@ -205,6 +224,10 @@ extern "C" {
   pPhysicsEventCountItem formatTriggerCountItem(uint32_t runTime, time_t stamp, uint64_t triggerCount);
   pScalerItem         formatScalerItem(unsigned scalerCount, time_t timestamp, 
 				      uint32_t btime, uint32_t etime, void* pCounters);
+  pNonIncrTimestampedScaler  formatNonIncrTSScalerItem(unsigned scalerCount, time_t timestamp, 
+						       uint32_t btime, uint32_t etime, 
+						       uint64_t eventTimestamp, void* pCounters,
+						       uint32_t timebaseDivisor);
   pTextItem          formatTextItem(unsigned nStrings, time_t stamp, uint32_t runTime,
 				    const char** pStrings, int type);
   pStateChangeItem   formatStateChange(time_t stamp, uint32_t offset, uint32_t runNumber,

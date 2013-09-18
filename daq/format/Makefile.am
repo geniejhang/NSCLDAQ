@@ -10,12 +10,14 @@ libdataformat_la_SOURCES = CRingSelectionPredicate.cpp	\
 			CRingScalerItem.cpp		\
 			CRingTextItem.cpp		\
 			CRingPhysicsEventCountItem.cpp \
+			CRingTimestampedRunningScalerItem.cpp \
 			CRingFragmentItem.cpp       \
 			CPhysicsEventItem.cpp       \
 			CRingItemFactory.cpp		\
 			ringitem.c			\
 			CDataSource.cpp CRingDataSource.cpp CFileDataSource.cpp  \
 			CDataSourceFactory.cpp
+
 
 
 include_HEADERS	= CRingSelectionPredicate.h	\
@@ -26,12 +28,15 @@ include_HEADERS	= CRingSelectionPredicate.h	\
 			CRingScalerItem.h	\
 			CRingTextItem.h	\
 			CRingPhysicsEventCountItem.h	\
+			CRingTimestampedRunningScalerItem.h \
 			CRingFragmentItem.h           \
 			CPhysicsEventItem.h	\
 			CRingItemFactory.h	\
 			DataFormat.h	\
 			CDataSource.h CRingDataSource.h CFileDataSource.h \
 			CDataSourceFactory.h
+
+
 
 INCLUDES	= -I@top_srcdir@/base/dataflow	\
 		  -I@top_srcdir@/base/exception	\

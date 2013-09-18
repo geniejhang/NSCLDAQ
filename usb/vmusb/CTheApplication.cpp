@@ -148,7 +148,11 @@ int CTheApplication::operator()(int argc, char** argv)
 
     Globals::pUSBController  = CVMUSBFactory::createUSBController(type, connectionString);
     
+    std::cerr << "Attached VMUSB controller with firmare: " << std::hex << 
+      Globals::pUSBController->readFirmwareID() << std::dec << std::endl;
+
     
+
     // Set default configuration file names and then override with the ones supplied on
     // the command line (if any).
     

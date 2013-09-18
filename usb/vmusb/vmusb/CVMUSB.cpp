@@ -949,7 +949,6 @@ CVMUSB::executeList(CVMUSBReadoutList&     list,
 }
 
 // SWIG version of the above:
-
 std::vector<uint8_t> 
 CVMUSB::executeList(CVMUSBReadoutList& list, int maxBytes)
 {
@@ -967,8 +966,6 @@ CVMUSB::executeList(CVMUSBReadoutList& list, int maxBytes)
 
   return result;
 }
-
-
 /*!
    Load a list into the VM-USB for later execution.
    It is the callers responsibility to:

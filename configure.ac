@@ -50,6 +50,13 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 
+# check to find the size of address
+AC_CHECK_SIZEOF([void*])
+AS_IF([test "$ac_cv_sizeof_voidp" -eq 8],
+    AC_DEFINE([ADDR64],1,[Specifies that memory addresses are 64-bits ]),
+     [])
+   
+
 # Checks for library functions.
 
 AC_FUNC_ERROR_AT_LINE
@@ -60,6 +67,7 @@ AC_CHECK_FUNCS([dup2 gethostbyaddr gethostbyname gettimeofday inet_ntoa memmove 
 AC_CHECK_FUNCS([ftruncate munmap])
 AC_FUNC_MMAP
 AC_FUNC_STAT
+
 
 # Automake:
 
@@ -297,7 +305,7 @@ AC_ARG_ENABLE([epics-tools],
 if test "$BUILD_EPICS_TOOLS" == "yes"
 then
 
-epicstestdirs="/usr/local/epics /opt/epics /soft/intel/epics"
+epicstestdirs="/usr/local/epics /opt/epics /usr/lib/epics"
 haveepics="no"
 
 
@@ -311,6 +319,23 @@ AC_ARG_WITH(epics-rootdir,
 	 epicsroot="$withval"],
 	[haveepics="no"])
 
+#
+#  Figure out which architecture specific directory to use.
+#
+#   For now we're just going to support various types of linux:
+#   linux-x86_64 (64 bit linux) and linxu-x86 (32 bit linux).
+#   Later this can be expanded to other os's and archs.
+#
+bits=`arch`
+kernel=`uname |tr [A-Z] [a-z]`
+
+case $bits in
+   i686 | i386)
+   	bits=x86
+   ;;
+esac
+
+epicsarch=$kernel-$bits
 
 
 if test $haveepics == "no"
