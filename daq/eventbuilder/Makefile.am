@@ -46,12 +46,12 @@ noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h \
 INCLUDES =  \
 	-I@top_srcdir@/daq/format \
 	-I@top_srcdir@/base/tcpip \
-	-I@top_srcdir@/base/exception  \
+	@LIBTCLPLUS_CFLAGS@	\
 	-I@top_srcdir@/base/headers	\
 	-I@top_srcdir@/base/tcpip        \
 	-I@top_srcdir@/servers/portmanager \
 	-I@top_srcdir@/base/os \
-	-I@top_srcdir@/base/tclplus	\
+	@LIBTCLPLUS_CFLAGS@ \
 	@THREADCXX_FLAGS@ @TCL_FLAGS@
 
 
@@ -59,12 +59,13 @@ libEventBuilderClient_la_LIBADD = @top_builddir@/base/tcpip/libTcp.la \
 	@top_builddir@/servers/portmanager/libPortManager.la   \
 	@top_builddir@/base/tcpip/libTcp.la	\
 	@top_builddir@/base/os/libdaqshm.la		\
-	@top_builddir@/base/exception/libException.la
+	@LIBTCLPLUS_LDFLAGS@
 
-libEventBuilder_la_LIBADD = @top_builddir@/base/tclplus/libtclPlus.la \
-	@top_builddir@/base/exception/libException.la \
+libEventBuilder_la_LIBADD = @LIBTCLPLUS_LDFLAGS@	\
 	@top_builddir@/base/os/libdaqshm.la    \
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@
+
+libEventBuilder_la_LDFLAGS=@LIBTCLPLUS_LDFLAGS@
 
 TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 	connectionList.tcl observer.tcl barriers.tcl GUI.tcl inputStatistics.tcl \

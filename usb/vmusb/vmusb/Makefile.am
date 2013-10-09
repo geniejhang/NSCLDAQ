@@ -27,17 +27,16 @@ noinst_HEADERS		= CVMUSB.h   \
 
 libVMUSB_CXXFLAGS=@THREADCXX_FLAGS@
 
-INCLUDES		= $(USBSWITCHES) -I$(top_srcdir)/base/headers -I$(top_srcdir)/base/tclplus  \
+INCLUDES		= $(USBSWITCHES) -I$(top_srcdir)/base/headers @LIBTCLPLUS_CFLAGS@  \
 			-I@top_srcdir@/base/tcpip \
-			 -I$(top_srcdir)/base/exception @TCL_FLAGS@
+			  @TCL_FLAGS@
 
 libVMUSB_la_LIBADD       = @top_srcdir@/base/tcpip/libTcp.la $(USB_LIBS)  
 
 libVMUSBRemote_la_LIBADD = @top_builddir@/usb/vmusb/vmusb/libVMUSB.la \
 	@TCL_LDFLAGS@ \
 	@top_builddir@/base/tcpip/libTcp.la \
-	@top_builddir@/base/exception/libException.la \
-	@top_builddir@/base/tclplus/libtclPlus.la -lException @THREADLD_FLAGS@
+	@LIBEXCEPTION_LDFLAGS@  @THREADLD_FLAGS@
 
 #IVP tests:
 
@@ -80,11 +79,11 @@ libCVMUSB_la_LIBADD  = libVMUSB.la @THREADLD_FLAGS@
 BUILT_SOURCES=CVMUSB_wrap.cxx CVMUSBReadoutList_wrap.cxx
 
 CVMUSB_wrap.cxx:	CVMUSB.h
-	swig -c++ -debug-classes -tcl -namespace -pkgversion 1.0 CVMUSB.h
+	@SWIG@ -c++ -debug-classes -tcl -namespace -pkgversion 1.0 CVMUSB.h
 
 libCVMUSBReadoutList_la_SOURCES = CVMUSBReadoutList_wrap.cxx
 libCVMUSBReadoutList_la_LIBADD = libVMUSB.la @THREADLD_FLAGS@
 
 
 CVMUSBReadoutList_wrap.cxx: CVMUSBReadoutList.h
-	swig -c++ -debug-classes -tcl -namespace -pkgversion 1.0 CVMUSBReadoutList.h
+	@SWIG@ -c++ -debug-classes -tcl -namespace -pkgversion 1.0 CVMUSBReadoutList.h
