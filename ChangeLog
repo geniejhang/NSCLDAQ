@@ -475,6 +475,18 @@ Feb 1, 2012 - Feb 24, 2012
 	from the more lively source to be sent out.
         * Fix error in ReadoutGUI - timed runs fail badly if it takes more
         than .5 seconds to end the run.
-
-
+        * Fix edge case in CRingBuffer::isRing - if there are files in
+	/dev/shm that are smaller than a minimal ringbuffer segfaults
+	occur.
+10.2-105
+	* Fiddle around with the build window logic to get the event
+	orderer to properly order under weird edge cases.
+	* Fix buffer overflow error in stdring (Bug #1916) 
+	   *   If a ring item would overflow the buffersize seleted by 
+	       --minsize, resize thebuffer.
+	   *   If a ring item would not fit in the ring, complain and
+	       exit.
+	* Fix Issue #1928 - Event orderer GUI was never updating the total
+	fragment counter in the UI.
+	
 	
