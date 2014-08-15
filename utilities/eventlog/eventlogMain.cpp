@@ -27,6 +27,7 @@
 #include <CRemoteAccess.h>
 #include <DataFormat.h>
 #include <CAllButPredicate.h>
+#include <CStateMonitorThread.h>
 #include <io.h>
 
 #include <iostream>
@@ -80,7 +81,9 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    m_fRunNumberOverride(false),
    m_pChecksumContext(0),
    m_nBeginsSeen(0),
-   m_fChangeRunOk(false)
+   m_fChangeRunOk(false),
+   m_fUseStateManager(false),
+   m_pStateMonitor(0)
  {
  }
 
@@ -156,98 +159,113 @@ class noData :  public CRingBuffer::CRingBufferPredicate
  ** open.
  */
  void
- EventLogMain::recordData()
- {
-   // if we are in one shot mode, indicate to whoever started us that we are ready to
-   // roll.  That file goes in the event directory so that we don' thave to keep hunting
-   // for it like we did in ye olde version of NSCLDAQ:
+EventLogMain::recordData()
+{
+    // if we are in one shot mode, indicate to whoever started us that we are ready to
+    // roll.  That file goes in the event directory so that we don' thave to keep hunting
+    // for it like we did in ye olde version of NSCLDAQ:
 
-   if (m_exitOnEndRun) {
-     string startedFile = m_eventDirectory;
-     startedFile += "/.started";
-     int fd = open(startedFile.c_str(), O_WRONLY | O_CREAT,
-		   S_IRWXU );
-     if (fd == -1) {
-       perror("Could not open the .started file");
-       exit(EXIT_FAILURE);
+    if (m_exitOnEndRun) {
+      string startedFile = m_eventDirectory;
+      startedFile += "/.started";
+      int fd = open(startedFile.c_str(), O_WRONLY | O_CREAT,
+                    S_IRWXU );
+      if (fd == -1) {
+        perror("Could not open the .started file");
+        exit(EXIT_FAILURE);
+      }
+
+      close(fd);
+    }
+
+    // Now we need to hunt for the BEGIN_RUN item...however if there's a run
+    // number override we just use that run number unconditionally.
+
+    bool warned = false;
+    CRingItem* pItem;
+    CRingItem* pFormatItem(0);
+    CAllButPredicate all;
+
+    // Loop over all runs.
+
+    while(1) {
+
+      // If necessary, hunt for the begin run.
+
+      if (!m_fRunNumberOverride) {
+        while (1) {
+          pItem = CRingItem::getFromRing(*m_pRing, all);
+
+          /*
+            As of NSCLDAQ-11 it is possible for the item just before a begin run
+            to be a Ring format item:
+          */
+
+          if (pItem->type() == RING_FORMAT) {
+            pFormatItem = pItem;
+          } else if (pItem->type() == BEGIN_RUN) {
+            m_nBeginsSeen = 1;
+            break;
+          } else {
+            // Ring format item must >exactly< precede BEGIN_RUN:
+            delete pFormatItem;
+            pFormatItem = 0;
+          }
+
+          if (!warned && !pFormatItem) {
+            warned = true;
+            cerr << "**Warning - first item received was not a begin run. Skipping until we get one\n";
+          }
+        }
+
+
+
+        // Now we have the begin run item; and potentially the ring format item
+        // too:
+
+
+        CRingStateChangeItem item(*pItem);
+        // Skip the run if we are not recording else record it.
+
+        if (m_fUseStateManager && !m_pStateMonitor->getRecording()) {
+          delete pFormatItem;
+          delete pItem;
+          skipRun();
+        } else {
+         recordRun(item, pFormatItem);
+         delete pFormatItem;    // delete 0 is a no-op.
+         delete pItem;
+         pFormatItem = 0;
+        }
+      } else {
+         if (m_fUseStateManager && !m_pStateMonitor->getRecording()) {
+             skipRun();
+         } else {
+             recordRun(*(reinterpret_cast<const CRingStateChangeItem*>(0)), 0);
+         }
      }
+        // Return/exit after making our .exited file if this is a one-shot.
 
-     close(fd);
-   }
-
-   // Now we need to hunt for the BEGIN_RUN item...however if there's a run
-   // number override we just use that run number unconditionally.
-
-   bool warned = false;
-   CRingItem* pItem;
-   CRingItem* pFormatItem(0);
-   CAllButPredicate all;
-
-   // Loop over all runs.
-
-   while(1) {
-
-     // If necessary, hunt for the begin run.
-
-     if (!m_fRunNumberOverride) {
-       while (1) {
-	 pItem = CRingItem::getFromRing(*m_pRing, all);
-	 
-	 /*
-	   As of NSCLDAQ-11 it is possible for the item just before a begin run
-	   to be a Ring format item:
-	 */
-	 
-	 if (pItem->type() == RING_FORMAT) {
-	   pFormatItem = pItem;
-	 } else if (pItem->type() == BEGIN_RUN) {
-	   m_nBeginsSeen = 1;
-	   break;
-	 } else {
-	   // Ring format item must >exactly< precede BEGIN_RUN:
-	   delete pFormatItem;
-	   pFormatItem = 0;
-	 }
-	 
-	 if (!warned && !pFormatItem) {
-	   warned = true;
-	   cerr << "**Warning - first item received was not a begin run. Skipping until we get one\n";
-	 }
-       }
-       
-       // Now we have the begin run item; and potentially the ring format item
-       // too:
-       
-       CRingStateChangeItem item(*pItem);
-       recordRun(item, pFormatItem);
-       delete pFormatItem;    // delete 0 is a no-op.
-       delete pItem;
-       pFormatItem = 0;
-       
-       // Return/exit after making our .exited file if this is a one-shot.
-     } else {
-       recordRun(*(reinterpret_cast<const CRingStateChangeItem*>(0)), 0);
-     }
-     if (m_exitOnEndRun) {
-       string exitedFile = m_eventDirectory;
-       exitedFile       += "/.exited";
-       int fd = open(exitedFile.c_str(), O_WRONLY | O_CREAT,
-		     S_IRWXU);
-       if (fd == -1) {
-	 perror("Could not open .exited file");
-	 exit(EXIT_FAILURE);
-	 return;
-       }
-       close(fd);
-       return;
-     }
+      if (m_exitOnEndRun) {
+        string exitedFile = m_eventDirectory;
+        exitedFile       += "/.exited";
+        int fd = open(exitedFile.c_str(), O_WRONLY | O_CREAT,
+                      S_IRWXU);
+        if (fd == -1) {
+          perror("Could not open .exited file");
+          exit(EXIT_FAILURE);
+          return;
+        }
+        close(fd);
+        return;
+      }
 
 
-   }
+    }
 
 
 
- }
+}
 
  /*
  ** Record a run to disk.  This must
@@ -383,6 +401,43 @@ class noData :  public CRingBuffer::CRingBufferPredicate
 
 
  }
+ /**
+  * skipRun
+  *    Called when we have been invoked withe the --state-manager
+  *    option and the state manager says the current run should
+  *    not be recorded.   In that case, we just get ring items
+  *    and release them until we have a balanced set of begin/end
+  *    pairs.  m_nBeginsSeen indicates how many begin runs we've
+  *    seen so far (0 or 1 usually).
+  */
+ void
+ EventLogMain::skipRun()
+ {
+    CAllButPredicate all;
+    
+    cout << "Skipping a run because recording is off\n";
+    bool sawAtLeastOneBegin = (m_nBeginsSeen > 0) ? true : false;
+    do {
+        CRingItem* pItem = CRingItem::getFromRing(*m_pRing, all);
+        if (pItem->type() == BEGIN_RUN) {
+            m_nBeginsSeen++;
+            sawAtLeastOneBegin = true;
+        }
+        if (pItem->type() == END_RUN)  {
+            m_nBeginsSeen--;
+            sawAtLeastOneBegin = true; // In case we came in in the middle.
+        }
+        
+        delete pItem;
+        
+        // The condition for finishing the loop is that we did
+        // see at least one begin and the numbe of begins has been
+        // balanced by the number of ends:
+        
+    } while ( !(sawAtLeastOneBegin && (m_nBeginsSeen <= 0)));
+    cout << "Run Skipped\n";
+ }
+ 
 
  /*
  ** Parse the command line arguments, stuff them where they need to be
@@ -454,6 +509,18 @@ class noData :  public CRingBuffer::CRingBufferPredicate
 
    m_fChecksum = (parsed.checksum_flag != 0);
    m_fChangeRunOk = (parsed.combine_runs_flag != 0);
+   
+   // --state-manager
+   //   = This and one-shot cannot both be present:
+   
+   if (parsed.state_manager_flag) {
+        if (m_exitOnEndRun) {
+            cerr << "--state-manager and --one-shot cannot both be used\n";
+            exit(EXIT_FAILURE);
+        }
+        m_fUseStateManager = true;
+        createStateMonitor();
+   }
 
  }
 
@@ -682,4 +749,46 @@ EventLogMain::isBadItem(CRingItem& item, int runNumber)
   }
   return false;
 
+}
+/**
+ * createStateMonitor
+ *    Create and start up the state monitor thread.  This will
+ *    be queried to determine if a run needs to be recorded.
+ *
+ * @note - The following environment variables must be set
+ *         else we exit:
+ *         *  TRANSITION_REQUEST_URI - URI at which transitions
+ *            requests get sent.
+ *         *  TRANSITION_SUBSCRIPTION_URI- URI to which transition
+ *            subscriptions needt obe directed.
+ */
+void
+EventLogMain::createStateMonitor()
+{
+    const char* reqUri = getenv("TRANSITION_REQUEST_URI");
+    const char* subUri = getenv("TRANSITION_SUBSCRIPTION_URI");
+    
+    if (reqUri && subUri) {
+        try {
+            m_pStateMonitor = new CStateMonitorThread(reqUri, subUri);
+            m_pStateMonitor->start();
+        }
+        catch (std::string msg) {
+            cerr << "Unable to start state monitor thread: "
+                << msg << std::endl;
+            cerr << "Be sure the state manager is running\n";
+            exit(EXIT_FAILURE);
+        }
+        catch (...) {
+            cerr << "Unable to start state monitor thread\n";
+            cerr << "Make sure the state manager is running\n";
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        cerr << "The --state-manager option requires that both \n";
+        cerr << "TRANSITION_REQUEST_URI and TRANSITION_SUBSCRIPTION_URI\n";
+        cerr << "are defined as environment variables and are the\n";
+        cerr << "state manager URIs\n";
+        exit(EXIT_FAILURE);
+    }
 }

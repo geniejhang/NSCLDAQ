@@ -2,9 +2,10 @@
 
 
 SUBDIRS = scalerdisplay daqstart dvdburn \
-	sequencer ringselector eventlog bufdump	\
+	sequencer ringselector bufdump	\
 	sclclient tkbufdump compatibility \
-	filter experimentConfiguration statemanager boot cpanel
+	filter experimentConfiguration statemanager boot cpanel \
+	eventlog
 
 
 

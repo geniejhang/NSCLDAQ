@@ -13,9 +13,11 @@ INCLUDES 		=	-I@top_srcdir@/base/headers		\
 				-I@top_srcdir@/daq/format		\
 			        -I@top_srcdir@/base/dataflow	\
 				-I@top_srcdir@/base/os		\
+				-I@top_srcdir@/utilities/statemanager \
 				@OPENSSL_INCLUDES@
 
 eventlog_LDADD		=	eventlogargs.o	\
+				@top_builddir@/utilities/statemanager/libStateMonitor.la \
 				@top_builddir@/daq/format/libdataformat.la	\
 				@top_builddir@/base/dataflow/libDataFlow.la	\
 				@LIBEXCEPTION_LDFLAGS@			\

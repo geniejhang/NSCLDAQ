@@ -40,6 +40,7 @@
 class CRingBuffer;
 class CRingItem;
 class CRingStateChangeItem;
+class CStateMonitorThread;
 
 
 /*!
@@ -63,7 +64,9 @@ class EventLogMain
   void*             m_pChecksumContext;  
   uint32_t          m_nBeginsSeen;
   bool              m_fChangeRunOk;
-
+  bool              m_fUseStateManager;
+  CStateMonitorThread* m_pStateMonitor;   // Only used if m_fUseStateManager true.
+  
   // Constructors and canonicals:
 
 public:
@@ -94,6 +97,8 @@ private:
   size_t itemSize(CRingItem& item) const;
   std::string shaFile(int runNumber) const;
   bool isBadItem(CRingItem& item, int runNumber);
+  void createStateMonitor();
+  void skipRun();
 };
 
 

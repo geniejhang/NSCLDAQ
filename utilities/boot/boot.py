@@ -176,6 +176,7 @@ def startup(monitor, prior, current, databases):
         
         for database in databases:
             Programs.startPrograms(monitor, database)
+            Programs.startEventLoggers(monitor, database)
         
         # Success so mark the system as up:
         

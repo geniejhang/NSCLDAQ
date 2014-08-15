@@ -30,18 +30,7 @@ from nscldaq.boot             import ssh, config
 
 _RunningPrograms = list()     # List of active program objects.
 
-##
-# _listPrograms
-#   List the programs a given database file.
-#
-# @param database - path to the database file.
-# @return         - iterable container from project.Programs.list()
-#
-def _listPrograms(database):
-    dbase  =   project.Project(database)
-    dbase.open()
-    progs  =   project.Programs(dbase)
-    return progs.list()
+
     
 ##
 # @class Program
@@ -88,7 +77,7 @@ class Program:
     ##
     # _setupEnv
     #   Set up the program environment.  This is done by
-    #   *  Invoking . $DAQBIN/daqsetup in the remote system.
+    #   *  Invoking . $DAQROOT/daqsetup in the remote system.
     #   *  Doing export's for each item in the env map.
     #
     # @param env  - Map of envvarName -> value pairs.
@@ -211,6 +200,79 @@ class Program:
         except:
             pass                               # Maybe it's already exited...
 
+##
+# _listPrograms
+#   List the programs a given database file.
+#
+# @param database - path to the database file.
+# @return         - iterable container from project.Programs.list()
+#
+def _listPrograms(database):
+    dbase  =   project.Project(database)
+    dbase.open()
+    progs  =   project.Programs(dbase)
+    return progs.list()
+##
+# _listLoggers
+#
+#   Produces a list of loggers to start.  The list is identical to that
+#   provided by listPrograms above.
+#
+#   @param database - the database to process (filename).
+#
+#   @return list of dicts.
+#
+def _listLoggers(database):
+    dbase = project.Project(database)
+    dbase.open()
+    loggers = project.EventLoggers(dbase)
+    rawList = loggers.list()
+    print(rawList)
+    
+    # massage rawList into the form _listPrograms returns.
+    # Each event logger is  $DAQBIN/eventlog
+    
+    result = list()
+    eventLogger = '%s/eventlog' % (os.getenv('DAQBIN'))
+    
+    for logger in rawList:
+        item =dict()
+        item['working_dir'] = logger['path']
+        item['host_name']   = logger['ring']['host_name']
+        item['path']        = eventLogger
+        item['args']        = ('--source=tcp://localhost/%s' % logger['ring']['ring_name'],
+                               '--state-manager')
+        result.append(item)
+    return result
+
+##
+# _startPrograms
+#   Given a list of program descriptions starts them.
+#
+# @param monitor       - state manager api.
+# @param programListin - iterable of dicts that define what to start. Each dict
+#                        contains the keys:
+#                        * path - Where the program lives in the target system.
+#                        * working_dir - The cwd the program is started in.
+#                        * host_name   - The host in which the program is started.
+#                        * args        - list of program arguments (e.g. options).
+#
+def _startPrograms(monitor, programListing):
+    #
+    # The env we're going to pass tells the program how to be a client of the
+    # statemanager, Note that $DAQBIN/daqsetup will be run in the shell as well.
+    
+    env = {                                                 \
+        'TRANSITION_REQUEST_URI'      : config.remoteRequestUri,   \
+        'TRANSITION_SUBSCRIPTION_URI' : config.remoteStateUri      \
+    }
+    for program in programListing:
+        path = program['path']
+        wd   = program['working_dir']
+        host = program['host_name']
+        args = program['args']
+        p    = Program(monitor, host, path, args, wd, env)    
+#                        
 #-----------------------------------------------------------------------------
 # Public entries.
 
@@ -223,27 +285,16 @@ class Program:
 #       poller to fire a procedure when the fd is readable.
 #
 # @param monitor -- The monitor object (includes the poller).
-# @param database - The database we would process if we were driven by it.
+# @param database - The database we would process if we were driven by it (filepath)
 #
 def startPrograms(monitor, database):
 
     print('Starting programs in %s ' % (database))
-    #
-    # The env we're going to pass tells the program how to be a client of the
-    # statemanager, Note that $DAQBIN/daqsetup will be run in the shell as well.
-    
-    env = {                                                 \
-        'TRANSITION_REQUEST_URI'      : config.remoteRequestUri,   \
-        'TRANSITION_SUBSCRIPTION_URI' : config.remoteStateUri      \
-    }
     
     programListing = _listPrograms(database)
-    for program in programListing:
-        path = program['path']
-        wd   = program['working_dir']
-        host = program['host_name']
-        args = program['args']
-        p    = Program(monitor, host, path, args, wd, env)
+    print(programListing)
+    _startPrograms(monitor, programListing)
+
 
 ##
 # stopPrograms
@@ -268,4 +319,26 @@ def stopPrograms(monitor, database):
     for program in _RunningPrograms:
         print("Sending intr to %s" % program._command)
         program.intr()                     # Give them a hard kill.
+        
+##
+# startEventLoggers
+#   Event loggers are really just a special type of program.
+#   The host is determined by the host the ring is in for now.
+#   the directory is directly provided.  The args are hard coded to
+#   *  --state-manager to ensure that whether a run is recorded or not is determined
+#      by the recording state of the state manager.
+#   *  --source with a value determined by the host/ring of the event logger's ring.
+#
+# @param monitor  - the monitor object (state monitor).
+# @param database - the database object to process.
+#
+#  @note by using the Program class to create the programs, stopPrograms will
+#        wind up stopping event loggers automatically.
+#
+def startEventLoggers(monitor, database):
+    print ("starting loggers")
+    programs = _listLoggers(database)
+    print(programs)
+    _startPrograms(monitor, programs)
+
     

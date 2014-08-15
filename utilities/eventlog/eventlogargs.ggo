@@ -9,3 +9,9 @@ option "number-of-sources" n "Number of data sources being built" int  optional 
 option "run"     r  "Run number : Overrides run state information ring items" int optional
 option "checksum" c "If present, in addition to run files, checksum files are produced" flag off
 option "combine-runs" C "If present, changes in run number in one-shot mode don't cause exit" flag off
+option "state-manager" m "Use state manager to know if run should be recorded"
+    details="URI's for the state manager will be gotten from the TRANSITION_REQUEST_URI
+and TRANSITION_SUBSCRIPTION_URI environment variables. This option and
+--oneshot are mutually exclusive.  eventlog will initiate run
+finalization itself when the runfile is closed."
+    flag off
