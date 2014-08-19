@@ -34,17 +34,18 @@ EXTRA_DIST=$(PACKAGE_FILES) $(MAINS) $(FIGURES) \
 # Bindings for C++
 
 
-INCLUDES  = @LIBTCLPLUS_CFLAGS@ @TCL_CPPFLAGS@
+INCLUDES  = @LIBTCLPLUS_CFLAGS@ @TCL_CPPFLAGS@ -I@top_srcdir@/base/thread
 
 
 lib_LTLIBRARIES = libStateMonitor.la
 
-libStateMonitor_la_SOURCES=CStateMonitor.cpp CTCLStateMonitor.cpp
-libStateMonitor_ladir     = @includedir@
-libStateMonitor_la_HEADERS= CStateMonitor.h CTCLStateMonitor.h 
-libStateMonitor_la_LIBADD = @LIBTCLPLUS_LDFLAGS@ @TCL_LIBS@ @ZMQ_LDFLAGS@
+libStateMonitor_la_SOURCES=CStateMonitor.cpp CTCLStateMonitor.cpp CStateMonitorThread.cpp
+libStateMonitor_ladir     = @includedir@ -I@top_srcdir@/base/thread @THREADCXX_FLAGS@
+libStateMonitor_la_HEADERS= CStateMonitor.h CTCLStateMonitor.h  CStateMonitorThread.h
+libStateMonitor_la_LIBADD =  @top_builddir@/base/thread/libdaqthreads.la \
+	@LIBTCLPLUS_LDFLAGS@ @TCL_LIBS@ @ZMQ_LDFLAGS@ @THREADLD_FLAGS@
 
-noinst_PROGRAMS=Polltest StateMonitorBaseTest StateMonitorTest tclTest1
+noinst_PROGRAMS=Polltest StateMonitorBaseTest StateMonitorTest tclTest1 ThreadTest
 Polltest_SOURCES=Polltest.cpp
 Polltest_LDFLAGS=libStateMonitor.la @ZMQ_LDFLAGS@
 
@@ -57,3 +58,5 @@ StateMonitorTest_LDFLAGS=libStateMonitor.la @LIBTCLPLUS_LDFLAGS@ @ZMQ_LDFLAGS@
 tclTest1_SOURCES=tclTest1.cpp
 tclTest1_LDFLAGS=libStateMonitor.la @LIBTCLPLUS_LDFLAGS@ @ZMQ_LDFLAGS@ @TCL_LIBS@ -Wl,"-rpath=@libdir@"
 
+ThreadTest_SOURCES=ThreadTest.cpp
+ThreadTest_LDFLAGS=libStateMonitor.la @top_builddir@/base/thread/libdaqthreads.la @LIBTCLPLUS_LDFLAGS@ @ZMQ_LDFLAGS@ @TCL_LIBS@ -Wl,"-rpath=@libdir@"
