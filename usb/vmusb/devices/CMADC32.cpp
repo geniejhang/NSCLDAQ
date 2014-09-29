@@ -535,7 +535,7 @@ CMADC32::clone() const
 */
 void
 CMADC32::setChainAddresses(CVMUSB&                controller,
-			   CMADC32::ChainPosition position,
+			   CMesytecBase::ChainPosition position,
 			   uint32_t               cbltBase,
 			   uint32_t               mcastBase)
 {
@@ -634,6 +634,7 @@ CMADC32::initCBLTReadout(CVMUSB& controller, uint32_t mcast, int rdoSize)
   controller.vmeWrite16(mcast + ReadoutReset, initamod, (uint16_t)0);
   controller.vmeWrite16(mcast + StartAcq , initamod, (uint16_t)1);
 }
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
