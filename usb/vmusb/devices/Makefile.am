@@ -22,7 +22,9 @@ libVMUSBDevices_la_SOURCES	= 	CConfigurableObject.cpp	\
 					CV1495sc.cpp	\
 					CTclModule.cpp \
 					CHiRA.cpp	\
-					CVMUSBControl.cpp
+					CVMUSBControl.cpp \
+					CMesytecBase.cpp \
+					CMTDC32.cpp
 
 
 INCLUDES	= 	-I$(top_srcdir)/usb/vmusb/vmusb 	\
@@ -67,7 +69,9 @@ noinst_HEADERS			= 	CConfigurableObject.h	\
 					CCAENV1x90Registers.h	\
 					CTclModule.h		\
 					CHiRA.h			\
-					CVMUSBControl.h
+					CVMUSBControl.h	\
+					CMesytecBase.h \
+					CMTDC32.h
 
 
 

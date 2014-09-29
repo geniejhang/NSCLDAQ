@@ -112,11 +112,13 @@ public:
     void initCBLTReadout(CVMUSB& controller,
                        uint32_t cbltAddress,
                        int wordsPermodule);
+
+
   // Utilities:
 
   
 private:
-    void addWrite(CVMUSBReadoutList& list, uint32_t address, value);
+    void addWrite(CVMUSBReadoutList& list, uint32_t address, uint16_t value);
     uint16_t computeMultiEventRegister();
     uint16_t getTermination();
 

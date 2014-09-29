@@ -13,14 +13,15 @@
 # @author Ron Fox (rfoxkendo@gmail.com)
 */
 
-#include "MTDC32.h"
+#include "CMTDC32.h"
 #include <CVMUSB.h>
 #include <CVMUSBReadoutList.h>
 #include "MADC32Registers.h"
+#include "CReadoutModule.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
-
+#include <iostream>
 /* Parameter constraint data structures: */
 
 
@@ -40,7 +41,7 @@ static const char* multiEventModes[] = {
 };
 static const uint16_t multiEventModeRegisterValues[] = {
     0, 1, 3                                       // Yes 2 is not used.
-}
+};
 
 // Values for -marktype:
 
@@ -102,7 +103,7 @@ static const uint16_t timingSourceValues[] = {
 
 static const char* bank0TriggerSources[] = {
     "Tr0", "Tr1",
-    "Ch0", "Ch1", "Ch2", "Ch3", "Ch4", "Ch5", Ch6", "Ch7",
+    "Ch0", "Ch1", "Ch2", "Ch3", "Ch4", "Ch5", "Ch6", "Ch7",
     "Ch8", "Ch9", "Ch10", "Ch11", "Ch12", "Ch13", "Ch14", "Ch15",
     "Ch16", "Ch17", "Ch18", "Ch19", "Ch20", "Ch21", "Ch22", "Ch23",
     "Ch24", "Ch25", "Ch26", "Ch27","Ch28", "Ch29", "Ch30", "Ch31",
@@ -113,11 +114,11 @@ static const uint16_t bank0TriggerSrcRegisterValues[] = {
     0x0080, 0x0084, 0x0088, 0x008c, 0x0090, 0x0094, 0x0098, 0x009c,   // Ch 7 is last one.
     0x00a0, 0x00a4, 0x00a8, 0x00ac, 0x00b0, 0x00b4, 0x00b8, 0x00bc,   // Ch 15...
     0x00c0, 0x00c4, 0x00c8, 0x00cc, 0x00d0, 0x00d4, 0x00d8, 0x00dc,   // Ch 23...
-    0x00e0, 0x00e4, 0x00e8, 0x00ec, 0x00f0, 0x00f4, 0x00f8, 0x00fc    // ch 31.
+    0x00e0, 0x00e4, 0x00e8, 0x00ec, 0x00f0, 0x00f4, 0x00f8, 0x00fc,   // ch 31.
     0x0100, 0x2000                                                    // Any bank 0..1.
 };
 static const char** bank1TriggerSources             = bank0TriggerSources;
-static const uin16_t* bank1TriggerSrcRegisterValues = bank0TriggeSrcRegisterValues;
+static const uint16_t* bank1TriggerSrcRegisterValues = bank0TriggerSrcRegisterValues;
 
 
 /**
@@ -132,14 +133,14 @@ CMTDC32::CMTDC32() :
 /**
  * destructor - nothing to do
  */
-CMDTC32::~CMTDC32() {}
+CMTDC32::~CMTDC32() {}
 
 /**
  * copy construction, if rhs has a configuration copy it into this
  *
  * @param rhs - the object we are initialized from.
  */
-CMDTC32::CMTDC32(const CMTDC32& rhs) :
+CMTDC32::CMTDC32(const CMTDC32& rhs) :
    m_pConfiguration(0)
 {
     if (rhs.m_pConfiguration) {
@@ -200,20 +201,20 @@ CMTDC32::onAttach(CReadoutModule& configuration)
     m_pConfiguration->addIntegerParameter("-base");
     m_pConfiguration->addIntegerParameter("-id", 0,255, 0);
     m_pConfiguration->addIntegerParameter("-ipl", 0,7,0);
-    m_pConfiguration->addIntegerParmaeter("-vector", 0,255, 0);
+    m_pConfiguration->addIntegerParameter("-vector", 0,255, 0);
     m_pConfiguration->addIntegerParameter("-irqthreshold", 0, 0x7fff, 1);
     m_pConfiguration->addIntegerParameter("-maxtransfers", 0, 0x7fff, 1);
     
-    m_pConfiguration->addEnumParameter("-datalen", dataLenValue, "32");
+    m_pConfiguration->addEnumParameter("-datalen", dataLenValues, "32");
     m_pConfiguration->addEnumParameter(
         "-multievent", multiEventModes, "no"
     );
-    m_pConfiguration->addBoolParameter("-skipberr", false);
-    m_pConfiguration->addBoolParameter("-countevents", false);
+    m_pConfiguration->addBooleanParameter("-skipberr", false);
+    m_pConfiguration->addBooleanParameter("-countevents", false);
     m_pConfiguration->addEnumParameter(
         "-marktype", markTypes, "timestamp"
     );
-    m_pConfiguration->addBoolParameter("-joinedbanks", true);
+    m_pConfiguration->addBooleanParameter("-joinedbanks", true);
     m_pConfiguration->addEnumParameter(
         "-resolution", resolutionValues, "3.9ps"
     );
@@ -223,24 +224,24 @@ CMTDC32::onAttach(CReadoutModule& configuration)
     m_pConfiguration->addIntegerParameter("-bank0winstart", 0, 65535, 16*1024-16);
     m_pConfiguration->addIntegerParameter("-bank1winstart", 0, 65535, 16*1024-16);
     m_pConfiguration->addIntegerParameter("-bank0winwidth", 0, 16*1024, 32);
-    m_pConfiguration->addIntegerParameter("-bank1winwidth", 0, 16*1024, 32_;
+    m_pConfiguration->addIntegerParameter("-bank1winwidth", 0, 16*1024, 32);
     m_pConfiguration->addEnumParameter("-bank0triggersource", bank0TriggerSources, "Tr0");
-    m_pConfiguration->addEnumParameter("-bank1triggersource", bank1TriggerSo9urces, "Tr1");
-    m_pConfiguration->addBoolParameter("-bank0firsthit", false);
-    m_pConfiguration->addBoolParameter("-bank1firsthit", false);
+    m_pConfiguration->addEnumParameter("-bank1triggersource", bank1TriggerSources, "Tr1");
+    m_pConfiguration->addBooleanParameter("-bank0firsthit", false);
+    m_pConfiguration->addBooleanParameter("-bank1firsthit", false);
     m_pConfiguration->addEnumParameter(
         "-edge", edgeValues, "falling"
     );
-    m_pConfiguration->addBoolParameter("-tr0terminated", false);
-    m_pConfiguration->addBoolParameter("-tr1terminated", false);
-    m_pConfiguration->addBoolParameter("-resetterminated", false);
-    m_pConfiguration->addBoolParameter("-ecltrig1isoscillator", false);
-    m_pConfiguration->addBoolParameter("-trigfromecl", false);
-    m_pConfiguration->addBoolParameter("-nimtrig1isoscillator", false);
+    m_pConfiguration->addBooleanParameter("-tr0terminated", false);
+    m_pConfiguration->addBooleanParameter("-tr1terminated", false);
+    m_pConfiguration->addBooleanParameter("-resetterminated", false);
+    m_pConfiguration->addBooleanParameter("-ecltrig1isoscillator", false);
+    m_pConfiguration->addBooleanParameter("-trigfromecl", false);
+    m_pConfiguration->addBooleanParameter("-nimtrig1isoscillator", false);
     m_pConfiguration->addEnumParameter(
         "-busy", busyValues, "bothbanks"
     );
-    m_pConfiguration->addBoolParameter("-pulseron", false);
+    m_pConfiguration->addBooleanParameter("-pulseron", false);
     m_pConfiguration->addIntegerParameter("-pulserpattern", 0);
     m_pConfiguration->addIntegerParameter(
         "-bank0threshold", 0, 255, 105
@@ -249,7 +250,7 @@ CMTDC32::onAttach(CReadoutModule& configuration)
         "-bank1threshold", 0, 255, 105
     );
     m_pConfiguration->addEnumParameter(
-        "-timingsource", timingSources, "vme",
+        "-timingsource", timingSources, "vme"
     );
     m_pConfiguration->addIntegerParameter("-tsdivisor", 1, 65535, 1);  // avoid 65536 special case.
     
@@ -273,13 +274,13 @@ CMTDC32::Initialize(CVMUSB& controller)
     // Reset the device and wait for it to settle.
     
     uint32_t base = m_pConfiguration->getIntegerParameter("-base");
-    controller.vmeWrite16(base+Reset, initamod, 0);
+    controller.vmeWrite16(base+Reset, initamod, static_cast<uint16_t>(0));
     sleep(1);
     
     // turn off data acquisition and reset any data stuck in the module fifos:
     
-    controller.vmeWrite16(base+StartDaq, initamod, 0);
-    controller.vmeWrite16(base+ReadoutReset, initamod, 0);
+    controller.vmeWrite16(base+StartAcq, initamod, static_cast<uint16_t>(0));
+    controller.vmeWrite16(base+ReadoutReset, initamod, static_cast<uint16_t>(0));
     
     // A lot of actions are needed to initialize the device. Therefore these are all
     // built into a list.
@@ -301,7 +302,7 @@ CMTDC32::Initialize(CVMUSB& controller)
     // Set up the way the module will handle the FIFO/event buffer:
     
     addWrite(list, base+DataFormat,
-        dataLenRegisterValues[m_pConfiguration->getEnumParameter("-datalen", dataLenValues);
+	     dataLenRegisterValues[m_pConfiguration->getEnumParameter("-datalen", dataLenValues)]);
     addWrite(list, base+MultiEvent, computeMultiEventRegister());
     addWrite(list, base+MarkType,
         markTypeRegisterValues[m_pConfiguration->getEnumParameter("-marktype", markTypes)]);
@@ -320,14 +321,14 @@ CMTDC32::Initialize(CVMUSB& controller)
     addWrite(list, base+MTDCBank0WinWidth, m_pConfiguration->getIntegerParameter("-bank0winwidth"));
     addWrite(list, base+MTDCBank1WinWidth, m_pConfiguration->getIntegerParameter("-bank1winwidth"));
     addWrite(list, base+MTDCBank0TrigSource,
-        bank0TriggerSrcRegisterValues[m_pConfiguration->getEnumParam("-bank0triggersource", bank0TriggerSources)]);
+        bank0TriggerSrcRegisterValues[m_pConfiguration->getEnumParameter("-bank0triggersource", bank0TriggerSources)]);
     addWrite(list, base+MTDCBank1TrigSource,
-        bank1TriggerSrcRegisterValues[m_pConfiguration->getEnumParam("-bank1triggersource", bank1TriggerSources)]);
+        bank1TriggerSrcRegisterValues[m_pConfiguration->getEnumParameter("-bank1triggersource", bank1TriggerSources)]);
     uint16_t firstHit = 0;
-    if (m_pConfig->getBoolParameter("-bank0firsthit")) {
+    if (m_pConfiguration->getBoolParameter("-bank0firsthit")) {
         firstHit |= 1;
     }
-    if (m_pConfig->getBoolParameter("-bank1firsthit")) {
+    if (m_pConfiguration->getBoolParameter("-bank1firsthit")) {
         firstHit |= 2;
     }
     addWrite(list, base+MTDCFirstHitOnly, firstHit);
@@ -345,8 +346,8 @@ CMTDC32::Initialize(CVMUSB& controller)
     addWrite(list, base+MTDCTriggerSelect, static_cast<uint16_t>(
         m_pConfiguration->getBoolParameter("-trigfromecl") ? 1 : 0
     ));
-    addWrite(list, base+NIMGateOrTiming, static_cast<uint16_t>(
-        m_pConfiguration->getBoolParameter("-nhimtrig1isoscillator" )? 1 : 0
+    addWrite(list, base+NIMGate1OrTiming, static_cast<uint16_t>(
+        m_pConfiguration->getBoolParameter("-nimtrig1isoscillator" )? 1 : 0
     ));
     addWrite(list, base+NIMBusyFunction,
         busyRegisterValues[m_pConfiguration->getEnumParameter("-busy", busyValues)]
@@ -392,7 +393,7 @@ CMTDC32::Initialize(CVMUSB& controller)
     // Finally, reset the readout again and start daq:
     
     addWrite(list, base+ReadoutReset, 1);
-    addWrite(list, base+InitFIfo, 0);
+    addWrite(list, base+InitFifo, 0);
     addWrite(list, base+StartAcq, 1);
     
     
@@ -428,12 +429,12 @@ CMTDC32::addReadoutList(CVMUSBReadoutList& list)
  *   @param mcstBase   - Base address for multicast writes.
  */
 void
-CMTDC32::setChainAddresses(CVMUSB& controller, CMesytecBase::position,
+CMTDC32::setChainAddresses(CVMUSB& controller, CMesytecBase::ChainPosition position,
                            uint32_t cbltBase, uint32_t mcastBase)
 {
   uint32_t base = m_pConfiguration->getIntegerParameter("-base");
 
-  cerr << "Position: " << position << endl;
+  std::cerr << "Position: " << position << std::endl;
 
   // Compute the value of the control register..though we will first program
   // the addresses then the control register:
@@ -442,18 +443,18 @@ CMTDC32::setChainAddresses(CVMUSB& controller, CMesytecBase::position,
   switch (position) {
   case first:
     controlRegister |= FIRSTENB | LASTDIS;
-    cerr << "First\n";
+    std::cerr << "First\n";
     break;
   case middle:
     controlRegister |= FIRSTDIS | LASTDIS;
-    cerr << "Middle\n";
+    std::cerr << "Middle\n";
     break;
   case last:
     controlRegister |= FIRSTDIS | LASTENB;
-    cerr << "Last\n";
+    std::cerr << "Last\n";
     break;
   }
-  cerr << "Setting chain address with " << hex << controlRegister << dec << endl;
+  std::cerr << "Setting chain address with " << std::hex << controlRegister << std::dec << std::endl;
 
   // program the registers, note that the address registers take only the top 8 bits.
 
@@ -466,7 +467,76 @@ CMTDC32::setChainAddresses(CVMUSB& controller, CMesytecBase::position,
  *  initCBLTReadout
  *
  *  Initialize the readout for CBLT transfer (called by chain).
+ *    @param controller - the controller object.
+ *    @param cbltAddress - the chain block/broadcast address.
+ *    @param wordsPerModule - Maximum number of words that can be read by this mod
  */
+void
+CMTDC32::initCBLTReadout(CVMUSB& controller,
+			 uint32_t cbltAddress,
+			 int wordsPermodule)
+{
+  // We need our timing source
+  // IRQThreshold
+  // VECTOR
+  // IPL
+  // Timestamp on/off
+
+  // Assumptions:  Internal oscillator reset if using timestamp
+  //               ..else no reset.
+  //               most modulep arameters are already set up.
+
+
+  int irqThreshold   = m_pConfiguration->getIntegerParameter("-irqthreshold");
+  int vector         = m_pConfiguration->getIntegerParameter("-vector");
+  int ipl            = m_pConfiguration->getIntegerParameter("-ipl");
+  bool timestamping  = m_pConfiguration->getBoolParameter("-timestamp");
+  
+  // Stop acquistiion
+  // ..and clear buffer memory:
+  controller.vmeWrite16(cbltAddress + StartAcq, initamod, (uint16_t)0);
+  controller.vmeWrite16(cbltAddress + InitFifo, initamod, (uint16_t)0);
+
+  // Set stamping
+
+  if(timestamping) {
+    // Oscillator sources are assumed to already be set.
+    // Reset the timer:
+
+    controller.vmeWrite16(cbltAddress + MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
+    controller.vmeWrite16(cbltAddress + TimestampReset, initamod, (uint16_t)3); // reset all counter.
+  }
+  else {
+    controller.vmeWrite16(cbltAddress + MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
+    controller.vmeWrite16(cbltAddress + EventCounterReset, initamod, (uint16_t)0); // Reset al event counters.
+  }
+  // Set multievent mode
+  
+  controller.vmeWrite16(cbltAddress + MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
+  controller.vmeWrite16(cbltAddress + IrqThreshold, initamod, (uint16_t)irqThreshold);
+  controller.vmeWrite16(cbltAddress + MaxTransfer, initamod,  (uint16_t)wordsPermodule);
+
+  // Set the IRQ
+
+  controller.vmeWrite16(cbltAddress + Vector, initamod, (uint16_t)vector);
+  controller.vmeWrite16(cbltAddress + Ipl,    initamod, (uint16_t)ipl);
+  controller.vmeWrite16(cbltAddress + IrqThreshold, initamod, (uint16_t)irqThreshold);
+
+  // Init the buffer and start data taking.
+
+  controller.vmeWrite16(cbltAddress + InitFifo, initamod, (uint16_t)0);
+  controller.vmeWrite16(cbltAddress + ReadoutReset, initamod, (uint16_t)0);
+  controller.vmeWrite16(cbltAddress + StartAcq , initamod, (uint16_t)1);
+}
+
+/**
+ * clone 
+ *  Clones this object returning a new dynamically allocated copy.
+ */
+CReadoutHardware*
+CMTDC32::clone() const {
+  return new CMTDC32(*this);
+}
 
 /*-----------------------------------------------------------------------------------------
  * Private utilities:
@@ -495,14 +565,14 @@ CMTDC32::addWrite(CVMUSBReadoutList& list, uint32_t address, uint16_t value)
  *
  * @return uint16_t - register value.
  */
-void
+uint16_t
 CMTDC32::computeMultiEventRegister()
 {
-    uint16_t result = multiEventMOdes[
-        m_pConfiguration->getEnumParameter("-multievent"), multiEventModes)
-    ];
+    uint16_t result = multiEventModeRegisterValues[
+        m_pConfiguration->getEnumParameter("-multievent", multiEventModes)
+				      ];
     if(m_pConfiguration->getBoolParameter("-skipberr")) {
-        result| = 4;                    // Skip berr flag.
+        result |= 4;                    // Skip berr flag.
     }
     if(m_pConfiguration->getBoolParameter("-countevents")) {
         result |= 8;                         // Count events  not words.

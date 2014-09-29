@@ -20,7 +20,12 @@
 #ifndef __CREADOUTHARDWARE_H
 #include "CReadoutHardware.h"
 #endif
-
+#ifndef _CRT_STDINT_H
+#ifndef _CRT_STDINT_H
+#define _CRT_STDINT_H
+#include <stdint.h>
+#endif
+#endif
 
 class ReadoutModule;
 class CVMUSB;
@@ -34,11 +39,11 @@ class CVMUSBReadoutList;
  */
 class CMesytecBase : public CReadoutHardware {
 public:
-  enum ChainPosition {                // Where module is in a readout chain.
+  typedef enum _ChainPosition {                // Where module is in a readout chain.
     first,
     middle,
     last
-  };  
+  } ChainPosition;  
 public:
   // The following functions are used by the madcchain module.
   //

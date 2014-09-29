@@ -333,7 +333,7 @@ CRingAccess::startFeeder(string proxyName, int socket)
 
   char mindataSw[100];
   char timeoutSw[100];
-  sprintf(mindataSw, "--mindata=%d", m_minData);
+  sprintf(mindataSw, "--mindata=%zd", m_minData);
   sprintf(timeoutSw, "--timeout=%d", m_Timeout);
 
   // build up and do the execve:

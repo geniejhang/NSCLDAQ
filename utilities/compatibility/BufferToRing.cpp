@@ -221,7 +221,7 @@ bool formatEvents (void* pBuffer)
 
 
   if(wordsLeft) {
-    fprintf(stderr, "*** Bad buffer structure, %d words left but no more events according to count (buffer %d)\n",
+    fprintf(stderr, "*** Bad buffer structure, %d words left but no more events according to count (buffer %zd\n",
 	    wordsLeft, buffers);
     return false;
   }
@@ -491,7 +491,7 @@ int main (int argc, char *argv[])
   if (argc) {
     int newSize = atoi(*argv);
     if (newSize < BUFFERSIZE) {
-      fprintf(stderr, "Buffer size specification %s must be an integer >= %d\n",
+      fprintf(stderr, "Buffer size specification %s must be an integer >= %zd ",
 	      *argv, BUFFERSIZE);
       exit(EXIT_FAILURE);
     }

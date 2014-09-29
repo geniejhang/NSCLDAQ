@@ -24,6 +24,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include "VMECommand.h"
 #include <sys/ioctl.h>
 #include <CVMEInterface.h>
+#include <inttypes.h>
 
 #include <stdint.h>
 
@@ -234,7 +235,7 @@ int CVMEMapCommand::Get(CTCLInterpreter& rInterp, CTCLResult& rResult,
   //
 
   char sValue[100];
-  sprintf(sValue, "%lu", nValue);
+  sprintf(sValue, "%uld", nValue);
   rResult += sValue;
   return TCL_OK;
 }
