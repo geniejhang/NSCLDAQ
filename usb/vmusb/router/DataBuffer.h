@@ -81,7 +81,7 @@ static const int VMUSBLastBuffer(0x8000);
 static const int VMUSBisScaler(0x4000);
 static const int VMUSBContinuous(0x2000);
 static const int VMUSBMultiBuffer(0x1000);
-static const int VMUSBNEventMask(0x0fff);
+static const int VMUSBNEventMask(0x1fff);
 
 static const int VMUSBContinuation(0x1000);
 static const int VMUSBEventLengthMask(0xfff);

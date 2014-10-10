@@ -139,7 +139,6 @@ public:
     }
 
     virtual int readFirmwareID();
-
     virtual void     writeGlobalMode(uint16_t value);
     virtual int  readGlobalMode();
     void writeGlobalMode(int value) { // SWIG
