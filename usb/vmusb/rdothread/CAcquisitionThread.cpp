@@ -587,7 +587,7 @@ void
 CAcquisitionThread::bootToTheHead()
 {
 	uint32_t junk;
-	cerr << "Desperate measures being employed to attempt final drain\n";
+	cerr << "Performing final drain\n";
 	m_pVme->writeActionRegister(CVMUSB::ActionRegister::sysReset);
 	m_pVme->writeActionRegister(0);
 	usleep(100);
@@ -597,6 +597,5 @@ CAcquisitionThread::bootToTheHead()
 	int status = m_pVme->usbRead(buffer,
 		 		     sizeof(buffer),
 				     &bytesRead, DRAINTIMEOUTS*1000);
-	cerr << "Final desparate attempt to flush usb fifo got status: " 
-	     << status << endl;
+	cerr << "Performing final fifo flush\n";
 }

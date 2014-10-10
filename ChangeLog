@@ -514,3 +514,7 @@ Feb 1, 2012 - Feb 24, 2012
 	so slow event rates don't require special event builder windows.
 	* Fix errors in monitor list handling/threading.
 	
+CAENTech LLNL Contract work:
+	* Initial draft MTDC32 support.
+	* Remove all that talk of deapration in the end of run.
+	

@@ -207,7 +207,7 @@ CMTDC32::onAttach(CReadoutModule& configuration)
     
     m_pConfiguration->addEnumParameter("-datalen", dataLenValues, "32");
     m_pConfiguration->addEnumParameter(
-        "-multievent", multiEventModes, "no"
+        "-multievent", multiEventModes, "off"
     );
     m_pConfiguration->addBooleanParameter("-skipberr", false);
     m_pConfiguration->addBooleanParameter("-countevents", false);
