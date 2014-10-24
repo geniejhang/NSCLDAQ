@@ -217,10 +217,10 @@ CDAQShm::attach(std::string name)
 
   void *pMemory = mmap(NULL, fileSize, PROT_READ | PROT_WRITE,
 		       MAP_SHARED, fd, 0);
-  if (!pMemory) {
+  if (pMemory == MAP_FAILED) {
     pMemory = mmap(NULL, fileSize, PROT_READ, MAP_SHARED, fd, 0);
   }
-  if (!pMemory) {
+  if (pMemory == MAP_FAILED) {
     if (errno == EACCES) {
       m_nLastError = NoAccess;
     } else {

@@ -276,20 +276,20 @@ CMTDC32::Initialize(CVMUSB& controller)
 {
     // Reset the device and wait for it to settle.
 
-  std::cerr << std::hex;
+  //  std::cerr << std::hex;
 
     uint32_t base = m_pConfiguration->getIntegerParameter("-base");
     controller.vmeWrite16(base+Reset, initamod, static_cast<uint16_t>(0));
-    std::cerr << "MTDC Reset\n";
+    //    std::cerr << "MTDC Reset\n";
     sleep(1);
     
     // turn off data acquisition and reset any data stuck in the module fifos:
 
-    std::cerr << StartAcq << " " << 0 << std::endl;
+    //    std::cerr << StartAcq << " " << 0 << std::endl;
 
     controller.vmeWrite16(base+StartAcq, initamod, static_cast<uint16_t>(0));
 
-    std::cerr << ReadoutReset << " " << 0;
+    //    std::cerr << ReadoutReset << " " << 0;
 
     controller.vmeWrite16(base+ReadoutReset, initamod, static_cast<uint16_t>(0));
     
@@ -421,7 +421,7 @@ CMTDC32::Initialize(CVMUSB& controller)
     }
     
 
-    std::cerr << std::dec;
+    //    std::cerr << std::dec;
     
 }
 /**
@@ -439,7 +439,7 @@ CMTDC32::addReadoutList(CVMUSBReadoutList& list)
 
   uint32_t base = m_pConfiguration->getUnsignedParameter("-base");
 
-  list.addFifoRead32(base + eventBuffer, readamod, (size_t)1000);
+  list.addFifoRead32(base + eventBuffer, readamod, (size_t)1024); // really 256 is maximum in single event mode I think.
   list.addWrite16(base + ReadoutReset, initamod, (uint16_t)1);
   list.addDelay(5);
     
@@ -580,7 +580,7 @@ CMTDC32::clone() const {
 void
 CMTDC32::addWrite(CVMUSBReadoutList& list, uint32_t address, uint16_t value)
 {
-  std::cerr << (address & 0xffff) << " " << value << std::endl;
+  //  std::cerr << (address & 0xffff) << " " << value << std::endl;
     list.addWrite16(address, initamod, value);
     list.addDelay(MADCDELAY);
 }
