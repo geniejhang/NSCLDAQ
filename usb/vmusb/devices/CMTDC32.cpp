@@ -457,7 +457,7 @@ CMTDC32::addReadoutList(CVMUSBReadoutList& list)
 void
 CMTDC32::setChainAddresses(CVMUSB& controller, CMesytecBase::ChainPosition position,
                            uint32_t cbltBase, uint32_t mcastBase)
-{
+{                                                                 
   uint32_t base = m_pConfiguration->getIntegerParameter("-base");
 
   std::cerr << "Position: " << position << std::endl;
@@ -480,7 +480,7 @@ CMTDC32::setChainAddresses(CVMUSB& controller, CMesytecBase::ChainPosition posit
     std::cerr << "Last\n";
     break;
   }
-  std::cerr << "Setting chain address with " << std::hex << controlRegister << std::dec << std::endl;
+  std::cerr << "Setting mtdc chain address with " << std::hex << controlRegister << std::dec << std::endl;
 
   // program the registers, note that the address registers take only the top 8 bits.
 
@@ -516,7 +516,8 @@ CMTDC32::initCBLTReadout(CVMUSB& controller,
   int irqThreshold   = m_pConfiguration->getIntegerParameter("-irqthreshold");
   int vector         = m_pConfiguration->getIntegerParameter("-vector");
   int ipl            = m_pConfiguration->getIntegerParameter("-ipl");
-  bool timestamping  = m_pConfiguration->getBoolParameter("-timestamp");
+  std::string markType = m_pConfiguration->cget("-marktype");
+  bool timestamping  = (markType == "timestamp") || (markType == "extended-timestamp");
   
   // Stop acquistiion
   // ..and clear buffer memory:
@@ -525,20 +526,23 @@ CMTDC32::initCBLTReadout(CVMUSB& controller,
 
   // Set stamping
 
+
+  // Note the generic configuration already set the correct marktype.
+
   if(timestamping) {
     // Oscillator sources are assumed to already be set.
     // Reset the timer:
 
-    controller.vmeWrite16(cbltAddress + MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
+    //    controller.vmeWrite16(cbltAddress + MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
     controller.vmeWrite16(cbltAddress + TimestampReset, initamod, (uint16_t)3); // reset all counter.
   }
   else {
-    controller.vmeWrite16(cbltAddress + MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
+    // controller.vmeWrite16(cbltAddress + MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
     controller.vmeWrite16(cbltAddress + EventCounterReset, initamod, (uint16_t)0); // Reset al event counters.
   }
   // Set multievent mode
   
-  controller.vmeWrite16(cbltAddress + MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
+  //  controller.vmeWrite16(cbltAddress + MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
   controller.vmeWrite16(cbltAddress + IrqThreshold, initamod, (uint16_t)irqThreshold);
   controller.vmeWrite16(cbltAddress + MaxTransfer, initamod,  (uint16_t)wordsPermodule);
 

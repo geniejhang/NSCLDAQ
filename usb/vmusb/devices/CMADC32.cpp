@@ -603,22 +603,24 @@ CMADC32::initCBLTReadout(CVMUSB& controller, uint32_t mcast, int rdoSize)
   controller.vmeWrite16(mcast + StartAcq, initamod, (uint16_t)0);
   controller.vmeWrite16(mcast + InitFifo, initamod, (uint16_t)0);
 
-  // Set stamping
+  // Setup synchronized stamping - note that each module must set the correct
+  // mark type.   This is because the MTDC e.g. has a richer set of marktypes
+  // than the MADC32.
 
   if(timestamping) {
     // Oscillator sources are assumed to already be set.
     // Reset the timer:
 
-    controller.vmeWrite16(mcast + MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
+    //    controller.vmeWrite16(mcast + MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
     controller.vmeWrite16(mcast + TimestampReset, initamod, (uint16_t)3); // reset all counter.
   }
   else {
-    controller.vmeWrite16(mcast + MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
+    //    controller.vmeWrite16(mcast + MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
     controller.vmeWrite16(mcast + EventCounterReset, initamod, (uint16_t)0); // Reset al event counters.
   }
   // Set multievent mode
   
-  controller.vmeWrite16(mcast + MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
+  // controller.vmeWrite16(mcast + MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
   controller.vmeWrite16(mcast + IrqThreshold, initamod, (uint16_t)irqThreshold);
   controller.vmeWrite16(mcast + MaxTransfer, initamod,  (uint16_t)rdoSize);
 
