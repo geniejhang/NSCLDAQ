@@ -869,4 +869,5 @@ Work on 11.0-rc11 begins
         Feature #3202 - Don't let exceptions propagate out of the reaout thread into the
         last chance exception handler.
         Feature #3229 - Make timestamp extractors for XXUSBReadout aware of run starts
+        Bug #3238 - Fix VMUSBReadout OutputThread fails when run title is too long
 	
