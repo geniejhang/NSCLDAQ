@@ -3014,6 +3014,12 @@ VM-USB scriptable readout version V5.0
                         <type>uint64_t</type> value that is that event's
                         timestamp.
                     </para>
+                    <para>
+                        If the library has a further entry named
+                        <function>onBeginRun</function>, taking no parametesr and
+                        having no return value, this funtion is called when the run
+                        starts.
+                    </para>
                 </listitem>
             </varlistentry>
         </variablelist>

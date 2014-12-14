@@ -868,5 +868,5 @@ Work on 11.0-rc11 begins
         Bug #3155 - Don't emit EOF message in compatibilitybuffer method.
         Feature #3202 - Don't let exceptions propagate out of the reaout thread into the
         last chance exception handler.
-        
+        Feature #3229 - Make timestamp extractors for XXUSBReadout aware of run starts
 	
