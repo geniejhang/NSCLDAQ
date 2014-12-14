@@ -45,6 +45,10 @@ static const int ENDPOINT_IN(0x86);
 
 static const int DEFAULT_TIMEOUT(2000);	// ms.
 
+// Retries for flushing the fifo/stopping data taking:
+
+static const int DRAIN_RETRIES(5);    // Retries.
+
 // The register offsets:
 
 static const unsigned int FIDRegister(0);       // Firmware id.
@@ -1374,11 +1378,26 @@ CVMUSBusb::openVMUsb()
     Os::usleep(100);
     
     // Turn off DAQ mode and flush any data that might be trapped in the VMUSB
-    // FIFOS.
+    // FIFOS.  To write the action register may require at least one read of the FIFO.
+    //
     
-    writeActionRegister(0);     // Turn off data taking.
+    int retriesLeft = DRAIN_RETRIES;
     uint8_t buffer[1024*13*2];  // Biggest possible VM-USB buffer.
     size_t  bytesRead;
+    
+    while (retriesLeft) {
+        try {
+            usbRead(buffer, sizeof(buffer), &bytesRead, 1);
+            writeActionRegister(0);     // Turn off data taking.
+            break;                      // done if success.
+        } catch (...) {
+            retriesLeft--;
+        }
+    }
+    if (!retriesLeft) {
+        std::cerr << "** Warning - not able to stop data taking VM-USB may need to be power cycled\n";
+    }
+    
     while(usbRead(buffer, sizeof(buffer), &bytesRead) == 0) {
          fprintf(stderr, "Flushing VMUSB Buffer\n");
     }
