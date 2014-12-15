@@ -872,4 +872,6 @@ Work on 11.0-rc11 begins
         Bug #3238 - Fix VMUSBReadout OutputThread fails when run title is too long
         Bug #3235 - Loop over drain/retries on writing the action register.  Note that the
            original trigger was Bug #3238 which is fixed in this release as well.
+        Feature #3232 - Add mechanism to get the source id from sbsReadout CDExperiment objects
+        and document how to have an event segment produce its own event segments.
 	
