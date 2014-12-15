@@ -37,7 +37,7 @@
 #endif
 
 
-class CControlModule;
+#include <CControlModule.h>
 class CVMUSB;
 
 
@@ -86,7 +86,7 @@ private:
 public:
   // canonicals:
 
-  CV812(std::string name);
+  CV812();
   CV812(const CV812& rhs);
   virtual ~CV812();
 
@@ -106,7 +106,7 @@ public:
 			  std::string value);            //!< Set parameter value
   virtual std::string Get(CVMUSB& vme, 
 			  std::string parameter);        //!< Get parameter value.
-  virtual void clone(const CControlHardware& rhs);	     //!< Virtual
+  virtual std::unique_ptr<CControlHardware> clone() const;	     //!< Virtual
 
   // utilities:
   

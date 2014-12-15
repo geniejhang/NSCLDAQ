@@ -20,7 +20,7 @@
 #include "Globals.h"
 
 #include <COutputThread.h>
-#include <CCCUSB.h>
+#include <CCCUSBusb.h>
 
 #include <TCLInterpreter.h>
 #include <TCLObject.h>
@@ -28,6 +28,7 @@
 #include <TCLLiveEventLoop.h>
 #include <CBeginRun.h>
 #include <CEndRun.h>
+#include <CInit.h>
 #include <CPauseRun.h>
 #include <CResumeRun.h>
 #include <CExit.h>
@@ -288,7 +289,7 @@ CTheApplication::createUsbController(const char* pSerialNo)
     throw msg;
   }
 
-  Globals::pUSBController = new CCCUSB(pMyController);
+  Globals::pUSBController = new CCCUSBusb(pMyController);
 
 }
 
@@ -346,6 +347,7 @@ CTheApplication::AppInit(Tcl_Interp* interp)
   new CEndRun(*pInterp);
   new CPauseRun(*pInterp);
   new CResumeRun(*pInterp);
+  new CInit(*pInterp);
   new CExit(*pInterp);
 
 

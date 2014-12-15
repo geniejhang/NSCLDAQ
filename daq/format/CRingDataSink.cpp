@@ -20,6 +20,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <CRingDataSink.h>
 #include <CRingBuffer.h>
 #include <CRingItem.h>
+#include <CDataSinkException.h>
 
 
 CRingDataSink::CRingDataSink(std::string ringName)
@@ -32,7 +33,7 @@ CRingDataSink::CRingDataSink(std::string ringName)
 CRingDataSink::~CRingDataSink()
 {
   delete m_pRing;
-  m_pRing;
+  m_pRing=0;
 }
 
 /**
@@ -78,5 +79,9 @@ void CRingDataSink::openRing()
     // If we are here, no ring exists already with the desired
     // name so we can create and produce
     m_pRing = CRingBuffer::createAndProduce(m_ringName);
+  }
+  if (m_pRing==0) {
+
+    throw CDataSinkException("CRingDataSink::openRing()","Failed to open specified ring");
   }
 }

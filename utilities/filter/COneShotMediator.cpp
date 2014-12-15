@@ -32,7 +32,6 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <CPhysicsEventItem.h>
 #include <CRingPhysicsEventCountItem.h>
 #include <CRingFragmentItem.h>
-#include <CMediatorException.h>
 
 /**! Constructor
 
@@ -88,22 +87,12 @@ void COneShotMediator::mainLoop()
   // the main loop
   CDataSource& source = *getDataSource();
   CDataSink& sink = *getDataSink();
-  CFilter* filter = getFilter();
-  if (filter==0) {
-    std::string errmsg = "No filter has been registered to the CMediator. Cannot proceed with mainloop";
-    throw CMediatorException("COneShotMediator::mainLoop()",errmsg);
-  }
-
 
   // Set up some counters
   int tot_iter=0, proc_iter=0, nskip=0, nprocess=0;
 
   nskip = getSkipCount(); 
   nprocess = getProcessCount(); 
-
-  // Initial single-shot operations
-  filter->initialize();
-  
 
   while (1) {
     
@@ -171,8 +160,6 @@ void COneShotMediator::mainLoop()
 
     // Increment our counter
     ++tot_iter;
-  } // end of while
+  }
 
-  // Final single-shot operations
-  filter->finalize();
 }

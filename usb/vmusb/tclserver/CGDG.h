@@ -35,7 +35,7 @@
 #endif
 
 
-class CControlModule;
+#include <CControlModule.h>
 class CVMUSB;
 
 
@@ -60,7 +60,7 @@ private:
 public:
   // Cannonical operations:
 
-  CGDG(std::string name);
+  CGDG();
   CGDG(const CGDG& rhs);
   virtual ~CGDG();
   CGDG& operator=(const CGDG& rhs);
@@ -78,7 +78,7 @@ public:
 			  std::string value);            //!< Set parameter value
   virtual std::string Get(CVMUSB& vme, 
 			  std::string parameter);        //!< Get parameter value.
-  virtual void clone(const CControlHardware& rhs);	     //!< Virtual copy constr.
+  virtual std::unique_ptr<CControlHardware> clone() const;	     //!< Virtual copy constr.
 
 private:
   uint32_t base();

@@ -63,7 +63,7 @@ class CUserDriver : public CControlHardware
 {
 
 public:
-  CUserDriver(std::string name);
+  CUserDriver();
   virtual void onAttach(CControlModule& configuration);
   virtual std::string Update(CVMUSB& vme);
   virtual std::string Set(CVMUSB& vme, 
@@ -71,18 +71,19 @@ public:
 			  std::string value);
   virtual std::string Get(CVMUSB& vme, 
 			  std::string parameter);
-  virtual void clone(const CControlHardware& rhs);
+  virtual std::unique_ptr<CControlHardware> clone() const;
 
 };
 
 /**
  *  constructor
- *    Just needs to pass the name to the base class which registers us by name:
  *
- * @param name - name given to us by the Module create command.
+ *  This only instantiates a base CControlHardware object that maintains a 
+ *  protected pointer m_pConfig. This pointer does not refer to anything
+ *  unit onAttach is called and the user explicitly stores the reference.
  */
-CUserDriver::CUserDriver(std::string name) :
-  CControlHardware(name)
+CUserDriver::CUserDriver() :
+  CControlHardware()
 {}
 
 /**
@@ -178,16 +179,14 @@ CUserDriver::Get(CVMUSB& vme, std::string parameter)
 }
 /**
  * clone
- *   We have no additional state so we don't need to do anything.
+ *  Return a copy of this object.
  * 
  * @param rhs - the object we are being cloned from.
  */
-void
-CUserDriver::clone(const CControlHardware& rhs)
+std::unique_ptr<CControlHardware>
+CUserDriver::clone() const
 {
-  CControlHardware* pRhs = const_cast<CControlHardware*>(&rhs);
-  m_pConfig = new CControlModule(*(pRhs->getConfiguration()));
-
+  return std::unique_ptr<CControlHardware>(new CUserDriver(*this));
 }
 
 /*--------------------------------------------------------------------------------------
@@ -201,19 +200,18 @@ CUserDriver::clone(const CControlHardware& rhs)
 class CUserDriverCreator : public CModuleCreator
 {
 public:
-  virtual CControlHardware* operator()(std::string name);
+  virtual std::unique_ptr<CControlHardware> operator()();
 };
 /**
  * operator()
  *   Create a CUserDriver instance of the specified name:
  *
- * @param name - The name of the object we are creating (Module name).
  * @return CControlHardware*  - Pointer to the newly, dynamically created object.
  */
-CControlHardware*
-CUserDriverCreator::operator()(std::string name)
+  std::unique_ptr<CControlHardware>
+CUserDriverCreator::operator()()
 {
-  return new CUserDriver(name);
+  return std::unique_ptr<CControlHardware>(new CUserDriver);
 }
 
 /*-----------------------------------------------------------------------------------
@@ -232,7 +230,8 @@ extern "C" {
   int Userdriver_Init(Tcl_Interp* pInterp)
   {
     CModuleFactory* pFact = CModuleFactory::instance(); // the module factory is a singleton.
-    pFact->addCreator("mydriver", new CUserDriverCreator);
+    pFact->addCreator("mydriver", 
+                      unique_ptr<CModuleCreator>(new CUserDriverCreator));
 
     return TCL_OK;
   }

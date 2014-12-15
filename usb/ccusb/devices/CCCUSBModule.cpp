@@ -254,6 +254,23 @@ CCCUSBModule::onAttach(CReadoutModule& configuration)
   // Control buffer size
   configuration.addEnumParameter("-bufferlength", 
                                   bufferLengthValues, "4096");
+
+  // mixed buffer 
+  configuration.addBooleanParameter("-mixedbuffer",false);
+  
+  // flush scaler buffer immediately after execution
+  configuration.addBooleanParameter("-forcescalerdump",false);
+
+  // allow camac bus arbitration... totally broken.
+  //  i tried setting this and it make my CC-USB slow down incredibly and then fail.
+  configuration.addBooleanParameter("-arbitratebus",false);
+                                  
+  // in case we want it later... at the moment we don't use it
+  configuration.addBooleanParameter("-optionalheader",false);
+                                  
+  configuration.addBooleanParameter("-triggerlatch",false);
+
+  configuration.addBooleanParameter("-printconfig",false);
 }
 /*!
 
@@ -277,7 +294,11 @@ CCCUSBModule::Initialize(CCCUSB& controller)
   configureLED(controller);
   configureBulkTransfer(controller);
   configureBufferLength(controller);
+  configureGlobalMode(controller);
 
+  if (m_pConfiguration->getBoolParameter("-printconfig")) {
+    controller.dumpConfiguration(cout);
+  }
 }
  
 /*!
@@ -671,5 +692,110 @@ void CCCUSBModule::configureBufferLength(CCCUSB& controller)
 
   // Write the new bits
   controller.writeGlobalMode(registerValue);
+
+}
+
+
+/**
+ * configureGlobalMode
+ *
+ * @param controller - reference to the CC-USB  object that represents the CAMAC controller.
+ *
+ */
+void CCCUSBModule::configureGlobalMode(CCCUSB& controller)
+{
+
+  uint16_t registerValue = 0;
+  uint16_t newValue = 0;
+
+  if (controller.readGlobalMode(registerValue)<0) {
+    throw std::string("CCCUSBModule::configureGlobalMode(CCCUSB&) Failure reading global mode");
+  } 
+
+  newValue = registerValue;
+
+  // update the bits for each option
+  newValue = setMixedBufferBits(newValue);
+  newValue = setForceScalerDumpBits(newValue);
+//  newValue = setArbitrateBusBits(newValue);
+//  newValue = setOptionalHeaderBits(newValue);
+  newValue = setTriggerLatchBits(newValue);
+  
+  // Write the new bits
+  controller.writeGlobalMode(newValue);
+
+}
+
+
+uint16_t CCCUSBModule::setMixedBufferBits(uint16_t reg_content)
+{
+  if (m_pConfiguration->getBoolParameter("-mixedbuffer")) {
+    // set it unconditionally
+    reg_content |= (0x20);
+  } else {
+    // unset it 
+    reg_content &= (~(0x20));
+  }
+
+  return reg_content;
+}
+
+uint16_t CCCUSBModule::setForceScalerDumpBits(uint16_t reg_content)
+{
+  if (m_pConfiguration->getBoolParameter("-forcescalerdump")) {
+    // set it unconditionally
+    reg_content |= (0x40);
+  } else {
+    // unset it 
+    reg_content &= (~(0x40));
+  }
+
+  return reg_content;
+
+}
+
+uint16_t CCCUSBModule::setArbitrateBusBits(uint16_t reg_content)
+{
+  if (m_pConfiguration->getBoolParameter("-arbitratebus")) {
+    // set it unconditionally
+    reg_content |= (0x1000);
+  } else {
+    // unset it 
+    reg_content &= (~(0x1000));
+  }
+
+  return reg_content;
+
+}
+
+uint16_t CCCUSBModule::setOptionalHeaderBits(uint16_t reg_content)
+{
+  if (m_pConfiguration->getBoolParameter("-optionalheader")) {
+    // set it unconditionally
+    //    reg_content |= (0x100);
+    std::cerr << "Optional header bit is not supported!" << std::endl;
+  } else {
+    // unset it 
+    //  reg_content &= (~(0x100));
+  }
+
+  // make sure it is always unset 
+  reg_content &= (~(0x100));
+
+  return reg_content;
+
+}
+
+uint16_t CCCUSBModule::setTriggerLatchBits(uint16_t reg_content)
+{
+  if (m_pConfiguration->getBoolParameter("-triggerlatch")) {
+    // set it unconditionally
+    reg_content |= (0x10);
+  } else {
+    // unset it 
+    reg_content &= (~(0x10));
+  }
+
+  return reg_content;
 
 }

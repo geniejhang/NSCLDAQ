@@ -21,6 +21,9 @@
 #include "CModuleCreator.h"
 #endif
 
+#include <CControlHardware.h>
+
+#include <memory>
 
 /**
  * @file CCAEN894Creator
@@ -39,7 +42,7 @@
 class CCAEN894Creator : public CModuleCreator
 {
 public:
-  virtual CControlHardware* operator()(std::string name);
+  virtual std::unique_ptr<CControlHardware> operator()();
 };
 
 #endif

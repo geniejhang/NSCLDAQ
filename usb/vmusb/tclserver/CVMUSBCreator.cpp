@@ -16,6 +16,7 @@
 
 #include "CVMUSBCreator.h"
 #include "CVMUSBModule.h"
+#include <memory>
 
 /**
  * operator()
@@ -24,8 +25,8 @@
  * @param name - The name of the  module.
  * @return CControlHardware* - Pointer to the created CVMUSBModule.
  */
-CControlHardware*
-CVMUSBCreator::operator()(std::string name)
+  std::unique_ptr<CControlHardware>
+CVMUSBCreator::operator()()
 {
-  return new CVMUSBModule(name);
+  return std::unique_ptr<CControlHardware>(new CVMUSBModule);
 }

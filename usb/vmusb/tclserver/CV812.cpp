@@ -66,8 +66,8 @@ Const(FixedCodeValue) 0xfaf5;
 /*!
    construct the beast.. The shadow registers will all get set to zero
 */
-CV812::CV812(string name) :
-  CControlHardware(name),
+CV812::CV812() :
+  CControlHardware(),
   m_pConfiguration(0),
   m_is812(true)
 {
@@ -89,7 +89,6 @@ CV812::CV812(string name) :
 CV812::CV812(const CV812& rhs) :
   CControlHardware(rhs)
 {
-  clone(*this);
 }
 /*!
   While destruction could leak I seem to recall problems if I destroy
@@ -106,7 +105,7 @@ CV812&
 CV812::operator=(const CV812& rhs)
 {
   if(this != &rhs) {
-    clone(rhs);
+    CControlHardware::operator=(rhs);
   }
   return *this;
 }
@@ -394,9 +393,10 @@ CV812::Get(CVMUSB& vme, string parameter)
 /*!
   At present, cloning is a no-op.
 */
-void
-CV812::clone(const CControlHardware& rhs)
+std::unique_ptr<CControlHardware>
+CV812::clone() const
 {
+  return std::unique_ptr<CControlHardware>(new CV812(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////////////

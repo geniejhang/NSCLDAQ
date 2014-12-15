@@ -14,135 +14,111 @@
 	     East Lansing, MI 48824-1321
 */
 
-/**
- * @file CMarker.cpp
- * @brief Implementation of the marker driver : insert a constant uint16_t in the buffer.
- * @author Ron Fox <fox@nscl.msu.edu>
- */
+// Implementation of the C785 class VM-USB support for the CAEN V785.
+
+
+#include <config.h>
 
 #include "CMarker.h"
 
 #include "CReadoutModule.h"
-#include <CCCUSB.h>
 #include <CCCUSBReadoutList.h>
-
-#include <tcl.h>
-
-#include <assert.h>
 #include <stdlib.h>
-#include <stdio.h>
 
-#include <string>
-#include <set>
+using namespace std;
 
-#include <iostream>
 
-/**
- * Local consts
- */
-static CConfigurableObject::limit Zero(0);
-static CConfigurableObject::limit MaxUint16(0xffff);
+static CConfigurableObject::limit valueLow(0);
+static CConfigurableObject::limit valueHigh(0xffff);
+static CConfigurableObject::Limits valueLimits(valueLow, valueHigh);
 
-static CConfigurableObject::Limits valueLimits(Zero, MaxUint16);
 
-/*-----------------------------------------------------------------------------
- * Implementations of canonicals- note m_pConfiguration is a base class protected
- * member.
- */
+///////////////////////////////////////////////////////////////////////////////////////
+////////////////////////// Canonical class/object operations /////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
-/**
- * default constructor:
- */
-CMarker::CMarker()
+CMarker::CMarker() :
+  m_pConfiguration(0)
+{}
 
+CMarker::CMarker(const CMarker& rhs) :
+  m_pConfiguration(0)
 {
-  m_pConfiguration = 0;		// Can't use an initializer for a base class.
-}
-/**
- * copy constructor
- *
- * @param rhs - The object that will be cloned into this.
- */
-CMarker::CMarker(const CMarker& rhs) 
-{
-  m_pConfiguration = 0;                    // Someone else manages storage.
-  if(rhs.m_pConfiguration) {
+  if (rhs.m_pConfiguration) {
     m_pConfiguration = new CReadoutModule(*(rhs.m_pConfiguration));
   }
 }
-/**
- * destuctor
- */
-CMarker::~CMarker()
-{
-  // Comoone else manages the m_pConfiguration storage.
-}
 
-/**
- * Assignments should probably be illegal:
- *
- * @param rhs - The item being assigned to this.
- * @return *this
- */
+CMarker::~CMarker() {}
+
 CMarker&
 CMarker::operator=(const CMarker& rhs)
 {
-  if (&rhs != this) {
-    m_pConfiguration = 0;
-    if (rhs.m_pConfiguration) {
-      m_pConfiguration = new CReadoutModule(*(rhs.m_pConfiguration));
-    }
-  }
   return *this;
 }
+/////////////////////////////////////////////////////////////////////////////////
+//////////////////////// Overridable operations /////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
-/*-----------------------------------------------------------------------
- * Implementing the driver interface:
- */
+/*!
+    Attach the module to its configuration by  storing the config reference and
+    adding the -value parameter to the config.
+    \param CReadoutModule& configuration
 
-/**
- * onAttach
- *   The configuration is attached to this object and options
- *   are added to it.
- *
- * @param config - References the configuration
- */
+*/
 void
 CMarker::onAttach(CReadoutModule& configuration)
 {
   m_pConfiguration = &configuration;
-  configuration.addParameter("-value", CConfigurableObject::isInteger, &valueLimits);
 
+  m_pConfiguration->addParameter("-value", CConfigurableObject::isInteger, &valueLimits, "0");
 
 }
-/**
- * Initialize:
- *   No-op as there's no hardware to initialize.
- */
-void
-CMarker::Initialize(CCCUSB& controller) {}
+/*!
+   The device does not need to be initialized.
+*/
+void 
+CMarker::Initialize(CCCUSB& controller)
+{}
 
-/**
- * addReadoutList
- *   Add the marker element to the readoutlist.
- *
- * @param list - the readout list for this stack.
- */
+/*!
+    The module is added to the readout list by fetching the value parameter as a 16 bit integer
+    and adding the marker command to the readout list.
+*/
 void
 CMarker::addReadoutList(CCCUSBReadoutList& list)
 {
-  uint16_t value = getIntegerParameter("-value");
-  list.addMarker(value);
-}
-/**
- * clone
- *   Virtual constructor.
- *
- * @return copy of this.
- */
-CReadoutHardware*
-CMarker::clone() const
-{
-    return new CMarker(*this);
+  unsigned int value = getIntegerParameter("-value");
+
+  list.addMarker(static_cast<uint16_t>(value));
 }
 
+/*!
+  Virtual constructor:
+
+*/
+CReadoutHardware* 
+CMarker::clone() const
+{
+  return new CMarker(*this);
+}
+/////////////////////////////////////////////////////////////////////
+//////////////////// Private utility functions //////////////////////
+/////////////////////////////////////////////////////////////////////
+
+// Return the value of an integer parameter.
+// Parameters:
+//    std::string name - name of the parameter.
+// Returns:
+//    value
+// Throws a string exception (from cget) if there is no such parameter.
+// caller is responsible for ensuring the parameter is an int.
+//
+unsigned int
+CMarker::getIntegerParameter(string name)
+{
+  string sValue =  m_pConfiguration->cget(name);
+  unsigned int    value  = strtoul(sValue.c_str(), NULL, 0);
+
+  return value;
+}

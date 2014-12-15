@@ -16,6 +16,8 @@
 #include "CChicoTriggerCreator.h"
 #include "ChicoTrigger.h"
 
+#include <memory>
+
 /**
  * operator()
  *   Create a ChicoTrigger object
@@ -24,8 +26,8 @@
  *
  * @return CControlHardware*
  */
-CControlHardware*
-CChicoTriggerCreator::operator()(std::string name)
+  std::unique_ptr<CControlHardware>
+CChicoTriggerCreator::operator()()
 {
-  return new ChicoTrigger(name);
+  return std::unique_ptr<CControlHardware>(new ChicoTrigger);
 }

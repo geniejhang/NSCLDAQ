@@ -126,8 +126,8 @@ CONST(SEL_4)        24;
   Construction is pretty much a no-op as the configuration is 
   handled at attach time.
 */
-CGDG::CGDG(string name) :
-  CControlHardware(name),
+CGDG::CGDG() :
+  CControlHardware(),
   m_pConfiguration(0)
 {
   for (int i=0; i < 8; i++) {
@@ -141,7 +141,6 @@ CGDG::CGDG(string name) :
 CGDG::CGDG(const CGDG& rhs)  : 
   CControlHardware(rhs)
 {
-  clone(rhs);
 }
 /*!
    Destruction is also a no-op.
@@ -156,7 +155,7 @@ CGDG&
 CGDG::operator=(const CGDG& rhs) 
 {
   if (this != &rhs) {
-    clone(rhs);
+    CControlHardware::operator=(rhs);
   }
   return *this;
 }
@@ -222,7 +221,8 @@ CGDG::Update(CVMUSB& vme)
   // So that this doesn't take all day we'll do this as an immediate
   // list:
 
-  CVMUSBReadoutList ops;
+  unique_ptr<CVMUSBReadoutList> pOps(vme.createReadoutList());
+  CVMUSBReadoutList& ops = *pOps;
   ops.addWrite32(baseAddress+FGGConfig,
 		 am, 
 		 (CONFIG_DGG << CONFIG_1)    |
@@ -360,9 +360,10 @@ CGDG::Get(CVMUSB& vme, string parameter)
 /*!
     Clone oursevles... a no op at this point
 */
-void
-CGDG::clone(const CControlHardware& rhs)
+std::unique_ptr<CControlHardware>
+CGDG::clone() const
 {
+  return std::unique_ptr<CControlHardware>(new CGDG(*this));
 }
 
 ////////////////////////////////////////////////////////////////////////////

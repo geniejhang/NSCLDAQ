@@ -20,7 +20,10 @@
 #
 
 package require tcltest
-package require Delay_Provider
+
+
+tcltest::test pkgrequire-0 {make sure that we can require the package
+} {package require Delay_Provider} 1.0
 
 
 
@@ -53,7 +56,7 @@ tcltest::test begin-0 {Test that the delay lasts at least as long as we expect
   set stop [clock milliseconds]
 
   set elapsed [expr $stop-$start]
-  expr {$elapsed>3000} 
+  expr {$elapsed>=3000} 
 } -result 1 -returnCodes 0
 
 
@@ -63,3 +66,9 @@ tcltest::test end-0 {Just call it for kicks to make sure it isn't broken
 } -returnCodes 0
 
 
+tcltest::test init-0 {Just call it for kicks to make sure it isn't broken
+} -body {
+  ::Delay::init 0
+} -returnCodes 0
+
+tcltest::cleanupTests

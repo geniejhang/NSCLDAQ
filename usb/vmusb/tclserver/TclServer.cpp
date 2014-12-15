@@ -26,6 +26,7 @@ using namespace std;
 #include "CUpdateCommand.h"
 #include "CMonCommand.h"
 #include "CWatchCommand.h"
+#include "CRunStateCommand.h"
 #include <DataBuffer.h>
 #include <CBufferQueue.h>
 #include <DataFormat.h>
@@ -216,7 +217,7 @@ TclServer::operator()()
     throw;
   }
   catch (CException& err) {
-    cerr << "CAcquisitino thread caught a daq exception: "
+    cerr << "CAcquisition thread caught a daq exception: "
 	 << err.ReasonText() << " while " << err.WasDoing() << endl;
     throw;
   }
@@ -269,6 +270,7 @@ TclServer::initInterpreter()
 		    *m_pVme);
   new CMonCommand(*m_pInterpreter, *this);
   new CWatchCommand(*m_pInterpreter, *this);
+  new CRunStateCommand(*m_pInterpreter, *this);
   
 }
 /*

@@ -7,24 +7,16 @@
 
      http://www.gnu.org/licenses/gpl.txt
 
-     Authors:
+     Author:
              Ron Fox
-             Jeromy Tompkins 
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
 
 
-/**
- * @file CMarker.h
- * @brief Defines the support class for creating Marker words.
- * @author Ron Fox <fox@nscl.msu.edu>
- */
-
 #ifndef __CMARKER_H
 #define __CMARKER_H
-
 
 #ifndef __CREADOUTHARDWARE_H
 #include "CReadoutHardware.h"
@@ -58,30 +50,48 @@ class CReadoutModule;
 class CCCUSB;
 class CCCUSBReadoutList;
 
-/**
- * CMarker
- *    Class to insert a marker in the output buffer.  There is one configuration
- *    option: -value which sets the unsigned 16 bit marker value.
- */
+/*!
+  The CMarker class is a module that inserts a marker word into the output
+  data stream.  The marker word is a 16 bit datum. You can insert a 32 bit
+  marker by inserting two of these with the low order 16 bits first.
+
+  Configuration parameter is:
+
+\verbatim
+Parameter      Value type              value meaning
+-value         integer [0-0xffff]       The marker word to insert. This must be provided.
+                                        (well it actually defaults to 0).
+
+
+*/
+
 class CMarker : public CReadoutHardware
 {
-public:
-  CMarker();
-  CMarker(const CMarker& rhs);
-  virtual ~CMarker();
-  CMarker& operator= (const CMarker& rhs);
 private:
-  int operator==(const CMarker& rhs) const;
-  int operator!=(const CMarker& rhs) const;
+  CReadoutModule*    m_pConfiguration;
+public:
+  // Class canonicals:
 
-  // The CReadoutHardware interface we need to implement:
+  CMarker();
+  CMarker(const CMarker& CMarker);
+  virtual ~CMarker();
+  CMarker& operator=(const CMarker& rhs);
+
+private:
+  int operator==(const CMarker& rhs);
+  int operator!=(const CMarker& rhs);
+
 
 public:
   virtual void onAttach(CReadoutModule& configuration);
   virtual void Initialize(CCCUSB& controller);
   virtual void addReadoutList(CCCUSBReadoutList& list);
   virtual CReadoutHardware* clone() const;
-  
+
+private:
+  unsigned int getIntegerParameter(std::string name);
+
+
 };
 
 

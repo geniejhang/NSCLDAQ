@@ -358,6 +358,7 @@ AC_CONFIG_FILES([Makefile
                  base/plotchart/Makefile
 		 base/plotcontainer/Makefile
 		 base/tcpip/Makefile
+		 base/tclutils/Makefile
 		 caenfw-common/Makefile
 		 servers/Makefile
 		 servers/tclserver/Makefile
@@ -399,6 +400,7 @@ AC_CONFIG_FILES([Makefile
 		 daq/eventbuilder/glom/Makefile
 		 daq/eventbuilder/unglom/Makefile
 		 daq/eventbuilder/startOrderer
+		 daq/actions/Makefile
 		 daq/eventbuilder/offlineorderer/Makefile
      daq/eventbuilder/offlineorderer/figures/Makefile
 		 sbs/Makefile
@@ -432,21 +434,36 @@ AC_CONFIG_FILES([Makefile
 		 usb/vmusb/driverkit/Makefile usb/vmusb/driverkit/Makefile-template
 		 usb/vmusb/tcldrivers/Makefile
 		 usb/vmusb/driverkit/VMUSBDriverIncludes
-                 usb/vmusb/controlpanels/Makefile usb/vmusb/controlpanels/cv6533/Makefile
+		 usb/vmusb/controlpanels/Makefile usb/vmusb/controlpanels/cv6533/Makefile
 		 usb/vmusb/devtests/Makefile
 		 usb/vmusb/vmusbPackage/Makefile
+		 usb/vmusb/tclservertests/Makefile
 		 usb/ccusb/Makefile
 		 usb/ccusb/ccusb/Makefile usb/ccusb/devices/Makefile 
 		 usb/ccusb/router/Makefile
 		 usb/ccusb/rdothread/Makefile usb/ccusb/tclserver/Makefile 
 		 usb/ccusb/tclserver/driver_Makefile
+		 usb/ccusb/tclpackage/Makefile
+		 usb/ccusb/tcldrivers/Makefile
 		 usb/ccusb/daqconfig/Makefile  usb/ccusb/commands/Makefile
 		 usb/ccusb/driverkit/Makefile
 		 usb/ccusb/driverkit/Makefile-template
 		 usb/ccusb/driverkit/CCUSBDriverIncludes
                  usb/ccusb/controlpanels/Makefile
+		 usb/ccusb/devtests/Makefile
+		 usb/ccusb/tclservertests/Makefile
 		 usb/caenfwloader/Makefile
+		 usb/common/Makefile
+		 usb/common/tcldrivers/Makefile
+		 usb/common/devices/Makefile
+		 usb/common/configurableobject/Makefile
+		 usb/common/slowcontrols/Makefile
+		 usb/mesytec/Makefile
+		 usb/mesytec/MCFD16/Makefile
+		 usb/mesytec/MCFD16/figures/Makefile
 		 docbuild/Makefile
+		 docbuild/images/Makefile
+		 docbuild/images/callouts/Makefile
 		 docconfig/Makefile])
 
 AC_OUTPUT

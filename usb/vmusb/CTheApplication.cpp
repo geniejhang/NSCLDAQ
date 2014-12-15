@@ -31,6 +31,7 @@
 #include <CEndRun.h>
 #include <CPauseRun.h>
 #include <CResumeRun.h>
+#include <CInit.h>
 #include <CExit.h>
 #include <Exception.h>
 #include <ErrnoException.h>
@@ -349,6 +350,7 @@ CTheApplication::AppInit(Tcl_Interp* interp)
   new CEndRun(*pInterp);
   new CPauseRun(*pInterp);
   new CResumeRun(*pInterp);
+  new CInit(*pInterp);
   new CExit(*pInterp);
   
   // If there's an initialization script then run it now:
@@ -367,8 +369,8 @@ CTheApplication::AppInit(Tcl_Interp* interp)
   
     // Instantiate the live event loop and run it.
     
-    CTCLLiveEventLoop* pEventLoop = CTCLLiveEventLoop::getInstance();
-    pEventLoop->start(pInterp);
+  CTCLLiveEventLoop* pEventLoop = CTCLLiveEventLoop::getInstance();
+  pEventLoop->start(pInterp);
 
   return TCL_OK;
 }

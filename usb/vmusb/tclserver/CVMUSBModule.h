@@ -45,7 +45,7 @@
 #endif
 
 
-class CControlModule;
+#include <CControlModule.h>
 class CVMUSB;
 
 /**
@@ -73,7 +73,7 @@ class CVMUSBModule : public CControlHardware
 {
   // Canonical operations:
 public:
-  CVMUSBModule(std::string name);
+  CVMUSBModule();
   CVMUSBModule(const CVMUSBModule& rhs);
   virtual ~CVMUSBModule();
   CVMUSBModule& operator=(const CVMUSBModule& rhs);
@@ -91,7 +91,7 @@ public:
 			  std::string value);            //!< Set parameter value
   virtual std::string Get(CVMUSB& vme, 
 			  std::string parameter);        //!< Get parameter value.
-  virtual void  clone(const CControlHardware& rhs);	     //!< Virtual copy constr.
+  virtual std::unique_ptr<CControlHardware> clone() const;	     //!< Virtual copy constr.
 
   // Utilities if any required.
 

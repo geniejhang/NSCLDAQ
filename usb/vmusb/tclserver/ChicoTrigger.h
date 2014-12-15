@@ -34,8 +34,9 @@
 #endif
 #endif
 
+#include <memory>
 
-class CControlModule;
+#include <CControlModule.h>
 class CVMUSB;
 
 
@@ -58,7 +59,7 @@ private:
 public:
   // Cannonical operations:
 
-  ChicoTrigger(std::string name);
+  ChicoTrigger();
   ChicoTrigger(const ChicoTrigger& rhs);
   virtual ~ChicoTrigger();
   ChicoTrigger& operator=(const ChicoTrigger& rhs);
@@ -76,7 +77,7 @@ public:
 			  std::string value);            //!< Set parameter value
   virtual std::string Get(CVMUSB& vme, 
 			  std::string parameter);        //!< Get parameter value.
-  virtual void clone(const CControlHardware& rhs);	     //!< Virtual copy constr.
+  virtual std::unique_ptr<CControlHardware> clone() const;	     //!< Virtual copy constr.
 
 private:
   uint32_t base();

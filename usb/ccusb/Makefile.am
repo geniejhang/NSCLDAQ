@@ -2,11 +2,15 @@ SUBDIRS = 	ccusb 		\
 		devices		\
 		router		\
 		rdothread	\
-		daqconfig	\
 		tclserver		\
+		daqconfig	\
 		commands	\
 		driverkit   \
-                controlpanels
+    tcldrivers \
+    controlpanels \
+    tclpackage \
+		devtests \
+		tclservertests
 
 
 bin_PROGRAMS = CCUSBReadout
@@ -20,6 +24,7 @@ CCUSBReadout_CPPFLAGS = -I@top_srcdir@/usb/ccusb/ccusb -I@top_srcdir@/usb/ccusb/
 	-I@top_srcdir@/usb/ccusb/rdothread \
 	 -I@top_srcdir@/usb/ccusb/daqconfig -I@top_srcdir@/usb/ccusb/commands \
 	-I@top_srcdir@/usb/ccusb/tclserver  \
+	-I@top_srcdir@/usb/common/slowcontrols  \
 	-I@top_srcdir@/base/headers @LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/thread \
 	-I@top_srcdir@/base/dataflow	                       \

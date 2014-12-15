@@ -15,6 +15,7 @@
 */
 #include "CV812Creator.h"
 #include "CV812.h"
+#include <memory>
 
 /**
  * operator()
@@ -24,8 +25,8 @@
  *
  * @return CControlHardware* - pointer to a CV812
  */
-CControlHardware*
-CV812Creator::operator()(std::string name)
+  std::unique_ptr<CControlHardware>
+CV812Creator::operator()()
 {
-  return new CV812(name);
+  return std::unique_ptr<CControlHardware>(new CV812);
 }
