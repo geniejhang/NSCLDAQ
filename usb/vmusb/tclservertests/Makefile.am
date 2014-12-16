@@ -9,7 +9,8 @@ unittests_SOURCES = @srcdir@/TestRunner.cpp \
 										@srcdir@/ctclcontrolmoduletest.cpp \
 										@srcdir@/cxlmcontrolstest.cpp \
 										@srcdir@/cvmusbmoduletest.cpp \
-										@srcdir@/cwienermdgg16test.cpp
+										@srcdir@/cwienermdgg16test.cpp \
+										@srcdir@/cmdgg16controltest.cpp
 #										@srcdir@/modulefactorytest.cpp
 unittests_LDADD = @top_builddir@/usb/vmusb/vmusb/libVMUSB.la \
 									@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \

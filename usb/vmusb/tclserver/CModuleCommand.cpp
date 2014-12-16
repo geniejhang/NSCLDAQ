@@ -37,6 +37,7 @@ using namespace std;
 #include "CXLMControlsCreator.h"
 #include "CChicoTriggerCreator.h"
 #include "CMxDCRCBusCreator.h"
+#include "CMDGG16ControlCreator.h"
 #include <memory>
 
 /*!
@@ -77,6 +78,8 @@ CModuleCommand::CModuleCommand(CTCLInterpreter& interp,
                     unique_ptr<CModuleCreator>(new CMxDCRCBusCreator));
   pFact->addCreator("chicotrigger", 
                     unique_ptr<CModuleCreator>(new CChicoTriggerCreator));
+  pFact->addCreator("mdgg16",
+                    unique_ptr<CModuleCreator>(new CMDGG16ControlCreator));
 
 }
 //! Destroy the module.. no op provided only as a chain to the base class destructor.

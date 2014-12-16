@@ -44,7 +44,9 @@ libVMUSBControlServer_la_SOURCES	= \
 					CMxDCRCBusCreator.cpp \
 					ChicoTrigger.cpp \
 					CChicoTriggerCreator.cpp \
-					CWienerMDGG16.cpp
+					CWienerMDGG16.cpp \
+					CMDGG16Control.cpp \
+					CMDGG16ControlCreator.cpp 
 
 noinst_HEADERS			=	CGDG.h			\
 					CV812.h			\
@@ -76,7 +78,9 @@ noinst_HEADERS			=	CGDG.h			\
 					CMxDCRCBusCreator.h \
 					ChicoTrigger.h \
 					CChicoTriggerCreator.h \
-					CWienerMDGG16.h
+					CWienerMDGG16.h \
+					CMDGG16Control.h \
+					CMDGG16ControlCreator.h
 
 
 
@@ -101,3 +105,4 @@ install-data-local:
 	$(INSTALL_DATA)  @srcdir@/*.h @prefix@/vmusbdriver/includes
 	$(INSTALL_DATA)  @srcdir@/CUserDriverSample.cpp @prefix@/vmusbdriver/example
 
+EXTRA_DIST = WienerMDGG16Registers.h

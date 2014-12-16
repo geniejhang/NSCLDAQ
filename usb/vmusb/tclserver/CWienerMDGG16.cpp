@@ -17,18 +17,40 @@
 #include <CWienerMDGG16.h>
 #include <CVMUSBReadoutList.h>
 #include <VMEAddressModifier.h>
+#include <WienerMDGG16Registers.h>
 
-static const uint32_t LOGICAL_OR_AB = 0x00b8;
-static const uint32_t LOGICAL_OR_CD = 0x00bc;
+using namespace WienerMDGG16;
 
 
-void CWienerMDGG16::addWriteLogicalORMaskAB(CVMUSBReadoutList& list, uint16_t mask)
+void CWienerMDGG16::addWriteLogicalORMaskAB(CVMUSBReadoutList& list, 
+                                            uint32_t mask)
 {
-  list.addWrite32(m_base+LOGICAL_OR_AB, VMEAMod::a24UserData, mask);
+  list.addWrite32(m_base+Regs::Logical_OR_AB, VMEAMod::a24UserData, mask);
 }
 
-void CWienerMDGG16::addWriteLogicalORMaskCD(CVMUSBReadoutList& list, uint16_t mask)
+void CWienerMDGG16::addWriteLogicalORMaskCD(CVMUSBReadoutList& list, 
+                                            uint32_t mask)
 {
-  list.addWrite32(m_base+LOGICAL_OR_CD, VMEAMod::a24UserData, mask);
+  list.addWrite32(m_base+Regs::Logical_OR_CD, VMEAMod::a24UserData, mask);
 }
 
+void CWienerMDGG16::addReadLogicalORMaskAB(CVMUSBReadoutList& list)
+{
+  list.addRead32(m_base+Regs::Logical_OR_AB, VMEAMod::a24UserData);
+}
+
+void CWienerMDGG16::addReadLogicalORMaskCD(CVMUSBReadoutList& list)
+{
+  list.addRead32(m_base+Regs::Logical_OR_CD, VMEAMod::a24UserData);
+}
+
+void CWienerMDGG16::addWriteECLOutput(CVMUSBReadoutList& list, 
+                                      uint32_t value)
+{
+  list.addWrite32(m_base+Regs::ECL_Output, VMEAMod::a24UserData, value);
+}
+
+void CWienerMDGG16::addReadECLOutput(CVMUSBReadoutList& list)
+{
+  list.addRead32(m_base+Regs::ECL_Output, VMEAMod::a24UserData);
+}

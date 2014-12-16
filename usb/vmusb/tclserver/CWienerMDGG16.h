@@ -27,19 +27,17 @@ class CWienerMDGG16 {
     uint32_t m_base;
 
   public:
-//    CWienerMDGG16();
-//    CWienerMDGG16(const CWienerMDGG16& rhs);
-//    ~CWienerMDGG16();
-
     void setBase(uint32_t base) { m_base = base; }
     uint32_t getBase() const { return m_base; }
 
-    void addWriteLogicalORMaskAB(CVMUSBReadoutList& list,
-                                uint16_t mask);
+    void addWriteLogicalORMaskAB(CVMUSBReadoutList& list, uint32_t mask);
+    void addWriteLogicalORMaskCD(CVMUSBReadoutList& list, uint32_t mask);
 
-    void addWriteLogicalORMaskCD(CVMUSBReadoutList& list,
-                                uint16_t mask);
-
+    void addReadLogicalORMaskAB(CVMUSBReadoutList& list);
+    void addReadLogicalORMaskCD(CVMUSBReadoutList& list);
+                               
+    void addWriteECLOutput(CVMUSBReadoutList& list, uint32_t val);
+    void addReadECLOutput(CVMUSBReadoutList& list);
 };
 
 #endif
