@@ -559,5 +559,58 @@ snit::type MDGG16Presenter {
       $self UpdateViewFromModel
     }
   }
+
+  method SaveCurrentStateToFile {path} {
+    set outfile [open $path w+]
+    # check for the presence of a handle
+    set handle [$self cget -handle]
+    if {$handle eq {}} {
+      set msg {MDGG16Presenter::CommitMask }
+      append msg {Cannot access model because it does not exist.}
+      return -code error $msg
+    }
+
+    # check for the presence of a view
+    set view [$self cget -view]
+    if {$view eq {}} {
+      set msg {MDGG16Presenter::CommitMask }
+      append msg {Cannot update view because it does not exist.}
+      return -code error $msg
+    }
+
+
+    ### Logical OR AB
+    set bits [list]
+    for {set index 0} {$index < 16} {incr index} {
+      lappend bits [$view GetBit 0 $index]
+    }
+    for {set index 0} {$index < 16} {incr index} {
+      lappend bits [$view GetBit 1 $index]
+    }
+    # turn list of bits into a number
+    set mask [$self EncodeMaskIntoBits $bits]
+    set or_a [expr $mask & 0xffff]
+    set or_b [expr ($mask>>16) & 0xffff]
+
+    puts $outfile "or_a $or_a"
+    puts $outfile "or_b $or_b"
+
+    ### Logical OR CD 
+    set bits [list]
+    for {set index 0} {$index < 16} {incr index} {
+      lappend bits [$view GetBit 2 $index]
+    }
+    for {set index 0} {$index < 16} {incr index} {
+      lappend bits [$view GetBit 3 $index]
+    }
+    # turn list of bits into a number
+    set mask [$self EncodeMaskIntoBits $bits]
+    set or_c [expr $mask & 0xffff]
+    set or_d [expr ($mask>>16) & 0xffff]
+    puts $outfile "or_c $or_c"
+    puts $outfile "or_d $or_d"
+
+    close $outfile
+  }
 }
 

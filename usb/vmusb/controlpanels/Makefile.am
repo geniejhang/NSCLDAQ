@@ -1,7 +1,7 @@
 SUBDIRS=cv6533
 
 PACKAGES=client.tcl configfile.tcl gdgcontrol.tcl gdgwidget.tcl sclclient.tcl xlm72scalerpanel.tcl \
-				 MDGG16Gui.tcl MDGG16Proxy.tcl
+				 MDGG16Gui.tcl MDGG16Proxy.tcl MDGG16GuiApp.tcl
 
 APPS=gdgpanel.tcl v812usbcontrol.tcl MDGG16Control.tcl
 

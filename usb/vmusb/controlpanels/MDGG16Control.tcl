@@ -7,8 +7,7 @@ package require cmdline
 set argv2 $argv
 set argv {}
 
-package require mdgg16gui
-package require mdgg16proxy
+package require mdgg16guiapp
 
 
 # Handle the options
@@ -48,16 +47,15 @@ ttk::style configure "Odd.TCheckbutton" -background "snow3"
 ttk::style configure "Odd.TFrame" -background "snow3"
 
 
+#
+#set paramDict [array get ::params]
+#MDGG16Proxy ::proxy -server [dict get $paramDict -host] \
+#                    -port [dict get $paramDict -port] \
+#                    -module [dict get $paramDict -module]
+#
+#MDGG16View .view 
+#MDGG16Presenter ::pres -view .view -handle ::proxy
 
-set paramDict [array get ::params]
-MDGG16Proxy ::proxy -server [dict get $paramDict -host] \
-                    -port [dict get $paramDict -port] \
-                    -module [dict get $paramDict -module]
+MDGG16GuiApp app {*}[array get ::params]
 
-MDGG16View .view 
-MDGG16Presenter ::pres -view .view -handle ::proxy
-
-grid .view -sticky nsew -padx 8 -pady 8
-grid rowconfigure . 0 -weight 1
-grid columnconfigure . 0 -weight 1
 wm resizable . false false
