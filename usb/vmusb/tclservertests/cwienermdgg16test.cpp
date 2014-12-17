@@ -34,6 +34,8 @@ class CWienerMDGG16Tests : public CppUnit::TestFixture {
     CPPUNIT_TEST(addReadECLOutput_0);
     CPPUNIT_TEST(addReadFirmware_0);
     CPPUNIT_TEST(addReadGlobal_0);
+    CPPUNIT_TEST(addWriteLEDNIMOutput_0);
+    CPPUNIT_TEST(addReadLEDNIMOutput_0);
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -56,6 +58,8 @@ class CWienerMDGG16Tests : public CppUnit::TestFixture {
     void addReadECLOutput_0();
     void addReadFirmware_0();
     void addReadGlobal_0();
+    void addWriteLEDNIMOutput_0();
+    void addReadLEDNIMOutput_0();
 
 };
 
@@ -161,5 +165,25 @@ void CWienerMDGG16Tests::addReadGlobal_0() {
   expected[0] = string("addRead32 fff00004 39");
 
   //print_vectors(expected, m_list.getLog());
+  CPPUNIT_ASSERT(expected == m_list.getLog());
+}
+
+void CWienerMDGG16Tests::addWriteLEDNIMOutput_0() {
+
+  m_dev.addWriteLEDNIMOutput(m_list, 0xff);
+
+  vector<string> expected(1);
+  expected[0] = string("addWrite32 fff000d0 39 255");
+
+  CPPUNIT_ASSERT(expected == m_list.getLog());
+}
+
+void CWienerMDGG16Tests::addReadLEDNIMOutput_0() {
+
+  m_dev.addReadLEDNIMOutput(m_list);
+
+  vector<string> expected(1);
+  expected[0] = string("addRead32 fff000d0 39");
+
   CPPUNIT_ASSERT(expected == m_list.getLog());
 }
