@@ -20,6 +20,10 @@
 using namespace std;
 
 class CWienerMDGG16Tests : public CppUnit::TestFixture {
+  private:
+    CWienerMDGG16 m_dev;
+    CLoggingReadoutList m_list;
+
   public:
     CPPUNIT_TEST_SUITE(CWienerMDGG16Tests);
     CPPUNIT_TEST(addWriteLogicalORMaskAB_0);
@@ -28,11 +32,17 @@ class CWienerMDGG16Tests : public CppUnit::TestFixture {
     CPPUNIT_TEST(addReadLogicalORMaskCD_0);
     CPPUNIT_TEST(addWriteECLOutput_0);
     CPPUNIT_TEST(addReadECLOutput_0);
+    CPPUNIT_TEST(addReadFirmware_0);
+    CPPUNIT_TEST(addReadGlobal_0);
     CPPUNIT_TEST_SUITE_END();
 
 
   public:
     void setUp() {
+      m_dev = CWienerMDGG16();
+      m_dev.setBase(0xfff00000);
+
+      m_list = CLoggingReadoutList();
     }
     void tearDown() {
     }
@@ -44,6 +54,8 @@ class CWienerMDGG16Tests : public CppUnit::TestFixture {
     void addReadLogicalORMaskCD_0();
     void addWriteECLOutput_0();
     void addReadECLOutput_0();
+    void addReadFirmware_0();
+    void addReadGlobal_0();
 
 };
 
@@ -63,87 +75,91 @@ void print_vectors(const vector<T>& expected, const vector<T>& actual) {
 
 
 void CWienerMDGG16Tests::addWriteLogicalORMaskAB_0() {
-  CWienerMDGG16 dev;
-  dev.setBase(0xfff00000);
 
-  CLoggingReadoutList list;
-  dev.addWriteLogicalORMaskAB(list, 0xffff);
+  m_dev.addWriteLogicalORMaskAB(m_list, 0xffff);
 
   vector<string> expected(1);
   expected[0] = string("addWrite32 fff000b8 39 65535");
 
-  CPPUNIT_ASSERT(expected == list.getLog());
+  CPPUNIT_ASSERT(expected == m_list.getLog());
 }
 
 
 void CWienerMDGG16Tests::addWriteLogicalORMaskCD_0() {
-  CWienerMDGG16 dev;
-  dev.setBase(0xfff00000);
 
-  CLoggingReadoutList list;
-  dev.addWriteLogicalORMaskCD(list, 0xffff);
+  m_dev.addWriteLogicalORMaskCD(m_list, 0xffff);
 
   vector<string> expected(1);
   expected[0] = string("addWrite32 fff000bc 39 65535");
 
-  //print_vectors(expected, list.getLog());
-  CPPUNIT_ASSERT(expected == list.getLog());
+  //print_vectors(expected, m_list.getLog());
+  CPPUNIT_ASSERT(expected == m_list.getLog());
 }
 
 void CWienerMDGG16Tests::addReadLogicalORMaskAB_0() {
-  CWienerMDGG16 dev;
-  dev.setBase(0xfff00000);
 
-  CLoggingReadoutList list;
-  dev.addReadLogicalORMaskAB(list);
+  m_dev.addReadLogicalORMaskAB(m_list);
 
   vector<string> expected(1);
   expected[0] = string("addRead32 fff000b8 39");
 
-  //print_vectors(expected, list.getLog());
-  CPPUNIT_ASSERT(expected == list.getLog());
+  //print_vectors(expected, m_list.getLog());
+  CPPUNIT_ASSERT(expected == m_list.getLog());
 }
 
 
 void CWienerMDGG16Tests::addReadLogicalORMaskCD_0() {
-  CWienerMDGG16 dev;
-  dev.setBase(0xfff00000);
 
-  CLoggingReadoutList list;
-  dev.addReadLogicalORMaskCD(list);
+  m_dev.addReadLogicalORMaskCD(m_list);
 
   vector<string> expected(1);
   expected[0] = string("addRead32 fff000bc 39");
 
-  //print_vectors(expected, list.getLog());
-  CPPUNIT_ASSERT(expected == list.getLog());
+  //print_vectors(expected, m_list.getLog());
+  CPPUNIT_ASSERT(expected == m_list.getLog());
 }
 
 
 void CWienerMDGG16Tests::addWriteECLOutput_0() {
-  CWienerMDGG16 dev;
-  dev.setBase(0xfff00000);
 
-  CLoggingReadoutList list;
-  dev.addWriteECLOutput(list,0xff);
+  m_dev.addWriteECLOutput(m_list,0xff);
 
   vector<string> expected(1);
   expected[0] = string("addWrite32 fff0000c 39 255");
 
-  //print_vectors(expected, list.getLog());
-  CPPUNIT_ASSERT(expected == list.getLog());
+  //print_vectors(expected, m_list.getLog());
+  CPPUNIT_ASSERT(expected == m_list.getLog());
 }
 
 void CWienerMDGG16Tests::addReadECLOutput_0() {
-  CWienerMDGG16 dev;
-  dev.setBase(0xfff00000);
 
-  CLoggingReadoutList list;
-  dev.addReadECLOutput(list);
+  m_dev.addReadECLOutput(m_list);
 
   vector<string> expected(1);
   expected[0] = string("addRead32 fff0000c 39");
 
-  //print_vectors(expected, list.getLog());
-  CPPUNIT_ASSERT(expected == list.getLog());
+  //print_vectors(expected, m_list.getLog());
+  CPPUNIT_ASSERT(expected == m_list.getLog());
+}
+
+void CWienerMDGG16Tests::addReadFirmware_0() {
+
+  m_dev.addReadFirmware(m_list);
+
+  vector<string> expected(1);
+  expected[0] = string("addRead32 fff00000 39");
+
+  //print_vectors(expected, m_list.getLog());
+  CPPUNIT_ASSERT(expected == m_list.getLog());
+}
+
+void CWienerMDGG16Tests::addReadGlobal_0() {
+
+  m_dev.addReadGlobal(m_list);
+
+  vector<string> expected(1);
+  expected[0] = string("addRead32 fff00004 39");
+
+  //print_vectors(expected, m_list.getLog());
+  CPPUNIT_ASSERT(expected == m_list.getLog());
 }

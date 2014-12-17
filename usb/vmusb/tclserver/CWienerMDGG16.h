@@ -38,6 +38,10 @@ class CWienerMDGG16 {
                                
     void addWriteECLOutput(CVMUSBReadoutList& list, uint32_t val);
     void addReadECLOutput(CVMUSBReadoutList& list);
+
+    void addReadFirmware(CVMUSBReadoutList& list);
+    void addReadGlobal(CVMUSBReadoutList& list);
+
 };
 
 #endif

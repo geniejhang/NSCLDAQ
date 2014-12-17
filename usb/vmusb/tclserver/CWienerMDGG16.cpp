@@ -54,3 +54,14 @@ void CWienerMDGG16::addReadECLOutput(CVMUSBReadoutList& list)
 {
   list.addRead32(m_base+Regs::ECL_Output, VMEAMod::a24UserData);
 }
+
+void CWienerMDGG16::addReadFirmware(CVMUSBReadoutList& list)
+{
+  list.addRead32(m_base+Regs::FirmwareID, VMEAMod::a24UserData);
+}
+
+void CWienerMDGG16::addReadGlobal(CVMUSBReadoutList& list)
+{
+  list.addRead32(m_base+Regs::Global, VMEAMod::a24UserData);
+}
+
