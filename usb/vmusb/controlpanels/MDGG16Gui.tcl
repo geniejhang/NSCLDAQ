@@ -562,13 +562,6 @@ snit::type MDGG16Presenter {
 
   method SaveCurrentStateToFile {path} {
     set outfile [open $path w+]
-    # check for the presence of a handle
-    set handle [$self cget -handle]
-    if {$handle eq {}} {
-      set msg {MDGG16Presenter::CommitMask }
-      append msg {Cannot access model because it does not exist.}
-      return -code error $msg
-    }
 
     # check for the presence of a view
     set view [$self cget -view]
@@ -577,7 +570,6 @@ snit::type MDGG16Presenter {
       append msg {Cannot update view because it does not exist.}
       return -code error $msg
     }
-
 
     ### Logical OR AB
     set bits [list]
