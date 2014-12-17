@@ -153,6 +153,7 @@ CMDGG16Control::Initialize(CVMUSB& vme)
 //   std::cout << std::dec;
 
    configureECLOutputs(*pList);   
+   configureLEDsAndNIMOutputs(*pList);   
 
    if (m_pConfig->getEnumParameter("-mode",modeEnum)==0) {
      // explicit mode 
@@ -173,15 +174,6 @@ CMDGG16Control::Initialize(CVMUSB& vme)
      throw errmsg.str();
    }
 }
-//
-//void CMDGG16Control::readState(CVMUSB& vme) 
-//{
-//  
-//   unique_ptr<CVMUSBReadoutList> pList(vme.createReadoutList());
-//   m_dev.addReadFirmware(*pList);
-//   m_dev.addReadGlobal(*pList);
-//
-//}
 
 /*!
   Update the device from the shadow configuration.
@@ -358,6 +350,27 @@ void CMDGG16Control::configureECLOutputs(CVMUSBReadoutList& list)
     m_dev.addWriteECLOutput(list, outputBits);
   }
 }
+
+
+void CMDGG16Control::configureLEDsAndNIMOutputs(CVMUSBReadoutList& list)
+{
+  if (m_pConfig) {
+    // there is currently only 1 option and that is to have all
+    // of the logical or outputs provided. 
+    using namespace ::WienerMDGG16::LEDNIM_Output;
+    uint32_t outputBits = (NIM_Logical_OR << NIM1_Shift);
+    outputBits |= (NIM_Logical_OR << NIM2_Shift);
+    outputBits |= (NIM_Logical_OR << NIM3_Shift);
+    outputBits |= (NIM_Logical_OR << NIM4_Shift);
+
+    outputBits |= (LED_ECL_OR_1234<< LEDGreen_Lt_Shift);
+    outputBits |= (LED_ECL_OR_12 << LEDGreen_Rt_Shift);
+    outputBits |= (LED_ECL_OR_23 << LEDYellow_Lt_Shift);
+    outputBits |= (LED_ECL_OR_34 << LEDYellow_Rt_Shift);
+    m_dev.addWriteLEDNIMOutput(list, outputBits);
+  }
+}
+
 
 void CMDGG16Control::configureORMasks(CVMUSBReadoutList& list)
 {

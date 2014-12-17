@@ -11,6 +11,7 @@ namespace WienerMDGG16
     const uint32_t Global        = 0x0004;
     const uint32_t Auxiliary     = 0x0008;
     const uint32_t ECL_Output    = 0x000c;
+    const uint32_t LEDNIM_Output    = 0x00d0;
     const uint32_t Logical_OR_AB     = 0x00b8;
     const uint32_t Logical_OR_CD     = 0x00bc;
   }
@@ -36,6 +37,40 @@ namespace WienerMDGG16
     const uint32_t B_Offset = 16;
     const uint32_t C_Offset = 0;
     const uint32_t D_Offset = 16;
+  }
+
+  namespace LEDNIM_Output {
+    // shifts for each set of bits
+    const uint32_t LEDGreen_Lt_Shift = 0;
+    const uint32_t LEDGreen_Rt_Shift = 4;
+    const uint32_t LEDYellow_Lt_Shift = 8;
+    const uint32_t LEDYellow_Rt_Shift = 12;
+    const uint32_t NIM1_Shift = 16;
+    const uint32_t NIM2_Shift = 20;
+    const uint32_t NIM3_Shift = 24;
+    const uint32_t NIM4_Shift = 28;
+
+    // common mask for all of the sets of bits...
+    // b/c they are all 4 bits wide.
+    const uint32_t Bit_Mask = 0xf;
+
+    const uint32_t LED_ECL_OR_1234 = 0;
+    const uint32_t LED_ECL_OR_12 = 1;
+    const uint32_t LED_ECL_OR_23 = 2;
+    const uint32_t LED_ECL_OR_34 = 3;
+    const uint32_t LED_ECL_OUT1 = 4;
+    const uint32_t LED_ECL_OUT2 = 5;
+    const uint32_t LED_ECL_OUT3 = 6;
+    const uint32_t LED_ECL_OUT4 = 7;
+
+    // values for the NIM bits
+    const uint32_t NIM_None = 0;
+    const uint32_t NIM_ECL1 = 1;
+    const uint32_t NIM_ECL2 = 2;
+    const uint32_t NIM_ECL3 = 3;
+    const uint32_t NIM_ECL4 = 4;
+    const uint32_t NIM_NIMIn1 = 5;
+    const uint32_t NIM_Logical_OR = 6;
   }
 
 }

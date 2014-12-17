@@ -83,3 +83,14 @@ uint32_t CWienerMDGG16::readGlobal(CVMUSB& ctlr)
   return executeList<uint32_t>(ctlr,*pList);
 }
 
+void CWienerMDGG16::addWriteLEDNIMOutput(CVMUSBReadoutList& list, 
+                                          uint32_t value)
+{
+  list.addWrite32(m_base+Regs::LEDNIM_Output, VMEAMod::a24UserData, value);
+}
+
+void CWienerMDGG16::addReadLEDNIMOutput(CVMUSBReadoutList& list)
+{
+  list.addRead32(m_base+Regs::LEDNIM_Output, VMEAMod::a24UserData);
+}
+

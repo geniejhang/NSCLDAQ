@@ -100,6 +100,7 @@ private:
   // Confiuration parameter getters:
   uint32_t base();
   void configureECLOutputs(CVMUSBReadoutList& list);
+  void configureLEDsAndNIMOutputs(CVMUSBReadoutList& list);
   void configureORMasks(CVMUSBReadoutList& list);
   void configureFromConfigFile(CVMUSBReadoutList& ctlr);
 
