@@ -22,11 +22,141 @@ tcltest::test decodeMask-0 {Makes sure we can decode properly
 
   MDGG16Presenter ::dev
   
-    set mask [expr 0xffffffff]
+  set mask [expr 0xffffffff]
   set res [::dev DecodeMaskIntoBits $mask]
   ::dev destroy
   set res
 } [list 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 \
                  1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ] 
+
+snit::type FakeView {
+  option -presenter
+
+  variable _log
+  variable _memory
+
+  constructor {args} {
+    $self configurelist $args
+    set _log [list]
+    set _memory [dict create 0 [dict create] 1 [dict create] \
+                             2 [dict create] 3 [dict create]]
+  }
+
+  method SetBit {col ch val} {
+    dict set _memory $col $ch $val
+  }
+
+  method GetBit {col ch} {
+    return [dict get $_memory $col $ch]
+  }
+
+  method SetOutOfSync {val} { }
+  method MapColumnToWidget {col} { return $self  }
+}
+
+snit::type FakeHandle {
+  variable _log
+
+  constructor {} {
+    set _log [list]
+  }
+
+  method SetLogicalORAB {val} {
+    lappend _log "SetLogicalORAB $val"
+  }
+
+  method SetLogicalORCD {val} {
+    lappend _log "SetLogicalORCD $val"
+  }
+
+  method GetLogicalORAB {} {
+    return 128;
+  }
+
+  method GetLogicalORCD {} {
+    return 127;
+  }
+
+  method GetLog {} {return $_log}
+}
+
+tcltest::test saveToFile-0 {Makes sure we can save to file
+} {
+  set view [FakeView %AUTO%]
+
+  for {set col 0} {$col<4} {incr col} {
+    for {set ch 0} {$ch<16} {incr ch} {
+      $view SetBit $col $ch 1
+    }
+  }
+  MDGG16Presenter ::dev -view $view
+  ::dev SaveCurrentStateToFile tmp.txt
+  ::dev destroy
+  $view destroy
+  
+  
+  set content [tcltest::viewFile tmp.txt]
+  file delete tmp.txt
+  set content
+} {or_a 65535
+or_b 65535
+or_c 65535
+or_d 65535}
+
+
+tcltest::test CommitMask-0 {Commit mask should copy state of view to handle
+} {
+  set handle [FakeHandle %AUTO%]
+  set view [FakeView %AUTO%]
+
+  MDGG16Presenter ::dev -view $view -handle $handle
+
+  # set the view state now b/c otherwise it would be set to whatever the 
+  # handle dictated in the previous line. 
+  for {set col 0} {$col<4} {incr col} {
+    for {set ch 0} {$ch<16} {incr ch} {
+      $view SetBit $col $ch 1
+    }
+  }
+
+  # commit the mask... because the view only knows how to return 1 for 
+  # every bit it maintains, this will produce two masks of value 65535
+  ::dev CommitMask 
+  $view destroy
+  
+  set log [$handle GetLog]
+  $handle destroy 
+  ::dev destroy
+
+  set log
+} {{SetLogicalORAB 4294967295} {SetLogicalORCD 4294967295}}
+
+tcltest::test UpdateViewFromModel-0 {Commit mask should copy state of view to handle
+} {
+  set handle [FakeHandle %AUTO%]
+  set view [FakeView %AUTO%]
+
+  # by default the next step will read from the handle the mask
+  # AB = 128 and CD = 127
+  MDGG16Presenter ::dev -view $view -handle $handle
+
+  # commit the mask... because the view only knows how to return 1 for 
+  # every bit it maintains, this will produce two masks of value 65535
+  ::dev UpdateViewFromModel
+
+  set result [list]
+  for {set col 0} {$col<4} {incr col} {
+    for {set ch 0} {$ch<16} {incr ch} {
+      lappend result [$view GetBit $col $ch] 
+    }
+  }
+  $view destroy
+  $handle destroy 
+  ::dev destroy
+
+  set result
+} [list 0 0 0 0  0 0 0 1  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0 \
+        1 1 1 1  1 1 1 0  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0 ]
+
 
 tcltest::cleanupTests
