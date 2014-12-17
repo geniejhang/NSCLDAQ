@@ -254,7 +254,7 @@ snit::widget MDGG16View {
   }
 
   method MapColumnToWidget {col} {
-    return [dict get [dict create 0 $_colA 1 $_colB 2 $_colC 3 _$colD] $col]
+    return [dict get [dict create 0 $_colA 1 $_colB 2 $_colC 3 $_colD] $col]
   }
 }
 
@@ -320,7 +320,7 @@ snit::type MDGG16Presenter {
       $view SetBit 0 $bit [lindex $bits $bit]
     }
 
-    for {set bit 17} {$bit < 32} {incr bit} {
+    for {set bit 16} {$bit < 32} {incr bit} {
       $view SetBit 1 $bit [lindex $bits $bit]
     }
 
@@ -332,7 +332,7 @@ snit::type MDGG16Presenter {
       $view SetBit 2 $bit [lindex $bits $bit]
     }
 
-    for {set bit 17} {$bit < 32} {incr bit} {
+    for {set bit 16} {$bit < 32} {incr bit} {
       $view SetBit 3 $bit [lindex $bits $bit]
     }
   }
@@ -397,7 +397,7 @@ snit::type MDGG16Presenter {
     set bits [list]
 
     # interpret mask as an actual byte
-    set byteValue [binary format s2 $mask]
+    set byteValue [binary format iu1 $mask]
 
     # convert byte into representation of bits as a string
     set count [binary scan $byteValue b32 binRep]
@@ -424,11 +424,9 @@ snit::type MDGG16Presenter {
     set binByte [binary format b32 $binRepStr]
 
     # interpret the byte as an 16-bit signed number
-    set count [binary scan $binByte s2 mask]
+    set count [binary scan $binByte iu1 mask]
 
     # becuase the number if signed and padded, we mask out upper bits
-    set mask [expr {$mask & 0xff}]
-
     return $mask
   } 
 

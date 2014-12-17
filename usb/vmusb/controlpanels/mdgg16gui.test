@@ -4,4 +4,29 @@ package require tcltest
 tcltest::test pkgrequire-0 {Must be able to require package
 } {package require mdgg16gui} 1.0
 
+
+tcltest::test encodeMask-0 {Makes sure we can encode properly
+} {
+
+  MDGG16Presenter ::dev
+
+  set bits [list 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 \
+                 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ] 
+  set res [::dev EncodeMaskIntoBits $bits]
+  ::dev destroy
+  set res
+} [expr 0xffffffff]
+
+tcltest::test decodeMask-0 {Makes sure we can decode properly
+} {
+
+  MDGG16Presenter ::dev
+  
+    set mask [expr 0xffffffff]
+  set res [::dev DecodeMaskIntoBits $mask]
+  ::dev destroy
+  set res
+} [list 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 \
+                 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ] 
+
 tcltest::cleanupTests

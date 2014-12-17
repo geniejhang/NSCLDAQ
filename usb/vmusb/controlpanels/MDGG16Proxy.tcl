@@ -1,6 +1,4 @@
-
 package provide mdgg16proxy 1.0
-
 
 package require snit
 package require usbcontrolclient
@@ -9,9 +7,9 @@ snit::type MDGG16Proxy {
 
   option -module -default {}
 
-  component _comObj;
+  component _comObj
 
-  delegate option * to _comObj;
+  delegate option * to _comObj
 
   constructor {args} {
     install _comObj using controlClient %AUTO%
