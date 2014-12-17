@@ -27,14 +27,24 @@ namespace eval MDGG16ChannelNames {
 }
 
 
+## @brief A column of checkbuttons with 17 rows
+#
+# There are 16 individually configurable buttons and one button that will toggle
+# all of the buttons together. This view that is not entirely devoid
+# of logic in that it can update whether any of its variables have been altered
+# since a previous sync reset. The widget is intended to be used with another
+# presenter-like widget. In the case of the MDGG16Control, it is managed by
+# another view that serves as a proxy to the real presenter.
+# 
 snit::widget CheckbuttonColumn {
 
-  hulltype ttk::frame 
+  hulltype ttk::frame  ;##!< make sure we can set the style
+  delegate option * to hull ;##!< make sure we can set the style
 
   option -presenter -default {} -configuremethod SetPresenter
   option -stylename -default {} -configuremethod SetStyle
-  delegate option * to hull
 
+  ## "private" variables that maintain the state of the checkbuttons
   variable _bit0
   variable _bit1
   variable _bit2
@@ -52,10 +62,13 @@ snit::widget CheckbuttonColumn {
   variable _bit14
   variable _bit15
 
-  variable _outOfSync
+  variable _outOfSync ;##! maintains whether at least one widget has changed
+                      ;#  since last sync
 
-  variable _widgets
+  variable _widgets ;##! convenient list of 16 individual widgets
 
+  ## @brief Construct the object, initialize, and parse options
+  #
   constructor {args} {
     set _widgets [list]
 
@@ -63,19 +76,23 @@ snit::widget CheckbuttonColumn {
 
     $self SetOutOfSync 1
 
+    # By default we will set these to 1. This is just a choice of
+    # initialization. In the presence of a real device associated with this,
+    # the values should be updated immediately after connection is established.
     for {set ch 0} {$ch < 17} {incr ch} {
       set _bit$ch 1
       trace add variable [myvar _bit$ch] write [mymethod BitChanged]
     }
 
-
     $self BuildGUI
     $self UpdateStyle [$self cget -style]
   }
 
-  ## @brief Buil
+  ## @brief Assemble the widgets
+  #
   #
   method BuildGUI {} {
+    # intialize checkbuttons
     for {set ch 0} {$ch < 16} {incr ch} {
       lappend _widgets [ttk::checkbutton $win.bit$ch -variable [myvar _bit$ch]] ;#-text "Enable"]
     }
@@ -83,12 +100,14 @@ snit::widget CheckbuttonColumn {
     ttk::checkbutton $win.bit16 -variable [myvar _bit16]
     trace add variable [myvar _bit16] write [mymethod Synchronize]
 
+    # grid the widgets
     for {set row 0} {$row<16} {incr row} {
       grid [lindex $_widgets $row] -sticky ew -padx 4 -pady 4
     }
     grid $sep -sticky ew
     grid $win.bit16 -sticky ew -padx 4 -pady 4
 
+    # all rows and columns are allowed to stretch
     grid rowconfigure $win [Utils::sequence 0 [llength $_widgets] 1] -weight 1 
     grid columnconfigure $win 0 -weight 1
   }
@@ -116,10 +135,32 @@ snit::widget CheckbuttonColumn {
     return [set _bit$index]
   }
 
+
+  ## @brief It is possible that a presenter could control this.
+  #
+  # There is not gaurantee that there will be a presenter but it is allowed.
+  #
   method SetPresenter {opt val} {
     set options($opt) $val
   }
 
+  ## @brief Callback for when -stylename is modified
+  #
+  # This is just a dispatcher to the UpdateStyle method. It does set the option
+  # to the value though.
+  #
+  # @param opt    option name (should be -stylename)
+  # @param val    value 
+  #
+  method SetStyle {opt val} {
+    $self UpdateStyle $val
+    set options($opt) $val
+  }
+
+  ## @brief Propagate a style change to the various widgets
+  #
+  # @param stylename  prefix name for a ttk style
+  #
   method UpdateStyle {stylename} {
     if {[llength $_widgets]>0} {
       foreach w $_widgets {
@@ -130,28 +171,56 @@ snit::widget CheckbuttonColumn {
     }
   }
 
+  ## @brief Callback for whenever bit 16 is written to
+  #
+  # When bit 16 is written to, it triggers all of the checkbuttons to be set
+  # identically. It is like a "select all" or "deselect all"
+  #
+  # @param name1  unused
+  # @param name2  unused
+  # @param op     unused
+  #
   method Synchronize {name1 name2 op} {
     # get the state of the variable
     set state [set [$win.bit16 cget -variable]]
+
+    # set the other widget values to be the same 
     foreach w $_widgets {
       set [$w cget -variable] $state
     }
   }
 
-  method SetStyle {opt val} {
-    $self UpdateStyle $val
-    set options($opt) $val
-  }
 
+  ## @brief Callback for whenever a bit is written to
+  #
+  # This is the callback of a trace set on all of the _bit# variables associated
+  # with the instance. When called, this will make sure to flag that the view is
+  # out of sync. 
+  #
+  # @param name1  unused
+  # @param name2  unused
+  # @param op     unused
+  #
   method BitChanged {name1 name2 op} {
     if {!$_outOfSync} {
       $self SetOutOfSync 1
     }
   }
 
+  ## @brief Sets the flag that indicates whether the view has changed since last
+  #         time _outOfSync was reset.
+  # 
+  #  @param state   boolean indicating whether out of sync or not
+  #
+  #
   method SetOutOfSync {state} {
-    set _outOfSync $state
+    set _outOfSync [string is true $state]
   }
+
+  ## @brief Retreive fully qualified name of the _outOfSync variable for
+  #         potentially registering a callback for it outside of this scope
+  #
+  # @returns qualified variable name of _outOfSync
   method GetOutOfSyncVar {} { return [myvar _outOfSync]}
 }
 
@@ -459,7 +528,7 @@ snit::type MDGG16Presenter {
       lappend bits [$view GetBit 1 $index]
     }
     # turn list of bits into a number
-    set mask [$self EncodeMaskIntoBits $bits]
+    set mask [$self EncodeBitsIntoMask $bits]
     $handle SetLogicalORAB $mask
 
     ### Logical OR CD 
@@ -471,7 +540,7 @@ snit::type MDGG16Presenter {
       lappend bits [$view GetBit 3 $index]
     }
     # turn list of bits into a number
-    set mask [$self EncodeMaskIntoBits $bits]
+    set mask [$self EncodeBitsIntoMask $bits]
     $handle SetLogicalORCD $mask
   }
 
@@ -487,10 +556,10 @@ snit::type MDGG16Presenter {
   method DecodeMaskIntoBits {mask} {
     set bits [list]
 
-    # interpret mask as an actual byte
+    # interpret mask as a 32-bit unsigned integer
     set byteValue [binary format iu1 $mask]
 
-    # convert byte into representation of bits as a string
+    # convert integer into representation of bits as a string
     set count [binary scan $byteValue b32 binRep]
 
     # split each character up to form a list of bits
@@ -505,16 +574,16 @@ snit::type MDGG16Presenter {
   # @param list of bits (least significant bit first)
   #
   # @returns an integer
-  method EncodeMaskIntoBits {bits} {
+  method EncodeBitsIntoMask {bits} {
     set mask 0
 
     # collapse list of bits into a single word by removing spaces
     set binRepStr [join $bits {}]
 
-    # convert string representation of bits into an actual byte
+    # convert string representation of bits into an actual byte string
     set binByte [binary format b32 $binRepStr]
 
-    # interpret the byte as an 16-bit signed number
+    # interpret the byte as an 32-bit unsigned integer
     set count [binary scan $binByte iu1 mask]
 
     # becuase the number if signed and padded, we mask out upper bits
@@ -580,7 +649,7 @@ snit::type MDGG16Presenter {
       lappend bits [$view GetBit 1 $index]
     }
     # turn list of bits into a number
-    set mask [$self EncodeMaskIntoBits $bits]
+    set mask [$self EncodeBitsIntoMask $bits]
     set or_a [expr $mask & 0xffff]
     set or_b [expr ($mask>>16) & 0xffff]
 
@@ -596,7 +665,7 @@ snit::type MDGG16Presenter {
       lappend bits [$view GetBit 3 $index]
     }
     # turn list of bits into a number
-    set mask [$self EncodeMaskIntoBits $bits]
+    set mask [$self EncodeBitsIntoMask $bits]
     set or_c [expr $mask & 0xffff]
     set or_d [expr ($mask>>16) & 0xffff]
     puts $outfile "or_c $or_c"

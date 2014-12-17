@@ -12,7 +12,7 @@ tcltest::test encodeMask-0 {Makes sure we can encode properly
 
   set bits [list 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 \
                  1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 ] 
-  set res [::dev EncodeMaskIntoBits $bits]
+  set res [::dev EncodeBitsIntoMask $bits]
   ::dev destroy
   set res
 } [expr 0xffffffff]
