@@ -29,7 +29,11 @@ namespace eval MDGG16ChannelNames {
 
 snit::widget CheckbuttonColumn {
 
+  hulltype ttk::frame 
+
   option -presenter -default {} -configuremethod SetPresenter
+  option -stylename -default {} -configuremethod SetStyle
+  delegate option * to hull
 
   variable _bit0
   variable _bit1
@@ -48,30 +52,39 @@ snit::widget CheckbuttonColumn {
   variable _bit14
   variable _bit15
 
+  variable _widgets
+
   constructor {args} {
+    set _widgets [list]
+
     $self configurelist $args
 
     for {set ch 0} {$ch < 17} {incr ch} {
       set _bit$ch 1
     }
 
-    set _rows [list]
 
     $self BuildGUI
+    $self UpdateStyle [$self cget -style]
   }
 
   ## @brief Buil
   #
   method BuildGUI {} {
-    for {set ch 0} {$ch < 17} {incr ch} {
-      lappend _rows [ttk::checkbutton $win.bit$ch -variable [myvar _bit$ch]] ;#-text "Enable"]
+    for {set ch 0} {$ch < 16} {incr ch} {
+      lappend _widgets [ttk::checkbutton $win.bit$ch -variable [myvar _bit$ch]] ;#-text "Enable"]
     }
+    set sep [ttk::separator $win.separator -orient horizontal]
+    ttk::checkbutton $win.bit16 -variable [myvar _bit16]
+    trace add variable [myvar _bit16] write [mymethod Synchronize]
 
-    foreach row $_rows {
-      grid $row -sticky ew -padx 4 -pady 4
+    for {set row 0} {$row<16} {incr row} {
+      grid [lindex $_widgets $row] -sticky ew -padx 4 -pady 4
     }
+    grid $sep -sticky ew
+    grid $win.bit16 -sticky ew -padx 4 -pady 4
 
-    grid rowconfigure $win [Utils::sequence 0 [llength $_rows] 1] -weight 1 
+    grid rowconfigure $win [Utils::sequence 0 [llength $_widgets] 1] -weight 1 
     grid columnconfigure $win 0 -weight 1
   }
 
@@ -101,12 +114,35 @@ snit::widget CheckbuttonColumn {
   method SetPresenter {opt val} {
     set options($opt) $val
   }
+
+  method UpdateStyle {stylename} {
+    if {[llength $_widgets]>0} {
+      foreach w $_widgets {
+        $w configure -style "$stylename.TCheckbutton"
+      }
+      $win.bit16 configure -style "$stylename.TCheckbutton"
+      $self configure -style "$stylename.TFrame"
+    }
+  }
+
+  method Synchronize {name1 name2 op} {
+    # get the state of the variable
+    set state [set [$win.bit16 cget -variable]]
+    foreach w $_widgets {
+      set [$w cget -variable] $state
+    }
+  }
+
+  method SetStyle {opt val} {
+    $self UpdateStyle $val
+    set options($opt) $val
+  }
 }
 
 
 ##########################
 
-snit::widget NameColumnView {
+snit::widget NameColumn {
 
   option -presenter -default {} -configuremethod SetPresenter
 
@@ -192,28 +228,28 @@ snit::widget MDGG16View {
   }
 
   method BuildGUI {} {
-
-    set title [ttk::frame $win.titles]
-    ttk::label $title.names -text "Names" -width 24
-    ttk::label $title.orA -text "OR A"
-    ttk::label $title.orB -text "OR B"
-    ttk::label $title.orC -text "OR C"
-    ttk::label $title.orD -text "OR D"
-    grid $title.names $title.orA $title.orB $title.orC $title.orD -sticky nsew -padx 4 -pady 4
-    grid columnconfigure $title 0 -weight 4 -uniform a
-    grid columnconfigure $title {1 2 3 4} -weight 1 -uniform a
+    set title [ttk::label $win.title -text "MDGG-16 Controls" -style Title.TLabel]
+    
+    set header [ttk::frame $win.headers -style "Header.TFrame"]
+    ttk::label $header.names -text "Names" -width 24 -style Header.TLabel
+    ttk::label $header.orA -text "OR A" -style Header.TLabel
+    ttk::label $header.orB -text "OR B" -style Header.TLabel
+    ttk::label $header.orC -text "OR C" -style Header.TLabel
+    ttk::label $header.orD -text "OR D" -style Header.TLabel
+    grid $header.names $header.orA $header.orB $header.orC $header.orD -sticky nsew -padx 4 -pady 4
+    grid columnconfigure $header 0 -weight 4 -uniform a
+    grid columnconfigure $header {1 2 3 4} -weight 1 -uniform a
 
     set cols [ttk::frame $win.cols]
-    install _colNames using NameColumnView $cols.colNames
-    install _colA using CheckbuttonColumn $cols.colA
-    install _colB using CheckbuttonColumn $cols.colB
-    install _colC using CheckbuttonColumn $cols.colC
-    install _colD using CheckbuttonColumn $cols.colD
+    install _colNames using NameColumn $cols.colNames
+    install _colA using CheckbuttonColumn $cols.colA -stylename "Even"
+    install _colB using CheckbuttonColumn $cols.colB -stylename "Odd"
+    install _colC using CheckbuttonColumn $cols.colC -stylename "Even"
+    install _colD using CheckbuttonColumn $cols.colD -stylename "Odd"
     grid $_colNames $_colA $_colB $_colC $_colD -sticky nsew
     grid rowconfigure $cols {0 1 2 3 4} -weight 0
-    grid columnconfigure $title 0 -weight 4 -uniform a
+    grid columnconfigure $cols 0 -weight 4 -uniform a
     grid columnconfigure $cols {1 2 3 4} -weight 1 -uniform a
-
 
     set buttons [ttk::frame $win.buttons]
     ttk::button $buttons.commit -text "Commit to Device" -command [mymethod Commit]
@@ -221,17 +257,19 @@ snit::widget MDGG16View {
     grid $buttons.commit $buttons.update -sticky ew
     grid columnconfigure $buttons {0 1} -weight 1
 
-    grid $title -sticky ew
+    grid $title -sticky new
+    grid $header -sticky ew
     grid $cols -sticky nsew
     grid $buttons -sticky new
-    grid rowconfigure $cols {0 1 2 3 4} -weight 1
-    grid columnconfigure $cols {0 1 2 3 4} -weight 1
+    grid rowconfigure $win {0 1 2 3} -weight 1
+    grid columnconfigure $win 0 -weight 1
 
   }
 
   method Commit {} {
     set pr [$self cget -presenter]
     if {$pr ne {}} {
+      puts "Committing"
       $pr Commit
     }
   }
@@ -239,6 +277,7 @@ snit::widget MDGG16View {
   method Update {} {
     set pr [$self cget -presenter]
     if {$pr ne {}} {
+      puts "Updating"
       $pr Update 
     }
   }
@@ -321,7 +360,7 @@ snit::type MDGG16Presenter {
     }
 
     for {set bit 16} {$bit < 32} {incr bit} {
-      $view SetBit 1 $bit [lindex $bits $bit]
+      $view SetBit 1 [expr $bit-16] [lindex $bits $bit]
     }
 
     ## set the logical OR bits for C and D
@@ -333,7 +372,7 @@ snit::type MDGG16Presenter {
     }
 
     for {set bit 16} {$bit < 32} {incr bit} {
-      $view SetBit 3 $bit [lindex $bits $bit]
+      $view SetBit 3 [expr $bit-16] [lindex $bits $bit]
     }
   }
 
