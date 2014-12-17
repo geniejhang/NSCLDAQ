@@ -50,6 +50,19 @@ class CVMUSB;
 
 */
 
+struct CMDGG16ControlState 
+{
+  uint32_t or_a;
+  uint32_t or_b;
+  uint32_t or_c;
+  uint32_t or_d;
+};
+
+class ConfigFileReader {
+  public:
+    CMDGG16ControlState parse(std::string file);
+};
+
 class CMDGG16Control : public CControlHardware
 {
   private:
@@ -88,6 +101,7 @@ private:
   uint32_t base();
   void configureECLOutputs(CVMUSBReadoutList& list);
   void configureORMasks(CVMUSBReadoutList& list);
+  void configureFromConfigFile(CVMUSBReadoutList& ctlr);
 
 
 };

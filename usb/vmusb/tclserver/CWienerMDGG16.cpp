@@ -14,11 +14,13 @@
 	     East Lansing, MI 48824-1321
 */
 
+#include <memory>
 #include <CWienerMDGG16.h>
 #include <CVMUSBReadoutList.h>
 #include <VMEAddressModifier.h>
 #include <WienerMDGG16Registers.h>
 
+using std::unique_ptr;
 using namespace WienerMDGG16;
 
 
@@ -63,5 +65,21 @@ void CWienerMDGG16::addReadFirmware(CVMUSBReadoutList& list)
 void CWienerMDGG16::addReadGlobal(CVMUSBReadoutList& list)
 {
   list.addRead32(m_base+Regs::Global, VMEAMod::a24UserData);
+}
+
+uint32_t CWienerMDGG16::readFirmware(CVMUSB& ctlr) 
+{
+  unique_ptr<CVMUSBReadoutList> pList(ctlr.createReadoutList());
+  addReadFirmware(*pList);
+
+  return executeList<uint32_t>(ctlr,*pList);
+}
+
+uint32_t CWienerMDGG16::readGlobal(CVMUSB& ctlr) 
+{
+  unique_ptr<CVMUSBReadoutList> pList(ctlr.createReadoutList());
+  addReadGlobal(*pList);
+
+  return executeList<uint32_t>(ctlr,*pList);
 }
 

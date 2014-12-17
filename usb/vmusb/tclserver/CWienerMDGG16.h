@@ -19,7 +19,8 @@
 
 #include <stdint.h>
 
-class CVMUSBReadoutList;
+#include <CVMUSB.h>
+#include <CVMUSBReadoutList.h>
 
 class CWienerMDGG16 {
 
@@ -42,6 +43,35 @@ class CWienerMDGG16 {
     void addReadFirmware(CVMUSBReadoutList& list);
     void addReadGlobal(CVMUSBReadoutList& list);
 
+    uint32_t readFirmware(CVMUSB& ctlr);
+    uint32_t readGlobal(CVMUSB& ctlr);
+
+  private:
+    template <class T> T executeList(CVMUSB& ctlr, CVMUSBReadoutList& list);
+
 };
+
+
+
+template <class T>
+T CWienerMDGG16::executeList(CVMUSB& ctlr, CVMUSBReadoutList& list)
+{
+  size_t nRead=0;
+  T buffer;
+  int status = ctlr.executeList(list, &buffer, sizeof(buffer), &nRead);
+  if (status<0) {
+    std::string errmsg ("CWienerMDGG16::readGlobal() failed during ");
+    errmsg += "executeList() with status " + std::to_string(status);
+    throw errmsg;
+  }
+
+  if (nRead != sizeof(buffer)) {
+    std::string errmsg ("CWienerMDGG16::executeList() read back fewer");
+    errmsg += " bytes than were expected.";
+    throw errmsg;
+  }
+
+  return buffer;
+}
 
 #endif

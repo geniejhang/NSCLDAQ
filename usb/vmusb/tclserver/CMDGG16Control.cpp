@@ -25,11 +25,35 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
+#include <sys/stat.h>
 
 using namespace std;
 
-static const char* modeEnum [] = { "or" , 0 };
+static const char* modeEnum [] = { "explicit" , "file", 0 };
+
+static bool fileReadable(std::string, std::string value, void* arg) 
+{
+  int status = access(value.c_str(), R_OK);
+  return (status == 0);
+}
+
+CMDGG16ControlState ConfigFileReader::parse(std::string path) 
+{
+  ifstream file(path.c_str());
+
+  CMDGG16ControlState state = {0,0,0,0};
+  string varname;
+
+  file >> varname >> state.or_a;
+  file >> varname >> state.or_b;
+  file >> varname >> state.or_c;
+  file >> varname >> state.or_d;
+
+  return state;
+}
+
 
 /*!
    construct the beast.. The shadow registers will all get set to zero
@@ -101,11 +125,13 @@ CMDGG16Control::onAttach(CControlModule& configuration)
   configuration.addParameter("-base", CConfigurableObject::isInteger, NULL, 
                              string("0"));
 
-  configuration.addEnumParameter("-mode", modeEnum, "or");
+  configuration.addEnumParameter("-mode", modeEnum, "explicit");
   configuration.addIntegerParameter("-or_a",0,255,255);
   configuration.addIntegerParameter("-or_b",0,255,255);
   configuration.addIntegerParameter("-or_c",0,255,255);
   configuration.addIntegerParameter("-or_d",0,255,255);
+
+  configuration.addParameter("-configfile", fileReadable, nullptr, "");
 }
 ////////////////////////////////////////////////////////////////////////////
 /*!
@@ -121,13 +147,20 @@ CMDGG16Control::Initialize(CVMUSB& vme)
 
    unique_ptr<CVMUSBReadoutList> pList(vme.createReadoutList());
 
-   std::cout << std::hex;
-   std::cout << "Firmware : " << m_dev.readFirmware(vme) << std::endl;
-   std::cout << "Global : " << m_dev.readGlobal(vme) << std::endl;
-   std::cout << std::dec;
+//   std::cout << std::hex;
+//   std::cout << "Firmware : " << m_dev.readFirmware(vme) << std::endl;
+//   std::cout << "Global : " << m_dev.readGlobal(vme) << std::endl;
+//   std::cout << std::dec;
 
    configureECLOutputs(*pList);   
-   configureORMasks(*pList);   
+
+   if (m_pConfig->getEnumParameter("-mode",modeEnum)==0) {
+     // explicit mode 
+     configureORMasks(*pList);   
+   } else {
+     // file mode
+     configureFromConfigFile(*pList);
+   }
 
    size_t nRead=0;
    uint32_t buf[8];
@@ -341,5 +374,19 @@ void CMDGG16Control::configureORMasks(CVMUSBReadoutList& list)
     m_dev.addWriteLogicalORMaskAB(list, or_ab); 
     m_dev.addWriteLogicalORMaskCD(list, or_cd);
   }
+
+}
+
+void CMDGG16Control::configureFromConfigFile(CVMUSBReadoutList& list)
+{
+  std::string path = m_pConfig->cget("-configfile");
+  CMDGG16ControlState state = ConfigFileReader().parse(path);
+
+  using namespace ::WienerMDGG16::Logical_OR;
+
+  uint32_t or_ab = (state.or_b<<B_Offset)|(state.or_a<<A_Offset);
+  uint32_t or_cd = (state.or_d<<D_Offset)|(state.or_c<<C_Offset);
+  m_dev.addWriteLogicalORMaskAB(list, or_ab); 
+  m_dev.addWriteLogicalORMaskCD(list, or_cd);
 
 }
