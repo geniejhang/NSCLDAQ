@@ -41,8 +41,8 @@ static const time_t DefaultBuildWindow(20); // default seconds to accumulate dat
 static const uint32_t IdlePollInterval(2);  // Seconds between idle polls.
 static const time_t DefaultStartupTimeout(4); // default seconds to accumulate data before ordering.
 static time_t timeOfFirstSubmission(UINT64_MAX); //
-static const  size_t defaultXonLimit(80*Mega);     // Default total fragment storage at which we can xon
-static const  size_t defaultXoffLimit(100*Mega);    // Default total fragment storage at which we xoff.
+static const  size_t defaultXonLimit(150*Mega);     // Default total fragment storage at which we can xon
+static const  size_t defaultXoffLimit(200*Mega);    // Default total fragment storage at which we xoff.
 
 /*---------------------------------------------------------------------
  * Debugging
@@ -730,8 +730,7 @@ CFragmentHandler::resetTimestamps()
   m_nMostRecentlyPopped = 0;
 
   for (Sources::iterator p = m_FragmentQueues.begin(); p != m_FragmentQueues.end(); p++) {
-    p->second.s_newestTimestamp = 0;
-    p->second.s_lastPoppedTimestamp = UINT64_MAX;
+    p->second.reset();
   }
 }
       
@@ -938,6 +937,8 @@ CFragmentHandler::popOldest()
         observeDuplicateTimestamp(pOldestQ->first, fragmentTimestamp);
       }
       pOldestQ->second.s_lastPoppedTimestamp = fragmentTimestamp;
+      pOldestQ->second.s_bytesDeQd          += oldestFrag.second->s_header.s_size;
+      pOldestQ->second.s_bytesInQ           -= oldestFrag.second->s_header.s_size;
       pOldestQ->second.s_queue.pop();
 
       // If this queue has been emptied mark that time:
@@ -1039,6 +1040,8 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
 
     memcpy(pFrag->s_pBody, pFragment->s_body, pFrag->s_header.s_size);
 
+    // Get a reference to the fragment queue, creating it if needed:
+    
     SourceQueue& destQueue(getSourceQueue(pHeader->s_sourceId));
 
 
@@ -1058,10 +1061,12 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
 		  << timestamp << " Next: 0x" << pFrag->s_header.s_timestamp << std::endl;
       }
     }
-    destQueue.s_newestTimestamp = timestamp; // for sure the newest 
-
+    // Update stastistics:
     
-   // Get a reference to the fragment queue, creating it if needed:
+    destQueue.s_newestTimestamp = timestamp;                  // for sure the newest 
+    destQueue.s_bytesInQ       += pFrag->s_header.s_size;     // Only count payloads.
+    destQueue.s_totalBytesQd   += pFrag->s_header.s_size;     // Total bytes into the queue.
+    
     
     destQueue.s_queue.push(std::pair<time_t, EVB::pFragment>(m_nNow, pFrag));
     m_liveSources.insert(pHeader->s_sourceId); // having a fragment makes a source live.
@@ -1201,8 +1206,12 @@ CFragmentHandler::QueueStatGetter::operator()(SourceElementV& source)
     QueueStatistics stats;
     stats.s_queueId       = source.first;
     stats.s_queueDepth    = sourceQ.s_queue.size();
-    stats.s_oldestElement = stats.s_queueDepth ?sourceQ.s_queue.front().second->s_header.s_timestamp :
-      0;
+    stats.s_oldestElement =
+        stats.s_queueDepth ? sourceQ.s_queue.front().second->s_header.s_timestamp 
+                           : 0;
+    stats.s_queuedBytes       = sourceQ.s_bytesInQ;
+    stats.s_dequeuedBytes     = sourceQ.s_bytesDeQd;
+    stats.s_totalQueuedBytes  = sourceQ.s_totalBytesQd;
     
     m_nTotalFragments += stats.s_queueDepth;
     m_Stats.push_back(stats);
@@ -1262,6 +1271,8 @@ CFragmentHandler::generateBarrier(std::vector<EVB::pFragment>& outputList)
     if (!p->second.s_queue.empty()) {
       ::EVB::pFragment pFront = p->second.s_queue.front().second;
       p->second.s_lastPoppedTimestamp = pFront->s_header.s_timestamp;
+      p->second.s_bytesDeQd           += pFront->s_header.s_size;
+      p->second.s_bytesInQ            -= pFront->s_header.s_size;
       if (pFront->s_header.s_barrier) {
 	outputList.push_back(pFront);
 	p->second.s_queue.pop();
@@ -1446,8 +1457,6 @@ CFragmentHandler::getSourceQueue(uint32_t id)
   Sources::iterator p = m_FragmentQueues.find(id);
   if (p  == m_FragmentQueues.end()) {	       // Need to create.
     SourceQueue& queue = m_FragmentQueues[id]; // Does most of the creation.
-    queue.s_newestTimestamp = m_nNewest;	       // Probably the best initial value.
-    queue.s_lastPoppedTimestamp = UINT64_MAX;
     return queue;
   }  else {			              // already exists.
     return p->second;

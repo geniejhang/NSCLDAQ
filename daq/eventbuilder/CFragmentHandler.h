@@ -124,7 +124,19 @@ private:
   typedef struct _SourceQueue {
     uint64_t                                        s_newestTimestamp;
     uint64_t                                        s_lastPoppedTimestamp;
+    uint64_t                                        s_bytesInQ; 
+    uint64_t                                        s_bytesDeQd;
+    uint64_t                                        s_totalBytesQd;
     std::queue<std::pair<time_t,  EVB::pFragment> > s_queue;
+    void reset() {
+        s_newestTimestamp = 0;
+        s_lastPoppedTimestamp = UINT64_MAX;
+        s_bytesInQ = 0;
+        s_bytesDeQd  = 0;
+        s_totalBytesQd = 0;
+    }
+    _SourceQueue()  {reset();}
+    
 
   } SourceQueue, *pSourceQueue;
 
@@ -142,6 +154,10 @@ public:
         uint32_t   s_queueId;
         uint32_t   s_queueDepth;
         uint64_t   s_oldestElement;
+        size_t     s_queuedBytes;               // Currently queued bytes
+        size_t     s_dequeuedBytes;
+        size_t     s_totalQueuedBytes;          // bytes queued since last reset.
+        
     } QueueStatistics, *pQueueStatistics;
     
     typedef struct _InputStatistics {

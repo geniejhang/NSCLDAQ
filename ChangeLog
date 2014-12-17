@@ -874,4 +874,6 @@ Work on 11.0-rc11 begins
            original trigger was Bug #3238 which is fixed in this release as well.
         Feature #3232 - Add mechanism to get the source id from sbsReadout CDExperiment objects
         and document how to have an event segment produce its own event segments.
+        Feature #3217 - Provide indications of the Eventbuilder queue depth and throughputs in
+        bytes/sec.
 	
