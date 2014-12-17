@@ -52,6 +52,8 @@ snit::widget CheckbuttonColumn {
   variable _bit14
   variable _bit15
 
+  variable _outOfSync
+
   variable _widgets
 
   constructor {args} {
@@ -59,8 +61,11 @@ snit::widget CheckbuttonColumn {
 
     $self configurelist $args
 
+    $self SetOutOfSync 1
+
     for {set ch 0} {$ch < 17} {incr ch} {
       set _bit$ch 1
+      trace add variable [myvar _bit$ch] write [mymethod BitChanged]
     }
 
 
@@ -137,6 +142,17 @@ snit::widget CheckbuttonColumn {
     $self UpdateStyle $val
     set options($opt) $val
   }
+
+  method BitChanged {name1 name2 op} {
+    if {!$_outOfSync} {
+      $self SetOutOfSync 1
+    }
+  }
+
+  method SetOutOfSync {state} {
+    set _outOfSync $state
+  }
+  method GetOutOfSyncVar {} { return [myvar _outOfSync]}
 }
 
 
@@ -217,11 +233,19 @@ snit::widget MDGG16View {
   component _colB
   component _colC
   component _colD
+  component _updateButton
+
+  variable _outOfSyncAVar
+  variable _outOfSyncBVar
+  variable _outOfSyncCVar
+  variable _outOfSyncDVar
 
   constructor {args} {
     $self configurelist $args
 
     $self BuildGUI
+    $self SetUpSync
+
   }
 
   destructor {
@@ -253,7 +277,8 @@ snit::widget MDGG16View {
 
     set buttons [ttk::frame $win.buttons]
     ttk::button $buttons.commit -text "Commit to Device" -command [mymethod Commit]
-    ttk::button $buttons.update -text "Update from Device" -command [mymethod Update] 
+    set _updateButton [ttk::button $buttons.update -text "Update from Device" \
+                                                   -command [mymethod Update]]
     grid $buttons.commit $buttons.update -sticky ew
     grid columnconfigure $buttons {0 1} -weight 1
 
@@ -265,11 +290,22 @@ snit::widget MDGG16View {
     grid columnconfigure $win 0 -weight 1
 
   }
+  
+  method SetUpSync {} {
+    set _outOfSyncAVar [$_colA GetOutOfSyncVar]
+    trace add variable $_outOfSyncAVar write [mymethod SyncChanged]
+    set _outOfSyncBVar [$_colB GetOutOfSyncVar]
+    trace add variable $_outOfSyncBVar write [mymethod SyncChanged]
+    set _outOfSyncCVar [$_colC GetOutOfSyncVar]
+    trace add variable $_outOfSyncCVar write [mymethod SyncChanged]
+    set _outOfSyncDVar [$_colD GetOutOfSyncVar]
+    trace add variable $_outOfSyncDVar write [mymethod SyncChanged]
+
+  }
 
   method Commit {} {
     set pr [$self cget -presenter]
     if {$pr ne {}} {
-      puts "Committing"
       $pr Commit
     }
   }
@@ -277,7 +313,6 @@ snit::widget MDGG16View {
   method Update {} {
     set pr [$self cget -presenter]
     if {$pr ne {}} {
-      puts "Updating"
       $pr Update 
     }
   }
@@ -294,6 +329,18 @@ snit::widget MDGG16View {
 
   method MapColumnToWidget {col} {
     return [dict get [dict create 0 $_colA 1 $_colB 2 $_colC 3 $_colD] $col]
+  }
+
+  method SyncChanged {name1 name2 op} {
+    set outA [set $_outOfSyncAVar]
+    set outB [set $_outOfSyncBVar]
+    set outC [set $_outOfSyncCVar]
+    set outD [set $_outOfSyncDVar]
+    if { $outA || $outB || $outC || $outD } {
+      $_updateButton state !disabled
+    } else {
+      $_updateButton state disabled
+    }
   }
 }
 
@@ -374,6 +421,11 @@ snit::type MDGG16Presenter {
     for {set bit 16} {$bit < 32} {incr bit} {
       $view SetBit 3 [expr $bit-16] [lindex $bits $bit]
     }
+
+    [$view MapColumnToWidget 0] SetOutOfSync 0
+    [$view MapColumnToWidget 1] SetOutOfSync 0
+    [$view MapColumnToWidget 2] SetOutOfSync 0
+    [$view MapColumnToWidget 3] SetOutOfSync 0
   }
 
   ## @brief Write the state of the view to the device
