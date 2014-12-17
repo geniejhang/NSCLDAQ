@@ -60,4 +60,4 @@ MDGG16Presenter ::pres -view .view -handle ::proxy
 grid .view -sticky nsew -padx 8 -pady 8
 grid rowconfigure . 0 -weight 1
 grid columnconfigure . 0 -weight 1
-
+wm resizable . false false
