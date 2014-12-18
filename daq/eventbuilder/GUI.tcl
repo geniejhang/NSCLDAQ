@@ -36,6 +36,7 @@ package require EVB::connectionList
 package require EVB::Late
 package require EVB::LatePopup
 package require EVB::DuplicateTimestamp
+package require EVB::OutOfOrderUI
 
 # Establish the EVB namespace into which we're going to squeeze:
 
@@ -51,6 +52,8 @@ namespace eval ::EVB {
     variable lastOutBytes 0
     variable lastinputstats
     array set lastinputstats [list]
+    
+    variable ooWidget
 }
 
 #-----------------------------------------------------------------------------
@@ -429,6 +432,7 @@ snit::widgetadaptor EVB::errorStatistics {
 #   - getSummaryStats - Returns the summary widget so that it can be updated.
 #   - getSourceStats  - Returns the source statistics widget so that it can be
 #                     updated.
+#   - getOutOfOrderStats - Get tab for per source out of order information.
 #   - getBarrierStats - Returns the barrier statistics widget so that it can be
 #                     updated.
 #   - getErrorStats   - Get the error statistics widget
@@ -436,6 +440,7 @@ snit::widgetadaptor EVB::errorStatistics {
 snit::widgetadaptor EVB::statusNotebook {
     component summaryStats
     component sourceStats
+    component ooStats
     component barrierStats
     component errorStats
     
@@ -463,6 +468,9 @@ snit::widgetadaptor EVB::statusNotebook {
         
         install sourceStats using EVB::sourceStatistics $win.sources
         $hull add $sourceStats -text {Source Statistics}
+        
+        install ooStats using OutOfOrderWindow $win.oo
+        $hull add $ooStats -text {Out of order}
         
         install barrierStats using EVB::barrierStatistics $win.barrier
         $hull add $barrierStats -text {Barriers}
@@ -494,6 +502,13 @@ snit::widgetadaptor EVB::statusNotebook {
         return $sourceStats
     }
     ##
+    # getOutOfOrderStats
+    #
+    #   Returns the out of order statistics window.
+    method getOutOfOrderStats {} {
+        return $ooStats
+    }
+    ##
     # getBarrierStats
     #   Return the widget that manages the barrier statistics.
     #
@@ -515,6 +530,10 @@ snit::widgetadaptor EVB::statusNotebook {
 #
 # Stuff to maintain the status of the UI.
 #
+
+proc addOutOfOrder {id last bad} {
+    $EVB::ooWidget add $id [clock seconds] $last $bad
+}
 
 
 ##
@@ -545,6 +564,10 @@ proc EVB::createGui widget {
     
     set summary [$widget getSummaryStats]
     EVB::onflow add [list $summary configure -flowcontrol 0] [list $summary configure -flowcontrol 1]
+    
+    set EVB::ooWidget [$widget getOutOfOrderStats]
+
+    EVB::ootrace add addOutOfOrder
 
     return $widget
 }

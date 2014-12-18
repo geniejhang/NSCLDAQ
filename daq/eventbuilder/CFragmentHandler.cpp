@@ -511,6 +511,65 @@ CFragmentHandler::removeFlowControlObserver(FlowControlObserver* pObserver)
 }
 
 /**
+ * addNonMonotonicTimestampObserver
+ *   Add an observer that is called if an input queue has a timestamp that is
+ *   non-monotonic with respect to the previous timestamp.
+ *
+ *  @param pObserver - pointer to the observer to add.
+ */
+void
+CFragmentHandler::addNonMonotonicTimestampObserver(
+    CFragmentHandler::NonMonotonicTimestampObserver* pObserver
+)
+{
+    m_nonMonotonicTsObservers.push_back(pObserver);
+}
+/**
+ * removeNonMonotonicTimestampobserver
+ *   Remove an observer observer established with
+ *   addNonMonotonicTimestampObserver above
+ *
+ *   @param pObserver - pointer to the observer to remove.
+ *
+ *   @note we do not own the storage for the observer, if the observer
+ *   is dynamically allocated it is not our responsibility to delete it.
+ */
+void
+CFragmentHandler::removeNonMonotonicTimestampobserver(
+    CFragmentHandler::NonMonotonicTimestampObserver* pObserver
+)
+{
+    std::list<NonMonotonicTimestampObserver*>::iterator p =
+        std::find(m_nonMonotonicTsObservers.begin(),
+                  m_nonMonotonicTsObservers.end(), pObserver);
+    if (p != m_nonMonotonicTsObservers.end()) {
+        m_nonMonotonicTsObservers.erase(p);
+    }
+}
+
+/**
+ * observeOutOfOrderInput
+ *    Fire the observers associated with an out of order timestamp on an
+ *    input queue.
+ *
+ *   @param sourceId - id of the source that has out of order input.
+ *   @param prior    - Timestamp prior to the out of order one.
+ *   @param bad      - Out of order timestamp.
+ */
+void
+CFragmentHandler::observeOutOfOrderInput(
+    unsigned sourceId, uint64_t prior, uint64_t bad
+)
+{
+    std::list<NonMonotonicTimestampObserver*>::iterator p =
+        m_nonMonotonicTsObservers.begin();
+    while (p != m_nonMonotonicTsObservers.end()) {
+        NonMonotonicTimestampObserver* pObs = *p;
+        (*pObs)(sourceId, prior, bad);
+        p++;
+    }
+}
+/**
  * Xon
  *   Initiate a flow on event.  This means invoking the Xon method
  *   of each flow control observer registered with us.
@@ -1068,7 +1127,25 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
     destQueue.s_totalBytesQd   += pFrag->s_header.s_size;     // Total bytes into the queue.
     
     
+    // Before we push the queue element, see if we need to observe a bad
+    // timestamop:
+    
+    
+    
+    
+    
+    uint64_t newTimestamp   = pFrag->s_header.s_timestamp;
+    uint64_t priorTimestamp =
+        destQueue.s_lastTimestamp;
+    
+    if (newTimestamp < priorTimestamp) {
+        observeOutOfOrderInput(pHeader->s_sourceId, priorTimestamp, newTimestamp);
+    }
+
     destQueue.s_queue.push(std::pair<time_t, EVB::pFragment>(m_nNow, pFrag));
+    destQueue.s_lastTimestamp = newTimestamp;
+    
+    
     m_liveSources.insert(pHeader->s_sourceId); // having a fragment makes a source live.
     
     // update newest/oldest if needed -- and not a barrier:
@@ -1093,7 +1170,7 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
 #endif
 	m_nOldest = timestamp;
     }
-    // Queue out of order fragmen?
+    // Queue out of order fragment?
     if (!destQueue.s_queue.empty()) {
       if (timestamp < destQueue.s_newestTimestamp) {
 	std::cerr << "Queue timestamp took a jump backwards from : "

@@ -127,6 +127,7 @@ private:
     uint64_t                                        s_bytesInQ; 
     uint64_t                                        s_bytesDeQd;
     uint64_t                                        s_totalBytesQd;
+    uint64_t                                        s_lastTimestamp;
     std::queue<std::pair<time_t,  EVB::pFragment> > s_queue;
     void reset() {
         s_newestTimestamp = 0;
@@ -134,6 +135,7 @@ private:
         s_bytesInQ = 0;
         s_bytesDeQd  = 0;
         s_totalBytesQd = 0;
+        s_lastTimestamp = 0;
     }
     _SourceQueue()  {reset();}
     
@@ -225,6 +227,13 @@ public:
         virtual void Xon() = 0;
         virtual void Xoff() = 0;
   };
+  
+  class NonMonotonicTimestampObserver {
+    public:
+        virtual void operator()(
+            unsigned sourceid, uint64_t priorTimestamp, uint64_t thisTimestamp
+        ) = 0;
+  };
 
 
   // Queue statistics accumulator:
@@ -259,12 +268,13 @@ private:
 
   uint32_t                     m_nFragmentsLastPeriod; //!< # fragments in last flush check interval.
 
-  std::list<Observer*>         m_OutputObservers;
-  std::list<DataLateObserver*> m_DataLateObservers;
-  std::list<BarrierObserver*>  m_goodBarrierObservers;
-  std::list<PartialBarrierObserver*> m_partialBarrierObservers;
-  std::list<DuplicateTimestampObserver*>  m_duplicateTimestampObservers;
-  std::list<FlowControlObserver*>        m_flowControlObservers;
+  std::list<Observer*>                       m_OutputObservers;
+  std::list<DataLateObserver*>               m_DataLateObservers;
+  std::list<BarrierObserver*>                m_goodBarrierObservers;
+  std::list<PartialBarrierObserver*>         m_partialBarrierObservers;
+  std::list<DuplicateTimestampObserver*>     m_duplicateTimestampObservers;
+  std::list<FlowControlObserver*>            m_flowControlObservers;
+  std::list<NonMonotonicTimestampObserver*>  m_nonMonotonicTsObservers;
 
   Sources                      m_FragmentQueues;
   bool                         m_fBarrierPending;      //< True if at least one queue has a barrier event.
@@ -339,6 +349,15 @@ public:
   
   void addFlowControlObserver(FlowControlObserver* pObserver);
   void removeFlowControlObserver(FlowControlObserver* pObserver);
+  
+  void addNonMonotonicTimestampObserver(
+    NonMonotonicTimestampObserver* pObserver
+  );
+  void removeNonMonotonicTimestampobserver(
+    NonMonotonicTimestampObserver* pObserver
+  );
+  
+  
   // queue management.
 
   void flush();
@@ -374,6 +393,7 @@ private:
 		 std::vector<uint32_t>& missingSources);
   void observeGoodBarrier(std::vector<std::pair<uint32_t, uint32_t> >& types);
   void observeDuplicateTimestamp(uint32_t sourceId, uint64_t timestamp);
+  void observeOutOfOrderInput(unsigned sourceId, uint64_t prior, uint64_t bad);
   void Xoff();
   void Xon();
   

@@ -876,4 +876,6 @@ Work on 11.0-rc11 begins
         and document how to have an event segment produce its own event segments.
         Feature #3217 - Provide indications of the Eventbuilder queue depth and throughputs in
         bytes/sec.
+        Feature #3220 - Add Event builder diagnostics/display for out of order timestamps
+          in the input queue(s).
 	
