@@ -108,7 +108,10 @@ void print_vectors(const vector<T>& expected, const vector<T>& actual) {
   cout.flags(ios::dec);
 }
 
-
+// if the flags do not exist, then CConfigurableObject will throw.
+// This just checks to see that after we have attached our hardware
+// to the m_pMod control module, that the required flags have been added and 
+// are locatable.
 void CMDGG16ControlTests::onAttach_0() {
   CPPUNIT_ASSERT_NO_THROW(m_pMod->cget("-base"));
   CPPUNIT_ASSERT_NO_THROW(m_pMod->cget("-mode"));
@@ -119,6 +122,8 @@ void CMDGG16ControlTests::onAttach_0() {
   CPPUNIT_ASSERT_NO_THROW(m_pMod->cget("-configfile"));
 }
 
+// Check that we add the proper commands to the stack given a specific set of
+// or values in the explicit mode.
 void CMDGG16ControlTests::initialize_0() {
   m_pMod->configure("-mode","explicit");
  
@@ -147,9 +152,12 @@ void CMDGG16ControlTests::initialize_0() {
 }
 
 
+// Same as initialize_0 except that this tests for the proper functioning when
+// the -mode is "file"
 void CMDGG16ControlTests::initialize_1() {
+  // create a test file
   generateTestConfigFile(".testfile.txt");
-  FileJanitor janitor(".testfile.txt"); // to cleanup
+  FileJanitor janitor(".testfile.txt"); // to cleanup when done
 
   m_pMod->configure("-mode","file");
   m_pMod->configure("-configfile",".testfile.txt");
@@ -159,10 +167,10 @@ void CMDGG16ControlTests::initialize_1() {
 
   vector<string> expected = {
     "executeList::begin",
-    "addWrite32 ff00000c 39 858993459", // (i.e. 0x33333333)
+    "addWrite32 ff00000c 39 858993459",  // (i.e. 0x33333333)
     "addWrite32 ff0000d0 39 1717973520", // (i.e. 0x66660000) for NIM outs
-    "addWrite32 ff0000b8 39 16646399",
-    "addWrite32 ff0000bc 39 16515325",
+    "addWrite32 ff0000b8 39 16646399",   // or_a and or_b
+    "addWrite32 ff0000bc 39 16515325",   // or_c and or_d
     "executeList::end"};
 
   auto record = ctlr.getOperationRecord();
@@ -172,6 +180,7 @@ void CMDGG16ControlTests::initialize_1() {
   
 }
 
+// setting the or_ab register does what we expect
 void CMDGG16ControlTests::set_0() 
 {
   CMockVMUSB ctlr;
@@ -189,6 +198,7 @@ void CMDGG16ControlTests::set_0()
 }
 
 
+// setting the or_cd register does what we expect
 void CMDGG16ControlTests::set_1() 
 {
   CMockVMUSB ctlr;
@@ -206,6 +216,7 @@ void CMDGG16ControlTests::set_1()
 }
 
 
+// setting an unknown parameter name throws.
 void CMDGG16ControlTests::set_2() 
 {
   CMockVMUSB ctlr;
@@ -216,7 +227,7 @@ void CMDGG16ControlTests::set_2()
 
 }
 
-
+// retrieving content of or_ab does what we expect
 void CMDGG16ControlTests::get_0() 
 {
   CMockVMUSB ctlr;
@@ -231,6 +242,7 @@ void CMDGG16ControlTests::get_0()
 }
 
 
+// retrieving content of or_cd register does what we expect
 void CMDGG16ControlTests::get_1() 
 {
   CMockVMUSB ctlr;
@@ -244,6 +256,7 @@ void CMDGG16ControlTests::get_1()
   CPPUNIT_ASSERT(expected == ctlr.getOperationRecord());
 }
 
+// tests that we throw when an unknown param name is passed
 void CMDGG16ControlTests::get_2() 
 {
   CMockVMUSB ctlr;
@@ -251,6 +264,8 @@ void CMDGG16ControlTests::get_2()
   CPPUNIT_ASSERT_THROW( m_pMod->Get(ctlr,"invalid param"),
                         std::string);
 }
+
+// basic test for the config file reader.
 void CMDGG16ControlTests::readConfig_0() {
 
   generateTestConfigFile(".testfile.txt");
