@@ -29,7 +29,6 @@ class CMDGG16ControlTests : public CppUnit::TestFixture {
 
     CPPUNIT_TEST(initialize_0);
     CPPUNIT_TEST(initialize_1);
-    CPPUNIT_TEST(initialize_2);
 
     CPPUNIT_TEST(set_0);
     CPPUNIT_TEST(set_1);
@@ -61,7 +60,6 @@ class CMDGG16ControlTests : public CppUnit::TestFixture {
     void onAttach_0();
     void initialize_0();
     void initialize_1();
-    void initialize_2();
 
     void set_0();
     void set_1();
