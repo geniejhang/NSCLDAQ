@@ -4,8 +4,15 @@
 
 #include <stdint.h>
 
+/**! This file defines a structured namespace to describe the registers
+ * of the MDGG-16 device. It is not an exhaustive list but provides the 
+ * registers that are currently operated on in the device by other classes
+ * such as the WienerMDGG16::CDeviceDriver.
+ *
+ */
 namespace WienerMDGG16 
 {
+  // register address offsets
   namespace Regs {
     const uint32_t FirmwareID    = 0x0000;
     const uint32_t Global        = 0x0004;
@@ -16,6 +23,7 @@ namespace WienerMDGG16
     const uint32_t Logical_OR_CD     = 0x00bc;
   }
 
+  // Bit meanings/offsets for ECL_Output register
   namespace ECL_Output {
     const uint32_t ECL9_Offset  = 0;
     const uint32_t ECL10_Offset = 4;
@@ -32,6 +40,7 @@ namespace WienerMDGG16
     const uint32_t Logical_OR = 3;
   }
 
+  // Bit meanings/offsets for Logical_OR register
   namespace Logical_OR {
     const uint32_t A_Offset = 0;
     const uint32_t B_Offset = 16;
@@ -39,6 +48,7 @@ namespace WienerMDGG16
     const uint32_t D_Offset = 16;
   }
 
+  // Bit meanings/offsets for LED/NIM register
   namespace LEDNIM_Output {
     // shifts for each set of bits
     const uint32_t LEDGreen_Lt_Shift = 0;
@@ -73,7 +83,7 @@ namespace WienerMDGG16
     const uint32_t NIM_Logical_OR = 6;
   }
 
-}
+} // end namespace
 
 #endif
 

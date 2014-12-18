@@ -23,49 +23,58 @@ using std::unique_ptr;
 namespace WienerMDGG16 
 {
 
+  //
   void CDeviceDriver::addWriteLogicalORMaskAB(CVMUSBReadoutList& list, 
       uint32_t mask)
   {
     list.addWrite32(m_base+Regs::Logical_OR_AB, VMEAMod::a24UserData, mask);
   }
 
+  //
   void CDeviceDriver::addWriteLogicalORMaskCD(CVMUSBReadoutList& list, 
       uint32_t mask)
   {
     list.addWrite32(m_base+Regs::Logical_OR_CD, VMEAMod::a24UserData, mask);
   }
 
+  //
   void CDeviceDriver::addReadLogicalORMaskAB(CVMUSBReadoutList& list)
   {
     list.addRead32(m_base+Regs::Logical_OR_AB, VMEAMod::a24UserData);
   }
 
+  //
   void CDeviceDriver::addReadLogicalORMaskCD(CVMUSBReadoutList& list)
   {
     list.addRead32(m_base+Regs::Logical_OR_CD, VMEAMod::a24UserData);
   }
 
+  //
   void CDeviceDriver::addWriteECLOutput(CVMUSBReadoutList& list, 
       uint32_t value)
   {
     list.addWrite32(m_base+Regs::ECL_Output, VMEAMod::a24UserData, value);
   }
 
+  //
   void CDeviceDriver::addReadECLOutput(CVMUSBReadoutList& list)
   {
     list.addRead32(m_base+Regs::ECL_Output, VMEAMod::a24UserData);
   }
 
+  //
   void CDeviceDriver::addReadFirmware(CVMUSBReadoutList& list)
   {
     list.addRead32(m_base+Regs::FirmwareID, VMEAMod::a24UserData);
   }
 
+  //
   void CDeviceDriver::addReadGlobal(CVMUSBReadoutList& list)
   {
     list.addRead32(m_base+Regs::Global, VMEAMod::a24UserData);
   }
 
+  //
   uint32_t CDeviceDriver::readFirmware(CVMUSB& ctlr) 
   {
     unique_ptr<CVMUSBReadoutList> pList(ctlr.createReadoutList());
@@ -74,6 +83,7 @@ namespace WienerMDGG16
     return executeList<uint32_t>(ctlr,*pList);
   }
 
+  //
   uint32_t CDeviceDriver::readGlobal(CVMUSB& ctlr) 
   {
     unique_ptr<CVMUSBReadoutList> pList(ctlr.createReadoutList());
@@ -82,14 +92,18 @@ namespace WienerMDGG16
     return executeList<uint32_t>(ctlr,*pList);
   }
 
+  //
   void CDeviceDriver::addWriteLEDNIMOutput(CVMUSBReadoutList& list, 
       uint32_t value)
   {
     list.addWrite32(m_base+Regs::LEDNIM_Output, VMEAMod::a24UserData, value);
   }
 
+  //
   void CDeviceDriver::addReadLEDNIMOutput(CVMUSBReadoutList& list)
   {
     list.addRead32(m_base+Regs::LEDNIM_Output, VMEAMod::a24UserData);
   }
-}
+
+
+} // end of namespace
