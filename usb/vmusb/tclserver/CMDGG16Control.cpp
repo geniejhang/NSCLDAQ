@@ -1,17 +1,17 @@
 /*
-    This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2005.
+   This software is Copyright by the Board of Trustees of Michigan
+   State University (c) Copyright 2005.
 
-    You may use this software under the terms of the GNU public license
-    (GPL).  The terms of this license are described at:
+   You may use this software under the terms of the GNU public license
+   (GPL).  The terms of this license are described at:
 
-     http://www.gnu.org/licenses/gpl.txt
+http://www.gnu.org/licenses/gpl.txt
 
-     Author:
-             Ron Fox
-	     NSCL
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+Author:
+Ron Fox
+NSCL
+Michigan State University
+East Lansing, MI 48824-1321
 */
 
 #include <config.h>
@@ -39,367 +39,362 @@ static bool fileReadable(std::string, std::string value, void* arg)
   return (status == 0);
 }
 
-CMDGG16ControlState ConfigFileReader::parse(std::string path) 
+
+namespace WienerMDGG16
 {
-  ifstream file(path.c_str());
 
-  CMDGG16ControlState state = {0,0,0,0};
-  string varname;
+  CControlHdwrState ConfigFileReader::parse(std::string path) 
+  {
+    ifstream file(path.c_str());
 
-  file >> varname >> state.or_a;
-  file >> varname >> state.or_b;
-  file >> varname >> state.or_c;
-  file >> varname >> state.or_d;
+    CControlHdwrState state = {0,0,0,0};
+    string varname;
 
-  return state;
-}
+    file >> varname >> state.or_a;
+    file >> varname >> state.or_b;
+    file >> varname >> state.or_c;
+    file >> varname >> state.or_d;
 
-
-/*!
-   construct the beast.. The shadow registers will all get set to zero
-*/
-CMDGG16Control::CMDGG16Control() :
-  CControlHardware(), m_dev()
-{
-}
-
-/*!
-
-  Copy construction:
-*/
-CMDGG16Control::CMDGG16Control(const CMDGG16Control& rhs) :
-  CControlHardware(rhs), m_dev(rhs.m_dev)
-{
-}
-/*!
-  While destruction could leak I seem to recall problems if I destroy
-  the configuration..
-*/
-CMDGG16Control::~CMDGG16Control()
-{
-}
-
-/*!
-  Assignment is a clone:
-*/
-CMDGG16Control&
-CMDGG16Control::operator=(const CMDGG16Control& rhs)
-{
-  if(this != &rhs) {
-    m_dev = rhs.m_dev;
-    CControlHardware::operator=(rhs);
+    return state;
   }
-  return *this;
-}
 
-/*!
-  Same configuration implies equality:
-*/
-int 
-CMDGG16Control::operator==(const CMDGG16Control& rhs) const
-{
-  return CControlHardware::operator==(rhs);
-}
-/*
-   != is the logical inverse of ==
-*/
-int
-CMDGG16Control::operator!=(const CMDGG16Control& rhs) const
-{
-  return !(*this == rhs);
-}
 
-///////////////////////////////////////////////////////////////////////////
+  /*!
+    construct the beast.. The shadow registers will all get set to zero
+    */
+  CControlHdwr::CControlHdwr() :
+    CControlHardware(), m_dev()
+  {
+  }
 
-/*!
-   Attachment : We need to define our parameters which are:
-   -base   - unlimited integer.
+  /*!
 
- \param configure - Encapsulates the configuration for this module.
+    Copy construction:
+    */
+  CControlHdwr::CControlHdwr(const CControlHdwr& rhs) :
+    CControlHardware(rhs), m_dev(rhs.m_dev)
+  {
+  }
+  /*!
+    While destruction could leak I seem to recall problems if I destroy
+    the configuration..
+    */
+  CControlHdwr::~CControlHdwr()
+  {
+  }
 
-*/
-void
-CMDGG16Control::onAttach(CControlModule& configuration)
-{
-  m_pConfig = &configuration;
-  configuration.addParameter("-base", CConfigurableObject::isInteger, NULL, 
-                             string("0"));
+  /*!
+    Assignment is a clone:
+    */
+  CControlHdwr&
+    CControlHdwr::operator=(const CControlHdwr& rhs)
+    {
+      if(this != &rhs) {
+        m_dev = rhs.m_dev;
+        CControlHardware::operator=(rhs);
+      }
+      return *this;
+    }
 
-  configuration.addEnumParameter("-mode", modeEnum, "explicit");
-  configuration.addIntegerParameter("-or_a",0,255,255);
-  configuration.addIntegerParameter("-or_b",0,255,255);
-  configuration.addIntegerParameter("-or_c",0,255,255);
-  configuration.addIntegerParameter("-or_d",0,255,255);
+  /*!
+    Same configuration implies equality:
+    */
+  int 
+    CControlHdwr::operator==(const CControlHdwr& rhs) const
+    {
+      return CControlHardware::operator==(rhs);
+    }
+  /*
+     != is the logical inverse of ==
+     */
+  int
+    CControlHdwr::operator!=(const CControlHdwr& rhs) const
+    {
+      return !(*this == rhs);
+    }
 
-  configuration.addParameter("-configfile", fileReadable, nullptr, "");
-}
-////////////////////////////////////////////////////////////////////////////
-/*!
+  ///////////////////////////////////////////////////////////////////////////
+
+  void
+    CControlHdwr::onAttach(CControlModule& configuration)
+    {
+      m_pConfig = &configuration;
+      configuration.addParameter("-base", CConfigurableObject::isInteger, NULL, 
+          string("0"));
+
+      configuration.addEnumParameter("-mode", modeEnum, "explicit");
+      configuration.addIntegerParameter("-or_a",0,255,255);
+      configuration.addIntegerParameter("-or_b",0,255,255);
+      configuration.addIntegerParameter("-or_c",0,255,255);
+      configuration.addIntegerParameter("-or_d",0,255,255);
+
+      configuration.addParameter("-configfile", fileReadable, nullptr, "");
+    }
+  ////////////////////////////////////////////////////////////////////////////
+  /*!
     Initialize the module bringing it to a known state.
 
-   \param CVMUSB& vme
-     Controller that hooks us to the VM-USB.
-*/
-void
-CMDGG16Control::Initialize(CVMUSB& vme)
-{
-   m_dev.setBase(base());
+    \param CVMUSB& vme
+    Controller that hooks us to the VM-USB.
+    */
+  void
+    CControlHdwr::Initialize(CVMUSB& vme)
+    {
+      m_dev.setBase(base());
 
-   unique_ptr<CVMUSBReadoutList> pList(vme.createReadoutList());
+      unique_ptr<CVMUSBReadoutList> pList(vme.createReadoutList());
 
-//   std::cout << std::hex;
-//   std::cout << "Firmware : " << m_dev.readFirmware(vme) << std::endl;
-//   std::cout << "Global : " << m_dev.readGlobal(vme) << std::endl;
-//   std::cout << std::dec;
+      // set up the outputs and leds
+      configureECLOutputs(*pList);   
+      configureLEDsAndNIMOutputs(*pList);   
 
-   configureECLOutputs(*pList);   
-   configureLEDsAndNIMOutputs(*pList);   
+      // behave properly according to the mode.
+      if (m_pConfig->getEnumParameter("-mode",modeEnum)==0) {
+        // explicit mode 
+        configureORMasks(*pList);   
+      } else {
+        // file mode
+        configureFromConfigFile(*pList);
+      }
 
-   if (m_pConfig->getEnumParameter("-mode",modeEnum)==0) {
-     // explicit mode 
-     configureORMasks(*pList);   
-   } else {
-     // file mode
-     configureFromConfigFile(*pList);
-   }
+      // execute the list
+      size_t nRead=0;
+      uint32_t buf[8];
+      int status = vme.executeList(*pList, buf, sizeof(buf), &nRead);
 
-   size_t nRead=0;
-   uint32_t buf[8];
-   int status = vme.executeList(*pList, buf, sizeof(buf), &nRead);
+      if (status < 0) {
+        std::stringstream errmsg;
+        errmsg << "CControlHdwr::Initialize() failed while executing list ";
+        errmsg << "with status = " << status;
+        throw errmsg.str();
+      }
+    }
 
-   if (status < 0) {
-     std::stringstream errmsg;
-     errmsg << "CMDGG16Control::Initialize() failed while executing list ";
-     errmsg << "with status = " << status;
-     throw errmsg.str();
-   }
-}
-
-/*!
-  Update the device from the shadow configuration.
-
-  \param vme  - VME controller object.
-  \return string
-  \retval "OK"  - Everything worked.
-  \retval "ERROR -...."  Describes why things did not work.
-
-*/
-string
-CMDGG16Control::Update(CVMUSB& vme)
-{
-
-  return string("OK");
-}
-///////////////////////////////////////////////////////////////////////////////////
-/*!
-   Set a value in the device.
-
-
-  \param vme        - The VM-USB controller object.
-  \param parameter  - Name of the parameter to set.
-  \param value      - Value to which the parameter will be set.
-
-   \return string
-   \retval "OK"    - The parameter was set (the shadow value will also be set).
-   \retval "ERROR -..."  An error was detected, the remaining string describes the error.
-*/
-string
-CMDGG16Control::Set(CVMUSB& vme, string parameter, string value)
-{
-  // to ensure that we use the most recent base address.
-  m_dev.setBase(base());
-
-  // convert string to unsigned long integer (auto detects base)
-  uint32_t val = std::stoul(value,0,0);
-
-  unique_ptr<CVMUSBReadoutList> pList( vme.createReadoutList() );
-
-  if (parameter == "or_ab") {
-    m_dev.addWriteLogicalORMaskAB(*pList, val);
-  } else if (parameter == "or_cd") {
-    m_dev.addWriteLogicalORMaskCD(*pList, val);
-  } else {
-    std::string errmsg("CMDGG16Control::Set() called with invalid parameter ");
-    errmsg += "name (";
-    errmsg += parameter;
-    errmsg += ").";
-    throw errmsg;
+  string CControlHdwr::Update(CVMUSB& vme)
+  {
+    return string("OK");
   }
 
 
-  size_t nRead=0;
-  uint32_t buf[8];
-  int status = vme.executeList(*pList, buf, sizeof(buf), &nRead);
-  if (status<0) {
-    std::stringstream errmsg;
-    errmsg << "CMDGG16Control::Set() failure while executing list. ";
-    errmsg << "Status returned is " << status;
-    throw errmsg.str();
-  }
+  string
+    CControlHdwr::Set(CVMUSB& vme, string parameter, string value)
+    {
+      // to ensure that we use the most recent base address.
+      m_dev.setBase(base());
 
-  std::string result;
-  size_t nLongs = nRead/sizeof(uint32_t);
-  if (nLongs>0) {
-    for (size_t i=0; i<nLongs; ++i) {
-      result += (std::to_string(buf[i]) + " ");
+      // convert string to unsigned long integer (auto detects base)
+      uint32_t val = std::stoul(value,0,0);
+
+      unique_ptr<CVMUSBReadoutList> pList( vme.createReadoutList() );
+
+      // dispatch parameter to specific operation
+      if (parameter == "or_ab") {
+        m_dev.addWriteLogicalORMaskAB(*pList, val);
+      } else if (parameter == "or_cd") {
+        m_dev.addWriteLogicalORMaskCD(*pList, val);
+      } else {
+        std::string errmsg("CControlHdwr::Set() called with invalid parameter ");
+        errmsg += "name (";
+        errmsg += parameter;
+        errmsg += ").";
+        throw errmsg;
+      }
+
+
+      // Execute the list.
+      size_t nRead=0;
+      uint32_t buf[8];
+      int status = vme.executeList(*pList, buf, sizeof(buf), &nRead);
+      if (status<0) {
+        std::stringstream errmsg;
+        errmsg << "CControlHdwr::Set() failure while executing list. ";
+        errmsg << "Status returned is " << status;
+        throw errmsg.str();
+      }
+
+      // Format the output
+      std::string result;
+      size_t nLongs = nRead/sizeof(uint32_t);
+      if (nLongs>0) {
+        for (size_t i=0; i<nLongs; ++i) {
+          result += (std::to_string(buf[i]) + " ");
+        } 
+      }
+      return result;
+    }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //
+  string CControlHdwr::Get(CVMUSB& vme, string parameter)
+  {
+    // make sure that the logical device is configured properly before using it
+    m_dev.setBase(base());
+
+    unique_ptr<CVMUSBReadoutList> pList(vme.createReadoutList());
+
+    // Dispatch functionality for parameter type
+    //  .. if lots more functionality is required, this might be made a bit less
+    //  .. crude than a simple if-else scheme.
+    if (parameter=="or_ab") {
+      m_dev.addReadLogicalORMaskAB(*pList);
+    } else if (parameter=="or_cd") {
+      m_dev.addReadLogicalORMaskCD(*pList);
+    } else {
+      std::string errmsg("CControlHdwr::Get() called with invalid parameter ");
+      errmsg += "name (";
+      errmsg += parameter;
+      errmsg += ").";
+      throw errmsg;
     } 
+
+    // execute list
+    size_t nRead=0;
+    uint32_t buf[8];
+    int status = vme.executeList(*pList, buf, sizeof(buf), &nRead);
+    if (status<0) {
+      std::stringstream errmsg;
+      errmsg << "CControlHdwr::Get() failure while executing list. ";
+      errmsg << "Status returned is " << status;
+      throw errmsg.str();
+    }
+
+    string result = "OK";
+    // convert returned data into a list
+    size_t nLongs = nRead/sizeof(uint32_t);
+    if (nLongs>0) {
+      // reset the value
+      result = "";
+      for (size_t i=0; i<nLongs; ++i) {
+        result += std::to_string(buf[i]);
+        if (i<(nLongs-1)) {
+          result += " ";
+        } 
+      }
+    }
+    return result;
+
   }
-  return result;
-}
-/////////////////////////////////////////////////////////////////////////////////////////
-/*!
-   Get a value from the device.
- 
-  \return string
-  \retval stringified-integer   - Things went ok.
-  \retval "ERROR - ..."         - An error occured described by the remainder of the string.
+
+  ///////////////////////////////////////////////////////////////////////////////////////
+  /*!
+    At present, cloning is a no-op.
+    */
+  std::unique_ptr<CControlHardware>
+    CControlHdwr::clone() const
+    {
+      return std::unique_ptr<CControlHardware>(new CControlHdwr(*this));
+    }
+
+  //////////////////////////////////////////////////////////////////////////////////
+  ///////////////// private utilities //////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////
+
+  /*
+     Return the base address of the device:
+
 */
-string
-CMDGG16Control::Get(CVMUSB& vme, string parameter)
-{
-  m_dev.setBase(base());
+  uint32_t 
+    CControlHdwr::base()
+    {
+      if (m_pConfig) {
+        string strBase = m_pConfig->cget("-base");
+        unsigned long base;
+        base = strtoul(strBase.c_str(), NULL, 0);
+        return static_cast<uint32_t>(base);
+      }
+      else {
+        return static_cast<uint32_t>(0);
+      }
+    }
 
-  unique_ptr<CVMUSBReadoutList> pList(vme.createReadoutList());
-  
-  string result = "OK";
-  if (parameter=="or_ab") {
-    m_dev.addReadLogicalORMaskAB(*pList);
-  } else if (parameter=="or_cd") {
-    m_dev.addReadLogicalORMaskCD(*pList);
-  } else {
-    std::string errmsg("CMDGG16Control::Get() called with invalid parameter ");
-    errmsg += "name (";
-    errmsg += parameter;
-    errmsg += ").";
-    throw errmsg;
-  } 
+  void CControlHdwr::configureECLOutputs(CVMUSBReadoutList& list)
+  {
+    if (m_pConfig) {
+      // there is currently only 1 option and that is to have all
+      // of the logical or outputs provided. 
+      using namespace ECL_Output;
+      using ECL_Output::Logical_OR;
 
-  // execute list
-  size_t nRead=0;
-  uint32_t buf[8];
-  int status = vme.executeList(*pList, buf, sizeof(buf), &nRead);
-  if (status<0) {
-    std::stringstream errmsg;
-    errmsg << "CMDGG16Control::Set() failure while executing list. ";
-    errmsg << "Status returned is " << status;
-    throw errmsg.str();
-  }
+      uint32_t outputBits = 0;
 
-  // convert returned data into a list
-  size_t nLongs = nRead/sizeof(uint32_t);
-  if (nLongs>0) {
-    // reset the value
-    result = "";
-    for (size_t i=0; i<nLongs; ++i) {
-      result += std::to_string(buf[i]);
-      if (i<(nLongs-1)) {
-       result += " ";
-      } 
+      // I believe this is supposed to direct 
+      // OR_A to ECL9 and ECL13
+      // OR_B to ECL10 and ECL14
+      // OR_C to ECL11 and ECL15
+      // OR_D to ECL12 and ECL16
+      // .. but it is not clear that it is doing so.
+      outputBits |= (Logical_OR << ECL9_Offset);
+      outputBits |= (Logical_OR << ECL10_Offset);
+      outputBits |= (Logical_OR << ECL11_Offset);
+      outputBits |= (Logical_OR << ECL12_Offset);
+      outputBits |= (Logical_OR << ECL13_Offset);
+      outputBits |= (Logical_OR << ECL14_Offset);
+      outputBits |= (Logical_OR << ECL15_Offset);
+      outputBits |= (Logical_OR << ECL16_Offset);
+      m_dev.addWriteECLOutput(list, outputBits);
     }
   }
-  return result;
-
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-/*!
-  At present, cloning is a no-op.
-*/
-std::unique_ptr<CControlHardware>
-CMDGG16Control::clone() const
-{
-  return std::unique_ptr<CControlHardware>(new CMDGG16Control(*this));
-}
-
-//////////////////////////////////////////////////////////////////////////////////
-///////////////// private utilities //////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////
-
-/*
-   Return the base address of the device:
-
-*/
-uint32_t 
-CMDGG16Control::base()
-{
-  if (m_pConfig) {
-    string strBase = m_pConfig->cget("-base");
-    unsigned long base;
-    base = strtoul(strBase.c_str(), NULL, 0);
-    return static_cast<uint32_t>(base);
-  }
-  else {
-    return static_cast<uint32_t>(0);
-  }
-}
-
-void CMDGG16Control::configureECLOutputs(CVMUSBReadoutList& list)
-{
-  if (m_pConfig) {
-    // there is currently only 1 option and that is to have all
-    // of the logical or outputs provided. 
-    using namespace ::WienerMDGG16::ECL_Output;
-    uint32_t outputBits = (Logical_OR << ECL9_Offset);
-    outputBits |= (Logical_OR << ECL10_Offset);
-    outputBits |= (Logical_OR << ECL11_Offset);
-    outputBits |= (Logical_OR << ECL12_Offset);
-    outputBits |= (Logical_OR << ECL13_Offset);
-    outputBits |= (Logical_OR << ECL14_Offset);
-    outputBits |= (Logical_OR << ECL15_Offset);
-    outputBits |= (Logical_OR << ECL16_Offset);
-    m_dev.addWriteECLOutput(list, outputBits);
-  }
-}
 
 
-void CMDGG16Control::configureLEDsAndNIMOutputs(CVMUSBReadoutList& list)
-{
-  if (m_pConfig) {
-    // there is currently only 1 option and that is to have all
-    // of the logical or outputs provided. 
-    using namespace ::WienerMDGG16::LEDNIM_Output;
-    uint32_t outputBits = (NIM_Logical_OR << NIM1_Shift);
-    outputBits |= (NIM_Logical_OR << NIM2_Shift);
-    outputBits |= (NIM_Logical_OR << NIM3_Shift);
-    outputBits |= (NIM_Logical_OR << NIM4_Shift);
+  void CControlHdwr::configureLEDsAndNIMOutputs(CVMUSBReadoutList& list)
+  {
+    if (m_pConfig) {
+      // there is currently only 1 option and that is to have all
+      // of the logical or outputs provided. 
+      using namespace ::WienerMDGG16::LEDNIM_Output;
+      uint32_t outputBits = 0;
 
-    outputBits |= (LED_ECL_OR_1234<< LEDGreen_Lt_Shift);
-    outputBits |= (LED_ECL_OR_12 << LEDGreen_Rt_Shift);
-    outputBits |= (LED_ECL_OR_23 << LEDYellow_Lt_Shift);
-    outputBits |= (LED_ECL_OR_34 << LEDYellow_Rt_Shift);
-    m_dev.addWriteLEDNIMOutput(list, outputBits);
-  }
-}
+      // set up the NIM outputs 
+      outputBits |= (NIM_Logical_OR << NIM1_Shift);
+      outputBits |= (NIM_Logical_OR << NIM2_Shift);
+      outputBits |= (NIM_Logical_OR << NIM3_Shift);
+      outputBits |= (NIM_Logical_OR << NIM4_Shift);
 
-
-void CMDGG16Control::configureORMasks(CVMUSBReadoutList& list)
-{
-  if (m_pConfig) {
-    uint32_t or_a = m_pConfig->getUnsignedParameter("-or_a"); 
-    uint32_t or_b = m_pConfig->getUnsignedParameter("-or_b"); 
-    uint32_t or_c = m_pConfig->getUnsignedParameter("-or_c"); 
-    uint32_t or_d = m_pConfig->getUnsignedParameter("-or_d"); 
-
-    using namespace ::WienerMDGG16::Logical_OR;
-
-    uint32_t or_ab = (or_b<<B_Offset)|(or_a<<A_Offset);
-    uint32_t or_cd = (or_d<<D_Offset)|(or_c<<C_Offset);
-    m_dev.addWriteLogicalORMaskAB(list, or_ab); 
-    m_dev.addWriteLogicalORMaskCD(list, or_cd);
+      // set up the LEDs
+      outputBits |= (LED_ECL_OR_1234<< LEDGreen_Lt_Shift);
+      outputBits |= (LED_ECL_OR_12 << LEDGreen_Rt_Shift);
+      outputBits |= (LED_ECL_OR_23 << LEDYellow_Lt_Shift);
+      outputBits |= (LED_ECL_OR_34 << LEDYellow_Rt_Shift);
+      m_dev.addWriteLEDNIMOutput(list, outputBits);
+    }
   }
 
-}
 
-void CMDGG16Control::configureFromConfigFile(CVMUSBReadoutList& list)
-{
-  std::string path = m_pConfig->cget("-configfile");
-  CMDGG16ControlState state = ConfigFileReader().parse(path);
+  void CControlHdwr::configureORMasks(CVMUSBReadoutList& list)
+  {
+    if (m_pConfig) {
+      uint32_t or_a = m_pConfig->getUnsignedParameter("-or_a"); 
+      uint32_t or_b = m_pConfig->getUnsignedParameter("-or_b"); 
+      uint32_t or_c = m_pConfig->getUnsignedParameter("-or_c"); 
+      uint32_t or_d = m_pConfig->getUnsignedParameter("-or_d"); 
 
-  using namespace ::WienerMDGG16::Logical_OR;
+      using namespace ::WienerMDGG16::Logical_OR;
 
-  uint32_t or_ab = (state.or_b<<B_Offset)|(state.or_a<<A_Offset);
-  uint32_t or_cd = (state.or_d<<D_Offset)|(state.or_c<<C_Offset);
-  m_dev.addWriteLogicalORMaskAB(list, or_ab); 
-  m_dev.addWriteLogicalORMaskCD(list, or_cd);
+      uint32_t or_ab = (or_b<<B_Offset)|(or_a<<A_Offset);
+      uint32_t or_cd = (or_d<<D_Offset)|(or_c<<C_Offset);
+      m_dev.addWriteLogicalORMaskAB(list, or_ab); 
+      m_dev.addWriteLogicalORMaskCD(list, or_cd);
+    }
+  }
 
-}
+  void CControlHdwr::configureFromConfigFile(CVMUSBReadoutList& list)
+  {
+    if (m_pConfig) {
+      std::string path = m_pConfig->cget("-configfile");
+
+      // read in the config file
+      CControlHdwrState state = ConfigFileReader().parse(path);
+
+      using namespace ::WienerMDGG16::Logical_OR;
+
+      // build the values to write
+      uint32_t or_ab = (state.or_b<<B_Offset)|(state.or_a<<A_Offset);
+      uint32_t or_cd = (state.or_d<<D_Offset)|(state.or_c<<C_Offset);
+
+      // add the writes to the readout list for later execution
+      m_dev.addWriteLogicalORMaskAB(list, or_ab); 
+      m_dev.addWriteLogicalORMaskCD(list, or_cd);
+    }
+  }
+
+} // end namespace

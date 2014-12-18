@@ -46,7 +46,7 @@ class CMDGG16ControlTests : public CppUnit::TestFixture {
   public:
     void setUp() {
       // create the control hardware
-      unique_ptr<CControlHardware> hdwr(new CMDGG16Control);
+      unique_ptr<CControlHardware> hdwr(new WienerMDGG16::CControlHdwr);
 
       // create control module and pass ownership of hardware to the 
       // CControlModule
@@ -258,7 +258,8 @@ void CMDGG16ControlTests::readConfig_0() {
   // should delete test file when it goes out of scope
   FileJanitor janitor(".testfile.txt");
 
-  CMDGG16ControlState state = ConfigFileReader().parse(".testfile.txt");
+  using namespace WienerMDGG16;
+  CControlHdwrState state = ConfigFileReader().parse(".testfile.txt");
 
   CPPUNIT_ASSERT_EQUAL(uint32_t(255), state.or_a);
   CPPUNIT_ASSERT_EQUAL(uint32_t(254), state.or_b);

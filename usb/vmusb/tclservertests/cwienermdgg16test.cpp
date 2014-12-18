@@ -21,7 +21,7 @@ using namespace std;
 
 class CWienerMDGG16Tests : public CppUnit::TestFixture {
   private:
-    CWienerMDGG16 m_dev;
+    WienerMDGG16::CDeviceDriver m_dev;
     CLoggingReadoutList m_list;
 
   public:
@@ -41,7 +41,7 @@ class CWienerMDGG16Tests : public CppUnit::TestFixture {
 
   public:
     void setUp() {
-      m_dev = CWienerMDGG16();
+      m_dev = WienerMDGG16::CDeviceDriver();
       m_dev.setBase(0xfff00000);
 
       m_list = CLoggingReadoutList();

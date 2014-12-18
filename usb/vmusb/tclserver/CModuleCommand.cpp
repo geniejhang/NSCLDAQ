@@ -78,8 +78,9 @@ CModuleCommand::CModuleCommand(CTCLInterpreter& interp,
                     unique_ptr<CModuleCreator>(new CMxDCRCBusCreator));
   pFact->addCreator("chicotrigger", 
                     unique_ptr<CModuleCreator>(new CChicoTriggerCreator));
+
   pFact->addCreator("mdgg16",
-                    unique_ptr<CModuleCreator>(new CMDGG16ControlCreator));
+                    unique_ptr<CModuleCreator>(new WienerMDGG16::CControlCreator));
 
 }
 //! Destroy the module.. no op provided only as a chain to the base class destructor.

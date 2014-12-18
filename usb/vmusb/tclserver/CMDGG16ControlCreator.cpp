@@ -8,8 +8,13 @@
 /////////////////////// CMDGG16ControlCreator ///////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-std::unique_ptr<CControlHardware> CMDGG16ControlCreator::operator()()
+namespace WienerMDGG16
 {
-  return std::unique_ptr<CControlHardware>(new CMDGG16Control);
+
+  std::unique_ptr<CControlHardware> CControlCreator::operator()()
+  {
+    return std::unique_ptr<CControlHardware>(new CControlHdwr);
+  }
+
 }
 
