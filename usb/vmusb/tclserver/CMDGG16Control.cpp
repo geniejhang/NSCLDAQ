@@ -193,11 +193,9 @@ namespace WienerMDGG16
       } else if (parameter == "or_cd") {
         m_dev.addWriteLogicalORMaskCD(*pList, val);
       } else {
-        std::string errmsg("CControlHdwr::Set() called with invalid parameter ");
-        errmsg += "name (";
-        errmsg += parameter;
-        errmsg += ").";
-        throw errmsg;
+        std::string retval("ERROR - invalid parameter name \"");
+        retval += parameter + "\"";
+        return retval;
       }
 
 
@@ -206,10 +204,9 @@ namespace WienerMDGG16
       uint32_t buf[8];
       int status = vme.executeList(*pList, buf, sizeof(buf), &nRead);
       if (status<0) {
-        std::stringstream errmsg;
-        errmsg << "CControlHdwr::Set() failure while executing list. ";
-        errmsg << "Status returned is " << status;
-        throw errmsg.str();
+        std::string retval("ERROR - executeList returned status = ");
+        retval += std::to_string(status);
+        return retval;
       }
 
       // Format the output
@@ -240,11 +237,9 @@ namespace WienerMDGG16
     } else if (parameter=="or_cd") {
       m_dev.addReadLogicalORMaskCD(*pList);
     } else {
-      std::string errmsg("CControlHdwr::Get() called with invalid parameter ");
-      errmsg += "name (";
-      errmsg += parameter;
-      errmsg += ").";
-      throw errmsg;
+      std::string retval("ERROR - invalid parameter name \"");
+      retval += parameter + "\"";
+      return retval;
     } 
 
     // execute list
@@ -252,10 +247,9 @@ namespace WienerMDGG16
     uint32_t buf[8];
     int status = vme.executeList(*pList, buf, sizeof(buf), &nRead);
     if (status<0) {
-      std::stringstream errmsg;
-      errmsg << "CControlHdwr::Get() failure while executing list. ";
-      errmsg << "Status returned is " << status;
-      throw errmsg.str();
+      std::string retval("ERROR - executeList returned status = ");
+      retval += std::to_string(status);
+      return retval;
     }
 
     string result = "OK";

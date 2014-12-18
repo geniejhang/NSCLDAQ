@@ -33,10 +33,12 @@ class CMDGG16ControlTests : public CppUnit::TestFixture {
     CPPUNIT_TEST(set_0);
     CPPUNIT_TEST(set_1);
     CPPUNIT_TEST(set_2);
+    CPPUNIT_TEST(set_3);
 
     CPPUNIT_TEST(get_0);
     CPPUNIT_TEST(get_1);
     CPPUNIT_TEST(get_2);
+    CPPUNIT_TEST(get_3);
 
     CPPUNIT_TEST(readConfig_0);
 
@@ -64,10 +66,12 @@ class CMDGG16ControlTests : public CppUnit::TestFixture {
     void set_0();
     void set_1();
     void set_2();
+    void set_3();
 
     void get_0();
     void get_1();
     void get_2();
+    void get_3();
 
     void readConfig_0();
 
@@ -222,8 +226,21 @@ void CMDGG16ControlTests::set_2()
   CMockVMUSB ctlr;
 
 
-  CPPUNIT_ASSERT_THROW( m_pMod->Set(ctlr, "invalidparam", "0"),
-                       std::string );
+  CPPUNIT_ASSERT_EQUAL( string("ERROR - invalid parameter name \"invalidparam\""),
+                                m_pMod->Set(ctlr, "invalidparam", "0"));
+
+}
+
+// see that we don't totally fail when executeList returns error code
+// - this is not necessarily a failure mode to break the slow-controls server
+//   and may be recoverable.
+void CMDGG16ControlTests::set_3() 
+{
+  CMockVMUSB ctlr;
+  ctlr.addReturnDatum(0,-1); // force negative return status
+
+  CPPUNIT_ASSERT_EQUAL( string("ERROR - executeList returned status = -1"),
+                                m_pMod->Set(ctlr, "or_ab", "0"));
 
 }
 
@@ -261,8 +278,22 @@ void CMDGG16ControlTests::get_2()
 {
   CMockVMUSB ctlr;
 
-  CPPUNIT_ASSERT_THROW( m_pMod->Get(ctlr,"invalid param"),
-                        std::string);
+  CPPUNIT_ASSERT_EQUAL( string("ERROR - invalid parameter name \"invalidparam\""),
+                                m_pMod->Get(ctlr, "invalidparam"));
+}
+
+
+// see that we don't totally fail when executeList returns error code
+// - this is not necessarily a failure mode to break the slow-controls server
+//   and may be recoverable.
+void CMDGG16ControlTests::get_3() 
+{
+  CMockVMUSB ctlr;
+  ctlr.addReturnDatum(0,-1); // force negative return status
+
+  CPPUNIT_ASSERT_EQUAL( string("ERROR - executeList returned status = -1"),
+                                m_pMod->Get(ctlr, "or_ab"));
+
 }
 
 // basic test for the config file reader.
