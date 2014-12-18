@@ -425,7 +425,7 @@ AC_CONFIG_FILES([Makefile
 		 sbs/VmeDevice/Makefile
 		 sbs/caenfwloader/Makefile
 		 usb/Makefile
-                 usb/loaders/Makefile
+		 usb/loaders/Makefile
 		 usb/vmusb/Makefile
 		 usb/vmusb/vmusb/Makefile usb/vmusb/devices/Makefile 
 		 usb/vmusb/router/Makefile
@@ -435,6 +435,7 @@ AC_CONFIG_FILES([Makefile
 		 usb/vmusb/tcldrivers/Makefile
 		 usb/vmusb/driverkit/VMUSBDriverIncludes
 		 usb/vmusb/controlpanels/Makefile usb/vmusb/controlpanels/cv6533/Makefile
+		 usb/vmusb/controlpanels/figures/Makefile
 		 usb/vmusb/devtests/Makefile
 		 usb/vmusb/vmusbPackage/Makefile
 		 usb/vmusb/tclservertests/Makefile
@@ -449,7 +450,7 @@ AC_CONFIG_FILES([Makefile
 		 usb/ccusb/driverkit/Makefile
 		 usb/ccusb/driverkit/Makefile-template
 		 usb/ccusb/driverkit/CCUSBDriverIncludes
-                 usb/ccusb/controlpanels/Makefile
+		 usb/ccusb/controlpanels/Makefile
 		 usb/ccusb/devtests/Makefile
 		 usb/ccusb/tclservertests/Makefile
 		 usb/caenfwloader/Makefile
