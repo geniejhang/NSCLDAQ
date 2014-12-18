@@ -123,10 +123,10 @@ namespace WienerMDGG16
           string("0"));
 
       configuration.addEnumParameter("-mode", modeEnum, "explicit");
-      configuration.addIntegerParameter("-or_a",0,255,255);
-      configuration.addIntegerParameter("-or_b",0,255,255);
-      configuration.addIntegerParameter("-or_c",0,255,255);
-      configuration.addIntegerParameter("-or_d",0,255,255);
+      configuration.addIntegerParameter("-or_a",0,65535,65535);
+      configuration.addIntegerParameter("-or_b",0,65535,65535);
+      configuration.addIntegerParameter("-or_c",0,65535,65535);
+      configuration.addIntegerParameter("-or_d",0,65535,65535);
 
       configuration.addParameter("-configfile", fileReadable, nullptr, "");
     }
