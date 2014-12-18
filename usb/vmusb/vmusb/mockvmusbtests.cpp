@@ -29,6 +29,7 @@ class CMockVMUSBTests : public CppUnit::TestFixture {
   CPPUNIT_TEST (executeList_1); 
   CPPUNIT_TEST (executeList_2); 
   CPPUNIT_TEST (executeList_3); 
+  CPPUNIT_TEST (executeList_4); 
   CPPUNIT_TEST (globalMode_0); 
   CPPUNIT_TEST (eventsPerBuffer_0); 
   CPPUNIT_TEST (addReturnDatum_0);
@@ -50,6 +51,7 @@ class CMockVMUSBTests : public CppUnit::TestFixture {
   void executeList_1(); 
   void executeList_2(); 
   void executeList_3(); 
+  void executeList_4(); 
   void globalMode_0(); 
   void eventsPerBuffer_0();
 
@@ -123,8 +125,7 @@ void CMockVMUSBTests::executeList_1() {
 void CMockVMUSBTests::executeList_2() 
 {
   vector<uint16_t> data = {0, 1, 2, 3};
-  std::vector<uint16_t>& buffer0 = m_pCtlr->createReturnDataStructure();
-  buffer0.insert(buffer0.end(), data.begin(), data.end());
+  m_pCtlr->addReturnData(data,0);
 
   CVMUSBReadoutList list; // a dummy list
   uint16_t buffer[32];
@@ -144,14 +145,11 @@ void CMockVMUSBTests::executeList_2()
 void CMockVMUSBTests::executeList_3() 
 {
   vector<uint16_t> data0 = {0, 1, 2, 3};
-  std::vector<uint16_t>& buffer0= m_pCtlr->createReturnDataStructure();
-  buffer0.insert(buffer0.end(), data0.begin(), data0.end());
+  m_pCtlr->addReturnData(data0, 0);
 
   // create a new buffer to store data in
-  std::vector<uint16_t>& buffer1 = m_pCtlr->createReturnDataStructure();
   std::vector<uint16_t> data1 = {4, 5};
-  // add the data to the new buffer
-  buffer1.insert(buffer1.end(), data1.begin(), data1.end());
+  m_pCtlr->addReturnData(data1, 0);
 
   CVMUSBReadoutList list; // a dummy list
   uint16_t buffer[32];
@@ -173,6 +171,16 @@ void CMockVMUSBTests::executeList_3()
 
 }
 
+// Force VMUSB to return specific status value
+void CMockVMUSBTests::executeList_4() 
+{
+  m_pCtlr->addReturnDatum(3,-1);
+
+  size_t buf;
+  CLoggingReadoutList list;
+  CPPUNIT_ASSERT_EQUAL(-1, 
+                       m_pCtlr->executeList(list,&buf,sizeof(buf),&buf));
+}
 
 /** Test that writing to global mode can be read back appropriately
  * and that the operations get recorded properly.
@@ -211,29 +219,37 @@ void CMockVMUSBTests::eventsPerBuffer_0() {
 
 
 void CMockVMUSBTests::addReturnDatum_0() {
-  vector<vector<uint16_t> >& retData = m_pCtlr->getReturnData();
+  auto& retData = m_pCtlr->getReturnData();
 
   CPPUNIT_ASSERT(0 == retData.size());
 
-  m_pCtlr->addReturnDatum(25);
+  m_pCtlr->addReturnDatum(25,0);
 
   CPPUNIT_ASSERT(1 == retData.size());
-  CPPUNIT_ASSERT(1 == retData.front().size());
-  CPPUNIT_ASSERT(25 == retData.front().at(0));
+  CPPUNIT_ASSERT(1 == retData.front().second.size());
+  CPPUNIT_ASSERT(25 == retData.front().second.at(0));
+  CPPUNIT_ASSERT(0 == retData.front().first); // return status
 }
 
 void CMockVMUSBTests::addReturnData_0() {
-  vector<vector<uint16_t> >& retData = m_pCtlr->getReturnData();
+  // gain a reference to the return data
+  auto& returnData = m_pCtlr->getReturnData();
 
-  CPPUNIT_ASSERT(0 == retData.size());
+  // at this point there should be nothing in it
+  CPPUNIT_ASSERT(0 == returnData.size());
 
+  // add some data to it
   std::vector<uint16_t> data = {0,1,2};
-  m_pCtlr->addReturnData(data);
+  m_pCtlr->addReturnData(data,0); // by default the status is set to 0
 
-  CPPUNIT_ASSERT(1 == retData.size());
-  CPPUNIT_ASSERT(3 == retData.front().size());
-  CPPUNIT_ASSERT(0 == retData.front().at(0));
-  CPPUNIT_ASSERT(1 == retData.front().at(1));
-  CPPUNIT_ASSERT(2 == retData.front().at(2));
+  // grab the first element's data buffer
+  auto& retData = returnData.front().second;
+
+  // it should now have 1 element
+  CPPUNIT_ASSERT(1 == returnData.size());
+  CPPUNIT_ASSERT(3 == retData.size()); // 
+  CPPUNIT_ASSERT(0 == retData.at(0));
+  CPPUNIT_ASSERT(1 == retData.at(1));
+  CPPUNIT_ASSERT(2 == retData.at(2));
 }
 
