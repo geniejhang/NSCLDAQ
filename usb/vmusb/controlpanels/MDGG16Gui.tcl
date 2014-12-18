@@ -94,7 +94,7 @@ snit::widget CheckbuttonColumn {
   method BuildGUI {} {
     # intialize checkbuttons
     for {set ch 0} {$ch < 16} {incr ch} {
-      lappend _widgets [ttk::checkbutton $win.bit$ch -variable [myvar _bit$ch]] ;#-text "Enable"]
+      lappend _widgets [ttk::checkbutton $win.bit$ch -variable [myvar _bit$ch]]
     }
     set sep [ttk::separator $win.separator -orient horizontal]
     ttk::checkbutton $win.bit16 -variable [myvar _bit16]
@@ -226,20 +226,37 @@ snit::widget CheckbuttonColumn {
 
 
 ##########################
+#
 
+## @brief Column of specialized ttk::entry widgets
+#
+# In the single column of ttk::entry widget this produces, there are 16 rows. In
+# the 17th row, there is a single ttk::label that says "Common". The column that
+# this creates is intended to be used alongside a CheckbuttonColumn. The
+# variables controlled by the ttk::entry are defined in the MDGG16ChannelNames
+# namespace. The top row corresponds to channel 0, the bottom row to channel
+# 15, and the rows in between map linearly. 
+#
+# The entry widgets have been specialized to allow specialization of the values
+# to be a name while not allowing an empty string. If the user specifies
+# whitespace only in the entry, the value will fall back to a default value that
+# is Ch#.
+#
+# In general this is a standalone megawidget that needs no presenter. It is just
+# a collection of widgets. 
 snit::widget NameColumn {
 
-  option -presenter -default {} -configuremethod SetPresenter
-
-  constructor {args} {
-    $self configurelist $args
-
+  ## @brief  Construct and assemble gui
+  #
+  constructor {} {
     set _rows [list]
-
     $self BuildGUI
   }
 
-  ## @brief Buil
+  ## @brief Assemble widgets into a gui
+  #
+  # This grids all of the widgets and makes them stretchable in the horizontal
+  # direction.
   #
   method BuildGUI {} {
     for {set ch 0} {$ch < 16} {incr ch} {
@@ -285,44 +302,76 @@ snit::widget NameColumn {
     regexp {^.*(\d+)$} $widget match ch
     set $str "Ch$ch"
   }
-
-  method SetPresenter {opt val} {
-    set options($opt) $val
-  }
 }
 
 ############################
+#
 
+## @brief The main megawidget
+#
+# This is just a NameColumn and 4 CheckbuttonColumns with some buttons. The
+# buttons at the bottom provide the ability to update from the device or commit
+# the state of the view to the device. The actual functionality of these buttons
+# is suggested, but it is the presenter attached to the instance that actual
+# determines what happens when these buttons are pressed because this will only
+# forward the button press event to the presenter. 
+#
+# An instance of this class will trace the variables of the CheckbuttonColumns
+# that it owns and use the values of those to maintain whether the update button
+# should be active or not.
+# 
+# Without a presenter object, this will keep track of whether synchronization
+# has been lost but there will never be any way to reset it to be synchronized.
+# In fact, the megawidget will look usable, but in reality nothing will happen
+# when the commit and update button are pressed.
+#
 snit::widget MDGG16View {
 
-  option -presenter -default {}
+  option -presenter -default {} ;##!< handles logic for commit and update
 
-  component _colNames
-  component _colA
-  component _colB
-  component _colC
-  component _colD
-  component _updateButton
+  component _colNames ;##!< name column widget
+  component _colA     ;##!< column A
+  component _colB     ;##!< column B
+  component _colC     ;##!< column C
+  component _colD     ;##!< column D
+  component _updateButton 
 
-  variable _outOfSyncAVar
-  variable _outOfSyncBVar
-  variable _outOfSyncCVar
-  variable _outOfSyncDVar
+  variable _outOfSyncAVar ;##!< name of colA's out of sync state variable
+  variable _outOfSyncBVar ;##!< name of colB's out of sync state variable
+  variable _outOfSyncCVar ;##!< name of colC's out of sync state variable
+  variable _outOfSyncDVar ;##!< name of colD's out of sync state variable
 
+  ## @brief Construct, parse options, and assemble
+  #
+  # @param args   option value pairs
+  #
   constructor {args} {
     $self configurelist $args
 
     $self BuildGUI
     $self SetUpSync
-
   }
 
+  ## @brief Destruct
+  #
+  # Destroy all of the subcomponents.
   destructor {
+    catch {destroy $_colNames}
+    catch {destroy $_colA}
+    catch {destroy $_colB}
+    catch {destroy $_colC}
+    catch {destroy $_colD}
+    catch {destroy $_updateButton}
   }
 
+  ## @brief Assembles the widgets into a unified megawidget
+  #
   method BuildGUI {} {
+
+    # Big title at top of widget
     set title [ttk::label $win.title -text "MDGG-16 Controls" -style Title.TLabel]
     
+    # The titles for each column
     set header [ttk::frame $win.headers -style "Header.TFrame"]
     ttk::label $header.names -text "Names" -width 24 -style Header.TLabel
     ttk::label $header.orA -text "OR A" -style Header.TLabel
@@ -333,6 +382,7 @@ snit::widget MDGG16View {
     grid columnconfigure $header 0 -weight 4 -uniform a
     grid columnconfigure $header {1 2 3 4} -weight 1 -uniform a
 
+    # The columns
     set cols [ttk::frame $win.cols]
     install _colNames using NameColumn $cols.colNames
     install _colA using CheckbuttonColumn $cols.colA -stylename "Even"
@@ -344,6 +394,7 @@ snit::widget MDGG16View {
     grid columnconfigure $cols 0 -weight 4 -uniform a
     grid columnconfigure $cols {1 2 3 4} -weight 1 -uniform a
 
+    # the buttons
     set buttons [ttk::frame $win.buttons]
     ttk::button $buttons.commit -text "Commit to Device" -command [mymethod Commit]
     set _updateButton [ttk::button $buttons.update -text "Update from Device" \
@@ -360,6 +411,8 @@ snit::widget MDGG16View {
 
   }
   
+  ## @brief Sets traces on the variables managing sync state
+  #
   method SetUpSync {} {
     set _outOfSyncAVar [$_colA GetOutOfSyncVar]
     trace add variable $_outOfSyncAVar write [mymethod SyncChanged]
@@ -372,6 +425,10 @@ snit::widget MDGG16View {
 
   }
 
+  ## @brief Forward a commit button pressed event
+  # 
+  # If no presenter has been set, then this is a no-op
+  #
   method Commit {} {
     set pr [$self cget -presenter]
     if {$pr ne {}} {
@@ -379,6 +436,10 @@ snit::widget MDGG16View {
     }
   }
 
+  ## @brief Forward an update button pressed event
+  # 
+  # If no presenter has been set, then this is a no-op
+  #
   method Update {} {
     set pr [$self cget -presenter]
     if {$pr ne {}} {
@@ -386,20 +447,53 @@ snit::widget MDGG16View {
     }
   }
 
+  ## @brief Access value of specific bit for a certain column
+  #
+  # Provides that way to provide access to bits of the sub widgets without
+  # needed to know much about them other than which column.
+  #
+  # @param col    index of checkbutton column (0=leftmost, ..., 3=rightmost)
+  # @param ch     index of bit in column
+  #
+  # @warning There is no check for sanity of parameters passed into this. It is
+  #          the callers responsibility to make sure these are sensible.
   method GetBit {col ch} {
     set widget [$self MapColumnToWidget $col]
     return [$widget GetBit $ch]
   }
 
+  ## @brief Set a value for a bit in a column
+  #
+  # Analogous to the GetBit method except that in this case we write the bit.
+  #
+  # @param col    index of checkbutton column (0=leftmost, ..., 3=rightmost)
+  # @param ch     index of bit in column
+  # @param val    value to write (should be 0 or 1)
+  #
   method SetBit {col ch val} {
     set widget [$self MapColumnToWidget $col]
     return [$widget SetBit $ch $val]
   }
 
+  ## @brief Mechanism to get name of widget forming a specific column
+  #
+  # @param col  checkbutton column index (0=leftmost, ..., 3=rightmost)
+  #
+  # @returns fully-qualified name of CheckbuttonColumn widget
+  #
+  # @throws error if col is out of range
   method MapColumnToWidget {col} {
     return [dict get [dict create 0 $_colA 1 $_colB 2 $_colC 3 $_colD] $col]
   }
 
+  ## @brief Callback for when any of the button columns go out of sync
+  #
+  # This provides the mechanism for enabling and disabling the update button. 
+  #
+  # @param name1  unused
+  # @param name2  unused
+  # @param op     unused
+  #
   method SyncChanged {name1 name2 op} {
     set outA [set $_outOfSyncAVar]
     set outB [set $_outOfSyncBVar]
@@ -411,16 +505,31 @@ snit::widget MDGG16View {
       $_updateButton state disabled
     }
   }
+
+  method SetOutOfSync {state} {
+    $_colA SetOutOfSync $state
+    $_colB SetOutOfSync $state
+    $_colC SetOutOfSync $state
+    $_colD SetOutOfSync $state
+  }
 }
 
 ##############################################################################
 
-## @brief The logic for the ChannelEnableDisableView
+## @brief The logic for the MDGG16View
 #
+# Provides the logic for handling when the commit or update buttons are pressed
+# in the the MDGG16View. This maintains a reference to a view and to a device
+# handle. The expected arguments here are for the view to be an MDGG16View and
+# for the handle to be an MDGG16Proxy. However, duck typing applies and any
+# satisfactory substitute can be used in place of any of these.
+#
+# It is important to understand that neither the view nor the handle are owned
+# by this snit::type.
 snit::type MDGG16Presenter {
 
-  option -view -default {} -configuremethod SetView
-  option -handle -default {} -configuremethod SetHandle
+  option -view -default {} -configuremethod SetView ;#!< the view
+  option -handle -default {} -configuremethod SetHandle ;#!< the handle
 
   ## @brief Parse options and construct
   #
@@ -449,52 +558,16 @@ snit::type MDGG16Presenter {
   # @throws error if no view exists
   # @throws error if communication fails
   method UpdateViewFromModel {} {
-  # verify that first there is a device to communicate with
-    set handle [$self cget -handle]
-    if {$handle eq {}} {
-      set msg {MDGG16Presenter::UpdateViewFromModel }
-      append msg {Cannot access model because it does not exist.}
-      return -code error $msg
-    }
 
-    # verify that first there is a view to communicate with
-    set view [$self cget -view]
-    if {$view eq {}} {
-      set msg {MDGG16Presenter::UpdateViewFromModel }
-      append msg {Cannot update view because it does not exist.}
-      return -code error $msg
-    }
+    set bits [$self RetrieveAndDecodeMask AB]
+    $self SetBitsForColumn 0 [lrange $bits 0  15]
+    $self SetBitsForColumn 1 [lrange $bits 16 31]
 
-    ## set the logical OR bits for A and B
-    set mask [$handle GetLogicalORAB]
-    # split the mask into a list of bits
-    set bits [$self DecodeMaskIntoBits $mask]
+    set bits [$self RetrieveAndDecodeMask CD]
+    $self SetBitsForColumn 2 [lrange $bits 0  15]
+    $self SetBitsForColumn 3 [lrange $bits 16 31]
 
-    # update the view
-    for {set bit 0} {$bit < 16} {incr bit} {
-      $view SetBit 0 $bit [lindex $bits $bit]
-    }
-
-    for {set bit 16} {$bit < 32} {incr bit} {
-      $view SetBit 1 [expr $bit-16] [lindex $bits $bit]
-    }
-
-    ## set the logical OR bits for C and D
-    set mask [$handle GetLogicalORCD]
-    set bits [$self DecodeMaskIntoBits $mask]
-
-    for {set bit 0} {$bit < 16} {incr bit} {
-      $view SetBit 2 $bit [lindex $bits $bit]
-    }
-
-    for {set bit 16} {$bit < 32} {incr bit} {
-      $view SetBit 3 [expr $bit-16] [lindex $bits $bit]
-    }
-
-    [$view MapColumnToWidget 0] SetOutOfSync 0
-    [$view MapColumnToWidget 1] SetOutOfSync 0
-    [$view MapColumnToWidget 2] SetOutOfSync 0
-    [$view MapColumnToWidget 3] SetOutOfSync 0
+    $self UpdateOutOfSyncState 0
   }
 
   ## @brief Write the state of the view to the device
@@ -503,48 +576,144 @@ snit::type MDGG16Presenter {
   # @throws error if no view exists
   #
   method CommitMask {} {
-  # check for the presence of a handle
+    $self ThrowIfNoHandle ${type}::CommitMask
     set handle [$self cget -handle]
-    if {$handle eq {}} {
-      set msg {MDGG16Presenter::CommitMask }
-      append msg {Cannot access model because it does not exist.}
-      return -code error $msg
-    }
-
-    # check for the presence of a view
-    set view [$self cget -view]
-    if {$view eq {}} {
-      set msg {MDGG16Presenter::CommitMask }
-      append msg {Cannot update view because it does not exist.}
-      return -code error $msg
-    }
 
     ### Logical OR AB
-    set bits [list]
-    for {set index 0} {$index < 16} {incr index} {
-      lappend bits [$view GetBit 0 $index]
-    }
-    for {set index 0} {$index < 16} {incr index} {
-      lappend bits [$view GetBit 1 $index]
-    }
-    # turn list of bits into a number
-    set mask [$self EncodeBitsIntoMask $bits]
+    set mask [$self RetrieveAndEncodeBits {0 1}]
     $handle SetLogicalORAB $mask
 
     ### Logical OR CD 
-    set bits [list]
-    for {set index 0} {$index < 16} {incr index} {
-      lappend bits [$view GetBit 2 $index]
-    }
-    for {set index 0} {$index < 16} {incr index} {
-      lappend bits [$view GetBit 3 $index]
-    }
-    # turn list of bits into a number
-    set mask [$self EncodeBitsIntoMask $bits]
+    set mask [$self RetrieveAndEncodeBits {2 3}]
     $handle SetLogicalORCD $mask
   }
 
+  ## @brief Saves view state to a file.
+  #
+  # This is almost identical to the commit method except that it 
+  # writes the mask values to a file instead of to a device. This is invoked
+  # the MDGG16GuiApp's "Save as..." menu button at the present moment.
+  #
+  # Produces a file that looks kind of like:
+  # or_a  123
+  # or_b  123
+  # or_c  123
+  # or_d  123
+  #
+  # Where the numbers are the calculated bit masks in decimal.
+  #
+  # @param path   name of file to save to
+  #
+  # @throws error if now view exists
+  method SaveCurrentStateToFile {path} {
+
+    # it makes no sense to do this if there is no view
+    $self ThrowIfNoView ${type}::SaveCurrentStateToFile
+
+    # open the file
+    set outfile [open $path w+]
+
+    set view [$self cget -view]
+
+    ### Logical OR AB
+    set mask [$self RetrieveAndEncodeBits {0 1}]
+    set or_a [expr $mask & 0xffff]
+    set or_b [expr ($mask>>16) & 0xffff]
+    puts $outfile "or_a $or_a"
+    puts $outfile "or_b $or_b"
+
+    ### Logical OR CD 
+    set mask [$self RetrieveAndEncodeBits {2 3}]
+    set or_c [expr $mask & 0xffff]
+    set or_d [expr ($mask>>16) & 0xffff]
+    puts $outfile "or_c $or_c"
+    puts $outfile "or_d $or_d"
+
+    close $outfile
+  }
+
+  #############################################################################
+  #
   # UTILITY METHODS
+  #
+
+  ## @brief Read mask from device and transform into list of bits
+  #
+  # This will read the specified mask from the device and parse it into a
+  # representation in bits. The list will contain 32 elements (1 for each bit)
+  # and the order will be least significant to most significant.
+  #
+  # @param name   mask name (either AB or CD)
+  #
+  # @returns 32 element list of 0s and 1s
+  #
+  # @throws error if no device handle exists
+  method RetrieveAndDecodeMask {name} {
+    $self ThrowIfNoHandle ${type}::RetrieveAndDecodeMask
+
+    set handle [$self cget -handle]
+    set mask [$handle GetLogicalOR$name]
+
+    # split the mask into a list of bits
+    return [$self DecodeMaskIntoBits $mask]
+  }
+
+  ## @brief Write list of bits to checkbuttons in a given column
+  #
+  # @param col  column number (either 0, 1, 2, or 3)
+  # @param bits list of 0s and 1s (must be 16 elements long)
+  #
+  # @throws error if no view exists
+  method SetBitsForColumn {col bits} {
+
+    $self ThrowIfNoView ${type}::SetBitsForColumn
+
+    set view [$self cget -view]
+    for {set bit 0} {$bit < 16} {incr bit} {
+      $view SetBit $col $bit [lindex $bits $bit]
+    }
+  }
+
+  ## @brief Update the out of sync value in value
+  #
+  # Typcially this is just called to let the view know that it has recently been
+  # synced.
+  #
+  # @param state  boolean value indicating whether out of sync
+  #
+  # @throws error if no view exists
+  method UpdateOutOfSyncState {state} {
+    $self ThrowIfNoView ${type}::UpdateOutOfSyncState 
+
+    [$self cget -view] SetOutOfSync $state 
+  }
+
+
+  ## @brief The opposite of RetrieveAndDecodeMask
+  # 
+  # Reads the bits from two columns and then forms them into a 32-bit unsigned
+  # integer. The column specified as element 0 of the argument forms the lower
+  # 16-bits of the integer and the second element forms the upper 16-bits.
+  #
+  # @param cols   2-element list containing which two lists to use
+  #
+  # @return 32-bit unsigned integer 
+  method RetrieveAndEncodeBits {cols} {
+    $self ThrowIfNoView ${type}::RetrieveAndEncodeBits
+
+    set view [$self cget -view]
+
+    set bits [list]
+    foreach col $cols {
+      for {set index 0} {$index < 16} {incr index} {
+        lappend bits [$view GetBit $col $index]
+      }
+    }
+
+    # turn list of bits into a number
+    return [$self EncodeBitsIntoMask $bits]
+  }
+
 
   ## @brief Split an integer into a list of bits
   #
@@ -629,49 +798,31 @@ snit::type MDGG16Presenter {
     }
   }
 
-  method SaveCurrentStateToFile {path} {
-    set outfile [open $path w+]
-
-    # check for the presence of a view
-    set view [$self cget -view]
-    if {$view eq {}} {
-      set msg {MDGG16Presenter::CommitMask }
-      append msg {Cannot update view because it does not exist.}
+  ## @brief Throws an error if no handle exists 
+  #
+  # @param context  method name to indicate what called this.
+  #
+  # @throws error
+  method ThrowIfNoHandle {context} {
+    if {[$self cget -handle] eq {}} {
+      set msg "$context "
+      append msg {Cannot access model because it does not exist.}
       return -code error $msg
     }
-
-    ### Logical OR AB
-    set bits [list]
-    for {set index 0} {$index < 16} {incr index} {
-      lappend bits [$view GetBit 0 $index]
-    }
-    for {set index 0} {$index < 16} {incr index} {
-      lappend bits [$view GetBit 1 $index]
-    }
-    # turn list of bits into a number
-    set mask [$self EncodeBitsIntoMask $bits]
-    set or_a [expr $mask & 0xffff]
-    set or_b [expr ($mask>>16) & 0xffff]
-
-    puts $outfile "or_a $or_a"
-    puts $outfile "or_b $or_b"
-
-    ### Logical OR CD 
-    set bits [list]
-    for {set index 0} {$index < 16} {incr index} {
-      lappend bits [$view GetBit 2 $index]
-    }
-    for {set index 0} {$index < 16} {incr index} {
-      lappend bits [$view GetBit 3 $index]
-    }
-    # turn list of bits into a number
-    set mask [$self EncodeBitsIntoMask $bits]
-    set or_c [expr $mask & 0xffff]
-    set or_d [expr ($mask>>16) & 0xffff]
-    puts $outfile "or_c $or_c"
-    puts $outfile "or_d $or_d"
-
-    close $outfile
   }
+
+  ## @brief Throws an error if no handle exists 
+  #
+  # @param context  method name to indicate what called this.
+  #
+  # @throws error
+  method ThrowIfNoView {context} {
+    if {[$self cget -view] eq {}} {
+      set msg "$context "
+      append msg {Cannot access model because it does not exist.}
+      return -code error $msg
+    }
+  }
+
 }
 

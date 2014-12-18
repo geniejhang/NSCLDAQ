@@ -113,7 +113,12 @@ tcltest::test CommitMask-0 {Commit mask should copy state of view to handle
 
   # set the view state now b/c otherwise it would be set to whatever the 
   # handle dictated in the previous line. 
-  for {set col 0} {$col<4} {incr col} {
+  for {set col 0} {$col<2} {incr col} {
+    for {set ch 0} {$ch<16} {incr ch} {
+      $view SetBit $col $ch [expr $ch%2]
+    }
+  }
+  for {set col 2} {$col<4} {incr col} {
     for {set ch 0} {$ch<16} {incr ch} {
       $view SetBit $col $ch 1
     }
@@ -129,7 +134,7 @@ tcltest::test CommitMask-0 {Commit mask should copy state of view to handle
   ::dev destroy
 
   set log
-} {{SetLogicalORAB 4294967295} {SetLogicalORCD 4294967295}}
+} {{SetLogicalORAB 2863311530} {SetLogicalORCD 4294967295}}
 
 tcltest::test UpdateViewFromModel-0 {Commit mask should copy state of view to handle
 } {
