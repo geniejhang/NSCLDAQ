@@ -120,6 +120,8 @@ namespace WienerMDGG16
        *  read from the -configfile specified.
        *
        * @param vme   a CVMUSB controller
+       *
+       * \throws std::string if failure occurs while communicating with device
        */
       virtual void Initialize(CVMUSB& vme);
 
@@ -140,7 +142,10 @@ namespace WienerMDGG16
        * \param parameter name of parameter
        * \param value     string representation of value to write
        *
-       * \returns response from device
+       * \returns return message
+       * \retval <value> return data read from device during operation 
+       * \retval ERROR - ... when a bad parameter name is passed
+       * \retval ERROR - ... when a failure occurs 
        */
       virtual std::string Set(CVMUSB& vme, std::string parameter, 
           std::string value);
@@ -153,7 +158,10 @@ namespace WienerMDGG16
        *
        * \returns value associated with parameter
        *
-       * \throws std::string - error occurs during communication with device
+       * \returns return message
+       * \retval <value> return data read from device during operation 
+       * \retval ERROR - ... when a bad parameter name is passed
+       * \retval ERROR - ... when a failure occurs 
        */
       virtual std::string Get(CVMUSB& vme, std::string parameter); 
 
