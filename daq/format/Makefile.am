@@ -28,7 +28,10 @@ libdataformat_la_SOURCES = CRingSelectionPredicate.cpp	\
       CFileDataSink.cpp CDataSinkFactory.cpp \
       CRingDataSink.cpp \
       CDataSinkException.cpp \
-      CAbnormalEndItem.cpp 
+      CAbnormalEndItem.cpp  \
+			CFakeDataSource.cpp \
+			CLoggingDataSink.cpp
+
 libdataformat_la_CPPFLAGS=$(COMPILATION_FLAGS)
 
 include_HEADERS	= CRingSelectionPredicate.h	\
@@ -52,7 +55,9 @@ include_HEADERS	= CRingSelectionPredicate.h	\
       CDataSink.h CFileDataSink.h CDataSinkFactory.h \
       CRingDataSink.h \
       CDataSinkException.h \
-      CAbnormalEndItem.h
+      CAbnormalEndItem.h \
+			CFakeDataSource.h \
+			CLoggingDataSink.h
 
 
 

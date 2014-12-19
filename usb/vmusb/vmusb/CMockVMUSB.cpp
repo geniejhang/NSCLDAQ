@@ -39,7 +39,6 @@ int CMockVMUSB::executeList(CVMUSBReadoutList& list, void* pReadBuffer,
   // Try to upcast to a CLoggingReadoutList.
   // Dispatch to the proper handler given the success or failure of this upcast.
 
-  int retval = 0;
 
   try {
     // try to upcast 
@@ -47,18 +46,22 @@ int CMockVMUSB::executeList(CVMUSBReadoutList& list, void* pReadBuffer,
 
     // if dynamic_cast didn't throw, then the user passed in a 
     // CLoggingReadoutList. Send it to the overridden form.
-    retval = executeLoggingRdoList(logList, pReadBuffer, readBufferSize, 
+    executeLoggingRdoList(logList, pReadBuffer, readBufferSize, 
                                    bytesRead);
   } catch (bad_cast& exc) {
     // upcasting failed... that means we have a tradition CVMUSBReadoutList.  
-    retval = executeVMUSBRdoList(list, pReadBuffer, readBufferSize, bytesRead);
+    executeVMUSBRdoList(list, pReadBuffer, readBufferSize, bytesRead);
   }
 
   // fill the return data
   fillReturnData(pReadBuffer, readBufferSize, bytesRead);
 
-  // pop off the front
+  // default return value used is 0
+  int retval = 0;
+
   if (m_returnData.size()>0) {
+    // if we have data, snag the return value and pop off the front
+    retval = m_returnData.front().first;
     m_returnData.erase(m_returnData.begin());
   }
 
@@ -279,33 +282,42 @@ void CMockVMUSB::fillReturnData(void* pBuffer, size_t bufSize, size_t* nbytes)
     *nbytes = 0;
   } else {
 
+    // retrieve the return data (status and data buffer)
     auto& returnData = m_returnData.front();
-    size_t nToReturn = std::min(bufferSize, returnData.size());
+    auto& returnBuffer = returnData.second;
+    size_t nToReturn = std::min(bufferSize, returnBuffer.size());
     (*nbytes) = nToReturn*sizeof(uint16_t);
 
     // copy
     uint16_t* buffer = reinterpret_cast<uint16_t*>(pBuffer);
 
     for (size_t index=0; index<nToReturn; ++index) {
-      *(buffer+index) = returnData[index];
+      *(buffer+index) = returnBuffer[index];
     }
 
-    auto begin = returnData.begin();
+    auto begin = returnBuffer.begin();
     auto end = begin + nToReturn;
 
-    returnData.erase(begin, end);
+    returnBuffer.erase(begin, end);
   }
 }
 
-void CMockVMUSB::addReturnDatum(uint16_t datum) 
+void CMockVMUSB::addReturnDatum(uint16_t datum, int status) 
 {
   vector<uint16_t> returnData = {datum};
-  vector<uint16_t>& buffer = createReturnDataStructure();
+  auto& data = createReturnDataStructure();
+
+  data.first = status;
+  auto& buffer = data.second;
   buffer.insert(buffer.end(), returnData.begin(), returnData.end());
 }
-void CMockVMUSB::addReturnData(std::vector<uint16_t> data) 
+void CMockVMUSB::addReturnData(std::vector<uint16_t> data, int status) 
 {
-  vector<uint16_t>& buffer = createReturnDataStructure();
+  auto& retData = createReturnDataStructure();
+  // set return status
+  retData.first = status;
+
+  auto& buffer = retData.second;
   buffer.insert(buffer.end(), data.begin(), data.end());
 }
 

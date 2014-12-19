@@ -18,7 +18,7 @@ class CMockVMUSB : public CVMUSB
     std::map<uint32_t, uint32_t> m_registers;
     std::map<uint32_t, std::string> m_registerNames;
     std::map<uint32_t, uint32_t> m_addressData;
-    std::vector<std::vector<uint16_t> > m_returnData;
+    std::vector<std::pair<int,std::vector<uint16_t> > > m_returnData;
 
     public:
     CMockVMUSB();
@@ -43,19 +43,19 @@ class CMockVMUSB : public CVMUSB
 
     std::vector<std::string> getOperationRecord() const { return m_opRecord;}
 
-    std::vector<uint16_t>& createReturnDataStructure() 
+    std::pair<int,std::vector<uint16_t> >& createReturnDataStructure() 
     {
-      m_returnData.push_back(std::vector<uint16_t>());
+      m_returnData.push_back( std::make_pair(0,std::vector<uint16_t>()) );
       return m_returnData.back();
     }
 
-    std::vector<std::vector<uint16_t> >& getReturnData() 
+    std::vector<std::pair<int,std::vector<uint16_t> > >& getReturnData() 
     {
       return m_returnData;
     };
 
-    void addReturnDatum(uint16_t datum);
-    void addReturnData(std::vector<uint16_t> datum);
+    void addReturnDatum(uint16_t datum, int status=0);
+    void addReturnData(std::vector<uint16_t> datum, int status);
 
     private:
      void setUpRegisterMap(); 

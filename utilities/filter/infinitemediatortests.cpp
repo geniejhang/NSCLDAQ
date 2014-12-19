@@ -45,6 +45,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 
 #include "CTransparentFilter.h"
 #include "CNullFilter.h"
+#include "CTestFilter.h"
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -57,55 +58,6 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 // A test suite 
 class CInfiniteMediatorTest : public CppUnit::TestFixture
 {
-  private:
-    // Define a test filter to return some testable results
-    class CTestFilter : public CFilter {
-      private:
-        int m_nProcessed;
-  
-      public:
-       CTestFilter() : CFilter(), m_nProcessed(0) {}
-      CTestFilter* clone() const { return new CTestFilter(*this);}
-
-      virtual CRingItem* handleStateChangeItem(CRingStateChangeItem*) 
-      { ++m_nProcessed; return new CRingStateChangeItem(BEGIN_RUN);}
-
-      virtual CRingItem* handleScalerItem(CRingScalerItem* ) 
-      { ++m_nProcessed; return new CRingScalerItem(200);}
-
-      virtual CRingItem* handleTextItem(CRingTextItem*) 
-      { ++m_nProcessed; 
-        std::vector<std::string> str_vec;
-        str_vec.push_back("0000");
-        str_vec.push_back("1111");
-        str_vec.push_back("2222");
-        return new CRingTextItem(PACKET_TYPES,str_vec);
-      }
-
-      virtual CRingItem* handlePhysicsEventItem(CPhysicsEventItem* ) 
-      { ++m_nProcessed; return new CPhysicsEventItem(4096);}
-
-      virtual CRingItem* 
-        handlePhysicsEventCountItem(CRingPhysicsEventCountItem*) 
-        { ++m_nProcessed; 
-            return new CRingPhysicsEventCountItem(static_cast<uint64_t>(4),
-                                                  static_cast<uint32_t>(1001));}
-
-      virtual CRingItem* handleFragmentItem(CRingFragmentItem*)
-      {
-        ++m_nProcessed; 
-        return new CRingFragmentItem(static_cast<uint64_t>(10101),
-            static_cast<uint32_t>(1),
-            static_cast<uint32_t>(2),
-            reinterpret_cast<void*>(new char[2]),
-            static_cast<uint32_t>(3));
-      }
-
-      virtual CRingItem* handleRingItem(CRingItem*) 
-      { ++m_nProcessed; return new CRingItem(100);}
-
-      int getNProcessed() const { return m_nProcessed;}
-    };
 
   private:
     CFilter* m_filter;
@@ -135,6 +87,9 @@ class CInfiniteMediatorTest : public CppUnit::TestFixture
     CPPUNIT_TEST ( testTransparentMainLoop );
 
     CPPUNIT_TEST ( testFilterReturnsNULL );
+
+    CPPUNIT_TEST ( initialize_0 );
+    CPPUNIT_TEST ( finalize_0 );
 //    CPPUNIT_TEST ( testMultiSourceStates );
     CPPUNIT_TEST_SUITE_END();
 
@@ -162,6 +117,9 @@ class CInfiniteMediatorTest : public CppUnit::TestFixture
 //    void testMultiSourceStates();
 
     void testFilterReturnsNULL();
+
+    void initialize_0();
+    void finalize_0();
 
   private:
     size_t writeRingItemToFile(CRingItem& item,
@@ -662,5 +620,20 @@ size_t CInfiniteMediatorTest::writeRingItemToFile(CRingItem& item,
 }
 
 
+void CInfiniteMediatorTest::initialize_0 () 
+{
+  CTestFilter* filt = dynamic_cast<CTestFilter*>(m_filter);
+  CPPUNIT_ASSERT_EQUAL(false, filt->m_initCalled );
+  m_mediator->initialize();
+  CPPUNIT_ASSERT_EQUAL(true, filt->m_initCalled );
+}
+
+void CInfiniteMediatorTest::finalize_0 () 
+{
+  CTestFilter* filt = dynamic_cast<CTestFilter*>(m_filter);
+  CPPUNIT_ASSERT_EQUAL(false, filt->m_finalCalled );
+  m_mediator->finalize();
+  CPPUNIT_ASSERT_EQUAL(true, filt->m_finalCalled );
+}
 
 

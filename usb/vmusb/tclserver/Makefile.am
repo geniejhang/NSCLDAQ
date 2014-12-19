@@ -4,7 +4,7 @@ lib_LTLIBRARIES			= libVMUSBControlServer.la libUserDriver.la
 COMPILATION_FLAGS=@THREADCXX_FLAGS@ -I@top_srcdir@/usb/vmusb/vmusb		\
 					-I@top_srcdir@/usb/common/configurableobject \
 					-I@top_srcdir@/usb/common/slowcontrols \
-					-I@top_srcdir@/daq/format                 \
+					-I@top_srcdir@/daq/format  \
 					-I@top_srcdir@/usb/vmusb/devices	\
 					-I@top_srcdir@/usb/vmusb/rdothread	\
 					-I@top_srcdir@/usb/vmusb/router	\
@@ -43,7 +43,10 @@ libVMUSBControlServer_la_SOURCES	= \
 					CMxDCRCBus.cpp \
 					CMxDCRCBusCreator.cpp \
 					ChicoTrigger.cpp \
-					CChicoTriggerCreator.cpp
+					CChicoTriggerCreator.cpp \
+					CWienerMDGG16.cpp \
+					CMDGG16Control.cpp \
+					CMDGG16ControlCreator.cpp 
 
 noinst_HEADERS			=	CGDG.h			\
 					CV812.h			\
@@ -74,7 +77,10 @@ noinst_HEADERS			=	CGDG.h			\
 					CMxDCRCBus.h \
 					CMxDCRCBusCreator.h \
 					ChicoTrigger.h \
-					CChicoTriggerCreator.h
+					CChicoTriggerCreator.h \
+					CWienerMDGG16.h \
+					CMDGG16Control.h \
+					CMDGG16ControlCreator.h
 
 
 
@@ -99,3 +105,4 @@ install-data-local:
 	$(INSTALL_DATA)  @srcdir@/*.h @prefix@/vmusbdriver/includes
 	$(INSTALL_DATA)  @srcdir@/CUserDriverSample.cpp @prefix@/vmusbdriver/example
 
+EXTRA_DIST = WienerMDGG16Registers.h

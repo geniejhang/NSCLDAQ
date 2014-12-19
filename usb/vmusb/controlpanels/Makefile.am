@@ -1,8 +1,11 @@
-SUBDIRS=cv6533
+SUBDIRS=cv6533 figures
 
-PACKAGES=client.tcl configfile.tcl gdgcontrol.tcl gdgwidget.tcl sclclient.tcl xlm72scalerpanel.tcl
+PACKAGES=client.tcl configfile.tcl gdgcontrol.tcl gdgwidget.tcl sclclient.tcl xlm72scalerpanel.tcl \
+				 MDGG16Gui.tcl MDGG16Proxy.tcl MDGG16GuiApp.tcl
 
-APPS=gdgpanel.tcl v812usbcontrol.tcl
+APPS=gdgpanel.tcl v812usbcontrol.tcl MDGG16Control.tcl
+
+TCL_TESTS = tclTests.tcl mdgg16gui.test
 
 install-exec-local:
 	$(mkinstalldirs) @prefix@/TclLibs
@@ -12,7 +15,10 @@ install-exec-local:
 	for f in $(APPS); do $(INSTALL_SCRIPT) @srcdir@/$$f @bindir@; done
 	$(INSTALL_SCRIPT) @srcdir@/v812usbcontrol.tcl @bindir@/v895usbcontrol.tcl	
 	$(INSTALL_SCRIPT) @srcdir@/XLM72ScalerGUI.tcl @bindir@/XLM72ScalerGUI	
+	$(INSTALL_SCRIPT) @srcdir@/MDGG16Control.tcl @bindir@/MDGG16Control	
 
 
+check-TESTS:
+	TCLLIBPATH=@prefix@/TclLibs tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl
 
-EXTRA_DIST= $(APPS) $(PACKAGES) XLM72ScalerGUI.tcl
+EXTRA_DIST= $(APPS) $(PACKAGES) XLM72ScalerGUI.tcl $(TCL_TESTS)

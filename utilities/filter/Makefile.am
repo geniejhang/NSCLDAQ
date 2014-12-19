@@ -66,12 +66,14 @@ libfilter_la_DEPENDENCIES = @srcdir@/filterargs.h
 noinst_PROGRAMS = unittests testapp
 
 unittests_SOURCES	= TestRunner.cpp  \
-            infinitemediatortests.cpp \
-            filtermaintests.cpp  \
-            compositefiltertests.cpp \
-            transparentfiltertests.cpp \
-            oneshothandlertests.cpp \
-            oneshotmediatortests.cpp 
+						infinitemediatortests.cpp \
+						filtermaintests.cpp  \
+						compositefiltertests.cpp \
+						transparentfiltertests.cpp \
+						oneshothandlertests.cpp \
+						oneshotmediatortests.cpp  \
+						CTestFilter.h \
+						CTestFilter.cpp
 
 unittests_LDADD		= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 			@top_builddir@/base/dataflow/libDataFlow.la 	\
