@@ -163,3 +163,14 @@ void COneShotMediator::mainLoop()
   }
 
 }
+
+
+void COneShotMediator::initialize()
+{
+  getFilter()->initialize();
+}
+
+void COneShotMediator::finalize()
+{
+  getFilter()->finalize();
+}

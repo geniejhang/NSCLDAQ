@@ -129,4 +129,12 @@ void CInfiniteMediator::mainLoop()
 
 }
 
+void CInfiniteMediator::initialize() 
+{
+  getFilter()->initialize();
+}
 
+void CInfiniteMediator::finalize() 
+{
+  getFilter()->finalize();
+}

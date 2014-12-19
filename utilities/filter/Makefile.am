@@ -71,7 +71,8 @@ unittests_SOURCES	= TestRunner.cpp  \
             compositefiltertests.cpp \
             transparentfiltertests.cpp \
             oneshothandlertests.cpp \
-            oneshotmediatortests.cpp 
+            oneshotmediatortests.cpp  \
+						CTestFilter.cpp
 
 unittests_LDADD		= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 			@top_builddir@/base/dataflow/libDataFlow.la 	\

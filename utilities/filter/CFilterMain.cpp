@@ -157,7 +157,9 @@ CDataSink* CFilterMain::constructDataSink()
 void CFilterMain::operator()()
 {
   try {
+    m_mediator->initialize();
     m_mediator->mainLoop();
+    m_mediator->finalize();
   } catch (CException& exc) {
     std::cerr << exc.WasDoing() << " : " << exc.ReasonText() << std::endl;
     throw CFatalException(); 
