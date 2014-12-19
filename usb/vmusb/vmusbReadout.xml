@@ -16963,6 +16963,103 @@ Module cget <replaceable>name</replaceable>
                     </varlistentry>
                   </variablelist>
                 </refsect3>
+
+                <refsect3>
+                  <title>Parameters</title>
+
+                  <para>
+                    The following parameters can be Set:
+                  </para>
+
+                  <variablelist>
+                    <varlistentry>
+                      <term><literal>or_ab</literal></term>
+                      <listitem>
+                        <para>
+                          Provides the bit masks for the OR A and the OR B 
+                          definitions. See the description of the -or_a option 
+                          for how each of these are defined individually. The
+                          value to provide for this parameter should be a
+                          combination of the two individual masks. It is a 32-bit
+                          integer where the least significant 16-bits are the OR A
+                          definition and the upper 16-bits are the OR B
+                          definition.
+                        </para>
+                        <para>
+                          The return value of this should be the response of the
+                          device when successful. Any failure will result in a
+                          return value beginning with "ERROR - " and is followed
+                          by a description of the error.
+                        </para>
+
+                      </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                      <term><literal>or_cd</literal></term>
+                      <listitem>
+                        <para>
+                          This is the same as the <parameter>or_ab</parameter> 
+                          parameter except that it is formed by OR C and OR D bit
+                          masks. The least significant 16-bits are the OR C
+                          definition and the upper 16-bits are the OR D
+                          definition.
+                        </para>
+                        <para>
+                          The return value of this should be the response of the
+                          device when successful. Any failure will result in a
+                          return value beginning with "ERROR - " and is followed
+                          by a description of the error.
+                        </para>
+
+                      </listitem>
+                    </varlistentry>
+                  </variablelist>
+
+                  <para>
+                    The following parameters can be retrieved via Get:
+                  </para>
+
+                  <variablelist>
+                    <varlistentry>
+                      <term><literal>or_ab</literal></term>
+                      <listitem>
+                        <para>
+                          Reads the values of the OR A and OR B bit masks from the
+                          device. The returned value will have both 16-bit masks
+                          encoded into a 32-bit integer. The least significant
+                          16 bits define the OR A mask and the upper 16 bits
+                          define the OR B mask.
+                        </para>
+
+                        <para>
+                          If an error occurs while communicating with the device,
+                          the response will begin with "ERROR - " and will be
+                          followed by a description of the error.
+                        </para>
+                      </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                      <term><literal>or_cd</literal></term>
+                      <listitem>
+                        <para>
+                          Reads the values of the OR C and OR D bit masks from the
+                          device. The returned value will have both 16-bit masks
+                          encoded into a 32-bit integer. The least significant
+                          16 bits define the OR C mask and the upper 16 bits
+                          define the OR D mask.
+                        </para>
+
+                        <para>
+                          If an error occurs while communicating with the device,
+                          the response will begin with "ERROR - " and will be
+                          followed by a description of the error.
+                        </para>
+                      </listitem>
+                    </varlistentry>
+                  </variablelist>
+                </refsect3>
             </refsect2> 
         </refsect1>
 
