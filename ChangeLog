@@ -882,4 +882,6 @@ Work on 11.0-rc11 begins
           the status display that  provides the output ring statistics.  This allows
           users to see where the output ring buffers are rather than just an output ring
           full indicator.
-	
+        Feature #3161 - Here be dragons!!! save the stagearea value set in the
+          UI in the ~/stagearea/.settings.tcl file.  This may surprise test users.
+          
