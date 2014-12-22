@@ -260,6 +260,8 @@ proc EVBC::start args {
         puts $EVBC::pipefd $line
     }
     ::flush $EVBC::pipefd
+    puts $EVBC::pipefd "set ::OutputRing [$options cget -destring]"
+    ::flush $EVBC::pipefd
     puts $EVBC::pipefd "start $::EVBC::appNameSuffix"
     ::flush $EVBC::pipefd
     

@@ -37,6 +37,8 @@ package require EVB::Late
 package require EVB::LatePopup
 package require EVB::DuplicateTimestamp
 package require EVB::OutOfOrderUI
+package require RingStatus
+package require ring
 
 # Establish the EVB namespace into which we're going to squeeze:
 
@@ -436,6 +438,7 @@ snit::widgetadaptor EVB::errorStatistics {
 #   - getBarrierStats - Returns the barrier statistics widget so that it can be
 #                     updated.
 #   - getErrorStats   - Get the error statistics widget
+#   - getRingStats    - Get ring status widget.
 #  ..
 snit::widgetadaptor EVB::statusNotebook {
     component summaryStats
@@ -443,6 +446,7 @@ snit::widgetadaptor EVB::statusNotebook {
     component ooStats
     component barrierStats
     component errorStats
+    component ringStats
     
     delegate option * to hull
     delegate method * to hull
@@ -469,6 +473,9 @@ snit::widgetadaptor EVB::statusNotebook {
         install sourceStats using EVB::sourceStatistics $win.sources
         $hull add $sourceStats -text {Source Statistics}
         
+        install ringStats using RingStatus $win.ringstats
+        $hull add $ringStats -text {Output Ring Stats}
+        
         install ooStats using OutOfOrderWindow $win.oo
         $hull add $ooStats -text {Out of order}
         
@@ -486,6 +493,15 @@ snit::widgetadaptor EVB::statusNotebook {
     }
     #------------------------------------------------------------------------
     # Public methods:
+    
+    
+    ##
+    # getRingStats
+    #   Return the status widhget for the ring.
+    #
+    method getRingStats {} {
+        return $ringStats
+    }
     
     ##
     # getSummaryStats
@@ -582,6 +598,7 @@ proc EVB::createGui widget {
 #                 This defaults to 2000.
 #
 proc EVB::maintainGUI {widget {ms 2000}} {
+    global OutputRing
 
     # Get the UI pieces:
 
@@ -591,6 +608,12 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     set errors           [$widget getErrorStats]
     set incompleteWidget [$errors getIncompleteStatistics]
     set lateWidget       [$errors getLateStatistics]
+    
+    # Update the output ring status:
+    
+    set rstats [$widget getRingStats]
+    $rstats configure -name $OutputRing
+    $rstats update [ringbuffer usage $OutputRing]
  
     
     # Get the various statistics:
