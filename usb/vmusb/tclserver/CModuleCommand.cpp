@@ -35,6 +35,7 @@ using namespace std;
 #include "CV812Creator.h"
 #include "CVMUSBCreator.h"
 #include "CTclModuleCreator.h"
+#include "CMarkerCreator.h"
 
 /*!
    Construct the command. 
@@ -63,6 +64,7 @@ CModuleCommand::CModuleCommand(CTCLInterpreter& interp,
   pFact->addCreator("v6533", new CV6533Creator);
   pFact->addCreator("ChicoTrigger", new CChicoTriggerCreator);
   pFact->addCreator("tcl", new CTclModuleCreator);
+  pFact->addCreator("marker", new CMarkerCreator);
 
 }
 //! Destroy the module.. no op provided only as a chain to the base class destructor.

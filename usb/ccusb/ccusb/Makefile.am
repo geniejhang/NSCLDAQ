@@ -1,5 +1,6 @@
 lib_LTLIBRARIES		= libCCUSB.la libCCCUSB.la libCCCUSBReadoutList.la
 COMPILATION_FLAGS		= -I@top_srcdir@/base/os \
+				-I@top_srcdir@/base/thread \
 		@TCL_FLAGS@ @USBSWITCHES@ @THREADCXX_FLAGS@
 
 
@@ -28,6 +29,7 @@ BUILT_SOURCES=@srcdir@/CCCUSB_wrap.cxx @srcdir@/CCCUSBReadoutList_wrap.cxx
 
 
  libCCUSB_la_LIBADD	= @top_builddir@/base/os/libdaqshm.la \
+			@top_builddir@/base/thread/libdaqthreads.la \
 	 @USB_LIBS@   @THREADLD_FLAGS@
 
  libCCCUSB_la_LIBADD     = libCCUSB.la @top_builddir@/base/os/libdaqshm.la \

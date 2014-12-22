@@ -53,6 +53,8 @@
 #endif
 
 
+#include <CMutex.h>
+
 //  The structures below are defined in <usb.h> which is included
 //  by the implementation and can be treated as opaque by any of our
 //  clients (they are in fact opaque in usb.h if memory servers.
@@ -93,6 +95,7 @@ private:
     int                     m_timeout; // Timeout used when user doesn't give one.
     uint16_t                m_irqMask; // interrupt mask shadow register.
     std::string             m_serial;  // Attached serial number.
+    CMutex*                 m_pMutex;  // Mutex for critical sections.
 
     // Static functions.
 public:

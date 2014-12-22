@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <os.h>
 
+#include <pthread.h>
+
 
 
 using namespace std;
@@ -165,10 +167,16 @@ CCCUSB::serialNo(struct usb_device* dev)
 CCCUSB::CCCUSB(struct usb_device* device) :
     m_handle(0),
     m_device(device),
-    m_timeout(DEFAULT_TIMEOUT)
+    m_timeout(DEFAULT_TIMEOUT),
+    m_pMutex(0)
 {
+  CMutexAttr attributes;
+  attributes.setType(PTHREAD_MUTEX_RECURSIVE_NP);
+  m_pMutex = new CMutex(attributes);
+
   m_serial = serialNo(m_device);
   openUsb();
+  
 
 }
 ////////////////////////////////////////////////////////////////
@@ -181,6 +189,7 @@ CCCUSB::~CCCUSB()
     usb_release_interface(m_handle, 0);
     usb_close(m_handle);
     Os::usleep(5000);
+    delete m_pMutex;
 }
 
 
@@ -218,6 +227,7 @@ CCCUSB::reconnect()
 void
 CCCUSB::writeActionRegister(uint16_t value)
 {
+    CriticalSection s(*m_pMutex);
     char outPacket[100];
 
 
@@ -1166,6 +1176,7 @@ CCCUSB::loadList(uint8_t  listNumber, CCCUSBReadoutList& list)
 int 
 CCCUSB::usbRead(void* data, size_t bufferSize, size_t* transferCount, int timeout)
 {
+  CriticalSection s(*m_pMutex);
   int status = usb_bulk_read(m_handle, ENDPOINT_IN,
 			     static_cast<char*>(data), bufferSize,
 			     timeout);
@@ -1262,6 +1273,7 @@ int
 CCCUSB::transaction(void* writePacket, size_t writeSize,
 		    void* readPacket,  size_t readSize)
 {
+    CriticalSection s(*m_pMutex);
     int status = usb_bulk_write(m_handle, ENDPOINT_OUT,
 				static_cast<char*>(writePacket), writeSize, 
 				m_timeout);

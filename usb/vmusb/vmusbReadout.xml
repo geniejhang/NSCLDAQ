@@ -16680,6 +16680,7 @@ Module cget <replaceable>name</replaceable>
                                 </para>
                             </listitem>
                         </varlistentry>
+                        
                         <varlistentry>
                             <term><literal>temp</literal></term>
                             <listitem>
@@ -16719,6 +16720,21 @@ Module cget <replaceable>name</replaceable>
                         The fourth and last list will be the channel temperatures.
                     </para>
                 </refsect3>
+            </refsect2>
+            <refsect2>
+                <title>marker</title>
+                <para>
+                    This module inserts a marker in the monitor list.  The main use
+                    is to get data buffers periodically flushed for slow data
+                    rate applications.
+                </para>
+                <para>
+                    The module has no gettable or settable parameters.  It has a
+                    single configuration option <option>-value</option> which
+                    sets the of the marker word.  Normally  you don't need to
+                    modify this as the marker word will never make it outside the
+                    VMUSBReadout program.
+                </para>
             </refsect2>
         </refsect1>
 

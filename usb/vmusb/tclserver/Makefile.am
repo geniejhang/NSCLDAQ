@@ -39,7 +39,8 @@ libVMUSBControlServer_la_SOURCES	= 	CControlHardware.cpp	\
 					CV6533Creator.cpp	\
 					CChicoTriggerCreator.cpp \
 					CTclModuleCreator.cpp    \
-					CTclControlModule.cpp
+					CTclControlModule.cpp	\
+					CMarkerObject.cpp CMarkerCreator.cpp
 
 noinst_HEADERS			=	CGDG.h			\
 					CV812.h			\
@@ -65,7 +66,8 @@ noinst_HEADERS			=	CGDG.h			\
 					CV6533Creator.h		\
 					CChicoTriggerCreator.h	\
 					CTclModuleCreator.h	\
-					CTclControlModule.h
+					CTclControlModule.h	\
+					CMarkerObject.h CMarkerCreator.h
 
 
 

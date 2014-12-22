@@ -884,4 +884,12 @@ Work on 11.0-rc11 begins
           full indicator.
         Feature #3161 - Here be dragons!!! save the stagearea value set in the
           UI in the ~/stagearea/.settings.tcl file.  This may surprise test users.
-          
+        Feature #3274:
+	  *   Add class CriticalSection safe critical sections via mutex (base/thread)
+	  *   Add Mutex to CXXUSB classes and encapsulate
+	      writeActionRegister, transaction and readUSB in a
+              CriticalSection to make the libusb stuff all thread
+              protected.
+	  *   Add a marker slow control module so any periodic flush of
+	      the physics buffer is at the discretion of the experimenter.
+

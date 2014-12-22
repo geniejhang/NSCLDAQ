@@ -27,6 +27,8 @@
 #include <unistd.h>
 #include <stdio.h>
 
+#include <pthread.h>
+
 using namespace std;
 
 // Constants:
@@ -187,6 +189,10 @@ CVMUSBusb::CVMUSBusb(struct usb_device* device) :
     m_timeout(DEFAULT_TIMEOUT)
 {
   m_serial = serialNo(device);                  // Set the desired serial number.
+  CMutexAttr  attr;
+  attr.setType(PTHREAD_MUTEX_RECURSIVE_NP);
+  m_pMutex  = new CMutex(attr);
+  
   openVMUsb();
 }
 ////////////////////////////////////////////////////////////////
@@ -198,6 +204,9 @@ CVMUSBusb::~CVMUSBusb()
 {
     usb_release_interface(m_handle, 0);
     usb_close(m_handle);
+    
+    delete m_pMutex;
+    
     Os::usleep(5000);
 }
 
@@ -235,6 +244,7 @@ CVMUSBusb::reconnect()
 void
 CVMUSBusb::writeActionRegister(uint16_t value)
 {
+    CriticalSection s(*m_pMutex);
     char outPacket[100];
 
 
@@ -1005,6 +1015,7 @@ CVMUSBusb::loadList(uint8_t  listNumber, CVMUSBReadoutList& list, off_t listOffs
 int 
 CVMUSBusb::usbRead(void* data, size_t bufferSize, size_t* transferCount, int timeout)
 {
+  CriticalSection s(*m_pMutex);
   int status = usb_bulk_read(m_handle, ENDPOINT_IN,
 			     static_cast<char*>(data), bufferSize,
 			     timeout);
@@ -1063,6 +1074,7 @@ int
 CVMUSBusb::transaction(void* writePacket, size_t writeSize,
 		    void* readPacket,  size_t readSize)
 {
+    CriticalSection s(*m_pMutex);
     int status = usb_bulk_write(m_handle, ENDPOINT_OUT,
 				static_cast<char*>(writePacket), writeSize, 
 				m_timeout);
