@@ -306,7 +306,7 @@
 
       # launch the program as a pipeline with read permissions
       set cmd [file join /path to OneThousandLimiter]
-      set pipe [open "| $cmd  --source=tcp://localhost/user --sink=file:///dev/null |& cat" r]
+      set pipe [open "| $cmd  --source=tcp://localhost/user --sink=file:///dev/null |&amp; cat" r]
       chan configure $pipe -blocking 0
       chan configure $pipe -buffering line
 
