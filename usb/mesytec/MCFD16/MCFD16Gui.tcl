@@ -19,7 +19,8 @@ package provide mcfd16gui 1.0
 package require mcfd16usb
 package require snit
 package require Tk
-package require FrameSwitcher
+#package require FrameSwitcher
+package require FrameManager
 package require scriptheadergenerator
 package require BlockCompleter
 package require mcfd16channelnames
@@ -881,7 +882,8 @@ snit::widget MCFD16ControlPanel {
       return -code error "MCFD16ControlPanel must be provided -handle option."
     }
 
-    install m_frames using FrameSwitcher $win.frames
+    #  install m_frames using FrameSwitcher $win.frames
+    install m_frames using FrameManager $win.frames
     install m_comPrsntr using \
       MCFD16CommonPresenter %AUTO% -widgetname $win.com \
                                    -handle [$self cget -handle]
