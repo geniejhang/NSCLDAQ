@@ -3014,6 +3014,12 @@ VM-USB scriptable readout version V5.0
                         <type>uint64_t</type> value that is that event's
                         timestamp.
                     </para>
+                    <para>
+                        If the library has a further entry named
+                        <function>onBeginRun</function>, taking no parametesr and
+                        having no return value, this funtion is called when the run
+                        starts.
+                    </para>
                 </listitem>
             </varlistentry>
         </variablelist>
@@ -16810,6 +16816,7 @@ Module cget <replaceable>name</replaceable>
                                 </para>
                             </listitem>
                         </varlistentry>
+                        
                         <varlistentry>
                             <term><literal>temp</literal></term>
                             <listitem>
@@ -17061,6 +17068,21 @@ Module cget <replaceable>name</replaceable>
                   </variablelist>
                 </refsect3>
             </refsect2> 
+            <refsect2>
+                <title>marker</title>
+                <para>
+                    This module inserts a marker in the monitor list.  The main use
+                    is to get data buffers periodically flushed for slow data
+                    rate applications.
+                </para>
+                <para>
+                    The module has no gettable or settable parameters.  It has a
+                    single configuration option <option>-value</option> which
+                    sets the of the marker word.  Normally  you don't need to
+                    modify this as the marker word will never make it outside the
+                    VMUSBReadout program.
+                </para>
+            </refsect2>
         </refsect1>
 
       </refentry>

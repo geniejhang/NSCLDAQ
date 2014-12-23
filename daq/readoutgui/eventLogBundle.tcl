@@ -37,6 +37,7 @@ package require ring
 package require portAllocator
 package require DataSourceUI
 package require versionUtils
+package require StateManager
 
 
 
@@ -815,6 +816,11 @@ proc ::EventLog::register {} {
     set ::EventLog::statusBarManager      [::StatusBar::getInstance]
     set ::EventLog::statusbar \
         [$::EventLog::statusBarManager addMessage {No Event Segments yet}]
+    
+    #
+    #  Arrange for the event logging parameters to be saved/restored.
+    #
+    set sm [StateManagerSingleton %AUTO%]
 }
 ##
 #  ::EventLog::unregister
@@ -1291,6 +1297,8 @@ proc EventLog::promptParameters {} {
         Configuration::Set EventLogAdditionalSources [$ctl.f cget -additionalsources]
         Configuration::Set EventLogUseGUIRunNumber   [$ctl.f cget -forcerun]
         Configuration::Set EventLogUseChecksumFlag   [$ctl.f cget -usechecksum]
+        set priorStageArea [Configuration::get StageArea]
+        Configuration::Set StageArea                 [$ctl.f cget -stagearea]
         
         # If we're usin gthe nsrcs flag and it would currently be negative warn:
         
@@ -1306,6 +1314,11 @@ proc EventLog::promptParameters {} {
                     -message "Your total source count is negative: $mySources managed by us $adtlSources additional sources -> $totsrc total sources"
             }
             $sm destroy
+        }
+        #  If the stagearea changed ensure the directory structure is there and good:
+        
+        if {$priorStageArea ne [Configuration::get StageArea]} {
+            ExpFileSystem::CreateHierarchy
         }
     }
     destroy .eventlogsettings

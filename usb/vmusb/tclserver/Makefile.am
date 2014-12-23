@@ -35,18 +35,19 @@ libVMUSBControlServer_la_SOURCES	= \
 					CV812Creator.cpp	\
 					CVMUSBCreator.cpp	\
 					CV6533Creator.cpp	\
-					CTclModuleCreator.cpp    \
-					CTclControlModule.cpp \
 					CXLMControls.cpp	\
 					CXLMControlsCreator.cpp \
-          CRunStateCommand.cpp \
-					CMxDCRCBus.cpp \
-					CMxDCRCBusCreator.cpp \
-					ChicoTrigger.cpp \
+					CRunStateCommand.cpp    \
+					CMxDCRCBus.cpp          \
+					CMxDCRCBusCreator.cpp   \
+					ChicoTrigger.cpp         \
 					CChicoTriggerCreator.cpp \
-					CWienerMDGG16.cpp \
-					CMDGG16Control.cpp \
-					CMDGG16ControlCreator.cpp 
+					CWienerMDGG16.cpp        \
+					CMDGG16Control.cpp       \
+					CMDGG16ControlCreator.cpp \
+					CTclModuleCreator.cpp     \
+					CTclControlModule.cpp	  \
+					CMarkerObject.cpp CMarkerCreator.cpp
 
 noinst_HEADERS			=	CGDG.h			\
 					CV812.h			\
@@ -70,17 +71,18 @@ noinst_HEADERS			=	CGDG.h			\
 					CVMUSBCreator.h		\
 					CV6533Creator.h		\
 					CTclModuleCreator.h	\
-					CTclControlModule.h	\
-					CXLMControls.h	\
-					CXLMControlsCreator.h \
-          CRunStateCommand.h \
-					CMxDCRCBus.h \
-					CMxDCRCBusCreator.h \
-					ChicoTrigger.h \
+					CXLMControls.h	        \
+					CXLMControlsCreator.h  \
+					CRunStateCommand.h     \
+					CMxDCRCBus.h           \
+					CMxDCRCBusCreator.h    \
+					ChicoTrigger.h         \
 					CChicoTriggerCreator.h \
-					CWienerMDGG16.h \
-					CMDGG16Control.h \
-					CMDGG16ControlCreator.h
+					CWienerMDGG16.h        \
+					CMDGG16Control.h       \
+					CMDGG16ControlCreator.h \
+					CTclControlModule.h	 \
+					CMarkerObject.h CMarkerCreator.h
 
 
 

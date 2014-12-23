@@ -198,7 +198,11 @@ CAcquisitionThread::operator()()
 	 << err.ReasonText() << " while " << err.WasDoing() << endl;
     errorMessage = err.ReasonText();
   }
+  catch(int i) {
+    // normal end run.
+  }
   catch (...) {			// exceptions are used to exit the main loop.?
+    std::cerr << "Caught unexpected condition\n";
   }
   
   endRun();			// Emit end run buffer.
@@ -240,7 +244,7 @@ CAcquisitionThread::mainLoop()
 	    cerr << "Bad status from usbread: " << strerror(errno) << endl;
 	    cerr << "Ending the run .. check CAMAC crate.  If it tripped off ";
 	    cerr << " you'll need to restart this program\n";
-	    throw 1;
+	    throw (int)1;
 	  }
 	}
       // Commands from our command queue.
@@ -284,7 +288,7 @@ CAcquisitionThread::processCommand(CControlQueues::opCode command)
       stopDaq();
     }
     queues->Acknowledge();
-    throw "Run ending";
+    throw 1;
   }
   else if (command == CControlQueues::PAUSE) {
     pauseDaq();
@@ -441,6 +445,7 @@ CAcquisitionThread::stopDaq()
     assert(pStack);
     pStack->onEndRun(*m_pCamac);    // Call onEndRun for daq hardware associated with the stack.
   }
+  cerr << "End of run operations complete\n";
 }
 /*!
   Pause the daq. This means doing a stopDaq() and fielding 

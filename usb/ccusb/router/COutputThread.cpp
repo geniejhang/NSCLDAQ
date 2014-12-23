@@ -284,7 +284,11 @@ COutputThread::startRun(DataBuffer& buffer)
   if (time(&timestamp) == -1) {
     throw CErrnoException("Failed to get the time in COutputThread::startRun");
   }
-
+  // Call the timestamp extractor's callback if they have one
+  
+  if (m_pBeginRunCallback) {
+    (*m_pBeginRunCallback)();
+  }
   // Update our concept of run state.
 
   CRunState* pState = CRunState::getInstance();
@@ -301,12 +305,13 @@ COutputThread::startRun(DataBuffer& buffer)
   CDataFormatItem format;
   format.commitToRing(*m_pRing);
 
+
   CRingStateChangeItem begin(NULL_TIMESTAMP, Globals::sourceId, BARRIER_START,
                              BEGIN_RUN,
 			     m_runNumber,
 			     0,
 			     static_cast<uint32_t>(timestamp),
-			     m_title);
+			     m_title.substr(0, TITLE_MAXSIZE-1));
 
   begin.commitToRing(*m_pRing);
   
@@ -739,7 +744,7 @@ COutputThread::getTimestampExtractor()
                       << " timestamp extractor function" << std::endl;
             exit(EXIT_FAILURE);
         }
-
+        m_pBeginRunCallback = reinterpret_cast<StateChangeCallback>(dlsym(pDllHandle, "onBeginRun"));
         dlclose(pDllHandle);
         
     }

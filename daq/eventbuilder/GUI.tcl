@@ -36,6 +36,9 @@ package require EVB::connectionList
 package require EVB::Late
 package require EVB::LatePopup
 package require EVB::DuplicateTimestamp
+package require EVB::OutOfOrderUI
+package require RingStatus
+package require ring
 
 # Establish the EVB namespace into which we're going to squeeze:
 
@@ -45,6 +48,14 @@ namespace eval ::EVB {
     
     set lastDupStats [list 0 {}]
     variable  dupDialog ""
+    
+    
+    variable lastInBytes  0
+    variable lastOutBytes 0
+    variable lastinputstats
+    array set lastinputstats [list]
+    
+    variable ooWidget
 }
 
 #-----------------------------------------------------------------------------
@@ -90,6 +101,7 @@ namespace eval ::EVB {
 #   - -newest       - Newest in-flight timestamp.
 #   - -deepestid    - If of deepest input queue.
 #   - -deepestdepth - Depth of deepest input queue.
+#   - -queuedbytes   - Total number of queued bytes.
 #
 #   Delegated to the output summary:
 #
@@ -98,6 +110,8 @@ namespace eval ::EVB {
 #   - -hottestoutcount - Number of fragments written from hottestoutid.
 #   - -coldestoutid    - Id from which the fewest fragments have been written.
 #   - -coldestoutcount - Number of fragments written from coldestoutid.
+#   - -outbytes        - Total number of dequeued bytes.
+#   - -outrate         - output rates.
 #
 #   Delegated to the barrier summary:
 #
@@ -121,6 +135,7 @@ snit::widgetadaptor ::EVB::summary {
     delegate option -newest       to inputSummary
     delegate option -deepestid    to inputSummary
     delegate option -deepestdepth to inputSummary
+    delegate option -queuedbytes  to inputSummary  as -bytes
     
     # Delegate output summary options:
     
@@ -129,6 +144,8 @@ snit::widgetadaptor ::EVB::summary {
     delegate option -hottestoutcount to outputSummary as -hottestcount
     delegate option -coldestoutid    to outputSummary as -coldestid
     delegate option -coldestoutcount to outputSummary as -coldestcount
+    delegate option -outbytes        to outputSummary
+    delegate option -outrate         to outputSummary
    
     # Delegate barrier summary
     
@@ -267,7 +284,7 @@ snit::widgetadaptor ::EVB::sourceStatistics {
     # getQueueStatistics
     #
     # Return the queuestats component.  This allows clients to maintain
-    # its appearance/value.
+    # its appearance/value
     #
     # @return widget - the queuestats component object.
     method getQueueStatistics {} {
@@ -417,15 +434,19 @@ snit::widgetadaptor EVB::errorStatistics {
 #   - getSummaryStats - Returns the summary widget so that it can be updated.
 #   - getSourceStats  - Returns the source statistics widget so that it can be
 #                     updated.
+#   - getOutOfOrderStats - Get tab for per source out of order information.
 #   - getBarrierStats - Returns the barrier statistics widget so that it can be
 #                     updated.
 #   - getErrorStats   - Get the error statistics widget
+#   - getRingStats    - Get ring status widget.
 #  ..
 snit::widgetadaptor EVB::statusNotebook {
     component summaryStats
     component sourceStats
+    component ooStats
     component barrierStats
     component errorStats
+    component ringStats
     
     delegate option * to hull
     delegate method * to hull
@@ -452,6 +473,12 @@ snit::widgetadaptor EVB::statusNotebook {
         install sourceStats using EVB::sourceStatistics $win.sources
         $hull add $sourceStats -text {Source Statistics}
         
+        install ringStats using RingStatus $win.ringstats
+        $hull add $ringStats -text {Output Ring Stats}
+        
+        install ooStats using OutOfOrderWindow $win.oo
+        $hull add $ooStats -text {Out of order}
+        
         install barrierStats using EVB::barrierStatistics $win.barrier
         $hull add $barrierStats -text {Barriers}
         
@@ -467,6 +494,15 @@ snit::widgetadaptor EVB::statusNotebook {
     #------------------------------------------------------------------------
     # Public methods:
     
+    
+    ##
+    # getRingStats
+    #   Return the status widhget for the ring.
+    #
+    method getRingStats {} {
+        return $ringStats
+    }
+    
     ##
     # getSummaryStats
     #   Return the widget that manages the summary statistics.
@@ -480,6 +516,13 @@ snit::widgetadaptor EVB::statusNotebook {
     #
     method getSourceStats {} {
         return $sourceStats
+    }
+    ##
+    # getOutOfOrderStats
+    #
+    #   Returns the out of order statistics window.
+    method getOutOfOrderStats {} {
+        return $ooStats
     }
     ##
     # getBarrierStats
@@ -503,6 +546,10 @@ snit::widgetadaptor EVB::statusNotebook {
 #
 # Stuff to maintain the status of the UI.
 #
+
+proc addOutOfOrder {id last bad} {
+    $EVB::ooWidget add $id [clock seconds] $last $bad
+}
 
 
 ##
@@ -533,6 +580,10 @@ proc EVB::createGui widget {
     
     set summary [$widget getSummaryStats]
     EVB::onflow add [list $summary configure -flowcontrol 0] [list $summary configure -flowcontrol 1]
+    
+    set EVB::ooWidget [$widget getOutOfOrderStats]
+
+    EVB::ootrace add addOutOfOrder
 
     return $widget
 }
@@ -547,6 +598,7 @@ proc EVB::createGui widget {
 #                 This defaults to 2000.
 #
 proc EVB::maintainGUI {widget {ms 2000}} {
+    global OutputRing
 
     # Get the UI pieces:
 
@@ -556,6 +608,12 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     set errors           [$widget getErrorStats]
     set incompleteWidget [$errors getIncompleteStatistics]
     set lateWidget       [$errors getLateStatistics]
+    
+    # Update the output ring status:
+    
+    set rstats [$widget getRingStats]
+    $rstats configure -name $OutputRing
+    $rstats update [ringbuffer usage $OutputRing]
  
     
     # Get the various statistics:
@@ -577,7 +635,7 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     # Organize the input/output statitics by source
     # Each sourceid will have a dict that contains the following keys
     # (not all dicts will have all fields!!!)
-    # inputstats   - Input statistics for that source
+    # inputstats   - Input statistics for that source.
     # outputstats  - Output statistics for that source
     # barrierstats - Barrier statistics for that source.
     # inompletebarriers - Incomplete barrier statistics.
@@ -588,19 +646,27 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     array set sourceStatistics [list]
 
 
-    set deepest -1
-    set deepestCount -1
+    set deepest      -1;                  # Deepest queue id.
+    set deepestCount -1;                  # Number in deepest queue.
+    set totalin       0;                  # total bytes in.
+    set totalout      0;                  # total bytes out.
+    
     foreach queue [lindex $inputStats 3] {
 	set quid [lindex $queue 0]
+        incr totalin  [lindex $queue 3]
+        incr totalout [lindex $queue 4]
 
 	# Create the empty dict if it does not exist yet.
 
 	if {[array names sourceStatistics $quid] eq ""} {
 	    set sourceStatistics($quid) [dict create]
 	}
+        if {[array names EVB::lastinputstats $quid] eq ""} {
+            set EVB::lastinputstats($quid) [list 0 0]
+        }
 	dict append sourceStatistics($quid) inputstats $queue
 
-	# Figure out the deepest queuen and its depth:
+	# Figure out the deepest queue and its depth:
 
 	set depth [lindex $queue 1]
 	if {$depth > $deepestCount} {
@@ -608,6 +674,14 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	    set deepestCount $depth
 	}
     }
+    #  Byte rate in/out the multiplication by 1000.0 in the numerator
+    #  serves the dual function of turning bytes/ms into bytes/sec and
+    #  forcing the computation to be floating.
+    set inputRate  [expr {(1000.0*($totalin - $::EVB::lastInBytes))/$ms}]
+    set outputRate [expr {(1000.0*($totalout - $::EVB::lastOutBytes))/$ms}]
+    
+    set ::EVB::lastInBytes $totalin
+    set ::EVB::lastOutBytes $totalout
 
 
     # Add output statistics in and in the meantime figure out the hottest/coldest source information
@@ -702,7 +776,8 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	-completebarriers [lindex $completeBarriers 0]                \
 	-incompletebarriers [lindex $incompleteBarriers 0]            \
 	-mixedbarriers      [lindex $completeBarriers 2]              \
-	-outfragments $totalFrags
+	-outfragments $totalFrags                                     \
+        -queuedbytes $totalin -outbytes $totalout -outrate $outputRate
 
     $barriers configure -incompletecount [lindex $incompleteBarriers 0] \
 	-completecount [lindex $completeBarriers 0] \
@@ -727,12 +802,25 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	    set inputStats [dict get $sourceStatistics($source) inputstats]
 	    set depth [lindex $inputStats 1]
 	    set oldest [lindex $inputStats 2]
+            
+            #input/output bytes/rates.
+            
+            set inb     [lindex $inputStats 3]
+            set inbt    [lindex $inputStats 5]
+            set outb   [lindex $inputStats 4]
+            set laststats  $::EVB::lastinputstats($source)
+            set lastinb  [lindex $laststats 0]
+            set lastoutb [lindex $laststats 1]
+            set ::EVB::lastinputstats($source) [list $inbt $outb]
+            
+            set qrate  [expr {1000.0*($inbt -  $lastinb)/$ms}]
+            set dqrate [expr {1000.0*($outb - $lastoutb)/$ms}]
 	}
 	if {[dict exists $sourceStatistics($source) outputstats]} {
 	    set outputStats [dict get $sourceStatistics($source) outputstats]
 	    set outfrags [lindex $outputStats 1]
 	}
-	$iQStats updateQueue $source $depth $oldest $outfrags
+	$iQStats updateQueue $source $depth $oldest $outfrags $inb $qrate $outb $dqrate
 
 	# Barrier statistics.
 

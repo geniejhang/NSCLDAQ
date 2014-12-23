@@ -61,6 +61,8 @@
 #endif
 #endif
 
+#include <CMutex.h>
+
 //  The structures below are defined in <usb.h> which is included
 //  by the implementation and can be treated as opaque by any of our
 //  clients (they are in fact opaque in usb.h if memory servers.
@@ -95,6 +97,7 @@ class CCCUSBusb : public CCCUSB
     struct usb_device*      m_device;  //!< Device we are open on.
     int                     m_timeout; //!< Timeout used when user doesn't give one.
     std::string             m_serial;  //!< Connected device serial number.
+    CMutex*                 m_pMutex;  // Basis for critical sections.
 
   public:
     // Constructors and other canonical functions.
