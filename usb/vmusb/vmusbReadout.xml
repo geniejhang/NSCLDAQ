@@ -3090,9 +3090,20 @@ package require ReadoutStateHook
             <!--  adc command reference -->
             
 <refentry id="vmusb3-adc">
+     <refentryinfo>
+        <author>
+            <personname>
+                <firstname>Ron</firstname>
+                <surname>Fox</surname>
+            </personname>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+  </refentryinfo>
   <refmeta>
      <refentrytitle>adc</refentrytitle>
      <manvolnum>3vmusb</manvolnum>
+     <refmiscinfo class='empty'></refmiscinfo>
   </refmeta>
   <refnamediv>
      <refname>adc</refname>
@@ -3338,9 +3349,20 @@ adc config adc1    -geo 12 -supressrange off  -ipl 0 -vector 0
    <!-- caenchain command - aggregate 785's into CBLT chains -->
             
    <refentry id="vmusb3-caenchain">
+     <refentryinfo>
+        <author>
+            <personname>
+                <firstname>Ron</firstname>
+                <surname>Fox</surname>
+            </personname>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+      </refentryinfo>
      <refmeta>
         <refentrytitle>caenchain</refentrytitle>
         <manvolnum>3vmusb</manvolnum>
+        <refmiscinfo class='empty'></refmiscinfo>
      </refmeta>
      <refnamediv>
         <refname>caenchain</refname>
@@ -3450,9 +3472,20 @@ caenchain config chain -base 0x10000000 -modules [list adc1 adc2 adc3]
    <!-- VM USB control and scaler readout -->
    
          <refentry id="vmusb3_vmusb">
+            <refentryinfo>
+                <author>
+                    <personname>
+                        <firstname>Ron</firstname>
+                        <surname>Fox</surname>
+                    </personname>
+                </author>
+                <productname>NSCLDAQ</productname>
+                <productnumber></productnumber>
+              </refentryinfo>
            <refmeta>
               <refentrytitle id='vmusb3_vmusb_title'>vmusb</refentrytitle>
               <manvolnum>3vmusb</manvolnum>
+              <refmiscinfo class='empty'></refmiscinfo>
            </refmeta>
            <refnamediv>
               <refname>vmusb</refname>
@@ -3887,9 +3920,20 @@ vmusb cget name
    <!-- SIS 330x FADC driver -->
    
          <refentry id="vmusb3-sis330x">
+           <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo> 
            <refmeta>
               <refentrytitle>sis330x</refentrytitle>
               <manvolnum>3vmusb</manvolnum>
+              <refmiscinfo class='empty'></refmiscinfo>
            </refmeta>
            <refnamediv>
               <refname>sis330x</refname>
@@ -4180,9 +4224,20 @@ addtcldriver <replaceable>name</replaceable>
    <!-- SIS 3820 scaler command  -->
             
       <refentry id="vmusb3-sis3820">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo>
          <refmeta>
            <refentrytitle>sis3820</refentrytitle>
            <manvolnum>3vmusb</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
          </refmeta>
          <refnamediv>
            <refname>sis3820</refname>
@@ -4290,9 +4345,20 @@ sis3820 scaler1 0x38000000
       <!-- v830 command - configure CAEN V830 32 channel latching scalers -->
             
       <refentry id="vmusb3-v830">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo>
         <refmeta>
            <refentrytitle>v830</refentrytitle>
            <manvolnum>3vmusb</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>v830</refname>
@@ -4591,9 +4657,20 @@ v830 create scaler 0x80000000
 
       </refentry>
       <refentry id="vmusb3-v977">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo>
 	<refmeta>
 	   <refentrytitle>v977</refentrytitle>
 	   <manvolnum>3vmusb</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	   <refname>v977</refname>
@@ -4781,9 +4858,20 @@ well formed Tcl list that consists of option name value pairs.
       
       </refentry>
       <refentry id="vmusb3-sis3804">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo>
         <refmeta>
            <refentrytitle>sis3804</refentrytitle>
            <manvolnum>3vmusb</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>sis3804</refname>
@@ -4897,9 +4985,20 @@ sis3804 config scaler1 -refpulser true
       
       </refentry>
       <refentry id="vmusb3-hira">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo>
         <refmeta>
            <refentrytitle>hira</refentrytitle>
            <manvolnum>3vmusb</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>hira</refname>
@@ -5021,9 +5120,20 @@ hira cget <replaceable>name</replaceable>
       </refentry>
 
       <refentry id="vmusb3-hytec">
+        <refentryinfo>
+        <author>
+            <personname>
+                <firstname>Ron</firstname>
+                <surname>Fox</surname>
+            </personname>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+      </refentryinfo>
         <refmeta>
            <refentrytitle>hytec</refentrytitle>
            <manvolnum>3vmusb</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>hytec</refname>
@@ -5347,9 +5457,20 @@ hytec config adc -lld 0.0 -hld 8.191 -events 1 -id 0xadc1 -zerosuppress on
 	</refsect1>
       </refentry>
       <refentry id="vmusb3-tcldriversupport">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo>
         <refmeta>
            <refentrytitle>tcl driver support</refentrytitle>
            <manvolnum>3vmusb</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>tcl driver support</refname>
@@ -5566,9 +5687,20 @@ package require VMUSBDriverSupport
       </refentry>
 
       <refentry id="vmusb3-madc">
+        <refentryinfo>
+        <author>
+            <personname>
+                <firstname>Ron</firstname>
+                <surname>Fox</surname>
+            </personname>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+      </refentryinfo>
         <refmeta>
            <refentrytitle>madc</refentrytitle>
            <manvolnum>3vmusb</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>madc</refname>
@@ -6024,9 +6156,20 @@ madc config adc -thresholds $thresholds                  <co id="madcthresholds"
       
       </refentry>
       <refentry id="vmusb3-madcchain">
+        <refentryinfo>
+        <author>
+            <personname>
+                <firstname>Ron</firstname>
+                <surname>Fox</surname>
+            </personname>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+      </refentryinfo>
          <refmeta>
 	    <refentrytitle>madcchain</refentrytitle>
 	    <manvolnum>3vmusb</manvolnum>
+            <refmiscinfo class='empty'></refmiscinfo>
          </refmeta>
 	 <refnamediv>
 	    <refname>madcchain</refname>
@@ -6142,9 +6285,20 @@ madcchain cget <replaceable>name</replaceable>
 	 </refsect1>
       </refentry>
       <refentry id="vmusb3-madcscaler">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo>
         <refmeta>
            <refentrytitle>madcscaler</refentrytitle>
            <manvolnum>3vmusb</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>madcscaler</refname>
@@ -6215,9 +6369,20 @@ madcscaler cget <replaceable>name</replaceable>
       </refentry>
 
       <refentry id="vmusb3-mase">
+        <refentryinfo>
+        <author>
+            <personname>
+                <firstname>Ron</firstname>
+                <surname>Fox</surname>
+            </personname>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+      </refentryinfo>
 	<refmeta>
 	   <refentrytitle>mase</refentrytitle>
 	   <manvolnum>3vmusb</manvolnum>
+            <refmiscinfo class='empty'></refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	   <refname>mase</refname>
@@ -19384,9 +19549,20 @@ AXLM72Scaler <replaceable>name slot</replaceable>
 <!-- manpage 5vmusb -->
 
     <refentry id="vmusb5-slowcontrols-protocol">
+      <refentryinfo>
+        <author>
+            <personname>
+                <firstname>Ron</firstname>
+                <surname>Fox</surname>
+            </personname>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+      </refentryinfo>  
       <refmeta>
          <refentrytitle>VMUSB slow controls protocol</refentrytitle>
          <manvolnum>5vmusb</manvolnum>
+          <refmiscinfo class='empty'></refmiscinfo>
       </refmeta>
       <refnamediv>
          <refname>VMUSB Slow controls protocol</refname>
