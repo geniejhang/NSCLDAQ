@@ -17,9 +17,33 @@ eval ::tcltest::configure $argv
 # add hook to access whether tests failed for generating a meaningful return code
 proc ::tcltest::cleanupTestsHook {} {
   variable numTests
+  parray numTests
   set ::exitCode [expr {$numTests(Failed) >0}]
 }
 
-::tcltest::runAllTests 
+#rename catch _real_catch
+#set fail 0
+#proc catch {script {ret ""} {opt ""}} {
+#  set status 0
+#  if {$ret ne ""} {
+#    upvar $ret retvar
+#    if {$opt ne ""} {
+#      puts "$ret $opt"
+#      upvar $opt optvar
+#      set status [_real_catch $script retvar optvar]
+#    } else {
+#      puts "$ret"
+#      set status [_real_catch $script retvar]
+#    }
+#  } else {
+#    puts none
+#    set status [_real_catch $script]
+#  }
+#
+#  if {$status>0} {set ::fail $status}
+#  return $status
+#}
+#
+tcltest::runAllTests
 
-return $::exitCode
+exit $::exitCode

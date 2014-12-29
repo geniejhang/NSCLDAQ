@@ -15,10 +15,21 @@
 
 package require tcltest
 
+set loadFailure 0
 tcltest::test pkgrequire-0 {Require the package 
-} {package require scriptheadergenerator} 1.0
+} {set ::loadFailure [catch {package require scriptheadergenerator}]} 0
 
-package require mcfd16guiapp
+if $::loadFailure {
+  tcltest::cleanupTests
+  exit 
+}
+
+set loadFailure [catch {package require mcfd16guiapp}]
+if $::loadFailure {
+  tcltest::cleanupTests
+  exit 
+}
+
 
 tcltest::test usb-0 {Generate proper usb header 
 } -setup {

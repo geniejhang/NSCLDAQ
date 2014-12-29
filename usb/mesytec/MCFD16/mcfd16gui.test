@@ -17,9 +17,14 @@ package require snit
 package require mcfd16usb
 package require mcfd16memorizer
 
-
+set loadFailure 0
 tcltest::test pkgrequire-0 {Ensure that we can require the package
-} {package require mcfd16gui} 1.0
+} {set ::loadFailure [catch {package require mcfd16gui}]} 0
+
+if $::loadFailure {
+  tcltest::cleanupTests
+  exit 
+}
 
 snit::method MCFD16IndividualView BuildGUI {} {}
 
