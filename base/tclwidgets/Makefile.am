@@ -7,4 +7,9 @@ install-exec-local:
 	$(INSTALL_SCRIPT) @srcdir@/ReDistribNotes @prefix@/TclLibs/widgets
 	echo "pkg_mkIndex -verbose @prefix@/TclLibs/widgets *.tcl" | @TCLSH_CMD@
 
-EXTRA_DIST = $(SCRIPT_FILES) ReDistribNotes
+TCLTESTS=tclTests.tcl framemanager.test framesequencer.test
+
+check-TESTS:
+	TCLLIBPATH=@prefix@/TclLibs HERE=@srcdir@ tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl
+
+EXTRA_DIST = $(SCRIPT_FILES) ReDistribNotes $(TCLTESTS)
