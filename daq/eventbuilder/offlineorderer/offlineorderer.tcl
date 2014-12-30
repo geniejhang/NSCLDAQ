@@ -20,6 +20,7 @@
 
 package require cmdline
 package require InstallRoot
+package require ring
 
 # -----------------------------------------------------------------------------
 
@@ -42,6 +43,18 @@ set outring [lindex [array get params outputring] 1]
 set stagearea [lindex [array get params stagearea] 1]
 
 lappend auto_path [file join [::InstallRoot::Where] TclLibs] 
+
+# ----------------------------------------------------------------------------
+# Create the rings if they do not exist already
+#
+set knownRings [ringbuffer list]
+if {$inring ni $knownRings} {
+  ringbuffer create $inring
+}
+
+if {$outring ni $knownRings} {
+  ringbuffer create $outring
+}
 
 
 # -----------------------------------------------------------------------------
