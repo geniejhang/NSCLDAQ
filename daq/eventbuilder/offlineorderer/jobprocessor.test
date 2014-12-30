@@ -40,7 +40,7 @@ tcltest::test setupStateMachine-0 { Test that state machine has the callout bund
   $jp setupStateMachine
 
   [$jp getRunStateMachine] listCalloutBundles
-} -result "rdoCallouts EVBStateCallouts EventLog DataSourceMgr DataSourceMonitor"
+} -result "EventLog EVBStateCallouts DataSourceMgr"
 
 tcltest::test tearDownStateMachine-0 { Test that state machine has no bundles after it is torn down
 } -setup {
@@ -123,7 +123,6 @@ tcltest::test clearDataSources-0 {Test that the data source manager is empty whe
 } -result 0
 
 
-
 tcltest::test startProcessing-0 {Test that if an error occurs, then the system will transition back to NotReady
 } -setup {
   
@@ -144,6 +143,11 @@ tcltest::test startProcessing-0 {Test that if an error occurs, then the system w
 } -body {
   $jp setupStateMachine
 
+  after 1000 {
+    .__tk__messagebox.ok invoke
+   # set win [focus]
+   # event generate $win <KeyPress-Return>
+  }
   catch {$jp startProcessing} msg
 
   [$jp getRunStateMachine] getState
