@@ -28,6 +28,7 @@ East Lansing, MI 48824-1321
 #include <fstream>
 #include <iomanip>
 #include <sys/stat.h>
+#include <limits>
 
 using namespace std;
 
@@ -50,10 +51,18 @@ namespace WienerMDGG16
     CControlHdwrState state = {0,0,0,0};
     string varname;
 
+    // first two lines are nothing important
+    file.ignore(numeric_limits<streamsize>::max(), '\n');
+    file.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    // next come the masks
     file >> varname >> state.or_a;
     file >> varname >> state.or_b;
     file >> varname >> state.or_c;
     file >> varname >> state.or_d;
+
+    // after the masks come the names... we don't care b/c they have nothing
+    // to do with the device.
 
     return state;
   }

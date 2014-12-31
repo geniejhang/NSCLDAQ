@@ -339,14 +339,18 @@ snit::widget NameColumn {
 # when the commit and update button are pressed.
 #
 snit::widget MDGG16View {
+  hulltype ttk::frame
 
   option -presenter -default {} ;##!< handles logic for commit and update
+
+  delegate option * to hull
 
   component _colNames ;##!< name column widget
   component _colA     ;##!< column A
   component _colB     ;##!< column B
   component _colC     ;##!< column C
   component _colD     ;##!< column D
+  component _syncLbl  ;##!< out of sync label
   component _updateButton 
 
   variable _outOfSyncAVar ;##!< name of colA's out of sync state variable
@@ -382,7 +386,14 @@ snit::widget MDGG16View {
   method BuildGUI {} {
 
     # Big title at top of widget
-    set title [ttk::label $win.title -text "MDGG-16 Controls" -style Title.TLabel]
+    set title [ttk::frame $win.titleFrame]
+    set titleLbl [ttk::label $title.title -text "MDGG-16 Controls" -style Title.TLabel]
+    set _syncLbl [ttk::label $title.syncLbl \
+      -text "OUT OF SYNC...\n PRESS COMMIT OR UPDATE TO RESYNC" \
+      -style OutOfSync.TLabel]
+    grid $_syncLbl -sticky ew 
+    grid $titleLbl -sticky ew
+    grid columnconfigure $title 0 -weight 1
     
     # The titles for each column
     set header [ttk::frame $win.headers -style "Header.TFrame"]
@@ -514,8 +525,10 @@ snit::widget MDGG16View {
     set outD [set $_outOfSyncDVar]
     if { $outA || $outB || $outC || $outD } {
       $_updateButton state !disabled
+      grid $_syncLbl -row 0 
     } else {
       $_updateButton state disabled
+      grid remove $_syncLbl
     }
   }
 
@@ -626,24 +639,83 @@ snit::type MDGG16Presenter {
     # open the file
     set outfile [open $path w+]
 
+    chan puts $outfile "Configuration file for MDGG16Control"
+    chan puts $outfile [clock format [clock seconds]]
+
     set view [$self cget -view]
 
     ### Logical OR AB
     set mask [$self RetrieveAndEncodeBits {0 1}]
     set or_a [expr $mask & 0xffff]
     set or_b [expr ($mask>>16) & 0xffff]
-    puts $outfile "or_a $or_a"
-    puts $outfile "or_b $or_b"
+    chan puts $outfile "or_a $or_a"
+    chan puts $outfile "or_b $or_b"
 
     ### Logical OR CD 
     set mask [$self RetrieveAndEncodeBits {2 3}]
     set or_c [expr $mask & 0xffff]
     set or_d [expr ($mask>>16) & 0xffff]
-    puts $outfile "or_c $or_c"
-    puts $outfile "or_d $or_d"
+    chan puts $outfile "or_c $or_c"
+    chan puts $outfile "or_d $or_d"
+
+    # save names
+    for {set ch 0} {$ch < 16} {incr ch} {
+      chan puts $outfile [format "%2d : %s" $ch [set ::MDGG16ChannelNames::chan$ch]]
+    }
 
     close $outfile
   }
+
+  method LoadStateFromFile {path} {
+    # open the file
+    set infile [open $path r]
+
+    chan gets $infile line
+    chan gets $infile line 
+
+    # read AB mask values
+    chan gets $infile line
+    set line [string trim $line " "]
+    set maska [lindex [split $line " "] 1]
+    chan gets $infile line
+    set line [string trim $line " "]
+    set maskb [lindex [split $line " "] 1]
+    set maskab [expr ($maskb<<16)|$maska]
+
+    set bits [$self DecodeMaskIntoBits $maskab]
+    $self SetBitsForColumn 0 [lrange $bits 0  15]
+    $self SetBitsForColumn 1 [lrange $bits 16 31]
+
+    # read CD mask values
+    chan gets $infile line
+    set line [string trim $line " "]
+    set maskc [lindex [split $line " "] 1]
+    chan gets $infile line
+    set line [string trim $line " "]
+    set maskd [lindex [split $line " "] 1]
+    set maskcd [expr ($maskd<<16)|$maskc]
+
+    set bits [$self DecodeMaskIntoBits $maskcd]
+    $self SetBitsForColumn 2 [lrange $bits 0  15]
+    $self SetBitsForColumn 3 [lrange $bits 16 31]
+
+    # read names if they exist
+    set pattern {^\s*(\d+) : (\w*)$}
+    while {1} {
+      chan gets $infile line
+      if {[eof $infile]} break
+
+      set matches [regexp -inline -- $pattern $line]
+      if {[llength $matches] == 3} {
+        set index [lindex $matches 1]
+        set name  [lindex $matches 2]
+        set ::MDGG16ChannelNames::chan$index $name
+      }
+    }
+
+    close $infile
+  }
+
 
   #############################################################################
   #
