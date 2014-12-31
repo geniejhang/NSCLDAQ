@@ -25,7 +25,7 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 	CCompleteBarrierCallback.cpp CBarrierTraceCommand.cpp CPartialBarrierCallback.cpp \
 	CSourceCommand.cpp CDeadSourceCommand.cpp CReviveSocketCommand.cpp \
 	CFlushCommand.cpp CResetCommand.cpp CConfigure.cpp CDuplicateTimeStatCommand.cpp \
-	CXonXOffCallbackCommand.cpp
+	COutOfOrderTraceCommand.cpp CXonXOffCallbackCommand.cpp 
 
 libEventBuilder_la_CPPFLAGS=$(COMPILATION_FLAGS)
 
@@ -57,7 +57,8 @@ noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h cmdline.h \
 	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h CCompleteBarrierCallback.h \
 	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h CDeadSourceCommand.h \
 	CReviveSocketCommand.h CFragReader.h CFragWriter.h CFlushCommand.h CResetCommand.h \
-	CConfigure.h fragio.h CDuplicateTimeStatCommand.h CXonXOffCallbackCommand.h
+	CConfigure.h fragio.h CDuplicateTimeStatCommand.h CXonXOffCallbackCommand.h \
+	COutOfOrderTraceCommand.h
 
 
 
@@ -77,7 +78,7 @@ libEventBuilder_la_LDFLAGS=@LIBTCLPLUS_LDFLAGS@
 TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 	connectionList.tcl observer.tcl barriers.tcl GUI.tcl inputStatistics.tcl \
 	late.tcl outputStatistics.tcl utility.tcl latePopup.tcl \
-	DuplicateTimestamp.tcl
+	DuplicateTimestamp.tcl OutOfOrderUI.tcl
 
 
 TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl evbRdoCallouts10.tcl EVBStateCallouts.tcl

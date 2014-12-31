@@ -739,6 +739,16 @@ CExperiment::setSourceId(uint32_t id)
     m_needHeader = true;
 }
 /**
+ * getSourceId
+ *   return the current evnt source id.
+ * @return uint32_t
+ */
+uint32_t
+CExperiment::getSourceId()
+{
+  return m_nSourceId;
+}
+/**
  * triggerFail
  *   Called by the trigger thread if it caught an exceptino that caused the
  *   trigger loop to exit.  In that case we schedule an event for the main thread

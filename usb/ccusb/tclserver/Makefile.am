@@ -1,6 +1,6 @@
 lib_LTLIBRARIES			= libCCUSBControlServer.la
-libCCUSBControlServer_la_SOURCES	=  \
-					CModuleCommand.cpp	\
+
+libCCUSBControlServer_la_SOURCES =  	CModuleCommand.cpp	\
 					TclServer.cpp		\
 					CSetCommand.cpp		\
 					serverinstance.cpp	\
@@ -14,7 +14,7 @@ libCCUSBControlServer_la_SOURCES	=  \
 					CCAEN894Creator.cpp     \
 					CPH7106Creator.cpp	\
 					CTclControlModule.cpp	\
-					CTclModuleCreator.cpp \
+					CTclModuleCreator.cpp   \
 					CCCUSBControl.cpp	\
 					CCCUSBControlCreator.cpp	
 
@@ -36,12 +36,12 @@ noinst_HEADERS			=	CSetCommand.h		\
 					CCAEN894Creator.h	\
 					CPH7106Creator.h	\
 					CTclControlModule.h	\
-					CTclModuleCreator.h \
-					CCCUSBControl.h \
-          CCCUSBControlCreator.h 
+					CTclModuleCreator.h     \
+					CCCUSBControl.h         \
+					CCCUSBControlCreator.h 
 
 
-libCCUSBControlServer_la_CPPFLAGS			= 	-I@top_srcdir@/usb/ccusb		\
+libCCUSBControlServer_la_CPPFLAGS	= -I@top_srcdir@/usb/ccusb		\
 					-I@top_srcdir@/daq/format		\
 					-I@top_srcdir@/usb/ccusb/ccusb		\
 					-I@top_srcdir@/usb/ccusb/devices	\
@@ -58,10 +58,11 @@ libCCUSBControlServer_la_LIBADD	= 	@top_builddir@/usb/ccusb/ccusb/libCCUSB.la   
 					@top_builddir@/usb/ccusb/devices/libCCUSBDevices.la \
 					@top_builddir@/usb/ccusb/rdothread/libCCUSBRdoThread.la \
 					@top_builddir@/usb/ccusb/router/libCCUSBRouter.la	\
-					@TCL_LDFLAGS@				\
-					@LIBTCLPLUS_LDFLAGS@		\
-					@top_builddir@/base/os/libdaqshm.la	\
-					@top_builddir@/base/thread/libdaqthreads.la	\
+					@top_builddir@/base/tcpip/libTcp.la			\
+					@TCL_LDFLAGS@						\
+					@LIBTCLPLUS_LDFLAGS@					\
+					@top_builddir@/base/os/libdaqshm.la			\
+					@top_builddir@/base/thread/libdaqthreads.la		\
 					@THREADLD_FLAGS@
 
 install-data-local:

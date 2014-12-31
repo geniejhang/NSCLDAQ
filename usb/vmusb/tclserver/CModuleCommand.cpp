@@ -39,6 +39,7 @@ using namespace std;
 #include "CMxDCRCBusCreator.h"
 #include "CMDGG16ControlCreator.h"
 #include <memory>
+#include "CMarkerCreator.h"
 
 /*!
    Construct the command. 
@@ -78,6 +79,7 @@ CModuleCommand::CModuleCommand(CTCLInterpreter& interp,
                     unique_ptr<CModuleCreator>(new CMxDCRCBusCreator));
   pFact->addCreator("chicotrigger", 
                     unique_ptr<CModuleCreator>(new CChicoTriggerCreator));
+  pFact->addCreator("marker", unique_ptr<CModuleCreator>(new CMarkerCreator));
 
   pFact->addCreator("mdgg16",
                     unique_ptr<CModuleCreator>(new WienerMDGG16::CControlCreator));

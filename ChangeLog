@@ -826,47 +826,70 @@ Work on 11.0-rc11 begins
            of 100Mbytes and low water mark of 80Mbytes.
         
 11.0-rc16:
-	Bug #2073 Properly interpret bit 12 of VMUSB buffer header as part of the
+	*  Bug #2073 Properly interpret bit 12 of VMUSB buffer header as part of the
 	number of events in the buffer.
-	Bug #2057 A - add -incremental option to VMUSBReadout stack module
+	*  Bug #2057 A - add -incremental option to VMUSBReadout stack module
 	driver so that the scalers ring items can be marked as
 	incremental.
-	Bug #2057 B - add -incremental option to CCUSBReadout stack module
+	*  Bug #2057 B - add -incremental option to CCUSBReadout stack module
 	driver as well.
-        Feature #2355 Add support for ABNORMAL_END ring items to the system.
-        Feature #2346 Enable BufferToRing to produce body headers if
+        *  Feature #2355 Add support for ABNORMAL_END ring items to the system.
+        *  Feature #2346 Enable BufferToRing to produce body headers if
         desired or specified by user.
-        Feature #1826 - Tell user when xxUSBReadout config file exceeds
+        *  Feature #1826 - Tell user when xxUSBReadout config file exceeds
 	the available stack space.
-        Feature #2173 - Provide VMUSB-tcl package.
-        Feature #2975 - Add ability to place callout bundle anywhere in the
+        *  Feature #2173 - Provide VMUSB-tcl package.
+        *  Feature #2975 - Add ability to place callout bundle anywhere in the
                         ordered list of registered callout bundles.
-        Bug #2130 - Don't allow a new run to start until the event builder
+        *  Bug #2130 - Don't allow a new run to start until the event builder
                     has flushed all its data out the output ring.
-        Feature #2099  - Add put(char* data, int nbytes) method to CDataSink interface
-        Bug #2034 - ringFragmentSources register to wrong event builder when
+        *  Feature #2099  - Add put(char* data, int nbytes) method to CDataSink interface
+        *  Bug #2034 - ringFragmentSources register to wrong event builder when
         starting duplicate event builder.  Note this may  not really fix the
         issue of a hanging event building pipeline since the next thing you're
         likely to run into is that glom is still alive and is the ring producer
         so the new pipeline won't start up right uniless the destination ring
         is modified.
-        Feature #868 - Remove NSCLDAQ's dependency on BLT as that is not being
+        *  Feature #868 - Remove NSCLDAQ's dependency on BLT as that is not being
         sufficiently supported for me to have confidence that it won't break (again)
         when we go to Tcl 8.6
-        Bug #2915 - Don't emit body headers if there's no scaler timestamp extractor.
+        *  Bug #2915 - Don't emit body headers if there's no scaler timestamp extractor.
         - Add try/catch block around the action register write that
 	triggers the vmusbreadout monitor list as this intermittently
 	fails.
 11.0-rc17 (Evidently I was not keeping up with starting new release candidates above).
-        Feature #3175 - ringFragmentSource stuff that used to go to source#.txt now goes
+        *  Feature #3175 - ringFragmentSource stuff that used to go to source#.txt now goes
         to stderr which in turn goes to an output window tab of the UI.
-        Feature #3205 - Only end run if the state is active or paused...this prevents
+        *  Feature #3205 - Only end run if the state is active or paused...this prevents
         attempting to end the run while the rdothread is busy initializing the run.
-        Bug #3208 - Set paused state when pausing run so that resume is allowed.
+        *  Bug #3208 - Set paused state when pausing run so that resume is allowed.
         Feature #3164 - For event builder windows put functional titles in that also
         give a disambiguating username.
-        Bug #3155 - Don't emit EOF message in compatibilitybuffer method.
-        Feature #3202 - Don't let exceptions propagate out of the reaout thread into the
+        *  Bug #3155 - Don't emit EOF message in compatibilitybuffer method.
+        *  Feature #3202 - Don't let exceptions propagate out of the reaout thread into the
         last chance exception handler.
-        
-	
+        *  Feature #3229 - Make timestamp extractors for XXUSBReadout aware of run starts
+        *  Bug #3238 - Fix VMUSBReadout OutputThread fails when run title is too long
+        *  Bug #3235 - Loop over drain/retries on writing the action register.  Note that the
+           original trigger was Bug #3238 which is fixed in this release as well.
+        *  Feature #3232 - Add mechanism to get the source id from sbsReadout CDExperiment objects
+        and document how to have an event segment produce its own event segments.
+        *  Feature #3217 - Provide indications of the Eventbuilder queue depth and throughputs in
+        bytes/sec.
+        *  Feature #3220 - Add Event builder diagnostics/display for out of order timestamps
+          in the input queue(s).
+        *  Feature #3223 - Diagnostic for output ring full - implemented as a tab on
+          the status display that  provides the output ring statistics.  This allows
+          users to see where the output ring buffers are rather than just an output ring
+          full indicator.
+        *  Feature #3161 - Here be dragons!!! save the stagearea value set in the
+          UI in the ~/stagearea/.settings.tcl file.  This may surprise test users.
+        *  Feature #3274:
+	  *   Add class CriticalSection safe critical sections via mutex (base/thread)
+	  *   Add Mutex to CXXUSB classes and encapsulate
+	      writeActionRegister, transaction and readUSB in a
+              CriticalSection to make the libusb stuff all thread
+              protected.
+	  *   Add a marker slow control module so any periodic flush of
+	      the physics buffer is at the discretion of the experimenter.
+       *  Merged rc17 development branch to nscldaq-11.0 development branch.

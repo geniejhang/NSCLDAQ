@@ -100,7 +100,8 @@ COutputThread::COutputThread(std::string ring) :
   m_ringName(ring),
   m_pRing(0),
   m_pEvtTimestampExtractor(0),
-  m_pSclrTimestampExtractor(0)
+  m_pSclrTimestampExtractor(0),
+  m_pBeginRunCallback(0)
 {
   
 }
@@ -261,6 +262,13 @@ COutputThread::startRun(DataBuffer& buffer)
 {
 
   time_t timestamp;
+  
+  // If there's a begin run callback call it before emitting the begin  run
+  // record:
+  
+  if (m_pBeginRunCallback) {
+    (*m_pBeginRunCallback)();
+  }
 
   m_nOutputBufferSize = Globals::usbBufferSize;
 
@@ -282,13 +290,14 @@ COutputThread::startRun(DataBuffer& buffer)
 
   CDataFormatItem format;
   format.commitToRing(*m_pRing);
-
+  
+ 
   CRingStateChangeItem begin(NULL_TIMESTAMP, Globals::sourceId, BARRIER_START,
                              BEGIN_RUN,
 			     m_runNumber,
 			     0,
 			     static_cast<uint32_t>(timestamp),
-			     m_title);
+			     m_title.substr(0, TITLE_MAXSIZE-1));
 
   begin.commitToRing(*m_pRing);
   
@@ -794,6 +803,12 @@ COutputThread::getTimestampExtractor()
             std::cerr << "Fatal error: user provided library with neither"
                       << " timestamp extractor function" << std::endl;
             exit(EXIT_FAILURE);
+        }
+        // If there is a begin run callback register it too:
+        
+        void* pBegRun = dlsym(pDllHandle, "onBeginRun");
+        if (pBegRun) {
+            m_pBeginRunCallback = reinterpret_cast<StateChangeCallback>(pBegRun);
         }
 
         dlclose(pDllHandle);

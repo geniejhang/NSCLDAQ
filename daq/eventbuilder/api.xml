@@ -5368,7 +5368,16 @@ EVB::config get <replaceable>name</replaceable>
                                     Each element of this list is itself a sublist
                                     that contains in order, the source id,
                                     the number of fragments in the queue
-                                    (depth) and the oldest fragment in the queue.
+                                    (depth), the timestamp of the oldest
+                                    fragment in the queue, the number of bytes
+                                    in the fragments queued in the queue and
+                                    the number of bytes that have been dequeued
+                                    from the queue.
+                                </para>
+                                <para>
+                                    All of these statistics get reset when the
+                                    <command>EVB::reset</command> command is
+                                    executed.
                                 </para>
                             </listitem>
                         </itemizedlist>
