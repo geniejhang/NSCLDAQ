@@ -761,6 +761,16 @@ proc ::EventLog::enter {from to} {
     if {($from in [list Active Paused]) && ($to eq "NotReady")} {
       # if the start was aborted then we should not try to cleanup
       if {! $::EventLog::failed} {
+        # Kill of the event log program since it's not going to see ends:
+        foreach pid $::EventLog::loggerPid {
+            if {$pid != -1} {
+                catch {exec kill -90 $pid}
+            }
+        }
+        # Create the exit file:
+        set fd [open [file join [::ExpFileSystem::getCurrentRunDir] .exited] w]
+        puts $fd "dummy"
+        close $fd
       	::EventLog::runEnding
       } 
 

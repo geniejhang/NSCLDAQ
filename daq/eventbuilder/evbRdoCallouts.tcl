@@ -26,9 +26,10 @@ package require ring
 package require StateManager
 package require Thread
 
+
 namespace eval ::EVBC {
     set initialized 0
-    set pipefd    "";            # Holds the fd to the pipe inot the evbpipeline
+    set pipefd    "";            # Holds the fd to the pipe to the evbpipeline
     set evbpids   [list];        # Holds list of PIDS that are the event builder.
     
     # Figure out where we are and hence the root of the daq system:
@@ -279,11 +280,9 @@ proc EVBC::start args {
     set ports [::portAllocator create %AUTO]
     set me    $::tcl_platform(user)
     set hunting "ORDERER:$me:$::EVBC::appNameSuffix"
-    puts "Application name: $hunting"
     set found 0
     for {set i 0} {$i < 100} {incr i} {
 	set allocations [$ports listPorts]
-        puts $allocations
 	foreach allocation $allocations {
 	    set name [lindex $allocation 1]
 	    set owner [lindex $allocation 2]
@@ -298,14 +297,11 @@ proc EVBC::start args {
 	    set i 100
 	}
     }
-    puts "Started up"
     $ports destroy
-    puts "Destroying .waiting"
     destroy .waiting
     if {!$found} {
 	error "Event builder failed to start within timeout"
     }
-    puts "Done."
 
 }
 
@@ -327,7 +323,11 @@ proc EVBC::stop {} {
 
     set EVBC::evbpids [list];              # Expecting the exit so empty the pidlist.
     
+    # Push an exit and mark us not connected.
+    
     puts $EVBC::pipefd exit
+    ::flush $EVBC::pipefd
+                   
     
 }
 #------------------------------------------------------------------------------
@@ -1133,8 +1133,7 @@ proc ::EVBC::attach state {
 ##
 # EVBC::enter
 #   Called when a new state is entered.
-#   * Halted -> Active   invoke onBegin - we do this inleave to get the jump
-#     on when the data sources start spewing data.
+#   * Active -> Halted  invoke onEnd
 # @param from - state that we left.
 # @param to   - State that we are entring.
 #
@@ -1142,13 +1141,16 @@ proc ::EVBC::enter {from to} {
     if {($from eq "Active") && ($to eq "Halted")} {
         ::EVBC::onEnd
     }
+    if {($from in [list Active Paused]) && ($to eq "NotReady")} {
+        ::EVBC::stop
+    }
 
 }
 ##
 # EVBC::leave
 #   Called when a state is being left.
-#   * Active -> Halted  invoke onEnd
-
+#   * Halted -> Active   invoke onBegin - we do this inleave to get the jump
+#     on when the data sources start spewing data.
 #
 # @param from - State we are leaving.
 # @param to   - State we are about to enter.

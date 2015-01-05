@@ -885,12 +885,12 @@ Work on 11.0-rc11 begins
         *  Feature #3161 - Here be dragons!!! save the stagearea value set in the
           UI in the ~/stagearea/.settings.tcl file.  This may surprise test users.
         *  Feature #3274:
-	  *   Add class CriticalSection safe critical sections via mutex (base/thread)
-	  *   Add Mutex to CXXUSB classes and encapsulate
+	   *   Add class CriticalSection safe critical sections via mutex (base/thread)
+	   *   Add Mutex to CXXUSB classes and encapsulate
 	      writeActionRegister, transaction and readUSB in a
               CriticalSection to make the libusb stuff all thread
               protected.
-	  *   Add a marker slow control module so any periodic flush of
+	   *   Add a marker slow control module so any periodic flush of
 	      the physics buffer is at the discretion of the experimenter.
        *  Merged rc17 development branch to nscldaq-11.0 development branch.
 11.0-rc18
@@ -899,3 +899,10 @@ Work on 11.0-rc11 begins
          master when CRingBuffer::Create take action as follows:  If the file is
          formatted as a ring buffer, just re-register it.  If the file is not
          formatted as a ring buffer, then throw an error.
+       * Bug #3325 - Clean up the way that data source exits are handled in the readout GUI
+         specifically;
+         *  Had been first transitioning to Ready then NotReady...just go directly to notready.
+         *  In event log bundle {Active, Paused} -> NotReady kills eventlogger
+            does a clean run finalization.
+         *  In event builder these transitions kill off the event bulder.
+         
