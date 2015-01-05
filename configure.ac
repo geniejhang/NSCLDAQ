@@ -462,6 +462,7 @@ AC_CONFIG_FILES([Makefile
 		 usb/mesytec/Makefile
 		 usb/mesytec/MCFD16/Makefile
 		 usb/mesytec/MCFD16/figures/Makefile
+		 usb/mesytec/MSCF16/Makefile
 		 docbuild/Makefile
 		 docbuild/images/Makefile
 		 docbuild/images/callouts/Makefile

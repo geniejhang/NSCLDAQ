@@ -16,7 +16,7 @@ endif
 
 
 SUBDIRS =	 base caenfw-common servers base/dataflow  \
-		daq utilities docbuild docconfig $(SBSDIRS) $(EPICSDIRS) $(USBDIR)
+		daq utilities $(SBSDIRS) $(EPICSDIRS) $(USBDIR)
 
 
 install-data-local:
