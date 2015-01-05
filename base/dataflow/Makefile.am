@@ -100,8 +100,10 @@ unittests_SOURCES = TestRunner.cpp StaticTests.cpp TransferTests.cpp testcommon.
 		ManageTest.cpp WhilePredTest.cpp crmastertests.cpp RemoteTests.cpp
 
 unittests_LDADD   = -L@prefix@/lib $(CPPUNIT_LDFLAGS) \
+			-lDataFlow		\
+			@top_builddir@/base/os/libdaqshm.la	\
 			@LIBEXCEPTION_LDFLAGS@	\
-			-lDataFlow  -lrt
+			-lrt
 
 unittests_LDFLAGS = -Wl,"-rpath-link=$(libdir)"
 

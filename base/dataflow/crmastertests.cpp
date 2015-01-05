@@ -9,6 +9,7 @@
 
 #include <unistd.h>
 #include <CRingMaster.h>
+
 #include <CRingBuffer.h>
 
 #include <sys/socket.h>
@@ -16,6 +17,9 @@
 #include <arpa/inet.h>
 #include <iostream>
 #include "testcommon.h"
+#include "CErrnoException.h"
+
+#include <daqshm.h>
 
 using namespace std;
 
@@ -27,6 +31,12 @@ class rmasterTests : public CppUnit::TestFixture {
   CPPUNIT_TEST(unregister);
   CPPUNIT_TEST(duplicatereg);
   CPPUNIT_TEST(getdata);
+  
+  // Tests for creation with the /dev/shm file already existing
+  
+  CPPUNIT_TEST(existsAndIsRing);
+  CPPUNIT_TEST(existsAndIsNotRing);
+  
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -43,6 +53,9 @@ protected:
   void unregister();
   void duplicatereg();
   void getdata();
+  
+  void existsAndIsRing();
+  void existsAndIsNotRing();
 
 };
 
@@ -254,4 +267,67 @@ rmasterTests::getdata()
 
   shutdown(socket, SHUT_RDWR);
   CRingBuffer::remove(uniqueRing("remote"));
+}
+
+// It's not legal to make a ring buffer that collides with an existing,
+// non ring buffer shared memory region.
+
+void rmasterTests::existsAndIsNotRing()
+{
+    std::string ringName("notaring");
+    std::string shmName("/");
+    shmName += ringName;
+    
+    // Delete without checking status in case it already exists:
+    
+    CDAQShm::remove(shmName);
+    
+    // Create a non ring buffer shared memory
+    
+    long minsize = sysconf(_SC_PAGESIZE);
+    ASSERT(!CDAQShm::create(
+        shmName, minsize,
+        CDAQShm::GroupRead | CDAQShm::GroupWrite |
+        CDAQShm::OtherRead | CDAQShm::OtherWrite));
+    
+    // Creating a ring buffer with that name should fail with
+    // CErrnoException.
+    
+    CPPUNIT_ASSERT_THROW(
+        CRingBuffer::create(ringName),
+        CErrnoException
+    );
+    
+    // Cleanup by getting rid of that shared memory region.
+    
+    ASSERT(!CDAQShm::remove(shmName));
+    
+}
+// If the shared memory exists and is a ring but not known to the
+// ring master then we just make it known.
+
+void rmasterTests::existsAndIsRing()
+{
+    std::string ringName("isaring");
+    std::string shmName("/");
+    shmName += ringName;
+    
+    CDAQShm::remove(shmName);                 // Just in case
+    
+    // Make a new file and format it as a ring:
+    
+    long page   = sysconf(_SC_PAGESIZE);
+    size_t size = (1024*1024*2 /page) * page; // size is just a multiple of pagesize:
+
+    ASSERT(!CDAQShm::create(
+        shmName, size,
+        CDAQShm::GroupRead | CDAQShm::GroupWrite |
+        CDAQShm::OtherRead | CDAQShm::OtherWrite));
+    CRingBuffer::format(ringName, 10);
+    
+    CPPUNIT_ASSERT_NO_THROW(CRingBuffer::create(ringName));
+    CPPUNIT_ASSERT_NO_THROW(CRingBuffer::remove(ringName));
+    
+    CDAQShm::remove(shmName);             // In case test failed.
+    
 }
