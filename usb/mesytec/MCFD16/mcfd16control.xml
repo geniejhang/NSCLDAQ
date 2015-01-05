@@ -270,7 +270,7 @@
           </para>
 
           <programlisting>
-            tclsh < mysettings.tcl
+            tclsh &lt; mysettings.tcl
           </programlisting>
         </listitem>
       </orderedlist>

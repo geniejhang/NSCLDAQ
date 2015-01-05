@@ -1,6 +1,6 @@
 SCRIPT_FILES=@srcdir@/mwutil.tcl @srcdir@/notebook.tcl @srcdir@/tablelist.tcl @srcdir@/tablelistSortByColumn.tcl \
 	@srcdir@/tablelistWidget.tcl  @srcdir@/tabnbook.tcl @srcdir@/FrameSequencer.tcl @srcdir@/FrameManager.tcl \
-	RingStatus.tcl
+	@srcdir@/RingStatus.tcl
 
 install-exec-local:
 	$(mkinstalldirs) @prefix@/TclLibs/widgets
