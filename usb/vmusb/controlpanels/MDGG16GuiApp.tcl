@@ -105,6 +105,7 @@ snit::type MDGG16GuiApp {
     catch {$_options destroy}
     catch {$_proxy destroy}
     catch {destroy $_view}
+    catch {destroy $_menu}
     catch {$_presenter destroy}
   }
 
@@ -140,7 +141,8 @@ snit::type MDGG16GuiApp {
     if {[$self cget -configfile] eq {}} {
       set path [tk_getSaveFile -confirmoverwrite 1 -title {Save as} ] 
       if {$path ne {}} {
-        $_presenter SaveCurrentStateToFile $path
+        $self configure -configfile $path
+        $_presenter SaveCurrentStateToFile [$self cget -configfile]
       }
     } else {
       $_presenter SaveCurrentStateToFile [$self cget -configfile]
