@@ -37,6 +37,7 @@ namespace eval MDGG16ChannelNames {
   variable chan13 Ch13
   variable chan14 Ch14
   variable chan15 Ch15
+
 }
 
 
@@ -352,6 +353,7 @@ snit::widget MDGG16View {
   component _colD     ;##!< column D
   component _syncLbl  ;##!< out of sync label
   component _updateButton 
+  component _status ;##!< status label
 
   variable _outOfSyncAVar ;##!< name of colA's out of sync state variable
   variable _outOfSyncBVar ;##!< name of colB's out of sync state variable
@@ -379,6 +381,7 @@ snit::widget MDGG16View {
     catch {destroy $_colC}
     catch {destroy $_colD}
     catch {destroy $_updateButton}
+    catch {destroy $_status}
   }
 
   ## @brief Assembles the widgets into a unified megawidget
@@ -423,6 +426,8 @@ snit::widget MDGG16View {
     ttk::button $buttons.commit -text "Commit to Device" -command [mymethod Commit]
     set _updateButton [ttk::button $buttons.update -text "Update from Device" \
                                                    -command [mymethod Update]]
+
+    set _status [ttk::label $win.status -text {}]
     grid $buttons.commit $buttons.update -sticky ew
     grid columnconfigure $buttons {0 1} -weight 1
 
@@ -430,6 +435,7 @@ snit::widget MDGG16View {
     grid $header -sticky ew
     grid $cols -sticky nsew
     grid $buttons -sticky new
+    grid $_status -sticky sew -pady {4 0}
     grid rowconfigure $win {0 1 2 3} -weight 1
     grid columnconfigure $win 0 -weight 1
 
@@ -538,6 +544,10 @@ snit::widget MDGG16View {
     $_colC SetOutOfSync $state
     $_colD SetOutOfSync $state
   }
+
+  method SetStatus {message} {
+    $_status configure -text $message
+  }
 }
 
 ##############################################################################
@@ -556,6 +566,8 @@ snit::type MDGG16Presenter {
 
   option -view -default {} -configuremethod SetView ;#!< the view
   option -handle -default {} -configuremethod SetHandle ;#!< the handle
+
+  variable _clearStatusOpId -1 ; ##!< Previously scheduled status clear op
 
   ## @brief Parse options and construct
   #
@@ -716,6 +728,21 @@ snit::type MDGG16Presenter {
     close $infile
   }
 
+  method SetTransientStatus {msg} {
+    $self ThrowIfNoView "$self:SetTransientMessage"
+
+    # if the previously scheduled operation already occurred, the next line is
+    # a no-op. However, if it hasn't, we need it cleared so that the new status
+    # message gets its full time of visibility
+    if {$_clearStatusOpId != -1} {
+      after cancel $_clearStatusOpId
+    }
+
+    [$self cget -view] SetStatus $msg
+    set _clearStatusOpId [after 2000 [list [set [myvar options(-view)]] \
+                                           SetStatus {}]]
+
+  }
 
   #############################################################################
   #

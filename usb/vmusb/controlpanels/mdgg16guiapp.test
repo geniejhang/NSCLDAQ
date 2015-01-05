@@ -24,7 +24,7 @@ proc tk_getSaveFile {args} {
   return [file join $::testDir test]
 }
 
-### fake presneter
+### fake presenter
 
 # remove all knowledge of the MDGG16Proxy snit::type
 ::MDGG16Proxy destroy
