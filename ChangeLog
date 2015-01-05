@@ -893,3 +893,5 @@ Work on 11.0-rc11 begins
 	  *   Add a marker slow control module so any periodic flush of
 	      the physics buffer is at the discretion of the experimenter.
        *  Merged rc17 development branch to nscldaq-11.0 development branch.
+11.0-rc18
+       * Bug #3367 - Swap order of type/name in the CCUSB TclServer Module command.
