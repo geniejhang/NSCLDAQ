@@ -50,51 +50,54 @@ snit::type MSCF16USB {
 
   ##
   #
-  # For consistency with RC bus protocol, we will use the
-  # range of channels from 0-4 instead of 1-5.
   method SetGain {ch val} {
-    if {![Utils::isInRange 0 4 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[0,4\]."
+    if {![Utils::isInRange 1 5 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[1,5\]."
       return -code error -errorinfo MSCF16USB::SetGain $msg
     }
     if {![Utils::isInRange 0 15 $val]} {
       set msg "Invalid value provided. Must be in range \[0,15\]."
       return -code error -errorinfo MSCF16USB::SetGain $msg
     }
-    return [$self _Transaction [list SG [expr $ch+1] $val]]
+    return [$self _Transaction [list SG [expr $ch] $val]]
   }
 
   method GetGain {ch} {
     if {$m_needsUpdate} {
       $self Update
     }
-    if {![Utils::isInRange 0 4 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[0,4\]."
+    if {![Utils::isInRange 1 5 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[1,5\]."
       return -code error -errorinfo MSCF16USB::GetGain $msg
     }
+
+    # we have to map this back down
+    incr ch -1
     return [lindex [dict get $m_moduleState Gains] $ch]
   }
 
   method SetShapingTime {ch val} {
-    if {![Utils::isInRange 0 4 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[0,4\]."
+    if {![Utils::isInRange 1 5 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[1,5\]."
       return -code error -errorinfo MSCF16USB::SetShapingTime $msg
     }
     if {![Utils::isInRange 0 15 $val]} {
       set msg "Invalid value provided. Must be in range \[0,15\]."
       return -code error -errorinfo MSCF16USB::SetShapingTime $msg
     }
-    return [$self _Transaction [list SS [expr $ch+1] $val]]
+    return [$self _Transaction [list SS [expr $ch] $val]]
   }
 
   method GetShapingTime {ch} {
     if {$m_needsUpdate} {
       $self Update
     }
-    if {![Utils::isInRange 0 4 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[0,4\]."
+    if {![Utils::isInRange 1 5 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[1,5\]."
       return -code error -errorinfo MSCF16USB::GetShapingTime $msg
     }
+    # we have to map this back down
+    incr ch -1
     return [lindex [dict get $m_moduleState ShapingTime] $ch]
   }
 
@@ -119,6 +122,9 @@ snit::type MSCF16USB {
       set msg "Invalid channel provided. Must be in range \[1,17\]."
       return -code error -errorinfo MSCF16USB::GetPoleZero $msg
     }
+
+    # we have to map this back down
+    incr ch -1
     return [lindex [dict get $m_moduleState PoleZero] $ch]
   }
 
@@ -143,6 +149,9 @@ snit::type MSCF16USB {
       set msg "Invalid channel provided. Must be in range \[1,17\]."
       return -code error -errorinfo MSCF16USB::GetThreshold $msg
     }
+
+    # we have to map this back down
+    incr ch -1
     return [lindex [dict get $m_moduleState Thresholds] $ch]
   }
 
@@ -221,7 +230,7 @@ snit::type MSCF16USB {
   method Update {} {
     set response [$self _Transaction "DS"]
 
-    set m_moduleState [$parser parseDSResponse $response]
+    set m_moduleState [$m_parser parseDSResponse $response]
     set m_needsUpdate 0
   }
 
@@ -272,13 +281,12 @@ snit::type MSCF16USB {
     # string.
     set patt {mscf(-RC){0,1}>$}
     set iter 0
-    while {![regexp $patt $response] && ($iter < 100)} {
+    while {![regexp $patt $totalResponse]} {
       after 25 
       set response [chan read $m_serialFile]
       append totalResponse $response
       incr iter
     }
-    puts $iter
 
     # done
     return $totalResponse

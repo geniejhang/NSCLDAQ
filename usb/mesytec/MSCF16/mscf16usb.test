@@ -114,14 +114,14 @@ tcltest::test gain-0 {Gain parameter ranges are protected
 } -body {
 
   set resList [list]
-  set res [catch {::dev SetGain 5 1} msg]
+  set res [catch {::dev SetGain 6 1} msg]
   lappend resList [list $res $msg]
   set res [catch {::dev SetGain 4 16} msg]
   lappend resList [list $res $msg]
 
-  ::dev SetGain 0 1
+  ::dev SetGain 1 1
   lappend resList [tcltest::viewFile $::serialFile]
-} -result [list {1 {Invalid channel provided. Must be in range [0,4].}} \
+} -result [list {1 {Invalid channel provided. Must be in range [1,5].}} \
 {1 {Invalid value provided. Must be in range [0,15].}} \
 {SG 1 1}]
 
@@ -134,13 +134,15 @@ tcltest::test gain-1 {Able to get gain
 } -body {
 
   set resList [list]
-  set res [catch {::dev GetGain 5} msg]
+  set res [catch {::dev GetGain 6} msg]
   lappend resList [list $res $msg]
 
+  # because ch 1 really means the first channel, then we need to get the value
+  # at index 0
   lappend resList [::dev GetGain 1]
   set resList
-} -result [list {1 {Invalid channel provided. Must be in range [0,4].}} \
-13]
+} -result [list {1 {Invalid channel provided. Must be in range [1,5].}} \
+1]
 
 tcltest::test shapingTime-0 {Shaping time parameter ranges are protected 
 } -setup {
@@ -150,14 +152,14 @@ tcltest::test shapingTime-0 {Shaping time parameter ranges are protected
 } -body {
 
   set resList [list]
-  set res [catch {::dev SetShapingTime 5 1} msg]
+  set res [catch {::dev SetShapingTime 6 1} msg]
   lappend resList [list $res $msg]
   set res [catch {::dev SetShapingTime 4 16} msg]
   lappend resList [list $res $msg]
 
-  ::dev SetShapingTime 0 1
+  ::dev SetShapingTime 1 1
   lappend resList [tcltest::viewFile $::serialFile]
-} -result [list {1 {Invalid channel provided. Must be in range [0,4].}} \
+} -result [list {1 {Invalid channel provided. Must be in range [1,5].}} \
 {1 {Invalid value provided. Must be in range [0,15].}} \
 {SS 1 1}]
 
@@ -170,13 +172,15 @@ tcltest::test shapingTime-1 {Retrieve shaping time for channel
 } -body {
 
   set resList [list]
-  set res [catch {::dev GetShapingTime 5} msg]
+  set res [catch {::dev GetShapingTime 6} msg]
   lappend resList [list $res $msg]
 
+  # because ch 3 really means the 3rd channel, then we need to get the value
+  # at index 2
   lappend resList [::dev GetShapingTime 3]
   set resList
-} -result [list {1 {Invalid channel provided. Must be in range [0,4].}} \
-3]
+} -result [list {1 {Invalid channel provided. Must be in range [1,5].}} \
+1]
 
 tcltest::test poleZero-0 {Pole zero parameter ranges are protected
 } -setup {
@@ -208,10 +212,12 @@ tcltest::test poleZero-1 {Retrieve pole zero for channel
   set res [catch {::dev GetPoleZero 18} msg]
   lappend resList [list $res $msg]
 
+  # because ch 3 really means the 3rd channel, then we need to get the value
+  # at index 2
   lappend resList [::dev GetPoleZero 3]
   set resList
 } -result [list {1 {Invalid channel provided. Must be in range [1,17].}} \
-128]
+70]
 
 tcltest::test threshold-0 {Threshold parameter ranges are protected
 } -setup {
@@ -242,10 +248,12 @@ tcltest::test threshold-1 {Retrieve threshold for channel
   set res [catch {::dev GetThreshold 18} msg]
   lappend resList [list $res $msg]
 
+  # because ch 3 really means the 3rd channel, then we need to get the value
+  # at index 2
   lappend resList [::dev GetThreshold 3]
   set resList
 } -result [list {1 {Invalid channel provided. Must be in range [1,17].}} \
-128]
+0]
 
 tcltest::test monitor-0 {Monitor parameter ranges are protected
 } -setup {

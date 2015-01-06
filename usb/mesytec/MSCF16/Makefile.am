@@ -3,7 +3,8 @@
 
 DRIVERDest = @prefix@/TclLibs/mesytec
 
-TCLDRIVERS = MSCF16USB.tcl
+TCLDRIVERS = MSCF16USB.tcl MSCF16Gui.tcl MSCF16GuiApp.tcl
+TCLAPPS = MSCF16Control.tcl
 
 DOCS = 
 
