@@ -102,11 +102,16 @@ snit::widget MSCF16Form {
 
     $self InitArray
     $self SetupGUI
+
+    # force the state of the gui to reflect whether it is 
+    # in common or individual mode
+    $self CommonMode
   }
 
   method InitArray {} {
     set monitor 0
     set remote on
+    set single common
     for {set i 0} {$i < 5} {incr i} {
       set ga$i 0
       set sh$i 0
@@ -192,18 +197,22 @@ snit::widget MSCF16Form {
     set w $win.table.group4
     ttk::frame $w
     ttk::checkbutton $w.si -text Common -variable [myvar single]\
-                           -onvalue individual -offvalue common \
+                           -onvalue common -offvalue individual \
                            -command [mymethod CommonMode]
     ttk::spinbox $w.gac -textvariable [myvar ga4] -width 4 \
                         -from 0 -to 15 
+    trace add variable [myvar ga4] write [mymethod OnGainChanged]
     ttk::spinbox $w.shc -textvariable [myvar sh4] -width 4 \
                         -from 0 -to 15 
+    trace add variable [myvar sh4] write [mymethod OnShapingTimeChanged]
 
     ttk::spinbox $w.pzc -textvariable [myvar pz16] -width 4 \
                         -from 0 -to 255 
+    trace add variable [myvar pz17] write [mymethod OnPoleZeroChanged]
 
     ttk::spinbox $w.thc -textvariable [myvar th16] -width 4 \
                         -from 0 -to 255 
+    trace add variable [myvar th17] write [mymethod OnThresholdhanged]
 
     grid $w.si  $w.gac $w.shc $w.pzc $w.thc x -sticky news
     grid columnconfigure $w {0 1 2 3 4 5} -weight 1 -uniform a
@@ -245,6 +254,36 @@ snit::widget MSCF16Form {
     if {[$self cget -presenter] ne {}} {
       [$self cget -presenter] OnSetMode $single
     }
+
+    if {$single eq "common"} {
+      $self SetStateOfIndividualControls disabled
+      $self SetStateOfCommonControls !disabled
+    } else {
+      $self SetStateOfIndividualControls !disabled
+      $self SetStateOfCommonControls disabled
+    }
+  }
+
+  method SetStateOfIndividualControls {state} {
+    for {set grp 0} {$grp < 4} {incr grp} {
+
+      $win.table.group$grp.ga$grp state $state
+      $win.table.group$grp.sh$grp state $state
+
+      for {set subgrp 0} {$subgrp<4} {incr subgrp} {
+        set i [expr $grp*4+$subgrp]
+        $win.table.group$grp.pz$i state $state
+        $win.table.group$grp.th$i state $state
+        $win.table.group$grp.mo$i state $state
+      }
+    }
+  }
+
+  method SetStateOfCommonControls {state} {
+    $win.table.group4.gac state $state
+    $win.table.group4.shc state $state
+    $win.table.group4.pzc state $state
+    $win.table.group4.thc state $state
   }
 
   method RemoteLocal {} {
@@ -317,11 +356,13 @@ snit::widget MSCF16Form {
     incr index
     $self DelayedChanCommit ShapingTime $index [set $name1]
   }
+
   method OnPoleZeroChanged {name1 name2 op} {
     set index [$self ExtractEndingIndex $name1 pz]
     incr index
     $self DelayedChanCommit PoleZero $index [set $name1]
   }
+
   method OnThresholdChanged {name1 name2 op} {
     set index [$self ExtractEndingIndex $name1 th]
     incr index
