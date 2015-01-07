@@ -13,7 +13,6 @@
 #	   East Lansing, MI 48824-1321
 
 
-
 package provide mscf16guiapp 1.0
 
 package require snit
@@ -21,8 +20,10 @@ package require mscf16usb
 package require mscf16gui
 
 
-##
+## @brief Options for the MSCF16Control app.
 #
+# This encapsulates the options so that they could in principle be passed 
+# around more easily.
 #
 snit::type MSCF16AppOptions {
 
@@ -35,18 +36,31 @@ snit::type MSCF16AppOptions {
   }
 }
 
-##
+## @brief Toplevel snit::type that holds all the piece of the MSCF16Control
 #
+# This owns the handle, presenter, and view. It also deals with managing of the
+# global data such as the channel names. At startup and shutdown of the
+# application, this will store that state of these names to a user specified
+# file.
 #
 snit::type MSCF16GuiApp {
 
-  component _options
-  component _view
-  component _presenter
-  component _handle
+  component _options    ;#!< the MSCF16AppOptions
+  component _view       ;#!< a view
+  component _presenter  ;#!< presenter for the view
+  component _handle     ;#! a device handle
 
+  # all option management is handled by the MSCF16AppOptions snit::type
   delegate option * to _options
 
+  ## @brief COnstruct all of the pieces..
+  #
+  # The device handle, view, and presenter are all created so that they can work
+  # together.  Furthermore, the config file for the channel names ia read if it
+  # exists to restore previous channel names.  Failure during this cause the
+  # whole application to halt "gracefully".
+  #
+  # @param args   list of option-value pairs
   constructor {args} {
     install _options using MSCF16AppOptions %AUTO%
     $self configurelist $args
@@ -67,6 +81,8 @@ snit::type MSCF16GuiApp {
 
   }
 
+  ## @brief Destroy all owned state and save channel names to file
+  #
   destructor {
     # save state to file
     $self SaveChannelNames [$self cget -channelconfig]
@@ -77,7 +93,14 @@ snit::type MSCF16GuiApp {
 
   }
 
-  ## some helper procs for loading and saving channel names
+  ## @brief Attempt to read in config file with channel names
+  #
+  # This simply returns if the file at the path provided cannot be opened. So
+  # the user understands what happened, it presents them with a dialogue
+  # explaining what will happen.
+  # 
+  # @param path   path to the channel config
+  #
   method ReadInChannelNames {path} {
     if {[catch {open $path r} f]} {
       set msg  "User provided nonexistent file for channel names. For now, defaults "
@@ -102,6 +125,13 @@ snit::type MSCF16GuiApp {
     }
   }
 
+  ## @brief Write the existing channel names to a file
+  #
+  # This not only writes the channel names, but also timestamps the creation of
+  # the file.
+  #
+  #  @param path  path to the file to save
+  #
   method SaveChannelNames {path} {
     set f [open $path w]
     for {set i 0} {$i < 16} {incr i} {
@@ -113,4 +143,4 @@ snit::type MSCF16GuiApp {
   }
 
 
-}
+} ;# end of MSCF16GuiApp snit::type
