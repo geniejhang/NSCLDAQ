@@ -62,11 +62,13 @@ MSCF16GuiApp app -widgetname .form {*}$optionsDict
 grid .form -sticky nsew
 grid rowconfigure . 0 -weight 1
 grid columnconfigure . 0 -weight 1
-wm title . "MSCF-16 Controls"
 
+# set up some window rules
+wm title . "MSCF-16 Controls"
 wm protocol . WM_DELETE_WINDOW [list ::app destroy]
 wm resizable . false false
 
+# establish the style of the widgets
 ttk::style configure Header.TFrame -background goldenrod3
 ttk::style configure Header.TLabel -background goldenrod3 \
                                    -font {helvetica 14 bold}
