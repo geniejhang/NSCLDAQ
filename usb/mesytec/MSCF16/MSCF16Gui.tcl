@@ -19,6 +19,7 @@ package provide mscf16gui 1.0
 package require snit
 package require Tk
 package require ChannelLabel
+package require TransientLabel
 
 # the original implementation used the convention of 
 # starting counting at 1 rather than 0. For programming
@@ -45,30 +46,6 @@ namespace eval MSCF16ChannelNames {
   variable chan15 Ch16
 }
 
-snit::widgetadaptor TransientStatusBar {
-
-  option -text -default {} -configuremethod SetText 
-  delegate option * to hull
-  delegate method * to hull
-
-  variable _lastOpId -1
-
-  constructor {args} {
-    installhull using ttk::label
-    $self configurelist $args
-  }
-
-  method SetText {opt msg} {
-    if {$_lastOpId != -1} {
-      after cancel $_lastOpId
-    }
-    $hull configure -text $msg
-    set options($opt) $msg
-
-    # schedule the clear event
-    set _lastOpId [after 2000 [list $self configure -text {}]]
-  }
-}
 
 snit::widget MSCF16Form {
 
@@ -271,7 +248,7 @@ snit::widget MSCF16Form {
     ttk::frame $w
     ttk::checkbutton $w.remote -text Remote -variable [myvar remote] -onvalue on \
                      -offvalue off -command [mymethod RemoteLocal]
-    set _statusLbl [TransientStatusBar $w.status -text {}]
+    set _statusLbl [TransientLabel $w.status -text {}]
     grid $_statusLbl $w.remote -sticky ew
     grid rowconfigure $w 0 -weight 1
     grid columnconfigure $w 0 -weight 1
@@ -294,7 +271,7 @@ snit::widget MSCF16Form {
         set i [expr $grp*4+$subgrp]
         $win.table.group$grp.pz$i state $state
         $win.table.group$grp.th$i state $state
-        $win.table.group$grp.mo$i state $state
+#        $win.table.group$grp.mo$i state $state
       }
     }
   }

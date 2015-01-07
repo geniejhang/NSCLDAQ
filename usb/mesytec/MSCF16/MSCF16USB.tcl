@@ -12,13 +12,35 @@
 #	   Michigan State University
 #	   East Lansing, MI 48824-1321
 
-
-
 package provide mscf16usb 1.0
 
 package require snit
 package require Utils
 
+
+## @brief The USB interface for the MSCF-16 
+#
+# Provides some basic control over the MSCF-16 through a standard interface.
+# The convention is adopted that the first channel is indexed at 0. This is
+# consistent with other drivers.
+#
+# This opens a special file for communicating with the device. The channel is 
+# owned by the instance of this class and is closed when the instance is
+# destroyed. It depends on external code to ensure that no thrashing of the
+# device occurs because on Linux, it is possible for multiple instances of this
+# to be attached to the same file.
+#
+# Because the performance of communication over the uSB protocol is so poor, the
+# driver utilizes a lazy update mechanism. The state of the module will only
+# ever be read if a "set" operation has been carried out since the last read.
+# Otherwise, the value is returned from the shadow state maintained by the
+# instance. For this reason, best performance is achieved by performing all
+# set operations first and then all get operations afterwards. The worst
+# performance will be found by interleaving set and get operations all of the
+# time. 
+#
+# Parsing of the state of the device is handle by an instance of the
+# MSCF16DSParser snit::type.
 snit::type MSCF16USB {
 
   variable m_serialFile ;# the communication channel to the device 
@@ -30,6 +52,10 @@ snit::type MSCF16USB {
   ## @brief Construct the driver 
   #
   # Opens the file
+  #
+  # @param serialFile   path to the special file
+  #
+  # @throws error if fails to open file
   constructor {serialFile} {
     install m_parser using MSCF16DSParser %AUTO%
 
@@ -43,13 +69,25 @@ snit::type MSCF16USB {
     set m_moduleState [dict create]
   }
 
+  ## @brief Close the file and destroy the parser
+  #
   destructor {
     catch {$m_parser destroy}
     catch {close $m_serialFile}
   }
 
-  ##
+  ## brief Set the gain for a group
   #
+  # To set the common setting for the device, use ch 4.
+  # This translates the channel index provided to be consistent with what is
+  # expected by the device.
+  # To access the common value, use index 4.
+  #
+  # @param ch   group index (must be in range [0,4])
+  # @param val  value to write (must be in range [0,15])
+  #
+  # @throws error if ch is out of range
+  # @throws error if val is out of range
   method SetGain {ch val} {
     if {![Utils::isInRange 0 4 $ch]} {
       set msg "Invalid channel provided. Must be in range \[0,4\]."
@@ -59,9 +97,20 @@ snit::type MSCF16USB {
       set msg "Invalid value provided. Must be in range \[0,15\]."
       return -code error -errorinfo MSCF16USB::SetGain $msg
     }
+
     return [$self _Transaction [list SG [expr $ch+1] $val]]
   }
 
+  ## @brief Retrieve the current gain value
+  #
+  # Updates the shadow state if needed.
+  # To access the common value, use index 4.
+  #
+  # @param  ch  group index (must be in range [0,4])
+  #
+  # @return integer value requested
+  #
+  # @throws error if ch is out of range
   method GetGain {ch} {
     if {$m_needsUpdate} {
       $self Update
@@ -74,6 +123,21 @@ snit::type MSCF16USB {
     return [lindex [dict get $m_moduleState Gains] $ch]
   }
 
+
+  ## @brief Set the shaping time for a channel
+  #
+  # This translates the group index provided up by one to be consistent with
+  # what is accepted by the device.
+  #
+  # To access the common value, use index 4.
+  #
+  # @param ch   group index ( must be in range [0,4])
+  # @param val  value to write (must be in range [0,3])
+  #
+  # @return ""
+  #
+  # @throws error if ch is out of range
+  # @throws error if val is out of range
   method SetShapingTime {ch val} {
     if {![Utils::isInRange 0 4 $ch]} {
       set msg "Invalid channel provided. Must be in range \[0,4\]."
@@ -86,6 +150,15 @@ snit::type MSCF16USB {
     return [$self _Transaction [list SS [expr $ch+1] $val]]
   }
 
+  ## @brief Retrieve the value of the shaping time for a group
+  #
+  # To access the common value, use index 4.
+  #
+  # @param ch   group index ( must be in range [0,4])
+  # 
+  # @returns integer value requested
+  #
+  # @throws error if ch is out of range
   method GetShapingTime {ch} {
     if {$m_needsUpdate} {
       $self Update
@@ -97,6 +170,17 @@ snit::type MSCF16USB {
     return [lindex [dict get $m_moduleState ShapingTime] $ch]
   }
 
+  ## @brief Set the pole zero value for a channel
+  # 
+  # To set the common value, use index 16.
+  #
+  # @param ch   channel index ( must be in range [0,16])
+  # @param val  value to write (must be in range [0,3])
+  #
+  # @return ""
+  #
+  # @throws error if ch is out of range
+  # @throws error if val is out of range
   method SetPoleZero {ch val} {
     if {![Utils::isInRange 0 16 $ch]} {
       set msg "Invalid channel provided. Must be in range \[0,16\]."
@@ -110,6 +194,15 @@ snit::type MSCF16USB {
     return [$self _Transaction [list SP [expr $ch+1] $val]]
   }
 
+  ## @brief Retrieve the pole zero value for a channel
+  # 
+  # To access the common value, use index 16.
+  #
+  # @param ch   channel index ( must be in range [0,16])
+  #
+  # @return the integer value requested
+  #
+  # @throws error if ch is out of range
   method GetPoleZero {ch} {
     if {$m_needsUpdate} {
       $self Update
@@ -122,6 +215,17 @@ snit::type MSCF16USB {
     return [lindex [dict get $m_moduleState PoleZero] $ch]
   }
 
+  ## @brief Set the threshold value for a channel
+  # 
+  # To set the common value, use index 16.
+  #
+  # @param ch   channel index ( must be in range [0,16])
+  # @param val  value to write (must be in range [0,255])
+  #
+  # @return response from device
+  #
+  # @throws error if ch is out of range
+  # @throws error if val is out of range
   method SetThreshold {ch val} {
     if {![Utils::isInRange 0 16 $ch]} {
       set msg "Invalid channel provided. Must be in range \[0,16\]."
@@ -135,6 +239,15 @@ snit::type MSCF16USB {
     return [$self _Transaction [list ST [expr $ch+1] $val]]
   }
 
+  ## @brief Retrieve the threshold value for a channel
+  # 
+  # To access the common value, use index 16.
+  #
+  # @param ch   channel index ( must be in range [0,16])
+  #
+  # @return the integer value requested
+  #
+  # @throws error if ch is out of range
   method GetThreshold {ch} {
     if {$m_needsUpdate} {
       $self Update
@@ -147,6 +260,16 @@ snit::type MSCF16USB {
     return [lindex [dict get $m_moduleState Thresholds] $ch]
   }
 
+  ## @brief Set the channel to be monitored
+  #
+  # It is important to note that this translates the channel index up by 1 to
+  # write to the device to match the range accepted by the device.
+  #
+  # @param channel  the channel index (must be in range [0,15])
+  #
+  # @return response from device
+  #
+  # @throws error if channel is out of range
   method SetMonitor {channel} {
     if {![Utils::isInRange 0 15 $channel]} {
       set msg "Invalid channel provided. Must be in range \[0,15\]."
@@ -155,6 +278,14 @@ snit::type MSCF16USB {
     return [$self _Transaction [list MC [expr $channel+1]]]
   }
 
+
+  ## @brief Retrieve the index of the channel being monitored
+  # 
+  # The value returned from the device is decreased by 1 to match the
+  # conventional range accepted by the driver. This ensures that all
+  # communication with the device uses the channel range [0,15].
+  #
+  # @return channel index 
   method GetMonitor {} {
     if {$m_needsUpdate} {
       $self Update
@@ -163,6 +294,21 @@ snit::type MSCF16USB {
     return [expr $val-1]
   }
 
+  ## @brief Sets the configuration mode of the device
+  #
+  # It appears that you can set individual channel values when the device is in
+  # common mode. However, it is unwise to trust this behavior because other
+  # Mesytec devices do not allow such interaction. So... be sure that whatever
+  # you are trying to configure is appropriate to the config mode the device is
+  # in at the time.
+  # 
+  # This maps "common" to 0 and "individual" to 1.
+  #
+  # @param mode   the config mode (either common or individual)
+  # 
+  # @returns response from the device
+  #
+  # @throws error if mode is neither "common" or "individual"
   method SetMode {mode} {
     set code 0
     switch $mode {
@@ -176,6 +322,13 @@ snit::type MSCF16USB {
     return [$self _Transaction [list SI $code]]
   }
 
+  ## @brief Retrieve the config mode of the device
+  #
+  # Triggers an update of shadow state if required.
+  #
+  # @returns config mode (either "common" or "individual")
+  #
+  # @throws error if state of device is not understood by this driver
   method GetMode {} {
     if {$m_needsUpdate} {
       $self Update
@@ -196,6 +349,13 @@ snit::type MSCF16USB {
     return $mode
   }
 
+  ## @brief Enable/Disable remote control operation
+  #
+  # @param on   boolean value indicating whether remote operation is turned on
+  #
+  # @returns response from device
+  #
+  # @throws error if on is not a boolean value
   method EnableRC {on} {
     if {![string is boolean $on]} {
       set msg "Invalid argument provided. Must be a boolean value."
@@ -209,6 +369,11 @@ snit::type MSCF16USB {
     }
   }
 
+  ## @brief Reads status or remote control operation
+  #
+  # Trigger update of shadow state if required.
+  #
+  # @return status of remote control (either 0 or 1)
   method RCEnabled {} {
     if {$m_needsUpdate} {
       $self Update
@@ -217,7 +382,10 @@ snit::type MSCF16USB {
     return [string is true [dict get $m_moduleState Remote]]
   }
 
-  ## @brief Send the DS command and parse response
+  ## @brief Send the DS command and updates shadow state
+  #
+  # This also updates the flag indicating that the next Get operation requires
+  # another update. 
   #
   method Update {} {
     set response [$self _Transaction "DS"]
@@ -295,18 +463,53 @@ snit::type MSCF16USB {
     return [$self _Read]
   }
 
+  ## @brief Assigns the shadow state
+  #
+  # @warning There is no check to see whether the dict passed in is 
+  #          good. It will potentially fail on the next Get operation,
+  #          but might not. 
+  #
+  # @param state  a dict with the proper structure for the shadow state
   method _setModuleState {state} {
     set m_moduleState $state
   }
 
-}
+} ;# end of MSCF16USB snit::type
 
+
+
+#-----------------------------------------------------------------------------#
+
+
+
+## @brief A parser for the DS respone of the MSCF-16
+#
+# The actual format of the DS response depends heavily on the status of the
+# software(firmware?) version of the device. As a result, the logic is
+# externalized into this. Basically this just takes the full DS response as a
+# string and then parses it into a proper dict.
+#
+# External callers should only rely on the parseDSResponse method to exist. All
+# of the other methods are just utility methods and are subject to change if the
+# format of the DS response changes.
 snit::type MSCF16DSParser {
 
-  variable mscf
+  
+  variable mscf ;#!< the dict to fill
+
+  ##  @brief Constructor is a no-op
+  #
   constructor {args} {
   }
 
+  ## @brief The main entry point
+  # 
+  # Basically, this splits the entire string into lines and then operates on
+  # them one by one. It ignores the lines it is uninterested in.
+  #
+  # @param response  the complete DS response from the device
+  #
+  # @returns the parse dictionary
   method parseDSResponse {response} {
     set response [split $response "\n"]
 
@@ -336,10 +539,8 @@ snit::type MSCF16DSParser {
     return $mscf
   }
 
-  method parseCode {line} {
-    set code [string range $line 0 [string first : $line]]
-  }
-
+  ## @brief parse the gain line
+  #
   method parseGains {line} {
 
     set lineVals [list]
@@ -353,6 +554,8 @@ snit::type MSCF16DSParser {
     return $lineVals
   }
 
+  ## @brief parse the threshold line
+  #
   method parseThresholds {line} {
     set lineVals [list]
 
@@ -367,6 +570,8 @@ snit::type MSCF16DSParser {
     return $lineVals
   }
 
+  ## @brief parse the pole zero line
+  #
   method parsePoleZero {line} {
 
     set lineVals [list]
@@ -382,6 +587,8 @@ snit::type MSCF16DSParser {
     return $lineVals
   }
 
+  ## @brief parse the shaping time line
+  #
   method parseShapingTime {line} {
     set lineVals [list]
     set patt {^shts: (\d+ ){4}c:(\d+)$}
@@ -395,6 +602,8 @@ snit::type MSCF16DSParser {
 
   }
 
+  ## @brief parse the line containing the multiplicity
+  #
   method parseMultiplicity {line} {
     set lineVals [list]
     set patt {^mult: (\d+) (\d+)$}
@@ -404,6 +613,8 @@ snit::type MSCF16DSParser {
     return $lineVals
   }
 
+  ## @brief parse the line containing info of monitor
+  #
   method parseMonitor {line} {
     set nSet [scan $line "monitor: %d" monitor]
 
@@ -413,6 +624,8 @@ snit::type MSCF16DSParser {
     return $monitor
   }
 
+  ## @brief parse the line containing info of configuration mode
+  #  
   method parseConfigMode {line} {
      set nSet [scan $line "%s mode" mode]
 
@@ -423,6 +636,8 @@ snit::type MSCF16DSParser {
      return $mode
   }
 
+  ## @brief parse the line containing info state of remote control
+  #  
   method parseRemote {line} {
      set nSet [scan $line "rc %s" remote ]
      if {$nSet != 1} {
@@ -431,5 +646,5 @@ snit::type MSCF16DSParser {
      return $remote
   }
     
-}
+} ;# end of MSCF16DSParser snit::type
 
