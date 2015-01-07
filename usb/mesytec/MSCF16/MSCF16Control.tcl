@@ -40,25 +40,6 @@ if {("-help" in $argv_tmp) || ("-?" in $argv_tmp)} {
   exit
 }
 
-## some helper procs for loading and saving channel names
-proc ReadInChannelNames {path} {
-  set f [open $path r]
-  for {set i 0} {$i < 16} {incr i} {
-    chan gets $f ::MSCF16ChannelNames::chan$i 
-  }
-  close $f
-}
-
-proc Exit {path} {
-  set f [open $path w]
-  for {set i 0} {$i < 16} {incr i} {
-    chan puts $f [set MSCF16ChannelNames::chan$i] 
-  }
-  chan puts $f "Generated on [clock format [clock seconds]]"
-  close $f
-  exit
-}
-
 #----------------------------------------------------------------------
 # Here begins the code to process arguments and launch the program.
 #
@@ -83,9 +64,8 @@ grid rowconfigure . 0 -weight 1
 grid columnconfigure . 0 -weight 1
 wm title . "MSCF-16 Controls"
 
-# some stuff for loading and saving the channel names
-ReadInChannelNames $ChannelNamePath
-wm protocol . WM_DELETE_WINDOW [list Exit $ChannelNamePath]
+wm protocol . WM_DELETE_WINDOW [list ::app destroy]
+wm resizable . false false
 
 ttk::style configure Header.TFrame -background goldenrod3
 ttk::style configure Header.TLabel -background goldenrod3 \

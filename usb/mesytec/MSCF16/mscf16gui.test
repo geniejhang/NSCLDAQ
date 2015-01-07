@@ -43,22 +43,22 @@ snit::type FakeHandle {
     set _memory [dict create]
     
     dict set _memory threshold [dict create]
-    for {set ch 1} {$ch < 18} {incr ch} {
+    for {set ch 0} {$ch < 17} {incr ch} {
       dict set _memory threshold $ch NA
     }
 
     dict set _memory polezero [dict create]
-    for {set ch 1} {$ch < 18} {incr ch} {
+    for {set ch 0} {$ch < 17} {incr ch} {
       dict set _memory polezero $ch NA
     }
 
     dict set _memory gain [dict create]
-    for {set ch 1} {$ch < 6} {incr ch} {
+    for {set ch 0} {$ch < 5} {incr ch} {
       dict set _memory gain $ch NA
     }
 
     dict set _memory shaping [dict create]
-    for {set ch 1} {$ch < 6} {incr ch} {
+    for {set ch 0} {$ch < 5} {incr ch} {
       dict set _memory shaping $ch NA
     }
 
@@ -132,11 +132,11 @@ proc tearDown {} {
 
 ## A proc to load either the FakeHandle or FakeView with state
 proc LoadHandle {devname} {
-  for {set ch 1} {$ch<18} {incr ch} {
+  for {set ch 0} {$ch<17} {incr ch} {
     $devname SetThreshold $ch [expr $ch/2]
     $devname SetPoleZero $ch [expr $ch/3]
   }
-  for {set ch 1} {$ch<6} {incr ch} {
+  for {set ch 0} {$ch<5} {incr ch} {
     $devname SetGain $ch $ch
     $devname SetShapingTime $ch $ch
   }
@@ -151,16 +151,16 @@ proc ReadInterface {devname} {
 
   # these are in separate loops because I want the order of the list to be 
   # easily understood
-  for {set ch 1} {$ch<18} {incr ch} {
+  for {set ch 0} {$ch<17} {incr ch} {
     lappend state [$devname GetThreshold $ch]
   }
-  for {set ch 1} {$ch<18} {incr ch} {
+  for {set ch 0} {$ch<17} {incr ch} {
     lappend state [$devname GetPoleZero $ch]
   }
-  for {set ch 1} {$ch<6} {incr ch} {
+  for {set ch 0} {$ch<5} {incr ch} {
     lappend state [$devname GetGain $ch]
   }
-  for {set ch 1} {$ch<6} {incr ch} {
+  for {set ch 0} {$ch<5} {incr ch} {
     lappend state [$devname GetShapingTime $ch]
   }
   lappend state [$devname GetMode]
@@ -186,9 +186,9 @@ tcltest::test update-0 {Update view from model
   ::pres UpdateViewFromModel 
   
   ReadInterface ::fakeview 
-} -result [list 0 1 1 2  2 3 3 4  4 5 5 6  6 7 7 8  8 \
-0 0 1 1  1 2 2 2  3 3 3 4  4 4 5 5  5 \
-1 2 3 4 5  1 2 3 4 5  \
+} -result [list 0 0 1 1  2 2 3 3  4 4 5 5  6 6 7 7  8 \
+0 0 0 1  1 1 2 2  2 3 3 3  4 4 4 5  5 \
+0 1 2 3 4  0 1 2 3 4  \
 individual 8 NA]
 
 
@@ -207,7 +207,7 @@ tcltest::test commitsinglechan-0 {Committing a single param with index
   # should produce a list that is all NA except for the 2nd element of the
   # threshold component
   ReadInterface ::handle
-} -result [list NA 23 NA NA  NA NA NA NA  NA NA NA NA  NA NA NA NA  NA\
+} -result [list NA NA 23 NA  NA NA NA NA  NA NA NA NA  NA NA NA NA  NA\
 NA NA NA NA  NA NA NA NA  NA NA NA NA  NA NA NA NA  NA \
 NA NA NA NA NA  NA NA NA NA NA \
 NA NA NA ]

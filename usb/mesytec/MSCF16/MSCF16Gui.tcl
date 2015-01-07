@@ -77,7 +77,6 @@ snit::widget MSCF16Form {
   variable _scheduledCommitOpId -1 
 
   method SetCommittable {opt val} {
-    puts "$opt $val"
     set options($opt) $val
   }
 
@@ -193,7 +192,7 @@ snit::widget MSCF16Form {
                     -style Group.TSpinbox
       trace add variable [myvar ga$group] write [mymethod OnGainChanged]
       ttk::spinbox $w.sh$group -textvariable [myvar sh$group] \
-                   -width 4 -from 0 -to 15 \
+                   -width 4 -from 0 -to 3 \
                     -style Group.TSpinbox
       trace add variable [myvar sh$group] write [mymethod OnShapingTimeChanged]
 
@@ -310,27 +309,29 @@ snit::widget MSCF16Form {
   method RemoteLocal {} {
     if {[$self cget -presenter] ne {}} {
       [$self cget -presenter] OnEnableRC $remote
-      $_statusLbl configure -text "Tranitioned to remote $remote"
+      $_statusLbl configure -text "Transitioned to remote $remote"
     }
   }
 
-  method SetThreshold {index val} {set th[expr $index-1] $val }
-  method GetThreshold index {return [set th[expr $index-1]] }
+  # Setter/Getter interface
+  method SetThreshold {index val} {set th$index $val }
+  method GetThreshold index {return [set th$index] }
 
-  method SetPoleZero {index val} { set pz[expr $index-1] $val }
-  method GetPoleZero index { return [set pz[expr $index-1]] }
+  method SetPoleZero {index val} { set pz$index $val }
+  method GetPoleZero index { return [set pz$index] }
 
   method SetMonitor {val} { set monitor $val }
   method GetMonitor {} { return $monitor }
 
-  method SetGain {index val} { set ga[expr $index-1] $val  }
-  method GetGain {index} { return [set ga[expr $index-1]]}
+  method SetGain {index val} { set ga$index $val  }
+  method GetGain {index} { return [set ga$index]}
 
-  method SetShapingTime {index val} { set sh[expr $index-1] $val }
-  method GetShapingTime {index} { return [set sh[expr $index-1]] }
+  method SetShapingTime {index val} { set sh$index $val }
+  method GetShapingTime {index} { return [set sh$index] }
 
   method SetMode {val} {set single $val }
   method GetMode {} { return $single }
+
 
   method ExtractEndingIndex {string pattern} {
     set index [string last $pattern $string]
@@ -340,30 +341,26 @@ snit::widget MSCF16Form {
 
   method OnGainChanged {name1 name2 op} {
     set index [$self ExtractEndingIndex $name1 ga]
-    incr index
     $self DelayedChanCommit Gain $index [set $name1]
   }
 
   method OnShapingTimeChanged {name1 name2 op} {
     set index [$self ExtractEndingIndex $name1 sh]
-    incr index
     $self DelayedChanCommit ShapingTime $index [set $name1]
   }
 
   method OnPoleZeroChanged {name1 name2 op} {
     set index [$self ExtractEndingIndex $name1 pz]
-    incr index
     $self DelayedChanCommit PoleZero $index [set $name1]
   }
 
   method OnThresholdChanged {name1 name2 op} {
     set index [$self ExtractEndingIndex $name1 th]
-    incr index
     $self DelayedChanCommit Threshold $index [set $name1]
   }
 
   method OnMonitorChanged {name1 name2 op} {
-    $self DelayedCommit Monitor [expr [set $name1]+1]
+    $self DelayedCommit Monitor [expr [set $name1]]
   }
   
   method OnModeChanged {name1 name2 op} {
@@ -411,6 +408,8 @@ snit::widget MSCF16Form {
     $_statusLbl configure -text $message
   }
 }
+
+# --------------------------------------------------------------------------- #
 
 ##
 #
@@ -461,12 +460,12 @@ snit::type MSCF16Presenter {
       $view SetMode [$handle GetMode]
       $view SetMonitor [$handle GetMonitor]
 
-      for {set ch 1} {$ch < 18} {incr ch} {
+      for {set ch 0} {$ch < 17} {incr ch} {
         $view SetThreshold $ch [$handle GetThreshold $ch]
         $view SetPoleZero $ch [$handle GetPoleZero $ch]
       }
 
-      for {set grp 1} {$grp < 6} {incr grp} {
+      for {set grp 0} {$grp < 5} {incr grp} {
         $view SetGain $grp [$handle GetGain $grp]
         $view SetShapingTime $grp [$handle GetShapingTime $grp]
       }
@@ -485,12 +484,12 @@ snit::type MSCF16Presenter {
       $handle SetMode [$view GetMode]
       $handle SetMonitor [$view GetMonitor]
 
-      for {set ch 1} {$ch < 18} {incr ch} {
+      for {set ch 0} {$ch < 17} {incr ch} {
         $handle SetThreshold $ch [$view GetThreshold $ch]
         $handle SetPoleZero $ch [$view GetPoleZero $ch]
       }
 
-      for {set grp 1} {$grp < 6} {incr grp} {
+      for {set grp 0} {$grp < 5} {incr grp} {
         $handle SetGain $grp [$view GetGain $grp]
         $handle SetShapingTime $grp [$view GetShapingTime $grp]
       }
@@ -505,7 +504,6 @@ snit::type MSCF16Presenter {
 
   method OnSetMonitor {chan} {
     if {[$self cget -handle] ne {}} {
-      puts $chan
       [$self cget -handle] SetMonitor $chan
     }
   }

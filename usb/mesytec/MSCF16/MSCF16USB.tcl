@@ -51,59 +51,55 @@ snit::type MSCF16USB {
   ##
   #
   method SetGain {ch val} {
-    if {![Utils::isInRange 1 5 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[1,5\]."
+    if {![Utils::isInRange 0 4 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[0,4\]."
       return -code error -errorinfo MSCF16USB::SetGain $msg
     }
     if {![Utils::isInRange 0 15 $val]} {
       set msg "Invalid value provided. Must be in range \[0,15\]."
       return -code error -errorinfo MSCF16USB::SetGain $msg
     }
-    return [$self _Transaction [list SG [expr $ch] $val]]
+    return [$self _Transaction [list SG [expr $ch+1] $val]]
   }
 
   method GetGain {ch} {
     if {$m_needsUpdate} {
       $self Update
     }
-    if {![Utils::isInRange 1 5 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[1,5\]."
+    if {![Utils::isInRange 0 4 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[0,4\]."
       return -code error -errorinfo MSCF16USB::GetGain $msg
     }
 
-    # we have to map this back down
-    incr ch -1
     return [lindex [dict get $m_moduleState Gains] $ch]
   }
 
   method SetShapingTime {ch val} {
-    if {![Utils::isInRange 1 5 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[1,5\]."
+    if {![Utils::isInRange 0 4 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[0,4\]."
       return -code error -errorinfo MSCF16USB::SetShapingTime $msg
     }
-    if {![Utils::isInRange 0 15 $val]} {
-      set msg "Invalid value provided. Must be in range \[0,15\]."
+    if {![Utils::isInRange 0 3 $val]} {
+      set msg "Invalid value provided. Must be in range \[0,3\]."
       return -code error -errorinfo MSCF16USB::SetShapingTime $msg
     }
-    return [$self _Transaction [list SS [expr $ch] $val]]
+    return [$self _Transaction [list SS [expr $ch+1] $val]]
   }
 
   method GetShapingTime {ch} {
     if {$m_needsUpdate} {
       $self Update
     }
-    if {![Utils::isInRange 1 5 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[1,5\]."
+    if {![Utils::isInRange 0 4 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[0,4\]."
       return -code error -errorinfo MSCF16USB::GetShapingTime $msg
     }
-    # we have to map this back down
-    incr ch -1
     return [lindex [dict get $m_moduleState ShapingTime] $ch]
   }
 
   method SetPoleZero {ch val} {
-    if {![Utils::isInRange 1 17 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[1,17\]."
+    if {![Utils::isInRange 0 16 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[0,16\]."
       return -code error -errorinfo MSCF16USB::SetPoleZero $msg
     }
     if {![Utils::isInRange 0 255 $val]} {
@@ -111,26 +107,24 @@ snit::type MSCF16USB {
       return -code error -errorinfo MSCF16USB::SetPoleZero $msg
     }
 
-    return [$self _Transaction [list SP $ch $val]]
+    return [$self _Transaction [list SP [expr $ch+1] $val]]
   }
 
   method GetPoleZero {ch} {
     if {$m_needsUpdate} {
       $self Update
     }
-    if {![Utils::isInRange 1 17 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[1,17\]."
+    if {![Utils::isInRange 0 16 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[0,16\]."
       return -code error -errorinfo MSCF16USB::GetPoleZero $msg
     }
 
-    # we have to map this back down
-    incr ch -1
     return [lindex [dict get $m_moduleState PoleZero] $ch]
   }
 
   method SetThreshold {ch val} {
-    if {![Utils::isInRange 1 17 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[1,17\]."
+    if {![Utils::isInRange 0 16 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[0,16\]."
       return -code error -errorinfo MSCF16USB::SetPoleZero $msg
     }
     if {![Utils::isInRange 0 255 $val]} {
@@ -138,37 +132,35 @@ snit::type MSCF16USB {
       return -code error -errorinfo MSCF16USB::SetPoleZero $msg
     }
 
-    return [$self _Transaction [list ST $ch $val]]
+    return [$self _Transaction [list ST [expr $ch+1] $val]]
   }
 
   method GetThreshold {ch} {
     if {$m_needsUpdate} {
       $self Update
     }
-    if {![Utils::isInRange 1 17 $ch]} {
-      set msg "Invalid channel provided. Must be in range \[1,17\]."
+    if {![Utils::isInRange 0 16 $ch]} {
+      set msg "Invalid channel provided. Must be in range \[0,16\]."
       return -code error -errorinfo MSCF16USB::GetThreshold $msg
     }
 
-    # we have to map this back down
-    incr ch -1
     return [lindex [dict get $m_moduleState Thresholds] $ch]
   }
 
   method SetMonitor {channel} {
-    if {![Utils::isInRange 1 16 $channel]} {
-      set msg "Invalid channel provided. Must be in range \[1,16\]."
+    if {![Utils::isInRange 0 15 $channel]} {
+      set msg "Invalid channel provided. Must be in range \[0,15\]."
       return -code error -errorinfo MSCF16USB::SetMonitor $msg
     }
-    return [$self _Transaction [list MC $channel]]
+    return [$self _Transaction [list MC [expr $channel+1]]]
   }
 
   method GetMonitor {} {
     if {$m_needsUpdate} {
       $self Update
     }
-
-    return [dict get $m_moduleState Monitor]
+    set val [dict get $m_moduleState Monitor]
+    return [expr $val-1]
   }
 
   method SetMode {mode} {
