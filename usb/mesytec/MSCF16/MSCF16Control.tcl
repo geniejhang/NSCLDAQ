@@ -30,7 +30,7 @@ package require cmdline ;# for the command line option parsing
 # Handle the options
 set options {
   {-serialfile.arg ""          "name of serial file (e.g. /dev/ttyUSB0) \[MANDATORY for USB\]"}
-  {-channelconfig.arg "MSCF16channels.txt"       "file name to save channel names to [default MSCF16channels.txt]"}
+  {-channelconfig.arg "MSCF16channels.txt"       "file name to load/save channel names"}
 }
 set usage " --serialfile value ?option value? :"
 

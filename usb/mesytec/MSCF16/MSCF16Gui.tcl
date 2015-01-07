@@ -1,3 +1,18 @@
+#    This software is Copyright by the Board of Trustees of Michigan
+#    State University (c) Copyright 2015.
+#
+#    You may use this software under the terms of the GNU public license
+#    (GPL).  The terms of this license are described at:
+#
+#     http://www.gnu.org/licenses/gpl.txt
+#
+#    Author:
+#    Jeromy Tompkins
+#	   NSCL
+#	   Michigan State University
+#	   East Lansing, MI 48824-1321
+
+
 
 package provide mscf16gui 1.0
 
@@ -28,6 +43,31 @@ namespace eval MSCF16ChannelNames {
   variable chan13 Ch14
   variable chan14 Ch15
   variable chan15 Ch16
+}
+
+snit::widgetadaptor TransientStatusBar {
+
+  option -text -default {} -configuremethod SetText 
+  delegate option * to hull
+  delegate method * to hull
+
+  variable _lastOpId -1
+
+  constructor {args} {
+    installhull using ttk::label
+    $self configurelist $args
+  }
+
+  method SetText {opt msg} {
+    if {$_lastOpId != -1} {
+      after cancel $_lastOpId
+    }
+    $hull configure -text $msg
+    set options($opt) $msg
+
+    # schedule the clear event
+    set _lastOpId [after 2000 [list $self configure -text {}]]
+  }
 }
 
 snit::widget MSCF16Form {
@@ -96,16 +136,14 @@ snit::widget MSCF16Form {
   variable sh4
 
   option -presenter  -default {} 
+  component _statusLbl
 
   constructor {args} {
     $self configurelist $args
 
     $self InitArray
     $self SetupGUI
-
-    # force the state of the gui to reflect whether it is 
-    # in common or individual mode
-    $self CommonMode
+    
   }
 
   method InitArray {} {
@@ -175,7 +213,7 @@ snit::widget MSCF16Form {
         trace add variable [myvar th$i] write [mymethod OnThresholdChanged]
 
         ttk::radiobutton $w.mo$i -variable [myvar monitor] \
-          -value $i -command [mymethod Monitor] -style Group.TRadiobutton
+          -value $i -style Group.TRadiobutton
         trace add variable [myvar monitor] write [mymethod OnMonitorChanged]
 
         # within this loop, we will grid... the first row should have
@@ -194,25 +232,28 @@ snit::widget MSCF16Form {
       grid rowconfigure $w {0 1 2 3} -weight 1
     }
 
+    # common widgets
     set w $win.table.group4
     ttk::frame $w
     ttk::checkbutton $w.si -text Common -variable [myvar single]\
-                           -onvalue common -offvalue individual \
-                           -command [mymethod CommonMode]
+                           -onvalue common -offvalue individual 
+    trace add variable [myvar single] write [mymethod OnModeChanged]
+
     ttk::spinbox $w.gac -textvariable [myvar ga4] -width 4 \
                         -from 0 -to 15 
     trace add variable [myvar ga4] write [mymethod OnGainChanged]
+
     ttk::spinbox $w.shc -textvariable [myvar sh4] -width 4 \
                         -from 0 -to 15 
     trace add variable [myvar sh4] write [mymethod OnShapingTimeChanged]
 
     ttk::spinbox $w.pzc -textvariable [myvar pz16] -width 4 \
                         -from 0 -to 255 
-    trace add variable [myvar pz17] write [mymethod OnPoleZeroChanged]
+    trace add variable [myvar pz16] write [mymethod OnPoleZeroChanged]
 
     ttk::spinbox $w.thc -textvariable [myvar th16] -width 4 \
                         -from 0 -to 255 
-    trace add variable [myvar th17] write [mymethod OnThresholdhanged]
+    trace add variable [myvar th16] write [mymethod OnThresholdChanged]
 
     grid $w.si  $w.gac $w.shc $w.pzc $w.thc x -sticky news
     grid columnconfigure $w {0 1 2 3 4 5} -weight 1 -uniform a
@@ -231,8 +272,8 @@ snit::widget MSCF16Form {
     ttk::frame $w
     ttk::checkbutton $w.remote -text Remote -variable [myvar remote] -onvalue on \
                      -offvalue off -command [mymethod RemoteLocal]
-    ttk::button $w.exit -text Exit -command Exit
-    grid $w.remote -sticky ew
+    set _statusLbl [TransientStatusBar $w.status -text {}]
+    grid $_statusLbl $w.remote -sticky ew
     grid rowconfigure $w 0 -weight 1
     grid columnconfigure $w 0 -weight 1
 
@@ -242,26 +283,6 @@ snit::widget MSCF16Form {
     grid $win.remote -sticky nsew -padx 4 -pady 4
     grid columnconfigure $win 0 -weight 1
     grid rowconfigure $win 0 -weight 1
-  }
-
-  method Monitor {} {
-    if {[$self cget -presenter] ne {}} {
-      [$self cget -presenter] OnSetMonitor $monitor
-    }
-  }
-
-  method CommonMode {} {
-    if {[$self cget -presenter] ne {}} {
-      [$self cget -presenter] OnSetMode $single
-    }
-
-    if {$single eq "common"} {
-      $self SetStateOfIndividualControls disabled
-      $self SetStateOfCommonControls !disabled
-    } else {
-      $self SetStateOfIndividualControls !disabled
-      $self SetStateOfCommonControls disabled
-    }
   }
 
   method SetStateOfIndividualControls {state} {
@@ -289,55 +310,27 @@ snit::widget MSCF16Form {
   method RemoteLocal {} {
     if {[$self cget -presenter] ne {}} {
       [$self cget -presenter] OnEnableRC $remote
+      $_statusLbl configure -text "Tranitioned to remote $remote"
     }
   }
 
-  method SetThreshold {index val} {
-    set th[expr $index-1] $val
-  }
+  method SetThreshold {index val} {set th[expr $index-1] $val }
+  method GetThreshold index {return [set th[expr $index-1]] }
 
-  method GetThreshold index {
-    return [set th[expr $index-1]]
-  }
+  method SetPoleZero {index val} { set pz[expr $index-1] $val }
+  method GetPoleZero index { return [set pz[expr $index-1]] }
 
-  method SetPoleZero {index val} {
-    set pz[expr $index-1] $val
-  }
+  method SetMonitor {val} { set monitor $val }
+  method GetMonitor {} { return $monitor }
 
-  method GetPoleZero index {
-    return [set pz[expr $index-1]]
-  }
+  method SetGain {index val} { set ga[expr $index-1] $val  }
+  method GetGain {index} { return [set ga[expr $index-1]]}
 
-  method SetMonitor {val} {
-    set monitor $val
-  }
+  method SetShapingTime {index val} { set sh[expr $index-1] $val }
+  method GetShapingTime {index} { return [set sh[expr $index-1]] }
 
-  method GetMonitor {} {
-    return $monitor
-  }
-
-  method SetGain {index val} {
-    set ga[expr $index-1] $val
-  }
-
-  method GetGain {index} {
-    return [set ga[expr $index-1]]
-  }
-
-  method SetShapingTime {index val} {
-    set sh[expr $index-1] $val
-  }
-
-  method GetShapingTime {index} {
-    return [set sh[expr $index-1]]
-  }
-
-  method SetMode {val} {
-    set single $val
-  }
-  method GetMode {} {
-    return $single
-  }
+  method SetMode {val} {set single $val }
+  method GetMode {} { return $single }
 
   method ExtractEndingIndex {string pattern} {
     set index [string last $pattern $string]
@@ -370,7 +363,23 @@ snit::widget MSCF16Form {
   }
 
   method OnMonitorChanged {name1 name2 op} {
-    $self DelayedCommit Monitor [set $name1]
+    $self DelayedCommit Monitor [expr [set $name1]+1]
+  }
+  
+  method OnModeChanged {name1 name2 op} {
+
+    if {[$self cget -presenter] ne {}} {
+      [$self cget -presenter] OnSetMode $single
+    }
+
+    if {$single eq "common"} {
+      $self SetStateOfIndividualControls disabled
+      $self SetStateOfCommonControls !disabled
+    } else {
+      $self SetStateOfIndividualControls !disabled
+      $self SetStateOfCommonControls disabled
+    }
+    $_statusLbl configure -text "Transitioned to $single mode"
   }
   
   method DelayedChanCommit {param chan val} {
@@ -380,7 +389,8 @@ snit::widget MSCF16Form {
         after cancel $_scheduledCommitOpId
         set _scheduledCommitOpId -1
       }
-      set _scheduledCommitOpId [after 350 [list [$self cget -presenter] CommitSingleChan $param $chan $val]]
+      set _scheduledCommitOpId [after 350 \
+           [list [$self cget -presenter] CommitSingleChan $param $chan $val]]
     }
   }
 
@@ -391,11 +401,15 @@ snit::widget MSCF16Form {
         after cancel $_scheduledCommitOpId
         set _scheduledCommitOpId -1
       }
-      set _scheduledCommitOpId [after 350 [list [$self cget -presenter] CommitSingle $param $val]]
+      set _scheduledCommitOpId [after 350 \
+        [list [$self cget -presenter] CommitSingle $param $val]]
 
     }
   }
 
+  method SetStatus {message} {
+    $_statusLbl configure -text $message
+  }
 }
 
 ##
@@ -418,8 +432,9 @@ snit::type MSCF16Presenter {
   method CommitSingleChan {param index val} {
     set handle [$self cget -handle]
     if {$handle ne {}} {
-      $handle Set$param $index $val
-      $self UpdateViewFromModel
+        $handle Set$param $index $val
+        $self UpdateViewFromModel
+        [$self cget -view] SetStatus "Successfully updated $param $index"
     }
   }
 
@@ -428,6 +443,7 @@ snit::type MSCF16Presenter {
     if {$handle ne {}} {
       $handle Set$param $val
       $self UpdateViewFromModel
+      [$self cget -view] SetStatus "Successfully updated $param"
     }
   }
 
@@ -489,6 +505,7 @@ snit::type MSCF16Presenter {
 
   method OnSetMonitor {chan} {
     if {[$self cget -handle] ne {}} {
+      puts $chan
       [$self cget -handle] SetMonitor $chan
     }
   }
@@ -499,6 +516,11 @@ snit::type MSCF16Presenter {
     }
   }
 
+  ##########################################################
+  
+  ##
+  #
+  #
   method SetView {opt val} {
     set options($opt) $val
     $val configure -presenter $self
