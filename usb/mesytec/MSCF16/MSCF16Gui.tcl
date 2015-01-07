@@ -46,16 +46,29 @@ namespace eval MSCF16ChannelNames {
   variable chan15 Ch16
 }
 
-
+## @brief The view for the MSCF16Presenter
+#
+# This is not a fully stupid view. It not only assembles the widgets into 
+# the major gui, but also sets up all of the traces for the variables it
+# manages. The trace callbacks trigger methods in this snit::widget that
+# figure out what channel index the callback is associated with. Only then is the event
+# forwarded to the MSCF16Presenter. In the end, the MSCF16Presenter handles the
+# interaction with the device, but the process described ties this view to
+# a scheme in which each update of the variables in manages cause the presenter
+# to get a commit trigger. You will notice that there is no "commit" button.
+# That is because every widget is in essence its own commit button.
+#
+# It is important to understand that there is a mechanism for turning on and off
+# the trace callbacks via the -committable option. The presenter of this should
+# turn off the trace callbacks when updating the state because if it didn't, the
+# updating of the values in this would trigger further commits. The result would
+# be an infinitely repeating update cycle. 
+#
+# 
 snit::widget MSCF16Form {
 
-  option -committable -default 1 -configuremethod SetCommittable ;#!< changing widget vals schedules commit
-
-  variable _scheduledCommitOpId -1 
-
-  method SetCommittable {opt val} {
-    set options($opt) $val
-  }
+  option -committable -default 1;#!< changing widget vals schedules commit
+  variable _scheduledCommitOpId -1  ;# the last op id schedule to commit
 
   # there are a lot of variable managed by this...
   variable monitor
@@ -111,9 +124,12 @@ snit::widget MSCF16Form {
   variable sh3
   variable sh4
 
-  option -presenter  -default {} 
-  component _statusLbl
+  option -presenter  -default {}  ;# the presenter
+  component _statusLbl ;# transient label to communicating success/fail to user
 
+  ## @brief Constructor 
+  # 
+  #  Initializes the variables and builds the gui
   constructor {args} {
     $self configurelist $args
 
@@ -122,6 +138,11 @@ snit::widget MSCF16Form {
     
   }
 
+  ## @brief Initialize the variables
+  #
+  # Sets the default value for all of the widgets... the should be overwritten
+  # immediately after being connected to a presenter.
+  #
   method InitArray {} {
     set monitor 0
     set remote on
@@ -137,8 +158,19 @@ snit::widget MSCF16Form {
     }
   }
 
+  ## @brief Assemble the widgets 
+  #
+  # This is a monolithic method. It should be broken down into pieces but will
+  # remain as it is in the interest of time. In general, it builds the entire
+  # system. There is a table of individual channel settings grouped into 4 rows
+  # each and then a bottom row with the common settings. At any given time,  the
+  # either the widgets for common configuration or individual configuration are
+  # enabled. Any interaction with a widget triggers callback to execute after a
+  # slightly dealyed period of time. This allows for the user to hold down a
+  # spinbox button and then have only the resulting value committed.
   method SetupGUI {} {
 
+    #---------
     # build the table
     set w $win.table
     ttk::frame $w
@@ -243,7 +275,11 @@ snit::widget MSCF16Form {
     grid columnconfigure $win.table 0 -weight 1
     grid rowconfigure $win.table {0 1 2 3 4 5} -weight 1
 
+    # end of building the table
+    #--------------------------
+    
     # build remote frame
+    #  - contains the status lable and remote checkbutton
     set w $win.remote
     ttk::frame $w
     ttk::checkbutton $w.remote -text Remote -variable [myvar remote] -onvalue on \
@@ -253,7 +289,6 @@ snit::widget MSCF16Form {
     grid rowconfigure $w 0 -weight 1
     grid columnconfigure $w 0 -weight 1
 
-
     # grid the large chunks together
     grid $win.table -sticky nsew -padx 4 -pady 4
     grid $win.remote -sticky nsew -padx 4 -pady 4
@@ -261,6 +296,11 @@ snit::widget MSCF16Form {
     grid rowconfigure $win 0 -weight 1
   }
 
+  ## @brief Enables/disables the group of widgets associated with individual
+  # config
+  #
+  # @param state    the state to set (typically "disabled" or "!disabled")
+  #
   method SetStateOfIndividualControls {state} {
     for {set grp 0} {$grp < 4} {incr grp} {
 
@@ -276,6 +316,12 @@ snit::widget MSCF16Form {
     }
   }
 
+
+  ## @brief Enables/disables the group of widgets associated with common
+  # config
+  #
+  # @param state    the state to set (typically "disabled" or "!disabled")
+  #
   method SetStateOfCommonControls {state} {
     $win.table.group4.gac state $state
     $win.table.group4.shc state $state
@@ -283,6 +329,10 @@ snit::widget MSCF16Form {
     $win.table.group4.thc state $state
   }
 
+  ## @brief Callback for when the "remote" checkbutton is pressed
+  #
+  # This triggers an immediate commit.
+  #
   method RemoteLocal {} {
     if {[$self cget -presenter] ne {}} {
       [$self cget -presenter] OnEnableRC $remote
@@ -310,36 +360,95 @@ snit::widget MSCF16Form {
   method GetMode {} { return $single }
 
 
+  # -- Trace callback code --
+  
+
+  ## Utility method for extracting channel name from a fully qualified varname
+  #
+  # This is intended to get the integer that forms that very end of the variable
+  # name. For example, the index 12 will be extracted from a string 
+  # "::Type1::Inst_1::ga12" if the pattern is "ga".
+  #
+  # @param string   the fully qualified varname
+  # @param pattern  pattern that begin unqualified portion of name
+  #
+  # @returns index at the end of the varname
   method ExtractEndingIndex {string pattern} {
     set index [string last $pattern $string]
     set index [expr $index+[string length $pattern]]
     return [string range $string $index end]
   }
 
+
+  ## @brief Trace callback for gain variables
+  #
+  # Triggers a delayed commit.
+  #
+  # @param name1  first var name of traced var
+  # @param name2  second var name of traced var
+  # @param op     operation triggering trace callback
   method OnGainChanged {name1 name2 op} {
     set index [$self ExtractEndingIndex $name1 ga]
     $self DelayedChanCommit Gain $index [set $name1]
   }
 
+  ## @brief Trace callback for shaping time variables
+  #
+  # Triggers a delayed commit.
+  #
+  # @param name1  first var name of traced var
+  # @param name2  second var name of traced var
+  # @param op     operation triggering trace callback
   method OnShapingTimeChanged {name1 name2 op} {
     set index [$self ExtractEndingIndex $name1 sh]
     $self DelayedChanCommit ShapingTime $index [set $name1]
   }
 
+  ## @brief Trace callback for pole zero variables
+  #
+  # Triggers a delayed commit.
+  #
+  # @param name1  first var name of traced var
+  # @param name2  second var name of traced var
+  # @param op     operation triggering trace callback
   method OnPoleZeroChanged {name1 name2 op} {
     set index [$self ExtractEndingIndex $name1 pz]
     $self DelayedChanCommit PoleZero $index [set $name1]
   }
 
+  ## @brief Trace callback for threshold variables
+  #
+  # Triggers a delayed commit.
+  #
+  # @param name1  first var name of traced var
+  # @param name2  second var name of traced var
+  # @param op     operation triggering trace callback
   method OnThresholdChanged {name1 name2 op} {
     set index [$self ExtractEndingIndex $name1 th]
     $self DelayedChanCommit Threshold $index [set $name1]
   }
 
+  ## @brief Trace callback for monitor variable
+  #
+  # Triggers a delayed commit.
+  #
+  # @param name1  first var name of traced var
+  # @param name2  second var name of traced var
+  # @param op     operation triggering trace callback
   method OnMonitorChanged {name1 name2 op} {
     $self DelayedCommit Monitor [expr [set $name1]]
   }
   
+  ## @brief Callback for the configuration mode changes
+  #
+  # The "common" checkbutton determines whether the user can interact with the
+  # widgets associated with common or individual configuration. When the button
+  # changes, this gets triggered. It handles the logic for forwarding the event
+  # to the presenter, but also updates the state of the widgets accordingly.
+  #
+  # @param name1  first var name of traced var
+  # @param name2  second var name of traced var
+  # @param op     operation triggering trace callback
   method OnModeChanged {name1 name2 op} {
 
     if {[$self cget -presenter] ne {}} {
@@ -356,6 +465,18 @@ snit::widget MSCF16Form {
     $_statusLbl configure -text "Transitioned to $single mode"
   }
   
+  ## @brief Utility method for scheduling a delayed commit 
+  #
+  # Given a param name, channel index, and value, this triggers a commit to
+  # occur after 350 ms. Previously scheduled updates are cancelled if they have
+  # not yet occurred. it is assumed that the user is not fast enough to navigate
+  # between two different widgets and modify them both within 350 ms. That would
+  # be moving very quickly.
+  #
+  # @param param  name of parameter to set (this should be captialized because
+  #               it is used to form a "Set" command like "SetThreshold")
+  # @param chan   the channel index
+  # @param val    value to write
   method DelayedChanCommit {param chan val} {
     # it doesn't matter what changed... we will just schedule the commit
     if {([$self cget -committable]==1) && ([$self cget -presenter] ne {})} {
@@ -368,6 +489,13 @@ snit::widget MSCF16Form {
     }
   }
 
+  ## @brief Same as DelayedChanCommit but for parameters with no index
+  #
+  # This should be used for parameters like Monitor.
+  #
+  # @param param  name of parameter to set (this should be captialized because
+  #               it is used to form a "Set" command like "SetThreshold")
+  # @param val    value to write
   method DelayedCommit {param val} {
     # it doesn't matter what changed... we will just schedule the commit
     if {([$self cget -committable]==1) && ([$self cget -presenter] ne {})} {
@@ -381,6 +509,14 @@ snit::widget MSCF16Form {
     }
   }
 
+  ## @brief Set the status message 
+  #
+  # This will form transient message. It is useful for indicating success or
+  # failure of previous commits. There is no manipulation of the string to
+  # ensure a proper length. The caller should make sure that they don't write a
+  # long message, because it may not all be visible if too long.
+  #
+  # @param  message
   method SetStatus {message} {
     $_statusLbl configure -text $message
   }
@@ -388,23 +524,51 @@ snit::widget MSCF16Form {
 
 # --------------------------------------------------------------------------- #
 
-##
+## @brief Presenter for the MSCF16Form
 #
+# This forms the direct communication mechanism for the device. The update logic
+# and the commit logic are in this snit::type, however, the MSCF16Form has
+# already determined that a commit should occur by the time this is interacted
+# with. 
+#
+# By nature, this does not _demand_ a view and handle to be contructed, but it
+# will fail when trying to do just about anything. For that reason, the user
+# should either set the -view and -handle options at construction or before
+# trying to do anything.
 #
 snit::type MSCF16Presenter {
 
   option -view -default {} -configuremethod SetView
   option -handle -default {} -configuremethod SetHandle
 
+  ## @brief Construct and parse options
+  #
+  # @param args   list of option-value pairs
   constructor {args} {
     $self configurelist $args
   }
 
+  ## @brief Commit all view state to device
+  #
+  # At the moment, this is not utilized because it is way too slow. Instead
+  # the CommitSingle and CommitSingleChan method are used. If for some reason,
+  # the system moves to a "commit" button approach where the gui and the device
+  # are coupled more loosely, then this would be the method to use.
   method Commit {} {
     $self CommitViewToModel
     $self UpdateViewFromModel
   }
 
+  ## @brief Commit a single parameter that is indexed
+  #
+  # If there is no handle register to this, the method does nothing!
+  #
+  # When the handle is present, the single parameter value is committed and then
+  # the entire view is updated.
+  #
+  # @param param    name of parameter (used to form a Set command)
+  # @param index    index of parameter
+  # @param val      value to write
   method CommitSingleChan {param index val} {
     set handle [$self cget -handle]
     if {$handle ne {}} {
@@ -414,6 +578,15 @@ snit::type MSCF16Presenter {
     }
   }
 
+  ## @brief Commit a single parameter that has no index
+  #
+  # If there is no handle register to this, the method does nothing!
+  #
+  # When the handle is present, the single parameter value is committed and then
+  # the entire view is updated.
+  #
+  # @param param    name of parameter (used to form a Set command)
+  # @param val      value to write
   method CommitSingle {param val} {
     set handle [$self cget -handle]
     if {$handle ne {}} {
@@ -423,6 +596,11 @@ snit::type MSCF16Presenter {
     }
   }
 
+  ## @brief Update the entire view with the state of the handle
+  #
+  # This gets calls for every commit regardless. The important part of the logic
+  # is that it turns off the trace calbbacks in the view so that no subsequent
+  # commits are scheduled while the update process is underway. 
   method UpdateViewFromModel {} {
     set view [$self cget -view]
     set handle [$self cget -handle]
@@ -453,6 +631,10 @@ snit::type MSCF16Presenter {
     }
   }
 
+  ## @brief Commit entire view state to the handle
+  #
+  # Not utilized at the moment. However, it is the logic of the Commit method.
+  #
   method CommitViewToModel {} {
     set view [$self cget -view]
     set handle [$self cget -handle]
@@ -473,29 +655,39 @@ snit::type MSCF16Presenter {
     }
   }
 
+  ## @brief Set the configuration mode
+  #
   method OnSetMode {mode} {
     if {[$self cget -handle] ne {}} {
       [$self cget -handle] SetMode $mode
     }
   }
 
+  if {0} {
+  ## @brief Set the monitored channel
+  #
   method OnSetMonitor {chan} {
     if {[$self cget -handle] ne {}} {
       [$self cget -handle] SetMonitor $chan
     }
   }
+  }
 
+  ## @brief Set the remote control state of the device
   method OnEnableRC {state} {
     if {[$self cget -handle] ne {}} {
       [$self cget -handle] EnableRC $state
     }
   }
 
-  ##########################################################
   
-  ##
+  ## @brief Callback for associating a view with this
   #
+  # Handles the intitial handshake between the view and presenter.
+  # If a handle exists, this also will trigger an update of the view.
   #
+  # @param opt  option name (-view)
+  # @param val  value to set 
   method SetView {opt val} {
     set options($opt) $val
     $val configure -presenter $self
@@ -505,6 +697,13 @@ snit::type MSCF16Presenter {
     }
   }
 
+  ## @brief Callback for associating a handle with this
+  #
+  # Handles the intitial handshake between the view and presenter. If a view is
+  # present as well, then the view is updated from the newly registered handle.
+  #
+  # @param opt  option name (-handle)
+  # @param val  value to set 
   method SetHandle {opt val} {
     set options($opt) $val
 
