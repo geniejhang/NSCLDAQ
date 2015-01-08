@@ -70,6 +70,7 @@ snit::type ScriptHeaderGenerator {
   method generateUSBHeader {} {
     set header [list]
     lappend header {package require mcfd16usb}
+    lappend header {package require mcfd16channelnames}
     lappend header [list set serialFile [$_options cget -serialfile]]
     lappend header {}
     lappend header "if \{!\[file exists \$serialFile\]\} \{"
@@ -91,6 +92,7 @@ snit::type ScriptHeaderGenerator {
     set header [list]
 
     lappend header {package require mcfd16rc}
+    lappend header {package require mcfd16channelnames}
     lappend header [list MXDCRCProxy ::proxy -server [$_options cget -host] \
       -port [$_options cget -port] \
       -module [$_options cget -module] \

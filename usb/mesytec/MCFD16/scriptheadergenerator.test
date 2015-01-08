@@ -43,6 +43,7 @@ tcltest::test usb-0 {Generate proper usb header
   generator generateHeader
 } -result [list \
 "package require mcfd16usb" \
+"package require mcfd16channelnames" \
 "set serialFile dummy"  \
 {} \
 "if \{!\[file exists \$serialFile\]\} \{" \
@@ -65,6 +66,7 @@ tcltest::test mxdcrcbus-0 {Generate proper mxdcrcbus header
   generator generateHeader
 } -result [list \
 {package require mcfd16rc} \
+{package require mcfd16channelnames} \
 {MXDCRCProxy ::proxy -server h -port 1230 -module rcbus -devno 2} \
 {# use the proxy created to construct an MCFD16RC} \
 {MCFD16RC dev ::proxy} ]
