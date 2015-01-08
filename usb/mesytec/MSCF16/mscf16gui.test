@@ -115,6 +115,9 @@ snit::type FakeView {
     set _lastStatus $message 
   }
   method GetStatus {} { return $_lastStatus }
+
+  method SetStateOfAllControls {state} {}
+  method SetStateOfMonitorControls {state} {}
 }
 
 ## Some simple proc to facilitate the tests...

@@ -311,11 +311,18 @@ snit::widget MSCF16Form {
         set i [expr $grp*4+$subgrp]
         $win.table.group$grp.pz$i state $state
         $win.table.group$grp.th$i state $state
-#        $win.table.group$grp.mo$i state $state
       }
     }
   }
 
+  method SetStateOfMonitorControls {state} {
+    for {set grp 0} {$grp < 4} {incr grp} {
+      for {set subgrp 0} {$subgrp<4} {incr subgrp} {
+        set i [expr $grp*4+$subgrp]
+        $win.table.group$grp.mo$i state $state
+      }
+    }
+  }
 
   ## @brief Enables/disables the group of widgets associated with common
   # config
@@ -327,6 +334,12 @@ snit::widget MSCF16Form {
     $win.table.group4.shc state $state
     $win.table.group4.pzc state $state
     $win.table.group4.thc state $state
+  }
+
+  method SetStateOfAllControls {state} {
+    $self SetStateOfIndividualControls $state
+    $self SetStateOfCommonControls $state
+    $self SetStateOfMonitorControls $state
   }
 
   ## @brief Callback for when the "remote" checkbutton is pressed
@@ -571,10 +584,17 @@ snit::type MSCF16Presenter {
   # @param val      value to write
   method CommitSingleChan {param index val} {
     set handle [$self cget -handle]
-    if {$handle ne {}} {
+    set view [$self cget -view]
+    if {($handle ne {}) && ($view ne {})} {
+        $view SetStatus "Communicating with device"
+        $view SetStateOfAllControls disabled
+        update
+        
         $handle Set$param $index $val
         $self UpdateViewFromModel
-        [$self cget -view] SetStatus "Successfully updated $param $index"
+
+        $view SetStateOfMonitorControls !disabled
+        $view SetStatus "Successfully updated $param $index"
     }
   }
 
@@ -589,10 +609,18 @@ snit::type MSCF16Presenter {
   # @param val      value to write
   method CommitSingle {param val} {
     set handle [$self cget -handle]
-    if {$handle ne {}} {
+    set view [$self cget -view]
+    if {($handle ne {}) && ($view ne {})} {
+
+      $view SetStatus "Communicating with device"
+      $view SetStateOfAllControls disabled
+      update
+
       $handle Set$param $val
       $self UpdateViewFromModel
-      [$self cget -view] SetStatus "Successfully updated $param"
+
+      $view SetStateOfMonitorControls !disabled
+      $view SetStatus "Successfully updated $param"
     }
   }
 
