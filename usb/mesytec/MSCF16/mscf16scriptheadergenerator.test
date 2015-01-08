@@ -38,7 +38,7 @@ tcltest::test usb-0 {Generate proper usb header
   generator destroy
   opts destroy
 } -body {
-  ScriptHeaderGenerator generator opts
+  MSCF16ScriptHeaderGenerator generator opts
 
   generator generateHeader
 } -result [list \

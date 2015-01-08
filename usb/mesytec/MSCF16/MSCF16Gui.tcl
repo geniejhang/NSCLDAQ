@@ -221,8 +221,7 @@ snit::widget MSCF16Form {
         trace add variable [myvar th$i] write [mymethod OnThresholdChanged]
 
         ttk::radiobutton $w.mo$i -variable [myvar monitor] \
-          -value $i -style Group.TRadiobutton
-        trace add variable [myvar monitor] write [mymethod OnMonitorChanged]
+          -value $i -style Group.TRadiobutton -command [mymethod OnMonitorChanged $i]
 
         # within this loop, we will grid... the first row should have
         # the widgets that only appear once every 4 rows...
@@ -372,6 +371,8 @@ snit::widget MSCF16Form {
   method SetMode {val} {set single $val }
   method GetMode {} { return $single }
 
+  method EnableRC {on} { set remote $on } 
+  method RCEnabled {} { return $remote }
 
   # -- Trace callback code --
   
@@ -448,8 +449,8 @@ snit::widget MSCF16Form {
   # @param name1  first var name of traced var
   # @param name2  second var name of traced var
   # @param op     operation triggering trace callback
-  method OnMonitorChanged {name1 name2 op} {
-    $self DelayedCommit Monitor [expr [set $name1]]
+  method OnMonitorChanged {index} {
+    $self DelayedCommit Monitor $index
   }
   
   ## @brief Callback for the configuration mode changes
@@ -554,6 +555,8 @@ snit::type MSCF16Presenter {
   option -view -default {} -configuremethod SetView
   option -handle -default {} -configuremethod SetHandle
 
+  option -autoupdate -default 1
+
   ## @brief Construct and parse options
   #
   # @param args   list of option-value pairs
@@ -640,6 +643,7 @@ snit::type MSCF16Presenter {
       # loop... not a good thing
       $view configure -committable 0
 
+      $view EnableRC [$handle RCEnabled]
       $view SetMode [$handle GetMode]
       $view SetMonitor [$handle GetMonitor]
 
@@ -647,7 +651,6 @@ snit::type MSCF16Presenter {
         $view SetThreshold $ch [$handle GetThreshold $ch]
         $view SetPoleZero $ch [$handle GetPoleZero $ch]
       }
-
       for {set grp 0} {$grp < 5} {incr grp} {
         $view SetGain $grp [$handle GetGain $grp]
         $view SetShapingTime $grp [$handle GetShapingTime $grp]
@@ -668,6 +671,7 @@ snit::type MSCF16Presenter {
     set handle [$self cget -handle]
 
     if {($view ne {}) && ($handle ne {})} {
+      $handle EnableRC [$view RCEnabled]
       $handle SetMode [$view GetMode]
       $handle SetMonitor [$view GetMonitor]
 
@@ -720,7 +724,7 @@ snit::type MSCF16Presenter {
     set options($opt) $val
     $val configure -presenter $self
 
-    if {[$self cget -handle] ne {}} {
+    if {([$self cget -handle] ne {}) && [$self cget -autoupdate]} {
       $self UpdateViewFromModel
     }
   }
@@ -735,7 +739,7 @@ snit::type MSCF16Presenter {
   method SetHandle {opt val} {
     set options($opt) $val
 
-    if {[$self cget -view] ne {}} {
+    if {([$self cget -view] ne {}) && [$self cget -autoupdate]} {
       $self UpdateViewFromModel
     }
   }

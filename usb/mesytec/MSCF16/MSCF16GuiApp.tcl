@@ -18,6 +18,7 @@ package provide mscf16guiapp 1.0
 package require snit
 package require mscf16usb
 package require mscf16gui
+package require mscf16statesaver
 
 
 ## @brief Options for the MSCF16Control app.
@@ -70,6 +71,9 @@ snit::type MSCF16GuiApp {
 
       install _presenter using MSCF16Presenter %AUTO% -view $_view \
                                      -handle $_handle
+
+      $self SetUpMenu 
+
       # read in the names of the channels.
       $self ReadInChannelNames [$self cget -channelconfig]
     } msg]
@@ -143,4 +147,65 @@ snit::type MSCF16GuiApp {
   }
 
 
+  ## @brief Build the menu
+  # 
+  # Adds the File and Configure drop-down menus.
+  #
+  # @todo Make this capable of building a menu if the toplevel is not ".".
+  #
+  method SetUpMenu {} {
+
+    option add *tearOff 0
+
+    # get the menu for the toplevel
+    set menu [[winfo toplevel [$self cget -widgetname]] cget -menu]
+    if {$menu eq ""} {
+      set m .menu
+      menu $m
+      menu $m.file 
+      $m.file add command -command [mymethod ToSaveAs] -label "Save as..."
+#      $m.file add command -command [mymethod ToLoad] -label "Load settings..."
+
+#      menu $m.config
+#      $m.config add command -command [mymethod ToEnableDisable] -label "Enable/disable..."
+
+      $m add cascade -menu $m.file -label "File"
+#      $m add cascade -menu $m.config -label "Configure"
+
+      . configure -menu $m
+    }
+  }
+
+  method ToSaveAs {} {
+    set path [tk_getSaveFile -confirmoverwrite 1 -defaultextension ".tcl" \
+                    -title {Save as} ] 
+    if {$path ne ""} {
+      set saver [MSCF16StateSaver %AUTO% $self]
+      $saver SaveState $path
+      $saver destroy
+    }
+  }
+
+  method GetOptions {} {
+    return $_options
+  }
+
+  method GetPresenter {} {
+    return $_presenter
+  }
+  method SetPresenter {pres} {
+    set oldPresenter $_presenter
+    set _presenter $pres
+    return $oldPresenter
+  }
+
+  method GetHandle {} {
+    return $_handle
+  }
+
+  method SetHandle {handle} {
+    set oldHandle $_handle
+    set _handle $handle
+    return $oldHandle
+  }
 } ;# end of MSCF16GuiApp snit::type

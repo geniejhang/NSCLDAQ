@@ -24,7 +24,7 @@ package require snit
 # ways to instantiate. This snit::type handles the difference and can determine
 # what the appropriate text to add should be according to the MSCF16AppOptions.
 #
-snit::type ScriptHeaderGenerator {
+snit::type MSCF16ScriptHeaderGenerator {
 
   option -name -default ::dev
 
