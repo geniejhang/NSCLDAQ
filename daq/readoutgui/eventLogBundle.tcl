@@ -764,7 +764,7 @@ proc ::EventLog::enter {from to} {
         # Kill of the event log program since it's not going to see ends:
         foreach pid $::EventLog::loggerPid {
             if {$pid != -1} {
-                catch {exec kill -90 $pid}
+                catch {exec kill -9 $pid}
             }
         }
         # Create the exit file:

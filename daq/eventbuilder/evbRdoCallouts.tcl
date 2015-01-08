@@ -28,6 +28,7 @@ package require Thread
 
 
 namespace eval ::EVBC {
+    set registered 0;            # nonzero if the event bundle is registered.
     set initialized 0
     set pipefd    "";            # Holds the fd to the pipe to the evbpipeline
     set evbpids   [list];        # Holds list of PIDS that are the event builder.
@@ -1168,9 +1169,13 @@ proc ::EVBC::leave {from to} {
 #
 #
 proc EVBC::useEventBuilder {} {
-    set stateMachine [RunstateMachineSingleton %AUTO%]
-    set callouts [$stateMachine listCalloutBundles]
-    $stateMachine addCalloutBundle EVBC [lindex $callouts 0]
+
+    if {$EVBC::registered == 0} {
+        set stateMachine [RunstateMachineSingleton %AUTO%]
+        set callouts [$stateMachine listCalloutBundles]
+        $stateMachine addCalloutBundle EVBC [lindex $callouts 0]
+        set ::EVBC::registered 1
+    }
 }
 
 ##

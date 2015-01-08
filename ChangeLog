@@ -905,4 +905,7 @@ Work on 11.0-rc11 begins
          *  In event log bundle {Active, Paused} -> NotReady kills eventlogger
             does a clean run finalization.
          *  In event builder these transitions kill off the event bulder.
+       * Bug #3400 - Event builder should protect itself from attempts to register the bundle
+         more than once.  Note that this makes the docs correct as it does not hurt to
+         useEventBuilder in the OnStart without protection.
          
