@@ -83,6 +83,7 @@ snit::type MDGG16GuiApp {
 
       if {[$self cget -configfile] ne {}} {
         $_presenter LoadStateFromFile [$self cget -configfile]
+        $self SetWindowTitle "MDGG-16 Controls - [file tail [$self cget -configfile]]"
       }
     } msg]
     if {$res} {
@@ -144,12 +145,14 @@ snit::type MDGG16GuiApp {
         $self configure -configfile $path
         $_presenter SaveCurrentStateToFile [$self cget -configfile]
         $_presenter SetTransientStatus "Saved to [file tail [$self cget -configfile]]"
+        $self SetWindowTitle "MDGG-16 Controls - [file tail [$self cget -configfile]]"
       } else {
         $_presenter SetTransientStatus "Save operation cancelled."
       }
     } else {
       $_presenter SaveCurrentStateToFile [$self cget -configfile]
       $_presenter SetTransientStatus "Saved to [file tail [$self cget -configfile]]"
+      $self SetWindowTitle "MDGG-16 Controls - [file tail [$self cget -configfile]]"
     }
   }
 
@@ -165,6 +168,16 @@ snit::type MDGG16GuiApp {
     } else {
       $_presenter SetTransientStatus "Save operation cancelled."
     }
+  }
+
+  method SetWindowTitle {title} {
+    set top [winfo toplevel [$self cget -name]]
+    wm title $top $title
+  }
+
+  method GetWindowTitle {} {
+    set top [winfo toplevel [$self cget -name]]
+    return [wm title $top]
   }
 
 }
