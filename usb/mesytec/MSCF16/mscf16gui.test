@@ -29,64 +29,11 @@ if {$::loadFailure} {
   exit
 }
 
-##############################################################################
-# Setting up Fake Objects to test the presenter with...
-
-# A simple fake object for the device handle
-snit::type FakeHandle {
-
-  variable _memory
-
-  constructor {args} {
-#    $self configurelist $args
-
-    set _memory [dict create]
-    
-    dict set _memory threshold [dict create]
-    for {set ch 0} {$ch < 17} {incr ch} {
-      dict set _memory threshold $ch NA
-    }
-
-    dict set _memory polezero [dict create]
-    for {set ch 0} {$ch < 17} {incr ch} {
-      dict set _memory polezero $ch NA
-    }
-
-    dict set _memory gain [dict create]
-    for {set ch 0} {$ch < 5} {incr ch} {
-      dict set _memory gain $ch NA
-    }
-
-    dict set _memory shaping [dict create]
-    for {set ch 0} {$ch < 5} {incr ch} {
-      dict set _memory shaping $ch NA
-    }
-
-    dict set _memory monitor NA
-    dict set _memory mode NA
-    dict set _memory rc NA
-  }
-
-  method SetThreshold {ch val} { dict set _memory threshold $ch $val }
-  method GetThreshold {ch} { return [dict get $_memory threshold $ch] }
-
-  method SetPoleZero {ch val} { dict set _memory polezero $ch $val }
-  method GetPoleZero {ch} { return [dict get $_memory polezero $ch] }
-
-  method SetGain {ch val} { dict set _memory gain $ch $val }
-  method GetGain {ch} { return [dict get $_memory gain $ch] }
-
-  method SetShapingTime {ch val} { dict set _memory shaping $ch $val }
-  method GetShapingTime {ch} { return [dict get $_memory shaping $ch] }
-
-  method SetMode {val} { dict set _memory mode $val }
-  method GetMode {} { return [dict get $_memory mode] }
-
-  method SetMonitor {val} { dict set _memory monitor $val }
-  method GetMonitor {} { return [dict get $_memory monitor] }
-
-  method EnableRC {val} { dict set _memory rc $val }
-  method RCEnabled {} { return [dict get $_memory rc]}
+# require the memorizer safely so that cleanupTests gets called if 
+# we fail.
+if {[catch {package require mscf16memorizer} msg]} {
+  tcltest::cleanupTests
+  exit
 }
 
 ## A simple fake of the view
@@ -106,7 +53,7 @@ snit::type FakeView {
   delegate method * to _stdinterface
 
   constructor {args} {
-    install _stdinterface using FakeHandle %AUTO%
+    install _stdinterface using MSCF16Memorizer %AUTO%
 
     $self configurelist $args
   }
@@ -122,7 +69,7 @@ snit::type FakeView {
 
 ## Some simple proc to facilitate the tests...
 proc setup {} {
-  FakeHandle ::handle
+  MSCF16Memorizer ::handle
   FakeView ::fakeview
   MSCF16Presenter ::pres -handle ::handle -view ::fakeview
 }
