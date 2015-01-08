@@ -69,14 +69,12 @@ proc LoadHandle {devname} {
   }
   $devname SetMode individual
   $devname SetMonitor 8
-  puts "monitor = [$devname GetMonitor]"
   $devname EnableRC on
 }
 
 proc setUp {} {
   ::MSCF16AppOptions ::opts  -serialfile dummy
 
-  puts "About to create fake handle"
   # set up a fake with a known state. 
   ::MSCF16Memorizer ::handle
   LoadHandle ::handle
@@ -105,11 +103,12 @@ tcltest::test save-0 {
   tcltest::viewFile $testFile
 } -result {package require mscf16usb
 set serialFile dummy
+
 if {![file exists $serialFile]} {
   puts "Serial file \"$serialFile\" provided but does not exist."
   exit
 }
-MSCF16USB ::dev dummy
+MSCF16USB ::dev $serialFile
 ::dev EnableRC on
 ::dev SetMode individual
 ::dev SetMonitor 8
@@ -145,6 +144,8 @@ MSCF16USB ::dev dummy
 ::dev SetPoleZero 14 4
 ::dev SetThreshold 15 7
 ::dev SetPoleZero 15 5
+::dev SetThreshold 16 8
+::dev SetPoleZero 16 5
 ::dev SetGain 0 0
 ::dev SetShapingTime 0 0
 ::dev SetGain 1 1
@@ -153,8 +154,10 @@ MSCF16USB ::dev dummy
 ::dev SetShapingTime 2 2
 ::dev SetGain 3 3
 ::dev SetShapingTime 3 3
+::dev SetGain 4 4
+::dev SetShapingTime 4 4
 ::dev RCEnabled
-::dev GetMode 
+::dev GetMode
 ::dev GetMonitor
 ::dev GetThreshold 0
 ::dev GetPoleZero 0
@@ -188,6 +191,8 @@ MSCF16USB ::dev dummy
 ::dev GetPoleZero 14
 ::dev GetThreshold 15
 ::dev GetPoleZero 15
+::dev GetThreshold 16
+::dev GetPoleZero 16
 ::dev GetGain 0
 ::dev GetShapingTime 0
 ::dev GetGain 1
@@ -195,7 +200,9 @@ MSCF16USB ::dev dummy
 ::dev GetGain 2
 ::dev GetShapingTime 2
 ::dev GetGain 3
-::dev GetShapingTime 3}
+::dev GetShapingTime 3
+::dev GetGain 4
+::dev GetShapingTime 4}
 
 tcltest::cleanupTests
 

@@ -180,7 +180,7 @@ snit::type MSCF16GuiApp {
     set path [tk_getSaveFile -confirmoverwrite 1 -defaultextension ".tcl" \
                     -title {Save as} ] 
     if {$path ne ""} {
-      set saver [MSCF16StateSaver %AUTO% $self]
+      set saver [MSCF16StateSaver %AUTO% $_options $_presenter]
       $saver SaveState $path
       $saver destroy
     }

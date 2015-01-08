@@ -243,8 +243,8 @@ snit::widget MSCF16Form {
     set w $win.table.group4
     ttk::frame $w
     ttk::checkbutton $w.si -text Common -variable [myvar single]\
-                           -onvalue common -offvalue individual 
-    trace add variable [myvar single] write [mymethod OnModeChanged]
+                           -onvalue common -offvalue individual \
+                           -command [ mymethod OnModeChanged]
 
     ttk::spinbox $w.gac -textvariable [myvar ga4] -width 4 \
                         -from 0 -to 15 
@@ -368,7 +368,9 @@ snit::widget MSCF16Form {
   method SetShapingTime {index val} { set sh$index $val }
   method GetShapingTime {index} { return [set sh$index] }
 
-  method SetMode {val} {set single $val }
+  method SetMode {val} {
+    set single $val 
+  }
   method GetMode {} { return $single }
 
   method EnableRC {on} { set remote $on } 
@@ -463,12 +465,16 @@ snit::widget MSCF16Form {
   # @param name1  first var name of traced var
   # @param name2  second var name of traced var
   # @param op     operation triggering trace callback
-  method OnModeChanged {name1 name2 op} {
+  method OnModeChanged {} {
 
     if {[$self cget -presenter] ne {}} {
       [$self cget -presenter] OnSetMode $single
     }
 
+    $self SetStateForMode $single
+  }
+  
+  method SetStateForMode {} {
     if {$single eq "common"} {
       $self SetStateOfIndividualControls disabled
       $self SetStateOfCommonControls !disabled
@@ -476,9 +482,8 @@ snit::widget MSCF16Form {
       $self SetStateOfIndividualControls !disabled
       $self SetStateOfCommonControls disabled
     }
-    $_statusLbl configure -text "Transitioned to $single mode"
   }
-  
+
   ## @brief Utility method for scheduling a delayed commit 
   #
   # Given a param name, channel index, and value, this triggers a commit to
@@ -692,6 +697,10 @@ snit::type MSCF16Presenter {
   method OnSetMode {mode} {
     if {[$self cget -handle] ne {}} {
       [$self cget -handle] SetMode $mode
+    }
+
+    if {[$self cget -view] ne {}} {
+      [$self cget -view] SetStatus "Transitioned to $mode mode"
     }
   }
 
