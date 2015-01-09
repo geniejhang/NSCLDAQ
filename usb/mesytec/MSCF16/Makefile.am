@@ -1,5 +1,5 @@
 
-#SUBDIRS=figures
+SUBDIRS=figures
 
 DRIVERDest = @prefix@/TclLibs/mesytec
 

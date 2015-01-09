@@ -518,7 +518,7 @@ snit::widget MSCF16Form {
         after cancel $_scheduledCommitOpId
         set _scheduledCommitOpId -1
       }
-      set _scheduledCommitOpId [after 300 \
+      set _scheduledCommitOpId [after 301 \
            [list [$self cget -presenter] CommitSingleChan Set$param $chan $val]]
     }
   }
@@ -537,7 +537,7 @@ snit::widget MSCF16Form {
         after cancel $_scheduledCommitOpId
         set _scheduledCommitOpId -1
       }
-      set _scheduledCommitOpId [after 300 \
+      set _scheduledCommitOpId [after 301 \
         [list [$self cget -presenter] CommitSingle Set$param $val]]
 
     }
@@ -680,22 +680,46 @@ snit::type MSCF16Presenter {
       # loop... not a good thing
       $view configure -committable 0
 
-      $view EnableRC [$handle RCEnabled]
-      $view SetMode [$handle GetMode]
-      $view SetMonitor [$handle GetMonitor]
+      set val [$handle RCEnabled]
+      if {$val ne {NA}} {
+          $view EnableRC $val
+      }
+
+      $self SyncParam Mode $handle $view
+      $self SyncParam Monitor $handle $view
+#      $view SetMode [$handle GetMode]
+#      $view SetMonitor [$handle GetMonitor]
 
       for {set ch 0} {$ch < 17} {incr ch} {
-        $view SetThreshold $ch [$handle GetThreshold $ch]
-        $view SetPoleZero $ch [$handle GetPoleZero $ch]
+        $self SyncIndexedParam Threshold $ch $handle $view
+        $self SyncIndexedParam PoleZero $ch $handle $view
+#        $view SetThreshold $ch [$handle GetThreshold $ch]
+#        $view SetPoleZero $ch [$handle GetPoleZero $ch]
       }
       for {set grp 0} {$grp < 5} {incr grp} {
-        $view SetGain $grp [$handle GetGain $grp]
-        $view SetShapingTime $grp [$handle GetShapingTime $grp]
+        $self SyncIndexedParam Gain $grp $handle $view
+        $self SyncIndexedParam ShapingTime $grp $handle $view
+#        $view SetGain $grp [$handle GetGain $grp]
+#        $view SetShapingTime $grp [$handle GetShapingTime $grp]
       }
 
       # now we are done updating. If the user wants to manipulate the widgets,
       # then it will schedule a later commit.
       $view configure -committable 1
+    }
+  }
+
+  method SyncParam {name from to} {
+    set val [$from Get$name]
+    if {$val ne "NA"} {
+      $to Set$name $val
+    }
+  }
+
+  method SyncIndexedParam {name index from to} {
+    set val [$from Get$name $index]
+    if {$val ne "NA"} {
+      $to Set$name $index $val
     }
   }
 
@@ -708,18 +732,26 @@ snit::type MSCF16Presenter {
     set handle [$self cget -handle]
 
     if {($view ne {}) && ($handle ne {})} {
-      $handle EnableRC [$view RCEnabled]
-      $handle SetMode [$view GetMode]
-      $handle SetMonitor [$view GetMonitor]
+      set val [$view RCEnabled]
+      if {$val ne "NA"} { $handle EnableRC $val }
+
+      $self SyncParam Mode $view $handle
+      $self SyncParam Monitor $view $handle
+#      $handle SetMode [$view GetMode]
+#      $handle SetMonitor [$view GetMonitor]
 
       for {set ch 0} {$ch < 17} {incr ch} {
-        $handle SetThreshold $ch [$view GetThreshold $ch]
-        $handle SetPoleZero $ch [$view GetPoleZero $ch]
+        $self SyncIndexedParam Threshold $ch $view $handle
+        $self SyncIndexedParam PoleZero $ch $view $handle
+#        $handle SetThreshold $ch [$view GetThreshold $ch]
+#        $handle SetPoleZero $ch [$view GetPoleZero $ch]
       }
 
       for {set grp 0} {$grp < 5} {incr grp} {
-        $handle SetGain $grp [$view GetGain $grp]
-        $handle SetShapingTime $grp [$view GetShapingTime $grp]
+        $self SyncIndexedParam Gain $grp $view $handle
+        $self SyncIndexedParam ShapingTime $grp $view $handle
+#        $handle SetGain $grp [$view GetGain $grp]
+#        $handle SetShapingTime $grp [$view GetShapingTime $grp]
       }
     }
   }
