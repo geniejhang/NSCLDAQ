@@ -65,6 +65,7 @@ snit::type FakeView {
 
   method SetStateOfAllControls {state} {}
   method SetStateOfMonitorControls {state} {}
+  method SetStateForMode {} {}
 }
 
 ## Some simple proc to facilitate the tests...

@@ -281,8 +281,8 @@ snit::widget MSCF16Form {
     #  - contains the status lable and remote checkbutton
     set w $win.remote
     ttk::frame $w
-    ttk::checkbutton $w.remote -text Remote -variable [myvar remote] -onvalue on \
-                     -offvalue off -command [mymethod RemoteLocal]
+    ttk::checkbutton $w.remote -text Remote -variable [myvar remote] -onvalue 1 \
+                     -offvalue 0 -command [mymethod RemoteLocal]
     set _statusLbl [TransientLabel $w.status -text {}]
     grid $_statusLbl $w.remote -sticky ew
     grid rowconfigure $w 0 -weight 1
@@ -452,7 +452,9 @@ snit::widget MSCF16Form {
   # @param name2  second var name of traced var
   # @param op     operation triggering trace callback
   method OnMonitorChanged {index} {
-    $self DelayedCommit Monitor $index
+    if {[$self cget -presenter] ne {}} {
+      [$self cget -presenter] CommitSingle Monitor $index
+    }
   }
   
   ## @brief Callback for the configuration mode changes
@@ -468,10 +470,9 @@ snit::widget MSCF16Form {
   method OnModeChanged {} {
 
     if {[$self cget -presenter] ne {}} {
-      [$self cget -presenter] OnSetMode $single
+       [$self cget -presenter] CommitSingle Mode $single
     }
 
-    $self SetStateForMode $single
   }
   
   method SetStateForMode {} {
@@ -576,8 +577,19 @@ snit::type MSCF16Presenter {
   # the system moves to a "commit" button approach where the gui and the device
   # are coupled more loosely, then this would be the method to use.
   method Commit {} {
-    $self CommitViewToModel
-    $self UpdateViewFromModel
+    set view [$self cget -view]
+    if {$view ne {}} {
+      $view SetStatus "Communicating with device"
+      $view SetStateOfAllControls disabled
+      update
+
+      $self CommitViewToModel
+      $self UpdateViewFromModel
+
+      $view SetStateForMode 
+      $view SetStateOfMonitorControls !disabled
+      $view SetStatus "Successfully updated"
+    }
   }
 
   ## @brief Commit a single parameter that is indexed
@@ -601,6 +613,7 @@ snit::type MSCF16Presenter {
         $handle Set$param $index $val
         $self UpdateViewFromModel
 
+        $view SetStateForMode 
         $view SetStateOfMonitorControls !disabled
         $view SetStatus "Successfully updated $param $index"
     }
@@ -627,6 +640,7 @@ snit::type MSCF16Presenter {
       $handle Set$param $val
       $self UpdateViewFromModel
 
+      $view SetStateForMode 
       $view SetStateOfMonitorControls !disabled
       $view SetStatus "Successfully updated $param"
     }
@@ -699,20 +713,13 @@ snit::type MSCF16Presenter {
       [$self cget -handle] SetMode $mode
     }
 
-    if {[$self cget -view] ne {}} {
-      [$self cget -view] SetStatus "Transitioned to $mode mode"
+    set view [$self cget -view]
+    if {$view ne {}} {
+      $view SetStateForMode
+      $view SetStatus "Transitioned to $mode mode"
     }
   }
 
-  if {0} {
-  ## @brief Set the monitored channel
-  #
-  method OnSetMonitor {chan} {
-    if {[$self cget -handle] ne {}} {
-      [$self cget -handle] SetMonitor $chan
-    }
-  }
-  }
 
   ## @brief Set the remote control state of the device
   method OnEnableRC {state} {

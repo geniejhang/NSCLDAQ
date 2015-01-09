@@ -19,6 +19,7 @@ package require snit
 package require mscf16usb
 package require mscf16gui
 package require mscf16statesaver
+package require mscf16fileloader
 
 
 ## @brief Options for the MSCF16Control app.
@@ -164,7 +165,7 @@ snit::type MSCF16GuiApp {
       menu $m
       menu $m.file 
       $m.file add command -command [mymethod ToSaveAs] -label "Save as..."
-#      $m.file add command -command [mymethod ToLoad] -label "Load settings..."
+      $m.file add command -command [mymethod ToLoad] -label "Load settings..."
 
 #      menu $m.config
 #      $m.config add command -command [mymethod ToEnableDisable] -label "Enable/disable..."
@@ -182,6 +183,18 @@ snit::type MSCF16GuiApp {
     if {$path ne ""} {
       set saver [MSCF16StateSaver %AUTO% $_options $_presenter]
       $saver SaveState $path
+      $saver destroy
+      $_view SetStatus "State saved as [file tail $path]"
+    }
+  }
+
+  method ToLoad {} {
+    set path [tk_getOpenFile -defaultextension ".tcl" \
+                    -title {Choose file to load} ] 
+    if {$path ne ""} {
+      set saver [MSCF16FileLoader %AUTO% $_options $_presenter]
+      $saver Load $path
+      $_view SetStatus "State loaded from [file tail $path]"
       $saver destroy
     }
   }

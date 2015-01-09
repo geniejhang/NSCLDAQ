@@ -34,17 +34,27 @@ snit::type MSCF16StateSaver {
 
     set logger [MSCF16CommandLogger %AUTO% $logFile]
 
+    # typically registering a new handle will cause the presenter to
+    # automatically update the view to the state of the device
+    # We merely want to record the state of the view to a file so we 
+    # store the previous state and then restore it.
     set oldUpdateState [$_presenter cget -autoupdate]
     set oldHandle [$_presenter cget -handle]
 
-    # turn of autoupdate
+    # turn of autoupdate so we don't try to update
     $_presenter configure -autoupdate 0
+
+    # insert the logging handle, then commit state of view to it.
+    # there is no update that needs to happen.
     $_presenter configure -handle $logger
+    $_presenter CommitViewToModel
 
-    $_presenter Commit 
-
-    $_presenter configure -autoupdate $oldUpdateState
+    # the state of the device never changed, so reestablish the 
+    # old handle without updating from the device.
     $_presenter configure -handle $oldHandle
+
+    # turn of autoupdate so we don't try to update
+    $_presenter configure -autoupdate 1 
     $logger destroy
 
 

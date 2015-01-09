@@ -6,7 +6,8 @@ DRIVERDest = @prefix@/TclLibs/mesytec
 TCLDRIVERS = MSCF16USB.tcl MSCF16Gui.tcl MSCF16GuiApp.tcl \
 						 MSCF16Memorizer.tcl MSCF16CommandLogger.tcl \
 						 MSCF16ScriptHeaderGenerator.tcl \
-						 MSCF16StateSaver.tcl 
+						 MSCF16StateSaver.tcl MSCF16FileLoader.tcl \
+						 TclSourceFilter.tcl
 TCLAPPS = MSCF16Control.tcl
 
 DOCS = 
@@ -24,7 +25,7 @@ install-exec-local:
 #
 TCLTESTS=tclTests.tcl mscf16usb.test mscf16memorizer.test \
 				 mscf16commandlogger.test mscf16scriptheadergenerator.test \
-				 mscf16statesaver.test
+				 mscf16statesaver.test mscf16fileloader.test tclsourcefilter.test
 
 LOG_COMPILER = @TCLSH_CMD@ tclTests.tcl 
 

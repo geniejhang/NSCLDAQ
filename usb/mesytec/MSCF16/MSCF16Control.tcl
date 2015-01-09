@@ -72,11 +72,11 @@ wm resizable . false false
 ttk::style configure Header.TFrame -background goldenrod3
 ttk::style configure Header.TLabel -background goldenrod3 \
                                    -font {helvetica 14 bold}
-ttk::style configure Group.TFrame -background snow3
-ttk::style configure Group.TLabel -background snow3
-ttk::style configure Group.TSpinbox -background snow3
-ttk::style configure Group.TCheckbutton -background snow3
-ttk::style configure Group.TRadiobutton -background snow3
-ttk::style configure Group.TEntry -background snow3
-
+#ttk::style configure Group.TSpinbox -background snow3 
+ttk::style map Group.TFrame -background {disabled snow3 !disabled snow3 focus snow3}
+ttk::style map Group.TLabel -background {disabled snow3 !disabled snow3 focus snow3}
+ttk::style map Group.TSpinbox -background {disabled snow3 !disabled snow3 focus snow3}
+ttk::style map Group.TCheckbutton -background {disabled snow3 !disabled snow3 focus snow3}
+ttk::style map Group.TRadiobutton -background {disabled snow3 !disabled snow3 focus snow3}
+ttk::style map Group.TEntry -background {disabled snow3 !disabled snow3 focus snow3}
 

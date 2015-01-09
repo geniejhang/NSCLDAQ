@@ -100,6 +100,8 @@ tcltest::test save-0 {
   set testFile [file join $::testDir test.out]
   set res [catch {::saver SaveState $testFile} msg]
 
+  puts "$res $msg"
+
   tcltest::viewFile $testFile
 } -result {package require mscf16usb
 set serialFile dummy
@@ -155,54 +157,7 @@ MSCF16USB ::dev $serialFile
 ::dev SetGain 3 3
 ::dev SetShapingTime 3 3
 ::dev SetGain 4 4
-::dev SetShapingTime 4 4
-::dev RCEnabled
-::dev GetMode
-::dev GetMonitor
-::dev GetThreshold 0
-::dev GetPoleZero 0
-::dev GetThreshold 1
-::dev GetPoleZero 1
-::dev GetThreshold 2
-::dev GetPoleZero 2
-::dev GetThreshold 3
-::dev GetPoleZero 3
-::dev GetThreshold 4
-::dev GetPoleZero 4
-::dev GetThreshold 5
-::dev GetPoleZero 5
-::dev GetThreshold 6
-::dev GetPoleZero 6
-::dev GetThreshold 7
-::dev GetPoleZero 7
-::dev GetThreshold 8
-::dev GetPoleZero 8
-::dev GetThreshold 9
-::dev GetPoleZero 9
-::dev GetThreshold 10
-::dev GetPoleZero 10
-::dev GetThreshold 11
-::dev GetPoleZero 11
-::dev GetThreshold 12
-::dev GetPoleZero 12
-::dev GetThreshold 13
-::dev GetPoleZero 13
-::dev GetThreshold 14
-::dev GetPoleZero 14
-::dev GetThreshold 15
-::dev GetPoleZero 15
-::dev GetThreshold 16
-::dev GetPoleZero 16
-::dev GetGain 0
-::dev GetShapingTime 0
-::dev GetGain 1
-::dev GetShapingTime 1
-::dev GetGain 2
-::dev GetShapingTime 2
-::dev GetGain 3
-::dev GetShapingTime 3
-::dev GetGain 4
-::dev GetShapingTime 4}
+::dev SetShapingTime 4 4}
 
 tcltest::cleanupTests
 
