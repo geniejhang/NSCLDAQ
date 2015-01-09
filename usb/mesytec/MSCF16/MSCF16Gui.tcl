@@ -133,7 +133,7 @@ snit::widget MSCF16Form {
   constructor {args} {
     $self configurelist $args
 
-    $self InitArray
+    $self InitVariables
     $self SetupGUI
     
     $self SetStateForMode
@@ -144,7 +144,7 @@ snit::widget MSCF16Form {
   # Sets the default value for all of the widgets... the should be overwritten
   # immediately after being connected to a presenter.
   #
-  method InitArray {} {
+  method InitVariables {} {
     set monitor 0
     set remote on
     set single common
@@ -283,7 +283,7 @@ snit::widget MSCF16Form {
     set w $win.remote
     ttk::frame $w
     ttk::checkbutton $w.remote -text Remote -variable [myvar remote] -onvalue 1 \
-                     -offvalue 0 -command [mymethod RemoteLocal]
+                     -offvalue 0 -command [mymethod OnRemoteChanged]
     set _statusLbl [TransientLabel $w.status -text {}]
     grid $_statusLbl $w.remote -sticky ew
     grid rowconfigure $w 0 -weight 1
@@ -369,7 +369,7 @@ snit::widget MSCF16Form {
   #
   # This triggers an immediate commit.
   #
-  method RemoteLocal {} {
+  method OnRemoteChanged {} {
     if {[$self cget -presenter] ne {}} {
       [$self cget -presenter] CommitSingle EnableRC $remote
       $_statusLbl configure -text "Transitioned to remote $remote"
@@ -687,20 +687,14 @@ snit::type MSCF16Presenter {
 
       $self SyncParam Mode $handle $view
       $self SyncParam Monitor $handle $view
-#      $view SetMode [$handle GetMode]
-#      $view SetMonitor [$handle GetMonitor]
 
       for {set ch 0} {$ch < 17} {incr ch} {
         $self SyncIndexedParam Threshold $ch $handle $view
         $self SyncIndexedParam PoleZero $ch $handle $view
-#        $view SetThreshold $ch [$handle GetThreshold $ch]
-#        $view SetPoleZero $ch [$handle GetPoleZero $ch]
       }
       for {set grp 0} {$grp < 5} {incr grp} {
         $self SyncIndexedParam Gain $grp $handle $view
         $self SyncIndexedParam ShapingTime $grp $handle $view
-#        $view SetGain $grp [$handle GetGain $grp]
-#        $view SetShapingTime $grp [$handle GetShapingTime $grp]
       }
 
       # now we are done updating. If the user wants to manipulate the widgets,
@@ -709,6 +703,21 @@ snit::type MSCF16Presenter {
     }
   }
 
+  ## @brief Utility for passing a value from one component to another
+  #
+  # Because the handle and the view both implement mirror Get/Set type 
+  # interfaces, transferring a particular parameter from one to the other is the
+  # same in both directions. The only difference is which is used for the Get
+  # and which for the Set. 
+  #
+  # This is also a common location for all of the transfer operations. It checks
+  # for values NA and if found, it doesn't transfer. The NA value is special b/c
+  # it is the default value for the MSCF16Memorizer snit::type that is used to
+  # transfer state into the GUI.
+  #
+  # @param name   parameter name
+  # @param from   object from which to Get
+  # @param to     object to Set
   method SyncParam {name from to} {
     set val [$from Get$name]
     if {$val ne "NA"} {
@@ -716,6 +725,14 @@ snit::type MSCF16Presenter {
     }
   }
 
+  ## @brief Utility for passing an indexed value between handle and view
+  #
+  # This is the same as SyncParam except it is to be used for Setters and
+  # Getters that have an associated index.
+  #
+  # @param name   parameter name
+  # @param from   object from which to Get
+  # @param to     object to Set
   method SyncIndexedParam {name index from to} {
     set val [$from Get$name $index]
     if {$val ne "NA"} {
@@ -737,44 +754,16 @@ snit::type MSCF16Presenter {
 
       $self SyncParam Mode $view $handle
       $self SyncParam Monitor $view $handle
-#      $handle SetMode [$view GetMode]
-#      $handle SetMonitor [$view GetMonitor]
 
       for {set ch 0} {$ch < 17} {incr ch} {
         $self SyncIndexedParam Threshold $ch $view $handle
         $self SyncIndexedParam PoleZero $ch $view $handle
-#        $handle SetThreshold $ch [$view GetThreshold $ch]
-#        $handle SetPoleZero $ch [$view GetPoleZero $ch]
       }
 
       for {set grp 0} {$grp < 5} {incr grp} {
         $self SyncIndexedParam Gain $grp $view $handle
         $self SyncIndexedParam ShapingTime $grp $view $handle
-#        $handle SetGain $grp [$view GetGain $grp]
-#        $handle SetShapingTime $grp [$view GetShapingTime $grp]
       }
-    }
-  }
-
-  ## @brief Set the configuration mode
-  #
-  method OnSetMode {mode} {
-    if {[$self cget -handle] ne {}} {
-      [$self cget -handle] SetMode $mode
-    }
-
-    set view [$self cget -view]
-    if {$view ne {}} {
-      $view SetStateForMode
-      $view SetStatus "Transitioned to $mode mode"
-    }
-  }
-
-
-  ## @brief Set the remote control state of the device
-  method OnEnableRC {state} {
-    if {[$self cget -handle] ne {}} {
-      [$self cget -handle] EnableRC $state
     }
   }
 

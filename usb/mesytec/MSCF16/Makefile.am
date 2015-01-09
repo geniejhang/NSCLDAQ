@@ -9,7 +9,7 @@ TCLDRIVERS = MSCF16USB.tcl MSCF16Gui.tcl MSCF16GuiApp.tcl \
 						 MSCF16StateSaver.tcl MSCF16FileLoader.tcl
 TCLAPPS = MSCF16Control.tcl
 
-DOCS = 
+DOCS = mscf16control.xml
 
 install-exec-local:
 	$(mkinstalldirs) @prefix@/TclLibs
