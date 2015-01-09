@@ -165,3 +165,58 @@ snit::type MSCF16FileLoader {
     lappend _validAPICalls {^\s*[[:alnum:]:]+\s+RCEnabled$}
   }
 }
+
+snit::type MSCF16NameLoader {
+
+  component _filter
+  
+  ## @brief Construct and set up the state
+  #
+  # @param presenter    an MCFD16ControlPanel instance
+  # @param args         option-value pairs
+  #
+  constructor {} {
+    install _filter using TclSourceFilter %AUTO%
+    $_filter SetValidPatterns $_validAPICalls
+  }
+  
+  destructor {
+    $_filter destroy
+  }
+
+  method Load {path} {
+    if {![file exists $path]} {
+      set msg "Cannot load from $path, because file does not exist."
+      tk_messageBox -icon error -message $msg
+      return
+    } elseif {! [file readable $path]} { 
+      set msg "Cannot load from $path, because file is not readable."
+      tk_messageBox -icon error -message $msg
+      return
+    }
+
+    set scriptFile [open $path r]
+    set content [chan read $scriptFile]
+    close $scriptFile
+
+    set executableLines [$_filter Filter $content]
+
+    $self EvaluateAPILines $executableLines
+  }
+
+  method EvaluateAPILines {lines} {
+    foreach line $lines {
+      uplevel #0 eval $line
+    }
+  }
+  # Type data .... 
+  typevariable _validAPICalls ;# list of calls consider valid API calls
+
+  ## @brief Populate the list of valid api calls
+  #
+  typeconstructor {
+    set _validAPICalls [list]
+    lappend _validAPICalls {^\s*set\s+(::)*MSCF16ChannelNames::chan\d+.+$}
+    lappend _validAPICalls {^\s*namespace\s+::MSCF16ChannelNames\s+eval\s+{\s*}\s*$}
+  }
+}

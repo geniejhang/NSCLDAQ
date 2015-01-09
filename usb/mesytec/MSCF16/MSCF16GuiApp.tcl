@@ -30,7 +30,7 @@ package require mscf16fileloader
 snit::type MSCF16AppOptions {
 
   option -serialfile -default {}
-  option -channelconfig -default {}
+  option -configfile -default {}
   option -widgetname -default {.app}
 
   constructor {args} {
@@ -76,7 +76,10 @@ snit::type MSCF16GuiApp {
       $self SetUpMenu 
 
       # read in the names of the channels.
-      $self ReadInChannelNames [$self cget -channelconfig]
+      if {[$self cget -configfile] ne {}} {
+        $self LoadChannelNames [$self cget -configfile]
+        $_view SetStatus "Channel names loaded from [$self cget -configfile]"
+      }
     } msg]
     
     if {$res} {
@@ -90,46 +93,14 @@ snit::type MSCF16GuiApp {
   #
   destructor {
     # save state to file
-    $self SaveChannelNames [$self cget -channelconfig]
 
-    $_options destroy
-    $_handle destroy
+    catch {$self SaveState [$self cget -configfile]}
+
+    catch {$_options destroy}
+    catch {$_handle destroy}
     catch {destroy $_view}
 
   }
-
-  ## @brief Attempt to read in config file with channel names
-  #
-  # This simply returns if the file at the path provided cannot be opened. So
-  # the user understands what happened, it presents them with a dialogue
-  # explaining what will happen.
-  # 
-  # @param path   path to the channel config
-  #
-  method ReadInChannelNames {path} {
-    if {[catch {open $path r} f]} {
-      set msg  "User provided nonexistent file for channel names. For now, defaults "
-      append msg "will be used instead. On exit, the specified file will be "
-      append msg "generated while saving the then current channel names."
-      tk_messageBox -icon error -message $msg
-      return
-    }
-
-    # otherwise we succeeded to open the file
-    set content [chan read $f]
-    close $f
-
-    set names [split $content "\n"]
-
-    # if we have all of the channels present, then use them.
-    # there is at least 16 lines... the 17th line is the timestamp
-    if {[llength $names] >= 16} {
-      for {set ch 0} {$ch<16} {incr ch} {
-        set ::MSCF16ChannelNames::chan$ch [lindex $names $ch]
-      }
-    }
-  }
-
   ## @brief Write the existing channel names to a file
   #
   # This not only writes the channel names, but also timestamps the creation of
@@ -146,7 +117,6 @@ snit::type MSCF16GuiApp {
     close $f
     exit
   }
-
 
   ## @brief Build the menu
   # 
@@ -181,23 +151,47 @@ snit::type MSCF16GuiApp {
     set path [tk_getSaveFile -confirmoverwrite 1 -defaultextension ".tcl" \
                     -title {Save as} ] 
     if {$path ne ""} {
-      set saver [MSCF16StateSaver %AUTO% $_options $_presenter]
-      $saver SaveState $path
-      $saver destroy
+      $self SaveState $path
       $_view SetStatus "State saved as [file tail $path]"
     }
+  }
+
+  method SaveState {path} {
+    set saver [MSCF16StateSaver %AUTO% $_options $_presenter]
+    $saver SaveState $path
+    $saver destroy
   }
 
   method ToLoad {} {
     set path [tk_getOpenFile -defaultextension ".tcl" \
                     -title {Choose file to load} ] 
     if {$path ne ""} {
-      set saver [MSCF16FileLoader %AUTO% $_options $_presenter]
-      $saver Load $path
+      $self LoadDeviceState $path
+      $self LoadChannelNames $path
       $_view SetStatus "State loaded from [file tail $path]"
-      $saver destroy
     }
   }
+
+  method LoadDeviceState {path} {
+    set devLoader [MSCF16FileLoader %AUTO% $_options $_presenter]
+    $devLoader Load $path
+    $devLoader destroy
+  }
+
+  ## @brief Attempt to read in config file with channel names
+  #
+  # This simply returns if the file at the path provided cannot be opened. So
+  # the user understands what happened, it presents them with a dialogue
+  # explaining what will happen.
+  # 
+  # @param path   path to the channel config
+  #
+  method LoadChannelNames {path} {
+    set nameLoader [MSCF16NameLoader %AUTO%]
+    $nameLoader Load $path
+    $nameLoader destroy
+  }
+
 
   method GetOptions {} {
     return $_options

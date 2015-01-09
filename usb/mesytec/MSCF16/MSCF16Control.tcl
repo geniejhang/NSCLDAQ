@@ -30,7 +30,7 @@ package require cmdline ;# for the command line option parsing
 # Handle the options
 set options {
   {-serialfile.arg ""          "name of serial file (e.g. /dev/ttyUSB0) \[MANDATORY for USB\]"}
-  {-channelconfig.arg "MSCF16channels.txt"       "file name to load/save channel names"}
+  {-configfile.arg "MSCF16state.tcl"     "file name to load/save gui state"}
 }
 set usage " --serialfile value ?option value? :"
 
@@ -53,7 +53,7 @@ if {$res == 1} {
 
 # I really prefer to deal with dicts rathers than arrays...
 set optionsDict [array get ::params]
-set ChannelNamePath [dict get $optionsDict -channelconfig]
+set ChannelNamePath [dict get $optionsDict -configfile]
 
 # create the app (constructs the driver and gui)
 MSCF16GuiApp app -widgetname .form {*}$optionsDict
@@ -64,8 +64,11 @@ grid rowconfigure . 0 -weight 1
 grid columnconfigure . 0 -weight 1
 
 # set up some window rules
-wm title . "MSCF-16 Controls"
-wm protocol . WM_DELETE_WINDOW [list ::app destroy]
+wm title . "MSCF-16 Controls - [file tail $ChannelNamePath]"
+wm protocol . WM_DELETE_WINDOW {
+  ::app destroy
+  destroy .
+}
 wm resizable . false false
 
 # establish the style of the widgets

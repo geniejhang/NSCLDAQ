@@ -32,6 +32,14 @@ snit::type MSCF16StateSaver {
       chan puts $logFile $line
     }
 
+    $self SaveDeviceState $logFile
+    $self SaveNames $logFile
+
+    # done...
+    close $logFile
+  }
+
+  method SaveDeviceState {logFile} {
     set logger [MSCF16CommandLogger %AUTO% $logFile]
 
     # typically registering a new handle will cause the presenter to
@@ -56,9 +64,12 @@ snit::type MSCF16StateSaver {
     # turn of autoupdate so we don't try to update
     $_presenter configure -autoupdate 1 
     $logger destroy
+  }
 
-
-    # done...
-    close $logFile
+  method SaveNames {logFile} {
+    chan puts $logFile "namespace eval ::MSCF16ChannelNames {}"
+    for {set ch 0} {$ch<16} {incr ch} {
+      chan puts $logFile "set ::MSCF16ChannelNames::chan$ch [set ::MSCF16ChannelNames::chan$ch]"
+    }
   }
 }

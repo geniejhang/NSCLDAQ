@@ -136,6 +136,7 @@ snit::widget MSCF16Form {
     $self InitArray
     $self SetupGUI
     
+    $self SetStateForMode
   }
 
   ## @brief Initialize the variables
@@ -341,6 +342,16 @@ snit::widget MSCF16Form {
     $self SetStateOfMonitorControls $state
   }
 
+  method SetStateForMode {} {
+    if {$single eq "common"} {
+      $self SetStateOfIndividualControls disabled
+      $self SetStateOfCommonControls !disabled
+    } else {
+      $self SetStateOfIndividualControls !disabled
+      $self SetStateOfCommonControls disabled
+    }
+  }
+
   ## @brief Callback for when the "remote" checkbutton is pressed
   #
   # This triggers an immediate commit.
@@ -475,16 +486,6 @@ snit::widget MSCF16Form {
 
   }
   
-  method SetStateForMode {} {
-    if {$single eq "common"} {
-      $self SetStateOfIndividualControls disabled
-      $self SetStateOfCommonControls !disabled
-    } else {
-      $self SetStateOfIndividualControls !disabled
-      $self SetStateOfCommonControls disabled
-    }
-  }
-
   ## @brief Utility method for scheduling a delayed commit 
   #
   # Given a param name, channel index, and value, this triggers a commit to
@@ -586,8 +587,8 @@ snit::type MSCF16Presenter {
       $self CommitViewToModel
       $self UpdateViewFromModel
 
-      $view SetStateForMode 
       $view SetStateOfMonitorControls !disabled
+      $view SetStateForMode 
       $view SetStatus "Successfully updated"
     }
   }
@@ -613,8 +614,8 @@ snit::type MSCF16Presenter {
         $handle Set$param $index $val
         $self UpdateViewFromModel
 
-        $view SetStateForMode 
         $view SetStateOfMonitorControls !disabled
+        $view SetStateForMode 
         $view SetStatus "Successfully updated $param $index"
     }
   }
@@ -640,8 +641,8 @@ snit::type MSCF16Presenter {
       $handle Set$param $val
       $self UpdateViewFromModel
 
-      $view SetStateForMode 
       $view SetStateOfMonitorControls !disabled
+      $view SetStateForMode 
       $view SetStatus "Successfully updated $param"
     }
   }
@@ -742,6 +743,7 @@ snit::type MSCF16Presenter {
 
     if {([$self cget -handle] ne {}) && [$self cget -autoupdate]} {
       $self UpdateViewFromModel
+      $val SetStateForMode
     }
   }
 
@@ -757,6 +759,7 @@ snit::type MSCF16Presenter {
 
     if {([$self cget -view] ne {}) && [$self cget -autoupdate]} {
       $self UpdateViewFromModel
+      [$self cget -view] SetStateForMode
     }
   }
 
