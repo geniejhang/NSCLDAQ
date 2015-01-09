@@ -153,7 +153,7 @@ tcltest::test commitsinglechan-0 {Committing a single param with index
   tearDown
 } -body {
   # commit only the threshold parameter for channel 2
-  ::pres CommitSingleChan Threshold 2 23
+  ::pres CommitSingleChan SetThreshold 2 23
   
   # should produce a list that is all NA except for the 2nd element of the
   # threshold component
@@ -174,7 +174,7 @@ tcltest::test commitsingle-0 {Committing a single param
   tearDown
 } -body {
   # commit only the monitor paramater
-  ::pres CommitSingle Monitor 14 
+  ::pres CommitSingle SetMonitor 14 
   
   # this should produce a list that is mostly NA except for the only
   # entry for the monitor

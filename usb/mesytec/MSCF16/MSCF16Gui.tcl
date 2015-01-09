@@ -304,6 +304,7 @@ snit::widget MSCF16Form {
   method SetStateOfIndividualControls {state} {
     for {set grp 0} {$grp < 4} {incr grp} {
 
+      $win.table.group$grp state $state
       $win.table.group$grp.ga$grp state $state
       $win.table.group$grp.sh$grp state $state
 
@@ -315,6 +316,9 @@ snit::widget MSCF16Form {
     }
   }
 
+  ## @brief Sets the state of all the monitor radiobuttons
+  #
+  # @param state  the state to set (typically "disabled" or "!disabled")
   method SetStateOfMonitorControls {state} {
     for {set grp 0} {$grp < 4} {incr grp} {
       for {set subgrp 0} {$subgrp<4} {incr subgrp} {
@@ -330,18 +334,27 @@ snit::widget MSCF16Form {
   # @param state    the state to set (typically "disabled" or "!disabled")
   #
   method SetStateOfCommonControls {state} {
+    $win.table.group4 state $state
     $win.table.group4.gac state $state
     $win.table.group4.shc state $state
     $win.table.group4.pzc state $state
     $win.table.group4.thc state $state
   }
 
+  ## @brief Set the state of _all_ widgets!
+  #
+  # @param state    the state to set (typically "disabled" or "!disabled")
   method SetStateOfAllControls {state} {
     $self SetStateOfIndividualControls $state
     $self SetStateOfCommonControls $state
     $self SetStateOfMonitorControls $state
   }
 
+  ## @brief Set the state of widgets properly for the config mode
+  #
+  # For example, if the "common" checkbutton indicates that common mode is 
+  # selected,
+  # the all of the widgets associated with individual control are disabled.
   method SetStateForMode {} {
     if {$single eq "common"} {
       $self SetStateOfIndividualControls disabled
@@ -358,7 +371,7 @@ snit::widget MSCF16Form {
   #
   method RemoteLocal {} {
     if {[$self cget -presenter] ne {}} {
-      [$self cget -presenter] OnEnableRC $remote
+      [$self cget -presenter] CommitSingle EnableRC $remote
       $_statusLbl configure -text "Transitioned to remote $remote"
     }
   }
@@ -464,7 +477,7 @@ snit::widget MSCF16Form {
   # @param op     operation triggering trace callback
   method OnMonitorChanged {index} {
     if {[$self cget -presenter] ne {}} {
-      [$self cget -presenter] CommitSingle Monitor $index
+      [$self cget -presenter] CommitSingle SetMonitor $index
     }
   }
   
@@ -481,7 +494,7 @@ snit::widget MSCF16Form {
   method OnModeChanged {} {
 
     if {[$self cget -presenter] ne {}} {
-       [$self cget -presenter] CommitSingle Mode $single
+       [$self cget -presenter] CommitSingle SetMode $single
     }
 
   }
@@ -505,8 +518,8 @@ snit::widget MSCF16Form {
         after cancel $_scheduledCommitOpId
         set _scheduledCommitOpId -1
       }
-      set _scheduledCommitOpId [after 350 \
-           [list [$self cget -presenter] CommitSingleChan $param $chan $val]]
+      set _scheduledCommitOpId [after 300 \
+           [list [$self cget -presenter] CommitSingleChan Set$param $chan $val]]
     }
   }
 
@@ -524,8 +537,8 @@ snit::widget MSCF16Form {
         after cancel $_scheduledCommitOpId
         set _scheduledCommitOpId -1
       }
-      set _scheduledCommitOpId [after 350 \
-        [list [$self cget -presenter] CommitSingle $param $val]]
+      set _scheduledCommitOpId [after 300 \
+        [list [$self cget -presenter] CommitSingle Set$param $val]]
 
     }
   }
@@ -611,7 +624,9 @@ snit::type MSCF16Presenter {
         $view SetStateOfAllControls disabled
         update
         
-        $handle Set$param $index $val
+        if {[catch {$handle $param $index $val} msg]} {
+          tk_messageBox -icon error -message $msg
+        }
         $self UpdateViewFromModel
 
         $view SetStateOfMonitorControls !disabled
@@ -638,7 +653,9 @@ snit::type MSCF16Presenter {
       $view SetStateOfAllControls disabled
       update
 
-      $handle Set$param $val
+      if {[catch {$handle $param $val} msg]} {
+        tk_messageBox -icon error -message $msg
+      }
       $self UpdateViewFromModel
 
       $view SetStateOfMonitorControls !disabled

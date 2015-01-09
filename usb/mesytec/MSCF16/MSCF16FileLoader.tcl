@@ -71,6 +71,7 @@ snit::type MSCF16FileLoader {
     set content [chan read $scriptFile]
     set executableLines [$_filter Filter $content]
 
+
     # determine the first
     set devName [$self ExtractDeviceName [lindex $executableLines 0]]
     if {[llength [info commands $devName]]>0} {
@@ -92,6 +93,7 @@ snit::type MSCF16FileLoader {
 
     # update the actual content, swapping in the handle triggers the 
     # view to be updated...
+    $_presenter configure -autoupdate 1
     set realHandle [$self SwapInHandle $fakeHandle]
 
     # pass the real handle back in, but make sure that that does not 

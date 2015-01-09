@@ -229,11 +229,11 @@ snit::type MSCF16USB {
   method SetThreshold {ch val} {
     if {![Utils::isInRange 0 16 $ch]} {
       set msg "Invalid channel provided. Must be in range \[0,16\]."
-      return -code error -errorinfo MSCF16USB::SetPoleZero $msg
+      return -code error -errorinfo MSCF16USB::SetThreshold $msg
     }
     if {![Utils::isInRange 0 255 $val]} {
       set msg "Invalid value provided. Must be in range \[0,255\]."
-      return -code error -errorinfo MSCF16USB::SetPoleZero $msg
+      return -code error -errorinfo MSCF16USB::SetThreshold $msg
     }
 
     return [$self _Transaction [list ST [expr $ch+1] $val]]
