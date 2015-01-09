@@ -1,11 +1,33 @@
+#    This software is Copyright by the Board of Trustees of Michigan
+#    State University (c) Copyright 2015.
+#
+#    You may use this software under the terms of the GNU public license
+#    (GPL).  The terms of this license are described at:
+#
+#     http://www.gnu.org/licenses/gpl.txt
+#
+#    Author:
+#    Jeromy Tompkins
+#	   NSCL
+#	   Michigan State University
+#	   East Lansing, MI 48824-1321
 
 
 package provide TclSourceFilter 1.0
+
 package require BlockCompleter
 
+## @brief Extracts specific patterns from a script
+#
+# This snit::type can be loaded with a list of regular expressions that are used
+# to extract full blocks from a tcl script. This takes the original script,
+# breaks it into complete blocks, and then checks those blocks against the
+# specified patterns. 
+#
+# Any pattern provided is used in conjunction with the regexp command.
 snit::type TclSourceFilter {
 
-  variable _validPatterns
+  variable _validPatterns ;#!< list of regular expressions
 
 
   ## @brief Construct and set up the state
@@ -17,11 +39,18 @@ snit::type TclSourceFilter {
     set _validPatterns [list]
   }
   
+  #--- Public interface
+
+
+  ## @brief Pass list of regular expressions
+  #
+  # @param patterns   list of regular expressions
   method SetValidPatterns {patterns} {
     set _validPatterns $patterns
   }
 
-  ##
+  ## @brief Entry point for processing
+  #
   # @param  path    the path to a file containing state 
   method Filter {script} {
     # split the file into complete chunks that can be passed to eval
@@ -32,6 +61,8 @@ snit::type TclSourceFilter {
 
     return $executableLines
   }
+
+  #---- Utility methods
 
   ## @brief Split the file into fully executable chunks
   #
@@ -47,8 +78,10 @@ snit::type TclSourceFilter {
     set blocks [list]
     BlockCompleter bc -left "{" -right "}"
  
+    # split the complete contents into a list of lines
     set lines [split $contents "\n"]
 
+    # work through the list until it is done.
     set index 0
     set nLines [llength $lines]
     while {$index < $nLines} {
@@ -66,18 +99,15 @@ snit::type TclSourceFilter {
     return $blocks
   }
 
-  ## @brief Check to see if second element is an API call
+  ## @brief The actual filter code
   #
-  # In a well-formed call to a device driver, the first element will be the name
-  # of the device driver instance and the second element of the line will be the
-  # actual method name. If the second element is not a string that is understood
-  # to be a valid method name, then we return false. That is only if that line
-  # is also not recognized as a command to manipulate the names.
-  # 
-  # @param  lines   the list of lines to filter
+  # Passed a list of complete tcl blocks, this then attempts to match each block
+  # to the provided patterns. If the match is good (i.e. regexp returns 1) then
+  # the block is appended to the list that is returned. 
   #
-  # @returns a list of lines that only contain  valid api calls or name
-  # manipulation code
+  # @param  blocks   the list of complete blocks
+  #
+  # @returns a list of lines that matched 
   method FindPatternMatches blocks {
     set validLines [list]
     foreach line $blocks {
@@ -88,11 +118,10 @@ snit::type TclSourceFilter {
     return $validLines
   }
 
-  ## @brief Check whether the second element of a line is a valid api call
+  ## @brief Check whether line matches on of the provided expressions
   #
-  # This snit::type provides a list of strings that it considers valid API
-  # calls. If the second element of the line is in this list, then it is
-  # considered an api call.
+  # This does a linear search through the list of patterns and stops only when
+  # it has found a positive match or has run out of regular expressions to try.
   #
   # @param line   line of code to check
   #
@@ -109,4 +138,4 @@ snit::type TclSourceFilter {
     return $found
   }
 
-}
+} ;# end of TclSourceFilter
