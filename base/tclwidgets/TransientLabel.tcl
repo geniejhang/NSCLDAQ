@@ -35,6 +35,10 @@ snit::widgetadaptor TransientLabel {
     $self configurelist $args
   }
 
+  destructor {
+    after cancel $_lastOpId
+  }
+
   ## @brief Callback for the -text option
   #
   # Sets the value of the -text option, schedules the fallback to the default

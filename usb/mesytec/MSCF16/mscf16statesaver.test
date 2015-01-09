@@ -157,7 +157,24 @@ MSCF16USB ::dev $serialFile
 ::dev SetGain 3 3
 ::dev SetShapingTime 3 3
 ::dev SetGain 4 4
-::dev SetShapingTime 4 4}
+::dev SetShapingTime 4 4
+namespace eval ::MSCF16ChannelNames {}
+set ::MSCF16ChannelNames::chan0 Ch1
+set ::MSCF16ChannelNames::chan1 Ch2
+set ::MSCF16ChannelNames::chan2 Ch3
+set ::MSCF16ChannelNames::chan3 Ch4
+set ::MSCF16ChannelNames::chan4 Ch5
+set ::MSCF16ChannelNames::chan5 Ch6
+set ::MSCF16ChannelNames::chan6 Ch7
+set ::MSCF16ChannelNames::chan7 Ch8
+set ::MSCF16ChannelNames::chan8 Ch9
+set ::MSCF16ChannelNames::chan9 Ch10
+set ::MSCF16ChannelNames::chan10 Ch11
+set ::MSCF16ChannelNames::chan11 Ch12
+set ::MSCF16ChannelNames::chan12 Ch13
+set ::MSCF16ChannelNames::chan13 Ch14
+set ::MSCF16ChannelNames::chan14 Ch15
+set ::MSCF16ChannelNames::chan15 Ch16}
 
 tcltest::cleanupTests
 
