@@ -144,14 +144,14 @@ snit::type MDGG16GuiApp {
       if {$path ne {}} {
         $self configure -configfile $path
         $_presenter SaveCurrentStateToFile [$self cget -configfile]
-        $_presenter SetTransientStatus "Saved to [file tail [$self cget -configfile]]"
+        $_view SetStatus "Saved to [file tail [$self cget -configfile]]"
         $self SetWindowTitle "MDGG-16 Controls - [file tail [$self cget -configfile]]"
       } else {
-        $_presenter SetTransientStatus "Save operation cancelled."
+        $_view SetStatus "Save operation cancelled."
       }
     } else {
       $_presenter SaveCurrentStateToFile [$self cget -configfile]
-      $_presenter SetTransientStatus "Saved to [file tail [$self cget -configfile]]"
+      $_view SetStatus "Saved to [file tail [$self cget -configfile]]"
       $self SetWindowTitle "MDGG-16 Controls - [file tail [$self cget -configfile]]"
     }
   }
@@ -164,9 +164,9 @@ snit::type MDGG16GuiApp {
     set path [tk_getSaveFile -confirmoverwrite 1 -title {Save as} ] 
     if {$path ne {}} {
       $_presenter SaveCurrentStateToFile $path
-      $_presenter SetTransientStatus "Saved to [file tail $path]"
+      $_view SetStatus "Saved to [file tail $path]"
     } else {
-      $_presenter SetTransientStatus "Save operation cancelled."
+      $_view SetStatus "Save operation cancelled."
     }
   }
 

@@ -19,6 +19,7 @@ package require snit
 package require Tk
 package require Utils
 package require mdgg16proxy
+package require TransientLabel
 
 namespace eval MDGG16ChannelNames {
   variable chan0 Ch0
@@ -427,7 +428,8 @@ snit::widget MDGG16View {
     set _updateButton [ttk::button $buttons.update -text "Update from Device" \
                                                    -command [mymethod Update]]
 
-    set _status [ttk::label $win.status -text {}]
+#    set _status [ttk::label $win.status -text {}]
+    set _status [TransientLabel $win.status -timerlength 2000 -text {}]
     grid $buttons.commit $buttons.update -sticky ew
     grid columnconfigure $buttons {0 1} -weight 1
 
@@ -726,22 +728,6 @@ snit::type MDGG16Presenter {
     }
 
     close $infile
-  }
-
-  method SetTransientStatus {msg} {
-    $self ThrowIfNoView "$self:SetTransientMessage"
-
-    # if the previously scheduled operation already occurred, the next line is
-    # a no-op. However, if it hasn't, we need it cleared so that the new status
-    # message gets its full time of visibility
-    if {$_clearStatusOpId != -1} {
-      after cancel $_clearStatusOpId
-    }
-
-    [$self cget -view] SetStatus $msg
-    set _clearStatusOpId [after 2000 [list [set [myvar options(-view)]] \
-                                           SetStatus {}]]
-
   }
 
   #############################################################################
