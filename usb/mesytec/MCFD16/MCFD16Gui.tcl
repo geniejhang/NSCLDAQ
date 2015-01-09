@@ -24,6 +24,7 @@ package require FrameManager
 package require scriptheadergenerator
 package require TclSourceFilter
 package require mcfd16channelnames
+package require ChannelLabel
 
 
 ## "Base" type for MCFD16View ################
@@ -57,34 +58,6 @@ snit::type MCFD16View {
   # snit::type
   method mcfd {} {
     return [$self info vars _mcfd]
-  }
-
-  ## @brief Check whether a channel name contains non-whitespace characters
-  # 
-  # This is called when a channel entry loses focus
-  #
-  # @param name   candidate string 
-  #
-  # @return boolean
-  # @retval 0 - string was empty or all whitespace
-  # @retval 1 - otherwise
-  method ValidateName {name} {
-    set name [string trim $name]
-    set good [expr [string length $name]!=0]
-
-    return $good
-  }
-
-  ## @brief Reset channel to a simple string
-  #
-  # Typically called with ValidateName returns false. It will set the string
-  # to "Ch#".
-  #
-  # @returns ""
-  method ResetChannelName {widget} {
-    set str [$widget cget -textvariable]
-    regexp {^.*(\d+)$} $widget match ch
-    set $str "Ch$ch"
   }
 
   ## @brief Initialize all elements of the array for each setting
@@ -382,10 +355,9 @@ snit::widget MCFD16IndividualView {
     ttk::frame $w -style $style.TFrame
 
     # construct first row
-    ttk::entry $w.na$ch -width 8 -textvariable MCFD16ChannelNames::chan$ch \
+    ChannelLabel $w.na$ch -width 8 -textvariable MCFD16ChannelNames::chan$ch \
                         -style "$style.TEntry" \
-                                -validate focus -validatecommand [mymethod ValidateName %P] \
-                                -invalidcommand [mymethod ResetChannelName %W]
+                        -defaultstring "Ch$ch"
 
     ttk::spinbox $w.th$ch -textvariable "[$self mcfd](th$ch)" -width 4 \
                         -style "$style.TSpinbox" -from 0 -to 255 \
@@ -422,10 +394,10 @@ snit::widget MCFD16IndividualView {
 
     # construct second row 
     incr ch
-    ttk::entry $w.na$ch -width 8 -textvariable MCFD16ChannelNames::chan$ch \
-      -style "$style.TEntry" \
-      -validate focus -validatecommand [mymethod ValidateName %P] \
-                      -invalidcommand [mymethod ResetChannelName %W]
+    ChannelLabel $w.na$ch -width 8 -textvariable MCFD16ChannelNames::chan$ch \
+                        -style "$style.TEntry" \
+                        -defaultstring "Ch$ch"
+
     ttk::spinbox $w.th$ch -textvariable "[$self mcfd](th$ch)" -width 4 \
       -style "$style.TSpinbox" -from 0 -to 255 \
       -state readonly
