@@ -21,29 +21,6 @@ proc ::tcltest::cleanupTestsHook {} {
   set ::exitCode [expr {$numTests(Failed) >0}]
 }
 
-#rename catch _real_catch
-#set fail 0
-#proc catch {script {ret ""} {opt ""}} {
-#  set status 0
-#  if {$ret ne ""} {
-#    upvar $ret retvar
-#    if {$opt ne ""} {
-#      puts "$ret $opt"
-#      upvar $opt optvar
-#      set status [_real_catch $script retvar optvar]
-#    } else {
-#      puts "$ret"
-#      set status [_real_catch $script retvar]
-#    }
-#  } else {
-#    puts none
-#    set status [_real_catch $script]
-#  }
-#
-#  if {$status>0} {set ::fail $status}
-#  return $status
-#}
-#
 tcltest::runAllTests
 
 exit $::exitCode

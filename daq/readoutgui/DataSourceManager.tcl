@@ -127,6 +127,27 @@ snit::type DataSourceManager {
         
         lappend loadedProviders $name
     }
+
+    ##
+    # unload
+    #
+    #   The opposite of the load method. All pieces of a loaded package are to
+    #   be removed. The package is forgotten and the loadedProviders are
+    #   destroyed. If the named package doesn't exist, this is a no-op; it is
+    #   not considered a failure.
+    #
+    # @param name   name of package to unload
+    #
+    method unload name {
+      if {[$self _isLoaded $name]} {
+        set package ${name}_Provider
+        package forget $package
+
+        set index [lsearch -exact $loadedProviders $name]
+        set loadedProviders [lreplace $loadedProviders $index $index]
+      }
+    }
+
     ##
     # parameters
     #   Ask about the parameterization of a data source provider.

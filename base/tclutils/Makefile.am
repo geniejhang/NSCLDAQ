@@ -1,8 +1,8 @@
 
 DRIVERDest=@prefix@/TclLibs/tclutils
 
-TCLDRIVERS= Utils.tcl BlockCompleter.tcl
-TCLTESTS= utils.test blockcompleter.test           
+TCLDRIVERS= Utils.tcl BlockCompleter.tcl TclSourceFilter.tcl
+TCLTESTS= utils.test blockcompleter.test tclsourcefilter.test
 
 install-exec-local:
 	$(mkinstalldirs) @prefix@/TclLibs

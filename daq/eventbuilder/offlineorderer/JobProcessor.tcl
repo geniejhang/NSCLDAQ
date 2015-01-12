@@ -27,13 +27,12 @@ package require DataSourceMonitor
 package require EVBStateCallouts
 
 package require ExpFileSystem
-package require rdoCalloutsBundle ;# self registers
-package require OfflineEVBOutputPipeline
 package require OfflineEVBInputPipeline
 package require OfflineEVBHoistPipeline
 package require evbcallouts
 
 package require Thread
+package require OfflineEVBOutputPipeline
 
 ## @namespace HoistConfig
 #
@@ -83,12 +82,11 @@ snit::type JobProcessor {
 
   variable sourceManager ""
   variable stateMachine  ""
+  variable completionStatus FAIL ; # assume failure unless told otherwise
 
   ## @brief Pass the options
   #
   constructor {args} {
-    variable sourceManager
-    variable stateMachine
     set sourceManager [DataSourcemanagerSingleton %AUTO%]
     set stateMachine  [RunstateMachineSingleton %AUTO%]
 
@@ -114,10 +112,10 @@ snit::type JobProcessor {
   #
   method setupStateMachine {} {
     # rdoCalloutsBundle has already been registered
-    ::EVBStateCallouts::register
     ::EventLog::register
+    ::EVBStateCallouts::register
     ::DataSourceMgr::register
-    ::DataSourceMonitor::register
+  #  ::DataSourceMonitor::register
   }
 
   ## @brief return the data source manager known to this
@@ -140,37 +138,36 @@ snit::type JobProcessor {
   # Sets up all the pipelines and then processes all of the files provided
   #
   method run {} {
+    set completionStatus FAIL
     # hook to handle one-time startup procedures 
-    puts "setup"
     $self setup
 
-    puts "startProcessing"
-    $self startProcessing 
-
-    # Tell the eventlog that it is okay for it to exit, because that is 
-    # what we expect.
-    EventLog::runEnding    ;# wait until run is ended and finalize
+    if {![catch {$self startProcessing} msg]} {
+      # the transition to active was successful so we should expect that 
+      # processing succeeds.
+      #
+      # Tell the eventlog that it is okay for it to exit, because that is 
+      # what we expect.
+      EventLog::runEnding    ;# wait until run is ended and finalize
+      set completionStatus OK
+    }
 
     $self stopProcessing   ;# stop the processing pipelines
+    return $completionStatus
   }
 
   ## @brief Load and configure the callout bundles 
   #
   #
   method setup {} {
-    puts "setupStateMachine"
     $self setupStateMachine 
 
-    puts "generateStartEVBSources"
     $self generateStartEVBSources 
 
-    puts "configureEVB"
     $self configureEVB
 
-    puts "configureEventLog"
     $self configureEventLog
 
-    puts "setupDataSourceManager"
     $self setupDataSourceManager
 
   }
@@ -191,19 +188,25 @@ snit::type JobProcessor {
     # Transition the state machine to Starting (note this schedules
     # a transition to Active on its own)
     if {[catch {$stateMachine transition Starting} msg]} {
-      $stateMachine transition NotReady
+      # things may not like being forced back to NotReady
+      catch {$stateMachine transition NotReady}
       $self tearDown
-      return -code error "JobProcessor::startProcessing failed to transition to Starting : $msg"
+      set msg "JobProcessor::startProcessing failed to transition to Starting : $msg"
+      tk_messageBox -icon error -message $msg
+      return -code error $msg 
     }
-
     # We need to wait for the scheduled transition to succeed
     # before transitioning to Active because otherwise it will fail
     $self waitForHalted
 
+    # exceptional behavior is caught by the transition
     if {[catch {$stateMachine transition Active} msg]} {
-      $stateMachine transition NotReady
+      # things may not like being forced back to NotReady
+      catch {$stateMachine transition NotReady}
       $self tearDown
-      return -code error "JobProcessor::startProcessing failed to transition to Active : $msg"
+      set msg "JobProcessor::startProcessing failed to transition to Active : $msg"
+      tk_messageBox -icon error -message $msg
+      return -code error $msg
     }
 
   }
@@ -229,35 +232,23 @@ snit::type JobProcessor {
   ## @brief Transition the state machine into a NotReady state
   #
   method stopProcessing {} {
-    puts "stopProcessing"
     variable stateMachine
 
     if {[$stateMachine getState] eq "Active"} {
-      puts "Active -> Halted"
       $stateMachine transition Halted
     }
 
-    puts "Halted -> NotReady"
     $stateMachine transition NotReady
 
     $self tearDown 
-
-#    after 1000 [list $options(-runprocessor) runNext]
-#    puts "Child thinks parent is : $::_parentThread"
-#    after 1000 "thread::send $::_parentThread [list $options(-runprocessor) runNext] ; set ::done 1"
-#    vwait ::done
-#    thread::send -async $::_parentThread [list $options(-runprocessor) runNext]
-#    puts "Child thread completed run"
   }
 
   ## @brief Transition the system into a clean state
   #
   method tearDown {} {
 
-    puts "clearDataSources"
     $self clearDataSources
     
-    puts "tearDownStateMachine"
     $self tearDownStateMachine
   }
 

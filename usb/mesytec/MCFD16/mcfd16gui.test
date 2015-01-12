@@ -14,12 +14,23 @@
 
 package require tcltest
 package require snit
+set loadFailure 0
+tcltest::test pkgrequire-0 {Ensure that we can require the package
+} {set ::loadFailure [catch {package require mcfd16gui}]} 0
+
+if $::loadFailure {
+  tcltest::cleanupTests
+  exit 
+}
+
+if {[catch {
 package require mcfd16usb
 package require mcfd16memorizer
-
-
-tcltest::test pkgrequire-0 {Ensure that we can require the package
-} {package require mcfd16gui} 1.0
+}]} {
+  puts "Failed to load requisite packages!"
+  tcltest::cleanupTests
+  exit 1
+}
 
 snit::method MCFD16IndividualView BuildGUI {} {}
 
@@ -651,7 +662,7 @@ proc generateTestAPICalls {} {
     "asdf GetDeadtime 0" \
     "asdf SetDelay 0 3" \
     "asdf GetDelay 0" \
-    "asdf SetFraction 0 23" \
+    "asdf SetFraction 0 20" \
     "asdf GetFraction 0" \
     "asdf SetPolarity 0 neg" \
     "asdf GetPolarity 0" \
@@ -675,7 +686,7 @@ tcltest::test loader_filterOutNonAPICalls-0 { Verify all lines of valid API call
 } -cleanup {
   loader destroy
 } -body {
-  loader FilterOutNonAPICalls $lines 
+  loader FilterOutNonAPICalls [join $lines "\n"]
 } -result [concat [generateTestAPICalls] [list "set ::MCFD16ChannelNames::chan3 thename"]]
 
 
@@ -737,45 +748,8 @@ tcltest::test loader_evaluateLines-0 {establish that evaluating lines produces s
   lappend res [::asdf PulserEnabled]
   lappend res [::asdf GetChannelMask]
   set res 
-} -result {2 2 2 2 3 23 neg common 1 0 0}
+} -result {2 2 2 2 3 20 neg common 1 0 0}
 
-tcltest::test loader_splitUpFile-0 {Check that a read tcl file can be split up without 
-} -setup {
-  tcltest::makeFile {
-if { asdf } {
-}
-} [file join [pwd] .test.tcl]
-  puts [tcltest::viewFile [file join [pwd] .test.tcl]]
-
-  LoadFromFilePresenter loader {}
-} -cleanup {
-  loader destroy
-} -body {
-  loader TokenizeFile [file join [pwd] .test.tcl]
-} -result [list {} {if { asdf } {
-}} {}]
-
-
-tcltest::test loader_isname-0 {Identify if line is for a name
-} -setup {
-  LoadFromFilePresenter loader {}
-} -cleanup {
-  loader destroy
-} -body {
-  # line starts with "set" and is followed by "::MCFD16ChannelNames::"
-  # there is no problem with extra whitespace
-  loader IsNameLine {set  ::MCFD16ChannelNames::chan2 asdf1234}
-} -result 1
-
-tcltest::test loader_isname-1 {Identify if line is not a name
-} -setup {
-  LoadFromFilePresenter loader {}
-} -cleanup {
-  loader destroy
-} -body {
-  # line does not start with "set ::MCFD16ChannelNames::"
-  loader IsNameLine {::MCFD16ChannelNames::chan2 asdf1234}
-} -result 0
 
 
 ###############################################################################

@@ -1,5 +1,5 @@
 #    This software is Copyright by the Board of Trustees of Michigan
-#    State University (c) Copyright 2014.
+#    State University (c) Copyright 2015.
 #
 #    You may use this software under the terms of the GNU public license
 #    (GPL).  The terms of this license are described at:
@@ -13,7 +13,7 @@
 #	   East Lansing, MI 48824-1321
 
 
-package provide scriptheadergenerator 1.0
+package provide mscf16scriptheadergenerator 1.0
 
 package require snit
 
@@ -22,17 +22,17 @@ package require snit
 # Depending on whether the user specified a usb or mxdcrcbus protocol, the 
 # first few lines in the saved file must be different to reflect the different
 # ways to instantiate. This snit::type handles the difference and can determine
-# what the appropriate text to add should be according to the MCFD16AppOptions.
+# what the appropriate text to add should be according to the MSCF16AppOptions.
 #
-snit::type ScriptHeaderGenerator {
+snit::type MSCF16ScriptHeaderGenerator {
 
   option -name -default ::dev
 
-  variable _options ;# the MCFD16AppOptions to refer to
+  variable _options ;# the MSCF16AppOptions to refer to
 
   ## @brief Construct and record the options
   #
-  # @param appoptions  the MCFD16AppOptions instance name manage by MCFD16GuiApp
+  # @param appoptions  the MSCF16AppOptions instance name manage by MSCF16GuiApp
   #
   # @returns name of constructed snit::type
   constructor {appoptions args} {
@@ -49,37 +49,35 @@ snit::type ScriptHeaderGenerator {
   #
   # @returns list of statements that compose the header
   method generateHeader {} {
-    set protocol [$_options cget -protocol]
 
-    set header [list]
-    if {$protocol eq "usb"} {
-      set header [$self generateUSBHeader]
-    } else {
-      set header [$self generateMxDCRCBusHeader]
-    }
+    set header [$self generateUSBHeader]
 
     return $header
   }
 
   ## @brief Specialized method for constructing a USB protocol header
   #
-  # Generates a header that instantiates an MCFD16USB type with the appropriate
+  # Generates a header that instantiates an MSCF16USB type with the appropriate
   # serial file name.
   #
   # @returns list of statements that compose the header
   method generateUSBHeader {} {
     set header [list]
-    lappend header {package require mcfd16usb}
-    lappend header {package require mcfd16channelnames}
+    lappend header {package require mscf16usb}
     lappend header [list set serialFile [$_options cget -serialfile]]
     lappend header {}
     lappend header "if \{!\[file exists \$serialFile\]\} \{"
     lappend header {  puts "Serial file \"$serialFile\" provided but does not exist."}
     lappend header {  exit}
     lappend header "\}"
-    lappend header "MCFD16USB [$self cget -name] \$serialFile"
+    lappend header "MSCF16USB [$self cget -name] \$serialFile"
     return $header
   }
+
+  if {0} {
+    # this may one day be useful if someone wants rc-bus support. I am 
+    # going to keep it around as a comment.
+    #
 
   ## @brief Specialized generator for the mxdcrcbus type protocol
   #
@@ -101,5 +99,6 @@ snit::type ScriptHeaderGenerator {
     lappend header "MCFD16RC [$self cget -name] ::proxy"
 
     return $header
+  }
   }
 }
