@@ -378,7 +378,7 @@ proc EVBC::flush {} {
 #                                 with an input queue.
 # @param info                   - Long description used to identify the source
 #                                 in the event orderer GUI.
-# @note Event sourcese are subprocesses of us but not subprocesses of the
+# @note Event sources are subprocesses of us but not subprocesses of the
 #       the event building pipeline.
 #
 #
@@ -386,6 +386,27 @@ proc ::EVBC::registerRingSource {source lib id info {expectHdrs 0}} {
    ::RingSourceMgr::addSource $source $lib $id $info $expectHdrs
 }
 
+#------------------------------------------------------------------------------
+## @fn EVBC::registerS800Source
+#
+# Convenience method for registering an S800 source. It is just a call to 
+# EVBC:registerRingSource but the s800 timestamp extractor is provided for
+# the user.
+#
+# @param ringUrl          - URL of the source ring.
+# @param id               - Source id used to associate event fragments
+#                           with an input queue.
+# @param desc             - Long description used to identify the source
+#                           in the event orderer GUI.
+#
+proc ::EVBC::registerS800Source {ringUrl id {desc {S800 USB data}}} { 
+    #
+    # Figure out the timestamp extractor path:
+    #
+    set extractor  [file join $EVBC::daqtop lib libS800TimeExtractor.so]
+    
+    ::EVBC::registerRingSource $ringUrl $extractor $id $desc
+}
 #------------------------------------------------------------------------------
 ##
 # @fn EVBC::startRingSource
