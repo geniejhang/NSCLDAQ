@@ -908,4 +908,13 @@ Work on 11.0-rc11 begins
        * Bug #3400 - Event builder should protect itself from attempts to register the bundle
          more than once.  Note that this makes the docs correct as it does not hurt to
          useEventBuilder in the OnStart without protection.
+       * Fix error that -inrate would go negative if the event builder was
+	used persistently because of the counter resets.  If the rates
+	look negative assume there's been a reset.  Note for _very long_
+	runs (more than 4billion [2^32] or is it 2^64 fragents in a queue), there
+	may be one update cycle with an inaccurate rate because of the
+	counter wrap.  I'm not going to worry about that now.  What would
+	be needed to worry about it is knowledge in the GUI of when a
+	reset happens so that wraps are handled properly and resets set
+	the last counters to zero instead.
          

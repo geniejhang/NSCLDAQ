@@ -371,7 +371,6 @@ proc EVBC::getOrdererPort {} {
     set allocations [$portManager listPorts]
     set user $::tcl_platform(user)
     set appName "ORDERER:$user:$::EVBC::appNameSuffix"
-    puts "Appname: $appName"
     set port ""
     foreach allocation $allocations {
         set name  [lindex $allocation 1]
