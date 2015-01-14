@@ -81,9 +81,10 @@ TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 	DuplicateTimestamp.tcl OutOfOrderUI.tcl
 
 
-TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl evbRdoCallouts10.tcl EVBStateCallouts.tcl
+TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl evbRdoCallouts10.tcl EVBStateCallouts.tcl \
+											 ringSourceMgr.tcl
 
-TCL_TEST_FILES=tclTests.tcl cbmanagerTests.test cmanagerCallbacks.test
+TCL_TEST_FILES=tclTests.tcl cbmanagerTests.test cmanagerCallbacks.test ringsourcemgr.test
 
 
 EXTRA_DIST=protocol.xml api.xml orderer.xml frag2ring.xml Asserts.h \
