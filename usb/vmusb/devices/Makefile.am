@@ -37,7 +37,9 @@ libVMUSBDevices_la_SOURCES	= CReadoutModule.cpp 	\
 					CXLMFERA.cpp \
 					CXLMTimestamp.cpp \
 					CLeCroy2551.cpp \
-					@top_srcdir@/usb/common/devices/CCamacBranchException.cpp 
+					@top_srcdir@/usb/common/devices/CCamacBranchException.cpp \
+					CMQDC32.cpp \
+					CMQDC32RdoHdwr.cpp
 
 libVMUSBDevices_la_CPPFLAGS	= 	-I@top_srcdir@/usb/vmusb/vmusb 	\
 			-I@top_srcdir@/usb/common/configurableobject \
@@ -97,7 +99,11 @@ noinst_HEADERS			= CReadoutModule.h 	\
 					@top_srcdir@/usb/common/devices/CNAF.h \
 					CXLMFERA.h \
 					CXLMTimestamp.h \
-					@top_srcdir@/usb/common/devices/CCamacBranchException.h 
+					@top_srcdir@/usb/common/devices/CCamacBranchException.h  \
+					CMQDC32.h \
+					CMQDC32RdoHdwr.h \
+					MQDC32Registers.h
+
 
 
 
