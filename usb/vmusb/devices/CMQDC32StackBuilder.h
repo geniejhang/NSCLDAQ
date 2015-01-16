@@ -14,8 +14,8 @@
 	     East Lansing, MI 48824-1321
 */
 
-#ifndef __CMQDC32_H
-#define __CMQDC32_h
+#ifndef __CMQDC32StackBuilder_H
+#define __CMQDC32StackBuilder_h
 
 #ifndef __CREADOUTHARDWARE_H
 #include "CReadoutHardware.h"
@@ -49,20 +49,17 @@ class CVMUSB;
 class CVMUSBReadoutList;
 
 
-struct CVMUSBResult {
-  size_t nBytes;
-  std::vector<uint8_t> data;
-};
+namespace MQDC32 {
 
-class CMQDC32 
+class CMQDC32StackBuilder 
 {
   private:
     uint32_t m_base;
 
   public:
-    CMQDC32() = default;
-    CMQDC32(const CMQDC32& rhs) = default;
-    ~CMQDC32() = default;
+    CMQDC32StackBuilder() = default;
+    CMQDC32StackBuilder(const CMQDC32StackBuilder& rhs) = default;
+    ~CMQDC32StackBuilder() = default;
 
     void setBase(uint32_t base) { m_base = base; }
     uint32_t getBase(uint32_t base) const { return m_base; }
@@ -84,27 +81,30 @@ class CMQDC32
     // Stack building methods
     void addWriteModuleID(CVMUSBReadoutList& list, uint16_t id);
 
+    // Thresholds
     void addWriteThreshold(CVMUSBReadoutList& list, unsigned int chan, 
                            int thresh);
     void addWriteThresholds(CVMUSBReadoutList& list, 
                             std::vector<int> thrs);
     void addWriteIgnoreThresholds(CVMUSBReadoutList& list, bool ignore);
 
+
     void addWriteMarkerType(CVMUSBReadoutList& list, uint16_t type);
 
     void addWriteMemoryBankSeparation(CVMUSBReadoutList& list, uint16_t type);
 
-    void addWriteBankLimit0(CVMUSBReadoutList& list, uint8_t val);
-    void addWriteBankLimit1(CVMUSBReadoutList& list, uint8_t val);
-    void addWriteBankLimits(CVMUSBReadoutList& list, uint8_t limit0, 
-                            uint8_t limit1);
+    void addWriteGateLimit0(CVMUSBReadoutList& list, uint8_t val);
+    void addWriteGateLimit1(CVMUSBReadoutList& list, uint8_t val);
+    void addWriteGateLimits(CVMUSBReadoutList& list, std::vector<int> limits);
 
     void addWriteExpTrigDelay0(CVMUSBReadoutList& list, uint16_t val);
     void addWriteExpTrigDelay1(CVMUSBReadoutList& list, uint16_t val);
-    void addWriteExpTrigDelays(CVMUSBReadoutList& list, uint16_t val0, 
-                               uint16_t val1);
+    void addWriteExpTrigDelays(CVMUSBReadoutList& list, std::vector<int> values);
+
+    void addWriteBankOffsets(CVMUSBReadoutList& list, std::vector<int> values);
 
     void addWritePulserState(CVMUSBReadoutList& list, uint16_t state);
+    void addWritePulserAmplitude(CVMUSBReadoutList& list, uint8_t amp);
 
     void addWriteTimeDivisor(CVMUSBReadoutList& list, uint16_t divisor);
     void addResetTimestamps(CVMUSBReadoutList& list);
@@ -118,18 +118,20 @@ class CMQDC32
 
     void addWriteNIMGate1Input(CVMUSBReadoutList& list, uint16_t type);
     void addWriteNIMFCInput(CVMUSBReadoutList& list, uint16_t type);
-    void addWriteNIMBusyInput(CVMUSBReadoutList& list, uint16_t type);
+    void addWriteNIMBusyOutput(CVMUSBReadoutList& list, uint16_t type);
 
     void addWriteTimeBaseSource(CVMUSBReadoutList& list, uint16_t val);
     void addWriteMultiEventMode(CVMUSBReadoutList& list, uint16_t val);
+    void addWriteTransferCount(CVMUSBReadoutList& list, uint16_t val);
 
     void addInitializeFifo(CVMUSBReadoutList& list);
 
+    void addWriteLowerMultLimits(CVMUSBReadoutList& list, std::vector<int> values);
+    void addWriteUpperMultLimits(CVMUSBReadoutList& list, std::vector<int> values);
 
-  private:
-    CVMUSBResult executeList(CVMUSB& ctlr, CVMUSBReadoutList& list, const size_t maxBytes);
+    void addFifoRead(CVMUSBReadoutList& list, size_t transfers);
 };
 
-
+} // end of namespace
 
 #endif

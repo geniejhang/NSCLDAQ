@@ -33,7 +33,7 @@
 #include <memory>
 
 #include <iostream>
-#include "MADC32Registers.h"
+#include "MQDC32Registers.h"
 
 
 using namespace std;
@@ -44,10 +44,11 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////
 // Data that drives parameter validity checks.
-static const char* GateModeValues[2] = {"common", "separate"};
-static const char* TimingSourceValues[2] = {"vme", "external"};
-static const char* InputCouplingValues[2] = {"AC","DC"};
-static const char* PulserModes[3] = {"off","amplitude","pulseramp"};
+static const char* GateModeValues[] = {"common", "separate",0};
+static const char* TimingSourceValues[] = {"vme", "external",0};
+static const char* InputCouplingValues[] = {"AC","DC",0};
+static const char* PulserModes[] = {"off","amplitude","pulseramp",0};
+static const char* NIMBusyModes[] = {"busy", "rcbus", "full", "overthreshold",0};
 // Legal values for the resolution...note in this case the default is explicitly defined as 8k
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +59,7 @@ static const char* PulserModes[3] = {"off","amplitude","pulseramp"};
 CMQDC32RdoHdwr::CMQDC32RdoHdwr() :
   CReadoutHardware(),
   m_logic(),
-  m_pConfiguration(0) 
+  m_pConfig(0) 
 {}
 
 
@@ -66,10 +67,10 @@ CMQDC32RdoHdwr::CMQDC32RdoHdwr() :
 
 CMQDC32RdoHdwr::CMQDC32RdoHdwr(const CMQDC32RdoHdwr& rhs) :
   CReadoutHardware(rhs),
-  m_pConfiguration(0)
+  m_pConfig(0)
 {
-  if (rhs.m_pConfiguration) {
-    m_pConfiguration = new CReadoutModule(*(rhs.m_pConfiguration));
+  if (rhs.m_pConfig) {
+    m_pConfig = new CReadoutModule(*(rhs.m_pConfig));
   }
 }
 
@@ -98,77 +99,75 @@ void
 CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
 {
 
-  m_pConfiguration = &configuration;
+  m_pConfig = &configuration;
 
   // Create the configuration parameters.
-  m_pConfiguration->addIntegerParameter("-base", 0);
-  m_pConfiguration->addIntegerParameter("-id",  0, 0xff, 0);
+  m_pConfig->addIntegerParameter("-base", 0);
+  m_pConfig->addIntegerParameter("-id",  0, 0xff, 0);
 
-  m_pConfiguration->addBooleanParameter("-timestamp", false);
+  m_pConfig->addBooleanParameter("-timestamp", false);
 
-  m_pConfiguration->addBooleanParameter("-usethresholds", false);
-  m_pConfiguration->addIntListParameter("-thresholds",
-                                        0, 0x1fff,  // min val, max val (13 bits)
+  m_pConfig->addBooleanParameter("-usethresholds", false);
+  m_pConfig->addIntListParameter("-thresholds",
+                                        0, MQDC32::Thresholds::Max, // min val, max val (13 bits)
                                         32, 32, 32, // min size, max size, default size
                                         0);  // def value
 
 
   // IRQ related details
-  m_pConfiguration->addIntegerParameter("-ipl", 0, 7, 0);
-  m_pConfiguration->addIntegerParameter("-vector", 0, 0xff, 0);
-  m_pConfiguration->addIntegerParameter("-irqthreshold", 0, 0xffff, 1);
-  m_pConfiguration->addBooleanParameter("-multievent", false);
-  m_pConfiguration->addIntegerParameter("-maxtransfer", 0, 0xf, 1); 
+  m_pConfig->addIntegerParameter("-ipl", 0, 7, 0);
+  m_pConfig->addIntegerParameter("-vector", 0, 0xff, 0);
+  m_pConfig->addIntegerParameter("-irqthreshold", 0, 0xffff, 1);
+  m_pConfig->addBooleanParameter("-multievent", false);
+  m_pConfig->addIntegerParameter("-maxtransfer", 0, 0xf, 1); 
 
-  m_pConfiguration->addIntListParameter("-bankoffsets", 
-                                        0, 0xff,
+  m_pConfig->addIntListParameter("-bankoffsets", 
+                                        0, MQDC32::BankOffsets::Max,
                                         2, 2, 2, 128);
-  m_pConfiguration->addEnumParameter("-gatemode", GateModeValues, GateModeValues[0]);
+  m_pConfig->addEnumParameter("-gatemode", GateModeValues, GateModeValues[0]);
 
   // the hold delays and widths have the same list constraints.
   // just different default values.
-  m_pConfiguration->addIntListParameter("-holdwidths", 
-                                        0, 0xff, // min val, max val 
+  m_pConfig->addIntListParameter("-holdwidths", 
+                                        0, MQDC32::GateLimit::Max, // min val, max val 
                                         2, 2, 2, // min size, max size, default size
-                                        15);  // def value
-  m_pConfiguration->addIntListParameter("-holddelay",
-                                        0, 0x3fff, // min val, max val 
+                                        MQDC32::GateLimit::Max);  // no limit 
+  m_pConfig->addIntListParameter("-holddelays",
+                                        0, MQDC32::ExpTrigDelay::Max, // min val, max val 
                                         2, 2, 2, // min size, max size, default size
                                         0);  // def value
 
   // input coupling
-  m_pConfiguration->addEnumParameter("-inputcoupling0", 
+  m_pConfig->addEnumParameter("-inputcoupling0", 
                                       InputCouplingValues, 
                                       InputCouplingValues[0]);
-  m_pConfiguration->addEnumParameter("-inputcoupling1", 
+  m_pConfig->addEnumParameter("-inputcoupling1", 
                                       InputCouplingValues, 
                                       InputCouplingValues[0]);
 
   // test pulser
-  m_pConfiguration->addEnumParameter("-pulser", PulserModes, PulserModes[0]);
-  m_pConfiguration->addIntegerParameter("-pulseramp", 0, 0xff, 32);
-
-  // the manual doesn't display this... do I not need it?
-  //  m_pConfiguration->addBooleanParameter("-gategenerator", false); 
+  m_pConfig->addEnumParameter("-pulser", PulserModes, PulserModes[0]);
+  m_pConfig->addIntegerParameter("-pulseramp", 0, 0xff, 32);
 
   // output configuration
-  m_pConfiguration->addBooleanParameter("-ecltermination", true);
-  m_pConfiguration->addBooleanParameter("-ecltiming", false);
-  m_pConfiguration->addBooleanParameter("-nimtiming", false);
+  m_pConfig->addBooleanParameter("-ecltermination", true);
+  m_pConfig->addBooleanParameter("-ecltiming", false);
+  m_pConfig->addBooleanParameter("-nimtiming", false);
+  m_pConfig->addEnumParameter("-nimbusy", NIMBusyModes, NIMBusyModes[0]);
 
   // timing 
-  m_pConfiguration->addEnumParameter("-timingsource", 
+  m_pConfig->addEnumParameter("-timingsource", 
                                      TimingSourceValues, 
                                      TimingSourceValues[0]);
-  m_pConfiguration->addIntegerParameter("-timingdivisor", 0, 0xffff, 15);
+  m_pConfig->addIntegerParameter("-timingdivisor", 0, 0xffff, 15);
 
 
   // multiplicity filter
-  m_pConfiguration->addIntListParameter("-multlowerlimits",
+  m_pConfig->addIntListParameter("-multlowerlimits",
                                         0, 0x3f,
                                         2, 2, 2,
                                         0);
-  m_pConfiguration->addIntListParameter("-multupperlimits",
+  m_pConfig->addIntListParameter("-multupperlimits",
       0, 0x3f,
       2, 2, 2,
       32);
@@ -205,99 +204,70 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
   m_logic.addDisableInterrupts(*pList);
 
   configureModuleID(*pList);
-
-//  configureThresholds(list);
-//  // there is already a delay inserted after the last threshold.
-//
-//  configureMarkerType(list);
-//
-//  configureMemoryBankSeparation(list);
-//
-//  configureGDG(list);
-//  
-//  configureTestPulser(list);
-//
-//  configureInputCoupling(list);
-//
-//  // Set the timing divisor, and clear the timestamp:
-//  configureTimeDivisor(list);
-//
-//  // Turn on or off ECL termination.  In fact the module provides much more control
-//  // over this featuer.. but for now we're all or nothing.
-//  configureECLTermination(list);
-//
-//  // Control which external sources can provide the timebase for the timestamp:
-//  configureECLTimeInput(list);
-//
-//  configureNIMTimeInput(list);
-//
-//  // Source of the timebase:
-//  configureTimeBaseSource(list);
-//  
-//  // Ensure that busy is on the busy connector:
-//
-//  list.addWrite16(base + NIMBusyFunction, initamod, (uint16_t)0);
-//  list.addDelay(MADCDELAY);
-//
-//  // Process -resolution, -irqthreshold and -multievent
-//  list.addWrite16(base + WithdrawIrqOnEmpty, initamod, (uint16_t)1);
-//  configureMultiEventMode(list);
-
-  // Finally clear the converter and set the IPL which enables interrupts if
-  // the IPL is non-zero, and does no harm if it is zero.
-
-//  uint8_t     ipl         = m_pConfiguration->getIntegerParameter("-ipl");
-//  uint8_t     ivector     = m_pConfiguration->getIntegerParameter("-vector");
-//  int         irqThreshold= m_pConfiguration->getIntegerParameter("-irqthreshold");
-//  list.addWrite16(base + Vector,   initamod, (uint16_t)ivector);
-//  list.addDelay(MADCDELAY);
-//  list.addWrite16(base + Ipl, initamod, (uint16_t)ipl);
-//  list.addWrite16(base + IrqThreshold, initamod, (uint16_t)irqThreshold);
-//  list.addDelay(MADCDELAY);
+  configureThresholds(*pList);
+  configureMarkerType(*pList);
+  configureMemoryBankSeparation(*pList);
+  configureGates(*pList);
+  configureBankOffsets(*pList);
+  configureTestPulser(*pList);
+  configureInputCoupling(*pList);
+  configureTimeDivisor(*pList);
+  configureECLTermination(*pList);
+  configureECLInputs(*pList);
+  configureNIMInputs(*pList);
+  configureNIMBusy(*pList);
+  configureTimeBaseSource(*pList);
+  configureMultiEventMode(*pList);
+  configureIrq(*pList);
 
   m_logic.addResetReadout(*pList);
   m_logic.addInitializeFifo(*pList);
   m_logic.addWriteAcquisitionState(*pList,true);
 
-  //  Execute the list to initialize the module:
-  char readBuffer[100];		// really a dummy as these are all write...
-  size_t bytesRead;
-  int status = controller.executeList(*pList, readBuffer, sizeof(readBuffer), &bytesRead);
-  if (status != 0) {
-     throw string("List excecution to initialize an MADC32 failed");
-   }
-
+  auto result = ctlr.executeList(*pList, 8);
 }
 
 uint32_t CMQDC32RdoHdwr::getBase() {
-  return m_pConfiguration->getUnsignedParameter("-base");
+  return m_pConfig->getUnsignedParameter("-base");
 }
 
 //
 void CMQDC32RdoHdwr::configureModuleID(CVMUSBReadoutList& list) {
-  uint16_t id = m_pConfiguration->getIntegerParameter("-id");
+  uint16_t id = m_pConfig->getIntegerParameter("-id");
   m_logic.addWriteModuleID(list,id);
 }
 
 void CMQDC32RdoHdwr::configureThresholds(CVMUSBReadoutList& list) {
-  if (m_pConfiguration->getBoolParameter("-usethresholds")) {
-    vector<int> thresholds  = m_pConfiguration->getIntegerList("-thresholds");
+  if (m_pConfig->getBoolParameter("-usethresholds")) {
+
+    // make sure that we honor thresholds that we are given
+    m_logic.addWriteIgnoreThresholds(list,false);
+
+    // pass the user's thresholds to the stack
+    auto thresholds  = m_pConfig->getIntegerList("-thresholds");
     m_logic.addWriteThresholds(list,thresholds);
   } else {
+    // set all thresholds to 0 (disables them)
     m_logic.addWriteThresholds(list,vector<int>(32,0));
+    // ignore thresholds. period.
+    m_logic.addWriteIgnoreThresholds(list,true);
   }
 }
 
 
 // timestamp --> extended always
 void CMQDC32RdoHdwr::configureMarkerType(CVMUSBReadoutList& list) {
-  bool        timestamp   = m_pConfiguration->getBoolParameter("-timestamp");
-  m_logic.addWriteMarkerType(list,(uint16_t)(timestamp ? 3 : 0));
+  using namespace MQDC32::MarkerType;
+  if (m_pConfig->getBoolParameter("-timestamp")) {
+    m_logic.addWriteMarkerType(list, Timestamp46Bit);
+  } else {
+    m_logic.addWriteMarkerType(list, EventCount);
+  }
 }
 
 
 void CMQDC32RdoHdwr::configureMemoryBankSeparation(CVMUSBReadoutList& list) {
-  string      gatemode    = m_pConfiguration->cget("-gatemode");
+  string      gatemode    = m_pConfig->cget("-gatemode");
   if (gatemode == string("separate")) {
     m_logic.addWriteMemoryBankSeparation(list,1);
   }
@@ -306,124 +276,162 @@ void CMQDC32RdoHdwr::configureMemoryBankSeparation(CVMUSBReadoutList& list) {
   }									
 }
 
-void CMQDC32RdoHdwr::configureGDG(CVMUSBReadoutList& list) {
-  // If the gate generator is on, we need to program the hold delays and widths
-  // as well as enable it.
+void CMQDC32RdoHdwr::configureGates(CVMUSBReadoutList& list) {
 
-  bool        gdg         = m_pConfiguration->getBoolParameter("-gategenerator");
-  vector<int> holddelays  = m_pConfiguration->getIntegerList("-holddelays");
-  vector<int> holdwidths  = m_pConfiguration->getIntegerList("-holdwidths");
-  uint32_t base = getBase();
-  if(gdg) {
-    list.addWrite16(base + HoldDelay0, initamod, (uint16_t)holddelays[0]);
-    list.addDelay(MADCDELAY);
-    list.addWrite16(base + HoldDelay1, initamod, (uint16_t)holddelays[1]);
-    list.addDelay(MADCDELAY);
+  auto holddelays = m_pConfig->getIntegerList("-holddelays");
+  auto holdwidths = m_pConfig->getIntegerList("-holdwidths");
 
-    list.addWrite16(base + HoldWidth0, initamod, (uint16_t)holdwidths[0]);
-    list.addDelay(MADCDELAY);
-    list.addWrite16(base + HoldWidth1, initamod, (uint16_t)holdwidths[1]);
-    list.addDelay(MADCDELAY);
-    
-    list.addWrite16(base + EnableGDG, initamod, (uint16_t)1);
-    list.addDelay(MADCDELAY);
-  } else {
-    list.addWrite16(base + EnableGDG, initamod, (uint16_t)0);
-    list.addDelay(MADCDELAY);
-  }
+  m_logic.addWriteExpTrigDelays(list, holddelays);
+  m_logic.addWriteGateLimits(list, holdwidths);
+}
+
+void CMQDC32RdoHdwr::configureBankOffsets(CVMUSBReadoutList& list) {
+  auto offsets = m_pConfig->getIntegerList("-bankoffsets"); 
+  m_logic.addWriteBankOffsets(list, offsets);
 }
 
 
 void CMQDC32RdoHdwr::configureTestPulser(CVMUSBReadoutList& list) {
-  int  modeIndex = m_pConfiguration->getEnumParameter("-pulser", PulserModes);
+  using namespace MQDC32::Pulser;
+
+  int  modeIndex = m_pConfig->getEnumParameter("-pulser", PulserModes);
+  int  amplitude = m_pConfig->getUnsignedParameter("-pulseramp");
+  switch (modeIndex) {
+    case 0:
+      // off
+      m_logic.addWritePulserState(list, Off);
+      break;
+    case 1:
+      // fixed amplitude
+      m_logic.addWritePulserState(list, FixedAmplitude);
+      break;
+    case 2:
+      // user defined amplitude
+      m_logic.addWritePulserState(list,5);
+      m_logic.addWritePulserAmplitude(list, UserAmplitude);
+      break;
+    default:
+      // do nothing.
+      break;
+  }
 }
 
 void CMQDC32RdoHdwr::configureInputCoupling(CVMUSBReadoutList& list) {
-  uint32_t base = getBase();
-  // Needs implementation!!
-  list.addDelay(MADCDELAY);
+  uint16_t coupling0 = m_pConfig->getEnumParameter("-inputcoupling0",InputCouplingValues); 
+  uint16_t coupling1 = m_pConfig->getEnumParameter("-inputcoupling1",InputCouplingValues); 
+
+  uint16_t coupling = (coupling0|(coupling1<<1));
+  m_logic.addWriteInputCoupling(list, coupling);
 }
 
 
 void CMQDC32RdoHdwr::configureTimeDivisor(CVMUSBReadoutList& list) {
-  int         timedivisor = m_pConfiguration->getIntegerParameter("-timingdivisor");
-  uint32_t base = getBase();
-  list.addWrite16(base + TimingDivisor, initamod, (uint16_t)timedivisor);
-  list.addDelay(MADCDELAY);
-  list.addWrite16(base + TimestampReset, initamod, (uint16_t)3); // Reset both counters.
-  list.addDelay(MADCDELAY);
+  uint16_t timedivisor = m_pConfig->getUnsignedParameter("-timingdivisor");
+
+  m_logic.addWriteTimeDivisor(list, timedivisor);
+  m_logic.addResetTimestamps(list);
 }
 
 void CMQDC32RdoHdwr::configureECLTermination(CVMUSBReadoutList& list) {
-  bool        termination = m_pConfiguration->getBoolParameter("-ecltermination");
-  uint32_t base = getBase();
-  if(termination) {
-    list.addWrite16(base + ECLTermination, initamod, (uint16_t)0xf);
+  if (m_pConfig->getBoolParameter("-ecltermination")) {
+    // terminate all!
+    m_logic.addWriteECLTermination(list, 0xf);
   }
   else {
-    list.addWrite16(base + ECLTermination, initamod, (uint16_t)0);
-  }
-  list.addDelay(MADCDELAY);
-}
-
-void CMQDC32RdoHdwr::configureECLTimeInput(CVMUSBReadoutList& list) {
-  bool        ecltimeinput= m_pConfiguration->getBoolParameter("-ecltiming");
-  uint32_t base = getBase();
-  if (ecltimeinput) {
-    list.addWrite16(base + ECLGate1OrTiming, initamod, (uint16_t)1);
-    list.addDelay(MADCDELAY);
-    list.addWrite16(base + ECLFCOrTimeReset, initamod, (uint16_t)1);
-    list.addDelay(MADCDELAY);
-  }
-  else {
-    list.addWrite16(base + ECLGate1OrTiming, initamod, (uint16_t)0);
-    list.addDelay(MADCDELAY);
-    list.addWrite16(base + ECLFCOrTimeReset, initamod, (uint16_t)0);
-    list.addDelay(MADCDELAY);
+    // terminate nothing
+    m_logic.addWriteECLTermination(list, 0);
   }
 }
 
-void CMQDC32RdoHdwr::configureNIMTimeInput(CVMUSBReadoutList& list) {
-  bool        nimtimeinput= m_pConfiguration->getBoolParameter("-nimtiming");
-  uint32_t base = getBase();
-  if (nimtimeinput) {
-    list.addWrite16(base + NIMGate1OrTiming, initamod, (uint16_t)1);
-    list.addDelay(MADCDELAY);
-    list.addWrite16(base + NIMFCOrTimeReset, initamod, (uint16_t)1);
-    list.addDelay(MADCDELAY);
+void CMQDC32RdoHdwr::configureECLInputs(CVMUSBReadoutList& list) {
+  
+  using namespace MQDC32;
+
+  if (m_pConfig->getBoolParameter("-ecltiming")) {
+    m_logic.addWriteECLGate1Input(list, ECLGate1::Oscillator);
+    m_logic.addWriteECLFCInput(list,  ECLFC::ResetTstamp);
+  } else {
+    m_logic.addWriteECLGate1Input(list, ECLGate1::Gate);
+    m_logic.addWriteECLFCInput(list,  ECLFC::FastClear);
+  }
+}
+
+void CMQDC32RdoHdwr::configureNIMInputs(CVMUSBReadoutList& list) {
+  
+  using namespace MQDC32;
+  if (m_pConfig->getBoolParameter("-nimtiming")) {
+    m_logic.addWriteNIMGate1Input(list, NIMGate1::Oscillator); 
+    m_logic.addWriteNIMFCInput(list, NIMFC::ResetTstamp);
   }
   else {
-    list.addWrite16(base + NIMGate1OrTiming, initamod, (uint16_t)0);
-    list.addDelay(MADCDELAY);
-    list.addWrite16(base + NIMFCOrTimeReset, initamod, (uint16_t)0);
-    list.addDelay(MADCDELAY);
+    m_logic.addWriteNIMGate1Input(list, NIMGate1::Gate);
+    m_logic.addWriteNIMFCInput(list, NIMFC::ResetTstamp);
+  }
+}
+
+void CMQDC32RdoHdwr::configureNIMBusy(CVMUSBReadoutList& list) {
+  int mode = m_pConfig->getEnumParameter("-nimbusy",NIMBusyModes);
+
+  using namespace MQDC32::NIMBusy;
+
+  switch (mode) {
+    case 0:
+      m_logic.addWriteNIMBusyOutput(list, Busy);
+      break;
+    case 1:
+      m_logic.addWriteNIMBusyOutput(list, RCBus);
+      break;
+    case 2:
+      m_logic.addWriteNIMBusyOutput(list, Full);
+      break;
+    case 3:
+      m_logic.addWriteNIMBusyOutput(list, OverThreshold);
+      break;
+    default:
+      // by default we just set it to busy
+      m_logic.addWriteNIMBusyOutput(list, Busy);
+      break;
   }
 }
 
 
 void CMQDC32RdoHdwr::configureTimeBaseSource(CVMUSBReadoutList& list) {
-  string      timesource  = m_pConfiguration->cget("-timingsource");
-  uint32_t base = getBase();
-  if(timesource == string("vme") ) {
-    list.addWrite16(base + TimingSource, initamod, (uint16_t)0);
+  uint16_t id = m_pConfig->getEnumParameter("-timingsource",TimingSourceValues);
+  m_logic.addWriteTimeBaseSource(list,id);
+}
+
+void CMQDC32RdoHdwr::configureIrq(CVMUSBReadoutList& list) {
+  uint8_t     ipl         = m_pConfig->getIntegerParameter("-ipl");
+  uint8_t     ivector     = m_pConfig->getIntegerParameter("-vector");
+  int         irqThreshold= m_pConfig->getIntegerParameter("-irqthreshold");
+  m_logic.addWriteIrqVector(list, ivector);
+  m_logic.addWriteIrqLevel(list, ipl);
+  m_logic.addWriteIrqThreshold(list, irqThreshold);
+
+  m_logic.addWriteWithdrawIrqOnEmpty(list,true);
+}
+
+void CMQDC32RdoHdwr::configureMultiEventMode(CVMUSBReadoutList& list) {
+  using namespace MQDC32::TransferMode;
+
+  if(m_pConfig->getBoolParameter("-multievent")) {
+    uint16_t nbuffers = m_pConfig->getUnsignedParameter("-maxtransfer");
+
+    m_logic.addWriteMultiEventMode(list, (Limited|EmitEOB) );
+    m_logic.addWriteTransferCount(list, nbuffers);
+  } else {
+    m_logic.addWriteMultiEventMode(list, Single);
+    m_logic.addWriteTransferCount(list, 1);
   }
-  else {
-    list.addWrite16(base + TimingSource, initamod, (uint16_t)1);
-  }
-  list.addDelay(MADCDELAY);
 }
 
 
-void CMQDC32RdoHdwr::configureMultiEventMode(CVMUSBReadoutList& list) {
-  bool        multiEvent  = m_pConfiguration->getBoolParameter("-multievent");
-  uint32_t base = getBase();
-  if(multiEvent) {
-    list.addWrite16(base + MultiEvent, initamod, (uint16_t)7);
-  }
-  else {
-    list.addWrite16(base + MultiEvent, initamod, (uint16_t)0);
-  }
-  list.addDelay(MADCDELAY);
+void CMQDC32RdoHdwr::configureMultiplicity(CVMUSBReadoutList& list) {
+  auto lower = m_pConfig->getIntegerList("-multlowerlimits");
+  auto upper = m_pConfig->getIntegerList("-multupperlimits");
+
+  m_logic.addWriteLowerMultLimits(list, lower);
+  m_logic.addWriteUpperMultLimits(list, upper);
 }
 /*!
   Add instructions to read out the ADC for a event. Since we're only working in
@@ -437,10 +445,12 @@ CMQDC32RdoHdwr::addReadoutList(CVMUSBReadoutList& list)
 {
   // Need the base:
 
-  uint32_t base = m_pConfiguration->getUnsignedParameter("-base");
+  uint32_t base = m_pConfig->getUnsignedParameter("-base");
 
-  list.addFifoRead32(base + eventBuffer, readamod, (size_t)45);
-  list.addWrite16(base + ReadoutReset, initamod, (uint16_t)1);
+//  m_logic.addFifoRead32(base + eventBuffer, readamod, (size_t)45);
+//
+  m_logic.addFifoRead(list,45);
+  m_logic.addResetReadout(list);
   list.addDelay(5);
 }
 
@@ -473,12 +483,13 @@ CMQDC32RdoHdwr::setChainAddresses(CVMUSB&                controller,
     uint32_t               mcastBase)
 {
 
-  uint32_t base = m_pConfiguration->getIntegerParameter("-base");
+  uint32_t base = m_pConfig->getIntegerParameter("-base");
 
   cerr << "Position: " << position << endl;
 
   // Compute the value of the control register..though we will first program
   // the addresses then the control register:
+  using namespace MQDC32;
 
   uint16_t controlRegister = MCSTENB | CBLTENB; // This much is invariant.
   switch (position) {
@@ -499,9 +510,9 @@ CMQDC32RdoHdwr::setChainAddresses(CVMUSB&                controller,
 
   // program the registers, note that the address registers take only the top 8 bits.
 
-  controller.vmeWrite16(base + CbltAddress, initamod, (uint16_t)(cbltBase >> 24));
-  controller.vmeWrite16(base + McstAddress, initamod, (uint16_t)(mcastBase >> 24));
-  controller.vmeWrite16(base + CbltMcstControl, initamod, (uint16_t)(controlRegister));
+  controller.vmeWrite16(base + Reg::CbltAddress, initamod, (uint16_t)(cbltBase >> 24));
+  controller.vmeWrite16(base + Reg::McstAddress, initamod, (uint16_t)(mcastBase >> 24));
+  controller.vmeWrite16(base + Reg::CbltMcstControl, initamod, (uint16_t)(controlRegister));
 
 }
 
@@ -526,15 +537,16 @@ CMQDC32RdoHdwr::initCBLTReadout(CVMUSB& controller, uint32_t mcast, int rdoSize)
   //               most modulep arameters are already set up.
 
 
-  int irqThreshold   = m_pConfiguration->getIntegerParameter("-irqthreshold");
-  int vector         = m_pConfiguration->getIntegerParameter("-vector");
-  int ipl            = m_pConfiguration->getIntegerParameter("-ipl");
-  bool timestamping  = m_pConfiguration->getBoolParameter("-timestamp");
+  int irqThreshold   = m_pConfig->getIntegerParameter("-irqthreshold");
+  int vector         = m_pConfig->getIntegerParameter("-vector");
+  int ipl            = m_pConfig->getIntegerParameter("-ipl");
+  bool timestamping  = m_pConfig->getBoolParameter("-timestamp");
   
+  using namespace MQDC32;
   // Stop acquistiion
   // ..and clear buffer memory:
-  controller.vmeWrite16(mcast + StartAcq, initamod, (uint16_t)0);
-  controller.vmeWrite16(mcast + InitFifo, initamod, (uint16_t)0);
+  controller.vmeWrite16(mcast + Reg::StartAcq, initamod, (uint16_t)0);
+  controller.vmeWrite16(mcast + Reg::InitFifo, initamod, (uint16_t)0);
 
   // Set stamping
 
@@ -542,30 +554,30 @@ CMQDC32RdoHdwr::initCBLTReadout(CVMUSB& controller, uint32_t mcast, int rdoSize)
     // Oscillator sources are assumed to already be set.
     // Reset the timer:
 
-    controller.vmeWrite16(mcast + MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
-    controller.vmeWrite16(mcast + TimestampReset, initamod, (uint16_t)3); // reset all counter.
+    controller.vmeWrite16(mcast + Reg::MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
+    controller.vmeWrite16(mcast + Reg::TimestampReset, initamod, (uint16_t)3); // reset all counter.
   }
   else {
-    controller.vmeWrite16(mcast + MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
-    controller.vmeWrite16(mcast + EventCounterReset, initamod, (uint16_t)0); // Reset al event counters.
+    controller.vmeWrite16(mcast + Reg::MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
+    controller.vmeWrite16(mcast + Reg::EventCounterReset, initamod, (uint16_t)0); // Reset al event counters.
   }
   // Set multievent mode
   
-  controller.vmeWrite16(mcast + MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
-  controller.vmeWrite16(mcast + IrqThreshold, initamod, (uint16_t)irqThreshold);
-  controller.vmeWrite16(mcast + MaxTransfer, initamod,  (uint16_t)rdoSize);
+  controller.vmeWrite16(mcast + Reg::MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
+  controller.vmeWrite16(mcast + Reg::IrqThreshold, initamod, (uint16_t)irqThreshold);
+  controller.vmeWrite16(mcast + Reg::MaxTransfer, initamod,  (uint16_t)rdoSize);
 
   // Set the IRQ
 
-  controller.vmeWrite16(mcast + Vector, initamod, (uint16_t)vector);
-  controller.vmeWrite16(mcast + Ipl,    initamod, (uint16_t)ipl);
-  controller.vmeWrite16(mcast + IrqThreshold, initamod, (uint16_t)irqThreshold);
+  controller.vmeWrite16(mcast + Reg::Vector, initamod, (uint16_t)vector);
+  controller.vmeWrite16(mcast + Reg::Ipl,    initamod, (uint16_t)ipl);
+  controller.vmeWrite16(mcast + Reg::IrqThreshold, initamod, (uint16_t)irqThreshold);
 
   // Init the buffer and start data taking.
 
-  controller.vmeWrite16(mcast + InitFifo, initamod, (uint16_t)0);
-  controller.vmeWrite16(mcast + ReadoutReset, initamod, (uint16_t)0);
-  controller.vmeWrite16(mcast + StartAcq , initamod, (uint16_t)1);
+  controller.vmeWrite16(mcast + Reg::InitFifo, initamod, (uint16_t)0);
+  controller.vmeWrite16(mcast + Reg::ReadoutReset, initamod, (uint16_t)0);
+  controller.vmeWrite16(mcast + Reg::StartAcq , initamod, (uint16_t)1);
 }
 
 

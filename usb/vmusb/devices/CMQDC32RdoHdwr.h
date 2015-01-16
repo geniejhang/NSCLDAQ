@@ -42,7 +42,7 @@
 #endif
 #endif
 
-#include <CMQDC32.h>
+#include <CMQDC32StackBuilder.h>
 
 // Forward class definitions:
 
@@ -94,8 +94,8 @@ public:
     last
   };
 private:
-  CMQDC32             m_logic;
-  CReadoutModule*     m_pConfiguration;
+  MQDC32::CMQDC32StackBuilder     m_logic;
+  CReadoutModule*     m_pConfig;
 public:
   CMQDC32RdoHdwr();
   CMQDC32RdoHdwr(const CMQDC32RdoHdwr& rhs);
@@ -128,15 +128,19 @@ private:
   void configureThresholds(CVMUSBReadoutList& list);
   void configureMarkerType(CVMUSBReadoutList& list);
   void configureMemoryBankSeparation(CVMUSBReadoutList& list);
-  void configureGDG(CVMUSBReadoutList& list);
+  void configureGates(CVMUSBReadoutList& list);
+  void configureBankOffsets(CVMUSBReadoutList& list);
   void configureTestPulser(CVMUSBReadoutList& list);
   void configureInputCoupling(CVMUSBReadoutList& list);
   void configureTimeDivisor(CVMUSBReadoutList& list);
   void configureECLTermination(CVMUSBReadoutList& list);
-  void configureECLTimeInput(CVMUSBReadoutList& list);
-  void configureNIMTimeInput(CVMUSBReadoutList& list);
+  void configureECLInputs(CVMUSBReadoutList& list);
+  void configureNIMInputs(CVMUSBReadoutList& list);
+  void configureNIMBusy(CVMUSBReadoutList& list);
   void configureTimeBaseSource(CVMUSBReadoutList& list);
+  void configureIrq(CVMUSBReadoutList& list);
   void configureMultiEventMode(CVMUSBReadoutList& list);
+  void configureMultiplicity(CVMUSBReadoutList& list);
   uint32_t getBase();
 };
 
