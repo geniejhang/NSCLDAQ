@@ -815,6 +815,17 @@ proc EVB::maintainGUI {widget {ms 2000}} {
             
             set qrate  [expr {1000.0*($inbt -  $lastinb)/$ms}]
             set dqrate [expr {1000.0*($outb - $lastoutb)/$ms}]
+            
+            # IF the rates are negative we've had a counter reset so the prior is
+            # assumed to be zero.  Next time we'll have a good prior so we
+            # don't have to worry about this.
+            
+            if {$qrate < 0.0} {
+                set qrate [expr {1000.0*$inbt/$ms}]
+            }
+            if {$dqrate < 0.0} {
+                set dqrate [expr {1000.0*$outb/$ms}]
+            }
 	}
 	if {[dict exists $sourceStatistics($source) outputstats]} {
 	    set outputStats [dict get $sourceStatistics($source) outputstats]

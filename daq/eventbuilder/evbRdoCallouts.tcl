@@ -27,9 +27,11 @@ package require StateManager
 package require Thread
 package require ringsourcemgr
 
+
 namespace eval ::EVBC {
+    set registered 0;            # nonzero if the event bundle is registered.
     set initialized 0
-    set pipefd    "";            # Holds the fd to the pipe inot the evbpipeline
+    set pipefd    "";            # Holds the fd to the pipe to the evbpipeline
     set evbpids   [list];        # Holds list of PIDS that are the event builder.
     
     # Figure out where we are and hence the root of the daq system:
@@ -280,33 +282,29 @@ proc EVBC::start args {
     set ports [::portAllocator create %AUTO]
     set appName [::EVBC::getAppName]
     set hunting $appName
-    puts "Application name: $hunting"
     set found 0
-    for {set i 0} {$i < 100} {incr i} {
-      set allocations [$ports listPorts]
-      puts $allocations
-      foreach allocation $allocations {
-        set name [lindex $allocation 1]
-        set owner [lindex $allocation 2]
-        if {($name eq $hunting) && ($::tcl_platform(user) eq $owner)} {
-          set found 1
-        }
-      }
-      if {!$found} {
-        update idletasks
-        after 500
-      } else {
-        set i 100
-      }
+    set me $::tcl_platform(user)
+    for {set i 0} {$i <s 100} {incr i} {
+	set allocations [$ports listPorts]
+	foreach allocation $allocations {
+	    set name [lindex $allocation 1]
+	    set owner [lindex $allocation 2]
+	    if {($name eq $hunting) && ($me eq $owner)} {
+		set found 1
+	    }
+	}
+	if {!$found} {
+	    update idletasks
+	    after 500
+	} else {
+	    set i 100
+	}
     }
-    puts "Started up"
     $ports destroy
-    puts "Destroying .waiting"
     destroy .waiting
     if {!$found} {
 	error "Event builder failed to start within timeout"
     }
-    puts "Done."
 
 }
 
@@ -333,7 +331,11 @@ proc EVBC::stop {} {
 
     set EVBC::evbpids [list];              # Expecting the exit so empty the pidlist.
     
+    # Push an exit and mark us not connected.
+    
     puts $EVBC::pipefd exit
+    ::flush $EVBC::pipefd
+                   
     
 }
 #------------------------------------------------------------------------------
@@ -363,6 +365,36 @@ proc EVBC::flush {} {
     
     #puts $EVBC::pipefd EVB::flushqueues
 }
+
+##
+# getOrdererPort
+#   Returns the event orderer port number
+#
+proc EVBC::getOrdererPort {} {
+   #
+    #  Figure out what port the event builder is running on... or if it's running
+    #
+    set portManager [::portAllocator create %AUTO%]
+    set allocations [$portManager listPorts]
+    set user $::tcl_platform(user)
+    set appName "ORDERER:$user:$::EVBC::appNameSuffix"
+    set port ""
+    foreach allocation $allocations {
+        set name  [lindex $allocation 1]
+        set owner [lindex $allocation 2]
+        if {($name eq $appName) && ($owner eq $user)} {
+            set port [lindex $allocation 0]
+            break
+        }
+    }
+    $portManager destroy
+    
+    if {$port eq ""} {
+        error "EVBC::startRingSource Unable to locate the event builder service"
+    }
+    return $port    
+}
+
 
 #------------------------------------------------------------------------------
 ## @fn EVBC::registerRingSource
@@ -1098,8 +1130,7 @@ proc ::EVBC::attach state {
 ##
 # EVBC::enter
 #   Called when a new state is entered.
-#   * Halted -> Active   invoke onBegin - we do this inleave to get the jump
-#     on when the data sources start spewing data.
+#   * Active -> Halted  invoke onEnd
 # @param from - state that we left.
 # @param to   - State that we are entring.
 #
@@ -1107,13 +1138,16 @@ proc ::EVBC::enter {from to} {
     if {($from eq "Active") && ($to eq "Halted")} {
         ::EVBC::onEnd
     }
+    if {($from in [list Active Paused]) && ($to eq "NotReady")} {
+        ::EVBC::stop
+    }
 
 }
 ##
 # EVBC::leave
 #   Called when a state is being left.
-#   * Active -> Halted  invoke onEnd
-
+#   * Halted -> Active   invoke onBegin - we do this inleave to get the jump
+#     on when the data sources start spewing data.
 #
 # @param from - State we are leaving.
 # @param to   - State we are about to enter.
@@ -1134,9 +1168,13 @@ proc ::EVBC::leave {from to} {
 #
 #
 proc EVBC::useEventBuilder {} {
-    set stateMachine [RunstateMachineSingleton %AUTO%]
-    set callouts [$stateMachine listCalloutBundles]
-    $stateMachine addCalloutBundle EVBC [lindex $callouts 0]
+
+    if {$EVBC::registered == 0} {
+        set stateMachine [RunstateMachineSingleton %AUTO%]
+        set callouts [$stateMachine listCalloutBundles]
+        $stateMachine addCalloutBundle EVBC [lindex $callouts 0]
+        set ::EVBC::registered 1
+    }
     $stateMachine addCalloutBundle ::RingSourceMgr [lindex $callouts 0]
 }
 

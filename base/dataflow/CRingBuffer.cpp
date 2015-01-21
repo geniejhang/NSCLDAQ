@@ -135,14 +135,45 @@ CRingBuffer::create(std::string name,
   size_t pages     = (rawSize + (pageSize-1))/pageSize;
   size_t shmSize   = pages*pageSize;
 
-  if(CDAQShm::create(shmName(name), shmSize, 
-		     CDAQShm::GroupRead | CDAQShm::GroupWrite | CDAQShm::OtherRead | CDAQShm::OtherWrite)) {
-    throw CErrnoException("Shared memory creation failed");
+  std::string memoryName = shmName(name);
+  
+  // If the shared memory does not exist, just create it:
+  
+  ssize_t existingSize = CDAQShm::size(memoryName);
+  
+  if (existingSize < 0) {
+    if(CDAQShm::create(shmName(memoryName), shmSize, 
+                       CDAQShm::GroupRead | CDAQShm::GroupWrite | CDAQShm::OtherRead | CDAQShm::OtherWrite)) {
+      throw CErrnoException("Shared memory creation failed");
+    }
+  
+  
+    format(name, maxConsumer);
+  }  else if (isRing(name)) {
+      // If the memory region exists - and is a ring
+      //  *   If the ring master knows about it it's an error to make a new one.
+      //  *   If the ring master does not know about it and it's  ring, make it known to the ring master.
+      
+      CRingMaster master;
+      bool exists = false;
+      try {
+        master.requestUsage();
+      }
+      catch (...) {
+        exists = true;                  // For now assume existence for any exxception
+      }
+      if (exists) {
+        errno  = EEXIST;
+        throw CErrnoException("Ring buffer already exists");
+      }
+      
+    
+  } else {
+    // If the memory region exists but is not a ring that's ean error.
+    
+    errno = EEXIST;
+    throw CErrnoException("Shared memory region exists but is not formatted as a ring buffer");
   }
-
-
-  format(name, maxConsumer);
-
   // Notify the ring master this has been created.
 
   CRingMaster* pOld = m_pMaster;

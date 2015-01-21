@@ -115,9 +115,16 @@ proc ::DataSourceMonitor::_checkSources ms {
         #  If the run is active try to stop it so that event files get properly
         #  closed.. note that the event logger will likely time out
         #
-        if {[$::DataSourceMonitor::sm getState] ne "Halted"} {
-            ReadoutGUIPanel::Log DataSourceMonitor warning "Stopping run - if recording data this could take some time"
-            $::DataSourceMonitor::sm transition Halted
+        #  Note not at all sure why this is being done but it takes much too long
+        #  tentatively commented out and we do a quick transition to not ready
+        #  putting the onus on the bundles to do the right thing when/if this
+        #  happens
+        
+        if {0} {
+            if {[$::DataSourceMonitor::sm getState] ne "Halted"} {
+                ReadoutGUIPanel::Log DataSourceMonitor warning "Stopping run - if recording data this could take some time"
+                $::DataSourceMonitor::sm transition Halted
+            }
         }
         # Stop the rest of the sources:
         

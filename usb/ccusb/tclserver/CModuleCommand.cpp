@@ -127,9 +127,9 @@ CModuleCommand::create(CTCLInterpreter& interp,
     m_Server.setResult("module create: Wrong number of params need: module create type name");
     return TCL_ERROR;
   }
-  string name = objv[2];
-  string type = objv[3];
-
+  
+  string type = objv[2];
+  string name = objv[3];
 
   CControlModule* pConfig = m_Server.findModule(name);
   if (pConfig!=nullptr) {
