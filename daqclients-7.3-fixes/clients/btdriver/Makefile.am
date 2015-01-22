@@ -1,0 +1,2 @@
+SUBDIRS = dd lib include
+
