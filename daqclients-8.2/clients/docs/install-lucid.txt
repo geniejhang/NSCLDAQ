@@ -1,0 +1,84 @@
+Installation instructions for NSCLDAQ on ubuntu lucid lynx (10.10).
+
+
+These instructions assume that you can, and have:
+1. Installed lucid on your target system.
+2. Have the following tarballs from sourceforge.net's nscldaq project.
+   spectrodaq-pregt-1.68g.tar.gz
+   nscldaq-8.2-016.tar.gz
+
+These instructions are specific to Ubuntu, however with some familiarity with
+package names on other distributions you ought to be able to extrapolate how to
+do installations there too.
+
+I. Unwrapping the tarballs.
+
+Put the spectrodaq and nscldaq tarballs in /usr/src
+
+tar xzf spectrodaq-pregt-1.68g.tar.gz
+tar xzf nscldaq-8.2-016.tar.gz
+
+
+II. Installing the dependent software
+
+NSCLDAQ depends on some packages that are not installed by default.
+These must be installed first prior to installing the rest of the system:
+
+cd nscldaq-8.2-016/docs
+. packages.lucid
+
+you will be prompted a few times  about whether or not you want to install
+additional packages.  Answer Y to each prompt, or hit <Enter> as Y is the
+default.
+
+
+Once this has completed you will need to create a configured kernel source tree
+so that the nscldaq configuration/build procedure can build the SBS driver
+properly: 
+
+cd /usr/src
+tar xjf linux-source*.tar.bz
+
+The actuall name of the linux source tarball will depend on when you install
+ubuntu lynx. we will call it a.b.c-d-generic (uname -r will return the versino
+string). 
+
+cd linux-source-`uname -r`
+cp /boot/config-`uname -r` .config
+make-kpkg configure
+make-kpkg binary
+
+You must wait for this process to complete before installing nsclaq (step IV).
+You can install spectrodaq in parallel with the kernel build, however
+(step III below).
+
+III Installing spectrodaq
+
+
+spectrodaq is the data distribution engine for NSCLDAQ 9.x and earlier (no
+there isn't a 9.x yet that version is reserved for the last nscldaq revision to
+use spectrodaq version 10.0 [which is testing] uses an entirely different data
+distribution system).
+
+cd /usr/src/spectrodaq-pregt
+./configure --prefix=/usr/opt/spectrodaq
+make depend install
+
+
+IV  Installing nscldaq
+
+cd /usr/src/nscldaq-8.2-016
+./configure --prefix=/usr/opt/daq/8.2 \
+	    --with-kernel-sources=/usr/src/linux-sourcce-`uname-r`
+make install
+
+
+V   Post installation configuration
+
+VI  System startup files
+
+A.  Appendix A Installing the VM-USB readout framework.
+
+B.  Appendix B Installing the CC-USB readout framework.
+
+  

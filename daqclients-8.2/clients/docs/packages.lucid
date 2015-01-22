@@ -1,0 +1,24 @@
+#!/bin/bash
+
+apt-get update
+apt-get install gcc g++ 
+apt-get install tcl8.5-dev tk8.5-dev libtktable2.9
+apt-get install iwidgets4 blt-dev bwidget
+apt-get install tcllib emacs23 openssh-server doxygen hyperlatex publib-dev
+apt-get install libgdbm-dev libgsl0-dev xmlto docbook-utils
+apt-get install libgd2-xpm-dev lesstif2-dev lesstif2 ncurses-dev
+apt-get install flex bison libusb-dev libtk-img
+apt-get install xfsprogs tcllib
+apt-get install libreadline5-dev gengetopt libcppunit-dev
+
+
+# Kernel source installation.
+
+full_version=`uname -r`
+version=`echo $full_version | cut -f1 -d-`
+
+sourcepkg=linux-source-$version
+
+apt-get install linux-source-$version
+apt-get install kernel-package
+
