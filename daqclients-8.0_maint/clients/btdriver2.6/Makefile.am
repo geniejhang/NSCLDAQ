@@ -1,0 +1,12 @@
+SUBDIRS =  lib include
+
+all-local:
+	./DriverBuild.sh  $(KERNEL_SRC)
+
+install-data-local:
+	$(INSTALL_DATA)   dd/btp.ko /lib/modules
+	$(INSTALL_SCRIPT) dd/mkbtp  /lib/modules
+
+
+
+EXTRA_DIST=DriverBuild.sh configure dd/*
