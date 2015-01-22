@@ -1,0 +1,16 @@
+lib_LTLIBRARIES		= 	libRouter.la
+libRouter_la_SOURCES	= 	COutputThread.cpp	\
+				CRunState.cpp  		\
+				DataBuffer.cpp
+
+include_HEADERS		=	COutputThread.h		\
+				CRunState.h  		\
+				DataBuffer.h
+
+INCLUDES		= $(NSCLDAQ_FLAGS) $(SPECTRODAQ_FLAGS) \
+				-I@top_srcdir@		\
+				-I@top_srcdir@/threadcomm -DLAST_CHANCE	\
+				$(TCL_FLAGS)
+
+libRouter_la_LIBADD	= $(NSCLDAQ_LIB) $(SPECTRODAQ_LDFLAGS)	\
+			@top_srcdir@/threadcomm/libThreadComm.la
