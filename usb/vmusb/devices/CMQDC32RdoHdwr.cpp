@@ -31,6 +31,7 @@
 #include <vector>
 #include <set>
 #include <memory>
+#include <stdexcept>
 
 #include <iostream>
 #include "MQDC32Registers.h"
@@ -47,8 +48,9 @@ using namespace std;
 static const char* GateModeValues[] = {"common", "separate",0};
 static const char* TimingSourceValues[] = {"vme", "external",0};
 static const char* InputCouplingValues[] = {"AC","DC",0};
-static const char* PulserModes[] = {"off","amplitude","pulseramp",0};
+static const char* PulserModes[] = {"off","fixedamplitude","useramplitude",0};
 static const char* NIMBusyModes[] = {"busy", "rcbus", "full", "overthreshold",0};
+static const char* SyncModeValues[] = {"never","resetall","ctraonly", "ctrbonly", "external",0};
 // Legal values for the resolution...note in this case the default is explicitly defined as 8k
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +121,6 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
   m_pConfig->addIntegerParameter("-vector", 0, 0xff, 0);
   m_pConfig->addIntegerParameter("-irqthreshold", 0, 0xffff, 1);
   m_pConfig->addBooleanParameter("-multievent", false);
-  m_pConfig->addIntegerParameter("-maxtransfer", 0, 0xf, 1); 
 
   m_pConfig->addIntListParameter("-bankoffsets", 
                                         0, MQDC32::BankOffsets::Max,
@@ -128,11 +129,11 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
 
   // the hold delays and widths have the same list constraints.
   // just different default values.
-  m_pConfig->addIntListParameter("-holdwidths", 
+  m_pConfig->addIntListParameter("-gatelimits", 
                                         0, MQDC32::GateLimit::Max, // min val, max val 
                                         2, 2, 2, // min size, max size, default size
                                         MQDC32::GateLimit::Max);  // no limit 
-  m_pConfig->addIntListParameter("-holddelays",
+  m_pConfig->addIntListParameter("-exptrigdelays",
                                         0, MQDC32::ExpTrigDelay::Max, // min val, max val 
                                         2, 2, 2, // min size, max size, default size
                                         0);  // def value
@@ -160,7 +161,7 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
                                      TimingSourceValues, 
                                      TimingSourceValues[0]);
   m_pConfig->addIntegerParameter("-timingdivisor", 0, 0xffff, 15);
-
+  m_pConfig->addEnumParameter("-syncmode",SyncModeValues,SyncModeValues[1]);
 
   // multiplicity filter
   m_pConfig->addIntListParameter("-multlowerlimits",
@@ -183,6 +184,18 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
           VMUSB object.
 */
 
+unique_ptr<CVMUSBReadoutList> getList(CVMUSB& ctlr) 
+{
+  return unique_ptr<CVMUSBReadoutList>(ctlr.createReadoutList());
+}
+
+void execList(CVMUSB& ctlr, unique_ptr<CVMUSBReadoutList>& list) 
+{
+  auto res = ctlr.executeList(*list,128);
+  if (res.size()==0) {
+    throw std::runtime_error("Failure while executing list.");
+  }
+}
 
 void
 CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
@@ -192,11 +205,20 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
   // in case time is needed between reset and the next operations on the module.
   // The remaining operations on the module will be done in 
   // a list so that they don't take so much time.
- 
+
 
   CVMUSB& ctlr = controller;
   m_logic.setBase(getBase());
-  m_logic.resetAll(ctlr);
+  //  m_logic.resetAll(ctlr);
+  {
+    unique_ptr<CVMUSBReadoutList> pList(controller.createReadoutList());
+    m_logic.addSoftReset(*pList);
+    m_logic.addWriteAcquisitionState(*pList,0);
+    auto res = controller.executeList(*pList,128);
+    if (res.size()==0) {
+      throw std::runtime_error("Failure while executing list.");
+    }
+  }
 
   unique_ptr<CVMUSBReadoutList> pList(controller.createReadoutList());
 
@@ -204,27 +226,47 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
   m_logic.addDisableInterrupts(*pList);
 
   configureModuleID(*pList);
+
+  // Configure the IRQ and buffering mode
+  configureIrq(*pList);
+  configureMultiEventMode(*pList);
+
+  // configure conversion / acquisition parameters
   configureThresholds(*pList);
-  configureMarkerType(*pList);
-  configureMemoryBankSeparation(*pList);
   configureGates(*pList);
   configureBankOffsets(*pList);
-  configureTestPulser(*pList);
+  //
+  //  // 
+  //  configureMemoryBankSeparation(*pList);
+  //
+  //  // configure inputs/outputs
+  //  configureECLInputs(*pList);
+  //  configureNIMInputs(*pList);
+  //  configureNIMBusy(*pList);
   configureInputCoupling(*pList);
-  configureTimeDivisor(*pList);
-  configureECLTermination(*pList);
-  configureECLInputs(*pList);
-  configureNIMInputs(*pList);
-  configureNIMBusy(*pList);
-  configureTimeBaseSource(*pList);
-  configureMultiEventMode(*pList);
-  configureIrq(*pList);
+  //  configureECLTermination(*pList);
+  //  //  ... timestamp
+  //  configureTimeBaseSource(*pList);
+  //  configureTimeDivisor(*pList);
+  //  configureMarkerType(*pList);
+  configureCounterReset(*pList);
+  //
 
-  m_logic.addResetReadout(*pList);
+  // see page 29 of MQDC manual for starting the readout.
+  // 1. Fifo reset
+  // 2. Readout reset
+  // 3. start acquisition
   m_logic.addInitializeFifo(*pList);
+  m_logic.addResetReadout(*pList);
   m_logic.addWriteAcquisitionState(*pList,true);
 
+  // test pulser
+  configureTestPulser(*pList);
   auto result = ctlr.executeList(*pList, 8);
+  if (result.size()==0) {
+    throw std::runtime_error("Failure while executing list.");
+  }
+
 }
 
 uint32_t CMQDC32RdoHdwr::getBase() {
@@ -278,11 +320,11 @@ void CMQDC32RdoHdwr::configureMemoryBankSeparation(CVMUSBReadoutList& list) {
 
 void CMQDC32RdoHdwr::configureGates(CVMUSBReadoutList& list) {
 
-  auto holddelays = m_pConfig->getIntegerList("-holddelays");
-  auto holdwidths = m_pConfig->getIntegerList("-holdwidths");
+  auto exptrigdelays = m_pConfig->getIntegerList("-exptrigdelays");
+  auto gatelimits = m_pConfig->getIntegerList("-gatelimits");
 
-  m_logic.addWriteExpTrigDelays(list, holddelays);
-  m_logic.addWriteGateLimits(list, holdwidths);
+  m_logic.addWriteExpTrigDelays(list, exptrigdelays);
+  m_logic.addWriteGateLimits(list, gatelimits);
 }
 
 void CMQDC32RdoHdwr::configureBankOffsets(CVMUSBReadoutList& list) {
@@ -303,12 +345,13 @@ void CMQDC32RdoHdwr::configureTestPulser(CVMUSBReadoutList& list) {
       break;
     case 1:
       // fixed amplitude
+      cout << "Fixed amplitude" << endl;
       m_logic.addWritePulserState(list, FixedAmplitude);
       break;
     case 2:
       // user defined amplitude
-      m_logic.addWritePulserState(list,5);
-      m_logic.addWritePulserAmplitude(list, UserAmplitude);
+      m_logic.addWritePulserState(list,UserAmplitude);
+      m_logic.addWritePulserAmplitude(list, amplitude);
       break;
     default:
       // do nothing.
@@ -403,25 +446,32 @@ void CMQDC32RdoHdwr::configureTimeBaseSource(CVMUSBReadoutList& list) {
 void CMQDC32RdoHdwr::configureIrq(CVMUSBReadoutList& list) {
   uint8_t     ipl         = m_pConfig->getIntegerParameter("-ipl");
   uint8_t     ivector     = m_pConfig->getIntegerParameter("-vector");
-  int         irqThreshold= m_pConfig->getIntegerParameter("-irqthreshold");
   m_logic.addWriteIrqVector(list, ivector);
   m_logic.addWriteIrqLevel(list, ipl);
-  m_logic.addWriteIrqThreshold(list, irqThreshold);
-
   m_logic.addWriteWithdrawIrqOnEmpty(list,true);
 }
 
 void CMQDC32RdoHdwr::configureMultiEventMode(CVMUSBReadoutList& list) {
   using namespace MQDC32::TransferMode;
 
+  uint16_t nUnits = m_pConfig->getUnsignedParameter("-irqthreshold");
   if(m_pConfig->getBoolParameter("-multievent")) {
-    uint16_t nbuffers = m_pConfig->getUnsignedParameter("-maxtransfer");
 
-    m_logic.addWriteMultiEventMode(list, (Limited|EmitEOB) );
-    m_logic.addWriteTransferCount(list, nbuffers);
+    m_logic.addWriteIrqThreshold(list, nUnits);
+    m_logic.addWriteTransferCount(list, nUnits);
+    m_logic.addWriteMultiEventMode(list, Limited);
   } else {
-    m_logic.addWriteMultiEventMode(list, Single);
+    m_logic.addWriteIrqThreshold(list, 1);
     m_logic.addWriteTransferCount(list, 1);
+    m_logic.addWriteMultiEventMode(list, Limited);
+
+    // warn the user if their -maxtransfer value has been overwritten
+    if (nUnits!=1) {
+      std::cerr << "User's values for -irqthreshold and -maxtransfer options ";
+      std::cerr << "has been overridden ";
+      std::cerr << "to be 1 for proper single event readout.";
+      std::cerr << std::endl;
+    }
   }
 }
 
@@ -433,6 +483,34 @@ void CMQDC32RdoHdwr::configureMultiplicity(CVMUSBReadoutList& list) {
   m_logic.addWriteLowerMultLimits(list, lower);
   m_logic.addWriteUpperMultLimits(list, upper);
 }
+
+void
+CMQDC32RdoHdwr::configureCounterReset(CVMUSBReadoutList& list) 
+{
+  using namespace MQDC32::CounterReset;
+  int modeIndex = m_pConfig->getEnumParameter("-syncmode", SyncModeValues);
+  switch (modeIndex) {
+    case 0:
+     m_logic.addWriteCounterReset(list, Never); 
+     break; 
+    case 1:
+     m_logic.addWriteCounterReset(list, (CTRA|CTRB)); 
+     break; 
+    case 2:
+     m_logic.addWriteCounterReset(list, CTRA); 
+     break; 
+    case 3:
+     m_logic.addWriteCounterReset(list, CTRB); 
+     break; 
+    case 4:
+     m_logic.addWriteCounterReset(list, External); 
+     break; 
+    default:
+     // do nothing.
+     break; 
+  }
+}
+
 /*!
   Add instructions to read out the ADC for a event. Since we're only working in
   single even tmode, we'll just read 'too many' words and let the
@@ -443,15 +521,25 @@ void CMQDC32RdoHdwr::configureMultiplicity(CVMUSBReadoutList& list) {
 void
 CMQDC32RdoHdwr::addReadoutList(CVMUSBReadoutList& list)
 {
-  // Need the base:
-
-  uint32_t base = m_pConfig->getUnsignedParameter("-base");
-
-//  m_logic.addFifoRead32(base + eventBuffer, readamod, (size_t)45);
-//
-  m_logic.addFifoRead(list,45);
+  if (m_pConfig->getBoolParameter("-multievent")) {
+    uint32_t maxTransfers = m_pConfig->getUnsignedParameter("-irqthreshold");
+    m_logic.addFifoRead(list,maxTransfers+40);
+  } else {
+    m_logic.addFifoRead(list,40);
+  }
+  
   m_logic.addResetReadout(list);
   list.addDelay(5);
+}
+
+void
+CMQDC32RdoHdwr::onEndRun(CVMUSB& ctlr) {
+  unique_ptr<CVMUSBReadoutList> pList(ctlr.createReadoutList());
+
+  m_logic.addWriteAcquisitionState(*pList,false);
+  m_logic.addResetReadout(*pList);
+
+  ctlr.executeList(*pList,8);
 }
 
 // Cloning supports a virtual copy constructor.

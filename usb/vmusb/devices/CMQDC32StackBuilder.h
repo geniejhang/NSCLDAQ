@@ -129,6 +129,8 @@ class CMQDC32StackBuilder
     void addWriteLowerMultLimits(CVMUSBReadoutList& list, std::vector<int> values);
     void addWriteUpperMultLimits(CVMUSBReadoutList& list, std::vector<int> values);
 
+    void addWriteCounterReset(CVMUSBReadoutList& list, uint8_t mode);
+
     void addFifoRead(CVMUSBReadoutList& list, size_t transfers);
 };
 

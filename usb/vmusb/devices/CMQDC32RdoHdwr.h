@@ -111,6 +111,7 @@ public:
   virtual void onAttach(CReadoutModule& configuration);
   virtual void Initialize(CVMUSB& controller);
   virtual void addReadoutList(CVMUSBReadoutList& list);
+  virtual void onEndRun(CVMUSB& ctlr);
   virtual CReadoutHardware* clone() const;
 
   // The following functions are used by the madcchain module.
@@ -141,6 +142,7 @@ private:
   void configureIrq(CVMUSBReadoutList& list);
   void configureMultiEventMode(CVMUSBReadoutList& list);
   void configureMultiplicity(CVMUSBReadoutList& list);
+  void configureCounterReset(CVMUSBReadoutList& list);
   uint32_t getBase();
 };
 

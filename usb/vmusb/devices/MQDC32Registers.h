@@ -204,5 +204,12 @@ namespace MQDC32 {
     Const(Max) 0x3fff;
   }
 
+  namespace CounterReset {
+    Const(Never)        0x0;
+    Const(CTRA)         0x1;
+    Const(CTRB)         0x2;
+    Const(External)     0xc;
+  }
+
 } // end of namespace
 #endif
