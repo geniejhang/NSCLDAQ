@@ -144,6 +144,8 @@ private:
   void configureMultiplicity(CVMUSBReadoutList& list);
   void configureCounterReset(CVMUSBReadoutList& list);
   uint32_t getBase();
+
+  void dumpConfig(CVMUSB& ctlr);
 };
 
 

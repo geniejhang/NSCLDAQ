@@ -197,6 +197,22 @@ void execList(CVMUSB& ctlr, unique_ptr<CVMUSBReadoutList>& list)
   }
 }
 
+template<class T>
+T execList(CVMUSB& ctlr, CVMUSBReadoutList& list) 
+{
+  T val;
+  size_t nBytes;
+  int status = ctlr.executeList(list, &val, sizeof(val), &nBytes);
+  if (status<0) {
+    throw std::runtime_error("Failure while executing list.");
+  }
+  if (nBytes != sizeof(T)) {
+    throw std::runtime_error("Failed to read the expect number of bytes.");
+  }
+
+  return val;
+}
+
 void
 CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
 {
@@ -209,7 +225,6 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
 
   CVMUSB& ctlr = controller;
   m_logic.setBase(getBase());
-  //  m_logic.resetAll(ctlr);
   {
     unique_ptr<CVMUSBReadoutList> pList(controller.createReadoutList());
     m_logic.addSoftReset(*pList);
@@ -235,20 +250,19 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
   configureThresholds(*pList);
   configureGates(*pList);
   configureBankOffsets(*pList);
+ 
+  configureMemoryBankSeparation(*pList);
   //
-  //  // 
-  //  configureMemoryBankSeparation(*pList);
-  //
-  //  // configure inputs/outputs
-  //  configureECLInputs(*pList);
-  //  configureNIMInputs(*pList);
-  //  configureNIMBusy(*pList);
+  // configure inputs/outputs
+  //configureECLInputs(*pList);
+  //configureNIMInputs(*pList);
+  //configureNIMBusy(*pList);
   configureInputCoupling(*pList);
   //  configureECLTermination(*pList);
   //  //  ... timestamp
-  //  configureTimeBaseSource(*pList);
-  //  configureTimeDivisor(*pList);
-  //  configureMarkerType(*pList);
+  configureTimeBaseSource(*pList);
+  configureTimeDivisor(*pList);
+  configureMarkerType(*pList);
   configureCounterReset(*pList);
   //
 
@@ -267,6 +281,16 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
     throw std::runtime_error("Failure while executing list.");
   }
 
+
+  dumpConfig(ctlr);
+
+}
+
+void CMQDC32RdoHdwr::dumpConfig(CVMUSB& ctlr) 
+{
+  CVMUSBReadoutList list;
+  m_logic.addReadBankOffset0(list);
+  std::cout << "Bank offset 0 = " << execList<uint16_t>(ctlr,list) << endl;
 }
 
 uint32_t CMQDC32RdoHdwr::getBase() {

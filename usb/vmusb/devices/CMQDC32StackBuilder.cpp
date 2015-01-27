@@ -37,6 +37,10 @@ namespace MQDC32 {
   {
     list.addWrite16(m_base + Reg::StartAcq, initamod, static_cast<uint16_t>(state));
   }
+  void CMQDC32StackBuilder::addReadAcquisitionState(CVMUSBReadoutList& list) 
+  {
+    list.addRead16(m_base + Reg::StartAcq, initamod);
+  }
 
   void CMQDC32StackBuilder::addResetReadout(CVMUSBReadoutList& list) {
     list.addWrite16(m_base + Reg::ReadoutReset, initamod, 1);
@@ -53,17 +57,29 @@ namespace MQDC32 {
     list.addWrite16(m_base + Reg::Ipl, initamod, level);
     list.addDelay(MQDCDELAY);
   }
+  void CMQDC32StackBuilder::addReadIrqLevel(CVMUSBReadoutList& list) 
+  {
+    list.addRead16(m_base + Reg::Ipl, initamod);
+  }
 
   void CMQDC32StackBuilder::addWriteIrqVector(CVMUSBReadoutList& list, uint8_t level) 
   {
     list.addWrite16(m_base + Reg::Vector, initamod, level);
     list.addDelay(MQDCDELAY);
   }
+  void CMQDC32StackBuilder::addReadIrqVector(CVMUSBReadoutList& list) 
+  {
+    list.addRead16(m_base + Reg::Vector, initamod);
+  }
 
   void CMQDC32StackBuilder::addWriteIrqThreshold(CVMUSBReadoutList& list, uint16_t thresh) 
   {
     list.addWrite16(m_base + Reg::IrqThreshold, initamod, thresh);
     list.addDelay(MQDCDELAY);
+  }
+  void CMQDC32StackBuilder::addReadIrqThreshold(CVMUSBReadoutList& list) 
+  {
+    list.addRead16(m_base + Reg::IrqThreshold, initamod);
   }
 
 
@@ -72,12 +88,21 @@ namespace MQDC32 {
     list.addWrite16(m_base + Reg::WithdrawIrqOnEmpty, initamod, (uint16_t)on);
     list.addDelay(MQDCDELAY);
   }
+  void CMQDC32StackBuilder::addReadWithdrawIrqOnEmpty(CVMUSBReadoutList& list) 
+  {
+    list.addRead16(m_base + Reg::WithdrawIrqOnEmpty, initamod);
+  }
 
   void CMQDC32StackBuilder::addWriteModuleID(CVMUSBReadoutList& list, uint16_t id)
   {
     list.addWrite16(m_base + Reg::ModuleId, initamod, id); // Module id.
     list.addDelay(MQDCDELAY);
   }
+  void CMQDC32StackBuilder::addReadModuleID(CVMUSBReadoutList& list)
+  {
+    list.addRead16(m_base + Reg::ModuleId, initamod); // Module id.
+  }
+
 
   void CMQDC32StackBuilder::addWriteThreshold(CVMUSBReadoutList& list, unsigned int chan, 
       int thresh)
@@ -85,6 +110,11 @@ namespace MQDC32 {
     uint32_t addr = m_base + Reg::Thresholds + chan*sizeof(uint16_t);
     list.addWrite16(addr, initamod, thresh);
     list.addDelay(MQDCDELAY);
+  }
+  void CMQDC32StackBuilder::addReadThreshold(CVMUSBReadoutList& list, unsigned int chan)
+  {
+    uint32_t addr = m_base + Reg::Thresholds + chan*sizeof(uint16_t);
+    list.addRead16(addr, initamod);
   }
 
   void CMQDC32StackBuilder::addWriteThresholds(CVMUSBReadoutList& list,
@@ -100,12 +130,20 @@ namespace MQDC32 {
     list.addWrite16(m_base+Reg::IgnoreThresholds, initamod, uint16_t(off));
     list.addDelay(MQDCDELAY);
   }
+  void CMQDC32StackBuilder::addReadIgnoreThresholds(CVMUSBReadoutList& list)
+  {
+    list.addRead16(m_base+Reg::IgnoreThresholds, initamod);
+  }
 
 
   void CMQDC32StackBuilder::addWriteMarkerType(CVMUSBReadoutList& list, uint16_t type)
   {
     list.addWrite16(m_base + Reg::MarkType, initamod, type); 
     list.addDelay(MQDCDELAY);
+  }
+  void CMQDC32StackBuilder::addReadMarkerType(CVMUSBReadoutList& list)
+  {
+    list.addRead16(m_base + Reg::MarkType, initamod); 
   }
 
   void CMQDC32StackBuilder::addWriteMemoryBankSeparation(CVMUSBReadoutList& list, 
@@ -114,17 +152,30 @@ namespace MQDC32 {
     list.addWrite16(m_base + Reg::BankOperation, initamod, type);
     list.addDelay(MQDCDELAY);
   }
+  void CMQDC32StackBuilder::addReadMemoryBankSeparation(CVMUSBReadoutList& list)
+  {
+    list.addRead16(m_base + Reg::BankOperation, initamod);
+  }
 
   void CMQDC32StackBuilder::addWriteGateLimit0(CVMUSBReadoutList& list, uint8_t limit)
   {
     list.addWrite16(m_base + Reg::GateLimit0, initamod, limit);
     list.addDelay(MQDCDELAY);
   }
+  void CMQDC32StackBuilder::addReadGateLimit0(CVMUSBReadoutList& list)
+  {
+    list.addRead16(m_base + Reg::GateLimit0, initamod);
+  }
+
 
   void CMQDC32StackBuilder::addWriteGateLimit1(CVMUSBReadoutList& list, uint8_t limit)
   {
     list.addWrite16(m_base + Reg::GateLimit1, initamod, limit);
     list.addDelay(MQDCDELAY);
+  }
+  void CMQDC32StackBuilder::addReadGateLimit1(CVMUSBReadoutList& list)
+  {
+    list.addRead16(m_base + Reg::GateLimit1, initamod);
   }
 
   void CMQDC32StackBuilder::addWriteGateLimits(CVMUSBReadoutList& list, vector<int> limits)
@@ -138,12 +189,21 @@ namespace MQDC32 {
     list.addWrite16(m_base + Reg::ExpTrigDelay0, initamod, delay);
     list.addDelay(MQDCDELAY);
   }
+  void CMQDC32StackBuilder::addReadExpTrigDelay0(CVMUSBReadoutList& list)
+  {
+    list.addRead16(m_base + Reg::ExpTrigDelay0, initamod);
+  }
 
   void CMQDC32StackBuilder::addWriteExpTrigDelay1(CVMUSBReadoutList& list, uint16_t delay)
   {
     list.addWrite16(m_base + Reg::ExpTrigDelay1, initamod, delay);
     list.addDelay(MQDCDELAY);
   }
+  void CMQDC32StackBuilder::addReadExpTrigDelay1(CVMUSBReadoutList& list)
+  {
+    list.addRead16(m_base + Reg::ExpTrigDelay1, initamod);
+  }
+
 
   void CMQDC32StackBuilder::addWriteExpTrigDelays(CVMUSBReadoutList& list, vector<int> delays) 
   {
@@ -158,11 +218,23 @@ namespace MQDC32 {
     list.addWrite16(m_base + Reg::BankOffset1, initamod, values.at(1));
     list.addDelay(MQDCDELAY);
   }
+  void CMQDC32StackBuilder::addReadBankOffset0(CVMUSBReadoutList& list) 
+  {
+    list.addRead16(m_base + Reg::BankOffset0, initamod);
+  }
+  void CMQDC32StackBuilder::addReadBankOffset1(CVMUSBReadoutList& list) 
+  {
+    list.addRead16(m_base + Reg::BankOffset1, initamod);
+  }
 
   void CMQDC32StackBuilder::addWritePulserState(CVMUSBReadoutList& list, uint16_t state)
   {
     list.addWrite16(m_base+Reg::TestPulser, initamod, state);
     list.addDelay(MQDCDELAY);
+  }
+  void CMQDC32StackBuilder::addReadPulserState(CVMUSBReadoutList& list)
+  {
+    list.addRead16(m_base+Reg::TestPulser, initamod);
   }
 
   void CMQDC32StackBuilder::addWritePulserAmplitude(CVMUSBReadoutList& list, uint8_t val)
@@ -170,17 +242,25 @@ namespace MQDC32 {
     list.addWrite16(m_base+Reg::PulserAmp, initamod, val);
     list.addDelay(MQDCDELAY);
   }
-
-
-  void CMQDC32StackBuilder::addWriteInputCoupling(CVMUSBReadoutList& list, uint16_t type)
+  void CMQDC32StackBuilder::addReadPulserAmplitude(CVMUSBReadoutList& list)
   {
-    list.addWrite16(m_base+Reg::InputCoupling, initamod, type);
-    list.addDelay(MQDCDELAY);
+    list.addRead16(m_base+Reg::PulserAmp, initamod);
   }
 
   void CMQDC32StackBuilder::addWriteTimeDivisor(CVMUSBReadoutList& list, uint16_t divisor)
   {
     list.addWrite16(m_base + Reg::TimingDivisor, initamod, divisor);
+    list.addDelay(MQDCDELAY);
+  }
+  void CMQDC32StackBuilder::addReadTimeDivisor(CVMUSBReadoutList& list)
+  {
+    list.addRead16(m_base + Reg::TimingDivisor, initamod);
+  }
+
+
+  void CMQDC32StackBuilder::addWriteInputCoupling(CVMUSBReadoutList& list, uint16_t type)
+  {
+    list.addWrite16(m_base+Reg::InputCoupling, initamod, type);
     list.addDelay(MQDCDELAY);
   }
 
