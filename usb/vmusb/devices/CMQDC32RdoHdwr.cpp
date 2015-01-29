@@ -228,14 +228,20 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
   {
     unique_ptr<CVMUSBReadoutList> pList(controller.createReadoutList());
     m_logic.addSoftReset(*pList);
-    m_logic.addWriteAcquisitionState(*pList,0);
     auto res = controller.executeList(*pList,128);
     if (res.size()==0) {
       throw std::runtime_error("Failure while executing list.");
     }
   }
 
+  // If this is not here, the configuration that gets sets in the following
+  // lines gets reset to null. Heinously, this is a delayed effect. The first 
+  // data out of the device might look like the configuration was properly set, 
+  // however, after some time, the configuration changes and the data changes.
+  sleep(1);
+
   unique_ptr<CVMUSBReadoutList> pList(controller.createReadoutList());
+  m_logic.addWriteAcquisitionState(*pList,0);
 
   // First disable the interrupts so that we can't get any spurious ones during init.
   m_logic.addDisableInterrupts(*pList);
@@ -252,19 +258,18 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
   configureBankOffsets(*pList);
  
   configureMemoryBankSeparation(*pList);
-  //
+  
   // configure inputs/outputs
-  //configureECLInputs(*pList);
-  //configureNIMInputs(*pList);
-  //configureNIMBusy(*pList);
+  configureECLInputs(*pList);
+  configureNIMInputs(*pList);
+  configureNIMBusy(*pList);
   configureInputCoupling(*pList);
-  //  configureECLTermination(*pList);
-  //  //  ... timestamp
+  configureECLTermination(*pList);
+  //  ... timestamp
   configureTimeBaseSource(*pList);
   configureTimeDivisor(*pList);
   configureMarkerType(*pList);
   configureCounterReset(*pList);
-  //
 
   // see page 29 of MQDC manual for starting the readout.
   // 1. Fifo reset
@@ -272,25 +277,24 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
   // 3. start acquisition
   m_logic.addInitializeFifo(*pList);
   m_logic.addResetReadout(*pList);
-  m_logic.addWriteAcquisitionState(*pList,true);
-
-  // test pulser
   configureTestPulser(*pList);
+
   auto result = ctlr.executeList(*pList, 8);
   if (result.size()==0) {
     throw std::runtime_error("Failure while executing list.");
   }
 
+  // allow time for that configuration to set in
+  sleep(1);
 
-  dumpConfig(ctlr);
+  // begin accepting gates.
+  pList->clear();
+  m_logic.addWriteAcquisitionState(*pList,true);
+  result = ctlr.executeList(*pList, 8);
+  if (result.size()==0) {
+    throw std::runtime_error("Failure while executing list.");
+  }
 
-}
-
-void CMQDC32RdoHdwr::dumpConfig(CVMUSB& ctlr) 
-{
-  CVMUSBReadoutList list;
-  m_logic.addReadBankOffset0(list);
-  std::cout << "Bank offset 0 = " << execList<uint16_t>(ctlr,list) << endl;
 }
 
 uint32_t CMQDC32RdoHdwr::getBase() {
