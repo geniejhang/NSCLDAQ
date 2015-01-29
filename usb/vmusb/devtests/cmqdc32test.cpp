@@ -66,6 +66,7 @@ class cmqdc32test : public CppUnit::TestFixture {
   CPPUNIT_TEST( addInitializeFifo_0 );
   CPPUNIT_TEST( addWriteLowerMultLimits_0 );
   CPPUNIT_TEST( addWriteUpperMultLimits_0 );
+  CPPUNIT_TEST( addWriteCounterReset_0 );
   CPPUNIT_TEST( addFifoRead_0 );
   CPPUNIT_TEST_SUITE_END();
 
@@ -114,6 +115,7 @@ protected:
   void addInitializeFifo_0();
   void addWriteLowerMultLimits_0();
   void addWriteUpperMultLimits_0();
+  void addWriteCounterReset_0();
   void addFifoRead_0();
 };
 
@@ -706,6 +708,20 @@ void cmqdc32test::addWriteUpperMultLimits_0() {
 
   CPPUNIT_ASSERT(expected == record);
 }
+
+void cmqdc32test::addWriteCounterReset_0() {
+  CLoggingReadoutList list;
+  m_module.addWriteCounterReset(list,2);
+
+  vector<string> expected = {"addWrite16 40006090 09 2",
+  "addDelay 1"};
+
+  auto record =  list.getLog();
+//  print_vectors(expected, record);
+
+  CPPUNIT_ASSERT(expected == record);
+}
+
 
 void cmqdc32test::addFifoRead_0() {
   CLoggingReadoutList list;
