@@ -20,36 +20,42 @@
 #ifndef CRINGDATASINK_H
 #define CRINGDATASINK_H
 
-#include <CDataSink.h>
 
-#include <string>
+#include <CRingItem.h>
+#include <RingDataSink.h>
 
-class CRingItem;
-class CRingBuffer;
+using CRingDataSink = NSCLDAQ::RingDataSink<CRingItem>;
 
-class CRingDataSink : public CDataSink
-{
-  private:
-    CRingBuffer*  m_pRing;
-    std::string   m_ringName; 
- 
-  public:
-    CRingDataSink(std::string ringName);
-    virtual ~CRingDataSink();
-
-  private:
-    CRingDataSink(const CRingDataSink& rhs);
-    CRingDataSink& operator=(const CRingDataSink& rhs);
-    int operator==(const CRingDataSink& rhs) const;
-    int operator!=(const CRingDataSink& rhs) const;
-
-    // The interface functions required by the ABC:
-  public:
-    void putItem(const CRingItem& item);
-    void put(const void* pData, size_t nBytes);
-
-  private:
-    void openRing();
-
-};
+//#include <CDataSink.h>
+//
+//#include <string>
+//
+//class CRingItem;
+//class CRingBuffer;
+//
+//class CRingDataSink : public CDataSink
+//{
+//  private:
+//    CRingBuffer*  m_pRing;
+//    std::string   m_ringName; 
+// 
+//  public:
+//    CRingDataSink(std::string ringName);
+//    virtual ~CRingDataSink();
+//
+//  private:
+//    CRingDataSink(const CRingDataSink& rhs);
+//    CRingDataSink& operator=(const CRingDataSink& rhs);
+//    int operator==(const CRingDataSink& rhs) const;
+//    int operator!=(const CRingDataSink& rhs) const;
+//
+//    // The interface functions required by the ABC:
+//  public:
+//    void putItem(const CRingItem& item);
+//    void put(const void* pData, size_t nBytes);
+//
+//  private:
+//    void openRing();
+//
+//};
 #endif

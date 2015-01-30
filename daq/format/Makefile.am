@@ -23,10 +23,6 @@ libdataformat_la_SOURCES = CRingSelectionPredicate.cpp	\
 			CRingItemFactory.cpp		\
 			ringitem.c			\
       RingItemComparisons.cpp \
-			CDataSource.cpp CRingDataSource.cpp CFileDataSource.cpp  \
-			CDataSourceFactory.cpp \
-      CFileDataSink.cpp CDataSinkFactory.cpp \
-      CRingDataSink.cpp \
       CDataSinkException.cpp \
       CAbnormalEndItem.cpp  \
 			CFakeDataSource.cpp \
@@ -50,10 +46,6 @@ include_HEADERS	= CRingSelectionPredicate.h	\
                         CUnknownFragment.h      \
 			DataFormat.h	\
       RingItemComparisons.h \
-			CDataSource.h CRingDataSource.h CFileDataSource.h \
-			CDataSourceFactory.h \
-      CDataSink.h CFileDataSink.h CDataSinkFactory.h \
-      CRingDataSink.h \
       CDataSinkException.h \
       CAbnormalEndItem.h \
 			CFakeDataSource.h \
@@ -95,7 +87,7 @@ unittests_LDADD		= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 
 unittests_CPPFLAGS=$(COMPILATION_FLAGS)
 
-unittests_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"
+unittests_LDFLAGS	= -Wl,"-rpath-link=$(libdir)" @top_builddir@/base/os/libdaqshm.la
 
 
 TESTS=./unittests
