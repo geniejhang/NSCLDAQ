@@ -1,5 +1,6 @@
 /*
-    This software is Copyright by the Board of Trustees of Michigan
+    This software is Copyright by the Board of Trustees of Michigan 
+    State University (c) Copyright 2015
 
 
     You may use this software under the terms of the GNU public license
@@ -8,7 +9,7 @@
      http://www.gnu.org/licenses/gpl.txt
 
      Author:
-             Ron Fox
+     Jeromy Tompkins
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
@@ -111,9 +112,9 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
 
   m_pConfig->addBooleanParameter("-usethresholds", false);
   m_pConfig->addIntListParameter("-thresholds",
-                                        0, MQDC32::Thresholds::Max, // min val, max val (13 bits)
-                                        32, 32, 32, // min size, max size, default size
-                                        0);  // def value
+                                  0, MQDC32::Thresholds::Max, 
+                                  32, 32, 32, 
+                                  0);  // def value
 
 
   // IRQ related details
@@ -123,28 +124,28 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
   m_pConfig->addBooleanParameter("-multievent", false);
 
   m_pConfig->addIntListParameter("-bankoffsets", 
-                                        0, MQDC32::BankOffsets::Max,
-                                        2, 2, 2, 128);
+                                  0, MQDC32::BankOffsets::Max,
+                                  2, 2, 2, 128);
   m_pConfig->addEnumParameter("-gatemode", GateModeValues, GateModeValues[0]);
 
   // the hold delays and widths have the same list constraints.
   // just different default values.
   m_pConfig->addIntListParameter("-gatelimits", 
-                                        0, MQDC32::GateLimit::Max, // min val, max val 
-                                        2, 2, 2, // min size, max size, default size
-                                        MQDC32::GateLimit::Max);  // no limit 
+                                  0, MQDC32::GateLimit::Max, // min val, max val 
+                                  2, 2, 2, // min size, max size, default size
+                                  MQDC32::GateLimit::Max);  // no limit 
   m_pConfig->addIntListParameter("-exptrigdelays",
-                                        0, MQDC32::ExpTrigDelay::Max, // min val, max val 
-                                        2, 2, 2, // min size, max size, default size
-                                        0);  // def value
+                                  0, MQDC32::ExpTrigDelay::Max, // min val, max val 
+                                  2, 2, 2, // min size, max size, default size
+                                  0);  // def value
 
   // input coupling
   m_pConfig->addEnumParameter("-inputcoupling0", 
-                                      InputCouplingValues, 
-                                      InputCouplingValues[0]);
+                               InputCouplingValues, 
+                               InputCouplingValues[0]);
   m_pConfig->addEnumParameter("-inputcoupling1", 
-                                      InputCouplingValues, 
-                                      InputCouplingValues[0]);
+                               InputCouplingValues, 
+                               InputCouplingValues[0]);
 
   // test pulser
   m_pConfig->addEnumParameter("-pulser", PulserModes, PulserModes[0]);
@@ -174,6 +175,7 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
       32);
 
 }
+
 /*!
    Initialize the module prior to data taking.  We will get the initialization
    data from the configuration.  Unfortunately, there's no way to verify the
@@ -183,36 +185,6 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
           to initilize the module (the module is in a VME crate connected to that
           VMUSB object.
 */
-
-unique_ptr<CVMUSBReadoutList> getList(CVMUSB& ctlr) 
-{
-  return unique_ptr<CVMUSBReadoutList>(ctlr.createReadoutList());
-}
-
-void execList(CVMUSB& ctlr, unique_ptr<CVMUSBReadoutList>& list) 
-{
-  auto res = ctlr.executeList(*list,128);
-  if (res.size()==0) {
-    throw std::runtime_error("Failure while executing list.");
-  }
-}
-
-template<class T>
-T execList(CVMUSB& ctlr, CVMUSBReadoutList& list) 
-{
-  T val;
-  size_t nBytes;
-  int status = ctlr.executeList(list, &val, sizeof(val), &nBytes);
-  if (status<0) {
-    throw std::runtime_error("Failure while executing list.");
-  }
-  if (nBytes != sizeof(T)) {
-    throw std::runtime_error("Failed to read the expect number of bytes.");
-  }
-
-  return val;
-}
-
 void
 CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
 {
@@ -284,7 +256,8 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
     throw std::runtime_error("Failure while executing list.");
   }
 
-  // allow time for that configuration to set in
+  // allow time for that configuration to set in before accepting gates
+  // because some of the config will effect the digitized values.
   sleep(1);
 
   // begin accepting gates.
@@ -297,16 +270,26 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
 
 }
 
+/*! \brief Utility func for retrieving the base address
+ *
+ */
 uint32_t CMQDC32RdoHdwr::getBase() {
   return m_pConfig->getUnsignedParameter("-base");
 }
 
-//
+/*! \brief  Add operations to the stack to set module id
+ *
+ * \param list a readout list
+ */
 void CMQDC32RdoHdwr::configureModuleID(CVMUSBReadoutList& list) {
   uint16_t id = m_pConfig->getIntegerParameter("-id");
   m_logic.addWriteModuleID(list,id);
 }
 
+/*! \brief Add operations to stack to set up the thresholds
+ *
+ * \param list a readout list
+ */
 void CMQDC32RdoHdwr::configureThresholds(CVMUSBReadoutList& list) {
   if (m_pConfig->getBoolParameter("-usethresholds")) {
 
@@ -325,7 +308,13 @@ void CMQDC32RdoHdwr::configureThresholds(CVMUSBReadoutList& list) {
 }
 
 
-// timestamp --> extended always
+/*! \brief Add operations to stack to use event count or timestamp
+ *
+ *  If the timestamp is to be used, the extended tstamp is always used. otherwise
+ *  the device is configured to use the event count.
+ *
+ * \param list a readout list
+ */
 void CMQDC32RdoHdwr::configureMarkerType(CVMUSBReadoutList& list) {
   using namespace MQDC32::MarkerType;
   if (m_pConfig->getBoolParameter("-timestamp")) {
@@ -335,7 +324,12 @@ void CMQDC32RdoHdwr::configureMarkerType(CVMUSBReadoutList& list) {
   }
 }
 
-
+/*! \brief Set up the gate mode to use single or separate 
+ *
+ * \todo, give proper documentation for this.
+ *
+ * \param list  a readout list
+ */
 void CMQDC32RdoHdwr::configureMemoryBankSeparation(CVMUSBReadoutList& list) {
   string      gatemode    = m_pConfig->cget("-gatemode");
   if (gatemode == string("separate")) {
@@ -346,6 +340,15 @@ void CMQDC32RdoHdwr::configureMemoryBankSeparation(CVMUSBReadoutList& list) {
   }									
 }
 
+/*! \brief Set up the internal gate parameters 
+ *
+ * The exptrigdelays are the delay between when the actual exp gate arrives
+ * and when the integration gate is applied to the signal. the gate limit is 
+ * the length of the integration time used. It adjusts the actual gate width
+ * if it is shorter.
+ *
+ * \param list  a readout list
+ */
 void CMQDC32RdoHdwr::configureGates(CVMUSBReadoutList& list) {
 
   auto exptrigdelays = m_pConfig->getIntegerList("-exptrigdelays");
@@ -355,12 +358,28 @@ void CMQDC32RdoHdwr::configureGates(CVMUSBReadoutList& list) {
   m_logic.addWriteGateLimits(list, gatelimits);
 }
 
+/*! \brief Set up the internal gate parameters 
+ *
+ * The exptrigdelays are the delay between when the actual exp gate arrives
+ * and when the integration gate is applied to the signal. the gate limit is 
+ * the length of the integration time used. It adjusts the actual gate width
+ * if it is shorter.
+ *
+ * \param list  a readout list
+ */
 void CMQDC32RdoHdwr::configureBankOffsets(CVMUSBReadoutList& list) {
   auto offsets = m_pConfig->getIntegerList("-bankoffsets"); 
   m_logic.addWriteBankOffsets(list, offsets);
 }
 
-
+/*! Set up the test pulser
+ *
+ * The pulser is really only effective in user amplitude mode.In that case,
+ * we need to set the user's amplitude as well. We do so here.
+ *  
+ * \param list  a readout list
+ *
+ */
 void CMQDC32RdoHdwr::configureTestPulser(CVMUSBReadoutList& list) {
   using namespace MQDC32::Pulser;
 
@@ -372,10 +391,13 @@ void CMQDC32RdoHdwr::configureTestPulser(CVMUSBReadoutList& list) {
       m_logic.addWritePulserState(list, Off);
       break;
     case 1:
+      // We actually don't want to let the user use the true
+      // "Fixed amplitude" pulser mode because it has 0 amplitude.
+      //
       // fixed amplitude
-      cout << "Fixed amplitude" << endl;
-      m_logic.addWritePulserState(list, FixedAmplitude);
-      break;
+      //      cout << "Fixed amplitude" << endl;
+      //      m_logic.addWritePulserState(list, FixedAmplitude);
+      //      break;
     case 2:
       // user defined amplitude
       m_logic.addWritePulserState(list,UserAmplitude);
@@ -387,6 +409,14 @@ void CMQDC32RdoHdwr::configureTestPulser(CVMUSBReadoutList& list) {
   }
 }
 
+/*! \brief Configure the input coupling for the signals
+ *
+ * The two banks of inputs are configured using a single register so this
+ * handles the configuration of both. 
+ *
+ * \param list  a readout list
+ *
+ */
 void CMQDC32RdoHdwr::configureInputCoupling(CVMUSBReadoutList& list) {
   uint16_t coupling0 = m_pConfig->getEnumParameter("-inputcoupling0",InputCouplingValues); 
   uint16_t coupling1 = m_pConfig->getEnumParameter("-inputcoupling1",InputCouplingValues); 
@@ -395,7 +425,13 @@ void CMQDC32RdoHdwr::configureInputCoupling(CVMUSBReadoutList& list) {
   m_logic.addWriteInputCoupling(list, coupling);
 }
 
-
+/*! \brief Add commands to adjust the time divisor
+ *
+ * This effectively sets a prescaler for the timestamp.
+ *
+ * \param list  a readout list
+ *
+ */
 void CMQDC32RdoHdwr::configureTimeDivisor(CVMUSBReadoutList& list) {
   uint16_t timedivisor = m_pConfig->getUnsignedParameter("-timingdivisor");
 
@@ -403,10 +439,18 @@ void CMQDC32RdoHdwr::configureTimeDivisor(CVMUSBReadoutList& list) {
   m_logic.addResetTimestamps(list);
 }
 
+/*! \brief Add commands to enable or disable termination for the ECL inputs
+ *
+ * If termination is enabled, everything is terminated. Gate0, Gate1, and 
+ * Reset are terminated for the common inputs. The individual gate inputs 
+ * are also terminated for both banks. Otherwise, nothing is terminated.
+ *
+ * \param list  a readout list
+ */
 void CMQDC32RdoHdwr::configureECLTermination(CVMUSBReadoutList& list) {
   if (m_pConfig->getBoolParameter("-ecltermination")) {
     // terminate all!
-    m_logic.addWriteECLTermination(list, 0xf);
+    m_logic.addWriteECLTermination(list, 0x1f);
   }
   else {
     // terminate nothing
@@ -414,6 +458,15 @@ void CMQDC32RdoHdwr::configureECLTermination(CVMUSBReadoutList& list) {
   }
 }
 
+/*! \brief Set up the ECL inputs to be consistent with the mode of the module
+ *
+ *  If the user is sending an external oscillator for a timestamp, they should
+ *  set the ECLinputs to deal with timing. One of them is the oscillator inputs
+ *  and the other clears the timestamp. Othewise, they just behave as normal. One
+ *  is the Gate1 input and the other is the Fast clear.
+ *
+ *  \param list   a readout list
+ */
 void CMQDC32RdoHdwr::configureECLInputs(CVMUSBReadoutList& list) {
   
   using namespace MQDC32;
@@ -427,6 +480,15 @@ void CMQDC32RdoHdwr::configureECLInputs(CVMUSBReadoutList& list) {
   }
 }
 
+/*! Set up the ECL inputs to be consistent with the mode of the module
+ *
+ *  If the user is sending an external oscillator for a timestamp, they should
+ *  set the ECLinputs to deal with timing. One of them is the oscillator inputs
+ *  and the other clears the timestamp. Othewise, they just behave as normal. One
+ *  is the Gate1 input and the other is the Fast clear.
+ *
+ *  \param list   a readout list
+ */
 void CMQDC32RdoHdwr::configureNIMInputs(CVMUSBReadoutList& list) {
   
   using namespace MQDC32;
@@ -440,6 +502,10 @@ void CMQDC32RdoHdwr::configureNIMInputs(CVMUSBReadoutList& list) {
   }
 }
 
+/*! Configures the signal that is outputted from the NIM busy.
+ *
+ *  \param list a readout list
+ */
 void CMQDC32RdoHdwr::configureNIMBusy(CVMUSBReadoutList& list) {
   int mode = m_pConfig->getEnumParameter("-nimbusy",NIMBusyModes);
 
@@ -466,11 +532,26 @@ void CMQDC32RdoHdwr::configureNIMBusy(CVMUSBReadoutList& list) {
 }
 
 
+/*! \brief Adds commands to set timestamp source 
+ *
+ * Sets the time source as either the vme backplane 16MHz clock or an external
+ * source.
+ *
+ * \param list    a readout list
+ *
+ */
 void CMQDC32RdoHdwr::configureTimeBaseSource(CVMUSBReadoutList& list) {
   uint16_t id = m_pConfig->getEnumParameter("-timingsource",TimingSourceValues);
   m_logic.addWriteTimeBaseSource(list,id);
 }
 
+/*! \brief Adds commands for configuring the interrupt configuration
+ *
+ * The irq level is set in addition to the irq vector that the device responds to.
+ * furthermore, the irq is withdrawn when the fifo is empty.
+ *
+ * \param list    a readout list
+ */
 void CMQDC32RdoHdwr::configureIrq(CVMUSBReadoutList& list) {
   uint8_t     ipl         = m_pConfig->getIntegerParameter("-ipl");
   uint8_t     ivector     = m_pConfig->getIntegerParameter("-vector");
@@ -479,6 +560,14 @@ void CMQDC32RdoHdwr::configureIrq(CVMUSBReadoutList& list) {
   m_logic.addWriteWithdrawIrqOnEmpty(list,true);
 }
 
+/*! \brief Configure the system for single or multi event mode
+ *
+ *  In the end, both of these are really just multi event mode. The
+ *  difference is how many transfer words are allowed and what the irq
+ *  threshold is.
+ *
+ * \param list    a readout list
+ */
 void CMQDC32RdoHdwr::configureMultiEventMode(CVMUSBReadoutList& list) {
   using namespace MQDC32::TransferMode;
 
@@ -503,7 +592,12 @@ void CMQDC32RdoHdwr::configureMultiEventMode(CVMUSBReadoutList& list) {
   }
 }
 
-
+/*! \brief Set up the multiplicity limits
+ *
+ * The lower and upper limits for the two banks are set up.
+ *
+ * \param list  a readout list
+ */
 void CMQDC32RdoHdwr::configureMultiplicity(CVMUSBReadoutList& list) {
   auto lower = m_pConfig->getIntegerList("-multlowerlimits");
   auto upper = m_pConfig->getIntegerList("-multupperlimits");
@@ -512,6 +606,10 @@ void CMQDC32RdoHdwr::configureMultiplicity(CVMUSBReadoutList& list) {
   m_logic.addWriteUpperMultLimits(list, upper);
 }
 
+/*! \brief Set up the scheme for dealing with the counter reset (-syncmode)
+ *
+ * \param list  a readout list
+ */
 void
 CMQDC32RdoHdwr::configureCounterReset(CVMUSBReadoutList& list) 
 {
@@ -540,16 +638,17 @@ CMQDC32RdoHdwr::configureCounterReset(CVMUSBReadoutList& list)
 }
 
 /*!
-  Add instructions to read out the ADC for a event. Since we're only working in
-  single even tmode, we'll just read 'too many' words and let the
-  BERR terminate for us.  This ensures that we'll have that 0xfff at the end of 
-  the data.
+  Add instructions to read out the QDC for a event. Since we're working with 
+  either single or multi event mode, we will read at least the minimum transfers
+  for a complete readout of an extra cycle plus the headers, berr et.
+
   \param list  - The VMUSB read9out list that's being built for this stack.
 */
 void
 CMQDC32RdoHdwr::addReadoutList(CVMUSBReadoutList& list)
 {
   if (m_pConfig->getBoolParameter("-multievent")) {
+    // 
     uint32_t maxTransfers = m_pConfig->getUnsignedParameter("-irqthreshold");
     m_logic.addFifoRead(list,maxTransfers+40);
   } else {
@@ -560,6 +659,11 @@ CMQDC32RdoHdwr::addReadoutList(CVMUSBReadoutList& list)
   list.addDelay(5);
 }
 
+/*! Operations to do after a run has ended. This is intended to turn of 
+ * the acceptance of gates.
+ *
+ * \param ctlr  a VMUSB device
+ */
 void
 CMQDC32RdoHdwr::onEndRun(CVMUSB& ctlr) {
   unique_ptr<CVMUSBReadoutList> pList(ctlr.createReadoutList());

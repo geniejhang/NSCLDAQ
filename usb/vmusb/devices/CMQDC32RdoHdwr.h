@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2005.
+    State University (c) Copyright 2015.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -8,7 +8,7 @@
      http://www.gnu.org/licenses/gpl.txt
 
      Author:
-             Ron Fox
+      Jeromy Tompkins
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
@@ -52,8 +52,9 @@ class CVMUSBReadoutList;
 
 
 /*!
-   The MADC32 is a 32 channel ADC module produced by Mesytec.
-   This module will be used in single event mode.
+   The MQDC32 is a 32 channel QDC module produced by Mesytec.
+   This module can be used in single and multievent mode, though it is most sensible
+   to use it in single event mode with VMUSBReadout.
    The following configuration parameters can be sued to tailor
    the module:
 
@@ -63,25 +64,30 @@ class CVMUSBReadoutList;
    -id                  integer [0-255]     Module id (part of the module header).
    -ipl                 integer [0-7]       Interrupt priority level 0 means disabled.
    -vector              integer [0-255]     Interrupt vector.
-   -timestamp           bool  (false)       If true enables the extended timestamp.
+   -irqthreshold        integer 0           # Events before interrupt.
+   -multievent          bool (false)        Enable/disablen multi-event mode.
+   -bankoffsets         int [2]             Shifts adc output by +-1000 ch for each bank
    -gatemode            enum (separate,common)  Determines if the bank gates are
                                             independent or common.
-   -holddelays          int[2]              Delay between trigger and gate for each bank.
-   -holdwidths          int[2]              Lengths of generated gates.
-   -gategenerator       bool                Enable gate generator (hold stuff)
-   -inputrange          enum (4v,8v,10v)    ADC input range.
+   -exptrigdelays       int[2]              Delay between trigger and gate for each bank.
+   -gatelimits          int[2]              Lengths of generated gates.
+   -inputcoupling0      enum  (AC,DC)       Determines electrical coupling for bank 0 inputs  
+   -inputcoupling1      enum  (AC,DC)       Determines electrical coupling for bank 1 inputs  
+   -pulser              enum (off,fixedamplitude,useramplitude) Enables/disables pulser
+   -pulseramp           int [0-255]         Amplitude of pulser for useramplitdue mode
    -ecltermination      bool                Enable termination of the ECL inputs.
    -ecltming            bool                Enables ECL timestamp inputs
                                             (oscillator and reset).
    -nimtiming           bool                Enables NIM input for timestamp inputs
                                             (oscillator & rset).
+   -timestamp           bool  (false)       If true enables the extended timestamp.
    -timingsource        enum (vme,external)  Determines where timestamp source is.
    -timingdivisor       int [0-15]          Divisor (2^n) of timestamp clock
+   -syncmode            enum                Determines how the tstamp resets
+   -multlowerlimits     int[2] [0-0x3f]     Specifies lower multiplicility limits 
+   -multupperlimits     int[2] [0-0x3f]     Specifies upper multiplicility limits 
    -thresholds          int[32] [0-4095]    Threshold settings (0 means unused).
-   -multievent          bool (false)        Enable/disablen multi-event mode.
-   -irqthreshold        integer 0           # Events before interrupt.
-   -resolution          enum (8k)           2k 4k 4khires 8k 8khires ..
-                                            possible ADC resolution values.
+   -usethresholds       bool                Determines whether to use thresholds
 
 \endverbatim
 */
@@ -105,9 +111,8 @@ private:
   int operator==(CMQDC32RdoHdwr& rhs) const;
   int operator!=(CMQDC32RdoHdwr& rhs) const;
 
-  // The interface for CReadoutHardware:
-
 public:
+  // The interface for CReadoutHardware:
   virtual void onAttach(CReadoutModule& configuration);
   virtual void Initialize(CVMUSB& controller);
   virtual void addReadoutList(CVMUSBReadoutList& list);
@@ -117,14 +122,18 @@ public:
   // The following functions are used by the madcchain module.
   //
   void setChainAddresses(CVMUSB& controller,
-			 ChainPosition position,
-			 uint32_t      cbltBase,
-			 uint32_t      mcastBase);
+                  			 ChainPosition position,
+                  			 uint32_t      cbltBase,
+                  			 uint32_t      mcastBase);
 
   void initCBLTReadout(CVMUSB& controller, uint32_t cbltAddress, int wordsPermodule);
   // Utilities:
 
 private:
+  // Utility methods to deal with the logic associated with either an individual
+  // or group of options.  These all add vme operations to a readout list that 
+  // are later executed.  For the most part, they are just chunks of the logic 
+  // associated with the Initialize method.
   void configureModuleID(CVMUSBReadoutList& list);
   void configureThresholds(CVMUSBReadoutList& list);
   void configureMarkerType(CVMUSBReadoutList& list);
