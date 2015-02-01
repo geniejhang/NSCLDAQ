@@ -40,7 +40,7 @@ namespace NSCLDAQ
     public:
 
       /*! \brief Default constructor */
-      DataSink() = defualt;
+      DataSink() = default;
 
       /*! \brief The virtual destructor
        *
