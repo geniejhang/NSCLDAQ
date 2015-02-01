@@ -235,4 +235,11 @@ namespace NSCLDAQ
     return pItem;
   }
 
+  template<>
+  inline  bool FileDataSource<_RingItem>::acceptable(_RingItem* item) const
+    {
+      uint16_t type             = item->s_header.s_type; // Byte swaps as needed.
+      std::set<uint16_t>::iterator i = m_exclude.find(type);
+      return (i == m_exclude.end()); // Not found is good.
+    }
 } // end of NSCLDAQ namespace

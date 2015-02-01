@@ -1,3 +1,5 @@
+#SUBDIRS = 10.x
+
 bin_PROGRAMS = compatibilitybuffer compatibilitylogger BufferToRing convert10to11
 
 noinst_HEADERS = buffer.h buftypes.h CBufferConverter.h CLogRun.h \
@@ -36,9 +38,11 @@ BufferToRing_CPPFLAGS=-I@top_srcdir@/daq/format -I@top_srcdir@/base/headers \
 convert10to11_SOURCES = Convert10to11.cpp
 
 convert10to11_LDADD = @top_builddir@/daq/format/libdataformat.la \
-    @top_builddir@/base/os/libdaqshm.la
+    @top_builddir@/base/os/libdaqshm.la \
+		@top_builddir@/base/uri/liburl.la
 convert10to11_CPPFLAGS=-I@top_srcdir@/daq/format -I@top_srcdir@/base/headers \
-	-I@top_srcdir@/base/os
+	-I@top_srcdir@/base/os -I@top_srcdir@/base/uri \
+	 @LIBTCLPLUS_CFLAGS@
 
 
 #  Anything that is generated from a .in file is in builddir anything

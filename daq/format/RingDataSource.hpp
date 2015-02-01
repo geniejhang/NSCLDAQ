@@ -106,7 +106,7 @@ Destructor:
 
   // specialization of getItem for CRingItems.
   template<> 
-    CRingItem* RingDataSource<CRingItem>::getItem()
+   inline CRingItem* RingDataSource<CRingItem>::getItem()
     {
       CRingItem* pItem = CRingItem::getFromRing(*m_pRing, *m_pPredicate);
       return pItem;

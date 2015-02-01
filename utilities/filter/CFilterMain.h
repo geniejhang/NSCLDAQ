@@ -23,11 +23,11 @@
 #include <vector> 
 #include <stdint.h>
 #include <CFatalException.h>
+#include <CDataSource.h>
+#include <CDataSink.h>
 
 class CMediator;
-class CDataSource;
 class CFilter;
-class CDataSink;
 struct gengetopt_args_info;
 
 class CFilterMain

@@ -44,9 +44,10 @@
 #endif
 #endif
 
+#include <CDataSource.h>
+
 // forward class definitions:
 
-class CDataSource;
 class CRingScalerItem;
 class CRingStateChangeItem;
 class TclServerConnection;

@@ -21,10 +21,11 @@
 
 #include <COneShotHandler.h>
 #include <CMediator.h>
+#include <CDataSource.h>
+#include <CDataSource.h>
+#include <CDataSink.h>
 
-class CDataSource;
 class CFilter;
-class CDataSink;
 class CRingItem;
 class CRingStateChangeItem;
 
