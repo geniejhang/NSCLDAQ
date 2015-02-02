@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2015.
+    State University (c) Copyright 2014.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -24,7 +24,6 @@
 namespace NSCLDAQ 
 {
 
-  // Forward declaration
   template<class T> class DataSink;
 
 
@@ -37,36 +36,28 @@ namespace NSCLDAQ
    *   CFileDataSink   - specified by the file:// protocol
    *                     (stdout can be specified as file:///stdout or - )
    *
-   *   CRingDataSink   - specified by tcp:// or ring:// protocol
+   * To be supported in the future:
+   *   CRingDataSink   - TODO...
+   *
    */
   template<class T> class DataSinkFactory
   {
-    
     public:
       /**! 
-       * \brief Parse the argument and return the proper type of sink
-       *
-       * This is the means by which a user can request a new data sink.
-       *
-       * \param  uri    identifier of the sink (proto://...)
-       *
-       * \returns a new data sink (caller assumes ownership)
-       */
+
+        Parse the argument and return the proper type of sink
+        */
       virtual DataSink<T>* makeSink(std::string uri);
 
     private:
       /**!
-       * Create a file data sink for the specified file    
-       *
-       * \returns a new file data sink
-       */
+        Create a file data sink for the specified file    
+        */
       DataSink<T>* makeFileSink(std::string fname); 
 
       /**!
-       * Create a ring data sink with the specified name
-       *
-       * \returns a new ring data sink
-       */
+        Create a ring data sink with the specified name
+        */
       DataSink<T>* makeRingSink(std::string ringname); 
   };
 

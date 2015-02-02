@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2015.
+    State University (c) Copyright 2005.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -106,7 +106,7 @@ Destructor:
 
   // specialization of getItem for CRingItems.
   template<> 
-   inline CRingItem* RingDataSource<CRingItem>::getItem()
+    CRingItem* RingDataSource<CRingItem>::getItem()
     {
       CRingItem* pItem = CRingItem::getFromRing(*m_pRing, *m_pPredicate);
       return pItem;

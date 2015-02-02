@@ -18,8 +18,7 @@ COMPILATION_FLAGS		=	-I@top_srcdir@/base/headers	\
 				-I@top_srcdir@/daq/format	\
 				@LIBTCLPLUS_CFLAGS@		\
 				-I@top_srcdir@/servers/portmanager \
-				-I@top_srcdir@/base/os \
-				-I@top_srcdir@/base/uri
+				-I@top_srcdir@/base/os
 
 
 sclclient_CPPFLAGS=$(COMPILATION_FLAGS)

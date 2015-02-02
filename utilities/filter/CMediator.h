@@ -19,10 +19,9 @@
 #ifndef CMEDIATOR_H
 #define CMEDIATOR_H
 
-#include <CDataSource.h>
-#include <CDataSink.h>
-
+class CDataSource;
 class CFilter;
+class CDataSink;
 class CRingItem;
 class CRingStateChangeItem;
 

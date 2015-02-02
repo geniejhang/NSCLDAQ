@@ -20,10 +20,10 @@
 #define CINFINITEMEDIATOR_H
 
 #include <CMediator.h>
-#include <CDataSource.h>
-#include <CDataSink.h>
 
+class CDataSource;
 class CFilter;
+class CDataSink;
 class CRingItem;
 class CRingStateChangeItem;
 

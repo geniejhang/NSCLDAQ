@@ -1,6 +1,6 @@
 /*
    This software is Copyright by the Board of Trustees of Michigan
-   State University (c) Copyright 2015.
+   State University (c) Copyright 2005.
 
    You may use this software under the terms of the GNU public license
    (GPL).  The terms of this license are described at:
@@ -170,7 +170,6 @@ namespace NSCLDAQ
       }
     }
 
-  ///////////////////    SPECIALIZATIONS  ///////////////////////////////////
 
   // specialization for CRingItems.
   template<> inline CRingItem* FileDataSource<CRingItem>::getItemFromFile()
@@ -235,11 +234,4 @@ namespace NSCLDAQ
     return pItem;
   }
 
-  template<>
-  inline  bool FileDataSource<_RingItem>::acceptable(_RingItem* item) const
-    {
-      uint16_t type             = item->s_header.s_type; // Byte swaps as needed.
-      std::set<uint16_t>::iterator i = m_exclude.find(type);
-      return (i == m_exclude.end()); // Not found is good.
-    }
 } // end of NSCLDAQ namespace
