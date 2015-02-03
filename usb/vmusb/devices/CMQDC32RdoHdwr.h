@@ -73,7 +73,7 @@ class CVMUSBReadoutList;
    -gatelimits          int[2]              Lengths of generated gates.
    -inputcoupling0      enum  (AC,DC)       Determines electrical coupling for bank 0 inputs  
    -inputcoupling1      enum  (AC,DC)       Determines electrical coupling for bank 1 inputs  
-   -pulser              enum (off,fixedamplitude,useramplitude) Enables/disables pulser
+   -pulser              bool (false)        Enables/disables pulser
    -pulseramp           int [0-255]         Amplitude of pulser for useramplitdue mode
    -ecltermination      bool                Enable termination of the ECL inputs.
    -ecltming            bool                Enables ECL timestamp inputs

@@ -49,9 +49,8 @@ using namespace std;
 static const char* GateModeValues[] = {"common", "separate",0};
 static const char* TimingSourceValues[] = {"vme", "external",0};
 static const char* InputCouplingValues[] = {"AC","DC",0};
-static const char* PulserModes[] = {"off","fixedamplitude","useramplitude",0};
 static const char* NIMBusyModes[] = {"busy", "rcbus", "full", "overthreshold",0};
-static const char* SyncModeValues[] = {"never","resetall","ctraonly", "ctrbonly", "external",0};
+static const char* SyncModeValues[] = {"never","internal","external",0};
 // Legal values for the resolution...note in this case the default is explicitly defined as 8k
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +147,7 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
                                InputCouplingValues[0]);
 
   // test pulser
-  m_pConfig->addEnumParameter("-pulser", PulserModes, PulserModes[0]);
+  m_pConfig->addBooleanParameter("-pulser", false);
   m_pConfig->addIntegerParameter("-pulseramp", 0, 0xff, 32);
 
   // output configuration
@@ -197,20 +196,20 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
 
   CVMUSB& ctlr = controller;
   m_logic.setBase(getBase());
-  {
-    unique_ptr<CVMUSBReadoutList> pList(controller.createReadoutList());
-    m_logic.addSoftReset(*pList);
-    auto res = controller.executeList(*pList,128);
-    if (res.size()==0) {
-      throw std::runtime_error("Failure while executing list.");
-    }
-  }
-
-  // If this is not here, the configuration that gets sets in the following
-  // lines gets reset to null. Heinously, this is a delayed effect. The first 
-  // data out of the device might look like the configuration was properly set, 
-  // however, after some time, the configuration changes and the data changes.
-  sleep(1);
+//  {
+//    unique_ptr<CVMUSBReadoutList> pList(controller.createReadoutList());
+//    m_logic.addSoftReset(*pList);
+//    auto res = controller.executeList(*pList,128);
+//    if (res.size()==0) {
+//      throw std::runtime_error("Failure while executing list.");
+//    }
+//  }
+//
+//  // If this is not here, the configuration that gets sets in the following
+//  // lines gets reset to null. Heinously, this is a delayed effect. The first 
+//  // data out of the device might look like the configuration was properly set, 
+//  // however, after some time, the configuration changes and the data changes.
+//  sleep(1);
 
   unique_ptr<CVMUSBReadoutList> pList(controller.createReadoutList());
   m_logic.addWriteAcquisitionState(*pList,0);
@@ -242,6 +241,9 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
   configureTimeDivisor(*pList);
   configureMarkerType(*pList);
   configureCounterReset(*pList);
+  
+  // multiplicity thresholds
+  configureMultiplicity(*pList);
 
   // see page 29 of MQDC manual for starting the readout.
   // 1. Fifo reset
@@ -383,30 +385,16 @@ void CMQDC32RdoHdwr::configureBankOffsets(CVMUSBReadoutList& list) {
 void CMQDC32RdoHdwr::configureTestPulser(CVMUSBReadoutList& list) {
   using namespace MQDC32::Pulser;
 
-  int  modeIndex = m_pConfig->getEnumParameter("-pulser", PulserModes);
   int  amplitude = m_pConfig->getUnsignedParameter("-pulseramp");
-  switch (modeIndex) {
-    case 0:
-      // off
-      m_logic.addWritePulserState(list, Off);
-      break;
-    case 1:
-      // We actually don't want to let the user use the true
-      // "Fixed amplitude" pulser mode because it has 0 amplitude.
-      //
-      // fixed amplitude
-      //      cout << "Fixed amplitude" << endl;
-      //      m_logic.addWritePulserState(list, FixedAmplitude);
-      //      break;
-    case 2:
-      // user defined amplitude
-      m_logic.addWritePulserState(list,UserAmplitude);
-      m_logic.addWritePulserAmplitude(list, amplitude);
-      break;
-    default:
-      // do nothing.
-      break;
+  if (m_pConfig->getBoolParameter("-pulser")) {
+    // user defined amplitude is the only supported
+    m_logic.addWritePulserState(list,UserAmplitude);
+    m_logic.addWritePulserAmplitude(list, amplitude);
+  } else {
+    // off
+    m_logic.addWritePulserState(list, Off);
   }
+
 }
 
 /*! \brief Configure the input coupling for the signals
@@ -436,7 +424,8 @@ void CMQDC32RdoHdwr::configureTimeDivisor(CVMUSBReadoutList& list) {
   uint16_t timedivisor = m_pConfig->getUnsignedParameter("-timingdivisor");
 
   m_logic.addWriteTimeDivisor(list, timedivisor);
-  m_logic.addResetTimestamps(list);
+  // the reset of the timestamp is left to the user...
+//  m_logic.addResetTimestamps(list); 
 }
 
 /*! \brief Add commands to enable or disable termination for the ECL inputs
@@ -623,12 +612,6 @@ CMQDC32RdoHdwr::configureCounterReset(CVMUSBReadoutList& list)
      m_logic.addWriteCounterReset(list, (CTRA|CTRB)); 
      break; 
     case 2:
-     m_logic.addWriteCounterReset(list, CTRA); 
-     break; 
-    case 3:
-     m_logic.addWriteCounterReset(list, CTRB); 
-     break; 
-    case 4:
      m_logic.addWriteCounterReset(list, External); 
      break; 
     default:
@@ -647,6 +630,7 @@ CMQDC32RdoHdwr::configureCounterReset(CVMUSBReadoutList& list)
 void
 CMQDC32RdoHdwr::addReadoutList(CVMUSBReadoutList& list)
 {
+  uint32_t base = m_pConfig->getBoolParameter("-base");
   if (m_pConfig->getBoolParameter("-multievent")) {
     // 
     uint32_t maxTransfers = m_pConfig->getUnsignedParameter("-irqthreshold");
@@ -654,7 +638,6 @@ CMQDC32RdoHdwr::addReadoutList(CVMUSBReadoutList& list)
   } else {
     m_logic.addFifoRead(list,40);
   }
-  
   m_logic.addResetReadout(list);
   list.addDelay(5);
 }

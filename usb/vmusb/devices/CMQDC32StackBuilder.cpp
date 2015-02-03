@@ -342,6 +342,10 @@ namespace MQDC32 {
     list.addDelay(MQDCDELAY);
   }
 
+  void CMQDC32StackBuilder::addReadCounterReset(CVMUSBReadoutList& list) {
+    list.addRead16(m_base + Reg::EventCounterReset, initamod);
+  }
+
   void CMQDC32StackBuilder::addFifoRead(CVMUSBReadoutList& list, size_t transfers) {
     list.addFifoRead32(m_base + Reg::eventBuffer, readamod, transfers);
   }
