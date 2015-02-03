@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                      "file:///usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd
+"
+>
+<book>
+    <bookinfo>
+      <title>Using NSCLDAQ and SpecTcl with a CAEN V775 TDC</title>
+      <author><firstname>Ron</firstname><surname>Fox</surname></author>
+      <revhistory>
+          <revision>
+             <revnumber>1.0</revnumber>
+             <date>January 22, 2015</date>
+             <authorinitials>RF</authorinitials>
+             <revremark>Original Release</revremark>
+          </revision>
+      </revhistory>
+    </bookinfo>
+    <chapter>
+        <title>Introduction</title>
+        <para>
+            This document will show how to take data from NSCLDAQ, and analyze it
+            with SpecTcl using a CAEN
+            V775 32 channel TDC.
+            We are going to:
+        </para>
+        <itemizedlist>
+            <listitem><para>
+                Show a simple electronics setup that will send test pulses into
+                the V775.
+            </para></listitem>
+            <listitem><para>
+                Show how to use the SBS readout framework to read events
+                from the V775
+            </para></listitem>
+            <listitem><para>
+                Show how to use NSCLSpecTcl to create raw spectra for the TDC
+                online.
+            </para></listitem>
+        </itemizedlist>
+        <para>
+            This paper assumes that you are at least somewhat familiar with Linux
+            since the DAQ software runs on a Linux box. It also assumes that you a
+            little familiar with C++. Finally it will be helpful if you know how to use
+            an oscilloscope, as that will be needed to setup your electronics.
+            All the code is available at:
+            <ulink url='http://docs.nscl.msu.edu/daq/samples/caenv775/code.zip' />
+        </para>
+    </chapter>
+    <chapter>
+        <title>Setting up the Electronics.</title>
+        <para>
+            
+        </para>
+    </chapter>
+    <chapter>
+        <title>Creating the Readout program</title>
+        <para>
+            
+        </para>
+    </chapter>
+    <chapter>
+        <title>
+            Creating the tailored SpecTcl
+        </title>
+        <para>
+            
+        </para>
+    </chapter>
+    <chapter>
+        <title>Running the system.</title>
+        <para>
+            
+        </para>
+    </chapter>
+    <chapter>
+        <title>Taking the example further.</title>
+        <para>
+            
+        </para>
+    </chapter>
+    <appendix>
+        <title>The full readout program.</title>
+        <para>
+            
+        </para>
+    </appendix>
+    <appendix>
+        <title>The full SpecTcl program.</title>
+        <para>
+            
+        </para>
+    </appendix>
+    <appendix>
+        <title>Scripts and other glue components.</title>
+        <para>
+            
+        </para>
+    </appendix>
+</book>

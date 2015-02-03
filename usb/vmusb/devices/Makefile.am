@@ -8,7 +8,9 @@ libVMUSBDevices_la_SOURCES	= CReadoutModule.cpp 	\
 					CMarker.cpp		\
 					C3804.cpp		\
 					CNADC2530.cpp		\
+					CMesytecBase.cpp	\
 					CMADC32.cpp		\
+					CMTDC32.cpp		\
 					CMADCScaler.cpp		\
 					CV1x90.cpp		\
 					CV977.cpp		\
@@ -69,7 +71,9 @@ noinst_HEADERS			= CReadoutModule.h 	\
 					CMarker.h		\
 					C3804.h			\
 					CNADC2530.h		\
+					CMesytecBase.h		\
 					CMADC32.h		\
+					CMTDC32.h		\
 					CMADCScaler.h		\
 					CV1x90.h		\
 					CV977.h			\
