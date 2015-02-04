@@ -1,0 +1,920 @@
+WidGet file, version 1.1, created:  Tue Oct 07 13:46:39  2003
+Widget radiobutton#9
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 1
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#9
+	configure font Times,14
+	other tabbing {}
+	other item_name radiobutton#9
+	geometry row 8
+	other type radiobutton
+	configure text 1
+	geometry column 1
+	other comments {}
+Widget scale#3
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command { SetThreshold 1}
+	configure label {Threshold 1 mv}
+	other master {}
+	other pathname scale#3
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold1
+	geometry row 3
+	other type scale
+	geometry column 2
+	other comments {}
+Widget scale#4
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 0}
+	configure label {Threshold  0 mv}
+	other master {}
+	other pathname scale#4
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold0
+	geometry row 3
+	other type scale
+	geometry column 1
+	other comments {}
+Widget scale#5
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 2}
+	configure label {Threshold 2 mv}
+	other master {}
+	other pathname scale#5
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold2
+	geometry row 3
+	other type scale
+	geometry column 3
+	other comments {}
+Widget button#1
+	geometry row 13
+	other error {}
+	other type button
+	other master {}
+	configure text Save...
+	other pathname button#1
+	other tags {}
+	other level {}
+	other help {}
+	other comments {}
+	geometry column 4
+	configure command SaveConfig
+	other tabbing {}
+	other item_name save
+Widget scale#6
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 3}
+	configure label {Threshold 3 mv}
+	other master {}
+	other pathname scale#6
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold3
+	geometry row 3
+	other type scale
+	geometry column 4
+	other comments {}
+Widget scale#12
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 4}
+	configure label {Threshold 4 mv}
+	other master {}
+	other pathname scale#12
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold4
+	geometry row 3
+	other type scale
+	geometry column 5
+	other comments {}
+Widget scale#13
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 5}
+	configure label {Threshold 5 mv}
+	other master {}
+	other pathname scale#13
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold5
+	geometry row 3
+	other type scale
+	geometry column 6
+	other comments {}
+Widget scale#14
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 6}
+	configure label {Threshold 6 mv}
+	other master {}
+	other pathname scale#14
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold6
+	geometry row 3
+	other type scale
+	geometry column 7
+	other comments {}
+Widget label#14
+	geometry row 7
+	other error {}
+	other type label
+	other master {}
+	configure text {Majority threshold}
+	other pathname label#14
+	other tags {}
+	other level {}
+	other help {}
+	other comments {}
+	geometry column 3
+	other item_name label#14
+	other tabbing {}
+Widget scale#15
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 7}
+	configure label {Threshold 7 mv}
+	other master {}
+	other pathname scale#15
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold7
+	geometry row 3
+	other type scale
+	geometry column 8
+	other comments {}
+Widget label#15
+	geometry row 1
+	other error {}
+	other type label
+	other master {}
+	configure text {CAENV 812 @}
+	other pathname label#15
+	other tags {}
+	other level {}
+	other help {}
+	other comments {}
+	geometry column 3
+	other tabbing {}
+	other item_name label#15
+Widget label#16
+	geometry row 1
+	other error {}
+	other type label
+	configure textvariable BaseAddress
+	other master {}
+	configure text label
+	other pathname label#16
+	other tags {}
+	other level {}
+	other help {}
+	other comments {}
+	geometry column 4
+	other tabbing {}
+	other item_name base
+Widget label#17
+	geometry row 1
+	other error {}
+	other type label
+	other master {}
+	configure text {Serial Number: }
+	other pathname label#17
+	other tags {}
+	other level {}
+	other help {}
+	other comments {}
+	geometry column 5
+	other item_name label#17
+	other tabbing {}
+Widget label#18
+	geometry row 1
+	other error {extra characters after close-quote}
+	other type label
+	configure textvariable SerialNumber
+	other master {}
+	configure text label
+	other pathname label#18
+	other tags {}
+	other level {}
+	other help {}
+	other comments {}
+	geometry column 6
+	other item_name serialno
+	other tabbing {}
+Widget label#20
+	geometry row 2
+	other error {}
+	other type label
+	configure textvariable Filename
+	other master {}
+	configure text label
+	other pathname label#20
+	other tags {}
+	other level {}
+	other help {}
+	other comments {}
+	geometry column 4
+	other item_name filename
+	other tabbing {}
+Widget label#19
+	geometry row 2
+	other error {}
+	other type label
+	other master {}
+	configure text {Configuration File}
+	other pathname label#19
+	other tags {}
+	other level {}
+	other help {}
+	other comments {}
+	geometry column 3
+	other item_name label#19
+	other tabbing {}
+Widget label#21
+	geometry row 2
+	other error {}
+	other type label
+	other master {}
+	configure text Module
+	other pathname label#21
+	other tags {}
+	other level {}
+	other help {}
+	other comments {}
+	geometry column 5
+	other item_name label#21
+	other tabbing {}
+Widget f
+	other generic_options {button {
+		} canvas {
+		} checkbutton {
+		} entry {
+		} frame {
+		} label {
+		} listbox {
+		} menubutton {
+		} message {
+		} radiobutton {
+		} scale {
+		} scrollbar {
+		} text {
+		}
+	}
+	other panel {}
+	other resize_row {0 0 0 0 0 0 0 0 0 0 0 0 0}
+	other type frame
+	other code set\ tcl_traceExec\ 2\n\nglobal\ BaseAddress\nglobal\ SerialNumber\ \nglobal\ Filename\nglobal\ ModuleName\nglobal\ MajorityLevel\nglobal\ auto_path\nglobal\ Configured\nglobal\ ModuleMap\n\n\n\nset\ BaseAddress\ 0\nset\ SerialNumber\ 1234\nset\ Filename\ \"-unknown-\"\nset\ ModuleName\ \"-unknown-\"\nset\ MajorityLevel\ 1\nset\ Device\ \{\ \}\nset\ Configured\ 0\n\nset\ me\ \$argv0\nset\ installdir\ \[file\ dirname\ \$me\]\nsource\ \$installdir\ CFD812.tcl\nsource\ \$installdir\ CFDState.tcl\n\npackage\ require\ CFD812\npackage\ require\ CFDState\n\n\n#\ \ Conversion\ from\ a\ width\ value\ in\ ns\n#\ \ to\ a\ width\ register\ value\ (0-255).\n#\ \ The\ width\ register\ is\ 15\ -\ 250ns.\nproc\ WidthToRegister\ \{ns\}\ \{\n\ \n\ \ set\ register\ \[expr\ (\$ns\ -\ 15)*256/235\]\n\ \ if\ \{\$register\ <\ 0\}\ \{\ set\ register\ 0\ \}\n\ \ if\ \{\$register\ >\ 255\}\ \{set\ register\ 255\}\n\n\ \ return\ \$register\n\}\n#\ \ Conversion\ from\ a\ register\ value\ \n#\ \ To\ a\ width\ value.\n#\nproc\ RegisterToWidth\ \{reg\}\ \{\n\n\ \ \ set\ ns\ \[expr\ \$reg*235/256\]\n\ \ \ set\ ns\ \[expr\ \$ns\ +\ 15\]\n\n\ \ \ return\ \$ns\n\}\n\n\n#\ Conversion\ from\ a\ deadtime\ valuein\ ns\n#\ To\ a\ register\ value\ (0-255)\ \n#\nproc\ DeadtimeToRegister\ \{ns\}\ \{\n\ \ \ set\ range\ \[expr\ (2000\ -\ 150)\ +\ 1\]\n\ \ \ set\ reg\ \[expr\ (\$ns\ -\ 150)*256/\$range\]\n\ \ \ if\ \{\$reg\ <\ 0\}\ \{set\ reg\ 0\}\n\ \ \ if\ \{\$reg\ >\ 255\}\ \{set\ reg\ 255\}\n\ \ \ return\ \$reg\n\}\n\nproc\ RegisterToDeadtime\ \{reg\}\ \{\n\ \ \ set\ range\ \[expr\ (2000-150)+1\]\n\ \ \ set\ ns\ \[expr\ \$reg*range/256\ +\ 150\]\n\n\ \ \ return\ \$ns\n\}\n\n#\ \ Respond\ to\ changes\ in\ a\ threshold\n#\ scale\ widget\n\nproc\ SetThreshold\ \{channel\ value\}\ \{\ \n\ \ global\ Configured\n\ \ global\ ModuleName\n\ \ global\ ModuleMap\n\n\ \ if\ \{\$Configured\}\ \{\n\ \ \ \ \ CFDState::SetThreshold\ \$ModuleName\ \$channel\ \$value\n\ \ \ \ \ CFD812::SetThreshold\ \$ModuleMap\ \$channel\ \$value\n\ \ \}\n\}\n\n#\ Respond\ to\ changes\ in\ width\ scale\ widgets.\n\nproc\ SetWidth\ \{bank\ value\}\ \{\n\ \ \ global\ ModuleName\n\ \ \ global\ ModuleMap\n\ \ \ global\ Configured\n\ \ \ if\ \{\$Configured\}\ \{\n\ \ \ \ \ CFDState::SetWidth\ \$ModuleName\ \$bank\ \$value\n\ \ \ \ \ CFD812::SetWidth\ \$ModuleMap\ \$bank\ \[WidthToRegister\ \$value\]\n\ \ \ \}\n\}\n\n#\ Respond\ in\ changes\ in\ Deadtime\ scale\ widgets.\n\nproc\ SetDeadtime\ \{bank\ value\}\ \{\ \n\ \ \ global\ Configured\n\ \ \ global\ ModuleName\n\ \ \ global\ ModuleMap\n\n\ \ \ if\ \{\$Configured\ \}\ \{\n\ \ \ \ \ \ CFDState::SetDeadtime\ \$ModuleName\ \$bank\ \$value\n\ \ \ \ \ \ CFD812::SetDeadtime\ \$ModuleMap\ \$bank\ \\\n\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \[DeadtimeToRegister\ \$value\]\n\ \ \ \}\n\}\n\n#Respond\ to\ changes\ in\ the\ majority\ level\ requested.\n\nproc\ SetMajority\ \{\}\ \{\ \ \n\ \ \ global\ MajorityLevel\n\ \ \ global\ Configured\n\ \ \ global\ ModuleName\n\ \ \ global\ ModuleMap\n\ \ \ global\ Filename\n\n\ \ \ if\ \{\$Configured\}\ \{\n\ \ \ \ \ \ CFDState::SetMultiplicity\ \$ModuleName\ \$MajorityLevel\n\ \ \ \ \ \ CFD812::SetMultiplicityThreshold\ \$ModuleMap\ \\\n\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \$MajorityLevel\n\ \ \ \}\n\}\n\nproc\ SaveConfig\ \{\}\ \{\n\ \ \ global\ BaseAddress\n\ \ \ global\ SerialNumber\ \n\ \ \ global\ Filename\n\ \ \ global\ ModuleName\n\ \ \ global\ BaseAddress\n\ \ \ global\ SerialNumber\ \n\ \ \ global\ Filename\n\ \ \ global\ ModuleName\n\n\ \ set\ types\ \{\n\ \ \ \ \ \ \ \{\{CFD\ Config\}\ \ \ \ \ \ \ \{.cfd\}\ \ \ \ \ \ \ \ \}\n\ \ \ \ \ \ \ \{\{All\ Files\}\ \ \ \ \ \ \ \ *\ \ \ \ \ \ \ \ \ \ \ \ \ \}\n\ \ \}\n\n\ \ set\ filename\ \[tk_getSaveFile\ \ -defaultextension\ .cfd\ \\\n\t\t\t-filetypes\ \$types\ \\\n\t\t\t-title\ \"Save\ config\ file\ as..\"\]\n\n\ \ set\ fd\ \[open\ \$filename\ w\]\n\n\ \ \ #\ Identify\ the\ file:\n\n\ \ set\ ticks\ \[clock\ seconds\]\n\ \ set\ time\ \[clock\ format\ \$ticks\]\n\n\ \ puts\ \$fd\ \"#\ CFD\ configuration\ file\ written\ \$time\"\n\ \ puts\ \$fd\ \"set\ Name\ \$ModuleName\"\n\ \ puts\ \$fd\ \"set\ ModuleBase\ \[format\ 0x%x\ \$BaseAddress\]\"\n\n\ \ #\ \ Thresholds:\n\n\ \ for\ \{set\ i\ 0\}\ \{\$i\ <\ 16\}\ \{incr\ i\}\ \{\n\ \ \ \ \ puts\ \$fd\ \\\n\ \ \ \ \ \ \"set\ Thresholds(\$i)\ \[CFDState::GetThreshold\ \$ModuleName\ \$i\]\"\n\ \ \}\n\ \ #\ widths:\n\ \n\ \ puts\ \$fd\ \"set\ WidthLow\ \ \[CFDState::GetWidth\ \$ModuleName\ 0\]\"\n\ \ puts\ \$fd\ \"set\ WidthHigh\ \[CFDState::GetWidth\ \$ModuleName\ 1\]\"\n\n\ \ #\ Deadtimes:\n\n\ \ puts\ \$fd\ \"set\ DeadTimeLow\ \ \[CFDState::GetDeadtime\ \$ModuleName\ 0\]\"\n\ \ puts\ \$fd\ \"set\ DeadTimeHigh\ \[CFDState::GetDeadtime\ \$ModuleName\ 1\]\"\n\n\ \ #\ Majority:\n\n\ \ puts\ \$fd\ \"set\ Majority\ \ \[CFDState::GetMultiplicity\ \$ModuleName\]\"\n\n\ \ #\n\n\ \ close\ \$fd\n\ \ set\ Filename\ \$filename\n\n\}\n#\n#\ \ Read\ the\ configuration\ file.\n#\nproc\ ReadConfig\ \{file\}\ \{\n\ \ \ global\ BaseAddress\n\ \ \ global\ Filename\n\ \ \ global\ ModuleName\n\ \ \ global\ MajorityLevel\n\ \ \ global\ Device\n\n\ \ \ #\ Initialize\ thresholds\ to\ defaults:\n\n\ \ \ for\ \{set\ i\ 0\}\ \{\$i\ <\ 16\}\ \{incr\ i\}\ \{\n\ \ \ \ \ set\ Thresholds(\$i)\ -5\ \ \ \ \;#\ Default\ values.\n\ \ \ \}\n\n\ \ \ #\ Inittialize\ other\ valuse\ to\ defaults.\n\n\ \ \ set\ WidthLow\ 128\n\ \ \ set\ WidthHigh\ 128\n\n\ \ \ set\ DeadTimeLow\ 200\n\ \ \ set\ DeadTimeHigh\ 200\n\n\ \ \ set\ Majority\ 1\n\n\ \ \ #\ Read\ the\ file\ to\ override\ defaults:\n\n\ \ \ catch\ \"source\ \$file\"\n\n\ \ #\ set\ our\ globals\ according\ to\ the\ sourced\ setup\ file:\n\n\ \ \ set\ ModuleName\ \ \ \$Name\n\ \ \ set\ BaseAddress\ \ \$ModuleBase\n\ \ \ set\ MajorityLevel\ \$Majority\n\n\ \ #\ Create\ and\ setup\ a\ new\ state\ object:\n\n\ \ \ CFDState::Create\ \$Name\n\ \ \ for\ \{set\ i\ 0\}\ \{\$i\ <\ 16\}\ \{incr\ i\}\ \{\n\ \ \ \ \ CFDState::SetThreshold\ \$Name\ \$i\ \$Thresholds(\$i)\n\ \ \ \}\n\ \ \ CFDState::SetWidth\ \$Name\ 0\ \$WidthLow\n\ \ \ CFDState::SetWidth\ \$Name\ 1\ \$WidthHigh\n\n\ \ \ CFDState::SetDeadtime\ \$Name\ 0\ \$DeadTimeLow\n\ \ \ CFDState::SetDeadtime\ \$Name\ 1\ \$DeadTimeHigh\n\ \ \ CFDState::SetBase\ \ \$Name\ \$ModuleBase\n\ \ \ CFDState::SetMultiplicity\ \$Name\ \$Majority\n\n\n\ \ \ \n\}\n\n#\ \ Set\ the\ configuration\ from\ the\ current\ settings.\n#\ \ By\ setting\ the\ config\ into\ the\ UI\ elements\n#\ \ The\ hardware\ setting\ functions\ will\ automatically\n#\ \ get\ set.\n\nproc\ SetConfig\ \{\}\ \{\n\n\ \ \ global\ ModuleName\n\ \ \ global\ ModuleMap\n\ \ \ global\ BaseAddress\n\ \ \ global\ SerialNumber\n\n\t#\ Access\ the\ hardware\ and\ set\ it\ up\ according\n\t#\ to\ the\ configuration\ as\ well.\n\n\ \ \ set\ ModuleMap\ \[CFD812::Map\ \$BaseAddress\ \$ModuleName\]\n\n\ \ \ \ \ #\ Thresholds:\n\n\ \ for\ \{set\ i\ 0\}\ \{\$i\ <\ 16\}\ \{incr\ i\}\ \{\n\ \ \ \ \ CFD812::SetThreshold\ \$ModuleMap\ \$i\ \\\n\t\[CFDState::GetThreshold\ \$ModuleName\ \$i\]\n\ \ \}\n\n\ \ \ \ #\ Widths:\n\n\ \ CFD812::SetWidth\ \$ModuleMap\ 0\ \\\n\ \ \ \ \ \ \ \ \[WidthToRegister\ \[CFDState::GetWidth\ \$ModuleName\ 0\]\]\n\ \ CFD812::SetWidth\ \$ModuleMap\ 1\ \\\n\ \ \ \ \ \ \ \ \[WidthToRegister\ \[CFDState::GetWidth\ \$ModuleName\ 1\]\]\ \n\n\ \ \ #\ Deadtimes:\n\n\ \ CFD812::SetDeadtime\ \$ModuleMap\ 0\ \\\n\ \ \[DeadtimeToRegister\ \[CFDState::GetDeadtime\ \$ModuleName\ 0\]\]\n\ \ CFD812::SetDeadtime\ \$ModuleMap\ 1\ \\\n\ \ \[DeadtimeToRegister\ \[CFDState::GetDeadtime\ \$ModuleName\ 1\]\]\n\n\ \ \ #\ Majority\ level:\n\n\ \ CFD812::SetMultiplicityThreshold\ \$ModuleMap\ \\\n\ \ \ \ \[CFDState::GetMultiplicity\ \$ModuleName\]\n\n\ \ #\ Finally\ read\ the\ serial\ number\ register\ and\n\ \ #\ put\ it\ in\ the\ corresponding\ lable\ widget's\ variable.\n\n\ \ set\ SerialNumber\ \[CFD812::GetSerialNumber\ \$ModuleMap\]\n\ \ puts\ \"New\ Serial\ no\ \$SerialNumber\"\n\t#\ Set\ threshold\ widgets.\n\n\ \ \ for\ \{set\ i\ 0\}\ \{\$i\ <\ 16\}\ \{incr\ i\}\ \{\n\ \ \ \ \ \ .threshold\$i\ set\ \[CFDState::GetThreshold\ \$ModuleName\ \$i\]\n\ \ \ \}\n\n\t#\ Set\ the\ width\ widgets.\n\n\ \ \ .width0\ set\ \[CFDState::GetWidth\ \$ModuleName\ 0\]\n\ \ \ .width1\ set\ \[CFDState::GetWidth\ \$ModuleName\ 1\]\n\n\t#\ Set\ the\ deadtime\ widgets.\n\n\ \ \ .deadtime0\ set\ \[CFDState::GetDeadtime\ \$ModuleName\ 0\]\n\ \ \ .deadtime1\ set\ \[CFDState::GetDeadtime\ \$ModuleName\ 1\]\n\n\t#\ Set\ the\ majority\n\n\ \ \ SetMajority\n\n\n\}\n\n#\ \ Select\ and\ read\ the\ config\ file:\n\n\nset\ types\ \{\n\ \ \ \ \{\{CFD\ Config\}\ \ \ \ \ \ \ \{.cfd\}\ \ \ \ \ \ \ \ \}\n\ \ \ \ \{\{All\ Files\}\ \ \ \ \ \ \ \ *\ \ \ \ \ \ \ \ \ \ \ \ \ \}\n\}\n\nset\ Filename\ \[tk_getOpenFile\ \ -defaultextension\ .cfd\ \\\n\t\t\t-filetypes\ \$types\ \\\n\t\t\t-title\ \"Read\ Configuration\"\]\n\nReadConfig\ \$Filename\nset\ Filename\ \[file\ tail\ \$Filename\]\n\nset\ Configured\ 1\n\nSetConfig\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n
+	other min_row {30 30 30 53 30 18 30 30 30 30 30 30 30}
+	other master {}
+	other pathname f
+	other resize_column {2 2 2 2 2 2 2 2}
+	other tags {}
+	other level 0
+	configure background #e9e9e9
+	other min_column {30 2 95 30 30 68 30 30}
+	other help {}
+	other Colors {black white bisque grey red green blue magenta yellow SystemButtonFace}
+	other comments {}
+	other item_name f
+	other tabbing {}
+Widget label#22
+	geometry row 2
+	other error {}
+	other type label
+	configure textvariable ModuleName
+	other master {}
+	configure text label
+	other pathname label#22
+	other tags {}
+	other level {}
+	other help {}
+	other comments {}
+	geometry column 6
+	other item_name module
+	other tabbing {}
+Widget radiobutton#10
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 5
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#10
+	configure font Times,14
+	other tabbing {}
+	other item_name majority5
+	geometry row 8
+	other type radiobutton
+	configure text 5
+	geometry column 2
+	other comments {}
+Widget radiobutton#11
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 9
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#11
+	configure font Times,14
+	other tabbing {}
+	other item_name mnajority9
+	geometry row 8
+	other type radiobutton
+	configure text 9
+	geometry column 3
+	other comments {}
+Widget radiobutton#12
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 13
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#12
+	configure font Times,14
+	other tabbing {}
+	other item_name majority13
+	geometry row 8
+	other type radiobutton
+	configure text 13
+	geometry column 4
+	other comments {}
+Widget radiobutton#13
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 17
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#13
+	configure font Times,14
+	other tabbing {}
+	other item_name majority17
+	geometry row 8
+	other type radiobutton
+	configure text 17
+	geometry column 5
+	other comments {}
+Widget scale#27
+	configure orient h
+	configure to 250.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from 15.0
+	configure command {SetWidth 0}
+	configure label {Widths 0-7}
+	other master {}
+	other pathname scale#27
+	geometry sticky ew
+	other tabbing {}
+	other item_name width0
+	geometry row 4
+	other type scale
+	geometry column 3
+	other comments {}
+Widget scale#28
+	configure orient h
+	configure to 2000.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from 150.0
+	configure command {SetDeadtime 0}
+	configure label {Deadtimes 0-7}
+	other master {}
+	other pathname scale#28
+	geometry sticky ew
+	other tabbing {}
+	other item_name deadtime0
+	geometry row 4
+	other type scale
+	geometry column 6
+	other comments {}
+Widget scale#30
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 8}
+	configure label {Threshold 8 mv}
+	other master {}
+	other pathname scale#30
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold8
+	geometry row 5
+	other type scale
+	geometry column 1
+	other comments {}
+Widget radiobutton#17
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 2
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#17
+	configure font Times,14
+	other tabbing {}
+	other item_name radiobutton#17
+	geometry row 9
+	other type radiobutton
+	configure text 2
+	geometry column 1
+	other comments {}
+Widget scale#31
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 9}
+	configure label {Threshold 9 mv}
+	other master {}
+	other pathname scale#31
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold9
+	geometry row 5
+	other type scale
+	geometry column 2
+	other comments {}
+Widget scale#32
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 10}
+	configure label {Threshold 10 mv}
+	other master {}
+	other pathname scale#32
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold10
+	geometry row 5
+	other type scale
+	geometry column 3
+	other comments {}
+Widget radiobutton#19
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 6
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#19
+	configure font Times,14
+	other tabbing {}
+	other item_name majority6
+	geometry row 9
+	other type radiobutton
+	configure text 6
+	geometry column 2
+	other comments {}
+Widget scale#33
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 11}
+	configure label {Threshold 11 mv}
+	other master {}
+	other pathname scale#33
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold11
+	geometry row 5
+	other type scale
+	geometry column 4
+	other comments {}
+Widget radiobutton#21
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 10
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#21
+	configure font Times,14
+	other tabbing {}
+	other item_name majority10
+	geometry row 9
+	other type radiobutton
+	configure text 10
+	geometry column 3
+	other comments {}
+Widget scale#34
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 12}
+	configure label {Threshold 12 mv}
+	other master {}
+	other pathname scale#34
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold12
+	geometry row 5
+	other type scale
+	geometry column 5
+	other comments {}
+Widget radiobutton#23
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 14
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#23
+	configure font Times,14
+	other tabbing {}
+	other item_name majority14
+	geometry row 9
+	other type radiobutton
+	configure text 14
+	geometry column 4
+	other comments {}
+Widget scale#35
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 13}
+	configure label {Threshold 13 mv}
+	other master {}
+	other pathname scale#35
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold13
+	geometry row 5
+	other type scale
+	geometry column 6
+	other comments {}
+Widget scale#36
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 14}
+	configure label {Threshold 14 mv}
+	other master {}
+	other pathname scale#36
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold14
+	geometry row 5
+	other type scale
+	geometry column 7
+	other comments {}
+Widget scale#37
+	configure orient h
+	configure to -255.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from -1.0
+	configure command {SetThreshold 15}
+	configure label {Threshold 15 mv}
+	other master {}
+	other pathname scale#37
+	geometry sticky ew
+	other tabbing {}
+	other item_name threshold15
+	geometry row 5
+	other type scale
+	geometry column 8
+	other comments {}
+Widget radiobutton#25
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 18
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#25
+	configure font Times,14
+	other tabbing {}
+	other item_name majority18
+	geometry row 9
+	other type radiobutton
+	configure text 18
+	geometry column 5
+	other comments {}
+Widget scale#39
+	configure orient h
+	configure to 250.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from 15.0
+	configure command {SetWidth 1}
+	configure label {Widths 8-15}
+	other master {}
+	other pathname scale#39
+	geometry sticky ew
+	other tabbing {}
+	other item_name width1
+	geometry row 6
+	other type scale
+	geometry column 3
+	other comments {}
+Widget scale#40
+	configure orient h
+	configure to 2000.0
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure from 150.0
+	configure command {SetDeadtime 1}
+	configure label {Deadtimes 8-15}
+	other master {}
+	other pathname scale#40
+	geometry sticky ew
+	other tabbing {}
+	other item_name deadtime1
+	geometry row 6
+	other type scale
+	geometry column 6
+	other comments {}
+Widget radiobutton#27
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 19
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#27
+	configure font Times,14
+	other tabbing {}
+	other item_name majority19
+	geometry row 10
+	other type radiobutton
+	configure text 19
+	geometry column 5
+	other comments {}
+Widget radiobutton#28
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 15
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#28
+	configure font Times,14
+	other tabbing {}
+	other item_name majority15
+	geometry row 10
+	other type radiobutton
+	configure text 15
+	geometry column 4
+	other comments {}
+Widget radiobutton#29
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 11
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#29
+	configure font Times,14
+	other tabbing {}
+	other item_name majority11
+	geometry row 10
+	other type radiobutton
+	configure text 11
+	geometry column 3
+	other comments {}
+Widget radiobutton#30
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 7
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#30
+	configure font Times,14
+	other tabbing {}
+	other item_name majority7
+	geometry row 10
+	other type radiobutton
+	configure text 7
+	geometry column 2
+	other comments {}
+Widget radiobutton#31
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 3
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#31
+	configure font Times,14
+	other tabbing {}
+	other item_name marjority3
+	geometry row 10
+	other type radiobutton
+	configure text 3
+	geometry column 1
+	other comments {}
+Widget radiobutton#32
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 4
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#32
+	configure font Times,14
+	other tabbing {}
+	other item_name marjority4
+	geometry row 11
+	other type radiobutton
+	configure text 4
+	geometry column 1
+	other comments {}
+Widget radiobutton#33
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 8
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#33
+	configure font Times,14
+	other tabbing {}
+	other item_name majority8
+	geometry row 11
+	other type radiobutton
+	configure text 8
+	geometry column 2
+	other comments {}
+Widget radiobutton#34
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 12
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#34
+	configure font Times,14
+	other tabbing {}
+	other item_name majority12
+	geometry row 11
+	other type radiobutton
+	configure text 12
+	geometry column 3
+	other comments {}
+Widget radiobutton#35
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 16
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#35
+	configure font Times,14
+	other tabbing {}
+	other item_name majority16
+	geometry row 11
+	other type radiobutton
+	configure text 16
+	geometry column 4
+	other comments {}
+Widget radiobutton#36
+	configure variable MajorityLevel
+	other error {}
+	other tags {}
+	other level {}
+	other help {}
+	configure value 20
+	configure command SetMajority
+	other master {}
+	other pathname radiobutton#36
+	configure font Times,14
+	other tabbing {}
+	other item_name majority20
+	geometry row 11
+	other type radiobutton
+	configure text 20
+	geometry column 5
+	other comments {}
+

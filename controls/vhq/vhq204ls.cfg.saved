@@ -1,0 +1,11 @@
+#
+#  Sample configuration file for a VHQ20x -XX hv controller.
+#
+
+set name vhq204ls
+set base 0xdd00	;# base address
+set maxv 2000		;# Max voltage in V.
+set maxi 100		;# Max current in uA.
+set resi 0.1            ;# Current resolution in uAmps.
+set description "My test module" ;# Symbolic name.
+
