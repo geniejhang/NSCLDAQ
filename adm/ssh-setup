@@ -1,0 +1,12 @@
+#!/bin/bash
+
+mkdir -p ~/.ssh
+cd ~/.ssh
+chmod 0700 .
+ssh-keygen -t dsa -P "" -f id_dsa
+mv id_dsa.pub authorized_keys
+mv id_dsa     identity
+chmod 0600 identity
+chmod 0640 authorized_keys
+
+echo StrictHostKeyChecking no >>config
