@@ -1,0 +1,53 @@
+Quicky scaler display program.
+
+Iterations:
+- Create titled pages.
+- Create mappings between scalers and channels.
+- Add single scalers to pages
+- Add ratios lines to pages
+- Add absolute time.
+- Add Alarms
+     > 3 setttings: Normal, Calibration, Alarms off.
+       Continuously visible radio box.
+     > U/L limits.
+- Add callouts.
+- Add print capability.
+
+
+Iteration 1:
+
+Produce a screen with:
+- Header line containing:
+  . Title.
+  . Run Number.
+  . Elapsed run time.
+  . Scaler period time.
+  . Run State.
+- Frame containing a tabbed notebook.
+- Command:
+  . page name title
+      Produces a page in the tabbed notebook tabbed by name
+      Page contains a title string at the top (centered).
+
+
+Iteration 2:
+   Create a method to map between scalers names and array names.
+   Command:
+      . scaler name channelnum.
+
+Iteration 3:
+    Add single scalers to pages.
+    Scalers are displayed as a table with titles as follows:
+      Scaler name     rate   total
+    Command:
+       display_single name
+
+Iteration 4:
+    Add Ratio lines to pages.
+	pair of scaler name fields (one empty if necessary).
+      if pair, rate/total are a list of numbers.
+      Additional Ratio column.
+         Update determines ratio if second column blank.
+     Command:
+        display_ratio name1 name2
+

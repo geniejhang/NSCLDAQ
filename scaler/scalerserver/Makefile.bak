@@ -1,0 +1,42 @@
+#
+#   Makefile to build the scalerserver
+#   scalerserver is a tcl server with extra commands to support
+#   the scaler configuration stuff in the hardware.tcl file.
+#
+Objects = Server.o serverinstance.o tkAppInit.o TclAuthorizer.o tclAppInit.o \
+	CDigitizerDictionary.o CModuleCommand.o CDigitizerModule.o \
+	CConfigurationParameter.o CBoolConfigParam.o \
+	CIntArrayParam.o CIntConfigParam.o CStringArrayparam.o \
+	CStringConfigParam.o CModuleCreator.o \
+	CCAENModule.o CCAENV775.o CCAENV775Creator.o \
+	CCAENV785.o CCAENV785Creator.o \
+	CCAENV792.o CCAENV792Creator.o \
+	CCAENV830Module.o CCAENV830Creator.o \
+	CConfigurator.o
+
+
+LINK=g++ -ggdb 
+LIBRARIES= -L/usr/opt/daq/8.1/lib \
+	  -L/usr/X11R6/lib \
+	-lTclPlus -lException -lLicense -ltk -ltcl -lXt -lX11 -lm \
+	-Wl,"-rpath=/usr/opt/daq/8.1/lib"
+
+INCLUDEDIRS=-I. -I/usr/opt/daq/8.1/include -I/usr/include/tcl
+
+COMPILE=g++ -c -ggdb $(INCLUDEDIRS)
+
+
+.cpp.o:
+	$(COMPILE) $<
+
+scalerserver: $(Objects)
+	$(LINK) -o scalerserver $(Objects) $(LIBRARIES)
+
+
+clean:
+	rm -f $(Objects)
+	rm -f scalerserver
+
+depend:
+	makedepend -Y. *.cpp
+
