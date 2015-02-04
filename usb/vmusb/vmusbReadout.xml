@@ -17511,6 +17511,52 @@ Module cget <replaceable>name</replaceable>
                 </para>
             </refsect2>
             <refsect2>
+              <title>mxdcrcbus</title>
+              <para>
+                This slow-controls module enables a Mesytec MxDC device to be used as a 
+                proxy for the RC-bus protocol. The NIM busy output of the targeted 
+                MxDC will be hijacked for this purpose. To use, clients of the slow-controls
+                server can send Set and Get commands with appropriate
+                arguments to the slow-controls server. The first argument should specify 
+                the name of the mxdcrcbus slow-controls module to handle the request. 
+                The second argument, i.e. the parameter name, will provide the device 
+                number of the hardware on the rc-bus and address of the parameter 
+                referred to in it. The device number, D, and parameter address, A, are to be encoded
+                into a string of the form "dDaA". In other words, if an mxdcrcbus module
+                was created with the name "mymod" and the user wanted to use it 
+                to write the value 23 to a parameter 
+                address 10 on the device whose number is 20, the client would write
+                "Set mymod d20a10 23" to the slow-controls server. To read the value
+                back, the client would write "Get mymod d20a10" to the slow-controls server.
+              </para>
+              <refsect3>
+                <title>OPTIONS</title>
+                <para>
+                  The module supports only the <option>-base</option>
+                  option which describes to the software the base address
+                  of the Mesytec digitizer as encoded in the module's rotary
+                  switches.
+                </para>
+              </refsect3>
+            </refsect2>
+            <refsect2>
+              <title>mxdcreset</title>
+              <para>
+                This slow-controls module provides an on-demand soft reset. It also 
+                clears the device's internal counters.
+              </para>
+              <refsect3>
+                <title>OPTIONS</title>
+                <para>
+                  The module supports only the <option>-base</option>
+                  option which describes to the software the base address
+                  of the Mesytec digitizer as encoded in the module's rotary
+                  switches.
+                </para>
+              </refsect3>
+            </refsect2>
+
+            <refsect2>
                 <title>v6553</title>
                 <para>
                     This is a CAEN bias supply controller.  It makes use of the
