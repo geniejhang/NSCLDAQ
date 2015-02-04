@@ -1,0 +1,106 @@
+BINDIR=/home/fox/daq/bin
+INCLUDEDIR=/home/fox/daq/include
+LIBDIR=/home/fox/daq/lib
+VMELIBRARY=-L/home/fox/daq/lib -lVmeAPI -lpcivme
+VMELIBRARYHEADERS=-I/home/fox/daq/include
+spectrodaq_conf_dir=/opt/spectrodaq/bin
+CAMAC=-DVC32CAMAC
+#
+#  Makefile to build a readout program given the stuff in the standard
+#  skeleton.
+#
+
+SPECTRO_FLAGS=$(shell $(spectrodaq_conf_dir)/spectrodaq-conf --cflags)
+SPECTRO_LDFLAGS=$(shell $(spectrodaq_conf_dir)/spectrodaq-conf --libs)
+
+CC = gcc
+
+
+
+LDFLAGS=-L$(INSTDIR)/Lib -L$(DESTROOT)/Lib -lReadout $(SPECTRO_LDFLAGS) \
+	$($(VMEDEVICE)LIBS) 
+
+LDFLAGS=-L$(LIBDIR) -lReadout $(SPECTRO_LDFLAGS) $(VMELIBRARY) \
+	-lTclPlus -ltk -ltcl -lm
+
+CXXFLAGS = -ggdb -c -D__UNIX__ $(SPECTRO_FLAGS) -I$(INCLUDEDIR) \
+	-I$(VMELIBRARYHEADERS) $(CAMAC) -DVME -I/usr/include/tcl -I.
+
+
+CPP = g++ $(CXXFLAGS)
+
+
+PROGOBJS=ReadoutMain.o skeleton.o \
+CBoolConfigParam.o \
+CCAENV775.o \
+CCAENV775Creator.o \
+CCAENV785.o \
+CCAENV785Creator.o \
+CCAENV820.o \
+CCAENV820Card.o \
+CCAENV820Creator.o \
+CConfigurationParameter.o \
+CDigitizerDictionary.o \
+CDigitizerModule.o \
+CIntArrayParam.o \
+CIntConfigParam.o \
+CModuleCommand.o \
+CModuleCreator.o \
+CReadOrder.o \
+CScalerBank.o \
+CScalerModule.o 
+
+
+all : Program
+
+Program: $(PROGOBJS)
+	g++ -o Readout $(PROGOBJS) $(LDFLAGS)
+
+ReadoutMain.o: ReadoutMain.cpp
+	$(CPP)  $<
+skeleton.o: skeleton.cpp
+	$(CPP)  $<
+
+
+
+clean:
+	rm -f $(PROGOBJS)
+	rm -f Readout
+
+depend:
+	makedepend -Y. *.cpp# DO NOT DELETE
+
+CBoolConfigParam.o: CBoolConfigParam.h CConfigurationParameter.h
+CCAENV775.o: CCAENV775.h CDigitizerModule.h CConfigurationParameter.h
+CCAENV775.o: CIntConfigParam.h CIntArrayParam.h CBoolConfigParam.h
+CCAENV775Creator.o: CCAENV775Creator.h CModuleCreator.h CCAENV775.h
+CCAENV775Creator.o: CDigitizerModule.h CConfigurationParameter.h
+CCAENV785.o: CCAENV785.h CDigitizerModule.h CConfigurationParameter.h
+CCAENV785.o: CIntConfigParam.h CBoolConfigParam.h CIntArrayParam.h
+CCAENV785Creator.o: CCAENV785Creator.h CModuleCreator.h CDigitizerModule.h
+CCAENV785Creator.o: CConfigurationParameter.h CCAENV785.h
+CCAENV820.o: CCAENV820.h CScalerModule.h CDigitizerModule.h
+CCAENV820.o: CConfigurationParameter.h CCAENV820Card.h CIntConfigParam.h
+CCAENV820.o: CBoolConfigParam.h
+CCAENV820Card.o: CCAENV820Card.h
+CCAENV820Creator.o: CCAENV820Creator.h CModuleCreator.h CCAENV820.h
+CCAENV820Creator.o: CScalerModule.h CDigitizerModule.h
+CCAENV820Creator.o: CConfigurationParameter.h
+CConfigurationParameter.o: CConfigurationParameter.h
+CDigitizerDictionary.o: CDigitizerDictionary.h CDigitizerModule.h
+CDigitizerDictionary.o: CConfigurationParameter.h
+CDigitizerModule.o: CDigitizerModule.h CConfigurationParameter.h
+CDigitizerModule.o: CIntConfigParam.h CIntArrayParam.h CBoolConfigParam.h
+CIntArrayParam.o: CIntArrayParam.h
+CIntConfigParam.o: CIntConfigParam.h
+CModuleCommand.o: CModuleCommand.h CDigitizerDictionary.h CModuleCreator.h
+CModuleCommand.o: CDigitizerModule.h CConfigurationParameter.h CReadOrder.h
+CModuleCreator.o: CModuleCreator.h CDigitizerModule.h
+CModuleCreator.o: CConfigurationParameter.h
+CReadOrder.o: CReadOrder.h CModuleCommand.h CDigitizerDictionary.h
+CReadOrder.o: CDigitizerModule.h CConfigurationParameter.h
+CScalerBank.o: CScalerBank.h CReadOrder.h CDigitizerDictionary.h
+CScalerBank.o: CScalerModule.h CDigitizerModule.h CConfigurationParameter.h
+CScalerModule.o: CScalerModule.h CDigitizerModule.h CConfigurationParameter.h
+skeleton.o: CDigitizerDictionary.h CReadOrder.h CModuleCommand.h
+skeleton.o: CCAENV785Creator.h CModuleCreator.h CCAENV775Creator.h
