@@ -50,7 +50,7 @@ static const char* GateModeValues[] = {"common", "separate",0};
 static const char* TimingSourceValues[] = {"vme", "external",0};
 static const char* InputCouplingValues[] = {"AC","DC",0};
 static const char* NIMBusyModes[] = {"busy", "rcbus", "full", "overthreshold",0};
-static const char* SyncModeValues[] = {"never","internal","external",0};
+static const char* SyncModeValues[] = {"never","begin_run","extern_oneshot",0};
 // Legal values for the resolution...note in this case the default is explicitly defined as 8k
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +109,7 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
 
   m_pConfig->addBooleanParameter("-timestamp", false);
 
-  m_pConfig->addBooleanParameter("-usethresholds", false);
+  m_pConfig->addBooleanParameter("-usethresholds", true);
   m_pConfig->addIntListParameter("-thresholds",
                                   0, MQDC32::Thresholds::Max, 
                                   32, 32, 32, 
@@ -160,16 +160,18 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
   m_pConfig->addEnumParameter("-timingsource", 
                                      TimingSourceValues, 
                                      TimingSourceValues[0]);
-  m_pConfig->addIntegerParameter("-timingdivisor", 0, 0xffff, 15);
-  m_pConfig->addEnumParameter("-syncmode",SyncModeValues,SyncModeValues[1]);
+  m_pConfig->addIntegerParameter("-timingdivisor", 0, 0xffff, 1);
+  m_pConfig->addEnumParameter("-resetlogic",SyncModeValues,SyncModeValues[1]);
 
   // multiplicity filter
+  // Note that the second of element of the two element list provided to the
+  // following two parameters must be in the range [0,16].
   m_pConfig->addIntListParameter("-multlowerlimits",
-                                        0, 0x3f,
+                                        0, 32,
                                         2, 2, 2,
                                         0);
   m_pConfig->addIntListParameter("-multupperlimits",
-      0, 0x3f,
+      0, 32,
       2, 2, 2,
       32);
 
@@ -591,11 +593,39 @@ void CMQDC32RdoHdwr::configureMultiplicity(CVMUSBReadoutList& list) {
   auto lower = m_pConfig->getIntegerList("-multlowerlimits");
   auto upper = m_pConfig->getIntegerList("-multupperlimits");
 
+  checkMultLimitRanges(lower);
+  checkMultLimitRanges(upper);
+
   m_logic.addWriteLowerMultLimits(list, lower);
   m_logic.addWriteUpperMultLimits(list, upper);
 }
 
-/*! \brief Set up the scheme for dealing with the counter reset (-syncmode)
+/*! \brief Enforce the restricted range for the bank 1 limits
+ *
+ * The bank 1 multiplicity limit is restricted to the range [0,16] for
+ * for the lower and upper values. This is different than the bank 0
+ * limits which are restricted to the range [0,32]. Because of the
+ * way the limits are defined for the parameter, this second stage 
+ * of limit checking must be provided.
+ *
+ * \param   limit   a integer vector containing at least two elements
+ *
+ * \throws  std::string if the limits[1] is out of range.
+ */
+void 
+CMQDC32RdoHdwr::checkMultLimitRanges(const std::vector<int>& limits)
+{
+  // element 1 enforce range restriction to [0,15]
+  if (limits.at(1)>16) {
+    std::string errmsg("A value outside of [0,16] was provided to ");
+    errmsg += "-multlowerlimits or -multupperlimits for bank 1.";
+    errmsg += "\nTransition to active failed!";
+    throw errmsg;
+
+  }
+}
+
+/*! \brief Set up the scheme for dealing with the counter reset (-resetlogic)
  *
  * \param list  a readout list
  */
@@ -603,7 +633,7 @@ void
 CMQDC32RdoHdwr::configureCounterReset(CVMUSBReadoutList& list) 
 {
   using namespace MQDC32::CounterReset;
-  int modeIndex = m_pConfig->getEnumParameter("-syncmode", SyncModeValues);
+  int modeIndex = m_pConfig->getEnumParameter("-resetlogic", SyncModeValues);
   switch (modeIndex) {
     case 0:
      m_logic.addWriteCounterReset(list, Never); 

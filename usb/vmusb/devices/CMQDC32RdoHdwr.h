@@ -152,6 +152,8 @@ private:
   void configureMultiEventMode(CVMUSBReadoutList& list);
   void configureMultiplicity(CVMUSBReadoutList& list);
   void configureCounterReset(CVMUSBReadoutList& list);
+
+  void checkMultLimitRanges(const std::vector<int>& limits);
   uint32_t getBase();
 
 };
