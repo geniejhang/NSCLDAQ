@@ -1,0 +1,18 @@
+# Configuration file saved: Thu Nov 20 16:55:51 EST 2003 
+#   VHQ power supply: Scint L/R VHQ202m 2Kv @ 3ma 
+
+#      Device configuration was
+#
+#  Short name:    scintlr_hv 
+#  Base Address:  0xde00
+#  Max Voltage:   2000  V
+#  Max Current    3000 uA
+#  Description     Scint L/R VHQ202m 2Kv @ 3ma
+#  Current Res.   1.0 uA
+
+set SetPoint(a)      1320  ;# a setpoint (V)
+set RampSpeed(a)  100     ;# a Ramp speed (10V/s)
+set ILimit(a)          3000.0       ;# a Current limit (uA)
+set SetPoint(b)      1280  ;# b setpoint (V)
+set RampSpeed(b)  100     ;# b Ramp speed (10V/s)
+set ILimit(b)          3000.0       ;# b Current limit (uA)

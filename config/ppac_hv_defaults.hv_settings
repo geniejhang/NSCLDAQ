@@ -1,0 +1,18 @@
+# Configuration file saved: Thu Nov 20 17:19:47 EST 2003 
+#   VHQ power supply: PPAC Bias supply 2KV @ 100uA 
+
+#      Device configuration was
+#
+#  Short name:    ppac_hv 
+#  Base Address:  0xdd00
+#  Max Voltage:   2000  V
+#  Max Current    100 uA
+#  Description     PPAC Bias supply 2KV @ 100uA
+#  Current Res.   0.1 uA
+
+set SetPoint(a)      520  ;# a setpoint (V)
+set RampSpeed(a)  4     ;# a Ramp speed (10V/s)
+set ILimit(a)          1.0       ;# a Current limit (uA)
+set SetPoint(b)      0  ;# b setpoint (V)
+set RampSpeed(b)  100     ;# b Ramp speed (10V/s)
+set ILimit(b)          100.0       ;# b Current limit (uA)

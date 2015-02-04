@@ -1,0 +1,63 @@
+# Shaper configuration file saved Fri Feb 20 09:55:57 EST 2004 
+#
+#   Name                 :  shaper
+#   Caennet Controller:  caennet_0x100000
+#   Caennet node id   :  1
+
+set muxenable 1
+set  muxsel     0
+set offset       192
+
+set outconfig(0)    1
+set outconfig(1)    1
+set outconfig(2)    1
+set outconfig(3)    1
+set outconfig(4)    0
+set outconfig(5)    0
+set outconfig(6)    0
+set outconfig(7)    0
+
+set outpolarity(0) 1
+set outpolarity(1) 1
+set outpolarity(2) 1
+set outpolarity(3) 1
+set outpolarity(4) 1
+set outpolarity(5) 1
+set outpolarity(6) 1
+set outpolarity(7) 1
+
+set shapetime(0) 1
+set shapetime(1) 1
+set shapetime(2) 1
+set shapetime(3) 1
+set shapetime(4) 1
+set shapetime(5) 1
+set shapetime(6) 1
+set shapetime(7) 1
+
+set coarsegain(0)  2
+set coarsegain(1)  2
+set coarsegain(2)  2
+set coarsegain(3)  2
+set coarsegain(4)  2
+set coarsegain(5)  0
+set coarsegain(6)  0
+set coarsegain(7)  0
+
+set finegain(0)  0
+set finegain(1)  0
+set finegain(2)  0
+set finegain(3)  0
+set finegain(4)  0
+set finegain(5)  0
+set finegain(6)  0
+set finegain(7)  0
+
+set pole0(0)  0
+set pole0(1)  0
+set pole0(2)  0
+set pole0(3)  0
+set pole0(4)  0
+set pole0(5)  0
+set pole0(6)  0
+set pole0(7)  0

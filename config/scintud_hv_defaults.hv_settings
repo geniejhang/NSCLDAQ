@@ -1,0 +1,18 @@
+# Configuration file saved: Thu Nov 20 16:55:58 EST 2003 
+#   VHQ power supply: Scint U/D VHQ202m 
+
+#      Device configuration was
+#
+#  Short name:    scintud_hv 
+#  Base Address:  0xef00
+#  Max Voltage:   2000  V
+#  Max Current    3000 uA
+#  Description     Scint U/D VHQ202m
+#  Current Res.   1.0 uA
+
+set SetPoint(a)      1260  ;# a setpoint (V)
+set RampSpeed(a)  100     ;# a Ramp speed (10V/s)
+set ILimit(a)          3000.0       ;# a Current limit (uA)
+set SetPoint(b)      1200  ;# b setpoint (V)
+set RampSpeed(b)  100     ;# b Ramp speed (10V/s)
+set ILimit(b)          3000.0       ;# b Current limit (uA)
