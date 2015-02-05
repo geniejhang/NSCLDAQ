@@ -920,3 +920,5 @@ Work on 11.0-rc11 begins
          
 11.0-000  
 	* Feature #3413 Merge in MTDC support from CAEN.
+	* Support callout extensions for scaler display.
+	
