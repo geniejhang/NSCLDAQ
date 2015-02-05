@@ -73,6 +73,7 @@ CRingTimestampedRunningScalerItem::CRingTimestampedRunningScalerItem(const CRing
     throw std::bad_cast();
   }
 
+  m_pItem = reinterpret_cast<pNonIncrTimestampedScaler>(getItemPointer());
   init(m_pItem->s_scalerCount);
 
 }
@@ -86,6 +87,7 @@ CRingTimestampedRunningScalerItem::CRingTimestampedRunningScalerItem(const CRing
   CRingItem(rhs)
 {
 
+  m_pItem = reinterpret_cast<pNonIncrTimestampedScaler>(getItemPointer());
   init(m_pItem->s_scalerCount);
 }
 /**
@@ -106,6 +108,7 @@ CRingTimestampedRunningScalerItem::operator=(const CRingTimestampedRunningScaler
 {
   if (&rhs != this) {
     CRingItem::operator=(rhs);
+    m_pItem = reinterpret_cast<pNonIncrTimestampedScaler>(getItemPointer());
     init(m_pItem->s_scalerCount);
   }
 
