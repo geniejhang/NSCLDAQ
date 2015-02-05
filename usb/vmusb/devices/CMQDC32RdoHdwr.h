@@ -43,6 +43,7 @@
 #endif
 
 #include <CMQDC32StackBuilder.h>
+#include <CMesytecBase.h>
 
 // Forward class definitions:
 
@@ -91,14 +92,8 @@ class CVMUSBReadoutList;
 
 \endverbatim
 */
-class CMQDC32RdoHdwr : public CReadoutHardware
+class CMQDC32RdoHdwr : public CMesytecBase
 {
-public:
-  enum ChainPosition {
-    first,
-    middle,
-    last
-  };
 private:
   MQDC32::CMQDC32StackBuilder     m_logic;
   CReadoutModule*     m_pConfig;
@@ -121,12 +116,14 @@ public:
 
   // The following functions are used by the madcchain module.
   //
-  void setChainAddresses(CVMUSB& controller,
-                  			 ChainPosition position,
-                  			 uint32_t      cbltBase,
-                  			 uint32_t      mcastBase);
+  virtual void setChainAddresses(CVMUSB& controller,
+                           			 ChainPosition position,
+                            	   uint32_t      cbltBase,
+                  			         uint32_t      mcastBase);
 
-  void initCBLTReadout(CVMUSB& controller, uint32_t cbltAddress, int wordsPermodule);
+  virtual void initCBLTReadout(CVMUSB& controller, 
+                               uint32_t cbltAddress, 
+                               int wordsPermodule);
   // Utilities:
 
 private:

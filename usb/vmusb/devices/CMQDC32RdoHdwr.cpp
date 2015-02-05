@@ -59,7 +59,7 @@ static const char* SyncModeValues[] = {"never","begin_run","extern_oneshot",0};
 /* These are largely trivial in nature: */
 
 CMQDC32RdoHdwr::CMQDC32RdoHdwr() :
-  CReadoutHardware(),
+  CMesytecBase(),
   m_logic(),
   m_pConfig(0) 
 {}
@@ -68,7 +68,7 @@ CMQDC32RdoHdwr::CMQDC32RdoHdwr() :
 /*! Copy construction involves a deep copy */
 
 CMQDC32RdoHdwr::CMQDC32RdoHdwr(const CMQDC32RdoHdwr& rhs) :
-  CReadoutHardware(rhs),
+  CMesytecBase(rhs),
   m_pConfig(0)
 {
   if (rhs.m_pConfig) {
@@ -81,6 +81,7 @@ CMQDC32RdoHdwr::~CMQDC32RdoHdwr() {}
 CMQDC32RdoHdwr&
 CMQDC32RdoHdwr::operator=(const CMQDC32RdoHdwr& rhs)
 {
+  CMesytecBase::operator=(rhs);
   return *this;
 }
 /////////////////////////////////////////////////////////////////////////////////
@@ -694,29 +695,29 @@ CMQDC32RdoHdwr::clone() const
 {
   return new CMQDC32RdoHdwr(*this);
 }
-////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
 //
-// Code here provides support for the madcchain pseudo module that use these devices
-// in CBLT mode.
+// Code here provides support for the madcchain pseudo module that use these 
+// devices in CBLT mode.
 //
 
 /*!
    Set up the chain/mcast addresses.
    @param controller - Handle to VM_USB controller object.
-   @param position   - A value from the position enumerator CMQDC32RdoHdwr::ChainPosition
+   @param position   - A value from the position enumerator CMesytecBase::ChainPosition
    @param cbltBase   - Base address for CBLT transfers.
    @param mcastBase  - Base address for multicast transfers.
 
    Note that both mcast and cblt are enabled for now.
 */
 void
-CMQDC32RdoHdwr::setChainAddresses(CVMUSB&                controller,
-    CMQDC32RdoHdwr::ChainPosition position,
-    uint32_t               cbltBase,
-    uint32_t               mcastBase)
+CMQDC32RdoHdwr::setChainAddresses(CVMUSB&                ctlr,
+                                  CMesytecBase::ChainPosition position,
+                                  uint32_t               cbltBase,
+                                  uint32_t               mcastBase)
 {
 
-  uint32_t base = m_pConfig->getIntegerParameter("-base");
+  uint32_t base = getBase();
 
   cerr << "Position: " << position << endl;
 
@@ -726,38 +727,38 @@ CMQDC32RdoHdwr::setChainAddresses(CVMUSB&                controller,
 
   uint16_t controlRegister = MCSTENB | CBLTENB; // This much is invariant.
   switch (position) {
-  case first:
-    controlRegister |= FIRSTENB | LASTDIS;
-    cerr << "First\n";
-    break;
-  case middle:
-    controlRegister |= FIRSTDIS | LASTDIS;
-    cerr << "Middle\n";
-    break;
-  case last:
-    controlRegister |= FIRSTDIS | LASTENB;
-    cerr << "Last\n";
-    break;
+    case first:
+      controlRegister |= FIRSTENB | LASTDIS;
+      cerr << "First\n";
+      break;
+    case middle:
+      controlRegister |= FIRSTDIS | LASTDIS;
+      cerr << "Middle\n";
+      break;
+    case last:
+      controlRegister |= FIRSTDIS | LASTENB;
+      cerr << "Last\n";
+      break;
   }
   cerr << "Setting chain address with " << hex << controlRegister << dec << endl;
 
   // program the registers, note that the address registers take only the top 8 bits.
 
-  controller.vmeWrite16(base + Reg::CbltAddress, initamod, (uint16_t)(cbltBase >> 24));
-  controller.vmeWrite16(base + Reg::McstAddress, initamod, (uint16_t)(mcastBase >> 24));
-  controller.vmeWrite16(base + Reg::CbltMcstControl, initamod, (uint16_t)(controlRegister));
+  ctlr.vmeWrite16(base + Reg::CbltAddress, initamod, (uint16_t)(cbltBase >> 24));
+  ctlr.vmeWrite16(base + Reg::McstAddress, initamod, (uint16_t)(mcastBase >> 24));
+  ctlr.vmeWrite16(base + Reg::CbltMcstControl, initamod, (uint16_t)(controlRegister));
 
 }
 
 /*!
    Set up data taking for CBLT readout with the timestamp parameters we are using and
    the mcast address for the chain
-   @param controller - CVMUSB controller reference.
+   @param ctlr - CVMUSB ctlr reference.
    @param mcast  - Multicast address used to program the chain.
    @param rdoSize - Words per module.
 */
 void
-CMQDC32RdoHdwr::initCBLTReadout(CVMUSB& controller, uint32_t mcast, int rdoSize)
+CMQDC32RdoHdwr::initCBLTReadout(CVMUSB& ctlr, uint32_t mcast, int rdoSize)
 {
   // We need our timing source
   // IRQThreshold
@@ -778,8 +779,8 @@ CMQDC32RdoHdwr::initCBLTReadout(CVMUSB& controller, uint32_t mcast, int rdoSize)
   using namespace MQDC32;
   // Stop acquistiion
   // ..and clear buffer memory:
-  controller.vmeWrite16(mcast + Reg::StartAcq, initamod, (uint16_t)0);
-  controller.vmeWrite16(mcast + Reg::InitFifo, initamod, (uint16_t)0);
+  ctlr.vmeWrite16(mcast + Reg::StartAcq, initamod, (uint16_t)0);
+  ctlr.vmeWrite16(mcast + Reg::InitFifo, initamod, (uint16_t)0);
 
   // Set stamping
 
@@ -787,35 +788,29 @@ CMQDC32RdoHdwr::initCBLTReadout(CVMUSB& controller, uint32_t mcast, int rdoSize)
     // Oscillator sources are assumed to already be set.
     // Reset the timer:
 
-    controller.vmeWrite16(mcast + Reg::MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
-    controller.vmeWrite16(mcast + Reg::TimestampReset, initamod, (uint16_t)3); // reset all counter.
+    ctlr.vmeWrite16(mcast + Reg::MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
+    ctlr.vmeWrite16(mcast + Reg::TimestampReset, initamod, (uint16_t)3); // reset all counter.
   }
   else {
-    controller.vmeWrite16(mcast + Reg::MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
-    controller.vmeWrite16(mcast + Reg::EventCounterReset, initamod, (uint16_t)0); // Reset al event counters.
+    ctlr.vmeWrite16(mcast + Reg::MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
+    ctlr.vmeWrite16(mcast + Reg::EventCounterReset, initamod, (uint16_t)0); // Reset al event counters.
   }
   // Set multievent mode
   
-  controller.vmeWrite16(mcast + Reg::MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
-  controller.vmeWrite16(mcast + Reg::IrqThreshold, initamod, (uint16_t)irqThreshold);
-  controller.vmeWrite16(mcast + Reg::MaxTransfer, initamod,  (uint16_t)rdoSize);
+  ctlr.vmeWrite16(mcast + Reg::MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
+  ctlr.vmeWrite16(mcast + Reg::IrqThreshold, initamod, (uint16_t)irqThreshold);
+  ctlr.vmeWrite16(mcast + Reg::MaxTransfer, initamod,  (uint16_t)rdoSize);
 
   // Set the IRQ
 
-  controller.vmeWrite16(mcast + Reg::Vector, initamod, (uint16_t)vector);
-  controller.vmeWrite16(mcast + Reg::Ipl,    initamod, (uint16_t)ipl);
-  controller.vmeWrite16(mcast + Reg::IrqThreshold, initamod, (uint16_t)irqThreshold);
+  ctlr.vmeWrite16(mcast + Reg::Vector, initamod, (uint16_t)vector);
+  ctlr.vmeWrite16(mcast + Reg::Ipl,    initamod, (uint16_t)ipl);
+  ctlr.vmeWrite16(mcast + Reg::IrqThreshold, initamod, (uint16_t)irqThreshold);
 
   // Init the buffer and start data taking.
 
-  controller.vmeWrite16(mcast + Reg::InitFifo, initamod, (uint16_t)0);
-  controller.vmeWrite16(mcast + Reg::ReadoutReset, initamod, (uint16_t)0);
-  controller.vmeWrite16(mcast + Reg::StartAcq , initamod, (uint16_t)1);
+  ctlr.vmeWrite16(mcast + Reg::InitFifo, initamod, (uint16_t)0);
+  ctlr.vmeWrite16(mcast + Reg::ReadoutReset, initamod, (uint16_t)0);
+  ctlr.vmeWrite16(mcast + Reg::StartAcq , initamod, (uint16_t)1);
 }
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Private utilities:
-//
 
