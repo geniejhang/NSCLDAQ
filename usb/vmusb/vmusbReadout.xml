@@ -6943,7 +6943,7 @@ stack config evt -modules {qdc} -trigger interrupt -ipl 1 -vector 0 <co id="mqdc
         </refmeta>
         <refnamediv>
           <refname>madcchain</refname>
-          <refpurpose>Support CBLT chains of MADC32 modules.</refpurpose>
+          <refpurpose>Support CBLT chains of Mesytec MxDC32 family of modules.</refpurpose>
         </refnamediv>
         <refsynopsisdiv>
           <cmdsynopsis>
@@ -6965,23 +6965,25 @@ madcchain cget <replaceable>name</replaceable>
 	 <refsect1>
 	    <title>DESCRIPTION</title>
 	    <para>
-	       This module creates and configures chains of MADC32 modules.
+	       This module creates and configures chains of MxDC32 modules.
+         At the moment the MADC-32, MTDC-32, and MQDC-32 all are 
+         supported.
 	       If these modules are, in turn, run in multi-event mode,
 	       a specialized SpecTcl will be needed to unpack the data.
 	       It is possible, however to use single event mode with
 	       CBLT readout and use 'normal' SpecTcl unpacking.
 	    </para>
 	    <para>
-	       The <command>create</command> creates a new MADC32 chain.
+	       The <command>create</command> creates a new MxDC32 chain.
 	       <replaceable>name</replaceable> will be used to refer to this chain
 	       during configuration.  At any time the
 	       <command>cget</command> returns the configuration of the chain
 	       as a list of parameter-name parameter-value pairs.
 	    </para>
 	    <para>
-	       The <command>config</command> configures an MADC32 chain.
+	       The <command>config</command> configures an MxDC32 chain.
 	       A set of option name option value argument pairs should follow
-	       the chain name on the commandline.  OPTIONS below descsribes the
+	       the chain name on the commandline.  OPTIONS below describes the
 	       options and their legal values.
 	    </para>
          </refsect1>
@@ -7020,12 +7022,12 @@ madcchain cget <replaceable>name</replaceable>
 	          <term><option>-maxwordspermodule</option> <replaceable>longword-coun</replaceable></term>
 		  <listitem>
 		     <para>
-		        Defines the maximuim words that can be read from each module.
+		        Defines the maximum words that can be read from each module.
 			This should be a number between
 			<literal>1</literal> and <literal>1024</literal>.
 			This value should usually be larger than the
 			<option>-irqthreshold</option> option programmed into the
-			MADC32 modules in the chain.  For each block read, the
+			MxDC32 modules in the chain.  For each block read, the
 			module will return no more data than the complete event that
 			causes the number of longwords read from the module to exceed
 			this value.
@@ -7036,7 +7038,7 @@ madcchain cget <replaceable>name</replaceable>
 	          <term><option>-modules</option>  <replaceable>module-name-list</replaceable></term>
 		  <listitem>
 		     <para>
-		        Defines the list of MADC32 modules that make up the chain.
+		        Defines the list of MxDC32 modules that make up the chain.
 			The value for this option should be a well formulated
 			Tcl list containing names of <command>madc</command> modules.
 			There is a restriction on the order of these names.  The
@@ -7046,7 +7048,7 @@ madcchain cget <replaceable>name</replaceable>
 		     </para>
 		     <para>
 		        For practical purposes, to limit confusion, I generally
-			enumderate the modules from left (low slot number) to
+			enumerate the modules from left (low slot number) to
 			right (higher slot number). 
 		     </para>
 		  </listitem>
