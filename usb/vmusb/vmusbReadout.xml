@@ -6760,54 +6760,80 @@ mqdc cget <replaceable>name</replaceable>
             </varlistentry>
 
             <varlistentry>
-              <term><option>-multlowerlimits</option> <replaceable>intlist</replaceable></term>
+              <term><option>-multlowerlimit0</option> <replaceable>val</replaceable></term>
               <listitem>
                 <para>
-                  The <replaceable>intlist</replaceable> must be a two element list that contains
-                  integers. The meaning for the two elements change 
+                  The <replaceable>val</replaceable> must be an integer in the range [0,32]. 
+                  The effect of this option changes 
                   according to the value of the <option>-gatemode</option> option. In general,
-                  these provide a lower multiplicity limit for accepting data. If the number
+                  this provides a lower multiplicity limit for accepting data. If the number
                   of channels with data for a single gate is greater than or equal to the lower
                   multiplicity limit, the data is added to the buffer. If that is not the case,
-                  all data produced for that single gate is discarded. The first element must 
-                  be in a range from 0 to 32 and the second element must be in a range from
-                  0 to 16.
+                  all data produced for that single gate is discarded.
 
                 </para> 
                 <para>
-                  If <option>-gatemode</option> is set to <literal>common</literal>, then only the first element 
-                  of <replaceable>intlist</replaceable> is considered. It serves as the lower
-                  multiplicity limit for all 32 channels. 
-                  In case the reader is curious, the 
-                  second list element is written to the device just as the first element is. 
-                  The device simply ignores the presence of the second value because of the
-                  gate mode.
+                  If <option>-gatemode</option> is set to <literal>common</literal>, then 
+                  the value serves as the lower multiplicity limit for all 32 channels. 
                 </para>
                 <para>
-                  If instead <option>-gatemode</option> is set to <literal>separate</literal>, both the first 
-                  and second elements of <replaceable>intlist</replaceable> have importance.
-                  The first element serves as the lower multiplicity limit for bank 0 channels
-                  (channels 0 to 15) and the second element serves as the lower multiplicity limit
-                  for bank 1 channels (channels 16 to 31).
+                  If instead <option>-gatemode</option> is set to <literal>separate</literal>, 
+                  it serves as the lower multiplicity limit for bank 0 channels
+                  (channels 0 to 15).
                 </para>
                 <para>
-                  The default value for this is {0 0}.
+                  The default value for this is 0.
                 </para>
               </listitem>
             </varlistentry>
 
             <varlistentry>
-              <term><option>-multupperlimits</option> <replaceable>intlist</replaceable></term>
+              <term><option>-multlowerlimit1</option> <replaceable>val</replaceable></term>
+              <listitem>
+                <para>
+                  The <replaceable>val</replaceable> must be an integer in the range [0,16]. 
+                  The effect of this option changes 
+                  according to the value of the <option>-gatemode</option> option. 
+                  If <option>-gatemode</option> is set to <literal>common</literal>, then 
+                  the value is written to the device, but the device makes no use of it.
+                  If instead <option>-gatemode</option> is set to <literal>separate</literal>, 
+                  it serves as the lower multiplicity limit for bank 1 channels
+                  (channels 16 to 31).
+                </para>
+                <para>
+                  The default value for this is 0.
+                </para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><option>-multupperlimit0</option> <replaceable>val</replaceable></term>
               <listitem>
                 <para>
                   The requirements and meaning for this are the same as for the 
-                  <option>-multlowerlimits</option> option. The difference is that the 
-                  values provided in <replaceable>intlist</replaceable> are upper limits
-                  instead of lower limits. If the number of channels with data for a gate must
-                  be less than or equal to the upper limit value provided to be accepted.
+                  <option>-multlowerlimit0</option> option. The difference is that the 
+                  <replaceable>val</replaceable> provided is an upper limit
+                  instead of a lower limit. If the number of channels with data for a gate must
+                  be less than or equal to the upper limit value provided to be accepted. The
+                  valid range of values for <replaceable>val</replaceable> are [0,32].
                 </para>
                 <para>
-                  The default value for this {32 32}.
+                  The default value for this 32.
+                </para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><option>-multupperlimit1</option> <replaceable>val</replaceable></term>
+              <listitem>
+                <para>
+                  The requirements and meaning for this are the same as for the 
+                  <option>-multlowerlimit1</option> option. The difference is that the 
+                  <replaceable>val</replaceable> provided is an upper limit
+                  instead of a lower limit. If the number of channels with data for a gate must
+                  be less than or equal to the upper limit value provided to be accepted. The
+                  valid range of values for <replaceable>val</replaceable> are [0,16].
+                </para>
+                <para>
+                  The default value for this 16.
                 </para>
               </listitem>
             </varlistentry>

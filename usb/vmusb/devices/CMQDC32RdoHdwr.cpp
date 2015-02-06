@@ -164,17 +164,15 @@ CMQDC32RdoHdwr::onAttach(CReadoutModule& configuration)
   m_pConfig->addIntegerParameter("-timingdivisor", 0, 0xffff, 1);
   m_pConfig->addEnumParameter("-resetlogic",SyncModeValues,SyncModeValues[1]);
 
-  // multiplicity filter
-  // Note that the second of element of the two element list provided to the
-  // following two parameters must be in the range [0,16].
-  m_pConfig->addIntListParameter("-multlowerlimits",
-                                        0, 32,
-                                        2, 2, 2,
-                                        0);
-  m_pConfig->addIntListParameter("-multupperlimits",
-      0, 32,
-      2, 2, 2,
-      32);
+  m_pConfig->addIntegerParameter("-multlowerlimit0",
+                                   0, 32, 0);
+  m_pConfig->addIntegerParameter("-multlowerlimit1",
+                                   0, 16, 0);
+
+  m_pConfig->addIntegerParameter("-multupperlimit0",
+                                   0, 32, 32);
+  m_pConfig->addIntegerParameter("-multupperlimit1",
+                                   0, 16, 16);
 
 }
 
@@ -199,20 +197,6 @@ CMQDC32RdoHdwr::Initialize(CVMUSB& controller)
 
   CVMUSB& ctlr = controller;
   m_logic.setBase(getBase());
-//  {
-//    unique_ptr<CVMUSBReadoutList> pList(controller.createReadoutList());
-//    m_logic.addSoftReset(*pList);
-//    auto res = controller.executeList(*pList,128);
-//    if (res.size()==0) {
-//      throw std::runtime_error("Failure while executing list.");
-//    }
-//  }
-//
-//  // If this is not here, the configuration that gets sets in the following
-//  // lines gets reset to null. Heinously, this is a delayed effect. The first 
-//  // data out of the device might look like the configuration was properly set, 
-//  // however, after some time, the configuration changes and the data changes.
-//  sleep(1);
 
   unique_ptr<CVMUSBReadoutList> pList(controller.createReadoutList());
   m_logic.addWriteAcquisitionState(*pList,0);
@@ -591,39 +575,16 @@ void CMQDC32RdoHdwr::configureMultiEventMode(CVMUSBReadoutList& list) {
  * \param list  a readout list
  */
 void CMQDC32RdoHdwr::configureMultiplicity(CVMUSBReadoutList& list) {
-  auto lower = m_pConfig->getIntegerList("-multlowerlimits");
-  auto upper = m_pConfig->getIntegerList("-multupperlimits");
+  int lower0 = m_pConfig->getIntegerParameter("-multlowerlimit0");
+  int lower1 = m_pConfig->getIntegerParameter("-multlowerlimit1");
+  int upper0 = m_pConfig->getIntegerParameter("-multupperlimit0");
+  int upper1 = m_pConfig->getIntegerParameter("-multupperlimit1");
 
-  checkMultLimitRanges(lower);
-  checkMultLimitRanges(upper);
+  m_logic.addWriteLowerMultLimits(list, {lower0,upper0});
+  m_logic.addWriteUpperMultLimits(list, {lower1,upper1});
 
-  m_logic.addWriteLowerMultLimits(list, lower);
-  m_logic.addWriteUpperMultLimits(list, upper);
-}
-
-/*! \brief Enforce the restricted range for the bank 1 limits
- *
- * The bank 1 multiplicity limit is restricted to the range [0,16] for
- * for the lower and upper values. This is different than the bank 0
- * limits which are restricted to the range [0,32]. Because of the
- * way the limits are defined for the parameter, this second stage 
- * of limit checking must be provided.
- *
- * \param   limit   a integer vector containing at least two elements
- *
- * \throws  std::string if the limits[1] is out of range.
- */
-void 
-CMQDC32RdoHdwr::checkMultLimitRanges(const std::vector<int>& limits)
-{
-  // element 1 enforce range restriction to [0,15]
-  if (limits.at(1)>16) {
-    std::string errmsg("A value outside of [0,16] was provided to ");
-    errmsg += "-multlowerlimits or -multupperlimits for bank 1.";
-    errmsg += "\nTransition to active failed!";
-    throw errmsg;
-
-  }
+//  m_logic.addWriteLowerMultLimits(list, std::vector<int>()={lower0,lower1});
+//  m_logic.addWriteUpperMultLimits(list, std::vector<int>()={upper0,upper1});
 }
 
 /*! \brief Set up the scheme for dealing with the counter reset (-resetlogic)
