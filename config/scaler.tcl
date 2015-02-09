@@ -1,14 +1,41 @@
-set dataurl tcp://$env(DAQHOST):2602/
-set scalerdir /usr/opt/daq/8.0/Scripts
-set configdir $env(CONFIGDIR)
-set daqroot   $env(DAQROOT)
-set exproot   $env(HOME)/experiment
-set current   $env(HOME)/experiment/current
 
-source $scalerdir/scaler.tcl
-source $configdir/hardware.tcl
+set ::configdir $::env(CONFIGDIR)
+set ::daqroot   $::env(DAQROOT)
+set ::exproot   $::env(HOME)/experiment
+set ::current   $::env(HOME)/experiment/current
+
+#
+# Channel definitions:
+#
+
+# Trigger channels.
+
+channel master 0.1
+channel master.live 1.1
+
+
+# PPAC channels.
+
+channel see.ppac.u  16.1
+channel see.ppac.d  17.1
+channel see.ppac.l  18.1
+channel see.ppac.r  19.1
+channel see.ppac.a  20.1
+
+
+# Scintilator channels:
+
+channel see.scint.u 24.1
+channel see.scint.d 25.1
+channel see.scint.l 26.1
+channel see.scint.r 27.1
+
+#
+#  Page display definitions:
+#
 
 page ALL "All of the scalers"
+
 
 display_ratio  ALL master.live master
 
@@ -18,6 +45,8 @@ display_single ALL  see.ppac.a
 
 display_ratio  ALL see.scint.u see.scint.d
 display_ratio  ALL see.scint.l see.scint.r
+
+# Strip charts
 
 stripparam see.scint.u
 stripparam see.scint.d
@@ -29,28 +58,25 @@ stripratio see.scint.l see.scint.r
 
 
 
-set clientpid [exec $daqroot/bin/sclclient -s $dataurl & ]
 
-proc Cleanup {widget pid} {
-    if {$widget != "."} return
-    exec kill $pid
-}
-
-bind . <Destroy> "Cleanup %W $clientpid"
+#  Code to implement scaler rate logging:
 
 
 set open 0
 set fd   ""
 
+
 proc UserBeginRun {} {
-    global current
-    global open
     global fd
-    global RunNumber
-    global RunTitle
+    global open
+    global current
+    
+    set title [getTitle]
+    set run   [getRunNumber]
 
     set fd [open $current/scint.log w]
-    puts $fd "\"$RunTitle\",$RunNumber"
+    
+    puts $fd "\"$title\",$run"
     puts $fd "Time,up,down,left,right"
     flush $fd
     set open 1
@@ -69,19 +95,19 @@ proc UserEndRun {} {
 proc UserUpdate {} {
     global open
     global fd
-    global Scaler_Increments
-    global ScalerMap
+
 
     if {$open} {
-	set up    $Scaler_Increments($ScalerMap(see.scint.u))
-	set down  $Scaler_Increments($ScalerMap(see.scint.d))
-	set left  $Scaler_Increments($ScalerMap(see.scint.l))
-	set right $Scaler_Increments($ScalerMap(see.scint.r))
+	set up    [getRate see.scint.u]
+	set down  [getRate see.scint.d] 
+	set left  [getRate see.scint.l]
+	set right [getRate see.scint.r]
+        
 	set time [clock seconds]
 	set time [clock format $time]
+        
 	puts $fd "\"$time\",$up,$down,$left,$right"
 
 	flush $fd
     }
 }
-
