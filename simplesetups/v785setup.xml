@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                      "file:///usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd
+"
+>
+<book>
+    <bookinfo>
+      <title>Using NSCLDAQ and SpecTcl with a CAEN V785 Peak-Sensing ADC</title>
+      <author><firstname></firstname><surname></surname></author>
+      <revhistory>
+          <revision>
+             <revnumber>1.0</revnumber>
+             <date>Feb 5, 2015</date>
+             <authorinitials></authorinitials>
+             <revremark>Original Release</revremark>
+          </revision>
+      </revhistory>
+    </bookinfo>
+    <chapter>
+      <title>PREFACE</title>
+        <para>
+          This paper's purpose is to guide the reader in setting up and reading out data
+          from a CAEN V785 peak sensing ADC. It covers the electronics that will be needed
+          and how to set them up. It will show how to modify the production readout
+          (V8.1), and SpecTcl (V3.1) software skeletons to readout and histogram data from
+          the adc. Testing for the code is also covered to a limited extent.
+        </para>
+        <para>
+          This paper assumes that you are
+        </para>
+        <itemizedlist>
+            <listitem><para>
+               Somewhat familiar with Linux.
+            </para></listitem>
+            <listitem><para>
+              Have a basic familiarity with the C++ programming language.
+            </para></listitem>
+            <listitem><para>
+              Familiar with an oscilloscope.
+            </para></listitem>
+        </itemizedlist>
+        <para>
+          Final version of the software are available for download at:
+          <emphasis>MAKE THE LINK CORRECT!</emphasis>
+        </para>
+        <para>
+          Every effort has been made to ensure the accuracy of this document. As authors we take very seriously reports of mistakes, omissions, and unclear documentation. If you come across a part of the document
+you think is wrong, needs expansion, or is not clearly worded, please report this to
+&lt;fox@nscl.msu.edu&gt;. We will correct this problem as soon as possible and, if you like, credit you
+publicly in the document for finding and helping us fix this issue.
+        </para>
+    </chapter>
+
+
+
+    <chapter>
+        <title>The electronics</title>
+        <para>
+          The CAEN V785 is a 12 bit, 32-channel analog to digital converter that
+          returns a value related to the maximum voltage that occurs during the
+          time a gate is present. The input signal must be positive and less
+          than 4V. The V785 is a VME based module. For a complete understanding
+          of the module I suggest that you obtain a copy of the product manual,
+          available as a PDF at http://www.caen.it/  
+        </para>
+        <section>
+          <title>A minimal electronics setup</title>
+
+          <para>
+            The following items will be needed to build our simple setup:
+          </para>
+
+          <itemizedlist>
+            <listitem>
+              <para>CAEN V785 ADC module</para>
+            </listitem>
+            <listitem>
+              <para>VME Crate</para>
+            </listitem>
+            <listitem>
+              <para>SBS Bit3 PCI/VME bus interface</para>
+            </listitem>
+            <listitem>
+              <para>NIM Crate</para>
+            </listitem>
+            <listitem>
+              <para>NIM Spectroscopy amplifier of some sort</para>
+            </listitem>
+            <listitem>
+              <para>NIM Discriminator</para>
+            </listitem>
+            <listitem>
+              <para>Two channels of NIM Gate and delay generator</para>
+            </listitem>
+            <listitem>
+              <para>NIM Signal splitter</para>
+            </listitem>
+            <listitem>
+              <para>LEMO to Ribbon cable converter</para>
+            </listitem>
+            <listitem>
+              <para>VME CAEN V262 I/O Module</para>
+            </listitem>
+            <listitem>
+              <para>Pulser</para>
+            </listitem>
+            <listitem>
+              <para>50-Ohm LEMO terminator</para>
+            </listitem>
+            <listitem>
+              <para>An assortment of LEMO cables</para>
+            </listitem>
+            <listitem>
+              <para>A 34-conductor ribbon cable with 3M connectors on each end</para>
+            </listitem>
+            <listitem>
+              <para>An oscilloscope</para>
+            </listitem>
+          </itemizedlist>
+
+          <figure>
+            <title>A simple electronics setup for the CAEN V785</title>
+            <mediaobject>
+              <imageobject>
+                <imagedata fileref="figures/electronics_block_diagram.png"
+                  format="PNG"/> 
+              </imageobject>
+            </mediaobject>
+          </figure>
+
+          <para>
+           Before starting be sure that you can secure all of these items, many are available through the NSCL
+electronics pool. Figure 1-1 shows the complete setup of the system, due to the varying amount of
+familiarity of readers to the electronics, a brief description of the component and what the signal coming
+out of it should look like will be given.
+          </para>
+
+          <para>
+            We will first look at the signal from the pulser. A pocket will work well for this. A pocket pulsers will
+give a small negative pulse, but we will invert it later. The signal directly from the pulser will look like
+figure 1-2 when viewed on a scope. The pulser only works when terminated with 50 Ohms.
+          </para>
+
+          <para>
+            The pulser will run directly into a NIM based amplifier. This amplifer serves two purposes. First it will
+amplify our signal helping it stand out against any noise we might have in the channel. It will also invert
+the negative pulser signal giving us the positive signal that is required by the V785. The signal coming
+from the bi-polar output of the amplifier will look like figure 1-3. Adjust the gain on the amplifier until
+you output signal has an amplitude of about 2V
+          </para>
+
+          <figure>
+            <title>Pulser Output Signal</title>
+            <mediaobject>
+              <imageobject>
+                <imagedata fileref="figures/pulser_output.png"
+                  format="PNG"/>
+              </imageobject>
+            </mediaobject>
+          </figure>
+          <figure>
+            <title>Amplifer Output Signal</title>
+            <mediaobject>
+              <imageobject>
+                <imagedata fileref="figures/amplifier_output.png" format="PNG"/>
+              </imageobject>
+            </mediaobject>
+          </figure>
+
+          <para>
+            After you are happy with the signal from the amplifier plug the bipolar output into the splitter. The
+splitter will simply split the signal much like a "T" but will keep the 50? termination needed by the
+pulser
+          </para>
+
+          <para>
+            After you are happy with the signal from the amplifier plug the bipolar output into the splitter. The
+splitter will simply split the signal much like a "T" but will keep the 50? termination needed by the
+pulser.
+          </para>
+          <para>
+            <emphasis>NOTE:</emphasis> Ribbon cable can difficult to work with because it is easy to get it twisted and lose track, of
+which end is which. To avoid this look carefully at the coloring on the cable you are using and be sure
+it is plugged in the correct channel of the ADC.
+          </para>
+
+          <para>
+            The other output from the splitter will go into a discriminator. This could be either a leading edge or a
+constant fraction discriminator. The job of the discriminator is determine when a signal has occurred and
+to put out a logic signal when it does. The discriminator will have a threshold knob, be sure that the
+threshold is set above any background noise that may be present so that the discriminator only trips on
+the pulser signal. It will be useful to look at the both the logic pulse and the signal from the amplifier at
+the same time when setting the threshold value. Figure 1-4 shows what you will see.
+          </para>
+
+          <figure>
+            <title>Amplified Signal with Logic Pulser</title>
+            <mediaobject>
+              <imageobject>
+                <imagedata
+                  fileref="figures/amplified_signal_with_logic_pulse.png"
+                  format="PNG"/>
+              </imageobject>
+            </mediaobject>
+          </figure>
+
+          <para>
+            When the threshold is set to a reasonable level, connect one of the dis- criminator outputs to the start of
+one channel of your gate and delay gen- erator. The gate and delay generator will generate a gate when it
+receives a logic signal from the discriminator. When looking at the signal from the amplifier and the gate
+at the same time on the scope, the signal pulse should fall within the gate as seen in figure 1-5. If the gate
+is occurring too early you can use the gate and delay generator to delay the gate or to make the gate last
+longer. If the gate is too late you need to delay the signal pulse, that can be done using a delay module, or
+by adding cable delay. When you are happy with the gate timing, plug it into one of the LEMO
+connectors on the CAEN V785 labeled gate, put a 50 Ohm terminator in the other one.
+          </para>
+
+          <figure>
+            <title>Amplified Signal and Gate</title>
+            <mediaobject>
+              <imageobject>
+                <imagedata fileref="figures/amplified_signal_with_gate.png"
+                  format="PNG"/>
+              </imageobject>
+            </mediaobject>
+          </figure>
+
+          <para>
+            The second output of the discriminator will go to a second gate and delay channel; this combined with
+the CAEN V262 will trigger the computer when there is data on the V785. This channel will be run in
+latched mode meaning that it will be given both a start and a stop signal for the gate. The output signal
+will start being "true" when the start signal is received and stops being "true" when the stop signal is
+received. The start signal is the signal from the discriminator. The discriminator output will go to the IN0
+of the CAEN V262 I/O module. The stop signal is generated by the computer to indicate it has
+responded to the trigger. That signal is present at the SHP2 output of the V262 and should be connected
+to the stop on the gate and delay generator.
+          </para>
+
+          <para>
+            At this point your setup should be complete. Now is good time to make sure that your setup is the same
+as Figure 1-1. If everything is setup correctly the BUSY and DRDY lights on the
+V785 should be lit up.
+          </para>
+          <para>
+            <emphasis>NOTE:</emphasis> At this point your setup should be complete. Now is good time to make sure that your setup is the same
+as Figure 1-1. If everything is setup correctly the BUSY and DRDY lights on the V785 should be lit up
+          </para>
+        </section>
+    </chapter>
+    <chapter>
+        <title>Setting up the software</title>
+        <para>
+           The software modifications needed to make the above setup work can be divided into three tasks: 
+        </para>
+        <orderedlist>
+          <listitem>
+            <para>Telling the software what electronics we are using.</para>
+          </listitem>
+          <listitem>
+            <para>Telling the software how to respond to event triggers.</para>
+          </listitem>
+          <listitem>
+            <para>Telling the software how to analyze the data acquired.</para>
+          </listitem>
+        </orderedlist>
+
+        <section>
+          <title>Readout software</title>
+          <para>
+            In order to tell the software about our electronics we are going to develop a C++ class for our module.
+That class will be a derived class but we don?t need to concern ourselves with the details of the parent
+class. Like all of the software tailoring we need to do, most of the details are hidden and we need only to
+fill in a few holes.
+          </para>
+
+          <para>
+            The following commands will make a new directory and copy the
+            skeleton files to it:
+          </para>
+          <programlisting>
+mkdir -p ~/experiment/readout
+cd ~/experiment/readout
+cp /usr/opt/daq/pReadoutSkeleton/* .
+          </programlisting>
+
+          <section>
+            <title>Modifying the Readout Skeleton</title>
+
+            <para>
+              Now that we have obtained a copy of the Skeleton file we can began to think about the modifications we
+need to make. We need to tell the software what kind of module we are using, how to initialize it, how to
+clear it, and how to read it. We will do this by creating a class called by MyEventSegment. In order to
+follow good coding practice and to make our code as versatile as possible we will write our class in two
+separate files, a header file and an implementation file. Start by creating a file called MyEventSement.h.
+It should look like this:
+            </para>
+
+            <example>
+              <title>Header for MyEventSegment</title>
+              <programlisting>
+/*
+This is the header file to define the MyEventSegment class, which
+is derived from CEventSegment. This class can be used to read
+out any number of CAEN modules covered by the CAENcard class.
+Those cards include the V785, V775, and V792.
+6Chapter 2. Setting up the software
+Tim Hoagland
+11/3/04
+s04.thoagland@wittenberg.edu
+*/
+#ifndef __MYEVENTSEGMENT_H                      <co  id="ex0_inc_protect"/>
+#define __MTEVENTSEGMENT_H
+#ifdef HAVE_STD_NAMESPACE
+using namespace std;                            <co id="ex0_using_std"/>
+#endif
+#include &lt;spectrodaq.h&gt;
+#include &lt;CEventSegment.h&gt;
+#include &lt;CDocumentedPacket.h&gt;
+#include &lt;CAENcard.h&gt;
+#define CAENTIMEOUT 50
+// Declares a class derived from CEventSegment
+class MyEventSegment : public CEventSegment     <co id="ex0_class_decl"/>
+{
+private:
+CDocumentedPacket m_MyPacket;                   <co id="ex0_docpacket"/>
+CAENcard* module;                               <co id="ex0_module_ptr"/>
+public:
+MyEventSegment(short slot,unsigned short Id);   <co id="ex0_ctor"/>
+// Defines packet info
+~MyEventSegment();                              <co id="ex0_dtor"/> 
+virtual void Initialize();                      <co id="ex0_init"/> 
+// One time Module setup
+virtual void Clear();                           <co id="ex0_clear"/>
+// Resets data buffer
+virtual unsigned int MaxSize();                 <co id="ex0_maxsize"/> 
+virtual DAQWordBufferPtr&amp; Read(DAQWordBufferPtr&amp; rBuf); <co id="ex0_read"/>
+// Reads data buffer
+};
+#endif 
+              </programlisting>
+              <para>
+                The header defines the class, its internal data and the services
+                it exports to the readout framework. Refer to the circled
+                numbers in the listing above when reading the following
+                explanation
+              </para>
+
+              <calloutlist>
+                <callout arearefs='ex0_inc_protect'>
+                  <para>
+                   Each header should protect itself against being included more
+                   than once per compilation unit. This #ifndef directive and
+                   the subsequente #define do this. The first time the header is
+                   included, __MYEVENTSEGMENT_H is not defined, and the #ifndef
+                   is true. This causes __MYEVENTSEGMENT_H to be defined, which
+                   prevents subsequent inclusions from doing anything.
+                  </para> 
+                </callout> 
+                <callout arearefs='ex0_using_std'>
+                  <para>
+                    Newer compilers define many of the standard classes,
+                    functions and constants inside of the std:: namespace. The
+                    spectrodaq.h header refers to these without explicitly
+                    qualifying them with the namespace. If the std:: namespace
+                    exists, this directive asks the compiler to search it for
+                    unqualified names (e.g cin could be resolved by std::cin).
+                  </para> 
+                </callout> 
+                <callout arearefs='ex0_class_decl'>
+                  <para>
+                    The class we are defining MyEventSegment implements the
+                    services of a base class called CEventSegment. Anything that
+                    reads out a chunk of the experiment is an event segment and
+                    must be derived from the CEventSegment base class.
+                  </para> 
+                </callout> 
+                <callout arearefs='ex0_docpacket'>
+                  <para>
+                    By convention, events are segmented in to packets. A packet
+                    is a leading word count, followed by an word that identifies
+                    the contents of the packet followed by the packet body.
+                    Packet identifiers are maintained by Daniel Bazin, and the
+                    set of packet identifiers that have been currently assigned
+                    are described at:
+                    http://groups.nscl.msu.edu/userinfo/daq/nscltags.html If you
+                    are creating a detector system that will need its own tag
+                    contact &lt;bazin@nscl.msu.edu&gt; to get one assigned. The
+                    m_MyPacket is member data for the class. It is a
+                    CDocumentedPacket. Documented packets do the book-keeping
+                    associated with maintaining the packet structure as well
+                    as documenting their presence in documentation records
+                    written at the beginning of the run
+                  </para> 
+                </callout> 
+                <callout arearefs='ex0_module_ptr'>
+                  <para>
+                    The support software for the CAEN V685 ADC is itself a
+                    class: CAENcard. We will create an object of this class in
+                    order to access the module. This pointer will be used to
+                    access the object and hence the module
+                  </para> 
+                </callout> 
+                <callout arearefs='ex0_ctor'>
+                  <para>
+                   This line declares the constructor for MyEventSegment. A
+                   constructor is a function that is called to initialize the
+                   data of an object when the object is being created
+                   (constructed). 
+                  </para> 
+                </callout> 
+                <callout arearefs='ex0_dtor'>
+                  <para>
+                    This line declares the destructor for MyEventSegment. A
+                    destructor is a function that is called when an object of a
+                    class is being destroyed. Since we will be dynamically
+                    creating the CAENcard pointed to by module, we must declare
+                    and implement a destructor to destroy that object when
+                    objects of MyEventSegment are destroyed.
+                  </para> 
+                </callout> 
+                <callout arearefs='ex0_init'>
+                  <para>
+                    The Initialize member function is called whenever the run is
+                    about to become active. If hardware or software requires
+                    initialization, it can be done here. This function will be
+                    called both when a run is begun as well as when a run is
+                    resumed.
+                  </para> 
+                </callout> 
+                <callout arearefs='ex0_clear'>
+                  <para>
+                    The Clear member function is called when it is appropriate
+                    to clear any data that may have been latched into the
+                    digitizers. This occurs at the beginning of a run and after
+                    each event is read out.
+                  </para> 
+                </callout> 
+                <callout arearefs='ex0_maxsize'>
+                  <para>
+                    The MaxSize member function is obsolete but must be defined
+                    and implemented for compatiblity with older software. In the
+                    past this returned the maximum number of words the event
+                    segment would add to the event. Now it is never called.
+                  </para> 
+                </callout> 
+                <callout arearefs='ex0_read'>
+                  <para>
+                   The Read member function is called in response to a trigger.
+                   This member must read the part of the event that is managed
+                   by this event segment. 
+                  </para> 
+                </callout> 
+              </calloutlist>
+            </example>
+
+            <para>
+              We will also create an implementation file: MyEventSegment.cpp.
+              This file will implement the member functions that were defined by
+              MyEventSegment.h above. The contents of this file are shown below:
+            </para>
+          </section>
+        </section>
+    </chapter>
+    <chapter>
+        <title>
+            Creating the tailored SpecTcl
+        </title>
+        <para>
+            
+        </para>
+    </chapter>
+    <chapter>
+        <title>Running the system.</title>
+        <para>
+            
+        </para>
+    </chapter>
+    <chapter>
+        <title>Taking the example further.</title>
+        <para>
+            
+        </para>
+    </chapter>
+    <appendix>
+        <title>The full readout program.</title>
+        <para>
+            
+        </para>
+    </appendix>
+    <appendix>
+        <title>The full SpecTcl program.</title>
+        <para>
+            
+        </para>
+    </appendix>
+    <appendix>
+        <title>Scripts and other glue components.</title>
+        <para>
+            
+        </para>
+    </appendix>
+</book>
