@@ -52,6 +52,7 @@
 //#include "C3820TstampCommand.h"
 #include "CXLMTimestamp.h"
 #include "CMQDC32RdoHdwr.h"
+#include "CMTDCCommand.h"
 
 #include <CReadoutModule.h>
 #include <TCLInterpreter.h>
@@ -109,6 +110,7 @@ CConfiguration::CConfiguration() :
   m_Commands.push_back(new CAddTclDriver(*m_pInterp, *this));
   m_Commands.push_back(new CHiRACommand(*m_pInterp, *this));
   m_Commands.push_back(new CVMUSBCommand(*m_pInterp, *this));
+  m_Commands.push_back(new CMTDCCommand(*m_pInterp, *this));
 
   m_Commands.push_back(new CUserCommand(*m_pInterp, *this, "delay", new CDelay));
 
