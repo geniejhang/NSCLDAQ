@@ -50,38 +50,159 @@ protected:
 CPPUNIT_TEST_SUITE_REGISTRATION(cmqdc32test);
 
  
-// On creating a module, attaching it to a configuration should
-// cause the right configuration entries and defaults to be made.
-//
-// Readout list executed immediately should return no data since there are
-// no triggers.
-//
+// this is a behavioral test. It merely record the default functionality that
+// has been tested to work.
 void cmqdc32test::initialize_0()
 {
   std::string baseString = "0x80000000";
   m_pConfig->configure("-base", baseString);
-  m_pConfig->configure("-ipl", "1");
-  m_pConfig->configure("-vector", "0");
-  m_pConfig->configure("-multievent", "on");
-  m_pConfig->configure("-irqthreshold", "1");
-  m_pConfig->configure("-gatemode", "common");
-  m_pConfig->configure("-multlowerlimit0", "0");
-  m_pConfig->configure("-multlowerlimit1", "0");
-  m_pConfig->configure("-multupperlimit0", "32");
-  m_pConfig->configure("-multupperlimit1", "16");
-  m_pConfig->configure("-pulser", "on");
 
   CMockVMUSB ctlr;
   ctlr.addReturnDatum(1);
   ctlr.addReturnDatum(1);
   m_pModule->Initialize(ctlr);
 
-  std::vector<std::string> ops = ctlr.getOperationRecord();
-  cout.flags(ios::hex);
-  copy(ops.begin(), ops.end(), ostream_iterator<std::string>(cout,"\n"));
-  cout.flags(ios::dec);
+  std::vector<std::string> expected = {"executeList::begin",
+    "addWrite16 8000603a 09 0",
+    "addWrite16 80006010 09 0",
+    "addDelay 1",
+    "addWrite16 80006004 09 0",
+    "addDelay 1",
+    "addWrite16 80006012 09 0",
+    "addDelay 1",
+    "addWrite16 80006010 09 0",
+    "addDelay 1",
+    "addWrite16 8000601c 09 1",
+    "addDelay 1",
+    "addWrite16 80006018 09 1",
+    "addDelay 1",
+    "addWrite16 8000601a 09 1",
+    "addDelay 1",
+    "addWrite16 80006036 09 3",
+    "addDelay 1",
+    "addWrite16 8000604c 09 0",
+    "addDelay 1",
+    "addWrite16 80004000 09 0",
+    "addDelay 1",
+    "addWrite16 80004002 09 0",
+    "addDelay 1",
+    "addWrite16 80004004 09 0",
+    "addDelay 1",
+    "addWrite16 80004006 09 0",
+    "addDelay 1",
+    "addWrite16 80004008 09 0",
+    "addDelay 1",
+    "addWrite16 8000400a 09 0",
+    "addDelay 1",
+    "addWrite16 8000400c 09 0",
+    "addDelay 1",
+    "addWrite16 8000400e 09 0",
+    "addDelay 1",
+    "addWrite16 80004010 09 0",
+    "addDelay 1",
+    "addWrite16 80004012 09 0",
+    "addDelay 1",
+    "addWrite16 80004014 09 0",
+    "addDelay 1",
+    "addWrite16 80004016 09 0",
+    "addDelay 1",
+    "addWrite16 80004018 09 0",
+    "addDelay 1",
+    "addWrite16 8000401a 09 0",
+    "addDelay 1",
+    "addWrite16 8000401c 09 0",
+    "addDelay 1",
+    "addWrite16 8000401e 09 0",
+    "addDelay 1",
+    "addWrite16 80004020 09 0",
+    "addDelay 1",
+    "addWrite16 80004022 09 0",
+    "addDelay 1",
+    "addWrite16 80004024 09 0",
+    "addDelay 1",
+    "addWrite16 80004026 09 0",
+    "addDelay 1",
+    "addWrite16 80004028 09 0",
+    "addDelay 1",
+    "addWrite16 8000402a 09 0",
+    "addDelay 1",
+    "addWrite16 8000402c 09 0",
+    "addDelay 1",
+    "addWrite16 8000402e 09 0",
+    "addDelay 1",
+    "addWrite16 80004030 09 0",
+    "addDelay 1",
+    "addWrite16 80004032 09 0",
+    "addDelay 1",
+    "addWrite16 80004034 09 0",
+    "addDelay 1",
+    "addWrite16 80004036 09 0",
+    "addDelay 1",
+    "addWrite16 80004038 09 0",
+    "addDelay 1",
+    "addWrite16 8000403a 09 0",
+    "addDelay 1",
+    "addWrite16 8000403c 09 0",
+    "addDelay 1",
+    "addWrite16 8000403e 09 0",
+    "addDelay 1",
+    "addWrite16 80006054 09 0",
+    "addDelay 1",
+    "addWrite16 80006056 09 0",
+    "addDelay 1",
+    "addWrite16 80006050 09 255",
+    "addDelay 1",
+    "addWrite16 80006052 09 255",
+    "addDelay 1",
+    "addWrite16 80006044 09 128",
+    "addDelay 1",
+    "addWrite16 80006046 09 128",
+    "addDelay 1",
+    "addWrite16 80006040 09 0",
+    "addDelay 1",
+    "addWrite16 80006064 09 0",
+    "addDelay 1",
+    "addWrite16 80006066 09 0",
+    "addDelay 1",
+    "addWrite16 8000606a 09 0",
+    "addDelay 1",
+    "addWrite16 8000606c 09 1",
+    "addDelay 1",
+    "addWrite16 8000606e 09 0",
+    "addDelay 1",
+    "addWrite16 80006060 09 0",
+    "addDelay 1",
+    "addWrite16 80006062 09 31",
+    "addDelay 1",
+    "addWrite16 80006096 09 0",
+    "addDelay 1",
+    "addWrite16 80006098 09 1",
+    "addDelay 1",
+    "addWrite16 80006038 09 0",
+    "addDelay 1",
+    "addWrite16 80006090 09 3",
+    "addDelay 1",
+    "addWrite16 800060b2 09 0",
+    "addDelay 1",
+    "addWrite16 800060b6 09 0",
+    "addDelay 1",
+    "addWrite16 800060b0 09 32",
+    "addDelay 1",
+    "addWrite16 800060b4 09 16",
+    "addDelay 1",
+    "addWrite16 8000603c 09 1",
+    "addDelay 1",
+    "addWrite16 80006034 09 1",
+    "addWrite16 80006070 09 0",
+    "addDelay 1",
+    "executeList::end",
+    "executeList::begin",
+    "addWrite16 8000603a 09 1",
+    "executeList::end"};
 
 
-  CPPUNIT_ASSERT_EQUAL(std::string("writeEventsPerBuffer(0x00000014)"), ops.at(0));
+  auto ops = ctlr.getOperationRecord();
+
+  CPPUNIT_ASSERT(expected == ops);
 
 }
