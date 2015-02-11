@@ -320,12 +320,14 @@ void CMQDC32RdoHdwr::configureMarkerType(CVMUSBReadoutList& list) {
  * \param list  a readout list
  */
 void CMQDC32RdoHdwr::configureMemoryBankSeparation(CVMUSBReadoutList& list) {
-  string      gatemode    = m_pConfig->cget("-gatemode");
-  if (gatemode == string("separate")) {
-    m_logic.addWriteMemoryBankSeparation(list,1);
-  }
-  else {
-    m_logic.addWriteMemoryBankSeparation(list,0);
+  int modeIndex = m_pConfig->getEnumParameter("-gatemode",GateModeValues);
+  switch(modeIndex) {
+    case 0:
+      m_logic.addWriteMemoryBankSeparation(list,0);
+      break;
+    case 1:
+      m_logic.addWriteMemoryBankSeparation(list,1);
+      break;
   }									
 }
 
@@ -580,8 +582,8 @@ void CMQDC32RdoHdwr::configureMultiplicity(CVMUSBReadoutList& list) {
   int upper0 = m_pConfig->getIntegerParameter("-multupperlimit0");
   int upper1 = m_pConfig->getIntegerParameter("-multupperlimit1");
 
-  m_logic.addWriteLowerMultLimits(list, {lower0,upper0});
-  m_logic.addWriteUpperMultLimits(list, {lower1,upper1});
+  m_logic.addWriteLowerMultLimits(list, {lower0,lower1});
+  m_logic.addWriteUpperMultLimits(list, {upper0,upper1});
 
 //  m_logic.addWriteLowerMultLimits(list, std::vector<int>()={lower0,lower1});
 //  m_logic.addWriteUpperMultLimits(list, std::vector<int>()={upper0,upper1});
@@ -681,6 +683,7 @@ CMQDC32RdoHdwr::setChainAddresses(CVMUSB&                ctlr,
   uint32_t base = getBase();
 
   cerr << "Position: " << position << endl;
+  cerr << "base: " << hex << base << dec << endl;
 
   // Compute the value of the control register..though we will first program
   // the addresses then the control register:
@@ -749,16 +752,16 @@ CMQDC32RdoHdwr::initCBLTReadout(CVMUSB& ctlr, uint32_t mcast, int rdoSize)
     // Oscillator sources are assumed to already be set.
     // Reset the timer:
 
-    ctlr.vmeWrite16(mcast + Reg::MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
+//    ctlr.vmeWrite16(mcast + Reg::MarkType,       initamod, (uint16_t)1); // Show timestamp, not event count.
     ctlr.vmeWrite16(mcast + Reg::TimestampReset, initamod, (uint16_t)3); // reset all counter.
   }
   else {
-    ctlr.vmeWrite16(mcast + Reg::MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
+ //   ctlr.vmeWrite16(mcast + Reg::MarkType,       initamod, (uint16_t)0); // Use Eventcounter.
     ctlr.vmeWrite16(mcast + Reg::EventCounterReset, initamod, (uint16_t)0); // Reset al event counters.
   }
   // Set multievent mode
   
-  ctlr.vmeWrite16(mcast + Reg::MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
+//  ctlr.vmeWrite16(mcast + Reg::MultiEvent, initamod, (uint16_t)3);      // Multi event mode 3.
   ctlr.vmeWrite16(mcast + Reg::IrqThreshold, initamod, (uint16_t)irqThreshold);
   ctlr.vmeWrite16(mcast + Reg::MaxTransfer, initamod,  (uint16_t)rdoSize);
 

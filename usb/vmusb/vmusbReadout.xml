@@ -6975,113 +6975,154 @@ stack config evt -modules {qdc} -trigger interrupt -ipl 1 -vector 0 <co id="mqdc
           <cmdsynopsis>
             <command>
 madcchain create <replaceable>name</replaceable>
-               </command>
-           </cmdsynopsis>
-	   <cmdsynopsis>
-	       <command>
+            </command>
+          </cmdsynopsis>
+          <cmdsynopsis>
+            <command>
 madcchain config <replaceable>name ?options</replaceable>
-               </command>
-	   </cmdsynopsis>
-	   <cmdsynopsis>
-	      <command>
+            </command>
+          </cmdsynopsis>
+          <cmdsynopsis>
+            <command>
 madcchain cget <replaceable>name</replaceable>
-	      </command>
-           </cmdsynopsis>
-         </refsynopsisdiv>
-	 <refsect1>
-	    <title>DESCRIPTION</title>
-	    <para>
-	       This module creates and configures chains of MxDC32 modules.
-         At the moment the MADC-32, MTDC-32, and MQDC-32 all are 
-         supported.
-	       If these modules are, in turn, run in multi-event mode,
-	       a specialized SpecTcl will be needed to unpack the data.
-	       It is possible, however to use single event mode with
-	       CBLT readout and use 'normal' SpecTcl unpacking.
-	    </para>
-	    <para>
-	       The <command>create</command> creates a new MxDC32 chain.
-	       <replaceable>name</replaceable> will be used to refer to this chain
-	       during configuration.  At any time the
-	       <command>cget</command> returns the configuration of the chain
-	       as a list of parameter-name parameter-value pairs.
-	    </para>
-	    <para>
-	       The <command>config</command> configures an MxDC32 chain.
-	       A set of option name option value argument pairs should follow
-	       the chain name on the commandline.  OPTIONS below describes the
-	       options and their legal values.
-	    </para>
-         </refsect1>
-	 <refsect1>
-	    <title>OPTIONS</title>
-	    <para>
-	       This section describes the configuration options supported by
-	       the <command>cmadcchain</command> command.
-	    </para>
-	    <variablelist>
-	       <varlistentry>
-	          <term><option>-cbltaddress</option>  <replaceable>base-address</replaceable></term>
-		  <listitem>
-		     <para>
-		        Defines the base address to which the CBLT reads will be
-			directed.  When the modules in the chain are initialized,
-			this address will be programmed as the CBLT base address.
-			Note that only the top 8 bits of this value are used.
-		     </para>
-		  </listitem>
-	       </varlistentry>
-	       <varlistentry>
-	          <term><option>-mcastaddress</option> <replaceable>base-address</replaceable></term>
-		  <listitem>
-		     <para>
-		        Defines the base address for the chain's multicast address.
-			The multicast address is used to perform synchronous initialization
-			and time-stamp clears.  This address will be programmed as the
-			MCAST base address for all modules in the chain.
-			Only the top 8 bits of the <replaceable>base-address</replaceable>
-			have any meaning.
-		     </para>
-		  </listitem>
-               </varlistentry>
-	       <varlistentry>
-	          <term><option>-maxwordspermodule</option> <replaceable>longword-coun</replaceable></term>
-		  <listitem>
-		     <para>
-		        Defines the maximum words that can be read from each module.
-			This should be a number between
-			<literal>1</literal> and <literal>1024</literal>.
-			This value should usually be larger than the
-			<option>-irqthreshold</option> option programmed into the
-			MxDC32 modules in the chain.  For each block read, the
-			module will return no more data than the complete event that
-			causes the number of longwords read from the module to exceed
-			this value.
-		     </para>
-		  </listitem>
-	       </varlistentry>
-	       <varlistentry>
-	          <term><option>-modules</option>  <replaceable>module-name-list</replaceable></term>
-		  <listitem>
-		     <para>
-		        Defines the list of MxDC32 modules that make up the chain.
-			The value for this option should be a well formulated
-			Tcl list containing names of <command>madc</command> modules.
-			There is a restriction on the order of these names.  The
-			first name in the list must be the leftmost module in the
-			crate and the last name must be the right most module in the
-			chain. 
-		     </para>
-		     <para>
-		        For practical purposes, to limit confusion, I generally
-			enumerate the modules from left (low slot number) to
-			right (higher slot number). 
-		     </para>
-		  </listitem>
-	       </varlistentry>
-	    </variablelist>
-	 </refsect1>
+            </command>
+          </cmdsynopsis>
+        </refsynopsisdiv>
+        <refsect1>
+          <title>DESCRIPTION</title>
+          <para>
+            This module creates and configures chains of MxDC32 modules.
+            At the moment the MADC-32, MTDC-32, and MQDC-32 all are 
+            supported.
+            If these modules are, in turn, run in multi-event mode,
+            a specialized SpecTcl will be needed to unpack the data.
+            It is possible, however to use single event mode with
+            CBLT readout and use 'normal' SpecTcl unpacking.
+          </para>
+          <para>
+            The <command>create</command> creates a new MxDC32 chain.
+            <replaceable>name</replaceable> will be used to refer to this chain
+            during configuration.  At any time the
+            <command>cget</command> returns the configuration of the chain
+            as a list of parameter-name parameter-value pairs.
+          </para>
+          <para>
+            The <command>config</command> configures an MxDC32 chain.
+            A set of option name option value argument pairs should follow
+            the chain name on the commandline.  OPTIONS below describes the
+            options and their legal values.
+          </para>
+        </refsect1>
+        <refsect1>
+          <title>OPTIONS</title>
+          <para>
+            This section describes the configuration options supported by
+            the <command>cmadcchain</command> command.
+          </para>
+          <variablelist>
+            <varlistentry>
+              <term><option>-cbltaddress</option>  <replaceable>base-address</replaceable></term>
+              <listitem>
+                <para>
+                  Defines the base address to which the CBLT reads will be
+                  directed.  When the modules in the chain are initialized,
+                  this address will be programmed as the CBLT base address.
+                  Note that only the top 8 bits of this value are used.
+                </para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><option>-mcastaddress</option> <replaceable>base-address</replaceable></term>
+              <listitem>
+                <para>
+                  Defines the base address for the chain's multicast address.
+                  The multicast address is used to perform synchronous initialization
+                  and time-stamp clears.  This address will be programmed as the
+                  MCAST base address for all modules in the chain.
+                  Only the top 8 bits of the <replaceable>base-address</replaceable>
+                  have any meaning.
+                </para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><option>-maxwordspermodule</option> <replaceable>longword-coun</replaceable></term>
+              <listitem>
+                <para>
+                  Defines the maximum words that can be read from each module.
+                  This should be a number between
+                  <literal>1</literal> and <literal>1024</literal>.
+                  This value should usually be larger than the
+                  <option>-irqthreshold</option> option programmed into the
+                  MxDC32 modules in the chain.  For each block read, the
+                  module will return no more data than the complete event that
+                  causes the number of longwords read from the module to exceed
+                  this value.
+                </para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><option>-modules</option>  <replaceable>module-name-list</replaceable></term>
+              <listitem>
+                <para>
+                  Defines the list of MxDC32 modules that make up the chain.
+                  The value for this option should be a well formulated
+                  Tcl list containing names of <command>madc</command> modules.
+                  There is a restriction on the order of these names.  The
+                  first name in the list must be the leftmost module in the
+                  crate and the last name must be the right most module in the
+                  chain. 
+                </para>
+                <para>
+                  For practical purposes, to limit confusion, I generally
+                  enumerate the modules from left (low slot number) to
+                  right (higher slot number). 
+                </para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </refsect1>
+
+        <refsect1>
+          <title>EXAMPLE</title>
+          <para>
+            The following daqconfig.tcl script will operate on an MADC-32 and an
+            MQDC-32 placed in adjacent slots of a VME crate. The MADC-32 has
+            base address set to 0x0d000000 and the MQDC-32 has its base address
+            set to 0x40000000 both via jumper switches. The two devices are
+            configured to read out using an interrupt trigger. The MADC-32 is
+            leftmost in the crate and thus is the first module to be read out.
+            Both will respond to the chain block transfer address 0xaa000000 and
+            multicast address 0xbb000000. 
+          </para>
+          <example>
+            <title>Sample usage</title>
+            <programlisting>
+# create and configure the MADC-32 object
+madc create adc -base 0x0d000000 -id 1
+madc config adc -ipl 1 -vector 0
+
+# create and configure the MQDC-32 object
+mqdc create qdc -base 0x40000000 -id 2 
+mqdc config qdc -ipl 1 -vector 0
+
+# Create the chain
+madcchain create chain 
+madcchain config chain -cbltaddress 0xaa000000 
+madcchain config chain -mcastaddress 0xbb000000
+madcchain config chain -maxwordspermodule 1 
+
+# order matters here. The adc is read first and the qdc last.
+madcchain config chain -modules [list adc qdc]
+
+# create a stack that executes via an interrupt
+stack create event
+stack config event -modules [list chain] -trigger interrupt -ipl 1 -vector 0 
+            </programlisting>
+          </example>
+        </refsect1>
       </refentry>
+
+
       <refentry id="vmusb3-madcscaler">
         <refentryinfo>
             <author>
