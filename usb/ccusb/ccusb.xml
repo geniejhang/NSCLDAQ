@@ -5400,7 +5400,7 @@ stack config events -delay 10 -lamtimeout 8                 <co id ="timing" />
         <refsynopsisdiv>
           <cmdsynopsis>
          <command>
-Module create <replaceable>name type</replaceable>
+Module create <replaceable>type name</replaceable>
           </command>
           </cmdsynopsis>
           <cmdsynopsis>

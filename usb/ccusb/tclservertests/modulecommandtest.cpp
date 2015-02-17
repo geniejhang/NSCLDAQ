@@ -64,8 +64,9 @@ void CModuleCommandTests::create_0() {
   vector<CTCLObject> arglist(4); 
   arglist[0] = (arg = "Module");
   arglist[1] = (arg = "create");
-  arglist[2] = (arg = "name");
-  arglist[3] = (arg = "ccusb");
+
+  arglist[2] = (arg = "ccusb");
+  arglist[3] = (arg = "name");
 
   // process the command 
   m_cmd->operator()(*m_interp, arglist);
@@ -81,8 +82,8 @@ void CModuleCommandTests::create_1() {
   vector<CTCLObject> arglist(4); 
   arglist[0] = (arg = "Module");
   arglist[1] = (arg = "create");
-  arglist[2] = (arg = "name");
-  arglist[3] = (arg = "ccusb");
+  arglist[2] = (arg = "ccusb");
+  arglist[3] = (arg = "name");
 
   // create the object the first time
   int status = m_cmd->operator()(*m_interp, arglist);
