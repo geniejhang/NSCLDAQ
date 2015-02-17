@@ -74,10 +74,6 @@ snit::type FakeHandle {
   method GetLog {} {return $_log}
 }
 
-proc clock {subcommand {arg ""}} {
-  return "Wed Dec 31 12:00:00 EST 2014"
-}
-
 ###############################################################################
 # Begin tests
 
@@ -128,28 +124,10 @@ tcltest::test saveToFile-0 {Makes sure we can save to file
   set content [tcltest::viewFile tmp.txt]
   file delete tmp.txt
   set content
-} {Configuration file for MDGG16Control
-Wed Dec 31 12:00:00 EST 2014
-or_a 65535
+} {or_a 65535
 or_b 65535
 or_c 65535
-or_d 65535
- 0 : Ch0
- 1 : Ch1
- 2 : Ch2
- 3 : Ch3
- 4 : Ch4
- 5 : Ch5
- 6 : Ch6
- 7 : Ch7
- 8 : Ch8
- 9 : Ch9
-10 : Ch10
-11 : Ch11
-12 : Ch12
-13 : Ch13
-14 : Ch14
-15 : Ch15}
+or_d 65535}
 
 
 #
@@ -215,59 +193,5 @@ tcltest::test UpdateViewFromModel-0 {Commit mask should copy state of view to ha
 } [list 0 0 0 0  0 0 0 1  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0 \
         1 1 1 1  1 1 1 0  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0 ]
 
-tcltest::test LoadStateFromFile-0 {Loading state from file translates to view
-} {
-  tcltest::makeFile {Configuration file for MDGG16Control
-Wed Dec 31 12:00:00 EST 2014
-or_a 6553
-or_b 6555
-or_c 6535
-or_d 5535
- 0 : CCh0
- 1 : CCh1
- 2 : asdf
- 3 : Ch3
- 4 : Ch4
- 5 : Ch5
- 6 : Ch6
- 7 : Ch7asdf
- 8 : Ch8
- 9 : Ch9asdf
-10 : Ch10
-11 : Ch11asdf
-12 : Ch12
-13 : Ch13
-14 : Ch14
-15 : Ch15asdf} fake.config
-
-  set handle [FakeHandle %AUTO%]
-  set view [FakeView %AUTO%]
-
-  # by default the next step will read from the handle the mask
-  # AB = 128 and CD = 127
-  MDGG16Presenter ::dev -view $view -handle $handle
-
-  ::dev LoadStateFromFile fake.config
-
-  set resList [list]
-  for {set ch 0} {$ch < 16} {incr ch} {
-    lappend  resList [set MDGG16ChannelNames::chan$ch]
-  }
-
-  set result [list]
-  for {set col 0} {$col<4} {incr col} {
-    for {set ch 0} {$ch<16} {incr ch} {
-      lappend resList [$view GetBit $col $ch] 
-    }
-  }
-
-  $view destroy
-  $handle destroy 
-  ::dev destroy
-
-  set resList
-} [list CCh0 CCh1 asdf Ch3 Ch4 Ch5 Ch6 Ch7asdf Ch8 Ch9asdf Ch10 Ch11asdf Ch12 Ch13 Ch14 Ch15asdf \
-1 0 0 1  1 0 0 1  1 0 0 1  1 0 0 0  1 1 0 1  1 0 0 1  1 0 0 1  1 0 0 0 \
-1 1 1 0  0 0 0 1  1 0 0 1  1 0 0 0  1 1 1 1  1 0 0 1  1 0 1 0  1 0 0 0]
 
 tcltest::cleanupTests

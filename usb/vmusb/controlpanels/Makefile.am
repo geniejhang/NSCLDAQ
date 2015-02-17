@@ -5,7 +5,7 @@ PACKAGES=client.tcl configfile.tcl gdgcontrol.tcl gdgwidget.tcl sclclient.tcl xl
 
 APPS=gdgpanel.tcl v812usbcontrol.tcl MDGG16Control.tcl
 
-TCL_TESTS = tclTests.tcl mdgg16gui.test mdgg16guiapp.test
+TCL_TESTS = tclTests.tcl mdgg16gui.test
 
 install-exec-local:
 	$(mkinstalldirs) @prefix@/TclLibs

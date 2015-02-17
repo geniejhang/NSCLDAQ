@@ -30,7 +30,7 @@ TCLTESTS = acaen671.test \
 
 
 check-TESTS:
-	echo "pkg_mkIndex -verbose @srcdir@ MockCCUSB.tcl" | $(TCLSH_CMD)
+	echo "pkg_mkIndex -verbose @srcdir@ @srcdir@/MockCCUSB.tcl" | $(TCLSH_CMD)
 	TCLLIBPATH="@prefix@/TclLibs @libdir@ @srcdir@" HERE=@srcdir@ tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl
 
 EXTRA_DIST=$(TCLDRIVERS) $(TCLTESTS)

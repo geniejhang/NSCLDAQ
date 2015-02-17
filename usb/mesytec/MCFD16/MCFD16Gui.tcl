@@ -22,9 +22,8 @@ package require Tk
 #package require FrameSwitcher
 package require FrameManager
 package require scriptheadergenerator
-package require TclSourceFilter
+package require BlockCompleter
 package require mcfd16channelnames
-package require ChannelLabel
 
 
 ## "Base" type for MCFD16View ################
@@ -39,16 +38,12 @@ snit::type MCFD16View {
 
   variable _mcfd ;# basic array of values
 
-  variable _outOfSync
-
   ## @brief Construct and initialize options
   #
   constructor {args} {
     $self configurelist $args
 
     $self InitArray 
-
-    set _outOfSync 1
   }
 
 
@@ -58,6 +53,34 @@ snit::type MCFD16View {
   # snit::type
   method mcfd {} {
     return [$self info vars _mcfd]
+  }
+
+  ## @brief Check whether a channel name contains non-whitespace characters
+  # 
+  # This is called when a channel entry loses focus
+  #
+  # @param name   candidate string 
+  #
+  # @return boolean
+  # @retval 0 - string was empty or all whitespace
+  # @retval 1 - otherwise
+  method ValidateName {name} {
+    set name [string trim $name]
+    set good [expr [string length $name]!=0]
+
+    return $good
+  }
+
+  ## @brief Reset channel to a simple string
+  #
+  # Typically called with ValidateName returns false. It will set the string
+  # to "Ch#".
+  #
+  # @returns ""
+  method ResetChannelName {widget} {
+    set str [$widget cget -textvariable]
+    regexp {^.*(\d+)$} $widget match ch
+    set $str "Ch$ch"
   }
 
   ## @brief Initialize all elements of the array for each setting
@@ -89,20 +112,7 @@ snit::type MCFD16View {
     set _mcfd(dl8) 1
     set _mcfd(fr8) 20
     set _mcfd(th16) 127
-
-    trace add variable [myvar _mcfd] write [mymethod OutOfSync]
   }
-
-  method OutOfSync {name1 name2 op} {
-    $self SetOutOfSync 1
-  }
-
-  method SetOutOfSync {state} {
-    set _outOfSync $state
-  }
-
-  method IsOutOfSync {} { return $_outOfSync}
-  method GetOutOfSyncVar {} { return [myvar _outOfSync] }
 
   # ------ Setters and getters
   
@@ -275,10 +285,6 @@ snit::widget MCFD16IndividualView {
 
   }
 
-  destructor {
-    $m_base destroy
-  }
-
   ## @brief Assemble the widgets
   #
   method BuildGUI {} {
@@ -355,9 +361,10 @@ snit::widget MCFD16IndividualView {
     ttk::frame $w -style $style.TFrame
 
     # construct first row
-    ChannelLabel $w.na$ch -width 8 -textvariable MCFD16ChannelNames::chan$ch \
+    ttk::entry $w.na$ch -width 8 -textvariable MCFD16ChannelNames::chan$ch \
                         -style "$style.TEntry" \
-                        -defaultstring "Ch$ch"
+                                -validate focus -validatecommand [mymethod ValidateName %P] \
+                                -invalidcommand [mymethod ResetChannelName %W]
 
     ttk::spinbox $w.th$ch -textvariable "[$self mcfd](th$ch)" -width 4 \
                         -style "$style.TSpinbox" -from 0 -to 255 \
@@ -394,10 +401,10 @@ snit::widget MCFD16IndividualView {
 
     # construct second row 
     incr ch
-    ChannelLabel $w.na$ch -width 8 -textvariable MCFD16ChannelNames::chan$ch \
-                        -style "$style.TEntry" \
-                        -defaultstring "Ch$ch"
-
+    ttk::entry $w.na$ch -width 8 -textvariable MCFD16ChannelNames::chan$ch \
+      -style "$style.TEntry" \
+      -validate focus -validatecommand [mymethod ValidateName %P] \
+                      -invalidcommand [mymethod ResetChannelName %W]
     ttk::spinbox $w.th$ch -textvariable "[$self mcfd](th$ch)" -width 4 \
       -style "$style.TSpinbox" -from 0 -to 255 \
       -state readonly
@@ -447,10 +454,6 @@ snit::widget MCFD16CommonView {
     $self configurelist $args 
 
     $self BuildGUI
-  }
-
-  destructor {
-    $m_base destroy
   }
 
   ## Construct the header and the row of controls
@@ -864,11 +867,6 @@ snit::widget MCFD16ControlPanel {
   variable m_mode  ;# current config mode of the device (selects visible frame)
   variable m_current
 
-  variable m_commonOutOfSync 
-  variable m_individualOutOfSync 
-
-  variable m_updateButton
-
   ## Create all presenters and build the gui
   #
   # This reads from the device the configuration mode and then displays the
@@ -901,23 +899,11 @@ snit::widget MCFD16ControlPanel {
     set m_mode [[$self cget -handle] GetMode]
     trace add variable [myvar m_mode] write [mymethod OnModeChange]
 
-    $self SetUpOutOfSyncTrace 
     $self BuildGUI
 
     # sets the m_current and updates the frame switcher
     $self OnModeChange {} {} {}
 
-  }
-
-  method SetUpOutOfSyncTrace {} {
-    set m_commonOutOfSync [[$m_comPrsntr cget -view] GetOutOfSyncVar]
-    set m_individualOutOfSync [[$m_indPrsntr cget -view] GetOutOfSyncVar]
-    trace add variable $m_commonOutOfSync write [mymethod OnOutOfSync]
-    trace add variable $m_individualOutOfSync write [mymethod OnOutOfSync]
-  }
-
-  method OnOutOfSync {name1 name2 op} {
-    $self SetUpdateButtonState !disabled
   }
 
   ## @brief Create the widget and then install them into the megawidget.
@@ -935,14 +921,12 @@ snit::widget MCFD16ControlPanel {
                                   -value common -style Mode.TRadiobutton
     ttk::radiobutton $mode.modeInd -text "individual" -variable [myvar m_mode] \
                                   -value individual -style Mode.TRadiobutton
-    trace add variable [myvar m_mode] write [mymethod OnOutOfSync]
     grid $mode.modeLbl $mode.modeCom $mode.modeInd -sticky new
     grid columnconfigure $mode {0 1 2} -weight 1
 
     ttk::button $win.commit -text "Commit to Device" -command [mymethod Commit] \
                                   -style "Commit.TButton"
-    set m_updateButton $win.update
-    ttk::button $m_updateButton -text "Update from Device" -command [mymethod Update] \
+    ttk::button $win.update -text "Update from Device" -command [mymethod Update] \
                                   -style "Commit.TButton"
 
     grid $win.mode - -sticky new
@@ -986,7 +970,6 @@ snit::widget MCFD16ControlPanel {
     [$self cget -handle] SetMode $m_mode ;# set mode first to make sure that
                                          ;# subsequent writes succeed.
     $m_current Commit
-    $self SetUpdateButtonState disabled
   }
 
   ## @brief Commit the channel settings and also the pulser state
@@ -1001,7 +984,6 @@ snit::widget MCFD16ControlPanel {
     $m_current Commit
     $m_pulserPrsntr CommitViewToModelNoTransition
 
-    $self SetUpdateButtonState disabled
   }
 
   ## Call each of the presenters' UpdateViewFromModel methods
@@ -1016,20 +998,8 @@ snit::widget MCFD16ControlPanel {
     $m_comPrsntr UpdateViewFromModel 
     $m_indPrsntr UpdateViewFromModel 
     $m_pulserPrsntr UpdateViewFromModel
-
-    $self SetUpdateButtonState disabled
   }
 
-  method SetUpdateButtonState state {
-    $m_updateButton state $state
-
-    if {$state eq "disabled"} {
-      $self SetUpOutOfSyncTrace
-    } else {
-      trace remove variable $m_commonOutOfSync write [mymethod OnOutOfSync]
-      trace remove variable $m_individualOutOfSync write [mymethod OnOutOfSync]
-    }
-  }
   ## Retrieve the current controls presenter
   #
   method GetCurrent {} { return $m_current }
@@ -1288,7 +1258,6 @@ snit::type LoadFromFilePresenter {
   option -view -default {} -configuremethod SetView
   variable _contentFr
 
-  component _filter
 
   ## @brief Construct and set up the state
   #
@@ -1297,9 +1266,6 @@ snit::type LoadFromFilePresenter {
   #
   constructor {contentFr args} {
     set _contentFr $contentFr 
-
-    install _filter using TclSourceFilter %AUTO%
-    $_filter SetValidPatterns $_validAPICalls
 
     $self configurelist $args
   }
@@ -1352,11 +1318,11 @@ snit::type LoadFromFilePresenter {
       tk_messageBox -icon error -message $msg
     }
 
-    set f [open $path r]
-    set content [chan read $f]
-    catch {close $f}
+    # split the file into complete chunks that can be passed to eval
+    set rawLines [$self TokenizeFile $path]
 
-    set executableLines [$self FilterOutNonAPICalls $content]
+    # find the lines we can safely execute
+    set executableLines [$self FilterOutNonAPICalls $rawLines]
 
     # determine the first
     set devName [$self ExtractDeviceName [lindex $executableLines 0]]
@@ -1383,11 +1349,36 @@ snit::type LoadFromFilePresenter {
     set fakeHandle [$self SwapInHandle $realHandle]
 
     $fakeHandle destroy
+    catch {close $loadFile}
   }
 
-  method FilterOutNonAPICalls {content} {
-    # find the lines we can safely execute
-    return [$_filter Filter $content]
+  ## @brief Split the file into fully executable chunks
+  #
+  # This uses the BlockCompleter snit::type to find all complete blocks (i.e. at
+  # the end of a line the number of left and right curly braces are equal). The
+  # list of complete blocks are returned.
+  #
+  # @param path   the path to the file to parse
+  #
+  # @returns  the list of complete blocks 
+  method TokenizeFile {path} {
+    # if here, the file exists and can be updated
+    set loadFile [open $path r]
+
+    set blocks [list]
+    BlockCompleter bc -left "{" -right "}"
+ 
+    while {![chan eof $loadFile]} {
+      bc appendText [chan gets $loadFile]
+      while {![bc isComplete] && ![chan eof $loadFile]} {
+        bc appendText "\n[chan gets $loadFile]"
+      }
+      lappend blocks [bc getText]
+      bc Reset
+    }
+
+    bc destroy
+    return $blocks
   }
 
   ## @brief Replace current handle with a new handle
@@ -1400,6 +1391,28 @@ snit::type LoadFromFilePresenter {
     $_contentFr configure -handle $newHandle
 
     return $oldHandle
+  }
+
+  ## @brief Check to see if second element is an API call
+  #
+  # In a well-formed call to a device driver, the first element will be the name
+  # of the device driver instance and the second element of the line will be the
+  # actual method name. If the second element is not a string that is understood
+  # to be a valid method name, then we return false. That is only if that line
+  # is also not recognized as a command to manipulate the names.
+  # 
+  # @param  lines   the list of lines to filter
+  #
+  # @returns a list of lines that only contain  valid api calls or name
+  # manipulation code
+  method FilterOutNonAPICalls lines {
+    set validLines [list]
+    foreach line $lines {
+      if {[$self IsValidAPICall $line] || [$self IsNameLine $line]} {
+        lappend validLines $line
+      }
+    }
+    return $validLines
   }
 
   ## @brief Retrieve name of the device driver from a line
@@ -1420,11 +1433,40 @@ snit::type LoadFromFilePresenter {
     return $name
   }
 
+  ## @brief Check whether the second element of a line is a valid api call
+  #
+  # This snit::type provides a list of strings that it considers valid API
+  # calls. If the second element of the line is in this list, then it is
+  # considered an api call.
+  #
+  # @param line   line of code to check
+  #
+  # @returns boolean
+  # @retval 0 - second element is not in list of valid calls
+  # @retval 1 - otherwise
+  method IsValidAPICall {line} {
+    # we are only treating simple lines where the second element is the verb
+    # this is valid for all 
+    set verb [lindex $line 1]
+    return [expr {$verb in $_validAPICalls}]
+  }
+
   method EvaluateAPILines {lines} {
     foreach line $lines {
       #puts $line
       uplevel #0 eval $line
     }
+  }
+
+  ## @brief Check whether a line looks like it will set a channel name
+  #
+  # @returns boolean
+  # @retval 0 - doesn't satisfy regular expression
+  # @retval 1 - otherwise
+  method IsNameLine {line} {
+    set expression {^\s*set\s+(::)*MCFD16ChannelNames::chan.*$}
+    return [regexp $expression $line]
+
   }
 
   # Type data .... 
@@ -1434,31 +1476,29 @@ snit::type LoadFromFilePresenter {
   #
   typeconstructor {
     set _validAPICalls [list]
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+SetThreshold\s+\d+\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+GetThreshold\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+SetGain\s+\d+\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+GetGain\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+SetWidth\s+\d+\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+GetWidth\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+SetDeadtime\s+\d+\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+GetDeadtime\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+SetDelay\s+\d+\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+GetDelay\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+SetFraction\s+\d+\s+(20|40)$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+GetFraction\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+SetPolarity\s+\d+\s+(neg|pos)$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+GetPolarity\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+SetMode\s+(common|individual)$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+GetMode$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+EnableRC\s+\w+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+RCEnabled$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+SetChannelMask\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+GetChannelMask$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+EnablePulser\s+\d+$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+DisablePulser$}
-    lappend _validAPICalls {^\s*[[:alnum:]:]+\s+PulserEnabled$}
-    lappend _validAPICalls {^\s*set\s+(::)*MCFD16ChannelNames::chan\d+.+$}
-    lappend _validAPICalls {^\s*namespace\s+::MCFD16ChannelNames\s+eval\s+{\s*}\s*$}
+    lappend _validAPICalls "SetThreshold"
+    lappend _validAPICalls "GetThreshold"
+    lappend _validAPICalls "SetGain"
+    lappend _validAPICalls "GetGain"
+    lappend _validAPICalls "SetWidth"
+    lappend _validAPICalls "GetWidth"
+    lappend _validAPICalls "SetDeadtime"
+    lappend _validAPICalls "GetDeadtime"
+    lappend _validAPICalls "SetDelay"
+    lappend _validAPICalls "GetDelay"
+    lappend _validAPICalls "SetFraction"
+    lappend _validAPICalls "GetFraction"
+    lappend _validAPICalls "SetPolarity"
+    lappend _validAPICalls "GetPolarity"
+    lappend _validAPICalls "SetMode"
+    lappend _validAPICalls "GetMode"
+    lappend _validAPICalls "EnableRC"
+    lappend _validAPICalls "RCEnabled"
+    lappend _validAPICalls "SetChannelMask"
+    lappend _validAPICalls "GetChannelMask"
+    lappend _validAPICalls "EnablePulser"
+    lappend _validAPICalls "DisablePulser"
+    lappend _validAPICalls "PulserEnabled"
   }
 }
 

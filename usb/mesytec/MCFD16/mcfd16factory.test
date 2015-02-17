@@ -16,16 +16,8 @@
 
 package require tcltest
 
-set ::loadFailure 0
 tcltest::test pkgrequire-0 {Require the package
-} { 
-  set ::loadFailure [catch {package require mcfd16factory}] 
-} 0
-
-if $::loadFailure {
-  tcltest::cleanupTests
-  exit
-}
+} {package require mcfd16factory} 1.0
 
 package require mcfd16guiapp
 

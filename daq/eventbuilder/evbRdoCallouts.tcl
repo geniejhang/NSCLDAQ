@@ -25,7 +25,6 @@ package require Experiment 2.0
 package require ring
 package require StateManager
 package require Thread
-package require ringsourcemgr
 
 
 namespace eval ::EVBC {
@@ -280,11 +279,10 @@ proc EVBC::start args {
     label    .waiting.for -text "Waiting for event builder to start up"
     pack     .waiting.for
     set ports [::portAllocator create %AUTO]
-    set appName [::EVBC::getAppName]
-    set hunting $appName
+    set me    $::tcl_platform(user)
+    set hunting "ORDERER:$me:$::EVBC::appNameSuffix"
     set found 0
-    set me $::tcl_platform(user)
-    for {set i 0} {$i <s 100} {incr i} {
+    for {set i 0} {$i < 100} {incr i} {
 	set allocations [$ports listPorts]
 	foreach allocation $allocations {
 	    set name [lindex $allocation 1]
@@ -306,11 +304,6 @@ proc EVBC::start args {
 	error "Event builder failed to start within timeout"
     }
 
-}
-
-proc EVBC::getAppName {} {
-    set me      $::tcl_platform(user)
-    return "ORDERER:$me:$::EVBC::appNameSuffix"
 }
 
 #------------------------------------------------------------------------------
@@ -395,50 +388,6 @@ proc EVBC::getOrdererPort {} {
     return $port    
 }
 
-
-#------------------------------------------------------------------------------
-## @fn EVBC::registerRingSource
-#
-# Adds a ring source to the RingSourceMgr callout bundle. This is actually just
-# a convenience method so that people can remain dealing with only the EVBC::
-# namespace. In the end, the EVBC callout bundle does almost nothing for setting up 
-# the ring sources.
-#
-# @param sourceRingUrl          - URL of the source ring.
-# @param timestampExtractorLib  - Path to the timestamp extractor shared object.
-# @param id                     - Source id used to associate event fragments
-#                                 with an input queue.
-# @param info                   - Long description used to identify the source
-#                                 in the event orderer GUI.
-# @note Event sources are subprocesses of us but not subprocesses of the
-#       the event building pipeline.
-#
-#
-proc ::EVBC::registerRingSource {source lib id info {expectHdrs 0}} {
-   ::RingSourceMgr::addSource $source $lib $id $info $expectHdrs
-}
-
-#------------------------------------------------------------------------------
-## @fn EVBC::registerS800Source
-#
-# Convenience method for registering an S800 source. It is just a call to 
-# EVBC:registerRingSource but the s800 timestamp extractor is provided for
-# the user.
-#
-# @param ringUrl          - URL of the source ring.
-# @param id               - Source id used to associate event fragments
-#                           with an input queue.
-# @param desc             - Long description used to identify the source
-#                           in the event orderer GUI.
-#
-proc ::EVBC::registerS800Source {ringUrl id {desc {S800 USB data}}} { 
-    #
-    # Figure out the timestamp extractor path:
-    #
-    set extractor  [file join $EVBC::daqtop lib libS800TimeExtractor.so]
-    
-    ::EVBC::registerRingSource $ringUrl $extractor $id $desc
-}
 #------------------------------------------------------------------------------
 ##
 # @fn EVBC::startRingSource
@@ -455,9 +404,61 @@ proc ::EVBC::registerS800Source {ringUrl id {desc {S800 USB data}}} {
 #       the event building pipeline.
 #
 proc EVBC::startRingSource {sourceRingUrl timestampExtractorLib id info {expectHeaders 0}} {
-  ::RingSourceMgr::startSource $sourceRingUrl $timestampExtractorLib $id $info $expectHeaders
+
+
+    
+    set port [::EVBC::getOrdererPort]
+    #  Construct the command we're going to run
+    
+    set ringSource [file join $EVBC::daqtop bin ringFragmentSource]
+
+    set switches [::EVBC::_computeRingSourceSwitches $port $sourceRingUrl \
+                                                     $timestampExtractorLib \
+                                                     $id \
+                                                     $info \
+                                                     $expectHeaders]
+    
+    append ringSource $switches
+
+    # Run the command in a pipeline that gets stderr/stdout and
+    # set a fileevent on it so that we get output and errors and eof.
+    # The trick with cat below ensures that we get both stderr and stdout.
+    #
+    set fd [open "| $ringSource |& cat" r]
+    fconfigure $fd -buffering line -blocking 0
+    fileevent $fd readable [list EVBC::_HandleDataSourceInput $fd $info $id]
+
 }
 
+
+##
+# @fn EVBC::_computeRingSourceSwitches
+#
+# @param port             the port of the orderer server
+# @param url              url of the ring 
+# @param tstampExtractor  path to tstamp extractor lib
+# @param id               source id associated with source
+# @param info             description of the source
+# @param expectHeaders    boolean to specify --expectbodyheaders flag
+# 
+# @returns string containing command line arguments to use
+#
+proc EVBC::_computeRingSourceSwitches {port url tstampExtractor id info expectHeaders} {
+
+    set switches ""
+    append switches " --evbhost=localhost --evbport=$port"
+    append switches " --info=$info --ids=$id --ring=$url"
+
+    if {$tstampExtractor ne ""} {
+      append switches " --timestampextractor=[file normalize $tstampExtractor]"
+    }
+
+    if {[string is true $expectHeaders]} {
+      append switches " --expectbodyheaders"
+    }
+
+    return $switches
+}
 
 ##
 # @fn EVBC::startS800Source
@@ -544,8 +545,6 @@ proc EVBC::onBegin {} {
     }
     if {[$EVBC::applicationOptions cget -restart] && ($EVBC::pipefd ne "")} {
         EVBC::stop
-        # reset the sources so that we don't skip them.
-        ::RingSourceMgr::resetSources
         vwait EVBC::pipefd;      # Will become empty on exit.
     }
     catch [list ringbuffer create $EVBC::destRing] msg;  #ensure ring exists first.
@@ -578,8 +577,8 @@ proc EVBC::onBegin {} {
         }
             
         if {[info commands startEVBSources] ne ""} {
-          ::EVBC::_waitForEventBuilder
-          startEVBSources
+	    ::EVBC::_waitForEventBuilder
+            startEVBSources
         }
     } else {
 	EVBC::reset
@@ -609,20 +608,6 @@ proc EVBC::onEnd {} {
     if {$EVBC::guiFrame ne ""} {
             EVBC::_EnableGUI
     }
-}
-
-#------------------------------------------------------------------------------
-## 
-# @fn EVBC::isRunning
-#
-# Checks whether there is a channel associated with the event builder. Notice that
-# if the eof occurs, the EVBC::pipefd gets reset to "".
-#
-# @returns boolean
-# @retval 0 - EVB is not running
-# @retval 1 - EVB is running
-proc EVBC::isRunning {} {
-  return [expr {$::EVBC::pipefd ne ""}]
 }
 ###############################################################################
 #
@@ -667,11 +652,9 @@ proc ::EVBC::_StartMonitorThread {} {
                 set item [ring get $ringurl [list 1 2]];  # Begin/end only.
                 if {[dict get $item type] eq "Begin Run"} {
                     incr nesting
-                  puts "Found begin run: nesting = $nesting"
                 }
                 if {[dict get $item type] eq "End Run"} {
                     incr nesting -1
-                  puts "Found end run: nesting = $nesting"
                     if {$nesting == 0} {
                         thread::mutex lock $mutex
                         thread::cond  notify $condvar
@@ -727,7 +710,27 @@ proc EVBC::_PipeInputReady {} {
         EVBC::_Output [gets $EVBC::pipefd]
     }
 }
-
+#------------------------------------------------------------------------------
+##
+# @fn [private] EVBC::_HandleDataSourceInput
+#
+#   Called as a file event when input is ready from a data source pipeline.
+#   This may also be due to an event source exiting
+#
+# @param fd   - File descriptor open on the event source stdout/stderr,.
+# @param info - Textual description of the event source.
+# @param id   - Source id (numeric)
+#
+proc EVBC::_HandleDataSourceInput {fd info id} {
+    set text "$info ($id) "
+    if {[eof $fd]} {
+        catch {close $fd} msg
+        append text "exited: $msg"
+    } else {
+        append text [gets $fd]
+    }
+    EVBC::_Output $text
+}
 #-------------------------------------------------------------------------------
 ##
 # @fn [private] EVBC::_Output
@@ -741,7 +744,6 @@ proc EVBC::_PipeInputReady {} {
 proc EVBC::_Output msg {
     ReadoutGUIPanel::outputText "[clock format [clock seconds]] $msg"
 }
-
 #-----------------------------------------------------------------------------
 ##
 # @fn [private] EVBC::_ValidateOptions
@@ -1084,7 +1086,7 @@ proc EVBC::_waitForEventBuilder {} {
 
     set ports [::portAllocator create %AUTO%]
     set me $::tcl_platform(user)
-    set name [EVBC::getAppName]
+    set name ORDERER:$me:$::EVBC::appNameSuffix
     set port -1
     set allocations [$ports listPorts]
     foreach allocation $allocations {
@@ -1102,7 +1104,6 @@ proc EVBC::_waitForEventBuilder {} {
     }
     close $fd
 }
-
 
 #-------------------------------------------------------------------------------
 #
@@ -1126,6 +1127,8 @@ proc EVBC::_waitForEventBuilder {} {
 #       manager.  This includes enabling the GUI and so on.
 #
 proc ::EVBC::attach state {
+    ::EVBC::initialize
+
 }
 ##
 # EVBC::enter
@@ -1163,9 +1166,6 @@ proc ::EVBC::leave {from to} {
 #  useEventBuilder
 #     Register the event builder with the state manager
 #
-#     This also adds the RingSourceMgr immediately afterwards to work with
-#     it.
-#
 #
 proc EVBC::useEventBuilder {} {
 
@@ -1175,7 +1175,6 @@ proc EVBC::useEventBuilder {} {
         $stateMachine addCalloutBundle EVBC [lindex $callouts 0]
         set ::EVBC::registered 1
     }
-    $stateMachine addCalloutBundle ::RingSourceMgr [lindex $callouts 0]
 }
 
 ##

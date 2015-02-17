@@ -1,6 +1,6 @@
 SCRIPT_FILES=@srcdir@/mwutil.tcl @srcdir@/notebook.tcl @srcdir@/tablelist.tcl @srcdir@/tablelistSortByColumn.tcl \
 	@srcdir@/tablelistWidget.tcl  @srcdir@/tabnbook.tcl @srcdir@/FrameSequencer.tcl @srcdir@/FrameManager.tcl \
-	@srcdir@/RingStatus.tcl @srcdir@/ChannelLabel.tcl @srcdir@/TransientLabel.tcl
+	@srcdir@/RingStatus.tcl
 
 install-exec-local:
 	$(mkinstalldirs) @prefix@/TclLibs/widgets
@@ -8,9 +8,4 @@ install-exec-local:
 	$(INSTALL_SCRIPT) @srcdir@/ReDistribNotes @prefix@/TclLibs/widgets
 	echo "pkg_mkIndex -verbose @prefix@/TclLibs/widgets *.tcl" | @TCLSH_CMD@
 
-TCLTESTS=tclTests.tcl framemanager.test framesequencer.test channellabel.test transientlabel.test
-
-check-TESTS:
-	TCLLIBPATH=@prefix@/TclLibs HERE=@srcdir@ tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl
-
-EXTRA_DIST = $(SCRIPT_FILES) ReDistribNotes $(TCLTESTS)
+EXTRA_DIST = $(SCRIPT_FILES) ReDistribNotes

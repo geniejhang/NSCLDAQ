@@ -64,6 +64,7 @@ void CModuleCommandTests::create_0() {
   vector<CTCLObject> arglist(4); 
   arglist[0] = (arg = "Module");
   arglist[1] = (arg = "create");
+
   arglist[2] = (arg = "ccusb");
   arglist[3] = (arg = "name");
 

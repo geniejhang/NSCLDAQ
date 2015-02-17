@@ -29,7 +29,6 @@ set options {
   {-module.arg     ""          "name of module registered to slow-controls server"}
   {-host.arg       "localhost" "host running VMUSBReadout slow-controls server" }
   {-port.arg       27000       "port the slow-controls server is listening on" }
-  {-configfile.arg   ""        "configuration file"}
 }
 set usage " -module value ?option value? :"
 
@@ -60,11 +59,16 @@ ttk::style configure "Header.TFrame" -background "cornflower blue"
 #ttk::style configure "Even.TCheckbutton" -background ""
 ttk::style configure "Odd.TCheckbutton" -background "snow3"
 ttk::style configure "Odd.TFrame" -background "snow3"
-ttk::style configure "OutOfSync.TLabel" -background "yellow" \
-                                        -foreground "red" \
-                                        -font "helvetica 16 bold"
 
 
+#
+#set paramDict [array get ::params]
+#MDGG16Proxy ::proxy -server [dict get $paramDict -host] \
+#                    -port [dict get $paramDict -port] \
+#                    -module [dict get $paramDict -module]
+#
+#MDGG16View .view 
+#MDGG16Presenter ::pres -view .view -handle ::proxy
 
 MDGG16GuiApp app {*}[array get ::params]
 

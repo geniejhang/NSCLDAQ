@@ -15,21 +15,10 @@
 
 package require tcltest
 
-set loadFailure 0
 tcltest::test pkgrequire-0 {Require the package 
-} {set ::loadFailure [catch {package require scriptheadergenerator}]} 0
+} {package require scriptheadergenerator} 1.0
 
-if $::loadFailure {
-  tcltest::cleanupTests
-  exit 
-}
-
-set loadFailure [catch {package require mcfd16guiapp}]
-if $::loadFailure {
-  tcltest::cleanupTests
-  exit 
-}
-
+package require mcfd16guiapp
 
 tcltest::test usb-0 {Generate proper usb header 
 } -setup {
@@ -43,7 +32,6 @@ tcltest::test usb-0 {Generate proper usb header
   generator generateHeader
 } -result [list \
 "package require mcfd16usb" \
-"package require mcfd16channelnames" \
 "set serialFile dummy"  \
 {} \
 "if \{!\[file exists \$serialFile\]\} \{" \
@@ -66,7 +54,6 @@ tcltest::test mxdcrcbus-0 {Generate proper mxdcrcbus header
   generator generateHeader
 } -result [list \
 {package require mcfd16rc} \
-{package require mcfd16channelnames} \
 {MXDCRCProxy ::proxy -server h -port 1230 -module rcbus -devno 2} \
 {# use the proxy created to construct an MCFD16RC} \
 {MCFD16RC dev ::proxy} ]

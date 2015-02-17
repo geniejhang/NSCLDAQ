@@ -24,7 +24,6 @@ snit::type MDGG16AppOptions {
   option -module  -default {}
   option -host  -default localhost
   option -port  -default 27000
-  option -configfile -default ""
 
   constructor {args} {
     $self configurelist $args
@@ -80,11 +79,6 @@ snit::type MDGG16GuiApp {
       install _view using MDGG16View [$self cget -name]
       install _presenter using MDGG16Presenter %AUTO% -view [$self cget -name] \
         -handle $_proxy
-
-      if {[$self cget -configfile] ne {}} {
-        $_presenter LoadStateFromFile [$self cget -configfile]
-        $self SetWindowTitle "MDGG-16 Controls - [file tail [$self cget -configfile]]"
-      }
     } msg]
     if {$res} {
       puts "MDGG16GuiApp failed to construct with error : $msg"
@@ -106,7 +100,6 @@ snit::type MDGG16GuiApp {
     catch {$_options destroy}
     catch {$_proxy destroy}
     catch {destroy $_view}
-    catch {destroy $_menu}
     catch {$_presenter destroy}
   }
 
@@ -128,32 +121,9 @@ snit::type MDGG16GuiApp {
     } else {
       set _menu [menu $top.menu]
     }
-    $_menu add command -label "Save" -command [mymethod Save]
     $_menu add command -label "Save as..." -command [mymethod SaveAs]
 
     . configure -menu .menu
-  }
-
-  ## @brief Logic to handle the "Save as..." operation
-  #
-  # This method just dispatches to the presenter after acquiring a path name.
-  #
-  method Save {} {
-    if {[$self cget -configfile] eq {}} {
-      set path [tk_getSaveFile -confirmoverwrite 1 -title {Save as} ] 
-      if {$path ne {}} {
-        $self configure -configfile $path
-        $_presenter SaveCurrentStateToFile [$self cget -configfile]
-        $_view SetStatus "Saved to [file tail [$self cget -configfile]]"
-        $self SetWindowTitle "MDGG-16 Controls - [file tail [$self cget -configfile]]"
-      } else {
-        $_view SetStatus "Save operation cancelled."
-      }
-    } else {
-      $_presenter SaveCurrentStateToFile [$self cget -configfile]
-      $_view SetStatus "Saved to [file tail [$self cget -configfile]]"
-      $self SetWindowTitle "MDGG-16 Controls - [file tail [$self cget -configfile]]"
-    }
   }
 
   ## @brief Logic to handle the "Save as..." operation
@@ -164,20 +134,6 @@ snit::type MDGG16GuiApp {
     set path [tk_getSaveFile -confirmoverwrite 1 -title {Save as} ] 
     if {$path ne {}} {
       $_presenter SaveCurrentStateToFile $path
-      $_view SetStatus "Saved to [file tail $path]"
-    } else {
-      $_view SetStatus "Save operation cancelled."
     }
   }
-
-  method SetWindowTitle {title} {
-    set top [winfo toplevel [$self cget -name]]
-    wm title $top $title
-  }
-
-  method GetWindowTitle {} {
-    set top [winfo toplevel [$self cget -name]]
-    return [wm title $top]
-  }
-
 }

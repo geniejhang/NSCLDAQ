@@ -535,11 +535,11 @@ proc ::EventLog::_duplicateRun {} {
     #  Figure out the return value:
 
     if {[file exists $runDirPath]} {
-      set message "The final run directory '$runDirPath' already exists indicating this run may already have been recorded"
+	set message "The final run directory '$runDirPath' already exists indicating this run may already have been recorded"
     } elseif {($eventSegments > 0)} {
-      set message "[::ExpFileSystem::getCurrentRunDir] has event segments in it for this run ($run) indicating this run may already have been recorded but not finalized"
+	set message "[::ExpFileSystem::getCurrentRunDir] has event segments in it for this run ($run) indicating this run may already have been recorded but not finalized"
     } else {
-      set message ""
+	set message ""
     }
     return $message
 
@@ -679,7 +679,7 @@ proc ::EventLog::runStarting {} {
 
     ::EventLog::_startLogger
     ::EventLog::_waitForFile $startFile $::EventLog::startupTimeout \
-                                        $::EventLog::filePollInterval
+    $::EventLog::filePollInterval
     ::EventLog::deleteStartFile
     set ::EventLog::expectingExit 0
     ::EventLog::_setStatusLine 2000
@@ -787,9 +787,19 @@ proc ::EventLog::enter {from to} {
 #
 proc ::EventLog::leave {from to} {
   if {($from eq "Halted") && ($to eq "Active")} {
+    set errors [::EventLog::listIdentifiableProblems]
+
+    # if the error list has error messages in it, then abort
+    if {[llength $errors]>0} {
+      set ::EventLog::failed 1
+      set errstr [join $errors "\n"]
+      return -code error "EventLog aborted transition because of the following impending problems:\n$errstr"
+    } else {
+      # no problems were identified, so start up the run
       ::EventLog::runStarting
       # reset the failure state
       set ::EventLog::failed 0
+    }
   }
 }
 

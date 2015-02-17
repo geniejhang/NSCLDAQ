@@ -129,17 +129,10 @@
         </para>
 
         <programlisting>
-         Configuration file for MDGG16Control
-         Timestamp of creation
          or_a  value_a
          or_b  value_b
          or_c  value_c
          or_d  value_d
-          0 : Name of Channel 0
-          1 : Name of Channel 1
-          2 : Name of Channel 2
-          ...
-         15 : Name of Channel 15 
         </programlisting>
 
         <para>
@@ -229,34 +222,17 @@
 
   <section>
     <title>
-      Saving and Restoring The State of the GUI Between Sessions
+      Saving data
     </title>
 
     <section>
       <title>Saving the state</title>  
       <para>
-        The state of the GUI can always be saved to a specific file by means of the "Save
-        as..." menu button. The user can also commit the state to a specific
-        file via the "Save" operation. If a --configfile argument was provided
-        when launching the program, the file will be overwritten with the
-        current settings. If no --configfile argument was provided, the user is
-        prompted for a filename. Subsequent "save" operations will use this
-        file. The file produced by either of these save operations is capable of being used for
-        the --configfile command line option in a later MDGG16Control session 
-        or for the -configfile option in the mdgg16 slow-controls module.
+        The state of the GUI can always be saved to a file by means of the "Save
+        as..." menu button. Doing so produces a file capable of being used for
+        the -configfile option in the mdgg16 slow-controls module.
       </para>
 
-    </section>
-
-    <section>
-      <title>Restoring previous state</title>
-      <para>
-        The state can easily be restored by passing a configuration file from a 
-        previous save operation to the --configfile option. This should load up
-        the content of the file to the GUI. This does not commit the file
-        contents to the device, so the user should expect that the GUI will warn
-        that the GUI and the device are not synchronize. 
-      </para>
     </section>
 
   </section>

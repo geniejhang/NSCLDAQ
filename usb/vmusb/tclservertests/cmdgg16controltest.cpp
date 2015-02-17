@@ -93,28 +93,10 @@ class FileJanitor {
 
 void generateTestConfigFile (std::string path) {
   std::ofstream f(path.c_str());
-  f << "Configuration file for MDGG16Control" << endl;
-  f << "Wed Dec 31 16:23:12 EST 2014" << endl;
   f << "or_a " << 255 << endl;
   f << "or_b " << 254 << endl;
   f << "or_c " << 253 << endl;
   f << "or_d " << 252 << endl;
-  f << " 0 : Ch0" << endl;
-  f << " 1 : Ch1" << endl;
-  f << " 2 : Ch2" << endl;
-  f << " 3 : Ch3" << endl;
-  f << " 4 : Ch4" << endl;
-  f << " 5 : Ch5" << endl;
-  f << " 6 : Ch6" << endl;
-  f << " 7 : Ch7" << endl;
-  f << " 8 : Ch8" << endl;
-  f << " 9 : Ch9" << endl;
-  f << "10 : Ch10" << endl;
-  f << "11 : Ch11" << endl;
-  f << "12 : Ch12" << endl;
-  f << "13 : Ch13" << endl;
-  f << "14 : Ch14" << endl;
-  f << "15 : Ch15" << endl;
   f.close();
 }
 

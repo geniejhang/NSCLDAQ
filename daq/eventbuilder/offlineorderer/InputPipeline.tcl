@@ -260,7 +260,7 @@ snit::type OfflineEVBInputPipeline {
   # @param params an OfflineEVBInputPipeParams object
   #
   method launch {params} {
-    if {[$params cget -inputring] ni [ringbuffer list]} {
+    if {[catch {ringbuffer usage [$params cget -inputring]} msg]} {
       # failed to find the ring
       ringbuffer create [$params cget -inputring]
     }
