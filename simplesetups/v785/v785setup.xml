@@ -21,24 +21,23 @@
         <para>
           This paper's purpose is to guide the reader in setting up and reading
           out data from a CAEN V785 peak sensing ADC. It covers the electronics
-          that will be needed and how to set them up. It will show how to
-          modify the production readout (V11.0), and SpecTcl (V3.4) software
-          skeletons to readout and histogram data from the adc. Testing for the
-          code is also covered to a limited extent.
+          that will be needed and how to set them up. It will show how to modify
+          the production readout (V11.0) software skeleton to readout data from
+          the adc. Testing for the code is also covered to a limited extent.
         </para>
         <para>
           This paper assumes that you are
         </para>
         <itemizedlist>
-            <listitem><para>
-               Somewhat familiar with Linux.
-            </para></listitem>
-            <listitem><para>
-              Have a basic familiarity with the C++ programming language.
-            </para></listitem>
-            <listitem><para>
+          <listitem><para>
+              Somewhat familiar with Linux.
+          </para></listitem>
+          <listitem><para>
+              Familiar with the C++ programming language at a basic level.
+          </para></listitem>
+          <listitem><para>
               Familiar with an oscilloscope.
-            </para></listitem>
+          </para></listitem>
         </itemizedlist>
         <para>
           Final version of the software are available for download at:
@@ -49,7 +48,7 @@
           As authors we take very seriously reports of mistakes, omissions, and
           unclear documentation. If you come across a part of the document you
           think is wrong, needs expansion, or is not clearly worded, please
-          report this to &lt;fox@nscl.msu.edu&gt;. We will correct this problem
+          report this to &lt;helpme@nscl.msu.edu&gt;. We will correct this problem
           as soon as possible and, if you like, credit you publicly in the
           document for finding and helping us fix this issue.
         </para>
@@ -58,8 +57,8 @@
     <chapter>
         <title>The electronics</title>
         <para>
-          The CAEN V785 is a 12 bit, 32-channel analog-to-digital converter that
-          returns a value related to the maximum voltage that occurs during the
+          The CAEN V785 is a 12-bit, 32-channel analog-to-digital converter that
+          returns a digitized value of the maximum voltage that occurs during the
           time a gate is present. The input signal must be positive and less
           than 4V. The V785 is a VME-based module. For a complete understanding
           of the module I suggest that you obtain a copy of the product manual,
@@ -99,9 +98,6 @@
             </listitem>
             <listitem>
               <para>LEMO to Ribbon cable converter</para>
-            </listitem>
-            <listitem>
-              <para>VME CAEN V262 I/O Module</para>
             </listitem>
             <listitem>
               <para>Pulser</para>
@@ -160,20 +156,12 @@
 
           <figure>
             <title>Pulser Output Signal</title>
-            <mediaobject>
-              <imageobject>
-                <imagedata fileref="figures/ss785_pulser_output.png"
-                  format="PNG"/>
-              </imageobject>
-            </mediaobject>
+            <graphic fileref="figures/ss785_pulser_output.png"
+              format="PNG"/>
           </figure>
           <figure>
             <title>Amplifer Output Signal</title>
-            <mediaobject>
-              <imageobject>
-                <imagedata fileref="figures/ss785_amplifier_output.png" format="PNG"/>
-              </imageobject>
-            </mediaobject>
+            <graphic fileref="figures/ss785_amplifier_output.png" format="PNG"/>
           </figure>
 
           <para>
@@ -212,13 +200,8 @@
 
           <figure>
             <title>Amplified Signal with Logic Pulser</title>
-            <mediaobject>
-              <imageobject>
-                <imagedata
-                  fileref="figures/ss785_amplified_signal_with_logic_pulse.png"
-                  format="PNG"/>
-              </imageobject>
-            </mediaobject>
+            <graphic fileref="figures/ss785_amplified_signal_with_logic_pulse.png"
+              format="PNG"/>
           </figure>
 
           <para>
@@ -239,12 +222,8 @@
 
           <figure>
             <title>Amplified Signal and Gate</title>
-            <mediaobject>
-              <imageobject>
-                <imagedata fileref="figures/ss785_amplified_signal_with_gate.png"
-                  format="PNG"/>
-              </imageobject>
-            </mediaobject>
+            <graphic fileref="figures/ss785_amplified_signal_with_gate.png"
+              format="PNG"/>
           </figure>
 
           <para>
@@ -479,6 +458,7 @@ East Lansing, MI 48824-1321
   s04.thoagland@wittenberg.edu
 */
 #include &lt;config.h&gt;
+#include &lt;string&gt;
 
 #ifdef HAVE_STD_NAMESPACE                             <co id="ex1_ifdef_std"/>
 using namespace std;
@@ -491,21 +471,19 @@ static int CAENTIMEOUT = 50;
 
 // Packet version -should be changed whenever major changes are made
 // to the packet structure.
-static char* pPacketVersion = "1.0";                    <co id="ex1_pkt_version"/>
+static const char* pPacketVersion = "1.0";                    <co id="ex1_pkt_version"/>
 
 //constructor set Packet details
 MyEventSegment::MyEventSegment(short slot, unsigned short Id):
-  m_myPacket(Id),
-  m_module(slot),                                       <co id="ex1_mod_ptr_init"/> 
-  string("My Packet"),
-  string("Sample documented packet"),
-  string(pPacketVersion))                            <co id="ex1_initlist"/>
+  m_myPacket(Id,"My Packet","Sample documented packet",pPacketVersion),
+  m_module(slot)                                        <co id="ex1_mod_ptr_init"/> 
+                                                        <co id="ex1_initlist"/>
 {
 }
 
 // Is called right after the module is created. All one time Setup
 // should be done now.
-void MyEventSegment::Initialize()
+void MyEventSegment::initialize()
 {
   m_module.reset();                                        <co id="ex1_mod_ptr_reset"/>
   clear();
@@ -536,11 +514,11 @@ size_t MyEventSegment::read(void* pBuffer, size_t maxsize)
   {
     // Opens a new Packet
     uint16_t* pBuf = reinterpret_cast&lt;uint16_t*&gt;(pBuffer);
-    pBuf = m_MyPacket.Begin(pBuf);                                 <co id="ex1_pkt_begin"/> 
+    pBuf = m_myPacket.Begin(pBuf);                                 <co id="ex1_pkt_begin"/> 
     // Reads data into the Packet 
     nBytesRead = m_module.readEvent(pBuf);                         <co id="ex1_readEvent"/> 
     // Closes the open Packet
-    pBuf = m_MyPacket.End(pBuf+nBytesRead/sizeof(uint16_t));       <co id="ex1_pkt_end"/> 
+    pBuf = m_myPacket.End(pBuf+nBytesRead/sizeof(uint16_t));       <co id="ex1_pkt_end"/> 
   }
 
   // compute number of bytes added to buffer
@@ -692,10 +670,11 @@ size_t MyEventSegment::read(void* pBuffer, size_t maxsize)
 
             <programlisting>
 void
-CMyExperiment::SetupReadout(CExperiment&amp; rExperiment)
+CMyExperiment::SetupReadout(CExperiment* pExperiment)
 {
-  CReadoutMain::SetupReadout(rExperiment);
-  rExperiment.AddEventSegment(new MyEventSegment(10, 0xff00));
+  assert(pExperiment!=0);
+  CReadoutMain::SetupReadout(pExperiment);
+  pExperiment->AddEventSegment(new MyEventSegment(10, 0xff00));
 }
             </programlisting>
 
@@ -762,7 +741,7 @@ make
             </para>
 
             <para>
-              In this section we?ll show how to use the command line to
+              In this section we will show how to use the command line to
             </para>
 
             <itemizedlist>
@@ -773,7 +752,7 @@ make
               </listitem>
               <listitem>
                 <para>
-                 Start your Readout program, start a run, stop a run and exit. 
+                 Start your Readout program, start a run, stop a run, and exit. 
                 </para> 
               </listitem>
 
@@ -785,75 +764,56 @@ make
             </itemizedlist>
 
             <para>
-              There are two buffer dumping programs that are now available to
-              support the NSCL Data acquisition system. Unfortunately, both are
-              called bufdump and can only be distinguished by where they are
-              installed.
+              The program provided by NSCLDAQ that prints formatted raw data
+              output to a terminal is called
+              <command>dumper</command>. It can be attached to the ringbuffer
+              that is receiving the output data of the Readout program and be
+              used to inspect the raw data.
             </para>
 
             <variablelist>
               <varlistentry>
-                <term>/usr/opt/nscldaq/current/bufdump</term>
+                <term>/usr/opt/nscldaq/current/bin/dumper</term>
                 <listitem>
                   <para>
-                    Dumps the front segments of buffers in real-time. This is the program we will use for our initial
-                    testing
-                  </para>
-                </listitem>
-              </varlistentry>
-
-              <varlistentry>
-                <term>/usr/opt/utilities/current/bin/bufdump</term>
-
-                <listitem>
-                  <para>
-                    Provides formatted dumps of complete buffers. Each buffer
-                    must be individually requested from the data taking system,
-                    or an offline file. This program has extensive online and
-                    offline help and may be very useful and powerful to detect
-                    and debug problems with more complex event structures than
-                    our example, but is overkill for this application. A web
-                    based manual for this program is available at
-                    http://docs.nscl.msu.edu/daq/bufdump/. A PDF printable manual
-                    is available at
-                    http://docs.nscl.msu.edu/daq/bufdump/manual.pdf. The
-                    program?s help menu also has very complete documentation.
+                    Dumps contents of ring items to the screen as formatted text.
                   </para>
                 </listitem>
               </varlistentry>
             </variablelist>
 
             <para>
-              To start the simple buffer dump program, therefore, log on to the
-              system connected to the VME crate in which your CAEN V785 has
-              been installed and type: 
+              To start the <command>dumper</command> program, log onto any
+              computer on the same network as the one physically connected to
+              the VME crate in which your CAEN V785 has been installed.
+              Typically this is the same machine, but it doesn't have to be.
+              To launch the program, you have to specify the hostname of the
+              computer running the Readout program and also the name of the
+              ringbuffer to connect to. The default values for these are
+              "localhost" and your username. Assuming the Readout
+              program is running locally (i.e. hostname=localhost) and your user
+              name is "user0", you would type either:
             </para>
 
             <screen>
-<literal>spdaqxx&gt;</literal> <command>/usr/opt/daq/current/bin/bufdump</command>
+<literal>spdaqxx&gt;</literal> <command>/usr/opt/daq/current/bin/dumper
+  --source=tcp://localhost/user0</command>
             </screen>
-
             <para>
-              Output similar to the following should be printed:
+              or equivalently,
             </para>
-
             <screen>
-              <computeroutput>
-bufdump version 2.0 (C) Copyright 2002 Michigan State University all rights reserved
-bufdump comes with ABSOLUTELY NO WARRANTY;
-This is free software, and you are welcome to redistribute it
-under certain conditions; See http://www.gnu.org/licenses/gpl.txt
-for details
-bufdump was written by:
-Ron Fox
-Eric Kasten
-Added Sink Id 2
-              </computeroutput>
+<literal>spdaqxx&gt;</literal> <command>/usr/opt/daq/current/bin/dumper</command>
             </screen>
 
             <para>
-              This output indicates that bufdump has successfully connected to
-              the online system of the local computer.
+              The data rate is often high which causes the dumper to print out a
+              streaming list of numbers that are impossible to read unless the
+              program stops. For this reason, it is
+              generally useful to limit the number of ring items processed by
+              the dumper with the
+              <option>--count</option> option. The value provided to this at
+              launch determines the number of items process before exiting.
             </para>
 
             <para>
@@ -869,22 +829,9 @@ Added Sink Id 2
             </screen>
 
             <para>
-              When Readout starts, it should output a message like:
+              When Readout starts, it will prompt you for input with a
+              <literal>%</literal> symbol.
             </para>
-
-            <screen>
-              <computeroutput>
-pReadout version 1.0 (C) Copyright 2002 Michigan State University all rights reserved
-pReadout comes with ABSOLUTELY NO WARRANTY;
-This is free software, and you are welcome to redistribute it
-under certain conditions; See http://www.gnu.org/licenses/gpl.txt
-for details
-pReadout was written by:
-Ron Fox
-%
-              </computeroutput>
-            </screen>
-
             <para>
               The Readout program you have built runs an extended Tcl
               interpreter. Tcl is a scripting language that is widely used
@@ -904,11 +851,11 @@ Ron Fox
 
                 <listitem>
                   <para>
-                    Begins a run. From the point of view of your code, your the
-                    Initialize and Clear member functions of your event segment
-                    will be called. The Readout framework will respond to each
-                    trigger by calling the Read member function of your event
-                    segment.
+                    Begins a run. From the point of view of your code, the
+                    initialize and clear member functions of your event segment
+                    will be called. The Readout framework will continually check
+                    whether your trigger is satisfied and then call the
+                    read member function of your event segment when it is.
                   </para>
                 </listitem>
               </varlistentry>
@@ -918,7 +865,7 @@ Ron Fox
                 <listitem>
                   <para>
                     Ends a run. The readout framework stops responding to
-                    triggers 
+                    triggers.
                   </para>
                 </listitem>
               </varlistentry>
@@ -932,54 +879,52 @@ Ron Fox
 % <command>begin</command>
             </screen>
             <para>
-              The >bufdump terminal session should now start spewing stuff at you. If the trigger rate is high, you may
-need to stop the run to be able to read the buffers. To do this type: end to the Readout program.
+              The dumper terminal session should now start spewing stuff at you.
+              If the trigger rate is high, you may need to stop the run to be
+              able to read the buffers. To do this type: end to the Readout
+              program.
             </para>
 
             <para>
-               When the run starts, bufdump dumps the headers of several non-event buffers. As each event buffer is
-filled with data collected by the Read member function in your event segment, bufdump will dump the
-buffer header and the first event in the buffer. This might look a bit like this:
+               When the run starts, dumper dumps the headers of several
+               non-event buffers. As each event buffer is filled with data
+               collected by the read member function in your event segment,
+               dumper will dump the buffer header and the first event in the
+               buffer. This might look a bit like this:
             </para>
 
             <screen>
               <computeroutput>
------------------------ Event (first Event) ----------------
-Header:
-300 1 -27712 0 1859 0 4 0 0 0 5 258 772 258 0 0
-Event:
-71(10) words of data
-47 46 ff00 4200 2000 4000 404f 4010
-4055 4001 4066 4011 404c 4002 4059 4012
-4059 4003 4058 4013 404d 4004 405d 4014
-405e 4005 4048 4015 4058 4006 4076 4016
-4065 4007 4bcc 4017 4050 4008 4068 4018
-406b 4009 4057 4019 405a 400a 4067 401a
-406a 400b 404e 401b 405a 400c 406c 401c
-4066 400d 405a 401d 404f 400e 406e 401e
-405a 400f 4055 401f 404c 4404 5824
+asdfsdf
               </computeroutput>
             </screen>
 
             <para>
-              Focus on the section below the word Event:. This is a hexadecimal representation of the data in the first
-event of the buffer. The event that we made starts with 47, this is the total number of words (in hex) that
-exist in the event. The size of the event is filled in by the Readout framework. The next word is the
-number of words in our packet (in hex). This word is filled in by our documented packet. The third word
-is the packet id in this case 0xff00 This word is also filled in by our documented packet object. The
-remainder of the event is the data from the ADC hardware. The next two words are the ADC header; if
-you break these down into binary representation the first five bits will be the slot where the V785 is
-located. If the packet ID and slot number are both correct then you are ready to move on to modifying the
-SpecTcl Skeleton.
+              Focus on the section below the word Event:. This is a hexadecimal
+              representation of the data in the first event of the buffer. The
+              event that we made starts with 47, this is the total number of
+              words (in hex) that exist in the event. The size of the event is
+              filled in by the Readout framework. The next word is the number of
+              words in our packet (in hex). This word is filled in by our
+              documented packet. The third word is the packet id in this case
+              0xff00 This word is also filled in by our documented packet
+              object. The remainder of the event is the data from the ADC
+              hardware. The next two words are the ADC header; if you break
+              these down into binary representation the first five bits will be
+              the slot where the V785 is located. If the packet ID and slot
+              number are both correct then you are ready to move on to modifying
+              the SpecTcl Skeleton.
             </para>
 
             <para>
-              Complete documentation of the data read from the ADC hardware is given by the CAEN V785 manual.
-This manual can be found online at CAEN website: http://www.caen.it/
+              Complete documentation of the data read from the ADC hardware is
+              given by the CAEN V785 manual.  This manual can be found online at
+              CAEN website: http://www.caen.it/
             </para>
 
             <para>
-              Exit the Readout program by typing the following to the Readout program:
+              Exit the Readout program by typing the following to the Readout
+              program:
             </para>
 
             <screen>
@@ -989,22 +934,4 @@ This manual can be found online at CAEN website: http://www.caen.it/
           </section>
         </section>
     </chapter>
-    <appendix>
-        <title>The full readout program.</title>
-        <para>
-            
-        </para>
-    </appendix>
-    <appendix>
-        <title>The full SpecTcl program.</title>
-        <para>
-            
-        </para>
-    </appendix>
-    <appendix>
-        <title>Scripts and other glue components.</title>
-        <para>
-            
-        </para>
-    </appendix>
 </book>
