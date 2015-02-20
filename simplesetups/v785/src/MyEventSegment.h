@@ -29,5 +29,8 @@ class MyEventSegment : public CEventSegment
     virtual void initialize();                    
     virtual void clear();                         
     virtual size_t read(void* pBuffer, size_t maxwords);
+
+  public:
+    uint64_t computeTimestamp(uint16_t* pBuf);
 };
 #endif 

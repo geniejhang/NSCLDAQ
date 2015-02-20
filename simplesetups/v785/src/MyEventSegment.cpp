@@ -22,13 +22,16 @@ East Lansing, MI 48824-1321
   s04.thoagland@wittenberg.edu
 */
 #include <string>
+#include <sstream>
+#include <stdint.h>
 
 #ifdef HAVE_STD_NAMESPACE                             
 using namespace std;
 #endif
 
 // Set the polling limit for a timeout
-static int CAENTIMEOUT = 50;
+static const unsigned int CAENTIMEOUT = 100;
+static const unsigned int MAXWORDS = 34*sizeof(uint32_t)/sizeof(uint16_t);
 
 #include "MyEventSegment.h"                             
 
@@ -59,21 +62,43 @@ void MyEventSegment::clear()
 }
 
 //Is called to readout data on m_module
-size_t MyEventSegment::read(void* pBuffer, size_t maxsize)
+size_t MyEventSegment::read(void* pBuffer, size_t maxShorts)
 {
-  int nBytesRead=0;
+  // we got a trigger, but do we actually have data?
+  int trial = 0;
+  while (!m_module.dataPresent() && trial<CAENTIMEOUT) {
+    ++trial;
+  }
+
+  
+  size_t nShorts = 0;
   // Tests again that data is ready 
   if(m_module.dataPresent())
   {
+    if(maxShorts <= MAXWORDS) {
+      throw std::string("Buffer does not have sufficient space!");
+    }
+
     // Opens a new Packet
-    uint16_t* pBuf = reinterpret_cast<uint16_t*>(pBuffer);
-    pBuf = m_myPacket.Begin(pBuf);                                 
-    // Reads data into the Packet 
-    nBytesRead = m_module.readEvent(pBuf);                         
+    uint16_t* pBufBegin = reinterpret_cast<uint16_t*>(pBuffer);
+    uint16_t* pBuf = m_myPacket.Begin(pBufBegin);
+    // Reads data into the Packet
+    int nBytesRead = m_module.readEvent(pBuf);
     // Closes the open Packet
-    pBuf = m_myPacket.End(pBuf+nBytesRead/sizeof(uint16_t));       
+    uint16_t* pBufEnd = m_myPacket.End(pBuf+nBytesRead/sizeof(uint16_t));       
+
+    nShorts = (pBufEnd-pBufBegin);
+
+    setTimestamp(computeTimestamp(pBufEnd-2));
   }
 
-  // compute number of bytes added to buffer
-  return nBytesRead;                                               
+
+  return nShorts;
+}
+
+uint64_t MyEventSegment::computeTimestamp(uint16_t* pBuf)
+{
+    uint64_t eoe =  *(pBuf)<<16;
+    eoe          |= *(pBuf+1);
+    return (eoe&0x00ffffff);
 }
