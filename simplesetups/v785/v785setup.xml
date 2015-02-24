@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                      "file:///usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd
-"
+"file:///usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd" 
 >
 <book>
   <bookinfo>
     <title>Using NSCLDAQ with a CAEN V785 Peak-Sensing ADC and CAEN V262 IO Register</title>
     <author><firstname>Jeromy</firstname> <surname>Tompkins</surname></author>
     <author><firstname>Tim</firstname> <surname>Hoagland</surname></author>
+    <author><firstname>Ron</firstname> <surname>Fox</surname></author>
     <revhistory>
       <revision>
         <revnumber>1.0</revnumber>
         <date>11/03/04</date>
-        <authorinitials>T.H.</authorinitials>
+        <authorinitials>TH &amp; RF</authorinitials>
         <author><firstname>Tim</firstname> <surname>Hoagland</surname></author>
         <revremark>Original release</revremark>
       </revision>
@@ -215,10 +215,10 @@
       <para> 
         The other output from the splitter will go into a
         discriminator.  This could be either a leading edge or a constant
-        fraction discriminator. The job of the discriminator is to ouptut a
+        fraction discriminator. The job of the discriminator is to output a
         logic signal when an input signals has exceeded a certain voltage
-        threshold. The output signal will be used to tell the ADC that a
-        signal and thereby initiate the process of recording the peak height
+        threshold. The output signal will be used to tell the ADC to
+        initiate the process of recording the peak height
         of the signal. The discriminator will have a threshold knob, be sure
         that the threshold is set above any background noise that may be
         present so that the discriminator only trips on the pulser signal.
@@ -257,8 +257,11 @@
 
       <para>
         Next we will take the "DRDY" output of the V785 and send that into
-        IN0 of the CAEN V262. This signal will be used as the signal to
-        trigger out readout.  
+        the start input of a gate delay generator. We will then take the output
+        of that gate delay generator into the IN0 of the CAEN V262. Next you
+        should connect the SHP2 output of the V262 to the stop input of the GDG. 
+        This scheme ensures that the signal at INO is held high long enough for
+        the software to recognize it.
       </para>
       <para>
         At this point your setup should be complete. Now is good time to
@@ -537,8 +540,8 @@ size_t MyEventSegment::read(void* pBuffer, size_t maxsize)
 // Extract the lower 24-bits of the end of event word
 uint64_t MyEventSegment::extractEventCount(uint16_t* pEOE) 
 {
-    uint64_t count =  *(pBuf)&lt;&lt;16;
-    count          |= *(pBuf+1);
+    uint64_t count =  *(pEOE)&lt;&lt;16;
+    count          |= *(pEOE+1);
     return (count&amp;0x00ffffff);                          <co id="ex1_extractCount"/>
 }
         </programlisting>
