@@ -150,14 +150,10 @@ proc startEVBSources {} {                    <co id='evbbundle.startsources' />
     </section>
 
 </chapter>
+<!-- /chapter -->
 <!-- manpage 3evb -->
 
-<preface>
-    <title>Preface</title>
-    <para>
-        The pages below describe the API layer.
-    </para>
-</preface>
+
 <!--  Event builder API layer. -->
       <refentry id="evb3_start">
         <refentryinfo>
@@ -572,17 +568,6 @@ EVBC::startS800Source <replaceable>ring-uri source-id ?info?</replaceable>
       </refentry>
 
 <!-- Event builder EZBuilder layer. -->
-<preface>
-    <title>Preface</title>
-    <para>
-        The pages below provide reference material for the EZBuilder
-        layer of software.  Conceptually, this layer provides a single
-        initialization proc (called from <command>OnStart</command>),
-        a proc to call from <command>OnBegin</command> and another proc to call
-        from <command>OnEnd</command>.
-    </para>
-</preface>
-
       <refentry id="evb3_initialize">
         <refentryinfo>
           <author>
@@ -786,14 +771,6 @@ EVBC::onBegin
 
       </refentry>
 
- <preface>
-    <title>Event builder callback bundle</title>
-    <para>
-        The manpage below describes the event builder callback bundle.
-        This interface provides the simplest and recommended way to
-        incorporate the event builder into your experiment.
-    </para>
-</preface>   
       <refentry id="evb3_callbackbundle">
         <refentryinfo>
           <author>
