@@ -1,5 +1,18 @@
 #!/usr/bin/env python
 
+"""
+	@file chapter2book.py
+
+	@author Jeromy Tompkins
+
+	This script promotes a chapter from the big documentation book
+	into a complete docbook book. The user provides the location of
+	the chapter source (this should only contain the user guide type information)
+	as well as the 
+
+
+"""
+
 import sys
 import os
 from os import path
@@ -24,6 +37,8 @@ parser.add_argument('-p','--pdf', \
 										help='Generate the pdf', \
 										type=bool,
 										default=True)
+parser.add_argument('-o','--outdir', help='Directory of output files', \
+										default='.')
 
 class ChapterUpgrader:
 	'''
@@ -61,7 +76,8 @@ args = parser.parse_args()
 targetFile     = args.source
 baseTargetFile = path.splitext(targetFile)[0]
 upgradedFile   = path.join('.',baseTargetFile+'_upgr.xml')
-outputFile     = path.join('.',baseTargetFile+'_autobook.xml')
+outputFile   = path.join(args.outdir,baseTargetFile+'_autobook.xml')
+
 
 bookInfoFile   = args.bookinfo
 
@@ -86,7 +102,7 @@ newfile.close()
 
 # generate the pdf is desired
 if args.pdf:
-	subprocess.call(['docbook2pdf',outputFile])
+	subprocess.call(['docbook2pdf','-o',args.outdir,outputFile])
 
 # clean up that is requested
 if not args.xml:
