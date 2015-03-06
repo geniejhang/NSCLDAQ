@@ -7,7 +7,7 @@ DIST_SUBDIRS = images
 
 
 
-install-exec-local: daq.html daq.mans tutorial.pdf tutorial.html
+install-exec-local: daq.html tutorial.pdf tutorial.html
 	$(mkinstalldirs) @prefix@/share
 	$(mkinstalldirs)  @prefix@/share/man
 	$(mkinstalldirs) @prefix@/share/html
@@ -26,7 +26,6 @@ install-exec-local: daq.html daq.mans tutorial.pdf tutorial.html
 
 clean-local:
 	-rm -f *.pdf
-	-rm -f *.[0-9]*
 	-rm -f daq.xml
 	-rm -f daq.html daq.mans tutorial.pdf tutorial.html
 
