@@ -1,17 +1,20 @@
-DOCS    = @srcdir@/v775setup.xml @srcdir@/v775book.xml
+DOCS    = @srcdir@/v775setup.xml @srcdir@/v775bookinfo.xml
 FIGURES = @srcdir@/v775ediagram.jpeg @srcdir@/v775ediagram.eps
 FIGSRC  = @srcdir@/v775ediagram.dia
 
-EXTRA_DIST=$(DOCS)
 
-install-exec-local: v775book.pdf
-	$(mkinstalldirs) @prefix/share/html
-	$(mkinstalldirs) @prefix/share/pdfs
+CHAPTER2BOOK=@top_srcdir@/docbuild/chapter2book.py
+
+BOOK = @builddir@/v775setup_autobook.pdf
+
+install-exec-local:
+	$(mkinstalldirs) @prefix@/share/html
+	$(mkinstalldirs) @prefix@/share/pdfs
 	$(INSTALL_DATA) $(FIGURES) @prefix@/share/html
-	$(INSTALL_DATA) v775book.pdf @prefix@/share/pdfs
-
-v775book.pdf: @srcdir@/v775book.xml @srcdir@/v775setup.xml
-	docbook2pdf @srcdir@/v775book.xml
+	$(CHAPTER2BOOK) -s @srcdir@/v775setup.xml -b @srcdir@/v775bookinfo.xml -o .
+	$(INSTALL_DATA) $(BOOK) @prefix@/share/pdfs
 
 clean-local:
-	rm -f v775book.pdf v775setup.pdf
+	rm -f $(BOOK)
+
+EXTRA_DIST=$(DOCS) $(BOOK)
