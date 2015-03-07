@@ -1,5 +1,19 @@
 #!/usr/bin/env python
 
+#    This software is Copyright by the Board of Trustees of Michigan
+#    State University (c) Copyright 2015.
+#
+#    You may use this software under the terms of the GNU public license
+#    (GPL).  The terms of this license are described at:
+#
+#     http://www.gnu.org/licenses/gpl.txt
+#
+#    Author:
+#    Jeromy Tompkins
+#	   NSCL
+#	   Michigan State University
+#	   East Lansing, MI 48824-1321
+
 """
 	@file chapter2book.py
 
@@ -65,6 +79,12 @@
 	</book>
   @endverbatim
 
+	Be wary that this script is not terribly smart. It does not check to see that
+	the input xml tree will convert to proper docbook. It just converts the
+	toplevel tags, inserts at most a single child node, and then saves the
+	resulting xml tree to a new file. If desired, docbook2pdf is run on the new
+	file. The real test for whether the input xml was valid is determined by
+	whether docbook2pdf complains that the new xml tree is invalid docbook. 
 
 """
 
