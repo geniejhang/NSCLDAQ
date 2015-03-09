@@ -50,7 +50,7 @@ check-TESTS: check_PROGRAMS
 
 
 EXTRA_DIST=$(PACKAGE_FILES) $(TEST_FILES) $(INTERACTIVE_TESTS) $(APP_FILES) $(IMAGES) \
-	$(DOCS)
+	$(DOCS) $(FIGURES)
 
 #  The Tcl API to get data from rings...and tests.
 
