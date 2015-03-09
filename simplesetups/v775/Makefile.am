@@ -17,4 +17,4 @@ install-exec-local:
 clean-local:
 	rm -f $(BOOK)
 
-EXTRA_DIST=$(DOCS) $(BOOK)
+EXTRA_DIST=$(DOCS) $(BOOK) $(FIGURES) $(FIGSRC)
