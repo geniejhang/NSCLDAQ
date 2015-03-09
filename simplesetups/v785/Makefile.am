@@ -15,7 +15,7 @@ install-exec-local:
 	$(mkinstalldirs) @prefix@/share/html/figures
 	$(mkinstalldirs) @prefix@/share/pdfs
 	$(INSTALL_DATA) $(FIGURES) @prefix@/share/html/figures
-	$(CHAPTER2BOOK) -s @srcdir@/v785setup.xml -b @srcdir@/v785bookinfo.xml -o .
+	$(CHAPTER2BOOK) -s @srcdir@/v785setup.xml -b @srcdir@/v785bookinfo.xml -o @builddir@
 	$(INSTALL_DATA) $(BOOK) @prefix@/share/pdfs
 
 clean-local:

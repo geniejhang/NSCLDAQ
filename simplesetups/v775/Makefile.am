@@ -11,7 +11,7 @@ install-exec-local:
 	$(mkinstalldirs) @prefix@/share/html
 	$(mkinstalldirs) @prefix@/share/pdfs
 	$(INSTALL_DATA) $(FIGURES) @prefix@/share/html
-	$(CHAPTER2BOOK) -s @srcdir@/v775setup.xml -b @srcdir@/v775bookinfo.xml -o .
+	$(CHAPTER2BOOK) -s @srcdir@/v775setup.xml -b @srcdir@/v775bookinfo.xml -o @builddir@ 
 	$(INSTALL_DATA) $(BOOK) @prefix@/share/pdfs
 
 clean-local:
