@@ -12,8 +12,9 @@ BOOK = @builddir@/v785setup_autobook.pdf
 
 install-exec-local:
 	$(mkinstalldirs) @prefix@/share/html
+	$(mkinstalldirs) @prefix@/share/html/figures
 	$(mkinstalldirs) @prefix@/share/pdfs
-	$(INSTALL_DATA) $(FIGURES) @prefix@/share/html
+	$(INSTALL_DATA) $(FIGURES) @prefix@/share/html/figures
 	$(CHAPTER2BOOK) -s @srcdir@/v785setup.xml -b @srcdir@/v785bookinfo.xml -o .
 	$(INSTALL_DATA) $(BOOK) @prefix@/share/pdfs
 

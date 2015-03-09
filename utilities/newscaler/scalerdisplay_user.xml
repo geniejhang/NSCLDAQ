@@ -129,7 +129,7 @@
         scaler.def. 
       </para>
       <screen>
-<literal>spdaqXX$</literal> <command>touch scaler.def</command>
+<literal>spdaqXX&gt;</literal> <command>touch scaler.def</command>
       </screen>
 
       <para>
@@ -300,7 +300,7 @@ display_ratio scalers raw_10hz_clock live_10hz_clock
       </para>
 
       <screen>
-<literal>spdaqXX$</literal> <command>export SCALER_RING="tcp://localhost/output"</command>
+<literal>spdaqXX&gt;</literal> <command>export SCALER_RING="tcp://localhost/output"</command>
       </screen>
 
       <para>
@@ -310,7 +310,7 @@ display_ratio scalers raw_10hz_clock live_10hz_clock
       </para>
 
       <screen>
-<literal>spdaqXX$</literal> <command>$DAQBIN/ScalerDisplay scaler.def</command>
+<literal>spdaqXX&gt;</literal> <command>$DAQBIN/ScalerDisplay scaler.def</command>
       </screen>
 
       <para>
@@ -408,7 +408,7 @@ stripconfig timeaxis 1200
       </para>
 
       <screen>
-        <literal>spdaqXX$</literal> <command>export SCALER_RING="tcp://spdaqX/build"</command>
+<literal>spdaqXX&gt;</literal> <command>export SCALER_RING="tcp://spdaqX/build"</command>
       </screen>
 
       <para>
@@ -431,7 +431,7 @@ stripconfig timeaxis 1200
       </para>
 
       <screen>
-<literal>spdaqXX$</literal> <command>export SCALER_RING="tcp://localhost/output tcp://localhost/output2"</command>
+<literal>spdaqXX&gt;</literal> <command>export SCALER_RING="tcp://localhost/output tcp://localhost/output2"</command>
       </screen>
 
       <para>
@@ -590,7 +590,7 @@ scint_cfd0,0,0.0,0.0
       </para>
 
       <screen>
-<literal>spdaqXX$</literal> <command>gimp run0000-stripchart.ps</command>
+<literal>spdaqXX&gt;</literal> <command>gimp run0000-stripchart.ps</command>
       </screen>
 
       <para>

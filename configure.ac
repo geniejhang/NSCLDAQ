@@ -404,6 +404,8 @@ AC_CONFIG_FILES([Makefile
 		 daq/eventbuilder/offlineorderer/Makefile
      daq/eventbuilder/offlineorderer/figures/Makefile
 		simplesetups/Makefile
+		simplesetups/v775/Makefile
+		simplesetups/v785/Makefile
 		 sbs/Makefile
 		 sbs/driver/Makefile
 		 sbs/driver/src/Makefile

@@ -26,10 +26,12 @@ INTERACTIVE_TESTS=pagetest.tcl
 
 INSTDIR=@prefix@/TclLibs/newscaler
 GRAPHDIR=@prefix@/share/scalerdisplay
+FIGUREDIR=@prefix@/share/html/figures
 
 install-exec-hook:
 	$(mkinstalldirs) $(INSTDIR) 
 	$(mkinstalldirs) $(GRAPHDIR)
+	$(mkinstalldirs) $(FIGUREDIR)
 	$(mkinstalldirs) @prefix@/share/pdfs
 	install @libdir@/libTclRingBuffer.so $(INSTDIR)
 	(cd @srcdir@; $(INSTALL_SCRIPT) $(PACKAGE_FILES) $(INSTDIR))
@@ -39,6 +41,7 @@ install-exec-hook:
 	$(CHAPTER2BOOK) -s @srcdir@/scalerdisplay_user.xml -b @srcdir@/scalerdisplay_user_bookinfo.xml -o .
 	$(INSTALL_DATA)  $(BOOK) @prefix@/share/pdfs
 	(cd @srcdir@; install $(IMAGES) $(GRAPHDIR))
+	install $(FIGURES) $(FIGUREDIR)
 
 
 
