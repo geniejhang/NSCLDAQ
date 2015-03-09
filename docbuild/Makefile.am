@@ -1,12 +1,9 @@
 EXTRA_DIST = alltsts.tcl docbuilder.tcl \
 	fragmenttest.tcl mansectests.tcl \
 	metadirtest.tcl walkdirtest.tcl \
-	tutorial.xml 
+	tutorial.xml chapter2book.py
 
 DIST_SUBDIRS = images
-
-
-EXTRA_DIST = chapter2book.py
 
 install-exec-local: daq.html tutorial.pdf tutorial.html
 	$(mkinstalldirs) @prefix@/share
