@@ -970,7 +970,7 @@ extern "C" {                                    <co id="vmusb-dev-getEvtTstamp-e
     id="vmusb-dev-getEvtTstamp-rangecheck"/>
       pData += 2;                               <co id="vmusb-dev-getEvtTstamp-incr"/>
 
-      memcpy(&amp;, pData, sizeof(tstamp)); 
+      memcpy(&amp;tstamp, pData, sizeof(tstamp)); 
     }
     return tstamp;                              <co id="vmusb-dev-getEvtTstamp-return"/>
   }
@@ -1283,7 +1283,7 @@ extern "C" {
         </para>
 
         <screen>
-<literal>spdaqXX&gt;</literal> <command>g++ -std=c++11 -shared -o mytstamplib.so mytstamplib.cpp</command>
+<literal>spdaqXX&gt;</literal> <command>g++ -std=c++11 -fPIC -shared -o mytstamplib.so mytstamplib.cpp</command>
         </screen>
       </section>
     </section>
