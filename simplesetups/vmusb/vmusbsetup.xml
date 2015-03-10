@@ -1,0 +1,310 @@
+
+<!--     chapter simple-setups -->
+
+<chapter>
+  <title>A Simple VMUSBReadout Experiment Tutorial</title>
+
+
+  <section>
+    <title>Introduction</title>
+
+    <para>
+      NSCLDAQ distributes with it a program called VMUSBReadout that supports
+      the readout of the Wiener VM-USB VME controller. The following document
+      will instruct the reader in how to set up a basic experiment consisting of
+      a CAEN V785 peak sensing analog-to-digital converter, a CAEN V775
+      time-to-digital converter, and a Struck SIS3820 32-channel latching
+      scaler. The level at which this tutorial is written assumes the following: 
+    </para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Little to no programming experience</para>
+      </listitem>
+      <listitem>
+        <para>Access to the proper electronics</para>
+      </listitem>
+      <listitem>
+        <para>Ability to wire up signal processing circuit from a block diagram</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>
+      In addition to simply setting up the experiment, the user will be
+      instructed at how to interpret the output of the devices using the dumper
+      program. If you are unfamiliar with the VMUSBReadout program, you can
+      find a complete user's guide for the
+      <application>VMUSBReadout</application> in the comprehensive NSCLDAQ
+      documentation.
+    </para>
+
+  </section>
+
+  <section>
+    <title>Setting up the Electronics</title>
+
+    <para>
+      In this section, the reader will be walked through setting up a simple
+      DAQ for processing a pulser. In order to set up the following circuit, the
+      user must acquire the following electronics:
+    </para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Wiener VM-USB controller</para>
+      </listitem>
+      <listitem>
+        <para>CAEN V775 time-to-digital converter</para>
+      </listitem>
+      <listitem>
+        <para>CAEN V785 peak-sensing analog-to-digital converter</para>
+      </listitem>
+      <listitem>
+        <para>Struck SIS3820 32-channel scaler</para>
+      </listitem>
+      <listitem>
+        <para>Gate and delay generator</para>
+      </listitem>
+      <listitem>
+        <para>Plenty of lemo cables</para>
+      </listitem>
+      <listitem>
+        <para>Pulser</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>
+      Rather than detail how to plug each cable into each module, th
+      electronics diagram for the digitizers is provided in <xref linkend="v775v785blockdiagram"
+        endterm="v775v785blockdiagram-title"/>.
+    </para>
+
+    <figure id="v775v785blockdiagram">
+      <title id="v775v785blockdiagram-title">
+        Block diagram of the V775 and V785 wiring
+      </title>
+      <graphic fileref="v785v775sis3820setup.eps"/>
+    </figure>
+
+    <!--
+    <figure id="sis3820blockdiagram">
+      <title id="sis3820blockdiagram-title">
+        Block diagram of SIS3820 scaler wiring
+      </title>
+    </figure>
+    -->
+  </section>
+
+  <section id="daqconfig">
+    <title id="daqconfig-title">
+      The Configuration Files
+    </title>
+
+    <para>
+      Because we are using hardware that is already supported by
+      <application>VMUSBReadout</application>, the only tasks left
+      are to create the <filename>daqconfig.tcl</filename> and
+      <filename>ctlconfig.tcl</filename> scripts.
+    </para>
+
+    <para>
+      The <filename>ctlconfig.tcl</filename> script will be an empty file
+      because we are not attempting to use any features of the slow-controls
+      subsystem. We can quickly generate an empty file with the
+      <command>touch</command> program at the command line. Here is how that
+      works.
+    </para>
+
+    <screen>
+<literal>spdaqXX&gt;</literal> <command>touch ctlconfig.tcl</command>
+    </screen>
+
+    <para>
+      The next step is to build our <filename>daqconfig.tcl</filename> script.
+      In that file, we will declare the V785, V775, and SIS3820 and add them to
+      stacks. Doing so will cause them to be initialized at the beginning
+      of each run, read out during triggers, and then transitioned back to an
+      inactive mode at the end of each run. The V785 and V775 will be read out
+      using a chained block transfer for each event trigger and the SIS3820 will
+      be periodically read using an internally generated trigger. We will
+      therefore, need to define two separate stacks.
+    </para>
+    
+    <para>
+      We will begin with defining the stack that will read out our digitizer.
+      Because this stack will read out the event data, we will refer to it as
+      the "event stack". To begin setting up this stack, we have to first
+      construct the device instances for the V785 and V775. Both of these
+      conveniently share the same Tcl command ensemble, because they are
+      essentially identical pieces of hardware. The command ensemble that create
+      their device instances is called <command>adc</command>. It takes a set of
+      options that are accepted for both V785 and V775 devices and then some
+      more specialized options only valid for either the V785 and V775. The
+      first module we will create is the V785. To do so we add the following
+      lines to our <filename>daqconfig.tcl</filename> file:
+    </para>
+
+    <programlisting>
+set adcThresh [list 10 10 10 10  10 10 10 10 \
+                    10 10 10 10  10 10 10 10 \
+                    10 10 10 10  10 10 10 10 \
+                    10 10 10 10  10 10 10 10 ]  <co id="vmusb-ss-v785-thresh"/>
+adc create v785 0x11110000                      <co id="vmusb-ss-v785-create"/>
+adc config v785 -geo 10 -threshold $adcThresh   <co id="vmusb-ss-v785-config"/>
+    </programlisting>
+
+    <calloutlist>
+      <callout arearefs="vmusb-ss-v785-thresh">
+        <para>
+          The V785 takes a list of 32 integers for its
+          <option>-threshold</option> option. Each integer corresponds to the
+          threshold for a channel. The first element of the list corresponds to
+          channel 0 and the last to channel 31. For making our code more
+          organized, we define a variable named <literal>adcThresh</literal>
+          that will hold the list of 32 integers we created. Note that we
+          created the list using a Tcl <command>list</command> command. This
+          simply just returns a properly formatted Tcl list. The
+          <command>set</command> command assigns the list to the variable.
+        </para>
+      </callout>
+      <callout arearefs="vmusb-ss-v785-create">
+        <para>
+          A new adc device instance is created with the name
+          <literal>v785</literal>. The base address of the V785 in our crate is
+          provided as the last argument to the line. 
+        </para>
+      </callout>
+      <callout arearefs="vmusb-ss-v785-config">
+        <para>
+          The device instance named <literal>v785</literal> is configured. We
+          specify via the <option>-geo</option> option which slot it lives in.
+          This value will label the data outputted by the device during each
+          readout cycle. It is important that this corresponds to the correct
+          slot index the card is situated in. We also pass the list wof
+          thresholds to the <option>-thresholds</option> option. The
+          <literal>$</literal> syntax dereferences the variable
+          <literal>adcThresh</literal> and returns the list
+          that it refers to.
+        </para>
+      </callout>
+    </calloutlist>
+
+
+    <para>
+      Using an an almost identical recipe, we will create a device instance for
+      the V775. We want to define the time range of the TDC so we will configure
+      the <option>-timescale</option> option.
+    </para>
+
+    <programlisting>
+set tdcThresh [list 10 10 10 10  10 10 10 10 \
+                    10 10 10 10  10 10 10 10 \
+                    10 10 10 10  10 10 10 10 \
+                    10 10 10 10  10 10 10 10 ]
+adc create v775 0x22220000                      <co id="vmusb-ss-v775-create"/>
+adc config v775 -geo 11 -threshold $tdcThresh   
+adc config v775 -timescale 150                  <co id="vmusb-ss-v775-config"/>
+    </programlisting>
+
+    <calloutlist>
+      <callout arearefs="vmusb-ss-v775-create">
+        <para>
+          Just like the V785, we create the device instance using the
+          <command>create</command> subcommand. The name we can refer to this
+          device later in the script will be <literal>v775</literal>. The 
+          base address for the module is 0x22220000.
+        </para>
+      </callout>
+      <callout arearefs="vmusb-ss-v775-config">
+        <para>
+          The first line of configuration is almost identical to the V785
+          besides the different slot number and the different variable name
+          holding the threshold list. The second line of configuration though
+          establishes the time range of the TDC as a maximum 150 ns.  
+        </para>
+      </callout>
+    </calloutlist>
+
+
+    <para>
+      We now have two device instances defined in the configuration script. If
+      we wanted to, we could immediately construct a stack using the
+      <command>stack</command> command ensemble and pass our
+      <literal>v775</literal> and <literal>v785</literal> device instance to it.
+      However, we intend to read out our devices using a chained block transfer
+      technique. A chained block transfer is an optimized means for reading out
+      multiple devices. Instead of having to set up a block transfer from one
+      device and then again from the second device, we can set up one block
+      transfer and that reads out all of the devices in order. This
+      functionality is implemented by the V785 and V775 rather than the VM-USB.
+      To the VM-USB, this is just like a normal block transfer. To set this up
+      in our <filename>daqconfig.tcl</filename> file we need to use the
+      <command>caenchain</command> command. Here is how we do that:
+    </para>
+
+    <programlisting>
+      caenchain create chain                  <co id="vmusb-ss-chain-create"/>
+      caenchain config chain -base 0x12000000 -modules [list v775 v785] <co
+        id="vmusb-ss-chain-config"/>
+    </programlisting>
+
+    <calloutlist>
+      <callout arearefs="vmusb-ss-chain-create">
+        <para>
+          This line creates a device instance for the chained block transfer. We
+          can refer to it by its name <literal>chain</literal> later in the
+          file.
+        </para>
+      </callout>
+      <callout arearefs="vmusb-ss-chain-config">
+        <para>
+          The chained block transfer works by accessing the devices via a
+          different address than their individual base addresses. In fact, by
+          sending commands to this address, all of the modules who understand it
+          can respond simultaneously. Some implementation require a multicast
+          address as well as a chained block transfer address, the base address
+          we provide for the Caen modules is dual purpose. It is important that
+          only the top 8-bits of the base address provided here is used.
+          Furthermore, we have also added the <literal>v775</literal> and
+          <literal>v785</literal> device instances for chained readout. The
+          order of these modules should reflect the order in which they reside
+          in the crate. The leftmost module in the crate should be the first
+          module in the list and the rightmost module should be the last in the
+          list.
+        </para>
+      </callout>
+    </calloutlist>
+
+    <para>
+      The <command>caenchain</command> extends the idea of a device instance. It
+      does not really reflect a piece of hardware. Rather it is more of a
+      virtual piece of hardware that handles the readout of multiple physical
+      pieces of hardware. In fact, at this point we are ready to create our
+      stack and we will only register the <literal>chain</literal> to the stack.
+      Here is how that works
+    </para>
+
+
+    <programlisting>
+stack create evtStack                             
+stack config evtStack -modules [list chain] -trigger nim1 <co
+  id="vmusb-ss-evtstack-config"/>
+    </programlisting>
+
+    <calloutlist>
+      <callout arearefs="vmusb-ss-evtstack-config">
+        <para>
+          A single element list containing <literal>chain</literal> is added to
+          the stack. Because our <literal>v775</literal> and
+          <literal>v785</literal> are register to the <literal>chain</literal>
+          they will indirectly be read out. The <option>-trigger</option> option
+          is passed a value of <literal>nim1</literal> to indicate that the
+          stack will be triggered for execution whenever a logic pulse arrives
+          at NIM input 1.
+        </para>
+      </callout>
+    </calloutlist>
+  </section>
+
+
+</chapter>
