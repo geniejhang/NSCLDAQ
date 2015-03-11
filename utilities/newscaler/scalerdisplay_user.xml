@@ -216,7 +216,7 @@ channel -incremental 0 labr_cfd 4.1
       </para>
 
       <programlisting>
-channel lowlim 7 hilim 10 live_10hz_clock 1.1
+channel -lowlim 7 -hilim 10 live_10hz_clock 1.1
       </programlisting>
 
       <para>
