@@ -1247,7 +1247,7 @@ sis3820 cget <replaceable>name</replaceable>
             <example>
                <title>Configuring an SIS3820 scaler module</title>
                <programlisting>
-sis3820 scaler1 0x38000000
+sis3820 create scaler1 0x38000000
                </programlisting>
             </example>
          </refsect1>
