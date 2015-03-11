@@ -1,4 +1,4 @@
-DOCS    = @srcdir@/vmusbsetup.xml @srcdir@/vmusbbookinfo.xml
+DOCS    = @srcdir@/vmusbsetup.xml @srcdir@/vmusb_bookinfo.xml
 #FIGURES = 
 
 
@@ -10,8 +10,8 @@ install-exec-local:
 	$(mkinstalldirs) @prefix@/share/html
 	$(mkinstalldirs) @prefix@/share/html/figures
 	$(mkinstalldirs) @prefix@/share/pdfs
-	$(INSTALL_DATA) $(FIGURES) @prefix@/share/html/figures
-	$(CHAPTER2BOOK) -s @srcdir@/vmusbsetup.xml -b @srcdir@/vmusbbookinfo.xml -o @builddir@
+#	$(INSTALL_DATA) $(FIGURES) @prefix@/share/html/figures
+	$(CHAPTER2BOOK) -s @srcdir@/vmusbsetup.xml -b @srcdir@/vmusb_bookinfo.xml -o @builddir@
 	$(INSTALL_DATA) $(BOOK) @prefix@/share/pdfs
 
 clean-local:

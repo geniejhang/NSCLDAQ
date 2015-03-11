@@ -1,2 +1,2 @@
-SUBDIRS = v775 v785
+SUBDIRS = v775 v785 vmusb
 
