@@ -824,20 +824,20 @@ Index         Counts                 Rate
 
         <programlisting>
 #ifndef CRAWUNPACKER_H
-#define CRAWUNPACKER_H
+#define CRAWUNPACKER_H    <co id="vmusb-ss-rawunpack-incgrd"/>
 
-#include &lt;config.h&gt;
+#include &lt;config.h&gt; <co id="vmusb-ss-rawunpack-config"/>
 #include "CRawADCUnpacker.h"
 #include &lt;EventProcessor.h&gt;
 #include &lt;TreeParameter.h&gt;
-#include &lt;cstdint&gt;
-#include &lt;cstddef&gt;
+#include &lt;cstdint&gt;  <co id="vmusb-ss-rawunpack-stdint"/>
+#include &lt;cstddef&gt;  <co id="vmusb-ss-rawunpack-stddef"/>
 
-class CRawUnpacker : public CEventProcessor
+class CRawUnpacker : public CEventProcessor <co id="vmusb-ss-rawunpack-classdecl"/>
 {
   private:
     CRawADCUnpacker      m_unpacker;
-    CTreeParameterArray  m_values;
+    CTreeParameterArray  m_values;   <co id="vmusb-ss-rawunpack-members"/> 
 
   public:
     CRawUnpacker();
@@ -846,14 +846,73 @@ class CRawUnpacker : public CEventProcessor
     virtual Bool_t operator()(const Address_t pEvent,
                               CEvent&amp; rEvent,
                               CAnalyzer&amp; rAnalyzer,
-                              CBufferDecoder&amp; rDecoder);
+                              CBufferDecoder&amp; rDecoder);  <co id="vmusb-ss-rawunpack-op"/>
   private:
     Bool_t unpack(TranslatorPointer&lt;std::uint32_t&gt; begin, 
-                  std::size_t nLongWords);
+                  std::size_t nLongWords);   <co id="vmusb-ss-rawunpack-up"/>
 };
 
 #endif 
         </programlisting>
+        <calloutlist>
+          <callout arearefs="vmusb-ss-rawunpack-incgrd">
+            <para>
+              To protect against including the header twice, we add these
+              preprocessor directives to only include it once. This is called an
+              include guard.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-config">
+            <para>
+              The <filename>config.h</filename> file contains lots of
+              preprocessor definitions. You must include it prior to other
+              files.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-stdint">
+            <para>
+              To use the <literal>std::uint32_t</literal> type, we need to
+              include this header. We choose to use this over
+              <filename>stdint.h</filename> because it is more portable.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-stddef">
+            <para>
+              To use the <literal>std::size_t</literal> type, we need to include
+              this header.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-classdecl">
+            <para>
+              Our CRawUnpacker class derives from the CEventProcessor base
+              class. This makes it possible to use the event processor in the
+              SpecTcl event processing pipeline.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-members">
+            <para>
+              The event processor will maintain an object that handles the
+              parsing of the data itself in a platform independent way. The
+              result of the parse will be used to set tree parameters. The
+              <literal>CTreeParameterArray</literal> is a convenient collection
+              of tree parameters. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-op">
+            <para>
+              The operator() method is called for every ring item of type
+              PHYSICS_EVENT that is read from the input stream of data.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-up">
+            <para>
+              The method that actually handles initiation of parsing and setting
+              tree parameters with the results. The first argument of this is a
+              smart pointer that transparently handles byte swapping. It behaves
+              like a pointer, dereferencing it returns a uint32_t.
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           The implementation of our CRawUnpacker class will be found in the source
@@ -871,12 +930,14 @@ class CRawUnpacker : public CEventProcessor
 #include &lt;TCLAnalyzer.h&gt;
 #include &lt;cstdint&gt;
 #include &lt;iostream&gt;
+#include &lt;stdexcept&gt;
 
-using namespace std;
+using namespace std; <co id="vmusb-ss-rawunpack-usingstd"/>
 
 CRawUnpacker::CRawUnpacker()
   : m_unpacker(),
-    m_values("t",4096,0.0,4095.0,"channels",64,0)
+    m_values("t",4096,0.0,4095.0,"channels",64,0) <co
+    id="vmusb-ss-rawunpack-ctor"/>
 {
 }
 
@@ -884,6 +945,26 @@ CRawUnpacker::~CRawUnpacker()
 {
 }
         </programlisting>
+        <calloutlist>
+          <callout arearefs="vmusb-ss-rawunpack-usingstd">
+            <para>
+              This brings uint32_t, size_t, and exception into scope. We avoid
+              having to prefix these types with <literal>std::</literal> every
+              time.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-ctor">
+            <para>
+              The list of comma separated calls following the colon are called
+              an initialize list. We use it to construct the data members. The
+              second element of the list create a
+              <literal>CTreeParameterArray</literal> consisting of 64 tree
+              parameters, each having 4096 bins in a range of 0 to 4095. The
+              names given to these parameter are of the form "t.XX" where XX is
+              the index, left-padded with zeroes.
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           The more interesting code occurs in the operator() and unpack() methods.
