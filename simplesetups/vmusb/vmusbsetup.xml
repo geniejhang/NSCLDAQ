@@ -727,4 +727,701 @@ Index         Counts                 Rate
       </para>
     </section>
   </section>
+
+  <section>
+    <title>Developing a Tailored SpecTcl</title>
+
+    <para>
+      The dumper is not the most useful tool for understanding the data read
+      out by the electronics. Instead we should be using
+      <application>SpecTcl</application> for that purpose, because it provides a
+      much more straightforward and intuitive way to inspect data. To use
+      SpecTcl, we have to teach it how to retrieve the salient features of our
+      data and store them as tree parameters. Tree parameters are objects that
+      behave as though the are plain old double values. What makes them special
+      is that they are histogrammable entities. By unpacking raw data into tree
+      parameters, we can use SpecTcl to quickly define histograms from them. 
+    </para>
+    <para>
+    An example of a
+      simple SpecTcl implementation for unpacking a single V775 exists in conjunction with the
+      SBS Readout framework. To not repeat what has already been demonstrated,
+      this will demonstrate how to develop a SpecTcl whose parsing utilities are
+      separated from the SpecTcl framework. In principle, the parsing class used
+      here could be reused in other analysis framework like ROOT. It will also
+      demonstrate a modern style of implementing C++ that leverages some newer
+      C++11 features, like the range-based for loop.
+    </para>
+    <section>
+      <title>Acquiring the Skeleton</title>
+
+      <para>
+        There is a good deal of boilerplate code that goes into developing a
+        tailored SpecTcl. To avoid rewriting a lot of that code, you can start
+        from the "skeleton" implementation. This provides a fully functional
+        SpecTcl application that can be easily modified to support our specific
+        needs. Getting the skeleton can be achieved by doing:
+      </para>
+
+      <screen>
+<literal>spdaqXX&gt;</literal> <command>mkdir MySpecTcl</command>
+<literal>spdaqXX&gt;</literal> <command>cd MySpecTcl</command>
+<literal>spdaqXX&gt;</literal> <command>cp /usr/opt/spectcl/3.4/Skel/* .</command>
+      </screen>
+
+      <para>
+        It does not matter all that much which specific version is used so long
+        as it is at least version 3.4. Prior to version 3.4 there was no support
+        for the NSCLDAQ 11.0 data format. Because our data has been acquired
+        using an 11.0 version VMUSBReadout, it is therefore not possible to
+        analyze it using an older version of SpecTcl.
+      </para>
+      
+    </section>
+
+
+    <section>
+      <title>Writing our Event Processor</title>
+
+      <para>
+        SpecTcl has an analysis engine in it that handles all of the
+        input/output type operations for the user. It can do so because it
+        understands how to read raw data from an input stream and parse it into
+        entities of a given data format. Once it has determined the type of
+        entity, it passes it to an analysis pipeline for processing. The
+        details of the processing is very experiment specific and must be
+        provided by the experimenter. This is done by deriving a new class from
+        the EventProcessor class and then registering it to the pipeline. Our
+        derived EventProcessor will get passed the beginning of each physics
+        event body for processing.
+      </para>
+
+      <para>
+        We intend to write an event processor that clearly separates the
+        SpecTcl-like dependencies from the unpacking code. It will be named
+        CRawUnpacker because it will operate on the raw data format. The
+        CRawUnpacker will be responsible for doing SpecTcl related things, like
+        storing data into tree parameters, using a SpecTcl independent unpacking
+        routine. The latter will be a class named CRawADCUnpacker that will
+        parse the data format produced by the V785 and V775 and store the
+        resulting information in ParsedADCEvent objects. 
+      </para>
+
+      <para>
+        It is good practice in C++ to declare the capabilities of our class in a
+        header file and then implement those capabilities in a source file.
+        Doing so makes the code more flexible, reusable, and less bloated. We
+        will follow this practice while implementing our SpecTcl, which means we
+        have four files to create. 
+        
+      </para>
+
+      <section>
+        <title>CRawUnpacker</title>
+        <para>Without further ado, let's start by defining
+          our CRawUnpacker header file, <filename>CRawUnpacker.h</filename>
+        </para>
+
+        <programlisting>
+#ifndef CRAWUNPACKER_H
+#define CRAWUNPACKER_H
+
+#include &lt;config.h&gt;
+#include "CRawADCUnpacker.h"
+#include &lt;EventProcessor.h&gt;
+#include &lt;TreeParameter.h&gt;
+#include &lt;cstdint&gt;
+#include &lt;cstddef&gt;
+
+class CRawUnpacker : public CEventProcessor
+{
+  private:
+    CRawADCUnpacker      m_unpacker;
+    CTreeParameterArray  m_values;
+
+  public:
+    CRawUnpacker();
+    virtual ~CRawUnpacker();
+
+    virtual Bool_t operator()(const Address_t pEvent,
+                              CEvent&amp; rEvent,
+                              CAnalyzer&amp; rAnalyzer,
+                              CBufferDecoder&amp; rDecoder);
+  private:
+    Bool_t unpack(TranslatorPointer&lt;std::uint32_t&gt; begin, 
+                  std::size_t nLongWords);
+};
+
+#endif 
+        </programlisting>
+
+        <para>
+          The implementation of our CRawUnpacker class will be found in the source
+          file <filename>CRawUnpacker.cpp</filename>. This is naturally a bit longer of a
+          file, because it includes the implementation code. The constructors and
+          destructors are nearly trivial and will be dealt with in one fell
+          swoop.
+        </para>
+
+        <programlisting>
+#include "CRawUnpacker.h"
+#include &lt;TreeParameter.h&gt;
+#include &lt;TranslatorPointer.h&gt;
+#include &lt;BufferDecoder.h&gt;
+#include &lt;TCLAnalyzer.h&gt;
+#include &lt;cstdint&gt;
+#include &lt;iostream&gt;
+
+using namespace std;
+
+CRawUnpacker::CRawUnpacker()
+  : m_unpacker(),
+    m_values("t",4096,0.0,4095.0,"channels",64,0)
+{
+}
+
+CRawUnpacker::~CRawUnpacker()
+{
+}
+        </programlisting>
+
+        <para>
+          The more interesting code occurs in the operator() and unpack() methods.
+          The operator() method is responsible for the actual processing of the
+          data as well as telling SpecTcl what the size
+          of the event is. It will
+          just handle the calculation and reporting of the event size and then
+          delegate the parsing and handling of the results to the unpack() method.
+          <tip>
+            <para>
+              At least one event processor is required to set the event size
+              and to avoid introducing confusing bugs into your SpecTcl, it is best
+              practice to only do this in the first event processor of the pipeline.
+            </para>
+          </tip>
+          The resulting operator() method will look like this:
+        </para>
+
+        <programlisting>
+Bool_t
+CRawUnpacker::operator()(const Address_t pEvent, 
+                        CEvent&amp; rEvent, 
+                        CAnalyzer&amp; rAnalyzer, 
+                        CBufferDecoder&amp; rDecoder)
+{
+  TranslatorPointer&lt;uint16_t&gt; p(*rDecoder.getBufferTranslator(), pEvent);
+  CTclAnalyzer&amp; a(dynamic_cast&lt;CTclAnalyzer&amp;&gt;(rAnalyzer));
+
+  size_t  size = (*p++ &amp; 0x0fff);
+
+  // the event header is exclusive so the actual size of the full event
+  // is actually the 
+  a.SetEventSize((size+1)*sizeof(uint16_t));
+
+  size_t nLongWords = size*sizeof(uint16_t)/sizeof(uint32_t);
+
+  return unpack(p, nLongWords);
+}
+        </programlisting>
+
+        <para>
+          The unpack() method implementation will look like this:
+        </para>
+
+        <programlisting>
+Bool_t 
+CRawUnpacker::unpack(TranslatorPointer&lt;uint32_t&gt; begin,
+                     size_t nLongWords)
+{
+  auto end = begin+nLongWords;
+
+  try {
+    vector&lt;ParsedADCEvent&gt; events = m_unpacker.parseAll(begin, end);
+    int offset = 0;
+    for (auto&amp; event : events) {
+      offset = (event.s_geo-10)*32;
+      for (auto&amp; chanData : event.s_data) {
+        m_values[chanData.first+offset] = chanData.second;
+      }
+    }
+  } catch (exception&amp; exc) {
+    cout &lt;&lt; "Parsing Failed! Reason=" &lt;&lt; exc.what() &lt;&lt; endl;
+    return kfFALSE;
+  }
+                                    
+  return kfTRUE;
+}
+        </programlisting>
+
+        <para>
+          That is it for the implementation ofthe CRawUnpacker class. Before
+          moving on, I would like to explain the motivation for the unpack()
+          method. It is not obvious why its contents could not have just been
+          included as the body of the operator() method. They very well could have
+          and it would have worked perfectly fine for our specific setup. However,
+          splitting it off makes our event processor much more reusable.
+        </para>
+        <para>
+          One of the reasons NSCLDAQ 11.0 was created was for better support of
+          event building. The very presence of the capability makes it likely that
+          we might want to use it. Separating the the unpack() from the operator()
+          is aimed at supporting this scenario. The event builder outputs data
+          that looks a bit different than the input data it receives, because it
+          appends extra information to each item and then groups those together.
+          In the lingo of the event builder, PHYSICS_EVENT ring items that enter
+          the event builder are transformed into fragments that are glommed into
+          built ring items of type PHYSICS_EVENT. The built ring item has a body
+          stuffed with fragments. If we tried to parse the body of one of these
+          using our operator() as it is currently implemented, SpecTcl would fail
+          miserably.  However, the same data that this parser understands is
+          present in that built ring item. It is just buried deeply in a fragment.
+          So the logic in this unpacker is still useful if we can traverse through
+          the structure of the built body. By separating the unpack() method from
+          the operator() method, we can call it once the right part of the data
+          has been found. You might be wondering why we don't call the operator()
+          method.  The reason is that the operator method is responsible for
+          reporting the event size. In a built ring item, the value this would
+          extract would be incorrect. The unpack() method allows us to bypass it.
+        </para>
+      </section> <!-- end of CRawUnpacker -->
+
+
+      <section>
+        <title>The CRawADCUnpacker Class</title>
+
+        <para>
+          The CRawUnpacker depends on the presence of a parser class for the
+          V785 and V775 class. That will be implemented in the CRawADCUnpacker
+          class. I had stated that I would do this in a framework independent
+          way. I will do so by showing a simpler example that depends on the
+          TranslatorPointer&lt;uint32_t&gt; type for simplicity and then will
+          explain how to generalize this afterwords. This will keep the example
+          accessible to more people that don't need their code 100% independent
+          but will at the same time provide those who do have the need a clear
+          path forward.
+        </para>
+
+        <para>
+          We will begin by describing the problem this class will solve. In the
+          most fundamental sense, we have to work our way sequentially through
+          the data, identify each piece, store the information in a framework
+          independent entity, and identify when we are done. By doing this we
+          will in essence validate the structure of the data. If it is different
+          than we expect, then we cannot gaurantee that we understand it and
+          will fail. If we do not encounter an error, we will return our
+          platform independent type filled with the parsed information. Let's
+          start by defining that type, which we will call ParsedADCEvent.
+        </para>
+
+        <programlisting>
+#ifndef CRAWADCUNPACKER_H
+#define CRAWADCUNPACKER_H
+
+#include &lt;vector&gt;
+#include &lt;utility&gt;
+#include &lt;cstdint&gt;
+#include &lt;TranslatorPointer.h&gt;
+
+struct ParsedADCEvent
+{
+  int s_geo;
+  int s_crate;
+  int s_count;
+  int s_eventNumber;
+  std::vector&lt;std::pair&lt;int, std::uint16_t&gt; &gt; s_data;
+};
+
+#endif
+        </programlisting>
+
+        <para>
+          The ParsedADCEvent contains all of the information that we care to
+          keep from a complete event. The data for each channel will be stored
+          as a pair in an a vector. The first element of each pair will be the
+          channel number while the second element will be the digitized value. 
+        </para>
+
+        <para>
+          The next thing we need to do is define the CRawADCUnpacker class
+          itself. Two entry points will be provided for public use. One of them
+          is used by the CRawUnpacker class, parseAll(), and it iteratively
+          calls the second, parseSingle(). We will focu primarily on the
+          implementation of parseSingle() because it is the true parsing
+          routine. The parseSingle() method depends on a handful of helper
+          methods that will be explained as they come up. Here is the class
+          declaration of the CRawADCUnpacker. In CRawADCUnpacker.h, it would
+          follow the end of the ParsedADCEvent delcaration but precede the
+          #endif preprocessor directive.
+        </para>
+
+        <programlisting>
+class CRawADCUnpacker 
+{
+  public:
+    using Iter=TranslatorPointer&lt;std::uint32_t&gt;;
+
+  private:
+    enum ProcessingMode {HEADER_MODE, DATA_MODE, EOE_MODE, DONE_MODE};
+
+  public:
+    std::vector&lt;ParsedADCEvent&gt; 
+      parseAll(Iter&amp; begin, Iter&amp; end);
+
+    std::pair&lt;Iter, ParsedADCEvent&gt;
+      parseSingle(Iter&amp; begin, Iter&amp; end);
+
+  private:
+    bool isHeader(std::uint32_t word);
+    bool isData(std::uint32_t word);
+    bool isEOE(std::uint32_t word);
+
+    void unpackHeader(std::uint32_t word, ParsedADCEvent&amp; event);
+    void unpackDatum(std::uint32_t word, ParsedADCEvent&amp; event);
+    Iter
+      unpackData(Iter&amp; begin, Iter&amp; end, ParsedADCEvent&amp; event);
+    void unpackEOE(std::uint32_t word, ParsedADCEvent&amp; event);
+};
+          
+        </programlisting>
+
+        <para>
+          We know that the data from the ADC must come in a specific order.  The
+          event header should come first followed by a sequence of data words,
+          and then ultimately an end of event or trailer word.  Furthermore, the
+          header word is descriptive about how many data words exist so by
+          reading it we will know when to expect the end of event word. If the
+          data we are parsing violates this structure, then something bad has
+          happened. To enforce this ordering, the parser will operate as a
+          simple state machine. At any given point, we will know that the data
+          should be either a header word, data word, or end-of-event word. Once
+          we have completed each parsing stage, we update the state to handle
+          the next stage. For simplicity and readability, we do this using an
+          enum called ProcessingMode. It has 4 states: HEADER_MODE, DATA_MODE,
+          EOE_MODE, and DONE_MODE. Here is the code for the parseSingle()
+          method and includes that we need to add to our
+          <filename>CRawADCUnpacker.cpp</filename> file:
+        </para>
+
+        <programlisting>
+pair&lt;CRawADCUnpacker::Iter,ParsedADCEvent&gt; 
+  CRawADCUnpacker::parseSingle(Iter&amp; begin, Iter&amp; end)
+{
+  
+  auto iter = begin;
+  ParsedADCEvent event;
+
+  ProcessingMode mode = HEADER_MODE;
+
+  while (iter != end) {
+    if (mode==HEADER_MODE) {  
+
+      unpackHeader(*iter++, event);
+      mode = DATA_MODE;
+
+    } else if (mode==DATA_MODE) {
+      int nWords = event.s_count;
+      auto dataEnd = iter+nWords;
+
+      if ((dataEnd > end) || (dataEnd == end)) {
+        string errmsg("CRawADCUnpacker::parseSingle() ");
+        errmsg += "Incomplete event found in buffer.";
+        throw runtime_error(errmsg);
+      }
+
+      iter = unpackData(iter, dataEnd, event);
+      mode = EOE_MODE;
+
+    } else if (mode==EOE_MODE) {
+
+      unpackEOE(*iter++,event);
+
+      mode = DONE_MODE;
+
+
+      // we are done
+      break;
+    }
+
+  }
+
+  return make_pair(iter,event);
+}
+        </programlisting>
+
+        <para>
+          As you can see, there are many supporting pieces. We will look at them
+          one by one, beginning with the unpackHeader() method.
+        </para>
+
+        <programlisting>
+bool CRawADCUnpacker::isHeader(uint32_t word)
+{
+  return ((word&amp;TYPE_MASK)==TYPE_HDR);
+}
+
+
+void CRawADCUnpacker::unpackHeader(uint32_t word, ParsedADCEvent&amp; event)
+{
+  if (! isHeader(word) ) {
+    string errmsg = "CRawADCUnpacker::parseHeader() ";
+    errmsg += "Found non-header word when expecting header. ";
+    errmsg += "Word=";
+    errmsg += to_string(word);
+    throw runtime_error(errmsg);
+  }
+
+  event.s_geo   = ((word &amp; GEO_MASK)&gt;&gt;GEO_SHIFT);
+  event.s_crate = ((word &amp; HDR_CRATE_MASK)&gt;&gt;HDR_CRATE_SHIFT);
+  event.s_count = ((word &amp; HDR_COUNT_MASK)&gt;&gt;HDR_COUNT_SHIFT);
+}
+        </programlisting>
+
+        <para>
+          The data words are unpacked in a bit more fancy method called
+          unpackData(). It loops through a range of words designated by its
+          arguments, calling unpackDatum() on each one. The unpackDatum() is
+          very similar to unpackHeader() method in that it extracts specific
+          pieces of data from the data word it is passed. The difference is that
+          the values it extracts for the channel and value are paired together
+          are stored in the vector of the event. This is what those look like:
+        </para>
+
+        <programlisting>
+bool CRawADCUnpacker::isData(uint32_t word)
+{
+  return ((word&amp;TYPE_MASK)==TYPE_DATA);
+}
+
+
+void CRawADCUnpacker::unpackDatum(uint32_t word, ParsedADCEvent&amp; event)
+{
+  if (! isData(word) ) {
+    string errmsg = "CRawADCUnpacker::unpackDatum() ";
+    errmsg += "Found non-data word when expecting data.";
+    throw runtime_error(errmsg);
+  }
+
+  int channel   = ((word &amp; DATA_CHANMASK)&gt;&gt;DATA_CHANSHIFT);
+  uint16_t data = (word &amp; DATA_CONVMASK);
+
+  auto chanData = make_pair(channel,data);
+  event.s_data.push_back(chanData);
+}
+
+
+CRawADCUnpacker::Iter 
+CRawADCUnpacker::unpackData(Iter&amp; begin, 
+                            Iter&amp; end,
+                            ParsedADCEvent&amp; event)
+{
+  // only allocate memory once because we know how much we need already
+  event.s_data.reserve(event.s_count);
+
+  auto iter = begin;
+  while(iter != end) {
+
+    unpackDatum(*iter, event); 
+
+    ++iter;
+  }
+
+  return iter;
+}
+        </programlisting>
+
+        <para>
+          Finally, we reach the unpackEOE() method. Once again, this is
+          extremely similar to the unpackHeader() method, moreso than the
+          unpackDatum() method. Here is the code for that.
+        </para>
+
+        <programlisting>
+bool CRawADCUnpacker::isEOE(uint32_t word)
+{
+  return ((word&amp;TYPE_MASK)==TYPE_TRAIL);
+}
+
+void CRawADCUnpacker::unpackEOE(uint32_t word, ParsedADCEvent&amp; event)
+{
+  if (! isEOE(word) ) {
+    string errmsg = "CRawADCUnpacker::unpackEOE() ";
+    errmsg += "Found non-data word when expecting data.";
+    throw runtime_error(errmsg);
+  }
+  
+  event.s_eventNumber = (word &amp; TRAIL_COUNT_MASK);
+}
+        </programlisting>
+
+        <para>
+          Alright, now that we have the parseSingle() method defined and
+          understood, we can go back to the
+          parseAll() method. It is very simple and resemble the unpackData()
+          method in that it just calls parseSingle() until it is done. The only
+          differences are that it stores each ADC event into a list for
+          returning and has to protect itself from processing the BERR words
+          (0xffffffff) that follow the more meaningful data. Here is the
+          parseAll() implementation:
+        </para>
+
+        <programlisting>
+vector&lt;ParsedADCEvent&gt; 
+CRawADCUnpacker::parseAll(Iter&amp; begin,
+                          Iter&amp; end)
+{
+  vector&lt;ParsedADCEvent&gt; parsedData;
+
+  auto iter = begin;
+  while (iter != end) {
+
+    if (*iter != 0xffffffff) {
+      auto result = parseSingle(iter,end);
+
+      parsedData.push_back(result.second);
+      iter = result.first;
+    } else {
+      ++iter;
+    }
+  } 
+
+  return parsedData;
+}
+        </programlisting>
+
+        <para>
+          That is it for the unpacker. Let me now explain what would need to be
+          done to make this fully independent of SpecTcl. The only dependency
+          that this has on SpecTcl are some header files and the
+          <literal>TranslatorPointer&lt;uint32_t&gt;</literal> type. What may
+          not be terribly clear is that the
+          <literal>TranslatorPointer&lt;uint32_t&gt;</literal> behaves almost
+          identically to a <literal>uint32_t*</literal>. In that case, one could
+          just as well use a <literal>uint32_t*</literal> pointer in its stead.
+          You may wonder why I didn't do this already. Well, the kicker is that
+          a TranslatorPointer is able to automatically handle byte-order
+          swapping if the data requires it. A plain old pointer is not so smart.
+          You will only be bitten by this if the data in the data stream was
+          generated in such a way that swapping bytes is necessary. Only you are
+          the one who knows this if you venture outside the world of SpecTcl. If
+          you have to swap bytes, this becomes a bit less portable and you will
+          need to create your own byte-swapping smart pointer. The good news is
+          that it is little difficulty to accomodate any solution you have
+          concerning the TranslatorPointer. Because we hid this behind a
+          typedef, we only need to change the <literal>Iter</literal> alias to
+          be a different type. Done. Arguably the more general solution would be
+          to transform the class into a template itself where the
+          <literal>Iter</literal> is the template parameter. Doing so requires
+          more changes to the code but would not have to be recompiled whenever
+          you wanted to change the type. The most important thing here is that
+          these changes never require a change to the actual implementation
+          code. The only requirement is that whatever you choose to use for the
+          iterator implements the operators used. Any random access iterator
+          will fulfill that requirement, but you need not go so far to implement
+          all requirements of a random access iterator.
+          As for the included headers, you can
+          use preprocessor conditionals for this. If you are building with
+          SpecTcl, then you will need the proper headers, otherwise, you should
+          not include them.
+        </para>
+      </section> <!-- end of CRawADCUnpacker -->
+
+      
+    </section> <!-- end of event processor -->
+
+    <section>
+      <title>Setting up the Event Processing Pipeline</title>
+
+      <para>
+        The <filename>MySpecTclApp.cpp</filename> contains the code the defines
+        the event processing pipeline. We need to add an instance of the
+        CRawUnpacker class to it in order for our code to execute. You will
+        notice that in MySpecTclApp.cpp there are already a handful of
+        predefined event processors that are registered to the pipeline. We need
+        to make the following changes. First, find the following two line:
+      </para>
+
+      <programlisting>
+static CFixedEventUnpacker Stage1;
+static CAddFirst2          Stage2;
+      </programlisting>
+
+      <para>
+        You should replace the two lines with a single line:
+      </para>
+
+      <programlisting>
+static CRawUnpacker gRawStage;
+      </programlisting>
+
+      <para>
+        You will also need to add the following line to the list of includes at
+        the top of the file.
+      </para>
+
+      <programlisting>
+#include "CRawUnpacker.h"        
+      </programlisting>
+
+      <para>
+        The next thing you need to do is find the method called
+        <literal>CMySpecTclApp::CreateAnalysisPipeline()</literal>. In it your
+        should replace the entire body to look like:
+      </para>
+
+      <programlisting>
+void 
+CMySpecTclApp::CreateAnalysisPipeline(CAnalyzer&amp; rAnalyzer)
+{
+  RegisterEventProcessor(gRawStage, "Raw");
+}
+      </programlisting>
+
+      <para>
+        With that, SpecTcl will pass every ring item of type PHYSICS_EVENT to
+        our event processor.
+      </para>
+    </section>
+
+    <section>
+      <title>
+        Building SpecTcl
+      </title>
+
+      <para>
+        Because we have added two extra classes to the SpecTcl application, we
+        need to ensure that they are added to the build. That is easily done by
+        modifying the OBJECTS variable. You should edit your
+        <filename>Makefile</filename> to look like this:
+      </para>
+
+      <programlisting>
+OBJECTS=MySpecTclApp.o CRawUnpacker.o CRawADCUnpacker.o
+      </programlisting>
+
+      <para>
+        Furthermore, because we have made use of a handful of C++11 features, we
+        need to ensure that the compiler operates in the C++11 mode. This is
+        accomplished with the <literal>-std=c++11</literal> flag. You should add
+        it to the <literal>USERCXXFLAGS</literal> variable. In the end, that
+        line will resemble this:
+      </para>
+
+      <programlisting>
+USERCXXFLAGS= -std=c++11
+      </programlisting>
+
+      <para>
+        We can now compile our program. You should see this succeed with no
+        errors. Compilation is initiated by the <command>make</command> command.
+      </para>
+
+      <screen>
+<literal>spdaqXX&gt;</literal> <command>make</command>
+      </screen>
+
+    </section>
+  </section>
+
 </chapter>
+
+<!-- /chapter -->
