@@ -21,7 +21,7 @@ static const uint32_t HDR_CRATE_MASK (0x00ff0000);
 
 static const unsigned DATA_CHANSHIFT(16);
 static const uint32_t DATA_CHANMASK (0x001f0000);
-static const uint32_t DATA_CONVMASK (0x00000fff);
+static const uint32_t DATA_CONVMASK (0x00003fff);
 
 static const uint32_t TRAIL_COUNT_MASK(0x00ffffff);
 

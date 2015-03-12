@@ -1238,11 +1238,24 @@ struct ParsedADCEvent
   int s_crate;
   int s_count;
   int s_eventNumber;
-  std::vector&lt;std::pair&lt;int, std::uint16_t&gt; &gt; s_data;
+  std::vector&lt;std::pair&lt;int, std::uint16_t&gt; &gt; s_data; <co id="vmusb-ss-adcunp-sdata"/>
 };
 
 #endif
         </programlisting>
+        <calloutlist>
+          <callout arearefs="vmusb-ss-adcunp-sdata">
+            <para>
+              The digitized value and channel it is associated with group
+              naturally together. We accomplish this by storing the two values
+              as a <literal>std::pair</literal>, which is just a container. The
+              first element of the pair is the channel index and the second
+              element is the digitize value. Because a single event may consist
+              of up to 32 digitized values, the ParsedADCEvent maintains a
+              vector of these.
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           The ParsedADCEvent contains all of the information that we care to
@@ -1268,19 +1281,21 @@ struct ParsedADCEvent
 class CRawADCUnpacker 
 {
   public:
-    using Iter=TranslatorPointer&lt;std::uint32_t&gt;;
+    using Iter=TranslatorPointer&lt;std::uint32_t&gt;; <co id="vmusb-ss-adcunp-tdef"/>
 
   private:
-    enum ProcessingMode {HEADER_MODE, DATA_MODE, EOE_MODE, DONE_MODE};
+  enum ProcessingMode {HEADER_MODE, DATA_MODE, EOE_MODE, DONE_MODE}; <co
+    id="vmusb-ss-adcunp-enum"/>
 
   public:
     std::vector&lt;ParsedADCEvent&gt; 
-      parseAll(Iter&amp; begin, Iter&amp; end);
+    parseAll(Iter&amp; begin, Iter&amp; end); 
 
     std::pair&lt;Iter, ParsedADCEvent&gt;
       parseSingle(Iter&amp; begin, Iter&amp; end);
 
   private:
+    // Utility methods
     bool isHeader(std::uint32_t word);
     bool isData(std::uint32_t word);
     bool isEOE(std::uint32_t word);
@@ -1293,6 +1308,28 @@ class CRawADCUnpacker
 };
           
         </programlisting>
+
+        <calloutlist>
+          <callout arearefs="vmusb-ss-adcunp-tdef">
+            <para>
+              To save from repeatedly writing the type name
+              <literal>TranslatorPointer&lt;std::uint32_t&gt;</literal> over and
+              over again, we alias it as <literal>Iter</literal>. This is just
+              another way to define a typedef. I will explain later how this
+              also helps loosen small dependence of the class on the SpecTcl
+              framework.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-enum">
+            <para>
+              We will operate our parser as a very primitive state machine.
+              The <literal>ProcessingMode</literal> enumeration defined here
+              will be used to label each state. Each of these values is
+              implemented as an integer of unknown value. We don't really care
+              what value they hold.
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           We know that the data from the ADC must come in a specific order.  The
@@ -1317,46 +1354,145 @@ pair&lt;CRawADCUnpacker::Iter,ParsedADCEvent&gt;
   CRawADCUnpacker::parseSingle(Iter&amp; begin, Iter&amp; end)
 {
   
-  auto iter = begin;
-  ParsedADCEvent event;
+  auto iter = begin;                <co id="vmusb-ss-adcunp-ps-auto"/>
+  ParsedADCEvent event;             <co id="vmusb-ss-adcunp-ps-evtdec"/>
 
-  ProcessingMode mode = HEADER_MODE;
+  ProcessingMode mode = HEADER_MODE; <co id="vmusb-ss-adcunp-ps-mode"/>
 
   while (iter != end) {
-    if (mode==HEADER_MODE) {  
+    if (mode==HEADER_MODE) {   <co id="vmusb-ss-adcunp-ps-hdrm"/>
 
-      unpackHeader(*iter++, event);
-      mode = DATA_MODE;
+      unpackHeader(*iter++, event); <co id="vmusb-ss-adcunp-ps-uphdr"/>
+      mode = DATA_MODE;             <co id="vmusb-ss-adcunp-ps-u8m-data"/>
 
-    } else if (mode==DATA_MODE) {
+    } else if (mode==DATA_MODE) {   <co id="vmusb-ss-adcunp-ps-dm"/>
       int nWords = event.s_count;
       auto dataEnd = iter+nWords;
 
-      if ((dataEnd > end) || (dataEnd == end)) {
+      if ((dataEnd > end) || (dataEnd == end)) { <co
+        id="vmusb-ss-adcunp-ps-check"/>
         string errmsg("CRawADCUnpacker::parseSingle() ");
         errmsg += "Incomplete event found in buffer.";
         throw runtime_error(errmsg);
       }
 
-      iter = unpackData(iter, dataEnd, event);
-      mode = EOE_MODE;
+      iter = unpackData(iter, dataEnd, event); <co id="vmusb-ss-adcunp-ps-upd"/>
+      mode = EOE_MODE;              <co id="vmusb-ss-adcunp-ps-u8m-eoe"/>
 
-    } else if (mode==EOE_MODE) {
+    } else if (mode==EOE_MODE) {    <co id="vmusb-ss-adcunp-ps-eoem"/>
 
-      unpackEOE(*iter++,event);
+      unpackEOE(*iter++,event);     <co id="vmusb-ss-adcunp-ps-upeoe"/>
 
-      mode = DONE_MODE;
+      mode = DONE_MODE;             <co id="vmusb-ss-adcunp-ps-u8m-done"/>
 
 
       // we are done
-      break;
+      break;                        <co id="vmusb-ss-adcunp-ps-brk"/>
     }
 
   }
 
-  return make_pair(iter,event);
+  return make_pair(iter,event);     <co id="vmusb-ss-adcunp-ps-mkpr"/>
 }
         </programlisting>
+
+        <calloutlist>
+          <callout arearefs="vmusb-ss-adcunp-ps-auto">
+            <para>
+              We create a new translator pointer to iterate over the body of
+              data. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-evtdec">
+            <para>
+              Here we create a brand new, empty ParsedADCEvent that will be
+              filled with the parsed data. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-mode">
+            <para>
+              The initial state of our state machine is
+              <literal>HEADER_MODE</literal> which indicates that the first data
+              word should be a header.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-hdrm">
+            <para>
+              Selects the block of code that will execute when we expecting a
+              header. This should only be called the first time through the
+              loop.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-uphdr">
+            <para>
+              The logic for parsing the header to a utility method. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-u8m-data">
+            <para>
+              After parsing a header, the next word should be treated as a data
+              word. Here we update the state of our state machine to be
+              DATA_MODE.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-dm">
+            <para>
+              Selects the block of code to execute when expecting data words. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-check">
+            <para>
+              Just because the header word tells us that a certain number of
+              data words follows does not mean they actually do. This ensures
+              that the data we expect is there before accessing it. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-upd">
+            <para>
+              A utility method is called to handle the unpacking of all the data
+              words. The resulting location of the buffer following the last
+              data word is returned by the method. It is used to move the
+              iterator to a new position.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-u8m-eoe">
+            <para>
+              The data should be done being processed so we expect an end of
+              event word to follow next.              
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-eoem">
+            <para>
+             Selects the block of code to execute when a expecting an
+             end-of-event word. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-upeoe">
+            <para>
+              A utility method handles the parsing of the end-of-event word. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-u8m-done">
+            <para>
+              Honestly this is not needed. It is just a convenient marker to
+              alert the reader to the completeness of the parsing.    
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-brk">
+            <para>
+              With the end of event parsed, we stop parsing the buffer.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ps-mkpr">
+            <para>
+              This method must both pass the next unprocessed location of the
+              buffer back to the caller in case it desires to continue parsing
+              as well as the newly parsed event data. We do so by using a
+              function to create an object of type
+              <literal>std::pair&lt;CRawADCUnpacker::Iter,ParsedADCEvent&gt;</literal>.
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           As you can see, there are many supporting pieces. We will look at them
@@ -1364,9 +1500,9 @@ pair&lt;CRawADCUnpacker::Iter,ParsedADCEvent&gt;
         </para>
 
         <programlisting>
-bool CRawADCUnpacker::isHeader(uint32_t word)
+bool CRawADCUnpacker::isHeader(uint32_t word) 
 {
-  return ((word&amp;TYPE_MASK)==TYPE_HDR);
+  return ((word&amp;TYPE_MASK)==TYPE_HDR);   <co id="vmusb-ss-adcunp-ishdr"/>
 }
 
 
@@ -1378,13 +1514,35 @@ void CRawADCUnpacker::unpackHeader(uint32_t word, ParsedADCEvent&amp; event)
     errmsg += "Word=";
     errmsg += to_string(word);
     throw runtime_error(errmsg);
-  }
+  }   <co id="vmusb-ss-adcunp-uph-check"/>
 
   event.s_geo   = ((word &amp; GEO_MASK)&gt;&gt;GEO_SHIFT);
   event.s_crate = ((word &amp; HDR_CRATE_MASK)&gt;&gt;HDR_CRATE_SHIFT);
-  event.s_count = ((word &amp; HDR_COUNT_MASK)&gt;&gt;HDR_COUNT_SHIFT);
+  event.s_count = ((word &amp; HDR_COUNT_MASK)&gt;&gt;HDR_COUNT_SHIFT);  <co id="vmusb-ss-adcunp-uphdr"/>
 }
         </programlisting>
+
+        <calloutlist>
+          <callout arearefs="vmusb-ss-adcunp-ishdr">
+            <para>
+              Here we use bitwise arithmetic to check that bits 24-26 are set to the value 2. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-uph-check">
+            <para>
+              If the word is not a header word, we failed to properly
+              understand the data and parsing should stop immediately. An
+              exception is thrown.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-uphdr">
+            <para>
+              Using bitwise arithmetic again, we extract the geo value (slot
+              number), crate number, and number of data words to follow. These
+              are all stored to the event we are filling.
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           The data words are unpacked in a bit more fancy method called
@@ -1399,7 +1557,7 @@ void CRawADCUnpacker::unpackHeader(uint32_t word, ParsedADCEvent&amp; event)
         <programlisting>
 bool CRawADCUnpacker::isData(uint32_t word)
 {
-  return ((word&amp;TYPE_MASK)==TYPE_DATA);
+  return ((word&amp;TYPE_MASK)==TYPE_DATA);  <co id="vmusb-ss-adcunp-isdata"/>
 }
 
 
@@ -1412,10 +1570,10 @@ void CRawADCUnpacker::unpackDatum(uint32_t word, ParsedADCEvent&amp; event)
   }
 
   int channel   = ((word &amp; DATA_CHANMASK)&gt;&gt;DATA_CHANSHIFT);
-  uint16_t data = (word &amp; DATA_CONVMASK);
+  uint16_t data = (word &amp; DATA_CONVMASK);   <co id="vmusb-ss-adcunp-updm"/>
 
   auto chanData = make_pair(channel,data);
-  event.s_data.push_back(chanData);
+  event.s_data.push_back(chanData);             <co id="vmusb-ss-adcunp-adddatum"/>
 }
 
 
@@ -1425,19 +1583,62 @@ CRawADCUnpacker::unpackData(Iter&amp; begin,
                             ParsedADCEvent&amp; event)
 {
   // only allocate memory once because we know how much we need already
-  event.s_data.reserve(event.s_count);
+  event.s_data.reserve(event.s_count);       <co id="vmusb-ss-adcunp-ud-rsv"/>
 
   auto iter = begin;
   while(iter != end) {
 
-    unpackDatum(*iter, event); 
+    unpackDatum(*iter, event);                <co id="vmusb-ss-adcunp-ud-updm"/>
 
     ++iter;
   }
 
-  return iter;
+  return iter;   <co id="vmusb-ss-adcunp-ud-ret"/>
 }
         </programlisting>
+        <calloutlist>
+          <callout arearefs="vmusb-ss-adcunp-isdata">
+            <para>
+              We check that bits 24-26 store the value 0. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-updm">
+            <para>
+               Using bit-wise arithmetic we extract the channel and value. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-adddatum">
+            <para>
+              The channel and value are paired together and then added to the
+              end of the vector. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ud-rsv">
+            <para>
+              Initially the vector that will store the channel data has zero
+              size. Every time that a new element is added we will push it onto
+              the back of the vector. By default, this will likely cause the
+              vector's memory buffer to be reallocated everytime we add an
+              element, which is costly. Because we already know the final size,
+              we can allocate the total memory once using its
+              <literal>reserve</literal> method.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ud-updm">
+            <para>
+              To parse all of the it  data words, we just iterate through the
+              range that has been precomputed for this. Each word is unpacked
+              by a called to the unpackDatum(). If the word is not a data word,
+              an exception is thrown.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-ud-ret">
+            <para>
+              The location of the next unparsed word in the buffer is returned
+              to the caller.
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           Finally, we reach the unpackEOE() method. Once again, this is
