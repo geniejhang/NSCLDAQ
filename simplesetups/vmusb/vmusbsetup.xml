@@ -990,20 +990,86 @@ CRawUnpacker::operator()(const Address_t pEvent,
                         CAnalyzer&amp; rAnalyzer, 
                         CBufferDecoder&amp; rDecoder)
 {
-  TranslatorPointer&lt;uint16_t&gt; p(*rDecoder.getBufferTranslator(), pEvent);
-  CTclAnalyzer&amp; a(dynamic_cast&lt;CTclAnalyzer&amp;&gt;(rAnalyzer));
+  TranslatorPointer&lt;uint16_t&gt; p(*rDecoder.getBufferTranslator(), pEvent);  <co id="vmusb-ss-rawunpack-transptr-ctor"/>
 
-  size_t  size = (*p++ &amp; 0x0fff);
+  CTclAnalyzer&amp; a(dynamic_cast&lt;CTclAnalyzer&amp;&gt;(rAnalyzer)); <co
+    id="vmusb-ss-rawunpack-dyncast"/>
+
+  size_t  size = (*p++ &amp; 0x0fff); <co id="vmusb-ss-rawunpack-extract"/>
 
   // the event header is exclusive so the actual size of the full event
   // is actually the 
-  a.SetEventSize((size+1)*sizeof(uint16_t));
+  a.SetEventSize((size+1)*sizeof(uint16_t)); <co
+    id="vmusb-ss-rawunpack-setsize"/>
 
-  size_t nLongWords = size*sizeof(uint16_t)/sizeof(uint32_t);
+  size_t nLongWords = size*sizeof(uint16_t)/sizeof(uint32_t); <co
+    id="vmusb-ss-rawunpack-nlongwrds"/>
 
-  return unpack(p, nLongWords);
+  return unpack(p, nLongWords); 
 }
         </programlisting>
+        <calloutlist>
+          <callout arearefs="vmusb-ss-rawunpack-transptr-ctor">
+            <para>
+              The data is not gauranteed to have native byte ordering because it
+              may have originated on a different host. SpecTcl provides a smart
+              pointer called TranslatorPointer that handles the byte-swapping
+              automatically. Here we create one that refers to the buffer
+              managed by the buffer decoder at the address stored by pEvent.
+              This is also a way to convert the pEvent to a more useful type
+              than Address_t.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-dyncast">
+            <para>
+              The standard implementation of SpecTcl used at the NSCL makes use
+              of a CTclAnalyzer. The CTclAnalyzer needs to be told how big the
+              buffer is in order to successfully traverse the data stream. A
+              method to set the event side is available in CTclAnalyzer but not
+              in the generic CAnalyzer class. For that reason, we upcast the
+              reference passed into our analyzer. If this is invalid,
+              dynamic_cast will throw an exception of type std::bad_cast. We
+              know it will succeed though because our analyzer is a
+              CTclAnalyzer. Note that we cast to a reference to avoid copying
+              the analyzer unnecessarily.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-extract">
+            <para>
+              The first 16-bit word of the VM-USB buffer contains the event
+              header. The entire size of the body less 1 is contained in the
+              lower 12-bits of this word. We use a bitwise-AND operator to
+              extract that number. Note that the <literal>*p++</literal>
+              effectively retrieved the value pointed and then
+              incremented the pointer forward by 16-bits.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-setsize">
+            <para>
+              Here we pass the size of the event to the analyzer. The argument
+              requires a size in units of bytes rather than 16-bit words. We
+              convert by multiplying our number by the number of bytes in a
+              16-bit word (<literal>sizeof(uint16_t)</literal>). Note that we
+              could have just multiplied by 2, but chose to do otherwise for
+              readability sake. 
+              <tip>
+                <para>
+                  Write for people to understand your code easier. Code is
+                  written once and read everytime thereafter.
+                </para>
+              </tip>
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-nlongwrds">
+            <para>
+              The remainder of the buffer referred to by our pointer
+              <literal>p</literal> is composed of 32-bit integers. We need to
+              know how many of these there are and will compute it. We are
+              converting our size from units of 16-bit integers to units of
+              32-bit integers.
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           The unpack() method implementation will look like this:
@@ -1014,25 +1080,88 @@ Bool_t
 CRawUnpacker::unpack(TranslatorPointer&lt;uint32_t&gt; begin,
                      size_t nLongWords)
 {
-  auto end = begin+nLongWords;
+  auto end = begin+nLongWords;  <co id="vmusb-ss-rawunpack-auto"/>
 
-  try {
-    vector&lt;ParsedADCEvent&gt; events = m_unpacker.parseAll(begin, end);
+  try {  <co id="vmusb-ss-rawunpack-try"/>
+    vector&lt;ParsedADCEvent&gt; events = m_unpacker.parseAll(begin, end);  <co
+      id="vmusb-ss-rawunpack-parseall"/>
+
     int offset = 0;
-    for (auto&amp; event : events) {
-      offset = (event.s_geo-10)*32;
-      for (auto&amp; chanData : event.s_data) {
+    for (auto&amp; event : events) {  <co id="vmusb-ss-rawunpack-rlevt"/>
+      offset = (event.s_geo-10)*32;  <co id="vmusb-ss-rawunpack-offset"/>
+      for (auto&amp; chanData : event.s_data) {  <co
+        id="vmusb-ss-rawunpack-rlch"/>
         m_values[chanData.first+offset] = chanData.second;
       }
     }
-  } catch (exception&amp; exc) {
+  } catch (exception&amp; exc) {  <co id="vmusb-ss-rawunpack-catch"/>
     cout &lt;&lt; "Parsing Failed! Reason=" &lt;&lt; exc.what() &lt;&lt; endl;
-    return kfFALSE;
+    return kfFALSE;  <co id="vmusb-ss-rawunpack-false"/>
   }
                                     
-  return kfTRUE;
+  return kfTRUE;  <co id="vmusb-ss-rawunpack-true"/>
 }
         </programlisting>
+        <calloutlist>
+          <callout arearefs="vmusb-ss-rawunpack-auto">
+            <para>
+              The <literal>auto</literal> keyword is a shortcut introduced in
+              C++11 that causes the compiler to deduce the type of
+              <literal>end</literal>. Because <literal>begin</literal> is of
+              type <literal>TranslatorPointer&lt;uint32_t&gt;</literal>,
+              <literal>end</literal> will be of the same type but will point to
+              a location in memory <literal>nLongWords</literal> away.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-try vmusb-ss-rawunpack-catch
+            vmusb-ss-rawunpack-false">
+            <para>
+              The CRawADCUnpacker::parseAll() method may through an exception
+              and this along with the <literal>catch</literal> ensure that any
+              object thrown of type derived from
+              <literal>std::exception</literal> will be caught. We choose to
+              print a message to the user and then return false. Returning this
+              causes the event to be excluded from the histogramming process. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-parseall">
+            <para>
+              Here is where we call our parser. It will return a list of
+              parsed events if it succeeds. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-rlevt">
+            <para>
+              This is another C++11 construct called a range-based for loop.
+              Basically what this does is loop through each element of the
+              <literal>events</literal> vector and assign a reference called
+              <literal>event</literal> to it. We are using it to access the data
+              of the V775 and then the V785.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-offset">
+            <para>
+              The channel data of the V775 and V785 are stored in the same array
+              of tree parameters. We compute an offset based on the slot number
+              of the module. The data labeled with slot number
+              (<literal>s_geo</literal>) 10 will be at offset 0, whereas those
+              from slot 11 will be at offset 32.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-rlch">
+            <para>
+             Here we use another range-based for loop to iterate through the
+             channel data of a specific digitizer's data.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-rawunpack-true">
+            <para>
+             If we reached this point, our entire event was parsed successfully
+             and it is sensible to histogram the results. We indicate this by
+             returning true.
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           That is it for the implementation ofthe CRawUnpacker class. Before
