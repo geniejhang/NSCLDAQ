@@ -20,11 +20,11 @@ install-exec-local:
 	$(mkinstalldirs) @prefix@/share/html
 	$(mkinstalldirs) @prefix@/share/html/figures
 	$(mkinstalldirs) @prefix@/share/pdfs
-#	$(INSTALL_DATA) $(FIGURES) @prefix@/share/html/figures
+	$(INSTALL_DATA) $(FIGURES) @prefix@/share/html/figures
 	$(CHAPTER2BOOK) -s @srcdir@/vmusbsetup.xml -b @srcdir@/vmusb_bookinfo.xml -o @builddir@
 	$(INSTALL_DATA) $(BOOK) @prefix@/share/pdfs
 
 clean-local:
 	rm -f $(BOOK)
 
-EXTRA_DIST=$(DOCS) $(BOOK)
+EXTRA_DIST=$(DOCS) $(BOOK) $(FIGURES)
