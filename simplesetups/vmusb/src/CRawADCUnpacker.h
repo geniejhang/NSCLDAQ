@@ -27,10 +27,10 @@ class CRawADCUnpacker
 
   public:
     std::vector<ParsedADCEvent> 
-      parseAll(Iter begin, Iter end);
+      parseAll(const Iter& begin, const Iter& end);
 
     std::pair<Iter, ParsedADCEvent>
-      parseSingle(Iter begin, Iter end);
+      parseSingle(const Iter& begin, const Iter& end);
 
   private:
     bool isHeader(std::uint32_t word);
@@ -40,7 +40,7 @@ class CRawADCUnpacker
     void unpackHeader(std::uint32_t word, ParsedADCEvent& event);
     void unpackDatum(std::uint32_t word, ParsedADCEvent& event);
     Iter 
-      unpackData(Iter begin, Iter end, ParsedADCEvent& event);
+      unpackData(const Iter& begin, const Iter& end, ParsedADCEvent& event);
     void unpackEOE(std::uint32_t word, ParsedADCEvent& event);
 };
 

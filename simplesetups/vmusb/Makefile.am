@@ -1,5 +1,15 @@
 DOCS    = @srcdir@/vmusbsetup.xml @srcdir@/vmusb_bookinfo.xml
-#FIGURES = 
+FIGURES =  @srcdir@/figures/sis3820blockdiagram.dia  \
+					 @srcdir@/figures/sis3820blockdiagram.jpg \
+					 @srcdir@/figures/sis3820blockdiagram.eps \
+					 @srcdir@/figures/sis3820blockdiagram.png \
+					 @srcdir@/figures/treegui_1d_0.png \
+					 @srcdir@/figures/treegui_1d_1.png  \
+					 @srcdir@/figures/treegui_1d_2.png \
+					 @srcdir@/figures/treegui_connect.png \
+					 @srcdir@/figures/xamine_0.png \
+					 @srcdir@/figures/xamine_1.png 
+
 
 
 CHAPTER2BOOK=@top_srcdir@/docbuild/chapter2book.py

@@ -127,14 +127,14 @@
       <title id="v775v785blockdiagram-title">
         Block diagram of the V775 and V785 wiring
       </title>
-      <graphic fileref="v785v775sis3820setup.eps"/>
+      <graphic fileref="figures/v785v775sis3820setup.eps"/>
     </figure>
 
     <figure id="sis3820blockdiagram">
       <title id="sis3820blockdiagram-title">
         Block diagram of SIS3820 scaler wiring
       </title>
-      <graphic fileref="sis3820blockdiagram.png"/>
+      <graphic fileref="figures/sis3820blockdiagram.png"/>
     </figure>
   </section>
 
@@ -851,6 +851,10 @@ Index         Counts                 Rate
 #include &lt;cstdint&gt;  <co id="vmusb-ss-rawunpack-stdint"/>
 #include &lt;cstddef&gt;  <co id="vmusb-ss-rawunpack-stddef"/>
 
+class CEvent;
+class CAnalyzer;
+class CBufferDecoder;     <co id="vmusb-ss-rawunp-fwddecl"/>
+
 class CRawUnpacker : public CEventProcessor <co id="vmusb-ss-rawunpack-classdecl"/>
 {
   private:
@@ -900,6 +904,16 @@ class CRawUnpacker : public CEventProcessor <co id="vmusb-ss-rawunpack-classdecl
               this header.
             </para>
           </callout>
+          <callout arearefs="vmusb-ss-rawunp-fwddecl">
+            <para>
+              Because some of the arguments in the methods of our class will
+              take references to objects, we need to forward declare their
+              types. This does not define the classes, it just introduces the
+              name of these classes as a valid type. We will have to actually
+              include definitions later if we are going to use the
+              functionality of these types.
+            </para>
+          </callout>
           <callout arearefs="vmusb-ss-rawunpack-classdecl">
             <para>
               Our CRawUnpacker class derives from the CEventProcessor base
@@ -942,11 +956,8 @@ class CRawUnpacker : public CEventProcessor <co id="vmusb-ss-rawunpack-classdecl
 
         <programlisting>
 #include "CRawUnpacker.h"
-#include &lt;TreeParameter.h&gt;
-#include &lt;TranslatorPointer.h&gt;
 #include &lt;BufferDecoder.h&gt;
 #include &lt;TCLAnalyzer.h&gt;
-#include &lt;cstdint&gt;
 #include &lt;iostream&gt;
 #include &lt;stdexcept&gt;
 
@@ -1225,8 +1236,7 @@ CRawUnpacker::unpack(TranslatorPointer&lt;uint32_t&gt; begin,
           TranslatorPointer&lt;uint32_t&gt; type for simplicity and then will
           explain how to generalize this afterwords. This will keep the example
           accessible to more people that don't need their code 100% independent
-          but will at the same time provide those who do have the need a clear
-          path forward.
+          but will also provide a clear path forward for those who do need it.
         </para>
 
         <para>
@@ -1278,7 +1288,7 @@ struct ParsedADCEvent
         <para>
           The ParsedADCEvent contains all of the information that we care to
           keep from a complete event. The data for each channel will be stored
-          as a pair in an a vector. The first element of each pair will be the
+          as a pair in a vector. The first element of each pair will be the
           channel number while the second element will be the digitized value. 
         </para>
 
@@ -1286,13 +1296,13 @@ struct ParsedADCEvent
           The next thing we need to do is define the CRawADCUnpacker class
           itself. Two entry points will be provided for public use. One of them
           is used by the CRawUnpacker class, parseAll(), and it iteratively
-          calls the second, parseSingle(). We will focu primarily on the
+          calls the second, parseSingle(). We will focus primarily on the
           implementation of parseSingle() because it is the true parsing
           routine. The parseSingle() method depends on a handful of helper
           methods that will be explained as they come up. Here is the class
-          declaration of the CRawADCUnpacker. In CRawADCUnpacker.h, it would
-          follow the end of the ParsedADCEvent delcaration but precede the
-          #endif preprocessor directive.
+          declaration of the CRawADCUnpacker. In <filename>CRawADCUnpacker.h</filename>, it would
+          follow the end of the ParsedADCEvent definition but precede the
+          <literal>#endif</literal> preprocessor directive.
         </para>
 
         <programlisting>
@@ -1301,16 +1311,12 @@ class CRawADCUnpacker
   public:
     using Iter=TranslatorPointer&lt;std::uint32_t&gt;; <co id="vmusb-ss-adcunp-tdef"/>
 
-  private:
-  enum ProcessingMode {HEADER_MODE, DATA_MODE, EOE_MODE, DONE_MODE}; <co
-    id="vmusb-ss-adcunp-enum"/>
-
   public:
     std::vector&lt;ParsedADCEvent&gt; 
-    parseAll(Iter&amp; begin, Iter&amp; end); 
+      parseAll(const Iter&amp; begin, const Iter&amp; end); <co id="vmusb-ss-adcunp-pall-pval"/>
 
-    std::pair&lt;Iter, ParsedADCEvent&gt;
-      parseSingle(Iter&amp; begin, Iter&amp; end);
+    std::pair&lt;Iter, ParsedADCEvent&gt; 
+      parseSingle(const Iter&amp; begin, const Iter&amp; end);
 
   private:
     // Utility methods
@@ -1320,8 +1326,7 @@ class CRawADCUnpacker
 
     void unpackHeader(std::uint32_t word, ParsedADCEvent&amp; event);
     void unpackDatum(std::uint32_t word, ParsedADCEvent&amp; event);
-    Iter
-      unpackData(Iter&amp; begin, Iter&amp; end, ParsedADCEvent&amp; event);
+    Iter unpackData(const Iter&amp; begin, const Iter&amp; end, ParsedADCEvent&amp; event);
     void unpackEOE(std::uint32_t word, ParsedADCEvent&amp; event);
 };
           
@@ -1334,17 +1339,16 @@ class CRawADCUnpacker
               <literal>TranslatorPointer&lt;std::uint32_t&gt;</literal> over and
               over again, we alias it as <literal>Iter</literal>. This is just
               another way to define a typedef. I will explain later how this
-              also helps loosen small dependence of the class on the SpecTcl
+              also helps loosen the dependence of the class on the SpecTcl
               framework.
             </para>
           </callout>
-          <callout arearefs="vmusb-ss-adcunp-enum">
+          <callout arearefs="vmusb-ss-adcunp-pall-pval">
             <para>
-              We will operate our parser as a very primitive state machine.
-              The <literal>ProcessingMode</literal> enumeration defined here
-              will be used to label each state. Each of these values is
-              implemented as an integer of unknown value. We don't really care
-              what value they hold.
+              This and the next method form the public interface for our parse.
+              Other code can either parse a chunk of ADC data as a series of
+              subsections from multiple devices or a single section from a
+              single device.
             </para>
           </callout>
         </calloutlist>
@@ -1356,58 +1360,74 @@ class CRawADCUnpacker
           header word is descriptive about how many data words exist so by
           reading it we will know when to expect the end of event word. If the
           data we are parsing violates this structure, then something bad has
-          happened. To enforce this ordering, the parser will operate as a
-          simple state machine. At any given point, we will know that the data
-          should be either a header word, data word, or end-of-event word. Once
-          we have completed each parsing stage, we update the state to handle
-          the next stage. For simplicity and readability, we do this using an
-          enum called ProcessingMode. It has 4 states: HEADER_MODE, DATA_MODE,
-          EOE_MODE, and DONE_MODE. Here is the code for the parseSingle()
-          method and includes that we need to add to our
+          happened. Each stage will check whether the data is valid and throw
+          if it is not. Here is the code for the parseSingle() method and
+          includes that we need to add to our
           <filename>CRawADCUnpacker.cpp</filename> file:
         </para>
 
         <programlisting>
+#include "CRawADCUnpacker.h"
+#include &lt;string&gt;
+#include &lt;stdexcept&gt;
+#include &lt;iostream&gt;
+
+using namespace std;
+
+static const uint32_t TYPE_MASK (0x07000000);
+static const uint32_t TYPE_HDR  (0x02000000);
+static const uint32_t TYPE_DATA (0x00000000);
+static const uint32_t TYPE_TRAIL(0x04000000);
+
+static const unsigned GEO_SHIFT(27);
+static const uint32_t GEO_MASK (0xf8000000);
+
+static const unsigned HDR_COUNT_SHIFT(8);      
+static const uint32_t HDR_COUNT_MASK (0x00003700);
+static const unsigned HDR_CRATE_SHIFT(16);
+static const uint32_t HDR_CRATE_MASK (0x00ff0000);
+
+static const unsigned DATA_CHANSHIFT(16);
+static const uint32_t DATA_CHANMASK (0x001f0000);
+static const uint32_t DATA_CONVMASK (0x00003fff);
+
+static const uint32_t TRAIL_COUNT_MASK(0x00ffffff);
+static const uint32_t BERR(0xffffffff); <co id="vmusb-ss-adcunp-defs"/>
+
+
 pair&lt;CRawADCUnpacker::Iter,ParsedADCEvent&gt; 
-  CRawADCUnpacker::parseSingle(Iter&amp; begin, Iter&amp; end)
+  CRawADCUnpacker::parseSingle(const Iter&amp; begin, const Iter&amp; end)
 {
   
-  auto iter = begin;                <co id="vmusb-ss-adcunp-ps-auto"/>
   ParsedADCEvent event;             <co id="vmusb-ss-adcunp-ps-evtdec"/>
 
-  ProcessingMode mode = HEADER_MODE; <co id="vmusb-ss-adcunp-ps-mode"/>
+  auto iter = begin;                <co id="vmusb-ss-adcunp-ps-auto"/>
+  if (iter&lt;end) {                <co id="vmusb-ss-adcunp-ps-chk0"/>
+    unpackHeader(*iter++, event); <co id="vmusb-ss-adcunp-ps-uphdr"/>
+  } else {
+    string errmsg("CRawADCUnpacker::parseSingle() ");
+    errmsg += "Incomplete event found in buffer.";
+    throw runtime_error(errmsg);
+  }
 
-  while (iter != end) {
-    if (mode==HEADER_MODE) {   <co id="vmusb-ss-adcunp-ps-hdrm"/>
+  int nWords = event.s_count;
+  auto dataEnd = iter+nWords;
 
-      unpackHeader(*iter++, event); <co id="vmusb-ss-adcunp-ps-uphdr"/>
-      mode = DATA_MODE;             <co id="vmusb-ss-adcunp-ps-u8m-data"/>
-
-    } else if (mode==DATA_MODE) {   <co id="vmusb-ss-adcunp-ps-dm"/>
-      int nWords = event.s_count;
-      auto dataEnd = iter+nWords;
-
-      if ((dataEnd > end) || (dataEnd == end)) { <co
-        id="vmusb-ss-adcunp-ps-check"/>
-        string errmsg("CRawADCUnpacker::parseSingle() ");
-        errmsg += "Incomplete event found in buffer.";
-        throw runtime_error(errmsg);
-      }
-
-      iter = unpackData(iter, dataEnd, event); <co id="vmusb-ss-adcunp-ps-upd"/>
-      mode = EOE_MODE;              <co id="vmusb-ss-adcunp-ps-u8m-eoe"/>
-
-    } else if (mode==EOE_MODE) {    <co id="vmusb-ss-adcunp-ps-eoem"/>
-
-      unpackEOE(*iter++,event);     <co id="vmusb-ss-adcunp-ps-upeoe"/>
-
-      mode = DONE_MODE;             <co id="vmusb-ss-adcunp-ps-u8m-done"/>
-
-
-      // we are done
-      break;                        <co id="vmusb-ss-adcunp-ps-brk"/>
-    }
-
+  if ((dataEnd > end) || (dataEnd == end)) { <co
+     id="vmusb-ss-adcunp-ps-check"/>
+    string errmsg("CRawADCUnpacker::parseSingle() ");
+    errmsg += "Incomplete event found in buffer.";
+    throw runtime_error(errmsg);
+  } else {
+    iter = unpackData(iter, dataEnd, event); <co id="vmusb-ss-adcunp-ps-upd"/>
+  }
+ 
+  if (iter&lt;end) {              <co id="vmusb-ss-adcunp-ps-chk1"/>
+    unpackEOE(*iter++,event);     <co id="vmusb-ss-adcunp-ps-upeoe"/>
+  } else {
+    string errmsg("CRawADCUnpacker::parseSingle() ");
+    errmsg += "Incomplete event found in buffer.";
+    throw runtime_error(errmsg);
   }
 
   return make_pair(iter,event);     <co id="vmusb-ss-adcunp-ps-mkpr"/>
@@ -1415,10 +1435,11 @@ pair&lt;CRawADCUnpacker::Iter,ParsedADCEvent&gt;
         </programlisting>
 
         <calloutlist>
-          <callout arearefs="vmusb-ss-adcunp-ps-auto">
+          <callout arearefs="vmusb-ss-adcunp-defs">
             <para>
-              We create a new translator pointer to iterate over the body of
-              data. 
+              This and the lines before it define useful bitmasks and shifts 
+              for performing bitwise arithmetic on the data. We will use them
+              to extract the pieces of information from each word.
             </para>
           </callout>
           <callout arearefs="vmusb-ss-adcunp-ps-evtdec">
@@ -1427,41 +1448,28 @@ pair&lt;CRawADCUnpacker::Iter,ParsedADCEvent&gt;
               filled with the parsed data. 
             </para>
           </callout>
-          <callout arearefs="vmusb-ss-adcunp-ps-mode">
+          <callout arearefs="vmusb-ss-adcunp-ps-auto">
             <para>
-              The initial state of our state machine is
-              <literal>HEADER_MODE</literal> which indicates that the first data
-              word should be a header.
+              We create a new translator pointer to iterate over the body of
+              data. 
             </para>
           </callout>
-          <callout arearefs="vmusb-ss-adcunp-ps-hdrm">
+          <callout arearefs="vmusb-ss-adcunp-ps-chk0 vmusb-ss-adcunp-ps-chk1">
             <para>
-              Selects the block of code that will execute when we expecting a
-              header. This should only be called the first time through the
-              loop.
+              Every time that we move the iterator forward, we need to make sure
+              that we do not step out of bounds. Dereferencing an iterator 
+              beyond its bounds of validity is asking for all kinds of pain.
             </para>
           </callout>
           <callout arearefs="vmusb-ss-adcunp-ps-uphdr">
             <para>
-              The logic for parsing the header to a utility method. 
-            </para>
-          </callout>
-          <callout arearefs="vmusb-ss-adcunp-ps-u8m-data">
-            <para>
-              After parsing a header, the next word should be treated as a data
-              word. Here we update the state of our state machine to be
-              DATA_MODE.
-            </para>
-          </callout>
-          <callout arearefs="vmusb-ss-adcunp-ps-dm">
-            <para>
-              Selects the block of code to execute when expecting data words. 
+              The logic for parsing the header lives in a utility method. 
             </para>
           </callout>
           <callout arearefs="vmusb-ss-adcunp-ps-check">
             <para>
               Just because the header word tells us that a certain number of
-              data words follows does not mean they actually do. This ensures
+              data words should follow does not mean they actually do. This ensures
               that the data we expect is there before accessing it. 
             </para>
           </callout>
@@ -1473,32 +1481,9 @@ pair&lt;CRawADCUnpacker::Iter,ParsedADCEvent&gt;
               iterator to a new position.
             </para>
           </callout>
-          <callout arearefs="vmusb-ss-adcunp-ps-u8m-eoe">
-            <para>
-              The data should be done being processed so we expect an end of
-              event word to follow next.              
-            </para>
-          </callout>
-          <callout arearefs="vmusb-ss-adcunp-ps-eoem">
-            <para>
-             Selects the block of code to execute when a expecting an
-             end-of-event word. 
-            </para>
-          </callout>
           <callout arearefs="vmusb-ss-adcunp-ps-upeoe">
             <para>
               A utility method handles the parsing of the end-of-event word. 
-            </para>
-          </callout>
-          <callout arearefs="vmusb-ss-adcunp-ps-u8m-done">
-            <para>
-              Honestly this is not needed. It is just a convenient marker to
-              alert the reader to the completeness of the parsing.    
-            </para>
-          </callout>
-          <callout arearefs="vmusb-ss-adcunp-ps-brk">
-            <para>
-              With the end of event parsed, we stop parsing the buffer.
             </para>
           </callout>
           <callout arearefs="vmusb-ss-adcunp-ps-mkpr">
@@ -1569,7 +1554,7 @@ void CRawADCUnpacker::unpackHeader(uint32_t word, ParsedADCEvent&amp; event)
           very similar to unpackHeader() method in that it extracts specific
           pieces of data from the data word it is passed. The difference is that
           the values it extracts for the channel and value are paired together
-          are stored in the vector of the event. This is what those look like:
+          and stored in the vector of the event. This is what those look like:
         </para>
 
         <programlisting>
@@ -1596,8 +1581,8 @@ void CRawADCUnpacker::unpackDatum(uint32_t word, ParsedADCEvent&amp; event)
 
 
 CRawADCUnpacker::Iter 
-CRawADCUnpacker::unpackData(Iter&amp; begin, 
-                            Iter&amp; end,
+CRawADCUnpacker::unpackData(const Iter&amp; begin, 
+                            const Iter&amp; end,
                             ParsedADCEvent&amp; event)
 {
   // only allocate memory once because we know how much we need already
@@ -1638,15 +1623,15 @@ CRawADCUnpacker::unpackData(Iter&amp; begin,
               the back of the vector. By default, this will likely cause the
               vector's memory buffer to be reallocated everytime we add an
               element, which is costly. Because we already know the final size,
-              we can allocate the total memory once using its
-              <literal>reserve</literal> method.
+              we can allocate the total memory once using the 
+              <literal>vector&lt;&gt;::reserve</literal> method.
             </para>
           </callout>
           <callout arearefs="vmusb-ss-adcunp-ud-updm">
             <para>
-              To parse all of the it  data words, we just iterate through the
-              range that has been precomputed for this. Each word is unpacked
-              by a called to the unpackDatum(). If the word is not a data word,
+              To parse all of the data words, we just iterate through the
+              range that has been passed in as parameters. Each word is unpacked
+              by a call to the unpackDatum() method. If the word is not a data word,
               an exception is thrown.
             </para>
           </callout>
@@ -1715,8 +1700,8 @@ void CRawADCUnpacker::unpackEOE(uint32_t word, ParsedADCEvent&amp; event)
 
         <programlisting>
 vector&lt;ParsedADCEvent&gt; 
-CRawADCUnpacker::parseAll(Iter&amp; begin,
-                          Iter&amp; end)
+CRawADCUnpacker::parseAll(const Iter&amp; begin,
+                          const Iter&amp; end)
 {
   vector&lt;ParsedADCEvent&gt; parsedData;  <co id="vmusb-ss-adcunp-pall-init"/>
 
@@ -1744,8 +1729,8 @@ CRawADCUnpacker::parseAll(Iter&amp; begin,
           </callout>
           <callout arearefs="vmusb-ss-adcunp-pall-chberr">
             <para>
-              Check if the word is a BERR. We expect that at the end of our
-              event body so seeing one or two is not an error. 
+              Check if the word is a BERR. We expect BERRs at the end of the
+              event body, so seeing one or two is not an error. 
             </para>
           </callout>
           <callout arearefs="vmusb-ss-adcunp-pall-single">
@@ -1790,11 +1775,11 @@ CRawADCUnpacker::parseAll(Iter&amp; begin,
           generated in such a way that swapping bytes is necessary. Only you are
           the one who knows this if you venture outside the world of SpecTcl. If
           you have to swap bytes, this becomes a bit less portable and you will
-          need to create your own byte-swapping smart pointer. The good news is
+          need to create your own byte-swapping utility. The good news is
           that it is little difficulty to accomodate any solution you have
           concerning the TranslatorPointer. Because we hid this behind a
           typedef, we only need to change the <literal>Iter</literal> alias to
-          be a different type. Done. Arguably the more general solution would be
+          be a different type. Arguably the more general solution would be
           to transform the class into a template itself where the
           <literal>Iter</literal> is the template parameter. Doing so requires
           more changes to the code but would not have to be recompiled whenever
@@ -1866,6 +1851,25 @@ CMySpecTclApp::CreateAnalysisPipeline(CAnalyzer&amp; rAnalyzer)
         With that, SpecTcl will pass every ring item of type PHYSICS_EVENT to
         our event processor.
       </para>
+
+      <para>
+        Typically, after the first event processor there might be subsequent
+        processors that compute the values of other tree parameters from the raw
+        value extracted by the first. A good example of this is computed a
+        calibrated value from the raw value.  It is common and recommended
+        practice to write the subsequent event processors in such a way that
+        they depend only on the tree parameters that were assigned values in the
+        first processor. There are many ways to accomplish this. One method
+        would be to separate the tree parameters from the CRawUnpacker class and
+        define a structure that provides other processors access to them.
+        Another method might be to define them as a static member of the
+        CRawUnpacker class. These are just two ways that pop into my head, but
+        you can solve the problem however best makes sense to you.
+        Remember that SpecTcl is a software framework much like other analysis
+        frameworks, e.g. ROOT. If you can code it in C++ and work within the
+        constraints of the SpecTcl framework, nothing stops you from doing that.
+      </para>
+
     </section>
 
     <section>
@@ -1906,8 +1910,126 @@ USERCXXFLAGS= -std=c++11
       </screen>
 
     </section>
+
   </section>
 
+  <section>
+    <title>Using SpecTcl</title>
+
+    <para>
+      To start using SpecTcl, you need to define at least one histogram and then
+      attach to a data source. Let's start by launch SpecTcl. In the directory
+      that you have copied the skeleton into, there should be a
+      <filename>SpecTclRC.tcl</filename>  file. This is a Tcl script that gets
+      sourced upon start up. We will not dwell on the details of it here, but
+      you need to make sure it is present. In that directory launch SpecTcl:
+    </para>
+
+    <screen>
+<literal>spdaqXX&gt;</literal> <command>./SpecTcl</command>
+    </screen>
+
+    <para>
+      SpecTcl can take a while to start up so give it 5 to 10 seconds to
+      complete its initialization routines. Once it is up and running, you
+      should have four new windows open that correspond to Xamine, the TreeGui,
+      the SpecTcl control panel, and tkcon. The definition of histograms is
+      accomplished in the TreeGui. Without exploring all of the options for
+      histograms, a one dimensions histogram is created by selecting a tree
+      parameter to associate with it and also a name to refer to the histogram
+      by. Let's create our first 1-d histogram:
+    </para>
+    <orderedlist>
+      <listitem>
+        <para>
+          In the middle of the window on the left, there is a text entry for a
+          tree parameter name. We know our tree parameters are named "t.XX" so
+          we can choose an index and write the name. Here I choose "t.01". In
+          the following figure, I have highlighted the text entry in red.
+        </para>
+        <graphic fileref="figures/treegui_1d_0.png"/>
+        <para>
+          If you do not know the name of your tree parameter, you can use the
+          "Parameter" button above the text entry to select one.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Next we need to give our histogram a name. Lacking any sense of
+          creativity at the moment, I choose to name the histogram "t01". Enter
+          this is the text entry below the label "SpectrumName". In the
+          following figure I have hightlighted it in red.
+        </para>
+        <graphic fileref="figures/treegui_1d_1.png"/>
+      </listitem>
+      <listitem>
+        <para>
+          To actually create the histogram, you need to press the
+          "Create/Replace" button to the upper right of where you specified the
+          name of the histogram. Once you have pressed this, a row should have
+          been added to the previously empty list of histograms (once again it
+          is highlighted in red). The window should look like this:
+        </para> 
+        <graphic fileref="figures/treegui_1d_2.png"/>
+      </listitem>
+    </orderedlist>
+
+    <para>
+      With a histogram created, we need to attach SpecTcl to a data stream.
+      Let's assume that your Readout program is running and spewing out data.
+      SpecTcl can be directed to attach to this "online" data stream by going to
+      the "Data Sources" drop-down menu and selecting "Online...". A dialogue
+      will pop up that will direct you to specify a ring buffer name. Let's
+      assume that the ring name is "tompkins" and the ringbuffer lives on
+      computer whose hostname is "spdaqXX". You can disregard the buffer size
+      because it does not influence parsing when dealing with ring items.
+      Instead, we will select that our data format is "ring11" to indicate that
+      the data is in the 11.0 data format. At the end your dialogue should look
+      something like this:
+    </para>
+
+    <graphic fileref="figures/treegui_connect.png"/>
+
+    <para>
+      When you have the appropriate data source specified, you can press "Ok"
+      (highlighted in red in the figure).
+    </para>
+
+    <para>
+      The status bar at the bottom of the tree gui should show that it is
+      connect and processing events at this point. The next thing to do is move
+      to the Xamine window and display our histogram. The bottom left corner of
+      the Xamine window has a button labeled "Display+".
+    </para>
+    <graphic fileref="figures/xamine_0.png"/>
+    <para>
+      Press the "Display+" button and select a histogram to display. In my case,
+      there is only a single histogram named "t01" to choose from. Click on the
+      histogram name and press "Okay". The histogram should now be visible and
+      Xamine should look something like this:
+    </para>
+
+    <graphic fileref="figures/xamine_1.png"/>
+
+    <para>
+      You can press "Update All" to see the histogram grow in counts from here
+      on out. With a single histogram created, you should be able to figure out
+      how to create other 1-d histograms and even 2-d histograms. The process is
+      very similar. Be aware, that you need to create a histogram prior to attaching
+      to a data source for it to receive any data. 
+    </para>
+  </section>
+
+  <section>
+    <title>Conclusion</title>
+    <para>
+      The contents of the tutorial touched on the tip of the iceberg concerning
+      how to run an experiment using NSCLDAQ. However, at this point, you should
+      be well acquainted with the principles associated with VMUSBReadout and
+      SpecTcl. More complicated systems simply require longer configuration
+      files and more detailed SpecTcl event processors. 
+    </para>
+  </section>
 </chapter>
 
 <!-- /chapter -->

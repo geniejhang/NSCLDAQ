@@ -26,8 +26,8 @@ static const uint32_t DATA_CONVMASK (0x00003fff);
 static const uint32_t TRAIL_COUNT_MASK(0x00ffffff);
 
 vector<ParsedADCEvent> 
-CRawADCUnpacker::parseAll(Iter begin,
-                          Iter end)
+CRawADCUnpacker::parseAll(const Iter& begin,
+                          const Iter& end)
 {
   vector<ParsedADCEvent> parsedData;
 
@@ -51,44 +51,37 @@ CRawADCUnpacker::parseAll(Iter begin,
 
 
 pair<CRawADCUnpacker::Iter, ParsedADCEvent> 
-  CRawADCUnpacker::parseSingle(Iter begin, Iter end)
+  CRawADCUnpacker::parseSingle(const Iter& begin, const Iter& end)
 {
   
   auto iter = begin;
   ParsedADCEvent event;
 
-  ProcessingMode mode = HEADER_MODE;
+  if (iter<end) {
+    unpackHeader(*iter++, event);
+  } else {
+    string errmsg("CRawADCUnpacker::parseSingle() ");
+    errmsg += "Incomplete event found in buffer.";
+    throw runtime_error(errmsg);
+  }
 
-  while (iter != end) {
-    if (mode==HEADER_MODE) {  
+  int nWords = event.s_count;
+  auto dataEnd = iter+nWords;
 
-      unpackHeader(*iter++, event);
-      mode = DATA_MODE;
+  if ((dataEnd > end) || (dataEnd == end)) {
+    string errmsg("CRawADCUnpacker::parseSingle() ");
+    errmsg += "Incomplete event found in buffer.";
+    throw runtime_error(errmsg);
+  } else {
+    iter = unpackData(iter, dataEnd, event);
+  }
 
-    } else if (mode==DATA_MODE) {
-      int nWords = event.s_count;
-      auto dataEnd = iter+nWords;
-
-      if ((dataEnd > end) || (dataEnd == end)) {
-        string errmsg("CRawADCUnpacker::parseSingle() ");
-        errmsg += "Incomplete event found in buffer.";
-        throw runtime_error(errmsg);
-      }
-
-      iter = unpackData(iter, dataEnd, event);
-      mode = EOE_MODE;
-
-    } else if (mode==EOE_MODE) {
-
-      unpackEOE(*iter++,event);
-
-      mode = DONE_MODE;
-
-
-      // we are done
-      break;
-    }
-
+  if (iter<end) {
+    unpackEOE(*iter++,event);
+  } else {
+    string errmsg("CRawADCUnpacker::parseSingle() ");
+    errmsg += "Incomplete event found in buffer.";
+    throw runtime_error(errmsg);
   }
 
   return make_pair(iter,event);
@@ -154,8 +147,8 @@ void CRawADCUnpacker::unpackDatum(uint32_t word, ParsedADCEvent& event)
 
 
 CRawADCUnpacker::Iter 
-CRawADCUnpacker::unpackData(Iter begin, 
-                            Iter end,
+CRawADCUnpacker::unpackData(const Iter& begin, 
+                            const Iter& end,
                             ParsedADCEvent& event)
 {
   // only allocate memory once because we know how much we need already
