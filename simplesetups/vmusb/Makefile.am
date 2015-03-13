@@ -3,6 +3,9 @@ FIGURES =  @srcdir@/figures/sis3820blockdiagram.dia  \
 					 @srcdir@/figures/sis3820blockdiagram.jpg \
 					 @srcdir@/figures/sis3820blockdiagram.eps \
 					 @srcdir@/figures/sis3820blockdiagram.png \
+					 @srcdir@/figures/v785v775sis3820setup.png \
+					 @srcdir@/figures/v785v775sis3820setup.eps \
+					 @srcdir@/figures/v785v775sis3820setup.dia \
 					 @srcdir@/figures/treegui_1d_0.png \
 					 @srcdir@/figures/treegui_1d_1.png  \
 					 @srcdir@/figures/treegui_1d_2.png \
