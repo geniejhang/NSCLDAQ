@@ -19,13 +19,21 @@
 
     <itemizedlist>
       <listitem>
-        <para>Little to no programming experience</para>
+        <para>No programming experience in Tcl</para>
+      </listitem>
+      <listitem>
+        <para>Some familiarity with the C++ language</para>
       </listitem>
       <listitem>
         <para>Access to the required electronics</para>
       </listitem>
       <listitem>
-        <para>Ability to wire up signal processing circuit from a block diagram</para>
+        <para>Ability to wire up a signal processing circuit from a block diagram</para>
+      </listitem>
+      <listitem>
+        <para>A version of NSCLDAQ 11 has been installed on the system in
+          <filename>/usr/opt/nscldaq/11.x-yyy</filename>, where x is any minor
+          version and yyy is any path version.</para>
       </listitem>
       <listitem>
         <para>The reader has already read the
@@ -40,10 +48,11 @@
     <para>
       In addition to simply setting up the experiment, the user will be
       instructed at how to interpret the output of the devices using the dumper
-      program. If you are unfamiliar with the VMUSBReadout program, you can
-      find a complete user's guide for the
-      <application>VMUSBReadout</application> in the comprehensive NSCLDAQ
-      documentation.
+      program for simple debugging and then on how to develop a basic SpecTcl
+      application tailored to the specific experiment. The SpecTcl
+      implementation will give an example of how to write an event processor
+      using a framework independent data unpacker as well as supporting its
+      potential reuse on event built data.
     </para>
 
   </section>
@@ -52,9 +61,9 @@
     <title>Setting up the Electronics</title>
 
     <para>
-      In this section, the reader will be walked through setting up a simple
-      DAQ for processing a pulser. In order to set up the following circuit, the
-      user must acquire at least the following electronics:
+      In this section, the reader will be given a schematic of the circuit the
+      rest of this guide will assume. In order to set it up,
+      the user must acquire <emphasis>at least</emphasis> the following:
     </para>
 
     <itemizedlist>
@@ -100,9 +109,18 @@
     </itemizedlist>
 
     <para>
-      Rather than detail how to plug each cable into each module, th
-      electronics diagram for the digitizers is provided in <xref linkend="v775v785blockdiagram"
-        endterm="v775v785blockdiagram-title"/>.
+      Rather than detail how to plug each cable into each module, th electronics
+      diagram for the digitizers is provided in <xref
+        linkend="v775v785blockdiagram" endterm="v775v785blockdiagram-title"/>.
+      Take note that this is a very basic circuit that makes no attempt to
+      handle busy logic properly. It is designed specifically for generating
+      some test data. Be aware also that there are some signal conversions not
+      shown in the block diagram because their need depends on the exact
+      hardware being used. It is left up to the reader to determine whether a
+      logic signal needs to be converted from ECL to NIM or ECL to TTL or
+      whatever between modules. A separate diagram is provided for the the
+      scaler portion of the circuit at <xref linkend="sis3820blockdiagram"
+        endterm="sis3820blockdiagram-title"/>.
     </para>
 
     <figure id="v775v785blockdiagram">
@@ -1649,7 +1667,7 @@ CRawADCUnpacker::unpackData(Iter&amp; begin,
         <programlisting>
 bool CRawADCUnpacker::isEOE(uint32_t word)
 {
-  return ((word&amp;TYPE_MASK)==TYPE_TRAIL);
+  return ((word&amp;TYPE_MASK)==TYPE_TRAIL);             <co id="vmusb-ss-adcunp-eoe-is"/>
 }
 
 void CRawADCUnpacker::unpackEOE(uint32_t word, ParsedADCEvent&amp; event)
@@ -1657,12 +1675,32 @@ void CRawADCUnpacker::unpackEOE(uint32_t word, ParsedADCEvent&amp; event)
   if (! isEOE(word) ) {
     string errmsg = "CRawADCUnpacker::unpackEOE() ";
     errmsg += "Found non-data word when expecting data.";
-    throw runtime_error(errmsg);
-  }
+    throw runtime_error(errmsg);  <co id="vmusb-ss-adcunp-eoe-throw"/>
+  } 
   
-  event.s_eventNumber = (word &amp; TRAIL_COUNT_MASK);
+  event.s_eventNumber = (word &amp; TRAIL_COUNT_MASK);   <co id="vmusb-ss-adcunp-eoe-extr"/>
 }
         </programlisting>
+        <calloutlist>
+          <callout arearefs="vmusb-ss-adcunp-eoe-is">
+            <para>
+              Check that bits 24-26 contain the number 4 to identify it as an
+              end-of-event word. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-eoe-throw">
+            <para>
+              If the word is not identified as an end-of-event word, we do not
+              understand the data properly and need to stop parsing.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-eoe-extr">
+            <para>
+              Using bitwise arithmetic, we extract the event number from the
+              word and store it in the event.  
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           Alright, now that we have the parseSingle() method defined and
@@ -1680,24 +1718,61 @@ vector&lt;ParsedADCEvent&gt;
 CRawADCUnpacker::parseAll(Iter&amp; begin,
                           Iter&amp; end)
 {
-  vector&lt;ParsedADCEvent&gt; parsedData;
+  vector&lt;ParsedADCEvent&gt; parsedData;  <co id="vmusb-ss-adcunp-pall-init"/>
 
   auto iter = begin;
-  while (iter != end) {
+  while (iter != end) {      
 
-    if (*iter != 0xffffffff) {
-      auto result = parseSingle(iter,end);
+    if (*iter != 0xffffffff) {              <co id="vmusb-ss-adcunp-pall-chberr"/>
+      auto result = parseSingle(iter,end);   <co id="vmusb-ss-adcunp-pall-single"/>
 
-      parsedData.push_back(result.second);
-      iter = result.first;
+      parsedData.push_back(result.second);   <co id="vmusb-ss-adcunp-pall-pback"/>
+      iter = result.first;                   <co id="vmusb-ss-adcunp-pall-upd8"/>
     } else {
-      ++iter;
+      ++iter;                                <co id="vmusb-ss-adcunp-pall-incr"/>
     }
   } 
 
   return parsedData;
 }
         </programlisting>
+        <calloutlist>
+          <callout arearefs="vmusb-ss-adcunp-pall-init">
+            <para>
+              We initialize an empty vector that will ultimately be filled and returned.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-pall-chberr">
+            <para>
+              Check if the word is a BERR. We expect that at the end of our
+              event body so seeing one or two is not an error. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-pall-single">
+            <para>
+              Parse a single event. 
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-pall-pback">
+            <para>
+              Append the parsed data from the previous call to the end of our
+              vector. The value returned by the parseSingle() method is actually
+              a pair of values, the parsed data was the second element.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-pall-upd8">
+            <para>
+              Use the iterator returned by the parseSingle() method to increment
+              our pointer.
+            </para>
+          </callout>
+          <callout arearefs="vmusb-ss-adcunp-pall-incr">
+            <para>
+              In the case that the word is a BERR, we need to step to the next
+              word.
+            </para>
+          </callout>
+        </calloutlist>
 
         <para>
           That is it for the unpacker. Let me now explain what would need to be
