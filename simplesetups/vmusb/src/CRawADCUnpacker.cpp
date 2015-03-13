@@ -26,8 +26,8 @@ static const uint32_t DATA_CONVMASK (0x00003fff);
 static const uint32_t TRAIL_COUNT_MASK(0x00ffffff);
 
 vector<ParsedADCEvent> 
-CRawADCUnpacker::parseAll(Iter& begin,
-                          Iter& end)
+CRawADCUnpacker::parseAll(Iter begin,
+                          Iter end)
 {
   vector<ParsedADCEvent> parsedData;
 
@@ -51,7 +51,7 @@ CRawADCUnpacker::parseAll(Iter& begin,
 
 
 pair<CRawADCUnpacker::Iter, ParsedADCEvent> 
-  CRawADCUnpacker::parseSingle(Iter& begin, Iter& end)
+  CRawADCUnpacker::parseSingle(Iter begin, Iter end)
 {
   
   auto iter = begin;
@@ -154,8 +154,8 @@ void CRawADCUnpacker::unpackDatum(uint32_t word, ParsedADCEvent& event)
 
 
 CRawADCUnpacker::Iter 
-CRawADCUnpacker::unpackData(Iter& begin, 
-                            Iter& end,
+CRawADCUnpacker::unpackData(Iter begin, 
+                            Iter end,
                             ParsedADCEvent& event)
 {
   // only allocate memory once because we know how much we need already
