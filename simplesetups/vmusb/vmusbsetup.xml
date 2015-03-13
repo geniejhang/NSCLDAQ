@@ -127,7 +127,7 @@
       <title id="v775v785blockdiagram-title">
         Block diagram of the V775 and V785 wiring
       </title>
-      <graphic fileref="figures/v785v775sis3820setup.eps"/>
+      <graphic fileref="figures/v785v775sis3820setup.png"/>
     </figure>
 
     <figure id="sis3820blockdiagram">
