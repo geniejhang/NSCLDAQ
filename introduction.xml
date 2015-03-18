@@ -4,14 +4,14 @@
 
   <para>
     NSCLDAQ is a software suite that provides a flexible and extensible
-    framework for handling the reading out of front-end electronics and
-    managing the data flow produced for nuclear physics experiments.  It
-    attempts to break down the data acquisition system, DAQ,  into smaller problems
-    that it tackles with specific applications. The idea is that smaller
-    applications can be assembled into more complicated applications. This
-    approach enables NSCLDAQ to be a modular system capable of tackling a wide
-    range of experimental setups, from small calibration setups to merging
-    multiple independent data acquisitions into unified systems. 
+    framework for handling the data flow produced by nuclear physics
+    experiments.  It aims to solve the top-level problem of managing the data
+    stream by breaking it down into smaller problems solved by smaller
+    applications. It therefore is a collection of tools that can be assembled
+    into more complicated applications. This approach enables NSCLDAQ to be a
+    modular system capable of tackling a wide range of experimental setups, from
+    small calibration setups to merging multiple independent data acquisitions
+    into unified systems. 
   </para>
 
   <section>
