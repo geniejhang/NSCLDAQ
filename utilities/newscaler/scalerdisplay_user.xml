@@ -1,8 +1,8 @@
-<!-- chapter utilities -->
+<!-- chapter user-guide -->
 
 <chapter id="chapter.scalerdisplay">
-  <title>
-    Scaler Display User's Guide
+  <title id="chapter.scalerdisplay-title">
+    ScalerDisplay
   </title>
 
   <section>
