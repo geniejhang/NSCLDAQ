@@ -132,8 +132,8 @@ tutorial.html: @srcdir@/tutorial.xml
 	touch tutorial.html
 
 
-TESTS = bookbuilderTest.py run_all_tests.py
-check-TESTS:
-	(cd @srcdir@; PYTHONPATH=. @PYTHON@ run_all_tests.py)
+#TESTS = bookbuilderTest.py run_all_tests.py
+#check-TESTS:
+#	(cd @srcdir@; PYTHONPATH=. @PYTHON@ run_all_tests.py)
 
 
