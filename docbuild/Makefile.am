@@ -5,9 +5,9 @@ EXTRA_DIST = alltsts.tcl docbuilder.tcl \
 
 DIST_SUBDIRS = images
 
-install-exec-local: daq.html tutorial.pdf tutorial.html
+install-exec-local: daq.html daq.mans tutorial.pdf tutorial.html
 	$(mkinstalldirs) @prefix@/share
-	$(mkinstalldirs)  @prefix@/share/man
+	$(mkinstalldirs) @prefix@/share/man
 	$(mkinstalldirs) @prefix@/share/html
 	$(mkinstalldirs) @prefix@/share/tuthtml
 	$(mkinstalldirs) @prefix@/share/pdfs
@@ -31,12 +31,15 @@ clean-local:
 
 if PDFDOCS
 DOCBOOK2PDF = docbook2pdf
-DOCBOOK2HTML= docbook2html 
 else
 DOCBOOK2PDF = touch daq.pdf 
-DOCBOOK2HTML= touch daq.html
 endif
 
+if HTMLDOCS
+DOCBOOK2HTML= docbook2html 
+else
+DOCBOOK2HTML= touch daq.html
+endif
 
 if XMLMANS
 DOCBOOK2MAN = xmlto man
@@ -132,8 +135,5 @@ tutorial.html: @srcdir@/tutorial.xml
 	touch tutorial.html
 
 
-#TESTS = bookbuilderTest.py run_all_tests.py
-#check-TESTS:
-#	(cd @srcdir@; PYTHONPATH=. @PYTHON@ run_all_tests.py)
 
 

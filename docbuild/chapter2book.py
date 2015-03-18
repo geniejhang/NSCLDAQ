@@ -103,32 +103,34 @@ import subprocess
 #############################################################################
 # Set Up the argument parser
 parser = argparse.ArgumentParser()
-parser.add_argument('-s','--source', \
-										help='Path to the xml defining body', \
+parser.add_argument('-s','--source',
+										help='Path to the xml defining body', 
 										required=True)
-parser.add_argument('-b','--bookinfo', \
+parser.add_argument('-b','--bookinfo',
 										help='Path to the xml file contain bookinfo element')
-parser.add_argument('-x','--xml', \
-										help='Save the xml generated for the book', \
+parser.add_argument('-x','--xml',
+										help='Save the xml generated for the book',
 										type=bool,
-										default=False)
-parser.add_argument('-p','--pdf', \
-										help='Generate the pdf', \
+										default=False,
+										nargs='?')
+parser.add_argument('-p','--pdf',
+										help='Generate the pdf',
 										type=bool,
-										default=True)
-parser.add_argument('-o','--outdir', help='Directory of output files', \
+										default=True,
+										nargs='?')
+parser.add_argument('-o','--outdir', help='Directory of output files',
 										default='.')
 
 #############################################################################
 
 class ChapterUpgrader:
-	'''
+	"""
 	Reads in an xml tree from file and upgrades all
 	first level section tags to chapter tags. 
-	'''
+	"""
 	tree = None
 	def __init__(self,path):
-		'''
+		"""
 		@brief Constructor
 
 	  Reads in the tree from a path and then immediately upgrades the sections
@@ -136,19 +138,19 @@ class ChapterUpgrader:
 
 		@param path		the path to the xml content tree 
 
-		'''
+		"""
 		self.tree = etree.parse(path)
 		root = self.tree.getroot()
 		root.tag = 'book'
 		self.sections_to_chapters(root)
 	
 	def sections_to_chapters(self,root):
-		'''
+		"""
 		@brief Upgrades the section tags to chapters
 
 		@param root		the root element (type=etree.Element) 
 
-		'''
+		"""
 		for element in root:
 			if element.tag == 'section':
 				element.tag = 'chapter'
@@ -157,7 +159,7 @@ class ChapterUpgrader:
 		return self.tree
 	
 	def insert_bookinfo(self,path):
-		'''
+		"""
 		@brief Inserts the bookinfo tag
 
 		Deletes the first top-level title tag and replaces it with the bookinfo
@@ -165,7 +167,7 @@ class ChapterUpgrader:
 
 		@param path		path to the xml file containing <bookinfo> tag
 
-		'''
+		"""
 		infoRoot = etree.parse(path).getroot()
 		root = self.tree.getroot()
 		
@@ -210,6 +212,8 @@ newfile.close()
 
 # generate the pdf is desired
 if args.pdf:
+	currentWd = os.getcwd()
+	print currentWd
 	subprocess.call(['docbook2pdf','-o',args.outdir,outputFile])
 
 # clean up generated xml if requested
