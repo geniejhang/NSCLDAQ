@@ -31,13 +31,9 @@ clean-local:
 
 if PDFDOCS
 DOCBOOK2PDF = docbook2pdf
-else
-DOCBOOK2PDF = touch daq.pdf 
-endif
-
-if HTMLDOCS
 DOCBOOK2HTML= docbook2html 
 else
+DOCBOOK2PDF = touch daq.pdf 
 DOCBOOK2HTML= touch daq.html
 endif
 
