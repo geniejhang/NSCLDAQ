@@ -14,9 +14,12 @@ if BUILD_USB
    USBDIR=usb
 endif
 
+if BUILD_DOCS
+	DOCDIR=docbuild docconfig simplesetups
+endif
 
 SUBDIRS =	 base caenfw-common servers base/dataflow  \
-		daq utilities docbuild docconfig simplesetups \
+		daq utilities $(DOCDIR) \
 		$(SBSDIRS) $(EPICSDIRS) $(USBDIR)
 
 
@@ -30,7 +33,7 @@ install-data-local:
 	echo "pkg_mkIndex @prefix@/TclLibs *.so" >makeindex.tcl
 	$(TCLSH_CMD) <makeindex.tcl
 	$(INSTALL_SCRIPT) config.h @prefix@/include
-	$(MANDB) @prefix@/share/man
+	@MANDB@ @prefix@/share/man
 	touch @prefix@/pythonLibs/nscldaq/__init__.py
 	echo "Version: "NSCLDAQ-$(VERSION) built on `hostname` `date` > @prefix@/VERSION
 	$(INSTALL_SCRIPT) daqsetup.bash @prefix@

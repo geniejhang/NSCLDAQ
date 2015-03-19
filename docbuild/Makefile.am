@@ -27,28 +27,12 @@ clean-local:
 	-rm -f daq.xml
 	-rm -f daq.html daq.mans tutorial.pdf tutorial.html
 
-
-
-if PDFDOCS
-DOCBOOK2PDF = docbook2pdf
-DOCBOOK2HTML= docbook2html 
-else
-DOCBOOK2PDF = touch daq.pdf 
-DOCBOOK2HTML= touch daq.html
-endif
-
-if XMLMANS
-DOCBOOK2MAN = xmlto man
-else
-DOCBOOK2MAN = touch
-endif
-
 daq.pdf: daq.xml
-	$(DOCBOOK2PDF) daq.xml
+	@DOCBOOK2PDF@ daq.xml
 
 
 daq.mans: daq.xml				
-	- $(DOCBOOK2MAN) daq.xml
+	- @DOCBOOK2MAN@ daq.xml
 	touch daq.mans
 
 BOOKDIRS = 	@top_srcdir@ \
@@ -114,7 +98,7 @@ BOOKDIRS = 	@top_srcdir@ \
 daq.html: daq.xml
 	- rm -rf html
 	mkdir html
-	- $(DOCBOOK2HTML) -o @builddir@/html daq.xml
+	- @DOCBOOK2HTML@ -o @builddir@/html daq.xml
 	touch daq.html
 
 daq.xml:
@@ -122,12 +106,12 @@ daq.xml:
 
 
 tutorial.pdf: @srcdir@/tutorial.xml
-	$(DOCBOOK2PDF) @srcdir@/tutorial.xml
+	@DOCBOOK2PDF@ @srcdir@/tutorial.xml
 
 tutorial.html: @srcdir@/tutorial.xml
 	- rm -rf tuthtml
 	mkdir @builddir@/tuthtml
-	- $(DOCBOOK2HTML) -o @builddir@/tuthtml @srcdir@/tutorial.xml
+	- @DOCBOOK2HTML@ -o @builddir@/tuthtml @srcdir@/tutorial.xml
 	touch tutorial.html
 
 
