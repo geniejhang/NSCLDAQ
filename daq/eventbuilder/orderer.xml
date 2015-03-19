@@ -150,26 +150,19 @@ proc startEVBSources {} {                    <co id='evbbundle.startsources' />
     </section>
 
 </chapter>
-<!-- /chapter -->
 <!-- manpage 3evb -->
 
-
+<preface>
+    <title>Preface</title>
+    <para>
+        The pages below describe the API layer.
+    </para>
+</preface>
 <!--  Event builder API layer. -->
       <refentry id="evb3_start">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id="evb3_start_title">EVBC::start</refentrytitle>
            <manvolnum>3evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVBC::start</refname>
@@ -286,20 +279,9 @@ EVBC::start -glombuild on -glomdt 300 -destring built -teering fragments
         </refsect1>
       </refentry>
       <refentry id="evb3_stop">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id="evb3_stop_title">EVBC::stop</refentrytitle>
            <manvolnum>3evb</manvolnum>
-            <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVBC::stop</refname>
@@ -325,20 +307,9 @@ EVBC::stop
 
       </refentry>
       <refentry id="evb3_reset">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id="evb3_resetcmd">EVBC::reset</refentrytitle>
            <manvolnum>3evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::reset</refname>
@@ -368,20 +339,9 @@ EVB::reset
         </refsect1>
       </refentry>
       <refentry id="evb3_flush">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id="evb3_flush_title">EVBC::flush</refentrytitle>
            <manvolnum>evb3</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVBC::flush</refname>
@@ -411,20 +371,9 @@ EBC::flush
       </refentry>
 
       <refentry id="evb3_startringsource">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb3_startringsource_title'>EVBC::startRingSource</refentrytitle>
            <manvolnum>3evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVBC::startRingSource</refname>
@@ -525,20 +474,9 @@ EVBC::startRingSource <replaceable>source-uri extractor-lib source-id info</repl
 
       </refentry>
       <refentry id="evb3_starts800source">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb3_starts800source_title'>EVBC::startS800Source</refentrytitle>
            <manvolnum>3evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVBC::startS800Source</refname>
@@ -568,21 +506,21 @@ EVBC::startS800Source <replaceable>ring-uri source-id ?info?</replaceable>
       </refentry>
 
 <!-- Event builder EZBuilder layer. -->
+<preface>
+    <title>Preface</title>
+    <para>
+        The pages below provide reference material for the EZBuilder
+        layer of software.  Conceptually, this layer provides a single
+        initialization proc (called from <command>OnStart</command>),
+        a proc to call from <command>OnBegin</command> and another proc to call
+        from <command>OnEnd</command>.
+    </para>
+</preface>
+
       <refentry id="evb3_initialize">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb3_initiailze_title'>EVBC::initialize</refentrytitle>
            <manvolnum>3evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVBC::initialize</refname>
@@ -686,20 +624,9 @@ EVBC::initialize -glombuild yes -glomdt 200 -destrign built -restart yes -gui on
         </refsect1>
       </refentry>
       <refentry id="evb3_onbegin">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb3_onbegin_title'>EVBC::onBegin</refentrytitle>
            <manvolnum>3evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVBC::onBegin</refname>
@@ -734,20 +661,9 @@ EVBC::onBegin
 
       </refentry>
       <refentry id="evb3_onend">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb3_onend_title'>EVBC::onEnd</refentrytitle>
            <manvolnum>3evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVBC::onEnd</refname>
@@ -771,6 +687,14 @@ EVBC::onBegin
 
       </refentry>
 
+ <preface>
+    <title>Event builder callback bundle</title>
+    <para>
+        The manpage below describes the event builder callback bundle.
+        This interface provides the simplest and recommended way to
+        incorporate the event builder into your experiment.
+    </para>
+</preface>   
       <refentry id="evb3_callbackbundle">
         <refentryinfo>
           <author>
@@ -849,20 +773,9 @@ EVBC::configure <replaceable>option value ...</replaceable>
 <!-- /manpage     -->
 <!-- manpage 1daq -->
       <refentry id="daq1-evbclientfw-run">
-        <refentryinfo>
-            <author>
-                    <personname>
-                            <firstname>Ron</firstname>
-                            <surname>Fox</surname>
-                    </personname>
-            </author>
-            <productname>NSCLDAQ</productname>
-            <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id="daq1-evbclientfw-run-title">Event builder client framework</refentrytitle>
            <manvolnum>1daq</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>Event builder client framework</refname>
@@ -959,20 +872,9 @@ EVBC::configure <replaceable>option value ...</replaceable>
 <!-- /manpage -->
 <!-- manpage 1evb -->
       <refentry id='evb1_handleFragment'>
-        <refentryinfo>
-            <author>
-                    <personname>
-                            <firstname>Ron</firstname>
-                            <surname>Fox</surname>
-                    </personname>
-            </author>
-            <productname>NSCLDAQ</productname>
-            <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb1_handleFragment_title'>EVB::handleFragment</refentrytitle>
            <manvolnum>1evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::handleFragment</refname>
@@ -1010,20 +912,9 @@ EVB::handleFragments <replaceable>file-descriptor</replaceable>
 
       </refentry>
       <refentry id="evb1_inputStats">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb1_inputStats_title'>EVB::inputStats</refentrytitle>
            <manvolnum>1evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::inputStats</refname>
@@ -1131,20 +1022,9 @@ EVB::inputStats clear
 
       </refentry>
       <refentry id="evb1_outputstats">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb1_outputstats_title'>EVB::outputStats</refentrytitle>
            <manvolnum>1tcl</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::outputStats</refname>
@@ -1184,20 +1064,9 @@ EBB::outputStatistics clear
 
       </refentry>
       <refentry id="evb1_dlatestats">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
             <refentrytitle id='evb1_dlatestats_title'>EVB::dlatestats</refentrytitle>
            <manvolnum>1evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname >EVB::dlatestats</refname>
@@ -1258,20 +1127,9 @@ EVB::dlatestats
 
       </refentry>
       <refentry id="evb1_ondatalate">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb1_ondatalate_title'>EVB::onDataLate</refentrytitle>
            <manvolnum>1evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::onDataLate</refname>
@@ -1318,20 +1176,9 @@ EVB::onDataLate
       </refentry>
 
       <refentry id="evb1_barriertrace">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb1_barriertrace_title'>EVB::barriertrace</refentrytitle>
            <manvolnum>1evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::barriertrace</refname>
@@ -1384,20 +1231,9 @@ EVB::barriertrace incomplete ?<replaceable>script</replaceable>?
 
       </refentry>
       <refentry id="evb1_source">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb1_source_title'>EVB::source</refentrytitle>
            <manvolnum>1evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::source</refname>
@@ -1432,20 +1268,9 @@ EVB::source ?<replaceable>socket id1...</replaceable>?
 
       </refentry>
       <refentry id="evb1_deadsource">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb1_deadsource1_title'>EVB::deadsource</refentrytitle>
            <manvolnum>1evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::deadsource</refname>
@@ -1470,20 +1295,9 @@ EVB::deadsource <replaceable>id</replaceable>
         </refsect1>
       </refentry>
       <refentry id="evb1_revivesocket">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb1_revivesocket_title'>EVB::reviveSocket</refentrytitle>
            <manvolnum>1evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::reviveSocket</refname>
@@ -1510,20 +1324,9 @@ EVB::reviveSocket <replaceable>sock-name</replaceable>
       </refentry>
 
       <refentry id="evb1_flush">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb1_flush_title'>EVB::flush</refentrytitle>
            <manvolnum>1evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::flush</refname>
@@ -1551,20 +1354,9 @@ EVB::flush
       </refentry>
 
       <refentry id="evb1_reset">
-        <refentryinfo>
-          <author>
-                  <personname>
-                          <firstname>Ron</firstname>
-                          <surname>Fox</surname>
-                  </personname>
-          </author>
-          <productname>NSCLDAQ</productname>
-          <productnumber></productnumber>
-        </refentryinfo>
         <refmeta>
            <refentrytitle id='evb1_reset_title'>EVB::reset</refentrytitle>
            <manvolnum>1evb</manvolnum>
-           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>EVB::reset</refname>

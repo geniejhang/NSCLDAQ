@@ -159,6 +159,7 @@ void CFilterMainTest::testOneShot()
 
 void CFilterMainTest::testMultiProducersOnRingIsFatal()
 {
+  std::cout << "\ntestMultiProducersOnRingIsFatal" << std::endl;
    CRingBuffer *ring = 0;
    std::string rname = "test";
    if (CRingBuffer::isRing(rname)) {

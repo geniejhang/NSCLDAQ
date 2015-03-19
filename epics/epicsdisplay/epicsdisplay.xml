@@ -43,16 +43,7 @@
 <!-- manpage 1tcl -->
 
     <refentry id="manpage.epicsdisplay">
-    <refentryinfo>
-      <author>
-              <personname>
-                      <firstname>Ron</firstname>
-                      <surname>Fox</surname>
-              </personname>
-      </author>
-      <productname>NSCLDAQ</productname>
-      <productnumber></productnumber>
-    </refentryinfo>
+    <beginpage />
     <refmeta>
         <refentrytitle>epicsdisplay
         <productname>NSCLRingDAQ</productname>
@@ -65,7 +56,6 @@
         </author>
         </refentrytitle>
         <manvolnum>1tcl</manvolnum>
-        <refmiscinfo class='empty'></refmiscinfo>
         <refmiscinfo />
     </refmeta>
     <refnamediv>

@@ -158,19 +158,7 @@ void CFilterMain::operator()()
 {
   try {
     m_mediator->initialize();
-
-    // allow the finalize operations to be called if an exception is 
-    // thrown from the main loop. Consider the arrival of an 
-    // ABNORMAL_ENDRUN
-    try {
-      m_mediator->mainLoop();
-    } catch (CException& exc) {
-      std::cerr << exc.WasDoing() << " : " << exc.ReasonText() << std::endl;
-    } catch (...) {
-      std::cerr << "Caught unknown exception thrown from main loop. ";
-      std::cerr << "Shutting down filter." << std::endl;
-    }
-
+    m_mediator->mainLoop();
     m_mediator->finalize();
   } catch (CException& exc) {
     std::cerr << exc.WasDoing() << " : " << exc.ReasonText() << std::endl;

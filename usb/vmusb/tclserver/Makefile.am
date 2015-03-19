@@ -47,9 +47,7 @@ libVMUSBControlServer_la_SOURCES	= \
 					CMDGG16ControlCreator.cpp \
 					CTclModuleCreator.cpp     \
 					CTclControlModule.cpp	  \
-					CMarkerObject.cpp CMarkerCreator.cpp \
-					CMxDCReset.cpp \
-					CMxDCResetCreator.cpp
+					CMarkerObject.cpp CMarkerCreator.cpp
 
 noinst_HEADERS			=	CGDG.h			\
 					CV812.h			\
@@ -84,9 +82,7 @@ noinst_HEADERS			=	CGDG.h			\
 					CMDGG16Control.h       \
 					CMDGG16ControlCreator.h \
 					CTclControlModule.h	 \
-					CMarkerObject.h CMarkerCreator.h \
-					CMxDCReset.h \
-					CMxDCResetCreator.h
+					CMarkerObject.h CMarkerCreator.h
 
 
 

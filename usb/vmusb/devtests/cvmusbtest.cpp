@@ -3,6 +3,7 @@
 #include <cppunit/Asserter.h>
 #include "Asserts.h"
 
+#include <Globals.cpp>
 #include <CReadoutModule.h>
 #include <CMockVMUSB.h>
 #include <string>

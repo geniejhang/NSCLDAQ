@@ -1,8 +1,5 @@
 PKGFILES=@srcdir@/marker.tcl @srcdir@/pkgIndex.tcl @srcdir@/series.tcl \
 	@srcdir@/xyplot.tcl @srcdir@/series.test
-
-DOCS=plotcontainer.xml
-
 DESTDIR = @prefix@/TclLibs/plotcontainer
 
 install-exec-local:
@@ -12,4 +9,4 @@ install-exec-local:
 check-TESTS:
 	(cd @srcdir@; tclsh series.test)
 
-EXTRA_DIST=$(PKGFILES) $(DOCS)
+EXTRA_DIST=$(PKGFILES)

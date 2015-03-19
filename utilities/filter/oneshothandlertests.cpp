@@ -86,6 +86,7 @@ void COneShotHandlerTest::tearDown()
 
 void COneShotHandlerTest::testConstructor()
 {
+  std::cout << "BEGIN COneShotHandlerTest " << std::endl;
   uint32_t nsources= 1;
   COneShotHandler handler(nsources);
 
@@ -110,6 +111,7 @@ void COneShotHandlerTest::testConstructor()
 
 void COneShotHandlerTest::testWaitForBegin()
 {
+  std::cout << "BEGIN COneShotHandlerTest:: wait for begin " << std::endl;
   uint32_t nsources= 2;
   COneShotHandler handler(nsources);
   
@@ -125,6 +127,7 @@ void COneShotHandlerTest::testWaitForBegin()
   // we should not longer be waiting
   CPPUNIT_ASSERT_EQUAL(false, handler.waitingForBegin());
   
+  std::cout << "DONE COneShotHandlerTest:: wait for begin " << std::endl;
 
 }
 
@@ -232,6 +235,7 @@ void COneShotHandlerTest::testUpdateNull()
 
 void COneShotHandlerTest::testWaitForBegin_1()
 {
+  std::cout << "BEGIN COneShotHandlerTest:: wait for begin " << std::endl;
   uint32_t nsources= 2;
   COneShotHandler handler(nsources);
   
@@ -253,5 +257,6 @@ void COneShotHandlerTest::testWaitForBegin_1()
   // we should not longer be waiting
   CPPUNIT_ASSERT_EQUAL(false, handler.waitingForBegin());
   
+  std::cout << "DONE COneShotHandlerTest:: wait for begin " << std::endl;
 
 }

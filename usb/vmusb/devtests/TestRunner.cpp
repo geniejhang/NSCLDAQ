@@ -33,11 +33,8 @@ class CConfiguration;
 class Globals
 {
 public:
-  static int pConfig;
-  static int scalerPeriod;
+  static CConfiguration* pConfig;
 };
 
-int Globals::pConfig(0);
-int Globals::scalerPeriod(0);
-
+// CConfiguration* Globals::pConfig(0);
 void* gpTCLApplication(0);
