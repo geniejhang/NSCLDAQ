@@ -46,7 +46,7 @@ then
   then
     AC_MSG_FAILURE([xmlto is required to build documentation but was not found])
   else
-    AC_SUBST(DOCBOOK2MAN,[xmlto])
+    AC_SUBST(DOCBOOK2MAN,["xmlto man"])
   fi
 
   AC_CHECK_PROG(HAVE_MANDB, mandb, [true], [false])
@@ -63,8 +63,6 @@ fi
 
 AC_CHECK_LIB([X11], [XSetWindowBackground])
 AC_CHECK_LIB([Xt], [XtManage])
-# AC_CHECK_LIB([cppunit], [_ZN7CppUnit12XmlOutputterD1Ev], [CPPUNIT_LDFLAGS=-lcppunit])
-
 
 AM_PATH_CPPUNIT
 

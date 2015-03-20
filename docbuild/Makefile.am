@@ -5,6 +5,11 @@ EXTRA_DIST = alltsts.tcl docbuilder.tcl \
 
 DIST_SUBDIRS = images
 
+TOPDF = @DOCBOOK2PDF@
+TOMAN = @DOCBOOK2MAN@
+TOHTML = @DOCBOOK2HTML@
+UPDATEMAN = @MANDB@
+
 install-exec-local: daq.html daq.mans tutorial.pdf tutorial.html
 	$(mkinstalldirs) @prefix@/share
 	$(mkinstalldirs) @prefix@/share/man
@@ -13,6 +18,7 @@ install-exec-local: daq.html daq.mans tutorial.pdf tutorial.html
 	$(mkinstalldirs) @prefix@/share/pdfs
 	for i in 1 2 3 4 5 6 7 8; do $(mkinstalldirs) @prefix@/share/man/man$$i; done
 	- for i in 1 2 3 4 5 6 7 8; do for f in *.$$i*; do  $(INSTALL_DATA) $$f @prefix@/share/man/man$$i; done; done
+	$(UPDATEMAN) @prefix@/share/man
 	- $(INSTALL_DATA) html/* @prefix@/share/html
 	- $(mkinstalldirs) @prefix@/share/images @prefix@/share/images/callouts
 	- $(INSTALL_DATA) @srcdir@/images/*.gif @prefix@/share/images;
@@ -28,12 +34,13 @@ clean-local:
 	-rm -f daq.html daq.mans tutorial.pdf tutorial.html
 
 daq.pdf: daq.xml
-	@DOCBOOK2PDF@ daq.xml
+	$(TOPDF) daq.xml
 
 
 daq.mans: daq.xml				
-	- @DOCBOOK2MAN@ daq.xml
-	touch daq.mans
+	$(TOMAN) -o man daq.xml
+
+#	touch daq.mans
 
 BOOKDIRS = 	@top_srcdir@ \
             @top_srcdir@/base/dataflow\
@@ -69,13 +76,10 @@ BOOKDIRS = 	@top_srcdir@ \
 						@top_srcdir@/sbs/tclpackage \
 						@top_srcdir@/usb/loaders \
 						@top_srcdir@/usb/caenfwloader \
-						@top_srcdir@/utilities/boot \
 						@top_srcdir@/utilities/filter \
 						@top_srcdir@/utilities/sequencer \
 						@top_srcdir@/utilities/ringselector \
-						@top_srcdir@/utilities/cpanel \
 						@top_srcdir@/utilities/compatibility \
-						@top_srcdir@/utilities/statemanager \
 						@top_srcdir@/utilities/tkbufdump \
 						@top_srcdir@/epics/controlpush \
 						@top_srcdir@/epics/epicsdisplay \
@@ -89,8 +93,12 @@ BOOKDIRS = 	@top_srcdir@ \
 						@top_srcdir@/base/os \
 						@top_srcdir@/base/tclwidgets  \
 						@top_srcdir@/libtcl/tclplus  \
-						@top_srcdir@/libtcl/exception \
-						@top_srcdir@/utilities/experimentConfiguration
+						@top_srcdir@/libtcl/exception 
+
+#						@top_srcdir@/utilities/boot 
+#						@top_srcdir@/utilities/statemanager 
+#						@top_srcdir@/utilities/experimentConfiguration
+#						@top_srcdir@/utilities/cpanel 
 
 
 
@@ -98,7 +106,7 @@ BOOKDIRS = 	@top_srcdir@ \
 daq.html: daq.xml
 	- rm -rf html
 	mkdir html
-	- @DOCBOOK2HTML@ -o @builddir@/html daq.xml
+	- $(TOHTML) -o @builddir@/html daq.xml
 	touch daq.html
 
 daq.xml:
@@ -106,12 +114,12 @@ daq.xml:
 
 
 tutorial.pdf: @srcdir@/tutorial.xml
-	@DOCBOOK2PDF@ @srcdir@/tutorial.xml
+	$(TOPDF) @srcdir@/tutorial.xml
 
 tutorial.html: @srcdir@/tutorial.xml
 	- rm -rf tuthtml
 	mkdir @builddir@/tuthtml
-	- @DOCBOOK2HTML@ -o @builddir@/tuthtml @srcdir@/tutorial.xml
+	- $(TOHTML) -o @builddir@/tuthtml @srcdir@/tutorial.xml
 	touch tutorial.html
 
 

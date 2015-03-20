@@ -18,6 +18,7 @@
                     have to modify to produce a real application.
                     </para>
                 </listitem>
+            <!--
             <listitem>
                 <para>
                     How to hook the readout program into the NSCLDAQ-11.0 state
@@ -26,6 +27,7 @@
                     for more information about the state manager.
                 </para>
             </listitem>
+            -->
         </itemizedlist>
     </para>
     <para>
@@ -1140,6 +1142,7 @@ make
             the <option>--help</option> option.
             </para>
         </section>
+        <!--
     <section>
         <title>Using SBSReadout with the state manager</title>
         <para>
@@ -1163,10 +1166,10 @@ make
             fails when the run is active.
         </para>
         <para>
-            The key to using this package is the <option>--init-script</option>
+            The key to using this package is the <option>init-script</option>
             command line option.  When you describe the Readout program to the
             experiment configuration editor be sure to include an
-            <option>--init-script</option> command line parameter that runs
+            <option>init-script</option> command line parameter that runs
             an initialization script that includes the <literal>ReadoutStateHook</literal>
             package.
         </para>
@@ -1187,6 +1190,7 @@ package require ReadoutStateHook
             </programlisting>
         </example>
     </section>
+    -->
 </chapter>
     
     
