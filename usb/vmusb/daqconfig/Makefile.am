@@ -22,9 +22,51 @@ libVMUSBConfig_la_SOURCES	= 	CADCCommand.cpp		\
 				CAddTclDriver.cpp	\
 				CHiRACommand.cpp	\
 				CVMUSBCommand.cpp	\
-				CMTDCCommand.cpp
+  			CMTDCCommand.cpp \
+	      CReadoutModule.cpp	\
+				C3820.cpp		\
+				C785.cpp		\
+				CCAENChain.cpp		\
+				CStack.cpp		\
+				C830.cpp		\
+				CMarker.cpp		\
+				C3804.cpp		\
+				CNADC2530.cpp		\
+				CMesytecBase.cpp	\
+				CMADC32.cpp		\
+				CMTDC32.cpp		\
+				CMADCScaler.cpp		\
+				CV1x90.cpp		\
+				CV977.cpp		\
+				CXLM.cpp		\
+				CMASE.cpp		\
+				CMADCChain.cpp	\
+				CHINP.cpp \
+				CPSD.cpp	\
+				CV1729.cpp	\
+				CV1495sc.cpp	\
+				CTclModule.cpp \
+				CHiRA.cpp	\
+				CVMUSBControl.cpp \
+				CDelay.cpp \
+				CCBD8210CamacBranchDriver.cpp \
+				@top_srcdir@/usb/common/devices/CCrateController.cpp \
+				CCBD8210CrateController.cpp \
+				CCBD8210ReadoutList.cpp \
+				CCBDCamacBranch.cpp \
+				@top_srcdir@/usb/common/devices/CBCNAF.cpp \
+				@top_srcdir@/usb/common/devices/CCNAF.cpp \
+				@top_srcdir@/usb/common/devices/CNAF.cpp \
+				CULMTrigger.cpp \
+				CLeCroy4300B.cpp \
+				CLeCroy4434.cpp \
+				CXLMFERA.cpp \
+				CXLMTimestamp.cpp \
+				CLeCroy2551.cpp \
+				@top_srcdir@/usb/common/devices/CCamacBranchException.cpp \
+				CMQDC32StackBuilder.cpp \
+				CMQDC32RdoHdwr.cpp
 
-libVMUSBConfig_la_CXXFLAGS=@THREADCXX_FLAGS@
 
 
 noinst_HEADERS		=	CADCCommand.h  		\
@@ -50,21 +92,67 @@ noinst_HEADERS		=	CADCCommand.h  		\
 				CAddTclDriver.h		\
 				CHiRACommand.h		\
 				CVMUSBCommand.h		\
-				CMTDCCommand.h
+				CMTDCCommand.h \
+				CReadoutModule.h	\
+				CReadoutHardware.h	\
+				C3820.h			\
+				C785.h			\
+				CCAENChain.h		\
+				CStack.h		\
+				C830.h			\
+				CMarker.h		\
+				C3804.h			\
+				CNADC2530.h		\
+				CMesytecBase.h		\
+				CMADC32.h		\
+				CMTDC32.h		\
+				CMADCScaler.h		\
+				CV1x90.h		\
+				CV977.h			\
+				CXLM.h			\
+				CMASE.h			\
+				CMADCChain.h		\
+				MADC32Registers.h	\
+				CHINP.h \
+				CPSD.h			\
+				CV1729.h		\
+				CV1495sc.h		\
+				CCAENV1x90Opcodes.h	\
+				CCAENV1x90Registers.h	\
+				CTclModule.h		\
+				CHiRA.h			\
+				CVMUSBControl.h \
+				CDelay.h \
+				CCBD8210CamacBranchDriver.h \
+				@top_srcdir@/usb/common/devices/CCrateController.h \
+				CCBD8210CrateController.h \
+				CCBD8210ReadoutList.h \
+				CCBDCamacBranch.h \
+				@top_srcdir@/usb/common/devices/CBCNAF.h \
+				@top_srcdir@/usb/common/devices/CCNAF.h \
+				@top_srcdir@/usb/common/devices/CNAF.h \
+				CXLMFERA.h \
+				CXLMTimestamp.h \
+				@top_srcdir@/usb/common/devices/CCamacBranchException.h  \
+				CMQDC32StackBuilder.h \
+				CMQDC32RdoHdwr.h \
+				MQDC32Registers.h
 
 
+libVMUSBConfig_la_CXXFLAGS=@THREADCXX_FLAGS@
 
-libVMUSBConfig_la_CPPFLAGS		= 	-I@top_srcdir@/usb/vmusb/devices	\
-		    -I@top_srcdir@/usb/common/configurableobject \
+libVMUSBConfig_la_CPPFLAGS = \
+				-I@top_srcdir@/usb/common/configurableobject \
 				-I@top_srcdir@/usb/vmusb		\
 				-I@top_srcdir@/usb/vmusb/vmusb		\
 				-I@top_srcdir@/usb/common/devices		\
 				@LIBTCLPLUS_CFLAGS@		\
 				-I@top_srcdir@/base/headers		\
+				-I@top_srcdir@/base/os	\
 				$(TCL_FLAGS) 
 
 
-libVMUSBConfig_la_LIBADD	= @top_builddir@/usb/vmusb/devices/libVMUSBDevices.la \
+libVMUSBConfig_la_LIBADD	= \
 				@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
 				@LIBTCLPLUS_LDFLAGS@	\
 				$(TCL_LDFLAGS) @THREADLD_FLAGS@
@@ -73,3 +161,5 @@ install-data-local:
 	$(mkinstalldirs) @prefix@/vmusbdriver
 	$(mkinstalldirs) @prefix@/vmusbdriver/includes
 	$(INSTALL_DATA)  @srcdir@/*.h @prefix@/vmusbdriver/includes
+
+EXTRA_DIST = CCamacCompat.hpp

@@ -463,7 +463,7 @@ AC_CONFIG_FILES([Makefile
 		 usb/Makefile
 		 usb/loaders/Makefile
 		 usb/vmusb/Makefile
-		 usb/vmusb/vmusb/Makefile usb/vmusb/devices/Makefile 
+		 usb/vmusb/vmusb/Makefile
 		 usb/vmusb/router/Makefile
 		 usb/vmusb/rdothread/Makefile usb/vmusb/tclserver/Makefile 
 		 usb/vmusb/daqconfig/Makefile  usb/vmusb/commands/Makefile
