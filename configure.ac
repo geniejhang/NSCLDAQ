@@ -476,7 +476,7 @@ AC_CONFIG_FILES([Makefile
 		 usb/vmusb/vmusbPackage/Makefile
 		 usb/vmusb/tclservertests/Makefile
 		 usb/ccusb/Makefile
-		 usb/ccusb/ccusb/Makefile usb/ccusb/devices/Makefile 
+		 usb/ccusb/ccusb/Makefile 
 		 usb/ccusb/router/Makefile
 		 usb/ccusb/rdothread/Makefile usb/ccusb/tclserver/Makefile 
 		 usb/ccusb/tclserver/driver_Makefile
