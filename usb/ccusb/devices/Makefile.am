@@ -1,4 +1,5 @@
 lib_LTLIBRARIES 		= libCCUSBDevices.la #libCCUSBSwigDevices.la
+
 libCCUSBDevices_la_SOURCES	= 	CConfigurableObject.cpp	\
 					CReadoutModule.cpp	\
 					CReadoutHardware.cpp	\

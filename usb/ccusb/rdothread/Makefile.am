@@ -10,7 +10,6 @@ noinst_HEADERS		= CAcquisitionThread.h		\
 
 libCCUSBRdoThread_la_CPPFLAGS		=  -I@top_srcdir@/usb/ccusb \
 			-I@top_srcdir@/usb/ccusb/router				\
-			-I@top_srcdir@/usb/ccusb/devices			\
 			-I@top_srcdir@/usb/ccusb/ccusb				\
 			-I@top_srcdir@/usb/ccusb/daqconfig			\
 			@TCL_CPPFLAGS@						\
@@ -20,8 +19,9 @@ libCCUSBRdoThread_la_CPPFLAGS		=  -I@top_srcdir@/usb/ccusb \
 			-I@top_srcdir@/base/headers @THREADCXX_FLAGS@
 
 
-libCCUSBRdoThread_la_LIBADD	= @top_builddir@/usb/ccusb/devices/libCCUSBDevices.la	\
-			  @top_builddir@/usb/ccusb/ccusb/libCCUSB.la		\
+libCCUSBRdoThread_la_LIBADD	=  \
+			@top_builddir@/usb/ccusb/daqconfig/libCCUSBConfig.la	\
+			@top_builddir@/usb/ccusb/ccusb/libCCUSB.la		\
 			@top_builddir@/base/thread/libdaqthreads.la		\
 			@top_builddir@/base/os/libdaqshm.la			\
 			@LIBTCLPLUS_LDFLAGS@ @THREADLD_FLAGS@
