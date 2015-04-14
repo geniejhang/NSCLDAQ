@@ -5,7 +5,7 @@ COMPILATION_FLAGS=@THREADCXX_FLAGS@ -I@top_srcdir@/usb/vmusb/vmusb		\
 					-I@top_srcdir@/usb/common/configurableobject \
 					-I@top_srcdir@/usb/common/slowcontrols \
 					-I@top_srcdir@/daq/format  \
-					-I@top_srcdir@/usb/vmusb/devices	\
+					-I@top_srcdir@/usb/vmusb/daqconfig	\
 					-I@top_srcdir@/usb/vmusb/rdothread	\
 					-I@top_srcdir@/usb/vmusb/router	\
 					-I@top_srcdir@/usb/vmusb	\
@@ -90,9 +90,10 @@ noinst_HEADERS			=	CGDG.h			\
 
 
 
-libVMUSBControlServer_la_LIBADD	= 	@top_builddir@/usb/vmusb/vmusb/libVMUSB.la \
+libVMUSBControlServer_la_LIBADD	= \
+ 					@top_builddir@/usb/vmusb/vmusb/libVMUSB.la \
 					@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
-					@top_builddir@/usb/vmusb/devices/libVMUSBDevices.la \
+					@top_builddir@/usb/vmusb/daqconfig/libVMUSBConfig.la \
 					@top_builddir@/usb/vmusb/rdothread/libVMUSBRdoThread.la \
 					@top_builddir@/usb/vmusb/router/libVMUSBRouter.la	\
 					@LIBTCLPLUS_LDFLAGS@	\

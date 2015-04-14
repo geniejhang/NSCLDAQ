@@ -2,9 +2,11 @@ lib_LTLIBRARIES		= libVMUSBRdoThread.la
 libVMUSBRdoThread_la_SOURCES	= CAcquisitionThread.cpp 	\
 			CControlQueues.cpp
 
-libVMUSBRdoThread_la_CPPFLAGS = @THREADCXX_FLAGS@ -I@top_srcdir@/usb/vmusb/router		\
+libVMUSBRdoThread_la_CPPFLAGS = \
+		  @THREADCXX_FLAGS@ \
+  		-I@top_srcdir@/usb/vmusb/router		\
 			-I@top_srcdir@/usb/common/slowcontrols	\
-			-I@top_srcdir@/usb/vmusb/devices	\
+			-I@top_srcdir@/usb/vmusb/daqconfig	\
 			-I@top_srcdir@/usb/vmusb/vmusb		\
 			-I@top_srcdir@/usb/vmusb/daqconfig	\
 			-I@top_srcdir@/usb/vmusb/tclserver @TCL_FLAGS@ \
@@ -22,8 +24,9 @@ noinst_HEADERS		= CAcquisitionThread.h		\
 
 
 
-libVMUSBRdoThread_la_LIBADD	= @top_builddir@/usb/vmusb/devices/libVMUSBDevices.la	\
-			  @top_builddir@/usb/vmusb/vmusb/libVMUSB.la		\
+libVMUSBRdoThread_la_LIBADD	= \
+			@top_builddir@/usb/vmusb/daqconfig/libVMUSBConfig.la	\
+		  @top_builddir@/usb/vmusb/vmusb/libVMUSB.la		\
 			@LIBTCLPLUS_LDFLAGS@					\
 			@top_builddir@/base/thread/libdaqthreads.la \
 			@top_builddir@/base/os/libdaqshm.la	\

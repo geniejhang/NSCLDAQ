@@ -44,7 +44,7 @@ noinst_HEADERS			=	CSetCommand.h		\
 libCCUSBControlServer_la_CPPFLAGS	= -I@top_srcdir@/usb/ccusb		\
 					-I@top_srcdir@/daq/format		\
 					-I@top_srcdir@/usb/ccusb/ccusb		\
-					-I@top_srcdir@/usb/ccusb/devices	\
+					-I@top_srcdir@/usb/ccusb/daqconfig	\
 					-I@top_srcdir@/usb/ccusb/rdothread	\
 					-I@top_srcdir@/usb/ccusb/router	\
 					-I@top_srcdir@/usb/common/slowcontrols	\
@@ -55,7 +55,7 @@ libCCUSBControlServer_la_CPPFLAGS	= -I@top_srcdir@/usb/ccusb		\
 					@TCL_FLAGS@ @THREADCXX_FLAGS@
 
 libCCUSBControlServer_la_LIBADD	= 	@top_builddir@/usb/ccusb/ccusb/libCCUSB.la          \
-					@top_builddir@/usb/ccusb/devices/libCCUSBDevices.la \
+					@top_builddir@/usb/ccusb/daqconfig/libCCUSBConfig.la \
 					@top_builddir@/usb/ccusb/rdothread/libCCUSBRdoThread.la \
 					@top_builddir@/usb/ccusb/router/libCCUSBRouter.la	\
 					@top_builddir@/base/tcpip/libTcp.la			\
