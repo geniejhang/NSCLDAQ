@@ -28,7 +28,7 @@ exec tclsh ${0} ${@}
 #  Global variables (configuration parameters):
 
 set ConfigurationRoot "~see/saved_settings"; # Top of configuration directory tree.
-set WorkingDirectory  "~/config";	# Where the config files to save are.
+set WorkingDirectory  $env(CONFIGDIR); 
 
 #  The files to save.
 

@@ -23,12 +23,12 @@
 # 			"" "" "" "" "" "" "" "" } ;# Make these meaningful!!
 
 
-adc create caenv785 [expr 11 << 24]
-adc config caenv785 -geo 11 -suppressrange on
+adc create caenv785 0x06000000
+adc config caenv785 -geo 11 -supressrange off
 adc config caenv785 -thresholds [list 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
 				    0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 
-set adcParameters(caenv785) [list see.ppac.u see.ppac.d \
+set adcChannels(caenv785) [list see.ppac.u see.ppac.d \
 				 see.ppac.l see.ppac.r see.ppac.a]
 
 
@@ -55,17 +55,17 @@ set adcParameters(caenv785) [list see.ppac.u see.ppac.d \
 # 			"" "" "" "" "" "" "" ""  } ;# Set meaningful paramnames
 
 
-adc create caenv792 [expr 7 << 24]
-adc config caenv792 -geo 12 -iped 128
+adc create caenv792 0x7000000
+adc config caenv792 -geo 12 -iped 128 -supressrange off
 adc config caenv792 -thresholds [list 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
 				     0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-set adcParameters(caenv792) [list see.sci.u "" see.sci.d "" see.sci.l "" see.sci.r]
+set adcChannels(caenv792) [list see.sci.u "unused.1" see.sci.d "unused.2" see.sci.l "unused.3" see.sci.r]
 
 
 ## Define the event readout...first the 785 thne the 792:
 
 stack create event
-stack config event -triger nim1 -delay 10 -modules [list caenv785 caenv792]
+stack config event -trigger nim1 -delay 15 -modules [list caenv785 caenv792]
 
 
 
@@ -90,7 +90,7 @@ stack config event -triger nim1 -delay 10 -modules [list caenv785 caenv792]
 
 
 v830 create caenv830 0x80000000
-v830 config caenv830 -channels 0xc000f8f0 -header off 0 -trigger vme 
+v830 config caenv830 -channels 0xc000f8f0 -header off  -trigger vme 
 v830 config caenv830 -autoreset on
 
 stack create scaler
@@ -111,16 +111,18 @@ stack config scaler -trigger scaler -period 2 -delay 1 -modules [list caenv830]
 
 
 if {[info var SpecTclHome] == ""} {
-
-
-    puts "--------------- Initializing CFD  ---------"
+    set configdir [file dirname [info script]]
+    set controls  [file normalize [file join $configdir .. controls]]
+    set cfddir    [file join $controls cfd]
+    set shaperdir [file join $controls shaper]
+    puts "--------------- Initializing CFD  ($configdir) ---------"
 
    
     catch "exec $cfddir/loadcfd.tcl $configdir/seecfd.cfd      \
 	    $configdir/seecfd_default.cfd_settings " msg
     
     puts $msg
-
+    
     puts "----------------- Initializing shaper: -----"
 
     catch "exec $shaperdir/loadshaper.tcl $configdir/shaper.cfg   \

@@ -667,13 +667,13 @@ proc shaper_ui {root args} {
 
 
 #
-#  Exit with confirmation prompt:
+#  Exitwith confirmation prompt:
 #
 proc Exit {}  {
    set confirm [tk_dialog  .confirm "Exit Confirmation" \
 				   "Are you sure you want to exit"  \
 				   questhead 1 Yes No ]
-   if {$confirm == 0} exit
+    if {$confirm == 0} {destroy .}
    
 }
 #
@@ -998,7 +998,7 @@ proc CreateModule {name controller node} {
       set Config($name.pole0.$i)         $pole0($i)
    }
    
-   bind .$name <Destroy> exit
+    bind .$name <Destroy> [list destroy .]
    
    # Configure the GUI.
    ConfigureGui $name

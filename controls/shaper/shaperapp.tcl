@@ -47,7 +47,8 @@ foreach file $argv {
     toplevel .$name
     shaper_ui .$name
     
-    CreateModule $name $controller $nodeid
+#    CreateModule $name $controller $nodeid
+    CreateModule $name $vme0 $nodeid
 
 }
 

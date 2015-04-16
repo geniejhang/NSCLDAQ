@@ -296,7 +296,7 @@ namespace eval n568b {
 	set error [lindex $reply 0]
 	if {$error != 0} {
 	    puts "Error in reply"
-	    error "CAENnet reply message error $error"  n568b::Id" $error
+	    error "CAENnet reply message error $error"  n568b::Id  $error
 	}
 	puts "Building reply"
 	for {set i 1} {$i < [llength $reply] } {incr i} {

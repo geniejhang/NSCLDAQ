@@ -60,9 +60,12 @@ puts "$argv0 $argv"
 set config   [lindex $argv 0]
 set settings [lindex $argv 1]
 
-
+puts "config: $config"
+puts "settings: $settings"
 source $config
 source $settings
+
+
 
 #
 #   Create the module:

@@ -4,4 +4,5 @@ set ModuleBase 0x10000000
 set Crate      0
 
 
-source ~/config/seecfd_default.cfd_settings
+
+source [file join [file dirname [info script]] seecfd_default.cfd_settings]

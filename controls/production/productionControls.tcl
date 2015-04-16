@@ -148,10 +148,13 @@ proc TurnOff {devices widget prefixtext} {
 proc Ramp {devices widget prefixtext} {
     global HVInfo
 
+    puts "Ram: $devices"
+
     # Devices is a set of devices.  Each is started independently although
     # they are slaved to the same switch.
     #
     foreach device $devices {
+	puts "initiating ramp for $device"
 	set controller $HVInfo($device.module)
 	set setpta     $HVInfo($device.setpoint.a)
 	set setptb     $HVInfo($device.setpoint.b)
