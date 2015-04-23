@@ -32,7 +32,7 @@ CCUSBReadout_CPPFLAGS = -I@top_srcdir@/usb/ccusb/ccusb \
 	$(TCL_FLAGS) @THREADCXX_FLAGS@ 
 
 
-CCUSBReadout_LDADD	= \ 
+CCUSBReadout_LDADD	= \
 	@top_builddir@/usb/ccusb/commands/libCCUSBCommands.la	\
 	@top_builddir@/usb/ccusb/daqconfig/libCCUSBConfig.la		\
 	@top_builddir@/usb/ccusb/rdothread/libCCUSBRdoThread.la	\
