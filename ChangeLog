@@ -522,3 +522,6 @@ Feb 1, 2012 - Feb 24, 2012
 	* Add try catch block to the monitor list in vmusb readout as
 	sometimes the action register write seems to fail.
 	
+10.2-113
+	* Bug #3979 - Don't sysreset in VMUSBReadout at end of run.
+	
