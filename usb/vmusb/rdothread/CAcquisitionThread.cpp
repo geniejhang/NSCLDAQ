@@ -588,7 +588,7 @@ CAcquisitionThread::bootToTheHead()
 {
 	uint32_t junk;
 	cerr << "Desperate measures being employed to attempt final drain\n";
-	m_pVme->writeActionRegister(CVMUSB::ActionRegister::sysReset);
+	// m_pVme->writeActionRegister(CVMUSB::ActionRegister::sysReset);
 	m_pVme->writeActionRegister(0);
 	usleep(100);
 	m_pVme->vmeRead32(0, CVMUSBReadoutList::a32UserData, &junk);
