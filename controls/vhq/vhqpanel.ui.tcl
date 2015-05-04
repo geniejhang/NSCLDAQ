@@ -125,20 +125,24 @@ proc vhqpanel_ui {root args} {
 	label $base.label#14 \
 		-text {Current (uA)}
 
-	entry $base.chavlimitvalue \
-		-cursor {} \
-		-state disabled
+#	entry $base.chavlimitvalue \
+#		-cursor {} \
+#		-state disabled
+	label $base.chavlimitvalue
 
-	entry $base.chacurrent \
-		-cursor {} \
-		-state disabled
+#	entry $base.chacurrent \
+#		-cursor {} \
+#		-state disabled
+	label $base.chacurrent
 
-	entry $base.chbvlimitvalue \
-		-cursor {} \
-		-state disabled
+#	entry $base.chbvlimitvalue \
+#		-cursor {} \
+#		-state disabled
+	label $base.chbvlimitvalue
 
-	entry $base.chbcurrent \
-		-cursor {}
+#	entry $base.chbcurrent \
+#		-cursor {}
+	label $base.chbcurrent
 
 	label $base.label#19 \
 		-text {Ramp Speed (V/sec)}
@@ -195,15 +199,18 @@ proc vhqpanel_ui {root args} {
 	entry $base.chasetpoint \
 		-cursor {}
 
-	entry $base.chavactual \
-		-cursor {} \
-		-state disabled
+	#entry $base.chavactual \
+	#	-cursor {} \
+	#	-state disabled
+
+	label $base.chavactual 
 
 	entry $base.chbsetpoint \
 		-cursor {}
 
-	entry $base.chbvactual \
-		-cursor {}
+	#entry $base.chbvactual \
+	#	-cursor {}
+	label $base.chbvactual
 
 	button $base.chastartramp \
 		-command "StartRamp $base.chastartramp a" \
@@ -496,14 +503,16 @@ proc UpdateActual {name chan values} {
   
 
    append vwidget .$name. ch $chan vactual
-   SetEntry $vwidget $voltage
+#   SetEntry $vwidget $voltage
+    $vwidget configure -text $voltage
 
     # current must be converted to uA
 
    set current [expr $current*$ires]
 
    append iwidget .$name. ch $chan current
-   SetEntry $iwidget $current
+#   SetEntry $iwidget $current
+    $iwidget configure -text $current
   
 }
 
@@ -627,12 +636,13 @@ proc DisplayLimits {name channel} {
 
    append ientry .$name. ch$channel ilimitvalue
    append ventry .$name. ch$channel vlimitvalue
-
+ 
    $ientry delete 0 end
    $ientry insert end $ilimit
    
-   SetEntry $ventry $vlimit
-   
+ #  SetEntry $ventry $vlimit
+     $ventry configure -text $vlimit
+ 
 }
 #
 #  Set the software current limit
