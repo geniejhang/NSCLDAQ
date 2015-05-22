@@ -132,7 +132,7 @@ TclServer::scheduleExit()
     Tcl_Event* pEvent = reinterpret_cast<Tcl_Event*>(Tcl_Alloc(sizeof(Tcl_Event)));
     pEvent->proc = TclServer::Exit;
     
-    Tcl_ThreadQueueEvent(m_tclThreadId, pEvent, TCL_QUEUE_HEAD);   // exit is urgent.
+    Tcl_ThreadQueueEvent(m_threadId, pEvent, TCL_QUEUE_HEAD);   // exit is urgent.
 }
 
 

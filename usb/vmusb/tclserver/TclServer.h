@@ -83,7 +83,6 @@ private:
   CVMUSB*                      m_pVme;		// VME controller.
   std::vector<CControlModule*> m_Modules;       // Hardware we can access.
   CTCLInterpreter*             m_pInterpreter;
-  unsigned long                m_tid;
   CVMUSBReadoutList*           m_pMonitorList; /* List to perform periodically. */
   Tcl_ThreadId                 m_threadId;
   bool                         m_waitingMonitor;
@@ -92,7 +91,6 @@ private:
   size_t                       m_nMonitorDataSize;
   bool                         m_dumpAllVariables;
   bool                         m_exitNow;
-  Tcl_ThreadId                 m_tclThreadId;    // In case Tcl encapsulates.
 
 
   // Public data structures:
@@ -128,7 +126,7 @@ public:
 
   CVMUSBReadoutList getMonitorList(); /* Allow rdothread to get a copy. */
   CTCLInterpreter* getInterp() {return m_pInterpreter;} /* For Tcl drivers. */
-  Tcl_ThreadId     getTclThreadId()  {return m_tclThreadId; }
+  Tcl_ThreadId     getTclThreadId()  {return m_threadId; }
 
   // Adaptor to spectrodaq threading.
 
