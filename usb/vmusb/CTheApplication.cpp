@@ -280,10 +280,11 @@ CTheApplication::startOutputThread(std::string ring)
 void
 CTheApplication::startTclServer()
 {
-  TclServer* pServer = new TclServer;
-  pServer->start(tclServerPort, Globals::controlConfigFilename.c_str(),
+  // we have to set the global pTclServer immediately because
+  // the following line potentially will depend on the Globals::pTclServer
+  Globals::pTclServer = new TclServer;
+  Globals::pTclServer->start(tclServerPort, Globals::controlConfigFilename.c_str(),
 		   *Globals::pUSBController);
-  Globals::pTclServer = pServer; // Save for readout.
 //  Os::usleep(500);
 }
 /*
