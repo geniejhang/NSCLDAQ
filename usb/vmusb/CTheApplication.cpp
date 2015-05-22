@@ -300,6 +300,7 @@ void
 CTheApplication::startInterpreter()
 {
   cout << "main waiting" << endl;
+  m_pMutex->lock();
   m_pCondition->wait(*m_pMutex);
   cout << "initializing main interp" << endl;
 
