@@ -30,8 +30,6 @@ using namespace std;
 #include <DataBuffer.h>
 #include <CBufferQueue.h>
 #include <DataFormat.h>
-#include <CMutex.h>
-#include <CCondition.h>
 
 #include <tcl.h>
 #include <TCLInterpreter.h>
@@ -64,7 +62,7 @@ using std::shared_ptr;
 /*!  Constructor is not very interesting 'cause all the action is in 
     start and operator()
 */
-TclServer::TclServer(shared_ptr<CMutex> pMutex, shared_ptr<CConditionVariable> pCond) :
+TclServer::TclServer() :
   m_port(-1),
   m_configFilename(string("")),
   m_pVme(0),
@@ -74,9 +72,7 @@ TclServer::TclServer(shared_ptr<CMutex> pMutex, shared_ptr<CConditionVariable> p
   m_pMonitorData(0),
   m_nMonitorDataSize(0),
   m_dumpAllVariables(true),
-  m_exitNow(false),
-  m_pMutex(pMutex),
-  m_pCondition(pCond)
+  m_exitNow(false)
 {
   m_pInstance = this;		// static->object context.
 }
@@ -120,20 +116,10 @@ TclServer::start(int port, const char* configFile, CVMUSB& vme)
 
   // Schedule the thread for execution:
 
-  this->Thread::start();
+  this->CSynchronizedThread::start();
 
 }
 
-/**
- * Adapts from the nextgen to spectrodaq thread model.
- */
-void
-TclServer::run()
-{
-  m_tid = getId();		// Incase we have references internally.
-  m_tclThreadId = Tcl_GetCurrentThread();
-  operator()();
-}
 /**
  * scheduleExit
  *   This is called to set an exit event into my event queue.
@@ -191,6 +177,17 @@ TclServer::setResult(string msg)
   
   
 }
+
+void TclServer::init()
+{
+  cout << "Starting TclServer::init" << endl;
+  initInterpreter();		// Create interp and add commands.
+  readConfigFile();	  	// Initialize the modules.
+  initModules();        // Initialize the fully configured modules.
+  createMonitorList();	// Figure out the set of modules that need monitoring.
+  startTcpServer();	  	// Set up the Tcp/Ip listener event.
+  cout << "TclServer::init done" << endl;
+}
 /*!
    Entry point for the thread.  This will be called when the thread is first
    scheduled after start was called.  We just need to call our
@@ -198,28 +195,11 @@ TclServer::setResult(string msg)
    Parameters are ignored (start stocked the member data with everything
    we need) and we never return.
 */
-int
+void
 TclServer::operator()()
 {
-
-
+  m_threadId = Tcl_GetCurrentThread(); // Save for later use.
   try {
-    { 
-      // lock the mutex
-      CriticalSection lock(*m_pMutex);
-
-      m_threadId = Tcl_GetCurrentThread(); // Save for later use.
-      initInterpreter();		// Create interp and add commands.
-      readConfigFile();		// Initialize the modules.
-      initModules();              // Initialize the fully configured modules.
-      createMonitorList();	// Figure out the set of modules that need monitoring.
-      startTcpServer();		// Set up the Tcp/Ip listener event.
-    }
-
-    // signal we are done initializing to let the main thread resume
-    cout << "tclserver done initializing " << endl;
-    m_pCondition->signal();
-
     EventLoop();		// Run the Tcl event loop forever.
   }
   catch (string msg) {

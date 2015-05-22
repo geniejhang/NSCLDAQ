@@ -43,12 +43,7 @@
 #endif
 #endif
 
-#ifndef __THREAD_H
-#include <Thread.h>
-#ifndef __THREAD_H
-#define __THREAD_H
-#endif
-#endif
+#include <CSynchronizedThread.h>
 
 #include <CControlModule.h>
 
@@ -57,8 +52,6 @@
 class CVMUSB;
 class CTCLInterpreter;
 struct DataBuffer;
-class CMutex;
-class CConditionVariable;
 
 /*!
   The TclServer class implements a little Tcl server for our readout software.
@@ -81,7 +74,7 @@ class CConditionVariable;
    connections from localhost.
 
 */
-class TclServer : public Thread
+class TclServer : public CSynchronizedThread
 {
 // Member data:
 private:
@@ -100,8 +93,6 @@ private:
   bool                         m_dumpAllVariables;
   bool                         m_exitNow;
   Tcl_ThreadId                 m_tclThreadId;    // In case Tcl encapsulates.
-  std::shared_ptr<CMutex>      m_pMutex;
-  std::shared_ptr<CConditionVariable>  m_pCondition;
 
 
   // Public data structures:
@@ -116,7 +107,7 @@ public:
   } TclServerEvent;
   
 public:
-  TclServer(std::shared_ptr<CMutex> pMutex, std::shared_ptr<CConditionVariable> pCond);
+  TclServer();
   ~TclServer();			// This is a final class.
 private:
   TclServer(const TclServer& rhs);
@@ -141,17 +132,19 @@ public:
 
   // Adaptor to spectrodaq threading.
 
-  virtual void run();
   void scheduleExit();
   
 public:
+
+  // Thread unsafe initialization
+  void init();
 
   // Initialize the the modules
   void readConfigFile();
   void initModules();
 
 protected:
-  int operator()();
+  void operator()();
 
 private:
   void sendWatchedVariables();
