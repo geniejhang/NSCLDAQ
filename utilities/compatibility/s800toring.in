@@ -42,6 +42,8 @@ else
     $DAQBIN/ringbuffer create $ring
 fi
 
+BUFFERSIZE=8192
+
 if [ $# -eq 3 ] ; then
   netcat $host $port | $DAQBIN/BufferToRing --create-body-header=no --buffersize=$BUFFERSIZE | $DAQBIN/stdintoring $ring
 elif [ $# -eq 5 ] ; then
