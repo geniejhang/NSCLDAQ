@@ -180,13 +180,11 @@ TclServer::setResult(string msg)
 
 void TclServer::init()
 {
-  cout << "Starting TclServer::init" << endl;
   initInterpreter();		// Create interp and add commands.
   readConfigFile();	  	// Initialize the modules.
   initModules();        // Initialize the fully configured modules.
   createMonitorList();	// Figure out the set of modules that need monitoring.
   startTcpServer();	  	// Set up the Tcp/Ip listener event.
-  cout << "TclServer::init done" << endl;
 }
 /*!
    Entry point for the thread.  This will be called when the thread is first
