@@ -1,8 +1,23 @@
 #!/usr/bin/env tclsh
 
+set here [file dirname [file normalize [info script]]]
+lappend auto_path $here
+lappend auto_path [file join $here .. TclLibs]
+lappend auto_path [file join $here .. lib]
+
+
 package require InstallRoot
 package require cmdline
 package require Itcl 
+package require ULMTriggerGUI
+
+# Tk package parses argv when it is required... It will cause a crash 
+# when it encounters unknown commands, so we have to hide the real arguments
+# from it.
+set argv_tmp $argv
+set argv [list]
+package require Tk
+set argv $argv_tmp
 
 set options {
   {-module.arg ""         "name of module registered to slow-controls server \[MANDATORY\]"}
@@ -14,7 +29,19 @@ set options {
 }
 
 set usage " --module value ?option value? :"
-array set params [::cmdline::getoptions argv $options]
+
+if {("-help" in $argv_tmp) || ("-?" in $argv_tmp)} {
+  puts [cmdline::usage $options $usage]
+  exit
+}
+
+set res [catch {
+  array set ::params [::cmdline::getoptions argv $options]
+} msg]
+if {$res == 1} {
+  puts $msg
+  exit
+}
 
 if {[lindex [array get params -module] 1] eq ""} {
   puts [::cmdline::usage $options $usage]
@@ -35,14 +62,6 @@ set port [lindex [array get params -port] 1]
 set ring [lindex [array get params -ring] 1]
 set path [lindex [array get params -configfile] 1]
 
-# Ensure that we have the ULMTriggerGUI package in the lib
-lappend auto_path [file join [::InstallRoot::Where] TclLibs] 
-lappend auto_path [pwd]
-package require ULMTriggerGUI
-
-#source ULMTriggerGUIPanel.tcl
-
-package require Tk
 
 ATrigger2367 mygui 0 1 $host $port $module $slot 
 
