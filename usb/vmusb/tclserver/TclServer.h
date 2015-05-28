@@ -91,6 +91,7 @@ private:
   size_t                       m_nMonitorDataSize;
   bool                         m_dumpAllVariables;
   bool                         m_exitNow;
+  bool                         m_isRunning;
 
 
   // Public data structures:
@@ -125,8 +126,10 @@ public:
   // selectors:
 
   CVMUSBReadoutList getMonitorList(); /* Allow rdothread to get a copy. */
-  CTCLInterpreter* getInterp() {return m_pInterpreter;} /* For Tcl drivers. */
-  Tcl_ThreadId     getTclThreadId()  {return m_threadId; }
+  CTCLInterpreter*  getInterp() {return m_pInterpreter;} /* For Tcl drivers. */
+  Tcl_ThreadId      getTclThreadId()  {return m_threadId; }
+
+  bool              isRunning() const { return m_isRunning; }
 
   // Adaptor to spectrodaq threading.
 

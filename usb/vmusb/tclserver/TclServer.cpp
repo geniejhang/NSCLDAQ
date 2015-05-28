@@ -57,8 +57,6 @@ static const int VarUpdateInterval(1); // Number of seconds between variable upd
 */
 TclServer* TclServer::m_pInstance(0); // static->object context. ptr.
 
-using std::shared_ptr;
-
 /*!  Constructor is not very interesting 'cause all the action is in 
     start and operator()
 */
@@ -72,7 +70,8 @@ TclServer::TclServer() :
   m_pMonitorData(0),
   m_nMonitorDataSize(0),
   m_dumpAllVariables(true),
-  m_exitNow(false)
+  m_exitNow(false),
+  m_isRunning(false)
 {
   m_pInstance = this;		// static->object context.
 }
@@ -181,10 +180,11 @@ TclServer::setResult(string msg)
 void TclServer::init()
 {
   initInterpreter();		// Create interp and add commands.
+  startTcpServer();	  	// Set up the Tcp/Ip listener event.
   readConfigFile();	  	// Initialize the modules.
   initModules();        // Initialize the fully configured modules.
   createMonitorList();	// Figure out the set of modules that need monitoring.
-  startTcpServer();	  	// Set up the Tcp/Ip listener event.
+  m_isRunning = true;
 }
 /*!
    Entry point for the thread.  This will be called when the thread is first
