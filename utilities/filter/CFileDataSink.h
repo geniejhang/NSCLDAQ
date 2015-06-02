@@ -1,6 +1,6 @@
 
-#ifndef _CFILEDATASINK_H
-#define _CFILEDATASINK_H
+#ifndef CFILEDATASINK_H
+#define CFILEDATASINK_H
 
 #include "CDataSink.h"
 #include <unistd.h>

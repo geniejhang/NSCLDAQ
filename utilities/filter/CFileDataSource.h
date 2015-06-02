@@ -1,5 +1,5 @@
-#ifndef __CFILEDATASOURCE_H
-#define __CFILEDATASOURCE_H
+#ifndef CFILEDATASOURCE_H
+#define CFILEDATASOURCE_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -17,31 +17,11 @@
 */
 
 
-#ifndef __CDATASOURCE_h
 #include "CDataSource.h"
-#endif
 
-#ifndef __STL_SET
 #include <set>
-#ifndef __STL_SET
-#define __STL_SET
-#endif
-#endif
-
-#ifndef __STL_VECTOR
 #include <vector>
-#ifndef __STL_VECTOR
-#define __STL_VECTOR
-#endif
-#endif
-
-#ifndef __CRT_STDINT_H
 #include <stdint.h>
-#ifndef __CRT_STDINT_H
-#define __CRT_STDINT_H
-#endif
-#endif
-
 
 // Forward class definitions:
 
@@ -82,6 +62,8 @@ public:
   // Mandatory interface:
 
   virtual CRingItem* getItem();
+
+  void read(char* pBuffer, size_t nBytes);
 
   // utilities:
 

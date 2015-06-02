@@ -72,6 +72,10 @@ CRingDataSource::getItem()
   return pItem;
 }
 
+void CRingDataSource::read(char* pBuffer, size_t nBytes)
+{
+  m_pRing->get(pBuffer, nBytes);
+}
 ///////////////////////////////////////////////////////////////////////////////////////////
 //
 // Utilities:

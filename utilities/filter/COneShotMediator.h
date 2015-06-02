@@ -23,7 +23,7 @@
 #include <CMediator.h>
 
 class CDataSource;
-class CFilter;
+class CBufferDecoder;
 class CDataSink;
 class CRingItem;
 class CRingStateChangeItem;
@@ -44,9 +44,9 @@ class COneShotMediator : public CMediator
 
   public:
     // The constructor
-    COneShotMediator(CDataSource* source, CFilter* filter, CDataSink* sink);
+    COneShotMediator(CDataSource* source, CBufferDecoder* decoder, CDataSink* sink);
     // The constructor
-    COneShotMediator(CDataSource* source, CFilter* filter, CDataSink* sink, 
+    COneShotMediator(CDataSource* source, CBufferDecoder* decoder, CDataSink* sink, 
                       int nsources);
 
     virtual ~COneShotMediator();

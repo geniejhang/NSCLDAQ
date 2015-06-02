@@ -22,7 +22,7 @@
 #include <CMediator.h>
 
 class CDataSource;
-class CFilter;
+class CBufferDecoder;
 class CDataSink;
 class CRingItem;
 class CRingStateChangeItem;
@@ -39,7 +39,7 @@ class CInfiniteMediator : public CMediator
 {
   public:
     // The constructor
-    CInfiniteMediator(CDataSource* source, CFilter* filter, CDataSink* sink);
+    CInfiniteMediator(CDataSource* source, CBufferDecoder* decoder, CDataSink* sink);
 
     virtual ~CInfiniteMediator();
 

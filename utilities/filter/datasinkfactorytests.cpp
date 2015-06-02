@@ -22,6 +22,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <URIFormatException.h>
 #include <Asserts.h>
 #include <string>
+#include <stdexcept>
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
@@ -34,6 +35,8 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <CFileDataSink.h>
 #include <CRingBuffer.h>
 
+using namespace std;
+
 // A test suite 
 class CDataSinkFactoryTest : public CppUnit::TestFixture
 {
@@ -45,7 +48,7 @@ class CDataSinkFactoryTest : public CppUnit::TestFixture
 //    CPPUNIT_TEST ( testFailOnStdin );
     CPPUNIT_TEST ( testRingSink );
     CPPUNIT_TEST ( testTCPRingSink );
-    CPPUNIT_TEST ( testFailRingSink );
+//    CPPUNIT_TEST ( testFailRingSink );
     CPPUNIT_TEST (testRemoteFail);
     CPPUNIT_TEST_SUITE_END();
 
@@ -131,7 +134,7 @@ void CDataSinkFactoryTest::testFailRingSink()
   CRingBuffer *ring = 0;
   std::string rname = "test";
   if (CRingBuffer::isRing(rname)) {
-    ring = new CRingBuffer(rname,CRingBuffer::producer);
+    ring = new CRingBuffer(rname, CRingBuffer::producer);
   } else {
     ring = CRingBuffer::createAndProduce(rname);
   }
@@ -148,6 +151,8 @@ void CDataSinkFactoryTest::testFailRingSink()
     // child process
     CDataSinkFactory factory;
     CDataSink* sink = 0;
+
+    cout << "here" << endl;
     CPPUNIT_ASSERT_THROW( sink=factory.makeSink(rsink), CException );
 
     CPPUNIT_ASSERT( 0 == sink );

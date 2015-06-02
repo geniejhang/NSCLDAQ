@@ -1,5 +1,5 @@
-#ifndef __CDATASOURCE_H
-#define __CDATASOURCE_H
+#ifndef CDATASOURCE_H
+#define CDATASOURCE_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -16,6 +16,7 @@
 	     East Lansing, MI 48824-1321
 */
 
+#include <cstddef> // for size_T
 
 // forward definitions:
 
@@ -50,6 +51,7 @@ public:
   //
 
   virtual CRingItem* getItem() = 0;
+  virtual void read(char* pBuffer, size_t nBytes) = 0;
 
 
 };

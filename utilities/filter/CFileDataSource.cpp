@@ -112,6 +112,11 @@ CFileDataSource::getItem()
     delete pItem;
   }
 }
+
+void CFileDataSource::read(char* pBuffer, size_t nBytes)
+{
+  size_t nRead = io::readData(m_fd, pBuffer, nBytes);
+}
 //////////////////////////////////////////////////////////////////////////////////////////
 //
 // Private utilties.

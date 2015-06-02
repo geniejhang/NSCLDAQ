@@ -1,5 +1,5 @@
-#ifndef __CRINGDATASOURCE_H
-#define __CRINGDATASOURCE_H
+#ifndef CRINGDATASOURCE_H
+#define CRINGDATASOURCE_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -15,24 +15,9 @@
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
-#ifndef __CDATASOURCE_H
 #include "CDataSource.h"
-#endif
-
-#ifndef __STL_VECTOR
 #include <vector>
-#ifndef __STL_VECTOR
-#define __STL_VECTOR
-#endif
-#endif
-
-#ifndef __CRT_STDINT_H
 #include <stdint.h>
-#ifndef __CRT_STDINT_H
-#define __CRT_STDINT_H
-#endif
-#endif
-
 
 // forward class definitions.
 
@@ -75,6 +60,7 @@ public:
 
 public:
   virtual CRingItem* getItem();
+  void read(char* pBuffer, size_t nBytes);
 
   // Utilities:
 
