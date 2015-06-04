@@ -25,6 +25,7 @@ using namespace std;
 // a bit too by adding a virtual keyword in front of setResult.
 class CFakeTclServer : public TclServer {
   public: 
+    CFakeTclServer() : TclServer() {}
     void setResult(std::string) {}
 };
 

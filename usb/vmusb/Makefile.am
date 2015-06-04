@@ -1,9 +1,11 @@
 SUBDIRS = 	vmusb 		\
 		daqconfig	\
+		commands	\
+		systemcontrol \
 		router		\
 		rdothread	\
 		tclserver	\
-	  commands	\
+		daqconfig	\
 		driverkit	\
 		tcldrivers	\
 		controlpanels	\
@@ -23,6 +25,7 @@ VMUSBReadout_CXXFLAGS= \
 	-I@top_srcdir@/usb/vmusb/commands  \
 	-I@top_srcdir@/usb/vmusb/rdothread	\
 	-I@top_srcdir@/usb/common/slowcontrols	\
+	-I@top_srcdir@/usb/common/systemcontrol	\
 	@LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/thread	\
 	-I@top_srcdir@/base/headers	\
@@ -49,14 +52,16 @@ VMUSBReadout_LDADD	= cmdline.o \
 		@top_builddir@/usb/vmusb/tclserver/libVMUSBControlServer.la	\
 		@top_builddir@/usb/vmusb/daqconfig/libVMUSBConfig.la	\
 		@top_builddir@/usb/vmusb/commands/libVMUSBCommands.la	\
-                @top_builddir@/servers/portmanager/libPortManager.la \
+		@top_builddir@/usb/vmusb/systemcontrol/libVMUSBSystemControl.la	\
+		@top_builddir@/servers/portmanager/libPortManager.la \
 		@top_builddir@/base/dataflow/libDataFlow.la \
 		@top_builddir@/usb/vmusb/vmusb/libVMUSB.la	\
 		@LIBTCLPLUS_LDFLAGS@	\
 		@top_builddir@/base/thread/libdaqthreads.la	\
 		@top_builddir@/base/os/libdaqshm.la	\
-		$(TCL_LDFLAGS) $(USB_LIBS) @THREADLD_FLAGS@
-
+		$(TCL_LDFLAGS) \
+    $(USB_LIBS) \
+		@THREADLD_FLAGS@
 
 VMUSBReadout_LDFLAGS=-Wl,"-rpath=$(libdir)"
 

@@ -9,7 +9,9 @@ libVMUSBRdoThread_la_CPPFLAGS = \
 			-I@top_srcdir@/usb/vmusb/daqconfig	\
 			-I@top_srcdir@/usb/vmusb/vmusb		\
 			-I@top_srcdir@/usb/vmusb/daqconfig	\
-			-I@top_srcdir@/usb/vmusb/tclserver @TCL_FLAGS@ \
+			-I@top_srcdir@/usb/vmusb/tclserver \
+			-I@top_srcdir@/usb/vmusb/systemcontrol \
+			@TCL_FLAGS@ \
 			@LIBTCLPLUS_CFLAGS@		\
 			-I@top_srcdir@/base/headers	\
 			-I@top_srcdir@/base/thread	\

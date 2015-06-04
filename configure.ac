@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT(nscldaq, 11.0-000, fox@nscl.msu.edu,[], [http://www.sourceforge.net/projects/nscldaq])
+AC_INIT(nscldaq, 11.0-005, fox@nscl.msu.edu,[], [http://www.sourceforge.net/projects/nscldaq])
 
 
 AC_CONFIG_SRCDIR([/utilities/StringsToIntegers.h])
@@ -310,9 +310,10 @@ AC_SUBST(ZMQ_LDFLAGS)
 
 ##
 # need the zmq c++ bindings
-#
+#  note in some c++11's we need to include <algorithm> to include zmq.hpp:
 AC_LANG_PUSH(C++)
-AC_CHECK_HEADER([zmq.hpp],[], [AC_MSG_ERROR([The zeromq C++ header (zmq.hpp) is missing and is required for nscldaq])])
+AC_CHECK_HEADERS([algorithm zmq.hpp],[], [AC_MSG_ERROR([The zeromq C++ header (zmq.hpp) is missing and is required for nscldaq])],
+			    [#include <algorithm>])
 AC_LANG_POP
 
 
@@ -463,14 +464,20 @@ AC_CONFIG_FILES([Makefile
 		 usb/Makefile
 		 usb/loaders/Makefile
 		 usb/vmusb/Makefile
-		 usb/vmusb/vmusb/Makefile
+		 usb/vmusb/vmusb/Makefile 
+     usb/vmusb/devices/Makefile 
 		 usb/vmusb/router/Makefile
-		 usb/vmusb/rdothread/Makefile usb/vmusb/tclserver/Makefile 
-		 usb/vmusb/daqconfig/Makefile  usb/vmusb/commands/Makefile
-		 usb/vmusb/driverkit/Makefile usb/vmusb/driverkit/Makefile-template
+		 usb/vmusb/rdothread/Makefile 
+     usb/vmusb/tclserver/Makefile 
+		 usb/vmusb/daqconfig/Makefile  
+     usb/vmusb/commands/Makefile
+     usb/vmusb/systemcontrol/Makefile
+		 usb/vmusb/driverkit/Makefile 
+     usb/vmusb/driverkit/Makefile-template
 		 usb/vmusb/tcldrivers/Makefile
 		 usb/vmusb/driverkit/VMUSBDriverIncludes
-		 usb/vmusb/controlpanels/Makefile usb/vmusb/controlpanels/cv6533/Makefile
+		 usb/vmusb/controlpanels/Makefile 
+     usb/vmusb/controlpanels/cv6533/Makefile
 		 usb/vmusb/controlpanels/figures/Makefile
 		 usb/vmusb/devtests/Makefile
 		 usb/vmusb/vmusbPackage/Makefile
