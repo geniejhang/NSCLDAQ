@@ -78,6 +78,7 @@ noinst_HEADERS		= \
 libCCUSBConfig_la_CPPFLAGS		= \
 				-I@top_srcdir@/usb/ccusb		\
 				-I@top_srcdir@/usb/ccusb/ccusb		\
+				-I@top_srcdir@/usb/ccusb/devices		\
 				-I@top_srcdir@/usb/common/devices		\
 				-I@top_srcdir@/base/headers		\
 				@LIBTCLPLUS_CFLAGS@		\
