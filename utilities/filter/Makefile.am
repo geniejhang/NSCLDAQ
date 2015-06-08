@@ -18,6 +18,7 @@ libfilter_la_SOURCES = CDataSource.cpp \
 											 CBufferTranslator.cpp \
 											 CFilterMain.cpp \
                        CMediator.cpp \
+                       CFakeMediator.cpp \
                        CInfiniteMediator.cpp \
                        COneShotHandler.cpp \
                        CCompositeFilter.cpp \
@@ -56,6 +57,7 @@ include_HEADERS	=  CDataSource.h \
 									 CTranslatorPointer.h \
 									 CFilterMain.h \
                    CMediator.h \
+									 CFakeMediator.h \
                    CInfiniteMediator.h \
                    COneShotHandler.h \
                    CFilter.h \

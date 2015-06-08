@@ -40,7 +40,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #define private public
 #define protected public
 #include "CFilterMain.h"
-#include "COneShotMediator.h"
+#include "CInifiniteMediator.h"
 #undef private
 #undef protected
 
@@ -199,26 +199,6 @@ void CFilterMainTest::testMultiProducersOnRingIsFatal()
 
 }
 
-class CFakeMediator : public CMediator {
-  private:
-    std::vector<std::string> m_log;
-  
-  public:
-    CFakeMediator(): CMediator(nullptr, nullptr, nullptr), m_log() {}
-    void mainLoop() {
-      m_log.push_back("mainLoop");
-    }
-
-    void initialize() {
-      m_log.push_back("initialize");
-    }
-
-    void finalize() {
-      m_log.push_back("finalize");
-    }
-
-    std::vector<std::string> getLog () const { return m_log;}
-};
 
 void CFilterMainTest::mainLoop_0()
 {
