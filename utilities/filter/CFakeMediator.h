@@ -19,6 +19,9 @@
 
 #include <CMediator.h>
 
+#include <vector>
+#include <string>
+
 class CFakeMediator : public CMediator {
   private:
     std::vector<std::string> m_log;
