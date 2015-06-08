@@ -40,7 +40,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #define private public
 #define protected public
 #include "CFilterMain.h"
-#include "CInifiniteMediator.h"
+#include "CFakeMediator.h"
 #undef private
 #undef protected
 
