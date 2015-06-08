@@ -35,7 +35,8 @@ libfilter_la_SOURCES = CDataSource.cpp \
 BUILT_SOURCES = @srcdir@/filterargs.c
 
 noinst_HEADERS = @srcdir@/../StringsToIntegers.h \
-                 @srcdir@/filterargs.h
+                 @srcdir@/filterargs.h \
+								 @srcdir@/histotypes.h
 
 include_HEADERS	=  CDataSource.h \
 									 CFileDataSource.h \
