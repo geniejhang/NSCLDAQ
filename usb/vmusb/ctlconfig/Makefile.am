@@ -110,6 +110,7 @@ unittests_SOURCES = \
    		cctlconfigurationtest.cpp
 
 unittests_CXXFLAGS = \
+	    -I@top_srcdir@/base/headers \
 	    -I@top_srcdir@/base/testutils \
 	    -I@top_srcdir@/usb/vmusb/vmusb \
 	    -I@top_srcdir@/usb/common/slowcontrols \
