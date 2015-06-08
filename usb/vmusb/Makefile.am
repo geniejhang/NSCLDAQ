@@ -1,11 +1,7 @@
 SUBDIRS = 	vmusb 		\
 		daqconfig	\
-		commands	\
-		systemcontrol \
-		router		\
-		rdothread	\
-		tclserver	\
-		daqconfig	\
+		ctlconfig \
+		core \
 		driverkit	\
 		tcldrivers	\
 		controlpanels	\
@@ -13,19 +9,22 @@ SUBDIRS = 	vmusb 		\
 		vmusbPackage \
 		tclservertests
 
+#		commands	
+#		systemcontrol 
+#		router		
+#		rdothread
+#		tclserver	
+#		daqconfig	
 
 bin_PROGRAMS = VMUSBReadout
 
 VMUSBReadout_CXXFLAGS= \
   @THREADCXX_FLAGS@ \
 	-I@top_srcdir@/usb/vmusb/vmusb \
-	-I@top_srcdir@/usb/vmusb/router \
-	-I@top_srcdir@/usb/vmusb/tclserver \
+	-I@top_srcdir@/usb/vmusb/core \
 	-I@top_srcdir@/usb/vmusb/daqconfig \
-	-I@top_srcdir@/usb/vmusb/commands  \
-	-I@top_srcdir@/usb/vmusb/rdothread	\
+	-I@top_srcdir@/usb/vmusb/ctlconfig \
 	-I@top_srcdir@/usb/common/slowcontrols	\
-	-I@top_srcdir@/usb/common/systemcontrol	\
 	@LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/thread	\
 	-I@top_srcdir@/base/headers	\
@@ -33,6 +32,12 @@ VMUSBReadout_CXXFLAGS= \
 	-I@top_srcdir@/servers/portmanager \
 	-I@top_srcdir@/base/os		\
 	@TCL_CPPFLAGS@ $(USBSWITCHES) 
+
+#	-I@top_srcdir@/usb/vmusb/router 
+#	-I@top_srcdir@/usb/vmusb/tclserver 
+#	-I@top_srcdir@/usb/vmusb/commands  
+#	-I@top_srcdir@/usb/vmusb/rdothread	
+# -I@top_srcdir@/usb/common/systemcontrol	
 
 VMUSBReadout_CCFLAGS=@THREADC_FLAGS@
 
@@ -47,12 +52,9 @@ noinst_HEADERS = CTheApplication.h Globals.h event.h
 
 
 VMUSBReadout_LDADD	= cmdline.o \
-		@top_builddir@/usb/vmusb/router/libVMUSBRouter.la	\
-		@top_builddir@/usb/vmusb/rdothread/libVMUSBRdoThread.la	\
-		@top_builddir@/usb/vmusb/tclserver/libVMUSBControlServer.la	\
-		@top_builddir@/usb/vmusb/daqconfig/libVMUSBConfig.la	\
-		@top_builddir@/usb/vmusb/commands/libVMUSBCommands.la	\
-		@top_builddir@/usb/vmusb/systemcontrol/libVMUSBSystemControl.la	\
+		@top_builddir@/usb/vmusb/daqconfig/libVMUSBDaqConfig.la	\
+		@top_builddir@/usb/vmusb/ctlconfig/libVMUSBCtlConfig.la	\
+		@top_builddir@/usb/vmusb/core/libVMUSBCore.la	\
 		@top_builddir@/servers/portmanager/libPortManager.la \
 		@top_builddir@/base/dataflow/libDataFlow.la \
 		@top_builddir@/usb/vmusb/vmusb/libVMUSB.la	\
@@ -62,6 +64,12 @@ VMUSBReadout_LDADD	= cmdline.o \
 		$(TCL_LDFLAGS) \
     $(USB_LIBS) \
 		@THREADLD_FLAGS@
+
+#		@top_builddir@/usb/vmusb/router/libVMUSBRouter.la	
+#		@top_builddir@/usb/vmusb/rdothread/libVMUSBRdoThread.la	
+#		@top_builddir@/usb/vmusb/tclserver/libVMUSBControlServer.la	
+#		@top_builddir@/usb/vmusb/commands/libVMUSBCommands.la	
+#		@top_builddir@/usb/vmusb/systemcontrol/libVMUSBSystemControl.la	
 
 VMUSBReadout_LDFLAGS=-Wl,"-rpath=$(libdir)"
 

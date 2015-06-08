@@ -13,18 +13,16 @@
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
-
-
 #include <config.h>
-#include "CGetCommand.h"
+#include "CUpdateCommand.h"
 
-#include "TclServer.h"
+#include "CCtlConfiguration.h"
 #include <TCLObject.h>
 #include <TCLInterpreter.h>
 #include "CControlModule.h"
 #include <CRunState.h>
 #include <CControlQueues.h>
-#include <CCCUSB.h>
+#include <CVMUSB.h>
 #include <tcl.h>
 
 using namespace std;
@@ -32,28 +30,28 @@ using namespace std;
 /*!
   Construct the command.
 */
-CGetCommand::CGetCommand(CTCLInterpreter& interp,
-			 TclServer&       server,
-			 CCCUSB&          vme) :
-  CTCLObjectProcessor(interp, "Get"),
-  m_Server(server),
+CUpdateCommand::CUpdateCommand(CTCLInterpreter&   interp,
+    			                     CCtlConfiguration& config,
+                        			 CVMUSB&            vme) :
+  CTCLObjectProcessor(interp, "Update"),
+  m_config(config),
   m_Vme(vme)
 {}
-CGetCommand::~CGetCommand()
+CUpdateCommand::~CUpdateCommand()
 {}
 
 /*
-   Execute the get command.  See the class comments for syntax.
+   Execute the Update command.  See the class comments for syntax.
 */
 int
-CGetCommand::operator()(CTCLInterpreter& interp,
+CUpdateCommand::operator()(CTCLInterpreter& interp,
 			vector<CTCLObject>& objv)
 {
-  // Need 3 words on the command line:
+  // Need 2 words on the command line:
 
-  if (objv.size() != 3) {
-    m_Server.setResult(
-	      "ERROR Get: Incorrect number of command parameters : need Get name point");
+  if (objv.size() != 2) {
+    interp.setResult(
+	      "ERROR Update: Incorrect number of command parameters : need Update name");
     return TCL_ERROR;
   }
 
@@ -61,15 +59,14 @@ CGetCommand::operator()(CTCLInterpreter& interp,
 
 
   string name  = objv[1];
-  string point = objv[2];
   
   // Locate the object:
 
-  CControlModule* pModule = m_Server.findModule(name);
+  CControlModule* pModule = m_config.findModule(name);
   if (!pModule) {
-    string msg("ERROR Get: unable to find module ");
+    string msg("ERROR Update: unable to find module ");
     msg += name;
-    m_Server.setResult( msg);
+    interp.setResult( msg);
     return TCL_ERROR;
   }
 
@@ -82,14 +79,13 @@ CGetCommand::operator()(CTCLInterpreter& interp,
     CControlQueues::getInstance()->AcquireUsb();
   }
 
-  string result =   pModule->Get(m_Vme, point.c_str());
-  m_Server.setResult( result);
+  string result =   pModule->Update(m_Vme);
+  interp.setResult( result);
 
   // if we need to, put the vmusb back into acquisition mode
   if (mustRelease) {
     CControlQueues::getInstance()->ReleaseUsb();
   }
+
   return TCL_OK;
-
 }
-

@@ -18,13 +18,13 @@
 #include <config.h>
 #include "CGetCommand.h"
 
-#include "TclServer.h"
+#include "CCtlConfiguration.h"
 #include <TCLObject.h>
 #include <TCLInterpreter.h>
 #include "CControlModule.h"
 #include <CRunState.h>
 #include <CControlQueues.h>
-#include <CCCUSB.h>
+#include <CVMUSB.h>
 #include <tcl.h>
 
 using namespace std;
@@ -32,11 +32,11 @@ using namespace std;
 /*!
   Construct the command.
 */
-CGetCommand::CGetCommand(CTCLInterpreter& interp,
-			 TclServer&       server,
-			 CCCUSB&          vme) :
+CGetCommand::CGetCommand(CTCLInterpreter&   interp,
+                  			 CCtlConfiguration& server,
+                  			 CVMUSB&            vme) :
   CTCLObjectProcessor(interp, "Get"),
-  m_Server(server),
+  m_config(server),
   m_Vme(vme)
 {}
 CGetCommand::~CGetCommand()
@@ -52,7 +52,7 @@ CGetCommand::operator()(CTCLInterpreter& interp,
   // Need 3 words on the command line:
 
   if (objv.size() != 3) {
-    m_Server.setResult(
+    interp.setResult(
 	      "ERROR Get: Incorrect number of command parameters : need Get name point");
     return TCL_ERROR;
   }
@@ -65,11 +65,11 @@ CGetCommand::operator()(CTCLInterpreter& interp,
   
   // Locate the object:
 
-  CControlModule* pModule = m_Server.findModule(name);
+  CControlModule* pModule = m_config.findModule(name);
   if (!pModule) {
     string msg("ERROR Get: unable to find module ");
     msg += name;
-    m_Server.setResult( msg);
+    interp.setResult( msg);
     return TCL_ERROR;
   }
 
@@ -82,13 +82,15 @@ CGetCommand::operator()(CTCLInterpreter& interp,
     CControlQueues::getInstance()->AcquireUsb();
   }
 
+  // Now try the command returning any string error that is thrown:
   string result =   pModule->Get(m_Vme, point.c_str());
-  m_Server.setResult( result);
+  interp.setResult( result);
 
   // if we need to, put the vmusb back into acquisition mode
   if (mustRelease) {
     CControlQueues::getInstance()->ReleaseUsb();
   }
+
   return TCL_OK;
 
 }

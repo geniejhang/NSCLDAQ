@@ -20,6 +20,8 @@
 #include <TCLObject.h>
 #include <TCLInterpreter.h>
 #include "CControlModule.h"
+#include <CRunState.h>
+#include <CControlQueues.h>
 #include <CCCUSB.h>
 #include <tcl.h>
 
@@ -70,10 +72,24 @@ CSetCommand::operator()(CTCLInterpreter& interp,
 
     return TCL_ERROR;
   }
-  // Now try the command returning any string error that is thrown:
 
+  // If we are in the middle of a run, we need to halt data collection
+  // before using the vmusb
+  bool mustRelease(false);
+  if (CRunState::getInstance()->getState() == CRunState::Active) {
+    mustRelease = true;
+    CControlQueues::getInstance()->AcquireUsb();
+  }
+
+  // Now try the command returning any string error that is thrown:
   string result = pModule->Set(m_Vme, point.c_str(), value.c_str());
   m_Server.setResult( result);
+
+  // if we need to, put the vmusb back into acquisition mode
+  if (mustRelease) {
+    CControlQueues::getInstance()->ReleaseUsb();
+  }
+
   return TCL_OK;
   
 }
