@@ -36,7 +36,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2006, Al
 // Header Files:
 #include <config.h>
 #include "CBufferDecoder.h"
-#include <EventFormatError.h>
+#include <CEventFormatError.h>
 #include <CBuffer.h>
 #include <CBufferTranslator.h>
 #include <CTranslatorPointer.h>
