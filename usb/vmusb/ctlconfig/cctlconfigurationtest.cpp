@@ -16,6 +16,7 @@
 
 #include <make_unique.h>
 #include <CMxDCReset.h>
+#include <CControlModule.h>
 
 #define private public
 #define protected public
@@ -29,7 +30,6 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
-#include <CControlModule.h>
 
 #include <vector>
 #include <string>

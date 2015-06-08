@@ -114,6 +114,7 @@ unittests_CXXFLAGS = \
 	    -I@top_srcdir@/base/testutils \
 	    -I@top_srcdir@/usb/vmusb/vmusb \
 	    -I@top_srcdir@/usb/common/slowcontrols \
+	    -I@top_srcdir@/usb/common/configurableobject \
 			-I@srcdir@ \
 			@TCL_FLAGS@ \
 			@LIBTCLPLUS_CFLAGS@ \
