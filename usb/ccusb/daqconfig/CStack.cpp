@@ -16,7 +16,7 @@
 
 #include <config.h>
 #include <CConfiguration.h>
-#include "CStack.h"
+#include <CStack.h>
 #include <CReadoutModule.h>
 #include <CCCUSB.h>
 #include <CCCUSBReadoutList.h>

@@ -153,6 +153,7 @@ libVMUSBDaqConfig_la_CPPFLAGS = \
 
 
 libVMUSBDaqConfig_la_LIBADD	= \
+				@top_builddir@/usb/vmusb/vmusb/libVMUSB.la \
 				@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
 				@LIBTCLPLUS_LDFLAGS@	\
 				$(TCL_LDFLAGS) @THREADLD_FLAGS@

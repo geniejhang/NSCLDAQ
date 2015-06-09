@@ -65,12 +65,6 @@ VMUSBReadout_LDADD	= cmdline.o \
     $(USB_LIBS) \
 		@THREADLD_FLAGS@
 
-#		@top_builddir@/usb/vmusb/router/libVMUSBRouter.la	
-#		@top_builddir@/usb/vmusb/rdothread/libVMUSBRdoThread.la	
-#		@top_builddir@/usb/vmusb/tclserver/libVMUSBControlServer.la	
-#		@top_builddir@/usb/vmusb/commands/libVMUSBCommands.la	
-#		@top_builddir@/usb/vmusb/systemcontrol/libVMUSBSystemControl.la	
-
 VMUSBReadout_LDFLAGS=-Wl,"-rpath=$(libdir)"
 
 cmdline.h: commandline.ggo
