@@ -31,6 +31,7 @@ using namespace std;
 #include <TCLInterpreter.h>
 #include <CCCUSB.h>
 #include "CControlModule.h"
+#include "CControlHardware.h"
 #include <Exception.h>
 #include <string>
 #include <iostream>

@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT(nscldaq, 11.0-000, fox@nscl.msu.edu,[], [http://www.sourceforge.net/projects/nscldaq])
+AC_INIT(nscldaq, 11.0-005, fox@nscl.msu.edu,[], [http://www.sourceforge.net/projects/nscldaq])
 
 
 AC_CONFIG_SRCDIR([/utilities/StringsToIntegers.h])
@@ -310,9 +310,10 @@ AC_SUBST(ZMQ_LDFLAGS)
 
 ##
 # need the zmq c++ bindings
-#
+#  note in some c++11's we need to include <algorithm> to include zmq.hpp:
 AC_LANG_PUSH(C++)
-AC_CHECK_HEADER([zmq.hpp],[], [AC_MSG_ERROR([The zeromq C++ header (zmq.hpp) is missing and is required for nscldaq])])
+AC_CHECK_HEADERS([algorithm zmq.hpp],[], [AC_MSG_ERROR([The zeromq C++ header (zmq.hpp) is missing and is required for nscldaq])],
+			    [#include <algorithm>])
 AC_LANG_POP
 
 
@@ -376,32 +377,33 @@ AC_CONFIG_LINKS([utilities/filter/run-0000-00.evt:utilities/filter/run-0000-00.e
 AC_CONFIG_FILES([Makefile
 		nscldaq
 		daqsetup.bash
-		base/Makefile
-		base/os/Makefile
-                 base/CopyrightTools/Makefile
-                 base/bltsubst/Makefile
-                 base/cvt/Makefile
-		 base/thread/Makefile
-                 base/headers/Makefile
-                 base/security/Makefile
-                 base/tclwidgets/Makefile
-                 base/uri/Makefile
-		 base/dataflow/Makefile
-                 base/plotchart/Makefile
-		 base/plotcontainer/Makefile
-		 base/tcpip/Makefile
-		 base/tclutils/Makefile
-		 caenfw-common/Makefile
-		 servers/Makefile
-		 servers/tclserver/Makefile
-                 servers/portmanager/Makefile
-		 utilities/Makefile
-                 utilities/daqstart/Makefile
-                 utilities/dvdburn/Makefile
-		 utilities/scalerdisplay/ScalerDisplay
-                 utilities/sequencer/Makefile
-		 utilities/ringselector/Makefile
-		 utilities/bufdump/Makefile
+    base/Makefile
+    base/os/Makefile
+    base/CopyrightTools/Makefile
+    base/bltsubst/Makefile
+    base/cvt/Makefile
+    base/thread/Makefile
+    base/headers/Makefile
+    base/security/Makefile
+    base/tclwidgets/Makefile
+    base/uri/Makefile
+    base/dataflow/Makefile
+    base/plotchart/Makefile
+    base/plotcontainer/Makefile
+    base/tcpip/Makefile
+    base/tclutils/Makefile
+    base/testutils/Makefile
+    caenfw-common/Makefile
+    servers/Makefile
+    servers/tclserver/Makefile
+    servers/portmanager/Makefile
+    utilities/Makefile
+    utilities/daqstart/Makefile
+    utilities/dvdburn/Makefile
+    utilities/scalerdisplay/ScalerDisplay
+    utilities/sequencer/Makefile
+    utilities/ringselector/Makefile
+    utilities/bufdump/Makefile
 		 utilities/eventlog/Makefile
 		 utilities/sclclient/Makefile
 		 utilities/tkbufdump/Makefile
@@ -466,14 +468,16 @@ AC_CONFIG_FILES([Makefile
 		 usb/Makefile
 		 usb/loaders/Makefile
 		 usb/vmusb/Makefile
-		 usb/vmusb/vmusb/Makefile
-		 usb/vmusb/router/Makefile
-		 usb/vmusb/rdothread/Makefile usb/vmusb/tclserver/Makefile 
-		 usb/vmusb/daqconfig/Makefile  usb/vmusb/commands/Makefile
-		 usb/vmusb/driverkit/Makefile usb/vmusb/driverkit/Makefile-template
+		 usb/vmusb/vmusb/Makefile 
+		 usb/vmusb/core/Makefile 
+		 usb/vmusb/ctlconfig/Makefile 
+		 usb/vmusb/daqconfig/Makefile  
+		 usb/vmusb/driverkit/Makefile 
+     usb/vmusb/driverkit/Makefile-template
 		 usb/vmusb/tcldrivers/Makefile
 		 usb/vmusb/driverkit/VMUSBDriverIncludes
-		 usb/vmusb/controlpanels/Makefile usb/vmusb/controlpanels/cv6533/Makefile
+		 usb/vmusb/controlpanels/Makefile 
+     usb/vmusb/controlpanels/cv6533/Makefile
 		 usb/vmusb/controlpanels/figures/Makefile
 		 usb/vmusb/devtests/Makefile
 		 usb/vmusb/vmusbPackage/Makefile

@@ -1,10 +1,18 @@
 
 
 
-SUBDIRS = daqstart dvdburn \
-	sequencer ringselector eventlog bufdump	\
-	sclclient tkbufdump compatibility \
-        filter conversion newscaler
+SUBDIRS = daqstart \
+					dvdburn \
+					sequencer \
+					filter \
+					conversion \
+					ringselector \
+					eventlog \
+					bufdump	\
+					sclclient \
+					tkbufdump \
+					compatibility \
+					newscaler
 
 # scalerdisplay - removed in favor of newscaler
 

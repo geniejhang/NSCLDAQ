@@ -4,12 +4,12 @@ unittests_CPPFLAGS=@TCL_CPPFLAGS@
 
 unittests_SOURCES = TestRunner.cpp cvmusbtest.cpp cmqdc32test.cpp cmqdc32stacktest.cpp
 
-unittests_DEPENDENCIES = @top_builddir@/usb/vmusb/daqconfig/libVMUSBConfig.la \
+unittests_DEPENDENCIES = @top_builddir@/usb/vmusb/daqconfig/libVMUSBDaqConfig.la \
 									@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
 									@top_builddir@/usb/vmusb/vmusb/libVMUSB.la \
 									$(NSCLDAQ_LIB) 
 
-unittests_LDADD = @top_builddir@/usb/vmusb/daqconfig/libVMUSBConfig.la \
+unittests_LDADD = @top_builddir@/usb/vmusb/daqconfig/libVMUSBDaqConfig.la \
 									@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
 									@top_builddir@/usb/vmusb/vmusb/libVMUSB.la \
 									$(NSCLDAQ_LIB) @CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@

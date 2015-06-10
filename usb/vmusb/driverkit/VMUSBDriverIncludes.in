@@ -12,7 +12,8 @@ CXXFLAGS = -g -fPIC -I. -I$(MAININCLUDES) -I$(INCLUDES)   $(TCL_FLAGS) @THREADCX
 CCFLAGS=$(CXXFLAGS)
 
 LDFLAGS = -shared \
-	$(LIBDIR)/libVMUSBConfig.so	\
+	$(LIBDIR)/libVMUSBDaqConfig.so	\
+	$(LIBDIR)/libConfigurableObject.so \
 	$(LIBDIR)/libVMUSB.so		\
 	$(TCL_LDFLAGS) @THREADLD_FLAGS@
 

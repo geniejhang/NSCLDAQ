@@ -53,7 +53,7 @@ noinst_HEADERS		= \
 				CPH7132Command.h	\
 				CUserCommand.h		\
 				CAddTclDriver.h		\
-				CMarkerCommand.h
+				CMarkerCommand.h \
 				CConfigurableObject.h	\
 				CReadoutModule.h 	\
 				CReadoutHardware.h 	\
@@ -70,15 +70,15 @@ noinst_HEADERS		= \
 				CTclModule.h		\
 				CMarker.h
 
-#				CScalerCommand.h
-
 
 
 
 libCCUSBConfig_la_CPPFLAGS		= \
 				-I@top_srcdir@/usb/ccusb		\
 				-I@top_srcdir@/usb/ccusb/ccusb		\
+				-I@top_srcdir@/usb/ccusb/daqconfig		\
 				-I@top_srcdir@/usb/common/devices		\
+				-I@top_srcdir@/usb/common/configurableobject \
 				-I@top_srcdir@/base/headers		\
 				@LIBTCLPLUS_CFLAGS@		\
 				@TCL_FLAGS@ \
@@ -86,6 +86,7 @@ libCCUSBConfig_la_CPPFLAGS		= \
 
 libCCUSBConfig_la_LIBADD	=	 \
 				@top_builddir@/usb/ccusb/ccusb/libCCUSB.la \
+				@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
 				@LIBTCLPLUS_LDFLAGS@ \
 				@TCL_LDFLAGS@ \
 				@THREADLD_FLAGS@ 
@@ -97,4 +98,7 @@ install-data-local:
 	$(INSTALL_DATA)  @srcdir@/*.h @prefix@/ccusbdriver/includes
 
 
-EXTRA_DIST = CCamacCompat.hpp
+EXTRA_DIST = CCamacCompat.hpp 
+
+
+#CReadoutModule.h CReadoutHardware.h CStack.h

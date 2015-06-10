@@ -55,7 +55,6 @@ BUILT_SOURCES=@srcdir@/CCCUSB_wrap.cxx @srcdir@/CCCUSBReadoutList_wrap.cxx
 
 
 
-
 ## SWIG Wrapper containing cvmusb::CCCUSB 
 libCCCUSB_la_LIBADD = \
 			libCCUSB.la \
@@ -116,6 +115,7 @@ remotetests_SOURCES = TestRunner.cpp \
 remotetests_LDADD = $(CPPUNIT_LDFLAGS) \
 			@builddir@/libCCUSB.la                      \
 			@top_builddir@/base/tcpip/libTcp.la         \
+			@top_builddir@/base/thread/libdaqthreads.la \
 			@LIBTCLPLUS_LDFLAGS@                        \
 			@LIBEXCEPTION_LDFLAGS@                      \
 		   	@TCL_LDFLAGS@                               \
