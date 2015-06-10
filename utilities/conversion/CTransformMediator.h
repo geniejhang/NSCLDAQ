@@ -20,6 +20,9 @@
 #define CTRANSFORMMEDIATOR_H
 
 #include <CMediator.h>
+#include <CPredicate.h>
+
+#include <memory>
 
 class CDataSource;
 class CDataSink;
@@ -36,10 +39,13 @@ class CTransformMediator : public CMediator
 {
   private:
     Transform m_transform;
+    std::unique_ptr<CPredicate> m_pPredicate;
 
   public:
     // The constructor
-    CTransformMediator(CDataSource* source, CDataSink* sink, Transform trans=Transform());
+    CTransformMediator(std::unique_ptr<CDataSource> source,
+                       std::unique_ptr<CDataSink> sink,
+                       Transform trans=Transform());
 
     virtual ~CTransformMediator();
 
@@ -66,6 +72,13 @@ class CTransformMediator : public CMediator
      *  This simply calls the finalize method of the filter.
      */
     virtual void finalize();
+
+  private:
+    void updatePredicate();
+    void processOne();
 };
+
+// include the implementation
+#include <CTransformMediator.cpp>
 
 #endif

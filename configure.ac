@@ -414,6 +414,8 @@ AC_CONFIG_FILES([Makefile
 		 utilities/compatibility/s800toring
 		 utilities/compatibility/bufdump
                  utilities/conversion/Makefile
+                 utilities/conversion/NSCLDAQ10/Makefile
+                 utilities/conversion/NSCLDAQ11/Makefile
 		 utilities/newscaler/Makefile
 		 utilities/newscaler/ScalerDisplay.tcl
                  epics/chanlog/Makefile

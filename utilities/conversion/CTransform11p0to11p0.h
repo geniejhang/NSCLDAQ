@@ -3,14 +3,16 @@
 #ifndef CTransform11p0to11p0_H
 #define CTransform11p0to11p0_H
 
-#include <CFilter.h>
+#include <NSCLDAQ11/CRingItem.h>
 #include <memory>
+
+class CFilter;
 
 class CTransform11p0to11p0 
 {
   public:
-    using InitialType = Format::11p0;
-    using FinalType = Format::11p0;
+    using InitialType = NSCLDAQ11::CRingItem;
+    using FinalType =   NSCLDAQ11::CRingItem;
 
   private:
     std::unique_ptr<CFilter> m_pFilter;

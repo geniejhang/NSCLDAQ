@@ -14,25 +14,10 @@
 	     East Lansing, MI 48824-1321
 */
 
-
-static const char* Copyright = "(C) Copyright Michigan State University 2014, All rights reserved";
-
-
-#include "CTransformMediator.h"
-
 #include <iostream>
 #include <CDataSource.h>
 #include <CDataSink.h>
-#include <CDataHandler.h>
-#include <CBuffer.h>
-#include <CBufferIO.h>
-
-#include <CRingStateChangeItem.h>
-#include <CRingScalerItem.h>
-#include <CRingTextItem.h>
-#include <CPhysicsEventItem.h>
-#include <CRingPhysicsEventCountItem.h>
-#include <CRingFragmentItem.h>
+#include <CCompositePredicate.h>
 
 /**! Constructor
 
@@ -44,11 +29,12 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 
 */
 template<class Transform>
-CTransformMediator::CTransformMediator(CDataSource* source, 
-                                       CDataSink* sink, 
+CTransformMediator<Transform>::CTransformMediator(std::unique_ptr<CDataSource> source,
+                                       std::unique_ptr<CDataSink> sink,
                                        Transform transform)
-: CMediator(source,sink),
-  m_transform(transform)
+: CMediator(move(source),move(sink)),
+  m_transform(transform),
+  m_pPredicate(new CCompositePredicate)
 {}
 
 /**! Destructor
@@ -60,7 +46,7 @@ CTransformMediator::CTransformMediator(CDataSource* source,
   it goes out of scope.
 */
 template<class Transform>
-CTransformMediator::~CTransformMediator() 
+CTransformMediator<Transform>::~CTransformMediator()
 {
 }
 
@@ -72,7 +58,7 @@ CTransformMediator::~CTransformMediator()
   from the source and the filter are properly managed.
 */
 template<class Transform>
-void CTransformMediator::mainLoop()
+void CTransformMediator<Transform>::mainLoop()
 {
   
   // Dereference our pointers before entering
@@ -83,20 +69,19 @@ void CTransformMediator::mainLoop()
   }
 
 }
-
-void CTransformMediator::initialize() 
+template<class Transform>
+void CTransformMediator<Transform>::initialize()
 {
 }
-
-void CTransformMediator::finalize() 
+template<class Transform>
+void CTransformMediator<Transform>::finalize()
 {
 }
-
-void CTransformMediator::processOne()
+template<class Transform>
+void CTransformMediator<Transform>::processOne()
 {
   CDataSource& source    = *getDataSource();
   CDataSink&   sink      = *getDataSink();
-  CPredicate&  predicate = *getPredicate();
 
   using T1 = typename Transform::InitialType;
   using T2 = typename Transform::FinalType;
@@ -106,10 +91,14 @@ void CTransformMediator::processOne()
 
   updatePredicate();
 
-  if (predicate()) {
+  if ((*m_pPredicate)()) {
 
     T2 item2 = m_transform(item1);
 
     sink << item2;
   }
 }
+
+template<class Transform>
+void CTransformMediator<Transform>::updatePredicate()
+{}

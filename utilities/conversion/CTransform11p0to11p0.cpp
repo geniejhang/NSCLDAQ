@@ -1,6 +1,8 @@
 
 #include <CTransform11p0to11p0.h>
 #include <CFilter.h>
+#include <NSCLDAQ11/CRingItemFactory.h>
+#include <NSCLDAQ11/CRingItem.h>
 
 using namespace std;
 
@@ -11,15 +13,17 @@ CTransform11p0to11p0::CTransform11p0to11p0(unique_ptr<CFilter> pFilter)
 CTransform11p0to11p0::FinalType 
 CTransform11p0to11p0::operator()(InitialType& item)
 {
-  InitialType* pItem = CRingItemFactory::create(&item);
+  InitialType* pItem = CRingItemFactory::createRingItem(&item);
 
   return dispatch(pItem);
 }
 
 CTransform11p0to11p0::FinalType 
 CTransform11p0to11p0::dispatch(InitialType* pItem)
+
   // initial pointer to filtered item
-  CRingItem* fitem = pItem;
+  InitialType* fitem = pItem;
+
   switch(pItem->type()) {
 
     // State change items
