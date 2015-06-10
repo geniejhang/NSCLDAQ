@@ -7,3 +7,4 @@ package require tcltest
 tcltest::testConstraint false 0
 eval ::tcltest::configure $argv
 ::tcltest::runAllTests
+#::tcltest::cleanupTests

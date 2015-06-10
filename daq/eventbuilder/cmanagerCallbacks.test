@@ -74,9 +74,10 @@ tcltest::test connectionmanager-1 {Connection callback} \
 	$mgr configure -connectcommand [list Connected %H]
 	startConnection
 	vwait ::connection;	# Starts the event loop going.
-	list $::host
 
-    } -result [list 127.0.0.1];	# (localhost)
+	expr {$::host in [list 127.0.0.1 ::1]} ;  # Local host specs
+
+    } -result 1
 
 ##
 # This test seems to have problems realated to the limited use of
@@ -107,4 +108,4 @@ tcltest::test connectionmanager-2 {Disconnect callback} \
 
     } -result [list 127.0.0.1 "test connection"]
 
-tcltest::cleanupTests
+tcltest::cleanupTests;        # Only good for standalone.
