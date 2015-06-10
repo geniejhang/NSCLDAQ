@@ -127,4 +127,4 @@ tcltest::test cbmnager-9 {invoke exception: no such callback} \
 	list $result $msg
     } -result [list 1 "No such callback"]
 
-tcltest::cleanupTests
+tcltest::cleanupTests;     # Only good for standalone use.
