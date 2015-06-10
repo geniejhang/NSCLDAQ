@@ -15,8 +15,11 @@
 */
 
 
-#ifndef __CRINGITEMFACTORY_H
-#define __CRINGITEMFACTORY_H
+#ifndef CRINGITEMFACTORY_H
+#define CRINGITEMFACTORY_H
+
+namespace NSCLDAQ10
+{
 
 class CRingItem;
 
@@ -35,4 +38,5 @@ public:
   static bool   isKnownItemType(const void* pItem);
 };
 
+} // end of namespace
 #endif

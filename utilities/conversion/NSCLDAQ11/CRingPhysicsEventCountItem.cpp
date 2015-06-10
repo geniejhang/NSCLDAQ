@@ -19,6 +19,9 @@
 
 using namespace std;
 
+namespace NSCLDAQ11
+{
+
 ///////////////////////////////////////////////////////////////////////////////////
 //
 // Constructors and other canonicals.
@@ -354,3 +357,6 @@ CRingPhysicsEventCountItem::init()
 
 
 }
+
+
+} // end of namespace

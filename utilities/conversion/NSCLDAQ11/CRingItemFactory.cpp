@@ -28,12 +28,15 @@
 #include "CUnknownFragment.h"
 #include "CGlomParameters.h"
 #include "CAbnormalEndItem.h"
-#include "DataFormat.h"
+#include "DataFormatV11.h"
 
 #include <vector>
 #include <string>
 #include <string.h>
 #include <set>
+
+namespace NSCLDAQ11
+{
 
 static std::set<uint32_t> knownItemTypes;
 
@@ -202,3 +205,5 @@ CRingItemFactory::isKnownItemType(const void* pItem)
   return knownItemTypes.count(itemType(p)) > 0;
 
 }
+
+} // end of namespace

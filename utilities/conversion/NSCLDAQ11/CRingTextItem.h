@@ -19,7 +19,7 @@
 
 #include "CRingItem.h"
 
-#include "DataFormat.h"
+#include "DataFormatV11.h"
 
 #ifndef __RANGEERROR_H
 #include <RangeError.h>

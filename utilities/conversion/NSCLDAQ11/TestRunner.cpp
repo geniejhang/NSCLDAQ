@@ -40,3 +40,5 @@ int main(int argc, char** argv)
   }
   return !wasSucessful;
 }
+
+int gpTCLApplication = 0;

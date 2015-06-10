@@ -102,23 +102,32 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libdataformatv10_la_LIBADD =
-libdataformatv10_la_SOURCES = libdataformatv10.c
-libdataformatv10_la_OBJECTS = libdataformatv10.lo
+am_libdataformatv10_la_OBJECTS = libdataformatv10_la-CRingItem.lo \
+	libdataformatv10_la-CRingScalerItem.lo \
+	libdataformatv10_la-CRingStateChangeItem.lo \
+	libdataformatv10_la-CPhysicsEventItem.lo \
+	libdataformatv10_la-CRingPhysicsEventCountItem.lo \
+	libdataformatv10_la-CRingTextItem.lo
+libdataformatv10_la_OBJECTS = $(am_libdataformatv10_la_OBJECTS)
+libdataformatv10_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) \
+	$(libdataformatv10_la_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = libdataformatv10.c
-DIST_SOURCES = libdataformatv10.c
+SOURCES = $(libdataformatv10_la_SOURCES)
+DIST_SOURCES = $(libdataformatv10_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -187,6 +196,7 @@ LIBS = @LIBS@
 LIBTCLPLUS_CFLAGS = @LIBTCLPLUS_CFLAGS@
 LIBTCLPLUS_LDFLAGS = @LIBTCLPLUS_LDFLAGS@
 LIBTOOL = @LIBTOOL@
+LIB_RUNTIME_DIR = @LIB_RUNTIME_DIR@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
@@ -301,13 +311,12 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libdataformatv10.la
-libConversion_la_SOURCES = CRingItem.cpp \
+libdataformatv10_la_SOURCES = CRingItem.cpp \
                            CRingScalerItem.cpp \
                            CRingStateChangeItem.cpp \
                            CPhysicsEventItem.cpp \
                            CRingPhysicsEventCountItem.cpp \
-                           CRingTextItem.cpp \
-                           CRingFragmentItem.cpp
+                           CRingTextItem.cpp
 
 include_HEADERS = CRingItem.h \
                   CRingScalerItem.h \
@@ -315,14 +324,16 @@ include_HEADERS = CRingItem.h \
                   CPhysicsEventItem.h \
                   CRingPhysicsEventCountItem.h \
                   CRingTextItem.h \
-                  CRingFragmentItem.h \
                   DataFormatV10.h
 
-libConversion_la_CXXFLAGS = -I@srcdir@
+libdataformatv10_la_CXXFLAGS = -I@srcdir@ \
+                               @LIBTCLPLUS_CFLAGS@
+
+libdataformatv10_la_LDFLAGS = @LIBTCLPLUS_LDFLAGS@
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
+.SUFFIXES: .cpp .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -386,7 +397,7 @@ clean-libLTLIBRARIES:
 	  rm -f "$${dir}/so_locations"; \
 	done
 libdataformatv10.la: $(libdataformatv10_la_OBJECTS) $(libdataformatv10_la_DEPENDENCIES) $(EXTRA_libdataformatv10_la_DEPENDENCIES) 
-	$(LINK) -rpath $(libdir) $(libdataformatv10_la_OBJECTS) $(libdataformatv10_la_LIBADD) $(LIBS)
+	$(libdataformatv10_la_LINK) -rpath $(libdir) $(libdataformatv10_la_OBJECTS) $(libdataformatv10_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -394,28 +405,75 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CPhysicsEventItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingPhysicsEventCountItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingScalerItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingStateChangeItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingTextItem.Plo@am__quote@
 
-.c.o:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c $<
+.cpp.o:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
 
-.c.obj:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+.cpp.obj:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-.c.lo:
-@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+.cpp.lo:
+@am__fastdepCXX_TRUE@	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+libdataformatv10_la-CRingItem.lo: CRingItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-CRingItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-CRingItem.Tpo -c -o libdataformatv10_la-CRingItem.lo `test -f 'CRingItem.cpp' || echo '$(srcdir)/'`CRingItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv10_la-CRingItem.Tpo $(DEPDIR)/libdataformatv10_la-CRingItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingItem.cpp' object='libdataformatv10_la-CRingItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CRingItem.lo `test -f 'CRingItem.cpp' || echo '$(srcdir)/'`CRingItem.cpp
+
+libdataformatv10_la-CRingScalerItem.lo: CRingScalerItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-CRingScalerItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-CRingScalerItem.Tpo -c -o libdataformatv10_la-CRingScalerItem.lo `test -f 'CRingScalerItem.cpp' || echo '$(srcdir)/'`CRingScalerItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv10_la-CRingScalerItem.Tpo $(DEPDIR)/libdataformatv10_la-CRingScalerItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingScalerItem.cpp' object='libdataformatv10_la-CRingScalerItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CRingScalerItem.lo `test -f 'CRingScalerItem.cpp' || echo '$(srcdir)/'`CRingScalerItem.cpp
+
+libdataformatv10_la-CRingStateChangeItem.lo: CRingStateChangeItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-CRingStateChangeItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-CRingStateChangeItem.Tpo -c -o libdataformatv10_la-CRingStateChangeItem.lo `test -f 'CRingStateChangeItem.cpp' || echo '$(srcdir)/'`CRingStateChangeItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv10_la-CRingStateChangeItem.Tpo $(DEPDIR)/libdataformatv10_la-CRingStateChangeItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingStateChangeItem.cpp' object='libdataformatv10_la-CRingStateChangeItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CRingStateChangeItem.lo `test -f 'CRingStateChangeItem.cpp' || echo '$(srcdir)/'`CRingStateChangeItem.cpp
+
+libdataformatv10_la-CPhysicsEventItem.lo: CPhysicsEventItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-CPhysicsEventItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-CPhysicsEventItem.Tpo -c -o libdataformatv10_la-CPhysicsEventItem.lo `test -f 'CPhysicsEventItem.cpp' || echo '$(srcdir)/'`CPhysicsEventItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv10_la-CPhysicsEventItem.Tpo $(DEPDIR)/libdataformatv10_la-CPhysicsEventItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CPhysicsEventItem.cpp' object='libdataformatv10_la-CPhysicsEventItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CPhysicsEventItem.lo `test -f 'CPhysicsEventItem.cpp' || echo '$(srcdir)/'`CPhysicsEventItem.cpp
+
+libdataformatv10_la-CRingPhysicsEventCountItem.lo: CRingPhysicsEventCountItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-CRingPhysicsEventCountItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-CRingPhysicsEventCountItem.Tpo -c -o libdataformatv10_la-CRingPhysicsEventCountItem.lo `test -f 'CRingPhysicsEventCountItem.cpp' || echo '$(srcdir)/'`CRingPhysicsEventCountItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv10_la-CRingPhysicsEventCountItem.Tpo $(DEPDIR)/libdataformatv10_la-CRingPhysicsEventCountItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingPhysicsEventCountItem.cpp' object='libdataformatv10_la-CRingPhysicsEventCountItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CRingPhysicsEventCountItem.lo `test -f 'CRingPhysicsEventCountItem.cpp' || echo '$(srcdir)/'`CRingPhysicsEventCountItem.cpp
+
+libdataformatv10_la-CRingTextItem.lo: CRingTextItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-CRingTextItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-CRingTextItem.Tpo -c -o libdataformatv10_la-CRingTextItem.lo `test -f 'CRingTextItem.cpp' || echo '$(srcdir)/'`CRingTextItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv10_la-CRingTextItem.Tpo $(DEPDIR)/libdataformatv10_la-CRingTextItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingTextItem.cpp' object='libdataformatv10_la-CRingTextItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CRingTextItem.lo `test -f 'CRingTextItem.cpp' || echo '$(srcdir)/'`CRingTextItem.cpp
 
 mostlyclean-libtool:
 	-rm -f *.lo

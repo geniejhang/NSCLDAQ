@@ -32,6 +32,9 @@
 #include <string.h>
 #include <set>
 
+namespace NSCLDAQ10
+{
+
 static std::set<uint32_t> knownItemTypes;
 
 /**
@@ -211,3 +214,5 @@ CRingItemFactory::isKnownItemType(const void* pItem)
   return knownItemTypes.count(p->s_type) > 0;
 
 }
+
+} // end of namespace

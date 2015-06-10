@@ -21,6 +21,9 @@
 #include <sstream>
 using namespace std;
 
+namespace NSCLDAQ10
+{
+
 ///////////////////////////////////////////////////////////////////////////////////
 //
 //   Constructors and other canonical member functions.
@@ -317,3 +320,6 @@ CRingTextItem::init()
 {
   m_pItem = reinterpret_cast<pTextItem>(getItemPointer());
 }
+
+
+} // end of namespace

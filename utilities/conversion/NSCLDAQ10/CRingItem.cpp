@@ -16,10 +16,7 @@
 
 #include <config.h>
 #include "CRingItem.h"
-#include "DataFormat.h"
-
-#include <CRingBuffer.h>
-#include <CRingSelectionPredicate.h>
+#include "DataFormatV10.h"
 #include <string.h>
 #include <iostream>
 #include <string>
@@ -237,26 +234,6 @@ CRingItem::updateSize()
 //
 //   Object operations.
 
-/*!
-   Commit the current version of the ring data to a ring.  
-   - Calculates the size field of the header
-   - puts the data in the ring buffer.
-
-   \param ring  - Reference to the ring buffer in which the item will be put.
-
-   \note The invoking process must already be the producing process for the ring.
-   \note This implementation has no mechanism to timeout the put, however that could be
-         added later.
-   \note This function is non-destructive. There's nothing to stop the caller from
-         issuing it on several rings.
-   
-*/
-void
-CRingItem::commitToRing(CRingBuffer& ring)
-{
-  updateSize();
-  ring.put(m_pItem, m_pItem->s_header.s_size);
-}
 
 /*!
    This is primarily intended for items that have been constructed via
@@ -336,56 +313,6 @@ CRingItem::toString() const
 //
 //  Static class methods.
 
-/*!
-   Fetches the next item in the ring that matches the
-   conditions described by the predicate and wraps it in a CRingItem.
-   The m_swapNeeded flag will be set in accordance with the byte order of the underlying
-   item.  This is determined by knowing that the high 16 bits of the type field
-   shall always be zero.
-   \param ring  - Reference to the ring from which to get the item
-   \param predicate - an object that skips unwanted items in the ring.
-
-   \return CRingItem*
-   \retval Pointer to a new, dynamically constructed ring item that has been wrapped around
-           the message fetched.
-
-   \note There is no method for specifying a timeout on the wait for a desirable
-         message.
-*/
-CRingItem*
-CRingItem::getFromRing(CRingBuffer& ring, CRingSelectionPredicate& predicate)
-{
-  predicate.selectItem(ring);
-  
-  // look at the header, figure out the byte order and count so we can
-  // create the item and fill it in.
-  //
-
-  RingItemHeader header;
-  blockUntilData(ring, sizeof(header));	// Wait until we have at least a header.
-  ring.peek(&header, sizeof(header)); 
-
-  bool otherOrder(false);
-  uint32_t size = header.s_size;
-  if ((header.s_type & 0xffff0000) != 0) {
-    otherOrder = true;
-    size = swal(size);
-  }
-  // Create the item and fill it in:
-
-  CRingItem* pItem = new CRingItem(header.s_type, size);
-  blockUntilData(ring, size);	// Wait until all data in.
-  size_t gotSize = ring.get(pItem->m_pItem, size, size);// Read the item from the ring.
-  if(gotSize  != size) {  
-    std::cerr << "Mismatch in CRingItem::getItem required size: sb " << size << " was " << gotSize 
-	      << std::endl;
-  }
-  pItem->m_pCursor += (size - sizeof(RingItemHeader));
-  pItem->m_swapNeeded = otherOrder;
-
-  return pItem;
-
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -457,31 +384,6 @@ CRingItem::swal(uint32_t datum)
   uint32_t result = swapper.bytes[3] | (swapper.bytes[2] << 8) | 
     (swapper.bytes[1] << 16) | (swapper.bytes[0] << 24);
 
-}
-/*
- *  Blocks the caller until a ring has at least the minimum required
- * amound of data.. note the use of a local predicate
- */
-
-class RingHasNoMoreThan : public CRingBuffer::CRingBufferPredicate
-{
-private:
-  size_t   m_requiredBytes;
-public:
-  RingHasNoMoreThan(size_t required) :
-    m_requiredBytes(required)
-  {}
-
-  bool operator()(CRingBuffer& ring) {
-    return ring.availableData() < m_requiredBytes;
-  }
-};
-
-void 
-CRingItem::blockUntilData(CRingBuffer& ring, size_t nbytes)
-{
-  RingHasNoMoreThan p(nbytes);
-  ring.blockWhile(p);
 }
 /**
  * timeString

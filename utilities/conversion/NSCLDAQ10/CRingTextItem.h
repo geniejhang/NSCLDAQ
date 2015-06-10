@@ -17,13 +17,9 @@
 	     East Lansing, MI 48824-1321
 */
 
-#ifndef __CRINGITEM_H
 #include "CRingItem.h"
-#endif
 
-#ifndef __DATAFORMAT_H
-#include "DataFormat.h"
-#endif
+#include "DataFormatV10.h"
 
 #ifndef __RANGEERROR_H
 #include <RangeError.h>
@@ -65,6 +61,8 @@
 #endif
 #endif
 
+namespace NSCLDAQ10
+{
 
 /*!
   The text ring item provides a mechanism to put an item in/take an item out of 
@@ -117,5 +115,6 @@ private:
   void   init();
 };
 
+} // end of namespace
 
 #endif

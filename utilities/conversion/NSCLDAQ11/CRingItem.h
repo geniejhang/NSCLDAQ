@@ -1,5 +1,5 @@
-#ifndef CRINGITEM_H
-#define CRINGITEM_H
+#ifndef NSCLDAQ11_CRINGITEM_H
+#define NSCLDAQ11_CRINGITEM_H
 
 /*
     This software is Copyright by the Board of Trustees of Michigan
@@ -25,8 +25,6 @@ namespace NSCLDAQ11
 {
 
 struct _RingItem;
-class CRingBuffer;
-class CRingSelectionPredicate;
 
 // Constants:
 
@@ -95,13 +93,9 @@ public:
   void setBodyCursor(void* pNewCursor);
 
   // Object actions:
-
-  void commitToRing(CRingBuffer& ring);
   void updateSize();		/* Set the header size given the cursor. */
 
-  // class level methods:
 
-  static CRingItem* getFromRing(CRingBuffer& ring, CRingSelectionPredicate& predicate);
 
   // Virtual methods that all ring items must provide:
 
@@ -120,7 +114,6 @@ protected:
 
   // Private Utilities.
 private:
-  static void blockUntilData(CRingBuffer& ring, size_t nbytes);
   void copyIn(const CRingItem& rhs);
   void throwIfNoBodyHeader(std::string msg) const;
   void getTimestampExtractor();

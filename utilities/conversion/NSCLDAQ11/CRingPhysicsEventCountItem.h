@@ -20,7 +20,7 @@
 
 #include "CRingItem.h"
 
-#include "DataFormat.h"
+#include "DataFormatV11.h"
 
 #ifndef __CRT_TIME_H
 #include <time.h>

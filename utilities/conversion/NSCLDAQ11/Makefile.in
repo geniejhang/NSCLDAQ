@@ -16,6 +16,7 @@
 @SET_MAKE@
 
 
+
 VPATH = @srcdir@
 am__make_dryrun = \
   { \
@@ -52,6 +53,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+noinst_PROGRAMS = unittests$(EXEEXT)
 subdir = utilities/conversion/NSCLDAQ11
 DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -102,8 +104,42 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libdataformatv11_la_LIBADD =
-libdataformatv11_la_SOURCES = libdataformatv11.c
-libdataformatv11_la_OBJECTS = libdataformatv11.lo
+am_libdataformatv11_la_OBJECTS = libdataformatv11_la-CRingItem.lo \
+	libdataformatv11_la-CAbnormalEndItem.lo \
+	libdataformatv11_la-CRingScalerItem.lo \
+	libdataformatv11_la-CRingStateChangeItem.lo \
+	libdataformatv11_la-CPhysicsEventItem.lo \
+	libdataformatv11_la-CRingPhysicsEventCountItem.lo \
+	libdataformatv11_la-CRingTextItem.lo \
+	libdataformatv11_la-CRingFragmentItem.lo \
+	libdataformatv11_la-CGlomParameters.lo \
+	libdataformatv11_la-CUnknownFragment.lo \
+	libdataformatv11_la-CDataFormatItem.lo \
+	libdataformatv11_la-CRingItemFactory.lo \
+	libdataformatv11_la-RingItemComparisons.lo ringitem.lo
+libdataformatv11_la_OBJECTS = $(am_libdataformatv11_la_OBJECTS)
+libdataformatv11_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) \
+	$(libdataformatv11_la_LDFLAGS) $(LDFLAGS) -o $@
+PROGRAMS = $(noinst_PROGRAMS)
+am_unittests_OBJECTS = unittests-TestRunner.$(OBJEXT) \
+	unittests-ringitemtests.$(OBJEXT) \
+	unittests-teststate.$(OBJEXT) unittests-scalertests.$(OBJEXT) \
+	unittests-texttest.$(OBJEXT) \
+	unittests-physcounttests.$(OBJEXT) \
+	unittests-formatoutputtests.$(OBJEXT) \
+	unittests-dataformattests.$(OBJEXT) \
+	unittests-fragmenttest.$(OBJEXT) \
+	unittests-glomparamtests.$(OBJEXT) \
+	unittests-factorytests.$(OBJEXT)
+unittests_OBJECTS = $(am_unittests_OBJECTS)
+am__DEPENDENCIES_1 =
+unittests_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	@top_builddir@/utilities/conversion/NSCLDAQ11/libdataformatv11.la
+unittests_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(unittests_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -117,8 +153,17 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = libdataformatv11.c
-DIST_SOURCES = libdataformatv11.c
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+SOURCES = $(libdataformatv11_la_SOURCES) $(unittests_SOURCES)
+DIST_SOURCES = $(libdataformatv11_la_SOURCES) $(unittests_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -127,6 +172,8 @@ am__can_run_installinfo = \
 HEADERS = $(include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
+am__tty_colors = \
+red=; grn=; lgn=; blu=; std=
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -187,6 +234,7 @@ LIBS = @LIBS@
 LIBTCLPLUS_CFLAGS = @LIBTCLPLUS_CFLAGS@
 LIBTCLPLUS_LDFLAGS = @LIBTCLPLUS_LDFLAGS@
 LIBTOOL = @LIBTOOL@
+LIB_RUNTIME_DIR = @LIB_RUNTIME_DIR@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
@@ -301,28 +349,65 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libdataformatv11.la
-libConversion_la_SOURCES = CRingItem.cpp \
+libdataformatv11_la_SOURCES = CRingItem.cpp \
+                           CAbnormalEndItem.cpp \
                            CRingScalerItem.cpp \
                            CRingStateChangeItem.cpp \
                            CPhysicsEventItem.cpp \
                            CRingPhysicsEventCountItem.cpp \
                            CRingTextItem.cpp \
-                           CRingFragmentItem.cpp
+                           CRingFragmentItem.cpp \
+                           CGlomParameters.cpp \
+                           CUnknownFragment.cpp \
+                           CDataFormatItem.cpp \
+                           CRingItemFactory.cpp \
+                                                                                                        RingItemComparisons.cpp \
+													 ringitem.c 
 
 include_HEADERS = CRingItem.h \
+                  CAbnormalEndItem.h \
                   CRingScalerItem.h \
                   CRingStateChangeItem.h \
                   CPhysicsEventItem.h \
                   CRingPhysicsEventCountItem.h \
                   CRingTextItem.h \
                   CRingFragmentItem.h \
-                  DataFormatV11.h
+                  CGlomParameters.h \
+                  CUnknownFragment.h \
+                  CDataFormatItem.h \
+                  CRingItemFactory.h \
+                  RingItemComparisons.h \
+                  DataFormatV11.h 
 
-libConversion_la_CXXFLAGS = -I@srcdir@
+libdataformatv11_la_CXXFLAGS = -I@srcdir@ \
+                               @LIBTCLPLUS_CFLAGS@
+
+libdataformatv11_la_LDFLAGS = @LIBTCLPLUS_LDFLAGS@
+unittests_SOURCES = TestRunner.cpp \
+										ringitemtests.cpp teststate.cpp	\
+										scalertests.cpp texttest.cpp physcounttests.cpp		\
+										formatoutputtests.cpp dataformattests.cpp       \
+										fragmenttest.cpp glomparamtests.cpp factorytests.cpp 
+
+unittests_LDADD = -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
+                        @top_builddir@/utilities/conversion/NSCLDAQ11/libdataformatv11.la	\
+			@LIBEXCEPTION_LDFLAGS@
+
+unittests_CPPFLAGS = @CPPUNIT_CFLAGS@ \
+                    @LIBTCLPLUS_CFLAGS@ \
+                    @TCL_FLAGS@ \
+                    -I@top_srcdir@/base/testutils
+
+unittests_LDFLAGS = @CPPUNIT_LDFLAGS@ \
+                            @TCL_LDFLAGS@ \
+                          @LIBEXCEPTION_LDFLAGS@ \
+                          -Wl,"-rpath-link=$(libdir)"
+
+TESTS = ./unittests
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
+.SUFFIXES: .c .cpp .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -386,7 +471,19 @@ clean-libLTLIBRARIES:
 	  rm -f "$${dir}/so_locations"; \
 	done
 libdataformatv11.la: $(libdataformatv11_la_OBJECTS) $(libdataformatv11_la_DEPENDENCIES) $(EXTRA_libdataformatv11_la_DEPENDENCIES) 
-	$(LINK) -rpath $(libdir) $(libdataformatv11_la_OBJECTS) $(libdataformatv11_la_LIBADD) $(LIBS)
+	$(libdataformatv11_la_LINK) -rpath $(libdir) $(libdataformatv11_la_OBJECTS) $(libdataformatv11_la_LIBADD) $(LIBS)
+
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
+unittests$(EXEEXT): $(unittests_OBJECTS) $(unittests_DEPENDENCIES) $(EXTRA_unittests_DEPENDENCIES) 
+	@rm -f unittests$(EXEEXT)
+	$(unittests_LINK) $(unittests_OBJECTS) $(unittests_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -394,7 +491,31 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CAbnormalEndItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CDataFormatItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CGlomParameters.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CPhysicsEventItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CRingFragmentItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CRingItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CRingItemFactory.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CRingPhysicsEventCountItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CRingScalerItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CRingStateChangeItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CRingTextItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-CUnknownFragment.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv11_la-RingItemComparisons.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ringitem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-TestRunner.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-dataformattests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-factorytests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-formatoutputtests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-fragmenttest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-glomparamtests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-physcounttests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-ringitemtests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-scalertests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-teststate.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-texttest.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -416,6 +537,272 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+.cpp.o:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
+
+.cpp.obj:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+.cpp.lo:
+@am__fastdepCXX_TRUE@	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+libdataformatv11_la-CRingItem.lo: CRingItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CRingItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CRingItem.Tpo -c -o libdataformatv11_la-CRingItem.lo `test -f 'CRingItem.cpp' || echo '$(srcdir)/'`CRingItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CRingItem.Tpo $(DEPDIR)/libdataformatv11_la-CRingItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingItem.cpp' object='libdataformatv11_la-CRingItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CRingItem.lo `test -f 'CRingItem.cpp' || echo '$(srcdir)/'`CRingItem.cpp
+
+libdataformatv11_la-CAbnormalEndItem.lo: CAbnormalEndItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CAbnormalEndItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CAbnormalEndItem.Tpo -c -o libdataformatv11_la-CAbnormalEndItem.lo `test -f 'CAbnormalEndItem.cpp' || echo '$(srcdir)/'`CAbnormalEndItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CAbnormalEndItem.Tpo $(DEPDIR)/libdataformatv11_la-CAbnormalEndItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CAbnormalEndItem.cpp' object='libdataformatv11_la-CAbnormalEndItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CAbnormalEndItem.lo `test -f 'CAbnormalEndItem.cpp' || echo '$(srcdir)/'`CAbnormalEndItem.cpp
+
+libdataformatv11_la-CRingScalerItem.lo: CRingScalerItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CRingScalerItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CRingScalerItem.Tpo -c -o libdataformatv11_la-CRingScalerItem.lo `test -f 'CRingScalerItem.cpp' || echo '$(srcdir)/'`CRingScalerItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CRingScalerItem.Tpo $(DEPDIR)/libdataformatv11_la-CRingScalerItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingScalerItem.cpp' object='libdataformatv11_la-CRingScalerItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CRingScalerItem.lo `test -f 'CRingScalerItem.cpp' || echo '$(srcdir)/'`CRingScalerItem.cpp
+
+libdataformatv11_la-CRingStateChangeItem.lo: CRingStateChangeItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CRingStateChangeItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CRingStateChangeItem.Tpo -c -o libdataformatv11_la-CRingStateChangeItem.lo `test -f 'CRingStateChangeItem.cpp' || echo '$(srcdir)/'`CRingStateChangeItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CRingStateChangeItem.Tpo $(DEPDIR)/libdataformatv11_la-CRingStateChangeItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingStateChangeItem.cpp' object='libdataformatv11_la-CRingStateChangeItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CRingStateChangeItem.lo `test -f 'CRingStateChangeItem.cpp' || echo '$(srcdir)/'`CRingStateChangeItem.cpp
+
+libdataformatv11_la-CPhysicsEventItem.lo: CPhysicsEventItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CPhysicsEventItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CPhysicsEventItem.Tpo -c -o libdataformatv11_la-CPhysicsEventItem.lo `test -f 'CPhysicsEventItem.cpp' || echo '$(srcdir)/'`CPhysicsEventItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CPhysicsEventItem.Tpo $(DEPDIR)/libdataformatv11_la-CPhysicsEventItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CPhysicsEventItem.cpp' object='libdataformatv11_la-CPhysicsEventItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CPhysicsEventItem.lo `test -f 'CPhysicsEventItem.cpp' || echo '$(srcdir)/'`CPhysicsEventItem.cpp
+
+libdataformatv11_la-CRingPhysicsEventCountItem.lo: CRingPhysicsEventCountItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CRingPhysicsEventCountItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CRingPhysicsEventCountItem.Tpo -c -o libdataformatv11_la-CRingPhysicsEventCountItem.lo `test -f 'CRingPhysicsEventCountItem.cpp' || echo '$(srcdir)/'`CRingPhysicsEventCountItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CRingPhysicsEventCountItem.Tpo $(DEPDIR)/libdataformatv11_la-CRingPhysicsEventCountItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingPhysicsEventCountItem.cpp' object='libdataformatv11_la-CRingPhysicsEventCountItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CRingPhysicsEventCountItem.lo `test -f 'CRingPhysicsEventCountItem.cpp' || echo '$(srcdir)/'`CRingPhysicsEventCountItem.cpp
+
+libdataformatv11_la-CRingTextItem.lo: CRingTextItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CRingTextItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CRingTextItem.Tpo -c -o libdataformatv11_la-CRingTextItem.lo `test -f 'CRingTextItem.cpp' || echo '$(srcdir)/'`CRingTextItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CRingTextItem.Tpo $(DEPDIR)/libdataformatv11_la-CRingTextItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingTextItem.cpp' object='libdataformatv11_la-CRingTextItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CRingTextItem.lo `test -f 'CRingTextItem.cpp' || echo '$(srcdir)/'`CRingTextItem.cpp
+
+libdataformatv11_la-CRingFragmentItem.lo: CRingFragmentItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CRingFragmentItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CRingFragmentItem.Tpo -c -o libdataformatv11_la-CRingFragmentItem.lo `test -f 'CRingFragmentItem.cpp' || echo '$(srcdir)/'`CRingFragmentItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CRingFragmentItem.Tpo $(DEPDIR)/libdataformatv11_la-CRingFragmentItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingFragmentItem.cpp' object='libdataformatv11_la-CRingFragmentItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CRingFragmentItem.lo `test -f 'CRingFragmentItem.cpp' || echo '$(srcdir)/'`CRingFragmentItem.cpp
+
+libdataformatv11_la-CGlomParameters.lo: CGlomParameters.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CGlomParameters.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CGlomParameters.Tpo -c -o libdataformatv11_la-CGlomParameters.lo `test -f 'CGlomParameters.cpp' || echo '$(srcdir)/'`CGlomParameters.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CGlomParameters.Tpo $(DEPDIR)/libdataformatv11_la-CGlomParameters.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CGlomParameters.cpp' object='libdataformatv11_la-CGlomParameters.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CGlomParameters.lo `test -f 'CGlomParameters.cpp' || echo '$(srcdir)/'`CGlomParameters.cpp
+
+libdataformatv11_la-CUnknownFragment.lo: CUnknownFragment.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CUnknownFragment.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CUnknownFragment.Tpo -c -o libdataformatv11_la-CUnknownFragment.lo `test -f 'CUnknownFragment.cpp' || echo '$(srcdir)/'`CUnknownFragment.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CUnknownFragment.Tpo $(DEPDIR)/libdataformatv11_la-CUnknownFragment.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CUnknownFragment.cpp' object='libdataformatv11_la-CUnknownFragment.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CUnknownFragment.lo `test -f 'CUnknownFragment.cpp' || echo '$(srcdir)/'`CUnknownFragment.cpp
+
+libdataformatv11_la-CDataFormatItem.lo: CDataFormatItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CDataFormatItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CDataFormatItem.Tpo -c -o libdataformatv11_la-CDataFormatItem.lo `test -f 'CDataFormatItem.cpp' || echo '$(srcdir)/'`CDataFormatItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CDataFormatItem.Tpo $(DEPDIR)/libdataformatv11_la-CDataFormatItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CDataFormatItem.cpp' object='libdataformatv11_la-CDataFormatItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CDataFormatItem.lo `test -f 'CDataFormatItem.cpp' || echo '$(srcdir)/'`CDataFormatItem.cpp
+
+libdataformatv11_la-CRingItemFactory.lo: CRingItemFactory.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-CRingItemFactory.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-CRingItemFactory.Tpo -c -o libdataformatv11_la-CRingItemFactory.lo `test -f 'CRingItemFactory.cpp' || echo '$(srcdir)/'`CRingItemFactory.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-CRingItemFactory.Tpo $(DEPDIR)/libdataformatv11_la-CRingItemFactory.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingItemFactory.cpp' object='libdataformatv11_la-CRingItemFactory.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-CRingItemFactory.lo `test -f 'CRingItemFactory.cpp' || echo '$(srcdir)/'`CRingItemFactory.cpp
+
+libdataformatv11_la-RingItemComparisons.lo: RingItemComparisons.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv11_la-RingItemComparisons.lo -MD -MP -MF $(DEPDIR)/libdataformatv11_la-RingItemComparisons.Tpo -c -o libdataformatv11_la-RingItemComparisons.lo `test -f 'RingItemComparisons.cpp' || echo '$(srcdir)/'`RingItemComparisons.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv11_la-RingItemComparisons.Tpo $(DEPDIR)/libdataformatv11_la-RingItemComparisons.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='RingItemComparisons.cpp' object='libdataformatv11_la-RingItemComparisons.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv11_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv11_la-RingItemComparisons.lo `test -f 'RingItemComparisons.cpp' || echo '$(srcdir)/'`RingItemComparisons.cpp
+
+unittests-TestRunner.o: TestRunner.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-TestRunner.o -MD -MP -MF $(DEPDIR)/unittests-TestRunner.Tpo -c -o unittests-TestRunner.o `test -f 'TestRunner.cpp' || echo '$(srcdir)/'`TestRunner.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-TestRunner.Tpo $(DEPDIR)/unittests-TestRunner.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='TestRunner.cpp' object='unittests-TestRunner.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-TestRunner.o `test -f 'TestRunner.cpp' || echo '$(srcdir)/'`TestRunner.cpp
+
+unittests-TestRunner.obj: TestRunner.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-TestRunner.obj -MD -MP -MF $(DEPDIR)/unittests-TestRunner.Tpo -c -o unittests-TestRunner.obj `if test -f 'TestRunner.cpp'; then $(CYGPATH_W) 'TestRunner.cpp'; else $(CYGPATH_W) '$(srcdir)/TestRunner.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-TestRunner.Tpo $(DEPDIR)/unittests-TestRunner.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='TestRunner.cpp' object='unittests-TestRunner.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-TestRunner.obj `if test -f 'TestRunner.cpp'; then $(CYGPATH_W) 'TestRunner.cpp'; else $(CYGPATH_W) '$(srcdir)/TestRunner.cpp'; fi`
+
+unittests-ringitemtests.o: ringitemtests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-ringitemtests.o -MD -MP -MF $(DEPDIR)/unittests-ringitemtests.Tpo -c -o unittests-ringitemtests.o `test -f 'ringitemtests.cpp' || echo '$(srcdir)/'`ringitemtests.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-ringitemtests.Tpo $(DEPDIR)/unittests-ringitemtests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='ringitemtests.cpp' object='unittests-ringitemtests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-ringitemtests.o `test -f 'ringitemtests.cpp' || echo '$(srcdir)/'`ringitemtests.cpp
+
+unittests-ringitemtests.obj: ringitemtests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-ringitemtests.obj -MD -MP -MF $(DEPDIR)/unittests-ringitemtests.Tpo -c -o unittests-ringitemtests.obj `if test -f 'ringitemtests.cpp'; then $(CYGPATH_W) 'ringitemtests.cpp'; else $(CYGPATH_W) '$(srcdir)/ringitemtests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-ringitemtests.Tpo $(DEPDIR)/unittests-ringitemtests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='ringitemtests.cpp' object='unittests-ringitemtests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-ringitemtests.obj `if test -f 'ringitemtests.cpp'; then $(CYGPATH_W) 'ringitemtests.cpp'; else $(CYGPATH_W) '$(srcdir)/ringitemtests.cpp'; fi`
+
+unittests-teststate.o: teststate.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-teststate.o -MD -MP -MF $(DEPDIR)/unittests-teststate.Tpo -c -o unittests-teststate.o `test -f 'teststate.cpp' || echo '$(srcdir)/'`teststate.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-teststate.Tpo $(DEPDIR)/unittests-teststate.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='teststate.cpp' object='unittests-teststate.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-teststate.o `test -f 'teststate.cpp' || echo '$(srcdir)/'`teststate.cpp
+
+unittests-teststate.obj: teststate.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-teststate.obj -MD -MP -MF $(DEPDIR)/unittests-teststate.Tpo -c -o unittests-teststate.obj `if test -f 'teststate.cpp'; then $(CYGPATH_W) 'teststate.cpp'; else $(CYGPATH_W) '$(srcdir)/teststate.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-teststate.Tpo $(DEPDIR)/unittests-teststate.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='teststate.cpp' object='unittests-teststate.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-teststate.obj `if test -f 'teststate.cpp'; then $(CYGPATH_W) 'teststate.cpp'; else $(CYGPATH_W) '$(srcdir)/teststate.cpp'; fi`
+
+unittests-scalertests.o: scalertests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-scalertests.o -MD -MP -MF $(DEPDIR)/unittests-scalertests.Tpo -c -o unittests-scalertests.o `test -f 'scalertests.cpp' || echo '$(srcdir)/'`scalertests.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-scalertests.Tpo $(DEPDIR)/unittests-scalertests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='scalertests.cpp' object='unittests-scalertests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-scalertests.o `test -f 'scalertests.cpp' || echo '$(srcdir)/'`scalertests.cpp
+
+unittests-scalertests.obj: scalertests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-scalertests.obj -MD -MP -MF $(DEPDIR)/unittests-scalertests.Tpo -c -o unittests-scalertests.obj `if test -f 'scalertests.cpp'; then $(CYGPATH_W) 'scalertests.cpp'; else $(CYGPATH_W) '$(srcdir)/scalertests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-scalertests.Tpo $(DEPDIR)/unittests-scalertests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='scalertests.cpp' object='unittests-scalertests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-scalertests.obj `if test -f 'scalertests.cpp'; then $(CYGPATH_W) 'scalertests.cpp'; else $(CYGPATH_W) '$(srcdir)/scalertests.cpp'; fi`
+
+unittests-texttest.o: texttest.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-texttest.o -MD -MP -MF $(DEPDIR)/unittests-texttest.Tpo -c -o unittests-texttest.o `test -f 'texttest.cpp' || echo '$(srcdir)/'`texttest.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-texttest.Tpo $(DEPDIR)/unittests-texttest.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='texttest.cpp' object='unittests-texttest.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-texttest.o `test -f 'texttest.cpp' || echo '$(srcdir)/'`texttest.cpp
+
+unittests-texttest.obj: texttest.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-texttest.obj -MD -MP -MF $(DEPDIR)/unittests-texttest.Tpo -c -o unittests-texttest.obj `if test -f 'texttest.cpp'; then $(CYGPATH_W) 'texttest.cpp'; else $(CYGPATH_W) '$(srcdir)/texttest.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-texttest.Tpo $(DEPDIR)/unittests-texttest.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='texttest.cpp' object='unittests-texttest.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-texttest.obj `if test -f 'texttest.cpp'; then $(CYGPATH_W) 'texttest.cpp'; else $(CYGPATH_W) '$(srcdir)/texttest.cpp'; fi`
+
+unittests-physcounttests.o: physcounttests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-physcounttests.o -MD -MP -MF $(DEPDIR)/unittests-physcounttests.Tpo -c -o unittests-physcounttests.o `test -f 'physcounttests.cpp' || echo '$(srcdir)/'`physcounttests.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-physcounttests.Tpo $(DEPDIR)/unittests-physcounttests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='physcounttests.cpp' object='unittests-physcounttests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-physcounttests.o `test -f 'physcounttests.cpp' || echo '$(srcdir)/'`physcounttests.cpp
+
+unittests-physcounttests.obj: physcounttests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-physcounttests.obj -MD -MP -MF $(DEPDIR)/unittests-physcounttests.Tpo -c -o unittests-physcounttests.obj `if test -f 'physcounttests.cpp'; then $(CYGPATH_W) 'physcounttests.cpp'; else $(CYGPATH_W) '$(srcdir)/physcounttests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-physcounttests.Tpo $(DEPDIR)/unittests-physcounttests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='physcounttests.cpp' object='unittests-physcounttests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-physcounttests.obj `if test -f 'physcounttests.cpp'; then $(CYGPATH_W) 'physcounttests.cpp'; else $(CYGPATH_W) '$(srcdir)/physcounttests.cpp'; fi`
+
+unittests-formatoutputtests.o: formatoutputtests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-formatoutputtests.o -MD -MP -MF $(DEPDIR)/unittests-formatoutputtests.Tpo -c -o unittests-formatoutputtests.o `test -f 'formatoutputtests.cpp' || echo '$(srcdir)/'`formatoutputtests.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-formatoutputtests.Tpo $(DEPDIR)/unittests-formatoutputtests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='formatoutputtests.cpp' object='unittests-formatoutputtests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-formatoutputtests.o `test -f 'formatoutputtests.cpp' || echo '$(srcdir)/'`formatoutputtests.cpp
+
+unittests-formatoutputtests.obj: formatoutputtests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-formatoutputtests.obj -MD -MP -MF $(DEPDIR)/unittests-formatoutputtests.Tpo -c -o unittests-formatoutputtests.obj `if test -f 'formatoutputtests.cpp'; then $(CYGPATH_W) 'formatoutputtests.cpp'; else $(CYGPATH_W) '$(srcdir)/formatoutputtests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-formatoutputtests.Tpo $(DEPDIR)/unittests-formatoutputtests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='formatoutputtests.cpp' object='unittests-formatoutputtests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-formatoutputtests.obj `if test -f 'formatoutputtests.cpp'; then $(CYGPATH_W) 'formatoutputtests.cpp'; else $(CYGPATH_W) '$(srcdir)/formatoutputtests.cpp'; fi`
+
+unittests-dataformattests.o: dataformattests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-dataformattests.o -MD -MP -MF $(DEPDIR)/unittests-dataformattests.Tpo -c -o unittests-dataformattests.o `test -f 'dataformattests.cpp' || echo '$(srcdir)/'`dataformattests.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-dataformattests.Tpo $(DEPDIR)/unittests-dataformattests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dataformattests.cpp' object='unittests-dataformattests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-dataformattests.o `test -f 'dataformattests.cpp' || echo '$(srcdir)/'`dataformattests.cpp
+
+unittests-dataformattests.obj: dataformattests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-dataformattests.obj -MD -MP -MF $(DEPDIR)/unittests-dataformattests.Tpo -c -o unittests-dataformattests.obj `if test -f 'dataformattests.cpp'; then $(CYGPATH_W) 'dataformattests.cpp'; else $(CYGPATH_W) '$(srcdir)/dataformattests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-dataformattests.Tpo $(DEPDIR)/unittests-dataformattests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dataformattests.cpp' object='unittests-dataformattests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-dataformattests.obj `if test -f 'dataformattests.cpp'; then $(CYGPATH_W) 'dataformattests.cpp'; else $(CYGPATH_W) '$(srcdir)/dataformattests.cpp'; fi`
+
+unittests-fragmenttest.o: fragmenttest.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-fragmenttest.o -MD -MP -MF $(DEPDIR)/unittests-fragmenttest.Tpo -c -o unittests-fragmenttest.o `test -f 'fragmenttest.cpp' || echo '$(srcdir)/'`fragmenttest.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-fragmenttest.Tpo $(DEPDIR)/unittests-fragmenttest.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fragmenttest.cpp' object='unittests-fragmenttest.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-fragmenttest.o `test -f 'fragmenttest.cpp' || echo '$(srcdir)/'`fragmenttest.cpp
+
+unittests-fragmenttest.obj: fragmenttest.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-fragmenttest.obj -MD -MP -MF $(DEPDIR)/unittests-fragmenttest.Tpo -c -o unittests-fragmenttest.obj `if test -f 'fragmenttest.cpp'; then $(CYGPATH_W) 'fragmenttest.cpp'; else $(CYGPATH_W) '$(srcdir)/fragmenttest.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-fragmenttest.Tpo $(DEPDIR)/unittests-fragmenttest.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='fragmenttest.cpp' object='unittests-fragmenttest.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-fragmenttest.obj `if test -f 'fragmenttest.cpp'; then $(CYGPATH_W) 'fragmenttest.cpp'; else $(CYGPATH_W) '$(srcdir)/fragmenttest.cpp'; fi`
+
+unittests-glomparamtests.o: glomparamtests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-glomparamtests.o -MD -MP -MF $(DEPDIR)/unittests-glomparamtests.Tpo -c -o unittests-glomparamtests.o `test -f 'glomparamtests.cpp' || echo '$(srcdir)/'`glomparamtests.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-glomparamtests.Tpo $(DEPDIR)/unittests-glomparamtests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='glomparamtests.cpp' object='unittests-glomparamtests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-glomparamtests.o `test -f 'glomparamtests.cpp' || echo '$(srcdir)/'`glomparamtests.cpp
+
+unittests-glomparamtests.obj: glomparamtests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-glomparamtests.obj -MD -MP -MF $(DEPDIR)/unittests-glomparamtests.Tpo -c -o unittests-glomparamtests.obj `if test -f 'glomparamtests.cpp'; then $(CYGPATH_W) 'glomparamtests.cpp'; else $(CYGPATH_W) '$(srcdir)/glomparamtests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-glomparamtests.Tpo $(DEPDIR)/unittests-glomparamtests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='glomparamtests.cpp' object='unittests-glomparamtests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-glomparamtests.obj `if test -f 'glomparamtests.cpp'; then $(CYGPATH_W) 'glomparamtests.cpp'; else $(CYGPATH_W) '$(srcdir)/glomparamtests.cpp'; fi`
+
+unittests-factorytests.o: factorytests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-factorytests.o -MD -MP -MF $(DEPDIR)/unittests-factorytests.Tpo -c -o unittests-factorytests.o `test -f 'factorytests.cpp' || echo '$(srcdir)/'`factorytests.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-factorytests.Tpo $(DEPDIR)/unittests-factorytests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='factorytests.cpp' object='unittests-factorytests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-factorytests.o `test -f 'factorytests.cpp' || echo '$(srcdir)/'`factorytests.cpp
+
+unittests-factorytests.obj: factorytests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-factorytests.obj -MD -MP -MF $(DEPDIR)/unittests-factorytests.Tpo -c -o unittests-factorytests.obj `if test -f 'factorytests.cpp'; then $(CYGPATH_W) 'factorytests.cpp'; else $(CYGPATH_W) '$(srcdir)/factorytests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-factorytests.Tpo $(DEPDIR)/unittests-factorytests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='factorytests.cpp' object='unittests-factorytests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-factorytests.obj `if test -f 'factorytests.cpp'; then $(CYGPATH_W) 'factorytests.cpp'; else $(CYGPATH_W) '$(srcdir)/factorytests.cpp'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -496,6 +883,99 @@ GTAGS:
 distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; skip=0; \
+	srcdir=$(srcdir); export srcdir; \
+	list=' $(TESTS) '; \
+	$(am__tty_colors); \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *[\ \	]$$tst[\ \	]*) \
+		xpass=`expr $$xpass + 1`; \
+		failed=`expr $$failed + 1`; \
+		col=$$red; res=XPASS; \
+	      ;; \
+	      *) \
+		col=$$grn; res=PASS; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *[\ \	]$$tst[\ \	]*) \
+		xfail=`expr $$xfail + 1`; \
+		col=$$lgn; res=XFAIL; \
+	      ;; \
+	      *) \
+		failed=`expr $$failed + 1`; \
+		col=$$red; res=FAIL; \
+	      ;; \
+	      esac; \
+	    else \
+	      skip=`expr $$skip + 1`; \
+	      col=$$blu; res=SKIP; \
+	    fi; \
+	    echo "$${col}$$res$${std}: $$tst"; \
+	  done; \
+	  if test "$$all" -eq 1; then \
+	    tests="test"; \
+	    All=""; \
+	  else \
+	    tests="tests"; \
+	    All="All "; \
+	  fi; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="$$All$$all $$tests passed"; \
+	    else \
+	      if test "$$xfail" -eq 1; then failures=failure; else failures=failures; fi; \
+	      banner="$$All$$all $$tests behaved as expected ($$xfail expected $$failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all $$tests failed"; \
+	    else \
+	      if test "$$xpass" -eq 1; then passes=pass; else passes=passes; fi; \
+	      banner="$$failed of $$all $$tests did not behave as expected ($$xpass unexpected $$passes)"; \
+	    fi; \
+	  fi; \
+	  dashes="$$banner"; \
+	  skipped=""; \
+	  if test "$$skip" -ne 0; then \
+	    if test "$$skip" -eq 1; then \
+	      skipped="($$skip test was not run)"; \
+	    else \
+	      skipped="($$skip tests were not run)"; \
+	    fi; \
+	    test `echo "$$skipped" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$skipped"; \
+	  fi; \
+	  report=""; \
+	  if test "$$failed" -ne 0 && test -n "$(PACKAGE_BUGREPORT)"; then \
+	    report="Please report to $(PACKAGE_BUGREPORT)"; \
+	    test `echo "$$report" | wc -c` -le `echo "$$banner" | wc -c` || \
+	      dashes="$$report"; \
+	  fi; \
+	  dashes=`echo "$$dashes" | sed s/./=/g`; \
+	  if test "$$failed" -eq 0; then \
+	    col="$$grn"; \
+	  else \
+	    col="$$red"; \
+	  fi; \
+	  echo "$${col}$$dashes$${std}"; \
+	  echo "$${col}$$banner$${std}"; \
+	  test -z "$$skipped" || echo "$${col}$$skipped$${std}"; \
+	  test -z "$$report" || echo "$${col}$$report$${std}"; \
+	  echo "$${col}$$dashes$${std}"; \
+	  test "$$failed" -eq 0; \
+	else :; fi
+
 distdir: $(DISTFILES)
 	@srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
@@ -527,8 +1007,9 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
@@ -566,7 +1047,7 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
-	mostlyclean-am
+	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -634,18 +1115,19 @@ ps-am:
 
 uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
 
-.MAKE: install-am install-strip
+.MAKE: check-am install-am install-strip
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libLTLIBRARIES clean-libtool ctags distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-includeHEADERS install-info \
-	install-info-am install-libLTLIBRARIES install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
+.PHONY: CTAGS GTAGS all all-am check check-TESTS check-am clean \
+	clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean-noinstPROGRAMS ctags distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-includeHEADERS install-info install-info-am \
+	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-includeHEADERS \

@@ -5,8 +5,7 @@ libdataformatv10_la_SOURCES = CRingItem.cpp \
                            CRingStateChangeItem.cpp \
                            CPhysicsEventItem.cpp \
                            CRingPhysicsEventCountItem.cpp \
-                           CRingTextItem.cpp \
-                           CRingFragmentItem.cpp
+                           CRingTextItem.cpp
 
 include_HEADERS = CRingItem.h \
                   CRingScalerItem.h \
@@ -14,8 +13,10 @@ include_HEADERS = CRingItem.h \
                   CPhysicsEventItem.h \
                   CRingPhysicsEventCountItem.h \
                   CRingTextItem.h \
-                  CRingFragmentItem.h \
                   DataFormatV10.h
 
-libdataformatv10_la_CXXFLAGS = -I@srcdir@
+libdataformatv10_la_CXXFLAGS = -I@srcdir@ \
+                               @LIBTCLPLUS_CFLAGS@
+
+libdataformatv10_la_LDFLAGS = @LIBTCLPLUS_LDFLAGS@
 
