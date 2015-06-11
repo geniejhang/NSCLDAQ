@@ -24,7 +24,7 @@
 #include <CCCUSBReadoutList.h>
 #include <DataBuffer.h>
 #include <CControlQueues.h>
-#include "../router/CRunState.h" // else pick up the daq one by mistake.
+#include "CRunState.h"
 #include <assert.h>
 #include <time.h>
 #include <string>
