@@ -40,6 +40,7 @@ noinst_PROGRAMS = unittests
 unittests_SOURCES	= TestRunner.cpp \
 										ringitemtests.cpp teststate.cpp	\
 										scalertests.cpp texttest.cpp physcounttests.cpp		\
+                                                                                physeventtests.cpp \
 										formatoutputtests.cpp dataformattests.cpp       \
 										fragmenttest.cpp glomparamtests.cpp factorytests.cpp 
 

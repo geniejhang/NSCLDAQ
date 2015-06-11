@@ -4,11 +4,13 @@
 #include <cppunit/Asserter.h>
 #include "Asserts.h"
 
-#include <DataFormat.h>
+#include <DataFormatV11.h>
 #include <CPhysicsEventItem.h>
 
 #include <string.h>
 #include <time.h>
+
+using namespace NSCLDAQ11;
 
 class physeventtests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(physeventtests);

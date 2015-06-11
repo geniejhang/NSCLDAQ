@@ -1,3 +1,6 @@
+#ifndef DATAFORMATV10_H
+#define DATAFORMATV10_H
+
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -13,13 +16,6 @@
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
-
-#ifndef DATAFORMATPRE10_H
-#define DATAFORMATPRE10_H
-
-
-#include <stdint.h>
-#include <time.h>
 
 /*!
   \file DataFormat.h
@@ -44,37 +40,50 @@ be zero.
 
 */
 
-namespace NSCLDAQ10 {
-
 /*
    Define the type codes for the items.
    Applications can add user specific types if they use values that are at least
    FIRST_USER_TYPE
 */
 
+#include <stdint.h>
+#include <time.h>
+
+namespace NSCLDAQ10
+{
+
 // state change item type codes:
-static const uint32_t BEGIN_RUN(1);
-static const uint32_t END_RUN(2);
-static const uint32_t PAUSE_RUN(3);
-static const uint32_t RESUME_RUN(4);
+
+static const uint32_t BEGIN_RUN  = 1;
+static const uint32_t END_RUN    = 2;
+static const uint32_t PAUSE_RUN  = 3;
+static const uint32_t RESUME_RUN = 4;
 
 // Documentation item type codes:
 
-static const uint32_t PACKET_TYPES(10);
-static const uint32_t MONITORED_VARIABLES(11);
+static const uint32_t PACKET_TYPES        = 10;
+static const uint32_t MONITORED_VARIABLES = 11;
 
 // Scaler data:
 
-static const uint32_t INCREMENTAL_SCALERS(20);
+
+static const uint32_t INCREMENTAL_SCALERS = 20;
+static const uint32_t TIMESTAMPED_NONINCR_SCALERS =21;
 
 // Physics events:
 
-static const uint32_t PHYSICS_EVENT(30);
-static const uint32_t PHYSICS_EVENT_COUNT(31);
+static const uint32_t PHYSICS_EVENT       = 30;
+static const uint32_t PHYSICS_EVENT_COUNT = 31;
+
+
+// Event builder related items:
+
+static const uint32_t EVB_FRAGMENT        = 40; /* Event builder fragment. */
+static const uint32_t EVB_UNKNOWN_PAYLOAD = 41; /* Evb fragment whose payload isn't a ring item */
 
 // User defined item codes
 
-static const uint32_t FIRST_USER_ITEM_CODE(32768); /* 0x8000 */
+static const uint32_t FIRST_USER_ITEM_CODE = 32768; /* 0x8000 */
 
 
 // Longest allowed title:
@@ -124,10 +133,27 @@ typedef struct _ScalerItem {
   RingItemHeader  s_header;
   uint32_t        s_intervalStartOffset;
   uint32_t        s_intervalEndOffset;
-  uint32_t          s_timestamp;
+  uint32_t        s_timestamp;
   uint32_t        s_scalerCount;
   uint32_t        s_scalers[1];
 } ScalerItem, *pScalerItem;
+
+/*
+  Nonincremental timestamped scalers are scalers that dont' get 
+  reset on reads and have a 64 bit timestamp.  The timing information
+  put in those scalers includes both the raw time and a divisor that
+  can be used to support sub-second timing information
+*/
+typedef struct _NonIncrTimestampedScaler {
+  RingItemHeader  s_header;
+  uint64_t        s_eventTimestamp; /* For event building. */
+  uint32_t        s_intervalStartOffset;
+  uint32_t        s_intervalEndOffset;
+  uint32_t        s_intervalDivisor;
+  uint32_t        s_clockTimestamp; /* unix time */
+  uint32_t        s_scalerCount;
+  uint32_t        s_scalers[1];
+} NonIncrTimestampedScaler, *pNonIncrTimestampedScaler;
 
 /*!
   The various documentation Events are just a bunch of null terminated strings that
@@ -142,13 +168,14 @@ typedef struct _TextItem {
   char           s_strings[1];
 } TextItem, *pTextItem;
 
+
 /*!
   For now a physics event is just a header and a body of uint16_t's.
 */
 
 typedef struct _PhysicsEventItem {
   RingItemHeader s_header;
-  uint16_t       s_body[1];
+  uint16_t       s_body[];
 } PhysicsEventItem, *pPhysicsEventItem;
 
 /*!
@@ -162,6 +189,38 @@ typedef struct __PhysicsEventCountItem {
   uint32_t         s_timestamp;
   uint64_t       s_eventCount;	/* Maybe 4Gevents is too small ;-) */
 } PhysicsEventCountItem, *pPhysicsEventCountItem;
+
+/**
+ * Event builder stages can put event fragments into the
+ * ring buffer for monitoring software:
+ * (EVB_FRAGMENT):
+ */
+typedef struct _EventBuilderFragment {
+  RingItemHeader s_header;
+  uint64_t       s_timestamp;
+  uint32_t       s_sourceId;
+  uint32_t       s_payloadSize;
+  uint32_t       s_barrierType;
+  uint32_t        s_body[1];	/* Really s_payload bytes of data.. */
+} EventBuilderFragment, *pEventBuilderFragment;
+
+/**
+  Below are functions that are available to format ring types.
+  Note that all of these return a pointer that must be free(3)'d.
+*/
+
+extern pPhysicsEventItem  formatEventItem(size_t nWords, void* pPayload);
+extern pPhysicsEventCountItem formatTriggerCountItem(uint32_t runTime, time_t stamp, uint64_t triggerCount);
+extern pScalerItem         formatScalerItem(unsigned scalerCount, time_t timestamp,
+                                            uint32_t btime, uint32_t etime, void* pCounters);
+extern pNonIncrTimestampedScaler  formatNonIncrTSScalerItem(unsigned scalerCount, time_t timestamp,
+                                                            uint32_t btime, uint32_t etime,
+                                                            uint64_t eventTimestamp, void* pCounters,
+                                                            uint32_t timebaseDivisor);
+extern pTextItem          formatTextItem(unsigned nStrings, time_t stamp, uint32_t runTime,
+                                         const char** pStrings, int type);
+extern pStateChangeItem   formatStateChange(time_t stamp, uint32_t offset, uint32_t runNumber,
+                                            const char* pTitle, int type);
 
 } // end of namespace
 #endif

@@ -40,3 +40,7 @@ int main(int argc, char** argv)
   }
   return !wasSucessful;
 }
+
+
+// for tclplus
+int gpTCLApplication = 0;

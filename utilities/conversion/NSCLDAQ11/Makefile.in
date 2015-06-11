@@ -128,6 +128,7 @@ am_unittests_OBJECTS = unittests-TestRunner.$(OBJEXT) \
 	unittests-teststate.$(OBJEXT) unittests-scalertests.$(OBJEXT) \
 	unittests-texttest.$(OBJEXT) \
 	unittests-physcounttests.$(OBJEXT) \
+	unittests-physeventtests.$(OBJEXT) \
 	unittests-formatoutputtests.$(OBJEXT) \
 	unittests-dataformattests.$(OBJEXT) \
 	unittests-fragmenttest.$(OBJEXT) \
@@ -386,6 +387,7 @@ libdataformatv11_la_LDFLAGS = @LIBTCLPLUS_LDFLAGS@
 unittests_SOURCES = TestRunner.cpp \
 										ringitemtests.cpp teststate.cpp	\
 										scalertests.cpp texttest.cpp physcounttests.cpp		\
+                                                                                physeventtests.cpp \
 										formatoutputtests.cpp dataformattests.cpp       \
 										fragmenttest.cpp glomparamtests.cpp factorytests.cpp 
 
@@ -512,6 +514,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-fragmenttest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-glomparamtests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-physcounttests.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-physeventtests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-ringitemtests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-scalertests.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-teststate.Po@am__quote@
@@ -733,6 +736,20 @@ unittests-physcounttests.obj: physcounttests.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='physcounttests.cpp' object='unittests-physcounttests.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-physcounttests.obj `if test -f 'physcounttests.cpp'; then $(CYGPATH_W) 'physcounttests.cpp'; else $(CYGPATH_W) '$(srcdir)/physcounttests.cpp'; fi`
+
+unittests-physeventtests.o: physeventtests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-physeventtests.o -MD -MP -MF $(DEPDIR)/unittests-physeventtests.Tpo -c -o unittests-physeventtests.o `test -f 'physeventtests.cpp' || echo '$(srcdir)/'`physeventtests.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-physeventtests.Tpo $(DEPDIR)/unittests-physeventtests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='physeventtests.cpp' object='unittests-physeventtests.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-physeventtests.o `test -f 'physeventtests.cpp' || echo '$(srcdir)/'`physeventtests.cpp
+
+unittests-physeventtests.obj: physeventtests.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-physeventtests.obj -MD -MP -MF $(DEPDIR)/unittests-physeventtests.Tpo -c -o unittests-physeventtests.obj `if test -f 'physeventtests.cpp'; then $(CYGPATH_W) 'physeventtests.cpp'; else $(CYGPATH_W) '$(srcdir)/physeventtests.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/unittests-physeventtests.Tpo $(DEPDIR)/unittests-physeventtests.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='physeventtests.cpp' object='unittests-physeventtests.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o unittests-physeventtests.obj `if test -f 'physeventtests.cpp'; then $(CYGPATH_W) 'physeventtests.cpp'; else $(CYGPATH_W) '$(srcdir)/physeventtests.cpp'; fi`
 
 unittests-formatoutputtests.o: formatoutputtests.cpp
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(unittests_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT unittests-formatoutputtests.o -MD -MP -MF $(DEPDIR)/unittests-formatoutputtests.Tpo -c -o unittests-formatoutputtests.o `test -f 'formatoutputtests.cpp' || echo '$(srcdir)/'`formatoutputtests.cpp
