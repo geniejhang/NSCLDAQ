@@ -481,12 +481,12 @@ AC_CONFIG_FILES([Makefile
 		 usb/vmusb/tclservertests/Makefile
 		 usb/ccusb/Makefile
 		 usb/ccusb/ccusb/Makefile 
-		 usb/ccusb/router/Makefile
-		 usb/ccusb/rdothread/Makefile usb/ccusb/tclserver/Makefile 
-		 usb/ccusb/tclserver/driver_Makefile
+		 usb/ccusb/core/Makefile 
+		 usb/ccusb/daqconfig/Makefile 
+		 usb/ccusb/ctlconfig/Makefile 
+		 usb/ccusb/ctlconfig/driver_Makefile
 		 usb/ccusb/tclpackage/Makefile
 		 usb/ccusb/tcldrivers/Makefile
-		 usb/ccusb/daqconfig/Makefile  usb/ccusb/commands/Makefile
 		 usb/ccusb/driverkit/Makefile
 		 usb/ccusb/driverkit/Makefile-template
 		 usb/ccusb/driverkit/CCUSBDriverIncludes
