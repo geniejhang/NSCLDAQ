@@ -74,12 +74,14 @@ unittests_SOURCES = \
    		cccusbcontroltests.cpp
 
 unittests_CXXFLAGS = \
+	    -I@srcdir@ \
 	    -I@top_srcdir@/base/headers \
 	    -I@top_srcdir@/base/testutils \
 	    -I@top_srcdir@/usb/ccusb/ccusb \
+	    -I@top_srcdir@/usb/ccusb/ctlconfig \
 	    -I@top_srcdir@/usb/ccusb \
 	    -I@top_srcdir@/usb/common/slowcontrols \
-			-I@srcdir@ \
+	    -I@top_srcdir@/usb/common/configurableobject \
 			@TCL_FLAGS@ \
 			@LIBTCLPLUS_CFLAGS@ \
 			$(CPPUNIT_INCLUDES)
