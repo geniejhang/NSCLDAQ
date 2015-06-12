@@ -21,32 +21,17 @@
  * @author Ron Fox (fox@nscl.msu.edu)
  */
 
-#ifndef __CRINGTIMESTAMPEDRUNNINGSCALERITEM_H
-#define __CRINGTIMESTAMPEDRUNNINGSCALERITEM_H
+#ifndef DAQ10_CRINGTIMESTAMPEDRUNNINGSCALERITEM_H
+#define DAQ10_CRINGTIMESTAMPEDRUNNINGSCALERITEM_H
 
-#ifndef __CRINGITEM_H
 #include "CRingItem.h"
-#endif
+#include "DataFormatV10.h"
 
-#ifndef __DATAFORMAT_H
-#include "DataFormat.h"
-#endif
-
-#ifndef __STL_VECTOR
 #include <vector>
-#ifndef __STL_VECTOR
-#define __STL_VECTOR
-#endif
-#endif
-
-#ifndef __CPPRTL_TYPEINFO
 #include <typeinfo>
-#ifndef __CPPRTL_TYPEINFO
-#define __CPPRTL_TYPEINFO
-#endif
-#endif
 
-
+namespace NSCLDAQ10
+{
 
 /**
  * @class CRingItemTimestampedRunningScalerItem
@@ -82,6 +67,8 @@ public:
   time_t   getCalendarTime() const;
   std::vector<uint32_t> getScalers() const;
 
+   uint32_t getOffsetStart() const;
+   uint32_t getOffsetEnd() const;
 
   // Utility methods:
 
@@ -91,5 +78,6 @@ private:
   
 };
 
+} // end of namespace
 
 #endif

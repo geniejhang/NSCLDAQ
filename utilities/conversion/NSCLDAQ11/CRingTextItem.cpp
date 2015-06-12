@@ -210,6 +210,12 @@ CRingTextItem::getStrings() const
 
   return result;
 }
+
+uint32_t
+CRingTextItem::getStringCount() const {
+    pTextItemBody pItem = reinterpret_cast<pTextItemBody>(getBodyPointer());
+    return pItem->s_stringCount;
+}
 /*!
    Modify the buffered value of the run time offset.  This may be done if you use the
    simplified constuctor and only later figure out what the run time offset actually is.
@@ -257,6 +263,14 @@ CRingTextItem::getTimeDivisor() const
   pTextItemBody pItem = reinterpret_cast<pTextItemBody>(getBodyPointer());
   return pItem->s_offsetDivisor;
 }
+
+void
+CRingTextItem::setTimeDivisor(uint32_t divisor)
+{
+  pTextItemBody pItem = reinterpret_cast<pTextItemBody>(getBodyPointer());
+  pItem->s_offsetDivisor = divisor;
+}
+
 /*!
    Set a new value for the timestamp of the item.
 */

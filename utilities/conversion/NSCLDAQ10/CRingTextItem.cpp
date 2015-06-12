@@ -173,6 +173,12 @@ CRingTextItem::getStrings() const
 
   return result;
 }
+
+uint32_t CRingTextItem::getStringCount() const
+{
+    return m_pItem->s_stringCount;
+}
+
 /*!
    Modify the buffered value of the run time offset.  This may be done if you use the
    simplified constuctor and only later figure out what the run time offset actually is.

@@ -18,7 +18,6 @@ class physeventtests : public CppUnit::TestFixture {
   CPPUNIT_TEST( badcast );
   CPPUNIT_TEST_SUITE_END();
 
-
 private:
 
 public:

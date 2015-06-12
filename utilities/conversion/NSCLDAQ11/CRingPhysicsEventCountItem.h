@@ -1,5 +1,5 @@
-#ifndef CRINGPHYSICSEVENTCOUNTERITEM_H
-#define CRINGPHYSICSEVENTCOUNTERITEM_H
+#ifndef NSCLDAQ11_CRINGPHYSICSEVENTCOUNTERITEM_H
+#define NSCLDAQ11_CRINGPHYSICSEVENTCOUNTERITEM_H
 
 
 /*
@@ -22,27 +22,9 @@
 
 #include "DataFormatV11.h"
 
-#ifndef __CRT_TIME_H
 #include <time.h>
-#ifndef __CRT_TIME_H
-#define __CRT_TIME_H
-#endif
-#endif
-
-
-#ifndef __CPPRTL_TYPEINFO
 #include <typeinfo>
-#ifndef __CPPRTL_TYPEINFO
-#define __CPPRTL_TYPEINFO
-#endif
-#endif
-
-#ifndef __STL_STRING
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
 
 namespace NSCLDAQ11
 {

@@ -1,5 +1,5 @@
-#ifndef CPHYSICSEVENTITEM_H
-#define CPHYSICSEVENTITEM_H
+#ifndef NSCLDAQ10_CPHYSICSEVENTITEM_H
+#define NSCLDAQ10_CPHYSICSEVENTITEM_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -23,6 +23,7 @@
 #include <stdint.h>
 
 #include <string>
+#include <vector>
 
 namespace NSCLDAQ10
 {
@@ -47,6 +48,9 @@ public:
   CPhysicsEventItem& operator=(const CPhysicsEventItem& rhs);
   int operator==(const CPhysicsEventItem& rhs) const;
   int operator!=(const CPhysicsEventItem& rhs) const;
+
+  // public utility methods
+public:
 
   // Virtual methods that all ring items must provide:
 

@@ -55,7 +55,7 @@ build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = unittests$(EXEEXT)
 subdir = utilities/conversion/NSCLDAQ10
-DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
+DIST_COMMON = $(nscldaq10_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_openssl.m4 \
@@ -101,15 +101,18 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(nscldaq10dir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libdataformatv10_la_LIBADD =
 am_libdataformatv10_la_OBJECTS = libdataformatv10_la-CRingItem.lo \
 	libdataformatv10_la-CRingScalerItem.lo \
+	libdataformatv10_la-CRingTimestampedRunningScalerItem.lo \
 	libdataformatv10_la-CRingStateChangeItem.lo \
 	libdataformatv10_la-CPhysicsEventItem.lo \
 	libdataformatv10_la-CRingPhysicsEventCountItem.lo \
 	libdataformatv10_la-CRingTextItem.lo \
+	libdataformatv10_la-CRingFragmentItem.lo \
+	libdataformatv10_la-CRingItemFactory.lo \
 	libdataformatv10_la-ringitem.lo
 libdataformatv10_la_OBJECTS = $(am_libdataformatv10_la_OBJECTS)
 libdataformatv10_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
@@ -150,7 +153,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-HEADERS = $(include_HEADERS)
+HEADERS = $(nscldaq10_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -332,18 +335,25 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libdataformatv10.la
 libdataformatv10_la_SOURCES = CRingItem.cpp \
                            CRingScalerItem.cpp \
+                           CRingTimestampedRunningScalerItem.cpp \
                            CRingStateChangeItem.cpp \
                            CPhysicsEventItem.cpp \
                            CRingPhysicsEventCountItem.cpp \
                            CRingTextItem.cpp \
+                           CRingFragmentItem.cpp \
+                           CRingItemFactory.cpp \
                            ringitem.cpp
 
-include_HEADERS = CRingItem.h \
+nscldaq10dir = @includedir@/NSCLDAQ10
+nscldaq10_HEADERS = CRingItem.h \
                   CRingScalerItem.h \
+                  CRingTimestampedRunningScalerItem.h \
                   CRingStateChangeItem.h \
                   CPhysicsEventItem.h \
                   CRingPhysicsEventCountItem.h \
                   CRingTextItem.h \
+                  CRingFragmentItem.h \
+                    CRingItemFactory.h \
                   DataFormatV10.h
 
 libdataformatv10_la_CXXFLAGS = -I@srcdir@ \
@@ -458,11 +468,14 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CPhysicsEventItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingFragmentItem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingItemFactory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingPhysicsEventCountItem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingScalerItem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingStateChangeItem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingTextItem.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-CRingTimestampedRunningScalerItem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdataformatv10_la-ringitem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-TestRunner.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unittests-formatoutputtests.Po@am__quote@
@@ -507,6 +520,13 @@ libdataformatv10_la-CRingScalerItem.lo: CRingScalerItem.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CRingScalerItem.lo `test -f 'CRingScalerItem.cpp' || echo '$(srcdir)/'`CRingScalerItem.cpp
 
+libdataformatv10_la-CRingTimestampedRunningScalerItem.lo: CRingTimestampedRunningScalerItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-CRingTimestampedRunningScalerItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-CRingTimestampedRunningScalerItem.Tpo -c -o libdataformatv10_la-CRingTimestampedRunningScalerItem.lo `test -f 'CRingTimestampedRunningScalerItem.cpp' || echo '$(srcdir)/'`CRingTimestampedRunningScalerItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv10_la-CRingTimestampedRunningScalerItem.Tpo $(DEPDIR)/libdataformatv10_la-CRingTimestampedRunningScalerItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingTimestampedRunningScalerItem.cpp' object='libdataformatv10_la-CRingTimestampedRunningScalerItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CRingTimestampedRunningScalerItem.lo `test -f 'CRingTimestampedRunningScalerItem.cpp' || echo '$(srcdir)/'`CRingTimestampedRunningScalerItem.cpp
+
 libdataformatv10_la-CRingStateChangeItem.lo: CRingStateChangeItem.cpp
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-CRingStateChangeItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-CRingStateChangeItem.Tpo -c -o libdataformatv10_la-CRingStateChangeItem.lo `test -f 'CRingStateChangeItem.cpp' || echo '$(srcdir)/'`CRingStateChangeItem.cpp
 @am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv10_la-CRingStateChangeItem.Tpo $(DEPDIR)/libdataformatv10_la-CRingStateChangeItem.Plo
@@ -534,6 +554,20 @@ libdataformatv10_la-CRingTextItem.lo: CRingTextItem.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingTextItem.cpp' object='libdataformatv10_la-CRingTextItem.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CRingTextItem.lo `test -f 'CRingTextItem.cpp' || echo '$(srcdir)/'`CRingTextItem.cpp
+
+libdataformatv10_la-CRingFragmentItem.lo: CRingFragmentItem.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-CRingFragmentItem.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-CRingFragmentItem.Tpo -c -o libdataformatv10_la-CRingFragmentItem.lo `test -f 'CRingFragmentItem.cpp' || echo '$(srcdir)/'`CRingFragmentItem.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv10_la-CRingFragmentItem.Tpo $(DEPDIR)/libdataformatv10_la-CRingFragmentItem.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingFragmentItem.cpp' object='libdataformatv10_la-CRingFragmentItem.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CRingFragmentItem.lo `test -f 'CRingFragmentItem.cpp' || echo '$(srcdir)/'`CRingFragmentItem.cpp
+
+libdataformatv10_la-CRingItemFactory.lo: CRingItemFactory.cpp
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-CRingItemFactory.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-CRingItemFactory.Tpo -c -o libdataformatv10_la-CRingItemFactory.lo `test -f 'CRingItemFactory.cpp' || echo '$(srcdir)/'`CRingItemFactory.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libdataformatv10_la-CRingItemFactory.Tpo $(DEPDIR)/libdataformatv10_la-CRingItemFactory.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='CRingItemFactory.cpp' object='libdataformatv10_la-CRingItemFactory.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -c -o libdataformatv10_la-CRingItemFactory.lo `test -f 'CRingItemFactory.cpp' || echo '$(srcdir)/'`CRingItemFactory.cpp
 
 libdataformatv10_la-ringitem.lo: ringitem.cpp
 @am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdataformatv10_la_CXXFLAGS) $(CXXFLAGS) -MT libdataformatv10_la-ringitem.lo -MD -MP -MF $(DEPDIR)/libdataformatv10_la-ringitem.Tpo -c -o libdataformatv10_la-ringitem.lo `test -f 'ringitem.cpp' || echo '$(srcdir)/'`ringitem.cpp
@@ -645,27 +679,27 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-includeHEADERS: $(include_HEADERS)
+install-nscldaq10HEADERS: $(nscldaq10_HEADERS)
 	@$(NORMAL_INSTALL)
-	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
+	@list='$(nscldaq10_HEADERS)'; test -n "$(nscldaq10dir)" || list=; \
 	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(includedir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(includedir)" || exit 1; \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(nscldaq10dir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(nscldaq10dir)" || exit 1; \
 	fi; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(includedir)'"; \
-	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(includedir)" || exit $$?; \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(nscldaq10dir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(nscldaq10dir)" || exit $$?; \
 	done
 
-uninstall-includeHEADERS:
+uninstall-nscldaq10HEADERS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
+	@list='$(nscldaq10_HEADERS)'; test -n "$(nscldaq10dir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(includedir)'; $(am__uninstall_files_from_dir)
+	dir='$(DESTDIR)$(nscldaq10dir)'; $(am__uninstall_files_from_dir)
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -847,7 +881,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(nscldaq10dir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -903,7 +937,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-includeHEADERS
+install-data-am: install-nscldaq10HEADERS
 
 install-dvi: install-dvi-am
 
@@ -949,7 +983,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
+uninstall-am: uninstall-libLTLIBRARIES uninstall-nscldaq10HEADERS
 
 .MAKE: check-am install-am install-strip
 
@@ -960,14 +994,14 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
 	dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
-	install-includeHEADERS install-info install-info-am \
-	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-info install-info-am install-libLTLIBRARIES \
+	install-man install-nscldaq10HEADERS install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-includeHEADERS \
-	uninstall-libLTLIBRARIES
+	tags uninstall uninstall-am uninstall-libLTLIBRARIES \
+	uninstall-nscldaq10HEADERS
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

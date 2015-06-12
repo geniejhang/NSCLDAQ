@@ -2,19 +2,26 @@ lib_LTLIBRARIES = libdataformatv10.la
 
 libdataformatv10_la_SOURCES = CRingItem.cpp \
                            CRingScalerItem.cpp \
+                           CRingTimestampedRunningScalerItem.cpp \
                            CRingStateChangeItem.cpp \
                            CPhysicsEventItem.cpp \
                            CRingPhysicsEventCountItem.cpp \
                            CRingTextItem.cpp \
+                           CRingFragmentItem.cpp \
+                           CRingItemFactory.cpp \
                            ringitem.cpp
 
+nscldaq10dir = @includedir@/NSCLDAQ10
 
-include_HEADERS = CRingItem.h \
+nscldaq10_HEADERS = CRingItem.h \
                   CRingScalerItem.h \
+                  CRingTimestampedRunningScalerItem.h \
                   CRingStateChangeItem.h \
                   CPhysicsEventItem.h \
                   CRingPhysicsEventCountItem.h \
                   CRingTextItem.h \
+                  CRingFragmentItem.h \
+                    CRingItemFactory.h \
                   DataFormatV10.h
 
 libdataformatv10_la_CXXFLAGS = -I@srcdir@ \

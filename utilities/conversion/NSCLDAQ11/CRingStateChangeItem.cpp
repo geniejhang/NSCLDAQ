@@ -17,6 +17,7 @@
 
 #include <config.h>
 #include "CRingStateChangeItem.h"
+#include <DataFormatV11.h>
 #include <RangeError.h>
 #include <sstream>
 #include <string.h>
@@ -326,6 +327,27 @@ CRingStateChangeItem::getTimestamp() const
 
     return pItem->s_Timestamp;
 }
+
+void
+CRingStateChangeItem::setOffsetDivisor(uint32_t divisor)
+{
+    pStateChangeItemBody pItem =
+        reinterpret_cast<pStateChangeItemBody>(getBodyPointer());
+
+    pItem->s_offsetDivisor = divisor;
+}
+
+
+
+uint32_t
+CRingStateChangeItem::getOffsetDivisor() const
+{
+    pStateChangeItemBody pItem =
+        reinterpret_cast<pStateChangeItemBody>(getBodyPointer());
+
+    return pItem->s_offsetDivisor;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //

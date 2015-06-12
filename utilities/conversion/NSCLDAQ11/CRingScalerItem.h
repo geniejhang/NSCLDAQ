@@ -1,5 +1,5 @@
-#ifndef CRINGSCALERITEM_H
-#define CRINGSCALERITEM_H
+#ifndef NSCLDAQ11_CRINGSCALERITEM_H
+#define NSCLDAQ11_CRINGSCALERITEM_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -20,33 +20,10 @@
 
 #include "CRingItem.h"
 
-#include "DataFormatV11.h"
-
-#ifndef __STL_VECTOR
 #include <vector>
-#ifndef __STL_VECTOR
-#define __STL_VECTOR
-#endif
-#endif
-
-#ifndef __CPPRTL_TYPEINFO
 #include <typeinfo>
-#ifndef __CPPRTL_TYPEINFO
-#define __CPPRTL_TYPEINFO
-#endif
-#endif
-
-#ifndef __RANGEERROR_H
 #include <RangeError.h>
-#endif
-
-#ifndef __STL_STRING
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
-
 
 namespace NSCLDAQ11
 {
@@ -65,9 +42,9 @@ public:
 public:
   CRingScalerItem(size_t numScalers);
   CRingScalerItem(uint32_t startTime,
-		  uint32_t stopTime,
-		  time_t   timestamp,
-		  std::vector<uint32_t> scalers,
+                  uint32_t stopTime,
+                  time_t   timestamp,
+                  std::vector<uint32_t> scalers,
                   bool                  isIncremental = true,
                   uint32_t              timeOffsetDivisor = 1);
   CRingScalerItem(uint64_t eventTimestamp, uint32_t source, uint32_t barrier,
@@ -105,6 +82,7 @@ public:
   void     setScaler(uint32_t channel, uint32_t value) throw(CRangeError);
   uint32_t getScaler(uint32_t channel) const throw(CRangeError);
   std::vector<uint32_t> getScalers() const;
+  void setScalers(const std::vector<uint32_t>& values);
 
   uint32_t getScalerCount() const;
 

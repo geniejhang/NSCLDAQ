@@ -96,6 +96,8 @@ public:
 public:
   std::vector<std::string>  getStrings() const;
 
+  uint32_t getStringCount() const;
+
   void     setTimeOffset(uint32_t offset);
   uint32_t getTimeOffset() const;
 

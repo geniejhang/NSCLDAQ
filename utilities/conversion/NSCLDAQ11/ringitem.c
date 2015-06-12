@@ -20,7 +20,7 @@
 #include "DataFormatV11.h"
 
 #ifdef __cplusplus
-namespace NSCLDAQV11
+namespace NSCLDAQ11
 {
 #endif
 

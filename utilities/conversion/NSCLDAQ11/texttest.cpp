@@ -11,6 +11,7 @@
 #undef protected
 
 #include <DataFormatV11.h>
+#include <byte_cast.h>
 
 #include <string>
 #include <vector>
@@ -30,6 +31,8 @@ class texttests : public CppUnit::TestFixture {
   CPPUNIT_TEST(copycons);
   CPPUNIT_TEST(tscons);
   CPPUNIT_TEST(fractionalRunTime);
+  CPPUNIT_TEST( getStringCount_0 );
+  CPPUNIT_TEST( setTimeDivisor_0 );
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -48,6 +51,8 @@ protected:
   void copycons();
   void tscons();
   void fractionalRunTime();
+  void getStringCount_0();
+  void setTimeDivisor_0();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(texttests);
@@ -361,4 +366,23 @@ texttests::fractionalRunTime()
       strings, 1234, stamp, 3
     );
     EQ(static_cast<float>(1234.0/3.0), item.computeElapsedTime());
+}
+
+
+void texttests::getStringCount_0()
+{
+    vector<string> testStrings = {"one", "two", "three"};
+    CRingTextItem item(MONITORED_VARIABLES, testStrings);
+
+    EQ( uint32_t(3), item.getStringCount() );
+}
+
+void texttests::setTimeDivisor_0()
+{
+    vector<string> testStrings = {"one", "two", "three"};
+    CRingTextItem item(MONITORED_VARIABLES, testStrings);
+    item.setTimeDivisor(234);
+
+    pTextItemBody pBody = reinterpret_cast<pTextItemBody>(item.getBodyPointer());
+    EQ( uint32_t(234), pBody->s_offsetDivisor);
 }

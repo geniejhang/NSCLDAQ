@@ -25,7 +25,7 @@
 #include "CRingTextItem.h"
 #include "CPhysicsEventItem.h"
 #include "CRingTimestampedRunningScalerItem.h"
-#include "DataFormat.h"
+#include "DataFormatV10.h"
 
 #include <vector>
 #include <string>
@@ -214,5 +214,6 @@ CRingItemFactory::isKnownItemType(const void* pItem)
   return knownItemTypes.count(p->s_type) > 0;
 
 }
+
 
 } // end of namespace

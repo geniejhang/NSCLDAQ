@@ -18,6 +18,9 @@
 #include <time.h>
 #include <string.h>
 
+namespace NSCLDAQ10
+{
+
 ////////////////////////////////////////////////////////////////////////////////////
 //
 // Construtors and other canonicals.
@@ -206,6 +209,18 @@ CRingTimestampedRunningScalerItem::getScalers() const
   return result;
 }
 
+uint32_t
+CRingTimestampedRunningScalerItem::getOffsetStart() const
+{
+   return m_pItem->s_intervalStartOffset;
+}
+
+uint32_t
+CRingTimestampedRunningScalerItem::getOffsetEnd() const
+{
+   return m_pItem->s_intervalEndOffset;
+}
+
 /**
  * TODO: After merge need to add the formatting method
  *       need to add to ring item factory.
@@ -248,3 +263,6 @@ CRingTimestampedRunningScalerItem::bodySize(uint32_t nScalers)
     + (nScalers-1)*sizeof(uint32_t) - sizeof(RingItemHeader);
   return size;
 }
+
+
+} // end of namespace

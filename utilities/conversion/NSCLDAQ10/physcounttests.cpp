@@ -160,3 +160,4 @@ void physcounttests::copycons()
   EQ(original.getTimestamp(),     copy.getTimestamp());
   EQ(original.getEventCount(),    copy.getEventCount());
 }
+

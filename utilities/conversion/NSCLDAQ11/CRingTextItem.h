@@ -100,12 +100,13 @@ public:
   // Public interface:
 public:
   std::vector<std::string>  getStrings() const;
+  uint32_t getStringCount() const;
 
   void     setTimeOffset(uint32_t offset);
   uint32_t getTimeOffset() const;
   float    computeElapsedTime() const;
   uint32_t getTimeDivisor() const;
-
+  void     setTimeDivisor(uint32_t divisor);
   void     setTimestamp(time_t stamp);
   time_t   getTimestamp() const;
 

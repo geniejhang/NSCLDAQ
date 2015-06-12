@@ -17,6 +17,7 @@
 #include "CPhysicsEventItem.h"
 #include <sstream>
 #include <stdio.h>
+#include <vector>
 
 namespace NSCLDAQ10
 {
@@ -52,6 +53,7 @@ CPhysicsEventItem::operator!=(const CPhysicsEventItem& rhs) const
 {
   return CRingItem::operator!=(rhs);
 }
+
 
 /*--------------------------------------------------
  *

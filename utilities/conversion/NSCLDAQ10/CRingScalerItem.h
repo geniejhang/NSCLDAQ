@@ -1,5 +1,5 @@
-#ifndef CRINGSCALERITEM_H
-#define CRINGSCALERITEM_H
+#ifndef NSCLDAQ10_CRINGSCALERITEM_H
+#define NSCLDAQ10_CRINGSCALERITEM_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -71,6 +71,8 @@ public:
 
   void     setScaler(uint32_t channel, uint32_t value) throw(CRangeError);
   uint32_t getScaler(uint32_t channel) const throw(CRangeError);
+
+  void setScalers(const std::vector<uint32_t>& scalers);
   std::vector<uint32_t> getScalers() const;
 
   uint32_t getScalerCount() const;

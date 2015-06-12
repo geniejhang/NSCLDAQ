@@ -1,5 +1,5 @@
-#ifndef DATAFORMATV11_H
-#define DATAFORMATV11_H
+#ifndef DAQ11_DATAFORMATV11_H
+#define DAQ11_DATAFORMATV11_H
 
 /*
     This software is Copyright by the Board of Trustees of Michigan

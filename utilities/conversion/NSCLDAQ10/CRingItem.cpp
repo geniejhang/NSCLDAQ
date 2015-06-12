@@ -191,6 +191,8 @@ CRingItem::getItemPointer()
 {
   return m_pItem;
 }
+
+
 /*!
    \return uint32_t
    \retval Current type of the item.

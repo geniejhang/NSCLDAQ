@@ -15,6 +15,7 @@
 */
 #include <config.h>
 #include "CRingScalerItem.h"
+#include <DataFormatV11.h>
 #include <time.h>
 #include <string.h>
 #include <sstream>
@@ -349,6 +350,21 @@ CRingScalerItem::setScaler(uint32_t channel, uint32_t value) throw(CRangeError)
 
     pScalers->s_scalers[channel] = value;
 }
+
+/*!
+  Set a scaler values.
+  \param values  - The new values for that channel.
+  \throw CRangError if there are too many channels
+*/
+void
+CRingScalerItem::setScalers(const std::vector<uint32_t>& values)
+{
+    size_t size = values.size();
+    for ( size_t ch=0; ch<size; ++ch) {
+        setScaler(ch, values.at(ch));
+    }
+}
+
 /*!
 
   \param channel - Number of the channel we want.

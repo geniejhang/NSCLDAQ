@@ -31,6 +31,9 @@ class ritemtests : public CppUnit::TestFixture {
 //  CPPUNIT_TEST(selection);
   CPPUNIT_TEST(copyconstruct);
   CPPUNIT_TEST(bodysize);
+  CPPUNIT_TEST(fillBody_0);
+  CPPUNIT_TEST(fillBody_1);
+  CPPUNIT_TEST(fillBody_2);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -51,6 +54,9 @@ protected:
 //  void selection();
 //  void sampling();
   void bodysize();
+  void fillBody_0();
+  void fillBody_1();
+  void fillBody_2();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ritemtests);
@@ -341,4 +347,45 @@ ritemtests::bodysize()
   *pBody++ = 2;
   i.setBodyCursor(pBody);
   EQ(static_cast<size_t>(2), i.getBodySize());
+}
+
+
+void ritemtests::fillBody_0()
+{
+    vector<uint16_t> data = {0, 1, 2, 3, 4, 5, 6};
+    CRingItem item(1);
+
+    item.fillBody(data);
+
+    // body was updated appropriately
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("body size should match size of data passed in",
+                         data.size()*sizeof(uint16_t), item.getBodySize());
+}
+void ritemtests::fillBody_1()
+{
+    vector<uint16_t> data = {0, 1, 2, 3, 4, 5, 6};
+    CRingItem item(1);
+
+    item.fillBody(data);
+
+    // body contains data we expect
+    uint16_t* pBody = reinterpret_cast<uint16_t*>(item.getBodyPointer());
+    for (size_t i=0; i<data.size(); ++i) {
+        CPPUNIT_ASSERT_EQUAL_MESSAGE( "body should recieve data passed in",
+                                      data.at(i), *pBody++ );
+    }
+
+}
+void ritemtests::fillBody_2()
+{
+    vector<uint16_t> data = {0, 1, 2, 3, 4, 5, 6};
+    CRingItem item(1);
+
+    item.fillBody(data);
+
+    // cursor is located after our new data
+    uint16_t* pBody = reinterpret_cast<uint16_t*>(item.getBodyPointer());
+    uint16_t* pCursor = reinterpret_cast<uint16_t*>(item.getBodyCursor());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("cursor should be located after newly inserted data",
+                         ptrdiff_t(data.size()), pCursor-pBody);
 }

@@ -14,14 +14,14 @@
 	     East Lansing, MI 48824-1321
 */
 
-#ifndef NSCLDAQ11_CRINGFRAGMENTITEM_H
-#define NSCLDAQ11_CRINGFRAGMENTITEM_H
+#ifndef NSCLDAQ10_CRINGFRAGMENTITEM_H
+#define NSCLDAQ10_CRINGFRAGMENTITEM_H
 
 #include "CRingItem.h"
 
 #include <typeinfo>
 
-namespace NSCLDAQ11
+namespace NSCLDAQ10
 {
 
 // Forward definitions.
@@ -35,6 +35,11 @@ typedef struct _EventBuilderFragment *pEventBuilderFragment;
  */
 class CRingFragmentItem : public CRingItem
 {
+  // Private object data:
+
+private:
+  pEventBuilderFragment  m_pFragment;
+
   // Implemented canonical items:
 
 public:
@@ -57,8 +62,8 @@ public:
 public:
   uint64_t     timestamp() const;
   uint32_t     source() const;
-  size_t       payloadSize();
-  void*        payloadPointer();
+  size_t       payloadSize()   const;
+  const void*  payloadPointer() const;
   uint32_t     barrierType() const;
 
   // Virtual method overrides:
@@ -70,10 +75,10 @@ public:
 
 private:
   size_t bodySize(size_t payloadSize) const;
-  void   copyPayload(const void* pPayloadSource, size_t payloadSize);
+  void   copyPayload(const void* pPayloadSource);
   void   init(size_t size);
 };
 
-
 } // end of namespace
+
 #endif

@@ -169,6 +169,9 @@ teststate::accessors()
 
   empty.setTimestamp(314159);
   EQ((time_t)(314159), empty.getTimestamp());
+
+  empty.setOffsetDivisor(2345);
+  EQ(uint32_t(2345),empty.getOffsetDivisor());
   
 }
 /**
@@ -198,6 +201,7 @@ void teststate::copycons()
   EQ(original.getElapsedTime(), copy.getElapsedTime());
   EQ(original.getTitle(),         copy.getTitle());
   EQ(original.getTimestamp(),   copy.getTimestamp());
+  EQ(original.getOffsetDivisor(),   copy.getOffsetDivisor());
 }
 /*
   Test constructors of items with timestamps:

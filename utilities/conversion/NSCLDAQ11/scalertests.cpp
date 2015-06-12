@@ -12,6 +12,9 @@
 
 #include <DataFormatV11.h>
 #include <time.h>
+#include <vector>
+#include <algorithm>
+#include <iterator>
 
 using namespace std;
 using namespace NSCLDAQ11;
@@ -27,6 +30,7 @@ class scltests : public CppUnit::TestFixture {
   CPPUNIT_TEST(tstampCopyCons);
   CPPUNIT_TEST(fractionalRunTime);
   CPPUNIT_TEST(incremental);
+  CPPUNIT_TEST(setScalers_0);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -47,6 +51,7 @@ protected:
   void tstampCopyCons();
   void fractionalRunTime();
   void incremental();
+  void setScalers_0();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(scltests);
@@ -89,7 +94,7 @@ void scltests::fullcons()
   for (int i =0; i < 32; i++) {
     EQ(scalerValues[i], pItem->s_body.u_noBodyHeader.s_body.s_scalers[i]);
   }
- 
+
 }
 // Exercise the 'downcast'  construction from an existing ring buffer.
 //  This also exercises the getter accessors.
@@ -318,4 +323,20 @@ scltests::incremental()
     ASSERT(inc.isIncremental());
     ASSERT(!notinc.isIncremental());
     
+}
+
+
+void scltests::setScalers_0()
+{
+    CRingScalerItem sclr(32);
+
+    // we only support the setting of scalers with a vector whose
+    // size is the same as what currently exist
+    vector<uint32_t> values(sclr.getScalerCount());
+    iota(begin(values), end(values), 0);
+
+    sclr.setScalers(values);
+
+    ASSERT( values == sclr.getScalers() );
+    EQ( values.size(), static_cast<size_t>(sclr.getScalerCount()) );
 }

@@ -3,9 +3,14 @@
 #ifndef CTransform10p0to11p0_H
 #define CTransform10p0to11p0_H
 
-#include <NSCLDAQ10/CRingItem.h>
-#include <NSCLDAQ11/CRingItem.h>
-#include <memory>
+namespace NSCLDAQ10
+{
+    class CRingItem;
+}
+
+namespace NSCLDAQ11 {
+    class CRingItem;
+}
 
 class CTransform10p0to11p0 
 {
@@ -16,6 +21,15 @@ class CTransform10p0to11p0
   public:
     FinalType operator()(InitialType& item);
     FinalType dispatch(InitialType& item);
+
+   public:
+    FinalType transformScaler(InitialType& item);
+    FinalType transformStateChange(InitialType& item);
+    FinalType transformPhysicsEvent(InitialType& item);
+    FinalType transformPhysicsEventCount(InitialType& item);
+    FinalType transformText(InitialType& item);
+    FinalType transformNonIncrScaler(InitialType& item);
+    FinalType transformFragment(InitialType& item);
 };
 
 #endif

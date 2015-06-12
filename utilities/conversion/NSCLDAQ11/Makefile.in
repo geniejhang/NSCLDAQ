@@ -55,7 +55,7 @@ build_triplet = @build@
 host_triplet = @host@
 noinst_PROGRAMS = unittests$(EXEEXT)
 subdir = utilities/conversion/NSCLDAQ11
-DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
+DIST_COMMON = $(nscldaq11_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_openssl.m4 \
@@ -101,7 +101,7 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(nscldaq11dir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libdataformatv11_la_LIBADD =
 am_libdataformatv11_la_OBJECTS = libdataformatv11_la-CRingItem.lo \
@@ -170,7 +170,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-HEADERS = $(include_HEADERS)
+HEADERS = $(nscldaq11_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -365,7 +365,8 @@ libdataformatv11_la_SOURCES = CRingItem.cpp \
                                                                                                         RingItemComparisons.cpp \
 													 ringitem.c 
 
-include_HEADERS = CRingItem.h \
+nscldaq11dir = @includedir@/NSCLDAQ11
+nscldaq11_HEADERS = CRingItem.h \
                   CAbnormalEndItem.h \
                   CRingScalerItem.h \
                   CRingStateChangeItem.h \
@@ -826,27 +827,27 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-includeHEADERS: $(include_HEADERS)
+install-nscldaq11HEADERS: $(nscldaq11_HEADERS)
 	@$(NORMAL_INSTALL)
-	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
+	@list='$(nscldaq11_HEADERS)'; test -n "$(nscldaq11dir)" || list=; \
 	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(includedir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(includedir)" || exit 1; \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(nscldaq11dir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(nscldaq11dir)" || exit 1; \
 	fi; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(includedir)'"; \
-	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(includedir)" || exit $$?; \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(nscldaq11dir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(nscldaq11dir)" || exit $$?; \
 	done
 
-uninstall-includeHEADERS:
+uninstall-nscldaq11HEADERS:
 	@$(NORMAL_UNINSTALL)
-	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
+	@list='$(nscldaq11_HEADERS)'; test -n "$(nscldaq11dir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(includedir)'; $(am__uninstall_files_from_dir)
+	dir='$(DESTDIR)$(nscldaq11dir)'; $(am__uninstall_files_from_dir)
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -1028,7 +1029,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(nscldaq11dir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -1084,7 +1085,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-includeHEADERS
+install-data-am: install-nscldaq11HEADERS
 
 install-dvi: install-dvi-am
 
@@ -1130,7 +1131,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
+uninstall-am: uninstall-libLTLIBRARIES uninstall-nscldaq11HEADERS
 
 .MAKE: check-am install-am install-strip
 
@@ -1141,14 +1142,14 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES
 	dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
-	install-includeHEADERS install-info install-info-am \
-	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-info install-info-am install-libLTLIBRARIES \
+	install-man install-nscldaq11HEADERS install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-includeHEADERS \
-	uninstall-libLTLIBRARIES
+	tags uninstall uninstall-am uninstall-libLTLIBRARIES \
+	uninstall-nscldaq11HEADERS
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

@@ -1,5 +1,5 @@
-#ifndef __CRINGSTATECHANGEITEM_H
-#define __CRINGSTATECHANGEITEM_H
+#ifndef NSCLDAQ10_CRINGSTATECHANGEITEM_H
+#define NSCLDAQ10_CRINGSTATECHANGEITEM_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -19,26 +19,11 @@
 
 #include <CRingItem.h>
 
-
 #include <DataFormatV10.h>
 
-
-#ifndef __STL_STRING
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
-
-#ifndef __CPPRTL_TYPEINFO
 #include <typeinfo>
-#ifndef __CPPRTL_TYPEINFO
-#endif
-#endif
-
-#ifndef __RANGEERROR_H
 #include <RangeError.h>
-#endif
 
 namespace NSCLDAQ10
 {

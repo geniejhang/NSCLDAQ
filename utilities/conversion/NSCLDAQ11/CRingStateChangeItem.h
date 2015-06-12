@@ -1,5 +1,5 @@
-#ifndef __CRINGSTATECHANGEITEM_H
-#define __CRINGSTATECHANGEITEM_H
+#ifndef NSCLDAQ11_CRINGSTATECHANGEITEM_H
+#define NSCLDAQ11_CRINGSTATECHANGEITEM_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -18,28 +18,15 @@
 
 
 #include <CRingItem.h>
-#include <DataFormatV11.h>
 
-
-#ifndef __STL_STRING
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
-
-#ifndef __CPPRTL_TYPEINFO
 #include <typeinfo>
-#ifndef __CPPRTL_TYPEINFO
-#endif
-#endif
-
-#ifndef __RANGEERROR_H
 #include <RangeError.h>
-#endif
 
 namespace NSCLDAQ11
 {
+
+struct _StateChangeItemBody;
 
 /*!
   This class represents a state change item.
@@ -62,7 +49,7 @@ class CRingStateChangeItem : public CRingItem
 
   // construction and other canonicals
 public:
-  CRingStateChangeItem(uint16_t reason = BEGIN_RUN);
+  CRingStateChangeItem(uint16_t reason = 1);
   CRingStateChangeItem(uint16_t reason,
 		       uint32_t runNumber,
 		       uint32_t timeOffset,
@@ -89,7 +76,7 @@ public:
   void setRunNumber(uint32_t run);
   uint32_t getRunNumber() const;
 
-  void setElapsedTime(uint32_t offset);
+  void     setElapsedTime(uint32_t offset);
   uint32_t getElapsedTime() const;
   float    computeElapsedTime() const;
 
@@ -99,6 +86,8 @@ public:
   void setTimestamp(time_t stamp);
   time_t getTimestamp() const;
 
+  void setOffsetDivisor(uint32_t divisor);
+  uint32_t getOffsetDivisor() const;
   // Virtual method overrides.
 
   virtual std::string typeName() const;
@@ -109,7 +98,7 @@ public:
 private:
   void init();
   bool isStateChange();
-  pStateChangeItemBody getStateChangeBody();
+  _StateChangeItemBody* getStateChangeBody();
 };
 
 } // end of namespace

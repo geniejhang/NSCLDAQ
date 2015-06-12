@@ -1,5 +1,5 @@
-#ifndef CRINGPHYSICSEVENTCOUNTERITEM_H
-#define CRINGPHYSICSEVENTCOUNTERITEM_H
+#ifndef NSCLDAQ10_CRINGPHYSICSEVENTCOUNTERITEM_H
+#define NSCLDAQ10_CRINGPHYSICSEVENTCOUNTERITEM_H
 
 
 /*
@@ -47,10 +47,10 @@ private:
 public:
   CRingPhysicsEventCountItem();
   CRingPhysicsEventCountItem(uint64_t count,
-			     uint32_t timeOffset);
-  CRingPhysicsEventCountItem(uint64_t count, 
-			     uint32_t timeoffset, 
-			     time_t stamp);
+                             uint32_t timeOffset);
+  CRingPhysicsEventCountItem(uint64_t count,
+                             uint32_t timeoffset,
+                             time_t stamp);
   CRingPhysicsEventCountItem(const CRingItem& rhs)  throw(std::bad_cast);
   CRingPhysicsEventCountItem(const CRingPhysicsEventCountItem& rhs);
 

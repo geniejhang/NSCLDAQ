@@ -27,6 +27,7 @@ class texttests : public CppUnit::TestFixture {
   CPPUNIT_TEST(castcons);
   CPPUNIT_TEST(accessors);
   CPPUNIT_TEST(copycons);
+  CPPUNIT_TEST(getStringCount_0);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -43,6 +44,7 @@ protected:
   void castcons();
   void accessors();
   void copycons();
+  void getStringCount_0();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(texttests);
@@ -254,4 +256,12 @@ void texttests::copycons()
     EQ (testStrings[i], copiedStrings[i]);
   }
   
+}
+
+void texttests::getStringCount_0()
+{
+    vector<string> testStrings = {"one", "two", "three"};
+    CRingTextItem item(MONITORED_VARIABLES, testStrings);
+
+    EQ( uint32_t(3), item.getStringCount() );
 }

@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 namespace NSCLDAQ10
 {
@@ -75,6 +76,9 @@ public:
   void*  getBodyPointer();
   void*  getBodyCursor();
   _RingItem*  getItemPointer();
+
+  template<class T> void fillBody(const std::vector<T>& data);
+
   uint32_t type() const;
 
   // Mutators:
@@ -107,6 +111,31 @@ private:
 
   
 };
+
+
+// Template implementation
+template<class T>
+void CRingItem::fillBody(const std::vector<T>& data)
+{
+    size_t nBytesPerItem = sizeof(typename std::vector<T>::value_type);
+    size_t nBytesToCopy = nBytesPerItem*data.size();
+
+    newIfNecessary(nBytesToCopy);
+
+    T* pCursor = reinterpret_cast<T*>(getBodyPointer());
+
+    size_t nElements = data.size();
+    for (size_t element=0; element<nElements; ++element) {
+        *pCursor = data.at(element);
+        ++pCursor;
+    }
+
+    setBodyCursor(pCursor);
+    updateSize();
+
+}
+
+
 
 } // end of namespace
 #endif

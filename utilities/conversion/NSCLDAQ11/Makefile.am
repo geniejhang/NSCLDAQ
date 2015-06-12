@@ -14,8 +14,9 @@ libdataformatv11_la_SOURCES = CRingItem.cpp \
                            CRingItemFactory.cpp \
                                                                                                         RingItemComparisons.cpp \
 													 ringitem.c 
+nscldaq11dir = @includedir@/NSCLDAQ11
 
-include_HEADERS = CRingItem.h \
+nscldaq11_HEADERS = CRingItem.h \
                   CAbnormalEndItem.h \
                   CRingScalerItem.h \
                   CRingStateChangeItem.h \

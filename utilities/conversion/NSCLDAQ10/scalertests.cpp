@@ -12,6 +12,8 @@
 
 #include <DataFormatV10.h>
 #include <time.h>
+#include <algorithm>
+#include <iterator>
 
 using namespace std;
 using namespace NSCLDAQ10;
@@ -148,6 +150,14 @@ void scltests::accessors()
   for (uint32_t i = 0; i < 32; i++) {
     EQ(i, s.getScaler(i));
   }
+
+  // test that we can pass in an array of values
+  std::vector<uint32_t> values(32);
+  std::iota(begin(values), end(values), 32);
+
+  s.setScalers(values);
+  ASSERT(values == s.getScalers());
+
 }
 // Test copy construction.
 

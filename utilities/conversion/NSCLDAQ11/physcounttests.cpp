@@ -10,6 +10,7 @@
 
 #include <string.h>
 #include <time.h>
+#include <chrono>
 
 using namespace NSCLDAQ11;
 
@@ -19,6 +20,7 @@ class physcounttests : public CppUnit::TestFixture {
   CPPUNIT_TEST(partialcons);
   CPPUNIT_TEST(fullcons);
   CPPUNIT_TEST(castcons);
+  CPPUNIT_TEST(castcons_1);
   CPPUNIT_TEST(accessors);
   CPPUNIT_TEST(copycons);
   CPPUNIT_TEST(tscons);
@@ -38,6 +40,7 @@ protected:
   void partialcons();
   void fullcons();
   void castcons();
+  void castcons_1();
   void accessors();
   void copycons();
   void tscons();
@@ -85,46 +88,64 @@ void physcounttests::fullcons()
 //
 void physcounttests::castcons()
 {
-  CRingItem            good(PHYSICS_EVENT_COUNT);
-  CRingStateChangeItem bad;
+    CRingItem            good(PHYSICS_EVENT_COUNT);
+    CRingStateChangeItem bad;
 
-  time_t now;
-  time(&now);
+    time_t now;
+    time(&now);
 
-  PhysicsEventCountItem body = {sizeof(PhysicsEventCountItem),
-				PHYSICS_EVENT_COUNT,
-				1234, static_cast<uint32_t>(now), 1234568};
-  memcpy(good.getItemPointer(), &body, sizeof(body));
-  uint8_t* p = reinterpret_cast<uint8_t*>(good.getBodyCursor());
-  p          += sizeof(PhysicsEventCountItem) - sizeof(RingItemHeader);
-  good.setBodyCursor(p);
+    PhysicsEventCountItem body = {sizeof(PhysicsEventCountItem),
+                                  PHYSICS_EVENT_COUNT,
+                                  1234, static_cast<uint32_t>(now), 1234568};
+    memcpy(good.getItemPointer(), &body, sizeof(body));
+    uint8_t* p = reinterpret_cast<uint8_t*>(good.getBodyCursor());
+    p          += sizeof(PhysicsEventCountItem) - sizeof(RingItemHeader);
+    good.setBodyCursor(p);
 
-  bool thrown(false);
-  try {
-    CRingPhysicsEventCountItem i(good);
-  }
-  catch(...) {
-    thrown = true;
-  }
-  ASSERT(!thrown);
+    bool thrown(false);
+    try {
+        CRingPhysicsEventCountItem i(good);
+    }
+    catch(...) {
+        thrown = true;
+    }
+    ASSERT(!thrown);
 
-  // Bad construction should throw a bad cast:
+    // Bad construction should throw a bad cast:
 
-  bool rightexception(false);
-  thrown = false;
-  try {
-    CRingPhysicsEventCountItem i(bad);
-  }
-  catch (std::bad_cast c) {
-    thrown = true;
-    rightexception = true;
-  }
-  catch(...) {
-    thrown = true;
-    rightexception = false;
-  }
-  ASSERT(thrown);
-  ASSERT(rightexception);
+    bool rightexception(false);
+    thrown = false;
+    try {
+        CRingPhysicsEventCountItem i(bad);
+    }
+    catch (std::bad_cast c) {
+        thrown = true;
+        rightexception = true;
+    }
+    catch(...) {
+        thrown = true;
+        rightexception = false;
+    }
+    ASSERT(thrown);
+    ASSERT(rightexception);
+}
+
+void physcounttests::castcons_1()
+{
+    using namespace std::chrono;
+    // good constructor should cause identical body layout
+
+    auto time_now = system_clock::to_time_t( system_clock::now() );
+
+    CRingPhysicsEventCountItem orig(123, 345, time_now);
+    CRingItem base(orig);
+    CRingPhysicsEventCountItem item = base;
+
+    EQ( uint64_t(123), item.getEventCount());
+    EQ( uint32_t(345), item.getTimeOffset());
+    EQ( uint32_t(1), item.getTimeDivisor());
+    EQ( time_now, item.getTimestamp());
+
 }
 
 // Test write accessors (reads have already been tested.
