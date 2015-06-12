@@ -11,7 +11,6 @@
 #undef protected
 
 #include <DataFormatV11.h>
-#include <byte_cast.h>
 
 #include <string>
 #include <vector>
