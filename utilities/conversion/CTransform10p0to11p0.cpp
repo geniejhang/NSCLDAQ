@@ -68,7 +68,7 @@ CTransform10p0to11p0::dispatch(InitialType& item)
     return CTransform10p0to11p0::FinalType(1);
 }
 
-CTransform10p0to11p0::FinalType
+NSCLDAQ11::CRingScalerItem
 CTransform10p0to11p0::transformScaler(InitialType& item)
 {
     NSCLDAQ10::CRingScalerItem& v10item = dynamic_cast<NSCLDAQ10::CRingScalerItem&>(item);
@@ -82,10 +82,10 @@ CTransform10p0to11p0::transformScaler(InitialType& item)
 
     v11item.setScalers(v10item.getScalers());
 
-    return FinalType(v11item);
+    return v11item;
 }
 
-CTransform10p0to11p0::FinalType
+NSCLDAQ11::CRingStateChangeItem
 CTransform10p0to11p0::transformStateChange(InitialType& item)
 {
     NSCLDAQ10::CRingStateChangeItem& v10item = dynamic_cast<NSCLDAQ10::CRingStateChangeItem&>(item);
@@ -101,10 +101,10 @@ CTransform10p0to11p0::transformStateChange(InitialType& item)
 
     v11item.setTitle(v10item.getTitle());
 
-    return FinalType(v11item);
+    return v11item;
 }
 
-CTransform10p0to11p0::FinalType
+NSCLDAQ11::CPhysicsEventItem
 CTransform10p0to11p0::transformPhysicsEvent(InitialType& item)
 {
     NSCLDAQ10::CPhysicsEventItem& v10item = dynamic_cast<NSCLDAQ10::CPhysicsEventItem&>(item);
@@ -119,10 +119,10 @@ CTransform10p0to11p0::transformPhysicsEvent(InitialType& item)
     v11item.setBodyCursor(pCursor11);
     v11item.updateSize();
 
-    return FinalType(v11item);
+    return v11item;
 }
 
-CTransform10p0to11p0::FinalType
+NSCLDAQ11::CRingPhysicsEventCountItem
 CTransform10p0to11p0::transformPhysicsEventCount(InitialType& item)
 {
     NSCLDAQ10::CRingPhysicsEventCountItem& v10item
@@ -132,10 +132,10 @@ CTransform10p0to11p0::transformPhysicsEventCount(InitialType& item)
                                                   v10item.getTimeOffset(),
                                                   v10item.getTimestamp());
 
-    return FinalType(v11item);
+    return v11item;
 }
 
-CTransform10p0to11p0::FinalType
+NSCLDAQ11::CRingTextItem
 CTransform10p0to11p0::transformText(InitialType& item)
 {
     NSCLDAQ10::CRingTextItem& v10item
@@ -146,10 +146,10 @@ CTransform10p0to11p0::transformText(InitialType& item)
                                      v10item.getTimeOffset(),
                                      v10item.getTimestamp());
     v11item.setTimeDivisor(1);
-    return FinalType(v11item);
+    return v11item;
 }
 
-CTransform10p0to11p0::FinalType
+NSCLDAQ11::CRingScalerItem
 CTransform10p0to11p0::transformNonIncrScaler(InitialType& item)
 {
     NSCLDAQ10::CRingTimestampedRunningScalerItem& v10item
@@ -161,10 +161,10 @@ CTransform10p0to11p0::transformNonIncrScaler(InitialType& item)
                                        v10item.getScalers(),
                                        false,
                                        1);
-    return FinalType(v11item);
+    return v11item;
 }
 
-CTransform10p0to11p0::FinalType
+NSCLDAQ11::CRingFragmentItem
 CTransform10p0to11p0::transformFragment(InitialType& item)
 {
     NSCLDAQ10::CRingFragmentItem& v10item
@@ -176,6 +176,6 @@ CTransform10p0to11p0::transformFragment(InitialType& item)
                                          v10item.payloadPointer(),
                                          v10item.barrierType());
 
-    return FinalType(v11item);
+    return v11item;
 }
 
