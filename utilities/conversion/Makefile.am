@@ -13,7 +13,8 @@ include_HEADERS = CTransformMediator.h \
 #                           CTransform11p0to11p0.h
 
 libConversion_la_CXXFLAGS = -I@srcdir@ \
-                            -I@top_srcdir@/daq/format \
+                            -I@srcdir@/NSCLDAQ10 \
+                            -I@srcdir@/NSCLDAQ11 \
                             @LIBTCLPLUS_CFLAGS@
 
 libConversion_la_LIBADD = @LIBTCLPLUS_LDFLAGS@
