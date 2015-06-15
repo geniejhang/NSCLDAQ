@@ -25,6 +25,7 @@ using namespace std;
 #include "CGetCommand.h"
 #include "CUpdateCommand.h"
 #include "CWatchCommand.h"
+#include <CSystemControl.h>
 
 
 #include <tcl.h>
@@ -45,14 +46,15 @@ static const int VarUpdateInterval(1);
 /*!  Constructor is not very interesting 'cause all the action is in 
     start and operator()<
 */
-TclServer::TclServer() :
+TclServer::TclServer(CSystemControl& systemControl) :
   m_port(-1),
   m_configFilename(string("")),
   m_pVme(0),
   m_pInterpreter(0),
   m_dumpAllVariables(true),
   m_exitNow(false),
-  m_config()
+  m_config(),
+  m_systemControl(systemControl)
 {}
 /*!
   These threads are built to live 'forever' so the destructor is also 
@@ -101,10 +103,28 @@ TclServer::start(int port, const char* configFile, CCCUSB& vme)
 void
 TclServer::init()
 {
+  try {
     initInterpreter();		// Create interp and add commands.
     readConfigFile();		// Initialize the modules.
     initModules();              // Initialize the fully configured modules.
     startTcpServer();		// Set up the Tcp/Ip listener event.
+  } catch (string msg) {
+    cerr << "TclServer thread caught a string exception: " << msg << endl;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
+  }
+  catch (char* msg) {
+    cerr << "TclServer thread caught a char* exception: " << msg << endl;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
+  }
+  catch (CException& err) {
+    cerr << "CTclServer thread caught a daq exception: "
+	       << err.ReasonText() << " while " << err.WasDoing() << endl;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
+  }
+  catch (...) {
+    cerr << "TclServer thread caught some other exception type.\n";
+    m_systemControl.scheduleExit(EXIT_FAILURE);
+  }
 }
 /**
  * scheduleExit
@@ -138,20 +158,20 @@ TclServer::operator()()
   }
   catch (string msg) {
     cerr << "TclServer thread caught a string exception: " << msg << endl;
-    throw;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
   }
   catch (char* msg) {
     cerr << "TclServer thread caught a char* exception: " << msg << endl;
-    throw;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
   }
   catch (CException& err) {
-    cerr << "CAcquisitino thread caught a daq exception: "
-	 << err.ReasonText() << " while " << err.WasDoing() << endl;
-    throw;
+    cerr << "TclServer thread caught a daq exception: "
+	       << err.ReasonText() << " while " << err.WasDoing() << endl;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
   }
   catch (...) {
     cerr << "TclServer thread caught some other exception type.\n";
-    throw;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
   }
 }
 

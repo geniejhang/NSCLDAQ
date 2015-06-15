@@ -22,28 +22,13 @@
 
 
 
-#ifndef __CEXIT_H
-#define __CEXIT_H
+#ifndef CEXIT_H
+#define CEXIT_H
 
-#ifndef __TCLOBJECTPROCESSOR_H
 #include <TCLObjectProcessor.h>
-#endif
 
-#ifndef __STL_VECTOR
 #include <vector>
-#ifndef __STL_VECTOR
-#define __STL_VECTOR
-#endif
-#endif
-
-#ifndef __STL_STRING
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
-
-
 
 class CTCLInterpreter;
 class CTCLInterpreterObject;

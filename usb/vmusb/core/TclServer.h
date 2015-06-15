@@ -30,6 +30,7 @@
 class CVMUSB;
 class CTCLInterpreter;
 struct DataBuffer;
+class CSystemControl;
 
 /*!
   The TclServer class implements a little Tcl server for our readout software.
@@ -70,6 +71,7 @@ private:
   bool                         m_dumpAllVariables;
   bool                         m_exitNow;
   bool                         m_isRunning;
+  CSystemControl&              m_systemControl;
 
 
   // Public data structures:
@@ -84,7 +86,7 @@ public:
   } TclServerEvent;
   
 public:
-  TclServer();
+  TclServer(CSystemControl& sysControl);
   ~TclServer();			// This is a final class.
 private:
   TclServer(const TclServer& rhs);

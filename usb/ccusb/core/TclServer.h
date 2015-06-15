@@ -28,6 +28,7 @@
 
 class CCCUSB;
 class CTCLInterpreter;
+class CSystemControl;
 
 /*!
   The TclServer class implements a little Tcl server for our readout software.
@@ -63,10 +64,11 @@ private:
   bool                         m_exitNow;
   Tcl_ThreadId                 m_tclThreadId;
   CCtlConfiguration            m_config;
+  CSystemControl&              m_systemControl;
 
 
 public:
-  TclServer();
+  TclServer(CSystemControl& systemControl);
   ~TclServer();			// This is a final class.
 private:
   TclServer(const TclServer& rhs);

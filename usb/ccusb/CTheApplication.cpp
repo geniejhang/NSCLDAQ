@@ -442,7 +442,7 @@ CTheApplication::initializeBufferPool()
 void
 CTheApplication::startTclServer(int port)
 {
-  TclServer* pServer = new TclServer;
+  TclServer* pServer = new TclServer(m_sysControl);
   pServer->start(port, Globals::controlConfigFilename.c_str(),
 		   *Globals::pUSBController);
 }

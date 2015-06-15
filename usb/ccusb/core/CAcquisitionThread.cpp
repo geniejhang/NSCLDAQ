@@ -440,14 +440,12 @@ CAcquisitionThread::stopDaq()
 
   drainUsb();
 
-  cerr << "Calling end of run operations\n";
   std::vector<CReadoutModule*> Stacks = Globals::pConfig->getStacks();
   for(int i =0; i < Stacks.size(); i++) {
     CStack* pStack = dynamic_cast<CStack*>(Stacks[i]->getHardwarePointer());
     assert(pStack);
     pStack->onEndRun(*m_pCamac);    // Call onEndRun for daq hardware associated with the stack.
   }
-  cerr << "End of run operations complete\n";
 }
 /*!
   Pause the daq. This means doing a stopDaq() and fielding 
@@ -516,16 +514,15 @@ CAcquisitionThread::drainUsb()
   size_t bytesRead;
   cerr << "CAcquisitionThread::drainUsb...\n";
   do {
-    int    status = m_pCamac->usbRead(pBuffer->s_rawData, pBuffer->s_storageSize,
-				    &bytesRead, 
-				    DRAINTIMEOUTS*1000); // 5 second timeout!!
+    int status = m_pCamac->usbRead(pBuffer->s_rawData, pBuffer->s_storageSize,
+                                   &bytesRead, DRAINTIMEOUTS*1000); // 5 second timeout!!
     if (status == 0) {
       pBuffer->s_bufferSize = bytesRead;
       pBuffer->s_bufferType   = TYPE_EVENTS;
       cerr << "Got a buffer, with type header: " << hex << pBuffer->s_rawData[0] << endl;
       if (pBuffer->s_rawData[0] & CCUSBLastBuffer) {
-	cerr << "Done\n";
-	done = true;
+        cerr << "Done\n";
+        done = true;
       }
       processBuffer(pBuffer);
       pBuffer = gFreeBuffers.get();
@@ -534,17 +531,17 @@ CAcquisitionThread::drainUsb()
       timeouts++;		// By the time debugged this is only failure.
       cerr << "Read timed out\n";
       if(timeouts >= DRAINTIMEOUTS) {
-	cerr << "Warning: drainUsb() persistent timeout assuming already drained\n";
-	uint32_t junk;
-	cerr << "Desparate measures being employed to attempt final drain\n";
-	m_pCamac->writeActionRegister(CCCUSB::ActionRegister::clear);
-	m_pCamac->writeActionRegister(0);
-	Os::usleep(100);
-	status = m_pCamac->usbRead(pBuffer->s_rawData, pBuffer->s_storageSize,
-				 &bytesRead, DRAINTIMEOUTS*1000);
-	cerr << "Final desparate attempt to flush usb fifo got status: " 
-	     << status << endl;
-	done = true;
+        cerr << "Warning: drainUsb() persistent timeout assuming already drained\n";
+        uint32_t junk;
+        cerr << "Desparate measures being employed to attempt final drain\n";
+        m_pCamac->writeActionRegister(CCCUSB::ActionRegister::clear);
+        m_pCamac->writeActionRegister(0);
+        Os::usleep(100);
+        status = m_pCamac->usbRead(pBuffer->s_rawData, pBuffer->s_storageSize,
+            &bytesRead, DRAINTIMEOUTS*1000);
+        cerr << "Final desparate attempt to flush usb fifo got status: " 
+          << status << endl;
+        done = true;
       }
     }
   } while (!done);
@@ -552,7 +549,7 @@ CAcquisitionThread::drainUsb()
 
   gFreeBuffers.queue(pBuffer);
   cerr << "Done finished\n";
-  
+
 }
 /*!
    Emit a begin run buffer to the output thread.
