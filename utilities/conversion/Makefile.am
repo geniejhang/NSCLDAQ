@@ -9,7 +9,8 @@ libConversion_la_SOURCES = CTransformMediator.h \
                            #CTransform11p0to11p0.cpp
 
 include_HEADERS = CTransformMediator.h \
-                           CTransform10p0to11p0.h
+                           CTransform10p0to11p0.h \
+                           CTransform11p0to10p0.h
 
 #                           CTransform11p0to11p0.h
 
