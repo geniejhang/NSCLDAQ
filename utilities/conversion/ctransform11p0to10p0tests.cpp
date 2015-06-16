@@ -24,6 +24,8 @@
 #include <NSCLDAQ10/CUnknownFragment.h>
 #include <NSCLDAQ11/CUnknownFragment.h>
 
+#include <NSCLDAQ11/CDataFormatItem.h>
+
 #include <NSCLDAQ10/DataFormatV10.h>
 #include <NSCLDAQ11/DataFormatV11.h>
 
@@ -36,6 +38,7 @@
 #include <chrono>
 #include <iterator>
 #include <algorithm>
+#include <stdexcept>
 
 using namespace std;
 
@@ -657,4 +660,37 @@ void Text_4()
 }; // end of Fragment tests
 
 CPPUNIT_TEST_SUITE_REGISTRATION(CTransform11p0to10p0Tests_Text);
+
+
+class CTransform11p0to10p0Tests_General : public CppUnit::TestFixture
+{
+private:
+    CTransform11p0to10p0       m_transform;
+
+public:
+    CPPUNIT_TEST_SUITE(CTransform11p0to10p0Tests_General);
+    CPPUNIT_TEST(Test_0);
+    CPPUNIT_TEST(Test_1);
+    CPPUNIT_TEST_SUITE_END();
+
+public:
+    void setUp() {
+        m_transform = CTransform11p0to10p0();
+    }
+  void tearDown() {}
+protected:
+void Test_0() {
+    NSCLDAQ11::CDataFormatItem item;
+    CPPUNIT_ASSERT_THROW_MESSAGE( "Data format item do not convert",
+                                  m_transform(item), std::runtime_error );
+}
+void Test_1() {
+    NSCLDAQ11::CRingItem item(NSCLDAQ11::EVB_GLOM_INFO);
+    CPPUNIT_ASSERT_THROW_MESSAGE( "Glom info items do not convert",
+                                  m_transform(item), std::runtime_error );
+}
+
+}; // end of Fragment tests
+
+CPPUNIT_TEST_SUITE_REGISTRATION(CTransform11p0to10p0Tests_General);
 
