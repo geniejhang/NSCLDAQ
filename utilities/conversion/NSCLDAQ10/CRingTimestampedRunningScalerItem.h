@@ -66,10 +66,11 @@ public:
   float    getStopTime() const;
   time_t   getCalendarTime() const;
   std::vector<uint32_t> getScalers() const;
+  uint32_t getScalerCount() const;
 
-   uint32_t getOffsetStart() const;
-   uint32_t getOffsetEnd() const;
-
+  uint32_t getOffsetStart() const;
+  uint32_t getOffsetEnd() const;
+  uint32_t getIntervalDivisor() const;
   // Utility methods:
 
 private:

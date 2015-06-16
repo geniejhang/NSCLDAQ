@@ -8,6 +8,7 @@ libdataformatv10_la_SOURCES = CRingItem.cpp \
                            CRingPhysicsEventCountItem.cpp \
                            CRingTextItem.cpp \
                            CRingFragmentItem.cpp \
+                           CUnknownFragment.cpp \
                            CRingItemFactory.cpp \
                            ringitem.cpp
 
@@ -21,7 +22,8 @@ nscldaq10_HEADERS = CRingItem.h \
                   CRingPhysicsEventCountItem.h \
                   CRingTextItem.h \
                   CRingFragmentItem.h \
-                    CRingItemFactory.h \
+                  CUnknownFragment.h \
+                  CRingItemFactory.h \
                   DataFormatV10.h
 
 libdataformatv10_la_CXXFLAGS = -I@srcdir@ \

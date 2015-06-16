@@ -1,5 +1,5 @@
-#ifndef CUNKNOWNFRAGMENT_H
-#define CUNKNOWNFRAGMENT_H
+#ifndef NSCLDAQ11_CUNKNOWNFRAGMENT_H
+#define NSCLDAQ11_CUNKNOWNFRAGMENT_H
 
 /*
     This software is Copyright by the Board of Trustees of Michigan

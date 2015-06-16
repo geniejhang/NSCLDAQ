@@ -15,9 +15,11 @@
 */
 
 #include "CPhysicsEventItem.h"
+#include <DataFormatV10.h>
 #include <sstream>
 #include <stdio.h>
 #include <vector>
+#include <typeinfo>
 
 namespace NSCLDAQ10
 {
@@ -34,6 +36,14 @@ CPhysicsEventItem::CPhysicsEventItem(const CPhysicsEventItem& rhs) :
   CRingItem(rhs) {}
 
 CPhysicsEventItem::~CPhysicsEventItem() {}
+
+CPhysicsEventItem::CPhysicsEventItem(const CRingItem& rhs) 
+  : CRingItem(rhs)
+{
+  if (type() != PHYSICS_EVENT) {
+    throw std::bad_cast();
+  }
+}
 
 CPhysicsEventItem& 
 CPhysicsEventItem::operator=(const CPhysicsEventItem& rhs) 

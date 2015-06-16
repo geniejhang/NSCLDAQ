@@ -43,6 +43,7 @@ class CPhysicsEventItem : public CRingItem
 public:
   CPhysicsEventItem(uint16_t type, size_t maxBody=8192);
   CPhysicsEventItem(const CPhysicsEventItem& rhs);
+  CPhysicsEventItem(const CRingItem& rhs);
   virtual ~CPhysicsEventItem();
 
   CPhysicsEventItem& operator=(const CPhysicsEventItem& rhs);

@@ -210,6 +210,12 @@ CRingTimestampedRunningScalerItem::getScalers() const
 }
 
 uint32_t
+CRingTimestampedRunningScalerItem::getScalerCount() const
+{
+    return m_pItem->s_scalerCount;
+}
+
+uint32_t
 CRingTimestampedRunningScalerItem::getOffsetStart() const
 {
    return m_pItem->s_intervalStartOffset;
@@ -219,6 +225,12 @@ uint32_t
 CRingTimestampedRunningScalerItem::getOffsetEnd() const
 {
    return m_pItem->s_intervalEndOffset;
+}
+
+uint32_t
+CRingTimestampedRunningScalerItem::getIntervalDivisor() const
+{
+    return m_pItem->s_intervalDivisor;
 }
 
 /**
