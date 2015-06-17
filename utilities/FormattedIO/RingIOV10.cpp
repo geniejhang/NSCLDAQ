@@ -4,7 +4,7 @@
 #include <CDataSink.h>
 #include <NSCLDAQ10/CRingItem.h>
 
-#include <DataFormatV10.h>
+#include <NSCLDAQ10/DataFormatV10.h>
 #include <byte_cast.h>
 
 #include <iostream>

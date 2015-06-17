@@ -21,8 +21,8 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 
 #include <CTestSourceSink.h>
 #include <RingIOV10.h>
-#include <CRingItem.h>
-#include <CRingFragmentItem.h>
+#include <NSCLDAQ10/CRingItem.h>
+#include <NSCLDAQ10/CRingFragmentItem.h>
 
 #include <cstdint>
 #include <vector>
