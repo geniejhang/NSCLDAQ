@@ -8,8 +8,8 @@ include_HEADERS	= RingIOV10.h \
 									RingIOV11.h
 
 libdaqformatio_la_CPPFLAGS	=  \
-		-I@top_srcdir@/utilities/io \
-		-I@top_srcdir@/utilities/conversion \
+                -I@top_srcdir@/utilities/IO \
+                -I@top_srcdir@/utilities/conversion \
 		-I@top_srcdir@/base/headers \
     @LIBTCLPLUS_CFLAGS@	
 

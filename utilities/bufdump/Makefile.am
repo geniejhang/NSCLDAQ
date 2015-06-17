@@ -18,12 +18,12 @@ dumper_CPPFLAGS =	-I@srcdir@/.. 				\
 				@LIBTCLPLUS_CFLAGS@			\
 				-I@top_srcdir@/daq/format		\
 				-I@top_srcdir@/base/dataflow		\
-				-I@top_srcdir@/utilities/filter		\
-				-I@top_srcdir@/base/os
+                                -I@top_srcdir@/utilities/IO		\
+                                -I@top_srcdir@/base/os
 
 dumper_LDADD		=		\
 				@top_builddir@/base/uri/liburl.la			\
-				@top_builddir@/utilities/filter/libfilter.la			\
+                                @top_builddir@/utilities/IO/libdaqio.la			\
 				@top_builddir@/daq/format/libdataformat.la	\
 				@top_builddir@/base/dataflow/libDataFlow.la	\
 				@top_builddir@/base/uri/liburl.la	\
