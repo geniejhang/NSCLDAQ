@@ -8,6 +8,8 @@
 #include <string>
 #include <CErrnoException.h>
 
+class CRingItem;
+
 ///! \brief A "file" data sink
 /**!
 *   Owns and manages a general file object. The user should

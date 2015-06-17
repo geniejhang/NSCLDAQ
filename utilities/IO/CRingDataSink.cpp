@@ -43,9 +43,8 @@ CRingDataSink::~CRingDataSink()
  */
 void CRingDataSink::putItem(const CRingItem& item)
 {
-  CRingItem& the_item = const_cast<CRingItem&>(item); 
+  put(item.getItemPointer(), item.size());
 
-  the_item.commitToRing(*m_pRing);
 }
 /**
  * put

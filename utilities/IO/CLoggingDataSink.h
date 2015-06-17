@@ -3,8 +3,9 @@
 #define CLOGGINGDATASINK_H
 
 #include <vector>
-#include <CRingItem.h>
 #include <CDataSink.h>
+
+class CRingItem;
 
 class CLoggingDataSink : public CDataSink
 {

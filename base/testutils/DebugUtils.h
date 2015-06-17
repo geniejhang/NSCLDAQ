@@ -65,4 +65,22 @@ void print_vectors(const std::vector<T>& expected, const std::vector<T>& actual)
 
 }
 
+
+template<class T>
+std::ostream& operator<<(std::ostream& stream, const std::vector<T>& vec)
+{
+  stream << "{ ";
+  auto size = vec.size();
+  for (size_t i=0; i<size; ++i) {
+      stream << vec.at(i);
+      if ( i != (size-1) ) {
+        stream << ',';
+      }
+  }
+  stream << "}";
+  return stream;
+}
+
+
+
 #endif

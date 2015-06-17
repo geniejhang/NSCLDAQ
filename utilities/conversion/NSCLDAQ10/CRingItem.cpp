@@ -192,6 +192,15 @@ CRingItem::getItemPointer()
   return m_pItem;
 }
 
+/*!
+   \return void*
+   \retval Pointer to the body.  To be usually used by derived classes but...
+*/
+const _RingItem*
+CRingItem::getItemPointer() const 
+{
+  return m_pItem;
+}
 
 /*!
    \return uint32_t
@@ -206,6 +215,18 @@ CRingItem::type() const
   }
   else {
     return rawType;
+  }
+}
+
+uint32_t
+CRingItem::size() const
+{
+  uint32_t size = m_pItem->s_header.s_size;
+  if (mustSwap()) {
+    return swal(size);
+  }
+  else {
+    return size; 
   }
 }
 

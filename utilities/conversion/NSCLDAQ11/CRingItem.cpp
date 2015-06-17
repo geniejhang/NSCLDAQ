@@ -263,6 +263,17 @@ CRingItem::type() const
   }
 }
 
+uint32_t 
+CRingItem::size() const
+{
+  uint32_t size = m_pItem->s_header.s_size;
+  if (mustSwap()) {
+    return swal(size);
+  }
+  else {
+    return size; 
+  }
+}
 /**
  * hasBodyHeader
  *

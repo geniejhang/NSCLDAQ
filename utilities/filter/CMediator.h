@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2015.
+    State University (c) Copyright 2014.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -20,7 +20,7 @@
 #define CMEDIATOR_H
 
 class CDataSource;
-class CBufferDecoder;
+class CFilter;
 class CDataSink;
 class CRingItem;
 class CRingStateChangeItem;
@@ -29,15 +29,15 @@ class CRingStateChangeItem;
 class CMediator
 {
   private:
-    CDataSource*    m_pSource; //!< the source
-    CBufferDecoder* m_pBufferDecoder; //!< the decoder
-    CDataSink*      m_pSink; //!< the sink 
+    CDataSource* m_pSource; //!< the source
+    CFilter* m_pFilter; //!< the filter 
+    CDataSink* m_pSink; //!< the sink 
     int  m_nToProcess; //!< number to process
     int  m_nToSkip; //!< number to skip
 
   public:
     // The constructor
-    CMediator(CDataSource* source, CBufferDecoder* decoder, CDataSink* sink);
+    CMediator(CDataSource* source, CFilter* filter, CDataSink* sink);
 
     virtual ~CMediator();
 
@@ -77,11 +77,11 @@ class CMediator
       \param filter the new filter
       \return the old filter 
     */
-    CBufferDecoder* setBufferDecoder( CBufferDecoder* decoder) 
+    CFilter* setFilter( CFilter* filter) 
     {
-        CBufferDecoder* old_decoder = m_pBufferDecoder;
-        m_pBufferDecoder = decoder;
-        return old_decoder;
+        CFilter* old_filter = m_pFilter;
+        m_pFilter = filter;
+        return old_filter;
     }  
 
     /**! Set the source
@@ -115,7 +115,7 @@ class CMediator
 
     /**! Access to the filter 
     */
-    CBufferDecoder* getBufferDecoder() { return m_pBufferDecoder;}
+    CFilter* getFilter() { return m_pFilter;}
 
     /**! Access to the source 
     */
@@ -139,7 +139,7 @@ class CMediator
   protected:
     /**! Delegate item to proper handler of filter
     */
-//    virtual CRingItem* handleItem(CRingItem* item); 
+    virtual CRingItem* handleItem(CRingItem* item); 
 
 };
 

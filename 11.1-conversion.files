@@ -2551,3 +2551,11 @@ utilities/conversion/NSCLDAQ10/CRingFragmentItem.cpp
 utilities/conversion/ctransform10p0to11p0tests.cpp
 utilities/conversion/NSCLDAQ11/CRingFragmentItem.h
 utilities/conversion/NSCLDAQ11/CRingFragmentItem.cpp
+utilities/conversion/CTransform11p0to10p0.h
+utilities/conversion/CTransform11p0to10p0.cpp
+utilities/conversion/ctransform11p0to10p0tests.cpp
+utilities/conversion/NSCLDAQ10/CUnknownFragment.h
+utilities/conversion/NSCLDAQ10/CUnknownFragment.cpp
+utilities/conversion/daqformat_cast.h
+utilities/conversion/NSCLDAQ10/RingIO.h
+utilities/conversion/NSCLDAQ10/RingIO.cpp

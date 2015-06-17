@@ -76,10 +76,12 @@ public:
   void*  getBodyPointer();
   void*  getBodyCursor();
   _RingItem*  getItemPointer();
+  const _RingItem* getItemPointer() const;
 
   template<class T> void fillBody(const std::vector<T>& data);
 
   uint32_t type() const;
+  uint32_t size() const;
 
   // Mutators:
 

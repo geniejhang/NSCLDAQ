@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <CLoggingDataSink.h>
 #include <CRingItemFactory.h>
+#include <CRingItem.h>
 #include <DataFormat.h>
 
 void CLoggingDataSink::putItem(const CRingItem& item)

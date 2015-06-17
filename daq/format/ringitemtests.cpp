@@ -17,6 +17,9 @@
 #include <CDesiredTypesPredicate.h>
 
 #include <CRingBuffer.h>
+#include <CRingItemFactory.h>
+
+#include <memory>
 
 std::string uniqueName(std::string);
 
@@ -35,6 +38,7 @@ class ritemtests : public CppUnit::TestFixture {
   CPPUNIT_TEST(tsconstruct);
   CPPUNIT_TEST(addbodyheader);
   CPPUNIT_TEST(equality);
+  CPPUNIT_TEST(size);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -57,6 +61,7 @@ protected:
   void tsconstruct();
   void addbodyheader();
   void equality();
+  void size();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ritemtests);
@@ -402,4 +407,22 @@ void ritemtests::equality()
 
     ASSERT( item0 == item1 );
 
+}
+
+
+void ritemtests::size() 
+{
+  CRingItem item( PHYSICS_EVENT );
+  uint16_t* pBody = reinterpret_cast<uint16_t*>(item.getBodyPointer());
+  *pBody = 0;
+  pBody++;
+
+  item.setBodyCursor(pBody);
+  item.updateSize();
+
+  pRingItem pItem = item.getItemPointer();
+
+  // because we made the item locally on this computer, we don't
+  // need to worry about byte order
+  EQ( pItem->s_header.s_size, item.size() );
 }

@@ -2,14 +2,9 @@
 #ifndef CDATASINK_H
 #define CDATASINK_H
 
-class CRingItem;
-
-#ifndef __CRT_STDLIB_H
 #include <stdlib.h>
-#ifndef __CRT_STDLIB_H
-#define __CRT_STDLIB_H
-#endif
-#endif
+
+class CRingItem;
 
 /**! Interface for CDataSinks
 *
@@ -22,7 +17,7 @@ class CDataSink
 public:
     
     // The virtual destructor
-    virtual ~CDataSink() {}
+    virtual ~CDataSink();
 
 
     // A method defining how to send ring items to the sink

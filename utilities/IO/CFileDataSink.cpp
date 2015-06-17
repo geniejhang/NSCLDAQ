@@ -96,8 +96,7 @@ void CFileDataSink::putItem(const CRingItem& item)
     const RingItem* pItem = item.getItemPointer();
 
     // Set up variable for writing it to stream
-    size_t nbytes = pItem->s_header.s_size;
-    put(pItem, nbytes);
+    put(pItem, item.size());
 
 }
 

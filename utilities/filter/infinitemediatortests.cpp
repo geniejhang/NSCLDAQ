@@ -36,7 +36,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <CFileDataSink.h>
 #include <CDataSinkFactory.h>
 #include <CDataSourceFactory.h>
-#include <CTestDecoder.h>
+#include <CTestFilter.h>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -51,7 +51,7 @@ class CInfiniteMediatorTest : public CppUnit::TestFixture
 {
 
   private:
-    CBufferDecoder* m_pDecoder;
+    CFilter* m_pFilter;
     CDataSource* m_source;
     CDataSink* m_sink;
     CInfiniteMediator* m_mediator;
@@ -79,7 +79,7 @@ class CInfiniteMediatorTest : public CppUnit::TestFixture
 CPPUNIT_TEST_SUITE_REGISTRATION( CInfiniteMediatorTest );
 
 CInfiniteMediatorTest::CInfiniteMediatorTest()
-    : m_pDecoder(0),
+    : m_pFilter(0),
     m_source(0),
     m_sink(0),
     m_mediator(0)
@@ -89,13 +89,13 @@ CInfiniteMediatorTest::CInfiniteMediatorTest()
 void CInfiniteMediatorTest::setUp()
 {
   std::vector<uint16_t> dummy;
-  m_pDecoder = new CTestDecoder;
+  m_pFilter = new CTestFilter;
   m_source = new CFileDataSource(STDIN_FILENO, dummy);
   m_sink = new CFileDataSink(STDOUT_FILENO);
 
-  m_mediator = new CInfiniteMediator(m_source,m_pDecoder,m_sink);
+  m_mediator = new CInfiniteMediator(m_source,m_pFilter,m_sink);
   m_mediator->setDataSource(m_source);
-  m_mediator->setBufferDecoder(m_pDecoder);
+  m_mediator->setFilter(m_pFilter);
   m_mediator->setDataSink(m_sink);
 }
 
@@ -110,16 +110,16 @@ void CInfiniteMediatorTest::tearDown()
 void CInfiniteMediatorTest::testConstructor()
 {
   CPPUNIT_ASSERT_EQUAL( m_source, m_mediator->m_pSource);
-  CPPUNIT_ASSERT_EQUAL( m_pDecoder, m_mediator->m_pBufferDecoder);
+  CPPUNIT_ASSERT_EQUAL( m_pFilter, m_mediator->m_pFilter);
   CPPUNIT_ASSERT_EQUAL( m_sink, m_mediator->m_pSink);
 }
 
 void CInfiniteMediatorTest::testSetMembers()
 {
-    CBufferDecoder* new_pDecoder = 0;
-    CBufferDecoder* old_pDecoder = m_mediator->setBufferDecoder(new_pDecoder);
-    CPPUNIT_ASSERT_EQUAL( m_pDecoder, old_pDecoder );
-    CPPUNIT_ASSERT_EQUAL( new_pDecoder, m_mediator->m_pBufferDecoder );
+    CFilter* new_pFilter = 0;
+    CFilter* old_pFilter = m_mediator->setFilter(new_pFilter);
+    CPPUNIT_ASSERT_EQUAL( m_pFilter, old_pFilter );
+    CPPUNIT_ASSERT_EQUAL( new_pFilter, m_mediator->m_pFilter );
 
     CDataSource* new_source = 0;
     CDataSource* old_source = m_mediator->setDataSource(new_source);
