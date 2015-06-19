@@ -108,6 +108,7 @@ static const uint16_t FORMAT_MAJOR  = 11;  /* nscldaq-11. */
 static const uint16_t FORMAT_MINOR  =  0;  /* nscldaq-x.0 */
 
 /* state change item type codes: */
+static const uint32_t VOID = 0;
 
 static const uint32_t BEGIN_RUN  = 1;
 static const uint32_t END_RUN    = 2;

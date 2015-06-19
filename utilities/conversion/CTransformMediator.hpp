@@ -18,7 +18,13 @@
 #include <CDataSource.h>
 #include <CDataSink.h>
 #include <CCompositePredicate.h>
+#include <NSCLDAQ10/CRingItem.h>
+#include <NSCLDAQ11/CRingItem.h>
+#include <RingIOV10.h>
+#include <RingIOV11.h>
 
+#include <iostream>
+#include <stdexcept>
 /**! Constructor
 
   Constructs the mediator object. This object owns its referenced members.
@@ -32,7 +38,7 @@ template<class Transform>
 CTransformMediator<Transform>::CTransformMediator(std::unique_ptr<CDataSource> source,
                                        std::unique_ptr<CDataSink> sink,
                                        Transform transform)
-: CMediator(move(source),move(sink)),
+: CBaseMediator(move(source), move(sink)),
   m_transform(transform),
   m_pPredicate(new CCompositePredicate)
 {}
@@ -60,12 +66,22 @@ CTransformMediator<Transform>::~CTransformMediator()
 template<class Transform>
 void CTransformMediator<Transform>::mainLoop()
 {
-  
+  if (! getDataSource()) {
+    std::string errmsg = "CTransformMediator<>::mainLoop() Data source is null";
+    throw std::runtime_error(errmsg);
+  }
+  if (! getDataSink()) {
+    std::string errmsg = "CTransformMediator<>::mainLoop() Data sink is null";
+    throw std::runtime_error(errmsg);
+  }
+
   // Dereference our pointers before entering
   // the main loop
 
-  while (1) {
+  int count = 0;
+  while (count < 100) {
     processOne();
+    ++count;
   }
 
 }
@@ -86,17 +102,26 @@ void CTransformMediator<Transform>::processOne()
   using T1 = typename Transform::InitialType;
   using T2 = typename Transform::FinalType;
 
-  T1 item1;
+  T1 item1(1);
   source >> item1;
 
   updatePredicate();
 
-  if ((*m_pPredicate)()) {
+  try {
+//    if ((*m_pPredicate)()) {
 
-    T2 item2 = m_transform(item1);
+      T2 item2 = m_transform(item1);
 
-    sink << item2;
+      if (item2.type() != 0) {
+        sink << item2;
+      }
+//    }
+  } catch (std::exception& exc) {
+    std::cout << exc.what() << std::endl;
+  } catch (...) {
+    std::cout << "Caught an error" << std::endl;
   }
+
 }
 
 template<class Transform>

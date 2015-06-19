@@ -19,8 +19,8 @@
 #ifndef CTRANSFORMMEDIATOR_H
 #define CTRANSFORMMEDIATOR_H
 
-#include <CMediator.h>
 #include <CPredicate.h>
+#include <CBaseMediator.h>
 
 #include <memory>
 
@@ -35,7 +35,7 @@ class CDataSink;
  *
  */
 template<class Transform>
-class CTransformMediator : public CMediator
+class CTransformMediator  : public CBaseMediator
 {
   private:
     Transform m_transform;
@@ -43,8 +43,8 @@ class CTransformMediator : public CMediator
 
   public:
     // The constructor
-    CTransformMediator(std::unique_ptr<CDataSource> source,
-                       std::unique_ptr<CDataSink> sink,
+    CTransformMediator(std::unique_ptr<CDataSource> source = std::unique_ptr<CDataSource>(),
+                       std::unique_ptr<CDataSink> sink = std::unique_ptr<CDataSink>(),
                        Transform trans=Transform());
 
     virtual ~CTransformMediator();
@@ -79,6 +79,6 @@ class CTransformMediator : public CMediator
 };
 
 // include the implementation
-#include <CTransformMediator.cpp>
+#include <CTransformMediator.hpp>
 
 #endif

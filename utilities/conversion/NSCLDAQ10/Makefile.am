@@ -24,6 +24,7 @@ nscldaq10_HEADERS = CRingItem.h \
                   CRingFragmentItem.h \
                   CUnknownFragment.h \
                   CRingItemFactory.h \
+                  CVoidItem.h \
                   DataFormatV10.h
 
 libdataformatv10_la_CXXFLAGS = -I@srcdir@ \

@@ -54,6 +54,8 @@ namespace NSCLDAQ10
 
 // state change item type codes:
 
+static const uint32_t VOID = 0;
+
 static const uint32_t BEGIN_RUN  = 1;
 static const uint32_t END_RUN    = 2;
 static const uint32_t PAUSE_RUN  = 3;

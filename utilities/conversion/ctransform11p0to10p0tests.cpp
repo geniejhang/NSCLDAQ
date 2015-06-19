@@ -681,13 +681,13 @@ public:
 protected:
 void Test_0() {
     NSCLDAQ11::CDataFormatItem item;
-    CPPUNIT_ASSERT_THROW_MESSAGE( "Data format item do not convert",
-                                  m_transform(item), std::runtime_error );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Data format item do not convert",
+                                  NSCLDAQ10::VOID, m_transform(item).type() );
 }
 void Test_1() {
     NSCLDAQ11::CRingItem item(NSCLDAQ11::EVB_GLOM_INFO);
-    CPPUNIT_ASSERT_THROW_MESSAGE( "Glom info items do not convert",
-                                  m_transform(item), std::runtime_error );
+    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Glom info items do not convert",
+                                  NSCLDAQ10::VOID, m_transform(item).type() );
 }
 
 }; // end of Fragment tests

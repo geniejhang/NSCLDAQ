@@ -5,7 +5,8 @@
 
 class CPredicate
 {
-  virtual bool operator()() = 0;
+  public:
+    virtual bool operator()() = 0;
 };
 
 #endif

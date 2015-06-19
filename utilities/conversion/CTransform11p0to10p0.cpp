@@ -1,6 +1,6 @@
 #include "CTransform11p0to10p0.h"
 
-#include <NSCLDAQ10/CRingItemFactory.h>
+#include <NSCLDAQ11/CRingItemFactory.h>
 #include <NSCLDAQ10/CRingScalerItem.h>
 #include <NSCLDAQ10/CRingTimestampedRunningScalerItem.h>
 #include <NSCLDAQ11/CRingScalerItem.h>
@@ -16,17 +16,21 @@
 #include <NSCLDAQ11/CRingFragmentItem.h>
 #include <NSCLDAQ10/CUnknownFragment.h>
 #include <NSCLDAQ11/CUnknownFragment.h>
+#include <NSCLDAQ10/CVoidItem.h>
 #include <NSCLDAQ10/DataFormatV10.h>
 #include <NSCLDAQ11/DataFormatV11.h>
 
 #include <stdexcept>
+#include <memory>
 #include <string>
 
 using namespace std;
 
 CTransform11p0to10p0::FinalType
 CTransform11p0to10p0::operator()(InitialType& item) {
-    return dispatch(item);
+  NSCLDAQ11::CRingItemFactory factory;
+    unique_ptr<NSCLDAQ11::CRingItem> pItem(factory.createRingItem(item));
+    return dispatch(*pItem);
 }
 
 
@@ -61,9 +65,7 @@ CTransform11p0to10p0::dispatch(InitialType& item)
         return transformUnknownFragment(item);
         break;
     default:
-        std::string errmsg("CTransform11p0to10p0::dispatch()");
-        errmsg += "Unsupported type (" + to_string(item.type()) + ") found";
-        throw std::runtime_error(errmsg);
+        return NSCLDAQ10::CVoidItem();
         break;
     }
     return CTransform11p0to10p0::FinalType(1);
