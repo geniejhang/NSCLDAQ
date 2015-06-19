@@ -23,6 +23,8 @@ include_HEADERS = CTransformMediator.h \
 libConversion_la_CXXFLAGS = -I@srcdir@ \
                             -I@srcdir@/NSCLDAQ10 \
                             -I@srcdir@/NSCLDAQ11 \
+                            -I@top_srcdir@/utilities/filter \
+                            -I@top_srcdir@/utilities/IO \
                             @LIBTCLPLUS_CFLAGS@
 
 libConversion_la_LIBADD = @LIBTCLPLUS_LDFLAGS@
