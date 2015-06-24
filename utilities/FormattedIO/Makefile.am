@@ -9,7 +9,7 @@ include_HEADERS	= RingIOV10.h \
 
 libdaqformatio_la_CPPFLAGS	=  \
                 -I@top_srcdir@/utilities/IO \
-                -I@top_srcdir@/utilities/conversion \
+                -I@top_srcdir@/utilities/format \
 		-I@top_srcdir@/base/headers \
     @LIBTCLPLUS_CFLAGS@	
 
@@ -19,8 +19,8 @@ libdaqformatio_la_LDFLAGS	= -version-info $(SOVERSION)	\
 
 libdaqformatio_la_LIBADD	= \
 			@top_builddir@/utilities/IO/libdaqio.la \
-			@top_builddir@/utilities/conversion/NSCLDAQ10/libdataformatv10.la \
-			@top_builddir@/utilities/conversion/NSCLDAQ11/libdataformatv11.la \
+			@top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
+			@top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
 			@LIBEXCEPTION_LDFLAGS@
 
 
@@ -39,15 +39,15 @@ unittests_LDADD		= \
 			@builddir@/libdaqformatio.la \
 			@top_builddir@/utilities/FormattedIO/libdaqformatio.la \
 			@top_builddir@/utilities/IO/libdaqio.la \
-			@top_builddir@/utilities/conversion/NSCLDAQ10/libdataformatv10.la \
-			@top_builddir@/utilities/conversion/NSCLDAQ11/libdataformatv11.la \
+			@top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
+			@top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
 			$(CPPUNIT_LDFLAGS) 		\
 			@LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS=  \
 										 -I@top_srcdir@/utilities/FormattedIO \
 										 -I@top_srcdir@/utilities/IO \
-										 -I@top_srcdir@/utilities/conversion \
+                                                                                 -I@top_srcdir@/utilities/format \
 										 @LIBTCLPLUS_CFLAGS@	
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 

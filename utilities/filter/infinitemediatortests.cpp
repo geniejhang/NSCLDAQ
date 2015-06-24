@@ -109,9 +109,9 @@ void CInfiniteMediatorTest::tearDown()
 
 void CInfiniteMediatorTest::testConstructor()
 {
-  CPPUNIT_ASSERT_EQUAL( m_source, m_mediator->m_pSource);
-  CPPUNIT_ASSERT_EQUAL( m_pFilter, m_mediator->m_pFilter);
-  CPPUNIT_ASSERT_EQUAL( m_sink, m_mediator->m_pSink);
+  CPPUNIT_ASSERT_EQUAL( m_source, m_mediator->m_pSource.get());
+  CPPUNIT_ASSERT_EQUAL( m_pFilter, m_mediator->m_pFilter.get());
+  CPPUNIT_ASSERT_EQUAL( m_sink, m_mediator->m_pSink.get());
 }
 
 void CInfiniteMediatorTest::testSetMembers()
@@ -119,16 +119,16 @@ void CInfiniteMediatorTest::testSetMembers()
     CFilter* new_pFilter = 0;
     CFilter* old_pFilter = m_mediator->setFilter(new_pFilter);
     CPPUNIT_ASSERT_EQUAL( m_pFilter, old_pFilter );
-    CPPUNIT_ASSERT_EQUAL( new_pFilter, m_mediator->m_pFilter );
+    CPPUNIT_ASSERT_EQUAL( new_pFilter, m_mediator->m_pFilter.get() );
 
     CDataSource* new_source = 0;
     CDataSource* old_source = m_mediator->setDataSource(new_source);
     CPPUNIT_ASSERT_EQUAL( m_source,  old_source );
-    CPPUNIT_ASSERT_EQUAL( new_source, m_mediator->m_pSource );
+    CPPUNIT_ASSERT_EQUAL( new_source, m_mediator->m_pSource.get() );
 
     CDataSink* new_sink = 0;
     CDataSink* old_sink = m_mediator->setDataSink(new_sink);
     CPPUNIT_ASSERT_EQUAL( m_sink , old_sink );
-    CPPUNIT_ASSERT_EQUAL( new_sink , m_mediator->m_pSink );
+    CPPUNIT_ASSERT_EQUAL( new_sink , m_mediator->m_pSink.get() );
 }
 

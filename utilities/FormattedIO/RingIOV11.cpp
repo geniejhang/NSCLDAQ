@@ -36,8 +36,11 @@ std::istream& operator>>(std::istream& stream,
   stream.read(pItem, headerSize);
 
   uint32_t totalSize = item.size();
-  pItem += headerSize;
-  stream.read(pItem, totalSize-headerSize);
+  char* pBody = pItem + headerSize;
+  stream.read(pBody, totalSize-headerSize);
+
+  item.setBodyCursor(pItem+totalSize);
+  item.updateSize();
 
   return stream;
 }
@@ -52,8 +55,11 @@ CDataSource& operator>>(CDataSource& source,
   source.read(pItem, headerSize);
 
   uint32_t totalSize = byte_cast<uint32_t>(pItem);
-  pItem += headerSize;
-  source.read(pItem, totalSize-headerSize);
+  char* pBody = pItem + headerSize;
+  source.read(pBody, totalSize-headerSize);
+
+  item.setBodyCursor(pItem+totalSize);
+  item.updateSize();
 
   return source;
 }

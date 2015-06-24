@@ -4,10 +4,12 @@
 SUBDIRS = daqstart \
 					dvdburn \
 					sequencer \
-					conversion \
-					IO \
+                                        Buffer \
+                                        format \
+                                        IO \
 					FormattedIO \
 					filter \
+					conversion \
 					ringselector \
 					eventlog \
 					bufdump	\

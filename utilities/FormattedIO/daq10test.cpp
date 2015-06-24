@@ -85,6 +85,9 @@ void CFormattedIOV10Test::input_0()
 
   CPPUNIT_ASSERT_MESSAGE("Body of extracted should be correct",
                           equal(pBody, pBody+2, data+2));
+
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("Body size is correct",
+                                size_t(8), item.getBodySize());
 }
 
 void CFormattedIOV10Test::output_0()

@@ -19,7 +19,7 @@ Main::Main(int argc, char **argv)
 
   setUpTransformFactory();
 
-  m_pMediator = xformFactory.create(10, 11);
+  m_pMediator = m_factory.create(10, 11);
 
   m_pMediator->setDataSource(pSource);
   m_pMediator->setDataSink(pSink);
@@ -39,10 +39,9 @@ int Main::run()
 
 void Main::setUpTransformFactory()
 {
-  CTransformFactory xformFactory;
-  xformFactory.setCreator( 10, 11,
+  m_factory.setCreator(10, 11,
                            unique_ptr<CTransformCreator>(new CGenericCreator<CTransform10p0to11p0>()));
-  xformFactory.setCreator( 11, 10,
+  m_factory.setCreator( 11, 10,
                            unique_ptr<CTransformCreator>(new CGenericCreator<CTransform11p0to10p0>()));
 
 }

@@ -30,7 +30,7 @@ void print_vectors(const std::vector<T>& expected, const std::vector<T>& actual)
   cout << setfill('-') << setw(2*columnWidth+1) << '-' << setfill(' ') << endl;
 
   // figure out the max size
-  size_t sizeExpected = exptected.size();
+  size_t sizeExpected = expected.size();
   size_t sizeActual   = actual.size();
   size_t nIters = std::max(sizeExpected, sizeActual);
 
@@ -65,6 +65,11 @@ void print_vectors(const std::vector<T>& expected, const std::vector<T>& actual)
 
 }
 
+//extern std::ostream& operator<<(std::ostream& stream, std::uint8_t value)
+//{
+//  stream << int(value);
+//  return stream;
+//}
 
 template<class T>
 std::ostream& operator<<(std::ostream& stream, const std::vector<T>& vec)
@@ -74,10 +79,10 @@ std::ostream& operator<<(std::ostream& stream, const std::vector<T>& vec)
   for (size_t i=0; i<size; ++i) {
       stream << vec.at(i);
       if ( i != (size-1) ) {
-        stream << ',';
+        stream << ", ";
       }
   }
-  stream << "}";
+  stream << "}" << std::flush;
   return stream;
 }
 

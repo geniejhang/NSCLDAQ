@@ -1,47 +1,53 @@
-lib_LTLIBRARIES = libdataformatv10.la
+lib_LTLIBRARIES = libdataformatv11.la
 
-libdataformatv10_la_SOURCES = CRingItem.cpp \
+libdataformatv11_la_SOURCES = CRingItem.cpp \
+                           CAbnormalEndItem.cpp \
                            CRingScalerItem.cpp \
-                           CRingTimestampedRunningScalerItem.cpp \
                            CRingStateChangeItem.cpp \
                            CPhysicsEventItem.cpp \
                            CRingPhysicsEventCountItem.cpp \
                            CRingTextItem.cpp \
                            CRingFragmentItem.cpp \
+                           CGlomParameters.cpp \
                            CUnknownFragment.cpp \
+                           CDataFormatItem.cpp \
                            CRingItemFactory.cpp \
-                           ringitem.cpp
+                                                                                                        RingItemComparisons.cpp \
+													 ringitem.c 
+nscldaq11dir = @includedir@/NSCLDAQ11
 
-nscldaq10dir = @includedir@/NSCLDAQ10
-
-nscldaq10_HEADERS = CRingItem.h \
+nscldaq11_HEADERS = CRingItem.h \
+                  CAbnormalEndItem.h \
                   CRingScalerItem.h \
-                  CRingTimestampedRunningScalerItem.h \
                   CRingStateChangeItem.h \
                   CPhysicsEventItem.h \
                   CRingPhysicsEventCountItem.h \
                   CRingTextItem.h \
                   CRingFragmentItem.h \
+                  CGlomParameters.h \
                   CUnknownFragment.h \
+                  CDataFormatItem.h \
                   CRingItemFactory.h \
-                  CVoidItem.h \
-                  DataFormatV10.h
+                  RingItemComparisons.h \
+                  DataFormatV11.h 
 
-libdataformatv10_la_CXXFLAGS = -I@srcdir@ \
+libdataformatv11_la_CXXFLAGS = -I@srcdir@ \
                                @LIBTCLPLUS_CFLAGS@
 
-libdataformatv10_la_LDFLAGS = @LIBTCLPLUS_LDFLAGS@
+libdataformatv11_la_LDFLAGS = @LIBTCLPLUS_LDFLAGS@
 
 noinst_PROGRAMS = unittests
 
 unittests_SOURCES	= TestRunner.cpp \
-                                                                                ringitemtests.cpp teststate.cpp	\
-                                                                                scalertests.cpp texttest.cpp physcounttests.cpp		\
-                                                                                formatoutputtests.cpp
+										ringitemtests.cpp teststate.cpp	\
+										scalertests.cpp texttest.cpp physcounttests.cpp		\
+                                                                                physeventtests.cpp \
+										formatoutputtests.cpp dataformattests.cpp       \
+										fragmenttest.cpp glomparamtests.cpp factorytests.cpp 
 
 unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
-                        @top_builddir@/utilities/conversion/NSCLDAQ10/libdataformatv10.la	\
-                        @LIBEXCEPTION_LDFLAGS@
+                        @top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la	\
+			@LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS= @CPPUNIT_CFLAGS@ \
                     @LIBTCLPLUS_CFLAGS@ \

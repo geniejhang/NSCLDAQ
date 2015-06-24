@@ -2,9 +2,8 @@
 
 lib_LTLIBRARIES	=	libfilter.la
 
-libfilter_la_SOURCES = CBuffer.cpp \
-											 CBufferIO.cpp \
-											 CFilterMain.cpp \
+libfilter_la_SOURCES = CFilterMain.cpp \
+                       CBaseMediator.cpp \
                        CMediator.cpp \
                        CFakeMediator.cpp \
                        CInfiniteMediator.cpp \
@@ -26,9 +25,8 @@ BUILT_SOURCES = @srcdir@/filterargs.c
 noinst_HEADERS = @srcdir@/../StringsToIntegers.h \
                  @srcdir@/filterargs.h 
 
-include_HEADERS	=  CBuffer.h \
-									 CBufferIO.h \
-									 CFilterMain.h \
+include_HEADERS	=  CFilterMain.h \
+									 CBaseMediator.h \
                    CMediator.h \
 									 CFakeMediator.h \
                    CInfiniteMediator.h \

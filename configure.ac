@@ -398,6 +398,7 @@ AC_CONFIG_FILES([Makefile
     servers/tclserver/Makefile
     servers/portmanager/Makefile
     utilities/Makefile
+    utilities/Buffer/Makefile
     utilities/daqstart/Makefile
     utilities/dvdburn/Makefile
     utilities/scalerdisplay/ScalerDisplay
@@ -416,8 +417,10 @@ AC_CONFIG_FILES([Makefile
     utilities/compatibility/s800toring
     utilities/compatibility/bufdump
     utilities/conversion/Makefile
-    utilities/conversion/NSCLDAQ10/Makefile
-    utilities/conversion/NSCLDAQ11/Makefile
+    utilities/format/Makefile
+    utilities/format/NSCLDAQ8/Makefile
+    utilities/format/NSCLDAQ10/Makefile
+    utilities/format/NSCLDAQ11/Makefile
     utilities/IO/Makefile
     utilities/FormattedIO/Makefile
     utilities/newscaler/Makefile
