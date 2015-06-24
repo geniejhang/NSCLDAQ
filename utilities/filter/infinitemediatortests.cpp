@@ -94,9 +94,9 @@ void CInfiniteMediatorTest::setUp()
   m_sink = new CFileDataSink(STDOUT_FILENO);
 
   m_mediator = new CInfiniteMediator(m_source,m_pFilter,m_sink);
-  m_mediator->setDataSource(m_source);
-  m_mediator->setFilter(m_pFilter);
-  m_mediator->setDataSink(m_sink);
+//  m_mediator->setDataSource(m_source);
+//  m_mediator->setFilter(m_pFilter);
+//  m_mediator->setDataSink(m_sink);
 }
 
 void CInfiniteMediatorTest::tearDown()
