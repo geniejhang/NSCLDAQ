@@ -64,7 +64,7 @@ unittests_LDFLAGS	= @CPPUNIT_LDFLAGS@ \
 
 TESTS=./unittests
 
-testApp_SOURCES = Main.cpp
+testApp_SOURCES = Main.h Main.cpp
 
 testApp_LDADD = @builddir@/libConversion.la \
 								@top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
