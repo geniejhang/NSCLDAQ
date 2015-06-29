@@ -21,21 +21,18 @@ namespace DAQ
 
       if ((newItem.type() == GENERIC) ) {
 
-        CRawBuffer buffer;
-        buffer.setHeader(anyBuffer.getHeader());
-        buffer.getBuffer() << anyBuffer;
+        CRawBuffer buffer(gBufferSize);
+        anyBuffer.toRawBuffer(buffer);
+
         return buffer;
 
       } else {
         if (anyBuffer.type() == GENERIC) {
 
-          CRawBuffer& rawBuffer = dynamic_cast<CRawBuffer&>(anyBuffer);
+          const CRawBuffer& rawBuffer = dynamic_cast<const CRawBuffer&>(anyBuffer);
 
-          if (newItem.type() == SCALERBF) {
-            return CScalerBuffer(rawBuffer);
-          } else if (newItem.type() == DATABF) {
-            return CPhysicsEventBuffer(buffer);
-          }
+          return T(rawBuffer);
+
         } else {
           // cannot cast from a specific buffer to another specific buffer
           throw std::bad_cast();
@@ -43,8 +40,8 @@ namespace DAQ
       }
 
 
-
-      return new_item;
+    // we really should never reach this point
+      return newItem;
     }
   }
 }

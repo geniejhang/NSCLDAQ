@@ -83,10 +83,12 @@ public:
 
 void rawBufferCtor_0() {
 
-  CRawBuffer rawBuf;
+  CRawBuffer rawBuf(8192);
 
-  rawBuf.getBody() = m_bytes;
-  rawBuf.setHeader(m_header);
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << m_header;
+  buffer << m_bytes;
+  rawBuf.setBuffer(buffer);
 
   CScalerBuffer sclrBuf(rawBuf);
   CPPUNIT_ASSERT_EQUAL_MESSAGE("Scalers are correct when constructed from raw buffer",
@@ -96,10 +98,12 @@ void rawBufferCtor_0() {
 
 void rawBufferCtor_1() {
 
-  CRawBuffer rawBuf;
+  CRawBuffer rawBuf(8192);
 
-  rawBuf.getBody() = m_bytes;
-  rawBuf.setHeader(m_header);
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << m_header;
+  buffer << m_bytes;
+  rawBuf.setBuffer(buffer);
 
   CScalerBuffer sclrBuf(rawBuf);
   CPPUNIT_ASSERT_EQUAL_MESSAGE("Offset end is correct when constructed from raw buffer",
@@ -108,10 +112,12 @@ void rawBufferCtor_1() {
 
 void rawBufferCtor_2() {
 
-  CRawBuffer rawBuf;
+  CRawBuffer rawBuf(8192);
 
-  rawBuf.getBody() = m_bytes;
-  rawBuf.setHeader(m_header);
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << m_header;
+  buffer << m_bytes;
+  rawBuf.setBuffer(buffer);
 
   CScalerBuffer sclrBuf(rawBuf);
   CPPUNIT_ASSERT_EQUAL_MESSAGE("Offset begin is correct when constructed from raw buffer",

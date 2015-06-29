@@ -57,6 +57,9 @@ namespace DAQ {
 
       iterator begin() const;
       iterator end() const;
+
+      Buffer::ByteBuffer& getBuffer() { return m_buffer;}
+      const Buffer::ByteBuffer& getBuffer() const { return m_buffer;}
     };
 
 
@@ -110,11 +113,16 @@ namespace DAQ {
       const_iterator end() const;
 
       std::size_t size() const { return m_body.size(); }
-      Event& at(std::size_t index) { return m_body.at(index); }
+      Event at(std::size_t index) { return m_body.at(index); }
+
+
+      void toRawBuffer(CRawBuffer &buffer) const;
 
      private:
-      void parseBodyData(const Buffer::ByteBuffer &data);
-      void parseStandardBody(const Buffer::ByteBuffer& data);
+      void parseBodyData(Buffer::ByteBuffer::const_iterator beg,
+                         Buffer::ByteBuffer::const_iterator end);
+      void parseStandardBody(Buffer::ByteBuffer::const_iterator beg,
+                             Buffer::ByteBuffer::const_iterator end);
     };
     
 

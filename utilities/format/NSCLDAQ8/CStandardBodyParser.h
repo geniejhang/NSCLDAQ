@@ -17,7 +17,8 @@ namespace DAQ {
     {
     public:
       std::vector<std::shared_ptr<CPhysicsEvent> >
-      operator()(Buffer::BufferPtr<std::uint16_t> pos,
+      operator()(std::size_t nEvents,
+                 Buffer::BufferPtr<std::uint16_t> pos,
                  Buffer::BufferPtr<std::uint16_t> end);
 
        std::pair<std::shared_ptr<CPhysicsEvent>, Buffer::BufferPtr<std::uint16_t> >

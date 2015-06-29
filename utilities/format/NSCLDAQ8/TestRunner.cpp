@@ -18,11 +18,20 @@
 #include <cppunit/ui/text/TestRunner.h>
 #include <string>
 #include <iostream>
+#include <DataFormatV8.h>
+
 using namespace std;
+
+namespace DAQ
+{
+  namespace V8 {
+    std::size_t gBufferSize = 8192;
+  }
+}
 
 int main(int argc, char** argv)
 {
-  CppUnit::TextUi::TestRunner   
+  CppUnit::TextUi::TestRunner
                runner; // Control tests.
   CppUnit::TestFactoryRegistry& 
                registry(CppUnit::TestFactoryRegistry::getRegistry());

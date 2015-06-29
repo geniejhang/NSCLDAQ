@@ -20,7 +20,9 @@ namespace DAQ
         m_offsetEnd(),
         m_scalers()
     {
-      Buffer::BufferPtr<uint8_t>  p8(rawBuffer.getBody().begin(), m_header.mustSwap());
+      // need to skip over the 32-byte buffer header
+      auto bodyBegin = rawBuffer.getBuffer().begin() + 16*sizeof(std::uint16_t);
+      Buffer::BufferPtr<uint8_t>  p8(bodyBegin, m_header.mustSwap());
 
       Buffer::BufferPtr<uint32_t> p32 = p8;
       m_offsetEnd = *p32;
@@ -49,6 +51,21 @@ namespace DAQ
 
     bheader CScalerBuffer::getHeader() const {
       return m_header;
+    }
+
+    void CScalerBuffer::toRawBuffer(CRawBuffer &buffer) const
+    {
+      vector<uint8_t> empty(6);
+
+      Buffer::ByteBuffer newbuf;
+      newbuf << m_header;
+      newbuf << m_offsetEnd;
+      newbuf << empty;
+      newbuf << m_offsetBegin;
+      newbuf << empty;
+      newbuf << m_scalers;
+
+      buffer.setBuffer(newbuf);
     }
 
     std::uint32_t CScalerBuffer::getOffsetBegin() const

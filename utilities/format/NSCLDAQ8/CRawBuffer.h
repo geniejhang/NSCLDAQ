@@ -12,18 +12,20 @@ namespace DAQ
     class CRawBuffer : public CV8Buffer
     {
     private:
-      bheader                     m_header;
-      DAQ::Buffer::ByteBuffer     m_body;
+      bheader              m_parsedHeader;
+      Buffer::ByteBuffer   m_unparsedBuffer;
 
     public:
-      CRawBuffer();
+      CRawBuffer(std::size_t size);
+
       bheader  getHeader() const;
-      void setHeader(const bheader& header) { m_header = header; }
       BufferTypes type() const { return GENERIC; }
+      void toRawBuffer(CRawBuffer &buffer) const;
 
-      Buffer::ByteBuffer& getBody();
-      const Buffer::ByteBuffer& getBody() const;
+//      Buffer::ByteBuffer& getBuffer();
+      const Buffer::ByteBuffer& getBuffer() const;
 
+      void setBuffer(const Buffer::ByteBuffer& buffer);
     };
 
   } // end of V8

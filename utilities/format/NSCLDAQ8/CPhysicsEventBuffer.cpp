@@ -51,14 +51,16 @@ namespace DAQ {
     {
       Buffer::ByteBuffer buffer;
       buffer << body;
-      parseBodyData(buffer);
+      parseBodyData(buffer.begin(), buffer.end());
     }
 
     CPhysicsEventBuffer::CPhysicsEventBuffer(const CRawBuffer &rawBuffer)
       : m_header(rawBuffer.getHeader()),
         m_body()
     {
-      parseBodyData(rawBuffer.getBody());
+      std::size_t hdrSize = 16*sizeof(std::uint16_t);
+      auto buf = rawBuffer.getBuffer();
+      parseBodyData(buf.begin()+hdrSize, buf.end());
     }
 
     CPhysicsEventBuffer::CPhysicsEventBuffer(const CPhysicsEventBuffer& rhs)
@@ -88,22 +90,24 @@ namespace DAQ {
       return *this;
     }
 
-    void CPhysicsEventBuffer::parseBodyData(const Buffer::ByteBuffer& data)
+    void CPhysicsEventBuffer::parseBodyData(Buffer::ByteBuffer::const_iterator beg,
+                                            Buffer::ByteBuffer::const_iterator end)
     {
       if (m_header.buffmt == StandardVsn) {
-        parseStandardBody(data);
+        parseStandardBody(beg, end);
       } else {
         throw std::runtime_error("Only buffer version 5 is supported");
       }
     }
 
-    void CPhysicsEventBuffer::parseStandardBody(const Buffer::ByteBuffer &body)
+    void CPhysicsEventBuffer::parseStandardBody(Buffer::ByteBuffer::const_iterator beg,
+                                                Buffer::ByteBuffer::const_iterator end)
     {
       CStandardBodyParser parser;
-      Buffer::BufferPtr<uint16_t> beg(body.begin(), m_header.mustSwap());
-      Buffer::BufferPtr<uint16_t> end(body.end(), m_header.mustSwap());
+      Buffer::BufferPtr<uint16_t> begPtr(beg, m_header.mustSwap());
+      Buffer::BufferPtr<uint16_t> endPtr(end, m_header.mustSwap());
 
-      m_body = parser(beg, end);
+      m_body = parser(m_header.nevt, begPtr, endPtr);
     }
 
     bheader CPhysicsEventBuffer::getHeader() const {
@@ -130,5 +134,18 @@ namespace DAQ {
       return m_body.end();
     }
 
+    void CPhysicsEventBuffer::toRawBuffer(CRawBuffer &buffer) const
+    {
+      Buffer::ByteBuffer newbuf;
+
+      newbuf << m_header;
+
+      for (auto& pEvent : m_body) {
+        newbuf << pEvent->getBuffer();
+      }
+
+      buffer.setBuffer(newbuf);
+
+     }
   } // namespace V8
 } // namespace DAQ

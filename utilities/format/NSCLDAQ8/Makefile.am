@@ -1,11 +1,14 @@
 lib_LTLIBRARIES = libdataformatv8.la
 
-libdataformatv8_la_SOURCES = CV8Buffer.cpp \
+libdataformatv8_la_SOURCES = bheader.cpp \
+                                CV8Buffer.cpp \
                                 CRawBuffer.cpp \
                                 CPhysicsEventBuffer.cpp \
                                 CScalerBuffer.cpp \
                                 CPhysicsEventBodyParser.cpp \
-                                CStandardBodyParser.cpp
+                                CStandardBodyParser.cpp \
+                                CControlBuffer.cpp \
+                                CTextBuffer.cpp
 
 nscldaq8dir = @includedir@/NSCLDAQ8
 
@@ -16,8 +19,9 @@ nscldaq8_HEADERS = DataFormatV8.h \
                     CPhysicsEventBuffer.h \
                     CScalerBuffer.h \
                     CPhysicsEventBodyParser.h \
-                    CStandardBodyParser.h
-
+                    CStandardBodyParser.h \
+                    CControlBuffer.h \
+                    CTextBuffer.h
 
 libdataformatv8_la_CXXFLAGS = -I@srcdir@ \
                               -I@top_srcdir@/utilities/Buffer \
@@ -31,7 +35,11 @@ noinst_PROGRAMS = unittests
 unittests_SOURCES	= TestRunner.cpp \
                           physicseventtest.cpp \
                           standardbodyparsertest.cpp \
-                          scalerbuffertest.cpp
+                          scalerbuffertest.cpp \
+                          format_casttest.cpp \
+                          rawbuffertest.cpp \
+                          ccontrolbuffertest.cpp \
+                          ctextbuffertest.cpp
 
 unittests_LDADD	= $(CPPUNIT_LDFLAGS) 		\
                   @builddir@/libdataformatv8.la	\

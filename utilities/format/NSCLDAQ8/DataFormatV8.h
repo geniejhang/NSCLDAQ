@@ -1,11 +1,15 @@
 #ifndef DATAFORMATV8_H
 #define DATAFORMATV8_H
 
+#include <cstdint>
+
 namespace DAQ
 {
   namespace V8
   {
-    enum BufferVersion { StandardVsn=5, JumboVsn=6 };
+    extern std::size_t gBufferSize;
+
+    enum BufferVersion : std::uint16_t { StandardVsn=5, JumboVsn=6 };
 
     enum BufferTypes {
       VOID         = 0,

@@ -7,12 +7,14 @@ namespace DAQ {
   namespace V8 {
     
     vector<shared_ptr<CPhysicsEvent> >
-    CStandardBodyParser::operator()(Buffer::BufferPtr<uint16_t> beg,
+    CStandardBodyParser::operator()(std::size_t nEvents,
+                                    Buffer::BufferPtr<uint16_t> beg,
                                     Buffer::BufferPtr<uint16_t> end)
     {
       vector<shared_ptr<CPhysicsEvent> > events;
 
-      while (beg != end) {
+//      while (beg != end) {
+      for (std::size_t index=0; (beg!=end) && (index<nEvents); ++index) {
         auto result = parseOne(beg, end);
 
         events.push_back( std::get<0>(result) );

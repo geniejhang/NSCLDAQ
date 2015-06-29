@@ -10,6 +10,7 @@
 
 #include <DataFormatV8.h>
 #include <CRawBuffer.h>
+#include <ByteBuffer.h>
 #include <DebugUtils.h>
 
 #define private public
@@ -83,8 +84,8 @@ void totalShorts_0() {
 
 void ctor_0() {
 
-  CPPUNIT_ASSERT_EQUAL_MESSAGE("Buffer should be parsed when construction completes",
-                               std::size_t(3), m_physicsBuffer.size());
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("Buffer should be parsed nevt number of times",
+                               std::size_t(2), m_physicsBuffer.size());
 
 }
 
@@ -117,27 +118,35 @@ void unsupportedVersion_0() {
 
 void rawBufferCtor_0() {
 
-  CRawBuffer rawBuf;
+  CRawBuffer rawBuf(8192);
 
-  rawBuf.getBody() << m_bodyData;
-  rawBuf.setHeader(m_header);
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << m_header;
+  buffer << m_bodyData;
+
+  rawBuf.setBuffer(buffer);
 
   CPhysicsEventBuffer physBuf(rawBuf);
   CPPUNIT_ASSERT_EQUAL_MESSAGE("Construct from a raw buffer",
-                               std::size_t(3), physBuf.size());
+                               std::size_t(2), physBuf.size());
 }
 
 
 void rawBufferCtor_1() {
 
-  CRawBuffer rawBuf;
+  CRawBuffer rawBuf(8192);
 
-  rawBuf.getBody() << m_bodyData;
-  rawBuf.setHeader(m_header);
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << m_header;
+  buffer << m_bodyData;
+
+  rawBuf.setBuffer(buffer);
+
 
   // because we are building our raw buffer from the same data that m_physicsBuffer was
   // constructed from, the contents better be the same.
   CPhysicsEventBuffer physBuf(rawBuf);
+
   CPPUNIT_ASSERT_MESSAGE("RawBuffer ctor has proper 1st event",
                          std::equal(physBuf.at(0)->begin(), physBuf.at(0)->end(),
                                     m_physicsBuffer.at(0)->begin()));
@@ -145,10 +154,13 @@ void rawBufferCtor_1() {
 
 void rawBufferCtor_2() {
 
-  CRawBuffer rawBuf;
+  CRawBuffer rawBuf(8192);
 
-  rawBuf.getBody() << m_bodyData;
-  rawBuf.setHeader(m_header);
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << m_header;
+  buffer << m_bodyData;
+
+  rawBuf.setBuffer(buffer);
 
   // because we are building our raw buffer from the same data that m_physicsBuffer was
   // constructed from, the contents better be the same.

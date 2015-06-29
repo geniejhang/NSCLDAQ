@@ -32,6 +32,8 @@ namespace DAQ
       bheader getHeader() const;
       BufferTypes type() const { return SCALERBF; }
 
+      void toRawBuffer(CRawBuffer &buffer) const;
+
       std::uint32_t getOffsetBegin() const;
       std::uint32_t getOffsetEnd() const;
       std::vector<std::uint32_t> getScalers() const;

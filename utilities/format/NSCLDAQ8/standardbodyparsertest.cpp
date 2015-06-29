@@ -117,7 +117,7 @@ public:
 
     void parse_0() {
 
-      auto result = m_parser(m_beg, m_deadend);
+      auto result = m_parser(2, m_beg, m_deadend);
 
       CPPUNIT_ASSERT_EQUAL_MESSAGE(
             "parsing 2 physics event should produce 2 physics events",
@@ -125,7 +125,7 @@ public:
     }
 
     void parse_1() {
-      auto result = m_parser(m_beg, m_deadend);
+      auto result = m_parser(2, m_beg, m_deadend);
 
       CPPUNIT_ASSERT_MESSAGE(
             "first physics event makes sense",
@@ -133,7 +133,7 @@ public:
     }
 
     void parse_2() {
-      auto result = m_parser(m_beg, m_deadend);
+      auto result = m_parser(2, m_beg, m_deadend);
 
       CPPUNIT_ASSERT_MESSAGE(
             "second physics event makes sense",
