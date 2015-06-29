@@ -6,6 +6,11 @@
 namespace DAQ {
   namespace V8 {
     
+    CControlBuffer::CControlBuffer() : m_header(), m_title(), m_offset(), m_time()
+    {
+      setTitle(m_title);
+    }
+
     CControlBuffer::CControlBuffer(const bheader &header, const std::string &title,
                                    std::uint32_t offset, const bftime &time)
       : m_header(header), m_title(), m_offset(offset), m_time(time)

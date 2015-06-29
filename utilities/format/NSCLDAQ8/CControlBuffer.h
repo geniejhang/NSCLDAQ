@@ -21,6 +21,7 @@ namespace DAQ {
       bftime        m_time;
 
     public:
+      CControlBuffer();
       CControlBuffer(const bheader& header, const std::string& title,
                      std::uint32_t offset, const bftime& time);
       CControlBuffer(const CRawBuffer& rawBuf);

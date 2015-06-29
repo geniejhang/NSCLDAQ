@@ -16,7 +16,7 @@ namespace DAQ
       Buffer::ByteBuffer   m_unparsedBuffer;
 
     public:
-      CRawBuffer(std::size_t size);
+      CRawBuffer(std::size_t size = gBufferSize);
 
       bheader  getHeader() const;
       BufferTypes type() const { return GENERIC; }

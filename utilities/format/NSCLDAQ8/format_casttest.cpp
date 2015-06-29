@@ -11,7 +11,10 @@
 #include <DataFormatV8.h>
 #include <CRawBuffer.h>
 #include <CScalerBuffer.h>
+#include <CControlBuffer.h>
 #include <CPhysicsEventBuffer.h>
+#include <CTextBuffer.h>
+
 #include <DebugUtils.h>
 
 #define private public
@@ -35,6 +38,12 @@ public:
   CPPUNIT_TEST_SUITE(format_casttest);
   CPPUNIT_TEST( castRawToPhysics_0 );
   CPPUNIT_TEST( castRawToScaler_0 );
+  CPPUNIT_TEST( castRawToControl_0 );
+  CPPUNIT_TEST( castRawToText_0 );
+  CPPUNIT_TEST( castTextToRaw_0 );
+  CPPUNIT_TEST( castScalerToRaw_0 );
+  CPPUNIT_TEST( castPhysicsEventToRaw_0 );
+  CPPUNIT_TEST( castControlToRaw_0 );
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -103,8 +112,6 @@ void castRawToScaler_0 () {
 
   rawBuf.setBuffer(buffer);
 
-  // because we are building our raw buffer from the same data that m_physicsBuffer was
-  // constructed from, the contents better be the same.
   auto  sclrBuf = format_cast<CScalerBuffer>(rawBuf);
   CPPUNIT_ASSERT_EQUAL_MESSAGE("RawBuffer ctor has proper 2nd event",
                          uint32_t(1234), sclrBuf.getOffsetEnd());
@@ -112,6 +119,78 @@ void castRawToScaler_0 () {
                          uint32_t(5678), sclrBuf.getOffsetBegin());
   CPPUNIT_ASSERT_EQUAL_MESSAGE("RawBuffer ctor has proper 2nd event",
                          sclrs, sclrBuf.getScalers());
+}
+
+void castRawToControl_0 () {
+  m_header.type = DAQ::V8::ENDRUNBF;
+
+  CRawBuffer rawBuf(8192);
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << m_header;
+
+  string title("the best thing ever");
+  title.resize(80, '\0');
+  buffer << title.c_str();
+
+  buffer << std::uint32_t(12345);
+  buffer << bftime({12, 34, 56, 78, 90, 1, 2});
+  rawBuf.setBuffer(buffer);
+
+  CPPUNIT_ASSERT_NO_THROW_MESSAGE(
+        "format_cast CRawBuffer --> CControlBuffer is allowed",
+        auto cntlBuf = format_cast<CControlBuffer>(rawBuf)
+      );
+
+}
+
+void castRawToText_0 () {
+  m_header.type = DAQ::V8::PKTDOCBF;
+
+  CRawBuffer rawBuf(8192);
+
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << m_header;
+  buffer << std::uint16_t(9);
+  buffer << std::vector<std::string>({"the", "test"});
+  rawBuf.setBuffer(buffer);
+
+  CPPUNIT_ASSERT_NO_THROW_MESSAGE(
+        "format_cast CRawBuffer --> CTextBuffer is allowed",
+        auto textBuf = format_cast<CTextBuffer>(rawBuf)
+      );
+
+}
+
+void castTextToRaw_0() {
+  CTextBuffer buffer;
+
+  CPPUNIT_ASSERT_NO_THROW_MESSAGE(
+        "format_cast CTextBuffer --> CRawBuffer is allowed",
+        auto rawBuf = format_cast<CRawBuffer>(buffer) );
+}
+
+void castScalerToRaw_0() {
+  CScalerBuffer buffer;
+
+  CPPUNIT_ASSERT_NO_THROW_MESSAGE(
+        "format_cast CScalerBuffer --> CRawBuffer is allowed",
+        auto rawBuf = format_cast<CRawBuffer>(buffer) );
+}
+
+void castPhysicsEventToRaw_0() {
+  CPhysicsEventBuffer buffer;
+
+  CPPUNIT_ASSERT_NO_THROW_MESSAGE(
+        "format_cast CPhysicsEventBuffer --> CRawBuffer is allowed",
+        auto rawBuf = format_cast<CRawBuffer>(buffer) );
+}
+
+void castControlToRaw_0() {
+  CControlBuffer buffer;
+
+  CPPUNIT_ASSERT_NO_THROW_MESSAGE(
+        "format_cast CControlBuffer --> CRawBuffer is allowed",
+        auto rawBuf = format_cast<CRawBuffer>(buffer) );
 }
 
 };
