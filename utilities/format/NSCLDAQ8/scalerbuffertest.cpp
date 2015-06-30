@@ -4,9 +4,6 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
 
 #include <DataFormatV8.h>
 #include <CRawBuffer.h>
@@ -18,6 +15,11 @@
 #include <CScalerBuffer.h>
 #undef protected
 #undef private
+
+#include <iostream>
+#include <iomanip>
+#include <algorithm>
+#include <stdexcept>
 
 using namespace std;
 
@@ -39,6 +41,7 @@ public:
   CPPUNIT_TEST(rawBufferCtor_0);
   CPPUNIT_TEST(rawBufferCtor_1);
   CPPUNIT_TEST(rawBufferCtor_2);
+  CPPUNIT_TEST(rawBufferCtor_3);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -122,6 +125,21 @@ void rawBufferCtor_2() {
   CScalerBuffer sclrBuf(rawBuf);
   CPPUNIT_ASSERT_EQUAL_MESSAGE("Offset begin is correct when constructed from raw buffer",
                                m_offsetBegin, sclrBuf.getOffsetBegin());
+}
+
+void rawBufferCtor_3() {
+  // poison the type to be something different than a scaler type
+  m_header.type = BEGRUNBF;
+
+  CRawBuffer rawBuf(8192);
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << m_header;
+  buffer << m_bytes;
+  rawBuf.setBuffer(buffer);
+
+  CPPUNIT_ASSERT_THROW_MESSAGE( "Raw ctor from non-scaler type fails",
+                                CScalerBuffer sclrBuf(rawBuf),
+                                std::runtime_error);
 }
 
 };

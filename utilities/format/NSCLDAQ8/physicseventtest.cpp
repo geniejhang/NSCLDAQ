@@ -4,9 +4,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
+
 
 #include <DataFormatV8.h>
 #include <CRawBuffer.h>
@@ -18,6 +16,10 @@
 #include <CPhysicsEventBuffer.h>
 #undef protected
 #undef private
+
+#include <iostream>
+#include <iomanip>
+#include <algorithm>
 
 using namespace std;
 
@@ -41,6 +43,7 @@ public:
   CPPUNIT_TEST(rawBufferCtor_0);
   CPPUNIT_TEST(rawBufferCtor_1);
   CPPUNIT_TEST(rawBufferCtor_2);
+  CPPUNIT_TEST(rawBufferCtor_3);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -170,6 +173,22 @@ void rawBufferCtor_2() {
                                     m_physicsBuffer.at(1)->begin()));
 }
 
+void rawBufferCtor_3 () {
+  CRawBuffer rawBuf(8192);
+  m_header.type = SCALERBF;
+
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << m_header;
+  buffer << m_bodyData;
+
+  rawBuf.setBuffer(buffer);
+
+  // because we are building our raw buffer from the same data that m_physicsBuffer was
+  // constructed from, the contents better be the same.
+  CPPUNIT_ASSERT_THROW_MESSAGE("RawBuffer ctor throws if not of type DATABF",
+                               CPhysicsEventBuffer physBuf(rawBuf),
+                                std::runtime_error);
+}
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(physicseventtest);

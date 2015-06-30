@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 using namespace std;
 
@@ -38,6 +39,7 @@ public:
   CPPUNIT_TEST(rawCtor_1);
   CPPUNIT_TEST(rawCtor_2);
   CPPUNIT_TEST(rawCtor_3);
+  CPPUNIT_TEST(rawCtor_4);
   CPPUNIT_TEST(toRawBuffer_0);
   CPPUNIT_TEST(totalBytes_0);
   CPPUNIT_TEST_SUITE_END();
@@ -47,7 +49,7 @@ public:
   void setUp() {
 
     m_header.nwds = 100;
-    m_header.type = DAQ::V8::DATABF;
+    m_header.type = DAQ::V8::STATEVARBF;
     m_header.cks  = 0;
     m_header.run  = 1;
     m_header.seq  = 2;
@@ -59,15 +61,18 @@ public:
     m_header.ssignature = DAQ::V8::BOM16;
     m_header.lsignature = DAQ::V8::BOM32;
 
+    // create some strings
     m_strings = {"the first const char*",
                  "the second const char* ..              and some more",
                  "the first const char* but what about this?",
                  ""};
 
+    // compute the total number of bytes composed by strings
     std::uint16_t totalBytes = sizeof(std::uint16_t);
     for (auto& element : m_strings) {
       totalBytes += element.size() + 1;
     }
+
     ByteBuffer buffer;
     buffer << m_header;
     buffer << totalBytes;
@@ -86,45 +91,46 @@ public:
   }
 
   void rawCtor_0 () {
-    const char* pText = reinterpret_cast<const char*>(m_rawBuf.getBuffer().data());
-    pText += 16*sizeof(std::uint16_t) + sizeof(std::uint16_t);
-
     CPPUNIT_ASSERT_EQUAL_MESSAGE("First string makes sense",
                                  m_strings.at(0), m_buffer.getStrings().at(0));
-
   }
 
   void rawCtor_1 () {
-    const char* pText = reinterpret_cast<const char*>(m_rawBuf.getBuffer().data());
-    pText += 16*sizeof(std::uint16_t) + sizeof(std::uint16_t);
-    pText += m_strings.at(0).size() + 1;
-
     CPPUNIT_ASSERT_EQUAL_MESSAGE("second string makes sense",
                                  m_strings.at(1), m_buffer.getStrings().at(1));
-
   }
 
   void rawCtor_2 () {
-    const char* pText = reinterpret_cast<const char*>(m_rawBuf.getBuffer().data());
-    pText += 16*sizeof(std::uint16_t) + sizeof(std::uint16_t);
-    pText += m_strings.at(0).size() + 1;
-    pText += m_strings.at(1).size() + 1;
-
     CPPUNIT_ASSERT_EQUAL_MESSAGE("third string makes sense",
                                  m_strings.at(2), m_buffer.getStrings().at(2));
 
   }
 
   void rawCtor_3 () {
-    const char* pText = reinterpret_cast<const char*>(m_rawBuf.getBuffer().data());
-    pText += 16*sizeof(std::uint16_t) + sizeof(std::uint16_t);
-    pText += m_strings.at(0).size() + 1;
-    pText += m_strings.at(1).size() + 1;
-    pText += m_strings.at(2).size() + 1;
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("fourth string makes sense",
                                  m_strings.at(3), m_buffer.getStrings().at(3));
 
+  }
+
+  void rawCtor_4 () {
+    CRawBuffer buffer;
+
+    // create a buffer and fill it with a buffer header
+    DAQ::Buffer::ByteBuffer buf;
+    bheader headr; headr.type = DAQ::V8::DATABF; // this is an unacceptable type...
+    buf << headr;
+
+    // it does not matter that we finish this b/c it should throw before looking at any
+    // of the data past the header
+
+    buffer.setBuffer(buf);
+
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+          "Raw ctor with non text type causes a thrown exception",
+          CTextBuffer text(buffer),
+          std::runtime_error
+          );
   }
 
   void toRawBuffer_0 () {

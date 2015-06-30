@@ -18,10 +18,13 @@ namespace DAQ {
     {
       bheader                  m_header;
       std::vector<std::string> m_strings;
+
     public:
       CTextBuffer();
       CTextBuffer(const bheader& header, const std::vector<std::string>& strings);
       CTextBuffer(const CRawBuffer& rawBuf);
+
+      CTextBuffer(const CTextBuffer& rhs);
 
       ~CTextBuffer() {}
 
@@ -33,6 +36,14 @@ namespace DAQ {
       std::vector<std::string> getStrings() const { return m_strings; }
 
       std::uint16_t totalBytes() const;
+
+    private:
+      void validateTypeToConstructFrom();
+      void validateDeadEndMeaningful(Buffer::ByteBuffer::const_iterator deadEnd,
+                                     Buffer::ByteBuffer::const_iterator bufferEnd);
+      std::uint16_t extractTotalBytes(const Buffer::ByteBuffer& buffer) const;
+      void parseStringsFromBuffer(Buffer::ByteBuffer::const_iterator beg,
+                                   Buffer::ByteBuffer::const_iterator end);
     };
     
   } // namespace V8

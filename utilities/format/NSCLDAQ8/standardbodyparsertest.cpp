@@ -3,10 +3,6 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
-#include <functional>
 
 #include <DataFormatV8.h>
 #include <make_unique.h>
@@ -16,6 +12,11 @@
 #include <CStandardBodyParser.h>
 #undef protected
 #undef private
+
+#include <iostream>
+#include <iomanip>
+#include <algorithm>
+#include <functional>
 
 using namespace std;
 

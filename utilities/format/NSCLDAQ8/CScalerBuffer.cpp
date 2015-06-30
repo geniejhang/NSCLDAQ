@@ -20,6 +20,13 @@ namespace DAQ
         m_offsetEnd(),
         m_scalers()
     {
+
+      if (m_header.type != SCALERBF && m_header.type != SNAPSCBF) {
+        std::string errmsg = "CScalerBuffer::CScalerBuffer(CRawBuffer const&) ";
+        errmsg += "Buffer is not of type SCALERBF or SNAPSCBF!";
+        throw std::runtime_error(errmsg);
+      }
+
       // need to skip over the 32-byte buffer header
       auto bodyBegin = rawBuffer.getBuffer().begin() + 16*sizeof(std::uint16_t);
       Buffer::BufferPtr<uint8_t>  p8(bodyBegin, m_header.mustSwap());

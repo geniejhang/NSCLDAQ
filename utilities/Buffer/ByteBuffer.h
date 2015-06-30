@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <cstring>
+#include <string>
 #include <iterator>
 
 namespace DAQ
@@ -66,5 +67,15 @@ DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
 extern
 DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
                                     std::int64_t value);
+extern
+DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
+                                    const DAQ::Buffer::ByteBuffer& rhs);
 
+extern
+DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
+                                    const std::string& string);
+
+extern
+DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
+                                    const char* string);
 #endif

@@ -83,3 +83,23 @@ ByteBuffer& operator<<(ByteBuffer& buffer, std::int64_t value)
   return loadBuffer(buffer, beg, end);
 }
 
+ByteBuffer& operator<<(ByteBuffer& buffer, const ByteBuffer& rhs)
+{
+  buffer.insert(buffer.end(), rhs.begin(), rhs.end());
+
+  return buffer;
+}
+
+ByteBuffer& operator<<(ByteBuffer& buffer, const std::string& rhs)
+{
+  buffer.insert(buffer.end(), rhs.begin(), rhs.end());
+
+  return buffer;
+}
+
+ByteBuffer& operator<<(ByteBuffer& buffer, const char* rhs)
+{
+  buffer << std::string(rhs) << uint8_t(0);
+
+  return buffer;
+}

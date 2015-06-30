@@ -16,7 +16,7 @@ namespace DAQ
       DATABF       = 1,
       SCALERBF     = 2,
       SNAPSCBF     = 3,
-      STATEVARDB   = 4,
+      STATEVARBF   = 4,
       RUNVARBF     = 5,
       PKTDOCBF     = 6,
       BEGRUNBF     = 11,

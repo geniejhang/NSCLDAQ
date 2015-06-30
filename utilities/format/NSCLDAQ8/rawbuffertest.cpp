@@ -5,9 +5,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
+
 
 #include <DataFormatV8.h>
 #include <CRawBuffer.h>
@@ -19,6 +17,10 @@
 #include <CScalerBuffer.h>
 #undef protected
 #undef private
+
+#include <iostream>
+#include <iomanip>
+#include <algorithm>
 
 using namespace std;
 

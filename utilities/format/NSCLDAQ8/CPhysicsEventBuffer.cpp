@@ -58,6 +58,12 @@ namespace DAQ {
       : m_header(rawBuffer.getHeader()),
         m_body()
     {
+      if (m_header.type != DATABF) {
+        std::string errmsg = "CPhysicsEventBuffer::CPhysicsEventBuffer(CRawBuffer const&) ";
+        errmsg += "Buffer is not of type DATABF!";
+        throw std::runtime_error(errmsg);
+      }
+
       std::size_t hdrSize = 16*sizeof(std::uint16_t);
       auto buf = rawBuffer.getBuffer();
       parseBodyData(buf.begin()+hdrSize, buf.end());

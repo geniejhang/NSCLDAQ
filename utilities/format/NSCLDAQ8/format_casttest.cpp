@@ -4,9 +4,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
+
 
 #include <DataFormatV8.h>
 #include <CRawBuffer.h>
@@ -23,6 +21,9 @@
 #undef protected
 #undef private
 
+#include <iostream>
+#include <iomanip>
+#include <algorithm>
 using namespace std;
 
 using namespace DAQ::V8;
@@ -94,6 +95,8 @@ void castRawToPhysics_0 () {
 void castRawToScaler_0 () {
   std::vector<std::uint32_t> sclrs = {0, 1, 2, 3};
   m_header.nevt = sclrs.size();
+
+  m_header.type = SCALERBF;
 
   CRawBuffer rawBuf(8192);
   DAQ::Buffer::ByteBuffer buffer;
