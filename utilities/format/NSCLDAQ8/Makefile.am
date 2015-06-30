@@ -21,7 +21,8 @@ nscldaq8_HEADERS = DataFormatV8.h \
                     CPhysicsEventBodyParser.h \
                     CStandardBodyParser.h \
                     CControlBuffer.h \
-                    CTextBuffer.h
+                    CTextBuffer.h \
+										format_cast.h
 
 libdataformatv8_la_CXXFLAGS = -I@srcdir@ \
                               -I@top_srcdir@/utilities/Buffer \
