@@ -3,6 +3,7 @@
 #define CBUFFER_H
 
 #include <vector>
+#include <array>
 #include <cstring>
 #include <string>
 #include <iterator>

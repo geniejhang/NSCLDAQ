@@ -6,7 +6,9 @@ libbuffer_la_SOURCES =  ByteBuffer.cpp \
 
 include_HEADERS = ByteBuffer.h \
                   ByteOrder.h \
-                  BufferPtr.h
+                  BufferPtr.h \
+                  Deserializer.h
+
 
 libbuffer_la_CXXFLAGS = -I@srcdir@ \
                          @LIBTCLPLUS_CFLAGS@
@@ -18,7 +20,8 @@ noinst_PROGRAMS = unittests
 unittests_SOURCES = TestRunner.cpp \
                     translatorptrtest.cpp \
                     byteordertest.cpp\
-                    bytebuffertest.cpp
+                    bytebuffertest.cpp \
+                    deserializertest.cpp
 
 unittests_LDADD	= $(builddir)/libbuffer.la \
                     @CPPUNIT_LDFLAGS@ 		\
