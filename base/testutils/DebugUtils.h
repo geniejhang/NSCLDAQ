@@ -18,10 +18,8 @@ void print_vectors(const std::vector<T>& expected, const std::vector<T>& actual)
 
   using namespace std;
 
-  // we are interested in hex output and also it showing the x before it
-  auto oldFlags = cout.flags( ios::hex | ios::showbase );
 
-  int columnWidth = 8;
+  int columnWidth = sizeof(T)*2+2;
 
   // create header
   cout << setw(columnWidth) << "Expected"; 
@@ -36,10 +34,15 @@ void print_vectors(const std::vector<T>& expected, const std::vector<T>& actual)
 
   for (size_t i=0; i<nIters; ++i) {
 
+    cout << setw(3) << i << " : ";
+
+    // we are interested in hex output and also it showing the x before it
+    auto oldFlags = cout.flags( ios::hex | ios::showbase );
+
     // output either a value or spaces
     if (i < sizeExpected) {
       auto oldFill  = cout.fill('0');
-      cout << setw(columnWidth) << expected.at(i);
+      cout << setw(columnWidth) << static_cast<unsigned int>(expected.at(i));
       cout.fill(oldFill);
     } else {
       cout << setw(columnWidth) << ' ';
@@ -51,16 +54,18 @@ void print_vectors(const std::vector<T>& expected, const std::vector<T>& actual)
     // output either a value or spaces
     if (i < sizeActual) {
       auto oldFill  = cout.fill('0');
-      cout << setw(columnWidth) << actual.at(i);
+      cout << setw(columnWidth) << static_cast<unsigned int>(actual.at(i));
       cout.fill(oldFill);
     } else {
       cout << setw(columnWidth) << '0';
     }
 
+    // revert the formatting of cout to what it was
+    cout.flags(oldFlags);
+
+    cout << endl;
   } // end loop
 
-  // revert the formatting of cout to what it was
-  cout.flags(oldFlags);
 }
 
 }
