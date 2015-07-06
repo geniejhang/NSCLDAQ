@@ -21,11 +21,12 @@ namespace DAQ {
     {
       validateTypeToConstructFrom(); // throws if bad
 
-      std::uint16_t totalBytes = extractTotalBytes(rawBuf.getBuffer());
+      std::uint16_t totalShorts = extractTotalShorts(rawBuf.getBuffer(),
+                                                     rawBuf.bufferNeedsSwap());
 
       // locate beginning of body (i.e. skip the 16-word header)
-      auto beg    = rawBuf.getBuffer().begin() + 16*sizeof(std::uint16_t);
-      auto deadEnd = beg + totalBytes;
+      auto beg     = rawBuf.getBuffer().begin() + 16*sizeof(std::uint16_t);
+      auto deadEnd = beg + totalShorts*sizeof(std::uint16_t);
 
       validateDeadEndMeaningful(deadEnd, rawBuf.getBuffer().end());
 
@@ -42,9 +43,14 @@ namespace DAQ {
 
     void CTextBuffer::toRawBuffer(CRawBuffer &buffer) const
     {
+      // make sure that the number of words are correctly computed
+
+      bheader header = m_header;
+      header.nwds = 16+totalShorts();
+
       Buffer::ByteBuffer buf;
-      buf << m_header;
-      buf << totalBytes();
+      buf << header;
+      buf << totalShorts();
       for (auto& str : m_strings) {
         buf << str.c_str();
       }
@@ -52,20 +58,31 @@ namespace DAQ {
       buffer.setBuffer(buf);
     }
 
-    std::uint16_t CTextBuffer::totalBytes() const
+    std::uint16_t CTextBuffer::totalShorts() const
     {
-      std::uint16_t totalBytes = sizeof(std::uint16_t);
+      std::uint32_t nBytes = totalBytes();
+
+      return ((nBytes%2)==0) ? nBytes/2 : (nBytes+1)/2;
+    }
+
+    std::uint32_t CTextBuffer::totalBytes() const
+    {
+      std::uint32_t totalBytes = sizeof(std::uint16_t);
 
       for (auto& element : m_strings) {
-        totalBytes += element.size() + 1;
+        if ((element.size() % 2) == 0) {
+          totalBytes += element.size() + 2;
+        } else {
+          totalBytes += element.size() + 1;
+        }
       }
 
       return totalBytes;
     }
-    
-    std::uint16_t CTextBuffer::extractTotalBytes(const Buffer::ByteBuffer &buffer) const
+
+    std::uint16_t CTextBuffer::extractTotalShorts(const Buffer::ByteBuffer &buffer, bool needsSwap) const
     {
-      Buffer::BufferPtr<std::uint16_t> pSize(buffer.begin(), m_header.mustSwap());
+      Buffer::BufferPtr<std::uint16_t> pSize(buffer.begin(), needsSwap);
       pSize += 16; // skip over 16 shorts
       return *pSize;
     }
@@ -97,15 +114,32 @@ namespace DAQ {
 
     void CTextBuffer::parseStringsFromBuffer(Buffer::ByteBuffer::const_iterator beg,
                                              Buffer::ByteBuffer::const_iterator end) {
-      auto begEnd = beg;
-      while (beg != end) {
 
+      auto origBeg = beg;
+      auto begEnd = beg;
+      // the +1 check is because the char padding skip can jump by 1 or 2
+      while ((beg != end) && (beg != end+1)) {
         begEnd = std::find(beg, end, '\0');
         m_strings.push_back(std::string(beg, begEnd));
 
-        beg = begEnd+1;
+        beg = skipNullCharPadding(beg, begEnd);
       }
 
     }
-  } // namespace V8
+
+    Buffer::ByteBuffer::const_iterator
+    CTextBuffer::skipNullCharPadding(Buffer::ByteBuffer::const_iterator beg,
+                                     Buffer::ByteBuffer::const_iterator begEnd)
+    {
+      Buffer::ByteBuffer::const_iterator startNextStr;
+      if ((std::distance(beg, begEnd)%2)==0) {
+        startNextStr = begEnd+2;
+      } else {
+        startNextStr = begEnd+1;
+      }
+
+      return startNextStr;
+    }
+
+    } // namespace V8
 } // namespace DAQ

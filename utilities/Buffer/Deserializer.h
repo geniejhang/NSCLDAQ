@@ -54,7 +54,7 @@ namespace DAQ {
           m_fail = true;
         } else {
 
-          type = m_swapper.copyAs<T>(m_get);
+          m_swapper.interpretAs<T>(m_get, type);
 
           m_get = end;
         }
@@ -67,6 +67,26 @@ namespace DAQ {
         extract(type);
         return type;
       }
+
+      template<typename T>
+      void extract(T* begin, T* end) {
+        auto itend = m_get + std::distance(begin, end)*sizeof(T);
+
+        // do not allow to go past the end
+        if (itend > m_end) {
+          m_eof = true;
+          m_fail = true;
+        } else {
+
+          while (begin != end) {
+            m_swapper.interpretAs<T>(m_get, *begin);
+            ++begin;
+            ++m_get;
+          }
+          m_get = itend;
+        }
+
+      };
 
       void clear() {
         m_fail = false;

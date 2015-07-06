@@ -26,6 +26,8 @@ class deserializertest : public CppUnit::TestFixture {
   CPPUNIT_TEST(extract_1);
   CPPUNIT_TEST(extract_2);
   CPPUNIT_TEST(extract_3);
+  CPPUNIT_TEST(extract_4);
+  CPPUNIT_TEST(extract_5);
   CPPUNIT_TEST(eof_0);
   CPPUNIT_TEST_SUITE_END();
 
@@ -92,6 +94,50 @@ public:
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Extracting 32 bit signed number makes sense",
                                  std::uint32_t(0xffffffff), value );
+  }
+
+  void extract_4 () {
+    ByteBuffer buffer;
+    buffer.push_back('a');
+    buffer.push_back('b');
+    buffer.push_back('c');
+    buffer.push_back('d');
+
+    Deserializer<ByteBuffer> stream(buffer);
+
+    char arr[4];
+    stream.extract(arr);
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Extracting string array makes sense",
+                                 char('a'), arr[0]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Extracting string array makes sense",
+                                 char('b'), arr[1]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Extracting string array makes sense",
+                                 char('c'), arr[2]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Extracting string array makes sense",
+                                 char('d'), arr[3]);
+  }
+
+  void extract_5 () {
+    ByteBuffer buffer;
+    buffer.push_back('a');
+    buffer.push_back('b');
+    buffer.push_back('c');
+    buffer.push_back('d');
+
+    Deserializer<ByteBuffer> stream(buffer);
+
+    char arr[4];
+    stream.extract(arr, arr+4);
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Extracting string array makes sense",
+                                 char('a'), arr[0]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Extracting string array makes sense",
+                                 char('b'), arr[1]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Extracting string array makes sense",
+                                 char('c'), arr[2]);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Extracting string array makes sense",
+                                 char('d'), arr[3]);
   }
 
   void eof_0 () {

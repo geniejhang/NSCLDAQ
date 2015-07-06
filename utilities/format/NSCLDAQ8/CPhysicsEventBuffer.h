@@ -60,6 +60,8 @@ namespace DAQ {
 
       Buffer::ByteBuffer& getBuffer() { return m_buffer;}
       const Buffer::ByteBuffer& getBuffer() const { return m_buffer;}
+
+      bool dataNeedsSwap() const { return m_needsSwap; }
     };
 
 
@@ -90,12 +92,14 @@ namespace DAQ {
     private:
       bheader m_header;
       Body    m_body;
+      bool    m_mustSwap;
 
     public:
       // Canonical methods
-      CPhysicsEventBuffer() : m_header(), m_body() {}
+      CPhysicsEventBuffer() : m_header(), m_body(), m_mustSwap(false) {}
       CPhysicsEventBuffer(const bheader& header,
-                          const std::vector<std::uint16_t>& body);
+                          const std::vector<std::uint16_t>& body,
+                          bool mustSwap=false);
       CPhysicsEventBuffer(const CRawBuffer& rawBuffer);
       CPhysicsEventBuffer(const CPhysicsEventBuffer& rhs);
 
@@ -123,6 +127,7 @@ namespace DAQ {
                          Buffer::ByteBuffer::const_iterator end);
       void parseStandardBody(Buffer::ByteBuffer::const_iterator beg,
                              Buffer::ByteBuffer::const_iterator end);
+      void swapBytesOfHeaderInPlace(bheader& header) const;
     };
     
 

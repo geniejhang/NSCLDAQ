@@ -34,13 +34,13 @@ libdataformatv8_la_LDFLAGS = @LIBTCLPLUS_LDFLAGS@ \
 noinst_PROGRAMS = unittests
 
 unittests_SOURCES	= TestRunner.cpp \
-                          physicseventtest.cpp \
-                          standardbodyparsertest.cpp \
-                          scalerbuffertest.cpp \
-                          format_casttest.cpp \
-                          rawbuffertest.cpp \
-                          ccontrolbuffertest.cpp \
-                          ctextbuffertest.cpp
+                            ccontrolbuffertest.cpp \
+                            physicseventtest.cpp \
+                            standardbodyparsertest.cpp \
+                            scalerbuffertest.cpp \
+                            format_casttest.cpp \
+                            rawbuffertest.cpp \
+                            ctextbuffertest.cpp
 
 unittests_LDADD	= $(CPPUNIT_LDFLAGS) 		\
                   @builddir@/libdataformatv8.la	\

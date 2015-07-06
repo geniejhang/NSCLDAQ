@@ -8,16 +8,57 @@
 #include <string>
 #include <iterator>
 
+#include <iostream>
+
 namespace DAQ
 {
   namespace Buffer
   {
 
-    using ByteBuffer = std::vector<unsigned char>;
+    using ByteBuffer = std::vector<std::uint8_t>;
 
   }  // end of Buffer
 } // end of DAQ
 
+
+
+
+template<class T>
+DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
+                                    const T& value)
+{
+  // the char* can always refer to another type
+  const char* beg = reinterpret_cast<const char*>(&value);
+  const char* end = beg + sizeof(value);
+
+  // make sure we only allocate once the memory we need
+  buffer.reserve(buffer.size() + (end - beg));
+
+  // copy the data using a back_inserter (calls push_back when assigning),
+  // so that the buffer is properly sized when the copy is completed.
+  std::copy(beg, end, std::back_inserter(buffer));
+
+  return buffer;
+}
+
+template<> inline
+DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
+                                    const std::string& rhs)
+{
+  buffer << std::uint16_t(rhs.size());
+  buffer.insert(buffer.end(), rhs.begin(), rhs.end());
+
+  return buffer;
+}
+
+template<> inline
+DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
+                                    const DAQ::Buffer::ByteBuffer& rhs)
+{
+  buffer.insert(buffer.end(), rhs.begin(), rhs.end());
+
+  return buffer;
+}
 
 /*!
  *  \brief Data insertion using a vector
@@ -42,41 +83,39 @@ DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
   return buffer;
 }
 
-extern
-DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    std::uint8_t value);
-extern
-DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    std::int8_t value);
 
-extern
-DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    std::uint16_t value);
-extern
-DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    std::int16_t value);
+inline DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
+                                    const char* rhs)
+{
+  std::size_t length = strlen(rhs);
 
-extern
-DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    std::uint32_t value);
-extern
-DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    std::int32_t value);
-extern
-DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    std::uint64_t value);
-extern
-DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    std::int64_t value);
-extern
-DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    const DAQ::Buffer::ByteBuffer& rhs);
+  buffer.insert(buffer.end(), rhs, rhs+length);
 
-extern
-DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    const std::string& string);
+  // even lengths have a \0\0 trailer while odd lengths have \0
+  if ((length % 2)==0) buffer << uint16_t(0);
+  else                 buffer << uint8_t(0);
 
-extern
+  return buffer;
+}
+
+template<class T, std::size_t N>
 DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
-                                    const char* string);
+                                    const T (&arr)[N]) {
+  for (std::size_t i=0; i<N; ++i) {
+    buffer << arr[i];
+  }
+
+  return buffer;
+}
+
+template<class T, std::size_t N>
+DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
+                                    const std::array<T,N>& array) {
+  for (auto & element : array) {
+    buffer << element;
+  }
+
+  return buffer;
+}
+
 #endif

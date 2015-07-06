@@ -13,6 +13,8 @@
 #include <CPhysicsEventBuffer.h>
 #include <CTextBuffer.h>
 
+#include <Deserializer.h>
+
 #include <DebugUtils.h>
 
 #define private public
@@ -43,6 +45,7 @@ public:
   CPPUNIT_TEST( castRawToText_0 );
   CPPUNIT_TEST( castTextToRaw_0 );
   CPPUNIT_TEST( castScalerToRaw_0 );
+  CPPUNIT_TEST( castScalerToRaw_1 );
   CPPUNIT_TEST( castPhysicsEventToRaw_0 );
   CPPUNIT_TEST( castControlToRaw_0 );
   CPPUNIT_TEST_SUITE_END();
@@ -95,7 +98,6 @@ void castRawToPhysics_0 () {
 void castRawToScaler_0 () {
   std::vector<std::uint32_t> sclrs = {0, 1, 2, 3};
   m_header.nevt = sclrs.size();
-
   m_header.type = SCALERBF;
 
   CRawBuffer rawBuf(8192);
@@ -179,6 +181,49 @@ void castScalerToRaw_0() {
         "format_cast CScalerBuffer --> CRawBuffer is allowed",
         auto rawBuf = format_cast<CRawBuffer>(buffer) );
 }
+
+void castScalerToRaw_1() {
+  bheader header = {28, DAQ::V8::SCALERBF,
+                    0, 0, 0,
+                    1,
+                    0, 0, 0,
+                    DAQ::V8::StandardVsn,
+                    DAQ::V8::BOM16, DAQ::V8::BOM32,
+                    0, 0};
+  CScalerBuffer buffer(header,
+                       1234, 5678,
+                       vector<uint32_t>({1}));
+
+
+  auto rawBuf = format_cast<CRawBuffer>(buffer);
+
+  DAQ::Buffer::Deserializer<ByteBuffer> stream(rawBuf.getBuffer(), false);
+
+  std::uint16_t value;
+  for (std::size_t i=0; i<16; ++i) {
+    stream >> value;
+  }
+
+  std::uint32_t offEnd, offBegin, sclr0;
+  stream >> offEnd;
+  stream >> value;
+  stream >> value;
+  stream >> value;
+  stream >> offBegin;
+  stream >> value;
+  stream >> value;
+  stream >> value;
+  stream >> sclr0;
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("Offset begin is maintained",
+                               std::uint32_t(1234), offBegin);
+
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("Offset end is maintained",
+                               std::uint32_t(5678), offEnd);
+
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("Scaler value is maintained",
+                               std::uint32_t(1), sclr0);
+
+  }
 
 void castPhysicsEventToRaw_0() {
   CPhysicsEventBuffer buffer;

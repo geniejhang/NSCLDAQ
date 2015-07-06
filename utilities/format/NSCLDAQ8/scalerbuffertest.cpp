@@ -42,6 +42,8 @@ public:
   CPPUNIT_TEST(rawBufferCtor_1);
   CPPUNIT_TEST(rawBufferCtor_2);
   CPPUNIT_TEST(rawBufferCtor_3);
+  CPPUNIT_TEST(rawBufferCtor_4);
+  CPPUNIT_TEST(toRawBuffer_0);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -50,7 +52,7 @@ public:
     m_scalers = std::vector<std::uint32_t>({3, 0, 1,
                                            2, 3,
                                            3, 4, 5});
-  m_header.nwds = 100;
+    m_header.nwds = 42;
     m_header.type = DAQ::V8::SCALERBF;
     m_header.cks  = 0;
     m_header.run  = 1;
@@ -65,8 +67,8 @@ public:
 
 
     // create the various pieces in the body
-    m_offsetEnd = 123;
-    m_offsetBegin = 456;
+    m_offsetBegin = 123;
+    m_offsetEnd   = 456;
     std::vector<std::uint8_t>  empty(6); // empty space
 
     // fill a byte buffer with data
@@ -140,6 +142,73 @@ void rawBufferCtor_3() {
   CPPUNIT_ASSERT_THROW_MESSAGE( "Raw ctor from non-scaler type fails",
                                 CScalerBuffer sclrBuf(rawBuf),
                                 std::runtime_error);
+}
+
+// construct from a byte swapped buffer produces the correct result
+void rawBufferCtor_4() {
+  bheader header;
+  header.nwds = 0x2a00;
+  header.type = 0x0200;
+  header.nevt = 0x0800;
+  header.buffmt = 0x0500;
+  header.ssignature = 0x0201;
+  header.lsignature = 0x04030201;
+  header.cks = 0;
+  header.cpu = 0;
+  header.nbit = 0;
+  header.nlam = 0;
+  header.run = 0x0100;
+  header.seq = 0x02000000;
+  header.unused[0] = 0;
+  header.unused[1] = 0;
+
+  std::vector<std::uint32_t> sclrs({0x03000000, 0x00000000, 0x01000000,
+                                    0x02000000, 0x03000000,
+                                    0x03000000, 0x04000000, 0x05000000});
+
+  // create the various pieces in the body
+  std::uint32_t offsetBegin = 0x7b000000; // reversal of 123=0x007b
+  std::uint32_t offsetEnd   = 0xc8010000; // reversal of 456=0x01c8
+  std::vector<std::uint8_t>  empty(6); // empty space
+
+  // fill a byte buffer with data
+  ByteBuffer bytes;
+  bytes << offsetEnd;
+  bytes << empty;
+  bytes << offsetBegin;
+  bytes << empty;
+  bytes << sclrs;
+
+  CRawBuffer rawBuf(8192);
+  DAQ::Buffer::ByteBuffer buffer;
+  buffer << header;
+  buffer << bytes;
+  rawBuf.setBuffer(buffer);
+
+  CScalerBuffer sclrBuf(rawBuf);
+
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("raw ctor swaps header properly",
+                         m_header,  sclrBuf.getHeader());
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("raw ctor swaps offset end properly",
+                         m_offsetEnd, sclrBuf.getOffsetEnd());
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("raw ctor swaps offset begin properly",
+                         m_offsetBegin, sclrBuf.getOffsetBegin());
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("raw ctor swaps scalers properly",
+                         m_scalers, sclrBuf.getScalers());
+
+  }
+
+void toRawBuffer_0 () {
+  CRawBuffer rawBuf(8192);
+
+  m_scalerBuffer.toRawBuffer(rawBuf);
+
+  ByteBuffer expected;
+  expected << m_header;
+  expected << m_bytes;
+
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("toRawBuffer does what it should",
+                               expected, rawBuf.getBuffer());
 }
 
 };

@@ -2,6 +2,7 @@
 #include "CRawBuffer.h"
 #include <ByteBuffer.h>
 #include <BufferPtr.h>
+#include <Deserializer.h>
 
 using namespace std;
 
@@ -27,32 +28,36 @@ namespace DAQ
         throw std::runtime_error(errmsg);
       }
 
-      // need to skip over the 32-byte buffer header
-      auto bodyBegin = rawBuffer.getBuffer().begin() + 16*sizeof(std::uint16_t);
-      Buffer::BufferPtr<uint8_t>  p8(bodyBegin, m_header.mustSwap());
+      Buffer::Deserializer<Buffer::ByteBuffer> buffer(rawBuffer.getBuffer(),
+                                                      rawBuffer.bufferNeedsSwap());
 
-      Buffer::BufferPtr<uint32_t> p32 = p8;
-      m_offsetEnd = *p32;
-      p8 += 10;
+      // skip the header b/c we obtained it from the RawBuffer already
+      uint16_t discard;
+      for (std::size_t i=0; i<16; ++i) buffer >> discard;
 
-      p32 = p8;
-      m_offsetBegin = *p32;
-      p8 += 10;
+      buffer >> m_offsetEnd;
+      buffer >> discard;
+      buffer >> discard;
+      buffer >> discard;
+      buffer >> m_offsetBegin;
+      buffer >> discard;
+      buffer >> discard;
+      buffer >> discard;
 
-      p32 = p8;
-
+      std::uint32_t value;
       m_scalers.reserve(m_header.nevt);
       for (std::size_t index=0; index<m_header.nevt; ++index) {
-        m_scalers.push_back(*p32++);
+        buffer >> value;
+        m_scalers.push_back(value);
       }
-
 
     }
 
     CScalerBuffer::CScalerBuffer(const bheader &header, std::uint32_t offsetBegin,
                   std::uint32_t offsetEnd,
                   const std::vector<uint32_t> &scalers)
-      : m_header(header), m_offsetBegin(offsetBegin),
+      : m_header(header),
+        m_offsetBegin(offsetBegin),
         m_offsetEnd(offsetEnd), m_scalers(scalers)
     {}
 
@@ -63,6 +68,10 @@ namespace DAQ
     void CScalerBuffer::toRawBuffer(CRawBuffer &buffer) const
     {
       vector<uint8_t> empty(6);
+
+      bheader header = m_header;
+      header.nwds = 16 + 6 + 2*m_scalers.size();
+      header.nevt = m_scalers.size();
 
       Buffer::ByteBuffer newbuf;
       newbuf << m_header;

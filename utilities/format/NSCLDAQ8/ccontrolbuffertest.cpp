@@ -80,10 +80,7 @@ public:
 
 
   void title_0() {
-    std::string title;
-    for (int i=0; i<81; ++i) {
-      title += '0';
-    }
+    std::string title(81, ' ');
 
     CPPUNIT_ASSERT_THROW_MESSAGE("Titles longer than 80 characters results in an exception",
                                  CControlBuffer buffer(m_header, title, 0, bftime() ),
@@ -93,7 +90,7 @@ public:
   void toRawBuffer_0 () {
 
     std::string expected("my title");
-    expected.resize(80, '\0'); // right pad with null character
+    expected.resize(80, ' '); // right pad with null character
 
     // locate the spot in the buffer where the title lives
     auto beg = m_rawBuf.getBuffer().begin() + 16*sizeof(uint16_t);
@@ -223,6 +220,8 @@ public:
   CPPUNIT_TEST(rawCtor_5);
   CPPUNIT_TEST(rawCtor_6);
   CPPUNIT_TEST(rawCtor_7);
+  CPPUNIT_TEST(rawCtor_8);
+  CPPUNIT_TEST(rawCtor_9);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -244,8 +243,10 @@ public:
     m_header.ssignature = DAQ::V8::BOM16;
     m_header.lsignature = DAQ::V8::BOM32;
 
-    m_title = std::string("a test title");
-    m_title.resize(80, '\0');
+    m_title = "my test title";
+    m_title.resize(80, ' ');
+    char title[80];
+    std::copy(m_title.begin(), m_title.end(), title);
 
     m_offset = 12345;
     m_time = {9, 8, 7, 6, 5, 4, 3};
@@ -254,7 +255,7 @@ public:
 
     ByteBuffer buffer;
     buffer << m_header;
-    buffer << m_title;
+    buffer << title;
     buffer << m_offset;
     buffer << m_time;
     m_rawBuf.setBuffer(buffer);
@@ -268,6 +269,7 @@ public:
   }
 
   void rawCtor_0 () {
+
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Title is correct",
                                  m_title, m_buffer.getTitle());
   }
@@ -305,6 +307,49 @@ public:
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Tenth is correct",
                                  m_time.tenths, m_buffer.getTimeStruct().tenths);
   }
+
+  void rawCtor_9 () {
+    m_header.nwds = 0x6400;
+    m_header.type = 0x0b00;
+    m_header.cks  = 0x0000;
+    m_header.run  = 0x0100;
+    m_header.seq  = 0x02000000;
+    m_header.nevt = 0;
+    m_header.nlam = 0;
+    m_header.cpu  = 0;
+    m_header.nbit = 0;
+    m_header.buffmt = 0x0500;
+    m_header.ssignature = 0x0201;
+    m_header.lsignature = 0x04030201;
+
+    m_title = std::string("a test title");
+    m_title.resize(80, ' ');
+    char title[80];
+    std::copy(m_title.begin(), m_title.end(), title);
+
+    m_offset = 0x39300000; // 12345 in reverse byte order
+    m_time = {0x0900, 0x0800, 0x0700, 0x0600, 0x0500, 0x0400, 0x0300};
+    DAQ::V8::bftime time = {9, 8, 7, 6, 5, 4, 3};
+
+    m_rawBuf = CRawBuffer(8192);
+
+    ByteBuffer buffer;
+    buffer << m_header;
+    buffer << title;
+    buffer << m_offset;
+    buffer << m_time;
+    m_rawBuf.setBuffer(buffer);
+
+    m_buffer = CControlBuffer(m_rawBuf);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Construct from swapped body must yield correct offset  ",
+                                 uint32_t(12345), m_buffer.getOffset());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Construct from swapped body must yield correct title  ",
+                                 m_title, m_buffer.getTitle());
+    CPPUNIT_ASSERT_MESSAGE("Construct from swapped body must yield correct time  ",
+                           time == m_buffer.getTimeStruct());
+
+  }
+
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ccontrolbuffertest_rawCtor);

@@ -28,7 +28,7 @@ namespace DAQ {
 
 
       bheader getHeader() const { return m_header; }
-      BufferTypes type() const { return m_header.type; }
+      BufferTypes type() const { return BufferTypes(m_header.type); }
       void toRawBuffer(CRawBuffer &buffer) const;
 
       void setTitle(const std::string& title);

@@ -29,21 +29,24 @@ namespace DAQ {
       ~CTextBuffer() {}
 
       bheader getHeader() const { return m_header; }
-      BufferTypes type() const { return m_header.type; }
+      BufferTypes type() const { return BufferTypes(m_header.type); }
       void toRawBuffer(CRawBuffer &buffer) const;
 
       std::vector<std::string>& getStrings() {return m_strings; }
       std::vector<std::string> getStrings() const { return m_strings; }
 
-      std::uint16_t totalBytes() const;
+      std::uint32_t totalBytes() const;
+      std::uint16_t totalShorts() const;
 
     private:
       void validateTypeToConstructFrom();
       void validateDeadEndMeaningful(Buffer::ByteBuffer::const_iterator deadEnd,
                                      Buffer::ByteBuffer::const_iterator bufferEnd);
-      std::uint16_t extractTotalBytes(const Buffer::ByteBuffer& buffer) const;
+      std::uint16_t extractTotalShorts(const Buffer::ByteBuffer& buffer, bool needsSwap) const;
       void parseStringsFromBuffer(Buffer::ByteBuffer::const_iterator beg,
-                                   Buffer::ByteBuffer::const_iterator end);
+                                  Buffer::ByteBuffer::const_iterator end);
+      Buffer::ByteBuffer::const_iterator skipNullCharPadding(Buffer::ByteBuffer::const_iterator beg,
+                                                             Buffer::ByteBuffer::const_iterator end);
     };
     
   } // namespace V8

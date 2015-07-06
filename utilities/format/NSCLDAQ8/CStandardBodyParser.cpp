@@ -13,7 +13,6 @@ namespace DAQ {
     {
       vector<shared_ptr<CPhysicsEvent> > events;
 
-//      while (beg != end) {
       for (std::size_t index=0; (beg!=end) && (index<nEvents); ++index) {
         auto result = parseOne(beg, end);
 

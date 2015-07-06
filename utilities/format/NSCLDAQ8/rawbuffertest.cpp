@@ -84,7 +84,7 @@ void setBuffer_0() {
 void setBuffer_1() {
 
   CPPUNIT_ASSERT_EQUAL_MESSAGE("setBuffer header constructs type properly",
-                               DAQ::V8::SCALERBF, m_buffer.getHeader().type );
+                               DAQ::V8::SCALERBF, DAQ::V8::BufferTypes(m_buffer.getHeader().type) );
 }
 
 void setBuffer_2() {
@@ -103,7 +103,7 @@ void setBuffer_3() {
 void setBuffer_4() {
 
   CPPUNIT_ASSERT_EQUAL_MESSAGE("setBuffer header constructs buffmt",
-                               DAQ::V8::StandardVsn, m_buffer.getHeader().buffmt );
+                               DAQ::V8::StandardVsn, DAQ::V8::BufferVersion(m_buffer.getHeader().buffmt) );
 }
 
 void setBuffer_5() {

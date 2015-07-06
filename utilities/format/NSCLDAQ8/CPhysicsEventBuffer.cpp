@@ -45,9 +45,11 @@ namespace DAQ {
     ////////////////////////////////////////////////////////////////////////////
 
     CPhysicsEventBuffer::CPhysicsEventBuffer(const bheader &header,
-                                             const std::vector<std::uint16_t>& body)
+                                             const std::vector<std::uint16_t>& body,
+                                             bool mustSwap)
       : m_header(header),
-        m_body()
+        m_body(),
+        m_mustSwap(mustSwap)
     {
       Buffer::ByteBuffer buffer;
       buffer << body;
@@ -56,7 +58,8 @@ namespace DAQ {
 
     CPhysicsEventBuffer::CPhysicsEventBuffer(const CRawBuffer &rawBuffer)
       : m_header(rawBuffer.getHeader()),
-        m_body()
+        m_body(),
+        m_mustSwap(rawBuffer.bufferNeedsSwap())
     {
       if (m_header.type != DATABF) {
         std::string errmsg = "CPhysicsEventBuffer::CPhysicsEventBuffer(CRawBuffer const&) ";
@@ -110,8 +113,8 @@ namespace DAQ {
                                                 Buffer::ByteBuffer::const_iterator end)
     {
       CStandardBodyParser parser;
-      Buffer::BufferPtr<uint16_t> begPtr(beg, m_header.mustSwap());
-      Buffer::BufferPtr<uint16_t> endPtr(end, m_header.mustSwap());
+      Buffer::BufferPtr<uint16_t> begPtr(beg, m_mustSwap);
+      Buffer::BufferPtr<uint16_t> endPtr(end, m_mustSwap);
 
       m_body = parser(m_header.nevt, begPtr, endPtr);
     }
@@ -140,11 +143,24 @@ namespace DAQ {
       return m_body.end();
     }
 
+    // because I don't know how to properly swap the body of a physics event, I
+    // have to send the entire buffer back unswapped.
     void CPhysicsEventBuffer::toRawBuffer(CRawBuffer &buffer) const
     {
       Buffer::ByteBuffer newbuf;
 
-      newbuf << m_header;
+      bheader header = m_header;
+//      std::uint16_t nShorts = 16; // size of bheader
+//      for (auto& pEvent : m_body) {
+//        nShorts += pEvent->getNTotalShorts();
+//      }
+//      header.nwds = nShorts;
+//      header.nevt = m_body.size();
+
+      if (m_mustSwap) {
+        swapBytesOfHeaderInPlace(header);
+      }
+      newbuf << header;
 
       for (auto& pEvent : m_body) {
         newbuf << pEvent->getBuffer();
@@ -153,5 +169,24 @@ namespace DAQ {
       buffer.setBuffer(newbuf);
 
      }
+
+    void CPhysicsEventBuffer::swapBytesOfHeaderInPlace(bheader &header) const
+    {
+      BO::swapBytes(header.nwds);
+      BO::swapBytes(header.type);
+      BO::swapBytes(header.cks);
+      BO::swapBytes(header.run);
+      BO::swapBytes(header.seq);
+      BO::swapBytes(header.nevt);
+      BO::swapBytes(header.nlam);
+      BO::swapBytes(header.cpu);
+      BO::swapBytes(header.nbit);
+      BO::swapBytes(header.buffmt);
+      BO::swapBytes(header.ssignature);
+      BO::swapBytes(header.lsignature);
+      BO::swapBytes(header.unused[0]);
+      BO::swapBytes(header.unused[1]);
+    }
+
   } // namespace V8
 } // namespace DAQ

@@ -7,6 +7,7 @@
 #include <DataFormatV8.h>
 #include <CRawBuffer.h>
 #include <DebugUtils.h>
+#include <ByteOrder.h>
 
 #define private public
 #define protected public
@@ -40,6 +41,8 @@ public:
   CPPUNIT_TEST(rawCtor_2);
   CPPUNIT_TEST(rawCtor_3);
   CPPUNIT_TEST(rawCtor_4);
+  CPPUNIT_TEST(rawCtor_5);
+//  CPPUNIT_TEST(rawCtor_6);
   CPPUNIT_TEST(toRawBuffer_0);
   CPPUNIT_TEST(totalBytes_0);
   CPPUNIT_TEST_SUITE_END();
@@ -48,7 +51,7 @@ public:
   ctextbuffertest() : m_header(), m_strings(), m_rawBuf(8192), m_buffer() {}
   void setUp() {
 
-    m_header.nwds = 100;
+    m_header.nwds = 24;
     m_header.type = DAQ::V8::STATEVARBF;
     m_header.cks  = 0;
     m_header.run  = 1;
@@ -62,20 +65,22 @@ public:
     m_header.lsignature = DAQ::V8::BOM32;
 
     // create some strings
-    m_strings = {"the first const char*",
-                 "the second const char* ..              and some more",
-                 "the first const char* but what about this?",
-                 ""};
+    m_strings = {"a", "bb", "cccc", ""}; // needs a \0\0
 
     // compute the total number of bytes composed by strings
     std::uint16_t totalBytes = sizeof(std::uint16_t);
     for (auto& element : m_strings) {
-      totalBytes += element.size() + 1;
+      if ((element.size()%2)==0) {
+        totalBytes += element.size() + 2;
+      } else {
+        totalBytes += element.size() + 1;
+      }
+
     }
 
     ByteBuffer buffer;
     buffer << m_header;
-    buffer << totalBytes;
+    buffer << uint16_t(totalBytes/sizeof(std::uint16_t));
     buffer << m_strings.at(0).c_str();
     buffer << m_strings.at(1).c_str();
     buffer << m_strings.at(2).c_str();
@@ -133,6 +138,64 @@ public:
           );
   }
 
+  void rawCtor_5 () {
+    CRawBuffer buffer;
+
+    // create a buffer and fill it with a buffer header
+    DAQ::Buffer::ByteBuffer buf;
+    bheader headr; // this is an unacceptable type...
+    headr.nwds = 0x1800;
+    headr.type = 0x0400;
+    headr.cks  = 0;
+    headr.run  = 0x0100;
+    headr.seq  = 0x02000000;
+    headr.nevt = 0x0300;
+    headr.nlam = 0;
+    headr.cpu  = 0;
+    headr.nbit = 0;
+    headr.buffmt = 0x0500;
+    headr.ssignature = 0x0201;
+    headr.lsignature = 0x04030201;
+    headr.unused[0] = 0;
+    headr.unused[1] = 0;
+
+    buf << headr;
+
+    // compute the total number of bytes composed by strings
+    std::uint16_t totalBytes = sizeof(std::uint16_t);
+    for (auto& element : m_strings) {
+      if ((element.size()%2)==0) {
+        totalBytes += element.size() + 2;
+      } else {
+        totalBytes += element.size() + 1;
+      }
+    }
+    std::uint16_t swappedTotalBytes = totalBytes/sizeof(std::uint16_t);
+    DAQ::BO::swapBytes(swappedTotalBytes);
+
+    buf << swappedTotalBytes;
+    buf << m_strings.at(0).c_str();
+    buf << m_strings.at(1).c_str();
+    buf << m_strings.at(2).c_str();
+    buf << m_strings.at(3).c_str();
+
+    // it does not matter that we finish this b/c it should throw before looking at any
+    // of the data past the header
+
+    buffer.setBuffer(buf);
+    CTextBuffer text(buffer);
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Originally inverted buffer is now uninverted",
+                                 m_header, text.getHeader());
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("total word size is ",
+                                 uint16_t(totalBytes/sizeof(std::uint16_t)), text.totalShorts());
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("strings are correct ",
+                                 m_strings, text.getStrings());
+
+  }
+
   void toRawBuffer_0 () {
     CRawBuffer rawBuf(8192);
     m_buffer.toRawBuffer(rawBuf);
@@ -147,7 +210,7 @@ public:
   void totalBytes_0() {
     CTextBuffer text(bheader(), {"a", "b", "c"});
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Computing total bytes in body is correct",
-                                 std::uint16_t(8), text.totalBytes());
+                                 std::uint16_t(4), text.totalShorts());
   }
 
 };

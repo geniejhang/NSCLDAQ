@@ -1,7 +1,8 @@
 #include "CControlBuffer.h"
 #include <CRawBuffer.h>
-#include <BufferPtr.h>
+#include <Deserializer.h>
 #include <stdexcept>
+#include <typeinfo>
 
 namespace DAQ {
   namespace V8 {
@@ -21,38 +22,38 @@ namespace DAQ {
     CControlBuffer::CControlBuffer(const CRawBuffer &rawBuf)
       : m_header(rawBuf.getHeader()), m_title(), m_offset(), m_time()
     {
-      Buffer::BufferPtr<std::uint8_t> p8(rawBuf.getBuffer().begin(), m_header.mustSwap());
+      Buffer::Deserializer<Buffer::ByteBuffer> databuf(rawBuf.getBuffer(),
+                                                       rawBuf.bufferNeedsSwap());
 
-      p8 += 16*sizeof(std::uint16_t); // skip over buffer header
+      // skip header
+      std::uint16_t discard;
+      for (std::size_t i=0; i<16; ++i) databuf >> discard;
 
-      // create the title
-      setTitle(std::string(p8, p8+80));
+      // extract the title
+      uint8_t title[80];
+      databuf.extract(title, title+80);
+      m_title.assign(title, title+80);
 
-      // skip over the title
-      p8 += 80;
-
-      // the next piece is a 32-bit integer, extract it
-      Buffer::BufferPtr<std::uint32_t> p32(p8);
-      m_offset = *p32++;
-
-      // the remainder are all 16-bit words, create 16-bit pointer, and
-      // extract the data
-      Buffer::BufferPtr<std::uint16_t> p16(p32);
-      m_time.month  = *p16++;
-      m_time.day    = *p16++;
-      m_time.year   = *p16++;
-      m_time.hours  = *p16++;
-      m_time.min    = *p16++;
-      m_time.sec    = *p16++;
-      m_time.tenths = *p16++;
+      databuf >> m_offset;
+      databuf >> m_time.month;
+      databuf >> m_time.day;
+      databuf >> m_time.year;
+      databuf >> m_time.hours;
+      databuf >> m_time.min;
+      databuf >> m_time.sec;
+      databuf >> m_time.tenths;
     }
 
     void CControlBuffer::toRawBuffer(CRawBuffer &buffer) const
     {
 
+      bheader header = m_header;
+      header.nwds = 65;
+      header.nevt = 0;
+
       Buffer::ByteBuffer tmpBuf;
-      tmpBuf << m_header;
-      tmpBuf << m_title; // need to accommodate the 80 character size
+      tmpBuf << header;
+      tmpBuf.insert(tmpBuf.end(), m_title.begin(), m_title.end());
       tmpBuf << m_offset;
       tmpBuf << m_time;
 
@@ -66,7 +67,7 @@ namespace DAQ {
         throw std::runtime_error("CControlBuffer::CControlBuffer() title cannot exceed 80 characters");
       } else {
         m_title = title;
-        m_title.resize(80, '\0');
+        m_title.resize(80, ' ');
       }
 
     }

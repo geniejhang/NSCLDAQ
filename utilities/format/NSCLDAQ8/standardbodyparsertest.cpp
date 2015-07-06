@@ -40,6 +40,7 @@ public:
   CPPUNIT_TEST(parse_0);
   CPPUNIT_TEST(parse_1);
   CPPUNIT_TEST(parse_2);
+  CPPUNIT_TEST(parse_3);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -138,6 +139,27 @@ public:
 
       CPPUNIT_ASSERT_MESSAGE(
             "second physics event makes sense",
+            std::equal(m_beg+3, m_deadend, result.at(1)->begin()));
+    }
+
+    void parse_3() {
+
+      // test that we can handle parsing byte-reversed data
+      std::vector<uint16_t> expected({3, 0, 1, 2, 3});
+
+      std::vector<uint16_t> data({0x0300, 0, 0x0100, 0x0200, 0x0300});
+
+      m_bodyData = DAQ::Buffer::ByteBuffer();
+      m_bodyData << data;
+
+      m_beg     = BufferPtr<uint16_t>(m_bodyData.begin(), true);
+      m_deadend = BufferPtr<uint16_t>(m_bodyData.end(), true);
+
+      m_parser = CStandardBodyParser();
+      auto result = m_parser(2, m_beg, m_deadend);
+
+      CPPUNIT_ASSERT_MESSAGE(
+            "second physics event makes sense even when byte swapped",
             std::equal(m_beg+3, m_deadend, result.at(1)->begin()));
     }
 };

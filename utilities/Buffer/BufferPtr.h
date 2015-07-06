@@ -245,7 +245,7 @@ namespace DAQ
   */
       inline BufferPtr<T> operator+(std::size_t Offset)
       {
-        return BufferPtr<T>(m_iter+Offset*sizeof(T));
+        return BufferPtr<T>(m_iter+Offset*sizeof(T), m_swapper);
 
       }
 
@@ -260,7 +260,7 @@ namespace DAQ
    */
       inline BufferPtr<T> operator-(std::size_t Offset)
       {
-        return BufferPtr<T>(m_iter-Offset*sizeof(T));
+        return BufferPtr<T>(m_iter-Offset*sizeof(T), m_swapper);
       }
 
       inline difference_type operator-(const BufferPtr<T>& rhs)

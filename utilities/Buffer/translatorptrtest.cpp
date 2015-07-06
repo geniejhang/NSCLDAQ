@@ -26,6 +26,7 @@ private:
   CPPUNIT_TEST(copyConstruct_1);
   CPPUNIT_TEST(copyConstruct_2);
   CPPUNIT_TEST(copyConstruct_3);
+  CPPUNIT_TEST(moveConstruct_0);
   CPPUNIT_TEST(assign_0);
   CPPUNIT_TEST(assign_1);
   CPPUNIT_TEST(assign_2);
@@ -40,11 +41,15 @@ private:
   CPPUNIT_TEST(predecrement_0);
   CPPUNIT_TEST(add_0);
   CPPUNIT_TEST(add_1);
+  CPPUNIT_TEST(add_2);
   CPPUNIT_TEST(sub_0);
   CPPUNIT_TEST(sub_1);
   CPPUNIT_TEST(sub_2);
+  CPPUNIT_TEST(sub_3);
   CPPUNIT_TEST(addequal_0);
+  CPPUNIT_TEST(addequal_1);
   CPPUNIT_TEST(subequal_0);
+  CPPUNIT_TEST(subequal_1);
   CPPUNIT_TEST(lessThan_0);
   CPPUNIT_TEST(lessThan_1);
   CPPUNIT_TEST(greaterThan_0);
@@ -104,6 +109,15 @@ public:
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Generalized copy maintains swapping status",
                                  true, ptr2.getSwapper().isSwappingBytes());
   }
+
+  void moveConstruct_0 () {
+
+    BufferPtr<uint64_t> ptr2(BufferPtr<uint8_t>(m_buffer.begin(), DAQ::BO::CByteSwapper(true)));
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Generalized copy maintains swapping status",
+                                 true, ptr2.getSwapper().isSwappingBytes());
+  }
+
   void assign_0() {
     BufferPtr<uint8_t> ptr(m_buffer.begin());
 
@@ -228,6 +242,16 @@ public:
 
   }
 
+  void add_2() {
+    BufferPtr<int8_t> ptr(m_buffer.begin(), true);
+
+    auto newPtr = ptr + 5;
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Addition returns ptr with same swapping semantics",
+                           true, newPtr.getSwapper().isSwappingBytes());
+
+  }
+
   void sub_0() {
     BufferPtr<int8_t> ptr(m_buffer.begin());
 
@@ -262,6 +286,16 @@ public:
 
   }
 
+  void sub_3() {
+    BufferPtr<int8_t> ptr(m_buffer.begin(), true);
+
+    auto newPtr = ptr + 5;
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Subtraction returns ptr with same swapping semantics",
+                           true, newPtr.getSwapper().isSwappingBytes());
+
+  }
+
   void addequal_0 () {
     BufferPtr<int32_t> ptr(m_buffer.begin());
 
@@ -270,6 +304,16 @@ public:
 
     CPPUNIT_ASSERT_MESSAGE("+= changes the original ptr",
                            (oldPos+2*sizeof(int32_t)) == ptr.getBaseIterator());
+
+  }
+
+  void addequal_1 () {
+    BufferPtr<int32_t> ptr(m_buffer.begin(), true);
+
+    ptr += 2;
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("+= maintains swapping",
+                           true, ptr.getSwapper().isSwappingBytes());
 
   }
 
@@ -283,6 +327,17 @@ public:
                            (oldPos-2*sizeof(int32_t)) == ptr.getBaseIterator());
 
   }
+
+  void subequal_1 () {
+    BufferPtr<int32_t> ptr(m_buffer.begin(), true);
+
+    ptr -= 2;
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("-= maintains swapping",
+                           true, ptr.getSwapper().isSwappingBytes());
+
+  }
+
 
   void lessThan_0 () {
     BufferPtr<int32_t> ptr(m_buffer.begin());

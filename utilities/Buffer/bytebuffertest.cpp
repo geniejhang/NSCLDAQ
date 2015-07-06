@@ -25,6 +25,11 @@ class bytebuffertest : public CppUnit::TestFixture {
   CPPUNIT_TEST(insert32_1);
   CPPUNIT_TEST(insert64_0);
   CPPUNIT_TEST(insert64_1);
+  CPPUNIT_TEST(insertArr_0);
+  CPPUNIT_TEST(insertArr_1);
+  CPPUNIT_TEST(insertString_0);
+  CPPUNIT_TEST(insertConstCharPtr_0);
+  CPPUNIT_TEST(insertConstCharPtr_1);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -154,6 +159,75 @@ public:
 
   }
 
+  void insertArr_0() {
+    ByteBuffer buffer;
+
+    std::int16_t test[4] = {0, 1, 2, 3};
+    buffer << test;
+
+    ByteBuffer expected = {0, 0, 1, 0, 2, 0, 3, 0};
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("int16t [4] insert stores the correct values",
+                                 expected, buffer);
+
+  }
+
+  void insertArr_1() {
+
+    std::string m_title = "my test title";
+//    m_title.resize(80, ' ');
+    char title[13];
+    std::copy(m_title.begin(), m_title.end(), title);
+
+    ByteBuffer buffer;
+
+//    std::uint8_t test[4] = {'a','b','c','d'};
+    buffer << title;
+
+    cout << buffer << endl;
+//    CPPUNIT_ASSERT_EQUAL_MESSAGE("uint8_t [4] insert stores the correct values",
+//                                 expected, buffer);
+
+//    CPPUNIT_ASSERT_EQUAL_MESSAGE("uint8_t [4] insert 4 values",
+//                                 size_t(4), buffer.size());
+
+  }
+
+  void insertString_0() {
+    ByteBuffer buffer;
+
+    std::string mystr("the");
+    buffer << mystr;
+
+    ByteBuffer expected = {3, 0, 't', 'h', 'e'};
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("string insert stores the correct values",
+                                 expected, buffer);
+
+  }
+
+  void insertConstCharPtr_0() {
+    ByteBuffer buffer;
+
+    const char* msg = "a";
+    buffer << msg;
+
+    ByteBuffer expected = {'a', 0};
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("const char* insert stores the correct value for odd msg",
+                                 expected, buffer);
+
+  }
+
+  void insertConstCharPtr_1() {
+    ByteBuffer buffer;
+
+    const char* msg = "ab";
+    buffer << msg;
+
+    ByteBuffer expected = {'a', 'b', 0, 0};
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("const char* insert stores the correct value for even msg",
+                                 expected, buffer);
+
+  }
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(bytebuffertest);

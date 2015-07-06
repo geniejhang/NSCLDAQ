@@ -14,6 +14,7 @@ namespace DAQ
     private:
       bheader              m_parsedHeader;
       Buffer::ByteBuffer   m_unparsedBuffer;
+      bool                 m_bytesNeededSwap;
 
     public:
       CRawBuffer(std::size_t size = gBufferSize);
@@ -22,10 +23,14 @@ namespace DAQ
       BufferTypes type() const { return GENERIC; }
       void toRawBuffer(CRawBuffer &buffer) const;
 
-//      Buffer::ByteBuffer& getBuffer();
       const Buffer::ByteBuffer& getBuffer() const;
 
       void setBuffer(const Buffer::ByteBuffer& buffer);
+
+      bool bufferNeedsSwap() const { return m_bytesNeededSwap; }
+
+    private:
+      void parseHeader(const Buffer::ByteBuffer& buffer, bool swap);
     };
 
   } // end of V8
