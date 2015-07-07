@@ -1,6 +1,7 @@
 lib_LTLIBRARIES = libConversion.la
 
 libConversion_la_SOURCES = CTransformMediator.h \
+                           C8p0to10p0Mediator.cpp \
                            CTransformMediator.hpp \
                            CTransform8p0to10p0.cpp \
                            CTransform10p0to11p0.cpp \
@@ -11,6 +12,7 @@ libConversion_la_SOURCES = CTransformMediator.h \
                            #CTransform11p0to11p0.cpp
 
 include_HEADERS = CTransformMediator.h \
+                    C8p0to10p0Mediator.h \
                            CTransform8p0to10p0.h \
                            CTransform10p0to11p0.h \
                            CTransform11p0to10p0.h \
@@ -28,7 +30,7 @@ libConversion_la_CXXFLAGS = -I@srcdir@ \
                             -I@top_srcdir@/utilities/filter \
                             -I@top_srcdir@/utilities/IO \
                             -I@top_srcdir@/utilities/FormattedIO \
-                            -I@top_srcdir@/utilities/format \
+                            -I@top_srcdir@/utilities/Buffer \
                             @LIBTCLPLUS_CFLAGS@
 
 libConversion_la_LIBADD = @LIBTCLPLUS_LDFLAGS@
@@ -49,6 +51,7 @@ unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                    @top_builddir@/utilities/IO/libdaqio.la	\
                    @top_builddir@/utilities/FormattedIO/libdaqformatio.la	\
                    @top_builddir@/utilities/filter/libfilter.la	\
+                   @top_builddir@/utilities/Buffer/libbuffer.la	\
                    @LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS= -I@srcdir@ \
