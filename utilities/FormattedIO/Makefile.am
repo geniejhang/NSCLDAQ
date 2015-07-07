@@ -2,14 +2,18 @@
 
 lib_LTLIBRARIES	=	libdaqformatio.la
 
-libdaqformatio_la_SOURCES = RingIOV10.cpp \
+libdaqformatio_la_SOURCES = BufferIOV8.cpp \
+                            RingIOV10.cpp \
 											RingIOV11.cpp
-include_HEADERS	= RingIOV10.h \
+include_HEADERS	= BufferIOV8.h \
+                  RingIOV10.h \
 									RingIOV11.h
 
 libdaqformatio_la_CPPFLAGS	=  \
                 -I@top_srcdir@/utilities/IO \
+                -I@top_srcdir@/utilities/format/NSCLDAQ8 \
                 -I@top_srcdir@/utilities/format \
+                -I@top_srcdir@/utilities/Buffer \
 		-I@top_srcdir@/base/headers \
     @LIBTCLPLUS_CFLAGS@	
 
@@ -19,6 +23,8 @@ libdaqformatio_la_LDFLAGS	= -version-info $(SOVERSION)	\
 
 libdaqformatio_la_LIBADD	= \
 			@top_builddir@/utilities/IO/libdaqio.la \
+                        @top_builddir@/utilities/Buffer/libbuffer.la \
+                        @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la \
 			@top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
 			@top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
 			@LIBEXCEPTION_LDFLAGS@
@@ -32,6 +38,7 @@ libdaqformatio_la_CXXFLAGS = $(THREADCXX_FLAGS) $(AM_CXXFLAGS)
 noinst_PROGRAMS = unittests
 
 unittests_SOURCES	= TestRunner.cpp  \
+                            daq8test.cpp \
 										daq10test.cpp \
 										daq11test.cpp
 
@@ -39,7 +46,8 @@ unittests_LDADD		= \
 			@builddir@/libdaqformatio.la \
 			@top_builddir@/utilities/FormattedIO/libdaqformatio.la \
 			@top_builddir@/utilities/IO/libdaqio.la \
-			@top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
+                        @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la \
+                        @top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
 			@top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
 			$(CPPUNIT_LDFLAGS) 		\
 			@LIBEXCEPTION_LDFLAGS@
@@ -48,7 +56,9 @@ unittests_CPPFLAGS=  \
 										 -I@top_srcdir@/utilities/FormattedIO \
 										 -I@top_srcdir@/utilities/IO \
                                                                                  -I@top_srcdir@/utilities/format \
-										 @LIBTCLPLUS_CFLAGS@	
+                                                                                 -I@top_srcdir@/utilities/format/NSCLDAQ8 \
+                                                                                 -I@top_srcdir@/base/testutils \
+                                                                                 @LIBTCLPLUS_CFLAGS@
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 
 unittests_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"
