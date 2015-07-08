@@ -11,6 +11,7 @@
 #include <stdexcept>
 
 using namespace std;
+using namespace DAQ::Transform;
 
 namespace NSCLDAQ10 {
   class CRingItem;
