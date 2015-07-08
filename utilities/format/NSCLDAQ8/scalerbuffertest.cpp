@@ -206,6 +206,10 @@ void toRawBuffer_0 () {
   ByteBuffer expected;
   expected << m_header;
   expected << m_bytes;
+  expected.resize(8192); // need to ensure that the buffer is a full
+                         // 8192 for comparison with the raw buffer. The
+                         // rawbuffer will have the proper gBufferSize
+                         // according to CScalerBuffer::toRawBuffer()
 
   CPPUNIT_ASSERT_EQUAL_MESSAGE("toRawBuffer does what it should",
                                expected, rawBuf.getBuffer());

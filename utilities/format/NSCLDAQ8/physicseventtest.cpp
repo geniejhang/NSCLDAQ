@@ -265,6 +265,10 @@ void rawBufferCtor_4() {
     CRawBuffer newBuf(8192);
     physBuf.toRawBuffer(newBuf);
 
+    origBuffer.resize(8192); // make sure that the origBuffer is a full buffer size, b/c
+                             // CPhysicsEventBuffer::toRawBuffer will make sure that
+                             // the raw buffer is the appropriate size.
+
     CPPUNIT_ASSERT_EQUAL_MESSAGE("physics buffer is returned to raw buffer unswapped",
                                  origBuffer, newBuf.getBuffer());
     }
