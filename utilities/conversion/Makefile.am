@@ -47,6 +47,7 @@ unittests_SOURCES = TestRunner.cpp \
 
 unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                    @top_builddir@/utilities/conversion/libConversion.la	\
+                   @top_builddir@/utilities/Buffer/libbuffer.la	\
                    @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la	\
                    @top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la	\
                    @top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la	\
@@ -57,6 +58,7 @@ unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                    @LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS= -I@srcdir@ \
+                    -I@top_srcdir@/utilities/Buffer \
                     -I@top_srcdir@/utilities/format/NSCLDAQ8 \
                     -I@top_srcdir@/utilities/format/NSCLDAQ10 \
                     -I@top_srcdir@/utilities/format/NSCLDAQ11 \
