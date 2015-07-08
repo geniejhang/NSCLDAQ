@@ -46,6 +46,7 @@ public:
   CPPUNIT_TEST(rawBufferCtor_3);
   CPPUNIT_TEST(rawBufferCtor_4);
   CPPUNIT_TEST(toRawBuffer_0);
+  CPPUNIT_TEST(toRawBuffer_1);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -223,25 +224,55 @@ void rawBufferCtor_4() {
 
     DAQ::Buffer::ByteBuffer origBuffer = createSwappedEvent();
 
-    CRawBuffer rawBuf(8192);
+    CRawBuffer rawBuf;
     rawBuf.setBuffer(origBuffer);
 
     // construct from a buffer that needs swapping
     CPhysicsEventBuffer physBuf(rawBuf);
 
     // fill a CRawBuffer with it.
-    CRawBuffer newBuf(8192);
+    CRawBuffer newBuf;
     physBuf.toRawBuffer(newBuf);
 
-    origBuffer.resize(8192); // make sure that the origBuffer is a full buffer size, b/c
+    origBuffer.resize(gBufferSize); // make sure that the origBuffer is a full buffer size, b/c
                              // CPhysicsEventBuffer::toRawBuffer will make sure that
                              // the raw buffer is the appropriate size.
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("physics buffer is returned to raw buffer unswapped",
                                  origBuffer, newBuf.getBuffer());
     }
-};
 
+   void toRawBuffer_1() {
+
+     struct ChangeBufferSize {
+       std::size_t oldSize;
+       ChangeBufferSize(std::size_t bsize) : oldSize(gBufferSize) {
+         gBufferSize = bsize;
+       }
+       ~ChangeBufferSize() {
+         gBufferSize = oldSize;
+       }
+     };
+
+    DAQ::Buffer::ByteBuffer origBuffer = createSwappedEvent();
+
+    CRawBuffer rawBuf(8192);
+    rawBuf.setBuffer(origBuffer);
+
+    // in case this fails, we want to change back the buffer size to what it was.
+    // Note that this must follow rawBuf.setBuffer() as it does, because setBuffer()
+    // will resize the buffer to gBufferSize and destroy the data.
+    ChangeBufferSize newSize(1);
+
+    // construct from a buffer that needs swapping
+    CPhysicsEventBuffer physBuf(rawBuf);
+
+    CPPUNIT_ASSERT_THROW_MESSAGE("Throws exception if cannot fit into buffer",
+                                 physBuf.toRawBuffer(rawBuf),
+                                 std::runtime_error);
+   }
+
+};
 
 CPPUNIT_TEST_SUITE_REGISTRATION(physicseventtest);
 

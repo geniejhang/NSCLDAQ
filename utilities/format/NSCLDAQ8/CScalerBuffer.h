@@ -37,6 +37,8 @@ namespace DAQ
       std::uint32_t getOffsetBegin() const;
       std::uint32_t getOffsetEnd() const;
       std::vector<std::uint32_t> getScalers() const;
+
+      std::size_t computeNWords() const;
     };
 
   } // end of V8

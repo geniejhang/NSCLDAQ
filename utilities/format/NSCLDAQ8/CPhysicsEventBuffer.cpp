@@ -31,7 +31,7 @@ namespace DAQ {
     }
 
     std::size_t CPhysicsEvent::getNTotalShorts() const {
-      return *(m_buffer.begin());
+      return *(begin());
     }
 
     CPhysicsEvent::iterator CPhysicsEvent::begin() const {
@@ -147,19 +147,23 @@ namespace DAQ {
     // have to send the entire buffer back unswapped.
     void CPhysicsEventBuffer::toRawBuffer(CRawBuffer &buffer) const
     {
-      Buffer::ByteBuffer newbuf;
-
       bheader header = m_header;
-//      std::uint16_t nShorts = 16; // size of bheader
-//      for (auto& pEvent : m_body) {
-//        nShorts += pEvent->getNTotalShorts();
-//      }
-//      header.nwds = nShorts;
-//      header.nevt = m_body.size();
+
+      std::size_t nWords = computeNWords();
+      if (nWords*sizeof(std::uint16_t) > gBufferSize) {
+        std::string errmsg("DAQ::V8::CPhysicsEventBuffer::toRawBuffer(CRawBuffer&) ");
+        errmsg += "Total event buffer size (" + std::to_string(nWords) + ") ";
+        errmsg += "cannot fit in buffer (gBufferSize=" + std::to_string(gBufferSize) + ")";
+        throw std::runtime_error(errmsg);
+      }
+
+      updateHeader(header);
 
       if (m_mustSwap) {
         swapBytesOfHeaderInPlace(header);
       }
+
+      Buffer::ByteBuffer newbuf;
       newbuf << header;
 
       for (auto& pEvent : m_body) {
@@ -168,7 +172,7 @@ namespace DAQ {
 
       buffer.setBuffer(newbuf);
 
-     }
+    }
 
     void CPhysicsEventBuffer::swapBytesOfHeaderInPlace(bheader &header) const
     {
@@ -186,6 +190,21 @@ namespace DAQ {
       BO::swapBytes(header.lsignature);
       BO::swapBytes(header.unused[0]);
       BO::swapBytes(header.unused[1]);
+    }
+
+    std::size_t CPhysicsEventBuffer::computeNWords() const
+    {
+      std::size_t nWords = 16; // size of header
+      for (auto& pEvent : m_body) {
+        nWords += pEvent->getNTotalShorts();
+      }
+      return nWords;
+    }
+
+    void CPhysicsEventBuffer::updateHeader(bheader& header) const
+    {
+      header.nwds = static_cast<std::uint16_t>(computeNWords());
+      header.nevt = static_cast<std::uint16_t>(m_body.size());
     }
 
   } // namespace V8

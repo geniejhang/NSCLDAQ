@@ -128,6 +128,8 @@ namespace DAQ {
       void parseStandardBody(Buffer::ByteBuffer::const_iterator beg,
                              Buffer::ByteBuffer::const_iterator end);
       void swapBytesOfHeaderInPlace(bheader& header) const;
+      std::size_t computeNWords() const;
+      void updateHeader(bheader& header) const;
     };
     
 

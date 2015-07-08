@@ -69,8 +69,17 @@ namespace DAQ
     {
       vector<uint8_t> empty(6);
 
+      std::size_t nWords = computeNWords();
+
+      if (nWords*2 > gBufferSize) {
+        std::string errmsg("DAQ::V8::CScalerBuffer::toRawBuffer(CRawBuffer&) ");
+        errmsg += "Scaler buffer size (" + std::to_string(nWords) + ") ";
+        errmsg += "cannot fit in buffer (gBufferSize=" + std::to_string(gBufferSize) + ")";
+        throw std::runtime_error(errmsg);
+      }
+
       bheader header = m_header;
-      header.nwds = 16 + 6 + 2*m_scalers.size();
+      header.nwds = nWords;
       header.nevt = m_scalers.size();
 
       Buffer::ByteBuffer newbuf;
@@ -81,9 +90,13 @@ namespace DAQ
       newbuf << empty;
       newbuf << m_scalers;
 
+
       buffer.setBuffer(newbuf);
     }
 
+    std::size_t CScalerBuffer::computeNWords() const {
+      return (16 + 6 + 2*m_scalers.size());
+    }
     std::uint32_t CScalerBuffer::getOffsetBegin() const
     {
       return m_offsetBegin;

@@ -44,6 +44,7 @@ public:
   CPPUNIT_TEST(rawBufferCtor_3);
   CPPUNIT_TEST(rawBufferCtor_4);
   CPPUNIT_TEST(toRawBuffer_0);
+  CPPUNIT_TEST(toRawBuffer_1);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -213,6 +214,27 @@ void toRawBuffer_0 () {
 
   CPPUNIT_ASSERT_EQUAL_MESSAGE("toRawBuffer does what it should",
                                expected, rawBuf.getBuffer());
+}
+
+void toRawBuffer_1 () {
+
+  struct ChangeBufferSize {
+    std::size_t oldSize;
+    ChangeBufferSize(std::size_t bsize) : oldSize(gBufferSize) {
+      gBufferSize = bsize;
+    }
+    ~ChangeBufferSize() {
+      gBufferSize = oldSize;
+    }
+  };
+
+  // in case this fails, we want to change back the buffer size to what it was.
+  ChangeBufferSize newSize(1);
+
+  CRawBuffer rawBuf;
+  CPPUNIT_ASSERT_THROW_MESSAGE("toRawBuffer should throw if gBufferSize is too small",
+          m_scalerBuffer.toRawBuffer(rawBuf),
+          std::runtime_error);
 }
 
 };
