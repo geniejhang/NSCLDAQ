@@ -44,7 +44,6 @@ class CFormattedIOV8Test : public CppUnit::TestFixture
     CPPUNIT_TEST_SUITE( CFormattedIOV8Test );
     CPPUNIT_TEST ( extract_0 );
     CPPUNIT_TEST ( insert_0 );
-    CPPUNIT_TEST ( insert_1 );
     CPPUNIT_TEST_SUITE_END();
 
     public:
@@ -53,7 +52,6 @@ class CFormattedIOV8Test : public CppUnit::TestFixture
 
     void extract_0();
     void insert_0();
-    void insert_1();
 
 };
 
@@ -120,26 +118,6 @@ void CFormattedIOV8Test::insert_0()
   CPPUNIT_ASSERT_EQUAL_MESSAGE("What was written actually was written",
                                charBuffer, record);
 
-
-}
-
-
-void CFormattedIOV8Test::insert_1()
-{
-  CTestSourceSink ss(34);
-  std::vector<std::uint16_t> data = {0x0001, 0x0011};
-  DAQ::Buffer::ByteBuffer buffer;
-  buffer << data;
-
-  DAQ::V8::CRawBuffer rawBuf;
-  rawBuf.setBuffer(buffer);
-
-  CTestSourceSink sink(34);
-
-  CPPUNIT_ASSERT_THROW_MESSAGE(
-        "Cannot write buffer whose size is different than gFilledBuffer",
-        sink << rawBuf ,
-        std::runtime_error );
 
 }
 
