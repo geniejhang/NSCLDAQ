@@ -51,7 +51,7 @@ public:
 public:
   void setUp() {
 
-    m_header.nwds = 24;
+    m_header.nwds = 21;
     m_header.type = DAQ::V8::DATABF;
     m_header.cks  = 0;
     m_header.run  = 1;
@@ -65,8 +65,7 @@ public:
     m_header.lsignature = DAQ::V8::BOM32;
 
     m_bodyData = std::vector<uint16_t>({3, 0, 1,
-                                       2, 3,
-                                       3, 4, 5});
+                                       2, 3});
     m_physicsBuffer = CPhysicsEventBuffer(m_header, m_bodyData);
 
   }
@@ -121,9 +120,10 @@ void unsupportedVersion_0() {
 
 }
 
-void rawBufferCtor_0() {
 
-  CRawBuffer rawBuf(8192);
+CRawBuffer createRawBuffer() {
+
+  CRawBuffer rawBuf;
 
   DAQ::Buffer::ByteBuffer buffer;
   buffer << m_header;
@@ -131,7 +131,11 @@ void rawBufferCtor_0() {
 
   rawBuf.setBuffer(buffer);
 
-  CPhysicsEventBuffer physBuf(rawBuf);
+  return rawBuf;
+}
+
+void rawBufferCtor_0() {
+  CPhysicsEventBuffer physBuf(createRawBuffer());
   CPPUNIT_ASSERT_EQUAL_MESSAGE("Construct from a raw buffer",
                                std::size_t(2), physBuf.size());
 }
@@ -139,19 +143,9 @@ void rawBufferCtor_0() {
 
 void rawBufferCtor_1() {
 
-  CRawBuffer rawBuf(8192);
-
-  DAQ::Buffer::ByteBuffer buffer;
-  buffer << m_header;
-  buffer << m_bodyData;
-
-  rawBuf.setBuffer(buffer);
-
-
   // because we are building our raw buffer from the same data that m_physicsBuffer was
   // constructed from, the contents better be the same.
-  CPhysicsEventBuffer physBuf(rawBuf);
-
+  CPhysicsEventBuffer physBuf(createRawBuffer());
   CPPUNIT_ASSERT_MESSAGE("RawBuffer ctor has proper 1st event",
                          std::equal(physBuf.at(0)->begin(), physBuf.at(0)->end(),
                                     m_physicsBuffer.at(0)->begin()));
@@ -159,44 +153,29 @@ void rawBufferCtor_1() {
 
 void rawBufferCtor_2() {
 
-  CRawBuffer rawBuf(8192);
-
-  DAQ::Buffer::ByteBuffer buffer;
-  buffer << m_header;
-  buffer << m_bodyData;
-
-  rawBuf.setBuffer(buffer);
-
   // because we are building our raw buffer from the same data that m_physicsBuffer was
   // constructed from, the contents better be the same.
-  CPhysicsEventBuffer physBuf(rawBuf);
+  CPhysicsEventBuffer physBuf(createRawBuffer());
   CPPUNIT_ASSERT_MESSAGE("RawBuffer ctor has proper 2nd event",
                          std::equal(physBuf.at(1)->begin(), physBuf.at(1)->end(),
                                     m_physicsBuffer.at(1)->begin()));
 }
 
 void rawBufferCtor_3 () {
-  CRawBuffer rawBuf(8192);
-  m_header.type = SCALERBF;
+  m_header.type = SCALERBF; // poison the buffer type to be something we cannot construct from
 
-  DAQ::Buffer::ByteBuffer buffer;
-  buffer << m_header;
-  buffer << m_bodyData;
+  CRawBuffer rawBuf = createRawBuffer();
 
-  rawBuf.setBuffer(buffer);
-
-  // because we are building our raw buffer from the same data that m_physicsBuffer was
-  // constructed from, the contents better be the same.
-  CPPUNIT_ASSERT_THROW_MESSAGE("RawBuffer ctor throws if not of type DATABF",
+\  CPPUNIT_ASSERT_THROW_MESSAGE("RawBuffer ctor throws if not of type DATABF",
                                CPhysicsEventBuffer physBuf(rawBuf),
                                 std::runtime_error);
 }
 
 
-// construct from a byte swapped buffer produces the correct result
-void rawBufferCtor_4() {
+DAQ::Buffer::ByteBuffer createSwappedEvent()
+{
   bheader header;
-  header.nwds = 0x1800;
+  header.nwds = 0x1500;
   header.type = 0x0100;
   header.nevt = 0x0200;
   header.buffmt = 0x0500;
@@ -212,14 +191,21 @@ void rawBufferCtor_4() {
   header.unused[1] = 0;
 
   std::vector<std::uint16_t> data({0x0300, 0x0000, 0x0100,
-                                   0x0200, 0x0300,
-                                   0x0300, 0x0400, 0x0500});
+                                   0x0200, 0x0300});
 
 
-  CRawBuffer rawBuf(8192);
   DAQ::Buffer::ByteBuffer buffer;
   buffer << header;
   buffer << data;
+  return buffer;
+}
+
+// construct from a byte swapped buffer produces the correct result
+void rawBufferCtor_4() {
+
+  DAQ::Buffer::ByteBuffer buffer = createSwappedEvent();
+
+  CRawBuffer rawBuf(8192);
   rawBuf.setBuffer(buffer);
 
   CPhysicsEventBuffer physBuf(rawBuf);
@@ -232,36 +218,18 @@ void rawBufferCtor_4() {
                                true, physBuf.at(1)->dataNeedsSwap());
   }
 
-  // construct from a byte swapped buffer produces the correct result
+  // original byte order is maintained for PhysicsEvents
   void toRawBuffer_0() {
-    bheader expectedHeader;
-    expectedHeader.nwds = 0x1800;
-    expectedHeader.type = 0x0100;
-    expectedHeader.nevt = 0x0200;
-    expectedHeader.buffmt = 0x0500;
-    expectedHeader.ssignature = 0x0201;
-    expectedHeader.lsignature = 0x04030201;
-    expectedHeader.cks = 0;
-    expectedHeader.cpu = 0;
-    expectedHeader.nbit = 0;
-    expectedHeader.nlam = 0;
-    expectedHeader.run = 0x0100;
-    expectedHeader.seq = 0x02000000;
-    expectedHeader.unused[0] = 0;
-    expectedHeader.unused[1] = 0;
 
-    std::vector<std::uint16_t> data({0x0300, 0x0000, 0x0100,
-                                     0x0200, 0x0300});
-
+    DAQ::Buffer::ByteBuffer origBuffer = createSwappedEvent();
 
     CRawBuffer rawBuf(8192);
-    DAQ::Buffer::ByteBuffer origBuffer;
-    origBuffer << expectedHeader;
-    origBuffer << data;
     rawBuf.setBuffer(origBuffer);
 
+    // construct from a buffer that needs swapping
     CPhysicsEventBuffer physBuf(rawBuf);
 
+    // fill a CRawBuffer with it.
     CRawBuffer newBuf(8192);
     physBuf.toRawBuffer(newBuf);
 
