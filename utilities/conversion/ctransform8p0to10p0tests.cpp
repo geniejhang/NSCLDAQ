@@ -66,7 +66,8 @@ public:
 
         m_header.type = V8::SCALERBF;
         m_header.nevt = 16;
-        m_header.nwds = 33; // i think this includes the size of the header?
+        m_header.nwds = 33;
+        m_header.buffmt = V8::StandardVsn;
         m_header.ssignature = V8::BOM16;
         m_header.lsignature = V8::BOM32;
 

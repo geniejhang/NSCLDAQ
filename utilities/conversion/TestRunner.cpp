@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 
 namespace DAQ {
   namespace V8 {
-    std::size_t gBufferSize = 34;
+    std::size_t gBufferSize = 8192;
   }
 }
 
