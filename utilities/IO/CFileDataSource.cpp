@@ -115,7 +115,13 @@ CFileDataSource::getItem()
 
 void CFileDataSource::read(char* pBuffer, size_t nBytes)
 {
-  size_t nRead = io::readData(m_fd, pBuffer, nBytes);
+  if (! eof() ) {
+    size_t nRead = io::readData(m_fd, pBuffer, nBytes);
+
+    if (nRead != nBytes) {
+      setEOF(true);
+    }
+  }
 }
 //////////////////////////////////////////////////////////////////////////////////////////
 //

@@ -33,16 +33,21 @@ class CDataSource
 {
   // constructors and canonicals.  In general most canonicals are not allowed.
   //
+  bool m_eof;
 
 public:
   CDataSource();
   virtual ~CDataSource();
+
+  bool eof() const { return m_eof; }
+  void clear() { setEOF(false); }
 
 private:
   CDataSource(const CDataSource& rhs);
   CDataSource& operator=(const CDataSource& rhs);
   int operator==(const CDataSource& rhs) const;
   int operator!=(const CDataSource& rhs) const;
+
 public:
 
   // This method must be implemented in concrete
@@ -53,7 +58,8 @@ public:
   virtual CRingItem* getItem() = 0;
   virtual void read(char* pBuffer, size_t nBytes) = 0;
 
-
+protected:
+  void setEOF(bool state) { m_eof = state; }
 };
 
 #endif
