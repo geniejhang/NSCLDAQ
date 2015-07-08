@@ -22,5 +22,5 @@
 //
 // Implemented canonicals:
 
-CDataSource::CDataSource() {}
+CDataSource::CDataSource() : m_eof(false) {}
 CDataSource::~CDataSource() {}

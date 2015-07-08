@@ -37,6 +37,7 @@ using std::string;
   \param exclude - List of item types that should not be accepted from the ring.
 */
 CRingDataSource::CRingDataSource(URL& url, vector<uint16_t> sample, vector<uint16_t> exclude) :
+  CDataSource(),
   m_pRing(0), 
   m_pPredicate(0),
   m_url(*(new URL(url)))
