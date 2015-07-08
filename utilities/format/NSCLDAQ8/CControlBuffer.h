@@ -40,6 +40,8 @@ namespace DAQ {
       std::uint32_t getOffset() const { return m_offset; }
       void setOffset(std::uint32_t offset) { m_offset = offset; }
 
+      std::size_t computeNWords() const { return 65; }
+
     }; // end of CControlBuffer
 
   } // namespace V8

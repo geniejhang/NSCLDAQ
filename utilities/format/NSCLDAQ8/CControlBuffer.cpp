@@ -46,9 +46,15 @@ namespace DAQ {
 
     void CControlBuffer::toRawBuffer(CRawBuffer &buffer) const
     {
+      if (computeNWords() > gBufferSize) {
+        std::string errmsg("DAQ::V8::CControlBuffer::toRawBuffer(CRawBuffer&) ");
+        errmsg += "Total control buffer size (" + std::to_string(computeNWords()) + ") ";
+        errmsg += "cannot fit in buffer (gBufferSize=" + std::to_string(gBufferSize) + ")";
+        throw std::runtime_error(errmsg);
+      }
 
       bheader header = m_header;
-      header.nwds = 65; // this is a constant sized entity
+      header.nwds = computeNWords();
       header.nevt = 0; // we never have an event
 
       Buffer::ByteBuffer tmpBuf;

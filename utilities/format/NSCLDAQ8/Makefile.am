@@ -42,6 +42,7 @@ unittests_SOURCES	= TestRunner.cpp \
                             rawbuffertest.cpp \
                             ctextbuffertest.cpp
 
+
 unittests_LDADD	= $(CPPUNIT_LDFLAGS) 		\
                   @builddir@/libdataformatv8.la	\
                   @top_builddir@/utilities/Buffer/libbuffer.la \
@@ -62,3 +63,6 @@ unittests_LDFLAGS	= @CPPUNIT_LDFLAGS@ \
 
 
 TESTS=./unittests
+
+
+EXTRA_DIST = ChangeBufferSize.h

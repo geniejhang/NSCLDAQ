@@ -10,6 +10,7 @@
 #include <CRawBuffer.h>
 #include <ByteBuffer.h>
 #include <DebugUtils.h>
+#include <ChangeBufferSize.h>
 
 #define private public
 #define protected public
@@ -244,16 +245,6 @@ void rawBufferCtor_4() {
 
    void toRawBuffer_1() {
 
-     struct ChangeBufferSize {
-       std::size_t oldSize;
-       ChangeBufferSize(std::size_t bsize) : oldSize(gBufferSize) {
-         gBufferSize = bsize;
-       }
-       ~ChangeBufferSize() {
-         gBufferSize = oldSize;
-       }
-     };
-
     DAQ::Buffer::ByteBuffer origBuffer = createSwappedEvent();
 
     CRawBuffer rawBuf(8192);
@@ -262,7 +253,7 @@ void rawBufferCtor_4() {
     // in case this fails, we want to change back the buffer size to what it was.
     // Note that this must follow rawBuf.setBuffer() as it does, because setBuffer()
     // will resize the buffer to gBufferSize and destroy the data.
-    ChangeBufferSize newSize(1);
+    ::DAQ::V8::Test::ChangeBufferSize newSize(1);
 
     // construct from a buffer that needs swapping
     CPhysicsEventBuffer physBuf(rawBuf);

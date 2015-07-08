@@ -15,6 +15,7 @@
 #include <CRawBuffer.h>
 #include <DebugUtils.h>
 #include <BufferPtr.h>
+#include <ChangeBufferSize.h>
 
 #define private public
 #define protected public
@@ -45,6 +46,7 @@ public:
   CPPUNIT_TEST(toRawBuffer_6);
   CPPUNIT_TEST(toRawBuffer_7);
   CPPUNIT_TEST(toRawBuffer_8);
+  CPPUNIT_TEST(toRawBuffer_9);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -69,7 +71,7 @@ public:
     m_buffer = CControlBuffer(m_header, "my title", 1234, bftime({0, 1, 2 ,3, 4, 5, 6}));
 
 
-    m_rawBuf = CRawBuffer(8192);
+    m_rawBuf = CRawBuffer();
     m_buffer.toRawBuffer(m_rawBuf);
 
   }
@@ -195,6 +197,14 @@ void toRawBuffer_1 () {
 
       CPPUNIT_ASSERT_EQUAL_MESSAGE("toRawBuffer preserves tenths",
                              std::uint16_t(6), *p16);
+    }
+
+    void toRawBuffer_9 () {
+      DAQ::V8::Test::ChangeBufferSize bufferSizeForScope(1);
+
+      CPPUNIT_ASSERT_THROW_MESSAGE("Fail if gBufferSize is too small",
+             m_buffer.toRawBuffer(m_rawBuf),
+            std::runtime_error);
     }
 
 };

@@ -45,8 +45,17 @@ namespace DAQ {
     {
       // make sure that the number of words are correctly computed
 
+      std::size_t nWords = 16+totalShorts();
+
+      if (nWords > gBufferSize) {
+        std::string errmsg("DAQ::V8::CTextBuffer::toRawBuffer(CRawBuffer&) ");
+        errmsg += "Text buffer size (" + std::to_string(nWords) + ") ";
+        errmsg += "cannot fit in buffer (gBufferSize=" + std::to_string(gBufferSize) + ")";
+        throw std::runtime_error(errmsg);
+      }
+
       bheader header = m_header;
-      header.nwds = 16+totalShorts();
+      header.nwds = nWords;
 
       Buffer::ByteBuffer buf;
       buf << header;

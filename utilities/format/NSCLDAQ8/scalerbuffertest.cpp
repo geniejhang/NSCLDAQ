@@ -9,6 +9,7 @@
 #include <CRawBuffer.h>
 #include <DebugUtils.h>
 #include <ByteBuffer.h>
+#include <ChangeBufferSize.h>
 
 #define private public
 #define protected public
@@ -218,18 +219,9 @@ void toRawBuffer_0 () {
 
 void toRawBuffer_1 () {
 
-  struct ChangeBufferSize {
-    std::size_t oldSize;
-    ChangeBufferSize(std::size_t bsize) : oldSize(gBufferSize) {
-      gBufferSize = bsize;
-    }
-    ~ChangeBufferSize() {
-      gBufferSize = oldSize;
-    }
-  };
 
   // in case this fails, we want to change back the buffer size to what it was.
-  ChangeBufferSize newSize(1);
+  ::DAQ::V8::Test::ChangeBufferSize newSize(1);
 
   CRawBuffer rawBuf;
   CPPUNIT_ASSERT_THROW_MESSAGE("toRawBuffer should throw if gBufferSize is too small",

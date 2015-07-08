@@ -8,6 +8,7 @@
 #include <CRawBuffer.h>
 #include <DebugUtils.h>
 #include <ByteOrder.h>
+#include <ChangeBufferSize.h>
 
 #define private public
 #define protected public
@@ -44,6 +45,7 @@ public:
   CPPUNIT_TEST(rawCtor_5);
 //  CPPUNIT_TEST(rawCtor_6);
   CPPUNIT_TEST(toRawBuffer_0);
+  CPPUNIT_TEST(toRawBuffer_1);
   CPPUNIT_TEST(totalBytes_0);
   CPPUNIT_TEST_SUITE_END();
 
@@ -205,6 +207,18 @@ public:
     CPPUNIT_ASSERT_EQUAL_MESSAGE("toRawBuffer should fill the right stuff",
                                  m_rawBuf.getBuffer(),
                                  rawBuf.getBuffer());
+  }
+
+  void toRawBuffer_1 () {
+
+    ::DAQ::V8::Test::ChangeBufferSize sizeForThisScope(1);
+
+    CRawBuffer rawBuf;
+
+    CPPUNIT_ASSERT_THROW_MESSAGE("BufferSize that is too small should fail",
+                                 m_buffer.toRawBuffer(rawBuf),
+                                 std::runtime_error);
+
   }
 
   void totalBytes_0() {
