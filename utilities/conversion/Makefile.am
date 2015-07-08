@@ -32,6 +32,7 @@ libConversion_la_CXXFLAGS = -I@srcdir@ \
                             -I@top_srcdir@/utilities/IO \
                             -I@top_srcdir@/utilities/FormattedIO \
                             -I@top_srcdir@/utilities/Buffer \
+                            -I@top_srcdir@/base/headers \
                             @LIBTCLPLUS_CFLAGS@
 
 libConversion_la_LIBADD = @LIBTCLPLUS_LDFLAGS@
@@ -63,6 +64,7 @@ unittests_CPPFLAGS= -I@srcdir@ \
                     -I@top_srcdir@/utilities/IO \
                     -I@top_srcdir@/utilities/FormattedIO \
                     -I@top_srcdir@/utilities/format \
+                    -I@top_srcdir@/base/headers \
                     @CPPUNIT_CFLAGS@ \
                     @LIBTCLPLUS_CFLAGS@ \
                     @TCL_FLAGS@ \
@@ -94,4 +96,5 @@ testApp_CPPFLAGS = -I@srcdir@ \
 									 -I@top_srcdir@/utilities/filter \
 									 -I@top_srcdir@/utilities/IO \
                                                                          -I@top_srcdir@/utilities/FormattedIO \
-                                                                         -I@top_srcdir@/utilities/format
+                                                                         -I@top_srcdir@/utilities/format \
+                                                                         -I@top_srcdir@/base/headers
