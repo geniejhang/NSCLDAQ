@@ -46,6 +46,7 @@ unittests_LDADD		= \
 			@builddir@/libdaqformatio.la \
 			@top_builddir@/utilities/FormattedIO/libdaqformatio.la \
 			@top_builddir@/utilities/IO/libdaqio.la \
+                        @top_builddir@/utilities/Buffer/libbuffer.la \
                         @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la \
                         @top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
 			@top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
@@ -55,6 +56,7 @@ unittests_LDADD		= \
 unittests_CPPFLAGS=  \
 										 -I@top_srcdir@/utilities/FormattedIO \
 										 -I@top_srcdir@/utilities/IO \
+                                                                                 -I@top_srcdir@/utilities/Buffer \
                                                                                  -I@top_srcdir@/utilities/format \
                                                                                  -I@top_srcdir@/utilities/format/NSCLDAQ8 \
                                                                                  -I@top_srcdir@/base/testutils \
