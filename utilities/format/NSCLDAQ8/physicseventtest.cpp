@@ -166,7 +166,7 @@ void rawBufferCtor_3 () {
 
   CRawBuffer rawBuf = createRawBuffer();
 
-\  CPPUNIT_ASSERT_THROW_MESSAGE("RawBuffer ctor throws if not of type DATABF",
+  CPPUNIT_ASSERT_THROW_MESSAGE("RawBuffer ctor throws if not of type DATABF",
                                CPhysicsEventBuffer physBuf(rawBuf),
                                 std::runtime_error);
 }
