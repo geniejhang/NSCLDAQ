@@ -48,8 +48,8 @@ namespace DAQ {
     {
 
       bheader header = m_header;
-      header.nwds = 65;
-      header.nevt = 0;
+      header.nwds = 65; // this is a constant sized entity
+      header.nevt = 0; // we never have an event
 
       Buffer::ByteBuffer tmpBuf;
       tmpBuf << header;

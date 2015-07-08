@@ -26,6 +26,7 @@ const Buffer::ByteBuffer& CRawBuffer::getBuffer() const
 void CRawBuffer::setBuffer(const Buffer::ByteBuffer &buffer)
 {
   m_unparsedBuffer = buffer;
+  m_unparsedBuffer.resize(gBufferSize, 0);
 
   // parse the header first assuming native byte orderig
   parseHeader(buffer, false);

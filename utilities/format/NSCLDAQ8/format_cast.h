@@ -5,6 +5,7 @@
 #include <CScalerBuffer.h>
 #include <CPhysicsEventBuffer.h>
 #include <CV8Buffer.h>
+#include <DataFormatV8.h>
 
 #include <typeinfo>
 
