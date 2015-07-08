@@ -25,6 +25,11 @@
 
 #include <iostream>
 #include <stdexcept>
+
+
+namespace DAQ {
+  namespace Transform {
+
 /**! Constructor
 
   Constructs the mediator object. This object owns its referenced members.
@@ -127,3 +132,7 @@ void CTransformMediator<Transform>::processOne()
 template<class Transform>
 void CTransformMediator<Transform>::updatePredicate()
 {}
+
+  } // end of Transform
+} // end of DAQ
+

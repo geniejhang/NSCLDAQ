@@ -41,6 +41,10 @@ int main(int argc, char** argv)
   return !wasSucessful;
 }
 
-
+namespace DAQ {
+  namespace V8 {
+    std::size_t gBufferSize = 34;
+  }
+}
 
 int gpTCLApplication = 0;

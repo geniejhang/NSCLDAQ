@@ -2,6 +2,9 @@
 
 using namespace std;
 
+namespace DAQ {
+  namespace Transform {
+
 CTransformFactory::CTransformFactory()
   : m_creators()
 {
@@ -26,3 +29,6 @@ CTransformFactory::create(int vsnFrom, int vsnTo)
     return (*pCreator)();
 
 }
+
+  } // end of Transform
+} // end of DAQ

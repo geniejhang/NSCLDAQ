@@ -1,6 +1,7 @@
 lib_LTLIBRARIES = libConversion.la
 
 libConversion_la_SOURCES = CTransformMediator.h \
+                           C8p0to10p0Mediator.cpp \
                            CTransformMediator.hpp \
                            CTransform8p0to10p0.cpp \
                            CTransform10p0to11p0.cpp \
@@ -9,9 +10,10 @@ libConversion_la_SOURCES = CTransformMediator.h \
 													CCompositePredicate.cpp 
 
                            #CTransform11p0to11p0.cpp
-#                           C8p0to10p0Mediator.cpp 
+
 
 include_HEADERS = CTransformMediator.h \
+                           C8p0to10p0Mediator.h \
                            CTransform8p0to10p0.h \
                            CTransform10p0to11p0.h \
                            CTransform11p0to10p0.h \
@@ -20,7 +22,6 @@ include_HEADERS = CTransformMediator.h \
 													 CCompositePredicate.h 
 
 #                           CTransform11p0to11p0.h
-#                    C8p0to10p0Mediator.h 
 
 libConversion_la_CXXFLAGS = -I@srcdir@ \
                             -I@top_srcdir@/utilities/format \
@@ -77,6 +78,7 @@ TESTS=./unittests
 testApp_SOURCES = Main.h Main.cpp
 
 testApp_LDADD = @builddir@/libConversion.la \
+                @top_builddir@/utilities/Buffer/libbuffer.la \
                @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la \
 								@top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
 								@top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
@@ -85,6 +87,7 @@ testApp_LDADD = @builddir@/libConversion.la \
 								@top_builddir@/utilities/FormattedIO/libdaqformatio.la
 
 testApp_CPPFLAGS = -I@srcdir@ \
+                    -I@top_srcdir@/utilities/Buffer \
                     -I@top_srcdir@/utilities/format/NSCLDAQ8 \
 									 -I@top_srcdir@/utilities/format/NSCLDAQ10 \
 									 -I@top_srcdir@/utilities/format/NSCLDAQ11 \

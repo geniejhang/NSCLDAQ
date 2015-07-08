@@ -8,6 +8,10 @@
 #include <memory>
 #include <utility>
 
+
+namespace DAQ {
+  namespace Transform {
+
 /*!
  * \brief The CTransformCreator class
  *
@@ -66,5 +70,9 @@ public:
      */
     std::unique_ptr<CBaseMediator> create(int vsnFrom, int vsnTo);
 };
+
+
+  } // end of Transform
+} // end of DAQ
 
 #endif // CTRANSFORMFACTORY_H

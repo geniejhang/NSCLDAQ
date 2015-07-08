@@ -12,7 +12,7 @@ class CBaseMediator;
 class Main
 {
 private:
-  CTransformFactory m_factory;
+  DAQ::Transform::CTransformFactory m_factory;
   std::unique_ptr<CBaseMediator> m_pMediator;
 
 public:

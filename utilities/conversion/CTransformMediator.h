@@ -27,6 +27,10 @@
 class CDataSource;
 class CDataSink;
 
+namespace DAQ {
+  namespace Transform {
+
+
 /**! \brief A mediator that never quits unless count is satisfied or stream ends.
  *
  *  This provides a very basic mediator that will read from a source and then 
@@ -76,9 +80,15 @@ class CTransformMediator  : public CBaseMediator
   private:
     void updatePredicate();
     void processOne();
+
 };
+
+  } // end of Transform
+} // end of DAQ
 
 // include the implementation
 #include <CTransformMediator.hpp>
+
+
 
 #endif
