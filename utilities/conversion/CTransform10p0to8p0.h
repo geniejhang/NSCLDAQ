@@ -1,6 +1,7 @@
 #ifndef DAQ_TRANSFORM_CTRANSFORM10P0TO8P0_H
 #define DAQ_TRANSFORM_CTRANSFORM10P0TO8P0_H
 
+#include <cstdint>
 
 namespace NSCLDAQ10 {
   class CRingItem;
@@ -25,6 +26,10 @@ namespace DAQ {
       using InitialType = NSCLDAQ10::CRingItem;
       using FinalType   = V8::CRawBuffer;
 
+    private:
+      std::uint32_t m_seq;
+      std::uint16_t m_run;
+
     public:
       CTransform10p0to8p0();
 
@@ -38,6 +43,7 @@ namespace DAQ {
 
     private:
       std::uint16_t mapControlType(std::uint16_t type) const;
+      std::uint16_t mapTextType(std::uint16_t type) const;
     };
     
   } // namespace Transform

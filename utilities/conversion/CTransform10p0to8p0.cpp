@@ -8,6 +8,9 @@
 #include <NSCLDAQ8/CControlBuffer.h>
 #include <NSCLDAQ10/CPhysicsEventItem.h>
 #include <NSCLDAQ8/CPhysicsEventBuffer.h>
+#include <NSCLDAQ10/CRingTextItem.h>
+#include <NSCLDAQ8/CTextBuffer.h>
+#include <NSCLDAQ8/format_cast.h>
 
 namespace DAQ {
   namespace Transform {
@@ -20,36 +23,46 @@ namespace DAQ {
     {
 
       switch (item.type()) {
-        case NSCLDAQ10::INCREMENTAL_SCALER:
-          return transformIncrScaler(item);
+        case NSCLDAQ10::INCREMENTAL_SCALERS:
+          return V8::format_cast<V8::CRawBuffer>(transformIncrScaler(item));
           break;
         case NSCLDAQ10::TIMESTAMPED_NONINCR_SCALERS:
-          return transformNonIncrScaler(item);
+          return V8::format_cast<V8::CRawBuffer>(transformNonIncrScaler(item));
           break;
         case NSCLDAQ10::BEGIN_RUN:
         case NSCLDAQ10::END_RUN:
         case NSCLDAQ10::PAUSE_RUN:
         case NSCLDAQ10::RESUME_RUN:
-          return transformStateChange(item);
+          return V8::format_cast<V8::CRawBuffer>(transformStateChange(item));
           break;
         case NSCLDAQ10::PHYSICS_EVENT:
-          return transformPhysicsEvent(item);
+          return V8::format_cast<V8::CRawBuffer>(transformPhysicsEvent(item));
           break;
         case NSCLDAQ10::MONITORED_VARIABLES:
         case NSCLDAQ10::PACKET_TYPES:
-          return transformText(item);
+          return V8::format_cast<V8::CRawBuffer>(transformText(item));
           break;
         case NSCLDAQ10::EVB_FRAGMENT:
         case NSCLDAQ10::EVB_UNKNOWN_PAYLOAD: // these do not transform.
           break;
       default:
           std::string errmsg("CTransform10p0to8p0::dispatch()");
-          errmsg += "Unsupported type (" + to_string(item.getHeader().type) + ") found";
+          errmsg += "Unsupported type (" + to_string(item.type()) + ") found";
           throw std::runtime_error(errmsg);
           break;
       }
 
-      return NSCLDAQ10::CRingItem(0);
+      V8::bheader header;
+      header.nwds = 16;
+      header.nevt = 0;
+      header.type = V8::VOID;
+      header.ssignature = V8::BOM16;
+      header.lsignature = V8::BOM32;
+      Buffer::ByteBuffer buffer;
+      buffer << header;
+      DAQ::V8::CRawBuffer voidBuffer;
+      voidBuffer.setBuffer(buffer);
+      return voidBuffer;
     }
 
 
@@ -75,7 +88,26 @@ namespace DAQ {
 
     V8::CTextBuffer CTransform10p0to8p0::transformText(const InitialType &item)
     {
-      return V8::CTextBuffer();
+      const NSCLDAQ10::CRingTextItem& v10item = dynamic_cast<const NSCLDAQ10::CRingTextItem&>(item);
+
+      V8::bheader header;
+      header.nwds = v10item.size()/sizeof(uint16_t);
+      header.type = mapTextType(item.type());
+      header.nevt = v10item.getStringCount();
+      header.buffmt = V8::StandardVsn;
+      header.ssignature = V8::BOM16;
+      header.lsignature = V8::BOM32;
+      header.run = m_run;
+      header.seq = m_seq;
+      header.cpu = 0;
+      header.nbit = 0;
+      header.nlam = 0;
+      header.cks = 0;
+      header.unused[0] = 0;
+      header.unused[1] = 0;
+
+
+      return V8::CTextBuffer(header, v10item.getStrings());
     }
 
     std::uint16_t CTransform10p0to8p0::mapControlType(std::uint16_t type) const
@@ -97,6 +129,26 @@ namespace DAQ {
           break;
         default:
           throw std::runtime_error("CTransform10p0to8p0::mapControlType(std::uint16_t) unknown type provided");
+          break;
+      }
+
+      return v8type;
+
+    }
+
+    std::uint16_t CTransform10p0to8p0::mapTextType(std::uint16_t type) const
+    {
+      std::uint16_t v8type;
+
+      switch(type) {
+        case NSCLDAQ10::MONITORED_VARIABLES:
+          v8type = V8::RUNVARBF;
+          break;
+        case NSCLDAQ10::PACKET_TYPES:
+          v8type = V8::PKTDOCBF;
+          break;
+        default:
+          throw std::runtime_error("CTransform10p0to8p0::mapTextType(std::uint16_t) unknown type provided");
           break;
       }
 
