@@ -35,8 +35,11 @@ namespace DAQ
           return T(rawBuffer);
 
         } else {
-          // cannot cast from a specific buffer to another specific buffer
-          throw std::bad_cast();
+          // In case someone tries to cast from a type to the same type.
+          // This will either succeed or throw a std::bad_cast.
+          const T& specificType = dynamic_cast<const T&>(anyBuffer);
+
+          return T(specificType);
         }
       }
 
