@@ -27,6 +27,7 @@ nscldaq8_HEADERS = DataFormatV8.h \
                     format_cast.h
 
 libdataformatv8_la_CXXFLAGS = -I@srcdir@ \
+                              -I@top_srcdir@/utilities/format \
                               -I@top_srcdir@/utilities/Buffer \
                                @LIBTCLPLUS_CFLAGS@
 
@@ -52,6 +53,7 @@ unittests_LDADD	= $(CPPUNIT_LDFLAGS) 		\
                   @LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS= -I@srcdir@ \
+										-I@top_srcdir@/utilities/format \
                     -I@top_srcdir@/utilities/Buffer \
                     @CPPUNIT_CFLAGS@ \
                     @LIBTCLPLUS_CFLAGS@ \
