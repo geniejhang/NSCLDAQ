@@ -9,6 +9,13 @@ namespace DAQ {
     CTextBuffer::CTextBuffer()
       : m_header(), m_strings()
     {
+      m_header.type = RUNVARBF;
+    }
+
+    CTextBuffer::CTextBuffer(BufferTypes type)
+      : m_header(), m_strings()
+    {
+      m_header.type = type;
     }
 
     CTextBuffer::CTextBuffer(const bheader &header,
@@ -56,6 +63,7 @@ namespace DAQ {
 
       bheader header = m_header;
       header.nwds = nWords;
+      header.nevt = m_strings.size();
 
       Buffer::ByteBuffer buf;
       buf << header;
@@ -87,6 +95,31 @@ namespace DAQ {
       }
 
       return totalBytes;
+    }
+
+    bool CTextBuffer::appendString(const string &str)
+    {
+      std::uint32_t nBytes = totalBytes() + 16*sizeof(std::uint16_t); // body + header
+
+      std::size_t strLength = str.size();
+      if ( (strLength%2) == 0 ) strLength += 2;
+      else                      strLength += 1;
+
+      bool successfullyAppended = true;
+      if (nBytes + strLength > gBufferSize ) {
+        successfullyAppended = false;
+      } else {
+        successfullyAppended = true;
+        m_strings.push_back(str);
+      }
+
+      return successfullyAppended;
+    }
+
+    std::size_t CTextBuffer::getNBytesFree() const
+    {
+      std::uint32_t nBytesOccupied = totalBytes() + 16*sizeof(std::uint16_t); // body + header
+      return gBufferSize - nBytesOccupied;
     }
 
     std::uint16_t CTextBuffer::extractTotalShorts(const Buffer::ByteBuffer &buffer, bool needsSwap) const

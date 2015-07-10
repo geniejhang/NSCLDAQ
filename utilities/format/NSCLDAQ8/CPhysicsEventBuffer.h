@@ -96,7 +96,9 @@ namespace DAQ {
 
     public:
       // Canonical methods
-      CPhysicsEventBuffer() : m_header(), m_body(), m_mustSwap(false) {}
+      CPhysicsEventBuffer();
+      CPhysicsEventBuffer(const bheader& header,
+                          const Buffer::ByteBuffer& rawBody);
       CPhysicsEventBuffer(const bheader& header,
                           const std::vector<std::uint16_t>& body,
                           bool mustSwap=false);
@@ -121,6 +123,10 @@ namespace DAQ {
 
 
       void toRawBuffer(CRawBuffer &buffer) const;
+
+      bool appendEvent(std::shared_ptr<CPhysicsEvent> pEvent);
+
+      std::size_t getNBytesFree() const;
 
      private:
       void parseBodyData(Buffer::ByteBuffer::const_iterator beg,

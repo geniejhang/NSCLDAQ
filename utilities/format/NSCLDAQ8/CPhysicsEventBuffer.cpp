@@ -44,6 +44,31 @@ namespace DAQ {
 
     ////////////////////////////////////////////////////////////////////////////
 
+    CPhysicsEventBuffer::CPhysicsEventBuffer()
+      : m_header(), m_body(), m_mustSwap(false)
+    {
+     m_header.type   = DATABF;
+     m_header.buffmt = StandardVsn;
+     m_header.nwds = 16;
+     m_header.nevt = 0;
+     m_header.ssignature = BOM16;
+     m_header.lsignature = BOM32;
+     m_header.cks  = 0;
+     m_header.nlam = 0;
+     m_header.nbit = 0;
+     m_header.cpu  = 0;
+     m_header.seq  = 0;
+     m_header.run  = 0;
+     m_header.unused[0] = 0;
+     m_header.unused[1] = 0;
+    }
+
+    CPhysicsEventBuffer::CPhysicsEventBuffer(const bheader &header, const Buffer::ByteBuffer &rawBody)
+      : m_header(header), m_body(), m_mustSwap(m_header.mustSwap())
+    {
+      parseBodyData(rawBody.begin(), rawBody.end());
+    }
+
     CPhysicsEventBuffer::CPhysicsEventBuffer(const bheader &header,
                                              const std::vector<std::uint16_t>& body,
                                              bool mustSwap)
@@ -152,7 +177,7 @@ namespace DAQ {
       std::size_t nWords = computeNWords();
       if (nWords*sizeof(std::uint16_t) > gBufferSize) {
         std::string errmsg("DAQ::V8::CPhysicsEventBuffer::toRawBuffer(CRawBuffer&) ");
-        errmsg += "Total event buffer size (" + std::to_string(nWords) + ") ";
+        errmsg += "Total event buffer size (" + std::to_string(nWords*sizeof(std::uint16_t)) + ") ";
         errmsg += "cannot fit in buffer (gBufferSize=" + std::to_string(gBufferSize) + ")";
         throw std::runtime_error(errmsg);
       }
@@ -172,6 +197,29 @@ namespace DAQ {
 
       buffer.setBuffer(newbuf);
 
+    }
+
+    bool CPhysicsEventBuffer::appendEvent(std::shared_ptr<CPhysicsEvent> pEvent)
+    {
+      bool successfullyAppended = true;
+
+      std::size_t resultingNWords = computeNWords() + pEvent->getNTotalShorts();
+      std::size_t resultingNBytes = resultingNWords*sizeof(std::uint16_t);
+
+      if (resultingNBytes > gBufferSize) {
+        successfullyAppended = false;
+      } else {
+        successfullyAppended = true;
+        m_body.push_back(pEvent);
+      }
+
+      return successfullyAppended;
+    }
+
+    std::size_t CPhysicsEventBuffer::getNBytesFree() const
+    {
+      std::size_t nBytesOccuppied = computeNWords()*sizeof(std::uint16_t);
+      return (gBufferSize-nBytesOccuppied);
     }
 
     void CPhysicsEventBuffer::swapBytesOfHeaderInPlace(bheader &header) const
@@ -203,6 +251,7 @@ namespace DAQ {
 
     void CPhysicsEventBuffer::updateHeader(bheader& header) const
     {
+      header.type = static_cast<std::uint16_t>(DATABF);
       header.nwds = static_cast<std::uint16_t>(computeNWords());
       header.nevt = static_cast<std::uint16_t>(m_body.size());
     }

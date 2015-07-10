@@ -47,6 +47,9 @@ public:
   CPPUNIT_TEST(toRawBuffer_0);
   CPPUNIT_TEST(toRawBuffer_1);
   CPPUNIT_TEST(totalBytes_0);
+  CPPUNIT_TEST(appendString_0);
+  CPPUNIT_TEST(appendString_1);
+  CPPUNIT_TEST(appendString_2);
   CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -58,7 +61,7 @@ public:
     m_header.cks  = 0;
     m_header.run  = 1;
     m_header.seq  = 2;
-    m_header.nevt = 3;
+    m_header.nevt = 4;
     m_header.nlam = 0;
     m_header.cpu  = 0;
     m_header.nbit = 0;
@@ -151,7 +154,7 @@ public:
     headr.cks  = 0;
     headr.run  = 0x0100;
     headr.seq  = 0x02000000;
-    headr.nevt = 0x0300;
+    headr.nevt = 0x0400;
     headr.nlam = 0;
     headr.cpu  = 0;
     headr.nbit = 0;
@@ -204,6 +207,7 @@ public:
 
     // Because we have create m_buffer using the m_rawBuf, we sure better find that
     // we get an identical buffer back using toRawBuffer
+
     CPPUNIT_ASSERT_EQUAL_MESSAGE("toRawBuffer should fill the right stuff",
                                  m_rawBuf.getBuffer(),
                                  rawBuf.getBuffer());
@@ -226,6 +230,41 @@ public:
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Computing total bytes in body is correct",
                                  std::uint16_t(4), text.totalShorts());
   }
+
+
+void appendString_0 () {
+  DAQ::V8::Test::ChangeBufferSize bSizeForScope(35);
+
+  CTextBuffer test(DAQ::V8::RUNVARBF);
+  bool result = test.appendString("There was no way!");
+
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("Insufficient space in buffer for new string causes failure",
+                               false, result);
+}
+
+void appendString_1 () {
+    DAQ::V8::Test::ChangeBufferSize bSizeForScope(38);
+
+    CTextBuffer test(DAQ::V8::RUNVARBF);
+    bool result = test.appendString("A");
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Sufficient space in buffer for new string causes success",
+                                 true, result);
+
+}
+
+void appendString_2 () {
+    DAQ::V8::Test::ChangeBufferSize bSizeForScope(38);
+
+    CTextBuffer test(DAQ::V8::RUNVARBF);
+    std::string msg("A");
+    test.appendString(msg);
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Sufficient space in buffer for new string causes success",
+                                 msg, test.getStrings().at(0));
+
+}
+
 
 };
 

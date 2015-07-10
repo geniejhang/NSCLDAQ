@@ -118,4 +118,12 @@ CPhysicsEventItem::toString() const
 
 }
 
+DAQ::Buffer::ByteBuffer CPhysicsEventItem::getBodyData() const
+{
+  auto pBegin = reinterpret_cast<const char*>(getBodyPointer());
+  auto pEnd   = pBegin + getBodySize();
+
+  return DAQ::Buffer::ByteBuffer(pBegin, pEnd);
+}
+
 } // end of namespace

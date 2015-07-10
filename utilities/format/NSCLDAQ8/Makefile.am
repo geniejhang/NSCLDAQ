@@ -8,7 +8,8 @@ libdataformatv8_la_SOURCES = bheader.cpp \
                                 CPhysicsEventBodyParser.cpp \
                                 CStandardBodyParser.cpp \
                                 CControlBuffer.cpp \
-                                CTextBuffer.cpp
+                                CTextBuffer.cpp \
+                                CVoidBuffer.cpp
 
 nscldaq8dir = @includedir@/NSCLDAQ8
 
@@ -22,7 +23,8 @@ nscldaq8_HEADERS = DataFormatV8.h \
                     CStandardBodyParser.h \
                     CControlBuffer.h \
                     CTextBuffer.h \
-										format_cast.h
+                    CVoidBuffer.h \
+                    format_cast.h
 
 libdataformatv8_la_CXXFLAGS = -I@srcdir@ \
                               -I@top_srcdir@/utilities/Buffer \
@@ -40,7 +42,8 @@ unittests_SOURCES	= TestRunner.cpp \
                             scalerbuffertest.cpp \
                             format_casttest.cpp \
                             rawbuffertest.cpp \
-                            ctextbuffertest.cpp
+                            ctextbuffertest.cpp \
+                            cvoidbuffertest.cpp
 
 
 unittests_LDADD	= $(CPPUNIT_LDFLAGS) 		\

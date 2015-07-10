@@ -424,8 +424,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Scaler);
 
         void Control_1()
         {
-          cout << m_title.size() << endl;
-          cout << v10item.getTitle().size() << endl;
           CPPUNIT_ASSERT_EQUAL_MESSAGE("Title remains the same",
                                        m_title, v10item.getTitle());
         }

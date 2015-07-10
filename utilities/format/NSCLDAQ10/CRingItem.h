@@ -74,7 +74,9 @@ public:
   size_t getStorageSize() const;
   size_t getBodySize()    const;
   void*  getBodyPointer();
+  const char* getBodyPointer() const;
   void*  getBodyCursor();
+  const char* getBodyCursor() const;
   _RingItem*  getItemPointer();
   const _RingItem* getItemPointer() const;
 

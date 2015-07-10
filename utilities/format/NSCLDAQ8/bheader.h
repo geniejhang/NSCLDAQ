@@ -46,6 +46,8 @@ namespace DAQ
       std::uint16_t	tenths;			/* 0-9.			*/     /* 3 */
     };
 
+    extern bftime to_bftime(const std::time_t& time);
+
     /*		Structures which describe the final output data buffers */
 
     struct bheader				/* Data buffer header	*/
@@ -63,6 +65,12 @@ namespace DAQ
       std::uint16_t ssignature;		/* Short byte order signature */
       std::uint32_t lsignature;		/* Long byte order signature  */
       std::uint16_t	unused[2];		/* Pad out to 16 words.	    */
+
+      bheader();
+      bheader(std::uint16_t nwds, std::uint16_t type, std::uint16_t cks, std::uint16_t run,
+              std::uint32_t seq, std::uint16_t nevt, std::uint16_t nlam, std::uint16_t cpu,
+              std::uint16_t nbit, std::uint16_t buffmt, std::uint16_t ssignature,
+              std::uint32_t lsignature, std::uint16_t unused0, std::uint16_t unused1);
 
       bool mustSwap() const {
         return (lsignature != BOM32);

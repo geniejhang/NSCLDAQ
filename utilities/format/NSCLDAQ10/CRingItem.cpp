@@ -173,6 +173,12 @@ CRingItem::getBodyPointer()
 {
   return m_pItem->s_body;
 }
+
+const char*
+CRingItem::getBodyPointer() const
+{
+  return reinterpret_cast<const char*>(m_pItem->s_body);
+}
 /*!
    \return void*
    \retval Pointer to the next insertion point of the body
@@ -182,6 +188,12 @@ CRingItem::getBodyCursor()
 {
   return m_pCursor;
 }
+const char*
+CRingItem::getBodyCursor() const
+{
+  return reinterpret_cast<const char*>(m_pCursor);
+}
+
 /*!
    \return void*
    \retval Pointer to the body.  To be usually used by derived classes but...

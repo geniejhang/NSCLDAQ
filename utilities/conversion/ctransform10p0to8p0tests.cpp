@@ -94,10 +94,10 @@ public:
   }
 
 protected:
-//  void scaler_0() {
-//    CPPUNIT_ASSERT_EQUAL_MESSAGE("Type transforms to SCALERBF",
-//                                 V8::SCALERBF, m_item.getHeader().type);
-//  }
+  void scaler_0() {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Type transforms to SCALERBF",
+                                 V8::SCALERBF, m_item.getHeader().type);
+  }
 
 //  void scaler_1() {
 //    CPPUNIT_ASSERT_EQUAL_MESSAGE("Interval offset begin value is preserved",
@@ -151,7 +151,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Scaler);
         CPPUNIT_TEST_SUITE_END();
 
     public:
-        V8::CTextBuffer                v8item;
+        V8::CRawBuffer                v8item;
         NSCLDAQ10::CRingTextItem       v10item;
         Transform::CTransform10p0to8p0 m_transform;
         std::vector<std::string>       m_strings;
@@ -168,6 +168,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Scaler);
 
         void setUp()
         {
+          V8::gBufferSize = 70;
           m_transform = Transform::CTransform10p0to8p0();
 
           m_strings = {"why", "did", "the", "chicken", "cross", "the", "road?"};
@@ -181,7 +182,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Scaler);
         }
 
         void tearDown() {
-
+          V8::gBufferSize = 8192;
         }
 
         void Text_0()
@@ -244,7 +245,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Scaler);
 
         void Text_10()
         {
-          V8::CTextBuffer textBuf(v8item);
+          V8::CTextBuffer textBuf = V8::format_cast<V8::CTextBuffer>(v8item);
 
           CPPUNIT_ASSERT_EQUAL_MESSAGE("Strings will be copied in unaltered",
                                        m_strings, textBuf.getStrings());
@@ -256,9 +257,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Scaler);
 
           NSCLDAQ10::CRingTextItem text(NSCLDAQ10::PACKET_TYPES, m_strings, m_offsetTime, tstamp);
 
+          m_transform = DAQ::Transform::CTransform10p0to8p0();
           v8item = m_transform( text );
 
-          V8::CTextBuffer buffer(v8item);
+          V8::CTextBuffer buffer = V8::format_cast<V8::CTextBuffer>(v8item);
 
           CPPUNIT_ASSERT_EQUAL_MESSAGE("PACKET_TYPES --> PKTDOCBF",
                                        V8::PKTDOCBF, buffer.type());
@@ -267,255 +269,550 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Scaler);
     };
     CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Text);
 
+    class CTransform10p0to8p0Tests_MultiText : public CppUnit::TestFixture
+    {
 
-//    class CTransform10p0to8p0Tests_PhysicsEvent : public CppUnit::TestFixture
-//    {
+        public:
+        CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_MultiText);
+        CPPUNIT_TEST(MultiText_0);
+        CPPUNIT_TEST(MultiText_1);
+        CPPUNIT_TEST(MultiText_2);
+        CPPUNIT_TEST_SUITE_END();
 
-//        public:
-//        CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_PhysicsEvent);
-//        CPPUNIT_TEST(Event_0);
-//        CPPUNIT_TEST(Event_1);
-//        CPPUNIT_TEST(Event_2);
-//        CPPUNIT_TEST(Event_3);
-//        CPPUNIT_TEST_SUITE_END();
+    public:
+        V8::CRawBuffer                 v8item;
+        NSCLDAQ10::CRingTextItem       v10item;
+        Transform::CTransform10p0to8p0 m_transform;
+        std::vector<std::string>       m_strings;
+        std::uint32_t                  m_offsetTime;
 
-//    public:
-//        V8::bheader m_header;
-//        NSCLDAQ10::CPhysicsEventItem v10item;
-//        Transform::CTransform10p0to8p0 m_transform;
-//        Buffer::ByteBuffer m_body;
+    public:
+        // We need to define a default constructor b/c the CRingTextItem classes
+        // do not define a default constructor.
+        CTransform10p0to8p0Tests_MultiText()
+          : v8item(), v10item(NSCLDAQ10::MONITORED_VARIABLES),
+            m_transform(),
+            m_strings() ,
+            m_offsetTime() {}
 
-//    public:
-//        // We need to define a default constructor b/c the CRingTextItem classes
-//        // do not define a default constructor.
-//        CTransform10p0to8p0Tests_PhysicsEvent()
-//          : v10item(8192),
-//            m_transform(),
-//            m_body() {}
+        void setUp()
+        {
+          V8::gBufferSize = 43; // just big enough to fit two 3-letter words each buffer
+          m_transform = Transform::CTransform10p0to8p0();
 
-//        void setUp()
-//        {
-//          m_transform = Transform::CTransform10p0to8p0();
+          m_strings = {"why", "did", "the","cat", "nap"};
 
-//          m_header.type = V8::DATABF;
-//          m_header.buffmt = V8::StandardVsn;
-//          m_header.nevt = 1;
-//          m_header.nwds = 18; // i think this includes the size of the header?
-//          m_header.ssignature = V8::BOM16;
-//          m_header.lsignature = V8::BOM32;
+          std::time_t tstamp = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() );
 
-//          std::vector<std::uint16_t> body({2, 1234});
+          v10item = NSCLDAQ10::CRingTextItem(NSCLDAQ10::MONITORED_VARIABLES,
+                                        m_strings, m_offsetTime, tstamp);
+        }
 
-//        m_body = Buffer::ByteBuffer();
-//          m_body << body;
+        void tearDown() {
 
-//          V8::CPhysicsEventBuffer event(m_header, body);
+        }
 
-//          v10item = m_transform( V8::format_cast<V8::CRawBuffer>(event) );
-//        }
+        void MultiText_0()
+        {
+          v8item = m_transform( v10item );
 
-//        void tearDown() {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("First component of CRingTextItem should be returned",
+                                       std::uint16_t(V8::RUNVARBF), v8item.getHeader().type);
+        }
 
-//        }
+        void MultiText_1()
+        {
+          v8item = m_transform( v10item );
 
-//        void Event_0()
-//        {
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("DATABF --> PHYSICS_EVENT",
-//                                       NSCLDAQ10::PHYSICS_EVENT, v10item.type());
-//        }
+          V8::CTextBuffer textBuf = V8::format_cast<V8::CTextBuffer>(v8item);
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("The returned buffer should contain first 2 words only",
+                                       std::size_t(2), textBuf.getStrings().size());
+        }
 
-//        void Event_1()
-//        {
-//          const char* pBody =reinterpret_cast<const char*>(v10item.getBodyPointer());
+        void MultiText_2()
+        {
+          v8item = m_transform( v10item );
 
-//          // copy the body into something safer and easier to work with
-//          Buffer::ByteBuffer body(pBody, pBody+v10item.getBodySize());
+          V8::CTextBuffer textBuf = V8::format_cast<V8::CTextBuffer>(v8item);
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("After the first is returned, there should be two ready to be returned",
+                                       std::size_t(2), m_transform.getStagedTextBuffers().size());
+        }
 
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("Physics event body remains the same",
-//                                       m_body, body);
-//        }
-
-//        void adaptSetupForMultipleEvents() {
-//          std::vector<std::uint16_t> body({2, 0x1234, 2, 0x5678, 2, 0x9abc});
-
-//          m_header.nevt = 3;
-//          m_header.nwds = 22;
-
-//          m_body = Buffer::ByteBuffer();
-//          m_body << body;
-
-//          V8::CPhysicsEventBuffer event(m_header, body);
-
-//          v10item = m_transform( V8::format_cast<V8::CRawBuffer>(event) );
-//        }
-
-//        void Event_2()
-//        {
-//          adaptSetupForMultipleEvents();
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("2 more physics events are present",
-//                                       std::size_t(2), m_transform.getRemainingEvents().size());
-//        }
+    };
+    CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_MultiText);
 
 
-//        void Event_3()
-//        {
-//          adaptSetupForMultipleEvents();
+    class CTransform10p0to8p0Tests_PhysicsEvent : public CppUnit::TestFixture
+    {
 
-//          v10item = m_transform.getRemainingEvents().front();
+        public:
+        CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_PhysicsEvent);
+        CPPUNIT_TEST(Event_0);
+        CPPUNIT_TEST(Event_1);
+        CPPUNIT_TEST(Event_2);
+        CPPUNIT_TEST(Event_3);
+        CPPUNIT_TEST(Event_4);
+        CPPUNIT_TEST(Event_5);
+        CPPUNIT_TEST(Event_6);
+        CPPUNIT_TEST(Event_7);
+        CPPUNIT_TEST(Event_8);
+        CPPUNIT_TEST(Event_9);
+        CPPUNIT_TEST(Event_10);
+        CPPUNIT_TEST(Event_11);
+        CPPUNIT_TEST_SUITE_END();
 
-//          const char* pBody = reinterpret_cast<const char*>(v10item.getBodyPointer());
+    public:
+        V8::CRawBuffer        v8item;
+        Transform::CTransform10p0to8p0 m_transform;
+        Buffer::ByteBuffer             m_bodyData;
 
-//          // copy the body into something safer and easier to work with
-//          Buffer::ByteBuffer bodyBytes(pBody, pBody+v10item.getBodySize());
+    public:
+        // We need to define a default constructor b/c the CRingTextItem classes
+        // do not define a default constructor.
+        CTransform10p0to8p0Tests_PhysicsEvent()
+          : v8item(),
+            m_transform(),
+            m_bodyData() {}
 
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("Physics event body remains the same",
-//                                       Buffer::ByteBuffer({2, 0, 0x78, 0x56}), bodyBytes );
-//        }
+        void setUp()
+        {
 
-//    };
-//    CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_PhysicsEvent);
+          V8::gBufferSize = 40; // select a size that will automatically flush
+          m_transform = Transform::CTransform10p0to8p0();
 
-//    class CTransform10p0to8p0Tests_Control : public CppUnit::TestFixture
-//    {
+          NSCLDAQ10::CPhysicsEventItem event(NSCLDAQ10::PHYSICS_EVENT, 8192);
+          m_bodyData << std::vector<std::uint16_t>({4, 0, 1, 2});
 
-//        public:
-//        CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_Control);
-//        CPPUNIT_TEST(Control_0);
-//        CPPUNIT_TEST(Control_1);
-//        CPPUNIT_TEST(Control_2);
-//        CPPUNIT_TEST(Control_3);
-//        CPPUNIT_TEST(Control_4);
-//        CPPUNIT_TEST(Control_5);
-//        CPPUNIT_TEST(Control_6);
-//        CPPUNIT_TEST(Control_7);
-//        CPPUNIT_TEST_SUITE_END();
+          event.fillBody(m_bodyData);
 
-//    public:
-//        V8::bheader m_header;
-//        NSCLDAQ10::CRingStateChangeItem v10item;
-//        Transform::CTransform10p0to8p0 m_transform;
-//        std::uint32_t m_offset;
-//        std::string m_title;
-//        DAQ::V8::bftime m_tstruct;
 
-//    public:
-//        // We need to define a default constructor b/c the CRingTextItem classes
-//        // do not define a default constructor.
-//        CTransform10p0to8p0Tests_Control()
-//          : v10item(NSCLDAQ10::BEGIN_RUN),
-//            m_transform()
-//        {}
+          v8item = m_transform( event );
 
-//        void setUp()
-//        {
-//          m_transform = Transform::CTransform10p0to8p0();
+        }
 
-//          m_header.type = V8::BEGRUNBF;
-//          m_header.buffmt = V8::StandardVsn;
-//          m_header.nwds = 65;
-//          m_header.nevt = 0;
-//          m_header.run = 1357;
-//          m_header.ssignature = V8::BOM16;
-//          m_header.lsignature = V8::BOM32;
+        void tearDown() {
+          V8::gBufferSize = 8192;
+        }
 
-//          m_title = "a title for you and me";
-//          m_title.resize(80, ' '); // needed b/c CControlBuffer stretches title to 80 chars
-//                                   // we must do the same if we are to use it to compare
+        void Event_0()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("PHYSICS_EVENT --> DATABF",
+                                       V8::DATABF,
+                                       V8::BufferTypes(v8item.getHeader().type));
+        }
 
-//          m_offset = 0x12345678;
+        void Event_1()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("Checksum is set to 0",
+                                       std::uint16_t(0), v8item.getHeader().cks);
+        }
 
-//          m_tstruct = {1, 2, 1971, 3, 4, 5, 6};
+        void Event_2()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("Run number is set to 0",
+                                       std::uint16_t(0), v8item.getHeader().run);
+        }
 
-//          V8::CControlBuffer ctlBuf(m_header, m_title, m_offset, m_tstruct);
+        void Event_3()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("nevt will be set to 1",
+                                       std::uint16_t(1), v8item.getHeader().nevt);
+        }
 
-//          v10item = m_transform( V8::format_cast<V8::CRawBuffer>(ctlBuf) );
-//        }
+        void Event_4()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("processor number set to 0",
+                                       std::uint16_t(0), v8item.getHeader().cpu);
 
-//        void tearDown() {
+        }
+        void Event_5()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("nbit set to 0",
+                                       std::uint16_t(0), v8item.getHeader().nbit);
+        }
 
-//        }
+        void Event_6()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("buffmt set to 5",
+                                       std::uint16_t(5), v8item.getHeader().buffmt);
+        }
 
-//        void Control_0()
-//        {
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("BEGRUNBF --> BEGIN_RUN",
-//                                       NSCLDAQ10::BEGIN_RUN, v10item.type());
-//        }
+        void Event_7()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("nlam set to 0",
+                                       std::uint16_t(0), v8item.getHeader().nlam);
+        }
 
-//        void Control_1()
-//        {
-//          cout << m_title.size() << endl;
-//          cout << v10item.getTitle().size() << endl;
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("Title remains the same",
-//                                       m_title, v10item.getTitle());
-//        }
+        void Event_8()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("ssignature set to 0x0102",
+                                       std::uint16_t(0x0102),
+                                       v8item.getHeader().ssignature);
+        }
 
-//        void Control_2()
-//        {
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("Offset remains the same",
-//                                       m_offset, v10item.getElapsedTime());
-//        }
+        void Event_9()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("lsignature set to 0x0102",
+                                       std::uint32_t(0x01020304),
+                                       v8item.getHeader().lsignature);
+        }
 
-//        void Control_3()
-//        {
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("Run number remains the same",
-//                                       static_cast<std::uint32_t>(m_header.run),
-//                                       v10item.getRunNumber());
-//        }
+        void Event_10()
+        {
+          V8::CPhysicsEventBuffer evtBuf = V8::format_cast<V8::CPhysicsEventBuffer>(v8item);
 
-//        void Control_4()
-//        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("PhysicsEventBuffer contains only 1 event",
+                                       std::size_t(1), evtBuf.size());
+        }
 
-//          std::tm calTime;
-//          calTime.tm_mon  = m_tstruct.month;
-//          calTime.tm_mday = m_tstruct.day;
-//          calTime.tm_year = m_tstruct.year - 1900;
-//          calTime.tm_hour = m_tstruct.hours;
-//          calTime.tm_min  = m_tstruct.min;
-//          calTime.tm_sec  = m_tstruct.sec;
+        void Event_11()
+        {
+          V8::CPhysicsEventBuffer evtBuf = V8::format_cast<V8::CPhysicsEventBuffer>(v8item);
 
-//          std::time_t time = std::mktime(&calTime);
-//          std::time_t time2 = std::mktime(&calTime);
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("Timestamp converts as expected",
-//                                       time2, time);
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("Timestamp converts as expected",
-//                                       time, v10item.getTimestamp());
-//        }
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("PhysicsEvent remains the same",
+                                       m_bodyData, evtBuf.at(0)->getBuffer());
+        }
 
-//        void Control_5 () {
-//          m_header.type = V8::ENDRUNBF;
 
-//          V8::CControlBuffer ctlBuf(m_header, m_title, m_offset, m_tstruct);
+    };
+    CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_PhysicsEvent);
 
-//          v10item = m_transform( V8::format_cast<V8::CRawBuffer>(ctlBuf) );
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("ENDRUNBF --> END_RUN",
-//                                       NSCLDAQ10::END_RUN, v10item.type());
+    class CTransform10p0to8p0Tests_MultiPhysicsEvent : public CppUnit::TestFixture
+    {
+    public:
+    CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_MultiPhysicsEvent);
+    CPPUNIT_TEST(MultiEvent_0);
+    CPPUNIT_TEST(MultiEvent_1);
+    CPPUNIT_TEST(MultiEvent_2);
+    CPPUNIT_TEST(MultiEvent_3);
+    CPPUNIT_TEST_SUITE_END();
 
-//        }
+    private:
+      Buffer::ByteBuffer m_bodyData;
+      V8::CRawBuffer     v8item;
+      NSCLDAQ10::CPhysicsEventItem v10item;
+      Transform::CTransform10p0to8p0 m_transform;
 
-//        void Control_6 () {
-//          m_header.type = V8::PAUSEBF;
+    public:
+      CTransform10p0to8p0Tests_MultiPhysicsEvent() : m_bodyData(), v8item(),
+        v10item(NSCLDAQ10::PHYSICS_EVENT), m_transform() {}
 
-//          V8::CControlBuffer ctlBuf(m_header, m_title, m_offset, m_tstruct);
+      void setUp() {
+        V8::gBufferSize = 41; // select a size that will require two transforms to flush
+        m_transform = Transform::CTransform10p0to8p0();
 
-//          v10item = m_transform( V8::format_cast<V8::CRawBuffer>(ctlBuf) );
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("PAUSEBF --> PAUSE_RUN",
-//                                       NSCLDAQ10::PAUSE_RUN, v10item.type());
+        v10item = NSCLDAQ10::CPhysicsEventItem(NSCLDAQ10::PHYSICS_EVENT, 8192);
+        m_bodyData << std::vector<std::uint16_t>({4, 0, 1, 2});
 
-//        }
+        v10item.fillBody(m_bodyData);
 
-//        void Control_7 () {
-//          m_header.type = V8::RESUMEBF;
+      }
 
-//          V8::CControlBuffer ctlBuf(m_header, m_title, m_offset, m_tstruct);
+      void tearDown() {
+        V8::gBufferSize = 8192;
+      }
 
-//          v10item = m_transform( V8::format_cast<V8::CRawBuffer>(ctlBuf) );
-//          CPPUNIT_ASSERT_EQUAL_MESSAGE("RESUMEBF --> RESUME_RUN",
-//                                       NSCLDAQ10::RESUME_RUN, v10item.type());
+      void MultiEvent_0 () {
+        v8item = m_transform( v10item );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Return VOID when space remains in buffer",
+                                     std::uint16_t(V8::VOID), v8item.getHeader().type);
+      }
 
-//        }
+      void MultiEvent_1 () {
+        v8item = m_transform( v10item );
+        v8item = m_transform( v10item );
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Return DATABF when data needs to be flushed",
+                                     std::uint16_t(V8::DATABF), v8item.getHeader().type);
+      }
 
-//    };
-//    CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Control);
+      void MultiEvent_2 () {
+        v8item = m_transform( v10item );
+        v8item = m_transform( v10item );
+
+        V8::CPhysicsEventBuffer evtBuf = V8::format_cast<V8::CPhysicsEventBuffer>(v8item);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Return DATABF with expected number of physics events",
+                                     std::size_t(1), evtBuf.size() );
+      }
+
+      void MultiEvent_3 () {
+        v8item = m_transform( v10item );
+        v8item = m_transform( v10item );
+
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("After flush, transform object should have started a new physics event",
+                                     std::size_t(1), m_transform.getCurrentPhysicsBuffer().size() );
+      }
+    };
+    CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_MultiPhysicsEvent);
+
+
+    class CTransform10p0to8p0Tests_Control : public CppUnit::TestFixture
+    {
+
+        public:
+        CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_Control);
+        CPPUNIT_TEST(Control_0);
+        CPPUNIT_TEST(Control_1);
+        CPPUNIT_TEST(Control_2);
+        CPPUNIT_TEST(Control_3);
+        CPPUNIT_TEST(Control_4);
+        CPPUNIT_TEST(Control_5);
+        CPPUNIT_TEST(Control_6);
+        CPPUNIT_TEST(Control_7);
+        CPPUNIT_TEST(Control_8);
+        CPPUNIT_TEST(Control_9);
+        CPPUNIT_TEST(Control_10);
+        CPPUNIT_TEST(Control_11);
+        CPPUNIT_TEST(Control_12);
+        CPPUNIT_TEST(Control_13);
+        CPPUNIT_TEST(Control_14);
+        CPPUNIT_TEST(Control_15);
+        CPPUNIT_TEST(Control_16);
+        CPPUNIT_TEST(Control_17);
+        CPPUNIT_TEST(Control_18);
+        CPPUNIT_TEST(Control_19);
+        CPPUNIT_TEST(Control_20);
+        CPPUNIT_TEST(Control_21);
+        CPPUNIT_TEST(Control_22);
+        CPPUNIT_TEST(Control_23);
+        CPPUNIT_TEST(Control_24);
+        CPPUNIT_TEST_SUITE_END();
+
+    public:
+        V8::CRawBuffer v8item;
+        Transform::CTransform10p0to8p0 m_transform;
+        std::uint32_t m_offset;
+        std::string m_title;
+        std::uint16_t m_run;
+        std::tm     m_calTime;
+    public:
+        // We need to define a default constructor b/c the CRingTextItem classes
+        // do not define a default constructor.
+        CTransform10p0to8p0Tests_Control()
+          : v8item(),
+            m_transform()
+        {}
+
+        void setUp()
+        {
+          m_transform = Transform::CTransform10p0to8p0();
+
+          m_transform.setSequenceNumber(10);
+
+          m_title = "a title for you and me";
+
+          m_offset = 0x12345678;
+
+          m_run = 1357;
+
+          NSCLDAQ10::CRingStateChangeItem v10item = setUpType(NSCLDAQ10::BEGIN_RUN);
+
+          v8item = m_transform( v10item );
+        }
+
+        NSCLDAQ10::CRingStateChangeItem setUpType(std::uint16_t type)
+        {
+          using namespace std::chrono;
+          std::time_t now = system_clock::to_time_t(system_clock::now());
+          std::tm* pTime = std::localtime(&now);
+          if (pTime != nullptr) {
+            m_calTime = *pTime;
+          }
+
+          return NSCLDAQ10::CRingStateChangeItem(type, m_run, m_offset, now, m_title);
+        }
+
+        void tearDown() {
+
+        }
+
+        void Control_0()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("BEGIN_RUN --> BEGRUNBF",
+                                       std::uint16_t(V8::BEGRUNBF), v8item.getHeader().type);
+        }
+
+        void Control_1()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("Checksum is set to 0",
+                                       std::uint16_t(0), v8item.getHeader().cks);
+        }
+
+        void Control_2()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("Run number is mapped correctly",
+                                       std::uint16_t(1357), v8item.getHeader().run);
+        }
+
+        void Control_3()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("nevt will be set to 0",
+                                       std::uint16_t(0), v8item.getHeader().nevt);
+        }
+
+        void Control_4()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("processor number set to 0",
+                                       std::uint16_t(0), v8item.getHeader().cpu);
+
+        }
+        void Control_5()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("nbit set to 0",
+                                       std::uint16_t(0), v8item.getHeader().nbit);
+        }
+
+        void Control_6()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("buffmt set to 5",
+                                       std::uint16_t(5), v8item.getHeader().buffmt);
+        }
+
+        void Control_7()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("nlam set to 0",
+                                       std::uint16_t(0), v8item.getHeader().nlam);
+        }
+
+        void Control_8()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("ssignature set to 0x0102",
+                                       std::uint16_t(0x0102),
+                                       v8item.getHeader().ssignature);
+        }
+
+        void Control_9()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("lsignature set to 0x0102",
+                                       std::uint32_t(0x01020304),
+                                       v8item.getHeader().lsignature);
+        }
+
+        void Control_10()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("run number is stored by transformer",
+                                       std::uint16_t(1357),
+                                       m_transform.getCurrentRunNumber());
+        }
+
+        void Control_11()
+        {
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("sequence number known by transformer is used",
+                                       std::uint32_t(10),
+                                       v8item.getHeader().seq);
+        }
+
+        void Control_12()
+        {
+          auto ctlBuf = V8::format_cast<V8::CControlBuffer>(v8item);
+
+          m_title.resize(80, ' ');
+          CPPUNIT_ASSERT_MESSAGE("title will transform the same for first 79 characters",
+                                 std::equal(m_title.begin(), m_title.begin()+79, ctlBuf.getTitle().begin()));
+        }
+
+        void Control_13()
+        {
+          auto ctlBuf = V8::format_cast<V8::CControlBuffer>(v8item);
+
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("80th character of title will be a null terminator",
+                                 '\0', ctlBuf.getTitle().at(79));
+        }
+
+        void Control_14()
+        {
+          auto ctlBuf = V8::format_cast<V8::CControlBuffer>(v8item);
+
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("Time offset will remain unchanged",
+                                 m_offset, ctlBuf.getOffset());
+        }
+
+        void Control_15()
+        {
+          auto ctlBuf = V8::format_cast<V8::CControlBuffer>(v8item);
+
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("month will map according to std::localtime",
+                                       std::uint16_t(m_calTime.tm_mon), ctlBuf.getTimeStruct().month);
+        }
+
+        void Control_16()
+        {
+          auto ctlBuf = V8::format_cast<V8::CControlBuffer>(v8item);
+
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("day will map according to std::localtime",
+                                 std::uint16_t(m_calTime.tm_mday), ctlBuf.getTimeStruct().day);
+        }
+
+        void Control_17()
+        {
+          auto ctlBuf = V8::format_cast<V8::CControlBuffer>(v8item);
+
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("year will map according to std::localtime + 1900",
+                                 std::uint16_t(m_calTime.tm_year+1900), ctlBuf.getTimeStruct().year);
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("year will map according to std::localtime + 1900",
+                                 std::uint16_t(2015), ctlBuf.getTimeStruct().year);
+
+        }
+
+        void Control_18()
+        {
+          auto ctlBuf = V8::format_cast<V8::CControlBuffer>(v8item);
+
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("hours will map according to std::localtime",
+                                 std::uint16_t(m_calTime.tm_hour), ctlBuf.getTimeStruct().hours);
+        }
+
+        void Control_19()
+        {
+          auto ctlBuf = V8::format_cast<V8::CControlBuffer>(v8item);
+
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("minutes will map according to std::localtime",
+                                 std::uint16_t(m_calTime.tm_min), ctlBuf.getTimeStruct().min);
+        }
+
+        void Control_20()
+        {
+          auto ctlBuf = V8::format_cast<V8::CControlBuffer>(v8item);
+
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("seconds will map according to std::localtime",
+                                 std::uint16_t(m_calTime.tm_sec), ctlBuf.getTimeStruct().sec);
+        }
+
+        void Control_21()
+        {
+          auto ctlBuf = V8::format_cast<V8::CControlBuffer>(v8item);
+
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("tenths will become 0",
+                                 std::uint16_t(0), ctlBuf.getTimeStruct().tenths);
+        }
+
+        void Control_22()
+        {
+          auto v10item= setUpType(NSCLDAQ10::END_RUN);
+
+          v8item = m_transform( v10item );
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("END_RUN --> ENDRUNBF",
+                                 std::uint16_t(V8::ENDRUNBF), v8item.getHeader().type);
+        }
+
+        void Control_23()
+        {
+          auto v10item= setUpType(NSCLDAQ10::PAUSE_RUN);
+
+          v8item = m_transform( v10item );
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("PAUSE_RUN --> PAUSEBF",
+                                 std::uint16_t(V8::PAUSEBF), v8item.getHeader().type);
+        }
+
+        void Control_24()
+        {
+          auto v10item= setUpType(NSCLDAQ10::RESUME_RUN);
+
+          v8item = m_transform( v10item );
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("RESUME_RUN --> RESUMEBF",
+                                 std::uint16_t(V8::RESUMEBF), v8item.getHeader().type);
+        }
+    };
+    CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Control);
 
 
 

@@ -21,6 +21,7 @@ namespace DAQ {
 
     public:
       CTextBuffer();
+      CTextBuffer(BufferTypes type);
       CTextBuffer(const bheader& header, const std::vector<std::string>& strings);
       CTextBuffer(const CRawBuffer& rawBuf);
 
@@ -37,6 +38,10 @@ namespace DAQ {
 
       std::uint32_t totalBytes() const;
       std::uint16_t totalShorts() const;
+
+      bool appendString(const std::string& str);
+
+      std::size_t getNBytesFree() const;
 
     private:
       void validateTypeToConstructFrom();

@@ -7,15 +7,20 @@
 #include <NSCLDAQ10/CRingStateChangeItem.h>
 #include <NSCLDAQ8/CControlBuffer.h>
 #include <NSCLDAQ10/CPhysicsEventItem.h>
-#include <NSCLDAQ8/CPhysicsEventBuffer.h>
 #include <NSCLDAQ10/CRingTextItem.h>
 #include <NSCLDAQ8/CTextBuffer.h>
+#include <NSCLDAQ8/CVoidBuffer.h>
 #include <NSCLDAQ8/format_cast.h>
+
+#include <iostream>
+using namespace std;
 
 namespace DAQ {
   namespace Transform {
     
     CTransform10p0to8p0::CTransform10p0to8p0()
+      : m_run(0), m_seq(0), m_physicsBuffer( createNewPhysicsBuffer() ),
+        m_textBuffers()
     {
     }
 
@@ -36,11 +41,11 @@ namespace DAQ {
           return V8::format_cast<V8::CRawBuffer>(transformStateChange(item));
           break;
         case NSCLDAQ10::PHYSICS_EVENT:
-          return V8::format_cast<V8::CRawBuffer>(transformPhysicsEvent(item));
+          return transformPhysicsEvent(item);
           break;
         case NSCLDAQ10::MONITORED_VARIABLES:
         case NSCLDAQ10::PACKET_TYPES:
-          return V8::format_cast<V8::CRawBuffer>(transformText(item));
+          return transformText(item);
           break;
         case NSCLDAQ10::EVB_FRAGMENT:
         case NSCLDAQ10::EVB_UNKNOWN_PAYLOAD: // these do not transform.
@@ -78,36 +83,100 @@ namespace DAQ {
 
     V8::CControlBuffer CTransform10p0to8p0::transformStateChange(const InitialType &item)
     {
-      return V8::CControlBuffer();
+      auto& v10item = dynamic_cast<const NSCLDAQ10::CRingStateChangeItem&>(item);
+
+      m_run = v10item.getRunNumber();
+
+      V8::bheader header;
+      header.type = mapControlType(v10item.type());
+      header.run = m_run;
+      header.seq = m_seq;
+
+      std::string title = v10item.getTitle();
+      title.resize(80, ' ');
+      title.at(79) = '\0';
+
+      V8::CControlBuffer ctlBuf(header,
+                                title,
+                                v10item.getElapsedTime(),
+                                V8::to_bftime(v10item.getTimestamp()));
+
+      return ctlBuf;
     }
 
-    V8::CPhysicsEventBuffer CTransform10p0to8p0::transformPhysicsEvent(const InitialType &item)
+    V8::CRawBuffer CTransform10p0to8p0::transformPhysicsEvent(const InitialType &item)
     {
-      return V8::CPhysicsEventBuffer();
+      const NSCLDAQ10::CPhysicsEventItem& v10item
+                          = dynamic_cast<const NSCLDAQ10::CPhysicsEventItem&>(item);
+
+
+      Buffer::ByteBuffer body = v10item.getBodyData();
+      std::shared_ptr<V8::CPhysicsEvent> pEvent(new V8::CPhysicsEvent(body, v10item.mustSwap()));
+
+      V8::CRawBuffer returnBuffer;
+      if ( m_physicsBuffer.appendEvent(pEvent) ) {
+
+        if (m_physicsBuffer.getNBytesFree() == 0) {
+          returnBuffer = V8::format_cast<V8::CRawBuffer>(m_physicsBuffer);
+
+          m_physicsBuffer = createNewPhysicsBuffer();
+      } else {
+          returnBuffer = V8::format_cast<V8::CRawBuffer>(V8::CVoidBuffer());
+        }
+
+      } else {
+        returnBuffer = V8::format_cast<V8::CRawBuffer>(m_physicsBuffer);
+        V8::bheader header;
+
+        m_physicsBuffer = createNewPhysicsBuffer();
+        m_physicsBuffer.appendEvent(pEvent);
+      }
+
+      return returnBuffer;
     }
 
-    V8::CTextBuffer CTransform10p0to8p0::transformText(const InitialType &item)
+    V8::CRawBuffer CTransform10p0to8p0::transformText(const InitialType &item)
     {
       const NSCLDAQ10::CRingTextItem& v10item = dynamic_cast<const NSCLDAQ10::CRingTextItem&>(item);
 
-      V8::bheader header;
-      header.nwds = v10item.size()/sizeof(uint16_t);
-      header.type = mapTextType(item.type());
-      header.nevt = v10item.getStringCount();
-      header.buffmt = V8::StandardVsn;
-      header.ssignature = V8::BOM16;
-      header.lsignature = V8::BOM32;
-      header.run = m_run;
-      header.seq = m_seq;
-      header.cpu = 0;
-      header.nbit = 0;
-      header.nlam = 0;
-      header.cks = 0;
-      header.unused[0] = 0;
-      header.unused[1] = 0;
+      auto strings = v10item.getStrings();
+
+      appendNewTextBuffer(v10item.type());
+      //for ( auto& str : strings ) {
+      std::size_t nStr = strings.size();
+      for (std::size_t i=0; i<nStr; ++i) {
+        std::string& str = strings.at(i);
+
+        auto& textBuf = m_textBuffers.back();
+
+        if ( textBuf.appendString(str) ) { // insufficient space causes false to be returned
+          if (textBuf.getNBytesFree() == 0) {
+            appendNewTextBuffer(v10item.type());
+          }
+
+        } else {
+
+          appendNewTextBuffer(item.type());
+          m_textBuffers.back().appendString(str);
+        }
+      }
+
+      const V8::CTextBuffer textBuf = m_textBuffers.front();
+      m_textBuffers.erase(m_textBuffers.begin());
+
+      V8::CRawBuffer rawBuf = V8::format_cast<V8::CRawBuffer>(textBuf);
+      return rawBuf;
+    }
 
 
-      return V8::CTextBuffer(header, v10item.getStrings());
+    const V8::CPhysicsEventBuffer& CTransform10p0to8p0::getCurrentPhysicsBuffer() const
+    {
+      return m_physicsBuffer;
+    }
+
+    const std::vector<V8::CTextBuffer>& CTransform10p0to8p0::getStagedTextBuffers() const
+    {
+      return m_textBuffers;
     }
 
     std::uint16_t CTransform10p0to8p0::mapControlType(std::uint16_t type) const
@@ -156,5 +225,28 @@ namespace DAQ {
 
     }
     
-  } // namespace Transform
+    V8::CPhysicsEventBuffer CTransform10p0to8p0::createNewPhysicsBuffer()
+    {
+      V8::bheader header;
+      header.type = V8::DATABF;
+      header.nevt = 1;
+      header.run = m_run;
+      header.seq = m_seq;
+
+      ++m_seq;
+
+      return V8::CPhysicsEventBuffer(header,  Buffer::ByteBuffer({}));
+    }
+
+  void CTransform10p0to8p0::appendNewTextBuffer(std::uint16_t type) {
+    V8::bheader header;
+    header.type = mapTextType(type);
+    header.run  = m_run;
+    header.seq  = m_seq;
+
+    V8::CTextBuffer buffer(header, {});
+    m_textBuffers.push_back(buffer);
+
+  }
+} // namespace Transform
 } // namespace DAQ

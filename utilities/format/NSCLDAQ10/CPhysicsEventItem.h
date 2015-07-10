@@ -18,6 +18,8 @@
 
 #include <CRingItem.h>		/* Base class */
 
+#include <ByteBuffer.h>
+
 #include <unistd.h>
 
 #include <stdint.h>
@@ -53,6 +55,7 @@ public:
   // public utility methods
 public:
 
+  DAQ::Buffer::ByteBuffer getBodyData() const;
   // Virtual methods that all ring items must provide:
 
   virtual std::string typeName() const;	// Textual type of item.

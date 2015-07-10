@@ -183,13 +183,13 @@ void castScalerToRaw_0() {
 }
 
 void castScalerToRaw_1() {
-  bheader header = {28, DAQ::V8::SCALERBF,
-                    0, 0, 0,
-                    1,
-                    0, 0, 0,
-                    DAQ::V8::StandardVsn,
-                    DAQ::V8::BOM16, DAQ::V8::BOM32,
-                    0, 0};
+  bheader header = bheader(28, DAQ::V8::SCALERBF,
+                           0, 0, 0,
+                           1,
+                           0, 0, 0,
+                           DAQ::V8::StandardVsn,
+                           DAQ::V8::BOM16, DAQ::V8::BOM32,
+                           0, 0);
   CScalerBuffer buffer(header,
                        1234, 5678,
                        vector<uint32_t>({1}));
