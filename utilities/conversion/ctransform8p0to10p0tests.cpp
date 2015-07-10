@@ -37,7 +37,7 @@ using namespace DAQ;
 
 
 
-class CTransform10p0to8p0Tests_Scaler : public CppUnit::TestFixture
+class CTransform8p0to10p0Tests_Scaler : public CppUnit::TestFixture
 {
 private:
     V8::bheader m_header;
@@ -48,7 +48,7 @@ private:
     std::uint32_t m_offsetEnd;
 
 public:
-    CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_Scaler);
+    CPPUNIT_TEST_SUITE(CTransform8p0to10p0Tests_Scaler);
     CPPUNIT_TEST(scaler_0);
     CPPUNIT_TEST(scaler_1);
     CPPUNIT_TEST(scaler_2);
@@ -57,7 +57,7 @@ public:
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    CTransform10p0to8p0Tests_Scaler() : m_header(), m_transform(),
+    CTransform8p0to10p0Tests_Scaler() : m_header(), m_transform(),
       m_scalers(), m_item(NSCLDAQ10::INCREMENTAL_SCALERS),
       m_offsetBegin(0), m_offsetEnd(0) {}
 
@@ -117,7 +117,7 @@ protected:
 
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Scaler);
+CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
 
 
 

@@ -48,6 +48,7 @@ namespace DAQ {
 
       void clearStagedTextBuffers () { m_textBuffers.clear(); }
 
+      void setCurrentRunNumber(std::uint16_t runNo) { m_run = runNo; }
       std::uint16_t getCurrentRunNumber() const { return m_run; }
 
       void setSequenceNumber(std::uint32_t seqNo) { m_seq = seqNo; }

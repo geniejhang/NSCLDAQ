@@ -3,6 +3,7 @@
 #include <NSCLDAQ10/CRingItem.h>
 #include <NSCLDAQ8/CRawBuffer.h>
 #include <NSCLDAQ10/CRingScalerItem.h>
+#include <NSCLDAQ10/CRingTimestampedRunningScalerItem.h>
 #include <NSCLDAQ8/CScalerBuffer.h>
 #include <NSCLDAQ10/CRingStateChangeItem.h>
 #include <NSCLDAQ8/CControlBuffer.h>
@@ -73,12 +74,32 @@ namespace DAQ {
 
     V8::CScalerBuffer CTransform10p0to8p0::transformIncrScaler(const InitialType &item)
     {
-      return V8::CScalerBuffer();
+      auto& v10item = dynamic_cast<const NSCLDAQ10::CRingScalerItem&>(item);
+
+      V8::bheader header;
+      header.type = V8::SCALERBF;
+      header.nevt = v10item.getScalerCount();
+      header.run  = m_run;
+      header.seq  = m_seq;
+      V8::CScalerBuffer sclrBuf(header, v10item.getStartTime(), v10item.getEndTime(),
+                                v10item.getScalers());
+      return sclrBuf;
     }
 
     V8::CScalerBuffer CTransform10p0to8p0::transformNonIncrScaler(const InitialType &item)
     {
-      return V8::CScalerBuffer();
+
+      auto& v10item = dynamic_cast<const NSCLDAQ10::CRingTimestampedRunningScalerItem&>(item);
+
+      V8::bheader header;
+      header.type = V8::SCALERBF;
+      header.nevt = v10item.getScalerCount();
+      header.run  = m_run;
+      header.seq  = m_seq;
+      V8::CScalerBuffer sclrBuf(header, v10item.getOffsetStart(), v10item.getOffsetEnd(),
+                                v10item.getScalers());
+      return sclrBuf;
+
     }
 
     V8::CControlBuffer CTransform10p0to8p0::transformStateChange(const InitialType &item)

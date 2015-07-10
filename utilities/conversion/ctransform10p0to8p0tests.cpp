@@ -5,6 +5,7 @@
 
 #include <NSCLDAQ8/CScalerBuffer.h>
 #include <NSCLDAQ10/CRingScalerItem.h>
+#include <NSCLDAQ10/CRingTimestampedRunningScalerItem.h>
 
 #include <NSCLDAQ8/CControlBuffer.h>
 #include <NSCLDAQ10/CRingStateChangeItem.h>
@@ -42,35 +43,44 @@ using namespace DAQ;
 
 class CTransform10p0to8p0Tests_Scaler : public CppUnit::TestFixture
 {
-private:
+public:
+    CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_Scaler);
+    CPPUNIT_TEST(Scaler_0);
+    CPPUNIT_TEST(Scaler_1);
+    CPPUNIT_TEST(Scaler_2);
+    CPPUNIT_TEST(Scaler_4);
+    CPPUNIT_TEST(Scaler_5);
+    CPPUNIT_TEST(Scaler_6);
+    CPPUNIT_TEST(Scaler_7);
+    CPPUNIT_TEST(Scaler_8);
+    CPPUNIT_TEST(Scaler_9);
+    CPPUNIT_TEST(Scaler_10);
+    CPPUNIT_TEST(Scaler_11);
+    CPPUNIT_TEST(Scaler_12);
+    CPPUNIT_TEST_SUITE_END();
+
+protected:
     Transform::CTransform10p0to8p0 m_transform;
     vector<uint32_t> m_scalers;
-    V8::CScalerBuffer m_item;
+    V8::CRawBuffer v8item;
     std::uint32_t m_offsetBegin;
     std::uint32_t m_offsetEnd;
     std::time_t m_tstamp;
     std::tm     m_calTime;
 
-public:
-    CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_Scaler);
-//    CPPUNIT_TEST(scaler_0);
-//    CPPUNIT_TEST(scaler_1);
-//    CPPUNIT_TEST(scaler_2);
-//    CPPUNIT_TEST(scaler_4);
-//    CPPUNIT_TEST(scaler_5);
-    CPPUNIT_TEST_SUITE_END();
 
 public:
     CTransform10p0to8p0Tests_Scaler() :
       m_transform(),
-      m_scalers(), m_item(),
+      m_scalers(), v8item(),
       m_offsetBegin(0),
       m_offsetEnd(0),
       m_tstamp(0),
       m_calTime() {}
 
-    void setUp() {
+    virtual void setUp() {
         m_transform = Transform::CTransform10p0to8p0();
+        m_transform.setCurrentRunNumber(234);
 
         m_scalers = vector<uint32_t>(16);
         iota(m_scalers.begin(), m_scalers.end(), 0);
@@ -87,47 +97,143 @@ public:
 
         NSCLDAQ10::CRingScalerItem scaler(m_offsetBegin, m_offsetEnd, m_tstamp, m_scalers);
 
-        m_item = m_transform( scaler );
+        v8item = m_transform( scaler );
 
     }
-  void tearDown() {
+  virtual void tearDown() {
   }
 
-protected:
-  void scaler_0() {
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Type transforms to SCALERBF",
-                                 V8::SCALERBF, m_item.getHeader().type);
+  void Scaler_0()
+  {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("INCREMENTAL_SCALERS --> SCALERBF",
+                                 std::uint16_t(V8::SCALERBF), v8item.getHeader().type);
   }
 
-//  void scaler_1() {
-//    CPPUNIT_ASSERT_EQUAL_MESSAGE("Interval offset begin value is preserved",
-//                                 m_offsetBegin, m_item.getStartTime());
-//  }
+  void Scaler_1()
+  {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Checksum is set to 0",
+                                 std::uint16_t(0), v8item.getHeader().cks);
+  }
 
-//  void scaler_2() {
-//    CPPUNIT_ASSERT_EQUAL_MESSAGE("Interval offset end value is preserved",
-//                                 m_offsetEnd, m_item.getEndTime());
-//  }
+  void Scaler_2()
+  {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Run number is set to the value known by the transform",
+                                 std::uint16_t(234), v8item.getHeader().run);
+  }
 
-////  void scaler_3() {
-////    CPPUNIT_ASSERT_EQUAL_MESSAGE("Timestamp is what we demand to be returned",
-////                                 DEFAULT_TSTAMP, m_item.getTimestamp());
-////  }
+  void Scaler_4()
+  {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("nevt will be set to scaler count",
+                                 std::uint16_t(m_scalers.size()), v8item.getHeader().nevt);
+  }
 
-//  void scaler_4() {
-//    CPPUNIT_ASSERT_EQUAL_MESSAGE("scaler count must be the same as m_header.nevt",
-//                                 std::uint32_t(m_header.nevt), m_item.getScalerCount());
-//  }
+  void Scaler_5()
+  {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("processor number set to 0",
+                                 std::uint16_t(0), v8item.getHeader().cpu);
 
-//  void scaler_5() {
-//    CPPUNIT_ASSERT_EQUAL_MESSAGE("scaler values must be the same",
-//                                 m_scalers, m_item.getScalers());
-//  }
+  }
+  void Scaler_6()
+  {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("nbit set to 0",
+                                 std::uint16_t(0), v8item.getHeader().nbit);
+  }
+
+  void Scaler_7()
+  {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("buffmt set to 5",
+                                 std::uint16_t(5), v8item.getHeader().buffmt);
+  }
+
+  void Scaler_8()
+  {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("ssignature set to 0x0102",
+                                 std::uint16_t(0x0102),
+                                 v8item.getHeader().ssignature);
+  }
+
+  void Scaler_9()
+  {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("lsignature set to 0x0102",
+                                 std::uint32_t(0x01020304),
+                                 v8item.getHeader().lsignature);
+  }
+
+  void Scaler_10()
+  {
+    auto sclBuf = V8::format_cast<V8::CScalerBuffer>(v8item);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("interval start offset remains the same",
+                                 std::uint32_t(0x1234), sclBuf.getOffsetBegin());
+  }
+
+  void Scaler_11()
+  {
+    auto sclBuf = V8::format_cast<V8::CScalerBuffer>(v8item);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("interval end offset remains the same",
+                                 std::uint32_t(0x5678), sclBuf.getOffsetEnd());
+  }
+
+  void Scaler_12()
+  {
+    auto sclBuf = V8::format_cast<V8::CScalerBuffer>(v8item);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("scalers should remain the same",
+                                 m_scalers, sclBuf.getScalers());
+  }
 
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Scaler);
 
+class CTransform10p0to8p0Tests_NonIncrScaler : public CTransform10p0to8p0Tests_Scaler
+{
+public:
+  CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_NonIncrScaler);
+  CPPUNIT_TEST(Scaler_1);
+  CPPUNIT_TEST(Scaler_2);
+  CPPUNIT_TEST(Scaler_4);
+  CPPUNIT_TEST(Scaler_5);
+  CPPUNIT_TEST(Scaler_6);
+  CPPUNIT_TEST(Scaler_7);
+  CPPUNIT_TEST(Scaler_8);
+  CPPUNIT_TEST(Scaler_9);
+  CPPUNIT_TEST(Scaler_10);
+  CPPUNIT_TEST(Scaler_11);
+  CPPUNIT_TEST(Scaler_12);
+  CPPUNIT_TEST_SUITE_END();
+
+public:
+  void setUp() {
+    m_transform = Transform::CTransform10p0to8p0();
+    m_transform.setCurrentRunNumber(234);
+
+    m_scalers = vector<uint32_t>(16);
+    iota(m_scalers.begin(), m_scalers.end(), 0);
+
+    m_offsetBegin = 0x1234;
+    m_offsetEnd   = 0x5678;
+
+    m_tstamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm* pTime = std::localtime(&m_tstamp);
+
+    if (pTime != nullptr) {
+      m_calTime = *pTime;
+    }
+
+    NSCLDAQ10::CRingTimestampedRunningScalerItem scaler(0x123456789ab, m_offsetBegin,m_offsetEnd,
+                                                        1, m_tstamp, m_scalers);
+
+    v8item = m_transform( scaler );
+  }
+
+  void tearDown() {}
+
+  void Scaler_13 () {
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("TIMESTAMPED_NONINCR_SCALERS --> SCALERBF",
+                                 std::uint16_t(V8::SCALERBF), v8item.getHeader().type);
+
+  }
+};
+CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
 
     ///////////////////////////////////////////////////////////////////////////
