@@ -53,6 +53,7 @@ namespace DAQ {
 
       void setSequenceNumber(std::uint32_t seqNo) { m_seq = seqNo; }
 
+      void updateSequence(const InitialType& item);
     private:
       V8::CPhysicsEventBuffer createNewPhysicsBuffer();
       void appendNewTextBuffer(std::uint16_t type);

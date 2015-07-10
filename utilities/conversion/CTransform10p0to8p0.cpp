@@ -8,6 +8,7 @@
 #include <NSCLDAQ10/CRingStateChangeItem.h>
 #include <NSCLDAQ8/CControlBuffer.h>
 #include <NSCLDAQ10/CPhysicsEventItem.h>
+#include <NSCLDAQ10/CRingPhysicsEventCountItem.h>
 #include <NSCLDAQ10/CRingTextItem.h>
 #include <NSCLDAQ8/CTextBuffer.h>
 #include <NSCLDAQ8/CVoidBuffer.h>
@@ -50,6 +51,9 @@ namespace DAQ {
           break;
         case NSCLDAQ10::EVB_FRAGMENT:
         case NSCLDAQ10::EVB_UNKNOWN_PAYLOAD: // these do not transform.
+          break;
+        case NSCLDAQ10::PHYSICS_EVENT_COUNT:
+          updateSequence(item);
           break;
       default:
           std::string errmsg("CTransform10p0to8p0::dispatch()");
@@ -147,7 +151,6 @@ namespace DAQ {
 
       } else {
         returnBuffer = V8::format_cast<V8::CRawBuffer>(m_physicsBuffer);
-        V8::bheader header;
 
         m_physicsBuffer = createNewPhysicsBuffer();
         m_physicsBuffer.appendEvent(pEvent);
@@ -198,6 +201,12 @@ namespace DAQ {
     const std::vector<V8::CTextBuffer>& CTransform10p0to8p0::getStagedTextBuffers() const
     {
       return m_textBuffers;
+    }
+
+    void CTransform10p0to8p0::updateSequence(const InitialType &item)
+    {
+      auto& v10item = dynamic_cast<const NSCLDAQ10::CRingPhysicsEventCountItem&>(item);
+      m_seq = v10item.getEventCount();
     }
 
     std::uint16_t CTransform10p0to8p0::mapControlType(std::uint16_t type) const
