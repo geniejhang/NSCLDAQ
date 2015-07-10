@@ -39,8 +39,8 @@ class CBaseMediator
   private:
     // Copy and assignment do not make sense because ownership
     // is not transferrable of the CDataSource and CDataSink.
-    CBaseMediator(const CBaseMediator&);
-    CBaseMediator& operator=(const CBaseMediator&);
+    CBaseMediator(const CBaseMediator&) = delete;
+    CBaseMediator& operator=(const CBaseMediator&) = delete;
 
   public:
 

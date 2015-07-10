@@ -710,7 +710,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
           m_run = 1357;
 
-          NSCLDAQ10::CRingStateChangeItem v10item = setUpType(NSCLDAQ10::BEGIN_RUN);
+          NSCLDAQ10::CRingStateChangeItem v10item = setUpType(NSCLDAQ10::END_RUN);
 
           v8item = m_transform( v10item );
         }
@@ -733,8 +733,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
         void Control_0()
         {
-          CPPUNIT_ASSERT_EQUAL_MESSAGE("BEGIN_RUN --> BEGRUNBF",
-                                       std::uint16_t(V8::BEGRUNBF), v8item.getHeader().type);
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("END_RUN --> ENDRUNBF",
+                                       std::uint16_t(V8::ENDRUNBF), v8item.getHeader().type);
         }
 
         void Control_1()
@@ -893,11 +893,11 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
         void Control_22()
         {
-          auto v10item= setUpType(NSCLDAQ10::END_RUN);
+          auto v10item= setUpType(NSCLDAQ10::BEGIN_RUN);
 
           v8item = m_transform( v10item );
-          CPPUNIT_ASSERT_EQUAL_MESSAGE("END_RUN --> ENDRUNBF",
-                                 std::uint16_t(V8::ENDRUNBF), v8item.getHeader().type);
+          CPPUNIT_ASSERT_EQUAL_MESSAGE("BEGIN_RUN --> BEGRUNBF",
+                                 std::uint16_t(V8::BEGRUNBF), v8item.getHeader().type);
         }
 
         void Control_23()

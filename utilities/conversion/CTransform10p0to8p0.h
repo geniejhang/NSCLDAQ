@@ -27,7 +27,9 @@ namespace DAQ {
       using FinalType   = V8::CRawBuffer;
 
     private:
-      std::uint32_t m_seq;
+      std::uint32_t m_nTriggersProcessed;
+      double        m_samplingFactor;
+      std::uint32_t m_lastSequence;
       std::uint16_t m_run;
       V8::CPhysicsEventBuffer              m_physicsBuffer;
       std::vector<V8::CTextBuffer>         m_textBuffers;
@@ -51,11 +53,13 @@ namespace DAQ {
       void setCurrentRunNumber(std::uint16_t runNo) { m_run = runNo; }
       std::uint16_t getCurrentRunNumber() const { return m_run; }
 
-      void setSequenceNumber(std::uint32_t seqNo) { m_seq = seqNo; }
+      void setSequenceNumber(std::uint32_t seqNo) { m_lastSequence = seqNo; }
 
-      void updateSequence(const InitialType& item);
+      void updateStatistics(const InitialType& item);
+      void resetStatistics();
+      void startNewPhysicsBuffer();
+
     private:
-      V8::CPhysicsEventBuffer createNewPhysicsBuffer();
       void appendNewTextBuffer(std::uint16_t type);
       std::uint16_t mapControlType(std::uint16_t type) const;
       std::uint16_t mapTextType(std::uint16_t type) const;

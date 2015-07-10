@@ -2,6 +2,7 @@ lib_LTLIBRARIES = libConversion.la
 
 libConversion_la_SOURCES = CTransformMediator.h \
                            C8p0to10p0Mediator.cpp \
+                           C10p0to8p0Mediator.cpp \
                            CTransformMediator.hpp \
                            CTransform8p0to10p0.cpp \
                            CTransform10p0to8p0.cpp \
@@ -15,6 +16,7 @@ libConversion_la_SOURCES = CTransformMediator.h \
 
 include_HEADERS = CTransformMediator.h \
                            C8p0to10p0Mediator.h \
+                           C10p0to8p0Mediator.h \
                            CTransform8p0to10p0.h \
                            CTransform10p0to8p0.h \
                            CTransform10p0to11p0.h \
@@ -46,7 +48,8 @@ unittests_SOURCES = TestRunner.cpp \
                     ctransform10p0to8p0tests.cpp \
                     ctransform10p0to11p0tests.cpp \
                     ctransform11p0to10p0tests.cpp \
-                    ctransformfactorytests.cpp
+                    ctransformfactorytests.cpp \
+                    c10p0to8p0mediatortests.cpp
 
 unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                    @top_builddir@/utilities/conversion/libConversion.la	\
