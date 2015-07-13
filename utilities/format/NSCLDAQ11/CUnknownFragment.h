@@ -19,15 +19,10 @@
 
 #include "CRingFragmentItem.h"
 
-#ifndef __CPPRTL_TYPEINFO
 #include <typeinfo>
-#ifndef __CPPRTL_TYPEINFO
-#define __CPPRTL_TYPEINFO
-#endif
-#endif
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 /**
  * @class CUnknownFragment
@@ -57,6 +52,6 @@ public:
     
 };
 
-} // end of namespace
-
+  } // end of V11 namespace
+} // end DAQ
 #endif

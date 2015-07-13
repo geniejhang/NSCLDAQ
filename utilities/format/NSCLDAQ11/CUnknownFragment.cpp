@@ -19,8 +19,8 @@
 #include <string.h>
 #include <sstream>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 /*-----------------------------------------------------------------------------
  * Canonical methods.
@@ -122,4 +122,5 @@ CUnknownFragment::typeName() const
     return "Fragment with unknown payload";
 }
 
-} // end of namespace
+  } // end of V11 namespace
+} // end DAQ

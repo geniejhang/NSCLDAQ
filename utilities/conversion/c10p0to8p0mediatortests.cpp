@@ -68,7 +68,7 @@ public:
 
 public:
   void physEventFlush_0() {
-    NSCLDAQ10::CPhysicsEventItem item(NSCLDAQ10::PHYSICS_EVENT);
+    V10::CPhysicsEventItem item(V10::PHYSICS_EVENT);
     item.fillBody(std::vector<std::uint16_t>({2,0}));
 
     auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
@@ -84,8 +84,8 @@ public:
 
 void physEventFlush_1() {
 
-  NSCLDAQ10::CRingStateChangeItem begin;
-  NSCLDAQ10::CPhysicsEventItem item(NSCLDAQ10::PHYSICS_EVENT);
+  V10::CRingStateChangeItem begin;
+  V10::CPhysicsEventItem item(V10::PHYSICS_EVENT);
   item.fillBody(std::vector<std::uint16_t>({2,0}));
 
   auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
@@ -105,8 +105,8 @@ void physEventFlush_1() {
 
   void physEventFlush_2() {
 
-    NSCLDAQ10::CRingStateChangeItem begin;
-    NSCLDAQ10::CPhysicsEventItem event(NSCLDAQ10::PHYSICS_EVENT);
+    V10::CRingStateChangeItem begin;
+    V10::CPhysicsEventItem event(V10::PHYSICS_EVENT);
     event.fillBody(std::vector<std::uint16_t>({2,0}));
 
     auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
@@ -139,8 +139,8 @@ void physEventFlush_1() {
 
         V8::Test::ChangeBufferSize forScope(132);
 
-        NSCLDAQ10::CRingStateChangeItem begin;
-        NSCLDAQ10::CPhysicsEventItem event(NSCLDAQ10::PHYSICS_EVENT);
+        V10::CRingStateChangeItem begin;
+        V10::CPhysicsEventItem event(V10::PHYSICS_EVENT);
         std::vector<std::uint16_t> bodyData(50);
         std::iota(bodyData.begin(), bodyData.end(), 0);
         bodyData.at(0) = 50;
@@ -186,9 +186,9 @@ void physEventFlush_1() {
 
         V8::Test::ChangeBufferSize forScope(232);
 
-        NSCLDAQ10::CRingStateChangeItem begin;
-        NSCLDAQ10::CRingStateChangeItem end(NSCLDAQ10::END_RUN);
-        NSCLDAQ10::CPhysicsEventItem event(NSCLDAQ10::PHYSICS_EVENT);
+        V10::CRingStateChangeItem begin;
+        V10::CRingStateChangeItem end(V10::END_RUN);
+        V10::CPhysicsEventItem event(V10::PHYSICS_EVENT);
         std::vector<std::uint16_t> bodyData(50);
         std::iota(bodyData.begin(), bodyData.end(), 0);
         bodyData.at(0) = 50;
@@ -267,7 +267,7 @@ public:
 
     std::time_t tstamp = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() );
 
-    auto v10item = NSCLDAQ10::CRingTextItem(NSCLDAQ10::MONITORED_VARIABLES,
+    auto v10item = V10::CRingTextItem(V10::MONITORED_VARIABLES,
                                             m_strings, 0x12345678, tstamp);
 
     auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());

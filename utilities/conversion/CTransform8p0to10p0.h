@@ -9,12 +9,6 @@
 #include <memory>
 #include <ctime>
 
-namespace NSCLDAQ10 {
-  class CRingItem;
-  class CRingScalerItem;
-  class CRingTextItem;
-  class CRingStateChangeItem;
-}
 
 namespace DAQ {
 
@@ -27,28 +21,35 @@ namespace DAQ {
     extern std::size_t gBufferSize;
   }
 
+  namespace V10 {
+    class CRingItem;
+    class CRingScalerItem;
+    class CRingTextItem;
+    class CRingStateChangeItem;
+  }
+
   namespace Transform {
     
     class CTransform8p0to10p0
     {
     private:
-      std::vector<NSCLDAQ10::CPhysicsEventItem> m_physicsEvents;
+      std::vector<V10::CPhysicsEventItem> m_physicsEvents;
 
     public:
       typedef typename DAQ::V8::CRawBuffer InitialType;
-      typedef typename NSCLDAQ10::CRingItem FinalType;
+      typedef typename V10::CRingItem FinalType;
 
     public:
       CTransform8p0to10p0() {}
 
       FinalType operator()(const InitialType& type);
 
-      NSCLDAQ10::CRingScalerItem transformScaler(const InitialType& item);
-      NSCLDAQ10::CRingStateChangeItem transformControl(const InitialType& item);
-      NSCLDAQ10::CPhysicsEventItem transformPhysicsEvent(const InitialType &item);
-      NSCLDAQ10::CRingTextItem transformText(const InitialType& item);
+      V10::CRingScalerItem transformScaler(const InitialType& item);
+      V10::CRingStateChangeItem transformControl(const InitialType& item);
+      V10::CPhysicsEventItem transformPhysicsEvent(const InitialType &item);
+      V10::CRingTextItem transformText(const InitialType& item);
 
-      std::vector<NSCLDAQ10::CPhysicsEventItem>& getRemainingEvents()
+      std::vector<V10::CPhysicsEventItem>& getRemainingEvents()
       {  return m_physicsEvents; }
       void transformOnePhysicsEvent(const std::shared_ptr<V8::CPhysicsEvent>& pEvent);
 

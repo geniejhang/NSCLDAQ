@@ -20,8 +20,8 @@
 
 #include "DataFormatV10.h"
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 /**
  * Implement the functions prototypes in DataFormat.h
@@ -260,4 +260,5 @@ formatStateChange(time_t stamp, uint32_t offset, uint32_t runNumber,
   
 }
 
-} // end of namespace
+  } // end of V10 namespace
+} // end of DAQ

@@ -22,7 +22,7 @@ static uint32_t swal(uint32_t l)
     return result;
 }
 
-using namespace NSCLDAQ11;
+using namespace DAQ::V11;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Query methods:

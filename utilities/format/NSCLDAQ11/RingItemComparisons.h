@@ -1,10 +1,10 @@
 
 
-#ifndef RINGITEMCOMPARISONS_H
-#define RINGITEMCOMPARISONS_H
+#ifndef DAQ_V11_RINGITEMCOMPARISONS_H
+#define DAQ_V11_RINGITEMCOMPARISONS_H
 
 #include <DataFormatV11.h>
 
-bool operator==(const NSCLDAQ11::_RingItem& lhs, const NSCLDAQ11::_RingItem& rhs);
+bool operator==(const DAQ::V11::_RingItem& lhs, const DAQ::V11::_RingItem& rhs);
 
 #endif

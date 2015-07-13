@@ -25,8 +25,8 @@
 #endif
 #endif
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 /**
  * @class CDataFormatItem
@@ -73,6 +73,7 @@ private:
     
 };
 
-} // end of namespace
+  } // end of V11 namespace
+} // end DAq
 
 #endif

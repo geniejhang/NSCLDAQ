@@ -43,7 +43,7 @@ private:
     V8::bheader m_header;
     Transform::CTransform8p0to10p0 m_transform;
     vector<uint32_t> m_scalers;
-    NSCLDAQ10::CRingScalerItem m_item;
+    V10::CRingScalerItem m_item;
     std::uint32_t m_offsetBegin;
     std::uint32_t m_offsetEnd;
 
@@ -58,7 +58,7 @@ public:
 
 public:
     CTransform8p0to10p0Tests_Scaler() : m_header(), m_transform(),
-      m_scalers(), m_item(NSCLDAQ10::INCREMENTAL_SCALERS),
+      m_scalers(), m_item(V10::INCREMENTAL_SCALERS),
       m_offsetBegin(0), m_offsetEnd(0) {}
 
     void setUp() {
@@ -87,7 +87,7 @@ public:
 protected:
   void scaler_0() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Type transforms to INCREMENTAL_SCALERS",
-                                 NSCLDAQ10::INCREMENTAL_SCALERS, m_item.type());
+                                 V10::INCREMENTAL_SCALERS, m_item.type());
   }
 
   void scaler_1() {
@@ -139,14 +139,14 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
 
     public:
         V8::bheader m_header;
-        NSCLDAQ10::CRingTextItem v10item;
+        V10::CRingTextItem v10item;
         Transform::CTransform8p0to10p0 m_transform;
         std::vector<std::string> m_strings;
 
     public:
         // We need to define a default constructor b/c the CRingTextItem classes
         // do not define a default constructor.
-        CTransform8p0to10p0Tests_Text() : v10item(NSCLDAQ10::MONITORED_VARIABLES, {}),
+        CTransform8p0to10p0Tests_Text() : v10item(V10::MONITORED_VARIABLES, {}),
             m_transform(),
             m_strings() {}
 
@@ -208,7 +208,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
         {
 
           CPPUNIT_ASSERT_EQUAL_MESSAGE("PKTDOCBF --> PACKET_TYPES",
-                                       NSCLDAQ10::PACKET_TYPES, v10item.type());
+                                       V10::PACKET_TYPES, v10item.type());
         }
         void Text_6()
         {
@@ -224,7 +224,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
 
           v10item = m_transform( V8::format_cast<V8::CRawBuffer>(text) );
           CPPUNIT_ASSERT_EQUAL_MESSAGE("RUNVARBF --> MONITORED_VARIABLES",
-                                  NSCLDAQ10::MONITORED_VARIABLES, v10item.type());
+                                  V10::MONITORED_VARIABLES, v10item.type());
 
         }
 
@@ -242,7 +242,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
 
           v10item = m_transform( V8::format_cast<V8::CRawBuffer>(text) );
           CPPUNIT_ASSERT_EQUAL_MESSAGE("STATEVARBF --> MONITORED_VARIABLES",
-                                  NSCLDAQ10::MONITORED_VARIABLES, v10item.type());
+                                  V10::MONITORED_VARIABLES, v10item.type());
         }
 
     };
@@ -262,7 +262,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
 
     public:
         V8::bheader m_header;
-        NSCLDAQ10::CPhysicsEventItem v10item;
+        V10::CPhysicsEventItem v10item;
         Transform::CTransform8p0to10p0 m_transform;
         Buffer::ByteBuffer m_body;
 
@@ -302,7 +302,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
         void Event_0()
         {
           CPPUNIT_ASSERT_EQUAL_MESSAGE("DATABF --> PHYSICS_EVENT",
-                                       NSCLDAQ10::PHYSICS_EVENT, v10item.type());
+                                       V10::PHYSICS_EVENT, v10item.type());
         }
 
         void Event_1()
@@ -373,7 +373,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
 
     public:
         V8::bheader m_header;
-        NSCLDAQ10::CRingStateChangeItem v10item;
+        V10::CRingStateChangeItem v10item;
         Transform::CTransform8p0to10p0 m_transform;
         std::uint32_t m_offset;
         std::string m_title;
@@ -383,7 +383,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
         // We need to define a default constructor b/c the CRingTextItem classes
         // do not define a default constructor.
         CTransform8p0to10p0Tests_Control()
-          : v10item(NSCLDAQ10::BEGIN_RUN),
+          : v10item(V10::BEGIN_RUN),
             m_transform()
         {}
 
@@ -419,7 +419,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
         void Control_0()
         {
           CPPUNIT_ASSERT_EQUAL_MESSAGE("BEGRUNBF --> BEGIN_RUN",
-                                       NSCLDAQ10::BEGIN_RUN, v10item.type());
+                                       V10::BEGIN_RUN, v10item.type());
         }
 
         void Control_1()
@@ -467,7 +467,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
 
           v10item = m_transform( V8::format_cast<V8::CRawBuffer>(ctlBuf) );
           CPPUNIT_ASSERT_EQUAL_MESSAGE("ENDRUNBF --> END_RUN",
-                                       NSCLDAQ10::END_RUN, v10item.type());
+                                       V10::END_RUN, v10item.type());
 
         }
 
@@ -478,7 +478,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
 
           v10item = m_transform( V8::format_cast<V8::CRawBuffer>(ctlBuf) );
           CPPUNIT_ASSERT_EQUAL_MESSAGE("PAUSEBF --> PAUSE_RUN",
-                                       NSCLDAQ10::PAUSE_RUN, v10item.type());
+                                       V10::PAUSE_RUN, v10item.type());
 
         }
 
@@ -489,7 +489,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform8p0to10p0Tests_Scaler);
 
           v10item = m_transform( V8::format_cast<V8::CRawBuffer>(ctlBuf) );
           CPPUNIT_ASSERT_EQUAL_MESSAGE("RESUMEBF --> RESUME_RUN",
-                                       NSCLDAQ10::RESUME_RUN, v10item.type());
+                                       V10::RESUME_RUN, v10item.type());
 
         }
 

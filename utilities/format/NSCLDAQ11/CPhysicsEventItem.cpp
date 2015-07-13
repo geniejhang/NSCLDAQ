@@ -21,8 +21,8 @@
 
 #include <iostream>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 
 /**
@@ -134,4 +134,5 @@ CPhysicsEventItem::toString() const
 }
 
 
-} // end of namespace
+  } // end of V11 namespace
+} // end of DAQ

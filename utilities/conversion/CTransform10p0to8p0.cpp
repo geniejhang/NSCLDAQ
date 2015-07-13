@@ -35,33 +35,33 @@ namespace DAQ {
 
     CTransform10p0to8p0::FinalType CTransform10p0to8p0::operator ()(const InitialType& item)
     {
-      NSCLDAQ10::CRingItemFactory factory;
-      std::unique_ptr<NSCLDAQ10::CRingItem> pItem(factory.createRingItem(item));
+      V10::CRingItemFactory factory;
+      std::unique_ptr<V10::CRingItem> pItem(factory.createRingItem(item));
 
       switch (pItem->type()) {
-        case NSCLDAQ10::INCREMENTAL_SCALERS:
+        case V10::INCREMENTAL_SCALERS:
           return V8::format_cast<V8::CRawBuffer>(transformIncrScaler(*pItem));
           break;
-        case NSCLDAQ10::TIMESTAMPED_NONINCR_SCALERS:
+        case V10::TIMESTAMPED_NONINCR_SCALERS:
           return V8::format_cast<V8::CRawBuffer>(transformNonIncrScaler(*pItem));
           break;
-        case NSCLDAQ10::BEGIN_RUN:
-        case NSCLDAQ10::END_RUN:
-        case NSCLDAQ10::PAUSE_RUN:
-        case NSCLDAQ10::RESUME_RUN:
+        case V10::BEGIN_RUN:
+        case V10::END_RUN:
+        case V10::PAUSE_RUN:
+        case V10::RESUME_RUN:
           return V8::format_cast<V8::CRawBuffer>(transformStateChange(*pItem));
           break;
-        case NSCLDAQ10::PHYSICS_EVENT:
+        case V10::PHYSICS_EVENT:
           return transformPhysicsEvent(*pItem);
           break;
-        case NSCLDAQ10::MONITORED_VARIABLES:
-        case NSCLDAQ10::PACKET_TYPES:
+        case V10::MONITORED_VARIABLES:
+        case V10::PACKET_TYPES:
           return transformText(*pItem);
           break;
-        case NSCLDAQ10::EVB_FRAGMENT:
-        case NSCLDAQ10::EVB_UNKNOWN_PAYLOAD: // these do not transform.
+        case V10::EVB_FRAGMENT:
+        case V10::EVB_UNKNOWN_PAYLOAD: // these do not transform.
           break;
-        case NSCLDAQ10::PHYSICS_EVENT_COUNT:
+        case V10::PHYSICS_EVENT_COUNT:
           updateSamplingFactor(*pItem);
           break;
       default:
@@ -82,7 +82,7 @@ namespace DAQ {
 
     V8::CScalerBuffer CTransform10p0to8p0::transformIncrScaler(const InitialType &item)
     {
-      auto& v10item = dynamic_cast<const NSCLDAQ10::CRingScalerItem&>(item);
+      auto& v10item = dynamic_cast<const V10::CRingScalerItem&>(item);
 
       V8::bheader header;
       header.type = V8::SCALERBF;
@@ -97,7 +97,7 @@ namespace DAQ {
     V8::CScalerBuffer CTransform10p0to8p0::transformNonIncrScaler(const InitialType &item)
     {
 
-      auto& v10item = dynamic_cast<const NSCLDAQ10::CRingTimestampedRunningScalerItem&>(item);
+      auto& v10item = dynamic_cast<const V10::CRingTimestampedRunningScalerItem&>(item);
 
       V8::bheader header;
       header.type = V8::SCALERBF;
@@ -112,9 +112,9 @@ namespace DAQ {
 
     V8::CControlBuffer CTransform10p0to8p0::transformStateChange(const InitialType &item)
     {
-      auto& v10item = dynamic_cast<const NSCLDAQ10::CRingStateChangeItem&>(item);
+      auto& v10item = dynamic_cast<const V10::CRingStateChangeItem&>(item);
 
-      if (v10item.type() == NSCLDAQ10::BEGIN_RUN) {
+      if (v10item.type() == V10::BEGIN_RUN) {
         resetStatistics();
       }
 
@@ -139,8 +139,8 @@ namespace DAQ {
 
     V8::CRawBuffer CTransform10p0to8p0::transformPhysicsEvent(const InitialType &item)
     {
-      const NSCLDAQ10::CPhysicsEventItem& v10item
-                          = dynamic_cast<const NSCLDAQ10::CPhysicsEventItem&>(item);
+      const V10::CPhysicsEventItem& v10item
+                          = dynamic_cast<const V10::CPhysicsEventItem&>(item);
 
 
       Buffer::ByteBuffer body = v10item.getBodyData();
@@ -171,7 +171,7 @@ namespace DAQ {
 
     V8::CRawBuffer CTransform10p0to8p0::transformText(const InitialType &item)
     {
-      const NSCLDAQ10::CRingTextItem& v10item = dynamic_cast<const NSCLDAQ10::CRingTextItem&>(item);
+      const V10::CRingTextItem& v10item = dynamic_cast<const V10::CRingTextItem&>(item);
 
       auto strings = v10item.getStrings();
 
@@ -215,7 +215,7 @@ namespace DAQ {
 
     void CTransform10p0to8p0::updateSamplingFactor(const InitialType &item)
     {
-      auto& v10item = dynamic_cast<const NSCLDAQ10::CRingPhysicsEventCountItem&>(item);
+      auto& v10item = dynamic_cast<const V10::CRingPhysicsEventCountItem&>(item);
       double observedTriggers = static_cast<double>(m_nTriggersProcessed);
       double realTriggers     = static_cast<double>(v10item.getEventCount());
       if (realTriggers != 0) {
@@ -230,16 +230,16 @@ namespace DAQ {
       std::uint16_t v8type;
 
       switch(type) {
-        case NSCLDAQ10::BEGIN_RUN:
+        case V10::BEGIN_RUN:
           v8type = V8::BEGRUNBF;
           break;
-        case NSCLDAQ10::END_RUN:
+        case V10::END_RUN:
           v8type = V8::ENDRUNBF;
           break;
-        case NSCLDAQ10::PAUSE_RUN:
+        case V10::PAUSE_RUN:
           v8type = V8::PAUSEBF;
           break;
-        case NSCLDAQ10::RESUME_RUN:
+        case V10::RESUME_RUN:
           v8type = V8::RESUMEBF;
           break;
         default:
@@ -256,10 +256,10 @@ namespace DAQ {
       std::uint16_t v8type;
 
       switch(type) {
-        case NSCLDAQ10::MONITORED_VARIABLES:
+        case V10::MONITORED_VARIABLES:
           v8type = V8::RUNVARBF;
           break;
-        case NSCLDAQ10::PACKET_TYPES:
+        case V10::PACKET_TYPES:
           v8type = V8::PKTDOCBF;
           break;
         default:

@@ -21,48 +21,16 @@
 
 #include "DataFormatV10.h"
 
-#ifndef __RANGEERROR_H
 #include <RangeError.h>
-#endif
 
-#ifndef __CRT_STDINT_H
 #include <stdint.h>
-#ifndef __CRT_STDINT_H
-#define __CRT_STDINT_H
-#endif
-#endif
-
-#ifndef __CRT_TIME_H
 #include <time.h>
-#ifndef __CRT_TIME_H
-#define __CRT_TIME_H
-#endif
-#endif
-
-#ifndef __STL_STRING
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
-
-#ifndef __STL_VECTOR
 #include <vector>
-#ifndef __STL_VECTOR
-#define __STL_VECTOR
-#endif
-#endif
-
-
-#ifndef __CPPRTL_TYPEINFO
 #include <typeinfo>
-#ifndef __CPPRTL_TYPEINFO
-#define __CPPRTL_TYPEINFO
-#endif
-#endif
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 /*!
   The text ring item provides a mechanism to put an item in/take an item out of 
@@ -117,6 +85,7 @@ private:
   void   init();
 };
 
-} // end of namespace
+  } // end of V10 namespace
+} // end DAQ
 
 #endif

@@ -15,11 +15,11 @@
 */
 
 
-#ifndef CRINGITEMFACTORY_H
-#define CRINGITEMFACTORY_H
+#ifndef DAQ_V11_CRINGITEMFACTORY_H
+#define DAQ_V11_CRINGITEMFACTORY_H
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 class CRingItem;
 
@@ -38,5 +38,6 @@ public:
   static bool   isKnownItemType(const void* pItem);
 };
 
-} // end of namespace
+} // end of V11 namespace
+} // end DAQ
 #endif

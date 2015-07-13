@@ -47,7 +47,7 @@ namespace DAQ {
       CDataSource& source = *getDataSource();
       CDataSink& sink = *getDataSink();
 
-      NSCLDAQ10::CRingItem item1(NSCLDAQ10::VOID);
+      DAQ::V10::CRingItem item1(DAQ::V10::VOID);
       source >> item1;
 
       if (source.eof()) {
@@ -88,10 +88,10 @@ namespace DAQ {
 
     bool C10p0to8p0Mediator::typeDemandsFlush(std::uint32_t v10type) const
     {
-      return (v10type != NSCLDAQ10::PHYSICS_EVENT
-          && v10type != NSCLDAQ10::EVB_FRAGMENT
-          && v10type != NSCLDAQ10::EVB_UNKNOWN_PAYLOAD
-          && v10type != NSCLDAQ10::PHYSICS_EVENT_COUNT);
+      return (v10type != DAQ::V10::PHYSICS_EVENT
+          && v10type != DAQ::V10::EVB_FRAGMENT
+          && v10type != DAQ::V10::EVB_UNKNOWN_PAYLOAD
+          && v10type != DAQ::V10::PHYSICS_EVENT_COUNT);
     }
 
     bool C10p0to8p0Mediator::dataToFlush() const

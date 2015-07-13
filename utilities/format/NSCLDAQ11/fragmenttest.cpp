@@ -10,7 +10,7 @@
 #include "CUnknownFragment.h"
 // Test for event fragment in a ring item:
 
-using namespace NSCLDAQ11;
+using namespace DAQ::V11;
 
 class FragmentTests : public CppUnit::TestFixture
 {

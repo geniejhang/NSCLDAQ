@@ -18,8 +18,8 @@
 #include <time.h>
 #include <string.h>
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 ////////////////////////////////////////////////////////////////////////////////////
 //
@@ -277,4 +277,5 @@ CRingTimestampedRunningScalerItem::bodySize(uint32_t nScalers)
 }
 
 
-} // end of namespace
+  } // end of V10 namespace
+} // end DAQ

@@ -7,6 +7,9 @@
 #include <iostream>
 using namespace std;
 
+namespace DAQ {
+  namespace Transform {
+
 CTransform11p0to11p0::CTransform11p0to11p0(unique_ptr<CFilter> pFilter)
   : m_pFilter(move(pFilter))
 {}
@@ -14,7 +17,7 @@ CTransform11p0to11p0::CTransform11p0to11p0(unique_ptr<CFilter> pFilter)
 CTransform11p0to11p0::FinalType 
 CTransform11p0to11p0::operator()(InitialType& item)
 {
-  InitialType* pItem = NSCLDAQ11::CRingItemFactory::createRingItem(item);
+  InitialType* pItem = V11::CRingItemFactory::createRingItem(item);
 
   return dispatch(pItem);
 }
@@ -74,4 +77,5 @@ CTransform11p0to11p0::dispatch(InitialType* pItem)
   return CRingItem(*fitem);
 }
 
-}
+  } // end Transform
+} // end DAQ

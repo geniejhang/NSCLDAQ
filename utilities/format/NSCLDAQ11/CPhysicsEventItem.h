@@ -23,8 +23,8 @@
 #include <string>
 #include <typeinfo>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 struct _RingItem;
 
@@ -61,6 +61,7 @@ public:
 };
 
 
-} // end of namespace
+} // end of V11 namespace
+} // end DAQ
 
 #endif

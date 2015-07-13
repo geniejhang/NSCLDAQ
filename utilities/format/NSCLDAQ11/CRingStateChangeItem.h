@@ -23,8 +23,8 @@
 #include <typeinfo>
 #include <RangeError.h>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 struct _StateChangeItemBody;
 
@@ -101,7 +101,7 @@ private:
   _StateChangeItemBody* getStateChangeBody();
 };
 
-} // end of namespace
-
+  } // end of V11 namespace
+} // end DAQ
 #endif
 

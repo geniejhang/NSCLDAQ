@@ -21,8 +21,8 @@
 #include <sstream>
 using namespace std;
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 ///////////////////////////////////////////////////////////////////////////////////
 //
@@ -328,4 +328,5 @@ CRingTextItem::init()
 }
 
 
-} // end of namespace
+  } // end of V10 namespace
+} // end DAQ

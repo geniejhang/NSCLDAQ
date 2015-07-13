@@ -27,8 +27,8 @@
 #include <string>
 #include <vector>
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 struct _RingItem;
 
@@ -65,6 +65,7 @@ public:
   
 };
 
-} // end of namespace
+} // end of V10
+}// end of DAQ
 
 #endif

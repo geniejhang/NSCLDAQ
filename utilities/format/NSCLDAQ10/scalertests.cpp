@@ -16,7 +16,7 @@
 #include <iterator>
 
 using namespace std;
-using namespace NSCLDAQ10;
+using namespace DAQ::V10;
 
 class scltests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(scltests);

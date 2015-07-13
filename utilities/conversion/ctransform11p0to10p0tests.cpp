@@ -41,14 +41,15 @@
 #include <stdexcept>
 
 using namespace std;
+using namespace DAQ;
 using namespace DAQ::Transform;
 
 class CTransform11p0to10p0Tests_NonIncrScaler : public CppUnit::TestFixture
 {
 private:
     CTransform11p0to10p0       m_transform;
-    NSCLDAQ10::CRingTimestampedRunningScalerItem v10item;
-    NSCLDAQ11::CRingScalerItem v11item;
+    V10::CRingTimestampedRunningScalerItem v10item;
+    V11::CRingScalerItem v11item;
     std::time_t time_now;
 
 public:
@@ -76,7 +77,7 @@ public:
         time_now = system_clock::to_time_t( system_clock::now() ) + 1;
 
         m_transform = CTransform11p0to10p0();
-        v11item     = NSCLDAQ11::CRingScalerItem(1234, // evt tstamp
+        v11item     = V11::CRingScalerItem(1234, // evt tstamp
                                                  56,   // source id
                                                  78,   // barrier
                                                  14,    // start time
@@ -95,7 +96,7 @@ protected:
 void scaler_0() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "Non-incr scaler becomes TIMESTAMPED_NONINCR_SCALER",
-                NSCLDAQ10::TIMESTAMPED_NONINCR_SCALERS, v10item.type());
+                V10::TIMESTAMPED_NONINCR_SCALERS, v10item.type());
 }
 void scaler_1()
 {
@@ -143,8 +144,8 @@ class CTransform11p0to10p0Tests_IncrScaler : public CppUnit::TestFixture
 {
 private:
     CTransform11p0to10p0       m_transform;
-    NSCLDAQ10::CRingScalerItem v10item;
-    NSCLDAQ11::CRingScalerItem v11item;
+    V10::CRingScalerItem v10item;
+    V11::CRingScalerItem v11item;
     std::time_t time_now;
 
 public:
@@ -168,7 +169,7 @@ public:
         time_now = system_clock::to_time_t( system_clock::now() ) + 1;
 
         m_transform = CTransform11p0to10p0();
-        v11item     = NSCLDAQ11::CRingScalerItem(1234, // evt tstamp
+        v11item     = V11::CRingScalerItem(1234, // evt tstamp
                                                  56,   // source id
                                                  78,   // barrier
                                                  14,    // start time
@@ -187,7 +188,7 @@ protected:
 void scaler_0() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "Incremental scaler becomes INCREMENTAL_SCALER",
-                NSCLDAQ10::INCREMENTAL_SCALERS, v10item.type());
+                V10::INCREMENTAL_SCALERS, v10item.type());
 }
 void scaler_2()
 {
@@ -227,8 +228,8 @@ class CTransform11p0to10p0Tests_State : public CppUnit::TestFixture
 {
 private:
     CTransform11p0to10p0       m_transform;
-    NSCLDAQ10::CRingStateChangeItem v10item;
-    NSCLDAQ11::CRingStateChangeItem v11item;
+    V10::CRingStateChangeItem v10item;
+    V11::CRingStateChangeItem v11item;
     std::time_t time_now;
 
 public:
@@ -254,10 +255,10 @@ public:
         time_now = system_clock::to_time_t( system_clock::now() ) + 1;
 
         m_transform = CTransform11p0to10p0();
-        v11item = NSCLDAQ11::CRingStateChangeItem(987, // tstamp
+        v11item = V11::CRingStateChangeItem(987, // tstamp
                                            9, // source id
                                            8, // barrier
-                                           NSCLDAQ11::BEGIN_RUN,
+                                           V11::BEGIN_RUN,
                                            42, // run number
                                            1000, // time offset
                                            time_now, // timestamp
@@ -270,7 +271,7 @@ protected:
 void state_0() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "BEGIN_RUN -- > BEGIN_RUN",
-                NSCLDAQ10::BEGIN_RUN, v10item.type());
+                V10::BEGIN_RUN, v10item.type());
 }
 void state_1()
 {
@@ -296,30 +297,30 @@ void state_4()
 
 void state_5()
 {
-    v11item = NSCLDAQ11::CRingStateChangeItem(NSCLDAQ11::END_RUN);
+    v11item = V11::CRingStateChangeItem(V11::END_RUN);
     v10item = m_transform(v11item);
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "END_RUN -- > END_RUN",
-                NSCLDAQ10::END_RUN, v10item.type());
+                V10::END_RUN, v10item.type());
 }
 void state_6()
 {
-    v11item = NSCLDAQ11::CRingStateChangeItem(NSCLDAQ11::PAUSE_RUN);
+    v11item = V11::CRingStateChangeItem(V11::PAUSE_RUN);
     v10item = m_transform(v11item);
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "PAUSE_RUN -- > PAUSE_RUN",
-                NSCLDAQ10::PAUSE_RUN, v10item.type());
+                V10::PAUSE_RUN, v10item.type());
 }
 void state_7()
 {
-    v11item = NSCLDAQ11::CRingStateChangeItem(NSCLDAQ11::RESUME_RUN);
+    v11item = V11::CRingStateChangeItem(V11::RESUME_RUN);
     v10item = m_transform(v11item);
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "RESUME_RUN -- > RESUME_RUN",
-                NSCLDAQ10::RESUME_RUN, v10item.type());
+                V10::RESUME_RUN, v10item.type());
 }
 
 }; // end of state tests
@@ -330,8 +331,8 @@ class CTransform11p0to10p0Tests_PhysicsEvent : public CppUnit::TestFixture
 {
 private:
     CTransform11p0to10p0       m_transform;
-    NSCLDAQ10::CPhysicsEventItem v10item;
-    NSCLDAQ11::CPhysicsEventItem v11item;
+    V10::CPhysicsEventItem v10item;
+    V11::CPhysicsEventItem v11item;
     vector<uint8_t>              data;
 
 public:
@@ -350,7 +351,7 @@ public:
         data.resize(32);
         iota(data.begin(), data.end(), 0);
 
-        v11item     = NSCLDAQ11::CPhysicsEventItem(12345, 6, 7);
+        v11item     = V11::CPhysicsEventItem(12345, 6, 7);
         auto pCursor = reinterpret_cast<uint8_t*>(v11item.getBodyCursor());
         pCursor = std::copy(data.begin(), data.end(), pCursor); 
         v11item.setBodyCursor(pCursor);
@@ -364,7 +365,7 @@ protected:
 void physicsEvent_0() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "PHYSICS_EVENT -- > PHYSICS_EVENT",
-                NSCLDAQ10::PHYSICS_EVENT, v10item.type());
+                V10::PHYSICS_EVENT, v10item.type());
 }
 void physicsEvent_1()
 {
@@ -382,8 +383,8 @@ class CTransform11p0to10p0Tests_EventCount : public CppUnit::TestFixture
 {
 private:
     CTransform11p0to10p0       m_transform;
-    NSCLDAQ10::CRingPhysicsEventCountItem v10item;
-    NSCLDAQ11::CRingPhysicsEventCountItem v11item;
+    V10::CRingPhysicsEventCountItem v10item;
+    V11::CRingPhysicsEventCountItem v11item;
     std::time_t time_now;
 
 public:
@@ -407,7 +408,7 @@ public:
 
         m_transform = CTransform11p0to10p0();
 
-        v11item     = NSCLDAQ11::CRingPhysicsEventCountItem(12345, 6, 7, 8, 9, time_now, 11);
+        v11item     = V11::CRingPhysicsEventCountItem(12345, 6, 7, 8, 9, time_now, 11);
 
         v10item     = m_transform(v11item);
     }
@@ -417,7 +418,7 @@ protected:
 void eventCount_0() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "PHYSICS_EVENT_COUNT -- > PHYSICS_EVENT_COUNT",
-                NSCLDAQ10::PHYSICS_EVENT_COUNT, v10item.type());
+                V10::PHYSICS_EVENT_COUNT, v10item.type());
 }
 void eventCount_1()
 {
@@ -444,8 +445,8 @@ class CTransform11p0to10p0Tests_Fragment : public CppUnit::TestFixture
 {
 private:
     CTransform11p0to10p0       m_transform;
-    NSCLDAQ10::CRingFragmentItem v10item;
-    NSCLDAQ11::CRingFragmentItem v11item;
+    V10::CRingFragmentItem v10item;
+    V11::CRingFragmentItem v11item;
     vector<uint8_t>              data;
 
 public:
@@ -468,7 +469,7 @@ public:
         std::iota(data.begin(), data.end(), 0);
         m_transform = CTransform11p0to10p0();
 
-        v11item     = NSCLDAQ11::CRingFragmentItem(12345, 6, data.size(),
+        v11item     = V11::CRingFragmentItem(12345, 6, data.size(),
                                                   data.data(), 23);
 
         v10item     = m_transform(v11item);
@@ -479,7 +480,7 @@ protected:
 void Fragment_0() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "EVB_FRAGMENT -- > EVB_FRAGMENT",
-                NSCLDAQ10::EVB_FRAGMENT, v10item.type());
+                V10::EVB_FRAGMENT, v10item.type());
 }
 void Fragment_1()
 {
@@ -515,8 +516,8 @@ class CTransform11p0to10p0Tests_UnknownFragment : public CppUnit::TestFixture
 {
 private:
     CTransform11p0to10p0       m_transform;
-    NSCLDAQ10::CUnknownFragment v10item;
-    NSCLDAQ11::CUnknownFragment v11item;
+    V10::CUnknownFragment v10item;
+    V11::CUnknownFragment v11item;
     vector<uint8_t>              data;
 
 public:
@@ -539,7 +540,7 @@ public:
         std::iota(data.begin(), data.end(), 0);
         m_transform = CTransform11p0to10p0();
 
-        v11item     = NSCLDAQ11::CUnknownFragment(12345, 6, 23, data.size(),
+        v11item     = V11::CUnknownFragment(12345, 6, 23, data.size(),
                                                   data.data());
 
         v10item     = m_transform(v11item);
@@ -550,7 +551,7 @@ protected:
 void UFragment_0() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "EVB_UNKNOWN_PAYLOAD -- > EVB_UNKNOWN_PAYLOAD",
-                NSCLDAQ10::EVB_UNKNOWN_PAYLOAD, v10item.type());
+                V10::EVB_UNKNOWN_PAYLOAD, v10item.type());
 }
 void UFragment_1()
 {
@@ -586,8 +587,8 @@ class CTransform11p0to10p0Tests_Text : public CppUnit::TestFixture
 {
 private:
     CTransform11p0to10p0       m_transform;
-    NSCLDAQ10::CRingTextItem   v10item;
-    NSCLDAQ11::CRingTextItem   v11item;
+    V10::CRingTextItem   v10item;
+    V11::CRingTextItem   v11item;
     std::time_t                time_now;
     std::vector<std::string>   strings;
 
@@ -603,8 +604,8 @@ public:
 public:
     CTransform11p0to10p0Tests_Text()
         : m_transform(),
-          v10item(NSCLDAQ10::PACKET_TYPES, {}),
-          v11item(NSCLDAQ11::PACKET_TYPES, {}),
+          v10item(V10::PACKET_TYPES, {}),
+          v11item(V11::PACKET_TYPES, {}),
           time_now(),
           strings() {}
 
@@ -617,7 +618,7 @@ public:
 
         m_transform = CTransform11p0to10p0();
 
-        v11item     = NSCLDAQ11::CRingTextItem(NSCLDAQ11::PACKET_TYPES,
+        v11item     = V11::CRingTextItem(V11::PACKET_TYPES,
                                                12345, 6, 23,
                                                strings, 56, time_now,
                                                3);
@@ -630,7 +631,7 @@ protected:
 void Text_0() {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(
                 "PACKET_TYPES --> PACKET_TYPES",
-                NSCLDAQ10::PACKET_TYPES, v10item.type());
+                V10::PACKET_TYPES, v10item.type());
 }
 void Text_1()
 {
@@ -681,14 +682,14 @@ public:
   void tearDown() {}
 protected:
 void Test_0() {
-    NSCLDAQ11::CDataFormatItem item;
+    V11::CDataFormatItem item;
     CPPUNIT_ASSERT_EQUAL_MESSAGE( "Data format item do not convert",
-                                  NSCLDAQ10::VOID, m_transform(item).type() );
+                                  V10::VOID, m_transform(item).type() );
 }
 void Test_1() {
-    NSCLDAQ11::CRingItem item(NSCLDAQ11::EVB_GLOM_INFO);
+    V11::CRingItem item(V11::EVB_GLOM_INFO);
     CPPUNIT_ASSERT_EQUAL_MESSAGE( "Glom info items do not convert",
-                                  NSCLDAQ10::VOID, m_transform(item).type() );
+                                  V10::VOID, m_transform(item).type() );
 }
 
 }; // end of Fragment tests

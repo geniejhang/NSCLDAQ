@@ -22,8 +22,9 @@
 #include <string>
 #include <vector>
 
-namespace NSCLDAQ10
+namespace DAQ
 {
+  namespace V10 {
 
 struct _RingItem;
 
@@ -141,5 +142,6 @@ void CRingItem::fillBody(const std::vector<T>& data)
 
 
 
-} // end of namespace
+} // end of V10 namespace
+} // end of DAQ
 #endif

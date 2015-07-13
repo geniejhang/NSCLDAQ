@@ -25,8 +25,9 @@
 #include <typeinfo>
 #include <string>
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
+
 
 /*!
    The physics event count item provides periodic informatino about how
@@ -83,5 +84,6 @@ private:
   void init();
 };
 
-} // end of namespace
+  } // end V10
+} // end DAQ
 #endif

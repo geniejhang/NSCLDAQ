@@ -21,8 +21,8 @@
 #include <string.h>
 #include <sstream>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 /*-------------------------------------------------------------------------------------
  *   Canonical methods
@@ -342,4 +342,5 @@ CRingFragmentItem::init(size_t size)
 }
 
 
-} // end of namespace
+  } // end of V11 namespace
+} // end dAQ

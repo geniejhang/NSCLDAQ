@@ -10,7 +10,7 @@
 #include <iostream>
 
 std::ostream& operator<<(std::ostream& stream,
-                         const NSCLDAQ10::CRingItem& item)
+                         const DAQ::V10::CRingItem& item)
 {
   const char* pItem = reinterpret_cast<const char*>(item.getItemPointer());
   stream.write(pItem, item.size());
@@ -19,7 +19,7 @@ std::ostream& operator<<(std::ostream& stream,
 
 
 CDataSink& operator<<(CDataSink& sink,
-                      const NSCLDAQ10::CRingItem& item)
+                      const DAQ::V10::CRingItem& item)
 {
   sink.put(item.getItemPointer(), item.size());
 
@@ -27,7 +27,7 @@ CDataSink& operator<<(CDataSink& sink,
 }
 
 std::istream& operator>>(std::istream& stream,
-                         NSCLDAQ10::CRingItem& item)
+                         DAQ::V10::CRingItem& item)
 {
   size_t headerSize = 2*sizeof(uint32_t);
 
@@ -46,7 +46,7 @@ std::istream& operator>>(std::istream& stream,
 
 
 CDataSource& operator>>(CDataSource& source,
-                        NSCLDAQ10::CRingItem& item)
+                        DAQ::V10::CRingItem& item)
 {
   size_t headerSize = 2*sizeof(uint32_t);
 

@@ -95,8 +95,8 @@ typdef union Body {
 #include <time.h>
 
 #ifdef __cplusplus
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 #endif
 
 /*
@@ -457,7 +457,8 @@ extern "C" {
 #ifdef __cplusplus
 } // end of extern
 
-} // end of namespace
+  } // end of V11 namespace
+} // end DAQ
 #endif
 
 #endif

@@ -18,7 +18,7 @@
 
 //#include <CRingBuffer.h>
 
-using namespace NSCLDAQ10;
+using namespace DAQ::V10;
 using namespace std;
 
 class ritemtests : public CppUnit::TestFixture {

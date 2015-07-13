@@ -13,17 +13,20 @@
 using namespace std;
 using namespace DAQ::Transform;
 
-namespace NSCLDAQ10 {
-  class CRingItem;
+namespace DAQ {
+  namespace V10 {
+    class CRingItem;
+  }
+
+  namespace V11 {
+    class CRingItem;
+  }
 }
 
-namespace NSCLDAQ11 {
-  class CRingItem;
-}
 
 struct DumbyTransform {
-  using InitialType = NSCLDAQ10::CRingItem;
-  using FinalType   = NSCLDAQ11::CRingItem;
+  using InitialType = DAQ::V10::CRingItem;
+  using FinalType   = DAQ::V11::CRingItem;
   FinalType operator()(InitialType& item) { return FinalType(0); }
 };
 

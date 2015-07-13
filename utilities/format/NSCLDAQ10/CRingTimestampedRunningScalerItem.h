@@ -30,8 +30,8 @@
 #include <vector>
 #include <typeinfo>
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 /**
  * @class CRingItemTimestampedRunningScalerItem
@@ -79,6 +79,7 @@ private:
   
 };
 
-} // end of namespace
+} // end of V10 namespace
+} // end DAQ
 
 #endif

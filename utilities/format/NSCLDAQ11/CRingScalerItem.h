@@ -25,8 +25,8 @@
 #include <RangeError.h>
 #include <string>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 /*!
    This class derived from CRingItem and represents a set of scalers that have been 
@@ -100,6 +100,6 @@ private:
 			     const char* message) const throw(CRangeError);
 };
    
-} // end of namespace
-
+} // end of V11 namespace
+} // end DAQ
 #endif

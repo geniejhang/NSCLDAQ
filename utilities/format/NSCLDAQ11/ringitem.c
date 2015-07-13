@@ -20,8 +20,8 @@
 #include "DataFormatV11.h"
 
 #ifdef __cplusplus
-namespace NSCLDAQ11
-{
+namespace DAQ {
+namespace V11 {
 #endif
 
 /*-----------------------------------------------------------------------------
@@ -945,5 +945,6 @@ mustSwap(const RingItem* pItem)
 }
 
 #ifdef __cplusplus
-} // end of namespace
+  } // end of V11 namespace
+} // end DAQ
 #endif

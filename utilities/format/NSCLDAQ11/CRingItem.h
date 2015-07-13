@@ -21,8 +21,8 @@
 #include <stdint.h>
 #include <string>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+	namespace V11 {
 
 struct _RingItem;
 
@@ -122,6 +122,7 @@ private:
   
 };
 
-} // end of namespace
+} // end of V11 namespace
+} // end DAq
 
 #endif

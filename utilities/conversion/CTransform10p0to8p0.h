@@ -5,9 +5,6 @@
 #include <NSCLDAQ8/CTextBuffer.h>
 #include <cstdint>
 
-namespace NSCLDAQ10 {
-  class CRingItem;
-}
 
 namespace DAQ {
 
@@ -19,11 +16,15 @@ namespace DAQ {
     extern std::size_t gBufferSize;
   }
 
+  namespace V10 {
+    class CRingItem;
+  }
+
   namespace Transform {
     
     class CTransform10p0to8p0
     {
-      using InitialType = NSCLDAQ10::CRingItem;
+      using InitialType = V10::CRingItem;
       using FinalType   = V8::CRawBuffer;
 
     private:

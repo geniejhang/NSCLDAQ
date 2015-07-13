@@ -23,8 +23,8 @@
 
 using namespace std;
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 uint32_t CRingScalerItem::m_ScalerFormatMask(0xffffffff); // by default scalers are 32 bits wide.
 
@@ -516,4 +516,5 @@ CRingScalerItem::throwIfInvalidChannel(uint32_t channel,
 }
 
 
-} // end of namespace
+} // end of V11 namespace
+} // end DAQ

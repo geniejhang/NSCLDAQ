@@ -2,8 +2,8 @@
 #ifndef NSCLDAQ10_CVOIDITEM_H
 #define NSCLDAQ10_CVOIDITEM_H
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+namespace V10 {
 
 class CVoidItem : public CRingItem
 {
@@ -13,6 +13,7 @@ class CVoidItem : public CRingItem
     uint32_t type() const { return 0; }
 };
 
-}
+} // end V10
+} // end DAQ
 
 #endif

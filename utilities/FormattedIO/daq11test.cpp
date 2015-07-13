@@ -29,6 +29,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <iostream>
 
 using namespace std;
+using namespace DAQ;
 
 // A test suite 
 class CFormattedIOV11Test : public CppUnit::TestFixture
@@ -74,7 +75,7 @@ void CFormattedIOV11Test::input_0()
   ss.put(data, sizeof(data));
 
   // extract a complete ring item
-  NSCLDAQ11::CRingItem item(1);
+  V11::CRingItem item(1);
   ss >> item;
 
   CPPUNIT_ASSERT_EQUAL_MESSAGE("Size after extraction should be correct",
@@ -97,7 +98,7 @@ void CFormattedIOV11Test::input_1()
   ss.put(data, sizeof(data));
 
   // extract a complete ring item
-  NSCLDAQ11::CRingItem item(1);
+  V11::CRingItem item(1);
   ss >> item;
 
   CPPUNIT_ASSERT_EQUAL_MESSAGE("Size after extraction should be correct",
@@ -120,7 +121,7 @@ void CFormattedIOV11Test::output_0()
   CTestSourceSink sink(128);
 
   vector<uint8_t> payload = {0, 1, 2, 3, 4, 5, 6};
-  NSCLDAQ11::CRingFragmentItem item(100, 2, payload.size(), payload.data(), 2);
+  V11::CRingFragmentItem item(100, 2, payload.size(), payload.data(), 2);
 
   sink << item;
 

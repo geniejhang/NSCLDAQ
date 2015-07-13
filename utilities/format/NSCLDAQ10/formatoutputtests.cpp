@@ -13,7 +13,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 // Event item tests.
 
-using namespace NSCLDAQ10;
+using namespace DAQ::V10;
 
 class PhysicsItemOutput : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(PhysicsItemOutput);

@@ -10,7 +10,7 @@
 
 // Tests for glom parameter ring item class:
 
-using namespace NSCLDAQ11;
+using namespace DAQ::V11;
 
 class GlomItemTests : public CppUnit::TestFixture
 {

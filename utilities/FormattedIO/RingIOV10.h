@@ -6,21 +6,23 @@
 class CDataSource;
 class CDataSink;
 
-namespace NSCLDAQ10
+namespace DAQ
 {
+  namespace V10 {
     class CRingItem;
+  }
 }
 
 extern std::ostream& operator<<(std::ostream& stream,
-                                const NSCLDAQ10::CRingItem& item);
+                                const DAQ::V10::CRingItem& item);
 
 extern CDataSink& operator<<(CDataSink& stream,
-                             const NSCLDAQ10::CRingItem& item);
+                             const DAQ::V10::CRingItem& item);
 
 extern std::istream& operator>>(std::istream& stream,
-                                NSCLDAQ10::CRingItem& item);
+                                DAQ::V10::CRingItem& item);
 
 extern CDataSource& operator>>(CDataSource& stream,
-                               NSCLDAQ10::CRingItem& item);
+                               DAQ::V10::CRingItem& item);
 
 #endif // RINGIO_H

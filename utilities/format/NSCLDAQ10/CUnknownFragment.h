@@ -21,8 +21,8 @@
 
 #include <typeinfo>
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 /**
  * @class CUnknownFragment
@@ -52,6 +52,7 @@ public:
 
 };
 
-} // end of namespace
+} // end of V10
+} // end DAQ
 
 #endif

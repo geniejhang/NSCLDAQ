@@ -30,7 +30,7 @@
 // data format methods, run those through both createRingItem methods
 // to check the result.
 //
-using namespace NSCLDAQ11;
+using namespace DAQ::V11;
 
 class RingFactoryTests : public CppUnit::TestFixture
 {

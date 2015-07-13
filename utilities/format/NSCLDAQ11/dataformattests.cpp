@@ -8,7 +8,7 @@
 #include "DataFormatV11.h"
 #include "CDataFormatItem.h"
 
-using namespace NSCLDAQ11;
+using namespace DAQ::V11;
 
 /**
  * tests for the CDataFormat item class.

@@ -24,8 +24,9 @@
 
 using namespace std;
 
-namespace NSCLDAQ10
+namespace DAQ
 {
+  namespace V10 {
 
 ////////////////////////////////////////////////////////////////////////////
 //
@@ -332,4 +333,5 @@ CRingStateChangeItem::isStateChange()
 }
 
 
-} // end of namespace
+	} // end of V10 namespace
+} // end DAQ

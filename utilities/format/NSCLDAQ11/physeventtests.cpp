@@ -10,7 +10,7 @@
 #include <string.h>
 #include <time.h>
 
-using namespace NSCLDAQ11;
+using namespace DAQ::V11;
 
 class physeventtests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(physeventtests);

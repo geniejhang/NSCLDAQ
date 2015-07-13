@@ -24,8 +24,8 @@
 #include <sstream>
 #include <iomanip>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -622,4 +622,5 @@ CRingItem::throwIfNoBodyHeader(std::string msg) const
 }
 
 
-} // end of namespace
+} // end of V11 namespace
+} // end DAQ

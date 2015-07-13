@@ -37,6 +37,7 @@
 #include <algorithm>
 
 using namespace std;
+using namespace DAQ;
 using namespace DAQ::Transform;
 
 class CTransform10p0to11p0Tests : public CppUnit::TestFixture
@@ -81,17 +82,17 @@ void CTransform10p0to11p0Tests::scaler_0()
 
     std::time_t time_now = system_clock::to_time_t( system_clock::now() );
 
-    NSCLDAQ10::CRingScalerItem v10item(0, 1, time_now, {0, 1, 2, 3});
+    V10::CRingScalerItem v10item(0, 1, time_now, {0, 1, 2, 3});
 
-    NSCLDAQ11::CRingScalerItem v11item = m_transform(v10item);
+    V11::CRingScalerItem v11item = m_transform(v10item);
 
-    NSCLDAQ11::CRingScalerItem expected(0, 1, time_now, {0, 1, 2, 3}, true, 1);
+    V11::CRingScalerItem expected(0, 1, time_now, {0, 1, 2, 3}, true, 1);
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Scaler item should have no body header",
                                  false, v11item.hasBodyHeader() );
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("INCREMENTAL_SCALERS should become PERIODIC_SCALERS",
-                                 NSCLDAQ11::PERIODIC_SCALERS, v11item.type() );
+                                 V11::PERIODIC_SCALERS, v11item.type() );
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Scaler item start times should be the same",
                                  v10item.getStartTime(), v11item.getStartTime() );
@@ -117,19 +118,19 @@ void CTransform10p0to11p0Tests::scaler_0()
 
         std::time_t time_now = system_clock::to_time_t( system_clock::now() );
 
-        NSCLDAQ10::CRingStateChangeItem v10item(NSCLDAQ10::BEGIN_RUN, 3,
+        V10::CRingStateChangeItem v10item(V10::BEGIN_RUN, 3,
                                                 10203, time_now, "test");
 
-        NSCLDAQ11::CRingStateChangeItem v11item = m_transform(v10item);
+        V11::CRingStateChangeItem v11item = m_transform(v10item);
 
-        NSCLDAQ11::CRingStateChangeItem expected(NSCLDAQ10::BEGIN_RUN, 3,
+        V11::CRingStateChangeItem expected(V10::BEGIN_RUN, 3,
                                                  10203, time_now, "test");
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("State change item should have no body header",
                                      false, v11item.hasBodyHeader() );
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("State change item type should remain the same",
-                                     NSCLDAQ11::BEGIN_RUN, v11item.type() );
+                                     V11::BEGIN_RUN, v11item.type() );
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("State change item run number should be the same",
                                      v10item.getRunNumber(), v11item.getRunNumber() );
@@ -151,10 +152,10 @@ void CTransform10p0to11p0Tests::scaler_0()
     {
         vector<uint16_t> data = {0, 1, 2, 3, 4};
 
-        NSCLDAQ10::CPhysicsEventItem v10item(NSCLDAQ10::PHYSICS_EVENT);
+        V10::CPhysicsEventItem v10item(V10::PHYSICS_EVENT);
         v10item.fillBody(data);
 
-        NSCLDAQ11::CPhysicsEventItem v11item = m_transform(v10item);
+        V11::CPhysicsEventItem v11item = m_transform(v10item);
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Physics event should have no body header",
                                      false, v11item.hasBodyHeader() );
@@ -165,13 +166,13 @@ void CTransform10p0to11p0Tests::scaler_0()
     {
         vector<uint16_t> data = {0, 1, 2, 3, 4};
 
-        NSCLDAQ10::CPhysicsEventItem v10item(NSCLDAQ10::PHYSICS_EVENT);
+        V10::CPhysicsEventItem v10item(V10::PHYSICS_EVENT);
         v10item.fillBody(data);
 
-        NSCLDAQ11::CPhysicsEventItem v11item = m_transform(v10item);
+        V11::CPhysicsEventItem v11item = m_transform(v10item);
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Physics event should have no body header",
-                                     NSCLDAQ11::PHYSICS_EVENT, v11item.type() );
+                                     V11::PHYSICS_EVENT, v11item.type() );
 
     }
 
@@ -179,10 +180,10 @@ void CTransform10p0to11p0Tests::scaler_0()
     {
         vector<uint16_t> data = {0, 1, 2, 3, 4};
 
-        NSCLDAQ10::CPhysicsEventItem v10item(NSCLDAQ10::PHYSICS_EVENT);
+        V10::CPhysicsEventItem v10item(V10::PHYSICS_EVENT);
         v10item.fillBody(data);
 
-        NSCLDAQ11::CPhysicsEventItem v11item = m_transform(v10item);
+        V11::CPhysicsEventItem v11item = m_transform(v10item);
 
         uint16_t* pBody = reinterpret_cast<uint16_t*>(v11item.getBodyPointer());
 
@@ -197,10 +198,10 @@ void CTransform10p0to11p0Tests::scaler_0()
     {
         vector<uint16_t> data = {0, 1, 2, 3, 4};
 
-        NSCLDAQ10::CPhysicsEventItem v10item(NSCLDAQ10::PHYSICS_EVENT);
+        V10::CPhysicsEventItem v10item(V10::PHYSICS_EVENT);
         v10item.fillBody(data);
 
-        NSCLDAQ11::CPhysicsEventItem v11item = m_transform(v10item);
+        V11::CPhysicsEventItem v11item = m_transform(v10item);
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Physics event body should have same size",
                                      v10item.getBodySize(), v11item.getBodySize());
@@ -220,8 +221,8 @@ void CTransform10p0to11p0Tests::scaler_0()
         CPPUNIT_TEST_SUITE_END();
 
     public:
-        NSCLDAQ10::CRingPhysicsEventCountItem v10item;
-        NSCLDAQ11::CRingPhysicsEventCountItem v11item;
+        V10::CRingPhysicsEventCountItem v10item;
+        V11::CRingPhysicsEventCountItem v11item;
         CTransform10p0to11p0 m_transform;
         std::time_t time_now;
 
@@ -234,7 +235,7 @@ void CTransform10p0to11p0Tests::scaler_0()
             time_now = system_clock::to_time_t( system_clock::now() ) + 1;
 
             m_transform = CTransform10p0to11p0();
-            v10item     = NSCLDAQ10::CRingPhysicsEventCountItem(123, 345, time_now);
+            v10item     = V10::CRingPhysicsEventCountItem(123, 345, time_now);
             v11item     = m_transform(v10item);
         }
 
@@ -295,8 +296,8 @@ void CTransform10p0to11p0Tests::scaler_0()
         CPPUNIT_TEST_SUITE_END();
 
     public:
-        NSCLDAQ10::CRingTextItem v10item;
-        NSCLDAQ11::CRingTextItem v11item;
+        V10::CRingTextItem v10item;
+        V11::CRingTextItem v11item;
         CTransform10p0to11p0 m_transform;
         std::time_t time_now;
         std::vector<std::string> strings;
@@ -304,8 +305,8 @@ void CTransform10p0to11p0Tests::scaler_0()
     public:
         // We need to define a default constructor b/c the CRingTextItem classes
         // do not define a default constructor.
-        CTransform10p0to11p0Tests_Text() : v10item(NSCLDAQ10::MONITORED_VARIABLES, {}),
-            v11item(NSCLDAQ11::MONITORED_VARIABLES, {}),
+        CTransform10p0to11p0Tests_Text() : v10item(V10::MONITORED_VARIABLES, {}),
+            v11item(V11::MONITORED_VARIABLES, {}),
             m_transform(),
             time_now(),
             strings() {}
@@ -318,7 +319,7 @@ void CTransform10p0to11p0Tests::scaler_0()
             time_now = system_clock::to_time_t( system_clock::now() ) + 1;
 
             strings = std::vector<std::string>({"the", "test", "array"});
-            v10item     = NSCLDAQ10::CRingTextItem(NSCLDAQ10::MONITORED_VARIABLES,
+            v10item     = V10::CRingTextItem(V10::MONITORED_VARIABLES,
                                                    strings,
                                                    345,
                                                    time_now);
@@ -375,17 +376,17 @@ void CTransform10p0to11p0Tests::scaler_0()
         void Text_7()
         {
             CPPUNIT_ASSERT_EQUAL_MESSAGE(
-                        "NSCLDAQ10::MONITORED_VARIABLES --> NSCLDAQ11::MONITORED_VARIABLES",
-                        NSCLDAQ11::MONITORED_VARIABLES, v11item.type());
+                        "V10::MONITORED_VARIABLES --> V11::MONITORED_VARIABLES",
+                        V11::MONITORED_VARIABLES, v11item.type());
         }
 
         void Text_8()
         {
-            v10item = NSCLDAQ10::CRingTextItem(NSCLDAQ10::PACKET_TYPES, {});
+            v10item = V10::CRingTextItem(V10::PACKET_TYPES, {});
             v11item = m_transform(v10item);
             CPPUNIT_ASSERT_EQUAL_MESSAGE(
-                        "NSCLDAQ10::PACKET_TYPES --> NSCLDAQ11::PACKET_TYPES",
-                        NSCLDAQ11::PACKET_TYPES, v11item.type());
+                        "V10::PACKET_TYPES --> V11::PACKET_TYPES",
+                        V11::PACKET_TYPES, v11item.type());
         }
 
     };
@@ -408,8 +409,8 @@ void CTransform10p0to11p0Tests::scaler_0()
         CPPUNIT_TEST_SUITE_END();
 
     public:
-        NSCLDAQ10::CRingTimestampedRunningScalerItem v10item;
-        NSCLDAQ11::CRingScalerItem v11item;
+        V10::CRingTimestampedRunningScalerItem v10item;
+        V11::CRingScalerItem v11item;
         CTransform10p0to11p0 m_transform;
         std::time_t time_now;
         std::vector<uint32_t> values;
@@ -424,7 +425,7 @@ void CTransform10p0to11p0Tests::scaler_0()
         void setUp()
         {
             using namespace std::chrono;
-            using NonIncrSclr = NSCLDAQ10::CRingTimestampedRunningScalerItem;
+            using NonIncrSclr = V10::CRingTimestampedRunningScalerItem;
 
             // force this be different than now by 1
             time_now = system_clock::to_time_t( system_clock::now() ) + 1;
@@ -481,8 +482,8 @@ void CTransform10p0to11p0Tests::scaler_0()
         void NonIncrSclr_6()
         {
             CPPUNIT_ASSERT_EQUAL_MESSAGE(
-               "NSCLDAQ10::TIMESTAMPED_NONINCR_SCALERS --> NSCLDAQ11::PERIODIC_SCALERS",
-                        NSCLDAQ11::PERIODIC_SCALERS, v11item.type());
+               "V10::TIMESTAMPED_NONINCR_SCALERS --> V11::PERIODIC_SCALERS",
+                        V11::PERIODIC_SCALERS, v11item.type());
         }
         void NonIncrSclr_7()
         {
@@ -521,8 +522,8 @@ void CTransform10p0to11p0Tests::scaler_0()
         CPPUNIT_TEST_SUITE_END();
 
     public:
-        NSCLDAQ10::CRingFragmentItem v10item;
-        NSCLDAQ11::CRingFragmentItem v11item;
+        V10::CRingFragmentItem v10item;
+        V11::CRingFragmentItem v11item;
         CTransform10p0to11p0 m_transform;
         std::time_t time_now;
         std::vector<uint8_t> values;
@@ -544,7 +545,7 @@ void CTransform10p0to11p0Tests::scaler_0()
 
             m_transform = CTransform10p0to11p0();
 
-            v10item     = NSCLDAQ10::CRingFragmentItem(1234567, // timestamp
+            v10item     = V10::CRingFragmentItem(1234567, // timestamp
                                                        3,  // source id
                                                        values.size(),  // payload size
                                                        values.data(), // payload data

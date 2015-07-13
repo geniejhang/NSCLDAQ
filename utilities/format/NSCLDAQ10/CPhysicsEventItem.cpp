@@ -21,8 +21,8 @@
 #include <vector>
 #include <typeinfo>
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 /*
  * All the canonical methods just delegate to the base class
@@ -126,4 +126,5 @@ DAQ::Buffer::ByteBuffer CPhysicsEventItem::getBodyData() const
   return DAQ::Buffer::ByteBuffer(pBegin, pEnd);
 }
 
-} // end of namespace
+  } // end V10
+} // end DAQ

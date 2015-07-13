@@ -35,8 +35,8 @@
 #include <string.h>
 #include <set>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 static std::set<uint32_t> knownItemTypes;
 
@@ -206,4 +206,5 @@ CRingItemFactory::isKnownItemType(const void* pItem)
 
 }
 
-} // end of namespace
+  } // end of V11 namespace
+} // end DAQ

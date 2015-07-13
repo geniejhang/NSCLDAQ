@@ -19,8 +19,8 @@
 
 #include <sstream>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 /*-----------------------------------------------------------------------------
  * Canonicals
@@ -207,4 +207,5 @@ CDataFormatItem::init()
 }
 
 
-} // end of namespace
+  } // end of V11 namespace
+} // end DAQ

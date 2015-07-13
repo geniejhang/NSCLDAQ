@@ -49,8 +49,8 @@ be zero.
 #include <stdint.h>
 #include <time.h>
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 // state change item type codes:
 
@@ -224,5 +224,6 @@ extern pTextItem          formatTextItem(unsigned nStrings, time_t stamp, uint32
 extern pStateChangeItem   formatStateChange(time_t stamp, uint32_t offset, uint32_t runNumber,
                                             const char* pTitle, int type);
 
-} // end of namespace
+  } // end of V10 namespace
+} // end DAq
 #endif

@@ -15,7 +15,7 @@
 #undef private
 #undef protected
 
-using namespace NSCLDAQ10;
+using namespace DAQ::V10;
 using namespace std;
 
 class physeventtests : public CppUnit::TestFixture {

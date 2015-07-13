@@ -51,12 +51,12 @@ namespace DAQ {
       try {
         //    if ((*m_pPredicate)()) {
 
-        ::NSCLDAQ10::CRingItem item2 = m_transform(item1);
+        ::DAQ::V10::CRingItem item2 = m_transform(item1);
 
-        if (item2.type() == NSCLDAQ10::PHYSICS_EVENT) {
+        if (item2.type() == DAQ::V10::PHYSICS_EVENT) {
           auto& events = m_transform.getRemainingEvents();
           for (auto & event : events) {
-            sink << NSCLDAQ10::CRingItem(event);
+            sink << DAQ::V10::CRingItem(event);
           }
         }
         if (item2.type() != 0) {

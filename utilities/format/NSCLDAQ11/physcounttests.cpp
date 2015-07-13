@@ -12,7 +12,7 @@
 #include <time.h>
 #include <chrono>
 
-using namespace NSCLDAQ11;
+using namespace DAQ::V11;
 
 class physcounttests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(physcounttests);

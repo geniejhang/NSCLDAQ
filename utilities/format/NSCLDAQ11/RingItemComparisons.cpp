@@ -3,8 +3,8 @@
 
 #include <algorithm>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 /**! Comparison of _RingItem objects
   *
@@ -25,4 +25,5 @@ bool operator==(const _RingItem& lhs, const _RingItem& rhs)
     
 }
 
-} // end of namespace
+  } // end of V11 namespace
+} // end DAQ

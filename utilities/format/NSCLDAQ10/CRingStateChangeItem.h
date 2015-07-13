@@ -25,8 +25,8 @@
 #include <typeinfo>
 #include <RangeError.h>
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 /*!
   This class represents a state change item.
@@ -93,6 +93,7 @@ private:
 
 };
 
-} // end of namespace
+  } // end of V10
+} // end of DAQ namespace
 
 #endif

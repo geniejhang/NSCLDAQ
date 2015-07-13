@@ -19,8 +19,9 @@
 
 using namespace std;
 
-namespace NSCLDAQ10
+namespace DAQ
 {
+  namespace V10 {
 
 ///////////////////////////////////////////////////////////////////////////////////
 //
@@ -263,4 +264,5 @@ CRingPhysicsEventCountItem::init()
 
 }
 
-} // end of namespace
+} // end of V10 namespace
+} // end of DAQ

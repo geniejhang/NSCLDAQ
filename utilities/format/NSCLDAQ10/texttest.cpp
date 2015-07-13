@@ -18,7 +18,7 @@
 #include <string.h>
 
 using namespace std;
-using namespace NSCLDAQ10;
+using namespace DAQ::V10;
 
 class texttests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(texttests);

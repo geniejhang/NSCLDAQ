@@ -21,8 +21,8 @@
 
 #include <typeinfo>
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
 
 // Forward definitions.
 
@@ -79,6 +79,7 @@ private:
   void   init(size_t size);
 };
 
-} // end of namespace
+  } // end V10
+} // end DAq
 
 #endif

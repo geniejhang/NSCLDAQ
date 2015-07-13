@@ -27,8 +27,9 @@
 #include <vector>
 #include <string>
 
-namespace NSCLDAQ10
+namespace DAQ
 {
+  namespace V10 {
 
 /*!
    This class derived from CRingItem and represents a set of scalers that have been 
@@ -92,5 +93,6 @@ private:
 };
    
 
-} // end of namespace
+  } // end of V10 namespace
+} // end of DAQ
 #endif

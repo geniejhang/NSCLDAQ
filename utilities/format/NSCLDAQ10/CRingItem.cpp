@@ -23,8 +23,9 @@
 #include <sstream>
 #include <iomanip>
 
-namespace NSCLDAQ10
-{
+namespace DAQ {
+  namespace V10 {
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -443,4 +444,5 @@ CRingItem::timeString(time_t theTime)
   return result;
 }
 
-} // end of namespace
+} // end of V10 namespace
+} // end DAQ

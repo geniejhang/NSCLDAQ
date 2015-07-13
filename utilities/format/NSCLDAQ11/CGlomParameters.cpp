@@ -20,8 +20,8 @@
 
 #include <sstream>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 /**
  * @note the definition below requires that the order of array elements matches
@@ -225,4 +225,5 @@ CGlomParameters::toString() const
     return out.str();
 }
 
-} // end of namespace
+  } // end of V11 namespace
+} // end DAQ

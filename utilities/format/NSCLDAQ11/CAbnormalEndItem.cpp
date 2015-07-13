@@ -24,8 +24,8 @@
 #include "DataFormatV11.h"
 #include <typeinfo>
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 /**
  * default constructor
@@ -133,4 +133,5 @@ CAbnormalEndItem::toString() const
     return result;
 }
 
-} // end of namespace
+  } // end of V11 namespace
+} // end DAQ

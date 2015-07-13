@@ -22,8 +22,9 @@
 
 using namespace std;
 
-namespace NSCLDAQ10
+namespace DAQ
 {
+  namespace V10 {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -377,4 +378,5 @@ CRingScalerItem::throwIfInvalidChannel(uint32_t channel,
   }
 }
 
-} // end of namespace
+ } // end V10
+} // end DAQ

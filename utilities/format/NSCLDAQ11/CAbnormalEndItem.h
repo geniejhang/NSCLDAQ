@@ -24,8 +24,8 @@
 
 #include "CRingItem.h"
 
-namespace NSCLDAQ11
-{
+namespace DAQ {
+  namespace V11 {
 
 class CAbnormalEndItem : public CRingItem
 {
@@ -50,6 +50,7 @@ public:
     virtual std::string toString() const;
 };
 
-} // end of namespace
+  } // end of V11 namespace
+} // end DAQ
 
 #endif

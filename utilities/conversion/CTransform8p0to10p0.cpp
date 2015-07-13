@@ -55,17 +55,17 @@ namespace DAQ {
           break;
       }
 
-      return NSCLDAQ10::CRingItem(1);
+      return V10::CRingItem(1);
     }
     
 
-    NSCLDAQ10::CRingScalerItem CTransform8p0to10p0::transformScaler(const InitialType &item)
+    V10::CRingScalerItem CTransform8p0to10p0::transformScaler(const InitialType &item)
     {
       using namespace std::chrono;
 
       auto sclrBuf = V8::format_cast<V8::CScalerBuffer>(item);
 
-      NSCLDAQ10::CRingScalerItem newItem(sclrBuf.getOffsetBegin(),
+      V10::CRingScalerItem newItem(sclrBuf.getOffsetBegin(),
                                          sclrBuf.getOffsetEnd(),
                                          system_clock::to_time_t(system_clock::now()),
                                          sclrBuf.getScalers());
@@ -73,7 +73,7 @@ namespace DAQ {
       return newItem;
     }
 
-    NSCLDAQ10::CRingStateChangeItem CTransform8p0to10p0::transformControl(const InitialType &item)
+    V10::CRingStateChangeItem CTransform8p0to10p0::transformControl(const InitialType &item)
     {
       auto ctlBuf = V8::format_cast<V8::CControlBuffer>(item);
 
@@ -81,7 +81,7 @@ namespace DAQ {
       std::uint16_t run  = ctlBuf.getHeader().run;
       std::uint16_t type = ctlBuf.getHeader().type;
 
-      NSCLDAQ10::CRingStateChangeItem v10item(mapControlType(type),
+      V10::CRingStateChangeItem v10item(mapControlType(type),
                                               run,
                                               ctlBuf.getOffset(),
                                               tstamp,
@@ -90,7 +90,7 @@ namespace DAQ {
       return v10item;
     }
 
-    NSCLDAQ10::CPhysicsEventItem CTransform8p0to10p0::transformPhysicsEvent(const InitialType &item)
+    V10::CPhysicsEventItem CTransform8p0to10p0::transformPhysicsEvent(const InitialType &item)
     {
       m_physicsEvents.clear();
 
@@ -105,7 +105,7 @@ namespace DAQ {
         ++it;
       }
 
-      NSCLDAQ10::CPhysicsEventItem firstEvent( m_physicsEvents.front() );
+      V10::CPhysicsEventItem firstEvent( m_physicsEvents.front() );
       m_physicsEvents.erase(m_physicsEvents.begin());
 
       return firstEvent;
@@ -114,7 +114,7 @@ namespace DAQ {
     void CTransform8p0to10p0::transformOnePhysicsEvent(const std::shared_ptr<DAQ::V8::CPhysicsEvent>& pEvent)
     {
       // make sure that we construct a physics event big enough to handle any V8 buffer
-      m_physicsEvents.emplace(m_physicsEvents.end(), NSCLDAQ10::PHYSICS_EVENT,
+      m_physicsEvents.emplace(m_physicsEvents.end(), V10::PHYSICS_EVENT,
                               pEvent->getNTotalShorts()*sizeof(std::uint16_t));
 
       auto& v10Item = m_physicsEvents.back();
@@ -125,16 +125,16 @@ namespace DAQ {
       v10Item.updateSize();
     }
 
-    NSCLDAQ10::CRingTextItem CTransform8p0to10p0::transformText(const InitialType &item)
+    V10::CRingTextItem CTransform8p0to10p0::transformText(const InitialType &item)
     {
       auto textBuf = V8::format_cast<V8::CTextBuffer>(item);
 
       uint32_t v10type;
       std::uint16_t v8type = textBuf.getHeader().type;
       if (v8type == V8::STATEVARBF || v8type == V8::RUNVARBF) {
-        v10type = NSCLDAQ10::MONITORED_VARIABLES;
+        v10type = V10::MONITORED_VARIABLES;
       } else if (v8type == V8::PKTDOCBF) {
-        v10type = NSCLDAQ10::PACKET_TYPES;
+        v10type = V10::PACKET_TYPES;
       } else {
         std::string errmsg("CTransform8p0to10p0::transformText() ");
         errmsg += "No known conversion of version 8 text type " + to_string(v8type) + " ";
@@ -142,7 +142,7 @@ namespace DAQ {
         throw std::runtime_error(errmsg);
       }
 
-      NSCLDAQ10::CRingTextItem textItem(v10type, textBuf.getStrings());
+      V10::CRingTextItem textItem(v10type, textBuf.getStrings());
       return textItem;
     }
 
@@ -165,16 +165,16 @@ namespace DAQ {
 
       switch(type) {
         case V8::BEGRUNBF:
-          v10type = NSCLDAQ10::BEGIN_RUN;
+          v10type = V10::BEGIN_RUN;
           break;
         case V8::ENDRUNBF:
-          v10type = NSCLDAQ10::END_RUN;
+          v10type = V10::END_RUN;
           break;
         case V8::PAUSEBF:
-          v10type = NSCLDAQ10::PAUSE_RUN;
+          v10type = V10::PAUSE_RUN;
           break;
         case V8::RESUMEBF:
-          v10type = NSCLDAQ10::RESUME_RUN;
+          v10type = V10::RESUME_RUN;
           break;
         default:
           throw std::runtime_error("CTransform8p0to10p0::mapControlType(std::uint16_t) unknown type provided");

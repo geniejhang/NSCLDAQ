@@ -17,7 +17,7 @@
 
 using namespace std;
 
-using namespace NSCLDAQ11;
+using namespace DAQ::V11;
 
 class teststate : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(teststate);

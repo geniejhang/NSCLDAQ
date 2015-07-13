@@ -3,22 +3,25 @@
 #ifndef CTransform10p0to11p0_H
 #define CTransform10p0to11p0_H
 
-namespace NSCLDAQ10
-{
-    class CRingItem;
-}
 
-namespace NSCLDAQ11 {
-    class CRingItem;
-    class CRingScalerItem;
-    class CRingStateChangeItem;
-    class CPhysicsEventItem;
-    class CRingPhysicsEventCountItem;
-    class CRingTextItem;
-    class CRingFragmentItem;
-}
 
 namespace DAQ {
+
+  namespace V10
+  {
+      class CRingItem;
+  }
+
+  namespace V11 {
+      class CRingItem;
+      class CRingScalerItem;
+      class CRingStateChangeItem;
+      class CPhysicsEventItem;
+      class CRingPhysicsEventCountItem;
+      class CRingTextItem;
+      class CRingFragmentItem;
+  }
+
   namespace Transform {
 
 
@@ -37,8 +40,8 @@ namespace DAQ {
  *  \code
  *      NSCLDAQ10::CRingScalerItem oldItem(32);
  *      auto newItem = CTransform10p0to11p0()(oldItem);
- *      NSCLDAQ11::CRingScalerItem& sclr
- *           = dynamic_cast<NSCLDAQ11::CRingScalerItem&>(newItem);
+ *      V11::CRingScalerItem& sclr
+ *           = dynamic_cast<V11::CRingScalerItem&>(newItem);
  *  \endcode
  *
  *  The better method for this is to use the
@@ -47,8 +50,8 @@ namespace DAQ {
 class CTransform10p0to11p0 
 {
   public:
-    typedef typename NSCLDAQ10::CRingItem InitialType;
-    typedef typename NSCLDAQ11::CRingItem FinalType;
+    typedef typename V10::CRingItem InitialType;
+    typedef typename V11::CRingItem FinalType;
 
   public:
     /*! \brief Main entry point for any transform
@@ -89,7 +92,7 @@ class CTransform10p0to11p0
      * \param item  10.0 incremental scaler item
      * \return transformed item (PERIODIC_SCALER type)
      */
-    NSCLDAQ11::CRingScalerItem transformScaler(InitialType& item);
+    V11::CRingScalerItem transformScaler(InitialType& item);
 
     /*!
      * \brief Transforms 10.0 State Change to an 11.0 State Change
@@ -111,7 +114,7 @@ class CTransform10p0to11p0
      * \param item 10.0 state change type
      * \return transformed item in 11.0 format
      */
-    NSCLDAQ11::CRingStateChangeItem transformStateChange(InitialType& item);
+    V11::CRingStateChangeItem transformStateChange(InitialType& item);
 
     /*!
      * \brief Transform a physics event between 10.0 and 11.0 formats
@@ -125,7 +128,7 @@ class CTransform10p0to11p0
      * \param item  10.0 physics event item
      * \return transformed 11.0 physics event
      */
-    NSCLDAQ11::CPhysicsEventItem transformPhysicsEvent(InitialType& item);
+    V11::CPhysicsEventItem transformPhysicsEvent(InitialType& item);
 
     /*!
      * \brief Transform Physics Event Counts from 10.0 to 11.0
@@ -141,7 +144,7 @@ class CTransform10p0to11p0
      * \param item
      * \return
      */
-    NSCLDAQ11::CRingPhysicsEventCountItem transformPhysicsEventCount(InitialType& item);
+    V11::CRingPhysicsEventCountItem transformPhysicsEventCount(InitialType& item);
 
     /*!
      * \brief Transform a text item between 10.0 and 11.0 formats
@@ -161,7 +164,7 @@ class CTransform10p0to11p0
      * \param item 10.0 text item type
      * \return transformed 11.0 item
      */
-    NSCLDAQ11::CRingTextItem transformText(InitialType& item);
+    V11::CRingTextItem transformText(InitialType& item);
 
     /*!
      * \brief Transform timestamped non-incr scaler (aka. timestamped running sclr)
@@ -182,7 +185,7 @@ class CTransform10p0to11p0
      * \param item 10.0 non-incr scaler item
      * \return transformed 11.0 item
      */
-    NSCLDAQ11::CRingScalerItem transformNonIncrScaler(InitialType& item);
+    V11::CRingScalerItem transformNonIncrScaler(InitialType& item);
 
     /*!
      * \brief Transform a 10.0 Fragment to an 11.0 Fragment
@@ -211,7 +214,7 @@ class CTransform10p0to11p0
      * \param item the 10.0 item
      * \return the transformed 11.0 item
      */
-    NSCLDAQ11::CRingFragmentItem transformFragment(InitialType& item);
+    V11::CRingFragmentItem transformFragment(InitialType& item);
 };
 
   } // end Transform

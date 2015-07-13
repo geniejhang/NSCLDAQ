@@ -18,8 +18,10 @@
 #ifndef DAQ10_CRINGITEMFACTORY_H
 #define DAQ10_CRINGITEMFACTORY_H
 
-namespace NSCLDAQ10
+namespace DAQ
 {
+  namespace V10 {
+
 
 class CRingItem;
 
@@ -38,5 +40,6 @@ public:
   static bool   isKnownItemType(const void* pItem);
 };
 
-} // end of namespace
+} // end of V10 namespace
+} // end of DAQ
 #endif

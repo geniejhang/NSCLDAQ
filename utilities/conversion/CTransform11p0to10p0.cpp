@@ -31,8 +31,8 @@ namespace DAQ {
 
 CTransform11p0to10p0::FinalType
 CTransform11p0to10p0::operator()(InitialType& item) {
-  NSCLDAQ11::CRingItemFactory factory;
-    unique_ptr<NSCLDAQ11::CRingItem> pItem(factory.createRingItem(item));
+  V11::CRingItemFactory factory;
+    unique_ptr<V11::CRingItem> pItem(factory.createRingItem(item));
     return dispatch(*pItem);
 }
 
@@ -42,33 +42,33 @@ CTransform11p0to10p0::dispatch(InitialType& item)
 {
 
     switch (item.type()) {
-    case NSCLDAQ11::PERIODIC_SCALERS:
+    case V11::PERIODIC_SCALERS:
         return transformScaler(item);
         break;
-    case NSCLDAQ11::BEGIN_RUN:
-    case NSCLDAQ11::END_RUN:
-    case NSCLDAQ11::PAUSE_RUN:
-    case NSCLDAQ11::RESUME_RUN:
+    case V11::BEGIN_RUN:
+    case V11::END_RUN:
+    case V11::PAUSE_RUN:
+    case V11::RESUME_RUN:
         return transformStateChange(item);
         break;
-    case NSCLDAQ11::PHYSICS_EVENT:
+    case V11::PHYSICS_EVENT:
         return transformPhysicsEvent(item);
         break;
-    case NSCLDAQ11::PHYSICS_EVENT_COUNT:
+    case V11::PHYSICS_EVENT_COUNT:
         return transformPhysicsEventCount(item);
         break;
-    case NSCLDAQ11::MONITORED_VARIABLES:
-    case NSCLDAQ11::PACKET_TYPES:
+    case V11::MONITORED_VARIABLES:
+    case V11::PACKET_TYPES:
         return transformText(item);
         break;
-    case NSCLDAQ11::EVB_FRAGMENT:
+    case V11::EVB_FRAGMENT:
         return transformFragment(item);
         break;
-    case NSCLDAQ11::EVB_UNKNOWN_PAYLOAD:
+    case V11::EVB_UNKNOWN_PAYLOAD:
         return transformUnknownFragment(item);
         break;
     default:
-        return NSCLDAQ10::CVoidItem();
+        return V10::CVoidItem();
         break;
     }
     return CTransform11p0to10p0::FinalType(1);
@@ -77,9 +77,9 @@ CTransform11p0to10p0::dispatch(InitialType& item)
 
 
 CTransform11p0to10p0::FinalType
-CTransform11p0to10p0::transformScaler(NSCLDAQ11::CRingItem& item)
+CTransform11p0to10p0::transformScaler(V11::CRingItem& item)
 {
-    auto& sclrItem = dynamic_cast<NSCLDAQ11::CRingScalerItem&>(item);
+    auto& sclrItem = dynamic_cast<V11::CRingScalerItem&>(item);
     if (sclrItem.isIncremental()) {
         return transformIncrScaler(item);
     } else {
@@ -89,12 +89,12 @@ CTransform11p0to10p0::transformScaler(NSCLDAQ11::CRingItem& item)
 }
 
 
-NSCLDAQ10::CRingScalerItem
+V10::CRingScalerItem
 CTransform11p0to10p0::transformIncrScaler(InitialType &item)
 {
-    auto& sclrItem = dynamic_cast<NSCLDAQ11::CRingScalerItem&>(item);
+    auto& sclrItem = dynamic_cast<V11::CRingScalerItem&>(item);
 
-    NSCLDAQ10::CRingScalerItem v10item(sclrItem.getScalerCount());
+    V10::CRingScalerItem v10item(sclrItem.getScalerCount());
 
     v10item.setStartTime(sclrItem.getStartTime());
     v10item.setEndTime(sclrItem.getEndTime());
@@ -106,12 +106,12 @@ CTransform11p0to10p0::transformIncrScaler(InitialType &item)
 }
 
 
-NSCLDAQ10::CRingTimestampedRunningScalerItem
+V10::CRingTimestampedRunningScalerItem
 CTransform11p0to10p0::transformNonIncrScaler(InitialType &item)
 {
-    auto& sclrItem = dynamic_cast<NSCLDAQ11::CRingScalerItem&>(item);
+    auto& sclrItem = dynamic_cast<V11::CRingScalerItem&>(item);
 
-    NSCLDAQ10::CRingTimestampedRunningScalerItem v10item(
+    V10::CRingTimestampedRunningScalerItem v10item(
                 sclrItem.getEventTimestamp(),
                 sclrItem.getStartTime(),
                 sclrItem.getEndTime(),
@@ -123,12 +123,12 @@ CTransform11p0to10p0::transformNonIncrScaler(InitialType &item)
     return v10item;
 }
 
-NSCLDAQ10::CRingStateChangeItem
+V10::CRingStateChangeItem
 CTransform11p0to10p0::transformStateChange(InitialType &item)
 {
-    auto& v11Item = dynamic_cast<NSCLDAQ11::CRingStateChangeItem&>(item);
+    auto& v11Item = dynamic_cast<V11::CRingStateChangeItem&>(item);
 
-    NSCLDAQ10::CRingStateChangeItem v10item(v11Item.type(),
+    V10::CRingStateChangeItem v10item(v11Item.type(),
                                             v11Item.getRunNumber(),
                                             v11Item.getElapsedTime(),
                                             v11Item.getTimestamp(),
@@ -136,11 +136,11 @@ CTransform11p0to10p0::transformStateChange(InitialType &item)
     return v10item;
 }
 
-NSCLDAQ10::CPhysicsEventItem
+V10::CPhysicsEventItem
 CTransform11p0to10p0::transformPhysicsEvent(InitialType& item)
 {
-    auto& v11Item = dynamic_cast<NSCLDAQ11::CPhysicsEventItem&>(item);
-    NSCLDAQ10::CPhysicsEventItem v10item(NSCLDAQ11::PHYSICS_EVENT,
+    auto& v11Item = dynamic_cast<V11::CPhysicsEventItem&>(item);
+    V10::CPhysicsEventItem v10item(V11::PHYSICS_EVENT,
                                          v11Item.getStorageSize());
 
     auto pBegin11 = reinterpret_cast<char*>(v11Item.getBodyPointer());
@@ -154,22 +154,22 @@ CTransform11p0to10p0::transformPhysicsEvent(InitialType& item)
   return v10item;
 }
 
-NSCLDAQ10::CRingPhysicsEventCountItem
+V10::CRingPhysicsEventCountItem
 CTransform11p0to10p0::transformPhysicsEventCount(InitialType& item)
 {
-    auto& v11Item = dynamic_cast<NSCLDAQ11::CRingPhysicsEventCountItem&>(item);
-    NSCLDAQ10::CRingPhysicsEventCountItem v10item(v11Item.getEventCount(),
+    auto& v11Item = dynamic_cast<V11::CRingPhysicsEventCountItem&>(item);
+    V10::CRingPhysicsEventCountItem v10item(v11Item.getEventCount(),
                                                   v11Item.getTimeOffset(),
                                                   v11Item.getTimestamp());
 
     return v10item;
 }
 
-NSCLDAQ10::CRingFragmentItem
+V10::CRingFragmentItem
 CTransform11p0to10p0::transformFragment(InitialType& item)
 {
-    auto& v11Item = dynamic_cast<NSCLDAQ11::CRingFragmentItem&>(item);
-    NSCLDAQ10::CRingFragmentItem v10item(v11Item.timestamp(),
+    auto& v11Item = dynamic_cast<V11::CRingFragmentItem&>(item);
+    V10::CRingFragmentItem v10item(v11Item.timestamp(),
                                          v11Item.source(),
                                          v11Item.payloadSize(),
                                          v11Item.payloadPointer(),
@@ -179,11 +179,11 @@ CTransform11p0to10p0::transformFragment(InitialType& item)
 
 }
 
-NSCLDAQ10::CUnknownFragment
+V10::CUnknownFragment
 CTransform11p0to10p0::transformUnknownFragment(InitialType& item)
 {
-    auto& v11Item = dynamic_cast<NSCLDAQ11::CUnknownFragment&>(item);
-    NSCLDAQ10::CUnknownFragment v10item(v11Item.timestamp(),
+    auto& v11Item = dynamic_cast<V11::CUnknownFragment&>(item);
+    V10::CUnknownFragment v10item(v11Item.timestamp(),
                                         v11Item.source(),
                                         v11Item.barrierType(),
                                         v11Item.payloadSize(),
@@ -193,11 +193,11 @@ CTransform11p0to10p0::transformUnknownFragment(InitialType& item)
 
 }
 
-NSCLDAQ10::CRingTextItem
+V10::CRingTextItem
 CTransform11p0to10p0::transformText(InitialType& item)
 {
-    auto& v11Item = dynamic_cast<NSCLDAQ11::CRingTextItem&>(item);
-    NSCLDAQ10::CRingTextItem v10item(v11Item.type(),
+    auto& v11Item = dynamic_cast<V11::CRingTextItem&>(item);
+    V10::CRingTextItem v10item(v11Item.type(),
                                      v11Item.getStrings(),
                                      v11Item.getTimeOffset(),
                                      v11Item.getTimestamp());

@@ -15,7 +15,7 @@
 #include <time.h>
 
 using namespace std;
-using namespace NSCLDAQ10;
+using namespace DAQ::V10;
 
 class teststate : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(teststate);

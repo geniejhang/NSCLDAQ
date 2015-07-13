@@ -8,21 +8,27 @@
 
 class CFilter;
 
-class CTransform11p0to11p0 
-{
-  public:
-    using InitialType = NSCLDAQ11::CRingItem;
-    using FinalType =   NSCLDAQ11::CRingItem;
+namespace DAQ {
+  namespace Transform {
 
-  private:
-    std::unique_ptr<CFilter> m_pFilter;
+    class CTransform11p0to11p0
+    {
+    public:
+      using InitialType = NSCLDAQ11::CRingItem;
+      using FinalType =   NSCLDAQ11::CRingItem;
 
-  public:
-    CTransform11p0to11p0(std::unique_ptr<CFilter> pFilt);
+    private:
+      std::unique_ptr<CFilter> m_pFilter;
 
-    FinalType operator()(InitialType& item);
+    public:
+      CTransform11p0to11p0(std::unique_ptr<CFilter> pFilt);
 
-    FinalType dispatch(InitialType* item);
-};
+      FinalType operator()(InitialType& item);
+
+      FinalType dispatch(InitialType* item);
+    };
+
+  } // end Transform
+} // end DAQ
 
 #endif

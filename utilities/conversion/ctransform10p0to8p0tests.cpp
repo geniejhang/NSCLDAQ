@@ -95,7 +95,7 @@ public:
           m_calTime = *pTime;
         }
 
-        NSCLDAQ10::CRingScalerItem scaler(m_offsetBegin, m_offsetEnd, m_tstamp, m_scalers);
+        V10::CRingScalerItem scaler(m_offsetBegin, m_offsetEnd, m_tstamp, m_scalers);
 
         v8item = m_transform( scaler );
 
@@ -219,7 +219,7 @@ public:
       m_calTime = *pTime;
     }
 
-    NSCLDAQ10::CRingTimestampedRunningScalerItem scaler(0x123456789ab, m_offsetBegin,m_offsetEnd,
+    V10::CRingTimestampedRunningScalerItem scaler(0x123456789ab, m_offsetBegin,m_offsetEnd,
                                                         1, m_tstamp, m_scalers);
 
     v8item = m_transform( scaler );
@@ -258,7 +258,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
     public:
         V8::CRawBuffer                v8item;
-        NSCLDAQ10::CRingTextItem       v10item;
+        V10::CRingTextItem       v10item;
         Transform::CTransform10p0to8p0 m_transform;
         std::vector<std::string>       m_strings;
         std::uint32_t                  m_offsetTime;
@@ -267,7 +267,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
         // We need to define a default constructor b/c the CRingTextItem classes
         // do not define a default constructor.
         CTransform10p0to8p0Tests_Text()
-          : v8item(), v10item(NSCLDAQ10::MONITORED_VARIABLES),
+          : v8item(), v10item(V10::MONITORED_VARIABLES),
             m_transform(),
             m_strings() ,
             m_offsetTime() {}
@@ -281,7 +281,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
           std::time_t m_tstamp = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() );
 
-          v10item = NSCLDAQ10::CRingTextItem(NSCLDAQ10::MONITORED_VARIABLES,
+          v10item = V10::CRingTextItem(V10::MONITORED_VARIABLES,
                                         m_strings, m_offsetTime, m_tstamp);
 
           v8item = m_transform( v10item );
@@ -361,7 +361,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
         {
           std::time_t tstamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
-          NSCLDAQ10::CRingTextItem text(NSCLDAQ10::PACKET_TYPES, m_strings, m_offsetTime, tstamp);
+          V10::CRingTextItem text(V10::PACKET_TYPES, m_strings, m_offsetTime, tstamp);
 
           m_transform = DAQ::Transform::CTransform10p0to8p0();
           v8item = m_transform( text );
@@ -387,7 +387,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
     public:
         V8::CRawBuffer                 v8item;
-        NSCLDAQ10::CRingTextItem       v10item;
+        V10::CRingTextItem       v10item;
         Transform::CTransform10p0to8p0 m_transform;
         std::vector<std::string>       m_strings;
         std::uint32_t                  m_offsetTime;
@@ -396,7 +396,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
         // We need to define a default constructor b/c the CRingTextItem classes
         // do not define a default constructor.
         CTransform10p0to8p0Tests_MultiText()
-          : v8item(), v10item(NSCLDAQ10::MONITORED_VARIABLES),
+          : v8item(), v10item(V10::MONITORED_VARIABLES),
             m_transform(),
             m_strings() ,
             m_offsetTime() {}
@@ -410,7 +410,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
           std::time_t tstamp = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() );
 
-          v10item = NSCLDAQ10::CRingTextItem(NSCLDAQ10::MONITORED_VARIABLES,
+          v10item = V10::CRingTextItem(V10::MONITORED_VARIABLES,
                                         m_strings, m_offsetTime, tstamp);
         }
 
@@ -486,7 +486,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
           V8::gBufferSize = 40; // select a size that will automatically flush
           m_transform = Transform::CTransform10p0to8p0();
 
-          NSCLDAQ10::CPhysicsEventItem event(NSCLDAQ10::PHYSICS_EVENT, 8192);
+          V10::CPhysicsEventItem event(V10::PHYSICS_EVENT, 8192);
           m_bodyData << std::vector<std::uint16_t>({4, 0, 1, 2});
 
           event.fillBody(m_bodyData);
@@ -596,18 +596,18 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
     private:
       Buffer::ByteBuffer m_bodyData;
       V8::CRawBuffer     v8item;
-      NSCLDAQ10::CPhysicsEventItem v10item;
+      V10::CPhysicsEventItem v10item;
       Transform::CTransform10p0to8p0 m_transform;
 
     public:
       CTransform10p0to8p0Tests_MultiPhysicsEvent() : m_bodyData(), v8item(),
-        v10item(NSCLDAQ10::PHYSICS_EVENT), m_transform() {}
+        v10item(V10::PHYSICS_EVENT), m_transform() {}
 
       void setUp() {
         V8::gBufferSize = 41; // select a size that will require two transforms to flush
         m_transform = Transform::CTransform10p0to8p0();
 
-        v10item = NSCLDAQ10::CPhysicsEventItem(NSCLDAQ10::PHYSICS_EVENT, 8192);
+        v10item = V10::CPhysicsEventItem(V10::PHYSICS_EVENT, 8192);
         m_bodyData << std::vector<std::uint16_t>({4, 0, 1, 2});
 
         v10item.fillBody(m_bodyData);
@@ -711,12 +711,12 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
           m_run = 1357;
 
-          NSCLDAQ10::CRingStateChangeItem v10item = setUpType(NSCLDAQ10::END_RUN);
+          V10::CRingStateChangeItem v10item = setUpType(V10::END_RUN);
 
           v8item = m_transform( v10item );
         }
 
-        NSCLDAQ10::CRingStateChangeItem setUpType(std::uint16_t type)
+        V10::CRingStateChangeItem setUpType(std::uint16_t type)
         {
           using namespace std::chrono;
           std::time_t now = system_clock::to_time_t(system_clock::now());
@@ -725,7 +725,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
             m_calTime = *pTime;
           }
 
-          return NSCLDAQ10::CRingStateChangeItem(type, m_run, m_offset, now, m_title);
+          return V10::CRingStateChangeItem(type, m_run, m_offset, now, m_title);
         }
 
         void tearDown() {
@@ -894,7 +894,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
         void Control_22()
         {
-          auto v10item= setUpType(NSCLDAQ10::BEGIN_RUN);
+          auto v10item= setUpType(V10::BEGIN_RUN);
 
           v8item = m_transform( v10item );
           CPPUNIT_ASSERT_EQUAL_MESSAGE("BEGIN_RUN --> BEGRUNBF",
@@ -903,7 +903,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
         void Control_23()
         {
-          auto v10item= setUpType(NSCLDAQ10::PAUSE_RUN);
+          auto v10item= setUpType(V10::PAUSE_RUN);
 
           v8item = m_transform( v10item );
           CPPUNIT_ASSERT_EQUAL_MESSAGE("PAUSE_RUN --> PAUSEBF",
@@ -912,7 +912,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
         void Control_24()
         {
-          auto v10item= setUpType(NSCLDAQ10::RESUME_RUN);
+          auto v10item= setUpType(V10::RESUME_RUN);
 
           v8item = m_transform( v10item );
           CPPUNIT_ASSERT_EQUAL_MESSAGE("RESUME_RUN --> RESUMEBF",

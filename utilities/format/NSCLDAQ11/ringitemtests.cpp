@@ -23,7 +23,7 @@ std::string uniqueName(std::string);
 
 using namespace std;
 
-using namespace NSCLDAQ11;
+using namespace DAQ::V11;
 
 class ritemtests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(ritemtests);
