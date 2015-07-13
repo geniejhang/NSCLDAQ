@@ -53,9 +53,10 @@ namespace DAQ {
       void setCurrentRunNumber(std::uint16_t runNo) { m_run = runNo; }
       std::uint16_t getCurrentRunNumber() const { return m_run; }
 
-      void setSequenceNumber(std::uint32_t seqNo) { m_lastSequence = seqNo; }
+      void setNTriggersProcessed(std::size_t nTriggers) { m_nTriggersProcessed = nTriggers; }
+      std::uint32_t computeSequence() const;
 
-      void updateStatistics(const InitialType& item);
+      void updateSamplingFactor(const InitialType& item);
       void resetStatistics();
       void startNewPhysicsBuffer();
 

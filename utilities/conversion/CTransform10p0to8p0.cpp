@@ -62,7 +62,7 @@ namespace DAQ {
         case NSCLDAQ10::EVB_UNKNOWN_PAYLOAD: // these do not transform.
           break;
         case NSCLDAQ10::PHYSICS_EVENT_COUNT:
-          updateStatistics(*pItem);
+          updateSamplingFactor(*pItem);
           break;
       default:
           std::string errmsg("CTransform10p0to8p0::dispatch()");
@@ -88,7 +88,7 @@ namespace DAQ {
       header.type = V8::SCALERBF;
       header.nevt = v10item.getScalerCount();
       header.run  = m_run;
-      header.seq  = m_lastSequence;
+      header.seq  = computeSequence();
       V8::CScalerBuffer sclrBuf(header, v10item.getStartTime(), v10item.getEndTime(),
                                 v10item.getScalers());
       return sclrBuf;
@@ -103,7 +103,7 @@ namespace DAQ {
       header.type = V8::SCALERBF;
       header.nevt = v10item.getScalerCount();
       header.run  = m_run;
-      header.seq  = m_lastSequence;
+      header.seq  = computeSequence();
       V8::CScalerBuffer sclrBuf(header, v10item.getOffsetStart(), v10item.getOffsetEnd(),
                                 v10item.getScalers());
       return sclrBuf;
@@ -123,7 +123,7 @@ namespace DAQ {
       V8::bheader header;
       header.type = mapControlType(v10item.type());
       header.run = m_run;
-      header.seq = m_lastSequence;
+      header.seq = computeSequence();
 
       std::string title = v10item.getTitle();
       title.resize(80, ' ');
@@ -148,7 +148,6 @@ namespace DAQ {
 
       V8::CRawBuffer returnBuffer;
       if ( m_physicsBuffer.appendEvent(pEvent) ) {
-
         ++m_nTriggersProcessed;
 
         if (m_physicsBuffer.getNBytesFree() == 0) {
@@ -214,12 +213,16 @@ namespace DAQ {
       return m_textBuffers;
     }
 
-    void CTransform10p0to8p0::updateStatistics(const InitialType &item)
+    void CTransform10p0to8p0::updateSamplingFactor(const InitialType &item)
     {
       auto& v10item = dynamic_cast<const NSCLDAQ10::CRingPhysicsEventCountItem&>(item);
       double observedTriggers = static_cast<double>(m_nTriggersProcessed);
       double realTriggers     = static_cast<double>(v10item.getEventCount());
-      m_samplingFactor = observedTriggers/realTriggers;
+      if (realTriggers != 0) {
+        m_samplingFactor = observedTriggers/realTriggers;
+      } else {
+        m_samplingFactor = 1.0; // realTriggers=0 means that we have no info to compute something else
+      }
     }
 
     std::uint16_t CTransform10p0to8p0::mapControlType(std::uint16_t type) const
@@ -270,26 +273,30 @@ namespace DAQ {
     
     void CTransform10p0to8p0::startNewPhysicsBuffer()
     {
-      m_lastSequence = (m_nTriggersProcessed/m_samplingFactor);
+      m_lastSequence = computeSequence();
 
       V8::bheader header;
       header.type = V8::DATABF;
       header.nevt = 0;
       header.run = m_run;
-      header.seq = m_lastSequence;
+      header.seq = computeSequence();
 
       m_physicsBuffer = V8::CPhysicsEventBuffer(header,  Buffer::ByteBuffer({}));
     }
+
+  std::uint32_t CTransform10p0to8p0::computeSequence() const
+  {
+    return m_nTriggersProcessed/m_samplingFactor;
+  }
 
   void CTransform10p0to8p0::appendNewTextBuffer(std::uint16_t type) {
     V8::bheader header;
     header.type = mapTextType(type);
     header.run  = m_run;
-    header.seq  = m_lastSequence;
+    header.seq  = computeSequence();
 
     V8::CTextBuffer buffer(header, {});
     m_textBuffers.push_back(buffer);
-
   }
 
   void CTransform10p0to8p0::resetStatistics()

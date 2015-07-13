@@ -647,6 +647,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("After flush, transform object should have started a new physics event",
                                      std::size_t(1), m_transform.getCurrentPhysicsBuffer().size() );
       }
+
     };
     CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_MultiPhysicsEvent);
 
@@ -702,7 +703,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
         {
           m_transform = Transform::CTransform10p0to8p0();
 
-          m_transform.setSequenceNumber(10);
+          m_transform.setNTriggersProcessed(10);
 
           m_title = "a title for you and me";
 
