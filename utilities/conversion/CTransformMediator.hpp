@@ -83,11 +83,7 @@ void CTransformMediator<Transform>::mainLoop()
   // Dereference our pointers before entering
   // the main loop
 
-  int count = 0;
-  while (count < 100) {
-    processOne();
-    ++count;
-  }
+  while (processOne()) {}
 
 }
 template<class Transform>
@@ -99,7 +95,7 @@ void CTransformMediator<Transform>::finalize()
 {
 }
 template<class Transform>
-void CTransformMediator<Transform>::processOne()
+bool CTransformMediator<Transform>::processOne()
 {
   CDataSource& source    = *getDataSource();
   CDataSink&   sink      = *getDataSink();
@@ -109,6 +105,10 @@ void CTransformMediator<Transform>::processOne()
 
   T1 item1(1);
   source >> item1;
+
+  if (source.eof()) {
+    return false;
+  }
 
   updatePredicate();
 
@@ -127,6 +127,7 @@ void CTransformMediator<Transform>::processOne()
     std::cout << "Caught an error" << std::endl;
   }
 
+  return true;
 }
 
 template<class Transform>

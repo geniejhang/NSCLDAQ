@@ -1,4 +1,5 @@
 lib_LTLIBRARIES = libConversion.la
+bin_PROGRAMS = format_converter
 
 libConversion_la_SOURCES = CTransformMediator.h \
                            C8p0to10p0Mediator.cpp \
@@ -39,17 +40,24 @@ libConversion_la_CXXFLAGS = -I@srcdir@ \
                             -I@top_srcdir@/base/headers \
                             @LIBTCLPLUS_CFLAGS@
 
-libConversion_la_LIBADD = @LIBTCLPLUS_LDFLAGS@
+libConversion_la_LIBADD = @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la \
+			  @top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
+			  @top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
+			  @top_builddir@/utilities/filter/libfilter.la \
+			  @top_builddir@/utilities/IO/libdaqio.la \
+			  @top_builddir@/utilities/FormattedIO/libdaqformatio.la \
+			  @LIBTCLPLUS_LDFLAGS@
 
-noinst_PROGRAMS = unittests testApp
+
+noinst_PROGRAMS = unittests
 
 unittests_SOURCES = TestRunner.cpp \
                     ctransform8p0to10p0tests.cpp \
                     ctransform10p0to8p0tests.cpp \
                     ctransform10p0to11p0tests.cpp \
                     ctransform11p0to10p0tests.cpp \
-                    ctransformfactorytests.cpp \
-                    c10p0to8p0mediatortests.cpp
+		    ctransformfactorytests.cpp \
+		    c10p0to8p0mediatortests.cpp
 
 unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                    @top_builddir@/utilities/conversion/libConversion.la	\
@@ -85,24 +93,39 @@ unittests_LDFLAGS	= @CPPUNIT_LDFLAGS@ \
 
 TESTS=./unittests
 
-testApp_SOURCES = Main.h Main.cpp
 
-testApp_LDADD = @builddir@/libConversion.la \
+BUILT_SOURCES = format_converter_options.c
+
+format_converter_options.c : format_converter_options.ggo
+	gengetopt -i $< -F @srcdir@/format_converter_options -a cmdLineOpts
+
+format_converter_SOURCES = Main.h Main.cpp format_converter_options.c
+
+format_converter_LDADD = @builddir@/libConversion.la \
                 @top_builddir@/utilities/Buffer/libbuffer.la \
                @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la \
-								@top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
-								@top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
-								@top_builddir@/utilities/filter/libfilter.la \
-								@top_builddir@/utilities/IO/libdaqio.la \
-								@top_builddir@/utilities/FormattedIO/libdaqformatio.la
+	       @top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
+	       @top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
+	       @top_builddir@/utilities/filter/libfilter.la \
+	       @top_builddir@/utilities/IO/libdaqio.la \
+	       @top_builddir@/utilities/FormattedIO/libdaqformatio.la
 
-testApp_CPPFLAGS = -I@srcdir@ \
+format_converter_CPPFLAGS = -I@srcdir@ \
                     -I@top_srcdir@/utilities/Buffer \
                     -I@top_srcdir@/utilities/format/NSCLDAQ8 \
-									 -I@top_srcdir@/utilities/format/NSCLDAQ10 \
-									 -I@top_srcdir@/utilities/format/NSCLDAQ11 \
-									 -I@top_srcdir@/utilities/filter \
-									 -I@top_srcdir@/utilities/IO \
-                                                                         -I@top_srcdir@/utilities/FormattedIO \
-                                                                         -I@top_srcdir@/utilities/format \
-                                                                         -I@top_srcdir@/base/headers
+		    -I@top_srcdir@/utilities/format/NSCLDAQ10 \
+		    -I@top_srcdir@/utilities/format/NSCLDAQ11 \
+		    -I@top_srcdir@/utilities/filter \
+		    -I@top_srcdir@/utilities/IO \
+		    -I@top_srcdir@/utilities/FormattedIO \
+		    -I@top_srcdir@/utilities/format \
+		    -I@top_srcdir@/base/headers
+
+EXTRA_DIST = format_converter_options.ggo \
+						 format_converter_options.h \
+						 format_convert.py
+
+
+install-exec-local:
+	${INSTALL_SCRIPT} @srcdir@/convert_format.py @prefix@/bin/convert_format 
+	chmod a+x @prefix@/bin/convert_format

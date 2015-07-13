@@ -3,17 +3,21 @@
 
 //#include <CTransform11p0to10p0.h>
 //#include <CTransformMediator.h>
-#include <memory>
 
 #include <CTransformFactory.h>
+#include <format_converter_options.h>
+
+#include <memory>
+#include <utility>
 
 class CBaseMediator;
 
 class Main
 {
 private:
+  cmdLineOpts                       m_argsInfo;
   DAQ::Transform::CTransformFactory m_factory;
-  std::unique_ptr<CBaseMediator> m_pMediator;
+  std::unique_ptr<CBaseMediator>    m_pMediator;
 
 public:
     Main(int argc, char** argv);
@@ -21,7 +25,11 @@ public:
     int run();
 
 private:
+    std::unique_ptr<CDataSource> createSource() const;
+    std::unique_ptr<CDataSink> createSink() const;
     void setUpTransformFactory();
+    std::pair<int, int> parseInOutVersions() const;
+
 };
 
 #endif // MAIN_H

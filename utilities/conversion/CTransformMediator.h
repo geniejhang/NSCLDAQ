@@ -79,7 +79,7 @@ class CTransformMediator  : public CBaseMediator
 
   private:
     void updatePredicate();
-    void processOne();
+    bool processOne();
 
 };
 

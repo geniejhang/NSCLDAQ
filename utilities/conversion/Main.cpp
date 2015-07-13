@@ -18,22 +18,48 @@ namespace DAQ {
 }
 
 Main::Main(int argc, char **argv)
-  : m_pMediator()
+  : m_pMediator(),
+    m_argsInfo()
 {
-  CDataSourceFactory sourceFactory;
-  unique_ptr<CDataSource> pSource( sourceFactory.makeSource("file://./testin10.evt", {}, {}) );
 
-  CDataSinkFactory factory;
-  unique_ptr<CDataSink> pSink( factory.makeSink("file://./testout10p8.evt") );
+  cmdline_parser(argc, argv, &m_argsInfo);
 
+  auto pSource = createSource();
+  auto pSink = createSink();
+
+
+  auto transformSpec = parseInOutVersions();
   setUpTransformFactory();
 
-  m_pMediator = m_factory.create(10, 8);
-
+  m_pMediator = m_factory.create(transformSpec.first, transformSpec.second);
   m_pMediator->setDataSource(pSource);
   m_pMediator->setDataSink(pSink);
 }
 
+
+unique_ptr<CDataSource> Main::createSource() const
+{
+  CDataSourceFactory sourceFactory;
+  unique_ptr<CDataSource> pSource( sourceFactory.makeSource(m_argsInfo.source_arg, {}, {}) );
+
+  return move(pSource);
+}
+
+unique_ptr<CDataSink> Main::createSink() const
+{
+  CDataSinkFactory factory;
+  unique_ptr<CDataSink> pSink( factory.makeSink(m_argsInfo.sink_arg) );
+
+  return move(pSink);
+}
+
+std::pair<int, int> Main::parseInOutVersions() const
+{
+  int inputVsn  = std::atoi(cmdline_parser_input_version_values[m_argsInfo.input_version_arg]);
+  int outputVsn = std::atoi(cmdline_parser_output_version_values[m_argsInfo.output_version_arg]);
+
+  return std::make_pair(inputVsn, outputVsn);
+}
 
 int Main::run()
 {
