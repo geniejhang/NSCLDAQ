@@ -18,6 +18,10 @@ namespace NSCLDAQ11 {
     class CRingFragmentItem;
 }
 
+namespace DAQ {
+  namespace Transform {
+
+
 /*! \brief Transformation from 10.0 to 11.0 data.
  *
  *  The transformations defined here are the DAQ committee approved
@@ -209,5 +213,8 @@ class CTransform10p0to11p0
      */
     NSCLDAQ11::CRingFragmentItem transformFragment(InitialType& item);
 };
+
+  } // end Transform
+} // end DAQ
 
 #endif

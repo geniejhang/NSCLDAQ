@@ -22,6 +22,9 @@
 
 using namespace std;
 
+namespace DAQ {
+  namespace Transform {
+
 CTransform10p0to11p0::FinalType
 CTransform10p0to11p0::operator()(InitialType& item)
 {
@@ -178,4 +181,7 @@ CTransform10p0to11p0::transformFragment(InitialType& item)
 
     return v11item;
 }
+
+  } // end Transform
+} // end DAQ
 

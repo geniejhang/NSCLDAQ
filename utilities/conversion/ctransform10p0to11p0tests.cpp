@@ -37,11 +37,13 @@
 #include <algorithm>
 
 using namespace std;
+using namespace DAQ::Transform;
 
 class CTransform10p0to11p0Tests : public CppUnit::TestFixture
 {
 private:
     CTransform10p0to11p0 m_transform;
+
 public:
     CPPUNIT_TEST_SUITE(CTransform10p0to11p0Tests);
     CPPUNIT_TEST(scaler_0);

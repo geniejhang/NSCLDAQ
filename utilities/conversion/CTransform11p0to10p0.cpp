@@ -26,6 +26,9 @@
 
 using namespace std;
 
+namespace DAQ {
+  namespace Transform {
+
 CTransform11p0to10p0::FinalType
 CTransform11p0to10p0::operator()(InitialType& item) {
   NSCLDAQ11::CRingItemFactory factory;
@@ -201,3 +204,7 @@ CTransform11p0to10p0::transformText(InitialType& item)
 
     return v10item;
 }
+
+  } // end Transform
+} // end DAQ
+

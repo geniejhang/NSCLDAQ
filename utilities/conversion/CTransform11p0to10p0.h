@@ -18,6 +18,9 @@ namespace NSCLDAQ11 {
     class CRingItem;
 }
 
+namespace DAQ {
+  namespace Transform {
+
 class CTransform11p0to10p0
 {
 public:
@@ -41,5 +44,8 @@ public:
     NSCLDAQ10::CRingTextItem transformText(InitialType& item);
 
 };
+
+  } // end Transform
+} // end DAq
 
 #endif // CTRANSFORM11P0TO10P0_H

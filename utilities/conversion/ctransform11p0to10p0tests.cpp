@@ -41,6 +41,7 @@
 #include <stdexcept>
 
 using namespace std;
+using namespace DAQ::Transform;
 
 class CTransform11p0to10p0Tests_NonIncrScaler : public CppUnit::TestFixture
 {
