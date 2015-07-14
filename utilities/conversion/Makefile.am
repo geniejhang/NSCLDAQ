@@ -37,9 +37,9 @@ libConversion_la_CXXFLAGS = -I@srcdir@ \
                             -I@top_srcdir@/base/headers \
                             @LIBTCLPLUS_CFLAGS@
 
-libConversion_la_LIBADD = @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la \
-			  @top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
-			  @top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
+libConversion_la_LIBADD = @top_builddir@/utilities/format/V8/libdataformatv8.la \
+			  @top_builddir@/utilities/format/V10/libdataformatv10.la \
+			  @top_builddir@/utilities/format/V11/libdataformatv11.la \
 			  @top_builddir@/utilities/filter/libfilter.la \
 			  @top_builddir@/utilities/IO/libdaqio.la \
 			  @top_builddir@/utilities/FormattedIO/libdaqformatio.la \
@@ -59,9 +59,9 @@ unittests_SOURCES = TestRunner.cpp \
 unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                    @top_builddir@/utilities/conversion/libConversion.la	\
                    @top_builddir@/utilities/Buffer/libbuffer.la	\
-                   @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la	\
-                   @top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la	\
-                   @top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la	\
+		   @top_builddir@/utilities/format/V8/libdataformatv8.la	\
+		   @top_builddir@/utilities/format/V10/libdataformatv10.la	\
+		   @top_builddir@/utilities/format/V11/libdataformatv11.la	\
                    @top_builddir@/utilities/IO/libdaqio.la	\
                    @top_builddir@/utilities/FormattedIO/libdaqformatio.la	\
                    @top_builddir@/utilities/filter/libfilter.la	\
@@ -97,9 +97,9 @@ format_converter_SOURCES = Main.h Main.cpp format_converter_options.c
 
 format_converter_LDADD = @builddir@/libConversion.la \
                 @top_builddir@/utilities/Buffer/libbuffer.la \
-               @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la \
-	       @top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
-	       @top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
+	       @top_builddir@/utilities/format/V8/libdataformatv8.la \
+	       @top_builddir@/utilities/format/V10/libdataformatv10.la \
+	       @top_builddir@/utilities/format/V11/libdataformatv11.la \
 	       @top_builddir@/utilities/filter/libfilter.la \
 	       @top_builddir@/utilities/IO/libdaqio.la \
 	       @top_builddir@/utilities/FormattedIO/libdaqformatio.la

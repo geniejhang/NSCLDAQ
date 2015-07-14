@@ -23,9 +23,9 @@ libdaqformatio_la_LDFLAGS	= -version-info $(SOVERSION)	\
 libdaqformatio_la_LIBADD	= \
 			@top_builddir@/utilities/IO/libdaqio.la \
                         @top_builddir@/utilities/Buffer/libbuffer.la \
-                        @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la \
-			@top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
-			@top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
+			@top_builddir@/utilities/format/V8/libdataformatv8.la \
+			@top_builddir@/utilities/format/V10/libdataformatv10.la \
+			@top_builddir@/utilities/format/V11/libdataformatv11.la \
 			@LIBEXCEPTION_LDFLAGS@
 
 
@@ -46,9 +46,9 @@ unittests_LDADD		= \
 			@top_builddir@/utilities/FormattedIO/libdaqformatio.la \
 			@top_builddir@/utilities/IO/libdaqio.la \
                         @top_builddir@/utilities/Buffer/libbuffer.la \
-                        @top_builddir@/utilities/format/NSCLDAQ8/libdataformatv8.la \
-                        @top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la \
-			@top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la \
+			@top_builddir@/utilities/format/V8/libdataformatv8.la \
+			@top_builddir@/utilities/format/V10/libdataformatv10.la \
+			@top_builddir@/utilities/format/V11/libdataformatv11.la \
 			$(CPPUNIT_LDFLAGS) 		\
 			@LIBEXCEPTION_LDFLAGS@
 
