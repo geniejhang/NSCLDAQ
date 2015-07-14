@@ -1,7 +1,7 @@
 
 #include <CTransform11p0to11p0.h>
-#include <NSCLDAQ11/CRingItemFactory.h>
-#include <NSCLDAQ11/CRingItem.h>
+#include <V11/CRingItemFactory.h>
+#include <V11/CRingItem.h>
 #include <CFilter.h>
 
 #include <iostream>
@@ -25,7 +25,7 @@ CTransform11p0to11p0::operator()(InitialType& item)
 CTransform11p0to11p0::FinalType 
 CTransform11p0to11p0::dispatch(InitialType* pItem)
 {
-    using namespace NSCLDAQ11;
+    using namespace V11;
 
     // initial pointer to filtered item
   InitialType* fitem = pItem;

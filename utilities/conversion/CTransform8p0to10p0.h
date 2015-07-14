@@ -2,7 +2,7 @@
 #define DAQ_TRANSFORM_CTRANSFORM8P0TO10P0_H
 
 #include <ByteBuffer.h>
-#include <NSCLDAQ10/CPhysicsEventItem.h>
+#include <V10/CPhysicsEventItem.h>
 
 #include <cstdint>
 #include <vector>

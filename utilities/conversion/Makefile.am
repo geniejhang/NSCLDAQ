@@ -30,9 +30,6 @@ include_HEADERS = CTransformMediator.h \
 
 libConversion_la_CXXFLAGS = -I@srcdir@ \
                             -I@top_srcdir@/utilities/format \
-                            -I@top_srcdir@/utilities/format/NSCLDAQ8 \
-                            -I@top_srcdir@/utilities/format/NSCLDAQ10 \
-                            -I@top_srcdir@/utilities/format/NSCLDAQ11 \
                             -I@top_srcdir@/utilities/filter \
                             -I@top_srcdir@/utilities/IO \
                             -I@top_srcdir@/utilities/FormattedIO \
@@ -73,9 +70,6 @@ unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 
 unittests_CPPFLAGS= -I@srcdir@ \
                     -I@top_srcdir@/utilities/Buffer \
-                    -I@top_srcdir@/utilities/format/NSCLDAQ8 \
-                    -I@top_srcdir@/utilities/format/NSCLDAQ10 \
-                    -I@top_srcdir@/utilities/format/NSCLDAQ11 \
                     -I@top_srcdir@/utilities/filter \
                     -I@top_srcdir@/utilities/IO \
                     -I@top_srcdir@/utilities/FormattedIO \
@@ -112,9 +106,6 @@ format_converter_LDADD = @builddir@/libConversion.la \
 
 format_converter_CPPFLAGS = -I@srcdir@ \
                     -I@top_srcdir@/utilities/Buffer \
-                    -I@top_srcdir@/utilities/format/NSCLDAQ8 \
-		    -I@top_srcdir@/utilities/format/NSCLDAQ10 \
-		    -I@top_srcdir@/utilities/format/NSCLDAQ11 \
 		    -I@top_srcdir@/utilities/filter \
 		    -I@top_srcdir@/utilities/IO \
 		    -I@top_srcdir@/utilities/FormattedIO \

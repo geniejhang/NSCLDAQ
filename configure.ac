@@ -418,9 +418,9 @@ AC_CONFIG_FILES([Makefile
     utilities/compatibility/bufdump
     utilities/conversion/Makefile
     utilities/format/Makefile
-    utilities/format/NSCLDAQ8/Makefile
-    utilities/format/NSCLDAQ10/Makefile
-    utilities/format/NSCLDAQ11/Makefile
+    utilities/format/V8/Makefile
+    utilities/format/V10/Makefile
+    utilities/format/V11/Makefile
     utilities/IO/Makefile
     utilities/FormattedIO/Makefile
     utilities/newscaler/Makefile

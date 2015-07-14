@@ -1,5 +1,5 @@
 #include <BufferIOV8.h>
-#include <NSCLDAQ8/CRawBuffer.h>
+#include <V8/CRawBuffer.h>
 #include <ByteBuffer.h>
 #include <CDataSource.h>
 #include <CDataSink.h>

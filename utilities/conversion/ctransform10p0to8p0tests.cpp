@@ -3,23 +3,23 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include "Asserts.h"
 
-#include <NSCLDAQ8/CScalerBuffer.h>
-#include <NSCLDAQ10/CRingScalerItem.h>
-#include <NSCLDAQ10/CRingTimestampedRunningScalerItem.h>
+#include <V8/CScalerBuffer.h>
+#include <V10/CRingScalerItem.h>
+#include <V10/CRingTimestampedRunningScalerItem.h>
 
-#include <NSCLDAQ8/CControlBuffer.h>
-#include <NSCLDAQ10/CRingStateChangeItem.h>
+#include <V8/CControlBuffer.h>
+#include <V10/CRingStateChangeItem.h>
 
-#include <NSCLDAQ8/CPhysicsEventBuffer.h>
-#include <NSCLDAQ10/CPhysicsEventItem.h>
+#include <V8/CPhysicsEventBuffer.h>
+#include <V10/CPhysicsEventItem.h>
 
-#include <NSCLDAQ8/CTextBuffer.h>
-#include <NSCLDAQ10/CRingTextItem.h>
+#include <V8/CTextBuffer.h>
+#include <V10/CRingTextItem.h>
 
-#include <NSCLDAQ8/DataFormatV8.h>
-#include <NSCLDAQ10/DataFormatV10.h>
+#include <V8/DataFormatV8.h>
+#include <V10/DataFormatV10.h>
 
-#include <NSCLDAQ8/format_cast.h>
+#include <V8/format_cast.h>
 #include <DebugUtils.h>
 
 #define private public

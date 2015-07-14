@@ -3,7 +3,7 @@
 #ifndef CTransform11p0to11p0_H
 #define CTransform11p0to11p0_H
 
-#include <NSCLDAQ11/CRingItem.h>
+#include <V11/CRingItem.h>
 #include <memory>
 
 class CFilter;
@@ -14,8 +14,8 @@ namespace DAQ {
     class CTransform11p0to11p0
     {
     public:
-      using InitialType = NSCLDAQ11::CRingItem;
-      using FinalType =   NSCLDAQ11::CRingItem;
+      using InitialType = V11::CRingItem;
+      using FinalType =   V11::CRingItem;
 
     private:
       std::unique_ptr<CFilter> m_pFilter;

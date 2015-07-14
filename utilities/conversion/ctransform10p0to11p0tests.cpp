@@ -3,28 +3,28 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include "Asserts.h"
 
-#include <NSCLDAQ10/CRingScalerItem.h>
-#include <NSCLDAQ11/CRingScalerItem.h>
+#include <V10/CRingScalerItem.h>
+#include <V11/CRingScalerItem.h>
 
-#include <NSCLDAQ10/CRingStateChangeItem.h>
-#include <NSCLDAQ11/CRingStateChangeItem.h>
+#include <V10/CRingStateChangeItem.h>
+#include <V11/CRingStateChangeItem.h>
 
-#include <NSCLDAQ10/CPhysicsEventItem.h>
-#include <NSCLDAQ11/CPhysicsEventItem.h>
+#include <V10/CPhysicsEventItem.h>
+#include <V11/CPhysicsEventItem.h>
 
-#include <NSCLDAQ10/CRingPhysicsEventCountItem.h>
-#include <NSCLDAQ11/CRingPhysicsEventCountItem.h>
+#include <V10/CRingPhysicsEventCountItem.h>
+#include <V11/CRingPhysicsEventCountItem.h>
 
-#include <NSCLDAQ10/CRingTextItem.h>
-#include <NSCLDAQ11/CRingTextItem.h>
+#include <V10/CRingTextItem.h>
+#include <V11/CRingTextItem.h>
 
-#include <NSCLDAQ10/CRingTimestampedRunningScalerItem.h>
+#include <V10/CRingTimestampedRunningScalerItem.h>
 
-#include <NSCLDAQ10/CRingFragmentItem.h>
-#include <NSCLDAQ11/CRingFragmentItem.h>
+#include <V10/CRingFragmentItem.h>
+#include <V11/CRingFragmentItem.h>
 
-#include <NSCLDAQ10/DataFormatV10.h>
-#include <NSCLDAQ11/DataFormatV11.h>
+#include <V10/DataFormatV10.h>
+#include <V11/DataFormatV11.h>
 
 #define private public
 #define protected public

@@ -11,7 +11,6 @@ include_HEADERS	= BufferIOV8.h \
 
 libdaqformatio_la_CPPFLAGS	=  \
                 -I@top_srcdir@/utilities/IO \
-                -I@top_srcdir@/utilities/format/NSCLDAQ8 \
                 -I@top_srcdir@/utilities/format \
                 -I@top_srcdir@/utilities/Buffer \
 		-I@top_srcdir@/base/headers \
@@ -58,7 +57,6 @@ unittests_CPPFLAGS=  \
 										 -I@top_srcdir@/utilities/IO \
                                                                                  -I@top_srcdir@/utilities/Buffer \
                                                                                  -I@top_srcdir@/utilities/format \
-                                                                                 -I@top_srcdir@/utilities/format/NSCLDAQ8 \
                                                                                  -I@top_srcdir@/base/testutils \
                                                                                  @LIBTCLPLUS_CFLAGS@
 unittests_CXXFLAGS = $(AM_CXXFLAGS)

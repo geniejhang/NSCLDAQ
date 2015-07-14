@@ -1,8 +1,8 @@
 #ifndef DAQ_TRANSFORM_CTRANSFORM10P0TO8P0_H
 #define DAQ_TRANSFORM_CTRANSFORM10P0TO8P0_H
 
-#include <NSCLDAQ8/CPhysicsEventBuffer.h>
-#include <NSCLDAQ8/CTextBuffer.h>
+#include <V8/CPhysicsEventBuffer.h>
+#include <V8/CTextBuffer.h>
 #include <cstdint>
 
 

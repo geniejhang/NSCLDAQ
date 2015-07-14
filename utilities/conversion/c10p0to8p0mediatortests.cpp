@@ -3,15 +3,15 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include "Asserts.h"
 
-#include <NSCLDAQ10/CRingStateChangeItem.h>
-#include <NSCLDAQ10/CPhysicsEventItem.h>
-#include <NSCLDAQ10/CRingTextItem.h>
-#include <NSCLDAQ10/DataFormatV10.h>
+#include <V10/CRingStateChangeItem.h>
+#include <V10/CPhysicsEventItem.h>
+#include <V10/CRingTextItem.h>
+#include <V10/DataFormatV10.h>
 
-#include <NSCLDAQ8/CRawBuffer.h>
-#include <NSCLDAQ8/DataFormatV8.h>
-#include <NSCLDAQ8/format_cast.h>
-#include <NSCLDAQ8/ChangeBufferSize.h>
+#include <V8/CRawBuffer.h>
+#include <V8/DataFormatV8.h>
+#include <V8/format_cast.h>
+#include <V8/ChangeBufferSize.h>
 
 #include <BufferIOV8.h>
 

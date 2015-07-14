@@ -1,8 +1,8 @@
 #include "C10p0to8p0Mediator.h"
-#include <NSCLDAQ8/DataFormatV8.h>
-#include <NSCLDAQ10/DataFormatV10.h>
-#include <NSCLDAQ8/format_cast.h>
-#include <NSCLDAQ10/CRingItem.h>
+#include <V8/DataFormatV8.h>
+#include <V10/DataFormatV10.h>
+#include <V8/format_cast.h>
+#include <V10/CRingItem.h>
 #include <RingIOV10.h>
 #include <BufferIOV8.h>
 

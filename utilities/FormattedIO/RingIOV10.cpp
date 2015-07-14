@@ -2,9 +2,9 @@
 
 #include <CDataSource.h>
 #include <CDataSink.h>
-#include <NSCLDAQ10/CRingItem.h>
+#include <V10/CRingItem.h>
 
-#include <NSCLDAQ10/DataFormatV10.h>
+#include <V10/DataFormatV10.h>
 #include <byte_cast.h>
 
 #include <iostream>

@@ -1,14 +1,14 @@
 #include "C8p0to10p0Mediator.h"
-#include <NSCLDAQ10/CRingItem.h>
-#include <NSCLDAQ10/CPhysicsEventItem.h>
-#include <NSCLDAQ8/CRawBuffer.h>
+#include <V10/CRingItem.h>
+#include <V10/CPhysicsEventItem.h>
+#include <V8/CRawBuffer.h>
+#include <V8/DataFormatV8.h>
+#include <V10/DataFormatV10.h>
 #include <CDataSource.h>
 #include <CDataSink.h>
 #include <RingIOV10.h>
 #include <BufferIOV8.h>
 #include <exception>
-#include <DataFormatV8.h>
-#include <DataFormatV10.h>
 
 namespace DAQ {
   namespace Transform {

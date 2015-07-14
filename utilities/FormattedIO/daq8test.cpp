@@ -21,8 +21,8 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 
 #include <CTestSourceSink.h>
 #include <BufferIOV8.h>
-#include <DataFormatV8.h>
-#include <NSCLDAQ8/CRawBuffer.h>
+#include <V8/DataFormatV8.h>
+#include <V8/CRawBuffer.h>
 
 #include <DebugUtils.h>
 

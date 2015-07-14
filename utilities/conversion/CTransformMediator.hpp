@@ -18,8 +18,8 @@
 #include <CDataSource.h>
 #include <CDataSink.h>
 #include <CCompositePredicate.h>
-#include <NSCLDAQ10/CRingItem.h>
-#include <NSCLDAQ11/CRingItem.h>
+#include <V10/CRingItem.h>
+#include <V11/CRingItem.h>
 #include <RingIOV10.h>
 #include <RingIOV11.h>
 

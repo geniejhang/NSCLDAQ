@@ -1,19 +1,19 @@
 #include "CTransform10p0to8p0.h"
-#include <DataFormatV10.h>
-#include <NSCLDAQ10/CRingItem.h>
-#include <NSCLDAQ8/CRawBuffer.h>
-#include <NSCLDAQ10/CRingScalerItem.h>
-#include <NSCLDAQ10/CRingTimestampedRunningScalerItem.h>
-#include <NSCLDAQ8/CScalerBuffer.h>
-#include <NSCLDAQ10/CRingStateChangeItem.h>
-#include <NSCLDAQ8/CControlBuffer.h>
-#include <NSCLDAQ10/CPhysicsEventItem.h>
-#include <NSCLDAQ10/CRingPhysicsEventCountItem.h>
-#include <NSCLDAQ10/CRingTextItem.h>
-#include <NSCLDAQ10/CRingItemFactory.h>
-#include <NSCLDAQ8/CTextBuffer.h>
-#include <NSCLDAQ8/CVoidBuffer.h>
-#include <NSCLDAQ8/format_cast.h>
+#include <V10/DataFormatV10.h>
+#include <V10/CRingItem.h>
+#include <V8/CRawBuffer.h>
+#include <V10/CRingScalerItem.h>
+#include <V10/CRingTimestampedRunningScalerItem.h>
+#include <V8/CScalerBuffer.h>
+#include <V10/CRingStateChangeItem.h>
+#include <V8/CControlBuffer.h>
+#include <V10/CPhysicsEventItem.h>
+#include <V10/CRingPhysicsEventCountItem.h>
+#include <V10/CRingTextItem.h>
+#include <V10/CRingItemFactory.h>
+#include <V8/CTextBuffer.h>
+#include <V8/CVoidBuffer.h>
+#include <V8/format_cast.h>
 
 #include <memory>
 
