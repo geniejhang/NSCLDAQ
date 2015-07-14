@@ -4,6 +4,7 @@
 #include "CTransformFactory.h"
 #include "C8p0to10p0Mediator.h"
 #include "C10p0to8p0Mediator.h"
+#include "C10p0to11p0Mediator.h"
 #include "CTransform11p0to10p0.h"
 #include "CTransform10p0to11p0.h"
 #include "CTransformMediator.h"
@@ -79,7 +80,7 @@ void Main::setUpTransformFactory()
   m_factory.setCreator(  10, 8,
                          unique_ptr<CTransformCreator>(new C10p0to8p0MediatorCreator()));
   m_factory.setCreator( 10, 11,
-                           unique_ptr<CTransformCreator>(new CGenericCreator<CTransform10p0to11p0>()));
+                           unique_ptr<CTransformCreator>(new C10p0to11p0MediatorCreator()));
   m_factory.setCreator( 11, 10,
                            unique_ptr<CTransformCreator>(new CGenericCreator<CTransform11p0to10p0>()));
 

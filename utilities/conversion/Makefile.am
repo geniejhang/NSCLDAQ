@@ -4,6 +4,7 @@ bin_PROGRAMS = format_converter
 libConversion_la_SOURCES = CTransformMediator.h \
                            C8p0to10p0Mediator.cpp \
                            C10p0to8p0Mediator.cpp \
+			   C10p0to11p0Mediator.cpp \
                            CTransformMediator.hpp \
                            CTransform8p0to10p0.cpp \
                            CTransform10p0to8p0.cpp \
@@ -18,7 +19,8 @@ libConversion_la_SOURCES = CTransformMediator.h \
 include_HEADERS = CTransformMediator.h \
                            C8p0to10p0Mediator.h \
                            C10p0to8p0Mediator.h \
-                           CTransform8p0to10p0.h \
+			   C10p0to11p0Mediator.h \
+			   CTransform8p0to10p0.h \
                            CTransform10p0to8p0.h \
                            CTransform10p0to11p0.h \
                            CTransform11p0to10p0.h \

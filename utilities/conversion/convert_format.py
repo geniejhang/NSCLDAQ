@@ -17,7 +17,6 @@ def set_up_parser():
 def compute_conversion_stages(input, output):
   inIndex = versionOpts.index(input)
   outIndex = versionOpts.index(output)
-  print(inIndex, ' ' , outIndex)
   
   stages = []
   if outIndex > inIndex :
@@ -27,7 +26,6 @@ def compute_conversion_stages(input, output):
     for index in range(inIndex, outIndex, -1):
       stages.append({'in':versionOpts[index], 'out':versionOpts[index-1]})
 
-  print(stages)
   return stages
 
 def executable():
@@ -35,7 +33,6 @@ def executable():
   return os.path.join(bin_dir, 'format_converter')
   
 def set_up_simple_command(stage, source, sink):
-  print("set up simple command")
   cmd = [executable(), 
       '--input-version', str(stage['in']), 
       '--output-version', str(stage['out']), 
@@ -44,7 +41,6 @@ def set_up_simple_command(stage, source, sink):
   call(cmd, shell=False)
 
 def set_up_compound_command(stages, source, sink):
-  print("set up compound command")
   cmd = [executable(), 
       '--input-version', str(stages[0]['in']), 
       '--output-version', str(stages[0]['out']), 
