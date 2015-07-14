@@ -48,7 +48,7 @@ unittests_SOURCES	= TestRunner.cpp \
 										fragmenttest.cpp glomparamtests.cpp factorytests.cpp 
 
 unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
-                        @top_builddir@/utilities/format/NSCLDAQ11/libdataformatv11.la	\
+			@builddir@/libdataformatv11.la	\
 			@LIBEXCEPTION_LDFLAGS@
 
 unittests_CFLAGS= -I@srcdir@/..

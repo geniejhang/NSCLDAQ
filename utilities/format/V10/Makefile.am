@@ -43,7 +43,7 @@ unittests_SOURCES	= TestRunner.cpp \
 
 unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                         @top_builddir@/utilities/Buffer/libbuffer.la \
-                        @top_builddir@/utilities/format/NSCLDAQ10/libdataformatv10.la	\
+			@builddir@/libdataformatv10.la	\
                         @LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS= -I@srcdir@/.. \
