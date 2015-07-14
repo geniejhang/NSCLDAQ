@@ -123,7 +123,7 @@ format_converter_CPPFLAGS = -I@srcdir@ \
 
 EXTRA_DIST = format_converter_options.ggo \
 						 format_converter_options.h \
-						 format_convert.py
+						 convert_format.py
 
 
 install-exec-local:
