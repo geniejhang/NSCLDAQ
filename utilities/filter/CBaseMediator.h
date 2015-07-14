@@ -78,7 +78,7 @@ class CBaseMediator
         m_pSource.reset(source);
         return old_source;
     }  
-    void setDataSource( std::unique_ptr<CDataSource>& pSource) {
+    virtual void setDataSource( std::unique_ptr<CDataSource>& pSource) {
       m_pSource.swap(pSource);
     }
     /**! Set the sink
@@ -94,17 +94,17 @@ class CBaseMediator
         m_pSink.reset(sink);
         return old_sink;
     }  
-    void setDataSink( std::unique_ptr<CDataSink>& pSink) {
+    virtual void setDataSink( std::unique_ptr<CDataSink>& pSink) {
       m_pSink.swap(pSink);
     }
 
     /**! Access to the source 
     */
-    CDataSource* getDataSource() { return m_pSource.get();}
+    virtual CDataSource* getDataSource() { return m_pSource.get();}
 
     /**! Access to the sink 
     */
-    CDataSink* getDataSink() { return m_pSink.get();}
+    virtual CDataSink* getDataSink() { return m_pSink.get();}
 
 };
 
