@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2014.
+    State University (c) Copyright 2015.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -24,7 +24,7 @@
 class CDataSink;
 
 
-/**! Factory class for constructing CDataSink objects
+/*! Factory class for constructing CDataSink objects
 *
 * When provided a universal resource identifier (URI), this 
 * will return the appropriate type of data sink.
@@ -33,8 +33,7 @@ class CDataSink;
 *   CFileDataSink   - specified by the file:// protocol
 *                     (stdout can be specified as file:///stdout or - )
 *
-* To be supported in the future:
-*   CRingDataSink   - TODO...
+*   CRingDataSink   - specified by the tcp:// or ring:// protocol.
 *
 */
 class CDataSinkFactory

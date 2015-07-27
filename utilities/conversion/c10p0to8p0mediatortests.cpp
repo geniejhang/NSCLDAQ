@@ -1,3 +1,18 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2015.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Jeromy Tompkins
+       NSCL
+       Michigan State University
+       East Lansing, MI 48824-1321
+*/
 
 #include <cppunit/Asserter.h>
 #include <cppunit/extensions/HelperMacros.h>
@@ -35,6 +50,13 @@ using namespace DAQ;
 
 
 
+/*!
+ * \brief The C10p0to8p0MediatorTests_PhysEventFlush class
+ *
+ * Here we are testing whether or not the mediator behaves properly
+ * concerning buffering physics events and then flushing them when
+ * necessary
+ */
 class C10p0to8p0MediatorTests_PhysEventFlush : public CppUnit::TestFixture
 {
 private:
@@ -51,9 +73,10 @@ public:
 
 public:
 
+    // Bare minimum
     void setUp() {
 
-      V8::gBufferSize = 8192;
+      V8::gBufferSize = 8192; // default size
 
       std::unique_ptr<CDataSource> pSource(new CTestSourceSink);
       m_mediator.setDataSource(pSource);
@@ -67,7 +90,11 @@ public:
     }
 
 public:
+
+    // if we don't have to flush, the event should be buffered and not
+    // sent to the sink
   void physEventFlush_0() {
+
     V10::CPhysicsEventItem item(V10::PHYSICS_EVENT);
     item.fillBody(std::vector<std::uint16_t>({2,0}));
 
@@ -82,6 +109,8 @@ public:
                                  std::size_t(0), pSink->getBuffer().size());
   }
 
+ // if a control buffer arrives first, it should be the first thing sent to the
+// sink
 void physEventFlush_1() {
 
   V10::CRingStateChangeItem begin;
@@ -102,7 +131,8 @@ void physEventFlush_1() {
                                std::uint16_t(V8::BEGRUNBF),
                                returnedBuffer.getHeader().type);
 }
-
+  // if a control buffer arrives and an event is already buffered, the
+  // event should be flushed and then the control buffer
   void physEventFlush_2() {
 
     V10::CRingStateChangeItem begin;
@@ -133,13 +163,16 @@ void physEventFlush_1() {
 
   }
 
+
+    // Ensure that the sequence numbers make sense.
       void physEventFlush_3() {
 
-        // Ensure that the sequence numbers make sense.
+        V8::Test::ChangeBufferSize forScope(132); // to make this easier to test
 
-        V8::Test::ChangeBufferSize forScope(132);
-
+        // Create a begin event and a physics event with 50 data elements
+        // in the body
         V10::CRingStateChangeItem begin;
+
         V10::CPhysicsEventItem event(V10::PHYSICS_EVENT);
         std::vector<std::uint16_t> bodyData(50);
         std::iota(bodyData.begin(), bodyData.end(), 0);
@@ -149,13 +182,17 @@ void physEventFlush_1() {
         auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
         auto pSink = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSink());
 
+        // Load the source with the test data
         *pSource << begin;
         *pSource << event;
         *pSource << event;
+
+        // Process the test data
         bool good = m_mediator.processOne();
         good = m_mediator.processOne();
         good = m_mediator.processOne();
 
+        // read out the first V8 buffer
         V8::CRawBuffer returnedBuffer;
         *pSink >> returnedBuffer;
 
@@ -164,12 +201,14 @@ void physEventFlush_1() {
             std::uint32_t(0),
             returnedBuffer.getHeader().seq);
 
+        // read second buffer
         *pSink >> returnedBuffer;
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE(
             "First physics event buffer should have sequence 0",
             std::uint32_t(0),
             returnedBuffer.getHeader().seq);
+
 
         *pSink >> returnedBuffer;
 
@@ -180,12 +219,12 @@ void physEventFlush_1() {
 
       }
 
+      // Ensure that the sequence numbers make sense when multiple events are in the queue.
       void physEventFlush_4() {
-
-        // Ensure that the sequence numbers make sense when multiple events are in the queue.
 
         V8::Test::ChangeBufferSize forScope(232);
 
+        // create test data
         V10::CRingStateChangeItem begin;
         V10::CRingStateChangeItem end(V10::END_RUN);
         V10::CPhysicsEventItem event(V10::PHYSICS_EVENT);
@@ -197,7 +236,7 @@ void physEventFlush_1() {
         auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
         auto pSink = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSink());
 
-        // Load the source with data
+        // Load the source with test data
         *pSource << begin;
         *pSource << event;
         *pSource << event;
@@ -233,7 +272,16 @@ void physEventFlush_1() {
 CPPUNIT_TEST_SUITE_REGISTRATION(C10p0to8p0MediatorTests_PhysEventFlush);
 
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
+/*!
+ * \brief The C10p0to8p0MediatorTests_TextFlush class
+ *
+ * Make sure that overflowed text buffers work as we expect
+ */
 class C10p0to8p0MediatorTests_TextFlush : public CppUnit::TestFixture
 {
 private:
@@ -258,23 +306,28 @@ public:
     }
 
     void tearDown() {
-      V8::gBufferSize = 8192;
+      V8::gBufferSize = 8192; // reset to the default size
     }
 
 public:
+
+    // If a textual ring item has data bigger than the size of the V8 buffer,
+    // but each string fits, then the data gets split into multiple buffers.
   void TextFlush_0() {
+    // Create test data
     std::vector<std::string> m_strings = {"why", "did", "the","cat", "nap"};
-
     std::time_t tstamp = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() );
-
     auto v10item = V10::CRingTextItem(V10::MONITORED_VARIABLES,
                                             m_strings, 0x12345678, tstamp);
 
     auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
     auto pSink = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSink());
 
+    // load the source with test data
     *pSource << v10item;
 
+    // Because the ring item is larger than the V8::gBufferSize, multiple
+    // buffers will be produced by this call.
     bool good = m_mediator.processOne();
 
     V8::CRawBuffer buffer0, buffer1, buffer2;

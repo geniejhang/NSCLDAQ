@@ -6,7 +6,7 @@ libdataformatv8_la_SOURCES = bheader.cpp \
                                 CPhysicsEventBuffer.cpp \
                                 CScalerBuffer.cpp \
                                 CPhysicsEventBodyParser.cpp \
-                                CStandardBodyParser.cpp \
+				CGenericBodyParser.cpp \
                                 CControlBuffer.cpp \
                                 CTextBuffer.cpp \
                                 CVoidBuffer.cpp
@@ -20,8 +20,8 @@ nscldaq8_HEADERS = DataFormatV8.h \
                     CPhysicsEventBuffer.h \
                     CScalerBuffer.h \
                     CPhysicsEventBodyParser.h \
-                    CStandardBodyParser.h \
-                    CControlBuffer.h \
+		    CGenericBodyParser.h \
+		    CControlBuffer.h \
                     CTextBuffer.h \
                     CVoidBuffer.h \
                     format_cast.h
@@ -39,12 +39,12 @@ noinst_PROGRAMS = unittests
 unittests_SOURCES	= TestRunner.cpp \
                             ccontrolbuffertest.cpp \
                             physicseventtest.cpp \
-                            standardbodyparsertest.cpp \
-                            scalerbuffertest.cpp \
-                            format_casttest.cpp \
+			    scalerbuffertest.cpp \
+			    format_casttest.cpp \
                             rawbuffertest.cpp \
                             ctextbuffertest.cpp \
-                            cvoidbuffertest.cpp
+			    cvoidbuffertest.cpp \
+			    cgenericbodyparsertest.cpp
 
 
 unittests_LDADD	= $(CPPUNIT_LDFLAGS) 		\

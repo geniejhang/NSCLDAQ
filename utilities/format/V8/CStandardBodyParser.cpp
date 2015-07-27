@@ -1,5 +1,4 @@
 #include "V8/CStandardBodyParser.h"
-#include <iostream>
 
 using namespace std;
 
@@ -27,6 +26,12 @@ namespace DAQ {
     CStandardBodyParser::parseOne(Buffer::BufferPtr<uint16_t> beg,
                                   Buffer::BufferPtr<uint16_t> max)
     {
+      if (beg >= max) {
+        std::string errmsg("DAQ::V8::CStandardBodyParser::parseOne() ");
+        errmsg += "Iterator provided is out of bounds";
+        throw std::runtime_error(errmsg);
+      }
+
       size_t size = *beg;
 
       auto itEnd = beg + size;

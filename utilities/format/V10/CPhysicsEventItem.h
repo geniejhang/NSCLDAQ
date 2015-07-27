@@ -55,6 +55,9 @@ public:
   // public utility methods
 public:
 
+  /*!
+   * \returns copy of the body data
+   */
   DAQ::Buffer::ByteBuffer getBodyData() const;
   // Virtual methods that all ring items must provide:
 

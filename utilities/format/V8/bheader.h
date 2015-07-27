@@ -1,8 +1,6 @@
-
-
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2005.
+    State University (c) Copyright 2015
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -10,7 +8,7 @@
      http://www.gnu.org/licenses/gpl.txt
 
      Author:
-             Ron Fox
+             Jeromy Tompkins
              NSCL
              Michigan State University
              East Lansing, MI 48824-1321
@@ -28,13 +26,17 @@
 
 #define BUFFER_REVISION 5
 #define JUMBO_BUFFER_REVISION 6
-/*		Absolute time:		*/
 
 namespace DAQ
 {
   namespace V8
   {
 
+    /*!
+     * \brief Human readable time that is easy to query
+     *
+     * This is the struct that is used by the control buffer types
+     */
     struct bftime
     {
       std::uint16_t	month;			/* Month 1-12		*/     /* 3 */
@@ -46,41 +48,86 @@ namespace DAQ
       std::uint16_t	tenths;			/* 0-9.			*/     /* 3 */
     };
 
+    /*!
+     * \brief Convert between std::time_t and V8::bftime
+     * \param time a value set by time() or std::chrono::system_clock::to_time_t()
+     * \return the equivalent bftime value
+     */
     extern bftime to_bftime(const std::time_t& time);
 
-    /*		Structures which describe the final output data buffers */
+    //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 
+    /*!
+     * \brief The bheader struct
+     *
+     * This header is common to all V8 buffer types. Many elements are defunct and
+     * unused (i.e. cks, nlam, nbit, and cpu). The remaining define the type of
+     * data that is carried in the remainder of the buffer, how it is structured,
+     * the amount of valid data in the buffer, and how to intperpret it.  It is
+     * always the very first data that is in a V8 buffer.
+     */
     struct bheader				/* Data buffer header	*/
     {
-      std::uint16_t	nwds;			/* Used part of buffer	*/
+      std::uint16_t	nwds;			/* Incl. count of 16-bit units in buffer with valid data	*/
       std::uint16_t type;			/* buffer type		*/
-      std::uint16_t	cks;			/* checksum over used part of buffer */
+      std::uint16_t	cks;			/* checksum over used part of buffer (unused) */
       std::uint16_t	run;			/* Run number		*/
-      std::uint32_t	seq;			/* Buffer sequence number */
+      std::uint32_t	seq;			/* Number of physics events preceeding the buffer */
       std::uint16_t	nevt;			/* Event count in buffer    */
-      std::uint16_t	nlam;			/* Number of lam masks	    */
-      std::uint16_t	cpu;			/* Processor number	    */
-      std::uint16_t	nbit;			/* Number of bit registers */
+      std::uint16_t	nlam;			/* Number of lam masks	(unused)    */
+      std::uint16_t	cpu;			/* Processor number	(unused)    */
+      std::uint16_t	nbit;			/* Number of bit registers (unused) */
       std::uint16_t	buffmt;			/* Data format revision level */
-      std::uint16_t ssignature;		/* Short byte order signature */
-      std::uint32_t lsignature;		/* Long byte order signature  */
+      std::uint16_t ssignature;		/* Short byte order signature (0x0102)*/
+      std::uint32_t lsignature;		/* Long byte order signature  (0x01020304)*/
       std::uint16_t	unused[2];		/* Pad out to 16 words.	    */
 
+      /*!
+       * \brief Default constructor
+       *
+       * This creates a "VOID" buffer.
+       *
+       * type = 0
+       * nwds = 16
+       * buffmt = 5 (i.e. V8::StandardVsn)
+       * ssignature = 0x0102
+       * lsignature = 0x01020304
+       *
+       * All other items initialized to 0.
+       *
+       */
       bheader();
-      bheader(std::uint16_t nwds, std::uint16_t type, std::uint16_t cks, std::uint16_t run,
-              std::uint32_t seq, std::uint16_t nevt, std::uint16_t nlam, std::uint16_t cpu,
-              std::uint16_t nbit, std::uint16_t buffmt, std::uint16_t ssignature,
-              std::uint32_t lsignature, std::uint16_t unused0, std::uint16_t unused1);
 
+      /*!
+       * \brief Completely explicit constructor
+       */
+      bheader(std::uint16_t nwds, std::uint16_t type, std::uint16_t cks,
+              std::uint16_t run, std::uint32_t seq,
+              std::uint16_t nevt, std::uint16_t nlam,
+              std::uint16_t cpu, std::uint16_t nbit,
+              std::uint16_t buffmt, std::uint16_t ssignature,
+              std::uint32_t lsignature, std::uint16_t unused0,
+              std::uint16_t unused1);
+
+      /*! Checks whether long signature is in native byte ordering */
       bool mustSwap() const {
         return (lsignature != BOM32);
       }
 
 
-    };
+    }; // end of bheader
 
   } // end of V8
 } // end of DAQ
+
+
+/////////////////////////////////////////////////////////////////////////////////
+////// Operator overloads ///////////////////////////////////////////////////////
+
+
+///////////////// Equality operator
+
 
 inline bool operator==(const DAQ::V8::bftime& lhs, const DAQ::V8::bftime& rhs) {
   bool equal=true;
@@ -116,6 +163,10 @@ inline bool operator==(const DAQ::V8::bheader& lhs, const DAQ::V8::bheader& rhs)
   return equal;
 }
 
+
+////////////////////// Insertion into a ByteBuffer
+
+
 extern
 DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
                                     const DAQ::V8::bftime& time);
@@ -142,4 +193,6 @@ inline std::ostream& operator<<(std::ostream& stream, const DAQ::V8::bheader& he
   stream << "u[1]:" << header.unused[1] << "}";
   return stream;
 }
+
+
 #endif // BHEADER_H

@@ -1,3 +1,20 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2015.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Jeromy Tompkins
+       NSCL
+       Michigan State University
+       East Lansing, MI 48824-1321
+*/
+
+
 #include "Main.h"
 #include "CDataSourceFactory.h"
 #include "CDataSinkFactory.h"
@@ -8,6 +25,7 @@
 #include "CTransform11p0to10p0.h"
 #include "CTransform10p0to11p0.h"
 #include "CTransformMediator.h"
+#include "V8/CPhysicsEventBuffer.h"
 
 using namespace std;
 using namespace DAQ::Transform;
@@ -18,6 +36,9 @@ namespace DAQ {
   }
 }
 
+
+
+//
 Main::Main(int argc, char **argv)
   : m_pMediator(),
     m_argsInfo()
@@ -28,8 +49,16 @@ Main::Main(int argc, char **argv)
   auto pSource = createSource();
   auto pSink = createSink();
 
-
   auto transformSpec = parseInOutVersions();
+
+  if (transformSpec.first == 8) {
+    setUpV8Transform();
+  }
+
+  if (transformSpec.first == 8 || transformSpec.second == 8) {
+    setUpBufferSize();
+  }
+
   setUpTransformFactory();
 
   m_pMediator = m_factory.create(transformSpec.first, transformSpec.second);
@@ -38,6 +67,7 @@ Main::Main(int argc, char **argv)
 }
 
 
+//
 unique_ptr<CDataSource> Main::createSource() const
 {
   CDataSourceFactory sourceFactory;
@@ -46,6 +76,7 @@ unique_ptr<CDataSource> Main::createSource() const
   return move(pSource);
 }
 
+//
 unique_ptr<CDataSink> Main::createSink() const
 {
   CDataSinkFactory factory;
@@ -54,6 +85,7 @@ unique_ptr<CDataSink> Main::createSink() const
   return move(pSink);
 }
 
+//
 std::pair<int, int> Main::parseInOutVersions() const
 {
   int inputVsn  = std::atoi(cmdline_parser_input_version_values[m_argsInfo.input_version_arg]);
@@ -62,6 +94,7 @@ std::pair<int, int> Main::parseInOutVersions() const
   return std::make_pair(inputVsn, outputVsn);
 }
 
+//
 int Main::run()
 {
   m_pMediator->initialize();
@@ -73,6 +106,7 @@ int Main::run()
   return 0;
 }
 
+//
 void Main::setUpTransformFactory()
 {
   m_factory.setCreator(  8, 10,
@@ -87,6 +121,39 @@ void Main::setUpTransformFactory()
 }
 
 
+//
+void Main::setUpV8Transform() const
+{
+  using namespace DAQ::V8;
+
+  switch (m_argsInfo.v8_size_policy_arg) {
+    case v8_size_policy_arg_Inclusive16BitWords:
+      CPhysicsEventBuffer::m_bodyType = CPhysicsEventBuffer::Inclusive16BitWords;
+      break;
+    case v8_size_policy_arg_Inclusive32BitWords:
+      CPhysicsEventBuffer::m_bodyType = CPhysicsEventBuffer::Inclusive32BitWords;
+      break;
+    case v8_size_policy_arg_Inclusive32BitBytes:
+      CPhysicsEventBuffer::m_bodyType = CPhysicsEventBuffer::Inclusive32BitBytes;
+      break;
+    case v8_size_policy_arg_Exclusive16BitWords:
+      CPhysicsEventBuffer::m_bodyType = CPhysicsEventBuffer::Exclusive16BitWords;
+      break;
+    default:
+      // we should nevert get here
+      throw std::runtime_error("Main::setUpTransform() User provided size policy unknown");
+      break;
+  }
+}
+
+//
+void Main::setUpBufferSize() const {
+
+  DAQ::V8::gBufferSize = m_argsInfo.v8_buffer_size_arg;
+
+}
+
+//
 int main (int argc, char** argv) 
 {
   Main theMain(argc, argv);

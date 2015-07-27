@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2014.
+    State University (c) Copyright 2015.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -20,12 +20,13 @@
 #include <iostream>
 using namespace std;
 
+
+// Boilerplate code for CPPUNIT tests
 int main(int argc, char** argv)
 {
-  CppUnit::TextUi::TestRunner   
-               runner; // Control tests.
-  CppUnit::TestFactoryRegistry& 
-               registry(CppUnit::TestFactoryRegistry::getRegistry());
+  CppUnit::TextUi::TestRunner runner; // Control tests.
+  CppUnit::TestFactoryRegistry&
+      registry(CppUnit::TestFactoryRegistry::getRegistry());
 
   runner.addTest(registry.makeTest());
 

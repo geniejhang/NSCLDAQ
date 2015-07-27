@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2015
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Jeromy Tompkins
+             NSCL
+             Michigan State University
+             East Lansing, MI 48824-1321
+*/
+
 #include "V8/CTextBuffer.h"
 #include <V8/CRawBuffer.h>
 #include <BufferPtr.h>
@@ -5,24 +21,24 @@
 
 namespace DAQ {
   namespace V8 {
-    
-    CTextBuffer::CTextBuffer()
-      : m_header(), m_strings()
-    {
-      m_header.type = RUNVARBF;
-    }
 
+
+    //
     CTextBuffer::CTextBuffer(BufferTypes type)
       : m_header(), m_strings()
     {
       m_header.type = type;
     }
 
+
+    //
     CTextBuffer::CTextBuffer(const bheader &header,
                              const std::vector<std::string> &strings)
       : m_header(header), m_strings(strings)
     {}
 
+
+    //
     CTextBuffer::CTextBuffer(const CRawBuffer &rawBuf)
       : m_header(rawBuf.getHeader()), m_strings()
     {
@@ -44,10 +60,14 @@ namespace DAQ {
 
     }
 
+
+    //
     CTextBuffer::CTextBuffer(const CTextBuffer &rhs)
       : m_header(rhs.m_header), m_strings(rhs.m_strings)
     {}
 
+
+    //
     void CTextBuffer::toRawBuffer(CRawBuffer &buffer) const
     {
       // make sure that the number of words are correctly computed
@@ -75,6 +95,8 @@ namespace DAQ {
       buffer.setBuffer(buf);
     }
 
+
+    //
     std::uint16_t CTextBuffer::totalShorts() const
     {
       std::uint32_t nBytes = totalBytes();
@@ -82,6 +104,8 @@ namespace DAQ {
       return ((nBytes%2)==0) ? nBytes/2 : (nBytes+1)/2;
     }
 
+
+    //
     std::uint32_t CTextBuffer::totalBytes() const
     {
       std::uint32_t totalBytes = sizeof(std::uint16_t);
@@ -97,6 +121,8 @@ namespace DAQ {
       return totalBytes;
     }
 
+
+    //
     bool CTextBuffer::appendString(const string &str)
     {
       std::uint32_t nBytes = totalBytes() + 16*sizeof(std::uint16_t); // body + header
@@ -116,12 +142,16 @@ namespace DAQ {
       return successfullyAppended;
     }
 
+
+    //
     std::size_t CTextBuffer::getNBytesFree() const
     {
       std::uint32_t nBytesOccupied = totalBytes() + 16*sizeof(std::uint16_t); // body + header
       return gBufferSize - nBytesOccupied;
     }
 
+
+    //
     std::uint16_t CTextBuffer::extractTotalShorts(const Buffer::ByteBuffer &buffer, bool needsSwap) const
     {
       Buffer::BufferPtr<std::uint16_t> pSize(buffer.begin(), needsSwap);
@@ -129,6 +159,8 @@ namespace DAQ {
       return *pSize;
     }
 
+
+    //
     void CTextBuffer::validateTypeToConstructFrom()
     {
       if (m_header.type != STATEVARBF && m_header.type != RUNVARBF
@@ -144,6 +176,7 @@ namespace DAQ {
     }
 
 
+    //
     void CTextBuffer::validateDeadEndMeaningful(Buffer::ByteBuffer::const_iterator deadEnd,
                                                 Buffer::ByteBuffer::const_iterator bufferEnd) {
       if (deadEnd > bufferEnd) {
@@ -154,6 +187,8 @@ namespace DAQ {
       }
     }
 
+
+    //
     void CTextBuffer::parseStringsFromBuffer(Buffer::ByteBuffer::const_iterator beg,
                                              Buffer::ByteBuffer::const_iterator end) {
 
@@ -169,6 +204,8 @@ namespace DAQ {
 
     }
 
+
+    //
     Buffer::ByteBuffer::const_iterator
     CTextBuffer::skipNullCharPadding(Buffer::ByteBuffer::const_iterator beg,
                                      Buffer::ByteBuffer::const_iterator begEnd)

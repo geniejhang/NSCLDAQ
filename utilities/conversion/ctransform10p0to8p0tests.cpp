@@ -1,3 +1,18 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2015.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Jeromy Tompkins
+       NSCL
+       Michigan State University
+       East Lansing, MI 48824-1321
+*/
 
 #include <cppunit/Asserter.h>
 #include <cppunit/extensions/HelperMacros.h>
@@ -40,7 +55,11 @@ using namespace std;
 using namespace DAQ;
 
 
-
+/*!
+ * \brief The CTransform10p0to8p0Tests_Scaler class
+ *
+ * Tests that scaler transforms obey the rules.
+ */
 class CTransform10p0to8p0Tests_Scaler : public CppUnit::TestFixture
 {
 public:
@@ -184,6 +203,15 @@ public:
 
 CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Scaler);
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+/*!
+ * \brief The CTransform10p0to8p0Tests_NonIncrScaler class
+ *
+ * Test that non-incremental scalers transform according to the rules
+ */
 class CTransform10p0to8p0Tests_NonIncrScaler : public CTransform10p0to8p0Tests_Scaler
 {
 public:
@@ -235,16 +263,22 @@ public:
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-    ///////////////////////////////////////////////////////////////////////////
-
+    /*!
+     * \brief The CTransform10p0to8p0Tests_Text class
+     *
+     * Make sure V10::CRingTextItems transform according to the rules
+     */
     class CTransform10p0to8p0Tests_Text : public CppUnit::TestFixture
     {
 
         public:
         CPPUNIT_TEST_SUITE(CTransform10p0to8p0Tests_Text);
         CPPUNIT_TEST(Text_0);
-        //CPPUNIT_TEST(Text_1);
+        CPPUNIT_TEST(Text_1);
         CPPUNIT_TEST(Text_2);
         CPPUNIT_TEST(Text_4);
         CPPUNIT_TEST(Text_5);
@@ -297,8 +331,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
                                        std::uint16_t(V8::RUNVARBF), v8item.getHeader().type);
         }
 
-// not sure how to test the next one b/c it depends on the output of the time() function.
-        // I could play tricks with the include path, but that is non trivial.
         void Text_1()
         {
           CPPUNIT_ASSERT_EQUAL_MESSAGE("Checksum is set to 0",
@@ -375,6 +407,16 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
     };
     CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_Text);
 
+    ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
+
+    /*!
+     * \brief The CTransform10p0to8p0Tests_MultiText class
+     *
+     * Makes sure that V10::CRingTextItems that overflow the V8 buffers are handled
+     * properly
+     */
     class CTransform10p0to8p0Tests_MultiText : public CppUnit::TestFixture
     {
 
@@ -447,7 +489,15 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
     };
     CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_MultiText);
 
+    ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
 
+    /*!
+     * \brief The CTransform10p0to8p0Tests_PhysicsEvent class
+     *
+     * Ensures that V8::CPhysicsEventItems convert as we would expect them to
+     */
     class CTransform10p0to8p0Tests_PhysicsEvent : public CppUnit::TestFixture
     {
 
@@ -583,6 +633,16 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
     };
     CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_PhysicsEvent);
 
+    ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
+
+    /*!
+     * \brief The CTransform10p0to8p0Tests_MultiPhysicsEvent class
+     *
+     * Verify that the buffering capabibilities of the transform behave appropriately
+     * for physics events.
+     */
     class CTransform10p0to8p0Tests_MultiPhysicsEvent : public CppUnit::TestFixture
     {
     public:
@@ -651,7 +711,16 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
     };
     CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_MultiPhysicsEvent);
 
+    ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
 
+
+    /*!
+     * \brief The CTransform10p0to8p0Tests_Control class
+     *
+     * Verifies that the V10::CRingStateChangeItem transforms appropriately
+     */
     class CTransform10p0to8p0Tests_Control : public CppUnit::TestFixture
     {
 

@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2015.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Jeromy Tompkins
+       NSCL
+       Michigan State University
+       East Lansing, MI 48824-1321
+*/
+
 #include "CTransform8p0to10p0.h"
 
 #include <V8/DataFormatV8.h>
@@ -25,6 +41,7 @@ using namespace std;
 namespace DAQ {
   namespace Transform {
     
+    //
     CTransform8p0to10p0::FinalType CTransform8p0to10p0::operator ()(const InitialType& item)
     {
 
@@ -58,7 +75,7 @@ namespace DAQ {
       return V10::CRingItem(1);
     }
     
-
+    //
     V10::CRingScalerItem CTransform8p0to10p0::transformScaler(const InitialType &item)
     {
       using namespace std::chrono;
@@ -73,6 +90,7 @@ namespace DAQ {
       return newItem;
     }
 
+    //
     V10::CRingStateChangeItem CTransform8p0to10p0::transformControl(const InitialType &item)
     {
       auto ctlBuf = V8::format_cast<V8::CControlBuffer>(item);
@@ -90,6 +108,7 @@ namespace DAQ {
       return v10item;
     }
 
+    //
     V10::CPhysicsEventItem CTransform8p0to10p0::transformPhysicsEvent(const InitialType &item)
     {
       m_physicsEvents.clear();
@@ -111,6 +130,7 @@ namespace DAQ {
       return firstEvent;
     }
 
+    //
     void CTransform8p0to10p0::transformOnePhysicsEvent(const std::shared_ptr<DAQ::V8::CPhysicsEvent>& pEvent)
     {
       // make sure that we construct a physics event big enough to handle any V8 buffer
@@ -125,6 +145,7 @@ namespace DAQ {
       v10Item.updateSize();
     }
 
+    //
     V10::CRingTextItem CTransform8p0to10p0::transformText(const InitialType &item)
     {
       auto textBuf = V8::format_cast<V8::CTextBuffer>(item);
@@ -146,6 +167,7 @@ namespace DAQ {
       return textItem;
     }
 
+    //
     std::time_t CTransform8p0to10p0::convertToTime_t(const V8::bftime &tstruct) const
     {
       std::tm calTime;
@@ -159,6 +181,7 @@ namespace DAQ {
       return std::mktime(&calTime);
     }
 
+    //
     std::uint16_t CTransform8p0to10p0::mapControlType(std::uint16_t type) const
     {
       std::uint16_t v10type;
@@ -184,5 +207,6 @@ namespace DAQ {
       return v10type;
 
     }
+
   } // namespace Transform
 } // namespace DAQ

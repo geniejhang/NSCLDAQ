@@ -81,6 +81,11 @@ public:
   _RingItem*  getItemPointer();
   const _RingItem* getItemPointer() const;
 
+  /*! \brief Conveniently set the body of the event to some data
+   *
+   * This copies the entire container into the body, sets the cursor,
+   * and updates the size.
+   */
   template<class T> void fillBody(const std::vector<T>& data);
 
   uint32_t type() const;

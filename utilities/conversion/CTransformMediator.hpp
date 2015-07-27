@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2014.
+    State University (c) Copyright 2015.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -113,14 +113,12 @@ bool CTransformMediator<Transform>::processOne()
   updatePredicate();
 
   try {
-//    if ((*m_pPredicate)()) {
 
       T2 item2 = m_transform(item1);
 
       if (item2.type() != 0) {
         sink << item2;
       }
-//    }
   } catch (std::exception& exc) {
     std::cout << exc.what() << std::endl;
   } catch (...) {

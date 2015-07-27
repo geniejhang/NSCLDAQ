@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2015
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Jeromy Tompkins
+             NSCL
+             Michigan State University
+             East Lansing, MI 48824-1321
+*/
+
 #include "V8/CControlBuffer.h"
 #include <V8/CRawBuffer.h>
 #include <Deserializer.h>
@@ -7,11 +23,13 @@
 namespace DAQ {
   namespace V8 {
     
+    //
     CControlBuffer::CControlBuffer() : m_header(), m_title(), m_offset(), m_time()
     {
       setTitle(m_title);
     }
 
+    //
     CControlBuffer::CControlBuffer(const bheader &header, const std::string &title,
                                    std::uint32_t offset, const bftime &time)
       : m_header(header), m_title(), m_offset(offset), m_time(time)
@@ -19,6 +37,7 @@ namespace DAQ {
       setTitle(title);
     }
 
+    //
     CControlBuffer::CControlBuffer(const CRawBuffer &rawBuf)
       : m_header(rawBuf.getHeader()), m_title(), m_offset(), m_time()
     {
@@ -44,6 +63,7 @@ namespace DAQ {
       databuf >> m_time.tenths;
     }
 
+    //
     void CControlBuffer::toRawBuffer(CRawBuffer &buffer) const
     {
       if (computeNWords() > gBufferSize) {
@@ -67,6 +87,7 @@ namespace DAQ {
 
     }
     
+    //
     void CControlBuffer::setTitle(const std::string &title)
     {
       if (title.size() > 80) {
@@ -78,9 +99,11 @@ namespace DAQ {
 
     }
 
+    //
     std::string CControlBuffer::getTitle() const
     {
       return m_title;
     }
+
   } // namespace V8
 } // namespace DAQ

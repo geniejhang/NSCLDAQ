@@ -1,5 +1,21 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2015
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Jeromy Tompkins
+             NSCL
+             Michigan State University
+             East Lansing, MI 48824-1321
+*/
+
 #include "V8/CPhysicsEventBuffer.h"
-#include <V8/CStandardBodyParser.h>
+#include <V8/CGenericBodyParser.h>
 #include <V8/CRawBuffer.h>
 #include <ByteOrder.h>
 #include <ByteBuffer.h>
@@ -7,20 +23,27 @@
 namespace DAQ {
   namespace V8 {
     
+    ///////////////////////////////////////////////////////////////////////////
+    // CPhysicsEvent Implementation
+    //
+
     CPhysicsEvent::CPhysicsEvent(const Buffer::ByteBuffer &data, bool needsSwap)
       : m_needsSwap(needsSwap),
         m_buffer(data) {}
 
+    //
     CPhysicsEvent::CPhysicsEvent(Buffer::ByteBuffer&& data, bool needsSwap)
       : m_needsSwap(needsSwap),
         m_buffer( move(data) ) {}
 
+    //
     CPhysicsEvent::CPhysicsEvent(const CPhysicsEvent& rhs)
       : m_needsSwap(rhs.m_needsSwap),
         m_buffer(rhs.m_buffer) {}
 
     CPhysicsEvent::~CPhysicsEvent() {}
 
+    //
     CPhysicsEvent& CPhysicsEvent::operator=(const CPhysicsEvent& rhs)
     {
       if (this != &rhs) {
@@ -30,45 +53,56 @@ namespace DAQ {
       return *this;
     }
 
+    //
     std::size_t CPhysicsEvent::getNTotalShorts() const {
-      return *(begin());
+      std::size_t nBytes = m_buffer.size();
+
+      // this knowingly truncates the odd byte.
+      return nBytes/sizeof(std::uint16_t);
     }
 
+    //
     CPhysicsEvent::iterator CPhysicsEvent::begin() const {
       return iterator(m_buffer.begin(), BO::CByteSwapper(m_needsSwap));
     }
 
+    //
     CPhysicsEvent::iterator CPhysicsEvent::end() const {
       return iterator(m_buffer.end(), BO::CByteSwapper(m_needsSwap));
     }
 
     ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
+    ///////////////////////////////////////////////////////////////////////////
+    // CPhysicsEventBuffer Implementation
+    //
+
+
+    // Static member initialization
+    CPhysicsEventBuffer::BodyTypePolicy
+    CPhysicsEventBuffer::m_bodyType = CPhysicsEventBuffer::BufferPreference;
+
+
+    //
     CPhysicsEventBuffer::CPhysicsEventBuffer()
       : m_header(), m_body(), m_mustSwap(false)
     {
-     m_header.type   = DATABF;
-     m_header.buffmt = StandardVsn;
-     m_header.nwds = 16;
-     m_header.nevt = 0;
-     m_header.ssignature = BOM16;
-     m_header.lsignature = BOM32;
-     m_header.cks  = 0;
-     m_header.nlam = 0;
-     m_header.nbit = 0;
-     m_header.cpu  = 0;
-     m_header.seq  = 0;
-     m_header.run  = 0;
-     m_header.unused[0] = 0;
-     m_header.unused[1] = 0;
+      m_header.type   = DATABF;
     }
 
-    CPhysicsEventBuffer::CPhysicsEventBuffer(const bheader &header, const Buffer::ByteBuffer &rawBody)
-      : m_header(header), m_body(), m_mustSwap(m_header.mustSwap())
+    //
+    CPhysicsEventBuffer::CPhysicsEventBuffer(const bheader &header,
+                                             const Buffer::ByteBuffer &rawBody)
+      : m_header(header),
+        m_body(),
+        m_mustSwap(m_header.mustSwap())
     {
       parseBodyData(rawBody.begin(), rawBody.end());
     }
 
+    //
     CPhysicsEventBuffer::CPhysicsEventBuffer(const bheader &header,
                                              const std::vector<std::uint16_t>& body,
                                              bool mustSwap)
@@ -81,6 +115,7 @@ namespace DAQ {
       parseBodyData(buffer.begin(), buffer.end());
     }
 
+    //
     CPhysicsEventBuffer::CPhysicsEventBuffer(const CRawBuffer &rawBuffer)
       : m_header(rawBuffer.getHeader()),
         m_body(),
@@ -97,9 +132,11 @@ namespace DAQ {
       parseBodyData(buf.begin()+hdrSize, buf.end());
     }
 
+    //
     CPhysicsEventBuffer::CPhysicsEventBuffer(const CPhysicsEventBuffer& rhs)
       : m_header(rhs.m_header),
-        m_body()
+        m_body(),
+        m_mustSwap(rhs.m_mustSwap)
     {
       // deep copy
       for (auto pEvt : rhs.m_body) {
@@ -107,8 +144,10 @@ namespace DAQ {
       }
     }
 
+    //
     CPhysicsEventBuffer::~CPhysicsEventBuffer() {}
 
+    //
     CPhysicsEventBuffer& CPhysicsEventBuffer::operator=(const CPhysicsEventBuffer& rhs)
     {
       if (this != &rhs) {
@@ -120,56 +159,92 @@ namespace DAQ {
           new_body.push_back(std::shared_ptr<CPhysicsEvent>(new CPhysicsEvent(*pEvt)));
         }
         m_body = new_body;
+
+        m_mustSwap = rhs.m_mustSwap;
       }
       return *this;
     }
 
+
+    //
     void CPhysicsEventBuffer::parseBodyData(Buffer::ByteBuffer::const_iterator beg,
                                             Buffer::ByteBuffer::const_iterator end)
     {
-      if (m_header.buffmt == StandardVsn) {
-        parseStandardBody(beg, end);
+      if ( m_bodyType == BufferPreference ) {
+
+        if (m_header.buffmt == StandardVsn) {
+          parseStandardBody(beg, end);
+        } else {
+          throw std::runtime_error("Only buffer version 5 is supported");
+        }
+
       } else {
-        throw std::runtime_error("Only buffer version 5 is supported");
+        parseGeneralBody(beg, end);
       }
     }
 
+
+    //
     void CPhysicsEventBuffer::parseStandardBody(Buffer::ByteBuffer::const_iterator beg,
                                                 Buffer::ByteBuffer::const_iterator end)
     {
-      CStandardBodyParser parser;
+//      CStandardBodyParser parser;
+      CGenericBodyParser parser( mapBodyType(Inclusive16BitWords) );
       Buffer::BufferPtr<uint16_t> begPtr(beg, m_mustSwap);
       Buffer::BufferPtr<uint16_t> endPtr(end, m_mustSwap);
 
       m_body = parser(m_header.nevt, begPtr, endPtr);
     }
 
+
+    //
+    void CPhysicsEventBuffer::parseGeneralBody(Buffer::ByteBuffer::const_iterator beg,
+                                               Buffer::ByteBuffer::const_iterator end)
+    {
+      CGenericBodyParser parser( mapBodyType(m_bodyType) );
+
+      Buffer::BufferPtr<uint16_t> begPtr(beg, m_mustSwap);
+      Buffer::BufferPtr<uint16_t> endPtr(end, m_mustSwap);
+
+      m_body = parser(m_header.nevt, begPtr, endPtr);
+    }
+
+
+    //
     bheader CPhysicsEventBuffer::getHeader() const {
       return m_header;
     }
     
-    CPhysicsEventBuffer::iterator CPhysicsEventBuffer::begin() 
+
+    //
+    CPhysicsEventBuffer::iterator CPhysicsEventBuffer::begin()
     {
       return m_body.begin();
     }
 
+
+    //
     CPhysicsEventBuffer::const_iterator CPhysicsEventBuffer::begin() const
     {
       return m_body.begin();
     }
 
+
+    //
     CPhysicsEventBuffer::iterator CPhysicsEventBuffer::end() 
     {
       return m_body.end();
     }
 
+    //
     CPhysicsEventBuffer::const_iterator CPhysicsEventBuffer::end() const
     {
       return m_body.end();
     }
 
-    // because I don't know how to properly swap the body of a physics event, I
-    // have to send the entire buffer back unswapped.
+
+    // Because I don't know how to properly swap the body of a physics event, I
+    // have to send the entire buffer back unswapped if it is not in native-byte order.
     void CPhysicsEventBuffer::toRawBuffer(CRawBuffer &buffer) const
     {
       bheader header = m_header;
@@ -199,6 +274,7 @@ namespace DAQ {
 
     }
 
+    //
     bool CPhysicsEventBuffer::appendEvent(std::shared_ptr<CPhysicsEvent> pEvent)
     {
       bool successfullyAppended = true;
@@ -216,12 +292,16 @@ namespace DAQ {
       return successfullyAppended;
     }
 
+
+    //
     std::size_t CPhysicsEventBuffer::getNBytesFree() const
     {
       std::size_t nBytesOccuppied = computeNWords()*sizeof(std::uint16_t);
       return (gBufferSize-nBytesOccuppied);
     }
 
+
+    //
     void CPhysicsEventBuffer::swapBytesOfHeaderInPlace(bheader &header) const
     {
       BO::swapBytes(header.nwds);
@@ -240,20 +320,53 @@ namespace DAQ {
       BO::swapBytes(header.unused[1]);
     }
 
+
+    //
     std::size_t CPhysicsEventBuffer::computeNWords() const
     {
-      std::size_t nWords = 16; // size of header
+      std::size_t nBytes = 16*sizeof(std::uint16_t); // size of header
       for (auto& pEvent : m_body) {
-        nWords += pEvent->getNTotalShorts();
+        nBytes += pEvent->getBuffer().size();
       }
+
+      std::size_t nWords;
+      if ((nBytes%2)==0) {
+        nWords = nBytes/sizeof(std::uint16_t);
+      } else {
+        nWords = nBytes/sizeof(std::uint16_t) + 1;
+      }
+
       return nWords;
     }
 
+    //
     void CPhysicsEventBuffer::updateHeader(bheader& header) const
     {
       header.type = static_cast<std::uint16_t>(DATABF);
       header.nwds = static_cast<std::uint16_t>(computeNWords());
       header.nevt = static_cast<std::uint16_t>(m_body.size());
+    }
+
+    //
+    PhysicsEventSizePolicy
+    CPhysicsEventBuffer::mapBodyType(BodyTypePolicy type) const
+    {
+      PhysicsEventSizePolicy genericType = V8::Inclusive16BitWords;
+      switch (type) {
+        case (Inclusive16BitWords) :
+          genericType = V8::Inclusive16BitWords;
+          break;
+        case (Exclusive16BitWords) :
+          genericType = V8::Exclusive16BitWords;
+          break;
+        case (Inclusive32BitBytes) :
+          genericType = V8::Inclusive32BitBytes;
+          break;
+        case (Inclusive32BitWords) :
+          genericType = V8::Inclusive32BitWords;
+          break;
+      }
+      return genericType;
     }
 
   } // namespace V8

@@ -1,5 +1,3 @@
-#ifndef CRINGDATASOURCE_H
-#define CRINGDATASOURCE_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -11,10 +9,14 @@
 
      Author:
              Ron Fox
-	     NSCL
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+       NSCL
+       Michigan State University
+       East Lansing, MI 48824-1321
 */
+
+#ifndef CRINGDATASOURCE_H
+#define CRINGDATASOURCE_H
+
 #include "CDataSource.h"
 #include <vector>
 #include <stdint.h>
@@ -34,6 +36,8 @@ class CRingItem;
    If a remote ring is specified, the usual proxy ring scheme is used to hoist
    data to localhost from the remote host.
 
+   CRingDataSources NEVER reach an end of file condition.
+
 */
 class CRingDataSource : public CDataSource
 {
@@ -46,8 +50,8 @@ private:
   // Canonical methods.
 public:
   CRingDataSource(URL&                   url,
-		  std::vector<uint16_t>  sample,
-		  std::vector<uint16_t>  exclude);
+                  std::vector<uint16_t>  sample,
+                  std::vector<uint16_t>  exclude);
   virtual ~CRingDataSource();
 private:
   CRingDataSource(const CRingDataSource& rhs);
@@ -59,7 +63,16 @@ public:
   // Mandatory public interface:
 
 public:
+  /*!
+   * \brief DEPRECATED - Read a full ring item from the source
+   *
+   *  This blocks until the complete ring item has arrived.
+   *  Caller receives ownership of object returned.
+   *
+   * \return pointer to object extracted.
+   */
   virtual CRingItem* getItem();
+
   void read(char* pBuffer, size_t nBytes);
 
   // Utilities:

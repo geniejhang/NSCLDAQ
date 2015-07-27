@@ -1,3 +1,18 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2015.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Jeromy Tompkins
+       NSCL
+       Michigan State University
+       East Lansing, MI 48824-1321
+*/
 
 #include <cppunit/Asserter.h>
 #include <cppunit/extensions/HelperMacros.h>
@@ -40,6 +55,12 @@ using namespace std;
 using namespace DAQ;
 using namespace DAQ::Transform;
 
+/*!
+ * \brief The CTransform10p0to11p0Tests class
+ *
+ * Tests whether the transformation rules are held for, scalers, state changes, and
+ * physics events when going between version 10 and 11
+ */
 class CTransform10p0to11p0Tests : public CppUnit::TestFixture
 {
 private:
@@ -208,7 +229,16 @@ void CTransform10p0to11p0Tests::scaler_0()
 
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
+    /*!
+     * \brief The CTransform10p0to11p0Tests_PhysicsCount class
+     *
+     * Tests that transformation rules are obeyed for physics event count
+     *  items when going from 10 -> 11.
+     */
     class CTransform10p0to11p0Tests_PhysicsCount : public CppUnit::TestFixture
     {
 
@@ -278,7 +308,14 @@ void CTransform10p0to11p0Tests::scaler_0()
 
 
     ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 
+    /*!
+     * \brief The CTransform10p0to11p0Tests_Text class
+     *
+     * Tests that the transformation rules for CRingTextItems are obeyed.
+     */
     class CTransform10p0to11p0Tests_Text : public CppUnit::TestFixture
     {
 
@@ -392,6 +429,17 @@ void CTransform10p0to11p0Tests::scaler_0()
     };
     CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to11p0Tests_Text);
 
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+
+    /*!
+     * \brief The CTransform10p0to11p0Tests_NonIncrSclr class
+     *
+     * Tests that rules of transformation are obeyed for
+     * CRingTimestampedRunningScalers (i.e. TIMESTAMPED_NONINCR_SCALERS)
+     */
     class CTransform10p0to11p0Tests_NonIncrSclr : public CppUnit::TestFixture
     {
 
@@ -505,6 +553,15 @@ void CTransform10p0to11p0Tests::scaler_0()
     };
     CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to11p0Tests_NonIncrSclr);
 
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    /*!
+     * \brief The CTransform10p0to11p0Tests_Fragment class
+     *
+     * Tests that rules are obeyed for fragment types.
+     */
     class CTransform10p0to11p0Tests_Fragment : public CppUnit::TestFixture
     {
 

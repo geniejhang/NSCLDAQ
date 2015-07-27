@@ -1,3 +1,19 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2015.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Jeromy Tompkins
+       NSCL
+       Michigan State University
+       East Lansing, MI 48824-1321
+*/
+
 #include "CTransform10p0to8p0.h"
 #include <V10/DataFormatV10.h>
 #include <V10/CRingItem.h>
@@ -22,17 +38,18 @@ using namespace std;
 namespace DAQ {
   namespace Transform {
     
+    // Initialize and start a new, empty physics event buffer
     CTransform10p0to8p0::CTransform10p0to8p0()
       : m_run(0),
         m_nTriggersProcessed(0),
         m_samplingFactor(1.0),
-        m_lastSequence(0),
         m_physicsBuffer(),
         m_textBuffers()
     {
        startNewPhysicsBuffer();
     }
 
+    // Main entry point
     CTransform10p0to8p0::FinalType CTransform10p0to8p0::operator ()(const InitialType& item)
     {
       V10::CRingItemFactory factory;
@@ -71,6 +88,7 @@ namespace DAQ {
           break;
       }
 
+      // Fill the header with a VOID header
       Buffer::ByteBuffer buffer;
       buffer << V8::bheader();
 
@@ -79,7 +97,7 @@ namespace DAQ {
       return voidBuffer;
     }
 
-
+    //
     V8::CScalerBuffer CTransform10p0to8p0::transformIncrScaler(const InitialType &item)
     {
       auto& v10item = dynamic_cast<const V10::CRingScalerItem&>(item);
@@ -94,6 +112,7 @@ namespace DAQ {
       return sclrBuf;
     }
 
+    //
     V8::CScalerBuffer CTransform10p0to8p0::transformNonIncrScaler(const InitialType &item)
     {
 
@@ -110,6 +129,7 @@ namespace DAQ {
 
     }
 
+    //
     V8::CControlBuffer CTransform10p0to8p0::transformStateChange(const InitialType &item)
     {
       auto& v10item = dynamic_cast<const V10::CRingStateChangeItem&>(item);
@@ -137,6 +157,7 @@ namespace DAQ {
       return ctlBuf;
     }
 
+    //
     V8::CRawBuffer CTransform10p0to8p0::transformPhysicsEvent(const InitialType &item)
     {
       const V10::CPhysicsEventItem& v10item
@@ -169,6 +190,7 @@ namespace DAQ {
       return returnBuffer;
     }
 
+    //
     V8::CRawBuffer CTransform10p0to8p0::transformText(const InitialType &item)
     {
       const V10::CRingTextItem& v10item = dynamic_cast<const V10::CRingTextItem&>(item);
@@ -176,25 +198,30 @@ namespace DAQ {
       auto strings = v10item.getStrings();
 
       appendNewTextBuffer(v10item.type());
-      //for ( auto& str : strings ) {
+
       std::size_t nStr = strings.size();
       for (std::size_t i=0; i<nStr; ++i) {
         std::string& str = strings.at(i);
 
         auto& textBuf = m_textBuffers.back();
 
-        if ( textBuf.appendString(str) ) { // insufficient space causes false to be returned
+        if ( textBuf.appendString(str) ) {
+          // text buffer was successfully appended
+
           if (textBuf.getNBytesFree() == 0) {
             appendNewTextBuffer(v10item.type());
           }
 
         } else {
+          // text buffer was not appended.
 
           appendNewTextBuffer(item.type());
           m_textBuffers.back().appendString(str);
         }
       }
 
+      // send out the first V8::CTextBuffer and remove it from
+      // the stored list of buffers so it does not get emitted twice
       const V8::CTextBuffer textBuf = m_textBuffers.front();
       m_textBuffers.erase(m_textBuffers.begin());
 
@@ -202,17 +229,19 @@ namespace DAQ {
       return rawBuf;
     }
 
-
+    //
     const V8::CPhysicsEventBuffer& CTransform10p0to8p0::getCurrentPhysicsBuffer() const
     {
       return m_physicsBuffer;
     }
 
+    //
     const std::vector<V8::CTextBuffer>& CTransform10p0to8p0::getStagedTextBuffers() const
     {
       return m_textBuffers;
     }
 
+    //
     void CTransform10p0to8p0::updateSamplingFactor(const InitialType &item)
     {
       auto& v10item = dynamic_cast<const V10::CRingPhysicsEventCountItem&>(item);
@@ -225,6 +254,7 @@ namespace DAQ {
       }
     }
 
+    //
     std::uint16_t CTransform10p0to8p0::mapControlType(std::uint16_t type) const
     {
       std::uint16_t v8type;
@@ -248,9 +278,9 @@ namespace DAQ {
       }
 
       return v8type;
-
     }
 
+    //
     std::uint16_t CTransform10p0to8p0::mapTextType(std::uint16_t type) const
     {
       std::uint16_t v8type;
@@ -268,12 +298,11 @@ namespace DAQ {
       }
 
       return v8type;
-
     }
     
+    //
     void CTransform10p0to8p0::startNewPhysicsBuffer()
     {
-      m_lastSequence = computeSequence();
 
       V8::bheader header;
       header.type = V8::DATABF;
@@ -284,26 +313,28 @@ namespace DAQ {
       m_physicsBuffer = V8::CPhysicsEventBuffer(header,  Buffer::ByteBuffer({}));
     }
 
-  std::uint32_t CTransform10p0to8p0::computeSequence() const
-  {
-    return m_nTriggersProcessed/m_samplingFactor;
-  }
+    //
+    std::uint32_t CTransform10p0to8p0::computeSequence() const
+    {
+      return m_nTriggersProcessed/m_samplingFactor;
+    }
 
-  void CTransform10p0to8p0::appendNewTextBuffer(std::uint16_t type) {
-    V8::bheader header;
-    header.type = mapTextType(type);
-    header.run  = m_run;
-    header.seq  = computeSequence();
+    //
+    void CTransform10p0to8p0::appendNewTextBuffer(std::uint16_t type) {
+      V8::bheader header;
+      header.type = mapTextType(type);
+      header.run  = m_run;
+      header.seq  = computeSequence();
 
-    V8::CTextBuffer buffer(header, {});
-    m_textBuffers.push_back(buffer);
-  }
+      V8::CTextBuffer buffer(header, {});
+      m_textBuffers.push_back(buffer);
+    }
 
-  void CTransform10p0to8p0::resetStatistics()
-  {
-    m_samplingFactor = 1.0;
-    m_nTriggersProcessed = 0;
-    m_lastSequence = 0;
-  }
-} // namespace Transform
+    //
+    void CTransform10p0to8p0::resetStatistics()
+    {
+      m_samplingFactor = 1.0;
+      m_nTriggersProcessed = 0;
+    }
+  } // namespace Transform
 } // namespace DAQ

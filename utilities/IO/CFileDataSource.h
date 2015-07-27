@@ -1,5 +1,3 @@
-#ifndef CFILEDATASOURCE_H
-#define CFILEDATASOURCE_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -11,11 +9,14 @@
 
      Author:
              Ron Fox
-	     NSCL
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+       NSCL
+       Michigan State University
+       East Lansing, MI 48824-1321
 */
 
+
+#ifndef CFILEDATASOURCE_H
+#define CFILEDATASOURCE_H
 
 #include "CDataSource.h"
 

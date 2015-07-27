@@ -1,3 +1,18 @@
+/*
+    This software is Copyright by the Board of Trustees of Michigan
+    State University (c) Copyright 2015.
+
+    You may use this software under the terms of the GNU public license
+    (GPL).  The terms of this license are described at:
+
+     http://www.gnu.org/licenses/gpl.txt
+
+     Author:
+             Jeromy Tompkins
+       NSCL
+       Michigan State University
+       East Lansing, MI 48824-1321
+*/
 
 #include <CTransform11p0to11p0.h>
 #include <V11/CRingItemFactory.h>
@@ -10,6 +25,7 @@ using namespace std;
 namespace DAQ {
   namespace Transform {
 
+    //
 CTransform11p0to11p0::CTransform11p0to11p0(unique_ptr<CFilter> pFilter)
   : m_pFilter(move(pFilter))
 {}
