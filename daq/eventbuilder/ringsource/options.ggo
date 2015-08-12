@@ -15,7 +15,7 @@ option "evbport" p "Event builder port" string optional default="managed"
 option "evbname" q "Event builder name" string optional
 option "info" i "Description string when connecting to server" string required
 option "ids"  s "Source ids this client will be allowed to submit to event builder" int multiple
-option "default-id" S "Source id to assign data without a predefined source id" int 
+option "default-id" S "Source id to assign data without a predefined source id" int optional
 
 
 section "Application specific options"
