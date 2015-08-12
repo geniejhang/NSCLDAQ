@@ -34,6 +34,7 @@ BUILT_SOURCES = @srcdir@/rfcmdline.c @srcdir@/rfcmdline.h  \
 
 @srcdir@/options.ggo: @top_srcdir@/daq/eventbuilder/options.ggo
 	cp @top_srcdir@/daq/eventbuilder/options.ggo  @srcdir@
+	echo option \"default-id\" S \"Source id to assign data without a predefined source id\" int optional >> @srcdir@/options.ggo
 	echo option \"ring\" r \"URL of ring from which fragments come\" string required >> @srcdir@/options.ggo
 	echo option \"timestampextractor\" t \"Shared library with timestamp extraction code\" string optional >> \
 		@srcdir@/options.ggo
