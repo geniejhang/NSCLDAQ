@@ -32,7 +32,7 @@ std::istream& operator>>(std::istream& stream, DAQ::V8::CRawBuffer& buffer)
 
   // i've yet to see a gaurantee that the above won't fail,
   // check that we got everything we asked for.
-  if (stream.gcount() != DAQ::V8::gBufferSize) {
+  if (stream.gcount() != DAQ::V8::gBufferSize && stream.good()) {
     std::string errmsg ("operator>>(std::istream&, DAQ::V8::CRawBuffer&) ");
     errmsg += "failed to read entire buffer.";
     throw std::runtime_error(errmsg);
