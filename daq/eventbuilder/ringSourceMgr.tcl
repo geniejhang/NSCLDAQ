@@ -22,6 +22,7 @@ package provide ringsourcemgr 1.0
 package require InstallRoot
 package require portAllocator
 package require evbcallouts
+package require EndrunMon
 
 #-------------------------------------------------------------------------------
 #
@@ -74,6 +75,8 @@ proc ::RingSourceMgr::addSource [list source tstamplib {id ""} \
       info $info \
       expecthdrs $expectHeaders \
       fd ""]
+    
+    
 }
 
 #------------------------------------------------------------------------------
@@ -173,6 +176,10 @@ proc ::RingSourceMgr::startSource {sourceRingUrl timestampExtractorLib id info {
   chan configure $fd -buffering line -blocking 0
   chan event $fd readable [list ::RingSourceMgr::_HandleDataSourceInput $fd $info $id]
 
+  # Indicate to the end run monitor it will have an end run from this src:
+    
+  EndrunMon::incEndRunCount
+  
   return $fd
 }
 
@@ -308,6 +315,7 @@ proc ::RingSourceMgr::_HandleDataSourceInput {fd info id} {
   if {[eof $fd]} {
     catch {close $fd} msg
     append text "exited: $msg"
+    ::EndrunMon::decEndRunCount;           # One less end run to wait for.
   } else {
     append text [gets $fd]
   }
