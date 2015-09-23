@@ -524,3 +524,50 @@ stripconfig <replaceable>option ?...?</replaceable>
 
 
 <!-- /manpage -->
+
+<!-- manpage 3tcl -->
+<refentry id="tcl3_ringbuffer">
+  <refentryinfo>
+    <author>
+	    <personname>
+		    <firstname>Ron</firstname>
+		    <surname>Fox</surname>
+	    </personname>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo>
+  <refmeta>
+     <refentrytitle id='tcl3_ringbuffer_title'>TclRingBuffer</refentrytitle>
+     <manvolnum>3tcl</manvolnum>
+     <refmiscinfo class='empty'></refmiscinfo>
+  </refmeta>
+  <refnamediv>
+     <refname>TclRingBuffer</refname>
+     <refpurpose>Tcl ring buffer consumer package</refpurpose>
+  </refnamediv>
+  
+  <refsynopsisdiv>
+    <cmdsynopsis>
+	<command>
+   </command>
+    </cmdsynopsis>
+
+  </refsynopsisdiv>
+  <refsect1>
+     <title>DESCRIPTION</title>
+     <para>
+     </para>
+  </refsect1>
+  <refsect1>
+     <title>
+	OPTIONS
+     </title>
+     <variablelist>
+!Option list elements!
+     </variablelist>
+  </refsect1>
+
+</refentry>
+
+ <!-- /manpage -->
