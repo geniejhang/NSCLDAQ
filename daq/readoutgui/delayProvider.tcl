@@ -28,6 +28,7 @@ package provide Delay_Provider 1.0
 namespace eval ::Delay {
   variable delayTime 0    ;#< The amount to delay on begin
   variable endDelayTime 0    ;#< The amount to delay on end
+  variable destroyCmd 0 ;#< After id for destroying progress dialog
 }
 
 #------------------------------------------------------------------------------
@@ -124,14 +125,25 @@ proc ::Delay::capabilities {} {
 }
 
 proc ::Delay::_delayWithFeedback {duration} {
-  toplevel .delay
-  ttk::label .delay.title -text "Delay in progress"
-  ttk::progressbar .delay.progress -orient horizontal -mode determinate \
-                                   -maximum $duration -value 0
-  grid .delay.title -sticky new -padx 8 -pady 8
-  grid .delay.progress -sticky new -padx 8 -pady 8
-  grid rowconfigure .delay 0 -weight 1
-  grid columnconfigure .delay 0 -weight 1
+  if {[winfo exists .delay]} {
+    if {$::Delay::destroyCmd != 0} {
+      after cancel $::Delay::destroyCmd
+      set ::Delay::destroyCmd 0
+    }
+
+    .delay.progress configure -maximum $duration -value 0
+
+  } else {
+
+    toplevel .delay
+    ttk::label .delay.title -text "Delay in progress"
+    ttk::progressbar .delay.progress -orient horizontal -mode determinate \
+      -maximum $duration -value 0
+    grid .delay.title -sticky new -padx 8 -pady 8
+    grid .delay.progress -sticky new -padx 8 -pady 8
+    grid rowconfigure .delay 0 -weight 1
+    grid columnconfigure .delay 0 -weight 1
+  }
 
   update
 
@@ -146,6 +158,6 @@ proc ::Delay::_delayWithFeedback {duration} {
   .delay.title configure -text "Delay complete"
   update
 
-  after 1000 {destroy .delay}
+  set ::Delay::destroyCmd [after 1000 {destroy .delay}]
 }
 
