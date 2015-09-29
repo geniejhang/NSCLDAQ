@@ -21,6 +21,8 @@ package provide eventLogBundle 1.0
 package provide Experiment     2.0;   # For compatibility with event builder.
 
 
+package require stageareaValidation
+
 package require Tk
 package require DAQParameters
 package require RunstateMachine
@@ -512,147 +514,6 @@ proc ::EventLog::_setStatusLine repeatInterval {
     set ::EventLog::statusUpdateId \
         [after $repeatInterval [list ::EventLog::_setStatusLine $repeatInterval]]
 }
-##
-# ::EventLog::_duplicateRun
-#
-#  @return string -   
-#  @retval non empty  if the run we are about to write already exists.
-#          we're going to define 'exists' as having a run directory in the
-#          experiment view. 
-# @retval empty if there is no sign that this run had already been recorded.
-#
-proc ::EventLog::_duplicateRun {} {
-    
-    set run [::ReadoutGUIPanel::getRun]
-    
-    # Two possibilities;  If the run was properly ended, there will be a
-    # run directory in the experimnent view
-    
-    set runDirPath [::ExpFileSystem::getRunDir $run]
-    
-    # If the run was improperly ended, there could be event segments in the
-    # current directory.  We'll look for them with glob.
-    #
-    
-    set checkGlob [::ExpFileSystem::getCurrentRunDir]
-    set checkGlob [file join $checkGlob [::ExpFileSystem::genEventfileBasename $run]*.evt ]
-    
-    set eventSegments [llength [glob -nocomplain $checkGlob]]
-
-    #  Figure out the return value:
-
-    if {[file exists $runDirPath]} {
-      set message "The final run directory '$runDirPath' already exists indicating this run may already have been recorded"
-    } elseif {($eventSegments > 0)} {
-      set message "[::ExpFileSystem::getCurrentRunDir] has event segments in it for this run ($run) indicating this run may already have been recorded but not finalized"
-    } else {
-      set message ""
-    }
-    return $message
-
-}
-
-##
-#   Check whether or not the .started file lives in the 
-#   experiment/current directory
-#
-proc ::EventLog::_dotStartedExists {} {
-  set currentPath [::ExpFileSystem::getCurrentRunDir]
-  return [file exists [file join $currentPath .started]]
-}
-
-##
-#   Check whether or not the .exited file lives in the 
-#   experiment/current directory
-#
-proc ::EventLog::_dotExitedExists {} {
-  set currentPath [::ExpFileSystem::getCurrentRunDir]
-  return [file exists [file join $currentPath .exited]]
-}
-
-##
-#   Check whether or not .evt files exist in the 
-#   experiment/current directory
-#
-#   @returns boolean indicating whether there are any files ending in .evt
-#
-proc ::EventLog::_runFilesExistInCurrent {} {
-  set currentPath [::ExpFileSystem::getCurrentRunDir]
-  set evtFiles [glob -directory $currentPath -nocomplain *.evt]
-  return [expr {[llength $evtFiles] > 0} ]
-}
-
-##
-# ::EventLog::listIdentifiableProblems
-#
-# Checks for a few things:
-# 1. experiment/run# directory already exists
-# 2. experiment/current/*.evt files exist
-#
-# @returns a list of error messages
-proc ::EventLog::listIdentifiableProblems {} {
-
-  set errors [list]
-
-  # check if run directory exist!
-  set msg [EventLog::_duplicateRun]
-  if {$msg ne ""} {
-    lappend errors $msg
-  } 
-  
-  # check if experiment/current/*.evt files exist
-  if {[::EventLog::_runFilesExistInCurrent]} {
-    set msg    "EventLog error: the experiment/current directory contains run "
-    append msg "segments and needs to be cleaned."
-    lappend errors $msg
-  }
-
-  return $errors
-}
-##
-# correctFixableProblems
-#
-#  Some startup issues can be corrected:
-# 1. experiment/current/.started exists
-# 2. experiment/current/.exited exists
-#
-#  In this case these files are just deleted.
-#
-proc ::EventLog::correctFixableProblems {} {
-  # check if experiment/current/.started exists
-  if {[::EventLog::_dotStartedExists]} {
-    ::EventLog::deleteStartFile
-
-  } 
-  
-  # check if experiment/current/.exited exists
-  if {[::EventLog::_dotExitedExists]} {
-    ::EventLog::deleteExitFile
-  } 
-    
-}
-
-##
-# deleteStartFile
-#   Kill off the .started file.
-#
-proc ::EventLog::deleteStartFile {} {
-    set startFile [file join [::ExpFileSystem::getCurrentRunDir] .started]
-    file delete -force $startFile 
-    
-}
-##
-# deleteExitFile
-#   Delete the .exited file
-#
-proc ::EventLog::deleteExitFile {} {
-    
-    set exitFile [file join [::ExpFileSystem::getCurrentRunDir] .exited]
-    file delete -force $exitFile 
-    
-}
-#------------------------------------------------------------------------------
-# Actions:
 
 ##
 # ::EventLog::runStarting
@@ -674,20 +535,16 @@ proc ::EventLog::runStarting {} {
   }
 
   # Now if desired start the new run.
+  ::StageareaValidation::correctAndValidate
 
   if {[::ReadoutGUIPanel::recordData]} {
-    ::EventLog::correctFixableProblems;         # Some things can be fixed :-)
-    set errorMessages [::EventLog::listIdentifiableProblems]
-    if {[llength $errorMessages]>0} {
-      return -code error $errorMessages
-    }
     
     set startFile [file join [::ExpFileSystem::getCurrentRunDir] .started]
 
     ::EventLog::_startLogger
     ::EventLog::_waitForFile $startFile $::EventLog::startupTimeout \
                                         $::EventLog::filePollInterval
-    ::EventLog::deleteStartFile
+    ::StageareaValidation::deleteStartFile
     set ::EventLog::expectingExit 0
     ::EventLog::_setStatusLine 2000
     set ::EventLog::needFinalization 1
@@ -718,7 +575,7 @@ proc ::EventLog::runEnding {} {
         foreach pid $::EventLog::loggerPid {
           catch {exec kill -9 $pid}; # in case waitforfile timed out.
         }
-        ::EventLog::deleteExitFile
+        ::StageareaValidation::deleteExitFile
         set ::EventLog::loggerPid -1
         ::EventLog::_finalizeRun
         file delete -force $startFile;   # So it's not there next time!!
@@ -794,12 +651,19 @@ proc ::EventLog::enter {from to} {
 #
 proc ::EventLog::leave {from to} {
   if {($from eq "Halted") && ($to eq "Active")} {
-      ::EventLog::runStarting
+      if {[catch {::EventLog::runStarting} msg]} {
+        set ::EventLog::failed 1
+        ::ReadoutGUIPanel::Log EventLogManager error $msg
+        error $msg
+      }
       # reset the failure state
       set ::EventLog::failed 0
   }
   if {($from in [list "Active" "Paused"]) && ($to eq "Halted") } {
-    set  ::EventLog::expectingExit 1
+    if {! $::EventLog::failed} { 
+      set  ::EventLog::expectingExit 1
+    }
+    set ::EventLog::failed 0
   }
 }
 
