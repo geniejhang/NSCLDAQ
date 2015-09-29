@@ -356,7 +356,7 @@ proc ::EventLog::_handleInput {} {
 
         if {!$::EventLog::expectingExit} {
             ::ReadoutGUIPanel::Log EventLogManager error "Unexpected event log error! $msg"
-            ::Diagnostics::Error {The event logger exited unexpectedly!!}
+            ::Diagnostics::Error {The event logger exited unexpectedly check EventLogManager tab for errors.!!}
         } else {
             ::EventLog::_finalizeRun;            # May need that if exit before wait.
         }
