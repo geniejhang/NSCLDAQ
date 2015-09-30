@@ -54,12 +54,20 @@ exec tclsh "$0" ${1+"$@"}
 #    *  Remove loggers... - Allows you to destroy an existing logger.
 #    *  Enable Loggers... - Allows you to specify which loggers will be active.
 #    *  List Loggers      - Lists the loggers and their states.
+#    *  [ ] Record Always - If checked multiloggers are launched even if
+#                           recording is disabled.
+#                     
 #
 #   Normally the loggers only function when the readoutGUI is recording, however
 #   if the ::multilogger::recordAlways flag is set, recording is always done.
 #   NOTE: in that case it's important to always ensure there are unique
 #         run numbers as the eventloggers will refuse to write over existing
 #         event files.
+#
+#   NOTE:  in record always mode, if the main recording checkbutton is not set
+#          the run number is incremented at the end of run to dodge efforts
+#          to record over existing files.
+#
 #
 #  This package is installed by default but you must load it
 #  (e.g. with  ReadoutCallouts.tcl) to incorporate it into the readout gui.
@@ -784,6 +792,7 @@ proc ::multilogger::leave {from to} {
             foreach logger $::multilogger::Loggers {
                 $logger start
             }
+            after 1000;                     # Wait for them to get setup.
         }
     }
 }
@@ -810,7 +819,16 @@ proc ::multilogger::enter {from to} {
         
         foreach logger $::multilogger::Loggers {
             $logger stop
+            
+            # If multilogger is recording but the 'central' eventlogger is not,l
+            # increment the run number to avoid stomping on event files next time
+            # around.
+            
+            
         }
+        if {$::multilogger::recordAlways && ![::ReadoutGUIPanel::recordData]} {
+                ::ReadoutGUIPanel::setRun [expr {[::ReadoutGUIPanel::getRun] + 1}]
+            }
     }
 }
 
@@ -830,11 +848,14 @@ proc ::multilogger::initPackage {} {
         $myMenu add separator
         $myMenu add command -label {Enable Loggers...} -command ::multilogger::enableLoggers
         $myMenu add command -label {Delete Loggers...} -command ::multilogger::deleteLoggers
+        $myMenu add separator
+        $myMenu add checkbutton -offvalue 0 -onvalue 1 -variable ::multilogger::recordAlways -label {Record Always}
         
         # Load the initial loggers from last time if they exist else build the
         # ~/.multiloggers file.
         
         ::multilogger::loadLoggers
+        
         
         set ::multilogger::Initialized 1
     }

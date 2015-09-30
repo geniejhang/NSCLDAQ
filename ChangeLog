@@ -981,3 +981,10 @@ Work on 11.0-rc11 begins
 	that it can detect the end run even if one or more data sources
 	has exited.
 	
+11.0-014 ?
+	* Bug #4675 - User interface changes for multilogger so that
+	record always can be user selected.
+	*  Multilogger - If recording always increment run number when run
+	ends and not globally recording.
+	*  Fix errror in remote gui back connection - would fail if the
+	service desired was not the last on in the port manager list.

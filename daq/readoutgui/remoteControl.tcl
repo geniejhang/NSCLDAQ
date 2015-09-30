@@ -228,11 +228,12 @@ snit::type ReadoutGuiRemoteControl {
         if {$app eq "s800rctl"} {
           puts stderr "found one"
           incr foundCount
+          set svcport $port
         }
       }
       if {$foundCount == 1} {
         puts stderr "Opening client connection"
-        set requestfd [socket $clientaddr $port]
+        set requestfd [socket $clientaddr $svcport]
         chan configure $requestfd -blocking 0 -buffering line
         chan event $requestfd readable [mymethod _onRequestReadable]
         puts "all set up."
