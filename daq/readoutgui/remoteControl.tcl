@@ -72,6 +72,9 @@ snit::type ReadoutGuiRemoteControl {
 
   variable statusmanager ""
   variable statusbar     ""
+  
+  variable priorRunNumber ""
+  variable priorTitle     ""
 
   ##
   # constructor:
@@ -260,7 +263,11 @@ snit::type ReadoutGuiRemoteControl {
         set statusbar     [$statusmanager addMessage] 
         $statusmanager setMessage $statusbar "Remote controlled by: $clientaddr"
       }
-
+      ##
+      #  Save the run number and title so that they can be restored when
+      #   the client disconnects.
+      set priorRunNumber [::ReadoutGUIPanel::getRun]
+      set priorTitle     [::ReadoutGUIPanel::getTitle]
     }
   }
   ##
@@ -324,6 +331,8 @@ snit::type ReadoutGuiRemoteControl {
   method _onClientExit {} {
     close $replyfd
     set replyfd -1
+    ::ReadoutGUIPanel::setRun $priorRunNumber
+    ::ReadoutGUIPanel::setTitle $priorTitle
     $self _setMaster
     $statusmanager setMessage $statusbar "Remote controlled by: nobody"
   }
