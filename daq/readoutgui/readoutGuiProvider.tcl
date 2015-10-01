@@ -22,6 +22,7 @@ package provide RemoteGUI_Provider 1.0
 package require S800_Provider
 package require ui
 package require ReadoutGuiClient
+package require RunstateMachine
 
 
 ##
@@ -156,13 +157,23 @@ proc ::RemoteGUI::_handleOutput output {
 # _outserverClosed
 #
 #  Called when the output server closes...probably the ReadoutGUI has blown
-#  away.  Just destroy the connection object and complain to the ow.
+#  away.
+#   *  destroy the connection object and complain to the output log.
+#   *  Start a transition to notready:
 #
 proc ::RemoteGUI::_outserverClosed {} {
+    
+    #  Log the disconnecty
+    
     variable outputMonitor
     $outputMonitor destroy
     
     set ow [::Output::getInstance]
     $ow log error "Lost connection to remote GUI output server."
     $ow log error "Probably the control server connection already was lost or soon will be"
+    
+    #  Transition to NotReady:
+    
+    forceFailure;            # in RunstateMachine pkg.
+
 }

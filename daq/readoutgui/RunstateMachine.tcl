@@ -408,3 +408,11 @@ proc resume {} {
   }
   $machine destroy
 }
+
+proc forceFailure {} {
+  set machine [RunstateMachineSingleton %AUTO%]
+  if { [catch { $machine transition NotReady } msg] } {
+    error "Transition to not ready failed with message : $msg"
+  }
+  $machine destroy    
+}

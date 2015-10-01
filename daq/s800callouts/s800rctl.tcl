@@ -89,20 +89,23 @@ snit::type s800rctl {
   #
   #
   destructor {
+
   #
   #  The catch is in case we're being destroyed because we lost
   #  our connection.
   #
-    catch {
+    set stat [catch {
       if {$socket ne ""} {
-        $self setMaster
-        chan event $socket readable {}
+        #catch {$self setMaster} ;  # can fail but still want to close  socket
+        #chan event $socket readable {}
         close $socket
-      } 
-
+      }
+    } msg]
+    catch {
       # close the server
       close $listenSocket
-
+    } msg
+    catch {
       # close any connection to the server that may have been made
       if {$replySocket ne ""} {
         chan event $replySocket readable {}
@@ -259,9 +262,14 @@ snit::type s800rctl {
   #   Connection failure throws an error.
   #
   method Connect {} {
-    set socket [socket $options(-host) $options(-port)]
-    chan configure $socket -buffering line -blocking 0
-    chan event $socket readable [mymethod _onRequestReadable]
+    if {$socket eq ""} {
+      set socket [socket $options(-host) $options(-port)]
+      chan configure $socket -buffering line -blocking 0
+      chan event $socket readable [mymethod _onRequestReadable]      
+    } else {
+      error "s800rctl::Connect - socket already connected"
+    }
+
   }
 
   ##
@@ -452,14 +460,13 @@ snit::type s800rctl {
   # @retval "" - eof of file condition
   #
   method _onReadable {fd} {
-
     if {[eof $fd]} {
       # close the channel
       catch {close $fd}
     } else {
       # read what we can from the channel
       if {[catch {gets $fd line} len]} {
-        set msg "s800rctl::_onReadable unable to read data from peer"
+        set msg "s800rctl::_onReadable unable to read data from peer $len"
         puts stderr $msg
       } else {
         return [list [chan blocked $fd] $line]

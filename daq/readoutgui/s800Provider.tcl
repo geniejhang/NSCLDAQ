@@ -133,9 +133,10 @@ proc ::S800::check id {
 proc ::S800::stop id {
     
     # If still alive and necessary stop the run.
+    set rctl [::S800::_getConnectionObject $id]
     
     if {([::S800::_getState $id] ne "halted") && [::S800::check $id]} {
-        set rctl [::S800::_getConnectionObject $id]
+        
         set status [$rctl getState]
         if {$status eq "active"} {
             $rctl end
@@ -143,7 +144,9 @@ proc ::S800::stop id {
         # Regardless, _failed will run down the rest of this.
         
         ::S800::_failed $id;    # Will do all the right stuff.
+        
     }
+    $rtcl destroy
     # Already in halted state since check took care of that for us.
 }
 ##
