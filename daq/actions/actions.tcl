@@ -16,7 +16,8 @@ package require snit
 
 snit::type Actions {
   
-  variable line "" 
+  variable accumulatedInput "" 
+  variable accumulatedOutMsg "" 
   variable incomplete 0 
   variable errors [dict create 0 " unable to parse directive"]
   variable legalDirectives {ERRMSG LOGMSG WRNMSG TCLCMD OUTPUT DBGMSG}
@@ -30,7 +31,6 @@ snit::type Actions {
   }
 
   method onReadable {fd} {
-    set incomplete 0 
 
     if { [eof $fd] } {
       # unregister itself
@@ -39,7 +39,6 @@ snit::type Actions {
       # we have reached an end of file
       #
       # convert to blocking to retrieve the exit status
-       if {0} {
       chan configure $fd -blocking 1
 
       if {[catch {close $fd} msg]} {
@@ -47,45 +46,119 @@ snit::type Actions {
           puts stderr "Child process exited abnormally with status: $::errorCode"
         }
       }
-       }
     } else {
       $self handleReadable $fd 
     }
   }
 
-  method getLine {} { return $line }
-  method setLine {str} { set line $str }
+  method getLine {} { return $accumulatedInput }
+  method setLine {str} { set accumulatedInput $str }
 
   method handleReadable {fd} {
-
-    set incomplete 0
 
     # read what the channel has to give us
     set input [chan read $fd ]
 
-    append line "$input"
-    set line [string trimright $line "\0\n"]
-
-    set result {}
-    while {[string length $line]>0 && !($incomplete)} {
-      set firstWord [$self extractFirstWord $line]
-
-      # if we have a legal directive, treat it
-      # as a packet
-      if {[$self isLegalDirective $firstWord]} {
-        set parsedLine [$self buildPacket ]
-        if {"$parsedLine" ne ""} {
-          set incomplete 0
-          set result [$self handleMessage $parsedLine]
-        }
-      } else {
-        set result [$self handleNonPacket]
-      }
-    }; # end of nonzero input
-
-    return $result
+    return [$self processInput $input]
   }
+
+  method computeNLinesToProcess {nLines strippedNewline firstLine} {
+    if {(! $strippedNewline)} {
+      puts "did not strip newline"
+      puts "nLines=$nLines, firstLine=\"$firstLine\", isLegalDir=[$self isLegalDirective [$self extractFirstWord $firstLine]]"
+      if {! (($nLines == 1) && !([$self isLegalDirective [$self extractFirstWord $firstLine]]))} {
+        puts "adjusting number of lines"
+        incr nLines -1
+      }
+    } 
+
+    return $nLines
+  }
+
+
+  # This has become embarrassingly complicated...
+  method processInput input {
+    puts "processing input: \"$input\""
+
+    if {$incomplete} {
+      puts "last was incomplete and we start with : \"$accumulatedInput\""
+      set input "[lindex $accumulatedInput end]$input"
+      set accumulatedInput {}
+    }
+
+    set strippedNewline 0
+    if {[string index $input end] eq "\n"} {
+      set input [string range $input 0 end-1]
+      set strippedNewline 1
+      puts "stripped the newline!"
+    }
+
+    set accumulatedInput [concat $accumulatedInput [split $input "\n"]]
  
+    set result {}
+
+    puts "accumulatedInput: \"$accumulatedInput\""
+    # we need to iterate over all lines that are present at the start
+    # so we will iterate over a copy of accumulatedInput because 
+    # the accumulatedInput list gets manipulated as we go along
+    set linesToProcess $accumulatedInput
+    set nLines [llength $linesToProcess]
+    set firstLine [lindex $linesToProcess 0]
+
+    set nLinesToProcess [$self computeNLinesToProcess $nLines $strippedNewline $firstLine]
+
+    for {set index 0} {$index<$nLinesToProcess} {incr index} {
+
+      set line [lindex $linesToProcess $index]
+
+      if {$index == [expr $nLines-1]} {
+        append accumulatedOutMsg "$line"
+      } else {
+      # add the new line back that was stripped when splitting the lines up 
+      # by newline
+        append accumulatedOutMsg "$line\n"
+      }
+
+      # pop off the current line from accumulatedInput
+      set accumulatedInput [lreplace $accumulatedInput 0 0]
+
+      puts "line: \"$line\", accumulatedOutMsg: \"$accumulatedOutMsg\", input: \"$accumulatedInput\", incomplete=$incomplete"
+
+      # continue until we have no line length or we have found an 
+      # incomplete 
+      set firstWord [$self extractFirstWord $accumulatedOutMsg]
+
+      # if we have a legal directive, treat it as a packet
+      if {[$self isLegalDirective $firstWord]} {
+        puts "Found a directive"
+        set parsedLine [$self buildPacket $accumulatedOutMsg]
+        if {$parsedLine ne ""} {
+          set incomplete 0
+          lappend result $parsedLine
+          set accumulatedOutMsg {}
+        } ;# else move to next line and handle it
+      } else {
+        set parsedLine [$self handleNonPacket $accumulatedOutMsg]
+        if {$parsedLine ne {}} {
+          lappend result $parsedLine
+          if {[lindex $parsedLine 2] == [string length $accumulatedOutMsg]} {
+            set accumulatedOutMsg {}
+          } else {
+            set accumulatedOutMsg [string range $accumulatedOutMsg [lindex $parsedLine 2] end]
+          }
+        }
+      }
+    }
+
+    set incomplete [expr !$strippedNewline]
+    puts "result: \"$result\""
+    set retval {}
+    foreach msg $result {
+      lappend retval [$self handleMessage $msg]
+    }
+    return $retval
+  }
+
   method extractFirstWord {sentence} {
     return [string range $sentence 0 5]
   }
@@ -96,28 +169,28 @@ snit::type Actions {
   # return a null string and move on. 
   # If the packet is found, truncate "line" so that the 
   # packet is no longer being outputted.
-  method buildPacket {} {
+  method buildPacket {content} {
 
     set incomplete 1
 
     # find first and second word boundaries 
-    set b1 [string first { } $line 0]
+    set b1 [string first { } $content 0]
     if {$b1 == -1} return
-    set b2 [string first { } $line [expr $b1+1]]
+    set b2 [string first { } $content [expr $b1+1]]
     if {$b2 == -1} return
     
-    set pktSize [string trim [string range $line $b1 $b2] { \n}]
-    set totalLength [string length $line]
+    set pktSize [string trim [string range $content $b1 $b2] { \n}]
+    set totalLength [string length $content]
     set remChars [expr $totalLength - ($b2+1)]
 
     if {$remChars >= $pktSize} {
        set b3 [expr $b2+$pktSize]
-       lappend parsedLine [$self extractFirstWord $line] 
-       lappend parsedLine [string range $line [expr $b2+1] $b3] 
-       lappend parsedLine [string range $line [expr $b1+1] [expr $b2-1]] 
+       lappend parsedLine [$self extractFirstWord $content] 
+       lappend parsedLine [string range $content [expr $b2+1] $b3] 
+       lappend parsedLine [string range $content [expr $b1+1] [expr $b2-1]] 
 
        set incomplete 0
-       set line [string range $line [expr $b3+1] end] 
+       set content [string range $content [expr $b3+1] end] 
       
        return $parsedLine
     } else {
@@ -131,25 +204,24 @@ snit::type Actions {
   # found 
   # if we find a directive, output everything up to that
   # directive, pop the outputted msg from the front of line,
-  # return.
-
-  method handleNonPacket {} {
+  # return. 
+  method handleNonPacket {content} {
   
-    # Check if line contains any legal directives
+    # handle the scenario when the line contains a directive somewhere
+    # in it
     foreach dir $legalDirectives {
-      set index [string first $dir $line]
+      set index [string first $dir $content]
       if {$index != -1} {
-        set msg [string range $line 0 [expr $index-1]]
-        set line [string range $line $index end]
+        # we found a directive, output everything up to that directive
+        set msg [string range $content 0 [expr $index-1]]
+        set content [string range $content $index end]
 
-        return [$self handleOutput $msg]
-        
-      } 
+        return  [list OUTPUT $content [string length $content]]
+      }
     }
 
-    # if we are here then we didn't find any directives
-    set result [$self handleOutput $line]
-    set line ""
+    # if we are here then we didn't find any directives, output the whole line
+    set result [list OUTPUT $content [string length $content]]
     return $result
   } 
 
