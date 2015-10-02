@@ -62,15 +62,23 @@ snit::type Actions {
     return [$self processInput $input]
   }
 
+
+  #
+  # We need to be careful about not processing the last line of the message
+  # in case it did not end in a newline character. By not ending in a newline
+  # character, that means we do not have a complete message and should
+  # adjust the number of lines to process so that the last line is excluded.
   method computeNLinesToProcess {nLines strippedNewline firstLine} {
     if {(! $strippedNewline)} {
-      puts "did not strip newline"
-      puts "nLines=$nLines, firstLine=\"$firstLine\", isLegalDir=[$self isLegalDirective [$self extractFirstWord $firstLine]]"
-      if {! (($nLines == 1) && !([$self isLegalDirective [$self extractFirstWord $firstLine]]))} {
-        puts "adjusting number of lines"
+      #puts "did not strip newline"
+      #puts "nLines=$nLines, firstLine=\"$firstLine\", isLegalDir=[$self isLegalDirective [$self extractFirstWord $firstLine]]"
+      if {($nLines != 1) 
+          || !([$self isLegalDirective [$self extractFirstWord $firstLine]]) 
+          || ([string length $firstLine]<6)} {
+        #puts "adjusting number of lines"
         incr nLines -1
       }
-    } 
+    }
 
     return $nLines
   }
@@ -78,59 +86,68 @@ snit::type Actions {
 
   # This has become embarrassingly complicated...
   method processInput input {
-    puts "processing input: \"$input\""
+    #puts "processing input: \"$input\""
 
     if {$incomplete} {
-      puts "last was incomplete and we start with : \"$accumulatedInput\""
+      #puts "last was incomplete and we start with : \"$accumulatedInput\""
       set input "[lindex $accumulatedInput end]$input"
       set accumulatedInput {}
     }
 
     set strippedNewline 0
+    set result {}
+
+    # pop a single newline character off of the end if it exists to avoid 
+    # an empty line at the end caused by the split command
     if {[string index $input end] eq "\n"} {
       set input [string range $input 0 end-1]
       set strippedNewline 1
-      puts "stripped the newline!"
+      #puts "stripped the newline!"
     }
 
     set accumulatedInput [concat $accumulatedInput [split $input "\n"]]
- 
-    set result {}
+    #puts "accumulatedInput: \"$accumulatedInput\""
 
-    puts "accumulatedInput: \"$accumulatedInput\""
     # we need to iterate over all lines that are present at the start
     # so we will iterate over a copy of accumulatedInput because 
     # the accumulatedInput list gets manipulated as we go along
     set linesToProcess $accumulatedInput
     set nLines [llength $linesToProcess]
+    if {$nLines == 0} {incr nLines}
     set firstLine [lindex $linesToProcess 0]
 
+    # adjust the number of lines to process in case we believe the last line is incomplete
     set nLinesToProcess [$self computeNLinesToProcess $nLines $strippedNewline $firstLine]
+    #puts "nLines: $nLines, nLinesToProcess: $nLinesToProcess"
 
+    # process the lines of data
     for {set index 0} {$index<$nLinesToProcess} {incr index} {
 
       set line [lindex $linesToProcess $index]
 
-      if {$index == [expr $nLines-1]} {
+
+      # correct for the removal of newlines during the split command
+      if {($index == [expr $nLines-1]) && !$incomplete} {
+        # if we are processing all of the original lines, then that implies the
+        # message we are working with is considered a complete message
         append accumulatedOutMsg "$line"
       } else {
-      # add the new line back that was stripped when splitting the lines up 
-      # by newline
+        # because we are here, we are in the middle of a message, and it is possible
+        # that we had newlines in the middle of the message. Make sure to add back the newline character
+        #that 
         append accumulatedOutMsg "$line\n"
       }
 
       # pop off the current line from accumulatedInput
       set accumulatedInput [lreplace $accumulatedInput 0 0]
 
-      puts "line: \"$line\", accumulatedOutMsg: \"$accumulatedOutMsg\", input: \"$accumulatedInput\", incomplete=$incomplete"
+      #puts "line: \"$line\", accumulatedOutMsg: \"$accumulatedOutMsg\", input: \"$accumulatedInput\", incomplete=$incomplete"
 
-      # continue until we have no line length or we have found an 
-      # incomplete 
+      # if the first word is a legal directive then we will handle the 
+      # message as a packet, otherwise it is some other entity 
       set firstWord [$self extractFirstWord $accumulatedOutMsg]
-
-      # if we have a legal directive, treat it as a packet
       if {[$self isLegalDirective $firstWord]} {
-        puts "Found a directive"
+        #puts "Found a directive"
         set parsedLine [$self buildPacket $accumulatedOutMsg]
         if {$parsedLine ne ""} {
           set incomplete 0
@@ -138,6 +155,7 @@ snit::type Actions {
           set accumulatedOutMsg {}
         } ;# else move to next line and handle it
       } else {
+        #puts "Found a non packet"
         set parsedLine [$self handleNonPacket $accumulatedOutMsg]
         if {$parsedLine ne {}} {
           lappend result $parsedLine
@@ -147,11 +165,13 @@ snit::type Actions {
             set accumulatedOutMsg [string range $accumulatedOutMsg [lindex $parsedLine 2] end]
           }
         }
-      }
-    }
+      } 
+    } ;# end of for loop
 
+
+    # handle the messages!
     set incomplete [expr !$strippedNewline]
-    puts "result: \"$result\""
+    #puts "result: \"$result\""
     set retval {}
     foreach msg $result {
       lappend retval [$self handleMessage $msg]

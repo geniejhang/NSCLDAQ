@@ -152,7 +152,7 @@ tcltest::test buildPktSmushed-0 {Test that dropped whitespace get handled
 tcltest::test handleNonPktNoDirective {Test that fully non-directive data is properly handled
 } -setup {
   set action [::Actions %AUTO% -actionbundle testHandlers]
-  set line "abcdefghij"
+  set line "abcdefghij\n"
   set ::testHandlers::line {}
 } -cleanup {
   $action destroy
@@ -174,6 +174,37 @@ tcltest::test handleNonPktWithDirective {Test that directive data is properly ha
 } -result {output "abcdef
 "error "ghij"}
 
+tcltest::test handlePainfulMessage {Test that directive data is properly handled
+} -setup {
+  set action [::Actions %AUTO% -actionbundle testHandlers]
+  set ::testHandlers::line {}
+} -cleanup {
+  $action destroy
+} -body {
+  $action processInput "\n"
+  $action processInput "T"
+  $action processInput "CL"
+  $action processInput "C"
+  $action processInput "M"
+  $action processInput "D"
+  $action processInput " "
+  $action processInput "16 "
+  $action processInput "puts \"mean msg\n"
+  $action processInput "\"\n"
+  set ::testHandlers::line
+} -result {output ""tcl "puts "mean msg
+""}
+
+tcltest::test handleSingleNewlineMessage {Test that we can produce a simple newline msg
+} -setup {
+  set action [::Actions %AUTO% -actionbundle testHandlers]
+  set ::testHandlers::line {}
+} -cleanup {
+  $action destroy
+} -body {
+  $action processInput "\n"
+  set ::testHandlers::line
+} -result {output ""}
 
 tcltest::test handleMessageLOG {test handleDirective for LOGMSG
 } -setup {
