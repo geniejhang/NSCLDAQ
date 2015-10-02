@@ -244,7 +244,17 @@ CRingTimestampedRunningScalerItem::init(uint32_t nScalers)
 size_t
 CRingTimestampedRunningScalerItem::bodySize(uint32_t nScalers)
 {
+ /*
+  *  The trailin -sizeof(uint32_t) needs a bit of 'splaining.
+  *  If we just do (nScalers-1)*sizeof(uint32_t) and the scaler
+  *  count is 0, (nScalers*sizeof(int32_t) will be a large number
+  *  due to unsized arithmetic.  By just subtracting that one
+  *  scaler that's in the struct def at the end we side step
+  *  that problem.  For more information, see Bug #4276.
+  */
+ 
   size_t size = sizeof(NonIncrTimestampedScaler) 
-    + (nScalers-1)*sizeof(uint32_t) - sizeof(RingItemHeader);
+    + (nScalers)*sizeof(uint32_t) - sizeof(RingItemHeader)
+    - sizeof(uint32_t);
   return size;
 }

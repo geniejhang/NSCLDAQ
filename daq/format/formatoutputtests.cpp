@@ -6,6 +6,8 @@
 
 #include "Asserts.h"
 #include "DataFormat.h"
+#include "CRingTimestampedRunningScalerItem.h"
+#include <time.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -145,6 +147,7 @@ class ScalerOutput : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(ScalerOutput);
   CPPUNIT_TEST(empty);
   CPPUNIT_TEST(counting);
+  CPPUNIT_TEST(tsempty);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -155,6 +158,7 @@ public:
 protected:
   void empty();
   void counting();
+  void tsempty();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION(ScalerOutput);
 
@@ -206,6 +210,15 @@ ScalerOutput::counting()
   
 
   free(pItem);
+}
+
+void
+ScalerOutput::tsempty()
+{
+  std::vector<uint32_t> empty;
+  CPPUNIT_ASSERT_NO_THROW(
+    CRingTimestampedRunningScalerItem(1234, 0, 1, 1, time(NULL), empty) 
+  );
 }
 ///////////////////////////////////////////////////////////////////////////////
 // Test text output item.
@@ -283,6 +296,7 @@ TextOutput::someStrings()
   free(pItem);
   
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Check the state change items:

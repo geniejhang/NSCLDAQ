@@ -524,4 +524,8 @@ Feb 1, 2012 - Feb 24, 2012
 	
 10.2-113
 	* Bug #3979 - Don't sysreset in VMUSBReadout at end of run.
+
+10.2-115 
+	* Bug #4276 - CRingTimestampedRunningScaler constructor throws
+	 bad_alloc if the number of scalers is 0.
 	
