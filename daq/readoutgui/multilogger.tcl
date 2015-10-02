@@ -158,7 +158,9 @@ snit::type EventLogger {
     #    Flag that it's ok for the loggers to exit.
     #
     method aboutToStop {} {
-        set expectingExit 1
+        if {$options(-enable)} {
+            set expectingExit 1
+        }
     }
     ##
     # stop
@@ -168,41 +170,43 @@ snit::type EventLogger {
     #  and kill it off should it not exit within the timeout.
     #
     method stop {} {
-        # First of all only do anything if there is a logger
-        # 
-        if {[llength $loggerPids] > 0} {
-            set expectingExit 1;            # So _handleInput does not freak.
-            set afterId                                 \
-                [after [expr $options(-timeout)*1000]   \
-                 [list incr ${selfns}::waitDone]        \
-            ]
-            vwait ${selfns}::waitDone
-            
-            if {[llength $loggerPids] == 0} {
+        if {$options(-enable) } {
 
-                # Logger exit was observed:
-                
-                after cancel $afterId;             # Cancel timeout.
-                
-            } else {
-                
-                # Logger did not exit:
-                # Shut it down the hard way:
-                
-                catch {close $loggerFd};        # Since this reports errors.
-                set loggerFd -1
-                foreach pid $loggerPids {
-                    catch [exec kill -9 $pid];   # Explicitly kill the pipe elements.
+            # First of all only do anything if there is a logger
+            # 
+            if {[llength $loggerPids] > 0} {
+                set expectingExit 1;            # So _handleInput does not freak.
+                set afterId                                 \
+                    [after [expr $options(-timeout)*1000]   \
+                     [list incr [myvar waitDone]]        \
+                ]
+                vwait [myvar waitDone]
+                if {[llength $loggerPids] == 0} {
+    
+                    # Logger exit was observed:
+                    
+                    after cancel $afterId;             # Cancel timeout.
+                    
+                } else {
+                    
+                    # Logger did not exit:
+                    # Shut it down the hard way:
+                    
+                    catch {close $loggerFd};        # Since this reports errors.
+                    set loggerFd -1
+                    foreach pid $loggerPids {
+                        catch [exec kill -9 $pid];   # Explicitly kill the pipe elements.
+                    }
+                    set loggerPids [list]
+                    
+                    # report the problem:
+                    
+                    set ring $options(-ring)
+                    set out  $options(-out)
+                    tk_messageBox -icon error -title {Timed out waiting for logger to exit}  \
+                        -type ok                                                            \
+                        -message "Multilogger $ring -> $out failed to exit within timeout"
                 }
-                set loggerPids [list]
-                
-                # report the problem:
-                
-                set ring $options(-ring)
-                set out  $options(-out)
-                tk_messageBox -icon error -title {Timed out waiting for logger to exit}  \
-                    -type ok                                                            \
-                    -message "Multilogger $ring -> $out failed to exit within timeout"
             }
         }
     }
@@ -224,9 +228,8 @@ snit::type EventLogger {
             set out  $options(-out)
             ::ReadoutGUIPanel::Log Multilogger: output "$ring -> $out: $data"
         } else {
-        
             catch {close $loggerFd}
-            incr waitDone;             # Trigger vwait to finish if waiting.
+            incr [myvar waitDone];             # Trigger vwait to finish if waiting.
             set loggerFd -1;           # Set the variables back to show the logger
             set loggerPids [list];     # no loger exists.
             
@@ -277,21 +280,21 @@ snit::widgetadaptor AddLogger {
         $self configurelist $args
         
         ttk::label $win.rlabel -text {Ring URI}
-        ttk::entry $win.ring   -textvariable ${selfns}::options(-ring)
+        ttk::entry $win.ring   -textvariable [myvar options(-ring)]
         
         ttk::label  $win.lout   -text {Output directory}
-        ttk::entry  $win.outdir -textvariable ${selfns}::options(-out)
+        ttk::entry  $win.outdir -textvariable [myvar options(-out)]
         ttk::button $win.outbrowse -text Browse... -command [mymethod _browseDir]
         
         ttk::label $win.ltimeout -text {End Run timeout}
-        ttk::spinbox $win.timeout -from 2 -to 1000 -textvariable ${selfns}::options(-timeout)
+        ttk::spinbox $win.timeout -from 2 -to 1000 -textvariable [myvar options(-timeout)]
         
         
         ttk::checkbutton $win.enable -text {Enable} -onvalue 1 -offvalue 0 \
-            -variable ${selfns}::options(-enable)
+            -variable [myvar options(-enable)]
         
         ttk::label $win.lsources -text {Number of sources}
-        ttk::spinbox $win.sources -from 1 -to 1000 -textvariable ${selfns}::options(-sources)
+        ttk::spinbox $win.sources -from 1 -to 1000 -textvariable [myvar options(-sources)]
         
         
         grid $win.rlabel $win.ring                   -sticky w
