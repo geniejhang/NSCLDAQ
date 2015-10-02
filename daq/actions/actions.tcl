@@ -14,22 +14,44 @@ package provide Actions 1.0
 package require snit
 
 
+## 
+#  A TCL-side parser for reading messages out of a pipeline enabled
+#  for reading. This aims to handle messages that are bookended with
+#  newline characters and will not work properly if messages do not
+#  follow that rule. Within that framework, this will identify 
+#  packets that are formed by the C++ functions in the Actions namespace.
+#  These have the form "DIRECTIVE size message", where DIRECTIVE is either
+#  ERRMSG, LOGMSG, WRNMSG, TCLCMD, OUTPUT, or DBGMSG. Any other message 
+#  that is not in this form will be treated as output.
+#
+#  This snit::type only handles the parsing stage of the message handling.
+#  What is actually done with the messages after parsing is entirely up
+#  to the user and definable via a callback bundle (-actionbundle). By 
+#  default, a callback bundle is provided and used that will work with
+#  the ReadoutGUI logging mechanism for formatting data.
 snit::type Actions {
   
-  variable accumulatedInput "" 
-  variable accumulatedOutMsg "" 
-  variable incomplete 0 
-  variable errors [dict create 0 " unable to parse directive"]
-  variable legalDirectives {ERRMSG LOGMSG WRNMSG TCLCMD OUTPUT DBGMSG}
+  variable accumulatedInput ""   ;#< message data received for parsing, split into a list by newlines 
+  variable accumulatedOutMsg ""  ;#< message being formed as a packet to output
+  variable incomplete 0          ;#< flag identifying if processing ended with an incomplete packet
+  variable errors [dict create 0 " unable to parse directive"] 
+  variable legalDirectives {ERRMSG LOGMSG WRNMSG TCLCMD OUTPUT DBGMSG} 
   variable directiveMap { ERRMSG 0 LOGMSG 1 WRNMSG 2 
                           TCLCMD 3 OUTPUT 4 DBGMSG 5} 
 
-  option -actionbundle -default DefaultActions
+  option -actionbundle -default DefaultActions ;#< callback bundle 
 
   constructor {args} {
     $self configurelist $args
   }
 
+  ## \brief Method for responding to readable events on pipes
+  # 
+  # This is really the entry point to this whole business. It 
+  # deals with eof conditions properly. Usually it just delegates
+  # to the handleReadable method
+  #
+  # \param fd   the file channel to read from
   method onReadable {fd} {
 
     if { [eof $fd] } {
@@ -54,15 +76,19 @@ snit::type Actions {
   method getLine {} { return $accumulatedInput }
   method setLine {str} { set accumulatedInput $str }
 
+  ## \brief Reads input from the channel and processes it
+  #
+  # \param fd   the channel to read from
   method handleReadable {fd} {
 
-    # read what the channel has to give us
+    # read what the channel has to give us, this does not terminate in 
+    # a newline if there was none to begin with.
     set input [chan read $fd ]
 
     return [$self processInput $input]
   }
 
-
+  ## Adjust the number of lines we have to process
   #
   # We need to be careful about not processing the last line of the message
   # in case it did not end in a newline character. By not ending in a newline
@@ -84,7 +110,20 @@ snit::type Actions {
   }
 
 
-  # This has become embarrassingly complicated...
+  ## The logic for parsing the messages
+  #
+  # This has become embarrassingly complicated... but it is not reasonable to rewrite.
+  # Parsing is not a trivial task.
+  #
+  # The idea here is that we are maintaining a list of lines that were separated by 
+  # newline characters. Packets may be contained in a single line or may consist of multiple lines.
+  # The packet message that is being formed is therefore part of the state of the 
+  # snit::type and is appended to until it is determined complete. 
+  #
+  # Once a packet is completed, it is added to a list of results. You can imagine that the 
+  # possibility exists to have multiple packets to deal with if we are not line buffering.
+  # In that case, we keep adding complete packets to our list until all viable text has
+  # been processed and then the packets are processed at the end.
   method processInput input {
     #puts "processing input: \"$input\""
 
@@ -183,12 +222,16 @@ snit::type Actions {
     return [string range $sentence 0 5]
   }
 
+  ## Parse msg that we have identified to begin with a directive
+  #
   # The first word was detected as a legal directive so 
   # we expect that there is a well formed packet. Try to
   # read the whole thing. If the full packet isn't there,
   # return a null string and move on. 
   # If the packet is found, truncate "line" so that the 
   # packet is no longer being outputted.
+  #
+  # \param content  the accumulated text to process starting with directive
   method buildPacket {content} {
 
     set incomplete 1
@@ -219,12 +262,16 @@ snit::type Actions {
 
   }
 
+  ## Parse msg that we have identified NOT to begin with a directive
+  #
   # Deal with non packet output... we simply output
   # everything we have up until a valid directive is 
-  # found 
-  # if we find a directive, output everything up to that
+  # found. If we find a directive, output everything up to that
   # directive, pop the outputted msg from the front of line,
-  # return. 
+  # return.  This is an attempt to handle malformed output that
+  # did not have a newline character.
+  #
+  # \param content  the accumulated text to process
   method handleNonPacket {content} {
   
     # handle the scenario when the line contains a directive somewhere
