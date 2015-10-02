@@ -991,3 +991,5 @@ Work on 11.0-rc11 begins
 	* Feature #4699 - When a ReadoutShell is enslaved save the run
 	number and title. When it regains mastery, restore those two bits
 	of data.
+	* Feature 4684 - Do piles more failure handling at end run.
+	

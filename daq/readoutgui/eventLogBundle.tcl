@@ -403,7 +403,7 @@ proc ::EventLog::_waitForFile {name waitTimeout pollInterval} {
 #
 proc ::EventLog::_finalizeRun {} {
     if {$::EventLog::needFinalization} {
-
+        
         set srcdir [::ExpFileSystem::getCurrentRunDir]
         set completeDir [::ExpFileSystem::getCompleteEventfileDir]
         set run [ReadoutGUIPanel::getRun]
@@ -418,10 +418,19 @@ proc ::EventLog::_finalizeRun {} {
         set  fileBaseName [::ExpFileSystem::genEventfileBasename $run]
         set  eventFiles [glob -nocomplain [file join $srcdir ${fileBaseName}*.evt]]
         set  mvdNames [list]
-        foreach eventFile $eventFiles {
-            set destFile [file join $destDir [file tail $eventFile]]
-            file rename -force $eventFile $destFile
-            lappend mvdNames $destFile
+        set renameStatus [catch {
+            foreach eventFile $eventFiles {
+                set destFile [file join $destDir [file tail $eventFile]]
+                file rename -force $eventFile $destFile
+                lappend mvdNames $destFile
+            }
+        } msg]
+        if {$renameStatus} {
+            tk_messageBox -title {Rename failure} -icon error -type ok \
+                -message "Rename of event files to $destDir failed: $msg : fix problem and manually move the event files"
+            set ::EventLog::needFinalization 0
+            ReadoutGUIPanel::incrRun
+            return
         }
         #
         #  If there is a checksum file (there should be) move that to the experiment directory
@@ -444,8 +453,14 @@ proc ::EventLog::_finalizeRun {} {
         #  using tar.
         
         set tarcmd "(cd $srcdir; tar chf - .) | (cd $destDir; tar xpf -)"
-        exec sh << $tarcmd
-        
+        set tarStatus [catch {exec sh << $tarcmd} msg]
+        if {$tarStatus} {
+            tk_messageBox -title {Tar Failed} -icon error -type ok \
+                -message "Copy of files from $srcdir to $destDir failed: $msg, Fix problem and move files manually."
+            set ::EventLog::needFinalization 0
+            ReadoutGUIPanel::incrRun
+            return
+        }
         # If required, protect the files:
         #   - The destDir is set to 0550
         #   - The parent dir is set to 0550.
@@ -588,6 +603,7 @@ proc ::EventLog::_runFilesExistInCurrent {} {
 # Checks for a few things:
 # 1. experiment/run# directory already exists
 # 2. experiment/current/*.evt files exist
+# 
 #
 # @returns a list of error messages
 proc ::EventLog::listIdentifiableProblems {} {
