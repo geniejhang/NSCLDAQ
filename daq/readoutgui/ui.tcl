@@ -728,9 +728,9 @@ snit::widgetadaptor RunControl {
     method _beginend {} {
         set state [$stateMachine getState]
         if {$state eq "Halted"} {
-            $stateMachine transition Active
+          begin
         } elseif {$state in [list Paused Active]} {
-            $stateMachine transition Halted
+          end
         } else {
             error "ERROR: begin/end button clicked when state is $state which should not happen"
         }
@@ -746,9 +746,9 @@ snit::widgetadaptor RunControl {
     method _pauseresume {} {
         set state [$stateMachine getState]
         if {$state eq "Paused"} {
-            $stateMachine transition Active
+          resume
         } elseif {$state eq "Active"} {
-            $stateMachine transition Paused
+          pause
         } else {
             error "ERROR: pause/resume button clicked when state is $state which should not happen"
         }
@@ -1512,9 +1512,7 @@ proc ::TimedRun::enter {from to} {
 #   a transition to halted.  The state machine callbacks do the rest of the work.
 #
 proc ::TimedRun::_alarm {} {
-    set sm [RunstateMachineSingleton %AUTO%]
-    $sm transition Halted
-    $sm destroy
+  end
 }
 
 # API Functions for the length of the run.
