@@ -176,8 +176,10 @@ snit::type ReadoutGuiRemoteControl {
   #
   method _setMaster {} {
     set rctlPanel [::RunControlSingleton::getInstance]
+    set timePanel [::TimedRun::getInstance]
     if {[$self _slaveMode]} {
       $rctlPanel master            
+      $timePanel setSlave 0
     }
   }
 
@@ -485,22 +487,34 @@ snit::type ReadoutGuiRemoteControl {
       return
     } else {
 
+      # Make the run control buttons display properly for slave state or not
       set rctlPanel [::RunControlSingleton::getInstance]
-      set current [$rctlPanel isSlave]
+      set timePanel [::TimedRun::getInstance]
+      set rctlIsSlave [$rctlPanel isSlave]
+      set timeIsSlave [$timePanel isSlave]
+
+
       if {$value} {
         if {$state ne "Halted" } {
           $self _reply ERROR "State must be halted to perform set operations"
           return
         }
+
         # if not a slave, set it...
-        if {!$current} {
+        if {!$rctlIsSlave} {
           $rctlPanel slave
         }  
+        if {!$timeIsSlave} {
+          $timePanel setSlave 1
+        }
         # if we are already a slave, then that is not an error.
         $self _reply OK
       } else {
-        if {$current} {
+        if {$rctlIsSlave} {
           $rctlPanel master
+        }
+        if {$timeIsSlave} {
+          $timePanel setSlave 0
         }
         $self _reply OK
       }
