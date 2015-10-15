@@ -16,6 +16,7 @@ proc startServer {} {
     set ::s800test::fd [open "|$tcl $server $::s800test::port" w]
     after 500
 }
+
 proc stopServer {} {
     close $::s800test::fd
 
@@ -137,6 +138,8 @@ tcltest::test s800-stop-1 {Stop the provider when it is running} \
     set state [dict get $::S800::sourceParams 0 state]
     list $rctlObject $state
 } -result [list {} halted]
+
+
 
 tcltest::test s800-stop-2 {Stop wrong provider fails} \
 -setup {

@@ -144,9 +144,16 @@ proc ::S800::stop id {
         # Regardless, _failed will run down the rest of this.
         
         ::S800::_failed $id;    # Will do all the right stuff.
+                                # including destroying the connection object
         
     }
-    $rtcl destroy
+
+    # because ::S800::_failed could have been called in the conditional,
+    # we need to make sure that the connection object has not been destroyed
+    # already before we destroy it ourselves.
+    if {$rctl in [::s800rctl info instances]} {
+      $rctl destroy
+    }
     # Already in halted state since check took care of that for us.
 }
 ##
