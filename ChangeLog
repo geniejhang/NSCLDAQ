@@ -987,4 +987,6 @@ Work on 11.0-rc11 begins
 	  its fifos are flushed.
 	* Feature #3394 - Provide a method for Scaler events in SBS
 	readout to have a real assinged timestamp.
-	
+	* Feature #2352 - add oneshot logic to ringfragmentsource
+	* Feature #4441 - Use non UI blocking waits for event log and evb
+	  to exit.

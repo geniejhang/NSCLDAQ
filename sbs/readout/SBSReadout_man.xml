@@ -2448,7 +2448,7 @@ catch (CReadoutException&amp; error) {
                  <modifier></modifier>
              </methodsynopsis>
              };
-         <synopsis>
+         </synopsis>
       </refsynopsisdiv>
       <refsect1>
          <title>Description</title>
