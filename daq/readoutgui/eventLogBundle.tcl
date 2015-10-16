@@ -112,7 +112,12 @@ namespace eval ::EventLog {
     
     ## 
     # @var failed         - Indicates whether or not the system has failed or succeeded
-    variable failed 0 
+    variable failed 0
+    
+    ##
+    # incremented when the eventLogger exits...this can be a vwait target:
+    
+    variable eventLogEnded 0
     
     # Export the bundle interface methods
     
@@ -364,6 +369,7 @@ proc ::EventLog::_handleInput {} {
         }
         set ::EventLog::loggerFd [list]
         set ::EventLog::loggerPid -1
+        incr ::EventLog::eventLogEnded
     } else {
         set line [gets $fd]
         ::ReadoutGUIPanel::Log EventLogManager output $line
@@ -564,17 +570,48 @@ proc ::EventLog::runEnding {} {
     
     set startFile [file join [::ExpFileSystem::getCurrentRunDir] .started]
     set exitFile [file join [::ExpFileSystem::getCurrentRunDir] .exited]
+
     # ne is used below because the logger could be a pipeline in which case
     # ::EventLog::loggerPid will be a list of pids which freaks out ==.
     
     if {$::EventLog::loggerPid ne -1} {
         
         set ::EventLog::expectingExit 1
-        ::EventLog::_waitForFile $exitFile $::EventLog::shutdownTimeout \
-            $::EventLog::filePollInterval
-        foreach pid $::EventLog::loggerPid {
-          catch {exec kill -9 $pid}; # in case waitforfile timed out.
+        
+        #  First do a vwait for eventLogEnded after disabling the
+        #  begin/end etc. buttons.
+        #  A timeout is used in case there's a problem and the event log
+        #  never exists.
+        
+        set ui [::RunControlSingleton::getInstance]
+        $ui configure -state disabled
+        
+        set timeoutId [after \
+            [expr {$::EventLog::shutdownTimeout*1000}]    \
+            [list incr ::EventLog::eventLogEnded]         \
+        ]
+        set oldValue $::EventLog::eventLogEnded;      # so we know if there was a timeout.
+        vwait ::EventLog::eventLogEnded
+        after cancel $timeoutId
+
+        if {$oldValue == $::EventLog::eventLogEnded} {
+            
+            # Wait timed out.
+            tk_messageBox -title "EventLogger exit timeout" -icon warning -type ok \
+                -message {Timed out waiting for eventlog to exit, killing it}
+            foreach pid $::EventLog::loggerPid {
+              catch {exec kill -9 $pid}; # in case waitforfile timed out.
+            }
+        } else {
+            # Normal exit, this should fall through very quickly, now that
+            #  we know the logger exited.
+            
+            ::EventLog::_waitForFile $exitFile $::EventLog::shutdownTimeout \
+                $::EventLog::filePollInterval
+            ::EventLog::deleteExitFile
+            
         }
+        puts "Enabling"
         ::StageareaValidation::deleteExitFile
         set ::EventLog::loggerPid -1
         ::EventLog::_finalizeRun
