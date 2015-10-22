@@ -73,15 +73,10 @@ snit::type s800rctl {
   constructor args {
     $self configurelist $args
 
-    # allocate a port
-    set allocator [portAllocator %AUTO%]
-    set port [$allocator allocatePort s800rctl]
+    set port [$self _getPortForService s800rctl]
     set listenSocket [socket -server [mymethod _onConnection] $port]
-    $allocator destroy
 
     $self Connect
-
-
   }
 
   ##
@@ -115,6 +110,32 @@ snit::type s800rctl {
     }
   }
 
+
+  
+  ## Retrieve a preallocated port for service or allocate an new one to return
+  #
+  # @returns port for service
+  #
+  method _getPortForService {service} {
+
+    set allocator [portAllocator %AUTO%]
+
+    # search through allocated ports for a specific service
+    set allocatedLocalPorts [$allocator listPorts]
+    foreach portInfo $allocatedLocalPorts {
+      if {[lindex $portInfo 1] eq $service} {
+        $allocator destroy
+        return [lindex $portInfo 0] ;# return the port number
+      }
+    }
+
+    # we did not find a preallocated port, so allocate one.
+    set port [$allocator allocatePort s800rctl]
+    $allocator destroy
+    return $port
+
+  }
+
   #------------------------------------------------------------------
   #
   #  Operations on the s800:
@@ -146,7 +167,7 @@ snit::type s800rctl {
   # NAKs result in an error throw:
   #
   method begin {} {
-    set result [$self Transaction begin]
+    set result [$self masterTransition Active]
     $self ThrowIfNak $result
   }
   ##
@@ -155,10 +176,31 @@ snit::type s800rctl {
   # NAKs result in error throws:
   #
   method end {} {
-    set result [$self Transaction end]
+    set result [$self masterTransition Halted]
     $self ThrowIfNak $result
   }
 
+  if {0} {
+  ##
+  # Request that a run pause.
+  #
+  # NAKs result in error throws:
+  #
+  method pause {} {
+    set result [$self masterTransition Paused]
+    $self ThrowIfNak $result
+  }
+
+  ##
+  # Request that a run pause.
+  #
+  # NAKs result in error throws:
+  #
+  method resume {} {
+    set result [$self masterTransition Active]
+    $self ThrowIfNak $result
+  }
+  }
   ##
   # Request an init operation.
   #
@@ -168,6 +210,18 @@ snit::type s800rctl {
     set result [$self Transaction init]
     $self ThrowIfNak $result
   }
+
+  ##
+  # Request a generic state transition
+  #
+  # @param newState   state to transition to  
+  #
+  # NAKs result in error throws
+  method masterTransition {newState} {
+    set result [$self Transaction [list masterTransition $newState]]
+    $self ThrowIfNak $result
+  }
+
   ##
   # Set the run number to the appropriate value
   #
@@ -494,20 +548,30 @@ snit::type s800rctl {
     # if the read was complete, handle the received message
     if {![lindex $readInfo 0]} {
 
+      # we have to reset the string replyReply but at the same time
+      # use the result in _handleCommand. The issue is that someone could
+      # remotely be inciting a transition to NotReady in the _handleCommand
+      # method. That would wind up calling S800::stop, which would straight 
+      # up destroy this instance. If we reset the replyReply string after,
+      # we might try to set replyReply when its instance is long gone. That
+      # causes a tcl error because the namespace for replyReply no longer 
+      # exists. So we have to copy it into a temporary variable that we 
+      # use later in the method. Shoot.
+      set command $replyReply
+      set replyReply ""
+
       # only evaluate the command if it was valid
-      if {[ $self _isValidCommand $replyReply]} {
+      if {[ $self _isValidCommand [lindex $command 0]]} {
       # if we had a valid command, then send the response immediately.
       # Executing the command the peer sent may require further
       # communication and at the moment the peer is waiting for a response
       # in blocking mode. Don't let it continue to block! 
         $self _sendResponse $replySocket "OK"
-        set result [$self _handleCommand $replyReply]
+        set result [$self _handleCommand $command]
       } else {
-        $self _sendResponse $replySocket "FAIL invalid command"
+        $self _sendResponse $replySocket "FAIL invalid command \"$command\""
       }
 
-      # reset  the string
-      set replyReply ""
     }
   }
 
@@ -540,7 +604,7 @@ snit::type s800rctl {
   # @retval 0 - not valid
   # @retval 1 - valid
   method _isValidCommand {verb} {
-    set acceptedVerbs [list end]
+    set acceptedVerbs [list end transitionTo]
     return [expr {$verb in $acceptedVerbs}]
   }
 

@@ -550,7 +550,6 @@ proc ::ReadoutGUIPanel::incrRun {} {
 #    -state         - Set the state of the widgets (disabled/normal)
 #
 snit::widgetadaptor RunControl {
-    component stateMachine
     
     option -pauseable -default 1 -configuremethod _changePauseVisibility
     option -recording -default 0
@@ -596,8 +595,6 @@ snit::widgetadaptor RunControl {
     #   Construct and configure the widget.
     #   - Install a ttk::frame as the hull.#
     #   - create and layout the widgets.
-    #   - Install the RunStateMachine singleton as our stateMachine component.
-    #   - Make our appearance match the statemachine's current state.
     #   - configure any options provided at instantiation time.
     #
     # METHODS
@@ -620,7 +617,6 @@ snit::widgetadaptor RunControl {
         
         $self _layoutWidgets
         
-        install stateMachine using RunstateMachineSingleton %AUTO%
         $self _updateAppearance
         
         $self configurelist $args
@@ -629,12 +625,7 @@ snit::widgetadaptor RunControl {
     ##
     # destructor
     #
-    #  Destroy the stateMachine component:
-    #
     destructor {
-        if {$stateMachine ne ""} {
-            $stateMachine destroy
-        }
     }
     
     method slave {} {
@@ -712,7 +703,9 @@ snit::widgetadaptor RunControl {
     # 
     #
     method _start {} {
-        $stateMachine transition Starting
+      set stateMachine [RunstateMachineSingleton %AUTO%]
+      $stateMachine transition Starting
+      $stateMachine destroy 
     }
     ##
     #  _beginend
@@ -726,7 +719,10 @@ snit::widgetadaptor RunControl {
     #       to change the appearance of the button itself.
     # 
     method _beginend {} {
+        set stateMachine [RunstateMachineSingleton %AUTO%]
         set state [$stateMachine getState]
+        $stateMachine destroy
+
         if {$state eq "Halted"} {
           begin
         } elseif {$state in [list Paused Active]} {
@@ -744,7 +740,9 @@ snit::widgetadaptor RunControl {
     #  *  Active -> Paused
     #  * Any other -> Bug error
     method _pauseresume {} {
+        set stateMachine [RunstateMachineSingleton %AUTO%]
         set state [$stateMachine getState]
+        $stateMachine destroy
         if {$state eq "Paused"} {
           resume
         } elseif {$state eq "Active"} {
@@ -779,7 +777,9 @@ snit::widgetadaptor RunControl {
     #   information.
     #
     method _updateAppearance {} {
+        set stateMachine [RunstateMachineSingleton %AUTO%]
         set state [$stateMachine getState]
+        $stateMachine destroy
         
         $win.slavemode configure -text "Currently  in slave mode ($state)"
         
@@ -822,9 +822,11 @@ namespace eval ::RunControlSingleton {
 proc ::RunControlSingleton::getInstance {{path ""} args} {
     if {$::RunControlSingleton::theInstance eq ""} {
         set ::RunControlSingleton::theInstance [RunControl $path {*}$args]
+
         set stateMachine [RunstateMachineSingleton %AUTO%]
         $stateMachine addCalloutBundle RunControlSingleton
         $stateMachine destroy
+
     } elseif {[llength $args] > 0} {
         $::RunControlSingleton::theInstance configure {*}$args
     }
@@ -1505,7 +1507,7 @@ proc ::TimedRun::getInstance {{win ""} args} {
         if {[llength $args] > 0} {
             $win configure {*}$args
         }
-        set sm [RunstateMachineSingleton %AUTO%]
+        set sm [::RunstateMachineSingleton %AUTO%]
         $sm addCalloutBundle TimedRun
     }
     return $::TimedRun::theInstance
@@ -2408,7 +2410,7 @@ image create photo output_error -file $::Output::errorFilename
 proc Output::getInstance { {win {}} args} {
     if {$::Output::theInstance eq ""} {
         set ::Output::theInstance [TabbedOutput $win {*}$args]
-        set sm [RunstateMachineSingleton %AUTO%]
+        set sm [::RunstateMachineSingleton %AUTO%]
         $sm addCalloutBundle Output
         $sm destroy
       
@@ -2854,7 +2856,7 @@ snit::widgetadaptor ReadoutGUI {
     #     Halted.
     #
     method _stopRun {} {
-        set sm [RunstateMachineSingleton %AUTO%]
+        set sm [::RunstateMachineSingleton %AUTO%]
         if {[$sm getState] in [list Active Paused]} {
             $sm transition Halted
         }

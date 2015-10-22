@@ -66,7 +66,7 @@ snit::type ReadoutGuiRemoteControl {
   variable manager  -1;            #< Port manager client instance.
 
   # verbs that we will process happily
-  variable legalVerbs [list set begin end get init]
+  variable legalVerbs [list set begin end get init masterTransition]
 
   # For my status area:
 
@@ -134,7 +134,10 @@ snit::type ReadoutGuiRemoteControl {
       # send the command
       puts $requestfd $script
 
-      # wait for the response
+      # A response will be received from the peer and that will be handled by
+      # _onRequestReadable. Once a complete message has been received, the 
+      # requestReplyReceived will have been set. For that reason, we wait
+      # on that variable.
       vwait [myvar requestReplyReceived]
       
       return $requestReply
@@ -222,26 +225,20 @@ snit::type ReadoutGuiRemoteControl {
       #  4. Obviously if there are  no instances fail too:
       #
       
-      puts stderr "Getting port usage: "
       set services [$allocator listPorts]
-      puts stderr $services
       set foundCount 0
       foreach service $services {
         set port [lindex $service 0]
         set app  [lindex $service 1]
-        puts stderr "Port $port app $app"
         if {$app eq "s800rctl"} {
-          puts stderr "found one"
           incr foundCount
           set svcport $port
         }
       }
       if {$foundCount == 1} {
-        puts stderr "Opening client connection"
         set requestfd [socket $clientaddr $svcport]
         chan configure $requestfd -blocking 0 -buffering line
         chan event $requestfd readable [mymethod _onRequestReadable]
-        puts "all set up."
       } elseif {$foundCount == 0} {
         set msg "ReadoutGUIRemoteControl::_onConnection Unable to locate "
         append msg "s800rctl service on $clientaddr"
@@ -355,7 +352,7 @@ snit::type ReadoutGuiRemoteControl {
     if {$line eq ""} {
       return
     }
-    if {[$self _isLegalCommand $line]} {
+    if {[$self _isLegalCommand [lindex $line 0]]} {
       $self _executeCommand $line
     } else {
       $self _reply FAIL "Invalid command '$line'"
@@ -626,6 +623,28 @@ snit::type ReadoutGuiRemoteControl {
   }
 
   ##
+  # _masterTransition
+  #  
+  #  Respond to a state transition request from the master.
+  #
+  # @param to   state to transition to
+  #
+  method _masterTransition {to} {
+    if {![$self _slaveMode]} {
+      $self _reply ERROR "Not in slave mode"
+      return
+    }
+    set sm [::RunstateMachineSingleton %AUTO%]
+    if {[catch {$sm masterTransition $to} msg]} {
+      $self _reply ERROR "The current state ($currentState) does not allow transition to $to state"
+    } else {
+      $self _reply OK
+    }
+    $sm destroy
+
+  }
+
+  ##
   # _init
   #   * Run must be Halted. 
   #   * Let the data source manager singleton do the rest of the work
@@ -686,6 +705,23 @@ snit::type ReadoutGuiRemoteControl {
     }
   }
 
+  ##
+  # _transitionTo
+  #   * Run must be endable._
+  #   * Use the state machine to end the run, and let the callback bundles do
+  #     everything else.
+  #
+  method _transitionTo {state} {
+    flush stdout
+    if {![$self _slaveMode]} {
+      $self _reply ERROR "Not in slave mode"
+      return
+    }
+    set sm [::RunstateMachineSingleton %AUTO%]
+    $sm transition $state
+    $sm destroy
+
+  }
 
   #---------------------------------------------------------------------------
   #  Type scoped methods (not associated with an object)
@@ -875,6 +911,18 @@ namespace eval RemoteControlClient {
       }
 
     } ;# end end
+
+
+    ## Define a new proc to send state transitions
+    proc ::masterTransition to {
+      set stateMachine [::RunstateMachineSingleton %AUTO%]
+      $stateMachine masterTransition $to
+      $stateMachine destroy
+    }
+
+    set stateMachine [RunstateMachineSingleton %AUTO]
+    $stateMachine setSlave 1
+    $stateMachine destroy
 
   }  ;# end setup
 
