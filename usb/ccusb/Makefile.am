@@ -1,9 +1,7 @@
 SUBDIRS = 	ccusb 		\
 		daqconfig	\
-		router		\
-		rdothread	\
-		tclserver		\
-		commands	\
+		ctlconfig \
+		core \
 		driverkit   \
     tcldrivers \
     controlpanels \
@@ -16,14 +14,12 @@ bin_PROGRAMS = CCUSBReadout
 
 CCUSBReadout_SOURCES = CTheApplication.cpp Globals.cpp @srcdir@/cmdline.c
 
-noinst_HEADERS = CTheApplication.h Globals.h Events.h
+noinst_HEADERS = CTheApplication.h Globals.h
 
 CCUSBReadout_CPPFLAGS = -I@top_srcdir@/usb/ccusb/ccusb \
-	-I@top_srcdir@/usb/ccusb/router \
-	-I@top_srcdir@/usb/ccusb/rdothread \
 	 -I@top_srcdir@/usb/ccusb/daqconfig \
-	 -I@top_srcdir@/usb/ccusb/commands \
-	-I@top_srcdir@/usb/ccusb/tclserver  \
+	 -I@top_srcdir@/usb/ccusb/ctlconfig \
+	 -I@top_srcdir@/usb/ccusb/core \
 	-I@top_srcdir@/usb/common/slowcontrols  \
 	-I@top_srcdir@/base/headers @LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/thread \
@@ -33,14 +29,11 @@ CCUSBReadout_CPPFLAGS = -I@top_srcdir@/usb/ccusb/ccusb \
 
 
 CCUSBReadout_LDADD	= \
-	@top_builddir@/usb/ccusb/commands/libCCUSBCommands.la	\
-	@top_builddir@/usb/ccusb/daqconfig/libCCUSBConfig.la		\
-	@top_builddir@/usb/ccusb/rdothread/libCCUSBRdoThread.la	\
-	@top_builddir@/usb/ccusb/commands/libCCUSBCommands.la		\
-	@top_builddir@/usb/ccusb/router/libCCUSBRouter.la		\
 	@top_builddir@/usb/ccusb/ccusb/libCCUSB.la		\
-	@top_builddir@/usb/ccusb/tclserver/libCCUSBControlServer.la \
-        @top_builddir@/servers/portmanager/libPortManager.la \
+	@top_builddir@/usb/ccusb/daqconfig/libCCUSBDaqConfig.la		\
+	@top_builddir@/usb/ccusb/ctlconfig/libCCUSBCtlConfig.la		\
+	@top_builddir@/usb/ccusb/core/libCCUSBCore.la \
+	@top_builddir@/servers/portmanager/libPortManager.la \
 	@top_builddir@/base/dataflow/libDataFlow.la \
 	@top_builddir@/base/thread/libdaqthreads.la		\
 	@LIBTCLPLUS_LDFLAGS@	\

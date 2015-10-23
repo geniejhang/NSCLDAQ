@@ -7,7 +7,7 @@ unittests_SOURCES = TestRunner.cpp $(TESTS)
 
 unittests_LDADD =  \
 		@top_builddir@/usb/ccusb/ccusb/libCCUSB.la            \
-		@top_builddir@/usb/ccusb/daqconfig/libCCUSBConfig.la  \
+		@top_builddir@/usb/ccusb/daqconfig/libCCUSBDaqConfig.la  \
 		@top_builddir@/base/thread/libdaqthreads.la		\
 		@top_builddir@/base/tcpip/libTcp.la                   \
 		@LIBTCLPLUS_LDFLAGS@                                  \

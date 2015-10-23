@@ -1,6 +1,6 @@
-lib_LTLIBRARIES		= libCCUSBConfig.la
+lib_LTLIBRARIES		= libCCUSBDaqConfig.la
 
-libCCUSBConfig_la_SOURCES	= \
+libCCUSBDaqConfig_la_SOURCES	= \
 				CConfiguration.cpp	\
 				CStackCommand.cpp	\
 				CPH7xxCommand.cpp	\
@@ -73,7 +73,7 @@ noinst_HEADERS		= \
 
 
 
-libCCUSBConfig_la_CPPFLAGS		= \
+libCCUSBDaqConfig_la_CPPFLAGS		= \
 				-I@top_srcdir@/usb/ccusb		\
 				-I@top_srcdir@/usb/ccusb/ccusb		\
 				-I@top_srcdir@/usb/ccusb/daqconfig		\
@@ -84,7 +84,7 @@ libCCUSBConfig_la_CPPFLAGS		= \
 				@TCL_FLAGS@ \
 				@THREADCXX_FLAGS@
 
-libCCUSBConfig_la_LIBADD	=	 \
+libCCUSBDaqConfig_la_LIBADD	=	 \
 				@top_builddir@/usb/ccusb/ccusb/libCCUSB.la \
 				@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
 				@LIBTCLPLUS_LDFLAGS@ \
