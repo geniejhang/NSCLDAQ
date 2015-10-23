@@ -167,8 +167,7 @@ snit::type s800rctl {
   # NAKs result in an error throw:
   #
   method begin {} {
-    set result [$self masterTransition Active]
-    $self ThrowIfNak $result
+    $self masterTransition Active
   }
   ##
   # Request that a run end.
@@ -176,8 +175,7 @@ snit::type s800rctl {
   # NAKs result in error throws:
   #
   method end {} {
-    set result [$self masterTransition Halted]
-    $self ThrowIfNak $result
+    $self masterTransition Halted
   }
 
   if {0} {
