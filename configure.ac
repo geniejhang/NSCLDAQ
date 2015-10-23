@@ -405,7 +405,6 @@ AC_CONFIG_FILES([Makefile
     utilities/sequencer/Makefile
     utilities/ringselector/Makefile
     utilities/bufdump/Makefile
-<<<<<<< .working
     utilities/eventlog/Makefile
     utilities/sclclient/Makefile
     utilities/tkbufdump/Makefile
