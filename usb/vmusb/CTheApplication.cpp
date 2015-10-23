@@ -284,7 +284,7 @@ CTheApplication::startTclServer()
 {
   // we have to set the global pTclServer immediately because
   // the following line potentially will depend on the Globals::pTclServer
-  Globals::pTclServer = new TclServer;
+  Globals::pTclServer = new TclServer(m_systemControl);
   Globals::pTclServer->start(tclServerPort, Globals::controlConfigFilename.c_str(),
 		   *Globals::pUSBController);
 

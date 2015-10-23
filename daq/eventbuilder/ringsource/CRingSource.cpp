@@ -40,11 +40,15 @@
 #include <io.h>
 #include <fstream>
 #include <iostream>
+#include <iterator>
+#include <algorithm>
+#include <stdexcept>
+#include <cassert>
 
 
-static std::ostream& log(std::cerr);
 static uint64_t lastTimestamp(NULL_TIMESTAMP);
 
+using namespace std;
 
 
 static size_t max_event(1024*128); // initial Max bytes of events in a getData
@@ -66,7 +70,8 @@ CRingSource::CRingSource(int argc, char** argv) :
   m_pArgs(0),
   m_pBuffer(0),
   m_timestamp(0),
-  m_sourceId(0)
+  m_allowedSourceIds(),
+  m_wrapper(0)
 {
   GetOpt parsed(argc, argv);
   m_pArgs = new gengetopt_args_info;
@@ -105,22 +110,34 @@ CRingSource::~CRingSource()
 void
 CRingSource::initialize()
 {
-  std::string url = m_pArgs->ring_arg;
+  string url = m_pArgs->ring_arg;
   
-  // Require only one source id:
-  if (m_pArgs->ids_given==0 && !m_pArgs->expectbodyheaders_given) {
-    throw std::string("The source id (--ids) is required for this source!");
-  } 
+  assert(m_pArgs->ids_given >= 0);
 
-  if (m_pArgs->ids_given > 1) {
-    throw std::string("This source only supports a single event id");
-  } else if (m_pArgs->ids_given == 1) {
-    m_sourceId = static_cast<uint32_t>(m_pArgs->ids_arg[0]);
-  } // otherwise m_sourceId is initialized to 0 in the ctor
+  if (m_pArgs->ids_given > 0) {
+    m_allowedSourceIds.insert(m_allowedSourceIds.end(),
+                              m_pArgs->ids_arg, 
+                              m_pArgs->ids_arg + m_pArgs->ids_given);
+  } else if (m_pArgs->ids_given==0) {
+    if (!m_pArgs->expectbodyheaders_given) {
+      throw string("The list of source ids (--ids) are required for this source!");
+    }
+  }
 
-
+  if (m_pArgs->default_id_given) {
+      m_defaultSourceId = m_pArgs->default_id_arg;
+  } else {
+    if (m_pArgs->ids_given > 0) {
+      m_defaultSourceId = m_pArgs->ids_arg[0];
+    } else {
+      // we should not get here but it is worth adding the check in case gengetopt gets
+      // changed.
+      throw string("Cannot set a default source id! Neither --default-id nor --ids option specified.");
+    }
+  }
+  
   if (m_pArgs->timestampextractor_given) {
-    std::string dlName = m_pArgs->timestampextractor_arg;
+    string dlName = m_pArgs->timestampextractor_arg;
     // note that in order to allow the .so to be rebuilt while we're running without
     // us potentially dying, the .so will be copied to a temporary file.
     // Once the image is mapped it is unlinked so that it vanishes once the source exits.
@@ -133,7 +150,7 @@ CRingSource::initialize()
     void* pDLL = dlopen(dlName.c_str(), RTLD_NOW);
     if (!pDLL) {
       int e = errno;
-      std::string msg = "Failed to load shared lib ";
+      string msg = "Failed to load shared lib ";
       msg += dlName;
       msg += " ";
       msg += strerror(e);
@@ -142,28 +159,32 @@ CRingSource::initialize()
     m_timestamp = reinterpret_cast<tsExtractor>(dlsym(pDLL, "timestamp"));
     if (!m_timestamp) {
       int e errno;
-      std::string msg = "Failed to locate timestamp function in ";
+      string msg = "Failed to locate timestamp function in ";
       msg += dlName;
       msg += " ";
       msg += strerror(e);
       throw msg;
     }
+
+    m_wrapper.setTimestampExtractor(m_timestamp);
     unlink(dlName.c_str());	// Marks this for destruction.
   } else {
     // the tstamplib is not provided. Has the expectbodyheaders flag
     // been provided? If not, this is not allowed and the program
     // be stopped (or the issue addressed somehow).
     if (!m_pArgs->expectbodyheaders_given) {
-      std::string msg = "This source may have ring items with insufficient data to ";
+      string msg = "This source may have ring items with insufficient data to ";
       msg += "create fragments. Either specify --expectbodyheaders or set the ";
-      msg += "--timestampextractor and -ids options.";
+      msg += "--timestampextractor and --ids options.";
       throw msg;
     }
 
   }
 
+  m_wrapper.setAllowedSourceIds(m_allowedSourceIds);
+  m_wrapper.setDefaultSourceId(m_defaultSourceId);
+  m_wrapper.setExpectBodyHeaders(m_pArgs->expectbodyheaders_flag);
   
-  log << std::hex;
 
   // Attach the ring.
 
@@ -202,7 +223,7 @@ CRingSource::dataReady(int ms)
  * getEvents
  *
  *  Takes data from the ring buffer and builds event fragment lists.
- *  - the event source comes from m_sourceId
+ *  - the event source comes from m_allowedSourceIds
  *  - scaler and trigger count events become untimestamped fragments.
  *  - State transition events become barriers whose type is the same as
  *    the type in their ring type
@@ -219,11 +240,11 @@ CRingSource::getEvents()
   uint8_t*         pFragments = reinterpret_cast<uint8_t*>(malloc(max_event*2));
   uint8_t*         pDest = pFragments;
   if (pFragments == 0) {
-    throw std::string("CRingSource::getEvents - memory allocation failed");
+    throw string("CRingSource::getEvents - memory allocation failed");
   }
 
   while ((bytesPackaged < max_event) && m_pBuffer->availableData()) {
-    CRingItem* p  = CRingItem::getFromRing(*m_pBuffer, all); // should not block.
+    std::unique_ptr<CRingItem> p(CRingItem::getFromRing(*m_pBuffer, all)); // should not block.
     RingItem*  pRingItem = p->getItemPointer();
 
     // If we got here but the data is bigger than our safety margin
@@ -234,60 +255,13 @@ CRingSource::getEvents()
       max_event = pRingItem->s_header.s_size + bytesPackaged;
       pFragments = reinterpret_cast<uint8_t*>(realloc(pFragments, max_event*2));
       pDest      = pFragments + offset;
-
     }
 
-    // initialize the fragment -- with the assumption that the
-    // item is a non-barrier with no timestamp:
-
-    ClientEventFragment frag;
-    frag.s_timestamp = NULL_TIMESTAMP;
-    frag.s_sourceId  = m_sourceId;
-    frag.s_size      = pRingItem->s_header.s_size;
-    frag.s_barrierType = 0;
-    frag.s_payload   = pDest;
-    memcpy(pDest, pRingItem,  pRingItem->s_header.s_size);
-    pDest           += pRingItem->s_header.s_size;
-    bytesPackaged   += pRingItem->s_header.s_size;
-
-    // Now figure what to do based on the type...default is non-timestamped, non-barrier
-    // If the ring item has a timesampe we can supply it right away:
+    ClientEventFragment frag = m_wrapper(p.get(), pDest);
+    pDest += frag.s_size;
+    bytesPackaged += frag.s_size;
     
-    if (p->hasBodyHeader()) {
-        frag.s_timestamp = p->getEventTimestamp();
-        frag.s_sourceId  = p->getSourceId();
-        frag.s_barrierType = p->getBarrierType();
-    } else {
-
-        // if we are here, then all is well in the world.
-        switch (pRingItem->s_header.s_type) {
-        case BEGIN_RUN:
-        case END_RUN:
-        case PAUSE_RUN:
-        case RESUME_RUN:
-          frag.s_barrierType = pRingItem->s_header.s_type;
-        case PERIODIC_SCALERS:	// not a barrier but no timestamp either.
-          break;
-        case PHYSICS_EVENT:
-          if (formatPhysicsEvent(pRingItem, p, frag)) {
-            lastTimestamp = frag.s_timestamp;
-            break;
-          }
-        default:
-          // default is to leave things alone
-          // this includes the DataFormat item
-    
-          break;
-        }
-    }
-    if (frag.s_timestamp == 0ll) {
-      log << "Zero timestamp in source!?!\n";
-    }
     frags.push_back(frag);
-    delete p;
-
-
-
     
   }
   // Send those fragments to the event builder:
@@ -330,7 +304,7 @@ CRingSource::shutdown()
  * @return uint64_t
  * @retval (later - earlier) in millisecond units.
  *
- * @throw - negative time differences throw an std::string (BUG).
+ * @throw - negative time differences throw an string (BUG).
  */
 uint64_t
 CRingSource::timedifMs(struct timespec& later, struct timespec& earlier)
@@ -351,7 +325,7 @@ CRingSource::timedifMs(struct timespec& later, struct timespec& earlier)
   // Illegal difference:
 
   if (sec < 0) {
-    throw std::string("BUGCHECK -- Invalid time difference direction");
+    throw string("BUGCHECK -- Invalid time difference direction");
   }
 
   uint64_t result = sec;
@@ -362,6 +336,7 @@ CRingSource::timedifMs(struct timespec& later, struct timespec& earlier)
   
 
 }
+
 /**
  * copyLib
  *
@@ -380,14 +355,14 @@ CRingSource::timedifMs(struct timespec& later, struct timespec& earlier)
  *
  * @param original - the name of the shared object to copy.
  *
- * @return std::string - name of the copied file.
+ * @return string - name of the copied file.
  *
- * @throw std::string on any error.
+ * @throw string on any error.
  */
-std::string
-CRingSource::copyLib(std::string original)
+string
+CRingSource::copyLib(string original)
 {
-  std::string destName;
+  string destName;
   int dest;
 
   // First try to open the original.  If that's not possible throw up.
@@ -395,7 +370,7 @@ CRingSource::copyLib(std::string original)
   int from = open(original.c_str(), O_RDONLY);
   if (from < 0) {
     int err = errno;   // In case string ops smash errno.
-    std::string msg("CRingSource: Time extractor shared library: ");
+    string msg("CRingSource: Time extractor shared library: ");
     msg += original;
     msg += " cannot be opened: ";
     msg += strerror(err);
@@ -412,7 +387,7 @@ CRingSource::copyLib(std::string original)
     char* pDestName = tmpnam(NULL);
     if (!pDestName) {
       int err = errno;
-      std::string msg("CRingSource: Failed to create temporary shared library filename: ");
+      string msg("CRingSource: Failed to create temporary shared library filename: ");
       msg += strerror(err);
       throw msg;
     }
@@ -421,10 +396,10 @@ CRingSource::copyLib(std::string original)
     
     // Open the dest.
     
-    int dest = open(destName.c_str(), O_CREAT | O_WRONLY, S_IRWXU);
+    dest = open(destName.c_str(), O_CREAT | O_WRONLY, S_IRWXU);
     if (!dest) {
       int err;
-      std::string msg = "CRingSource: Faile to create a temp file for the shared  library: ";
+      string msg = "CRingSource: Faile to create a temp file for the shared  library: ";
       msg += strerror(err);
       throw msg;
     }
@@ -459,58 +434,3 @@ CRingSource::copyLib(std::string original)
   close(dest);
   return destName;
 }
-/** Handle the case of a physics event without a body header.
-  * 
-  * This should throw if there is not tstamp extractor provided.
-  * Otherwise, if there are no bodyheaders and the tstamp
-  *
-  * \param item ring item C structure being accessed
-  * \param p    ring item object that manages the item param
-  * \param frag fragment header being filled in.
-  *
-  * \returns boolean whether or not the ring item was non-null
-  * 
-  * \throws when no tstamplib is provided and --expectbodyheaders is specified 
-  *
-  */
-bool
-CRingSource::formatPhysicsEvent (pRingItem item, CRingItem* p, ClientEventFragment& frag) 
-{
-  bool retval = false;
-
-  // Check if body headers are demanded.
-  if (m_pArgs->expectbodyheaders_flag) {
-    // this is okay if we have a tstamplib and ids from the user. Just tell them
-    // that they were mistaken about there being body headers on every ring item.
-    if (m_pArgs->timestampextractor_given && m_pArgs->ids_given) {
-      std::string msg = "ringFragmentSource::getEvents() : --expectbodyheaders ";
-      msg += "flag passed but observed a ring item without a BodyHeader.";
-      log << msg << "\n";
-    } else {
-      // Oh No. This is fatal. We have no way of determining the info to stick into
-      // the FragmentHeader. 
-      std::string msg = "ringFragmentSource passed --expectbodyheaders flag but observed ";
-      msg += "a ring item without a BodyHeader. This is fatal because the fragment header ";
-      msg += "cannot be defined without timestamp extractor.";
-      throw msg;
-    }  
-  }
-
-  // kludge for now - filter out null events:
-  if (item->s_header.s_size > (sizeof(RingItemHeader) + sizeof(uint32_t))) {
-    frag.s_timestamp = (*m_timestamp)(reinterpret_cast<pPhysicsEventItem>(item));
-    if (((frag.s_timestamp - lastTimestamp) > 0x100000000ll)  &&
-        (lastTimestamp != NULL_TIMESTAMP)) {
-      CRingItem* pSpecificItem = CRingItemFactory::createRingItem(*p);
-      log << "Timestamp skip from "  << lastTimestamp << " to " << frag.s_timestamp << std::endl;
-      log << "Ring item: " << pSpecificItem->toString() << std::endl;
-      delete pSpecificItem;
-    }
-    
-    retval = true; 
-  }
-
-  return retval;
-}
-
-

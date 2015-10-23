@@ -33,6 +33,7 @@ using namespace std;
 #include <DataFormat.h>
 #include <make_unique.h>
 #include <CControlQueues.h>
+#include <CSystemControl.h>
 
 #include <tcl.h>
 #include <TCLInterpreter.h>
@@ -63,7 +64,7 @@ TclServer* TclServer::m_pInstance(0); // static->object context. ptr.
 /*!  Constructor is not very interesting 'cause all the action is in 
     start and operator()
 */
-TclServer::TclServer() :
+TclServer::TclServer(CSystemControl& systemControl) :
   m_port(-1),
   m_configFilename(string("")),
   m_pVme(0),
@@ -75,7 +76,8 @@ TclServer::TclServer() :
   m_nMonitorDataSize(0),
   m_dumpAllVariables(true),
   m_exitNow(false),
-  m_isRunning(false)
+  m_isRunning(false),
+  m_systemControl(systemControl)
 {
   m_pInstance = this;		// static->object context.
 }
@@ -146,18 +148,35 @@ TclServer::setResult(string msg)
 {
   Tcl_Obj* result = Tcl_NewStringObj(msg.c_str(), -1);
   Tcl_SetObjResult(m_pInterpreter->getInterpreter(), result);
-  
-  
 }
 
 void TclServer::init()
 {
-  initInterpreter();		// Create interp and add commands.
-  startTcpServer();	  	// Set up the Tcp/Ip listener event.
-  readConfigFile();	  	// Initialize the modules.
-  initModules();        // Initialize the fully configured modules.
-  createMonitorList();	// Figure out the set of modules that need monitoring.
-  m_isRunning = true;
+  try {
+    initInterpreter();		// Create interp and add commands.
+    startTcpServer();	  	// Set up the Tcp/Ip listener event.
+    readConfigFile();	  	// Initialize the modules.
+    initModules();        // Initialize the fully configured modules.
+    createMonitorList();	// Figure out the set of modules that need monitoring.
+    m_isRunning = true;
+  }
+  catch (string msg) {
+    cerr << "TclServer thread caught a string exception: " << msg << endl;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
+  }
+  catch (char* msg) {
+    cerr << "TclServer thread caught a char* exception: " << msg << endl;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
+  }
+  catch (CException& err) {
+    cerr << "TclServer thread caught a daq exception: "
+      	 << err.ReasonText() << " while " << err.WasDoing() << endl;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
+  }
+  catch (...) {
+    cerr << "TclServer thread caught some other exception type.\n";
+    m_systemControl.scheduleExit(EXIT_FAILURE);
+  }
 }
 /*!
    Entry point for the thread.  This will be called when the thread is first
@@ -175,20 +194,20 @@ TclServer::operator()()
   }
   catch (string msg) {
     cerr << "TclServer thread caught a string exception: " << msg << endl;
-    throw;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
   }
   catch (char* msg) {
     cerr << "TclServer thread caught a char* exception: " << msg << endl;
-    throw;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
   }
   catch (CException& err) {
     cerr << "TclServer thread caught a daq exception: "
       	 << err.ReasonText() << " while " << err.WasDoing() << endl;
-    throw;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
   }
   catch (...) {
     cerr << "TclServer thread caught some other exception type.\n";
-    throw;
+    m_systemControl.scheduleExit(EXIT_FAILURE);
   }
 }
 
