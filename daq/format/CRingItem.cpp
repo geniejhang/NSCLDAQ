@@ -277,19 +277,6 @@ CRingItem::size() const
   }
 }
 
-/*!
-   \return uint32_t
-   \retval Current size of the item.
-*/
-uint32_t
-CRingItem::size() const
-{
-  if (hasBodyHeader()) {
-    return (sizeof(RingItemHeader) + sizeof(BodyHeader) +  getBodySize());
-  } else {
-    return (sizeof(RingItemHeader) + sizeof(uint32_t) + getBodySize());
-  }
-}
 /**
  * hasBodyHeader
  *
