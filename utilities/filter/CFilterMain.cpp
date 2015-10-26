@@ -20,8 +20,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include "CFilterMain.h"
 #include "CCompositeFilter.h"
 #include "CMediator.h"
-//#include "COneShotMediator.h"
-#include "CBufferDecoder.h"
+#include "COneShotMediator.h"
 #include "CInfiniteMediator.h"
 #include "CDataSourceFactory.h"
 #include "CDataSinkFactory.h"
@@ -50,12 +49,12 @@ CFilterMain::CFilterMain(int argc, char** argv)
 
   try {
 
-//    if (m_argsInfo->oneshot_given) {
-//      m_mediator = new COneShotMediator(0,new CCompositeFilter,0,
-//          m_argsInfo->number_of_sources_arg); 
-//    } else {
-      m_mediator = new CInfiniteMediator(0,nullptr,0);
-//    } 
+    if (m_argsInfo->oneshot_given) {
+      m_mediator = new COneShotMediator(0,new CCompositeFilter,0,
+          m_argsInfo->number_of_sources_arg); 
+    } else {
+      m_mediator = new CInfiniteMediator(0,new CCompositeFilter,0);
+    } 
     // Set up the data source 
     CDataSource* source = constructDataSource(); 
     m_mediator->setDataSource(source);
@@ -100,7 +99,7 @@ void CFilterMain::registerFilter(const CFilter* filter)
 {
   // We will always have a composite filter in this main
   CCompositeFilter* main_filter=0;
-//  main_filter = dynamic_cast<CCompositeFilter*>(m_mediator->getFilter());
+  main_filter = dynamic_cast<CCompositeFilter*>(m_mediator->getFilter());
 
   main_filter->registerFilter(filter);
 }

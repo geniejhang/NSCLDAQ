@@ -23,7 +23,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <iostream>
 #include <CDataSource.h>
 #include <CDataSink.h>
-#include <CBufferDecoder.h>
+#include <CFilter.h>
 #include <COneShotHandler.h>
 
 #include <CRingStateChangeItem.h>
@@ -42,8 +42,8 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
   \param sink a pointer to a CDataSink
 
 */
-COneShotMediator::COneShotMediator(CDataSource* source, CBufferDecoder* decoder, CDataSink* sink)
-: CMediator(source,decoder,sink),
+COneShotMediator::COneShotMediator(CDataSource* source, CFilter* filter, CDataSink* sink)
+: CMediator(source,filter,sink),
   m_oneShot(1)
 {}
 
@@ -52,13 +52,13 @@ COneShotMediator::COneShotMediator(CDataSource* source, CBufferDecoder* decoder,
   Constructs the mediator object. This object owns its referenced members.
 
   \param source a pointer to a CDataSource
-  \param decoder a pointer to a CFilter
+  \param filter a pointer to a CFilter
   \param sink a pointer to a CDataSink
 
 */
-COneShotMediator::COneShotMediator(CDataSource* source, CBufferDecoder* decoder, CDataSink* sink,
+COneShotMediator::COneShotMediator(CDataSource* source, CFilter* filter, CDataSink* sink,
                                    int nsources)
-: CMediator(source,decoder,sink),
+: CMediator(source,filter,sink),
   m_oneShot(nsources)
 {}
 

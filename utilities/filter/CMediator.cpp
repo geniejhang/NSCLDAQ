@@ -32,6 +32,8 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <CRingPhysicsEventCountItem.h>
 #include <CRingFragmentItem.h>
 
+using namespace std;
+
 /**! Constructor
 
   Constructs the mediator object. This object owns its referenced members.
@@ -41,10 +43,15 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
   \param sink a pointer to a CDataSink
 
 */
-CMediator::CMediator(CDataSource* source, CBufferDecoder* pDecoder, CDataSink* sink)
-: m_pSource(source),
-  m_pBufferDecoder(pDecoder),
-  m_pSink(sink),
+CMediator::CMediator(CDataSource* source, CFilter* filter, CDataSink* sink)
+: CBaseMediator(unique_ptr<CDataSource>(source), unique_ptr<CDataSink>(sink)), 
+  m_pFilter(unique_ptr<CFilter>(filter)),
+  m_nToProcess(-1),
+  m_nToSkip(-1)
+{}
+CMediator::CMediator(unique_ptr<CDataSource> source, unique_ptr<CFilter> filter, unique_ptr<CDataSink> sink)
+: CBaseMediator(move(source), move(sink)),
+  m_pFilter(move(filter)),
   m_nToProcess(-1),
   m_nToSkip(-1)
 {}
@@ -60,74 +67,59 @@ CMediator::CMediator(CDataSource* source, CBufferDecoder* pDecoder, CDataSink* s
 CMediator::~CMediator() 
 {
 
-  if (m_pSource!=0) {
-    delete m_pSource;
-    m_pSource = 0;
-  }
-
-  if (m_pBufferDecoder!=0) {
-    delete m_pBufferDecoder;
-    m_pBufferDecoder = 0;
-  }
-
-  if (m_pSink!=0) {
-    delete m_pSink;
-    m_pSink = 0;
-  }
-
   m_nToProcess = -1;
   m_nToSkip = -1;
 }
-//
-//CRingItem* CMediator::handleItem(CRingItem* item)
-//{
-//  // initial pointer to filtered item
-//  CRingItem* fitem = item;
-//  switch(item->type()) {
-//
-//    // State change items
-//    case BEGIN_RUN:
-//    case END_RUN:
-//    case PAUSE_RUN:
-//    case RESUME_RUN:
-//      fitem = m_pBufferDecoder->handleStateChangeItem(static_cast<CRingStateChangeItem*>(item));
-//      break;
-//
-//      // Documentation items
-//    case PACKET_TYPES:
-//    case MONITORED_VARIABLES:
-//      fitem = m_pBufferDecoder->handleTextItem(static_cast<CRingTextItem*>(item));
-//      break;
-//
-//      // Scaler items
-//    case PERIODIC_SCALERS:
-//      fitem = m_pBufferDecoder->handleScalerItem(static_cast<CRingScalerItem*>(item));
-//      break;
-//
-//      // Physics event item
-//    case PHYSICS_EVENT:
-//      fitem = m_pBufferDecoder->handlePhysicsEventItem(static_cast<CPhysicsEventItem*>(item));
-//      break;
-//
-//      // Physics event count
-//    case PHYSICS_EVENT_COUNT:
-//      fitem = m_pBufferDecoder->handlePhysicsEventCountItem(static_cast<CRingPhysicsEventCountItem*>(item));
-//      break;
-//
-//      // Event builder fragment handlers
-//    case EVB_FRAGMENT:
-//    case EVB_UNKNOWN_PAYLOAD:
-//      fitem = m_pBufferDecoder->handleFragmentItem(static_cast<CRingFragmentItem*>(item));
-//      break;
-//
-//      // Handle any other generic ring item...this can be 
-//      // the hook for handling user-defined items
-//    default:
-//      fitem = m_pBufferDecoder->handleRingItem(item);
-//      break;
-//  }
-//
-//  return fitem;
-//}
-//
+
+CRingItem* CMediator::handleItem(CRingItem* item)
+{
+  // initial pointer to filtered item
+  CRingItem* fitem = item;
+  switch(item->type()) {
+
+    // State change items
+    case BEGIN_RUN:
+    case END_RUN:
+    case PAUSE_RUN:
+    case RESUME_RUN:
+      fitem = m_pFilter->handleStateChangeItem(static_cast<CRingStateChangeItem*>(item));
+      break;
+
+      // Documentation items
+    case PACKET_TYPES:
+    case MONITORED_VARIABLES:
+      fitem = m_pFilter->handleTextItem(static_cast<CRingTextItem*>(item));
+      break;
+
+      // Scaler items
+    case PERIODIC_SCALERS:
+      fitem = m_pFilter->handleScalerItem(static_cast<CRingScalerItem*>(item));
+      break;
+
+      // Physics event item
+    case PHYSICS_EVENT:
+      fitem = m_pFilter->handlePhysicsEventItem(static_cast<CPhysicsEventItem*>(item));
+      break;
+
+      // Physics event count
+    case PHYSICS_EVENT_COUNT:
+      fitem = m_pFilter->handlePhysicsEventCountItem(static_cast<CRingPhysicsEventCountItem*>(item));
+      break;
+
+      // Event builder fragment handlers
+    case EVB_FRAGMENT:
+    case EVB_UNKNOWN_PAYLOAD:
+      fitem = m_pFilter->handleFragmentItem(static_cast<CRingFragmentItem*>(item));
+      break;
+
+      // Handle any other generic ring item...this can be 
+      // the hook for handling user-defined items
+    default:
+      fitem = m_pFilter->handleRingItem(item);
+      break;
+  }
+
+  return fitem;
+}
+
 

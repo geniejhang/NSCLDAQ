@@ -23,9 +23,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <iostream>
 #include <CDataSource.h>
 #include <CDataSink.h>
-#include <CBufferDecoder.h>
-#include <CBuffer.h>
-#include <CBufferIO.h>
+#include <CFilter.h>
 
 #include <CRingStateChangeItem.h>
 #include <CRingScalerItem.h>
@@ -43,8 +41,8 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
   \param sink a pointer to a CDataSink
 
 */
-CInfiniteMediator::CInfiniteMediator(CDataSource* source, CBufferDecoder* decoder, CDataSink* sink)
-: CMediator(source,decoder,sink)
+CInfiniteMediator::CInfiniteMediator(CDataSource* source, CFilter* filter, CDataSink* sink)
+: CMediator(source,filter,sink)
 {}
 
 /**! Destructor
@@ -73,28 +71,70 @@ void CInfiniteMediator::mainLoop()
   // the main loop
   CDataSource& source = *getDataSource();
   CDataSink& sink = *getDataSink();
-  CBufferDecoder& decoder = *getBufferDecoder();
 
-  while  (1) {
-    // create a new buffer
-    CBuffer buffer;
+  // Set up some counters
+  int tot_iter=0, proc_iter=0, nskip=0, nprocess=0;
 
-    // fill it
-    source >> buffer;
+  nskip = getSkipCount(); 
+  nprocess = getProcessCount(); 
 
-    // send it to the decoder to parse and process 
-    CBuffer newBuffer = decoder.onBuffer(buffer);
+  while (1) {
+    
+    // Check if all has been processed that was requested
+    if (proc_iter>=nprocess && nprocess>=0) {
+      break;
+    }
 
-    // output the data
-    sink << buffer;
+    // Get a new item
+    // Exit if the item returned is null
+    CRingItem* item = source.getItem();
+    if (item==0) {
+      break;
+    }
+
+    // only process if we have skipped the requested number
+    if (tot_iter>=nskip) {
+
+      // handle the item and get a pointer to 
+      // to the new item
+      CRingItem* new_item = handleItem(item);
+
+      // Only send an item if it is not null.
+      // The user could return null to prevent sending data
+      // to the sink
+      if (new_item!=0) {
+        // Send the new item on to the sink
+        sink.putItem(*new_item);
+      }
+    
+      // It is possible that the filter did nothing more than
+      // return a pointer to the same object. Therefore, only
+      // delete the returned item if it is different.
+      if ( new_item != item ) {
+        delete new_item;
+      } 
+      
+      // Increment the number processed
+      ++proc_iter;
+    }
+    
+
+    // delete original item
+    // THE FILTER MUST NOT HAVE DELETED THE OBJECT PASSED IT!!!
+    delete item;
+
+    // Increment our counter
+    ++tot_iter;
   }
 
 }
 
 void CInfiniteMediator::initialize() 
 {
+  getFilter()->initialize();
 }
 
 void CInfiniteMediator::finalize() 
 {
+  getFilter()->finalize();
 }
