@@ -263,19 +263,20 @@ Actions::COutputThread::operator()()
         
         Actions::ActionItem item;
         while (!m_pActionQueue->getnow(item)) {
+            // See if we should flush all
+            
+            time_t now = time(NULL);
+            if (now != lastTime) {
+                flushMessages();              // Flush all consolidations.
+                lastTime = now;
+            }
             m_pActionQueue->wait(1000);
         }
         // We have an action item now.
         
         processItem(item);
         
-        // See if we should flush all
-        
-        time_t now = time(NULL);
-        if (now != lastTime) {
-            flushMessages();              // Flush all consolidations.
-            lastTime = now;
-        }
+
     }
 }
 /**

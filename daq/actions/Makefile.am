@@ -17,6 +17,12 @@ TCLPACKAGES=actions.tcl defaultActions.tcl
 TCLTESTS =    actions.test tclTests.tcl
 
 
+noinst_PROGRAMS=testacts
+
+testacts_SOURCES=TestActionPackage.cpp
+testacts_CPPFLAGS=$(libActions_la_CPPFLAGS)
+testacts_LDFLAGS=@builddir@/libActions.la $(libActions_la_LDFLAGS) @TCL_LDFLAGS@
+
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs HERE=@srcdir@ tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl
 
