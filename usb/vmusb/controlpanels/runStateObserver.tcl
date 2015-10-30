@@ -21,6 +21,8 @@ snit::type RunStateObserver {
 
   constructor {args} {
     $self configurelist $args
+
+    tsv::object $self continue
   }
 
   destructor {
@@ -42,46 +44,54 @@ snit::type RunStateObserver {
   }
 
   method attachToRing {} {
-   set acqThread [$self startAcqThread ]
+    if {$acqThread eq {}} {
+      set acqThread [$self startAcqThread ]
+    } else {
+      return -code error {Thread is already running. Cannot create second thread for this instance.}
+    }
   }
 
   method detachFromRing {} {
     if {$acqThread ne {}} {
-      thread::send $acqThread [list set running 0]
-      thread::join $acqThread
+      tsv::set $self continue 0
+      thread::release $acqThread
       set acqThread {}
     }
 
   }
 
   method startAcqThread {} {
-    set acqThread [thread::create -joinable]
+    set acqThread [thread::create]
     if {[thread::send $acqThread [list lappend auto_path $::env(DAQLIB)] result]} {
-        puts "Could not extend thread's auto-path"
-        exit -1
+        return -code error "Could not extend thread's auto_path"
     }
     if {[thread::send $acqThread [list package require TclRingBuffer] result]} {
-        puts "Could not load RingBuffer package in acqthread: $result"
-        exit -1
+        return -code error "Could not load RingBuffer package in acqthread: $result"
     }
     
     if {[thread::send $acqThread [list ring attach $options(-ringurl)] result]} {
-        puts "Could not attach to ring buffer in acqthread $result"
-        exit -1
+        return -code error  "Could not attach to ring buffer in acqthread $result"
     }
-    
+
+    if {[thread::send $acqThread [list set instance $self] result]} {
+        return -code error "Could not send instance name to acqthread $result"
+    }
+
     #  The main loop will forward data to our handleData item.
     
     set myThread [thread::id]
     set getItems "proc getItems {obj tid uri} { 
-        while \$::running {                                             
+        while {\[tsv::get \$::instance continue\]} {                                             
             set ringItem \[ring get \$uri {1 2 3 4}]             
+            puts \$ringItem
             thread::send \$tid \[list \$obj handleData \$ringItem]     
         }                                                     
     }                                                         
-    set running 1
     getItems $self $myThread $options(-ringurl)
+
+    ring detach $options(-ringurl)
     "
+    tsv::set $self continue 1
     thread::send -async $acqThread $getItems
 
     
@@ -89,7 +99,6 @@ snit::type RunStateObserver {
   }
 
   method handleData {item} {
-    puts $item
     
     switch [dict get $item type] {
       "Begin Run"  { 
