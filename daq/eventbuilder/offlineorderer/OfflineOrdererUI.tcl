@@ -292,6 +292,7 @@ snit::type OfflineOrdererUIPresenter {
 
     # connect the RunStatusUI to the RunProcessor as an observer. 
     $runProcessor addRunStatusObserver $runProgressPresenter
+#    $runProgressPresenter configure -runprocessor $runProcessor
 
     # set the display mode
     $m_view configure -mode config
@@ -350,7 +351,6 @@ snit::type OfflineOrdererUIPresenter {
       set cmd0 [list $::Globals::sequencer select config ]
       set cmd1 [list $::Globals::menu delete 0 1 ]
       set cmd  [list $cmd0 $cmd1]
-      puts "Cmd = \"[join $cmd "; "]\""
       $::Globals::menu add command -label "Config" -command [join $cmd "; "] 
 
       $m_view configure -mode config
@@ -368,7 +368,6 @@ snit::type OfflineOrdererUIPresenter {
 
     set masterJobList [$jobBuilderPresenter getJobsList]
     if {[dict size $masterJobList]>0} {
-      puts $masterJobList
       $runProcessor configure -jobs $masterJobList
       set status [$runProcessor run]
     };

@@ -30,6 +30,7 @@ package require ExpFileSystem
 package require OfflineEVBInputPipeline
 package require OfflineEVBHoistPipeline
 package require evbcallouts
+package require evbconfigure
 
 package require Thread
 package require OfflineEVBOutputPipeline
@@ -116,6 +117,7 @@ snit::type JobProcessor {
     ::EVBStateCallouts::register
     ::DataSourceMgr::register
   #  ::DataSourceMonitor::register
+    ::EVBConfigure::register
   }
 
   ## @brief return the data source manager known to this
@@ -333,6 +335,7 @@ snit::type JobProcessor {
         dict set optDict $opt [$params cget $opt]
       }
       EVBC::initialize {*}$optDict
+
     }
 
   }
@@ -377,5 +380,6 @@ snit::type JobProcessor {
   }
 
 }
+
 
 
