@@ -34,6 +34,7 @@ package require evbconfigure
 
 package require Thread
 package require OfflineEVBOutputPipeline
+package require RunStateObserver
 
 ## @namespace HoistConfig
 #
@@ -84,12 +85,15 @@ snit::type JobProcessor {
   variable sourceManager ""
   variable stateMachine  ""
   variable completionStatus FAIL ; # assume failure unless told otherwise
+  variable runStateObserver ""
+  variable processingComplete 0
 
   ## @brief Pass the options
   #
   constructor {args} {
     set sourceManager [DataSourcemanagerSingleton %AUTO%]
     set stateMachine  [RunstateMachineSingleton %AUTO%]
+    set processingComplete 0
 
     $self configurelist $args
 
@@ -144,17 +148,40 @@ snit::type JobProcessor {
     # hook to handle one-time startup procedures 
     $self setup
 
+    set processingComplete 0
     if {![catch {$self startProcessing} msg]} {
-      # the transition to active was successful so we should expect that 
-      # processing succeeds.
-      #
-      # Tell the eventlog that it is okay for it to exit, because that is 
-      # what we expect.
-      EventLog::runEnding    ;# wait until run is ended and finalize
-      set completionStatus OK
+
+      RunStateObserver observer -ringurl tcp://localhost/$::EVBC::destRing \
+                                -onend [list set [myvar processingComplete] 1]
+
+      observer attachToRing
+
+      vwait [myvar processingComplete]
+
+      if {$processingComplete == 1} {
+        ::EventLog::runEnding
+        # the transition to active was successful so we should expect that 
+        # processing succeeds.
+        #
+        # Tell the eventlog that it is okay for it to exit, because that is 
+        # what we expect.
+        #
+        # Currently we have no mechanism for aborting a run in progress.
+        #
+        set completionStatus OK
+        puts "$completionStatus ... stopping"
+        $self stopProcessing   ;# stop the processing pipelines
+        puts "Stopped"
+
+      } else {
+        set completionStatus ABORT
+        $self forceStopProcessing
+      }
+
+      observer detachFromRing
+      observer destroy
     }
 
-    $self stopProcessing   ;# stop the processing pipelines
     return $completionStatus
   }
 
@@ -221,7 +248,6 @@ snit::type JobProcessor {
   # the update calls.
   #
   method waitForHalted {} {
-    variable stateMachine
 
     set state [$stateMachine getState]
     while {$state ne "Halted"} {
@@ -234,7 +260,6 @@ snit::type JobProcessor {
   ## @brief Transition the state machine into a NotReady state
   #
   method stopProcessing {} {
-    variable stateMachine
 
     if {[$stateMachine getState] eq "Active"} {
       $stateMachine transition Halted
@@ -243,6 +268,11 @@ snit::type JobProcessor {
     $stateMachine transition NotReady
 
     $self tearDown 
+  }
+
+  method forceStopProcessing {} {
+    $stateMachine transition NotReady
+    $self tearDown
   }
 
   ## @brief Transition the system into a clean state
@@ -335,7 +365,6 @@ snit::type JobProcessor {
         dict set optDict $opt [$params cget $opt]
       }
       EVBC::initialize {*}$optDict
-
     }
 
   }
@@ -379,7 +408,12 @@ snit::type JobProcessor {
                                                 file [$options(-inputparams) cget -file]]
   }
 
-}
 
+  method abortRun {} {
+    puts "setting processingComplete -> 2"
+    set processingComplete 2
+  }
+
+}
 
 

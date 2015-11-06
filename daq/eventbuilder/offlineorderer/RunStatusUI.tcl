@@ -133,6 +133,7 @@ snit::widget RunStatusUIView {
 snit::type RunStatusUIPresenter {
 
   option -widgetname -default ""
+  option -runprocessor -default ""
 
   component m_model     ;#< The model : OfflineEVBInputPipeParams
   component m_view      ;#< The view, owned by this
@@ -322,6 +323,8 @@ snit::type RunStatusUIPresenter {
   method createNewJobDisplay {status job} {
     set widgetName [$self findUniqueName]
     JobStatusDisplay $widgetName -status $status -jobname $job
+    puts "createNewJobDisplay [$self cget -runprocessor]"
+    $widgetName setRunProcessor [$self cget -runprocessor]
     return $widgetName
   }
 
@@ -403,6 +406,7 @@ snit::type RunStatusUIPresenter {
   method getViewWidget {} {
     return [$m_view getWindowName]
   }
+
 }
 
 
@@ -426,11 +430,15 @@ snit::widget JobStatusDisplay {
   option -jobname
   option -status -configuremethod setStatus
 
+  variable runProcessor 
+
   ## @brief Construct a new widget
   # 
   constructor {args} {
     $self buildGUI
     $self configurelist $args
+
+    set runProcessor {}
   }
 
   ## @brief Build the widgets that form the whole
@@ -439,12 +447,22 @@ snit::widget JobStatusDisplay {
     ttk::label $win.jobLbl  -textvariable [myvar options(-jobname)]
     ttk::label $win.jobStatusLbl -textvariable [myvar options(-status)]
     ttk::progressbar $win.jobProgress -orient horizontal -mode indeterminate
+    ttk::button $win.abort -text "Abort" -command [mymethod abortCurrent]
 
 #    grid $win.jobLbl $win.jobStatusLbl $win.jobProgress -sticky ew -padx 9 -pady 9
-    grid $win.jobLbl $win.jobStatusLbl -sticky ew -padx 9 -pady 9
+    grid $win.jobLbl $win.jobStatusLbl $win.abort -sticky ew -padx 9 -pady 9
 
 #    grid columnconfigure $win {0 1 2} -weight 1 -minsize 81
     grid columnconfigure $win {0 1} -weight 1 -minsize 81
+  }
+
+
+  method abortCurrent {} {
+    $runProcessor abortCurrent
+  }
+
+  method setRunProcessor processor {
+    set runProcessor $processor
   }
 
   ## @brief Transition the visible components for the new state 
@@ -468,4 +486,6 @@ snit::widget JobStatusDisplay {
     }
 
  } 
+
+
 }

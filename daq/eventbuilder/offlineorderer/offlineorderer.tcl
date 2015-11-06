@@ -20,6 +20,7 @@
 
 set here [file dirname [file normalize [info script]]]
 lappend auto_path [file join $here .. TclLibs]
+lappend auto_path [file join $here .. lib]
 
 package require cmdline
 package require InstallRoot
