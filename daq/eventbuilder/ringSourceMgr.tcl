@@ -229,7 +229,20 @@ proc ::RingSourceMgr::onBegin {} {
 proc ::RingSourceMgr::attach state {
 }
 
+##
+#
+#
+proc ::RingSourceMgr::register {{beforeBundle {}}} {
+  set sm [RunstateMachineSingleton %AUTO%]
+  if {$beforeBundle eq {}} {
+    $sm addCalloutBundle RingSourceMgr
+  } else {
+    $sm addCalloutBundle RingSourceMgr $beforeBundle
+  }
+  $sm destroy
+}
 
+#
 #------------------------------------------------------------------------------
 ##
 # EVBC::enter
@@ -262,7 +275,7 @@ proc ::RingSourceMgr::leave {from to} {
     ::RingSourceMgr::onBegin
 
     # give time to start up.
-    after 50
+    after 100
   }
 }
 

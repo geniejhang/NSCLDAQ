@@ -54,7 +54,6 @@ snit::type RunStateObserver {
   method detachFromRing {} {
     if {$acqThread ne {}} {
       tsv::set $self continue 0
-      thread::release $acqThread
       set acqThread {}
     }
 
@@ -62,7 +61,7 @@ snit::type RunStateObserver {
 
   method startAcqThread {} {
     set acqThread [thread::create]
-    if {[thread::send $acqThread [list lappend auto_path $::env(DAQLIB)] result]} {
+    if {[thread::send $acqThread [list set ::auto_path $::auto_path] result]} {
         return -code error "Could not extend thread's auto_path"
     }
     if {[thread::send $acqThread [list package require TclRingBuffer] result]} {
@@ -83,13 +82,13 @@ snit::type RunStateObserver {
     set getItems "proc getItems {obj tid uri} { 
         while {\[tsv::get \$::instance continue\]} {                                             
             set ringItem \[ring get \$uri {1 2 3 4}]             
-            puts \$ringItem
             thread::send \$tid \[list \$obj handleData \$ringItem]     
         }                                                     
     }                                                         
     getItems $self $myThread $options(-ringurl)
 
     ring detach $options(-ringurl)
+    thread::release
     "
     tsv::set $self continue 1
     thread::send -async $acqThread $getItems

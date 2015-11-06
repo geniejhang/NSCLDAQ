@@ -42,6 +42,7 @@ namespace eval EVBConfigure {
   proc leave {from to} {
     if {$from eq "Halted" && $to eq "Active"} {
       puts $::EVBC::pipefd [list set window 600]
+      after 1000
     }
   }
 

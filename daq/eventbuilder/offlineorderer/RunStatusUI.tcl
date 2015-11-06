@@ -83,11 +83,11 @@ snit::widget RunStatusUIView {
       ttk::label $top.statusLbl -text "Job Status" 
       ttk::separator $top.sep -orient horizontal 
 
-      grid $top.title          -       -sticky new
-      grid $top.nameLbl $top.statusLbl -sticky sew -padx 9
-      grid $top.sep            -       -sticky sew
+      grid $top.title          -        -  -sticky new
+      grid $top.nameLbl $top.statusLbl  x  -sticky sew -padx 9
+      grid $top.sep            -        -  -sticky sew
       grid rowconfigure $top 0 -weight 1
-      grid columnconfigure $top {0 1} -weight 1
+      grid columnconfigure $top all -weight 1
 
       grid $win.hdrFrame -sticky new
 
@@ -162,7 +162,7 @@ snit::type RunStatusUIPresenter {
     }
     
     # Create the default model
-    set m_model [dict create processing "" queued [list] completed [list]] 
+    set m_model [dict create processing "" aborted [list] queued [list] completed [list]] 
 
     # Create the view and pass it the values of the model
     set m_view   [RunStatusUIView $options(-widgetname) $self] 
@@ -267,6 +267,7 @@ snit::type RunStatusUIPresenter {
   # At the moment, this merely updates the view data and nothing else
   #
   method abort {} {
+    $self transitionCurrent aborted
     $self updateViewData $m_model 
   }
 
@@ -277,6 +278,8 @@ snit::type RunStatusUIPresenter {
   method updateViewData {model} {
 
     $self updateDisplayDataForStatusType completed 
+
+    $self updateDisplayDataForStatusType aborted
 
     $self updateDisplayDataForStatusType processing
 
@@ -323,7 +326,6 @@ snit::type RunStatusUIPresenter {
   method createNewJobDisplay {status job} {
     set widgetName [$self findUniqueName]
     JobStatusDisplay $widgetName -status $status -jobname $job
-    puts "createNewJobDisplay [$self cget -runprocessor]"
     $widgetName setRunProcessor [$self cget -runprocessor]
     return $widgetName
   }
@@ -450,7 +452,8 @@ snit::widget JobStatusDisplay {
     ttk::button $win.abort -text "Abort" -command [mymethod abortCurrent]
 
 #    grid $win.jobLbl $win.jobStatusLbl $win.jobProgress -sticky ew -padx 9 -pady 9
-    grid $win.jobLbl $win.jobStatusLbl $win.abort -sticky ew -padx 9 -pady 9
+#    grid $win.jobLbl $win.jobStatusLbl $win.abort -sticky ew -padx 9 -pady 9
+    grid $win.jobLbl $win.jobProgress $win.abort -sticky ew -padx 9 -pady 9
 
 #    grid columnconfigure $win {0 1 2} -weight 1 -minsize 81
     grid columnconfigure $win {0 1} -weight 1 -minsize 81
@@ -475,15 +478,15 @@ snit::widget JobStatusDisplay {
   #
   method setStatus {option value} {
     if {$value eq "processing"} {
-#      grid $win.jobProgress -column 2 -row 0 -sticky ew
-#      $win.jobProgress start 20
-      set options(-status) $value
-    } elseif {$value in [list "completed" "queued"]} {
-#      $win.jobProgress stop
-#      grid forget $win.jobProgress
-      grid configure $win.jobStatusLbl -columnspan 2
-      set options(-status) $value
+      grid remove $win.jobStatusLbl
+      grid $win.jobProgress -column 1 -row 0 -sticky ew
+      $win.jobProgress start 20
+    } else {
+      $win.jobProgress stop
+      grid remove $win.jobProgress
+      grid configure $win.jobStatusLbl -column 1 -row 0 -sticky ew
     }
+    set options(-status) $value
 
  } 
 

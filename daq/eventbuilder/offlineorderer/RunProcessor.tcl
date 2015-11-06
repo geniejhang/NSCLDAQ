@@ -83,9 +83,7 @@ snit::type RunProcessor {
 
 #    set processor [JobProcessor %AUTO% -runprocessor $self]
     set m_workerThread [thread::create -joinable]
-    puts $::auto_path
     thread::send $m_workerThread "lappend auto_path $::auto_path"
-    thread::send $m_workerThread {list puts $::auto_path}
     thread::send $m_workerThread {package require OfflineEVBJobProcessor}
     thread::send $m_workerThread {wm withdraw .}
     set processor [thread::send $m_workerThread {set processor [JobProcessor %AUTO%]}]
@@ -139,14 +137,12 @@ snit::type RunProcessor {
       set iparams [dict get $options(-jobs) $job -inputparams]
       if {[catch {set run [$self guessRunNumber [$iparams cget -file]]} msg]} {
         set resp [tk_messageBox -icon error -message "RunProcessor::run failed to identify the run number"]
-        puts $resp
         $self observeAbort
         return
       }
       thread::send $m_workerThread [list ReadoutGUIPanel::setRun $run ]
 
 
-      puts "$job , run $run"
       $self configureJobProcessor [dict get $options(-jobs) $job]
 
 #      # launch this thing but stop if it was aborted.
@@ -197,7 +193,6 @@ snit::type RunProcessor {
   }
 
   method abortCurrent {} {
-    puts "Aborting Current"
     thread::send $m_workerThread [list $processor abortRun]
   }
 
@@ -208,25 +203,21 @@ snit::type RunProcessor {
   method configureJobProcessor {params} {
     set iparams [dict get $params -inputparams]
     set opts [$self pickle $iparams]
-    puts $opts
     set iparams [thread::send $m_workerThread [list OfflineEVBInputPipeParams %AUTO% {*}$opts]]
     thread::send $m_workerThread [list $processor configure -inputparams $iparams]
 
     set hparams [dict get $params -hoistparams]
     set opts [$self pickle $hparams]
-    puts $opts
     set iparams [thread::send $m_workerThread [list OfflineEVBHoistPipeParams %AUTO% {*}$opts]]
     thread::send $m_workerThread [list $processor configure -hoistparams $iparams]
 
     set eparams [dict get $params -evbparams]
     set opts [$self pickle $eparams]
-    puts $opts
     set iparams [thread::send $m_workerThread [list EVBC::AppOptions %AUTO% {*}$opts]]
     thread::send $m_workerThread [list $processor configure -evbparams $iparams]
 
     set oparams [dict get $params -outputparams]
     set opts [$self pickle $oparams]
-    puts $opts
     set iparams [thread::send $m_workerThread [list OfflineEVBOutputPipeParams %AUTO% {*}$opts]]
     thread::send $m_workerThread [list $processor configure -outputparams $iparams]
 
@@ -298,6 +289,7 @@ snit::type RunProcessor {
 
     # The new status object has all jobs in the queued position.
     set newdict [dict create queued     [dict keys $options(-jobs)] \
+                             aborted   [list] \
                              processing "" \
                              completed  [list]]
 
