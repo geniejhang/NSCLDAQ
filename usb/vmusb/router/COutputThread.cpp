@@ -596,7 +596,7 @@ COutputThread::event(void* pData)
   segmentSize += 1;		// Size is not self inclusive
   if ((segmentSize + m_nWordsInBuffer) >= m_nOutputBufferSize/sizeof(uint16_t)) {
     int newSize          = 2*segmentSize*sizeof(uint16_t);
-    uint8_t* pNewBuffer = reinterpret_cast<uint8_t*>(realloc(m_pBuffer, newSize));
+    uint8_t* pNewBuffer = reinterpret_cast<uint8_t*>(realloc(m_pBuffer, m_nOutputBufferSize + newSize));
     if (pNewBuffer) {
       m_pBuffer            = pNewBuffer;
       m_pCursor            = m_pBuffer + m_nWordsInBuffer * sizeof(uint16_t);
