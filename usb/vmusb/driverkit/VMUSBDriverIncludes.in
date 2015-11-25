@@ -3,7 +3,7 @@ LIBDIR   = @prefix@/lib
 INCLUDES = @prefix@/vmusbdriver/includes
 MAININCLUDES = @prefix@/include
 TCL_FLAGS= @TCL_FLAGS@
-TCL_LDFLAGS=@TCL_LDFLAGS@
+TCL_LDFLAGS=@TCL_LIBS@      # TCL_LDFLAGS has two -lieee which causes probs.
 
 
 # Compilation flags:
