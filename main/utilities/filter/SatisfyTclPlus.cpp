@@ -1,2 +1,0 @@
-
-int gpTCLApplication = 0;

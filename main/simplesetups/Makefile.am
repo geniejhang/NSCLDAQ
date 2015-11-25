@@ -1,3 +1,0 @@
-SUBDIRS = v775 v785 vmusb
-DIST_SUBDIRS = v775 v785 vmusb
-

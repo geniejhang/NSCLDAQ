@@ -1,3 +1,0 @@
-SUBDIRS=tcldrivers devices configurableobject slowcontrols
-
-DIST_SUBDIRS=tcldrivers devices configurableobject slowcontrols
