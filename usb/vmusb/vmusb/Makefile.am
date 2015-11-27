@@ -45,7 +45,7 @@ libVMUSBRemote_la_LIBADD = @top_builddir@/usb/vmusb/vmusb/libVMUSB.la \
 #IVP tests:
 
 
-TEST_MODULES = TestRunner.cpp regTests.cpp  vmeTests.cpp
+TEST_MODULES = TestRunner.cpp regTests.cpp  vmeTests.cpp Asserts.h
 
 
 tests: $(TEST_MODULES)

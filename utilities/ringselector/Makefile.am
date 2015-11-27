@@ -57,7 +57,7 @@ stringstointtests_LDADD		= ../StringsToIntegers.lo	\
 
 stringstointtests_LDFLAGS	=	-Wl,"-rpath-link=$(libdir)"
 
-selectortests_SOURCES	=	TestRunner.cpp selectortests.cpp
+selectortests_SOURCES	=	TestRunner.cpp selectortests.cpp Asserts.h
 
 selectortests_LDADD	=	$(CPPUNIT_LDFLAGS)	\
 				@top_builddir@/base/os/libdaqshm.la \
