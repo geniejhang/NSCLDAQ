@@ -59,7 +59,7 @@ noinst_PROGRAMS = unittests
 unittests_SOURCES = TestRunner.cpp ChannelListTests.cpp  \
 		LookupVisitorTest.cpp \
 		TestChannel.cpp TestUnitChannel.cpp \
-		$(APPITEMS) Assserts.h
+		$(APPITEMS) Asserts.h
 
 unittests_LDADD = $(CPPUNIT_LDFLAGS) $(controlpush_LDADD)
 
