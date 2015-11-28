@@ -3,7 +3,7 @@ TESTABLEUNITS=CSink.cpp CFileSink.cpp CFileSinkCreator.cpp CSinkFactory.cpp \
 bin_PROGRAMS 	= daqstart
 daqstart_SOURCES= cmdline.c daqstart.cpp CDAQStart.cpp $(TESTABLEUNITS)
 
-noinst_HEADERS = cmdline.h CDAQStart.h  CFileSinkCreator.h \
+noinst_HEADERS = cmdline.h  CDAQStart.h  CFileSinkCreator.h \
 		CMonitoredProgram.h  CSinkCreator.h \
 		CFileSink.h  CLocalMonitoredProgram.h  CSink.h \
 		CSinkFactory.h grep.h Asserts.h
@@ -19,7 +19,9 @@ daqstart_LDADD = @LIBEXCEPTION_LDFLAGS@ \
 
 daqstart_CXXFLAGS=$(THREADCXX_FLAGS) -D_GNU_SOURCE $(AM_CXXFLAGS)
 
+BUILT_SOURCES =  cmdline.c cmdline.h
 
+cmdline.h: cmdline.c
 
 cmdline.c: daqstart.ggo
 	$(GENGETOPT) --unamed-opts <daqstart.ggo
@@ -43,3 +45,5 @@ unittests_LDADD = $(CPPUNIT_LDFLAGS) \
 
 TESTS = ./unittests
 
+clean-local:
+	-rm -f cmdline.c cmdline.h
