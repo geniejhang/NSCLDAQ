@@ -314,7 +314,7 @@ void rmasterTests::existsAndIsRing()
     
     CDAQShm::remove(shmName);                 // Just in case
     
-    // Make a new file and format it as a ring:
+    // Make a new file and format it as a ring.. but don't tell ringmaster.
     
     long page   = sysconf(_SC_PAGESIZE);
     size_t size = (1024*1024*2 /page) * page; // size is just a multiple of pagesize:
@@ -323,7 +323,7 @@ void rmasterTests::existsAndIsRing()
         shmName, size,
         CDAQShm::GroupRead | CDAQShm::GroupWrite |
         CDAQShm::OtherRead | CDAQShm::OtherWrite));
-    CRingBuffer::format(ringName, 10);
+    CRingBuffer::format(ringName, 10); // shm that is ring not known to ring master.
     
     CPPUNIT_ASSERT_NO_THROW(CRingBuffer::create(ringName));
     CPPUNIT_ASSERT_NO_THROW(CRingBuffer::remove(ringName));
