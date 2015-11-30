@@ -22,12 +22,18 @@ DAQHOME=@prefix@
 BIT3DEVICES=5       # Number of bit 3 devices.
 PORTMGRSWITCHES="-log `pwd`/portman.log -portfile `pwd`/test.port -pidfile `pwd`/pid"  
 
+
+
 # load daq defaults overrides
 [ -r /etc/default/nscldaq ] && . /etc/default/nscldaq
 
 # the following do not come from /etc/default/daq and are instead
 # constructed from those paths
-PIDFILEDIR=.
+
+if [ \( "x$PIDFILEDIR" = "x" \) -o ! \( -w "$PIDFILEDIR" \) ]
+then
+    PIDFILEDIR=.			# Defaults
+fi
 
 PORTMANAGER="${DAQHOME}/bin/DaqPortManager"
 PORTMANAGERNAME="nscldaq-portmaster"
