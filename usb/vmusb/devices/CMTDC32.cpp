@@ -259,9 +259,9 @@ CMTDC32::onAttach(CReadoutModule& configuration)
     
     m_pConfiguration->addBooleanParameter("-tstamp");
     m_pConfiguration->addIntegerParameter("-multlow0", 0, 255, 0);
-    m_pConfiguration->addIntegerParameter("-multhi0", 0, 255, 32);
+    m_pConfiguration->addIntegerParameter("-multhi0", 0, 255, 255);
     m_pConfiguration->addIntegerParameter("-multlow1", 0, 255, 0);
-    m_pConfiguration->addIntegerParameter("-multhi1", 0, 255, 16);
+    m_pConfiguration->addIntegerParameter("-multhi1", 0, 255, 255);
 }
 /**
  * Initialize
