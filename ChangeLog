@@ -1020,4 +1020,8 @@ Work on 11.0-rc11 begins
 	number and title. When it regains mastery, restore those two bits
 	of data.
 	* Feature 4684 - Do piles more failure handling at end run.
-	
+11.0-020
+	* Fix Bug #5180 - CRemoteAccess was leaking file descriptors that
+	  caused the EndrunMon package to hang ReadoutGUI on occasion
+	* Fixes Bug 5138 - ReadoutGUI remains responsive while awaiting 
+	  for the monitor thread to signal end of run.
