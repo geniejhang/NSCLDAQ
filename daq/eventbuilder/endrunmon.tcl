@@ -184,7 +184,7 @@ proc ::EndrunMon::waitEndRun {} {
     
     while {[thread::exists $::EndrunMon::tid]} {
         thread::cond wait $EndrunMon::condVar $::EndrunMon::mutex 300
-        update idletasks;              #Keep UI alive.
+        update;              #Keep UI alive.
     }
     # Thread exited so:
     
