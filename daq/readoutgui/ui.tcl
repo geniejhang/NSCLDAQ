@@ -928,6 +928,7 @@ namespace eval RunControlEnable {
   proc attach {to} {
     variable prevState 
     set rc [RunControlSingleton::getInstance]
+    $rc _updateAppearance
     set prevState [$rc cget -state]
   }
 
