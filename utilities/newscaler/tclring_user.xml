@@ -53,8 +53,12 @@ package require TclRingBuffer
 ...
 ring attach $someRingUri                    <co id='tclring_attach' />
 while {[continueProcessing]} {
-  set item [ring get $someRingUri $itemTypes] <co id='tclring_get' />
-  processItem $item
+  set item [ring get -timeout 5 $someRingUri $itemTypes] <co id='tclring_get' />
+  if {$item ne {}} {
+    processItem $item
+  } else {
+     puts "timed out"
+  }
 }
 ring detach $someRingUri                     <co id='tclring_detach' />
 ...
@@ -86,7 +90,11 @@ ring detach $someRingUri                     <co id='tclring_detach' />
 	  a ring items is available from the ring attached at
 	  <varname>someRingUri</varname>.  Only ring items
 	  that match the type list in <varname>itemType</varname>
-	  are returned.  
+    are returned. The <option>-timeout</option> option is provided
+    to timeout after 5 seconds. If the operation times out, then
+    an empty string is returned. If this option is omitted,
+    then the operation will block forever or until the desired
+    item arrives.
 	</para>
 	<para>
 	  The next matching ring items is translated to a dict (see

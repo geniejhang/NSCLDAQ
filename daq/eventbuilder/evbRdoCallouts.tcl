@@ -1144,8 +1144,8 @@ proc ::EVBC::enter {from to} {
     if {($from eq "Active") && ($to eq "Halted")} {
         ::EVBC::onEnd
     }
-    if {($from in [list Active Paused]) && ($to eq "NotReady")} {
-        ::EVBC::stop
+    if {$to eq "NotReady"} {
+        catch {::EVBC::stop}
     }
 
 }

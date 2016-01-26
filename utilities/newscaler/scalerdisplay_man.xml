@@ -611,7 +611,7 @@ ringbuffer attach <replaceable>ring-uri</replaceable>
     </cmdsynopsis>
     <cmdsynopsis>
 	<command>
-set item [ringbuffer get <replaceable>ring-uri ?type-list?</replaceable>
+set item [ringbuffer get <replaceable>?-timeout seconds? ring-uri ?type-list?</replaceable>]
 	</command>
     </cmdsynopsis>
     <cmdsynopsis>
@@ -634,7 +634,9 @@ ringbuffer detach <replaceable>ring-uri</replaceable>
 	the <command>ringbuffer attach</command> command to
 	attach as a client to that ring.  Once attached the
 	<command>ringbuffer get</command> command gets data
-	fromt he ring, blocking as needed.  The optional
+  fromt he ring, blocking as needed.  One can prevent blocking
+  forever by specifying the -timeout option, which takes an
+  argument of the number of seconds until timeout. The optional
 	<replaceable>type-list</replaceable> limits the types
 	of ring items returned.  The type list is a list of integer
 	item types.  See the header <filename>DataFormat.h</filename>
@@ -647,7 +649,9 @@ ringbuffer detach <replaceable>ring-uri</replaceable>
      </para>
      <para>
 	The items returned by <command>ring get</command> are dicts that are
-	descsribed in the <literal>RING ITEM DICT</literal> section below.
+	descsribed in the <literal>RING ITEM DICT</literal> section below. The
+	exception to this is that an empty string is returned when the operation
+	times out.
      </para>
   </refsect1>
   <refsect1>
