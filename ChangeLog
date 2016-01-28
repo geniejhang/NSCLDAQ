@@ -1029,3 +1029,8 @@ Work on 11.0-rc11 begins
 	  to Active state. This is no longer the case. Buttons are disabled
 		during transitions by default and no process needs to configure
 		the run control buttons itself.
+11.0-021
+	* Fixes Bugs #5039, #5141, and #5378 by adding and incorporating the 
+	  -timeout option to the ring get command of the TclRingBuffer package.
+		Failures during transitions do not lock the system up and allow 
+		recovery without starting the entire system again.
