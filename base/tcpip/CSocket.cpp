@@ -65,6 +65,11 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 #include <ErrnoException.h>
 #include <CTCPConnectionLost.h>
 
+// Other includes from nscldaq
+
+#include <daqdatatypes.h>
+
+
 // Standard and network library headers.
 
 #include <unistd.h>
