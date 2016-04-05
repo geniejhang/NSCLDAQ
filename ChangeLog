@@ -1037,3 +1037,6 @@ Work on 11.0-rc11 begins
 	*  Fixes bug #5627 to properly support single event mode.
 	*  Fixes bug #5624 by working around a newly found VMUSB issue concerning
 	   stacks that end in delay operations.
+	*  Fix xyplot.tcl - remove dependency on CAEN:digitizer cmopiled
+	clipping.
+11.0-022
