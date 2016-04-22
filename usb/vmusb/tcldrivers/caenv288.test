@@ -18,14 +18,18 @@
 # @author Jeromy Tompkins
 
 package require tcltest
+package require Itcl
 
 tcltest::test pkgrequire-0 {Ensure that we can require the package
 } {package require caenv288} 11.0
 
 
 tcltest::test setgetController-0 {Test that we can set and retrieve current controller
-} {
+} -setup {
   ACAENV288 dev {} 0x200000
+} -cleanup {
+  ::itcl::delete object dev
+} -body {
 
   set res [list ]
   lappend res [dev GetController]
@@ -35,7 +39,7 @@ tcltest::test setgetController-0 {Test that we can set and retrieve current cont
   lappend res [dev GetController]
 
   set res
-} {{} asdf {}}
+} -result {{} asdf {}}
 
 
 tcltest::cleanupTests
