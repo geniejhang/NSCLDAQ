@@ -529,3 +529,6 @@ Feb 1, 2012 - Feb 24, 2012
 	* Bug #4276 - CRingTimestampedRunningScaler constructor throws
 	 bad_alloc if the number of scalers is 0.
 	
+10.2-117 
+       * For scalers that are not 32 bits wide also mask off any top bit junk.
+

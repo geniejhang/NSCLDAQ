@@ -207,6 +207,14 @@ package require Tablelist
 #         Scaler_Increments without worrying about what might happen.
 #
 proc processIncrement {array index op} {
+    #  Mask the scaler to its bit width:
+
+    if {$::bitsWide($index) < 32} {
+	set value $::Scaler_Increments($index)
+	set value [expr {$value & ((1 << $::bitsWide($index)) -1)}]
+	set ::Scaler_Increments($index) $value
+    }
+
     #
     # No action to take if the scaler is not incremental:
 
