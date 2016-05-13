@@ -94,6 +94,7 @@ set fakeElapsedTime   0
 #    bitsWide(channel-no)      Number of bits wide the channel is.
 #    priorIncrement(channel-no)    Prior value of Scaler_Increments (for non-incrementals).
 #    nonIncrementalTotal(channel-no) non-incremental totals.
+#    narrowTotals              Self maintained totals if bit width < 32.
 #
 #    pageAlarmState(pageName)  Contains the alarm mask for a page.
 #                              Bits are as follows:
@@ -209,14 +210,9 @@ package require Tablelist
 proc processIncrement {array index op} {
     #  Mask the scaler to its bit width:
 
-    if {$::bitsWide($index) < 32} {
-	set value $::Scaler_Increments($index)
-	set value [expr {$value & ((1 << $::bitsWide($index)) -1)}]
-	set ::Scaler_Increments($index) $value
-    }
-
+    
     #
-    # No action to take if the scaler is not incremental:
+    # If not incremental:
 
     if {([array names ::incremental $index] ne "") && (!$::incremental($index))} {
 
@@ -233,6 +229,15 @@ proc processIncrement {array index op} {
 	    [expr {$::nonIncrementalTotal($index) + $::Scaler_Increments($index)}]
 	
 	set ::priorIncrement($index) $nextTotal; # New value is now the prior value.
+    } else {
+	# is incremental:
+	if {$::bitsWide($index) < 32} {
+	    set value $::Scaler_Increments($index)
+	    set value [expr {$value & ((1 << $::bitsWide($index)) -1)}]
+	    set ::Scaler_Increments($index) $value
+	    incr ::narrowTotals($index) $value
+	}
+
     }
 }
 
@@ -586,9 +591,20 @@ proc UpdateStatistics {} {
 	    set Scaler_Totals($element) $::nonIncrementalTotal($element)
 	}
     }
+ 
+
+    
 
     incr IntervalCount
     foreach element [array names Scaler_Increments] {
+	
+	# If a scaler is 'narrow' (width < 32) we need to use the internal
+	# narrowTotals for the Scaler_Totals value
+
+	if {$::bitsWide($element) < 32} {
+	    set ::Scaler_Totals($element) $::narrowTotals($element)
+	}
+
 	set rate [expr 1.0*$Scaler_Increments($element)/$ScalerDeltaTime]
 	set square [expr $rate*$rate]
 	if {[array names SumSquares $element] == ""} {
@@ -815,6 +831,7 @@ proc EndRun   {} {
     foreach id [array names ::priorIncrement] {
 	set ::priorIncrement($id) 0; # Reset the prior values array.
 	set ::nonIncrementalTotal($id) 0; # reset the totals info.
+	set ::narrowTotals($id) 0
     }
 
     if {[info proc UserEndRun] != ""} {
@@ -1407,6 +1424,7 @@ proc channel {args} {
     set ::bitsWide($id)    32;  #  By default all non-incremental scalers are 32 bits wide.
     set ::priorIncrement($id)  0;	#  prior scaler value.
     set ::nonIncrementalTotal($id) 0;	#  Total if not incremental.
+    set ::narrowTotals($id) 0
 
     foreach {option value} $switches {
 	if {[catch {processChannelSwitch $name $option $value} msg]} {
