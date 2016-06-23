@@ -58,7 +58,6 @@ class TestBase(unittest.TestCase):
         self._pid     = process.pid
         self._stdout  = process.stdout
         self._process = process
-        time.sleep(0.1)
         return process
     ##
     # getport
@@ -79,6 +78,7 @@ class TestBase(unittest.TestCase):
             waited = waited + 1
         
         self.assertEqual(len(portList), 1)     # there can be only one.
+        time.sleep(0.25)                        # Let server have time to make sockets.
         return portList[0]['port']
     
     ##
