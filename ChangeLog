@@ -530,5 +530,13 @@ Feb 1, 2012 - Feb 24, 2012
 	 bad_alloc if the number of scalers is 0.
 	
 10.2-117 
-       * For scalers that are not 32 bits wide also mask off any top bit junk.
+       * For scalers that are not 32 bits wide also mask off any top bit
+	junk.
+	
+10.2-119
+	*  Bug #6248 - ensure that when remote element of a proxy pipeline
+	exits, TCP/IP heartbeating gets the stdintoring component to exit
+	in a timely manner as well.
+
+	
 
