@@ -1020,28 +1020,119 @@ Work on 11.0-rc11 begins
 	number and title. When it regains mastery, restore those two bits
 	of data.
 	* Feature 4684 - Do piles more failure handling at end run.
-11.0-020
-	* Fix Bug #5180 - CRemoteAccess was leaking file descriptors that
-	  caused the EndrunMon package to hang ReadoutGUI on occasion
-	* Fixes Bug 5138 - ReadoutGUI remains responsive while awaiting 
-	  for the monitor thread to signal end of run.
-	* Fixes Bug 5096 - End run button was active while still transitioning
-	  to Active state. This is no longer the case. Buttons are disabled
-		during transitions by default and no process needs to configure
-		the run control buttons itself.
-11.0-021
-	* Fixes Bugs #5039, #5141, and #5378 by adding and incorporating the 
-	  -timeout option to the ring get command of the TclRingBuffer package.
-		Failures during transitions do not lock the system up and allow 
-		recovery without starting the entire system again.
+	
+11.0-003
+	* Good builds on Ubuntu 12.04 with gcc/g++-4.8 installed.
+	* Roll in shmmap status check fixes from 10.2 that were missed.
+	* Fix some link order problems that express in gcc/g++4.8
+	* If zmq.hpp needs a prerequisite #include <algorithm> don't fail the 
+	config
+	* If there is no nscldaq-10.x installation then don't do the 
+	evbrdocallouts10 test as it is going to require that.
+11.0-004
+	* Roll in changes from Dave Caussyn (FSU) for the VMUSB SIS3820
+	scaler support.  Specifically when -timestamp is true, use
+	external LNE as well.  Furthermore support configuration in the
+	create command.
+
+11.1-000
+	Good compilation of mergeer of 11.1 and 11.0head.
+	* Fixes Bug #4999 by allowing -multhi0 and -multhi1 to span from 0
+	  to 255 in mtdc driver. It also sets the default value to be 255
+		for each of these.
+	
+11.1-001 
+	*  Feature #4849 - add offline scaler sum program.
+	*  Feature #4885 - Strip chart axis controls for scaler display program.
 	*  Fixes bug #5627 to properly support single event mode.
 	*  Fixes bug #5624 by working around a newly found VMUSB issue concerning
 	   stacks that end in delay operations.
-	*  Fix xyplot.tcl - remove dependency on CAEN:digitizer cmopiled
-	clipping.
-11.0-022
-	*  Bug #6248 - Ensure the stdintoring part of a prox pipeline
-	exist when the remote exist by enabling keepalive and setting
-	reasonable parameters for it.
+11.1-003
+	*  Feature #5612 - add --offset switch to ring fragment source for
+	when source synchornize but with a constant skew.
+11.1-004
+	* Feature #5663 Filter out rings in ringbuffer status - by default
+	show only those created by the current user.
+	* Feature #5792 Provide traceback on control config file errors
+	  in XXUSBReadout program.s
+	* Feature #4870 Documentation:
+	   *   Task #5834 - Document missing stuff in os/thread
+	   *   Task #5822 - Document where to find Plotchart and how to
+   	       load NSCL's special version.
+	* Fixes bugs 5029 and 5032. SBS Readout emits PHYSICS_EVENT_COUNT
+	  and MONITORED_VARIABLE items with a body header to match the
+		behavior of scaler items. 
 
-	
+11.1-005
+
+      * Bug #5958 - Add new SIS330x driver that works properly in modes other
+        than HiRA
+      * Bug #5453 - Fix elapsed time drift in ReadoutGUI elapsed time clock.
+      * Bug #5879 - Properly handle top 8 bits of interrupt status id
+	value. 
+      * Bug #5882 - VMUSBReadout - Pause and resume must emit pause and
+	resume ring items.
+      * Bug #5882 - CCUSBReadout - Pause and resume must emit pause and
+	resume ring items.
+      * Bug #5980 - Fix input range selection on MADC32 - had interchanged
+                    10V and 8 V input range selectors.
+      * Bug #5363 - Make proxy rings have the fully qualified host name
+	            of the actual ring source.  In this way, we prevent
+	            duplicate proxy/hoister pipelines via dumpers on e.g.
+	            tcp://spdaq20/0400x and
+	            tcp://spdaq20.nscl.msu.edu/0400x
+      * Bug #6067 - Only clear the bits we need to clear in the 
+	            interrupt mask for interrupt triggered stacks.
+      * Bug #5639 - Scaler display performance degraded over time when
+	doing strip charts.  Set the series trimlist limit from the
+	default of 2M to 20K. 
+      * Bug #5381 - Improve documentation of XXUSBReadout default
+	parameters.  Note that there are also opportunistic fixes to small
+	defects and formatting issues with the driver and documentation
+	source code.
+	* Bug #6082 - Fixes broken elapsed time clock. It was not actually 
+	updating its value after the first run.
+	* Bug #5900 - Modifies the Makefiles so that NSCLDAQ can build in
+	 parallel.
+
+11.1-007
+	* Fixes bug in evbcallouts package that caused the -glomid option
+	to be ignored. Now it is passed to glom as the --sourceid command line
+	option.
+	* Bug#4834 - Fix bad dialog choice for data source editing.
+	* Bug #4384 - Unclear labels for prompt when adding data sources during a run
+	* Bug# 6133 - Threading the output stage of the event builder
+	caused flow control to deadlock.
+	* Adds a precheckForTransitionErrors to callout bundles. This allows for 
+	  for checking a transition doomed for failure because of some detectable
+		condition prior to transitioning. 
+	* Bug #6151 Slow controls server of CCUSBReadout and VMUSBReadout now
+	  accept connections from IPv6 loopback address (i.e. ::1) in addition
+		to the IPv4 loopback address (i.e. 127.0.0.1).
+	* Bug #5777 - Documentation added for RingSourceMgr and also documentation
+	  updated that pertains to the event builder.
+	* EVB gui is replaced with a new megawidget for better code organization.
+11.1-008
+	* Bug #6206 Fixes bug introduced in 11.1-007 concerning megawidget
+	introduction that caused failures during EVBC::initialize.
+11.1-009
+	* Changes the communication pattern with the VM-USB that was causing 
+	failures on daqdev-jessie. The opening of the VMUSB is simplified and the
+	read back after a stack execution always requests 26700 bytes.
+	* Bug #6245 Conditions call of exit(EXIT_FAILURE) on an actual failure. The
+	issue was introduced in version 11.1-006.
+	* Fixes buggy BLT read back when in interactive mode. The transaction method
+	of CVMUSBusb now is strict about reading iteratively until it receives all
+	requested data. This increased strictness caused changes to the vmeWrite16,
+	vmeWrite8, doVMERead, and writeRegister methods.
+	* Fixes broken BLT32 writes. Also imposes a limit on the size of the BLT
+	to be fewer than 255 transfers.
+	* Fixes bugs threading issues in SBS Readout framework. Specifically, the
+	Readout program was leaking threads associated with the trigger loop
+	every run which led to an 8192 kB leak in memory each begin run. There was
+	also a deadlock condition that could occur when the user attempted to end
+	a run when the trigger loop was attempting to do a scaler read.
+        * Bug #6248 enable keepalive and shorten timing parameters for ring2stdin
+	  when stdin is a socket so remote failures can be seen and seen
+          reasonably quickly.
+
