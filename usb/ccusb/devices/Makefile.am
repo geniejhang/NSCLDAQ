@@ -12,8 +12,8 @@ libCCUSBDevices_la_SOURCES	= 	CConfigurableObject.cpp	\
 					CC1205.cpp	\
 					CCCUSBModule.cpp	\
 					CPH7132.cpp	\
-					CTclModule.cpp
-
+					CTclModule.cpp	\
+					CPH7106Latch.cpp
 
 INCLUDES	= 	-I$(top_srcdir)/usb/ccusb/ccusb \
 			-I$(top_srcdir)/usb/ccusb/daqconfig \
@@ -40,8 +40,8 @@ noinst_HEADERS			= 	CConfigurableObject.h	\
 					CC1205.h		\
 					CCCUSBModule.h		\
 					CPH7132.h		\
-					CTclModule.h
-
+					CTclModule.h		\
+					CPH7106Latch.h
 
 install-data-local:
 	$(mkinstalldirs) @prefix@/ccusbdriver
