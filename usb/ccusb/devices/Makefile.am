@@ -13,7 +13,8 @@ libCCUSBDevices_la_SOURCES	= 	CConfigurableObject.cpp	\
 					CCCUSBModule.cpp	\
 					CPH7132.cpp	\
 					CTclModule.cpp	\
-					CPH7106Latch.cpp
+					CPH7106Latch.cpp	\
+					CJoergerClock.cpp
 
 INCLUDES	= 	-I$(top_srcdir)/usb/ccusb/ccusb \
 			-I$(top_srcdir)/usb/ccusb/daqconfig \
@@ -41,7 +42,8 @@ noinst_HEADERS			= 	CConfigurableObject.h	\
 					CCCUSBModule.h		\
 					CPH7132.h		\
 					CTclModule.h		\
-					CPH7106Latch.h
+					CPH7106Latch.h		\
+					CJoergerClock.h
 
 install-data-local:
 	$(mkinstalldirs) @prefix@/ccusbdriver
