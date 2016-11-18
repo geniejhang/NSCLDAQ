@@ -34,6 +34,7 @@
 #include <CCCUSBCommand.h>
 #include <CAddTclDriver.h>
 #include <CPH7106Command.h>
+#include <CJoergerClockCommand.h>
 #include <iostream>
 
 #include <tcl.h>
@@ -75,6 +76,7 @@ CConfiguration::CConfiguration() :
   m_Commands.push_back(new CPH7132Command(*m_pInterp, *this));
   m_Commands.push_back(new CAddTclDriver(*m_pInterp, *this));
   m_Commands.push_back(new CPH7106Command(*m_pInterp, *this));
+  m_Commands.push_back(new CJoergerClockCommand(*m_pInterp, *this));
 
 }
 /*!

@@ -12,7 +12,8 @@ libCCUSBConfig_la_SOURCES	= 	CConfiguration.cpp	\
 				CPH7132Command.cpp	\
 				CUserCommand.cpp	\
 				CAddTclDriver.cpp	\
-				CPH7106Command.cpp
+				CPH7106Command.cpp	\
+				CJoergerClockCommand.cpp
 
 
 #				CScalerCommand.cpp
@@ -32,7 +33,8 @@ noinst_HEADERS		=	CConfiguration.h 	\
 				CPH7132Command.h	\
 				CUserCommand.h		\
 				CAddTclDriver.h		\
-				CPH7106Command.h
+				CPH7106Command.h	\
+				CJoergerClockCommand.h
 
 
 

@@ -19,7 +19,7 @@
 
 #ifndef CJOERGERCLOCKCOMMAND_H
 #define CJOERGERCLOCKCOMMAND_H
-
+#include <TCLObjectProcessor.h>
 
 
 #ifndef __STL_VECTOR
