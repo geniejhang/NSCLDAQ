@@ -1043,7 +1043,6 @@ Work on 11.0-rc11 begins
 	*  Bug #6248 - Ensure the stdintoring part of a prox pipeline
 	exist when the remote exist by enabling keepalive and setting
 	reasonable parameters for it.
-
 11.0-024
 	* Fixes bug #6558 - Protects logic of code for when the DNS is configured 
 	to return a canonical name that lacks a domain name. 
