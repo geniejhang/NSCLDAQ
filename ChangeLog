@@ -1045,4 +1045,6 @@ Work on 11.0-rc11 begins
 	reasonable parameters for it.
 
 11.0-024
-	
+	* Fixes bug #6558 - Protects logic of code for when the DNS is configured 
+	to return a canonical name that lacks a domain name. 
+	 a domain name associated with it.
