@@ -25,6 +25,7 @@
 #include <zmq.hpp>
 #include <vector>
 #include "CStatusMessage.h"
+#include <ctime>
 
 
 class CSqlite;
@@ -49,7 +50,16 @@ class CSqliteStatement;
   *   table cases simpler.
   */
 class CStatusDb {
-
+    // Public data structures:
+public:
+    typedef struct _LogRecord {
+       unsigned    s_id;
+       std::string s_severity;
+       std::string s_application;
+       std::string s_source;
+       std::time_t s_timestamp;
+       std::string s_message;
+    } LogRecord, *pLogRecord;
 private:
     CSqlite&        m_handle;             // Database handle.
     

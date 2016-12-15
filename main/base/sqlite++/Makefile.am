@@ -1,10 +1,10 @@
 lib_LTLIBRARIES = libsqlite3pp.la
 
 include_HEADERS=CSqlite.h CSqliteException.h CSqliteStatement.h\
-	 CSqliteTransaction.h
+	 CSqliteTransaction.h CSqliteWhere.h
 
 libsqlite3pp_la_SOURCES=CSqlite.cpp CSqliteException.cpp CSqliteStatement.cpp \
-	CSqliteTransaction.cpp
+	CSqliteTransaction.cpp CSqliteWhere.cpp
 
 
 libsqlite3pp_la_CPPFLAGS = @SQLITE3_CFLAGS@
@@ -14,7 +14,7 @@ noinst_PROGRAMS=unittests
 noinst_HEADERS=Asserts.h
 
 unittests_SOURCES = TestRunner.cpp exceptionTest.cpp connectionTest.cpp \
-			statementTest.cpp transactionTest.cpp \
+			statementTest.cpp transactionTest.cpp filtertests.cpp \
 			$(libsqlite3pp_la_SOURCES)
 
 unittests_LDFLAGS = @SQLITE3_LDFLAGS@ @CPPUNIT_LDFLAGS@
