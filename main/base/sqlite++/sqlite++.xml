@@ -2605,4 +2605,1209 @@ while(!++s.atEnd()) {
   </refsect1>
 </refentry>     
 
+<refentry id="daq3_sqlitewhere">
+  <refentryinfo>
+    <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+        <personblurb><para></para></personblurb>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo>
+  <refmeta>
+     <refentrytitle>CQueryFilter classes</refentrytitle>
+     <manvolnum>3daq</manvolnum>
+         <refmiscinfo class='empty'></refmiscinfo>
+  </refmeta>
+  <refnamediv>
+     <refname>CQueryFilter classes</refname>
+     <refpurpose>Classes that construct where clause bodies.</refpurpose>
+  </refnamediv>
+  
+  <refsynopsisdiv>
+   <synopsis>
+#include &lt;CSqliteWhere.h&gt;
+class <ooclass><classname>CQueryFilter</classname></ooclass>
+{
+    
+    <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>std::string</type>
+        <methodname>toString</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier>= 0</modifier>
+        
+    </methodsynopsis>  
+};
+
+class <ooclass><classname>CRawFilter</classname></ooclass> : public CQueryFilter
+{
+    <constructorsynopsis>
+       <methodname>CRawFilter</methodname>
+       <methodparam>
+           <modifier></modifier>
+           <type>std::string </type>
+           <parameter>filterString</parameter>
+       </methodparam>  
+    </constructorsynopsis>
+    
+    <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>std::string</type>
+        <methodname>toString</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+        
+    </methodsynopsis>  
+    
+};
+class <ooclass><classname>CBinaryRelationFilter</classname></ooclass>  : public CQueryFilter
+{
+
+    typedef enum _binaryOp {
+        equal, notEqual, gt, lt, ge, le    
+    } binaryOp;                       // Allowed relational ops.
+
+    <constructorsynopsis>
+       <methodname>CBinaryRelationFilter</methodname>
+       <methodparam>
+        <modifier></modifier><type>std::string</type>
+            <parameter>field</parameter>
+       </methodparam>
+       <methodparam>
+        <modifier></modifier><type>binaryOp</type>
+            <parameter>op</parameter>
+       </methodparam>
+    </constructorsynopsis>
+
+    <methodsynopsis>
+        <modifier>virtual </modifier>
+        <type>std::string </type>
+        <methodname>rhs</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier>= 0</modifier>
+    </methodsynopsis>  
+    <methodsynopsis>
+        <modifier>virtual </modifier>
+        <type>std::string </type>
+        <methodname>toString</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+
+
+};
+
+class <ooclass><classname>CRelationToNumberFilter</classname></ooclass> public CBinaryRelationFilter
+{
+    <constructorsynopsis>
+       <methodname>CRelationToNumberFilter</methodname>
+       <methodparam>
+        <modifier></modifier><type>std::string </type>
+            <parameter>field</parameter>
+       </methodparam>
+       <methodparam>
+        <modifier></modifier><type>CBinaryRelationFilter::binaryOp </type>
+            <parameter>op</parameter>
+       </methodparam>
+       <methodparam>
+        <modifier></modifier><type>double</type>
+            <parameter> value</parameter>
+       </methodparam>
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+    <methodsynopsis>
+        <modifier>virtual </modifier>
+        <type>std::string</type>
+        <methodname> rhs</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+
+};
+
+class <ooclass><classname>CRelationToStringFilter</classname></ooclass> public CBinaryRelationFilter
+{
+    <constructorsynopsis>
+       <methodname>CRelationToStringFilter</methodname>
+       <methodparam>
+        <modifier></modifier><type>std::string </type>
+            <parameter>field</parameter>
+       </methodparam>
+       <methodparam>
+        <modifier></modifier><type>CBinaryRelationFilter::binaryOp </type>
+            <parameter>op</parameter>
+       </methodparam>
+       <methodparam>
+        <modifier></modifier><type>std::string </type>
+            <parameter>value</parameter>
+       </methodparam>
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+    <methodsynopsis>
+        <modifier>virtual </modifier>
+        <type>std::string </type>
+        <methodname>rhs</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+    
+};
+
+class <ooclass><classname>CRelationBetweenFieldsFilter</classname></ooclass> public CBinaryRelationFilter
+{
+    <constructorsynopsis>
+       <methodname>CRelationBetweenFieldsFilter</methodname>
+       <methodparam>
+        <modifier></modifier><type>std::string </type>
+            <parameter>field</parameter>
+       </methodparam>
+       <methodparam>
+        <modifier></modifier><type>CBinaryRelationFilter::binaryOp </type>
+            <parameter>op</parameter>
+       </methodparam>
+       <methodparam>
+        <modifier></modifier><type>std::string </type>
+            <parameter>f2</parameter>
+       </methodparam>
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>std::string </type>
+        <methodname>rhs</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+    
+};
+
+class <ooclass><classname>CCompoundFilter</classname></ooclass> : public CQueryFilter
+{
+    <constructorsynopsis>
+       <methodname>CCompoundFilter</methodname>
+       <methodparam>
+        <modifier></modifier><type>std::string </type>
+            <parameter>joinString</parameter>
+       </methodparam>
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+    <constructorsynopsis>
+       <methodname>CCompoundFilter</methodname>
+       <methodparam>
+        <modifier></modifier><type>std::string </type>
+            <parameter>joinString</parameter>
+       </methodparam>
+       <methodparam>
+        <modifier></modifier><type>std::vector&lt;CQueryFilter*&gt;&amp; </type>
+            <parameter>subFilters</parameter>
+       </methodparam>
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+    
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>void </type>
+        <methodname>addClause</methodname>
+        <methodparam>
+            <modifier></modifier><type>CQueryFilter&amp;</type>
+                <parameter>clause</parameter>
+        </methodparam>
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>std::vector&lt;CQueryFilter*>&gt;::iterator </type>
+        <methodname>begin</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>
+    
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>std::vector&lt;CQueryFilter*&gt;::iterator</type>
+        <methodname>end<</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>size_t</type>
+        <methodname>size</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>bool </type>
+        <methodname>isLast</methodname>
+        <methodparam>
+            <modifier></modifier><type>std::vector&lt;CQueryFilter*&gt;::iterator&amp; </type>
+                <parameter>p</parameter>
+        </methodparam>
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+    
+    <methodsynopsis>
+        <modifier>virtual </modifier>
+        <type>std::string </type>
+        <methodname>toString</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+    
+    
+};
+
+class <ooclass><classname>CAndFilter</classname></ooclass>  : public CCompoundFilter
+{
+    <constructorsynopsis>
+       <methodname>CAndFilter</methodname>
+       <void />
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+     <constructorsynopsis>
+        <methodname>CAndFilter</methodname>
+        <methodparam>
+            <modifier></modifier><type>std::vector&lt;CQueryFilter*&gt;&amp; </type>
+                <parameter>clauses</parameter>
+        </methodparam>
+        <exceptionname></exceptionname>
+     </constructorsynopsis>
+    
+};
+
+class <ooclass><classname>COrFilter</classname></ooclass> : public CCompoundFilter
+{
+    <constructorsynopsis>
+       <methodname>COrFilter</methodname>
+       <void />
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+    <constructorsynopsis>
+       <methodname>COrFilter</methodname>
+       <methodparam>
+        <modifier></modifier><type>std::vector&lt;CQueryFilter*&gt;&amp; </type>
+            <parameter>clauses</parameter>
+       </methodparam>
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+    
+    
+};
+
+class <ooclass><classname>CInFilter</classname></ooclass> : CQueryFilter
+{
+    <constructorsynopsis>
+       <methodname>CInFilter</methodname>
+       <methodparam>
+        <modifier></modifier><type>std::string</type>
+            <parameter>field</parameter>
+       </methodparam>
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+    <constructorsynopsis>
+       <methodname>CInFilter</methodname>
+       <methodparam>
+        <modifier></modifier><type>std::string</type>
+            <parameter>field</parameter>
+       </methodparam>
+       <methodparam>
+        <modifier></modifier><type>std::vector&lt;double&gt;&amp;</type>
+            <parameter>values</parameter>
+       </methodparam>
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+    <constructorsynopsis>
+       <methodname>CInFilter</methodname>
+       <methodparam>
+        <modifier></modifier><type>std::string</type>
+            <parameter>field</parameter>
+       </methodparam>
+       <methodparam>
+        <modifier></modifier><type>std::vector&lt;std::string&gt;&amp; </type>
+            <parameter>values</parameter>
+       </methodparam>
+       <exceptionname></exceptionname>
+    </constructorsynopsis>
+    
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>void </type>
+        <methodname>addItem</methodname>
+        <methodparam>
+            <modifier></modifier><type>double </type>
+                <parameter>value</parameter>
+        </methodparam>
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>void </type>
+        <methodname>addItem</methodname>
+        <methodparam>
+            <modifier></modifier><type>std::string </type>
+                <parameter>value</parameter>
+        </methodparam>
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+    <methodsynopsis>
+        <modifier>virtual </modifier>
+        <type>std::string </type>
+        <methodname>toString</methodname>
+        <void />
+        <exceptionname></exceptionname>
+        <modifier></modifier>
+    </methodsynopsis>  
+    
+    
+    
+};
+
+   </synopsis>
+  </refsynopsisdiv>
+  <refsect1>
+     <title>DESCRIPTION</title>
+     <para>
+        NSCLDAQ uses SQLite databases in several subsystems.  It is desirable to
+        create APIs to those databases that hide the details of the SQL query
+        language from the user.  This class hierarchy provides tools for
+        producing the <literal>WHERE</literal> clauses of queries these APIs
+        may generate.
+     </para>
+     <para>
+        Exposing an search interface API that uses these classes allows
+        application authors to build up sophisticated queries without any
+        knowledge of SQL.
+     </para>
+     <para>
+        The class hierarchy described in this man page consists of an abstract
+        base class <classname>CQueryFilter</classname> which provides the interface
+        that all query objects must provide.  <literal>CLASSES</literal> contains
+        classes that make up this package and their methods.
+     </para>
+  </refsect1>
+  <refsect1>
+     <title>
+    CLASSES
+     </title>
+     <para>
+        This section describes the classes that make up this package.  Each
+        class is described in a subsection.
+     </para>
+     <refsect2>
+        <title><classname>CQueryFilter</classname></title>
+        <para>
+            This is the abstract base class of the entire hierarchy.  It defines
+            a virtual method <methodname>toString</methodname>() which is expected
+            to return an <type>std::string</type> that provides the
+            part of the SQL <literal>WHERE</literal> clause represented by instances
+            of a concrete subclass.
+        </para>
+        <para>
+            Note that the actual <literal>WHERE</literal> keyword should not
+            be part of the output of method.  That should be provided by
+            whatever is generating the actual query.  For example:
+        </para>
+        <informalexample>
+            <programlisting>
+CQueryFilter* pSomeFilter = ...;
+....
+std::string query = "SELECT * FROM some_table WHERE ";
+query += pSomeFilter->toString();
+...
+            </programlisting>
+        </informalexample>
+        <para>
+            is a fairly typical pattern for the code that generates and runs
+            actual queries.
+        </para>
+     </refsect2>
+     <refsect2>
+        <title><classname>CRawFilter</classname></title>
+        <para>
+            This class provides a mechanism for either savvy application authors
+            or API authors to integrate raw <literal>WHERE</literal> clauses
+            with other filters in this subsystem.  The methods in this
+            class are:
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CRawFilter</methodname>
+                       <methodparam>
+                           <modifier></modifier>
+                           <type>std::string </type>
+                           <parameter>filterString</parameter>
+                       </methodparam>  
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Construtor.  <parameter>filterString</parameter> should be
+                        a valid SQL WHERE clause.  For example:
+                        <literal>"some_field BETWEEN '2016-JAN-1' AND NOW()"</literal>.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual</modifier>
+                        <type>std::string</type>
+                        <methodname>toString</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                        
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        Outputs exactly the <parameter>filterString</parameter>
+                        passed in to the constructor.
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+     </refsect2>
+     <refsect2>
+        <title><classname>CBinaryRelationFilter</classname></title>
+        <para>
+            This is a base class that simplifies the creation of classes that
+            express binary relation clauses.  It is an abstract base class that
+            simplifies the generation of where clauses of the form
+            <literal>field op something</literal>.  Where field is a database
+            field, op is a binary operator (e.g. <literal>=</literal>), and
+            something is anything else that could be on the right hand side
+            of a binary operator.
+        </para>
+        <para>
+            The base class maintains the left hand side and operator and provides
+            a concrete implementation of the <methodname>toString</methodname>
+            method that relies on a concrete class's implementation of
+            a <methodname>rhs</methodname> method to render the right hand side
+            of the operator.
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CBinaryRelationFilter</methodname>
+                       <methodparam>
+                        <modifier></modifier><type>std::string</type>
+                            <parameter>field</parameter>
+                       </methodparam>
+                       <methodparam>
+                        <modifier></modifier><type>binaryOp</type>
+                            <parameter>op</parameter>
+                       </methodparam>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Constructs the base class.  The <parameter>field</parameter>
+                        and <parameter>op</parameter> are saved to be used
+                        when <methodname>toString</methodname> is called.
+                        See below for the valid values a 
+                        <classname>CBinaryRelationFilter::binaryOp</classname>
+                        type can have.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual </modifier>
+                        <type>std::string </type>
+                        <methodname>rhs</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier>= 0</modifier>
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        This pure virtual function must be implemented by
+                        subclasses to render the right hand side of the
+                        expression.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual </modifier>
+                        <type>std::string </type>
+                        <methodname>toString</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>              
+                </term>
+                <listitem>
+                    <para>
+                        Renders the expression.
+                    </para>
+                </listitem>
+            </varlistentry>    
+        </variablelist>
+        <para>
+            The <type>binaryOp</type> data type is an enumerated type that
+            provides symbolic definitions for all of the SQL binary operators:
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <literal>equal</literal>
+                </term>
+                <listitem>
+                    <para>
+                        Compares the left and right hand sides for equality.
+                        Renders as <literal>=</literal>.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <literal>notEqual</literal>
+                </term>
+                <listitem>
+                    <para>
+                        Compares the left and right hand sides for inequality.
+                        Renders as <literal>&lt;&gt;</literal>.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <literal>gt</literal>
+                </term>
+                <listitem>
+                    <para>
+                        True if the left hand is strictly greater than the right
+                        side of the expression.  Renders as <literal>&gt;</literal>.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <literal>lt</literal>
+                </term>
+                <listitem>
+                    <para>
+                        True if the left hand is strictly less than the right
+                        side of the expression.  Renders as <literal>&lt;</literal>
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <literal>ge</literal>
+                </term>
+                <listitem>
+                    <para>
+                        True if the left hand is greater than or equal to the right
+                        side of the experession. Renders as <literal>&gt;=</literal>.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <literal>le</literal>
+                </term>
+                <listitem>
+                    <para>
+                        True if the left hand is less than or equal to the right
+                        side of the expression.  Renders as <literal>&lt;=</literal>
+                    </para>
+                </listitem>
+            </varlistentry>            
+        </variablelist>
+     </refsect2>
+     <refsect2>
+        <title><classname>CRelationToNumberFilter</classname></title>
+        <para>
+            Concrete subclass of <classname>CBinaryRelationFilter</classname>
+            that compares a field to a numeric value.  
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CRelationToNumberFilter</methodname>
+                       <methodparam>
+                        <modifier></modifier><type>std::string </type>
+                            <parameter>field</parameter>
+                       </methodparam>
+                       <methodparam>
+                        <modifier></modifier><type>CBinaryRelationFilter::binaryOp </type>
+                            <parameter>op</parameter>
+                       </methodparam>
+                       <methodparam>
+                        <modifier></modifier><type>double</type>
+                            <parameter> value</parameter>
+                       </methodparam>
+                       <exceptionname></exceptionname>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        The constructor accepts the <parameter>field</parameter>
+                        and desired <parameter>op</parameter> and passes them
+                        both on to the base class constructor.  The
+                        <parameter>value</parameter> is rendered by the
+                        <methodname>rhs</methodname> method described below.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual </modifier>
+                        <type>std::string</type>
+                        <methodname> rhs</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>              
+                </term>
+                <listitem>
+                    <para>
+                        Returns a string representation of the constructor's
+                        <parameter>value</parameter> parameter.  This value,
+                        as befits numeric values in SQL is not quoted.
+                        If the value is an integral, the resulting rendition
+                        will not contain a decimal point.  If the value has
+                        digits to the right of the decimal point those will
+                        be shown as well, making this class suitable for use
+                        with both integer and real fields in the underlying
+                        database.
+                    </para>
+                </listitem>
+            </varlistentry>        
+        </variablelist>
+     </refsect2>
+     <refsect2>
+        <title>CRelationToStringFilter</title>
+        <para>
+            Subclass of <classname>CBinaryRelationFilter</classname>.  This
+            class is suitable for producing comparisons between textual fields
+            and string literals.
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CRelationToStringFilter</methodname>
+                       <methodparam>
+                        <modifier></modifier><type>std::string </type>
+                            <parameter>field</parameter>
+                       </methodparam>
+                       <methodparam>
+                        <modifier></modifier><type>CBinaryRelationFilter::binaryOp </type>
+                            <parameter>op</parameter>
+                       </methodparam>
+                       <methodparam>
+                        <modifier></modifier><type>std::string </type>
+                            <parameter>value</parameter>
+                       </methodparam>
+                       <exceptionname></exceptionname>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        The constructor passes the <parameter>field</parameter>
+                        and <parameter>op</parameter> parameters directly
+                        tom the base class constructor.  The
+                        <parameter>value</parameter> is saved to be rendered
+                        by the <methodname>rhs</methodname> method below.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual </modifier>
+                        <type>std::string </type>
+                        <methodname>rhs</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        Renders the <parameter>value</parameter> parameter
+                        that was passed to the constructor.  As demanded by
+                        SQL, the value is quoted within <literal>'</literal>
+                        characters, e.g. the string <literal>astring</literal>
+                        is rendered as <literal>'astring'</literal>.
+                    </para>
+                </listitem>
+            </varlistentry>        
+        </variablelist>
+        <refsect3>
+            <title>BUGS</title>
+            <para>
+                The string value is not inspected and therefore cannot contain
+                any embedded <literal>'</literal> characters at this time as those
+                need to be mapped to <literal>''</literal> to be properly
+                handled by SQL.
+            </para>
+        </refsect3>
+     </refsect2>
+     <refsect2>
+        <title>
+            <classname>CRelationBetweenFieldsFilter</classname>
+        </title>
+        <para>
+            Concrete subclass of <classname>CBinaryRelationFilter</classname>
+            that is suitable for requiring a relationship betweeen two fields
+            of a database of a field and a function.
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CRelationBetweenFieldsFilter</methodname>
+                       <methodparam>
+                        <modifier></modifier><type>std::string </type>
+                            <parameter>field</parameter>
+                       </methodparam>
+                       <methodparam>
+                        <modifier></modifier><type>CBinaryRelationFilter::binaryOp </type>
+                            <parameter>op</parameter>
+                       </methodparam>
+                       <methodparam>
+                        <modifier></modifier><type>std::string </type>
+                            <parameter>f2</parameter>
+                       </methodparam>
+                       <exceptionname></exceptionname>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Passes <parameter>field</parameter> and
+                        <parameter>op</parameter> to the base class constructor.
+                        <parameter>f2</parameter> is saved to be rendered by
+                        <methodname>rhs</methodname> below.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier></modifier>
+                        <type>std::string </type>
+                        <methodname>rhs</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        Outputs the <parameter>f2</parameter> parameter
+                        passed to the constructor.  The value is output without
+                        any quotes.  This makes the class suitable expressing
+                        relationships between two database fields or a database
+                        field and an SQL function.
+                    </para>
+                </listitem>
+            </varlistentry>        
+        </variablelist>
+     </refsect2>
+     <refsect2>
+        <title><classname>CCompoundFilter</classname></title>
+        <para>
+            Concrete class derived from <classname>CQueryFilter</classname>.
+            Objects of this class represent lists of clauses that are joined by
+            a conjunctive operator such as <literal>AND</literal> or
+            <literal>OR</literal>.
+        </para>
+        <para>
+            Note that all subclauses are maintained as pointers in order to
+            allow them to execute the properl <methodname>toString</methodname>
+            method to render themselves.  It is therefore important that the
+            caller maintain the lifetime of these objects for at least as long
+            as the <classname>CCompoundFilter</classname> is in use.
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CCompoundFilter</methodname>
+                       <methodparam>
+                        <modifier></modifier><type>std::string </type>
+                            <parameter>joinString</parameter>
+                       </methodparam>
+                       <exceptionname></exceptionname>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        This constructor accepts
+                        only the <parameter>joinString</parameter>
+                        that is used to join subclauses of the condition together.
+                        <methodname>addClause</methodname> must be called
+                        at least twice to allow the generation of valid
+                        a valid SQL conditional clause.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CCompoundFilter</methodname>
+                       <methodparam>
+                        <modifier></modifier><type>std::string </type>
+                            <parameter>joinString</parameter>
+                       </methodparam>
+                       <methodparam>
+                        <modifier></modifier><type>std::vector&lt;CQueryFilter*&gt;&amp; </type>
+                            <parameter>subFilters</parameter>
+                       </methodparam>
+                       <exceptionname></exceptionname>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        The query filters in the <parameter>subFilters</parameter>
+                        parameter provide an initial set of query sub-clasues.
+                        Once constructed it is still possible to add
+                        more sub-clauses via <methodname>addClause</methodname>.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier></modifier>
+                        <type>void </type>
+                        <methodname>addClause</methodname>
+                        <methodparam>
+                            <modifier></modifier><type>CQueryFilter&amp;</type>
+                                <parameter>clause</parameter>
+                        </methodparam>
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        Adds one more clause to the set of clauses joined together
+                        by the <parameter>joinString</parameter>.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier></modifier>
+                        <type>std::vector&lt;CQueryFilter*>&gt;::iterator </type>
+                        <methodname>begin</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Provides an iterator to the container of clauses.  The
+                        iterator initially 'points' to the first element of the
+                        container.  The container is ordered and the order
+                        is the order in which the clauses where added.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier></modifier>
+                        <type>std::vector&lt;CQueryFilter*&gt;::iterator</type>
+                        <methodname>end<</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        Provides an iterator that points off the end fo the
+                        container of clauses. This is normally used to determine
+                        when iteration over the container has completed.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier></modifier>
+                        <type>size_t</type>
+                        <methodname>size</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        Returns the number of clauses that have been added to the
+                        filter.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier></modifier>
+                        <type>bool </type>
+                        <methodname>isLast</methodname>
+                        <methodparam>
+                            <modifier></modifier><type>std::vector&lt;CQueryFilter*&gt;::iterator&amp; </type>
+                                <parameter>p</parameter>
+                        </methodparam>
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        Returns <literal>true</literal> if the iterator
+                        <parameter>p</parameter> 'points' to the last element
+                        of the clauses container.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual </modifier>
+                        <type>std::string </type>
+                        <methodname>toString</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        Renders the search filter.  Each clause is parenthesized
+                        and pairs of clauses are joined via the
+                        <parameter>joinString</parameter>.  For example,
+                        suppose the join string is <literal>AND</literal> and
+                        the two clauses are binary filters that compare fields
+                        to a literal.  <methodname>toString</methodname>
+                        might produce something like:
+                    </para>
+                    <informalexample>
+                        <programlisting>
+(field1 = 12) AND (field 2 = 'some string')                            
+                        </programlisting>
+                    </informalexample>
+                    <para>
+                        It is an error to invoke this when the compound has
+                        fewer than two clauses.  In this case the method
+                        throws a <classname>std::range_error</classname>
+                        exception.
+                    </para>
+                </listitem>
+            </varlistentry>        
+        </variablelist>
+        <para>
+            Two convenience subclasses, <classname>CAndFilter</classname> and
+            <classname>COrFilter</classname>  provide join strings of
+            <literal>AND</literal> and <literal>OR</literal> respectively.
+        </para>
+     </refsect2>
+     <refsect2>
+        <title><classname>CInFilter</classname></title>
+        <para>
+            Concrete subclass of <classname>CQueryFilter</classname>.
+            Provides support for filter clauses that search for membershp in
+            a set of values.
+        </para>
+        <para>
+            Note that in SQL, the values must be homogeneous in type.
+            <classname>CInFilter</classname> does not check or require that,
+            however it is highly likely you well get SQL syntax errors if you
+            mix numeric and string elements in the same
+            <classname>CInFilter</classname> object.
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CInFilter</methodname>
+                       <methodparam>
+                        <modifier></modifier><type>std::string</type>
+                            <parameter>field</parameter>
+                       </methodparam>
+                       <exceptionname></exceptionname>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        This constructor creates a <classname>CInFilter</classname>
+                        object with no value set.  In order to invoke
+                        <methodname>toString</methodname> legally at least one
+                        value must be added via <methodname>addValue</methodname>.
+                        The <parameter>field</parameter> parameter specifies
+                        which field of the database must be in the value set.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CInFilter</methodname>
+                       <methodparam>
+                        <modifier></modifier><type>std::string</type>
+                            <parameter>field</parameter>
+                       </methodparam>
+                       <methodparam>
+                        <modifier></modifier><type>std::vector&lt;double&gt;&amp;</type>
+                            <parameter>values</parameter>
+                       </methodparam>
+                       <exceptionname></exceptionname>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Creates a <classname>CInFilter</classname> whose set is
+                        initially the collection of numeric values
+                        represented by <parameter>values</parameter>.
+                        The <parameter>field</parameter> parameter specifies
+                        which field of the database must be in the value set.
+                    </para>
+                    <para>
+                        Once created, <methodname>addItem</methodname> can
+                        be called later to add additional items to the set.
+                        Given this initialization, only numeric items should be
+                        added to the set.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <constructorsynopsis>
+                       <methodname>CInFilter</methodname>
+                       <methodparam>
+                        <modifier></modifier><type>std::string</type>
+                            <parameter>field</parameter>
+                       </methodparam>
+                       <methodparam>
+                        <modifier></modifier><type>std::vector&lt;std::string&gt;&amp; </type>
+                            <parameter>values</parameter>
+                       </methodparam>
+                       <exceptionname></exceptionname>
+                    </constructorsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Creates a <classname>CInFilter</classname> object whose
+                        set is initially the collection of string values
+                        <parameter>values</parameter>.
+                        The <parameter>field</parameter> parameter specifies
+                        which field of the database must be in the value set.
+                    </para>
+                    <para>
+                        Once created <methodname>addItem</methodname> can be
+                        called to extend the set.  Only string valued items
+                        should be added to the set.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier></modifier>
+                        <type>void </type>
+                        <methodname>addItem</methodname>
+                        <methodparam>
+                            <modifier></modifier><type>double </type>
+                                <parameter>value</parameter>
+                        </methodparam>
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        Adds a numeric item to the set.  Note that the items
+                        added to the set should be homogeneous in type.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier></modifier>
+                        <type>void </type>
+                        <methodname>addItem</methodname>
+                        <methodparam>
+                            <modifier></modifier><type>std::string </type>
+                                <parameter>value</parameter>
+                        </methodparam>
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>  
+                </term>
+                <listitem>
+                    <para>
+                        Adds a string item to the set. Note that the items
+                        added to the set should be homogenous in type.
+                    </para>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>virtual </modifier>
+                        <type>std::string </type>
+                        <methodname>toString</methodname>
+                        <void />
+                        <exceptionname></exceptionname>
+                        <modifier></modifier>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Renders the clause for SQL.  Suppose a few numeric
+                        values are in the set.  This might produce a result string
+                        like:
+                    </para>
+                    <informalexample>
+                        <programlisting>
+afield IN (1, 2, 3)
+                        </programlisting>
+                    </informalexample>
+                </listitem>
+            </varlistentry>                            
+        </variablelist>
+     </refsect2>
+  </refsect1>
+   
+</refentry>     
+
 <!-- /manpage -->
