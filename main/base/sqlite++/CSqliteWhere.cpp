@@ -23,6 +23,11 @@
 #include <stdexcept>
 #include <sstream>
 
+/*-------------------------------------------------------------------------
+ * Useful canned queries:
+ */
+
+CRawFilter DAQ::acceptAll("1=1");
 
 /*-----------------------------------------------------------------------------
  *  Implementation of CRawFilter.

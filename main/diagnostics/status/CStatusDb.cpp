@@ -24,10 +24,14 @@
 #include <CSqlite.h>
 #include <CSqliteStatement.h>
 #include <CSqliteTransaction.h>
+#include <CSqliteWhere.h>
+
 #include "CStatusMessage.h"
 
 #include <cstring>
 #include <stdexcept>
+
+
 
 
 /**
@@ -289,6 +293,50 @@ CStatusDb::addReadoutStatistics(
         t.rollback();
         throw;
     }
+}
+
+/*------------------------------------------------------------------------------
+ * Query methods:
+ */
+
+/**
+ * queryLogMessages
+ *    Get log messages that meet the requested criteria:
+ *
+ *  @param result - reference to a vector that will be populated with the result
+ *                  set... any existing values in this vector will be untouched.
+ *  @param filter - Criteria used to filter the query (generates the WHERE clause).
+ */
+void
+CStatusDb::queryLogMessages(
+    std::vector<LogRecord>& result, CQueryFilter& filter
+)
+{
+    std::string baseQuery =
+        "SELECT id, severity, application, source, timestamp, message      \
+            FROM log_messages                                             \
+            WHERE \
+        ";
+    baseQuery += filter.toString();
+    baseQuery += "ORDER BY id ASC";             // Same as time ordering too.
+    
+    CSqliteStatement query(m_handle, baseQuery.c_str());
+    
+    do {
+        ++query;                           // next record.
+        if (! query.atEnd()) {             // empty result set is possible.
+            LogRecord record;
+            
+            record.s_id = query.getInt(0);
+            record.s_severity = reinterpret_cast<const char*>(query.getText(1));
+            record.s_application = reinterpret_cast<const char*>(query.getText(2));
+            record.s_source   = reinterpret_cast<const char*>(query.getText(3));
+            record.s_timestamp = query.getInt64(4);
+            record.s_message  = reinterpret_cast<const char*>(query.getText(5));
+            
+            result.push_back(record);
+        }
+    } while (!query.atEnd());
 }
 /*------------------------------------------------------------------------------\
  *  Bridge methods between insert and addXxxx

@@ -152,14 +152,15 @@ noinst_PROGRAMS=$(TEST_PROGS) testringstatus
 
 dbtests_SOURCES=TestRunner.cpp Asserts.h statusdbSchema.cpp \
 	dblogtests.cpp dbringtests.cpp dbstatechangetests.cpp \
-	dbrdostattests.cpp dbinsertests.cpp
+	dbrdostattests.cpp dbinsertests.cpp logquerytests.cpp
 
 dbtests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
 dbtests_LDFLAGS=libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
 
 
 ringstattests_SOURCES=TestRunner.cpp Asserts.h ringstattests.cpp \
-	readoutstattests.cpp logmsgtests.cpp statemsgtests.cpp testutils.cpp testutils.h
+	readoutstattests.cpp logmsgtests.cpp statemsgtests.cpp \
+	testutils.cpp testutils.h
 
 ringstattests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
 ringstattests_LDFLAGS=libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@

@@ -228,4 +228,7 @@ public:
     virtual std::string toString();
     
 };
+namespace DAQ {
+    extern CRawFilter acceptAll;
+};
 #endif

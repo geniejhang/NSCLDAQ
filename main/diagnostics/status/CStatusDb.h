@@ -30,6 +30,7 @@
 
 class CSqlite;
 class CSqliteStatement;
+class CQueryFilter;
 
 /**
   * @class CSqlite
@@ -110,6 +111,11 @@ public:
         uint32_t severity, const char* app, const char* src,
         int64_t  time, const char* message
     );
+    
+    // Queries:
+public:
+    void queryLogMessages(std::vector<LogRecord>& result, CQueryFilter& filter);
+    
             // Transitional methods between insert and addXXXX
 private:
     void marshallRingStatistics(
