@@ -26,7 +26,10 @@
 #include <vector>
 #include "CStatusMessage.h"
 #include <ctime>
+#include <map>
 
+#include <sys/types.h>
+#include <unistd.h>
 
 class CSqlite;
 class CSqliteStatement;
@@ -61,6 +64,40 @@ public:
        std::time_t s_timestamp;
        std::string s_message;
     } LogRecord, *pLogRecord;
+    
+    typedef struct _RingBuffer {
+        unsigned    s_id;
+        std::string s_fqname;
+        std::string s_name;
+        std::string s_host;
+    } RingBuffer, *pRingBuffer;
+    
+    typedef struct _RingClient {
+        unsigned     s_id;
+        pid_t        s_pid;
+        bool         s_isProducer;
+        std::string  s_command;
+    } RingClient, *pRingClient;
+    
+    typedef struct _RingStatistics {
+        unsigned     s_id;
+        time_t       s_timestamp;
+        uint64_t     s_operations;
+        uint64_t     s_bytes;
+        uint64_t     s_backlog;
+    } RingStatistics, *pRingSatistics;
+    
+    // Rings and client:
+    
+    typedef std::pair<RingBuffer, std::vector<RingClient> > RingAndClients;
+    typedef std::map<std::string, RingAndClients> RingDirectory;
+    
+    // Rings, clients and statistics:
+    
+    typedef std::pair<RingClient, std::vector<RingStatistics> > RingClientAndStats;
+    typedef std::pair<RingBuffer, std::vector<RingClientAndStats> > RingsAndStatistics;
+    typedef std::map<std::string, RingsAndStatistics> CompleteRingStatistics;
+    
 private:
     CSqlite&        m_handle;             // Database handle.
     
@@ -115,6 +152,11 @@ public:
     // Queries:
 public:
     void queryLogMessages(std::vector<LogRecord>& result, CQueryFilter& filter);
+    
+    void listRings(std::vector<RingBuffer>& result, CQueryFilter& filter);
+    void listRingsAndClients(RingDirectory& result, CQueryFilter& filter);
+    void queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& filter);
+    
     
             // Transitional methods between insert and addXXXX
 private:

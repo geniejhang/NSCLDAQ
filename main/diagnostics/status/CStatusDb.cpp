@@ -341,6 +341,51 @@ CStatusDb::queryLogMessages(
         }
     } while (!query.atEnd());
 }
+/**
+ * listRings
+ *    Produce a list of rings that satisfy a filter.
+ *  @param result - references a vector of RingBuffer structs that will be
+ *                  appended to with the results of the query.
+ *  @param filter - Criteria for selecting the rings.
+ *  @note  To be consistent with queries on ring statistics that involve joins,
+ *         all fields are named r.xxxx   Keep this in mind when producing filters.
+ *  @note  The s_fqname is a string fot eh form s_name@s_host.  For proxy rings this
+ *         can lead to e.g.:  fox@spdaq22.nscl.msu.edu@charlie.nscl.msu.edu
+ *         for the proxy ring in charlie of the original ring named fox
+ *         that lives in spdaq22.
+ *  @note The results are ordered by the fully qualified ring name.
+ *  @note derived fileds like fqname are aliased to r_fqname as r.fqname is not
+ *        legal.
+ */
+void
+CStatusDb::listRings(std::vector<RingBuffer>& result, CQueryFilter& filter)
+{
+    // The base query.
+    
+    std::string query = "                                                  \
+        SELECT r.id, r.name, r.host, r.name || '@' || r.host AS r_fqname       \
+        FROM ring_buffer                                                   \
+        WHERE \
+    ";
+    query += filter.toString();
+    query += "\n ORDER BY r.fqdn ASC";
+    
+    CSqliteStatement q(m_handle, query.c_str());
+    
+    do {
+        ++q;                                 // Step the query.
+        if (! q.atEnd()) {                   // Could be empty result set.
+            RingBuffer r;
+            
+            r.s_id     = q.getInt(0);
+            r.s_fqname = reinterpret_cast<const char*>(q.getText(3));
+            r.s_name   = reinterpret_cast<const char*>(q.getText(1));
+            r.s_name   = reinterpret_cast<const char*>(q.getText(2));
+            
+            result.push_back(r);
+        }
+    } while (! q.atEnd());
+}
 /*------------------------------------------------------------------------------\
  *  Bridge methods between insert and addXxxx
  */
