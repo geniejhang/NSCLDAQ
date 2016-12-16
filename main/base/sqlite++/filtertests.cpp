@@ -210,7 +210,7 @@ void FilterTests::compvec()
 
 void FilterTests::in0()
 {
-  CInFilter f;
+  CInFilter f("afield");
   CPPUNIT_ASSERT_THROW(
     f.toString(),
     std::range_error
@@ -221,60 +221,60 @@ void FilterTests::in0()
 
 void FilterTests::in1num()
 {
-  CInFilter f;
+  CInFilter f("afield");
   f.addItem(0);
   std::string result;
   CPPUNIT_ASSERT_NO_THROW(
     result = f.toString()
   );
   
-  EQ(std::string("IN (0)"), result);
+  EQ(std::string("afield IN (0)"), result);
 }
 
 // two items: IN (i1, i2).
 
 void FilterTests::in2num()
 {
-  CInFilter f;
+  CInFilter f("afield");
   f.addItem(0);
   f.addItem(1);
-  EQ(std::string("IN (0, 1)"), f.toString());
+  EQ(std::string("afield IN (0, 1)"), f.toString());
 }
 void FilterTests::in3num()
 {
-  CInFilter f;
+  CInFilter f("afield");
   f.addItem(0);
   f.addItem(1);
   f.addItem(2);
   
-  EQ(std::string("IN (0, 1, 2)"), f.toString());
+  EQ(std::string("afield IN (0, 1, 2)"), f.toString());
 }
 
 // See if strings get properly quoted:
 
 void FilterTests::in3str()
 {
-  CInFilter f;
+  CInFilter f("afield");
   f.addItem("one");
   f.addItem("two");
   f.addItem("three");
-  EQ(std::string("IN ('one', 'two', 'three')"), f.toString());
+  EQ(std::string("afield IN ('one', 'two', 'three')"), f.toString());
 }
 // instantiate with a vector of numbers:
 
 void FilterTests::invecnum()
 {
   std::vector<double> values = {1,2,3};
-  CInFilter f(values);
+  CInFilter f("afield", values);
   
-  EQ(std::string("IN (1, 2, 3)"), f.toString());
+  EQ(std::string("afield IN (1, 2, 3)"), f.toString());
 }
 // Vector of strings:
 
 void FilterTests::invecstr()
 {
   std::vector<std::string> values = {"one", "two", "three"};
-  CInFilter f(values);
+  CInFilter f("afield", values);
   
-  EQ(std::string("IN ('one', 'two', 'three')"), f.toString());  
+  EQ(std::string("afield IN ('one', 'two', 'three')"), f.toString());  
 }

@@ -385,13 +385,17 @@ CInFilter::CItem::toString()
 
 /**
  *  constructor - no items yet.  Must be added via addItem.
+ *    @param field - the field where applying the IN clause to.
  */
-CInFilter::CInFilter() {}
+CInFilter::CInFilter(std::string field) : m_field(field)
+{}
 /**
  * constructor with a vector of doubles:
+ *   @param field - the field where applying the IN clause to.
  *   @param values - the input vector.
  */
-CInFilter::CInFilter(std::vector<double>& values)
+CInFilter::CInFilter(std::string field, std::vector<double>& values) :
+    m_field(field)
 {
     for(int i =0; i < values.size(); i++) {
         CItem* pItem = new CItem(values[i]);
@@ -400,10 +404,11 @@ CInFilter::CInFilter(std::vector<double>& values)
 }
 /**
  * constructor with vector of strings.
- *
+ *   @param field - the field where applying the IN clause to.
  *   @param values - the input vector.
  */
-CInFilter::CInFilter(std::vector<std::string>& values)
+CInFilter::CInFilter(std::string field, std::vector<std::string>& values) :
+    m_field(field)
 {
     for (int i = 0; i < values.size(); i++) {
         CItem* pItem = new CItem(values[i]);
@@ -458,7 +463,8 @@ CInFilter::toString()
     if (m_items.size() < 1) {
         throw std::range_error("IN filter requires at least one element.");
     }
-    std::string result = "IN (";
+    std::string result = m_field;
+    result +=  " IN (";
     for (auto p = m_items.begin(); p != m_items.end(); p++) {
         result += (*p)->toString();
         if (std::next(p) != m_items.end()) {

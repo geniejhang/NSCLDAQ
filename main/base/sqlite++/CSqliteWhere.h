@@ -54,18 +54,7 @@ public:
     virtual std::string toString() = 0;             // Generate where clause.    
 };
 
-/**
- * @class CSimpleQueryFilter
- *    This is a place holder class that's intended to be a base class for
- *    terminal nodes in the query 'parse tree'.  Simple query filters are
- *    filters that have no subclauses.  These could be directly derived from
- *    CQueryFilter but this provides a measure of organization.
- */
-class CSimpleQueryFilter : public CQueryFilter
-{
-    virtual ~CSimpleQueryFilter() {}
-    virtual std::string toString() = 0;              // ABC.
-};
+
 /**
  * @class CRawFilter
  *    This filter can be used to supply arbitrary query fragments.
@@ -92,7 +81,8 @@ public:
  *   the fact that relationships between fields and number, fields and strings and
  *   fields and other fields must be specified differently.
  */
-class CBinaryRelationFilter : public CQueryFilter {
+class CBinaryRelationFilter : public CQueryFilter
+{
 public:
     typedef enum _binaryOp {
         equal, notEqual, gt, lt, ge, le    
@@ -204,9 +194,9 @@ public:
 class COrFilter : public CCompoundFilter
 {
 public:
-    COrFilter() : CCompoundFilter("AND") {}
+    COrFilter() : CCompoundFilter("OR") {}
     COrFilter(std::vector<CQueryFilter*>& clauses) :
-        CCompoundFilter("AND", clauses) {}
+        CCompoundFilter("OR", clauses) {}
     
 };
 /**
@@ -225,11 +215,11 @@ private:
         virtual std::string toString();
     };
     std::vector<CItem*> m_items;
-    
+    std::string         m_field;
 public:
-    CInFilter();
-    CInFilter(std::vector<double>& values);
-    CInFilter(std::vector<std::string>& values);
+    CInFilter(std::string field);
+    CInFilter(std::string field, std::vector<double>& values);
+    CInFilter(std::string field, std::vector<std::string>& values);
     virtual ~CInFilter();
     
     void addItem(double value);
