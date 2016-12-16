@@ -31,7 +31,7 @@
 #include <cstring>
 #include <stdexcept>
 
-
+#include <iostream>
 
 
 /**
@@ -318,7 +318,10 @@ CStatusDb::queryLogMessages(
             WHERE \
         ";
     baseQuery += filter.toString();
-    baseQuery += "ORDER BY id ASC";             // Same as time ordering too.
+    baseQuery += " ORDER BY id ASC";             // Same as time ordering too.
+    
+   // std::cout << std::endl << baseQuery << std::endl;          // For debugging dump the record.
+    
     
     CSqliteStatement query(m_handle, baseQuery.c_str());
     

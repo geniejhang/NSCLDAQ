@@ -203,7 +203,7 @@ public:
  * @class CInFilter
  *     Does an IN (el1, el2, el3).
  */
-class CInFilter : CQueryFilter
+class CInFilter : public CQueryFilter
 {
 private:
     class CItem : public CQueryFilter {
