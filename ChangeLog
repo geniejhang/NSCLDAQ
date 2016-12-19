@@ -1047,3 +1047,5 @@ Work on 11.0-rc11 begins
 	* Fixes bug #6558 - Protects logic of code for when the DNS is configured 
 	to return a canonical name that lacks a domain name. 
 	 a domain name associated with it.
+	* Fixes bug #6567 - Begin run callback fcn pointer gets zero initialized
+	to avoid a segmentation fault at the beginning of a run.
