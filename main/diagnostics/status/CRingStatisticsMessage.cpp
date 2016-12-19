@@ -157,15 +157,9 @@ CStatusDefinitions::RingStatistics::endMessage()
     
     m_socket.send(msgHeader, ZMQ_SNDMORE);          // We have at least the ring id part.
     
-    // Build and send the ring identification
-    
-       // How big is the struct:
-       
-    size_t idSize = sizeof(RingStatIdentification) + (m_ringName.size()) +1;
     RingStatIdentification* pId =
-        reinterpret_cast<RingStatIdentification*>(calloc(1, idSize));
-    pId->s_tod = std::time(NULL);
-    strcpy(pId->s_ringName, m_ringName.c_str());
+        CStatusDefinitions::makeRingid(m_ringName.c_str());
+    size_t idSize = CStatusDefinitions::ringIdSize(pId);
     
         // If there is no producer and no consumers, there are no more message
         // parts:
@@ -174,6 +168,7 @@ CStatusDefinitions::RingStatistics::endMessage()
     zmq::message_t msgId(idSize);
     std::memcpy(msgId.data(), pId, idSize);
     m_socket.send(msgId, flags);
+    std::free(pId);                         // Done with that storage now.
    
     
     // If there's a producer send that message part.
@@ -231,33 +226,10 @@ CStatusDefinitions::RingStatistics::makeClient(
     bool producer
 )
 {
-    // Figure out the size of the client struct..it's going to be the size
-    // of the base struct added to the space required for the strings:
-    
-    size_t size = sizeof(CStatusDefinitions::RingStatClient);
-    for (int i = 0; i < command.size(); i++) {
-        size += std::strlen(command[i].c_str()) + 1;   // +1 for the null terminator.        
-    }
-    size++;                                           // Extra null terminator.
-    
-    RingStatClient* result = reinterpret_cast<CStatusDefinitions::RingStatClient*>(
-        std::calloc(size, 1)
+
+    return CStatusDefinitions::makeRingClient(
+        ops, bytes, backlog, pid, producer, command
     );
-    // Fill in the storage:
-    
-    result->s_operations = ops;
-    result->s_bytes      = bytes;
-    result->s_backlog    = backlog;
-    result->s_pid       = pid;
-    result->s_isProducer = producer;
-    
-    char* p = result->s_command;          // note this is prefilled with 0.
-    for (int i = 0; i < command.size(); i++) {
-        std::strcpy(p, command[i].c_str());
-        p += std::strlen(command[i].c_str()) + 1;
-    }
-    
-    return result;
 }
 /**
  *  freeStorage
@@ -284,14 +256,5 @@ CStatusDefinitions::RingStatistics::freeStorage()
 size_t
 CStatusDefinitions::RingStatistics::sizeClient(RingStatClient* pClient)
 {
-    size_t result = sizeof(RingStatClient);
-    char* p       = pClient->s_command;
-    while (*p) {
-        size_t nbytes = std::strlen(p) + 1;   // count the null.
-        result += nbytes;
-        p      += nbytes;
-    }
-    result++;                              // Final null terminator.
-    
-    return result;
+    return CStatusDefinitions::ringClientSize(pClient);
 }

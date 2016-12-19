@@ -156,6 +156,7 @@ public:
     void listRings(std::vector<RingBuffer>& result, CQueryFilter& filter);
     void listRingsAndClients(RingDirectory& result, CQueryFilter& filter);
     void queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& filter);
+
     
     
             // Transitional methods between insert and addXXXX

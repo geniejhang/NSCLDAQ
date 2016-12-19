@@ -55,14 +55,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION(RingTests);
 void RingTests::addMinimal() {
   std::vector<const CStatusDefinitions::RingStatClient*> empty;
   CStatusDefinitions::RingStatIdentification*  pRingId  =
-    reinterpret_cast<CStatusDefinitions::RingStatIdentification*>(std::malloc(
-      sizeof(CStatusDefinitions::RingStatIdentification) +
-      std::strlen("testring") + 1
-    ));
+    CStatusDefinitions::makeRingid("testring");
   try {
     CStatusDefinitions::RingStatIdentification& ringId(*pRingId);
     ringId.s_tod = 1234;
-    std::strcpy(ringId.s_ringName, "testring");
     
     m_pDb->addRingStatistics(
       CStatusDefinitions::SeverityLevels::INFO, "ringdaemon",
@@ -101,14 +97,10 @@ void RingTests::addMinimal() {
 void RingTests::addMinimal2() {
   std::vector<const CStatusDefinitions::RingStatClient*> empty;
   CStatusDefinitions::RingStatIdentification*  pRingId  =
-    reinterpret_cast<CStatusDefinitions::RingStatIdentification*>(std::malloc(
-      sizeof(CStatusDefinitions::RingStatIdentification) +
-      std::strlen("testring") + 1
-    ));
+    CStatusDefinitions::makeRingid("testring");
   try {
     CStatusDefinitions::RingStatIdentification& ringId(*pRingId);
     ringId.s_tod = 1234;
-    std::strcpy(ringId.s_ringName, "testring");
     
     m_pDb->addRingStatistics(
       CStatusDefinitions::SeverityLevels::INFO, "ringdaemon",
@@ -170,14 +162,10 @@ void RingTests::addMinimal2() {
 void RingTests::addMinimalDup() {
   std::vector<const CStatusDefinitions::RingStatClient*> empty;
   CStatusDefinitions::RingStatIdentification*  pRingId  =
-    reinterpret_cast<CStatusDefinitions::RingStatIdentification*>(std::malloc(
-      sizeof(CStatusDefinitions::RingStatIdentification) +
-      std::strlen("testring") + 1
-    ));
+    CStatusDefinitions::makeRingid("testring");
   try {
     CStatusDefinitions::RingStatIdentification& ringId(*pRingId);
     ringId.s_tod = 1234;
-    std::strcpy(ringId.s_ringName, "testring");
     
     m_pDb->addRingStatistics(
       CStatusDefinitions::SeverityLevels::INFO, "ringdaemon",
@@ -212,25 +200,14 @@ void RingTests::addMinimalDup() {
 void RingTests::addClient1()
 {
   CStatusDefinitions::RingStatIdentification* pRingId =
-    reinterpret_cast<CStatusDefinitions::RingStatIdentification*>(std::malloc(
-      strlen("testring") + sizeof(CStatusDefinitions::RingStatIdentification) + 1
-  ));
+    CStatusDefinitions::makeRingid("testring");
   pRingId->s_tod = 1234;
   std::strcpy(pRingId->s_ringName, "testring");
-  
-  CStatusDefinitions::RingStatClient* pStats =
-    reinterpret_cast<CStatusDefinitions::RingStatClient*>(std::malloc(
-      std::strlen("this is a test ") + sizeof(CStatusDefinitions::RingStatClient) + 1
-  ));
-  pStats->s_operations = 100;
-  pStats->s_bytes      = 2048;
-  pStats->s_backlog    = 8192;
-  pStats->s_pid        = 666;
-  pStats->s_isProducer = 0;
-  memcpy(
-    pStats->s_command, "this\0is\0a\0test\0\0",
-    std::strlen("this is a test ") + 1
+  std::vector<std::string> cmdvec = CStatusDefinitions::stringListToVector(
+    "this\0is\0a\0test\0\0"
   );
+  CStatusDefinitions::RingStatClient* pStats = CStatusDefinitions::makeRingClient(
+    100, 2048, 8192, 666, false, cmdvec);
   std::vector<const CStatusDefinitions::RingStatClient*> clients = {pStats};
   
   try {
@@ -298,38 +275,18 @@ void RingTests::addClient1()
 void RingTests::addClient2()
 {
   CStatusDefinitions::RingStatIdentification* pRingId =
-    reinterpret_cast<CStatusDefinitions::RingStatIdentification*>(std::malloc(
-      strlen("testring") + sizeof(CStatusDefinitions::RingStatIdentification) + 1
-  ));
+    CStatusDefinitions::makeRingid("testring");
   pRingId->s_tod = 1234;
-  std::strcpy(pRingId->s_ringName, "testring");
+  std::vector<std::string> cmdvec;
   
-  CStatusDefinitions::RingStatClient* pStats =
-    reinterpret_cast<CStatusDefinitions::RingStatClient*>(std::malloc(
-      std::strlen("this is a test ") + sizeof(CStatusDefinitions::RingStatClient) + 1
-  ));
-  pStats->s_operations = 100;
-  pStats->s_bytes      = 2048;
-  pStats->s_backlog    = 8192;
-  pStats->s_pid        = 666;
-  pStats->s_isProducer = 0;
-  memcpy(
-    pStats->s_command, "this\0is\0a\0test\0\0",
-    std::strlen("this is a test ") + 1
+  cmdvec = CStatusDefinitions::stringListToVector("this\0is\0a\0test\0\0");
+  CStatusDefinitions::RingStatClient* pStats = CStatusDefinitions::makeRingClient(
+    100, 2048, 8192, 666, false, cmdvec
   );
-  
-  CStatusDefinitions::RingStatClient* pStats2 =
-    reinterpret_cast<CStatusDefinitions::RingStatClient*>(std::malloc(
-      std::strlen("this is another test ") + sizeof(CStatusDefinitions::RingStatClient) + 1
-  ));
-  pStats2->s_operations = 123;
-  pStats2->s_bytes      = 4567;
-  pStats2->s_backlog    = 0;
-  pStats2->s_pid        = 111;
-  pStats2->s_isProducer = 1;
-  memcpy(
-    pStats2->s_command, "this\0is\0another\0test\0\0",
-    std::strlen("this is another test ") + 1
+
+  cmdvec = CStatusDefinitions::stringListToVector("this\0is\0another\0test\0\0");
+  CStatusDefinitions::RingStatClient* pStats2 = CStatusDefinitions::makeRingClient(
+    123, 4567, 0, 111, true, cmdvec
   );
   
   std::vector<const CStatusDefinitions::RingStatClient*> clients = {pStats, pStats2};
@@ -410,25 +367,15 @@ void RingTests::addClient2()
 void RingTests::addMultiStat()
 {
   CStatusDefinitions::RingStatIdentification* pRingId =
-    reinterpret_cast<CStatusDefinitions::RingStatIdentification*>(std::malloc(
-      strlen("testring") + sizeof(CStatusDefinitions::RingStatIdentification) + 1
-  ));
+    CStatusDefinitions::makeRingid("testring");
   pRingId->s_tod = 1234;
-  std::strcpy(pRingId->s_ringName, "testring");
+  std::vector<std::string> cmdvec;
   
-  CStatusDefinitions::RingStatClient* pStats =
-    reinterpret_cast<CStatusDefinitions::RingStatClient*>(std::malloc(
-      std::strlen("this is a test ") + sizeof(CStatusDefinitions::RingStatClient) + 1
-  ));
-  pStats->s_operations = 100;
-  pStats->s_bytes      = 2048;
-  pStats->s_backlog    = 8192;
-  pStats->s_pid        = 666;
-  pStats->s_isProducer = 0;
-  memcpy(
-    pStats->s_command, "this\0is\0a\0test\0\0",
-    std::strlen("this is a test ") + 1
+  cmdvec = CStatusDefinitions::stringListToVector("this\0is\0a\0test\0\0");
+  CStatusDefinitions::RingStatClient* pStats = CStatusDefinitions::makeRingClient(
+    100, 2048, 8192, 666, false, cmdvec
   );
+
   std::vector<const CStatusDefinitions::RingStatClient*> clients = {pStats};
   try {
     m_pDb->addRingStatistics(

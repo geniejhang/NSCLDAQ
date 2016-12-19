@@ -77,7 +77,8 @@ private:
     CStatusDefinitions::Header& hdr, uint32_t type, uint32_t sev,
     const char* app, const char* source
   );
-  std::pair<CStatusDefinitions::RingStatIdentification*, size_t> makeRingId(const char* ringName);
+  std::pair<CStatusDefinitions::RingStatIdentification*, size_t>
+    makeRingId(const char* ringName);
   size_t stringListLength(const char* stringList);
   std::pair<CStatusDefinitions::RingStatClient*, size_t> makeRingClient(
     uint64_t operations, uint64_t bytes, uint64_t backlog, uint64_t pid,
@@ -127,17 +128,12 @@ InsertTests::fillHeader(
 std::pair<CStatusDefinitions::RingStatIdentification*, size_t>
 InsertTests::makeRingId(const char* ringName)
 {
-  size_t totalSize =
-    sizeof(CStatusDefinitions::RingStatIdentification*) + std::strlen(ringName) + 1;
-  std::time_t now = std::time(nullptr);
-  
   CStatusDefinitions::RingStatIdentification* pResult =
-    reinterpret_cast<CStatusDefinitions::RingStatIdentification*>(malloc(totalSize));
-  
-  pResult->s_tod = now;
-  std::strcpy(pResult->s_ringName, ringName);
-  
-  return std::pair<CStatusDefinitions::RingStatIdentification*, size_t>(pResult, totalSize);
+    CStatusDefinitions::makeRingid(ringName); 
+  return std::pair<CStatusDefinitions::RingStatIdentification*, size_t>(
+    pResult, 
+    CStatusDefinitions::ringIdSize(pResult)
+  );
 }
 
 // Number of bytes in a string list:
@@ -163,18 +159,19 @@ InsertTests::makeRingClient(
     bool producer, const char* commandList
   )
 {
+  std::vector<std::string> commandVec;
+  const char* p(commandList);
+  while(! *p) {
+    std::string word(p);
+    commandVec.push_back(word);
+    p += word.size() + 1;
+  }
   size_t commandLen= stringListLength(commandList);
   size_t totalSize = sizeof(CStatusDefinitions::RingStatClient) + commandLen;
   
-  CStatusDefinitions::RingStatClient* pResult =
-    reinterpret_cast<CStatusDefinitions::RingStatClient*>(std::malloc(totalSize));
-  
-  pResult->s_operations = operations;
-  pResult->s_bytes      = bytes;
-  pResult->s_backlog    = backlog;
-  pResult->s_pid        = pid;
-  pResult->s_isProducer = producer ? true : false;
-  std::memcpy(pResult->s_command, commandList, commandLen);
+  CStatusDefinitions::RingStatClient* pResult = CStatusDefinitions::makeRingClient(
+    operations, bytes, backlog, pid, producer, commandVec
+  );
     
   return std::pair<CStatusDefinitions::RingStatClient*, size_t>(pResult, totalSize);
 }

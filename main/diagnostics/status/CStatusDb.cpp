@@ -32,7 +32,8 @@
 #include <stdexcept>
 
 #include <iostream>
-
+#include <sys/types.h>
+#include <unistd.h>
 
 /**
  *  constructor
@@ -362,14 +363,14 @@ CStatusDb::listRings(std::vector<RingBuffer>& result, CQueryFilter& filter)
 {
     // The base query.
     
-    std::string query = "                                                  \
-        SELECT r.id, r.name, r.host, r.name || '@' || r.host AS r_fqname       \
-        FROM ring_buffer                                                   \
-        WHERE \
+    std::string query = "                                                       \
+        SELECT r.id, r.name, r.host, r.name || '@' || r.host AS r_fqname        \
+        FROM ring_buffer AS r                                                  \
+        WHERE                                                                  \
     ";
     query += filter.toString();
-    query += "\n ORDER BY r.fqdn ASC";
-    
+    query += " ORDER BY r_fqname ASC";
+    // std::cout << std::endl << query << std::endl;     // For query debugging.
     CSqliteStatement q(m_handle, query.c_str());
     
     do {
@@ -380,11 +381,69 @@ CStatusDb::listRings(std::vector<RingBuffer>& result, CQueryFilter& filter)
             r.s_id     = q.getInt(0);
             r.s_fqname = reinterpret_cast<const char*>(q.getText(3));
             r.s_name   = reinterpret_cast<const char*>(q.getText(1));
-            r.s_name   = reinterpret_cast<const char*>(q.getText(2));
+            r.s_host   = reinterpret_cast<const char*>(q.getText(2));
             
             result.push_back(r);
         }
     } while (! q.atEnd());
+}
+/**
+ * listRingsAndClients:
+ *    Lists ringbuffers and the clients each has.
+ *
+ *  @param result - query results which are a map indexed by fully qualified
+ *                  ring name that contains a RingBuffer and a vector of its
+ *                  clients.
+ * @param filter  - The condition to use to filter the results.
+ */
+void
+CStatusDb::listRingsAndClients(RingDirectory& result, CQueryFilter& filter)
+{
+    // Construct the query:
+    
+    std::string query = "                                                     \
+        SELECT r.id, r.name, r.host, r.name || '@' || r.host AS r_fqname,     \
+               c.id, c.pid, c.producer, c.command                             \
+        FROM ring_buffer AS r                                                 \
+        INNER JOIN ring_client AS c ON c.ring_id = r.id                       \
+        WHERE \
+    ";
+    query += filter.toString();
+    std::cout << std::endl << query << std::endl;         // debug query.
+    CSqliteStatement q(m_handle, query.c_str());
+    
+    // Loop through the results:
+    
+    do {
+        ++q;                                   // Next row if any.
+        if (!q.atEnd()) {
+            // Pull the stuff out:
+            
+            RingBuffer r;
+            r.s_id     = q.getInt(0);
+            r.s_fqname = reinterpret_cast<const char*>(q.getText(3));
+            r.s_name   = reinterpret_cast<const char*>(q.getText(1));
+            r.s_host   = reinterpret_cast<const char*>(q.getText(2));
+            
+            RingClient c;
+            c.s_id     = q.getInt(4);
+            c.s_pid    = static_cast<pid_t>(q.getInt(5));
+            c.s_isProducer = q.getInt(6) ? true : false;
+            c.s_command = reinterpret_cast<const char*>(q.getText(7));
+            
+            
+            
+            // Append to existing or create a new map entry:
+            
+            if (result.count(r.s_fqname) == 0) {
+                result[r.s_fqname].first = r;    
+            }
+            result[r.s_fqname].second.push_back(c);
+            
+        }
+    } while (!q.atEnd());
+    
+    
 }
 /*------------------------------------------------------------------------------\
  *  Bridge methods between insert and addXxxx
