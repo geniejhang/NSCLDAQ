@@ -115,7 +115,7 @@ EVBC::registerRingSource tcp://localhost/fox2 {} 2 {Source 2} 1 1 <co id='evbbun
                     <literal>NotReady</literal>.  
                   </para>
             </callout>
-            <callout arearefs='evbbundle.configure'>
+            <callout arearefs='evbbundle.initialize'>
                 <para>
                      ys the event builder to enable its user interface,
                     place the output of the last stage of the building pipeline
@@ -177,6 +177,7 @@ EVBC::registerRingSource tcp://localhost/fox2 {} 2 {Source 2} 1 1 <co id='evbbun
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -307,6 +308,7 @@ EVBC::start -glombuild on -glomdt 300 -destring built -teering fragments
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -389,6 +391,7 @@ EVB::reset
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -432,6 +435,7 @@ EBC::flush
                     <firstname>Jeromy</firstname>
                     <surname>Tompkins</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -614,6 +618,7 @@ EVBC::registerRingSource <replaceable>source-uri extractor-lib source-ids info e
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -731,6 +736,7 @@ EVBC::startRingSource <replaceable>source-uri extractor-lib source-id info</repl
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -779,6 +785,7 @@ EVBC::startS800Source <replaceable>ring-uri source-id ?info?</replaceable>
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -970,6 +977,7 @@ EVBC::initialize -glombuild yes -glomdt 200 -destring built -restart yes -gui on
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1018,6 +1026,7 @@ EVBC::onBegin
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1056,6 +1065,7 @@ EVBC::onBegin
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1138,6 +1148,7 @@ EVBC::configure <replaceable>option value ...</replaceable>
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -1245,6 +1256,7 @@ EVBC::configure <replaceable>option value ...</replaceable>
               <firstname>Jeromy</firstname>
               <surname>Tompkins</surname>
             </personname>
+            <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1325,24 +1337,29 @@ EVBC::configure <replaceable>option value ...</replaceable>
                 <variablelist>
                   <varlistentry>
                     <term>sourceUrl</term>
+                    <listitem>      
                     <para>
                       The <option>sourceUrl</option> is the URL of the data source.
                       This should the url of a ring buffer (e.g. tcp://someHost/ringName).
                     </para>
+                    </listitem>
                   </varlistentry>
 
                   <varlistentry>
                     <term>tstampLibPath</term>
-                    <para>
+                    <listitem>
+                        <para>
                       The <option>tstampLibPath</option> is the path to the user's timestamp extractor library.
                       This is allowed to be left as an empty string if the <option>expectBodyHeaders</option> 
                       argument is passed a true value.
                     </para>
+                    </listitem>
                   </varlistentry>
 
                   <varlistentry>
                     <term>ids</term>
-                    <para>The <option>ids</option> argument is a list of
+                    <listitem>
+                        <para>The <option>ids</option> argument is a list of
                       acceptable source ids. If the ringFragmentSource sees a ring
                       item with a source id different than what is provided here,
                       then the process with exit. If there was no body header on
@@ -1350,19 +1367,23 @@ EVBC::configure <replaceable>option value ...</replaceable>
                       with a source id that is the same as the first element of the
                       list passed to this argument.
                     </para>
+                    </listitem>
                   </varlistentry>
 
                   <varlistentry>
                     <term>info</term>
-                    <para>
+                    <listitem>
+                        <para>
                       The <option>info</option> is a generic string that is
                       used to label the data source in the event builder GUI.
                     </para>
+                    </listitem>
                   </varlistentry>
 
                   <varlistentry>
                     <term><replaceable>expectBodyHeaders</replaceable></term>
-                    <para>
+                    <listitem>
+                        <para>
                       The optional <option>expectBodyHeaders</option> argument is
                       defaulted to false and specifies whether all data passing
                       into the ringFragmentSource can be expected to have body
@@ -1378,36 +1399,43 @@ EVBC::configure <replaceable>option value ...</replaceable>
                       timestamp extractor will be ignored while the timestamp in
                       the body header will be used.  
                     </para>
+                    </listitem>
                   </varlistentry>
 
                   <varlistentry>
                     <term><replaceable>oneshot</replaceable></term>
-                    <para>
+                    <listitem>
+                        <para>
                       The optional <option>oneshot</option> argument specifies whether the 
                       ringFragmentSource should exit after a symmetric number of begin and
                       end runs have been observed. By default it is set to false.
                     </para>
+                    </listitem>
                   </varlistentry>
 
                   <varlistentry>
                     <term><replaceable>timeout</replaceable></term>
-                    <para>
+                    <listitem>
+                        <para>
                       The optional <option>timeout</option> argument specifies the number
                       of seconds that the ringFragmentSource will wait since the first end
                       run arrives before shutting down. By default this is set to 20 seconds.
                     </para>
+                    </listitem>
                   </varlistentry>
 
 
                   <varlistentry>
                     <term><replaceable>offset</replaceable></term>
 
-                    <para>
+                    <listitem>
+                        <para>
                       The optional <option>offset</option> argument is used to define
                       a integer value to add to the timestamp. One can use this to 
                       compensate for a known, stable synchronization offset between data
                       streams passing through the event builder.
                     </para>
+                    </listitem>
                   </varlistentry>
 
                 </variablelist>
@@ -1418,73 +1446,89 @@ EVBC::configure <replaceable>option value ...</replaceable>
             <varlistentry>
               <term>RingSourceMgr::getOrdererPort</term>
 
-              <para>
+              <listitem>
+                <para>
                 Retrieves the port that the event builder is listening for connections on. 
                 This works with the DAQPortManager to obtain the port so it is necessary that
                 the the port manager is running. If the port cannot be found, an exceptional
                 return occurs with an error code. 
               </para>
+              </listitem>
             </varlistentry>
 
 
             <varlistentry>
               <term>RingSourceMgr::clearSources</term>
 
-              <para>
+              <listitem>
+                <para>
                 Deletes all knowledge of the sources that had been registered previously. 
               </para>
+              </listitem>
             </varlistentry>
 
             <varlistentry>
               <term>RingSourceMgr::resetSources</term>
 
-              <para>
+              <listitem>
+                <para>
                 Deletes all knowledge of running ringFragmentSource processes.
               </para>
+              </listitem>
             </varlistentry>
 
             <varlistentry>
               <term>RingSourceMgr::startSource <replaceable>sourceUrl tstampLibPath ids info expectHeaders oneshot timeout offset</replaceable></term>
 
-              <para>
+              <listitem>
+                <para>
                 Launches a ringFragmentSource process directly. The parameters have the same semantics and default
                 values as the RingSourceMgr::addSource proc.
               </para>
+              </listitem>
             </varlistentry>
 
             <varlistentry>
               <term>RingSourceMgr::onBegin</term>
 
-              <para>
+              <listitem>
+                <para>
                 This essentially just calls <literal>RingSourceMgr::startSource</literal> for each of the
                 registered ring sources.
               </para>
+              </listitem>
             </varlistentry>
 
 
             <varlistentry>
               <term>RingSourceMgr::attach <replaceable>state</replaceable></term>
 
-              <para>
+              <listitem>
+                <para>
                 This is a no-op.
               </para>
+              </listitem>
             </varlistentry>
 
             <varlistentry>
               <term>RingSourceMgr::enter <replaceable>from to</replaceable></term>
 
-              <para>
+              <listitem>
+                <para>
                 When <option>to</option> is "NotReady" it calls <literal>::RingSourceMgr::resetSources</literal>.
               </para>
+              </listitem>
             </varlistentry>
 
             <varlistentry>
               <term>RingSourceMgr::leave <replaceable>from to</replaceable></term>
 
-              <para>
+              <listitem>
+                <para>
                 When <option>from</option> is "Halted" and <option>to</option> is "Active", the event builder 
                 is waited on to become available and then <literal>::RingSourceMgr::onBegin</literal> is called.
               </para>
+              </listitem>
             </varlistentry>
           </variablelist>
         </refsect1>
@@ -1502,6 +1546,7 @@ EVBC::configure <replaceable>option value ...</replaceable>
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -1553,6 +1598,7 @@ EVB::handleFragments <replaceable>file-descriptor</replaceable>
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1674,6 +1720,7 @@ EVB::inputStats clear
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1727,6 +1774,7 @@ EBB::outputStatistics clear
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1801,6 +1849,7 @@ EVB::dlatestats
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1861,6 +1910,7 @@ EVB::onDataLate
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1927,6 +1977,7 @@ EVB::barriertrace incomplete ?<replaceable>script</replaceable>?
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1975,6 +2026,7 @@ EVB::source ?<replaceable>socket id1...</replaceable>?
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -2013,6 +2065,7 @@ EVB::deadsource <replaceable>id</replaceable>
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -2053,6 +2106,7 @@ EVB::reviveSocket <replaceable>sock-name</replaceable>
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -2094,6 +2148,7 @@ EVB::flush
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
