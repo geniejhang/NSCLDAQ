@@ -105,7 +105,7 @@ COutputThread::COutputThread(const char* pRing) :
   m_pCursor(0),
   m_nEventsSeen(0),
   m_pEvtTimestampExtractor(0),
-  m_pSclrTimestampExtractor(0)
+  m_pSclrTimestampExtractor(0),
   m_pBeginRunCallback(nullptr)
 {
   
