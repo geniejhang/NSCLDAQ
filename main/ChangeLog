@@ -1138,3 +1138,5 @@ Work on 11.0-rc11 begins
 11.1-010
   * Fixes issue in CRemoteAccess that caused failures when the fqdn returned
 	the same as the hostname.
+	* Fixes issue #6567 - Zero initializes begin run callback in CCUSBReadout to
+	avoid segmentation faults at beginning of each run.
