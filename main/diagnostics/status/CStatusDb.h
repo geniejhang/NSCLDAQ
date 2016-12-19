@@ -65,18 +65,60 @@ public:
        std::string s_message;
     } LogRecord, *pLogRecord;
     
+    
+    // Needs copy construction/assignment.
+    
     typedef struct _RingBuffer {
         unsigned    s_id;
         std::string s_fqname;
         std::string s_name;
         std::string s_host;
+        _RingBuffer(const _RingBuffer& rhs) {
+            copyIn(rhs);
+        }
+        _RingBuffer() {}
+        _RingBuffer& operator=(_RingBuffer& rhs) {
+            copyIn(rhs);
+            return *this;
+        }
+        void copyIn(const _RingBuffer& rhs) {
+            s_id = rhs.s_id;
+            s_fqname = rhs.s_fqname;
+            s_name = rhs.s_name;
+            s_host = rhs.s_host;
+        }
     } RingBuffer, *pRingBuffer;
+    
+    // Needs copy construction/assignment and comparison.
     
     typedef struct _RingClient {
         unsigned     s_id;
         pid_t        s_pid;
         bool         s_isProducer;
         std::string  s_command;
+        _RingClient() {}
+        _RingClient(const _RingClient& rhs) {
+            copyIn(rhs);
+        }
+        _RingClient& operator=(const _RingClient& rhs) {
+            copyIn(rhs);
+            return *this;
+        }
+        void copyIn(const _RingClient& rhs) {
+            s_id = rhs.s_id;
+            s_pid = rhs.s_pid;
+            s_isProducer = rhs.s_isProducer;
+            s_command = rhs.s_command;
+        }
+        int operator==(const _RingClient& rhs) {
+            return (s_id == rhs.s_id)        &&
+                    (s_pid == rhs.s_pid)     &&
+                    (s_isProducer == rhs.s_isProducer) &&
+                    (s_command    == rhs.s_command);
+        }
+        int operator!=(const struct _RingClient& rhs) {
+            return !(operator==(rhs));
+        }
     } RingClient, *pRingClient;
     
     typedef struct _RingStatistics {

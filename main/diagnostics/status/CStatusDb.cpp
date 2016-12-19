@@ -409,7 +409,7 @@ CStatusDb::listRingsAndClients(RingDirectory& result, CQueryFilter& filter)
         WHERE \
     ";
     query += filter.toString();
-    std::cout << std::endl << query << std::endl;         // debug query.
+    // std::cout << std::endl << query << std::endl;         // debug query.
     CSqliteStatement q(m_handle, query.c_str());
     
     // Loop through the results:
@@ -444,6 +444,81 @@ CStatusDb::listRingsAndClients(RingDirectory& result, CQueryFilter& filter)
     } while (!q.atEnd());
     
     
+}
+/**
+ * queryRingStatistics
+ *    Gets ring, client and statistics information from the database.
+ *
+ *   @param result - references a CompleteRingStatitics result.
+ *   @param filter - Specifies filters for the results.
+ */
+void
+CStatusDb::queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& filter)
+{
+    // Create the query string and Sqlite statement.
+    
+    std::string query = "                                                     \
+    SELECT r.id, r.name, r.host, r.name || '@' || r.host AS r_fqname,         \
+               c.id, c.pid, c.producer, c.command                             \
+               s.id, s.timestamp, s.operations, s.bytes, s.backlog            \
+        FROM ring_buffer AS r                                                 \
+        INNER JOIN ring_client AS c ON c.ring_id = r.id                       \
+        INNER JOIN ring_client_statistics AS s                                \
+            ON (s.ring_id = r.id)  AND (s.client_id = c.id)                   \
+        WHERE \
+    ";
+    query += filter.toString();
+    std::cout << std::endl << query << std::endl;     // For query debugging.
+    
+    CSqliteStatement q(m_handle, query.c_str());
+    
+    do {
+        ++q;
+        if(!q.atEnd()) {
+            RingBuffer r;
+            r.s_id     = q.getInt(0);
+            r.s_fqname = reinterpret_cast<const char*>(q.getText(3));
+            r.s_name   = reinterpret_cast<const char*>(q.getText(1));
+            r.s_host   = reinterpret_cast<const char*>(q.getText(2));
+            
+            RingClient c;
+            c.s_id     = q.getInt(4);
+            c.s_pid    = static_cast<pid_t>(q.getInt(5));
+            c.s_isProducer = q.getInt(6) ? true : false;
+            c.s_command = reinterpret_cast<const char*>(q.getText(7));
+            
+            RingStatistics s;
+            s.s_id         = q.getInt(8);
+            s.s_timestamp  = q.getInt64(9);
+            s.s_operations = q.getInt64(10);
+            s.s_bytes      = q.getInt64(11);
+            s.s_backlog    = q.getInt64(12);
+            
+            // Figure out if we're creating or appending information.
+            
+            if(!result.count(r.s_fqname)) {
+                result[r.s_fqname].first = r;
+            }
+            // If there's an existing matching ringclient, append, else
+            // make a new one:
+            
+            std::vector<RingClientAndStats>& rstats(result[r.s_fqname].second);
+            bool newOne(true);
+            for (int i = 0; i < rstats.size(); i++) {
+                if(rstats[i].first == c) {
+                    newOne = false;
+                    rstats[i].second.push_back(s);
+                }
+            }
+            if(newOne) {
+                RingClientAndStats newItem;
+                newItem.first = c;
+                rstats.push_back(newItem);
+                rstats.back().second.push_back(s);
+            }
+            
+        }
+    } while (! q.atEnd());
 }
 /*------------------------------------------------------------------------------\
  *  Bridge methods between insert and addXxxx
