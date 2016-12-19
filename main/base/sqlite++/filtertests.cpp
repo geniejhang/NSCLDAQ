@@ -4,6 +4,7 @@
 #include <cppunit/Asserter.h>
 #include "Asserts.h"
 #include "CSqliteWhere.h"
+#include <stdexcept>
 
 class FilterTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(FilterTests);
