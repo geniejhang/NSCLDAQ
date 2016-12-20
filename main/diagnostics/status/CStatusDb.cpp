@@ -611,6 +611,38 @@ CStatusDb::queryStateTransitions(
         }
     } while (!q.atEnd());
 }
+/**
+ * listReadoutApps
+ *   List the set of readout applications that match the stated filter
+ *   criteria.
+ *
+ * @param result  - Reference to the result that will be filled.
+ * @param filter  - Filter that will be applied to the query.
+ */
+void
+CStatusDb::listReadoutApps(std::vector<ReadoutApp>& result, CQueryFilter& filter)
+{
+    std::string query = "                                                     \
+        SELECT a.id, a.name, a.host                                           \
+        FROM readout_program AS a                                             \
+        WHERE                                                                 \
+    ";
+    query += filter.toString();
+    
+    CSqliteStatement q(m_handle, query.c_str());
+    
+    do {
+        ++q;
+        if (!q.atEnd()) {
+            ReadoutApp app;
+            app.s_id = q.getInt(0);
+            app.s_appName = reinterpret_cast<const char*>(q.getText(1));
+            app.s_appHost = reinterpret_cast<const char*>(q.getText(2));
+            
+            result.push_back(app);
+        }
+    } while (!q.atEnd());
+}
 /*------------------------------------------------------------------------------\
  *  Bridge methods between insert and addXxxx
  */

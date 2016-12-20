@@ -188,6 +188,10 @@ public:
         }
     } StateTransition, *pStateTransition;
     
+    // Readout statistics structs:
+    
+    typedef StateApp ReadoutApp, *pReadoutApp;    // For now identical.
+    
 private:
     CSqlite&        m_handle;             // Database handle.
     
@@ -253,6 +257,8 @@ public:
     void queryStateTransitions(
         std::vector<StateTransition>& result, CQueryFilter& filter
     );
+    
+    void listReadoutApps(std::vector<ReadoutApp>& result, CQueryFilter& filter);
     
             // Transitional methods between insert and addXXXX
 private:
