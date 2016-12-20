@@ -20,6 +20,10 @@ class RingQTests : public CppUnit::TestFixture {
   CPPUNIT_TEST(noclients);
   CPPUNIT_TEST(oneringwithclients);
   CPPUNIT_TEST(allwithclients);
+
+  CPPUNIT_TEST(statsnone);
+  CPPUNIT_TEST(statsforfox);
+  CPPUNIT_TEST(statsforall);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -33,6 +37,7 @@ public:
     m_pDb = new CStatusDb(":memory:", CSqlite::readwrite | CSqlite::create);
     createRings();
     createClients();
+    addStatistics();
   }
   void tearDown() {
     delete m_pDb;
@@ -44,6 +49,8 @@ private:
   void freeRings();
   void freeClients();
   void createClients();
+  void addStatistics();
+  
   
 protected:
   void norings();
@@ -54,6 +61,9 @@ protected:
   void oneringwithclients();
   void allwithclients();
   
+  void statsnone();
+  void statsforfox();
+  void statsforall();
 };
 void 
 RingQTests::freeRings()
@@ -142,11 +152,27 @@ void RingQTests::createClients()
   
   for (int i = 0; i < m_RingDefs.size(); i++) {
     
+    m_pDb->addRingStatistics(
+      CStatusDefinitions::SeverityLevels::INFO, "ringdaemon", 
+      m_RingDefs[i].first.c_str(),
+      *m_RingDefs[i].second, m_clients[i]
+    );
+  }
+}
+
+/// Add a few copies of the statistics with different timestamps.
+
+void RingQTests::addStatistics()
+{
+  for(int t =0; t < 5; t ++) {
+    for (int i =0; i < m_RingDefs.size(); i++) {
+      m_RingDefs[i].second->s_tod += 2;              // Two seconds apart.
       m_pDb->addRingStatistics(
         CStatusDefinitions::SeverityLevels::INFO, "ringdaemon", 
         m_RingDefs[i].first.c_str(),
         *m_RingDefs[i].second, m_clients[i]
       );
+    }
   }
 }
 
@@ -294,4 +320,97 @@ void RingQTests::allwithclients()
     EQ(pid_t(768), r2c[0].s_pid);
     EQ(pid_t(900), r2c[1].s_pid);
     EQ(pid_t(999), r2c[2].s_pid);
+}
+// Ring statistics with no results:
+
+void RingQTests::statsnone()
+{
+  CStatusDb::CompleteRingStatistics results;
+  CRawFilter f("0 = 1");                 // Never true.
+  
+  m_pDb->queryRingStatistics(results, f);
+  
+  EQ(size_t(0), results.size());
+}
+// Get statistics for fox - there will be one ring buffer.
+// It will have a a pair of clients, each with 6 statistics entries that
+// are identical but 2 seconds apart in their timsetamp.
+
+void RingQTests::statsforfox()
+{
+    CStatusDb::CompleteRingStatistics results;
+    CRelationToStringFilter           f("r.name", CBinaryRelationFilter::equal, "fox");
+    
+    m_pDb->queryRingStatistics(results, f);
+    
+    // one ring:
+    
+    EQ(size_t(1), results.size());
+    EQ(size_t(1), results.count("fox@charlie.nscl.msu.edu"));     // the fqringname
+    
+    CStatusDb::RingsAndStatistics& ringData(results["fox@charlie.nscl.msu.edu"]);
+    
+    // Check the ring buffer data:
+    
+    EQ(std::string("fox@charlie.nscl.msu.edu"), ringData.first.s_fqname);
+    EQ(std::string("fox"), ringData.first.s_name);
+    EQ(std::string("charlie.nscl.msu.edu"), ringData.first.s_host);
+    
+    std::vector<CStatusDb::RingClientAndStats>& clientStats(ringData.second);
+    EQ(size_t(2), clientStats.size());    // Two clients.
+    
+    // Look at the client info:
+    
+    CStatusDb::RingClient& c1(clientStats[0].first);
+    EQ(pid_t(678), c1.s_pid);
+    EQ(false, c1.s_isProducer);
+    EQ(std::string("this is a test"), c1.s_command);
+    
+    CStatusDb::RingClient& c2(clientStats[1].first);
+    EQ(pid_t(999), c2.s_pid);
+    EQ(true, c2.s_isProducer);
+    EQ(std::string("/usr/opt/daq/current/bin/Readout --ring=fox --sourceid=3"), c2.s_command);
+    
+    // Look at the stats for client 1 - number of them, detailed analysis
+    // of the first one, and require that the time differences be 2 seconds:
+    
+    std::vector<CStatusDb::RingStatistics>& s1(clientStats[0].second);
+    EQ(size_t(6), s1.size());
+    time_t t(1000);                     // initial time:
+    EQ(t, s1[0].s_timestamp);
+    EQ(uint64_t(123), s1[0].s_operations);
+    EQ(uint64_t(5000), s1[0].s_bytes);
+    EQ(uint64_t(100), s1[0].s_backlog);
+    for(int i = 1; i < 6; i++) {
+      t += 2;
+      EQ(t, s1[i].s_timestamp);
+    }
+    
+    std::vector<CStatusDb::RingStatistics>& s2(clientStats[1].second);
+    EQ(size_t(6), s2.size());
+    t = 1000;                          // reset the timestamp.
+    EQ(t, s2[0].s_timestamp);
+    EQ(uint64_t(100), s2[0].s_operations);
+    EQ(uint64_t(1000), s2[0].s_bytes);
+    EQ(uint64_t(0), s2[0].s_backlog);
+    
+    for (int  i = 1; i < 6; i++) {
+      t += 2;
+      EQ(t, s2[i].s_timestamp);
+    }
+}
+//  Stats with 1=1 filter:
+
+void RingQTests::statsforall()
+{
+    CStatusDb::CompleteRingStatistics result;
+    m_pDb->queryRingStatistics(result, DAQ::acceptAll);
+    
+    // Two rings have statistics, fox@charlie, e15010@spdaq20:
+    
+    EQ(size_t(2), result.size());
+    EQ(size_t(1), result.count("fox@charlie.nscl.msu.edu"));
+    EQ(size_t(1), result.count("e15010@spdaq20.nscl.msu.edu"));
+    
+    // Assume the rest is ok.
 }

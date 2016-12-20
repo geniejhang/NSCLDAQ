@@ -111,10 +111,9 @@ public:
             s_command = rhs.s_command;
         }
         int operator==(const _RingClient& rhs) {
-            return (s_id == rhs.s_id)        &&
-                    (s_pid == rhs.s_pid)     &&
+            return  (s_pid == rhs.s_pid)              &&
                     (s_isProducer == rhs.s_isProducer) &&
-                    (s_command    == rhs.s_command);
+                    (s_command == rhs.s_command);
         }
         int operator!=(const struct _RingClient& rhs) {
             return !(operator==(rhs));

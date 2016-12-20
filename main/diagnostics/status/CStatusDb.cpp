@@ -438,7 +438,18 @@ CStatusDb::listRingsAndClients(RingDirectory& result, CQueryFilter& filter)
             if (result.count(r.s_fqname) == 0) {
                 result[r.s_fqname].first = r;    
             }
-            result[r.s_fqname].second.push_back(c);
+            // If the client does not exist yet, then push it back:
+            
+            bool newItem = true;
+            std::vector<RingClient>& cs(result[r.s_fqname].second);
+            for (int i = 0; i < cs.size(); i ++) {
+                if (cs[i] == c) {
+                    newItem = false;
+                    break;
+                }
+            }
+            if (newItem) cs.push_back(c);
+            
             
         }
     } while (!q.atEnd());
@@ -459,7 +470,7 @@ CStatusDb::queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& fil
     
     std::string query = "                                                     \
     SELECT r.id, r.name, r.host, r.name || '@' || r.host AS r_fqname,         \
-               c.id, c.pid, c.producer, c.command                             \
+               c.id, c.pid, c.producer, c.command,                            \
                s.id, s.timestamp, s.operations, s.bytes, s.backlog            \
         FROM ring_buffer AS r                                                 \
         INNER JOIN ring_client AS c ON c.ring_id = r.id                       \
