@@ -532,6 +532,49 @@ CStatusDb::queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& fil
         }
     } while (! q.atEnd());
 }
+/**
+ * queryStateTranstions
+ *    Get all information about state transitions that satisfy filter criteria.
+ *
+ *  @param result -reference to the result set that will be appended to.
+ *  @param filter - filter criteria.
+ */
+void
+CStatusDb::queryStateTranstions(
+    std::vector<StateTransition>& result, CQueryFilter& filter
+)
+{
+    // Build the query string:
+    
+    std::string query = "                                                    \
+        SELECT a.name, a.host,                                               \
+               t.id, t.app_id, t.timestamp, t.leaving, t.entering            \
+        FROM state_application AS a                                          \
+        INNER JOIN state_transitions AS t ON t.app_id = a.id                 \
+        WHERE                                                                \
+    ";
+    query += filter.toString();
+    query += " ORDER BY t.timestamp ASC";
+    CSqliteStatement q(m_handle, query.c_str());
+    
+    //  fill in the result records - not the result set can be empty:
+    
+    do {
+        ++q;                               // Next result:
+        if (!q.atEnd()) {
+            StateTransition item;
+            item.s_appName      = reinterpret_cast<const char*>(q.getText(0));
+            item.s_appHost      = reinterpret_cast<const char*>(q.getText(1));
+            item.s_transitionId = q.getInt(2);
+            item.s_appId        = q.getInt(3);
+            item.s_timestamp    = q.getInt64(4);
+            item.s_leaving      = reinterpret_cast<const char*>(q.getText(5));
+            item.s_entering     = reinterpret_cast<const char*>(q.getText(6));                                   
+            
+            result.push_back(item);
+        }
+    } while (!q.atEnd());
+}
 /*------------------------------------------------------------------------------\
  *  Bridge methods between insert and addXxxx
  */

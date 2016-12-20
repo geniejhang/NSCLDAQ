@@ -56,6 +56,8 @@ class CQueryFilter;
 class CStatusDb {
     // Public data structures:
 public:
+    // Query result for log records:
+    
     typedef struct _LogRecord {
        unsigned    s_id;
        std::string s_severity;
@@ -65,6 +67,8 @@ public:
        std::string s_message;
     } LogRecord, *pLogRecord;
     
+    
+    // Query result structs for ring buffers, their clients and statistics.
     
     // Needs copy construction/assignment.
     
@@ -139,6 +143,35 @@ public:
     typedef std::pair<RingBuffer, std::vector<RingClientAndStats> > RingsAndStatistics;
     typedef std::map<std::string, RingsAndStatistics> CompleteRingStatistics;
     
+    // Result struct for state transitions:
+    
+    typedef struct _StateTransition {
+        unsigned    s_transitionId;                 
+        unsigned    s_appId;
+        std::string s_appName;
+        std::string s_appHost;
+        time_t      s_timestamp;
+        std::string s_leaving;
+        std::string s_entering;
+        _StateTransition() {}
+        _StateTransition(const _StateTransition& rhs) {
+            copyIn(rhs);
+        }
+        _StateTransition& operator=(const _StateTransition& rhs) {
+            copyIn(rhs);
+            return *this;
+        }
+        void copyIn(const _StateTransition& rhs) {
+            s_transitionId = rhs.s_transitionId;
+            s_appId        = rhs.s_appId;
+            s_appName      = rhs.s_appName;
+            s_appHost      = rhs.s_appHost;
+            s_timestamp    = rhs.s_timestamp;
+            s_leaving      = rhs.s_leaving;
+            s_entering     = rhs.s_entering;
+        }
+    } StateTransition, *pStateTransition;
+    
 private:
     CSqlite&        m_handle;             // Database handle.
     
@@ -198,7 +231,9 @@ public:
     void listRingsAndClients(RingDirectory& result, CQueryFilter& filter);
     void queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& filter);
 
-    
+    void queryStateTranstions(
+        std::vector<StateTransition>& result, CQueryFilter& filter
+    );
     
             // Transitional methods between insert and addXXXX
 private:
