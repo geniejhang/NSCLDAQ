@@ -145,11 +145,28 @@ public:
     
     // Result struct for state transitions:
     
+    typedef struct _StateApp {
+        unsigned      s_id;
+        std::string   s_appName;
+        std::string   s_appHost;
+        _StateApp() {}
+        _StateApp(const _StateApp& rhs) {
+            copyIn(rhs);
+        }
+        _StateApp& operator=(const _StateApp& rhs) {
+            copyIn(rhs);
+            return *this;
+        }
+        void copyIn(const _StateApp& rhs) {
+            s_id = rhs.s_id;
+            s_appName = rhs.s_appName;
+            s_appHost = rhs.s_appHost;
+        }
+    } StateApp, *pStateApp;
     typedef struct _StateTransition {
-        unsigned    s_transitionId;                 
+        StateApp    s_app;
         unsigned    s_appId;
-        std::string s_appName;
-        std::string s_appHost;
+        unsigned    s_transitionId;                 
         time_t      s_timestamp;
         std::string s_leaving;
         std::string s_entering;
@@ -162,13 +179,12 @@ public:
             return *this;
         }
         void copyIn(const _StateTransition& rhs) {
-            s_transitionId = rhs.s_transitionId;
             s_appId        = rhs.s_appId;
-            s_appName      = rhs.s_appName;
-            s_appHost      = rhs.s_appHost;
+            s_transitionId = rhs.s_transitionId;
             s_timestamp    = rhs.s_timestamp;
             s_leaving      = rhs.s_leaving;
             s_entering     = rhs.s_entering;
+            s_app.copyIn(rhs.s_app);
         }
     } StateTransition, *pStateTransition;
     
@@ -231,7 +247,10 @@ public:
     void listRingsAndClients(RingDirectory& result, CQueryFilter& filter);
     void queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& filter);
 
-    void queryStateTranstions(
+    void listStateApplications(
+        std::vector<StateApp>& result, CQueryFilter& filter
+    );
+    void queryStateTransitions(
         std::vector<StateTransition>& result, CQueryFilter& filter
     );
     

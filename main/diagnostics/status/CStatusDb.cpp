@@ -533,14 +533,49 @@ CStatusDb::queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& fil
     } while (! q.atEnd());
 }
 /**
- * queryStateTranstions
+ * listStateApplications
+ *    Produce a list of the set of applications that have emitted state
+ *    transitions that satify the filter criteria:
+ *
+ *  @param result -reference to the result set that will be appended to.
+ *  @param filter - Filter criteria.
+ */
+void
+CStatusDb::listStateApplications(
+    std::vector<StateApp>& result, CQueryFilter& filter
+)
+{
+    std::string query = "                                                     \
+        SELECT a.id, a.name, a.host                                           \
+        FROM state_application AS a                                           \
+        WHERE                                                                 \
+    ";
+    query += filter.toString();
+    query += " ORDER BY a.id ASC";
+    
+    CSqliteStatement q(m_handle, query.c_str());
+    
+    do {
+        ++q;
+        if (!q.atEnd()) {
+            StateApp app;
+            app.s_id =   q.getInt(0);
+            app.s_appName = reinterpret_cast<const char*>(q.getText(1));
+            app.s_appHost = reinterpret_cast<const char*>(q.getText(2));
+            
+            result.push_back(app);
+        }
+    } while (!q.atEnd());
+}
+/**
+ * queryStateTransitions
  *    Get all information about state transitions that satisfy filter criteria.
  *
  *  @param result -reference to the result set that will be appended to.
  *  @param filter - filter criteria.
  */
 void
-CStatusDb::queryStateTranstions(
+CStatusDb::queryStateTransitions(
     std::vector<StateTransition>& result, CQueryFilter& filter
 )
 {
@@ -554,7 +589,7 @@ CStatusDb::queryStateTranstions(
         WHERE                                                                \
     ";
     query += filter.toString();
-    query += " ORDER BY t.timestamp ASC";
+    query += " ORDER BY t.timestamp, a.name, a.host ASC";
     CSqliteStatement q(m_handle, query.c_str());
     
     //  fill in the result records - not the result set can be empty:
@@ -563,10 +598,11 @@ CStatusDb::queryStateTranstions(
         ++q;                               // Next result:
         if (!q.atEnd()) {
             StateTransition item;
-            item.s_appName      = reinterpret_cast<const char*>(q.getText(0));
-            item.s_appHost      = reinterpret_cast<const char*>(q.getText(1));
-            item.s_transitionId = q.getInt(2);
-            item.s_appId        = q.getInt(3);
+            item.s_app.s_appName      = reinterpret_cast<const char*>(q.getText(0));
+            item.s_app.s_appHost      = reinterpret_cast<const char*>(q.getText(1));
+            item.s_transitionId       = q.getInt(2);
+            item.s_app.s_id           =
+            item.s_appId              = q.getInt(3);
             item.s_timestamp    = q.getInt64(4);
             item.s_leaving      = reinterpret_cast<const char*>(q.getText(5));
             item.s_entering     = reinterpret_cast<const char*>(q.getText(6));                                   
