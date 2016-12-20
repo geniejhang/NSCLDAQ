@@ -89,7 +89,7 @@ size_t
 CStatusDefinitions::sizeStringList(const char* strings)
 {
     size_t result = 0;
-    while (! *strings) {
+    while ( *strings) {
         size_t slen = std::strlen(strings) + 1;   // +1 for \0 terminator.
         result  += slen;
         strings += slen;                           // next string.

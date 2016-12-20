@@ -50,7 +50,12 @@ class TestRingStatistics(unittest.TestCase):
         fmt    = 'LLLLI%ds' % cmdlen
         producer = struct.unpack(fmt, frame)
         
-        pcommand = string.rstrip(producer[5], "\0")
+        # Befrore splitting, slice the command at the \0\0 terminator.
+        
+        pcommand = producer[5]
+        cmdend   = pcommand.find("\x00\x00")
+        pcommand = pcommand[0:cmdend]
+        
         command = pcommand.split("\0")
         result = list(producer[0:5])
         result.append(command)

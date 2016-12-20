@@ -468,7 +468,8 @@ CStatusDb::queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& fil
         WHERE \
     ";
     query += filter.toString();
-    std::cout << std::endl << query << std::endl;     // For query debugging.
+    query += " ORDER BY s.timestamp ASC";
+    //std::cout << std::endl << query << std::endl;     // For query debugging.
     
     CSqliteStatement q(m_handle, query.c_str());
     
