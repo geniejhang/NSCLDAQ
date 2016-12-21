@@ -643,6 +643,144 @@ CStatusDb::listReadoutApps(std::vector<ReadoutApp>& result, CQueryFilter& filter
         }
     } while (!q.atEnd());
 }
+/**
+ * listRuns
+ *     Queries the set of runs each application has created.  The result
+ *     is a map that is indexed by the id (primary key) of the Readout program that created
+ *     the associated run information record.
+ *
+ *   @param result - reference to the result set.
+ *   @param filter - Filter criteria for the query.
+ */
+void
+CStatusDb::listRuns(RunDictionary& result, CQueryFilter& filter)
+{
+    std::string query = "                                                      \
+        SELECT a.id, a.name, a.host,                                           \
+               r.id, r.start, r.run, r.title                                   \
+        FROM readout_program  AS a                                             \
+        INNER JOIN run_info AS r ON r.readout_id = a.id                        \
+        WHERE                                                                  \
+    ";
+    query += filter.toString();
+    CSqliteStatement q(m_handle, query.c_str());
+    do {
+        ++q;
+        if (!q.atEnd()) {
+            
+            // We always need the run information:
+            
+            RunInfo r;
+            r.s_id = static_cast<unsigned>(q.getInt(3));
+            r.s_startTime = q.getInt64(4);
+            r.s_runNumber = q.getInt(5);
+            r.s_runTitle  = reinterpret_cast<const char*>(q.getText(6));
+            
+            // We only need the readout information if there's not already
+            // a map entry for that program.
+            
+            unsigned readoutId = static_cast<unsigned>(q.getInt(0));
+            
+            // If necessary, create a dict entry that the run can be pushed into.
+            
+            if (result.count(readoutId) == 0) {
+                ReadoutApp a;
+                a.s_id      = readoutId;
+                a.s_appName = reinterpret_cast<const char*>(q.getText(1));
+                a.s_appHost = reinterpret_cast<const char*>(q.getText(2));
+                std::pair<ReadoutApp, std::vector<RunInfo> > dictEntry;
+                dictEntry.first = a;
+                result[readoutId] = dictEntry;
+            }
+            result[readoutId].second.push_back(r);
+
+        }
+    } while (!q.atEnd());
+}
+/**
+ * queryReadoutStatistics
+ *    Returns information about the readout statistics.
+ *
+ *  @param result - Reference to the result set (ReadoutStatDict).
+ *  @param filter - Filters the query.
+ */
+void
+CStatusDb::queryReadoutStatistics(ReadoutStatDict& result, CQueryFilter& filter)
+{
+    std::string query = "                                                      \
+        SELECT a.id, a.name, a.host,                                           \
+               r.id, r.start, r.run, r.title,                                  \
+               s.id, s.timestamp, s.elapsedtime, s.triggers, s.events, s.bytes \
+        FROM readout_program  AS a                                             \
+        INNER JOIN run_info AS r ON r.readout_id = a.id                        \
+        INNER JOIN readout_statistics AS s                                     \
+                ON (s.readout_id = a.id) AND (s.run_id = r.id)                 \
+        WHERE                                                                  \
+    ";
+    query += filter.toString();
+    query += " ORDER BY s.id ASC";               // Global insert order.
+    
+    CSqliteStatement q(m_handle, query.c_str());
+    
+    do {
+        ++q;
+        if(!q.atEnd()) {
+            // Always need the statistics:
+            
+            ReadoutStatistics s;
+            s.s_id = static_cast<unsigned>(q.getInt(7));
+            s.s_timestamp = static_cast<time_t>(q.getInt64(8));
+            s.s_elapsedTime = static_cast<unsigned>(q.getInt(9));
+            s.s_triggers   = static_cast<uint64_t>(q.getInt64(10));
+            s.s_events     = static_cast<uint64_t>(q.getInt64(11));
+            s.s_bytes      = static_cast<uint64_t>(q.getInt64(12));
+            
+            // Need at least the application and readout id
+            
+            unsigned appid = static_cast<unsigned>(q.getInt(0));
+            unsigned runid = static_cast<unsigned>(q.getInt(3));
+            
+            // If necessary, make the map entry (readout):
+            
+            if (!result.count(appid)) {
+                std::pair<ReadoutApp, std::vector<RunStatistics> > mapEntry;
+                
+                ReadoutApp& app(mapEntry.first);
+                app.s_id     = appid;
+                app.s_appName = reinterpret_cast<const char*>(q.getText(1));
+                app.s_appHost = reinterpret_cast<const char*>(q.getText(2));
+                
+                result[appid] = mapEntry;
+            }
+            // IF necessary, create the run entry in result[appid]
+            // At the end of all this code, pRun will point to the
+            // RunStatistics entry that either already exists or was just created.
+            
+            ReadoutAppStats& app(result[appid]);   // Code above ensured this exists.
+            RunStatistics*   pRun(0);              // Will point to the run's statistics.
+            for (int i = 0; i < app.second.size(); i++) {
+                if (app.second[i].first.s_id == runid) {
+                    pRun = &(app.second[i]);
+                    break;
+                }
+            }
+            if (!pRun) {
+                RunStatistics rItem;
+                RunInfo&      rinfo(rItem.first);
+                
+                rinfo.s_id = runid;
+                rinfo.s_startTime = static_cast<uint64_t>(q.getInt64(4));
+                rinfo.s_runNumber = static_cast<uint32_t>(q.getInt(5));
+                rinfo.s_runTitle  = reinterpret_cast<const char*>(q.getText(6));
+                
+                app.second.push_back(rItem);
+                pRun = &(app.second.back());
+            }
+            pRun->second.push_back(s);
+        }
+        
+    } while (!q.atEnd());
+}
 /*------------------------------------------------------------------------------\
  *  Bridge methods between insert and addXxxx
  */

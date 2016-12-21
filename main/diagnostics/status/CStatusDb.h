@@ -191,6 +191,43 @@ public:
     // Readout statistics structs:
     
     typedef StateApp ReadoutApp, *pReadoutApp;    // For now identical.
+    typedef struct _RunInfo {
+        unsigned   s_id;
+        uint64_t   s_startTime;
+        uint32_t  s_runNumber;
+        std::string s_runTitle;
+        _RunInfo() {}
+        _RunInfo(const _RunInfo& rhs) {
+            copyIn(rhs);
+        }
+        _RunInfo& operator=(const _RunInfo& rhs) {
+            copyIn(rhs);
+            return *this;
+        }
+        void copyIn(const _RunInfo& rhs) {
+            s_id        = rhs.s_id;
+            s_startTime = rhs.s_startTime;
+            s_runNumber = rhs.s_runNumber;
+            s_runTitle  = rhs.s_runTitle;
+        }
+
+    } RunInfo, *pRunInfo;
+    
+    typedef std::pair<ReadoutApp, std::vector<RunInfo> > ApplicationRun, *pApplicationRun;
+    typedef std::map<unsigned, ApplicationRun> RunDictionary, *pRunDictionary;
+
+        typedef struct _ReadoutStatistics {
+        unsigned      s_id;
+        time_t        s_timestamp;
+        unsigned      s_elapsedTime;
+        uint64_t      s_triggers;
+        uint64_t      s_events;
+        uint64_t      s_bytes;
+        
+    } ReadoutStatistics, *pReadoutStatistics;
+    typedef std::pair<RunInfo, std::vector<ReadoutStatistics> > RunStatistics;
+    typedef std::pair<ReadoutApp, std::vector<RunStatistics> >  ReadoutAppStats;
+    typedef std::map<unsigned, ReadoutAppStats> ReadoutStatDict, *pReadoutStatDict;
     
 private:
     CSqlite&        m_handle;             // Database handle.
@@ -259,6 +296,8 @@ public:
     );
     
     void listReadoutApps(std::vector<ReadoutApp>& result, CQueryFilter& filter);
+    void listRuns(RunDictionary& result, CQueryFilter& filter);
+    void queryReadoutStatistics(ReadoutStatDict& result, CQueryFilter& filter);
     
             // Transitional methods between insert and addXXXX
 private:
