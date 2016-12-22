@@ -2,6 +2,8 @@ lib_LTLIBRARIES = libsqlite3pp.la
 
 TCL_PACKAGE_FILES = where.tcl
 TCL_PACKAGE_DIR   = @prefix@/TclLibs/sqlite
+TCL_TESTS         = where.test
+
 
 include_HEADERS=CSqlite.h CSqliteException.h CSqliteStatement.h\
 	 CSqliteTransaction.h CSqliteWhere.h
@@ -28,8 +30,14 @@ install-exec-hook: $(TCL_PACKAGE_FILES)
 	for f in $(TCL_PACKAGE_FILES);  do $(INSTALL_SCRIPT) @srcdir@/$$f $(TCL_PACKAGE_DIR); done
 	echo pkg_mkIndex -verbose $(TCL_PACKAGE_DIR) "*.tcl" | @TCLSH@
 
+TEST_EXTENSIONS=.py .test
+PY_LOG_COMPILER=@PYTHON@
+TEST_LOG_COMPILER=@TCLSH@
+TESTS_ENVIRONMENT=PYTHONPATH=@prefix@/pythonLibs; export PYTHONPATH;\
+	TCLLIBPATH=@prefix@/TclLibs; export TCLLIBPATH;
 
-TESTS=@builddir@/unittests
+TESTS=@builddir@/unittests  $(TCL_TESTS)
 
 
-EXTRA_DIST = sqlite++.xml
+EXTRA_DIST = sqlite++.xml $(TCL_PACKAGE_FILES) $(TCL_TESTS)
+
