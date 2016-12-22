@@ -33,14 +33,107 @@ package require tcltest
 set here [file dirname [info script]]
 source [file join $here  where.tcl]
 
+# Commands the package has:
+
+set cmdlist [list                                                          \
+    RawQueryFilter RelationToNonStringFilter RelationToStringFilter        \
+    CompoundFilter AndFilter OrFilter InFilter                             \
+]
+
+tcltest::test pkgCommands {Test that the package commands exist}              \
+-body {
+    set cmdsFound [list]
+    foreach cmd $cmdlist {
+        lappend cmdsFound [info command $cmd]
+    }
+    set cmdsFound
+} -result $cmdlist
+
+set rawString "(this = 'that' AND number=5)"
+tcltest::test rawTest {Test raw queries work} \
+-cleanup {
+    filter destroy
+}   \
+-body {
+    RawQueryFilter filter $rawString
+    filter toString
+} -result $rawString
+
+
+tcltest::test RealationToNonString {Test relationship of field to non string} \
+-cleanup {
+    filter destroy
+} \
+-body {
+    RelationToNonStringFilter filter run.number > 15
+    filter toString
+} -result {run.number > 15}
+
+tcltest::test RelationToNonString {Test relationship of field to string (quotes)}  \
+-cleanup {
+    filter destroy
+} \
+-body {
+    RelationToStringFilter filter run.title = "This is a test title"
+    filter toString
+} -result  {run.title = 'This is a test title'}
 #
 #  Ensure that test failures result in exit failure:
 #
 
+tcltest::test And { Test the and filter } \
+-cleanup {
+    filter destroy
+    f1     destroy
+    f2     destroy
+} \
+-body {
+    RelationToNonStringFilter f1 run.number > 12
+    RelationToStringFilter    f2 run.title = "This is a test title"
+    AndFilter  filter
+    filter addClause f1
+    filter addClause f2
+    
+    filter toString
+} -result {((run.number > 12) AND (run.title = 'This is a test title'))}
+    
+tcltest::test Or {Test the OR filter} \
+-cleanup {
+    filter destroy
+    f1     destroy
+    f2     destroy
+} \
+-body {
+    RelationToNonStringFilter f1 run.number > 12
+    RelationToStringFilter    f2 run.title = "This is a test title"
+    OrFilter  filter
+    filter addClause f1
+    filter addClause f2
+    
+    filter toString
+} -result {((run.number > 12) OR (run.title = 'This is a test title'))}
+
+
+tcltest::test In {Test the in filter} \
+-cleanup {
+    filter destroy
+} \
+-body {
+    InFilter filter m.run
+    filter addString run1
+    filter addNumber 1
+    filter addNumber 2
+    
+    filter toString
+} -result {m.run IN ('run1', 1, 2)}
+
 proc tcltest::cleanupTestsHook {} {
-    variable numTests
-    set ::exitCode [expr {$numTests(Failed) > 0}]
+    set ::exitCode [expr {$::tcltest::numTests(Failed) > 0}]
 }
 
 
 tcltest::cleanupTests
+
+if {$::exitCode != 0} {
+    exit $::exitCode
+}

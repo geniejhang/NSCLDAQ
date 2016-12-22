@@ -114,7 +114,7 @@ snit::type CompoundFilter {
     method toString {} {
         set itemTexts [list]
         foreach item $m_items {
-            lappend itemTexts "( [$item toString])"
+            lappend itemTexts "([$item toString])"
         }
         set condBody [join $itemTexts " $m_combiner " ]
         return "($condBody)"
@@ -143,10 +143,12 @@ snit::type OrFilter {
 
 snit::type InFilter {
     component CompoundFilter
+    variable m_field
     
     delegate method getItems to CompoundFilter
-    constructor {} {
+    constructor {field} {
         install CompoundFilter using CompoundFilter %AUTO% ,
+        set m_field $field
     }
     method addString value {
         $CompoundFilter addClause '$value'
@@ -156,7 +158,7 @@ snit::type InFilter {
     }
     method toString {} {
         set items [join [$CompoundFilter getItems] ", "]
-        return "IN ($items)"
+        return "$m_field IN ($items)"
         
     }
     
