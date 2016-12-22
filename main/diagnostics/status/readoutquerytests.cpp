@@ -25,6 +25,7 @@ class ReadoutQTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(nostats);
   CPPUNIT_TEST(run1charliestats);
   CPPUNIT_TEST(run1counters);
+  CPPUNIT_TEST(allruncounters);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -32,11 +33,12 @@ private:
   CStatusDb* m_pDb;
 public:
   void setUp() {
-    m_pDb = new CStatusDb(":memory:", CSqlite::readwrite);
+    m_pDb = new CStatusDb(":memory:", CSqlite::readwrite | CSqlite::create);
     createAppsAndRuns();
   }
   void tearDown() {
     delete m_pDb;
+
   }
 private:
   void createAppsAndRuns();
@@ -52,6 +54,7 @@ protected:
   void nostats();
   void run1charliestats();
   void run1counters();
+  void allruncounters();
 };
 // Utilities
 
@@ -373,5 +376,41 @@ void ReadoutQTest::run1counters()
   EQ(uint64_t(25), c2[0].s_events);
   EQ(uint64_t(512), c2[0].s_bytes);
   
+  EQ(time_t(1004), c2[1].s_timestamp);
+  EQ(time_t(1006), c2[2].s_timestamp);
   
+  
+}
+void ReadoutQTest::allruncounters()
+{
+  CStatusDb::ReadoutStatDict result;
+  m_pDb->queryReadoutStatistics(result, DAQ::acceptAll);
+  
+  // There are two applications:
+  
+  EQ(size_t(2), result.size());
+  CStatusDb::ReadoutAppStats& app1(result[1]);          // Readout
+  CStatusDb::ReadoutAppStats& app2(result[2]);          // CCUSBReadout.
+  
+  
+  EQ(size_t(2), app1.second.size());
+  CStatusDb::RunStatistics r11(app1.second[0]);
+  CStatusDb::RunStatistics r12(app1.second[1]);
+  
+  EQ(size_t(2), app2.second.size());
+  CStatusDb::RunStatistics r21(app2.second[0]);
+  CStatusDb::RunStatistics r22(app2.second[1]);
+  
+  // The first run in each will have 3 statistics entries, while the second
+  // will have 4.
+  
+  std::vector<CStatusDb::ReadoutStatistics> c11(r11.second);
+  std::vector<CStatusDb::ReadoutStatistics> c12(r12.second);
+  std::vector<CStatusDb::ReadoutStatistics> c21(r21.second);
+  std::vector<CStatusDb::ReadoutStatistics> c22(r22.second);
+  
+  EQ(size_t(3), c11.size());
+  EQ(size_t(4), c12.size());
+  EQ(size_t(3), c21.size());
+  EQ(size_t(4), c22.size());
 }

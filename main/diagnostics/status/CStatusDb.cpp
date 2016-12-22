@@ -714,12 +714,12 @@ CStatusDb::queryReadoutStatistics(ReadoutStatDict& result, CQueryFilter& filter)
         FROM readout_program  AS a                                             \
         INNER JOIN run_info AS r ON r.readout_id = a.id                        \
         INNER JOIN readout_statistics AS s                                     \
-                ON (s.readout_id = a.id) AND (s.run_id = r.id)                 \
+                ON (s.run_id = r.id)   AND (s.readout_id = a.id)              \
         WHERE                                                                  \
     ";
     query += filter.toString();
-    query += " ORDER BY s.id ASC";               // Global insert order.
-    
+    query += " ORDER BY s.id, r.run ASC";               // Global insert order.
+    std::cout << std::endl << query << std::endl;
     CSqliteStatement q(m_handle, query.c_str());
     
     do {
@@ -1666,7 +1666,7 @@ CStatusDb::addRdoStats(
         m_addRunStats = new CSqliteStatement(
             m_handle,
             "INSERT INTO readout_statistics                                 \
-                (run_id, readout_id, timestamp,                             \
+                (readout_id, run_id, timestamp,                             \
                 elapsedtime, triggers, events, bytes)                       \
                 VALUES (?, ?, ?, ?, ?, ?, ?)                                \
             "
