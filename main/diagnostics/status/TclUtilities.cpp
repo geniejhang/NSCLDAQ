@@ -221,6 +221,129 @@ TclMessageUtilities::addToDictionary(
     Tcl_DictObjPut(rawInterp, obj, keyObj, value.getObject());
 }
 /**
+ * getDictItem
+ *    Return an object from a dict given its key:
+ *    std::invalid_argument is thrown if there's no key match.
+ * @param interp - interpreter used to navigate the dict.
+ * @param dict   - Dictionary objecdt.]
+ * @param key    - Key whose value we're returning.
+ */
+Tcl_Obj*
+TclMessageUtilities::getDictItem(
+        CTCLInterpreter& interp, CTCLObject& obj, const char* key
+)
+{
+    Tcl_Interp* rawInterp = interp.getInterpreter();
+    Tcl_Obj*    dict      = obj.getObject();
+    Tcl_Obj*    result(nullptr);
+    
+    CTCLObject keyObj;
+    keyObj.Bind(interp);
+    keyObj = key;
+    
+    int status = Tcl_DictObjGet(rawInterp, dict, keyObj.getObject(), &result);
+    if ((status != TCL_OK) || (result == nullptr)) {
+        throw std::invalid_argument("Unable to get item from dict");
+    }
+    return result;
+    
+}
+/**
+ * getLongFromDictItem
+ *   Returns a long value from a dict item.  Throws if:
+ *   *   The dict isn't one.
+ *   *   The dict does not have the desired key/value pair.
+ *   *   The value does not translate to a long.
+ *
+ *  @param interp - interpreter used to do all the parsing.
+ *  @param dict   - Dictionary object.
+ *  @param key    - Key to select
+ *  @return long
+ */
+long
+TclMessageUtilities::getLongFromDictItem(
+    CTCLInterpreter& interp, CTCLObject& obj, const char* key
+)
+{
+    Tcl_Obj* item = getDictItem(interp, obj, key);
+    long result;
+    if (Tcl_GetLongFromObj(interp.getInterpreter(), item, &result) != TCL_OK) {
+        throw std::invalid_argument("Dictionary item does not have an integer representation");
+    }
+    return result;
+}
+/**
+ * getStringFromDictItem
+ *    Return the string representation of a dictionary value.  Throws if:
+ *    *  The dict isn't one.
+ *    *  The dict does not have the desired key.
+ *
+ *  @param interp   - interpreter used to parse the stuff.
+ *  @param obj      - Dict object reference.
+ *  @param key      - key to fetch.
+ *  @return std::string - string representation of the dict value.
+ */
+std::string
+TclMessageUtilities::getStringFromDictItem(
+    CTCLInterpreter& interp, CTCLObject& obj, const char* key
+)
+{
+    Tcl_Obj* item = getDictItem(interp, obj, key);
+    const char* textPtr = Tcl_GetString(item);
+    
+    return std::string(textPtr);
+    
+}
+/**
+ * getBoolFromDictItem
+ *     Returns the boolean representation of a dict item.  Throws if
+ *     *   The dict isn't actually oen.
+ *     *   The key is not found in the dict.
+ *     *   The item does not have a valid bool representation.
+ *
+ *  @param interp - interpreter used to parse stuff.
+ *  @param obj    - Supposed dict.
+ *  @param key    - Key for the value we want.
+ *  @return bool
+ */
+bool
+TclMessageUtilities::getBoolFromDictItem(
+    CTCLInterpreter& interp, CTCLObject& obj, const char* key
+)
+{
+    Tcl_Obj* item = getDictItem(interp, obj, key);
+    int  boolValue;
+    if (Tcl_GetBooleanFromObj(interp.getInterpreter(), item, &boolValue) != TCL_OK) {
+        throw std::invalid_argument("Dict item does not have a bool representation");
+    }
+    return (boolValue != 0) ? true : false;
+}
+/**
+ * getStringListFromDictItem
+ *    Turn a dict item that contains a list of strings into a vector of strings.
+ *
+ * @param interp - interpreter used to process the request.
+ * @param obj    - Dict object.
+ * @param key    - Key being retrieved from the dict.
+ */
+std::vector<std::string>
+TclMessageUtilities::getStringListFromDictItem(
+    CTCLInterpreter& interp, CTCLObject& obj, const char* key
+)
+{
+    Tcl_Obj* item = getDictItem(interp, obj, key);
+    CTCLObject list(item);
+    list.Bind(interp);
+    
+    std::vector<std::string> result;
+    for (int i = 0; i < list.llength(); i++) {
+        std::string item = list.lindex(i);
+        result.push_back(item);
+    }
+    
+    return result;
+}
+/**
  *  listFromStringList
  *     Many of the messages store a list of strings as null terminated strings
  *     one after another terminated by an additional null.  This method
