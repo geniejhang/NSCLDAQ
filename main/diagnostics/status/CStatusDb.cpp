@@ -921,7 +921,7 @@ CStatusDb::marshallLogMessage(
     
     if (message.size() != 2) {
         throw std::length_error(
-            "Log message that does noth ave 2 message aprts (CStatusDb)"
+            "Log message that does not have 2 message parts (CStatusDb)"
         );
     }
     const CStatusDefinitions::LogMessageBody* pBody =

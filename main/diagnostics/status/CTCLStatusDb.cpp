@@ -393,6 +393,7 @@ CTCLStatusDb::CTCLStatusDbInstance::addRingStatistics(
     catch (...) {
         std::free(id);
         freeRingClients(clients);
+        throw;
     }
     std::free(id);
     freeRingClients(clients);  

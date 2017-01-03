@@ -1,0 +1,407 @@
+#!/bin/sh
+# -*- tcl -*-
+# The next line is executed by /bin/sh, but not tcl \
+exec tclsh "$0" ${1+"$@"}
+
+#    This software is Copyright by the Board of Trustees of Michigan
+#    State University (c) Copyright 2014.
+#
+#    You may use this software under the terms of the GNU public license
+#    (GPL).  The terms of this license are described at:
+#
+#     http://www.gnu.org/licenses/gpl.txt
+#
+#    Authors:
+#             Ron Fox
+#             Jeromy Tompkins 
+#	     NSCL
+#	     Michigan State University
+#	     East Lansing, MI 48824-1321
+
+
+
+##
+# @file statdb.test
+# @brief Unit tests for TCL bindings to CStatusDb
+# @author Ron Fox <fox@nscl.msu.edu>
+#
+
+package require tcltest
+package require statusMessage
+package require sqlite3
+package require SqlWhere
+
+#---------------------------------------------------------------------------
+#  Creation/destruction.
+
+
+tcltest::test create {Creating an object creates a command.} \
+-setup \
+{
+    set cmd [statusdb create :memory: readwrite create]
+} \
+-cleanup {
+    statusdb destroy $cmd
+} \
+-body {
+    expr {[info command $cmd] ne ""}
+} -result 1
+
+
+tcltest::test destroy {Destroying a statsudb object destroys the command} \
+-setup {
+    set cmd [statusdb create :memory: readwrite create]
+} \
+-body {
+    statusdb destroy $cmd
+    
+    expr {[info command $cmd] eq ""}
+} -result 1
+
+
+
+#---------------------------------------------------------------------------
+#  Insertion:
+#
+
+#  Create a temp database file and return the statusdb command connected to it.
+#  the global databaseFile is set with the database filepath.
+
+set databaseFile ""
+
+proc createdb {} {
+    set ::databaseFile [tcltest::makeFile "" dbfile]
+    set cmd [statusdb create $::databaseFile create readwrite]
+    return $cmd
+}
+
+# Kill off a command and the file in databaseFile:
+
+proc cleanDb cmd {
+    statusdb destroy $cmd
+    tcltest::removeFile dbfile
+}
+
+
+proc makeHeader {type sev app host} {
+    set result [binary format \
+       i2a32a128 [list $type $sev] $app $host    \
+    ]
+    
+    return $result
+}
+proc makeLogBody {timestamp message} {
+    set nchar [string length $message]
+    incr nchar;    # Allow for the null terminator.
+    
+    set result [binary format \
+        wa$nchar $timestamp $message         \
+    ]
+    
+    return $result
+}
+
+proc makeLogMessage {severity application host timestamp message} {
+    set part1 [makeHeader 3 $severity $application $host]
+    set part2 [makeLogBody $timestamp $message]
+    
+    return [list $part1 $part2]
+}
+
+##
+# ring statistics:
+#
+
+tcltest::test addringstats_1 {Add a ring definition} \
+-setup {
+    set cmd [createdb]
+    sqlite3 db $::databaseFile -readonly 1
+} \
+-cleanup {
+    cleanDb $cmd
+    db close
+} \
+-body {
+    $cmd addRingStatistics INFO ringstatdaemon charlie.nscl.msu.edu [dict create timestamp 1234 name myring]
+    
+    # should have a ring_buffer entry for the ring described:
+    
+    db eval {SELECT * FROM ring_buffer}
+} -result [list 1 myring charlie.nscl.msu.edu]
+
+tcltest::test addringstats_2 {Test that a ring client gets added} \
+-setup {
+    set cmd [createdb]
+    sqlite3 db $::databaseFile -readonly 1
+} \
+-cleanup {
+    cleanDb $cmd
+    db close
+} \
+-body {
+    $cmd addRingStatistics INFO ringstatdaemon charlie.nscl.msu.edu [dict create \
+        timestamp 1234 name myring]  \
+        [dict create  \
+            ops 1234 bytes 12340 backlog 0 pid 50 producer 1  \
+            command [list my producer] \
+        ]
+    
+    db eval {SELECT * FROM ring_client}
+} -result [list 1 1 50 1 {my producer}]
+
+tcltest::test addringstats_3 {Test that a ring statistics entry is added}  \
+-setup {
+    set cmd [createdb]
+    sqlite3 db $::databaseFile -readonly 1
+} \
+-cleanup {
+    cleanDb $cmd
+    db close
+} \
+-body {
+    $cmd addRingStatistics INFO ringstatdaemon charlie.nscl.msu.edu [dict create \
+        timestamp 1234 name myring]  \
+        [dict create  \
+            ops 1234 bytes 12340 backlog 0 pid 50 producer 1  \
+            command [list my producer] \
+        ]
+    db eval {SELECT * FROM ring_client_statistics}
+} -result [list 1 1 1 1234 1234 12340 0]
+
+##
+# state transitions:
+
+tcltest::test addtransition_1 {Adding a transition requries a state_application entry} \
+-setup {
+    set cmd [createdb]
+    sqlite3 db $::databaseFile -readonly 1
+} \
+-cleanup {
+    cleanDb $cmd
+    db close
+} \
+-body {
+    $cmd addStateChange INFO VMUSBReadout charlie.nscl.msu.edu 112233 NotReady Readying
+    
+    db eval {SELECT * FROM state_application}
+} -result [list 1 VMUSBReadout charlie.nscl.msu.edu]
+
+tcltest::test addtransition_2 {Adding a transition requires a state_transitions entry too} \
+-setup {
+    set cmd [createdb]
+    sqlite3 db $::databaseFile -readonly 1
+} \
+-cleanup {
+    cleanDb $cmd
+    db close
+} \
+-body {
+    $cmd addStateChange INFO VMUSBReadout charlie.nscl.msu.edu 112233 NotReady Readying
+    
+    db eval {SELECT * FROM  state_transitions}
+} -result [list 1 1 112233 NotReady Readying]
+
+##
+# readout statistics:
+
+tcltest::test addreadoutstats_1 {Adding a run id creates a readout_program if needed} \
+-setup {
+    set cmd [createdb]
+    sqlite3 db $::databaseFile -readonly 1
+} \
+-cleanup {
+    cleanDb $cmd
+    db close
+} \
+-body {
+    $cmd addReadoutStatistics \
+        INFO VMUSBReadout charlie.nscl.msu.edu 666666 1  \
+        {A title string}
+    
+    db eval {SELECT * FROM readout_program}
+} -result [list 1 VMUSBReadout charlie.nscl.msu.edu]
+
+tcltest::test addreadoustats_2 {Adding a run id adds a run_info element} \
+-setup {
+    set cmd [createdb]
+    sqlite3 db $::databaseFile -readonly 1
+} \
+-cleanup {
+    cleanDb $cmd
+    db close
+} \
+-body {
+    $cmd addReadoutStatistics \
+        INFO VMUSBReadout charlie.nscl.msu.edu 666666 1  \
+        {A title string}
+    
+    db eval {SELECT * FROM run_info}
+} -result [list 1 1 666666 1 {A title string}]
+
+tcltest::test addreadoutstats_3 {Adding a run statistics entry creates a readout_statistics row} \
+-setup {
+    set cmd [createdb]
+    sqlite3 db $::databaseFile -readonly 1
+} \
+-cleanup {
+    cleanDb $cmd
+    db close
+} \
+-body {
+    $cmd addReadoutStatistics \
+        INFO VMUSBReadout charlie.nscl.msu.edu 666666 1  \
+        {A title string}                                                      \
+        [dict create timestamp 666667 elapsed 1 triggers 100 events 99 bytes 10240]
+    
+    db eval {SELECT * FROM readout_statistics}
+} -result [list 1 1 1 666667 1 100 99 10240]
+
+##
+# log messages:
+
+tcltest::test addlogmsg_1 {Adding a log msg adds a log_messages record} \
+-setup {
+    set cmd [createdb]
+    sqlite3 db $::databaseFile -readonly 1
+} \
+-cleanup {
+    cleanDb $cmd
+    db close
+} \
+-body {
+    $cmd addLogMessage \
+        WARNING error-generator charlie.nscl.msu.edu 111111  \
+        {This is a log message}
+    
+    db eval {SELECT * FROM log_messages}
+} -result [list 1 WARNING error-generator charlie.nscl.msu.edu 111111 {This is a log message}]
+
+## Generic insertion, we'll use a log message.
+
+tcltest::test insert_1 {add a log message as  a raw message} \
+-setup {
+    set cmd [createdb]
+    sqlite3 db $::databaseFile -readonly 1
+    set message [makeLogMessage 2 error-generator charlie.nscl.msu.edu 111111 {This is a log message}]
+} \
+-cleanup {
+    cleanDb $cmd
+    db close
+} \
+-body {
+    $cmd insert {*}$message
+    db eval {SELECT * FROM log_messages}
+} -result [list 1 WARNING error-generator charlie.nscl.msu.edu 111111 {This is a log message}]    
+    
+#-----------------------------------------------------------------------------
+#  Test queries.. note that for simplicity the database is stocked via the
+#  specific inserters rather than the generic 'insert' subcommand which would
+#  require us to build binary message parts.
+
+
+##
+# Log entries:
+
+# put some log messages into the db:
+
+proc stockLogMessages cmd {
+    $cmd addLogMessage INFO test1 charlie.nscl.msu.edu 0 {The first message}
+    $cmd addLogMessage WARNING test2 spdaq20.nscl.msu.edu 2 {The second message two seconds later}
+    $cmd addLogMessage SEVERE test1 charlie.nscl.msu.edu 3 {The system crashed}
+}
+
+tcltest::test querylog_1 {Return all log messages} \
+-setup {
+    set cmd [createdb]
+    stockLogMessages $cmd
+} \
+-cleanup {
+    cleanDb $cmd
+} \
+-body {
+    $cmd queryLogMessages
+} -result [list                                                               \
+    [dict create id 1 severity INFO  application test1                              \
+        source charlie.nscl.msu.edu timestamp 0 message {The first message}]        \
+    [dict create id 2 severity WARNING application test2                            \
+        source spdaq20.nscl.msu.edu timestamp 2                                     \
+        message {The second message two seconds later}]                             \
+    [dict create id 3 severity SEVERE application test1                             \
+        source charlie.nscl.msu.edu timestamp 3 message {The system crashed}]       \
+]
+
+tcltest::test querylog_2 {Return onlhy log messages wit application = test1} \
+-setup {
+    set cmd [createdb]
+    stockLogMessages $cmd
+    set cond [RelationToStringFilter %AUTO% application = test1]
+} \
+-cleanup {
+    cleanDb $cmd
+    $cond destroy
+} \
+-body {
+    $cmd queryLogMessages $cond
+} -result [list                                                              \
+    [dict create id 1 severity INFO  application test1                              \
+        source charlie.nscl.msu.edu timestamp 0 message {The first message}]        \
+    [dict create id 3 severity SEVERE application test1                             \
+        source charlie.nscl.msu.edu timestamp 3 message {The system crashed}]       \
+]
+    
+##
+# rings statistics:
+
+proc loadRingStats {cmd} {
+    $cmd addRingStatistics INFO ringstatdaemon charlie.nscl.msu.edu \
+        [dict create timestamp 0 name ring1]                        \
+        [dict create ops 100 bytes 1000 producer 1 command [list VMUSBReadout --ring=ring1] backlog 0 pid 123] \
+        [dict create ops 50 bytes 500 producer 0 command [list dumper --source=tcp://localhost/ring1] backlog 500 pid 200]
+    
+    $cmd addRingStatistics INFO ringstatdaemon charlie.nscl.msu.edu \
+        [dict create timestamp 0 name ring2]                        \
+        [dict create ops 300 bytes 3750 producer 1 command [list CCUSBReadout --ring=ring2] backlog 0 pid 200] \
+        [dict create opt 300 bytes 3750 producer 0 command [list ringselector --source=tcp://localhost/ring2] backlog 0 pid 257]
+    
+    $cmd addRingStatistics INFO ringstatdaemon charlie.nscl.msu.edu \
+        [dict create timestamp 2 name ring1]                        \
+        [dict create ops 200 bytes 2000 producer 1 command [list VMUSBReadout --ring=ring1] backlog 0 pid 123] \
+        [dict create ops 100 bytes 1000 producer 0 command [list dumper --source=tcp://localhost/ring1] backlog 1000 pid 200]
+
+    $cmd addRingStatistics INFO ringstatdaemon charlie.nscl.msu.edu \
+        [dict create timestamp 2 name ring2]                        \
+        [dict create ops 400 bytes 4000 producer 1 command [list CCUSBReadout --ring=ring2] backlog 0 pid 200] \
+        [dict create opt 400 bytes 4000 producer 0 command [list ringselector --source=tcp://localhost/ring2] backlog 0 pid 257]    
+}
+
+tcltest::test listrings_1 {List all of the rings that have been defined} \
+-setup {
+    set cmd [createdb]
+    loadRingStats $cmd
+} \
+-cleanup {
+    cleanDb $cmd
+} \
+-body {
+    $cmd listRings
+} -result [list                                                                \
+    [dict create id 1 name ring1 host charlie.nscl.msu.edu fqname ring1@charlie.nscl.msu.edu] \
+    [dict create id 2 name ring2 host charlie.nscl.msu.edu fqname ring2@charlie.nscl.msu.edu] \
+]         
+#---------------------------------------------------------------------------
+# Test completion:
+
+#
+#  Ensure that test failures result in exit failure:
+#
+
+proc tcltest::cleanupTestsHook {} {
+    variable numTests
+    set ::exitCode [expr {$numTests(Failed) > 0}]
+}
+
+
+tcltest::cleanupTests
+
+
+exit $::exitCode
