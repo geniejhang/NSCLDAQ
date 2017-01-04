@@ -243,7 +243,9 @@ TclMessageUtilities::getDictItem(
     
     int status = Tcl_DictObjGet(rawInterp, dict, keyObj.getObject(), &result);
     if ((status != TCL_OK) || (result == nullptr)) {
-        throw std::invalid_argument("Unable to get item from dict");
+        std::string msg("Unable to get item from dict: ");
+        msg += key;
+        throw std::invalid_argument(msg);
     }
     return result;
     

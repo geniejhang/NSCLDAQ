@@ -1458,9 +1458,9 @@ CTCLStatusDb::CTCLStatusDbInstance::createRingInfoDict(CTCLObject& result, CStat
     CTCLInterpreter* pInterp = result.getInterpreter();
     
     TclMessageUtilities::addToDictionary(*pInterp, result, "id",     rec.s_id);
-    TclMessageUtilities::addToDictionary(*pInterp, result, "fqname", rec.s_fqname.c_str());
     TclMessageUtilities::addToDictionary(*pInterp, result, "name",   rec.s_name.c_str());
     TclMessageUtilities::addToDictionary(*pInterp, result, "host",   rec.s_host.c_str());
+    TclMessageUtilities::addToDictionary(*pInterp, result, "fqname", rec.s_fqname.c_str());
 }
 /**
  *  createRingClientDict
@@ -1501,7 +1501,7 @@ CTCLStatusDb::CTCLStatusDbInstance::createRingStatisticsDict(
     TclMessageUtilities::addToDictionary(*pInterp, dict, "timestamp",  rec.s_timestamp);
     TclMessageUtilities::addToDictionary(*pInterp, dict, "operations", rec.s_operations);
     TclMessageUtilities::addToDictionary(*pInterp, dict, "bytes",      rec.s_bytes);
-    TclMessageUtilities::addToDictionary(*pInterp, dict, "backlogt",   rec.s_backlog);
+    TclMessageUtilities::addToDictionary(*pInterp, dict, "backlog",   rec.s_backlog);
 }
 /**
  * createAppDictionary

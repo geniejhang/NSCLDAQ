@@ -360,8 +360,8 @@ proc loadRingStats {cmd} {
     
     $cmd addRingStatistics INFO ringstatdaemon charlie.nscl.msu.edu \
         [dict create timestamp 0 name ring2]                        \
-        [dict create ops 300 bytes 3750 producer 1 command [list CCUSBReadout --ring=ring2] backlog 0 pid 200] \
-        [dict create opt 300 bytes 3750 producer 0 command [list ringselector --source=tcp://localhost/ring2] backlog 0 pid 257]
+        [dict create ops 300 bytes 3750 producer 1 command [list CCUSBReadout --ring=ring2] backlog 0 pid 201] \
+        [dict create ops 300 bytes 3750 producer 0 command [list ringselector --source=tcp://localhost/ring2] backlog 0 pid 257]
     
     $cmd addRingStatistics INFO ringstatdaemon charlie.nscl.msu.edu \
         [dict create timestamp 2 name ring1]                        \
@@ -370,8 +370,8 @@ proc loadRingStats {cmd} {
 
     $cmd addRingStatistics INFO ringstatdaemon charlie.nscl.msu.edu \
         [dict create timestamp 2 name ring2]                        \
-        [dict create ops 400 bytes 4000 producer 1 command [list CCUSBReadout --ring=ring2] backlog 0 pid 200] \
-        [dict create opt 400 bytes 4000 producer 0 command [list ringselector --source=tcp://localhost/ring2] backlog 0 pid 257]    
+        [dict create ops 400 bytes 4000 producer 1 command [list CCUSBReadout --ring=ring2] backlog 0 pid 201] \
+        [dict create ops 400 bytes 4000 producer 0 command [list ringselector --source=tcp://localhost/ring2] backlog 0 pid 257]    
 }
 
 tcltest::test listrings_1 {List all of the rings that have been defined} \
@@ -387,7 +387,155 @@ tcltest::test listrings_1 {List all of the rings that have been defined} \
 } -result [list                                                                \
     [dict create id 1 name ring1 host charlie.nscl.msu.edu fqname ring1@charlie.nscl.msu.edu] \
     [dict create id 2 name ring2 host charlie.nscl.msu.edu fqname ring2@charlie.nscl.msu.edu] \
-]         
+]
+
+tcltest::test listrings_2 {List selected rings} \
+-setup {
+    set cmd [createdb]
+    loadRingStats $cmd
+    set cond [RelationToNonStringFilter %AUTO% r.id = 2]
+} \
+-cleanup {
+    cleanDb $cmd
+    $cond destroy
+} \
+-body {
+    $cmd listRings $cond
+} -result [list                                                              \
+    [dict create id 2 name ring2 host charlie.nscl.msu.edu fqname ring2@charlie.nscl.msu.edu] \
+]
+
+tcltest::test listringclients_1 {List rings and all of their clients} \
+-setup {
+    set cmd [createdb]
+    loadRingStats $cmd
+} \
+-cleanup {
+    cleanDb $cmd
+} \
+-body {
+    $cmd listRingsAndClients
+} -result  [dict create                                                     \
+    ring1@charlie.nscl.msu.edu [list                           \
+        [dict create id 1 name ring1 host charlie.nscl.msu.edu fqname ring1@charlie.nscl.msu.edu] \
+        [list                                                               \
+           [dict create id 1 pid 123 isProducer 1 command  [list VMUSBReadout --ring=ring1] ] \
+           [dict create id 2 pid 200 isProducer 0 command  [list dumper --source=tcp://localhost/ring1]] \
+    ] ]  ring2@charlie.nscl.msu.edu [list                                     \
+          [dict create id 2 name ring2 host charlie.nscl.msu.edu fqname ring2@charlie.nscl.msu.edu] \
+        [list \
+          [dict create id 3 pid 201 isProducer 1 command [list CCUSBReadout --ring=ring2] ] \
+          [dict create id 4 pid 257 isProducer 0 command [list ringselector --source=tcp://localhost/ring2] ] \
+       ]                                                    \
+    ]                                                        \
+]
+
+tcltest::test listringclients_2 {list rings and clients for ony ring1} \
+-setup {
+    set cmd [createdb]
+    loadRingStats $cmd
+    set cond [RelationToStringFilter %AUTO% r.name = ring1]
+} \
+-cleanup {
+     cleanDb $cmd
+     $cond destroy
+} \
+-body {
+    $cmd listRingsAndClients $cond
+} -result [dict create                                                     \
+    ring1@charlie.nscl.msu.edu [list                           \
+        [dict create id 1 name ring1 host charlie.nscl.msu.edu fqname ring1@charlie.nscl.msu.edu] \
+        [list                                                               \
+           [dict create id 1 pid 123 isProducer 1 command  [list VMUSBReadout --ring=ring1] ] \
+           [dict create id 2 pid 200 isProducer 0 command  [list dumper --source=tcp://localhost/ring1]] \
+    ] ]                 \
+]
+
+tcltest::test queryringstats-1 {Get all of the rings, clients and statistics} \
+-setup {
+    set cmd [createdb]
+    loadRingStats $cmd
+} \
+-cleanup {
+    cleanDb $cmd
+} \
+-body {
+    $cmd queryRingStatistics
+} -result [dict create                                                       \
+    ring1@charlie.nscl.msu.edu [list                                         \
+       [dict create id 1 name ring1 host charlie.nscl.msu.edu fqname ring1@charlie.nscl.msu.edu] \
+       [list                                                                 \
+          [list                                                              \
+             [dict create id 1 pid 123 isProducer 1 command  [list VMUSBReadout --ring=ring1] ] \
+             [list                                                           \
+                [dict create id 1 timestamp 0 operations 100 bytes 1000 backlog 0]  \
+                [dict create id 5 timestamp 2 operations 200 bytes 2000 backlog 0] \
+             ]                                                                \
+          ]                                                                  \
+          [list                                                             \
+             [dict create id 2 pid 200 isProducer 0 command  [list dumper --source=tcp://localhost/ring1]] \
+             [list                                                          \
+                [dict create id 2 timestamp 0 operations 50 bytes 500 backlog 500] \
+                [dict create id 6 timestamp 2 operations 100 bytes 1000 backlog 1000] \
+             ]                                                               \
+          ]                                                                  \
+       ]                                                                     \
+    ]                                                                        \
+    ring2@charlie.nscl.msu.edu [list                                         \
+       [dict create id 2 name ring2 host charlie.nscl.msu.edu fqname ring2@charlie.nscl.msu.edu] \
+       [list                                                                   \
+            [list [dict create id 3 pid 201 isProducer 1 command [list CCUSBReadout --ring=ring2] ] \
+            [list                                                             \
+                [dict create id 3 timestamp 0 operations 300 bytes 3750 backlog 0] \
+                [dict create id 7 timestamp 2 operations 400 bytes 4000 backlog 0] \
+            ]                                                                 \
+       ]                                                                      \
+            [list [dict create id 4 pid 257 isProducer 0 command [list ringselector --source=tcp://localhost/ring2] ] \
+            [list                                                             \
+                [dict create id 4 timestamp 0 operations 300 bytes 3750 backlog 0] \
+                [dict create id 8 timestamp 2 operations 400 bytes 4000 backlog 0]  \
+            ]                                                                 \
+       ]]                                                                     \
+    ]                                                                        \
+]
+
+tcltest::test queryringstats-2 {Get filtered ring statistics} \
+-setup {
+    set cmd [createdb]
+    loadRingStats $cmd
+    set cond [RelationToStringFilter %AUTO% c.producer = 1]
+} \
+-cleanup {
+    cleanDb $cmd
+    $cond destroy
+} \
+-body {
+    $cmd queryRingStatistics $cond
+} -result [dict create                                                       \
+    ring1@charlie.nscl.msu.edu [list                                         \
+       [dict create id 1 name ring1 host charlie.nscl.msu.edu fqname ring1@charlie.nscl.msu.edu] \
+       [list                                                                 \
+          [list                                                              \
+             [dict create id 1 pid 123 isProducer 1 command  [list VMUSBReadout --ring=ring1] ] \
+             [list                                                           \
+                [dict create id 1 timestamp 0 operations 100 bytes 1000 backlog 0]  \
+                [dict create id 5 timestamp 2 operations 200 bytes 2000 backlog 0] \
+             ]                                                                \
+          ]                                                                  \
+       ]                                                                     \
+    ]                                                                        \
+    ring2@charlie.nscl.msu.edu [list                                         \
+       [dict create id 2 name ring2 host charlie.nscl.msu.edu fqname ring2@charlie.nscl.msu.edu] \
+       [list                                                                   \
+            [list [dict create id 3 pid 201 isProducer 1 command [list CCUSBReadout --ring=ring2] ] \
+            [list                                                             \
+                [dict create id 3 timestamp 0 operations 300 bytes 3750 backlog 0] \
+                [dict create id 7 timestamp 2 operations 400 bytes 4000 backlog 0] \
+            ]                                                                 \
+       ]]                                                                     \
+    ]                                                                        \
+]
+
 #---------------------------------------------------------------------------
 # Test completion:
 
