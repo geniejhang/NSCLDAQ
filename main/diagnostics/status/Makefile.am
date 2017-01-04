@@ -1,6 +1,7 @@
 bin_PROGRAMS = ringstatusdaemon statusaggregator multiaggregator
 
-lib_LTLIBRARIES = libStatusMessages.la libTclStatusMessages.la libPyStatusMessages.la
+lib_LTLIBRARIES = libStatusMessages.la libTclStatusMessages.la libPyStatusMessages.la \
+	libPyStatusDb.la
 
 TCL_PACKAGES=LogModel.tcl LogView.tcl LogController.tcl LogDisplay.tcl
 
@@ -124,11 +125,18 @@ libPyStatusMessages_la_CPPFLAGS=$(COMPILATION_FLAGS) @PYTHON_CPPFLAGS@
 libPyStatusMessages_la_LDFLAGS=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
 				@PYTHON_LDFLAGS@
 
+libPyStatusDb_la_SOURCES=PyStatusDb.cpp
+libPyStatusDb_la_CPPFLAGS=$(COMPILATION_FLAGS) @PYTHON_CPPFLAGS@
+libPyStatusDb_la_LDFLAGS=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
+				@top_builddir@/base/sqlite++/libsqlite3pp.la \
+				@PYTHON_LDFLAGS@ @SQLITE3_LDFLAGS@
+
 pypkgInstall:
 	$(mkinstalldirs) @prefix@/pythonLibs  @prefix@/pythonLibs/nscldaq
 	$(mkinstalldirs) @prefix@/pythonLibs/nscldaq/status
 	touch @prefix@/pythonLibs/nscldaq/status/__init__.py
 	$(INSTALL_PROGRAM) @libdir@/libPyStatusMessages.so @prefix@/pythonLibs/nscldaq/status/statusmessages.so
+	$(INSTALL_PROGRAM) @libdir@/libPyStatusDb.so @prefix@/pythonLibs/nscldaq/status/statusdb.so
 
 #-------------------- Tests -----
 
