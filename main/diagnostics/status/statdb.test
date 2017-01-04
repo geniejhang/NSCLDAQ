@@ -536,6 +536,286 @@ tcltest::test queryringstats-2 {Get filtered ring statistics} \
     ]                                                                        \
 ]
 
+##
+# state changes.  There are both applications and transitions that
+#                 an application can fire.
+
+proc loadStateData cmd {
+
+   # 3 readouts start getting ready:
+
+    $cmd addStateChange  INFO Readout charlie.nscl.msu.edu 0 NotReady Readying
+    $cmd addStateChange  INFO Readout spdaq20.nscl.msu.edu 1 NotReady Readying
+    $cmd addStateChange  INFO VMUSBReadout spdaq21.nscl.msu.edu 1 NotReady Readying
+    
+    # Transitions complete:
+    
+    $cmd addStateChange INFO Readout spdaq20.nscl.msu.edu 10 Readying Ready
+    $cmd addStateChange INFO VMUSBReadout spdaq21.nscl.msu.edu 11 Readying Ready
+    $cmd addStateChange INFO Readout charlie.nscl.msu.edu 11 Readying Ready
+}
+
+
+tcltest::test liststateapps-1  {List all state change emitters} \
+-setup {
+    set cmd [createdb]
+    loadStateData $cmd
+} \
+-cleanup {
+    cleanDb $cmd
+} \
+-body {
+    $cmd listStateApplications
+} -result [list                                                               \
+    [dict create id 1 name Readout host charlie.nscl.msu.edu]                 \
+    [dict create id 2 name Readout host spdaq20.nscl.msu.edu]                 \
+    [dict create id 3 name VMUSBReadout host spdaq21.nscl.msu.edu]            \
+]
+
+tcltest::test liststateapps-2 {list state change emitters named Readout} \
+-setup {
+    set cmd [createdb]
+    loadStateData $cmd
+    set cond [RelationToStringFilter %AUTO% a.name = Readout]
+} \
+-cleanup {
+    cleanDb $cmd
+    $cond destroy
+} \
+-body {
+    $cmd listStateApplications $cond
+} -result [list                                                                \
+    [dict create id 1 name Readout host charlie.nscl.msu.edu]                 \
+    [dict create id 2 name Readout host spdaq20.nscl.msu.edu]                 \
+]
+
+tcltest::test querytransitions-1 {Get all state transitions}                \
+-setup {
+    set cmd [createdb]
+    loadStateData $cmd   
+} \
+-cleanup {
+    cleanDb $cmd
+} \
+-body {
+    $cmd queryStateTransitions
+}  -result [list                                                              \
+    [dict create                                                              \
+        application [dict create id 1 name Readout host charlie.nscl.msu.edu] \
+        id 1 timestamp 0 leaving NotReady entering Readying                   \
+    ]                                                                         \
+   [dict create                                                              \
+      application [dict create id 2 name Readout host spdaq20.nscl.msu.edu]  \
+      id 2 timestamp 1 leaving NotReady entering Readying                        \
+   ]                                                                         \
+   [dict create                                                             \
+      application [dict create id 3 name VMUSBReadout host spdaq21.nscl.msu.edu] \
+      id 3 timestamp 1 leaving NotReady entering Readying                       \
+    ]                                                                       \
+    [dict create                                                            \
+       application [dict create id 2 name Readout host spdaq20.nscl.msu.edu]  \
+       id 4 timestamp 10 leaving Readying entering Ready                    \
+    ]                                                                       \
+    [dict create                                                            \
+       application [dict create id 1 name Readout host charlie.nscl.msu.edu] \
+       id 6 timestamp 11 leaving Readying entering Ready                     \
+    ]                                                                       \
+    [dict create                                                            \
+        application [dict create id 3 name VMUSBReadout host spdaq21.nscl.msu.edu] \
+        id 5 timestamp 11 leaving Readying entering Ready                   \
+    ]                                                                       \
+]
+
+tcltest::test querytransitions-2  {Only get the transitions for apps named Readout} \
+-setup {
+    set cmd [createdb]
+    loadStateData $cmd
+    set cond [RelationToStringFilter %AUTO% a.name = Readout]
+} \
+-cleanup {
+    cleanDb $cmd
+    $cond destroy
+} \
+-body {
+    $cmd queryStateTransitions $cond
+}  -result [list                                                              \
+    [dict create                                                              \
+        application [dict create id 1 name Readout host charlie.nscl.msu.edu] \
+        id 1 timestamp 0 leaving NotReady entering Readying                   \
+    ]                                                                         \
+   [dict create                                                              \
+      application [dict create id 2 name Readout host spdaq20.nscl.msu.edu]  \
+      id 2 timestamp 1 leaving NotReady entering Readying                        \
+   ]                                                                         \
+    [dict create                                                            \
+       application [dict create id 2 name Readout host spdaq20.nscl.msu.edu]  \
+       id 4 timestamp 10 leaving Readying entering Ready                    \
+    ]                                                                       \
+    [dict create                                                            \
+       application [dict create id 1 name Readout host charlie.nscl.msu.edu] \
+       id 6 timestamp 11 leaving Readying entering Ready                     \
+    ]                                                                       \
+]
+##
+# Readout statistics queries:
+#
+proc loadReadoutStats {cmd} {
+    
+    # run number 1:
+    
+    $cmd addReadoutStatistics INFO Readout charlie.nscl.msu.edu 100 1 {The first run on charlie}
+    $cmd addReadoutStatistics INFO VMUSBReadout spdaq20.nscl.msu.edu 100 1 {The first run on spdaq20}
+    
+    $cmd addReadoutStatistics INFO Readout charlie.nscl.msu.edu 100 1 {The first run on charlie} \
+      [dict create timestamp 102 elapsed 2 triggers 100 events 99 bytes 1024]
+    $cmd addReadoutStatistics INFO VMUSBReadout spdaq20.nscl.msu.edu 100 1 {The first run on spdaq20} \
+        [dict create timestamp 102 elapsed 2 triggers 110 events 110 bytes 2000]
+    
+    $cmd addReadoutStatistics INFO VMUSBReadout spdaq20.nscl.msu.edu 100 1 {The first run on spdaq20} \
+       [dict create timestamp 104 elapsed 4 triggers 50 events 49 bytes 1000]
+    $cmd addReadoutStatistics INFO Readout charlie.nscl.msu.edu 100 1 {The first run on charlie} \
+       [dict create timestamp 104 elapsed 4 triggers 7 events 7 bytes 120]
+    
+    # Run number 2:
+    
+    $cmd addReadoutStatistics INFO Readout charlie.nscl.msu.edu 200 2 {The second run on charlie}
+    $cmd addReadoutStatistics INFO VMUSBReadout spdaq20.nscl.msu.edu 200 2 {The second run on spdaq20}
+
+
+    $cmd addReadoutStatistics INFO Readout charlie.nscl.msu.edu 200 2 {The second run on charlie} \
+        [dict create timestamp 202 elapsed 2 triggers 25 events 25 bytes 100]
+    $cmd addReadoutStatistics INFO VMUSBReadout spdaq20.nscl.msu.edu 200 2 {The second run on spdaq20} \
+        [dict create timestamp 202 elapsed 2 triggers 200 events 150 bytes 15000]
+}
+
+tcltest::test listreadoutapps-1  {List all readout applications} \
+-setup {
+    set cmd [createdb]
+    loadReadoutStats $cmd
+} \
+-cleanup {
+    cleanDb $cmd
+} -body {
+    $cmd listReadoutApps
+} -result [list                                                            \
+    [dict create id 1 name Readout host charlie.nscl.msu.edu]              \
+    [dict create id 2 name VMUSBReadout host spdaq20.nscl.msu.edu]         \
+]
+
+tcltest::test listreadoutapps-2 {List all readout applications in charlie} \
+-setup {
+    set cmd [createdb]
+    loadReadoutStats $cmd
+    set cond [RelationToStringFilter %AUTO% a.host = charlie.nscl.msu.edu]
+} \
+-cleanup {
+    cleanDb $cmd
+    $cond destroy
+} -body {
+    $cmd listReadoutApps $cond
+} -result [list                                                            \
+    [dict create id 1 name Readout host charlie.nscl.msu.edu]              \
+]
+
+tcltest::test listruns-1  {List all runs}                               \
+-setup {
+    set cmd [createdb]
+    loadReadoutStats $cmd
+} \
+-cleanup {
+    cleanDb $cmd
+} -body {
+    $cmd listRuns
+} -result [dict  create                                                       \
+    1 [list                                                                   \
+         [dict create id 1 name Readout host charlie.nscl.msu.edu]            \
+         [list                                                                \
+            [dict create id 1 startTime 100 runNumber 1 runTitle {The first run on charlie}] \
+            [dict create id 3 startTime 200 runNumber 2 runTitle {The second run on charlie}] \
+         ]                                                                    \
+      ]                                                                       \
+   2  [list                                                                   \
+         [dict create id 2 name VMUSBReadout host spdaq20.nscl.msu.edu]       \
+         [list                                                                \
+            [dict create id 2 startTime 100 runNumber 1 runTitle {The first run on spdaq20}] \
+            [dict create id 4 startTime 200 runNumber 2 runTitle {The second run on spdaq20} ] \
+         ]                                                                    \
+      ]                                                                       \
+]
+
+
+tcltest::test listruns-2 {Only list run number 2} \
+-setup {
+    set cmd [createdb]
+    loadReadoutStats $cmd
+    set cond [RelationToStringFilter %AUTO% r.run = 2]
+} \
+-cleanup {
+    cleanDb $cmd
+    $cond destroy
+} -body {
+    $cmd listRuns $cond
+} -result [dict  create                                                       \
+    1 [list                                                                   \
+         [dict create id 1 name Readout host charlie.nscl.msu.edu]            \
+         [list                                                                \
+            [dict create id 3 startTime 200 runNumber 2 runTitle {The second run on charlie}] \
+         ]                                                                    \
+      ]                                                                       \
+   2  [list                                                                   \
+         [dict create id 2 name VMUSBReadout host spdaq20.nscl.msu.edu]       \
+         [list                                                                \
+            [dict create id 4 startTime 200 runNumber 2 runTitle {The second run on spdaq20} ] \
+         ]                                                                    \
+      ]                                                                       \
+]
+
+tcltest::test queryreadoutstats-1 {unfiltered query of the readout statistics} \
+-setup {
+    set cmd [createdb]
+    loadReadoutStats $cmd    
+} \
+-cleanup {
+    cleanDb $cmd
+} -body {
+    $cmd queryReadoutStatistics
+} -result [dict create                                                         \
+   1  [list                                                                    \
+         [dict create id 1 name Readout host charlie.nscl.msu.edu]            \
+         [list [list                                                                \
+            [dict create id 1 startTime 100 runNumber 1 runTitle {The first run on charlie}] \
+            [list                                                              \
+               [dict create id 1 timestamp 102 elapsedTime 2 triggers 100 events 99 bytes 1024] \
+               [dict create id 4 timestamp 104 elapsedTime 4 triggers 7 events 7 bytes 120]
+            ]                                                                  \
+         ]                                                                    \
+         [list                                                                 \
+            [dict create id 3 startTime 200 runNumber 2 runTitle {The second run on charlie}] \
+            [list                                                             \
+               [dict create id 5 timestamp 202 elapsedTime 2 triggers 25 events 25 bytes 100] \
+            ]                                                                  \
+         ]                                                                     \
+      ] ]                                                                         \
+   2  [list                                                                    \
+        [dict create id 2 name VMUSBReadout host spdaq20.nscl.msu.edu]       \
+        [list                                                                 \
+           [list                                                              \
+               [dict create id 2 startTime 100 runNumber 1 runTitle {The first run on spdaq20}] \
+               [list                                                           \
+                   [dict create id 2 timestamp 102 elapsedTime 2 triggers 110 events 110 bytes 2000] \
+                   [dict create id 3 timestamp 104 elapsedTime 4 triggers 50 events 49 bytes 1000]
+               ]                                                               \
+           ]                                                                   \
+           [list                                                              \
+               [dict create id 4 startTime 200 runNumber 2 runTitle {The second run on spdaq20} ] \
+               [list                                                          \
+                  [dict create id 6 timestamp 202 elapsedTime 2 triggers 200 events 150 bytes 15000] \
+               ]                                                               \
+           ]                                                                   \
+        ]                                                                     \
+      ]                                                                        \
+]
+
 #---------------------------------------------------------------------------
 # Test completion:
 

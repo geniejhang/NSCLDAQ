@@ -1145,7 +1145,7 @@ CTCLStatusDb::CTCLStatusDbInstance::listRuns(
  *   Performs a query that returns full Readout statistics information.  This returns
  *   a dict indexed on the primary key of readout programs.  Each key's value
  *   is a pair that consists of a Readout Application dict and a list of pairs.
- *   The list of pairs contains a run information dict and a vector of readout
+ *   The list of pairs contains a run information dict and a list of readout
  *   statistics dicts.  Each of those dicts has the following keys:
  *
  *   -  id - Primary key of the record in the database table.
