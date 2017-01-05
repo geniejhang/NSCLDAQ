@@ -526,6 +526,10 @@ statusdb_addLogMessage(PyObject* self, PyObject* args)
         PyErr_SetString(exception, e.what());
         return NULL;
     }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception type caught");
+        return NULL;
+    }
     
     Py_RETURN_NONE;
 }
@@ -604,8 +608,64 @@ statusdb_addRingStatistics(PyObject* self, PyObject* args)
         freeRingResources(id, clientStructs);
         return NULL;
     }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception type caught");
+        return NULL;
+    }
     
     
+    Py_RETURN_NONE;
+}
+/**
+ * statusdb_addStateChange
+ *    Wraps CStatusDB::addStateChange for python applications.
+ *
+ *  @param self - Pointer to our instance data.
+ *  @param args - positional parameters.  These are:
+ *     -  severity - from e.g. statusmessage.SeverityLevels
+ *     -  app      - Name of the emitting application.
+ *     -  src      - FQDN of the host that emitted the message.
+ *     -  timestamp - time_t at which the transition was logged.
+ *     -  from     - Prior state.
+ *     -  to       - State transitioned to.
+ * @return PyNone.
+ */
+static PyObject*
+statusdb_addStateChange(PyObject* self, PyObject* args)
+{
+    int severity;
+    std::uint64_t timestamp;
+    char* app;
+    char* src;
+    char* from;
+    char* to;
+    
+    if (!PyArg_ParseTuple(args, "isslss", &severity, &app, &src, &timestamp, &from, &to)) {
+        return NULL;
+    }
+    
+    // Use the try/catch block to map C++ exceptions into C++
+    
+    try {
+        CStatusDb*  pApi = getApi(self);
+        pApi->addStateChange(severity, app, src, timestamp, from, to);
+    }
+    catch (const char* msg) {
+        PyErr_SetString(exception, msg);
+        return NULL;
+    }
+    catch (std::string msg) {
+        PyErr_SetString(exception, msg.c_str());
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception type caught");
+        return NULL;
+    }
     Py_RETURN_NONE;
 }
 // Tables and data types for the statusdb type:
@@ -616,6 +676,9 @@ static PyMethodDef statusdbMethods[] = {
     },
     {"addRingStatistics", statusdb_addRingStatistics, METH_VARARGS,
       "Add ring buffer definitions, clients and statistics to the database"
+    },
+    {"addStateChange", statusdb_addStateChange, METH_VARARGS,
+     "Add a state change to the database"
     },
     {NULL, NULL, 0, NULL}  
 };

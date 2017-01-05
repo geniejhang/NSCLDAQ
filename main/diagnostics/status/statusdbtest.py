@@ -24,6 +24,7 @@
 import unittest
 import sqlite3
 import tempfile
+import time
 
 from nscldaq.status import statusdb
 from nscldaq.status  import statusmessages
@@ -144,7 +145,37 @@ class StatusDbTests(unittest.TestCase):
                 [client,]
             )
             
-            
+     #  Test(s) for addStateChange:
+     
+    def test_addStateChange_app(self):
+        ts = int(time.time())
+        self._api.addStateChange(
+            statusmessages.SeverityLevels.INFO, 'Readout', 'charlie.nscl.msu.edu',
+            ts, 'NotReady', 'Readying'
+        )
+        
+        cursor = self._sqlite.cursor()
+        cursor.execute('SELECT * FROM state_application')
+        r = cursor.fetchone()
+        self.assertEqual(1, r['id'])
+        self.assertEqual('Readout', r['name'])
+        self.assertEqual('charlie.nscl.msu.edu', r['host'])
+        
+        return ts                # So client texts can use our timestamp.
+    
+    def test_addStateChange_transition(self):
+        ts = self.test_addStateChange_app()
+        
+        # Should also have produced a state change record:
+        
+        cursor = self._sqlite.cursor()
+        cursor.execute('SELECT * FROM state_transitions')
+        r = cursor.fetchone()
+        self.assertEqual(1, r['id'])
+        self.assertEqual(1, r['app_id'])
+        self.assertEqual(ts, r['timestamp'])
+        self.assertEqual('NotReady', r['leaving'])
+        self.assertEqual('Readying', r['entering'])
             
 if __name__ == '__main__':
     unittest.main()
