@@ -26,6 +26,7 @@
 
 #include <string>
 #include <stdexcept>
+#include <cstdint>
 
 static PyObject* exception(0);
 
@@ -33,6 +34,22 @@ typedef struct _statusdb_Data {
     PyObject_HEAD
     CStatusDb*   m_pApi;
 } StatusDb, *pStatusDb;
+
+// utilities:
+
+/**
+ * getApi
+ *    Returnt he API object pointer.
+ *
+ *  @param self - Pointer to object data.
+ *  @return CStatusDb*
+ */
+static CStatusDb*
+getApi(PyObject* self)
+{
+    pStatusDb pThis = reinterpret_cast<pStatusDb>(self);
+    return pThis->m_pApi;
+}
 
 // Implementation of the statusdb type:
 
@@ -121,7 +138,7 @@ statusdb_init(PyObject* self, PyObject* args, PyObject* kwargs)
         PyErr_SetString(exception, e.what());
     }
     catch (...) {
-        
+        PyErr_SetString(exception, "Unanticipated c++ exception type caught");
     }
     // We can only get here on errors since the try block returns:
     
@@ -141,10 +158,63 @@ statusdb_delete(PyObject* self)
     delete pThis->m_pApi;
 }
 
+// Action methods for statusdb type instances.
+
+/**
+ * addLogMessage
+ *    Adds a log message to the database.
+ *
+ *  @param self - pointer tothe pStatusDb struct that is our instance data.
+ *  @param args - positional arguments.  See below.
+ *  @return Py_None  - Returns the None object.
+ *
+ * @note The method requires the following parameters:
+ *    -   severity - The severity (e.g. statusmessages.SeverityLevels.INFO).
+ *    -   app      - Application name string.
+ *    -   src      - source of the message (FQDN string).
+ *    -   time     - 64  bit time_t.
+ *    -   message - Message text.
+ */
+static PyObject*
+statusdb_addLogMessage(PyObject* self, PyObject* args)
+{
+    int           severity;
+    const char*   app;
+    const char*   src;
+    std::uint64_t time;
+    const char*   message;
+    
+    if (!PyArg_ParseTuple(args, "issLs", &severity, &app, &src, &time, &message)) {
+        return NULL;
+    }
+    
+    CStatusDb* pApi = getApi(self);
+    try {
+        pApi->addLogMessage(severity, app, src, time, message);
+    }
+    catch (const char* message) {
+        PyErr_SetString(exception, message);
+        return NULL;
+    }
+    catch (std::string message) {
+        PyErr_SetString(exception, message.c_str());
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        return NULL;
+    }
+    
+    Py_RETURN_NONE;
+}
+
 // Tables and data types for the statusdb type:
 
 static PyMethodDef statusdbMethods[] = {
-       {NULL, NULL, 0, NULL}  
+    {"addLogMessage", statusdb_addLogMessage, METH_VARARGS,
+     "Add a log message to the database"
+    },
+    {NULL, NULL, 0, NULL}  
 };
 
 static PyTypeObject statusdb_Type = {

@@ -148,7 +148,8 @@ TESTS_ENVIRONMENT=PYTHONPATH=@prefix@/pythonLibs; export PYTHONPATH;\
 
 
 PYTHON_TESTS=ringstatisticstests.py readoutstatisticstests.py \
-	logmessagestests.py statemessagetests.py statussub.py
+	logmessagestests.py statemessagetests.py statussub.py \
+	statusdbtest.py
 
 
 TCL_TESTS=statussubtest.test ringdecode.test logmodel.test statdb.test
