@@ -176,6 +176,71 @@ class StatusDbTests(unittest.TestCase):
         self.assertEqual(ts, r['timestamp'])
         self.assertEqual('NotReady', r['leaving'])
         self.assertEqual('Readying', r['entering'])
+        
+    # Tests for the addReadoutStatistics wrapper.
+    
+    def test_addReadoutStats_program(self):
+        ts = int(time.time())
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'VMUSBReadout',
+            'charlie.nscl.msu.edu',  ts, 12, 'This is a run title'
+        )
+        # Should make an entry in readout_program:
+        
+        cursor = self._sqlite.cursor()
+        cursor.execute('SELECT * FROM readout_program')
+        r = cursor.fetchone()
+        self.assertEqual(1, r['id'])
+        self.assertEqual('VMUSBReadout', r['name'])
+        self.assertEqual('charlie.nscl.msu.edu', r['host'])
+        
+        return ts
+    
+    def test_addReadoutStats_run(self):
+        ts = self.test_addReadoutStats_program()
+        
+        #  also adds a run definition:
+        
+        cursor = self._sqlite.cursor()
+        cursor.execute('SELECT * FROM run_info')
+        r = cursor.fetchone()
+        
+        self.assertEqual(1, r['id'])
+        self.assertEqual(1, r['readout_id'])
+        self.assertEqual(ts, r['start'])
+        self.assertEqual(12, r['run'])
+        self.assertEqual('This is a run title', r['title'])
+    
+    def test_addReadoutStats_stats(self):
+        ts = int(time.time())
+        counterinfo = {
+            'timestamp': ts + 5, 'elapsed': 5, 'triggers' : 100, 'events' : 99,
+            'bytes' : 1111
+        }
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'VMUSBReadout',
+            'charlie.nscl.msu.edu',  ts, 12, 'This is a run title',
+            counterinfo
+        )
+    
+        # Should add a stats entry.
+        
+        fielddict = {
+            'timestamp' : 'timestamp', 'elapsed': 'elapsedtime',
+            'triggers': 'triggers', 'events': 'events', 'bytes': 'bytes'
+        }                  # Maps counterinfo keys to record keys.
+        
+        cursor = self._sqlite.cursor()
+        cursor.execute('SELECT * FROM readout_statistics')
+        r  = cursor.fetchone()
+        
+        self.assertEqual(1, r['id'])
+        self.assertEqual(1, r['run_id'])
+        self.assertEqual(1, r['readout_id'])
+        
+        for f in fielddict.keys():
+            self.assertEqual(counterinfo[f], r[fielddict[f]])
+        
             
 if __name__ == '__main__':
     unittest.main()

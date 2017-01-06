@@ -24,6 +24,8 @@
 #include <CStatusDb.h>
 #include <CStatusMessage.h>
 #include <sqlite3.h>
+#include <CSqliteWhere.h>
+
 
 #include <string>
 #include <stdexcept>
@@ -130,6 +132,63 @@ getDictBoolItem(PyObject* dict, const char* key)
 }
 
 /**
+ * dictStoreObj
+ *    Store an object in a dict at the specified key.
+ *
+ *  @param dict - the dictionary to store to.
+ *  @param key  - the key to store at.
+ *  @param valobj - the value obj.
+ *
+ *  @throws std::string if dict is not actually a dict. or if PyDict_SetItemString
+ *          returned an error.
+ */
+static void
+dictStoreObj(PyObject* dict, const char* key, PyObject* valobj)
+{
+    if (!PyDict_Check(dict)) {
+        throw std::string("dictStoreObj first parameter is not a dict");
+    }
+    if (PyDict_SetItemString(dict, key, valobj)) {
+        std::string message("doctStoreObj store to dict key: ");
+        message += key;
+        message += " failed";
+        throw message;
+    }
+}
+/**
+ * dictStoreInt
+ *   Store an integer valued item in a dict.
+ * @param dict - the dict we're storing into.
+ * @param key  - Key to store to.
+ * @param value - the integer to store.
+ */
+static void
+dictStoreInt(PyObject* dict, const char* key, long value)
+{
+    PyObject* valObj = PyInt_FromLong(value);
+    if (!valObj) {
+        throw std::string("Unable to create an integer object in dictStoreInt");
+    }
+    dictStoreObj(dict, key, valObj);
+}
+/**
+ * dictStoreString
+ *    Store a string valued object into a specified dict key.
+ *
+ *  @param dict - The dictionary object.
+ *  @param key  - Value of the key.
+ *  @param value - The value to store.
+ */
+static void
+dictStoreString(PyObject* dict,  const char* key, const char* string)
+{
+    PyObject* strObj = PyString_FromString(string);
+    if (!strObj) {
+        throw std::string("Unable to create a string object in dictStoreString");
+    }
+    dictStoreObj(dict, key, strObj);
+}
+/**
  * Generic utilities for iterable objects:
  */
 
@@ -170,8 +229,8 @@ stringListToVector(PyObject* item)
         Py_DECREF(i);
     }
     catch (std::string) {
-        if(o) Py_DECREF(o);
-        if(i) Py_DECREF(i);
+        Py_XDECREF(o);
+        Py_XDECREF(i);
         throw;
     }
     return result;
@@ -371,6 +430,128 @@ packRingClients(
     // Add the newly created items to the end of the vector.
     
     r.insert(r.end(), newItems.begin(), newItems.end());
+}
+
+/**
+ * Utilities for addReadoutStatistics:
+ */
+
+/**
+ *  unpackReadoutCounters
+ *    Unpacks a dict of the sort created by PyStatusMessages.cpp:decodeRunCounters
+ *    into a CStatusDefinitions::ReadoutStatCounters struct.
+ *
+ * @param[out] result - references the output struct.
+ * @param[in]  dict   - Dictionary object.
+ * @throws std::string - if there's an error.
+ */
+static void
+unpackReadoutCounters(
+    CStatusDefinitions::ReadoutStatCounters& result, PyObject* dict
+)
+{
+    // ensure dict is one:
+    
+    if (!PyDict_Check(dict)) {
+        throw std::string("Readout Counters must be a dict and is not");
+    }
+    
+    // Note that getDictUint64Item can throw too.
+    
+    result.s_tod         = getDictUint64Item(dict, "timestamp");
+    result.s_elapsedTime = getDictUint64Item(dict, "elapsed");
+    result.s_triggers    = getDictUint64Item(dict, "triggers");
+    result.s_events      = getDictUint64Item(dict, "events");
+    result.s_bytes       = getDictUint64Item(dict, "bytes");
+    
+}
+/**
+ * Generic query utilities:
+ */
+
+/**
+ *  createFilterObject
+ *     Given a Python object that implements an appropriate toString entity
+ *     returns a new'd CRawFilter object that was constructed on that string.
+ *     It is the script level's responsibility to ensure that toString produces
+ *     a valid WHERE clause.
+ *
+ *  @param filterObj - A Python filter object.  See nscldaq.sqlite.where for
+ *                     sample (and useful) filter classes.
+ *   @param CQueryFilter* - Pointer to a new filter object. The caller must ensure
+ *                      this is eventually deleted.
+ */
+static CQueryFilter*
+createFilterObject(PyObject* filterObj)
+{
+    PyObject* filterStringObj = PyObject_CallMethod(
+        filterObj, const_cast<char*>("toString"), NULL
+    );
+    if (!filterStringObj) {
+        throw std::string("createFilterObj - the object does not have a suitable 'toString' method");
+    }
+    // filterStringObj must be able to deliver a string:
+    
+    char* filterString = PyString_AsString(filterStringObj);
+    if (!filterString) {
+        throw std::string("createFilterObj - the object's 'toString' method does not produce a string");
+    }
+    // Create/return the result:
+    
+    return new CRawFilter(std::string(filterString));
+}
+/**
+ * Utilities used by queryLogRecord
+ */
+
+/**
+ * logRecordToDict
+ *    Converts a Log record value to a python dict.  See
+ *    statusdb_queryLogRecords for the keys created.
+ *
+ *  @param rec - the log record to convert.
+ *  @return PyObject* that is a dict.
+ */
+static PyObject*
+logRecordToDict(CStatusDb::LogRecord& rec)
+{
+    PyObject* result = PyDict_New();
+    
+    dictStoreInt(result, "id", rec.s_id);
+    dictStoreInt(
+        result, "severity",
+        CStatusDefinitions::stringToSeverity(rec.s_severity.c_str())
+    );
+    dictStoreString(result, "application", rec.s_application.c_str());
+    dictStoreString(result, "source", rec.s_source.c_str());
+    dictStoreInt(result, "timestamp", rec.s_timestamp);
+    dictStoreString(result, "message", rec.s_message.c_str());
+    
+    return result;
+    
+}
+/**
+ * logRecordsToDictTuple
+ *    Converts a vector of CStatusDb::LogRecord structs into a tuple of
+ *    log record dicts.
+ *
+ *  @param queryResults - the results of a call to CStatusDb::queryLogRecords.
+ *  @return PyObject*   - a tuple (possibly empty) of log record dicts.
+ */
+static PyObject*
+logRecordsToDictTuple(std::vector<CStatusDb::LogRecord>& queryResults)
+{
+    size_t itemCount = queryResults.size();
+    PyObject* result = PyTuple_New(itemCount);
+    
+    for (int i = 0; i < itemCount; i++) {
+        PyObject* logDict = logRecordToDict(queryResults[i]);
+        if(PyTuple_SetItem(result, i, logDict)) {
+            throw std::string("Unable to set a new item to the tuple of log item dicts");
+        }
+    }
+    
+    return result;
 }
 
 // Implementation of the statusdb type:
@@ -668,6 +849,166 @@ statusdb_addStateChange(PyObject* self, PyObject* args)
     }
     Py_RETURN_NONE;
 }
+
+/**
+ * statusdb_addReadoutStatistics
+ *    Wraps CStatusDb::addReadoutStatistics - logs a readout statistics entry
+ *    into the database.
+ *
+ *  @param self - pointer to our storage.
+ *  @param args - positional parameters.  This consists of:
+ *      -  severity - message severity (from statusmessages.SeverityLevels).
+ *      -  app      - Application that's logged this record.
+ *      -  src      - FQDN Of host app is running in.
+ *      -  start    - time_t at which the record was created.
+ *      -  runNumber - Number of the active run.
+ *      -  title     - Title of the active run.
+ *      -  counters  - optional dict with the statistics.   This dict must
+ *                     have at least the keys from
+ *                     PyStatusMessages::msg_decodeRunCounters.
+ *  @return PyNone.
+ */
+static PyObject*
+statusdb_addReadoutStatistics(PyObject* self, PyObject* args)
+{
+    int severity;
+    char* app;
+    char* src;
+    std::int64_t startTime;
+    int   runNumber;
+    char* title;
+    PyObject* pCounterDict(nullptr);
+    CStatusDefinitions::ReadoutStatCounters* pCounters(nullptr);
+    
+    // Decoding depends on the length of the args tuple:
+    
+    if (PyTuple_Size(args) == 6) {
+        if (!PyArg_ParseTuple(
+            args, "isslis", &severity, &app, &src, &startTime, &runNumber, &title
+        )) {
+                return NULL;
+            }
+        } else {
+            if (!PyArg_ParseTuple(
+            args, "isslisO", &severity, &app, &src, &startTime, &runNumber, &title,
+            &pCounterDict
+        )) {
+                return NULL;
+            }
+        
+    }
+    // Manage c++ exceptions with this try /catch that maps them to python:
+    
+    try {
+        // If pCounterDict is not null, unpack it.
+        
+        CStatusDefinitions::ReadoutStatCounters counters;
+        if (pCounterDict != nullptr) {
+            unpackReadoutCounters(counters, pCounterDict);
+            pCounters = &counters;
+        }
+        CStatusDb* m_pApi = getApi(self);
+        m_pApi->addReadoutStatistics(
+            severity, app, src, startTime, runNumber, title, pCounters
+        );
+    }
+    catch (const char* msg) {
+        PyErr_SetString(exception, msg);
+        return NULL;
+    }
+    catch (std::string msg) {
+        PyErr_SetString(exception, msg.c_str());
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated exception type caught");
+        return NULL;
+    }
+    
+    Py_RETURN_NONE;
+}
+
+/**
+ * statusdb_queryLogMessages
+ *   Wrapper for CStatusDb::queryLogMessages
+ *
+ *  @param self - Pointer to our object storage.
+ *  @param args - positional parameters for the call.
+ *     This is an optional object with a toString method that takes no parameters
+ *     and returns a string that can be used to build a raw query filter.
+ *     See the nscldaq.sqlite.where module e.g.
+ *  @return PyObject*  A possibly empty tuple of dicts.  Each dict represents
+ *     a log record.  The dict keys are:
+ *       - 'id'   - Primary key of the record (uint).
+ *       - 'timestamp'  - The time at which the log message was emitted (int).
+ *       - 'message'    - The message itself (string).
+ *       - 'severity'   - The log message severity (int)
+ *       - 'application' - Application that emitted the log message.
+ *       - 'source'      - FQDN of the source node.
+ */
+static PyObject*
+statusdb_queryLogMessages(PyObject* self, PyObject* args)
+{
+    // Figure out which query filter to use in the  query.  Everything is in
+    // a try/catch block to map c++ exceptions to python exceptions:
+    
+    CQueryFilter* userFilter(nullptr);
+    try {
+        // Figure out the filter we're going to use:
+        
+        CQueryFilter* filter = &DAQ::acceptAll;     // Default filter.
+        PyObject*     filterObj;
+        if (PyTuple_Size(args) > 0) {    
+            if (!PyArg_ParseTuple(args, "O", &filterObj)) {
+                return NULL;
+            }
+            userFilter = createFilterObject(filterObj);
+            filter = userFilter;
+        }
+        // Do the query:
+        
+        CStatusDb* pApi = getApi(self);
+        std::vector<CStatusDb::LogRecord> queryResults;
+        pApi->queryLogMessages(queryResults, *filter);
+        delete userFilter;                     // Done with any user filter.
+        
+        // Pythonize the result:
+        
+        PyObject* result = logRecordsToDictTuple(queryResults);
+        return result;
+    }
+    catch(const char* message) {
+        PyErr_SetString(exception, message);
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::string message) {
+        PyErr_SetString(exception, message.c_str());
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        delete userFilter;
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception caught");
+        delete userFilter;
+        return NULL;
+
+    }
+    // Control should not pass here as the try block has a return too:
+    
+    PyErr_SetString(exception, "queryLogMessage bug detected in logic flow");
+    return NULL;
+
+}
+
 // Tables and data types for the statusdb type:
 
 static PyMethodDef statusdbMethods[] = {
@@ -679,6 +1020,12 @@ static PyMethodDef statusdbMethods[] = {
     },
     {"addStateChange", statusdb_addStateChange, METH_VARARGS,
      "Add a state change to the database"
+    },
+    {"addReadoutStatistics", statusdb_addReadoutStatistics, METH_VARARGS,
+     "Log a readout statistics entry into the database."
+    },
+    {"queryLogMessages", statusdb_queryLogMessages, METH_VARARGS,
+      "Query the log messages."
     },
     {NULL, NULL, 0, NULL}  
 };
