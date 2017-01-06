@@ -13,19 +13,24 @@
 #
 # Last used with libtclplus-v2.0-000
 
-baseURL="git://git.code.sf.net/p/nscldaq/git"
+baseURL="http://git.code.sf.net/p/nscldaq/git"
 
 tag="$1"
-uri="$2"
-
-if [ "$uri" = "" ]
-then
-   uri=$baseURL
-fi
 
 rm -rf libtcl 
 
-git clone $uri libtcl
-
+git clone $baseURL libtcl
 (cd libtcl; git checkout tags/$1)
+
+# the above is all well and good for the tags imported from svn.
+# but native git tags tag the whole repo so we need to extract only
+# the libtclplus subdir:
+
+if [ -d libtcl/libtclplus ]
+then
+    mv libtcl __temp__
+    mv __temp__/libtclplus libtcl
+    rm -rf __temp__
+fi
+
 (cd libtcl; autoreconf -i)
