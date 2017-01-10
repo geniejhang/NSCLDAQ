@@ -26,8 +26,9 @@ import sqlite3
 import tempfile
 import time
 
-from nscldaq.status import statusdb
+from nscldaq.status  import statusdb
 from nscldaq.status  import statusmessages
+from nscldaq.sqlite  import where
 
 class StatusDbTests(unittest.TestCase):
     def setUp(self):
@@ -240,7 +241,335 @@ class StatusDbTests(unittest.TestCase):
         
         for f in fielddict.keys():
             self.assertEqual(counterinfo[f], r[fielddict[f]])
+    
+    def test_queryLogMessages_nofilter(self):
+        self._api.addLogMessage(
+             statusmessages.SeverityLevels.WARNING, 'some-application',
+            'charlie.nscl.msu.edu', 1234, 'Something to talk about'
+        )
+        self._api.addLogMessage(
+            statusmessages.SeverityLevels.INFO, 'another-app',
+            'spdaq20.nscl.msu.edu', 1555,
+            "Every little thing's going to be all right"
+        )
+        result = self._api.queryLogMessages()
+        self.assertEqual(2, len(result))
+        self.maxDiff = 1000
+        self.assertEqual((
+            {
+                'id': 1, 'timestamp': 1234, 'message': 'Something to talk about',
+                'severity': statusmessages.SeverityLevels.WARNING,
+                'application': 'some-application',
+                'source': 'charlie.nscl.msu.edu'
+            },
+            {
+                'id': 2, 'timestamp': 1555,
+                'message': "Every little thing's going to be all right",
+                'severity': statusmessages.SeverityLevels.INFO,
+                'application': 'another-app',
+                'source': 'spdaq20.nscl.msu.edu'
+            }
+        ), result)
         
+    def test_queryLogMessages_filterlevel(self):
+        self.test_queryLogMessages_nofilter()
+        filter = where.RelationToString(
+            'severity', '=', 'INFO'
+        )
+        result = self._api.queryLogMessages(filter)
+        self.assertEqual(1, len(result))
+        self.assertEqual((
+           {
+                'id': 2, 'timestamp': 1555,
+                'message': "Every little thing's going to be all right",
+                'severity': statusmessages.SeverityLevels.INFO,
+                'application': 'another-app',
+                'source': 'spdaq20.nscl.msu.edu'
+            },
+        ), result)
+        
+    def test_listRings_nofilter(self):
+        self._api.addRingStatistics(
+            statusmessages.SeverityLevels.INFO, "ringstatdaemon",
+            'charlie.nscl.msu.edu',
+            {'timestamp': 12345, 'name': 'ring1'}
+        )
+        self._api.addRingStatistics(
+            statusmessages.SeverityLevels.INFO, "ringstatdaemon",
+            "spdaq20.nscl.msu.edu",
+            {'timestamp': 12346, 'name': 'ring2'}
+        )
+        result = self._api.listRings()              # no filter get all.
+        
+        #  We should have two ringbuffers:
+        
+        self.assertEqual(2, len(result))
+        
+        #  They should  look like this:
+        
+        sb = (
+            {
+                'id': 1, 'name': 'ring1', 'host': 'charlie.nscl.msu.edu',
+                'fqname': 'ring1@charlie.nscl.msu.edu'
+            },
+            {
+                'id': 2, 'name': 'ring2', 'host': 'spdaq20.nscl.msu.edu',
+                'fqname': 'ring2@spdaq20.nscl.msu.edu'
+            }
+            )
+        self.assertEqual(sb, result)
+    
+    def tets_listRings_withFilter(self):
+        self.test_listRings_nofilter()          # Stocks database.
+        filter = where.RelationToString('r.host', '=', 'charlie@nscl.msu.edu')
+        result = self.listRings(filter)
+        
+        self.assertEqual(1, len(result))
+        self.assertEqual((
+           {
+                'id': 1, 'name': 'ring1', 'host': 'charlie.nscl.msu.edu',
+                'fqname': 'ring1@charlie.nscl.msu.edu'
+            }, 
+        ), result)
+    def test_listRingsAndClients_nofilter(self):
+        client1 = {
+            'operations' : 100, 'bytes' : 1000, 'producer' : True,
+            'command': ['this', 'is', 'the', 'command'], 'backlog' : 0,
+            'pid': 123
+        }
+        client2 = {
+            'operations' : 150, 'bytes' : 2000, 'producer' : False,
+            'command': ['dumper', '--source=tcp://localhost/aring'],
+            'backlog' : 650, 'pid': 200           
+        }
+        clients = [client1, client2]
+        ring = {'timestamp': 12345, 'name' : 'aring'}
+        self._api.addRingStatistics(
+            statusmessages.SeverityLevels.INFO, 'ringstatdaemon',
+            'charlie.nscl.msu.edu', ring, clients
+        )
+        
+        ring = {'timestamp': 12400, 'name': 'bring'}
+        self._api.addRingStatistics(
+            statusmessages.SeverityLevels.INFO, 'ringstatdaemon',
+            'spdaq20.nscl.msu.edu', ring, [client1, ]
+        )
+        
+        result = self._api.listRingsAndClients()
+        
+        self.assertEqual(2, len(result))      # Two dict entries.
+        sb = {
+            'aring@charlie.nscl.msu.edu' : (
+                {
+                    'id': 1, 'name': 'aring', 'host': 'charlie.nscl.msu.edu',
+                    'fqname': 'aring@charlie.nscl.msu.edu'
+                },
+                (
+                    {
+                        'id': 1, 'pid': 123, 'producer': True,
+                        'command': 'this is the command'
+                    },
+                    {
+                        'id': 2, 'pid': 200, 'producer': False,
+                        'command': 'dumper --source=tcp://localhost/aring'
+                    }
+                )
+            ),
+            'bring@spdaq20.nscl.msu.edu': (
+                {
+                    'id': 2, 'name': 'bring', 'host': 'spdaq20.nscl.msu.edu',
+                    'fqname': 'bring@spdaq20.nscl.msu.edu'
+                },
+                (
+                    {
+                        'id': 3, 'pid': 123, 'producer': True,
+                        'command': 'this is the command'
+                    }, 
+                )
+            )
+        }
+        self.assertEqual(sb, result)
+        
+        def test_listRingsAndClients_withfilter(self):
+            self.test_listRingsAndClients_nofilter()
+            filter = where.RelationToNonString('c.producer', '=', 1)
+            result = self_api.listRingsAndClients(filter)         # Only producers.
             
+            self.assertEqual(2, len(result))
+            sb = {
+            'aring@charlie.nscl.msu.edu' : (
+                {
+                    'id': 1, 'name': 'aring', 'host': 'charlie.nscl.msu.edu',
+                    'fqname': 'aring@charlie.nscl.msu.edu'
+                },
+                (
+                    {
+                        'id': 1, 'pid': 123, 'producer': True,
+                        'command': 'this is the command'
+                    },
+                )
+            ),
+            'bring@spdaq20.nscl.msu.edu': (
+                {
+                    'id': 2, 'name': 'bring', 'host': 'spdaq20.nscl.msu.edu',
+                    'fqname': 'bring@spdaq20.nscl.msu.edu'
+                },
+                (
+                    {
+                        'id': 3, 'pid': 123, 'producer': True,
+                        'command': 'this is the command'
+                    }, 
+                )
+            )
+        }
+        self.assertEqual(sb, result)
+        
+        def test_queryRingStatistics_nofilter(self):
+            self.test_listRingsAndClients_nofilter()    # Stocks db.
+            result = test._api.queryRingStatistics()
+            
+            #  This is a bit to complicated for me to do a literal so
+            #  we'll check the size and then break things down a bit:
+            
+            self.assertEqual(2, len(result))
+            
+            self.assertTrue("aring@charlie.nscl.msu.edu" in result.keys())
+            self.assertTrue("bring@spdaq20.nscl.msu.edu" in result.keys())
+            
+            aring = result['aring@charlie.nscl.msu.edu']
+            bring = result['bring@spdaq20.nscl.msu.edu']
+            
+            # Ensure the ring ids are right.
+            
+            self.assertEqual({
+                'name': 'aring', id: 1, 'host': 'charlie.nscl.msu.edu',
+                'fqname': 'aring@charlie.nscl.msu.edu'
+            }, aring[0])
+            self.assertEqual({
+                id: 2, 'name': 'bring', 'host': 'spdaq20.nscl.msu.edu',
+                'fqname': 'bring@spdaq20.nscl.msu.edu'
+            }, bring[0])
+            
+            aringClients = aring[1]
+            bringClients = bring[1]
+            
+            self.assertEqual(2, len(aRingClients))
+            self.assertEqual(1, len(bRingClients))
+            
+            self.assertEqual(
+                (
+                    (
+                        {
+                            'id': 1, 'pid': 123, 'producer': True,
+                            'command': 'this is the command'
+                        },
+                        (
+                            {
+                                 'id': 1,    'timestamp': 12345,
+                                 'operations': 100, 'bytes': 1000, 'backlog': 0
+                            },
+                        )
+                    ),
+                    (
+                        {
+                            'id': 2, 'pid': 200, 'producer': False,
+                            'command': 'dumper --source=tcp://localhost/aring'
+                        },
+                        ({
+                            'id': 2, 'timestamp': 12345,
+                            'operations': 150, 'bytes': 2000, 'backlog': 650
+                        }, )
+                    )
+                ), aRingClients
+            )
+            self.assertEquals(
+            (
+                (
+                    {
+                        'id': 3, 'pid': 123, 'producer': True,
+                        'command': 'this is the command'
+                    },
+                    (
+                        {
+                            'id': 3, 'operations': 100, 'bytes':1000,
+                            'backlog':0
+                        },
+                    )
+                ),
+            )
+            , bRingClients 
+            )
+            
+    def test_listStateApps_nofilter(self):
+        ts = int(time.time())
+        self._api.addStateChange(
+            statusmessages.SeverityLevels.INFO, "Readout", 'charlie.nscl.msu.edu',
+            ts, 'NotReady', 'Readying'
+        )
+        self._api.addStateChange(
+            statusmessages.SeverityLevels.WARNING, "VMUSBReadout", 'spdaq20.nscl.msu.edu',
+            ts, 'NotReady', 'Readying'
+        )
+        self._api.addStateChange(
+            statusmessages.SeverityLevels.WARNING, "VMUSBReadout", 'spdaq20.nscl.msu.edu',
+            ts+1, 'Readying', 'Ready'
+        )
+        self._api.addStateChange(
+            statusmessages.SeverityLevels.INFO, "Readout", 'charlie.nscl.msu.edu',
+            ts+2, 'Readying', 'Ready'
+        )
+        
+        result = self._api.listStateApplications()
+        
+        self.assertEqual(2, len(result))
+        self.assertEqual(
+            (
+                {'id': 1, 'name': 'Readout', 'host': 'charlie.nscl.msu.edu'},
+                {'id': 2, 'name': 'VMUSBReadout', 'host': 'spdaq20.nscl.msu.edu'}
+            ), result
+        )
+        return ts
+    
+    def test_listStateApps_filter(self):
+        ts = self.test_listStateApps_nofilter()
+        filter = where.RelationToString('a.host', '=', 'charlie.nscl.msu.edu')
+        
+        result = self._api.listStateApplications(filter)
+        self.assertEqual(1, len(result))
+        self.assertEqual(
+            (
+                {'id': 1, 'name': 'Readout', 'host': 'charlie.nscl.msu.edu'},
+            ), result
+        )
+
+    def test_queryStateTransitions(self):
+        ts = self.test_listStateApps_nofilter()   # Stocks the database.
+        result = self._api.queryStateTransitions()
+        
+        self.assertEqual(4, len(result))
+        self.maxDiff = 2000
+        self.assertEqual((
+            {
+                'application':  {'id': 1, 'name': 'Readout', 'host': 'charlie.nscl.msu.edu'},
+                'appid': 1, 'transitionId': 1, 'timestamp': ts,
+                'leaving': 'NotReady', 'entering': 'Readying'
+            },
+            {
+                'application':  {'id': 2, 'name': 'VMUSBReadout', 'host': 'spdaq20.nscl.msu.edu'},
+                'appid': 2, 'transitionId': 2, 'timestamp': ts,
+                'leaving': 'NotReady', 'entering': 'Readying'
+            },
+            {
+                'application':  {'id': 2, 'name': 'VMUSBReadout', 'host': 'spdaq20.nscl.msu.edu'},
+                'appid': 2, 'transitionId': 3, 'timestamp': ts+1,
+                'leaving': 'Readying', 'entering': 'Ready'
+            },
+            {
+                'application': {'id': 1, 'name': 'Readout', 'host': 'charlie.nscl.msu.edu'},
+                'appid': 1, 'transitionId': 4, 'timestamp': ts+2,
+                'leaving': 'Readying', 'entering': 'Ready'
+            }
+            ), result)
+        
 if __name__ == '__main__':
     unittest.main()

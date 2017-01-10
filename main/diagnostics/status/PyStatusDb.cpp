@@ -189,6 +189,22 @@ dictStoreString(PyObject* dict,  const char* key, const char* string)
     dictStoreObj(dict, key, strObj);
 }
 /**
+ * dictStoreBool
+ *    Store a boolean value:
+ *
+ *  @param dict - dict being updated.
+ *  @param key  - String key.
+ *  @param value bool.
+ */
+static void
+dictStoreBool(PyObject* dict, const char* key, bool value)
+{
+    PyObject* vobj = value ? Py_True : Py_False;
+    Py_INCREF(vobj);
+    
+    dictStoreObj(dict, key, vobj);
+}
+/**
  * Generic utilities for iterable objects:
  */
 
@@ -549,6 +565,329 @@ logRecordsToDictTuple(std::vector<CStatusDb::LogRecord>& queryResults)
         if(PyTuple_SetItem(result, i, logDict)) {
             throw std::string("Unable to set a new item to the tuple of log item dicts");
         }
+    }
+    
+    return result;
+}
+
+/**
+ * Utilities used by ring statistics queries:
+ */
+
+
+/**
+ * ringBufferToDict
+ *   Given a CStatusDb::RingBuffer struct reference returns a dict that describes
+ *   that struct.
+ *
+ * @param ring - CStatusDb::RingBuffer& for the item we are converting.
+ * @return PyObject* - Dict that contains the pythonized version of the
+ *                     ringbuffer definition.
+ */
+static PyObject*
+ringBufferToDict(CStatusDb::RingBuffer& ring)
+{
+    PyObject* result = PyDict_New();
+    
+    dictStoreInt(result, "id", ring.s_id);
+    dictStoreString(result, "fqname", ring.s_fqname.c_str());
+    dictStoreString(result, "name", ring.s_name.c_str());
+    dictStoreString(result, "host", ring.s_host.c_str());
+    
+    
+    return result;
+}
+
+/**
+ * ringListToTuple
+ *    Converts a list of ring definitions into a tuple of dicts as described in
+ *    statusdb_listRings
+ *
+ * @param raw - The raw result from CStatusDb::listRings
+ * @result PyObject* The resulting tuple.
+ */
+static PyObject*
+ringListToTuple(std::vector<CStatusDb::RingBuffer>& raw)
+{
+    // Make the tuple:
+    
+    PyObject* result = PyTuple_New(raw.size());     // one entry per raw element.
+    for (int i = 0; i < raw.size(); i++) {
+        PyObject* entry = ringBufferToDict(raw[i]);
+        PyTuple_SetItem(result, i, entry);
+    }
+    
+    return result;
+}
+/**
+ * clientToDict
+ *   Turn a client data structure into the dict descsribed in statusdb_listRingsAndClients
+ *
+ * @param client - refers to a single CStatusDb::RingClient struct.
+ * @return PyObject* - dict created.
+ */
+static PyObject*
+clientToDict(CStatusDb::RingClient& client)
+{
+    PyObject* result = PyDict_New();
+    
+    dictStoreInt(result, "id", client.s_id);
+    dictStoreInt(result, "pid", client.s_pid);
+    dictStoreBool(result, "producer", client.s_isProducer);
+    dictStoreString(result, "command", client.s_command.c_str());
+    
+    return result;
+}
+/**
+ * ringClientsToTuple
+ *    Turn a vector of ring clients into a tuple of ring client dicts.
+ *    See statusdb_listRingsAndClients for a description of the keys in each dict.
+ *
+ *  @param clients - A vector of clients for a ring (reference).
+ *  @return PyObject* - tuple with one element per each client.
+ */
+static PyObject*
+ringClientsToTuple(std::vector<CStatusDb::RingClient>& clients)
+{
+    PyObject* result = PyTuple_New(clients.size());
+    
+    for (int i = 0; i < clients.size(); i++) {
+        PyTuple_SetItem(result, i, clientToDict(clients[i]));
+    }
+    
+    return result;
+}
+
+/**
+ * ringAndClientsToTuple
+ *   Turns the ring and clients pair into a tuple of ringbuffer and tuple of
+ *   ring client dicts.
+ *
+ * @param randc - Ring and clients.
+ * @return PyObject* the created tuple.
+ */
+static PyObject*
+ringAndClientsToTuple(CStatusDb::RingAndClients& randc) {
+    PyObject* result = PyTuple_New(2);       // it's a pair:
+    
+    PyTuple_SetItem(result, 0, ringBufferToDict(randc.first));
+    PyTuple_SetItem(result, 1, ringClientsToTuple(randc.second));
+    
+    return result;
+}
+
+/**
+ * ringDirectoryToMap
+ *   Takes the CStatusDb::RingDirectory and returns a dict as described
+ *   in  statusdb_listRingsAndClients.
+ *
+ * @param raw - the raw query results.
+ * @return PyObject* - The dict created.
+ */
+static PyObject*
+ringDirectoryToMap(CStatusDb::RingDirectory& raw)
+{
+    PyObject* result = PyDict_New();
+    
+    for (auto p = raw.begin(); p != raw.end(); p++) {
+        std::string key = p->first;
+        CStatusDb::RingAndClients& value(p->second);
+        PyObject* valueObj = ringAndClientsToTuple(value);
+        
+        dictStoreObj(result, key.c_str(), valueObj);
+    }
+    
+    return result;
+}
+/**
+ * statToDict
+ *   Given a ring statistics item, return a dict that represents it:
+ *
+ *  @param stat - Single stastics item.
+ *  @return PyObject* the dict.
+ */
+static PyObject*
+statToDict(CStatusDb::RingStatistics& stat)
+{
+    PyObject* result = PyDict_New();
+    
+    dictStoreInt(result, "id", stat.s_id);
+    dictStoreInt(result, "timstamp", stat.s_timestamp);
+    dictStoreInt(result, "operations", stat.s_operations);
+    dictStoreInt(result, "bytes", stat.s_bytes);
+    dictStoreInt(result, "backlog", stat.s_backlog);
+    
+    return result;
+}
+
+/**
+ * statVectorToTuple
+ *    Given a reference to a vector of ring statistics, return a tuple of
+ *    ring statistics dicts.
+ *
+ * @param stats - reference to the vector of stats.
+ * @return PyObject* - the tuple created.
+ */
+static PyObject*
+statVectorToTuple(std::vector<CStatusDb::RingStatistics>& stats)
+{
+    PyObject* result = PyTuple_New(stats.size());
+    
+    for (int i = 0; i < stats.size(); i++) {
+        PyTuple_SetItem(result, i, statToDict(stats[i]));
+    }
+    
+    return result;
+}
+
+/**
+ * clientAndStatsToPair
+ *    Given a reference to a CStatusDb::RingClientAndStats, create and return
+ *    a pair containing a ring client dict and a tuple of statistics dicts.
+ *
+ *  @param clientAndstats - The struct to convert.
+ *  @return PyObject*
+ */
+static PyObject*
+clientAndStatsToPair(CStatusDb::RingClientAndStats& clientAndStats)
+{
+    PyObject* result = PyTuple_New(2);
+    
+    PyTuple_SetItem(result, 0, clientToDict(clientAndStats.first));
+    PyTuple_SetItem(result, 1, statVectorToTuple(clientAndStats.second));
+    
+    return result;
+}
+
+/**
+ * clientAndStatsVecTo Pairs
+ *    Given a vector of RingClientAndStats, produce a tuple of pairs of of
+ *    ring client and statistics tuple
+ * @param vec - the vector of RingClientAndStats.
+ * @return PyObject* tuple.
+ */
+static PyObject*
+clientAndStatsVecToPairs(std::vector<CStatusDb::RingClientAndStats>& vec)
+{
+    PyObject* result = PyTuple_New(vec.size());
+    
+    for (int i = 0; i < vec.size(); i++) {
+        PyTuple_SetItem(result, i, clientAndStatsToPair(vec[i]));
+    }
+    
+    return result;
+}
+
+/**
+ * ringClientAndStatsToPair
+ *  Given a CStatusDb::RingsAndStatistics  reference, returns a pair consisting
+ *  of ring statistics and a tuple with the clients and their associated
+ *  statistics.
+ */
+static PyObject*
+ringClientAndStatsToPair(CStatusDb::RingsAndStatistics& ringAndStats)
+{
+    PyObject* result = PyTuple_New(2);
+    
+    PyTuple_SetItem(result, 0, ringBufferToDict(ringAndStats.first));
+    
+    PyTuple_SetItem(result, 1, clientAndStatsVecToPairs(ringAndStats.second));
+    
+    return result;
+}
+
+/**
+ * ringStatisticsToMap
+ *   Pythonizes a complete set of ring statistics.
+ *
+ *  @param stats - Reference to a CStatusDb::CompleteRingStatistics structure.
+ *  @return PyObject* dict as described in statusdb_queryRingStatistics
+ */
+static PyObject*
+ringStatisticsToMap(CStatusDb::CompleteRingStatistics& stats)
+{
+    PyObject* result = PyDict_New();
+    
+    for (auto p = stats.begin(); p != stats.end(); p++) {
+        std::string key = p->first;
+        
+        dictStoreObj(result, key.c_str(), ringClientAndStatsToPair(p->second));
+    }
+    
+    return result;
+}
+/**
+ * utilities for state transition queries:
+ */
+
+/**
+ * stateAppToDict
+ *    Takes a CStatusDb::StateApp struct as input and generates a dict
+ *    that describes that struct.
+ *
+ *  @param app - the item to convert.
+ *  @return PyObject* - a dict that describes the state application.
+ */
+static PyObject*
+stateAppToDict(CStatusDb::StateApp& app)
+{
+    PyObject* result = PyDict_New();;
+    
+    dictStoreInt(result, "id", app.s_id);
+    dictStoreString(result, "name", app.s_appName.c_str());
+    dictStoreString(result, "host", app.s_appHost.c_str());
+    
+    return result;
+}
+
+/**
+ * transitionVecToTuple
+ *    Takes the vector of CStatusDb::StateTransition items and returns a
+ *    tuple of dicts that contain the same data for python scripts.  See
+ *    statusdb_queryStateTransitions for more information about the dicts
+ *    that are in this tuple.
+ *
+ *  @param vec        - the vector of state transition information.
+ *  @return PyObject* - the tuple of dicts created.
+ *
+ */
+static PyObject*
+transitionVecToTuple(std::vector<CStatusDb::StateTransition>& vec)
+{
+    PyObject* result = PyTuple_New(vec.size());
+    
+    for (int i = 0; i < vec.size(); i++) {
+        PyObject* item = PyDict_New();
+        
+        dictStoreObj(item, "application", stateAppToDict(vec[i].s_app));
+        dictStoreInt(item, "appid", vec[i].s_appId);
+        dictStoreInt(item, "transitionId", vec[i].s_transitionId);
+        dictStoreInt(item, "timestamp", vec[i].s_timestamp);
+        dictStoreString(item, "leaving", vec[i].s_leaving.c_str());
+        dictStoreString(item, "entering", vec[i].s_entering.c_str());
+        
+        PyTuple_SetItem(result, i, item);
+    }
+    
+    return result;
+}
+
+
+/**
+ * stateAppVecToTuple
+ *   Takes a std::vector<CStatusDb::StateApp> and returns a tuple of dicts that
+ *   describe the contents of the input vector.
+ *
+ * @param vec - input vector of state app structs
+ * @return PyObject*  - Actually a tuple of dicts.
+ */
+static PyObject*
+stateAppVecToTuple(std::vector<CStatusDb::StateApp>& vec)
+{
+    PyObject* result = PyTuple_New(vec.size());
+    
+    for (int i = 0; i < vec.size(); i++) {
+        PyTuple_SetItem(result, i, stateAppToDict(vec[i]));
     }
     
     return result;
@@ -1008,6 +1347,383 @@ statusdb_queryLogMessages(PyObject* self, PyObject* args)
     return NULL;
 
 }
+/**
+ * statusdb_listRings
+ *   Lists the set of ringbuffers that are defined  in the database.
+ *   This is returned as a tuple of dicts.  Each dict contains the following
+ *   keys:
+ *   - id   - primary key of the ringbuffer record in the database.
+ *   - name - Ring buffer name (not URI).
+ *   - host - Host in which the ring buffer is defined.
+ *   - fqname - Fully qualified ring name.  This is just name@host
+ *            Note that for proxy rings there will be two @ signs:
+ *            name@sourcehost@proxyhost  where sourcehost is the host from which
+ *            the data is being hoisted and proxyhost is the host in which the
+ *            proxy ring lives.  For example, consider the ring
+ *            tcp://spdaq19.nscl.msu.edu/aring where the proxy is located in
+ *            u6pc2.nscl.msu.edu, this will have the fqname of
+ *            aring@spdaq19.nscl.msu.edu@u6pc2.nscl.msu.edu
+ *
+ *   @param self - Pointer to our instance data.
+ *   @param args - Positional parameters.  In this case there's a single optional
+ *                 parameter that is query filter.   Query filters are objects
+ *                 that have a method named 'toString' that returns a WHERE
+ *                 clause for sql.
+ *   @return PyObject*  See above for a definition of the object returned.
+ */
+static PyObject*
+statusdb_listRings(PyObject* self, PyObject* args)
+{
+   // Figure out which query filter to use in the  query.  Everything is in
+    // a try/catch block to map c++ exceptions to python exceptions:
+    
+    CQueryFilter* userFilter(nullptr);
+    try {
+        // Figure out the filter we're going to use:
+        
+        CQueryFilter* filter = &DAQ::acceptAll;     // Default filter.
+        PyObject*     filterObj;
+        if (PyTuple_Size(args) > 0) {    
+            if (!PyArg_ParseTuple(args, "O", &filterObj)) {
+                return NULL;
+            }
+            userFilter = createFilterObject(filterObj);
+            filter = userFilter;
+        }
+        // Do the query and marshall the results:
+        
+        std::vector<CStatusDb::RingBuffer> rawResult;
+        CStatusDb* pDb = getApi(self);
+        pDb->listRings(rawResult, *filter);
+        
+        PyObject* result = ringListToTuple(rawResult);
+        return result;
+    }
+    catch(const char* message) {
+        PyErr_SetString(exception, message);
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::string message) {
+        PyErr_SetString(exception, message.c_str());
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        delete userFilter;
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception caught");
+        delete userFilter;
+        return NULL;
+
+    }
+    // Control should not pass here as the try block has a return too:
+    
+    PyErr_SetString(exception, "queryLogMessage bug detected in logic flow");
+    return NULL;
+}
+
+/**
+ * statusdb_listRingsAndClients
+ *   Lists the ringbuffers and their known clients.
+ *
+ * @param self - Points to our obect instance data.
+ * @param args - Positional parameters.  This is an optional filter object.
+ *               Filter objects are objects with a 'toString' method that
+ *               returns the contents of an SQL WHERE clause.
+ * @return PyObject*  - This is actually a dict.  The
+ *               keys are fully qualified ring names the contents are a pair.
+ *               The first element of the pair is the ring dict as described
+ *               in statusdb_listRings.  The second is a tuple of
+ *               dicts where each dict describes a client.  The client dict has
+ *               the following keys:
+ *               -  id    - Primary key of the record.
+ *               -  pid   - PID of the client.
+ *               -  producer - Boolean that is true if the client was a producer.
+ *               - command  - The command used to start the client.
+ */
+static PyObject*
+statusdb_listRingsAndClients(PyObject* self, PyObject* args)
+{
+   // Figure out which query filter to use in the  query.  Everything is in
+    // a try/catch block to map c++ exceptions to python exceptions:
+    
+    CQueryFilter* userFilter(nullptr);
+    try {
+        // Figure out the filter we're going to use:
+        
+        CQueryFilter* filter = &DAQ::acceptAll;     // Default filter.
+        PyObject*     filterObj;
+        if (PyTuple_Size(args) > 0) {    
+            if (!PyArg_ParseTuple(args, "O", &filterObj)) {
+                return NULL;
+            }
+            userFilter = createFilterObject(filterObj);
+            filter = userFilter;
+        }
+        // Do the query and marshall the results:
+        
+        CStatusDb::RingDirectory raw;
+        CStatusDb* pApi = getApi(self);
+        
+        pApi->listRingsAndClients(raw, *filter);
+        
+        PyObject* result = ringDirectoryToMap(raw);
+        return result;
+
+    }
+    catch(const char* message) {
+        PyErr_SetString(exception, message);
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::string message) {
+        PyErr_SetString(exception, message.c_str());
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        delete userFilter;
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception caught");
+        delete userFilter;
+        return NULL;
+
+    }
+    // Control should not pass here as the try block has a return too:
+    
+    PyErr_SetString(exception, "queryLogMessage bug detected in logic flow");
+    return NULL;        
+}
+/**
+ * statusdb_queryRingStatistics
+ *
+ *    Wraps CStatusDb::queryRingStatistics.
+ *
+ *  @param self - Pointer to our instance data.
+ *  @param args - positional parameters.  This is an optional filter.
+ *  @return PyObject* Actually a pointer to a dict that is indexed by the fully
+ *               qualified name of each ring.  The contents of each key are
+ *               the same as that of listRingsAndClients except that intead of having
+ *               a vector of client dicts, there's a vector of pairs where the
+ *               first element is a client dict and the second a tuple of
+ *               statistics for that client.  Each statistic is a dict
+ *               that contains:
+ *               -  id  - Primary key of the statistic in the ring_statistics table.
+ *               -  timestamp   - Time at which the entry was produced. (int(time.time()))
+ *               -  operations  - Total number of operations the client has performed.
+ *               -  bytes       - Total number of bytes the client has transferred
+ *                                into or out of the ring.
+ *               -  backlog     - Number of bytes of backlog in the ring at the time
+ *                                the entry was made. 
+ */
+static PyObject*
+statusdb_queryRingStatistics(PyObject* self, PyObject* args)
+{
+   // Figure out which query filter to use in the  query.  Everything is in
+    // a try/catch block to map c++ exceptions to python exceptions:
+    
+    CQueryFilter* userFilter(nullptr);
+    try {
+        // Figure out the filter we're going to use:
+        
+        CQueryFilter* filter = &DAQ::acceptAll;     // Default filter.
+        PyObject*     filterObj;
+        if (PyTuple_Size(args) > 0) {    
+            if (!PyArg_ParseTuple(args, "O", &filterObj)) {
+                return NULL;
+            }
+            userFilter = createFilterObject(filterObj);
+            filter = userFilter;
+        }
+        // Do the query and marshall the results:
+        
+        CStatusDb* pApi = getApi(self);
+        CStatusDb::CompleteRingStatistics raw;
+        
+        pApi->queryRingStatistics(raw, *filter);
+        
+        PyObject* result = ringStatisticsToMap(raw);
+        return result;
+
+    }
+    catch(const char* message) {
+        PyErr_SetString(exception, message);
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::string message) {
+        PyErr_SetString(exception, message.c_str());
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        delete userFilter;
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception caught");
+        delete userFilter;
+        return NULL;
+
+    }
+    // Control should not pass here as the try block has a return too:
+    
+    PyErr_SetString(exception, "queryLogMessage bug detected in logic flow");
+    return NULL;        
+    
+}
+/**
+ * statusdb_listStateApplications
+ *   Lists the set of applications that can emit state information.
+ *
+ *  @param self - pointer to the instance's member storage.
+ *  @param args - Positional parameters.  This is an optional query filter.
+ *  @return PyObject* - actually a tuple of dicts that contain the following keys:
+ *                      - id   - Primary key of the application in the
+ *                               state_application table.
+ *                      - name - Name of the state application.
+ *                      - host - Host the application runs in.
+ */
+static PyObject*
+statusdb_listStateApplications(PyObject* self, PyObject* args)
+{
+   // Figure out which query filter to use in the  query.  Everything is in
+    // a try/catch block to map c++ exceptions to python exceptions:
+    
+    CQueryFilter* userFilter(nullptr);
+    try {
+        // Figure out the filter we're going to use:
+        
+        CQueryFilter* filter = &DAQ::acceptAll;     // Default filter.
+        PyObject*     filterObj;
+        if (PyTuple_Size(args) > 0) {    
+            if (!PyArg_ParseTuple(args, "O", &filterObj)) {
+                return NULL;
+            }
+            userFilter = createFilterObject(filterObj);
+            filter = userFilter;
+        }
+        // Do the query and marshall the results:
+        
+        CStatusDb* pApi = getApi(self);
+        std::vector<CStatusDb::StateApp> raw;
+        
+        pApi->listStateApplications(raw, *filter);
+        
+        PyObject* result = stateAppVecToTuple(raw);
+        return result;
+
+    }
+    catch(const char* message) {
+        PyErr_SetString(exception, message);
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::string message) {
+        PyErr_SetString(exception, message.c_str());
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        delete userFilter;
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception caught");
+        delete userFilter;
+        return NULL;
+
+    }
+    // Control should not pass here as the try block has a return too:
+    
+    PyErr_SetString(exception, "queryLogMessage bug detected in logic flow");
+    return NULL;        
+    
+}
+/**
+ *   statusdb_queryStateTransitions
+ *      Wrapper for CStatusDb::queryStateTransitions.  In keeping with the C++
+ *      API, we return a tuple of dicts.  Each dict has the following keys:
+ *      -  application - Contains the application dict for the app that generated
+ *                       the transition.
+ *      -  appid       - Contains the id of the application (should match the id
+ *                       key of the application dict).
+ *      - transitionid - Id of the transition in the state_transitions table.
+ *      - timestamp    - the int(time.time()) at when the transition was issued.
+ *      - leaving      - Name of the state that's being left.
+ *      - entering     - name of the state that's being entered.
+ *
+ *  @param self - pointer to our instance storage.
+ *  @param args - positional args that can contain an optional filter object.
+ *  
+ */
+static PyObject*
+statusdb_queryStateTransitions(PyObject* self, PyObject* args)
+{
+   // Figure out which query filter to use in the  query.  Everything is in
+    // a try/catch block to map c++ exceptions to python exceptions:
+    
+    CQueryFilter* userFilter(nullptr);
+    try {
+        // Figure out the filter we're going to use:
+        
+        CQueryFilter* filter = &DAQ::acceptAll;     // Default filter.
+        PyObject*     filterObj;
+        if (PyTuple_Size(args) > 0) {    
+            if (!PyArg_ParseTuple(args, "O", &filterObj)) {
+                return NULL;
+            }
+            userFilter = createFilterObject(filterObj);
+            filter = userFilter;
+        }
+        // Do the query and marshall the results:
+        
+        CStatusDb* pApi = getApi(self);
+        std::vector<CStatusDb::StateTransition> raw;
+        
+        pApi->queryStateTransitions(raw, *filter);
+        
+        PyObject* result = transitionVecToTuple(raw);
+        return result;
+
+    }
+    catch(const char* message) {
+        PyErr_SetString(exception, message);
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::string message) {
+        PyErr_SetString(exception, message.c_str());
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        delete userFilter;
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception caught");
+        delete userFilter;
+        return NULL;
+
+    }
+    // Control should not pass here as the try block has a return too:
+    
+    PyErr_SetString(exception, "queryLogMessage bug detected in logic flow");
+    return NULL;        
+    
+    
+}
 
 // Tables and data types for the statusdb type:
 
@@ -1026,6 +1742,21 @@ static PyMethodDef statusdbMethods[] = {
     },
     {"queryLogMessages", statusdb_queryLogMessages, METH_VARARGS,
       "Query the log messages."
+    },
+    {"listRings", statusdb_listRings, METH_VARARGS,
+    "List the set of ringbuffers defined in the database"},
+    {"listRingsAndClients", statusdb_listRingsAndClients, METH_VARARGS,
+    "Lists the ringbuffers and all of their known clients"},
+    {"queryRingStatistics", statusdb_queryRingStatistics, METH_VARARGS,
+        "Query ring statistics from the database"
+    },
+    {
+      "listStateApplications", statusdb_listStateApplications, METH_VARARGS,
+      "List the emitters of state change records."
+    },
+    {
+        "queryStateTransitions", statusdb_queryStateTransitions, METH_VARARGS,
+        "Generic query of state transitions"
     },
     {NULL, NULL, 0, NULL}  
 };
