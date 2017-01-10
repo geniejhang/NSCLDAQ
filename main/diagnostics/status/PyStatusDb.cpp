@@ -156,6 +156,21 @@ dictStoreObj(PyObject* dict, const char* key, PyObject* valobj)
     }
 }
 /**
+ * dictStoreObj
+ *   This overload stores an object in a dict with an unsigned  key.
+ *
+ * @param dict - the dict to be modified.
+ * @param key  - the key value.
+ * @param value - The value to store.
+ */
+static void
+dictStoreObj(PyObject* dict, unsigned key, PyObject* value)
+{
+    PyObject* keyObj = PyInt_FromLong(key);
+    PyDict_SetItem(dict, keyObj, value);
+}
+
+/**
  * dictStoreInt
  *   Store an integer valued item in a dict.
  * @param dict - the dict we're storing into.
@@ -204,6 +219,8 @@ dictStoreBool(PyObject* dict, const char* key, bool value)
     
     dictStoreObj(dict, key, vobj);
 }
+
+
 /**
  * Generic utilities for iterable objects:
  */
@@ -621,7 +638,7 @@ ringListToTuple(std::vector<CStatusDb::RingBuffer>& raw)
 }
 /**
  * clientToDict
- *   Turn a client data structure into the dict descsribed in statusdb_listRingsAndClients
+ *   Turn a client data structure into the dict described in statusdb_listRingsAndClients
  *
  * @param client - refers to a single CStatusDb::RingClient struct.
  * @return PyObject* - dict created.
@@ -892,7 +909,209 @@ stateAppVecToTuple(std::vector<CStatusDb::StateApp>& vec)
     
     return result;
 }
+/**
+ * Utililties for readout statistics queries.  Note that the application
+ * structs and dicts are identical to the applications structs and dicts
+ * used by the state transition queries.
+ */
 
+/**
+ * runInfoToDict
+ *    Given a CStatusDb::RunInfo struct returns a dict that has the same
+ *    information.  See statusdb_listRuns for a description of the keys.
+ *
+ *  @param run - a run info struct.
+ *  @return PyObject* - the resulting dict.
+ */
+static PyObject*
+runInfoToDict(CStatusDb::RunInfo& run)
+{
+    PyObject* result = PyDict_New();
+    
+    dictStoreInt(result, "id", run.s_id);
+    dictStoreInt(result, "start", run.s_startTime);
+    dictStoreInt(result, "number", run.s_runNumber);
+    dictStoreString(result, "title", run.s_runTitle.c_str());
+    
+    return result;
+}
+
+/**
+ * runVecToTuple
+ *   Turns a vector of CStatusDb::RunInfo structs into a tuple of run description
+ *   dicts.  See statusdb_listRuns for the keys in this dict.
+ *
+ * @param runs - Vector of RunInfo structs.
+ * @return PyObject* - the resulting tuple.
+ */
+static PyObject*
+runVecToTuple(std::vector<CStatusDb::RunInfo>& runs)
+{
+    PyObject* result = PyTuple_New(runs.size());
+    
+    for (int i = 0; i < runs.size(); i++) {
+        PyTuple_SetItem(result, i, runInfoToDict(runs[i]));
+    }
+    
+    return result;
+}
+
+
+/**
+ * appRunsToToTuple
+ *   Turns a CStatusDb::ApplicationRun into a tuple that consists of the
+ *   application dict and a tuple of run descsription dicts.
+ *
+ * @param appRuns  - CStatusDb::ApplicationRun struct to translate.
+ * @return PyObject* - The resulting tuple.
+ */
+static PyObject*
+appRunsToTuple(CStatusDb::ApplicationRun& appruns)
+{
+    PyObject* result = PyTuple_New(2);
+    
+    PyTuple_SetItem(result, 0, stateAppToDict(appruns.first));
+    PyTuple_SetItem(result, 1, runVecToTuple(appruns.second));
+    
+    return result;
+}
+
+/**
+ * runMapToDict
+ *    Take a map of run information and transform it into a dict
+ *    indexed by readout app primary key and whose contents are a pair that
+ *    contains readout application information and a run definition tuple.
+ *
+ *  @param runMap - Run map from CStatusDb::listRuns
+ *  @return PyObject* The dict result.
+ */
+static PyObject*
+runMapToDict(CStatusDb::RunDictionary runMap)
+{
+    PyObject* result = PyDict_New();
+    
+    for (auto p = runMap.begin(); p != runMap.end(); p++) {
+        unsigned key = p->first;
+        PyObject* value = appRunsToTuple(p->second);
+        
+        dictStoreObj(result, key, value);
+    }
+    
+    return result;
+}
+/**
+ * runStatsToDict
+ *    Creates a run statistics dict from a CStatusDb::ReadoutStatistics struct
+ *
+ * @param stats  - the statistics struct.
+ * @return PyObject* - the resulting dict.
+ */
+static PyObject*
+runStatsToDict(CStatusDb::ReadoutStatistics& stat)
+{
+    PyObject* result = PyDict_New();
+    
+    dictStoreInt(result, "id", stat.s_id);
+    dictStoreInt(result, "timestamp", stat.s_timestamp);
+    dictStoreInt(result, "elapsedTime", stat.s_elapsedTime);
+    dictStoreInt(result, "triggers", stat.s_triggers);
+    dictStoreInt(result, "events", stat.s_events);
+    dictStoreInt(result, "bytes", stat.s_bytes);
+    
+    return result;
+}
+
+/**
+ * readoutStatVecToTuple
+ *   Given a vector of readout statistics elements (CStatusDb::ReadoutStatistics),
+ *   produces a corresponding tuple of readout statistics dicts.
+ *
+ * @param vec - the statistics vector.
+ * @return PyObject* the resulting tuple.
+ */
+static PyObject*
+readoutStatVecToTuple(std::vector<CStatusDb::ReadoutStatistics>& vec)
+{
+    PyObject* result = PyTuple_New(vec.size());
+    
+    for (int i=0; i < vec.size(); i++) {
+        PyTuple_SetItem(result, i, runStatsToDict(vec[i]));
+    }
+    
+    return result;
+}
+
+/**
+ * runStatsVecToTuple
+ *    Given a vector of pairs containing run descriptions and a vector of
+ *    readout statistics for that run, produces a two element Python
+ *    tuple.  The first element of the tuple is the dict that describes a run.
+ *    The second element is a tuple of run statistics dicts.
+ *
+ * @param stats       - Vector of pairs.
+ * @return PyObject*  - Resulting tuple.
+ */
+static PyObject*
+runStatsVecToTuple(std::vector<CStatusDb::RunStatistics>& stats)
+{
+    PyObject* result = PyTuple_New(stats.size());
+    
+    
+    for (int i = 0; i < stats.size(); i++) {
+        PyObject* item = PyTuple_New(2);
+        
+        PyTuple_SetItem(item, 0, runInfoToDict(stats[i].first));
+        PyTuple_SetItem(item, 1, readoutStatVecToTuple(stats[i].second));
+        
+        
+        PyTuple_SetItem(result, i, item);
+    }
+    
+    return result;
+}
+
+/**
+ * appRunStatsToTuple
+ *    Converts a ReadoutAppStats into a tuple thhat contains
+ *    a description of the readout program that generated the stats
+ *    and a tuple of RunStatistics tuples.
+ *
+ * @param readoutStats - the ReadoutAppStats pair being converted.
+ * @return PyObject*   - The resulting two element tuple.
+ */
+static PyObject*
+appRunStatsToTuple(CStatusDb::ReadoutAppStats& readoutStats)
+{
+    PyObject* result = PyTuple_New(2);
+    
+    PyTuple_SetItem(result, 0, stateAppToDict(readoutStats.first));
+    PyTuple_SetItem(result, 1, runStatsVecToTuple(readoutStats.second));
+    
+    return result;
+}
+
+/**
+ * statMapToDict
+ *    Take a statistics map from CStatusDb::queryReadoutStatistics and
+ *    create the corresponding python dict.
+ *
+ *  @param stats      - the result from queryReadoutStatistics
+ *  @return PyObject* - The resulting dict.
+ */
+static PyObject*
+statMapToDict(CStatusDb::ReadoutStatDict& stats)
+{
+    PyObject* result = PyDict_New();
+    
+    for (auto p = stats.begin(); p != stats.end(); p++) {
+        unsigned key = p->first;
+        PyObject* value = appRunStatsToTuple(p->second);
+        
+        dictStoreObj(result, key, value);
+    }
+    
+    return result;
+}
 // Implementation of the statusdb type:
 
 // canonical methods:
@@ -1724,6 +1943,231 @@ statusdb_queryStateTransitions(PyObject* self, PyObject* args)
     
     
 }
+/**
+ * statusdb_listReadoutApps
+ *    List the known readout applications.  These are applications that
+ *    have emitted readout statistics, or defined themselves as intending
+ *    to do so.
+ *
+ *   @param self - pointer to the instance storage associated with the object
+ *                 on which this was called.
+ *   @param args - Positional args.  This can be an optional filter.
+ *   @result PyObject* - actually points to a tuple of dicts.  Each dict
+ *                 has the following keys:
+ *                 -  id   - primary key of the application in the
+ *                    readout_program table.
+ *                 - name - name of the application.
+ *                 - host - host in which the application lives.
+ *   @note At present there is no difference between a state app and a
+ *         readout app as far as the data structure goes.  We use this fact in
+ *         marshalling the data.
+ */
+static PyObject*
+statusdb_listReadoutApps(PyObject* self, PyObject* args)
+{
+   // Figure out which query filter to use in the  query.  Everything is in
+    // a try/catch block to map c++ exceptions to python exceptions:
+    
+    CQueryFilter* userFilter(nullptr);
+    try {
+        // Figure out the filter we're going to use:
+        
+        CQueryFilter* filter = &DAQ::acceptAll;     // Default filter.
+        PyObject*     filterObj;
+        if (PyTuple_Size(args) > 0) {    
+            if (!PyArg_ParseTuple(args, "O", &filterObj)) {
+                return NULL;
+            }
+            userFilter = createFilterObject(filterObj);
+            filter = userFilter;
+        }
+        // Do the query and marshall the results:
+        
+        CStatusDb* pApi = getApi(self);
+        std::vector<CStatusDb::StateApp> raw;
+        
+        pApi->listReadoutApps(raw, *filter);
+        
+        PyObject* result = stateAppVecToTuple(raw);
+        return result;
+
+    }
+    catch(const char* message) {
+        PyErr_SetString(exception, message);
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::string message) {
+        PyErr_SetString(exception, message.c_str());
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        delete userFilter;
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception caught");
+        delete userFilter;
+        return NULL;
+
+    }
+    // Control should not pass here as the try block has a return too:
+    
+    PyErr_SetString(exception, "queryLogMessage bug detected in logic flow");
+    return NULL;        
+    
+    
+}
+/**
+ * statusdb_listRuns
+ *    Lists the readout applications and the runs they've created.    This is
+ *    a wrapper for CStatusDb::listRuns
+ *
+ * @param self - Pointer to the storage associated with the instance on which
+ *               this method was called.
+ * @param args - Tuple with the positional args.  The positional args are only
+ *               an optional filter parameter.
+ * @return PyObject* - This is a dict that is indexed by the primary keys of
+ *               applications.  The contents of each dict index are a two element
+ *               tuple that contains the readout program dict followed by a
+ *               tuple of dicts that define the run.   Those dicts have the
+ *               following keys:
+ *               -  id    - Primary key of the run in the run_info table.
+ *               -  start - Timestamp that is the int(time.time()) when the run
+ *                          started.
+ *               -  number - Run number.
+ *               -  title  - Run Title.
+ */
+static PyObject*
+statusdb_listRuns(PyObject* self, PyObject* args){
+   // Figure out which query filter to use in the  query.  Everything is in
+    // a try/catch block to map c++ exceptions to python exceptions:
+    
+    CQueryFilter* userFilter(nullptr);
+    try {
+        // Figure out the filter we're going to use:
+        
+        CQueryFilter* filter = &DAQ::acceptAll;     // Default filter.
+        PyObject*     filterObj;
+        if (PyTuple_Size(args) > 0) {    
+            if (!PyArg_ParseTuple(args, "O", &filterObj)) {
+                return NULL;
+            }
+            userFilter = createFilterObject(filterObj);
+            filter = userFilter;
+        }
+        // Do the query and marshall the results:
+        
+        CStatusDb* pApi = getApi(self);
+        CStatusDb::RunDictionary raw;
+        pApi->listRuns(raw, *filter);
+        
+        PyObject* result = runMapToDict(raw);
+        return result;
+
+    }
+    catch(const char* message) {
+        PyErr_SetString(exception, message);
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::string message) {
+        PyErr_SetString(exception, message.c_str());
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        delete userFilter;
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception caught");
+        delete userFilter;
+        return NULL;
+
+    }
+    // Control should not pass here as the try block has a return too:
+    
+    PyErr_SetString(exception, "queryLogMessage bug detected in logic flow");
+    return NULL;            
+}
+/**
+ * statusdb_queryReadoutStatistics
+ *    Wraps the CStatusDb::queryReadoutStatistics method for Python
+ *    scripts.  The return value is vary much like statusdb_listRuns,
+ *    however the second element of the pair for each key consists
+ *    of a tuple where each element is not only the run information but
+ *    a tuple of statistics entries for that run.  The statistics are
+ *    dicts with the following keys:
+ *    -  id          - primary key of the statistics entry.
+ *    -  timestasmp  - int(time.time()) at which the entry was emitted.
+ *    -  elapsedTime - Number of seconds into the run represented by the entry.
+ *    -  triggers    - Total number of triggers responded to by the program.
+ *    -  events      - Total number of events produced by the program.
+ *    -  bytes       - Total number of bytes produced by the program.
+ *
+ *   @param self - pointer to the instance data of the object on which this method
+ *                 is being called.
+ *   @param args - Positional parameters.  An optional filter on the query.
+ */
+static PyObject*
+statusdb_queryReadoutStatistics(PyObject* self, PyObject* args)
+{
+   // Figure out which query filter to use in the  query.  Everything is in
+    // a try/catch block to map c++ exceptions to python exceptions:
+    
+    CQueryFilter* userFilter(nullptr);
+    try {
+        // Figure out the filter we're going to use:
+        
+        CQueryFilter* filter = &DAQ::acceptAll;     // Default filter.
+        PyObject*     filterObj;
+        if (PyTuple_Size(args) > 0) {    
+            if (!PyArg_ParseTuple(args, "O", &filterObj)) {
+                return NULL;
+            }
+            userFilter = createFilterObject(filterObj);
+            filter = userFilter;
+        }
+        // Do the query and marshall the results:
+        
+        CStatusDb* pApi = getApi(self);
+        CStatusDb::ReadoutStatDict raw;
+        pApi->queryReadoutStatistics(raw, *filter);
+        
+        PyObject* result = statMapToDict(raw);
+        return result;
+
+    }
+    catch(const char* message) {
+        PyErr_SetString(exception, message);
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::string message) {
+        PyErr_SetString(exception, message.c_str());
+        delete userFilter;
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        delete userFilter;
+        return NULL;
+    }
+    catch (...) {
+        PyErr_SetString(exception, "Unanticipated C++ exception caught");
+        delete userFilter;
+        return NULL;
+
+    }
+    // Control should not pass here as the try block has a return too:
+    
+    PyErr_SetString(exception, "queryLogMessage bug detected in logic flow");
+    return NULL;                
+}
 
 // Tables and data types for the statusdb type:
 
@@ -1757,6 +2201,18 @@ static PyMethodDef statusdbMethods[] = {
     {
         "queryStateTransitions", statusdb_queryStateTransitions, METH_VARARGS,
         "Generic query of state transitions"
+    },
+    {
+        "listReadoutApps", statusdb_listReadoutApps, METH_VARARGS,
+        "List the set of applications that have emitted readout statistics"
+    },
+    {
+        "listRuns", statusdb_listRuns, METH_VARARGS,
+        "List the applications and the runs they created"
+    },
+    {
+        "queryReadoutStatistics", statusdb_queryReadoutStatistics, METH_VARARGS,
+        "Obtain statistics from readout programs"
     },
     {NULL, NULL, 0, NULL}  
 };

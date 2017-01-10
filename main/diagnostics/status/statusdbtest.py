@@ -542,7 +542,7 @@ class StatusDbTests(unittest.TestCase):
             ), result
         )
 
-    def test_queryStateTransitions(self):
+    def test_queryStateTransitions_nofilter(self):
         ts = self.test_listStateApps_nofilter()   # Stocks the database.
         result = self._api.queryStateTransitions()
         
@@ -570,6 +570,132 @@ class StatusDbTests(unittest.TestCase):
                 'leaving': 'Readying', 'entering': 'Ready'
             }
             ), result)
+        
+    def test_queryStateTransitions_filter(self, ):
+        ts = self.test_listStateApps_nofilter()
+        filter = where.RelationToNonString('t.timestamp', '>', ts)
+        result = self._api.queryStateTransitions(filter)
+        
+        self.assertEqual(2, len(result))
+        self.assertEqual(
+            (
+                {
+                'application':  {'id': 2, 'name': 'VMUSBReadout', 'host': 'spdaq20.nscl.msu.edu'},
+                'appid': 2, 'transitionId': 3, 'timestamp': ts+1,
+                'leaving': 'Readying', 'entering': 'Ready'
+            },
+            {
+                'application': {'id': 1, 'name': 'Readout', 'host': 'charlie.nscl.msu.edu'},
+                'appid': 1, 'transitionId': 4, 'timestamp': ts+2,
+                'leaving': 'Readying', 'entering': 'Ready'
+            }
+            ), result
+        )
+    def test_listReadoutApps_nofilter(self):
+        ts = int(time.time())
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'VMUSBReadout',
+            'charlie.nscl.msu.edu',  ts, 12, 'This is a run title'
+        )
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'Readout',
+            'spdaq20.nscl.msu.edu', ts+1, 12, 'This is a run title on spdaq20'
+        )
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'CCUSBReadout',
+            'spdaq19.nscl.msu.edu', ts+2, 12, 'This is a run title on spdaq19'
+        )
+        result = self._api.listReadoutApps()
+        
+        self.assertEqual(3, len(result))
+        self.assertEqual(
+            (
+                {'id': 1, 'name' : 'VMUSBReadout', 'host': 'charlie.nscl.msu.edu'},
+                {'id': 2, 'name' : 'Readout', 'host': 'spdaq20.nscl.msu.edu'},
+                {'id': 3, 'name' : 'CCUSBReadout', 'host': 'spdaq19.nscl.msu.edu' }
+            ), result
+        )
+        return ts
+    def test_listReadoutApps_filter(self):
+        ts = self.test_listReadoutApps_nofilter()
+        filter = where.InFilter('a.id')
+        filter.addNumber(2)
+        filter.addNumber(3)
+        result = self._api.listReadoutApps(filter)
+        self.assertEqual(2, len(result))
+        self.assertEqual(
+            (
+                {'id': 2, 'name' : 'Readout', 'host': 'spdaq20.nscl.msu.edu'},
+                {'id': 3, 'name' : 'CCUSBReadout', 'host': 'spdaq19.nscl.msu.edu'}
+            ), result
+        )
+    def test_listRuns_nofilter(self):
+        ts = self.test_listReadoutApps_nofilter()
+        result = self._api.listRuns()
+        
+        self.assertEqual(3, len(result))
+        self.assertEqual([1,2,3], result.keys())
+        
+        self.assertEqual(
+            {
+                1: (
+                    {'id': 1, 'name' : 'VMUSBReadout', 'host': 'charlie.nscl.msu.edu'},
+                    (
+                        { 'id': 1, 'number': 12,
+                         'title': 'This is a run title', 'start': ts}
+                        ,
+                    )
+                   ),
+                2: (
+                    {'id': 2, 'name' : 'Readout', 'host': 'spdaq20.nscl.msu.edu'},
+                    (
+                      { 'id': 2, 'number': 12,
+                       'title': 'This is a run title on spdaq20', 'start': ts + 1}
+                        ,
+                    )
+                   ),
+                3: (
+                    {'id': 3, 'name' : 'CCUSBReadout', 'host': 'spdaq19.nscl.msu.edu' },
+                    (
+                        { 'id': 3, 'number': 12,
+                       'title': 'This is a run title on spdaq19', 'start': ts + 2}
+                        ,
+                    )
+                   )
+            }, result
+        )
+    def test_listRuns_filter(self):
+        ts = self.test_listReadoutApps_nofilter()
+        filter = where.RelationToString('a.host', 'LIKE', 'spdaq%')
+        result = self._api.listRuns(filter)
+        
+        self.assertEqual(2, len(result))
+        self.assertEqual(
+            {
+                2: (
+                    {'id': 2, 'name' : 'Readout', 'host': 'spdaq20.nscl.msu.edu'},
+                    (
+                      { 'id': 2, 'number': 12,
+                       'title': 'This is a run title on spdaq20', 'start': ts + 1}
+                        ,
+                    )
+                   ),
+                3: (
+                    {'id': 3, 'name' : 'CCUSBReadout', 'host': 'spdaq19.nscl.msu.edu' },
+                    (
+                        { 'id': 3, 'number': 12,
+                       'title': 'This is a run title on spdaq19', 'start': ts + 2}
+                        ,
+                    )
+                   )
+            }, result)
+    
+    def test_queryReadoutStats_nofilter(self):
+        #  Stock the apps and runs:
+        
+        ts = self.test_listReadoutApps_nofilter()
+        
+        #  Now some statistics entries for each app's run 1.
         
 if __name__ == '__main__':
     unittest.main()
