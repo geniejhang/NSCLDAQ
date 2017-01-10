@@ -29,6 +29,7 @@ East Lansing, MI 48824-1321
 #include "CRunState.h" 
 #include <CConfiguration.h>
 #include <Globals.h>     // Need to maintain the running global. 
+#include <CMutex.h>
 #include <assert.h>
 #include <time.h>
 #include <string>
@@ -309,7 +310,7 @@ CAcquisitionThread::processCommand(CControlQueues::opCode command)
   CRunState* pState = CRunState::getInstance();
   pState->setState(CRunState::Stopping);
   if (command == CControlQueues::ACQUIRE) {
-    stopDaq();
+    stopDaqImpl();
     queues->Acknowledge();
     CControlQueues::opCode release  = queues->getRequest();
     assert(release == CControlQueues::RELEASE);
@@ -393,6 +394,7 @@ CAcquisitionThread::processBuffer(DataBuffer* pBuffer)
   void
 CAcquisitionThread::startDaq()
 {
+  CriticalSection lock(CVMUSB::getGlobalMutex());
 
   //  First do a bulk read just to flush any crap that's in the VM-USB
   // output fifo..as it appears to sometimes leave crap there.
@@ -486,7 +488,7 @@ CAcquisitionThread::startDaq()
   - Call shutdown the hardware in the stacks
  */
   void
-CAcquisitionThread::stopDaq()
+CAcquisitionThread::stopDaqImpl()
 {
   if (m_haveScalerStack) {
     m_pVme->writeActionRegister(CVMUSB::ActionRegister::scalerDump);
@@ -507,6 +509,17 @@ CAcquisitionThread::stopDaq()
   disableInterrupts();
 }
 
+/*! \brief CAcquisitionThread::stopDaq
+ *
+ * This delegates all logic to stopDaqImpl but adds synchronization to it.
+ *
+ */
+void CAcquisitionThread::stopDaq()
+{
+  CriticalSection lock(CVMUSB::getGlobalMutex());
+  stopDaqImpl();
+}
+
 void CAcquisitionThread::disableInterrupts() 
 {
   // disable the interrupt service vectors
@@ -514,7 +527,7 @@ void CAcquisitionThread::disableInterrupts()
     m_pVme->writeVector(regIdx, 0);
   }
   // further... mask all of the interrupt request levels
-  m_pVme->writeIrqMask(0xff);
+  m_pVme->writeIrqMask(0x7f);
 }
 
 /*!

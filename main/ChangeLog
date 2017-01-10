@@ -1150,3 +1150,5 @@ Work on 11.0-rc11 begins
 	VMUSB. The VMUSB is now reset every time it is acquired.
 	* Fixes bug #6605 to ensure that the driver fails if it is not communicating
 	with a valid V1x90 device.
+	* Improves synchronization for CCUSB/VMUSBReadout between readout thread and
+	tclserver.
