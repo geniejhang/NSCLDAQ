@@ -1148,4 +1148,5 @@ Work on 11.0-rc11 begins
 	avoid segmentation faults at beginning of each run.
 	* Fixes bug introduced in 11.1-009 that broke the functionality of the
 	VMUSB. The VMUSB is now reset every time it is acquired.
-
+	* Fixes bug #6605 to ensure that the driver fails if it is not communicating
+	with a valid V1x90 device.
