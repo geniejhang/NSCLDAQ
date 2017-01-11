@@ -138,6 +138,8 @@ pypkgInstall:
 	$(INSTALL_PROGRAM) @libdir@/libPyStatusMessages.so @prefix@/pythonLibs/nscldaq/status/statusmessages.so
 	$(INSTALL_PROGRAM) @libdir@/libPyStatusDb.so @prefix@/pythonLibs/nscldaq/status/statusdb.so
 
+DOCS=status-refs.xml statusdb-refs.xml
+
 #-------------------- Tests -----
 
 TEST_EXTENSIONS=.py .test
@@ -150,6 +152,7 @@ TESTS_ENVIRONMENT=PYTHONPATH=@prefix@/pythonLibs; export PYTHONPATH;\
 PYTHON_TESTS=ringstatisticstests.py readoutstatisticstests.py \
 	logmessagestests.py statemessagetests.py statussub.py \
 	statusdbtest.py
+
 
 
 TCL_TESTS=statussubtest.test ringdecode.test logmodel.test statdb.test
@@ -221,4 +224,4 @@ clean-local:
 #  Ensure stuff makes it into the tarball:
 
 EXTRA_DIST = $(PYTHON_TESTS) $(TCL_TESTS) ringstatus.ggo multiaggregator.ggo \
-	Log.tcl $(TCL_PACKAGES)
+	Log.tcl $(TCL_PACKAGES) $(DOCS)

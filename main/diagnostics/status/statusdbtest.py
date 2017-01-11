@@ -697,5 +697,149 @@ class StatusDbTests(unittest.TestCase):
         
         #  Now some statistics entries for each app's run 1.
         
+        # VMUSBReadout in charlie:
+        
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'VMUSBReadout',
+            'charlie.nscl.msu.edu', ts, 12, 'This is a run title',
+            {'timestamp': ts+1, 'elapsed': 1, 'triggers': 100, 'events': 98, 'bytes': 1000}
+        )
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'VMUSBReadout',
+            'charlie.nscl.msu.edu', ts, 12, 'This is a run title',
+            {'timestamp': ts+3, 'elapsed': 3, 'triggers': 300, 'events': 98*3, 'bytes': 3000}
+        )
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'VMUSBReadout',
+            'charlie.nscl.msu.edu', ts, 12, 'This is a run title',
+            {'timestamp': ts+5, 'elapsed': 5, 'triggers': 500, 'events': 98*5, 'bytes': 5000}
+        )
+        # Readout in spdaq20:
+        
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'Readout',
+            'spdaq20.nscl.msu.edu', ts+1, 12, 'This is a run title on spdaq20',
+            {'timestamp': ts+3, 'elapsed': 2, 'triggers': 250, 'events': 240, 'bytes': 3000}
+        )
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'Readout',
+            'spdaq20.nscl.msu.edu', ts+1, 12, 'This is a run title on spdaq20',
+            {'timestamp': ts+5, 'elapsed': 4, 'triggers': 500, 'events': 480, 'bytes': 6000}
+        )
+        
+        # CCUSBReadout in spdaq19:
+        
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'CCUSBReadout',
+            'spdaq19.nscl.msu.edu', ts+2, 12, 'This is a run title on spdaq19',
+            {'timestamp': ts+3, 'elapsed': 1, 'triggers': 150, 'events': 150, 'bytes': 1500}
+        )
+        self._api.addReadoutStatistics(
+            statusmessages.SeverityLevels.INFO, 'CCUSBReadout',
+            'spdaq19.nscl.msu.edu', ts+2, 12, 'This is a run title on spdaq19',
+            {'timestamp': ts+7, 'elapsed': 5, 'triggers': 500, 'events': 500, 'bytes': 9102}
+        )
+        
+        result = self._api.queryReadoutStatistics()
+        self.assertEqual(3, len(result))
+        self.assertEqual([1,2,3], result.keys())
+        
+        # too hard for me to figure out how to do a single dict to compare so
+        # we'll do them by readout program:
+        
+        charlie = result[1] 
+        spdaq20 = result[2]
+        spdaq19 = result[3]
+        self.maxDiff = 2000
+        self.assertEqual(
+            (
+               {'id': 1, 'name': 'VMUSBReadout', 'host': 'charlie.nscl.msu.edu'},
+               ((
+                    {'id': 1, 'start': ts, 'number': 12, 'title': 'This is a run title'},
+                    (
+                        {'id': 1, 'timestamp': ts+1, 'elapsed': 1, 'triggers': 100, 'events': 98, 'bytes': 1000},
+                        {'id': 2, 'timestamp': ts+3, 'elapsed': 3, 'triggers': 300, 'events': 98*3, 'bytes': 3000},
+                        {'id': 3, 'timestamp': ts+5, 'elapsed': 5, 'triggers': 500, 'events': 98*5, 'bytes': 5000}
+                    )
+               ),),
+            ), charlie
+        )
+        self.assertEqual(
+            (
+               {'id': 2, 'name': 'Readout', 'host': 'spdaq20.nscl.msu.edu'},
+               (
+                (
+                    {'id': 2, 'start': ts+1, 'number': 12, 'title': 'This is a run title on spdaq20'},
+                    (
+                        {'id': 4, 'timestamp': ts+3, 'elapsed': 2, 'triggers': 250, 'events': 240, 'bytes': 3000},
+                        {'id': 5, 'timestamp': ts+5, 'elapsed': 4, 'triggers': 500, 'events': 480, 'bytes': 6000}
+                    )
+                ),
+               ),
+            ), spdaq20
+        )
+        self.assertEqual(
+            (
+                {'id': 3, 'name': 'CCUSBReadout', 'host': 'spdaq19.nscl.msu.edu'},
+                (
+                    (
+                        {'id': 3, 'start': ts + 2, 'number': 12, 'title': 'This is a run title on spdaq19'},
+                        (
+                            {'id': 6, 'timestamp': ts+3, 'elapsed': 1, 'triggers': 150, 'events': 150, 'bytes': 1500},
+                            {'id': 7, 'timestamp': ts+7, 'elapsed': 5, 'triggers': 500, 'events': 500, 'bytes': 9102}
+                        )
+                    ),
+                )
+            ), spdaq19
+        )
+        return ts
+        
+    def test_queryReadoutstatistics_filter(self):
+        ts = self.test_queryReadoutStats_nofilter()
+        filter = where.RelationToNonString('s.timestamp', '>', ts+4)
+        result = self._api.queryReadoutStatistics(filter)
+        
+        self.assertEqual([1,2, 3], result.keys())
+        
+        self.assertEqual(
+            (
+                {'id': 1, 'name': 'VMUSBReadout', 'host': 'charlie.nscl.msu.edu'},
+               ((
+                    {'id': 1, 'start': ts, 'number': 12, 'title': 'This is a run title'},
+                    (
+                      
+                        {'id': 3, 'timestamp': ts+5, 'elapsed': 5, 'triggers': 500, 'events': 98*5, 'bytes': 5000},
+                    )
+               ),),
+            ), result[1]
+        )
+        self.assertEqual(
+             (
+               {'id': 2, 'name': 'Readout', 'host': 'spdaq20.nscl.msu.edu'},
+               (
+                (
+                    {'id': 2, 'start': ts+1, 'number': 12, 'title': 'This is a run title on spdaq20'},
+                    (
+                        {'id': 5, 'timestamp': ts+5, 'elapsed': 4, 'triggers': 500, 'events': 480, 'bytes': 6000},
+                    )
+                ),
+               ),
+            ),result[2]
+        )
+        self.assertEqual(
+            (
+                {'id': 3, 'name': 'CCUSBReadout', 'host': 'spdaq19.nscl.msu.edu'},
+                (
+                    (
+                        {'id': 3, 'start': ts + 2, 'number': 12, 'title': 'This is a run title on spdaq19'},
+                        (
+                            {'id': 7, 'timestamp': ts+7, 'elapsed': 5, 'triggers': 500, 'events': 500, 'bytes': 9102},
+                        )
+                    ),
+                )
+            ), result[3]
+        )
+        
+        
 if __name__ == '__main__':
     unittest.main()

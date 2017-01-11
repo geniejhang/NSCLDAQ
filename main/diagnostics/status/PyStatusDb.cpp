@@ -1013,7 +1013,7 @@ runStatsToDict(CStatusDb::ReadoutStatistics& stat)
     
     dictStoreInt(result, "id", stat.s_id);
     dictStoreInt(result, "timestamp", stat.s_timestamp);
-    dictStoreInt(result, "elapsedTime", stat.s_elapsedTime);
+    dictStoreInt(result, "elapsed", stat.s_elapsedTime);
     dictStoreInt(result, "triggers", stat.s_triggers);
     dictStoreInt(result, "events", stat.s_events);
     dictStoreInt(result, "bytes", stat.s_bytes);
@@ -2104,7 +2104,7 @@ statusdb_listRuns(PyObject* self, PyObject* args){
  *    dicts with the following keys:
  *    -  id          - primary key of the statistics entry.
  *    -  timestasmp  - int(time.time()) at which the entry was emitted.
- *    -  elapsedTime - Number of seconds into the run represented by the entry.
+ *    -  elapsed     - Number of seconds into the run represented by the entry.
  *    -  triggers    - Total number of triggers responded to by the program.
  *    -  events      - Total number of events produced by the program.
  *    -  bytes       - Total number of bytes produced by the program.

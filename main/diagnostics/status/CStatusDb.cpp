@@ -719,7 +719,7 @@ CStatusDb::queryReadoutStatistics(ReadoutStatDict& result, CQueryFilter& filter)
     ";
     query += filter.toString();
     query += " ORDER BY s.id, r.run ASC";               // Global insert order.
-    std::cout << std::endl << query << std::endl;
+//    std::cout << std::endl << query << std::endl;
     CSqliteStatement q(m_handle, query.c_str());
     
     do {
