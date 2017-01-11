@@ -1152,3 +1152,5 @@ Work on 11.0-rc11 begins
 	with a valid V1x90 device.
 	* Improves synchronization for CCUSB/VMUSBReadout between readout thread and
 	tclserver.
+	* Fixes bug #6602. The source code for the VMUSBReadout simple setup
+	tutorial is included during the installation of NSCLDAQ for users.
