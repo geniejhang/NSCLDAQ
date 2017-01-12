@@ -1154,3 +1154,4 @@ Work on 11.0-rc11 begins
 	tclserver.
 	* Fixes bug #6602. The source code for the VMUSBReadout simple setup
 	tutorial is included during the installation of NSCLDAQ for users.
+	* Changes the interaction logic for the CCUSB to make it more stable.
