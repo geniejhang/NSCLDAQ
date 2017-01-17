@@ -1,6 +1,10 @@
 bin_PROGRAMS = teering
 
+<<<<<<< HEAD:main/daq/evbtools/teering/Makefile.am
 teering_SOURCES = teering.cpp @srcdir@/tcmdline.c # @top_srcdir@/daq/eventbuilder/fragment.c
+=======
+teering_SOURCES = teering.cpp @srcdir@/tcmdline.c 
+>>>>>>> master:main/daq/evbtools/teering/Makefile.am
 
 BUILT_SOURCES=@srcdir@/tcmdline.c
 

@@ -1,6 +1,11 @@
 
 
+<<<<<<< HEAD
 SUBDIRS = 				common \
+=======
+
+SUBDIRS = 				common	\
+>>>>>>> master
 					daqstart \
 					dvdburn \
 					sequencer \

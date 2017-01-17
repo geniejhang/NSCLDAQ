@@ -25,6 +25,10 @@
 // This may need to be typedef'd here once that' gets yanked
 // out (usleep that uses it is POSIX deprecated).
 
+#include <CSemaphore.h>
+
+#include <memory>
+#include <string>
 
 #include <unistd.h>
 
@@ -40,8 +44,34 @@ public:
   static int  checkStatus(int status, int checkStatus, std::string msg);
   static int  checkNegativeStatus(int returnCode);
   static std::string  getfqdn(const char* host);
+<<<<<<< HEAD
   static std::vector<std::string> getProcessCommand(pid_t pid);
   static std::string hostname();
+=======
+
+  virtual std::unique_ptr<DAQ::OS::CSemaphore> createSemaphore(const std::string& name, int initCount) = 0;
+};
+
+
+/*!
+ * \brief The CPosixOperatingSystem class
+ *
+ * A concrete implementation of the Os class that is designed to provide
+ * an interface to a POSIX environment.
+ */
+class CPosixOperatingSystem : public Os
+{
+
+public:
+    CPosixOperatingSystem() = default;
+    CPosixOperatingSystem(const CPosixOperatingSystem& rhs) = default;
+    ~CPosixOperatingSystem() = default;
+
+    CPosixOperatingSystem& operator=(const CPosixOperatingSystem& rhs);
+
+    virtual std::unique_ptr<DAQ::OS::CSemaphore> createSemaphore(const std::string& name, int initCount);
+
+>>>>>>> master
 };
 
 #endif

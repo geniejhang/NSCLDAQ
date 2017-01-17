@@ -81,6 +81,7 @@ private:
   void startDaq();
 public:				// To allow exit handler to stop acquisition
   void stopDaq();
+  void stopDaqImpl();
 private:
   void pauseDaq();
   void CCusbToAutonomous();

@@ -1143,6 +1143,10 @@ Work on 11.0-rc11 begins
 	updating its value after the first run.
 	* Bug #5900 - Modifies the Makefiles so that NSCLDAQ can build in
 	 parallel.
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
 11.1-007
 	* Fixes bug in evbcallouts package that caused the -glomid option
 	to be ignored. Now it is passed to glom as the --sourceid command line
@@ -1180,6 +1184,7 @@ Work on 11.0-rc11 begins
 	every run which led to an 8192 kB leak in memory each begin run. There was
 	also a deadlock condition that could occur when the user attempted to end
 	a run when the trigger loop was attempting to do a scaler read.
+<<<<<<< HEAD
         * Bug #6248 enable keepalive and shorten timing parameters for ring2stdin
 	  when stdin is a socket so remote failures can be seen and seen
           reasonably quickly.
@@ -1187,3 +1192,57 @@ Work on 11.0-rc11 begins
       * Bug #5903 - add separate options to enable/disable underflow and
         overflow in the "adc" command of VMUSBReadout
 
+=======
+	* Bug #6248 enable keepalive and shorten timing parameters for ring2stdin
+	when stdin is a socket so remote failures can be seen and seen
+	reasonably quickly.
+11.1-010
+  * Fixes issue in CRemoteAccess that caused failures when the fqdn returned
+	the same as the hostname.
+	* Got rid of a bunch of docbook errors.
+	* Fix bug #6555 - ensure all bus access check loops timeout.
+	* Fix bug #6404 - Prevent -timeaxis negative or zero - fail
+	program if so.
+	* Fix Bug #6395 - extend the MAGIC string check in the ring buffer
+	isHeader method to detect non 11.x ringbuffers.
+11.2-000
+	* CRingBuffer constructor throws if it fails to map the shared memory
+	region and thereby avoiding delayed failures.
+	* RingMaster logging facilities enhanced. RingMaster logs now to 
+	/var/log/nscldaq/ringmaster.log by default at startup.
+	* Issues #6516 & #6519  Failure logic for REGISTER and UNREGISTER loosened in RingMaster.
+	* Adds CSemaphore infrastructure and synchronization to the RingBuffer
+	API.
+  * Fixes issue in CRemoteAccess that caused failures when the fqdn returned
+	the same as the hostname.
+	* Got rid of a bunch of docbook errors.
+	* Fix bug #6555 - ensure all bus access check loops timeout.
+	* Fix bug #6404 - Prevent -timeaxis negative or zero - fail
+	program if so.
+	* Fix Bug #6395 - extend the MAGIC string check in the ring buffer
+	isHeader method to detect non 11.x ringbuffers.
+	* Issue #6459 The ULM trigger reads the state of device at startup if no configfile is
+	provided. Otherwise, it reads the file and updates the module to 	its values.
+	* Bug #6567 - Begin run callback pointer is zero initialized to avoid
+	segmentation fault at beginning of run in CCUSBReadout.
+	* Bug #6573 - --enable-docs option given the standard semantics of
+	an autotools option. 
+	* RingBuffer API now uses file locking to synchronize creation, deletion,
+	and attaching operations across processes.
+	* Bug #6579 Fixes synchronization when beginning a run in CCUSBReadout and
+	VMUSBReadout.
+	* Adds usb_reset operations to the CVMUSBusb::openVMusb() method that
+	was broken in version 11.1-009. 
+	* Fixes bug #6605 to ensure that the driver fails if it is not communicating
+	with a valid V1x90 device.
+	* Fixes bug #6602. The source code for the VMUSBReadout simple setup
+	tutorial is included during the installation of NSCLDAQ for users.
+	* Improves synchronization for CCUSB/VMUSBReadout between readout thread and
+	tclserver.
+	* Changes the interaction logic for the CCUSB to make it more stable.
+	* Fixes bug #6617 Removes warnings from tar that originated from time
+	skews between the local machine and the NFS server.
+	* Fixes bug #6599. Adds documentation for the xlm Module in VMUSBReadout.
+	* Fixes bugs #6585, #6588, and #6591. Updates the VMUSBReadout simple setup
+	to make it easier to follow by fixing incomplete or inaccurate content.
+>>>>>>> master

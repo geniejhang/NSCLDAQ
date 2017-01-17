@@ -156,11 +156,13 @@ snit::type EventLogger {
             
             # Construct the logger command and start it.
             
+            set timestamp [clock format [clock seconds] -format {%d%b%Y-%T}]
+            
             set command [list $loggerProgram                        \
                 --source=$options(-ring) --path=$options(-out)      \
                 --oneshot --checksum                                \
                 --number-of-sources=$options(-sources)              \
-                
+                --prefix=$timestamp-run                             \
             ]
 
             set loggerFd [open "| $command |& cat" r]
@@ -235,7 +237,6 @@ snit::type EventLogger {
                         -message "Multilogger $ring -> $out failed to exit within timeout"
                 }
             }
-            $self _renameFiles
         }
     }
     ##
@@ -309,6 +310,7 @@ snit::type EventLogger {
         }
   }
 
+<<<<<<< HEAD
     ##
     # _renameFiles
     #   Rename all files that are associated with the recently ended run.
@@ -355,6 +357,8 @@ snit::type EventLogger {
         file attributes $options(-out) -permissions ugo-w 
         
     }
+=======
+>>>>>>> master
 }
 
 

@@ -57,7 +57,7 @@ BUILT_SOURCES=@srcdir@/CCCUSB_wrap.cxx @srcdir@/CCCUSBReadoutList_wrap.cxx
 
 ## SWIG Wrapper containing cvmusb::CCCUSB 
 libCCCUSB_la_LIBADD = \
-			libCCUSB.la \
+			@builddir@/libCCUSB.la \
 			@top_builddir@/base/os/libdaqshm.la \
 			@top_builddir@/base/thread/libdaqthreads.la \
 			@top_builddir@/base/tcpip/libTcp.la         \
@@ -69,7 +69,7 @@ libCCCUSB_la_LIBADD = \
 
 ## SWIG Wrapper containing cvmusbreadoutlist::CCCUSBReadoutList
 libCCCUSBReadoutList_la_LIBADD = \
-			libCCUSB.la \
+			@builddir@/libCCUSB.la \
 			@top_builddir@/base/os/libdaqshm.la \
 			@THREADLD_FLAGS@ 
 
@@ -86,7 +86,7 @@ install-data-local:
 ##          TESTS
 ## -------------------------------------------
 
-noinst_PROGRAMS = unittests tests remotetests
+noinst_PROGRAMS = unittests tests remotetests camactests
 
 ## These all link against installed libraries rather than
 ## the .la files produced before the installation. These are
@@ -95,8 +95,7 @@ noinst_PROGRAMS = unittests tests remotetests
 ## Manual test programs for CCUSBusb
 tests_SOURCES = TestRunner.cpp \
 		regTests.cpp
-tests_LDADD = $(CPPUNIT_LDFLAGS) \
-		-L@libdir@ -lCCUSB \
+tests_LDADD = $(CPPUNIT_LDFLAGS) @builddir@/libCCUSB.la \
 		@TCL_LDFLAGS@ \
 		@LIBTCLPLUS_LDFLAGS@
 tests_CXXFLAGS = -I@top_srcdir@/base/thread $(AM_CXXFLAGS)
@@ -112,8 +111,8 @@ tests_LDFLAGS =  @top_builddir@/base/thread/libdaqthreads.la        \
 ## Manual test program for CCCUSBRemote
 remotetests_SOURCES = TestRunner.cpp \
 			remoteRegTests.cpp
-remotetests_LDADD = $(CPPUNIT_LDFLAGS) \
-			@builddir@/libCCUSB.la                      \
+remotetests_LDADD = @builddir@/libCCUSB.la        \
+ 		  $(CPPUNIT_LDFLAGS) 													\
 			@top_builddir@/base/tcpip/libTcp.la         \
 			@top_builddir@/base/thread/libdaqthreads.la \
 			@LIBTCLPLUS_LDFLAGS@                        \
@@ -131,10 +130,10 @@ remotetests_LDFLAGS = @top_builddir@/base/thread/libdaqthreads.la \
 unittests_SOURCES  = TestRunner.cpp rdolistTests.cpp \
 			 loggingrdolistTests.cpp \
 			 mockccusbTests.cpp
-unittests_LDADD    = $(CPPUNIT_LDFLAGS)                             \
+unittests_LDADD    = @builddir@/libCCUSB.la        \
+			$(CPPUNIT_LDFLAGS)                          \
 			@top_builddir@/base/tcpip/libTcp.la         \
 			@top_builddir@/base/thread/libdaqthreads.la \
-			-L@libdir@ -lCCUSB                          \
 			@TCL_LDFLAGS@                               \
 			@LIBTCLPLUS_LDFLAGS@
 
@@ -142,6 +141,18 @@ unittests_CXXFLAGS = -I@top_srcdir@/base/thread \
 			$(AM_CXXFLAGS)
 unittests_LDFLAGS  = -Wl,"-rpath=@libdir@" 
 
+## These are tests that run automatically at check-TESTS
+camactests_SOURCES  = TestRunner.cpp camacTests.cpp 
+camactests_LDADD    = @builddir@/libCCUSB.la        \
+			$(CPPUNIT_LDFLAGS)                          \
+			@top_builddir@/base/tcpip/libTcp.la         \
+			@top_builddir@/base/thread/libdaqthreads.la \
+			@TCL_LDFLAGS@                               \
+			@LIBTCLPLUS_LDFLAGS@
+
+camactests_CXXFLAGS = -I@top_srcdir@/base/thread \
+			$(AM_CXXFLAGS)
+camactests_LDFLAGS  = -Wl,"-rpath=@libdir@" 
 
 TESTS = ./unittests
 

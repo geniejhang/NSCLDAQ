@@ -22,8 +22,11 @@ nodist_libfilter_la_SOURCES=filterargs.c filterargs.h
 
 BUILT_SOURCES = filterargs.c filterargs.h
 
+<<<<<<< HEAD
 noinst_HEADERS = @top_srcdir@/utilities/common/StringsToIntegers.h 
 
+=======
+>>>>>>> master
 
 include_HEADERS	=  CFilterMain.h \
 		CBaseMediator.h \

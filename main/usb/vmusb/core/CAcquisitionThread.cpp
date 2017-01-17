@@ -28,7 +28,8 @@ East Lansing, MI 48824-1321
 #include <event.h>
 #include "CRunState.h" 
 #include <CConfiguration.h>
-#include <Globals.h>     // Need to maintain the running global. 
+#include <Globals.h>     // Need to maintain the running global.
+#include <CMutex.h>
 #include <assert.h>
 #include <time.h>
 #include <string>
@@ -311,7 +312,7 @@ CAcquisitionThread::processCommand(CControlQueues::opCode command)
   CRunState* pState = CRunState::getInstance();
   pState->setState(CRunState::Stopping);
   if (command == CControlQueues::ACQUIRE) {
-    stopDaq();
+    stopDaqImpl();
     queues->Acknowledge();
     CControlQueues::opCode release  = queues->getRequest();
     assert(release == CControlQueues::RELEASE);
@@ -390,6 +391,7 @@ CAcquisitionThread::processBuffer(DataBuffer* pBuffer)
   void
 CAcquisitionThread::startDaq()
 {
+  CriticalSection lock(CVMUSB::getGlobalMutex());
 
 
   // Start the VMUSB in data taking mode:
@@ -404,6 +406,7 @@ CAcquisitionThread::startDaq()
   - draining data from the VMUSB:
   - Call shutdown the hardware in the stacks
  */
+<<<<<<< HEAD
   void
 CAcquisitionThread::stopDaq()
 {
@@ -411,20 +414,50 @@ CAcquisitionThread::stopDaq()
   Globals::pHLController->stopAcquisition();
   Globals::pHLController->performStopOperations();
 
+=======
+  void CAcquisitionThread::stopDaqImpl()
+  {
+      if (m_haveScalerStack) {
+          m_pVme->writeActionRegister(CVMUSB::ActionRegister::scalerDump);
+      }
+      m_pVme->writeActionRegister(0);
+      drainUsb();
 
-  // turn off interrupts so that interrupts don't continue to trigger if the
-  // user chose to turn them off between runs
-  disableInterrupts();
+      cerr << "Running on end routines" << endl;
+      for(int i =0; i < m_Stacks.size(); i++) {
+          CStack* pStack = dynamic_cast<CStack*>(m_Stacks[i]->getHardwarePointer());
+
+          assert(pStack);
+          pStack->onEndRun(*m_pVme);   // Enable the trigger logic for the stack.
+      }
+
+      // turn off interrupts so that interrupts don't continue to trigger if the
+      // user chose to turn them off between runs
+      disableInterrupts();
+  }
+>>>>>>> master
+
+  /*!
+   * \brief CAcquisitionThread::stopDaq
+   *
+   * This delegates all logic to stopDaqImpl but adds thread_local
+   * synchronization to it.
+   */
+  void
+CAcquisitionThread::stopDaq()
+{
+  CriticalSection lock(CVMUSB::getGlobalMutex());
+  stopDaqImpl();
 }
 
-void CAcquisitionThread::disableInterrupts() 
+void CAcquisitionThread::disableInterrupts()
 {
   // disable the interrupt service vectors
   for (int regIdx=1; regIdx<=4; ++regIdx) {
     m_pVme->writeVector(regIdx, 0);
   }
   // further... mask all of the interrupt request levels
-  m_pVme->writeIrqMask(0xff);
+  m_pVme->writeIrqMask(0x7f);
 }
 
 /*!

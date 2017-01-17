@@ -13,7 +13,7 @@ COMPILATION_FLAGS =  \
 	@THREADCXX_FLAGS@ @TCL_FLAGS@
 
 
-lib_LTLIBRARIES=libEventBuilder.la  libEventBuilderClient.la 
+lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la 
 
 
 
@@ -80,7 +80,7 @@ libEventBuilder_la_LDFLAGS=@LIBTCLPLUS_LDFLAGS@
 TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 	connectionList.tcl observer.tcl barriers.tcl GUI.tcl inputStatistics.tcl \
 	late.tcl outputStatistics.tcl utility.tcl latePopup.tcl \
-	DuplicateTimestamp.tcl OutOfOrderUI.tcl
+	DuplicateTimestamp.tcl OutOfOrderUI.tcl evbui.tcl
 
 
 TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl evbRdoCallouts10.tcl EVBStateCallouts.tcl \
@@ -121,13 +121,18 @@ install-exec-hook:
 
 noinst_PROGRAMS = unittests ordertests
 
+unittests_DEPENDENCIES = libEventBuilderClient.la cmdline.o cmdline.h
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
 	connectTest.cpp  
 nodist_unittests_SOURCES = cmdline.c cmdline.h
 
+<<<<<<< HEAD
 
 
 unittests_LDADD = libEventBuilderClient.la \
+=======
+unittests_LDADD = @builddir@/libEventBuilderClient.la \
+>>>>>>> master
 	$(libEventBuilder_la_LIBADD) \
 	@top_builddir@/servers/portmanager/libPortManager.la \
 	@top_builddir@/base/tcpip/libTcp.la 	\
@@ -135,7 +140,6 @@ unittests_LDADD = libEventBuilderClient.la \
 
 unittests_CPPFLAGS=$(COMPILATION_FLAGS)
 
-unittests_DEPENDENCIES = cmdline.o cmdline.h
 
 
 ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \

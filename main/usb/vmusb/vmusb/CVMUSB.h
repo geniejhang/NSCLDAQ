@@ -26,44 +26,14 @@
 //%}
 //#endif
 
-#ifndef __CVMUSB_H
-#define __CVMUSB_H
+#ifndef CVMUSB_H
+#define CVMUSB_H
 
-#ifndef __STL_VECTOR
 #include <vector>
-#ifndef __STL_VECTOR
-#define __STL_VECTOR
-#endif
-#endif
-
-#ifndef __STL_STRING
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
-
-#ifndef __CRT_STDINT_H
 #include <stdint.h>
-#ifndef __CRT_STDINT_H
-#define __CRT_STDINT_H
-#endif
-#endif
-
-#ifndef __CRT_SYS_TYPES_H
 #include <sys/types.h>
-#ifndef __CRT_SYS_TYPES_H
-#define __CRT_SYS_TYPES_H
-#endif
-#endif
-
-
-#ifndef __CVMUSBREADOUTLIST_H
 #include <CVMUSBReadoutList.h>
-#ifndef __CVMUSBREADOUTLIST_H
-#define __CVMUSBREADOUTLIST_H
-#endif
-#endif
 
 //  The structures below are defined in <usb.h> which is included
 //  by the implementation and can be treated as opaque by any of our
@@ -72,6 +42,7 @@
 struct usb_device;
 struct usb_dev_handle;
 
+class CMutex;
 
 /*!
    This class is part of the support package for the Wiener/JTEC VM-USB 
@@ -124,6 +95,8 @@ class CVMUSB
       ShadowRegisters() : interruptVectors(9,0) {}
     };
 
+    static CMutex* m_pGlobalMutex;
+
 // The register offsets:
 
     static const unsigned int FIDRegister = (0);       // Firmware id.
@@ -156,6 +129,8 @@ private:
 public:
     static std::vector<struct usb_device*> enumerate();
     static std::string serialNo(struct usb_device* dev);
+
+    static CMutex& getGlobalMutex();
 
     // Constructors and other canonical functions.
     // Note that since destruction closes the handle and there's no
@@ -330,6 +305,8 @@ public:
       }
       return result;
     }
+
+    int getBufferSize() const;
 
     // List operations.
   
@@ -638,7 +615,8 @@ protected:
     void* getFromPacket32(void* packet, uint32_t* datum);
     unsigned int whichToISV(int which);
     int   doVMEWrite(CVMUSBReadoutList& list);
-    int   doVMERead(CVMUSBReadoutList&  list, uint32_t* datum);
+    template<class T>
+    int   doVMERead(CVMUSBReadoutList&  list, T* datum);
     uint16_t* listToOutPacket(uint16_t ta, CVMUSBReadoutList& list, size_t* outSize,
 			      off_t offset = 0);
 
@@ -685,5 +663,18 @@ inline size_t uint8_vector_size(std::vector<uint8_t> vec)  {
 }
 
   
+// Template implementations...
+//
+//
+
+// Common code to do a single shot vme read operation:
+template<class T>
+int
+CVMUSB::doVMERead(CVMUSBReadoutList& list, T* datum)
+{
+  size_t actualRead;
+  int status = executeList(list, datum, sizeof(T), &actualRead);
+  return status;
+}
 
 #endif
