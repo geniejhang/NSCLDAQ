@@ -61,10 +61,6 @@ tests_SOURCES = @srcdir@/TestRunner.cpp \
 		@srcdir@/vmeTests.cpp \
 		@srcdir@/Asserts.h
 
-<<<<<<< HEAD
-=======
-
->>>>>>> master
 tests_CPPFLAGS = -std=c++11 -g -I@prefix@/include -I@top_srcdir@/base/thread \
 		$(CPPUNIT_INCLUDES)
 tests_LDADD = @top_builddir@/base/thread/libdaqthreads.la \
