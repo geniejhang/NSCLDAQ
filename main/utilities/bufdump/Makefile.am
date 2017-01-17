@@ -6,12 +6,9 @@ dumper_SOURCES	=	BufdumpMain.cpp		\
 
 nodist_dumper_SOURCES= dumperargs.c dumperargs.h
 
-<<<<<<< HEAD
 
-noinst_HEADERS	=	BufdumpMain.h
-=======
 noinst_HEADERS	=	BufdumpMain.h	
->>>>>>> master
+
 
 BUILT_SOURCES	=	dumperargs.c dumperargs.h
 
@@ -28,11 +25,7 @@ dumper_CPPFLAGS =	-I@top_srcdir@/utilities/common 				\
                                 -I@top_srcdir@/base/os			\
 				-I@top_srcdir@/utilities/common
 
-<<<<<<< HEAD
-dumper_LDADD		=	@top_builddir@/utilities/common/libUtilCommon.la	\
-=======
 dumper_LDADD		=	@top_builddir@/utilities/common/libUtilCommon.la 	\
->>>>>>> master
 				@top_builddir@/base/uri/liburl.la			\
                                 @top_builddir@/utilities/IO/libdaqio.la			\
 				@top_builddir@/daq/format/libdataformat.la	\
