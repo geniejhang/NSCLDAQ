@@ -2838,7 +2838,7 @@ class <ooclass><classname>CCompoundFilter</classname></ooclass> : public CQueryF
     <methodsynopsis>
         <modifier></modifier>
         <type>std::vector&lt;CQueryFilter*&gt;::iterator</type>
-        <methodname>end<</methodname>
+        <methodname>end</methodname>
         <void />
         <exceptionname></exceptionname>
         <modifier></modifier>
@@ -3545,7 +3545,7 @@ query += pSomeFilter->toString();
                     <methodsynopsis>
                         <modifier></modifier>
                         <type>std::vector&lt;CQueryFilter*&gt;::iterator</type>
-                        <methodname>end<</methodname>
+                        <methodname>end</methodname>
                         <void />
                         <exceptionname></exceptionname>
                         <modifier></modifier>

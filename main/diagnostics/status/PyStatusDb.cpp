@@ -1274,7 +1274,7 @@ statusdb_addLogMessage(PyObject* self, PyObject* args)
 }
 
 /**
- * statusdb_addLogMessage
+ * statusdb_addRingStatistics
  *    Wrapper for CStatusDb::addRingStatistics.
  *    
  *  @param self  - Pointer to our instance storage.
@@ -1883,6 +1883,7 @@ statusdb_listStateApplications(PyObject* self, PyObject* args)
  *
  *  @param self - pointer to our instance storage.
  *  @param args - positional args that can contain an optional filter object.
+ *  @result PyObject* A tuple of dicts, see above.
  *  
  */
 static PyObject*

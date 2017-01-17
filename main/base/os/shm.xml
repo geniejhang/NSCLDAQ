@@ -515,7 +515,7 @@ g++ -o myprogram obj1.o obj2.o obj3.o -L$DAQHOME/lib -ldaqshm \
     </methodsynopsis>
     <methodsynopsis>
         <modifier>static</modifier>
-        <type>std::vector&lt;std::string&gt</type>
+        <type>std::vector&lt;std::string&gt;</type>
         <methodname>getProcessCommand</methodname>
         <methodparam>
             <type>pid_t</type><parameter>pid</parameter>
@@ -707,7 +707,7 @@ g++ -o myprogram obj1.o obj2.o obj3.o -L$DAQHOME/lib -ldaqshm \
             <term>
                 <methodsynopsis>
                     <modifier>static</modifier>
-                    <type>std::vector&lt;std::string&gt</type>
+                    <type>std::vector&lt;std::string&gt;</type>
                     <methodname>getProcessCommand</methodname>
                     <methodparam>
                         <type>pid_t</type><parameter>pid</parameter>
