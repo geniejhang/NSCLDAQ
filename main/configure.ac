@@ -3,18 +3,11 @@
 
 AC_PREREQ(2.61)
 
-<<<<<<< HEAD
 AC_INIT(nscldaq,12.0-001, fox@nscl.msu.edu,[], [http://www.sourceforge.net/projects/nscldaq])
 
 
-
 AC_CONFIG_SRCDIR([/base/CopyrightTools/CopyrightNotice.cpp])
-=======
-AC_INIT(nscldaq,11.2-000, [scientificsoftware@nscl.msu.edu],[], [http://www.sourceforge.net/projects/nscldaq])
 
-
-AC_CONFIG_SRCDIR([/base/dataflow/CRingBuffer.h])
->>>>>>> master
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -139,12 +132,9 @@ AC_FUNC_STAT
 
 # Automake:
 
-<<<<<<< HEAD
+
 AM_INIT_AUTOMAKE([foreign parallel-tests subdir-objects])
 
-=======
-AM_INIT_AUTOMAKE([foreign subdir-objects])
->>>>>>> master
 
 # Makefile exports:
 
@@ -537,6 +527,8 @@ AC_CONFIG_FILES([Makefile
     		simplesetups/v775/Makefile
     		simplesetups/v785/Makefile
     		simplesetups/vmusb/Makefile
+		simplesetups/vmsub/src/Makefile
+		simplsetups/vmusb/src/Example_Makefile
 		 sbs/Makefile
 		 sbs/driver/Makefile
 		 sbs/driver/src/Makefile
