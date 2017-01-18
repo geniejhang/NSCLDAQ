@@ -32,7 +32,7 @@
 #include <CReadoutModule.h>
 #include <CPreBeginCommand.h>
 #include <stdexcept>
-
+#include <CCCUSBHighLevelController.h>
 #include <thread>
 #include <chrono>
 
