@@ -183,21 +183,7 @@ int Os::checkNegativeStatus(int returnStatus)
 std::string
 Os::getfqdn(const char* host)
 {
-<<<<<<< HEAD
-  struct hostent result;
-  struct hostent* pResult;
-  char   buffer[8192];                 // Ought to be big enough.
-  int    errorCode;
-  
-  gethostbyname_r(
-    host, &result, buffer, sizeof(buffer), &pResult, &errorCode
-  );
-  if (!pResult) {
-    throw std::string(hstrerror(errorCode));
-  }
-  std::string name(result.h_name);
-  return name;
-=======
+
   struct addrinfo  hints = {AI_CANONNAME | AI_V4MAPPED | AI_ADDRCONFIG,
 			    AF_UNSPEC, 0, 0, 
 			    0, NULL, NULL, NULL};
@@ -233,7 +219,7 @@ std::unique_ptr<DAQ::OS::CSemaphore>
 CPosixOperatingSystem::createSemaphore(const std::string& name, int initCount)
 {
     return std::unique_ptr<DAQ::OS::CSemaphore>(new DAQ::OS::CPosixSemaphore(name, initCount));
->>>>>>> master
+
 }
 /**
  * getProcesssCommand
