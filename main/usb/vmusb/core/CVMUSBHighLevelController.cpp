@@ -211,6 +211,14 @@ CVMUSBHighLevelController::performStopOperations()
         CStack* pStack = dynamic_cast<CStack*>((*p)->getHardwarePointer());
         pStack->onEndRun(*m_pController);
     }
+    
+    // disable the interrupt service vectors
+    
+    for (int regIdx=1; regIdx<=4; ++regIdx) {
+      m_pController->writeVector(regIdx, 0);
+    }
+    // further... mask all of the interrupt request levels
+    m_pController->writeIrqMask(0x7f);
 }
 /**
  * startAcquisition

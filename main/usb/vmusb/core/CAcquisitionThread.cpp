@@ -399,43 +399,17 @@ CAcquisitionThread::startDaq()
   VMusbToAutonomous();
 
 }
-/*!
-  Stop data taking this involves:
-  - Forcing a scaler trigger (action register write)
-  - Setting clearing the DAQ start bit (action register write)
-  - draining data from the VMUSB:
-  - Call shutdown the hardware in the stacks
- */
-<<<<<<< HEAD
-  void
-CAcquisitionThread::stopDaq()
+
+void CAcquisitionThread::stopDaqImpl()
 {
+    Globals::pHLController->stopAcquisition();
+    
+    drainUsb();
 
-  Globals::pHLController->stopAcquisition();
-  Globals::pHLController->performStopOperations();
+    cerr << "Running on end routines" << endl;
+    Globals::pHLController->performStopOperations();  // Disables interrupts too.
 
-=======
-  void CAcquisitionThread::stopDaqImpl()
-  {
-      if (m_haveScalerStack) {
-          m_pVme->writeActionRegister(CVMUSB::ActionRegister::scalerDump);
-      }
-      m_pVme->writeActionRegister(0);
-      drainUsb();
-
-      cerr << "Running on end routines" << endl;
-      for(int i =0; i < m_Stacks.size(); i++) {
-          CStack* pStack = dynamic_cast<CStack*>(m_Stacks[i]->getHardwarePointer());
-
-          assert(pStack);
-          pStack->onEndRun(*m_pVme);   // Enable the trigger logic for the stack.
-      }
-
-      // turn off interrupts so that interrupts don't continue to trigger if the
-      // user chose to turn them off between runs
-      disableInterrupts();
-  }
->>>>>>> master
+}
 
   /*!
    * \brief CAcquisitionThread::stopDaq
