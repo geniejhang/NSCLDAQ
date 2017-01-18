@@ -78,9 +78,7 @@ lappend auto_path $libdir
 package require portAllocator
 package require log
 package require ring
-<<<<<<< HEAD
 package require dns
-=======
 package require cmdline
 
 set options {
@@ -94,7 +92,6 @@ if {[catch {::cmdline::getoptions argv $options $usage} params]} {
   puts $params
   exit
 }
->>>>>>> master
 
 
 #  Locate the directory in which the hoister lives and
@@ -130,15 +127,11 @@ set knownRings  [list];			# Registered rings.
 # If the host translates we'll assume this is a proxy.
 #
 proc isRemoteProxy name {
-<<<<<<< HEAD
     set nameList [split $name @]
     set host     [lindex $nameList 1]
     set ring     [lindex $nameList 0]
-=======
+
     emitLogMsg debug "isRemoteProxy '$name'"
-    set host [file rootname $name]
-    set ring [file extension $name]
->>>>>>> master
 
     # Must have a non-blank extension:
 
@@ -165,39 +158,14 @@ proc isRemoteProxy name {
 # The rings are enuemrated into the global variable ::knownRings above.
 #
 proc enumerateRings {} {
-<<<<<<< HEAD
     set files [glob -nocomplain [file join $::shmDirectory *_12]]
-=======
+
     emitLogMsg debug "enumerateRings"
-    set files [glob -nocomplain [file join $::shmDirectory *]]
->>>>>>> master
     set ::knownRings [list]
 
     emitLogMsg debug "Initial file list: $files"
 
     foreach file $files {
-<<<<<<< HEAD
-	puts "Trying $file"
-	if {[file type $file] eq "file"} {
-	    puts "Is ordinary"
-	    set shmname [file tail $file]
-	    set shmname [string range $shmname 0 end-3]
-	    puts "ring name: $shmname"
-	    if {[catch {ringbuffer usage $shmname} data] == 0} {
-		puts "Is a ring"
-		# See if this is a defunct proxy ring:
-		#
-		if {[isRemoteProxy $shmname]} { 
-		    puts "Deleting remote proxy $file"
-		    catch {file delete -force $file}
-		} else {
-		    lappend ::knownRings $shmname
-		}
-	    } else {
-		puts $data
-	    }
-	}
-=======
       emitLogMsg debug "Trying $file"
       if {[file type $file] eq "file"} {
         emitLogMsg debug "Is ordinary"
@@ -219,7 +187,6 @@ proc enumerateRings {} {
           puts $data
         }
       }
->>>>>>> master
     }
 
 }
