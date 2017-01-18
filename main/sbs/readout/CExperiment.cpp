@@ -630,11 +630,9 @@ void CExperiment::TriggerScalerReadout()
 
 
   CVMEInterface::Unlock();
-<<<<<<< HEAD
-=======
 
   // For now documented variables are tied to this trigger too:
->>>>>>> master
+
   ScheduleRunVariableDump();
   CVMEInterface::Lock();
 
