@@ -44,10 +44,10 @@ public:
   static int  checkStatus(int status, int checkStatus, std::string msg);
   static int  checkNegativeStatus(int returnCode);
   static std::string  getfqdn(const char* host);
-<<<<<<< HEAD
+
   static std::vector<std::string> getProcessCommand(pid_t pid);
   static std::string hostname();
-=======
+
 
   virtual std::unique_ptr<DAQ::OS::CSemaphore> createSemaphore(const std::string& name, int initCount) = 0;
 };
@@ -71,7 +71,7 @@ public:
 
     virtual std::unique_ptr<DAQ::OS::CSemaphore> createSemaphore(const std::string& name, int initCount);
 
->>>>>>> master
+
 };
 
 #endif
