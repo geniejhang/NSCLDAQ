@@ -48,7 +48,7 @@ static const string usage("Usage:\n\t begin");
 /////////////////////////////////////////////////////////////////////////
 
 /*!
-<<<<<<< HEAD
+
   Construct the begin command 
   \param interp : CTCLInterpreter&
      Interpreter on which this command will be registered.
@@ -57,14 +57,6 @@ static const string usage("Usage:\n\t begin");
 CBeginRun::CBeginRun(CTCLInterpreter& interp, CPreBeginCommand* preBegin) :
   CTCLObjectProcessor(interp, "begin"),
   m_pPreBegin(preBegin)
-=======
-          Construct the begin command
-          \param interp : CTCLInterpreter&
-             Interpreter on which this command will be registered.
-        */
-CBeginRun::CBeginRun(CTCLInterpreter& interp) :
-    CTCLObjectProcessor(interp, "begin")
->>>>>>> master
 {}
 /*!
            Destructor does nothing important.
@@ -82,7 +74,7 @@ void CBeginRun::reconnect()
     std::cout << "Begin reconnect acquiring" << std::flush << std::endl;
     CriticalSection lock(CCCUSB::getGlobalMutex());
     std::cout << "Begin reconnect acquired" << std::flush << std::endl;
-    Globals::pUSBController->reconnect();
+    Globals::pController->reconnect();
     std::cout << "Begin done " << std::flush << std::endl;
 }
 
@@ -106,7 +98,6 @@ int
 CBeginRun::operator()(CTCLInterpreter& interp,
                       vector<CTCLObject>& objv)
 {
-<<<<<<< HEAD
   // Make sured all precoditions are met.
 
   if (objv.size() != 1) {
@@ -167,52 +158,6 @@ CBeginRun::operator()(CTCLInterpreter& interp,
   }
   pState->setTitle(string(titleString));
   
-
-  CAcquisitionThread* pReadout = CAcquisitionThread::getInstance();
-  pReadout->start(Globals::pUSBController, Globals::pController);
-
-  interp.setResult("Begin - Run started");
-
-  return TCL_OK;
-=======
-    // Make sured all precoditions are met.
-
-    if (objv.size() != 1) {
-        tclUtil::Usage(interp,
-                       "Incorrect number of command parameters",
-                       objv,
-                       usage);
-        return TCL_ERROR;
-    }
-
-    CRunState* pState = CRunState::getInstance();
-    if (pState->getState() != CRunState::Idle) {
-        tclUtil::Usage(interp,
-                       "Invalid run state for begin be sure to stop the run",
-                       objv,
-                       usage);
-        return TCL_ERROR;
-    }
-    // Set the state to match the appropriate set of variables:
-    //
-    CTCLVariable run(&interp, "run", false);
-    const char* runNumberString = run.Get(TCL_GLOBAL_ONLY);
-    if (!runNumberString) {
-        runNumberString = "0";	// If no run variable, default run number-> 0.
-    }
-    uint16_t runNumber;
-    sscanf(runNumberString, "%hu", &runNumber);
-    pState->setRunNumber(runNumber);
-
-    CTCLVariable title(&interp, "title", false);
-    const char *titleString = title.Get(TCL_GLOBAL_ONLY);
-    if (!titleString) {
-        titleString = "No Title Set"; // If no title variable default it.
-    }
-    pState->setTitle(string(titleString));
-
-    // Re-establish connection to the controller:
-
     reconnect();
 
     // Check that the configuration file processes correctly:
@@ -269,11 +214,12 @@ CBeginRun::operator()(CTCLInterpreter& interp,
     // delete pConfig;
     Globals::pConfig = 0;
 
-    CAcquisitionThread* pReadout = CAcquisitionThread::getInstance();
-    pReadout->start(Globals::pUSBController);
+  CAcquisitionThread* pReadout = CAcquisitionThread::getInstance();
+  pReadout->start(Globals::pUSBController, Globals::pController);
 
-    tclUtil::setResult(interp, string("Begin - Run started"));
-    return TCL_OK;
->>>>>>> master
+  interp.setResult("Begin - Run started");
+
+  return TCL_OK;
+
 }
 
