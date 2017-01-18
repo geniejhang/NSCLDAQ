@@ -372,7 +372,6 @@ void rmasterTests::existsAndIsRing()
     CDAQShm::remove(shmName);             // In case test failed.
     
 }
-<<<<<<< HEAD
 
 /**
  *  Check that we can get the client info from the ring master.
@@ -422,5 +421,4 @@ void rmasterTests::clientInfo()
   }
   CRingBuffer::remove(ringname);
 }
-=======
->>>>>>> master
+
