@@ -135,18 +135,7 @@ CRingBuffer::create(std::string name,
 
     size_t rawSize   = dataBytes + headerSize;
 
-<<<<<<< HEAD
-  std::string memoryName = shmName(name);
-  
-  // If the shared memory does not exist, just create it:
-  
-  ssize_t existingSize = CDAQShm::size(memoryName);
-  
-  if (existingSize < 0) {
-    if(CDAQShm::create(memoryName, shmSize, 
-                       CDAQShm::GroupRead | CDAQShm::GroupWrite | CDAQShm::OtherRead | CDAQShm::OtherWrite)) {
-      throw CErrnoException("Shared memory creation failed");
-=======
+
     long   pageSize  = sysconf(_SC_PAGESIZE);
     size_t pages     = (rawSize + (pageSize-1))/pageSize;
     size_t shmSize   = pages*pageSize;
@@ -165,7 +154,7 @@ CRingBuffer::create(std::string name,
         } else {
           created = true;
         }
->>>>>>> master
+
     }
 
     // lock
@@ -277,31 +266,9 @@ CRingBuffer::remove(string name)
         throw CErrnoException("CRingBuffer::remove - not a ring");
     }
 
-<<<<<<< HEAD
-  if (!isRing(name)) {
-    errno = ENOENT;
-    throw CErrnoException("CRingBuffer::remove - not a ring");
-  }
-  
-  
-  // If _I_ don't own the ring don't allow deletion (unless I'm root).
-  
-  struct stat shmInfo;
-  int status = CDAQShm::stat(shmName(name), &shmInfo);
-  if (status == -1) {
-    throw CErrnoException("CRingBuffer::remove - Getting info about shared memory");
-  }
-  uid_t me = getuid();
-  if ((me != 0) && (me != shmInfo.st_uid)) {
-    errno = EPERM;
-    throw CErrnoException("CRingBuffer::remove - checking ringbuffer ownership");
-  }
-  // Connect to the ring master:
-  
-  connectToRingMaster();
-=======
+
     // If _I_ don't own the ring don't allow deletion (unless I'm root).
->>>>>>> master
+
 
     struct stat shmInfo;
     int status = CDAQShm::stat(name, &shmInfo);
@@ -363,9 +330,6 @@ void CRingBuffer::unsynchedFormat(std::string name, size_t maxConsumer)
 
     // Now map the ring:
 
-<<<<<<< HEAD
-  string fullName = shmName(name);
-  ssize_t memSize = CDAQShm::size(fullName);
   if (memSize == -1) {
     if (CDAQShm::lastError() == CDAQShm::CheckOSError) {
       throw CErrnoException("CRingBuffer::format - sizing the shared memory");
@@ -375,12 +339,10 @@ void CRingBuffer::unsynchedFormat(std::string name, size_t maxConsumer)
   }
   
   // Now map the ring:
-=======
-    pRingBuffer      pRing      = reinterpret_cast<pRingBuffer>(CDAQShm::attach(fullName));
 
->>>>>>> master
+  pRingBuffer      pRing      = reinterpret_cast<pRingBuffer>(CDAQShm::attach(fullName));
 
-    // Map the ring:
+  // do the format.
 
     pRingHeader        pHeader   = reinterpret_cast<pRingHeader>(pRing);
     pClientInformation pProducer = reinterpret_cast<pClientInformation>(pHeader + 1);
@@ -608,29 +570,6 @@ CRingBuffer::CRingBuffer(string name, CRingBuffer::ClientMode mode) :
   m_pollInterval(DEFAULT_POLLMS),
   m_ringName(name)
 {
-<<<<<<< HEAD
-  if (!isRing(name)) {
-    errno = ENOENT;
-    throw CErrnoException("CRingBuffer::CRingBuffer - not a ring");
-  }
-  m_pRing = mapRingBuffer(shmName(name));
-
-  // Now that we're mapped the remainder of the constructor must execute in a try
-  // block so that failure will allow us to unmap the ring.
-  //
-  try {
-    if (m_mode == producer) {
-      if (m_pRing->s_producer.s_pid == -1) {
-	m_pClientInfo         = &(m_pRing->s_producer);
-	m_pClientInfo->s_pid  = getpid(); // leave the offset where it was.
-	// On success - clear the statistics for this client:
-	
-	m_pClientInfo->s_transfers = 0;
-	m_pClientInfo->s_bytes     = 0;
-	
-	__sync_synchronize();		  // And flush to shm.
-=======
->>>>>>> master
 
     if (!isRing(name)) {
       errno = ENOENT;
@@ -657,6 +596,8 @@ CRingBuffer::CRingBuffer(string name, CRingBuffer::ClientMode mode) :
     //
     try {
       attach();
+      m_pClientInfo->s_transfers = 0;
+      m_pClientInfo->s_bytes     = 0;
     } catch (...) {
       unMapRing();
       throw;
