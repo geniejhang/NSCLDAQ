@@ -398,29 +398,17 @@ std::cout << "startDaq done" << std::flush << std::endl;
 */
 void CAcquisitionThread::stopDaqImpl()
 {
-<<<<<<< HEAD
+
   m_pController->stopAcquisition();
-=======
-    int actionRegister = 0;
-    if (m_haveScalerStack) actionRegister |= CCCUSB::ActionRegister::scalerDump;
-    m_pCamac->writeActionRegister(actionRegister);
+
 
 
     drainUsb();
->>>>>>> master
 
-    std::vector<CReadoutModule*> Stacks = Globals::pConfig->getStacks();
-    for(int i =0; i < Stacks.size(); i++) {
-      CStack* pStack = dynamic_cast<CStack*>(Stacks[i]->getHardwarePointer());
-      assert(pStack);
-      pStack->onEndRun(*m_pCamac);    // Call onEndRun for daq hardware associated with the stack.
-    }
+    m_pController->performStopOperations(); 
 }
 
-<<<<<<< HEAD
-  m_pController->performStopOperations();
 
-=======
 /*!
    Stop data taking this involves:
    - Forcing a scaler trigger (action register write)
@@ -436,7 +424,6 @@ CAcquisitionThread::stopDaq()
   CriticalSection lock(CCCUSB::getGlobalMutex());
 
   stopDaqImpl();
->>>>>>> master
 }
 /*!
   Pause the daq. This means doing a stopDaq() and fielding 
