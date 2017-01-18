@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT(nscldaq,12.0-001, fox@nscl.msu.edu,[], [http://www.sourceforge.net/projects/nscldaq])
+AC_INIT(nscldaq,12.0-002, fox@nscl.msu.edu,[], [http://www.sourceforge.net/projects/nscldaq])
 
 
 AC_CONFIG_SRCDIR([/base/CopyrightTools/CopyrightNotice.cpp])
@@ -423,7 +423,6 @@ AC_CONFIG_LINKS([utilities/filter/run-0000-00.evt:utilities/filter/run-0000-00.e
 AC_CONFIG_FILES([Makefile
 		nscldaq
 		daqsetup.bash
-<<<<<<< HEAD
 		base/Makefile
 		base/os/Makefile
                  base/CopyrightTools/Makefile
@@ -527,8 +526,8 @@ AC_CONFIG_FILES([Makefile
     		simplesetups/v775/Makefile
     		simplesetups/v785/Makefile
     		simplesetups/vmusb/Makefile
-		simplesetups/vmsub/src/Makefile
-		simplsetups/vmusb/src/Example_Makefile
+		simplesetups/vmusb/src/Makefile
+		simplesetups/vmusb/src/Example_Makefile
 		 sbs/Makefile
 		 sbs/driver/Makefile
 		 sbs/driver/src/Makefile
@@ -576,134 +575,6 @@ AC_CONFIG_FILES([Makefile
     		 usb/ccusb/tclpackage/Makefile
     		 usb/ccusb/tcldrivers/Makefile
     		 usb/ccusb/driverkit/Makefile
-=======
-    base/Makefile
-    base/os/Makefile
-    base/CopyrightTools/Makefile
-    base/bltsubst/Makefile
-    base/cvt/Makefile
-    base/thread/Makefile
-    base/headers/Makefile
-    base/security/Makefile
-    base/tclwidgets/Makefile
-    base/uri/Makefile
-    base/dataflow/Makefile
-    base/plotchart/Makefile
-    base/plotcontainer/Makefile
-    base/tcpip/Makefile
-    base/tclutils/Makefile
-    base/testutils/Makefile
-    caenfw-common/Makefile
-    servers/Makefile
-    servers/tclserver/Makefile
-    servers/portmanager/Makefile
-    utilities/Makefile
-    utilities/common/Makefile
-    utilities/Buffer/Makefile
-    utilities/daqstart/Makefile
-    utilities/dvdburn/Makefile
-    utilities/scalerdisplay/ScalerDisplay
-    utilities/sequencer/Makefile
-    utilities/ringselector/Makefile
-    utilities/bufdump/Makefile
-    utilities/eventlog/Makefile
-    utilities/sclclient/Makefile
-    utilities/tkbufdump/Makefile
-    utilities/filter/Makefile
-    utilities/filter/Makefile-template
-    utilities/filter/FilterIncludes
-    utilities/compatibility/Makefile
-    utilities/compatibility/eventlog-compat
-    utilities/compatibility/spectcldaq
-    utilities/compatibility/s800toring
-    utilities/compatibility/bufdump
-    utilities/conversion/Makefile
-    utilities/fileanalyzer/Makefile
-    utilities/format/Makefile
-    utilities/format/V8/Makefile
-    utilities/format/V10/Makefile
-    utilities/format/V11/Makefile
-    utilities/IO/Makefile
-    utilities/FormattedIO/Makefile
-    utilities/newscaler/Makefile
-    utilities/newscaler/ScalerDisplay.tcl
-    utilities/scalersum/Makefile
-    epics/chanlog/Makefile
-    epics/controlpush/Makefile
-    epics/epicsdisplay/Makefile
-    epics/epicsdisplay/epicsdisplay
-    epics/Makefile
-    daq/Makefile
-    daq/format/Makefile
-    daq/readoutgui/Makefile
-    daq/readoutgui/InstallRoot.tcl
-    daq/readoutgui/ReadoutShell.tcl
-    daq/s800callouts/Makefile
-    daq/eventbuilder/Makefile
-    daq/eventbuilder/Makefile_Skeleton
-    daq/eventbuilder/startOrderer
-    daq/evbtools/Makefile
-    daq/evbtools/ringsource/Makefile
-    daq/evbtools/teering/Makefile
-    daq/evbtools/glom/Makefile
-    daq/evbtools/unglom/Makefile
-    daq/evbtools/offlineorderer/Makefile
-    daq/evbtools/offlineorderer/figures/Makefile
-    daq/actions/Makefile
-    simplesetups/Makefile
-    simplesetups/v775/Makefile
-    simplesetups/v785/Makefile
-    simplesetups/vmusb/Makefile
-    simplesetups/vmusb/src/Makefile
-    simplesetups/vmusb/src/Example_Makefile
-    sbs/Makefile
-    sbs/driver/Makefile
-    sbs/driver/src/Makefile
-    sbs/driver/include/Makefile
-    sbs/driver/dd/GNUmakefile
-    sbs/nsclapi/Makefile
-    sbs/tclpackage/Makefile
-    sbs/puretcl/Makefile
-    sbs/vmemodules/Makefile
-    sbs/readout/Makefile
-    sbs/readout/UserMakefile
-    sbs/readout/SBSRdoMakeIncludes
-    sbs/slowcontrols/Makefile
-    sbs/slowcontrols/vhq/Makefile
-    sbs/slowcontrols/caenv812/Makefile
-    sbs/slowcontrols/n568b/Makefile
-    sbs/slowcontrols/bcnaf/Makefile
-    sbs/slowcontrols/vhs/Makefile
-    sbs/scripted/Makefile
-    sbs/VmeDevice/Makefile
-    sbs/caenfwloader/Makefile
-    usb/Makefile
-    usb/loaders/Makefile
-    usb/vmusb/Makefile
-    usb/vmusb/vmusb/Makefile 
-    usb/vmusb/core/Makefile 
-    usb/vmusb/ctlconfig/Makefile 
-    usb/vmusb/daqconfig/Makefile  
-    usb/vmusb/driverkit/Makefile 
-    usb/vmusb/driverkit/Makefile-template
-    usb/vmusb/tcldrivers/Makefile
-    usb/vmusb/driverkit/VMUSBDriverIncludes
-    usb/vmusb/controlpanels/Makefile 
-    usb/vmusb/controlpanels/cv6533/Makefile
-    usb/vmusb/controlpanels/figures/Makefile
-    usb/vmusb/devtests/Makefile
-    usb/vmusb/vmusbPackage/Makefile
-    usb/vmusb/tclservertests/Makefile
-    usb/ccusb/Makefile
-    usb/ccusb/ccusb/Makefile 
-    usb/ccusb/core/Makefile
-    usb/ccusb/daqconfig/Makefile 
-    usb/ccusb/ctlconfig/Makefile 
-    usb/ccusb/ctlconfig/driver_Makefile
-    usb/ccusb/tclpackage/Makefile
-    usb/ccusb/tcldrivers/Makefile
-    usb/ccusb/driverkit/Makefile
->>>>>>> master
 		 usb/ccusb/driverkit/Makefile-template
 		 usb/ccusb/driverkit/CCUSBDriverIncludes
 		 usb/ccusb/controlpanels/Makefile
