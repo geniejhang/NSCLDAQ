@@ -126,13 +126,8 @@ unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
 	connectTest.cpp  
 nodist_unittests_SOURCES = cmdline.c cmdline.h
 
-<<<<<<< HEAD
 
-
-unittests_LDADD = libEventBuilderClient.la \
-=======
 unittests_LDADD = @builddir@/libEventBuilderClient.la \
->>>>>>> master
 	$(libEventBuilder_la_LIBADD) \
 	@top_builddir@/servers/portmanager/libPortManager.la \
 	@top_builddir@/base/tcpip/libTcp.la 	\
