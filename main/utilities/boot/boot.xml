@@ -238,9 +238,21 @@ $DAQBIN/boot s800.experiment caesar.experiment s800-ceasar-merge.experiment
 
 <!-- manpage 1daq -->
       <refentry id="daq1_boot">
+      <refentryinfo>
+    <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+        <personblurb><para></para></personblurb>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo>  
         <refmeta>
            <refentrytitle id="daq1_boot_title">boot</refentrytitle>
            <manvolnum>1daq</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>boot</refname>

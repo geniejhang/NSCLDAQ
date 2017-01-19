@@ -243,6 +243,7 @@ CStooge* pStooge = CStoogeFactory::getInstance()->create("moe");
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -357,6 +358,7 @@ CStooge* pStooge = CStoogeFactory::getInstance()->create("moe");
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>

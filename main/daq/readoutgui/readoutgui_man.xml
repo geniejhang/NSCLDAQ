@@ -6,6 +6,7 @@
                         <firstname>Ron</firstname>
                         <surname>Fox</surname>
                 </personname>
+                <personblurb><para></para></personblurb>
         </author>
         <productname>NSCLDAQ</productname>
         <productnumber></productnumber>
@@ -249,6 +250,7 @@ lappend auto_path $pkghome
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -469,6 +471,7 @@ $abell destroy
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -629,6 +632,7 @@ Configuration::readConfigFile <replaceable>path</replaceable>
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -974,6 +978,7 @@ package require DAQParameters
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -1423,6 +1428,7 @@ set <replaceable>source-descriptions</replaceable> [<replaceable>$singleton</rep
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -1843,6 +1849,7 @@ if {$result eq "Ok"} {
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -1964,6 +1971,7 @@ package require Diagnostics
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -2134,6 +2142,7 @@ package require ExpFileSystemConfig
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -2419,6 +2428,7 @@ ReadoutGuiApp <replaceable>%AUTO% | app-name</replaceable>
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -2911,6 +2921,7 @@ $mymenu add command -label "a command" -command handleACommand
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -3348,6 +3359,7 @@ $::MyBundle::sm    addCalloutBundle MyBundle          <co id='callout_bundle_reg
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -3653,6 +3665,7 @@ $sm restore                                          <co id='statemgr_restore' /
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -4626,6 +4639,7 @@ proc Output::getInstance { {win {}} args} {
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -4737,6 +4751,7 @@ OutputWindowSettings <replaceable>widget-path ?options...?</replaceable>
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -4903,6 +4918,7 @@ $status setMessage $msg {Some text} -foreground green
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5208,6 +5224,7 @@ proc ::MyDataSource::parameters {} {
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5259,6 +5276,7 @@ proc ::<replaceable>providerName</replaceable>::parameters {} {
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5305,6 +5323,7 @@ proc ::<replaceable>providerName</replaceable>::parameters {} {
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5356,6 +5375,7 @@ proc ::<replaceable>providerName</replaceable>::check <replaceable>sourceId</rep
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5405,6 +5425,7 @@ proc ::<replaceable>providername</replaceable>::stop <replaceable>sourceId</repl
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5456,6 +5477,7 @@ proc ::<replaceable>providerName</replaceable>::begin {sourceId runNumber title}
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5519,6 +5541,7 @@ proc ::<replaceable>providerName</replaceable>::pause <replaceable>sourceId</rep
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5575,6 +5598,7 @@ proc ::<replaceable>providerName</replaceable>::resume <replaceable>sourceId</re
                                 <firstname>Ron</firstname>
                                 <surname>Fox</surname>
                         </personname>
+                        <personblurb><para></para></personblurb>
                 </author>
                 <productname>NSCLDAQ</productname>
                 <productnumber></productnumber>
@@ -5619,6 +5643,7 @@ proc ::<replaceable>providerName</replaceable>::resume <replaceable>sourceId</re
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5664,6 +5689,7 @@ proc ::<replaceable>providerName</replaceable>::init <replaceable>sourceId</repl
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5751,6 +5777,7 @@ proc ::<replaceable>providerName</replaceable>::capabilities {} {
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -5932,6 +5959,7 @@ package require SSHPipe_Provider
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -6045,6 +6073,7 @@ $DAQROOT/bin/s800toring <replaceable>host port ring</replaceable>
                             <firstname>Jeromy</firstname>
                             <surname>Tompkins</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -6105,6 +6134,7 @@ package require Delay_Provider
                             <firstname>Ron</firstname>
                             <surname>Fox</surname>
                     </personname>
+                    <personblurb><para></para></personblurb>
             </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>
@@ -6308,6 +6338,7 @@ $DAQROOT/bin/ReadoutShell
                                 <firstname>Ron</firstname>
                                 <surname>Fox</surname>
                         </personname>
+                        <personblurb><para></para></personblurb>
                 </author>
                 <productname>NSCLDAQ</productname>
                 <productnumber></productnumber>

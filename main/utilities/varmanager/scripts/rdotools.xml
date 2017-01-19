@@ -601,6 +601,7 @@
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -645,6 +646,7 @@ $DAQBIN/vardbsh <replaceable>uri</replaceable> &lt; $DAQBIN/MakeRunControl.tcl
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -823,6 +825,7 @@ $DAQBIN/addrdo <replaceable>uri</replaceable> <optional>option value ...</option
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -913,6 +916,7 @@ $DAQBIN/lsrdo <replaceable>uri</replaceable> <optional>option value...</optional
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -969,6 +973,7 @@ $DAQBIN/rdoonoff <replaceable>uri name </replaceable>
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1027,6 +1032,7 @@ resetrdo
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>

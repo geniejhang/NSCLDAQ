@@ -436,6 +436,7 @@ int main(int argc, char** argv)
                     <firstname>Ron</firstname>
                     <surname>Fox</surname>
             </personname>
+            <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -548,6 +549,7 @@ $DAQBIN/vardbServer
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1098,6 +1100,7 @@ varmgr::statemachine runStateMachine $runStates
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1381,6 +1384,7 @@ varmgr::subscribe
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -1993,6 +1997,7 @@ public:
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -2337,6 +2342,7 @@ class <ooclass><classname>CVarMgrApiFactory</classname></ooclass>
                   <firstname>Ron</firstname>
                   <surname>Fox</surname>
           </personname>
+          <personblurb><para></para></personblurb>
   </author>
   <productname>NSCLDAQ</productname>
   <productnumber></productnumber>
@@ -2526,6 +2532,7 @@ class <ooclass><classname>CVarMgrApiFactory</classname></ooclass>
                     <firstname>Ron</firstname>
                     <surname>Fox</surname>
             </personname>
+            <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -2672,6 +2679,7 @@ class <ooclass><classname>CVarMgrApiFactory</classname></ooclass>
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -3184,6 +3192,7 @@ api.rmvar(path)
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -3428,6 +3437,7 @@ tcp://<replaceable>hostname</replaceable><optional>:portnum</optional><optional>
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>

@@ -902,6 +902,7 @@ while(1) {
                 <firstname>Ron</firstname>
                 <surname>Fox</surname>
             </personname>
+            <personblurb><para></para></personblurb>
         </author>
         <productname>NSCLDAQ</productname>
         <productnumber></productnumber>
@@ -1871,6 +1872,7 @@ Macros:
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -1943,8 +1945,8 @@ CMutex guard;
       </refentryinfo>
        <refmeta>
           <refentrytitle id="manpage.ccondition-title">CCondition</refentrytitle>
-          <manvolnum>3daq</manvolnu
-	  <refmiscinfo class='empty'></refmiscinfo>m>
+          <manvolnum>3daq</manvolnum>
+	  <refmiscinfo class='empty'></refmiscinfo>
        </refmeta>
        <refnamediv>
           <refname>CCondition</refname>

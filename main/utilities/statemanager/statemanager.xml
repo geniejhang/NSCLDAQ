@@ -568,6 +568,7 @@ $DAQBIN/ReadoutGui <replaceable>requestUri subscriptionUri</replaceable>
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -621,6 +622,7 @@ $DAQBIN/ReadoutGui <replaceable>requestURI subscriptionURI</replaceable>
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -1521,6 +1523,7 @@ public:
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -2945,6 +2948,7 @@ public:
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -3637,6 +3641,7 @@ set state [mgr getProgramState name]
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -5272,9 +5277,21 @@ while 1:
 <!-- python bindings -->
 
 <refentry id="python3_statemanager_utilities">
+   <refentryinfo>
+    <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+        <personblurb><para></para></personblurb>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo> 
   <refmeta>
      <refentrytitle id='python3_statemanager_utilities_title'>State manager utilities</refentrytitle>
      <manvolnum>3python</manvolnum>
+     <refmiscinfo class='empty'></refmiscinfo>
   </refmeta>
   <refnamediv>
      <refname>nscldaq.statemanager.Utilities.getPort</refname>
@@ -5553,9 +5570,21 @@ while True:
   </refsect1>
 </refentry>
       <refentry id="python3_statemonitor">
+        <refentryinfo>
+    <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+        <personblurb><para></para></personblurb>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo>
         <refmeta>
            <refentrytitle id="python3_statemonitor_title">StateMonitor</refentrytitle>
            <manvolnum>3python</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>StateMonitorBase</refname>
@@ -5847,9 +5876,21 @@ sm.run()
 <!-- C++ bindings -->
 
 	 <refentry id="daq3_czmqeventloop">
+        <refentryinfo>
+    <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+        <personblurb><para></para></personblurb>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo>    
        <refmeta>
           <refentrytitle id="daq3_czmqeventloop_title">CZMQEventLoop</refentrytitle>
           <manvolnum>3daq</manvolnum>
+            <refmiscinfo class='empty'></refmiscinfo>
        </refmeta>
        <refnamediv>
           <refname>CZMQEventLoop</refname>
@@ -6208,9 +6249,21 @@ sm.run()
         </refsect1>
      </refentry>     
 <refentry id="daq3_cstatemonitorbase">
+   <refentryinfo>
+    <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+        <personblurb><para></para></personblurb>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo> 
   <refmeta>
      <refentrytitle id="daq3_cstatemonitorbase_title">classname</refentrytitle>
      <manvolnum>3daq</manvolnum>
+       <refmiscinfo class='empty'></refmiscinfo>
   </refmeta>
   <refnamediv>
      <refname>CStateMonitorBase</refname>
@@ -6550,9 +6603,21 @@ protected:
    </refsect1>
 </refentry>
 <refentry id="daq3_cstatemonitor">
+    <refentryinfo>
+    <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+        <personblurb><para></para></personblurb>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo>
   <refmeta>
      <refentrytitle id="daq3_cstatemonitor_title">CStateMonitor</refentrytitle>
      <manvolnum>3daq</manvolnum>
+     <refmiscinfo class='empty'></refmiscinfo>
   </refmeta>
   <refnamediv>
      <refname>CStateMonitor</refname>

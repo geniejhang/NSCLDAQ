@@ -6,6 +6,7 @@
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+         <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -275,6 +276,7 @@ from nscldaq.ringbuffer import ringmaster
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+         <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>

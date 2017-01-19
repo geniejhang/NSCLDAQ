@@ -205,7 +205,7 @@ INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-KERNEL_SOURCE_DIR = 
+KERNEL_SOURCE_DIR = /usr/src/linux-headers-3.16.0-4-amd64
 LD = /usr/bin/ld -m elf_x86_64
 LDFLAGS = 
 LIBEXCEPTION_LDFLAGS = -L/usr/opt/nscldaq/12.0-002/lib -lException -Wl,"-rpath=/usr/opt/nscldaq/12.0-002/lib"
