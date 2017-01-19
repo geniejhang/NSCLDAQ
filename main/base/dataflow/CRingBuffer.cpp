@@ -148,7 +148,7 @@ CRingBuffer::create(std::string name,
 
     bool created = false;
     if (existingSize < 0) {
-        if(CDAQShm::create(shmName(memoryName), shmSize,
+        if(CDAQShm::create(memoryName, shmSize,
                            CDAQShm::GroupRead | CDAQShm::GroupWrite | CDAQShm::OtherRead | CDAQShm::OtherWrite)) {
             throw CErrnoException("Shared memory creation failed");
         } else {
@@ -159,7 +159,7 @@ CRingBuffer::create(std::string name,
 
     // lock
     
-    CScopedDAQShm shmemFile(shmName(name), O_RDWR);
+    CScopedDAQShm shmemFile(memoryName, O_RDWR);
     DAQ::OS::CPosixBlockingRecordLock lock(shmemFile.getFd(),
                                   DAQ::OS::CPosixBlockingRecordLock::Write,
                                   DAQ::OS::CPosixBlockingRecordLock::BEG,
@@ -269,9 +269,9 @@ CRingBuffer::remove(string name)
 
     // If _I_ don't own the ring don't allow deletion (unless I'm root).
 
-
+    std::string memoryName = shmName(name);
     struct stat shmInfo;
-    int status = CDAQShm::stat(name, &shmInfo);
+    int status = CDAQShm::stat(memoryName, &shmInfo);
     if (status == -1) {
         throw CErrnoException("CRingBuffer::remove - Getting info about shared memory");
     }
@@ -284,7 +284,7 @@ CRingBuffer::remove(string name)
     // lock
     size_t headerSize = sizeof(RingHeader) +
       sizeof(ClientInformation)*(m_defaultMaxConsumers+1);
-    CScopedDAQShm shmemFile(shmName(name), O_RDWR);
+    CScopedDAQShm shmemFile(memoryName, O_RDWR);
     DAQ::OS::CPosixBlockingRecordLock lock(shmemFile.getFd(),
                                   DAQ::OS::CPosixBlockingRecordLock::Write,
                                   DAQ::OS::CPosixBlockingRecordLock::BEG,
@@ -300,9 +300,8 @@ CRingBuffer::remove(string name)
 
     // Delete the ring shared memory special file.
 
-    string fullName   = shmName(name);
 
-    if (CDAQShm::remove(fullName)) {
+    if (CDAQShm::remove(memoryName)) {
         throw CErrnoException("Shared memory deletion failed");
     }
 

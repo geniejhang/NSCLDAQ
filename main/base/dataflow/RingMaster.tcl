@@ -170,6 +170,12 @@ proc enumerateRings {} {
       if {[file type $file] eq "file"} {
         emitLogMsg debug "Is ordinary"
         set shmname [file tail $file]
+	
+	# 12.0 - need to remove the _12 as CRingBuffer::isRing will glue it back on:
+	
+	set shmname [lrange [split $shmname _] 0 end-1]
+	set shmname [join $shmname "_"]
+	
         emitLogMsg debug "ring name: $shmname"
         if {[catch {ringbuffer usage $shmname} data] == 0} {
           emitLogMsg debug "Is a ring"

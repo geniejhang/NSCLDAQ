@@ -116,10 +116,10 @@ stdintoring_CXXFLAGS =	$(THREADCXX_FLAGS) $(AM_CXXFLAGS) $(COMPILATION_FLAGS)
 
 noinst_PROGRAMS = unittests producer consumer
 
-unittests_SOURCES = TestRunner.cpp StaticTests.cpp TransferTests.cpp testcommon.cpp \
+unittests_SOURCES = TestRunner.cpp StaticTests.cpp testcommon.cpp  TransferTests.cpp  \
 		DifferenceTests.cpp BlockingTests.cpp InfoTests.cpp \
 		ManageTest.cpp WhilePredTest.cpp crmastertests.cpp RemoteTests.cpp \
-	StatisticTests.cpp connectivityTests.cpp
+	#StatisticTests.cpp connectivityTests.cpp
 
 unittests_LDADD   = -L@prefix@/lib $(CPPUNIT_LDFLAGS) \
 			@builddir@/libDataFlow.la		\
