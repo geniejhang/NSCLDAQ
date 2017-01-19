@@ -77,12 +77,19 @@ private:
     
     CSqlite&         m_db;
     TransactionState m_state;
+    std::string      m_startCommand;
+    std::string      m_rollbackCommand;
+    std::string      m_commitCommand;
 public:
     CSqliteTransaction(CSqlite& db);
+    CSqliteTransaction(
+        CSqlite& db, const char* start, const char* rollback, const char* commit
+    );
     virtual ~CSqliteTransaction();
     
     // Operations on the transaction:
     
+    void start();
     void rollback();                // Rollback now.
     void scheduleRollback();        // Rollback on destruction
     void commit();                  // early commit.
@@ -104,5 +111,21 @@ public:
     };
 };
 
+/**
+ * @class CSqliteSavePoint
+ *
+ *      Support for the SAVEPOINT, RELEASE, ROLLBACK
+ *      form of transactions.
+ *      The strategy is to construct a transaction with the right commands.
+ */
+class CSqliteSavePoint : public CSqliteTransaction
+{
+public:
+    CSqliteSavePoint(CSqlite& db, const char* name);
+private:
+    static std::string startCommand(const char* name);
+    static std::string rollbackCommand(const char* name);
+    static std::string commitCommand(const char* name);
+};
 
 #endif                  // __CSQLITETRANSACTION_H

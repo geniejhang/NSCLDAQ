@@ -1240,4 +1240,6 @@ Work on 11.0-rc11 begins
 	* Fixes bug #6599. Adds documentation for the xlm Module in VMUSBReadout.
 	* Fixes bugs #6585, #6588, and #6591. Updates the VMUSBReadout simple setup
 	to make it easier to follow by fixing incomplete or inaccurate content.
->>>>>>> master
+        * Create status database and API for it.
+	* Provide support in sqlite++ for savepoints.
+	

@@ -69,7 +69,24 @@ CSqliteTransaction::CException::what() const noexcept
 /**
  * Implement the CSqliteTransaction class itself.
  */
-
+/**
+ * constructor
+ *    This construtor allows us to be encapsulated in a CSavepoint class:
+ *  @param db       - database.
+ *  @param startCmd    - Command to start the transaction.
+ *  @param rollback - Command to rollback the transaction.
+ *  @param commit   - Command to commit the transaction
+ */
+CSqliteTransaction::CSqliteTransaction(
+    CSqlite& db, const char* startCmd, const char* rollback, const char* commit
+) :
+    m_db(db), m_state(active),
+    m_startCommand(startCmd),
+    m_rollbackCommand(rollback),
+    m_commitCommand(commit)
+{
+    start();
+}
 /**
  * constructor
  *    Save the database, set the transaction state to active,
@@ -77,10 +94,15 @@ CSqliteTransaction::CException::what() const noexcept
  * @param db - The database on which the transaction is starting:
  */
 CSqliteTransaction::CSqliteTransaction(CSqlite& db) :
-    m_db(db), m_state(active)
+    m_db(db), m_state(active),
+    m_startCommand("BEGIN DEFERRED TRANSACTION"),
+    m_rollbackCommand("ROLLBACK TRANSACTION"),
+    m_commitCommand("COMMIT TRANSACTION")
 {
-    CSqliteStatement::execute(m_db, "BEGIN DEFERRED TRANSACTION");
+    start();  
 }
+
+
 /**
  * destructor
  *    Dispose of the transaction properly:
@@ -98,6 +120,15 @@ CSqliteTransaction::~CSqliteTransaction()
 
 }
 /**
+ * start
+ *    Initiate the transaction
+ */
+void
+CSqliteTransaction::start()
+{
+    CSqliteStatement::execute(m_db, m_startCommand.c_str());
+}
+/**
  * rollback
  *    Rollback the transaction now.  The state is set to completed so
  *    destruction is a no-op.
@@ -107,7 +138,7 @@ void CSqliteTransaction::rollback()
     switch(m_state) {
         case active:
         case rollbackpending:
-            CSqliteStatement::execute(m_db, "ROLLBACK TRANSACTION");
+            CSqliteStatement::execute(m_db, m_rollbackCommand.c_str());
             m_state = completed;
             break;
         case completed:
@@ -140,7 +171,7 @@ void CSqliteTransaction::commit()
 {
     switch (m_state) {
         case active:
-            CSqliteStatement::execute(m_db, "COMMIT TRANSACTION");
+            CSqliteStatement::execute(m_db, m_commitCommand.c_str());
             m_state = completed;
             break;
         case completed:
@@ -152,3 +183,63 @@ void CSqliteTransaction::commit()
     }
 }
 
+/**
+ *  Implement a save point:
+ */
+
+/**
+ * constructor
+ *    @param db - The database handle (reference).
+ *    @param name - The name of the save point.
+ */
+CSqliteSavePoint::CSqliteSavePoint(CSqlite& db, const char* name) :
+    CSqliteTransaction(
+        db, startCommand(name).c_str(), rollbackCommand(name).c_str(),
+        commitCommand(name).c_str()
+    )
+{}
+
+
+/**
+ * startCommand
+ *    Create the string SAVEPOINT name
+ *
+ *  @param name -name of the savepoint.
+ *  @return std::string
+ */
+std::string
+CSqliteSavePoint::startCommand(const char* name)
+{
+    std::string result = "SAVEPOINT ";
+    result            += name;
+    return result;
+}
+/**
+ * rollbackCommand
+ *    Create the string:  ROLLBACK TRANSACTION TO SAVEPOINT name
+ *
+ *  @param name
+ *  @return std::string
+ */
+std::string
+CSqliteSavePoint::rollbackCommand(const char* name)
+{
+    std::string result = "ROLLBACK TRANSACTION TO SAVEPOINT ";
+    result += name;
+    return result;
+}
+
+/**
+ *  commitCommand
+ *     Create the string RELEASE SAVEPOINT name
+ *
+ *   @param name - the name of the save point to 'commit'.
+ *   @return std::string
+ */
+std::string
+CSqliteSavePoint::commitCommand(const char* name)
+{
+    std::string result = "RELEASE SAVEPOINT ";
+    result += name;
+    return result;
+}
