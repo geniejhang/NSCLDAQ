@@ -27,6 +27,7 @@ libdaqformatio_la_LIBADD	= \
 			@top_builddir@/utilities/format/V10/libdataformatv10.la \
 			@top_builddir@/utilities/format/V11/libdataformatv11.la \
 			@top_builddir@/daq/format/libdataformat.la	\
+			@top_builddir@/base/os/libdaqshm.la 		\
 			@LIBEXCEPTION_LDFLAGS@
 
 
@@ -50,6 +51,7 @@ unittests_LDADD		= \
 			@top_builddir@/utilities/format/V10/libdataformatv10.la \
 			@top_builddir@/utilities/format/V11/libdataformatv11.la \
 			@top_builddir@/daq/format/libdataformat.la		\
+			@top_builddir@/base/os/libdaqshm.la			\
 			$(CPPUNIT_LDFLAGS) 		\
 			@LIBEXCEPTION_LDFLAGS@
 

@@ -43,6 +43,7 @@ ringstatusdaemon_CPPFLAGS = -I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAG
 	-I@top_srcdir@/base/dataflow
 ringstatusdaemon_LDFLAGS  = @top_builddir@/servers/portmanager/libPortManager.la \
 	@builddir@/libStatusMessages.la	@top_builddir@/base/dataflow/libDataFlow.la \
+	@top_builddir@/base/os/libdaqshm.la	\
 	@LIBEXCEPTION_LDFLAGS@
 
 nodist_ringstatusdaemon_SOURCES = ringstatus.c ringstatus.h

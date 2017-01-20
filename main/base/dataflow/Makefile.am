@@ -23,7 +23,7 @@ COMPILATION_FLAGS =  -I@top_srcdir@/base/headers 	\
 		$(TCL_FLAGS)		\
 	-DBINDIR='"@prefix@/bin"'
 
-libDataFlow_la_LDFLAGS =  @LIBTCLPLUS_LDFLAGS@		\
+libDataFlow_la_LDFLAGS = @top_builddir@/base/os/libdaqshm.la  @LIBTCLPLUS_LDFLAGS@		\
 			@TCL_LDFLAGS@			\
 			-version-info $(SOVERSION) 	\
 	                -Wl,"-rpath-link=$(libdir)" 	\
