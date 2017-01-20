@@ -664,6 +664,7 @@ tcltest::test precheckTransitionErrors-0 {
 } \
 -body {
   catch {$s precheckTransitionForErrors Active} msg
+  
 } -returnCodes 0 -result 0
 
 
