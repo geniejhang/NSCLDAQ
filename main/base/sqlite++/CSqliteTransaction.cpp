@@ -23,7 +23,7 @@
 #include "CSqliteTransaction.h"
 #include "CSqlite.h"
 #include "CSqliteStatement.h"
-
+#include <sstream>
 /*----------------------------------------------------------------------------*/
 /**
  * Implement the exception class used by the transaction methods:
@@ -138,8 +138,17 @@ void CSqliteTransaction::rollback()
     switch(m_state) {
         case active:
         case rollbackpending:
-            CSqliteStatement::execute(m_db, m_rollbackCommand.c_str());
-            m_state = completed;
+            {
+                // Some cases can be multiple commands
+                
+                m_state = completed;
+                std::string command;
+                std::istringstream f(m_rollbackCommand);
+                while (getline(f, command, ';')) {
+                    CSqliteStatement::execute(m_db, command.c_str());
+                }
+               
+            }
             break;
         case completed:
             throw CException("Rollback attemped on completed transaction");
@@ -171,8 +180,8 @@ void CSqliteTransaction::commit()
 {
     switch (m_state) {
         case active:
-            CSqliteStatement::execute(m_db, m_commitCommand.c_str());
             m_state = completed;
+            CSqliteStatement::execute(m_db, m_commitCommand.c_str());    
             break;
         case completed:
             throw CException("Attempting to commmit a completed transaction");
@@ -226,6 +235,8 @@ CSqliteSavePoint::rollbackCommand(const char* name)
 {
     std::string result = "ROLLBACK TRANSACTION TO SAVEPOINT ";
     result += name;
+    result += "; ";
+    result += commitCommand(name);
     return result;
 }
 

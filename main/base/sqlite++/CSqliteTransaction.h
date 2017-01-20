@@ -91,8 +91,8 @@ public:
     
     void start();
     void rollback();                // Rollback now.
-    void scheduleRollback();        // Rollback on destruction
-    void commit();                  // early commit.
+    void scheduleRollback();                // Rollback on destruction
+    void commit();                          // early commit.
     
 public:
     // This exception is thrown when you do somethign stupid with the transaction
@@ -122,6 +122,7 @@ class CSqliteSavePoint : public CSqliteTransaction
 {
 public:
     CSqliteSavePoint(CSqlite& db, const char* name);
+
 private:
     static std::string startCommand(const char* name);
     static std::string rollbackCommand(const char* name);
