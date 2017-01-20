@@ -1155,4 +1155,11 @@ Work on 11.0-rc11 begins
 	* Fixes bug #6602. The source code for the VMUSBReadout simple setup
 	tutorial is included during the installation of NSCLDAQ for users.
 	* Changes the interaction logic for the CCUSB to make it more stable.
+	* Fixes bug #6617 Removes warnings from tar that originated from time
+	skews between the local machine and the NFS server.
+	* Fixes bug #6599. Adds documentation for the xlm Module in VMUSBReadout.
+	* Fixes bugs #6585, #6588, and #6591. Updates the VMUSBReadout simple setup
+	to make it easier to follow by fixing incomplete or inaccurate content.
 11.1-011
+	* Fixes performance regression in CCUSB driver that was introduced in
+	11.1-010.
