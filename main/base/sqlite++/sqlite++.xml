@@ -2557,6 +2557,105 @@ while(!++s.atEnd()) {
         readable error message string.
     </para>
   </refsect1>
+</refentry>
+<refentry id="sqlite3_csqlitesavepoint">
+  <refentryinfo>
+    <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+        <personblurb><para></para></personblurb>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo>
+  <refmeta>
+     <refentrytitle>CSqliteSavePoint</refentrytitle>
+     <manvolnum>3sqlite</manvolnum>
+         <refmiscinfo class='empty'></refmiscinfo>
+  </refmeta>
+  <refnamediv>
+     <refname>CSqliteSavePoint</refname>
+     <refpurpose>Support for <literal>SAVEPOINT</literal> transactions</refpurpose>
+  </refnamediv>
+  
+  <refsynopsisdiv>
+   <synopsis>
+#include &lt;CSqliteTransaction&gt;
+       class <ooclass><classname>CSqliteSavePoint : public CSqliteTransaction</classname></ooclass>
+{
+public:
+<constructorsynopsis>
+   <methodname>CSqliteSavePoint</methodname>
+   <methodparam>
+    <modifier></modifier><type>CSqlite&amp; </type>
+        <parameter>db</parameter>
+   </methodparam>
+   <methodparam>
+    <modifier>const </modifier><type>char* </type>
+        <parameter>name</parameter>
+   </methodparam>
+   <exceptionname></exceptionname>
+</constructorsynopsis> 
+
+};
+   </synopsis>
+  </refsynopsisdiv>
+  <refsect1>
+     <title>DESCRIPTION</title>
+     <para>
+        <classname>CSqliteSavePoint</classname> provides support for the SQL
+        savepoint form of transactions.   Save points operate in a manner
+        identical to transactions, unlike transactions, however, they can nest.
+     </para>
+     <para>
+        Save points are named entities.  Therefore the constructor requires a
+        name string, in addition to a <classname>CSqlite</classname> reference.
+        The name you use must not be the same as any existing active savepoint.
+     </para>
+     <para>
+        Unlike transactions, savepoints can be nested. A save point created
+        while another save point is active is said to be an inner save point
+        with respect to the active one.  Inner save points must be resolved
+        (committed or rolled back) prior to outer ones (this is a restriction
+        of the library, not of SQL/SQLite).  With that in mind, here's a table
+        that shows what happens for various combinations of inner/outer
+        resolutions:
+     </para>
+     <informaltable>
+        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+            <thead>
+                <row>
+                    <entry>Inner Resolution</entry>
+                    <entry>Outer resolution</entry>
+                    <entry>What to expect</entry>
+                </row>
+            </thead>
+            <tbody>
+                <row>
+                    <entry>committed</entry><entry>committed</entry>
+                    <entry>All operations in both savepoint scopes are retained.</entry>
+                </row>
+                <row>
+                    <entry>rolled back</entry><entry>comitted</entry>
+                    <entry>
+                        Only the operations in the scope of the outer savepoint but
+                        not in the scope of the inner save point are retained.
+                    </entry>
+                </row>
+                <row>
+                    <entry>committed</entry><entry>rolled back</entry>
+                    <entry>Nothing is retained.</entry>
+                </row>
+                <row>
+                    <entry>rolled back</entry><entry>rolled back</entry>
+                    <entry>Nothing is retained</entry>
+                </row>
+            </tbody>
+        </tgroup>
+     </informaltable>
+  </refsect1>
 </refentry>     
 <refentry id="sqlite3_csqliteexception">
   <refentryinfo>
