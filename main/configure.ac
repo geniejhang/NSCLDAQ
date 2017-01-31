@@ -447,6 +447,7 @@ AC_CONFIG_FILES([Makefile
                  servers/portmanager/Makefile
 		 diagnostics/Makefile
 		 diagnostics/status/Makefile
+		diagnoistics/dbinjector/Makefile
 		 utilities/Makefile
 		utilities/common/Makefile
 		 utilities/Buffer/Makefile
