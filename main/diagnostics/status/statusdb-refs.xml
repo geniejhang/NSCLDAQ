@@ -429,9 +429,7 @@ public:
         In <literal>METHODS</literal> below the methods of the API are decscribed.
         In <literal>PUBLIC VARIABLES, TYPES and CONSTANTS</literal> The API data
         types are decribed.  Note that internally the API makes use of
-        transactions to ensure database consistency.  In the future, the
-        API will export <literal>SAVEPOINT</literal>s which are a form of
-        nested transaction.
+        transactions to ensure database consistency.  
      </para>
   </refsect1>
   <refsect1>
@@ -2612,6 +2610,36 @@ public:
                 </para>
             </listitem>
         </varlistentry>
+        <varlistentry>
+            <term><command>savepoint <replaceable>name script</replaceable></command></term>
+            <listitem>
+                <para>
+                  While not properly an insert operation, this command can be
+                  used to batch several insertions into the database.  If several
+                  insertions need to be done atomically the <command>savepoint</command>
+                  command can also do this.  Note that the underlying library uses
+                  savepoints to ensure that insertions that involve more than
+                  one table are atomic.
+                </para>
+                <para>
+                  The <parameter>name</parameter> is the name of the savepoint
+                  and must be unique.  The <parameter>script</parameter> is
+                  a script that, presumably, performs one or more insertion
+                  operations.  Savepoints operate like transactions in the sense
+                  that they can be committed, which actually makes the
+                  requested changes to the database, or rolledback, which
+                  does not do the insertions into the database performed within
+                  the scope of the transaction.
+                </para>
+                <para>
+                  The <command>savepoint</command> command performs a commit
+                  on successful completion of the script.  If, however an
+                  uncaught error occurs during the script or the script completes
+                  with a <command>break</command> command, the operations
+                  performed by the script are rolled back.
+                </para>
+            </listitem>
+        </varlistentry>
      </variablelist>
         <para>
             The subcommands below query the database.  Note that each of these
@@ -3550,6 +3578,10 @@ public:
       result = api.listReadoutApps(<optional>filter</optional>)
       result = api.listRuns(<optional>filter</optional>)
       result = api.queryReadoutStatistics(<optional>filter</optional>)
+      
+      with statusdb.savepoint(api, name) as object:
+        ...
+        
       
    </synopsis>
   </refsynopsisdiv>
@@ -4826,6 +4858,99 @@ public:
           </listitem>
       </varlistentry>
    </variablelist>
+   <para>
+    The api supports savepoints via the <classname>statusdb.savepoint</classname>
+    command.   This command also functions as a context manager allowing
+    savepoint transactions to be performed in the scope of a <command>with</command>
+    command.
+   </para>
+   <para>
+    Savepoints are like transactions, in the sense that the operations performed
+    while a savepoint is active can either be committed, causing the changes to be
+    made permanent or rolled back, causing the changes to not be placed in the
+    database.  Furthermore, database operations performed within the scope of
+    a savepoint are performed atomically relative to other operations. Sqlite
+    implements this atomicity via a lock on the database file.  Until the
+    savepoint is committed or rolledback, the program sees the database as if the
+    proposed changes had taken place.
+   </para>
+   <para>
+    Savepoints are unlike transactions in that they have names associated with them
+    and can be nested.
+   </para>
+   <para>
+    When a <classname>statusdb.savepoint</classname> is constructed the savepoint
+    begins on the database specified by its first parameter and with a savepoint
+    name specified by the second parameter.
+   <classname>statusdb.savepoint</classname> objects support the following methods:
+   </para>
+   <variablelist>
+    <varlistentry>
+        <term><methodname>commit</methodname></term>
+        <listitem>
+            <para>
+              The insertions performed so far are committed immediately.  The
+              savepoint scope ends so that any further operations are not done
+              within the save point.
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term><methodname>rollback</methodname></term>
+        <listitem>
+            <para>
+              The insertions performed so far are rolled back.  From the database
+              point of view it's as if they did not occur.  The
+              savepoint scope ends and any further operations are not done
+              within the savepoint,.
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term><methodname>scheduleRollback</methodname></term>
+        <listitem>
+            <para>
+              The intent to rollback is declared.  Further operations may be
+              performed and they will be performed within the scope of the
+              save point until the actual rollback is performed at which point
+              they will be rolled back.
+            </para>
+            <para>
+              The actual rollback occurs when the savepoint object is destroyed or,
+              if the savepoint object is being used as a context manager, when the
+              <command>with</command> block is exited.
+            </para>
+        </listitem>
+    </varlistentry>
+   </variablelist>
+   <formalpara>
+    <title>Savepoints as context managers</title>
+    <para>
+      <classname>statusdb.savepoint</classname> objects can be constructed as
+      context managers (in a <command>with</command> command).  When this is done;
+      <itemizedlist>
+        <listitem>
+          <para>
+            Scheduled rollbacks are performed when the body of the
+            <command>with</command> command is exited.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            If the body of the with command raises an unhandled exception,
+            the savepoint is rolledback as the <command>with</command> body is exited.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            If the <command>with</command> body is exited normally and
+            none of the methods of the object have been called, the savepoint
+            is committed at that time.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+   </formalpara>
   </refsect1>
 </refentry>     
 

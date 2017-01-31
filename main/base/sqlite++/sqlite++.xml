@@ -789,6 +789,7 @@ void mkdir(CSqlite&amp; db, int parent, std::vector&lt;std::string&gt;&amp; path
     <classname>CSqlite</classname>
     <classname>CSqliteStatement</classname>
     <classname>CSqliteTransaction</classname>
+    <classname>CSqliteSavePoint</classname>
     <classname>CSqliteException</classname>
    </synopsis>
   </refsynopsisdiv>
@@ -820,16 +821,21 @@ void mkdir(CSqlite&amp; db, int parent, std::vector&lt;std::string&gt;&amp; path
         </para>
      </formalpara>
      <formalpara>
-        <title><classname>CSqliteTransaction</classname></title>
+        <title><classname>CSqliteTransaction</classname> and <classname>CSqliteSavePoint</classname></title>
         <para>
+            <classname>CSqlite</classname>
             Provides support for auto-completed transaction.  Construction begins
             a transaction and by default destruction commits.  It is also possible
             to rollback, schedule a rollback for destruction time and to do an
             immediate commit (prior to destruction).
             For reference information see:
             <link linkend="sqlite3_csqlitetransaction"
-                  endterm="sqlite3_csqlitetransaction_title" />
+                  endterm="sqlite3_csqlitetransaction_title" />.
+            <classname>CSqliteSavePoint</classname> is derived from
+            <classname>CSqliteTransaction</classname> and implements
+            savepoints.
         </para>
+        
      </formalpara>
      <formalpara>
         <title><classname>CSqliteException</classname></title>
@@ -2320,6 +2326,8 @@ while(!++s.atEnd()) {
    <synopsis>
 #include &lt;CSqliteTransaction.h&gt;
        <ooclass><classname>CSqliteTransaction</classname></ooclass> {
+        typedef TransactionState;
+       
         <constructorsynopsis>
            <methodname>CSqliteTransaction</methodname>
            <methodparam>
@@ -2352,7 +2360,17 @@ while(!++s.atEnd()) {
             <exceptionname>CSqliteException</exceptionname>
             <exceptionname>CSqliteTransaction::CException</exceptionname>
             <modifier></modifier>
-        </methodsynopsis>  
+        </methodsynopsis>
+        <methodsynopsis>
+            <modifier></modifier>
+            <type>TransactionState</type>
+            <methodname>state</methodname>
+            <void />
+            <exceptionname></exceptionname>
+            <modifier>const</modifier>
+        </methodsynopsis>
+        
+        
 };
       
    </synopsis>
@@ -2544,7 +2562,72 @@ while(!++s.atEnd()) {
                 </para>
             </listitem>
         </varlistentry>
+        <varlistentry>
+            <term>
+                <methodsynopsis>
+                    <modifier></modifier>
+                    <type>TransactionState</type>
+                    <methodname>state</methodname>
+                    <void />
+                    <exceptionname></exceptionname>
+                    <modifier>const</modifier>
+                </methodsynopsis>
+            </term>
+            <listitem>
+                <para>
+                    Returns the state of the transaction.  See
+                    <literal>TYPES</literal> below.
+                </para>
+            </listitem>
+        </varlistentry>
      </variablelist>
+  </refsect1>
+  <refsect1>
+    <title>TYPES</title>
+    <para>
+        The <classname>CSqliteTransaction</classname> class defines one public
+        type; the enumerated type <type>TransactionState</type>.   Transactions
+        have a concept of <firstterm>resolution</firstterm>. Once a transaction
+        has been resolved, new resolution for the transaction cannot be proposed.
+        Transactions also have scope.  When a transaction has been committed or
+        rolled back, queries will no longer be performed under the transactions's scope.
+        The queries that did fall under the transaction's scope will be the ones
+        that will be either committed or rolled back depending on the
+        resolution of the transaction.
+        The value of the transaction state can be any of:
+    </para>
+    <variablelist>
+        <varlistentry>
+            <term><literal>active</literal></term>
+            <listitem>
+                <para>
+                    The transaction has not yet been resolved.  All queries
+                    will take place under its scope.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><literal>rollbackpending</literal></term>
+            <listitem>
+                <para>
+                    The transaction is resolved and when the transaction
+                    scope is left, all transactions in the scope will be
+                    rolled back.  The transaction scope, however continues and
+                    additional queries are under the scope of the transaction
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><literal>completed</literal></term>
+            <listitem>
+                <para>
+                    The transaction is resolved and its scope ended.  This means
+                    that the transaction has been either comitted or rolled back.
+                    All further queries do not fall under the scope of the transaction.
+                </para>
+            </listitem>
+        </varlistentry>
+    </variablelist>
   </refsect1>
   <refsect1>
     <title>NESTED CLASSES</title>
