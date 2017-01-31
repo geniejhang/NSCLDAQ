@@ -1,6 +1,6 @@
 bin_PROGRAMS=statusinjector
 
-statusinjector_SOURCES=statusinjector.cpp
+statusinjector_SOURCES=statusinjector.cpp CParameters.cpp CParameters.h
 
 
 nodist_statusinjector_SOURCES= cmdopts.h cmdopts.c
