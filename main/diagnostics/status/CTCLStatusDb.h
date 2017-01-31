@@ -106,6 +106,8 @@ private:
             void addLogMessage(
                 CTCLInterpreter& interp, std::vector<CTCLObject>& objv
             );
+            void savepoint(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
+            
             // Query top level command handlers:
             
         private:

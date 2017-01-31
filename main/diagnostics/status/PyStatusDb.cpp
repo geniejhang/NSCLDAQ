@@ -25,7 +25,7 @@
 #include <CStatusMessage.h>
 #include <sqlite3.h>
 #include <CSqliteWhere.h>
-
+#include <CSqliteTransaction.h>
 
 #include <string>
 #include <stdexcept>
@@ -1217,6 +1217,7 @@ statusdb_delete(PyObject* self)
 {
     pStatusDb pThis = reinterpret_cast<pStatusDb>(self);
     delete pThis->m_pApi;
+    self->ob_type->tp_free(self);
 }
 
 // Action methods for statusdb type instances.
@@ -2260,8 +2261,358 @@ static PyTypeObject statusdb_Type = {
     statusdb_new,                 /* tp_new */
 };
 
+/**
+ Context manager for status db objects that supports savepoints used like:
+   with SavePoint(dbObject, saveptName) as sp:
+       # Do database operations.
+  Within the context manager one can
+  sp.commit(), sp.rollback(), sp.schedule.rollback()
 
-// Module level initialization:
+  Same as for CSqliteSavePoint however the savepoint is actually destroyed
+  when __exit__ is called rather than when the object is deleted.
+ Module level initialization:
+*/
+
+// Method definitions for savepoint context manager:
+
+typedef struct _savepoint_Data {
+    PyObject_HEAD
+    CSqliteSavePoint*   m_pSavepoint;
+} Savepoint, *pSavepoint;
+
+// Canonical methods.
+
+/**
+ * savept_new
+ *    Create a new savepoint object.  Save point objects:
+ *    - Represent an SQLITE savepoint.
+ *    - Start the save point on creation.
+ *    - If necessary complete the save point (rollback or commit) on destruction
+ *    - Acts as a resource which can complete the savepoint on __exit__.
+ *
+ *  @param type   - pointer to a savepoint_Type struct.
+ *  @param args   - Positional parameters.
+ *  @param kwargs - Keywords args.
+ *  @return PyObject* a pointer to an uninitialized Savepoint object storage struct.
+ */
+static PyObject*
+savept_new(PyTypeObject* type, PyObject* args, PyObject* kwargs)
+{
+    PyObject* self = type->tp_alloc(type, 0);
+    if (!self) {
+        PyErr_SetString(exception, "Unable to allocate a statusdb.savepoint object");
+    } else {
+        pSavepoint pThis = reinterpret_cast<pSavepoint>(self);
+        pThis->m_pSavepoint = nullptr;
+    }
+    return self;
+}
+
+/**
+ * savept_init
+ *   Given an uninitialized pSavepoint, produces one that is initialized and
+ *   ready to go.  This involves creating the named savepoint object which
+ *   starts the savepoint.
+ *
+ *  @param self -  Actually a pSavepoint.
+ *  @param args - Positional args - we need a database object and a name.
+ *  @param kwargs - Keyword args.
+ *  @return   int - 0 for success, -1 for failure.
+ *  @note Sqlite exceptions will get mapped to failure codes with a python
+ *               exception active (e.g. duplicate save point names can cause this).
+ */
+static int
+savept_init(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    PyObject*   pDb;
+    const char* pName;
+    if (!PyArg_ParseTuple(args, "Os", &pDb, &pName)) {
+        return -1;                            // Exception already raised.
+    }
+    try {
+        pSavepoint pThis = reinterpret_cast<pSavepoint>(self);
+        if (pDb->ob_type != &statusdb_Type) {
+            throw std::string("First parameter must be a status database type");
+        }
+        CStatusDb* pApi = getApi(pDb);
+        pThis->m_pSavepoint = pApi->savepoint(pName);
+        
+    }
+    catch (const char* msg) {
+        PyErr_SetString(exception, msg);
+        return -1;
+    }
+    catch (std::string msg) {
+        PyErr_SetString(exception, msg.c_str());
+        return -1;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        return -1;
+    }
+    return 0;
+}
+
+/**
+ * savept_delete
+ *   Get rid of a save point.  Note that this means deleting the object too.
+ *
+ *   @param self -  Pointer to the object storage.
+ */
+static void
+savept_delete(PyObject* self)
+{
+    pSavepoint pThis = reinterpret_cast<pSavepoint>(self);
+    delete pThis->m_pSavepoint;
+    self->ob_type->tp_free(self);
+}
+
+
+
+// Methods in dispatch table:
+
+/**
+ * savept__enter__
+ *    Required to be a resource manager.  Actually, this is a no-op.  All the
+ *    work is done at construction and __exit__ or destruction time.
+ *
+ * @param self - Pointer to this object's storage.
+ * @return PyObject* - the context manager object.
+ */
+static PyObject*
+savept_enter(PyObject* self, PyObject* args)
+{
+    return self;
+}
+/**
+ * savept__exit__
+ *   The operation performed depends on the object state if no exception:
+ *   -  active:   A commit is performed.
+ *   -  rollbackpending: A rollback is performed.
+ *   - completed:  Nothing is done.
+ *   If exception:
+ *   - active:    A rollback is performed
+ *   - rollbackpending: a rollback is performed.
+ *   - completed: Nothing is done.
+ *
+ *  @param self - Pointer to the actual context manager.
+ *  @param args - Triple of exception type, exception value and traceback.
+ *                All are None if no exception is present.
+ *  @return Py_False.
+ */
+static PyObject*
+savept_exit(PyObject* self, PyObject* args)
+{
+    PyObject* exctype;
+    PyObject* exvalue;
+    PyObject* traceback;
+    
+    if (!PyArg_ParseTuple(args, "OOO", &exctype, &exvalue, &traceback)) {
+        return nullptr;
+    }
+    // Resolve the savepoint:
+    
+    pSavepoint        pThis   = reinterpret_cast<pSavepoint>(self);
+    CSqliteSavePoint* pSavept = pThis->m_pSavepoint;
+    CSqliteTransaction::TransactionState state = pSavept->state();
+    
+    // Map exceptions in C++ to Python:
+    
+    try {
+        switch (state) {
+        case CSqliteTransaction::active:
+            if (exctype == Py_None) {
+                pSavept->commit();
+            } else {
+                pSavept->rollback();
+            }
+            break;
+        case CSqliteTransaction::rollbackpending:
+            pSavept->rollback();
+            break;
+        case CSqliteTransaction::completed:
+            break;
+        }
+    }
+    catch (const char* msg) {
+        PyErr_SetString(exception, msg);
+        return NULL;
+    }
+    catch (std::string msg) {
+        PyErr_SetString(exception, msg.c_str());
+        return NULL;
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        return NULL;
+    }
+    Py_RETURN_FALSE;    
+    
+}
+/**
+ * savept_commit
+ *    Commit the savepoint.
+ *
+ * @param self - Pointer to the object.
+ * @param args - positional parameters -must be empty.
+ * @return Py_None
+ */
+static PyObject*
+savept_commit(PyObject* self, PyObject* args)
+{
+    if (PyTuple_Size(args) > 0) {
+        PyErr_SetString(exception, "No parameters are allowed for commit");
+        return NULL;
+    }
+    
+    try {
+        CSqliteSavePoint*   pS = (reinterpret_cast<pSavepoint>(self))->m_pSavepoint;
+        pS->commit();
+    }
+    catch (const char* msg) {
+         PyErr_SetString(exception, msg);
+         return NULL;
+     }
+     catch (std::string msg) {
+         PyErr_SetString(exception, msg.c_str());
+         return NULL;
+     }
+     catch (std::exception& e) {
+         PyErr_SetString(exception, e.what());
+         return NULL;
+     }
+     
+     Py_RETURN_NONE;
+}
+/**
+ * savept_rollback
+ *    Perform an immediate rollback of the savept.
+*  @param self   - Pointer to the object storage.
+ *  @param args   - Positional parameters - must be empty.
+ *  @return Py_None.
+ */
+static PyObject*
+savept_rollback(PyObject* self, PyObject* args)
+{
+    if (PyTuple_Size(args) > 0) {
+        PyErr_SetString(exception, "No parameters are allowed to perform a rollbak");
+        return NULL;
+    }
+    
+    try {
+        CSqliteSavePoint*   pS = (reinterpret_cast<pSavepoint>(self))->m_pSavepoint;
+        pS->rollback();
+    }
+    catch (const char* msg) {
+         PyErr_SetString(exception, msg);
+         return NULL;
+     }
+     catch (std::string msg) {
+         PyErr_SetString(exception, msg.c_str());
+         return NULL;
+     }
+     catch (std::exception& e) {
+         PyErr_SetString(exception, e.what());
+         return NULL;
+     }
+     
+     Py_RETURN_NONE;
+}
+// method dispatch tabl
+
+/**
+ * savept_scheduleRollback
+ *    Schedule a rollback to happen when the object is deleted or exits a context.
+ *
+ *  @param self   - Pointer to the object storage.
+ *  @param args   - Positional parameters - must be empty.
+ *  @return Py_None.
+ */
+static PyObject*
+savept_scheduleRollback(PyObject* self, PyObject* args)
+{
+    if (PyTuple_Size(args) > 0) {
+        PyErr_SetString(exception, "No parameters are allowed to schedule a rollbak");
+        return NULL;
+    }
+    
+    try {
+        CSqliteSavePoint*   pS = (reinterpret_cast<pSavepoint>(self))->m_pSavepoint;
+        pS->scheduleRollback();
+    }
+    catch (const char* msg) {
+         PyErr_SetString(exception, msg);
+         return NULL;
+     }
+     catch (std::string msg) {
+         PyErr_SetString(exception, msg.c_str());
+         return NULL;
+     }
+     catch (std::exception& e) {
+         PyErr_SetString(exception, e.what());
+         return NULL;
+     }
+     
+     Py_RETURN_NONE;
+}
+// method dispatch table
+
+static PyMethodDef SavePointMethods[] {
+    {"__enter__", savept_enter, METH_VARARGS, "Begin save point"},
+    {"__exit__",  savept_exit, METH_VARARGS,  "exit save point context"},
+    {"commit",    savept_commit, METH_VARARGS, "Commit transaction now"},
+    {"rollback",  savept_rollback, METH_VARARGS, "Rollback transaction now"},
+    {"scheduleRollback", savept_scheduleRollback, METH_VARARGS,
+        "Rollback when __exit__ is called"},
+    {NULL, NULL, 0, NULL}
+};
+
+// Type table for savepoint
+
+static PyTypeObject savepoint_Type = {
+    PyObject_HEAD_INIT(NULL)
+    0,                         /*ob_size*/
+    "statusdb.savepoint",       /*tp_name*/
+    sizeof(Savepoint), /*tp_basicsize*/
+    0,                         /*tp_itemsize*/
+    (destructor)(savept_delete), /*tp_dealloc*/
+    0,                         /*tp_print*/
+    0,                         /*tp_getattr*/
+    0,                         /*tp_setattr*/
+    0,                         /*tp_compare*/
+    0,                         /*tp_repr*/
+    0,                         /*tp_as_number*/
+    0,                         /*tp_as_sequence*/
+    0,                         /*tp_as_mapping*/
+    0,                         /*tp_hash */
+    0,                         /*tp_call*/
+    0,                         /*tp_str*/
+    0,                         /*tp_getattro*/
+    0,                         /*tp_setattro*/
+    0,                         /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,        /*tp_flags*/
+    "Encapsulation of savepoints for statusdb class.", /* tp_doc */
+    0,                         /* tp_traverse */
+    0,                         /* tp_clear */
+    0,                         /* tp_richcompare */
+    0,                         /* tp_weaklistoffset */
+    0,                         /* tp_iter */
+    0,                         /* tp_iternext */
+    SavePointMethods,           /* tp_methods */
+    0,                         /* tp_members */
+    0,                         /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)savept_init,      /* tp_init */
+    0,                         /* tp_alloc */
+    savept_new,                 /* tp_new */
+};
+
+
+
 
 static PyMethodDef ModuleMethods[] = {
     {NULL, NULL, 0, NULL}                        // End of methods sentinel.
@@ -2297,5 +2648,13 @@ initstatusdb(void)
     Py_INCREF(&statusdb_Type);
     PyModule_AddObject(
         module, "statusdb", reinterpret_cast<PyObject*>(&statusdb_Type)
+    );
+    
+    if (PyType_Ready(&savepoint_Type)) {
+        return;
+    }
+    Py_INCREF(&savepoint_Type);
+    PyModule_AddObject(
+        module, "savepoint", reinterpret_cast<PyObject*>(&savepoint_Type)
     );
 }

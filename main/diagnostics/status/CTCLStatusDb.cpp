@@ -35,8 +35,12 @@
 #include <sstream>
 #include <cstring>
 #include <cstdlib>
+#include <memory>
+
 #include <CSqliteWhere.h>
 #include <CSqlite.h>
+#include <CSqliteTransaction.h>
+
 // Map CSqlite open flag strings to their integer equivalents:
 
 static std::map<std::string, int> OpenFlagMap = {
@@ -279,6 +283,8 @@ CTCLStatusDb::CTCLStatusDbInstance::operator()(
             addReadoutStatistics(interp, objv);
         } else if (subcommand == "addLogMessage") {
             addLogMessage(interp, objv);
+        } else if (subcommand == "savepoint") {
+            savepoint(interp, objv);
         } else if (subcommand == "queryLogMessages") {
             queryLogMessages(interp, objv);
         } else if (subcommand == "listRings") {
@@ -497,6 +503,43 @@ CTCLStatusDb::CTCLStatusDbInstance::addLogMessage(CTCLInterpreter& interp, std::
     std::string msg = objv[6];
     
     m_pDb->addLogMessage(sev, app.c_str(), src.c_str(), tod, msg.c_str());
+}
+
+/**
+ * savepoint
+ *    Perform a script inside a save point.
+ *  @param interp - the interpreter that is executing this command and the
+ *                  savepoint wrapped command.
+ *  @param objv   - The command line words.  In addition to the subcommand
+ *                  we need a savepoint name and a script to execute.
+ *                  The script return code determines how the savepoint is resolved:
+ *                  -  TCL_OK or TCL_CONTINUE result in a commit.
+ *                  -  anything else results in a rollback.
+ *  @note - since Tcl_ERROR silently results in a rollback, the user should
+ *          probably check for and report real errors from within the script.
+ *          itself.
+ */
+void
+CTCLStatusDb::CTCLStatusDbInstance::savepoint(
+    CTCLInterpreter& interp, std::vector<CTCLObject>& objv
+)
+{
+    requireExactly(objv, 4);
+    std::string saveptName = objv[2];
+    CTCLObject& script(objv[3]);
+    
+    // Wrap the script execution:
+    
+    {
+        std::unique_ptr<CSqliteSavePoint>
+            pSavepoint(m_pDb->savepoint(saveptName.c_str()));
+            
+        int status =
+            Tcl_GlobalEvalObj(interp.getInterpreter(), script.getObject());
+        if ((status != TCL_OK) && (status != TCL_CONTINUE)) {
+            pSavepoint->scheduleRollback();
+        }
+    }
 }
 
 /*----------------------------------------------------------------------------

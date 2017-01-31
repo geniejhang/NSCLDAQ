@@ -163,6 +163,7 @@ CStatusDb::addLogMessage(uint32_t severity, const char* app, const char* src,
     m_pLogInsert->reset();
 
 }
+
 /**
  * addRingStatistics
  *    Add a ring statistics entry.  If need be, the ring identification
@@ -183,7 +184,7 @@ CStatusDb::addRingStatistics(
 {
     // all of this is done as a transaction:
     
-    CSqliteTransaction t(m_handle);
+    CSqliteSavePoint t(m_handle, "statusdb");
     
     try {
         // Get the id of the ring buffer or create it if it does not yet
@@ -228,7 +229,7 @@ CStatusDb::addStateChange(
     int64_t  tod, const char* from, const char* to    
 )
 {
-    CSqliteTransaction t(m_handle);
+    CSqliteSavePoint t(m_handle, "statusdb");
     try {
         int appId = getStateChangeAppId(app, src);
         if (appId == -1) {
@@ -266,7 +267,7 @@ CStatusDb::addReadoutStatistics(
 {
         
     
-    CSqliteTransaction t(m_handle);
+    CSqliteSavePoint t(m_handle, "statusdb");
     try {
         // If necessary add the readout_program:
         
@@ -294,6 +295,23 @@ CStatusDb::addReadoutStatistics(
         t.rollback();
         throw;
     }
+}
+
+/**
+ * savepoint
+ *    Create an outer save point.   This allows applications to batch inserts
+ *    over a range of messages.  With sqlite, this tends to improve performance.
+ *
+ * @param name - Name of the save point.  Note that internally, the software
+ *               uses the 'statusdb' save point.
+ * @return CSqliteSavePoint*  Typically this shoulid be used to initialize
+ *              an std::unique_ptr object so that destruction is assured on
+ *              block exit.
+ */
+CSqliteSavePoint*
+CStatusDb::savepoint(const char* name)
+{
+    return new CSqliteSavePoint(m_handle, name);
 }
 
 /*------------------------------------------------------------------------------

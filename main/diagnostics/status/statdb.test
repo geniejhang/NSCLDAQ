@@ -816,6 +816,47 @@ tcltest::test queryreadoutstats-1 {unfiltered query of the readout statistics} \
       ]                                                                        \
 ]
 
+
+tcltest::test savept-1 {Test save point with ok completion} \
+-setup {
+    set cmd [createdb]
+} \
+-cleanup {
+   cleanDb $cmd 
+} \
+-body {
+    $cmd savepoint test {
+        $cmd addLogMessage \
+            WARNING error-generator charlie.nscl.msu.edu 111111  \
+            {This is a log message}
+    }
+    #  Committed so:
+    
+    $cmd queryLogMessages
+} -result [list                                               \
+    [dict create id 1 severity WARNING application error-generator \
+        source charlie.nscl.msu.edu timestamp 111111 \
+        message "This is a log message"]            \
+    ]
+
+tcltest::test savept-2 {Test savepoint with rollback forced} \
+-setup {
+    set cmd [createdb]
+} \
+-cleanup {
+   cleanDb $cmd 
+} \
+-body {
+    $cmd savepoint test {
+        $cmd addLogMessage \
+            WARNING error-generator charlie.nscl.msu.edu 111111  \
+            {This is a log message}
+        break;                           # Forces rollback.
+    }
+    #  Committed so:
+    
+    $cmd queryLogMessages
+} -result [list]
 #---------------------------------------------------------------------------
 # Test completion:
 

@@ -1242,4 +1242,7 @@ Work on 11.0-rc11 begins
 	to make it easier to follow by fixing incomplete or inaccurate content.
         * Create status database and API for it.
 	* Provide support in sqlite++ for savepoints.
+	* Use savepoints in CStatusDb rather than transactions.
+	* Make savepoints for CStatusDb available for callers wanting to
+	bactch operations (e.g. inserts).
 	

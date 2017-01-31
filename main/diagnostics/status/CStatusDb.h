@@ -34,6 +34,7 @@
 class CSqlite;
 class CSqliteStatement;
 class CQueryFilter;
+class CSqliteSavePoint;
 
 /**
   * @class CSqlite
@@ -279,6 +280,8 @@ public:
         uint32_t severity, const char* app, const char* src,
         int64_t  time, const char* message
     );
+    
+    CSqliteSavePoint* savepoint(const char* name);
     
     // Queries:
 public:

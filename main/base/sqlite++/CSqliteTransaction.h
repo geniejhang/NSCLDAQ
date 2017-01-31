@@ -70,7 +70,7 @@ class CSqlite;
 */
 
 class CSqliteTransaction {
-private:
+public:
     typedef enum _transactionState {
         active, rollbackpending, completed
     } TransactionState;
@@ -93,6 +93,7 @@ public:
     void rollback();                // Rollback now.
     void scheduleRollback();                // Rollback on destruction
     void commit();                          // early commit.
+    TransactionState state() const {return m_state;}
     
 public:
     // This exception is thrown when you do somethign stupid with the transaction

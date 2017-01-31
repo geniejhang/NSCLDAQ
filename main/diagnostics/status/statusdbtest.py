@@ -839,7 +839,62 @@ class StatusDbTests(unittest.TestCase):
                 )
             ), result[3]
         )
+    
+    #  Tests for the savepoint context manager:
+    
+    def normal_commit(self):
+        with statusdb.savepoint(self._api, 'test') as savepoint:
+            self._api.addLogMessage(
+                statusmessages.SeverityLevels.WARNING, 'some-application',
+                'charlie.nscl.msu.edu', 1234, 'Something to talk about'
+            )
+            
+        # Commits here:
         
+        logs = self._api.queryLogMessages();
+        self.assertEqual(1, len(logs))
+        self.assertEqual(
+            logs[0],
+            {
+                'id' : 1, 'timestamp' : 1234, 'message': 'Something to talk about',
+                'severity': statusmessages.SeverityLevels.WARNING,
+                'application' : 'some-application', 'source': 'charlie.nscl.msu.edu'
+            }
+        )
+        def test_scheduled_rollback(self):
+         with statusdb.savepoint(self._api, 'test') as savepoint:
+            self._api.addLogMessage(
+                statusmessages.SeverityLevels.WARNING, 'some-application',
+                'charlie.nscl.msu.edu', 1234, 'Something to talk about'
+            )
+            savepoint.scheduleRollback()
+        
+        # rolled back.
+        
+        logs = self._api.queryLogMessages();
+        self.assertEqual(0, len(logs))
+    
+        def test_hardRollback(self):
+           with statusdb.savepoint(self._api, 'test') as savepoint:
+            self._api.addLogMessage(
+                statusmessages.SeverityLevels.WARNING, 'some-application',
+                'charlie.nscl.msu.edu', 1234, 'Something to talk about'
+            )
+            savepoint.rollback()
+            logs = self._api.queryLogMessages();
+            self.assertEqual(0, len(logs))
+        
+        def test_hardcommit(self):
+            with statusdb.savepoint(self._api, 'test') as savepoint:
+                self._api.addLogMessage(
+                    statusmessages.SeverityLevels.WARNING, 'some-application',
+                    'charlie.nscl.msu.edu', 1234, 'Something to talk about'
+                )
+                savepoint.commit()
+                c = self._sqlite.cursor()
+                c.execute('SELECT COUNT(*) AS c FROM log_messages')
+                r = c.fetchone()
+                self.assertEqual(1, r['c'])
         
 if __name__ == '__main__':
     unittest.main()

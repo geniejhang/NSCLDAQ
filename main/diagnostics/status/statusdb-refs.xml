@@ -171,6 +171,17 @@ public:
         </methodparam>
         <exceptionname></exceptionname>
         <modifier></modifier>
+    </methodsynopsis>
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>CSqliteSavePoint*</type>
+        <methodname>savepoint</methodname>
+        <methodparam>
+          <modifier>const</modifier><type>char*</type>
+            <parameter>name</parameter>
+        </methodparam>
+        <exceptionname></exceptionname>
+        <modifier></modifier>
     </methodsynopsis>  
     
     // Queries:
@@ -770,6 +781,41 @@ public:
                 </para>
                 <para>
                     <parameter>message</parameter> is the message string to log.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>
+                  <methodsynopsis>
+                    <modifier></modifier>
+                    <type>CSqliteSavePoint*</type>
+                    <methodname>savepoint</methodname>
+                    <methodparam>
+                      <modifier>const</modifier><type>char*</type>
+                        <parameter>name</parameter>
+                    </methodparam>
+                    <exceptionname></exceptionname>
+                    <modifier></modifier>
+                </methodsynopsis>  
+            </term>
+            <listitem>
+                <para>
+                  Creates the named savepoint on the database represented
+                  by the <classname>CStatusDb</classname> object it's called on.
+                  Typically this should be used to construct an
+                  <classname>std::unique_ptr</classname> object.  That will ensure
+                  that the savepoint will be destroyed at the end of the
+                  block in which it is constructed (the normal way that
+                  <classname>CSqliteSavePoint</classname> objects are used).
+                </para>
+                <para>
+                  This is normally used to batch several insert operations
+                  within a single transaction to improve insertion performance.
+                  It may also be used to ensure atomicity of multiple insert
+                  operations.  Note that insertion methods in the
+                  <classname>CStatusDb</classname> class which require
+                  more than one table are run inside of a savepoint named
+                  <literal>statusdb</literal>.
                 </para>
             </listitem>
         </varlistentry>
