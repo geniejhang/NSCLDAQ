@@ -89,7 +89,7 @@ CTCLAggregate::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>& objv
 }
 /**
  * aggregatorThread
- *    Statis method that is the entry point of the thread that runs the multi
+ *    Status method that is the entry point of the thread that runs the multi
  *    aggregator.  A very simple method:
  *
  * @param a - references the aggregator object.

@@ -281,6 +281,12 @@ public:
         );
         static size_t ringClientSize(RingStatClient* pClient);
         
+        static void readMessage(
+            std::vector<zmq::message_t*>& message, zmq::socket_t& sock
+        );
+        static void freeMessage(std::vector<zmq::message_t*>& message);
+        
+        
     /*-------------------------------------------------------------------------
      */
     // Utility methods for building messages:

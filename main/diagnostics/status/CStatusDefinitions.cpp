@@ -336,3 +336,47 @@ CStatusDefinitions::formatHeader(Header& hdr, uint32_t type, uint32_t severity, 
     hdr.s_source[sizeof(hdr.s_source) -1]  = 0;
      
 }
+/**
+ * readMessage
+ *    Read a, possibly, multi part mesage.  This blocks.
+ *
+ *  @param[out] message - vector of pointers to message parts.
+ *  @param[in]  sock    - zmq::socket_t from which to read.
+ */
+void
+CStatusDefinitions::readMessage(
+    std::vector<zmq::message_t*>& message, zmq::socket_t& sock
+)
+{
+   
+    // Loop until there are no more parts... there's at least one.
+    
+    uint64_t more(0);
+    do  {
+        
+        size_t   moreSize(sizeof(more));
+    
+    
+        zmq::message_t* part = new zmq::message_t;
+        sock.recv(part);
+        message.push_back(part);
+        
+        sock.getsockopt(ZMQ_RCVMORE, &more, &moreSize);
+    } while(more);
+    
+}
+/**
+ * freeMessage
+ *    Given a message that was read with readMessage above, frees the
+ *    message parts.
+ *
+ *  @param[inout] message - the message to free. On exit this vector will be empty.
+ */
+void
+CStatusDefinitions::freeMessage(std::vector<zmq::message_t*>& message)
+{
+    for (int i = 0; i < message.size(); i++) {
+        delete message[i];
+    }
+    message.clear();
+}
