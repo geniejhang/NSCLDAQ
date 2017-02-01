@@ -1,0 +1,46 @@
+<!-- manpage 1daq -->
+      <refentry id="daq1_logmessageviewer">
+        <refentryinfo>
+          <author>
+                  <personname>
+                          <firstname>Ron</firstname>
+                          <surname>Fox</surname>
+                  </personname>
+                  <personblurb><para></para></personblurb>
+          </author>
+          <productname>NSCLDAQ</productname>
+          <productnumber></productnumber>
+        </refentryinfo>
+        <refmeta>
+           <refentrytitle id="daq1_logmessageviewer_title">LogMessageViewer</refentrytitle>
+           <manvolnum>1daq</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
+        </refmeta>
+        <refnamediv>
+           <refname>LogMessageViewer</refname>
+           <refpurpose>View log messages.</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+$DAQBIN/LogMessageViewer <optional>dbfile</optional>
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            This program provides a tabular display of the log messages accumulated
+            during an experiment.  It relies on
+            <link linkend='daq1_statusinjector' endterm='daq1_statusinjector_title' />
+            to be running to maintain the database.  If the <replaceable>dbfile</replaceable>
+            parameter is provided that database file is used.  If not,
+            <filename>~/status.db</filename> is used as the database file.
+           </para>
+        </refsect1>
+
+      </refentry>
+
+<!-- /manpage -->

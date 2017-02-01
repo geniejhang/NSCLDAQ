@@ -52,6 +52,7 @@ BOOKDIRS = 	@top_srcdir@ \
 		@top_srcdir@/daq/format \
 		@top_srcdir@/diagnostics/status \
 		@top_srcdir@/diagnostics/dbinjector \
+		@top_srcdir@/diagnostics/viewers	\
 		@top_srcdir@/usb \
 		@top_srcdir@/usb/vmusb \
 		@top_srcdir@/usb/ccusb \
