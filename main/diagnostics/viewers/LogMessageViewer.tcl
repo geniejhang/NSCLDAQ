@@ -22,17 +22,21 @@ exec tclsh "$0" ${1+"$@"}
 
 ##
 # @file logtest.tcl
-# @brief Simple test program for logging.
+# @brief Log message displayer.
 # @author Ron Fox <fox@nscl.msu.edu>
 #
 
 ##
-# This is a simple test program for a log display.
+# Displays filtered log messages.
 # We create a log display object
 # We start multinode aggregation as an internal thread.
 # We subscribe to log messages.
 # We attach a script to log message receipt that decodes the message
 # and dispatches it to the log display object.
+
+set here [file dirname [info script]]
+lappend auto_path [file normalize [file join $here .. TclLibs]]
+
 
 package require LogView
 package require LogModel
