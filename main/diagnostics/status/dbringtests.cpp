@@ -19,12 +19,12 @@
 
 class RingTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(RingTests);
-//  CPPUNIT_TEST(addMinimal);
-//  CPPUNIT_TEST(addMinimal2);
-//  CPPUNIT_TEST(addMinimalDup);
-//  CPPUNIT_TEST(addClient1);
+  CPPUNIT_TEST(addMinimal);
+  CPPUNIT_TEST(addMinimal2);
+  CPPUNIT_TEST(addMinimalDup);
+  CPPUNIT_TEST(addClient1);
   CPPUNIT_TEST(addClient2);
-//  CPPUNIT_TEST(addMultiStat);
+  CPPUNIT_TEST(addMultiStat);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -434,7 +434,7 @@ void RingTests::addMultiStat()
     EQ(1235, loadCounters.getInt(2));           // timestamp.
     EQ(125,  loadCounters.getInt(3));           // operations.
     EQ(3000, loadCounters.getInt(4));           // bytes.
-    EQ(1204, loadCounters.getInt(5));           // backlog.
+    EQ(1024, loadCounters.getInt(5));           // backlog.
 
     ++loadCounters;
     ASSERT(loadCounters.atEnd());

@@ -1301,7 +1301,7 @@ CStatusDb::getRingClientId(
     // Bind the query parameters.
     
     m_getClientId->bind(1, ringId);
-    m_getClientId->bind(2, client.s_pid);
+    m_getClientId->bind(2, static_cast<int>(client.s_pid));
     m_getClientId->bind(3, command.c_str(), -1, SQLITE_STATIC);
     
     // See if we have a match and pull out the id if so:
