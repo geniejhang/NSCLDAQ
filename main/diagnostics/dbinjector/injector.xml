@@ -1,0 +1,105 @@
+<!-- manpage 1daq -->
+      <refentry id="daq1_statusinjector">
+        <refentryinfo>
+          <author>
+                  <personname>
+                          <firstname>Ron</firstname>
+                          <surname>Fox</surname>
+                  </personname>
+                  <personblurb><para></para></personblurb>
+          </author>
+          <productname>NSCLDAQ</productname>
+          <productnumber></productnumber>
+        </refentryinfo>
+        <refmeta>
+           <refentrytitle id='daq1_statusinjector_title'>statusinjector</refentrytitle>
+           <manvolnum>1daq</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
+        </refmeta>
+        <refnamediv>
+           <refname>statusinjector</refname>
+           <refpurpose>Aggregate status messages into an sqlite database</refpurpose>
+        </refnamediv>
+        
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+statusinjector <optional><option>--service=<replaceable>publisher</replaceable></option></optional>
+               <optional><option>--filename=<replaceable>databasefile</replaceable></option></optional>
+               <optional><option>--help</option></optional> <optional><option>--version</option></optional>
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            This program aggregates all status messages across the nodes invovled
+            in an experiment's data flow and inserts message information into an
+            Sqlite database.   The insertions are performed using
+            <link linkend='daq3_CStatusDb' endterm='daq3_CStatusDb_title' />.
+           </para>
+        </refsect1>
+        <refsect1>
+           <title>
+              OPTIONS
+           </title>
+           <variablelist>
+            <varlistentry>
+                <term><option>--help</option></term>
+                <listitem>
+                    <para>
+                        If this option is present help text is output to stdout
+                        and the program immediately exits regardless of any other
+                        options.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>--version</option></term>
+                <listitem>
+                    <para>
+                        If this option is present, the program name and
+                        version are output to stdout and the program immediately
+                        exits regardless of any other options.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>service=<replaceable>publisher</replaceable></option></term>
+                <listitem>
+                    <para>
+                        Specifies the service name of the per node status
+                        aggregator's publication service.  The default value is
+                        <literal>StatusPublisher</literal> which is the normal
+                        default for NSCLDAQ.  You should never need to override
+                        this.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>--file=<replaceable>databasefile</replaceable></option></term>
+                <listitem>
+                    <para>
+                        Provides the name of a file to be used as the database
+                        file.  Status messages are aggregated into this sqlite
+                        database.  If the file exists and is a valid Sqlite database
+                        file additional messages will extend the set of messages
+                        in that file.  If the file does not exist it will be
+                        created.  Note that if necessary the tables and keys
+                        required for the status database will be created.
+                    </para>
+                    <para>
+                        The default value is <filename>~/status.db</filename>
+                        This is also the default database file for the
+                        various utilities and display programs in nscldaq that
+                        access the status database.
+                    </para>
+                </listitem>
+            </varlistentry>
+           </variablelist>
+        </refsect1>
+
+      </refentry>
+
+<!-- /manpage -->
