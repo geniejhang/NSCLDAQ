@@ -15,4 +15,4 @@ cmdopts.c: cmdopts.h
 cmdopts.h: cmdopts.ggo
 	$(GENGETOPT) --output-dir=@builddir@ --input=@srcdir@/cmdopts.ggo -F cmdopts
 
-EXTRA_DIST=injector.xml
+EXTRA_DIST=injector.xml cmdopts.ggo
