@@ -34,85 +34,135 @@ exec tclsh "$0" ${1+"$@"}
 # We attach a script to log message receipt that decodes the message
 # and dispatches it to the log display object.
 
-package require LogDisplay
+package require LogView
+package require LogModel
 package require statusMessage
 package require dialogWrapper
 
-proc processMessage {rawMessage} {
-    set decodedMessage [statusdecode $rawMessage]
-    $::logDisplay addMessage $decodedMessage
-}
+set dbfile ~/status.db
 
-proc updateFilter {} {
-    set filters [list]    
-    # Severity selection severity in (all severities with value 1)
+if {[llength $argv] > 0} {
+    set dbfile [lindex $argv 0]
+}
+set dbfile [file normalize $dbfile]
+puts "Using database $dbfile"
+
+set severityList [list DEBUG INFO WARNING SEVERE DEFECT]
+set filter [dict create]
+
+##
+# populateView
+#   Populate the view with the messages more recent than the ones we already had.
+#
+# @param dt     - milliseconds to the next update.
+# @param lastid - id of the last message gotten from the database.
+#
+proc populateView {dt lastid} {
+    set idFilter [list id > $lastid]
+    set filter   [list $idFilter]
     
-    set severitiesShown [list]
-    foreach severity [list DEBUG INFO WARNING SEVERE DEFECT] {
-        
-        if {[set ::$severity]} {
-            lappend severitiesShown $severity
+    if {[dict exists $::filter severities]} {
+        lappend filter [dict get $::filter severities]
+    }
+    
+    foreach field [list application source] {
+        if {[dict exist $::filter $field]} {
+            lappend filter [dict get $::filter $field]
         }
     }
-    if {[llength $severitiesShown] > 1} {
-        set sevFilter [list severity in $severitiesShown]
-        lappend filters $sevFilter
-    } else  {  
-        set sevFilter [list severity = $severitiesShown]
-        lappend filters $sevFilter
-    }
-    # Application filter:
     
-    if {$::visibleApplication ne""} {
-        lappend filters [list application == $::visibleApplication]
-    }
-    #  Source filter:
     
-    if {$::visibleSource ne ""} {
-        lappend filters [list source == $::visibleSource]
+    set newMessages [model get $filter]
+    .logview load $newMessages
+    
+    # Update the last id seen:
+    
+    if {[llength $newMessages] > 0} {
+        set lastid [dict get [lindex $newMessages end] id]
     }
-
-    $::logDisplay setFilter $filters
+    
+    
+    set ::updateId [after $dt [list populateView $dt $lastid]]
+}
+##
+# updateFilter
+#    -  Update the severities key of the filter dict.
+#    -  Cancel updates
+#    -  Restart updates with the new filter (and id = -1 so that we rescan
+#       the database).
+#
+proc updateFilter {} {
+    after cancel $::updateId;            # cancel updates.
+    .logview clear
+    set severities [list]
+    foreach sev $::severityList {
+        set value [set ::$sev]
+        if {$value} {
+            lappend severities '$sev'
+        }
+    }
+    set sevList "([join $severities ,])"
+    dict set ::filter severities [list severity IN $sevList]   
+    
+    populateView 1000 -1
 }
 
-
+##
+# setTextFilter
+#
+#  prompts for and adds a filter for a text field.
+#
+# @param which - field to filter on.
+#
 proc setTextFilter which {
-    upvar $which value
-    toplevel .d
-    DialogWrapper .d.prompt -showcancel 1
-    set c [.d.prompt controlarea]
-    entry $c.e
-    $c.e insert end $value
-    .d.prompt configure -form $c.e
-    pack .d.prompt
-    set result [.d.prompt modal]
+    #
+    #  Create a dialog that prompts for the field value:
+    #
+    toplevel .prompt
+    set d [DialogWrapper .prompt.dialog]
+    set carea [$d controlarea]
+    set f [ttk::frame $carea.frame]
+    ttk::label $f.label -text [string totitle "$which "]
+    set value [ttk::entry $f.entry]
+    grid $f.label $value
+    $d configure -form $f
+    pack $d
+    
+    set result [$d modal]
+    
     if {$result eq "Ok"} {
-        set value [$c.e get]
-        updateFilter    
+        set requested [$value get]
+        destroy .prompt;              # Don't need this any more.
+        
+        #  Note that an empty string removes the filter:
+        
+        if {$requested eq ""} {
+            dict unset ::filter $which
+        } else {
+            dict set ::filter $which [list $which = '$requested']
+        }
+        updateFilter
     }
-    destroy .d
-    
-    
-    
 }
-
+##
+# clearFilters
+#
+#    Clears all filters.
+#
 proc clearFilters {} {
-    foreach severity [list DEBUG INFO WARNING SEVERE DEFECT] {
-        set ::$severity 1
+    foreach sev $::severityList {
+        set ::$sev 1
     }
-    set ::visibleApplication ""
-    set ::visibleSource ""
+    set ::filter [dict create]
     updateFilter
 }
 
-# Set up log display menu handling
+# Create/pack the view and create the model
 
-set logDisplay [LogDisplay %AUTO% -filename test.db]
+LogModel model -file $dbfile
+LogView .logview
 pack .logview
-set uri [statusaggregator]
-    
-set sub [statusSubscription create $uri [list [list LOG_MESSAGE {}]]]
-$sub onMessage processMessage
+
 
 # Set up menus for filtering
 
@@ -123,6 +173,7 @@ menu .menubar.filter -tearoff 0
 . configure -menu .menubar
 
 # Populate the filter menu:
+
 
 # Severity filtering;  Variables for each of the severity types:
 
@@ -135,15 +186,24 @@ set DEFECT  1
 set visibleApplication ""
 set visibleSource      ""
 
+
+
 .menubar.filter add command -label {Filter Severities:}
-foreach sev [list DEBUG INFO WARNING SEVERE DEFECT] {
+foreach sev  $severityList {
     .menubar.filter add checkbutton -onvalue 1 -offvalue 0 -variable $sev \
-        -label $sev -command updateFilter
+        -label $sev  -command updateFilter
 }
 .menubar.filter add separator
-.menubar.filter add command -label Application... -command [list setTextFilter visibleApplication]
-.menubar.filter add command -label Source...      -command [list setTextFilter visibleSource]
+.menubar.filter add command -label Application... -command [list setTextFilter application]
+.menubar.filter add command -label Source...      -command [list setTextFilter source]
 
 .menubar.filter add separator
 .menubar.filter add command -label Clear -command [list clearFilters]
+
+# Start the periodic population.
+#
+
+set updateId -1
+updateFilter;             # Setup the initial filter information.
+
 
