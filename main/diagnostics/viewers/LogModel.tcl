@@ -48,8 +48,7 @@ package require snit
 #
 
 snit::type LogModel {
-    option -file -default [
-                           list]
+    option -file -default [list]  -configuremethod _configureFile
     variable dbCommand
     
     constructor args {

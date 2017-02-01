@@ -1,1 +1,1 @@
-SUBDIRS=status dbinjector
+SUBDIRS=status dbinjector viewers

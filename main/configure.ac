@@ -448,6 +448,7 @@ AC_CONFIG_FILES([Makefile
 		 diagnostics/Makefile
 		 diagnostics/status/Makefile
 		diagnostics/dbinjector/Makefile
+		diagnostics/viewers/Makefile
 		 utilities/Makefile
 		utilities/common/Makefile
 		 utilities/Buffer/Makefile

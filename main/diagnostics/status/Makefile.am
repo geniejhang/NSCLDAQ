@@ -3,7 +3,7 @@ bin_PROGRAMS = ringstatusdaemon statusaggregator multiaggregator
 lib_LTLIBRARIES = libStatusMessages.la libTclStatusMessages.la libPyStatusMessages.la \
 	libPyStatusDb.la
 
-TCL_PACKAGES=LogModel.tcl LogView.tcl LogController.tcl LogDisplay.tcl
+TCL_PACKAGES=
 
 
 
@@ -107,12 +107,11 @@ libTclStatusMessages_la_LDFLAGS=$(COMMON_LIBS)  	\
 				@LIBTCLPLUS_LDFLAGS@ 	\
 				@TCL_LDFLAGS@
 
+
 tclpkgInstall:
 	$(mkinstalldirs) @prefix@/TclLibs @prefix@/TclLibs/status
 	rm -f @prefix@/TclLibs/status/libTclStatusMessages.so
-	$(LN_S) @libdir@/libTclStatusMessages.so @prefix@/TclLibs/status/libTclStatusMessages.so
-	for f in $(TCL_PACKAGES); do $(INSTALL_SCRIPT) @srcdir@/$$f @prefix@/TclLibs/status; done
-	echo pkg_mkIndex -verbose "@prefix@/TclLibs/status *.so *.tcl" |@TCLSH@
+	$(LN_S) @libdir@/libTclStatusMessages.so @prefix@/TclLibs/status/libTclStatusMessages.so	
 
 tclAppInstall::
 	$(mkinstalldirs) @bindir@
@@ -215,6 +214,7 @@ testringstatus_LDFLAGS= libStatusMessages.la \
 	$(COMMON_LIBS)
 
 TESTS=$(TEST_PROGS) $(PYTHON_TESTS) $(TCL_TESTS)
+
 
 
 install-exec-hook: tclpkgInstall pypkgInstall tclAppInstall
