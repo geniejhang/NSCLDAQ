@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <set>
+#include <sys/statvfs.h>
 
 
 
@@ -156,6 +157,27 @@ void writeData (int fd, const void* pData , size_t size)
   return nBytes;		// Complete read.
 }
 
-
+/**
+ * freeSpacePercent
+ *    Returns the percent of a filesystem that is free for user files.
+ *
+ *  @param[in] fd - File descriptor for a file open on the device.
+ *  @return    float - Percent of filesystem free (100.0*free/total).
+ *  @note      total space has to be determined by converting fragments into
+ *             blocks (f_frsize/f_bsize).
+ */
+double freeSpacePercent(int fd)
+{
+  struct statvfs volumeInfo;
+  if (fstatvfs(fd, &volumeInfo)) {
+    throw errno;
+  }
+  fsblkcnt_t     availBlocks = volumeInfo.f_bavail;
+  unsigned long  totalBlocks =
+    volumeInfo.f_blocks * (volumeInfo.f_frsize/volumeInfo.f_bsize);
+    
+  return (100.0)*availBlocks/totalBlocks;
+  
+}
 
 }

@@ -17,14 +17,17 @@ EXTRA_DIST=shm.xml
 #
 # Tests:
 
-noinst_PROGRAMS    = unittests
+noinst_PROGRAMS    = unittests checkfree
 
 unittests_SOURCES = TestRunner.cpp createTests.cpp removeTests.cpp attachTests.cpp \
         detachTests.cpp timeoutTests.cpp semaphoretests.cpp
 
 
 unittests_CPPFLAGS=$(COMPILATION_FLAGS)
-
 unittests_LDADD   = @builddir@/libdaqshm.la @CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
+
+checkfree_SOURCES=checkfree.cpp
+checkfree_CPPFLAGS=$(COMPILATION_FLAGS)
+checkfree_LDADD  = @builddir@/libdaqshm.la
 
 TESTS=./unittests

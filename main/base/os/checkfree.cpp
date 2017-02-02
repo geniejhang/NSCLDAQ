@@ -20,17 +20,19 @@
 # @author <fox@nscl.msu.edu>
 */
 
-#include <os.h>
+#include <io.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <iostream>
 
 int main(int argc, char**argv)
 {
     const char *fname = argv[1];
     int         fd    = open(fname, O_RDONLY);
     
-    double result = io::freeSpacepercent(fd);
+    double result = io::freeSpacePercent(fd);
     
     close(fd);
     

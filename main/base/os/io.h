@@ -39,6 +39,7 @@
 namespace io {
   void writeData (int fd, const void* pData , size_t size);
   size_t readData (int fd, void* pBuffer,  size_t nBytes);
+  double freeSpacePercent(int fd);
 }
 
 
