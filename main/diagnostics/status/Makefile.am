@@ -138,7 +138,7 @@ pypkgInstall:
 	$(INSTALL_PROGRAM) @libdir@/libPyStatusMessages.so @prefix@/pythonLibs/nscldaq/status/statusmessages.so
 	$(INSTALL_PROGRAM) @libdir@/libPyStatusDb.so @prefix@/pythonLibs/nscldaq/status/statusdb.so
 
-DOCS=status-refs.xml statusdb-refs.xml
+DOCS=status-refs.xml statusdb-refs.xml statusdb-schema.xml
 
 #-------------------- Tests -----
 
@@ -155,7 +155,7 @@ PYTHON_TESTS=ringstatisticstests.py readoutstatisticstests.py \
 
 
 
-TCL_TESTS=statussubtest.test ringdecode.test logmodel.test statdb.test
+TCL_TESTS=statussubtest.test ringdecode.test  statdb.test
 
 
 TEST_PROGS=ringstattests tclpkgtests subtests ringpubclasstest ringdaemontests \
