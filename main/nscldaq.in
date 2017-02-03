@@ -20,9 +20,19 @@
 DAQHOME=@prefix@
 #export TCLLIBPATH="${DAQHOME}/Scripts" #not sure why this is here, nothing uses it
 BIT3DEVICES=5       # Number of bit 3 devices.
-PORTMGRSWITCHES="-log `pwd`/portman.log -portfile `pwd`/test.port -pidfile `pwd`/pid"  
+PORTMGRSWITCHES="-log `pwd`/portman.log -portfile `pwd`/test.port -pidfile `pwd`/pid"
+
+#  For root the log file directory is /var/log/nscldaq otherwise it's the cwd.
+
+if [ `id -u` = "0" ]
+then
+    LOGFILEDIR=/var/log/nscldaq
+else
+    LOGFILEDIR=`pwd`
+fi
+
 if [ -z $RINGMASTER_LOGFILE ] ; then
-  RINGMASTER_LOGFILE=/var/log/nscldaq/ringmaster.log
+      RINGMASTER_LOGFILE=${LOGFILEDIR}/ringmaster.log
 fi
 
 if [ -z $RINGMASTER_VERBOSITYLEVEL ] ; then
