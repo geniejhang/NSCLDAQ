@@ -343,6 +343,7 @@ CStatusDb::queryLogMessages(
     
     
     CSqliteStatement query(m_handle, baseQuery.c_str());
+    query.enableRetry();
     
     do {
         ++query;                           // next record.
@@ -390,7 +391,7 @@ CStatusDb::listRings(std::vector<RingBuffer>& result, CQueryFilter& filter)
     query += " ORDER BY r_fqname ASC";
     // std::cout << std::endl << query << std::endl;     // For query debugging.
     CSqliteStatement q(m_handle, query.c_str());
-    
+    q.enableRetry();
     do {
         ++q;                                 // Step the query.
         if (! q.atEnd()) {                   // Could be empty result set.
@@ -429,7 +430,7 @@ CStatusDb::listRingsAndClients(RingDirectory& result, CQueryFilter& filter)
     query += filter.toString();
     // std::cout << std::endl << query << std::endl;         // debug query.
     CSqliteStatement q(m_handle, query.c_str());
-    
+    q.enableRetry();
     // Loop through the results:
     
     do {
@@ -501,7 +502,7 @@ CStatusDb::queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& fil
     //std::cout << std::endl << query << std::endl;     // For query debugging.
     
     CSqliteStatement q(m_handle, query.c_str());
-    
+    q.enableRetry();
     do {
         ++q;
         if(!q.atEnd()) {
@@ -572,7 +573,7 @@ CStatusDb::listStateApplications(
     query += " ORDER BY a.id ASC";
     
     CSqliteStatement q(m_handle, query.c_str());
-    
+    q.enableRetry();
     do {
         ++q;
         if (!q.atEnd()) {
@@ -609,7 +610,7 @@ CStatusDb::queryStateTransitions(
     query += filter.toString();
     query += " ORDER BY t.timestamp, a.name, a.host ASC";
     CSqliteStatement q(m_handle, query.c_str());
-    
+    q.enableRetry();
     //  fill in the result records - not the result set can be empty:
     
     do {
@@ -648,6 +649,7 @@ CStatusDb::listReadoutApps(std::vector<ReadoutApp>& result, CQueryFilter& filter
     query += filter.toString();
     
     CSqliteStatement q(m_handle, query.c_str());
+    q.enableRetry();
     
     do {
         ++q;
@@ -682,6 +684,8 @@ CStatusDb::listRuns(RunDictionary& result, CQueryFilter& filter)
     ";
     query += filter.toString();
     CSqliteStatement q(m_handle, query.c_str());
+    q.enableRetry();
+    
     do {
         ++q;
         if (!q.atEnd()) {
@@ -739,7 +743,7 @@ CStatusDb::queryReadoutStatistics(ReadoutStatDict& result, CQueryFilter& filter)
     query += " ORDER BY s.id, r.run ASC";               // Global insert order.
 //    std::cout << std::endl << query << std::endl;
     CSqliteStatement q(m_handle, query.c_str());
-    
+    q.enableRetry();
     do {
         ++q;
         if(!q.atEnd()) {
@@ -1227,6 +1231,7 @@ CStatusDb::getRingId(const char* name, const char* host)
     }
     m_getRingId->bind(1, name, -1, SQLITE_STATIC);
     m_getRingId->bind(2, host, -1, SQLITE_STATIC);
+
     
     // Step the statement - we'll be at end if there's no rows:
     

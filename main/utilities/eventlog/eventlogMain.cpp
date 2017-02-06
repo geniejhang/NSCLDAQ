@@ -27,6 +27,7 @@
 #include <CRemoteAccess.h>
 #include <DataFormat.h>
 #include <CAllButPredicate.h>
+#include <CPortManager.h>
 #include <io.h>
 
 #include <iostream>
@@ -40,7 +41,9 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sstream>
 
+#include <system_error>
 
 using std::string;
 using std::cerr;
@@ -54,6 +57,8 @@ static const uint64_t M(K*K);
 static const uint64_t G(K*M);
 
 static const int RING_TIMEOUT(5);	// seconds in timeout for end of run segments...need no data in that time.
+
+static const int SpaceCheckInterval(1*M);  
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Local classes:
@@ -81,12 +86,19 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    m_pChecksumContext(0),
    m_nBeginsSeen(0),
    m_fChangeRunOk(false),
-   m_prefix("run")
+   m_prefix("run"),
+   m_haveWarned(false),
+   m_haveSevere(false),
+   m_pLogSocket(0),
+   m_pLogger(0)
  {
  }
 
  EventLogMain::~EventLogMain()
- {}
+ {
+    delete m_pLogger;
+    delete m_pLogSocket;
+ }
  //////////////////////////////////////////////////////////////////////////////////
  //
  // Object member functions:
@@ -100,8 +112,11 @@ class noData :  public CRingBuffer::CRingBufferPredicate
  int
  EventLogMain::operator()(int argc, char**argv)
  {
+   
    parseArguments(argc, argv);
+   log("Event logger starting", CStatusDefinitions::SeverityLevels::INFO);
    recordData();
+   log("Event logger exiting normally", CStatusDefinitions::SeverityLevels::INFO);
 
  }
 
@@ -142,8 +157,13 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    int fd = open(fullPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 
 		 S_IWUSR | S_IRUSR | S_IRGRP);
    if (fd == -1) {
-     perror("Open failed for event file segment"); 
-     exit(EXIT_FAILURE);
+      perror("Open failed for event file segment");
+      log(
+	  "Open failed for event file segment: ", errno,
+	  CStatusDefinitions::SeverityLevels::SEVERE
+      );
+      log("Event logger exiting in error", CStatusDefinitions::SeverityLevels::SEVERE);
+      exit(EXIT_FAILURE);
    }
    return fd;
 
@@ -170,7 +190,15 @@ class noData :  public CRingBuffer::CRingBufferPredicate
 		   S_IRWXU );
      if (fd == -1) {
        perror("Could not open the .started file");
-       exit(EXIT_FAILURE);
+       log(
+	   "Event logger could not open the .started file", errno,
+	   CStatusDefinitions::SeverityLevels::SEVERE
+	);
+       log(
+	  "Event Logger exiting in error",
+	  CStatusDefinitions::SeverityLevels::SEVERE
+	);
+	exit(EXIT_FAILURE);
      }
 
      close(fd);
@@ -243,6 +271,14 @@ class noData :  public CRingBuffer::CRingBufferPredicate
 		     S_IRWXU);
        if (fd == -1) {
 	 perror("Could not open .exited file");
+	 log(
+	      "Event logger could not open .exited file ", errno,
+	      CStatusDefinitions::SeverityLevels::SEVERE
+	  );
+	 log(
+	     "Event logger exiting with error",
+	     CStatusDefinitions::SeverityLevels::SEVERE
+	  );
 	 exit(EXIT_FAILURE);
 	 return;
        }
@@ -281,6 +317,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
 
    CRingItem*   pItem;
    uint16_t     itemType;
+   m_lastCheckedSize = 0;    // Last checked free space.
 
 
    // Figure out what file to open and how to set the pItem:
@@ -319,12 +356,60 @@ class noData :  public CRingBuffer::CRingBufferPredicate
        bytesInSegment = 0;
 
        fd = openEventSegment(runNumber, segment);
+        // put out a format item:
+	
+       if (pFormatItem) {
+	bytesInSegment += itemSize(*pFormatItem);
+	writeItem(fd, *pFormatItem);
+       }
      }
 
      writeItem(fd, *pItem);
 
      bytesInSegment  += size;
-
+     
+     // Check free disk space and log Warning, SEVERE or Info if so.
+     
+     if ((bytesInSegment - m_lastCheckedSize) >= SpaceCheckInterval) {
+	m_lastCheckedSize = bytesInSegment;
+	try {
+	  double pctFree = io::freeSpacePercent(fd);
+	  if (shouldLogWarning(pctFree)) {
+	    log(
+	      "Disk space is getting a bit low percent left: ", pctFree,
+	      CStatusDefinitions::SeverityLevels::WARNING
+	    );
+	    m_haveWarned = true;
+	  }
+	  if (shouldLogSevere(pctFree)) {
+	    log(
+	      "Disk space is getting very low percent left: ", pctFree,
+	      CStatusDefinitions::SeverityLevels::SEVERE
+	    );
+	    m_haveSevere = true;
+	  }
+	  if (shouldLogSevereClear(pctFree)) {
+	    log(
+	      "Disk space is somewhat better but still a bit percent left: ", pctFree,
+	      CStatusDefinitions::SeverityLevels::INFO
+	      );
+	    m_haveSevere = false;
+	  }
+	  if (shouldLogWarnClear(pctFree)) {
+	    log(
+	      "Disk space is ok now percent left:", pctFree,
+	      CStatusDefinitions::SeverityLevels::INFO
+	    );
+	    m_haveWarned = false;
+	  }
+	}
+	catch (int errno) {
+	  CStatusDefinitions::LogMessage* lm = getLogger();
+	  if (lm) {
+	    lm->Log(CStatusDefinitions::SeverityLevels::WARNING, "Unable to get disk free space.");
+	}
+       }
+     }
      delete pItem;
 
      if(itemType == END_RUN) {
@@ -351,6 +436,10 @@ class noData :  public CRingBuffer::CRingBufferPredicate
      pItem =  CRingItem::getFromRing(*m_pRing, p);
      if(isBadItem(*pItem, runNumber)) {
        std::cerr << "Eventlog: Data indicates probably the run ended in error exiting\n";
+       log(
+	   "Event log exiting - got a bad data item.  run may have ended in error",
+	   CStatusDefinitions::SeverityLevels::SEVERE
+      );
        exit(EXIT_FAILURE);
      }
    } 
@@ -430,6 +519,10 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    }
    if (parsed.run_given && !parsed.oneshot_given) {
      std::cerr << "--oneshot is required to specify --run\n";
+     log(
+	 "Event log startup failed --oneshot is required to specify --run",
+	 CStatusDefinitions::SeverityLevels::SEVERE
+      );
      exit(EXIT_FAILURE);
    }
    if (parsed.run_given) {
@@ -443,13 +536,24 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    }
 
    m_nSourceCount = parsed.number_of_sources_arg;
+   
+   // Get logging thresholds and service name:
+   
+   m_freeWarnThreshold   = parsed.freewarn_arg;
+   m_freeSevereThreshold = parsed.freesevere_arg;
+   m_appname             = parsed.appname_arg;
+   m_logService          = parsed.service_arg;
 
    // The directory must be writable:
-
    if (!dirOk(m_eventDirectory)) {
-     cerr << m_eventDirectory 
-	  << " must be an existing directory and writable so event files can be created"
+      std::ostringstream nosuchdirmsg;
+      nosuchdirmsg << "Event logger exiting: "
+	<< m_eventDirectory 
+	<< " must be an existing directory and writable so event files can be created";
+
+     cerr << nosuchdirmsg.str()
 	  << endl;
+    log(nosuchdirmsg.str().c_str(), CStatusDefinitions::SeverityLevels::SEVERE);
      exit(EXIT_FAILURE);
    }
 
@@ -463,7 +567,10 @@ class noData :  public CRingBuffer::CRingBufferPredicate
      m_pRing = CRingAccess::daqConsumeFrom(ringUrl);
    }
    catch (...) {
-     cerr << "Could not open the data source: " << ringUrl << endl;
+     std::ostringstream msg;
+     msg << "Event log exiting: Could not open the data source: " << ringUrl;
+     cerr << msg.str() << endl;
+     log(msg.str().c_str(), CStatusDefinitions::SeverityLevels::SEVERE);
      exit(EXIT_FAILURE);
    }
    // Checksum flag:
@@ -496,7 +603,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
  **    numberG  - The number o gigabytes.
  */
  uint64_t
- EventLogMain::segmentSize(const char* pValue) const
+ EventLogMain::segmentSize(const char* pValue)
  {
    char* end;
    uint64_t size = strtoull(pValue, &end, 0);
@@ -518,7 +625,10 @@ class noData :  public CRingBuffer::CRingBufferPredicate
 	 size *= K;
        }
        else {
-	 cerr << "Segment size multipliers must be one of g, m, or k" << endl;
+	std::ostringstream msg;
+	msg << "Event logger startup failure: " << "Segment size multipliers must be one of g, m, or k";
+	 cerr << msg.str() << endl;
+	 log(msg.str().c_str(), CStatusDefinitions::SeverityLevels::SEVERE); 
 	 exit(EXIT_FAILURE);
        }
 
@@ -526,13 +636,20 @@ class noData :  public CRingBuffer::CRingBufferPredicate
      // Size must not be zero:
 
      if (size == (uint64_t)0) {
-       cerr << "Segment size must not be zero!!" << endl;
+	std::ostringstream msg;
+	msg << "Event logger startup failure: " << "Segment size must not be zero!!";
+       cerr << msg.str() << endl;
+       log(msg.str().c_str(), CStatusDefinitions::SeverityLevels::SEVERE);
+       exit(EXIT_FAILURE);
      }
      return size;
    }
    // Some conversion problem:
-
-   cerr << "Segment sizes must be an integer, or an integer followed by g, m, or k\n";
+   
+   std::string msg1 = "Event logger startup Failure: ";
+   msg1 +=  "Segment sizes must be an integer, or an integer followed by g, m, or k";
+   cerr << msg1 << std::endl;
+   log(msg1.c_str(), CStatusDefinitions::SeverityLevels::SEVERE);
    exit(EXIT_FAILURE);
  }
 
@@ -613,15 +730,22 @@ EventLogMain::writeItem(int fd, CRingItem& item)
       io::writeData(fd, pItem, nBytes);
     }
     catch(int err) {
+      std::ostringstream msg;
+      msg << "Event logger exiting in error: ";
       if(err) {
-        cerr << "Unable to output a ringbuffer item : "  << strerror(err) << endl;
+        msg << "Unable to output a ringbuffer item : "  << strerror(err);
       }  else {
-        cerr << "Output file closed out from underneath us\n";
+        msg << "Output file closed out from underneath us";
       }
+      cerr << msg << std::endl;
+      log(msg.str().c_str(), CStatusDefinitions::SeverityLevels::SEVERE);
       exit(EXIT_FAILURE);
     }
     catch (std::string e) {
-      std::cerr << e << std::endl;
+      std::ostringstream msg;
+      msg << "Event logger exiting in error: " << e;
+      std::cerr << msg.str() << std::endl;
+      log(msg.str().c_str(), CStatusDefinitions::SeverityLevels::SEVERE);
       exit(EXIT_FAILURE);
     }
 }
@@ -699,3 +823,171 @@ EventLogMain::isBadItem(CRingItem& item, int runNumber)
   return false;
 
 }
+/**
+ * shouldLogWarning
+ *    Warnings should be logged if the free space pct is lower than the threshold
+ *    and no warning has yet been given:
+ *
+ *  @param[in] pct  - Percent free space.
+ *  @return bool
+ */
+bool
+EventLogMain::shouldLogWarning(double pct){
+  return (pct < m_freeWarnThreshold) && (!m_haveWarned);
+}
+/**
+ * shouldLogSEVERE
+ *    SEVERE log messages should be sent if the free space is lower than the
+ *    threshold and no message has been issued:
+ *
+ *  @param[in] pct  - Percent free space.
+ *  @return bool
+ */
+bool
+EventLogMain::shouldLogSevere(double pct)
+{
+  return (pct < m_freeSevereThreshold) && (!m_haveSevere);
+}
+/**
+ * shouldLogSEVEREClear
+ *    If the free space goes back above the threshold for SEVERE warnings and
+ *    we have not already done we need to send a log message to that effect:
+ *
+ *  @param pct  - Percentage of free disk space.
+ *  @return bool
+ */
+bool
+EventLogMain::shouldLogSevereClear(double pct)
+{
+  return (pct > m_freeSevereThreshold) && m_haveSevere;
+}
+/**
+ * shouldLogWarnClear
+ *    If the free space goes back above the threshold for a warning,
+ *    and we have not already done so, we need to send a log emssage to that
+ *    effect.
+ *
+ *  @param pct
+ *  @return bool
+ */
+bool
+EventLogMain::shouldLogWarnClear(double pct)
+{
+  return (pct > m_freeWarnThreshold) && m_haveWarned;
+}
+/**
+ * getAggregatorURI
+ *    Given that the service name for the aggregator is in m_logService,
+ *    locate the port on which the service is listening.  If it does not exist,
+ *    we throw an exception.
+ *
+ *  @return std::string
+ */
+std::string
+EventLogMain::getAggregatorURI()
+{
+  CPortManager mgr;
+  std::vector<CPortManager::portInfo> services = mgr.getPortUsage();
+  
+  std::string result = "tcp://localhost:";
+  for (size_t i = 0; i < services.size(); i++) {
+    if (services[i].s_Application == m_logService) {
+      std::ostringstream portString;
+      portString << services[i].s_Port;
+      result += portString.str();
+      return result;
+    }
+  }
+  throw std::runtime_error("Unable to find the status aggreagion port");
+}
+/**
+ * getLogger
+ *    This is invoked to get the logger object.  The logger object
+ *    is instantiated on demand rather than initially.   Once instantiated it
+ *    is retained in m_pLogger.
+ *    - Instantiating a logger is a matter using the port mnager to locate our
+ *      local aggregator.
+ *    - Creating a push socket that attaches to the URI tcp://localhost:aggregator-port
+ *    - Using that and our application name to construct a logger object.
+ *    - If that log object is successfully constructed, return it and save it in
+ *    - m_pLogger.
+ */
+CStatusDefinitions::LogMessage*
+EventLogMain::getLogger()
+{
+    CStatusDefinitions::LogMessage* pResult = m_pLogger;
+    
+    // If needed construct one.
+    
+    if (!pResult) {
+      // In case of error we're just going to return null.
+      try {
+	std::string uri = getAggregatorURI();
+	m_pLogSocket    = new zmq::socket_t(
+	  CStatusDefinitions::ZmqContext::getInstance(), ZMQ_PUSH
+	);
+	m_pLogSocket->connect(uri.c_str());
+	pResult = new CStatusDefinitions::LogMessage(*m_pLogSocket, m_appname);
+	m_pLogger = pResult;
+      }
+      catch (...) {
+	delete m_pLogger;             // In case any of these were made
+	delete m_pLogSocket;
+	m_pLogger = nullptr;
+	m_pLogSocket = nullptr;
+      }
+    }
+    
+    return pResult;
+}
+/**
+ * log
+ *    Creates and sends a generic log message.
+ *
+ *  @param[in] message - message to send.
+ *  @param[in] severity - message severity level.
+ */
+void
+EventLogMain::log(const char* message, int severity)
+{
+  CStatusDefinitions::LogMessage* pLogger = getLogger();
+  if (pLogger) {
+    pLogger->Log(severity, message);
+  }
+}
+/**
+ * log
+ *    Creates a disk low log message and sends it off.
+ *
+ *   @param baseMessage - the first part of the message.
+ *   @param free        - Percentage of free space.
+ *   @param severity    - Severity level for the log message.
+ */
+void
+EventLogMain::log(const char* baseMessage, double free, int severity)
+{
+
+
+  std::ostringstream message;
+  message << baseMessage << free;
+  log(message.str().c_str(), severity);
+
+}
+/**
+ * log
+ *     Log a message text from an errno
+ *
+ *   @param[in] message -the base message.
+ *   @param[in] errno   - System error number involved.
+ *   @param[in] severity - Severity of the log message.
+ */
+void
+EventLogMain::log(const char* message, int errno, int severity)
+{
+  std::ostringstream msg;
+  msg << message << strerror(errno);
+  
+  log(msg.str().c_str(), severity);
+}
+
+

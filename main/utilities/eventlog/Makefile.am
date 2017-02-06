@@ -16,10 +16,14 @@ eventlog_CPPFLAGS       =	-I@top_srcdir@/base/headers		\
 				-I@top_srcdir@/daq/format		\
 			        -I@top_srcdir@/base/dataflow	\
 				-I@top_srcdir@/base/os		\
+				-I@top_srcdir@/servers/portmanager \
+				-I@top_srcdir@/diagnostics/status	\
 				@OPENSSL_INCLUDES@
 
 eventlog_LDADD		=	@top_builddir@/daq/format/libdataformat.la	\
+				@top_builddir@/servers/portmanager/libPortManager.la \
 				@top_builddir@/base/dataflow/libDataFlow.la	\
+				@top_builddir@/diagnostics/status/libStatusMessages.la \
 				@LIBEXCEPTION_LDFLAGS@			\
 				@top_builddir@/base/os/libdaqshm.la		\
 				$(THREADLD_FLAGS) @OPENSSL_LDFLAGS@ @OPENSSL_LIBS@

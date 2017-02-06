@@ -24,6 +24,8 @@
 #include "CSqlite.h"
 #include "CSqliteException.h"
 #include <sqlite3.h>
+#include <sched.h>
+#include <stdexcept>
 
 
 // Static constant definitions:
@@ -36,6 +38,8 @@ const int CSqliteStatement::text(SQLITE_TEXT);
 const int CSqliteStatement::blob(SQLITE_BLOB);
 const int CSqliteStatement::null(SQLITE_NULL);
 
+
+
 /**
  * constructor:
  *    Create a new prepared statement object from the sql and
@@ -46,7 +50,8 @@ const int CSqliteStatement::null(SQLITE_NULL);
  */
 CSqliteStatement::CSqliteStatement(CSqlite& db, const char* sql) :
     m_connection(db),
-    m_cursorState(CSqliteStatement::interior)
+    m_cursorState(CSqliteStatement::interior),
+    m_retriable(false)
 {
     int status = sqlite3_prepare_v2(
         m_connection.connection(), sql, -1, &m_statement, 0
@@ -235,28 +240,47 @@ void CSqliteStatement::clearBindings()
  *   Step the statement.  The return value is handled in this way:
  *   -  SQLITE_DONE - sets the state to end
  *   -  SQLITE_ROW  - sets the state to interior.
- *   -  SQLITE_BUSY - TODO: -- Make a new exception??!?
+ *   -  SQLITE_BUSY - Throw an Sqlite Exception (database locked unless)
+ *                    m_retriable is true in which case we retry the step
+ *                    until something o ther than SQLITE_BUSY is returned.
  *   -  Any other - an SqliteException is thrown with the status.
  * @return *this
  */
 CSqliteStatement&
 CSqliteStatement::operator++()
 {
-    int status = sqlite3_step(m_statement);
+   
     if (m_cursorState != end) {
-        switch (status) {
-            case SQLITE_DONE:
-                m_cursorState = end;
-                break;
-            case SQLITE_ROW:
-                m_cursorState = interior;
-                break;
-            case SQLITE_BUSY:
-                break;                    // TODO
-            default:
-                CSqlite::checkStatus(status);
-                break;
+        
+        bool again = true;
+        while(again) {
+            int status = sqlite3_step(m_statement);
+            switch (status) {
+                case SQLITE_DONE:
+                    m_cursorState = end;
+                    again = false;
+                    break;
+                case SQLITE_ROW:
+                    m_cursorState = interior;
+                    again = false;
+                    break;
+                case SQLITE_BUSY:
+                    // Explicitly marked statements can be retried on locked db.
+                    
+                    again = m_retriable;
+                    if (!again) {
+                        CSqlite::checkStatus(status);
+                    } else {
+                        sched_yield();
+                    }
+                    break;                    // TODO
+                default:
+                    CSqlite::checkStatus(status);
+                    break;
+            }
         }
+    } else {
+        throw std::logic_error("Attempted to step an sqlite statement past end");
     }
     return *this;
 }

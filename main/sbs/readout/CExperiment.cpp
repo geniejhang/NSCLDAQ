@@ -636,7 +636,6 @@ void CExperiment::TriggerScalerReadout()
   ScheduleRunVariableDump();
   CVMEInterface::Lock();
 
-  CVMEInterface::Lock();
 
 }
 
