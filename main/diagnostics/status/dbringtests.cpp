@@ -257,8 +257,8 @@ void RingTests::addClient1()
     EQ(2048, fetchStats.getInt(4));              // bytes.
     EQ(8192, fetchStats.getInt(5));              // backog.
     
-    ++fetchClients;                 // only one so:
-    ASSERT(fetchClients.atEnd());
+    ++fetchStats;                 // only one so:
+    ASSERT(fetchStats.atEnd());
     
   }
   catch (...) {
