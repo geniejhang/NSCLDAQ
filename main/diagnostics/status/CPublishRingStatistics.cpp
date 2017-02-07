@@ -274,7 +274,7 @@ CPublishRingStatistics::publish(std::vector<Usage>& usage)
                 logger.Log(
                     CStatusDefinitions::SeverityLevels::WARNING,
                     makeBacklogMessage(
-                        item.s_ringName + "Ring free space is low",
+                        item.s_ringName + " Ring free space is low",
                         item.s_consumerCommands[c],
                         item.s_usage.s_bufferSpace, item.s_usage.s_consumers[c].second
                     )
@@ -284,7 +284,7 @@ CPublishRingStatistics::publish(std::vector<Usage>& usage)
                 logger.Log(
                     CStatusDefinitions::SeverityLevels::INFO,
                     makeBacklogMessage(
-                            item.s_ringName + "Ring free space is ok again",
+                            item.s_ringName + " Ring free space is ok again",
                             item.s_consumerCommands[c],
                             item.s_usage.s_bufferSpace, item.s_usage.s_consumers[c].second
                     )
