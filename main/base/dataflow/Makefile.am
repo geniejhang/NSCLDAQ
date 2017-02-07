@@ -152,7 +152,7 @@ consumer_CPPFLAGS=$(COMPILATION_FLAGS)
 TESTS=./unittests
 
 EXTRA_DIST=ringprimitives.xml ringbuffer_user.xml ringbuffer_man.xml ringlib.xml ringmaster.xml ringpipes.xml tclring.xml pyring.xml \
-	RingMaster.tcl ringbuffer.tcl \
+	RingMaster.tcl  \
 	ringtostdoutsw.ggo stdintoringsw.ggo 
 
 #-------------- My installation... includes tcl scripts/packages.
@@ -162,7 +162,6 @@ install-exec-local:
 	$(mkinstalldirs)  @prefix@/TclLibs
 	$(INSTALL_SCRIPT) @builddir@/.libs/libRingBuffer.* @prefix@/TclLibs
 	echo "pkg_mkIndex -verbose @prefix@/TclLibs *.so" | $(TCLSH_CMD)
-	$(INSTALL_SCRIPT) @srcdir@/ringbuffer.tcl @bindir@/ringbuffer
 	$(mkinstalldirs)  @prefix@/pythonLibs/nscldaq/ringbuffer
 	$(INSTALL_PROGRAM) @libdir@/libRingPy.so @prefix@/pythonLibs/nscldaq/ringbuffer/ringmaster.so
 	touch              @prefix@/pythonLibs/nscldaq/ringbuffer/__init__.py

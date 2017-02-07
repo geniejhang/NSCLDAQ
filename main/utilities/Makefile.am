@@ -26,10 +26,10 @@ SUBDIRS = 				common	\
 					dumpend		\
 					expEditor	\
 					fileanalyzer	\
-					vardbringbuffer
+					vardbringbuffer \
+					ringbuffer	\
 					fileanalyzer	\
-					scalersum	\
-					ringbuffer
+					scalersum
 
 
 # scalerdisplay - removed in favor of newscaler

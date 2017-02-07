@@ -503,6 +503,8 @@ AC_CONFIG_FILES([Makefile
 		 utilities/vardbEventbuilder/Makefile
 		 utilities/expEditor/Makefile
 		 utilities/dumpend/Makefile
+		 utilities/ringbuffer/Makefile
+		 utilities/scalersum/Makefile
                  epics/chanlog/Makefile
                  epics/controlpush/Makefile
                  epics/epicsdisplay/Makefile
