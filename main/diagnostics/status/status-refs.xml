@@ -37,7 +37,14 @@ ringstatusdaemon <optional><option>--service=<replaceable>service-name</replacea
             <command>ringstatusdaemon</command> is an NSCLDAQ command that
             is normally started at system startup time.  It periodically
             PUSHes data on a ZMQ socket to a recipient (the status aggregator
-            daemon).  The data pushed are ring statistics messages.
+            daemon).  
+           </para>
+           <para>
+            The daemon pushes ring statistics messages periodically.  The
+            daemon also  monitors the backlog on consumer clients and pushes
+            warning log messages if the backlog gets large and info messages
+            if the backlog goes back to something reasonable.
+            
            </para>
         </refsect1>
         <refsect1>
