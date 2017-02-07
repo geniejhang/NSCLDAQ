@@ -28,7 +28,8 @@ SUBDIRS = 				common	\
 					fileanalyzer	\
 					vardbringbuffer
 					fileanalyzer	\
-					scalersum
+					scalersum	\
+					ringbuffer
 
 
 # scalerdisplay - removed in favor of newscaler
