@@ -25,7 +25,7 @@ exec tclsh ${0} ${@}
 #    ringbuffer create ?--datasize=n? ?--maxconsumers=n?   name
 #    ringbuffer format ?--maxconsumers=n?                  name
 #    ringbuffer delete                                     name
-#    ringbuffer status ?--host=hostname?                  ?pattern?
+#    ringbuffer status ?--host=hostname? ?--host=hostname? ?--all? ?--user=user1,..? ?pattern?
 #    ringbuffer list   ?--host=hostname?
 #
 #  --datasize  - sets the size of the data region of a ring.
