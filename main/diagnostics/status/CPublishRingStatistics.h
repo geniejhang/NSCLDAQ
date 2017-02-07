@@ -70,7 +70,7 @@ private:
     std::vector<Usage> usageTextToVector(std::string& usage);
     Usage              itemToUsage(CTCLInterpreter& interp, CTCLObject& obj);
     void publish(std::vector<Usage>& usage);
-    bool logLargeBacklog(Usage& ringUsage, size_t index);
+    bool logLargeBacklog(const Usage& ringUsage, size_t index);
     bool logBacklogOk(const Usage& ringUsage, size_t index);
     static std::string makeBacklogMessage(
         std::string body, std::vector<std::string> command,
@@ -81,6 +81,8 @@ private:
         const Usage& ringUsage, const Usage& history, size_t index
     );
     void updateRingHistory(const Usage& ringUsage);
+    
+    bool lastLoggedValue(const Usage& ringUsage, size_t index);
 };
 
 

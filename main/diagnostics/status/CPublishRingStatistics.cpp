@@ -270,6 +270,8 @@ CPublishRingStatistics::publish(std::vector<Usage>& usage)
             // Note the message parts don't get sent until the endMessage
             // method.  Therefore we can intersperse a log message as needed:
             
+            item.s_logged[c] = lastLoggedValue(item, c);
+            
             if(logLargeBacklog(item, c)) {
                 logger.Log(
                     CStatusDefinitions::SeverityLevels::WARNING,
@@ -279,6 +281,7 @@ CPublishRingStatistics::publish(std::vector<Usage>& usage)
                         item.s_usage.s_bufferSpace, item.s_usage.s_consumers[c].second
                     )
                 );
+                item.s_logged[c] = true;
             }
             if (logBacklogOk(item, c)) {
                 logger.Log(
@@ -289,7 +292,7 @@ CPublishRingStatistics::publish(std::vector<Usage>& usage)
                             item.s_usage.s_bufferSpace, item.s_usage.s_consumers[c].second
                     )
                 );
-                // Default is item[c].s_logged = false so no need to adjust.
+                item.s_logged[c] = false;         // Switch back to unlogged stat.
             }
         }
         publisher.endMessage();                   // Send the message.
@@ -326,19 +329,16 @@ CPublishRingStatistics::publish(std::vector<Usage>& usage)
  *  @param   ringUsage   - Current usage of the ringbuffer.
  *  @param   index       - Index of consumer in the current usage.
  *  @return  bool        - True if logging is needed.
- *  @note Side effect:  If the threshold is above the backlog threshold,
- *                      the s_logged entry is set to true as this means that either
- *                      we will log or have logged.
+ 
  */
 bool
-CPublishRingStatistics::logLargeBacklog(Usage& ringUsage, size_t index)
+CPublishRingStatistics::logLargeBacklog(const Usage& ringUsage, size_t index)
 {
     // don't do anything if the backlog is lower than the threshold:
     
     double ringSize = ringUsage.s_usage.s_bufferSpace;
     double backlog  = ringUsage.s_usage.s_consumers[index].second;
     if (backlog/ringSize > BACKLOG_LOG_THRESHOLD) {
-        ringUsage.s_logged[index] = true;               // It will be or has been.
         std::map<std::string, Usage>::iterator pH = m_history.find(ringUsage.s_ringName);
         if (pH == m_history.end()) {
             // ring has no prior history so:
@@ -480,4 +480,30 @@ void
 CPublishRingStatistics::updateRingHistory(const Usage& ringUsage)
 {
     m_history[ringUsage.s_ringName] = ringUsage;
+}
+/**
+ * lastLoggedValue
+ *    Determines if a specific consumer has already logged a large backlog
+ *    message:
+ *
+ *  @param ringUsage - a ring usage struct.
+ *  @param index     - Consumer index.
+ *  @return bool     - true if logged, false if not.
+ */
+bool
+CPublishRingStatistics::lastLoggedValue(const Usage& ringUsage, size_t index)
+{
+    // If there's no entry for the ring in the map... that's equivalent to false:
+    
+    std::map<std::string, Usage>::iterator p = m_history.find(ringUsage.s_ringName);
+    if(p == m_history.end()) {
+        return false;
+    }
+    // If there's no identical client, that's also a false:
+    
+    std::pair<bool, size_t> idxInfo = getHistoryIndex(ringUsage, p->second, index);
+    if (!idxInfo.first) {
+        return false;
+    }
+    return p->second.s_logged[idxInfo.second];         // The actual value.
 }
