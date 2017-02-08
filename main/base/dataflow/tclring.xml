@@ -97,6 +97,11 @@ ringbuffer usage<replaceable> ?name?</replaceable>
     </command>
 </cmdsynopsis>
 <cmdsynopsis>
+  <command>
+    ringbuffer <replaceable>usageAt host</replaceable>
+  </command>
+</cmdsynopsis>
+<cmdsynopsis>
     <command>
 ringbuffer list
     </command>
@@ -383,7 +388,17 @@ ringbuffer list
                 </variablelist>
 
             </listitem>
-        </varlistentry>
+          </varlistentry>
+	  <varlistentry>
+	    <term><command>ringbuffer usageAt <replaceable>host</replaceable></term>
+	    <listitem>
+	      <para>
+		Same as the <command>usage</command> command but the statistics
+		of
+		the rings in the host <replaceable>host are listed.
+	      </para>
+	    </listitem>
+	  </varlistentry>
         <varlistentry>
             <term><command>list</command></term>
             <listitem>
