@@ -32,7 +32,8 @@ class CTCLInterpreter;
    ringbuffer format name ?maxconsumers?
    ringbuffer disconnect producer name
    ringbuffer disconnect consumer name index
-   ringbuffer usage name
+   ringbuffer usage ?name?
+   ringbuffer usageAt host
    ringbuffer remove name
    ringbuffer clients
 \endverbatim
@@ -82,6 +83,7 @@ protected:
 		 std::vector<CTCLObject>& objv);
   int usage(CTCLInterpreter& interp,
 	    std::vector<CTCLObject>& objv);
+  int usageAt(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
   int remove(CTCLInterpreter& interp,
 	     std::vector<CTCLObject>& objv);
   int list(CTCLInterpreter& interp,

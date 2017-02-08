@@ -94,17 +94,15 @@ CRingCommand::operator()(CTCLInterpreter&    interp,
 
   if (subCommand == string("create")) {
     return create(interp, objv);
-  }
-  else if (subCommand == string("format")) {
+  }  else if (subCommand == string("format")) {
     return format(interp, objv);
-  }
-  else if (subCommand == string("disconnect")) {
+  }  else if (subCommand == string("disconnect")) {
     return disconnect(interp, objv);
-  }
-  else if (subCommand == string("usage")) {
+  }  else if (subCommand == string("usage")) {
     return usage(interp, objv);
-  }
-  else if (subCommand == string("remove")) {
+  }  else if (subCommand == std::string("usageAt")) {
+    return usageAt(interp, objv);
+  }  else if (subCommand == string("remove")) {
     return remove(interp,objv);
   } else if (subCommand == string("list")) {
     return list(interp, objv);
@@ -607,6 +605,70 @@ CRingCommand::usage(CTCLInterpreter&    interp,
 
   return TCL_OK;
 
+}
+/**
+ * usageAt
+ *  List ring buffer usage statistics at a specific host.
+ *
+ * @param interp   - interpretre that's running the command.
+ * @param objv     - Vector of command line words.
+ * @return int     - TCL_OK if it all worked and TCL_ERROR if not.
+ */
+int
+CRingCommand::usageAt(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
+{
+  //  use exceptions for error handling:
+
+  std::string host;
+  try {
+    // Need a host:
+
+    requireExactly(objv, 3, "usageAt requires a hostname");
+    host = std::string(objv[2]);
+    CRingMaster master(host);
+    std::string result = master.requestUsage();
+    interp.setResult(result);
+    
+  }
+  catch (CException& reason) {
+    string result;
+    result += "Failed to get usage info:";
+    result += host;
+    result = " \n";
+    result += string(reason.ReasonText());
+    interp.setResult(result);
+    return TCL_ERROR;
+  }
+  catch (string msg) {
+    string result;
+    result += "Failed to get usage info: ";
+    result += host;
+    result = " \n";
+    result += msg;
+    result += '\n';
+    interp.setResult(result);
+    return TCL_ERROR;
+  }
+  catch (const char* pmsg) {
+    string result;
+    result += "Failed to get usage info ";
+    result += host;
+    result = " \n";
+    result += pmsg;
+    result += '\n';
+    interp.setResult(result);
+    return TCL_ERROR;
+  }
+  catch (...) {
+    string result;
+    result += "Failed to to get usage info ";
+    result += host;
+    result = " \n";
+ 
+    interp.setResult(result);
+    return TCL_ERROR;
+  }
+  return TCL_OK;
 }
 /**
  * list
