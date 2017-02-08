@@ -91,9 +91,10 @@ proc ::DbRingStatus::filterRings {usage desired} {
 proc ::DbRingStatus::ringsByHost {rbobject} {
     set result [dict create]
     set raw    [$rbobject list]
+    
     foreach ring $raw {
         set host [dict get $ring host]
-        dict lappend $host $ring
+        dict lappend result $host $ring
     }
     return $result
 }
