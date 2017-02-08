@@ -59,7 +59,8 @@ libSBSProductionReadout_la_SOURCES	=				\
 						CV977Busy.cpp			\
 						CRingCommand.cpp	\
 						CPreResumeCommand.cpp
-						CV977Busy.cpp
+						CV977Busy.cpp		\
+						CStatusReporting.cpp
 
 
 
@@ -78,7 +79,7 @@ noinst_HEADERS	=	CReadoutMain.h Skeleton.h CTCLAuthorizer.h	\
 			CReadoutException.h CInvalidPacketStateException.h	\
 			CEventPacket.h CVarList.h CDocumentedVars.h CVariableBuffers.h \
 			CBusy.h CCAENV262Busy.h CV977Busy.h CRingCommand.h CPreBeginCommand.h \
-			CPreEndCommand.h CPrePauseCommand.h CPreResumeCommand.h
+			CPreEndCommand.h CPrePauseCommand.h CPreResumeCommand.h CStatusReporting.h
 
 
 
@@ -90,11 +91,12 @@ libSBSProductionReadout_la_LIBADD	=	@top_builddir@/sbs/vmemodules/libSBSDeviceSu
 						@top_builddir@/base/dataflow/libDataFlow.la	\
 						@top_builddir@/sbs/				\
 						@top_builddir@/base/os/libdaqshm.la			\
+						@top_builddir@/diagnostics/status/libStatusMessages.la  \
 						@top_builddir@/sbs/driver/src/libbtp.la
 
 
 libSBSProductionReadout_la_LDFLAGS	=	-version-info	1:0:0	\
-						@LIBTCLPLUS_LDFLAGS@ $(TCL_LDFLAGS) $(THREADLD_FLAGS)
+						@LIBTCLPLUS_LDFLAGS@ $(TCL_LDFLAGS) $(THREADLD_FLAGS) @ZMQ_LDFLAGS@
 
 EXTRA_DIST	=	options.ggo Skeleton.cpp UserMakefile.in SBSRdoMakeIncludes.in SBSReadout_user.xml \
 							SBSReadout_man.xml \
