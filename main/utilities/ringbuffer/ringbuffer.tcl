@@ -57,6 +57,10 @@ package require portAllocator
 package require struct::matrix
 package require report
 
+package require DbRingStatus
+package require vardbringbuffer
+
+
 #  Global variables:
 
 set defaultDataSize     8m
@@ -94,7 +98,7 @@ proc usage {} {
     puts stderr " ringbuffer create ?--datasize=n? ?--maxconsumers=n?   name"
     puts stderr " ringbuffer format ?--maxconsumers=n?                  name"
     puts stderr " ringbuffer delete                                     name"
-    puts stderr " ringbuffer status ?--host=hostname? ?--all? ?--user=user1,..?  ?name?"
+    puts stderr " ringbuffer status --database=uri | (?--host=hostname? ?--all? ?--user=user1,..? ?name?)  "
     puts stderr " ringbuffer statistics ?--interval=seconds"
     puts stderr " ringbuffer list   ?--host=hostname?"
 
@@ -423,41 +427,64 @@ proc deleteRing tail {
 proc displayStatus tail {
     set tail [lrange $tail 1 end]
     set pattern "*"
-    set options  [list  --host=$::defaultHostname --all --user=$::tcl_platform(user)]
+    set options  [list --database=[list] --host=$::defaultHostname --all --user=$::tcl_platform(user)]
 
     array set parse [decodeArgs $tail $options]
-
-    if {[llength $parse(Parameters)] == 1} {
-	set pattern $parse(Parameters)
-    }
-    if {[llength $parse(Parameters)] > 1} {
-	usage
-	exit -1
-    }
-
-    # Get the usage and filter it by the pattern:
-
-    set info [getRingUsage $parse(--host)]
-
-    set resultList [list]
-    foreach item $info {
-	set ringname [lindex $item 0]
-	if {[string match $pattern $ringname]} {
-	    lappend resultList $item
+    
+    #  We can have either the --database parameter or not.
+    
+    
+    
+    if {$parse(--database) eq ""} {
+	
+	if {[llength $parse(Parameters)] == 1} {
+	    set pattern $parse(Parameters)
+	}
+	if {[llength $parse(Parameters)] > 1} {
+	    usage
+	    exit -1
+	}
+	
+	# Get the usage and filter it by the pattern:
+    
+	set info [getRingUsage $parse(--host)]
+    
+	set resultList [list]
+	foreach item $info {
+	    set ringname [lindex $item 0]
+	    if {[string match $pattern $ringname]} {
+		lappend resultList $item
+	    }
+	}
+	# Sort the list of rings by the ring name.
+    
+	set resultList [lsort -index 0 $resultList]
+    
+    
+	set resultList [filterRingStats $resultList [array get parse]]
+	
+	# Now format the info so humans can read it.
+	
+	displayUsageData $resultList
+    } else {
+	## use database to determine what we get.
+	#  Get the names of the rings defined in the database:
+	
+	set dbUri $parse(--database)
+	::nscldaq::vardbringbuffer create dbcmd $dbUri
+	set interestingRings [::DbRingStatus::ringsByHost dbcmd]
+	
+	set rings [::DbRingStatus::ringStatistics $interestingRings]
+	dict for {host stats} $rings {
+	    puts "Rings in $host"
+	    set  ringData [lsort -index 0 $stats]
+	    displayUsageData $ringData
 	}
     }
-    # Sort the list of rings by the ring name.
-
-    set resultList [lsort -index 0 $resultList]
+    
 
 
-    set resultList [filterRingStats $resultList [array get parse]]
-
-
-    # Now format the info so humans can read it.
-
-
-    displayUsageData $resultList
+    
 }
 
 #--------------------------------------------------------------------------
