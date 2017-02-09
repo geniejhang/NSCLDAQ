@@ -83,8 +83,7 @@ CReadoutMain::getTclServer()
 /*!
      \return CExperiment*
      \retval a pointer to the experiment object.  This will be null
-             if the experiment object has not yet been created.
-*/
+             if the experiment object has not yet been created.*/
 CExperiment*
 CReadoutMain::getExperiment()
 {
@@ -121,6 +120,15 @@ CReadoutMain::operator()()
       new CStatusReporting(
         parsedArgs.appname_arg, parsedArgs.status_service_arg
       );
+    // log startup:
+    
+    std::string msg = "Readout program (";
+    msg += parsedArgs.appname_arg;
+    msg += ") started";
+    
+    CStatusReporting::pInstance->log(
+      CStatusDefinitions::SeverityLevels::INFO, msg.c_str()
+    );
     
     // Initialize the application;
     // this include user initialization.

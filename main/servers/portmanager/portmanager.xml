@@ -612,7 +612,7 @@ catch (CPortManagerException&amp; error) {
          <programlisting>
 #include &lt;config.h&lt;
 #include &lt;histotypes.h&lt;
-#include &lt;CPortManagerException.h&lt;
+#include &lt;CPortManagerException.h&gt;
 
 
          </programlisting>

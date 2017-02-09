@@ -49,6 +49,8 @@
 #include <CVMEInterface.h>
 
 #include <CVMEInterface.h>
+#include <CStatusReporting.h>
+
 
 using namespace std;
 
@@ -254,6 +256,18 @@ CExperiment::Start(bool resume)
 
     uint32_t elapsedTime = (msTime - m_nRunStartStamp - m_nPausedmSeconds)/1000;
 
+    // IF needed emit a new run status message:
+    
+    
+    if (!resume) {
+        CStatusReporting::pInstance->logBegin(
+	  m_pRunState->m_runNumber, m_pRunState->m_pTitle
+	);
+	// initialize the statistics counters:
+	
+	m_nTriggers = 0;
+	m_nBytes    = 0;
+    }
     CRingStateChangeItem item(NULL_TIMESTAMP, m_nSourceId, BARRIER_START,
         resume ? RESUME_RUN : BEGIN_RUN,  m_pRunState->m_runNumber,
         elapsedTime, stamp,
@@ -535,9 +549,8 @@ CExperiment::EstablishBusy(CBusy* pBusyModule)
 void
 CExperiment::ReadEvent()
 {
-
+  m_nTriggers++;
   
-
   // If the root event segment exists, read it into the data buffer
   // and put the resulting event in the ring buffer:
   //
@@ -551,6 +564,7 @@ CExperiment::ReadEvent()
     uint16_t* pBuffer = reinterpret_cast<uint16_t*>(item.getBodyPointer());
     size_t nWords = m_pReadout->read(pBuffer +2 , m_nDataBufferSize);
     if (m_pReadout->getAcceptState() == CEventSegment::Keep) {
+    
       *(reinterpret_cast<uint32_t*>(pBuffer)) = nWords +2;
       item.setBodyCursor(pBuffer + nWords+2);
       item.updateSize();
@@ -559,6 +573,7 @@ CExperiment::ReadEvent()
       }
       item.commitToRing(*m_pRing);
       m_nEventsEmitted++;
+      m_nBytes += nWords * sizeof(uint16_t);
     }
     m_pReadout->clear();	// do any post event clears.
 
@@ -627,7 +642,9 @@ void CExperiment::TriggerScalerReadout()
 {
 
   readScalers();
-
+  CStatusReporting::pInstance->logStatistics(
+    m_nTriggers, m_nEventsEmitted, m_nBytes
+  );
 
   CVMEInterface::Unlock();
 

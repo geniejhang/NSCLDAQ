@@ -8,4 +8,4 @@ option "ring" r "Ring buffer name, defaults to your username"                 st
 option "sourceid" i "Source Id for event builder sources"  optional int default="0"
 option "init-script" s "Initialization script"             optional string
 option "appname" a  "Application name"      optional string default="SBSReadout"
-option "status-service" t  "Aggregation service    optional string default="StatusAggregator"
+option "status-service" t  "Aggregation service"    optional string default="StatusAggregator"

@@ -24,7 +24,7 @@
 #define     CSTATUSREPORTING_H
 
 #include <CStatusMessage.h>
-#incluce <string>
+#include <string>
 #include <zmq.hpp>
 
 /**
@@ -34,7 +34,7 @@
  *     to it in the public member CStatusReporting::pInstance.
  *     The instance provides a simplified interface to the status messaging
  *     system tailored to the needs of readout programs.
- */s
+ */
 class CStatusReporting
 {
 public:

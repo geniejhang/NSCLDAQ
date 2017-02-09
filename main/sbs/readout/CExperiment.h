@@ -102,6 +102,11 @@ private:
   uint32_t                m_nSourceId;
   bool                    m_needHeader;
   uint16_t                m_nDefaultSourceId;
+  
+  // statistics data:
+  
+  uint64_t                m_nTriggers;
+  uint64_t                m_nBytes;
 
 
   // Canonicals:
