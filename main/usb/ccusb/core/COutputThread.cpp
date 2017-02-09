@@ -1,5 +1,3 @@
-
-
 /*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2005.
@@ -41,6 +39,7 @@
 #include <CRingTextItem.h>
 #include <dlfcn.h>
 #include <CStack.h>
+#include <CStatusReporting.h>
 
 #include <fragment.h>
 
@@ -275,17 +274,30 @@ COutputThread::formatBuffer(DataBuffer& buffer)
   else {			// In this version any stack is fair game.
     events(buffer);
     m_nBuffersBeforeCount--;
+    timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+
     if(m_nBuffersBeforeCount == 0) {
         // Figure out how far into the run we are in seconds using
         // The difference between now and the start of the run.
         // forget the fractional seconds now.
         //
-        timespec now;
-        clock_gettime(CLOCK_REALTIME, &now);
        
         outputTriggerCount(now.tv_sec - m_startTimestamp.tv_sec);
         m_nBuffersBeforeCount = BUFFERS_BETWEEN_STATS;
+	
+	
     }
+	
+      // Output statistics information if at least one second has passsed.
+      
+    if (now.tv_sec != m_lastStatsMessage.tv_sec) {
+      CStatusReporting::pInstance->logStatistics(
+	m_nTriggers, m_nEvents, m_nBytes
+      );
+      m_lastStatsMessage = now;
+    }
+
   } 
 }
 /**
@@ -330,7 +342,7 @@ COutputThread::startRun(DataBuffer& buffer)
   m_title           = pState->getTitle();
 
   clock_gettime(CLOCK_REALTIME, &m_startTimestamp);
-  m_lastStampedBuffer = m_startTimestamp; // Last timestamped event...that is.
+  m_lastStatsMessage = m_lastStampedBuffer = m_startTimestamp; // Last timestamped event...that is.
   m_elapsedSeconds = 0;
   
   m_nEventsSeen    = 0;
@@ -339,6 +351,10 @@ COutputThread::startRun(DataBuffer& buffer)
   CDataFormatItem format;
   format.commitToRing(*m_pRing);
 
+  CStatusReporting::pInstance->logBegin(m_runNumber, m_title.c_str());
+  m_nTriggers = 0;
+  m_nEvents   = 0;
+  m_nBytes    = 0;
 
   CRingStateChangeItem begin(NULL_TIMESTAMP, Globals::sourceId, BARRIER_START,
                              BEGIN_RUN,
@@ -377,6 +393,10 @@ COutputThread::endRun(DataBuffer& buffer)
   clock_gettime(CLOCK_REALTIME, &microtime);
   timespec microdiff;
   mytimersub(&microtime, &m_startTimestamp, &microdiff);
+  
+  // Final statistics:
+  
+  CStatusReporting::pInstance->logStatistics(m_nTriggers, m_nEvents, m_nBytes);
   
   CRingStateChangeItem end(NULL_TIMESTAMP, Globals::sourceId, BARRIER_END,
                            END_RUN,
@@ -689,7 +709,15 @@ COutputThread::event(void* pData)
     // Note that if we were given a timestamp extractor we create event
     // with the timestamp otherwise we create it with a null body header.
     
+    
+    // Maintain statistics:
+    
+    m_nTriggers ++;
+    m_nEvents++;
+    m_nBytes += m_nWordsInBuffer*sizeof(uint16_t);
+    
     CRingItem* pEvent;
+    
     
     
     if (m_pEvtTimestampExtractor) {

@@ -125,6 +125,10 @@ private:
   TimestampExtractor m_pSclrTimestampExtractor;
   StateChangeCallback m_pBeginRunCallback;
   
+  uint64_t     m_nTriggers;
+  uint64_t     m_nEvents;              // Allow for future internal soft. trigger.
+  uint64_t     m_nBytes;
+  
   // Constuctors and other canonicals.
 
 public:

@@ -100,6 +100,7 @@ private:
   uint32_t    m_outputBufferSize;  // Bytes in output buffers.
   timespec      m_startTimestamp;    //!< Run start time.
   timespec      m_lastStampedBuffer; //!< Seconds into run of last stamped buffer.
+  timespec      m_lastStatsMessage;
   std::string m_ringName;
   CRingBuffer* m_pRing;
   uint64_t    m_nEventsSeen;
@@ -115,6 +116,13 @@ private:
   TimestampExtractor m_pSclrTimestampExtractor;
   StateChangeCallback m_pBeginRunCallback;
   CSystemControl&   m_systemControl;
+  
+  // Statistics -- allow for later software trigger:
+  
+  uint64_t   m_nTriggers;
+  uint64_t   m_nEvents;
+  uint64_t   m_nBytes;
+
   
   // Constuctors and other canonicals.
 

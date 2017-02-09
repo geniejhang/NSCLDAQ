@@ -65,7 +65,8 @@ libVMUSBCore_la_CPPFLAGS = \
 			-I@top_srcdir@/base/thread	\
 			-I@top_srcdir@/base/os \
 			-I@top_srcdir@/daq/format	\
-			-I@top_srcdir@/daq/eventbuilder
+			-I@top_srcdir@/daq/eventbuilder \
+			-I@top_srcdir@/diagnostics/status
 
 # add -DREPORT_ERRORS to INCLUDES below for verbose
 # error reporting info.
@@ -81,6 +82,8 @@ libVMUSBCore_la_LIBADD	= \
 			@top_builddir@/base/thread/libdaqthreads.la \
 			@top_builddir@/base/os/libdaqshm.la	\
 			@top_builddir@/daq/format/libdataformat.la	\
+			@top_builddir@/diagnostics/status/libStatusMessages.la \
+			@ZMQ_LDFLAGS@
 			@TCL_LDFLAGS@ \
 			@THREADLD_FLAGS@
 

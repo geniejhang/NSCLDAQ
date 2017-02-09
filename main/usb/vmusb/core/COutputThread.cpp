@@ -41,6 +41,7 @@
 #include <CRingTextItem.h>
 #include <CDataFormatItem.h>
 #include <CStack.h>
+#include <CStatusReporting.h>
 
 #include <sys/time.h>
 #include <dlfcn.h>
@@ -324,7 +325,11 @@ COutputThread::startRun(DataBuffer& buffer)
   m_title           = pState->getTitle();
 
   clock_gettime(CLOCK_REALTIME, &m_startTimestamp);
-  m_lastStampedBuffer = m_startTimestamp; // Last timestamped event...that is.
+  m_lastStatTime = m_lastStampedBuffer = m_startTimestamp; // Last timestamped event...that is.
+  m_nTriggers = 0;
+  m_nEvents   = 0;
+  m_nBytes    = 0;
+  
   m_elapsedSeconds = 0;
   
   m_nEventsSeen    = 0;
@@ -333,6 +338,7 @@ COutputThread::startRun(DataBuffer& buffer)
   format.commitToRing(*m_pRing);
   
  
+  CStatusReporting::pInstance->logBegin(m_runNumber, m_title.c_str());
   CRingStateChangeItem begin(NULL_TIMESTAMP, Globals::sourceId, BARRIER_START,
                              BEGIN_RUN,
 			     m_runNumber,
@@ -562,6 +568,17 @@ COutputThread::processEvents(DataBuffer& inBuffer)
   if (nWords < 0) {
     cerr << "Warning used up more than the buffer  by " << (-nWords) << endl;
   }
+  // IF needed, output a statistics record:
+  
+  timespec now;
+  clock_gettime(CLOCK_REALTIME, &now);
+  if (now.tv_sec != m_lastStatTime.tv_sec) {
+    m_lastStatTime = now;
+    CStatusReporting::pInstance->logStatistics(
+      m_nTriggers, m_nEvents, m_nBytes
+    );
+  }
+  
   m_nBuffersBeforeEventCount--;
   if (m_nBuffersBeforeEventCount == 0) {
     
@@ -794,6 +811,10 @@ COutputThread::event(void* pData)
     //
     // IF we were given a timestamp extractor we create an event with full
     // body header.
+    
+    m_nTriggers++;
+    m_nEvents++;
+    m_nBytes += m_nWordsInBuffer*sizeof(uint16_t);
     
     CRingItem* pEvent;
     if (m_pEvtTimestampExtractor) {

@@ -24,7 +24,7 @@ libStatusMessages_la_SOURCES=Constants.cpp CZmqContext.cpp \
 	StateChange.cpp		\
 	CStatusSubscription.cpp  \
 	CPublishRingStatistics.cpp CMultiAggregator.cpp  \
-	CStatusDb.cpp CStatusDb.h
+	CStatusDb.cpp CStatusDb.h CStatusReporting.cpp
 
 
 
@@ -32,7 +32,7 @@ libStatusMessages_la_CPPFLAGS = $(COMPILATION_FLAGS)
 libStatusMessages_la_LDFLAGS  = $(COMMON_LIBS)
 
 include_HEADERS = CStatusMessage.h CPublishRingStatistics.h \
-	CStatusSubscription.h CMultiAggregator.h
+	CStatusSubscription.h CMultiAggregator.h CStatusReporting.h
 
 #------------------- daemon for ring status:
 

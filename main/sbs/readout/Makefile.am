@@ -58,8 +58,8 @@ libSBSProductionReadout_la_SOURCES	=				\
 						CCAENV262Busy.cpp		\
 						CV977Busy.cpp			\
 						CRingCommand.cpp		\
-						CPreResumeCommand.cpp		\
-						CStatusReporting.cpp
+						CPreResumeCommand.cpp
+
 
 
 
@@ -78,7 +78,7 @@ noinst_HEADERS	=	CReadoutMain.h Skeleton.h CTCLAuthorizer.h	\
 			CReadoutException.h CInvalidPacketStateException.h	\
 			CEventPacket.h CVarList.h CDocumentedVars.h CVariableBuffers.h \
 			CBusy.h CCAENV262Busy.h CV977Busy.h CRingCommand.h CPreBeginCommand.h \
-			CPreEndCommand.h CPrePauseCommand.h CPreResumeCommand.h CStatusReporting.h
+			CPreEndCommand.h CPrePauseCommand.h CPreResumeCommand.h
 
 
 

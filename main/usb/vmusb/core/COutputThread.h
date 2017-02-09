@@ -118,6 +118,7 @@ private:
   int         m_elapsedSeconds;	   /* Seconds into the run. */
   timespec    m_startTimestamp;    //!< Run start time.
   timespec    m_lastStampedBuffer; //!< Seconds into run of last stamped buffer.
+  timespec    m_lastStatTime;      //!< Time we last emitted statistics.
   size_t      m_nOutputBufferSize;       //!< size of output buffer in bytes.
                                    //!< determined at the start of a run.
   uint8_t*    m_pBuffer;	   //!< Pointer to the current buffer.
@@ -132,6 +133,11 @@ private:
   StateChangeCallback m_pBeginRunCallback;
   CSystemControl& m_systemControl;
 
+  // Statistics counters:
+  
+  uint64_t  m_nTriggers;
+  uint64_t  m_nEvents;
+  uint64_t  m_nBytes;
 
   // Constuctors and other canonicals.
 

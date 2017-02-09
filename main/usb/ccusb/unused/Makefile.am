@@ -16,6 +16,7 @@ libCCUSBRouter_la_CPPFLAGS		= -I@top_srcdir@/usb/ccusb		\
                         -I@top_srcdir@/daq/eventbuilder  \
 			-I@top_srcdir@/base/thread @THREADCXX_FLAGS@ \
 			-I@top_srcdir@/usb/ccusb/devices	\
+			-I@top_srcdir@/diagnostics/status  \
 			-I@top_srcdir@/usb/ccusb/rdothread
 
 
@@ -25,6 +26,8 @@ libCCUSBRouter_la_LIBADD	= @top_builddir@/usb/ccusb/devices/libCCUSBDevices.la \
 			@top_builddir@/base/dataflow/libRingBuffer.la \
 			@top_builddir@/daq/format/libdataformat.la		\
 			@top_builddir@/usb/ccusb/rdothread/libCCUSBRdoThread.la \
+			@top_builddir@/diagnostics/status/libStatusMessages.la \
+			@ZMQ_LDFLAGS@						\
 			@top_builddir@/base/thread/libdaqthreads.la @THREADLD_FLAGS@ 
 
 install-data-local:
