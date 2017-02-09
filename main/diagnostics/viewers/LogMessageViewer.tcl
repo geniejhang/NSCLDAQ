@@ -165,7 +165,7 @@ proc clearFilters {} {
 
 LogModel model -file $dbfile
 LogView .logview -colors [dict create INFO green DEBUG purple WARNING orange  SEVERE red DEFECT red]
-pack .logview
+pack .logview -fill both -expand 1
 
 
 # Set up menus for filtering

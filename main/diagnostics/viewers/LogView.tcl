@@ -69,8 +69,7 @@ snit::widgetadaptor LogView {
             -columns $colNames \
             -displaycolumns #all  -height 25 -selectmode none \
             -show headings \
-            -yscrollcommand [list $win.vscroll set] \
-            -xscrollcommand [list $win.hscroll set]
+            -yscrollcommand [list $win.vscroll set]
         
         foreach colname $colNames wid $widths {
             $table heading $colname -text $colname -anchor w
@@ -84,13 +83,10 @@ snit::widgetadaptor LogView {
         ttk::scrollbar $win.vscroll -orient vertical \
             -command [list $win.tree yview]
         
-        ttk::scrollbar $win.hscroll -orient horizontal \
-            -command [list $win.tree xview]
         
         # Layout the widgets:
         
         grid $table $win.vscroll -sticky nsew
-        grid $win.hscroll        -sticky sew
         
         grid columnconfigure $win 0 -weight 1
         grid rowconfigure    $win 0 -weight 1
