@@ -390,12 +390,12 @@ ringbuffer list
             </listitem>
           </varlistentry>
 	  <varlistentry>
-	    <term><command>ringbuffer usageAt <replaceable>host</replaceable></term>
+	    <term><command>ringbuffer usageAt <replaceable>host</replaceable></command></term>
 	    <listitem>
 	      <para>
 		Same as the <command>usage</command> command but the statistics
 		of
-		the rings in the host <replaceable>host are listed.
+		the rings in the host <replaceable>host</replaceable> are listed.
 	      </para>
 	    </listitem>
 	  </varlistentry>

@@ -1566,6 +1566,33 @@ CC-USB scriptable readout version V2.0
                     </para>
                 </listitem>
             </varlistentry>
+            <varlistentry>
+                <term><option>--init-script</option></term>
+                <listitem>
+                    <para>
+                      Provides a filename for a Tcl script that will be read into the
+                      main interpreter as soon as Readout initialization completes.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>--appname</option></term>
+                <listitem>
+                    <para>
+                      Overrides the default application  name of
+                      <literal>VMUSBReadout</literal> used in the logging system.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><option>--status-service</option></term>
+                <listitem>
+                    <para>
+                      Overrides the default service (<literal>StatusAggregator</literal>)
+                      to which status messages will be pushed.
+                    </para>
+                </listitem>
+            </varlistentry>
         </variablelist>
     </section>
     <section>

@@ -3812,6 +3812,24 @@ Readout <replaceable>options...</replaceable>
         </listitem>
     </varlistentry>
     <varlistentry>
+        <term><option>--appname</option></term>
+        <listitem>
+            <para>
+              Overrides the default application  name of
+              <literal>VMUSBReadout</literal> used in the logging system.
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
+        <term><option>--status-service</option></term>
+        <listitem>
+            <para>
+              Overrides the default service (<literal>StatusAggregator</literal>)
+              to which status messages will be pushed.
+            </para>
+        </listitem>
+    </varlistentry>
+    <varlistentry>
         <term><option>--help</option></term>
         <listitem>
             <para>
