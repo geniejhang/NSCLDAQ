@@ -25,7 +25,6 @@ SUBDIRS = 				common	\
 					vardbEventbuilder   \
 					dumpend		\
 					expEditor	\
-					fileanalyzer	\
 					vardbringbuffer \
 					ringbuffer	\
 					fileanalyzer	\
