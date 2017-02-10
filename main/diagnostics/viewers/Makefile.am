@@ -1,4 +1,5 @@
-TCL_PACKAGES= LogModel.tcl LogView.tcl
+TCL_PACKAGES= LogModel.tcl LogView.tcl RingStatModel.tcl
+
 
 TCL_APPS=LogMessageViewer.tcl
 
