@@ -30,9 +30,11 @@ package require Tk
 package require snit
 package require png
 
+puts "RingStatView"
 
-namespace eval RingStatViewNS {
-    set here [file dirname [info script]];      # Install directory of script.
+namespace eval ::RingStatViewNS {
+    variable  here [file dirname [info script]];      # Install directory of script.
+    puts "RingStatViewNS::here:  $here"
 }
 
 ##
@@ -54,6 +56,7 @@ namespace eval RingStatViewNS {
 #
 snit::widgetadaptor RingStatView {
     component tree;                # Will be a ttk:: treeview.
+    option -idletimeout -default 5
     
     delegate option * to tree
     
@@ -114,7 +117,7 @@ snit::widgetadaptor RingStatView {
         
         #  Setup the scrollbar/tree interaction.
         
-        $win.vscroll configure -command [list $tree yiew]
+        $win.vscroll configure -command [list $tree yview]
         $tree        configure -yscrollcommand [list $win.vscroll set]
         
         #  Grid so that scrollbar stays fixed but the tree can expand in both
@@ -149,9 +152,37 @@ snit::widgetadaptor RingStatView {
             set clientsAndStats [lindex $value 1]
             $self _newRingInfo $ring $clientsAndStats
         }
+        $self _trimOldClients
     }
     #--------------------------------------------------------------------------
     #  Private entry points.
+    
+    
+    ##
+    # _trimOldClients
+    #    If a client has not had an update in over 5 seconds, we kill off
+    #    it's node under the assumption it's gone.
+    #
+    
+    method _trimOldClients {} {
+        set idletime $options(-idletimeout)
+        set now [clock seconds]
+        foreach ringid [array names appfolders] {
+            set newList [list]
+            set oldList $appfolders($ringid)
+            foreach client $oldList {
+                set item [dict get $client id]
+                set data [$tree item $item -values]
+                set lastUpdate [clock scan [lindex $data 1]]
+                if {($now - $lastUpdate) > $idletime} {
+                    $tree delete $item
+                } else {
+                    lappend newList $client
+                }
+            }
+            set appfolders($ringid) $newList
+        }
+    }
     
     ##
     # _addRingFolder

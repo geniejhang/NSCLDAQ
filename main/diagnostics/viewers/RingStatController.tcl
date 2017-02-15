@@ -80,7 +80,7 @@ snit::type RingStatController {
         # Get the new information:
         
         set filter [RelationToNonStringFilter  %AUTO% s.id > $lastId]
-        set data [$options(-model) queryStatistics $filter]
+        set data [$options(-model) queryRingStatistics $filter]
         $filter destroy
         
         $options(-view) newStatistics $data

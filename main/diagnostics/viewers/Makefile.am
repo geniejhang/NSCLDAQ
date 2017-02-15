@@ -1,8 +1,10 @@
-TCL_PACKAGES= LogModel.tcl LogView.tcl RingStatModel.tcl
+TCL_PACKAGES= LogModel.tcl LogView.tcl RingStatModel.tcl \
+   RingStatController.tcl RingStatView.tcl
 
 
-TCL_APPS=LogMessageViewer.tcl
+TCL_APPS=LogMessageViewer.tcl ringstatviewer.tcl
 
+IMAGES=folder.png program.png iconcredit.txt
 
 DOCS=logviewer.xml
 
@@ -13,6 +15,7 @@ tclpkgInstall:
 tclappInstall:
 	$(mkinstalldirs) @bindir@
 	for f in $(TCL_APPS); do $(INSTALL_SCRIPT) @srcdir@/$$f @bindir@/`basename $$f .tcl`; done
+	for f in $(IMAGES); do $(INSTALL_DATA) @srcdir@/$$f @prefix@/TclLibs/status; done
 
 install-exec-hook: tclpkgInstall tclappInstall
 

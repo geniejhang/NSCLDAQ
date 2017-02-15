@@ -37,7 +37,7 @@ package require SqlWhere
 #   The code provides access to raw queries but also some pre-packaged
 #   queries that are worth while.
 #
-snit::type RingStateModel {
+snit::type RingStatModel {
     option -dbcommand -default [list] -readonly 1
     
     
@@ -102,7 +102,7 @@ snit::type RingStateModel {
     
         set result [$self queryRingStatistics $filter]
         $filter destroy
-        
+
         return $result
     }
     #------------------------------------------------------------------------
@@ -129,8 +129,6 @@ snit::type RingStateModel {
                 }
             }
         }
-            
-        
         
         return $last
     }
