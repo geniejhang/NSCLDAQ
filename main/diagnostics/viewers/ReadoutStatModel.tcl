@@ -66,11 +66,14 @@ snit::type ReadoutStatModel {
         dict for {rdoid info} {
             set programs [lindex $info 1]
             foreach $p $programs {
-                set counters [lindex $p 1]
-                foreach counter $counters {
-                    set id [dict get $counter id]
-                    if {$id > $result} {
-                        set result $id
+                set runs [lindex $p 1]
+                foreach run $runs {
+                    set counters [lindex $run 1]
+                    foreach counter $counters {
+                        set id [dict get $counter id]
+                        if {$id > $result} {
+                            set result $id
+                        }
                     }
                 }
             }
