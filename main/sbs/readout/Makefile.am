@@ -10,6 +10,7 @@ COMPILATION_FLAGS	=	-I@top_srcdir@/sbs/vmemodules	\
 			-I@top_srcdir@/base/thread 		\
                         -I@top_srcdir@/daq/eventbuilder         \
 			-I@top_srcdir@/base/os			\
+			-@top_srcdir@/diagnostics/status	\
 			$(TCL_FLAGS) $(THREADCXX_FLAGS)	\
 			-DHAVE_VME_MAPPING -DHAVE_SBSVME_INTERFACE
 
