@@ -45,14 +45,14 @@ package require statusMessage
 #
 
 if {[llength $argv] != 1} {
-    puts stderr "Usage:"
-    puts stderr "   ringstatviewer dbfile\n"
-    puts stderr "Where:"
-    puts stderr "   dbfile is the name of a status message database file."
-    exit -1
+    set dbfile [file normalize [file join ~ status.db]]
+} else {
+    set dbfile [lindex $argv 0]
 }
 
-set db [statusdb create [lindex $argv 0] readonly]
+puts "Using database $dbfile"
+
+set db [statusdb create $dbfile readonly]
 
 #  Instantiate the model, view and lastly the controller:
 
