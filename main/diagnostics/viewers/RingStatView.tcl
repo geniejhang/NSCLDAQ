@@ -63,7 +63,7 @@ snit::widgetadaptor RingStatView {
     
     variable ringfolders -array [list]
     
-    # Array indexed by fully tree id of the ring buffer folder.
+    # Array indexed by tree id of the ring buffer folder.
     # The contents are lists of dicts containing:
     #   - tree id
     #   - PID
@@ -99,7 +99,7 @@ snit::widgetadaptor RingStatView {
         
         # Subwidgets:
         
-        set colnames [list properties operations bytes backlog]
+        set colnames [list properties updated operations bytes backlog]
         install tree using ttk::treeview $win.tree   \
             -show [list tree headings] -selectmode none \
             -columns $colnames
@@ -171,12 +171,137 @@ snit::widgetadaptor RingStatView {
         
         return $id
     }
+    ##
+    # _getPriorStats
+    #    Given a stats list and the id of a client return the statistics prior to
+    #    the last element of stats.   See _updateStats for an idea of what we
+    #    have to deal with.
+    #
+    # @param id   - Id of client node for which we want the prior stats.
+    # @param stats - List of statistics gotten since the last update.
+    # @return dict - empty if there is no prior stat else a dict with the keys
+    #                - timestamp - Timestamp at wich the previous item was made
+    #                -  operations - Total number of ring operations performed at timestamp.
+    #                -  bytes      - Total number of bytes transferred at timestamp.
+    #                -  backlog    - Total number of backlogged bytes.
+    #
+    method _getPriorStats {id stats} {
+        
+        if {[llength $stats] > 1} {
+            # Prior stat is the end-1 stat in the stats parameter.
+            
+            return [lindex $stats end-1]
+        }
+        #  Need to see if we have anything in the client node:
+        
+        set info [$tree item $id -value]
+        if {[lindex $info 1] ne ""} {
+            return [dict create timestamp [clock scan [lindex $info 1]]       \
+                    operations [lindex [lindex $info 2] 0]                    \
+                    bytes      [lindex [lindex $info 3] 0]                    \
+                    backlog    [lindex [lindex $info 4] 0]                    \
+            ]  
+        } else {
+            # There's no info in the node
+            
+            return [dict create];           # Can shimmer to an empty list.
+        }
+    }
+    ##
+    # _computeStatsItems
+    #   Given the prior and current statistics dicts, compute the
+    #   statistics items.  This will be a list of everything but the
+    #   client properties.
+    #
+    # @param prior   - prior statistics dict - could e empty.
+    # @param current - Current statistics.
+    # @return list    containing in order:
+    #                - Formatted timestamp.
+    #                - ops  ops/sec
+    #                - bytes  bytes/sec
+    #                - backlog
+    #
+    method _computeStatsItems {prior current} {
+        
+        # Timestamp always come from the current item:
+        
+        set timestamp [clock format   [dict get $current timestamp] -format "%D %T"] 
+
+        # Backlogs don't have a rate so:
+        
+        set backlog [dict get $current backlog]
+        
+        # all remaining items depend on whether or not pior is empty:
+        
+        if {[llength [dict keys $prior]] == 0} {
+            # No prior information
+            
+            set operations [format %5d [dict get $current operations]]
+            set bytes      [format %5d [dict get $current bytes]]
+            set backlog    [format %5d [dict get $current backlog]]
+        } else {
+            # Prior info from the prior parameter
+            # -- can compute rates in {ops,bytes}/sec
+            
+            set dt [expr {[dict get $current timestamp] - [dict get $prior timestamp]}]
+            
+            # If there's no time difference, somehow we've got the same messages
+            #  again -e.g. duplicat aggregator.
+            
+            if {$dt == 0} {
+                return ""
+            }
+            
+            # Operations:
+            
+            set rawops [dict get $current operations]
+            set opsrate [expr {($rawops - [dict get $prior operations]/$dt)}]
+            set operations [format "%5d %5.2f/sec" $rawops $opsrate]
+            
+            # Bytes:
+            
+            set rawbytes [dict get $current bytes]
+            set byterate [expr {($rawbytes - [dict get $prior bytes])/$dt}]
+            set bytes [format "%d %.2f/sec" $rawbytes $byterate]
+        }
+        
+        return [list $timestamp "$operations" "$bytes" "$backlog"]
+    }
     
     ##
     # _updateStats
+    #    Update the statistics entries on a client.
+    #    The following cases must be handled:
+    #    -   There's more than one statitics entry;  in that case rates can
+    #        be computed fromt he last two entries in the list and totals
+    #        come from the last entry.
+    #    -  There's only one statistics entry and the node in the tree has
+    #       statistics.  In that case, rates can be computed from the information
+    #       in the node and the statistics entry.  Totals will come from the
+    #       stat entry.
+    #    -  There's one statistics entry but there is not any information in the
+    #       node.   In that case, rates cannot be computed and totals come from
+    #       the statistics entry.
+    #  @note - because of how SQL queries work, there will never be an empty stats
+    #        list.
+    #
+    # @param clientid   - Id of the node we're updating (a client node).
+    # @param stats      - List of statistics entries.
+    #
     #
     method _updateStats {clientId stats} {
-        # stub.
+        set last [lindex $stats end];    # Pull out the last statistices entry.
+        set prior [$self _getPriorStats $clientId $stats]
+        set items [$self _computeStatsItems $prior $last]
+        
+        if {$items eq ""} return
+        
+        # we need to fold in the properties part of the current stats line:
+        
+        set currentItems [$tree item $clientId -values]
+        set currentItems [lreplace $currentItems 1 end {*}$items];   # Keep the client info.
+        $tree item $clientId -values $currentItems
+        
     }
     ##
     # _findClient
@@ -203,16 +328,22 @@ snit::widgetadaptor RingStatView {
     # _createClient
     #    Create a new client entry
     #
+    # @param parent - Id of the ring buffer node for which this is a client.
+    # @param client - Client statistics/description dict.
+    # @return string - id of newly created node.
+    #
     method _createClient {parent client} {
         set tag consumer
         if {[dict get $client isProducer]} {
             set tag producer
         }
+        set pid [dict get $client pid]
+        set cmd [dict get $client command]
         set id [$tree insert $parent end                                        \
-                -text [dict get $client command] -image ringstat_app -tags $tag \
-                -values [list "PID = [dict get $client pid]"]                   \
+                -text $cmd -image ringstat_app -tags $tag \
+                -values [list "PID = $pid" "" "" "" ""]                   \
         ]
-        # Fill in the properties:
+        lappend appfolders($parent) [dict create pid $pid command $cmd id $id]
         
         return $id
     }
