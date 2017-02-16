@@ -375,7 +375,6 @@ snit::widgetadaptor ReadoutStatView {
             }
         }
         set result  [list "$timestamp" "$elapsed" "$triggers" "$events" "$bytes"]
-        puts "$result"
         return $result
     }
     ##

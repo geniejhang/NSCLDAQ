@@ -30,11 +30,8 @@ package require Tk
 package require snit
 package require png
 
-puts "RingStatView"
-
 namespace eval ::RingStatViewNS {
     variable  here [file dirname [info script]];      # Install directory of script.
-    puts "RingStatViewNS::here:  $here"
 }
 
 ##

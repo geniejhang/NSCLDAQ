@@ -1,5 +1,7 @@
 TCL_PACKAGES= LogModel.tcl LogView.tcl RingStatModel.tcl \
-   RingStatController.tcl RingStatView.tcl
+   RingStatController.tcl RingStatView.tcl \
+   ReadoutStatModel.tcl ReadoutStatView.tcl
+
 
 
 TCL_APPS=LogMessageViewer.tcl ringstatviewer.tcl
