@@ -42,5 +42,50 @@ $DAQBIN/LogMessageViewer <optional>dbfile</optional>
         </refsect1>
 
       </refentry>
+            <refentry id="daq1_StatusViewer">
+              <refentryinfo>
+                <author>
+                        <personname>
+                                <firstname>Ron</firstname>
+                                <surname>Fox</surname>
+                        </personname>
+                        <personblurb><para></para></personblurb>
+                </author>
+                <productname>NSCLDAQ</productname>
+                <productnumber></productnumber>
+              </refentryinfo>
+              <refmeta>
+                 <refentrytitle id='daq1_StatusViewer_title'>StatusViewer</refentrytitle>
+                 <manvolnum>1daq</manvolnum>
+                 <refmiscinfo class='empty'></refmiscinfo>
+              </refmeta>
+              <refnamediv>
+                 <refname>StatusViewer</refname>
+                 <refpurpose>Consolidated simple status viewere</refpurpose>
+              </refnamediv>
+              
+              <refsynopsisdiv>
+                <cmdsynopsis>
+                    <command>
+$DAQBIN/StatusViewer <replaceable>dbfile</replaceable>
+              </command>
+                </cmdsynopsis>
+      
+              </refsynopsisdiv>
+              <refsect1>
+                 <title>DESCRIPTION</title>
+                 <para>
+                  Provides a program that displays ring buffer statistics,
+                  Readout statistics and log messages in a tabbed notebook,
+                  one tab for each type of status.
+                 </para>
+                 <para>
+                  The single program parameter is a database into which status
+                  messages are being injected.
+                 </para>
+              </refsect1>
+      
+            </refentry>
+      
 
 <!-- /manpage -->
