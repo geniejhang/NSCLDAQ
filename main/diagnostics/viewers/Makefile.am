@@ -21,4 +21,4 @@ tclappInstall:
 
 install-exec-hook: tclpkgInstall tclappInstall
 
-EXTRA_DIST=$(TCL_PACKAGES) $(TCL_APPS) $(DOCS)
+EXTRA_DIST=$(TCL_PACKAGES) $(TCL_APPS) $(DOCS) $(IMAGES)
