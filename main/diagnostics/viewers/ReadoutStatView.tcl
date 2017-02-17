@@ -174,7 +174,38 @@ snit::widgetadaptor ReadoutStatView {
         array unset programs
         array unset statItems
     }
-
+    ##
+    # cleanupOld
+    #   For items that are older than the specified amount, remove the rates
+    #   displays (if they exist).  The assumption is that if a run is no longer
+    #   emitting statistics, it's probably not active.  Any stalls due to
+    #   dataflow backpressuer are intended to show up in the ringbuffer statistics
+    #   displays.
+    #
+    # @param howOld  - number of seconds the timstamp has to be older than
+    #                  for the item to be cleaned.
+    #
+    method cleanupOld howOld {
+        set now [clock seconds]
+        foreach index [array names statItems] {
+            set statList $statItems($index)
+            foreach stat $statList {
+                set item [dict get $stat treeId]
+                set values [$tree item $item -values]
+                set ts [clock scan [lindex $values 1] ]
+                if {($now - $ts) > $howOld} {
+                    #  Elligible for rate removal:
+                    
+                    for {set index 2} {$index < [llength $values]} {incr index} {
+                        set newValue [lindex [lindex $values $index] 0]
+                        set values [lreplace $values $index $index $newValue]
+                    }
+                    $tree item $item -values $values
+                }
+                
+            }
+        }
+    }
     #------------------------------------------------------------------------
     # Private methods/
     

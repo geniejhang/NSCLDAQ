@@ -46,6 +46,7 @@ snit::type ReadoutStatController {
     option -model -default [list]
     option -view  -default [list]
     option -period -default 5
+    option -cleanup -default 5
     
     
     variable lastId 0;                # Ask for data with s.id > than this.
@@ -83,5 +84,6 @@ snit::type ReadoutStatController {
         set lastId [$options(-model) lastStatisticId $stats]
         
         $options(-view) addStatistics $stats
+        $options(-view) cleanupOld $options(-cleanup)
     }
 }
