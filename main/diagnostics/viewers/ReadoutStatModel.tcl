@@ -63,22 +63,19 @@ snit::type ReadoutStatModel {
     #
     method lastStatisticId data {
         set result -1
-        dict for {rdoid info} {
-            set programs [lindex $info 1]
-            foreach $p $programs {
-                set runs [lindex $p 1]
-                foreach run $runs {
-                    set counters [lindex $run 1]
-                    foreach counter $counters {
-                        set id [dict get $counter id]
-                        if {$id > $result} {
-                            set result $id
-                        }
+        dict for {rdoid info} $data {
+            set runs [lindex $info 1]
+            foreach run $runs {
+                set counters [lindex $run 1]
+                foreach counter $counters {
+                
+                    set id [dict get $counter id]
+                    if {$id > $result} {
+                        set result $id
                     }
                 }
             }
         }
-        
         return $result
     }
 }

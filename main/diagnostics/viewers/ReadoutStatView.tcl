@@ -300,7 +300,7 @@ snit::widgetadaptor ReadoutStatView {
         set priorTs [lindex $values 1]
         if {$priorTs ne ""} {
             set triggers [lindex [lindex $values 2] 0]
-            set events   [lindex [lindex $value 3] 0]
+            set events   [lindex [lindex $values 3] 0]
             set bytes    [lindex [lindex $values 4] 0]
             set priorstamp [clock scan $priorTs]
             

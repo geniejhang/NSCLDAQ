@@ -75,12 +75,12 @@ snit::type ReadoutStatController {
     #   - Get data from the model.
     #   - Update the view.
     method _updateView {} {
-        set afterId [after [expr {$options(-period)*1000}] [mymethod update] ]
+        set afterId [after [expr {$options(-period)*1000}] [mymethod _updateView] ]
         
-        set filter [RelationToNonStringFilter %AUTO% s.id > $lastid]
+        set filter [RelationToNonStringFilter %AUTO% s.id > $lastId]
         set stats  [$options(-model) queryReadoutStatistics $filter]
         $filter destroy
-        set lastId [$options(-model) lastStatisticsId $stats]
+        set lastId [$options(-model) lastStatisticId $stats]
         
         $options(-view) addStatistics $stats
     }
