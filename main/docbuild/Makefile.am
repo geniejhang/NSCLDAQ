@@ -47,6 +47,7 @@ daq.mans: daq.xml
 #	touch daq.mans
 
 BOOKDIRS = 	@top_srcdir@ \
+<<<<<<< HEAD
 		@top_srcdir@/base/dataflow \
 		@top_srcdir@/base/factories \
 		@top_srcdir@/daq/format \
