@@ -4,7 +4,8 @@ TCL_PACKAGES= LogModel.tcl LogView.tcl RingStatModel.tcl \
 
 
 
-TCL_APPS=LogMessageViewer.tcl ringstatviewer.tcl readoutstatviewer.tcl
+TCL_APPS=LogMessageViewer.tcl ringstatviewer.tcl readoutstatviewer.tcl \
+	StatusViewer.tcl
 
 IMAGES=folder.png program.png iconcredit.txt run.png
 

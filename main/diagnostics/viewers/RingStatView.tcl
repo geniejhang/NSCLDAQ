@@ -56,6 +56,7 @@ snit::widgetadaptor RingStatView {
     option -idletimeout -default 5
     
     delegate option * to tree
+    delegate method * to hull
     
     
     # Array indexed by fully qualified ring names whose contents are the
