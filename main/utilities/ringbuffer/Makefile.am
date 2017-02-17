@@ -5,7 +5,7 @@ TCL_PKGDIR = @prefix@/TclLibs/vardbringbuffer
 install-exec-local:
 	$(INSTALL_SCRIPT) @srcdir@/ringbuffer.tcl @bindir@/ringbuffer
 	$(mkinstalldirs) $(TCL_PKGDIR)
-	$(INSTALL_SCRIPT) $(TCL_PACKAGES) $(TCL_PKGDIR)
+	for f in $(TCL_PACKAGES); do $(INSTALL_SCRIPT) @srcdir@/$$f $(TCL_PKGDIR); done
 	echo "pkg_mkIndex -verbose  $(TCL_PKGDIR) *.tcl *.so" | @TCLSH@
 
 
