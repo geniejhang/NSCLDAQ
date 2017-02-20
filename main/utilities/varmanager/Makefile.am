@@ -9,7 +9,7 @@ bin_PROGRAMS=inittcl
 
 inittcl_SOURCES=inittcl.c
 inittcl_CPPFLAGS=@TCL_CPPFLAGS@
-inittcl_LDFLAGS=@TCL_LDFLAGS@
+inittcl_LDADD=@TCL_LDFLAGS@
 
 # Shared libraries:
 
@@ -28,7 +28,7 @@ libvardb_la_SOURCES=CVariableDb.cpp CVarDirTree.cpp CTypeFactory.cpp \
 	CStateMachineTypeFamilyHandler.cpp CStateMachine.cpp
 
 libvardb_la_CPPFLAGS = @SQLITE3_CFLAGS@ -I@top_srcdir@/base/sqlite++ -I@top_srcdir@/base/factories
-libvardb_la_LDFLAGS  = 	@top_builddir@/base/sqlite++/libsqlite3pp.la  @SQLITE3_LDFLAGS@ 
+libvardb_la_LIBADD  = 	@top_builddir@/base/sqlite++/libsqlite3pp.la  @SQLITE3_LDFLAGS@
 
 include_HEADERS = CVariableDb.h CVarDirTree.h CVariable.h CTypeFactory.h \
 	CDataType.h CIntegerType.h CRealType.h CStringType.h \
@@ -55,38 +55,43 @@ libvardbtcl_la_SOURCES=VarDbTclPackage.cpp \
 	CStateMachineCommand.cpp CStateMachineCommand.h
 
 libvardbtcl_la_CPPFLAGS=@TCL_FLAGS@ @LIBTCLPLUS_CFLAGS@ -I@top_srcdir@/base/sqlite++
-libvardbtcl_la_LDFLAGS= @builddir@/libvardb.la @top_builddir@/base/sqlite++/libsqlite3pp.la  \
-			@SQLITE3_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@\
-			-Wl,"-rpath=@libdir@"
+libvardbtcl_la_LIBADD= @builddir@/libvardb.la @top_builddir@/base/sqlite++/libsqlite3pp.la  \
+                        @SQLITE3_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
+libvardbtcl_la_LDFLAGS = -Wl,"-rpath=@libdir@"
 
 
 # Python bindings
 
 PYBINDINGS_CPPFLAGS=@PYTHON_CPPFLAGS@ $(libvardb_la_CPPFLAGS)
-PYBINDINGS_LDFLAGS=@PYTHON_LDFLAGS@  @builddir@/libvardb.la \
+PYBINDINGS_LIBADD=@PYTHON_LDFLAGS@  @builddir@/libvardb.la \
 			@top_builddir@/base/sqlite++/libsqlite3pp.la  \
-			@SQLITE3_LDFLAGS@ \
-			-Wl,"-rpath=@libdir@"
+                        @SQLITE3_LDFLAGS@
+PYBINDINGS_LDFLAGS = -Wl,"-rpath=@libdir@"
 
 libvardbpy_la_SOURCES=PyVarDb.cpp PyVarDb.h
 libvardbpy_la_CPPFLAGS=$(PYBINDINGS_CPPFLAGS)
+libvardbpy_la_LIBADD= $(PYBINDINGS_LIBADD)
 libvardbpy_la_LDFLAGS= $(PYBINDINGS_LDFLAGS)
 
 libvardirtreepy_la_SOURCES=PyVarDirTree.cpp
 libvardirtreepy_la_CPPFLAGS= $(PYBINDINGS_CPPFLAGS)
+libvardirtreepy_la_LIBADD=  $(PYBINDINGS_LIBADD)
 libvardirtreepy_la_LDFLAGS=  $(PYBINDINGS_LDFLAGS)
 
 libvariablepy_la_SOURCES = PyVariable.cpp
 libvariablepy_la_CPPFLAGS= $(PYBINDINGS_CPPFLAGS)
+libvariablepy_la_LIBADD = $(PYBINDINGS_LIBADD)
 libvariablepy_la_LDFLAGS = $(PYBINDINGS_LDFLAGS)
 
 libenumpy_la_SOURCES = PyEnum.cpp
 libenumpy_la_CPPFLAGS= $(PYBINDINGS_CPPFLAGS)
+libenumpy_la_LIBADD=  $(PYBINDINGS_LIBADD)
 libenumpy_la_LDFLAGS=  $(PYBINDINGS_LDFLAGS)
 
 
 libstatemachinepy_la_SOURCES = PyStateMachine.cpp
 libstatemachinepy_la_CPPFLAGS= $(PYBINDINGS_CPPFLAGS)
+libstatemachinepy_la_LIBADD = $(PYBINDINGS_LIBADD)
 libstatemachinepy_la_LDFLAGS = $(PYBINDINGS_LDFLAGS)
 
 ## Tests for compiled base
@@ -98,6 +103,7 @@ unittests_SOURCES = TestRunner.cpp  dirTests.cpp varTests.cpp typeFactoryTests.c
 	$(libvardb_la_SOURCES)
 
 unittests_CPPFLAGS = $(libvardb_la_CPPFLAGS) @CPPUNIT_CFLAGS@
+unittests_LDADD =  $(libvardb_la_LIBADD) @CPPUNIT_LDFLAGS@
 unittests_LDFLAGS =  $(libvardb_la_LDFLAGS) @CPPUNIT_LDFLAGS@
 
 
