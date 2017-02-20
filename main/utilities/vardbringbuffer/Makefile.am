@@ -1,10 +1,10 @@
 lib_LTLIBRARIES=libvardbRingBuffer.la libtclvardbringbuffer.la libPyVardbRingBuffer.la
 
-COMMONLDFLAGS = @top_builddir@/utilities/varmanager/server/libvarmgr.la \
+COMMONLIBS = @top_builddir@/utilities/varmanager/server/libvarmgr.la \
 		@top_builddir@/utilities/varmanager/libvardb.la         \
 		@top_builddir@/base/sqlite++/libsqlite3pp.la @SQLITE3_LDFLAGS@ \
-		@ZMQ_LDFLAGS@							\
-		-Wl,"-rpath=@libdir@"
+                @ZMQ_LDFLAGS@
+COMMONLDFLAGS = -Wl,"-rpath=@libdir@"
 COMMONCPPFLAGS= -I@top_srcdir@/utilities/varmanager/server 	\
 	-I@top_srcdir@/utilities/varmanager			\
 	-I@top_srcdir@/base/sqlite++
@@ -13,6 +13,7 @@ COMMONCPPFLAGS= -I@top_srcdir@/utilities/varmanager/server 	\
 
 libvardbRingBuffer_la_SOURCES = CVardbRingBuffer.cpp 
 libvardbRingBuffer_la_CPPFLAGS=$(COMMONCPPFLAGS)
+libvardbRingBuffer_la_LIBADD=$(COMMONLIBS)
 libvardbRingBuffer_la_LDFLAGS=$(COMMONLDFLAGS)
 
 include_HEADERS=CVardbRingBuffer.h
@@ -24,14 +25,16 @@ libtclvardbringbuffer_la_SOURCES = TCLVardbRingBufferPackage.cpp \
 	CTCLVardbRingBufferInstance.cpp CTCLVardbRingBufferInstance.h
 
 libtclvardbringbuffer_la_CPPFLAGS = $(COMMONCPPFLAGS) @LIBTCLPLUS_CFLAGS@ @TCL_CPPFLAGS@
-libtclvardbringbuffer_la_LDFLAGS = $(COMMONLDFLAGS) @builddir@/libvardbRingBuffer.la \
+libtclvardbringbuffer_la_LIBADD = $(COMMONLIBS) @builddir@/libvardbRingBuffer.la \
 	@LIBTCLPLUS_LDFLAGS@  @TCL_LDFLAGS@
+libtclvardbringbuffer_la_LDFLAGS = $(COMMONLDFLAGS)
 
 # Python API:
 
 libPyVardbRingBuffer_la_SOURCES=PyVardbRingbuffer.cpp
 libPyVardbRingBuffer_la_CPPFLAGS=$(COMMONCPPFLAGS) @PYTHON_CPPFLAGS@
-libPyVardbRingBuffer_la_LDFLAGS=$(COMMONLDFLAGS) libvardbRingBuffer.la @PYTHON_LDFLAGS@
+libPyVardbRingBuffer_la_LIBADD=$(COMMONLIBS) @builddir@/libvardbRingBuffer.la @PYTHON_LDFLAGS@
+libPyVardbRingBuffer_la_LDFLAGS=$(COMMONLDFLAGS)
 
 
 # Installation automake doesn't know how to do:
@@ -52,7 +55,8 @@ noinst_PROGRAMS=unittests
 
 unittests_SOURCES = TestRunner.cpp Asserts.h apitests.cpp
 unittests_CPPFLAGS=$(COMMONCPPFLAGS) @CPPUNIT_CFLAGS@
-unittests_LDFLAGS= libvardbRingBuffer.la $(COMMONLDFLAGS) @CPPUNIT_LDFLAGS@
+unittests_LDADD= @builddir@/libvardbRingBuffer.la $(COMMONLIBS) @CPPUNIT_LDFLAGS@
+unittests_LDFLAGS= $(COMMONLDFLAGS)
 
 # Testing setup for TCL and Python tests:
 
