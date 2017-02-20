@@ -10,53 +10,64 @@
 #include <signal.h>
 #include <string>
 #include <sys/wait.h>
+#include <CDataSink.h>
+#include <CDataSinkFactory.h>
 #include <CRingBuffer.h>
 #include <time.h>
 #include <pwd.h>
 
 #include <vector>
 
-#include <DataFormat.h>
-#include <CRingStateChangeItem.h>
-#include <CRingPhysicsEventCountItem.h>
-#include <CRingScalerItem.h>
-#include <CRingTextItem.h>
+#include <V12/DataFormat.h>
+#include <V12/CRingStateChangeItem.h>
+#include <V12/CRingPhysicsEventCountItem.h>
+#include <V12/CRingScalerItem.h>
+#include <V12/CRingTextItem.h>
+#include <V12/CPhysicsEventItem.h>
+#include <V12/CRingItemParser.h>
+#include <RingIOV12.h>
+#include <ContainerDeserializer.h>
+#include <ByteBuffer.h>
 #include <stdlib.h>
 #include <os.h>
 #include <assert.h>
 
-#include <DataFormat.h>
-
-
 using namespace std;
+using namespace DAQ;
+using namespace DAQ::V12;
 
 pid_t childpid;
 
 
-static void 
+static int 
 readItem(int fd, void* pBuffer)
 {
   char* p = reinterpret_cast<char*>(pBuffer);
 
   // Read the header:
 
-  size_t bytes = read(fd, p, sizeof(RingItemHeader));
-  EQ(sizeof(RingItemHeader), bytes);
-  pRingItemHeader h = reinterpret_cast<pRingItemHeader>(p);
+  size_t bytes = read(fd, p, 20);
+  EQ(size_t(20), bytes);
+  
+  uint32_t size, type, sourceId;
+  uint64_t tstamp; 
+  bool swapNeeded;
+ 
+  Parser::parseHeader(p, p+20, size, type, tstamp, sourceId, swapNeeded); 
   p += bytes;
-  size_t remaining = h->s_size - sizeof(RingItemHeader);
+
+  size_t remaining = size - 20;
   bytes = read(fd, p, remaining);
 
   EQ(remaining, bytes);
 
+  return size;
 }
-
 
 
 // Static utility program that will run a specified command
 // with stdout and stderr -> a pipe.  The read end of the pipe is returned.
 //
-
 static int spawn(const char* command) 
 {
   int pipes[2];
@@ -101,7 +112,7 @@ static int spawn(const char* command)
   
 }
 
-static void textItem(CRingBuffer& prod, int fd, bool check = true)
+static void textItem(CDataSink& prod, int fd, bool check = true)
 {
   vector<string>  items;
   items.push_back("String 1");
@@ -109,92 +120,95 @@ static void textItem(CRingBuffer& prod, int fd, bool check = true)
   items.push_back("The last string");
 
   CRingTextItem i(PACKET_TYPES, items);
-  i.commitToRing(prod);
+  prod << CRawRingItem(i);
 
   if (check) {
     char buffer[2048];
-    readItem(fd, buffer);
-    pTextItem e = reinterpret_cast<pTextItem>(buffer);
-    pTextItemBody pb = &(e->s_body.u_noBodyHeader.s_body);
-    EQ(PACKET_TYPES, e->s_header.s_type);
-    EQ((uint32_t)3,  pb->s_stringCount);
+    int size = readItem(fd, buffer);
+    auto result = Parser::parse(buffer, buffer+size);
+    EQ(PACKET_TYPES, result.first->type());
 
-    char* p = pb->s_strings;
-    string s1(p);
-    p += s1.size() + 1;
-    string s2(p);
-    p += s2.size() +1;
-    string s3(p);
+    CRingTextItem& item = dynamic_cast<CRingTextItem&>(*result.first);
+    EQ((uint32_t)3,  item.getStringCount());
 
-    EQ(string("String 1"), s1);
-    EQ(string("String 2"), s2);
-    EQ(string("The last string"), s3);
+    auto strings = item.getStrings();
+
+    EQ(string("String 1"), strings[0]);
+    EQ(string("String 2"), strings[1]);
+    EQ(string("The last string"), strings[2]);
   }
 }
 
-static void scaler(CRingBuffer& prod, int fd, bool check=true)
+static void scaler(CDataSink& prod, int fd, bool check=true)
 {
-  vector<uint32_t> scalers;
-  for (int i=0; i < 32; i++) {
-    scalers.push_back(i);
-  }
+  vector<uint32_t> scalers(32);
+  std::iota(scalers.begin(), scalers.end(), 0);;
+
   CRingScalerItem i(0, 10, time_t(NULL), scalers);
-  i.commitToRing(prod);
+  prod << CRawRingItem(i);
 
   if (check) {
     char buffer[1024];
-    readItem(fd, buffer);
+    int size = readItem(fd, buffer);
+    auto result = Parser::parse(buffer, buffer+size);
 
-    pScalerItem e = reinterpret_cast<pScalerItem>(buffer);
-    pScalerItemBody pb = &(e->s_body.u_noBodyHeader.s_body);
-    EQ(PERIODIC_SCALERS, e->s_header.s_type);
-    EQ((uint32_t)0,         pb->s_intervalStartOffset);
-    EQ((uint32_t)10,        pb->s_intervalEndOffset);
-    EQ((uint32_t)32,        pb->s_scalerCount);
+    CRingScalerItem& item = dynamic_cast<CRingScalerItem&>(*result.first);
+    EQ(PERIODIC_SCALERS, item.type());
+    EQ((uint32_t)0,         item.getStartTime());
+    EQ((uint32_t)10,        item.getEndTime());
+    EQ((uint32_t)32,        item.getScalerCount());
+    auto sclrs = item.getScalers();
     for (uint32_t i =0; i < 32; i++) {
-      EQ(i, pb->s_scalers[i]);
+      EQ(i, sclrs[i]);
     }
   }
 
 }
 
-static void eventCount(CRingBuffer& prod, int fd, int count, bool check=true)
+static void eventCount(CDataSink& prod, int fd, int count, bool check=true)
 {
   CRingPhysicsEventCountItem i(count, 12);
-  i.commitToRing(prod);
+  prod << CRawRingItem(i);
 
   if (check) {
     char buffer[1024];
-    readItem(fd, buffer);
-    pPhysicsEventCountItem e = reinterpret_cast<pPhysicsEventCountItem>(buffer);
-    pPhysicsEventCountItemBody pb = &(e->s_body.u_noBodyHeader.s_body);
-    EQ(PHYSICS_EVENT_COUNT, e->s_header.s_type);
-    EQ((uint32_t)12, pb->s_timeOffset);
-    EQ((uint64_t)count, pb->s_eventCount);
+    int size = readItem(fd, buffer);
+    auto result = Parser::parse(buffer, buffer+size);
+
+    auto& item = dynamic_cast<CRingPhysicsEventCountItem&>(*result.first);
+
+    EQ(PHYSICS_EVENT_COUNT, item.type());
+    EQ((uint32_t)12, item.getTimeOffset());
+    EQ((uint64_t)count, item.getEventCount());
   }
 }
 
 
-static void event(CRingBuffer& prod, int fd, bool check=true)
+static void event(CDataSink& prod, int fd, bool check=true)
 {
-  CRingItem i(PHYSICS_EVENT);
-  uint16_t* p = reinterpret_cast<uint16_t*>(i.getBodyPointer());
-  *p++        = 11;
+  CPhysicsEventItem i;
+  auto& body = i.getBody();
+  body << uint16_t(11);
   for (int i =0; i < 10; i++) {
-    *p++ = i;
+    body << uint16_t(i);
   }
-  i.setBodyCursor(p);
-  i.commitToRing(prod);
+  prod << CRawRingItem(i);
 
   if (check) {
     char buffer[1024];
-    readItem(fd, buffer);
-    pPhysicsEventItem e = reinterpret_cast<pPhysicsEventItem>(buffer);
-    uint16_t* pB   = (e->s_body.u_noBodyHeader.s_body);
-    EQ(PHYSICS_EVENT, e->s_header.s_type);
-    EQ((uint16_t)11, pB[0]);
+    int size = readItem(fd, buffer);
+    auto result = Parser::parse(buffer, buffer + size);
+    auto& item = dynamic_cast<CPhysicsEventItem&>(*result.first);
+
+    EQ(PHYSICS_EVENT, item.type());
+
+    auto stream = Buffer::makeContainerDeserializer(item.getBody(), false);
+    uint16_t temp;
+    stream >> temp;
+    EQ((uint16_t)11, temp);
     for (int i = 0; i < 10; i++) {
-      EQ((uint16_t)i, pB[i+1]);
+      stream >> temp;
+      EQ((uint16_t)i, temp);
     }
   }
 
@@ -202,10 +216,10 @@ static void event(CRingBuffer& prod, int fd, bool check=true)
 }
 
 
-static void beginRun(CRingBuffer& prod, int fd,  bool check = true)
+static void beginRun(CDataSink& prod, int fd,  bool check = true)
 {
   CRingStateChangeItem i(BEGIN_RUN, 1234, 0, time(NULL), "This is a title");
-  i.commitToRing(prod);
+  prod << CRawRingItem(i);
   
   // Should now be able to read the item from the pipe and it should match
   // the item we put in.
@@ -216,20 +230,21 @@ static void beginRun(CRingBuffer& prod, int fd,  bool check = true)
   if (check) {
     // We should be able to get what we put in:
     
-    readItem(fd, buffer);
-    pStateChangeItem item = reinterpret_cast<pStateChangeItem>(buffer);
-    pStateChangeItemBody  pb = &(item->s_body.u_noBodyHeader.s_body);
-    EQ(BEGIN_RUN, item->s_header.s_type);
-    EQ((uint32_t)1234,      pb->s_runNumber);
-    EQ((uint32_t)0,         pb->s_timeOffset);
-    EQ(string("This is a title"), string(pb->s_title));
+    int size = readItem(fd, buffer);
+    auto result = Parser::parse(buffer, buffer+size);
+    auto& item = dynamic_cast<CRingStateChangeItem&>(*result.first);
+
+    EQ(BEGIN_RUN, item.type());
+    EQ((uint32_t)1234,      item.getRunNumber());
+    EQ((uint32_t)0,         item.getElapsedTime());
+    EQ(string("This is a title"), item.getTitle());
   }
 }
 
-static void pauseRun(CRingBuffer& prod, int fd, bool check=true)
+static void pauseRun(CDataSink& prod, int fd, bool check=true)
 {
   CRingStateChangeItem i(PAUSE_RUN, 1234, 15, time(NULL), "This is a title");
-  i.commitToRing(prod);
+  prod << CRawRingItem(i);
   
   // Should now be able to read the item from the pipe and it should match
   // the item we put in.
@@ -240,20 +255,22 @@ static void pauseRun(CRingBuffer& prod, int fd, bool check=true)
   if (check) {
     // We should be able to get what we put in:
     
-    readItem(fd, buffer);
-    pStateChangeItem item = reinterpret_cast<pStateChangeItem>(buffer);
-    pStateChangeItemBody pb = &(item->s_body.u_noBodyHeader.s_body);
-    EQ(PAUSE_RUN, item->s_header.s_type);
-    EQ((uint32_t)1234,      pb->s_runNumber);
-    EQ((uint32_t)15,         pb->s_timeOffset);
-    EQ(string("This is a title"), string(pb->s_title));
+    int size = readItem(fd, buffer);
+    auto result = Parser::parse(buffer, buffer+size);
+
+    auto& item = dynamic_cast<CRingStateChangeItem&>(*result.first);
+
+    EQ(PAUSE_RUN, item.type());
+    EQ((uint32_t)1234,      item.getRunNumber());
+    EQ((uint32_t)15,         item.getElapsedTime());
+    EQ(string("This is a title"), item.getTitle());
   }
 }
 
-static void resumeRun(CRingBuffer& prod, int fd, bool check = true) 
+static void resumeRun(CDataSink& prod, int fd, bool check = true) 
 {
   CRingStateChangeItem i(RESUME_RUN, 1234, 15, time(NULL), "This is a title");
-  i.commitToRing(prod);
+  prod << CRawRingItem(i);
   
   // Should now be able to read the item from the pipe and it should match
   // the item we put in.
@@ -264,21 +281,22 @@ static void resumeRun(CRingBuffer& prod, int fd, bool check = true)
   if (check) {
     // We should be able to get what we put in:
     
-    readItem(fd, buffer);
-    pStateChangeItem item = reinterpret_cast<pStateChangeItem>(buffer);
-    pStateChangeItemBody pb = &(item->s_body.u_noBodyHeader.s_body);
-    EQ(RESUME_RUN, item->s_header.s_type);
-    EQ((uint32_t)1234,      pb->s_runNumber);
-    EQ((uint32_t)15,         pb->s_timeOffset);
-    EQ(string("This is a title"), string(pb->s_title));
+    int size = readItem(fd, buffer);
+    auto result = Parser::parse(buffer, buffer+size);
+
+    auto& item = dynamic_cast<CRingStateChangeItem&>(*result.first);
+    EQ(RESUME_RUN, item.type());
+    EQ((uint32_t)1234,      item.getRunNumber());
+    EQ((uint32_t)15,         item.getElapsedTime());
+    EQ(string("This is a title"), item.getTitle());
   }
 }
 
 
-static void endRun(CRingBuffer& prod, int fd, bool check = true)
+static void endRun(CDataSink& prod, int fd, bool check = true)
 {
   CRingStateChangeItem i(END_RUN, 1234, 25, time(NULL), "This is a title");
-  i.commitToRing(prod);
+  prod << CRawRingItem(i);
   
   // Should now be able to read the item from the pipe and it should match
   // the item we put in.
@@ -289,14 +307,15 @@ static void endRun(CRingBuffer& prod, int fd, bool check = true)
   if (check) {
     // We should be able to get what we put in:
     
-    readItem(fd, buffer);
-    pStateChangeItem item = reinterpret_cast<pStateChangeItem>(buffer);
-    pStateChangeItemBody pb = &(item->s_body.u_noBodyHeader.s_body);
+    int size = readItem(fd, buffer);
+    auto result = Parser::parse(buffer, buffer+size);
+
+    auto& item = dynamic_cast<CRingStateChangeItem&>(*result.first);
     
-    EQ(END_RUN, item->s_header.s_type);
-    EQ((uint32_t)1234,       pb->s_runNumber);
-    EQ((uint32_t)25,         pb->s_timeOffset);
-    EQ(string("This is a title"), string(pb->s_title));
+    EQ(END_RUN, item.type());
+    EQ((uint32_t)1234,       item.getRunNumber());
+    EQ((uint32_t)25,         item.getElapsedTime());
+    EQ(string("This is a title"), item.getTitle());
   }
 }
 
@@ -342,28 +361,30 @@ void rseltests::all()
   int fd = spawn(programName.c_str());
 
   
+  CDataSink* pProd = nullptr;
   try {
     // attach to our ring as a producer.
     
-    CRingBuffer prod(Os::whoami(), CRingBuffer::producer);
+    pProd = CDataSinkFactory().makeSink(std::string("tcp://localhost/")+Os::whoami());
     
     // Make a begin_run item, commit it.
     
-    beginRun(prod, fd);
+    beginRun(*pProd, fd);
     for (int i =0; i < 100; i++) {
-      event(prod,fd);
+      event(*pProd,fd);
     }
-    eventCount(prod, fd, 100);
-    scaler(prod, fd);
-    pauseRun(prod, fd);
-    resumeRun(prod, fd);
-    textItem(prod, fd);
-    endRun(prod, fd);
+    eventCount(*pProd, fd, 100);
+    scaler(*pProd, fd);
+    pauseRun(*pProd, fd);
+    resumeRun(*pProd, fd);
+    textItem(*pProd, fd);
+    endRun(*pProd, fd);
     
-
+    delete pProd;
 
   }    
   catch (...) {
+    delete pProd;
     kill(childpid*-1, SIGTERM);
     
     int status;
@@ -389,16 +410,19 @@ void rseltests::exclude()
   programName       += "/ringselector --exclude=BEGIN_RUN";
   int fd             = spawn(programName.c_str());
 
+  CDataSink* pProd = nullptr;
   try {
     
-    CRingBuffer prod(Os::whoami(), CRingBuffer::producer);
-    
+    pProd = CDataSinkFactory().makeSink(std::string("tcp://localhost/")+Os::whoami());
 
-    beginRun(prod, fd, false);
-    pauseRun(prod, fd);
-    endRun(prod,fd);		// Should be the first one back from the program.
+    beginRun(*pProd, fd, false);
+    pauseRun(*pProd, fd);
+    endRun(*pProd,fd);		// Should be the first one back from the program.
+
+    delete pProd;
   }
   catch (...) {
+
     kill (childpid*-1, SIGTERM);
     int s;
     wait(&s);
@@ -417,19 +441,23 @@ void rseltests::only()
   string programName = BINDIR;
   programName       += "/ringselector --accept=BEGIN_RUN"; // only begin runs.
   int  fd            = spawn(programName.c_str());
-  
+ 
+  CDataSink* pProd = nullptr; 
   try {
-    CRingBuffer prod(Os::whoami(), CRingBuffer::producer);
+    pProd = CDataSinkFactory().makeSink(std::string("tcp://localhost/")+Os::whoami());
 
-    beginRun(prod,fd);		// Should be fine.
-    eventCount(prod, fd, 100, false);
-    scaler(prod, fd, false);
-    pauseRun(prod, fd, false);
-    resumeRun(prod, fd, false);
-    beginRun(prod,fd);
+    beginRun(*pProd,fd);		// Should be fine.
+    eventCount(*pProd, fd, 100, false);
+    scaler(*pProd, fd, false);
+    pauseRun(*pProd, fd, false);
+    resumeRun(*pProd, fd, false);
+    beginRun(*pProd,fd);
 
+    delete pProd;
   }
   catch (...) {
+    delete pProd;
+
     kill (childpid*-1, SIGTERM);
     int s;
     wait(&s);

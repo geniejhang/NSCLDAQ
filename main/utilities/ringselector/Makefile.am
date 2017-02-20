@@ -63,13 +63,16 @@ selectortests_SOURCES	=	TestRunner.cpp selectortests.cpp
 selectortests_LDADD	=	$(CPPUNIT_LDFLAGS)	\
 				@top_builddir@/utilities/common/libUtilCommon.la	\
 				@top_builddir@/base/os/libdaqshm.la \
-				@top_builddir@/daq/format/libdataformat.la	\
+				@top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\
+				@top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
+				@top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+				@top_builddir@/utilities/IO/libdaqio.la \
 				@top_builddir@/base/dataflow/libDataFlow.la			\
 				@LIBEXCEPTION_LDFLAGS@
 
 selectortests_LDFLAGS	=	-Wl,"-rpath=link=$(libdir)"
 
-selectortests_CPPFLAGS	=	$(ringselector_CPPFLAGS) -DBINDIR="\"$(bindir)\""
+selectortests_CPPFLAGS	=	$(ringselector_CPPFLAGS) -DBINDIR="\"$(bindir)\"" 
 
 
 TESTS= ./selectortests
