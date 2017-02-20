@@ -28,7 +28,7 @@ libStatusMessages_la_SOURCES=Constants.cpp CZmqContext.cpp \
 
 
 libStatusMessages_la_CPPFLAGS = $(COMPILATION_FLAGS)
-libStatusMessages_la_LDFLAGS  = $(COMMON_LIBS)
+libStatusMessages_la_LIBADD   = $(COMMON_LIBS)
 
 include_HEADERS = CStatusMessage.h CPublishRingStatistics.h \
 	CStatusSubscription.h CMultiAggregator.h
@@ -40,7 +40,7 @@ ringstatusdaemon_SOURCES  = ringStatusDaemon.cpp \
 
 ringstatusdaemon_CPPFLAGS = -I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/dataflow
-ringstatusdaemon_LDFLAGS  = @top_builddir@/servers/portmanager/libPortManager.la \
+ringstatusdaemon_LDADD  = @top_builddir@/servers/portmanager/libPortManager.la \
 	@builddir@/libStatusMessages.la	@top_builddir@/base/dataflow/libDataFlow.la \
 	@LIBEXCEPTION_LDFLAGS@
 
@@ -52,7 +52,7 @@ nodist_ringstatusdaemon_SOURCES = ringstatus.c ringstatus.h
 
 statusaggregator_SOURCES  = aggregator.cpp
 statusaggregator_CPPFLAGS = -I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@
-statusaggregator_LDFLAGS  =  @top_builddir@/servers/portmanager/libPortManager.la \
+statusaggregator_LDADD  =  @top_builddir@/servers/portmanager/libPortManager.la \
 	@builddir@/libStatusMessages.la						  \
 	@ZMQ_LDFLAGS@								\
 	@LIBEXCEPTION_LDFLAGS@
@@ -62,7 +62,7 @@ statusaggregator_LDFLAGS  =  @top_builddir@/servers/portmanager/libPortManager.l
 multiaggregator_SOURCES = multiaggmain.cpp CMultiAggregator.cpp CMultiAggregator.h
 multiaggregator_CPPFLAGS=-I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/dataflow -I@top_srcdir@/base/os
-multiaggregator_LDFLAGS = @top_builddir@/servers/portmanager/libPortManager.la \
+multiaggregator_LDADD = @top_builddir@/servers/portmanager/libPortManager.la \
 	@builddir@/libStatusMessages.la @top_builddir@/base/dataflow/libDataFlow.la \
 	@top_builddir@/base/os/libdaqshm.la					\
 	@ZMQ_LDFLAGS@								\
@@ -99,7 +99,7 @@ libTclStatusMessages_la_SOURCES= TclPackage.cpp             \
 	TclUtilities.cpp TclUtilities.h 
 
 libTclStatusMessages_la_CPPFLAGS=$(COMPILATION_FLAGS) @TCL_FLAGS@ @LIBTCLPLUS_CFLAGS@ @TCL_DEFS@
-libTclStatusMessages_la_LDFLAGS=$(COMMON_LIBS)  	\
+libTclStatusMessages_la_LIBADD=$(COMMON_LIBS)  	\
 				@builddir@/libStatusMessages.la   \
 				@LIBTCLPLUS_LDFLAGS@ 	\
 				@TCL_LDFLAGS@
@@ -120,7 +120,7 @@ tclAppInstall::
 
 libPyStatusMessages_la_SOURCES= PyStatusMessages.cpp
 libPyStatusMessages_la_CPPFLAGS=$(COMPILATION_FLAGS) @PYTHON_CPPFLAGS@
-libPyStatusMessages_la_LDFLAGS=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
+libPyStatusMessages_la_LIBADD=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
 				@PYTHON_LDFLAGS@
 
 pypkgInstall:
@@ -155,14 +155,14 @@ dbtests_SOURCES=TestRunner.cpp Asserts.h statusdbSchema.cpp \
 	dbrdostattests.cpp dbinsertests.cpp
 
 dbtests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
-dbtests_LDFLAGS=libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
+dbtests_LDADD=@builddir@/libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
 
 
 ringstattests_SOURCES=TestRunner.cpp Asserts.h ringstattests.cpp \
 	readoutstattests.cpp logmsgtests.cpp statemsgtests.cpp testutils.cpp testutils.h
 
 ringstattests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
-ringstattests_LDFLAGS=libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
+ringstattests_LDADD=@builddir@/libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
 
 tclpkgtests_SOURCES = TestRunner.cpp Asserts.h pkgloads.cpp \
 	tclringstatustests.cpp testutils.cpp testutils.h \
@@ -170,22 +170,22 @@ tclpkgtests_SOURCES = TestRunner.cpp Asserts.h pkgloads.cpp \
 
 tclpkgtests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@ @LIBTCLPLUS_CFLAGS@ @TCL_FLAGS@ \
 					-DTCLLIBPATH="\"@prefix@/TclLibs\""
-tclpkgtests_LDFLAGS=$(COMMON_LIBS) @builddir@/libTclStatusMessages.la \
+tclpkgtests_LDADD=$(COMMON_LIBS) @builddir@/libTclStatusMessages.la \
                 @builddir@/libStatusMessages.la	\
 		@LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@ @CPPUNIT_LDFLAGS@
 
 subtests_SOURCES=TestRunner.cpp subtest.cpp
 subtests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
-subtests_LDFLAGS=libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
+subtests_LDADD=@builddir@/libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
 
 ringpubclasstest_SOURCES=TestRunner.cpp ringpubclasstest.cpp testutils.cpp testutils.h
 ringpubclasstest_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
-ringpubclasstest_LDFLAGS  =libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
+ringpubclasstest_LDADD  =@builddir@/libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
 
 ringdaemontests_SOURCES=TestRunner.cpp ringdaemontests.cpp \
 	CRingStatusDaemon.cpp CRingStatusDaemon.h testutils.cpp
 ringdaemontests_CPPFLAGS = $(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
-ringdaemontests_LDFLAGS  = libStatusMessages.la $(COMMON_LIBS) \
+ringdaemontests_LDADD  = @builddir@/libStatusMessages.la $(COMMON_LIBS) \
 	@CPPUNIT_LDFLAGS@
 
 
