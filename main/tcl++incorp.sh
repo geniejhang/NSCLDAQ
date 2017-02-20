@@ -13,7 +13,7 @@
 #
 # Last used with libtclplus-v2.0-000
 
-baseURL="git://git.code.sf.net/p/nscldaq/git"
+baseURL="https://git.nscl.msu.edu/daqdev/NSCLDAQ.git"
 
 tag="$1"
 uri="$2"
