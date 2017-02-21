@@ -1,11 +1,11 @@
 lib_LTLIBRARIES = libvardbEventBuilder.la libTclvardbEventBuilder.la \
 	libPyVarDbEvb.la
 
-COMMONLDFLAGS = @top_builddir@/utilities/varmanager/server/libvarmgr.la \
+COMMONLIBS = @top_builddir@/utilities/varmanager/server/libvarmgr.la \
 		@top_builddir@/utilities/varmanager/libvardb.la         \
 		@top_builddir@/base/sqlite++/libsqlite3pp.la @SQLITE3_LDFLAGS@ \
-		@ZMQ_LDFLAGS@							\
-		-Wl,"-rpath=@libdir@"
+                @ZMQ_LDFLAGS@
+COMMONLDFLAGS = -Wl,"-rpath=@libdir@"
 COMMONCPPFLAGS= -I@top_srcdir@/utilities/varmanager/server 	\
 	-I@top_srcdir@/utilities/varmanager			\
 	-I@top_srcdir@/base/sqlite++
@@ -14,6 +14,7 @@ COMMONCPPFLAGS= -I@top_srcdir@/utilities/varmanager/server 	\
 
 libvardbEventBuilder_la_SOURCES = CVardbEventBuilder.cpp
 libvardbEventBuilder_la_CPPFLAGS=$(COMMONCPPFLAGS)
+libvardbEventBuilder_la_LIBADD=$(COMMONLIBS)
 libvardbEventBuilder_la_LDFLAGS=$(COMMONLDFLAGS)
 
 # TCL Bindings
@@ -22,13 +23,15 @@ libTclvardbEventBuilder_la_SOURCES=CTCLVarDbEventBuilder.h CTCLVarDbEventBuilder
 	CTCLEvbInstance.cpp CTCLEvbInstance.h						\
 	EventBuilderTclPkgInit.cpp
 libTclvardbEventBuilder_la_CPPFLAGS=$(COMMONCPPFLAGS) @LIBTCLPLUS_CFLAGS@ @TCL_CPPFLAGS@
-libTclvardbEventBuilder_la_LDFLAGS=libvardbEventBuilder.la $(COMMONLDFLAGS) @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
+libTclvardbEventBuilder_la_LIBADD=@builddir@/libvardbEventBuilder.la $(COMMONLIBS) @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
+libTclvardbEventBuilder_la_LDFLAGS = $(COMMONLDFLAGS)
 
 #PYTHON Bindings
 
 libPyVarDbEvb_la_SOURCES=PyEventBuilder.cpp
 libPyVarDbEvb_la_CPPFLAGS=$(COMMONCPPFLAGS) @PYTHON_CPPFLAGS@
-libPyVarDbEvb_la_LDFLAGS=libvardbEventBuilder.la $(COMMONLDFLAGS) @PYTHON_LDFLAGS@
+libPyVarDbEvb_la_LIBADD=@builddir@/libvardbEventBuilder.la $(COMMONLIBS) @PYTHON_LDFLAGS@
+libPyVarDbEvb_la_LDFLAGS=$(COMMONLDFLAGS)
 
 
 install-exec-hook:
@@ -47,7 +50,8 @@ noinst_HEADERS=Asserts.h
 
 unittests_SOURCES=TestRunner.cpp apitests.cpp
 unittests_CPPFLAGS=$(COMMONCPPFLAGS) @CPPUNIT_CFLAGS@
-unittests_LDFLAGS=libvardbEventBuilder.la $(COMMONLDFLAGS)   @CPPUNIT_LDFLAGS@
+unittests_LDADD=@builddir@/libvardbEventBuilder.la $(COMMONLIBS)   @CPPUNIT_LDFLAGS@
+unittests_LDFLAGS=$(COMMONLDFLAGS)
 
 
 TEST_EXTENSIONS=.test .py

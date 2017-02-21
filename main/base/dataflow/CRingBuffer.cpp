@@ -650,17 +650,11 @@ CRingBuffer::putv(const std::vector<std::pair<const void *, size_t> > &buffers,
       auto pBuffer      = reinterpret_cast<const char*>(ioInfo.first);
       size_t bufferSize = ioInfo.second;
 
-//      std::cout << "new buffer" << std::endl;
-//      std::cout << "currentOffset = " << currentOffset << std::endl;
-//      std::cout << "bufferSize = " << bufferSize << std::endl;
-//      std::cout << "ringTop+1" << ringTop+1 << std::endl;
       if ((currentOffset + bufferSize) <=  (ringTop+1)) {
-//          std::cout << "whole transfer" << std::endl;
           pPut = std::copy(pBuffer, pBuffer+bufferSize, pPut);
           currentOffset += bufferSize;
       }
       else {
-//          std::cout << "split transfer" << std::endl;
           size_t firstSize = ringTop+1 - currentOffset;
           size_t secondSize= bufferSize - firstSize;
           pPut = std::copy(pBuffer, pBuffer+firstSize, pPut);                     // Move the first chunk.

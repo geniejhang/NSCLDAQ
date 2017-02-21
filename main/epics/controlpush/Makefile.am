@@ -15,7 +15,6 @@
 
 #  This application requires epics:
 
-if EPICS
 LIBDIR=@prefix@/TclLibs
 
 bin_PROGRAMS        = controlpush
@@ -81,5 +80,3 @@ unittests_CPPFLAGS=$(COMPILATION_FLAGS)
 
 clean-local:
 	rm -f cmdline.c rmcline.h
-
-endif

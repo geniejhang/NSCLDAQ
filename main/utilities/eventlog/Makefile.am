@@ -69,6 +69,7 @@ fakeruns_LDADD		=	@top_builddir@/utilities/nscldaq-format/format/V12/libdataform
 fakeruns_CPPFLAGS=-I@top_srcdir@/base/headers		\
 				@LIBTCLPLUS_CFLAGS@			\
                                 -I@top_srcdir@/utilities/nscldaq-format/format		\
+                                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO		\
                                 -I@top_srcdir@/utilities/nscldaq-format/Buffer		\
                                 -I@top_srcdir@/utilities/nscldaq-format/V12		\
                                 -I@top_srcdir@/utilities/IO		\
@@ -80,6 +81,7 @@ eventlogTests_SOURCES = TestRunner.cpp eventlogTests.cpp
 eventlogTests_CPPFLAGS=@CPPUNIT_CFLAGS@ -I@top_srcdir@/base/headers		\
 				@LIBTCLPLUS_CFLAGS@			\
                                 -I@top_srcdir@/utilities/nscldaq-format/format		\
+                                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO		\
                                 -I@top_srcdir@/utilities/nscldaq-format/Buffer		\
                                 -I@top_srcdir@/utilities/nscldaq-format/V12		\
                                 -I@top_srcdir@/utilities/IO		\

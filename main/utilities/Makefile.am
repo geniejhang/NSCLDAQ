@@ -6,7 +6,7 @@ SUBDIRS = 				common \
 					sequencer \
 					nscldaq-format/Buffer \
                                         IO \
-																				nscldaq-format \
+                                        nscldaq-format \
 					filter \
 					conversion \
 					ringselector \
