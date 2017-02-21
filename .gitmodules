@@ -1,3 +1,4 @@
 [submodule "main/daq/nscldaq-format"]
 	path = main/utilities/nscldaq-format
 	url = https://git.nscl.msu.edu/daqdev/nscldaq-format.git
+  branch = jenkins
