@@ -33,6 +33,8 @@ package require ringSerializer
 package require ringBufferObject
 package require stateProgramSerializer
 package require stateProgram
+package require dataSourceObject
+package require dsourceSerializer
 ##
 #  The purpose of this file is to provide a dashboard that shows data flow
 #  bottlenecks in an experiment that has been defined by an experiment database.
@@ -332,4 +334,28 @@ proc ::DashboardDatabase::loadRingBuffers {dburi canvas} {
 proc ::DashboardDatabase::loadStatePrograms {dburi canvas} {
     set programs [::Serialize::deserializeStatePrograms $dburi]
     return [createItems $programs $canvas StateProgramIcon]
+}
+##
+# loadDataSources
+#    Loads/displays the data sources from a database experiment def file.
+#
+# @param dburi - database uri
+# @param canvas - canvas on whih to display the stuff.
+# @return list  - List of resulting dashboard objects.
+# @note  A bit of fudging is done post call to createItems.  The -data
+#        values become a two element list containing, in order, the object and
+#        the name of the eventbuilder this data source outputs to.
+#
+proc ::DashboardDatabase::loadDataSources {dburi canvas} {
+    set sources [::Serialize::deserializeDataSources $dburi]
+    set result [createItems $sources $canvas DataSourceIcon]
+    
+    #  Fudge the -data back on the result items:
+    
+    foreach obj $result source $sources {
+        set evbName [dict get $source evbName]
+        $obj configure -data [list [$obj cget -data] $evbName]
+    }
+    
+    return $result
 }
