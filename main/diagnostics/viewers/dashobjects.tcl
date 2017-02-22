@@ -22,13 +22,15 @@ exec tclsh "$0" ${1+"$@"}
 
 ##
 # @file dashboard.tcl
-# @brief Provide dashboard view of an experiment
+# @brief Provide dashboard objects for the status display dashboard.
 # @author Ron Fox <fox@nscl.msu.edu>
 #
 
 package provide Dashboard 1.0
 package require Tk
 package require snit
+package require ringSerializer
+package require ringBufferObject
 ##
 #  The purpose of this file is to provide a dashboard that shows data flow
 #  bottlenecks in an experiment that has been defined by an experiment database.
@@ -238,4 +240,60 @@ snit::type DashboardObject {
         
         set options($optname) $color
     }
+}
+namespace eval DashboardDatabase {
+    
+}
+##
+# getProperty
+#   Given an object that has a getProperties method returns the value of a
+#   specific property.
+#
+# @param obj   - The object we want info from
+# @param prop  - Named property to fetch.
+# @result string - The property value.
+#
+proc ::DashboardDatabase::getProperty {obj prop} {
+    set props [$obj getProperties]
+    set propv  [$props find $prop]
+    if {$propv eq ""} {
+        error "Property $prop does not exist in the object $obj"
+    }
+    return [$propv cget -value]
+}
+
+##
+# loadRingBuffers
+#   Given a database URI that contains an experiment definitions, loads
+#   the ring buffers into the specified canvas;
+#
+# @param dburi -- URI Pointing to the database to read.
+# @param canvas -- Canvas on which the rings should be displayed.
+# @return list  -  List of resulting DashboardObjects.  The -data value
+#                  of each dashboard object is the RingBufferObject
+#                  generated from the database definitions.
+# @note - the ring buffers will be given a title like name@host.
+# @note - A highlight rectangle will be created with the canvas background
+#         color (unhighlighted essentially).
+#
+proc ::DashboardDatabase::loadRingBuffers {dburi canvas} {
+    set result [list]
+    set rings [::Serialize::deserializeRings $dburi]
+    set bg    [$canvas cget -background]
+    foreach ring $rings {
+        set o [dict get $ring object]
+        set x [dict get $ring x]
+        set y [dict get $ring y]
+        
+        set objId [$canvas create image $x $y -image RingBufferIcon]
+        set item [DashboardObject %AUTO% -id $objId -canvas $canvas -x $x -y $y]
+        $item configure -highlight $bg
+        set name [getProperty $o name]
+        set host [getProperty $o host]
+        $item configure -title $name@$host
+        $item configure -data $o
+        
+        lappend result $item
+    }
+    return $result
 }
