@@ -23,6 +23,7 @@
 #include <vector> 
 #include <stdint.h>
 #include <CFatalException.h>
+#include <memory>
 
 class CMediator;
 class CFilter;
@@ -82,8 +83,8 @@ class CFilterMain
 
   private:
     // Private utility functions 
-    DAQ::CDataSource* constructDataSource();
-    DAQ::CDataSink* constructDataSink();
+    std::unique_ptr<DAQ::CDataSource> constructDataSource();
+    std::unique_ptr<DAQ::CDataSink> constructDataSink();
 
     std::vector<uint16_t> constructExcludesList();
     std::vector<uint16_t> constructSampleList();

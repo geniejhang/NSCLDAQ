@@ -59,12 +59,12 @@ CFilterMain::CFilterMain(int argc, char** argv)
       m_mediator = new CInfiniteMediator(0,new CCompositeFilter,0);
     } 
     // Set up the data source 
-    CDataSource* source = constructDataSource(); 
-    m_mediator->setDataSource(source);
+    auto pSource = constructDataSource();
+    m_mediator->setDataSource(std::move(pSource));
 
     // Set up the sink source 
-    CDataSink* sink = constructDataSink(); 
-    m_mediator->setDataSink(sink);
+    auto pSink = constructDataSink();
+    m_mediator->setDataSink(std::move(pSink));
 
     // set up the skip and count args
     if (m_argsInfo->skip_given) {
@@ -135,7 +135,7 @@ void CFilterMain::registerFilter(const CFilter* filter)
     \exception May propagate CErrnoException,s CURLFormatException,
         or CFatalException
 */
-CDataSource* CFilterMain::constructDataSource()
+std::unique_ptr<CDataSource> CFilterMain::constructDataSource()
 {
   // Set up default source type
   std::string source_name("-");
@@ -149,8 +149,8 @@ CDataSource* CFilterMain::constructDataSource()
   // Set up the excludes
   std::vector<uint16_t> exclude = constructExcludesList();
   
-  CDataSource* source=0;
-  return CDataSourceFactory().makeSource(source_name,sample,exclude);
+  std::unique_ptr<CDataSource> pSource(CDataSourceFactory().makeSource(source_name,sample,exclude));
+  return pSource;
 }
 
 /**! Set up the data sink
@@ -158,7 +158,7 @@ CDataSource* CFilterMain::constructDataSource()
     Based on user's argument --sink, generates the appropriate source
     type.
 */
-CDataSink* CFilterMain::constructDataSink()
+std::unique_ptr<CDataSink> CFilterMain::constructDataSink()
 {
   // Set up default source type
   std::string sink_name("-");
@@ -166,7 +166,7 @@ CDataSink* CFilterMain::constructDataSink()
     sink_name = std::string(m_argsInfo->sink_arg);
   } 
 
-  CDataSink* sink=CDataSinkFactory().makeSink(sink_name);
+  std::unique_ptr<CDataSink> sink(CDataSinkFactory().makeSink(sink_name));
   return sink;
 }
 

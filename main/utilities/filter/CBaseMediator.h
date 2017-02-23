@@ -26,13 +26,13 @@
 class CBaseMediator
 {
   protected:
-    std::unique_ptr<DAQ::CDataSource> m_pSource; //!< the source
-    std::unique_ptr<DAQ::CDataSink>   m_pSink; //!< the sink
+    std::shared_ptr<DAQ::CDataSource> m_pSource; //!< the source
+    std::shared_ptr<DAQ::CDataSink>   m_pSink; //!< the sink
 
   public:
     // The constructor
-    CBaseMediator(std::unique_ptr<DAQ::CDataSource> pSource = std::unique_ptr<DAQ::CDataSource>(),
-                  std::unique_ptr<DAQ::CDataSink> pSink     = std::unique_ptr<DAQ::CDataSink>());
+    CBaseMediator(std::shared_ptr<DAQ::CDataSource> pSource = std::shared_ptr<DAQ::CDataSource>(),
+                  std::shared_ptr<DAQ::CDataSink> pSink     = std::shared_ptr<DAQ::CDataSink>());
 
     virtual ~CBaseMediator();
 
@@ -66,45 +66,36 @@ class CBaseMediator
     virtual void finalize() = 0;
 
     /**! Set the source
-      This transfers ownership of the object to this CBaseMediator.
-      Ownership of the previous source is transfered to the caller.
-  
+
       \param source the new source
-      \return the old source 
+
     */
-    DAQ::CDataSource* setDataSource( DAQ::CDataSource* source)
+    virtual std::shared_ptr<DAQ::CDataSource>
+    setDataSource( std::shared_ptr<DAQ::CDataSource> source)
     {
-        DAQ::CDataSource* old_source = m_pSource.release();
-        m_pSource.reset(source);
-        return old_source;
-    }  
-    virtual void setDataSource( std::unique_ptr<DAQ::CDataSource>& pSource) {
-      m_pSource.swap(pSource);
+        auto pOld = m_pSource;
+        m_pSource = source;
+        return pOld;
     }
+
     /**! Set the sink
-      This transfers ownership of the object to this CBaseMediator.
-      Ownership of the previous sink is transfered to the caller.
-  
       \param sink the new sink
-      \return the old sink 
     */
-    DAQ::CDataSink* setDataSink( DAQ::CDataSink* sink)
+    virtual std::shared_ptr<DAQ::CDataSink>
+    setDataSink(std::shared_ptr<DAQ::CDataSink> pSink)
     {
-        DAQ::CDataSink* old_sink = m_pSink.get();
-        m_pSink.reset(sink);
-        return old_sink;
-    }  
-    virtual void setDataSink( std::unique_ptr<DAQ::CDataSink>& pSink) {
-      m_pSink.swap(pSink);
+        auto pOld = m_pSink;
+        m_pSink = pSink;
+        return pOld;
     }
 
     /**! Access to the source 
     */
-    virtual DAQ::CDataSource* getDataSource() { return m_pSource.get();}
+    virtual std::shared_ptr<DAQ::CDataSource> getDataSource() { return m_pSource;}
 
     /**! Access to the sink 
     */
-    virtual DAQ::CDataSink* getDataSink() { return m_pSink.get();}
+    virtual std::shared_ptr<DAQ::CDataSink> getDataSink() { return m_pSink;}
 
 };
 

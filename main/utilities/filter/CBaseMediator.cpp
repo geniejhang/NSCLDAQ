@@ -35,9 +35,9 @@ using namespace DAQ;
   \param sink a pointer to a CDataSink
 
 */
-CBaseMediator::CBaseMediator(unique_ptr<CDataSource> pSource, unique_ptr<CDataSink> pSink)
-: m_pSource(move(pSource)),
-  m_pSink(move(pSink))
+CBaseMediator::CBaseMediator(shared_ptr<CDataSource> pSource, shared_ptr<CDataSink> pSink)
+: m_pSource(pSource),
+  m_pSink(pSink)
 {}
 
 /**! Destructor

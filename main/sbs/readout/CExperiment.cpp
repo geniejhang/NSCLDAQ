@@ -46,7 +46,6 @@
 #include <CBusy.h>
 #include <vector>
 #include <string>
-#include <fragment.h>
 #include <os.h>
 #include <CCondition.h>
 #include <CMutex.h>
@@ -54,7 +53,7 @@
 
 
 using namespace std;
-using namespace DAQ::V12;
+using namespace DAQ;
 
 //
 // This struct is used to the event used to schedule an end run with the interpreter.
@@ -233,9 +232,9 @@ CExperiment::Start(bool resume)
     // user knows the structure of the ring:
     //
     
-    CRawRingItem serializedItem;
+    V12::CRawRingItem serializedItem;
 
-    CDataFormatItem format;
+    V12::CDataFormatItem format;
     format.toRawRingItem(serializedItem);
     *m_pRing << serializedItem;
 
@@ -259,8 +258,8 @@ CExperiment::Start(bool resume)
 
     uint32_t elapsedTime = (msTime - m_nRunStartStamp - m_nPausedmSeconds)/1000;
 
-    CRingStateChangeItem item(NULL_TIMESTAMP, m_nSourceId,
-        resume ? RESUME_RUN : BEGIN_RUN,  m_pRunState->m_runNumber,
+    V12::CRingStateChangeItem item(V12::NULL_TIMESTAMP, m_nSourceId,
+        resume ? V12::RESUME_RUN : V12::BEGIN_RUN,  m_pRunState->m_runNumber,
         elapsedTime, stamp, m_pRunState->m_pTitle);
     item.toRawRingItem(serializedItem);
     *m_pRing << serializedItem;
@@ -281,7 +280,7 @@ CExperiment::Start(bool resume)
     // if this is a start run:
     
     if (!resume) {
-    CRingPhysicsEventCountItem count(NULL_TIMESTAMP, 
+    V12::CRingPhysicsEventCountItem count(V12::NULL_TIMESTAMP,
         getSourceId(), 
         0, // count
         0, // time offset
@@ -399,21 +398,21 @@ CExperiment::syncEndRun(bool pause)
   RunState::State finalState;
   if (pause) {
 
-    itemType   = PAUSE_RUN;
+    itemType   = V12::PAUSE_RUN;
     finalState = RunState::paused;
   }
   else {
-    itemType   = END_RUN;
+    itemType   = V12::END_RUN;
     finalState = RunState::inactive;
   }
 
-  CRingStateChangeItem item(NULL_TIMESTAMP, m_nSourceId,
+  V12::CRingStateChangeItem item(V12::NULL_TIMESTAMP, m_nSourceId,
                             itemType, 
 			    m_pRunState->m_runNumber,
 			    endOffset,
 			    now,
                 m_pRunState->m_pTitle);
-  CRawRingItem serializedItem(item);
+  V12::CRawRingItem serializedItem(item);
   *m_pRing << serializedItem;
 
 
@@ -557,8 +556,8 @@ CExperiment::ReadEvent()
     // This business is contrary to what was done in V12 to avoid all the
     // mess of reinterpret_casts, but I will keep it so that we keep the change
     // transparent to users' code
-    CRawRingItem item;
-    item.setType(PHYSICS_EVENT);
+    V12::CRawRingItem item;
+    item.setType(V12::PHYSICS_EVENT);
     item.getBody().resize(m_nDataBufferSize*sizeof(uint16_t));
 
     uint16_t* pBuffer = reinterpret_cast<uint16_t*>(item.getBody().data());
@@ -610,23 +609,23 @@ CExperiment::readScalers()
     
     m_pScalers->clear();	// Clear scalers after read.
 
-    CRingScalerItem  item(timestamp, srcid,
+    V12::CRingScalerItem  item(timestamp, srcid,
                           startTime,
 			  endTime,
 			  now,
               scalers);
-    CRawRingItem serializedItem(item);
+    V12::CRawRingItem serializedItem(item);
     *m_pRing << serializedItem;
 			  
   }
   // Regardless, let's emit a physics event count stamp:
 
-  CRingPhysicsEventCountItem item(NULL_TIMESTAMP, 
+  V12::CRingPhysicsEventCountItem item(V12::NULL_TIMESTAMP,
                                   getSourceId(), 
                                   m_nEventsEmitted,
                         				  endTime,
                         				  now);
-  CRawRingItem serializedItem(item);
+  V12::CRawRingItem serializedItem(item);
   *m_pRing << serializedItem;
 }
 
@@ -670,11 +669,11 @@ CExperiment::DocumentPackets()
     time_t           now     = time(&now);
     uint64_t         msTime  = getTimeMs();
     uint32_t         offset = (msTime - m_nRunStartStamp - m_nPausedmSeconds)/1000;
-    CRingTextItem item(PACKET_TYPES, NULL_TIMESTAMP, m_nSourceId,
+    V12::CRingTextItem item(V12::PACKET_TYPES, V12::NULL_TIMESTAMP, m_nSourceId,
                        packetDefs,
                        offset,
                        static_cast<uint32_t>(now));
-    CRawRingItem serializedItem(item);
+    V12::CRawRingItem serializedItem(item);
     *m_pRing << serializedItem;
   }
 }

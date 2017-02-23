@@ -26,7 +26,7 @@ namespace DAQ {
   namespace Transform {
 
     //
-CTransform11p0to11p0::CTransform11p0to11p0(unique_ptr<CFilter> pFilter)
+CTransform11p0to11p0::CTransform11p0to11p0(std::shared_ptr<CFilter> pFilter)
   : m_pFilter(move(pFilter))
 {}
 

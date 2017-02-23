@@ -123,14 +123,14 @@ void CInfiniteMediatorTest::testSetMembers()
     CPPUNIT_ASSERT_EQUAL( m_pFilter, old_pFilter );
     CPPUNIT_ASSERT_EQUAL( new_pFilter, m_mediator->m_pFilter.get() );
 
-    CDataSource* new_source = 0;
-    CDataSource* old_source = m_mediator->setDataSource(new_source);
-    CPPUNIT_ASSERT_EQUAL( m_source,  old_source );
-    CPPUNIT_ASSERT_EQUAL( new_source, m_mediator->m_pSource.get() );
+    std::shared_ptr<CDataSource> new_source = nullptr;
+    auto old_source = m_mediator->setDataSource(new_source);
+    CPPUNIT_ASSERT_EQUAL( m_source,  old_source.get() );
+    CPPUNIT_ASSERT_EQUAL( new_source, m_mediator->m_pSource );
 
-    CDataSink* new_sink = 0;
-    CDataSink* old_sink = m_mediator->setDataSink(new_sink);
-    CPPUNIT_ASSERT_EQUAL( m_sink , old_sink );
-    CPPUNIT_ASSERT_EQUAL( new_sink , m_mediator->m_pSink.get() );
+    std::shared_ptr<CDataSink> new_sink = nullptr ;
+    auto old_sink = m_mediator->setDataSink(new_sink);
+    CPPUNIT_ASSERT_EQUAL( m_sink , old_sink.get() );
+    CPPUNIT_ASSERT_EQUAL( new_sink , m_mediator->m_pSink );
 }
 

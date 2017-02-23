@@ -13,12 +13,20 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <CRingStateChangeItem.h>
-#include <CRingItem.h>
-#include <DataFormat.h>
+
+#include <V11/CRingStateChangeItem.h>
+#include <V11/CRingItem.h>
+#include <V11/DataFormatV11.h>
+
+#include <RingIOV11.h>
+#include <CFileDataSink.h>
+
 #include <io.h>
 #include <time.h>
 #include <stdexcept>
+
+
+using namespace DAQ;
 
 class TestEndInfo11 : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(TestEndInfo11);
@@ -74,14 +82,14 @@ void TestEndInfo11::oneWithBh()
   
   char tmplate[] = "testrunXXXXXX";
   int fd = mkstemp(tmplate);
+  CFileDataSink sink(fd);
+
   time_t now = time(NULL);
-  CRingStateChangeItem end(
+  V11::CRingStateChangeItem end(
     666, 1, 2,
-    END_RUN, 1234, 456, now, "This is a title"
+    V11::END_RUN, 1234, 456, now, "This is a title"
   );
-  RingItem* pItem = end.getItemPointer();
-  uint32_t itemSize = pItem->s_header.s_size;
-  io::writeData(fd, pItem, itemSize);
+  writeItem(sink, end);
   
   // Rewind the fd and create the end run info around it.
   
@@ -110,13 +118,13 @@ void TestEndInfo11::oneWoBH()
   
   char tmplate[] = "testrunXXXXXX";
   int fd = mkstemp(tmplate);
+  CFileDataSink sink(fd);
+
   time_t now = time(NULL);
-  CRingStateChangeItem end(
-    END_RUN, 1234, 456, now, "This is a title"
+  V11::CRingStateChangeItem end(
+    V11::END_RUN, 1234, 456, now, "This is a title"
   );
-  RingItem* pItem = end.getItemPointer();
-  uint32_t itemSize = pItem->s_header.s_size;
-  io::writeData(fd, pItem, itemSize);
+  writeItem(sink, end);
   
   // Rewind the fd and create the end run info around it.
   
@@ -156,13 +164,13 @@ void TestEndInfo11::nobodyHeaderThrows()
   
   char tmplate[] = "testrunXXXXXX";
   int fd = mkstemp(tmplate);
+  CFileDataSink sink(fd);
+
   time_t now = time(NULL);
-  CRingStateChangeItem end(
-    END_RUN, 1234, 456, now, "This is a title"
+  V11::CRingStateChangeItem end(
+    V11::END_RUN, 1234, 456, now, "This is a title"
   );
-  RingItem* pItem = end.getItemPointer();
-  uint32_t itemSize = pItem->s_header.s_size;
-  io::writeData(fd, pItem, itemSize);
+  writeItem(sink, end);
   
   // Rewind the fd and create the end run info around it.
   
@@ -192,28 +200,26 @@ void TestEndInfo11::twoWithBh()
 {
   char tmplate[] = "testrunXXXXXX";
   int fd = mkstemp(tmplate);
+  CFileDataSink sink(fd);
+
   time_t now = time(NULL);
   
   // First one:
   
-  CRingStateChangeItem end(
+  V11::CRingStateChangeItem end(
     666, 1, 2,
-    END_RUN, 1234, 456, now, "This is a title"
+    V11::END_RUN, 1234, 456, now, "This is a title"
   );
-  RingItem* pItem = end.getItemPointer();
-  uint32_t itemSize = pItem->s_header.s_size;
-  io::writeData(fd, pItem, itemSize);
+  writeItem(sink, end);
     
   // Second one:
   
-  CRingStateChangeItem end2(
+  V11::CRingStateChangeItem end2(
     676, 2, 2,
-    END_RUN, 1234, 456, now, "This is a title"
+    V11::END_RUN, 1234, 456, now, "This is a title"
   );
-  pItem    = end2.getItemPointer();
-  itemSize = pItem->s_header.s_size;
-  io::writeData(fd, pItem, itemSize);
-  
+  writeItem(sink, end2);
+
   // Rewind the fd and create the end run info around it.
   
   lseek(fd, 0, SEEK_SET);
@@ -244,26 +250,24 @@ void TestEndInfo11::twoWoBh()
 {
   char tmplate[] = "testrunXXXXXX";
   int fd = mkstemp(tmplate);
+  CFileDataSink sink(fd);
+
   time_t now = time(NULL);
   
   // first one:
   
-  CRingStateChangeItem end(
-    END_RUN, 1234, 456, now, "This is a title"
+  V11::CRingStateChangeItem end(
+    V11::END_RUN, 1234, 456, now, "This is a title"
   );
-  RingItem* pItem = end.getItemPointer();
-  uint32_t itemSize = pItem->s_header.s_size;
-  io::writeData(fd, pItem, itemSize);
+  writeItem(sink, end);
   
   // Second one: + 10 seconds to tell them apart.
 
-  CRingStateChangeItem end2(
-    END_RUN, 1234, 456, now+10, "This is a title"
+  V11::CRingStateChangeItem end2(
+    V11::END_RUN, 1234, 456, now+10, "This is a title"
   );
-  pItem    = end2.getItemPointer();
-  itemSize = pItem->s_header.s_size;
-  io::writeData(fd, pItem, itemSize);
-  
+  writeItem(sink, end2);
+
   // Rewind the fd and create the end run info around it.
   
   lseek(fd, 0, SEEK_SET);
@@ -288,26 +292,23 @@ void TestEndInfo11::twoWithMixed()   // One with body hdr one without.
 {
   char tmplate[] = "testrunXXXXXX";
   int fd = mkstemp(tmplate);
+  CFileDataSink sink(fd);
+
   time_t now = time(NULL);
   
   // First one:
   
-  CRingStateChangeItem end(
+  V11::CRingStateChangeItem end(
     666, 1, 2,
-    END_RUN, 1234, 456, now, "This is a title"
+    V11::END_RUN, 1234, 456, now, "This is a title"
   );
-  RingItem* pItem = end.getItemPointer();
-  uint32_t itemSize = pItem->s_header.s_size;
-  io::writeData(fd, pItem, itemSize);
-
+  writeItem(sink, end);
   // second one:
   
-  CRingStateChangeItem end2(
-    END_RUN, 1234, 456, now+10, "This is a title"
+  V11::CRingStateChangeItem end2(
+    V11::END_RUN, 1234, 456, now+10, "This is a title"
   );
-  pItem    = end2.getItemPointer();
-  itemSize = pItem->s_header.s_size;
-  io::writeData(fd, pItem, itemSize);
+  writeItem(sink, end);
   
   // Rewind the fd and create the end run info around it.
   

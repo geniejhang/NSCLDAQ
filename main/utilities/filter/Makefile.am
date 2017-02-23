@@ -59,7 +59,7 @@ libfilter_la_LDFLAGS	= -version-info $(SOVERSION)	\
 
 libfilter_la_LIBADD	= @top_builddir@/utilities/common/libUtilCommon.la \
 			@top_builddir@/utilities/IO/libdaqio.la \
-			@top_builddir@/daq/format/libdataformat.la \
+                        @top_builddir@/daq/format/libdataformat.la \
 			@top_builddir@/base/dataflow/libDataFlow.la \
 			@top_builddir@/base/uri/liburl.la		\
 			@top_builddir@/base/os/libdaqshm.la		\
@@ -124,6 +124,7 @@ testapp_CPPFLAGS= -I@top_srcdir@/utilities \
     -I@top_srcdir@/base/dataflow
 
 testapp_LDADD = -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
+                        @top_builddir@/utilities/IO/libdaqio.la \
 			@top_builddir@/base/dataflow/libDataFlow.la 	\
 			@top_builddir@/base/uri/liburl.la 	\
 			@top_builddir@/daq/format/libdataformat.la	\

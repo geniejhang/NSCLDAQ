@@ -112,7 +112,7 @@ void experimentTests::construct() {
   EQ(static_cast<size_t>(4096), 
      m_pExperiment->m_nDataBufferSize);
 
-  auto pRingSource = dynamic_cast<CRingDataSink*>(m_pExperiment->m_pRing);
+  auto pRingSource = dynamic_cast<DAQ::CRingDataSink*>(m_pExperiment->m_pRing);
   ASSERT(pRingSource);
   CRingBuffer::Usage usage =  pRingSource->getRing().getUsage();
   ASSERT(usage.s_bufferSpace > 4096);
@@ -150,8 +150,8 @@ void experimentTests::start()
 
     // order is important! The ring must be attached to prior to calling "start"
     // so that we do not attach too late and miss the state change item.
-    CDataSource* pConsumer =
-            CDataSourceFactory::makeSource(string("tcp://localhost/") + ringName, {}, {});
+    DAQ::CDataSource* pConsumer =
+            DAQ::CDataSourceFactory::makeSource(string("tcp://localhost/") + ringName, {}, {});
 
   m_pExperiment->m_pRunState->m_runNumber = 1234;
   m_pExperiment->m_pRunState->m_timeOffset = 5678;
@@ -235,8 +235,8 @@ experimentTests::stop()
 
   // order is important. This must be created before we stop so that
   // we do not attach to the ring too late.
-  CDataSource* pConsumer
-          = CDataSourceFactory::makeSource(string("tcp://localhost/") + ringName,
+  DAQ::CDataSource* pConsumer
+          = DAQ::CDataSourceFactory::makeSource(string("tcp://localhost/") + ringName,
                                             {}, {});
 
   m_pExperiment->syncEndRun(false);	// This should now work.

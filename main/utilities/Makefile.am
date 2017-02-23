@@ -14,8 +14,7 @@ SUBDIRS = 				common \
 					bufdump	\
 					sclclient \
 					tkbufdump \
-					compatibility \
-					newscaler	\
+                                        newscaler	\
 					varmanager	\
 					varmanager/server	\
 					varmanager/scripts \

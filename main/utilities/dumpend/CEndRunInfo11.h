@@ -26,7 +26,11 @@
 #include <vector>
 #include <memory>
 
-class CRingStateChangeItem;
+namespace DAQ {
+namespace V11 {
+  class CRingStateChangeItem;
+} // end V11
+} // end DAQ
 
 
 /**
@@ -38,7 +42,7 @@ class CRingStateChangeItem;
 class CEndRunInfo11 : public CEndRunInfo
 {
 private:
-    std::vector<std::unique_ptr<CRingStateChangeItem> > m_endRuns;
+    std::vector<std::unique_ptr<DAQ::V11::CRingStateChangeItem> > m_endRuns;
     
 public:
     CEndRunInfo11(int fd);

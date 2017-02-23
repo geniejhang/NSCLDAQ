@@ -32,10 +32,10 @@ namespace DAQ {
       using FinalType =   V11::CRingItem;
 
     private:
-      std::unique_ptr<CFilter> m_pFilter;
+      std::shared_ptr<CFilter> m_pFilter;
 
     public:
-      CTransform11p0to11p0(std::unique_ptr<CFilter> pFilt);
+      CTransform11p0to11p0(std::shared_ptr<CFilter> pFilt);
 
       FinalType operator()(InitialType& item);
 

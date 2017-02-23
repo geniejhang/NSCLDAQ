@@ -19,7 +19,7 @@
 # @author <fox@nscl.msu.edu>
 */
 
-#include "CEndRunInfo10.h"
+#include "CEndRunInfo12.h"
 #include <CFileDataSource.h>
 #include "V10/CRingStateChangeItem.h"
 #include "V10/DataFormatV10.h"
@@ -35,24 +35,24 @@ using namespace DAQ;
  *
  *  @param fd - File descriptor open on the event file.
  */
-CEndRunInfo10::CEndRunInfo10(int fd) :
+CEndRunInfo12::CEndRunInfo12(int fd) :
 CEndRunInfo(fd)
 {
-  loadEndRuns();
+//  loadEndRuns();
 }
 /**
  *  destructor
  */
-CEndRunInfo10::~CEndRunInfo10() {}
+CEndRunInfo12::~CEndRunInfo12() {}
 
 /**
  * numEnds
  *   @return unsigned - the number of end runs in the file analyzed by the constructor.
  */
 unsigned
-CEndRunInfo10::numEnds() const
+CEndRunInfo12::numEnds() const
 {
-  return m_endRuns.size();
+//  return m_endRuns.size();
 }
 
 /**
@@ -63,9 +63,9 @@ CEndRunInfo10::numEnds() const
  *
  */
 bool
-CEndRunInfo10::hasBodyHeader(int which) const
+CEndRunInfo12::hasBodyHeader(int which) const
 {
-  throwIfBadIndex(which);
+//  throwIfBadIndex(which);
   return false;
 }
 
@@ -73,14 +73,14 @@ CEndRunInfo10::hasBodyHeader(int which) const
  * getEventTimestamp
  *   @param which - Number of the end run record to get info about.
  *   @throw std::range_Error - if which is not a valid index in m_endRuns.
- *   @throw std::string - because there are no body headers to have an even timestamp in 
+ *   @throw std::string - because there are no body headers to have an even timestamp in
  *                        10.x
  */
 uint64_t
-CEndRunInfo10::getEventTimestamp(int which) const
+CEndRunInfo12::getEventTimestamp(int which) const
 {
-  throwIfBadIndex(which);
-  throw std::string("Version 10.x ring items don't have body headers");
+//  throwIfBadIndex(which);
+//  throw std::string("Version 10.x ring items don't have body headers");
 }
 /**
  * getSourceId
@@ -88,11 +88,11 @@ CEndRunInfo10::getEventTimestamp(int which) const
  *   @throw std::range_error - if 'which' is not a valid index in m_endRuns.
  *   @throw std::string      - because version 10.x has no body headers in which to have srcids.
  */
-uint32_t 
-CEndRunInfo10::getSourceId(int which) const
+uint32_t
+CEndRunInfo12::getSourceId(int which) const
 {
-  throwIfBadIndex(which);
-  throw std::string("Version 10.x ring items dont' have body headers");
+//  throwIfBadIndex(which);
+//  throw std::string("Version 10.x ring items dont' have body headers");
 }
 /**
  *  getBarrierType
@@ -101,10 +101,10 @@ CEndRunInfo10::getSourceId(int which) const
  *    @throw std::string - because version 10.x has nobody headeers in which to have barrier type codes.
  */
 uint32_t
-CEndRunInfo10::getBarrierType(int which) const
+CEndRunInfo12::getBarrierType(int which) const
 {
-  throwIfBadIndex(which);
-  throw std::string("Version 10.x ring items don't have a body headers");
+//  throwIfBadIndex(which);
+//  throw std::string("Version 10.x ring items don't have a body headers");
 }
 
 /**
@@ -115,10 +115,11 @@ CEndRunInfo10::getBarrierType(int which) const
  *   @throw std::range_error - which is out of range.
  */
 uint32_t
-CEndRunInfo10::getRunNumber(int which) const
+CEndRunInfo12::getRunNumber(int which) const
 {
-  throwIfBadIndex(which);
-  return m_endRuns[which]->getRunNumber();
+//  throwIfBadIndex(which);
+//  return m_endRuns[which]->getRunNumber();
+    return 0;
 }
 /**
  * getElapsedTime
@@ -128,10 +129,11 @@ CEndRunInfo10::getRunNumber(int which) const
  *   @throw std::range_error - if which is not a valid index.
  */
 float
-CEndRunInfo10::getElapsedTime(int which) const
+CEndRunInfo12::getElapsedTime(int which) const
 {
-  throwIfBadIndex(which);
-  return m_endRuns[which]->getElapsedTime();
+//  throwIfBadIndex(which);
+//  return m_endRuns[which]->getElapsedTime();
+    return 0;
 }
 
 /**
@@ -142,10 +144,11 @@ CEndRunInfo10::getElapsedTime(int which) const
  *   @throw std::range_error - if which is not a valid index.
  */
 std::string
-CEndRunInfo10::getTitle(int which) const
+CEndRunInfo12::getTitle(int which) const
 {
-  throwIfBadIndex(which);
-  return m_endRuns[which]->getTitle();        // Required to be null terminated.
+//  throwIfBadIndex(which);
+//  return m_endRuns[which]->getTitle();        // Required to be null terminated.
+    return 0;
 }
 /**
  * getTod
@@ -155,10 +158,11 @@ CEndRunInfo10::getTitle(int which) const
  *   @throw std::range_error - if which is invalid.
  */
 time_t
-CEndRunInfo10::getTod(int which) const
+CEndRunInfo12::getTod(int which) const
 {
-  throwIfBadIndex(which);
-  return m_endRuns[which]->getTimestamp();
+//  throwIfBadIndex(which);
+//  return m_endRuns[which]->getTimestamp();
+    return 0;
 }
 /*----------------------------------------------------------------------------------------------------
 ** Private utilities.
@@ -170,12 +174,12 @@ CEndRunInfo10::getTod(int which) const
  *   @throw std::range_error - if the index is bad.
  */
 void
-CEndRunInfo10::throwIfBadIndex(int which) const
+CEndRunInfo12::throwIfBadIndex(int which) const
 {
-  unsigned w = which;
-  if (w >= m_endRuns.size()) {
-    throw std::range_error("CEndRunInfo10  -- End run selected does not exist");
-  }
+//  unsigned w = which;
+//  if (w >= m_endRuns.size()) {
+//    throw std::range_error("CEndRunInfo12  -- End run selected does not exist");
+//  }
 }
 /**
  * loadEndRuns
@@ -187,21 +191,21 @@ CEndRunInfo10::throwIfBadIndex(int which) const
  *          if the ring item into a new'd struct and save it in the ring array.
  */
 void
-CEndRunInfo10::loadEndRuns()
+CEndRunInfo12::loadEndRuns()
 {
-    CFileDataSource source(m_nFd);
-    V10::CRingItem item(V10::VOID);
+//    CFileDataSource source(m_nFd);
+//    V10::CRingItem item(V10::VOID);
 
-  while (true) {
-    readItem(source, item);
-    if (source.eof()) break;
+//  while (true) {
+//    readItem(source, item);
+//    if (source.eof()) break;
 
-    if (item.type() == V10::END_RUN) {
+//    if (item.type() == V10::END_RUN) {
 
-        std::unique_ptr<V10::CRingStateChangeItem>
-                pItem(new V10::CRingStateChangeItem(item));
-        m_endRuns.push_back(std::move(pItem));
+//        std::unique_ptr<V10::CRingStateChangeItem>
+//                pItem(new V10::CRingStateChangeItem(item));
+//        m_endRuns.push_back(std::move(pItem));
 
-    }
-  }
+//    }
+//  }
 }

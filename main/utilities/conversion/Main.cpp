@@ -61,8 +61,8 @@ Main::Main(int argc, char **argv)
   setUpTransformFactory();
 
   m_pMediator = m_factory.create(transformSpec.first, transformSpec.second);
-  m_pMediator->setDataSource(pSource);
-  m_pMediator->setDataSink(pSink);
+  m_pMediator->setDataSource(std::move(pSource));
+  m_pMediator->setDataSink(std::move(pSink));
 }
 
 

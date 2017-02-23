@@ -6,10 +6,24 @@
 
 #include "CEndRunInfoFactory.h"
 #include <io.h>
-#include <DataFormat.h>
-#include <DataFormat10.h>
+
+#include <V10/CRingStateChangeItem.h>
+#include <V10/DataFormatV10.h>
+
+#include <V11/DataFormatV11.h>
+#include <V11/CDataFormatItem.h>
+
+#include <V12/CDataFormatItem.h>
+#include <V12/DataFormat.h>
+
+#include <CFileDataSink.h>
+#include <RingIOV10.h>
+#include <RingIOV11.h>
+#include <RingIOV12.h>
+
 #include "CEndRunInfo10.h"
 #include "CEndRunInfo11.h"
+#include "CEndRunInfo12.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -21,6 +35,7 @@
 #include <time.h>
 #include <string.h>
 
+using namespace DAQ;
 
 class ErInfoFactoryTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(ErInfoFactoryTests);
@@ -29,6 +44,7 @@ class ErInfoFactoryTests : public CppUnit::TestFixture {
   CPPUNIT_TEST(explicitbad);
   CPPUNIT_TEST(fromfile11);
   CPPUNIT_TEST(fromfile10);
+  CPPUNIT_TEST(fromfile12);
   CPPUNIT_TEST(fromfileunrecog);
   CPPUNIT_TEST(fromfileempty);
   CPPUNIT_TEST_SUITE_END();
@@ -48,6 +64,7 @@ protected:
   
   void fromfile11();
   void fromfile10();
+  void fromfile12();
   void fromfileunrecog();
   void fromfileempty();
 };
@@ -116,9 +133,10 @@ void ErInfoFactoryTests::fromfile11()
   
   // Write an 11.x ring format item:
   
-  CDataFormatItem item;
-  io::writeData(fd, item.getItemPointer(), item.getItemPointer()->s_header.s_size);
-  
+  V11::CDataFormatItem item;
+  CFileDataSink sink(fd);
+  writeItem(sink, item);
+
   // Should not need to rewind.
   
   CEndRunInfo* pObj = CEndRunInfoFactory::create(fd);
@@ -145,15 +163,9 @@ void ErInfoFactoryTests::fromfile10()
   
   //  Write an nscldaq10 begin run item:
   
-  NSCLDAQ10::StateChangeItem item;
-  item.s_header.s_size = sizeof(item);
-  item.s_header.s_type = NSCLDAQ10::BEGIN_RUN;
-  item.s_runNumber     = 10;
-  item.s_timeOffset    = 0;
-  item.s_Timestamp     = time(NULL);
-  strcpy(item.s_title, "This is a run");
-  
-  io::writeData(fd, &item, sizeof(item));
+  V10::CRingStateChangeItem item(V10::BEGIN_RUN, 10, 0, time(NULL), "This is a run");
+  CFileDataSink sink(fd);
+  writeItem(sink, item);
   
   CEndRunInfo* pObj = CEndRunInfoFactory::create(fd);
   ASSERT(pObj);
@@ -163,9 +175,9 @@ void ErInfoFactoryTests::fromfile10()
   close(fd);
   delete pObj;
 }
-// file with a 12.0 format record
 
-void ErInfoFactoryTests::fromfileunrecog()
+// file with a 12.0 format record
+void ErInfoFactoryTests::fromfile12()
 {
  // create a temp file:
   char tmplate[] = "testrunXXXXXX";
@@ -173,22 +185,46 @@ void ErInfoFactoryTests::fromfileunrecog()
   
   // Make a format item for 12.0
   
-  DataFormat item;
-  item.s_header.s_size = sizeof(item);
-  item.s_header.s_type = RING_FORMAT;
-  item.s_mbz           = 0;
-  item.s_majorVersion  = 12;
-  item.s_minorVersion  = 0;
-  
-  io::writeData(fd, &item, sizeof(item));
+  V12::CDataFormatItem item;
+  CFileDataSink sink(fd);
+  writeItem(sink, item);
   
   //  now the factory should throw a domain error:
   
+  CEndRunInfo* pObj = CEndRunInfoFactory::create(fd);
+  ASSERT(pObj);
+  CEndRunInfo12* p12 = dynamic_cast<CEndRunInfo12*>(pObj);
+  ASSERT(p12);
+  close(fd);
+
+  delete pObj;
+}
+
+// file with a 13.0 format record
+void ErInfoFactoryTests::fromfileunrecog()
+{
+ // create a temp file:
+  char tmplate[] = "testrunXXXXXX";
+  int fd = mkstemp(tmplate);
+
+  // Make a format item for 13.0
+
+  V12::CDataFormatItem item;
+  item.setMajor(13);
+  item.setMinor(0);
+
+  CFileDataSink sink(fd);
+  writeItem(sink, item);
+
+  //  now the factory should throw a domain error:
+
   CPPUNIT_ASSERT_THROW(
     CEndRunInfoFactory::create(fd),
     std::domain_error
   );
 }
+
+
 // Empty file looks like 10.2 with no end run records.
 
 void ErInfoFactoryTests::fromfileempty()

@@ -17,19 +17,113 @@
 
 using namespace std;
 
-void CCompositePredicate::addPredicate(std::unique_ptr<CPredicate> pPred)
+namespace DAQ {
+namespace Transform {
+
+void CCompositePredicate::addPredicate(std::shared_ptr<CPredicate> pPred)
 {
-  m_predicates.push_back(move(pPred));
+    m_predicates.push_back(pPred);
 }
 
-
-bool CCompositePredicate::operator()()
+std::vector<std::shared_ptr<CPredicate>>& CCompositePredicate::getPredicates()
 {
-  bool flag = true;
-
-  for (auto& pred : m_predicates) {
-    flag &= (*pred)();
-  }
-
-  return flag;
+    return m_predicates;
 }
+
+CPredicatedMediator::Action
+CCompositePredicate::preInputUpdate(CPredicatedMediator& mediator)
+{
+    CPredicatedMediator::Action action = CPredicatedMediator::CONTINUE;
+    auto currentAction = action;
+
+    for (auto pPred : m_predicates) {
+        currentAction = pPred->preInputUpdate(mediator);
+
+        if (currentAction == CPredicatedMediator::ABORT) {
+            // short circuit if abort returned
+            action = currentAction;
+            break;
+        } else if (currentAction == CPredicatedMediator::SKIP){
+            // if skipping, then let the other predicates continue to
+            // update, but remember that we have to skip
+            action = currentAction;
+        } // else CONTINUE was returned, don't both storing result
+    }
+    return action;
+}
+
+CPredicatedMediator::Action
+CCompositePredicate::postInputUpdate(CPredicatedMediator& mediator, int type)
+{
+    CPredicatedMediator::Action action = CPredicatedMediator::CONTINUE;
+    auto currentAction = action;
+
+    for (auto pPred : m_predicates) {
+        currentAction = pPred->preInputUpdate(mediator);
+
+        if (currentAction == CPredicatedMediator::ABORT) {
+            // short circuit if abort returned
+            action = currentAction;
+            break;
+        } else if (currentAction == CPredicatedMediator::SKIP){
+            // if skipping, then let the other predicates continue to
+            // update, but remember that we have to skip
+            action = currentAction;
+        } // else CONTINUE was returned, don't both storing result
+    }
+    return action;
+}
+
+CPredicatedMediator::Action
+CCompositePredicate::preOutputUpdate(CPredicatedMediator& mediator, int type)
+{
+    CPredicatedMediator::Action action = CPredicatedMediator::CONTINUE;
+    auto currentAction = action;
+
+    for (auto pPred : m_predicates) {
+        currentAction = pPred->preInputUpdate(mediator);
+
+        if (currentAction == CPredicatedMediator::ABORT) {
+            // short circuit if abort returned
+            action = currentAction;
+            break;
+        } else if (currentAction == CPredicatedMediator::SKIP){
+            // if skipping, then let the other predicates continue to
+            // update, but remember that we have to skip
+            action = currentAction;
+        } // else CONTINUE was returned, don't both storing result
+    }
+    return action;
+}
+
+CPredicatedMediator::Action
+CCompositePredicate::postOutputUpdate(CPredicatedMediator& mediator, int type)
+{
+    CPredicatedMediator::Action action = CPredicatedMediator::CONTINUE;
+    auto currentAction = action;
+
+    for (auto pPred : m_predicates) {
+        currentAction = pPred->preInputUpdate(mediator);
+
+        if (currentAction == CPredicatedMediator::ABORT) {
+            // short circuit if abort returned
+            action = currentAction;
+            break;
+        } else if (currentAction == CPredicatedMediator::SKIP){
+            // if skipping, then let the other predicates continue to
+            // update, but remember that we have to skip
+            action = currentAction;
+        } // else CONTINUE was returned, don't both storing result
+    }
+    return action;
+}
+
+void CCompositePredicate::reset()
+{
+    for (auto pPred : m_predicates) {
+        pPred->reset();
+    }
+}
+
+} // end Transform
+} // end DAQ

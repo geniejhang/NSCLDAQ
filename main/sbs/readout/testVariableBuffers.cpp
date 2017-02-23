@@ -31,7 +31,7 @@
 #include <iostream>
 
 using namespace std;
-using namespace DAQ::V12;
+using namespace DAQ;
 
 extern std::string uniqueName(std::string);
 
@@ -113,16 +113,16 @@ void VarBufs::strunvar() {
 
   // There should be an event in the ring buffer:
   
-  CRawRingItem rawItem;
-  *m_pConsumer >> rawItem;
+  V12::CRawRingItem rawItem;
+  readItem(*m_pConsumer, rawItem);
   
   ASSERT(! m_pConsumer->eof());
-  EQ(MONITORED_VARIABLES, rawItem.type());
+  EQ(V12::MONITORED_VARIABLES, rawItem.type());
 
   // The item should be a bunch of strings that when run in a captive
   // interpreter should reproduce the values of george, tom and dick:
 
-  CRingTextItem item(rawItem);
+  V12::CRingTextItem item(rawItem);
   vector<string> commands = item.getStrings();
   CTCLInterpreter interp;
   for (int i=0; i < commands.size(); i++) {
@@ -152,16 +152,16 @@ void VarBufs::ststatevar() {
 
   // There should be an event in the ring buffer:
   
-  CRawRingItem rawItem;
-  *m_pConsumer >> rawItem;
+  V12::CRawRingItem rawItem;
+  readItem(*m_pConsumer, rawItem);
   
   ASSERT(! m_pConsumer->eof());
-  EQ(MONITORED_VARIABLES, rawItem.type());
+  EQ(V12::MONITORED_VARIABLES, rawItem.type());
 
   // The item should be a bunch of strings that when run in a captive
   // interpreter should reproduce the values of george, tom and dick:
 
-  CRingTextItem item(rawItem);
+  V12::CRingTextItem item(rawItem);
   vector<string> commands = item.getStrings();
   CTCLInterpreter interp;
   for (int i=0; i < commands.size(); i++) {
@@ -227,16 +227,16 @@ void VarBufs::dtrunvar() {
 
   // There should be an event in the ring buffer:
   
-  CRawRingItem rawItem;
-  *m_pConsumer >> rawItem;
+  V12::CRawRingItem rawItem;
+  readItem(*m_pConsumer, rawItem);
   
   ASSERT(!m_pConsumer->eof());
-  EQ(MONITORED_VARIABLES, rawItem.type());
+  EQ(V12::MONITORED_VARIABLES, rawItem.type());
 
   // The item should be a bunch of strings that when run in a captive
   // interpreter should reproduce the values of george, tom and dick:
 
-  CRingTextItem item(rawItem);
+  V12::CRingTextItem item(rawItem);
   vector<string> commands = item.getStrings();
   CTCLInterpreter interp;
   for (int i=0; i < commands.size(); i++) {
@@ -269,16 +269,16 @@ void VarBufs::dtstatevar() {
 
   // There should be an event in the ring buffer:
  
-  CRawRingItem rawItem;
-  *m_pConsumer >> rawItem;
+  V12::CRawRingItem rawItem;
+  readItem(*m_pConsumer, rawItem);
   
   ASSERT(!m_pConsumer->eof());
-  EQ(MONITORED_VARIABLES, rawItem.type());
+  EQ(V12::MONITORED_VARIABLES, rawItem.type());
 
   // The item should be a bunch of strings that when run in a captive
   // interpreter should reproduce the values of george, tom and dick:
 
-  CRingTextItem item(rawItem);
+  V12::CRingTextItem item(rawItem);
   vector<string> commands = item.getStrings();
   CTCLInterpreter interp;
   for (int i=0; i < commands.size(); i++) {

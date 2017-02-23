@@ -22,9 +22,12 @@
 
 class CConditionVariable;
 class CMutex;
-class CDataSink;
+
 class CTCLInterpreter;
 
+namespace DAQ {
+class CDataSink;
+}
 
 
 /*!
@@ -61,12 +64,12 @@ class CVariableBuffers
 private:
   typedef struct _TriggerEvent {
     Tcl_Event    s_RawEvent;
-    CDataSink*   s_pRing;
+    DAQ::CDataSink*   s_pRing;
     uint64_t     s_TimeOffset;
     
   } TriggerEvent, *pTriggerEvent;
 
-  typedef void Creator(CDataSink* pRing, uint64_t toffset);
+  typedef void Creator(DAQ::CDataSink* pRing, uint64_t toffset);
 
   // Member data.
 private:
@@ -98,9 +101,9 @@ private:
 
   // Trigger members:
 public:  
-  void triggerRunVariableBuffer(CDataSink* pRing,
+  void triggerRunVariableBuffer(DAQ::CDataSink* pRing,
 				uint64_t timeoffset);
-  void triggerStateVariableBuffer(CDataSink* pRing,
+  void triggerStateVariableBuffer(DAQ::CDataSink* pRing,
 				  uint64_t timeoffset);
 
   // manipulate and retrieve the source id value
@@ -109,17 +112,17 @@ public:
 
 
  private:
-  void triggerBuffer(CDataSink* pRing,
+  void triggerBuffer(DAQ::CDataSink* pRing,
 		     Tcl_EventProc* handler,
 		     Creator* creator,
 		     uint64_t timeoffset);
   
   // Event relays.. the targets of the event:
  private:
-  static  void createRunVariableEvent(CDataSink* pRing, uint64_t timeBase);
-  static  void createStateVariableEvent(CDataSink* pRing, uint64_t timeBase);
+  static  void createRunVariableEvent(DAQ::CDataSink* pRing, uint64_t timeBase);
+  static  void createStateVariableEvent(DAQ::CDataSink* pRing, uint64_t timeBase);
   
-  static  void createDocEvent(CDataSink* pRing,
+  static  void createDocEvent(DAQ::CDataSink* pRing,
 			      uint16_t     eventType,
 			      CDocumentedVars::NameValuePairs& variables,
 			      uint64_t    tbase);

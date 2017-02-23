@@ -24,8 +24,16 @@
 
 #include "CEndRunInfo.h"
 #include <vector>
-#include <DataFormat10.h>
 #include <memory>
+
+
+namespace DAQ {
+namespace V10 {
+    class CRingStateChangeItem;
+}
+}
+
+
 /*
  * @class CEndRunInfo10
  *    Pull information out of end run records from nscldaq 10.x note that this
@@ -36,7 +44,7 @@
  */
 class CEndRunInfo10 : public CEndRunInfo
 {
-  std::vector<std::unique_ptr<NSCLDAQ10::StateChangeItem> > m_endRuns;
+  std::vector<std::unique_ptr<DAQ::V10::CRingStateChangeItem> > m_endRuns;
 public:
     CEndRunInfo10(int fd);
     virtual ~CEndRunInfo10();

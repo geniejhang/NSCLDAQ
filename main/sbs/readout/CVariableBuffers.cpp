@@ -33,7 +33,7 @@
 #include <iostream>
 
 using namespace std;
-using namespace DAQ::V12;
+using namespace DAQ;
 
 // Static class member data:
 
@@ -189,7 +189,7 @@ CVariableBuffers::createRunVariableEvent(CDataSink* pRing, uint64_t tbase)
 {
   CDocumentedVars::NameValuePairs info = m_pInstance->m_pVars->getRunVars();
   if (info.size() > 0) {
-    createDocEvent(pRing, MONITORED_VARIABLES, info, tbase);
+    createDocEvent(pRing, V12::MONITORED_VARIABLES, info, tbase);
   }
 }
 /*
@@ -200,7 +200,7 @@ CVariableBuffers::createStateVariableEvent(CDataSink* pRing, uint64_t tbase)
 {
   CDocumentedVars::NameValuePairs info = m_pInstance->m_pVars->getStateVars();
   if (info.size() > 0) {
-    createDocEvent(pRing, MONITORED_VARIABLES, info, tbase);
+    createDocEvent(pRing, V12::MONITORED_VARIABLES, info, tbase);
   }
 }
 /*
@@ -249,13 +249,13 @@ CVariableBuffers::createDocEvent(CDataSink* pRing,
   msTime *= 1000;
   msTime += currentTime.tv_nsec/(1000*1000);
 
-  CRingTextItem item(eventType, 
-      NULL_TIMESTAMP, 
+  V12::CRingTextItem item(eventType,
+      V12::NULL_TIMESTAMP,
       m_nSourceId, 
       elements,
       (msTime - tbase)/1000,
       timestamp);
-  CRawRingItem serialItem(item);
+  V12::CRawRingItem serialItem(item);
   *pRing << serialItem;
 
 }

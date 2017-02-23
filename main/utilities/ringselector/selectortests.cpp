@@ -112,7 +112,7 @@ static int spawn(const char* command)
   
 }
 
-static void textItem(CDataSink& prod, int fd, bool check = true)
+static void textItem(DAQ::CDataSink& prod, int fd, bool check = true)
 {
   vector<string>  items;
   items.push_back("String 1");
@@ -139,7 +139,7 @@ static void textItem(CDataSink& prod, int fd, bool check = true)
   }
 }
 
-static void scaler(CDataSink& prod, int fd, bool check=true)
+static void scaler(DAQ::CDataSink& prod, int fd, bool check=true)
 {
   vector<uint32_t> scalers(32);
   std::iota(scalers.begin(), scalers.end(), 0);;
@@ -165,7 +165,7 @@ static void scaler(CDataSink& prod, int fd, bool check=true)
 
 }
 
-static void eventCount(CDataSink& prod, int fd, int count, bool check=true)
+static void eventCount(DAQ::CDataSink& prod, int fd, int count, bool check=true)
 {
   CRingPhysicsEventCountItem i(count, 12);
   prod << CRawRingItem(i);
@@ -184,7 +184,7 @@ static void eventCount(CDataSink& prod, int fd, int count, bool check=true)
 }
 
 
-static void event(CDataSink& prod, int fd, bool check=true)
+static void event(DAQ::CDataSink& prod, int fd, bool check=true)
 {
   CPhysicsEventItem i;
   auto& body = i.getBody();
@@ -216,7 +216,7 @@ static void event(CDataSink& prod, int fd, bool check=true)
 }
 
 
-static void beginRun(CDataSink& prod, int fd,  bool check = true)
+static void beginRun(DAQ::CDataSink& prod, int fd,  bool check = true)
 {
   CRingStateChangeItem i(BEGIN_RUN, 1234, 0, time(NULL), "This is a title");
   prod << CRawRingItem(i);
@@ -241,7 +241,7 @@ static void beginRun(CDataSink& prod, int fd,  bool check = true)
   }
 }
 
-static void pauseRun(CDataSink& prod, int fd, bool check=true)
+static void pauseRun(DAQ::CDataSink& prod, int fd, bool check=true)
 {
   CRingStateChangeItem i(PAUSE_RUN, 1234, 15, time(NULL), "This is a title");
   prod << CRawRingItem(i);
@@ -267,7 +267,7 @@ static void pauseRun(CDataSink& prod, int fd, bool check=true)
   }
 }
 
-static void resumeRun(CDataSink& prod, int fd, bool check = true) 
+static void resumeRun(DAQ::CDataSink& prod, int fd, bool check = true)
 {
   CRingStateChangeItem i(RESUME_RUN, 1234, 15, time(NULL), "This is a title");
   prod << CRawRingItem(i);
@@ -293,7 +293,7 @@ static void resumeRun(CDataSink& prod, int fd, bool check = true)
 }
 
 
-static void endRun(CDataSink& prod, int fd, bool check = true)
+static void endRun(DAQ::CDataSink& prod, int fd, bool check = true)
 {
   CRingStateChangeItem i(END_RUN, 1234, 25, time(NULL), "This is a title");
   prod << CRawRingItem(i);
@@ -361,11 +361,11 @@ void rseltests::all()
   int fd = spawn(programName.c_str());
 
   
-  CDataSink* pProd = nullptr;
+  DAQ::CDataSink* pProd = nullptr;
   try {
     // attach to our ring as a producer.
     
-    pProd = CDataSinkFactory().makeSink(std::string("tcp://localhost/")+Os::whoami());
+    pProd = DAQ::CDataSinkFactory().makeSink(std::string("tcp://localhost/")+Os::whoami());
     
     // Make a begin_run item, commit it.
     
@@ -410,10 +410,10 @@ void rseltests::exclude()
   programName       += "/ringselector --exclude=BEGIN_RUN";
   int fd             = spawn(programName.c_str());
 
-  CDataSink* pProd = nullptr;
+  DAQ::CDataSink* pProd = nullptr;
   try {
     
-    pProd = CDataSinkFactory().makeSink(std::string("tcp://localhost/")+Os::whoami());
+    pProd = DAQ::CDataSinkFactory().makeSink(std::string("tcp://localhost/")+Os::whoami());
 
     beginRun(*pProd, fd, false);
     pauseRun(*pProd, fd);
@@ -442,9 +442,9 @@ void rseltests::only()
   programName       += "/ringselector --accept=BEGIN_RUN"; // only begin runs.
   int  fd            = spawn(programName.c_str());
  
-  CDataSink* pProd = nullptr; 
+  DAQ::CDataSink* pProd = nullptr;
   try {
-    pProd = CDataSinkFactory().makeSink(std::string("tcp://localhost/")+Os::whoami());
+    pProd = DAQ::CDataSinkFactory().makeSink(std::string("tcp://localhost/")+Os::whoami());
 
     beginRun(*pProd,fd);		// Should be fine.
     eventCount(*pProd, fd, 100, false);

@@ -19,17 +19,21 @@
 #include "TclServerConnection.h"
 #include "TcpClient.h"
 
-#include <CRingBuffer.h>
-#include <CRingScalerItem.h>
-#include <CRingStateChangeItem.h>
-#include <CRemoteAccess.h>
-#include <CDesiredTypesPredicate.h>
-#include <DataFormat.h>
+#include <CDataSource.h>
+#include <CDataSourceFactory.h>
+
+#include <V12/CRingScalerItem.h>
+#include <V12/CRingStateChangeItem.h>
+#include <V12/DataFormat.h>
+#include <V12/CRawRingItem.h>
+#include <RingIOV12.h>
+
+#include <CAllButPredicate.h>
+#include <CRingSelectPredWrapper.h>
+
 #include <CPortManager.h>
 #include <ErrnoException.h>
 #include <CInvalidArgumentException.h>
-#include <CDataSource.h>
-#include <CDataSourceFactory.h>
 
 #include <os.h>
 
@@ -42,6 +46,7 @@
 #include <vector>
 
 using namespace std;
+using namespace DAQ;
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -54,7 +59,7 @@ using namespace std;
   arguments to know what to do.
 */
 SclClientMain::SclClientMain() :
-  m_pRing(0),
+  m_pRing(nullptr),
   m_Port(-1),
   m_pServer(0)
 {}
@@ -66,7 +71,6 @@ SclClientMain::SclClientMain() :
 SclClientMain::~SclClientMain()
 {
   delete m_pServer;
-  delete m_pRing;
 }
   
 //////////////////////////////////////////////////////////////////////////////
@@ -95,17 +99,7 @@ SclClientMain::operator()(int argc, char** argv)
   // then connect to the ring:
 
 
-  std::vector<uint16_t> sample;	// None sample
-  std::vector<uint16_t>  exclude;
-
-  exclude.push_back(PACKET_TYPES);
-  exclude.push_back(MONITORED_VARIABLES);
-  exclude.push_back(PHYSICS_EVENT);
-  exclude.push_back(PHYSICS_EVENT_COUNT);
-  exclude.push_back(EVB_FRAGMENT);
-  exclude.push_back(EVB_UNKNOWN_PAYLOAD);
-
-  m_pRing = CDataSourceFactory::makeSource(url, sample, exclude);
+  m_pRing = CDataSourceFactory::makeSource(url);
 
   // remote host initializes to "localhost"
   // port initializes to "managed"
@@ -205,60 +199,66 @@ SclClientMain::getDisplayPort(string portArg)
 void
 SclClientMain::processItems()
 {
-  initializeStateChange();	// set up the initial values of the server vars.
+    initializeStateChange();	// set up the initial values of the server vars.
 
-  // Set up the ring predicate so that we're only going to be seeing
-  // state change and scaler items.
-  // TODO: 
-  //   Arrange a way for scaler display to also show trigger rates and
-  //  trigger counts.
-  // 
+    // Set up the ring predicate so that we're only going to be seeing
+    // state change and scaler items.
+    // TODO:
+    //   Arrange a way for scaler display to also show trigger rates and
+    //  trigger counts.
+    //
 
+    auto pPred = std::shared_ptr<CAllButPredicate>(new CAllButPredicate);
+    pPred->addExceptionType(V12::PACKET_TYPES);
+    pPred->addExceptionType(V12::MONITORED_VARIABLES);
+    pPred->addExceptionType(V12::PHYSICS_EVENT);
+    pPred->addExceptionType(V12::PHYSICS_EVENT_COUNT);
 
-  bool beginSeen = false;
+    CRingSelectPredWrapper predicate(pPred);
 
-  while(1) {
-    CRingItem*  pItem = m_pRing->getItem();
+    bool beginSeen = false;
 
-    // Dispatch to the correct handler:
+    while(1) {
+        //    CRingItem*  pItem = m_pRing->getItem();
+        V12::CRawRingItem rawItem;
+        readItemIf(*m_pRing, rawItem, predicate);
 
-    try {
-      switch (pItem->type()) {
-      case BEGIN_RUN:
-	beginSeen = true;
-      case END_RUN:
-      case PAUSE_RUN:
-      case RESUME_RUN:
-	{
-	  CRingStateChangeItem item(*pItem);
-	  processStateChange(item);
-	}
-	break;
-      case PERIODIC_SCALERS:
-	{
-	  // If the begin run not seen.. call RunInProgres in the server
+        // Dispatch to the correct handler:
 
-	  if (!beginSeen) {
-	    m_pServer->SendCommand("set RunState Active");
-	    m_pServer->SendCommand("RunInProgress");
-	    clearTotals();
-	    beginSeen = true;	// only do this once though.
-	  }
-	  CRingScalerItem item(*pItem);
-	  processScalers(item);
-	}
-	break;
-      default:
-	break;			// In case new ring item types we forget to exculde are added.
-      }
-      delete pItem;
-      pItem = 0;		// See the catch block below.
+        try {
+            switch (rawItem.type()) {
+            case V12::BEGIN_RUN:
+                beginSeen = true;
+            case V12::END_RUN:
+            case V12::PAUSE_RUN:
+            case V12::RESUME_RUN:
+            {
+                V12::CRingStateChangeItem item(rawItem);
+                processStateChange(item);
+            }
+                break;
+            case V12::PERIODIC_SCALERS:
+            {
+                // If the begin run not seen.. call RunInProgres in the server
+
+                if (!beginSeen) {
+                    m_pServer->SendCommand("set RunState Active");
+                    m_pServer->SendCommand("RunInProgress");
+                    clearTotals();
+                    beginSeen = true;	// only do this once though.
+                }
+                V12::CRingScalerItem item(rawItem);
+                processScalers(item);
+            }
+                break;
+            default:
+                break;			// In case new ring item types we forget to exculde are added.
+            }
+        }
+        catch (...) {		// Just in case exceptions are not fatal.
+            throw;
+        }
     }
-    catch (...) {		// Just in case exceptions are not fatal.
-      delete pItem;
-      throw;
-    }
-  }
 }
 /*
 ** Process scaler items.
@@ -273,7 +273,7 @@ SclClientMain::processItems()
 **
 */
 void
-SclClientMain::processScalers(const CRingScalerItem& item)
+SclClientMain::processScalers(const V12::CRingScalerItem& item)
 {
   float startTime           = item.computeStartTime();
   float endTime             = item.computeEndTime();
@@ -281,47 +281,11 @@ SclClientMain::processScalers(const CRingScalerItem& item)
   
   // What we do next depends on whether or not there's a body header:
   
-  if (item.hasBodyHeader()) {
-        uint32_t source = item.getSourceId();
-        processScalers(
-            source, startTime, endTime, increments, item.isIncremental()
-        );
-    
-  } else {
-    
-      // If the totals don't exist, zero them:
-    
-      if (m_Totals.size() == 0) {
-        for (int i=0; i < increments.size(); i++) {
-          m_Totals.push_back(0.0);
-        }
-      }
-      
-      // Update the totals from the increments:
-    
-      for (int i=0; i < increments.size(); i++) {
-        if (item.isIncremental()) {
-            m_Totals[i] += static_cast<double>(increments[i]);
-        } else {
-            m_Totals[i] = static_cast<double>(increments[i]);
-        }
-      }
-    
-      // Compute the elapsed and delta times:
-    
-      float deltaTime   = endTime - startTime;
-      float elapsedTime = endTime;
-    
-      // Interact with the server:
-    
-      setDouble("ScalerDeltaTime", deltaTime);
-      setDouble("ElapsedRunTime",  elapsedTime);
-      setInteger("Incremental", item.isIncremental() ? 1 : 0);
-      for (int i = 0; i < increments.size(); i++) {
-        setInteger("Scaler_Increments", increments[i], i);
-        setDouble("Scaler_Totals",  m_Totals[i], i);
-      }
-  }
+  uint32_t source = item.getSourceId();
+  processScalers(
+              source, startTime, endTime, increments, item.isIncremental()
+              );
+
   m_pServer->SendCommand("Update");
 
 
@@ -412,7 +376,7 @@ SclClientMain::processScalers(
 **  Update.
 */
 void
-SclClientMain::processStateChange(const CRingStateChangeItem& item)
+SclClientMain::processStateChange(const V12::CRingStateChangeItem& item)
 {
   uint16_t type    = item.type();
   uint32_t run     = item.getRunNumber();
@@ -428,23 +392,22 @@ SclClientMain::processStateChange(const CRingStateChangeItem& item)
   m_pServer->SendCommand(command);
 
   string stateproc;
-
   command = "set RunState ";
   switch (type) {
-  case BEGIN_RUN:
+  case V12::BEGIN_RUN:
     command += "Active";
     stateproc = "BeginRun";
     clearTotals();
     break;
-  case RESUME_RUN:
+  case V12::RESUME_RUN:
     command += "Active";
     stateproc = "ResumeRun";
     break;
-  case PAUSE_RUN:
+  case V12::PAUSE_RUN:
     command += "Paused";
     stateproc = "PauseRun";
     break;
-  case END_RUN:
+  case V12::END_RUN:
     command += "Inactive";
     stateproc= "EndRun";
     break;

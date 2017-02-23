@@ -21,10 +21,12 @@
 */
 #include "CEndRunInfo11.h"
 #include <CFileDataSource.h>
-#include <DataFormat.h>
-#include <CRingStateChangeItem.h>
+#include <V11/DataFormatV11.h>
+#include <V11/CRingStateChangeItem.h>
+#include <RingIOV11.h>
 #include <stdexcept>
 
+using namespace DAQ;
 
 /**
  * constructor
@@ -180,16 +182,18 @@ CEndRunInfo11::loadEndRuns()
     std::vector<uint16_t> filter;
     CFileDataSource src(m_nFd, filter);
     
-    CRingItem* pItem;
-    while ((pItem = src.getItem())) {
-        if (pItem->type() == END_RUN) {
+    V11::CRingItem item(V11::VOID);
+    while (1) {
+        readItem(src, item);
+        if (src.eof()) break;
+
+        if (item.type() == V11::END_RUN) {
             m_endRuns.push_back(
-                std::unique_ptr<CRingStateChangeItem>(
-                    new CRingStateChangeItem(*pItem)
+                std::unique_ptr<V11::CRingStateChangeItem>(
+                    new V11::CRingStateChangeItem(item)
                 )
             );
         }
-        delete pItem;
     }
     
 }

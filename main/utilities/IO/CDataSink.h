@@ -20,10 +20,17 @@
 #include <stdlib.h>
 #include <vector>
 #include <utility>
+#include <memory>
 
 class CRingItem;
 
 namespace DAQ {
+
+class CDataSink;
+
+typedef std::unique_ptr<CDataSink> CDataSinkUPtr;
+typedef std::shared_ptr<CDataSink> CDataSinkPtr;
+
 
 /*! \brief Interface for CDataSinks
 *

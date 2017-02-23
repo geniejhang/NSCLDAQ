@@ -33,9 +33,12 @@ class CCompoundEventSegment;
 class CBusy;
 class CEventTrigger;
 class CTriggerLoop;
-class CDataSink;
 class CEventSegment;
 class CScaler;
+
+namespace DAQ {
+ class CDataSink;
+}
 
 
 struct gengetopt_args_info;
@@ -57,7 +60,7 @@ class CExperiment // (final).
   // local data:
 
 private:
-  CDataSink*             m_pRing;	//!< Where event data eventually goes.
+  DAQ::CDataSink*             m_pRing;	//!< Where event data eventually goes.
   RunState*              m_pRunState;   //!< state information about the run.
   CScalerBank*           m_pScalers;    //!< The scalers to read.
   CCompoundEventSegment* m_pReadout;    //!< The event segment root.
@@ -119,7 +122,7 @@ public:
   void   DocumentPackets();
   void   ScheduleRunVariableDump();
   void   ScheduleEndRunBuffer(bool pause);
-  CDataSink* getRing() {
+  DAQ::CDataSink* getRing() {
     return m_pRing;
   }
   void setRing(std::string name);

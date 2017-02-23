@@ -1,19 +1,28 @@
 bin_PROGRAMS =dumpend
 
-COMMON_CFLAGS = -I@top_srcdir@/daq/format -I@top_srcdir@/base/os -I@top_srcdir@/utilities/IO  @LIBTCLPLUS_CFLAGS@ 
-COMMON_LOADFLAGS= @top_builddir@/daq/format/libdataformat.la @top_builddir@/base/dataflow/libDataFlow.la \
-	@top_builddir@/base/os/libdaqshm.la @top_builddir@/utilities/IO/libdaqio.la	\
+COMMON_CFLAGS = -I@top_srcdir@/utilities/nscldaq-format/format \
+                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
+                -I@top_srcdir@/base/os \
+                -I@top_srcdir@/utilities/IO  \
+                @LIBTCLPLUS_CFLAGS@
+COMMON_LOADFLAGS= @top_builddir@/utilities/nscldaq-format/format/V10/libdataformatv10.la \
+                    @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
+                    @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
+                    @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+                    @top_builddir@/base/dataflow/libDataFlow.la \
+                    @top_builddir@/base/os/libdaqshm.la \
+                    @top_builddir@/utilities/IO/libdaqio.la	\
 	@LIBEXCEPTION_LDFLAGS@
 
 dumpend_SOURCES = CFileIterator.cpp CFileIterator.h main.cpp CEndRunInfo.cpp CEndRunInfo.h \
 	CEndRunInfo11.cpp CEndRunInfo11.h CEndRunInfo10.cpp CEndRunInfo10.h \
-	CEndRunInfoFactory.cpp CEndRunInfoFactory.h  \
+        CEndRunInfo12.h CEndRunInfo12.cpp CEndRunInfoFactory.cpp CEndRunInfoFactory.h  \
 	Application.cpp Application.h
 
 nodist_dumpend_SOURCES=options.c options.h
 
 dumpend_CXXFLAGS=$(COMMON_CFLAGS)
-dumpend_LDFLAGS=$(COMMON_LOADFLAGS)
+dumpend_LDADD=$(COMMON_LOADFLAGS)
 
 
 # gengetopt stuff:
@@ -39,10 +48,11 @@ unittests_SOURCES=TestRunner.cpp fileitertest.cpp \
 	CEndRunInfo.cpp CEndRunInfo.h	\
 	CEndRunInfo11.cpp CEndRunInfo11.h \
 	CEndRunInfo10.cpp CEndRunInfo10.h \
+        CEndRunInfo12.cpp CEndRunInfo12.h \
 	CEndRunInfoFactory.cpp CEndRunInfoFactory.h
 
 unittests_CXXFLAGS=$(CPPUNIT_CFLAGS) $(COMMON_CFLAGS) -I@top_srcdir@/base/os
-unittests_LDFLAGS=$(CPPUNIT_LDFLAGS) @top_builddir@/base/os/libdaqshm.la $(COMMON_LOADFLAGS) 
+unittests_LDADD=$(CPPUNIT_LDFLAGS) @top_builddir@/base/os/libdaqshm.la $(COMMON_LOADFLAGS)
 
 EXTRA_DIST=options.ggo
 

@@ -145,7 +145,7 @@ void triggerResponse::eventsegs() {
 void triggerResponse::readout()
 {
   TestSegment myseg;
-  CDataSource *pRing = CDataSourceFactory::makeSource(string("tcp://localhost/") + ringName, {}, {});
+  DAQ::CDataSource *pRing = DAQ::CDataSourceFactory::makeSource(string("tcp://localhost/") + ringName, {}, {});
 
   m_pExperiment->AddEventSegment(&myseg);
 
@@ -202,7 +202,7 @@ void triggerResponse::scalerbank()
 void triggerResponse::readscalers()
 {  TestScaler scaler;
   m_pExperiment->AddScalerModule(&scaler);
-  CDataSource *pRing = CDataSourceFactory::makeSource(string("tcp://localhost/") + ringName, {}, {});
+  DAQ::CDataSource *pRing = DAQ::CDataSourceFactory::makeSource(string("tcp://localhost/") + ringName, {}, {});
 
   m_pExperiment->AddScalerModule(&scaler);
 

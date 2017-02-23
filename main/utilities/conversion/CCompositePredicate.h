@@ -21,15 +21,27 @@
 #include <vector>
 #include <memory>
 
+namespace DAQ {
+namespace Transform {
+
 class CCompositePredicate : public CPredicate
 {
   private:
-    std::vector<std::unique_ptr<CPredicate> > m_predicates;
+    std::vector<std::shared_ptr<CPredicate> > m_predicates;
 
   public:
-    void addPredicate(std::unique_ptr<CPredicate> pPred);
+    void addPredicate(std::shared_ptr<CPredicate> pPred);
+    std::vector<std::shared_ptr<CPredicate>>& getPredicates();
 
-    bool operator()();
+    virtual CPredicatedMediator::Action preInputUpdate(CPredicatedMediator& mediator);
+    virtual CPredicatedMediator::Action postInputUpdate(CPredicatedMediator& mediator, int type);
+    virtual CPredicatedMediator::Action preOutputUpdate(CPredicatedMediator& mediator, int type);
+    virtual CPredicatedMediator::Action postOutputUpdate(CPredicatedMediator& mediator, int type);
+
+    virtual void reset();
 };
+
+} // end Transform
+} // end DAQ
 
 #endif

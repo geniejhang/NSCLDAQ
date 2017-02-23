@@ -17,10 +17,30 @@
 #ifndef CPREDICATE_H
 #define CPREDICATE_H
 
+#include <CPredicatedMediator.h>
+
+namespace DAQ {
+namespace Transform {
+
 class CPredicate
 {
-  public:
-    virtual bool operator()() = 0;
+public:
+    virtual CPredicatedMediator::Action preInputUpdate(CPredicatedMediator& transform) = 0;
+
+    virtual CPredicatedMediator::Action postInputUpdate(CPredicatedMediator& transform,
+                                                       int type) = 0;
+
+    virtual CPredicatedMediator::Action preOutputUpdate(CPredicatedMediator& transform,
+                                                       int type) = 0;
+
+    virtual CPredicatedMediator::Action postOutputUpdate(CPredicatedMediator& transform,
+                                                        int type) = 0;
+
+    virtual void reset() = 0;
+
 };
+
+} // end Transform
+} // end DAQ
 
 #endif

@@ -14,15 +14,19 @@
 	     East Lansing, MI 48824-1321
 */
 
-#include <CRingBuffer.h>
-#include <DataFormat.h>
-#include <CRingStateChangeItem.h>
-#include <CRingScalerItem.h>
+#include <CRingDataSink.h>
+#include <V12/DataFormat.h>
+#include <V12/CRawRingItem.h>
+#include <V12/CRingStateChangeItem.h>
+#include <V12/CRingScalerItem.h>
+#include <RingIOV12.h>
 #include <vector>
 #include <stdint.h>
 #include <os.h>
 #include <time.h>
 #include <stdlib.h>
+
+using namespace DAQ;
 
 /**
  * @file testData.cpp
@@ -69,12 +73,12 @@ static uint32_t scalers[SCALERCOUNT] = {
  *
  *   @return CRingBuffer*
  */
-CRingBuffer*
+CDataSinkPtr
 openRingBuffer()
 {
     std::string ringName = Os::whoami();
     
-    return new CRingBuffer(ringName, CRingBuffer::producer);
+    return CDataSinkPtr(new DAQ::CRingDataSink(ringName));
 }
 
 /**
@@ -86,12 +90,12 @@ openRingBuffer()
  * @param pR   - Pointer to the ring buffer.
  */
 static void
-emitStateChange(int type, CRingBuffer* pR)
+emitStateChange(int type, CDataSink& sink)
 {
     time_t stamp = time(NULL);
-    CRingStateChangeItem item(0, 2, 0, type, runNumber, runOffset, stamp, title,
-                              divisor);
-    item.commitToRing(*pR);
+    V12::CRingStateChangeItem item(0, 2, type, runNumber, runOffset,
+                                   stamp, title, divisor);
+    writeItem(sink, V12::CRawRingItem(item));
 }
 /**
  * emitScaler
@@ -101,7 +105,7 @@ emitStateChange(int type, CRingBuffer* pR)
  * @param p  - Pointer to the ring.
  */
 static void
-emitScaler(CRingBuffer* p)
+emitScaler(CDataSink& sink)
 {
     scalerItems++;
     time_t stamp = time(NULL);
@@ -119,8 +123,9 @@ emitScaler(CRingBuffer* p)
     }
     // Create the ring item and submit it.
     
-    CRingScalerItem item(0, scalerItems % 2 + 1, 0, runOffset, endTime, stamp, s, divisor, incremental);
-    item.commitToRing(*p);
+    V12::CRingScalerItem item(0, scalerItems % 2 + 1, runOffset,
+                              endTime, stamp, s, divisor, incremental);
+    writeItem(sink, V12::CRawRingItem(item));
     
     // Update the run offset:
     
@@ -142,14 +147,14 @@ int main(int argc, char** argv)
             incremental = false;
         }
     }
-    CRingBuffer* pRing = openRingBuffer();
+    CDataSinkPtr pRing = openRingBuffer();
     
-    emitStateChange(BEGIN_RUN, pRing);
+    emitStateChange(V12::BEGIN_RUN, *pRing);
     for (int i =0; i < 100; i++) {
         sleep(2);
-        emitScaler(pRing);
+        emitScaler(*pRing);
     }
     
-    emitStateChange(END_RUN, pRing);
+    emitStateChange(V12::END_RUN, *pRing);
     
 }
