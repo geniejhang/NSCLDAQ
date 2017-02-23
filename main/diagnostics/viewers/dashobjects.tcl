@@ -732,3 +732,23 @@ proc ::DashboardDatabase::connectObjects {canvas rings statepgms dsources evbs} 
     _connectSourcesToBuilders $canvas $dsources $evbs
     _connectBuildersToRings   $canvas $evbs $rings
 }
+
+##
+# load
+#    Loads an experiment from the database:
+#
+# @param uri  - The uri of the database file.
+# @param canvas - The canvas to draw the experiment on.
+# @return List containing the list of rings, state programs data sources and event builders
+#
+proc ::DashboardDatabase::load {uri canvas} {
+    set rings [DashboardDatabase::loadRingBuffers $uri $canvas]
+    set pgms  [DashboardDatabase::loadStatePrograms $uri $canvas]
+    set sources [::DashboardDatabase::loadDataSources $uri $canvas]
+    set builders [::DashboardDatabase::loadEventBuilders $uri $canvas]
+
+    connectObjects $canvas $rings $pgms $sources $builders
+    
+    return [list $rings $pgms $sources $builders]
+    
+}
