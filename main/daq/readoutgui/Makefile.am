@@ -1,4 +1,4 @@
-install-exec-local:
+install-exec-local: @builddir@/libWait.la
 	$(mkinstalldirs) $(prefix)/bin
 	$(mkinstalldirs) $(prefix)/TclLibs/Stager
 	$(mkinstalldirs) @prefix@/share/html
