@@ -182,8 +182,6 @@ snit::type RingStatusHighlight {
         
         
         set newData [$options(-dbapi) queryRingStatistics $finalFilter]
-        puts $newData
-        puts "---------------------------"
         $finalFilter destroy
         $idFilter    destroy
         
