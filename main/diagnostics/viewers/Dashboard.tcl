@@ -28,20 +28,26 @@ exec tclsh "$0" ${1+"$@"}
 package require Tk
 lappend auto_path [file normalize [file join [file dirname [info script]] .. TclLibs]]
 package require Dashboard
+package require RingStatusHighlight
+package require statusMessage
 
 # Load the canvas with the experiment.
 
-if {[llength $argv] != 1} {
+if {[llength $argv] != 2} {
     puts stderr "Usage:"
-    puts stderr "   Dashboard dbfile"
+    puts stderr "   Dashboard expdbfile statusdbfile"
     puts stderr "Where:"
-    puts stderr "   dbfile is the path to the experiment database description file."
+    puts stderr "   expdbfile is the path to the experiment database description file."
+    puts stderr "   statusdbfile is the path to the database getting status info."
     exit -1
 }
 
 canvas .c
 pack   .c -fill both -expand 1
-set dburl file://[file normalize $argv]
+
+set dburl file://[file normalize [lindex $argv 0]]
+set statusDb [lindex $argv 1]
+
 set objects [::DashboardDatabase::load $dburl .c]
 
 #  Go over all the object bounding boxes and resize the canvas so that they all
@@ -73,5 +79,10 @@ incr ymax 100
 set startTime [clock seconds];  # We don't want any data older than _now_.
 
 
+set api [statusdb create $statusDb readonly]
 
+set highlighter [RingStatusHighlight %AUTO% \
+    -canvas .c -rings [lindex $objects 0] \
+    -dbapi $api ]
+    
 
