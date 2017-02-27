@@ -30,6 +30,7 @@ lappend auto_path [file normalize [file join [file dirname [info script]] .. Tcl
 package require Dashboard
 package require RingStatusHighlight
 package require statusMessage
+package require BacklogSummary
 
 # Load the canvas with the experiment.
 
@@ -83,6 +84,45 @@ set api [statusdb create $statusDb readonly]
 
 set highlighter [RingStatusHighlight %AUTO% \
     -canvas .c -rings [lindex $objects 0] \
-    -dbapi $api ]
+    -dbapi $api  -command [list showSummaryWindow %W %R %L]]
     
 
+proc getProperty {proplist name} {
+    set prop [$proplist find $name]
+    if {$prop ne ""} {
+        return [$prop cget -value]
+    }
+    error "No such property $name"
+}
+
+proc showSummaryWindow {highlighter ringobj lastid} {
+    
+    # Construct the toplevel widget from the ring FQN with . -> _
+    # If that window does not yet exist create it and title it with the fqn:
+    
+    set fqn [$ringobj cget -title]
+    set widget .[string map ". _" $fqn]
+    set existingWindows [winfo children .]
+    
+    if {$widget in $existingWindows } {
+        return
+    }
+    # Figure out the ring and host names:
+    
+    set ringObject [$ringobj cget -data]
+    set ringProps [$ringObject getProperties]
+    set rname [getProperty $ringProps name]
+    set rhost [getProperty $ringProps host]
+    
+    
+    
+    # Create and display the widget:
+    
+    toplevel $widget
+    wm title $widget $fqn
+    BacklogSummary $widget.summary   \
+        -dbcommand [$highlighter cget -dbapi] -ringname $rname \
+        -ringhost $rhost -threshold [$highlighter cget -threshold]
+    pack $widget.summary -fill both -expand 1
+    
+}

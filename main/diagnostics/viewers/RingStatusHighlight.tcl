@@ -148,9 +148,7 @@ snit::type RingStatusHighlight {
             set id [$item cget -id]
             $options(-canvas) addtag ringstatus withtag $id
         }
-        puts "About to bind"
         $canvas bind ringstatus <Button-1> [mymethod _dispatch -command %x %y]
-        puts "Bound"
     }
     ##
     # _update

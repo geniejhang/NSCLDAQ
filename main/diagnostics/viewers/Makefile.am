@@ -1,14 +1,14 @@
 TCL_PACKAGES= LogModel.tcl LogView.tcl RingStatModel.tcl \
    RingStatController.tcl RingStatView.tcl \
    ReadoutStatModel.tcl ReadoutStatView.tcl ReadoutStatController.tcl \
-   dashobjects.tcl RingStatusHighlight.tcl
+   dashobjects.tcl RingStatusHighlight.tcl BacklogSummary.tcl
 
 
 
 TCL_APPS=LogMessageViewer.tcl ringstatviewer.tcl readoutstatviewer.tcl \
 	StatusViewer.tcl Dashboard.tcl
 
-IMAGES=folder.png program.png iconcredit.txt run.png
+IMAGES=folder.png program.png iconcredit.txt run.png refresh.png
 
 DOCS=logviewer.xml
 
