@@ -156,7 +156,7 @@ public:
         // abort causes the subsequent predicates to get skipped
         EQMSG("action", CPredicatedMediator::SKIP, action);
         EQMSG("skip", vector<string>({"action","preInputUpdate"}), pPred->getLog());
-        EQMSG("pred0", vector<string>({"pred0","predInputUpdate"}), m_pPred0->getLog());
+        EQMSG("pred0", vector<string>({"pred0","preInputUpdate"}), m_pPred0->getLog());
     }
 
 

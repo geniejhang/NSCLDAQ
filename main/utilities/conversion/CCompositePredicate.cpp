@@ -59,7 +59,7 @@ CCompositePredicate::postInputUpdate(CPredicatedMediator& mediator, int type)
     auto currentAction = action;
 
     for (auto pPred : m_predicates) {
-        currentAction = pPred->preInputUpdate(mediator);
+        currentAction = pPred->postInputUpdate(mediator, type);
 
         if (currentAction == CPredicatedMediator::ABORT) {
             // short circuit if abort returned
@@ -81,7 +81,7 @@ CCompositePredicate::preOutputUpdate(CPredicatedMediator& mediator, int type)
     auto currentAction = action;
 
     for (auto pPred : m_predicates) {
-        currentAction = pPred->preInputUpdate(mediator);
+        currentAction = pPred->preOutputUpdate(mediator, type);
 
         if (currentAction == CPredicatedMediator::ABORT) {
             // short circuit if abort returned
@@ -103,7 +103,7 @@ CCompositePredicate::postOutputUpdate(CPredicatedMediator& mediator, int type)
     auto currentAction = action;
 
     for (auto pPred : m_predicates) {
-        currentAction = pPred->preInputUpdate(mediator);
+        currentAction = pPred->postOutputUpdate(mediator, type);
 
         if (currentAction == CPredicatedMediator::ABORT) {
             // short circuit if abort returned
