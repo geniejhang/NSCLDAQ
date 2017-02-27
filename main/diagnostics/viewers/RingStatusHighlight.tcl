@@ -49,7 +49,8 @@ package require SqlWhere
 # SUBSTITUTIONS:
 #   *   %W        - name of RingStatusHighlight object doing the dispatch.
 #   *   %R        - Ring dashboard object that triggered the dispatch.
-#   *   
+#   *   %L        - Last id seen in database query
+#
 #
 # @note - the assumption is that the application is largely event loop driven
 # @note - Requires the database injector is running on the database
@@ -82,10 +83,10 @@ snit::type RingStatusHighlight {
     constructor args {
         set options(-since) [clock seconds]
         $self configurelist $args
-        
         $self _createConditions
         $self _establishEvents
         $self _update
+
     }
     ##
     # Destructor:
@@ -97,11 +98,11 @@ snit::type RingStatusHighlight {
     destructor {
         $options(-canvas) dtag ringstatus ringstatus
         
-        $minDateCond destroy
+        catch {$minDateCond destroy}
         foreach ring $ringLikes {
-            $ring destroy
+            catch {$ring destroy}
         }
-        $ringsCond destroy
+        catch {$ringsCond destroy}
         
         after cancel $afterId
     }
@@ -147,7 +148,9 @@ snit::type RingStatusHighlight {
             set id [$item cget -id]
             $options(-canvas) addtag ringstatus withtag $id
         }
-        $canvas bind ringstatus <Button-1> [mymethod _dispatch -command]
+        puts "About to bind"
+        $canvas bind ringstatus <Button-1> [mymethod _dispatch -command %x %y]
+        puts "Bound"
     }
     ##
     # _update
@@ -291,5 +294,48 @@ snit::type RingStatusHighlight {
             }
         }
     }
-    method dispatch option {};            # Stub.
+    ##
+    # _dispatch
+    #   Called to dispatch a callback action script.  If the script exists,
+    #   substitutions are performed and then th script is invoked via uplevel #0.
+    #   Note that script errors are passed to bgerror for reporting to the user.
+    #
+    #  @param optname - the name of the option (e.g. -command) that holds the
+    #                   script to be dispatched.
+    #  @param x,y     - Coordinates of the click in the window.
+    method _dispatch {optname x y} {
+        set script $options($optname)
+        if {$script ne ""} {
+            set script [string map \
+                [list %W $self %R [$self _nearestRing $x $y] %L  $lastId]  \
+                $script]
+            set status [catch {uplevel #0 $script} msg]
+            if {$status} {bgerror $msg}
+        }
+    }
+    ##
+    # _nearestRing
+    #    Give an x/y of a click, returns the Ring item that's closest to
+    #    the click.  Note that since the click is bound to a ring item, there's
+    #    going to be a match.
+    #
+    #  @param  x - X window coords of the hit.
+    #  @param  y - Y window coords of the hit.
+    #  @return The ring buffer dashboard object clicked on.
+    #
+    method _nearestRing {x y} {
+        set c $options(-canvas)
+        set rings $options(-rings)
+        
+        set idList [$c find closest $x $y]
+        foreach id $idList {
+            foreach ring $rings {
+                if {$id eq [$ring cget -id]} {
+                    return $ring
+                }
+            }
+        }
+        error "BUG - _nearestRing has no mathcing ring."
+    }
+    
 }
