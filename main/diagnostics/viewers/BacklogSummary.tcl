@@ -72,8 +72,8 @@ snit::widgetadaptor BacklogSummary {
     
     typevariable updateImage
     
-    variable lastid     1
-    
+
+    variable lastTime
     ##
     # typeconstructor
     #     create/load the update image.
@@ -119,6 +119,7 @@ snit::widgetadaptor BacklogSummary {
         grid rowconfigure    $win 0 -weight 0
         grid rowconfigure    $win 1 -weight 1
         
+        set lastTime [clock seconds]        
         $self _update
     }
     
@@ -138,13 +139,12 @@ snit::widgetadaptor BacklogSummary {
         set elements [list];            # Memorize components so we can kill them off.
         lappend elements [RelationToStringFilter %AUTO% r.name = $options(-ringname)]
         lappend elements [RelationToStringFilter %AUTO% r.host = $options(-ringhost)]
-        lappend elements [RelationToNonStringFilter %AUTO% s.id > $lastid]
         lappend elements [RelationToNonStringFilter %AUTO% s.backlog >= $options(-threshold)]
-        lappend elements [RelationToNonStringFilter %AUTO% s.timestamp >= [expr {[clock seconds] - 2}]]
+        lappend elements [RelationToNonStringFilter %AUTO% s.timestamp >= [expr {$lastTime - 2}]]
         foreach element $elements {
             $filter addClause $element
         }
-        
+        set lastTime [clock seconds]
         #  Get the new data and kill off the filter:
         
 
@@ -170,9 +170,6 @@ snit::widgetadaptor BacklogSummary {
                  set id [dict get $lastStat id]
                  set backlog [dict get $lastStat backlog]
                  
-                 if {$id > $lastid } {
-                    set lastid $id
-                 }
                  $table insert {} end  -value [list $host $pid $command $backlog]
             }
             
