@@ -25,6 +25,7 @@
 #include <V11/CRingStateChangeItem.h>
 #include <RingIOV11.h>
 #include <stdexcept>
+#include <ostream>
 
 using namespace DAQ;
 
@@ -211,4 +212,12 @@ CEndRunInfo11::throwIfNoSuch(int which) const
     if (w >= m_endRuns.size()) {
         throw std::range_error("Selected end run record does not exist.");
     }
+}
+
+void CEndRunInfo11::dumpBodyHeader(int i, const CEndRunInfo &e, std::ostream &stream) const
+{
+    stream << "Has a body header:\n";
+    stream << "     Event timestamp: " << e.getEventTimestamp(i) << std::endl;
+    stream << "     Source Id      : " << e.getSourceId(i) << std::endl;
+    stream << "     Barrier Type   : " << e.getBarrierType() << std::endl;
 }

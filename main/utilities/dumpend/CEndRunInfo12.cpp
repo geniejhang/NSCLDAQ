@@ -21,11 +21,15 @@
 
 #include "CEndRunInfo12.h"
 #include <CFileDataSource.h>
-#include "V10/CRingStateChangeItem.h"
-#include "V10/DataFormatV10.h"
-#include <RingIOV10.h>
+
+#include <V12/CRawRingItem.h>
+#include <V12/CRingStateChangeItem.h>
+#include <V12/DataFormat.h>
+#include <RingIOV12.h>
+
 #include <stdexcept>
 #include <fstream>
+#include <ostream>
 #include <io.h>
 
 using namespace DAQ;
@@ -38,7 +42,7 @@ using namespace DAQ;
 CEndRunInfo12::CEndRunInfo12(int fd) :
 CEndRunInfo(fd)
 {
-//  loadEndRuns();
+  loadEndRuns();
 }
 /**
  *  destructor
@@ -52,7 +56,7 @@ CEndRunInfo12::~CEndRunInfo12() {}
 unsigned
 CEndRunInfo12::numEnds() const
 {
-//  return m_endRuns.size();
+  return m_endRuns.size();
 }
 
 /**
@@ -65,7 +69,7 @@ CEndRunInfo12::numEnds() const
 bool
 CEndRunInfo12::hasBodyHeader(int which) const
 {
-//  throwIfBadIndex(which);
+  throwIfBadIndex(which);
   return false;
 }
 
@@ -79,8 +83,8 @@ CEndRunInfo12::hasBodyHeader(int which) const
 uint64_t
 CEndRunInfo12::getEventTimestamp(int which) const
 {
-//  throwIfBadIndex(which);
-//  throw std::string("Version 10.x ring items don't have body headers");
+  throwIfBadIndex(which);
+  return m_endRuns[which]->getEventTimestamp();
 }
 /**
  * getSourceId
@@ -91,8 +95,8 @@ CEndRunInfo12::getEventTimestamp(int which) const
 uint32_t
 CEndRunInfo12::getSourceId(int which) const
 {
-//  throwIfBadIndex(which);
-//  throw std::string("Version 10.x ring items dont' have body headers");
+  throwIfBadIndex(which);
+  return m_endRuns[which]->getSourceId();
 }
 /**
  *  getBarrierType
@@ -103,8 +107,8 @@ CEndRunInfo12::getSourceId(int which) const
 uint32_t
 CEndRunInfo12::getBarrierType(int which) const
 {
-//  throwIfBadIndex(which);
-//  throw std::string("Version 10.x ring items don't have a body headers");
+  throwIfBadIndex(which);
+  throw std::runtime_error("Version 12.x ring items don't have barrier types");
 }
 
 /**
@@ -117,9 +121,8 @@ CEndRunInfo12::getBarrierType(int which) const
 uint32_t
 CEndRunInfo12::getRunNumber(int which) const
 {
-//  throwIfBadIndex(which);
-//  return m_endRuns[which]->getRunNumber();
-    return 0;
+  throwIfBadIndex(which);
+  return m_endRuns[which]->getRunNumber();
 }
 /**
  * getElapsedTime
@@ -131,9 +134,8 @@ CEndRunInfo12::getRunNumber(int which) const
 float
 CEndRunInfo12::getElapsedTime(int which) const
 {
-//  throwIfBadIndex(which);
-//  return m_endRuns[which]->getElapsedTime();
-    return 0;
+  throwIfBadIndex(which);
+  return m_endRuns[which]->getElapsedTime();
 }
 
 /**
@@ -146,9 +148,8 @@ CEndRunInfo12::getElapsedTime(int which) const
 std::string
 CEndRunInfo12::getTitle(int which) const
 {
-//  throwIfBadIndex(which);
-//  return m_endRuns[which]->getTitle();        // Required to be null terminated.
-    return 0;
+  throwIfBadIndex(which);
+  return m_endRuns[which]->getTitle();        // Required to be null terminated.
 }
 /**
  * getTod
@@ -160,9 +161,8 @@ CEndRunInfo12::getTitle(int which) const
 time_t
 CEndRunInfo12::getTod(int which) const
 {
-//  throwIfBadIndex(which);
-//  return m_endRuns[which]->getTimestamp();
-    return 0;
+  throwIfBadIndex(which);
+  return m_endRuns[which]->getTimestamp();
 }
 /*----------------------------------------------------------------------------------------------------
 ** Private utilities.
@@ -176,10 +176,10 @@ CEndRunInfo12::getTod(int which) const
 void
 CEndRunInfo12::throwIfBadIndex(int which) const
 {
-//  unsigned w = which;
-//  if (w >= m_endRuns.size()) {
-//    throw std::range_error("CEndRunInfo12  -- End run selected does not exist");
-//  }
+  unsigned w = which;
+  if (w >= m_endRuns.size()) {
+    throw std::range_error("CEndRunInfo12  -- End run selected does not exist");
+  }
 }
 /**
  * loadEndRuns
@@ -193,19 +193,27 @@ CEndRunInfo12::throwIfBadIndex(int which) const
 void
 CEndRunInfo12::loadEndRuns()
 {
-//    CFileDataSource source(m_nFd);
-//    V10::CRingItem item(V10::VOID);
+    CFileDataSource source(m_nFd);
+    V12::CRawRingItem item;
 
-//  while (true) {
-//    readItem(source, item);
-//    if (source.eof()) break;
+    try {
+      while (true) {
+        readItem(source, item);
+        if (source.eof()) break;
 
-//    if (item.type() == V10::END_RUN) {
+        if (item.type() == V12::END_RUN) {
+          m_endRuns.emplace_back(new V12::CRingStateChangeItem(item));
+        }
+      }
+    }  catch (std::exception& exc) {
+        std::cerr << "Caught exception while processing event file: " << exc.what() << std::endl;
+    }
+}
 
-//        std::unique_ptr<V10::CRingStateChangeItem>
-//                pItem(new V10::CRingStateChangeItem(item));
-//        m_endRuns.push_back(std::move(pItem));
 
-//    }
-//  }
+void CEndRunInfo12::dumpBodyHeader(int i, const CEndRunInfo &e, std::ostream &stream) const
+{
+    stream << "Has V12 header:\n";
+    stream << "     Event timestamp: " << e.getEventTimestamp(i) << std::endl;
+    stream << "     Source Id      : " << e.getSourceId(i) << std::endl;
 }

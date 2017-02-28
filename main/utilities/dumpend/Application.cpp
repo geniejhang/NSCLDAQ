@@ -97,12 +97,15 @@ Application::processFile(const char* name)
         CEndRunInfoFactory::DAQVersion v;
         switch (m_Args.daqversion_arg) {
             
-            case daqversion_arg_11:
-                v = CEndRunInfoFactory::nscldaq11;
-                break;
-            case daqversion_arg_10:
-                v = CEndRunInfoFactory::nscldaq10;
-                break;
+        case daqversion_arg_12:
+            v = CEndRunInfoFactory::nscldaq12;
+            break;
+        case daqversion_arg_11:
+            v = CEndRunInfoFactory::nscldaq11;
+            break;
+        case daqversion_arg_10:
+            v = CEndRunInfoFactory::nscldaq10;
+            break;
         }
         pEndRun = CEndRunInfoFactory::create(v, fd);
     }
@@ -125,44 +128,5 @@ void
 Application::dumpEndRunInfo(const char* name, CEndRunInfo& endRun)
 {
     std::cout << "------------------ " << name << " ----------------------\n";
-    std::cout << "Has " << endRun.numEnds() << " end run records\n";
-    for (int i = 0; i < endRun.numEnds(); i++) {
-        std::cout << "End run record # " << i << std::endl;
-        if (endRun.hasBodyHeader(i)) {
-            dumpBodyHeader(i, endRun);
-        }
-        dumpBody(i, endRun);
-    }
-}
-/**
- * dumpBodyHeader
- *    Dumps info from an end run body header.
- *
- *    @param i - selects the end run record.
- *    @param e - References the end run object.
- */
-void
-Application::dumpBodyHeader(int i, CEndRunInfo& e)
-{
-    std::cout << "Has a body header:\n";
-    std::cout << "     Event timestamp: " << e.getEventTimestamp(i) << std::endl;
-    std::cout << "     Source Id      : " << e.getSourceId(i) << std::endl;
-    std::cout << "     Barrier Type   : " << e.getBarrierType() << std::endl;
-
-}
-/**
- * dumpBody
- *    Dump info from the end run body:
- *    @param i - selects the end run record.
- *    @param e - The end run information object.
- */
-void
-Application::dumpBody(int i, CEndRunInfo& e)
-{
-    time_t tod = e.getTod(i);
-    std::cout << "Body: \n";
-    std::cout << "      Run                : " << e.getRunNumber(i) << std::endl;
-    std::cout << "      Seconds run lasted : " << e.getElapsedTime(i) << std::endl;
-    std::cout << "      Run Title          : " << e.getTitle(i)  << std::endl;
-    std::cout << "      Run Ended at       : " << ctime(&tod) << std::endl;
+    endRun.dump(std::cout);
 }

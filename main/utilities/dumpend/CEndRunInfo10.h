@@ -25,6 +25,7 @@
 #include "CEndRunInfo.h"
 #include <vector>
 #include <memory>
+#include <iosfwd>
 
 
 namespace DAQ {
@@ -63,11 +64,13 @@ public:
     virtual float    getElapsedTime(int which=0)      const ;
     virtual std::string getTitle(int which=0)         const ;
     virtual time_t   getTod(int which = 0)            const ;    
-    
+
     // Utilities:
     
 private:
     void loadEndRuns();
     void throwIfBadIndex(int which) const;
+
+    void dumpBodyHeader(int i, const CEndRunInfo &e, std::ostream& stream) const;
 };
 #endif

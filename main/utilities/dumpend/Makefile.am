@@ -2,6 +2,7 @@ bin_PROGRAMS =dumpend
 
 COMMON_CFLAGS = -I@top_srcdir@/utilities/nscldaq-format/format \
                 -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
+                -I@top_srcdir@/utilities/nscldaq-format/Buffer \
                 -I@top_srcdir@/base/os \
                 -I@top_srcdir@/utilities/IO  \
                 @LIBTCLPLUS_CFLAGS@
@@ -9,6 +10,7 @@ COMMON_LOADFLAGS= @top_builddir@/utilities/nscldaq-format/format/V10/libdataform
                     @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
                     @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
                     @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+                    @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
                     @top_builddir@/base/dataflow/libDataFlow.la \
                     @top_builddir@/base/os/libdaqshm.la \
                     @top_builddir@/utilities/IO/libdaqio.la	\
@@ -43,6 +45,7 @@ noinst_PROGRAMS=unittests
 
 unittests_SOURCES=TestRunner.cpp fileitertest.cpp \
 	endinfo11test.cpp endrun10test.cpp	\
+        endinfo12test.cpp \
 	erinfofactorytest.cpp			\
 	CFileIterator.cpp CFileIterator.h \
 	CEndRunInfo.cpp CEndRunInfo.h	\
