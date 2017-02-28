@@ -24,6 +24,7 @@
 #include <vector>
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 // Forward class definitions:
 
@@ -35,9 +36,16 @@ namespace DAQ {
 
 
 /*!
-  Provide a data source from an event file.  This allows users to directly dump
-  an event file to stdout.  The data source returns sequential ring items
-  that are not in the excluded set of data types.
+  \brief Data source for a unix file descriptor 
+  
+  Because the data source supports reading from a standard file descriptor,
+  it is useful for reading from a file or stdin. There is a big difference
+  between the functionality of these two types of sources in terms of whether
+  they are seekable. To support the difference, the class implements a buffer
+  to hold data read through a peek operation. Even though this gives the 
+  facade of not moving the get pointer in the file, it really will always read
+  from the file descriptor. The user will get data from a previous peek operation
+  if they trying to either peek or read since the previous peek operation.
 
 */
 
@@ -46,9 +54,12 @@ class CFileDataSource : public CDataSource
   // Private per-object data:
 
 private:
-  int                  m_fd;	  // File descriptor open on the event source.
-  std::set<uint16_t>   m_exclude; // item types to exclude from the return set.
-  URL&                 m_url;	  // URI that points to the file.
+  int                  m_fd;	       // File descriptor open on the event source.
+  std::set<uint16_t>   m_exclude;    // item types to exclude from the return set.
+  URL&                 m_url;	       // URI that points to the file.
+  std::vector<char>    m_peekBuffer; // a buffer for storing data peeked at but not read
+  bool                 m_lastReadWasPeek; // a flag to specify whether the last operation was a peek
+  off_t                m_pos;        // position prior to the last peek operation 
 
   // Constructors and other canonicals:
 
