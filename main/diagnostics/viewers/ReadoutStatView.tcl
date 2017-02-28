@@ -86,11 +86,12 @@ snit::widgetadaptor ReadoutStatView {
     #     Create images for the folders, the programs and the runs:
     #
     typeconstructor {
+        puts "Type constructor"
         image create photo readoutstat_folder -format png \
             -file [file join $::ReadoutStatViewNS::here folder.png]
         image create photo readoutstat_app    -format png \
             -file [file join $::ReadoutStatViewNS::here program.png]
-        image create photo readoutstat_run -format png \
+        image create photo readoutstat_runicon -format png \
             -file [file join $::ReadoutStatViewNS::here run.png]
         set fd [open [file join $::ReadoutStatViewNS::here iconcredit.txt] r]
         set credit [read $fd]
@@ -110,6 +111,11 @@ snit::widgetadaptor ReadoutStatView {
     #
     constructor args {
         installhull using ttk::frame
+        
+        toplevel .test
+        canvas   .test.c
+        pack .test.c
+    
         
         set colnames [list properties timestamp elapsed triggers events bytes]
         
@@ -299,9 +305,14 @@ snit::widgetadaptor ReadoutStatView {
         # Need to create and record a new entry.
         
         set newId [$tree insert $parent end                                 \
-            -text [dict get $runDef runNumber] -image readoutstat_run       \
+           -text [dict get $runDef runNumber] -image readoutstat_runicon       \
             -values [list "started: [clock format [dict get $runDef startTime] -format "%D %T"]"] \
         ]
+#        set newId [$tree insert $parent end                                 \
+#           -text [dict get $runDef runNumber] -image readoutstat_app       \
+#            -values [list "started: [clock format [dict get $runDef startTime] -format "%D %T"]"] \
+#        ]
+
         lappend statItems($parent)                                          \
             [dict create id [dict get $runDef id] id $runId treeId $newId]
         return $newId

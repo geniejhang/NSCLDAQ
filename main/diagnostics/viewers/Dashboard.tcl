@@ -35,6 +35,11 @@ package require BacklogSummary
 package require LogView
 package require LogModel
 package require LogController
+
+package require ReadoutStatModel
+package require ReadoutStatView
+package require ReadoutStatController
+
 #------------------------------------------------------------------------------
 #
 #   Utility procedures
@@ -198,8 +203,20 @@ LogView .n.l -colors [dict create \
 ]
 set logModel [LogModel %AUTO% -file $statusDb]
 set logController [LogController %AUTO% -model $logModel -view .n.l]
-.n add .n.l -text {LogMessages}
+.n add .n.l -text {Log Messages}
 menu .logmenu
 $logController fillFilterMenu .logmenu
 
+#  Add a tab with the readout statistics;
+#
+set rdoModel [ReadoutStatModel %AUTO% -dbcommand $api]
+ReadoutStatView .n.r
+set rdoController [ReadoutStatController %AUTO% -model $rdoModel -view .n.r ]
+.n add .n.r -text {Readout Statistics}
+
+#  Setup bindings so that when the notebook page changes the menubar
+#  reflects the appropriate context sensitive menu (if any):
+
 bind .n <<NotebookTabChanged>> [list setMenu . .n [list .n.l .logmenu]]
+
+
