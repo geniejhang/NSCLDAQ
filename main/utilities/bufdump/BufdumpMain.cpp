@@ -29,8 +29,7 @@
 #include <V12/CRingScalerItem.h>
 #include <RingIOV12.h>
 
-#include <CAllButPredicate.h>
-#include <CRingSelectPredWrapper.h>
+#include <CSimpleAllButPredicate.h>
 
 #include <Exception.h>
 
@@ -212,16 +211,14 @@ BufdumpMain::operator()(int argc, char** argv)
     m_itemCount = parse.count_arg;
   }
 
-  auto pPredicate = std::shared_ptr<CAllButPredicate>(new CAllButPredicate);
+  CSimpleAllButPredicate predicate;
 
   for (int i=0; i < exclude.size(); i++) {
-    pPredicate->addExceptionType(exclude[i]);
+    predicate.addExceptionType(exclude[i]);
   }
   for (int i=0; i < sample.size(); i++) {
-    pPredicate->addExceptionType(sample[i], true);
+    predicate.addExceptionType(sample[i]);
   }
-
-  CRingSelectPredWrapper predicate(pPredicate);
   CRawRingItem item;
   while (m_skipCount && !pSource->eof()) {
       DAQ::readItemIf(*pSource, item, predicate);
@@ -233,14 +230,15 @@ BufdumpMain::operator()(int argc, char** argv)
   while (!done && !pSource->eof()) {
       DAQ::readItemIf(*pSource, item, predicate);
       if (!pSource->eof()) {
-        processItem(item);
+          processItem(item);
 
-        numToDo--;
-      
-        if ((m_itemCount != 0) && (numToDo == 0)) done = true;
-    } else {
-      done = true;
-    }
+          numToDo--;
+
+          if ((m_itemCount != 0) && (numToDo == 0)) done = true;
+      } else {
+          done = true;
+          std::cout << "source eof" << endl;
+      }
   }
 
   return EXIT_SUCCESS;

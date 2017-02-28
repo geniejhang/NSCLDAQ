@@ -25,6 +25,7 @@
 #include <string>
 #include <time.h>
 
+#include <iosfwd>
 
 /**
  * @class CEndRunInfo
@@ -53,7 +54,14 @@ public:
     virtual uint32_t getRunNumber(int which = 0)      const = 0;
     virtual float    getElapsedTime(int which=0)      const = 0;
     virtual std::string getTitle(int which=0)         const = 0;
-    virtual time_t   getTod(int which = 0)            const = 0;    
+    virtual time_t   getTod(int which = 0)            const = 0;
+
+    virtual void dump( std::ostream& stream) const;
+
+protected:
+    virtual void dumpBodyHeader(int i, const CEndRunInfo& e, std::ostream& stream) const = 0;
+    void dumpBody(int i, const CEndRunInfo& e, std::ostream& stream) const;
+
 };
 
 #endif

@@ -25,6 +25,7 @@
 #include "CEndRunInfo.h"
 #include <vector>
 #include <memory>
+#include <iosfwd>
 
 namespace DAQ {
 namespace V11 {
@@ -68,6 +69,8 @@ public:
 private:
     void loadEndRuns();
     void throwIfNoSuch(int which) const ;
+
+    void dumpBodyHeader(int i, const CEndRunInfo &e, std::ostream& stream) const;
 };
 
 #endif

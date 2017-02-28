@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <io.h>
+#include <ostream>
 
 using namespace DAQ;
 
@@ -205,3 +206,7 @@ CEndRunInfo10::loadEndRuns()
     }
   }
 }
+
+
+void CEndRunInfo10::dumpBodyHeader(int i, const CEndRunInfo &e, std::ostream& stream) const
+{}

@@ -21,13 +21,25 @@
 */
 
 #include "CEndRunInfoFactory.h"
+#include "CEndRunInfo12.h"
 #include "CEndRunInfo11.h"
 #include "CEndRunInfo10.h"
-#include <DataFormat.h>
+#include <V10/DataFormatV10.h>
+#include <V11/DataFormatV11.h>
 
+#include <V12/DataFormat.h>
+#include <V12/CRingItemParser.h>
+
+#include <array>
 #include <stdexcept>
 #include <exception>
 #include <io.h>
+#include <iostream>
+
+using namespace DAQ;
+
+
+
 
 /**
  * create
@@ -49,31 +61,41 @@ CEndRunInfoFactory::create(int fd)
     lseek(fd, 0, SEEK_SET);               // Rewind the file.
     
     // Read the header first to see if it's a format item:
-    
-    
-    RingItemHeader hdr;
-    io::readData(fd, &hdr, sizeof(hdr));
+    // all ring item version have a size and type to start off
+    // with
+    std::array<char,8> hdrBuffer;
+    int status = io::readData(fd, hdrBuffer.data(), hdrBuffer.size());
+
+    uint32_t size, type;
+    bool needsSwap;
+    V12::Parser::parseSizeAndType(hdrBuffer.begin(), hdrBuffer.end(),
+                                  size, type, needsSwap);
+
     lseek(fd, 0, SEEK_SET);   // rewind again.
 
-    if (hdr.s_type == RING_FORMAT) {
-        // If the item is a ring format item, read the entire item.
-        // 1.  If it's 11 major version build a CEndRunInfo10
-        // 2.  Any other major version, throw domain error.
-        
-        DataFormat item;
-        io::readData(fd, &item, sizeof(DataFormat));
-        lseek(fd, 0, SEEK_SET);                  // Final rewind.
-        if (item.s_majorVersion == 11) {
+    // we have an empty file... give it to a V10 end run info and let it do its thing.
+
+    if (status == 0 || size < hdrBuffer.size()) {
+        return create(nscldaq10, fd);
+    }
+
+    if (type == V11::RING_FORMAT || type == V12::RING_FORMAT) {
+        if (size == 4*sizeof(uint32_t)) {
+            // we have a version 11 data format item
             return create(nscldaq11, fd);
+        } else if (size == 6*sizeof(uint32_t)) {
+            // we have a version 12 data format item
+            return create(nscldaq12, fd);
         } else {
             throw std::domain_error("Looks like this file format is newer than I can handle");
         }
-        
     } else {
-        // If there's not a ring format item at the start of the file it must
-        // be a 10.x guy:
-        
-        return create(nscldaq10, fd);
+        if (type == V10::BEGIN_RUN || type == V10::END_RUN ||
+                type == V10::PAUSE_RUN || type == V10::RESUME_RUN) {
+            return create(nscldaq10, fd);
+        } else {
+            throw std::domain_error("Looks like this file format is newer than I can handle");
+        }
     }
 }
 /**
@@ -96,7 +118,9 @@ CEndRunInfoFactory::create(CEndRunInfoFactory::DAQVersion version, int fd)
             return new CEndRunInfo11(fd);
         case nscldaq10:
             return new CEndRunInfo10(fd);
-        default:
+    case nscldaq12:
+        return new CEndRunInfo12(fd);
+    default:
             throw std::domain_error("Invalid daq version to create");
     }
 }

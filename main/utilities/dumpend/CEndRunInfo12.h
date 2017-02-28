@@ -6,7 +6,7 @@
 
 #include <vector>
 #include <memory>
-
+#include <iosfwd>
 
 class CEndRunInfo12 : public CEndRunInfo
 {
@@ -36,6 +36,7 @@ class CEndRunInfo12 : public CEndRunInfo
   private:
       void loadEndRuns();
       void throwIfBadIndex(int which) const;
+      void dumpBodyHeader(int i, const CEndRunInfo &e, std::ostream& stream) const;
 };
 
 #endif // CENDRUNINFO12_H

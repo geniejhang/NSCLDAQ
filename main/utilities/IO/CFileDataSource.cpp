@@ -28,13 +28,13 @@
 
 #include <string>
 #include <stdexcept>
+#include <limits>
 
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-#include <stdexcept>
+#include <unistd.h>
 
 using std::vector;
 using std::set;
@@ -58,7 +58,9 @@ namespace DAQ {
 */
 CFileDataSource::CFileDataSource(URL& url, vector<uint16_t> exclusionList) :
   m_fd(-1),
-  m_url(*(new URL(url)))
+  m_url(*(new URL(url))),
+  m_lastReadWasPeek(false),
+  m_pos(0)
 {
   for (int i=0; i < exclusionList.size(); i++) {
     m_exclude.insert(exclusionList[i]);
@@ -69,7 +71,10 @@ CFileDataSource::CFileDataSource(URL& url, vector<uint16_t> exclusionList) :
 
 CFileDataSource::CFileDataSource(const std::string& path, vector<uint16_t> exclusionList) :
   m_fd(-1),
-  m_url(*(new URL(string("file://") + path)))
+  m_url(*(new URL(string("file://") + path))),
+  m_lastReadWasPeek(false),
+  m_pos(0)
+
 {
   for (int i=0; i < exclusionList.size(); i++) {
     m_exclude.insert(exclusionList[i]);
@@ -83,7 +88,10 @@ CFileDataSource::CFileDataSource(const std::string& path, vector<uint16_t> exclu
  * construtor from fd:
  */
 CFileDataSource::CFileDataSource(int fd, vector<uint16_t> exclusionlist) :
-  m_fd(fd),  m_url(*(new URL("file://stdin/junk")))
+  m_fd(fd),  
+  m_url(*(new URL("file://stdin/junk"))), 
+  m_lastReadWasPeek(false),
+  m_pos(0)
 {
   for (int i=0; i < exclusionlist.size(); i++) {
     m_exclude.insert(exclusionlist[i]);
@@ -105,47 +113,148 @@ CFileDataSource::~CFileDataSource()
 //  Mandatory interface:
 
 
+/*! \brief Return the amount of data available for reading
+ *
+ * The return value depends largely on whether the file data source is governing
+ * a file descriptor referring to a seekable or non-seekable entity (i.e. stdin).
+ *
+ * \retval numeric_limits<size_t>::max() if fd == STDIN_FILENO
+ * \retval number of bytes to end of file otherwise
+ */
 size_t CFileDataSource::availableData() const
 {
-    // read current position and size of file
-    // return the difference
-    off_t currentPosition = lseek(m_fd, 0, SEEK_CUR);
-    off_t endPos = lseek(m_fd, 0, SEEK_END);
-    off_t status = lseek(m_fd, currentPosition, SEEK_SET);
+    size_t nBytes = 0;
+    if ( m_fd != STDIN_FILENO ){
+        // read current position and size of file
+        // return the difference
+        off_t currentPosition = lseek(m_fd, 0, SEEK_CUR);
+        off_t endPos = lseek(m_fd, 0, SEEK_END);
+        off_t status = lseek(m_fd, currentPosition, SEEK_SET);
 
-    return (endPos - currentPosition);
+        nBytes = (endPos - currentPosition);
+    } else {
+        nBytes = std::numeric_limits<size_t>::max();
+    }
+    return nBytes;
 }
 
+/*!
+ * \brief Read data from the file while giving the illusion that the get pointer stays fixed
+ *
+ *  Because stdin is not seekable, this can't be implemented using a basic read
+ *  operation followed by a seek. Instead, this has to read data into a "peek buffer"
+ *  that holds onto data for subsequent read or peek operations.
+ *
+ *  
+ *  \param pBuffer    the buffer to fill with the new data
+ *  \param nBytes     the number of bytes to read
+ *
+ *  \returns the number of bytes actually read
+ *
+ */
 size_t CFileDataSource::peek(char* pBuffer, size_t nBytes)
 {
-    // read the data
-    int status = io::readData(m_fd, pBuffer, nBytes);
+    int nBytesToCopy = 0;
+    size_t previousSize = 0;
 
-    // put it back
-    if (status > 0) {
-        lseek(m_fd, -status, SEEK_CUR);
-    } else if (status < 0) {
-        std::string msg("CFileDataSource::peek() ");
-        msg += strerror(errno);
-        throw std::runtime_error(msg);
+    if (m_lastReadWasPeek) {
+
+        // we have data in the peek buffer
+        previousSize = m_peekBuffer.size();
+
+        if (previousSize < nBytes) {
+            m_peekBuffer.resize(nBytes);
+            size_t nBytesRead = io::readData(m_fd,
+                                             m_peekBuffer.data() + previousSize,
+                                             nBytes - previousSize);
+
+            if (nBytesRead < 0) {
+                std::string msg("CFileDataSource::peek() ");
+                msg += strerror(errno);
+                throw std::runtime_error(msg);
+            } else {
+                nBytesToCopy = previousSize + nBytesRead;
+            }
+        } else {
+            nBytesToCopy = nBytes;
+        }
+    } else {
+        // store our file positio
+        m_pos = tell();
+
+        // no data in peek buffer... set it up and then read into it
+        m_peekBuffer.resize(nBytes);
+        nBytesToCopy = io::readData(m_fd, m_peekBuffer.data(), nBytes);
     }
 
-    return status;
+    // copy from our peek buffer into the user's
+    std::copy(m_peekBuffer.begin(), m_peekBuffer.begin() + nBytesToCopy, pBuffer);
+    m_lastReadWasPeek = true;
+
+    return nBytesToCopy;
 }
 
+/*! \brief Ignore (i.e. skip) the next nBytes available in the source
+ *
+ * \param nBytes  the number of bytes to skip
+ *
+ * This gives the illusion of simply moving the get pointer forward.
+ */
 void CFileDataSource::ignore(size_t nBytes)
 {
-    int status = lseek(m_fd, nBytes, SEEK_CUR);
-    if (status < 0) {
-        std::string msg("CFileDataSource::ignore() ");
-        msg += strerror(errno);
-        throw std::runtime_error(msg);
+    std::vector<char> tempBuffer;
+    size_t nBytesInPeekBuffer = m_peekBuffer.size();
+    if (m_lastReadWasPeek) {
+
+        // First ignore the data that was last read in a peek operation
+        //
+        // 2 situations need to be addressed:
+        // 1. User want to ignore more than the last peek
+        // 2. User wants to ignore less than the last peek
+        if (nBytesInPeekBuffer >= nBytes) {
+            // user wants to ignore fewer bytes than are in the peek buffer
+            // remove the bytes that they want to ignore
+            size_t nBytesToErase = std::min(nBytes, nBytesInPeekBuffer);
+            m_peekBuffer.erase(m_peekBuffer.begin(), m_peekBuffer.begin()+nBytesToErase);
+
+            // update our file position
+            m_pos += nBytesToErase;
+
+        } else {
+            // user wants to ignore more bytes than were in the peek buffer
+
+            // empty out the peek buffer
+            m_peekBuffer.clear();
+            m_lastReadWasPeek = false;
+
+            // resize our vector to store the new data we need to read...
+            // remember, some of what they wanted to ignore has already been
+            // ignored... we just need to ignore the remainder
+            tempBuffer.resize(nBytes - nBytesInPeekBuffer);
+
+            read(tempBuffer.data(), tempBuffer.size());
+        }
+    } else {
+        // there is nothing in the peek buffer to care about... just ignore
+        // the next nBytes by reading them.
+        tempBuffer.resize(nBytes);
+        read(tempBuffer.data(), nBytes);
     }
 }
 
+/*!
+ *  \returns the current position of the get pointer
+ *
+ *  Of course this is referrring to a "virtual" get pointer because
+ *  a peek operation actually moves the get pointer. 
+ */
 size_t CFileDataSource::tell() const
 {
-    return lseek(m_fd, 0, SEEK_CUR);
+    if (m_lastReadWasPeek) {
+        return m_pos;
+    } else {
+        return lseek(m_fd, 0, SEEK_CUR);
+    }
 }
 
 /*!
@@ -176,15 +285,66 @@ CFileDataSource::getItem()
   }
 }
 
+
+/*! \brief Read the next nBytes from the file
+ *
+ * \param pBuffer   the buffer to read data into
+ * \param nBytes    the number of bytes to read
+ * 
+ * Here we have once again to deal with the complications of the 
+ * peek buffer. We first read data from the peek buffer and then 
+ * from the file. Depending on how much data is in the peek buffer
+ * compared to the number of bytes requested, the may or may not
+ * be interaction with the underlying file.
+ *
+ */
 void CFileDataSource::read(char* pBuffer, size_t nBytes)
 {
-  if (! eof() ) {
-    size_t nRead = io::readData(m_fd, pBuffer, nBytes);
+    if (m_lastReadWasPeek) {
 
-    if (nRead != nBytes) {
-      setEOF(true);
+        if (nBytes <= m_peekBuffer.size()) {
+            // the user asked for less data than is in the peek buffer... copy over the
+            // data itno the user's buffer and return... no IO needs to take place
+            std::copy(m_peekBuffer.begin(), m_peekBuffer.begin()+ nBytes, pBuffer);
+            m_peekBuffer.erase(m_peekBuffer.begin(), m_peekBuffer.begin()+nBytes);
+
+            if (m_peekBuffer.size() > 0) {
+                m_lastReadWasPeek = true;
+            } else {
+                m_lastReadWasPeek = false;
+            }
+        } else {
+            // the user asked for more data than was in the peek buffer
+            // copy over what was in the peek buffer, then read the rest
+            size_t nBytesInPeek = m_peekBuffer.size();
+
+            pBuffer = std::copy(m_peekBuffer.begin(), m_peekBuffer.end(), pBuffer);
+            m_peekBuffer.clear();
+
+            m_lastReadWasPeek = false;
+
+            // read the rest
+            if (! eof() ) {
+                size_t nToRead = nBytes-nBytesInPeek;
+                size_t nRead = io::readData(m_fd, pBuffer, nToRead);
+
+                if (nRead != nToRead) {
+                    setEOF(true);
+                }
+            }
+
+        }
+    } else {
+
+
+        if (! eof() ) {
+            size_t nRead = io::readData(m_fd, pBuffer, nBytes);
+
+            if (nRead != nBytes) {
+                setEOF(true);
+            }
+        }
     }
-  }
 }
 
 void CFileDataSource::setExclusionList(const std::set<uint16_t>& list)
@@ -277,6 +437,8 @@ void CFileDataSource::openFile(const string& fullPath)
     if (m_fd == -1) {
       throw CErrnoException("Opening file data source");
     }
+
+    m_pos = tell();
 }
 
 void
