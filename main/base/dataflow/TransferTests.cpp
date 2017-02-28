@@ -45,6 +45,7 @@ class XferTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(XferTests);
   CPPUNIT_TEST(simpleput);
   CPPUNIT_TEST(simpleputv);
+  CPPUNIT_TEST(simpleputv_1);
   CPPUNIT_TEST(wrapput);
   CPPUNIT_TEST(wrapputv);
   CPPUNIT_TEST(edgewrap);
@@ -74,6 +75,7 @@ public:
 protected:
   void simpleput();
   void simpleputv();
+  void simpleputv_1();
   void wrapput();
   void wrapputv();
   void edgewrap();
@@ -172,6 +174,53 @@ void XferTests::simpleputv() {
     index++;
   }
   
+
+  munmap(pBuffer, pBuffer->s_header.s_topOffset+1);
+
+}
+
+// ensure that we can do 2 putvs in a row successfully
+void XferTests::simpleputv_1() {
+  CRingBuffer ring(string(SHM_TESTFILE), CRingBuffer::producer);
+
+  pRingBuffer        pBuffer = reinterpret_cast<pRingBuffer>(mapRingBuffer(fileName(SHM_TESTFILE).c_str()));
+  pClientInformation pPut    = &(pBuffer->s_producer);
+
+  // Check the initial format of the put 'pointer'
+
+  pid_t mypid = getpid();
+  pid_t ppid = pPut->s_pid;
+  EQ(mypid, ppid);
+  EQ(pBuffer->s_header.s_dataOffset, pPut->s_offset);
+
+  // Put 100 bytes of memory... counting pattern.
+
+  char data[100];
+  for (int i=0; i < 100; i++) {
+    data[i] = i;
+  }
+
+  char data2[100];
+  for (int i=0; i < 100; i++) {
+    data2[i] = i;
+  }
+
+  ring.putv({{data, sizeof(data)}});
+  ring.putv({{data2, sizeof(data2)}});
+
+  // The put pointer should have advanced and the data should be in the ring:
+
+  off_t offset = pPut->s_offset;
+  EQ(pBuffer->s_header.s_dataOffset + 200, offset);
+
+  int index = pBuffer->s_header.s_dataOffset;
+  char* p   = reinterpret_cast<char*>(pBuffer);
+
+  for (int i =0; i < 2*sizeof(data); i++) {
+    EQ(i%100, (int)p[index]);
+    index++;
+  }
+
 
   munmap(pBuffer, pBuffer->s_header.s_topOffset+1);
 
