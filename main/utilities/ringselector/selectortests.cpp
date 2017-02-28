@@ -39,12 +39,30 @@ using namespace DAQ::V12;
 pid_t childpid;
 
 
+template<class ByteIter>
+void dumpBinary(ByteIter beg, ByteIter end)
+{
+    std::cout << "begin dump " << std::endl;
+    std::cout << std::hex << std::setfill('0');
+    size_t size = std::distance(beg, end);
+    std::cout << size << std::endl;
+    for (auto iter=beg; iter<end; iter+=2) {
+        uint16_t value = *(iter+1);
+        value = ((value << 8) | (*iter));
+        std::cout << std::setw(4) << value << std::endl;
+    }
+    std::cout << std::setfill(' ') << std::dec;
+    std::cout << "end dump " << std::endl;
+}
+
 static int 
 readItem(int fd, void* pBuffer)
 {
-  char* p = reinterpret_cast<char*>(pBuffer);
+  auto p = reinterpret_cast<unsigned char*>(pBuffer);
+  auto pBeg = p;
 
   // Read the header:
+//  std::cout << "readItem" << std::endl;
 
   size_t bytes = read(fd, p, 20);
   EQ(size_t(20), bytes);
@@ -53,12 +71,14 @@ readItem(int fd, void* pBuffer)
   uint64_t tstamp; 
   bool swapNeeded;
  
-  Parser::parseHeader(p, p+20, size, type, tstamp, sourceId, swapNeeded); 
+  Parser::parseHeader(p, p+bytes, size, type, tstamp, sourceId, swapNeeded);
   p += bytes;
 
-  size_t remaining = size - 20;
+  size_t remaining = size - bytes;
   bytes = read(fd, p, remaining);
 
+
+//  dumpBinary(pBeg, pBeg + size);
   EQ(remaining, bytes);
 
   return size;
@@ -192,10 +212,13 @@ static void event(DAQ::CDataSink& prod, int fd, bool check=true)
   for (int i =0; i < 10; i++) {
     body << uint16_t(i);
   }
-  prod << CRawRingItem(i);
+//  CRawRingItem rawItem(i);
+//  std::cout << rawItem.toString() << std::endl;
+//  prod << rawItem;
+  prod << i;
 
   if (check) {
-    char buffer[1024];
+    unsigned char buffer[1024];
     int size = readItem(fd, buffer);
     auto result = Parser::parse(buffer, buffer + size);
     auto& item = dynamic_cast<CPhysicsEventItem&>(*result.first);
@@ -218,14 +241,15 @@ static void event(DAQ::CDataSink& prod, int fd, bool check=true)
 
 static void beginRun(DAQ::CDataSink& prod, int fd,  bool check = true)
 {
-  CRingStateChangeItem i(BEGIN_RUN, 1234, 0, time(NULL), "This is a title");
+    time_t now = time(NULL);
+  CRingStateChangeItem i(BEGIN_RUN, 1234, 0, now, "This is a title");
   prod << CRawRingItem(i);
   
   // Should now be able to read the item from the pipe and it should match
   // the item we put in.
   
   
-  char buffer[1024];
+  unsigned char buffer[1024];
  
   if (check) {
     // We should be able to get what we put in:
@@ -234,10 +258,11 @@ static void beginRun(DAQ::CDataSink& prod, int fd,  bool check = true)
     auto result = Parser::parse(buffer, buffer+size);
     auto& item = dynamic_cast<CRingStateChangeItem&>(*result.first);
 
-    EQ(BEGIN_RUN, item.type());
-    EQ((uint32_t)1234,      item.getRunNumber());
-    EQ((uint32_t)0,         item.getElapsedTime());
-    EQ(string("This is a title"), item.getTitle());
+//    std::cout << item.toString() << std::endl;
+    EQMSG("type", BEGIN_RUN, item.type());
+    EQMSG("run", (uint32_t)1234,      item.getRunNumber());
+    EQMSG("elapsed time", (uint32_t)0,         item.getElapsedTime());
+    EQMSG("title", string("This is a title"), item.getTitle());
   }
 }
 
@@ -368,17 +393,21 @@ void rseltests::all()
     pProd = DAQ::CDataSinkFactory().makeSink(std::string("tcp://localhost/")+Os::whoami());
     
     // Make a begin_run item, commit it.
-    
-    beginRun(*pProd, fd);
-    for (int i =0; i < 100; i++) {
-      event(*pProd,fd);
+    bool check = true;
+
+    beginRun(*pProd, fd, check);
+    beginRun(*pProd, fd, check);
+    for (int i =0; i < 0; i++) {
+        std::cout << "event " << i << " ... " << std::flush;
+      event(*pProd,fd, check);
+        std::cout << " done" << std::endl;
     }
-    eventCount(*pProd, fd, 100);
-    scaler(*pProd, fd);
-    pauseRun(*pProd, fd);
-    resumeRun(*pProd, fd);
-    textItem(*pProd, fd);
-    endRun(*pProd, fd);
+    eventCount(*pProd, fd, 100, check);
+    scaler(*pProd, fd, check);
+    pauseRun(*pProd, fd, check);
+    resumeRun(*pProd, fd, check);
+    textItem(*pProd, fd, check);
+    endRun(*pProd, fd, check);
     
     delete pProd;
 
@@ -391,8 +420,7 @@ void rseltests::all()
     wait(&status);
     throw;
   }
-  
-  
+
   // Cleanup by killing the child.
   
   kill(childpid*-1, SIGTERM);
