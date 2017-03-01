@@ -28,7 +28,7 @@ COMMON_LOADFLAGS= @top_builddir@/utilities/varmanager/server/libvarmgr.la \
 libstateclient_la_SOURCES=CStateClientApi.cpp CStateTransitionMonitor.cpp CStateManager.cpp \
 			CStateProgram.cpp
 libstateclient_la_CPPFLAGS=$(COMMON_CPPFLAGS)
-libstateclient_la_LDFLAGS=$(COMMON_LOADFLAGS)
+libstateclient_la_LIBADD=$(COMMON_LOADFLAGS)
 
 #
 
@@ -39,7 +39,7 @@ libTclstateclient_la_SOURCES=CTCLStateClientCommand.cpp CTCLStateClientInstanceC
 	CTCLStateManagerCommand.h CTCLStateManagerInstanceCommand.h
 
 libTclstateclient_la_CPPFLAGS=$(COMMON_CPPFLAGS)   @TCL_FLAGS@
-libTclstateclient_la_LDFLAGS= libstateclient.la $(COMMON_LOADFLAGS) @LIBTCLPLUS_LDFLAGS@  @TCL_LDFLAGS@
+libTclstateclient_la_LIBADD= @builddir@/libstateclient.la $(COMMON_LOADFLAGS) @LIBTCLPLUS_LDFLAGS@  @TCL_LDFLAGS@
 
 
 # 
@@ -48,13 +48,13 @@ libTclstateclient_la_LDFLAGS= libstateclient.la $(COMMON_LOADFLAGS) @LIBTCLPLUS_
 
 libPyStateManager_la_SOURCES= PyStateManager.cpp PyStateManager.h
 libPyStateManager_la_CPPFLAGS=@PYTHON_CPPFLAGS@ $(COMMON_CPPFLAGS)
-libPyStateManager_la_LIBADD = libstateclient.la
-libPyStateManager_la_LDFLAGS= @PYTHON_LDFLAGS@ $(COMMON_LOADFLAGS) 
+libPyStateManager_la_LIBADD = @builddir@/libstateclient.la $(COMMON_LOADFLAGS)
+libPyStateManager_la_LDFLAGS= @PYTHON_LDFLAGS@
 
 libPyStateClient_la_SOURCES= PyStateClient.cpp 
 libPyStateClient_la_CPPFLAGS=@PYTHON_CPPFLAGS@ $(COMMON_CPPFLAGS)
-libPyStateClient_la_LIBADD = libPyStateManager.la libstateclient.la
-libPyStateClient_la_LDFLAGS= @PYTHON_LDFLAGS@ $(COMMON_LOADFLAGS) 
+libPyStateClient_la_LIBADD = @builddir@/libPyStateManager.la @builddir@/libstateclient.la $(COMMON_LOADFLAGS)
+libPyStateClient_la_LDFLAGS= @PYTHON_LDFLAGS@
 
 
 # Headers for public APIS:
@@ -102,8 +102,7 @@ clean-local:
 status_SOURCES=status.cpp  statusopts.h
 status_DEPENDENCIES = statusopts.o 
 status_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-status_LDADD=@builddir@/statusopts.o 
-status_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+status_LDADD=@builddir@/statusopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 statusopts.h: statusopts.o
 
@@ -122,8 +121,7 @@ statusopts.o: @builddir@/statusopts.ggo
 prebegin_SOURCES=prebegin.cpp prebeginopts.h tracker.cpp transition.cpp transition.h tracker.h
 prebegin_DEPENDENCIES=prebeginopts.o
 prebegin_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir
-prebegin_LDADD=prebeginopts.o
-prebegin_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+prebegin_LDADD=prebeginopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 
 prebeginopts.h: @builddir@/prebeginopts.o
@@ -140,8 +138,7 @@ prebeginopts.o: @builddir@/prebeginopts.ggo
 begin_SOURCES=begin.cpp beginopts.h tracker.cpp transition.cpp transition.h
 begin_DEPENDENCIES=beginopts.o
 begin_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-begin_LDADD=beginopts.o
-begin_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+begin_LDADD=beginopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 beginopts.h: @builddir@/beginopts.o
 
@@ -158,8 +155,7 @@ beginopts.o: @builddir@/beginopts.ggo
 pause_SOURCES=pause.cpp pauseopts.h tracker.cpp transition.cpp tracker.h transition.h
 pause_DEPENDENCIES=pauseopts.o
 pause_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-pause_LDADD=pauseopts.o
-pause_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+pause_LDADD=pauseopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 pauseopts.h: pauseopts.o
 
@@ -179,8 +175,7 @@ pauseopts.o: @builddir@/pauseopts.ggo
 preresume_SOURCES=preresume.cpp preresumeopts.h tracker.cpp transition.cpp transition.h tracker.h
 preresume_DEPENDENCIES=preresumeopts.o
 preresume_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir
-preresume_LDADD=preresumeopts.o
-preresume_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+preresume_LDADD=preresumeopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 
 preresumeopts.h: @builddir@/preresumeopts.o
@@ -198,8 +193,7 @@ resume_SOURCES=resume.cpp resumeopts.h tracker.cpp transition.h transition.cpp
 
 resume_DEPENDENCIES=resumeopts.o
 resume_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-resume_LDADD=resumeopts.o
-resume_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+resume_LDADD=resumeopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 resumeopts.h: resumeopts.o
 
@@ -216,8 +210,7 @@ resumeopts.o: @builddir@/resumeopts.ggo
 preend_SOURCES=preend.cpp preendopts.h tracker.cpp transition.cpp transition.h tracker.h
 preend_DEPENDENCIES=preendopts.o
 preend_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir
-preend_LDADD=preendopts.o
-preend_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+preend_LDADD=preendopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 
 preendopts.h: @builddir@/preendopts.o
@@ -235,8 +228,7 @@ preendopts.o: @builddir@/preendopts.ggo
 prepause_SOURCES=prepause.cpp prepauseopts.h tracker.cpp transition.cpp transition.h tracker.h
 prepause_DEPENDENCIES=prepauseopts.o
 prepause_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir
-prepause_LDADD=prepauseopts.o
-prepause_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+prepause_LDADD=prepauseopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 
 prepauseopts.h: @builddir@/prepauseopts.o
@@ -254,8 +246,7 @@ prepauseopts.o: @builddir@/prepauseopts.ggo
 end_SOURCES=end.cpp endopts.h tracker.cpp transition.cpp tracker.h transition.h
 end_DEPENDENCIES=endopts.o
 end_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-end_LDADD=endopts.o
-end_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+end_LDADD=endopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 endopts.h: endopts.o
 
@@ -273,8 +264,7 @@ endopts.o: @builddir@/endopts.ggo
 title_SOURCES=title.cpp titleopts.h tracker.cpp
 title_DEPENDENCIES=titleopts.o
 title_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-title_LDADD=titleopts.o
-title_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+title_LDADD=titleopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 titleopts.h: titleopts.o
 
@@ -292,8 +282,7 @@ titleopts.o: @builddir@/titleopts.ggo
 trtimeout_SOURCES=timeout.cpp timeoutopts.h tracker.cpp
 trtimeout_DEPENDENCIES=timeoutopts.o
 trtimeout_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-trtimeout_LDADD=timeoutopts.o
-trtimeout_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+trtimeout_LDADD=timeoutopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 timeoutopts.h: timeoutopts.o
 
@@ -311,8 +300,7 @@ timeoutopts.o: @builddir@/timeoutopts.ggo
 recording_SOURCES=recording.cpp recordingopts.h tracker.cpp
 recording_DEPENDENCIES=recordingopts.o
 recording_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-recording_LDADD=recordingopts.o
-recording_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+recording_LDADD=recordingopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 recordingopts.h: recordingopts.o
 
@@ -331,8 +319,7 @@ recordingopts.o: @builddir@/recordingopts.ggo
 programdir_SOURCES=programdir.cpp programdiropts.h tracker.cpp
 programdir_DEPENDENCIES=programdiropts.o
 programdir_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-programdir_LDADD=programdiropts.o
-programdir_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+programdir_LDADD=programdiropts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 programdiropts.h: programdiropts.o
 
@@ -349,8 +336,7 @@ programdiropts.o: @builddir@/programdiropts.ggo
 runnum_SOURCES=runnum.cpp runnumopts.h tracker.cpp
 runnum_DEPENDENCIES=runnumopts.o
 runnum_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-runnum_LDADD=runnumopts.o
-runnum_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) 
+runnum_LDADD=runnumopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
 
 runnumopts.h: runnumopts.o
 
@@ -414,12 +400,12 @@ unittests_SOURCES=TestRunner.cpp Asserts.h TestStateChangeMonitor.cpp \
 	changeMonitorTests.cpp TestStateManager.cpp
 
 unittests_CPPFLAGS=$(COMMON_CPPFLAGS) $(CPPUNIT_CFLAGS) -DBINDIR=\"@bindir@\"
-unittests_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) $(CPPUNIT_LDFLAGS)
+unittests_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS) $(CPPUNIT_LDFLAGS)
 
 stateTests_SOURCES=TestRunner.cpp Asserts.h TestStateTransitions.cpp
 
 stateTests_CPPFLAGS=$(COMMON_CPPFLAGS) $(CPPUNIT_CFLAGS) -DBINDIR=\"@bindir@\"
-stateTests_LDFLAGS=libstateclient.la $(COMMON_LOADFLAGS) $(CPPUNIT_LDFLAGS)
+stateTests_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS) $(CPPUNIT_LDFLAGS)
 
 
 EXTRA_DIST+= stateclient.test statemgr.test  StateClientTests.py testBase.py StateManagerTests.py \
