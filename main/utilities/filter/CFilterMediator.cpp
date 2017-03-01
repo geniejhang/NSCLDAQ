@@ -1,20 +1,6 @@
 #include "CFilterMediator.h"
-#include <RingIOV10.h>
-#include <RingIOV11.h>
-#include <RingIOV12.h>
-#include <V10/CRingItem.h>
-#include <V11/CRingItem.h>
-#include <V12/CRawRingItem.h>
 
 namespace DAQ {
-namespace Transform {
-
-
-
-/////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////
 
 CFilterMediator::CFilterMediator()
 {
@@ -92,5 +78,4 @@ void CFilterMediator::setPredicate(std::shared_ptr<CPredicate> pPredicate)
     m_pPredicate = pPredicate;
 }
 
-} // end Transform
 } // end DAQ

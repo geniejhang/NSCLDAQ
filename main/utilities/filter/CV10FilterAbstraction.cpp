@@ -109,7 +109,7 @@ CFilterAbstraction::dispatch(V10::CRingItem &item)
         break;
 
     case TIMESTAMPED_NONINCR_SCALERS:
-        pFilteredItem = m_pFilter->handleTstampScaler(static_cast<CRingTimestampedRunningScalerItem*>(&item));
+        pFilteredItem = m_pFilter->handleTimestampedScaler(static_cast<CRingTimestampedRunningScalerItem*>(&item));
         break;
 
         // Physics event item

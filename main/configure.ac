@@ -459,6 +459,9 @@ AC_CONFIG_FILES([Makefile
 		 utilities/filter/Makefile
 		 utilities/filter/Makefile-template
 		 utilities/filter/FilterIncludes
+                 utilities/filter/V10/Makefile
+                 utilities/filter/V11/Makefile
+                 utilities/filter/V12/Makefile
                  utilities/conversion/Makefile
     		utilities/fileanalyzer/Makefile
     		utilities/IO/Makefile

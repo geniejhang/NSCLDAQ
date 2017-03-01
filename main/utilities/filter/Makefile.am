@@ -1,5 +1,7 @@
 #-------------- The library libdataformat
 
+SUBDIRS = V10 V11 V12
+
 lib_LTLIBRARIES	=	libfilter.la
 
 libfilter_la_SOURCES = CFilterMain.cpp \
@@ -14,6 +16,9 @@ libfilter_la_SOURCES = CFilterMain.cpp \
                        CMediatorException.cpp \
                        CAbnormalEndRunFilterHandler.cpp \
 			CRunStatistics.cpp  \
+                        CPredicatedMediator.cpp \
+                        CCompositePredicate.cpp \
+                        CTestPredicate.cpp \
 			 SatisfyTclPlus.cpp 
 
 nodist_libfilter_la_SOURCES=filterargs.c filterargs.h
@@ -40,7 +45,12 @@ include_HEADERS	=  CFilterMain.h \
                    CMediatorException.h \
                    CFatalException.h \
                    CAbnormalEndRunFilterHandler.h \
-		 CRunStatistics.h
+                 CRunStatistics.h \
+                 CPredicatedMediator.h \
+                 CPredicate.h \
+                 CCompositePredicate.h \
+                 CTestPredicate.h
+
 
 
 #                   COneShotMediator.h 
