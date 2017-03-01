@@ -26,7 +26,8 @@ SUBDIRS = 				common \
 					dumpend		\
 					expEditor	\
 					fileanalyzer	\
-                                        vardbringbuffer \
+                                        vardbringbuffer 
+
 					fileanalyzer	\
 					scalersum
 
