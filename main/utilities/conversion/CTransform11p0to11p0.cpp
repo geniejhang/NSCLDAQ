@@ -38,8 +38,7 @@ CTransform11p0to11p0::operator()(InitialType& item)
   return dispatch(pItem);
 }
 
-CTransform11p0to11p0::FinalType 
-CTransform11p0to11p0::dispatch(InitialType* pItem)
+CTransform11p0to11p0::FinalType CTransform11p0to11p0::dispatch(InitialType* pItem)
 {
     using namespace V11;
 
