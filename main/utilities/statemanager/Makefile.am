@@ -79,9 +79,9 @@ EXTRA_DIST=statusopts.ggi beginopts.ggi prebeginopts.ggi preendopts.ggi \
 		programdiropts.ggi runnumopts.ggi \
 		 standardopts.ggo  prepauseopts.ggi preresumeopts.ggi
 
-BUILT_SOURCES=statusopts.h beginopts.h resumeopts.h endopts.h titleopts.h pauseopts.h timeoutopts.h \
-	recordingopts.h programdiropts.h runnumopts.h prebeginopts.h preendopts.h prepauseopts.h \
-	preresumeopts.h
+BUILT_SOURCES=statusopts.cpp beginopts.cpp resumeopts.cpp endopts.cpp titleopts.cpp pauseopts.cpp timeoutopts.cpp \
+        recordingopts.cpp programdiropts.cpp runnumopts.cpp prebeginopts.cpp preendopts.cpp prepauseopts.cpp \
+        preresumeopts.cpp
 
 clean-local:
 	rm -f $(BUILT_SOURCES)
@@ -99,18 +99,14 @@ clean-local:
 
 
 
-status_SOURCES=status.cpp  statusopts.h
-status_DEPENDENCIES = statusopts.o 
+status_SOURCES=status.cpp statusopts.cpp
 status_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-status_LDADD=@builddir@/statusopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
-
-statusopts.h: statusopts.o
+status_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
 
-
-statusopts.o: @builddir@/statusopts.ggo
+statusopts.cpp: @builddir@/statusopts.ggo
 	$(GENGETOPT) <@builddir@/statusopts.ggo --file=@builddir@/statusopts
-	$(CC) -c -o @builddir@/statusopts.o @builddir@/statusopts.c
+	mv @builddir@/statusopts.c @builddir@/statusopts.cpp
 
 #  This mess is done so that statusopts.ggi can #include standardopts.ggo for common 
 #  program options.
@@ -118,52 +114,40 @@ statusopts.o: @builddir@/statusopts.ggo
 @builddir@/statusopts.ggo: statusopts.ggi standardopts.ggo
 	$(PREPROCESSOR) -P @srcdir@/statusopts.ggi  |tr -d "\\\\" >@builddir@/statusopts.ggo
 
-prebegin_SOURCES=prebegin.cpp prebeginopts.h tracker.cpp transition.cpp transition.h tracker.h
-prebegin_DEPENDENCIES=prebeginopts.o
+prebegin_SOURCES=prebegin.cpp prebeginopts.cpp tracker.cpp transition.cpp transition.h tracker.h
 prebegin_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir
-prebegin_LDADD=prebeginopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+prebegin_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
 
-prebeginopts.h: @builddir@/prebeginopts.o
-
-prebeginopts.o: @builddir@/prebeginopts.ggo
+prebeginopts.cpp: @builddir@/prebeginopts.ggo
 	$(GENGETOPT) <@builddir@/prebeginopts.ggo --file=@builddir@/prebeginopts
-	$(CC) -c -o @builddir@/prebeginopts.o @builddir@/prebeginopts.c
+	mv @builddir@/prebeginopts.c @builddir@/prebeginopts.cpp
 
 
 @builddir@/prebeginopts.ggo: prebeginopts.ggi standardopts.ggo transitionopts.ggi
 	$(PREPROCESSOR) -P @srcdir@/prebeginopts.ggi  |tr -d "\\\\" >@builddir@/prebeginopts.ggo
 
 
-begin_SOURCES=begin.cpp beginopts.h tracker.cpp transition.cpp transition.h
-begin_DEPENDENCIES=beginopts.o
+begin_SOURCES=begin.cpp beginopts.cpp tracker.cpp transition.cpp transition.h
 begin_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-begin_LDADD=beginopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+begin_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
-beginopts.h: @builddir@/beginopts.o
-
-
-beginopts.o: @builddir@/beginopts.ggo
+beginopts.cpp: @builddir@/beginopts.ggo
 	$(GENGETOPT) <@builddir@/beginopts.ggo --file=@builddir@/beginopts
-	$(CC) -c -o @builddir@/beginopts.o @builddir@/beginopts.c
+	mv @builddir@/beginopts.c @builddir@/beginopts.cpp
 
 
 @builddir@/beginopts.ggo: beginopts.ggi standardopts.ggo transitionopts.ggi
 	$(PREPROCESSOR) -P @srcdir@/beginopts.ggi  |tr -d "\\\\" >@builddir@/beginopts.ggo
 
 
-pause_SOURCES=pause.cpp pauseopts.h tracker.cpp transition.cpp tracker.h transition.h
-pause_DEPENDENCIES=pauseopts.o
+pause_SOURCES=pause.cpp pauseopts.cpp tracker.cpp transition.cpp tracker.h transition.h
 pause_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-pause_LDADD=pauseopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+pause_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
-pauseopts.h: pauseopts.o
-
-
-
-pauseopts.o: @builddir@/pauseopts.ggo
+pauseopts.cpp: @builddir@/pauseopts.ggo
 	$(GENGETOPT) <@builddir@/pauseopts.ggo --file=@builddir@/pauseopts
-	$(CC) -c -o @builddir@/pauseopts.o @builddir@/pauseopts.c
+	mv @builddir@/pauseopts.c @builddir@/pauseopts.cpp
 
 
 @builddir@/pauseopts.ggo: pauseopts.ggi standardopts.ggo transitionopts.ggi
@@ -172,52 +156,40 @@ pauseopts.o: @builddir@/pauseopts.ggo
 
 
 
-preresume_SOURCES=preresume.cpp preresumeopts.h tracker.cpp transition.cpp transition.h tracker.h
-preresume_DEPENDENCIES=preresumeopts.o
+preresume_SOURCES=preresume.cpp preresumeopts.cpp tracker.cpp transition.cpp transition.h tracker.h
 preresume_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir
-preresume_LDADD=preresumeopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+preresume_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
 
-preresumeopts.h: @builddir@/preresumeopts.o
-
-preresumeopts.o: @builddir@/preresumeopts.ggo
+preresumeopts.cpp: @builddir@/preresumeopts.ggo
 	$(GENGETOPT) <@builddir@/preresumeopts.ggo --file=@builddir@/preresumeopts
-	$(CC) -c -o @builddir@/preresumeopts.o @builddir@/preresumeopts.c
+	mv @builddir@/preresumeopts.c @builddir@/preresumeopts.cpp
 
 
 @builddir@/preresumeopts.ggo: preresumeopts.ggi standardopts.ggo transitionopts.ggi
 	$(PREPROCESSOR) -P @srcdir@/preresumeopts.ggi  |tr -d "\\\\" >@builddir@/preresumeopts.ggo
 
 
-resume_SOURCES=resume.cpp resumeopts.h tracker.cpp transition.h transition.cpp
-
-resume_DEPENDENCIES=resumeopts.o
+resume_SOURCES=resume.cpp resumeopts.cpp tracker.cpp transition.h transition.cpp
 resume_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-resume_LDADD=resumeopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+resume_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
-resumeopts.h: resumeopts.o
-
-
-
-resumeopts.o: @builddir@/resumeopts.ggo
+resumeopts.cpp: @builddir@/resumeopts.ggo
 	$(GENGETOPT) <@builddir@/resumeopts.ggo --file=@builddir@/resumeopts
-	$(CC) -c -o @builddir@/resumeopts.o @builddir@/resumeopts.c
+	mv @builddir@/resumeopts.c @builddir@/resumeopts.cpp
 
 
 @builddir@/resumeopts.ggo: resumeopts.ggi standardopts.ggo transitionopts.ggi
 	$(PREPROCESSOR) -P @srcdir@/resumeopts.ggi  |tr -d "\\\\" >@builddir@/resumeopts.ggo
 
-preend_SOURCES=preend.cpp preendopts.h tracker.cpp transition.cpp transition.h tracker.h
-preend_DEPENDENCIES=preendopts.o
+preend_SOURCES=preend.cpp preendopts.cpp tracker.cpp transition.cpp transition.h tracker.h
 preend_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir
-preend_LDADD=preendopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+preend_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
 
-preendopts.h: @builddir@/preendopts.o
-
-preendopts.o: @builddir@/preendopts.ggo
+preendopts.cpp: @builddir@/preendopts.ggo
 	$(GENGETOPT) <@builddir@/preendopts.ggo --file=@builddir@/preendopts
-	$(CC) -c -o @builddir@/preendopts.o @builddir@/preendopts.c
+	mv @builddir@/preendopts.c @builddir@/preendopts.cpp
 
 
 @builddir@/preendopts.ggo: @srcdir@/preendopts.ggi standardopts.ggo transitionopts.ggi
@@ -225,17 +197,13 @@ preendopts.o: @builddir@/preendopts.ggo
 
 
 
-prepause_SOURCES=prepause.cpp prepauseopts.h tracker.cpp transition.cpp transition.h tracker.h
-prepause_DEPENDENCIES=prepauseopts.o
+prepause_SOURCES=prepause.cpp prepauseopts.cpp tracker.cpp transition.cpp transition.h tracker.h
 prepause_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir
-prepause_LDADD=prepauseopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+prepause_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
-
-prepauseopts.h: @builddir@/prepauseopts.o
-
-prepauseopts.o: @builddir@/prepauseopts.ggo
+prepauseopts.cpp: @builddir@/prepauseopts.ggo
 	$(GENGETOPT) <@builddir@/prepauseopts.ggo --file=@builddir@/prepauseopts
-	$(CC) -c -o @builddir@/prepauseopts.o @builddir@/prepauseopts.c
+	mv @builddir@/prepauseopts.c @builddir@/prepauseopts.cpp
 
 
 @builddir@/prepauseopts.ggo: @srcdir@/prepauseopts.ggi standardopts.ggo transitionopts.ggi
@@ -243,72 +211,53 @@ prepauseopts.o: @builddir@/prepauseopts.ggo
 
 
 
-end_SOURCES=end.cpp endopts.h tracker.cpp transition.cpp tracker.h transition.h
-end_DEPENDENCIES=endopts.o
+end_SOURCES=end.cpp endopts.cpp tracker.cpp transition.cpp tracker.h transition.h
 end_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-end_LDADD=endopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
-
-endopts.h: endopts.o
+end_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
 
-
-endopts.o: @builddir@/endopts.ggo
+endopts.cpp: @builddir@/endopts.ggo
 	$(GENGETOPT) <@builddir@/endopts.ggo --file=@builddir@/endopts
-	$(CC) -c -o @builddir@/endopts.o @builddir@/endopts.c
+	mv @builddir@/endopts.c @builddir@/endopts.cpp
 
 
 @builddir@/endopts.ggo: endopts.ggi standardopts.ggo transitionopts.ggi
 	$(PREPROCESSOR) -P @srcdir@/endopts.ggi  |tr -d "\\\\" >@builddir@/endopts.ggo
 
 
-title_SOURCES=title.cpp titleopts.h tracker.cpp
-title_DEPENDENCIES=titleopts.o
+title_SOURCES=title.cpp titleopts.cpp tracker.cpp
 title_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-title_LDADD=titleopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+title_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
-titleopts.h: titleopts.o
-
-
-
-titleopts.o: @builddir@/titleopts.ggo
+titleopts.cpp: @builddir@/titleopts.ggo
 	$(GENGETOPT) <@builddir@/titleopts.ggo --file=@builddir@/titleopts --unamed-opts=STRING
-	$(CC) -c -o @builddir@/titleopts.o @builddir@/titleopts.c
+	mv @builddir@/titleopts.c @builddir@/titleopts.cpp
 
 
 @builddir@/titleopts.ggo: titleopts.ggi standardopts.ggo transitionopts.ggi
 	$(PREPROCESSOR) -P @srcdir@/titleopts.ggi  |tr -d "\\\\" >@builddir@/titleopts.ggo
 
 
-trtimeout_SOURCES=timeout.cpp timeoutopts.h tracker.cpp
-trtimeout_DEPENDENCIES=timeoutopts.o
+trtimeout_SOURCES=timeout.cpp timeoutopts.cpp tracker.cpp
 trtimeout_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-trtimeout_LDADD=timeoutopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+trtimeout_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
-timeoutopts.h: timeoutopts.o
-
-
-
-timeoutopts.o: @builddir@/timeoutopts.ggo
+timeoutopts.cpp: @builddir@/timeoutopts.ggo
 	$(GENGETOPT) <@builddir@/timeoutopts.ggo --file=@builddir@/timeoutopts --unamed-opts=TIMEOUT
-	$(CC) -c -o @builddir@/timeoutopts.o @builddir@/timeoutopts.c
+	mv @builddir@/timeoutopts.c @builddir@/timeoutopts.cpp
 
 
 @builddir@/timeoutopts.ggo: timeoutopts.ggi standardopts.ggo transitionopts.ggi
 	$(PREPROCESSOR) -P @srcdir@/timeoutopts.ggi  |tr -d "\\\\" >@builddir@/timeoutopts.ggo
 
 
-recording_SOURCES=recording.cpp recordingopts.h tracker.cpp
-recording_DEPENDENCIES=recordingopts.o
+recording_SOURCES=recording.cpp recordingopts.cpp tracker.cpp
 recording_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-recording_LDADD=recordingopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+recording_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
-recordingopts.h: recordingopts.o
-
-
-
-recordingopts.o: @builddir@/recordingopts.ggo
+recordingopts.cpp: @builddir@/recordingopts.ggo
 	$(GENGETOPT) <@builddir@/recordingopts.ggo --file=@builddir@/recordingopts --unamed-opts=STATE
-	$(CC) -c -o @builddir@/recordingopts.o @builddir@/recordingopts.c
+	mv @builddir@/recordingopts.c @builddir@/recordingopts.cpp
 
 
 @builddir@/recordingopts.ggo: recordingopts.ggi standardopts.ggo transitionopts.ggi
@@ -316,35 +265,25 @@ recordingopts.o: @builddir@/recordingopts.ggo
 
 
 
-programdir_SOURCES=programdir.cpp programdiropts.h tracker.cpp
-programdir_DEPENDENCIES=programdiropts.o
+programdir_SOURCES=programdir.cpp programdiropts.cpp tracker.cpp
 programdir_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-programdir_LDADD=programdiropts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+programdir_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
-programdiropts.h: programdiropts.o
-
-
-
-programdiropts.o: @builddir@/programdiropts.ggo
+programdiropts.cpp: @builddir@/programdiropts.ggo
 	$(GENGETOPT) <@builddir@/programdiropts.ggo --file=@builddir@/programdiropts --unamed-opts=PATH
-	$(CC) -c -o @builddir@/programdiropts.o @builddir@/programdiropts.c
+	mv @builddir@/programdiropts.c @builddir@/programdiropts.cpp
 
 
 @builddir@/programdiropts.ggo: programdiropts.ggi standardopts.ggo transitionopts.ggi
 	$(PREPROCESSOR) -P @srcdir@/programdiropts.ggi  |tr -d "\\\\" >@builddir@/programdiropts.ggo
 
-runnum_SOURCES=runnum.cpp runnumopts.h tracker.cpp
-runnum_DEPENDENCIES=runnumopts.o
+runnum_SOURCES=runnum.cpp runnumopts.cpp tracker.cpp
 runnum_CPPFLAGS=$(COMMON_CPPFLAGS) -I@builddir@
-runnum_LDADD=runnumopts.o @builddir@/libstateclient.la $(COMMON_LOADFLAGS) 
+runnum_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS)
 
-runnumopts.h: runnumopts.o
-
-
-
-runnumopts.o: @builddir@/runnumopts.ggo
+runnumopts.cpp: @builddir@/runnumopts.ggo
 	$(GENGETOPT) <@builddir@/runnumopts.ggo --file=@builddir@/runnumopts --unamed-opts=NUMBER
-	$(CC) -c -o @builddir@/runnumopts.o @builddir@/runnumopts.c
+	mv @builddir@/runnumopts.c @builddir@/runnumopts.cpp
 
 
 @builddir@/runnumopts.ggo: runnumopts.ggi standardopts.ggo transitionopts.ggi
