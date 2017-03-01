@@ -13,7 +13,8 @@ libConversion_la_SOURCES = CTransformMediator.h \
                            CTransformFactory.cpp \
                            CCompositePredicate.cpp \
                            CPredicatedMediator.cpp \
-                           CTestPredicate.cpp
+                           CTestPredicate.cpp \
+                           CProcessCountPredicate.cpp
 
                            #CTransform11p0to11p0.cpp
 
@@ -30,7 +31,8 @@ include_HEADERS = CTransformMediator.h \
                            CPredicate.h  \
                            CCompositePredicate.h  \
                            CPredicatedMediator.h \
-                           CTestPredicate.h
+                           CTestPredicate.h \
+                           CProcessCountPredicate.h
 
 #                           CTransform11p0to11p0.h
 
@@ -61,7 +63,8 @@ unittests_SOURCES = TestRunner.cpp \
                     ctransform11p0to10p0tests.cpp \
 		    ctransformfactorytests.cpp \
                     c10p0to8p0mediatortests.cpp \
-                    ccompositepredicatetests.cpp
+                    ccompositepredicatetests.cpp \
+                    processcountpredicatetests.cpp
 
 unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                    @builddir@/libConversion.la	\
