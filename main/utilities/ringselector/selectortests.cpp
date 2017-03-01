@@ -212,9 +212,6 @@ static void event(DAQ::CDataSink& prod, int fd, bool check=true)
   for (int i =0; i < 10; i++) {
     body << uint16_t(i);
   }
-//  CRawRingItem rawItem(i);
-//  std::cout << rawItem.toString() << std::endl;
-//  prod << rawItem;
   prod << i;
 
   if (check) {
