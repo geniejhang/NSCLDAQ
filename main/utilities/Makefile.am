@@ -9,7 +9,7 @@ SUBDIRS = 				common \
                                         nscldaq-format \
 					filter \
 					conversion \
-					ringselector \
+                                        ringselector \
 					eventlog \
 					bufdump	\
 					sclclient \
@@ -26,7 +26,7 @@ SUBDIRS = 				common \
 					dumpend		\
 					expEditor	\
 					fileanalyzer	\
-					vardbringbuffer
+                                        vardbringbuffer \
 					fileanalyzer	\
 					scalersum
 

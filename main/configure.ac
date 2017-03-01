@@ -459,12 +459,7 @@ AC_CONFIG_FILES([Makefile
 		 utilities/filter/Makefile
 		 utilities/filter/Makefile-template
 		 utilities/filter/FilterIncludes
-		 utilities/compatibility/Makefile
-		 utilities/compatibility/eventlog-compat
-		 utilities/compatibility/spectcldaq
-		 utilities/compatibility/s800toring
-		 utilities/compatibility/bufdump
-		utilities/conversion/Makefile
+                 utilities/conversion/Makefile
     		utilities/fileanalyzer/Makefile
     		utilities/IO/Makefile
 		 utilities/newscaler/Makefile
