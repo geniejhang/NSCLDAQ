@@ -26,12 +26,12 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <string>
 #include <fstream>
 #include <vector>
-#include <CPhysicsEventItem.h>
-#include <CRingStateChangeItem.h>
-#include <CRingScalerItem.h>
-#include <CRingTextItem.h>
-#include <CRingPhysicsEventCountItem.h>
-#include <CRingFragmentItem.h>
+#include <V11/CPhysicsEventItem.h>
+#include <V11/CRingStateChangeItem.h>
+#include <V11/CRingScalerItem.h>
+#include <V11/CRingTextItem.h>
+#include <V11/CRingPhysicsEventCountItem.h>
+#include <V11/CRingFragmentItem.h>
 
 #include "CTransparentFilter.h"
 #include "CNullFilter.h"
@@ -41,6 +41,8 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include "CCompositeFilter.h"
 #undef private
 #undef protected 
+
+using namespace DAQ::V11;
 
 // A test suite 
 class CCompositeFilterTest : public CppUnit::TestFixture
