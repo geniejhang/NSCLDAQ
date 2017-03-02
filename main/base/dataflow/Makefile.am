@@ -158,7 +158,7 @@ EXTRA_DIST=ringprimitives.xml ringbuffer_user.xml ringbuffer_man.xml ringlib.xml
 
 #-------------- My installation... includes tcl scripts/packages.
 
-install-exec-local: 
+install-exec-local: $(lib_LTLIBRARIES)
 	$(INSTALL_SCRIPT) @srcdir@/RingMaster.tcl @bindir@/RingMaster
 	$(mkinstalldirs)  @prefix@/TclLibs
 	$(INSTALL_SCRIPT) @builddir@/.libs/libRingBuffer.* @prefix@/TclLibs
