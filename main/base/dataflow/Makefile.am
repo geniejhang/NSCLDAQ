@@ -165,5 +165,5 @@ install-exec-local: $(lib_LTLIBRARIES)
 	echo "pkg_mkIndex -verbose @prefix@/TclLibs *.so" | $(TCLSH_CMD)
 	$(INSTALL_SCRIPT) @srcdir@/ringbuffer.tcl @bindir@/ringbuffer
 	$(mkinstalldirs)  @prefix@/pythonLibs/nscldaq/ringbuffer
-        $(INSTALL_SCRIPT) @libdir@/.libs/libRingPy.so @prefix@/pythonLibs/nscldaq/ringbuffer/ringmaster.so
+	$(INSTALL_SCRIPT) @libdir@/.libs/libRingPy.so @prefix@/pythonLibs/nscldaq/ringbuffer/ringmaster.so
 	touch              @prefix@/pythonLibs/nscldaq/ringbuffer/__init__.py
