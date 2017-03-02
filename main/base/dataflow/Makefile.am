@@ -16,17 +16,17 @@ noinst_HEADERS         = ringbufint.h Asserts.h testcommon.h CRingCommand.h CPid
 	CGetProducersCommand.h CGetConsumersCommand.h CAllParticipantsCommand.h
 
 COMPILATION_FLAGS =  -I@top_srcdir@/base/headers 	\
-	   -I@top_srcdir@/servers/portmanager \
-	   -I@top_srcdir@/base/uri	\
-	   -I@top_srcdir@/base/os	\
+		-I@top_srcdir@/servers/portmanager \
+		-I@top_srcdir@/base/uri	\
+		-I@top_srcdir@/base/os	\
 		@LIBTCLPLUS_CFLAGS@	\
 		$(TCL_FLAGS)		\
-	-DBINDIR='"@prefix@/bin"'
+		-DBINDIR='"@prefix@/bin"'
 
 libDataFlow_la_LDFLAGS =  @LIBTCLPLUS_LDFLAGS@		\
 			@TCL_LDFLAGS@			\
 			-version-info $(SOVERSION) 	\
-	                -Wl,"-rpath-link=$(libdir)" 	\
+			-Wl,"-rpath-link=$(libdir)" 	\
 			-lrt $(THREADLD_FLAGS)
 
 libDataFlow_la_LIBADD  = @top_builddir@/servers/portmanager/libPortManager.la \
@@ -165,5 +165,5 @@ install-exec-local: $(lib_LTLIBRARIES)
 	echo "pkg_mkIndex -verbose @prefix@/TclLibs *.so" | $(TCLSH_CMD)
 	$(INSTALL_SCRIPT) @srcdir@/ringbuffer.tcl @bindir@/ringbuffer
 	$(mkinstalldirs)  @prefix@/pythonLibs/nscldaq/ringbuffer
-	$(INSTALL_PROGRAM) @libdir@/libRingPy.so @prefix@/pythonLibs/nscldaq/ringbuffer/ringmaster.so
+	$(INSTALL_SCRIPT) @libdir@/.libs/libRingPy.so @prefix@/pythonLibs/nscldaq/ringbuffer/ringmaster.so
 	touch              @prefix@/pythonLibs/nscldaq/ringbuffer/__init__.py
