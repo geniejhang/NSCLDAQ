@@ -193,7 +193,7 @@ ringdaemontests_LDADD  = @builddir@/libStatusMessages.la $(COMMON_LIBS) \
 
 testringstatus_SOURCES = testringstatus.cpp CMultiAggregator.cpp CMultiAggregator.h
 testringstatus_CPPFLAGS= $(COMPILATION_FLAGS) -I@top_srcdir@/servers/portmanager
-testringstatus_LDFLAGS= libStatusMessages.la \
+testringstatus_LDADD= @builddir@/libStatusMessages.la \
 	@top_builddir@/servers/portmanager/libPortManager.la \
 	$(COMMON_LIBS)
 
