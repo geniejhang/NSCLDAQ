@@ -13,8 +13,8 @@
        Michigan State University
        East Lansing, MI 48824-1321
 */
-#ifndef CCOMPOSITEPREDICATE_H
-#define CCOMPOSITEPREDICATE_H
+#ifndef DAQ_CCOMPOSITEPREDICATE_H
+#define DAQ_CCOMPOSITEPREDICATE_H
 
 #include <CPredicate.h>
 
@@ -22,16 +22,19 @@
 #include <memory>
 
 namespace DAQ {
-namespace Transform {
+
+class CCompositePredicate;
+using CCompositePredicateUPtr = std::unique_ptr<CCompositePredicate>;
+using CCompositePredicatePtr = std::shared_ptr<CCompositePredicate>;
 
 class CCompositePredicate : public CPredicate
 {
   private:
-    std::vector<std::shared_ptr<CPredicate> > m_predicates;
+    std::vector<CPredicatePtr> m_predicates;
 
   public:
-    void addPredicate(std::shared_ptr<CPredicate> pPred);
-    std::vector<std::shared_ptr<CPredicate>>& getPredicates();
+    void addPredicate(CPredicatePtr pPred);
+    std::vector<CPredicatePtr>& getPredicates();
 
     virtual CPredicatedMediator::Action preInputUpdate(CPredicatedMediator& mediator);
     virtual CPredicatedMediator::Action postInputUpdate(CPredicatedMediator& mediator, int type);
@@ -41,7 +44,6 @@ class CCompositePredicate : public CPredicate
     virtual void reset();
 };
 
-} // end Transform
 } // end DAQ
 
 #endif

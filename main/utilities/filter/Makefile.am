@@ -11,7 +11,6 @@ libfilter_la_SOURCES = CFilterMain.cpp \
                        CInfiniteMediator.cpp \
                        COneShotMediator.cpp \
                        COneShotHandler.cpp \
-                       CCompositeFilter.cpp \
                        COneShotException.cpp \
                        CMediatorException.cpp \
                        CAbnormalEndRunFilterHandler.cpp \
@@ -19,7 +18,8 @@ libfilter_la_SOURCES = CFilterMain.cpp \
                         CPredicatedMediator.cpp \
                         CCompositePredicate.cpp \
                         CTestPredicate.cpp \
-			 SatisfyTclPlus.cpp 
+                         SatisfyTclPlus.cpp  \
+                         CFilterVersionAbstractionFactory.cpp
 
 nodist_libfilter_la_SOURCES=filterargs.c filterargs.h
 
@@ -34,10 +34,6 @@ include_HEADERS	=  CFilterMain.h \
                    CInfiniteMediator.h \
 		 COneShotMediator.h \
                    COneShotHandler.h \
-                   CFilter.h \
-                   CCompositeFilter.h  \
-                   CTransparentFilter.h \
-                   CNullFilter.h \
                    COneShotException.h \
                    CMediatorException.h \
                    CFatalException.h \
@@ -46,7 +42,9 @@ include_HEADERS	=  CFilterMain.h \
                  CPredicatedMediator.h \
                  CPredicate.h \
                  CCompositePredicate.h \
-                 CTestPredicate.h
+                 CTestPredicate.h \
+                 CFilterVersionAbstraction.h \
+                 CFilterVersionAbstractionFactory.h
 
 
 
@@ -56,9 +54,6 @@ libfilter_la_CPPFLAGS	= -I@top_srcdir@/utilities/common \
 		-I@top_srcdir@/utilities/IO \
 		@LIBTCLPLUS_CFLAGS@	\
 		-I@top_srcdir@/base/uri		\
-                -I@top_srcdir@/utilities/nscldaq-format/format \
-                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
-                -I@top_srcdir@/utilities/nscldaq-format/Buffer \
                 -I@top_srcdir@/base/os \
                 -I@top_srcdir@/base/headers
 
@@ -69,11 +64,6 @@ libfilter_la_LDFLAGS	= -version-info $(SOVERSION)	\
 
 libfilter_la_LIBADD	= @top_builddir@/utilities/common/libUtilCommon.la \
 			@top_builddir@/utilities/IO/libdaqio.la \
-                        @top_builddir@/utilities/nscldaq-format/format/V10/libdataformatv10.la \
-                        @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
-                        @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
-                        @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
-                        @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
 			@top_builddir@/base/dataflow/libDataFlow.la \
 			@top_builddir@/base/uri/liburl.la		\
 			@top_builddir@/base/os/libdaqshm.la		\
@@ -98,16 +88,13 @@ filterargs.h: filterargs.ggo
 noinst_PROGRAMS = unittests testapp
 
 unittests_SOURCES	= TestRunner.cpp  \
-						infinitemediatortests.cpp \
 						filtermaintests.cpp  \
-						compositefiltertests.cpp \
-						transparentfiltertests.cpp \
-						oneshothandlertests.cpp \
-						abnormalendrunfiltertests.cpp  \
-						CTestFilter.h \
-						CTestFilter.cpp
+                                                abnormalendrunfiltertests.cpp \
+                                                cfilterversionabstractionfactorytests.cpp
 
-#						oneshotmediatortests.cpp  
+
+#						oneshothandlertests.cpp \
+#                                                infinitemediatortests.cpp
 
 unittests_LDADD		= \
 			@builddir@/libfilter.la	\
@@ -130,7 +117,8 @@ unittests_CPPFLAGS=  -I@top_srcdir@/utilities/filter \
                     @LIBTCLPLUS_CFLAGS@	\
                     -I@top_srcdir@/base/uri		\
                     -I@top_srcdir@/base/headers		\
-                    -I@top_srcdir@/base/dataflow
+                    -I@top_srcdir@/base/dataflow \
+                    -I@top_srcdir@/base/testutils
 
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 
@@ -168,7 +156,7 @@ install-data-local:
 	$(mkinstalldirs) @prefix@/filterkit
 	$(INSTALL_DATA) FilterIncludes \
 		@srcdir@/CTemplateFilter.cpp \
-    @srcdir@/SkeletonMain.cpp @prefix@/filterkit
+		@srcdir@/SkeletonMain.cpp @prefix@/filterkit
 	$(INSTALL_DATA) Makefile-template @prefix@/filterkit/Makefile
 
 EXTRA_DIST = filterargs.ggo SkeletonMain.cpp CTemplateFilter.cpp \

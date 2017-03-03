@@ -66,7 +66,7 @@ uint32_t CFilterAbstraction::getDatumType() const
     }
 }
 
-void CFilterAbstraction::cleanup()
+void CFilterAbstraction::cleanUp()
 {
     if (m_pOutputItem != m_pInputItem) {
         delete m_pOutputItem;

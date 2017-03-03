@@ -3,10 +3,15 @@
 
 #include <CPredicatedMediator.h>
 
+#include <memory>
 
 namespace DAQ {
 
 class CFilterVersionAbstraction;
+
+class CFilterMediator;
+using CFilterMediatorUPtr = std::unique_ptr<CFilterMediator>;
+using CFilterMediatorPtr = std::shared_ptr<CFilterMediator>;
 
 ///////////////////////////////////////////////////////////////////////
 /// \brief The CFilterMediator class

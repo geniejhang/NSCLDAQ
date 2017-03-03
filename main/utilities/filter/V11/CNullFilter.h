@@ -1,9 +1,16 @@
 
 
-#ifndef CNULLFILTER_H
-#define CNULLFILTER_H
+#ifndef DAQ_V11_CNULLFILTER_H
+#define DAQ_V11_CNULLFILTER_H
 
-#include <CFilter.h>
+#include <V11/CFilter.h>
+
+namespace DAQ {
+namespace V11 {
+
+class CNullFilter;
+using CNullFilterUPtr = std::unique_ptr<CNullFilter>;
+using CNullFilterPtr = std::shared_ptr<CNullFilter>;
 
 /**! A filter whose handlers always return NULL.
 *
@@ -40,6 +47,10 @@ class CNullFilter : public CFilter {
     }
 
 };
+
+
+} // end V11
+} // end DAQ
 
 
 #endif

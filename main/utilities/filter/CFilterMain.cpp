@@ -20,13 +20,17 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include "CFilterMain.h"
 #include "CCompositeFilter.h"
 #include "CMediator.h"
-#include "COneShotMediator.h"
-#include "CInfiniteMediator.h"
+#include "CFilterMediator.h"
 #include "CDataSourceFactory.h"
 #include "CDataSinkFactory.h"
 #include <string>
 #include <DataFormat.h>
 #include <StringsToIntegers.h>
+
+#include <CPredicate.h>
+#include <CCompositePredicate.h>
+#include <CProcessCountPredicate.h>
+
 #include <vector>
 #include <iostream>
 #include <stdlib.h>
@@ -45,36 +49,43 @@ using namespace DAQ;
 
 */
 CFilterMain::CFilterMain(int argc, char** argv)
-  : m_mediator(0),
+  : m_pMediator(),
   m_argsInfo(new gengetopt_args_info)
 {
   cmdline_parser(argc,argv,m_argsInfo);  
 
   try {
 
-    if (m_argsInfo->oneshot_given) {
-      m_mediator = new COneShotMediator(0,new CCompositeFilter,0,
-          m_argsInfo->number_of_sources_arg); 
-    } else {
-      m_mediator = new CInfiniteMediator(0,new CCompositeFilter,0);
-    } 
+      m_pMediator.reset(new CFilterMediator);
+
+      CCompositePredicatePtr pPred(new CCompositePredicate);
+
+//     if (m_argsInfo->oneshot_given) {
+//      m_mediator = new COneShotMediator(0,new CCompositeFilter,0,
+//          m_argsInfo->number_of_sources_arg);
+//    } else {
+//      m_mediator = new CInfiniteMediator(0,new CCompositeFilter,0);
+//    }
+
     // Set up the data source 
     auto pSource = constructDataSource();
-    m_mediator->setDataSource(std::move(pSource));
+    m_pMediator->setDataSource(std::move(pSource));
 
     // Set up the sink source 
     auto pSink = constructDataSink();
-    m_mediator->setDataSink(std::move(pSink));
+    m_pMediator->setDataSink(std::move(pSink));
 
+
+    std::shared_ptr<CProcessCountPredicate> pProcessPred(new CProcessCountPredicate);
     // set up the skip and count args
     if (m_argsInfo->skip_given) {
-      m_mediator->setSkipCount(m_argsInfo->skip_arg);
-    }  
-
+        pProcessPred->setNumberToSkip(m_argsInfo->skip_arg);
+    }
     if (m_argsInfo->count_given) {
-      m_mediator->setProcessCount(m_argsInfo->count_arg);
-    }  
+        pProcessPred->setNumberToProcess(m_argsInfo->count_arg);
+    }
 
+    pPred->addPredicate(pProcessPred);
 
 
   } catch (CException& exc) {
@@ -104,23 +115,27 @@ CFilterMain::CFilterMain(int argc, char** argv)
 CFilterMain::~CFilterMain()
 {
   delete m_argsInfo;
-  delete m_mediator;
 }
 
-/**! Append a filter to the mediator's ccomposite filter
-  Note that because the filter argument will be used solely 
-  to call a clone, it is very important that any derived class
-  will provide its own clone method.
+///**! Append a filter to the mediator's ccomposite filter
+//  Note that because the filter argument will be used solely
+//  to call a clone, it is very important that any derived class
+//  will provide its own clone method.
 
-  \param filter a template of the filter to register
- */
-void CFilterMain::registerFilter(const CFilter* filter)
+//  \param filter a template of the filter to register
+// */
+//void CFilterMain::registerFilter(const CFilter* filter)
+//{
+//  // We will always have a composite filter in this main
+//  CCompositeFilter* main_filter=0;
+//  main_filter = dynamic_cast<CCompositeFilter*>(m_pMediator->getFilter());
+
+//  main_filter->registerFilter(filter);
+//}
+
+void CFilterMain::setVersionAbstraction(CFilterVersionAbstractionPtr pAbstraction)
 {
-  // We will always have a composite filter in this main
-  CCompositeFilter* main_filter=0;
-  main_filter = dynamic_cast<CCompositeFilter*>(m_mediator->getFilter());
-
-  main_filter->registerFilter(filter);
+    m_pMediator->setVersionAbstraction(pAbstraction);
 }
 
 
@@ -176,21 +191,27 @@ std::unique_ptr<CDataSink> CFilterMain::constructDataSink()
 void CFilterMain::operator()()
 {
   try {
-    m_mediator->initialize();
+    m_pMediator->initialize();
 
     // allow the finalize operations to be called if an exception is 
     // thrown from the main loop. Consider the arrival of an 
     // ABNORMAL_ENDRUN
     try {
-      m_mediator->mainLoop();
+
+        m_pMediator->mainLoop();
+
     } catch (CException& exc) {
       std::cerr << exc.WasDoing() << " : " << exc.ReasonText() << std::endl;
+    } catch (std::exception& exc) {
+      std::cerr << "Caught std::exception thrown from main loop. " << exc.what() << std::endl;
     } catch (...) {
       std::cerr << "Caught unknown exception thrown from main loop. ";
-      std::cerr << "Shutting down filter." << std::endl;
     }
 
-    m_mediator->finalize();
+    std::cerr << "Shutting down filter." << std::endl;
+
+    m_pMediator->finalize();
+
   } catch (CException& exc) {
     std::cerr << exc.WasDoing() << " : " << exc.ReasonText() << std::endl;
     throw CFatalException(); 

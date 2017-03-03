@@ -17,7 +17,6 @@
 #include <CProcessCountPredicate.h>
 
 namespace DAQ {
-namespace Transform {
 
 
 CProcessCountPredicate::CProcessCountPredicate(size_t nToSkip, size_t nToProcess)
@@ -116,5 +115,4 @@ size_t CProcessCountPredicate::getNumberToProcess() const
 }
 
 
-} // end Transform
 } // end DAQ

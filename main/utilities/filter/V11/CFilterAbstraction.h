@@ -3,6 +3,7 @@
 
 #include <CFilterVersionAbstraction.h>
 #include <V11/CRingItem.h>
+#include <V11/CCompositeFilter.h>
 
 #include <memory>
 
@@ -14,23 +15,32 @@ class CDataSink;
 namespace V11 {
 
 class CFilter;
+class CFilterAbstraction;
+
+using CFilterAbstractionUPtr = std::unique_ptr<CFilterAbstraction>;
+using CFilterAbstractionPtr = std::shared_ptr<CFilterAbstraction>;
 
 class CFilterAbstraction : public CFilterVersionAbstraction {
 private:
-    CRingItem m_item;
+    CRingItem  m_item;
     CRingItem* m_pInputItem;
     CRingItem* m_pOutputItem;
-    std::shared_ptr<CFilter> m_pFilter;
+    CCompositeFilterPtr m_pFilter;
 
 public:
     CFilterAbstraction();
+    CFilterAbstraction(const CFilterAbstraction&) = default;
+    CFilterAbstraction& operator=(const CFilterAbstraction&) = default;
+    ~CFilterAbstraction();
+
     virtual void readDatum(CDataSource& source);
     virtual void processDatum();
     virtual void outputDatum(CDataSink& sink);
     virtual uint32_t getDatumType() const;
-    virtual void cleanup();
+    virtual void cleanUp();
 
-    void setFilter(std::shared_ptr<CFilter> pFilter);
+    void registerFilter(CFilterPtr pFilter);
+    CFilterPtr getFilter() const;
     CRingItem* dispatch(CRingItem &item);
 };
 

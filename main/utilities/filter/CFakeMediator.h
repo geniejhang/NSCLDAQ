@@ -14,20 +14,22 @@
 	     East Lansing, MI 48824-1321
 */
 
-#ifndef CFAKEMEDIATOR_H
-#define CFAKEMEDIATOR_H
+#ifndef DAQ_CFAKEMEDIATOR_H
+#define DAQ_CFAKEMEDIATOR_H
 
-#include <CMediator.h>
+#include <CFilterMediator.h>
 
 #include <vector>
 #include <string>
 
-class CFakeMediator : public CMediator {
+namespace DAQ {
+
+class CFakeMediator : public CFilterMediator {
   private:
     std::vector<std::string> m_log;
   
   public:
-    CFakeMediator(): CMediator(nullptr, nullptr, nullptr), m_log() {}
+    CFakeMediator(): CFilterMediator(), m_log() {}
     void mainLoop() {
       m_log.push_back("mainLoop");
     }
@@ -43,4 +45,5 @@ class CFakeMediator : public CMediator {
     std::vector<std::string> getLog () const { return m_log;}
 };
 
+} // end DAQ
 #endif

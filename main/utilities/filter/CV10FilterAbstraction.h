@@ -28,7 +28,7 @@ public:
     virtual void processDatum();
     virtual void outputDatum(CDataSink&);
     virtual uint32_t getDatumType() const;
-    virtual void cleanup();
+    virtual void cleanUp();
 
     void setFilter(std::shared_ptr<CFilter> pFilter);
     CRingItem* dispatch(CRingItem &item);

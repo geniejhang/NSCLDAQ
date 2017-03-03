@@ -17,6 +17,22 @@
 
 static const char* Copyright = "(C) Copyright Michigan State University 2014, All rights reserved";
 
+#include <URL.h>
+
+#include <CFileDataSource.h>
+#include <CFileDataSink.h>
+#include <CDataSinkFactory.h>
+#include <CDataSourceFactory.h>
+#include <V11/CTestFilter.h>
+
+#include <cppunit/extensions/HelperMacros.h>
+
+#define private public
+#define protected public
+#include "CInfiniteMediator.h"
+#undef private
+#undef protected
+
 
 #include <fstream>
 #include <ios>
@@ -30,21 +46,6 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <URL.h>
-
-#include <CFileDataSource.h>
-#include <CFileDataSink.h>
-#include <CDataSinkFactory.h>
-#include <CDataSourceFactory.h>
-#include <CTestFilter.h>
-
-#include <cppunit/extensions/HelperMacros.h>
-
-#define private public
-#define protected public
-#include "CInfiniteMediator.h"
-#undef private
-#undef protected
 
 using namespace DAQ;
 
@@ -53,7 +54,7 @@ class CInfiniteMediatorTest : public CppUnit::TestFixture
 {
 
   private:
-    CFilter* m_pFilter;
+    V11::CFilter* m_pFilter;
     CDataSource* m_source;
     CDataSink* m_sink;
     CInfiniteMediator* m_mediator;

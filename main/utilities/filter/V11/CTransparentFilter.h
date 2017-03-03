@@ -17,10 +17,19 @@
 
 
 
-#ifndef CTRANSPARENTFILTER_H
-#define CTRANSPARENTFILTER_H
+#ifndef DAQ_V11_CTRANSPARENTFILTER_H
+#define DAQ_V11_CTRANSPARENTFILTER_H
 
-#include <CFilter.h>
+#include <V11/CFilter.h>
+
+
+namespace DAQ {
+namespace V11 {
+
+class CTransparentFilter;
+using CTransparentFilterUPtr = std::unique_ptr<CTransparentFilter>;
+using CTransparentFilterPtr = std::shared_ptr<CTransparentFilter>;
+
 
 /**! \class CTransparentFilter
   This class has handlers that do nothing more
@@ -35,5 +44,9 @@ class CTransparentFilter : public CFilter
     virtual CTransparentFilter* clone() const { return new CTransparentFilter(*this);} 
   
 };
+
+
+} // end V11
+} // end DAQ
 
 #endif

@@ -1,4 +1,4 @@
-#include "CV11FilterAbstraction.h"
+#include <V11/CFilterAbstraction.h>
 
 #include <V11/CRingItemFactory.h>
 #include <V11/CRingItem.h>
@@ -10,7 +10,7 @@
 #include <V11/CRingPhysicsEventCountItem.h>
 #include <V11/DataFormatV11.h>
 
-#include <V11/CFilter.h>
+#include <RingIOV11.h>
 
 namespace DAQ {
 namespace V11 {
@@ -18,10 +18,10 @@ namespace V11 {
 /////////////////////////////////////////////////////////////////
 
 CFilterAbstraction::CFilterAbstraction()
-    : m_item(),
+    : m_item(UNDEFINED),
       m_pInputItem(nullptr),
       m_pOutputItem(nullptr),
-      m_pFilter()
+      m_pFilter(new CCompositeFilter)
 {}
 
 CFilterAbstraction::~CFilterAbstraction()
@@ -41,8 +41,8 @@ void CFilterAbstraction::readDatum(CDataSource &source)
 
 void CFilterAbstraction::processDatum()
 {
-    m_pInputItem  = CRingItemFactory::createItem(m_item);
-    m_pOutputItem = m_pFilter->handleItem(m_pInputItem);
+    m_pInputItem  = CRingItemFactory::createRingItem(m_item);
+    m_pOutputItem = dispatch(*m_pInputItem);
 }
 
 
@@ -62,14 +62,14 @@ uint32_t CFilterAbstraction::getDatumType() const
     }
 }
 
-void CFilterAbstraction::cleanup()
+void CFilterAbstraction::cleanUp()
 {
     if (m_pOutputItem != m_pInputItem) {
         delete m_pOutputItem;
         m_pOutputItem = nullptr;
     }
 
-    m_pInputItem->setType(V11::VOID);
+    m_pInputItem->setType(V11::UNDEFINED);
 }
 
 
@@ -122,15 +122,38 @@ CFilterAbstraction::dispatch(CRingItem &item)
       pFilteredItem = m_pFilter->handleFragmentItem(static_cast<CRingFragmentItem*>(&item));
       break;
 
+  case ABNORMAL_ENDRUN:
+      pFilteredItem = m_pFilter->handleAbnormalEndItem(static_cast<CAbnormalEndItem*>(&item));
+      break;
+
+  case RING_FORMAT:
+      pFilteredItem = m_pFilter->handleDataFormatItem(static_cast<CDataFormatItem*>(&item));
+      break;
+
+  case EVB_GLOM_INFO:
+      pFilteredItem = m_pFilter->handleGlomParameters(static_cast<CGlomParameters*>(&item));
+      break;
+
       // Handle any other generic ring item...this can be
       // the hook for handling user-defined items
     default:
-      pFilteredItem = m_pFilter->handleRingItem(pItem);
+      pFilteredItem = m_pFilter->handleRingItem(&item);
       break;
   }
 
   return pFilteredItem;
 }
+
+void CFilterAbstraction::registerFilter(CFilterPtr pFilter)
+{
+    m_pFilter->registerFilter(pFilter);
+}
+
+CFilterPtr CFilterAbstraction::getFilter() const
+{
+    return m_pFilter;
+}
+
 
 } // end V11
 } // end DAQ

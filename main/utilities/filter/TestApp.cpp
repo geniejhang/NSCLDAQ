@@ -16,18 +16,24 @@
 
 
 #include <CFilterMain.h>
-#include <CTransparentFilter.h>
+#include <V11/CTransparentFilter.h>
+#include <V11/CFilterAbstraction.h>
 
-
+using namespace DAQ;
 
 int main(int argc, char** argv)
 {
 
-  // Create a transparent filter
-  CFilter* filter = new CTransparentFilter;
-
   CFilterMain theApp(argc, argv);
-  theApp.registerFilter(filter);
+
+  V11::CFilterAbstractionPtr pVersion(new V11::CFilterAbstraction);
+
+  // Create a transparent filter
+  V11::CFilterPtr pFilter(new V11::CTransparentFilter);
+
+  pVersion->registerFilter(pFilter);
+
+  theApp.setVersionAbstraction(pVersion);
 
   theApp();
 

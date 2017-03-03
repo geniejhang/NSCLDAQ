@@ -17,28 +17,29 @@
 
 
 
-#ifndef CFILTERMAIN_H
-#define CFILTERMAIN_H
+#ifndef DAQ_CFILTERMAIN_H
+#define DAQ_CFILTERMAIN_H
 
-#include <vector> 
-#include <stdint.h>
 #include <CFatalException.h>
-#include <memory>
+#include <CFilterVersionAbstraction.h>
+#include <CFilterMediator.h>
 
-class CMediator;
-class CFilter;
+#include <memory>
+#include <vector>
+#include <cstdint>
+
 struct gengetopt_args_info;
 
 namespace DAQ {
+
 class CDataSource;
 class CDataSink;
-}
 
 class CFilterMain
 {
   
   private:
-    CMediator* m_mediator; //!< The mediator
+    CFilterMediatorPtr m_pMediator; //!< The mediator
     struct gengetopt_args_info* m_argsInfo; //!< The parsed options
 
   public:
@@ -64,14 +65,7 @@ class CFilterMain
     */
     void operator()();
 
-    /**! Append a filter to the mediator's ccomposite filter
-      Note that because the filter argument will be used solely 
-      to call a clone, it is very important that any derived class
-      will provide its own clone method.
-  
-      \param filter a template of the filter to register
-    */
-    void registerFilter(const CFilter* filter);
+    void setVersionAbstraction(CFilterVersionAbstractionPtr pAbstraction);
 
     /**! Retrieve the mediator
      *
@@ -79,16 +73,20 @@ class CFilterMain
      *
      * \returns ptr to the mediator
      */
-    CMediator* getMediator() { return m_mediator; }
+    CFilterMediatorPtr getMediator() { return m_pMediator; }
+
+
 
   private:
     // Private utility functions 
     std::unique_ptr<DAQ::CDataSource> constructDataSource();
     std::unique_ptr<DAQ::CDataSink> constructDataSink();
 
-    std::vector<uint16_t> constructExcludesList();
-    std::vector<uint16_t> constructSampleList();
+    std::vector<std::uint16_t> constructExcludesList();
+    std::vector<std::uint16_t> constructSampleList();
     
 };
 
-#endif
+} // end DAQ
+
+#endif // DAQ_CFILTERMAIN_H

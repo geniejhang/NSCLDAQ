@@ -20,7 +20,10 @@
 #include <CPredicate.h>
 
 namespace DAQ {
-namespace Transform {
+
+class CProcessCountPredicate;
+using CProcessCountPredicateUPtr = std::unique_ptr<CProcessCountPredicate>;
+using CProcessCountPredicatePtr = std::shared_ptr<CProcessCountPredicate>;
 
 class CProcessCountPredicate: public CPredicate
 {
@@ -31,7 +34,7 @@ class CProcessCountPredicate: public CPredicate
     size_t m_processed;
 
   public:
-    CProcessCountPredicate(size_t nToSkip, size_t nToProcess);
+    CProcessCountPredicate(size_t nToSkip=0, size_t nToProcess=0);
     CProcessCountPredicate(const CProcessCountPredicate& ) = default;
     CProcessCountPredicate& operator=(const CProcessCountPredicate& ) = default;
 
@@ -67,8 +70,6 @@ class CProcessCountPredicate: public CPredicate
 
 };
 
-
-} // end Transform
 } // end DAQ
 
 #endif

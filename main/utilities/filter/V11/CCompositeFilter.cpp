@@ -21,6 +21,9 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <iomanip>
 #include <CCompositeFilter.h>
 
+namespace DAQ {
+namespace V11 {
+
 /**! The default constructor
   Does nothing but initialize an empty vector of filters
 */ 
@@ -41,7 +44,7 @@ CCompositeFilter::CCompositeFilter(const CCompositeFilter& rhs)
   const_iterator itend = rhs.end();
 
   while (it!=itend) {
-    m_filter.push_back((*it)->clone());
+    m_filter.emplace_back((*it)->clone());
     ++it;
   } 
 }
@@ -68,13 +71,11 @@ CCompositeFilter& CCompositeFilter::operator=(const CCompositeFilter& rhs)
     // original filters were not modified.
     FilterContainer copy;
     while (it!=itend) {
-      copy.push_back((*it)->clone());
+      copy.emplace_back((*it)->clone());
       ++it;
     } 
 
-    // We made it here so clear our container
-    // and copy all of the new pointer values
-    clearFilters();
+    m_filter.clear();
     m_filter = copy;
   }
 
@@ -87,7 +88,6 @@ CCompositeFilter& CCompositeFilter::operator=(const CCompositeFilter& rhs)
 */
 CCompositeFilter::~CCompositeFilter()
 {
-  clearFilters();
 }
 
 /**! Virtual copy constructor
@@ -112,9 +112,9 @@ CCompositeFilter* CCompositeFilter::clone() const
 
   \param filter a template of the filter to register
 */
-void CCompositeFilter::registerFilter(const CFilter* filter)
+void CCompositeFilter::registerFilter(CFilterPtr filter)
 {
-  m_filter.push_back(filter->clone());
+  m_filter.push_back(filter);
 }
 
 /**! Handle a generic ring item
@@ -378,21 +378,121 @@ CRingItem* CCompositeFilter::handleFragmentItem(CRingFragmentItem* item)
   return pItem0;
 }
 
-/**! Clear and resize filter container
-    Frees all memory pointed to by pointers in the container and
-    then resizes the container to zero size.
+
+/**! Handle abnormal end items
+
+   See handleRingItem(const CRingItem*) documentation above. The exact same thing
+   is done except that handleAbnormalEndItem(CAbnormalEndItem*) is
+   called.
 */
-void CCompositeFilter::clearFilters()
+CRingItem* CCompositeFilter::handleAbnormalEndItem(CAbnormalEndItem* item)
 {
-  iterator it    = begin();
+  iterator it = begin();
   iterator itend = end();
 
-  while (it!=itend) {
-    delete *it;
+  // Initialize some pointers to keep track of returned objects
+  CRingItem* pItem0=item;
+  CRingItem* pItem1=pItem0;
+  CAbnormalEndItem* state_item = 0;
+  while (it!=itend && pItem0!=0) {
+
+    state_item = static_cast<CAbnormalEndItem*>(pItem0);
+
+    // pass the first item to the filter and get the filtered item
+    pItem1 = (*it)->handleAbnormalEndItem(state_item);
+
+    // if the filter returned a different object than it was given
+    // delete the one it was given
+    if (pItem1 != pItem0 && pItem0!=item) {
+      delete pItem0;
+    }
+
+    // Update the pointer
+    pItem0 = pItem1;
+
+    // increment to the next filter
     ++it;
   }
-  m_filter.clear();
+  return pItem0;
 }
+
+
+/**! Handle evb glom parameters items
+
+   See handleRingItem(const CRingItem*) documentation above. The exact same thing
+   is done except that handleGlomParameters(CGlomParameters*) is
+   called.
+*/
+CRingItem* CCompositeFilter::handleGlomParameters(CGlomParameters* item)
+{
+  iterator it = begin();
+  iterator itend = end();
+
+  // Initialize some pointers to keep track of returned objects
+  CRingItem* pItem0=item;
+  CRingItem* pItem1=pItem0;
+  CGlomParameters* state_item = 0;
+  while (it!=itend && pItem0!=0) {
+
+    state_item = static_cast<CGlomParameters*>(pItem0);
+
+    // pass the first item to the filter and get the filtered item
+    pItem1 = (*it)->handleGlomParameters(state_item);
+
+    // if the filter returned a different object than it was given
+    // delete the one it was given
+    if (pItem1 != pItem0 && pItem0!=item) {
+      delete pItem0;
+    }
+
+    // Update the pointer
+    pItem0 = pItem1;
+
+    // increment to the next filter
+    ++it;
+  }
+  return pItem0;
+}
+
+
+
+/**! Handle data format items
+
+   See handleRingItem(const CRingItem*) documentation above. The exact same thing
+   is done except that handleDataFormatItem(CDataFormatItem*) is
+   called.
+*/
+CRingItem* CCompositeFilter::handleDataFormatItem(CDataFormatItem* item)
+{
+  iterator it = begin();
+  iterator itend = end();
+
+  // Initialize some pointers to keep track of returned objects
+  CRingItem* pItem0=item;
+  CRingItem* pItem1=pItem0;
+  CDataFormatItem* state_item = 0;
+  while (it!=itend && pItem0!=0) {
+
+    state_item = static_cast<CDataFormatItem*>(pItem0);
+
+    // pass the first item to the filter and get the filtered item
+    pItem1 = (*it)->handleDataFormatItem(state_item);
+
+    // if the filter returned a different object than it was given
+    // delete the one it was given
+    if (pItem1 != pItem0 && pItem0!=item) {
+      delete pItem0;
+    }
+
+    // Update the pointer
+    pItem0 = pItem1;
+
+    // increment to the next filter
+    ++it;
+  }
+  return pItem0;
+}
+
 
 /**! Initialization hook to run before any data is processed
 */
@@ -419,4 +519,7 @@ void CCompositeFilter::finalize()
     ++it;
   }
 }
+
+} // end V11
+} // end DAQ
 

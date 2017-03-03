@@ -19,6 +19,19 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 
 
 #include <cppunit/extensions/HelperMacros.h>
+#include <V11/CPhysicsEventItem.h>
+#include <V11/CRingStateChangeItem.h>
+#include <V11/CRingScalerItem.h>
+#include <V11/CRingTextItem.h>
+#include <V11/CRingPhysicsEventCountItem.h>
+#include <V11/CRingFragmentItem.h>
+
+#define private public
+#define protected public
+#include "V11/CTransparentFilter.h"
+#undef private
+#undef protected 
+
 #include <ios>
 #include <algorithm>
 #include <fstream>
@@ -26,18 +39,8 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <string>
 #include <fstream>
 #include <vector>
-#include <CPhysicsEventItem.h>
-#include <CRingStateChangeItem.h>
-#include <CRingScalerItem.h>
-#include <CRingTextItem.h>
-#include <CRingPhysicsEventCountItem.h>
-#include <CRingFragmentItem.h>
 
-#define private public
-#define protected public
-#include "CTransparentFilter.h"
-#undef private
-#undef protected 
+using namespace DAQ::V11;
 
 // A test suite 
 class CTransparentFilterTest : public CppUnit::TestFixture

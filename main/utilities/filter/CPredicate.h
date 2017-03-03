@@ -14,13 +14,16 @@
        East Lansing, MI 48824-1321
 */
 
-#ifndef CPREDICATE_H
-#define CPREDICATE_H
+#ifndef DAQ_CPREDICATE_H
+#define DAQ_CPREDICATE_H
 
+#include <memory>
 #include <CPredicatedMediator.h>
 
 namespace DAQ {
-namespace Transform {
+
+class CPredicate;
+using CPredicatePtr = std::shared_ptr<CPredicate>;
 
 class CPredicate
 {
@@ -40,7 +43,6 @@ public:
 
 };
 
-} // end Transform
 } // end DAQ
 
 #endif

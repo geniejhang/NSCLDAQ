@@ -18,7 +18,6 @@
 using namespace std;
 
 namespace DAQ {
-namespace Transform {
 
 void CCompositePredicate::addPredicate(std::shared_ptr<CPredicate> pPred)
 {
@@ -125,5 +124,4 @@ void CCompositePredicate::reset()
     }
 }
 
-} // end Transform
 } // end DAQ

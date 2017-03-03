@@ -17,17 +17,27 @@
 
 
 
-#ifndef CCOMPOSITEFILTER_H
-#define CCOMPOSITEFILTER_H
+#ifndef DAQ_V11_CCOMPOSITEFILTER_H
+#define DAQ_V11_CCOMPOSITEFILTER_H
+
+#include <V11/CFilter.h>
 
 #include <vector> 
-#include "CFilter.h"
+#include <memory>
+
+namespace DAQ {
+namespace V11 {
+
+
+class CCompositeFilter;
+using CCompositeFilterUPtr = std::unique_ptr<CCompositeFilter>;
+using CCompositeFilterPtr = std::shared_ptr<CCompositeFilter>;
 
 class CCompositeFilter : public CFilter
 {
   public:
     // Basic typedefs for use with the class
-    typedef std::vector<CFilter*> FilterContainer;
+    typedef std::vector<CFilterPtr> FilterContainer;
     typedef FilterContainer::iterator iterator;
     typedef FilterContainer::const_iterator const_iterator;
 
@@ -41,7 +51,7 @@ class CCompositeFilter : public CFilter
     CCompositeFilter& operator=(const CCompositeFilter&);
 
     // Filter registration
-    void registerFilter(const CFilter* filter);
+    void registerFilter(CFilterPtr filter);
 
     // Virtual copy constructor 
     CCompositeFilter* clone() const;
@@ -56,6 +66,9 @@ class CCompositeFilter : public CFilter
     virtual CRingItem* handlePhysicsEventItem(CPhysicsEventItem* item);
     virtual CRingItem* handlePhysicsEventCountItem(CRingPhysicsEventCountItem* item);
     virtual CRingItem* handleFragmentItem(CRingFragmentItem* item);
+    virtual CRingItem *handleAbnormalEndItem(CAbnormalEndItem *pItem);
+    virtual CRingItem *handleDataFormatItem(CDataFormatItem *pItem);
+    virtual CRingItem *handleGlomParameters(CGlomParameters *pItem);
 
     // Startup
     virtual void initialize();
@@ -69,13 +82,15 @@ class CCompositeFilter : public CFilter
     iterator end() { return m_filter.end(); }
     const_iterator end() const { return m_filter.end(); }
 
-    void clear() { clearFilters() ;}
+    void clear() { m_filter.clear() ;}
     size_t size() const { return m_filter.size();}
 
-  private:
-    // Free all dynamically allocated memory resize container 
-    void clearFilters();
 
 };
+
+
+
+} // end V11
+} // end DAQ
 
 #endif

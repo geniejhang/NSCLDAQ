@@ -17,15 +17,9 @@
 
 static const char* Copyright = "(C) Copyright Michigan State University 2014, All rights reserved";
 
-#include <fstream>
-#include <vector>
-#include <string>
-#include <CPhysicsEventItem.h>
-#include <CRingStateChangeItem.h>
-#include <CRingScalerItem.h>
-#include <CRingTextItem.h>
-#include <CRingPhysicsEventCountItem.h>
-#include <CRingFragmentItem.h>
+#include <cppunit/extensions/HelperMacros.h>
+#include <Asserts.h>
+
 #include <CRingBuffer.h>
 
 #include "CFilter.h"
@@ -35,16 +29,17 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <wait.h>
 #include <signal.h>
 
-#include <cppunit/extensions/HelperMacros.h>
 
-#define private public
-#define protected public
 #include "CFilterMain.h"
 #include "CFakeMediator.h"
-#undef private
-#undef protected
+
+#include <fstream>
+#include <vector>
+#include <string>
+
 
 using namespace std;
+using namespace DAQ;
 
 // A test suite 
 class CFilterMainTest : public CppUnit::TestFixture
@@ -136,7 +131,7 @@ void CFilterMainTest::testSkipTransmitted()
   const char* argv[] = {"Main",
                       "--skip=5"};
   CFilterMain app(argc, const_cast<char**>(argv)); 
-  CPPUNIT_ASSERT_EQUAL(5, app.m_mediator->m_nToSkip);
+  CPPUNIT_ASSERT_EQUAL(5, app.getMediator()->m_nToSkip);
 }
 
 void CFilterMainTest::testCountTransmitted()
@@ -145,7 +140,7 @@ void CFilterMainTest::testCountTransmitted()
   const char* argv[] = {"Main",
                       "--count=5"};
   CFilterMain app(argc, const_cast<char**>(argv)); 
-  CPPUNIT_ASSERT_EQUAL(5, app.m_mediator->m_nToProcess);
+  CPPUNIT_ASSERT_EQUAL(5, app.getMediator()->m_nToProcess);
 }
 
 //void CFilterMainTest::testOneShot()
@@ -208,8 +203,8 @@ void CFilterMainTest::mainLoop_0()
   CFilterMain app(argc, const_cast<char**>(argv)); 
   delete app.m_mediator;
 
-  CFakeMediator* newMediator = new CFakeMediator;
-  app.m_mediator = newMediator;
+  CFakeMediatorPtr newMediator(new CFakeMediator);
+  app.setMediator(newMediator);
 
   // run the main loop
   app();
