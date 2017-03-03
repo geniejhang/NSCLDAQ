@@ -306,14 +306,12 @@ EXTRA_DIST+=$(PYTHON_MODULES)
 
 #  Post installation tasks:
 
-install-exec-local:
+install-exec-hook:
 	$(mkinstalldirs) @prefix@/TclLibs/stateclient
 	rm -f           @prefix@/TclLibs/stateclient/libTclstateclient.so
 	$(LN_S)         @libdir@/libTclstateclient.so @prefix@/TclLibs/stateclient/libTclstateclient.so
 	for f in $(TCL_PACKAGES); do $(INSTALL_SCRIPT) @srcdir@/$$f @prefix@/TclLibs/stateclient; done
 	echo pkg_mkIndex -verbose @prefix@/TclLibs/stateclient "*.so" "*.tcl" | @TCLSH_CMD@
-
-install-exec-hook:
 	$(mkinstalldirs) @prefix@/pythonLibs/nscldaq/vardb
 	$(mkinstalldirs) @prefix@/pythonLibs/nscldaq/rctl
 	$(INSTALL_PROGRAM) @libdir@/libPyStateClient.so  @prefix@/pythonLibs/nscldaq/vardb/stateclient.so
