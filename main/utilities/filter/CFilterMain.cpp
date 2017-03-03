@@ -24,8 +24,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include "CDataSourceFactory.h"
 #include "CDataSinkFactory.h"
 #include <string>
-#include <DataFormat.h>
-#include <StringsToIntegers.h>
+//#include <StringsToIntegers.h>
 
 #include <CPredicate.h>
 #include <CCompositePredicate.h>
@@ -158,13 +157,17 @@ std::unique_ptr<CDataSource> CFilterMain::constructDataSource()
     source_name = std::string(m_argsInfo->source_arg);
   } 
 
-  // Set up the sampling 
-  std::vector<uint16_t> sample = constructSampleList();
+  // Set up the sampling
+  if (m_argsInfo->sample_given) {
+      m_pMediator->setSampleList(m_argsInfo->sample_arg);
+  }
   
   // Set up the excludes
-  std::vector<uint16_t> exclude = constructExcludesList();
+  if (m_argsInfo->exclude_given) {
+      m_pMediator->setExcludeList(m_argsInfo->exclude_arg);
+  }
   
-  std::unique_ptr<CDataSource> pSource(CDataSourceFactory().makeSource(source_name,sample,exclude));
+  std::unique_ptr<CDataSource> pSource(CDataSourceFactory().makeSource(source_name));
   return pSource;
 }
 
@@ -217,63 +220,4 @@ void CFilterMain::operator()()
     throw CFatalException(); 
   }
 
-}
-
-
-/**! Convert user's string arguments to integers 
-  This translates the user's command line input for the --sample option
-  from ring item type names to their numerical identifiers. 
-
-  \return a list of ring-item numbers corresponding to user's --sample option
-*/
-std::vector<uint16_t> 
-CFilterMain::constructSampleList() 
-{
-
-  std::vector<uint16_t> sample;
-  std::vector<int> s;
-  if (m_argsInfo->sample_given) {
-    try {
-      s = stringListToIntegers(std::string(m_argsInfo->sample_arg));
-    }
-    catch (...) {
-      std::cerr << "Invalid value for --sample, must be a list of item types was: "
-        << std::string(m_argsInfo->sample_arg) << std::endl;
-      throw CFatalException();
-    }
-    for(int i=0; i < s.size(); i++) {
-      sample.push_back(s[i]);
-    }
-  }
-
-  return sample;
-}
-
-/**! 
-  Makes a call to the stringListToIntegers that maps the
-  the names of ring item types to their associated identifying
-  numbers. 
-
-  \return a list of ring item numbers
-*/
-std::vector<uint16_t> 
-CFilterMain::constructExcludesList()
-{
-  std::vector<uint16_t> exclude;
-  std::vector<int> e;
-  if (m_argsInfo->exclude_given) {
-    try {
-      e = stringListToIntegers(std::string(m_argsInfo->exclude_arg));
-    }
-    catch (...) {
-      std::cerr << "Invalid value for --exclude, must be a list of item types was: "
-        << std::string(m_argsInfo->sample_arg) << std::endl;
-      throw CFatalException();
-      
-    }
-    for (int i = 0; i < e.size(); i++) {
-      exclude.push_back(e[i]);
-    }
-  }
-  return exclude;
 }

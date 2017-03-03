@@ -8,15 +8,16 @@ libfilter_la_SOURCES = CFilterMain.cpp \
                        CBaseMediator.cpp \
                        CMediator.cpp \
                        CFakeMediator.cpp \
+                       CFilterMediator.cpp \
                        CInfiniteMediator.cpp \
                        COneShotMediator.cpp \
                        COneShotHandler.cpp \
                        COneShotException.cpp \
                        CMediatorException.cpp \
-                       CAbnormalEndRunFilterHandler.cpp \
 			CRunStatistics.cpp  \
                         CPredicatedMediator.cpp \
                         CCompositePredicate.cpp \
+                        CProcessCountPredicate.cpp \
                         CTestPredicate.cpp \
                          SatisfyTclPlus.cpp  \
                          CFilterVersionAbstractionFactory.cpp
@@ -31,17 +32,18 @@ include_HEADERS	=  CFilterMain.h \
 		CBaseMediator.h \
                    CMediator.h \
 		 CFakeMediator.h \
+                 CFilterMediator.h \
                    CInfiniteMediator.h \
 		 COneShotMediator.h \
                    COneShotHandler.h \
                    COneShotException.h \
                    CMediatorException.h \
                    CFatalException.h \
-                   CAbnormalEndRunFilterHandler.h \
                  CRunStatistics.h \
                  CPredicatedMediator.h \
                  CPredicate.h \
                  CCompositePredicate.h \
+                 CProcessCountPredicate.h \
                  CTestPredicate.h \
                  CFilterVersionAbstraction.h \
                  CFilterVersionAbstractionFactory.h
@@ -90,8 +92,7 @@ noinst_PROGRAMS = unittests testapp
 
 unittests_SOURCES	= TestRunner.cpp  \
 						filtermaintests.cpp  \
-                                                abnormalendrunfiltertests.cpp \
-                                                cfilterversionabstractionfactorytests.cpp
+						cfilterversionabstractionfactorytests.cpp
 
 
 #						oneshothandlertests.cpp \
@@ -135,6 +136,8 @@ testapp_CPPFLAGS= -I@top_srcdir@/utilities \
                     @LIBTCLPLUS_CFLAGS@
 
 testapp_LDADD = -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
+                        @builddir@/libfilter.la	\
+                        @builddir@/V11/libfilterv11.la	\
                         @top_builddir@/utilities/IO/libdaqio.la \
 			@top_builddir@/base/dataflow/libDataFlow.la 	\
 			@top_builddir@/base/uri/liburl.la 	\
@@ -143,7 +146,6 @@ testapp_LDADD = -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                         @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
                         @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
                         @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
-			@builddir@/libfilter.la	\
 			@LIBEXCEPTION_LDFLAGS@
 testapp_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"
 

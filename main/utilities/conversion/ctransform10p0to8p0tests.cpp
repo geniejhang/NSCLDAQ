@@ -682,8 +682,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
       void MultiEvent_0 () {
         v8item = m_transform( v10item );
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Return VOID when space remains in buffer",
-                                     std::uint16_t(V8::VOID), v8item.getHeader().type);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Return UNDEFINED when space remains in buffer",
+                                     std::uint16_t(V8::UNDEFINED), v8item.getHeader().type);
       }
 
       void MultiEvent_1 () {

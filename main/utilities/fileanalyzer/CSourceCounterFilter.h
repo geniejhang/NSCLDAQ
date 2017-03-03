@@ -2,15 +2,15 @@
 #ifndef CSOURCECOUNTERFILTER_H
 #define CSOURCECOUNTERFILTER_H
 
-#include <CFilter.h>
-#include <DataFormat.h>
-#include <CRingItem.h>
-#include <CRingStateChangeItem.h>
-#include <CPhysicsEventItem.h>
-#include <CRingTextItem.h>
-#include <CRingItemFactory.h>
-#include <CRingPhysicsEventCountItem.h>
-#include <CRingFragmentItem.h>
+#include <V11/CFilter.h>
+#include <V11/DataFormatV11.h>
+#include <V11/CRingItem.h>
+#include <V11/CRingStateChangeItem.h>
+#include <V11/CPhysicsEventItem.h>
+#include <V11/CRingTextItem.h>
+#include <V11/CRingItemFactory.h>
+#include <V11/CRingPhysicsEventCountItem.h>
+#include <V11/CRingFragmentItem.h>
 #include <FragmentIndex.h>
 
 #include <stdint.h>
@@ -20,7 +20,10 @@
 #include <algorithm>
 #include <memory>
 
-class CSourceCounterFilter : public CFilter
+namespace DAQ {
+namespace V11 {
+
+class CSourceCounterFilter : public DAQ::V11::CFilter
 {
   private:
     std::map<uint32_t, std::map<uint32_t, uint32_t> > m_counters;
@@ -60,8 +63,10 @@ class CSourceCounterFilter : public CFilter
     void printCounters(std::ostream& stream) const;
     std::string translate(uint32_t type) const;
   
-
 };
+
+} // end V11
+} // end DAQ
 
 #endif
 

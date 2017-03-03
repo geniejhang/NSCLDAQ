@@ -5,6 +5,8 @@
 #include <V11/CRingItem.h>
 #include <V11/CCompositeFilter.h>
 
+#include <CSimpleAllButPredicate.h>
+
 #include <memory>
 
 namespace DAQ {
@@ -22,10 +24,11 @@ using CFilterAbstractionPtr = std::shared_ptr<CFilterAbstraction>;
 
 class CFilterAbstraction : public CFilterVersionAbstraction {
 private:
-    CRingItem  m_item;
-    CRingItem* m_pInputItem;
-    CRingItem* m_pOutputItem;
-    CCompositeFilterPtr m_pFilter;
+    CRingItem               m_item;
+    CRingItem*              m_pInputItem;
+    CRingItem*              m_pOutputItem;
+    CCompositeFilterPtr     m_pFilter;
+    CSimpleAllButPredicate  m_predicate;
 
 public:
     CFilterAbstraction();
@@ -38,6 +41,12 @@ public:
     virtual void outputDatum(CDataSink& sink);
     virtual uint32_t getDatumType() const;
     virtual void cleanUp();
+
+    virtual void initialize();
+    virtual void finalize();
+
+    virtual void setExcludeList(const std::string& excludeList);
+    virtual void setSampleList(const std::string& sampleList);
 
     void registerFilter(CFilterPtr pFilter);
     CFilterPtr getFilter() const;

@@ -25,7 +25,7 @@ public:
     virtual void finalize() = 0;
 
     virtual void setPredicate(CPredicatePtr pPredicate) = 0;
-    virtual CPredicatePtr getPredicate() const = 0;
+    virtual CPredicatePtr getPredicate() = 0;
 };
 
 }

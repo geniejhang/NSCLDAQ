@@ -36,7 +36,7 @@ public:
 
     void setVersionAbstraction(std::shared_ptr<CFilterVersionAbstraction> pAbstraction);
     void setPredicate(std::shared_ptr<CPredicate> pPredicate);
-    std::shared_ptr<CPredicate> getPredicate() const;
+    std::shared_ptr<CPredicate> getPredicate();
 };
 
 

@@ -8,6 +8,9 @@
 
 using namespace std;
 
+namespace DAQ {
+namespace V11 {
+
   CSourceCounterFilter::CSourceCounterFilter(uint32_t defaultId, std::string outputFile)
 : m_counters(), m_defaultId(defaultId), m_outputFile(outputFile), m_builtData(true)
 
@@ -187,3 +190,7 @@ void CSourceCounterFilter::setupCounters(uint32_t id)
   m_counters[id][EVB_UNKNOWN_PAYLOAD] = 0;
   m_counters[id][EVB_GLOM_INFO]       = 0;
 }
+
+
+} // end V11
+} // end DAQ

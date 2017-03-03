@@ -8,9 +8,13 @@
 #include <V11/CPhysicsEventItem.h>
 #include <V11/CRingFragmentItem.h>
 #include <V11/CRingPhysicsEventCountItem.h>
+#include <V11/StringsToIntegers.h>
 #include <V11/DataFormatV11.h>
 
 #include <RingIOV11.h>
+
+#include <sstream>
+#include <stdexcept>
 
 namespace DAQ {
 namespace V11 {
@@ -21,7 +25,8 @@ CFilterAbstraction::CFilterAbstraction()
     : m_item(UNDEFINED),
       m_pInputItem(nullptr),
       m_pOutputItem(nullptr),
-      m_pFilter(new CCompositeFilter)
+      m_pFilter(new CCompositeFilter),
+      m_predicate()
 {}
 
 CFilterAbstraction::~CFilterAbstraction()
@@ -36,7 +41,7 @@ CFilterAbstraction::~CFilterAbstraction()
 
 void CFilterAbstraction::readDatum(CDataSource &source)
 {
-    readItem(source, *m_pInputItem);
+    readItemIf(source, *m_pInputItem, m_predicate);
 }
 
 void CFilterAbstraction::processDatum()
@@ -73,6 +78,40 @@ void CFilterAbstraction::cleanUp()
 }
 
 
+void CFilterAbstraction::initialize()
+{
+    m_pFilter->initialize();
+}
+
+
+void CFilterAbstraction::finalize()
+{
+    m_pFilter->finalize();
+}
+
+
+void CFilterAbstraction::setExcludeList(const std::string &excludeList)
+{
+    std::vector<int> excludes;
+    try {
+        excludes = stringListToIntegers(excludeList);
+    }
+    catch (...) {
+        std::stringstream errMsg;
+        errMsg << "Invalid value for --exclude, must be a list of item types was: ";
+        errMsg << excludeList;
+        throw std::invalid_argument(errMsg.str());
+    }
+
+    for (auto& type : excludes) {
+        m_predicate.addExceptionType(type);
+    }
+}
+
+void CFilterAbstraction::setSampleList(const std::string &sampleList)
+{
+    // we currently don't support sampling
+}
 
 
 CRingItem*

@@ -42,6 +42,11 @@ public:
     void outputDatum(CDataSink& sink) {}
     uint32_t getDatumType() const { return 0; }
     void cleanUp() {};
+    void initialize() {};
+    void finalize() {};
+
+    void setExcludeList(const std::string&) {}
+    void setSampleList(const std::string&) {}
 };
 
 class CFakeVersionAbstractionCreator : public DAQ::CFilterVersionAbstractionCreator
@@ -56,7 +61,6 @@ public:
 // A test suite
 class CFilterVersionAbstractionFactoryTest : public CppUnit::TestFixture
 {
-  private:
 
   public:
 
@@ -67,6 +71,7 @@ class CFilterVersionAbstractionFactoryTest : public CppUnit::TestFixture
     CPPUNIT_TEST ( create_1 );
     CPPUNIT_TEST_SUITE_END();
 
+public:
     void setUp()
     {}
 

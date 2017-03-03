@@ -78,7 +78,7 @@ namespace DAQ {
       CDataSink& sink = *getDataSink();
 
       // Extract
-      V10::CRingItem item1(V10::VOID);
+      V10::CRingItem item1(V10::UNDEFINED);
       source >> item1;
 
       if (source.eof()) {
@@ -106,7 +106,7 @@ namespace DAQ {
           outputExtraTextBuffers(sink);
         }
 
-        if (item2.getHeader().type != V8::VOID) {
+        if (item2.getHeader().type != V8::UNDEFINED) {
           sink << item2;
         }
 

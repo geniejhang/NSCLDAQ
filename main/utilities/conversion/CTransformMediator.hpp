@@ -142,14 +142,14 @@ void CTransformMediator<Transform>::processOne()
 
 
 template<class Transform>
-void CTransformMediator<Transform>::setPredicate(std::shared_ptr<CPredicate> pPred)
+void CTransformMediator<Transform>::setPredicate(CPredicatePtr pPred)
 {
     m_pPredicate = pPred;
 }
 
 
 template<class Transform>
-std::shared_ptr<CPredicate> CTransformMediator<Transform>::getPredicate()
+CPredicatePtr CTransformMediator<Transform>::getPredicate()
 {
     return m_pPredicate;
 }

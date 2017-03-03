@@ -34,7 +34,11 @@ public:
 
     void setVersionAbstraction(CFilterVersionAbstractionPtr pAbstraction);
     void setPredicate(CPredicatePtr pPredicate);
-    CPredicatePtr getPredicate() const;
+    CPredicatePtr getPredicate();
+
+    void setExcludeList(const std::string& excludeList);
+    void setSampleList(const std::string& sampleList);
+
 };
 
 

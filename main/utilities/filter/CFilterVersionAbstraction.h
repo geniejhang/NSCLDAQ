@@ -23,6 +23,12 @@ public:
     virtual void outputDatum(CDataSink&) = 0;
     virtual uint32_t getDatumType() const = 0;
     virtual void cleanUp() = 0;
+
+    virtual void setExcludeList(const std::string& excludeList) = 0;
+    virtual void setSampleList(const std::string& sampleList) = 0;
+
+    virtual void initialize() = 0;
+    virtual void finalize() = 0;
 };
 
 

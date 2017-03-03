@@ -1,21 +1,19 @@
 
 
-#ifndef ABNORMALENDRUNFILTERHANDLER_H
-#define ABNORMALENDRUNFILTERHANDLER_H
+#ifndef DAQ_V11_ABNORMALENDRUNFILTERHANDLER_H
+#define DAQ_V11_ABNORMALENDRUNFILTERHANDLER_H
 
-#include <CFilter.h>
-
-class CRingItem;
-class CRingStateChangeItem;
-class CRingScalerItem;
-class CPhysicsEventItem;
-class CRingPhysicsEventCountItem;
-class CRingFragmentItem;
-class CRingTextItem;
+#include <V11/CFilter.h>
 
 namespace DAQ {
+
 class CDataSink;
-}
+
+namespace V11 {
+
+class CRingItem;
+class CAbnormalEndItem;
+
 
 /**! \brief Filter providing logic for handling ABNORMAL_ENDRUN items
  *
@@ -66,21 +64,20 @@ class CAbnormalEndRunFilterHandler : public CFilter
      * just exit normally.
      *
      */
-    CRingItem* handleRingItem(CRingItem* item);
+    CRingItem* handleRingItem(CRingItem *pItem);
 
-
-    // these are all just wrappers around the handleRingItem method. They
-    // simply do the following:
-    //
-    //   return handleRingItem(item);
-    //
-    CRingItem* handleStateChangeItem(CRingStateChangeItem* item);
-    CRingItem* handleScalerItem(CRingStateChangeItem* item);
-    CRingItem* handleTextItem(CRingTextItem* item);
-    CRingItem* handlePhysicsEventItem(CPhysicsEventItem* item);
-    CRingItem* handlePhysicsEventCountItem(CRingPhysicsEventCountItem* item);
-    CRingItem* handleFragmentItem(CRingFragmentItem* item);
+    CRingItem* handleAbnormalEndItem(CAbnormalEndItem* item);
+    CRingItem* handleDataFormatItem(CDataFormatItem *pItem);
+    CRingItem* handleFragmentItem(CRingFragmentItem *pItem);
+    CRingItem* handleGlomParameters(CGlomParameters *pItem);
+    CRingItem* handlePhysicsEventCountItem(CRingPhysicsEventCountItem *pItem);
+    CRingItem* handlePhysicsEventItem(CPhysicsEventItem *pItem);
+    CRingItem* handleScalerItem(CRingScalerItem *pItem);
+    CRingItem* handleStateChangeItem(CRingStateChangeItem *pItem);
+    CRingItem* handleTextItem(CRingTextItem *pItem);
 
 };
 
+} // end V11
+} // end DAQ
 #endif

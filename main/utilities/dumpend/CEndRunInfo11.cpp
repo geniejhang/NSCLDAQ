@@ -183,7 +183,7 @@ CEndRunInfo11::loadEndRuns()
     std::vector<uint16_t> filter;
     CFileDataSource src(m_nFd, filter);
     
-    V11::CRingItem item(V11::VOID);
+    V11::CRingItem item(V11::UNDEFINED);
     while (1) {
         readItem(src, item);
         if (src.eof()) break;

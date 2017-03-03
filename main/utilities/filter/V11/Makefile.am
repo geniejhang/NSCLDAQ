@@ -7,12 +7,14 @@ nscldaq11_HEADERS = CFilter.h \
                     CCompositeFilter.h \
                     CTransparentFilter.h \
                     CNullFilter.h \
-                    CFilterAbstraction.h
+                    CFilterAbstraction.h \
+										CAbnormalEndRunFilterHandler.h 
 
 
 
 libfilterv11_la_SOURCES = CCompositeFilter.cpp \
-                            CFilterAbstraction.cpp
+                            CFilterAbstraction.cpp \
+														CAbnormalEndRunFilterHandler.cpp
 
 libfilterv11_la_CPPFLAGS = -I@srcdir@/.. \
                             -I@top_srcdir@/utilities/IO \
@@ -34,6 +36,7 @@ unittests_SOURCES	= TestRunner.cpp  \
                                                 compositefiltertests.cpp \
                                                 transparentfiltertests.cpp \
                                                 cfilterabstractiontests.cpp \
+                                                abnormalendrunfiltertests.cpp \
                                                 CTestFilter.h \
                                                 CTestFilter.cpp
 

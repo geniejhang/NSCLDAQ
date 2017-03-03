@@ -8,6 +8,9 @@ FileAnalyzer_CXXFLAGS = -I@top_srcdir@/utilities/filter \
 												@LIBTCLPLUS_CFLAGS@
 
 FileAnalyzer_LDADD = @top_builddir@/utilities/filter/libfilter.la \
-										 @top_builddir@/daq/format/libdataformat.la \
-										 @top_builddir@/base/dataflow/libDataFlow.la
+                    @top_builddir@/utilities/filter/V11/libfilterv11.la \
+                                                                                 @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
+                                                                                 @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+                                                                                 @top_builddir@/utilities/IO/libdaqio.la \
+                                                                                 @top_builddir@/base/dataflow/libDataFlow.la
 

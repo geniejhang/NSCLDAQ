@@ -50,8 +50,8 @@ class CTransformMediator  : public CPredicatedMediator
 
   public:
     // The constructor
-    CTransformMediator(std::shared_ptr<CDataSource> source = std::shared_ptr<CDataSource>(),
-                       std::shared_ptr<CDataSink> sink = std::shared_ptr<CDataSink>(),
+    CTransformMediator(CDataSourcePtr source = CDataSourcePtr(),
+                       CDataSinkPtr sink = CDataSinkPtr(),
                        Transform trans=Transform());
 
     virtual ~CTransformMediator();
@@ -82,8 +82,8 @@ class CTransformMediator  : public CPredicatedMediator
 
     bool keepProcessing() const { return m_currentAction != ABORT; }
 
-    void setPredicate(std::shared_ptr<CPredicate> pPredicate);
-    std::shared_ptr<CPredicate> getPredicate();
+    void setPredicate(CPredicatePtr pPredicate);
+    CPredicatePtr getPredicate();
 private:
 
     void processOne();

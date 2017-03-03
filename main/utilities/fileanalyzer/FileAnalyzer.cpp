@@ -16,6 +16,7 @@
 
 #include <CFatalException.h>
 #include <CFilterMain.h>
+#include <V11/CFilterAbstraction.h>
 
 #include "CSourceCounterFilter.h"
 
@@ -25,8 +26,10 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <stdexcept>
 
 using namespace std;
+using namespace DAQ;
 
 struct CmdlineArgs {
   string s_outputFile;
@@ -129,18 +132,27 @@ int main(int argc, char* argv[])
     // Create the main
     CFilterMain theApp(argc,argv);
 
+    V11::CFilterAbstractionPtr pVersion(new V11::CFilterAbstraction);
+
     auto cmdLineOpts = parserResult.second;
     // Construct filter(s) here.
-    CSourceCounterFilter srcCounter(numeric_limits<uint32_t>::max(), cmdLineOpts.s_outputFile);
-    srcCounter.setBuiltData(cmdLineOpts.s_built);
+    std::shared_ptr<V11::CSourceCounterFilter> pSrcCounter(
+                new V11::CSourceCounterFilter(numeric_limits<uint32_t>::max(), cmdLineOpts.s_outputFile));
+    pSrcCounter->setBuiltData(cmdLineOpts.s_built);
 
-    theApp.registerFilter(&srcCounter);
+    pVersion->registerFilter(pSrcCounter);
+
+    theApp.setVersionAbstraction(pVersion);
 
     // Run the main loop
     theApp();
 
   } catch (CFatalException exc) {
     status = 1;
+
+  } catch (std::exception& exc) {
+      cout << "Caught fatal exception : " << exc.what() << endl;
+      status = 3;
   } catch (...) {
 
     cout << "Caught unknown fatal error...!" << endl;

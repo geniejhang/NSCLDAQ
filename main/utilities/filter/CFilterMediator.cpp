@@ -1,8 +1,10 @@
 #include "CFilterMediator.h"
+#include <CFilterVersionAbstraction.h>
 
 namespace DAQ {
 
-CFilterMediator::CFilterMediator()
+CFilterMediator::CFilterMediator(CDataSourcePtr pSource, CDataSinkPtr pSink)
+    : CPredicatedMediator(pSource, pSink)
 {
 }
 
@@ -25,7 +27,7 @@ void CFilterMediator::mainLoop()
 
         m_pVsnAbstraction->readDatum(source);
 
-        action = m_pPredicate->postInputUpdate(*this, pItem->type());
+        action = m_pPredicate->postInputUpdate(*this, m_pVsnAbstraction->getDatumType());
         if (action == CPredicatedMediator::SKIP) {
             continue;
         } else if (action == CPredicatedMediator::ABORT) {
@@ -46,36 +48,54 @@ void CFilterMediator::mainLoop()
 
         m_pVsnAbstraction->outputDatum(sink);
 
-        action = m_pPredicate->postOutputUpdate(*this, pNewItem->type());
+        action = m_pPredicate->postOutputUpdate(*this, m_pVsnAbstraction->getDatumType());
         if (action == CPredicatedMediator::SKIP) {
             continue;
         } else if (action == CPredicatedMediator::ABORT) {
             break;
         }
 
-        m_pVsnAbstraction->cleanup();
+        m_pVsnAbstraction->cleanUp();
     }
 
 }
 
 void CFilterMediator::initialize()
 {
-  getFilter()->initialize();
+  m_pVsnAbstraction->initialize();
 }
 
 void CFilterMediator::finalize()
 {
-  getFilter()->finalize();
+  m_pVsnAbstraction->finalize();
 }
 
-CPredicatePtr CFilterMediator::getPredicate() const
+CPredicatePtr CFilterMediator::getPredicate()
 {
     return m_pPredicate;
 }
 
 void CFilterMediator::setPredicate(CPredicatePtr pPredicate)
 {
-    m_pPredicate = pPredicate;
+    m_pPredicate = std::dynamic_pointer_cast<CCompositePredicate>(pPredicate);
+}
+
+
+void CFilterMediator::setVersionAbstraction(CFilterVersionAbstractionPtr pAbstraction)
+{
+    m_pVsnAbstraction = pAbstraction;
+}
+
+
+void CFilterMediator::setExcludeList(const std::string &excludeList)
+{
+    m_pVsnAbstraction->setExcludeList(excludeList);
+}
+
+
+void CFilterMediator::setSampleList(const std::string &sampleList)
+{
+    m_pVsnAbstraction->setSampleList(sampleList);
 }
 
 } // end DAQ

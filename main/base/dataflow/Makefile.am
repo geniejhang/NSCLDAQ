@@ -12,7 +12,7 @@ include_HEADERS        = CRingBuffer.h CTestRingBuffer.h CRingMaster.h CRemoteAc
 			CConnectivity.h 
 
 
-noinst_HEADERS         = ringbufint.h Asserts.h testcommon.h CRingCommand.h CPidToCommand.h \
+noinst_HEADERS         = ringbufint.h testcommon.h CRingCommand.h CPidToCommand.h \
 	CGetProducersCommand.h CGetConsumersCommand.h CAllParticipantsCommand.h
 
 COMPILATION_FLAGS =  -I@top_srcdir@/base/headers 	\
