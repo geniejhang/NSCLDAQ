@@ -131,7 +131,7 @@ unittests_LDADD   = -L@prefix@/lib $(CPPUNIT_LDFLAGS) \
 
 unittests_LDFLAGS = @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@ -Wl,"-rpath-link=$(libdir)"
 
-unittests_CPPFLAGS=$(COMPILATION_FLAGS)
+unittests_CPPFLAGS=$(COMPILATION_FLAGS) -I@top_srcdir@/base/testutils
 
 producer_SOURCES	=	producer.cpp
 
