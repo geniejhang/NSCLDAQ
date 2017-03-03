@@ -158,12 +158,12 @@ EXTRA_DIST=ringprimitives.xml ringbuffer_user.xml ringbuffer_man.xml ringlib.xml
 
 #-------------- My installation... includes tcl scripts/packages.
 
-install-exec-local: $(lib_LTLIBRARIES)
+install-exec-hook:
 	$(INSTALL_SCRIPT) @srcdir@/RingMaster.tcl @bindir@/RingMaster
 	$(mkinstalldirs)  @prefix@/TclLibs
 	$(INSTALL_SCRIPT) @builddir@/.libs/libRingBuffer.* @prefix@/TclLibs
 	echo "pkg_mkIndex -verbose @prefix@/TclLibs *.so" | $(TCLSH_CMD)
 	$(INSTALL_SCRIPT) @srcdir@/ringbuffer.tcl @bindir@/ringbuffer
 	$(mkinstalldirs)  @prefix@/pythonLibs/nscldaq/ringbuffer
-	$(INSTALL_SCRIPT) @libdir@/.libs/libRingPy.so @prefix@/pythonLibs/nscldaq/ringbuffer/ringmaster.so
-	touch              @prefix@/pythonLibs/nscldaq/ringbuffer/__init__.py
+	$(INSTALL_SCRIPT) @libdir@/libRingPy.so @prefix@/pythonLibs/nscldaq/ringbuffer/ringmaster.so
+	touch             @prefix@/pythonLibs/nscldaq/ringbuffer/__init__.py
