@@ -42,6 +42,9 @@ class CCompositePredicate : public CPredicate
     virtual CPredicatedMediator::Action postOutputUpdate(CPredicatedMediator& mediator, int type);
 
     virtual void reset();
+
+    CPredicatePtr at(size_t i) const;
+    size_t size() const;
 };
 
 } // end DAQ

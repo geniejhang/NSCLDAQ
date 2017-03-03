@@ -75,6 +75,7 @@ class CFilterMain
      */
     CFilterMediatorPtr getMediator() { return m_pMediator; }
 
+    void setMediator(CFilterMediatorPtr pMediator) { m_pMediator = pMediator; }
 
 
   private:

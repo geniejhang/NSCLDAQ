@@ -24,6 +24,9 @@
 
 namespace DAQ {
 
+class CFakeMediator;
+using CFakeMediatorPtr = std::shared_ptr<CFakeMediator>;
+
 class CFakeMediator : public CFilterMediator {
   private:
     std::vector<std::string> m_log;

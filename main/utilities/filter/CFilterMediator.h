@@ -2,12 +2,14 @@
 #define DAQ_CFILTERMEDIATOR_H
 
 #include <CPredicatedMediator.h>
+#include <CCompositePredicate.h>
 
 #include <memory>
 
 namespace DAQ {
 
 class CFilterVersionAbstraction;
+using CFilterVersionAbstractionPtr = std::shared_ptr<CFilterVersionAbstraction>;
 
 class CFilterMediator;
 using CFilterMediatorUPtr = std::unique_ptr<CFilterMediator>;
@@ -19,20 +21,20 @@ using CFilterMediatorPtr = std::shared_ptr<CFilterMediator>;
 class CFilterMediator : public CPredicatedMediator
 {
 private:
-    std::shared_ptr<CPredicate>                m_pPredicate;
-    std::shared_ptr<CFilterVersionAbstraction> m_pVsnAbstraction;
+    CCompositePredicatePtr       m_pPredicate;
+    CFilterVersionAbstractionPtr m_pVsnAbstraction;
 
 public:
-    CFilterMediator(std::shared_ptr<CDataSource> pSource = nullptr,
-                    std::shared_ptr<CDataSink> pSink = nullptr);
+    CFilterMediator(CDataSourcePtr pSource = nullptr,
+                    CDataSinkPtr pSink = nullptr);
 
     void mainLoop();
     void initialize();
     void finalize();
 
-    void setVersionAbstraction(std::shared_ptr<CFilterVersionAbstraction> pAbstraction);
-    void setPredicate(std::shared_ptr<CPredicate> pPredicate);
-    std::shared_ptr<CPredicate> getPredicate() const;
+    void setVersionAbstraction(CFilterVersionAbstractionPtr pAbstraction);
+    void setPredicate(CPredicatePtr pPredicate);
+    CPredicatePtr getPredicate() const;
 };
 
 

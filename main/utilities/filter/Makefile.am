@@ -52,10 +52,11 @@ include_HEADERS	=  CFilterMain.h \
 
 libfilter_la_CPPFLAGS	= -I@top_srcdir@/utilities/common \
 		-I@top_srcdir@/utilities/IO \
-		@LIBTCLPLUS_CFLAGS@	\
-		-I@top_srcdir@/base/uri		\
+                -I@top_srcdir@/base/uri		\
                 -I@top_srcdir@/base/os \
-                -I@top_srcdir@/base/headers
+                -I@top_srcdir@/base/headers \
+                @LIBTCLPLUS_CFLAGS@
+
 
 
 libfilter_la_LDFLAGS	= -version-info $(SOVERSION)	\
@@ -109,16 +110,15 @@ unittests_LDADD		= \
                         $(CPPUNIT_LDFLAGS) 		\
 			@LIBEXCEPTION_LDFLAGS@
 
-unittests_CPPFLAGS=  -I@top_srcdir@/utilities/filter \
-                    -I@top_srcdir@/utilities/nscldaq-format/format \
+unittests_CPPFLAGS=  -I@top_srcdir@/utilities/nscldaq-format/format \
                     -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                     -I@top_srcdir@/utilities/nscldaq-format/Buffer \
                     -I@top_srcdir@/utilities/IO \
-                    @LIBTCLPLUS_CFLAGS@	\
                     -I@top_srcdir@/base/uri		\
                     -I@top_srcdir@/base/headers		\
                     -I@top_srcdir@/base/dataflow \
-                    -I@top_srcdir@/base/testutils
+                    -I@top_srcdir@/base/testutils \
+                    @LIBTCLPLUS_CFLAGS@
 
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 
@@ -130,9 +130,9 @@ testapp_CPPFLAGS= -I@top_srcdir@/utilities \
                     -I@top_srcdir@/utilities/nscldaq-format/format \
                     -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                     -I@top_srcdir@/utilities/nscldaq-format/Buffer \
-                    @LIBTCLPLUS_CFLAGS@	\
                     -I@top_srcdir@/base/uri		\
-                    -I@top_srcdir@/base/dataflow
+                    -I@top_srcdir@/base/dataflow \
+                    @LIBTCLPLUS_CFLAGS@
 
 testapp_LDADD = -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                         @top_builddir@/utilities/IO/libdaqio.la \

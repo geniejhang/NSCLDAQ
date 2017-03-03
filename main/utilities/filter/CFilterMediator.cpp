@@ -68,12 +68,12 @@ void CFilterMediator::finalize()
   getFilter()->finalize();
 }
 
-std::shared_ptr<CPredicate> CFilterMediator::getPredicate() const
+CPredicatePtr CFilterMediator::getPredicate() const
 {
     return m_pPredicate;
 }
 
-void CFilterMediator::setPredicate(std::shared_ptr<CPredicate> pPredicate)
+void CFilterMediator::setPredicate(CPredicatePtr pPredicate)
 {
     m_pPredicate = pPredicate;
 }

@@ -124,4 +124,16 @@ void CCompositePredicate::reset()
     }
 }
 
+
+CPredicatePtr CCompositePredicate::at(size_t i) const
+{
+    return m_predicates.at(i);
+}
+
+size_t CCompositePredicate::size() const
+{
+    return m_predicates.size();
+}
+
+
 } // end DAQ

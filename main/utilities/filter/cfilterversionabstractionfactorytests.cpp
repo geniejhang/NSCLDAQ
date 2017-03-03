@@ -46,6 +46,7 @@ public:
 
 class CFakeVersionAbstractionCreator : public DAQ::CFilterVersionAbstractionCreator
 {
+public:
     CFilterVersionAbstractionUPtr create() const {
         return CFilterVersionAbstractionUPtr(new CFakeVersionAbstraction);
     }
