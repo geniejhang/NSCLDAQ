@@ -439,6 +439,7 @@ AC_CONFIG_FILES([Makefile
 		 base/factories/Makefile
 		 base/tclutils/Makefile
 		 base/testutils/Makefile
+     base/sfinae_tools/Makefile
 		 caenfw-common/Makefile
 		 servers/Makefile
 		 servers/tclserver/Makefile
