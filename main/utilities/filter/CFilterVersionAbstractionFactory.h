@@ -9,7 +9,8 @@ namespace DAQ {
 
 
 class CFilterVersionAbstractionCreator;
-using CFilterVersionAbstractionCreatorPtr = std::shared_ptr<CFilterVersionAbstractionCreator>;
+using CFilterVersionAbstractionCreatorUPtr = std::unique_ptr<CFilterVersionAbstractionCreator>;
+using CFilterVersionAbstractionCreatorPtr  = std::shared_ptr<CFilterVersionAbstractionCreator>;
 
 
 class CFilterVersionAbstractionCreator {

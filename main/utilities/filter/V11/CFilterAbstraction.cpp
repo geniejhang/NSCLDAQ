@@ -31,12 +31,6 @@ CFilterAbstraction::CFilterAbstraction()
 
 CFilterAbstraction::~CFilterAbstraction()
 {
-    if (m_pOutputItem != m_pInputItem) {
-        // this is legal if m_pOutputItem == nullptr
-        delete m_pOutputItem;
-    }
-
-    delete m_pInputItem;
 }
 
 void CFilterAbstraction::readDatum(CDataSource &source)
@@ -71,10 +65,13 @@ void CFilterAbstraction::cleanUp()
 {
     if (m_pOutputItem != m_pInputItem) {
         delete m_pOutputItem;
-        m_pOutputItem = nullptr;
     }
 
-    m_pInputItem->setType(V11::UNDEFINED);
+    delete m_pInputItem;
+
+    m_pInputItem = nullptr;
+    m_pOutputItem = nullptr;
+
 }
 
 

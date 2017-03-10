@@ -1,16 +1,17 @@
 
 
-#ifndef DAQ_V11_CNULLFILTER_H
-#define DAQ_V11_CNULLFILTER_H
+#ifndef DAQ_V12_CNULLFILTER_H
+#define DAQ_V12_CNULLFILTER_H
 
-#include <V11/CFilter.h>
+#include <V12/CFilter.h>
+#include <make_unique.h>
 
 namespace DAQ {
-namespace V11 {
+namespace V12 {
 
 class CNullFilter;
 using CNullFilterUPtr = std::unique_ptr<CNullFilter>;
-using CNullFilterPtr = std::shared_ptr<CNullFilter>;
+using CNullFilterPtr  = std::shared_ptr<CNullFilter>;
 
 /**! A filter whose handlers always return NULL.
 *
@@ -18,38 +19,48 @@ using CNullFilterPtr = std::shared_ptr<CNullFilter>;
 */
 class CNullFilter : public CFilter {
   public :
-    CNullFilter* clone() const { return new CNullFilter(*this); }
+    CFilterUPtr clone() const { return make_unique<CNullFilter>(*this); }
 
-    CRingItem* handleScalerItem(CRingScalerItem*) {
-      return 0;
-    }
-
-    CRingItem* handleTextItem(CRingTextItem*) {
+    CRingScalerItemPtr handleScalerItem(CRingScalerItemPtr) {
       return 0;
     }
 
-    CRingItem* handleFragmentItem(CRingFragmentItem*) {
-      return 0;
-    }
-    CRingItem* handlePhysicsEventCountItem(CRingPhysicsEventCountItem*) {
+    CRingTextItemPtr handleTextItem(CRingTextItemPtr) {
       return 0;
     }
 
-    CRingItem* handlePhysicsEventItem(CPhysicsEventItem*) {
-      return 0;
-    }
-    CRingItem* handleStateChangeItem(CRingStateChangeItem*) {
+    CRingPhysicsEventCountItemPtr handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr) {
       return 0;
     }
 
-    CRingItem* handleRingItem(CRingItem*) {
+    CPhysicsEventItemPtr handlePhysicsEventItem(CPhysicsEventItemPtr) {
+      return 0;
+    }
+    CRingStateChangeItemPtr handleStateChangeItem(CRingStateChangeItemPtr) {
       return 0;
     }
 
+    CRingItemPtr handleRingItem(CRingItemPtr) {
+      return 0;
+    }
+
+    CDataFormatItemPtr handleDataFormatItem(CDataFormatItemPtr) {
+        return nullptr;
+    }
+
+    CAbnormalEndItemPtr handleAbnormalEndItem(CAbnormalEndItemPtr pItem)
+    {
+        return nullptr;
+    }
+
+    CCompositeRingItemPtr handleCompositeItem(CCompositeRingItemPtr pItem)
+    {
+        return nullptr;
+    }
 };
 
 
-} // end V11
+} // end V12
 } // end DAQ
 
 

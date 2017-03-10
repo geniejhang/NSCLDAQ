@@ -1,19 +1,19 @@
-#ifndef DAQ_V11_CTESTFILTER_H
-#define DAQ_V11_CTESTFILTER_H
+#ifndef DAQ_V12_CTESTFILTER_H
+#define DAQ_V12_CTESTFILTER_H
 
-#include <V11/CFilter.h>
+#include <V12/CFilter.h>
 
 #include <string>
 #include <vector>
 
 namespace DAQ {
-namespace V11 {
+namespace V12 {
 
 class CRingItem;
 
 class CTestFilter;
 using CTestFilterUPtr = std::unique_ptr<CTestFilter>;
-using CTestFilterPtr = std::shared_ptr<CTestFilter>;
+using CTestFilterPtr  = std::shared_ptr<CTestFilter>;
 
 
 class CTestFilter : public CFilter {
@@ -27,30 +27,29 @@ public:
   std::vector<std::string> getHistory();
   int getNProcessed();
 
-  virtual CTestFilter *clone() const;
+  virtual CFilterUPtr clone() const;
 
-  virtual CRingItem *handleStateChangeItem(CRingStateChangeItem *);
+  virtual CRingStateChangeItemPtr handleStateChangeItem(CRingStateChangeItemPtr);
 
-  virtual CRingItem *handleScalerItem(CRingScalerItem *);
+  virtual CRingScalerItemPtr handleScalerItem(CRingScalerItemPtr );
 
-  virtual CRingItem *handleTextItem(CRingTextItem *);
+  virtual CRingTextItemPtr handleTextItem(CRingTextItemPtr);
 
-  virtual CRingItem *handlePhysicsEventItem(CPhysicsEventItem *);
+  virtual CPhysicsEventItemPtr handlePhysicsEventItem(CPhysicsEventItemPtr );
 
-  virtual CRingItem *handlePhysicsEventCountItem(CRingPhysicsEventCountItem *);
+  virtual CRingPhysicsEventCountItemPtr handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr );
 
-  virtual CRingItem *handleFragmentItem(CRingFragmentItem *);
-  virtual CRingItem *handleRingItem(CRingItem *);
+  virtual CRingItemPtr handleRingItem(CRingItemPtr);
 
-  virtual CRingItem *handleAbnormalEndItem(CAbnormalEndItem *pItem);
-  virtual CRingItem *handleDataFormatItem(CDataFormatItem *pItem);
-  virtual CRingItem *handleGlomParameters(CGlomParameters *pItem);
+  virtual CAbnormalEndItemPtr handleAbnormalEndItem(CAbnormalEndItemPtr pItem);
+  virtual CDataFormatItemPtr handleDataFormatItem(CDataFormatItemPtr pItem);
+  virtual CGlomParametersPtr handleGlomParameters(CGlomParametersPtr pItem);
 
   virtual void initialize();
   virtual void finalize();
 };
 
-} // end V11
+} // end V12
 } // end DAQ
 
 #endif

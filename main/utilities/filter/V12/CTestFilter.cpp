@@ -1,97 +1,94 @@
 
-#include <V11/CTestFilter.h>
+#include <V12/CTestFilter.h>
+
+#include <make_unique.h>
+
 #include <vector>
 #include <string>
 
 using namespace std;
 
 namespace DAQ {
-namespace V11 {
+namespace V12 {
 
 CTestFilter::CTestFilter() : m_history(), m_nProcessed(0) {}
 
 std::vector<std::string> CTestFilter::getHistory() { return m_history; }
 int CTestFilter::getNProcessed() { return m_nProcessed; }
 
-CTestFilter *CTestFilter::clone() const { return new CTestFilter(*this); }
+CFilterUPtr CTestFilter::clone() const {
+    return DAQ::make_unique<CTestFilter>(*this);
+}
 
-CRingItem *CTestFilter::handleStateChangeItem(CRingStateChangeItem *) {
+CRingStateChangeItemPtr CTestFilter::handleStateChangeItem(CRingStateChangeItemPtr ) {
   ++m_nProcessed;
    m_history.push_back("handleStateChangeItem");
-  return new CRingStateChangeItem(BEGIN_RUN);
+  return std::make_shared<CRingStateChangeItem>(BEGIN_RUN);
 }
 
-CRingItem *CTestFilter::handleScalerItem(CRingScalerItem *) {
+CRingScalerItemPtr CTestFilter::handleScalerItem(CRingScalerItemPtr ) {
   ++m_nProcessed;
     m_history.push_back("handleScalerItem");
-  return new CRingScalerItem(200);
+  return std::make_shared<CRingScalerItem>(200);
 }
 
-CRingItem *CTestFilter::handleTextItem(CRingTextItem *) {
+CRingTextItemPtr CTestFilter::handleTextItem(CRingTextItemPtr ) {
   ++m_nProcessed;
     m_history.push_back("handleTextItem");
   std::vector<std::string> str_vec;
   str_vec.push_back("0000");
   str_vec.push_back("1111");
   str_vec.push_back("2222");
-  return new CRingTextItem(PACKET_TYPES, str_vec);
+  return std::make_shared<CRingTextItem>(PACKET_TYPES, str_vec);
 }
 
-CRingItem *CTestFilter::handlePhysicsEventItem(CPhysicsEventItem *) {
+CPhysicsEventItemPtr CTestFilter::handlePhysicsEventItem(CPhysicsEventItemPtr ) {
   ++m_nProcessed;
     m_history.push_back("handlePhysicsEventItem");
-  return new CPhysicsEventItem(4096);
+  return std::make_shared<CPhysicsEventItem>();
+
 }
 
-CRingItem *
-CTestFilter::handlePhysicsEventCountItem(CRingPhysicsEventCountItem *) {
+CRingPhysicsEventCountItemPtr CTestFilter::handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr) {
   ++m_nProcessed;
     m_history.push_back("handlePhysicsEventCountItem");
-  return new CRingPhysicsEventCountItem(static_cast<uint64_t>(4),
+  return std::make_shared<CRingPhysicsEventCountItem>(static_cast<uint64_t>(4),
                                         static_cast<uint32_t>(1001));
 }
 
-CRingItem *CTestFilter::handleFragmentItem(CRingFragmentItem *) {
-  ++m_nProcessed;
-    m_history.push_back("handleFragmentItem");
-
-  return new CRingFragmentItem(
-      static_cast<uint64_t>(10101), static_cast<uint32_t>(1),
-      static_cast<uint32_t>(2), reinterpret_cast<void *>(new char[2]),
-      static_cast<uint32_t>(3));
-}
-
-CRingItem *CTestFilter::handleRingItem(CRingItem *) {
+CRingItemPtr CTestFilter::handleRingItem(CRingItemPtr ) {
   ++m_nProcessed;
     m_history.push_back("handleRingItem");
 
-  return new CRingItem(100);
+  auto pItem = std::make_shared<CRawRingItem>();
+  pItem->setType(100);
+  return pItem;
 }
 
-CRingItem *CTestFilter::handleAbnormalEndItem(CAbnormalEndItem *pItem)
+CAbnormalEndItemPtr CTestFilter::handleAbnormalEndItem(CAbnormalEndItemPtr pItem)
 {
     ++m_nProcessed;
     m_history.push_back("handleAbnormalEndItem");
-    return new CAbnormalEndItem();
+    return std::make_shared<CAbnormalEndItem>();
 }
 
-CRingItem *CTestFilter::handleGlomParameters(CGlomParameters *pItem)
+CGlomParametersPtr CTestFilter::handleGlomParameters(CGlomParametersPtr pItem)
 {
     ++m_nProcessed;
     m_history.push_back("handleGlomParameters");
-    return new CGlomParameters(123, true, CGlomParameters::average);
+    return std::make_shared<CGlomParameters>(123, true, CGlomParameters::average);
 }
 
-CRingItem *CTestFilter::handleDataFormatItem(CDataFormatItem *pItem)
+CDataFormatItemPtr CTestFilter::handleDataFormatItem(CDataFormatItemPtr pItem)
 {
     ++m_nProcessed;
     m_history.push_back("handleDataFormatItem");
-    return new CDataFormatItem();
+    return std::make_shared<CDataFormatItem>();
 }
 
 void CTestFilter::initialize() { m_history.push_back("initialize"); }
 
 void CTestFilter::finalize() { m_history.push_back("finalize"); }
 
-} // end V11
+} // end V12
 } // end DAQ

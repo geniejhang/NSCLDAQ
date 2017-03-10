@@ -1,15 +1,16 @@
 
 
-#ifndef DAQ_V11_ABNORMALENDRUNFILTERHANDLER_H
-#define DAQ_V11_ABNORMALENDRUNFILTERHANDLER_H
+#ifndef DAQ_V12_ABNORMALENDRUNFILTERHANDLER_H
+#define DAQ_V12_ABNORMALENDRUNFILTERHANDLER_H
 
-#include <V11/CFilter.h>
+#include <V12/CFilter.h>
+#include <stdexcept>
 
 namespace DAQ {
 
 class CDataSink;
 
-namespace V11 {
+namespace V12 {
 
 class CRingItem;
 class CAbnormalEndItem;
@@ -49,9 +50,7 @@ class CAbnormalEndRunFilterHandler : public CFilter
 
     CAbnormalEndRunFilterHandler(const CAbnormalEndRunFilterHandler& rhs);
 
-    CAbnormalEndRunFilterHandler* clone() const {
-      return new CAbnormalEndRunFilterHandler(*this);
-    }
+    CFilterUPtr clone() const;
 
   private:
     CAbnormalEndRunFilterHandler& operator=(const CAbnormalEndRunFilterHandler& rhs);
@@ -64,20 +63,35 @@ class CAbnormalEndRunFilterHandler : public CFilter
      * just exit normally.
      *
      */
-    CRingItem* handleRingItem(CRingItem *pItem);
-
-    CRingItem* handleAbnormalEndItem(CAbnormalEndItem* item);
-    CRingItem* handleDataFormatItem(CDataFormatItem *pItem);
-    CRingItem* handleFragmentItem(CRingFragmentItem *pItem);
-    CRingItem* handleGlomParameters(CGlomParameters *pItem);
-    CRingItem* handlePhysicsEventCountItem(CRingPhysicsEventCountItem *pItem);
-    CRingItem* handlePhysicsEventItem(CPhysicsEventItem *pItem);
-    CRingItem* handleScalerItem(CRingScalerItem *pItem);
-    CRingItem* handleStateChangeItem(CRingStateChangeItem *pItem);
-    CRingItem* handleTextItem(CRingTextItem *pItem);
+    template<class RingPtr>
+    RingPtr handleAnyRingItem(RingPtr pItem);
+    CRingStateChangeItemPtr handleStateChangeItem(CRingStateChangeItemPtr pItem);
+    CRingScalerItemPtr handleScalerItem(CRingScalerItemPtr pItem);
+    CRingTextItemPtr handleTextItem(CRingTextItemPtr pItem);
+    CPhysicsEventItemPtr handlePhysicsEventItem(CPhysicsEventItemPtr pItem);
+    CRingPhysicsEventCountItemPtr handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr pItem);
+    CGlomParametersPtr handleGlomParameters(CGlomParametersPtr pItem);
+    CCompositeRingItemPtr handleCompositeItem(CCompositeRingItemPtr pItem);
+    CDataFormatItemPtr handleDataFormatItem(CDataFormatItemPtr pItem);
+    CAbnormalEndItemPtr handleAbnormalEndItem(CAbnormalEndItemPtr item);
 
 };
 
-} // end V11
+// All of the functionality of the other are in the handleRingItem.
+template<class RingPtr>
+RingPtr
+CAbnormalEndRunFilterHandler::handleAnyRingItem(RingPtr pItem) {
+
+    if (pItem->type() == ABNORMAL_ENDRUN) {
+        writeItem(m_sink, *pItem);
+
+        throw std::runtime_error("Found an abnormal end run item. Shutting down!");
+    }
+
+    return pItem;
+}
+
+
+} // end V12
 } // end DAQ
 #endif

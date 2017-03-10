@@ -17,12 +17,11 @@
 
 static const char* Copyright = "(C) Copyright Michigan State University 2014, All rights reserved";
 
-#include <iostream>
-#include <iomanip>
-#include <CCompositeFilter.h>
+#include <V12/CCompositeFilter.h>
+#include <make_unique.h>
 
 namespace DAQ {
-namespace V11 {
+namespace V12 {
 
 /**! The default constructor
   Does nothing but initialize an empty vector of filters
@@ -98,9 +97,9 @@ CCompositeFilter::~CCompositeFilter()
 
   \return a pointer to the new dynamically allocated object
 */
-CCompositeFilter* CCompositeFilter::clone() const 
+CFilterUPtr CCompositeFilter::clone() const
 {
-  return new CCompositeFilter(*this);
+  return DAQ::make_unique<CCompositeFilter>(*this);
 }
 
 /**! Append a filter to the container
@@ -119,7 +118,7 @@ void CCompositeFilter::registerFilter(CFilterPtr filter)
 
 /**! Handle a generic ring item
     This is handler effectively just iterates through the set of 
-    registered filters and calls their respective handleRingItem(const CRingItem*)
+    registered filters and calls their respective handleRingItem(CRingItemPtr)
     methods. Memory is managed during the iterations such that each subsequent 
     filter receives as input the output of the previous. It is possible for a filter
     to return a pointer to the same object as was passed it and this is handled properly.
@@ -127,371 +126,225 @@ void CCompositeFilter::registerFilter(CFilterPtr filter)
   \param item the ring item to process
   \return a pointer to the output of the last filter registered to the composite
 */  
-CRingItem* CCompositeFilter::handleRingItem(CRingItem* item)
+CRingItemPtr CCompositeFilter::handleRingItem(CRingItemPtr pItem)
 {
   iterator it = begin(); 
   iterator itend = end(); 
 
-  // Initialize some pointers to keep track of returned objects
-  CRingItem* pItem0=item;
-  CRingItem* pItem1=pItem0;
   // Loop through the filters while the newly returned object isn't null
-  while (it!=itend && pItem0!=0) {
+  while (it!=itend && pItem) {
 
     // pass the first item to the filter and get the filtered item 
-    pItem1 = (*it)->handleRingItem(pItem0);
-
-    // if the filter returned a different object than it was given
-    // delete the one it was given 
-    if (pItem1 != pItem0 && pItem0!=item) {
-      delete pItem0;
-    }
-  
-    // Update the pointer
-    pItem0 = pItem1;
+    pItem = (*it)->handleRingItem(pItem);
 
     // increment to the next filter
     ++it;
   }
-  return pItem0;
+  return pItem;
 }
 
 /**! Handle state change items
 
-   See handleRingItem(const CRingItem*) documentation above. The exact same thing
-   is done except that handleStateChangeItem(const CRingStateChangleItem*) is 
+   See handleRingItem(CRingItemPtr) documentation above. The exact same thing
+   is done except that handleStateChangeItem(CRingStateChangeItemPtr) is
    called.
 */
-CRingItem* CCompositeFilter::handleStateChangeItem(CRingStateChangeItem* item)
+CRingStateChangeItemPtr CCompositeFilter::handleStateChangeItem(CRingStateChangeItemPtr pItem)
 {
   iterator it = begin(); 
   iterator itend = end(); 
 
   // Initialize some pointers to keep track of returned objects
-  CRingItem* pItem0=item;
-  CRingItem* pItem1=pItem0;
-  CRingStateChangeItem* state_item = 0;
-  while (it!=itend && pItem0!=0) {
-
-    state_item = static_cast<CRingStateChangeItem*>(pItem0);
+  while (it!=itend && pItem) {
 
     // pass the first item to the filter and get the filtered item 
-    pItem1 = (*it)->handleStateChangeItem(state_item);
-
-    // if the filter returned a different object than it was given
-    // delete the one it was given 
-    if (pItem1 != pItem0 && pItem0!=item) {
-      delete pItem0;
-    }
-  
-    // Update the pointer
-    pItem0 = pItem1;
+    pItem = (*it)->handleStateChangeItem(pItem);
 
     // increment to the next filter
     ++it;
   }
-  return pItem0;
+  return pItem;
 }
 
 /**! Handle scaler items
 
-   See handleRingItem(const CRingItem*) documentation above. The exact same thing
-   is done except that handleScalerItem(const CScalerItem*) is 
+   See handleRingItem(CRingItemPtr) documentation above. The exact same thing
+   is done except that handleScalerItem(CScalerItemPtr) is
    called.
 */
-CRingItem* CCompositeFilter::handleScalerItem(CRingScalerItem* item)
+CRingScalerItemPtr CCompositeFilter::handleScalerItem(CRingScalerItemPtr pItem)
 {
   iterator it = begin(); 
   iterator itend = end(); 
 
-  // Initialize some pointers to keep track of returned objects
-  CRingItem* pItem0=item;
-  CRingItem* pItem1=pItem0;
-  CRingScalerItem* state_item = 0;
-  while (it!=itend && pItem0!=0) {
-
-    state_item = static_cast<CRingScalerItem*>(pItem0);
+  while (it!=itend && pItem) {
 
     // pass the first item to the filter and get the filtered item 
-    pItem1 = (*it)->handleScalerItem(state_item);
-
-    // if the filter returned a different object than it was given
-    // delete the one it was given 
-    if (pItem1 != pItem0 && pItem0!=item) {
-      delete pItem0;
-    }
-  
-    // Update the pointer
-    pItem0 = pItem1;
+    pItem = (*it)->handleScalerItem(pItem);
 
     // increment to the next filter
     ++it;
   }
-  return pItem0;
+  return pItem;
 }
 
 /**! Handle text items
 
-   See handleRingItem(const CRingItem*) documentation above. The exact same thing
-   is done except that handleTextItem(const CTextItem*) is 
+   See handleRingItem(CRingItemPtr) documentation above. The exact same thing
+   is done except that handleTextItem(CTextItemPtr) is
    called.
 */
-CRingItem* CCompositeFilter::handleTextItem(CRingTextItem* item)
+CRingTextItemPtr CCompositeFilter::handleTextItem(CRingTextItemPtr pItem)
 {
   iterator it = begin(); 
   iterator itend = end(); 
 
-  // Initialize some pointers to keep track of returned objects
-  CRingItem* pItem0=item;
-  CRingItem* pItem1=pItem0;
-  CRingTextItem* state_item = 0;
-  while (it!=itend && pItem0!=0) {
-
-    state_item = static_cast<CRingTextItem*>(pItem0);
+  while (it!=itend && pItem) {
 
     // pass the first item to the filter and get the filtered item 
-    pItem1 = (*it)->handleTextItem(state_item);
-
-    // if the filter returned a different object than it was given
-    // delete the one it was given 
-    if (pItem1 != pItem0 && pItem0!=item) {
-      delete pItem0;
-    }
-  
-    // Update the pointer
-    pItem0 = pItem1;
+    pItem = (*it)->handleTextItem(pItem);
 
     // increment to the next filter
     ++it;
   }
-  return pItem0;
+  return pItem;
 }
 
 /**! Handle physics event items
 
-   See handleRingItem(const CRingItem*) documentation above. The exact same thing
-   is done except that handlePhysicsEventItem(const CPhysicsEventItem*) is 
+   See handleRingItem(CRingItemPtr) documentation above. The exact same thing
+   is done except that handlePhysicsEventItem(const CPhysicsEventItemPtr) is
    called.
 */
-CRingItem* CCompositeFilter::handlePhysicsEventItem(CPhysicsEventItem* item)
+CPhysicsEventItemPtr CCompositeFilter::handlePhysicsEventItem(CPhysicsEventItemPtr pItem)
 {
   iterator it = begin(); 
   iterator itend = end(); 
 
-  // Initialize some pointers to keep track of returned objects
-  CRingItem* pItem0=item;
-  CRingItem* pItem1=pItem0;
-  CPhysicsEventItem* state_item = 0;
-  while (it!=itend && pItem0!=0) {
-
-    state_item = static_cast<CPhysicsEventItem*>(pItem0);
+  while (it!=itend && pItem) {
 
     // pass the first item to the filter and get the filtered item 
-    pItem1 = (*it)->handlePhysicsEventItem(state_item);
-
-    // if the filter returned a different object than it was given
-    // delete the one it was given 
-    if (pItem1 != pItem0 && pItem0!=item) {
-      delete pItem0;
-    }
+    pItem = (*it)->handlePhysicsEventItem(pItem);
   
-    // Update the pointer
-    pItem0 = pItem1;
-
     // increment to the next filter
     ++it;
   }
-  return pItem0;
+  return pItem;
 }
 
 /**! Handle physics event items
 
-   See handleRingItem(const CRingItem*) documentation above. The exact same thing
-   is done except that handlePhysicsEventCountItem(const CRingPhysicsEventCountItem*) is 
+   See handleRingItem(CRingItemPtr) documentation above. The exact same thing
+   is done except that handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr) is
    called.
 */
-CRingItem* CCompositeFilter::handlePhysicsEventCountItem(CRingPhysicsEventCountItem* item)
+CRingPhysicsEventCountItemPtr CCompositeFilter::handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr pItem)
 {
   iterator it = begin(); 
   iterator itend = end(); 
 
-  // Initialize some pointers to keep track of returned objects
-  CRingItem* pItem0=item;
-  CRingItem* pItem1=pItem0;
-  CRingPhysicsEventCountItem* state_item = 0;
-  while (it!=itend && pItem0!=0) {
-
-    state_item = static_cast<CRingPhysicsEventCountItem*>(pItem0);
+  while (it!=itend && pItem) {
 
     // pass the first item to the filter and get the filtered item 
-    pItem1 = (*it)->handlePhysicsEventCountItem(state_item);
-
-    // if the filter returned a different object than it was given
-    // delete the one it was given 
-    if (pItem1 != pItem0 && pItem0!=item) {
-      delete pItem0;
-    }
+    pItem = (*it)->handlePhysicsEventCountItem(pItem);
   
-    // Update the pointer
-    pItem0 = pItem1;
-
     // increment to the next filter
     ++it;
   }
-  return pItem0;
+  return pItem;
 }
-
-/**! Handle physics event items
-
-   See handleRingItem(const CRingItem*) documentation above. The exact same thing
-   is done except that handleFragmentItem(const CFragmentItem*) is 
-   called.
-*/
-CRingItem* CCompositeFilter::handleFragmentItem(CRingFragmentItem* item)
-{
-  iterator it = begin(); 
-  iterator itend = end(); 
-
-  // Initialize some pointers to keep track of returned objects
-  CRingItem* pItem0=item;
-  CRingItem* pItem1=pItem0;
-  CRingFragmentItem* state_item = 0;
-  while (it!=itend && pItem0!=0) {
-
-    state_item = static_cast<CRingFragmentItem*>(pItem0);
-
-    // pass the first item to the filter and get the filtered item 
-    pItem1 = (*it)->handleFragmentItem(state_item);
-
-    // if the filter returned a different object than it was given
-    // delete the one it was given 
-    if (pItem1 != pItem0 && pItem0!=item) {
-      delete pItem0;
-    }
-  
-    // Update the pointer
-    pItem0 = pItem1;
-
-    // increment to the next filter
-    ++it;
-  }
-  return pItem0;
-}
-
 
 /**! Handle abnormal end items
 
-   See handleRingItem(const CRingItem*) documentation above. The exact same thing
-   is done except that handleAbnormalEndItem(CAbnormalEndItem*) is
+   See handleRingItem(CRingItemPtr) documentation above. The exact same thing
+   is done except that handleAbnormalEndItem(CAbnormalEndItemPtr) is
    called.
 */
-CRingItem* CCompositeFilter::handleAbnormalEndItem(CAbnormalEndItem* item)
+CAbnormalEndItemPtr CCompositeFilter::handleAbnormalEndItem(CAbnormalEndItemPtr pItem)
 {
   iterator it = begin();
   iterator itend = end();
 
-  // Initialize some pointers to keep track of returned objects
-  CRingItem* pItem0=item;
-  CRingItem* pItem1=pItem0;
-  CAbnormalEndItem* state_item = 0;
-  while (it!=itend && pItem0!=0) {
+  while (it!=itend && pItem) {
 
-    state_item = static_cast<CAbnormalEndItem*>(pItem0);
-
-    // pass the first item to the filter and get the filtered item
-    pItem1 = (*it)->handleAbnormalEndItem(state_item);
-
-    // if the filter returned a different object than it was given
-    // delete the one it was given
-    if (pItem1 != pItem0 && pItem0!=item) {
-      delete pItem0;
-    }
-
-    // Update the pointer
-    pItem0 = pItem1;
+    // pass the first item to the filter and get the filtered ite
+      pItem = (*it)->handleAbnormalEndItem(pItem);
 
     // increment to the next filter
     ++it;
   }
-  return pItem0;
+  return pItem;
 }
 
 
 /**! Handle evb glom parameters items
 
-   See handleRingItem(const CRingItem*) documentation above. The exact same thing
-   is done except that handleGlomParameters(CGlomParameters*) is
+   See handleRingItem(CRingItemPtr) documentation above. The exact same thing
+   is done except that handleGlomParameters(CGlomParametersPtr) is
    called.
 */
-CRingItem* CCompositeFilter::handleGlomParameters(CGlomParameters* item)
+CGlomParametersPtr CCompositeFilter::handleGlomParameters(CGlomParametersPtr pItem)
 {
   iterator it = begin();
   iterator itend = end();
 
-  // Initialize some pointers to keep track of returned objects
-  CRingItem* pItem0=item;
-  CRingItem* pItem1=pItem0;
-  CGlomParameters* state_item = 0;
-  while (it!=itend && pItem0!=0) {
-
-    state_item = static_cast<CGlomParameters*>(pItem0);
+  while (it!=itend && pItem) {
 
     // pass the first item to the filter and get the filtered item
-    pItem1 = (*it)->handleGlomParameters(state_item);
-
-    // if the filter returned a different object than it was given
-    // delete the one it was given
-    if (pItem1 != pItem0 && pItem0!=item) {
-      delete pItem0;
-    }
-
-    // Update the pointer
-    pItem0 = pItem1;
+    pItem = (*it)->handleGlomParameters(pItem);
 
     // increment to the next filter
     ++it;
   }
-  return pItem0;
+  return pItem;
 }
 
 
+
+/**! Handle composite items
+
+   See handleRingItem(CRingItemPtr) documentation above. The exact same thing
+   is done except that handleCompositeItem(CCompositeRingItemPtr) is
+   called.
+*/
+CCompositeRingItemPtr CCompositeFilter::handleCompositeItem(CCompositeRingItemPtr pItem)
+{
+  iterator it = begin();
+  iterator itend = end();
+
+  while (it!=itend && pItem) {
+
+    // pass the first item to the filter and get the filtered item
+    pItem = (*it)->handleCompositeItem(pItem);
+
+    // increment to the next filter
+    ++it;
+  }
+  return pItem;
+}
 
 /**! Handle data format items
 
-   See handleRingItem(const CRingItem*) documentation above. The exact same thing
-   is done except that handleDataFormatItem(CDataFormatItem*) is
+   See handleRingItem(CRingItemPtr) documentation above. The exact same thing
+   is done except that handleDataFormatItem(CDataFormatItemPtr) is
    called.
 */
-CRingItem* CCompositeFilter::handleDataFormatItem(CDataFormatItem* item)
+CDataFormatItemPtr CCompositeFilter::handleDataFormatItem(CDataFormatItemPtr pItem)
 {
   iterator it = begin();
   iterator itend = end();
 
-  // Initialize some pointers to keep track of returned objects
-  CRingItem* pItem0=item;
-  CRingItem* pItem1=pItem0;
-  CDataFormatItem* state_item = 0;
-  while (it!=itend && pItem0!=0) {
-
-    state_item = static_cast<CDataFormatItem*>(pItem0);
+  while (it!=itend && pItem) {
 
     // pass the first item to the filter and get the filtered item
-    pItem1 = (*it)->handleDataFormatItem(state_item);
-
-    // if the filter returned a different object than it was given
-    // delete the one it was given
-    if (pItem1 != pItem0 && pItem0!=item) {
-      delete pItem0;
-    }
-
-    // Update the pointer
-    pItem0 = pItem1;
+    pItem = (*it)->handleDataFormatItem(pItem);
 
     // increment to the next filter
     ++it;
   }
-  return pItem0;
+  return pItem;
 }
+
 
 
 /**! Initialization hook to run before any data is processed
@@ -520,6 +373,6 @@ void CCompositeFilter::finalize()
   }
 }
 
-} // end V11
+} // end V12
 } // end DAQ
 

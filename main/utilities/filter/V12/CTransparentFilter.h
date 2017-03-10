@@ -17,18 +17,19 @@
 
 
 
-#ifndef DAQ_V11_CTRANSPARENTFILTER_H
-#define DAQ_V11_CTRANSPARENTFILTER_H
+#ifndef DAQ_V12_CTRANSPARENTFILTER_H
+#define DAQ_V12_CTRANSPARENTFILTER_H
 
-#include <V11/CFilter.h>
+#include <V12/CFilter.h>
+#include <make_unique.h>
 
 
 namespace DAQ {
-namespace V11 {
+namespace V12 {
 
 class CTransparentFilter;
 using CTransparentFilterUPtr = std::unique_ptr<CTransparentFilter>;
-using CTransparentFilterPtr = std::shared_ptr<CTransparentFilter>;
+using CTransparentFilterPtr  = std::shared_ptr<CTransparentFilter>;
 
 
 /**! \class CTransparentFilter
@@ -41,12 +42,12 @@ class CTransparentFilter : public CFilter
 {
   public:
     // Virtual constructor
-    virtual CTransparentFilter* clone() const { return new CTransparentFilter(*this);} 
+    virtual CFilterUPtr clone() const { return DAQ::make_unique<CTransparentFilter>(*this);}
   
 };
 
 
-} // end V11
+} // end V12
 } // end DAQ
 
 #endif

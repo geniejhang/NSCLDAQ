@@ -63,3 +63,5 @@ unittests_CPPFLAGS= -I@top_srcdir@/utilities/filter \
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 
 unittests_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"
+
+TESTS = unittests

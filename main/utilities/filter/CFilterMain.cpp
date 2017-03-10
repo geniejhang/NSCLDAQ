@@ -57,7 +57,7 @@ CFilterMain::CFilterMain(int argc, char** argv)
 
       m_pMediator.reset(new CFilterMediator);
 
-      CCompositePredicatePtr pPred(new CCompositePredicate);
+      auto pPred = std::make_shared<CCompositePredicate>();
 
 //     if (m_argsInfo->oneshot_given) {
 //      m_mediator = new COneShotMediator(0,new CCompositeFilter,0,
@@ -75,7 +75,7 @@ CFilterMain::CFilterMain(int argc, char** argv)
     m_pMediator->setDataSink(std::move(pSink));
 
 
-    std::shared_ptr<CProcessCountPredicate> pProcessPred(new CProcessCountPredicate);
+    auto pProcessPred = std::make_shared<CProcessCountPredicate>();
     // set up the skip and count args
     if (m_argsInfo->skip_given) {
         pProcessPred->setNumberToSkip(m_argsInfo->skip_arg);
@@ -85,7 +85,7 @@ CFilterMain::CFilterMain(int argc, char** argv)
     }
 
     pPred->addPredicate(pProcessPred);
-
+    m_pMediator->setPredicate(pPred);
 
   } catch (CException& exc) {
     std::cerr << exc.ReasonText() << std::endl;

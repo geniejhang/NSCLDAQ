@@ -1,9 +1,9 @@
-#ifndef DAQ_V11_CFILTERABSTRACTION_H
-#define DAQ_V11_CFILTERABSTRACTION_H
+#ifndef DAQ_V12_CFILTERABSTRACTION_H
+#define DAQ_V12_CFILTERABSTRACTION_H
 
 #include <CFilterVersionAbstraction.h>
-#include <V11/CRingItem.h>
-#include <V11/CCompositeFilter.h>
+#include <V12/CRawRingItem.h>
+#include <V12/CCompositeFilter.h>
 
 #include <CSimpleAllButPredicate.h>
 
@@ -14,7 +14,7 @@ namespace DAQ {
 class CDataSource;
 class CDataSink;
 
-namespace V11 {
+namespace V12 {
 
 class CFilter;
 class CFilterAbstraction;
@@ -24,9 +24,9 @@ using CFilterAbstractionPtr = std::shared_ptr<CFilterAbstraction>;
 
 class CFilterAbstraction : public CFilterVersionAbstraction {
 private:
-    CRingItem               m_item;
-    CRingItem*              m_pInputItem;
-    CRingItem*              m_pOutputItem;
+    CRawRingItem            m_item;
+    CRingItemPtr            m_pInputItem;
+    CRingItemPtr            m_pOutputItem;
     CCompositeFilterPtr     m_pFilter;
     CSimpleAllButPredicate  m_predicate;
 
@@ -50,11 +50,11 @@ public:
 
     void registerFilter(CFilterPtr pFilter);
     CFilterPtr getFilter() const;
-    CRingItem* dispatch(CRingItem &item);
+    CRingItemPtr dispatch(CRingItemPtr item);
 };
 
 
-} // end V11
+} // end V12
 } // end DAQ
 
 #endif // CV11VERSIONFILTERABSTRACTION_H

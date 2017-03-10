@@ -20,15 +20,12 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <V11/CRingItem.h>
-#include <V11/CPhysicsEventItem.h>
-#include <V11/CAbnormalEndItem.h>
+#include <V12/CRingItem.h>
+#include <V12/CRawRingItem.h>
+#include <V12/CPhysicsEventItem.h>
+#include <V12/CAbnormalEndItem.h>
 
-#define private public
-#define protected public
-#include "V11/CAbnormalEndRunFilterHandler.h"
-#undef private
-#undef protected 
+#include "V12/CAbnormalEndRunFilterHandler.h"
 
 #include <CFileDataSink.h>
 
@@ -40,7 +37,7 @@ using namespace DAQ;
 class CAbnormalEndRunFilterHandlerTest : public CppUnit::TestFixture
 {
   private:
-    V11::CFilter* m_filter;
+    V12::CFilter* m_filter;
     CDataSink* m_sink;
 
   public:
@@ -71,7 +68,7 @@ CAbnormalEndRunFilterHandlerTest::CAbnormalEndRunFilterHandlerTest()
 void CAbnormalEndRunFilterHandlerTest::setUp()
 {
   m_sink = new CFileDataSink("test.txt");
-  m_filter = new V11::CAbnormalEndRunFilterHandler(*m_sink);
+  m_filter = new V12::CAbnormalEndRunFilterHandler(*m_sink);
 }
 
 void CAbnormalEndRunFilterHandlerTest::tearDown()
@@ -89,41 +86,31 @@ void CAbnormalEndRunFilterHandlerTest::tearDown()
 // Create some generic item type to force testing of handleRingItem()
 void CAbnormalEndRunFilterHandlerTest::testGenericItem()
 {
-  auto item = new V11::CRingItem(1000);
+  V12::CRingItemPtr item(new V12::CRawRingItem());
+  item->setType(1000);
 
-  V11::CRingItem* new_item;
+  V12::CRingItemPtr new_item;
 
   // make sure this works fine for all other items
   CPPUNIT_ASSERT_NO_THROW( new_item = m_filter->handleRingItem(item));
   CPPUNIT_ASSERT( item == new_item );
-  if (item != new_item) delete new_item;
-  delete item;
 
   // make sure this throws when the item gets sent downstream
-  std::unique_ptr<V11::CAbnormalEndItem> abnEnd(new V11::CAbnormalEndItem());
+  V12::CAbnormalEndItemPtr abnEnd(new V12::CAbnormalEndItem());
 
-  CPPUNIT_ASSERT_THROW( new_item = m_filter->handleAbnormalEndItem(abnEnd.get()),
+  CPPUNIT_ASSERT_THROW( new_item = m_filter->handleAbnormalEndItem(abnEnd),
                         std::runtime_error );
 }
 
-
 void CAbnormalEndRunFilterHandlerTest::testOtherItem()
 {
-  auto item = new V11::CRingItem(1000);
+  V12::CRingItemPtr item(new V12::CRawRingItem);
+  item->setType(1000);
 
-  V11::CRingItem* new_item;
+  V12::CRingItemPtr new_item;
 
   // make sure this works fine for all other items
   CPPUNIT_ASSERT_NO_THROW( new_item = m_filter->handleRingItem(item));
   CPPUNIT_ASSERT( item == new_item );
-  if (item != new_item) delete new_item;
-  delete item;
-
-  // make sure this throws when the item gets sent downstream
-  std::unique_ptr<V11::CRingItem> abnEnd(new V11::CRingItem(V11::ABNORMAL_ENDRUN));
-
-  // this is awful but it is basically what happens in the CCompositeFilter.
-  CPPUNIT_ASSERT_THROW( new_item = m_filter->handlePhysicsEventItem(static_cast<V11::CPhysicsEventItem*>(abnEnd.get())),
-      std::runtime_error );
 }
 

@@ -1,79 +1,73 @@
 
-#include <V11/CAbnormalEndRunFilterHandler.h>
-#include <V11/CRingItem.h>
-#include <V11/DataFormatV11.h>
+#include <V12/CAbnormalEndRunFilterHandler.h>
+#include <V12/CRingItem.h>
+#include <V12/DataFormat.h>
 
 #include <CDataSink.h>
-#include <RingIOV11.h>
+#include <RingIOV12.h>
+
+#include <make_unique.h>
 
 #include <stdexcept>
 
 namespace DAQ {
-namespace V11 {
+namespace V12 {
 
 CAbnormalEndRunFilterHandler::CAbnormalEndRunFilterHandler(const CAbnormalEndRunFilterHandler& rhs) 
   : m_sink(rhs.m_sink)
 {}
 
-// All of the functionality of the other are in the handleRingItem.
-CRingItem* 
-CAbnormalEndRunFilterHandler::handleRingItem(CRingItem *pItem) {
-
-    if (pItem->type() == ABNORMAL_ENDRUN) {
-        writeItem(m_sink, *pItem);
-
-        throw std::runtime_error("Found an abnormal end run item. Shutting down!");
-    }
-
-    return pItem;
+CFilterUPtr CAbnormalEndRunFilterHandler::clone() const {
+  return DAQ::make_unique<CAbnormalEndRunFilterHandler>(*this);
 }
 
-
-CRingItem* CAbnormalEndRunFilterHandler::handleAbnormalEndItem(CAbnormalEndItem* pItem)
+CAbnormalEndItemPtr
+CAbnormalEndRunFilterHandler::handleAbnormalEndItem(CAbnormalEndItemPtr pItem)
 {
-    return handleRingItem(pItem);
+    return handleAnyRingItem(pItem);
 }
 
-CRingItem* CAbnormalEndRunFilterHandler::handleDataFormatItem(CDataFormatItem *pItem)
+CDataFormatItemPtr CAbnormalEndRunFilterHandler::handleDataFormatItem(CDataFormatItemPtr pItem)
 {
-    return handleRingItem(pItem);
+    return handleAnyRingItem(pItem);
 }
 
-CRingItem* CAbnormalEndRunFilterHandler::handleFragmentItem(CRingFragmentItem *pItem)
+CGlomParametersPtr CAbnormalEndRunFilterHandler::handleGlomParameters(CGlomParametersPtr pItem)
 {
-    return handleRingItem(pItem);
+    return handleAnyRingItem(pItem);
 }
 
-CRingItem* CAbnormalEndRunFilterHandler::handleGlomParameters(CGlomParameters *pItem)
+CRingPhysicsEventCountItemPtr
+CAbnormalEndRunFilterHandler::handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr pItem)
 {
-    return handleRingItem(pItem);
+    return handleAnyRingItem(pItem);
 }
 
-CRingItem* CAbnormalEndRunFilterHandler::handlePhysicsEventCountItem(CRingPhysicsEventCountItem *pItem)
+CPhysicsEventItemPtr CAbnormalEndRunFilterHandler::handlePhysicsEventItem(CPhysicsEventItemPtr pItem)
 {
-    return handleRingItem(pItem);
+    return handleAnyRingItem(pItem);
 }
 
-CRingItem* CAbnormalEndRunFilterHandler::handlePhysicsEventItem(CPhysicsEventItem *pItem)
+CRingScalerItemPtr CAbnormalEndRunFilterHandler::handleScalerItem(CRingScalerItemPtr pItem)
 {
-    return handleRingItem(pItem);
+    return handleAnyRingItem(pItem);
 }
 
-CRingItem* CAbnormalEndRunFilterHandler::handleScalerItem(CRingScalerItem *pItem)
+CRingStateChangeItemPtr CAbnormalEndRunFilterHandler::handleStateChangeItem(CRingStateChangeItemPtr pItem)
 {
-    return handleRingItem(pItem);
+    return handleAnyRingItem(pItem);
 }
 
-CRingItem* CAbnormalEndRunFilterHandler::handleStateChangeItem(CRingStateChangeItem *pItem)
+CRingTextItemPtr CAbnormalEndRunFilterHandler::handleTextItem(CRingTextItemPtr pItem)
 {
-    return handleRingItem(pItem);
+    return handleAnyRingItem(pItem);
 }
 
-CRingItem* CAbnormalEndRunFilterHandler::handleTextItem(CRingTextItem *pItem)
+CCompositeRingItemPtr CAbnormalEndRunFilterHandler::handleCompositeItem(CCompositeRingItemPtr pItem)
 {
-    return handleRingItem(pItem);
+    return handleAnyRingItem(pItem);
 }
 
 
-} // end V11
+} // end V12
 } // end DAQ

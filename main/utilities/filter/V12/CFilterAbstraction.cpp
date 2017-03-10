@@ -1,28 +1,27 @@
-#include <V11/CFilterAbstraction.h>
+#include <V12/CFilterAbstraction.h>
 
-#include <V11/CRingItemFactory.h>
-#include <V11/CRingItem.h>
-#include <V11/CRingScalerItem.h>
-#include <V11/CRingStateChangeItem.h>
-#include <V11/CRingTextItem.h>
-#include <V11/CPhysicsEventItem.h>
-#include <V11/CRingFragmentItem.h>
-#include <V11/CRingPhysicsEventCountItem.h>
-#include <V11/StringsToIntegers.h>
-#include <V11/DataFormatV11.h>
+#include <V12/CRingItemFactory.h>
+#include <V12/CRingItem.h>
+#include <V12/CRingScalerItem.h>
+#include <V12/CRingStateChangeItem.h>
+#include <V12/CRingTextItem.h>
+#include <V12/CPhysicsEventItem.h>
+#include <V12/CRingPhysicsEventCountItem.h>
+#include <V12/StringsToIntegers.h>
+#include <V12/DataFormat.h>
 
-#include <RingIOV11.h>
+#include <RingIOV12.h>
 
 #include <sstream>
 #include <stdexcept>
 
 namespace DAQ {
-namespace V11 {
+namespace V12 {
 
 /////////////////////////////////////////////////////////////////
 
 CFilterAbstraction::CFilterAbstraction()
-    : m_item(UNDEFINED),
+    : m_item(),
       m_pInputItem(nullptr),
       m_pOutputItem(nullptr),
       m_pFilter(new CCompositeFilter),
@@ -31,23 +30,17 @@ CFilterAbstraction::CFilterAbstraction()
 
 CFilterAbstraction::~CFilterAbstraction()
 {
-    if (m_pOutputItem != m_pInputItem) {
-        // this is legal if m_pOutputItem == nullptr
-        delete m_pOutputItem;
-    }
-
-    delete m_pInputItem;
 }
 
 void CFilterAbstraction::readDatum(CDataSource &source)
 {
-    readItemIf(source, *m_pInputItem, m_predicate);
+    readItemIf(source, m_item, m_predicate);
 }
 
 void CFilterAbstraction::processDatum()
 {
     m_pInputItem  = CRingItemFactory::createRingItem(m_item);
-    m_pOutputItem = dispatch(*m_pInputItem);
+    m_pOutputItem = dispatch(m_pInputItem);
 }
 
 
@@ -69,12 +62,8 @@ uint32_t CFilterAbstraction::getDatumType() const
 
 void CFilterAbstraction::cleanUp()
 {
-    if (m_pOutputItem != m_pInputItem) {
-        delete m_pOutputItem;
-        m_pOutputItem = nullptr;
-    }
-
-    m_pInputItem->setType(V11::UNDEFINED);
+    m_pInputItem.reset();
+    m_pOutputItem.reset();
 }
 
 
@@ -114,69 +103,63 @@ void CFilterAbstraction::setSampleList(const std::string &sampleList)
 }
 
 
-CRingItem*
-CFilterAbstraction::dispatch(CRingItem &item)
+CRingItemPtr
+CFilterAbstraction::dispatch(CRingItemPtr pItem)
 {
     if (!m_pFilter) {
-        throw std::runtime_error("V11::CFilterAbstraction::dispatch() User must provide a filter prior to dispatching");
+        throw std::runtime_error("V12::CFilterAbstraction::dispatch() User must provide a filter prior to dispatching");
     }
 
     // initial pointer to filtered item
-  CRingItem* pFilteredItem = &item;
+  CRingItemPtr pFilteredItem = pItem;
 
-  switch(item.type()) {
+  switch(pItem->type()) {
 
     // State change items
     case BEGIN_RUN:
     case END_RUN:
     case PAUSE_RUN:
     case RESUME_RUN:
-      pFilteredItem = m_pFilter->handleStateChangeItem(static_cast<CRingStateChangeItem*>(&item));
+      pFilteredItem = m_pFilter->handleStateChangeItem(std::static_pointer_cast<CRingStateChangeItem>(pItem));
       break;
 
       // Documentation items
     case PACKET_TYPES:
     case MONITORED_VARIABLES:
-      pFilteredItem = m_pFilter->handleTextItem(static_cast<CRingTextItem*>(&item));
+      pFilteredItem = m_pFilter->handleTextItem(std::static_pointer_cast<CRingTextItem>(pItem));
       break;
 
       // Scaler items
     case PERIODIC_SCALERS:
-      pFilteredItem = m_pFilter->handleScalerItem(static_cast<CRingScalerItem*>(&item));
+      pFilteredItem = m_pFilter->handleScalerItem(std::static_pointer_cast<CRingScalerItem>(pItem));
       break;
 
       // Physics event item
     case PHYSICS_EVENT:
-      pFilteredItem = m_pFilter->handlePhysicsEventItem(static_cast<CPhysicsEventItem*>(&item));
+      pFilteredItem = m_pFilter->handlePhysicsEventItem(std::static_pointer_cast<CPhysicsEventItem>(pItem));
       break;
 
       // Physics event count
     case PHYSICS_EVENT_COUNT:
-      pFilteredItem = m_pFilter->handlePhysicsEventCountItem(static_cast<CRingPhysicsEventCountItem*>(&item));
-      break;
-
-      // Event builder fragment handlers
-    case EVB_FRAGMENT:
-    case EVB_UNKNOWN_PAYLOAD:
-      pFilteredItem = m_pFilter->handleFragmentItem(static_cast<CRingFragmentItem*>(&item));
+      pFilteredItem = m_pFilter->handlePhysicsEventCountItem(std::static_pointer_cast<CRingPhysicsEventCountItem>(pItem));
       break;
 
   case ABNORMAL_ENDRUN:
-      pFilteredItem = m_pFilter->handleAbnormalEndItem(static_cast<CAbnormalEndItem*>(&item));
+      pFilteredItem = m_pFilter->handleAbnormalEndItem(std::static_pointer_cast<CAbnormalEndItem>(pItem));
       break;
 
   case RING_FORMAT:
-      pFilteredItem = m_pFilter->handleDataFormatItem(static_cast<CDataFormatItem*>(&item));
+      pFilteredItem = m_pFilter->handleDataFormatItem(std::static_pointer_cast<CDataFormatItem>(pItem));
       break;
 
   case EVB_GLOM_INFO:
-      pFilteredItem = m_pFilter->handleGlomParameters(static_cast<CGlomParameters*>(&item));
+      pFilteredItem = m_pFilter->handleGlomParameters(std::static_pointer_cast<CGlomParameters>(pItem));
       break;
 
       // Handle any other generic ring item...this can be
       // the hook for handling user-defined items
     default:
-      pFilteredItem = m_pFilter->handleRingItem(&item);
+      pFilteredItem = m_pFilter->handleRingItem(pItem);
       break;
   }
 
@@ -194,5 +177,5 @@ CFilterPtr CFilterAbstraction::getFilter() const
 }
 
 
-} // end V11
+} // end V12
 } // end DAQ

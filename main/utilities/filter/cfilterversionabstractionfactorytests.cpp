@@ -22,6 +22,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <Asserts.h>
 
 #include "CFilterVersionAbstractionFactory.h"
+#include <make_unique.h>
 
 namespace DAQ {
 class CDataSource;
@@ -52,8 +53,8 @@ public:
 class CFakeVersionAbstractionCreator : public DAQ::CFilterVersionAbstractionCreator
 {
 public:
-    CFilterVersionAbstractionUPtr create() const {
-        return CFilterVersionAbstractionUPtr(new CFakeVersionAbstraction);
+    DAQ::CFilterVersionAbstractionUPtr create() const {
+        return DAQ::make_unique<CFakeVersionAbstraction>();
     }
 };
 
@@ -80,7 +81,7 @@ public:
 
     void addGetCreator_0()
     {
-        CFilterVersionAbstractionCreatorPtr pCreator;
+        CFilterVersionAbstractionCreatorPtr pCreator(new CFakeVersionAbstractionCreator);
         CFilterVersionAbstractionFactory factory;
 
         factory.addCreator(100, pCreator);
@@ -105,7 +106,7 @@ public:
 
     void create_0()
     {
-        CFakeVersionAbstractionCreatorPtr pCreator;
+        CFakeVersionAbstractionCreatorPtr pCreator(new CFakeVersionAbstractionCreator);
         CFilterVersionAbstractionFactory factory;
 
         factory.addCreator(100, pCreator);

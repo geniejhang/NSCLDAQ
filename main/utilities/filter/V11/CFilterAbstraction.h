@@ -20,7 +20,7 @@ class CFilter;
 class CFilterAbstraction;
 
 using CFilterAbstractionUPtr = std::unique_ptr<CFilterAbstraction>;
-using CFilterAbstractionPtr = std::shared_ptr<CFilterAbstraction>;
+using CFilterAbstractionPtr  = std::shared_ptr<CFilterAbstraction>;
 
 class CFilterAbstraction : public CFilterVersionAbstraction {
 private:
@@ -57,4 +57,4 @@ public:
 } // end V11
 } // end DAQ
 
-#endif // CV11VERSIONFILTERABSTRACTION_H
+#endif // DAQ_V11_CFILTERABSTRACTION_H

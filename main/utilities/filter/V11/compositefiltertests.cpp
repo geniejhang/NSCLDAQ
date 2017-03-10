@@ -465,9 +465,10 @@ void CCompositeFilterTest::testTestGenericItem()
 
 void CCompositeFilterTest::testInitialize0()
 {
-  CTestFilterPtr f(new CTestFilter);
-  m_pCompositeTest->registerFilter(f);
-  m_pCompositeTest->registerFilter(f);
+  auto  f1 = std::make_shared<CTestFilter>();
+  auto  f2 = std::make_shared<CTestFilter>();
+  m_pCompositeTest->registerFilter(f1);
+  m_pCompositeTest->registerFilter(f2);
 
   m_pCompositeTest->initialize();
   CCompositeFilter::iterator it = m_pCompositeTest->begin();
@@ -482,9 +483,10 @@ void CCompositeFilterTest::testInitialize0()
 
 void CCompositeFilterTest::testFinalize0()
 {
-  CTestFilterPtr f(new CTestFilter);
-  m_pCompositeTest->registerFilter(f);
-  m_pCompositeTest->registerFilter(f);
+  auto  f1 = std::make_shared<CTestFilter>();
+  auto  f2 = std::make_shared<CTestFilter>();
+  m_pCompositeTest->registerFilter(f1);
+  m_pCompositeTest->registerFilter(f2);
 
   m_pCompositeTest->finalize();
   CCompositeFilter::iterator it = m_pCompositeTest->begin();

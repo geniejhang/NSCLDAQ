@@ -17,21 +17,21 @@
 
 
 
-#ifndef DAQ_V11_CCOMPOSITEFILTER_H
-#define DAQ_V11_CCOMPOSITEFILTER_H
+#ifndef DAQ_V12_CCOMPOSITEFILTER_H
+#define DAQ_V12_CCOMPOSITEFILTER_H
 
-#include <V11/CFilter.h>
+#include <V12/CFilter.h>
 
 #include <vector> 
 #include <memory>
 
 namespace DAQ {
-namespace V11 {
+namespace V12 {
 
 
 class CCompositeFilter;
 using CCompositeFilterUPtr = std::unique_ptr<CCompositeFilter>;
-using CCompositeFilterPtr = std::shared_ptr<CCompositeFilter>;
+using CCompositeFilterPtr  = std::shared_ptr<CCompositeFilter>;
 
 class CCompositeFilter : public CFilter
 {
@@ -54,21 +54,21 @@ class CCompositeFilter : public CFilter
     void registerFilter(CFilterPtr filter);
 
     // Virtual copy constructor 
-    CCompositeFilter* clone() const;
+    CFilterUPtr clone() const;
 
     virtual ~CCompositeFilter();
 
     // Handlers
-    virtual CRingItem* handleRingItem(CRingItem* item);
-    virtual CRingItem* handleStateChangeItem(CRingStateChangeItem* item);
-    virtual CRingItem* handleScalerItem(CRingScalerItem* item);
-    virtual CRingItem* handleTextItem(CRingTextItem* item);
-    virtual CRingItem* handlePhysicsEventItem(CPhysicsEventItem* item);
-    virtual CRingItem* handlePhysicsEventCountItem(CRingPhysicsEventCountItem* item);
-    virtual CRingItem* handleFragmentItem(CRingFragmentItem* item);
-    virtual CRingItem *handleAbnormalEndItem(CAbnormalEndItem *pItem);
-    virtual CRingItem *handleDataFormatItem(CDataFormatItem *pItem);
-    virtual CRingItem *handleGlomParameters(CGlomParameters *pItem);
+    virtual CRingItemPtr handleRingItem(CRingItemPtr item);
+    virtual CRingStateChangeItemPtr handleStateChangeItem(CRingStateChangeItemPtr item);
+    virtual CRingScalerItemPtr handleScalerItem(CRingScalerItemPtr item);
+    virtual CRingTextItemPtr handleTextItem(CRingTextItemPtr item);
+    virtual CPhysicsEventItemPtr handlePhysicsEventItem(CPhysicsEventItemPtr item);
+    virtual CRingPhysicsEventCountItemPtr handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr item);
+    virtual CAbnormalEndItemPtr handleAbnormalEndItem(CAbnormalEndItemPtr pItem);
+    virtual CDataFormatItemPtr handleDataFormatItem(CDataFormatItemPtr pItem);
+    virtual CGlomParametersPtr handleGlomParameters(CGlomParametersPtr pItem);
+    virtual CCompositeRingItemPtr handleCompositeItem(CCompositeRingItemPtr pItem);
 
     // Startup
     virtual void initialize();
@@ -90,7 +90,7 @@ class CCompositeFilter : public CFilter
 
 
 
-} // end V11
+} // end V12
 } // end DAQ
 
 #endif

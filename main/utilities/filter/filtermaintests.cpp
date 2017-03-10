@@ -21,6 +21,7 @@ static const char *Copyright =
 #include <Asserts.h>
 
 #include <CRingBuffer.h>
+#include <make_unique.h>
 
 #include "CFilter.h"
 #include "CFatalException.h"
@@ -38,6 +39,7 @@ static const char *Copyright =
 #include <fstream>
 #include <vector>
 #include <string>
+#include <thread>
 
 using namespace std;
 using namespace DAQ;
@@ -147,14 +149,14 @@ void CFilterMainTest::testCountTransmitted() {
 //}
 //
 void CFilterMainTest::testMultiProducersOnRingIsFatal() {
-  CRingBuffer *ring = 0;
+  std::unique_ptr<CRingBuffer> pRing = 0;
   std::string rname = "test";
   if (CRingBuffer::isRing(rname)) {
-    ring = new CRingBuffer(rname, CRingBuffer::producer);
+    pRing = DAQ::make_unique<CRingBuffer>(rname, CRingBuffer::producer);
   } else {
-    ring = CRingBuffer::createAndProduce(rname);
+    pRing.reset(CRingBuffer::createAndProduce(rname));
   }
-  CPPUNIT_ASSERT(ring != 0);
+  CPPUNIT_ASSERT(pRing);
 
   int argc = 2;
   std::string rsink = "--sink=ring://localhost/";
@@ -163,6 +165,14 @@ void CFilterMainTest::testMultiProducersOnRingIsFatal() {
 
   // fork this to make a new process
 
+//  auto childOps = [argc, argv]() {
+//      std::cout << "child thread" << std::endl;
+//      CPPUNIT_ASSERT_THROW(CFilterMain app(argc, const_cast<char **>(argv)),
+//                           CFatalException);
+//  };
+
+//  std::thread child(childOps);
+//  child.join();
   pid_t pid = fork();
   // if the pid is 0 then it is the child
   if (!pid) {
@@ -182,7 +192,6 @@ void CFilterMainTest::testMultiProducersOnRingIsFatal() {
       alarm(0);
       kill(pid, SIGTERM);
     }
-    delete ring;
   }
 }
 
