@@ -15,8 +15,8 @@
 */
 
 #include "C10p0to8p0Mediator.h"
-#include <V8/DataFormatV8.h>
-#include <V10/DataFormatV10.h>
+#include <V8/DataFormat.h>
+#include <V10/DataFormat.h>
 #include <V8/format_cast.h>
 #include <V10/CRingItem.h>
 #include <RingIOV10.h>

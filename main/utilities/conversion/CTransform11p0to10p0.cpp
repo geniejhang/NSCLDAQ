@@ -32,7 +32,7 @@
 #include <V10/CUnknownFragment.h>
 #include <V11/CUnknownFragment.h>
 #include <V10/CVoidItem.h>
-#include <V10/DataFormatV10.h>
+#include <V10/DataFormat.h>
 #include <V11/DataFormatV11.h>
 
 #include <stdexcept>

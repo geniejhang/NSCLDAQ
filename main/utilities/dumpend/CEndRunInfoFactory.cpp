@@ -24,7 +24,7 @@
 #include "CEndRunInfo12.h"
 #include "CEndRunInfo11.h"
 #include "CEndRunInfo10.h"
-#include <V10/DataFormatV10.h>
+#include <V10/DataFormat.h>
 #include <V11/DataFormatV11.h>
 
 #include <V12/DataFormat.h>

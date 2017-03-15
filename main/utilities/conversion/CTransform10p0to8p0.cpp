@@ -15,7 +15,7 @@
 */
 
 #include "CTransform10p0to8p0.h"
-#include <V10/DataFormatV10.h>
+#include <V10/DataFormat.h>
 #include <V10/CRingItem.h>
 #include <V8/CRawBuffer.h>
 #include <V10/CRingScalerItem.h>
