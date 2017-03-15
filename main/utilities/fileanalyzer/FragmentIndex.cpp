@@ -1,13 +1,16 @@
 
 #include "FragmentIndex.h"
-#include <fragment.h> 
-#include <DataFormat.h>
+#include <fragment.h>
+#include <V11/DataFormat.h>
+
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
 #include <iterator>
 #include <algorithm>
 
+namespace DAQ {
+namespace V11 {
 
 FragmentIndex::FragmentIndex()
   : m_frags()
@@ -105,3 +108,6 @@ size_t FragmentIndex::computeWordsToNextFragment(uint16_t* data) //This gives th
 
 }
 
+
+} // end V11
+} // end DAQ

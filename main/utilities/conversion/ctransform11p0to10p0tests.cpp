@@ -44,7 +44,7 @@
 #include <V11/CDataFormatItem.h>
 
 #include <V10/DataFormat.h>
-#include <V11/DataFormatV11.h>
+#include <V11/DataFormat.h>
 
 #define private public
 #define protected public

@@ -28,7 +28,7 @@
 #include <V11/CRingFragmentItem.h>
 #include <V11/CUnknownFragment.h>
 #include <V11/CDataFormatItem.h>
-#include <V11/DataFormatV11.h>
+#include <V11/DataFormat.h>
 
 #include <CTransform11p0to11p0.h>
 

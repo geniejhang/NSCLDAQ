@@ -1,7 +1,7 @@
 
 #include <V11/CAbnormalEndRunFilterHandler.h>
 #include <V11/CRingItem.h>
-#include <V11/DataFormatV11.h>
+#include <V11/DataFormat.h>
 
 #include <CDataSink.h>
 #include <RingIOV11.h>

@@ -3,7 +3,7 @@
 #define CSOURCECOUNTERFILTER_H
 
 #include <V11/CFilter.h>
-#include <V11/DataFormatV11.h>
+#include <V11/DataFormat.h>
 #include <V11/CRingItem.h>
 #include <V11/CRingStateChangeItem.h>
 #include <V11/CPhysicsEventItem.h>

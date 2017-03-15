@@ -9,7 +9,7 @@
 #include <V11/CRingFragmentItem.h>
 #include <V11/CRingPhysicsEventCountItem.h>
 #include <V11/StringsToIntegers.h>
-#include <V11/DataFormatV11.h>
+#include <V11/DataFormat.h>
 
 #include <RingIOV11.h>
 

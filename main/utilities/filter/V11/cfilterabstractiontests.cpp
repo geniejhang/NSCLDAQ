@@ -33,7 +33,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <V11/CAbnormalEndItem.h>
 #include <V11/CGlomParameters.h>
 #include <V11/CDataFormatItem.h>
-#include <V11/DataFormatV11.h>
+#include <V11/DataFormat.h>
 
 #include <V11/CTestFilter.h>
 
