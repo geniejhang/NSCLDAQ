@@ -3,11 +3,12 @@ bin_PROGRAMS = FileAnalyzer
 
 FileAnalyzer_SOURCES = FileAnalyzer.cpp CSourceCounterFilter.cpp CSourceCounterFilter.h FragmentIndex.cpp FragmentIndex.h
 FileAnalyzer_CXXFLAGS = -I@top_srcdir@/utilities/filter \
+                        -I@top_srcdir@/utilities/filter/core \
 												-I@top_srcdir@/daq/format \
 												-I@top_srcdir@/daq/eventbuilder \
 												@LIBTCLPLUS_CFLAGS@
 
-FileAnalyzer_LDADD = @top_builddir@/utilities/filter/libfilter.la \
+FileAnalyzer_LDADD = @top_builddir@/utilities/filter/core/libfilter.la \
                     @top_builddir@/utilities/filter/V11/libfilterv11.la \
                                                                                  @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
                                                                                  @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \

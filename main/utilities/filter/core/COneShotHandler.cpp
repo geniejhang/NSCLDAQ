@@ -1,27 +1,35 @@
 
 #include <COneShotHandler.h>
-#include <CRingStateChangeItem.h>
-#include <DataFormat.h>
 #include <COneShotException.h>
 #include <ErrnoException.h>
 #include <limits>
 #include <sstream>
 #include <iostream>
 
+
+namespace DAQ {
+
 static uint32_t defaultRunNumber = std::numeric_limits<uint32_t>::max();
 
-COneShotHandler::COneShotHandler(unsigned int ntrans)
+COneShotHandler::COneShotHandler(int ntrans, uint32_t beginType,
+                                 uint32_t endType, const std::vector<uint32_t>& types)
   : m_nExpectedSources(ntrans),
   m_stateCounts(),
   m_cachedRunNo(defaultRunNumber),
-  m_complete(false)
+  m_complete(false),
+  m_beginType(beginType),
+  m_endType(endType)
 {
-  m_stateCounts[BEGIN_RUN] = 0;
-  m_stateCounts[END_RUN] = 0;
-  m_stateCounts[PAUSE_RUN] = 0;
-  m_stateCounts[RESUME_RUN] = 0;
+    for (auto type : types) {
+        m_stateCounts[type] = 0;
+    }
 }
 
+
+void COneShotHandler::setExpectedTransitions(int transitions)
+{
+    m_nExpectedSources = transitions;
+}
 
 /**! Process a new item
 *
@@ -32,49 +40,42 @@ COneShotHandler::COneShotHandler(unsigned int ntrans)
 * 
 * @throws CErrnoException when run number changes unexpectedly
 */
-void COneShotHandler::update(CRingItem* pItem)
+void COneShotHandler::update(uint32_t type, uint32_t runNumber)
 {
-  if (pItem==nullptr) {
-    throw COneShotException("COneShotHandler::update(CRingStateChangeItem*)",
-                            "Null pointer passed as argument.");
-  }
-  uint32_t type = pItem->type();
 
   // if we have already reached our limit, throw
   if (m_complete) {
-    throw COneShotException("COneShotHandler::update(CRingStateChangeItem*)",
+    throw COneShotException("COneShotHandler::update(uint32_t,uint32_t)",
                             "Unexpected, extra state change item");
   }
 
   if (validType(type)) {
-    updateState(static_cast<CRingStateChangeItem*>(pItem));
+    updateState(type, runNumber);
   }
 }
 
-void COneShotHandler::updateState(CRingStateChangeItem* pItem)
+void COneShotHandler::updateState(uint32_t type, uint32_t run)
 {
   // Check that the run number hasn't changed unexpectedly
-  uint32_t run = pItem->getRunNumber();
-  if (run != m_cachedRunNo  &&  m_cachedRunNo != defaultRunNumber) {
-    throw COneShotException("COneShotHandler::update(CRingStateChangeItem*)",
+  if (run != m_cachedRunNo && m_cachedRunNo != defaultRunNumber) {
+    throw COneShotException("COneShotHandler::updateState(uint32_t, uint32_t)",
         "More begin runs detected than expected");
   }
 
   // Only do something if we understand the state change
-  uint32_t type = pItem->type();
-  if (type==BEGIN_RUN) {
+  if (type==m_beginType) {
     if (waitingForBegin()) {
       // Handle the first begin run specially
-      initialize(pItem);
+      initialize(run);
 
       ++m_stateCounts[type];
 
-    } else if (getCount(BEGIN_RUN) >= m_nExpectedSources) {
+    } else if (getCount(m_beginType) >= m_nExpectedSources) {
       // Handle if there are too many BEGIN_RUNS 
       std::ostringstream errmsg;
       errmsg << "Too many begin runs observed. Expecting only " 
         << m_nExpectedSources;
-      throw COneShotException("COneShotHandler::update(CRingStateChangeItem*)",
+      throw COneShotException("COneShotHandler::updateState(uint32_t, uint32_t)",
           errmsg.str());
 
     }
@@ -84,15 +85,15 @@ void COneShotHandler::updateState(CRingStateChangeItem* pItem)
     }
   }
 
-  m_complete = (getCount(END_RUN)==m_nExpectedSources);
+  m_complete = (getCount(m_endType)==m_nExpectedSources);
 }
 
-void COneShotHandler::initialize(CRingStateChangeItem* pItem)
+void COneShotHandler::initialize(uint32_t runNumber)
 {
   // Set the run number
-  m_cachedRunNo = pItem->getRunNumber();
+  m_cachedRunNo = runNumber;
   
-  // Reset the counters 
+  // Reset the counters
   clearCounts();
 
 }
@@ -112,7 +113,7 @@ void COneShotHandler::reset()
 
 bool COneShotHandler::waitingForBegin() const
 {
-  return (getCount(BEGIN_RUN)==0);
+  return (getCount(m_beginType)==0);
 }
 
 /**! Get the number of state change items already seen
@@ -170,3 +171,6 @@ void COneShotHandler::clearCounts()
     ++it;
   }
 }
+
+
+} // end DAQ

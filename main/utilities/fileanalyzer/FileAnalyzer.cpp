@@ -136,8 +136,8 @@ int main(int argc, char* argv[])
 
     auto cmdLineOpts = parserResult.second;
     // Construct filter(s) here.
-    std::shared_ptr<V11::CSourceCounterFilter> pSrcCounter(
-                new V11::CSourceCounterFilter(numeric_limits<uint32_t>::max(), cmdLineOpts.s_outputFile));
+    auto pSrcCounter = std::make_shared<V11::CSourceCounterFilter>(numeric_limits<uint32_t>::max(),
+                                                                    cmdLineOpts.s_outputFile);
     pSrcCounter->setBuiltData(cmdLineOpts.s_built);
 
     pVersion->registerFilter(pSrcCounter);

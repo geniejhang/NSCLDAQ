@@ -78,6 +78,15 @@ void CFilterAbstraction::finalize()
     m_pFilter->finalize();
 }
 
+void CFilterAbstraction::setFilterMediator(CFilterMediator &mediator)
+{
+    m_pMediator = &mediator;
+}
+
+CFilterMediator* CFilterAbstraction::getFilterMediator()
+{
+    return m_pMediator;
+}
 
 void CFilterAbstraction::setExcludeList(const std::string &excludeList)
 {

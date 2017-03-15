@@ -13,7 +13,7 @@ using CFilterVersionAbstractionPtr = std::shared_ptr<CFilterVersionAbstraction>;
 
 class CFilterMediator;
 using CFilterMediatorUPtr = std::unique_ptr<CFilterMediator>;
-using CFilterMediatorPtr = std::shared_ptr<CFilterMediator>;
+using CFilterMediatorPtr  = std::shared_ptr<CFilterMediator>;
 
 ///////////////////////////////////////////////////////////////////////
 /// \brief The CFilterMediator class
@@ -23,6 +23,7 @@ class CFilterMediator : public CPredicatedMediator
 private:
     CCompositePredicatePtr       m_pPredicate;
     CFilterVersionAbstractionPtr m_pVsnAbstraction;
+    bool                         m_abort;
 
 public:
     CFilterMediator(CDataSourcePtr pSource = nullptr,
@@ -39,6 +40,8 @@ public:
     void setExcludeList(const std::string& excludeList);
     void setSampleList(const std::string& sampleList);
 
+    void setAbort();
+    bool getAbort() const { return m_abort; }
 };
 
 

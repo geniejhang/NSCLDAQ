@@ -13,6 +13,7 @@ namespace DAQ {
 
 class CDataSource;
 class CDataSink;
+class CFilterMediator;
 
 namespace V12 {
 
@@ -23,12 +24,14 @@ using CFilterAbstractionUPtr = std::unique_ptr<CFilterAbstraction>;
 using CFilterAbstractionPtr = std::shared_ptr<CFilterAbstraction>;
 
 class CFilterAbstraction : public CFilterVersionAbstraction {
+
 private:
     CRawRingItem            m_item;
     CRingItemPtr            m_pInputItem;
     CRingItemPtr            m_pOutputItem;
     CCompositeFilterPtr     m_pFilter;
     CSimpleAllButPredicate  m_predicate;
+    CFilterMediator*        m_pMediator;
 
 public:
     CFilterAbstraction();
@@ -47,6 +50,9 @@ public:
 
     virtual void setExcludeList(const std::string& excludeList);
     virtual void setSampleList(const std::string& sampleList);
+
+    virtual void setFilterMediator(CFilterMediator& mediator);
+    virtual CFilterMediator* getFilterMediator();
 
     void registerFilter(CFilterPtr pFilter);
     CFilterPtr getFilter() const;

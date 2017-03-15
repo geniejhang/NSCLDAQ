@@ -4,7 +4,7 @@
 namespace DAQ {
 
 CFilterMediator::CFilterMediator(CDataSourcePtr pSource, CDataSinkPtr pSink)
-    : CPredicatedMediator(pSource, pSink)
+    : CPredicatedMediator(pSource, pSink), m_abort(false)
 {
 }
 
@@ -56,12 +56,15 @@ void CFilterMediator::mainLoop()
         }
 
         m_pVsnAbstraction->cleanUp();
+
+        if (m_abort) break;
     }
 
 }
 
 void CFilterMediator::initialize()
 {
+    m_abort = false;
   m_pVsnAbstraction->initialize();
 }
 
@@ -84,6 +87,7 @@ void CFilterMediator::setPredicate(CPredicatePtr pPredicate)
 void CFilterMediator::setVersionAbstraction(CFilterVersionAbstractionPtr pAbstraction)
 {
     m_pVsnAbstraction = pAbstraction;
+    m_pVsnAbstraction->setFilterMediator(*this);
 }
 
 
@@ -96,6 +100,10 @@ void CFilterMediator::setExcludeList(const std::string &excludeList)
 void CFilterMediator::setSampleList(const std::string &sampleList)
 {
     m_pVsnAbstraction->setSampleList(sampleList);
+}
+
+void CFilterMediator::setAbort() {
+    m_abort = true;
 }
 
 } // end DAQ

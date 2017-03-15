@@ -13,6 +13,7 @@ namespace DAQ {
 
 class CDataSource;
 class CDataSink;
+class CFilterMediator;
 
 namespace V11 {
 
@@ -29,6 +30,7 @@ private:
     CRingItem*              m_pOutputItem;
     CCompositeFilterPtr     m_pFilter;
     CSimpleAllButPredicate  m_predicate;
+    CFilterMediator*        m_pMediator;
 
 public:
     CFilterAbstraction();
@@ -44,6 +46,8 @@ public:
 
     virtual void initialize();
     virtual void finalize();
+    virtual void setFilterMediator(CFilterMediator& mediator);
+    virtual CFilterMediator* getFilterMediator();
 
     virtual void setExcludeList(const std::string& excludeList);
     virtual void setSampleList(const std::string& sampleList);

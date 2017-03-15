@@ -458,11 +458,13 @@ AC_CONFIG_FILES([Makefile
 		 utilities/sclclient/Makefile
 		 utilities/tkbufdump/Makefile
 		 utilities/filter/Makefile
-		 utilities/filter/Makefile-template
-		 utilities/filter/FilterIncludes
+                 utilities/filter/core/Makefile
                  utilities/filter/V10/Makefile
                  utilities/filter/V11/Makefile
                  utilities/filter/V12/Makefile
+                 utilities/filter/filterkit/Makefile
+                 utilities/filter/filterkit/Makefile-template
+                 utilities/filter/filterkit/FilterIncludes
                  utilities/conversion/Makefile
     		utilities/fileanalyzer/Makefile
     		utilities/IO/Makefile

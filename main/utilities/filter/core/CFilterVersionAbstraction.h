@@ -1,8 +1,6 @@
 #ifndef DAQ_CFILTERVERSIONABSTRACTION_H
 #define DAQ_CFILTERVERSIONABSTRACTION_H
 
-#include <CGenericFilter.h>
-
 #include <memory>
 #include <cstdint>
 
@@ -10,6 +8,7 @@ namespace DAQ {
 
 class CDataSource;
 class CDataSink;
+class CFilterMediator;
 
 class CFilterVersionAbstraction;
 using CFilterVersionAbstractionUPtr = std::unique_ptr<CFilterVersionAbstraction>;
@@ -29,6 +28,9 @@ public:
 
     virtual void initialize() = 0;
     virtual void finalize() = 0;
+
+    virtual void setFilterMediator(CFilterMediator& mediator) = 0;
+    virtual CFilterMediator* getFilterMediator() = 0;
 };
 
 

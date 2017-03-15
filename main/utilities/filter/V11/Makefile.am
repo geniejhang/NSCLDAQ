@@ -8,22 +8,25 @@ nscldaq11_HEADERS = CFilter.h \
                     CTransparentFilter.h \
                     CNullFilter.h \
                     CFilterAbstraction.h \
-										CAbnormalEndRunFilterHandler.h 
+                CAbnormalEndRunFilterHandler.h  \
+                COneShotLogicFilter.h
 
 
 
 libfilterv11_la_SOURCES = CCompositeFilter.cpp \
                             CFilterAbstraction.cpp \
-														CAbnormalEndRunFilterHandler.cpp
+                        CAbnormalEndRunFilterHandler.cpp \
+                        COneShotLogicFilter.cpp
 
 libfilterv11_la_CPPFLAGS = -I@srcdir@/.. \
+                            -I@top_srcdir@/utilities/filter/core \
                             -I@top_srcdir@/utilities/IO \
                             -I@top_srcdir@/utilities/nscldaq-format/format \
                             -I@top_srcdir@/utilities/nscldaq-format/FormattedIO
 
 
 libfilterv11_la_LIBADD = @top_builddir@/utilities/IO/libdaqio.la \
-                            @top_builddir@/utilities/IO/libdaqio.la \
+                            @top_builddir@/utilities/filter/core/libfilter.la \
                             @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
                             @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la
 
@@ -37,6 +40,7 @@ unittests_SOURCES	= TestRunner.cpp  \
                                                 transparentfiltertests.cpp \
                                                 cfilterabstractiontests.cpp \
                                                 abnormalendrunfiltertests.cpp \
+                                                coneshotlogicfiltertests.cpp \
                                                 CTestFilter.h \
                                                 CTestFilter.cpp
 
@@ -44,6 +48,7 @@ unittests_SOURCES	= TestRunner.cpp  \
 unittests_LDADD		= \
                         @builddir@/libfilterv11.la	\
                         @top_builddir@/utilities/IO/libdaqio.la \
+                        @top_builddir@/utilities/filter/core/libfilter.la \
                         @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
                         @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
                         $(CPPUNIT_LDFLAGS) 		\

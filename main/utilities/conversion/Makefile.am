@@ -29,7 +29,7 @@ include_HEADERS = CTransformMediator.h \
 
 libConversion_la_CXXFLAGS = -I@srcdir@ \
                             -I@top_srcdir@/utilities/nscldaq-format/format \
-                            -I@top_srcdir@/utilities/filter \
+                            -I@top_srcdir@/utilities/filter/core \
                             -I@top_srcdir@/utilities/IO \
                             -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                             -I@top_srcdir@/utilities/nscldaq-format/Buffer \
@@ -39,7 +39,7 @@ libConversion_la_CXXFLAGS = -I@srcdir@ \
 libConversion_la_LIBADD = @top_builddir@/utilities/nscldaq-format/format/V8/libdataformatv8.la \
 			  @top_builddir@/utilities/nscldaq-format/format/V10/libdataformatv10.la \
 			  @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
-			  @top_builddir@/utilities/filter/libfilter.la \
+                          @top_builddir@/utilities/filter/core/libfilter.la \
 			  @top_builddir@/utilities/IO/libdaqio.la \
 			  @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
 			  @LIBTCLPLUS_LDFLAGS@
@@ -63,13 +63,13 @@ unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 		   @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la	\
                    @top_builddir@/utilities/IO/libdaqio.la	\
                    @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la	\
-                   @top_builddir@/utilities/filter/libfilter.la	\
+                   @top_builddir@/utilities/filter/core/libfilter.la	\
                    @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la	\
                    @LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS= -I@srcdir@ \
                     -I@top_srcdir@/utilities/nscldaq-format/Buffer \
-                    -I@top_srcdir@/utilities/filter \
+                    -I@top_srcdir@/utilities/filter/core \
                     -I@top_srcdir@/utilities/IO \
                     -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                     -I@top_srcdir@/utilities/nscldaq-format/format \
@@ -103,13 +103,13 @@ format_converter_LDADD = @builddir@/libConversion.la \
 	       @top_builddir@/utilities/nscldaq-format/format/V8/libdataformatv8.la \
 	       @top_builddir@/utilities/nscldaq-format/format/V10/libdataformatv10.la \
 	       @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
-	       @top_builddir@/utilities/filter/libfilter.la \
+               @top_builddir@/utilities/filter/core/libfilter.la \
 	       @top_builddir@/utilities/IO/libdaqio.la \
 	       @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la
 
 format_converter_CPPFLAGS = -I@srcdir@ \
                     -I@top_srcdir@/utilities/nscldaq-format/Buffer \
-		    -I@top_srcdir@/utilities/filter \
+                    -I@top_srcdir@/utilities/filter/core \
 		    -I@top_srcdir@/utilities/IO \
 		    -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
 		    -I@top_srcdir@/utilities/nscldaq-format/format \

@@ -27,6 +27,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 namespace DAQ {
 class CDataSource;
 class CDataSink;
+class CFilterMediator;
 }
 
 using namespace DAQ;
@@ -48,6 +49,8 @@ public:
 
     void setExcludeList(const std::string&) {}
     void setSampleList(const std::string&) {}
+    void setFilterMediator(CFilterMediator &mediator) {}
+    CFilterMediator* getFilterMediator() { return nullptr; }
 };
 
 class CFakeVersionAbstractionCreator : public DAQ::CFilterVersionAbstractionCreator
