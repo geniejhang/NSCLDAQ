@@ -1,5 +1,6 @@
 #-------------------- Filter Kit
-EXTRA_DIST = filterargs.ggo SkeletonMain.cpp CTemplateFilter.cpp \
+EXTRA_DIST = filterargs.ggo SkeletonMain.cpp CTemplateFilter.h \
+            CTemplateFilter.cpp \
              Makefile-template.in FilterIncludes.in
 
 
@@ -8,6 +9,7 @@ noinst_PROGRAMS = testapp
 
 testapp_SOURCES = TestApp.cpp
 testapp_CPPFLAGS= -I@top_srcdir@/utilities \
+                    -I@top_srcdir@/utilities/filter \
                     -I@top_srcdir@/utilities/nscldaq-format/format \
                     -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                     -I@top_srcdir@/utilities/nscldaq-format/Buffer \
@@ -15,9 +17,9 @@ testapp_CPPFLAGS= -I@top_srcdir@/utilities \
                     -I@top_srcdir@/base/dataflow \
                     @LIBTCLPLUS_CFLAGS@
 
-testapp_LDADD = -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
-                        @top_builddir@/utilities/filter/core/libfilter.la	\
+testapp_LDADD = @top_builddir@/utilities/filter/core/libfilter.la	\
                         @top_builddir@/utilities/filter/V11/libfilterv11.la	\
+                        @top_builddir@/utilities/filter/V12/libfilterv12.la	\
                         @top_builddir@/utilities/IO/libdaqio.la \
                         @top_builddir@/base/dataflow/libDataFlow.la 	\
                         @top_builddir@/base/uri/liburl.la 	\
@@ -34,6 +36,7 @@ install-data-local:
 	$(mkinstalldirs) @prefix@/filterkit
 	$(INSTALL_DATA) FilterIncludes \
 		@srcdir@/CTemplateFilter.cpp \
+		@srcdir@/CTemplateFilter.h \
 		@srcdir@/SkeletonMain.cpp @prefix@/filterkit
 	$(INSTALL_DATA) Makefile-template @prefix@/filterkit/Makefile
 

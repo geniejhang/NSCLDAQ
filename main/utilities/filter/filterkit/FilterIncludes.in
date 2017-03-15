@@ -8,11 +8,15 @@ TCL_LDFLAGS=@TCL_LDFLAGS@
 
 # Compilation flags:
 
-CXXFLAGS = -g -fPIC -I. -I$(MAININCLUDES) -I$(INCLUDES)   $(TCL_FLAGS) @THREADCXX_FLAGS@ @LIBTCLPLUS_CFLAGS@
+CXXFLAGS =-std=c++11 -g -fPIC -I. -I$(MAININCLUDES) -I$(INCLUDES)   $(TCL_FLAGS) @THREADCXX_FLAGS@ @LIBTCLPLUS_CFLAGS@
 CCFLAGS=$(CXXFLAGS)
 
 LDFLAGS = $(LIBDIR)/libdaqshm.so	\
-	$(LIBDIR)/libdataformat.so	\
+        $(LIBDIR)/libdataformatv11.so	\
+        $(LIBDIR)/libdataformatv12.so	\
+        $(LIBDIR)/libbuffer.so \
+        $(LIBDIR)/libfilterv11.so \
+        $(LIBDIR)/libfilterv12.so \
 	$(LIBDIR)/liburl.so	\
 	$(LIBDIR)/libfilter.so	\
 	@LIBEXCEPTION_LDFLAGS@ \

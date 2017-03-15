@@ -14,20 +14,27 @@
 	     East Lansing, MI 48824-1321
 */
 
-#include <iostream>
-#include <CFatalException.h>
-#include <CFilterMain.h>
 
 #include "CTemplateFilter.cpp"
 
-/// The main function
-/**! main function
-  Creates a CFilterMain object and 
-  executes its operator()() method. 
+#include <CFatalException.h>
+#include <CFilterMain.h>
+#include <V12/CFilterAbstraction.h>
 
-  \return 0 for normal exit, 
-          1 for known fatal error, 
-          2 for unknown fatal error
+#include <iostream>
+#include <memory>
+
+using namespace DAQ;
+
+
+/*! the main function
+ *
+ * Creates a CFilterMain object and
+ * executes its operator()() method.
+ *
+ *  \retval 0 for normal exit,
+ *  \retval 1 for known fatal error,
+ *  \retval 2 for unknown fatal error
 */
 int main(int argc, char* argv[])
 {
@@ -38,16 +45,19 @@ int main(int argc, char* argv[])
     // Create the main
     CFilterMain theApp(argc,argv);
 
-
     // Construct filter(s) here.
-    CTemplateFilter user_filter;
+    V12::CFilterAbstractionPtr pVersion(new V12::CFilterAbstraction);
+
+    std::shared_ptr<CTemplateFilter> pFilter(new CTemplateFilter);
 
     // Register the filter(s) here. Note that if more than
     // one filter will be registered, the order of registration
     // will define the order of execution. If multiple filters are
     // registered, the output of the first filter will become the
     // input of the second filter and so on. 
-    theApp.registerFilter(&user_filter);
+    pVersion->registerFilter(pFilter);
+
+    theApp.setVersionAbstraction(pVersion);
 
     // Run the main loop
     theApp();
