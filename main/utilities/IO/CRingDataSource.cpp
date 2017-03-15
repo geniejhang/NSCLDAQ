@@ -20,7 +20,6 @@
 #include <CRingBuffer.h>
 #include <CAllButPredicate.h>
 #include <URL.h>
-#include <CRingItem.h>
 #include <CRemoteAccess.h>
 
 using std::vector;
@@ -84,21 +83,6 @@ size_t CRingDataSource::tell() const
     return 0;
 }
 
-
-
-/*!
-   Returns the next qualified item from the ring.  The predicate selects the
-   appropriate item.
-   \return CRingItem*
-   \retval pointer to the next item that is returned from the ring. This is dynamically
-          allocated and it's up to the caller to delete it.
-*/
-CRingItem*
-CRingDataSource::getItem()
-{
-  CRingItem* pItem = CRingItem::getFromRing(*m_pRing, *m_pPredicate);
-  return pItem;
-}
 
 void CRingDataSource::read(char* pBuffer, size_t nBytes)
 {

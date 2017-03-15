@@ -16,8 +16,8 @@
 
 
 
-#ifndef CDATASINKFACTORY_H
-#define CDATASINKFACTORY_H
+#ifndef DAQ_CDATASINKFACTORY_H
+#define DAQ_CDATASINKFACTORY_H
 
 #include <string>
 

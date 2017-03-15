@@ -23,7 +23,6 @@ static const char *Copyright =
 #include <CRingBuffer.h>
 #include <make_unique.h>
 
-#include "CFilter.h"
 #include "CFatalException.h"
 
 #include <unistd.h>

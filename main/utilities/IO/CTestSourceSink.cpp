@@ -43,11 +43,6 @@ CTestSourceSink::~CTestSourceSink() {}
 
 
 //
-void CTestSourceSink::putItem(const CRingItem& item)
-{}
-
-
-//
 void
 CTestSourceSink::put(const void* pData, size_t nBytes)
 {

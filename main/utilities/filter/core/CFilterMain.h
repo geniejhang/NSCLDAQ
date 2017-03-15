@@ -20,11 +20,12 @@
 #ifndef DAQ_CFILTERMAIN_H
 #define DAQ_CFILTERMAIN_H
 
-#include <CDataSource.h>
-#include <CDataSink.h>
 #include <CFatalException.h>
 #include <CFilterVersionAbstraction.h>
 #include <CFilterMediator.h>
+
+#include <CDataSource.h>
+#include <CDataSink.h>
 
 #include <memory>
 #include <vector>

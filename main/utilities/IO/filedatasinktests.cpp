@@ -14,18 +14,10 @@
        East Lansing, MI 48824-1321
 */
 
-#include <fstream>
-#include <CPhysicsEventItem.h>
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <ios>
 #include <algorithm>
-#include <CRingStateChangeItem.h>
-#include <CRingItemFactory.h>
-#include <CPhysicsEventItem.h>
-#include <CRingScalerItem.h>
-#include <CFileDataSource.h>
-#include <RingItemComparisons.h>
 #include <fstream>
 #include <string>
 #include <fcntl.h>
@@ -34,28 +26,22 @@
 #include <unistd.h>
 
 #define private public
-
 #include "CFileDataSink.h"
+#undef private
 
 using namespace DAQ;
-
 
 // A test suite 
 class CFileDataSinkTest : public CppUnit::TestFixture
 {
-    private:
-    CPhysicsEventItem m_item;
 
     public:
-    CFileDataSinkTest();
-
     CPPUNIT_TEST_SUITE( CFileDataSinkTest );
 //    CPPUNIT_TEST ( testReadOrThrow );
     CPPUNIT_TEST ( testConstructor1 );
     CPPUNIT_TEST ( testConstructor2 );
     CPPUNIT_TEST ( testConstructor3 );
     CPPUNIT_TEST ( testConstructor4 );
-    CPPUNIT_TEST ( testPutItem );
     CPPUNIT_TEST ( testPut);
     CPPUNIT_TEST ( testPutv);
     CPPUNIT_TEST_SUITE_END();
@@ -69,7 +55,6 @@ class CFileDataSinkTest : public CppUnit::TestFixture
     void testConstructor3();
     void testConstructor4();
 
-    void testPutItem();
     void testPut();
     void testPutv();
 
@@ -80,26 +65,21 @@ class CFileDataSinkTest : public CppUnit::TestFixture
 // Register it with the test factory
 CPPUNIT_TEST_SUITE_REGISTRATION( CFileDataSinkTest );
 
-CFileDataSinkTest::CFileDataSinkTest()
-  : m_item(8192)
-{}
-
-
 void CFileDataSinkTest::setUp()
 {
 
     unlink("./dummy");
     unlink("./testOutFile0.bin");
 
-    // create a ring item and fill it
-    m_item = CPhysicsEventItem();    
-    uint16_t* pCursor = reinterpret_cast<uint16_t*>(m_item.getBodyCursor());
-    for (int i=0; i<10; i++) {
-        *pCursor = i;
-        pCursor++;
-    }
-    m_item.setBodyCursor(pCursor);
-    m_item.updateSize();
+//    // create a ring item and fill it
+//    m_item = CPhysicsEventItem();
+//    uint16_t* pCursor = reinterpret_cast<uint16_t*>(m_item.getBodyCursor());
+//    for (int i=0; i<10; i++) {
+//        *pCursor = i;
+//        pCursor++;
+//    }
+//    m_item.setBodyCursor(pCursor);
+//    m_item.updateSize();
 }
 
 // Kill the temp files:
@@ -182,27 +162,6 @@ void CFileDataSinkTest::testConstructor4()
   CPPUNIT_ASSERT( EBADF == errno );
 }
 
-void CFileDataSinkTest::testPutItem()
-{
-    using namespace std;
-
-    std::string fname = "./testOutFile0.bin";
-    {
-      CFileDataSink sink(fname);
-      sink.putItem(m_item);
-      sink.flush();
-    }
-    
-    std::vector<uint16_t> dummy;
-    URL uri(string("file://") + fname);
-    
-    CFileDataSource source(uri, dummy);
-
-    CRingItem* new_item = source.getItem();
-
-    CPPUNIT_ASSERT( *m_item.getItemPointer() == *new_item->getItemPointer() );
-}
-
 void CFileDataSinkTest::testPut()
 {
     std::string fname="./testOutFile0.bin";
@@ -221,7 +180,6 @@ void CFileDataSinkTest::testPut()
     CPPUNIT_ASSERT_EQUAL(0, strcmp(pData, buffer));
     
     close(fd);
-    
     
 }
 

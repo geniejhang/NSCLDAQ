@@ -18,7 +18,6 @@
 static const char* Copyright = "(C) Copyright Michigan State University 2014, All rights reserved";
 
 #include "CFilterMain.h"
-#include "CCompositeFilter.h"
 #include "CFilterMediator.h"
 #include "CDataSourceFactory.h"
 #include "CDataSinkFactory.h"
@@ -27,6 +26,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <CProcessCountPredicate.h>
 #include "CFatalException.h"
 #include "filterargs.h"
+#include <Exception.h>
 
 #include <string>
 #include <vector>

@@ -14,19 +14,19 @@
        East Lansing, MI 48824-1321
 */
 
-#ifndef CRINGDATASOURCE_H
-#define CRINGDATASOURCE_H
+#ifndef DAQ_CRINGDATASOURCE_H
+#define DAQ_CRINGDATASOURCE_H
 
 #include "CDataSource.h"
+
 #include <vector>
-#include <stdint.h>
+#include <cstdint>
 
 // forward class definitions.
 
 class CRingBuffer;
 class CAllButPredicate;
 class URL;
-class CRingItem;
 
 namespace DAQ {
 
@@ -74,16 +74,6 @@ public:
   size_t availableData() const;
   size_t tell() const;
 
-
-  /*!
-   * \brief DEPRECATED - Read a full ring item from the source
-   *
-   *  This blocks until the complete ring item has arrived.
-   *  Caller receives ownership of object returned.
-   *
-   * \return pointer to object extracted.
-   */
-  virtual CRingItem* getItem();
 
   void read(char* pBuffer, size_t nBytes);
 

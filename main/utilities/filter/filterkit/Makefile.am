@@ -10,11 +10,14 @@ noinst_PROGRAMS = testapp
 testapp_SOURCES = TestApp.cpp
 testapp_CPPFLAGS= -I@top_srcdir@/utilities \
                     -I@top_srcdir@/utilities/filter \
+                    -I@top_srcdir@/utilities/filter/core \
+                    -I@top_srcdir@/utilities/IO \
                     -I@top_srcdir@/utilities/nscldaq-format/format \
                     -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                     -I@top_srcdir@/utilities/nscldaq-format/Buffer \
                     -I@top_srcdir@/base/uri		\
                     -I@top_srcdir@/base/dataflow \
+                    -I@top_srcdir@/base/headers		\
                     @LIBTCLPLUS_CFLAGS@
 
 testapp_LDADD = @top_builddir@/utilities/filter/core/libfilter.la	\

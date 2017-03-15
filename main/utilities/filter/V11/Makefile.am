@@ -55,6 +55,7 @@ unittests_LDADD		= \
                         @LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS= -I@top_srcdir@/utilities/filter \
+                    -I@top_srcdir@/utilities/filter/core \
                     -I@top_srcdir@/utilities/nscldaq-format/format \
                     -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                     -I@top_srcdir@/utilities/nscldaq-format/Buffer \

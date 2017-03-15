@@ -23,7 +23,9 @@ libfilterv12_la_CPPFLAGS = -I@srcdir@/.. \
                             -I@top_srcdir@/utilities/nscldaq-format/format \
                             -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                             -I@top_srcdir@/utilities/nscldaq-format/Buffer \
-                            -I@top_srcdir@/base/headers
+                            -I@top_srcdir@/base/headers \
+                            -I@top_srcdir@/base/sfinae_tools
+
 
 libfilterv12_la_LIBADD = @top_builddir@/utilities/IO/libdaqio.la \
                             @top_builddir@/utilities/filter/core/libfilter.la \

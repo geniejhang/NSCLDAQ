@@ -14,15 +14,13 @@
              East Lansing, MI 48824-1321
 */
 
-#ifndef CDATASINK_H
-#define CDATASINK_H
+#ifndef DAQ_CDATASINK_H
+#define DAQ_CDATASINK_H
 
 #include <stdlib.h>
 #include <vector>
 #include <utility>
 #include <memory>
-
-class CRingItem;
 
 namespace DAQ {
 
@@ -46,14 +44,6 @@ public:
     virtual ~CDataSink();
 
 
-    /*!
-    * DEPRECATED - A method defining how to send ring items to the sink
-    *
-    * Instead of using this method, the user should use the overload of the
-    * insertion operator (operator<<) for CRingItems.
-    */
-    virtual void putItem(const CRingItem& item) =0;
-    
   /*!
      * \brief Write a block of data to the sink
      *

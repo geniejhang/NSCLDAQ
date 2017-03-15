@@ -15,15 +15,12 @@
 */
 
 
-#ifndef CDATASOURCE_H
-#define CDATASOURCE_H
+#ifndef DAQ_CDATASOURCE_H
+#define DAQ_CDATASOURCE_H
 
 #include <cstddef> // for size_T
 #include <memory>
 
-// forward definitions:
-
-class CRingItem;
 
 namespace DAQ {
 
@@ -69,16 +66,6 @@ public:
   virtual void ignore(size_t nBytes) = 0;
   virtual size_t peek(char* pBuffer, size_t nBytes) = 0;
   virtual size_t tell() const = 0;
-
-  /*!
-   * \brief DEPRECATED - Extract complete CRingItem from source
-   *
-   * The operation will block until the complete ring item is received.
-   * The caller receives ownership of the returned object.
-   *
-   * \return a new ring item
-   */
-  virtual CRingItem* getItem() = 0;
 
   /*!
    * \brief Read a block of data from the sink
