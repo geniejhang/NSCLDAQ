@@ -12,8 +12,7 @@
 #include <cstdlib>
 
 
-namespace DAQ {
-namespace V11 {
+namespace EVB {
 
 /**! A convenient, copiable piece formatting of 
 *   a fragment. Similar to a EVB::FlatFragment but
@@ -121,7 +120,6 @@ class FragmentIndex
 };
 
 
-} // end V11
 } // end DAQ
 
 #endif

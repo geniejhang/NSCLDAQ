@@ -51,7 +51,7 @@ CRingItem* CSourceCounterFilter::handlePhysicsEventItem(CPhysicsEventItem* pItem
 {
   if (m_builtData) {
     uint16_t* pBody = reinterpret_cast<uint16_t*>(pItem->getBodyPointer());
-    FragmentIndex index(pBody);
+    EVB::FragmentIndex index(pBody);
     auto iter = index.begin();
     auto iter_end = index.end();
     while (iter != iter_end) {

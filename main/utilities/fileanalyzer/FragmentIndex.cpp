@@ -9,8 +9,7 @@
 #include <iterator>
 #include <algorithm>
 
-namespace DAQ {
-namespace V11 {
+namespace EVB {
 
 FragmentIndex::FragmentIndex()
   : m_frags()
@@ -41,6 +40,8 @@ FragmentIndex::FragmentIndex(uint16_t* data)
 */
 void FragmentIndex::indexFragments(uint16_t* begin, uint16_t* end)
 {
+    using DAQ::V11::RingItemHeader;
+
   if (begin==0) {
     throw std::runtime_error("Null pointer passed as argument, cannot proceed");
   } 
@@ -108,6 +109,4 @@ size_t FragmentIndex::computeWordsToNextFragment(uint16_t* data) //This gives th
 
 }
 
-
-} // end V11
 } // end DAQ
