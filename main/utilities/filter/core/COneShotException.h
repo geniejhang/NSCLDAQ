@@ -1,8 +1,10 @@
 
-#ifndef CONESHOTEXCEPTION_H
-#define CONESHOTEXCEPTION_H
+#ifndef DAQ_CONESHOTEXCEPTION_H
+#define DAQ_CONESHOTEXCEPTION_H
 
 #include <Exception.h>
+
+namespace DAQ {
 
 /**! An exception for OneShotHandler errors
 *
@@ -24,4 +26,5 @@ class COneShotException : public CException
     virtual const char* ReasonText() const;
 };
 
+} // end DAQ
 #endif

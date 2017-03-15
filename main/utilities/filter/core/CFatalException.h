@@ -17,10 +17,14 @@
 
 
 
-#ifndef CFATALEXCEPTION_H
-#define CFATALEXCEPTION_H
+#ifndef DAQ_CFATALEXCEPTION_H
+#define DAQ_CFATALEXCEPTION_H
+
+namespace DAQ {
 
 // Define a fatal exception class
 struct CFatalException {};
+
+}
 
 #endif

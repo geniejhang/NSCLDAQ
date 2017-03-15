@@ -19,22 +19,19 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 
 #include "CFilterMain.h"
 #include "CCompositeFilter.h"
-#include "CMediator.h"
 #include "CFilterMediator.h"
 #include "CDataSourceFactory.h"
 #include "CDataSinkFactory.h"
-#include <string>
-//#include <StringsToIntegers.h>
-
 #include <CPredicate.h>
 #include <CCompositePredicate.h>
 #include <CProcessCountPredicate.h>
+#include "CFatalException.h"
+#include "filterargs.h"
 
+#include <string>
 #include <vector>
 #include <iostream>
 #include <stdlib.h>
-#include "filterargs.h"
-#include "CFatalException.h"
 #include <stdexcept>
 
 using namespace DAQ;

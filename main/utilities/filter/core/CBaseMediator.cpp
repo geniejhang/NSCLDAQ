@@ -23,8 +23,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <CDataSource.h>
 #include <CDataSink.h>
 
-using namespace std;
-using namespace DAQ;
+namespace DAQ {
 
 /**! Constructor
 
@@ -35,7 +34,7 @@ using namespace DAQ;
   \param sink a pointer to a CDataSink
 
 */
-CBaseMediator::CBaseMediator(shared_ptr<CDataSource> pSource, shared_ptr<CDataSink> pSink)
+CBaseMediator::CBaseMediator(CDataSourcePtr pSource, CDataSinkPtr pSink)
 : m_pSource(pSource),
   m_pSink(pSink)
 {}
@@ -52,3 +51,4 @@ CBaseMediator::~CBaseMediator()
 {
 }
 
+} // end DAQ

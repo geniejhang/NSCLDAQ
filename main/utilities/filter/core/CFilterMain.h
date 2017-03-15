@@ -20,6 +20,8 @@
 #ifndef DAQ_CFILTERMAIN_H
 #define DAQ_CFILTERMAIN_H
 
+#include <CDataSource.h>
+#include <CDataSink.h>
 #include <CFatalException.h>
 #include <CFilterVersionAbstraction.h>
 #include <CFilterMediator.h>
@@ -31,9 +33,6 @@
 struct gengetopt_args_info;
 
 namespace DAQ {
-
-class CDataSource;
-class CDataSink;
 
 class CFilterMain
 {
@@ -80,8 +79,8 @@ class CFilterMain
 
   private:
     // Private utility functions 
-    std::unique_ptr<DAQ::CDataSource> constructDataSource();
-    std::unique_ptr<DAQ::CDataSink> constructDataSink();
+    CDataSourceUPtr constructDataSource();
+    CDataSinkUPtr constructDataSink();
 
     std::vector<std::uint16_t> constructExcludesList();
     std::vector<std::uint16_t> constructSampleList();

@@ -1,6 +1,7 @@
 
 #include <COneShotException.h>
 
+namespace DAQ {
 
 COneShotException::COneShotException(std::string reason)
   : CException("OneShot"),
@@ -17,3 +18,5 @@ const char* COneShotException::ReasonText() const
 {
   return m_reason.c_str();
 }
+
+} // end DAQ

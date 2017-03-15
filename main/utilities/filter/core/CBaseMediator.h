@@ -16,23 +16,26 @@
 
 
 
-#ifndef CBASEMEDIATOR_H
-#define CBASEMEDIATOR_H
+#ifndef DAQ_CBASEMEDIATOR_H
+#define DAQ_CBASEMEDIATOR_H
 
-#include <memory>
 #include <CDataSource.h>
 #include <CDataSink.h>
+
+#include <memory>
+
+namespace DAQ {
 
 class CBaseMediator
 {
   protected:
-    std::shared_ptr<DAQ::CDataSource> m_pSource; //!< the source
-    std::shared_ptr<DAQ::CDataSink>   m_pSink; //!< the sink
+    CDataSourcePtr m_pSource; //!< the source
+    CDataSinkPtr   m_pSink; //!< the sink
 
   public:
     // The constructor
-    CBaseMediator(std::shared_ptr<DAQ::CDataSource> pSource = std::shared_ptr<DAQ::CDataSource>(),
-                  std::shared_ptr<DAQ::CDataSink> pSink     = std::shared_ptr<DAQ::CDataSink>());
+    CBaseMediator(CDataSourcePtr pSource = CDataSourcePtr(),
+                  CDataSinkPtr pSink     = CDataSinkPtr());
 
     virtual ~CBaseMediator();
 
@@ -70,8 +73,8 @@ class CBaseMediator
       \param source the new source
 
     */
-    virtual std::shared_ptr<DAQ::CDataSource>
-    setDataSource( std::shared_ptr<DAQ::CDataSource> source)
+    virtual CDataSourcePtr
+    setDataSource( CDataSourcePtr source)
     {
         auto pOld = m_pSource;
         m_pSource = source;
@@ -81,8 +84,8 @@ class CBaseMediator
     /**! Set the sink
       \param sink the new sink
     */
-    virtual std::shared_ptr<DAQ::CDataSink>
-    setDataSink(std::shared_ptr<DAQ::CDataSink> pSink)
+    virtual CDataSinkPtr
+    setDataSink(CDataSinkPtr pSink)
     {
         auto pOld = m_pSink;
         m_pSink = pSink;
@@ -91,12 +94,13 @@ class CBaseMediator
 
     /**! Access to the source 
     */
-    virtual std::shared_ptr<DAQ::CDataSource> getDataSource() { return m_pSource;}
+    virtual CDataSourcePtr getDataSource() { return m_pSource;}
 
     /**! Access to the sink 
     */
-    virtual std::shared_ptr<DAQ::CDataSink> getDataSink() { return m_pSink;}
+    virtual CDataSinkPtr getDataSink() { return m_pSink;}
 
 };
 
+} // end DAQ
 #endif
