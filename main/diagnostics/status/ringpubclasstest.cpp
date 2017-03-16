@@ -49,8 +49,14 @@ private:
 public:
   void setUp() {
     try {
-    killRings();                       // In setup in case we start with rings.
+      killRings();                       // In setup in case we start with rings.
+    } catch (...) {
+      std::cout << "exception while killing rings" << std::endl;
+      throw;
+    }
+
     
+	try {
     // Setup the zmq connections sender is a PUSH and receiver a PULL, and we'll
     // directly receive/analyze raw messages.
     
@@ -61,14 +67,24 @@ public:
     m_pSender->bind(uri);
     m_pReceiver->connect(uri);
     
-    // Now we can set up the publisher
-    
-    m_pPublisher = new CPublishRingStatistics(*m_pSender, "Test Application");
   
     } catch (std::exception exc) {
       std::cout << "caught exception : " << exc.what() << std::endl;
       throw exc;
+    } catch (...) {
+	std::cout << "caught exception while setting up sockets" << std::endl;
+	throw;
     }
+
+    
+    try {
+    // Now we can set up the publisher
+    m_pPublisher = new CPublishRingStatistics(*m_pSender, "Test Application");
+    } catch (...) {
+	std::cout << "exception while publish ring stats" << std::endl;
+	throw;
+    }
+
   }
   void tearDown() {
     try {
@@ -81,6 +97,9 @@ public:
     } catch (std::exception exc) {
       std::cout << "caught exception : " << exc.what() << std::endl;
       throw exc;
+    } catch (...) {
+      std::cout << "caught another exception while tearing down" << std::endl;
+	throw;
     }
   }
 protected:
