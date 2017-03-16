@@ -216,9 +216,9 @@ BufdumpMain::operator()(int argc, char** argv)
   for (int i=0; i < exclude.size(); i++) {
     predicate.addExceptionType(exclude[i]);
   }
-  for (int i=0; i < sample.size(); i++) {
-    predicate.addExceptionType(sample[i]);
-  }
+//  for (int i=0; i < sample.size(); i++) {
+//    predicate.addExceptionType(sample[i]);
+//  }
   CRawRingItem item;
   while (m_skipCount && !pSource->eof()) {
       DAQ::readItemIf(*pSource, item, predicate);
