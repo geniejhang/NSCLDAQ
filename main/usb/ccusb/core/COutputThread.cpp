@@ -527,11 +527,12 @@ COutputThread::scaler(void* pData)
 
   // Create the final scaler item and submit it to the ring.
 
-  if (m_pSclrTimestampExtractor == nullptr) {
-      throw std::runtime_error("Fatal error! User has not provided a scaler timestamp extractor!");
+  uint64_t tstamp = V12::NULL_TIMESTAMP;
+  if (m_pSclrTimestampExtractor) {
+    tstamp = m_pSclrTimestampExtractor(pData);
   }
 
-  V12::CRingScalerItem item(m_pSclrTimestampExtractor(pData),
+  V12::CRingScalerItem item(tstamp,
                                  Globals::sourceId, 
                                  m_elapsedSeconds,
                                  endTime, 
@@ -685,12 +686,13 @@ COutputThread::event(void* pData)
     // Note that if we were given a timestamp extractor we create event
     // with the timestamp otherwise we create it with a null body header.
     
-    if (m_pEvtTimestampExtractor == nullptr) {
-        throw std::runtime_error("Fatal error! User has not provided an event timestamp extractor!");
+    uint64_t tstamp = V12::NULL_TIMESTAMP;
+    if (m_pEvtTimestampExtractor) {
+        tstamp = m_pEvtTimestampExtractor(m_pBuffer);
     }
 
     V12::CPhysicsEventItem item(
-                m_pEvtTimestampExtractor(m_pBuffer),
+                tstamp,
                 Globals::sourceId,
                 Buffer::ByteBuffer(m_pBuffer,
                                    m_pBuffer+m_nWordsInBuffer*sizeof(uint16_t))
