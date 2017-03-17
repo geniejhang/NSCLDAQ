@@ -16,6 +16,7 @@ FileAnalyzer_CXXFLAGS = -I@top_srcdir@/utilities/filter \
                         -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                         -I@top_srcdir@/utilities/nscldaq-format/Buffer \
                         -I@top_srcdir@/daq/eventbuilder \
+                        -I@top_srcdir@/base/headers \
                         @LIBTCLPLUS_CFLAGS@
 
 FileAnalyzer_LDADD = @top_builddir@/utilities/filter/core/libfilter.la \
