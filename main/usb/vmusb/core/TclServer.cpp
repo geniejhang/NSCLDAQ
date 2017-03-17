@@ -30,7 +30,7 @@ using namespace std;
 #include <CCtlConfiguration.h>
 #include <DataBuffer.h>
 #include <CBufferQueue.h>
-#include <DataFormat.h>
+#include <V12/DataFormat.h>
 #include <make_unique.h>
 #include <CControlQueues.h>
 #include <CSystemControl.h>
@@ -624,7 +624,7 @@ TclServer::sendWatchedVariables()
 	  pBuffer->s_bufferType = TYPE_STRINGS;
 	  pStrings              = reinterpret_cast<pStringsBuffer>(pBuffer->s_rawData);
 	  pStrings->s_stringCount = 0;
-	  pStrings->s_ringType    = MONITORED_VARIABLES;
+      pStrings->s_ringType  = V12::MONITORED_VARIABLES;
 	  pDest                 = pStrings->s_strings;
 	}
 	
@@ -660,7 +660,7 @@ TclServer::sendWatchedVariables()
 	    pBuffer->s_bufferType = TYPE_STRINGS;
 	    pStrings              = reinterpret_cast<pStringsBuffer>(pBuffer->s_rawData);
 	    pStrings->s_stringCount = 0;
-	    pStrings->s_ringType    = MONITORED_VARIABLES;
+        pStrings->s_ringType    = V12::MONITORED_VARIABLES;
 	    pDest                 = pStrings->s_strings;
 	    
 	  }
