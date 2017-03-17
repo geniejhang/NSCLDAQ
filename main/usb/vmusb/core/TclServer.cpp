@@ -56,6 +56,8 @@ using namespace std;
 
 #include <vector>
 
+using namespace DAQ;
+
 static const int MonitorInterval(1);   // Number of seconds between monitor interval.
 static const int VarUpdateInterval(1); // Number of seconds between variable update items
 /* Pointer to the single instance in order to support transition from
