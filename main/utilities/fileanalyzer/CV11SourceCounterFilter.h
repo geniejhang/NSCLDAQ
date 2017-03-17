@@ -25,6 +25,17 @@
 namespace DAQ {
 namespace V11 {
 
+/*!
+ * \brief The CSourceCounterFilter class
+ *
+ * The CSourceCounterFilter is responsible for processing a stream of
+ * ring items and keeping track of how many of each item type was observed for
+ * each source id. Built physics events are analyzed one build layer deep. In other
+ * words, the fragments are traversed. The user can stream a textual report to any stream.
+ *
+ * The class is designed to function in a V11 filter program. The finalize
+ * method causes the result file to be written.
+ */
 class CSourceCounterFilter : public DAQ::V11::CFilter
 {
   private:
