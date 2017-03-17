@@ -183,7 +183,7 @@ CModuleCommand::create(CTCLInterpreter& interp,
 
   // Hardware was successfully created, wrap it into a CControlModule and
   // register it with the CCtlConfiguration
-  auto pModule = make_unique(new CControlModule(name,std::move(pHdwr)));
+  auto pModule = DAQ::make_unique<CControlModule>(name,std::move(pHdwr));
 
   m_config.addModule( move(pModule) );
   interp.setResult(name);

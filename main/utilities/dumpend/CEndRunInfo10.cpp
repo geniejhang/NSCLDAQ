@@ -22,7 +22,7 @@
 #include "CEndRunInfo10.h"
 #include <CFileDataSource.h>
 #include "V10/CRingStateChangeItem.h"
-#include "V10/DataFormatV10.h"
+#include "V10/DataFormat.h"
 #include <RingIOV10.h>
 #include <stdexcept>
 #include <fstream>
@@ -191,7 +191,7 @@ void
 CEndRunInfo10::loadEndRuns()
 {
     CFileDataSource source(m_nFd);
-    V10::CRingItem item(V10::VOID);
+    V10::CRingItem item(V10::UNDEFINED);
 
   while (true) {
     readItem(source, item);

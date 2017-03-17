@@ -23,7 +23,9 @@
 #include <memory>
 #include <utility>
 
+namespace DAQ {
 class CBaseMediator;
+}
 
 /*!
  * \brief The Main for format_converter
@@ -38,7 +40,7 @@ class Main
 private:
   cmdLineOpts                       m_argsInfo;
   DAQ::Transform::CTransformFactory m_factory;
-  std::unique_ptr<CBaseMediator>    m_pMediator;
+  std::unique_ptr<DAQ::CBaseMediator>    m_pMediator;
 
 public:
     Main(int argc, char** argv);

@@ -15,8 +15,8 @@
 */
 
 
-#ifndef CFILEDATASOURCE_H
-#define CFILEDATASOURCE_H
+#ifndef DAQ_CFILEDATASOURCE_H
+#define DAQ_CFILEDATASOURCE_H
 
 #include "CDataSource.h"
 
@@ -29,8 +29,6 @@
 // Forward class definitions:
 
 class URL;
-class CRingItem;
-struct _RingItemHeader;
 
 namespace DAQ {
 
@@ -83,8 +81,6 @@ public:
   size_t availableData() const;
   size_t tell() const;
 
-  virtual CRingItem* getItem();
-
   void read(char* pBuffer, size_t nBytes);
 
   void setExclusionList(const std::set<uint16_t>& list);
@@ -93,10 +89,10 @@ public:
 
 private:
   void       openFile(const std::string& fullPath);
-  CRingItem* getItemFromFile();
-  bool       acceptable(CRingItem* item) const;
+//  CRingItem* getItemFromFile();
+//  bool       acceptable(CRingItem* item) const;
   void       openFile();
-  uint32_t   getItemSize(_RingItemHeader& header);
+//  uint32_t   getItemSize(_RingItemHeader& header);
 };
 
 

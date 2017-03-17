@@ -10,8 +10,7 @@ libdaqio_la_SOURCES = CDataSource.cpp \
 											 CFileDataSink.cpp \
 											 CRingDataSink.cpp \
 											 CTestSourceSink.cpp \
-											 CLoggingDataSink.cpp \
-											 CDataSinkFactory.cpp \
+                                                                                         CDataSinkFactory.cpp \
 											 CDataSinkException.cpp
 
 include_HEADERS	=  CDataSource.h \
@@ -22,7 +21,6 @@ include_HEADERS	=  CDataSource.h \
 									 CFileDataSink.h \
 									 CRingDataSink.h \
 									 CTestSourceSink.h \
-									 CLoggingDataSink.h \
 									 CDataSinkFactory.h \
 									 CDataSinkException.h
 

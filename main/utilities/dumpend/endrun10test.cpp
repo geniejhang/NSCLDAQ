@@ -9,7 +9,7 @@
 
 #include "CEndRunInfo10.h"
 
-#include <V10/DataFormatV10.h>
+#include <V10/DataFormat.h>
 #include <V10/CRingStateChangeItem.h>
 
 #include <CFileDataSink.h>

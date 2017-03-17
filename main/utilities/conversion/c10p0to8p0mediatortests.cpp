@@ -21,10 +21,10 @@
 #include <V10/CRingStateChangeItem.h>
 #include <V10/CPhysicsEventItem.h>
 #include <V10/CRingTextItem.h>
-#include <V10/DataFormatV10.h>
+#include <V10/DataFormat.h>
 
 #include <V8/CRawBuffer.h>
-#include <V8/DataFormatV8.h>
+#include <V8/DataFormat.h>
 #include <V8/format_cast.h>
 #include <V8/ChangeBufferSize.h>
 

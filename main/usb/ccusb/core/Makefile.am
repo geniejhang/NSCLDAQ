@@ -61,8 +61,10 @@ libCCUSBCore_la_CPPFLAGS = \
 			-I@top_srcdir@/base/dataflow	\
 			-I@top_srcdir@/base/thread	\
 			-I@top_srcdir@/base/os \
-			-I@top_srcdir@/daq/format	\
-			-I@top_srcdir@/daq/eventbuilder
+                        -I@top_srcdir@/utilities/nscldaq-format/format	\
+                        -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
+                        -I@top_srcdir@/utilities/nscldaq-format/Buffer \
+                        -I@top_srcdir@/utilities/IO
 
 # add -DREPORT_ERRORS to INCLUDES below for verbose
 # error reporting info.
@@ -76,8 +78,11 @@ libCCUSBCore_la_LIBADD	= \
 			@LIBTCLPLUS_LDFLAGS@					\
 			@top_builddir@/base/thread/libdaqthreads.la \
 			@top_builddir@/base/os/libdaqshm.la	\
-			@top_builddir@/daq/format/libdataformat.la	\
-			@TCL_LDFLAGS@ \
-			@THREADLD_FLAGS@
+                        @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\
+                        @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la	\
+                        @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la	\
+                        @top_builddir@/utilities/IO/libdaqio.la	\
+                        @TCL_LDFLAGS@ \
+                        @THREADLD_FLAGS@
 
 

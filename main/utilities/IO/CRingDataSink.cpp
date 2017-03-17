@@ -19,7 +19,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 
 #include <CRingDataSink.h>
 #include <CRingBuffer.h>
-#include <CRingItem.h>
+//#include <CRingItem.h>
 #include <CDataSinkException.h>
 
 namespace DAQ {
@@ -38,16 +38,6 @@ CRingDataSink::~CRingDataSink()
   m_pRing=0;
 }
 
-/**
- * putItem
- *    Puts a ring item in the sink.
- * @param item - Reference to the item top ut.
- */
-void CRingDataSink::putItem(const CRingItem& item)
-{
-  put(item.getItemPointer(), item.size());
-
-}
 /**
  * put
  *   Puts arbitrary data to the sink (ring).

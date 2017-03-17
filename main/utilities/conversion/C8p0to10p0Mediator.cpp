@@ -18,8 +18,8 @@
 #include <V10/CRingItem.h>
 #include <V10/CPhysicsEventItem.h>
 #include <V8/CRawBuffer.h>
-#include <V8/DataFormatV8.h>
-#include <V10/DataFormatV10.h>
+#include <V8/DataFormat.h>
+#include <V10/DataFormat.h>
 #include <CDataSource.h>
 #include <CDataSink.h>
 #include <RingIOV10.h>

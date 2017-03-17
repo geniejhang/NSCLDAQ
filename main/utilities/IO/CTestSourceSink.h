@@ -14,14 +14,12 @@
        East Lansing, MI 48824-1321
 */
 
-#ifndef CTESTSOURCESINK_H
-#define CTESTSOURCESINK_H
+#ifndef DAQ_CTESTSOURCESINK_H
+#define DAQ_CTESTSOURCESINK_H
 
 #include "CDataSource.h"
 #include "CDataSink.h"
 #include <vector>
-
-class CRingItem;
 
 namespace DAQ {
 
@@ -74,12 +72,6 @@ class CTestSourceSink : public CDataSource, public CDataSink
     CTestSourceSink(size_t buffer_size);
     virtual ~CTestSourceSink();
 
-    /*!
-     * \brief DEPRECATED - Insert a ring item into the sink
-     * \param item
-     */
-    virtual void putItem(const CRingItem& item);
-
     /*! \brief Insert data into the sink
      *
      *  The data are pushed onto the back of the m_buffer.
@@ -102,12 +94,6 @@ class CTestSourceSink : public CDataSource, public CDataSink
      *  \throws std::runtime_error if insufficient data exists in buffer to satisfy request
      */
     virtual void read(char* pBuffer, size_t nBytes);
-
-    /*!
-     * \brief DEPRECATED - Extract a ring item from the source
-     * \return
-     */
-    virtual CRingItem* getItem() {return nullptr;}
 
 
     size_t availableData() const;

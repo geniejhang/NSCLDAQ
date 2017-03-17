@@ -243,22 +243,22 @@ TclServer::initInterpreter()
   
   // Add the commands... these don't get saved.. as they will live forever
 
-  m_config.addCommand( make_unique( new CModuleCommand(*m_pInterpreter,
-                                                       m_config)) );
-  m_config.addCommand( make_unique( new CSetCommand(*m_pInterpreter,
+  m_config.addCommand( DAQ::make_unique<CModuleCommand>(*m_pInterpreter,
+                                                       m_config));
+  m_config.addCommand( DAQ::make_unique<CSetCommand>(*m_pInterpreter,
                                                      m_config,
-                                                    *m_pVme)) );
-  m_config.addCommand( make_unique( new CGetCommand(*m_pInterpreter,
+                                                    *m_pVme));
+  m_config.addCommand( DAQ::make_unique<CGetCommand>(*m_pInterpreter,
                                                      m_config,
-                                                    *m_pVme)) );
-  m_config.addCommand( make_unique( new CUpdateCommand(*m_pInterpreter,
+                                                    *m_pVme)) ;
+  m_config.addCommand( DAQ::make_unique<CUpdateCommand>(*m_pInterpreter,
                                                         m_config,
-                                                       *m_pVme)) );
-  m_config.addCommand( make_unique( new CMonCommand(*m_pInterpreter,
-                                                    m_config)) );
-  m_config.addCommand( make_unique( new CWatchCommand(*m_pInterpreter)));
-  m_config.addCommand( make_unique( new CRunStateCommand(*m_pInterpreter,
-                                                          m_config)) );
+                                                       *m_pVme));
+  m_config.addCommand( DAQ::make_unique<CMonCommand>(*m_pInterpreter,
+                                                    m_config));
+  m_config.addCommand( DAQ::make_unique<CWatchCommand>(*m_pInterpreter));
+  m_config.addCommand( DAQ::make_unique<CRunStateCommand>(*m_pInterpreter,
+                                                          m_config));
 }
 /*
    Read the configuration file.  This is just sourcing the the file

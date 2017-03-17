@@ -49,35 +49,35 @@ private:
 public:
   void setUp() {
     try {
-    killRings();                       // In setup in case we start with rings.
-    
-    // Setup the zmq connections sender is a PUSH and receiver a PULL, and we'll
-    // directly receive/analyze raw messages.
-    
-    m_pZmqContext = &CStatusDefinitions::ZmqContext::getInstance();
-    m_pSender     = new zmq::socket_t(*m_pZmqContext, ZMQ_PUSH);
-    m_pReceiver   = new zmq::socket_t(*m_pZmqContext, ZMQ_PULL);
-    
-    m_pSender->bind(uri);
-    m_pReceiver->connect(uri);
-    
-    // Now we can set up the publisher
-    
-    m_pPublisher = new CPublishRingStatistics(*m_pSender, "Test Application");
-  
+      killRings();                       // In setup in case we start with rings.
+
+      // Setup the zmq connections sender is a PUSH and receiver a PULL, and we'll
+      // directly receive/analyze raw messages.
+
+      m_pZmqContext = &CStatusDefinitions::ZmqContext::getInstance();
+      m_pSender     = new zmq::socket_t(*m_pZmqContext, ZMQ_PUSH);
+      m_pReceiver   = new zmq::socket_t(*m_pZmqContext, ZMQ_PULL);
+
+      m_pSender->bind(uri);
+      m_pReceiver->connect(uri);
+
+      // Now we can set up the publisher
+
+      m_pPublisher = new CPublishRingStatistics(*m_pSender, "Test Application");
     } catch (std::exception exc) {
       std::cout << "caught exception : " << exc.what() << std::endl;
       throw exc;
     }
   }
+
   void tearDown() {
     try {
-    delete m_pPublisher;
-    delete m_pSender;
-    delete m_pReceiver;
-    CStatusDefinitions::ZmqContext::reset();
-    killRings();                        // no rings on exit too.
-  
+      delete m_pPublisher;
+      delete m_pSender;
+      delete m_pReceiver;
+      CStatusDefinitions::ZmqContext::reset();
+      killRings();                        // no rings on exit too.
+
     } catch (std::exception exc) {
       std::cout << "caught exception : " << exc.what() << std::endl;
       throw exc;

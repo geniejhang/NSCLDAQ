@@ -15,8 +15,6 @@
 */
 
 #include "CFileDataSink.h"
-#include <CRingItem.h>
-#include <DataFormat.h>
 #include <io.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -98,27 +96,6 @@ CFileDataSink::~CFileDataSink()
 
 }
 
-
-/**! Write ring item to the sink
-*
-* Writes the data to the file. This delegates the writing to
-* a static function io::writeData(int,void*,int).
-*
-* \param item refers to a CRingItem that contains the data
-*
-*
-* \throw CErrnoException when io failure
-*
-*/
-void CFileDataSink::putItem(const CRingItem& item)
-{
-    // Get the underlying structure containing the state 
-    const RingItem* pItem = item.getItemPointer();
-
-    // Set up variable for writing it to stream
-    put(pItem, item.size());
-
-}
 
 /**
  * put

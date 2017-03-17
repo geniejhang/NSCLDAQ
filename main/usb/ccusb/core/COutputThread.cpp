@@ -25,8 +25,19 @@
 #include <vector>
 #include <Exception.h>
 #include <ErrnoException.h>
-#include <CRingBuffer.h>
+#include <CDataSink.h>
+#include <CDataSinkFactory.h>
 #include <Globals.h>
+
+#include <V12/CRingStateChangeItem.h>
+#include <V12/CRingPhysicsEventCountItem.h>
+#include <V12/CRingScalerItem.h>
+#include <V12/CDataFormatItem.h>
+#include <V12/CRingTextItem.h>
+#include <V12/CPhysicsEventItem.h>
+#include <RingIOV12.h>
+
+#include <CStack.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -34,20 +45,13 @@
 #include <string.h>
 #include <time.h>
 #include <iostream>
-#include <CRingStateChangeItem.h>
-#include <CRingPhysicsEventCountItem.h>
-#include <CRingScalerItem.h>
-#include <CDataFormatItem.h>
-#include <CRingTextItem.h>
 #include <dlfcn.h>
-#include <CStack.h>
-
-#include <fragment.h>
 
 #include <sys/time.h>
 
 
 using namespace std;
+using namespace DAQ;
 
 static DataBuffer* lastBuffer(0);
 static const unsigned ReadoutStack(0);
@@ -335,18 +339,18 @@ COutputThread::startRun(DataBuffer& buffer)
   m_nEventsSeen    = 0;
 
 
-  CDataFormatItem format;
-  format.commitToRing(*m_pRing);
+  V12::CDataFormatItem format;
+  writeItem(*m_pRing, format);
 
 
-  CRingStateChangeItem begin(NULL_TIMESTAMP, Globals::sourceId, BARRIER_START,
-                             BEGIN_RUN,
-			     m_runNumber,
-			     0,
-			     static_cast<uint32_t>(timestamp),
-			     m_title.substr(0, TITLE_MAXSIZE-1));
-
-  begin.commitToRing(*m_pRing);
+  V12::CRingStateChangeItem
+          begin(V12::NULL_TIMESTAMP, Globals::sourceId,
+                V12::BEGIN_RUN,
+                m_runNumber,
+                0,
+                static_cast<uint32_t>(timestamp),
+                m_title);
+  writeItem(*m_pRing, begin);
   
   m_nBuffersBeforeCount = BUFFERS_BETWEEN_STATS;
 
@@ -377,14 +381,14 @@ COutputThread::endRun(DataBuffer& buffer)
   timespec microdiff;
   mytimersub(&microtime, &m_startTimestamp, &microdiff);
   
-  CRingStateChangeItem end(NULL_TIMESTAMP, Globals::sourceId, BARRIER_END,
-                           END_RUN,
-			   m_runNumber,
-			   microdiff.tv_sec,
-			   stamp,
-			   m_title);
+  V12::CRingStateChangeItem end(V12::NULL_TIMESTAMP, Globals::sourceId,
+                                V12::END_RUN,
+                                m_runNumber,
+                                microdiff.tv_sec,
+                                stamp,
+                                m_title);
 
-  end.commitToRing(*m_pRing);
+  writeItem(*m_pRing, end);
 			   
 }
 
@@ -412,14 +416,14 @@ COutputThread::pauseRun(DataBuffer& buffer)
   timespec microdiff;
   mytimersub(&microtime, &m_startTimestamp, &microdiff);
   
-  CRingStateChangeItem pause(NULL_TIMESTAMP, Globals::sourceId, BARRIER_END,
-                           PAUSE_RUN,
+  V12::CRingStateChangeItem pause(V12::NULL_TIMESTAMP, Globals::sourceId,
+                           V12::PAUSE_RUN,
 			   m_runNumber,
 			   microdiff.tv_sec,
 			   stamp,
 			   m_title);
 
-  pause.commitToRing(*m_pRing);
+  writeItem(*m_pRing, pause);
 }
 /**
  * resumeRun    (Bug #5882)
@@ -445,14 +449,14 @@ COutputThread::resumeRun(DataBuffer& buffer)
   timespec microdiff;
   mytimersub(&microtime, &m_startTimestamp, &microdiff);
   
-  CRingStateChangeItem resume(NULL_TIMESTAMP, Globals::sourceId, BARRIER_END,
-                           RESUME_RUN,
+  V12::CRingStateChangeItem resume(V12::NULL_TIMESTAMP, Globals::sourceId,
+                           V12::RESUME_RUN,
 			   m_runNumber,
 			   microdiff.tv_sec,
 			   stamp,
 			   m_title);
 
-  resume.commitToRing(*m_pRing);  
+  writeItem(*m_pRing, resume);
 }
 
 
@@ -523,27 +527,21 @@ COutputThread::scaler(void* pData)
 
   // Create the final scaler item and submit it to the ring.
 
-  CRingItem* pEvent;
+  uint64_t tstamp = V12::NULL_TIMESTAMP;
   if (m_pSclrTimestampExtractor) {
-    pEvent = new CRingScalerItem(m_pSclrTimestampExtractor(pData), 
+    tstamp = m_pSclrTimestampExtractor(pData);
+  }
+
+  V12::CRingScalerItem item(tstamp,
                                  Globals::sourceId, 
-                                 BARRIER_NOTBARRIER,
-                                 m_elapsedSeconds, 
+                                 m_elapsedSeconds,
                                  endTime, 
                                  timestamp, 
                                  counterData,
-				 1, CStack::isIncremental());
-  } else {
-    pEvent = new CRingScalerItem(m_elapsedSeconds,
-                                 endTime,
-                                 timestamp, 
-                                 counterData,
-				 CStack::isIncremental());
-  }
+                                 1, CStack::isIncremental());
 
-  pEvent->commitToRing(*m_pRing);
+  writeItem(*m_pRing, item);
   m_elapsedSeconds = endTime;
-  delete pEvent;
 
 }
 
@@ -688,33 +686,19 @@ COutputThread::event(void* pData)
     // Note that if we were given a timestamp extractor we create event
     // with the timestamp otherwise we create it with a null body header.
     
-    CRingItem* pEvent;
-    
-    
+    uint64_t tstamp = V12::NULL_TIMESTAMP;
     if (m_pEvtTimestampExtractor) {
-        pEvent = new CRingItem(
-            PHYSICS_EVENT, m_pEvtTimestampExtractor(m_pBuffer), Globals::sourceId,
-            0, m_nWordsInBuffer*sizeof(uint16_t) + 100
-        );
-    } else {
-        pEvent = new CRingItem(
-            PHYSICS_EVENT, m_nWordsInBuffer*sizeof(uint16_t) + 100
-        ); // +100 really needed?
+        tstamp = m_pEvtTimestampExtractor(m_pBuffer);
     }
-    CRingItem& event(*pEvent);
-    
-    // Put the data in the event and figure out where the end pointer is.
 
-    void* pDest = event.getBodyPointer();
-    memcpy(pDest, m_pBuffer, m_nWordsInBuffer*sizeof(uint16_t));
-    uint8_t* pEnd = reinterpret_cast<uint8_t*>(pDest);
-    pEnd += m_nWordsInBuffer*sizeof(uint16_t); // Where the new body cursor goes.
+    V12::CPhysicsEventItem item(
+                tstamp,
+                Globals::sourceId,
+                Buffer::ByteBuffer(m_pBuffer,
+                                   m_pBuffer+m_nWordsInBuffer*sizeof(uint16_t))
+                );
 
-    event.setBodyCursor(pEnd);
-    event.updateSize();
-    event.commitToRing(*m_pRing);
-
-    delete pEvent;
+    writeItem(*m_pRing, item);
 
     // Reset the cursor and word count in the assembly buffer:
 
@@ -739,9 +723,27 @@ COutputThread::event(void* pData)
 void
 COutputThread::attachRing()
 {
-  m_pRing = CRingBuffer::createAndProduce(m_ringName);
+    CDataSinkFactory factory;
+
+  m_pRing = factory.makeSink(createRingURL(m_ringName));
 
 }
+
+/*!
+ * \brief COutputThread::createRingURL
+ *
+ * Prepends the tcp://localhost/ string to the ring name.
+ *
+ * \param name  the name of a ring buffer (not its url)
+ *
+ * \return tcp://localhost/<name>
+ */
+std::string COutputThread::createRingURL(const string &name)
+{
+    std::string url("tcp://localhost/");
+    return url + name;
+}
+
 /**
  * Output a physics trigger count event item.  These are used to monitor
  * overall rates as well as to provide sampling statistics for sampling
@@ -752,8 +754,8 @@ COutputThread::attachRing()
 void
 COutputThread::outputTriggerCount(uint32_t runOffset)
 {
-  CRingPhysicsEventCountItem item(m_nEventsSeen, runOffset);
-  item.commitToRing(*m_pRing);
+  V12::CRingPhysicsEventCountItem item(m_nEventsSeen, runOffset);
+  writeItem(*m_pRing, item);
 }
 /**
  * stringBuffer:
@@ -783,12 +785,12 @@ COutputThread::processStrings(DataBuffer& buffer, StringsBuffer& strings)
 
   // Create and commit the item to the ring.
 
-  CRingTextItem texts(NULL_TIMESTAMP, Globals::sourceId, BARRIER_NOTBARRIER,
-                      strings.s_ringType,
-		      stringVector,
-		      m_elapsedSeconds, // best we can do for now.
-		      static_cast<uint32_t>(now));
-  texts.commitToRing(*m_pRing);
+  V12::CRingTextItem texts(V12::NULL_TIMESTAMP, Globals::sourceId,
+                           strings.s_ringType,
+                           stringVector,
+                           m_elapsedSeconds, // best we can do for now.
+                           static_cast<uint32_t>(now));
+  writeItem(*m_pRing, texts);
 
 }
 /**

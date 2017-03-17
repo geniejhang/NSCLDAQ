@@ -21,7 +21,7 @@
 */
 #include "CEndRunInfo11.h"
 #include <CFileDataSource.h>
-#include <V11/DataFormatV11.h>
+#include <V11/DataFormat.h>
 #include <V11/CRingStateChangeItem.h>
 #include <RingIOV11.h>
 #include <stdexcept>
@@ -183,7 +183,7 @@ CEndRunInfo11::loadEndRuns()
     std::vector<uint16_t> filter;
     CFileDataSource src(m_nFd, filter);
     
-    V11::CRingItem item(V11::VOID);
+    V11::CRingItem item(V11::UNDEFINED);
     while (1) {
         readItem(src, item);
         if (src.eof()) break;
