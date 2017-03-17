@@ -16,9 +16,9 @@
 
 #include <CFatalException.h>
 #include <CFilterMain.h>
-#include <V11/CFilterAbstraction.h>
+#include <V12/CFilterAbstraction.h>
 
-#include "CSourceCounterFilter.h"
+#include "CV12SourceCounterFilter.h"
 
 #include <limits>
 #include <iostream>
@@ -132,11 +132,11 @@ int main(int argc, char* argv[])
     // Create the main
     CFilterMain theApp(argc,argv);
 
-    V11::CFilterAbstractionPtr pVersion(new V11::CFilterAbstraction);
+    V12::CFilterAbstractionPtr pVersion(new V12::CFilterAbstraction);
 
     auto cmdLineOpts = parserResult.second;
     // Construct filter(s) here.
-    auto pSrcCounter = std::make_shared<V11::CSourceCounterFilter>(numeric_limits<uint32_t>::max(),
+    auto pSrcCounter = std::make_shared<V12::CSourceCounterFilter>(numeric_limits<uint32_t>::max(),
                                                                     cmdLineOpts.s_outputFile);
     pSrcCounter->setBuiltData(cmdLineOpts.s_built);
 

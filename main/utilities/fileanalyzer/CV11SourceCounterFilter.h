@@ -1,6 +1,6 @@
 
-#ifndef CSOURCECOUNTERFILTER_H
-#define CSOURCECOUNTERFILTER_H
+#ifndef DAQ_V11_CSOURCECOUNTERFILTER_H
+#define DAQ_V11_CSOURCECOUNTERFILTER_H
 
 #include <V11/CFilter.h>
 #include <V11/DataFormat.h>
@@ -11,6 +11,8 @@
 #include <V11/CRingItemFactory.h>
 #include <V11/CRingPhysicsEventCountItem.h>
 #include <V11/CRingFragmentItem.h>
+#include <V11/CAbnormalEndItem.h>
+#include <V11/CDataFormatItem.h>
 #include <FragmentIndex.h>
 
 #include <stdint.h>
@@ -51,6 +53,8 @@ class CSourceCounterFilter : public DAQ::V11::CFilter
     virtual CRingItem* 
       handlePhysicsEventCountItem(CRingPhysicsEventCountItem* pItem);
     virtual CRingItem* handleFragmentItem(CRingFragmentItem* pItem);
+    virtual CRingItem* handleDataFormatItem(CDataFormatItem *pItem);
+    virtual CRingItem* handleAbnormalEndItem(CAbnormalEndItem *pItem);
 
     virtual void finalize();
 

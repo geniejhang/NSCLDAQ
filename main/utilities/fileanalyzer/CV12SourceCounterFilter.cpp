@@ -1,15 +1,14 @@
 
-#include "CSourceCounterFilter.h"
-#include <iostream>
+#include "CV12SourceCounterFilter.h"
+
 #include <iomanip>
 #include <sstream>
 #include <fstream>
-#include <FragmentIndex.h>
 
 using namespace std;
 
 namespace DAQ {
-namespace V11 {
+namespace V12 {
 
   CSourceCounterFilter::CSourceCounterFilter(uint32_t defaultId, std::string outputFile)
 : m_counters(), m_defaultId(defaultId), m_outputFile(outputFile), m_builtData(true)
@@ -23,60 +22,64 @@ CSourceCounterFilter::~CSourceCounterFilter()
 }
 
 // The default handlers
-CRingItem* CSourceCounterFilter::handleRingItem(CRingItem* pItem) 
+CRingItemPtr CSourceCounterFilter::handleRingItem(CRingItemPtr pItem)
 {
-  incrementCounter(pItem);
-  return pItem;
+  return handleItem(pItem);
 }
 
-CRingItem* CSourceCounterFilter::handleStateChangeItem(CRingStateChangeItem* pItem) 
+CRingStateChangeItemPtr CSourceCounterFilter::handleStateChangeItem(CRingStateChangeItemPtr pItem) 
 {
-  incrementCounter(pItem);
-  return static_cast<CRingItem*>(pItem);
+    return handleItem(pItem);
 }
 
-CRingItem* CSourceCounterFilter::handleScalerItem(CRingScalerItem* pItem) 
+CRingScalerItemPtr CSourceCounterFilter::handleScalerItem(CRingScalerItemPtr pItem) 
 {
-  incrementCounter(pItem);
-  return static_cast<CRingItem*>(pItem);
+    return handleItem(pItem);
 }
 
-CRingItem* CSourceCounterFilter::handleTextItem(CRingTextItem* pItem) 
+CRingTextItemPtr CSourceCounterFilter::handleTextItem(CRingTextItemPtr pItem) 
 {
-  incrementCounter(pItem);
-  return static_cast<CRingItem*>(pItem);
+    return handleItem(pItem);
 }
 
-CRingItem* CSourceCounterFilter::handlePhysicsEventItem(CPhysicsEventItem* pItem) 
+CPhysicsEventItemPtr CSourceCounterFilter::handlePhysicsEventItem(CPhysicsEventItemPtr pItem) 
 {
-  if (m_builtData) {
-    uint16_t* pBody = reinterpret_cast<uint16_t*>(pItem->getBodyPointer());
-    EVB::FragmentIndex index(pBody);
-    auto iter = index.begin();
-    auto iter_end = index.end();
-    while (iter != iter_end) {
-      std::unique_ptr<CRingItem> pSubItem(CRingItemFactory::createRingItem(iter->s_itemhdr));
-      incrementCounter(iter->s_sourceId, pSubItem->type());
-      ++iter;
+    return handleItem(pItem);
+}
+
+CRingPhysicsEventCountItemPtr
+CSourceCounterFilter::handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr pItem)
+{
+    return handleItem(pItem);
+}
+
+CDataFormatItemPtr
+CSourceCounterFilter::handleDataFormatItem(CDataFormatItemPtr pItem)
+{
+    return handleItem(pItem);
+}
+
+
+CAbnormalEndItemPtr
+CSourceCounterFilter::handleAbnormalEndItem(CAbnormalEndItemPtr pItem)
+{
+    return handleItem(pItem);
+}
+
+CCompositeRingItemPtr
+CSourceCounterFilter::handleCompositeItem(CCompositeRingItemPtr pItem)
+{
+    // this will only go one  layer deep rather than traversing the entire tree.
+    // the pooint of the file analyzer program is to determine what the appropriate
+    // number of end runs and source ids exists for setting up an event builder.
+    // Since in event building there is only ever 1 layer of event building done,
+    // there is no need to keep track of children of children.
+
+    for (auto pChild : *pItem) {
+        incrementCounter(pChild->getSourceId(), pChild->type());
     }
-  } else {
-    incrementCounter(pItem);
 
-  }
-  return static_cast<CRingItem*>(pItem);
-}
-
-  CRingItem* 
-CSourceCounterFilter::handlePhysicsEventCountItem(CRingPhysicsEventCountItem* pItem) 
-{
-  incrementCounter(pItem);
-  return static_cast<CRingItem*>(pItem);
-}
-
-CRingItem* CSourceCounterFilter::handleFragmentItem(CRingFragmentItem* pItem)
-{
-  incrementCounter(pItem);
-  return static_cast<CRingItem*>(pItem);
+    return pItem;
 }
 
 
@@ -126,9 +129,8 @@ string CSourceCounterFilter::translate(uint32_t type) const
   namemap[PERIODIC_SCALERS]     = "PERIODIC_SCALERS";
   namemap[PHYSICS_EVENT]        = "PHYSICS_EVENT";
   namemap[PHYSICS_EVENT_COUNT]  = "PHYSICS_EVENT_COUNT";
-  namemap[EVB_FRAGMENT]         = "EVB_FRAGMENT";
-  namemap[EVB_UNKNOWN_PAYLOAD]  = "EVB_UNKNOWN_PAYLOAD";
   namemap[EVB_GLOM_INFO]        = "EVB_GLOM_INFO";
+  namemap[ABNORMAL_ENDRUN]      = "ABNORMAL_ENDRUN";
 
   map<uint32_t,string>::const_iterator it;
   it = namemap.find(type);
@@ -149,21 +151,10 @@ void CSourceCounterFilter::finalize()
   printCounters(dump_file);
 }
 
-
-void CSourceCounterFilter::incrementCounter(CRingItem* pItem) 
-{
-
-  if ( pItem->hasBodyHeader() ) {
-    incrementCounter(pItem->getSourceId(), pItem->type());
-  } else {
-    // this is setup in the constructor
-    incrementCounter(m_defaultId, pItem->type());
-  }
-
-}
-
 void CSourceCounterFilter::incrementCounter(uint32_t id, uint32_t type) 
 {
+    // avoid any concern with the composite bit
+    id = (0x7fff & id);
     if (!counterExists(id)) {
       setupCounters(id);
     }
@@ -186,9 +177,9 @@ void CSourceCounterFilter::setupCounters(uint32_t id)
   m_counters[id][PHYSICS_EVENT]       = 0;
   m_counters[id][PHYSICS_EVENT_COUNT] = 0;
 
-  m_counters[id][EVB_FRAGMENT]        = 0;
-  m_counters[id][EVB_UNKNOWN_PAYLOAD] = 0;
   m_counters[id][EVB_GLOM_INFO]       = 0;
+
+  m_counters[id][ABNORMAL_ENDRUN]     = 0;
 }
 
 
