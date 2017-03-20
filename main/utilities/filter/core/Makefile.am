@@ -22,7 +22,7 @@ nodist_libfilter_la_SOURCES=filterargs.c filterargs.h
 #                       COneShotMediator.cpp 
 
 BUILT_SOURCES = filterargs.c filterargs.h
-EXTRA_DISTS = filterargs.ggo
+EXTRA_DIST = filterargs.ggo
 
 include_HEADERS	=  CFilterMain.h \
 		CBaseMediator.h \
@@ -70,7 +70,7 @@ libfilter_la_CXXFLAGS = $(THREADCXX_FLAGS) $(AM_CXXFLAGS)
 
 filterargs.c: filterargs.h
 
-filterargs.h: filterargs.ggo 
+filterargs.h: filterargs.ggo
 	$(GENGETOPT) < @srcdir@/filterargs.ggo \
 		--output-dir=@builddir@ --file=filterargs --unamed-opts="OPTIONS"
 
