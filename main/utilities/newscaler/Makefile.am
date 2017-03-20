@@ -76,7 +76,10 @@ noinst_HEADERS=CTclRingCommand.h
 noinst_PROGRAMS   = ringTests
 ringTests_SOURCES = TestRunner.cpp ringTests.cpp
 ringTests_CPPFLAGS = @LIBTCLPLUS_CFLAGS@ @CPPUNIT_CFLAGS@ @TCL_FLAGS@ @THREADCXX_FLAGS@ \
-			-I@top_srcdir@/daq/format -I@top_srcdir@/base/dataflow
+                        -I@top_srcdir@/daq/format \
+                        -I@top_srcdir@/base/dataflow \
+                        -I@top_srcdir@/base/testutils
+
 ringTests_LDADD    =  @CPPUNIT_LDFLAGS@ libTclRingBuffer.la \
 			@top_builddir@/daq/format/libdataformat.la     \
 				@top_builddir@/base/dataflow/libDataFlow.la    \
