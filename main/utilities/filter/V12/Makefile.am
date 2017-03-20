@@ -8,7 +8,8 @@ nscldaq12_HEADERS = CFilter.h \
                     CNullFilter.h \
                     CFilterAbstraction.h \
                     CAbnormalEndRunFilterHandler.h \
-                    COneShotLogicFilter.h
+                    COneShotLogicFilter.h \
+                    CTransparentFilter.h
 
 
 
