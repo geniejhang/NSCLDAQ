@@ -137,8 +137,7 @@ snit::widgetadaptor BacklogSummary {
         
         set filter [AndFilter %AUTO%]
         set elements [list];            # Memorize components so we can kill them off.
-        lappend elements [RelationToStringFilter %AUTO% r.name = $options(-ringname)]
-        lappend elements [RelationToStringFilter %AUTO% r.host = $options(-ringhost)]
+        lappend elements [RelationToStringFilter %AUTO% r.name LIKE $options(-ringname)%]
         lappend elements [RelationToNonStringFilter %AUTO% s.backlog >= $options(-threshold)]
         lappend elements [RelationToNonStringFilter %AUTO% s.timestamp >= [expr {$lastTime - 2}]]
         foreach element $elements {
