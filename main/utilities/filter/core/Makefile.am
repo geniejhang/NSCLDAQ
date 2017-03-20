@@ -22,6 +22,7 @@ nodist_libfilter_la_SOURCES=filterargs.c filterargs.h
 #                       COneShotMediator.cpp 
 
 BUILT_SOURCES = filterargs.c filterargs.h
+EXTRA_DISTS = filterargs.ggo
 
 include_HEADERS	=  CFilterMain.h \
 		CBaseMediator.h \

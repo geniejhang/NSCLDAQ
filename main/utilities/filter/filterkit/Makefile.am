@@ -1,5 +1,5 @@
 #-------------------- Filter Kit
-EXTRA_DIST = filterargs.ggo SkeletonMain.cpp CTemplateFilter.h \
+EXTRA_DIST = SkeletonMain.cpp CTemplateFilter.h \
             CTemplateFilter.cpp \
              Makefile-template.in FilterIncludes.in
 
