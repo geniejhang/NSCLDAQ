@@ -97,12 +97,12 @@ int main(int argc, char** argv)
     // a listener available on it.  We'll delay another bit for that
     // to happen:
     
-    std::this_thread::sleep_for(std::chrono::seconds(SERVICE_STARTUP_DELAY));
     
     // Figure out the port
     
     try {
         unsigned port = translateService(parsedArgs.service_arg);
+	std::this_thread::sleep_for(std::chrono::seconds(SERVICE_STARTUP_DELAY));
         zmq::context_t& context(CStatusDefinitions::ZmqContext::getInstance());
         zmq::socket_t  pusher(context, ZMQ_PUSH);
         

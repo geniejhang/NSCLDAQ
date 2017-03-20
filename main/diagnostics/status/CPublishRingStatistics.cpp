@@ -30,6 +30,8 @@
 #include <sstream>
 #include <set>
 
+#include <iostream>
+
 /// These backlogs are different to prevent rapid flow of messages.
 
 static const double BACKLOG_LOG_THRESHOLD(0.9);
@@ -69,11 +71,11 @@ CPublishRingStatistics::~CPublishRingStatistics()
 void
 CPublishRingStatistics::operator()()
 {
-    CRingMaster rmaster;                        // Only want for the localhost.
+  
+    CRingMaster rmaster;                       // Only want for the localhost.
     std::string usage = rmaster.requestUsage();
     std::vector<Usage> usageVector                   = usageTextToVector(usage);
-    publish(usageVector);
-    
+    publish(usageVector);    
 }
 
 /*---------------------------------------------------------------------------
@@ -173,6 +175,7 @@ CPublishRingStatistics::itemToUsage(CTCLInterpreter& interp, CTCLObject& obj)
         consumer.second = int(oBacklog);
         result.s_usage.s_consumers.push_back(consumer);
     }
+
     // Producer statistics:
     
     CTCLObject oPstats = oRingStats.lindex(7);     // Producer statistics.
@@ -188,8 +191,13 @@ CPublishRingStatistics::itemToUsage(CTCLInterpreter& interp, CTCLObject& obj)
     result.s_usage.s_producerStats.s_transfers = double(ops);
     result.s_usage.s_producerStats.s_bytes     = double(bytes);
     if (result.s_usage.s_producer != -1) {
+
+      try {
         result.s_producerCommand =
             Os::getProcessCommand(result.s_usage.s_producer);
+      } catch (...) {
+	result.s_producerCommand.push_back("<defunct>");
+      }
     }
     
     CTCLObject oCstats;                    // Consumer statistics
@@ -205,19 +213,24 @@ CPublishRingStatistics::itemToUsage(CTCLInterpreter& interp, CTCLObject& obj)
         oPid = item.lindex(0);
         ops  = item.lindex(1);
         bytes = item.lindex(2);
-        
+
         CRingBuffer::clientStatistics client;
         client.s_pid = int(oPid);
         client.s_transfers= double(ops);
         client.s_bytes = double(bytes);
         result.s_usage.s_consumerStats.push_back(client);
         if (client.s_pid != -1) {
+	  try {
             result.s_consumerCommands.push_back(
                 Os::getProcessCommand(client.s_pid)
             );
+	  } catch (...) {
+	    std::vector<std::string> command;
+	    command.push_back("<defunct>");
+	    result.s_consumerCommands.push_back(command);
+	  }
             result.s_logged.push_back(false);          // Assume not logged.
         }
-        
     }
     
     return result;
@@ -239,7 +252,8 @@ CPublishRingStatistics::publish(std::vector<Usage>& usage)
     // To do the latter, we need some history for the consumers.
     
     CStatusDefinitions::RingStatistics publisher(*m_pSocket, m_appName);
-    CStatusDefinitions::LogMessage     logger(*m_pSocket, m_appName);  
+    CStatusDefinitions::LogMessage     logger(*m_pSocket, m_appName);
+    
     std::set<std::string>              ringNames;
     for (int i = 0; i < usage.size(); i++) {
         Usage& item(usage[i]);
