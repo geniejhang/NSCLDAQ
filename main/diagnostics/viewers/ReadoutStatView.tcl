@@ -112,11 +112,6 @@ snit::widgetadaptor ReadoutStatView {
     constructor args {
         installhull using ttk::frame
         
-        toplevel .test
-        canvas   .test.c
-        pack .test.c
-    
-        
         set colnames [list properties timestamp elapsed triggers events bytes]
         
         # Install and do basic treeview configuration.
