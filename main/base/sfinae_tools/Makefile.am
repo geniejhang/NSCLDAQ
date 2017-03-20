@@ -1,6 +1,6 @@
 
 
-include_HEADERS = is_iterator.h
+include_HEADERS = is_iterator.h is_byte_iterator.h
 
 
 
