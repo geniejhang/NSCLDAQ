@@ -38,7 +38,7 @@
 
 static const unsigned MAX_SERVICE_CHECKS(10);
 static const unsigned SERVICE_CHECK_INTERVAL(2);
-
+static const unsigned SERVICE_STARTUP_DELAY(5);
 /**
  * translateService
  *    Given a service name use the port manager to figure out the port
@@ -93,6 +93,11 @@ int main(int argc, char** argv)
         std::cerr << "Local port manager is not running\n";
         std::exit(EXIT_FAILURE);
     }
+    // There can be a macroscopic time between the port being advertised and
+    // a listener available on it.  We'll delay another bit for that
+    // to happen:
+    
+    std::this_thread::sleep_for(std::chrono::seconds(SERVICE_STARTUP_DELAY));
     
     // Figure out the port
     
