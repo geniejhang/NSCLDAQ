@@ -60,9 +60,6 @@ snit::type DataSourceObject {
     
     delegate method getProperties to data
     
-    # delegate method drawat        to gui
-    # delegate method moveto        to gui
-    # delegate method moveby        to gui
     delegate method addtag        to gui
     delegate method rmtag         to gui
     delegate method tags          to gui
@@ -118,26 +115,7 @@ snit::type DataSourceObject {
     #---------------------------------------------------------------------------
     # Public methods
     #
-    ##
-    # propertyChanged
-    #   The label may have changed
-    #   If the name or host are not "" we'll set the label to
-    #   name@host else we'll set it to "".
-    #
-    method propertyChanged {} {
-        set properties [$data getProperties]
-        set nameProp [$properties find name]
-        set hostProp [$properties find host]
-        
-        set name [$nameProp cget -value]
-        set host [$hostProp cget -value]
-        
-        if {($name ne "") || ($host ne "") } {
-            $Label configure -text $name@$host
-        } else  {
-            $Label configure -text ""
-        }
-    }
+
     
     ##
     # clone
@@ -305,6 +283,27 @@ snit::type DataSourceObject {
     }
     #--------------------------------------------------------------------------
     #  Methods to ensure the object label words:
+
+    ##
+    # propertyChanged
+    #   The label may have changed
+    #   If the name or host are not "" we'll set the label to
+    #   name@host else we'll set it to "".
+    #
+    method propertyChanged {} {
+        set properties [$data getProperties]
+        set nameProp [$properties find name]
+        set hostProp [$properties find host]
+        
+        set name [$nameProp cget -value]
+        set host [$hostProp cget -value]
+        
+        if {($name ne "") || ($host ne "") } {
+            $Label configure -text $name@$host
+        } else  {
+            $Label configure -text ""
+        }
+    }
     
     ##
     # drawat
