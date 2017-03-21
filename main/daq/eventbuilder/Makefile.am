@@ -122,8 +122,10 @@ install-exec-hook:
 noinst_PROGRAMS = unittests ordertests
 
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
-	connectTest.cpp  cmdline.c
+	connectTest.cpp  
 nodist_unittests_SOURCES = cmdline.c cmdline.h
+
+
 
 unittests_LDADD = @builddir@/libEventBuilderClient.la \
 	$(libEventBuilder_la_LIBADD) \
@@ -132,6 +134,9 @@ unittests_LDADD = @builddir@/libEventBuilderClient.la \
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
 unittests_CPPFLAGS=$(COMPILATION_FLAGS)
+
+unittests_DEPENDENCIES = cmdline.o cmdline.h
+
 
 ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
 	configcmdtests.cpp tclflowtest.cpp \
