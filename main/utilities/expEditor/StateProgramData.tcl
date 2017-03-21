@@ -50,12 +50,13 @@ snit::type StateProgramData {
         
         $properties add [property %AUTO% \
             -name name]
+        $properties add [property %AUTO% -name host ]
         $properties add [property %AUTO% \
             -name enable -value true -validate snit::boolean]
         $properties add [property %AUTO% \
             -name standalone -value false -validate snit::boolean]
         $properties add [property %AUTO% -name path ]
-        $properties add [property %AUTO% -name host ]
+       
         $properties add [property %AUTO% -name {Input Ring} -editable 0]
         $properties add [property %AUTO% -name {Output Ring} -editable 0]
         
