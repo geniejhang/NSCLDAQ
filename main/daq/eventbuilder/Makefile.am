@@ -135,7 +135,7 @@ unittests_LDADD = @builddir@/libEventBuilderClient.la \
 
 unittests_CPPFLAGS=$(COMPILATION_FLAGS)
 
-unittests_DEPENDENCIES = cmdline.o cmdline.h
+unittests_DEPENDENCIES = cmdline.o cmdline.h @builddir@/libEventBuilderClient.la
 
 
 ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
