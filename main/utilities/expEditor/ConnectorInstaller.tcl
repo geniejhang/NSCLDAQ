@@ -26,7 +26,7 @@ exec tclsh "$0" ${1+"$@"}
 # @author Ron Fox <fox@nscl.msu.edu>
 #
 
-package provide connectorInstaller 1.0
+package provide connectorInstaller 1.1
 package require connector
 package require Tk
 
@@ -643,6 +643,9 @@ snit::type ConnectorInstaller {
         set c     [dict get $desc canvas]
         set o     [dict get $desc object]
         
+        #  Invoke the changed property for object.
+        
+        $o propertyChanged 
     
         #  Use currentConnectors to locate the objects we are connected to:
         

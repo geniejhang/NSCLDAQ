@@ -92,6 +92,7 @@ snit::type Label {
         set xextent [expr {[lindex $box 2] - [lindex $box 0]}]
         set yextent [expr {[lindex $box 3] - [lindex $box 1]}]
         
+        
         #  The position will actually be the lower left coordinate:
         
         set x [lindex $box 0]
@@ -102,6 +103,16 @@ snit::type Label {
         set id [$c create text $x $y                                           \
             -tags  $options(-tag) -text $options(-text) -anchor nw]
         
+    }
+    ##
+    # Destructor must destroy the label:
+    #  @note - catch is done in case the canvas has been yanked out from under
+    #          us.
+    
+    destructor {
+        catch {
+            $options(-canvas) delete $id
+        }
     }
     #--------------------------------------------------------------------------
     # Configturation management:
@@ -141,11 +152,12 @@ snit::type Label {
     # @param y  - The new y position of the object we label.
     #
     method move {x y} {
-        # Compute the text position:
+        # Compute the text position:  assumption is the
+        # image is anchored centered.
         
-        set myx [expr {$x + $xextent}]
-        set myy [expr {$y + $yextent}]
-        
+        set myx [expr {$x - $xextent/2}]
+        set myy [expr {$y + $yextent/2}]
+
         # Move us to myx myy:
         
         set c $options(-canvas)
