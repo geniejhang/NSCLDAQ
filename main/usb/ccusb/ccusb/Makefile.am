@@ -96,7 +96,7 @@ noinst_PROGRAMS = unittests tests remotetests
 tests_SOURCES = TestRunner.cpp \
 		regTests.cpp
 tests_LDADD = $(CPPUNIT_LDFLAGS) \
-		-L@libdir@ -lCCUSB \
+		@builddir@/libCCUSB.la \
 		@TCL_LDFLAGS@ \
 		@LIBTCLPLUS_LDFLAGS@
 tests_CXXFLAGS = -I@top_srcdir@/base/thread $(AM_CXXFLAGS)
@@ -134,7 +134,7 @@ unittests_SOURCES  = TestRunner.cpp rdolistTests.cpp \
 unittests_LDADD    = $(CPPUNIT_LDFLAGS)                             \
 			@top_builddir@/base/tcpip/libTcp.la         \
 			@top_builddir@/base/thread/libdaqthreads.la \
-			-L@libdir@ -lCCUSB                          \
+			@builddir@/libCCUSB.la                          \
 			@TCL_LDFLAGS@                               \
 			@LIBTCLPLUS_LDFLAGS@
 
