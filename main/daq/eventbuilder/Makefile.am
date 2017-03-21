@@ -128,9 +128,11 @@ nodist_unittests_SOURCES = cmdline.c cmdline.h
 
 
 unittests_LDADD = @builddir@/libEventBuilderClient.la \
-	$(libEventBuilder_la_LIBADD) \
+	@top_builddir@/base/thread/libdaqthreads.la 	\
+	@top_builddir@/base/os/libdaqshm.la    \
 	@top_builddir@/servers/portmanager/libPortManager.la \
 	@top_builddir@/base/tcpip/libTcp.la 	\
+	@LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@  \
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
 unittests_CPPFLAGS=$(COMPILATION_FLAGS)
