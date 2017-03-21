@@ -32,6 +32,9 @@
 #    *  start  - Starts the services defined by the database.
 #    *  stop   - stops the services that are currently being run.
 #    *  exit   - Exit the program.
+#
+# @note - end of file on input is the same as exit.
+#
 import sys
 import os
 import select
@@ -294,7 +297,9 @@ def mainLoop(db) :
                 newfds.append(fd)
         
         fds = newfds
-        
+    
+    stopPrograms()                # Kill the programs.
+    
 ##
 #  Entry point:
 #
