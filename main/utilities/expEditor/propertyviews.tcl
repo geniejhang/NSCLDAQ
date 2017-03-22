@@ -421,3 +421,145 @@ snit::type EnumeratedEditor {
         $prop configure -value [$path cget -value]
     }
 }
+##
+# @class ListView
+#     Provides an editing widget for a property that consists of a list of values.
+#     this is a label for the property name.  An entry which can be used
+#     to add values to the list.  A button which can be used to move the entry
+#     value into the list (<Return> will as well).
+#     A list box that shows the list (<Double-1> removes the item unter the mouse
+#     from that list).
+#
+#
+# OPTIONS:
+#    *  -name  - Name of the property (label value).
+#    *  -value - List of current values.
+#    *  -maxlen - Largest number of values allowed in the list if adding a value
+#                would exceed this, bell is rung. If this is an empty string
+#                there is o practical limit. (only configurable at construction
+#                time).
+#    * -readonly - Disables list manipulation if enabled.
+#
+snit::widgetadaptor ListView {
+    component list
+    component entry
+    
+    option -name  -default ""
+    option -value -default [list]
+    option -maxlen -default "" -readonly 1
+    option -readonly -default 0 -readonly 1
+    
+    typevariable rightarrow
+    
+    ##
+    # create the right arrow bitmap.
+    
+    typeconstructor {
+        set rightarrow [image create bitmap -data {
+            #define right_width 11
+            #define right_height 11
+            static char right_bits = {
+            0x00, 0x00, 0x20, 0x00, 0x60, 0x00, 0xe0, 0x00, 0xfc, 0x01, 0xfc,
+            0x03, 0xfc, 0x01, 0xe0, 0x00, 0x60, 0x00, 0x20, 0x00, 0x00, 0x00
+            }
+        }]
+        
+    }
+    
+    ##
+    # constructor
+    #    install a ttk::frame as the hull.
+    #    Create the label, entry and list box.
+    #    Process the configuration options.
+    #    Bind event handlers appropriately.
+    #
+    # @param[in] args - Construction time configuration option/value pairs.
+    #
+    constructor args {
+        installhull using ttk::frame
+        
+        ttk::label $win.l -textvariable [myvar options(-name)]
+        
+        install entry using ttk::entry $win.entry -width 8
+        
+        ttk::button $win.b -image $rightarrow -command [mymethod _addToList]
+        
+        install list using listbox $win.list                               \
+            -listvariable [myvar options(-value)]                          \
+            -yscrollcommand [list $win.yscroll set] -selectmode single     \
+            -height 5
+        ttk::scrollbar $win.yscroll -command [list $list yview]
+        
+        
+        $self configurelist $args
+        
+        # Lay this all out
+        
+        grid $win.l  -row 0 -column 0 -sticky ew
+        grid $entry  -row 0 -column 1 -sticky ew
+        grid $win.b  -row 0 -column 2
+        grid $list -row 0 -column 3 -sticky nsew
+        grid $win.yscroll -row 0 -column 4 -sticky nsw
+        
+        # Let the entry expand in x and the list expand in y.
+        
+        grid rowconfigure $win 0 -weight 1
+        grid columnconfigure $win 1 -weight 1
+        grid columnconfigure $win 3 -weight 1
+        foreach col [list 0 2 4] {
+            grid columnconfigure $win $col -weight 0
+        }
+        #  If readonly we don't allow any modification.
+        
+        if {$options(-readonly) } {
+            $entry configure -state disable
+            $list configure -state disable
+            $win.b configure -state disable
+        } else {
+            # If enabled we also need to enable the event bindings:
+            
+            bind $list <Double-1> [mymethod _removeFromList %x %y]
+            bind $entry <Return> [mymethod _addToList]
+        }
+    }
+    #--------------------------------------------------------------------------
+    # Event handling.
+    #
+    
+    ##
+    # _addToList
+    #    Add the entry contents (if not empty) to the end of the list of values.
+    #
+    method _addToList {} {
+
+        set value [$entry get]
+        if {$value ne ""} {
+            
+            # If this is too many entries bell.
+            
+            set entryCount [llength $options(-value)]
+            incr entryCount
+            if {($options(-maxlen) ne "") && ($entryCount > $options(-maxlen))} {
+                bell
+                bell
+                bell
+                return
+            }
+            
+            $list insert end $value
+            $list yview end
+            $entry delete 0 end;       # Clear the entry.
+            focus -force $entry;             # Put the cursor in the entry again.
+        }
+    }
+    ##
+    # _removeFromList
+    #   Removes the entry under the cursor from the list.
+    #
+    #
+    method _removeFromList {x y} {
+        set index [$list index @$x,$y]
+        $list delete $index
+        
+    }
+}
