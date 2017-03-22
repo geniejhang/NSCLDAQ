@@ -556,10 +556,58 @@ snit::widgetadaptor ListView {
     # _removeFromList
     #   Removes the entry under the cursor from the list.
     #
-    #
+    # @param[in] x,y - mouse coordinates at event time relative to listbox origin.
     method _removeFromList {x y} {
         set index [$list index @$x,$y]
         $list delete $index
         
+    }
+}
+##
+# @class ListEditor
+#    Wrap a list valued property in a factory for editors of that
+#    property.
+#
+#
+snit::type ListEditor {
+    component prop
+    
+    delegate option * to prop
+    delegate method * to prop
+    
+    ##
+    # constructor
+    #    Just wrap the property and configure it:
+    #
+    # @param[in] args
+    #
+    constructor args {
+        install prop using ListProperty %AUTO% {*}$args
+    }
+    #--------------------------------------------------------------------------
+    #  Factory support methods.
+    #
+    
+    ##
+    # makeEditor
+    #    Create a new editor.
+    #
+    # @param[in]  path - widget path to assign to the editor.
+    # @return path
+    #
+    method makeEditor path {
+        ListView $path -name [$prop cget -name] -value [$prop cget -value] \
+            -maxlen [$prop cget -maxlen] -readonly [expr {![$prop cget -editable]}]
+        
+        return $path
+    }
+    ##
+    # saveValues
+    #   Save the values from an editor into the property.
+    #
+    # @param[in] path - widget path of the editor widget.
+    #
+    method saveValues path {
+        $prop configure -value [$path cget -value]
     }
 }
