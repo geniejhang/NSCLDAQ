@@ -78,3 +78,60 @@ snit::widgetadaptor PropertyView {
     }
     
 }
+##
+# @class GenericPropertyEditor
+#
+#  Wraps a generic property (string property) with a factory for an appropriate
+#  editor.   In this case, the editor produces a PropertyView which
+#  allows an arbitray string to be entered.
+#
+# METHODS:
+#   *  makeEditor - creates an editor.
+#   *  saveValues - Saves value(s) from the editor.
+#
+snit::type GenericPropertyEditor {
+    component prop
+    
+    # These make us a simple wrapper around the property we install:
+    
+    delegate option * to prop
+    delegate method * to prop
+    
+    ##
+    # constructor
+    #   - Install the property with a temporary name
+    #   - Process configuration options (hopefully updates the temp name).
+    #
+    # @param[in] args - construction time configuration options.
+    #
+    constructor args {
+        install prop using property %AUTO% -name temp
+        $self configurelist $args
+    }
+    #-------------------------------------------------------------------------
+    # Factory methods:
+    
+    ##
+    # makeEditor
+    #   Given a widget path creates an editor widget with that name
+    #   The widget is stocked with the current name/vaule and its -readonly
+    #   value determines if it's readable:
+    #
+    # @param[in] path - widget path.
+    # @return    path - just like all widget making things
+    method makeEditor path {
+        PropertyView $path                                                  \
+            -name [$prop cget -name] -value [$prop cget -value]               \
+            -readonly [expr {![$prop cget -editable]}]
+        return $path
+    }
+    ##
+    # saveValues
+    #   Stores the values from a view into the property.
+    #
+    # @param[in] path - widget path containing the view.
+    #
+    method saveValues path {
+        $self configure -value [$path cget -value]
+    }
+}
