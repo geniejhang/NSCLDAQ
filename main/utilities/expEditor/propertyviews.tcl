@@ -281,7 +281,7 @@ snit::type IntegerEditor {
     # @param[in] args - construction time configuration option/values.
     #
     constructor args {
-        install prop using property %AUTO% -name temp
+        install prop using IntegerProperty %AUTO% -name temp
         $self configurelist $args;             # Should override temp name.
     }
     destructor {
@@ -311,6 +311,111 @@ snit::type IntegerEditor {
     #   Save the editor value in the property.
     #
     # @param[in] path - editor widget path.
+    #
+    method saveValues path {
+        $prop configure -value [$path cget -value]
+    }
+}
+##
+# @class EnumeratedView
+#   Provides an editor for an enumerated type.  This will be a combo box
+#   where the initial value is loaded into the box and the values are the
+#   drop down.
+#
+# OPTIONS
+#   *  -readonly - if true the item is readonly. (can only be configured at construction).
+#   *  -name     - Name of the item.
+#   *  -value    - Value of the itemm.
+#   *  -values   - Legal values of the item.
+#
+# @note it is not an error to configure -value with an item not in -values
+#       though that may cause an error when the editor is saved back to the
+#       property.
+#
+snit::widgetadaptor EnumeratedView {
+    component chooser
+    
+    option -name -default ""
+    option -value -default ""
+    option -readonly -default 0 -readonly 1
+    
+    delegate option -values to chooser
+    
+    ##
+    # constructor
+    #   - hull is installed as a ttk::frame.
+    #   - label is made
+    #   - chooser is installed.
+    #   - options processed.
+    #   - widgets laid out
+    #   - if -readonly the chooser is disabled.
+    #
+    # @parameter[in] args - the constrution time option/value pairs.
+    #
+    constructor args {
+        installhull using ttk::frame
+        
+        ttk::label $win.l -textvariable [myvar options(-name)]
+        install chooser using ttk::combobox $win.chooser                     \
+            -textvariable [myvar options(-value)]
+        
+        $self configurelist $args
+        
+        grid $win.l $chooser -sticky nsew
+        grid columnconfigure $win 1 -weight 1
+        grid columnconfigure $win 0 -weight 0
+        grid rowconfigure $win 0 -weight 1
+        
+        if {$options(-readonly)} {
+            $chooser configure -state readonly
+        }
+          
+    }
+}
+##
+# @class EnumeratedEditor
+#    Wraps an EnumeratedProperty supplying factory methods for producing
+#    an editor (view) and receiving the data from that view if it is to be
+#    saved.
+#
+snit::type EnumeratedEditor {
+    component prop
+    delegate option * to prop
+    delegate method * to prop
+    
+    ##
+    # constructor:
+    #   install the property as an EnumeratedProperty with a temp name
+    #   configure the property - which should set the name.
+    #
+    # @param[in] args - construction time configuration option/value pairs.
+    #
+    constructor args {
+        install prop using EnumeratedProperty %AUTO% {*}$args;   # All opts delegated.
+        
+    }
+    #--------------------------------------------------------------------------
+    # Factory support methods:
+    
+    ##
+    # makeEditor
+    #   Returns a view for the object.
+    #
+    # @param[in] path - the widget path for the object to be created.
+    # @return path.
+    #
+    method makeEditor path {
+        return [EnumeratedView $path                                         \
+            -name [$prop cget -name] -value [$prop cget -value]              \
+            -values [$prop cget -values] -readonly [expr {![$prop cget -editable]}]
+        ]   
+    }
+    ##
+    # saveValues
+    #   Called when it's time to savae an editor's values to the underlying
+    #   property.
+    #
+    # @param[in] path - widget path of the editor.
     #
     method saveValues path {
         $prop configure -value [$path cget -value]
