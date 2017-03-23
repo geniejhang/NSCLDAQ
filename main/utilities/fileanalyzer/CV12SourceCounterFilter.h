@@ -28,7 +28,7 @@ namespace V12 {
  *
  * The CSourceCounterFilter is responsible for processing a stream of
  * ring items and keeping track of how many of each item type was observed for
- * each source id. Composite ring items are The user can stream a textual report to any stream.
+ * each source id. Composite ring items are processed one build layer deep.
  *
  * The class is designed to function in a V12 filter program. The finalize
  * method causes the result file to be written.
@@ -38,14 +38,13 @@ class CSourceCounterFilter : public CFilter
   private:
     std::map<uint32_t, std::map<uint32_t, uint32_t> > m_counters;
 
-    uint32_t     m_defaultId;
     std::string  m_outputFile;
     bool         m_builtData;
 
 
   public:
 
-    CSourceCounterFilter(uint32_t defaultId, std::string outputFile);
+    CSourceCounterFilter(std::string outputFile);
     virtual ~CSourceCounterFilter();
 
     CFilterUPtr clone() const { return DAQ::make_unique<CSourceCounterFilter>(*this);}

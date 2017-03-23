@@ -10,12 +10,14 @@ using namespace std;
 namespace DAQ {
 namespace V12 {
 
-  CSourceCounterFilter::CSourceCounterFilter(uint32_t defaultId, std::string outputFile)
-: m_counters(), m_defaultId(defaultId), m_outputFile(outputFile), m_builtData(true)
-
-{
-  setupCounters(m_defaultId);
-}
+/*!
+   * \brief Constructor
+   *
+   * \param outputFile
+   */
+  CSourceCounterFilter::CSourceCounterFilter(std::string outputFile)
+: m_counters(), m_outputFile(outputFile), m_builtData(true)
+{}
 
 CSourceCounterFilter::~CSourceCounterFilter() 
 {
