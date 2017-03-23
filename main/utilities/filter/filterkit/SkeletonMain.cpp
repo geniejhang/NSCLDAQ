@@ -29,8 +29,8 @@ using namespace DAQ;
 
 /*! the main function
  *
- * Creates a CFilterMain object and
- * executes its operator()() method.
+ * Creates a CFilterMain object, configures it for use with V12 data,
+ * and then executes its operator()() method.
  *
  *  \retval 0 for normal exit,
  *  \retval 1 for known fatal error,
@@ -45,19 +45,30 @@ int main(int argc, char* argv[])
     // Create the main
     CFilterMain theApp(argc,argv);
 
-    // Construct filter(s) here.
+    // The filter main is able to handle nscldaq 11.0 and 12.0 data
+    // format. In order to process a specific format, you need to pass
+    // in a object that defines how to handle a specific version. Here
+    // the V12::CFilterAbstraction class is used to deal with 12.0 data.
+    // If you want to deal with version 11.0, then you need to use
+    // V11::CFilterAbstraction.
     V12::CFilterAbstractionPtr pVersion(new V12::CFilterAbstraction);
+    theApp.setVersionAbstraction(pVersion);
 
+    // The filter that you create must be compatible with the version of
+    // data that is being used. A CTemplateFilter is derived from
+    // V12::CFilter and thus is for processing V12 data. If you want
+    // to handle V11 data, you need to use a filter derived from the
+    // V11::CFilter class.
     std::shared_ptr<CTemplateFilter> pFilter(new CTemplateFilter);
 
     // Register the filter(s) here. Note that if more than
     // one filter will be registered, the order of registration
     // will define the order of execution. If multiple filters are
     // registered, the output of the first filter will become the
-    // input of the second filter and so on. 
+    // input of the second filter and so on. Note that the filter
+    // is registered to the version abstraction rather than the
+    // CFilterMain object.
     pVersion->registerFilter(pFilter);
-
-    theApp.setVersionAbstraction(pVersion);
 
     // Run the main loop
     theApp();
