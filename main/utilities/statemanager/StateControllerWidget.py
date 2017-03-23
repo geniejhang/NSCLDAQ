@@ -239,6 +239,8 @@ class QNSCLRunControl(QtGui.QFrame):
     #
     def _endRun(self):
         self.stateChange.emit('Ready')
+        
+        
     ##
     # _prepauseRun
     #

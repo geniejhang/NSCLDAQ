@@ -183,6 +183,14 @@ class RunControl(StateControllerWidget.QNSCLStateControllerWidget):
             #
             self._stateManager.setGlobalState('NotReady')
             self._stateManager.waitTransition(self._stateTransitionProgress, None)
+        else:
+            #
+            # If the state transition was 'ending' and recording was active,
+            # increment the run number
+            #
+            if self._stateManager.isRecording()  and state == 'Ending':
+                runNumber = self._stateManager.getRunNumber()
+                self._stateManager.setRunNumber(runNumber + 1)
             
     ##
     # _titleChanged

@@ -41,6 +41,7 @@
 class CRingBuffer;
 class CRingItem;
 class CRingStateChangeItem;
+class CStateClientApi;
 
 
 
@@ -79,6 +80,8 @@ class EventLogMain
   std::string       m_logService;
   zmq::socket_t*    m_pLogSocket;
   CStatusDefinitions::LogMessage* m_pLogger;
+  
+  CStateClientApi*  m_pStateApi;
   
   
   // Constructors and canonicals:
@@ -123,6 +126,17 @@ private:
   void log(const char* msg, int severity);
   void log(const char* baseMessage, double free, int severity);
   void log(const char* msg, int errno, int severity);
+  
+  
+  // Promised methods:
+  
+  void notReadyClose(int fd, int run);
+  void writeChecksumFile(int runNumber);
+  bool expectStateRequest(
+    std::string& msg, const char* stateName,  int timeout
+  );
+  void stateManagerDie(const char* msg);
+
   
 };
 

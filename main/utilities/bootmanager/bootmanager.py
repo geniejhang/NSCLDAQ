@@ -204,7 +204,10 @@ def processProgramInput(readable):
                 client.setProgramState(program.name(), 'NotReady')
             except:
                 pass
-            client.setGlobalState('NotReady')
+            try:
+                client.setGlobalState('NotReady')
+            except:
+                pass
             break
         else:
             relayProgramOutput(program, line)

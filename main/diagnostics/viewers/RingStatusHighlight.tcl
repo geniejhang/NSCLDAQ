@@ -237,16 +237,22 @@ snit::type RingStatusHighlight {
                 }
                 #  If the ring's value is still 'unseen' make it zero and then
                 #  apply the increment selected above to it:
-                
-                set dashboardInfo $scoreboard($ringName)
-                set counter [lindex $dashboardInfo 1]
-                if {$counter eq "unseen"} {
-                    set counter 0
-                }
-                incr counter $increment
-                set dashboardInfo [lreplace $dashboardInfo 1 1 $counter]
-                set scoreboard($ringName) $dashboardInfo
-            }
+
+
+		# If there's no scoreboard entry (e.g. ring deleted)
+		# on to next iteration.
+
+		if {[array names scoreboard $ringName] ne ""} {
+		    set dashboardInfo $scoreboard($ringName)
+		    set counter [lindex $dashboardInfo 1]
+		    if {$counter eq "unseen"} {
+			set counter 0
+		    }
+		    incr counter $increment
+		    set dashboardInfo [lreplace $dashboardInfo 1 1 $counter]
+		    set scoreboard($ringName) $dashboardInfo
+		}
+	    }
         }
         #  Now run over all the ring dashboard elements that need setting:
         

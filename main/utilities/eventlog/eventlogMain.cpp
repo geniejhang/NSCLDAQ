@@ -28,6 +28,7 @@
 #include <DataFormat.h>
 #include <CAllButPredicate.h>
 #include <CPortManager.h>
+#include <CStateClientApi.h>
 #include <io.h>
 
 #include <iostream>
@@ -42,6 +43,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sstream>
+#include <cstdlib>
 
 #include <system_error>
 
@@ -90,7 +92,8 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    m_haveWarned(false),
    m_haveSevere(false),
    m_pLogSocket(0),
-   m_pLogger(0)
+   m_pLogger(0),
+   m_pStateApi(0)
  {
  }
 
@@ -98,6 +101,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
  {
     delete m_pLogger;
     delete m_pLogSocket;
+    delete m_pStateApi;
  }
  //////////////////////////////////////////////////////////////////////////////////
  //
@@ -112,13 +116,84 @@ class noData :  public CRingBuffer::CRingBufferPredicate
  int
  EventLogMain::operator()(int argc, char**argv)
  {
+  parseArguments(argc, argv);
+  log("EventlogMain::operator()", CStatusDefinitions::SeverityLevels::DEBUG);
+  // If run under the state manager instantiate the client api to it.
+
+  const char* programName = std::getenv("PROGRAM");
+  const char* subUri      = std::getenv("SUB_URI");
+  const char* reqUri      = std::getenv("REQ_URI");
+  
+  // all must be defined to instantiate the client.
+  
+  if (
+    (programName != nullptr) && (subUri != nullptr) && (reqUri != nullptr))
+  {
+    log("Creating state API", CStatusDefinitions::SeverityLevels::DEBUG);
+    m_pStateApi = new CStateClientApi(reqUri, subUri, programName);
    
-   parseArguments(argc, argv);
+   // at startup, we should have gotten a 'Readying' request.. we'll pull that
+   // and echo it.  If we don't have such a request then we'll set our state
+   // and the entire state to NotReady and suicide.
+   
+   std::string message;
+    if(0) {
+     log("Waiting for readying (1 second).", CStatusDefinitions::SeverityLevels::DEBUG);
+     if (!expectStateRequest(message, "Readying", 10000)) {
+         message += " initializing waiting for the 'Readying' transition request'";
+         stateManagerDie(message.c_str());
+     }
+     
+    
+    log("Setting event log state to Readyng", CStatusDefinitions::SeverityLevels::DEBUG);
+    m_pStateApi->setState("Readying");
+    }
+  }
+   
+   // Initialize the event logger:
+   
    log("Event logger starting", CStatusDefinitions::SeverityLevels::INFO);
+   
+   
+   // If the state API is active, we need to wait for the 'Ready' transition
+   // and echo that too:
+   
+  if (m_pStateApi) {
+    std::string message;
+    std::string newState;
+    if (0) {
+    
+    if (!expectStateRequest(message, "Ready", 10000)) {
+      message += " expecting transition to Ready";
+      stateManagerDie(message.c_str());
+    } else {
+      m_pStateApi->setState("Ready");
+    }
+    }
+    m_pStateApi->setState("Ready");    // We've initialized.
+    while(!m_pStateApi->waitTransition(newState, -1)) {
+      log("Waiting for Ready...", CStatusDefinitions::SeverityLevels::INFO);
+    }
+    if (newState != "Ready") {
+      message = "Expecting state transition to Ready got: ";
+      message += newState;
+      stateManagerDie(message.c_str());
+    }
+   
+  }
+   
+   // Record data until we're supposed to exit.
+   
+   log("Event Logger entering recordData()", CStatusDefinitions::SeverityLevels::INFO);
    recordData();
    log("Event logger exiting normally", CStatusDefinitions::SeverityLevels::INFO);
+   
 
- }
+    
+    // Once everybody is readying, we shou
+    
+    
+}
 
  ///////////////////////////////////////////////////////////////////////////////////
  //
@@ -157,11 +232,11 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    int fd = open(fullPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 
 		 S_IWUSR | S_IRUSR | S_IRGRP);
    if (fd == -1) {
-      perror("Open failed for event file segment");
-      log(
-	  "Open failed for event file segment: ", errno,
-	  CStatusDefinitions::SeverityLevels::SEVERE
-      );
+      std::string msg = "Open failed for event file segment ";
+      msg += fullPath;
+      msg += " ";
+      perror(msg.c_str());
+      log(msg.c_str(), errno, CStatusDefinitions::SeverityLevels::SEVERE);
       log("Event logger exiting in error", CStatusDefinitions::SeverityLevels::SEVERE);
       exit(EXIT_FAILURE);
    }
@@ -179,6 +254,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
  void
  EventLogMain::recordData()
  {
+
    // if we are in one shot mode, indicate to whoever started us that we are ready to
    // roll.  That file goes in the event directory so that we don' thave to keep hunting
    // for it like we did in ye olde version of NSCLDAQ:
@@ -215,7 +291,38 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    // Loop over all runs.
 
    while(1) {
+    // If we are cooperating with the state manager, before the run
+    // starts, we should expect to see a "Beginning" and then an "Active"
+    // state transition as the readouts get rolling:
+    
+    if(m_pStateApi) {
+      std::string newState;
+      log("Waiting for beginning transition" , CStatusDefinitions::SeverityLevels::DEBUG);
+      while (!m_pStateApi->waitTransition(newState, -1)) {
+        ;
+      }
+      if (newState != "Beginning") {
+        std::string msg = "Expected state transition to 'Beginning' instead got: ";
+        msg += newState;
+        stateManagerDie(msg.c_str());
+      }
 
+      log("Beginning received", CStatusDefinitions::SeverityLevels::DEBUG);
+      m_pStateApi->setState("Beginning");
+
+      while(!m_pStateApi->waitTransition(newState, -1)) {
+        ;
+      }
+      if (newState != "Active") {
+        std::string msg = "Expected state transition to 'Active' got: ";
+        msg += newState;
+        log(msg.c_str(), CStatusDefinitions::SeverityLevels::DEBUG);
+      }
+      // At this point readout programs can start shooting data through rings.
+    
+      m_pStateApi->setState("Active");
+      log("Active", CStatusDefinitions::SeverityLevels::DEBUG);
+    }
      // If necessary, hunt for the begin run.
 
      if (!m_fRunNumberOverride) {
@@ -262,6 +369,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
       //
        recordRun(*(reinterpret_cast<const CRingStateChangeItem*>(0)), 0);
      }
+     
      // Return/exit after making our .exited file if this is a one-shot.
 
      if (m_exitOnEndRun) {
@@ -308,6 +416,8 @@ class noData :  public CRingBuffer::CRingBufferPredicate
  void
  EventLogMain::recordRun(const CRingStateChangeItem& item, CRingItem* pFormatItem)
  {
+  std::string newState;
+  std::string stateMessage;
    unsigned int segment        = 0;
    uint32_t     runNumber;
    uint64_t     bytesInSegment = 0;
@@ -318,33 +428,125 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    CRingItem*   pItem;
    uint16_t     itemType;
    m_lastCheckedSize = 0;    // Last checked free space.
+   bool recording(true);
+   
+   // If using the state manager we need to use the global recording flag
+   // to determine if we are recording data.
 
+   if (m_pStateApi) {
+    recording = m_pStateApi->recording();
+   }
 
    // Figure out what file to open and how to set the pItem:
 
-   if (m_fRunNumberOverride) {
-     runNumber  = m_nOverrideRunNumber;
-     fd         = openEventSegment(runNumber, segment);
-     pItem      = CRingItem::getFromRing(*m_pRing, p);
-   } else {
-     runNumber  = item.getRunNumber();
-     fd         = openEventSegment(runNumber, segment);
-     pItem      = new CRingStateChangeItem(item);
-   }
 
-   // If there is a format item, write it out to file:
-   // Note there won't be if the run number has been overridden.
+    if (m_fRunNumberOverride) {
+      if (recording) {
+        runNumber  = m_nOverrideRunNumber;
+        fd         = openEventSegment(runNumber, segment);
+      }
+      pItem      = CRingItem::getFromRing(*m_pRing, p);
+    } else {
+      if (recording) {
+        runNumber  = item.getRunNumber();
+        fd         = openEventSegment(runNumber, segment);
+      }
+      pItem      = new CRingStateChangeItem(item);
+    }
+    // If there is a format item, write it out to file:
+    // Note there won't be if the run number has been overridden.
    
-   if (pFormatItem) {
-     bytesInSegment += itemSize(*pFormatItem);
-     writeItem(fd, *pFormatItem);
+    if (pFormatItem && recording) {
 
-   }
+      bytesInSegment += itemSize(*pFormatItem);
+      writeItem(fd, *pFormatItem);
+ 
+    }
+
+
 
  
 
    while(1) {
 
+     /**
+      If we're using the state manager see if there's
+      A transition pending.  The 'legal' transitions are:
+      
+      *  Ending - the run is ending.  Just echo back and when we see
+                  close the file we can complete the transition to Ready.
+      *  NotReady - Something failed.  Log this, go to NotReady, close the file
+                  and exit.
+      *  Pausing - The run is pausing.
+                   - Complete the transition to paused.
+                   - Wait indefinitely for the next transition. If resuming
+                     complete transaction back to Active then go on.
+                     If Ending, echo back and keep going, eventually we'll
+                    see the end run members and the End transition.
+                    If NotReady - something failed so treat as NotReady above.
+    */  
+
+    if (m_pStateApi) {
+      if (m_pStateApi->getState() != "Ending") {
+        if(m_pStateApi->waitTransition(newState, 0)) {
+          if (newState == "Ending") {
+            m_pStateApi->setState("Ending");
+            log("Ending state transition", CStatusDefinitions::SeverityLevels::DEBUG);
+          } else if (newState == "NotReady") {
+            notReadyClose(fd, runNumber);
+          } else if (newState == "Pausing") {
+            
+            // Finish the transition to paused.
+            
+            m_pStateApi->setState("Pausing");
+            while(!m_pStateApi->waitTransition(newState, -1)) {
+              ;
+            }
+            if (newState != "Paused") {
+              stateMessage = "Expected transition to Paused but got: ";
+              stateMessage += newState;
+              stateManagerDie(stateMessage.c_str());
+            }
+            m_pStateApi->setState("Paused");
+            
+            // What happens next depends on the next state request
+  
+            while (!m_pStateApi->waitTransition(newState, -1)) {
+              ;
+            }
+            if (newState == "Resuming") {
+              m_pStateApi->setState("Resuming");
+              while (!m_pStateApi->waitTransition(newState, -1)) {
+                ;
+              }
+              if (newState !=  "Active") {
+                stateMessage = "Expected transition to Active got: ";
+                stateMessage += newState;
+                stateManagerDie(stateMessage.c_str());
+              }
+              m_pStateApi->setState("Active");
+            } else if (newState == "Ending") {
+              m_pStateApi->setState("Ending");
+            }
+            else if (newState == "NotReady") {
+              notReadyClose(fd, runNumber);        
+            } else {
+              stateMessage = "Unexpected state transition while paused : ";
+              stateMessage += newState;
+              stateManagerDie (stateMessage.c_str());
+            }
+            
+          } else {
+            // Unexpected state:
+            std::string message = "Unexpected new state while recording: ";
+            message += newState;
+            stateManagerDie(message.c_str());
+          }
+        }
+      }
+    }
+
+    if (pItem) {                    // For when we get from ring with timeout.
      size_t size    = itemSize(*pItem);
      itemType       = pItem->type();
 
@@ -359,19 +561,30 @@ class noData :  public CRingBuffer::CRingBufferPredicate
         // put out a format item:
 	
        if (pFormatItem) {
-	bytesInSegment += itemSize(*pFormatItem);
-	writeItem(fd, *pFormatItem);
+        
+        if (recording) {
+          writeItem(fd, *pFormatItem);
+          bytesInSegment += itemSize(*pFormatItem);
+        }
        }
      }
 
-     writeItem(fd, *pItem);
-
-     bytesInSegment  += size;
+     if (recording) {
+          writeItem(fd, *pItem);
+          bytesInSegment  += size;
+     }
+     
+    
      
      // Check free disk space and log Warning, SEVERE or Info if so.
      
-     if ((bytesInSegment - m_lastCheckedSize) >= SpaceCheckInterval) {
+    if ((bytesInSegment - m_lastCheckedSize) >= SpaceCheckInterval) {
 	m_lastCheckedSize = bytesInSegment;
+    std::stringstream logMessage;
+    logMessage << "Segment size: ";
+    logMessage << bytesInSegment/(1024*1024);
+    logMessage << " Mbytes";
+    log(logMessage.str().c_str(), CStatusDefinitions::SeverityLevels::DEBUG);
 	try {
 	  double pctFree = io::freeSpacePercent(fd);
 	  if (shouldLogWarning(pctFree)) {
@@ -414,15 +627,19 @@ class noData :  public CRingBuffer::CRingBufferPredicate
 
      if(itemType == END_RUN) {
        endsRemaining--;
+       // If we're participating in the state manager and our state is not
+       // already 'Ready', we need to participate in the End of run transition.
+       
+       
        if (endsRemaining == 0) {
-	 break;
+        break;
        }
      }
      if (itemType == ABNORMAL_ENDRUN) {
         endsRemaining = 0;             // In case we're not --one-shot
         break;                         // unconditionally ends the run.
      }
-
+     
      // If we've seen an end of run, need to support timing out
      // if we dont see them all.
 
@@ -433,6 +650,11 @@ class noData :  public CRingBuffer::CRingBufferPredicate
 
        break;
      }
+     
+     // TODO:  In order to catch NotReady state transition in the middle of
+     //        a run it's probably going to be necessary to get ring items
+     //        with a timeout.
+     
      pItem =  CRingItem::getFromRing(*m_pRing, p);
      if(isBadItem(*pItem, runNumber)) {
        std::cerr << "Eventlog: Data indicates probably the run ended in error exiting\n";
@@ -442,48 +664,25 @@ class noData :  public CRingBuffer::CRingBufferPredicate
       );
        exit(EXIT_FAILURE);
      }
-   } 
-   //
-   //  If checksumming, finalize the checksum and write out the checksum file as well.
-   //  by  now m_pChecksumContext is only set if m_fChecksum was true when the run
-   //  files were opened.
-   //
-   if (m_pChecksumContext) {
-     EVP_MD_CTX* pCtx = reinterpret_cast<EVP_MD_CTX*>(m_pChecksumContext);
-     unsigned char* pDigest = reinterpret_cast<unsigned char*>(OPENSSL_malloc(EVP_MD_size(EVP_sha512())));
-     unsigned int   len;
-       
-     // Not quite sure what to do if pDigest failed to malloc...for now
-     // silently ignore...
-
-     if (pDigest) {
-       EVP_DigestFinal_ex(pCtx, pDigest, &len);
-       std::string digestFilename = shaFile(runNumber);
-       FILE* shafp = fopen(digestFilename.c_str(), "w");
-
-     
-       // Again not quite sure what to do if the open failed.
-       if (shafp) {
-	 unsigned char* p = pDigest;
-	 for (int i =0; i < len;i++) {
-	   fprintf(shafp, "%02x", *p++);
-	 }
-	 fprintf(shafp, "\n");
-	 fclose(shafp);
-       }
-       // Release the digest storage and the context.
-       OPENSSL_free(pDigest);
-
-     }
-     EVP_MD_CTX_destroy(pCtx);
-     m_pChecksumContext = 0;
-       
    }
+  }
+  if (recording) {
+    writeChecksumFile(runNumber);
+    close(fd);
+  }
+  // If necessary participate in the final transition to "Ready".
+  
+  if (m_pStateApi) {
+    
+    if (!expectStateRequest(stateMessage, "Ready", -1)) {
+     stateMessage += " - Expecting Final end after closed event file";
+     stateManagerDie(stateMessage.c_str());
+    }
+    m_pStateApi->setState("Ready");
+  }
 
-   close(fd);
-
-
- }
+    
+}
 
  /*
  ** Parse the command line arguments, stuff them where they need to be
@@ -950,9 +1149,14 @@ EventLogMain::getLogger()
 void
 EventLogMain::log(const char* message, int severity)
 {
-  CStatusDefinitions::LogMessage* pLogger = getLogger();
-  if (pLogger) {
-    pLogger->Log(severity, message);
+#ifndef LOG_DEBUG
+  if (severity != CStatusDefinitions::SeverityLevels::DEBUG)
+#endif
+  {
+    CStatusDefinitions::LogMessage* pLogger = getLogger();
+    if (pLogger) {
+      pLogger->Log(severity, message);
+    }
   }
 }
 /**
@@ -991,3 +1195,136 @@ EventLogMain::log(const char* message, int errno, int severity)
 }
 
 
+/**
+ * notReadyClose
+ *    This is called on a transition to not ready when an event file is open.
+ *    -  The file is closd and
+ *    -  The associated checksum file is written.
+ *    -  A log message is created indicating a premature close.
+ *  
+ * @param[in] fd - file descriptor of the open event file.
+ * @param[in] run - Number of the run.
+ */
+void
+EventLogMain::notReadyClose(int fd, int run)
+{
+  close(fd);
+  writeChecksumFile(run);
+  
+  std::ostringstream msg;
+  msg << "Eventlog: Premature close of event file for run " << run;
+  log(msg.str().c_str(), CStatusDefinitions::SeverityLevels::SEVERE);
+}
+/**
+ * writeChecksumFile
+ *    Common code to write a checksum file for the just closed run file.l
+ *
+ * @param[in] runNumber - number of the run just closed - used to generate the
+ *                    filename.
+ */
+void
+EventLogMain::writeChecksumFile(int runNumber)
+{
+   //
+   //  If checksumming, finalize the checksum and write out the checksum file as well.
+   //  by  now m_pChecksumContext is only set if m_fChecksum was true when the run
+   //  files were opened.
+   //
+   if (m_pChecksumContext) {
+     EVP_MD_CTX* pCtx = reinterpret_cast<EVP_MD_CTX*>(m_pChecksumContext);
+     unsigned char* pDigest = reinterpret_cast<unsigned char*>(OPENSSL_malloc(EVP_MD_size(EVP_sha512())));
+     unsigned int   len;
+       
+     // Not quite sure what to do if pDigest failed to malloc...for now
+     // silently ignore...
+
+     if (pDigest) {
+       EVP_DigestFinal_ex(pCtx, pDigest, &len);
+       std::string digestFilename = shaFile(runNumber);
+       FILE* shafp = fopen(digestFilename.c_str(), "w");
+
+     
+       // Again not quite sure what to do if the open failed.
+       if (shafp) {
+	 unsigned char* p = pDigest;
+	 for (int i =0; i < len;i++) {
+	   fprintf(shafp, "%02x", *p++);
+	 }
+	 fprintf(shafp, "\n");
+	 fclose(shafp);
+       }
+       // Release the digest storage and the context.
+       OPENSSL_free(pDigest);
+
+     }
+     EVP_MD_CTX_destroy(pCtx);
+     m_pChecksumContext = 0;
+       
+   }  
+}
+/**
+ * expectStateRequest
+ *    Called when we expect a specific state transition request.
+ *
+ * @param[out] msg       - If an error occurs, this message is filled in.
+ * @param[in] stateName - Expected state name in transition.
+ * @param[in] timeout   - Maximum ms to wait for the transition:
+ *                    - -1 no timeout.
+ *                    -  0 nonblocking poll.
+ * @return bool  - True if the expected transition occured, false otherwise.
+ *                 If false; msg is overwritten with an error description.
+ */
+bool
+EventLogMain::expectStateRequest(std::string& msg, const char* stateName, int timeout)
+{
+  // We assume the api is instantiated.
+  
+  std::string requestedState;
+  if (!m_pStateApi->waitTransition(requestedState, timeout)) {
+    // Timed out:
+    
+    msg = "Wait for transition request to state: ";
+    msg += stateName;
+    msg += " timed out without a transition request.";
+    return false;
+  }
+  // We have a transition.  Is it the one we wanted?
+  
+  if (requestedState != stateName) {
+    msg = "Expected a state transition to ";
+    msg += stateName;
+    msg + " but got one to ";
+    msg += requestedState;
+    return false;
+  }
+  // Yes it's the one we wanted.
+  
+  return true;
+}
+/**
+ * stateManagerDie
+ *   Called when the state manager is active and we need to die.
+ *   - Set our state to NotReady
+ *   - Request a global state transition to NotReady.
+ *   - Make a log message with severity SEVERE indicating we're about to
+ *     exit
+ *   - Actually exit.
+ *
+ *  @param[in] msg - message to log on exit.
+ */
+void
+EventLogMain::stateManagerDie(const char* msg)
+{
+  
+  // these try's are because maybe both states are already not ready.
+  
+  try {
+    m_pStateApi->setState("NotReady");       // We're Failing
+  } catch (...) {}
+  try {
+    m_pStateApi->setGlobalState("NotReady"); // Force the system to die.
+  } catch(...) {}
+  log(msg, CStatusDefinitions::SeverityLevels::SEVERE);
+  
+  exit(EXIT_FAILURE);
+}

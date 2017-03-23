@@ -91,7 +91,7 @@ proc prebeginOrDie {} {
     # Let's update the title and run numbers...these might fail if the run is
     # active, in which case the begin will also fail:
     
-    catch {set ::run [::state::client runnumber]}
+    catch {set ::run [::state::client runNumber]}
     catch {set ::title [::state::client title]}
     set outring [::state::client outring]
     if {$outring ne ""} {
