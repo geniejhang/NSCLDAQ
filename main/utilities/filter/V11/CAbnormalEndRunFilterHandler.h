@@ -56,14 +56,6 @@ class CAbnormalEndRunFilterHandler : public CFilter
   private:
     CAbnormalEndRunFilterHandler& operator=(const CAbnormalEndRunFilterHandler& rhs);
 
-    /*! \brief Checks for ABNORMAL_ENDRUN presence
-     *
-     * If the ring item is an ABNORMAL_ENDRUN, it sets a flag to ensure
-     * that an exception is thrown on the next iteration. Note that 
-     * the next iteration may not come... in which case this would probably
-     * just exit normally.
-     *
-     */
     CRingItem* handleRingItem(CRingItem *pItem);
 
     CRingItem* handleAbnormalEndItem(CAbnormalEndItem* item);

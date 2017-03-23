@@ -7,12 +7,24 @@
 namespace DAQ {
 namespace V11 {
 
+// forward declarations
 class CFilterAbstraction;
-
 class COneShotLogicFilter;
+
+// Some convenient typedefs
 using COneShotLogicFilterUPtr = std::unique_ptr<COneShotLogicFilter>;
 using COneShotLogicFilterPtr  = std::shared_ptr<COneShotLogicFilter>;
 
+/*!
+ * \brief One shot logic specific to V11 data
+ *
+ * The COneShotLogicFilter is a filter that processes data and
+ * helps implement the logic for the --oneshot option in filters.
+ * The bookkeeping is done by an object of the COneShotHandler class.
+ *
+ * If the user selects the --oneshot option, a filter of this type will
+ * be added to the set of filters run.
+ */
 class COneShotLogicFilter : public CFilter
 {
 private:

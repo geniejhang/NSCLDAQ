@@ -28,16 +28,35 @@
 namespace DAQ {
 namespace V12 {
 
-
+// forward declaration
 class CCompositeFilter;
+
+// Useful typedefs
 using CCompositeFilterUPtr = std::unique_ptr<CCompositeFilter>;
 using CCompositeFilterPtr  = std::shared_ptr<CCompositeFilter>;
 
+
+
+/*!
+ * \brief The CCompositeFilter class
+ *
+ * The CCompositeFilter class maintains a set
+ * of filters. When a method of this class is called, the same method
+ * for each of the filters in the set is called as well. The only exception
+ * to this is if there a multiple filters that need their handler to be called
+ * and an earlier filter returns nullptr (or equivalent) from its handler. In
+ * that case, the processing is aborted and the subsequent filters' handlers
+ * will not be called.
+ *
+ * The order in which the filters is called is the same as the order
+ * they were registered.
+ *
+ */
 class CCompositeFilter : public CFilter
 {
   public:
     // Basic typedefs for use with the class
-    typedef std::vector<CFilterPtr> FilterContainer;
+    typedef std::vector<CFilterPtr> FilterContainer; // CFilterPtr is a std::shared_ptr
     typedef FilterContainer::iterator iterator;
     typedef FilterContainer::const_iterator const_iterator;
 

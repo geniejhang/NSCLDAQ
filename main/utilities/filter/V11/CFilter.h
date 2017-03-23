@@ -30,11 +30,16 @@ using CFilterPtr  = std::shared_ptr<CFilter>;
   could consider this as a transparent filter that can be inserted into
   the data stream.
 
-  All derived methods must return a newly allocated CRingItem. There is
-  a one-to-one relationship between object input to the filter and objects
-  output from the filter. The user is not responsible for delete the
-  object passed into each method. In fact, doing so will cause a segmentation
-  fault.
+  All derived methods must return a dynamically allocated CRingItem.
+  Because the pointer passed in refers to an object that was dynamically
+  allocated, you can return the same pointer that was passed in or a pointer
+  to a newly allocated object. You must NOT delete the pointer passed
+  in as an argument. Doing so will lead to a double free or seg fault.
+  If any handler returns nullptr, no output will be
+  made to the data sink of the filter.
+
+  There is a one-to-one relationship between the object input to the filter
+  and objects output from the filter.
 */
 class CFilter
 {

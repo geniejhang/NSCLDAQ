@@ -83,8 +83,6 @@ CCompositeFilter& CCompositeFilter::operator=(const CCompositeFilter& rhs)
 }
 
 /**! Destructor
-  1. Frees all dynamically allocated objects
-  2. Clears the container holding the pointers to those objects.
 */
 CCompositeFilter::~CCompositeFilter()
 {
@@ -118,7 +116,8 @@ void CCompositeFilter::registerFilter(CFilterPtr filter)
 }
 
 /**! Handle a generic ring item
-    This is handler effectively just iterates through the set of 
+ *
+    This handler iterates through the set of
     registered filters and calls their respective handleRingItem(const CRingItem*)
     methods. Memory is managed during the iterations such that each subsequent 
     filter receives as input the output of the previous. It is possible for a filter

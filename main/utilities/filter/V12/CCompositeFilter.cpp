@@ -48,7 +48,7 @@ CCompositeFilter::CCompositeFilter(const CCompositeFilter& rhs)
   } 
 }
 
-/**! Assignment 
+/*! Assignment
 
   Performs a deep copy of the target. The target's state is copied 
   entirely prior to assignment. Following this operation, this will not own pointers 
@@ -81,15 +81,12 @@ CCompositeFilter& CCompositeFilter::operator=(const CCompositeFilter& rhs)
   return *this;
 }
 
-/**! Destructor
-  1. Frees all dynamically allocated objects
-  2. Clears the container holding the pointers to those objects.
-*/
+/*! Destructor */
 CCompositeFilter::~CCompositeFilter()
 {
 }
 
-/**! Virtual copy constructor
+/*! Virtual copy constructor
   Returns a dynamically allocated object whose state is a copy of this.
   Ownership of the returned object belongs to the caller. The semantics 
   of the copy operation for this class is described in the
@@ -102,14 +99,14 @@ CFilterUPtr CCompositeFilter::clone() const
   return DAQ::make_unique<CCompositeFilter>(*this);
 }
 
-/**! Append a filter to the container
+/*! Append a filter to the container
 *
-   By registering a filter to this, a copy of the filter is actually
-   registered. Filters are appended to the back of the container every
+   The composite filter takes shared ownership of the filter.
+   Filters are appended to the back of the container every
    time this method is called. As a result, the order of registration
    is preserved at execution time.
 
-  \param filter a template of the filter to register
+  \param filter     a shared pointer to the filter
 */
 void CCompositeFilter::registerFilter(CFilterPtr filter)
 {
@@ -117,13 +114,17 @@ void CCompositeFilter::registerFilter(CFilterPtr filter)
 }
 
 /**! Handle a generic ring item
-    This is handler effectively just iterates through the set of 
+    The handler iterates through the set of
     registered filters and calls their respective handleRingItem(CRingItemPtr)
-    methods. Memory is managed during the iterations such that each subsequent 
-    filter receives as input the output of the previous. It is possible for a filter
+    methods. It is possible for a filter
     to return a pointer to the same object as was passed it and this is handled properly.
+
+    If a filter returns nullptr or a shared ptr managing no memory,
+    handlers for subsequent filters will not be called
+    and processing will terminate.
+
     
-  \param item the ring item to process
+  \param item   the ring item to process
   \return a pointer to the output of the last filter registered to the composite
 */  
 CRingItemPtr CCompositeFilter::handleRingItem(CRingItemPtr pItem)
@@ -149,7 +150,8 @@ CRingItemPtr CCompositeFilter::handleRingItem(CRingItemPtr pItem)
    is done except that handleStateChangeItem(CRingStateChangeItemPtr) is
    called.
 */
-CRingStateChangeItemPtr CCompositeFilter::handleStateChangeItem(CRingStateChangeItemPtr pItem)
+CRingStateChangeItemPtr
+CCompositeFilter::handleStateChangeItem(CRingStateChangeItemPtr pItem)
 {
   iterator it = begin(); 
   iterator itend = end(); 

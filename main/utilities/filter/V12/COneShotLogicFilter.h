@@ -8,12 +8,26 @@
 namespace DAQ {
 namespace V12 {
 
+// Forward declarations
 class CFilterAbstraction;
-
 class COneShotLogicFilter;
+
+// Typedefs for smart pointers
 using COneShotLogicFilterUPtr = std::unique_ptr<COneShotLogicFilter>;
 using COneShotLogicFilterPtr  = std::shared_ptr<COneShotLogicFilter>;
 
+
+/*!
+ * \brief Filter for implementing the oneshot logic
+ *
+ * The bookkeeping for the oneshot logic is implemented in DAQ::COneShotHandler.
+ * This provides the extra logic to feed the oneshot handler with its data
+ * and also to take actions when certain criteria are determined by the oneshot
+ * handler. There is a similar class called DAQ::V11::COneShotLogicFilter.
+ *
+ * If the user selects the --oneshot option when invoking their filter, a filter
+ * of this type will be added to the composite filter in use.
+ */
 class COneShotLogicFilter : public CFilter
 {
 private:
@@ -39,17 +53,29 @@ public:
     CRingTextItemPtr handleTextItem(CRingTextItemPtr pItem);
     CCompositeRingItemPtr handleCompositeItem(CCompositeRingItemPtr pItem);
 
-    template<class T> T handleItem(T pItem);
-
     const COneShotHandler& getOneShotLogic() const;
+
+private:
+    template<class T> T handleItem(T pItem);
 
 };
 
-
+/*! \brief Generic handler for most item types.
+ *
+ * The code here embodies the logic that if no begin item type has been observed
+ * so far, nullptr will be returned. Otherwise, the item itself will be returned.
+ *
+ * All template parameters will be a type of shared_ptr.
+ *
+ * \param pItem     is a shared pointer type holder a pointer to a specialized ring item
+ *
+ * \retval nullptr (i.e. empty shared_ptr)
+ * \retval the same pointer passed in.
+ */
 template<class T>
 T COneShotLogicFilter::handleItem(T pItem)  {
     if (m_handler.waitingForBegin()) {
-        return T();
+        return T(); // return a null shared_ptr
     } else {
         return pItem;
     }

@@ -27,7 +27,10 @@
 namespace DAQ {
 namespace V12 {
 
+// forward declaration
 class CTransparentFilter;
+
+// Useful typedefs for smart pointers
 using CTransparentFilterUPtr = std::unique_ptr<CTransparentFilter>;
 using CTransparentFilterPtr  = std::shared_ptr<CTransparentFilter>;
 

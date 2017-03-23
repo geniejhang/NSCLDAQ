@@ -11,6 +11,15 @@ namespace DAQ {
 
 static uint32_t defaultRunNumber = std::numeric_limits<uint32_t>::max();
 
+
+/*!
+ * \brief Constructor
+ *
+ * \param ntrans    number of begin run type items to observe
+ * \param beginType the type of item to consider a begin run
+ * \param endType   the type of item to consider an end
+ * \param types     the types to keep counters for
+ */
 COneShotHandler::COneShotHandler(int ntrans, uint32_t beginType,
                                  uint32_t endType, const std::vector<uint32_t>& types)
   : m_nExpectedSources(ntrans),
@@ -25,18 +34,23 @@ COneShotHandler::COneShotHandler(int ntrans, uint32_t beginType,
     }
 }
 
-
+/*!
+ * \brief Specify how many begin runs should be expected
+ *
+ * \param transitions   the number of begin run items to expect
+ */
 void COneShotHandler::setExpectedTransitions(int transitions)
 {
     m_nExpectedSources = transitions;
 }
 
-/**! Process a new item
+/**! Process a new type and run number from a state change
 *
 * Check for error case:
 * - the run number changes when in the middle of the run.
 *
-* @param pItem a state change item to process
+* @param type       type of data item
+* @param runNumber  a run number
 * 
 * @throws CErrnoException when run number changes unexpectedly
 */
@@ -54,6 +68,22 @@ void COneShotHandler::update(uint32_t type, uint32_t runNumber)
   }
 }
 
+/*!
+ * \brief The guts of the logic for this class
+ *
+ * \param type  type of data item
+ * \param run   a run number
+ *
+ * If type is a begin run type and it is the first observed, the counters
+ * are cleared and the run number is cached. If no begin run items have arrived
+ * and a type arrives different from a begin run item, nothin is done. If
+ * a begin run has arrived, the counter for the type is incremented.
+ *
+ * \throws COneShotException if the run number passed in differs from
+ *                           the cached run number
+ * \throws COneShotException if type is a begin run type and it is one
+ *                           more begin run than was expected
+ */
 void COneShotHandler::updateState(uint32_t type, uint32_t run)
 {
   // Check that the run number hasn't changed unexpectedly
@@ -136,13 +166,10 @@ uint32_t COneShotHandler::getCount(uint32_t key) const
 }
 
 
-/**! Verify that type is BEGIN_RUN, END_RUN, PAUSE_RUN, RESUME_RUN
-*
-* Also enforce that the order of the state changes is sensible.
-* 
+/**! Verify that type corresponds to a type of interest
 *
 * @param type the ring item type
-* @return true if type is BEGIN/END/PAUSE/RESUME_RUN
+* @return true if type is a type of interest
 */
 bool COneShotHandler::validType(uint32_t type) const
 {

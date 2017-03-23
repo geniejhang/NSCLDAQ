@@ -8,6 +8,12 @@ namespace DAQ {
 class CPredicate;
 using CPredicatePtr = std::shared_ptr<CPredicate>;
 
+/*!
+ * \brief The CPredicatedMediator class
+ *
+ * The CPredicatedMediator class is just a mediator that incorporates
+ * a predicate into it.
+ */
 class CPredicatedMediator : public CBaseMediator {
 
 public:

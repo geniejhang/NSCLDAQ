@@ -9,11 +9,14 @@
 namespace DAQ {
 namespace V12 {
 
+// forward declarations
 class CNullFilter;
+
+// Useful typedefs for smart pointers
 using CNullFilterUPtr = std::unique_ptr<CNullFilter>;
 using CNullFilterPtr  = std::shared_ptr<CNullFilter>;
 
-/**! A filter whose handlers always return NULL.
+/**! A filter whose handlers always return nullptr.
 *
 * This is really intended for use in testing. 
 */
@@ -22,26 +25,26 @@ class CNullFilter : public CFilter {
     CFilterUPtr clone() const { return make_unique<CNullFilter>(*this); }
 
     CRingScalerItemPtr handleScalerItem(CRingScalerItemPtr) {
-      return 0;
+      return nullptr;
     }
 
     CRingTextItemPtr handleTextItem(CRingTextItemPtr) {
-      return 0;
+      return nullptr;
     }
 
     CRingPhysicsEventCountItemPtr handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr) {
-      return 0;
+      return nullptr;
     }
 
     CPhysicsEventItemPtr handlePhysicsEventItem(CPhysicsEventItemPtr) {
-      return 0;
+      return nullptr;
     }
     CRingStateChangeItemPtr handleStateChangeItem(CRingStateChangeItemPtr) {
-      return 0;
+      return nullptr;
     }
 
     CRingItemPtr handleRingItem(CRingItemPtr) {
-      return 0;
+      return nullptr;
     }
 
     CDataFormatItemPtr handleDataFormatItem(CDataFormatItemPtr) {
@@ -49,6 +52,11 @@ class CNullFilter : public CFilter {
     }
 
     CAbnormalEndItemPtr handleAbnormalEndItem(CAbnormalEndItemPtr pItem)
+    {
+        return nullptr;
+    }
+
+    CGlomParametersPtr handleGlomParameters(CGlomParametersPtr pItem)
     {
         return nullptr;
     }

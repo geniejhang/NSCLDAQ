@@ -9,13 +9,25 @@
 namespace DAQ {
 namespace V12 {
 
+// forward declarations
 class CRingItem;
-
 class CTestFilter;
+
+// Some useful smart pointer typedefs
 using CTestFilterUPtr = std::unique_ptr<CTestFilter>;
 using CTestFilterPtr  = std::shared_ptr<CTestFilter>;
 
-
+/*!
+ * \brief The CTestFilter class
+ *
+ * The CTestFilter class keeps track of the number of items processed
+ * and also a record of the call history. The call history can be
+ * retrieved with the getHistory() method.
+ *
+ * Also, each handler method returns a newly allocated object to the caller
+ * that has the same characteristics every time. See the implementation of each
+ * method for the details of each returned type.
+ */
 class CTestFilter : public CFilter {
 private:
   std::vector<std::string> m_history;

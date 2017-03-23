@@ -9,6 +9,22 @@
 
 namespace DAQ {
 
+
+/*!
+ * \brief Encapsulation of the oneshot logic in a version independent mannner
+ *
+ * For the most part, this class justs handles some bookkeeping with some methods
+ * to indicate the state of the bookkeeping. It requires extra logic to
+ * fully implement the behavior of oneshot. In the filter, that extra logic
+ * is in one of the COneShotLogicFilter classes. To function independent of version,
+ * this class deals with integers and nothing more. The logic that is encapsulated
+ * identifies when :
+ *
+ * 1. No begin run types have been passed to the update method
+ * 2. The number of expected end types have been observed.
+ * 3. The run number has been observed to change unexpectedly
+ * 4. The number of begin types observed exceeds the expected number.
+ */
 class COneShotHandler 
 {
   private:

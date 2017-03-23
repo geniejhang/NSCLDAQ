@@ -18,6 +18,11 @@ using CFilterMediatorPtr  = std::shared_ptr<CFilterMediator>;
 ///////////////////////////////////////////////////////////////////////
 /// \brief The CFilterMediator class
 ///
+/// The CFilterMediator class reads data from a source, passes it to a
+/// handler, and then writes resultant item to a sink. Because it has to support multiple
+/// data format versions, the actual interaction with the source, sink, and handling logic
+/// is delegated to an object derived from CFilterVersionAbstraction. In this sense, it
+/// implements a strategy pattern.
 class CFilterMediator : public CPredicatedMediator
 {
 private:

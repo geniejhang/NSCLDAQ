@@ -52,19 +52,8 @@ class CAbnormalEndRunFilterHandler : public CFilter
 
     CFilterUPtr clone() const;
 
-  private:
     CAbnormalEndRunFilterHandler& operator=(const CAbnormalEndRunFilterHandler& rhs);
 
-    /*! \brief Checks for ABNORMAL_ENDRUN presence
-     *
-     * If the ring item is an ABNORMAL_ENDRUN, it sets a flag to ensure
-     * that an exception is thrown on the next iteration. Note that 
-     * the next iteration may not come... in which case this would probably
-     * just exit normally.
-     *
-     */
-    template<class RingPtr>
-    RingPtr handleAnyRingItem(RingPtr pItem);
     CRingStateChangeItemPtr handleStateChangeItem(CRingStateChangeItemPtr pItem);
     CRingScalerItemPtr handleScalerItem(CRingScalerItemPtr pItem);
     CRingTextItemPtr handleTextItem(CRingTextItemPtr pItem);
@@ -75,9 +64,19 @@ class CAbnormalEndRunFilterHandler : public CFilter
     CDataFormatItemPtr handleDataFormatItem(CDataFormatItemPtr pItem);
     CAbnormalEndItemPtr handleAbnormalEndItem(CAbnormalEndItemPtr item);
 
+private:
+    template<class RingPtr>
+    RingPtr handleAnyRingItem(RingPtr pItem);
+
 };
 
-// All of the functionality of the other are in the handleRingItem.
+/*! \brief The logic for nearly all ring item handlers
+ *
+ * For all types besides an ABNORMAL_ENDRUN, the ring item passed in by pointer
+ * is returned. ABNORMAL_ENDRUN items however are written to the data sink passed
+ * in at construction and then an exception is thrown.
+ *
+ */
 template<class RingPtr>
 RingPtr
 CAbnormalEndRunFilterHandler::handleAnyRingItem(RingPtr pItem) {

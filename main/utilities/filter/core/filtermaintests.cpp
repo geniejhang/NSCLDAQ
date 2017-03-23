@@ -52,7 +52,6 @@ public:
   CPPUNIT_TEST(testBadSinkFail);
   CPPUNIT_TEST(testSkipTransmitted);
   CPPUNIT_TEST(testCountTransmitted);
-  //    CPPUNIT_TEST ( testOneShot );
   CPPUNIT_TEST(testMultiProducersOnRingIsFatal);
   CPPUNIT_TEST(mainLoop_0);
 
@@ -69,7 +68,6 @@ public:
   void testCountTransmitted();
 
   void testSetMembers();
-  //    void testOneShot();
   void testMultiProducersOnRingIsFatal();
   void mainLoop_0();
 

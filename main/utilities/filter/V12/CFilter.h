@@ -34,6 +34,11 @@ using CFilterPtr  = std::shared_ptr<CFilter>;
   output from the filter. The user is not responsible for delete the
   object passed into each method. In fact, doing so will cause a segmentation
   fault.
+
+  A difference between the V11 and V12 filter versions is that the
+  user is passed a smart pointer rather than a bare pointer. By doing so,
+  greater clarity exists concerning the management of memory in a filter
+  program.
 */
 class CFilter
 {

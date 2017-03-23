@@ -34,8 +34,8 @@ private:
 
 public:
     CFilterAbstraction();
-    CFilterAbstraction(const CFilterAbstraction&) = default;
-    CFilterAbstraction& operator=(const CFilterAbstraction&) = default;
+    CFilterAbstraction(const CFilterAbstraction&);
+    CFilterAbstraction& operator=(const CFilterAbstraction&);
     ~CFilterAbstraction();
 
     virtual void readDatum(CDataSource& source);
@@ -53,7 +53,7 @@ public:
     virtual void setSampleList(const std::string& sampleList);
 
     void registerFilter(CFilterPtr pFilter);
-    CFilterPtr getFilter() const;
+    CCompositeFilterPtr getFilter() const;
     CRingItem* dispatch(CRingItem &item);
 };
 

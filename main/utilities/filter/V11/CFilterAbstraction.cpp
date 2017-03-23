@@ -10,6 +10,7 @@
 #include <V11/CRingPhysicsEventCountItem.h>
 #include <V11/StringsToIntegers.h>
 #include <V11/DataFormat.h>
+#include <V11/CRingItemFactory.h>
 
 #include <RingIOV11.h>
 
@@ -32,6 +33,50 @@ CFilterAbstraction::CFilterAbstraction()
 CFilterAbstraction::~CFilterAbstraction()
 {
 }
+
+CFilterAbstraction::CFilterAbstraction(const CFilterAbstraction &rhs)
+    : m_item(rhs.m_item),
+      m_pInputItem(nullptr),
+      m_pOutputItem(nullptr),
+      m_pFilter(new CCompositeFilter(*rhs.m_pFilter)),
+      m_predicate(rhs.m_predicate)
+{
+
+    if (rhs.m_pInputItem) {
+        m_pInputItem = CRingItemFactory::createRingItem(rhs.m_pInputItem);
+    }
+
+    if (rhs.m_pOutputItem) {
+        m_pOutputItem = CRingItemFactory::createRingItem(rhs.m_pOutputItem);
+    }
+
+}
+
+CFilterAbstraction&
+CFilterAbstraction::operator=(const CFilterAbstraction &rhs)
+{
+    if (this != &rhs) {
+        m_item = rhs.m_item;
+        m_pFilter.reset(new CCompositeFilter(*rhs.m_pFilter));
+        m_predicate = rhs.m_predicate;
+
+        if (rhs.m_pInputItem) {
+            m_pInputItem = CRingItemFactory::createRingItem(rhs.m_pInputItem);
+        } else {
+            m_pInputItem = nullptr;
+        }
+
+        if (rhs.m_pOutputItem) {
+            m_pOutputItem = CRingItemFactory::createRingItem(rhs.m_pOutputItem);
+        } else {
+            m_pOutputItem = nullptr;
+        }
+    }
+
+    return *this;
+
+}
+
 
 void CFilterAbstraction::readDatum(CDataSource &source)
 {
@@ -194,7 +239,7 @@ void CFilterAbstraction::registerFilter(CFilterPtr pFilter)
     m_pFilter->registerFilter(pFilter);
 }
 
-CFilterPtr CFilterAbstraction::getFilter() const
+CCompositeFilterPtr CFilterAbstraction::getFilter() const
 {
     return m_pFilter;
 }

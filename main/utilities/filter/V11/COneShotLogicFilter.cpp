@@ -14,6 +14,14 @@ COneShotLogicFilter::COneShotLogicFilter(int nSources, CFilterAbstraction& abstr
 }
 
 
+/*!
+ * \brief Logic for all ring items besides state change items
+ *
+ * \param pItem     a pointer to a ring item
+ *
+ * \retval nullptr  if waiting for begin
+ * \retval pointer to the original item if not waiting for begin
+ */
 CRingItem* COneShotLogicFilter::handleRingItem(CRingItem* pItem)
 {
     if (m_handler.waitingForBegin()) {
@@ -23,6 +31,11 @@ CRingItem* COneShotLogicFilter::handleRingItem(CRingItem* pItem)
     }
 }
 
+/*!
+ * \brief COneShotLogicFilter::handleAbnormalEndItem
+ * \param pItem     pointer to the item to process
+ * \return the same pointer item that was passed in
+ */
 CRingItem* COneShotLogicFilter::handleAbnormalEndItem(CAbnormalEndItem* pItem)
 {
     // because the abnormal end run logic is handled in a different filter,
@@ -30,6 +43,13 @@ CRingItem* COneShotLogicFilter::handleAbnormalEndItem(CAbnormalEndItem* pItem)
     return pItem;
 }
 
+/*!
+ * \brief Handle the data format item
+ *
+ * \param pItem a pointer to a data format item
+ *
+ * \return  the same pointer that was passed in
+ */
 CRingItem* COneShotLogicFilter::handleDataFormatItem(CDataFormatItem *pItem)
 {
     return pItem;
@@ -60,6 +80,22 @@ CRingItem* COneShotLogicFilter::handleScalerItem(CRingScalerItem *pItem)
     return handleRingItem(pItem);
 }
 
+
+/*!
+ * \brief Handle state change items
+ *
+ * \param pItem    a pointer to a ring item
+ *
+ * \return pointer to a ring item
+ * \retval nullptr if waiting for begin and pItem does not refer to a begin type
+ * \retval pointer to the original item passed in otherwise
+ *
+ * \throws COneShotException if run number changes
+ * \throws COneShotException if more begin run items are observed than are expected
+ *
+ * If pItem points to an item that completes the oneshot logic, the filter mediator
+ * will be told to abort after outputting the result of the filter processing.
+ */
 CRingItem* COneShotLogicFilter::handleStateChangeItem(CRingStateChangeItem *pItem)
 {
     m_handler.update(pItem->type(), pItem->getRunNumber());

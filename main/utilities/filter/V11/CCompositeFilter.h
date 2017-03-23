@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2014.
+    State University (c) Copyright 2017.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -28,11 +28,22 @@
 namespace DAQ {
 namespace V11 {
 
-
+// Forward declaration
 class CCompositeFilter;
-using CCompositeFilterUPtr = std::unique_ptr<CCompositeFilter>;
-using CCompositeFilterPtr = std::shared_ptr<CCompositeFilter>;
 
+// Useful typedefs
+using CCompositeFilterUPtr = std::unique_ptr<CCompositeFilter>;
+using CCompositeFilterPtr  = std::shared_ptr<CCompositeFilter>;
+
+/*!
+ * \brief The CCompositeFilter class
+ *
+ * The CCompositeFilter class acts as a composite entity. Multiple
+ * filter objects can be registered or added to an object of this
+ * class, so that when a method of the object is called, it will
+ * call the same method for all of the objecs that have been
+ * registered to it.
+ */
 class CCompositeFilter : public CFilter
 {
   public:
@@ -66,9 +77,9 @@ class CCompositeFilter : public CFilter
     virtual CRingItem* handlePhysicsEventItem(CPhysicsEventItem* item);
     virtual CRingItem* handlePhysicsEventCountItem(CRingPhysicsEventCountItem* item);
     virtual CRingItem* handleFragmentItem(CRingFragmentItem* item);
-    virtual CRingItem *handleAbnormalEndItem(CAbnormalEndItem *pItem);
-    virtual CRingItem *handleDataFormatItem(CDataFormatItem *pItem);
-    virtual CRingItem *handleGlomParameters(CGlomParameters *pItem);
+    virtual CRingItem* handleAbnormalEndItem(CAbnormalEndItem *pItem);
+    virtual CRingItem* handleDataFormatItem(CDataFormatItem *pItem);
+    virtual CRingItem* handleGlomParameters(CGlomParameters *pItem);
 
     // Startup
     virtual void initialize();
