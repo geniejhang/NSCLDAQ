@@ -11,18 +11,18 @@
       streaming data between nodes, which are most commonly ringbuffers. Data is
       pulled from the upstream node, the source, and passed on to the downstream
       node, the sink. Occasionally, it is useful to be able to insert a program
-      to inspect or manipulate the data in between nodes. Probably the most
-      common example of this is a data integrity checker program. Other
+      to inspect or manipulate the data in between the nodes. Such a program
+      is considered a filter program because it processes data in between a
+      source and sink. A simple use for a filter is as a data integrity checker program. Other
       scenarios that may find use for a filter program are when a program
       downstream, like SpecTcl, expects a certain data format and the data is
       not originally formatted that way or if for diagnostic purposes one needs
-      to implement a program to count events in a channel for which there are no
-      hardware scalers setup.
+      to implement a program to perform some basic analysis on the data.
     </para>
 
     <para>
-      The nscldaq provides a framework for constructing a filter program that aims
-      to greatly simplify the development of a filter program. A filter program
+      The nscldaq provides the filter framework for the purpose of greatly
+      simplifying the development of a filter program. A filter program
       essentially consists of three stages. 
     </para>
 
@@ -59,36 +59,52 @@
 
     <para>
       The first and the last stages of the filter program are completely generic
-      to all filter programs because all must read data from the source before
-      processing it and then subsequently send the data to the sink. Because these
-      are generic, the nscldaq filter framework has already implemented those
-      stages out of the box. The user is left the responsibility of implementing
+      to all filter programs because all filters must read and write data. Because these
+      operations are generic, the nscldaq filter framework handles those stages for you.
+      The user is left the responsibility of implementing
       the second stage. Implementation of stage 2 consists of defining C++ classes
-      that instantiate primitive filter objects to be registered to the framework.
+      that instantiate filter objects to be registered to the framework.
       Though initially this may sound like some work, it is only as complicated as
-      the filter the user desires to construct. For example, the trivial task of
+      the user's needs are. For example, the trivial task of
       counting the number of physics event items in the data stream, can be
       accomplished with the following primitive filter:
 
       <programlisting>
-#include &lt;CFilter.h&gt;
+#include &lt;V12/CFilter.h&gt;
+#Include &lt;make_unique.h&gt;
 
-class CounterFilter : public CFilter
+class CounterFilter : public DAQ::V12::CFilter
 {
   int m_count;
 
   public:
     CounterFilter() : m_count(0) {}
 
-    CounterFilter* clone() const { return new CounterFilter(*this); }
+    CFilterUPtr clone() const { return DAQ::make_unique&lt;CounterFilter&gt;(*this); }
 
-    CRingItem* handlePhysicsEventItem(CPhysicsEventItem* item) 
+    CPhysicsEventItemPtr
+    handlePhysicsEventItem(CPhysicsEventItemPtr pItem)
     { ++m_count; }
 };
       </programlisting>
     </para>
 
   </section>
+
+<section>
+<title>Data Format Version Support</title>
+
+<para>
+    The Filter Framework supports multiple versions of data and can be extended
+    to support any data format. As of nscldaq 12.0, it supports versions 11.0 and 12.0.
+    Because of incompatibilities between the different versions, the filter interface
+    must be different for each. For example, there is no concept of a composite ring item
+    in version 11.0, whereas in 12.0 there is. Also, for backwards compatibility reasons,
+    the 11.0 filter interface was kept similar to what it was in NSCLDAQ 11.0. The
+    12.0 filter interface, on the other hand, is enhanced to promote better coding practices
+    and understanding.
+</para>
+</section>
   
   <section>
     <title>Getting Started</title>
@@ -99,15 +115,15 @@ class CounterFilter : public CFilter
       filter program is provided in this directory. It is recommended that the
       user start with these files to begin the process of creating his/her
       filter program. Simply copy the entire directory to a working location or
-      the relevant files: Makefile, SkeletonMain.cpp, and CTemplateFilter.cpp. I
-      will explain the contents of each of these files in the following
-      sections.
+      the relevant files: Makefile, SkeletonMain.cpp, CTemplateFilter.h, and
+      CTemplateFilter.cpp. I will explain the contents of each of these files
+      in the following sections.
     </para>
 
   </section>
 
   <section>
-    <title>Defining a primitive filter</title>
+    <title>Defining a filter</title>
 
     <para>
       Let's move to stage 2 of the filter program. The user defines the behavior
@@ -118,41 +134,30 @@ class CounterFilter : public CFilter
     </para>
 
     <para>
-      All filters used in the filter framework must derive from the CFilter base
-      class. A derived class of CFilter will define specific operations on the
+      All filters used in the filter framework must derive from a CFilter base
+      class. A derived class of DAQ::V12::CFilter will define specific operations on the
       different types of ring items by providing a new implementation of the
       specific ring item handler. There are handlers defined for each of the
       different ring item types:
 
       <programlisting>
-CRingItem* handleStateChangeItem(CRingStateChangeItem*);
-CRingItem* handleScalerItem(CRingScalerItem*);
-CRingItem* handlePhysicsEventItem(CPhysicsEventItem*);
-CRingItem* handleFragmentItem(CRingFragmentItem*);
-CRingItem* handlePhysicsEventCountItem(CRingPhysicsEventCountItem*);
-CRingItem* handleTextItem(CRingTextItem*);
-CRingItem* handleRingItem(CRingItem*);       
+CRingStateChangeItemPtr       handleStateChangeItem(CRingStateChangeItemPtr);
+CRingScalerItemPtr            handleScalerItem(CRingScalerItemPtr);
+CPhysicsEventItemPtr          handlePhysicsEventItem(CPhysicsEventItemPtr);
+CRingPhysicsEventCountItemPtr handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr);
+CRingTextItemPtr              handleTextItem(CRingTextItemPtr);
+CRingItemPtr                  handleRingItem(CRingItemPtr);
+CDataFormatItemPtr            handleDataFormatItem(CDataFormatItemPtr);
+CGlomParametersPtr            handleGlomParameters(CGlomParametersPtr);
+CAbnormalEndItemPtr           handleAbnormalEndItem(CAbnormalEndItemPtr);
+CCompositeRingItemPtr         handleCompositeRingItem(CCompositeRingItemPtr);
       </programlisting>
     </para>
 
     <para>
-     Each handler accepts as an argument a ring item read from the source and
-     will output a ring item to send to the sink. The framework will use the
-     type of each ring item it reads from the source to call the appropriate
-     handler method. Also, it is worth noting that handlers receiving a
-     specific ring item type can actually output any ring item type.
-     <footnote>
-       <para>
-         There is a limitation to this behavior though. If you have registered
-         more than one filter to the framework, and the first one mutates the
-         type of the ring item, the handler of the second filter will operate on
-         the ring item as though it were the original type.
-       </para>
-     </footnote>
-     It is not clear why the user would want to do this, but it is possible to,
-     for example, mutate scaler items into physics event items by means of a
-     filter.  It is also possible to prevent an item from being sent to the sink
-     by return 0 or nullptr from a handler. 
+     After reading a ring item from the source, the framework determines the
+     type of the ring item and calls the appropriate handler for it. The returned
+     ring item from the handler will be outputted to the sink.
     </para>
 
     <para>
@@ -161,10 +166,8 @@ CRingItem* handleRingItem(CRingItem*);
       base implementations do nothing more than return the argument. An example
       code snippet is included to illustrate this:
       <programlisting>
-CRingItem* CFilter::handleTextItem(CRingTextItem* item) {
-
-	return static_cast&lt;CRingItem*&gt;(item);
-
+CRingTextItemPtr CFilter::handleTextItem(CRingTextItemPtr pItem) {
+    return pItem;
 }
       </programlisting>
     </para>
@@ -179,7 +182,8 @@ CRingItem* CFilter::handleTextItem(CRingTextItem* item) {
     </para>
 
     <para>
-      The CTemplateFilter.cpp source file contains a basic implementation of a
+      The CTemplateFilter.h and CTemplateFilter.cpp source files contain a
+      basic implementation of a version 12.0
       filter. It solves the unrealistic problem of needing to produce a mirror
       image of event data. It copies event data in reverse order to the end of
       the body. This hopefully demonstrates the flexibility that exists in the
@@ -214,13 +218,93 @@ CRingItem* CFilter::handleTextItem(CRingTextItem* item) {
 
 
   </section> 
-  <!-- End of building a primitive filter -->
 
   <section>
+     <title>Smart Pointers</title>
+
+     <para>
+     You may be wondering what the Ptr and UPtr suffixes are at this point.
+     These are typedefs for smart pointer types and their usage is one of the
+     major differences between version 11.0 and 12.0 data format support.
+     There are two types of smart pointers
+     provided by the C++ standard since 2011: std::shared_ptr and std::unique_ptr.
+     To understand the difference between these, let's back up
+     and understand the problem they solve.
+     </para>
+
+     <para>
+     You probably know that when memory is dynamically allocated on the heap using the
+     new operator, it must be deallocated with the delete operator. If you do not
+     call delete when you are done with that
+     chunk of allocated memory, the memory will be leaked, which can be a big problem.
+     Smart pointers address
+     this issue. A smart pointer is an object whose sole job is manage a raw pointer
+     to allocated memory and then call delete on that pointer in its destructor. Here
+     is a very basic implementation and use of a smart pointer for an integer:
+     </para>
+
+<programlisting>
+
+class SimpleSmartPtr
+{
+private:
+   int * m_pointer;
+public:
+   SimpleSmartPtr(int* ptr) : m_pointer(ptr) {}
+   ~SimpleSmartPtr() { delete m_pointer; }
+};
+
+int main() {
+    SimpleSmartPtr pInt ( new int );
+
+    // no need to delete the pointer b/c it gets deleted automatically when
+    // pInt object goes out of scope
+
+    return 0;
+}
+</programlisting>
+
+    <para>
+    The std::shared_ptr and std::unique_ptr classes are a bit more intelligent than that
+    trivial implementation. For instance,they can hold any type of pointer, just like a vector can hold any data type,
+    and they overload a bunch of useful operators that make them behave just like a normal pointer.
+    The major difference is that you do not have to delete them.
+    </para>
+
+    <para>
+    So what is different between the two smart pointer types?  It all comes down to whether more than
+    one object can have ownership (i.e. call delete) of its pointer.
+    The unique_ptr always expects a 1-to-1 relationship
+    between itself and the piece of memory it maintains a pointer to. When it destructs, it deletes
+    the memory it references. The shared_ptr expects, on the other hand, an N-to-1
+    relationship. The idea is that any shared_ptr object can possibly call delete on the memory
+    it references and thus has a shared ownership of it. Only the last instance to refer to a specific
+    piece of memory is allowed to call delete though.
+    </para>
+
+    <para>
+    In general, unique_ptrs should be used sparingly. They model single ownership extremely
+    well, but that comes with some important restrictions, like not supporting standard
+    assignment. Shared pointers are much simpler to use and behave just like a normal pointer.
+    You will only ever have to manipulate a shared pointer in a filter program. The only time
+    you will see a unique pointer will be when you create one for the clone() method, which
+    is demonstrated for you.
+    </para>
+    
+   <para>
+    Hopefully this does not scare you. In the end, a smart pointer is going to make your life
+    easier. It rids your life of memory leaks and the complications of managing memory.
+    It also provides the same behavior as a normal pointer like *p, ++p, p++, and p--. When
+    you see Ptr and UPtr suffixes in nscldaq 12.0, know that these are typedefs for smart pointers
+    of ring items. A Ptr suffix indicates a shared_ptr and a UPtr suffix indicates a unique_ptr.
+    </para>
+  </section>
+
+<section>
     <title>Building a composite filter</title>
 
     <para>
-     A special filter is provided that allows users to stack primitive filters
+     A special filter type is provided that allows users to combine filters
      together into a composite filter. This composite filter, CCompositeFilter,
      maintains a list of registered filters and will call their respective
      handlers in the order in which they were registered to it. The output of
@@ -237,7 +321,7 @@ CRingItem* CFilter::handleTextItem(CRingTextItem* item) {
       the most basic and ubiquitous usage of the composite filter, one can
       actually register composite filters to the filter framework as well. This
       is possible because in the end, the composite filter is just another
-      filter. So have fun and don?t fear building composite filters to use in
+      filter. So have fun and don't fear building composite filters to use in
       the filter framework if it makes sense.
     </para>
 
@@ -269,21 +353,35 @@ int main(int argc, char* argv[])
   try {
 
     // Create the main
-    CFilterMain theApp(argc,argv); <co id='filter-main-maininst' />
+    CFilterMain theApp(argc,argv);
 
+    // The filter main is able to handle nscldaq 11.0 and 12.0 data
+    // format. In order to process a specific format, you need to pass
+    // in a object that defines how to handle a specific version. Here
+    // the V12::CFilterAbstraction class is used to deal with 12.0 data.
+    // If you want to deal with version 11.0, then you need to use
+    // V11::CFilterAbstraction.
+    V12::CFilterAbstractionPtr pVersion(new V12::CFilterAbstraction);
+    theApp.setVersionAbstraction(pVersion);
 
-    // Construct filter(s) here.
-    CTemplateFilter user_filter;   <co id='filter-main-userfiltinst' />
+    // The filter that you create must be compatible with the version of
+    // data that is being used. A CTemplateFilter is derived from
+    // V12::CFilter and thus is for processing V12 data. If you want
+    // to handle V11 data, you need to use a filter derived from the
+    // V11::CFilter class and pass it to a V11::CFilterAbstraction.
+    std::shared_ptr&lt;CTemplateFilter&gt; pFilter(new CTemplateFilter);
 
     // Register the filter(s) here. Note that if more than
     // one filter will be registered, the order of registration
     // will define the order of execution. If multiple filters are
     // registered, the output of the first filter will become the
-    // input of the second filter and so on. 
-    theApp.registerFilter(&amp;user_filter); <co id='filter-main-register' />
+    // input of the second filter and so on. Note that the filter
+    // is registered to the version abstraction rather than the
+    // CFilterMain object.
+    pVersion->registerFilter(pFilter);
 
     // Run the main loop
-    theApp();                       <co id='filter-main-mainloop' />
+    theApp();
 
   } catch (CFatalException exc) {   <co id='filter-main-fatalexcept' />
     status = 1;
@@ -301,70 +399,6 @@ int main(int argc, char* argv[])
         example above.
 			</para>
 		
-			<calloutlist>
-		
-				<callout arearefs='filter-main-tempfiltinc'>
-					<para>
-            Include the source code for the CTemplateFilter class. In more
-            elaborate filter programs this would likely just include the header
-            file and then link the implementation at compile time. However, for
-            simplicity, the CTemplateFilter class is defined and implemented in
-            the same source file. 
-					</para>
-				</callout>
-
-				<callout arearefs='filter-main-maininst'>
-					<para>
-            Instantiate the CFilterMain object. This object sets up the
-            framework, including the source and sink. It also handles the
-            parsing of command line parameters.
-					</para>
-				</callout>
-
-				<callout arearefs='filter-main-userfiltinst'>
-					<para>
-            Instantiate the user's filter(s). There can be any number of
-            filters instantiated here. If the user creates the filter on the
-            heap instead of the stack, they must delete their filter at the end
-            of the main program.
-					</para>
-				</callout>
-
-				<callout arearefs='filter-main-register'>
-					<para>
-            Register the user's filter(s). More than one filter can be
-            registered and the same filter can be registered multiple times.
-            The framework clones the filter and handles the memory allocated
-            for the cloned object. 
-					</para>
-				</callout>
-
-				<callout arearefs='filter-main-mainloop'>
-					<para>
-            Run the main loop of the program. Once this is called, data start
-            being read from the source, processed by the registered filters,
-            and then are passed to the sink. 
-					</para>
-				</callout>
-
-				<callout arearefs='filter-main-fatalexcept'>
-					<para>
-            Catch fatal exception. The CFatalException class is a dummy class
-            that has an empty implementation. It is just used to pass fatal
-            errors to the main function to abort execution. By default, the
-            filter framework will not throw fata exceptions from the main loop.
-            These should be limited to the first stage of filter.
-					</para>
-				</callout>
-
-				<callout arearefs='filter-main-unknownexcept'>
-					<para>
-					Catch all unhandled exceptions to exit gracefully. 
-					</para>
-				</callout>
-
-			</calloutlist>
-  
   </section>
   <!-- End of The main function -->
   
@@ -398,20 +432,23 @@ int main(int argc, char* argv[])
     <productnumber></productnumber>
   </refentryinfo>
   <refmeta>
-    <refentrytitle id='manpage.cfilter_title'>CFilter</refentrytitle>
+    <refentrytitle id='manpage.cfilter_title'>DAQ::V11::CFilter</refentrytitle>
     <manvolnum>3daq</manvolnum>
     <refmiscinfo class='empty'></refmiscinfo>
   </refmeta>
 
   <refnamediv>
-    <refname>CFilter</refname>
+    <refname>DAQ::V11::CFilter</refname>
     <refpurpose>Base class for primitive filters</refpurpose>
   </refnamediv>
 
 
   <refsynopsisdiv>
     <programlisting>
-#include &lt;CFilter.h&gt;
+#include &lt;V11/CFilter.h&gt;
+
+namespace DAQ {
+namespace V11 {
     </programlisting>
     <synopsis>
       <ooclass><classname>CFilter</classname></ooclass>
@@ -429,7 +466,7 @@ int main(int argc, char* argv[])
 
       <methodsynopsis>
         <modifier>virtual</modifier>
-        <type>CRingItem*</type>
+        <type>CFilter*</type>
         <methodname>clone</methodname>
         <modifier>const</modifier>
       </methodsynopsis>
@@ -499,6 +536,36 @@ int main(int argc, char* argv[])
 
       <methodsynopsis>
         <modifier>virtual</modifier>
+        <type>CRingItem*</type>
+        <methodname>handleDataFormatItem</methodname>
+        <methodparam>
+          <type>CDataFormatItem*</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingItem*</type>
+        <methodname>handleAbnormalEndItem</methodname>
+        <methodparam>
+          <type>CAbnormalEndItem*</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingItem*</type>
+        <methodname>handleGlomParameters</methodname>
+        <methodparam>
+          <type>CGlomParameters*</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
         <void/> <methodname>initialize</methodname> <void/>
       </methodsynopsis>
 
@@ -508,6 +575,10 @@ int main(int argc, char* argv[])
       </methodsynopsis>
     </synopsis>
 
+<programlisting>
+} // end V11
+} // end DAQ
+</programlisting>
   </refsynopsisdiv>
 
   <refsect1>
@@ -535,7 +606,7 @@ int main(int argc, char* argv[])
 
     <constructorsynopsis>
       <methodname>CFilter</methodname>
-      <void />
+      <void/>
     </constructorsynopsis>
     <para>
       The default constructor is a no-op.
@@ -552,7 +623,7 @@ int main(int argc, char* argv[])
 
     <methodsynopsis>
       <modifier>virtual</modifier>
-      <type>CRingItem*</type>
+      <type>CFilter*</type>
       <methodname>clone</methodname>
       <modifier>const</modifier>
     </methodsynopsis>
@@ -646,6 +717,42 @@ int main(int argc, char* argv[])
 
     <methodsynopsis>
       <modifier>virtual</modifier>
+      <type>CRingItem*</type>
+      <methodname>handleDataFormatItem</methodname>
+      <methodparam>
+        <type>CDataFormatItem*</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Downcasts the item pointer to a CRingItem and returns it.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingItem*</type>
+      <methodname>handleAbnormalEndItem</methodname>
+      <methodparam>
+        <type>CAbnormalEndItem*</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Downcasts the item pointer to a CRingItem and returns it.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingItem*</type>
+      <methodname>handleGlomParameters</methodname>
+      <methodparam>
+        <type>CGlomParameters*</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Downcasts the item pointer to a CRingItem and returns it.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
       <void/>
       <methodname>initialize</methodname>
       <void/>
@@ -672,7 +779,7 @@ int main(int argc, char* argv[])
 
 </refentry>
 
-<refentry id='manpage.ccompositefilter'>
+<refentry id='manpage.v11ccompositefilter'>
     <refentryinfo>
         <author>
                 <personname>
@@ -684,20 +791,23 @@ int main(int argc, char* argv[])
         <productnumber></productnumber>
     </refentryinfo>
   <refmeta>
-    <refentrytitle id='manpage.ccompositefilter_title'>CCompositeFilter</refentrytitle>
+    <refentrytitle id='manpage.v11ccompositefilter_title'>DAQ::V11::CCompositeFilter</refentrytitle>
     <manvolnum>3daq</manvolnum>
     <refmiscinfo class='empty'></refmiscinfo>
   </refmeta>
   
   <refnamediv>
-    <refname>CCompositeFilter</refname>
-	  <refpurpose>A composite filter composed of primitive filters</refpurpose>
+    <refname>DAQ::V11::CCompositeFilter</refname>
+          <refpurpose>A composite filter for nscldaq 11.0 data</refpurpose>
   </refnamediv>
 
 
   <refsynopsisdiv>
     <programlisting>
-#include &lt;CCompositeFilter.h&gt;
+#include &lt;V11/CCompositeFilter.h&gt;
+
+namespace DAQ {
+namespace V11 {
     </programlisting>
     <synopsis>
       <ooclass><classname>CCompositeFilter</classname></ooclass>
@@ -732,7 +842,7 @@ int main(int argc, char* argv[])
 
       <methodsynopsis>
         <modifier>virtual</modifier>
-        <type>CRingItem*</type>
+        <type>CCompositeFilter*</type>
         <methodname>clone</methodname>
         <modifier>const</modifier>
       </methodsynopsis>
@@ -799,6 +909,7 @@ int main(int argc, char* argv[])
         </methodparam>
       </methodsynopsis>
 
+
       <methodsynopsis>
         <modifier>virtual</modifier>
         <type>CRingItem*</type>
@@ -807,6 +918,34 @@ int main(int argc, char* argv[])
           <type>CRingTextItem*</type><parameter>item</parameter>
         </methodparam>
       </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingItem*</type>
+        <methodname>handleDataFormatItem</methodname>
+        <methodparam>
+          <type>CDataFormatItem*</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingItem*</type>
+        <methodname>handleAbnormaleEndItem</methodname>
+        <methodparam>
+          <type>CAbnormalEndItem*</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingItem*</type>
+        <methodname>handleGlomParameters</methodname>
+        <methodparam>
+          <type>CGlomParameters*</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
 
       <methodsynopsis>
         <modifier>virtual</modifier>
@@ -822,6 +961,10 @@ int main(int argc, char* argv[])
       </methodsynopsis>
 
     </synopsis>
+    <programlisting>
+} // end V11
+} // end DAQ
+    </programlisting>
 
   </refsynopsisdiv>
 
@@ -829,15 +972,11 @@ int main(int argc, char* argv[])
     <title>DESCRIPTION</title>
 
     <para>
-      <classname>CCompositeFilter</classname> is a derived class of CFilter and
-      is technically a primitive filter. However, it maintains a registry of
-      primitive filters that ultimately define its functionality. The composite
-      filter owns the filters that exist in its registry. When registering a
-      primitive filter, the actual filter passed as an argument is not
-      registered. Instead, it is cloned and the clone is registered. In this
-      way, the composite filter guarantees that it has ownership of all filters
-      in its registry. It will delete all of the filters it owns at destruction
-      time. When the composite filter is copied, it clones all of the
+      <classname>CCompositeFilter</classname> is a derived class of CFilter.
+      However, it maintains a registry of
+      filters that ultimately define its functionality. The composite
+      filter maintains shared ownership of the filters that exist in its registry.
+      When the composite filter is copied, it clones all of the
       target&apos;s filters rather than sharing pointers. 
     </para>
 
@@ -845,7 +984,8 @@ int main(int argc, char* argv[])
       All handler methods iteratively call the corresponding handler methods of
       the registered primitive filters. The registration order of the primitive
       filters defines the order in which the filters will be called. When its
-      registry is empty, the composite filter is just a transparent filter. 
+      registry is empty, the composite filter is just a transparent filter (i.e.
+      its methods return the pointer passed in as their argument).
     </para>
 
   </refsect1>
@@ -900,7 +1040,7 @@ int main(int argc, char* argv[])
 
     <methodsynopsis>
       <modifier>virtual</modifier>
-      <type>CRingItem*</type>
+      <type>CCompositeFilter*</type>
       <methodname>clone</methodname>
       <modifier>const</modifier>
     </methodsynopsis>
@@ -929,14 +1069,16 @@ int main(int argc, char* argv[])
       </methodparam>
     </methodsynopsis>
     <para>
-      Passes the item to the handleRingItem method of the registered primitives
-      in the order in which they were registered. The output of the first
-      primitive filter is passed as input to the second primitive filter. If
+      Passes the item to the handleRingItem method of the registered filters
+      in the order that they were registered. The output of the first
+      filter is passed as input to the second primitive filter. If
       the primitive filters return a newly allocated CRingItem, this will
       properly cleanup the items that are outputted by inner filters. In other
       words, if there are two filters registered and both return different ring
       items than they are passed, the output of the first filter will be
       deleted and the output of the second filter will be returned. 
+      If a filter returns nullptr, the execution terminates and the handlers
+      of subsequent filters do not get called.
     </para>
 
     <methodsynopsis>
@@ -1014,6 +1156,833 @@ int main(int argc, char* argv[])
 
     <methodsynopsis>
       <modifier>virtual</modifier>
+      <type>CRingItem*</type>
+      <methodname>handleDataFormatItem</methodname>
+      <methodparam>
+        <type>CDataFormatItem*</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handleDataFormatItem is called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingItem*</type>
+      <methodname>handleAbnormalEndItem</methodname>
+      <methodparam>
+        <type>CAbnormaleEndItem*</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handleAbnormalEndItem is called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingItem*</type>
+      <methodname>handleGlomParameters</methodname>
+      <methodparam>
+        <type>CGlomParameters*</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handleDataFormatItem is called.
+    </para>
+
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>initialize</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that initialize() called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>finalize</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that finalize() called.
+    </para>
+
+  </refsect1>
+  </refentry>
+
+
+<refentry id='manpage.v12cfilter'>
+  <refentryinfo>
+    <author>
+      <personname>
+        <firstname>Jeromy</firstname>
+        <surname>Tompkins</surname>
+      </personname>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo>
+  <refmeta>
+    <refentrytitle id='manpage.v12cfilter_title'>DAQ::V12::CFilter</refentrytitle>
+    <manvolnum>3daq</manvolnum>
+    <refmiscinfo class='empty'></refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>DAQ::V12::CFilter</refname>
+    <refpurpose>Base class for 12.0 filters</refpurpose>
+  </refnamediv>
+
+
+  <refsynopsisdiv>
+    <programlisting>
+#include &lt;V12/CFilter.h&gt;
+
+namespace DAQ {
+namespace V12 {
+    </programlisting>
+    <synopsis>
+      <ooclass><classname>CFilter</classname></ooclass>
+
+      <constructorsynopsis>
+        <methodname>CFilter</methodname>
+        <void />
+      </constructorsynopsis>
+
+      <destructorsynopsis>
+        <modifier>virtual</modifier>
+        <methodname>~CRingItem</methodname>
+        <void />
+      </destructorsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CFilterUPtr</type>
+        <methodname>clone</methodname>
+        <modifier>const</modifier>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingItemPtr</type>
+        <methodname>handleRingItem</methodname>
+        <methodparam>
+          <type>CRingItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingStateChangeItemPtr</type>
+        <methodname>handleStateChangeItem</methodname>
+        <methodparam>
+          <type>CRingStateChangeItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingScalerItemPtr</type>
+        <methodname>handleScalerItem</methodname>
+        <methodparam>
+          <type>CRingScalerItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CPhysicsEventItemPtr</type>
+        <methodname>handlePhysicsEventItem</methodname>
+        <methodparam>
+          <type>CPhysicsEventItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingPhysicsEventCountItemPtr</type>
+        <methodname>handlePhysicsEventCountItem</methodname>
+        <methodparam>
+          <type>CRingPhysicsEventCountItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingTextItemPtr</type>
+        <methodname>handleTextItem</methodname>
+        <methodparam>
+          <type>CRingTextItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CDataFormatItemPtr</type>
+        <methodname>handleDataFormatItem</methodname>
+        <methodparam>
+          <type>CDataFormatItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CAbnormalEndItemPtr</type>
+        <methodname>handleAbnormalEndItem</methodname>
+        <methodparam>
+          <type>CAbnormalEndItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CGlomParametersPtr</type>
+        <methodname>handleGlomParameters</methodname>
+        <methodparam>
+          <type>CGlomParametersPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CCompositeRingItemPtr</type>
+        <methodname>handleCompositeItem</methodname>
+        <methodparam>
+          <type>CCompositeRingItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <void/> <methodname>initialize</methodname> <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <void/> <methodname>finalize</methodname> <void/>
+      </methodsynopsis>
+    </synopsis>
+
+<programlisting>
+} // end V12
+} // end DAQ
+</programlisting>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>
+      <classname>DAQ::V12::CFilter</classname> is the base class of all
+      version 12.0 filters. It cannot be instantiated because it is an abstract class. The
+      <methodname>clone</methodname> method is a purely virtual method to enforce that
+      this must be clonable.
+    </para>
+
+    <para>
+      A series of handler methods are declared virtual for derived classes to
+      write their own handler implementations. Because all of these handlers
+      provide a default implementation, derived classes need not write an
+      implementation for all of the handlers. All of the handlers in the base
+      class do nothing more than return the ring item passed as an argument.
+    </para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>Public member functions</title>
+
+    <constructorsynopsis>
+      <methodname>CFilter</methodname>
+      <void />
+    </constructorsynopsis>
+    <para>
+      The default constructor is a no-op.
+    </para>
+
+    <destructorsynopsis>
+      <modifier>virtual</modifier>
+      <methodname>~CRingItem</methodname>
+      <void />
+    </destructorsynopsis>
+    <para>
+      The virtual destructor is a no-op.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CFilterUPtr</type>
+      <methodname>clone</methodname>
+      <modifier>const</modifier>
+    </methodsynopsis>
+    <para>
+      This is declared null.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingItemPtr</type>
+      <methodname>handleRingItem</methodname>
+      <methodparam>
+        <type>CRingItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Returns a copy of this.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingStateChangeItemPtr</type>
+      <methodname>handleStateChangeItem</methodname>
+      <methodparam>
+        <type>CRingStateChangeItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+        Returns the same shared pointer it received.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingScalerItemPtr</type>
+      <methodname>handleScalerItem</methodname>
+      <methodparam>
+        <type>CRingScalerItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Returns the same shared pointer it received.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CPhysicsEventItemPtr</type>
+      <methodname>handlePhysicsEventItem</methodname>
+      <methodparam>
+        <type>CPhysicsEventItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Returns the same shared pointer it received.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingPhysicsEventCountItemPtr</type>
+      <methodname>handlePhysicsEventCountItem</methodname>
+      <methodparam>
+        <type>CRingPhysicsEventCountItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Returns the same shared pointer it received.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingTextItemPtr</type>
+      <methodname>handleTextItem</methodname>
+      <methodparam>
+        <type>CRingTextItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Returns the same shared pointer it received.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CDataFormatItemPtr</type>
+      <methodname>handleDataFormatItem</methodname>
+      <methodparam>
+        <type>CDataFormatItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Returns the same shared pointer it received.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CAbnormalEndItemPtr</type>
+      <methodname>handleAbnormalEndItem</methodname>
+      <methodparam>
+        <type>CAbnormalEndItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Returns the same shared pointer it received.
+   </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CGlomParametersPtr</type>
+      <methodname>handleGlomParameters</methodname>
+      <methodparam>
+        <type>CGlomParametersPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Returns the same shared pointer it received.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CCompositeRingItemPtr</type>
+      <methodname>handleCompositeItem</methodname>
+      <methodparam>
+        <type>CCompositeRingItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Returns the same shared pointer it received.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>initialize</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+      Method executed prior to the first ring item is handled. It is useful for
+      one-time initialization tasks. You should not use it for code that must
+      execute when a begin run occurs.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>finalize</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+      Method executed after the last ring item is handled. It is useful for
+      clean up tasks such as writing a result to a file. You should not use it
+      for code that must execute when an end run occurs.
+    </para>
+
+  </refsect1>
+
+</refentry>
+
+<refentry id='manpage.v12ccompositefilter'>
+    <refentryinfo>
+        <author>
+                <personname>
+                        <firstname>Jeromy</firstname>
+                        <surname>Tompkins</surname>
+                </personname>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+    </refentryinfo>
+  <refmeta>
+    <refentrytitle id='manpage.v12ccompositefilter_title'>DAQ::V12::CCompositeFilter</refentrytitle>
+    <manvolnum>3daq</manvolnum>
+    <refmiscinfo class='empty'></refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>DAQ::V12::CCompositeFilter</refname>
+          <refpurpose>A composite filter for nscldaq 12.0 data</refpurpose>
+  </refnamediv>
+
+
+  <refsynopsisdiv>
+    <programlisting>
+#include &lt;V12/CCompositeFilter.h&gt;
+
+namespace DAQ {
+namespace V12 {
+    </programlisting>
+    <synopsis>
+      <ooclass><classname>CCompositeFilter</classname></ooclass>
+
+      <constructorsynopsis>
+        <methodname>CCompositeFilter</methodname>
+        <void />
+      </constructorsynopsis>
+
+      <constructorsynopsis>
+        <methodname>CCompositeFilter</methodname>
+        <methodparam>
+          <type>const CCompositeFilter&amp;</type>
+          <parameter>rhs</parameter>
+        </methodparam>
+      </constructorsynopsis>
+
+      <methodsynopsis>
+        <type>CCompositeFilter&amp;</type>
+        <methodname>operator=()</methodname>
+        <methodparam>
+          <type>const CCompositeFilter&amp;</type>
+          <parameter>rhs</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <destructorsynopsis>
+        <modifier>virtual</modifier>
+        <methodname>~CCompositeFilter</methodname>
+        <void />
+      </destructorsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CFilterUPtr</type>
+        <methodname>clone</methodname>
+        <modifier>const</modifier>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <type>void</type>
+        <methodname>registerFilter</methodname>
+        <methodparam>
+          <type>const CFilterPtr</type><parameter>filter</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingItemPtr</type>
+        <methodname>handleRingItem</methodname>
+        <methodparam>
+          <type>CRingItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingStateChangeItemPtr</type>
+        <methodname>handleStateChangeItem</methodname>
+        <methodparam>
+          <type>CRingStateChangeItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingScalerItemPtr</type>
+        <methodname>handleScalerItem</methodname>
+        <methodparam>
+          <type>CRingScalerItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CPhysicsEventItemptr</type>
+        <methodname>handlePhysicsEventItem</methodname>
+        <methodparam>
+          <type>CPhysicsEventItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingPhysicsEventCountItemPtr</type>
+        <methodname>handlePhysicsEventCountItem</methodname>
+        <methodparam>
+          <type>CRingPhysicsEventCountItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CRingTextItemPtr</type>
+        <methodname>handleTextItem</methodname>
+        <methodparam>
+          <type>CRingTextItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CDataFormatItemPtr</type>
+        <methodname>handleDataFormatItem</methodname>
+        <methodparam>
+          <type>CDataFormatItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CAbnormalEndItemPtr</type>
+        <methodname>handleAbnormalEndItem</methodname>
+        <methodparam>
+          <type>CAbnormalEndItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CGlomParametersPtr</type>
+        <methodname>handleGlomParameters</methodname>
+        <methodparam>
+          <type>CGlomParametersPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CCompositeRingItemPtr</type>
+        <methodname>handleCompositeItem</methodname>
+        <methodparam>
+          <type>CCompositeRingItemPtr</type><parameter>item</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <void/>
+        <methodname>initialize</methodname>
+        <void/>
+      </methodsynopsis>
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <void/>
+        <methodname>finalize</methodname>
+        <void/>
+      </methodsynopsis>
+
+    </synopsis>
+    <programlisting>
+} // end V12
+} // end DAQ
+    </programlisting>
+
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>
+      <classname>CCompositeFilter</classname> is a derived class of DAQ::V12::CFilter.
+      However, it maintains a registry of
+      filters that ultimately define its functionality. The composite
+      filter maintains shared ownership of the filters that exist in its registry.
+      When the composite filter is copied, it clones all of the
+      target&apos;s filters rather than sharing pointers.
+    </para>
+
+    <para>
+      All handler methods iteratively call the corresponding handler methods of
+      the registered filters. The registration order of the
+      filters defines the order in which they will be called. When its
+      registry is empty, the composite filter is just a transparent filter (i.e.
+      its methods return the pointer passed in as their argument).
+    </para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>Public member functions</title>
+
+    <constructorsynopsis>
+      <methodname>CCompositeFilter</methodname>
+      <void />
+    </constructorsynopsis>
+    <para>
+      An empty registry is created.
+    </para>
+
+    <constructorsynopsis>
+      <methodname>CCompositeFilter</methodname>
+      <methodparam>
+        <type>const CCompositeFilter&amp;</type>
+        <parameter>rhs</parameter>
+      </methodparam>
+    </constructorsynopsis>
+    <para>
+      All of the filters in the argument&apos;s registry are cloned. The order
+      of the registry is maintained.
+    </para>
+
+    <methodsynopsis>
+      <type>CCompositeFilter&amp;</type>
+      <methodname>operator=()</methodname>
+      <methodparam>
+        <type>const CCompositeFilter&amp;</type>
+        <parameter>rhs</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      All of the filters in the argument&apos;s registry are cloned into a
+      temporary registry. If no exceptions occur while performing this deep
+      copy, the filters currently in the registry are removed. Subsequently,
+      the temporary registry becomes the registry. In this way, if errors occur
+      while performing the copy, the current registry is not alterred.
+    </para>
+
+    <destructorsynopsis>
+      <modifier>virtual</modifier>
+      <methodname>~CCompositeFilter</methodname>
+      <void />
+    </destructorsynopsis>
+    <para>
+    Clears the registry.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CFilterUPtr</type>
+      <methodname>clone</methodname>
+      <modifier>const</modifier>
+    </methodsynopsis>
+    <para>
+      Returns a unique pointer to a newly created copy of the object.
+    </para>
+
+    <methodsynopsis>
+      <type>void</type>
+      <methodname>registerFilter</methodname>
+      <methodparam>
+        <type>const CFilterPtr</type><parameter>filter</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Appends the new filter to the end of the list of registered filters.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingItemPtr</type>
+      <methodname>handleRingItem</methodname>
+      <methodparam>
+        <type>CRingItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Passes the item to the handleRingItem method of the registered filters
+      in the order that they were registered. The output of the first
+      filter is passed as input to the second primitive filter.
+      If a filter returns a nullptr equivalent, the execution terminates and the handlers
+      of subsequent filters do not get called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingStateChangeItemPtr</type>
+      <methodname>handleStateChangeItem</methodname>
+      <methodparam>
+        <type>CRingStateChangeItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handleStateChangeItem is called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingScalerItemPtr</type>
+      <methodname>handleScalerItem</methodname>
+      <methodparam>
+        <type>CRingScalerItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handleScalerItem is called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CPhysicsEventItemPtr</type>
+      <methodname>handlePhysicsEventItem</methodname>
+      <methodparam>
+        <type>CPhysicsEventItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handlePhysicsEventItem is
+      called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingPhysicsEventCountItemPtr</type>
+      <methodname>handlePhysicsEventCountItem</methodname>
+      <methodparam>
+        <type>CRingPhysicsEventCountItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handlePhysicsEventCountItem is called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingTextItemPtr</type>
+      <methodname>handleTextItem</methodname>
+      <methodparam>
+        <type>CRingTextItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handleTextItem is called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CDataFormatItemPtr</type>
+      <methodname>handleDataFormatItem</methodname>
+      <methodparam>
+        <type>CDataFormatItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handleDataFormatItem is called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CAbnormalEndItemPtr</type>
+      <methodname>handleAbnormalEndItem</methodname>
+      <methodparam>
+        <type>CAbnormalEndItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handleAbnormalEndItem is called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CGlomParametersPtr</type>
+      <methodname>handleGlomParameters</methodname>
+      <methodparam>
+        <type>CGlomParametersPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handleDataFormatItem is called.
+    </para>
+
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CCompositeRingItemPtr</type>
+      <methodname>handleCompositeItem</methodname>
+      <methodparam>
+        <type>CCompositeRingItemPtr</type><parameter>item</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Behaves exactly like handleRingItem except that handleCompositeItem is called.
+    </para>
+
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
       <void/>
       <methodname>initialize</methodname>
       <void/>
@@ -1034,6 +2003,879 @@ int main(int argc, char* argv[])
 
   </refsect1>
 
+
 </refentry>
+
+
+
+<refentry id='manpage.v12cfilterabstraction'>
+    <refentryinfo>
+        <author>
+                <personname>
+                        <firstname>Jeromy</firstname>
+                        <surname>Tompkins</surname>
+                </personname>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+    </refentryinfo>
+  <refmeta>
+    <refentrytitle id='manpage.v12cfilterabstraction_title'>DAQ::V12::CFilterAbstraction</refentrytitle>
+    <manvolnum>3daq</manvolnum>
+    <refmiscinfo class='empty'></refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>DAQ::V12::CFilterAbstraction</refname>
+          <refpurpose>The data format abstraction for nscldaq 12.0</refpurpose>
+  </refnamediv>
+
+
+  <refsynopsisdiv>
+    <programlisting>
+#include &lt;V12/CFilterAbstraction.h&gt;
+
+namespace DAQ {
+namespace V12 {
+    </programlisting>
+    <synopsis>
+      <ooclass><classname>CFilterAbstraction</classname></ooclass>
+
+      <constructorsynopsis>
+        <methodname>CFilterAbstraction</methodname>
+        <void />
+      </constructorsynopsis>
+
+      <constructorsynopsis>
+        <methodname>CFilterAbstraction</methodname>
+        <methodparam>
+          <type>const CFilterAbstraction&amp;</type>
+          <parameter>rhs</parameter>
+        </methodparam>
+      </constructorsynopsis>
+
+      <methodsynopsis>
+        <type>CFilterAbstraction&amp;</type>
+        <methodname>operator=()</methodname>
+        <methodparam>
+          <type>const CFilterAbstraction&amp;</type>
+          <parameter>rhs</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <destructorsynopsis>
+        <modifier>virtual</modifier>
+        <methodname>~CFilterAbstaction</methodname>
+        <void />
+      </destructorsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>readDatum</methodname>
+        <methodparam>
+          <type>CDataSource&amp;</type><parameter>source</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>processDatum</methodname>
+        <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>outputDatum</methodname>
+        <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>uint32_t</type>
+        <methodname>getDatumType</methodname>
+        <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>cleanUp</methodname>
+            <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>initialize</methodname>
+        <void/>
+      </methodsynopsis>
+
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>finalize</methodname>
+        <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>setExcludeList</methodname>
+        <methodparam>
+          <type>const std::string&</type><parameter>list</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>setSampleList</methodname>
+        <methodparam>
+          <type>const std::string&</type><parameter>list</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>setFilterMediator</methodname>
+        <methodparam>
+            <type>CFilterMediator&amp;</type><parameter>mediator</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CFilterMediator*</type>
+        <methodname>getFilterMediator</methodname>
+            <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <void/>
+        <methodname>registerFilter</methodname>
+        <methodparam>
+        <type>CFilterPtr</type><parameter>pFilter</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <type>CFilterPtr</type>
+        <methodname>getFilter</methodname>
+        <void/>
+        <modifier>const</modifier>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <type>CRingItemPtr</type>
+        <methodname>dispatch</methodname>
+        <methodparam>
+        <type>CRingItemPtr</type><parameter>pItem</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+    </synopsis>
+    <programlisting>
+} // end V12
+} // end DAQ
+    </programlisting>
+
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>
+        The V12::CFilterAbstraction is a class that abstracts away the logical operations of
+        a filter mediator that depend directly on the nscldaq 12.0 data
+        format. The CFilterMediator class implements a strategy pattern and
+        the CFilterAbstraction is simply an implementation of the strategy.
+    </para>
+
+    <para>
+        One of the important aspects of the CFilterAbstraction is that it holds a
+        V12::CFilter object. When the dispatch() method is called, the appropriate handler function
+        for the filter is called. The dispatch() method is called from processDatum().
+    </para>
+
+    <para>
+        The methods of this class are designed to be called in a certain order. That order
+        is readDatum(), processDatum(), outputDatum(), cleanUp(). The cleanUp() method supports
+        being called at any time in this cycle.
+    </para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>Public member functions</title>
+
+    <constructorsynopsis>
+      <methodname>CFilterAbstraction</methodname>
+      <void />
+    </constructorsynopsis>
+    <para>
+    </para>
+
+    <constructorsynopsis>
+      <methodname>CFilterAbstraction</methodname>
+      <methodparam>
+        <type>const CFilterAbstraction&amp;</type>
+        <parameter>rhs</parameter>
+      </methodparam>
+    </constructorsynopsis>
+    <para>
+        A deep copy is made of the
+        input and output ring items that are maintained so that the copy and the source object
+        share no data.
+    </para>
+
+    <methodsynopsis>
+      <type>CFilterAbstraction&amp;</type>
+      <methodname>operator=()</methodname>
+      <methodparam>
+        <type>const CFilterAbstraction&amp;</type>
+        <parameter>rhs</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    All of the data members of the object are replaced with copies of the
+    rhs object. Deep copies are made of pointer-like data members.
+    </para>
+
+    <destructorsynopsis>
+      <modifier>virtual</modifier>
+      <methodname>~CCompositeFilter</methodname>
+      <void />
+    </destructorsynopsis>
+    <para>
+    Data members are deleted if they can be.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type></type>
+      <methodname>readDatum</methodname>
+      <methodparam>
+        <type>CDataSource&amp;</type><parameter>source</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Reads a raw 12.0 data item from the source object.
+    </para>
+
+    <methodsynopsis>
+    <modifier>virtual</modifier>
+      <void/>
+      <methodname>processDatum</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+        Constructs a specific derived type from the raw item that was read from
+        the source in readDatum(). The dispatch() method is called with the newly
+        constructed object.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>writeDatum</methodname>
+      <methodparam>
+        <type>CDataSink&amp;</type><parameter>sink</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Writes the object returned from the dispatch() method to the sink if it is
+    not a nullptr.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>uint32_t</type>
+      <methodname>getDatumType</methodname>
+        <void/>
+    </methodsynopsis>
+    <para>
+        Returns the type of the output object if it exists, otherwise it returns the type of the input
+        object. The reason for this is that the output object will only exist after the
+        processDatum() method has been called. The idea is that before processing the datum,
+        the current type is the type of the item that was read from the source. After processing,
+        the type corresponds to the type that will be outputted to the sink.
+    </para>
+
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>cleanUp</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+        "Deletes" the input and output items.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>initialize</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+        Calls the initialize() method of the filter it owns.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>finalize</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+        Calls the finalize() method of the filter it owns.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>void</type>
+      <methodname>setFilterMediator</methodname>
+      <methodparam>
+        <type>CFilterMediator&amp;</type><parameter>mediator</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+        Stores a pointer reference to the mediator passed in.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CFilterMediator*</type>
+      <methodname>getFilterMediator</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+      Returns the pointer to the mediator that was stored when setFilterMediator()
+      was last called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>setExcludeList</methodname>
+      <methodparam>
+        <type>const std::string&amp;</type><parameter>list</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      The list that is passed in as an argument is used to selectively read
+      data from the source. The argument should be a list of ring item types, either
+      as words or integers, separated by commas and without spaces. The types words
+      that can be used are the same as are specified in V12/DataFormat.h. They are:
+      BEGIN_RUN, END_RUN, PAUSE_RUN, RESUME_RUN, ABNORMAL_ENDRUN, RING_FORMAT,
+      MONITORED_VARIABLES, PACKET_TYPES, PERIODIC_SCALERS, PHYSICS_EVENT, PHYSICS_EVENT_COUNT,
+      and EVB_GLOM_INFO. The composite type specifiers for these are also accepted. The composite
+      type is formed by adding a "COMP_" as a prefix to any of the former.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>setSampleList</methodname>
+      <methodparam>
+        <type>const std::string&amp;</type><parameter>list</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+        Sampling of data types is not currently supported. Sampling implies that if necessary,
+        the ring item can be skipped over. In any case, this method is implemented as a no-op.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingItemPtr</type>
+      <methodname>dispatch</methodname>
+      <methodparam>
+        <type>CRingItemPtr</type><parameter>pItem</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+        The argument pItem must be a specific type of ring item and not a raw ring item. The reason for
+        this is that the pItem shared pointer will be upcasted to the type that matches the value returned by its
+        type() method. The appropriate handler of the filter will be called with the upcasted pointer.
+        The return value of the filter will be returned to the user.
+    </para>
+    <para>
+    If no filter has been set, this will throw a std::runtime_error(). Use the registerFilter() to
+    set the filter.
+    </para>
+
+
+    <methodsynopsis>
+      <type>void</type>
+      <methodname>registerFilter</methodname>
+      <methodparam>
+        <type>CFilterPtr</type><parameter>pFilter</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    The pFilter filter will be appended to the list of filters maintained by the composite filter
+    owned by the object.
+    </para>
+
+    <methodsynopsis>
+      <type>CCompositeFilterPtr</type>
+      <methodname>getFilter</methodname>
+        <void/>
+      <modifier>const</modifier>
+    </methodsynopsis>
+    <para>
+        A shared pointer to the composite filter that is owned by the class will be returned
+        to the caller.
+    </para>
+
+  </refsect1>
+
+
+</refentry>
+
+
+
+
+<refentry id='manpage.v11cfilterabstraction'>
+    <refentryinfo>
+        <author>
+                <personname>
+                        <firstname>Jeromy</firstname>
+                        <surname>Tompkins</surname>
+                </personname>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+    </refentryinfo>
+  <refmeta>
+    <refentrytitle id='manpage.v11cfilterabstraction_title'>DAQ::V11::CFilterAbstraction</refentrytitle>
+    <manvolnum>3daq</manvolnum>
+    <refmiscinfo class='empty'></refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>DAQ::V11::CFilterAbstraction</refname>
+          <refpurpose>The data format abstraction for nscldaq 11.0</refpurpose>
+  </refnamediv>
+
+
+  <refsynopsisdiv>
+    <programlisting>
+#include &lt;V11/CFilterAbstraction.h&gt;
+
+namespace DAQ {
+namespace V11 {
+    </programlisting>
+    <synopsis>
+      <ooclass><classname>CFilterAbstraction</classname></ooclass>
+
+      <constructorsynopsis>
+        <methodname>CFilterAbstraction</methodname>
+        <void />
+      </constructorsynopsis>
+
+      <constructorsynopsis>
+        <methodname>CFilterAbstraction</methodname>
+        <methodparam>
+          <type>const CFilterAbstraction&amp;</type>
+          <parameter>rhs</parameter>
+        </methodparam>
+      </constructorsynopsis>
+
+      <methodsynopsis>
+        <type>CFilterAbstraction&amp;</type>
+        <methodname>operator=()</methodname>
+        <methodparam>
+          <type>const CFilterAbstraction&amp;</type>
+          <parameter>rhs</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <destructorsynopsis>
+        <modifier>virtual</modifier>
+        <methodname>~CFilterAbstaction</methodname>
+        <void />
+      </destructorsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>readDatum</methodname>
+        <methodparam>
+          <type>CDataSource&amp;</type><parameter>source</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>processDatum</methodname>
+        <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>outputDatum</methodname>
+        <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>uint32_t</type>
+        <methodname>getDatumType</methodname>
+        <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>cleanUp</methodname>
+            <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>initialize</methodname>
+        <void/>
+      </methodsynopsis>
+
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>finalize</methodname>
+        <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>setExcludeList</methodname>
+        <methodparam>
+          <type>const std::string&</type><parameter>list</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>setSampleList</methodname>
+        <methodparam>
+          <type>const std::string&</type><parameter>list</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>void</type>
+        <methodname>setFilterMediator</methodname>
+        <methodparam>
+            <type>CFilterMediator&amp;</type><parameter>mediator</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <modifier>virtual</modifier>
+        <type>CFilterMediator*</type>
+        <methodname>getFilterMediator</methodname>
+            <void/>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <void/>
+        <methodname>registerFilter</methodname>
+        <methodparam>
+        <type>CFilterPtr</type><parameter>pFilter</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <type>CFilterPtr</type>
+        <methodname>getFilter</methodname>
+        <void/>
+        <modifier>const</modifier>
+      </methodsynopsis>
+
+      <methodsynopsis>
+        <type>CRingItemPtr</type>
+        <methodname>dispatch</methodname>
+        <methodparam>
+        <type>CRingItemPtr</type><parameter>pItem</parameter>
+        </methodparam>
+      </methodsynopsis>
+
+    </synopsis>
+    <programlisting>
+} // end V11
+} // end DAQ
+    </programlisting>
+
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>DESCRIPTION</title>
+
+    <para>
+        The V11::CFilterAbstraction is a class that abstracts away the logical operations of
+        a filter mediator that depend directly on the nscldaq 11.0 data
+        format. The CFilterMediator class implements a strategy pattern and
+        the CFilterAbstraction is simply an implementation of the strategy for 11.0 data.
+    </para>
+
+    <para>
+        One of the important aspects of the CFilterAbstraction is that it holds a
+        V11::CCompositeFilter object. When the dispatch() method is called, the appropriate handler function
+        for the filter is called. The dispatch() method is called from processDatum().
+    </para>
+
+    <para>
+        The methods of this class are designed to be called in a certain order. That order
+        is readDatum(), processDatum(), outputDatum(), cleanUp(). The cleanUp() method supports
+        being called at any time in this cycle.
+    </para>
+
+  </refsect1>
+
+  <refsect1>
+    <title>Public member functions</title>
+
+    <constructorsynopsis>
+      <methodname>CFilterAbstraction</methodname>
+      <void />
+    </constructorsynopsis>
+    <para>
+    </para>
+
+    <constructorsynopsis>
+      <methodname>CFilterAbstraction</methodname>
+      <methodparam>
+        <type>const CFilterAbstraction&amp;</type>
+        <parameter>rhs</parameter>
+      </methodparam>
+    </constructorsynopsis>
+    <para>
+        A deep copy is made of the
+        input and output ring items that are maintained so that the copy and the source object
+        share no data.
+    </para>
+
+    <methodsynopsis>
+      <type>CFilterAbstraction&amp;</type>
+      <methodname>operator=()</methodname>
+      <methodparam>
+        <type>const CFilterAbstraction&amp;</type>
+        <parameter>rhs</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    All of the data members of the object are replaced with copies of the
+    rhs object. Deep copies are made of pointer-like data members.
+    </para>
+
+    <destructorsynopsis>
+      <modifier>virtual</modifier>
+      <methodname>~CCompositeFilter</methodname>
+      <void />
+    </destructorsynopsis>
+    <para>
+    Data members are deleted if they can be.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type></type>
+      <methodname>readDatum</methodname>
+      <methodparam>
+        <type>CDataSource&amp;</type><parameter>source</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      Reads a raw 11.0 data item from the source object.
+    </para>
+
+    <methodsynopsis>
+    <modifier>virtual</modifier>
+      <void/>
+      <methodname>processDatum</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+        Constructs a specific derived type from the raw item that was read from
+        the source in readDatum(). The dispatch() method is called with the newly
+        constructed object.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>writeDatum</methodname>
+      <methodparam>
+        <type>CDataSink&amp;</type><parameter>sink</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    Writes the object returned from the dispatch() method to the sink if it is
+    not a nullptr.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>uint32_t</type>
+      <methodname>getDatumType</methodname>
+        <void/>
+    </methodsynopsis>
+    <para>
+        Returns the type of the output object if it exists, otherwise it returns the type of the input
+        object. The reason for this is that the output object will only exist after the
+        processDatum() method has been called. The idea is that before processing the datum,
+        the current type is the type of the item that was read from the source. After processing,
+        the type corresponds to the type that will be outputted to the sink.
+
+    </para>
+
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>cleanUp</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+        Deletes the input and output items. Care is taken to ensure that no memory is
+        doubly freed, because it is possible that the input and output pointers refer
+        to the exact same allocated memory.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>initialize</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+        Calls the initialize() method of the filter it owns.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>finalize</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+        Calls the finalize() method of the filter it owns.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>void</type>
+      <methodname>setFilterMediator</methodname>
+      <methodparam>
+        <type>CFilterMediator&amp;</type><parameter>mediator</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+        Stores a pointer reference to the mediator passed in.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CFilterMediator*</type>
+      <methodname>getFilterMediator</methodname>
+      <void/>
+    </methodsynopsis>
+    <para>
+      Returns the pointer to the mediator that was stored when setFilterMediator()
+      was last called.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>setExcludeList</methodname>
+      <methodparam>
+        <type>const std::string&amp;</type><parameter>list</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+      The list that is passed in as an argument is used to selectively read
+      data from the source. The argument should be a list of ring item types, either
+      as words or integers, separated by commas and without spaces. The types words
+      that can be used are the same as are specified in V12/DataFormat.h. They are:
+      BEGIN_RUN, END_RUN, PAUSE_RUN, RESUME_RUN, ABNORMAL_ENDRUN, RING_FORMAT,
+      MONITORED_VARIABLES, PACKET_TYPES, PERIODIC_SCALERS, PHYSICS_EVENT, PHYSICS_EVENT_COUNT,
+      EVB_GLOM_INFO, EVB_FRAGMENT, and EVB_UNKNOWN_PAYLOAD.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <void/>
+      <methodname>setSampleList</methodname>
+      <methodparam>
+        <type>const std::string&amp;</type><parameter>list</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+        Sampling of data types is not currently supported. Sampling implies that if necessary,
+        the ring item can be skipped over. In any case, this method is implemented as a no-op.
+    </para>
+
+    <methodsynopsis>
+      <modifier>virtual</modifier>
+      <type>CRingItem*</type>
+      <methodname>dispatch</methodname>
+      <methodparam>
+        <type>CRingItem*</type><parameter>pItem</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+        The argument pItem must be a specific type of ring item and not a raw ring item. The reason for
+        this is that the pItem shared pointer will be upcasted to the type that matches the value returned by its
+        type() method. The appropriate handler of the filter will be called with the upcasted pointer.
+        The return value of the filter will be returned to the user.
+    </para>
+    <para>
+    If no filter has been set, this will throw a std::runtime_error().
+    </para>
+
+
+    <methodsynopsis>
+      <type>void</type>
+      <methodname>registerFilter</methodname>
+      <methodparam>
+        <type>CFilterPtr</type><parameter>pFilter</parameter>
+      </methodparam>
+    </methodsynopsis>
+    <para>
+    The pFilter filter will be appended to the list of filters maintained by the composite filter
+    owned by the object.
+    </para>
+
+    <methodsynopsis>
+      <type>CCompositeFilterPtr</type>
+      <methodname>getFilter</methodname>
+        <void/>
+      <modifier>const</modifier>
+    </methodsynopsis>
+    <para>
+        A shared pointer to the composite filter that is owned by the class will be returned
+        to the caller.
+    </para>
+
+  </refsect1>
+
+
+</refentry>
+
+
 
 <!-- /manpage -->
