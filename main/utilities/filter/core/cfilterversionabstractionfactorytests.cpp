@@ -23,6 +23,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 
 #include "CFilterVersionAbstractionFactory.h"
 #include <make_unique.h>
+#include <stdexcept>
 
 namespace DAQ {
 class CDataSource;
@@ -32,6 +33,7 @@ class CFilterMediator;
 
 using namespace DAQ;
 
+// Define a version abstraction for testing purposes.
 
 class CFakeVersionAbstractionCreator;
 using CFakeVersionAbstractionCreatorPtr = std::shared_ptr<CFakeVersionAbstractionCreator>;
@@ -53,6 +55,11 @@ public:
     CFilterMediator* getFilterMediator() { return nullptr; }
 };
 
+
+////////////////////////////////////////////////////////////////////////
+
+
+// A creator class for the version abstraction above
 class CFakeVersionAbstractionCreator : public DAQ::CFilterVersionAbstractionCreator
 {
 public:
@@ -62,7 +69,7 @@ public:
 };
 
 
-// A test suite
+// A test suite for the version abstraction factory
 class CFilterVersionAbstractionFactoryTest : public CppUnit::TestFixture
 {
 
@@ -88,7 +95,6 @@ public:
         CFilterVersionAbstractionFactory factory;
 
         factory.addCreator(100, pCreator);
-
         auto pFoundCreator = factory.getCreator(100);
 
         EQMSG("added and retrieved creators are same",
@@ -102,7 +108,7 @@ public:
 
         auto pFoundCreator = factory.getCreator(100);
 
-        EQMSG("nullptr is essentially returned when creator not found",
+        EQMSG("'nullptr' is returned when creator not found",
               CFilterVersionAbstractionFactory::CreatorPtr(nullptr),
               pFoundCreator);
     }
