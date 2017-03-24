@@ -46,8 +46,6 @@ public:
      * data item with type V11::UNDEFINED.
      */
     FinalType operator()(const InitialType& item);
-};
-
 
     /*!
      * \brief Transform state change items
@@ -195,6 +193,7 @@ public:
      */
     V11::CAbnormalEndItem    transformAbnormalEndItem(const InitialType& item);
 
+};
 
 } // end Transform
 } // end DAQ
