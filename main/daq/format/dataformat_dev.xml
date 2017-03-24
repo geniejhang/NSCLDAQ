@@ -1489,6 +1489,11 @@ g++ -o myApplication src1.o src2.o ... -L$DAQROOT/lib \
                 <methodparam>
                     <type>CRingSelectionPredicate&amp;</type> <parameter>predicate</parameter>
                 </methodparam>
+                <!-- added in 12.0 -->
+                <methodparam>
+                  <type>int</type><parameter>timeout</parameter>
+                  <initializer>-1</initializer>
+                </methodparam>
             </methodsynopsis>
 
          </synopsis>
@@ -1863,6 +1868,10 @@ g++ -o myApplication src1.o src2.o ... -L$DAQROOT/lib \
              <methodparam>
                  <type>CRingSelectionPredicate&amp;</type> <parameter>predicate</parameter>
              </methodparam>
+             <methodparam>
+                  <type>int</type><parameter>timeout</parameter>
+                  <initializer>-1</initializer>
+                </methodparam>
          </methodsynopsis>
          <para>
             Returns a pointer to a dynamically allocated ring item that was
@@ -1887,6 +1896,16 @@ g++ -o myApplication src1.o src2.o ... -L$DAQROOT/lib \
             these not be sufficient to meet your needs.
         </para>
         <para>
+          The <parameter>timeout</parameter> is the maximum time in seconds
+          (roughly) this method will block before timing out.  If not supplied
+          the default is <literal>ULONG_MAX</literal> which is effectively
+          forever (about 136 years).
+        </para>
+        <para>
+            The return value is a dynamically allocated pointer to a ring item
+            gotten from the <parameter>ring</parameter>.  If the value is
+            <literal>nullptr</literal>, the method timed out without seeing a
+            ring item that matched the predicate.
             The caller is responsible for deleting the object.
         </para>
       </refsect1>
@@ -5905,8 +5924,13 @@ item.commitToRing(aring);
                 <modifier>= 0</modifier>
             </methodsynopsis>
             <methodsynopsis>
-                <type>void</type> <methodname>selectItem</methodname>
+                <type>bool</type> <methodname>selectItem</methodname>
                 <methodparam><type>CRingBuffer&amp;</type><parameter>ring</parameter>
+                </methodparam>
+                <!-- added in 12.0 -->
+                <methodparam>
+                  <type>int</type><parameter>timeout</parameter>
+                  <initializer>-1</initializer>
                 </methodparam>
             </methodsynopsis>
             <methodsynopsis>
@@ -6104,8 +6128,13 @@ item.commitToRing(aring);
                 of this return value.
             </para>
             <methodsynopsis>
-                <type>void</type> <methodname>selectItem</methodname>
+                <type>bool</type> <methodname>selectItem</methodname>
                 <methodparam><type>CRingBuffer&amp;</type> <parameter>ring</parameter>
+                </methodparam>
+                <!-- added in 12.0 -->
+                <methodparam>
+                  <type>int</type><parameter>timeout</parameter>
+                  <initializer>-1</initializer>
                 </methodparam>
             </methodsynopsis>
             <para>
@@ -6115,8 +6144,20 @@ item.commitToRing(aring);
                 is available. 
             </para>
             <para>
+              If provided <parameter>timeout</parameter> specifies an approximation
+              of the longest this entry will block before timing out.  The
+              default is <literal>ULONG_MAX</literal> which is effectively
+              forever (more than a century).
+            </para>
+            <para>
                 Normally, this is intended to be called from
                 <classname>CRingItem</classname>::<methodname>getFromRing</methodname>.
+            </para>
+            <para>
+              The return value from this is a <type>bool</type> that is
+              <literal>true</literal> if there's an item ready to be retrieved
+              and <literal>false</literal> if the method timed out without
+              seeing a matching item.
             </para>
          </refsect2>
          <refsect2>

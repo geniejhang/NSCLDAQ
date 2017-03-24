@@ -65,6 +65,7 @@ private:
 public:
   virtual void start();
   void         stop(bool pausing);          // stop/join.
+  bool         running() const {return m_running; }
   virtual void run();
 
 protected:

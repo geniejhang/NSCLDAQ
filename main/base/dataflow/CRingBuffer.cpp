@@ -1168,7 +1168,7 @@ CRingBuffer::blockWhile(CRingBuffer::CRingBufferPredicate& pred, unsigned long t
     while (pred(*this)) {
       time_t now = time(NULL);
       if ((now - start) >= timeout) 
-	return -1; // timeout
+        return -1; // timeout
       pollblock(); // wait a bit before checking condition.
     }
     

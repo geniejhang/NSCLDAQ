@@ -309,6 +309,7 @@ void CRunControlPackage::createCommands(CTCLInterpreter& interp)
   CPrePauseCommand* prePause = new CPrePauseCommand(interp);
   addCommand(prePause);
   addCommand(new CPauseCommand(interp, prePause));
+  addCommand(new CPreResumeCommand(interp));
   addCommand(new CResumeCommand(interp));
   addCommand(new CEndCommand(interp));
   addCommand(new CInitCommand(interp));

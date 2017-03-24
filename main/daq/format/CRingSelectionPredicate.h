@@ -114,7 +114,7 @@ public:
 
   virtual bool operator()(CRingBuffer& ring);
   virtual bool selectThis(uint32_t type) = 0;
-  void selectItem(CRingBuffer& ring);
+  bool selectItem(CRingBuffer& ring, int timeout = -1);
   size_t getNumberOfSelections() const { return m_selections.size(); }
 
   // Utilities for derived classes:

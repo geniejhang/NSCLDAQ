@@ -116,7 +116,9 @@ public:
 
   // class level methods:
 
-  static CRingItem* getFromRing(CRingBuffer& ring, CRingSelectionPredicate& predicate);
+  static CRingItem* getFromRing(
+    CRingBuffer& ring, CRingSelectionPredicate& predicate, int timeout = -1
+  );
 
   // Virtual methods that all ring items must provide:
 

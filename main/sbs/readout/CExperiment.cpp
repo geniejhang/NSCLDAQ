@@ -201,7 +201,7 @@ CExperiment::Start(bool resume)
   // The run must be in the correct state:
 
   if (resume &&
-    ( (m_pRunState->m_state != RunState::paused) && (m_pRunState->m_state != RunState::pausing))
+    ( (m_pRunState->m_state != RunState::paused) && (m_pRunState->m_state != RunState::resuming))
   ) { 
     throw CStateException(m_pRunState->stateName().c_str(),
 			  RunState::stateName(RunState::paused).c_str(),
@@ -356,7 +356,7 @@ CExperiment::Stop(bool pause)
   // Schedule the trigger thread to stop.
 
   if (m_pTriggerLoop) {
-    if ((state == RunState::pausing) || (state == RunState::halting)) {
+    if (m_pTriggerLoop->running() && ((state == RunState::pausing) || (state == RunState::halting))) {
       m_pTriggerLoop->stop(pause); // run is active
     }
     else {

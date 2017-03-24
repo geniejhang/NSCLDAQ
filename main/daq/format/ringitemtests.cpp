@@ -39,6 +39,9 @@ class physeventtests : public CppUnit::TestFixture {
   CPPUNIT_TEST(addbodyheader);
   CPPUNIT_TEST(equality);
   CPPUNIT_TEST(size);
+  CPPUNIT_TEST(timeout);
+  CPPUNIT_TEST(timeoutgotten);
+  CPPUNIT_TEST(timeoutnomatch);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -62,6 +65,9 @@ protected:
   void addbodyheader();
   void equality();
   void size();
+  void timeout();
+  void timeoutgotten();
+  void timeoutnomatch();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(physeventtests);
@@ -425,4 +431,65 @@ void physeventtests::size()
   // because we made the item locally on this computer, we don't
   // need to worry about byte order
   EQ( pItem->s_header.s_size, item.size() );
+}
+// get with empty ring and timeout does timeout
+void physeventtests::timeout()
+{
+  CRingBuffer::create(uniqueName("items"));
+  {
+    CRingBuffer cons(uniqueName("items"), CRingBuffer::consumer);
+    CAllButPredicate all;
+    CRingItem* pItem = CRingItem::getFromRing(cons, all, 1);   // Should timeout.
+    ASSERT(pItem == nullptr);
+  }
+  
+  CRingBuffer::remove(uniqueName("items"));
+}
+// get with matching item and timeout works.
+
+void physeventtests::timeoutgotten()
+{
+  CRingBuffer::create(uniqueName("items"));
+  {
+    CRingBuffer prod(uniqueName("items"), CRingBuffer::producer);
+    CRingBuffer cons(uniqueName("items"), CRingBuffer::consumer);
+    
+     CRingItem item(0x1234);
+    uint16_t* pData = reinterpret_cast<uint16_t*>(item.getBodyCursor());
+    for (uint16_t  i =0; i < 16; i++) {
+      *pData++  = i;
+    }
+    item.setBodyCursor(pData);
+    item.commitToRing(prod);
+    
+    CAllButPredicate all;
+    CRingItem* pItem = CRingItem::getFromRing(cons, all, 0);  // Shoud not timeout.
+    ASSERT(pItem != nullptr);
+  }
+  CRingBuffer::remove(uniqueName("items"));
+}
+// If we try to get an item but the only one(s) in the ring fail the
+// predicate that can fire timeout6.
+
+void physeventtests::timeoutnomatch()
+{
+  CRingBuffer::create(uniqueName("items"));
+  {
+    CRingBuffer prod(uniqueName("items"), CRingBuffer::producer);
+    CRingBuffer cons(uniqueName("items"), CRingBuffer::consumer);
+    
+    CRingItem item(0x1234);
+    uint16_t* pData = reinterpret_cast<uint16_t*>(item.getBodyCursor());
+    for (uint16_t  i =0; i < 16; i++) {
+      *pData++  = i;
+    }
+    item.setBodyCursor(pData);
+    item.commitToRing(prod);
+    
+    CAllButPredicate allbut;
+    allbut.addExceptionType(0x1234, false);
+    CRingItem* pItem = CRingItem::getFromRing(cons, allbut, 0);  // Shoud not timeout.
+    ASSERT(pItem == nullptr);
+  }
+  CRingBuffer::remove(uniqueName("items"));  
 }

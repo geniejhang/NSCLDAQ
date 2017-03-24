@@ -86,10 +86,10 @@ CPreResumeCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>& 
         return TCL_ERROR;        
     }
     catch (...) {
-        interp.setResult("prebegin - unexpected exception type");
+        interp.setResult("preresume - unexpected exception type");
         return TCL_ERROR;
     }
-    return TCL_ERROR;
+    return TCL_OK;
 }
  
  
