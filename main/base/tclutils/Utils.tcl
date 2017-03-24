@@ -71,3 +71,34 @@ namespace eval Utils {
     return $res
   }
 }
+##
+# fqdn
+#    Given a DNS hostname which is, potentially not fully qualified,
+#    returns its fully qualified hostname.  The hsotname must be
+#    resolvable with nslookup which must be installed in the user's path on
+#    the host system.
+#
+# @param host  - Name of the host to fully qualify.
+# @return string - the hosts fqdn.
+# @throw Errors if:
+#        *  nslookup is not installed.
+#        *  The host parameter is not resolveable.
+#  @note acknowledgements to Tom Wilkason who produced a script
+#        very much like this in
+#        http://computer-programming-forum.com/57-tcl/e186ce2a504ea1b8.htm
+#
+# @note nslookup is used because that's available on windows as well as unix
+#       like systems while host is available on unix like systems only(?).
+#
+
+proc fqdn host {
+   foreach line [split [exec nslookup $host] \n] { 
+      foreach {title host} [split $line :] { 
+         if {$title == "Name"} { 
+            return [string trim $host] 
+         } 
+      } 
+   } 
+   error "$host cannot be looked up by nslookup command."
+  
+}
