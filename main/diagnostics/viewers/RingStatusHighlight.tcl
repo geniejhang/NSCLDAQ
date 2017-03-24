@@ -31,6 +31,7 @@ package provide RingStatusHighlight 1.0
 package require Tk
 package require snit
 package require SqlWhere
+package require Utils
 
 ##
 # Provides a 'class' that will monitor the status of ring buffers we care
@@ -216,6 +217,14 @@ snit::type RingStatusHighlight {
         foreach ring $options(-rings) {
             set name [$ring cget -title]
             
+            #  The ring name is potentially not fully qualified.
+            #  The status messages/databases have fully qualified hosts, however
+            #  This could result in mismatches between the scoreboard name
+            #  and the database fqrn names.  Therefore we first map the
+            #  names to ringname@fqdn -- if possible.
+            
+            set name [ringToFqrn $name]
+            
             set scoreboard($name) [list $ring unseen]
         }
         #  Now look over the data:
@@ -341,5 +350,35 @@ snit::type RingStatusHighlight {
         }
         error "BUG - _nearestRing has no mathcing ring."
     }
+    #-------------------------------------------------------------------------
+    #  utility procs
     
+    ##
+    # ringToFqrn
+    #   Takes a ringname of the form ring@host where host may not be
+    #   fully qualified and returns ring@fqdn if possible.  If not possible,
+    #   just returns the input parameter.
+    #   Cases where this mapping may not be possible include:
+    #   -  host - is not visible in dns.
+    #   -  we've got a pathalogical name that is not of the form ring@host.
+    #   -  Any other reason the fqdn proc might fail.
+    #
+    # @param rname - ring name in ring@host form.
+    # @return strin - ring@fqdn-of-host
+    #
+    proc ringToFqrn {rname} {
+        # Bust the ringname up into its pieces:
+        
+        set namePieces [split $rname @]
+        if {[llength $namePieces] != 2} {
+            return $rname;                   # Can't do anything with this.
+        }
+        set status [catch {fqdn [lindex $namePieces 1]} fullHostName]
+        if {$status} {
+            # Probably dns lookup failed:
+            
+            return $rname
+        }
+        set fqrn [lindex $namePieces 0]@$fullHostName
+    }
 }
