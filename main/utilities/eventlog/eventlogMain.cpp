@@ -172,7 +172,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
     }
     m_pStateApi->setState("Ready");    // We've initialized.
     while(!m_pStateApi->waitTransition(newState, -1)) {
-      log("Waiting for Ready...", CStatusDefinitions::SeverityLevels::INFO);
+      log("Waiting for Ready...", CStatusDefinitions::SeverityLevels::DEBUG);
     }
     if (newState != "Ready") {
       message = "Expecting state transition to Ready got: ";
@@ -184,7 +184,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    
    // Record data until we're supposed to exit.
    
-   log("Event Logger entering recordData()", CStatusDefinitions::SeverityLevels::INFO);
+   log("Event Logger entering recordData()", CStatusDefinitions::SeverityLevels::DEBUG);
    recordData();
    log("Event logger exiting normally", CStatusDefinitions::SeverityLevels::INFO);
    
@@ -429,6 +429,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
    uint16_t     itemType;
    m_lastCheckedSize = 0;    // Last checked free space.
    bool recording(true);
+   bool processStateTransitions(true);
    
    // If using the state manager we need to use the global recording flag
    // to determine if we are recording data.
@@ -469,82 +470,29 @@ class noData :  public CRingBuffer::CRingBufferPredicate
 
    while(1) {
 
-     /**
-      If we're using the state manager see if there's
-      A transition pending.  The 'legal' transitions are:
-      
-      *  Ending - the run is ending.  Just echo back and when we see
-                  close the file we can complete the transition to Ready.
-      *  NotReady - Something failed.  Log this, go to NotReady, close the file
-                  and exit.
-      *  Pausing - The run is pausing.
-                   - Complete the transition to paused.
-                   - Wait indefinitely for the next transition. If resuming
-                     complete transaction back to Active then go on.
-                     If Ending, echo back and keep going, eventually we'll
-                    see the end run members and the End transition.
-                    If NotReady - something failed so treat as NotReady above.
-    */  
-
-    if (m_pStateApi) {
-      if (m_pStateApi->getState() != "Ending") {
-        if(m_pStateApi->waitTransition(newState, 0)) {
-          if (newState == "Ending") {
-            m_pStateApi->setState("Ending");
-            log("Ending state transition", CStatusDefinitions::SeverityLevels::DEBUG);
-          } else if (newState == "NotReady") {
-            notReadyClose(fd, runNumber);
-          } else if (newState == "Pausing") {
-            
-            // Finish the transition to paused.
-            
-            m_pStateApi->setState("Pausing");
-            while(!m_pStateApi->waitTransition(newState, -1)) {
-              ;
-            }
-            if (newState != "Paused") {
-              stateMessage = "Expected transition to Paused but got: ";
-              stateMessage += newState;
-              stateManagerDie(stateMessage.c_str());
-            }
-            m_pStateApi->setState("Paused");
-            
-            // What happens next depends on the next state request
-  
-            while (!m_pStateApi->waitTransition(newState, -1)) {
-              ;
-            }
-            if (newState == "Resuming") {
-              m_pStateApi->setState("Resuming");
-              while (!m_pStateApi->waitTransition(newState, -1)) {
-                ;
-              }
-              if (newState !=  "Active") {
-                stateMessage = "Expected transition to Active got: ";
-                stateMessage += newState;
-                stateManagerDie(stateMessage.c_str());
-              }
-              m_pStateApi->setState("Active");
-            } else if (newState == "Ending") {
-              m_pStateApi->setState("Ending");
-            }
-            else if (newState == "NotReady") {
-              notReadyClose(fd, runNumber);        
-            } else {
-              stateMessage = "Unexpected state transition while paused : ";
-              stateMessage += newState;
-              stateManagerDie (stateMessage.c_str());
-            }
-            
-          } else {
-            // Unexpected state:
-            std::string message = "Unexpected new state while recording: ";
-            message += newState;
-            stateManagerDie(message.c_str());
-          }
+    /* If the state manager is present and we still need to process
+     * state transitions check for one and:
+     * Whith the following exceptions just echo the transition:
+     *  - NotReady - do an stateManagerExit as the system is doing an emergency
+     *               shutdown.
+     *  - Ending - Stop processing state transitions;  Once the run file is
+     *             closed, we'll expect to see a transition to Ready to complete
+     *             our part of ending the run.
+     */
+    if (m_pStateApi && processStateTransitions) {
+      std::string nextState;
+      if (m_pStateApi->waitTransition(newState, 0)) {
+        if (newState == "NotReady") {
+          stateManagerDie("Being asked to exit by transition to NotReady while recording");
+        } else if (newState == "Ending") {
+          m_pStateApi->setState("Ending");
+          processStateTransitions = false;
+        } else {
+          m_pStateApi->setState(newState);    // All else just echo.
         }
       }
     }
+
 
     if (pItem) {                    // For when we get from ring with timeout.
      size_t size    = itemSize(*pItem);
@@ -578,60 +526,60 @@ class noData :  public CRingBuffer::CRingBufferPredicate
      
      // Check free disk space and log Warning, SEVERE or Info if so.
      
-    if ((bytesInSegment - m_lastCheckedSize) >= SpaceCheckInterval) {
-	m_lastCheckedSize = bytesInSegment;
-    std::stringstream logMessage;
-    logMessage << "Segment size: ";
-    logMessage << bytesInSegment/(1024*1024);
-    logMessage << " Mbytes";
-    log(logMessage.str().c_str(), CStatusDefinitions::SeverityLevels::DEBUG);
-	try {
-	  double pctFree = io::freeSpacePercent(fd);
-	  if (shouldLogWarning(pctFree)) {
-	    log(
-	      "Disk space is getting a bit low percent left: ", pctFree,
-	      CStatusDefinitions::SeverityLevels::WARNING
-	    );
-	    m_haveWarned = true;
-	  }
-	  if (shouldLogSevere(pctFree)) {
-	    log(
-	      "Disk space is getting very low percent left: ", pctFree,
-	      CStatusDefinitions::SeverityLevels::SEVERE
-	    );
-	    m_haveSevere = true;
-	  }
-	  if (shouldLogSevereClear(pctFree)) {
-	    log(
-	      "Disk space is somewhat better but still a bit percent left: ", pctFree,
-	      CStatusDefinitions::SeverityLevels::INFO
-	      );
-	    m_haveSevere = false;
-	  }
-	  if (shouldLogWarnClear(pctFree)) {
-	    log(
-	      "Disk space is ok now percent left:", pctFree,
-	      CStatusDefinitions::SeverityLevels::INFO
-	    );
-	    m_haveWarned = false;
-	  }
-	}
-	catch (int errno) {
-	  CStatusDefinitions::LogMessage* lm = getLogger();
-	  if (lm) {
-	    lm->Log(CStatusDefinitions::SeverityLevels::WARNING, "Unable to get disk free space.");
-	}
-       }
+      if ((bytesInSegment - m_lastCheckedSize) >= SpaceCheckInterval) {
+        m_lastCheckedSize = bytesInSegment;
+        std::stringstream logMessage;
+        logMessage << "Segment size: ";
+        logMessage << bytesInSegment/(1024*1024);
+        logMessage << " Mbytes";
+        log(logMessage.str().c_str(), CStatusDefinitions::SeverityLevels::DEBUG);
+        try {
+          double pctFree = io::freeSpacePercent(fd);
+          if (shouldLogWarning(pctFree)) {
+            log(
+              "Disk space is getting a bit low percent left: ", pctFree,
+              CStatusDefinitions::SeverityLevels::WARNING
+            );
+            m_haveWarned = true;
+          }
+          if (shouldLogSevere(pctFree)) {
+            log(
+              "Disk space is getting very low percent left: ", pctFree,
+              CStatusDefinitions::SeverityLevels::SEVERE
+            );
+            m_haveSevere = true;
+          }
+          if (shouldLogSevereClear(pctFree)) {
+            log(
+              "Disk space is somewhat better but still a bit percent left: ", pctFree,
+              CStatusDefinitions::SeverityLevels::INFO
+              );
+            m_haveSevere = false;
+          }
+          if (shouldLogWarnClear(pctFree)) {
+            log(
+              "Disk space is ok now percent left:", pctFree,
+              CStatusDefinitions::SeverityLevels::INFO
+            );
+            m_haveWarned = false;
+          }
+        }
+        catch (int errno) {
+          log("Unable to get disk free space", CStatusDefinitions::SeverityLevels::WARNING);
+        }
+      }
      }
      delete pItem;
 
      if(itemType == END_RUN) {
+      log("Got an end run item", CStatusDefinitions::SeverityLevels::DEBUG);
        endsRemaining--;
        // If we're participating in the state manager and our state is not
        // already 'Ready', we need to participate in the End of run transition.
        
        
        if (endsRemaining == 0) {
+        log("All end runs received", CStatusDefinitions::SeverityLevels::DEBUG);
         break;
        }
      }
@@ -655,8 +603,8 @@ class noData :  public CRingBuffer::CRingBufferPredicate
      //        a run it's probably going to be necessary to get ring items
      //        with a timeout.
      
-     pItem =  CRingItem::getFromRing(*m_pRing, p);
-     if(isBadItem(*pItem, runNumber)) {
+     pItem =  CRingItem::getFromRing(*m_pRing, p, 1);
+     if(pItem && isBadItem(*pItem, runNumber)) {
        std::cerr << "Eventlog: Data indicates probably the run ended in error exiting\n";
        log(
 	   "Event log exiting - got a bad data item.  run may have ended in error",
@@ -665,7 +613,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
        exit(EXIT_FAILURE);
      }
    }
-  }
+  log("Exited main recording loop", CStatusDefinitions::SeverityLevels::DEBUG);
   if (recording) {
     writeChecksumFile(runNumber);
     close(fd);
@@ -673,11 +621,17 @@ class noData :  public CRingBuffer::CRingBufferPredicate
   // If necessary participate in the final transition to "Ready".
   
   if (m_pStateApi) {
-    
-    if (!expectStateRequest(stateMessage, "Ready", -1)) {
-     stateMessage += " - Expecting Final end after closed event file";
+    std::string newState;
+    log("Expecting transition to Ready", CStatusDefinitions::SeverityLevels::DEBUG);
+    while (!m_pStateApi->waitTransition(newState, -1) ) {
+      ;
+    }
+    if (newState != "Ready") {
+     stateMessage  = "Was expecting a state transition to Ready but got: ";
+     stateMessage += newState;
      stateManagerDie(stateMessage.c_str());
     }
+    log("Setting state to Ready", CStatusDefinitions::SeverityLevels::DEBUG);
     m_pStateApi->setState("Ready");
   }
 
