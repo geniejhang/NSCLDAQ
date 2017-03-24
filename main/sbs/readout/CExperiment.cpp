@@ -626,8 +626,8 @@ CExperiment::readScalers()
                                   getSourceId(), 
                                   BARRIER_NOTBARRIER,
                                   m_nEventsEmitted,
-                        				  endTime,
-                        				  now);
+                        				  endTime/1000,
+                        				  now/1000);
   item.commitToRing(*m_pRing);
 }
 
