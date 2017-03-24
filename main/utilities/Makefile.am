@@ -9,7 +9,6 @@ SUBDIRS = 				common	\
 					filter \
 					conversion \
 					ringselector \
-					eventlog \
 					bufdump	\
 					sclclient \
 					tkbufdump \
@@ -28,6 +27,7 @@ SUBDIRS = 				common	\
 					vardbringbuffer \
 					ringbuffer	\
 					fileanalyzer	\
+					eventlog \
 					scalersum
 
 

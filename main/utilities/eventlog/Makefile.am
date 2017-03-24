@@ -16,7 +16,7 @@ eventlog_CPPFLAGS       =	-I@top_srcdir@/base/headers		\
 				-I@top_srcdir@/daq/format		\
 			        -I@top_srcdir@/base/dataflow	\
 				-I@top_srcdir@/base/os		\
-				-I@top_srcdir/base/thread	\
+				-I@top_srcdir@/base/thread	\
 				-I@top_srcdir@/servers/portmanager \
 				-I@top_srcdir@/diagnostics/status	\
 				-I@top_srcdir@/utilities/statemanager  \
