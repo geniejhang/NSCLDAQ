@@ -10,6 +10,7 @@ libConversion_la_SOURCES = CTransformMediator.h \
                            CTransform10p0to8p0.cpp \
                            CTransform10p0to11p0.cpp \
                            CTransform11p0to10p0.cpp \
+                           CTransform12p0to11p0.cpp \
                            CTransformFactory.cpp
 
                            #CTransform11p0to11p0.cpp
@@ -23,6 +24,7 @@ include_HEADERS = CTransformMediator.h \
                            CTransform10p0to8p0.h \
                            CTransform10p0to11p0.h \
                            CTransform11p0to10p0.h \
+                           CTransform12p0to11p0.h \
                            CTransformFactory.h
 
 #                           CTransform11p0to11p0.h
@@ -39,6 +41,7 @@ libConversion_la_CXXFLAGS = -I@srcdir@ \
 libConversion_la_LIBADD = @top_builddir@/utilities/nscldaq-format/format/V8/libdataformatv8.la \
 			  @top_builddir@/utilities/nscldaq-format/format/V10/libdataformatv10.la \
 			  @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
+                          @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
                           @top_builddir@/utilities/filter/core/libfilter.la \
 			  @top_builddir@/utilities/IO/libdaqio.la \
 			  @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
@@ -52,7 +55,9 @@ unittests_SOURCES = TestRunner.cpp \
                     ctransform10p0to8p0tests.cpp \
                     ctransform10p0to11p0tests.cpp \
                     ctransform11p0to10p0tests.cpp \
-		    ctransformfactorytests.cpp \
+                    ctransform11p0to10p0tests.cpp \
+                    ctransform12p0to11p0tests.cpp \
+                    ctransformfactorytests.cpp \
                     c10p0to8p0mediatortests.cpp
 
 unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
@@ -61,6 +66,7 @@ unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 		   @top_builddir@/utilities/nscldaq-format/format/V8/libdataformatv8.la	\
 		   @top_builddir@/utilities/nscldaq-format/format/V10/libdataformatv10.la	\
 		   @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la	\
+                   @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\
                    @top_builddir@/utilities/IO/libdaqio.la	\
                    @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la	\
                    @top_builddir@/utilities/filter/core/libfilter.la	\
@@ -103,6 +109,7 @@ format_converter_LDADD = @builddir@/libConversion.la \
 	       @top_builddir@/utilities/nscldaq-format/format/V8/libdataformatv8.la \
 	       @top_builddir@/utilities/nscldaq-format/format/V10/libdataformatv10.la \
 	       @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
+               @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
                @top_builddir@/utilities/filter/core/libfilter.la \
 	       @top_builddir@/utilities/IO/libdaqio.la \
 	       @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la
