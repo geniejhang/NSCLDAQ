@@ -11,6 +11,7 @@ libConversion_la_SOURCES = CTransformMediator.h \
                            CTransform10p0to11p0.cpp \
                            CTransform11p0to10p0.cpp \
                            CTransform12p0to11p0.cpp \
+                           CTransform11p0to12p0.cpp \
                            CTransformFactory.cpp
 
                            #CTransform11p0to11p0.cpp
@@ -25,6 +26,7 @@ include_HEADERS = CTransformMediator.h \
                            CTransform10p0to11p0.h \
                            CTransform11p0to10p0.h \
                            CTransform12p0to11p0.h \
+                           CTransform11p0to12p0.h \
                            CTransformFactory.h
 
 #                           CTransform11p0to11p0.h
@@ -57,6 +59,7 @@ unittests_SOURCES = TestRunner.cpp \
                     ctransform11p0to10p0tests.cpp \
                     ctransform11p0to10p0tests.cpp \
                     ctransform12p0to11p0tests.cpp \
+                    ctransform11p0to12p0tests.cpp \
                     ctransformfactorytests.cpp \
                     c10p0to8p0mediatortests.cpp
 
