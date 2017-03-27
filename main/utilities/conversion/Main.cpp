@@ -24,6 +24,8 @@
 #include "C10p0to11p0Mediator.h"
 #include "CTransform11p0to10p0.h"
 #include "CTransform10p0to11p0.h"
+#include "CTransform11p0to12p0.h"
+#include "CTransform12p0to11p0.h"
 #include "CTransformMediator.h"
 #include "V8/CPhysicsEventBuffer.h"
 
@@ -116,6 +118,10 @@ void Main::setUpTransformFactory()
                            unique_ptr<CTransformCreator>(new C10p0to11p0MediatorCreator()));
   m_factory.setCreator( 11, 10,
                            unique_ptr<CTransformCreator>(new CGenericCreator<CTransform11p0to10p0>()));
+  m_factory.setCreator( 11, 12,
+                           unique_ptr<CTransformCreator>(new CGenericCreator<CTransform11p0to12p0>()));
+  m_factory.setCreator( 12, 11,
+                           unique_ptr<CTransformCreator>(new CGenericCreator<CTransform12p0to11p0>()));
 
 }
 

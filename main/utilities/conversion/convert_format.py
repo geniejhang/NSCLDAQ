@@ -4,7 +4,7 @@ from subprocess import call, Popen, PIPE
 import argparse
 import os
 
-versionOpts = [8, 10, 11]
+versionOpts = [8, 10, 11, 12]
 sizePolicyOpts = ['Inclusive16BitWords', 'Inclusive32BitWords', 
                   'Inclusive32BitBytes', 'Exclusive16BitWords']
 

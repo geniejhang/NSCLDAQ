@@ -20,8 +20,10 @@
 #include <CCompositePredicate.h>
 #include <V10/CRingItem.h>
 #include <V11/CRingItem.h>
+#include <V12/CRawRingItem.h>
 #include <RingIOV10.h>
 #include <RingIOV11.h>
+#include <RingIOV12.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -112,8 +114,13 @@ void CTransformMediator<Transform>::processOne()
   m_currentAction = m_pPredicate->preInputUpdate(*this);
   if (m_currentAction != CONTINUE) return;
 
-  T1 item1(1);
+  T1 item1;
   source >> item1;
+
+  if (source.eof()) {
+      m_currentAction = ABORT;
+      return;
+  }
 
   m_currentAction = m_pPredicate->postInputUpdate(*this, item1.type());
   if (m_currentAction != CONTINUE ) return;
