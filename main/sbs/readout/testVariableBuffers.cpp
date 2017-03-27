@@ -251,6 +251,7 @@ void VarBufs::dtrunvar() {
   CTCLVariable dick(&interp, "dick", 0);
   EQ(strcmp("0", dick.Get()), 0); 
 
+  trigger.join();
 }
 //
 // Make some statevars, and start a separate thread that triggers the statevars.
@@ -293,4 +294,5 @@ void VarBufs::dtstatevar() {
   CTCLVariable dick(&interp, "dick", 0);
   EQ(strcmp("0", dick.Get()), 0); 
 
+  trigger.join();
 }
