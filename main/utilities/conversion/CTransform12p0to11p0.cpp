@@ -140,7 +140,6 @@ V11::CAbnormalEndItem
 CTransform12p0to11p0::transformAbnormalEndItem(const InitialType& item)
 {
     V11::CAbnormalEndItem v11;
-    v11.setBodyHeader(item.getEventTimestamp(), item.getSourceId(), 0);
     return v11;
 }
 

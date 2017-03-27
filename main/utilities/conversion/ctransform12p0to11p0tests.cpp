@@ -630,9 +630,6 @@ private:
 public:
     CPPUNIT_TEST_SUITE(CTransform12p0to11p0Tests_AbnormalEnd);
     CPPUNIT_TEST(AbnormalEnd_0);
-    CPPUNIT_TEST(AbnormalEnd_5);
-    CPPUNIT_TEST(AbnormalEnd_6);
-    CPPUNIT_TEST(AbnormalEnd_7);
     CPPUNIT_TEST(AbnormalEnd_8);
     CPPUNIT_TEST_SUITE_END();
 
@@ -668,28 +665,10 @@ void AbnormalEnd_0() {
                 V11::ABNORMAL_ENDRUN, v11item.type());
 }
 
-void AbnormalEnd_5()
-{
-  CPPUNIT_ASSERT_EQUAL_MESSAGE("Event timestamp transforms unchanged",
-                                uint64_t(0xffffffffffffffff), v11item.getEventTimestamp());
-}
-
-void AbnormalEnd_6()
-{
-  CPPUNIT_ASSERT_EQUAL_MESSAGE("Source id transforms unchanged",
-                                uint32_t(23), v11item.getSourceId());
-}
-
-void AbnormalEnd_7()
-{
-  CPPUNIT_ASSERT_EQUAL_MESSAGE("barrier becomes 0",
-                                uint32_t(0), v11item.getBarrierType());
-}
-
 void AbnormalEnd_8()
 {
-  CPPUNIT_ASSERT_EQUAL_MESSAGE("body header exists in v11 item",
-                                true, v11item.hasBodyHeader());
+  CPPUNIT_ASSERT_EQUAL_MESSAGE("body header is not part of v11 item",
+                                false, v11item.hasBodyHeader());
 }
 
 
