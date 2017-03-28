@@ -1217,6 +1217,31 @@ class ProgramOnlyTests(StateManagerTests):
         api = nscldaq.vardb.statemanager.Api('tcp://localhost')
         with self.assertRaises(nscldaq.vardb.statemanager.error):
             api.setGlobalState('NotReady')
+
+    def test_setProperty_create(self ):
+        api = nscldaq.vardb.statemanager.Api('tcp://localhost')
+        api.setProgramProperty('test', 'myprop', 'avalue')
+        self.assertEqual('avalue' , self._api.get('/RunState/test/myprop'))
+        
+    def test_setProperty_afterCreation(self):
+        api = nscldaq.vardb.statemanager.Api('tcp://localhost')
+        api.setProgramProperty('test', 'myprop', 'avalue')
+        api.setProgramProperty('test', 'myprop', 'bvalue', False)
+        self.assertEqual('bvalue' , self._api.get('/RunState/test/myprop'))
+    
+    def test_setProperty_nosuch(self):
+        api = nscldaq.vardb.statemanager.Api('tcp://localhost')
+        with self.assertRaises(nscldaq.vardb.statemanager.error):
+            api.setProgramProperty('test', 'myprop', 'bvalue', False)
+    
+    def test_getProperty(self):
+        api = nscldaq.vardb.statemanager.Api('tcp://localhost')
+        api.setProgramProperty('test', 'myprop', 'avalue')
+        self.assertEqual('avalue', api.getProgramProperty('test', 'myprop'))
+    def test_getProperty_nosuch(self):
+        api = nscldaq.vardb.statemanager.Api('tcp://localhost')
+        with self.assertRaises(nscldaq.vardb.statemanager.error):
+            api.getProgramProperty('test', 'myprop')
     
 # Run the tests if this is main:
 

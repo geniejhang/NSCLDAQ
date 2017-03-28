@@ -86,6 +86,13 @@ public:
     void               setEditorPosition(const char* name, int x, int y);
     int                getEditorXPosition(const char* name);
     int                getEditorYPosition(const char* name);
+    void               setProgramProperty(
+                            const char* progName, const char* propname,
+                            const char* value, bool create = true
+                       );
+    std::string        getProgramProperty(
+                            const char* progName, const char* propname
+                        );
 private:
     std::string getProgramDirectoryPath(const char* name);
     std::string  getVarpath(const char* program, const char* name);
