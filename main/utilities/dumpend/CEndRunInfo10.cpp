@@ -193,17 +193,18 @@ CEndRunInfo10::loadEndRuns()
     CFileDataSource source(m_nFd);
     V10::CRingItem item(V10::UNDEFINED);
 
-  while (true) {
     readItem(source, item);
-    if (source.eof()) break;
 
-    if (item.type() == V10::END_RUN) {
+    while (!source.eof()) {
+        if (item.type() == V10::END_RUN) {
 
-        std::unique_ptr<V10::CRingStateChangeItem>
-                pItem(new V10::CRingStateChangeItem(item));
-        m_endRuns.push_back(std::move(pItem));
+            std::unique_ptr<V10::CRingStateChangeItem>
+                    pItem(new V10::CRingStateChangeItem(item));
+            m_endRuns.push_back(std::move(pItem));
 
-    }
+        }
+
+        readItem(source, item);
   }
 }
 

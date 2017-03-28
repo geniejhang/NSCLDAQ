@@ -61,7 +61,8 @@ void EndInfo10Test::emptyFile() {
   
   int nullFd = open("/dev/null", O_RDONLY);
 
-  CPPUNIT_ASSERT_THROW( CEndRunInfo10 e(nullFd), std::runtime_error);
+  CEndRunInfo10 e(nullFd);
+  EQMSG("empty files have zero end runs", 0u, e.numEnds());
 
   close(nullFd);
 }

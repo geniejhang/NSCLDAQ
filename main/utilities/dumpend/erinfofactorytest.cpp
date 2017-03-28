@@ -238,5 +238,7 @@ void ErInfoFactoryTests::fromfileempty()
 {
   int nullFd = open("/dev/null", O_RDONLY);
 
-  CPPUNIT_ASSERT_THROW(CEndRunInfo* er = CEndRunInfoFactory::create(nullFd), std::runtime_error);
+  CEndRunInfo* er = CEndRunInfoFactory::create(nullFd);
+  EQMSG("empty file has no end runs",
+        0u, er->numEnds());
 }
