@@ -90,6 +90,7 @@ snit::type property {
         
         $self _dispatch \
             -changecmd [list %P $self %N [list $options(-name)] %V [list $options($optname)]]
+        parray options
     }
     ##
     # _dispatch

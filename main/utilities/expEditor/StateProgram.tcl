@@ -97,7 +97,9 @@ snit::type StateProgram {
     destructor {
         $data destroy
         $gui  destroy
-        $Label destroy        
+        if {$Label ne ""} {
+            $Label destroy
+        }
     }
     #---------------------------------------------------------------------------
     # Private methods
@@ -401,5 +403,63 @@ Therefore the host that '$myName' runs in is being changed to '$ringHost'"
         $gui moveby $dx $dy
         $options(-canvas) move $self $dx $dy;        # Moves the label.
     }
+    ##
+    # gui
+    #   @return the graphical representation object.
+    #
+    method gui {} {
+        return $gui
+    }
+    ##
+    # data
+    #  @param[in] newData (optional) - if present, replaces the data object.
+    #  @return object - the data object prior to the data call (e.g. if
+    #                   the newData parameter is supplied, you'll get the
+    #                   *previous* data).
+    #
+    method data {{newData ""}} {
+        set oldData $data
+        if {$newData ne ""} {
+            install data using set newData
+        }
+        return $oldData
+    }
+}
+##
+# @class ReadoutObject
+#     Bundle of A readout program (data) and the display stuff associated with it.
+#     Note that this is just a StateProgram with:
+#     *  data replaced by a ReadoutProgram.
+#     *  the graphical representation replaced by readout.png.
+#
+snit::type ReadoutObject {
+    component StateObject
     
+    delegate option * to StateObject
+    delegate method * to StateObject
+    
+    typevariable icon
+    
+    ##
+    # typeconstructor
+    #   Create and save (in icon) the graphical representation of the object.
+    #
+    typeconstructor {
+        set here [file dirname [info script]]
+        set icon [image create photo -format png -file [file join $here readout.png]]
+    }
+    
+    ##
+    # constructor
+    #   - construct the base class.
+    #   - replace the data object.
+    #   - replace the graphical representation of the base class's gui object.
+    #   - Run the configuration options.
+    constructor args {
+        install StateObject using StateProgram %AUTO%
+        [$StateObject data [ReadoutProgram %AUTO%]] destroy;   # replace and kill old data
+        [$StateObject gui] configure -image $icon
+        
+        $self configurelist $args
+    }
 }

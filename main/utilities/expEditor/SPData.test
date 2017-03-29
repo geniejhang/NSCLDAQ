@@ -317,14 +317,15 @@ tcltest::test changecmd-1 {If data are changed we should get notified} \
      set ps  [$plo get]
      
      foreach p $ps value [list \
-        test false true /usr/bin/test charlie tcp://localhost/test fox] {
+        test charlie false true /usr/bin/test  tcp://localhost/test fox StateProgram --help] {
         $p configure -value $value
      }
      set changelog
      
-} -result [list [list name test] [list enable false] [list standalone true] \
-    [list path /usr/bin/test] [list host charlie] \
-    [list "Input Ring" tcp://localhost/test] [list "Output Ring" fox]]
+} -result [list [list name test] [list host charlie] [list enable false] [list standalone true] \
+    [list path /usr/bin/test]  [list "Input Ring" tcp://localhost/test]  \
+    [list "Output Ring" fox] [list type StateProgram]                   \
+    [list "Program Parameters" --help]] 
 
 tcltest::test changecmd-2 {If data are changed in the packaged object we get notified} \
 -setup {
@@ -339,14 +340,15 @@ tcltest::test changecmd-2 {If data are changed in the packaged object we get not
      set ps  [$plo get]
      
      foreach p $ps value [list \
-        test false true /usr/bin/test charlie tcp://localhost/test fox] {
+        test charlie false true /usr/bin/test  tcp://localhost/test fox StateProgram --help] {
         $p configure -value $value
      }
      set changelog
      
-} -result [list [list name test] [list enable false] [list standalone true] \
-    [list path /usr/bin/test] [list host charlie] \
-    [list "Input Ring" tcp://localhost/test] [list "Output Ring" fox]]
+} -result [list [list name test] [list host charlie] [list enable false] [list standalone true] \
+    [list path /usr/bin/test]  \
+    [list "Input Ring" tcp://localhost/test] [list "Output Ring" fox]        \
+    [list type StateProgram]  [list "Program Parameters" --help]]
 
 
 tcltest::test readout-1 {Readout has and can access properties from base} \
@@ -360,6 +362,8 @@ tcltest::test readout-1 {Readout has and can access properties from base} \
     set p [$obj getProperties];         # Tests method delegation.
     [$p find enable] cget -value
 } -result true
+
+
 tcltest::test readout-2 {Readout has  additional properties created} \
 -setup {
     set obj [ReadoutProgram %AUTO%]
@@ -406,10 +410,11 @@ tcltest::test eventlog-3 {Valid segment sizes are ok} \
 -body {
     set p [$obj getProperties];         # Tests method delegation.
     set segsize [$p find segmentsize]
-    $segsize config -value 100m
+    $segsize configure -value 100m
     set values [$segsize cget -value]
-    $segsize config -value 10000000
+    $segsize configure -value 10000000
     lappend values [$segsize cget -value]
+    set values 
 } -result [list 100m 10000000]
 
 tcltest::test eventlog-4 {Invalid segment sizes are not ok} \
@@ -421,7 +426,7 @@ tcltest::test eventlog-4 {Invalid segment sizes are not ok} \
 } \
 -body {
     set p [$obj getProperties];         # Tests method delegation.
-    catch {[$p find segsize] config -value onegig}
+    catch {[$p find segsize] configure -value onegig}
 } -result 1
 
 # End/summarize the tests - note the magic below is intended to ensure that

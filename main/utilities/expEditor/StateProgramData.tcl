@@ -139,7 +139,7 @@ snit::type ReadoutProgram {
         
         # Set the type property to Readout:
         
-        [$poperties find type] config -value Readout
+        [$properties find type] configure -value Readout
         
         $self configurelist $args
     }
@@ -201,7 +201,7 @@ snit::type EventLogProgram {
     
         # Set the type property to Readout:
         
-        [$poperties find type] config -value Readout
+        [$properties find type] configure -value Readout
         
         # process construction time configuration.
     
@@ -220,23 +220,27 @@ snit::type EventLogProgram {
     #   *   m   - Units are Mbytes (1024*1024).
     #   *   g   - Units are Gbytes (1024*1024*1024).
     #
+    # @param validate  - if this were an object that would be the method name
+    #                    to do the validation.
     # @param proposed  - proposed new value.
     # @throw error if the value is not a valid size specification.
     #
-    method _validSize {proposed} {
+    method _validSize {validate proposed} {
         # Integer values are fine:
         
         set propsed [string trim $proposed]
-        if {[string is integer -strict $proposed]} return
+        if {[string is integer -strict $proposed]} {
+            return $proposed
+        }
         
         # Otherwise separate the string into last charater and all the preceding
         # ones:
         
-        set prefix [string range $value 0 end-1]
-        set suffix [string index end]
+        set prefix [string range $proposed 0 end-1]
+        set suffix [string index $proposed end]
         
         if {($suffix in [list k m g]) && [string is integer -strict $prefix]} {
-            return
+            return $proposed
         }
         error "Invalid size specification: $proposed"
             
