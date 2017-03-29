@@ -189,7 +189,7 @@ snit::widgetadaptor propertyEditor {
         
         # validate the object...no validator means anything goes.
         
-        if {($v eq "") || ([catch {$v validate $proposed}] == 0)} {
+        if {($v eq "") || ([catch {{*}$v validate $proposed} msg] == 0)} {
             
             # valid proposed string.
             
@@ -209,7 +209,7 @@ snit::widgetadaptor propertyEditor {
             #invalid:
             
             tk_messageBox -icon error -parent $win -title {Invalid value} -type ok \
-                -message "Invalid value '$proposed' for property [$prop cget -name]"
+                -message "Invalid value '$proposed' for property [$prop cget -name] : $msg"
             
             $e delete 0 end
             $e insert end [$prop cget -value]
