@@ -74,9 +74,10 @@ unittests_CPPFLAGS=  -I@top_srcdir@/utilities/filter \
 		-I@top_srcdir@/base/uri		\
 		-I@top_srcdir@/base/headers		\
                 -I@top_srcdir@/base/testutils \
-    -I@top_srcdir@/daq/format \
+                -I@top_srcdir@/daq/format \
 		-I@top_srcdir@/utilities/nscldaq-format/Buffer \
-    -I@top_srcdir@/base/dataflow
+                -I@top_srcdir@/base/dataflow \
+                -I@top_srcdir@/base/os
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 
 unittests_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"
