@@ -466,3 +466,47 @@ snit::type ReadoutObject {
         $StateObject destroy
     }
 }
+##
+# @class EventLogObject
+#   Wrapper of a StateProgram with:
+#   *  Data replaced by an EventLogProgram.
+#   *  graphical representation replaced with  eventlog.png.
+#
+snit::type EventLogObject {
+    component StateObject
+    
+    delegate option * to StateObject
+    delegate method * to StateObject
+    
+    typevariable icon
+    
+    ##
+    # typeconstructor
+    #   Sets 'icon' to be the eventlog.png file.
+    #
+    typeconstructor {
+        set here [file dirname [info script]]
+        set icon [image create photo -format png -file [file join $here eventlog.png]]
+    }
+    ##
+    # constructor
+    #   - construct the base class.
+    #   - replace the data object.
+    #   - replace the graphical representation of the base class objec.
+    #   - process configuration options.
+    #
+    constructor args {
+        install StateObject using StateProgram %AUTO%
+        [$StateObject data [EventLogProgram %AUTO]] destroy
+        [$StateObject gui] configure -image $icon
+        
+        $self configurelist $args
+    }
+    ##
+    # destructor:
+    #
+    destructor {
+        $StateObject destroy
+    }
+}
+
