@@ -201,7 +201,7 @@ snit::type EventLogProgram {
     
         # Set the type property to Readout:
         
-        [$properties find type] configure -value Readout
+        [$properties find type] configure -value EventLog
         
         # process construction time configuration.
     

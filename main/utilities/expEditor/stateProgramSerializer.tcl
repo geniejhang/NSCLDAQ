@@ -80,13 +80,15 @@ proc ::Serialize::_saveSmProgram {api program} {
     
     $api addProgram $name $d
     
-    # Command line parameters:
-    
-    $api setProperty $name args [[$properties find "Program Parameters"] cget -value]
-    $api setProperty $name type [[$properties find "type"] cget -value]
     #  Save canvas position:
     
     $api setEditorPosition $name [lindex $pos 0] [lindex $pos 1]
+    
+    # Save the properties;
+    
+    foreach prop [$properties get] {
+        $api setProperty $name [$prop cget -name] [$prop cget -value] 1
+    }
     
 }
 
@@ -127,9 +129,19 @@ proc ::Serialize::deserializeStatePrograms dburi {
         set x    [_smApi getEditorXPosition $program]
         set y    [_smApi getEditorYPosition $program]
         
+        # Figure out which type of object to create based on the type:
+        
+        set type [$_smApi getProperty $program type]
+        if {$type eq "Readout"} {
+            set obj [ReadoutObject %AUTO%]
+        } elseif {$type eq "EventLog"} {
+            set obj [EventLogProgram %AUTO%]
+        } else {
+            set obj [StateProgram %AUTO%]
+        }
+        
         #  Create the object and fill its properties in from the info dict:
         
-        set obj [StateProgram %AUTO%]
         set p   [$obj getProperties]
         
         [$p find name]  configure -value $program
@@ -137,14 +149,15 @@ proc ::Serialize::deserializeStatePrograms dburi {
                 dname [list enabled standalone path host inring        outring] {
             [$p find $pname] configure -value [dict get $info $dname]    
         }
-        # There are two properties args -> "Program Arguments" and type -> "type"
-        #  The catches provide for the case of pre-property databases:
+        #  Recover all properties (if possible) Older versions of teh database file
+        #  won't have properties:
         
-        catch {[$p find {Program Arguments}] configure -value [_smApi getProperty $program args]}
-        if {[catch {[$p find type] configure -value [_smApi getProperty $program type]}]} {
-            [$p find type] configure -value StateProgram
+        foreach p [$properties get] {
+            set name [$p cget -name]
+            catch {
+                $p configure -value [$_smApi getProperty $program $name]
+            }
         }
-       
         
         #  Add a new dict to the result:
         
