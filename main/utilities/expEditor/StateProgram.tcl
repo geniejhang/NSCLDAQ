@@ -465,6 +465,16 @@ snit::type ReadoutObject {
     destructor {
         $StateObject destroy
     }
+    ##
+    # clone
+    #   Create/return a copy of self
+    #
+    method clone {} {
+        set newObject [ReadoutObject %AUTO%]
+        $newObject _replaceData [[$self data] clone]
+        
+        return $newObject
+    }
 }
 ##
 # @class EventLogObject
@@ -497,7 +507,7 @@ snit::type EventLogObject {
     #
     constructor args {
         install StateObject using StateProgram %AUTO%
-        [$StateObject data [EventLogProgram %AUTO]] destroy
+        [$StateObject data [EventLogProgram %AUTO%]] destroy
         [$StateObject gui] configure -image $icon
         
         $self configurelist $args
@@ -507,6 +517,16 @@ snit::type EventLogObject {
     #
     destructor {
         $StateObject destroy
+    }
+    ##
+    # clone
+    #   Create/return a copy of self
+    #
+    method clone {} {
+        set newObject [EventLogObject %AUTO%]
+        $newObject _replaceData [[$self data] clone]
+        
+        return $newObject
     }
 }
 

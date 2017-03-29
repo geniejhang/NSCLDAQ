@@ -131,11 +131,11 @@ proc ::Serialize::deserializeStatePrograms dburi {
         
         # Figure out which type of object to create based on the type:
         
-        set type [$_smApi getProperty $program type]
+        set type [_smApi getProperty $program type]
         if {$type eq "Readout"} {
             set obj [ReadoutObject %AUTO%]
         } elseif {$type eq "EventLog"} {
-            set obj [EventLogProgram %AUTO%]
+            set obj [EventLogObject %AUTO%]
         } else {
             set obj [StateProgram %AUTO%]
         }
@@ -152,11 +152,12 @@ proc ::Serialize::deserializeStatePrograms dburi {
         #  Recover all properties (if possible) Older versions of teh database file
         #  won't have properties:
         
-        foreach p [$properties get] {
-            set name [$p cget -name]
+        foreach prop [$p get] {
+            set name [$prop cget -name]
             catch {
-                $p configure -value [$_smApi getProperty $program $name]
-            }
+                set value [_smApi getProperty $program $name]
+                $prop configure -value [_smApi getProperty $program $name]
+            } msg
         }
         
         #  Add a new dict to the result:

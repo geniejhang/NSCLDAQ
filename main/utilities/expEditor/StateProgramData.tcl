@@ -131,7 +131,7 @@ snit::type ReadoutProgram {
         install stateProgram using StateProgramData %AUTO%
         
         set properties [$stateProgram getProperties]
-        $properties add [IntegerProperty %AUTO% -name port]
+        $properties add [IntegerProperty %AUTO% -name port -value 0]
         $properties add [IntegerProperty %AUTO% -name sourceid -value 0]
         $properties add [property %AUTO% -name {init script}]
         $properties add [property %AUTO% -name appname]
@@ -148,6 +148,23 @@ snit::type ReadoutProgram {
     #
     destructor {
         $stateProgram destroy
+    }
+    ##
+    # clone
+    #    Return copy of self.
+    #
+    method clone {} {
+        set newObj [ReadoutProgram %AUTO%]
+        
+        ## Propagate current property values:
+        
+        set properties [$self getProperties]
+        set newprops [$newObj getProperties]
+        $properties foreach prop {
+            set newprop [$newprops find [$prop cget -name]]
+            $newprop configure -value [$prop cget -value]
+        }
+        return $newObj
     }
 }
 ##
@@ -207,6 +224,23 @@ snit::type EventLogProgram {
     
         $self configurelist $args
     }
+    ##
+    # clone
+    #    Return copy of self.
+    #
+    method clone {} {
+        set newObj [EventLogProgram %AUTO%]
+        
+        ## Propagate current property values:
+        set properties [$self getProperties]
+        set newprops [$newObj getProperties]
+        $properties foreach prop {
+            set newprop [$newprops find [$prop cget -name]]
+            $newprop configure -value [$prop cget -value]
+        }
+        return $newObj
+    }
+
     #--------------------------------------------------------------------------
     # Custom validators.
     #
