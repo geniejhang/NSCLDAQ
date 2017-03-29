@@ -462,4 +462,7 @@ snit::type ReadoutObject {
         
         $self configurelist $args
     }
+    destructor {
+        $StateObject destroy
+    }
 }
