@@ -51,14 +51,16 @@ snit::type StateProgramData {
         $properties add [property %AUTO% \
             -name name]
         $properties add [property %AUTO% -name host ]
-        $properties add [property %AUTO% \
-            -name enable -value true -validate snit::boolean]
-        $properties add [property %AUTO% \
-            -name standalone -value false -validate snit::boolean]
+        $properties add [EnumeratedProperty %AUTO% -values {true false} \
+            -name enable -value true]
+        $properties add [EnumeratedProperty %AUTO% -values {true false} \
+            -name standalone -value false ]
         $properties add [property %AUTO% -name path ]
        
         $properties add [property %AUTO% -name {Input Ring} -editable 0]
         $properties add [property %AUTO% -name {Output Ring} -editable 0]
+        $properties add [property %AUTO% -name {type} -editable 0 -value StateProgram]
+        $properties add [ListProperty %AUTO% -name {Program Parameters} -editable 1]
         
         $self configurelist $args
     }
@@ -103,4 +105,140 @@ snit::type StateProgramData {
     }
     
     
+}
+##
+# @class ReadoutProgram.
+#
+#   This is a state program with additional properties:
+#   *  port     - If nonempty the port on which the Tcl server starts listening.
+#   *  sourceid - Source id emitted in body headers (--sourceid) (default 0)
+#   *  init script - Initialization script path (--init-script) (default empty)
+#   *  appname  - Application name which if non empty overrides the default which is
+#                 the 
+#   *  status service - Status service name (--status-service) (Default StatusAggregator).
+#
+snit::type ReadoutProgram {
+    component stateProgram
+    
+    delegate option * to stateProgram
+    delegate method * to stateProgram
+    
+    ##
+    # constructor
+    #    install the state program and extend its property list.
+    #
+    constructor args {
+        install stateProgram using StateProgramData %AUTO%
+        
+        set properties [$stateProgram getProperties]
+        $properties add [IntegerProperty %AUTO% -name port]
+        $properties add [IntegerProperty %AUTO% -name sourceid -value 0]
+        $properties add [property %AUTO% -name {init script}]
+        $properties add [property %AUTO% -name appname]
+        $properties add [property %AUTO% -name {status service} -value StatusAggregator]
+        
+        # Set the type property to Readout:
+        
+        [$poperties find type] config -value Readout
+        
+        $self configurelist $args
+    }
+    ##
+    # destructor
+    #
+    destructor {
+        $stateProgram destroy
+    }
+}
+##
+# @class EventLogProgram
+#
+#   State program with the following addition properties:
+#   *  destdir      - Where the event files get written (default - empty which is wd of the program)
+#   *  segmentsize  - Size of event file segments.      (default 2g)
+#   *  checksum     - Enable creation of checksum files (default true).
+#   *  combine runs - Glues all the runs together into one event file (default false).
+#   *  prefix       - Text prefix to prepend on event files (default empty string)
+#   *  freewarn     - Percentage of disk space below which to log a warning (default 10)
+#   *  freesevere   - Percentage of disk space below which to log a sever error (default 1)
+#   *  appname      - Application name - if not blank overrides the default with is the name.
+#   *  status service - Service to which log messages are sent (default StatusAggregator).
+#
+snit::type EventLogProgram {
+    component stateProgram
+    
+    delegate method * to stateProgram
+    delegate option * to stateProgram
+    
+    ##
+    # constructor
+    #   install the state program base class.
+    #   add our properties.
+    #   set the type to EventLog
+    #   process any construction time configuration options.
+    #
+    constructor args {
+        install stateProgram using StateProgramData %AUTO%
+        
+        set properties [$stateProgram getProperties]
+        $properties add [property %AUTO% -name destdir]
+        $properties add [property %AUTO%                                       \
+            -name segmentsize -value 2g -validate [mymethod _validSize]   \
+        ]
+        $properties add [EnumeratedProperty %AUTO%                             \
+            -name checkum -values [list true false] -value true                \
+        ]
+        $properties add [EnumeratedProperty %AUTO%                             \
+            -name {combine runs} -values [list true false] -value false        \
+        ]
+        $properties add [property %AUTO% -name prefix]
+        $properties add [IntegerProperty %AUTO% -name freewarn -value 10]
+        $properties add [IntegerProperty %AUTO% -name freesevere -value 1]
+        $properties add [property %AUTO% -name appname]
+        $properties add [property %AUTO%                                       \
+            -name {status service} -value StatusAggregator                     \
+        ]
+    
+        # Set the type property to Readout:
+        
+        [$poperties find type] config -value Readout
+        
+        # process construction time configuration.
+    
+        $self configurelist $args
+    }
+    #--------------------------------------------------------------------------
+    # Custom validators.
+    #
+    
+    ##
+    # _validSize
+    #   Throw an error if a proposed value is not a valid size. Valid sizes are
+    #   either integers or integers followed by one of the following suffix
+    #   unit specification characters:
+    #   *   k   - Units are Kbytes (1024).
+    #   *   m   - Units are Mbytes (1024*1024).
+    #   *   g   - Units are Gbytes (1024*1024*1024).
+    #
+    # @param proposed  - proposed new value.
+    # @throw error if the value is not a valid size specification.
+    #
+    method _validSize {proposed} {
+        # Integer values are fine:
+        
+        set propsed [string trim $proposed]
+        if {[string is integer -strict $proposed]} return
+        
+        # Otherwise separate the string into last charater and all the preceding
+        # ones:
+        
+        set prefix [string range $value 0 end-1]
+        set suffix [string index end]
+        
+        if {($suffix in [list k m g]) && [string is integer -strict $prefix]} {
+            return
+        }
+        error "Invalid size specification: $proposed"
+            
+    }
 }

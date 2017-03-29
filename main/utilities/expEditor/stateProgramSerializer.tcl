@@ -80,6 +80,10 @@ proc ::Serialize::_saveSmProgram {api program} {
     
     $api addProgram $name $d
     
+    # Command line parameters:
+    
+    $api setProperty $name args [[$properties find "Program Parameters"] cget -value]
+    $api setProperty $name type [[$properties find "type"] cget -value]
     #  Save canvas position:
     
     $api setEditorPosition $name [lindex $pos 0] [lindex $pos 1]
@@ -132,6 +136,13 @@ proc ::Serialize::deserializeStatePrograms dburi {
         foreach pname [list enable  standalone path host "Input Ring" "Output Ring"] \
                 dname [list enabled standalone path host inring        outring] {
             [$p find $pname] configure -value [dict get $info $dname]    
+        }
+        # There are two properties args -> "Program Arguments" and type -> "type"
+        #  The catches provide for the case of pre-property databases:
+        
+        catch {[$p find {Program Arguments}] configure -value [_smApi getProperty $program args]}
+        if {[catch {[$p find type] configure -value [_smApi getProperty $program type]}]} {
+            [$p find type] configure -value StateProgram
         }
        
         
