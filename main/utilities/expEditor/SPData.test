@@ -424,14 +424,14 @@ tcltest::test eventlog-4 {Invalid segment sizes are not ok} \
     catch {[$p find segsize] config -value onegig}
 } -result 1
 
-
 # End/summarize the tests - note the magic below is intended to ensure that
 # a failed test fails the makefile test target too.
 
 proc tcltest::cleanupTestsHook {} {
     variable numTests
-    set ::exitCode $numTests(Failed)
+    set ::exitCode $::numTests(Failed)
 }
 
 
 tcltest::cleanupTests
+exit $::exitCode
