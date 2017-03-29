@@ -427,11 +427,22 @@ tcltest::test eventlog-4 {Invalid segment sizes are not ok} \
 # End/summarize the tests - note the magic below is intended to ensure that
 # a failed test fails the makefile test target too.
 
+set exitCode 0
 proc tcltest::cleanupTestsHook {} {
     variable numTests
-    set ::exitCode $::numTests(Failed)
+    set ::exitCode $::tcltest::numTests(Failed)
 }
 
 
+##
+# this pulls in Tk and cleanupTests exist in that case without reporting
+#  our error code so we need this little artifice:
+
+rename exit myexit
+
+proc exit {} {}
+
+
 tcltest::cleanupTests
-exit $::exitCode
+
+myexit $::exitCode
