@@ -545,6 +545,12 @@ set os [ObjectInstaller %AUTO%]
 tool ring [RingBufferObject %AUTO%] $os
 .t add ring
 
+tool Readout [ReadoutObject %AUTO%] $os
+.t add Readout
+
+tool EventLog [EventLogObject %AUTO%] $os
+.t add EventLog
+
 tool statePgm [StateProgram %AUTO%] $os
 .t add statePgm
 
