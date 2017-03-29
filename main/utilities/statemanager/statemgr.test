@@ -2494,13 +2494,15 @@ tcltest::test getproperty-2 {Get nonexiting property is error} \
 #
 # Magic to exit with errors if there are test failures:
 
-proc tcltest::cleanupTestHook {} {
+proc tcltest::cleanupTestsHook {} {
     variable numTests
     set ::exitCode $numTests(Failed)
 }
 
 
 tcltest::cleanupTests
+
+exit $::exitCode
 
 
 

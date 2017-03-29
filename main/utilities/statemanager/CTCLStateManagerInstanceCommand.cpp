@@ -709,6 +709,7 @@ void CTCLStateManagerInstanceCommand::getProperty(
     std::string result = m_pPrograms->getProgramProperty(
         program.c_str(), property.c_str()
     );
+    interp.setResult(result);
 
 }
 
