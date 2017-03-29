@@ -610,10 +610,11 @@ CExperiment::readScalers()
     m_pScalers->clear();	// Clear scalers after read.
 
     V12::CRingScalerItem  item(timestamp, srcid,
-                          startTime,
-			  endTime,
-			  now,
-              scalers);
+                               startTime,
+                               endTime,
+                               now,
+                               scalers,
+                               1000);
     V12::CRawRingItem serializedItem(item);
     *m_pRing << serializedItem;
 			  
@@ -621,10 +622,11 @@ CExperiment::readScalers()
   // Regardless, let's emit a physics event count stamp:
 
   V12::CRingPhysicsEventCountItem item(V12::NULL_TIMESTAMP,
-                                  getSourceId(), 
-                                  m_nEventsEmitted,
-                        				  endTime,
-                        				  now);
+                                       getSourceId(),
+                                       m_nEventsEmitted,
+                                       endTime,
+                                       now,
+                                       1000);
   V12::CRawRingItem serializedItem(item);
   *m_pRing << serializedItem;
 }
