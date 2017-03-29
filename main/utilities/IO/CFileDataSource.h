@@ -25,13 +25,13 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <limits>
 
 // Forward class definitions:
 
 class URL;
 
 namespace DAQ {
-
 
 /*!
   \brief Data source for a unix file descriptor 
@@ -81,7 +81,7 @@ public:
   size_t availableData() const;
   size_t tell() const;
 
-  void read(char* pBuffer, size_t nBytes);
+  void timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout);
 
   void setExclusionList(const std::set<uint16_t>& list);
 

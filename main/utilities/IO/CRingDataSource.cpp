@@ -21,6 +21,7 @@
 #include <CAllButPredicate.h>
 #include <URL.h>
 #include <CRemoteAccess.h>
+#include <CTimeout.h>
 
 using std::vector;
 using std::string;
@@ -84,9 +85,9 @@ size_t CRingDataSource::tell() const
 }
 
 
-void CRingDataSource::read(char* pBuffer, size_t nBytes)
+void CRingDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout)
 {
-  m_pRing->get(pBuffer, nBytes);
+  m_pRing->get(pBuffer, nBytes, timeout.getRemainingSeconds());
 }
 
 

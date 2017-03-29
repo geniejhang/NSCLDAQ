@@ -7,6 +7,7 @@
 #include "CTimeout.h"
 #include <thread>
 
+using namespace DAQ;
 
 class timeoutTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(timeoutTests);
@@ -53,6 +54,22 @@ class timeoutTests : public CppUnit::TestFixture {
       EQMSG("Remaining time should be zero if expired",
             double(0), timeout.getRemainingSeconds());
 
+  }
+
+  void reset_0() {
+    CTimeout timeout(10);
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+
+    ASSERTMSG("Remaining time should be less than 9",
+              timeout.getRemainingSeconds() < 8 );
+
+    timeout.reset();
+
+    // note that I am being pretty generous concerning the time left.
+    // all i care to see is that the number of remaining seconds
+    // increased.
+    ASSERTMSG("Reset time have reset the remaining seconds",
+              timeout.getRemainingSeconds() > 8 );
   }
 
 };

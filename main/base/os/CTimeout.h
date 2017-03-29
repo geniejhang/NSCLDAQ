@@ -20,6 +20,8 @@
 
 #include <chrono>
 
+namespace DAQ {
+
 /*!
  * \brief The CTimeout class
  *
@@ -42,6 +44,9 @@ public:
      *
      */
     CTimeout(double nSeconds);
+    CTimeout(const CTimeout& rhs) = default;
+    CTimeout(CTimeout&& rhs) = default;
+    CTimeout& operator=(const CTimeout&) = default;
 
     /*!
      * \brief getRemainingSeconds
@@ -51,7 +56,7 @@ public:
      * \retval 0 - timeout has elapsed
      * \retval >0 - otherwise
      */
-    double getRemainingSeconds();
+    double getRemainingSeconds() const;
 
     /*!
      * \brief expired
@@ -62,7 +67,16 @@ public:
      * \retval false - not expired
      * \retval ture  - expired
      */
-    bool expired();
+    bool expired() const;
+
+    /*!
+     * \brief reset
+     *
+     * Resets the start time to the present.
+     */
+    void reset();
 };
+
+} // end DAQ
 
 #endif // CTIMEOUT_H

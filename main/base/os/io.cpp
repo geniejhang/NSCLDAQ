@@ -21,6 +21,7 @@
  */
 
 #include "io.h"
+#include <CTimeout.h>
 
 #include <errno.h>
 #include <unistd.h>
@@ -155,6 +156,61 @@ void writeData (int fd, const void* pData , size_t size)
 
   return nBytes;		// Complete read.
 }
+
+  /**
+   * Get a buffer of data from  a file descritor with a timeout
+   * If necessary multiple read() operation are performed to deal
+   * with potential buffering between the source an us (e.g. we are typically
+   * on the ass end of a pipe where the pipe buffer may be smaller than an
+   * event buffer.
+   * @param fd      - File descriptor to read from.
+   * @param pBuffer - Pointer to a buffer big enough to hold the event buffer.
+   * @param size    - Number of bytes in the buffer.
+   * @param timeout - a timeout specifier
+   *
+   * @return size_t - Number of bytes read (might be fewer than nBytes if the EOF was hit
+   *                  during the read.
+   *
+   * @throw int - errno on error.
+   */
+    size_t timedReadData (int fd, void* pBuffer,  size_t nBytes, const ::DAQ::CTimeout& timeout)
+  {
+    uint8_t* pDest(reinterpret_cast<uint8_t*>(pBuffer));
+    size_t    residual(nBytes);
+    ssize_t   nRead;
+
+    // Read the buffer until :
+    //  error other than EAGAIN, EWOULDBLOCK  or EINTR
+    //  zero bytes read (end of file).
+    //  Regardless of how all this ends, we are going to emit a message on sterr.
+    //
+
+    while (residual && !timeout.expired()) {
+      nRead = read(fd, pDest, residual);
+      if (nRead == 0)		// EOF
+      {
+        return nBytes - residual;
+      }
+      if ((nRead < 0) && badError(errno) )
+      {
+        throw errno;
+      }
+      // If we got here and nread < 0, we need to set it to zero.
+
+      if (nRead < 0)
+      {
+        nRead = 0;
+      }
+
+      // Adjust all the pointers and counts for what we read:
+
+      residual -= nRead;
+      pDest  += nRead;
+    }
+    // If we get here the read worked:
+
+    return nBytes;		// Complete read.
+  }
 
 
 

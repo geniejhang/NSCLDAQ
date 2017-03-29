@@ -21,29 +21,25 @@
 */
 
 
-#ifndef __CTCLRINGCOMMAND_H
-#define __CTCLRINGCOMMAND_H
+#ifndef CTCLRINGCOMMAND_H
+#define CTCLRINGCOMMAND_H
 
-#ifndef __TCLOBJECTPROCESSOR_H
+#include <V12/CRingItem.h>
+
 #include <TCLObjectProcessor.h>
-#endif
-
-#ifndef __STL_MAP
 #include <map>
-#ifndef __STL_MAP
-#define __STL_MAP
-#endif
-#endif
 
-#ifndef __TCLOBJECT_H
 #include <TCLObject.h>
-#endif
+#include <CDataSource.h>
 
 class CTCLInterpreter;
-class CRingBuffer;
-class CRingItem;
-class CRingSelectionPredicate;
+
+namespace DAQ {
+
+class CDataSourcePredicate;
 class CTimeout;
+
+namespace V12 {
 
 /**
  * @class CTclRingCommand
@@ -69,7 +65,7 @@ class CTimeout;
 class CTclRingCommand : public CTCLObjectProcessor
 {
 private:
-    std::map<std::string, CRingBuffer*> m_attachedRings;
+    std::map<std::string, CDataSourcePtr> m_attachedRings;
     
 public:
     CTclRingCommand(CTCLInterpreter& interp);
@@ -86,21 +82,26 @@ protected:
     
     // Local utilities.
 private:
-    CTCLObject formatBodyHeader(CTCLInterpreter& interp, CRingItem* pItem);
-    void formatStateChangeItem(CTCLInterpreter& interp, CRingItem* pItem);
-    void formatScalerItem(CTCLInterpreter& interp, CRingItem* pSpecificItem);
-    void formatStringItem(CTCLInterpreter& interp, CRingItem* pSpecificItem);
-    void formatFormatItem(CTCLInterpreter& interp, CRingItem* pSpecificItem);
-    void formatEvent(CTCLInterpreter& interp, CRingItem* pSpecificItem);
-    void formatFragment(CTCLInterpreter& interp, CRingItem* pSpecificItem);
-    void formatTriggerCount(CTCLInterpreter& interp, CRingItem* pSpecificItem);
-    void formatGlomParams(CTCLInterpreter& interp, CRingItem* pSpecificItem);
-    void formatAbnormalEnd(CTCLInterpreter& interp, CRingItem* pSpecificItem);
+    void formatHeaderInfo(CRingItemPtr p, CTCLObject &result);
+    CTCLObject formatStateChangeItem(CTCLInterpreter& interp, CRingItemPtr pItem);
+    CTCLObject formatScalerItem(CTCLInterpreter& interp, CRingItemPtr pSpecificItem);
+    CTCLObject formatStringItem(CTCLInterpreter& interp, CRingItemPtr pSpecificItem);
+    CTCLObject formatFormatItem(CTCLInterpreter& interp, CRingItemPtr pSpecificItem);
+    CTCLObject formatEvent(CTCLInterpreter& interp, CRingItemPtr pSpecificItem);
+    CTCLObject formatTriggerCount(CTCLInterpreter& interp, CRingItemPtr pSpecificItem);
+    CTCLObject formatGlomParams(CTCLInterpreter& interp, CRingItemPtr pSpecificItem);
+    CTCLObject formatAbnormalEnd(CTCLInterpreter& interp, CRingItemPtr pSpecificItem);
+    CTCLObject formatComposite(CTCLInterpreter& interp, CRingItemPtr pSpecificItem);
 
-    CRingItem* getFromRing(CRingBuffer& ring, CRingSelectionPredicate& predicate,
-                           unsigned long timeout);
-    CRingItem* getFromRing(CRingBuffer& ring, CTimeout& timeout);
-    uint32_t swal(uint32_t value);
+    CTCLObject dispatch(CRingItemPtr pSpecificItem, CTCLInterpreter& interp);
+
+    CRingItemPtr getFromRing(CDataSource& ring, CDataSourcePredicate& predicate,
+                           const CTimeout& timeout);
+    CRingItemPtr getFromRing(CDataSource& ring, const CTimeout& timeout);
+
 };
+
+} // end V12
+} // end DAQ
 
 #endif

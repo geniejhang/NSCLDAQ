@@ -5,10 +5,8 @@ libdaqshm_la_SOURCES = daqshm.cpp os.cpp io.cpp CTimeout.cpp
 include_HEADERS      = daqshm.h os.h io.h CTimeout.h
 
 
-noinst_HEADERS	     = Asserts.h
-
 libdaqshm_la_LIBADD = @THREADLD_FLAGS@ -lcrypt @LIBEXCEPTION_LDFLAGS@
-COMPILATION_FLAGS   = @THREADCXX_FLAGS@ @LIBTCLPLUS_CFLAGS@
+COMPILATION_FLAGS   = -I@top_srcdir@/base/testutils @THREADCXX_FLAGS@ @LIBTCLPLUS_CFLAGS@
 libdaqshm_la_CPPFLAGS=$(COMPILATION_FLAGS)
 
 

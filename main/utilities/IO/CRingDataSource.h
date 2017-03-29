@@ -18,9 +18,11 @@
 #define DAQ_CRINGDATASOURCE_H
 
 #include "CDataSource.h"
+#include <CTimeout.h>
 
 #include <vector>
 #include <cstdint>
+#include <limits>
 
 // forward class definitions.
 
@@ -75,7 +77,7 @@ public:
   size_t tell() const;
 
 
-  void read(char* pBuffer, size_t nBytes);
+  void timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout);
 
   CRingBuffer& getRing();
   const CRingBuffer& getRing() const;

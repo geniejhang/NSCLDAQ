@@ -59,32 +59,46 @@ EXTRA_DIST=$(PACKAGE_FILES) $(TEST_FILES) $(INTERACTIVE_TESTS) $(APP_FILES) $(IM
 lib_LTLIBRARIES=libTclRingBuffer.la
 
 libTclRingBuffer_la_SOURCES=CTclRingCommand.cpp
-libTclRingBuffer_la_LIBADD=	@top_builddir@/daq/format/libdataformat.la     \
+libTclRingBuffer_la_LIBADD=	@top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la     \
+                                @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
+                                @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+                                @top_builddir@/utilities/IO/libdaqio.la \
 				@top_builddir@/base/dataflow/libDataFlow.la    \
 				@top_builddir@/base/tcpip/libTcp.la		\
 				@top_builddir@/base/os/libdaqshm.la 		\
 				@LIBTCLPLUS_LDFLAGS@  @TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 
-libTclRingBuffer_la_CPPFLAGS=@LIBTCLPLUS_CFLAGS@ @TCL_FLAGS@ @THREADCXX_FLAGS@ \
-				-I@top_srcdir@/base/dataflow \
-				-I@top_srcdir@/daq/format \
-				-I@top_srcdir@/base/os 
+libTclRingBuffer_la_CPPFLAGS=-I@top_srcdir@/base/dataflow \
+                                -I@top_srcdir@/utilities/nscldaq-format/format \
+                                -I@top_srcdir@/utilities/nscldaq-format/Buffer \
+                                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
+                                -I@top_srcdir@/utilities/IO \
+                                -I@top_srcdir@/base/os \
+                                @LIBTCLPLUS_CFLAGS@ @TCL_FLAGS@ @THREADCXX_FLAGS@
 
 noinst_HEADERS=CTclRingCommand.h
 
 noinst_PROGRAMS   = ringTests
 ringTests_SOURCES = TestRunner.cpp ringTests.cpp
-ringTests_CPPFLAGS = @LIBTCLPLUS_CFLAGS@ @CPPUNIT_CFLAGS@ @TCL_FLAGS@ @THREADCXX_FLAGS@ \
-                        -I@top_srcdir@/daq/format \
+ringTests_CPPFLAGS =    -I@top_srcdir@/utilities/nscldaq-format/format \
+                        -I@top_srcdir@/utilities/nscldaq-format/Buffer \
+                        -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
+                        -I@top_srcdir@/utilities/IO \
                         -I@top_srcdir@/base/dataflow \
-                        -I@top_srcdir@/base/testutils
+                        -I@top_srcdir@/base/testutils \
+                        @LIBTCLPLUS_CFLAGS@ @CPPUNIT_CFLAGS@ @TCL_FLAGS@ @THREADCXX_FLAGS@
 
-ringTests_LDADD    =  @CPPUNIT_LDFLAGS@ libTclRingBuffer.la \
-			@top_builddir@/daq/format/libdataformat.la     \
-				@top_builddir@/base/dataflow/libDataFlow.la    \
-				@LIBTCLPLUS_LDFLAGS@  @TCL_LDFLAGS@ @THREADLD_FLAGS@
+ringTests_LDADD    =  libTclRingBuffer.la \
+                        @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la     \
+                        @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
+                        @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+                        @top_builddir@/utilities/IO/libdaqio.la \
+                        @top_builddir@/base/dataflow/libDataFlow.la    \
+                        @CPPUNIT_LDFLAGS@  \
+                        @LIBTCLPLUS_LDFLAGS@  @TCL_LDFLAGS@ @THREADLD_FLAGS@
 
 
-check_PROGRAMS:  
+check_PROGRAMS:
 	@builddir@/ringTests
+

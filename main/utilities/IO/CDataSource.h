@@ -25,6 +25,7 @@
 namespace DAQ {
 
 class CDataSource;
+class CTimeout;
 
 typedef std::unique_ptr<CDataSource> CDataSourceUPtr;
 typedef std::shared_ptr<CDataSource> CDataSourcePtr;
@@ -72,7 +73,8 @@ public:
    * \param pBuffer   block of data to copy data into
    * \param nBytes    number of bytes to read from the source
    */
-  virtual void read(char* pBuffer, size_t nBytes) = 0;
+  virtual void read(char* pBuffer, size_t nBytes);
+  virtual void timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout) = 0;
 
 protected:
   void setEOF(bool state) { m_eof = state; }

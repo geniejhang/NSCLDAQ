@@ -60,7 +60,7 @@ void CTestSourceSink::putv(const std::vector<std::pair<const void *, size_t> > &
 }
 
 //
-void CTestSourceSink::read(char* pBuffer, size_t nBytes)
+void CTestSourceSink::timedRead(char* pBuffer, size_t nBytes, const CTimeout &)
 {
   if (m_buffer.size() < nBytes) {
     throw std::runtime_error("TestSourceSink::get() does not have requested bytes stored");

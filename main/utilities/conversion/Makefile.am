@@ -115,6 +115,7 @@ format_converter_LDADD = @builddir@/libConversion.la \
                @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
                @top_builddir@/utilities/filter/core/libfilter.la \
 	       @top_builddir@/utilities/IO/libdaqio.la \
+               @top_builddir@/base/os/libdaqshm.la \
 	       @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la
 
 format_converter_CPPFLAGS = -I@srcdir@ \
@@ -124,7 +125,8 @@ format_converter_CPPFLAGS = -I@srcdir@ \
 		    -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
 		    -I@top_srcdir@/utilities/nscldaq-format/format \
 		    -I@top_srcdir@/base/headers \
-				$(AM_CPPFLAGS)
+                    -I@top_srcdir@/base/os \
+                    $(AM_CPPFLAGS)
 
 EXTRA_DIST = format_converter_options.ggo \
 	 convert_format.py

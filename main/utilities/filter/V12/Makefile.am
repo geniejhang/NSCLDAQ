@@ -25,13 +25,15 @@ libfilterv12_la_CPPFLAGS = -I@srcdir@/.. \
                             -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                             -I@top_srcdir@/utilities/nscldaq-format/Buffer \
                             -I@top_srcdir@/base/headers \
-                            -I@top_srcdir@/base/sfinae_tools
+                            -I@top_srcdir@/base/sfinae_tools \
+                            -I@top_srcdir@/base/os
 
 
 libfilterv12_la_LIBADD = @top_builddir@/utilities/IO/libdaqio.la \
                             @top_builddir@/utilities/filter/core/libfilter.la \
                             @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
-                            @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la
+                            @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
+                            @top_builddir@/base/os/libdaqshm.la
 
 
 
@@ -54,6 +56,7 @@ unittests_LDADD		= \
                         @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
                         @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
                         @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
+                        @top_builddir@/base/os/libdaqshm.la \
                         $(CPPUNIT_LDFLAGS) 		\
                         @LIBEXCEPTION_LDFLAGS@
 
@@ -67,7 +70,8 @@ unittests_CPPFLAGS= -I@top_srcdir@/utilities/filter \
                     -I@top_srcdir@/base/uri		\
                     -I@top_srcdir@/base/headers		\
                     -I@top_srcdir@/base/dataflow \
-                    -I@top_srcdir@/base/testutils
+                    -I@top_srcdir@/base/testutils \
+                    -I@top_srcdir@/base/os
 
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 

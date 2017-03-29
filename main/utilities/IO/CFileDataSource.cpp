@@ -20,8 +20,7 @@
 
 
 #include <URL.h>
-//#include <CRingItem.h>
-//#include <DataFormat.h>
+#include <CTimeout.h>
 #include <ErrnoException.h>
 #include <CInvalidArgumentException.h>
 #include <io.h>
@@ -164,9 +163,10 @@ size_t CFileDataSource::peek(char* pBuffer, size_t nBytes)
 
         if (previousSize < nBytes) {
             m_peekBuffer.resize(nBytes);
-            size_t nBytesRead = io::readData(m_fd,
+            size_t nBytesRead = io::timedReadData(m_fd,
                                              m_peekBuffer.data() + previousSize,
-                                             nBytes - previousSize);
+                                             nBytes - previousSize,
+                                             CTimeout(0));
 
             if (nBytesRead < 0) {
                 std::string msg("CFileDataSource::peek() ");
@@ -184,7 +184,7 @@ size_t CFileDataSource::peek(char* pBuffer, size_t nBytes)
 
         // no data in peek buffer... set it up and then read into it
         m_peekBuffer.resize(nBytes);
-        nBytesToCopy = io::readData(m_fd, m_peekBuffer.data(), nBytes);
+        nBytesToCopy = io::timedReadData(m_fd, m_peekBuffer.data(), nBytes, CTimeout(0));
     }
 
     // copy from our peek buffer into the user's
@@ -270,7 +270,7 @@ size_t CFileDataSource::tell() const
  * be interaction with the underlying file.
  *
  */
-void CFileDataSource::read(char* pBuffer, size_t nBytes)
+void CFileDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout)
 {
     if (m_lastReadWasPeek) {
 
@@ -298,19 +298,18 @@ void CFileDataSource::read(char* pBuffer, size_t nBytes)
             // read the rest
             if (! eof() ) {
                 size_t nToRead = nBytes-nBytesInPeek;
-                size_t nRead = io::readData(m_fd, pBuffer, nToRead);
+                size_t nRead = io::timedReadData(m_fd, pBuffer, nToRead, timeout);
 
-                if (nRead != nToRead) {
+                if (nRead != nToRead && !timeout.expired()) {
                     setEOF(true);
                 }
             }
-
         }
     } else {
 
 
         if (! eof() ) {
-            size_t nRead = io::readData(m_fd, pBuffer, nBytes);
+            size_t nRead = io::timedReadData(m_fd, pBuffer, nBytes, timeout);
 
             if (nRead != nBytes) {
                 setEOF(true);

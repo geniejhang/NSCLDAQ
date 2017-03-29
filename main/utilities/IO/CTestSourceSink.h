@@ -19,6 +19,7 @@
 
 #include "CDataSource.h"
 #include "CDataSink.h"
+#include <CTimeout.h>
 #include <vector>
 
 namespace DAQ {
@@ -93,7 +94,7 @@ class CTestSourceSink : public CDataSource, public CDataSink
      *
      *  \throws std::runtime_error if insufficient data exists in buffer to satisfy request
      */
-    virtual void read(char* pBuffer, size_t nBytes);
+    virtual void timedRead(char* pBuffer, size_t nBytes, const CTimeout& );
 
 
     size_t availableData() const;
