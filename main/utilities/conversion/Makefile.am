@@ -38,6 +38,7 @@ libConversion_la_CXXFLAGS = -I@srcdir@ \
                             -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                             -I@top_srcdir@/utilities/nscldaq-format/Buffer \
                             -I@top_srcdir@/base/headers \
+                            -I@top_srcdir@/base/os \
                             @LIBTCLPLUS_CFLAGS@
 
 libConversion_la_LIBADD = @top_builddir@/utilities/nscldaq-format/format/V8/libdataformatv8.la \
@@ -47,6 +48,7 @@ libConversion_la_LIBADD = @top_builddir@/utilities/nscldaq-format/format/V8/libd
                           @top_builddir@/utilities/filter/core/libfilter.la \
 			  @top_builddir@/utilities/IO/libdaqio.la \
 			  @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+                          @top_builddir@/base/os/libdaqshm.la \
 			  @LIBTCLPLUS_LDFLAGS@
 
 
