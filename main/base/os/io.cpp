@@ -185,7 +185,7 @@ void writeData (int fd, const void* pData , size_t size)
     //  Regardless of how all this ends, we are going to emit a message on sterr.
     //
 
-    while (residual && !timeout.expired()) {
+    while (residual) {
       nRead = read(fd, pDest, residual);
       if (nRead == 0)		// EOF
       {
@@ -206,6 +206,10 @@ void writeData (int fd, const void* pData , size_t size)
 
       residual -= nRead;
       pDest  += nRead;
+
+      if (timeout.expired()) {
+          break;
+      }
     }
     // If we get here the read worked:
 
