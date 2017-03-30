@@ -39,8 +39,6 @@
 
 #include <CSimpleAllButPredicate.h>
 #include <CSimpleDesiredTypesPredicate.h>
-#include <CRingItemFactory.h>
-#include <CAbnormalEndItem.h>
 #include <CTimeout.h>
 
 #include <tcl.h>
