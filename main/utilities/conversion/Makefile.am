@@ -76,6 +76,7 @@ unittests_LDADD	= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
                    @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la	\
                    @top_builddir@/utilities/filter/core/libfilter.la	\
                    @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la	\
+                   @top_builddir@/base/os/libdaqshm.la \
                    @LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS= -I@srcdir@ \
@@ -85,6 +86,7 @@ unittests_CPPFLAGS= -I@srcdir@ \
                     -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                     -I@top_srcdir@/utilities/nscldaq-format/format \
                     -I@top_srcdir@/base/headers \
+                    -I@top_srcdir@/base/os \
                     @CPPUNIT_CFLAGS@ \
                     @LIBTCLPLUS_CFLAGS@ \
                     @TCL_FLAGS@ \
