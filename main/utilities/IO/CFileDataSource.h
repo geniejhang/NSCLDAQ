@@ -81,7 +81,7 @@ public:
   size_t availableData() const;
   size_t tell() const;
 
-  void timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout);
+  size_t timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout);
 
   void setExclusionList(const std::set<uint16_t>& list);
 

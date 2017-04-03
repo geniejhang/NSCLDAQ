@@ -77,7 +77,7 @@ public:
   size_t tell() const;
 
 
-  void timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout);
+  size_t timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout);
 
   CRingBuffer& getRing();
   const CRingBuffer& getRing() const;

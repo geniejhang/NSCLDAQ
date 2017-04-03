@@ -17,6 +17,9 @@
 #include <string>
 #include <iostream>
 
+#include <chrono>
+#include <thread>
+
 using namespace DAQ;
 using namespace DAQ::V12;
 
@@ -89,14 +92,14 @@ void EvlogTest::autorun() {
   switches += uri;
   pid_t evlogPid = startEventLog(switches);
 
-
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   // Create the run.
 
   CRingStateChangeItem begin(BEGIN_RUN, 123, 0, time(NULL), "This is a title");
   CRingStateChangeItem end(END_RUN, 123, 1, time(NULL), "This is a title");
 
-  *pRing << CRawRingItem(begin);
-  *pRing << CRawRingItem(end);
+  writeItem(*pRing, begin);
+  writeItem(*pRing, end);
 
   // wait for eventlog to finish.
 

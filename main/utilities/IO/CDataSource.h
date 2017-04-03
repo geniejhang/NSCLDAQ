@@ -73,8 +73,8 @@ public:
    * \param pBuffer   block of data to copy data into
    * \param nBytes    number of bytes to read from the source
    */
-  virtual void read(char* pBuffer, size_t nBytes);
-  virtual void timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout) = 0;
+  virtual size_t read(char* pBuffer, size_t nBytes);
+  virtual size_t timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout) = 0;
 
 protected:
   void setEOF(bool state) { m_eof = state; }

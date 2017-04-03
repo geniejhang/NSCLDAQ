@@ -23,6 +23,8 @@
 #include <CRemoteAccess.h>
 #include <CTimeout.h>
 
+#include <iostream>
+
 using std::vector;
 using std::string;
 
@@ -85,9 +87,10 @@ size_t CRingDataSource::tell() const
 }
 
 
-void CRingDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout)
+size_t CRingDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout)
 {
-  m_pRing->get(pBuffer, nBytes, timeout.getRemainingSeconds());
+  unsigned long nSeconds = timeout.getRemainingSeconds();
+  return m_pRing->get(pBuffer, nBytes, nSeconds);
 }
 
 

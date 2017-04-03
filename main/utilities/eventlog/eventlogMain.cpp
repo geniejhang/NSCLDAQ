@@ -203,8 +203,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
 
        if (!m_fRunNumberOverride) {
            while (1) {
-               *m_pRing >> rawItem;
-
+               readItem(*m_pRing, rawItem);
                /*
                 As of NSCLDAQ-11 it is possible for the item just before a begin run
                 to be one or more ring format items.

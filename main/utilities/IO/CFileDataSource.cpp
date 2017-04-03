@@ -270,8 +270,9 @@ size_t CFileDataSource::tell() const
  * be interaction with the underlying file.
  *
  */
-void CFileDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout)
+size_t CFileDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout)
 {
+    size_t totalRead = 0;
     if (m_lastReadWasPeek) {
 
         if (nBytes <= m_peekBuffer.size()) {
@@ -279,6 +280,8 @@ void CFileDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& ti
             // data itno the user's buffer and return... no IO needs to take place
             std::copy(m_peekBuffer.begin(), m_peekBuffer.begin()+ nBytes, pBuffer);
             m_peekBuffer.erase(m_peekBuffer.begin(), m_peekBuffer.begin()+nBytes);
+
+            totalRead = nBytes;
 
             if (m_peekBuffer.size() > 0) {
                 m_lastReadWasPeek = true;
@@ -295,6 +298,8 @@ void CFileDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& ti
 
             m_lastReadWasPeek = false;
 
+            totalRead = nBytesInPeek;
+
             // read the rest
             if (! eof() ) {
                 size_t nToRead = nBytes-nBytesInPeek;
@@ -303,6 +308,8 @@ void CFileDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& ti
                 if (nRead != nToRead && !timeout.expired()) {
                     setEOF(true);
                 }
+
+                totalRead += nRead;
             }
         }
     } else {
@@ -314,8 +321,12 @@ void CFileDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& ti
             if (nRead != nBytes) {
                 setEOF(true);
             }
+
+            totalRead += nRead;
         }
     }
+
+    return totalRead;
 }
 
 void CFileDataSource::setExclusionList(const std::set<uint16_t>& list)

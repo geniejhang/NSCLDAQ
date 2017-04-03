@@ -15,6 +15,7 @@
 #include <CRingBuffer.h>
 #include <time.h>
 #include <pwd.h>
+#include <is_byte_iterator.h>
 
 #include <vector>
 
@@ -30,6 +31,7 @@
 #include <ByteBuffer.h>
 #include <stdlib.h>
 #include <os.h>
+#include <io.h>
 #include <assert.h>
 
 using namespace std;
@@ -39,13 +41,14 @@ using namespace DAQ::V12;
 pid_t childpid;
 
 
-template<class ByteIter>
+template<class ByteIter,
+         typename = typename std::enable_if< DAQ::is_byte_iterator<ByteIter>::value >::type >
 void dumpBinary(ByteIter beg, ByteIter end)
 {
     std::cout << "begin dump " << std::endl;
-    std::cout << std::hex << std::setfill('0');
     size_t size = std::distance(beg, end);
-    std::cout << size << std::endl;
+    std::cout << "size=" << size << std::endl;
+    std::cout << std::hex << std::setfill('0');
     for (auto iter=beg; iter<end; iter+=2) {
         uint16_t value = *(iter+1);
         value = ((value << 8) | (*iter));
@@ -61,11 +64,9 @@ readItem(int fd, void* pBuffer)
   auto p = reinterpret_cast<unsigned char*>(pBuffer);
   auto pBeg = p;
 
-  // Read the header:
-//  std::cout << "readItem" << std::endl;
+  size_t bytes = ::io::readData(fd, p, 20);
 
-  size_t bytes = read(fd, p, 20);
-  EQ(size_t(20), bytes);
+  EQMSG("bytes read", size_t(20), bytes);
   
   uint32_t size, type, sourceId;
   uint64_t tstamp; 
@@ -77,9 +78,7 @@ readItem(int fd, void* pBuffer)
   size_t remaining = size - bytes;
   bytes = read(fd, p, remaining);
 
-
-//  dumpBinary(pBeg, pBeg + size);
-  EQ(remaining, bytes);
+  EQMSG("remaining bytes", remaining, bytes);
 
   return size;
 }
@@ -140,16 +139,16 @@ static void textItem(DAQ::CDataSink& prod, int fd, bool check = true)
   items.push_back("The last string");
 
   CRingTextItem i(PACKET_TYPES, items);
-  prod << CRawRingItem(i);
+  writeItem(prod, CRawRingItem(i));
 
   if (check) {
     char buffer[2048];
     int size = readItem(fd, buffer);
     auto result = Parser::parse(buffer, buffer+size);
-    EQ(PACKET_TYPES, result.first->type());
+    EQMSG("packet types type", PACKET_TYPES, result.first->type());
 
     CRingTextItem& item = dynamic_cast<CRingTextItem&>(*result.first);
-    EQ((uint32_t)3,  item.getStringCount());
+    EQMSG("string count", (uint32_t)3,  item.getStringCount());
 
     auto strings = item.getStrings();
 
@@ -165,7 +164,7 @@ static void scaler(DAQ::CDataSink& prod, int fd, bool check=true)
   std::iota(scalers.begin(), scalers.end(), 0);;
 
   CRingScalerItem i(0, 10, time_t(NULL), scalers);
-  prod << CRawRingItem(i);
+  writeItem(prod, CRawRingItem(i));
 
   if (check) {
     char buffer[1024];
@@ -173,22 +172,21 @@ static void scaler(DAQ::CDataSink& prod, int fd, bool check=true)
     auto result = Parser::parse(buffer, buffer+size);
 
     CRingScalerItem& item = dynamic_cast<CRingScalerItem&>(*result.first);
-    EQ(PERIODIC_SCALERS, item.type());
-    EQ((uint32_t)0,         item.getStartTime());
-    EQ((uint32_t)10,        item.getEndTime());
-    EQ((uint32_t)32,        item.getScalerCount());
+    EQMSG("scaler type", PERIODIC_SCALERS, item.type());
+    EQMSG("start time", (uint32_t)0,         item.getStartTime());
+    EQMSG("end time", (uint32_t)10,        item.getEndTime());
+    EQMSG("scaler count", (uint32_t)32,        item.getScalerCount());
     auto sclrs = item.getScalers();
     for (uint32_t i =0; i < 32; i++) {
-      EQ(i, sclrs[i]);
+      EQMSG("ith scaler value", i, sclrs[i]);
     }
   }
-
 }
 
 static void eventCount(DAQ::CDataSink& prod, int fd, int count, bool check=true)
 {
   CRingPhysicsEventCountItem i(count, 12);
-  prod << CRawRingItem(i);
+  writeItem(prod, i);
 
   if (check) {
     char buffer[1024];
@@ -197,9 +195,9 @@ static void eventCount(DAQ::CDataSink& prod, int fd, int count, bool check=true)
 
     auto& item = dynamic_cast<CRingPhysicsEventCountItem&>(*result.first);
 
-    EQ(PHYSICS_EVENT_COUNT, item.type());
-    EQ((uint32_t)12, item.getTimeOffset());
-    EQ((uint64_t)count, item.getEventCount());
+    EQMSG("physics event count type", PHYSICS_EVENT_COUNT, item.type());
+    EQMSG("time offset", (uint32_t)12, item.getTimeOffset());
+    EQMSG("event count", (uint64_t)count, item.getEventCount());
   }
 }
 
@@ -212,7 +210,7 @@ static void event(DAQ::CDataSink& prod, int fd, bool check=true)
   for (int i =0; i < 10; i++) {
     body << uint16_t(i);
   }
-  prod << i;
+  writeItem(prod, i);
 
   if (check) {
     unsigned char buffer[1024];
@@ -220,15 +218,15 @@ static void event(DAQ::CDataSink& prod, int fd, bool check=true)
     auto result = Parser::parse(buffer, buffer + size);
     auto& item = dynamic_cast<CPhysicsEventItem&>(*result.first);
 
-    EQ(PHYSICS_EVENT, item.type());
+    EQMSG("physics event type", PHYSICS_EVENT, item.type());
 
     auto stream = Buffer::makeContainerDeserializer(item.getBody(), false);
     uint16_t temp;
     stream >> temp;
-    EQ((uint16_t)11, temp);
+    EQMSG("body size", (uint16_t)11, temp);
     for (int i = 0; i < 10; i++) {
       stream >> temp;
-      EQ((uint16_t)i, temp);
+      EQMSG("body element", (uint16_t)i, temp);
     }
   }
 
@@ -240,7 +238,7 @@ static void beginRun(DAQ::CDataSink& prod, int fd,  bool check = true)
 {
     time_t now = time(NULL);
   CRingStateChangeItem i(BEGIN_RUN, 1234, 0, now, "This is a title");
-  prod << CRawRingItem(i);
+  writeItem(prod, i);
   
   // Should now be able to read the item from the pipe and it should match
   // the item we put in.
@@ -250,23 +248,22 @@ static void beginRun(DAQ::CDataSink& prod, int fd,  bool check = true)
  
   if (check) {
     // We should be able to get what we put in:
-    
+
     int size = readItem(fd, buffer);
     auto result = Parser::parse(buffer, buffer+size);
     auto& item = dynamic_cast<CRingStateChangeItem&>(*result.first);
 
-//    std::cout << item.toString() << std::endl;
-    EQMSG("type", BEGIN_RUN, item.type());
-    EQMSG("run", (uint32_t)1234,      item.getRunNumber());
-    EQMSG("elapsed time", (uint32_t)0,         item.getElapsedTime());
-    EQMSG("title", string("This is a title"), item.getTitle());
+    EQMSG("begin type", BEGIN_RUN, item.type());
+    EQMSG("begin run #", (uint32_t)1234,      item.getRunNumber());
+    EQMSG("begin elapsed time", (uint32_t)0,         item.getElapsedTime());
+    EQMSG("begin title", string("This is a title"), item.getTitle());
   }
 }
 
 static void pauseRun(DAQ::CDataSink& prod, int fd, bool check=true)
 {
   CRingStateChangeItem i(PAUSE_RUN, 1234, 15, time(NULL), "This is a title");
-  prod << CRawRingItem(i);
+  writeItem(prod, i);
   
   // Should now be able to read the item from the pipe and it should match
   // the item we put in.
@@ -282,17 +279,17 @@ static void pauseRun(DAQ::CDataSink& prod, int fd, bool check=true)
 
     auto& item = dynamic_cast<CRingStateChangeItem&>(*result.first);
 
-    EQ(PAUSE_RUN, item.type());
-    EQ((uint32_t)1234,      item.getRunNumber());
-    EQ((uint32_t)15,         item.getElapsedTime());
-    EQ(string("This is a title"), item.getTitle());
+    EQMSG("pause run type", PAUSE_RUN, item.type());
+    EQMSG("pause run number", (uint32_t)1234,      item.getRunNumber());
+    EQMSG("pause elapsed time", (uint32_t)15,         item.getElapsedTime());
+    EQMSG("pause title", string("This is a title"), item.getTitle());
   }
 }
 
 static void resumeRun(DAQ::CDataSink& prod, int fd, bool check = true)
 {
   CRingStateChangeItem i(RESUME_RUN, 1234, 15, time(NULL), "This is a title");
-  prod << CRawRingItem(i);
+  writeItem(prod, i);
   
   // Should now be able to read the item from the pipe and it should match
   // the item we put in.
@@ -307,10 +304,10 @@ static void resumeRun(DAQ::CDataSink& prod, int fd, bool check = true)
     auto result = Parser::parse(buffer, buffer+size);
 
     auto& item = dynamic_cast<CRingStateChangeItem&>(*result.first);
-    EQ(RESUME_RUN, item.type());
-    EQ((uint32_t)1234,      item.getRunNumber());
-    EQ((uint32_t)15,         item.getElapsedTime());
-    EQ(string("This is a title"), item.getTitle());
+    EQMSG("resume run type", RESUME_RUN, item.type());
+    EQMSG("resume run #", (uint32_t)1234,      item.getRunNumber());
+    EQMSG("resume elapsed time", (uint32_t)15,         item.getElapsedTime());
+    EQMSG("resume title", string("This is a title"), item.getTitle());
   }
 }
 
@@ -318,7 +315,7 @@ static void resumeRun(DAQ::CDataSink& prod, int fd, bool check = true)
 static void endRun(DAQ::CDataSink& prod, int fd, bool check = true)
 {
   CRingStateChangeItem i(END_RUN, 1234, 25, time(NULL), "This is a title");
-  prod << CRawRingItem(i);
+  writeItem(prod, i);
   
   // Should now be able to read the item from the pipe and it should match
   // the item we put in.
@@ -334,10 +331,10 @@ static void endRun(DAQ::CDataSink& prod, int fd, bool check = true)
 
     auto& item = dynamic_cast<CRingStateChangeItem&>(*result.first);
     
-    EQ(END_RUN, item.type());
-    EQ((uint32_t)1234,       item.getRunNumber());
-    EQ((uint32_t)25,         item.getElapsedTime());
-    EQ(string("This is a title"), item.getTitle());
+    EQMSG("type is END_RUN", END_RUN, item.type());
+    EQMSG("end run #", (uint32_t)1234,       item.getRunNumber());
+    EQMSG("end elapsed time", (uint32_t)25,         item.getElapsedTime());
+    EQMSG("end title", string("This is a title"), item.getTitle());
   }
 }
 
@@ -391,13 +388,10 @@ void rseltests::all()
     
     // Make a begin_run item, commit it.
     bool check = true;
-
     beginRun(*pProd, fd, check);
     beginRun(*pProd, fd, check);
-    for (int i =0; i < 0; i++) {
-        std::cout << "event " << i << " ... " << std::flush;
+    for (int i =0; i < 100; i++) {
       event(*pProd,fd, check);
-        std::cout << " done" << std::endl;
     }
     eventCount(*pProd, fd, 100, check);
     scaler(*pProd, fd, check);
