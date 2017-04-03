@@ -8,6 +8,10 @@ CTimeout::CTimeout(double nSeconds)
       m_start(std::chrono::high_resolution_clock::now())
 {}
 
+double CTimeout::getTotalSeconds() const {
+  return m_nSeconds;
+}
+
 double CTimeout::getRemainingSeconds() const {
     auto now = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsedTime = now - m_start;

@@ -49,6 +49,25 @@ public:
     CTimeout& operator=(const CTimeout&) = default;
 
     /*!
+     * \brief getTotalSeconds
+     *
+     * \return the total length of the timeout
+     *
+     * If the length of the timeout is zero, a function should assume
+     * polling functionality.
+     */
+    double getTotalSeconds() const;
+
+    /*!
+     * \brief isPoll
+     * \retval true if timeout is 0 seconds
+     * \retval false otherwise
+     */
+    bool isPoll() const {
+        return (m_nSeconds == 0);
+    }
+
+    /*!
      * \brief getRemainingSeconds
      *
      * This retrieves the amount of time that remains before expiration.
