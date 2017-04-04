@@ -25,6 +25,7 @@
 #include <TCLObject.h>
 #include <Exception.h>
 #include <stdexcept>
+#include <iostream>
 
 
 /**
@@ -90,6 +91,10 @@ CTCLServiceApiInstance::operator()(CTCLInterpreter& interp, std::vector<CTCLObje
             listAll(interp, objv);
         } else if (subcommand == "list") {
             list(interp, objv);
+        } else if (subcommand == "getProperty") {
+            getProperty(interp, objv);
+        } else if (subcommand == "setProperty") {
+            setProperty(interp, objv);
         } else {
             throw std::logic_error("Invalid subcommand");
         }
@@ -324,3 +329,47 @@ CTCLServiceApiInstance::list(
     
     interp.setResult(result);
 }
+/**
+ * setProperty
+ *    Sets the value of a service property.
+ */
+void
+CTCLServiceApiInstance::setProperty(
+    CTCLInterpreter& interp, std::vector<CTCLObject>& objv
+)
+{
+    requireAtLeast(objv, 5);
+    requireAtMost(objv, 6);
+    
+    int create = 1;
+    
+    std::string programName = objv[2];
+    std::string propName    = objv[3];
+    std::string propValue   = objv[4];
+    
+    if (objv.size() == 6) {
+        create = objv[5];
+    }
+
+    
+    m_pApi->setProperty(
+        programName.c_str(), propName.c_str(), propValue.c_str(), create
+    );
+}
+/**
+ * getProperty
+ *    Returns as the command value the value of a program property.
+ */
+void
+CTCLServiceApiInstance::getProperty(
+    CTCLInterpreter& interp, std::vector<CTCLObject>& objv
+)
+{
+    requireExactly(objv, 4);
+    
+    std::string programName = objv[2];
+    std::string propName    = objv[3];
+    
+    interp.setResult(m_pApi->getProperty(programName.c_str(), propName.c_str()));
+}
+

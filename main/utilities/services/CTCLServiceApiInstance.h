@@ -55,6 +55,7 @@ protected:
     void remove(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
     void listAll(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
     void list(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
+    void setProperty(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
+    void getProperty(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
 };
-
 #endif

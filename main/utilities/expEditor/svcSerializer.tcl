@@ -79,12 +79,16 @@ proc ::Serialize::_saveService {api obj}  {
     set p [$props find path]
     set path [$p cget -value]
     
+    set p [$propse find args]
+    set args [$p cget -value]
+    
     set position [$obj getPosition]
     
     # Now we can create the object and position it:
     
     $api createprog $name $path $host
     $api setEditorPosition $name [lindex $position 0] [lindex $position 1]
+    $api setProperty $name args $args
 }
 
 
@@ -149,8 +153,15 @@ proc ::Serialize::deserializeServices dbUri {
             foreach prop [list name host path] value [list $name $host $command] {
                 [$props find $prop] configure -value $value
             }
+            #  args may or may not be present depending on how old the db is:
             
-            lappend result [dict create object $obj x $x y $y]
+            catch {
+                set args [_svcDeserialize getProperty $name args]
+                [$props find args] configure -value $args
+            }
+            
+            
+            lappend result [dict create object $obj x $x y $y args $args]
             
         }
         
