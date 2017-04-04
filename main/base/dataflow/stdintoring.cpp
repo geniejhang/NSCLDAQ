@@ -1,4 +1,4 @@
-#include "stdntoringsw.h"
+#include "stdintoringsw.h"
 #include "CRingBuffer.h"
 #include "Exception.h"
 #include <stdint.h>
