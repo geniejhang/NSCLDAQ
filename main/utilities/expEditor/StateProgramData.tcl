@@ -29,6 +29,7 @@ exec tclsh "$0" ${1+"$@"}
 package provide stateProgramData 1.0
 package require snit
 package require properties
+package require PropertyViews
 
 ##
 # @class
@@ -48,19 +49,19 @@ snit::type StateProgramData {
     constructor args {
         install properties using propertylist %AUTO%
         
-        $properties add [property %AUTO% \
+        $properties add [GenericPropertyEditor %AUTO% \
             -name name]
-        $properties add [property %AUTO% -name host ]
-        $properties add [EnumeratedProperty %AUTO% -values {true false} \
+        $properties add [GenericPropertyEditor %AUTO% -name host ]
+        $properties add [EnumeratedEditor %AUTO% -values {true false} \
             -name enable -value true]
-        $properties add [EnumeratedProperty %AUTO% -values {true false} \
+        $properties add [EnumeratedEditor %AUTO% -values {true false} \
             -name standalone -value false ]
-        $properties add [property %AUTO% -name path ]
+        $properties add [GenericPropertyEditor %AUTO% -name path ]
        
-        $properties add [property %AUTO% -name {Input Ring} -editable 0]
-        $properties add [property %AUTO% -name {Output Ring} -editable 0]
-        $properties add [property %AUTO% -name {type} -editable 0 -value StateProgram]
-        $properties add [ListProperty %AUTO% -name {Program Parameters} -editable 1]
+        $properties add [GenericPropertyEditor %AUTO% -name {Input Ring} -editable 0]
+        $properties add [GenericPropertyEditor %AUTO% -name {Output Ring} -editable 0]
+        $properties add [GenericPropertyEditor %AUTO% -name {type} -editable 0 -value StateProgram]
+        $properties add [ListEditor %AUTO% -name {Program Parameters} -editable 1]
         
         $self configurelist $args
     }
@@ -131,11 +132,12 @@ snit::type ReadoutProgram {
         install stateProgram using StateProgramData %AUTO%
         
         set properties [$stateProgram getProperties]
-        $properties add [IntegerProperty %AUTO% -name port -value 0]
-        $properties add [IntegerProperty %AUTO% -name sourceid -value 0]
-        $properties add [property %AUTO% -name {init script}]
-        $properties add [property %AUTO% -name appname]
-        $properties add [property %AUTO% -name {status service} -value StatusAggregator]
+        $properties add [IntegerEditor %AUTO% -name port -value 0]
+        $properties add [IntegerEditor %AUTO% -name sourceid -value 0 \
+            -usespinbox 1 -from 0 -to 0xffffffff]
+        $properties add [GenericPropertyEditor %AUTO% -name {init script}]
+        $properties add [GenericPropertyEditor %AUTO% -name appname]
+        $properties add [GenericPropertyEditor %AUTO% -name {status service} -value StatusAggregator]
         
         # Set the type property to Readout:
         
@@ -198,21 +200,21 @@ snit::type EventLogProgram {
         install stateProgram using StateProgramData %AUTO%
         
         set properties [$stateProgram getProperties]
-        $properties add [property %AUTO% -name destdir]
-        $properties add [property %AUTO%                                       \
+        $properties add [GenericPropertyEditor %AUTO% -name destdir]
+        $properties add [GenericPropertyEditor %AUTO%                                       \
             -name segmentsize -value 2g -validate [mymethod _validSize]   \
         ]
-        $properties add [EnumeratedProperty %AUTO%                             \
+        $properties add [EnumeratedEditor %AUTO%                             \
             -name checkum -values [list true false] -value true                \
         ]
-        $properties add [EnumeratedProperty %AUTO%                             \
+        $properties add [EnumeratedEditor %AUTO%                             \
             -name {combine runs} -values [list true false] -value false        \
         ]
-        $properties add [property %AUTO% -name prefix]
-        $properties add [IntegerProperty %AUTO% -name freewarn -value 10]
-        $properties add [IntegerProperty %AUTO% -name freesevere -value 1]
-        $properties add [property %AUTO% -name appname]
-        $properties add [property %AUTO%                                       \
+        $properties add [GenericPropertyEditor %AUTO% -name prefix]
+        $properties add [IntegerEditor %AUTO% -name freewarn -value 10]
+        $properties add [IntegerEditor %AUTO% -name freesevere -value 1]
+        $properties add [GenericPropertyEditor %AUTO% -name appname]
+        $properties add [GenericPropertyEditor %AUTO%                          \
             -name {status service} -value StatusAggregator                     \
         ]
     

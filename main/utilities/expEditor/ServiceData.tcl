@@ -48,9 +48,10 @@ snit::type ServiceData {
     constructor args {
         install propertylist using propertylist %AUTO%
         
-        $propertylist add [property %AUTO% -name name]
-        $propertylist add [property %AUTO% -name host]
-        $propertylist add [property %AUTO% -name path]
+        $propertylist add [GenericPropertyEditor %AUTO% -name name]
+        $propertylist add [GenericPropertyEditor %AUTO% -name host]
+        $propertylist add [GenericPropertyEditor %AUTO% -name path]
+        $propertylist add [ListEditor %AUTO% -name args]
         
         $self configurelist $args
         
@@ -60,10 +61,12 @@ snit::type ServiceData {
     #   Destroy properties and the list:
     #
     destructor {
-        $propertylist foreach property {
-            $property destroy
+        if {$propertylist ne""} {
+            $propertylist foreach property {
+                $property destroy
+            }
+            $propertylist destroy
         }
-        $propertylist destroy
     }
     
     ##

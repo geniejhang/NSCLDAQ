@@ -35,6 +35,12 @@ namespace eval ::Validation {}
 #   - The service has a path.
 #   - The service has been allocated to a host.
 #
+#  Check that there are services whose filename are:
+#    - vardb-service  - The variable database server service wrapper shell.
+#    - boot-service   - The boot service wrapper shell
+#    - statusinjector - The status database status injection program.
+#
+#
 #  With the exception of nameless services each problem results in an error
 #  added to the result list. If there are several services without a name, however,
 #  these messages get collapsed to a single error.
@@ -43,31 +49,57 @@ namespace eval ::Validation {}
 # @return list - possibily empty list of validation failure messages.
 #
 proc ::Validation::validateServices svcs {
+    
+    array set requiredServiceDescriptions [list                                \
+        vardb-service     {The variable database server daemon}                \
+        boot-service      {The DAQ experiment boot service}                    \
+        statusinjector    {The status message to database injection service}   \
+        svcmanager        {The service manager (ensures services are running)} \
+    ]
     set namelessCount 0
     set result [list]
     array set names [list]
-    
+    set svcPrograms [list]
     foreach svc $svcs {
-	set p [$svc getProperties]
-	set name [[$p find name] cget -value]
-	if {$name eq ""} {
-	    incr namelessCount
-	    set name -no-name-
-	} elseif {[array names names $name] ne ""} {
-	    lappend result "There is more than one service named $name"
-	} else {
-	    set names($name) $name
-	}
-	if {[[$p find host] cget -value] eq ""} {
-	    lappend result "Service $name has not been assigned to a host"
-	}
-	if {[[$p find path] cget -value] eq ""} {
-	    lappend result "Service $name has not been given a path."
-	}
+        set p [$svc getProperties]
+        set name [[$p find name] cget -value]
+        if {$name eq ""} {
+            incr namelessCount
+            set name -no-name-
+        } elseif {[array names names $name] ne ""} {
+            lappend result "There is more than one service named $name"
+        } else {
+            set names($name) $name
+        }
+        if {[[$p find host] cget -value] eq ""} {
+            lappend result "Service $name has not been assigned to a host"
+        }
+        set path [[$p find path] cget -value]
+        if {$path eq ""} {
+            lappend result "Service $name has not been given a path."
+        } else {
+            lappend svcPrograms [file tail $path];     # Don't care about the dirs.
+        }
     }
 
     if {$namelessCount } {
-	lappend result "There are services that have not been named"
+        lappend svcPrograms "There are services that have not been named"
     }
+    #
+    #  Check for required services:
+    #
+    puts "$svcPrograms"
+    foreach requiredService [array names requiredServiceDescriptions] {
+        puts "Checking for $requiredService"
+            
+        
+        if {$requiredService ni $svcPrograms} {
+            lappend result \
+                "The required service $requiredService: \
+                $requiredServiceDescriptions($requiredService) has not been \
+                defined."
+        }
+    }
+    
     return $result
 }

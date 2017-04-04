@@ -89,9 +89,15 @@ snit::type Service {
     # destructor -- destroy our components.
     #
     destructor {
-        $data destroy
-        $gui destroy
-        $Label destroy
+        if {$data ne ""} {
+            $data destroy
+        }
+        if {$gui ne ""} {
+            $gui destroy
+        }
+        if {$Label ne ""} {
+            $Label destroy
+        }
     }
     ##
     #  clone

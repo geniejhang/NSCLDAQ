@@ -95,8 +95,12 @@ snit::type StateProgram {
     # destructor
     #
     destructor {
-        $data destroy
-        $gui  destroy
+        if {$data ne ""} {
+            $data destroy
+        }
+        if {$gui ne ""} {
+            $gui  destroy
+        }
         if {$Label ne ""} {
             $Label destroy
         }
@@ -463,7 +467,9 @@ snit::type ReadoutObject {
         $self configurelist $args
     }
     destructor {
-        $StateObject destroy
+        if {$StateObject ne ""} {
+            $StateObject destroy
+        }
     }
     ##
     # clone

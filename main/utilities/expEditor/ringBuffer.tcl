@@ -21,7 +21,7 @@ exec tclsh "$0" ${1+"$@"}
 package provide ringBuffer 1.0
 package require snit
 package require properties
-
+package require PropertyViews
 
 
 ##
@@ -58,8 +58,8 @@ snit::type RingBuffer {
     #
     constructor args {
         
-        set name [property %AUTO% -name name]
-        set host [property %AUTO% -name host]
+        set name [GenericPropertyEditor %AUTO% -name name]
+        set host [GenericPropertyEditor %AUTO% -name host]
         
         install properties using propertylist %AUTO%
         $properties add $name
