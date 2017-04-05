@@ -23,6 +23,8 @@
 #include <CRemoteAccess.h>
 #include <CTimeout.h>
 
+#include <iostream>
+
 using std::vector;
 using std::string;
 
@@ -65,7 +67,7 @@ CRingDataSource::~CRingDataSource()
 //  Required interfaces:
 
 
-size_t CRingDataSource::availableData() const {
+size_t CRingDataSource::availableData() {
     return m_pRing->availableData();
 }
 
@@ -85,9 +87,11 @@ size_t CRingDataSource::tell() const
 }
 
 
-void CRingDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout)
+size_t CRingDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout)
 {
-  m_pRing->get(pBuffer, nBytes, timeout.getRemainingSeconds());
+    using namespace std::chrono;
+    auto nSeconds = duration_cast<seconds>(timeout.getRemainingTime());
+    return m_pRing->get(pBuffer, nBytes, nSeconds.count());
 }
 
 

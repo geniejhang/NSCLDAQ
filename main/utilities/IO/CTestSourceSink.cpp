@@ -60,7 +60,7 @@ void CTestSourceSink::putv(const std::vector<std::pair<const void *, size_t> > &
 }
 
 //
-void CTestSourceSink::timedRead(char* pBuffer, size_t nBytes, const CTimeout &)
+size_t CTestSourceSink::timedRead(char* pBuffer, size_t nBytes, const CTimeout &)
 {
   if (m_buffer.size() < nBytes) {
     throw std::runtime_error("TestSourceSink::get() does not have requested bytes stored");
@@ -76,10 +76,12 @@ void CTestSourceSink::timedRead(char* pBuffer, size_t nBytes, const CTimeout &)
 
   // erase the bytes sent out
   m_buffer.erase(itBegin, itEnd);
+
+  return nBytes;
 }
 
 
-size_t CTestSourceSink::availableData() const
+size_t CTestSourceSink::availableData()
 {
     return m_buffer.size();
 }

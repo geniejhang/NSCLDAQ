@@ -27,10 +27,10 @@ CDataSource::CDataSource() : m_eof(false) {}
 CDataSource::~CDataSource() {}
 
 
-void CDataSource::read(char *pBuffer, size_t nBytes)
+size_t CDataSource::read(char *pBuffer, size_t nBytes)
 {
     CTimeout timeout(std::numeric_limits<size_t>::max());
-    timedRead(pBuffer, nBytes, timeout);
+    return timedRead(pBuffer, nBytes, timeout);
 }
 
 } // end DAQ

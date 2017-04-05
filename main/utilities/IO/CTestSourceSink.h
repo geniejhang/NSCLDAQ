@@ -94,10 +94,10 @@ class CTestSourceSink : public CDataSource, public CDataSink
      *
      *  \throws std::runtime_error if insufficient data exists in buffer to satisfy request
      */
-    virtual void timedRead(char* pBuffer, size_t nBytes, const CTimeout& );
+    virtual size_t timedRead(char* pBuffer, size_t nBytes, const CTimeout& );
 
 
-    size_t availableData() const;
+    size_t availableData();
     void   ignore(size_t nBytes);
     size_t peek(char *pBuffer, size_t nBytes);
     size_t tell() const;

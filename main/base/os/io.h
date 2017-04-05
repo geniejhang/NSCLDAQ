@@ -17,9 +17,10 @@
 #ifndef IO_H
 #define IO_H
 
-#include <unistd.h>
-#include <stdint.h>
+#include <cstdint>
+#include <utility>
 
+#include <unistd.h>
 
 namespace DAQ {
 class CTimeout;
@@ -32,9 +33,19 @@ class CTimeout;
  */
 
 namespace io {
+
+    enum ReturnCode {
+        SUCCESS     = 0,
+        ERROR       = 1,
+        END_OF_FILE = 2,
+        TIMED_OUT   = 3
+    };
+
   void writeData (int fd, const void* pData , size_t size);
-  size_t readData (int fd, void* pBuffer,  size_t nBytes);
-  size_t timedReadData (int fd, void* pBuffer,  size_t nBytes,
+  ssize_t readData (int fd, void* pBuffer,  size_t nBytes);
+
+  std::pair<ssize_t, ReturnCode>
+  timedReadData(int fd, void* pBuffer,  size_t nBytes,
                         const ::DAQ::CTimeout& timeout);
   double freeSpacePercent(int fd);
 }

@@ -21,9 +21,7 @@
 */
 
 #include "CTclRingCommand.h"
-#include <TCLInterpreter.h>
-#include <TCLObject.h>
-#include <CRingBuffer.h>
+
 #include <V12/CRawRingItem.h>
 #include <V12/CPhysicsEventItem.h>
 #include <V12/CRingStateChangeItem.h>
@@ -36,17 +34,21 @@
 #include <RingIOV12.h>
 
 #include <CDataSourceFactory.h>
+#include <CRingBuffer.h>
 
 #include <CSimpleAllButPredicate.h>
 #include <CSimpleDesiredTypesPredicate.h>
 #include <CTimeout.h>
 
-#include <tcl.h>
+#include <TCLInterpreter.h>
+#include <TCLObject.h>
 
 #include <limits>
 #include <chrono>
 #include <thread>
 #include <iostream>
+
+#include <tcl.h>
 
 using namespace std;
 
@@ -257,7 +259,7 @@ CTclRingCommand::get(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
     // If there's a 4th parameter it must be a list of item types to select
     // from
 
-    size_t nSeconds = std::numeric_limits<size_t>::max();
+    long nSeconds = 3600*24; // timeout after one day
 
     size_t paramIndexOffset = 0;
     if (std::string(objv[2]) == "-timeout") {
@@ -290,7 +292,8 @@ CTclRingCommand::get(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
     
     // Get the item from the ring.
     
-    CTimeout timeout(nSeconds);
+    std::chrono::seconds time(nSeconds);
+    CTimeout timeout( time );
     CDataSourcePtr pRing = p->second;
     auto pSpecificItem = getFromRing(*pRing, *pred, timeout);
 
@@ -712,7 +715,7 @@ CTclRingCommand::getFromRing(CDataSource &ring, const CTimeout& timer)
     CRawRingItem item;
     readItem(ring, item, timer);
 
-    if (timer.expired()) {
+    if (timer.expired() || ring.eof()) {
         return nullptr;
     } else {
         return CRingItemFactory::createRingItem(item);

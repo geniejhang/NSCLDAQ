@@ -22,7 +22,8 @@ ringselector_CPPFLAGS		= 	@LIBTCLPLUS_CFLAGS@	\
                                 -I@top_srcdir@/utilities/IO	\
                                 -I@top_srcdir@/utilities/nscldaq-format/format	\
                                 -I@top_srcdir@/utilities/nscldaq-format/Buffer	\
-                                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO
+                                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
+                                -I@top_srcdir@/base/sfinae_tools
 
 
 

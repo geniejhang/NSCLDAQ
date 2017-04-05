@@ -1,34 +1,56 @@
 #include "CTimeout.h"
 
+#include <iostream>
+using namespace std::chrono;
 
 namespace DAQ {
 
-CTimeout::CTimeout(double nSeconds)
-    : m_nSeconds(nSeconds),
-      m_start(std::chrono::high_resolution_clock::now())
+CTimeout::CTimeout(long nMicroseconds)
+    : m_start(high_resolution_clock::now()),
+      m_end(m_start + microseconds(nMicroseconds))
 {}
 
+CTimeout::CTimeout(const high_resolution_clock::duration& duration)
+    : m_start(high_resolution_clock::now()),
+      m_end(m_start + duration)
+{}
+
+nanoseconds CTimeout::getTotalTime() const {
+  return duration_cast<nanoseconds>(m_end - m_start);
+}
+
+nanoseconds CTimeout::getRemainingTime() const {
+   auto now = high_resolution_clock::now();
+
+   if (m_end > now) {
+      return duration_cast<nanoseconds>(m_end - now);
+   } else {
+       return nanoseconds(0);
+   }
+}
+
 double CTimeout::getRemainingSeconds() const {
-    auto now = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsedTime = now - m_start;
+    auto now = high_resolution_clock::now();
 
-    double remainingSecs = m_nSeconds - elapsedTime.count();
-
-    return (remainingSecs > 0) ? remainingSecs : 0;
+    if (m_end > now) {
+        return duration<double>(m_end - now).count();
+    } else {
+        return 0.0;
+    }
 }
 
 
 bool CTimeout::expired() const
 {
-    auto now = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsedTime = now - m_start;
-
-    return (elapsedTime.count() > m_nSeconds);
+    return high_resolution_clock::now() > m_end;
 }
 
 void CTimeout::reset()
 {
-    m_start = std::chrono::high_resolution_clock::now();
+    high_resolution_clock::duration period = m_end - m_start;
+
+    m_start = high_resolution_clock::now();
+    m_end = m_start + period;
 }
 
 
