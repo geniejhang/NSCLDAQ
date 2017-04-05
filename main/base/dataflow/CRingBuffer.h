@@ -121,6 +121,8 @@ public:
   static void remove(std::string name);
   static void format(std::string name,
 		     size_t maxConsumer = m_defaultMaxConsumers);
+  static void unsynchedFormat(std::string name,
+             size_t maxConsumer);
   static bool isRing(std::string name);
   static void   setDefaultRingSize(size_t byteCount);
   static size_t getDefaultRingSize();
@@ -183,9 +185,9 @@ public:
   void forceProducerRelease();
   void forceConsumerRelease(unsigned slot);
 
-  // Utility funcionts:
-
+  // Utility functions:
 private:
+  void        attach();
   size_t      availableData(ClientInformation* pInfo);
   void        unMapRing();
   void        allocateConsumer();

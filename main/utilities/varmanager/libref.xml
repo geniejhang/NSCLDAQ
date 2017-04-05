@@ -7,6 +7,7 @@
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -123,6 +124,7 @@
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -727,6 +729,7 @@ catch (std::exception&amp; e) {
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -1736,6 +1739,7 @@ CVariable        var(db, dir, "a/variable");
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -2082,6 +2086,7 @@ CVariable        var(db, dir, "a/variable");
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -2618,6 +2623,7 @@ public:
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -2922,6 +2928,7 @@ public:
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -3140,6 +3147,7 @@ public:
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -3316,6 +3324,7 @@ public:
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -3467,6 +3476,7 @@ CEnumTypeFamilyHandler::create(const char* typeName, CSqlite&amp; db, CTypeFacto
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -3955,6 +3965,7 @@ vardb::statemachine runStateMachine $runStates
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -4042,6 +4053,7 @@ db = VarDb(<parameter>filename</parameter>)
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -4439,6 +4451,7 @@ flag     = <methodname>isRelative</methodname>(<parameter>pathString</parameter>
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -4885,6 +4898,7 @@ nscldaq.vardb.variable.destroy(db, dir_or_none, path)
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -5017,6 +5031,7 @@ except nscldaq.vardb.enum.error as error:
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -5281,6 +5296,7 @@ transitionDict = nscldaq.vardb.statemachine.getTransitionMap(db, typeId)
                     <firstname>Ron</firstname>
                     <surname>Fox</surname>
             </personname>
+            <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>

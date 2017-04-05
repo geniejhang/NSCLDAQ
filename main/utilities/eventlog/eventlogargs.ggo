@@ -10,3 +10,7 @@ option "run"     r  "Run number : Overrides run state information ring items" in
 option "checksum" c "If present, in addition to run files, checksum files are produced" flag off
 option "combine-runs" C "If present, changes in run number in one-shot mode don't cause exit" flag off
 option "prefix" f "Specifies the prefix to use for the output file name" string optional
+option "freewarn" W "Percentage of free space at which to warn people" int optional default="10"
+option "freesevere" F "Percentage of free space at which to declare a severe error" int optional default="1"
+option "appname"  a    "Name of application on log messages" string optional default="eventlog"
+option "service"  N   "Name of service we push log messages to" string optional default="StatusAggregator"

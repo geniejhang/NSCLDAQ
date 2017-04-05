@@ -26,12 +26,13 @@ exec tclsh "$0" ${1+"$@"}
 # @author Ron Fox <fox@nscl.msu.edu>
 #
 
-package provide eventBuilderObject 1.0
+package provide eventBuilderObject 1.1
 package require Tk
 package require snit
 package require eventBuilder
 package require daqObject
 package require img::png
+package require Label
 
 ##
 # @class EventBuilderObject
@@ -52,6 +53,9 @@ package require img::png
 snit::type EventBuilderObject {
     component data;                         # Property list.
     component gui;                          # Graphical represntation.
+    component Label;                        # Label gui.
+        
+    
     
     # Delegations of options and methods:
     
@@ -63,9 +67,6 @@ snit::type EventBuilderObject {
     
     delegate method getProperties to data
     
-    delegate method drawat        to gui
-    delegate method moveto        to gui
-    delegate method moveby        to gui
     delegate method addtag        to gui
     delegate method rmtag         to gui
     delegate method tags          to gui
@@ -107,6 +108,7 @@ snit::type EventBuilderObject {
     destructor {
         $data destroy
         $gui  destroy
+        $Label destroy
     }
     
     #---------------------------------------------------------------------------
@@ -151,7 +153,7 @@ snit::type EventBuilderObject {
     
     #---------------------------------------------------------------------------
     #  Public methods
-    
+        
     ##
     # clone
     #   Create a copy of self:
@@ -273,5 +275,74 @@ snit::type EventBuilderObject {
             set objRing [$objprops find name]
             $ring configure -value [$objRing cget -value]
         }
+    }
+    #--------------------------------------------------------------------------
+    #  Methods to ensure the object label words:
+    ##
+    # propertyChanged
+    #   The label may have changed
+    #   If the name or host are not "" we'll set the label to
+    #   name@host else we'll set it to "".
+    #
+    method propertyChanged {} {
+        set properties [$data getProperties]
+        set nameProp [$properties find name]
+        set hostProp [$properties find host]
+        
+        set name [$nameProp cget -value]
+        set host [$hostProp cget -value]
+        
+        if {($name ne "") || ($host ne "") } {
+            $Label configure -text $name@$host
+        } else  {
+            $Label configure -text ""
+        }
+    }
+
+    
+    ##
+    # drawat
+    #    This draws the GUI at a specified location.
+    #    - Tell the GUI to run its drawat.. this may be what makes the image
+    #      on the canvas the first time
+    #    - If we've not yet installed the label object install it
+    #    - Invoke propertyChanged to set the label's text.
+    #
+    # @param x    - Desired x postion of the object.
+    # @param y    - Desired y position of the object.
+    #
+    method drawat {x y} {
+        $gui drawat $x $y
+        if {$Label eq ""} {
+            install Label using Label %AUTO%                      \
+                -canvas [$gui cget -canvas] -tag $self -id [$gui getId]
+            $self propertyChanged
+        } else {
+            $Label move $x $y
+        }
+    }
+    ##
+    #  movto
+    #   Move the GUI to the specified coordinates and drag the
+    #   label along with it:
+    #
+    # @param x,y  - new position for the object.
+    #
+    method moveto {x y} {
+
+        $gui moveto $x $y
+        $Label move $x $y
+    }
+    ##
+    # moveby
+    #   Move the object and label by dx,dy.  Note that we had hoped to just move
+    #   the tag but cant' because the gui object maintains inner stat that tells
+    #   it where it is.
+    #
+    # @param dx,dy - amount to move the object in x,y
+    #
+    method moveby {dx dy} {
+        $gui moveby $dx $dy
+        $options(-canvas) move $self $dx $dy;        # Moves the label.
     }
 }

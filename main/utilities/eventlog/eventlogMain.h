@@ -22,17 +22,22 @@
 
 #include <stdint.h>
 #include <string>
+#include <CStatusMessage.h>
+#include <zmq.hpp>
 
 // Forward class definitions.
 
+class CRingBuffer;
+class CStateClientApi;
+
 namespace DAQ {
 
-class CDataSource;
+  class CDataSource;
 
-namespace V12 {
+  namespace V12 {
     class CRawRingItem;
     class CRingStateChangeItem;
-}
+  }
 }
 
 /*!
@@ -57,7 +62,23 @@ class EventLogMain
   uint32_t          m_nBeginsSeen;
   bool              m_fChangeRunOk;
   std::string       m_prefix;
-
+  
+  // Disk space logging:
+  
+  size_t            m_lastCheckedSize;
+  int               m_freeWarnThreshold;
+  bool              m_haveWarned;
+  int               m_freeSevereThreshold;
+  bool              m_haveSevere;
+  std::string       m_appname;
+  
+  std::string       m_logService;
+  zmq::socket_t*    m_pLogSocket;
+  CStatusDefinitions::LogMessage* m_pLogger;
+  
+  CStateClientApi*  m_pStateApi;
+  
+  
   // Constructors and canonicals:
 
 public:
@@ -83,11 +104,35 @@ private:
                  const DAQ::V12::CRawRingItem& formatItem);
   void writeItem(int fd, const DAQ::V12::CRawRingItem &item);
   std::string defaultRingUrl() const;
-  uint64_t    segmentSize(const char* pValue) const;
+  uint64_t    segmentSize(const char* pValue);
   bool  dirOk(std::string dirname) const;
   bool  dataTimeout();
   std::string shaFile(int runNumber) const;
   bool isBadItem(const DAQ::V12::CRawRingItem &item, int runNumber);
+  
+  // Helpers for logging.
+  
+  bool shouldLogWarning(double pct);
+  bool shouldLogSevere(double pct);
+  bool shouldLogSevereClear(double pct);
+  bool shouldLogWarnClear(double pct);
+  std::string getAggregatorURI();
+  CStatusDefinitions::LogMessage* getLogger();
+  void log(const char* msg, int severity);
+  void log(const char* baseMessage, double free, int severity);
+  void log(const char* msg, int errno, int severity);
+  
+  
+  // Promised methods:
+  
+  void notReadyClose(int fd, int run);
+  void writeChecksumFile(int runNumber);
+  bool expectStateRequest(
+    std::string& msg, const char* stateName,  int timeout
+  );
+  void stateManagerDie(const char* msg);
+
+  
 };
 
 

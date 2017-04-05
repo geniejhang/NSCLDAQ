@@ -25,16 +25,13 @@
 #include <CRingBuffer.h>
 #include <TCLInterpreter.h>
 #include <TCLObject.h>
+#include <CStatusMessage.h>
+
 
 std::vector<std::string>
 marshallVector(const char* s)
 {
-  std::vector<std::string> result;
-  while(*s) {
-    result.push_back(std::string(s));
-    s += std::strlen(s) + 1;
-  }
-  return result;
+  return CStatusDefinitions::stringListToVector(s);
 }
 // So we can EQ on vectors e.g.
 std::ostream& operator<<(std::ostream& s, const std::vector<std::string>& v)

@@ -1,0 +1,709 @@
+<!-- manpage 5daq -->
+
+      <refentry id="daq5_statsudbschema">
+        <refentryinfo>
+          <author>
+                  <personname>
+                          <firstname>Ron</firstname>
+                          <surname>Fox</surname>
+                  </personname>
+                  <personblurb><para></para></personblurb>
+          </author>
+          <productname>NSCLDAQ</productname>
+          <productnumber></productnumber>
+        </refentryinfo>
+        <refmeta>
+           <refentrytitle id="daq5_statsudbschema_title">Status Database Schema</refentrytitle>
+           <manvolnum>5daq</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
+        </refmeta>
+        <refnamediv>
+           <refname>Status Database Schema</refname>
+           <refpurpose>Status Database tables</refpurpose>
+        </refnamediv>
+        <!--
+        <refsynopsisdiv>
+          <cmdsynopsis>
+              <command>
+          </command>
+          </cmdsynopsis>
+
+        </refsynopsisdiv>
+        -->
+        <refsect1>
+           <title>DESCRIPTION</title>
+           <para>
+            This document describes the database schema for the status database.
+            The database schema is created by
+            <classname>CStatusDb</classname>::<methodname>createSchema</methodname>.
+            That code is obviously the final arbiter for what the schema is.
+           </para>
+           <para>
+            Note that there are probably more normalized ways to express the
+            schema needs than what's been chosen.  The schema chosen makes not
+            effort to normalize information shared across message types.
+           </para>
+           <refsect2>
+            <title>Log Message schema</title>
+            <para>
+                Log messages are messages that have a severity and a text.
+                They are emitted by named applications and come from some host.
+                They are stored in a single table named <literal>log_messags</literal>.
+                The <literal>log_messages</literal> table has the following fields
+            </para>
+            <table frame='all'>
+                <title>log_messages table fields</title>
+                <tgroup cols='3' align='left' colsep='1' rowsep='1' >
+                    <thead>
+                        <row>
+                            <entry>Field</entry>
+                            <entry>Type</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Row primary key.  This is a unique value that is
+                                assigned sequentially.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>severity</entry><entry>TEXT</entry>
+                            <entry>
+                                A textual version of the severity code e.g.
+                                <classname>CStatusDefinitions</classname>::<varname>SeverityLevels::WARNING</varname>
+                                will be encoded as the literal text <literal>WARNING</literal>.
+                                This can be converted to a status code via
+                                <classname>CStatusDefinitions</classname>::<methodname>stringToSeverity</methodname>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>application</entry><entry>TEXT</entry>
+                            <entry>
+                                Name of the application that emitted the log message.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>source</entry><entry>TEXT</entry>
+                            <entry>
+                                The fully qualified hostname of the system from
+                                which the message came
+                                (e.g. <literal>spdaq20.nscl.msu.edu</literal>).
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>timestamp</entry><entry>INTEGER</entry>
+                            <entry>
+                                The time at which the message was emitted.
+                                This is a <type>time_t</type> type.   In Tcl this
+                                value is something that might have been returned
+                                from <command>clock seconds</command>.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>message</entry><entry>TEXT</entry>
+                            <entry>
+                                The text of the message.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+           </refsect2>
+           <refsect2>
+            <title>Ring Statistics</title>
+            <para>
+                Ring statistics are normalized over three tables.  Ring statistics
+                are emitted from a ring client that in turn is related to
+                a ring buffer.  Therefore the tables are:
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term><literal>ring_buffer</literal></term>
+                    <listitem>
+                        <para>
+                            One of these is present for every ring buffer
+                            that is known to the system.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>ring_client</literal></term>
+                    <listitem>
+                        <para>
+                            Each entry in this table represents a client of a ring
+                            in the <literal>ring_buffer</literal> table.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>ring_client_statistics</literal></term>
+                    <listitem>
+                        <para>
+                            Each entry in this table provides ring buffer
+                            transfer statistics for a client of a ring buffer
+                            at some instant in time.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+            <table frame='all'>
+                <title>ring_buffer fields</title>
+                <tgroup cols='3' align='left' colsep='1' rowsep='1' >
+                    <thead>
+                        <row>
+                            <entry>Field</entry><entry>Type</entry><entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>id</entry><entry>INTEGER</entry>
+                            <entry>
+                                A unique value associated with the row.  This value
+                                is sequentially assigned.  When row in another
+                                table must refer to a ring buffer (row in this
+                                table), it will have a field that contains the
+                                id value for that row.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>name</entry><entry>TEXT(64)</entry>
+                            <entry>
+                                The ringbuffer name.  Note that there are two
+                                types of ring buffers, and both will appear in this
+                                table. The first type are <firstterm>primary</firstterm>
+                                ring buffers.  These are the ultimate source of
+                                a data flow.  The second type are
+                                <firstterm>proxy</firstterm> ring buffers.  These
+                                receive data from a primary ring buffer in a different
+                                host and are a mechanism for data flow
+                                to cross host boundaries.  Proxy rings will have
+                                names like <replaceable>primary-name@primary-host</replaceable>.
+                                Where <replaceable>primary-name</replaceable> is
+                                the name of a primary ring buffer and
+                                <replaceable>primary-host</replaceable> is the
+                                fully qualified host in which the primary ring
+                                lives.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>host</entry><entry>TEXT(32)</entry>
+                            <entry>
+                                The host in which the ring buffer lives.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <table frame='all'>
+                <title>ring_client Fields</title>
+                <tgroup cols='3' rowsep='1' colsep='1' align='left' >
+                    <thead>
+                        <row>
+                            <entry>Field</entry><entry>Type</entry><entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Primary key of the row.  This is a unique integer
+                                that is sequentially assigned.  If placed in
+                                a field in another table it establishes a relationship
+                                between that row and a row in this table.
+                                See, for example, <literal>ring_id</literal> below.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>ring_id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Foreign key into the <literal>ring_buffer</literal>
+                                table. Foreign keys have values that are primary keys
+                                in a different table.  <literal>ring_id</literal>.
+                                Rows in this table identify ring clients,
+                                <literal>ring_id</literal> identifies the ring this
+                                row is a client of.  Ring buffers may have many
+                                clients. Putting foreign keys back to each clients
+                                ring buffer establishes the <firstterm>Has Many</firstterm>
+                                relationship between ring buffers and their clients.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>pid</entry><entry>INTEGER</entry>
+                            <entry>
+                                The process id of the ring client.  This process
+                                id is valid in the host that has the ring buffer.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>producer</entry><entry>INTEGER (boolean)</entry>
+                            <entry>
+                                This is a flag that is true (nonzero) if the client
+                                is a data producer for the ring.  Not that at any
+                                time, the ring buffer can have at most one producer.
+                                If this flag is zero, the client is a data consumer.
+                                Ring buffers can have a large number of consumers
+                                (the characteristic of a ring buffer
+                                established when it is created limit the
+                                number of consumers it can have).
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>command</entry><entry>TEXT</entry>
+                            <entry>
+                                The command used to start the client program.
+                                This is a space separated set of words that could
+                                have been passed to the shell to start the consumer.
+                                The command is not entirely faithful in that
+                                additional whitespace that might have been in the
+                                original command will have been suppressed in the
+                                contents of this field.  Furthermore, newlines will
+                                be mapped to spaces as well.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <table frame='all'>
+                <title>ring_client_statistics fields</title>
+                <tgroup cols='3' align='left' colsep='1' rowsep = '1' >
+                    <thead>
+                        <row>
+                            <entry>Field</entry><entry>Type</entry><entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Row primary key.  By now you get the picture of
+                                what this is.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>ring_id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Foreign key to the
+                                <literal>ring_buffer</literal> table
+                                that identifies the ring buffer for
+                                which the statistics in this row apply.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>client_id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Foreign key to the
+                                <literal>ring_client</literal>
+                                table that identifies the client for which this row
+                                provides statistics.  This establishes a
+                                <firstterm>Has Many</firstterm> relationship between
+                                ring buffer clients and statistics entries.
+                                Statistics entries are emitted periodically for each
+                                client by the <application>ringstatusdaemon</application>
+                                that runs in each DAQ system.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>timestamp</entry><entry>INTEGER</entry>
+                            <entry>
+                                The time at which the statistics entry was
+                                created.  This is a <type>time_t</type> value.
+                                Tcl scripts can treat this as a value that
+                                might come from <command>clock seconds</command>.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>operations</entry><entry>INTEGER</entry>
+                            <entry>
+                                The number of ring operations performed by the
+                                client as of <literal>timestamp</literal>.
+                                For producers an operation is a put of data
+                                (a ring item e.g.) into the ringbuffer.  For
+                                consumers it is a get.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>bytes</entry><entry>INTEGER</entry>
+                            <entry>
+                                The total number of bytes transfered
+                                into (if producer) or out from
+                                (if consumer) the ringbuffer fromt he time the
+                                client started until the time identified
+                                by the <literal>timestamp</literal> field.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>backlog</entry><entry>INTEGER</entry>
+                            <entry>
+                                This field is only non-zero for consumers.  It is
+                                the number of bytes of data that are in the ring buffer
+                                that the client has not yet removed.  If this value
+                                gets close to the size of the ring buffer, back
+                                pressure flow control will begin.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+           </refsect2>
+           <refsect2>
+            <title>State transition messages</title>
+            <para>
+                A state transition message indicates a run state transition has
+                been completed by an application.  You can think of the
+                NSCLDAQ run state as a finite state machine whose transitions
+                complete only when the identical finite state  machine associated
+                with participating applications complete.
+            </para>
+            <para>
+                Suppose for example, data taking consists of two applications
+                called <literal>Readout1</literal> and <literal>Readout2</literal>.
+                The global state machine is represented by the application
+                <literal>GlobalState</literal>.  A transition to the
+                <literal>Beginning</literal> state is performed by setting the
+                global state variable to <literal>Beginning</literal>. A log
+                mesgae may be emitted indicating the start of the transition
+                to this state.
+            </para>
+            <para>
+                As <literal>Readout1</literal> and <literal>Readout2</literal>
+                make their transitions to the <literal>Beginning</literal>
+                state, they will emit state transition messages indicating this.
+                When both have completed their own transitions the
+                global state machine (program that requested this transition)
+                will emit a state transition message indicating the global
+                state transition has completed.
+            </para>
+            <para>
+                From this we can see that state transitions consist of
+                an application which may emit several transitions.  The
+                applications are stored in the <literal>state_application</literal>
+                table while the transitions themselves are stored ni
+                <literal>state_transitions</literal>.  The database does not
+                distinguish between several incarnations (runs) of a single
+                application.
+            </para>
+            <table frame='all'>
+                <title>state_applications fields</title>
+                <tgroup cols='3' align='left' colsep='1' rowsep='1' >
+                    <thead>
+                        <row>
+                            <entry>Field</entry><entry>Type</entry><entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Sequentially assigned unique value (primary key)
+                                that identifes this row.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>name</entry><entry>TEXT(32)</entry>
+                            <entry>
+                                Name of the application that has emitted at least one
+                                state transition.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>host</entry><entry>TEXT(128)</entry>
+                            <entry>
+                                The host in which the application is running.  This
+                                is normally a fully qualified host name.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <table frame='all'>
+                <title>state_transitions fields.</title>
+                <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+                    <thead>
+                        <row>
+                            <entry>Field</entry><entry>Type</entry><entry>Descsription</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Primary key, a unique sequentially assigned
+                                integer.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>app_id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Foreign key into the
+                                <literal>state_application</literal> table.
+                                This identifies the application which emitted
+                                the state transition.  It establishes a
+                                <firstterm>Has Many</firstterm> relationship
+                                between transitions and the application that
+                                emitted them.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>timestamp</entry><entry>INTEGER</entry>
+                            <entry>
+                                The time at which the state transition occured.
+                                This is a <type>time_t</type> value and, for
+                                Tcl scripts can be treated as a number that
+                                came from <command>clock seconds</command>.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>leaving</entry><entry>TEXT(32)</entry>
+                            <entry>
+                                The name of the state that is being left during
+                                the state transition.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>entering</entry><entry>TEXT(32)</entry>
+                            <entry>
+                                The name of the state being entered by this
+                                state transition.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+           </refsect2>
+           <refsect2>
+            <title>Readout program statistics</title>
+            <para>
+                Readout programs are programs that emit data from the experiment
+                into the data flow.  Readout programs are instrumented so that
+                they emit statistics while taking data.
+                Data taking is divided into runs.  Each readout program has many
+                runs and each run has many statistics.
+            </para>
+            <para>
+                Runs are property of the readout program, rather than being
+                global because NSCLDAQ supports running readout programs in
+                a multi-readout configuration in standalong mode, meaning each
+                readout program may have a different set of data taking runs
+                than any other.
+            </para>
+            <para>
+                The tables used to capture thes data are:
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term><literal>readout_program</literal></term>
+                    <listitem>
+                        <para>
+                            Captures all incarnations of a readout program.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>run_info</literal></term>
+                    <listitem>
+                        <para>
+                            Captures per run information.  Each readout program
+                            has many runs.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><literal>readout_statistics</literal></term>
+                    <listitem>
+                        <para>
+                           Captures statistics from a readout program within a
+                           run at a specific point in time.  Each run (which is
+                           owned by a readout program) has many entries in this
+                           table.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+            <table frame='all'>
+                <title>readout_program fields.</title>
+                <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+                    <thead>
+                        <row>
+                            <entry>Field</entry><entry>Type</entry><entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Row primary key.  A unique value that is sequentially
+                                assigned.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>name</entry><entry>TEXT(32)</entry>
+                            <entry>
+                                Name of a readout application.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>host</entry><entry>TEXT(128)</entry>
+                            <entry>
+                                Fully qualified host name of the system in
+                                which the application is running.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <table frame='all'>
+                <title>run_info fields</title>
+                <tgroup cols='3' align='left' rowsep='1' colsep='1'>
+                    <thead>
+                        <row>
+                            <entry>Field</entry><entry>Type</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Primary key that uniquely identifies this row.
+                                This is a sequentially assigned integer.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>readout_id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Foreign key that specifies which readout program
+                                started this run.  This key establishes
+                                a <firstterm>Has Many</firstterm> relationship
+                                between the readout program and the runs it
+                                started.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>start</entry><entry>INTEGER</entry>
+                            <entry>
+                                Timestamp that identifies when this run started.
+                                This is a <type>time_t</type> value.  Tcl
+                                programs can treat it as if it came from
+                                e.g. <command>clock seconds</command>.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>run</entry><entry>INTEGER</entry>
+                            <entry>
+                                The run number for the run.
+                                Each run should have a unique run number.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>title</entry><entry>TEXT(80)</entry>
+                            <entry>
+                                A run title.  The run title describes the
+                                run and is assigned by the user for each
+                                run.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <table frame='all'>
+                <title>readout_statistics</title>
+                <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+                    <thead>
+                        <row>
+                            <entry>Field</entry><entry>Type</entry><entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Primary key for the table row.  This is a sequentially
+                                assigned unique integer.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>run_id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Foreign key to the run in <literal>run_info</literal>
+                                this entry provides statistics for.  The value
+                                of this field will be the primary key value for
+                                a row of <literal>run_info</literal>. 
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>readout_id</entry><entry>INTEGER</entry>
+                            <entry>
+                                Foreign key to the readout program that emitted
+                                this statistics entry.  The value of this field
+                                will be the value of the primary key of a row
+                                in the <literal>readout_program</literal> table.
+                                That row describes the readout program that emitted
+                                this record.  Note that it's possible to get to
+                                the readout program by chaining through the run
+                                record.   The presence of this foreign key makes
+                                a direct connection possible.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>timestamp</entry><entry>INTEGER</entry>
+                            <entry>
+                                The time at which the statistics record was
+                                emitted.  This is a <type>time_t</type> value.
+                                Tcl scripts can treat this as a time value
+                                from <command>clock seconds</command>.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>elapsedtime</entry><entry>INTEGER</entry>
+                            <entry>
+                                Number of seconds into the run at which the
+                                statistics record was emitted.  Note that in general,
+                                this will be the difference between this
+                                record's <literal>timestamp</literal> and
+                                the associated run's <literal>start</literal>
+                                values.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>triggers</entry><entry>INTEGER</entry>
+                            <entry>
+                                The number of triggers the readout program
+                                has processed.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>events</entry><entry>INTEGER</entry>
+                            <entry>
+                                The number of events the readout program
+                                emitted.  This need not be the same as
+                                <literal>triggers</literal>.  Readout programs
+                                could process multiple events per trigger resulting
+                                in more events than triggers.
+                                Equally they might reject some triggers resulting
+                                in fewer events than triggers, or a combination of
+                                these two possibilities.
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>bytes</entry><entry>INTEGER</entry>
+                            <entry>
+                                Number of bytes of data the readout program
+                                emitted.  The readout program is not aware of
+                                some of the formatting data present in a ring item.
+                                Therefore this value will, in general be somewhat
+                                less than the bytes the ring buffer will show
+                                the readout program put.
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+           </refsect2>
+        </refsect1>           
+      </refentry>
+
+
+<!-- /manpage -->

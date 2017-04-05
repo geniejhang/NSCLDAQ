@@ -1,8 +1,9 @@
 bin_PROGRAMS = ringstatusdaemon statusaggregator multiaggregator
 
-lib_LTLIBRARIES = libStatusMessages.la libTclStatusMessages.la libPyStatusMessages.la
+lib_LTLIBRARIES = libStatusMessages.la libTclStatusMessages.la libPyStatusMessages.la \
+	libPyStatusDb.la
 
-TCL_PACKAGES=LogModel.tcl LogView.tcl LogController.tcl LogDisplay.tcl
+TCL_PACKAGES=
 
 
 
@@ -23,7 +24,7 @@ libStatusMessages_la_SOURCES=Constants.cpp CZmqContext.cpp \
 	StateChange.cpp		\
 	CStatusSubscription.cpp  \
 	CPublishRingStatistics.cpp CMultiAggregator.cpp  \
-	CStatusDb.cpp CStatusDb.h
+	CStatusDb.cpp CStatusDb.h CStatusReporting.cpp
 
 
 
@@ -31,7 +32,7 @@ libStatusMessages_la_CPPFLAGS = $(COMPILATION_FLAGS)
 libStatusMessages_la_LIBADD   = $(COMMON_LIBS)
 
 include_HEADERS = CStatusMessage.h CPublishRingStatistics.h \
-	CStatusSubscription.h CMultiAggregator.h
+	CStatusSubscription.h CMultiAggregator.h CStatusReporting.h
 
 #------------------- daemon for ring status:
 
@@ -42,6 +43,7 @@ ringstatusdaemon_CPPFLAGS = -I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAG
 	-I@top_srcdir@/base/dataflow
 ringstatusdaemon_LDADD  = @top_builddir@/servers/portmanager/libPortManager.la \
 	@builddir@/libStatusMessages.la	@top_builddir@/base/dataflow/libDataFlow.la \
+	@top_builddir@/base/os/libdaqshm.la	\
 	@LIBEXCEPTION_LDFLAGS@
 
 nodist_ringstatusdaemon_SOURCES = ringstatus.c ringstatus.h
@@ -96,6 +98,7 @@ libTclStatusMessages_la_SOURCES= TclPackage.cpp             \
 	CTCLSubscriptions.cpp CTCLSubscriptions.h             \
 	CTCLDecodeMessage.cpp CTCLDecodeMessage.h	\
 	CTCLAggregate.cpp CTCLAggregate.h		\
+	CTCLStatusDb.cpp CTCLStatusDb.h			\
 	TclUtilities.cpp TclUtilities.h 
 
 libTclStatusMessages_la_CPPFLAGS=$(COMPILATION_FLAGS) @TCL_FLAGS@ @LIBTCLPLUS_CFLAGS@ @TCL_DEFS@
@@ -104,12 +107,11 @@ libTclStatusMessages_la_LIBADD=$(COMMON_LIBS)  	\
 				@LIBTCLPLUS_LDFLAGS@ 	\
 				@TCL_LDFLAGS@
 
+
 tclpkgInstall:
 	$(mkinstalldirs) @prefix@/TclLibs @prefix@/TclLibs/status
 	rm -f @prefix@/TclLibs/status/libTclStatusMessages.so
-	$(LN_S) @libdir@/libTclStatusMessages.so @prefix@/TclLibs/status/libTclStatusMessages.so
-	for f in $(TCL_PACKAGES); do $(INSTALL_SCRIPT) @srcdir@/$$f @prefix@/TclLibs/status; done
-	echo pkg_mkIndex -verbose "@prefix@/TclLibs/status *.so *.tcl" |@TCLSH@
+	$(LN_S) @libdir@/libTclStatusMessages.so @prefix@/TclLibs/status/libTclStatusMessages.so	
 
 tclAppInstall::
 	$(mkinstalldirs) @bindir@
@@ -123,11 +125,20 @@ libPyStatusMessages_la_CPPFLAGS=$(COMPILATION_FLAGS) @PYTHON_CPPFLAGS@
 libPyStatusMessages_la_LIBADD=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
 				@PYTHON_LDFLAGS@
 
+libPyStatusDb_la_SOURCES=PyStatusDb.cpp
+libPyStatusDb_la_CPPFLAGS=$(COMPILATION_FLAGS) @PYTHON_CPPFLAGS@
+libPyStatusDb_la_LDFLAGS=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
+				@top_builddir@/base/sqlite++/libsqlite3pp.la \
+				@PYTHON_LDFLAGS@ @SQLITE3_LDFLAGS@
+
 pypkgInstall:
 	$(mkinstalldirs) @prefix@/pythonLibs  @prefix@/pythonLibs/nscldaq
 	$(mkinstalldirs) @prefix@/pythonLibs/nscldaq/status
 	touch @prefix@/pythonLibs/nscldaq/status/__init__.py
 	$(INSTALL_PROGRAM) @libdir@/libPyStatusMessages.so @prefix@/pythonLibs/nscldaq/status/statusmessages.so
+	$(INSTALL_PROGRAM) @libdir@/libPyStatusDb.so @prefix@/pythonLibs/nscldaq/status/statusdb.so
+
+DOCS=status-refs.xml statusdb-refs.xml statusdb-schema.xml
 
 #-------------------- Tests -----
 
@@ -139,10 +150,12 @@ TESTS_ENVIRONMENT=PYTHONPATH=@prefix@/pythonLibs; export PYTHONPATH;\
 
 
 PYTHON_TESTS=ringstatisticstests.py readoutstatisticstests.py \
-	logmessagestests.py statemessagetests.py statussub.py
+	logmessagestests.py statemessagetests.py statussub.py \
+	statusdbtest.py
 
 
-TCL_TESTS=statussubtest.test ringdecode.test logmodel.test
+
+TCL_TESTS=statussubtest.test ringdecode.test  statdb.test
 
 
 TEST_PROGS=ringstattests tclpkgtests subtests ringpubclasstest ringdaemontests \
@@ -152,14 +165,17 @@ noinst_PROGRAMS=$(TEST_PROGS) testringstatus
 
 dbtests_SOURCES=TestRunner.cpp Asserts.h statusdbSchema.cpp \
 	dblogtests.cpp dbringtests.cpp dbstatechangetests.cpp \
-	dbrdostattests.cpp dbinsertests.cpp
+	dbrdostattests.cpp dbinsertests.cpp logquerytests.cpp \
+	ringquerytests.cpp transitionquerytests.cpp	\
+	readoutquerytests.cpp
 
 dbtests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
 dbtests_LDADD=@builddir@/libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
 
 
 ringstattests_SOURCES=TestRunner.cpp Asserts.h ringstattests.cpp \
-	readoutstattests.cpp logmsgtests.cpp statemsgtests.cpp testutils.cpp testutils.h
+	readoutstattests.cpp logmsgtests.cpp statemsgtests.cpp \
+	testutils.cpp testutils.h
 
 ringstattests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
 ringstattests_LDADD=@builddir@/libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
@@ -200,6 +216,7 @@ testringstatus_LDADD= @builddir@/libStatusMessages.la \
 TESTS=$(TEST_PROGS) $(PYTHON_TESTS) $(TCL_TESTS)
 
 
+
 install-exec-hook: tclpkgInstall pypkgInstall tclAppInstall
 
 clean-local:
@@ -208,4 +225,4 @@ clean-local:
 #  Ensure stuff makes it into the tarball:
 
 EXTRA_DIST = $(PYTHON_TESTS) $(TCL_TESTS) ringstatus.ggo multiaggregator.ggo \
-	Log.tcl $(TCL_PACKAGES)
+	Log.tcl $(TCL_PACKAGES) $(DOCS)

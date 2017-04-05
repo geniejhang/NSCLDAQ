@@ -1,8 +1,7 @@
 lib_LTLIBRARIES = libdaqshm.la
 
-
-libdaqshm_la_SOURCES = daqshm.cpp os.cpp io.cpp CTimeout.cpp
-include_HEADERS      = daqshm.h os.h io.h CTimeout.h
+libdaqshm_la_SOURCES = daqshm.cpp os.cpp io.cpp CTimeout.cpp CSemaphore.cpp CPosixBlockingRecordLock.cpp
+include_HEADERS      = daqshm.h os.h io.h CTimeout.h CSemaphore.h CPosixBlockingRecordLock.h
 
 
 libdaqshm_la_LIBADD = @THREADLD_FLAGS@ -lcrypt @LIBEXCEPTION_LDFLAGS@
@@ -16,13 +15,17 @@ EXTRA_DIST=shm.xml
 #
 # Tests:
 
-noinst_PROGRAMS    = unittests
-unittests_SOURCES = TestRunner.cpp createTests.cpp removeTests.cpp \
-	attachTests.cpp detachTests.cpp timeoutTests.cpp pidCmdTests.cpp
+noinst_PROGRAMS    = unittests checkfree
+
+unittests_SOURCES = TestRunner.cpp createTests.cpp removeTests.cpp attachTests.cpp \
+        detachTests.cpp timeoutTests.cpp semaphoretests.cpp
 
 
 unittests_CPPFLAGS=$(COMPILATION_FLAGS)
+unittests_LDADD   = @builddir@/libdaqshm.la @CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
-unittests_LDADD   = libdaqshm.la @CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
+checkfree_SOURCES=checkfree.cpp
+checkfree_CPPFLAGS=$(COMPILATION_FLAGS)
+checkfree_LDADD  = @builddir@/libdaqshm.la
 
 TESTS=./unittests

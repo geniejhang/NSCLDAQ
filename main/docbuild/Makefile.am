@@ -14,15 +14,11 @@ MANSECTS = 1compatibility.xml 1daq.xml 1epics.xml 1evb.xml 1tcl.xml 1utilities.x
 	3ccusb.xml 3daq.xml 3evb.xml 3provider.xml 3python.xml 3rdogui.xml 3sbsReadout.xml 3tcl.xml 3vmusb.xml \
 	5daq.xml 5tcl.xml 5vmusb.xml 3sqlite++.xml
 
-install-exec-local: daq.html daq.mans tutorial.pdf tutorial.html
+install-exec-local: daq.html  tutorial.pdf tutorial.html
 	$(mkinstalldirs) @prefix@/share
-	$(mkinstalldirs) @prefix@/share/man
 	$(mkinstalldirs) @prefix@/share/html
 	$(mkinstalldirs) @prefix@/share/tuthtml
 	$(mkinstalldirs) @prefix@/share/pdfs
-	for i in 1 2 3 4 5 6 7 8; do $(mkinstalldirs) @prefix@/share/man/man$$i; done
-	- for i in 1 2 3 4 5 6 7 8; do for f in man/*.$$i*; do  $(INSTALL_DATA) $$f @prefix@/share/man/man$$i; done; done
-	$(UPDATEMAN) @prefix@/share/man
 	- $(INSTALL_DATA) html/* @prefix@/share/html
 	- $(mkinstalldirs) @prefix@/share/images @prefix@/share/images/callouts
 	- $(INSTALL_DATA) @srcdir@/images/*.gif @prefix@/share/images;
@@ -36,7 +32,9 @@ clean-local:
 	-rm -f *.pdf
 	-rm -f daq.xml
 	-rm -f $(MANSECTS)
-	-rm -f daq.html daq.mans tutorial.pdf tutorial.html
+	-rm -f daq.html daq.mans tutorial.pdf tutorial.html 1usbReadout.xml 1sbsReadout.xml
+	-rm -rf tuthtml
+	-rm -rf man
 
 daq.pdf: daq.xml
 	$(TOPDF) daq.xml
@@ -53,6 +51,8 @@ BOOKDIRS = 	@top_srcdir@ \
 		@top_srcdir@/base/factories \
 		@top_srcdir@/daq/format \
 		@top_srcdir@/diagnostics/status \
+		@top_srcdir@/diagnostics/dbinjector \
+		@top_srcdir@/diagnostics/viewers	\
 		@top_srcdir@/usb \
 		@top_srcdir@/usb/vmusb \
 		@top_srcdir@/usb/ccusb \

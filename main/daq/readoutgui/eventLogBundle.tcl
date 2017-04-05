@@ -466,7 +466,7 @@ proc ::EventLog::_finalizeRun {} {
         #  Now what's left gets recursively/link-followed copied to the destDir
         #  using tar.
         
-        set tarcmd "(cd $srcdir; tar chf - .) | (cd $destDir; tar xpf -)"
+        set tarcmd "(cd $srcdir; tar chf - .) | (cd $destDir; tar --warning=no-timestamp xpf -)"
         set tarStatus [catch {exec sh << $tarcmd} msg]
         if {$tarStatus} {
             tk_messageBox -title {Tar Failed} -icon error -type ok \
@@ -774,6 +774,25 @@ proc ::EventLog::runEnding {} {
 proc ::EventLog::attach {state} {
     
 }
+## 
+# ::EventLog::precheckTransitionForErrors
+#
+# IF we are transitioning to Active from halted, make sure that we don't have
+# any detectable problems (@see ::StageareaValidation::correctAndValidate)
+#
+# @param from   state before transition
+# @param to     state after transition
+#
+proc ::EventLog::precheckTransitionForErrors {from to} {
+  set msg {}
+  if {$from eq "Halted" && $to eq "Active"} {
+    if {[::ReadoutGUIPanel::recordData]} {
+      ::StageareaValidation::correctFixableProblems;         # Some things can be fixed :-)
+      set msg [::StageareaValidation::listIdentifiableProblems]
+    }
+  }
+  return $msg
+}
 ##
 # ::EventLog::enter
 #
@@ -847,7 +866,19 @@ proc ::EventLog::onExit {} {
         }
     }
 }
-
+##
+#  ::EventLog::unregister
+#
+#   Unregisters the event logger package from the Run state machine singleton.
+#   this is really only supplied for testing purposes (maybe). But
+#   could potentially be used for special applications.
+#
+proc ::EventLog::unregister {} {
+    set sm [::RunstateMachineSingleton %AUTO%]
+    $sm removeCalloutBundle EventLog
+    $sm destroy
+    
+}
 #-------------------------------------------------------------------------------
 #
 # Bundle registration
@@ -1378,4 +1409,3 @@ proc EventLog::promptParameters {} {
     }
     destroy .eventlogsettings
 }
-

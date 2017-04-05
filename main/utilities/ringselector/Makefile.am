@@ -25,6 +25,7 @@ ringselector_CPPFLAGS		= 	@LIBTCLPLUS_CFLAGS@	\
                                 -I@top_srcdir@/utilities/nscldaq-format/FormattedIO
 
 
+
 ringselector_LDADD	=	@top_builddir@/utilities/common/libUtilCommon.la \
                                 @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\
                                 @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la	\
@@ -56,6 +57,21 @@ EXTRA_DIST	=	ringselector.xml parser.ggo Asserts.h
 
 #----------------------- Tests:
 
+#  Since this is the first guy written to use it, the tests for
+#  StringsToInteger are here too.
+#
+
+check_PROGRAMS	=	stringstointtests selectortests
+
+stringstointtests_SOURCES	=	TestRunner.cpp str2int.cpp 
+
+stringstointtests_CPPFLAGS	= @LIBTCLPLUS_CFLAGS@ -I@top_srcdir@/utilities/common
+
+stringstointtests_LDADD		= -L$(libdir)			\
+				@top_builddir@/utilities/common/libUtilCommon.la \
+				$(CPPUNIT_LDFLAGS)		\
+				@LIBEXCEPTION_LDFLAGS@
+
 noinst_PROGRAMS = selectortests
 
 selectortests_SOURCES	=	TestRunner.cpp selectortests.cpp
@@ -75,5 +91,4 @@ selectortests_LDFLAGS	=	-Wl,"-rpath=link=$(libdir)"
 selectortests_CPPFLAGS	=	$(ringselector_CPPFLAGS) -DBINDIR="\"$(bindir)\"" 
 
 
-TESTS= ./selectortests
 

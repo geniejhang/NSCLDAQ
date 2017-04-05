@@ -190,6 +190,7 @@ CTriggerLoop::mainLoop()
     try {
       CVMEInterface::Lock();
       for (int i =0; i < DWELL_COUNT; i++) {
+
 	if ((*pEvent)()) {
 	  m_pExperiment->ReadEvent();
 	}
@@ -197,6 +198,7 @@ CTriggerLoop::mainLoop()
 	  m_pExperiment->TriggerScalerReadout();
           if (m_stopping) break;                  // Check for time to stop.
 	}
+
       }
     }
     catch(...) {

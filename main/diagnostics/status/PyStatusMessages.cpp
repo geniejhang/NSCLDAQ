@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <thread>
 
+
 static PyObject*  exception;
 
 static bool       testMode(false);                  // if true, sockets are ZMQ_PUSH,
@@ -85,14 +86,13 @@ static PyObject*
 stringListFromStrings(const char* strings)
 {
     PyObject* result = PyList_New(0);
-    
-    while(*strings)
+    std::vector<std::string> stringVec = CStatusDefinitions::stringListToVector(strings);
+    for (auto i = 0; i < stringVec.size(); i++) 
     {
-        PyObject* item = PyString_FromString(strings);
+        PyObject* item = PyString_FromString(stringVec[i].c_str());
         Py_INCREF(item);
         PyList_Append(result, item);
         
-        strings += std::strlen(strings) + 1;       // Points to next string else NULL.
     }
     
     Py_INCREF(result);
@@ -1822,6 +1822,7 @@ msg_encodeRingClient(PyObject* client)
     PyObject* isProducer = pRawClient->s_isProducer ? Py_True : Py_False;
     Py_INCREF(isProducer);
     PyDict_SetItemString(result, "producer", isProducer);
+   
     PyDict_SetItemString(result, "command", stringListFromStrings(pRawClient->s_command));
     
     Py_INCREF(result);

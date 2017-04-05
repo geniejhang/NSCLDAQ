@@ -528,7 +528,7 @@ void StatementTest::stepTest()
     sqlite3_stmt* pS0 = s.statement();
     s.bind(1, 1234);
     ++s;                                     // step.
-    sqlite3_reset(pS0);
+    s.reset();
     s.bind(1, 5678);                         // Do I need to reset??
     ++s;                                     // Step.
     

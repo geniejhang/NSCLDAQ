@@ -262,10 +262,31 @@ public:
      * Useful utilities everyone should have:
      */
     public:
+        static size_t sizeStringList(const std::vector<std::string>& strings);
+        static size_t sizeStringList(const char* strings);
+        static void   copyStrings(char* pDest, const std::vector<std::string>& strings);
+        static std::vector<std::string> stringListToVector(const char* strings);
+        
         static std::string messageTypeToString(uint32_t type);
         static uint32_t stringToMessageType(const char* typeString);
         static std::string severityToString(uint32_t severity);
         static uint32_t stringToSeverity(const char* severityString);
+        
+        static RingStatIdentification* makeRingid(const char* ringName);
+        static size_t ringIdSize(RingStatIdentification* pRingId);
+        
+        static RingStatClient* makeRingClient(
+            uint64_t ops, uint64_t bytes, uint64_t backlog,
+            pid_t pid, bool isProducer, const std::vector<std::string>& command
+        );
+        static size_t ringClientSize(RingStatClient* pClient);
+        
+        static void readMessage(
+            std::vector<zmq::message_t*>& message, zmq::socket_t& sock
+        );
+        static void freeMessage(std::vector<zmq::message_t*>& message);
+        
+        
     /*-------------------------------------------------------------------------
      */
     // Utility methods for building messages:

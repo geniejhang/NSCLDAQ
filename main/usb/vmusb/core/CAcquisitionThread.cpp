@@ -28,7 +28,8 @@ East Lansing, MI 48824-1321
 #include <event.h>
 #include "CRunState.h" 
 #include <CConfiguration.h>
-#include <Globals.h>     // Need to maintain the running global. 
+#include <Globals.h>     // Need to maintain the running global.
+#include <CMutex.h>
 #include <assert.h>
 #include <time.h>
 #include <string>
@@ -311,7 +312,7 @@ CAcquisitionThread::processCommand(CControlQueues::opCode command)
   CRunState* pState = CRunState::getInstance();
   pState->setState(CRunState::Stopping);
   if (command == CControlQueues::ACQUIRE) {
-    stopDaq();
+    stopDaqImpl();
     queues->Acknowledge();
     CControlQueues::opCode release  = queues->getRequest();
     assert(release == CControlQueues::RELEASE);
@@ -390,6 +391,7 @@ CAcquisitionThread::processBuffer(DataBuffer* pBuffer)
   void
 CAcquisitionThread::startDaq()
 {
+  CriticalSection lock(CVMUSB::getGlobalMutex());
 
 
   // Start the VMUSB in data taking mode:
@@ -397,34 +399,39 @@ CAcquisitionThread::startDaq()
   VMusbToAutonomous();
 
 }
-/*!
-  Stop data taking this involves:
-  - Forcing a scaler trigger (action register write)
-  - Setting clearing the DAQ start bit (action register write)
-  - draining data from the VMUSB:
-  - Call shutdown the hardware in the stacks
- */
+
+void CAcquisitionThread::stopDaqImpl()
+{
+    Globals::pHLController->stopAcquisition();
+    
+    drainUsb();
+
+    cerr << "Running on end routines" << endl;
+    Globals::pHLController->performStopOperations();  // Disables interrupts too.
+
+}
+
+  /*!
+   * \brief CAcquisitionThread::stopDaq
+   *
+   * This delegates all logic to stopDaqImpl but adds thread_local
+   * synchronization to it.
+   */
   void
 CAcquisitionThread::stopDaq()
 {
-
-  Globals::pHLController->stopAcquisition();
-  Globals::pHLController->performStopOperations();
-
-
-  // turn off interrupts so that interrupts don't continue to trigger if the
-  // user chose to turn them off between runs
-  disableInterrupts();
+  CriticalSection lock(CVMUSB::getGlobalMutex());
+  stopDaqImpl();
 }
 
-void CAcquisitionThread::disableInterrupts() 
+void CAcquisitionThread::disableInterrupts()
 {
   // disable the interrupt service vectors
   for (int regIdx=1; regIdx<=4; ++regIdx) {
     m_pVme->writeVector(regIdx, 0);
   }
   // further... mask all of the interrupt request levels
-  m_pVme->writeIrqMask(0xff);
+  m_pVme->writeIrqMask(0x7f);
 }
 
 /*!

@@ -26,6 +26,7 @@ private:
   int m_a;
 public:
   CInvalidA(int a) : CCamacBranchException(), m_a(a) {}
+
   virtual ~CInvalidA() {}
   virtual const char* what() const {
     static std::stringstream msg; /* for scope issues. */
@@ -33,6 +34,7 @@ public:
 
     return msg.str().c_str();
   }
+
 };
 
 class CBadFirmwareFile : public CCamacBranchException

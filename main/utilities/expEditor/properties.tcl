@@ -56,7 +56,8 @@ package require snit
 #    *   %V  - New value of the property.
 #
 snit::type property {
-    option -name -readonly 1
+    
+    option -name -readonly 0
     option -value -default "" -configuremethod _validate
     option -validate -default ""
     option -editable -default 1 -type snit::boolean
@@ -83,7 +84,7 @@ snit::type property {
             set options($optname) $value
         } else {
             set validator $options(-validate)
-            set options($optname) [$validator validate $value]
+            set options($optname) [uplevel #0 $validator validate [list $value]]
         }
         #  Validation makes an error so we only get here if the config succeeded.
         
@@ -114,6 +115,196 @@ snit::type property {
         }
     }
 }
+#------------------------------------------------------------------------------
+#  Strongly typed properties:
+#
+
+##
+# @class IntegerProperty
+#
+#   Encapsulates a property that must be an integer.  The encapsulate just
+#   forces control over the -validate option
+#
+# OPTIONS:
+#   - -signed - if true the optino can be negative otherwise it must be >= 0
+#
+snit::type IntegerProperty {
+    component prop
+    
+    option -signed -default 0
+    
+    #  Note that we don't export -validate because we want exlusive control
+    #  over that.
+    
+    delegate option -name      to prop
+    delegate option -value     to prop
+    delegate option -editable  to prop
+    delegate option -changecmd to prop
+    
+    delegate method * to prop
+    
+    ##
+    # constructor
+    #   Constrution just installs the base class object, runs the configuration and
+    #   installs our validator.
+    #
+    # @param[in] args - the construction time configuration option/value pairs.
+    #
+    constructor args {
+        install prop using property %AUTO% -name temporary
+        $self configurelist $args
+        $prop configure -validate [mymethod _integer]
+    }
+    destructor {
+       $prop destroy
+    }
+    #---------------------------------------------------------------------------
+    # _integer
+    #   Validate that the new value must be an integer.
+    #
+    # @param validate - hard coded value 'validate' given how this is called.
+    # @param value    - new proprosed value.
+    # @return value if ok
+    # @throw error if not ok.
+    # @note - the -signed option determines if negative values are allowed:
+    #
+    method _integer {validate value} {
+        if {![string is integer -strict $value]} {
+            error "[$prop cget -name] property must be an integer was $value"
+        }
+        if {$options(-signed) && ($value < 0)} {
+            error" [$prop cget -name] property must ba positive integer was $value"
+        }
+        return $value
+    }
+}
+
+##
+# @class EnumeratedProperty
+#
+#    Property that must be selected from a list of valid properties.
+#
+# OPTIONS:
+# #  - - list of valid values.
+#
+snit::type EnumeratedProperty {
+    component prop
+    
+    option -values -default [list]
+    
+    #  Note that we don't export -validate because we want exlusive control
+    #  over that.
+    
+    delegate option -name      to prop
+    delegate option -value     to prop
+    delegate option -editable  to prop
+    delegate option -changecmd to prop
+    
+    delegate method * to prop
+    
+    ##
+    # constructor
+    #   Constrution just installs the base class object, runs the configuration and
+    #   installs our validator.
+    #
+    # @param[in] args - the construction time configuration option/value pairs.
+    #
+    constructor args {
+        install prop using property %AUTO% -name temporary
+        $self configurelist $args
+        $prop configure -validate [mymethod _inlist]
+    }
+    destructor {
+       $prop destroy
+    }
+    #---------------------------------------------------------------------------
+    # _inlist
+    #   Validate that the new value must be in -values
+    #
+    # @param validate - hard coded value 'validate' given how this is called.
+    # @param value    - new proprosed value.
+    # @return value if ok
+    
+    #
+    method _inlist {validate value} {
+        if {$value ni $options(-values)} {
+            error "[$prop cget -name] \
+property is $value but must be in the set: {[join $options(-values) ", "]}"
+        }
+        
+        return $value
+    }    
+}
+
+##
+# @class ListProperty
+#    Class to ensure that property values are valid Tcl lists.  It's possible
+#    to specify minimum and maximum list sizes. 
+#
+# OPTIONS
+#   -  -minlen - minimumlist length (defaults to 0).
+#   -  -maxlen - Maximum list length  default to no limit.
+#
+snit::type ListProperty {
+    component prop
+    
+    option -minlen  0
+    option -maxlen ""
+    
+    #  Note that we don't export -validate because we want exlusive control
+    #  over that.
+    
+    delegate option -name      to prop
+    delegate option -value     to prop
+    delegate option -editable  to prop
+    delegate option -changecmd to prop
+    
+    delegate method * to prop
+    
+    ##
+    # constructor
+    #   Constrution just installs the base class object, runs the configuration and
+    #   installs our validator.
+    #
+    # @param[in] args - the construction time configuration option/value pairs.
+    #
+    constructor args {
+        install prop using property %AUTO% -name temporary
+        $self configurelist $args
+        $prop configure -validate [mymethod _islist]
+    }
+    destructor {
+       $prop destroy
+    }
+    #---------------------------------------------------------------------------
+    # _islist
+    #   Validate that the new value must be a tcl list.
+    #
+    # @param validate - hard coded value 'validate' given how this is called.
+    # @param value    - new proprosed value.
+    # @return value if ok
+    
+    #
+    method _islist {validate value} {
+        if !{[string is list -strict $value]} {
+            error "Property [$prop cget -name] must be a Tcl list but was $value"
+        }
+        set len [llength $value]
+        if {$len < $options(-minlen)} {
+            error "Property [$prop cget -name] must have a least $options(-minlen) elements: $value; $len elements"
+        }
+        if {($options(-maxlen) ne "") && ($len > $options(-maxlen))} {
+            error "Property [$prop cget -name] must have a most $options(-maxlen) elements: $value; $len elements"
+        }
+        return $value
+    }    
+}
+
+
+#------------------------------------------------------------------------------
+#  Structures that encapsulate one or more property objects:
+
+
 ##
 # @class propertylist
 #    List of properties.

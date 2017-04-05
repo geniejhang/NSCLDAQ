@@ -24,11 +24,16 @@
 #include <CSqlite.h>
 #include <CSqliteStatement.h>
 #include <CSqliteTransaction.h>
+#include <CSqliteWhere.h>
+
 #include "CStatusMessage.h"
 
 #include <cstring>
 #include <stdexcept>
 
+#include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
 
 /**
  *  constructor
@@ -158,6 +163,7 @@ CStatusDb::addLogMessage(uint32_t severity, const char* app, const char* src,
     m_pLogInsert->reset();
 
 }
+
 /**
  * addRingStatistics
  *    Add a ring statistics entry.  If need be, the ring identification
@@ -178,7 +184,7 @@ CStatusDb::addRingStatistics(
 {
     // all of this is done as a transaction:
     
-    CSqliteTransaction t(m_handle);
+    CSqliteSavePoint t(m_handle, "statusdb");
     
     try {
         // Get the id of the ring buffer or create it if it does not yet
@@ -223,7 +229,7 @@ CStatusDb::addStateChange(
     int64_t  tod, const char* from, const char* to    
 )
 {
-    CSqliteTransaction t(m_handle);
+    CSqliteSavePoint t(m_handle, "statusdb");
     try {
         int appId = getStateChangeAppId(app, src);
         if (appId == -1) {
@@ -261,7 +267,7 @@ CStatusDb::addReadoutStatistics(
 {
         
     
-    CSqliteTransaction t(m_handle);
+    CSqliteSavePoint t(m_handle, "statusdb");
     try {
         // If necessary add the readout_program:
         
@@ -289,6 +295,513 @@ CStatusDb::addReadoutStatistics(
         t.rollback();
         throw;
     }
+}
+
+/**
+ * savepoint
+ *    Create an outer save point.   This allows applications to batch inserts
+ *    over a range of messages.  With sqlite, this tends to improve performance.
+ *
+ * @param name - Name of the save point.  Note that internally, the software
+ *               uses the 'statusdb' save point.
+ * @return CSqliteSavePoint*  Typically this shoulid be used to initialize
+ *              an std::unique_ptr object so that destruction is assured on
+ *              block exit.
+ */
+CSqliteSavePoint*
+CStatusDb::savepoint(const char* name)
+{
+    return new CSqliteSavePoint(m_handle, name);
+}
+
+/*------------------------------------------------------------------------------
+ * Query methods:
+ */
+
+/**
+ * queryLogMessages
+ *    Get log messages that meet the requested criteria:
+ *
+ *  @param result - reference to a vector that will be populated with the result
+ *                  set... any existing values in this vector will be untouched.
+ *  @param filter - Criteria used to filter the query (generates the WHERE clause).
+ */
+void
+CStatusDb::queryLogMessages(
+    std::vector<LogRecord>& result, CQueryFilter& filter
+)
+{
+    std::string baseQuery =
+        "SELECT id, severity, application, source, timestamp, message      \
+            FROM log_messages                                             \
+            WHERE \
+        ";
+    baseQuery += filter.toString();
+    baseQuery += " ORDER BY id ASC";             // Same as time ordering too.
+    
+   // std::cout << std::endl << baseQuery << std::endl;          // For debugging dump the record.
+    
+    
+    CSqliteStatement query(m_handle, baseQuery.c_str());
+    query.enableRetry();
+    
+    do {
+        ++query;                           // next record.
+        if (! query.atEnd()) {             // empty result set is possible.
+            LogRecord record;
+            
+            record.s_id = query.getInt(0);
+            record.s_severity = reinterpret_cast<const char*>(query.getText(1));
+            record.s_application = reinterpret_cast<const char*>(query.getText(2));
+            record.s_source   = reinterpret_cast<const char*>(query.getText(3));
+            record.s_timestamp = query.getInt64(4);
+            record.s_message  = reinterpret_cast<const char*>(query.getText(5));
+            
+            result.push_back(record);
+        }
+    } while (!query.atEnd());
+}
+/**
+ * listRings
+ *    Produce a list of rings that satisfy a filter.
+ *  @param result - references a vector of RingBuffer structs that will be
+ *                  appended to with the results of the query.
+ *  @param filter - Criteria for selecting the rings.
+ *  @note  To be consistent with queries on ring statistics that involve joins,
+ *         all fields are named r.xxxx   Keep this in mind when producing filters.
+ *  @note  The s_fqname is a string fot eh form s_name@s_host.  For proxy rings this
+ *         can lead to e.g.:  fox@spdaq22.nscl.msu.edu@charlie.nscl.msu.edu
+ *         for the proxy ring in charlie of the original ring named fox
+ *         that lives in spdaq22.
+ *  @note The results are ordered by the fully qualified ring name.
+ *  @note derived fileds like fqname are aliased to r_fqname as r.fqname is not
+ *        legal.
+ */
+void
+CStatusDb::listRings(std::vector<RingBuffer>& result, CQueryFilter& filter)
+{
+    // The base query.
+    
+    std::string query = "                                                       \
+        SELECT r.id, r.name, r.host, r.name || '@' || r.host AS r_fqname        \
+        FROM ring_buffer AS r                                                  \
+        WHERE                                                                  \
+    ";
+    query += filter.toString();
+    query += " ORDER BY r_fqname ASC";
+    // std::cout << std::endl << query << std::endl;     // For query debugging.
+    CSqliteStatement q(m_handle, query.c_str());
+    q.enableRetry();
+    do {
+        ++q;                                 // Step the query.
+        if (! q.atEnd()) {                   // Could be empty result set.
+            RingBuffer r;
+            
+            r.s_id     = q.getInt(0);
+            r.s_fqname = reinterpret_cast<const char*>(q.getText(3));
+            r.s_name   = reinterpret_cast<const char*>(q.getText(1));
+            r.s_host   = reinterpret_cast<const char*>(q.getText(2));
+            
+            result.push_back(r);
+        }
+    } while (! q.atEnd());
+}
+/**
+ * listRingsAndClients:
+ *    Lists ringbuffers and the clients each has.
+ *
+ *  @param result - query results which are a map indexed by fully qualified
+ *                  ring name that contains a RingBuffer and a vector of its
+ *                  clients.
+ * @param filter  - The condition to use to filter the results.
+ */
+void
+CStatusDb::listRingsAndClients(RingDirectory& result, CQueryFilter& filter)
+{
+    // Construct the query:
+    
+    std::string query = "                                                     \
+        SELECT r.id, r.name, r.host, r.name || '@' || r.host AS r_fqname,     \
+               c.id, c.pid, c.producer, c.command                             \
+        FROM ring_buffer AS r                                                 \
+        INNER JOIN ring_client AS c ON c.ring_id = r.id                       \
+        WHERE \
+    ";
+    query += filter.toString();
+    // std::cout << std::endl << query << std::endl;         // debug query.
+    CSqliteStatement q(m_handle, query.c_str());
+    q.enableRetry();
+    // Loop through the results:
+    
+    do {
+        ++q;                                   // Next row if any.
+        if (!q.atEnd()) {
+            // Pull the stuff out:
+            
+            RingBuffer r;
+            r.s_id     = q.getInt(0);
+            r.s_fqname = reinterpret_cast<const char*>(q.getText(3));
+            r.s_name   = reinterpret_cast<const char*>(q.getText(1));
+            r.s_host   = reinterpret_cast<const char*>(q.getText(2));
+            
+            RingClient c;
+            c.s_id     = q.getInt(4);
+            c.s_pid    = static_cast<pid_t>(q.getInt(5));
+            c.s_isProducer = q.getInt(6) ? true : false;
+            c.s_command = reinterpret_cast<const char*>(q.getText(7));
+            
+            
+            
+            // Append to existing or create a new map entry:
+            
+            if (result.count(r.s_fqname) == 0) {
+                result[r.s_fqname].first = r;    
+            }
+            // If the client does not exist yet, then push it back:
+            
+            bool newItem = true;
+            std::vector<RingClient>& cs(result[r.s_fqname].second);
+            for (int i = 0; i < cs.size(); i ++) {
+                if (cs[i] == c) {
+                    newItem = false;
+                    break;
+                }
+            }
+            if (newItem) cs.push_back(c);
+            
+            
+        }
+    } while (!q.atEnd());
+    
+    
+}
+/**
+ * queryRingStatistics
+ *    Gets ring, client and statistics information from the database.
+ *
+ *   @param result - references a CompleteRingStatitics result.
+ *   @param filter - Specifies filters for the results.
+ */
+void
+CStatusDb::queryRingStatistics(CompleteRingStatistics& result, CQueryFilter& filter)
+{
+    // Create the query string and Sqlite statement.
+    
+    std::string query = "                                                     \
+    SELECT r.id, r.name, r.host, r.name || '@' || r.host AS r_fqname,         \
+               c.id, c.pid, c.producer, c.command,                            \
+               s.id, s.timestamp, s.operations, s.bytes, s.backlog            \
+        FROM ring_buffer AS r                                                 \
+        INNER JOIN ring_client AS c ON c.ring_id = r.id                       \
+        INNER JOIN ring_client_statistics AS s                                \
+            ON (s.ring_id = r.id)  AND (s.client_id = c.id)                   \
+        WHERE \
+    ";
+    query += filter.toString();
+    query += " ORDER BY s.timestamp ASC";
+    //std::cout << std::endl << query << std::endl;     // For query debugging.
+    
+    CSqliteStatement q(m_handle, query.c_str());
+    q.enableRetry();
+    do {
+        ++q;
+        if(!q.atEnd()) {
+            RingBuffer r;
+            r.s_id     = q.getInt(0);
+            r.s_fqname = reinterpret_cast<const char*>(q.getText(3));
+            r.s_name   = reinterpret_cast<const char*>(q.getText(1));
+            r.s_host   = reinterpret_cast<const char*>(q.getText(2));
+            
+            RingClient c;
+            c.s_id     = q.getInt(4);
+            c.s_pid    = static_cast<pid_t>(q.getInt(5));
+            c.s_isProducer = q.getInt(6) ? true : false;
+            c.s_command = reinterpret_cast<const char*>(q.getText(7));
+            
+            RingStatistics s;
+            s.s_id         = q.getInt(8);
+            s.s_timestamp  = q.getInt64(9);
+            s.s_operations = q.getInt64(10);
+            s.s_bytes      = q.getInt64(11);
+            s.s_backlog    = q.getInt64(12);
+            
+            // Figure out if we're creating or appending information.
+            
+            if(!result.count(r.s_fqname)) {
+                result[r.s_fqname].first = r;
+            }
+            // If there's an existing matching ringclient, append, else
+            // make a new one:
+            
+            std::vector<RingClientAndStats>& rstats(result[r.s_fqname].second);
+            bool newOne(true);
+            for (int i = 0; i < rstats.size(); i++) {
+                if(rstats[i].first == c) {
+                    newOne = false;
+                    rstats[i].second.push_back(s);
+                }
+            }
+            if(newOne) {
+                RingClientAndStats newItem;
+                newItem.first = c;
+                rstats.push_back(newItem);
+                rstats.back().second.push_back(s);
+            }
+            
+        }
+    } while (! q.atEnd());
+}
+/**
+ * listStateApplications
+ *    Produce a list of the set of applications that have emitted state
+ *    transitions that satify the filter criteria:
+ *
+ *  @param result -reference to the result set that will be appended to.
+ *  @param filter - Filter criteria.
+ */
+void
+CStatusDb::listStateApplications(
+    std::vector<StateApp>& result, CQueryFilter& filter
+)
+{
+    std::string query = "                                                     \
+        SELECT a.id, a.name, a.host                                           \
+        FROM state_application AS a                                           \
+        WHERE                                                                 \
+    ";
+    query += filter.toString();
+    query += " ORDER BY a.id ASC";
+    
+    CSqliteStatement q(m_handle, query.c_str());
+    q.enableRetry();
+    do {
+        ++q;
+        if (!q.atEnd()) {
+            StateApp app;
+            app.s_id =   q.getInt(0);
+            app.s_appName = reinterpret_cast<const char*>(q.getText(1));
+            app.s_appHost = reinterpret_cast<const char*>(q.getText(2));
+            
+            result.push_back(app);
+        }
+    } while (!q.atEnd());
+}
+/**
+ * queryStateTransitions
+ *    Get all information about state transitions that satisfy filter criteria.
+ *
+ *  @param result -reference to the result set that will be appended to.
+ *  @param filter - filter criteria.
+ */
+void
+CStatusDb::queryStateTransitions(
+    std::vector<StateTransition>& result, CQueryFilter& filter
+)
+{
+    // Build the query string:
+    
+    std::string query = "                                                    \
+        SELECT a.name, a.host,                                               \
+               t.id, t.app_id, t.timestamp, t.leaving, t.entering            \
+        FROM state_application AS a                                          \
+        INNER JOIN state_transitions AS t ON t.app_id = a.id                 \
+        WHERE                                                                \
+    ";
+    query += filter.toString();
+    query += " ORDER BY t.timestamp, a.name, a.host ASC";
+    CSqliteStatement q(m_handle, query.c_str());
+    q.enableRetry();
+    //  fill in the result records - not the result set can be empty:
+    
+    do {
+        ++q;                               // Next result:
+        if (!q.atEnd()) {
+            StateTransition item;
+            item.s_app.s_appName      = reinterpret_cast<const char*>(q.getText(0));
+            item.s_app.s_appHost      = reinterpret_cast<const char*>(q.getText(1));
+            item.s_transitionId       = q.getInt(2);
+            item.s_app.s_id           =
+            item.s_appId              = q.getInt(3);
+            item.s_timestamp    = q.getInt64(4);
+            item.s_leaving      = reinterpret_cast<const char*>(q.getText(5));
+            item.s_entering     = reinterpret_cast<const char*>(q.getText(6));                                   
+            
+            result.push_back(item);
+        }
+    } while (!q.atEnd());
+}
+/**
+ * listReadoutApps
+ *   List the set of readout applications that match the stated filter
+ *   criteria.
+ *
+ * @param result  - Reference to the result that will be filled.
+ * @param filter  - Filter that will be applied to the query.
+ */
+void
+CStatusDb::listReadoutApps(std::vector<ReadoutApp>& result, CQueryFilter& filter)
+{
+    std::string query = "                                                     \
+        SELECT a.id, a.name, a.host                                           \
+        FROM readout_program AS a                                             \
+        WHERE                                                                 \
+    ";
+    query += filter.toString();
+    
+    CSqliteStatement q(m_handle, query.c_str());
+    q.enableRetry();
+    
+    do {
+        ++q;
+        if (!q.atEnd()) {
+            ReadoutApp app;
+            app.s_id = q.getInt(0);
+            app.s_appName = reinterpret_cast<const char*>(q.getText(1));
+            app.s_appHost = reinterpret_cast<const char*>(q.getText(2));
+            
+            result.push_back(app);
+        }
+    } while (!q.atEnd());
+}
+/**
+ * listRuns
+ *     Queries the set of runs each application has created.  The result
+ *     is a map that is indexed by the id (primary key) of the Readout program that created
+ *     the associated run information record.
+ *
+ *   @param result - reference to the result set.
+ *   @param filter - Filter criteria for the query.
+ */
+void
+CStatusDb::listRuns(RunDictionary& result, CQueryFilter& filter)
+{
+    std::string query = "                                                      \
+        SELECT a.id, a.name, a.host,                                           \
+               r.id, r.start, r.run, r.title                                   \
+        FROM readout_program  AS a                                             \
+        INNER JOIN run_info AS r ON r.readout_id = a.id                        \
+        WHERE                                                                  \
+    ";
+    query += filter.toString();
+    CSqliteStatement q(m_handle, query.c_str());
+    q.enableRetry();
+    
+    do {
+        ++q;
+        if (!q.atEnd()) {
+            
+            // We always need the run information:
+            
+            RunInfo r;
+            r.s_id = static_cast<unsigned>(q.getInt(3));
+            r.s_startTime = q.getInt64(4);
+            r.s_runNumber = q.getInt(5);
+            r.s_runTitle  = reinterpret_cast<const char*>(q.getText(6));
+            
+            // We only need the readout information if there's not already
+            // a map entry for that program.
+            
+            unsigned readoutId = static_cast<unsigned>(q.getInt(0));
+            
+            // If necessary, create a dict entry that the run can be pushed into.
+            
+            if (result.count(readoutId) == 0) {
+                ReadoutApp a;
+                a.s_id      = readoutId;
+                a.s_appName = reinterpret_cast<const char*>(q.getText(1));
+                a.s_appHost = reinterpret_cast<const char*>(q.getText(2));
+                std::pair<ReadoutApp, std::vector<RunInfo> > dictEntry;
+                dictEntry.first = a;
+                result[readoutId] = dictEntry;
+            }
+            result[readoutId].second.push_back(r);
+
+        }
+    } while (!q.atEnd());
+}
+/**
+ * queryReadoutStatistics
+ *    Returns information about the readout statistics.
+ *
+ *  @param result - Reference to the result set (ReadoutStatDict).
+ *  @param filter - Filters the query.
+ */
+void
+CStatusDb::queryReadoutStatistics(ReadoutStatDict& result, CQueryFilter& filter)
+{
+    std::string query = "                                                      \
+        SELECT a.id, a.name, a.host,                                           \
+               r.id, r.start, r.run, r.title,                                  \
+               s.id, s.timestamp, s.elapsedtime, s.triggers, s.events, s.bytes \
+        FROM readout_program  AS a                                             \
+        INNER JOIN run_info AS r ON r.readout_id = a.id                        \
+        INNER JOIN readout_statistics AS s                                     \
+                ON (s.run_id = r.id)   AND (s.readout_id = a.id)              \
+        WHERE                                                                  \
+    ";
+    query += filter.toString();
+    query += " ORDER BY s.id, r.run ASC";               // Global insert order.
+//    std::cout << std::endl << query << std::endl;
+    CSqliteStatement q(m_handle, query.c_str());
+    q.enableRetry();
+    do {
+        ++q;
+        if(!q.atEnd()) {
+            // Always need the statistics:
+            
+            ReadoutStatistics s;
+            s.s_id = static_cast<unsigned>(q.getInt(7));
+            s.s_timestamp = static_cast<time_t>(q.getInt64(8));
+            s.s_elapsedTime = static_cast<unsigned>(q.getInt(9));
+            s.s_triggers   = static_cast<uint64_t>(q.getInt64(10));
+            s.s_events     = static_cast<uint64_t>(q.getInt64(11));
+            s.s_bytes      = static_cast<uint64_t>(q.getInt64(12));
+            
+            // Need at least the application and readout id
+            
+            unsigned appid = static_cast<unsigned>(q.getInt(0));
+            unsigned runid = static_cast<unsigned>(q.getInt(3));
+            
+            // If necessary, make the map entry (readout):
+            
+            if (!result.count(appid)) {
+                std::pair<ReadoutApp, std::vector<RunStatistics> > mapEntry;
+                
+                ReadoutApp& app(mapEntry.first);
+                app.s_id     = appid;
+                app.s_appName = reinterpret_cast<const char*>(q.getText(1));
+                app.s_appHost = reinterpret_cast<const char*>(q.getText(2));
+                
+                result[appid] = mapEntry;
+            }
+            // IF necessary, create the run entry in result[appid]
+            // At the end of all this code, pRun will point to the
+            // RunStatistics entry that either already exists or was just created.
+            
+            ReadoutAppStats& app(result[appid]);   // Code above ensured this exists.
+            RunStatistics*   pRun(0);              // Will point to the run's statistics.
+            for (int i = 0; i < app.second.size(); i++) {
+                if (app.second[i].first.s_id == runid) {
+                    pRun = &(app.second[i]);
+                    break;
+                }
+            }
+            if (!pRun) {
+                RunStatistics rItem;
+                RunInfo&      rinfo(rItem.first);
+                
+                rinfo.s_id = runid;
+                rinfo.s_startTime = static_cast<uint64_t>(q.getInt64(4));
+                rinfo.s_runNumber = static_cast<uint32_t>(q.getInt(5));
+                rinfo.s_runTitle  = reinterpret_cast<const char*>(q.getText(6));
+                
+                app.second.push_back(rItem);
+                pRun = &(app.second.back());
+            }
+            pRun->second.push_back(s);
+        }
+        
+    } while (!q.atEnd());
 }
 /*------------------------------------------------------------------------------\
  *  Bridge methods between insert and addXxxx
@@ -430,7 +943,7 @@ CStatusDb::marshallLogMessage(
     
     if (message.size() != 2) {
         throw std::length_error(
-            "Log message that does noth ave 2 message aprts (CStatusDb)"
+            "Log message that does not have 2 message parts (CStatusDb)"
         );
     }
     const CStatusDefinitions::LogMessageBody* pBody =
@@ -718,6 +1231,7 @@ CStatusDb::getRingId(const char* name, const char* host)
     }
     m_getRingId->bind(1, name, -1, SQLITE_STATIC);
     m_getRingId->bind(2, host, -1, SQLITE_STATIC);
+
     
     // Step the statement - we'll be at end if there's no rows:
     
@@ -792,7 +1306,7 @@ CStatusDb::getRingClientId(
     // Bind the query parameters.
     
     m_getClientId->bind(1, ringId);
-    m_getClientId->bind(2, client.s_pid);
+    m_getClientId->bind(2, static_cast<int>(client.s_pid));
     m_getClientId->bind(3, command.c_str(), -1, SQLITE_STATIC);
     
     // See if we have a match and pull out the id if so:
@@ -1175,7 +1689,7 @@ CStatusDb::addRdoStats(
         m_addRunStats = new CSqliteStatement(
             m_handle,
             "INSERT INTO readout_statistics                                 \
-                (run_id, readout_id, timestamp,                             \
+                (readout_id, run_id, timestamp,                             \
                 elapsedtime, triggers, events, bytes)                       \
                 VALUES (?, ?, ?, ?, ?, ?, ?)                                \
             "

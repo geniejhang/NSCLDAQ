@@ -27,6 +27,7 @@
 #include <vector>
 #include <string>
 #include <zmq.hpp>
+#include <tcl.h>
 
 
 class CTCLInterpreter;
@@ -62,6 +63,21 @@ public:
     static void addToDictionary(
         CTCLInterpreter& interp, CTCLObject& dict,
         const char* key, CTCLObject& value
+    );
+    static Tcl_Obj*  getDictItem(
+        CTCLInterpreter& interp, CTCLObject& obj, const char* key
+    );
+    static long getLongFromDictItem(
+        CTCLInterpreter& interp, CTCLObject& obj, const char* key
+    );
+    static std::string getStringFromDictItem(
+        CTCLInterpreter& interp, CTCLObject& obj, const char* key
+    );
+    static bool getBoolFromDictItem(
+        CTCLInterpreter& interp, CTCLObject& obj, const char* key
+    );
+    static std::vector<std::string> getStringListFromDictItem(
+        CTCLInterpreter& inerp, CTCLObject& obj, const char* key
     );
     static CTCLObject listFromStringList(CTCLInterpreter& interp, const char* strings);
 };

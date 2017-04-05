@@ -6,11 +6,13 @@
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
         </refentryinfo>
         <refmeta>
+          
            <refentrytitle id='daq5_vardbringbuffer_title'>Ringbuffer schema</refentrytitle>
            <manvolnum>5daq</manvolnum>
            <refmiscinfo class='empty'></refmiscinfo>

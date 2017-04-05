@@ -137,7 +137,9 @@ class PortManagerTests(unittest.TestCase):
         iam    = getpass.getuser()
         
         info   = pm.listPorts()
+
         self.assertEquals(5, len(info))
+
         
         # Toss the data up into a dict keyed by service name.
         

@@ -267,13 +267,18 @@ CRingSelectionPredicate::operator()(CRingBuffer& ring)
   Once a match is found, the function returns.
 
   \param ring - Reference to the ring buffer.
-
+  \param timeout - Approximate maximum number of seconds to wait for the predicate
+                   to be satisfied ()
+                 - -1 blocks for UINT_MAX seconds which is practically forever.
+                 - 0  does not block.
+  \return bool - If true, the predicate matches if false, timed out.               
   \note - At this time there's no capability for expressing a timeout.
 */
-void
-CRingSelectionPredicate::selectItem(CRingBuffer& ring)
+bool
+CRingSelectionPredicate::selectItem(CRingBuffer& ring, int timeout)
 {
-  ring.While(*this);
+  int status = ring.blockWhile(*this, timeout);
+  return (status != -1);
 
 }
 

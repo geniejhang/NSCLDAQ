@@ -79,6 +79,19 @@ package require portAllocator
 package require log
 package require ring
 package require dns
+package require cmdline
+
+set options {
+  {f.arg "" "log file path"}
+  {v.arg 1 "log level verbosity"}
+}
+
+set usage ": RingMaster  \[options\]"
+
+if {[catch {::cmdline::getoptions argv $options $usage} params]} {
+  puts $params
+  exit
+}
 
 
 #  Locate the directory in which the hoister lives and
@@ -97,7 +110,7 @@ set shmDirectory [file join / dev shm]
 # Global variables/constants:
 
 
-set localhost   127.0.0.1;		# IP address of localhost connections.
+set localhost   [list "127.0.0.1" "::1"];		# IP address of localhost connections.
 set knownRings  [list];			# Registered rings.
 
 
@@ -117,6 +130,8 @@ proc isRemoteProxy name {
     set nameList [split $name @]
     set host     [lindex $nameList 1]
     set ring     [lindex $nameList 0]
+
+    emitLogMsg debug "isRemoteProxy '$name'"
 
     # Must have a non-blank extension:
 
@@ -144,33 +159,42 @@ proc isRemoteProxy name {
 #
 proc enumerateRings {} {
     set files [glob -nocomplain [file join $::shmDirectory *_12]]
+
+    emitLogMsg debug "enumerateRings"
     set ::knownRings [list]
 
-    puts "Initial file list: $files"
+    emitLogMsg debug "Initial file list: $files"
 
     foreach file $files {
-	puts "Trying $file"
-	if {[file type $file] eq "file"} {
-	    puts "Is ordinary"
-	    set shmname [file tail $file]
-	    set shmname [string range $shmname 0 end-3]
-	    puts "ring name: $shmname"
-	    if {[catch {ringbuffer usage $shmname} data] == 0} {
-		puts "Is a ring"
-		# See if this is a defunct proxy ring:
-		#
-		if {[isRemoteProxy $shmname]} { 
-		    puts "Deleting remote proxy $file"
-		    catch {file delete -force $file}
-		} else {
-		    lappend ::knownRings $shmname
-		}
-	    } else {
-		puts $data
-	    }
-	}
+      emitLogMsg debug "Trying $file"
+      if {[file type $file] eq "file"} {
+        emitLogMsg debug "Is ordinary"
+        set shmname [file tail $file]
+	
+	# 12.0 - need to remove the _12 as CRingBuffer::isRing will glue it back on:
+	
+	set shmname [lrange [split $shmname _] 0 end-1]
+	set shmname [join $shmname "_"]
+	
+        emitLogMsg debug "ring name: $shmname"
+        if {[catch {ringbuffer usage $shmname} data] == 0} {
+          emitLogMsg debug "Is a ring"
+          # See if this is a defunct proxy ring:
+          #
+          if {[isRemoteProxy $shmname]} { 
+            emitLogMsg info "Deleting remote proxy $file"
+            catch {file delete -force $file}
+          } else {
+            emitLogMsg info "Adding preexisting $shmname to list of known ring buffers"
+            lappend ::knownRings $shmname
+          }
+        } else {
+          emitLogMsg info "Failed while attempting to read $shmname as a ring buffer"
+          puts $data
+        }
+      }
     }
-	       
+
 }
 
 
@@ -187,11 +211,13 @@ proc enumerateRings {} {
 #   tail      - The command.. should look like REMOTE ringname.
 #
 proc RemoteHoist {socket client tail} {
-    ::log::log debug "REMOTE from $client : $tail"
+    emitLogMsg debug "RemoteHoist $socket $client '$tail'"
+  emitLogMsg info "REMOTE request from $client"
     # Ensure client provided a ring:
 
     if {[llength $tail] != 2} {
-	::log::log info "$tail not valid"
+	emitLogMsg error "'$tail' is not a valid request"
+  puts $socket "ERROR Invalid message format"
 	releaseResources $socket $client
 	return
     }
@@ -199,6 +225,9 @@ proc RemoteHoist {socket client tail} {
     
     set ringname [lindex $tail 1]
     if {[lsearch -exact $::knownRings $ringname] == -1} {
+      set msg "$ringname is not a known ringbuffer. "
+      append msg "feeder pipeline cannot be started."
+      emitLogMsg error $msg
 	puts $socket "ERROR $ringname does not exist"
     } else {
 	# If possible convert the client name in to an fqdn for the
@@ -214,6 +243,7 @@ proc RemoteHoist {socket client tail} {
 	puts $socket "OK BINARY FOLLOWS"
 	exec $::hoisterProgram $ringname $client >@ $socket  &
 	releaseResources $socket $client
+      emitLogMsg info "feeder pipeline started to send data from local ring(=$ringname) to host(=$client)"
     }
 
 
@@ -229,7 +259,7 @@ proc RemoteHoist {socket client tail} {
 #
 
 proc killClients ringName {
-    ::log::log debug "Killclients for $ringName"
+    emitLogMsg debug "killClients $ringName"
     set status [catch {ringbuffer usage $ringName} ringUsage]
     
     # If status is 1 the ring probably doesn't actually exist any more so no way to
@@ -243,7 +273,7 @@ proc killClients ringName {
     
     set producerPID [lindex $ringUsage 3]
     if {$producerPID != -1} {
-	::log::log debug "Killing producer: $producerPID"
+	emitLogMsg debug "Killing producer: $producerPID"
 	catch {exec kill -9 $producerPID}
     }
     # Now the consumers:
@@ -252,7 +282,7 @@ proc killClients ringName {
     foreach client $consumerInfo {
 	set pid [lindex $client 0]
 	if {$pid != -1} {;	# Should not need this but...
-	    ::log::log debug "Killing consumer: $pid"
+	    emitLogMsg debug "Killing consumer: $pid"
 	    catch {exec kill -9 $pid}
 	}
     }
@@ -269,9 +299,12 @@ proc killClients ringName {
 #   tail   - the message.
 #
 proc Unregister {socket client tail} {
-    ::log::log debug "Unregister from $client : $tail"
+    emitLogMsg debug "Unregister $socket $client '$tail'"
+    emitLogMsg info "UNREGISTER request from $client"
+
     if {[llength $tail] != 2} {
-	::log::log info "$tail not valid"
+	emitLogMsg error "'$tail' is not a valid message"
+  puts $socket "ERROR Invalid message format"
 	releaseResources $socket $client
 	return
     }
@@ -279,14 +312,15 @@ proc Unregister {socket client tail} {
     set ring  [lindex $tail 1]
     set which [lsearch -exact $::knownRings $ring]
     if {$which != -1} {
-	::log::log debug "Killing clients of $ring"
-	killClients $ring
-	::log::log debug "Removing $ring from $::knownRings"
-	set ::knownRings [lreplace $::knownRings $which $which]
-	puts $socket "OK"
+      emitLogMsg info "Killing clients of ring(=$ring)"
+      killClients $ring
+      emitLogMsg info "Removing ring(=$ring) from list of known rings"
+      emitLogMsg debug "Removing $ring from $::knownRings"
+      set ::knownRings [lreplace $::knownRings $which $which]
+      puts $socket "OK"
     } else {
-	::log::log info "Attempted remove of nonexistent $ring"
-	puts $socket "ERROR $ring does not exist"
+      emitLogMsg info "Ignoring attempt to unregister ring(=$ring). The ring is already unregistered."
+      puts $socket "OK"
     }
 }
 
@@ -304,20 +338,31 @@ proc Unregister {socket client tail} {
 # 
 
 proc Register {socket client tail} {
-    ::log::log debug "Register from $client : $tail"
+    emitLogMsg debug "Register $socket $client '$tail'"
+    emitLogMsg info "REGISTER request from $client"
+
     if {[llength $tail] != 2} {
-	::log::log info "$tail not valid"
-	releaseResources $socket $client
-	return
+      emitLogMsg error "'$tail' is not a valid message"
+      puts $socket "ERROR Invalid message format"
+      releaseResources $socket $client
+      return
     }
     set ring [lindex $tail 1]
+
     if {[lsearch -exact $::knownRings $ring] == -1} {
-	::log::log debug "Appending $ring -> $::knownRings"
-	lappend ::knownRings $ring
-	puts $socket "OK"
+      if {[catch {ringbuffer usage $ring} msg]} {
+        emitLogMsg error "Cannot register ring(=$ring) if associated shared memory segment is corrupt of doesn't exist."
+        puts $socket "ERROR $ring shared memory is either corrupt or does not exist"
+        return
+      }
+      emitLogMsg info "Adding ring(=$ring) to list of registered rings"
+      emitLogMsg debug "Appending $ring -> $::knownRings"
+      lappend ::knownRings $ring
+      puts $socket "OK"
     } else {
-	::log::log info "Attempted duplicate registration of $ring"
-	puts $socket "ERROR $ring is already registered"
+      # we don't care about duplicate registration. 
+      emitLogMsg info "Ignoring duplicate registration attempt for ring(=$ring)"
+      puts $socket "OK"
     }
 
 }
@@ -326,7 +371,7 @@ proc Register {socket client tail} {
 #  Figure out the known rings.. return them alphabetized.
 #
 proc listRings {} {
-    ::log::log debug listRings
+    emitLogMsg debug listRings
 
     return [lsort $::knownRings]
 }
@@ -343,28 +388,29 @@ proc listRings {} {
 #   pid     - Process id of the client.
 #
 proc removeUsageEntry {socket name type pid}  {
-    ::log::log debug removeUsageEntry
+  emitLogMsg debug "removeUsageEntry $socket $name $type $pid"
 
-    if {[array names ::RingUsage $socket] ne ""} {
-	set usage $::RingUsage($socket)
-	::log::log debug "initial usage: $usage"
-	set index 0
-	foreach item $usage {
-	    set uname [lindex $item 0]
-	    set utype [lindex $item 1]
-	    set upid  [lindex $item 2]
-	    if {($uname eq $name)      &&
-		($utype eq $type)      &&
-		($upid  eq $pid)} {
-		set usage [lreplace $usage $index $index]
-		::log::log debug "final usage: $usage"
-		set ::RingUsage($socket) $usage
-		return
-	    }
-	    
-	    incr index
-	}
+  if {[array names ::RingUsage $socket] ne ""} {
+    set usage $::RingUsage($socket)
+    emitLogMsg debug "initial usage: $usage"
+    set index 0
+    foreach item $usage {
+      set uname [lindex $item 0]
+      set utype [lindex $item 1]
+      set upid  [lindex $item 2]
+      if {($uname eq $name)      &&
+          ($utype eq $type)      &&
+          ($upid  eq $pid)} {
+        set usage [lreplace $usage $index $index]
+        emitLogMsg info "Removing usage entry : $usage"
+        emitLogMsg debug "final usage: $usage"
+        set ::RingUsage($socket) $usage
+        return
+      }
+
+      incr index
     }
+  }
 }
 
 #---------------------------------------------------------------------------------
@@ -377,33 +423,38 @@ proc removeUsageEntry {socket name type pid}  {
 #    host   - The host the socket was connecte to.
 #
 proc releaseResources {socket host} {
-    ::log::log debug releaseResources
+    emitLogMsg debug "releaseResources $socket $host"
 
     if {[array names ::RingUsage $socket] ne ""} {
 	# There are resources to kill off:
 
 	set usage $::RingUsage($socket)
+  set name    [lindex $usage 0 0]
+  set type    [lindex $usage 0 1]
+  set pid     [lindex $usage 0 2]
+  set comment [lindex $usage 0 3]
+  emitLogMsg info "Removing usage entry: ring=$name, type=$type, pid=$pid, comment='$comment'"
 	unset ::RingUsage($socket)
-	::log::log debug $usage
+	emitLogMsg debug $usage
 
 	foreach connection $usage {
 	    set ring   [lindex $connection 0]
 	    set type   [lindex $connection 1]
 
 	    if {$type eq "producer"} {
-		::log::log debug "Disconnecting producer from $ring"
+		emitLogMsg debug "Disconnecting producer from ring(=$ring)"
 		catch {ringbuffer disconnect producer $ring}
 	    } else {
 		set typeList [split $type .]
 		set index [lindex $typeList 1]
-		::log::log debug "Disconnecting consumer $index from $ring"
+		emitLogMsg debug "Disconnecting consumer $index from ring(=$ring)"
 		catch {ringbuffer disconnect consumer $ring $index}
 	    }
 
 	}
     }
 
-    close $socket
+    catch {close $socket}
 }
 #---------------------------------------------------------------------------------
 #
@@ -417,20 +468,24 @@ proc releaseResources {socket host} {
 #   message  - The full message.
 #
 proc Connect {socket client message} {
-    ::log::log debug Connect
+    emitLogMsg debug "Connect $socket $client '$message'"
+    emitLogMsg info "CONNECT request from $client"
 
      # The client must be local:
 
-    if {$client ne $::localhost} {
-	::log::log info "$message from non local host $client"
+    if {$client ni $::localhost} {
+	emitLogMsg error "Ring connection failed. Connections are only allowed from localhost"
+  puts $socket "ERROR Ring connections from remote hosts are forbidden"
 	releaseResources $socket $client
 	return
     }
     #  The message must have a ringname, a connection type a pid and a comment:
 
     if {[llength $message] != 5} {
-	::log::log info "$message not valid"
+	emitLogMsg error "Ring connection failed. '$message' is not a valid connection message"
+  puts $socket "ERROR Invalid message format"
 	releaseResources $socket $client
+  return
     }
 
     # Pull out the pieces of the message:
@@ -442,9 +497,9 @@ proc Connect {socket client message} {
 
     # Just record this:
 
-    ::log::log debug "Connect added entry for $socket : [list $name $type $pid $comment]"
-
     lappend ::RingUsage($socket) [list $name $type $pid $comment]
+
+    emitLogMsg info "Added usage entry : ring=$name, type=$type, pid=$pid, comment='$comment'"
 
     puts $socket "OK"
 }
@@ -460,19 +515,22 @@ proc Connect {socket client message} {
 # Parameters:
 #   socket       - The socket that received the message.
 proc Disconnect {socket client message} {
-    ::log::log debug Disconnect
+    emitLogMsg debug "Disconnect $socket $client '$message'"
+    emitLogMsg info "DISCONNECT request from $client"
 
     # The client must be local:
 
-    if {$client ne $::localhost} {
-	::log::log inf  "$message from non local host $client"
-	releaseResrouces $socket $client
+    if {$client ni $::localhost} {
+	emitLogMsg error  "Ring disconnect failed. Disconnections only allowed from localhost."
+	releaseResources $socket $client
+  return
     }
     # The message must have a rigname an connection type and a pid.
 
     if {[llength $message] != 4} {
-	::log::log info "$message not valid"
+	emitLogMsg error "Ring disconnection failed. '$message' is not a valid disconnect message"
 	releaseResources $socket $client
+  return
     }
 
     # pull out the pieces we need:
@@ -481,7 +539,7 @@ proc Disconnect {socket client message} {
     set type    [lindex $message 2]
     set pid     [lindex $message 3]
 
-    ::log::log debug "Removing entry from $socket : $name $type $pid"
+    emitLogMsg debug "Removing entry from $socket : $name $type $pid"
 
     removeUsageEntry $socket $name $type $pid
 
@@ -501,8 +559,9 @@ proc Disconnect {socket client message} {
 #   client      - host f the client.
 #   message     - Full message text.
 proc List {socket client message} {
-
+    emitLogMsg debug "List $socket $client '$message'"
     # The message text can be only the LIST command:
+    emitLogMsg info "LIST requested by $client"
 
     if {$message ne "LIST"} {
 	releaseResources $socket $client
@@ -513,7 +572,9 @@ proc List {socket client message} {
     foreach ring $rings {
 	if {![catch {ringbuffer usage $ring} usage]} {
 	    lappend result [list $ring $usage]
-	}
+	} else {
+    emitLogMsg warning "Failed while retrieving usage information for registered ring(=$ring)"
+  }
     }
     puts $socket "OK"
     puts $socket $result
@@ -577,12 +638,14 @@ proc listClients {socket client ring} {
 #   client    - The client's IP address in dotted form.
 #
 proc onMessage {socket client} {
+  emitLogMsg debug "onMessage $socket $client"
     if {[eof $socket]} {
-	::log::log info "Connection lost from $client"
+	emitLogMsg info "Socket connection lost from $client"
 	releaseResources $socket $client
 	return
     }
     set message [gets $socket]
+    emitLogMsg debug "received message '$message'"
     
     # Often we get an empty messages just before the eof ignore those.
 
@@ -618,11 +681,11 @@ proc onMessage {socket client} {
     } else {
 	# Bad command means close the socket:
 
-	::log::log info "Invalid command $command from $socket closing"
+	emitLogMsg info "Invalid command $command from $socket closing"
 	releaseResources $socket $client
 	
     }
-    ::log::log debug "Processed '$message' from client at $client"
+    emitLogMsg debug "Processed '$message' from client at $client"
 }
 
 
@@ -641,7 +704,8 @@ proc onMessage {socket client} {
 #   clientport - The client's port (not really relevant).
 #
 proc onConnection {channel clientaddr clientport} {
-    ::log::log info "New connection from $clientaddr"
+    emitLogMsg debug "onConnection $channel $clientaddr $clientport"
+    emitLogMsg info "New socket connection from $clientaddr"
 
     # Set the channel to line buffering and establish the handler:
 
@@ -650,13 +714,78 @@ proc onConnection {channel clientaddr clientport} {
 
 }
 
+## \brief Enable or disable all logging levels
+#
+# \param state    state to set (0 = disabled, 1 = enabled)
+#
+proc setStateOfAllLogLevels {state} {
+  if {$state} { 
+    set suppress 0
+  } else {
+    set suppress 1
+  }
+
+  foreach level {emergency alert critical error warning notice info debug} {
+     ::log::lvSuppress $level $suppress
+  }
+}
+
+## \brief Set the logging verbosity
+#
+# \param level  logging level value (0, 1, or 2)
+#
+# Logging levels imply:
+# 0    -  quiet (no logging)
+# 1    -  normal (all levels besides debugging)
+# 2    -  verbose (all levels)
+#
+proc setLoggingVerbosity {level} {
+  if {$level == 0 } {
+    # disable all log levels
+    setStateOfAllLogLevels off
+  } elseif {$level == 1} {
+    setStateOfAllLogLevels on
+    ::log::lvSuppress debug 1
+  } else {
+    setStateOfAllLogLevels on
+  }
+}
+
+
+proc emitLogMsg {level msg} {
+
+    set time [clock format [clock seconds]]
+
+    set logMsg "$time\t$msg"
+
+    ::log::log $level $logMsg
+}
+
 #---------------------------------------------------------------------------------
+#
+# Set up the logging environment
+#
+# remove old file if it exists
+set logFilePath [dict get $params f]
+if {$logFilePath eq {}} {
+  set logFile stderr
+} else {
+  file delete $logFilePath
+  set logFile [open $logFilePath w+]
+}
+
+::log::lvChannelForall $logFile
+
+# First enable all logging levels:
+
+set verbosityLevel [dict get $params v]
+setLoggingVerbosity $verbosityLevel
+
 #
 #  Entry point. We get our listen port from the NSCL Port manage.  This 
 #  also registers us for lookup by clients.
 #
 #
-
 set allocator [portAllocator new]
 
 while {1} {
@@ -665,28 +794,19 @@ while {1} {
     }
     after 1000;			# Retry connection in a second.
 }
-::log::log debug "Obtained a listen port: $listenPort"
+emitLogMsg debug "PortManager allocated a listen port: $listenPort"
 
 # Establish the log destination:
 
-::log::lvChannelForall stderr
-
-# First enable all logging levels:
-
-foreach level {emergency alert critical error warning notice info debug} {
-    ::log::lvSuppress $level  0 
-}
 
 #  Disable the ones I don't want:
-
- ::log::lvSuppress debug
 
 enumerateRings
 
 
 socket -server onConnection $listenPort
 
-::log::log debug "Server listen established on port $listenPort entering event loop"
+emitLogMsg debug "Server listen established on port $listenPort entering event loop"
 
 
 vwait forever;				# Start the event loop.

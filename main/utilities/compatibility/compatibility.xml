@@ -13,7 +13,10 @@
         This is a unix filter.  <application>compatibilitybuffer</application>
         accepts a stream of ring items on its standard input and produces
         a stream of spectrodaq style nscl data buffers on its output.
-        A trivial application of this program allows you to convert a ring
+        A trivial application of this program allows you to convert a ringCAEN_DGTZ_ErrorCode status = CAEN_DGTZ_(
+	handle,
+);
+CheckStatus(status);
         event file to a spectrodaq event file as shown below:
     </para>
     <example id="compatibilitybuffer-ex1">
@@ -275,9 +278,21 @@ start
 
 <!-- manpage 1compatibility -->
       <refentry id="manpage_compatibilitybuffer">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+                <personblurb><para></para></personblurb>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+        </refentryinfo>
         <refmeta>
            <refentrytitle>compatibilitybuffer</refentrytitle>
            <manvolnum>1compatibility</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>compatiblitybuffer</refname>
@@ -348,9 +363,20 @@ compatibilitybuffer <optional>options</optional>
       </refentry>
     <!-- NSCLDAQ-11 - convert10to11 -->
       <refentry id="compatibility1_convert10to11">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname><personblurb><para></para></personblurb>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo>
         <refmeta>
            <refentrytitle id="compatibility1_convert10to11_title">convert10to11</refentrytitle>
            <manvolnum>1compatibility</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>convert10to11</refname>
@@ -403,9 +429,20 @@ convert10to11
   
       
       <refentry id="manpage_compatibilitylogger">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname><personblurb><para></para></personblurb>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo>
         <refmeta>
            <refentrytitle>compatibilitylogger</refentrytitle>
            <manvolnum>1compatibility</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>compatibilitylogger</refname>
@@ -484,9 +521,20 @@ compatibilitylogger <optional>options</optional>
       </refentry>
 
       <refentry id="manpage-eventlog-compat">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Jeromy</firstname>
+                    <surname>Tompkins</surname>
+                </personname><personblurb><para></para></personblurb>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+          </refentryinfo>
         <refmeta>
            <refentrytitle>eventlog-compat</refentrytitle>
            <manvolnum>1compatibility</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>eventlog-compat</refname>
@@ -582,9 +630,21 @@ export EVENTLOGGER=/usr/opt/daq/10.0/bin/eventlog-compat
         </refsect1>
       </refentry>
       <refentry id="manpage-spectcldaq-compat">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+                <personblurb><para></para></personblurb>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+        </refentryinfo>
         <refmeta>
            <refentrytitle>spectcldaq</refentrytitle>
            <manvolnum>1compatibility</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>spectcldaq</refname>
@@ -675,9 +735,21 @@ proc attachOnline host {
 
       </refentry>
       <refentry id="spectcldaq.server">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+                <personblurb><para></para></personblurb>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+        </refentryinfo>
         <refmeta>
            <refentrytitle>spectcldaq.server</refentrytitle>
            <manvolnum>1compatibility</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>spectcldaq.server</refname>
@@ -798,9 +870,21 @@ proc attnet {host port} {
         </refsect1>
       </refentry>
       <refentry id="compatibility_buffertoring">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+                <personblurb><para></para></personblurb>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+        </refentryinfo>
         <refmeta>
            <refentrytitle>BufferToRing</refentrytitle>
            <manvolnum>1compatibility</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>BufferToRing</refname>
@@ -939,9 +1023,21 @@ $DAQROOT/bin/BufferToRing <optional>buffer-size</optional>
 
       </refentry>
       <refentry id="compatibility1-bufdump">
+        <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+                <personblurb><para></para></personblurb>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+        </refentryinfo>
         <refmeta>
            <refentrytitle>bufdump</refentrytitle>
            <manvolnum>1compatibility</manvolnum>
+           <refmiscinfo class='empty'></refmiscinfo>
         </refmeta>
         <refnamediv>
            <refname>bufdump</refname>

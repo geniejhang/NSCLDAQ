@@ -59,6 +59,7 @@ private:
     CSqlite&       m_connection;
     sqlite3_stmt*  m_statement;
     IteratorStatus m_cursorState;
+    bool           m_retriable;
     
     // Canonicals
 public:
@@ -127,6 +128,8 @@ public:
     
     const char* sql();                        // SQL of the statement.
     int   lastInsertId();                     // Row Id of last insert.
+    void  enableRetry() {m_retriable = true;}
+    void  disableRetry() {m_retriable = false;}
     
     
     // private utilities.

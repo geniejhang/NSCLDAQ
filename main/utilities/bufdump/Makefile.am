@@ -7,7 +7,8 @@ dumper_SOURCES	=	BufdumpMain.cpp		\
 nodist_dumper_SOURCES= dumperargs.c dumperargs.h
 
 
-noinst_HEADERS	=	BufdumpMain.h
+noinst_HEADERS	=	BufdumpMain.h	
+
 
 BUILT_SOURCES	=	dumperargs.c dumperargs.h
 
@@ -18,14 +19,14 @@ dumper_CPPFLAGS =	-I@top_srcdir@/utilities/common 				\
 				-I@top_srcdir@/base/headers		\
 				-I@top_srcdir@/base/uri			\
 				@LIBTCLPLUS_CFLAGS@			\
-                                -I@top_srcdir@/utilities/nscldaq-format/format		\
+				-I@top_srcdir@/utilities/nscldaq-format/format		\
 				-I@top_srcdir@/base/dataflow		\
-                                -I@top_srcdir@/utilities/IO		\
-                                -I@top_srcdir@/base/os \
-                                -I@top_srcdir@/utilities/nscldaq-format/Buffer \
-                                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO
+        -I@top_srcdir@/utilities/IO		\
+        -I@top_srcdir@/base/os \
+        -I@top_srcdir@/utilities/nscldaq-format/Buffer \
+        -I@top_srcdir@/utilities/nscldaq-format/FormattedIO
 
-dumper_LDADD		=	@top_builddir@/utilities/common/libUtilCommon.la	\
+dumper_LDADD		=	@top_builddir@/utilities/common/libUtilCommon.la 	\
 				@top_builddir@/base/uri/liburl.la			\
                                 @top_builddir@/utilities/IO/libdaqio.la			\
                                 @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\

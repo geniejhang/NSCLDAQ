@@ -3,7 +3,14 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 #include <Asserts.h>
+
+// White box the class under test.
+
+#define private public
 #include "CPublishRingStatistics.h"
+#undef private
+
+
 #include "CStatusMessage.h"
 #include <CRingBuffer.h>
 #include <CRingMaster.h>
@@ -37,6 +44,18 @@ class RingPubTests : public CppUnit::TestFixture {
   CPPUNIT_TEST(ringWithProducerAndConsumer);
   CPPUNIT_TEST(ringWithProducerSeveralConsumers);
   CPPUNIT_TEST(multipleRings);
+  CPPUNIT_TEST(getHistoryIndexNotFound);
+  CPPUNIT_TEST(getHistoryIndexFound);
+  CPPUNIT_TEST(makeLogMessage);
+  CPPUNIT_TEST(logLargeNoPriorHistory);
+  CPPUNIT_TEST(logLargeNoPriorConsumer);
+  CPPUNIT_TEST(logLargeLog);
+  CPPUNIT_TEST(logLargeNoLog);
+  CPPUNIT_TEST(logOkLog);
+  CPPUNIT_TEST(logOkNolog);
+  CPPUNIT_TEST(logOkNologNoClient);
+  CPPUNIT_TEST(logOkNologNohistory);
+  
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -110,6 +129,18 @@ protected:
   void ringWithProducerAndConsumer();
   void ringWithProducerSeveralConsumers();
   void multipleRings();
+  
+  void getHistoryIndexNotFound();
+  void getHistoryIndexFound();
+  void makeLogMessage();
+  void logLargeNoPriorHistory();
+  void logLargeNoPriorConsumer();
+  void logLargeLog();
+  void logLargeNoLog();
+  void logOkLog();
+  void logOkNolog();
+  void logOkNologNoClient();
+  void logOkNologNohistory();
 private:
     std::vector<zmq::message_t*> receiveMessage();
 };
@@ -382,4 +413,231 @@ void RingPubTests::multipleRings()
     p++;
   }
   
+}
+
+//  If asking for a history index that's not found, .first will be false.
+
+void RingPubTests::getHistoryIndexNotFound()
+{
+  // Create the usage entry:
+  
+  CPublishRingStatistics::Usage usage;
+  usage.s_consumerCommands.push_back({"/usr/opt/daq/12.0/bin/dumper", "--source=tcp://localhost/fox"});
+  usage.s_consumerCommands.push_back({"/usr/opt/daq/12.0/bin/eventlog", "--prefix=ccusb"});
+  usage.s_usage.s_consumers.push_back({1234, 5000});                // dumper pid/backlog.
+  usage.s_usage.s_consumers.push_back({666, 1234});                 // eventlog. pid/backlog
+  
+  // Create the history entry.
+  
+  CPublishRingStatistics::Usage history;
+  history.s_consumerCommands.push_back({"/usr/opt/daq/12.0/bin/dumper"});
+  history.s_consumerCommands.push_back({"/usr/opt/daq/12.0/bin/eventlog", "--prefix=vmusb"});
+  history.s_usage.s_consumers.push_back({666,5000});
+  history.s_usage.s_consumers.push_back({1234, 5000});
+  
+  //  Test:
+  
+  EQ(false, CPublishRingStatistics::getHistoryIndex(usage, history, 1).first);
+}
+
+// Asking for a history index that is found:
+
+void RingPubTests::getHistoryIndexFound()
+{
+  // Create the usage entry:
+  
+  CPublishRingStatistics::Usage usage;
+  usage.s_consumerCommands.push_back({"/usr/opt/daq/12.0/bin/dumper", "--source=tcp://localhost/fox"});
+  usage.s_consumerCommands.push_back({"/usr/opt/daq/12.0/bin/eventlog", "--prefix=ccusb"});
+  usage.s_usage.s_consumers.push_back({1234, 5000});                // dumper pid/backlog.
+  usage.s_usage.s_consumers.push_back({666, 1234});                 // eventlog. pid/backlog
+  
+  // Create the history entry.
+  
+  CPublishRingStatistics::Usage history;
+  history.s_consumerCommands.push_back({"/usr/opt/daq/12.0/bin/eventlog", "--prefix=ccusb"});
+  history.s_consumerCommands.push_back({"/usr/opt/daq/12.0/bin/dumper", "--source=tcp://localhost/fox"});
+  history.s_usage.s_consumers.push_back({666,1234});
+  history.s_usage.s_consumers.push_back({1234, 5000});  
+   
+  std::pair<bool, size_t> result = CPublishRingStatistics::getHistoryIndex(usage, history, 1);
+  ASSERT(result.first);
+  EQ(size_t(0), result.second);
+}
+
+// Create the right log message.
+
+void RingPubTests::makeLogMessage()
+{
+  std::vector<std::string> command = {"/usr/opt/daq/current/bin/dumper", "--source=tcp://localhost/fox"};
+  
+  std::string result = CPublishRingStatistics::makeBacklogMessage("Backlog too big: ", command, 100, 75);
+  EQ(std::string("Backlog too big:  Consumer command /usr/opt/daq/current/bin/dumper --source=tcp://localhost/fox  backlog is 75%"), result);
+}
+
+// If there's no history entries, then a ringbuffer that's over the threshold logs.
+// Note that we're going to assume the threshold is 95% or higher.
+
+void RingPubTests::logLargeNoPriorHistory()
+{
+    // Build a ring Usage struct with a single consumer client over the backlog.
+    
+    CPublishRingStatistics::Usage u;
+    u.s_ringName         = "SomeRing";
+    u.s_consumerCommands = {{"/usr/opt/daq/current/bin/dumper"}};
+    u.s_logged           = {false};                         // Not really needed.
+    CRingBuffer::Usage& ru(u.s_usage);                    // Need to fill in the rb usage:
+    ru.s_bufferSpace     = 100;                           // easy to do pcts.
+    ru.s_consumers       = {{1234, 95}};                  // One consumer with 95 pct backlog.
+    ru.s_consumerStats   = {{1234, 1000, 10000}};         // Don't actually think I need this but...
+    
+    // Ask if index 0 needs logging -- it should.
+    
+    ASSERT(m_pPublisher->logLargeBacklog(u, 0));
+}
+// If there are history entries for the ring but none for the consumer,
+// we also need to emit if over threshold.
+
+void RingPubTests::logLargeNoPriorConsumer()
+{
+  // Build the ring usage with a single consumer:
+  
+      CPublishRingStatistics::Usage u;
+    u.s_ringName         = "SomeRing";
+    u.s_consumerCommands = {{"/usr/opt/daq/current/bin/dumper"}};
+    u.s_logged           = {false};                         // Not really needed.
+    CRingBuffer::Usage& ru(u.s_usage);                    // Need to fill in the rb usage:
+    ru.s_bufferSpace     = 100;                           // easy to do pcts.
+    ru.s_consumers       = {{1234, 95}};                  // One consumer with 95 pct backlog.
+    ru.s_consumerStats   = {{1234, 1000, 10000}};         // Don't actually think I need this but...
+    
+    // Cheat to enter it int he map with a different PID:
+    
+    pid_t oldPid            = ru.s_consumers[0].first;
+    ru.s_consumers[0].first = 6666;
+    ru.s_consumerStats[0].s_pid = 6666;
+    m_pPublisher->m_history[u.s_ringName] = u;
+  
+    ru.s_consumers[0].first=  oldPid;
+    ru.s_consumerStats[0].s_pid = oldPid;
+    
+    ASSERT(m_pPublisher->logLargeBacklog(u, 0));
+}
+/// There's a history entry that shows this consumer has not yet logged:
+
+void RingPubTests::logLargeLog()
+{
+   
+    CPublishRingStatistics::Usage u;
+    u.s_ringName         = "SomeRing";
+    u.s_consumerCommands = {{"/usr/opt/daq/current/bin/dumper"}};
+    u.s_logged           = {false};                         // Not really needed.
+    CRingBuffer::Usage& ru(u.s_usage);                    // Need to fill in the rb usage:
+    ru.s_bufferSpace     = 100;                           // easy to do pcts.
+    ru.s_consumers       = {{1234, 95}};                  // One consumer with 95 pct backlog.
+    ru.s_consumerStats   = {{1234, 1000, 10000}};         // Don't actually think I need this but...
+    
+    
+    m_pPublisher->m_history[u.s_ringName] = u;
+    
+    ASSERT(m_pPublisher->logLargeBacklog(u, 0));
+}
+
+// 'Worst case' for no log is that there's a history entry. with a false
+// flag.
+
+void RingPubTests::logLargeNoLog()
+{
+    CPublishRingStatistics::Usage u;
+    u.s_ringName         = "SomeRing";
+    u.s_consumerCommands = {{"/usr/opt/daq/current/bin/dumper"}};
+    u.s_logged           = {false};                         // Not really needed.
+    CRingBuffer::Usage& ru(u.s_usage);                    // Need to fill in the rb usage:
+    ru.s_bufferSpace     = 100;                           // easy to do pcts.
+    ru.s_consumers       = {{1234, 85}};                  // One consumer with 85 pct backlog.
+    ru.s_consumerStats   = {{1234, 1000, 10000}};         // Don't actually think I need this but...
+    
+    
+    m_pPublisher->m_history[u.s_ringName] = u;
+    
+    ASSERT(!m_pPublisher->logLargeBacklog(u, 0));
+  
+}
+// History says there was a prior log but now we're below the thresold.
+// shouldl og ok:
+
+void RingPubTests::logOkLog()
+{
+    CPublishRingStatistics::Usage u;
+    u.s_ringName         = "SomeRing";
+    u.s_consumerCommands = {{"/usr/opt/daq/current/bin/dumper"}};
+    u.s_logged           = {true};                         // Not really needed.
+    CRingBuffer::Usage& ru(u.s_usage);                    // Need to fill in the rb usage:
+    ru.s_bufferSpace     = 100;                           // easy to do pcts.
+    ru.s_consumers       = {{1234, 75}};                  // One consumer with 75 pct backlog.
+    ru.s_consumerStats   = {{1234, 1000, 10000}};         // Don't actually think I need this but...
+    
+    m_pPublisher->m_history[u.s_ringName] = u;                          // History said we logged:
+    
+    ASSERT(m_pPublisher->logBacklogOk(u, 0));             // Threshold is now good.
+}
+// If the backlog is larger than the threshold no logging:
+
+void RingPubTests::logOkNolog()
+{
+    CPublishRingStatistics::Usage u;
+    u.s_ringName         = "SomeRing";
+    u.s_consumerCommands = {{"/usr/opt/daq/current/bin/dumper"}};
+    u.s_logged           = {true};                         // Not really needed.
+    CRingBuffer::Usage& ru(u.s_usage);                    // Need to fill in the rb usage:
+    ru.s_bufferSpace     = 100;                           // easy to do pcts.
+    ru.s_consumers       = {{1234, 85}};                  // One consumer with 85 pct backlog.
+    ru.s_consumerStats   = {{1234, 1000, 10000}};         // Don't actually think I need this but...
+    
+    m_pPublisher->m_history[u.s_ringName] = u;                          // History said we logged:
+    ASSERT(!m_pPublisher->logBacklogOk(u, 0));
+}
+// If we're below threshold and no client is visible, we don't report:
+
+void RingPubTests::logOkNologNoClient()
+{
+    CPublishRingStatistics::Usage u;
+    u.s_ringName         = "SomeRing";
+    u.s_consumerCommands = {{"/usr/opt/daq/current/bin/dumper"}};
+    u.s_logged           = {true};                         // Not really needed.
+    CRingBuffer::Usage& ru(u.s_usage);                    // Need to fill in the rb usage:
+    ru.s_bufferSpace     = 100;                           // easy to do pcts.
+    ru.s_consumers       = {{1234, 75}};                  // One consumer with 85 pct backlog.
+    ru.s_consumerStats   = {{1234, 1000, 10000}};         // Don't actually think I need this but...
+    
+    // Fake up a different client:
+    
+    pid_t originalPid = ru.s_consumers[0].first;
+    ru.s_consumers[0].first = 666;
+    ru.s_consumerStats[0].s_pid = 666;
+    
+    m_pPublisher->m_history[u.s_ringName] = u;
+    ru.s_consumers[0].first = originalPid;
+    ru.s_consumerStats[0].s_pid = originalPid;
+    
+    
+    ASSERT(!m_pPublisher->logBacklogOk(u, 0));
+    
+    
+}
+// If there are no history entries for the ring, don't log ok:
+
+void RingPubTests::logOkNologNohistory()
+{
+  CPublishRingStatistics::Usage u;
+    u.s_ringName         = "SomeRing";
+    u.s_consumerCommands = {{"/usr/opt/daq/current/bin/dumper"}};
+    u.s_logged           = {true};                         // Not really needed.
+    CRingBuffer::Usage& ru(u.s_usage);                    // Need to fill in the rb usage:
+    ru.s_bufferSpace     = 100;                           // easy to do pcts.
+    ru.s_consumers       = {{1234, 75}};                  // One consumer with 85 pct backlog.
+    ru.s_consumerStats   = {{1234, 1000, 10000}};         // Don't actually think I need this but...
+    
+    ASSERT(!m_pPublisher->logBacklogOk(u, 0));
+    
 }

@@ -427,6 +427,7 @@ int main(int argc, char* argv[])
         <firstname>Jeromy</firstname>
         <surname>Tompkins</surname>
       </personname>
+      <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -786,6 +787,7 @@ namespace V11 {
                         <firstname>Jeromy</firstname>
                         <surname>Tompkins</surname>
                 </personname>
+                <personblurb><para></para></personblurb>
         </author>
         <productname>NSCLDAQ</productname>
         <productnumber></productnumber>

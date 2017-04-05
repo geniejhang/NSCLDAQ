@@ -3,11 +3,11 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT(nscldaq, 12.0-001, fox@nscl.msu.edu,[], [http://www.sourceforge.net/projects/nscldaq])
-
+AC_INIT(nscldaq,12.0-002, fox@nscl.msu.edu,[], [http://www.sourceforge.net/projects/nscldaq])
 
 
 AC_CONFIG_SRCDIR([/base/CopyrightTools/CopyrightNotice.cpp])
+
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -22,9 +22,11 @@ AX_CXX_COMPILE_STDCXX_11([noext])
 
 AC_ARG_ENABLE([docs],
               AS_HELP_STRING([--enable-docs],[Build the documentation]),
-              [ENABLE_DOCS=yes],[ENABLE_DOCS=no])
-if test "x$ENABLE_DOCS" == "xyes"
+              [], [enable_docs=no])
+
+if test "x$enable_docs" == "xyes"
 then
+  AC_MSG_NOTICE([Documentation enabled])
 
   AC_CHECK_PROG(HAVE_DOCBOOK2PDF, [docbook2pdf], [true], [false])
   if test "$HAVE_DOCBOOK2PDF" == "false"
@@ -61,6 +63,7 @@ then
   AM_CONDITIONAL([BUILD_DOCS],[true])
 else
   AM_CONDITIONAL([BUILD_DOCS],[false])
+  AC_MSG_NOTICE([Documentation disabled])
 fi
 
 AC_CHECK_LIB([X11], [XSetWindowBackground])
@@ -127,6 +130,7 @@ AC_FUNC_STAT
 
 
 # Automake:
+
 
 AM_INIT_AUTOMAKE([foreign parallel-tests subdir-objects])
 
@@ -446,6 +450,8 @@ AC_CONFIG_FILES([Makefile
                  servers/portmanager/Makefile
 		 diagnostics/Makefile
 		 diagnostics/status/Makefile
+		diagnostics/dbinjector/Makefile
+		diagnostics/viewers/Makefile
 		 utilities/Makefile
 		utilities/common/Makefile
                  utilities/daqstart/Makefile
@@ -494,6 +500,8 @@ AC_CONFIG_FILES([Makefile
 		 utilities/vardbEventbuilder/Makefile
 		 utilities/expEditor/Makefile
 		 utilities/dumpend/Makefile
+		 utilities/ringbuffer/Makefile
+		 utilities/scalersum/Makefile
                  epics/chanlog/Makefile
                  epics/controlpush/Makefile
                  epics/epicsdisplay/Makefile
@@ -529,6 +537,8 @@ AC_CONFIG_FILES([Makefile
     		simplesetups/v775/Makefile
     		simplesetups/v785/Makefile
     		simplesetups/vmusb/Makefile
+		simplesetups/vmusb/src/Makefile
+		simplesetups/vmusb/src/Example_Makefile
 		 sbs/Makefile
 		 sbs/driver/Makefile
 		 sbs/driver/src/Makefile

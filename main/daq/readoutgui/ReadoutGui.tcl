@@ -1,3 +1,4 @@
+
 #    This software is Copyright by the Board of Trustees of Michigan
 #    State University (c) Copyright 2013.
 #
@@ -864,7 +865,10 @@ namespace eval ::ReadoutGUIStateManagement {
 #
 proc ::ReadoutGUIStateManagement::attach {state} {
     
+}proc ::ReadoutGUIStateManagement::precheckTransitionForErrors {from to} {
+	return [list]
 }
+
 ##
 # ::ReadoutGUIStateManagement::leave
 #   No up but required bundle proc.

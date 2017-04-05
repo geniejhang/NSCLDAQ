@@ -51,6 +51,9 @@
 #include <CMutex.h>
 #include <CVMEInterface.h>
 
+#include <CVMEInterface.h>
+#include <CStatusReporting.h>
+
 
 using namespace std;
 using namespace DAQ;
@@ -64,6 +67,7 @@ typedef struct _EndRunEvent {
   CExperiment* pExperiment;	// Pointer to the experiment object.
   CMutex*      pLock;            // Lock for condition variable.
   CConditionVariable* pCondVar;      // Condition variable.
+  CTriggerLoop* pTriggerLoop;      // the trigger loop
 
 } EndRunEvent, *pEndRunEvent;
 
@@ -200,7 +204,7 @@ CExperiment::Start(bool resume)
   // The run must be in the correct state:
 
   if (resume &&
-    ( (m_pRunState->m_state != RunState::paused) && (m_pRunState->m_state != RunState::pausing))
+    ( (m_pRunState->m_state != RunState::paused) && (m_pRunState->m_state != RunState::resuming))
   ) { 
     throw CStateException(m_pRunState->stateName().c_str(),
 			  RunState::stateName(RunState::paused).c_str(),
@@ -258,6 +262,18 @@ CExperiment::Start(bool resume)
 
     uint32_t elapsedTime = (msTime - m_nRunStartStamp - m_nPausedmSeconds)/1000;
 
+    // IF needed emit a new run status message:
+    
+    
+    if (!resume) {
+        CStatusReporting::pInstance->logBegin(
+	  m_pRunState->m_runNumber, m_pRunState->m_pTitle
+	);
+	// initialize the statistics counters:
+	
+	m_nTriggers = 0;
+	m_nBytes    = 0;
+    }
     V12::CRingStateChangeItem item(V12::NULL_TIMESTAMP, m_nSourceId,
         resume ? V12::RESUME_RUN : V12::BEGIN_RUN,  m_pRunState->m_runNumber,
         elapsedTime, stamp, m_pRunState->m_pTitle);
@@ -346,7 +362,7 @@ CExperiment::Stop(bool pause)
   // Schedule the trigger thread to stop.
 
   if (m_pTriggerLoop) {
-    if ((state == RunState::pausing) || (state == RunState::halting)) {
+    if (m_pTriggerLoop->running() && ((state == RunState::pausing) || (state == RunState::halting))) {
       m_pTriggerLoop->stop(pause); // run is active
     }
     else {
@@ -540,9 +556,8 @@ CExperiment::EstablishBusy(CBusy* pBusyModule)
 void
 CExperiment::ReadEvent()
 {
-
+  m_nTriggers++;
   
-
   // If the root event segment exists, read it into the data buffer
   // and put the resulting event in the ring buffer:
   //
@@ -564,6 +579,7 @@ CExperiment::ReadEvent()
     size_t nWords = m_pReadout->read(pBuffer +2, m_nDataBufferSize);
 
     if (m_pReadout->getAcceptState() == CEventSegment::Keep) {
+    
       *(reinterpret_cast<uint32_t*>(pBuffer)) = nWords +2;
       item.getBody().resize((nWords+2)*sizeof(uint16_t));
       item.setEventTimestamp(m_nEventTimestamp);
@@ -571,6 +587,7 @@ CExperiment::ReadEvent()
 
       *m_pRing << item;
       m_nEventsEmitted++;
+      m_nBytes += nWords * sizeof(uint16_t);
     }
 
     m_pReadout->clear();	// do any post event clears.
@@ -641,14 +658,18 @@ CExperiment::readScalers()
 void CExperiment::TriggerScalerReadout()
 {
 
-
   readScalers();
+  CStatusReporting::pInstance->logStatistics(
+    m_nTriggers, m_nEventsEmitted, m_nBytes
+  );
+
+  CVMEInterface::Unlock();
 
   // For now documented variables are tied to this trigger too:
 
-  CVMEInterface::Unlock();
   ScheduleRunVariableDump();
   CVMEInterface::Lock();
+
 
 }
 
@@ -727,6 +748,7 @@ CExperiment::ScheduleEndRunBuffer(bool pause)
   pEvent->pExperiment   = this;
   pEvent->pLock         = new CMutex;
   pEvent->pCondVar      = new CConditionVariable;
+  pEvent->pTriggerLoop  = m_pTriggerLoop;
   
   pEvent->pLock->lock();                // Required to wait on condition.
 
@@ -767,6 +789,9 @@ int CExperiment::HandleEndRunEvent(Tcl_Event* evPtr, int flags)
   pExperiment->syncEndRun(pEvent->pause);
   pEvent->pCondVar->signal();             // Tell signaller we're done.
   pEvent->pLock->unlock();                // And this releases it to run.
+
+  pEvent->pTriggerLoop->join();
+
   return 1;
 }
 

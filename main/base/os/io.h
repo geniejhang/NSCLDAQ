@@ -9,6 +9,7 @@
 
      Author:
              Ron Fox
+             Jeromy Tompkins
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
@@ -35,6 +36,7 @@ namespace io {
   size_t readData (int fd, void* pBuffer,  size_t nBytes);
   size_t timedReadData (int fd, void* pBuffer,  size_t nBytes,
                         const ::DAQ::CTimeout& timeout);
+  double freeSpacePercent(int fd);
 }
 
 

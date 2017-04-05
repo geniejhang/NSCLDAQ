@@ -22,9 +22,11 @@ make clean
 make -j2 all
 make -j2 install
 chmod u+x nscldaq
-./nscldaq start 
-sleep 10                  # give services a chance to start.
-make check-TESTS VERBOSE=1
+
+RINGMASTER_LOGFILE=$PWD/ringmaster_dist.log ./nscldaq start
+sleep 10
+make check-TESTS
+
 ./nscldaq stop
 
 

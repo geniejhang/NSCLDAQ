@@ -26,6 +26,8 @@
 #include <CRingBuffer.h>
 #include <vector>
 #include <string>
+#include <map>
+
 
 class CTCLInterpreter;
 class CTCLObject;
@@ -47,10 +49,13 @@ private:
         std::string                            s_ringName;
         std::vector<std::string>               s_producerCommand;
         std::vector<std::vector<std::string> > s_consumerCommands;
+        std::vector<bool>                      s_logged;
     } Usage, *pUsage;
+ 
 private:
     zmq::socket_t*   m_pSocket;                  // Publication socket.
     std::string      m_appName;
+    std::map<std::string, Usage>  m_history;
     
 public:
     CPublishRingStatistics(zmq::socket_t& socket, std::string appName);
@@ -65,6 +70,19 @@ private:
     std::vector<Usage> usageTextToVector(std::string& usage);
     Usage              itemToUsage(CTCLInterpreter& interp, CTCLObject& obj);
     void publish(std::vector<Usage>& usage);
+    bool logLargeBacklog(const Usage& ringUsage, size_t index);
+    bool logBacklogOk(const Usage& ringUsage, size_t index);
+    static std::string makeBacklogMessage(
+        std::string body, std::vector<std::string> command,
+        size_t ringSize, size_t backlog
+    );
+
+    static std::pair<bool, size_t> getHistoryIndex(
+        const Usage& ringUsage, const Usage& history, size_t index
+    );
+    void updateRingHistory(const Usage& ringUsage);
+    
+    bool lastLoggedValue(const Usage& ringUsage, size_t index);
 };
 
 

@@ -41,7 +41,25 @@ private:
   CConnectivity* m_pConnectivity;
 public:
   void setUp() {
-    m_pConnectivity = new CConnectivity("localhost");
+    try {			// Seems to intermittently throw...
+      m_pConnectivity = new CConnectivity("localhost");
+    }
+    catch (std::string msg) {
+      std::cerr << "setup caught string exception: " << msg <<std::endl;
+      throw;
+    }
+    catch (const char* msg) {
+      std::cerr << "setup caught a char* exception: " << msg << std::endl;
+      throw;
+    }
+    catch (CException& e) {
+      std::cerr << "Setup caught a CException derived exception: " << e.ReasonText() << std::endl;
+      throw;
+    }
+    catch (std::exception& e) {
+      std::cerr << "Setup caught a C++ exception: " << e.what() << std::endl;
+      throw;
+    }
   }
   void tearDown() {
     delete m_pConnectivity;

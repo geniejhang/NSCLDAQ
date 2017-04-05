@@ -13,19 +13,20 @@
 #
 # Last used with libtclplus-v2.0-000
 
-baseURL="https://git.nscl.msu.edu/daqdev/NSCLDAQ.git"
+##
+# Note the repository specified below only is accessible
+# within NSCL/FRIB.  To access externally, define the
+# baseURL to be git://git.code.sf.net/p/nscldaq/libtclplus
+#
+
+baseURL="https://git.nscl.msu.edu/daqdev/libtclplus.git"
 
 tag="$1"
-uri="$2"
-
-if [ "$uri" = "" ]
-then
-   uri=$baseURL
-fi
 
 rm -rf libtcl 
 
-git clone $uri libtcl
-
+git clone $baseURL libtcl
 (cd libtcl; git checkout tags/$1)
+
+
 (cd libtcl; autoreconf -i)

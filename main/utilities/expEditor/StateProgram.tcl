@@ -26,12 +26,13 @@ exec tclsh "$0" ${1+"$@"}
 # @author Ron Fox <fox@nscl.msu.edu>
 #
 
-package provide stateProgram 1.0
+package provide stateProgram 1.1
 package require snit
 package require Tk
 package require stateProgramData
 package require daqObject
 package require img::png
+package require Label
 
 ##
 # @class StateProgram
@@ -43,6 +44,7 @@ package require img::png
 snit::type StateProgram {
     component data
     component gui
+    component Label
  
     delegate option -provider  to data
     delegate option -changecmd to data
@@ -58,9 +60,6 @@ snit::type StateProgram {
     delegate method rmSink        to data
     delegate method getSinks      to data
     
-    delegate method drawat        to gui
-    delegate method moveto        to gui
-    delegate method moveby        to gui
     delegate method addtag        to gui
     delegate method rmtag         to gui
     delegate method tags          to gui
@@ -98,7 +97,7 @@ snit::type StateProgram {
     destructor {
         $data destroy
         $gui  destroy
-        
+        $Label destroy        
     }
     #---------------------------------------------------------------------------
     # Private methods
@@ -336,4 +335,71 @@ Therefore the host that '$myName' runs in is being changed to '$ringHost'"
             error "connectionPropertyChanged - $obj is not connected to us"
         }
     }
+    ##
+    # propertyChanged
+    #   The label may have changed
+    #   If the name or host are not "" we'll set the label to
+    #   name@host else we'll set it to "".
+    #
+    method propertyChanged {} {
+        set properties [$data getProperties]
+        set nameProp [$properties find name]
+        set hostProp [$properties find host]
+        
+        set name [$nameProp cget -value]
+        set host [$hostProp cget -value]
+        
+        if {($name ne "") || ($host ne "") } {
+            $Label configure -text $name@$host
+        } else  {
+            $Label configure -text ""
+        }
+    }
+    
+    ##
+    # drawat
+    #    This draws the GUI at a specified location.
+    #    - Tell the GUI to run its drawat.. this may be what makes the image
+    #      on the canvas the first time
+    #    - If we've not yet installed the label object install it
+    #    - Invoke propertyChanged to set the label's text.
+    #
+    # @param x    - Desired x postion of the object.
+    # @param y    - Desired y position of the object.
+    #
+    method drawat {x y} {
+        $gui drawat $x $y
+        if {$Label eq ""} {
+            install Label using Label %AUTO%                      \
+                -canvas [$gui cget -canvas] -tag $self -id [$gui getId]
+            $self propertyChanged
+        } else {
+            $Label move $x $y
+        }
+    }
+    ##
+    #  movto
+    #   Move the GUI to the specified coordinates and drag the
+    #   label along with it:
+    #
+    # @param x,y  - new position for the object.
+    #
+    method moveto {x y} {
+
+        $gui moveto $x $y
+        $Label move $x $y
+    }
+    ##
+    # moveby
+    #   Move the object and label by dx,dy.  Note that we had hoped to just move
+    #   the tag but cant' because the gui object maintains inner stat that tells
+    #   it where it is.
+    #
+    # @param dx,dy - amount to move the object in x,y
+    #
+    method moveby {dx dy} {
+        $gui moveby $dx $dy
+        $options(-canvas) move $self $dx $dy;        # Moves the label.
+    }
+    
 }

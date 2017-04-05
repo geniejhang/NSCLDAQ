@@ -30,6 +30,7 @@
 #include "CTCLSubscriptions.h"
 #include "CTCLDecodeMessage.h"
 #include "CTCLAggregate.h"
+#include "CTCLStatusDb.h"
 
 
 static const char* packageName = "statusMessage";
@@ -68,6 +69,7 @@ extern "C" {
         new CTCLSubscription(*interp);
         new CTCLDecodeMessage(*interp);
         new CTCLAggregate(*interp);
+	new CTCLStatusDb(*interp,"statusdb"); 
         return TCL_OK;
     }
     // needed by tcl++

@@ -267,6 +267,7 @@ import nscldaq.vardb.services
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -763,6 +764,7 @@ import nscldaq.vardb.services
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -1042,6 +1044,7 @@ dict for {name info} $svcInfo {
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+        <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -1371,6 +1374,7 @@ if api.exists() :
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1460,6 +1464,7 @@ $DAQBIN/svcwiz dbURI
                                 <firstname>Ron</firstname>
                                 <surname>Fox</surname>
                         </personname>
+                        <personblurb><para></para></personblurb>
                 </author>
                 <productname>NSCLDAQ</productname>
                 <productnumber></productnumber>
@@ -1513,6 +1518,7 @@ $DAQBIN/addsysprogram <replaceable>dbURI name path host</replaceable>
                                       <firstname>Ron</firstname>
                                       <surname>Fox</surname>
                               </personname>
+                              <personblurb><para></para></personblurb>
                       </author>
                       <productname>NSCLDAQ</productname>
                       <productnumber></productnumber>
@@ -1562,6 +1568,7 @@ $DAQBIN/lsservices <replaceable>dbURI</replaceable> <optional><option>-l</option
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1607,6 +1614,7 @@ $DAQBIN/modsysprogram <replaceable>dbURI name item-name new-value</replaceable>
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1653,6 +1661,7 @@ $DAQBIN/rmsysprogram <replaceable>dbURI program-name</replaceable>
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -1728,6 +1737,7 @@ $DAQBIN/svcmanager <replaceable>dbFilename</replaceable>
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+                  <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>

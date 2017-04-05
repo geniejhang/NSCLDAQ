@@ -57,12 +57,13 @@ snit::type RingBuffer {
     #   no validation is required.
     #
     constructor args {
-        set host [property %AUTO% -name host]
+        
         set name [property %AUTO% -name name]
+        set host [property %AUTO% -name host]
         
         install properties using propertylist %AUTO%
-        $properties add $host
         $properties add $name
+        $properties add $host
         
         $self configurelist $args
     }

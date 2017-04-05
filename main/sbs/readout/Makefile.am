@@ -13,6 +13,7 @@ COMPILATION_FLAGS	=	-I@top_srcdir@/sbs/vmemodules	\
 			-I@top_srcdir@/base/thread 		\
                         -I@top_srcdir@/daq/eventbuilder         \
 			-I@top_srcdir@/base/os			\
+			-I@top_srcdir@/diagnostics/status	\
 			$(TCL_FLAGS) $(THREADCXX_FLAGS)	\
 			-DHAVE_VME_MAPPING -DHAVE_SBSVME_INTERFACE
 
@@ -48,21 +49,21 @@ libSBSProductionReadout_la_SOURCES	=				\
 						CResumeCommand.cpp		\
 						CPreEndCommand.cpp		\
 						CEndCommand.cpp			\
-						CInitCommand.cpp			\
+						CInitCommand.cpp		\
 						CDocumentedPacket.cpp		\
 						CDocumentedPacketManager.cpp	\
 						CReadoutException.cpp	\
 						CInvalidPacketStateException.cpp \
-						CEventPacket.cpp 	\
-						CVarList.cpp	\
+						CEventPacket.cpp 		\
+						CVarList.cpp			\
 						CDocumentedVars.cpp		\
 						CVariableBuffers.cpp		\
 						CBusy.cpp			\
 						CCAENV262Busy.cpp		\
 						CV977Busy.cpp			\
-						CRingCommand.cpp	\
+						CRingCommand.cpp		\
 						CPreResumeCommand.cpp
-						CV977Busy.cpp
+
 
 
 
@@ -96,18 +97,19 @@ libSBSProductionReadout_la_LIBADD	=	@top_builddir@/sbs/vmemodules/libSBSDeviceSu
 						@top_builddir@/base/dataflow/libDataFlow.la	\
 						@top_builddir@/sbs/				\
 						@top_builddir@/base/os/libdaqshm.la			\
+						@top_builddir@/diagnostics/status/libStatusMessages.la  \
 						@top_builddir@/sbs/driver/src/libbtp.la
 
 
 libSBSProductionReadout_la_LDFLAGS	=	-version-info	1:0:0	\
-						@LIBTCLPLUS_LDFLAGS@ $(TCL_LDFLAGS) $(THREADLD_FLAGS)
+						@LIBTCLPLUS_LDFLAGS@ $(TCL_LDFLAGS) $(THREADLD_FLAGS) @ZMQ_LDFLAGS@
 
 EXTRA_DIST	=	options.ggo Skeleton.cpp UserMakefile.in SBSRdoMakeIncludes.in SBSReadout_user.xml \
 							SBSReadout_man.xml \
 			$(TCLPACKAGES)
 
 
-noinst_PROGRAMS	= Readout tests
+noinst_PROGRAMS	= Readout #tests
 
 Readout_SOURCES = Skeleton.cpp
 

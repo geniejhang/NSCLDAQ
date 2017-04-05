@@ -203,6 +203,7 @@ g++ -o myapp myapp.cpp -L$DAQROOT/lib -lDataFlow -Wl,"-rpath=$DAQROOT/lib"
                 <firstname>Ron</firstname>
                 <surname>Fox</surname>
             </personname>
+	     <personblurb><para></para></personblurb>
         </author>
         <productname>NSCLDAQ</productname>
         <productnumber></productnumber>
@@ -577,8 +578,14 @@ g++ -o myapp myapp.cpp -L$DAQROOT/lib -lDataFlow -Wl,"-rpath=$DAQROOT/lib"
    </refentry>
 
     <refentry id="manpage.cringaccess">
-        <refentryinfo>
-            <author><firstname>Ron</firstname> <surname>Fox</surname></author>
+      <refentryinfo>
+	 <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+	 <personblurb><para></para></personblurb>
+    </author>
             <productname>NSCLDAQ</productname>
             <productnumber></productnumber>           
         </refentryinfo>
@@ -882,6 +889,7 @@ CRingBuffer* pRing =
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+	 <personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>

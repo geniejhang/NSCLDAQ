@@ -46,15 +46,6 @@ tcltest::test property-construct-ok {Construct a property properly} \
     set result
 } -result [list test "" "" 1]
 
-tcltest::test property-namerdo {Property names are invariant} \
--setup {
-    set p [property %AUTO% -name test]
-} \
--body {
-    catch {$p configure -name forbidden}
-    
-} -result 1
-
 
 tcltest::test property-set {unvalidated set} \
 -setup {
@@ -135,6 +126,107 @@ tcltest::test property-dispatch {Can dispatch a command on property change} \
     set ::a
 } -result [list  test 1234]
 
+
+tcltest::test integer-property-1  {Integer property with valid integer} \
+-setup {
+    set p [IntegerProperty %AUTO% -name test -value 1]
+} \
+-cleanup {
+    $p destroy
+} \
+-body {
+    catch {$p configure -value -1234};       # ok value
+   
+} -result 0
+
+tcltest::test integer-property-1 {Integer property with invalid ineger} \
+-setup {
+    set p [IntegerProperty %AUTO% -name test -value 1]
+} \
+-cleanup {
+    $p destroy
+} \
+-body {
+    catch {$p configure -value 3.14159};       # ok value
+   
+} -result 1
+
+tcltest::test signed-property1 {Test signed integer property with valid integer} \
+-setup {
+    set p [IntegerProperty %AUTO% -name test -value 1 -signed 1]
+} \
+-cleanup {
+    $p destroy
+} \
+-body {
+    catch {$p configure -value 1234};       # ok value
+   
+} -result 0
+
+tcltest::test enumerated-1  {Check that enumerated type is ok} \
+-setup {
+    set p [EnumeratedProperty %AUTO% -name test -values [list on off] -value on]
+} \
+-cleanup {
+    $p destroy
+} -body {
+    catch {$p configure -value off}
+} -result 0
+
+tcltest::test enumerated-2 {Check bad enumerated type is an error} \
+-setup {
+    set p [EnumeratedProperty %AUTO% -name test -values [list on off] -value on]
+} \
+-cleanup {
+    $p destroy
+} -body {
+    catch {$p configure -value bad}
+} -result 1
+
+tcltest::test list-1  {Check that valid lists are valid for ListProperty} \
+-setup {
+    set p [ListProperty %AUTO% -name test]
+} \
+-cleanup {
+    $p destroy
+} \
+-body {
+    catch {$p configure -value [list 1 2 3 4 5]}
+} -result 0
+
+tcltest::test list-2 {Invalid list format for list property} \
+-setup {
+    set p [ListProperty %AUTO% -name test]
+} \
+-cleanup {
+    $p destroy
+} \
+-body {
+    catch {$p configure -value "1 2 3 4 5 \{"}
+} -result 1
+
+tcltest::test list-3 {Set minimum elements in list} \
+-setup {
+    set p [ListProperty %AUTO% -name test -minlen 20] 
+} \
+-cleanup {
+    $p destroy
+} \
+-body {
+    catch {$p configure -value [list 1 2 3 4 5]}
+} -result 1
+
+tcltest::test list-4 {Set maximum elements in a list} \
+-setup {
+    set p [ListProperty %AUTO% -name test -maxlen 2] 
+} \
+-cleanup {
+    $p destroy
+} \
+-body {
+    catch {$p configure -value [list 1 2 3 4 5]}
+} -result 1
+
 # End/summarize the tests - note the magic below is intended to ensure that
 # a failed test fails the makefile test target too.
 
@@ -145,3 +237,4 @@ proc tcltest::cleanupTestsHook {} {
 
 
 tcltest::cleanupTests
+exit $::exitCode

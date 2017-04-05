@@ -592,7 +592,8 @@ CStateManager::processMessages(BacklogCallback cb, void* cd, int timeout)
         std::vector<CStateTransitionMonitor::Notification> nots =
           m_pMonitor->getNotifications(-1, timeout);
         if (nots.size() == 0) break;
-        if (timeout == -1) timeout = 1000;           // Don't loop forever on forever waits.
+        //if (timeout == -1) timeout = 1000;           // Don't loop forever on forever waits.
+        timeout = 100;                                 //After that first one we don't want to wait long.
         for (int i = 0; i < nots.size(); i++) {
             if (cb) {
                 (*cb)(*this, nots[i], cd);

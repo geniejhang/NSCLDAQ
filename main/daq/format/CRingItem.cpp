@@ -518,21 +518,29 @@ CRingItem::toString() const
    shall always be zero.
    \param ring  - Reference to the ring from which to get the item
    \param predicate - an object that skips unwanted items in the ring.
-
+   \param timeout   - Number of seconds to block (estimate) for the get.
+                      *  0 - means just a poll.
+                      *  -1 - means forever.
+                      *  anything else is an estimate but is usually the minimum
+                         time for which the method can block without getting an
+                         item that satisfies the predicate passed.
    \return CRingItem*
    \retval Pointer to a new, dynamically constructed ring item that has been wrapped around
            the message fetched.
+   \retval nullptr  - If there's a timeout without a satisfying item being encountered.
 
-   \note There is no method for specifying a timeout on the wait for a desirable
-         message.
 */
 CRingItem*
-CRingItem::getFromRing(CRingBuffer& ring, CRingSelectionPredicate& predicate)
+CRingItem::getFromRing(CRingBuffer& ring, CRingSelectionPredicate& predicate, int timeout)
 {
-  predicate.selectItem(ring);
+  if(!predicate.selectItem(ring, timeout)) {
+    return nullptr;                          // Timeout.
+  }
   
   // look at the header, figure out the byte order and count so we can
-  // create the item and fill it in.
+  // create the item and fill it in.  Note that at this point we know
+  // there's at least something in the ring.  Therefore we allow ourself to
+  // fully block until there's a complete ring item to return.
   //
 
   RingItemHeader header;

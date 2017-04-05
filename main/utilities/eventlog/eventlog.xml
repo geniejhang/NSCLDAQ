@@ -78,9 +78,21 @@ eventlog --source=tcp://spdaq22/fox --path=/user/0400x/stagearea/current --onesh
 <!-- manpage 1daq -->
 
 <refentry id="manpage.eventlog">
+  <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Ron</firstname>
+                    <surname>Fox</surname>
+                </personname>
+                <personblurb><para></para></personblurb>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+        </refentryinfo>  
   <refmeta>
      <refentrytitle id='manpage.eventlog_title'>eventlog</refentrytitle>
      <manvolnum>1daq</manvolnum>
+     <refmiscinfo class='empty'></refmiscinfo>
   </refmeta>
   <refnamediv>
      <refname>eventlog</refname>
@@ -240,6 +252,66 @@ eventlog <optional>options...</optional>
 	    </para>
 	  </listitem>
 	</varlistentry>
+        <varlistentry>
+            <term><option>--prefix</option>=<replaceable>string</replaceable></term>
+            <listitem>
+                <para>
+                    The <replaceable>string</replaceable> will precede the generated
+                    filename.   For example if <option>--prefix</option> is
+                    <literal>vmusbreadout-</literal>, the first segment of run 6
+                    will be named <filename>vmusbreadout-run-0006-00.evt</filename>
+                    rather than <filename>run-0006-00.evt</filename>.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><option>--freewarn</option>=<replaceable>freepct</replaceable></term>
+            <listitem>
+                <para>
+                    Specifies the integer percentage of device capacity below which the
+                    event logger will emit a warning log message.   If not
+                    specified, this defaults to <literal>10</literal>.  Once
+                    the amount of free space on the device drops, while event
+                    recording is in progress, the eventlog program emits a
+                    log message with severity <literal>WARNING</literal> indicating
+                    that fact and how mucb space remains.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><option>--freesevere</option>=<replaceable>freepct</replaceable></term>
+            <listitem>
+                <para>
+                    Like <option>-freewarn</option> but specifies the threshold
+                    for a severe warning to be emitted.  This defaults to
+                    <literal>1</literal> percent.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><option>--appname</option>=<replaceable>name</replaceable></term>
+            <listitem>
+                <para>
+                    Log messages are identified by an application name and host of
+                    origin.  If you are running more than one event logger in
+                    a single host, you can use this to distinguish between their
+                    log messages.  If not supplied, the default is
+                    <literal>eventlog</literal>.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><option>--service</option>=<replaceable>servicename</replaceable></term>
+            <listitem>
+                <para>
+                    The name of the service to which event log connects in order to
+                    log messages.  This defaults to
+                    <literal>StatusAggregator</literal> which is normally correct.
+                    You should only need to specify this under extraordinary
+                    conditions.
+                </para>
+            </listitem>
+        </varlistentry>
      </variablelist>
   </refsect1>
 

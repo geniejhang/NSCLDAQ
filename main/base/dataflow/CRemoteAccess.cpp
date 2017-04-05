@@ -402,4 +402,5 @@ CRingAccess::local(std::string host)
   
   return localhost == fqhost;
 
+
 }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!-- chapter libraries -->
 <chapter>
     <title>Shared memory</title>
@@ -260,6 +261,7 @@ g++ -o myprogram obj1.o obj2.o obj3.o -L$DAQHOME/lib -ldaqshm \
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+	<personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -427,6 +429,7 @@ g++ -o myprogram obj1.o obj2.o obj3.o -L$DAQHOME/lib -ldaqshm \
             <firstname>Ron</firstname>
             <surname>Fox</surname>
         </personname>
+	<personblurb><para></para></personblurb>
     </author>
     <productname>NSCLDAQ</productname>
     <productnumber></productnumber>
@@ -515,7 +518,7 @@ g++ -o myprogram obj1.o obj2.o obj3.o -L$DAQHOME/lib -ldaqshm \
     </methodsynopsis>
     <methodsynopsis>
         <modifier>static</modifier>
-        <type>std::vector&lt;std::string&gt</type>
+        <type>std::vector&lt;std::string&gt;</type>
         <methodname>getProcessCommand</methodname>
         <methodparam>
             <type>pid_t</type><parameter>pid</parameter>
@@ -707,7 +710,7 @@ g++ -o myprogram obj1.o obj2.o obj3.o -L$DAQHOME/lib -ldaqshm \
             <term>
                 <methodsynopsis>
                     <modifier>static</modifier>
-                    <type>std::vector&lt;std::string&gt</type>
+                    <type>std::vector&lt;std::string&gt;</type>
                     <methodname>getProcessCommand</methodname>
                     <methodparam>
                         <type>pid_t</type><parameter>pid</parameter>
@@ -731,10 +734,23 @@ g++ -o myprogram obj1.o obj2.o obj3.o -L$DAQHOME/lib -ldaqshm \
   </refsect1>
 
 </refentry>     
-	 <refentry id="daqshm-manpage">
+<refentry id="daqshm-manpage">
+  
+   <refentryinfo>
+    <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+	<personblurb><para></para></personblurb>
+    </author>
+    <productname>NSCLDAQ</productname>
+    <productnumber></productnumber>
+  </refentryinfo>  
        <refmeta>
           <refentrytitle>CDAQShm</refentrytitle>
           <manvolnum>3</manvolnum>
+	   <refmiscinfo class='empty'></refmiscinfo>
        </refmeta>
        <refnamediv>
           <refname>CDAQShm</refname>
@@ -1142,4 +1158,3 @@ class <classname>CDAQShm</classname>
         </refsect1>
      </refentry>     
 
-<!-- /manpage -->

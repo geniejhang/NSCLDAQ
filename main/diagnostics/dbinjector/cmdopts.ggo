@@ -1,0 +1,6 @@
+package "statusinjector"
+version "1.0"
+purpose "Accept system wide status messages and inject them to the database"
+
+option "service" s "Name of node aggregation service" string optional default="StatusPublisher"
+option "file"    f "Name of database file" string optional default="~/status.db"

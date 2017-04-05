@@ -6,6 +6,7 @@
                           <firstname>Ron</firstname>
                           <surname>Fox</surname>
                   </personname>
+		   <personblurb><para></para></personblurb>
           </author>
           <productname>NSCLDAQ</productname>
           <productnumber></productnumber>
@@ -39,7 +40,7 @@ ringbuffer delete <replaceable>name</replaceable>
     <cmdsynopsis>
         <command>
 
-ringbuffer status <replaceable>?--host=hostname?  ?--all? ?--user=user1?,...?? ?pattern?</replaceable>
+ringbuffer status <replaceable>?--database=url? | (?--host=hostname?  ?--all? ?--user=user1?,...?? ?pattern?)</replaceable>
 
         </command>
     </cmdsynopsis>
@@ -109,7 +110,7 @@ ringbuffer statistics <replaceable>?--host=hostname? ?--interval=seconds?</repla
             </listitem>
         </varlistentry>
         <varlistentry>
-            <term><command>ringbuffer status <replaceable>?--host=hostname? ?--all? ?--user=user1?,...??  ?pattern?</replaceable></command></term>
+            <term><command>ringbuffer status <replaceable>?--database=url? | (?--host=hostname?  ?--all? ?--user=user1?,...?? ?pattern?)</replaceable></command></term>
 
             <listitem>
                 <para>
@@ -166,7 +167,21 @@ ringbuffer statistics <replaceable>?--host=hostname? ?--interval=seconds?</repla
 ringbuffer status --user=`whoami`,root
 		  </programlisting>
 		</informalexample>
-
+		<para>
+		  The <option>--database</option> option takes a URL of an
+		  experiment defintion variable database.  If supplied, the
+		  <option>--host</option>, <option>--all</option> and
+		  <option>--user</option> switches are ignored as are
+		    any ring names.  The URL is considered to be that of an
+		    experiment database.  The experiment database is queried
+		    for the set of ringbuffers used by that experiment and
+		    all of those ringbuffers.  The RingMaster in each involved
+		    host is queried and only the statistics for the involved rings
+		    are listed.  Each host involved creates a separate statistics
+		    table and the text:
+		    <literal>Rings in </literal><replaceable>fully.qualified.host</replaceable>
+		    is placed as a title above each table.
+		</para>
                 <para>
                     The ring buffer status is listed in tabular form.
                     Here is some sample output:

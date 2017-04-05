@@ -25,6 +25,8 @@
 #include <map>
 #include <os.h>
 #include <stdexcept>
+#include <cstring>
+#include <ctime>
 
 static std::map<std::string, std::uint32_t> messageTypeLookup = {
         {"RING_STATISTICS", CStatusDefinitions::MessageTypes::RING_STATISTICS},
@@ -61,6 +63,77 @@ static std::map<uint32_t, std::string> messageSeverityStringLookup = {
         {CStatusDefinitions::SeverityLevels::SEVERE, "SEVERE"},
         {CStatusDefinitions::SeverityLevels::DEFECT, "DEFECT"}
 };
+
+/**
+ * sizeStringList
+ *    Return the storage required for a list of strings when it is
+ *    flattened e.g. turned into "string1\0string2\0...stringn\0\0"
+ * @param strings - vector of strings to be flattened.
+ */
+size_t
+CStatusDefinitions::sizeStringList(const std::vector<std::string>& strings)
+{
+    size_t result(0);
+    for (int i = 0; i < strings.size(); i++) {
+        result += strings[i].size() + 1;                // +1 for \0
+    }
+    result++;                                          // +1 for \0 sentinel.
+    return result;
+}
+/**
+ * sizeStringList
+ *     Return the storage used by a flattened list of strings.  See above
+ *     for what that looks like in memory:
+ */
+size_t
+CStatusDefinitions::sizeStringList(const char* strings)
+{
+    size_t result = 0;
+    while ( *strings) {
+        size_t slen = std::strlen(strings) + 1;   // +1 for \0 terminator.
+        result  += slen;
+        strings += slen;                           // next string.
+    }
+    result++;                                     // count the end sentinell.
+    return result;
+}
+/**
+ * copyStrings
+ *    Flattens a string list (vector) into a char* stroage.
+ *  @param pDest  - pointer to destination - caller must ensure it's big enough.
+ *  @param strings - Vector of strings to flatten.
+ */
+void
+CStatusDefinitions::copyStrings(
+    char* pDest, const std::vector<std::string>& strings
+)
+{
+    
+    for (int i = 0; i < strings.size(); i++) {
+        std::strcpy(pDest, strings[i].c_str());
+        pDest += strings[i].size() + 1;          // Count the null.
+    }
+    *pDest = '\0';                             // Finalizing sentinnel.
+}
+/**
+ * stringListToVector
+ *    Convert a string list to a vector of strings.
+ *
+ *  @param strings - pointer to the strings in flattened form.
+ *  @return std::vector<std::string> - vector of strings in the flattened list.
+ */
+std::vector<std::string>
+CStatusDefinitions::stringListToVector(const char* strings)
+{
+    std::vector<std::string> result;
+    while (* strings) {    
+        std::string s(strings);
+        result.push_back(s);
+        strings += s.size() + 1;
+    }
+    return result;
+}
+
 /**
  * messageTypeToString
  *    Convert a message type value to a string.
@@ -146,6 +219,90 @@ CStatusDefinitions::stringToSeverity(const char* severityString)
     return p->second;
 }
 /**
+ *  makeRingid
+ *      Allocate and create a ring id message part struct:
+ *
+ * @param ringName - name of the ring
+ * @return RingStatIdentification* Pointer to dynamically allocated/filled in
+ *                   struct.
+ * @note the s_tod field is filled in with the current unix time.
+ * @note the caller is reponsible for invoking std::free to release the storage
+ *       allocated by this method.
+ */
+CStatusDefinitions::RingStatIdentification*
+CStatusDefinitions::makeRingid(const char* ringName)
+{
+    size_t totalSize = sizeof(RingStatIdentification) + strlen(ringName) + 1;
+    
+    RingStatIdentification* result =
+        reinterpret_cast<RingStatIdentification*>(malloc(totalSize));
+
+    result->s_tod = std::time(NULL);
+    std::strcpy(result->s_ringName, ringName);
+    
+    return result;
+}
+/**
+* ringIdSize
+*    Given a ring id struct that is already filled in, determine how bit it is.
+*
+*  @param pRingId - the item to size.
+*  @return size_t
+*/
+size_t
+CStatusDefinitions::ringIdSize(RingStatIdentification* pRingId)
+{
+   return sizeof(RingStatIdentification) + std::strlen(pRingId->s_ringName) + 1;
+}
+/**
+ * makeRingClient
+ *    Allocate and create a ring client struct.
+ *
+ *  @param ops - number of operations.
+ *  @param bytes - number of bytes transferred
+ *  @param backlog - Number of bytes backlogged in the queue.
+ *  @param pid     - Pid of the client.
+ *  @param isProducer - true if this is the ring producer.
+ *  @param command    - Client command string.
+ *  @return RingStatClient* dynamically allocated/filled in struct.
+ *  @note The client must release the storage for this struct via std::free
+ */
+CStatusDefinitions::RingStatClient*
+CStatusDefinitions::makeRingClient(
+    uint64_t ops, uint64_t bytes, uint64_t backlog, pid_t pid, bool isProducer,
+    const std::vector<std::string>& command
+)
+{
+    size_t totalSize = sizeof(RingStatClient) + sizeStringList(command);
+    
+    RingStatClient* pResult =
+        reinterpret_cast<RingStatClient*>(std::malloc(totalSize));
+    
+    pResult->s_operations = ops;
+    pResult->s_bytes      = bytes;
+    pResult->s_backlog    = backlog;
+    pResult->s_pid        = pid;
+    pResult->s_isProducer   = isProducer ? true : false;
+    copyStrings(pResult->s_command,  command);
+    
+    return pResult;
+}
+/**
+ * ringClientSize
+ *    Return the size of a ring client strucst that has been filled in
+ *
+ *  @param pClient - pointer to the filled  in struct.
+ *  @return size_t
+ */
+size_t
+CStatusDefinitions::ringClientSize(RingStatClient* pClient)
+{
+    return sizeof(RingStatClient) + sizeStringList(pClient->s_command);
+}
+
+/*-----------------------------------------------------------------------------
+ *  Private methods.
+/**
  * formatHeader
  *    Formats a message header.  The message header is the first message
  *    segment in a status message.  Therefore this method is used by all of the
@@ -178,4 +335,48 @@ CStatusDefinitions::formatHeader(Header& hdr, uint32_t type, uint32_t severity, 
     std::strncpy(hdr.s_source, host.c_str(), sizeof(hdr.s_source) -1);
     hdr.s_source[sizeof(hdr.s_source) -1]  = 0;
      
+}
+/**
+ * readMessage
+ *    Read a, possibly, multi part mesage.  This blocks.
+ *
+ *  @param[out] message - vector of pointers to message parts.
+ *  @param[in]  sock    - zmq::socket_t from which to read.
+ */
+void
+CStatusDefinitions::readMessage(
+    std::vector<zmq::message_t*>& message, zmq::socket_t& sock
+)
+{
+   
+    // Loop until there are no more parts... there's at least one.
+    
+    uint64_t more(0);
+    do  {
+        
+        size_t   moreSize(sizeof(more));
+    
+    
+        zmq::message_t* part = new zmq::message_t;
+        sock.recv(part);
+        message.push_back(part);
+        
+        sock.getsockopt(ZMQ_RCVMORE, &more, &moreSize);
+    } while(more);
+    
+}
+/**
+ * freeMessage
+ *    Given a message that was read with readMessage above, frees the
+ *    message parts.
+ *
+ *  @param[inout] message - the message to free. On exit this vector will be empty.
+ */
+void
+CStatusDefinitions::freeMessage(std::vector<zmq::message_t*>& message)
+{
+    for (int i = 0; i < message.size(); i++) {
+        delete message[i];
+    }
+    message.clear();
 }

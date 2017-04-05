@@ -64,6 +64,7 @@ public:
   virtual void start();
   void         stop(bool pausing);          // stop/join.
   virtual void operator()();
+  bool         running() const {return m_running; }
 
 protected:
   void         mainLoop();

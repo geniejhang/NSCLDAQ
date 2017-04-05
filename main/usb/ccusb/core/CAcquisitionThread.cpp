@@ -33,6 +33,7 @@
 #include <CConfiguration.h>
 #include <os.h>
 #include <Events.h>
+#include <CMutex.h>
 #include <tcl.h>
 #include <CCCUSBHighLevelController.h>
 
@@ -103,11 +104,7 @@ CAcquisitionThread::getInstance()
 void
 CAcquisitionThread::start(CCCUSB* usb, CCCUSBHighLevelController* pController)
 {
-  CRunState* pState = CRunState::getInstance();
-  pState->setState(CRunState::Active);
 
-
-  CAcquisitionThread* pThread = getInstance();
   m_pCamac = usb;
   m_pController = pController;
 
@@ -116,7 +113,7 @@ CAcquisitionThread::start(CCCUSB* usb, CCCUSBHighLevelController* pController)
   // starting the thread will eventually get operator() called and that
   // will do all the rest of the work in thread context.
 
-  getInstance()->Thread::start();
+  getInstance()->CSynchronizedThread::start();
   
 }
 
@@ -248,10 +245,11 @@ CAcquisitionThread::mainLoop()
 	} 
 	else {
 	  if (errno != ETIMEDOUT) {
-	    cerr << "Bad status from usbread: " << strerror(errno) << endl;
-	    cerr << "Ending the run .. check CAMAC crate.  If it tripped off ";
-	    cerr << " you'll need to restart this program\n";
-        throw int(1);
+      std::stringstream err;
+	    err << "Bad status from usbread: " << strerror(errno) << endl;
+	    err << "Ending the run .. check CAMAC crate.  If it tripped off ";
+	    err << " you'll need to restart this program\n";
+      throw err.str();
 	  }
 	}
       // Commands from our command queue.
@@ -283,7 +281,7 @@ CAcquisitionThread::processCommand(CControlQueues::opCode command)
   CControlQueues* queues = CControlQueues::getInstance();
 
   if (command == CControlQueues::ACQUIRE) {
-    stopDaq();
+    stopDaqImpl();
     queues->Acknowledge();
     CControlQueues::opCode release  = queues->getRequest();
     assert(release == CControlQueues::RELEASE);
@@ -360,6 +358,11 @@ CAcquisitionThread::processBuffer(DataBuffer* pBuffer)
 void
 CAcquisitionThread::startDaq()
 {
+  CriticalSection lock(CCCUSB::getGlobalMutex());
+
+  CRunState* pState = CRunState::getInstance();
+  pState->setState(CRunState::Active);
+
   char junk[100000];
   size_t moreJunk;
 
@@ -381,23 +384,42 @@ CAcquisitionThread::startDaq()
   cerr << "CCUSB located firmware revision: " << hex << fware << dec << endl;
 
   CCusbToAutonomous();
-
 }
+
 /*!
    Stop data taking this involves:
    - Forcing a scaler trigger (action register write)
    - Setting clearing the DAQ start bit (action register write)
    - draining data from the VMUSB:
 */
+void CAcquisitionThread::stopDaqImpl()
+{
+
+  m_pController->stopAcquisition();
+
+
+
+    drainUsb();
+
+    m_pController->performStopOperations(); 
+}
+
+
+/*!
+   Stop data taking this involves:
+   - Forcing a scaler trigger (action register write)
+   - Setting clearing the DAQ start bit (action register write)
+   - draining data from the VMUSB:
+
+   \see stopDaqImpl for the logical implementation of stopping the DAQ.
+   this just delegates that logic to it after acquiring a lock.
+*/
 void
 CAcquisitionThread::stopDaq()
 {
-  m_pController->stopAcquisition();
+  CriticalSection lock(CCCUSB::getGlobalMutex());
 
-  drainUsb();
-
-  m_pController->performStopOperations();
-
+  stopDaqImpl();
 }
 /*!
   Pause the daq. This means doing a stopDaq() and fielding 

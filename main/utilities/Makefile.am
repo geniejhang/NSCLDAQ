@@ -1,20 +1,17 @@
-
-
-SUBDIRS = 				common \
+SUBDIRS = 				common	\
 					daqstart \
 					dvdburn \
 					sequencer \
 					nscldaq-format/Buffer \
-                                        IO \
-                                        nscldaq-format \
+          IO \
+          nscldaq-format \
 					filter \
 					conversion \
-                                        ringselector \
-					eventlog \
+          ringselector \
 					bufdump	\
 					sclclient \
 					tkbufdump \
-                                        newscaler	\
+          newscaler	\
 					varmanager	\
 					varmanager/server	\
 					varmanager/scripts \
@@ -25,10 +22,10 @@ SUBDIRS = 				common \
 					vardbEventbuilder   \
 					dumpend		\
 					expEditor	\
+					vardbringbuffer \
+					ringbuffer	\
 					fileanalyzer	\
-                                        vardbringbuffer 
-
-					fileanalyzer	\
+					eventlog \
 					scalersum
 
 

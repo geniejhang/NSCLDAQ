@@ -41,14 +41,21 @@ package require ring
 
 <!-- manpage 3tcl -->
 <refentry id="manpage.tclring">
+      <refentryinfo>
+	<author>
+	    <personname>
+		<firstname>Ron</firstname>
+		<surname>Fox</surname>
+	    </personname>
+	    <personblurb><para></para></personblurb>
+	</author>
+	<productname>NSCLDAQ</productname>
+	<productnumber></productnumber>
+      </refentryinfo>
+    
   <refmeta>
      <refentrytitle  id='manpage.tclring.title'>
         TCL Ring package.
-        <author>
-            <firstname>Ron</firstname> <surname>Fox</surname>
-        </author>
-        <productname>NSCLDAQ</productname>
-        <productnumber></productnumber>
      </refentrytitle>
      <manvolnum>3tcl</manvolnum>
      <refmiscinfo class='empty'></refmiscinfo>
@@ -88,6 +95,11 @@ ringbuffer disconnect <replaceable>consumer name index</replaceable>
     <command>
 ringbuffer usage<replaceable> ?name?</replaceable>
     </command>
+</cmdsynopsis>
+<cmdsynopsis>
+  <command>
+    ringbuffer <replaceable>usageAt host</replaceable>
+  </command>
 </cmdsynopsis>
 <cmdsynopsis>
     <command>
@@ -376,7 +388,17 @@ ringbuffer list
                 </variablelist>
 
             </listitem>
-        </varlistentry>
+          </varlistentry>
+	  <varlistentry>
+	    <term><command>ringbuffer usageAt <replaceable>host</replaceable></command></term>
+	    <listitem>
+	      <para>
+		Same as the <command>usage</command> command but the statistics
+		of
+		the rings in the host <replaceable>host</replaceable> are listed.
+	      </para>
+	    </listitem>
+	  </varlistentry>
         <varlistentry>
             <term><command>list</command></term>
             <listitem>

@@ -91,7 +91,7 @@ proc prebeginOrDie {} {
     # Let's update the title and run numbers...these might fail if the run is
     # active, in which case the begin will also fail:
     
-    catch {set ::run [::state::client runnumber]}
+    catch {set ::run [::state::client runNumber]}
     catch {set ::title [::state::client title]}
     set outring [::state::client outring]
     if {$outring ne ""} {
@@ -120,7 +120,7 @@ proc beginRunOrDie {} {
 proc prePauseRunOrDie {} {
     if {[catch prepause msg]} {
         ::state::client setState NotReady
-        end
+        catch end
         error "Failed to prepause a run: $msg"
     }
     set ::state::runActive 1;    # Should aready be
@@ -128,7 +128,7 @@ proc prePauseRunOrDie {} {
 proc pauseRunOrDie {} {
     if {[catch pause msg]} {
         ::state::client setstate NotReady
-        end
+        catch end
         error "Failed to pause a run: $msg"
         exit -1
     }
@@ -136,17 +136,20 @@ proc pauseRunOrDie {} {
     
 }
 proc preResumeOrDie {} {
+    puts "preResumeOrDie"
     if {[catch preresume msg]} {
         ::state::client setstate NotReady
-        end
-        error "Failed to pre resume a run"
+        catch end
+        error "Failed to pre resume a run $msg"
+        exit -1
     }
     set ::state::runActive 1;             # Should aready be active.
 }
 proc resumeOrDie {} {
+    puts "resumeOrDie"
     if {[catch resume msg]} {
         ::state::client setstate NotReady
-        end
+        catch end
         error "Failed to resume a run: $msg"
         exit -1
     }
@@ -156,7 +159,7 @@ proc resumeOrDie {} {
 proc preEndOrDie {} {
     if {[catch preend msg]} {
         ::state::client setstate NotReady
-        end
+        catch end
         error "Failed to end a run: $msg"
         exit -1
     }

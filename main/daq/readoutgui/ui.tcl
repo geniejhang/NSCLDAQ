@@ -3205,4 +3205,3 @@ snit::widgetadaptor ReadoutGUI {
         }
     }
 }
-

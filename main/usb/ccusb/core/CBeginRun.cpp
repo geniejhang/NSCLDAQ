@@ -20,6 +20,7 @@
 #include <TCLInterpreterObject.h>
 #include <TCLVariable.h>
 #include <Exception.h>
+#include <CMutex.h>
 
 #include <Globals.h>
 #include "tclUtil.h"
@@ -31,22 +32,23 @@
 #include <CReadoutModule.h>
 #include <CPreBeginCommand.h>
 #include <stdexcept>
-
+#include <CCCUSBHighLevelController.h>
+#include <thread>
+#include <chrono>
 
 static const size_t MAX_STACK_STORAGE(1024);
 
 using std::vector;
 using std::string;
 
-static const string usage(
-"Usage:\n\
-   begin");
+static const string usage("Usage:\n\t begin");
 
 /////////////////////////////////////////////////////////////////////////
 //////////////////////////////// Canonicals /////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
 /*!
+
   Construct the begin command 
   \param interp : CTCLInterpreter&
      Interpreter on which this command will be registered.
@@ -57,8 +59,8 @@ CBeginRun::CBeginRun(CTCLInterpreter& interp, CPreBeginCommand* preBegin) :
   m_pPreBegin(preBegin)
 {}
 /*!
-   Destructor does nothing important.
-*/
+           Destructor does nothing important.
+        */
 CBeginRun::~CBeginRun()
 {}
 
@@ -66,24 +68,35 @@ CBeginRun::~CBeginRun()
 ///////////////////////////// Command execution /////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-/*!
-   Process the begin run.
-   - Ensure that the preconditions for starting the run are met these are:
-     - The begin command has no additional command line parameters.
-     - The current run state is Idle
-   - Create the Adc/Scaler configuration.
-     - Configure it from the file stored in Globals::configurationFilename.
-     - Store that configuration in Globals::configuration
-   - Start up the readout thread to take data.
 
-   \param interp : CTCLInterpreter&
-        Interpreter that is exeuting this command.
-   \param objv : std::vector<CTCLObject>&
-        Reference to an object vector that contains the command parameters.
-*/
+void CBeginRun::reconnect()
+{
+    CriticalSection lock(CCCUSB::getGlobalMutex());
+    std::cout << "Begin reconnect acquired" << std::flush << std::endl;
+    Globals::pUSBController->reconnect();
+    std::cout << "Begin done " << std::flush << std::endl;
+
+}
+
+/*!
+           Process the begin run.
+           - Ensure that the preconditions for starting the run are met these are:
+             - The begin command has no additional command line parameters.
+             - The current run state is Idle
+           - Create the Adc/Scaler configuration.
+             - Configure it from the file stored in Globals::configurationFilename.
+             - Store that configuration in Globals::configuration
+           - Start up the readout thread to take data.
+
+           \param interp : CTCLInterpreter&
+                Interpreter that is exeuting this command.
+           \param objv : std::vector<CTCLObject>&
+                Reference to an object vector that contains the command parameters.
+        */
+
 int
 CBeginRun::operator()(CTCLInterpreter& interp,
-		      vector<CTCLObject>& objv)
+                      vector<CTCLObject>& objv)
 {
   // Make sured all precoditions are met.
 
@@ -145,6 +158,61 @@ CBeginRun::operator()(CTCLInterpreter& interp,
   }
   pState->setTitle(string(titleString));
   
+    reconnect();
+
+    // Check that the configuration file processes correctly:
+
+    CConfiguration* pConfig = new CConfiguration;
+    Globals::pConfig = pConfig;
+    string errorMessage = "Begin - configuration file processing failed: ";
+    try {
+        pConfig->processConfiguration(Globals::configurationFilename);
+    }
+    catch (string msg) {
+        errorMessage += msg;
+        tclUtil::setResult(interp, errorMessage);
+        return TCL_ERROR;
+    }
+    catch (const char* msg) {
+        errorMessage += msg;
+        tclUtil::setResult(interp, errorMessage);
+        return TCL_ERROR;
+    }
+    catch (CException& e) {
+        errorMessage += e.ReasonText();
+        tclUtil::setResult(interp, errorMessage);
+        return TCL_ERROR;
+    }
+    catch (...) {
+        // Configuration file processing error of some sort...
+
+        tclUtil::setResult(interp, errorMessage);
+        return TCL_ERROR;
+
+    }
+    // Figure out how big the stacks are...the two stack + any headers must
+    // fit into the 1Kx16 stack memory the CUSB has:
+
+    std::vector<CReadoutModule*> stackModules = pConfig->getStacks();
+    size_t totalSize = 0;
+    CCCUSBReadoutList stacks;
+
+    // Just build one gimungous stack from one or both stacks:
+
+    for (int i = 0; i < stackModules.size(); i++) {
+        stackModules[i]->addReadoutList(stacks);
+    }
+    if (stacks.size() > MAX_STACK_STORAGE) {
+        tclUtil::setResult(interp, "**** Your configuration file exceeds the maximum stack storage space ****");
+        return TCL_ERROR;
+    }
+
+    // It did so we can kill it off and start the run.
+    // we kill it off because supporting Tcl drivers requires the configuration be processed a bit specially
+    // so that the interpreter is still around and the Tcl thread model isn't violated.
+    //
+    // delete pConfig;
+    Globals::pConfig = 0;
 
   CAcquisitionThread* pReadout = CAcquisitionThread::getInstance();
   pReadout->start(Globals::pUSBController, Globals::pController);
@@ -152,5 +220,6 @@ CBeginRun::operator()(CTCLInterpreter& interp,
   interp.setResult("Begin - Run started");
 
   return TCL_OK;
+
 }
 

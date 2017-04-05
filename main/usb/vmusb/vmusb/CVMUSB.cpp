@@ -18,6 +18,7 @@
 
 #include "CVMUSB.h"
 #include "CVMUSBReadoutList.h"
+#include <CMutex.h>
 #include <usb.h>
 #include <errno.h>
 #include <string.h>
@@ -43,6 +44,7 @@ static const int ENDPOINT_IN(0x86);
 // Timeouts:
 
 static const int DEFAULT_TIMEOUT(2000);	// ms.
+
 
 // The register offsets:
 
@@ -81,6 +83,9 @@ static const uint16_t TAVcsID12SHIFT(4);
 //   The following flag determines if enumerate needs to init the libusb:
 
 static bool usbInitialized(false);
+
+
+CMutex *CVMUSB::m_pGlobalMutex = nullptr;
 
 /////////////////////////////////////////////////////////////////////
 /*!
@@ -162,6 +167,27 @@ CVMUSB::serialNo(struct usb_device* dev)
   }
 
 }
+
+/*!
+ * \brief Retrieve the mutex for high level synchronization
+ *
+ * The global mutex is different than the mutex that is used for individual
+ * accesses to the module. Instead, it is used for synchronizing sets of
+ * operations that should occur as a unit.
+ *
+ * If the global mutex has not been constructed yet, this constructs it.
+ *
+ * \return the global mutex
+ */
+CMutex& CVMUSB::getGlobalMutex()
+{
+    if (m_pGlobalMutex == nullptr) {
+        m_pGlobalMutex = new CMutex;
+    }
+
+    return *m_pGlobalMutex;
+}
+
 ////////////////////////////////////////////////////////////////////
 /*!
   Construct the CVMUSB object.  This involves storing the
@@ -215,7 +241,7 @@ CVMUSB::CVMUSB(struct usb_device* device) :
     // - is the only way to ensure the m_irqMask value matches the register.
     // - ensures m_irqMask actually gets set:
 
-    writeIrqMask(0xff);
+    writeIrqMask(0x7f);
 }
 ////////////////////////////////////////////////////////////////
 /*!
@@ -614,6 +640,61 @@ CVMUSB::readEventsPerBuffer(void)
   return m_regShadow.eventsPerBuffer; 
 }
 
+
+/*!
+ * \brief Read the global mode buffer size from the shadow register
+ *
+ * \retval the size of the buffer in 16-bit word units (if appropriate)
+ * \retval -1 if the buffering mode is set to be in units of events
+ *
+ * If the size of the buffer cannot be determined, it is assumed to be
+ * in 13 kiloword buffering mode.
+ *
+ */
+int CVMUSB::getBufferSize() const
+{
+    int value = (m_regShadow.globalMode & 0xf);
+    int size = 0;
+    switch(value) {
+    case 0:
+        size = 13*1024;
+        break;
+    case 1:
+        size = 8*1024;
+        break;
+    case 2:
+        size = 4*1024;
+        break;
+    case 3:
+        size = 2*1024;
+        break;
+    case 4:
+        size = 1024;
+        break;
+    case 5:
+        size = 512;
+        break;
+    case 6:
+        size = 256;
+        break;
+    case 7:
+        size = 128;
+        break;
+    case 8:
+        size = 56;
+        break;
+    case 9:
+        size = -1;
+        break;
+    default:
+        size = 13*1024;
+        break;
+    }
+
+    return size;
+}
+
+
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////// VME Transfer Ops ////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -690,12 +771,9 @@ CVMUSB::vmeWrite8(uint32_t address, uint8_t aModifier, uint8_t data)
 int
 CVMUSB::vmeRead32(uint32_t address, uint8_t aModifier, uint32_t* data)
 {
-  CVMUSBReadoutList list;
-  list.addRead32(address, aModifier);
-  uint32_t      lData;
-  int status = doVMERead(list, &lData);
-  *data      = lData;
-  return status;
+  unique_ptr<CVMUSBReadoutList> pList(createReadoutList());
+  pList->addRead32(address, aModifier);
+  return doVMERead(*pList, data);
 }
 
 /*!
@@ -706,13 +784,8 @@ int
 CVMUSB::vmeRead16(uint32_t address, uint8_t aModifier, uint16_t* data)
 {
   unique_ptr<CVMUSBReadoutList> pList(createReadoutList());
-  CVMUSBReadoutList& list = *pList;
-  list.addRead16(address, aModifier);
-  uint32_t lData;
-  int      status = doVMERead(list, &lData);
-  *data = static_cast<uint16_t>(lData);
-
-  return status;
+  pList->addRead16(address, aModifier);
+  return doVMERead(*pList, data);
 }
 /*!
    Read an 8 bit byte from the VME... see vmeRead32 for information about
@@ -721,12 +794,9 @@ CVMUSB::vmeRead16(uint32_t address, uint8_t aModifier, uint16_t* data)
 int
 CVMUSB::vmeRead8(uint32_t address, uint8_t aModifier, uint8_t* data)
 {
-  CVMUSBReadoutList list;
-  list.addRead8(address, aModifier);
-  uint32_t lData;
-  int      status = doVMERead(list, &lData);
-  *data  = static_cast<uint8_t>(lData);
-  return status;
+  unique_ptr<CVMUSBReadoutList> pList(createReadoutList());
+  pList->addRead8(address, aModifier);
+  return doVMERead(*pList, data);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -813,16 +883,16 @@ CVMUSB::vmeFifoRead(uint32_t address, uint8_t aModifier,
 std::vector<uint8_t> 
 CVMUSB::executeList(CVMUSBReadoutList& list, int maxBytes)
 {
-  uint8_t data[maxBytes];
-  size_t     nRead;
-  std::vector<uint8_t> result;
+  size_t               nRead;
+  std::vector<uint8_t> result(maxBytes, 0);
 
-  int status = this->executeList(list, data, maxBytes, &nRead);
+  int status = this->executeList(list, result.data(), result.size(), &nRead);
 
   if (status == 0) {
-    for (int i = 0; i < nRead; i++) {
-      result.push_back(data[i]);
-    }
+    result.resize(nRead);
+  } else {
+    // failure ... get 
+    result.resize(0);
   }
 
   return result;
@@ -960,14 +1030,6 @@ CVMUSB::doVMEWrite(CVMUSBReadoutList& list)
   return status;
 }
 
-// Common code to do a single shot vme read operation:
-int
-CVMUSB::doVMERead(CVMUSBReadoutList& list, uint32_t* datum)
-{
-  size_t actualRead;
-  int status = executeList(list, datum, sizeof(uint32_t), &actualRead);
-  return status;
-}
 
 //  Utility to create a stack from a transfer address word and
 //  a CVMUSBReadoutList and an optional list offset (for non VCG lists).

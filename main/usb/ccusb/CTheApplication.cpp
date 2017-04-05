@@ -57,6 +57,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <string.h>
+#include <CStatusReporting.h>
 
 #include "cmdline.h"
 
@@ -133,6 +134,19 @@ int CTheApplication::operator()(int argc, char** argv)
   // Save the data source id:
   
   Globals::sourceId = arg_struct.sourceid_arg;
+  
+  // Set up logging and log that we're running now:
+  
+  CStatusReporting::pInstance =
+    new CStatusReporting(arg_struct.appname_arg, arg_struct.status_service_arg);
+  
+  std::string logMessage("Readout program (");
+  logMessage += arg_struct.appname_arg;
+  logMessage += ") started";
+
+  CStatusReporting::pInstance->log(
+    CStatusDefinitions::SeverityLevels::INFO, logMessage.c_str()
+  );
   
   // If a timstamp lib was given save that as well:
   

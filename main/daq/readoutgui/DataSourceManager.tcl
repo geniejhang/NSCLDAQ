@@ -769,11 +769,6 @@ proc ::DataSourceMgr::leave {from to} {
     if {($from eq "NotReady") && ($to eq "Starting")} {
         $mgr startAll
         
-        after idle  {
-            set sm [RunstateMachineSingleton %AUTO%]
-            $sm transition Halted
-            $sm destroy
-        }
     }
     
     if {($from in [list Active Paused]) && ($to eq "Halted")} {
@@ -806,6 +801,5 @@ proc ::DataSourceMgr::unregister {} {
     $mgr removeCalloutBundle DataSourceMgr
     $mgr destroy    
 }
-
 
 

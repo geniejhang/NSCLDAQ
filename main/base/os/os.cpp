@@ -183,19 +183,43 @@ int Os::checkNegativeStatus(int returnStatus)
 std::string
 Os::getfqdn(const char* host)
 {
-  struct hostent result;
-  struct hostent* pResult;
-  char   buffer[8192];                 // Ought to be big enough.
-  int    errorCode;
-  
-  gethostbyname_r(
-    host, &result, buffer, sizeof(buffer), &pResult, &errorCode
-  );
-  if (!pResult) {
-    throw std::string(hstrerror(errorCode));
-  }
-  std::string name(result.h_name);
-  return name;
+
+  struct addrinfo  hints = {AI_CANONNAME | AI_V4MAPPED | AI_ADDRCONFIG,
+			    AF_UNSPEC, 0, 0, 
+			    0, NULL, NULL, NULL};
+			    
+  struct addrinfo* hostInfo;
+  checkNegativeStatus( getaddrinfo(host, NULL, &hints, &hostInfo) );
+
+  std::string fqhostname(hostInfo->ai_canonname);
+  freeaddrinfo(hostInfo);
+
+  return fqhostname;
+}
+
+
+CPosixOperatingSystem&
+CPosixOperatingSystem::operator=(const CPosixOperatingSystem& rhs)
+{
+    // the class has no state associated with it, so this is trivial.
+    return *this;
+}
+
+/*!
+ * \brief Create a named semaphore
+ *
+ * \param name          name of the semaphore
+ * \param initCount     initial value of semaphore if created
+ *
+ * \return unique ptr owning newly allocated CPosixSemaphore
+ *
+ * See DAQ::OS::CPosixSemaphore for the semantics of the semaphore.
+ */
+std::unique_ptr<DAQ::OS::CSemaphore>
+CPosixOperatingSystem::createSemaphore(const std::string& name, int initCount)
+{
+    return std::unique_ptr<DAQ::OS::CSemaphore>(new DAQ::OS::CPosixSemaphore(name, initCount));
+
 }
 /**
  * getProcesssCommand

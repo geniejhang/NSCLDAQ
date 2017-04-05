@@ -36,6 +36,7 @@
 #include <os.h>
 #include <CRunState.h>
 #include <CControlQueues.h>
+#include <CStatusReporting.h>
 
 #include <CPortManager.h>
 #include <CVMUSBHighLevelController.h>
@@ -136,6 +137,18 @@ int CTheApplication::operator()(int argc, char** argv)
   // Save the data source id:
   
   Globals::sourceId = parsedArgs.sourceid_arg;
+  
+  // Set up logging and log that we're started:
+  
+  CStatusReporting::pInstance =
+    new CStatusReporting(parsedArgs.appname_arg, parsedArgs.status_service_arg);
+  std::string logMessage = "Readout program (";
+  logMessage += parsedArgs.appname_arg;
+  logMessage + ") starting";
+  
+  CStatusReporting::pInstance->log(
+    CStatusDefinitions::SeverityLevels::INFO, logMessage.c_str()
+  );
   
   // If a timstamp lib was given save that as well:
   

@@ -1,0 +1,157 @@
+#!/bin/sh
+# -*- tcl -*-
+# The next line is executed by /bin/sh, but not tcl \
+exec tclsh "$0" ${1+"$@"}
+
+#    This software is Copyright by the Board of Trustees of Michigan
+#    State University (c) Copyright 2014.
+#
+#    You may use this software under the terms of the GNU public license
+#    (GPL).  The terms of this license are described at:
+#
+#     http://www.gnu.org/licenses/gpl.txt
+#
+#    Authors:
+#             Ron Fox
+#             Jeromy Tompkins 
+#	     NSCL
+#	     Michigan State University
+#	     East Lansing, MI 48824-1321
+
+
+
+##
+# @file dbringbuffer.test
+# @brief tests for the dbringstatus package.
+# @author Ron Fox <fox@nscl.msu.edu>
+#
+
+package require tcltest
+package require DbRingStatus
+package require vardb
+package require vardbringbuffer
+
+#
+# Override the ringbufer usageAt command... lets us provide
+#  a known set of ringbuffers without needing ringmaster.
+#
+
+#  The ginned up rings we'll produce:
+
+array set testRings [list \
+    host1 [list {__test__ {8389392 8389391 100 -1 0 0 {} {0.0 0.0} {}}} {test {8389392 8389391 100 -1 0 0 {} {0.0 0.0} {}}}] \
+    host2 [list {fox {8389392 8389391 100 -1 0 0 {} {0.0 0.0} {}}} {wolf {8389392 8389391 100 -1 0 0 {} {0.0 0.0} {}}}]      \
+    host3 [list {larry {8389392 8389391 100 -1 0 0 {} {0.0 0.0} {}}} {moe {8389392 8389391 100 -1 0 0 {} {0.0 0.0} {}}} ]     \
+]
+
+
+proc ringbuffer {keyword host} {
+    return $::testRings($host)
+}
+
+# Making the ring database:
+
+proc createRingDefs {db} {
+    $db createSchema
+    
+    $db create  __test__ host1
+    $db create test      host1
+    
+    $db create fox       host2
+    $db create wolf      host2
+    
+    $db create larry    host3
+    $db create moe      host3           
+}
+
+
+
+tcltest::test filter-1 {empty inputs gives empty outputs} \
+-body {
+    ::DbRingStatus::filterRings [list] [list]
+} -result [list]
+
+tcltest::test filter-2 {List of usages but empty desired} \
+-setup {
+    set desired [list]
+    set usage [list [list ring1 ""] [list ring2 ""]]
+
+} \
+-body {
+    ::DbRingStatus::filterRings $usage $desired
+} -result [list]
+
+tcltest::test filter-3 {List of usages with subset in desired} \
+-setup {
+    set desired [list [dict create name ring1] [dict create name ring3]]
+    set usage [list [list ring1 ""] [list ring2 ""] [list ring3 ""]]
+} \
+-body {
+    ::DbRingStatus::filterRings $usage $desired
+} -result [list [list ring1 ""] [list ring3 ""]]
+
+tcltest::test ringsbyhost-1 {Gets the dict of all rings indexed by host} \
+-setup {
+    set dbfile [tcltest::makeFile "" vardb.db]
+    vardb::create $dbfile
+
+    nscldaq::vardbringbuffer create rdb file://$dbfile
+    createRingDefs rdb
+} \
+-cleanup {
+    nscldaq::vardbringbuffer destroy rdb
+    tcltest::removeFile $dbfile
+} \
+-body {
+    ::DbRingStatus::ringsByHost rdb
+} -result [dict create host1 [list                                           \
+    [dict create name __test__ host host1 datasize  8388608  maxconsumers 100] \
+    [dict create name test host host1 datasize  8388608  maxconsumers 100]     \
+    ]                                                                        \
+    host2 [list                                                              \
+        [dict create name fox host host2 datasize  8388608  maxconsumers 100]   \
+        [dict create name wolf host host2 datasize  8388608  maxconsumers 100]  \
+    ]                                                                         \
+    host3 [list                                                               \
+        [dict create name larry host host3 datasize  8388608  maxconsumers 100] \
+        [dict create name moe host host3 datasize  8388608  maxconsumers 100]   \
+    ]                                                                         \
+]
+
+tcltest::test ringstatistics-1 {Ring statistics filtered by the rings in database} \
+-setup {
+    set dbfile [tcltest::makeFile "" vardb.db]
+    vardb::create $dbfile
+
+    nscldaq::vardbringbuffer create rdb file://$dbfile
+    rdb createSchema
+    
+    rdb create __test__ host1
+    rdb create test     host1
+    rdb create moe      host3
+     
+} \
+-cleanup {
+    nscldaq::vardbringbuffer destroy rdb
+    tcltest::removeFile $dbfile
+} \
+-body {
+    ::DbRingStatus::ringStatistics [::DbRingStatus::ringsByHost rdb]
+} -result [dict create                                                      \
+    host1   [list  {__test__ {8389392 8389391 100 -1 0 0 {} {0.0 0.0} {}}}  \
+                   {test {8389392 8389391 100 -1 0 0 {} {0.0 0.0} {}}}    ] \
+    host3   [list {moe {8389392 8389391 100 -1 0 0 {} {0.0 0.0} {}}}]       \
+]
+
+
+#  test finalization.
+
+proc tcltest::cleanupTestsHook {} {
+    variable numTests
+    set ::exitCode $numTests(Failed)
+} 
+
+
+tcltest::cleanupTests
+
+exit $exitCode
