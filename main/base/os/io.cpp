@@ -27,7 +27,8 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <set>
-
+#include <system_error>
+#include <cmath>
 
 
 static std::set<int>                 okErrors;	// Acceptable errors in I/O operations.
@@ -118,7 +119,7 @@ void writeData (int fd, const void* pData , size_t size)
  *
  * @throw int - errno on error.
  */
-  size_t readData (int fd, void* pBuffer,  size_t nBytes)
+  ssize_t readData(int fd, void* pBuffer,  size_t nBytes)
 {
   uint8_t* pDest(reinterpret_cast<uint8_t*>(pBuffer));
   size_t    residual(nBytes);
@@ -158,10 +159,10 @@ void writeData (int fd, const void* pData , size_t size)
 }
 
   /**
-   * Get a buffer of data from  a file descritor with a timeout
-   * If necessary multiple read() operation are performed to deal
-   * with potential buffering between the source an us (e.g. we are typically
-   * on the ass end of a pipe where the pipe buffer may be smaller than an
+   * Get a buffer of data from a file descriptor with a timeout
+   * If necessary multiple read() operations are performed to deal
+   * with potential buffering between the source and us (e.g. we are typically
+   * on the end of a pipe where the pipe buffer may be smaller than an
    * event buffer.
    * @param fd      - File descriptor to read from.
    * @param pBuffer - Pointer to a buffer big enough to hold the event buffer.
@@ -173,47 +174,79 @@ void writeData (int fd, const void* pData , size_t size)
    *
    * @throw int - errno on error.
    */
-    size_t timedReadData (int fd, void* pBuffer,  size_t nBytes, const ::DAQ::CTimeout& timeout)
+  std::pair<ssize_t, ReturnCode>
+  timedReadData(int fd, void* pBuffer,  size_t nBytes, const ::DAQ::CTimeout& timeout)
   {
-    uint8_t* pDest(reinterpret_cast<uint8_t*>(pBuffer));
+      using namespace std::chrono;
+
+    uint8_t*  pDest(reinterpret_cast<uint8_t*>(pBuffer));
     size_t    residual(nBytes);
-    ssize_t   nRead;
+    ssize_t   nRead = 0;
 
-    // Read the buffer until :
-    //  error other than EAGAIN, EWOULDBLOCK  or EINTR
-    //  zero bytes read (end of file).
-    //  Regardless of how all this ends, we are going to emit a message on sterr.
-    //
-
+    // perform a read with a timeout iteratively until there is a timeout or something
+    // else stops the reading.
     while (residual) {
-      nRead = read(fd, pDest, residual);
-      if (nRead == 0)		// EOF
-      {
-        return nBytes - residual;
-      }
-      if ((nRead < 0) && badError(errno) )
-      {
-        throw errno;
-      }
-      // If we got here and nread < 0, we need to set it to zero.
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(fd, &readfds);
 
-      if (nRead < 0)
-      {
-        nRead = 0;
-      }
+        struct timeval tv;
+        // break up the remaining time into complete seconds and fractional seconds
+        auto time = duration_cast<microseconds>(timeout.getRemainingTime());
 
-      // Adjust all the pointers and counts for what we read:
+        tv.tv_sec  = time.count()/1000000;
+        tv.tv_usec = time.count()%1000000;
 
-      residual -= nRead;
-      pDest  += nRead;
+        // wait until fd is readable with the timeout
+        int status = select(fd+1, &readfds, nullptr, nullptr, &tv);
 
-      if (timeout.expired()) {
-          break;
-      }
+        if (status < 0) {
+            // error state... don't worry about EAGAIN, EINTR... just try again
+            if ((errno == EAGAIN || errno == EINTR)) {
+                if (timeout.expired()) {
+                    return std::make_pair(nRead, TIMED_OUT);
+                } else {
+                    continue;
+                }
+            } else {
+                // bad error
+                throw std::system_error(errno, std::system_category(),
+                                        "Failed while waiting on fd to become readable");
+            }
+        } else if (status == 0) {
+            // timeout
+            return std::make_pair(nRead, TIMED_OUT);
+        } else {
+            // there is a file descriptor set for reading ... read it!
+            ssize_t result = read(fd, pDest, residual);
+            if (result == 0) {
+                return std::make_pair(nRead, END_OF_FILE);
+            } else if ((result < 0)) {
+                // error condition
+
+                if (badError(errno) ) {
+                    throw std::system_error(errno, std::system_category(),
+                                            "Failed while reading from file descriptor");
+                } else if (!timeout.expired()) {
+                    continue;
+                } else {
+                    return std::make_pair(nRead, ERROR);
+                }
+            } else {
+                // good data to read...
+                nRead    += result;
+                pDest    += result;
+                residual -= result;
+            }
+        }
+
+        if (timeout.expired()) {
+            break;
+        }
     }
     // If we get here the read worked:
 
-    return nBytes;		// Complete read.
+    return std::make_pair(nRead, SUCCESS);	// Complete read.
   }
 
 

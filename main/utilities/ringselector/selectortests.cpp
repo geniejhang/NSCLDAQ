@@ -72,6 +72,7 @@ readItem(int fd, void* pBuffer)
   uint64_t tstamp; 
   bool swapNeeded;
  
+//  dumpBinary(p, p+20);
   Parser::parseHeader(p, p+bytes, size, type, tstamp, sourceId, swapNeeded);
   p += bytes;
 
@@ -242,8 +243,6 @@ static void beginRun(DAQ::CDataSink& prod, int fd,  bool check = true)
   
   // Should now be able to read the item from the pipe and it should match
   // the item we put in.
-  
-  
   unsigned char buffer[1024];
  
   if (check) {

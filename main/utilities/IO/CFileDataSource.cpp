@@ -27,6 +27,7 @@
 
 #include <string>
 #include <stdexcept>
+#include <system_error>
 #include <limits>
 
 #include <string.h>
@@ -120,14 +121,25 @@ CFileDataSource::~CFileDataSource()
  * \retval numeric_limits<size_t>::max() if fd == STDIN_FILENO
  * \retval number of bytes to end of file otherwise
  */
-size_t CFileDataSource::availableData() const
+size_t CFileDataSource::availableData()
 {
     size_t nBytes = 0;
     if ( m_fd != STDIN_FILENO ){
         // read current position and size of file
         // return the difference
         off_t currentPosition = lseek(m_fd, 0, SEEK_CUR);
-        off_t endPos = lseek(m_fd, 0, SEEK_END);
+
+        off_t endPos;
+        if (m_lastReadWasPeek) {
+            endPos = m_pos;
+        } else {
+            endPos = lseek(m_fd, 0, SEEK_END);
+        }
+
+        if (endPos == currentPosition) {
+            setEOF(true);
+        }
+
         off_t status = lseek(m_fd, currentPosition, SEEK_SET);
 
         nBytes = (endPos - currentPosition);
@@ -163,17 +175,31 @@ size_t CFileDataSource::peek(char* pBuffer, size_t nBytes)
 
         if (previousSize < nBytes) {
             m_peekBuffer.resize(nBytes);
-            size_t nBytesRead = io::timedReadData(m_fd,
+            auto result = io::timedReadData(m_fd,
                                              m_peekBuffer.data() + previousSize,
                                              nBytes - previousSize,
-                                             CTimeout(0));
+                                             CTimeout(0)); // poll
 
-            if (nBytesRead < 0) {
-                std::string msg("CFileDataSource::peek() ");
-                msg += strerror(errno);
-                throw std::runtime_error(msg);
+            if (result.second == io::END_OF_FILE) {
+                setEOF(true);
+
+                // shrink the size of the buffer to only contain data that was
+                // successfully read
+                m_peekBuffer.resize(previousSize + result.first);
+
+            } else if (result.second == io::TIMED_OUT) {
+                // shrink the size of the buffer to only contain data that was
+                // successfully read
+                m_peekBuffer.resize(previousSize + result.first);
+            } else if ( result.second == io::ERROR ) {
+                // bail but correct for the changes that were made...
+                // shrink the size of the buffer to only contain data taht was
+                // successfully read
+                m_peekBuffer.resize(previousSize + result.first);
+                throw std::system_error(errno, std::system_category(),
+                                        "CFileDataSource::peek(char*, size_t)");
             } else {
-                nBytesToCopy = previousSize + nBytesRead;
+                nBytesToCopy = previousSize + result.first;
             }
         } else {
             nBytesToCopy = nBytes;
@@ -184,7 +210,11 @@ size_t CFileDataSource::peek(char* pBuffer, size_t nBytes)
 
         // no data in peek buffer... set it up and then read into it
         m_peekBuffer.resize(nBytes);
-        nBytesToCopy = io::timedReadData(m_fd, m_peekBuffer.data(), nBytes, CTimeout(0));
+        auto result = io::timedReadData(m_fd, m_peekBuffer.data(), nBytes, CTimeout(0));
+        if (result.second == io::END_OF_FILE) {
+            setEOF(true);
+        }
+        nBytesToCopy += result.first;
     }
 
     // copy from our peek buffer into the user's
@@ -232,7 +262,26 @@ void CFileDataSource::ignore(size_t nBytes)
             // ignored... we just need to ignore the remainder
             tempBuffer.resize(nBytes - nBytesInPeekBuffer);
 
-            read(tempBuffer.data(), tempBuffer.size());
+            size_t nRead = io::readData(m_fd, tempBuffer.data(), tempBuffer.size());
+            if (nRead != tempBuffer.size()) {
+                if (nRead == 0) {
+                    setEOF(true);
+                } else {
+                    throw std::runtime_error("CFileDataSource::ignore(size_t) failed to ignore "
+                                             "requested data.");
+                }
+            }
+//            auto result = io::timedReadData(m_fd, tempBuffer.data(), tempBuffer.size(),
+//                                            CTimeout(0));
+//            if (result.second = io::END_OF_FILE) {
+//                setEOF(true);
+//            } else if (result.second != io::SUCCESS ) {
+//                throw std::system_error(errno, std::system_category(),
+//                                        "CFileDataSource::ignore(size_t)");
+//            } else if (result.first != tempBuffer.size()) {
+//                throw std::runtime_error("CFileDataSource::ignore(size_t) failed to ignore "
+//                                         "requested data.");
+//            }
         }
     } else {
         // there is nothing in the peek buffer to care about... just ignore
@@ -278,7 +327,7 @@ size_t CFileDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& 
         if (nBytes <= m_peekBuffer.size()) {
             // the user asked for less data than is in the peek buffer... copy over the
             // data itno the user's buffer and return... no IO needs to take place
-            std::copy(m_peekBuffer.begin(), m_peekBuffer.begin()+ nBytes, pBuffer);
+            std::copy(m_peekBuffer.begin(), m_peekBuffer.begin() + nBytes, pBuffer);
             m_peekBuffer.erase(m_peekBuffer.begin(), m_peekBuffer.begin()+nBytes);
 
             totalRead = nBytes;
@@ -303,26 +352,36 @@ size_t CFileDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& 
             // read the rest
             if (! eof() ) {
                 size_t nToRead = nBytes-nBytesInPeek;
-                size_t nRead = io::timedReadData(m_fd, pBuffer, nToRead, timeout);
+                auto result = io::timedReadData(m_fd, pBuffer, nToRead, timeout);
 
-                if (nRead != nToRead && !timeout.expired()) {
+                if (result.second == io::END_OF_FILE) {
                     setEOF(true);
+                } else if (result.second == io::ERROR) {
+                    // this was not a "bad" error so we were returned it...
+                    // we will throw it at this point.
+                    throw std::system_error(errno, std::system_category(),
+                                            "CFileDataSource::timedRead(char*, size_t, const CTimeout&)");
                 }
 
-                totalRead += nRead;
+                totalRead += result.first;
             }
         }
     } else {
 
 
         if (! eof() ) {
-            size_t nRead = io::timedReadData(m_fd, pBuffer, nBytes, timeout);
+            auto result = io::timedReadData(m_fd, pBuffer, nBytes, timeout);
 
-            if (nRead != nBytes) {
+            if (result.second == io::END_OF_FILE ) {
                 setEOF(true);
+            } else if (result.second == io::ERROR) {
+                // this was not a "bad" error so we were returned it...
+                // we will throw it at this point.
+                throw std::system_error(errno, std::system_category(),
+                                        "CFileDataSource::timedRead(char*, size_t, const CTimeout&)");
             }
 
-            totalRead += nRead;
+            totalRead += result.first;
         }
     }
 

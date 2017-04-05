@@ -81,7 +81,7 @@ size_t CTestSourceSink::timedRead(char* pBuffer, size_t nBytes, const CTimeout &
 }
 
 
-size_t CTestSourceSink::availableData() const
+size_t CTestSourceSink::availableData()
 {
     return m_buffer.size();
 }

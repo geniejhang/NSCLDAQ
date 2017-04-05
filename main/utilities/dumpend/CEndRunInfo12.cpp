@@ -164,7 +164,7 @@ CEndRunInfo12::getTod(int which) const
   throwIfBadIndex(which);
   return m_endRuns[which]->getTimestamp();
 }
-/*----------------------------------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
 ** Private utilities.
 */
 
@@ -205,7 +205,7 @@ CEndRunInfo12::loadEndRuns()
           m_endRuns.emplace_back(new V12::CRingStateChangeItem(item));
         }
       }
-    }  catch (std::exception& exc) {
+    } catch (std::exception& exc) {
         std::cerr << "Caught exception while processing event file: " << exc.what() << std::endl;
     }
 }

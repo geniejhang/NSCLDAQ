@@ -63,7 +63,7 @@ public:
    */
   void clear() { setEOF(false); }
 
-  virtual size_t availableData() const = 0;
+  virtual size_t availableData() = 0;
   virtual void ignore(size_t nBytes) = 0;
   virtual size_t peek(char* pBuffer, size_t nBytes) = 0;
   virtual size_t tell() const = 0;

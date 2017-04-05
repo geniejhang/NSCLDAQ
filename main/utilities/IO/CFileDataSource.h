@@ -78,7 +78,7 @@ public:
 
   size_t peek(char* pBuffer, size_t nBytes);
   void ignore(size_t nBytes);
-  size_t availableData() const;
+  size_t availableData();
   size_t tell() const;
 
   size_t timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout);

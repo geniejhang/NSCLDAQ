@@ -67,7 +67,7 @@ CRingDataSource::~CRingDataSource()
 //  Required interfaces:
 
 
-size_t CRingDataSource::availableData() const {
+size_t CRingDataSource::availableData() {
     return m_pRing->availableData();
 }
 
@@ -89,8 +89,9 @@ size_t CRingDataSource::tell() const
 
 size_t CRingDataSource::timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout)
 {
-  unsigned long nSeconds = timeout.getRemainingSeconds();
-  return m_pRing->get(pBuffer, nBytes, nSeconds);
+    using namespace std::chrono;
+    auto nSeconds = duration_cast<seconds>(timeout.getRemainingTime());
+    return m_pRing->get(pBuffer, nBytes, nSeconds.count());
 }
 
 

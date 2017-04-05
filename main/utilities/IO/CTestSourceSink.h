@@ -97,7 +97,7 @@ class CTestSourceSink : public CDataSource, public CDataSink
     virtual size_t timedRead(char* pBuffer, size_t nBytes, const CTimeout& );
 
 
-    size_t availableData() const;
+    size_t availableData();
     void   ignore(size_t nBytes);
     size_t peek(char *pBuffer, size_t nBytes);
     size_t tell() const;
