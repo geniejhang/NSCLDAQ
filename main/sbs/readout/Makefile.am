@@ -109,7 +109,7 @@ EXTRA_DIST	=	options.ggo Skeleton.cpp UserMakefile.in SBSRdoMakeIncludes.in SBSR
 			$(TCLPACKAGES)
 
 
-noinst_PROGRAMS	= Readout #tests
+noinst_PROGRAMS	= Readout tests
 
 Readout_SOURCES = Skeleton.cpp
 
