@@ -54,7 +54,9 @@ unittests_SOURCES=TestRunner.cpp fileitertest.cpp \
         CEndRunInfo12.cpp CEndRunInfo12.h \
 	CEndRunInfoFactory.cpp CEndRunInfoFactory.h
 
-unittests_CXXFLAGS=$(CPPUNIT_CFLAGS) $(COMMON_CFLAGS) -I@top_srcdir@/base/os
+unittests_CXXFLAGS=$(CPPUNIT_CFLAGS) $(COMMON_CFLAGS) \
+									 -I@top_srcdir@/base/os \
+									 -I@top_srcdir@/base/testutils
 unittests_LDADD=$(CPPUNIT_LDFLAGS) @top_builddir@/base/os/libdaqshm.la $(COMMON_LOADFLAGS)
 
 EXTRA_DIST=options.ggo
