@@ -80,7 +80,7 @@ unittests_LDADD		= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 			@top_builddir@/base/os/libdaqshm.la		\
 			@LIBEXCEPTION_LDFLAGS@
 
-unittests_CPPFLAGS=$(COMPILATION_FLAGS)
+unittests_CPPFLAGS=$(COMPILATION_FLAGS) -I@top_srcdir@/base/testutils
 
 unittests_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"
 
