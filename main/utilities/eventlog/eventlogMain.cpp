@@ -599,8 +599,8 @@ class noData :  public CRingBuffer::CRingBufferPredicate
      //        a run it's probably going to be necessary to get ring items
      //        with a timeout.
 
-     readItem(*m_pRing, rawItem, CTimeout(std::chrono::seconds(1));
-         if(rawItem.type() != UNDEFINED && isBadItem(*pItem, runNumber)) {
+     readItem(*m_pRing, rawItem, CTimeout(std::chrono::seconds(1)));
+         if(rawItem.type() != UNDEFINED && isBadItem(rawItem, runNumber)) {
          std::cerr << "Eventlog: Data indicates probably the run ended in error exiting\n";
          log(
              "Event log exiting - got a bad data item.  run may have ended in error",
@@ -1280,4 +1280,3 @@ EventLogMain::stateManagerDie(const char* msg)
   
   exit(EXIT_FAILURE);
 }
->>>>>>> origin/nscldaq-12.0-dev
