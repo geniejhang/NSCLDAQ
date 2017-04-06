@@ -89,7 +89,9 @@ selectortests_LDADD	=	$(CPPUNIT_LDFLAGS)	\
 
 selectortests_LDFLAGS	=	-Wl,"-rpath=link=$(libdir)"
 
-selectortests_CPPFLAGS	=	$(ringselector_CPPFLAGS) -DBINDIR="\"$(bindir)\"" 
+selectortests_CPPFLAGS	=	$(ringselector_CPPFLAGS) \
+                                -I@top_srcdir@/base/testutils \
+                                -DBINDIR="\"$(bindir)\""
 
 
 
