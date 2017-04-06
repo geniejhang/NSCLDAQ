@@ -28,6 +28,8 @@
 #include <cstdint>
 
 
+namespace DAQ {
+
 class CChannel;
 
 /**
@@ -65,4 +67,5 @@ private:
     CChannel* getChan(unsigned src, unsigned ch, bool incremental);
 };
 
+} // end DAQ
 #endif

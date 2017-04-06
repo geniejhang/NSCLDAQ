@@ -23,6 +23,7 @@
 
 #include "CCumulativeChannel.h"
 
+namespace DAQ {
 
 /**
  * constructor
@@ -66,3 +67,5 @@ CCumulativeChannel::operator uint64_t()
 {
     return m_WrapAdjust + m_lastValue;
 }
+
+} // end DAQ

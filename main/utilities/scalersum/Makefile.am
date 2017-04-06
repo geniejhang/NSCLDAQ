@@ -3,13 +3,22 @@ bin_PROGRAMS = sumscaler
 sumscaler_SOURCES=   main.cpp App.cpp App.h  CRun.h CRun.cpp \
 	CChannel.h CIncrementalChannel.h CIncrementalChannel.cpp \
 	CCumulativeChannel.h CCumulativeChannel.cpp
+
 nodist_sumscaler_SOURCES=options.c options.h
 
 sumscaler_CPPFLAGS=-I@top_srcdir@/utilities/IO 			\
-		    -I@top_srcdir@/daq/format			\
+		    -I@top_srcdir@/utilities/nscldaq-format/format			\
+		    -I@top_srcdir@/utilities/nscldaq-format/Buffer			\
+		    -I@top_srcdir@/utilities/nscldaq-format/FormattedIO			\
+		    -I@top_srcdir@/utilities/IO			\
+		    -I@top_srcdir@/base/os			\
 		    @LIBTCLPLUS_CFLAGS@
+
 sumscaler_LDFLAGS = @top_builddir@/utilities/IO/libdaqio.la 	\
-    @top_builddir@/daq/format/libdataformat.la			\
+    @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la			\
+    @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
+    @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+    @top_builddir@/base/os/libdaqshm.la \
     @LIBEXCEPTION_LDFLAGS@
 
 BUILT_SOURCES	= options.c options.h
@@ -28,10 +37,10 @@ clean-local:
 
 noinst_PROGRAMS=unittests
 
-unittests_SOURCES=Asserts.h TestRunner.cpp channelTests.cpp runTests.cpp \
-	CRun.cpp CCumulativeChannel.cpp CIncrementalChannel.cpp 
+unittests_SOURCES=TestRunner.cpp channelTests.cpp runTests.cpp \
+									CRun.cpp CCumulativeChannel.cpp CIncrementalChannel.cpp 
 
-unittests_CPPFLAGS=$(sumscaler_CPPFLAGS) @CPPUNIT_CFLAGS@
+unittests_CPPFLAGS=$(sumscaler_CPPFLAGS) -I@top_srcdir@/base/testutils @CPPUNIT_CFLAGS@
 unittests_LDFLAGS=$(sumscaler_LDFLAGS)   @CPPUNIT_LDFLAGS@
 
 TESTS = unittests

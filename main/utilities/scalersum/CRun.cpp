@@ -23,6 +23,8 @@
 #include "CIncrementalChannel.h"
 #include "CCumulativeChannel.h"
 
+namespace DAQ {
+
 /**
  * constructor
  *    Initialize a new object.
@@ -158,4 +160,5 @@ CRun::getChan(unsigned src, unsigned chan, bool incremental)
     return pResult;
 }
 
+} // end DAQ
 

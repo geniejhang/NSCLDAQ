@@ -6,6 +6,8 @@
 
 #include "CIncrementalChannel.h"
 
+using namespace DAQ;
+
 class testIncChan : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(testIncChan);
   CPPUNIT_TEST(initially0);

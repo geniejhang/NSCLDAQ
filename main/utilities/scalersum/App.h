@@ -33,9 +33,14 @@
 #include "options.h"
 
 
+namespace DAQ {
+
 class CDataSource;
 class CRun;
+
+namespace V12 {
 class CRingItem;
+}
 
 /**
  * @class App
@@ -92,9 +97,9 @@ private:
     void processFile(CDataSource& ds);
     std::string makeFileUri(std::string name);
 
-    void begin(CRingItem& item);
+    void begin(V12::CRingItem& item);
     void end();
-    void scaler(CRingItem& item);
+    void scaler(V12::CRingItem& item);
     
     void outputByRuns(
         std::ostream& out,
@@ -109,4 +114,5 @@ private:
     
 };
 
+} // end DAQ
 #endif

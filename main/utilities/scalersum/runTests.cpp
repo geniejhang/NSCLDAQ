@@ -6,6 +6,7 @@
 
 #include "CRun.h"
 
+using namespace DAQ;
 
 class testRun : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(testRun);
