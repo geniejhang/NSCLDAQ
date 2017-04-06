@@ -6,12 +6,12 @@ COMPILATION_FLAGS	=	-I@top_srcdir@/sbs/vmemodules	\
 			-I@top_srcdir@/base/headers	\
 			-I@top_srcdir@/servers/portmanager	\
 			-I@top_srcdir@/base/dataflow		\
-                        -I@top_srcdir@/utilities/IO		\
-                        -I@top_srcdir@/utilities/nscldaq-format/format		\
-                        -I@top_srcdir@/utilities/nscldaq-format/Buffer		\
-                        -I@top_srcdir@/utilities/nscldaq-format/FormattedIO	\
+      -I@top_srcdir@/utilities/IO		\
+      -I@top_srcdir@/utilities/nscldaq-format/format		\
+      -I@top_srcdir@/utilities/nscldaq-format/Buffer		\
+      -I@top_srcdir@/utilities/nscldaq-format/FormattedIO	\
 			-I@top_srcdir@/base/thread 		\
-                        -I@top_srcdir@/daq/eventbuilder         \
+      -I@top_srcdir@/daq/eventbuilder         \
 			-I@top_srcdir@/base/os			\
 			-I@top_srcdir@/diagnostics/status	\
 			$(TCL_FLAGS) $(THREADCXX_FLAGS)	\
@@ -89,10 +89,10 @@ noinst_HEADERS	=	CReadoutMain.h Skeleton.h CTCLAuthorizer.h	\
 
 libSBSProductionReadout_la_LIBADD	=	@top_builddir@/sbs/vmemodules/libSBSDeviceSupport.la	\
 						@top_builddir@/sbs/nsclapi/libSBSVmeAPI.la		\
-                                                @top_builddir@/utilities/IO/libdaqio.la		\
-                                                @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la		\
-                                                @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la		\
-                                                @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la		\
+						@top_builddir@/utilities/IO/libdaqio.la		\
+            @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la		\
+            @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la		\
+            @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la		\
 						@top_builddir@/servers/portmanager/libPortManager.la \
 						@top_builddir@/base/dataflow/libDataFlow.la	\
 						@top_builddir@/sbs/				\
@@ -192,11 +192,12 @@ tests_LDADD = 	libSBSProductionReadout_la-CExperiment.lo	\
 		libSBSProductionReadout_la-CDocumentedVars.lo				\
 		libSBSProductionReadout_la-CVarList.lo					\
 		libSBSProductionReadout_la-CVariableBuffers.lo				\
-                @top_builddir@/utilities/IO/libdaqio.la		\
-                @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la		\
-                @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la		\
-                @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la		\
-                @top_builddir@/base/dataflow/libDataFlow.la	\
+    @top_builddir@/utilities/IO/libdaqio.la		\
+    @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la		\
+    @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la		\
+    @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la		\
+    @top_builddir@/base/dataflow/libDataFlow.la	\
+	  @top_builddir@/diagnostics/status/libStatusMessages.la  \
 		@top_builddir@/sbs/nsclapi/libSBSVmeAPI.la	\
 		@top_builddir@/base/thread/libdaqthreads.la	\
 		@top_builddir@/base/os/libdaqshm.la		\
