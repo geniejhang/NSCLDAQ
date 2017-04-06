@@ -127,7 +127,7 @@ libPyStatusMessages_la_LIBADD=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
 
 libPyStatusDb_la_SOURCES=PyStatusDb.cpp
 libPyStatusDb_la_CPPFLAGS=$(COMPILATION_FLAGS) @PYTHON_CPPFLAGS@
-libPyStatusDb_la_LDFLAGS=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
+libPyStatusDb_la_LIBADD=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
 				@top_builddir@/base/sqlite++/libsqlite3pp.la \
 				@PYTHON_LDFLAGS@ @SQLITE3_LDFLAGS@
 
