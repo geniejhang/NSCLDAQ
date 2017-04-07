@@ -53,21 +53,18 @@ nodist_ringstatusdaemon_SOURCES = ringstatus.c ringstatus.h
 
 statusaggregator_SOURCES  = aggregator.cpp
 statusaggregator_CPPFLAGS = -I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@
-statusaggregator_LDADD  =  @top_builddir@/servers/portmanager/libPortManager.la \
-	@builddir@/libStatusMessages.la						  \
-	@ZMQ_LDFLAGS@								\
-	@LIBEXCEPTION_LDFLAGS@
+statusaggregator_LDADD  = @builddir@/libStatusMessages.la						  \
+													$(COMMON_LIBS) \
+													@LIBEXCEPTION_LDFLAGS@
 
 #--------------- aggregator with node discovery.
 
 multiaggregator_SOURCES = multiaggmain.cpp CMultiAggregator.cpp CMultiAggregator.h
 multiaggregator_CPPFLAGS=-I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/dataflow -I@top_srcdir@/base/os
-multiaggregator_LDADD = @top_builddir@/servers/portmanager/libPortManager.la \
-	@builddir@/libStatusMessages.la @top_builddir@/base/dataflow/libDataFlow.la \
-	@top_builddir@/base/os/libdaqshm.la					\
-	@ZMQ_LDFLAGS@								\
-	@LIBEXCEPTION_LDFLAGS@
+multiaggregator_LDADD = @builddir@/libStatusMessages.la \
+												$(COMMON_LIBS) \
+												@LIBEXCEPTION_LDFLAGS@
 
 nodist_multiaggregator_SOURCES = multiaggregator.h multiaggregator.c
 
