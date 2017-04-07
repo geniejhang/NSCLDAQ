@@ -136,7 +136,6 @@ proc pauseRunOrDie {} {
     
 }
 proc preResumeOrDie {} {
-    puts "preResumeOrDie"
     if {[catch preresume msg]} {
         ::state::client setstate NotReady
         catch end
@@ -146,7 +145,6 @@ proc preResumeOrDie {} {
     set ::state::runActive 1;             # Should aready be active.
 }
 proc resumeOrDie {} {
-    puts "resumeOrDie"
     if {[catch resume msg]} {
         ::state::client setstate NotReady
         catch end
