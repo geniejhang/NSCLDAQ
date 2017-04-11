@@ -147,6 +147,7 @@ options.h:	options.ggo
 clean-local:
 	-rm -f options.c options.h
 
+
 #tests_SOURCES=TestRunner.cpp experimentTests.cpp \
 #		compositeTests.cpp scalerbankTests.cpp	\
 #		compoundevsegTest.cpp			\
@@ -159,13 +160,13 @@ clean-local:
 #		testVariableBuffers.cpp	
 #
 #tests_DEPENDENCIES=libSBSProductionReadout.la
-#
+
 #tests_CPPFLAGS=$(COMPILATION_FLAGS)
-#
+
 #tests_LDADD = 	libSBSProductionReadout_la-CExperiment.lo	\
 #		libSBSProductionReadout_la-CComposite.lo	\
 #		libSBSProductionReadout_la-CScaler.lo libSBSProductionReadout_la-CScalerBank.lo	\
-#		libSBSProductionReadout_la-CEventSegment.lo libSBSProductionReaout_la-CCompoundEventSegment.lo \
+#		libSBSProductionReadout_la-CEventSegment.lo libSBSProductionReadout_la-CCompoundEventSegment.lo \
 #		libSBSProductionReadout_la-RunState.lo	\
 #		libSBSProductionReadout_la-CEventTrigger.lo libSBSProductionReadout_la-CTimedTrigger.lo	\
 #		libSBSProductionReadout_la-CNullTrigger.lo	libSBSProductionReadout_la-CRunControlPackage.lo		\
@@ -190,11 +191,11 @@ clean-local:
 #		@top_builddir@/sbs/nsclapi/libSBSVmeAPI.la	\
 #		@top_builddir@/base/thread/libdaqthreads.la	\
 #		@top_builddir@/base/os/libdaqshm.la		\
+#		@top_builddir@/diagnostics/status/libStatusMessages.la \
 #		$(TCL_LDFLAGS) 					\
 #		$(CPPUNIT_LDFLAGS)  $(THREADLD_FLAGS)
 #
 #tests_LDFLAGS= @LIBTCLPLUS_LDFLAGS@ -Wl,"-rpath-link=$(libdir)"
-
 
 
 

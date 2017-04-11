@@ -23,6 +23,7 @@
 
 #define private public
 #include <CExperiment.h>
+#include <CStatusReporting.h>
 #undef private
 
 extern std::string uniqueName(std::string);
@@ -31,6 +32,7 @@ using namespace std;
 
 static const string ringName(uniqueName("experimentTest"));
 static string testTitle("This is my title");
+static CStatusReporting reporter("Readout", "StatusAggregator");
 
 class experimentTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(experimentTests);
@@ -45,6 +47,7 @@ private:
   CExperiment*  m_pExperiment;
 public:
   void setUp() {
+    reporter.pInstance = &reporter;
     if (CRingBuffer::isRing(ringName)) {
       CRingBuffer::remove(ringName); // In case it already exists, remove it
     }

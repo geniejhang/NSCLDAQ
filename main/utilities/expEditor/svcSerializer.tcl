@@ -79,7 +79,7 @@ proc ::Serialize::_saveService {api obj}  {
     set p [$props find path]
     set path [$p cget -value]
     
-    set p [$propse find args]
+    set p [$props find args]
     set args [$p cget -value]
     
     set position [$obj getPosition]
@@ -138,6 +138,7 @@ proc ::Serialize::serializeServices {dbURI objects} {
 #                 *  y  - y coordinate saved from last placemento of object.
 proc ::Serialize::deserializeServices dbUri {
     ::nscldaq::services _svcDeserialize $dbUri
+    flush stdout
     set result [list]
     
     if {[_svcDeserialize exists]} {
@@ -155,6 +156,7 @@ proc ::Serialize::deserializeServices dbUri {
             }
             #  args may or may not be present depending on how old the db is:
             
+            set args [list]
             catch {
                 set args [_svcDeserialize getProperty $name args]
                 [$props find args] configure -value $args
