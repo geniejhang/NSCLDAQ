@@ -205,7 +205,7 @@ snit::type EventLogProgram {
             -name segmentsize -value 2g -validate [mymethod _validSize]   \
         ]
         $properties add [EnumeratedEditor %AUTO%                             \
-            -name checkum -values [list true false] -value true                \
+            -name checksum -values [list true false] -value true                \
         ]
         $properties add [EnumeratedEditor %AUTO%                             \
             -name {combine runs} -values [list true false] -value false        \
