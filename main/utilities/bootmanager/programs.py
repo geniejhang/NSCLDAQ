@@ -23,7 +23,7 @@
 
 from nscldaq.programs import ssh
 import os
-
+import Tkinter                 # Used to parse Tcl lists.
 
 ##
 # Class to manage a set of programs that are run on other platforms.
@@ -91,11 +91,147 @@ class Programs:
         }
     
     ##
+    # __getProgramParameters
+    #   Decodes the Tcl list (might be empty) in the 'Program Parameters'
+    #   property of a program and returns it.
+    #
+    # @param name - name of the program.
+    # @return string - Tcl list of parameters turned into a string.
+    #
+    def __getProgramParameters(self, name):
+        result = ' '
+        tclList = self._client.getProgramProperty(name, 'Program Parameters').strip()
+        if tclList != '':
+            pyList = []
+            tclInterp = Tkinter.Tcl().tk.eval
+            tclInterp('set list "%s"' % tclList)
+            size = int(tclInterp('llength $list'))
+            for i in range(size):
+                element = tclInterp('lindex $list %d' % i)
+                pyList.append(element)
+            result += ' '.join(pyList)
+    
+        return result
+    
+    ##
+    # __propertiesToOptions
+    #    Given a map whose keys are properties and whose values are corresponding
+    #    option names, computes program options based on the properties that
+    #    are present (non empty).
+    #
+    # @param name - program name
+    # @param map  - Property map described above.
+    #
+    def __propertiesToOptions(self, name, map):
+        optionList = []
+        for propName in map.keys():
+            try :
+                propValue = self._client.getProgramProperty(name, propName).strip()
+                if propValue != '':
+                    optname = map[propName]
+                    optionList.append(optname + '=' + propValue)
+            except:
+                pass             # Just assume a property is not defined.
+        return ' ' + ' '.join(optionList)
+    ##
+    # __propertiesToFlags
+    #
+    #   Processes properties that have 'boolean' values that, if 'true' result
+    #   in the presence of a flag parameter.
+    #
+    # @param name - the program name.
+    # @param map  - map of property names to flag names.
+    # @return string - command line options
+    #
+    def __propertiesToFlags(self, name, map):
+        flags = []
+        for propName in map.keys():
+            try :
+                propValue = self._client.getProgramProperty(name, propName).strip()
+                if (propValue  == 'true') :
+                    flags.append(map[propName])
+            except:
+                pass                     # Assume no property defined.
+        
+        return ' ' + ' '.join(flags)
+    #
+    ##
+    # __getReadoutParameters
+    #    Get the properties associated with readout prgorams and translate them
+    #    into program command line options.
+    #
+    # @param name - program name.
+    # @return string - command line parameters/options
+    #
+    def __getReadoutParameters(self, name):
+        readoutPropertyMap = {
+            'init script' : '--init-script',
+            'outring'     : '--ring',
+            'port'        : '--port',
+            'sourceid'    : '--sourceid',
+            'status service' : '--status-service','appname'     : '--appname'
+        }
+        
+        result = self.__propertiesToOptions(name, readoutPropertyMap)
+        return result
+    ##
+    # __getEventLogParameters
+    #    Returns the event log command line options described by the program's
+    #    properties.
+    #
+    # @param name - Name of the program.
+    # @return string - command line options.
+    #
+    def __getEventLogParameters(self, name):
+        eventlogPropertyMap = {
+            'appname'      : '--appname',
+            'freesevere'   : '--freesevere',
+            'freewarn'     : '--freewarn',
+            'inring'       : '--source',
+            'prefix'       : '--prefix',
+            'segmentsize'  : '--segmentsize',
+            'status server' : '--service'
+        }
+        result = self.__propertiesToOptions(name, eventlogPropertyMap)
+        
+        eventlogFlagMap = {
+            'checksum'     : '--checksum',
+            'combineruns'  : '--combine-runs'
+        }
+        result += ' ' + self.__propertiesToFlags(name, eventlogFlagMap)
+        
+        return result
+    
+    ##
+    # __programArguments
+    #   The actual parameters passed to a program depends on the program type
+    #   and the property settings it has.  This method dispatches to known program
+    #   type handlers and just returns the Tcl decoded string for
+    #   the property 'Program Parameters' for types not recognized.
+    #
+    # @param name  - Name of the program being started.
+    # @param pgmType  - program's 'type' property.
+    # @return string - Trailing program command line parameters.
+    #
+    def __programArguments(self, name, pgmType):
+        result = ''
+        if pgmType == 'Readout':
+            result += self.__getReadoutParameters(name)
+        elif pgmType == 'EventLog':
+            result += self.__getEventLogParameters(name)
+            
+            
+        # All types glom in the 'Program Parameters' list.  Unrecognized types
+        # fall through here and that's all they get.
+        
+        result += ' ' + self.__getProgramParameters(name)
+        return result
+    
+    ##
     # Start a program
     #  @param program - name of the program to start.
     #
     def __startProgram(self, program):
-        print('Starting program %s' % program)
         programDef = self.__getProgramDef(program)
         programEnv = self.__makeProgramEnv(programDef)
         host       = programDef['host']
@@ -105,10 +241,15 @@ class Programs:
         
         self._client.setProgramState(program, 'Readying')
         
+        # Construct the command line depending on the program type:
+        
+        programType = self._client.getProgramProperty(program, 'type')
+        args        = self.__programArguments(program, programType)
+        command = path + args
+        
         # Create the program and make map entries from its stdout/stderr for it.
         
-        
-        programObj = ssh.program(host, path, programEnv, program)
+        programObj = ssh.program(host, command, programEnv, program)
         
         stdout = programObj.stdout()
         stderr = programObj.stderr()
