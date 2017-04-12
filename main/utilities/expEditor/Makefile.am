@@ -12,7 +12,7 @@ TCLPACKAGES=properties.tcl propertyEditor.tcl daqobject.tcl ringBuffer.tcl \
 
 
 IMAGES=program.png ringbuffer.png sysprogram.png arrow.png eventBuilder.png \
-	dsource.png readout.png eventlog.png
+	dsource.png readout.png eventlog.png analysis.png
 DOC_IMAGES=propertyeditor.png expEditorinitial.jpg
 
 
