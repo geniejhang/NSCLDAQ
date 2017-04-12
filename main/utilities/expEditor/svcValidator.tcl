@@ -54,7 +54,6 @@ proc ::Validation::validateServices svcs {
         vardb-service     {The variable database server daemon}                \
         boot-service      {The DAQ experiment boot service}                    \
         statusinjector    {The status message to database injection service}   \
-        svcmanager        {The service manager (ensures services are running)} \
     ]
     set namelessCount 0
     set result [list]
@@ -88,9 +87,7 @@ proc ::Validation::validateServices svcs {
     #
     #  Check for required services:
     #
-    puts "$svcPrograms"
     foreach requiredService [array names requiredServiceDescriptions] {
-        puts "Checking for $requiredService"
             
         
         if {$requiredService ni $svcPrograms} {
