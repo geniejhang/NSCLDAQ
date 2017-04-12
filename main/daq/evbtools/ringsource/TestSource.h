@@ -13,39 +13,22 @@
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
-#ifndef __TESTSOURCE_H
-#define __TESTSOURCE_H
 
-
+#ifndef TESTSOURCE_H
+#define TESTSOURCE_H
 
 
 /**
  * @file TestSource.h
  * @brief Definition for the TestSource class which produces data into the ringk.
  */
-#ifndef __STL_STRING
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
-
-
-#ifndef __CRT_STDINT_H
-#include <stdint.h>
-#ifndef __CRT_STDINT_H
-#define __CRT_STDINT_H
-#endif
-#endif
-
-#ifndef __CRT_UNISTD_H
+#include <cstdint>
 #include <unistd.h>
-#ifndef __CRT_UNISTD_H
-#define __CRT_UNISTD_H
-#endif
-#endif
 
-class CRingBuffer;
+namespace DAQ {
+
+class CDataSink;
 
 /**
  * @class TestSource
@@ -62,33 +45,31 @@ class TestSource
   int         m_tsIncrement;
   uint64_t    m_timestamp;
   useconds_t  m_delay;
-  bool        m_useBodyHeaders;
 
 public:
-  TestSource(std::string ringName, int eventSize, bool useBodyHeaders=false) : 
+  TestSource(std::string ringName, int eventSize) :
     m_ringName(ringName), m_size(eventSize), m_elapsedTime(0), 
-    m_tsIncrement(2), m_timestamp(0), m_delay(0), 
-    m_useBodyHeaders(useBodyHeaders)
+    m_tsIncrement(2), m_timestamp(0), m_delay(0)
   {}
 
 public:
   void setTimestampIncrement(int newIncr) {m_tsIncrement = newIncr;}
   void setDelay(uint64_t newDelay) {m_delay = newDelay; }
 
-  void setGenerateBodyHeaders (bool onoff);
-
 public:
   void operator()();
     
   // private utilities:
 
-  void dataFormat(CRingBuffer& ring);
-  void beginRun(CRingBuffer& ring, int run, std::string title);
-  void someEventData(CRingBuffer& rings, int events);
-  void endRun(CRingBuffer& ring, int run, std::string title);
-  void Scaler(CRingBuffer& ring, int nsclers, int nsec);
+  void dataFormat(CDataSink& ring);
+  void beginRun(CDataSink& ring, int run, std::string title);
+  void someEventData(CDataSink& rings, int events);
+  void endRun(CDataSink& ring, int run, std::string title);
+  void Scaler(CDataSink& ring, int nsclers, int nsec);
   
 };
+
+} // end DAQ
 
 #endif
 

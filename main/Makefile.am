@@ -22,10 +22,10 @@ if BUILD_DOCS
 endif
 
 SUBDIRS =	 base caenfw-common servers base/dataflow diagnostics \
-		daq utilities $(DOCDIR) \
+                utilities daq $(DOCDIR) \
 		$(SBSDIRS) $(EPICSDIRS) $(USBDIR)
 
-DIST_SUBDIRS = base caenfw-common servers  base/dataflow diagnostics daq utilities \
+DIST_SUBDIRS = base caenfw-common servers  base/dataflow diagnostics utilities daq \
 		 docbuild docconfig simplesetups sbs epics usb
 
 

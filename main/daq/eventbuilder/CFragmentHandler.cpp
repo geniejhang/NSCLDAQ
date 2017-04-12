@@ -1103,7 +1103,7 @@ CFragmentHandler::addFragment(EVB::pFlatFragment pFragment)
 
     // If the timestamp is null, assign the newest timestamp from that source to it:
 
-    if ((timestamp == NULL_TIMESTAMP)) {
+    if ((timestamp == EVB::NULL_TIMESTAMP)) {
       assigned = true;
       timestamp = destQueue.s_newestTimestamp;
       pFrag->s_header.s_timestamp = timestamp;             // Avoid duplicate.

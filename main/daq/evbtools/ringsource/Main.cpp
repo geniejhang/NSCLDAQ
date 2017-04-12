@@ -35,7 +35,7 @@
 int
 main(int argc, char** argv)
 {
-  CRingSource src(argc, argv);
+  DAQ::CRingSource src(argc, argv);
 
 
   /** Below you should create instances of your event builder client app clases

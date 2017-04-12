@@ -24,6 +24,11 @@
 
 namespace DAQ {
 
+
+class CTestSourceSink;
+using CTestSourceSinkUPtr = std::unique_ptr<CTestSourceSink>;
+using CTestSourceSinkPtr  = std::shared_ptr<CTestSourceSink>;
+
 /*!
  * \brief A source/sink that enables testing of IO operations
  *

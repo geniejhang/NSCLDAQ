@@ -170,7 +170,7 @@ void emitAbnormalEnd()
 {
     CAbnormalEndItem end;
     pRingItem pItem= end.getItemPointer();
-    EVB::Fragment frag = {{NULL_TIMESTAMP, 0xffffffff, pItem->s_header.s_size, 0}, pItem};
+    EVB::Fragment frag = {{EVB::NULL_TIMESTAMP, 0xffffffff, pItem->s_header.s_size, 0}, pItem};
     outputBarrier(&frag);
 }
 

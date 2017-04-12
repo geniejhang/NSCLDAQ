@@ -232,7 +232,7 @@ static void writeNonPhysicsItem(CRingItem* pItem)
 
   // Provide initial values
   EVB::FragmentHeader hdr;
-  hdr.s_timestamp = NULL_TIMESTAMP;
+  hdr.s_timestamp = EVB::NULL_TIMESTAMP;
   hdr.s_sourceId  = sourceId;
   hdr.s_size      = pRItem->s_header.s_size;
   uint32_t type=pRItem->s_header.s_type;

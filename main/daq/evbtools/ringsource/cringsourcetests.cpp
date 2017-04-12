@@ -22,16 +22,14 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <CRingItem.h>
-#include <CPhysicsEventItem.h>
-#include <CRingStateChangeItem.h>
-#include <DataFormat.h>
-#include <CTestRingBuffer.h>
-#define private public
-#define protected public
+#include <V12/CPhysicsEventItem.h>
+#include <V12/CRingStateChangeItem.h>
+#include <V12/DataFormat.h>
+
+#include <CTestSourceSink.h>
+#include <RingIOV12.h>
+
 #include "CRingSource.h"
-#undef private
-#undef protected
 
 #include <array>
 #include <vector>
@@ -41,8 +39,7 @@ static const char* Copyright = "(C) Copyright Michigan State University 2014, Al
 #include <iostream>
 
 using namespace std;
-
-static uint64_t tstamp(_PhysicsEventItem*) { return 1; }
+using namespace DAQ;
 
 // A test suite 
 class CRingSourceTest : public CppUnit::TestFixture
@@ -50,7 +47,7 @@ class CRingSourceTest : public CppUnit::TestFixture
 
   private:
     CRingSource* m_pSource;
-    CTestRingBuffer *m_pRing;
+    CTestSourceSinkPtr m_pRing;
     bool m_ownRing;
 
   public:
@@ -62,34 +59,19 @@ class CRingSourceTest : public CppUnit::TestFixture
 
   public:
     void setUp() {
-      try {
-        CRingBuffer::create("__test__");
-        m_ownRing = true;
-      } catch (...) {
-        m_ownRing = false;
-      }
 
       std::vector<uint32_t> okids;
       okids.push_back(2);
-      m_pRing = new CTestRingBuffer("__test__");
-      m_pSource = (new CRingSource(m_pRing,
-            okids, 2, tstamp));
+      m_pRing= make_shared<CTestSourceSink>();
+      m_pSource = new CRingSource(m_pRing, okids);
     }
 
     void tearDown() {
       delete m_pSource;
-      delete m_pRing;
-
-      if (m_ownRing) {
-	return;
-        CRingBuffer::remove("__test__");
-      }
     }
 protected:
   void getEvent_0();
   void getEvent_1();
-private:
-  void fillBody(CRingItem& item);
 };
 // Register it with the test factory
 
@@ -97,46 +79,31 @@ CPPUNIT_TEST_SUITE_REGISTRATION( CRingSourceTest );
 
     
 void CRingSourceTest::getEvent_0() {
-      CPhysicsEventItem item;
-      item.setBodyHeader(1, 2, 0);
-      fillBody(item);
-      item.updateSize();
+    V12::CPhysicsEventItem item(1, 2);
 
-      m_pRing->put(item.getItemPointer(), item.size());
+    writeItem(*m_pRing, item);
 
-      auto pBuf = new uint8_t[1000];
-      m_pSource->transformAvailableData(pBuf);
-      delete [] pBuf;
+    m_pSource->transformAvailableData();
 
-      ASSERT( m_pSource->getFragmentList().size() == 1);
-    }
+    ASSERT( m_pSource->getFragmentList().size() == 1);
+}
 
 void CRingSourceTest::getEvent_1() {
 
-      m_pSource->setOneshot(true);
-      m_pSource->setNumberOfSources(2);
-      CRingStateChangeItem begin(BEGIN_RUN);
-      CRingStateChangeItem end(END_RUN);
-      m_pRing->put(end.getItemPointer(), end.size());
-      m_pRing->put(end.getItemPointer(), end.size());
+    m_pSource->setOneshot(true);
+    m_pSource->setNumberOfSources(2);
+    V12::CRingStateChangeItem begin(V12::BEGIN_RUN);
+    V12::CRingStateChangeItem end(V12::END_RUN);
+    writeItem(*m_pRing, begin);
+    writeItem(*m_pRing, end);
 
-      auto pBuf = new uint8_t[1000];
-      m_pSource->transformAvailableData(pBuf);
-      delete [] pBuf;
+    m_pSource->transformAvailableData();
 
-      EQMSG("Observation of 2 end runs for 2 sources, oneshot -> complete",
+    EQMSG("Observation of 2 end runs for 2 sources, oneshot -> complete",
           true, m_pSource->oneshotComplete());
-    }
+}
 
 
-void CRingSourceTest::fillBody(CRingItem& item) {
-      vector<uint8_t> data = {0, 1, 2, 3, 4, 5, 6, 7};
-      uint8_t* pData = reinterpret_cast<uint8_t*>(item.getBodyPointer()); 
-      pData = copy(data.begin(), data.end(), pData);
-      item.setBodyCursor(pData);
-      item.updateSize();
-
-    }
 
 
 

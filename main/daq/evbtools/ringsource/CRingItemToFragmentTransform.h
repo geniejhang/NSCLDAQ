@@ -24,7 +24,9 @@
 
 #include <CEVBClientApp.h>
 #include <EVBFramework.h>
-#include <DataFormat.h>
+#include <V12/DataFormat.h>
+#include <V12/CRawRingItem.h>
+#include <ByteBuffer.h>
 
 #include <string>
 #include <vector>
@@ -34,10 +36,10 @@
 
 // Forward definitions:
 
-class CRingBuffer;
-class CRingItem;
-struct _PhysicsEventItem;
-typedef _PhysicsEventItem *pPhysicsEventItem;
+
+
+namespace DAQ {
+
 
 class CRingItemToFragmentTransform 
 {
@@ -45,38 +47,27 @@ class CRingItemToFragmentTransform
 
 private:
   std::vector<std::uint32_t> m_allowedSourceIds;
-  std::uint32_t         m_defaultSourceId;
-  std::function<uint64_t(pPhysicsEventItem)> m_timestamp;
-  bool                  m_expectBodyHeaders;
 
   // Canonicals:
 
 public:
-  CRingItemToFragmentTransform(std::uint32_t defaultSourceId);
+  CRingItemToFragmentTransform();
   virtual ~CRingItemToFragmentTransform();
 
   // Main entry point
-  ClientEventFragment operator()(CRingItem* pItem, uint8_t* pDest);
+  ClientEventFragment operator()(const V12::CRawRingItem& pItem);
 
   // Getters and setters
   void setAllowedSourceIds(const std::vector<uint32_t>& ids)
   { m_allowedSourceIds = ids; }
   std::vector<uint32_t>& getAllowedSourceIds() { return m_allowedSourceIds; }
 
-  void     setDefaultSourceId(uint32_t id) { m_defaultSourceId = id; }
-  uint32_t getDefaultSourceId() { return m_defaultSourceId; }
-
-  void setTimestampExtractor(std::function<uint64_t(pPhysicsEventItem)> extractorFunc) 
-  { m_timestamp = extractorFunc; }
-  std::function<uint64_t(pPhysicsEventItem)> getTimestampExtractor() const { return m_timestamp; }
-
-  void setExpectBodyHeaders(bool yesno) { m_expectBodyHeaders = yesno; }
-  bool getExpectBodyHeaders() const { return m_expectBodyHeaders; }
-
 private:
-  bool formatPhysicsEvent(pRingItem item, CRingItem* p, ClientEventFragment& frag);
+  bool formatPhysicsEvent(const V12::CRawRingItem& p, ClientEventFragment& frag);
   void validateSourceId(uint32_t sourceId);
   bool isValidSourceId(uint32_t sourceId);
 };
+
+} // end DAQ
 
 #endif

@@ -39,6 +39,7 @@ libConversion_la_CXXFLAGS = -I@srcdir@ \
                             -I@top_srcdir@/utilities/nscldaq-format/Buffer \
                             -I@top_srcdir@/base/headers \
                             -I@top_srcdir@/base/os \
+                            -I@top_srcdir@/base/sfinae_tools \
                             @LIBTCLPLUS_CFLAGS@
 
 libConversion_la_LIBADD = @top_builddir@/utilities/nscldaq-format/format/V8/libdataformatv8.la \
@@ -87,6 +88,7 @@ unittests_CPPFLAGS= -I@srcdir@ \
                     -I@top_srcdir@/utilities/nscldaq-format/format \
                     -I@top_srcdir@/base/headers \
                     -I@top_srcdir@/base/os \
+                    -I@top_srcdir@/base/sfinae_tools \
                     @CPPUNIT_CFLAGS@ \
                     @LIBTCLPLUS_CFLAGS@ \
                     @TCL_FLAGS@ \
@@ -130,6 +132,7 @@ format_converter_CPPFLAGS = -I@srcdir@ \
 		    -I@top_srcdir@/utilities/nscldaq-format/format \
 		    -I@top_srcdir@/base/headers \
                     -I@top_srcdir@/base/os \
+                    -I@top_srcdir@/base/sfinae_tools \
                     $(AM_CPPFLAGS)
 
 EXTRA_DIST = format_converter_options.ggo \

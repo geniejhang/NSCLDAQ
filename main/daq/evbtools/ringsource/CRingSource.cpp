@@ -17,40 +17,33 @@
 #include "GetOpt.h"
 #include "rfcmdline.h"
 
-#include <CRingBuffer.h>
-#include <CRingItem.h>
-#include <DataFormat.h>
-#include <CRemoteAccess.h>
+#include <CDataSourceFactory.h>
+#include <CDataSource.h>
+
+#include <V12/CRawRingItem.h>
+#include <V12/DataFormat.h>
+#include <RingIOV12.h>
+
 #include <EVBFramework.h>
-#include <CAllButPredicate.h>
-#include <CRingItemFactory.h>
 #include <fragment.h>
-#include <string.h>
-#include <dlfcn.h>
-#include <errno.h>
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdio.h>
-#include <io.h>
+#include <ByteBuffer.h>
+
 #include <fstream>
 #include <iostream>
 
 #include <iterator>
 #include <algorithm>
+#include <thread>
 #include <stdexcept>
 #include <cassert>
+#include <cstdint>
+
+#include <sys/time.h>
+
+namespace DAQ {
 
 static std::ostream& logfile(std::cerr);
-static uint64_t lastTimestamp(NULL_TIMESTAMP);
-
-
+static uint64_t lastTimestamp = V12::NULL_TIMESTAMP;
 
 static size_t max_event(1024*1024*10); // initial Max bytes of events in a getData
 
@@ -59,30 +52,18 @@ static size_t max_event(1024*1024*10); // initial Max bytes of events in a getDa
  */
 
 
-CRingSource::CRingSource(CRingBuffer* pBuffer, 
-    const std::vector<uint32_t>& allowedIds, 
-    uint32_t defaultId, 
-    tsExtractor extractor)
+CRingSource::CRingSource(CDataSourcePtr pBuffer,
+                         const std::vector<uint32_t>& allowedIds)
   : m_pArgs(nullptr),
   m_pBuffer(pBuffer),
   m_allowedSourceIds(allowedIds),
-  m_defaultSourceId(defaultId),
-  m_timestamp(extractor),
-  m_stall(false),
-  m_stallCount(0),
-  m_expectBodyHeaders(false),
   m_fOneshot(false),
   m_nEndRuns(1),
   m_nEndsSeen(0),
   m_nTimeout(0),
   m_nTimeWaited(0),
-    m_wrapper(0),
-    m_myRing(false)
+  m_wrapper()
 {
-  m_wrapper.setTimestampExtractor(m_timestamp);
-  m_wrapper.setAllowedSourceIds(m_allowedSourceIds);
-  m_wrapper.setDefaultSourceId(m_defaultSourceId);
-  m_wrapper.setExpectBodyHeaders(m_expectBodyHeaders);
 }
 
 
@@ -97,12 +78,10 @@ CRingSource::CRingSource(CRingBuffer* pBuffer,
 CRingSource::CRingSource(int argc, char** argv) :
   m_pArgs(0),
   m_pBuffer(0),
-  m_timestamp(0),
   m_nEndRuns(1),
   m_nEndsSeen(0),
   m_nTimeout(0),
-  m_nTimeWaited(0),
-  m_wrapper(0)
+  m_nTimeWaited(0)
 {
   GetOpt parsed(argc, argv);
   m_pArgs = new gengetopt_args_info;
@@ -127,7 +106,6 @@ CRingSource::CRingSource(int argc, char** argv) :
 CRingSource::~CRingSource() 
 {
   delete m_pArgs;
-  if (m_myRing)delete m_pBuffer;		// Just in case we're destructed w/o shutdown.
 
 }
 
@@ -154,93 +132,22 @@ CRingSource::initialize()
   
   // Process the source id and body headers flags:
 
-  if (m_pArgs->ids_given==0 && !m_pArgs->expectbodyheaders_given) {
-    throw std::string("The source id (--ids) is required for this source!");
-  } 
-
   if (m_pArgs->ids_given > 0) {
     m_allowedSourceIds.insert(m_allowedSourceIds.end(),
 			      m_pArgs->ids_arg, 
 			      m_pArgs->ids_arg + m_pArgs->ids_given);
-  } else if (m_pArgs->ids_given==0) {
-    if (!m_pArgs->expectbodyheaders_given) {
-      throw std::string("The list of source ids (--ids) are required for this source!");
-    }
+  } else { //(m_pArgs->ids_given==0) {
+    throw std::string("The list of source ids (--ids) are required for this source!");
   }
-  if (m_pArgs->default_id_given) {
-    m_defaultSourceId = m_pArgs->default_id_arg;
-  } else {
-    if (m_pArgs->ids_given > 0) {
-      m_defaultSourceId = m_pArgs->ids_arg[0];
-    } else {
-      // we should not get here but it is worth adding the check in case gengetopt gets
-      // changed.
-      throw std::string("Cannot set a default source id! Neither --default-id nor --ids option specified.");
-    }
-  }
-  
 
-
-  if (m_pArgs->timestampextractor_given) {
-    std::string dlName = m_pArgs->timestampextractor_arg;
-    // note that in order to allow the .so to be rebuilt while we're running without
-    // us potentially dying, the .so will be copied to a temporary file.
-    // Once the image is mapped it is unlinked so that it vanishes once the source exits.
-
-    dlName = copyLib(dlName);
-
-    // Load the DLL and look up the timestamp function (putting i in m_timestamp;
-    // we never do a dlclose so the DLL remains loaded in all OS's.
-
-    void* pDLL = dlopen(dlName.c_str(), RTLD_NOW);
-    if (!pDLL) {
-      int e = errno;
-      std::string msg = "Failed to load shared lib ";
-      msg += dlName;
-      msg += " ";
-      msg += strerror(e);
-      throw msg;
-    }
-    m_timestamp = reinterpret_cast<tsExtractor>(dlsym(pDLL, "timestamp"));
-    if (!m_timestamp) {
-      int e errno;
-      std::string msg = "Failed to locate timestamp function in ";
-      msg += dlName;
-      msg += " ";
-      msg += strerror(e);
-      m_wrapper.setTimestampExtractor(m_timestamp);
-
-      throw msg;
-    }
-    unlink(dlName.c_str());	// Marks this for destruction.
-  } else {
-    // the tstamplib is not provided. Has the expectbodyheaders flag
-    // been provided? If not, this is not allowed and the program
-    // be stopped (or the issue addressed somehow).
-    if (!m_pArgs->expectbodyheaders_given) {
-      std::string msg = "This source may have ring items with insufficient data to ";
-      msg += "create fragments. Either specify --expectbodyheaders or set the ";
-      msg += "--timestampextractor and -ids options.";
-      throw msg;
-    }
-
-  }
- 
   m_wrapper.setAllowedSourceIds(m_allowedSourceIds);
-  m_wrapper.setDefaultSourceId(m_defaultSourceId);
-  m_wrapper.setExpectBodyHeaders(m_pArgs->expectbodyheaders_flag);
- 
+
   logfile << std::hex;
 
   // Attach the ring.
 
-  if (m_pBuffer && m_myRing) {
-    delete m_pBuffer;                // Don't leak rings
-  }
-  m_pBuffer = CRingAccess::daqConsumeFrom(url);
-  m_myRing = true;
+  m_pBuffer = CDataSourceFactory().makeSource(url);
 
-  
 }
 /**
  * dataReady
@@ -265,7 +172,7 @@ CRingSource::dataReady(int ms)
       m_nTimeWaited = 0;
       return true;
     }
-    m_pBuffer->pollblock();	// block a while.
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     clock_gettime(CLOCK_MONOTONIC, &now);
   } while(timedifMs(now, initial) < ms);
@@ -289,16 +196,40 @@ CRingSource::dataReady(int ms)
  *
  *
  */
+void CRingSource::transformAvailableData()
+{
+    size_t bytesPackaged(0);
+
+    V12::CRawRingItem item;
+
+    while ((bytesPackaged < max_event) && m_pBuffer->availableData()) {
+        readItem(*m_pBuffer, item);
+
+        // check for end runs for oneshot logic
+        if (item.type() == V12::END_RUN) {
+            m_nEndsSeen++;
+        }
+
+        auto frag = m_wrapper(item);
+
+        if (item.size() > (max_event*2 - bytesPackaged)) {
+            max_event = item.size() + bytesPackaged;
+        }
+
+        bytesPackaged += item.size() + sizeof(::EVB::FragmentHeader);
+
+        m_frags.push_back(frag);
+    }
+}
+
 void
 CRingSource::getEvents()
 {
 
   m_frags.clear(); // start fresh
 
-  uint8_t* pBuffer = reinterpret_cast<uint8_t*>(malloc(max_event*2));
-  // transforms avail data to fragments and adds to m_frags
-  transformAvailableData(pBuffer);
-  
+  transformAvailableData();
+
   // Send those fragments to the event builder:
 
   if (m_frags.size()) {
@@ -309,56 +240,12 @@ CRingSource::getEvents()
     exit(EXIT_SUCCESS);
   }
 
-  delete [] pBuffer;
-}
-
-void CRingSource::transformAvailableData(uint8_t*& pFragments)
-{
-  size_t bytesPackaged(0);
-  CAllButPredicate all;		// Predicate to selecdt all ring items.
-  uint8_t*         pDest = pFragments;
-
-  if (pFragments == 0) {
-    throw std::string("CRingSource::getEvents - memory allocation failed");
-  }
-
-  while ((bytesPackaged < max_event) && m_pBuffer->availableData()) {
-    std::unique_ptr<CRingItem> p(CRingItem::getFromRing(*m_pBuffer, all)); // should not block.
-    RingItem*  pRingItem = p->getItemPointer();
-
-    // check for end runs for oneshot logic
-    if (pRingItem->s_header.s_type == END_RUN) {
-      m_nEndsSeen++;
-    }
-
-
-    // If we got here but the data is bigger than our safety margin
-    //we need to resize pFragments:
-
-    if (pRingItem->s_header.s_size > (max_event*2 - bytesPackaged)) {
-      size_t offset = pDest - pFragments; // pFragments willchange.
-      max_event = pRingItem->s_header.s_size + bytesPackaged;
-      pFragments = reinterpret_cast<uint8_t*>(realloc(pFragments, max_event*2));
-      pDest      = pFragments + offset;
-
-    }
-
-    ClientEventFragment frag = m_wrapper(p.get(), pDest);
-
-    frag.s_timestamp += m_nTimeOffset;
-    pDest += frag.s_size;
-    bytesPackaged += frag.s_size;
-
-    m_frags.push_back(frag);
-
-  }
 }
 
 bool CRingSource::oneshotComplete()
 {
      return (m_fOneshot && (m_nEndsSeen >= m_nEndRuns));
 }
-
 
 /**
  * shutdown 
@@ -369,8 +256,28 @@ bool CRingSource::oneshotComplete()
 void
 CRingSource::shutdown()
 {
-  delete m_pBuffer;
-  m_pBuffer = 0;
+}
+
+void
+CRingSource::validateItem(const DAQ::V12::CRingItem &item)
+{
+    auto searchResult = std::find(m_allowedSourceIds.begin(),
+                            m_allowedSourceIds.end(),
+                            item.getSourceId());
+    if  (searchResult == m_allowedSourceIds.end()) {
+        string errmsg("Observed source id that was not provided via the --ids option");
+        throw runtime_error(errmsg);
+    }
+
+    if (item.getEventTimestamp() == 0ull) {
+      std::cerr << "Zero timestamp in source!?!\n";
+    }
+}
+
+
+void CRingSource::setAllowedSourceIds(const std::vector<uint32_t> &ids)
+{
+    m_allowedSourceIds = ids;
 }
 
 
@@ -408,101 +315,5 @@ CRingSource::timedifMs(struct timespec& later, struct timespec& earlier)
   
 
 }
-/**
- * copyLib
- *
- *  In order to allow the shared library that is the timestamp extractor to be
- * altered as we run (e.g. via make), it is copied to a temporary file and
- * that tempfile is what's mapped.
- * There are some timing holes we need to accept here:
- *  - Between the time the temp name is created and we actually create the file 
- *    someon else could duplicate the filename and we'll smash that file.
- *  - Between the time we copy the .so into the tempfile and actually map it
- *    someone else could come along and smash the copied so.
- *  - Between the time we create the file and finish copying it someone could be
- *    altering our source file.
- *
- * Life's truly a bitch if you think too hard about it.
- *
- * @param original - the name of the shared object to copy.
- *
- * @return std::string - name of the copied file.
- *
- * @throw std::string on any error.
- */
-std::string
-CRingSource::copyLib(std::string original)
-{
-  std::string destName;
-  int dest;
 
-  // First try to open the original.  If that's not possible throw up.
-
-  int from = open(original.c_str(), O_RDONLY);
-  if (from < 0) {
-    int err = errno;   // In case string ops smash errno.
-    std::string msg("CRingSource: Time extractor shared library: ");
-    msg += original;
-    msg += " cannot be opened: ";
-    msg += strerror(err);
-    throw msg;
-  }
-
-  // All of the try/catch things here are intended to be sure that any open 
-  // fds also get closed.  This prevents fd leakage in the unlikely event
-  // the caller tries to continue after failure.
-
-  try {
-    // Make the temp name:
-    
-    char* pDestName = tmpnam(NULL);
-    if (!pDestName) {
-      int err = errno;
-      std::string msg("CRingSource: Failed to create temporary shared library filename: ");
-      msg += strerror(err);
-      throw msg;
-    }
-    destName = pDestName;
-
-    
-    // Open the dest.
-    
-    dest = open(destName.c_str(), O_CREAT | O_WRONLY, S_IRWXU);
-    if (!dest) {
-      int err;
-      std::string msg = "CRingSource: Faile to create a temp file for the shared  library: ";
-      msg += strerror(err);
-      throw msg;
-    }
-    
-    // Copy the file.
-    try {
-      char buffer[8192];	// Or some such suitably large block  of storage.
-
-      while (1) {
-
-	// For reads we just get what we can but for writes we ensure the write is total.
-	
-	ssize_t nRead = read(from, buffer, sizeof(buffer));
-	if (nRead == 0) break;
-
-	io::writeData(dest, buffer, nRead);
-
-      }
-	  
-    }
-    catch(...) {
-      close(dest);
-      throw;
-    }
-    // Return the result if we survived all of this:
-  }
-  catch(...) {
-    close(from);
-    throw;
-  }
-  close(from);
-  close(dest);
-  return destName;
-}
-
+} // end DAQ

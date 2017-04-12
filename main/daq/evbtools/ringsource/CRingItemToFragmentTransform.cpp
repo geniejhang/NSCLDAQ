@@ -17,23 +17,30 @@
 #include "GetOpt.h"
 #include "rfcmdline.h"
 
-#include <CRingItem.h>
-#include <DataFormat.h>
-#include <CRemoteAccess.h>
+#include <V12/CRingItem.h>
+#include <V12/DataFormat.h>
+#include <V12/Serialize.h>
+#include <V12/CRingItemFactory.h>
+#include <RingIOV12.h>
+
 #include <EVBFramework.h>
-#include <CRingItemFactory.h>
 #include <fragment.h>
+
 #include <iterator>
 #include <algorithm>
 #include <string>
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
+#include <thread>
 
-
-static uint64_t lastTimestamp(NULL_TIMESTAMP);
 
 using namespace std;
+
+
+namespace DAQ {
+
+static uint64_t lastTimestamp = V12::NULL_TIMESTAMP;
 
 
 static size_t max_event(1024*128); // initial Max bytes of events in a getData
@@ -51,13 +58,11 @@ static size_t max_event(1024*128); // initial Max bytes of events in a getData
  * @param argc - number of command line words.
  * @param argv - array of pointers to command line words.
  */
-CRingItemToFragmentTransform::CRingItemToFragmentTransform(std::uint32_t defaultSourceId) :
-  m_allowedSourceIds(1,defaultSourceId),
-  m_defaultSourceId(defaultSourceId),
-  m_timestamp()
+CRingItemToFragmentTransform::CRingItemToFragmentTransform() :
+  m_allowedSourceIds(1,0)
 {
-
 }
+
 /**
  * destructor
  *
@@ -72,53 +77,40 @@ CRingItemToFragmentTransform::~CRingItemToFragmentTransform()
  */
 
   ClientEventFragment
-CRingItemToFragmentTransform::operator()(CRingItem* pItem, uint8_t* pDest)
+CRingItemToFragmentTransform::operator()(const V12::CRawRingItem& item)
 {
-  if (pItem == nullptr) {
-    throw std::runtime_error("CRingItemToFragmentTransform::operator() passed null pointer");
-  }
-  RingItem*  pRingItem = pItem->getItemPointer();
-
   // initialize the fragment -- with the assumption that the
   // item is a non-barrier with no timestamp:
 
   ClientEventFragment frag;
-  frag.s_timestamp = NULL_TIMESTAMP;
-  frag.s_sourceId  = m_defaultSourceId;
-  frag.s_size      = pRingItem->s_header.s_size;
+  frag.s_timestamp = item.getEventTimestamp();
+  frag.s_sourceId  = item.getSourceId();
+  frag.s_size      = item.size();
   frag.s_barrierType = 0;
-  frag.s_payload   = pDest;
-  std::memcpy(pDest, pRingItem,  pRingItem->s_header.s_size);
 
-  // Now figure what to do based on the type...default is non-timestamped, non-barrier
-  // If the ring item has a timesampe we can supply it right away:
+  auto pBuffer = new char[item.size()];
 
-  if (pItem->hasBodyHeader()) {
-    frag.s_timestamp   = pItem->getEventTimestamp();
-    frag.s_sourceId    = pItem->getSourceId();
-    frag.s_barrierType = pItem->getBarrierType();
-  } else {
+  V12::serializeItem(item, pBuffer);
 
-    // if we are here, then all is well in the world.
-    switch (pRingItem->s_header.s_type) {
-      case BEGIN_RUN:
-      case END_RUN:
-      case PAUSE_RUN:
-      case RESUME_RUN:
-        frag.s_barrierType = pRingItem->s_header.s_type;
-      case PERIODIC_SCALERS:	// not a barrier but no timestamp either.
-        break;
-      case PHYSICS_EVENT:
-        if (formatPhysicsEvent(pRingItem, pItem, frag)) {
+  frag.s_payload = pBuffer;
+
+  switch (item.type()) {
+  case V12::BEGIN_RUN:
+  case V12::END_RUN:
+  case V12::PAUSE_RUN:
+  case V12::RESUME_RUN:
+      frag.s_barrierType = item.type();
+      break;
+  case V12::PHYSICS_EVENT:
+      if (formatPhysicsEvent(item, frag)) {
           lastTimestamp = frag.s_timestamp;
           break;
-        }
-      default:
-        // default is to leave things alone
-        // this includes the DataFormat item
+      }
+  default:
+      // default is to leave things alone
+      // this includes the DataFormat item
 
-        break;
-    }
+      break;
   }
 
   validateSourceId(frag.s_sourceId);
@@ -145,44 +137,18 @@ CRingItemToFragmentTransform::operator()(CRingItem* pItem, uint8_t* pDest)
   *
   */
 bool
-CRingItemToFragmentTransform::formatPhysicsEvent (pRingItem item, CRingItem* p, ClientEventFragment& frag) 
+CRingItemToFragmentTransform::formatPhysicsEvent (const V12::CRawRingItem& p,
+                                                  ClientEventFragment& frag)
 {
-  bool retval = false;
+  bool retval = true;
 
-  // Check if body headers are demanded.
-  if (m_expectBodyHeaders == true) {
-    // this is okay if we have a tstamplib and ids from the user. Just tell them
-    // that they were mistaken about there being body headers on every ring item.
-    if (m_timestamp) {
-      cout << "tstamp is defined " << endl;
-    } else {
-      cout << "tstamp is NOT defined " << endl;
-    }
-    if ((m_allowedSourceIds.size()>0) && m_timestamp) {
-      string msg = "ringFragmentSource::getEvents() : --expectbodyheaders ";
-      msg += "flag passed but observed a ring item without a BodyHeader.";
-      std::cerr << msg << "\n";
-    } else {
-      // Oh No. This is fatal. We have no way of determining the info to stick into
-      // the FragmentHeader. 
-      string msg = "ringFragmentSource passed --expectbodyheaders flag but observed ";
-      msg += "a ring item without a BodyHeader. This is fatal because the fragment header ";
-      msg += "cannot be defined without timestamp extractor.";
-      throw std::runtime_error(msg);
-    }  
-  }
-
-  // kludge for now - filter out null events:
-  if (item->s_header.s_size > (sizeof(RingItemHeader) + sizeof(uint32_t))) {
-    frag.s_timestamp = m_timestamp(reinterpret_cast<pPhysicsEventItem>(item));
-    if (((frag.s_timestamp - lastTimestamp) > 0x100000000ll)  &&
-        (lastTimestamp != NULL_TIMESTAMP)) {
-      unique_ptr<CRingItem> pSpecificItem(CRingItemFactory::createRingItem(*p));
+  // warn if timestamp is not monotonic
+  if ( ((frag.s_timestamp - lastTimestamp) > 0x100000000ll)  &&
+           (lastTimestamp != V12::NULL_TIMESTAMP)) {
+      V12::CRingItemPtr pSpecificItem = V12::CRingItemFactory::createRingItem(p);
       std::cerr << "Timestamp skip from "  << lastTimestamp << " to " << frag.s_timestamp << endl;
       std::cerr << "Ring item: " << pSpecificItem->toString() << endl;
-    }
-    
-    retval = true; 
+      retval = false;
   }
 
   return retval;
@@ -205,3 +171,6 @@ bool CRingItemToFragmentTransform::isValidSourceId(std::uint32_t sourceId)
                           sourceId);
   return (searchResult != m_allowedSourceIds.end());
 }
+
+
+} // end DAQ
