@@ -180,8 +180,9 @@ def startPrograms(db):
         program = programDefs[name]
         command = program[0]
         host    = program[1]
-        additionalArgs = db.getProperty(name, 'args')
-        additionalArgs = processTclList(additionalArgs)
+        additionalArgs = db.getProperty(name, 'args').strip()
+        if additionalArgs != '':
+            additionalArgs = processTclList(additionalArgs)
         command = command + ' ' + additionalArgs
         progFds = startProgram(name, command, host)
         fds.extend(progFds)
