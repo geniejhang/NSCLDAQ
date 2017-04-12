@@ -186,11 +186,8 @@ def processProgramInput(readable):
                 return
 
         try :
-            print 'setflag'
             setFlag(f, os.O_NONBLOCK)
-            print 'read'
             line    = f.read()               # program may have exited.
-            print 'clearflag'
             clearFlag(f, os.O_NONBLOCK)
         except:
             print("read failed")
@@ -242,7 +239,22 @@ def initializeStateMachines(client):
 # Create the state client.
     
 result = processArgs()
-client = nscldaq.vardb.statemanager.Api(result[0], result[1])
+print(result)
+
+#  Wait for up to 10 seconds for the database services to become visible:
+#
+done = False
+retriesLeft = 10
+while not done:
+    try:
+        client = nscldaq.vardb.statemanager.Api(result[0], result[1])
+        done = True
+    except:
+        retriesLeft = retriesLeft - 1
+        if retriesLeft > 0:
+            time.sleep(1)
+        else:
+            done = True
 
 # the programs need a URI without a localhost in it.
 
