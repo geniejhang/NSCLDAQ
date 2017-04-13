@@ -89,6 +89,18 @@ proc ::Serialize::_saveService {api obj}  {
     $api createprog $name $path $host
     $api setEditorPosition $name [lindex $position 0] [lindex $position 1]
     $api setProperty $name args $args
+    
+    #  Get the type and save it.  If the type is a dataflow item; save
+    #  the input/output rings:
+    
+    set type [[$props find type] cget -value]
+    $api setProperty $name type $type
+    if {$type eq "dataflow"} {
+        set inring [[$props find {Input Ring}] cget -value]
+        set outring [[$props find {Output Ring}] cget -value]
+        $api setProperty $name inring $inring
+        $api setProperty $name outring $outring
+    }
 }
 
 
@@ -149,8 +161,26 @@ proc ::Serialize::deserializeServices dbUri {
             set x       [_svcDeserialize getEditorXPosition $name]
             set y       [_svcDeserialize getEditorYPosition $name]
  
-            set obj [Service %AUTO%]
-            set props [$obj getProperties]
+            # What happens next depends on the type of the object:
+            # Note again that the type property may not yet exist.
+            
+            catch {_svcDeserialize getProperty $name type} type;  #Error won't be 'dataflow'
+
+            if {$type eq "dataflow"} {
+                set obj [DataFlow %AUTO%]
+                set props [$obj getProperties]
+                
+                set inring [_svcDeserialize getProperty $name inring]
+                set outring [_svcDeserialize getProperty $name outring]
+                [$props find {Input Ring}] configure -value $inring
+                [$props find {Output Ring}] configure -value $outring
+                
+            } else {
+                set obj [Service %AUTO%]
+                set props [$obj getProperties]
+            }
+            
+            
             foreach prop [list name host path] value [list $name $host $command] {
                 [$props find $prop] configure -value $value
             }

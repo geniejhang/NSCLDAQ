@@ -402,6 +402,26 @@ proc connectDataSourcesToEvbs {dataSources evbs} {
     }
 }
 ##
+# selectDataFlowServices
+#   Given a list of service objects returns a (possibily empty ) list of those
+#   that are data flow objects.
+#
+# @param objects - the list of objects.
+# @return list   - of those that are data flow objects.
+#
+proc selectDataFlowServices {objects} {
+    set result [list]
+    foreach object $objects {
+        set props [$object getProperties]
+        set type [[$props find type] cget -value]
+        if {$type eq "dataflow"} {
+            lappend result $object
+        }
+    }
+    
+    return $result
+}
+##
 # restoreConnections
 #    Restore connections between objects as part of restoring the editor
 #    state from a database file:
@@ -420,6 +440,14 @@ proc restoreConnections {uri dataSources} {
     set statePrograms [$::cs listObjects .c state-program]
     set rings         [$::cs listObjects .c ring]
     connectStateProgramsToRings $statePrograms $rings
+    
+    #  The DataFlow services can also connect to rings.  The logic is identical
+    #  The logic for connecting them is the same as for state objects.
+    #
+    
+    set allServices [$::cs listObjects .c service]
+    set dataFlowPrograms [selectDataFlowServices $allServices]
+    connectStateProgramsToRings $dataFlowPrograms $rings
     
     #  Hook data sources to their input rings.
     
@@ -561,6 +589,9 @@ tool dsource      [DataSourceObject %AUTO%] $os
 
 tool service [Service %AUTO%] $os
 .t add service
+
+tool dataFlow [DataFlow %AUTO%] $os
+.t add dataFlow
 
 
 

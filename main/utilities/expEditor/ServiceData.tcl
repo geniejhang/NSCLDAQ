@@ -51,6 +51,7 @@ snit::type ServiceData {
         $propertylist add [GenericPropertyEditor %AUTO% -name name]
         $propertylist add [GenericPropertyEditor %AUTO% -name host]
         $propertylist add [GenericPropertyEditor %AUTO% -name path]
+        $propertylist add [GenericPropertyEditor %AUTO% -name type -value service -editable 0]
         $propertylist add [ListEditor %AUTO% -name args]
         
         $self configurelist $args
@@ -87,6 +88,71 @@ snit::type ServiceData {
     method clone {} {
         set newObj [ServiceData %AUTO%]
         set newProps [$newObj getProperties]
+        
+        $propertylist foreach prop {
+            set name [$prop cget -name]
+            set value [$prop cget -value]
+            
+            set np [$newProps find $name]
+            $np configure -value $value
+        }
+        
+        return $newObj
+    }
+}
+##
+# @class DataFlowData
+#     Derives from Service Data to provide a data flow object.  Dataflow
+#     objects are like services but they can appear in the dataflow.
+#     Unlike the other dataflow object types, however they do not participate
+#     in state transitions.  Examples of dataflow objects are filters, the
+#     scaler display programs root hooked to nscldaq and so on.
+#
+#   From the data point of view, this is a service with the additional
+#   properties:
+#     * Input Ring - optional ring from which the program takes data.
+#     * Output Ring - optional ring into which the program puts data.
+#
+#  @note - The rings are not editable.  They are set by doing connections.
+#
+snit::type DataFlowData {
+    component service
+    
+    delegate method * to service
+    delegate option * to service
+    
+    ##
+    # constuctor
+    #    Install service, get its property list and augment it.
+    #    Configure the item.
+    #
+    constructor args {
+        install service using ServiceData %AUTO%
+        
+        set props [$service getProperties]
+        $props add [GenericPropertyEditor %AUTO% -name {Input Ring} -editable 0]
+        $props add [GenericPropertyEditor %AUTO% -name {Output Ring} -editable 0]
+        [$props find type] configure -value dataflow
+        
+        $self configurelist $args
+    }
+    destructor {
+        if {$service ne ""} {
+            $service destroy;                 # destroy base class.
+        }
+    }
+    ##
+    # clone
+    #   Duplicate self.
+    #
+    # @return DataFlowData object.
+    #
+    method clone {} {
+        set newObj       [DataFlowData %AUTO%]
+        set newProps     [$newObj getProperties]
+        set propertyList [$self getProperties]
+        
+        # Copy our properties into the new object.
         
         $propertylist foreach prop {
             set name [$prop cget -name]
