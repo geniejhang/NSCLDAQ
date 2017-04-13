@@ -180,12 +180,17 @@ def startPrograms(db):
         program = programDefs[name]
         command = program[0]
         host    = program[1]
-        additionalArgs = db.getProperty(name, 'args').strip()
-        if additionalArgs != '':
-            additionalArgs = processTclList(additionalArgs)
-        command = command + ' ' + additionalArgs
-        progFds = startProgram(name, command, host)
-        fds.extend(progFds)
+        
+        # Only start the services that are 'true services'.
+        
+        type    = db.getProperty(name, 'type')
+        if type == 'service' :
+            additionalArgs = db.getProperty(name, 'args').strip()
+            if additionalArgs != '':
+                additionalArgs = processTclList(additionalArgs)
+            command = command + ' ' + additionalArgs
+            progFds = startProgram(name, command, host)
+            fds.extend(progFds)
     active = True
     return tuple(fds)
 
