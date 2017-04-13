@@ -40,6 +40,7 @@ from   nscldaq.programs  import eventbuilders
 from   nscldaq.programs  import rings
 from   nscldaq.vardb     import VardbRingbuffer
 from   nscldaq.vardb     import varmgr
+from   nscldaq.vardb     import services
 
 
 import argparse
@@ -262,6 +263,8 @@ reqUri = makeAbsoluteUri(result[0])
 subUri = makeAbsoluteUri(result[1])
 
 
+servicesApi = services.Api(reqUri)
+
 #
 #   Create the event builders and their data sources.
 #   These are created as persistent.
@@ -276,7 +279,7 @@ eventBuilders = eventbuilders.EventBuilders(evbApi)
 # for input from the processes.
 
 
-programs = programs.Programs(reqUri, subUri, client)
+programs = programs.Programs(reqUri, subUri, client, servicesApi)
 initializeStateMachines(client)
 
 while True :

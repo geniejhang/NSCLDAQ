@@ -28,11 +28,13 @@ import Tkinter                 # Used to parse Tcl lists.
 ##
 # Class to manage a set of programs that are run on other platforms.
 class Programs:
-    def __init__(self, requri, suburi, client):
+    def __init__(self, requri, suburi, client, servicesApi):
         self._reqUri = requri
         self._subUri = suburi
         self._client = client
+        self._services = servicesApi
         self._filesToProgram = dict()
+        self._namesToServices = dict()
     
     #----------------- Private interfaces --------------------
 
@@ -89,18 +91,14 @@ class Programs:
             'DAQROOT' : os.getenv('DAQROOT'), 'DAQBIN' : os.getenv('DAQBIN'),
             'DAQLIB' : os.getenv('DAQLIB'), 'PYTHONPATH' : os.getenv('PYTHONPATH')
         }
-    
     ##
-    # __getProgramParameters
-    #   Decodes the Tcl list (might be empty) in the 'Program Parameters'
-    #   property of a program and returns it.
+    # __tclListToString
+    #   Process a Tcl List to a string.
+    # @param tclList the list.
+    # @return string - the resulting parsed list.
     #
-    # @param name - name of the program.
-    # @return string - Tcl list of parameters turned into a string.
-    #
-    def __getProgramParameters(self, name):
+    def __tclListToString(self, tclList):
         result = ' '
-        tclList = self._client.getProgramProperty(name, 'Program Parameters').strip()
         if tclList != '':
             pyList = []
             tclInterp = Tkinter.Tcl().tk.eval
@@ -112,6 +110,27 @@ class Programs:
             result += ' '.join(pyList)
     
         return result
+    ##
+    # __getProgramParameters
+    #   Decodes the Tcl list (might be empty) in the 'Program Parameters'
+    #   property of a program and returns it.
+    #
+    # @param name - name of the program.
+    # @return string - Tcl list of parameters turned into a string.
+    #
+    def __getProgramParameters(self, name):
+        result = ' '
+        tclList = self._client.getProgramProperty(name, 'Program Parameters').strip()
+        return self.__tclListToString(tclList)
+    
+    ##
+    # __getServiceParameters
+    #   Returns the optional program parameters for a service.
+    # @param name - name of the servicwe
+    #
+    def __getServiceParameters(self, name):
+        tclList = self._services.getProperty(name, 'args').strip()
+        return self.__tclListToString(tclList)
     
     ##
     # __propertiesToOptions
@@ -256,8 +275,32 @@ class Programs:
 
         self._filesToProgram[stdout] = programObj
         self._filesToProgram[stderr] = programObj
+        
     
-    
+    ##
+    # __startDataFlowService
+    #    Starts a dataflow service
+    #
+    # @param programDef - the program definition dict.
+    #
+    def __startDataFlowService(self, programDef):
+        programEnv = self.__makeProgramEnv(programDef)
+        
+        host = programDef['host']
+        path = programDef['path']
+        
+        args = self.__getServiceParameters(programDef['name'])
+        command = path + ' ' + args
+        
+        print('starting' + command + '@', 'host')
+        programObj = ssh.program(host, command, programEnv, programDef['name'])
+        stdout     = programObj.stdout()
+        stderr      = programObj.stderr()
+        self._filesToProgram[stdout] = programObj
+        self._filesToProgram[stderr] = programObj
+        self._namesToServices[programDef['name']] = programObj
+        
+        
     ##
     # _setAllNotReady
     #    Set all active programs to notready state:
@@ -266,8 +309,47 @@ class Programs:
         for name in self._client.listActivePrograms() :
             if self._client.getProgramState(name) != 'NotReady':
                 self._client.setProgramState(name, 'NotReady')
+            
+    ##
+    # __listDataFlowServices
+    #
+    #    returns a list of data flow definition services.  These are services
+    #    that have the type property value 'dataflow' and therefore have an
+    #    inring/outring.k
+    #
+    # The result produced is a list of dicts that are much like what's
+    #  produced by getProgramDef.
+    #
+    def __listDataFlowServices(self):
+        result = list()
+        serviceListDict = self._services.list()
+        
+        for servicename in serviceListDict.keys():
+            serviceType = self._services.getProperty(servicename, 'type')
+            if serviceType == 'dataflow':
                 
+                # Dataflow object type make the dict.
                 
+                programDef = {
+                    'name': servicename, 'path': serviceListDict[servicename][0],
+                    'host' : serviceListDict[servicename][1],
+                    'outring': self._services.getProperty(servicename, 'outring'),
+                    'inring' : self._services.getProperty(servicename, 'inring')
+                }
+                result.append(programDef)
+        return result
+     
+    ##
+    # __stopDataFlowServices
+    #    Destroys service programs.  This should result in all of them exiting.
+    #
+    def __stopDataFlowServices(self):
+        for name in self._namesToServices:
+            program = self._namesToServices[name]
+            program.intr()
+            self._namesToServices[name] = None
+            del program
+        
     #----------------- Public interfaces ---------------------
         
     ##
@@ -279,12 +361,17 @@ class Programs:
         programList = self._client.listPrograms()
         for program in programList:
             self.__startProgram(program)
+            
+        serviceList = self.__listDataFlowServices()
+        for service in serviceList:
+            self.__startDataFlowService(service)
     ##
     # All programs were externally stopped due to system shutdown.
     #
     def stop(self):
         self._setAllNotReady()
         self._filesToProgram = dict()
+        self.__stopDataFlowServices()
     
     ##
     # getFiles:
