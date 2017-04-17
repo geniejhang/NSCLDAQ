@@ -64,6 +64,7 @@ CRingSource::CRingSource(CDataSourcePtr pBuffer,
   m_nTimeWaited(0),
   m_wrapper()
 {
+    m_wrapper.setAllowedSourceIds(m_allowedSourceIds);
 }
 
 
@@ -96,8 +97,8 @@ CRingSource::CRingSource(int argc, char** argv) :
   m_nTimeout = m_pArgs->timeout_arg * 1000;        // End run timeouts in ms.
   m_nTimeOffset = m_pArgs->offset_arg;             // tick time offset.
   
-
 }
+
 /**
  * destructor
  *
@@ -106,7 +107,6 @@ CRingSource::CRingSource(int argc, char** argv) :
 CRingSource::~CRingSource() 
 {
   delete m_pArgs;
-
 }
 
 /*---------------------------------------------------------------------

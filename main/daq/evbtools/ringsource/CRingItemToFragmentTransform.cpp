@@ -88,7 +88,7 @@ CRingItemToFragmentTransform::operator()(const V12::CRawRingItem& item)
   frag.s_size      = item.size();
   frag.s_barrierType = 0;
 
-  auto pBuffer = new char[item.size()];
+  auto pBuffer = new uint8_t[item.size()];
 
   V12::serializeItem(item, pBuffer);
 
@@ -166,7 +166,7 @@ CRingItemToFragmentTransform::validateSourceId(std::uint32_t sourceId)
 
 bool CRingItemToFragmentTransform::isValidSourceId(std::uint32_t sourceId) 
 {
- auto searchResult = std::find(m_allowedSourceIds.begin(), 
+  auto searchResult = std::find(m_allowedSourceIds.begin(),
                           m_allowedSourceIds.end(),
                           sourceId);
   return (searchResult != m_allowedSourceIds.end());

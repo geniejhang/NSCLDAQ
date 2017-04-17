@@ -1,6 +1,6 @@
 bin_PROGRAMS    = ringFragmentSource
 
-noinst_PROGRAMS = ringTestSource unittests srctests
+noinst_PROGRAMS = ringTestSource unittests
 #lib_LTLIBRARIES= libTimeExtractorTest.la libS800TimeExtractor.la libGretinaTimeExtractor.la
 
 BUILT_SOURCES = rfcmdline.c rfcmdline.h  \
@@ -117,7 +117,7 @@ ringFragmentSource_LDADD=  		 \
 EXTRA_DIST=ringsource.xml ringtestoptions.ggo
 
 unittests_SOURCES = TestRunner.cpp CRingSource.cpp CRingItemToFragmentTransform.cpp \
-                    cringitemtofragtransformtests.cpp 
+                    cringsourcetests.cpp cringitemtofragtransformtests.cpp
 
 nodist_unittests_SOURCES = rfcmdline.c
 
@@ -143,39 +143,10 @@ unittests_CPPFLAGS = -I@top_srcdir@/daq/eventbuilder \
                      -I@top_srcdir@/base/sfinae_tools \
                      -I@top_srcdir@/base/headers \
                      -I@top_srcdir@/base/os \
+                     -I@top_srcdir@/base/testutils \
                      @CPPUNIT_CFLAGS@ \
                      @LIBTCLPLUS_CFLAGS@
 
 
-
-srctests_SOURCES=TestRunner.cpp CRingSource.cpp CRingItemToFragmentTransform.cpp \
-                   cringsourcetests.cpp 
-
-nodist_srctests_SOURCES=rfcmdline.c
-
-srctests_LDADD = \
-	@top_builddir@/daq/eventbuilder/libEventBuilderClient.la \
-        @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
-        @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
-        @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
-        @top_builddir@/utilities/IO/libdaqio.la \
-        @top_builddir@/base/dataflow/libDataFlow.la \
-	@top_builddir@/base/dataflow/libRingBuffer.la \
-	@top_builddir@/base/os/libdaqshm.la	\
-	@CPPUNIT_LDFLAGS@ \
-	$(THREAD_LDFLAGS)  -ldl
-
-srctests_CPPFLAGS = -I@top_srcdir@/daq/eventbuilder \
-         -I@top_srcdir@/base/dataflow \
-         -I@top_srcdir@/utilities/nscldaq-format/format \
-         -I@top_srcdir@/utilities/nscldaq-format/Buffer \
-         -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
-         -I@top_srcdir@/utilities/IO \
-         -I@top_srcdir@/base/sfinae_tools \
-         -I@top_srcdir@/base/headers \
-         -I@top_srcdir@/base/os \
-         @LIBTCLPLUS_CFLAGS@	 \
-         @CPPUNIT_CFLAGS@
-
-TESTS=	unittests srctests
+TESTS=	unittests
 

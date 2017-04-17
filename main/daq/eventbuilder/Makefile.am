@@ -1,16 +1,14 @@
 bin_PROGRAMS= frag2ring
 
 COMPILATION_FLAGS =  \
-	-I@top_srcdir@/daq/format \
 	-I@top_srcdir@/base/tcpip \
-	@LIBTCLPLUS_CFLAGS@	\
 	-I@top_srcdir@/base/headers	\
 	-I@top_srcdir@/base/tcpip        \
 	-I@top_srcdir@/servers/portmanager \
 	-I@top_srcdir@/base/os \
 	-I@top_srcdir@/base/thread \
 	@LIBTCLPLUS_CFLAGS@ \
-	@THREADCXX_FLAGS@ @TCL_FLAGS@
+        @THREADCXX_FLAGS@ @TCL_FLAGS@
 
 
 lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la 
@@ -133,7 +131,7 @@ unittests_LDADD = @builddir@/libEventBuilderClient.la \
 	@top_builddir@/base/tcpip/libTcp.la 	\
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
-unittests_CPPFLAGS=$(COMPILATION_FLAGS)
+unittests_CPPFLAGS=$(COMPILATION_FLAGS) -I@top_srcdir@/base/testutils
 
 
 ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
@@ -143,9 +141,12 @@ ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
 
 
 ordertests_LDADD = 	@top_builddir@/base/thread/libdaqthreads.la 	\
-	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
+                        @CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@ \
+                        @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
 
-ordertests_CXXFLAGS=$(COMPILATION_FLAGS) @TCL_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@
+ordertests_CPPFLAGS=$(COMPILATION_FLAGS) \
+                    -I@top_srcdir@/base/testutils \
+                    @TCL_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@
 
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs HERE=@srcdir@ tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl
@@ -159,8 +160,7 @@ BUILT_SOURCES=cmdline.h cmdline.c
 cmdline.c: cmdline.h
 
 cmdline.h: options.ggo
-	$(GENGETOPT) --input=@srcdir@/options.ggo \
-		--output-dir=@builddir@
+	$(GENGETOPT) --input=@srcdir@/options.ggo --output-dir=@builddir@
 
 
 
