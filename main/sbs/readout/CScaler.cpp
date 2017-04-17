@@ -14,8 +14,8 @@
 	     East Lansing, MI 48824-1321
 */
 #include <config.h>
+#include <V12/DataFormat.h>
 #include "CScaler.h"
-#include <fragment.h>
 /*!
    It is expected that derived classes can override this to 
    provide any initialization required for the module that is being
@@ -97,7 +97,7 @@ CScaler::isComposite() const
 uint64_t
 CScaler::timestamp()
 {
-  return NULL_TIMESTAMP;
+  return DAQ::V12::NULL_TIMESTAMP;
 }
 /**
  * sourceId

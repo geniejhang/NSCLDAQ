@@ -261,7 +261,6 @@ static void writeNonPhysicsItem(CRingItem* pItem)
 
   freeFragment(p);
 
-  
 }
 /**
  * writePhysicsEvent

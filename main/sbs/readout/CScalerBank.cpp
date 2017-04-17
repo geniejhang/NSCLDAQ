@@ -15,7 +15,7 @@
 */
 #include <config.h>
 #include "CScalerBank.h"
-#include <fragment.h>
+#include <V12/DataFormat.h>
 
 using namespace std;
 
@@ -78,10 +78,10 @@ class TimestampVisitor : public CScalerBank::CVisitor
 private:
   uint64_t m_timestamp;
 public:
-  TimestampVisitor() : m_timestamp(NULL_TIMESTAMP) {}
+  TimestampVisitor() : m_timestamp(DAQ::V12::NULL_TIMESTAMP) {}
   virtual void operator() (CScaler* pItem) {
     uint64_t t = pItem->timestamp();
-    if (t != NULL_TIMESTAMP) m_timestamp = t;
+    if (t != DAQ::V12::NULL_TIMESTAMP) m_timestamp = t;
   }
   uint64_t timestamp() const {
     return m_timestamp;
