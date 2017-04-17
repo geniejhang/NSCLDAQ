@@ -26,8 +26,7 @@ include_HEADERS	=  CDataSource.h \
 
 
 libdaqio_la_CPPFLAGS	=  \
-		-I@top_srcdir@/daq/format \
-		-I@top_srcdir@/base/uri		\
+                -I@top_srcdir@/base/uri		\
 		-I@top_srcdir@/base/os \
 		-I@top_srcdir@/base/headers \
     -I@top_srcdir@/base/dataflow \
@@ -38,8 +37,7 @@ libdaqio_la_LDFLAGS	= -version-info $(SOVERSION)	\
 				$(THREADLD_FLAGS)
 
 libdaqio_la_LIBADD	= \
-			@top_builddir@/daq/format/libdataformat.la \
-			@top_builddir@/base/dataflow/libDataFlow.la \
+                        @top_builddir@/base/dataflow/libDataFlow.la \
 			@top_builddir@/base/uri/liburl.la		\
 			@top_builddir@/base/os/libdaqshm.la		\
 			@LIBEXCEPTION_LDFLAGS@
@@ -62,7 +60,6 @@ unittests_SOURCES	= TestRunner.cpp  \
 unittests_LDADD		= \
 			@builddir@/libdaqio.la \
 			@top_builddir@/base/uri/liburl.la 	\
-			@top_builddir@/daq/format/libdataformat.la	\
 			@top_builddir@/base/dataflow/libDataFlow.la 	\
 			@top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
 			@top_builddir@/base/os/libdaqshm.la	\
@@ -70,14 +67,14 @@ unittests_LDADD		= \
 			@LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS=  -I@top_srcdir@/utilities/filter \
-    @LIBTCLPLUS_CFLAGS@	\
 		-I@top_srcdir@/base/uri		\
 		-I@top_srcdir@/base/headers		\
                 -I@top_srcdir@/base/testutils \
-                -I@top_srcdir@/daq/format \
-		-I@top_srcdir@/utilities/nscldaq-format/Buffer \
+                -I@top_srcdir@/utilities/nscldaq-format/Buffer \
                 -I@top_srcdir@/base/dataflow \
-                -I@top_srcdir@/base/os
+                -I@top_srcdir@/base/os \
+                @LIBTCLPLUS_CFLAGS@
+
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 
 unittests_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"

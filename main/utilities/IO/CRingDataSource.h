@@ -49,7 +49,6 @@ class CRingDataSource : public CDataSource
   // Private per object data:
 private:
   CRingBuffer*        m_pRing;
-  CAllButPredicate*   m_pPredicate;
   URL&                m_url;
 
   // Canonical methods.

@@ -46,11 +46,11 @@ namespace DAQ {
 CRingDataSource::CRingDataSource(const URL &url, vector<uint16_t> sample, vector<uint16_t> exclude) :
   CDataSource(),
   m_pRing(0), 
-  m_pPredicate(0),
+//  m_pPredicate(0),
   m_url(*(new URL(url)))
 {
   openRing();
-  makePredicate(sample, exclude);
+//  makePredicate(sample, exclude);
 }
 
 /*!
@@ -59,7 +59,7 @@ CRingDataSource::CRingDataSource(const URL &url, vector<uint16_t> sample, vector
 CRingDataSource::~CRingDataSource()
 {
   delete m_pRing;
-  delete m_pPredicate;
+//  delete m_pPredicate;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,17 +109,17 @@ const CRingBuffer& CRingDataSource::getRing() const
 void CRingDataSource::setPredicate(std::vector<uint16_t> &sample,
                                    std::vector<uint16_t> &exclude)
 {
-    auto pOldPredicate = m_pPredicate;
-    m_pPredicate = nullptr;
+//    auto pOldPredicate = m_pPredicate;
+//    m_pPredicate = nullptr;
 
-    try {
-        makePredicate(sample, exclude);
-        delete pOldPredicate;
-    } catch (...) {
-        if (m_pPredicate) delete m_pPredicate;
+//    try {
+//        makePredicate(sample, exclude);
+//        delete pOldPredicate;
+//    } catch (...) {
+//        if (m_pPredicate) delete m_pPredicate;
 
-        m_pPredicate = pOldPredicate;
-    }
+//        m_pPredicate = pOldPredicate;
+//    }
 
 
 }
@@ -144,13 +144,13 @@ CRingDataSource::openRing()
 void
 CRingDataSource::makePredicate(vector<uint16_t> sample, vector<uint16_t> exclude)
 {
-  m_pPredicate = new CAllButPredicate;
-  for (int i=0; i < exclude.size(); i++) {
-    m_pPredicate->addExceptionType(exclude[i]);
-  }
-  for (int i=0; i < sample.size(); i++) {
-    m_pPredicate->addExceptionType(sample[i], true);
-  }
+//  m_pPredicate = new CAllButPredicate;
+//  for (int i=0; i < exclude.size(); i++) {
+//    m_pPredicate->addExceptionType(exclude[i]);
+//  }
+//  for (int i=0; i < sample.size(); i++) {
+//    m_pPredicate->addExceptionType(sample[i], true);
+//  }
 }
 
 
