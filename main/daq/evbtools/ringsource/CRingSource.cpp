@@ -113,6 +113,11 @@ CRingSource::~CRingSource()
  * Public interface:
  */
 
+void CRingSource::setTimestampOffset(int offset)
+{
+    m_nTimeOffset = offset;
+}
+
 
 /**
  * initialize
@@ -133,9 +138,9 @@ CRingSource::initialize()
   // Process the source id and body headers flags:
 
   if (m_pArgs->ids_given > 0) {
-    m_allowedSourceIds.insert(m_allowedSourceIds.end(),
-			      m_pArgs->ids_arg, 
-			      m_pArgs->ids_arg + m_pArgs->ids_given);
+      m_allowedSourceIds.insert(m_allowedSourceIds.end(),
+                                m_pArgs->ids_arg,
+                                m_pArgs->ids_arg + m_pArgs->ids_given);
   } else { //(m_pArgs->ids_given==0) {
     throw std::string("The list of source ids (--ids) are required for this source!");
   }
@@ -211,6 +216,12 @@ void CRingSource::transformAvailableData()
         }
 
         auto frag = m_wrapper(item);
+        // a real timestamp clock running at 1 GHz will never reach 2^64 in
+        // 58,000 years. The problem of overflow is not a problem that is worth
+        // handling. Just make sure that we keep the integrity of NULL_TIMESTAMP.
+        if (frag.s_timestamp != V12::NULL_TIMESTAMP) {
+            frag.s_timestamp += m_nTimeOffset;
+        }
 
         if (item.size() > (max_event*2 - bytesPackaged)) {
             max_event = item.size() + bytesPackaged;

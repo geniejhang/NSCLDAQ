@@ -61,6 +61,8 @@ class CRingSourceTest : public CppUnit::TestFixture
     CPPUNIT_TEST(getEvent_1);
     CPPUNIT_TEST(getEvent_2);
     CPPUNIT_TEST(getEvent_3);
+    CPPUNIT_TEST(getEvent_4);
+    CPPUNIT_TEST(getEvent_5);
     CPPUNIT_TEST_SUITE_END();
 
   public:
@@ -80,6 +82,8 @@ protected:
   void getEvent_1();
   void getEvent_2();
   void getEvent_3();
+  void getEvent_4();
+  void getEvent_5();
 };
 // Register it with the test factory
 
@@ -141,8 +145,8 @@ void CRingSourceTest::getEvent_2() {
 
 
 
-// Simply test that we can wrap a physics event with a fragment header...
-// This is representative of all other types besides state change types
+// Test that we can wrap a state change item with a fragment header and observe that
+// all data remains sane and the barrier type is set to the type of the item.
 void CRingSourceTest::getEvent_3() {
 
     V12::CRingStateChangeItem item(V12::BEGIN_RUN);
@@ -166,6 +170,44 @@ void CRingSourceTest::getEvent_3() {
 
     ASSERTMSG("payload", std::equal(serialItem.begin(), serialItem.end(), frag.s_payload));
 }
+
+
+// ensure that adding a time offset to a NULL_TIMESTAMP produces NULL_TIMESTAMP.
+void CRingSourceTest::getEvent_4() {
+
+    V12::CRingStateChangeItem item(V12::BEGIN_RUN);
+    item.setSourceId(2);
+
+    writeItem(*m_pRing, item);
+
+    m_pSource->setTimestampOffset(20);
+    m_pSource->transformAvailableData();
+
+    auto& list = m_pSource->getFragmentList();
+    ClientEventFragment frag = list.front();
+
+    EQMSG("timestamp", V12::NULL_TIMESTAMP, frag.s_timestamp);
+}
+
+
+// ensure that adding a time offset does indeed change the timestamp as expected.
+void CRingSourceTest::getEvent_5() {
+
+    V12::CRingStateChangeItem item(V12::BEGIN_RUN);
+    item.setSourceId(2);
+    item.setEventTimestamp(120);
+
+    writeItem(*m_pRing, item);
+
+    m_pSource->setTimestampOffset(-20);
+    m_pSource->transformAvailableData();
+
+    auto& list = m_pSource->getFragmentList();
+    ClientEventFragment frag = list.front();
+
+    EQMSG("timestamp", uint64_t(100), frag.s_timestamp);
+}
+
 
 
 

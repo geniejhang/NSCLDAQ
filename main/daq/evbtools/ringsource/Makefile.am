@@ -49,12 +49,7 @@ noinst_HEADERS=CRingSource.h CRingItemToFragmentTransform.h s800.h TestSource.h
 
 options.ggo: @top_srcdir@/daq/eventbuilder/options.ggo
 	cp @top_srcdir@/daq/eventbuilder/options.ggo  @builddir@
-	echo option \"default-id\" S \"Source id to assign data without a predefined source id\" int optional >> @builddir@/options.ggo
 	echo option \"ring\" r \"URL of ring from which fragments come\" string required >> @builddir@/options.ggo
-	echo option \"timestampextractor\" t \"Shared library with timestamp extraction code\" string optional >> \
-		@builddir@/options.ggo
-	echo option \"expectbodyheaders\" e \"Body headers are expected on every ring item.\" flag off >> \
-		@builddir@/options.ggo
 	echo option \"oneshot\" o \"One shot after n end run items\" optional  int default=\"1\" >> @builddir@/options.ggo
 	echo option \"timeout\" T \"Timeout waiting for end runs in oneshot mode\" int default=\"10\" optional  >>@builddir@/options.ggo
 	echo option \"offset\"  O \"Signed time offset to add to the extracted timestamp\" int default=\"0\" optional >>@builddir@/options.ggo

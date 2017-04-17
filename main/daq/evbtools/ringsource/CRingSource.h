@@ -106,6 +106,7 @@ public:
   void setNumberOfSources(unsigned nsources) { m_nEndRuns = nsources; }
   bool oneshotComplete();
   void setAllowedSourceIds(const std::vector<uint32_t>& ids);
+  void setTimestampOffset(int offset);
 
   void validateItem(const V12::CRingItem& item);
 
