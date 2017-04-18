@@ -62,6 +62,10 @@ namespace eval state {
 ::nscldaq::stateclient ::state::client \
     $::state::reqUri $::state::subUri $::state::programName
 
+# enable callback to andle state transitions:
+
+::state::client onStateChange stateChanged
+
 
 #  When we start the global state had better be "Readying"
 #  We'll try to set our state to "Ready" and if that fails,
@@ -79,9 +83,6 @@ if {[catch {::state::client setstate Ready} msg]} {
 
 
 
-# enable callback to andle state transitions:
-
-::state::client onStateChange stateChanged
 
 ##
 #  Do a pre-begin or die trying .  This puts us in the 'Starting' state.
