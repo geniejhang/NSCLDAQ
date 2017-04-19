@@ -69,7 +69,7 @@ namespace EVB {
    */
   typedef struct __attribute__((__packed__)) _Fragment {
     FragmentHeader   s_header;
-    void*           s_pBody;
+    uint8_t*           s_pBody;
   } Fragment, *pFragment;
 
 
@@ -84,7 +84,7 @@ namespace EVB {
 
   typedef struct __attribute__((__packed__)) _FlatFragment {
     FragmentHeader s_header;
-    int            s_body[];
+    uint8_t            s_body[];
   } FlatFragment, *pFlatFragment;
 
 #ifdef __cplusplus
