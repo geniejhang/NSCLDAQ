@@ -118,10 +118,15 @@ class DataSource(object):
         
         #  Fixed part of the command.
         
+        print(self._evbInfo)
+        print("'" + self._evbInfo['host'] + "'")
+        
         cmd = self._srcInfo['path']
-        cmd = cmd + ' --evbhost=' + self._evbInfo['host']
+        cmd = cmd + ' --evbhost=' + self._evbInfo['host'] 
         cmd = cmd + ' --evbport=managed'
-        cmd = cmd + ' --evbname=' + self._computeEvbServiceName()
+        svcSuffix = self._computeEvbServiceName()
+        if svcSuffix != '':
+            cmd = cmd + ' --evbname=' + svcSuffix
         cmd = cmd + ' --info="'    + self._srcInfo['info'] + '"'
         cmd = cmd + ' --ids='     + ','.join(str(item) for item in self._srcInfo['ids'])
         cmd = cmd + ' --ring='     + self._srcInfo['ring']
@@ -149,6 +154,7 @@ class DataSource(object):
     def start(self):
         envDict      = self._createEnv()
         dsourceCmd   = self._createDsCommand()
+        print("Data source: " + dsourceCmd)
         print("Data source command: " + dsourceCmd)
         self._source = ssh.program(
             self._srcInfo['host'], dsourceCmd, envDict, self._srcInfo['name']
@@ -369,7 +375,7 @@ class EventBuilder(object):
     #   
     def start(self):
         self._startEventBuilder()
-        time.sleep(1.0)              # let the service get set up.
+        time.sleep(3.0)              # let the service get set up.
         for ds in self._dSources:
             print("Starting data source: " + ds.name())
             ds.start()

@@ -133,5 +133,40 @@ class apiTests(unittest.TestCase):
         
         self.assertEqual(250, self._api.getEditorYPosition('atest'))
 
+    # Tests for the properties api:
+    
+    def test_setProperty_create(self):
+        self._api.create()
+        self._api.createProgram('atest', '/usr/bin/ls', 'ahost.nscl.msu.edu')
+        self._api.setProperty("atest", "aprop", "avalue")
+        self.assertEqual('avalue', self._db.get('/Services/atest/aprop'))
+    
+    def test_setProperty_modify(self):
+        self._api.create()
+        self._api.createProgram('atest', '/usr/bin/ls', 'ahost.nscl.msu.edu')
+        self._api.setProperty("atest", "aprop", "avalue")
+        self._api.setProperty('atest', 'aprop', 'anewvalue', False)
+        self.assertEqual('anewvalue', self._db.get('/Services/atest/aprop'))
+    
+    def test_setProperty_nocreate(self):
+        self._api.create()
+        self._api.createProgram('atest', '/usr/bin/ls', 'ahost.nscl.msu.edu')
+        with self.assertRaises(nscldaq.vardb.services.error) :
+            self._api.setProperty('atest', 'aprop', 'avalue', False)
+            
+    def test_getProperty_exists(self):
+        self._api.create()
+        self._api.createProgram('atest', '/usr/bin/ls', 'ahost.nscl.msu.edu')
+        self._api.setProperty("atest", "aprop", "avalue")
+        
+        self.assertEqual('avalue', self._api.getProperty('atest', 'aprop'))
+        
+    def test_getProperty_nox(self):
+        self._api.create()
+        self._api.createProgram('atest', '/usr/bin/ls', 'ahost.nscl.msu.edu')
+        with self.assertRaises(nscldaq.vardb.services.error) :
+            self._api.getProperty('atest', 'aprop')
+    
+            
 if __name__ == '__main__':
     unittest.main()

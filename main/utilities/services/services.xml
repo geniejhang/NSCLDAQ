@@ -418,8 +418,43 @@ import nscldaq.vardb.services
                 <parameter>name</parameter>
         </methodparam>
         <modifier></modifier>
-    </methodsynopsis>  
-
+    </methodsynopsis>
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>void</type>
+        <methodname>setProperty</methodname>
+        <methodparam>
+            <modifier>const</modifier>
+            <type>char*</type><parameter>program</parameter>
+        </methodparam>
+        <methodparam>
+            <modifier>const</modifier>
+            <type>char*</type><parameter>propertyName</parameter>
+        </methodparam>
+        <methodparam>
+            <modifier>const</modifier>
+            <type>char*</type><parameter>value</parameter>
+        </methodparam>
+        <methodparam>
+            <modifier></modifier>
+            <type>bool</type><parameter>allowCreation</parameter>
+            <initializer>true</initializer>
+        </methodparam>
+        <modifier></modifier>
+    </methodsynopsis>
+    <methodsynopsis>
+        <modifier></modifier>
+        <type>std::string</type>
+        <methodname>getProperty</methodname>
+        <methodparam>
+            <modifier>const</modifier>
+            <type>char*</type><parameter>programName</parameter>
+        </methodparam>
+        <methodparam>
+            <modifier>const</modifier>
+            <type>char*</type><parameter>propertyName</parameter>
+        </methodparam>
+    </methodsynopsis>
 };
    </synopsis>
   </refsynopsisdiv>
@@ -747,8 +782,78 @@ import nscldaq.vardb.services
                 </para>
             </listitem>
         </varlistentry>        
-                 
-
+        <varlistentry>
+            <term>
+                <methodsynopsis>
+                   <modifier></modifier>
+                   <type>void</type>
+                   <methodname>setProperty</methodname>
+                   <methodparam>
+                       <modifier>const</modifier>
+                       <type>char*</type><parameter>program</parameter>
+                   </methodparam>
+                   <methodparam>
+                       <modifier>const</modifier>
+                       <type>char*</type><parameter>propertyName</parameter>
+                   </methodparam>
+                   <methodparam>
+                       <modifier>const</modifier>
+                       <type>char*</type><parameter>value</parameter>
+                   </methodparam>
+                   <methodparam>
+                       <modifier></modifier>
+                       <type>bool</type><parameter>allowCreation</parameter>
+                       <initializer>true</initializer>
+                   </methodparam>
+                   <modifier></modifier>
+               </methodsynopsis>
+            </term>
+            <listitem>
+                <para>
+                    Sets a property associated with the service named
+                    <parameter>program</parameter>.  Properties are named
+                    string valued items.  The property set will be
+                    <parameter>propertyName</parameter> and it will be given
+                    the new value <parameter>value</parameter>.
+                </para>
+                <para>
+                    If <parameter>allowCreation</parameter> is
+                    <literal>true</literal> (the
+                    default), the property will be created if it does not
+                    already exist.  If <literal>false</literal> the method
+                    throws an exception if <parameter>propertyName</parameter>
+                    does not yet exist.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>
+               <methodsynopsis>
+                   <modifier></modifier>
+                   <type>std::string</type>
+                   <methodname>getProperty</methodname>
+                   <methodparam>
+                       <modifier>const</modifier>
+                       <type>char*</type><parameter>programName</parameter>
+                   </methodparam>
+                   <methodparam>
+                       <modifier>const</modifier>
+                       <type>char*</type><parameter>propertyName</parameter>
+                   </methodparam>
+               </methodsynopsis> 
+            </term>
+            <listitem>
+                <para>
+                    Returns the value of the property
+                    <parameter>propertyName</parameter> from the service
+                    named <parameter>propgramName</parameter>.  An exception
+                    is thrown if the <parameter>propertyName</parameter>
+                    does not yet exist for <parameter>programName</parameter>.
+                </para>
+            </listitem>
+        </varlistentry>
+               
+               
      </variablelist>
   </refsect1>
 </refentry>     
@@ -797,6 +902,8 @@ import nscldaq.vardb.services
 <command><replaceable>newCommand</replaceable> getEditorYPosition <replaceable>name</replaceable></command>
 <command><replaceable>newCommand</replaceable> listall</command>
 <command><replaceable>newCommand</replaceable> list <replaceable>name</replaceable></command>
+<command><replaceable>newCommand</replaceable> setProperty <replaceable>program property value ?canCreate</replaceable></command>
+<command><replaceable>newCommand</replaceable> getProperty <replaceable>program property</replaceable></command>
    </synopsis>
   </refsynopsisdiv>
   <refsect1>
@@ -1030,6 +1137,45 @@ dict for {name info} $svcInfo {
                 </para>
             </listitem>
         </varlistentry>
+        <varlistentry>
+            <term>
+                <command><replaceable>newCommand</replaceable> setProperty <replaceable>program property value ?canCreate</replaceable></command>
+            </term>
+            <listitem>
+                <para>
+                    Sets the value of a service property.  Properties are arbitrary
+                    named string values associated with a specific service.
+                    <parameter>program</parameter> specifies the service while
+                    <parameter>property</parameter> specifies the program
+                    property.  <parameter>value</parameter> is the new value
+                    to be given to the property.
+                </para>
+                <para>
+                    If <parameter>canCreate</parameter> is true (by default
+                    it is), the property will be created if it does not already
+                    exist.  If <literal>false</literal>, attempting to set
+                    a property that does not already exist results in an error.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>
+                <command><replaceable>newCommand</replaceable> getProperty <replaceable>program property</replaceable></command>
+            </term>
+            <listitem>
+                <para>
+                    Returns the value of an existing service's property.
+                    <parameter>program</parameter> is the name of the service
+                    and <parameter>property</parameter> the property's name.
+                </para>
+                <para>
+                    If the program and/or property do not yet exist, this command
+                    raises an error.
+                </para>
+            </listitem>
+        </varlistentry>
+
+
     </variablelist>
   </refsect1>
 </refentry>     
@@ -1075,6 +1221,8 @@ api.getEditorXPosition(name)
 api.getEditorYPosition(name)
 api.list()
 api.listProgram(name)
+api.setProperty(program, property, value[, canCreate])
+api.getProperty(program, property)
 
    </synopsis>
   </refsynopsisdiv>
@@ -1358,6 +1506,83 @@ if api.exists() :
                     Returns a two element tuple that contains, in order
                     the command and host in which the service <parameter>name</parameter>
                     will be run.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>
+                <methodsynopsis>
+                    <modifier></modifier>
+                    <type>None</type>
+                    <methodname>setProperty</methodname>
+                    <methodparam>
+                        <modifier></modifier>
+                        <type>string</type><parameter>program</parameter>
+                    </methodparam>
+                    <methodparam>
+                        <modifier></modifier>
+                        <type>string</type><parameter>property</parameter>
+                    </methodparam>
+                    <methodparam>
+                        <modifier></modifier>
+                        <type>string</type><parameter>value</parameter>
+                    </methodparam>
+                    <methodparam>
+                        <modifier></modifier>
+                        <type>boolean</type><parameter>canCreate</parameter>
+                        <initializer>True</initializer>
+                    </methodparam>
+                    <modifier></modifier>
+                </methodsynopsis>
+            </term>
+            <listitem>
+                <para>
+                    Sets the value of a property associated with the service
+                    named <parameter>program</parameter>.  
+                    Properties are named strings that are associated with
+                    a service.  <parameter>property</parameter> specifies
+                    which program property will be modified and
+                    <parameter>value</parameter> is the new value it will
+                    be given.  
+                </para>
+                <para>
+                    If the optional parameter <parameter>canCreate</parameter>
+                    is
+                    <literal>True</literal> (the default), the property is created if it does
+                    not already exist.  If <parameter>canCreate</parameter> is
+                    <literal>False</literal>, it is an error to try to set
+                    a nonexistent parameter.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+            <term>
+                <methodsynopsis>
+                    <modifier></modifier>
+                    <type>string</type>
+                    <methodname>getProperty</methodname>
+                    <methodparam>
+                        <modifier></modifier>
+                        <type>String</type><parameter>program</parameter>
+                    </methodparam>
+                    <methodparam>
+                        <modifier></modifier>
+                        <type>String</type><parameter>property</parameter>
+                    </methodparam>
+                    <modifier></modifier>
+                </methodsynopsis>     
+            </term>
+            <listitem>
+                <para>
+                    Returns the value of a service's property.
+                    <parameter>program</parameter> is the name of the service
+                    we are querying while <parameter>property</parameter>
+                    is the property who's value we want.
+                </para>
+                <para>
+                    An exception
+                    (<classname>nscldaq.vardb.services.error</classname>) is
+                    raised if the property does not yet exist.
                 </para>
             </listitem>
         </varlistentry>

@@ -37,6 +37,8 @@
 #include <string.h>
 #include <time.h>
 #include <sys/mman.h>
+#include <stdlib.h>
+
 
 #include <CPortManager.h>
 #include <sys/types.h>
@@ -488,6 +490,13 @@ CRingBuffer::getDefaultMaxConsumers()
 std::string
 CRingBuffer::defaultRing()
 {
+  // If the OUTRING env variable is defined us it otherwise the username:
+  
+  const char* outring = getenv("OUTRING");
+  if (outring) {
+    return std::string(outring);
+  }
+  
   return Os::whoami();
 
 
@@ -501,6 +510,13 @@ CRingBuffer::defaultRing()
 std::string 
 CRingBuffer::defaultRingUrl()
 {
+  // If the env variable INRING is defined use it else tcp://localhost/username.
+  
+  const char* inring = getenv("INRING");
+  if (inring) {
+    return std::string(inring);
+  }
+  
   std::string url = "tcp://localhost/";
   url += defaultRing();
   return url;

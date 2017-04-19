@@ -273,6 +273,64 @@ CServiceApi::list(const char* name)
     
     return result;
 }
+/*---------------------------------------------------------------------------
+ *  Added property interface (public).
+ */
+
+/**
+ * setProperty
+ *    Sets a service property. A service property is just a variable in the
+ *    service directory and its value.
+ *
+ * @param name - name of the service.
+ * @param propName - name of the property.
+ * @param propValue - Value to give to the property.
+ * @param create    - If true(default) the property is created if it does not exist.
+ */
+void
+CServiceApi::setProperty(
+    const char* name, const char* propName, const char* propValue, bool create
+)
+{
+    // Create the variable name:
+    
+    std::string dirname = programPath(name);
+    std::string varname  = dirname;
+    varname += "/";
+    varname += propName;
+    
+    // If create is true, then just bracket a variable create in a try
+    // catch block.  This can fail for various reasons but if it fails because
+    // the variable already exists, the set will work otherwise it won't.
+    // Note all properties are 'string' types.
+    
+    if (create) {
+        try {
+            m_pApi->declare(varname.c_str(), "string");
+        } catch (...) {}
+    }
+    //  If the declare failed above (but not because it existed) this will fail too.
+    
+    m_pApi->set(varname.c_str(), propValue);
+}
+/**
+ * getProperty
+ *    Returns the value of a property.  (See setProperty above).
+ *
+ * @param name     - Program name.
+ * @param propName - Property name.
+ * @return std::string
+ */
+std::string
+CServiceApi::getProperty(const char* name, const char* propName)
+{
+    std::string dirname = programPath(name);
+    std::string varname = dirname;
+    varname            += "/";
+    varname            += propName;
+    
+    return m_pApi->get(varname.c_str());
+}
 /*----------------------------------------------------------------------------
  *  Private utilities:
  */

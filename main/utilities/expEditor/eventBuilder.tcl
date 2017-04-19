@@ -29,6 +29,7 @@ exec tclsh "$0" ${1+"$@"}
 package provide eventBuilder 1.0
 package require snit
 package require properties
+package require PropertyViews
 
 ##
 # @class TsPolicy
@@ -69,20 +70,21 @@ snit::type EventBuilder {
         
         # Create/install properties:
         
-        $properties add [property %AUTO% -name name]
-        $properties add [property %AUTO% -name host]
-        $properties add [property %AUTO% -name servicePrefix -value ORDERER]
-        $properties add [property %AUTO% -name serviceSuffix]
-        $properties add [property %AUTO% \
-            -name coincidenceInterval -validate [snit::integer %AUTO% -min 1] \
-            -value 1]
-        $properties add [property %AUTO% \
-            -name build -validate snit::boolean -value true]
-        $properties add [property %AUTO% \
-            -name timestampPolicy -value earliest -validate TsPolicy]
-        $properties add [property %AUTO% \
-            -name sourceId -value 0 -validate [snit::integer %AUTO% -min 0]]
-        $properties add [property %AUTO% -name ring -editable 0]
+        $properties add [GenericPropertyEditor %AUTO% -name name]
+        $properties add [GenericPropertyEditor %AUTO% -name host]
+        $properties add [GenericPropertyEditor %AUTO% -name servicePrefix -value ORDERER]
+        $properties add [GenericPropertyEditor %AUTO% -name serviceSuffix]
+        $properties add [IntegerEditor %AUTO% \
+            -name coincidenceInterval -usespinbox 1  -from 1 -to 10000 -value 1]
+        $properties add [EnumeratedEditor %AUTO% \
+            -name build -values [list true false] -value true]
+        $properties add [EnumeratedEditor %AUTO%    \
+            -name timestampPolicy -value earliest            \
+            -values [list earliest latest average]           \
+        ]
+        $properties add [IntegerEditor %AUTO% \
+            -name sourceId -value 0 -usespinbox 1 -from 0 -to 0xffffffff ]
+        $properties add [GenericPropertyEditor %AUTO% -name ring -editable 0]
         
         $self configurelist $args
         

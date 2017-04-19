@@ -536,16 +536,125 @@ tcltest::test list-missingparam {list when missing program name} \
    catch  {svc list}
 } -result 1
 
+tcltest::test setProperty-1 {Create a property and set a value} \
+-setup {
+    set dbFile [setup]
+    set dbUri  [fnameToUri $dbFile]
+    ::nscldaq::services svc $dbUri
+    svc create
+    svc createprog atest /some/test1 somehost1
+    
+    set h [vardb::open $dbFile]
+} \
+-cleanup {
+    ::nscldaq::services -delete svc
+    vardb::close $h
+    cleanup $dbFile
+    
+} \
+-body {
+    svc setProperty atest aprop avalue
+    vardb::var get $h /Services/atest/aprop
+    
+} -result avalue
 
+tcltest::test setProperty-1 {Create and modify property} \
+-setup {
+    set dbFile [setup]
+    set dbUri  [fnameToUri $dbFile]
+    ::nscldaq::services svc $dbUri
+    svc create
+    svc createprog atest /some/test1 somehost1
+    
+    set h [vardb::open $dbFile]
+} \
+-cleanup {
+    ::nscldaq::services -delete svc
+    vardb::close $h
+    cleanup $dbFile
+    
+} \
+-body {
+    svc setProperty atest aprop avalue
+    svc setProperty atest aprop {Changed Value}
+    vardb::var get $h /Services/atest/aprop
+} -result {Changed Value}
+
+tcltest::test setProperty-3 {Modifying an nonexistent prop with creat false is an error} \
+-setup {
+    set dbFile [setup]
+    set dbUri  [fnameToUri $dbFile]
+    ::nscldaq::services svc $dbUri
+    svc create
+    svc createprog atest /some/test1 somehost1
+    
+    set h [vardb::open $dbFile]
+} \
+-cleanup {
+    ::nscldaq::services -delete svc
+    vardb::close $h
+    cleanup $dbFile
+    
+} \
+-body {
+    catch {
+        svc setProperty atest aprop avalue 0
+    }
+} -result 1
+
+tcltest::test getProperty-1 {Retrieve property value if it exists} \
+-setup {
+    set dbFile [setup]
+    set dbUri  [fnameToUri $dbFile]
+    ::nscldaq::services svc $dbUri
+    svc create
+    svc createprog atest /some/test1 somehost1
+    
+    set h [vardb::open $dbFile]
+} \
+-cleanup {
+    ::nscldaq::services -delete svc
+    vardb::close $h
+    cleanup $dbFile
+    
+} \
+-body {
+    svc setProperty atest aprop avalue
+    svc getProperty atest aprop
+} -result avalue
+
+tcltest::test getProperty-2 {Retrieve property value if not exists is error} \
+-setup {
+    set dbFile [setup]
+    set dbUri  [fnameToUri $dbFile]
+    ::nscldaq::services svc $dbUri
+    svc create
+    svc createprog atest /some/test1 somehost1
+    
+    set h [vardb::open $dbFile]
+} \
+-cleanup {
+    ::nscldaq::services -delete svc
+    vardb::close $h
+    cleanup $dbFile
+    
+} \
+-body {
+    catch {
+        svc getProperty atest aprop
+    }
+} -result 1
 
 #------------------------------------------------------------------
 #
 # Magic to exit with errors if there are test failures:
 
-proc tcltest::cleanupTestHook {} {
+proc tcltest::cleanupTestsHook {} {
     variable numTests
     set ::exitCode $numTests(Failed)
 }
 
 
 tcltest::cleanupTests
+
+exit $exitCode

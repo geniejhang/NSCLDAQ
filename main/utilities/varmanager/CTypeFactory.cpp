@@ -60,6 +60,24 @@ CTypeFactory::CTypeFactory(CSqlite& db) :
 }
 
 /**
+ * destructor
+ *    Destroy the unknown type handlers
+ */
+CTypeFactory::~CTypeFactory()
+{
+    // Destroy the dynamically allocated unknown type handlers:
+    
+    for (auto p = m_typeUnknownHandlers.begin(); p != m_typeUnknownHandlers.end(); p++) {
+        delete *p;
+    }
+    // Our base class creators are also dynamic:
+    
+    for (auto p = m_creators.begin(); p != m_creators.end(); p++) {
+        delete p->second;
+    }
+}
+
+/**
  *  createSchema
  * Create the schema needed to describe the variable types:
  *
@@ -93,6 +111,7 @@ CTypeFactory::addUnknownTypeHandler(CUnknownTypeHandler* pHandler)
 {
     m_typeUnknownHandlers.push_back(pHandler);
 }
+
 /**
  * create
  *    The factory method

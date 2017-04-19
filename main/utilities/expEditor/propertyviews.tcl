@@ -45,9 +45,11 @@ package require properties
 # 
 snit::widgetadaptor PropertyView {
     
-    option -name     -default "" -readonly 1
     option -value    -default "" 
     option -readonly -default 0  -readonly 1
+    
+    delegate method * to hull
+    delegate option * to hull
     
     ##
     # constructor:
@@ -60,23 +62,15 @@ snit::widgetadaptor PropertyView {
     # @param[in] args - the construction time configuration options.
     # 
     constructor args {
-        installhull using ttk::frame
+        installhull using ttk::entry  -textvariable [myvar options(-value)]
         
         $self configurelist $args
         
-        ttk::label $win.l -textvariable [myvar options(-name)]
-        ttk::entry $win.e -textvariable [myvar options(-value)]
         
         if {$options(-readonly)} {
-            $win.e configure -state disabled
+            $hull configure -state disabled
         }
-        
-        grid $win.l $win.e -sticky nsew
-        grid columnconfigure $win 1 -weight 1
-        grid columnconfigure $win 0 -weight 0
-        grid rowconfigure $win 0 -weight 1
     }
-    
 }
 ##
 # @class GenericPropertyEditor
@@ -124,8 +118,8 @@ snit::type GenericPropertyEditor {
     # @return    path - just like all widget making things
     method makeEditor path {
         PropertyView $path                                                  \
-            -name [$prop cget -name] -value [$prop cget -value]               \
-            -readonly [expr {![$prop cget -editable]}]
+            -readonly [expr {![$prop cget -editable]}]                      \
+            -value    [$prop cget -value]
         return $path
     }
     ##
@@ -161,7 +155,6 @@ snit::widgetadaptor  IntegerPropertyView {
     
     variable editor
     
-    option -name       -default "" -readonly 1
     option -value      -default "" -configuremethod _setValue               \
         -cgetmethod _getValue
     option -readonly   -default 0  -readonly 1
@@ -184,9 +177,8 @@ snit::widgetadaptor  IntegerPropertyView {
     constructor args {
         installhull using ttk::frame
         
-        label $win.l -textvariable [myvar options(-name)]
-        install spinbox using ttk::spinbox $win.spinbox
-        install entry   using ttk::entry   $win.entry
+        install spinbox using ttk::spinbox $win.spinbox  -width 5
+        install entry   using ttk::entry   $win.entry    -width 5
         
         $self configurelist $args
         
@@ -196,10 +188,7 @@ snit::widgetadaptor  IntegerPropertyView {
             set editor $entry
         }
         
-        grid $win.l $editor -sticky nsew
-        grid columnconfigure $win 1 -weight 1
-        grid columnconfigure $win 0 -weight 0
-        grid rowconfigure $win 0 -weight 1
+        grid $editor -sticky w
         
         if {$options(-readonly) } {
             $editor configure -state disabled
@@ -219,7 +208,6 @@ snit::widgetadaptor  IntegerPropertyView {
     # @param[in] value   - new value proposed.
     #
     method _setValue {optname value} {
-        
         # Update the spinbox.
         
         set s [$spinbox cget -state]
@@ -298,8 +286,9 @@ snit::type IntegerEditor {
     # @return path
     #
     method makeEditor path {
-        IntegerPropertyView $path -name [$prop cget -name] -value             \
-            [$prop cget -value] -readonly [expr {![$prop cget -editable]}]     \
+
+        IntegerPropertyView $path                                              \
+            -value [$prop cget -value] -readonly [expr {![$prop cget -editable]}]     \
             -usespinbox $options(-usespinbox) -from $options(-from)           \
             -to $options(-to) -increment $options(-increment)
         
@@ -333,13 +322,13 @@ snit::type IntegerEditor {
 #       property.
 #
 snit::widgetadaptor EnumeratedView {
-    component chooser
     
-    option -name -default ""
-    option -value -default ""
     option -readonly -default 0 -readonly 1
+    option -value -default ""
     
-    delegate option -values to chooser
+    
+    delegate method * to hull
+    delegate option * to hull
     
     ##
     # constructor
@@ -353,18 +342,11 @@ snit::widgetadaptor EnumeratedView {
     # @parameter[in] args - the constrution time option/value pairs.
     #
     constructor args {
-        installhull using ttk::frame
-        
-        ttk::label $win.l -textvariable [myvar options(-name)]
-        install chooser using ttk::combobox $win.chooser                     \
-            -textvariable [myvar options(-value)]
+        installhull using  ttk::combobox -textvariable [myvar options(-value)] \
+            -width 10
         
         $self configurelist $args
         
-        grid $win.l $chooser -sticky nsew
-        grid columnconfigure $win 1 -weight 1
-        grid columnconfigure $win 0 -weight 0
-        grid rowconfigure $win 0 -weight 1
         
         if {$options(-readonly)} {
             $chooser configure -state readonly
@@ -405,9 +387,10 @@ snit::type EnumeratedEditor {
     # @return path.
     #
     method makeEditor path {
+
         return [EnumeratedView $path                                         \
-            -name [$prop cget -name] -value [$prop cget -value]              \
-            -values [$prop cget -values] -readonly [expr {![$prop cget -editable]}]
+            -values [$prop cget -values] -value [$prop cget -value]          \
+            -readonly [expr {![$prop cget -editable]}]                       \
         ]   
     }
     ##
@@ -478,9 +461,7 @@ snit::widgetadaptor ListView {
     constructor args {
         installhull using ttk::frame
         
-        ttk::label $win.l -textvariable [myvar options(-name)]
-        
-        install entry using ttk::entry $win.entry -width 8
+        install entry using ttk::entry $win.entry -width 15
         
         ttk::button $win.b -image $rightarrow -command [mymethod _addToList]
         
@@ -495,18 +476,16 @@ snit::widgetadaptor ListView {
         
         # Lay this all out
         
-        grid $win.l  -row 0 -column 0 -sticky ew
-        grid $entry  -row 0 -column 1 -sticky ew
-        grid $win.b  -row 0 -column 2
-        grid $list -row 0 -column 3 -sticky nsew
-        grid $win.yscroll -row 0 -column 4 -sticky nsw
+        grid $entry  -row 0 -column 0 -sticky ew
+        grid $win.b  -row 0 -column 1
+        grid $list -row 0 -column 2 -sticky nsew
+        grid $win.yscroll -row 0 -column  3 -sticky nsw
         
         # Let the entry expand in x and the list expand in y.
         
-        grid rowconfigure $win 0 -weight 1
-        grid columnconfigure $win 1 -weight 1
-        grid columnconfigure $win 3 -weight 1
-        foreach col [list 0 2 4] {
+        grid columnconfigure $win 0 -weight 1
+        grid columnconfigure $win 2 -weight 1
+        foreach col [list  1 3] {
             grid columnconfigure $win $col -weight 0
         }
         #  If readonly we don't allow any modification.
@@ -596,7 +575,7 @@ snit::type ListEditor {
     # @return path
     #
     method makeEditor path {
-        ListView $path -name [$prop cget -name] -value [$prop cget -value] \
+        ListView $path  -value [$prop cget -value] \
             -maxlen [$prop cget -maxlen] -readonly [expr {![$prop cget -editable]}]
         
         return $path

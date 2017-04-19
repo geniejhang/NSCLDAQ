@@ -1068,6 +1068,90 @@ getEditorYPosition(PyObject* self, PyObject* args)
     return PyInt_FromLong(y);
 }
 /**
+ * setProgramProperty
+ *    Set the value of a program's property.  If requested, the property
+ *    can be created if it does not yet exist.
+ *
+ * @param self   - Pointer to the object data.
+ * @param args   - Positional arguments which are:
+ *                 *  The name of the program whose property we change.
+ *                 *  Name of the property to modify.
+ *                 *  value to give to the property.
+ *                 *  Optional boolean, if true (default) the property can
+ *                 *  be created if it does not yet exist.
+ * @return PyObject* - Py_Null.
+ */
+static PyObject*
+setProgramProperty(PyObject* self, PyObject* args)
+{
+    const char* pProgram;
+    const char* pProperty;
+    const char* pValue;
+    PyObject*   pCanCreate=Py_True;
+    int parseStatus;
+    
+    Py_ssize_t nArgs = PyTuple_Size(args);
+    if (nArgs == 3) {
+        parseStatus = PyArg_ParseTuple(
+            args, "sss", &pProgram, &pProperty, &pValue
+        );
+    } else {
+        parseStatus = PyArg_ParseTuple(
+            args, "sssO", &pProgram, &pProperty, &pValue, &pCanCreate
+        );
+    }
+    if (!parseStatus) {
+        return NULL;                   // Exception was raisec by ParseArgs.
+    }
+    bool createOk = pCanCreate == Py_True;
+    
+    // the try block below maps C++ exception back to Python exceptions.
+    
+    try {
+        getProgramApi(self)->setProgramProperty(
+            pProgram, pProperty, pValue, createOk
+        );
+    }
+    catch (std::exception & e) {
+        return raise(e.what());
+    }
+    Py_RETURN_NONE;
+}
+/**
+ * getProgramProperty
+ *    Returns the value of a program property.
+ *
+ *  @param self   - Pointer to object storage.
+ *  @param args   - Positional args which contains:
+ *                  *  pProgram   - program name.
+ *                  *  pProperty  - Property name.
+ * @return PyString - value of the property.
+ */
+static PyObject*
+getProgramProperty(PyObject* self, PyObject* args)
+{
+    const char* pProgram;
+    const char* pProperty;
+    std::string result;
+    PyObject*   pResult;
+    
+    if (! PyArg_ParseTuple(args, "ss", &pProgram, &pProperty)) {
+        return NULL;
+    }
+    
+    try {
+        result = getProgramApi(self)->getProgramProperty(
+            pProgram, pProperty
+        );
+    }
+    catch (std::exception& e) {
+        return raise(e.what());
+    }
+    
+    pResult = PyString_FromString(result.c_str());
+    return pResult;
+}
+/**
 * setGlobalState
 *     Force a state transition.
 *
@@ -1727,6 +1811,8 @@ static PyMethodDef ApiObjectMethods[] = {
     {"setEditorPosition", setEditorPosition, METH_VARARGS, "set editor position of object"},
     {"getEditorXPosition", getEditorXPosition, METH_VARARGS, "Get x position of an object"},
     {"getEditorYPosition", getEditorYPosition, METH_VARARGS, "Get y position of an object"},
+    {"setProgramProperty", setProgramProperty, METH_VARARGS, "Set property for a program"},
+    {"getProgramProperty", getProgramProperty, METH_VARARGS, "Get the value of a program property"},
     {"setGlobalState", setGlobalState, METH_VARARGS, "Start a global state transition"},
     {"getGlobalState", getGlobalState, METH_VARARGS, "Get The global state"},
     {"getSystemStatus", getSystemStatus, METH_VARARGS, "Get the state manager system status"},

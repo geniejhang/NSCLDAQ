@@ -97,8 +97,12 @@ snit::type DataSourceObject {
 
     destructor {
         $data destroy
-        $gui destroy
-        $Label destroy
+        if {$gui ne ""} {
+            $gui destroy
+        }
+        if {$Label ne ""} {
+            $Label destroy
+        }
     }
     
     #---------------------------------------------------------------------------

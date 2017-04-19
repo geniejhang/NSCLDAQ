@@ -98,7 +98,9 @@ snit::type RingBufferObject {
     destructor  {
         $data destroy
         $gui  destroy
-        $Label destroy
+        if {$Label ne ""} {
+            $Label destroy
+        }
     }
     
     ##

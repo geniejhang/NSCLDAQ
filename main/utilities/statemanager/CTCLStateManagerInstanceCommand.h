@@ -118,6 +118,10 @@ protected:
     void setEditorPosition(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
     void getEditorXPosition(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
     void getEditorYPosition(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
+    
+    void setProperty(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
+    void getProperty(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
+    
     // Utility methods.
 private:
     std::map<std::string, std::string> dictToMap(

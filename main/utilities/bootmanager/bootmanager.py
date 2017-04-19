@@ -40,6 +40,7 @@ from   nscldaq.programs  import eventbuilders
 from   nscldaq.programs  import rings
 from   nscldaq.vardb     import VardbRingbuffer
 from   nscldaq.vardb     import varmgr
+from   nscldaq.vardb     import services
 
 
 import argparse
@@ -186,11 +187,8 @@ def processProgramInput(readable):
                 return
 
         try :
-            print 'setflag'
             setFlag(f, os.O_NONBLOCK)
-            print 'read'
             line    = f.read()               # program may have exited.
-            print 'clearflag'
             clearFlag(f, os.O_NONBLOCK)
         except:
             print("read failed")
@@ -242,13 +240,30 @@ def initializeStateMachines(client):
 # Create the state client.
     
 result = processArgs()
-client = nscldaq.vardb.statemanager.Api(result[0], result[1])
+print(result)
+
+#  Wait for up to 10 seconds for the database services to become visible:
+#
+done = False
+retriesLeft = 10
+while not done:
+    try:
+        client = nscldaq.vardb.statemanager.Api(result[0], result[1])
+        done = True
+    except:
+        retriesLeft = retriesLeft - 1
+        if retriesLeft > 0:
+            time.sleep(1)
+        else:
+            done = True
 
 # the programs need a URI without a localhost in it.
 
 reqUri = makeAbsoluteUri(result[0])
 subUri = makeAbsoluteUri(result[1])
 
+
+servicesApi = services.Api(reqUri)
 
 #
 #   Create the event builders and their data sources.
@@ -264,7 +279,7 @@ eventBuilders = eventbuilders.EventBuilders(evbApi)
 # for input from the processes.
 
 
-programs = programs.Programs(reqUri, subUri, client)
+programs = programs.Programs(reqUri, subUri, client, servicesApi)
 initializeStateMachines(client)
 
 while True :

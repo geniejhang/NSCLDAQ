@@ -62,6 +62,10 @@ namespace eval state {
 ::nscldaq::stateclient ::state::client \
     $::state::reqUri $::state::subUri $::state::programName
 
+# enable callback to andle state transitions:
+
+::state::client onStateChange stateChanged
+
 
 # enable callback to andle state transitions:
 
