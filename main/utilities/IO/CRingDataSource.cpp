@@ -18,7 +18,6 @@
 #include "CRingDataSource.h"
 
 #include <CRingBuffer.h>
-#include <CAllButPredicate.h>
 #include <URL.h>
 #include <CRemoteAccess.h>
 #include <CTimeout.h>
