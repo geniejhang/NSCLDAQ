@@ -34,6 +34,7 @@ class CEnumTypeFamilyHandler : public CUnknownTypeHandler
 {
 public:
     CEnumTypeFamilyHandler(CSqlite& db);
+    virtual ~CEnumTypeFamilyHandler() {}
     
     CDataType* create(const char* typeName, CSqlite& db, CTypeFactory& factory);
 };

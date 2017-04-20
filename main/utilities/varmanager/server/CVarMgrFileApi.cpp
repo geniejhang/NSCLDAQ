@@ -175,7 +175,8 @@ void CVarMgrFileApi::rmdir(const char* path)
 void
 CVarMgrFileApi::declare(const char* path, const char* type, const char* initial)
 {
-    CVariable::create(*m_pDb, *m_pWd, path, type, initial);
+    CVariable* pVar = CVariable::create(*m_pDb, *m_pWd, path, type, initial);
+    delete pVar;
 }
 /**
  * set

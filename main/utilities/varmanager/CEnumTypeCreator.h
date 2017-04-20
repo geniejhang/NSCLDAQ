@@ -44,6 +44,7 @@ private:
     std::string m_typeName;
 public:
     CEnumTypeCreator(CSqlite& db, std::string enumName);
+    virtual ~CEnumTypeCreator() {}
     
     virtual CDataType* operator()();
     virtual std::string describe() const;

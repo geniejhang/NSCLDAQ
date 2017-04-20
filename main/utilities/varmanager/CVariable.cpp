@@ -227,9 +227,11 @@ CVariable::destroy(CVariableDb& db, int id)
 void
 CVariable::destroy(CVariable* pVar, bool doDelete)
 {
-    destroy(pVar->m_db, pVar->m_myId);
-    
+    int id = pVar->m_myId;
     if (doDelete) delete pVar;
+    destroy(pVar->m_db, id);
+    
+    
 }
 /**
  * destroy
@@ -246,8 +248,12 @@ CVariable::destroy(CVariable* pVar, bool doDelete)
 void
 CVariable::destroy(CVariableDb& db, CVarDirTree& dir, const char* path)
 {
-    CVariable theVar(db, dir, path);
-    destroy(&theVar, false);
+    int id;
+    {
+        CVariable theVar(db, dir, path);
+        id = theVar.m_myId;
+    }
+    destroy(db, id);
 }
 /**
  * destroy
@@ -260,8 +266,12 @@ CVariable::destroy(CVariableDb& db, CVarDirTree& dir, const char* path)
 void
 CVariable::destroy(CVariableDb& db, const char* path)
 {
-    CVariable theVar(db, path);
-    destroy(&theVar, false);
+    int id;
+    {
+        CVariable theVar(db, path);
+        id = theVar.m_myId;
+    }
+    destroy(db, id);
 }
 /*-----------------------------------------------------------------------------
  * Canonicals

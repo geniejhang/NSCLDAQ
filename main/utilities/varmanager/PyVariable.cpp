@@ -256,7 +256,6 @@ variable_destroy(PyObject* self, PyObject* args)
 {
     vardb_VarDbObject*       pDb(0);
     dirtree_DirTreeObject*   pDir(0);
-    PyObject*                pVar(0);
     const char*              pPath(0);
     int                      id(-1);
     
@@ -598,6 +597,7 @@ varinstance_get(PyObject* self, PyObject* args)
     // Create and return the result:
     
     PyObject* result = PyString_FromString(value.c_str());
+
     return result;
 }
 

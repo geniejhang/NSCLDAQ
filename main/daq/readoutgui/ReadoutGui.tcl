@@ -865,7 +865,8 @@ namespace eval ::ReadoutGUIStateManagement {
 #
 proc ::ReadoutGUIStateManagement::attach {state} {
     
-}proc ::ReadoutGUIStateManagement::precheckTransitionForErrors {from to} {
+}
+proc ::ReadoutGUIStateManagement::precheckTransitionForErrors {from to} {
 	return [list]
 }
 
