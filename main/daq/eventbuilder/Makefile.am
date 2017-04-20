@@ -37,7 +37,7 @@ libEventBuilderClient_la_CPPFLAGS=$(COMPILATION_FLAGS)
 frag2ring_SOURCES=frag2ring.cpp CFragReader.cpp CFragWriter.cpp
 
 frag2ring_CPPFLAGS=$(COMPILATION_FLAGS) \
-                    -I$(top_srcdir@/utilities/nscldaq-format/Buffer
+                    -I@top_srcdir@/utilities/nscldaq-format/Buffer
 
 frag2ring_LDADD = @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
                     @top_builddir@/base/os/libdaqshm.la $(THREADLD_FLAGS)
