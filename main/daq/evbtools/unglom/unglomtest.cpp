@@ -26,6 +26,7 @@ class CUnglomTests : public CppUnit::TestFixture
     CPPUNIT_TEST(processOne_0);
     CPPUNIT_TEST(processOne_1);
     CPPUNIT_TEST(processOne_2);
+    CPPUNIT_TEST(processOne_3);
     CPPUNIT_TEST_SUITE_END();
 
 
@@ -51,8 +52,7 @@ public:
         writeItem(*m_pSource, item);
         glom.processOne();
 
-        EQMSG("amount of data outputted", size_t(0),
-              m_pSink->getBuffer().size());
+        EQMSG("amount of data outputted", size_t(0), m_pSink->getBuffer().size());
     }
 
     // a composite item with one child should output nothing
@@ -74,6 +74,7 @@ public:
     std::pair<EVB::FragmentHeader, V12::CRawRingItem> readFragment()
     {
         auto stream = Buffer::makeContainerDeserializer(m_pSink->getBuffer(), false);
+
         EVB::FragmentHeader frag;
 
         // because the EVB::FragmentHeader is a "packed" structure, the compiler
@@ -92,6 +93,8 @@ public:
         return std::make_pair(frag, rawItem);
     }
 
+    // test that a non-barrier gets treated correctly. it should have a fragment header
+    // appended to it and that is it.
     void processOne_2() {
         CUnglom glom(m_pSource, m_pSink);
 
@@ -113,6 +116,18 @@ public:
         EQMSG("item timestamp", uint64_t(0), rawItem.getEventTimestamp());
         EQMSG("item source id", uint32_t(1), rawItem.getSourceId());
         EQMSG("item size", uint32_t(20), rawItem.size());
+    }
+
+    // test that a EVB_GLOM_INFO type is ignored and dropped on the floor.
+    void processOne_3() {
+        CUnglom glom(m_pSource, m_pSink);
+
+        V12::CRawRingItem item(V12::EVB_GLOM_INFO, 0, 1);
+
+        writeItem(*m_pSource, item);
+        glom.processOne();
+
+        EQMSG("no data written", size_t(0), m_pSink->getBuffer().size());
     }
 
 };
