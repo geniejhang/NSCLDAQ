@@ -23,7 +23,8 @@
 #include "fragment.h"
 #include <io.h>
 
-#include <DataFormat.h>
+#include <ByteBuffer.h
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
@@ -32,8 +33,6 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
-#include <CRingItemFactory.h>
-#include <CRingItem.h>
 
 /**
  * Constructor
@@ -119,19 +118,11 @@ void CFragWriter::convertAndWrite(void* pFragment) {
 void CFragWriter::stripAndWrite(void* pFragment) {
 
     EVB::pFragmentHeader pHeader = reinterpret_cast<EVB::pFragmentHeader>(pFragment);
-    pRingItem           pPayload = reinterpret_cast<pRingItem>(pHeader+1); // payload after the fragment.
+    Buffer::ByteBuffer payload(pFragment->s_body,
+                               pFragment->s_body + pHeader->s_size); // payload after the fragment.
   
-    // fill in the body header if it doesn't exist.
-    CRingItem* pItem = CRingItemFactory::createRingItem(pPayload);
-    if (!pItem->hasBodyHeader()) {
-      pItem->setBodyHeader( pHeader->s_timestamp, pHeader->s_sourceId, 
-                            pHeader->s_barrier);
-      // update our payload to the new item with the body header
-      pPayload = reinterpret_cast<pRingItem>(pItem->getItemPointer());
-    }
-
-    // Write the payload only
-    Write(pPayload->s_header.s_size, pPayload);
+   // Write the payload only
+    Write(payload.size(), payload.data());
 
     delete pItem;
 }
