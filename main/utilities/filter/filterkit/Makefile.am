@@ -18,6 +18,7 @@ testapp_CPPFLAGS= -I@top_srcdir@/utilities \
                     -I@top_srcdir@/base/uri		\
                     -I@top_srcdir@/base/dataflow \
                     -I@top_srcdir@/base/headers		\
+                    -I@top_srcdir@/base/sfinae_tools \
                     @LIBTCLPLUS_CFLAGS@
 
 testapp_LDADD = @top_builddir@/utilities/filter/core/libfilter.la	\
