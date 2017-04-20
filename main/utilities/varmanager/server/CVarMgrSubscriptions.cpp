@@ -114,6 +114,11 @@ void CVarMgrSubscriptions::subscribe(const char* pathPrefix)
     }
     
     m_pSocket->setsockopt(ZMQ_SUBSCRIBE, pathPrefix, strlen(pathPrefix));
+    // ZMQ lore says this helps the subscsription happen:
+    
+    zmq::message_t msg;
+    m_pSocket->recv(&msg, ZMQ_NOBLOCK);
+    
     m_subscriptions.insert(pathPrefix);
 }
 /**
