@@ -44,7 +44,7 @@ exec tclsh "$0" ${1+"$@"}
 #
 
 package provide ReadoutCalloutsHarness 1.0
-
+package require Thread
 
 ##
 #  These global variables are maintained by the state manager:
@@ -333,7 +333,64 @@ proc ReadoutState::setTimedLength {value} {}
 #
 #  Simulation of the ReadoutControl package
 
-namespace eval ReadoutControl {}
+namespace eval ReadoutControl {
+    variable waitTransitionTid -1
+    variable mutexid [thread::mutex create]
+    variable condid  [thread::cond create]
+    variable completedCount 0
+}
+
+##
+#  The thread described below is used to wait for a state transition.
+#  We need to do this in another thread to avoid pulling in messages that
+#  the state management dispacher in our thread needs.
+#
+
+set ::ReadoutControl::waitTransitionTid [thread::create -joinable {
+    set here [file dirname [info script]]
+    set libs [file normalize [file join $here ..]]
+    lappend auto_path $libs
+    
+    package require stateclient
+    package require Thread
+    ##
+    # waitTransition
+    #   This proc is fired off from the parent thread just prior to initiating
+    #   a state transtion it
+    #   1. Initializes
+    #   2. signals initialization is comlete.
+    #   3. waits for a transition.
+    #   4. Signals wait complete.
+    #   5. Tears down the state client.
+    #   6. Returns the thread to idle.
+    #
+    # @param[in] requri - Request URI for the vardbServer.
+    # @param[in] suburi - Subscription URI for the vardbServer.
+    # @param[in] progname - Name of our program.
+    # @param[in] mutexid - Id of the mutex used to protect the condition var.
+    # @param[in] condid  - Id of the condition variable used to signal init and transition.
+    # @param[in] tid     - Thread id on behalf of whom we're waiting
+    # @param[in] script  - Script to execute when the transition completes (in tid).
+    #
+    proc waitTransition {requri suburi progname mutexid condid tid script} {
+        
+        # Initialize and notify:
+        
+        nscldaq::stateclient client $requri $suburi $progname
+        thread::mutex lock $mutexid
+        thread::cond  notify $condid
+        thread::mutex unlock $mutexid
+        
+        # Wait for the transition and notify.
+        
+        client waitTransition
+        
+        thread::send -async $tid $script
+        
+        nscldaq::stateclient -delete client
+    }
+    thread::wait
+}]
 
 ##
 # getReadoutState
@@ -373,6 +430,9 @@ proc ReadoutControl::SetRun n {
 proc ReadoutControl::SetTitle t {
     ReadoutState::setTitle $t 
 }
+
+
+
 ##
 # _transition
 #   Internal method to perform a state transition.
@@ -381,11 +441,24 @@ proc ReadoutControl::SetTitle t {
 #
 proc ReadoutControl::_transition s {
     set api [::RdoCallouts::getReqApi]
-    $api   setGlobalState $s
-    vwait  ::state::transitionCounter;    # Wait for my state to change.
-    $api   waitTransition;                # Wait for all participants to complete.
-
     
+    thread::mutex lock $::ReadoutControl::mutexid
+    
+    thread::send -async $::ReadoutControl::waitTransitionTid "             \
+        waitTransition                                                 \
+            $::state::reqUri $::state::subUri $::state::programName \
+            $::ReadoutControl::mutexid $::ReadoutControl::condid    \
+            [thread::id] {incr ::ReadoutControl::completedCount}    \
+    "
+    #  Wait for initialization:
+    
+    thread::cond wait $::ReadoutControl::condid $::ReadoutControl::mutexid
+    thread::mutex unlock $::ReadoutControl::mutexid
+    
+    #  Start the state transition requested:
+    
+    $api   setGlobalState $s
+    vwait ::ReadoutControl::completedCount
 }
 ##
 # Begin
@@ -394,6 +467,7 @@ proc ReadoutControl::_transition s {
 #
 proc ReadoutControl::Begin {} {
     ::ReadoutControl::_transition Beginning
+    after 10
     ::ReadoutControl::_transition Active
 }
 ##
@@ -403,6 +477,7 @@ proc ReadoutControl::Begin {} {
 #
 proc ReadoutControl::End {} {
     ::ReadoutControl::_transition Ending
+    after 10
     ::ReadoutControl::_transition Ready
 }
 ##
@@ -411,6 +486,7 @@ proc ReadoutControl::End {} {
 #
 proc ReadoutControl::Pause {} {
     ::ReadoutControl::_transition Pausing
+    after 10
     ::ReadoutControl::_transition Paused
 }
 ##
@@ -419,6 +495,7 @@ proc ReadoutControl::Pause {} {
 #
 proc ReadoutControl::Resume {} {
     ::ReadoutControl::_transition Resuming
+    after 10
     ::ReadoutControl::_transition Active
 }
 #-----------------------------------------------------------------------------
