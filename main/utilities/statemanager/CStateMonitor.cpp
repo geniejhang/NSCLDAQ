@@ -322,6 +322,12 @@ CStateMonitorBase::CStateMonitorBase(
     m_pStateSocket->setsockopt(ZMQ_SUBSCRIBE, "TITLE:", 6);
     m_pStateSocket->setsockopt(ZMQ_SUBSCRIBE, "RECORD:", 7);
     
+    // ZMQ lore says that the following ensures subscsriptions actually happen:
+    
+    zmq::message_t msg;
+    m_pStateSocket->recv(&msg, ZMQ_NOBLOCK);
+    
+    
     //  Register the state socket readability with the event loop:
     
     m_eventLoop.Register(

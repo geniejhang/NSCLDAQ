@@ -25,7 +25,7 @@
 
 #include <vector>
 #include <string>
-
+#include <map>
 
 #include <CBufferQueue.h>
 #include <CGaurdedObject.h>
@@ -82,6 +82,7 @@ public:
     // Private data types
 
 private:
+     
     typedef CBufferQueue<Notification>  NotificationQ;
     class   MonitorThread;
     
@@ -92,6 +93,9 @@ private:
     NotificationQ         m_notifications;
     std::string           m_programParentPath;
     MonitorThread*        m_pMonitor;
+public:
+    static std::map<CStateTransitionMonitor::NotificationType, std::string>
+        m_typeToString;
     
     // Canonicals
     
