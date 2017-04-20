@@ -742,9 +742,9 @@ snit::widgetadaptor RunControl {
 
       RunControlSingleton::updateStateBundleOrder
 
-      $stateMachine transition Starting
+      start
 
-      $stateMachine destroy 
+      $stateMachine destroy
     }
     ##
     #  _beginend

@@ -609,6 +609,7 @@ proc start {} {
       $machine destroy
       error "transition to halted failed with message : $msg"
     }
+
     $machine destroy
   }
 
