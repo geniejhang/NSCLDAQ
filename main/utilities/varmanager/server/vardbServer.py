@@ -415,6 +415,10 @@ class databaseServer():
     #
     def _publishMessage(self, path, operation, data):
         message = ':'.join([path, operation, data])
+        try:
+            self._pub.recv(zmq.NOBLOCK)
+        except:
+            pass
         self._pub.send(message)
     
 
