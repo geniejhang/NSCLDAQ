@@ -56,6 +56,12 @@ public:
     std::map<std::string, std::pair<std::string, std::string> > list();
     std::pair<std::string, std::string> list(const char* name);
     
+    void setProperty(
+        const char* name, const char* propName, const char* propValue,
+        bool create = true
+    );
+    std::string getProperty(const char* name, const char* propName); 
+    
     // Utilities:
     
 private:

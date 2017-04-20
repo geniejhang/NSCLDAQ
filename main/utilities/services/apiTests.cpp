@@ -42,6 +42,14 @@ class ServerApiTests : public CppUnit::TestFixture {
   CPPUNIT_TEST(listsome);
   
   CPPUNIT_TEST(listByNameOk);
+  
+  // Tests of the new property interface.
+  
+  CPPUNIT_TEST(addProp);
+  CPPUNIT_TEST(setExistingProp);
+  CPPUNIT_TEST(setNonExProp);
+  CPPUNIT_TEST(getExistingProp);
+  CPPUNIT_TEST(getNonExProp);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -99,6 +107,14 @@ protected:
   void listsome();
   
   void listByNameOk();
+  
+  // Property API tests:
+  
+   void addProp();
+   void setExistingProp();
+   void setNonExProp();
+   void getExistingProp();
+   void getNonExProp();
 private:
   void progMatch(
       std::map<std::string, std::pair<std::string, std::string> >& listing,
@@ -347,4 +363,61 @@ void ServerApiTests::listByNameOk()
   std::pair<std::string, std::string> info = m_pSvcApi->list("Test");
   EQ(std::string("/bin/ls"), info.first);
   EQ(std::string("ahost"), info.second);
+}
+
+// Can set/create a propertyL:
+
+void ServerApiTests::addProp()
+{
+  m_pSvcApi->create();
+  m_pSvcApi->create("Test", "/bin/ls", "ahost");
+  
+  CPPUNIT_ASSERT_NO_THROW(
+    m_pSvcApi->setProperty("Test", "aprop","avalue")
+  );
+  EQ(std::string("avalue"), m_pBaseApi->get("/Services/Test/aprop"));
+}
+// Given an existing property, setProperty can modify its value:
+
+void ServerApiTests::setExistingProp()
+{
+  m_pSvcApi->create();
+  m_pSvcApi->create("Test", "/bin/ls", "ahost");
+  m_pSvcApi->setProperty("Test", "aprop","avalue");
+  
+  m_pSvcApi->setProperty("Test","aprop", "different value");
+  EQ(std::string("different value"), m_pBaseApi->get("/Services/Test/aprop"));
+}
+// Setting a nonexisting property with create=false throws:
+
+void ServerApiTests::setNonExProp()
+{
+  m_pSvcApi->create();
+  m_pSvcApi->create("Test", "/bin/ls", "ahost");
+  CPPUNIT_ASSERT_THROW(
+    m_pSvcApi->setProperty("Test", "aprop", "avalue", false),
+    std::exception
+  );
+}
+//  If a property has been created it can be gotten:
+
+
+void ServerApiTests::getExistingProp()
+{
+  m_pSvcApi->create();
+  m_pSvcApi->create("Test", "/bin/ls", "ahost");
+  m_pSvcApi->setProperty("Test", "aprop","avalue");
+  EQ(std::string("avalue"), m_pSvcApi->getProperty("Test", "aprop"));
+}
+// std::exception is thrown if a nonexistent property is fetched:
+void ServerApiTests::getNonExProp()
+{
+  m_pSvcApi->create();
+  m_pSvcApi->create("Test", "/bin/ls", "ahost");
+
+  CPPUNIT_ASSERT_THROW(
+    m_pSvcApi->getProperty("Test", "aprop"),
+    std::exception
+  );
+ 
 }

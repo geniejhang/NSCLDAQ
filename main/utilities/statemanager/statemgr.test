@@ -2412,18 +2412,97 @@ tcltest::test varnotification {Test variable notification} \
 } -result [dict create type VarChanged path /RunState/RunNumber value 1234]
 
 
+#-----------------------------------------------------------------------------
+# New (March 2017) tests for program property methods:
+
+tcltest::test setprop-1 {Setting property while creating it works:} \
+-setup {
+   setup
+   ::nscldaq::statemanager mgr tcp://localhost tcp://localhost
+
+   set h [varmgr::open  tcp://localhost]
+} \
+-cleanup {
+   ::nscldaq::statemanager -delete mgr
+    cleanup
+    
+    varmgr::close $h
+
+} \
+-body {
+   mgr setProperty test aproperty value
+   varmgr::var get $h /RunState/test/aproperty
+} -result value
+
+tcltest::test setprop-2 {disallowing creation throw for new prop} \
+-setup {
+   setup
+   ::nscldaq::statemanager mgr tcp://localhost tcp://localhost
+
+   set h [varmgr::open  tcp://localhost]
+} \
+-cleanup {
+   ::nscldaq::statemanager -delete mgr
+    cleanup
+    
+    varmgr::close $h
+
+} \
+-body {
+   catch {mgr setProperty test aproperty value 0}
+} -result 1
+
+tcltest::test getproperty-1 {Get existing property ok} \
+-setup {
+   setup
+   ::nscldaq::statemanager mgr tcp://localhost tcp://localhost
+
+   set h [varmgr::open  tcp://localhost]
+} \
+-cleanup {
+   ::nscldaq::statemanager -delete mgr
+    cleanup
+    
+    varmgr::close $h
+
+} \
+-body {
+   mgr setProperty test aproperty value
+   mgr getProperty test aproperty
+} -result value
+
+tcltest::test getproperty-2 {Get nonexiting property is error} \
+-setup {
+   setup
+   ::nscldaq::statemanager mgr tcp://localhost tcp://localhost
+
+   set h [varmgr::open  tcp://localhost]
+} \
+-cleanup {
+   ::nscldaq::statemanager -delete mgr
+    cleanup
+    
+    varmgr::close $h
+
+} \
+-body {
+   catch {mgr getProperty test aproperty}
+} -result 1
+
 #
 #------------------------------------------------------------------
 #
 # Magic to exit with errors if there are test failures:
 
-proc tcltest::cleanupTestHook {} {
+proc tcltest::cleanupTestsHook {} {
     variable numTests
     set ::exitCode $numTests(Failed)
 }
 
 
 tcltest::cleanupTests
+
+exit $::exitCode
 
 
 

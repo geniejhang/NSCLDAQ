@@ -129,6 +129,10 @@ CTCLStateManagerInstanceCommand::operator()(
             getEditorXPosition(interp, objv);
         } else if (subCommand == "getEditorYPosition") {
             getEditorYPosition(interp, objv);
+        } else if (subCommand == "setProperty") {
+            setProperty(interp, objv);
+        } else if (subCommand == "getProperty") {
+            getProperty(interp, objv);
             
             // The remainder of the subcommands are only legal if both URI's
             // were provided at construction time.
@@ -647,6 +651,74 @@ CTCLStateManagerInstanceCommand::getEditorYPosition(
     result = iResult;
     interp.setResult(result);
 }
+/**
+ * setProperty
+ *    Set a program property; optionally creating it.
+ *
+ * @param interp    - References the interpreter that's running the command.
+ * @param objv      - Command words.  In addition to the command and subcommand
+ *                    We need:
+ *                    *   Program name.
+ *                    *   Name of program property.
+ *                    *   Value to give the program property.
+ *                    *   optional boolean indicating if it's ok to create the
+ *                        parameter if it does not already exist.
+ */
+void
+CTCLStateManagerInstanceCommand::setProperty(
+    CTCLInterpreter& interp, std::vector<CTCLObject>& objv
+)
+{
+    requireAtLeast(objv, 5);               // the required params.
+    requireAtMost(objv, 6);                // and an optional.
+    
+    std::string program  = objv[2];
+    std::string property = objv[3];
+    std::string value    = objv[4];
+    
+    int mayCreate = 1;                    // Default optional to true:
+    if (objv.size() == 6) {
+        mayCreate = objv[5];
+    }
+    // Now run the method:
+    
+    m_pPrograms->setProgramProperty(
+        program.c_str(), property.c_str(), value.c_str(), mayCreate
+    );
+    
+}
+/**
+ * getProperty
+ *    Sets the result with the value of a program property.
+ *
+ *  
+ * @param interp    - References the interpreter that's running the command.
+ * @param objv      - Command words.  In addition to the command and subcommand
+ *                    We need:
+ *                    *   Program name.
+ *                    *   Name of program property.
+ */
+void CTCLStateManagerInstanceCommand::getProperty(
+    CTCLInterpreter& interp, std::vector<CTCLObject>& objv
+)
+{
+    requireExactly(objv, 4);
+    std::string program  = objv[2];
+    std::string property = objv[3];
+
+    std::string result = m_pPrograms->getProgramProperty(
+        program.c_str(), property.c_str()
+    );
+    interp.setResult(result);
+
+}
+
+
+
+/*-----------------------------------------------------------------------------
+ *  Commands that need a URI.
+ */
+
 /**
  * setGlobalState
  *    Set the global state

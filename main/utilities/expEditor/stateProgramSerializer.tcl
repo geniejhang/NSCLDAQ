@@ -84,6 +84,12 @@ proc ::Serialize::_saveSmProgram {api program} {
     
     $api setEditorPosition $name [lindex $pos 0] [lindex $pos 1]
     
+    # Save the properties;
+    
+    foreach prop [$properties get] {
+        $api setProperty $name [$prop cget -name] [$prop cget -value] 1
+    }
+    
 }
 
 ##
@@ -123,9 +129,19 @@ proc ::Serialize::deserializeStatePrograms dburi {
         set x    [_smApi getEditorXPosition $program]
         set y    [_smApi getEditorYPosition $program]
         
+        # Figure out which type of object to create based on the type:
+        
+        set type [_smApi getProperty $program type]
+        if {$type eq "Readout"} {
+            set obj [ReadoutObject %AUTO%]
+        } elseif {$type eq "EventLog"} {
+            set obj [EventLogObject %AUTO%]
+        } else {
+            set obj [StateProgram %AUTO%]
+        }
+        
         #  Create the object and fill its properties in from the info dict:
         
-        set obj [StateProgram %AUTO%]
         set p   [$obj getProperties]
         
         [$p find name]  configure -value $program
@@ -133,7 +149,16 @@ proc ::Serialize::deserializeStatePrograms dburi {
                 dname [list enabled standalone path host inring        outring] {
             [$p find $pname] configure -value [dict get $info $dname]    
         }
-       
+        #  Recover all properties (if possible) Older versions of teh database file
+        #  won't have properties:
+        
+        foreach prop [$p get] {
+            set name [$prop cget -name]
+            catch {
+                set value [_smApi getProperty $program $name]
+                $prop configure -value [_smApi getProperty $program $name]
+            } msg
+        }
         
         #  Add a new dict to the result:
         

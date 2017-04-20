@@ -214,7 +214,15 @@ class TestStateManager : public CppUnit::TestFixture {
   CPPUNIT_TEST(getStatusConsistent);
   CPPUNIT_TEST(getStatusInconsistent);
   
-  CPPUNIT_TEST_SUITE_END();
+  // Program properties:
+  
+  CPPUNIT_TEST(createAndSetProp);
+  CPPUNIT_TEST(setCreatedProp);
+  CPPUNIT_TEST(setNosuchProp);
+  CPPUNIT_TEST(getProp);
+  CPPUNIT_TEST(getNoSuchProp);
+  
+ CPPUNIT_TEST_SUITE_END();
 
 
 protected:
@@ -298,6 +306,13 @@ protected:
   
   void getStatusConsistent();
   void getStatusInconsistent();
+  void setNosuchProp();
+  void getProp();
+  void getNoSuchProp();
+  // Property tests added March 2017
+  
+  void createAndSetProp();
+  void setCreatedProp();
 private:
     pid_t m_serverPid;
     int m_serverRequestPort;
@@ -1764,4 +1779,52 @@ void TestStateManager::getStatusInconsistent()
     m_pApi->set("/RunState/SystemStatus", "Inconsistent");
     EQ(std::string("Inconsistent"), sm.getSystemStatus());
     
+}
+
+void TestStateManager::createAndSetProp()
+{
+    CStateManager sm("tcp://localhost", "tcp://localhost");
+    sm.getProgramApi()->setProgramProperty("test", "myprop", "value");
+    
+    EQ(std::string("value"), m_pApi->get("/RunState/test/myprop"));
+}
+
+void TestStateManager::setCreatedProp()
+{
+    // First create the property:
+    
+    CStateManager sm("tcp://localhost", "tcp://localhost");
+    sm.getProgramApi()->setProgramProperty("test", "myprop", "value");
+    
+    // Now set it to something different...disallowing create:
+    
+    sm.getProgramApi()->setProgramProperty("test", "myprop", "different", false);
+    
+    EQ(std::string("different"), m_pApi->get("/RunState/test/myprop"));
+}
+void TestStateManager::setNosuchProp()
+{
+    CStateManager sm("tcp://localhost", "tcp://localhost");
+    CPPUNIT_ASSERT_THROW(
+        sm.getProgramApi()->setProgramProperty("test", "myprop", "value", false),
+        std::runtime_error
+    );
+}
+void TestStateManager::getProp()
+{
+    CStateManager sm("tcp://localhost", "tcp://localhost");
+    sm.getProgramApi()->setProgramProperty("test", "myprop", "value");
+    
+    EQ(
+        std::string("value"),
+        sm.getProgramApi()->getProgramProperty("test", "myprop")
+    );
+}
+void TestStateManager::getNoSuchProp()
+{
+    CStateManager sm("tcp://localhost", "tcp://localhost");
+    CPPUNIT_ASSERT_THROW(
+        sm.getProgramApi()->getProgramProperty("test", "myprop"),
+        std::runtime_error
+    );
 }

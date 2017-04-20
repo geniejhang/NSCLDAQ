@@ -501,6 +501,80 @@ listProgram(PyObject* self, PyObject* args)
     return retval;
     
 }
+/**
+ * setProperty
+ *    Set the value of a property.
+ *
+ * @param[in] self   - Points to the object's data.
+ * @param[in] args   - Positional parameters - we need:
+ *                     - program name
+ *                     - property name
+ *                     - property value
+ *                     - optional allow creation flag.
+ * @return PyNone.
+ */
+static PyObject*
+setProperty(PyObject* self, PyObject* args)
+{
+    const char*  program;
+    const char*  propname;
+    const char*  value;
+    PyObject*    create(Py_True);
+    
+    Py_ssize_t nArgs = PyTuple_Size(args);
+    
+    if (nArgs == 3) {
+        if(!PyArg_ParseTuple(args, "sss", &program, &propname, &value)) {
+            return NULL; 
+        }
+    } else {
+        if(!PyArg_ParseTuple(args, "sssO", &program, &propname, &value, &create)) {
+            return NULL;
+        }
+    }
+    
+    bool canCreate = (create == Py_True) ? true : false;
+    try {
+        CServiceApi* pApi = getApi(self);
+        pApi->setProperty(program, propname, value, canCreate);
+    }  
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+/**
+ * getProperty
+ *    Return the value of a property (python string).
+ *
+ * @param[in] self - pointer to the object stroage.
+ * @param[in] args - Positional parameters:
+ *                   - program name.
+ *                   - property name.
+ * @return Py_String - containing the value of the property.
+ */
+static PyObject*
+getProperty(PyObject* self, PyObject* args)
+{
+    const char* program;
+    const char* property;
+    
+    if (!PyArg_ParseTuple(args, "ss", &program, &property)) {
+        return NULL;
+    }
+    std::string sResult;
+    try {
+        CServiceApi* pApi = getApi(self);
+        sResult = pApi->getProperty(program, property);
+    }
+    catch (std::exception& e) {
+        PyErr_SetString(exception, e.what());
+        return NULL;
+    }
+    
+    return PyString_FromString(sResult.c_str());
+}
 /* Method dispatch table for the API */
 
 static PyMethodDef ApiObjectMethods[] =
@@ -516,6 +590,8 @@ static PyMethodDef ApiObjectMethods[] =
     {"remove",     remove,     METH_VARARGS, "Remove a program"},
     {"list",       list,       METH_VARARGS, "List all programs"},
     {"listProgram", listProgram, METH_VARARGS, "List a program"},
+    {"setProperty", setProperty, METH_VARARGS, "Set a service property"},
+    {"getProperty", getProperty, METH_VARARGS, "Get a service property"},
     {NULL, NULL, 0, NULL}           // End of table sentinel.
 };
 

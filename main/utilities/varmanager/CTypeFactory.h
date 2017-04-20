@@ -53,6 +53,7 @@ public:
     // Canonicals:
     
     CTypeFactory(CSqlite& db);
+    virtual ~CTypeFactory();
     
     // Overrides of virtual methods:
     

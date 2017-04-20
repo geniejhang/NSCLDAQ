@@ -43,7 +43,7 @@ snit::widgetadaptor toolbar {
     delegate method * to hull;      # Can even be treated like a canvas.
     
     variable tools;                 # List of tool objects.
-    variable nextY 0;               # Offset at which the tool widget is installed.
+    variable nextY 20;               # Offset at which the tool widget is installed.
     
     option -target    "";          # Tools get installed on this canvas.
     
@@ -84,8 +84,10 @@ snit::widgetadaptor toolbar {
         set ht [lindex $size 1]
         set wid [lindex $size 0]
         
-        incr nextY $ht
-        return [list [expr {$wid/2}] $nextY]
+        set y $nextY
+        
+        incr nextY [expr $ht  + 10]
+        return [list [expr {$wid/2}] $y]
     }
     #--------------------------------------------------------------------------
     # Public methods.

@@ -84,12 +84,13 @@ snit::type property {
             set options($optname) $value
         } else {
             set validator $options(-validate)
-            set options($optname) [uplevel #0 $validator validate [list $value]]
+            set options($optname) [uplevel #0 {*}$validator validate [list $value]]
         }
         #  Validation makes an error so we only get here if the config succeeded.
         
         $self _dispatch \
             -changecmd [list %P $self %N [list $options(-name)] %V [list $options($optname)]]
+        
     }
     ##
     # _dispatch
@@ -142,6 +143,7 @@ snit::type IntegerProperty {
     delegate option -changecmd to prop
     
     delegate method * to prop
+    delegate option * to prop
     
     ##
     # constructor
@@ -201,6 +203,7 @@ snit::type EnumeratedProperty {
     delegate option -changecmd to prop
     
     delegate method * to prop
+    delegate option * to prop
     
     ##
     # constructor
@@ -260,6 +263,7 @@ snit::type ListProperty {
     delegate option -changecmd to prop
     
     delegate method * to prop
+    delegate option * to prop
     
     ##
     # constructor

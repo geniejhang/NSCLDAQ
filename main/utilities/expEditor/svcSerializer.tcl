@@ -79,12 +79,28 @@ proc ::Serialize::_saveService {api obj}  {
     set p [$props find path]
     set path [$p cget -value]
     
+    set p [$props find args]
+    set args [$p cget -value]
+    
     set position [$obj getPosition]
     
     # Now we can create the object and position it:
     
     $api createprog $name $path $host
     $api setEditorPosition $name [lindex $position 0] [lindex $position 1]
+    $api setProperty $name args $args
+    
+    #  Get the type and save it.  If the type is a dataflow item; save
+    #  the input/output rings:
+    
+    set type [[$props find type] cget -value]
+    $api setProperty $name type $type
+    if {$type eq "dataflow"} {
+        set inring [[$props find {Input Ring}] cget -value]
+        set outring [[$props find {Output Ring}] cget -value]
+        $api setProperty $name inring $inring
+        $api setProperty $name outring $outring
+    }
 }
 
 
@@ -134,6 +150,7 @@ proc ::Serialize::serializeServices {dbURI objects} {
 #                 *  y  - y coordinate saved from last placemento of object.
 proc ::Serialize::deserializeServices dbUri {
     ::nscldaq::services _svcDeserialize $dbUri
+    flush stdout
     set result [list]
     
     if {[_svcDeserialize exists]} {
@@ -144,13 +161,39 @@ proc ::Serialize::deserializeServices dbUri {
             set x       [_svcDeserialize getEditorXPosition $name]
             set y       [_svcDeserialize getEditorYPosition $name]
  
-            set obj [Service %AUTO%]
-            set props [$obj getProperties]
+            # What happens next depends on the type of the object:
+            # Note again that the type property may not yet exist.
+            
+            catch {_svcDeserialize getProperty $name type} type;  #Error won't be 'dataflow'
+
+            if {$type eq "dataflow"} {
+                set obj [DataFlow %AUTO%]
+                set props [$obj getProperties]
+                
+                set inring [_svcDeserialize getProperty $name inring]
+                set outring [_svcDeserialize getProperty $name outring]
+                [$props find {Input Ring}] configure -value $inring
+                [$props find {Output Ring}] configure -value $outring
+                
+            } else {
+                set obj [Service %AUTO%]
+                set props [$obj getProperties]
+            }
+            
+            
             foreach prop [list name host path] value [list $name $host $command] {
                 [$props find $prop] configure -value $value
             }
+            #  args may or may not be present depending on how old the db is:
             
-            lappend result [dict create object $obj x $x y $y]
+            set args [list]
+            catch {
+                set args [_svcDeserialize getProperty $name args]
+                [$props find args] configure -value $args
+            }
+            
+            
+            lappend result [dict create object $obj x $x y $y args $args]
             
         }
         

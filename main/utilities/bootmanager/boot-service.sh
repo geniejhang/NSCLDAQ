@@ -11,7 +11,7 @@
 
 #  First figure out where the database server is running:
 
-vardbHost=`$DAQBIN/lsservices $DB_URI -l |grep VARDBServer|cut -d@ -f2`
+vardbHost=`$DAQBIN/lsservices $DB_URI -l |grep vardb-service|cut -d@ -f2`
 vardbURI="tcp://$vardbHost"
 
 # Run the boot manager pointing at the vardb URI - service names default.

@@ -30,6 +30,7 @@ package provide dataSource 1.0
 package require snit
 package require properties
 package require daqObject
+package require PropertyViews
 
 ##
 # @class IntegerList
@@ -88,17 +89,17 @@ snit::type DataSource {
         
         # Add properties to the list:
         
-        $properties add [property %AUTO% -name name]
-        $properties add [property %AUTO% -name host]
-        $properties add [property %AUTO% -name path -value $fragsrc] 
-        $properties add [property %AUTO% -name info]
-        $properties add [property %AUTO% -name ids -validate IntegerList]
-        $properties add [property %AUTO% -name ring -editable 0]
-        $properties add [property %AUTO% \
-            -name defaultId -validate [snit::integer %AUTO% -min 0] -value 0]
-        $properties add [property %AUTO% -name timestampExtractor]
-        $properties add [property %AUTO% \
-            -name expectBodyHeaders -validate snit::boolean -value true]
+        $properties add [GenericPropertyEditor %AUTO% -name name]
+        $properties add [GenericPropertyEditor %AUTO% -name host]
+        $properties add [GenericPropertyEditor %AUTO% -name path -value $fragsrc] 
+        $properties add [GenericPropertyEditor %AUTO% -name info]
+        $properties add [ListEditor %AUTO% -name ids -validate IntegerList -value 0]
+        $properties add [GenericPropertyEditor %AUTO% -name ring -editable 0]
+        $properties add [IntegerEditor %AUTO% \
+            -name defaultId  -value 0]
+        $properties add [GenericPropertyEditor %AUTO% -name timestampExtractor]
+        $properties add [EnumeratedEditor %AUTO% \
+            -name expectBodyHeaders -values [list true false] -value true]
         
         $self configurelist $args
     }

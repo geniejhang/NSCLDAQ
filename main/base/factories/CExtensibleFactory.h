@@ -119,7 +119,7 @@ cerr << "No creator for  " << "subclass" << endl;
 template <class T>
 class CExtensibleFactory
 {
-private:
+protected:
   typedef  std::map<std::string, CCreator<T>* > CreatorMap;
   CreatorMap m_creators;
 

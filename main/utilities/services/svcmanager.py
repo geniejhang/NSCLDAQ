@@ -43,6 +43,8 @@ import fcntl
 from nscldaq.programs import ssh
 from nscldaq.vardb import services
 
+import Tkinter
+
 #
 # Module level definitions:
 
@@ -50,6 +52,27 @@ active = False                     # Not active.
 uri    = ''
 dbPath = ''
 programs = list()
+
+##
+#  processTclList
+#   Turns a Tcl List into a space separated string.
+#   We'll just use Tcl to do that:
+#
+# @param tclList - the list to convert.
+# @return string
+#
+def processTclList(tclList):
+    print(tclList)
+    tclInterp = Tkinter.Tcl().tk.eval
+    tclInterp('set list %s' % tclList)
+    nElements = int(tclInterp('llength $list'))
+    pyList = []
+    for i in range(0, nElements):
+        pyList.append(tclInterp('lindex $list %d' % i))
+    print(pyList)
+    
+    return ' '.join(pyList)
+
 ##
 # setFlag
 #   Set a file descriptor to non blocking mode.
@@ -157,8 +180,17 @@ def startPrograms(db):
         program = programDefs[name]
         command = program[0]
         host    = program[1]
-        progFds = startProgram(name, command, host)
-        fds.extend(progFds)
+        
+        # Only start the services that are 'true services'.
+        
+        type    = db.getProperty(name, 'type')
+        if type == 'service' :
+            additionalArgs = db.getProperty(name, 'args').strip()
+            if additionalArgs != '':
+                additionalArgs = processTclList(additionalArgs)
+            command = command + ' ' + additionalArgs
+            progFds = startProgram(name, command, host)
+            fds.extend(progFds)
     active = True
     return tuple(fds)
 

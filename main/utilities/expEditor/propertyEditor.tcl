@@ -50,15 +50,7 @@ package require BWidget
 # OPTIONS:
 #    *  -title    - Title displayed at the top of the widget.
 #    *  -proplist - Provides the property list to display.
-#    *  -command  - Command fired when a property value changes.
-#                   The script can take the following substitutions:
-#                   %W   - The widget.
-#                   %E   - Entry subwidget that is the editor for the value.
-#                   %L   - The property list.
-#                   %P   - Property object
-#                   %V   - Current propertly value.
-#                   %N   - Value in the corresponding entry widget.
-#
+
 # @note Modifying the table does not modify the underlying property list if
 #       -command won't do that.
 # @note Entry contents will be validated against the property's validation
@@ -67,7 +59,6 @@ package require BWidget
 snit::widgetadaptor propertyEditor {
     option -title -default ""
     option -proplist -default "" -configuremethod _newPropertyList
-    option -command -default [list]
     
     variable contents;    #Widget containing name/values.
     
@@ -101,8 +92,9 @@ snit::widgetadaptor propertyEditor {
         ttk::label $contents.valtitle  -text {Value} -relief solid -borderwidth 1
         
         grid $contents.nametitle $contents.valtitle -sticky new
-        grid $win.bottom  -stick nsew
+        grid $win.bottom  -sticky nsew
         grid rowconfigure $win 1 -weight 1
+        grid columnconfigure $win 0 -weight 1
         
         
         #  configure the widget - if there's a -proplist config/-title config
@@ -148,26 +140,16 @@ snit::widgetadaptor propertyEditor {
         set i 0
         if {$options(-proplist) ne ""} {
             foreach property [$options(-proplist) get] {
-                ttk::label $contents.n$i \
-                    -text [$property cget -name] -relief solid -borderwidth 1
-                
-                if {[$property cget -editable]} {
-                    set state normal
-                } else {
-                    set state disabled
-                }
-                ttk::entry $contents.v$i                                  \
-                    -validate focusout                                    \
-                    -validatecommand [mymethod _validate $property $contents.v$i]
-                $contents.v$i insert end [$property cget -value]
-                $contents.v$i configure -state  $state
-                
-                grid $contents.n$i $contents.v$i -sticky new
+                set name [$property cget -name]
+                ttk::label $contents.n$i -text $name
+                $property makeEditor $contents.v$i
+                grid  $contents.n$i $contents.v$i -sticky new
                 
                 incr i
             }
         }
     }
+    if 0 {
     ##
     #  _validate
     #     Called to validate a new entry.
@@ -189,7 +171,7 @@ snit::widgetadaptor propertyEditor {
         
         # validate the object...no validator means anything goes.
         
-        if {($v eq "") || ([catch {$v validate $proposed}] == 0)} {
+        if {($v eq "") || ([catch {{*}$v validate $proposed} msg] == 0)} {
             
             # valid proposed string.
             
@@ -209,12 +191,26 @@ snit::widgetadaptor propertyEditor {
             #invalid:
             
             tk_messageBox -icon error -parent $win -title {Invalid value} -type ok \
-                -message "Invalid value '$proposed' for property [$prop cget -name]"
+                -message "Invalid value '$proposed' for property [$prop cget -name] : $msg"
             
             $e delete 0 end
             $e insert end [$prop cget -value]
             
             return 0
+        }
+    }
+    }
+    ##
+    # commit
+    #   Commit the editor changes.
+    #   This is done by iterating the properties and invoking the
+    #   saveValues method for its associated widget.
+    #
+    method commit {} {
+        set i 0
+        $options(-proplist) foreach property {
+            $property saveValues $contents.v$i
+            incr i
         }
     }
 }
@@ -257,11 +253,10 @@ snit::widgetadaptor propertyDialog {
         install wrapper using DialogWrapper $win.wrapper
         set controlArea [$win.wrapper controlarea]
         
-        install editor using propertyEditor $controlArea.editor \
-            -command [mymethod _maintainChanges %P %N]
+        install editor using propertyEditor $controlArea.editor 
         
-        pack $editor -fill both -expand 1
-        pack $wrapper        -fill both -expand 1
+        pack $editor   -fill both -expand 1
+        pack $wrapper  -fill both -expand 1
         
         $self configurelist $args
     }
@@ -280,25 +275,11 @@ snit::widgetadaptor propertyDialog {
         wm title $win $value
     }
     ##
-    # _maintainChanges
-    #   Called when a property has been changed in the editor.  We
-    #   make an array element keyed by the property object with the new value.
-    #
-    # @param p  - property object.
-    # @param v  - New value.
-    #
-    method _maintainChanges {p v} {
-        set changes($p) $v
-    }
-    ##
     # _commitChanges
     #   Commit the changes array to the property list.
     #
     method _commitChanges {} {
-        foreach property [array names changes] {
-            $property configure -value $changes($property)
-        }
-        array unset changes  
+        $editor commit
     }
     #-------------------------------------------------------------------------
     #  modal

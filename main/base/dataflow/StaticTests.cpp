@@ -50,6 +50,9 @@ class StaticRingTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(isring);
   CPPUNIT_TEST(ringname);
   CPPUNIT_TEST(ringUrl);
+  
+  CPPUNIT_TEST(outringenv);
+  CPPUNIT_TEST(inringenv);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -86,6 +89,9 @@ protected:
   void isring();
   void ringname();
   void ringUrl();
+  
+  void outringenv();
+  void inringenv();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(StaticRingTest);
@@ -259,4 +265,35 @@ StaticRingTest::ringUrl()
   url += username;
   std::string defaultUrl = CRingBuffer::defaultRingUrl();
   EQ(url, defaultUrl);
+}
+
+// OUTRING should override the username as the default output ring:
+
+void
+StaticRingTest::outringenv()
+{
+  setenv("OUTRING", "testring", 1);
+  try {
+    EQ(std::string("testring"), CRingBuffer::defaultRing());
+    unsetenv("OUTRING");
+  }
+  catch (...) {
+    unsetenv("OUTRING");
+    throw;
+  }
+}
+// INRING overrides the default input ring URL.
+
+void
+StaticRingTest::inringenv()
+{
+  setenv("INRING", "tcp://localhost/irving", 1);
+  try {
+    EQ(std::string("tcp://localhost/irving"), CRingBuffer::defaultRingUrl());
+    unsetenv("INRING");
+  }
+  catch (...) {
+    unsetenv("INRING");
+    throw;
+  }
 }

@@ -317,14 +317,15 @@ tcltest::test changecmd-1 {If data are changed we should get notified} \
      set ps  [$plo get]
      
      foreach p $ps value [list \
-        test false true /usr/bin/test charlie tcp://localhost/test fox] {
+        test charlie false true /usr/bin/test  tcp://localhost/test fox StateProgram --help] {
         $p configure -value $value
      }
      set changelog
      
-} -result [list [list name test] [list enable false] [list standalone true] \
-    [list path /usr/bin/test] [list host charlie] \
-    [list "Input Ring" tcp://localhost/test] [list "Output Ring" fox]]
+} -result [list [list name test] [list host charlie] [list enable false] [list standalone true] \
+    [list path /usr/bin/test]  [list "Input Ring" tcp://localhost/test]  \
+    [list "Output Ring" fox] [list type StateProgram]                   \
+    [list "Program Parameters" --help]] 
 
 tcltest::test changecmd-2 {If data are changed in the packaged object we get notified} \
 -setup {
@@ -339,24 +340,114 @@ tcltest::test changecmd-2 {If data are changed in the packaged object we get not
      set ps  [$plo get]
      
      foreach p $ps value [list \
-        test false true /usr/bin/test charlie tcp://localhost/test fox] {
+        test charlie false true /usr/bin/test  tcp://localhost/test fox StateProgram --help] {
         $p configure -value $value
      }
      set changelog
      
-} -result [list [list name test] [list enable false] [list standalone true] \
-    [list path /usr/bin/test] [list host charlie] \
-    [list "Input Ring" tcp://localhost/test] [list "Output Ring" fox]]
+} -result [list [list name test] [list host charlie] [list enable false] [list standalone true] \
+    [list path /usr/bin/test]  \
+    [list "Input Ring" tcp://localhost/test] [list "Output Ring" fox]        \
+    [list type StateProgram]  [list "Program Parameters" --help]]
 
 
+tcltest::test readout-1 {Readout has and can access properties from base} \
+-setup {
+    set obj [ReadoutProgram %AUTO%]
+} \
+-cleanup {
+    $obj destroy
+} \
+-body {
+    set p [$obj getProperties];         # Tests method delegation.
+    [$p find enable] cget -value
+} -result true
+
+
+tcltest::test readout-2 {Readout has  additional properties created} \
+-setup {
+    set obj [ReadoutProgram %AUTO%]
+} \
+-cleanup {
+    $obj destroy
+} \
+-body {
+    set p [$obj getProperties];         # Tests method delegation.
+    [$p find sourceid] cget -value
+} -result 0
+
+tcltest::test eventlog-1 {Event log has and can access base properties} \
+-setup {
+    set obj [EventLogProgram %AUTO%]
+} \
+-cleanup {
+    $obj destroy
+} \
+-body {
+    set p [$obj getProperties];         # Tests method delegation.
+    [$p find enable] cget -value
+} -result true    
+
+tcltest::test eventlog-2 {Event log has new properties} \
+-setup {
+    set obj [EventLogProgram %AUTO%]
+} \
+-cleanup {
+    $obj destroy
+} \
+-body {
+    set p [$obj getProperties];         # Tests method delegation.
+    [$p find segmentsize] cget -value
+} -result 2g
+
+tcltest::test eventlog-3 {Valid segment sizes are ok} \
+-setup {
+    set obj [EventLogProgram %AUTO%]
+} \
+-cleanup {
+    $obj destroy
+} \
+-body {
+    set p [$obj getProperties];         # Tests method delegation.
+    set segsize [$p find segmentsize]
+    $segsize configure -value 100m
+    set values [$segsize cget -value]
+    $segsize configure -value 10000000
+    lappend values [$segsize cget -value]
+    set values 
+} -result [list 100m 10000000]
+
+tcltest::test eventlog-4 {Invalid segment sizes are not ok} \
+-setup {
+    set obj [EventLogProgram %AUTO%]
+} \
+-cleanup {
+    $obj destroy
+} \
+-body {
+    set p [$obj getProperties];         # Tests method delegation.
+    catch {[$p find segsize] configure -value onegig}
+} -result 1
 
 # End/summarize the tests - note the magic below is intended to ensure that
 # a failed test fails the makefile test target too.
 
+set exitCode 0
 proc tcltest::cleanupTestsHook {} {
     variable numTests
-    set ::exitCode $numTests(Failed)
+    set ::exitCode $::tcltest::numTests(Failed)
 }
 
 
+##
+# this pulls in Tk and cleanupTests exist in that case without reporting
+#  our error code so we need this little artifice:
+
+rename exit myexit
+
+proc exit {} {}
+
+
 tcltest::cleanupTests
+
+myexit $::exitCode

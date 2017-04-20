@@ -461,10 +461,6 @@ int main(int argc, char** argv)
         <methodname>defaultRing</methodname><void />
       </methodsynopsis>
       <methodsynopsis>
-        <modifier>static</modifier> <type>std::string</type>
-        <methodname>defaultRing</methodname><void />
-      </methodsynopsis>
-      <methodsynopsis>
         <modifier>static</modifier><type> std::string</type>
         <methodname>defaultRingUrl</methodname><void />
       </methodsynopsis>
@@ -879,7 +875,8 @@ int main(int argc, char** argv)
       </methodsynopsis>
       <para>
         Returns the default name of the ring for most NSCLDAQ cases.  This will
-        be the name of the logged in user.
+        be the name of the logged in user, or if it is defined, the value of
+        the environment variable <literal>OUTRING</literal>
       </para>
       <methodsynopsis>
         <modifier>static</modifier><type> std::string</type>
@@ -889,7 +886,8 @@ int main(int argc, char** argv)
         Returns a URL for the default ring for most NSCLDAQ applications.
         If <methodname>CRingBuffer::defaultRing</methodname> returns
         <literal>user</literal>, this function would return:
-        <literal>tcp://localhost/user</literal>.
+        <literal>tcp://localhost/user</literal> or, if it is defined, the
+        value of the <literal>INRING</literal> environment variable.
       </para>
       <constructorsynopsis>
         <methodname>CRingBuffer</methodname>

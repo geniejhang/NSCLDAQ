@@ -89,9 +89,15 @@ snit::type Service {
     # destructor -- destroy our components.
     #
     destructor {
-        $data destroy
-        $gui destroy
-        $Label destroy
+        if {$data ne ""} {
+            $data destroy
+        }
+        if {$gui ne ""} {
+            $gui destroy
+        }
+        if {$Label ne ""} {
+            $Label destroy
+        }
     }
     ##
     #  clone
@@ -223,5 +229,263 @@ snit::type Service {
         $gui moveby $dx $dy
         $options(-canvas) move $self $dx $dy;        # Moves the label.
     }
+    ##
+    # gui
+    #   @return the GUI element.
+    #
+    method gui {} {
+        return $gui
+    }
+    ##
+    # data
+    #   Return the current data item and optionally replace it.
+    #
+    # @param newData - optional if supplied the data element is replaced by this.
+    # @return current data object.
+    #
+    method data {{newData ""}} {
+        set result $data
+        if {$newData ne ""} {
+            set data $newData
+        }
+        return $result
+    }
+}
+##
+# @class DataFlow
+#    Packages a data flow item along with its graphical user interface elements.
+#    We are a connectible dataflow object with a different graphical representation.
+#
+snit::type DataFlow {
+    component ServiceObject
     
+    variable inring ""
+    variable outring ""
+    
+    # Anything we don't override gets handled by the 'base' class.
+    
+    delegate method * to ServiceObject
+    delegate option * to ServiceObject
+    
+    typevariable icon
+    
+    ##
+    # typeconstructor
+    #    Create the image; save it in the icon.
+    #
+    typeconstructor {
+        set here [file dirname [info script]]
+        set icon [image create photo -format png -file [file join $here analysis.png]]
+    }
+    ##
+    # constructor
+    #   Construct the base class.
+    #   Set the GUI icon
+    #   Replace the data with one of ours.
+    #   Do additional configuration indicated by the command line:
+    #
+    constructor args {
+        install ServiceObject using Service %AUTO% {*}$args
+        [$self gui] configure -image $icon
+        set oldData [$self data [DataFlowData %AUTO%]]
+        $oldData destroy
+        
+        $self configurelist $args
+    }
+    
+    destructor {
+        if {$ServiceObject ne ""} {
+            $ServiceObject destroy
+        }
+    }
+    
+    ##
+    # isConnectable
+    #    This object is connectable in any direction.
+    #
+    # @param direction - direction of the connection.
+    # @return true
+    #
+    method isConnectable direction {
+        return true
+    }
+    ##
+    # connect
+    #   Processes the connection of an object to us.  We can only accept
+    #   connections from and to a ringbuffer.  This means that pipelines
+    #   must be represented as single elements (a script) that has an input
+    #   and output ring.
+    #
+    # @param direction - Can be:
+    #                   *  from - the connection is from us (to the output ring).
+    #                   *  to   - the connection is to us (from the input ring).
+    # @param object    - The object we are being connected to/from.
+    # @note - from connections will disable the host and set it from the ring's
+    #         URI.
+    #
+    method connect {direction object} {
+        if {[$object type] ne "ring"} {
+            error "Data flow programs can only be connected to rings"
+        }
+        
+        # From is from us to our Output Ring
+        
+        if {$direction eq "from"} {
+            $self _setOutRingProperties $object
+            set outring $object
+            $self _disableHostEditing
+        } elseif {$direction eq "to"} {
+            $self _setInRingProperties $object
+            set inring $object
+        } else {
+            error  "Invalid Direction: $direction for connect."
+        }
+        return 1;                   # Success.
+    }
+    ##
+    # disconnect
+    #    Called when a ring is being disconnected from us (by deleting a
+    #    connector).
+    #
+    # @param ring  - the ring being disconnected from us.
+    #
+    method disconnect ring {
+        if {$ring eq $outring} {
+            $self _clearOutRingProperties
+            set outring ""
+            $self _enableHostEditing
+        } elseif {$ring eq $inring} {
+            $self _clearInRingProperties
+            set inring ""
+        } else {
+            error "The object $ring is not connected to us."
+        }
+    }
+    ##
+    # connectionPropertyChanged
+    #   If a ringbuffer we are connected to has a property changed, this is
+    #   called.  We'll figure out which it is (input or output ring) and
+    #   update the properties accordingly.
+    #
+    # @param obj   - The object that's had a change.
+    #
+    method connectionPropertyChanged obj {
+        if {$obj == $inring} {
+            $self _setInRingProperties $obj
+        } elseif {$obj == $outring} {
+            $self _setOutRingProperties $obj
+        } else {
+            error "$obj is not connected to this object."
+        }
+    }
+    ##
+    #  clone
+    #   Create a copy of self.
+    #
+    # @return copy of self.
+    #
+    method clone {} {
+        set newObj [DataFlow %AUTO%]
+        set myprops [$self getProperties]
+        set newprops [$newObj getProperties]
+        
+        $myprops foreach property {
+            set name [$property cget -name]
+            set value [$property cget -value]
+            
+            set newprop [$newprops find $name]
+            $newprop configure -value $value
+        }
+        
+        return $newObj
+    }
+    #-------------------------------------------------------------------------
+    # Private methods:
+    
+    ##
+    # _setOutRingProperties
+    #    Given a ring buffer that is being connected to us:
+    #    - Set our host to the host of the ring.
+    #    - Set our Output Ring to the ring's name.
+    #
+    # @param ring - ring buffer we are geing connected to.
+    #
+    method _setOutRingProperties ring {
+        set rprops [$ring getProperties]
+        set host [[$rprops find host] cget -value]
+        set ring [[$rprops find name] cget -value]
+        
+        set myprops [$self getProperties]
+        [$myprops find {Output Ring}] configure -value $ring
+        [$myprops find host] configure -value $host
+    }
+    ##
+    # _clearOutRingProperties
+    #
+    #   Clear the value of the Output Ring property.
+    #
+    method _clearOutRingProperties {} {
+        set props [$self getProperties]
+        [$props find {Output Ring}] configure -value {}
+    }
+    ##
+    #  _disableHostEditing
+    #    Turn off the ability to edit the host.  This is needed when an output
+    #    ring is defined as the ring's host constrains our host.
+    #
+    # @note at this time there's no way to ghost the host on property editors
+    #       that are already up.
+    #
+    method _disableHostEditing  {} {
+        set props [$self getProperties]
+        [$props find host] configure -editable 0
+    
+    }
+    ##
+    # _enableHostEditing
+    #   Turn on the ability to edit the host.  This ism done when an output ring
+    #   is disconnected from the progra as the program no longer needs to co-locate
+    #   with that ring.
+    #
+    #  See, however the note in _disableHostEditing
+    #
+    method _enableHostEditing {} {
+        set props [$self getProperties]
+        [$props find host] configure -editable 1
+    }
+    ##
+    # _setInRingProperties
+    #
+    #   Sets our input ring properties to be the URI of the input ring.
+    #   Also save the input ring.
+    #
+    # @param ring - the new input ring
+    #
+    method _setInRingProperties ring {
+        
+        # Figure out the URI of the ring:
+        
+        set rprops [$ring getProperties]
+        set name [[$rprops find name] cget -value]
+        set host [[$rprops find host] cget -value]
+        set uri tcp://$host/$name
+        
+        #  Set our Input Ring value to the URI:
+        
+        set props [$self getProperties]
+        [$props find {Input Ring}] configure -value $uri
+        set inring $ring
+        
+    }
+    ##
+    # _clearInRingProperties
+    #    Clears the input ring properties;
+    #    - clears the URI of our Input Ring property.
+    #    - clears the inring object.
+    #
+    method _clearInRingProperties {} {
+        set props [$self getProperties]
+        [$props find {Input Ring}] configure -value ""
+        set inring ""
+    }
 }

@@ -517,6 +517,50 @@ CStateProgram::getEditorYPosition(const char* name)
 {
     return atoi(getProgramVar(name, "editory").c_str());
 }
+/**
+ * setProgramProperty
+ *   Program properties are additional program variables that are application
+ *   specific.  These are all represented as string variables.
+ *   This method allows the client to set (optionally creating) the value of
+ *   one of these properties.
+ *
+ * @param[in] progname  - Name of the program whose property will be set.
+ * @param[in] propname  - Name of the property to be set.,
+ * @param[in] value     - New property value.
+ * @param[in] create    - Create the property if it does not already
+ *                        exist.  Defaults to true if not supplied.
+ * @note - if create is true and the property already exists, no error is
+ *         thrown.
+ */
+void
+CStateProgram::setProgramProperty(
+    const char* progname, const char* propname, const char* value, bool create
+)
+{
+    std::string fullVarname = getVarpath(progname, propname);
+    if (create) {
+        try {
+            m_pApi->declare(fullVarname.c_str(), "string");
+        }
+        catch(...) {}              // Assume throw is because it exists.
+    }
+    setProgramVar(progname, propname, value);  // This will throw if create failed.
+}
+/**
+ * getProgramProperty
+ *   Returns the value of a program property.  See setProgramProperty above
+ *   for a description of program properties.
+ *
+ *  @param[in] progname - name of the program whose property is being retrieved
+ *  @param[in] propname - Name of the property to retrieve.
+ *  @return string - value of the property.
+ *
+ */
+std::string
+CStateProgram::getProgramProperty(const char* progname, const char* propname)
+{
+    return getProgramVar(progname, propname);
+}
 /*---------------------------------------------------------------------------
  * Private utilities
  */
