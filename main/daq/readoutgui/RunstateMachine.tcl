@@ -319,6 +319,7 @@ snit::type RunstateMachine {
     #
     method _callback {method args} {
         foreach cb $callouts {
+          puts "$cb $method $args"
             if {[info command ::${cb}::${method}] ne ""} {
                 $cb $method {*}$args
             }
@@ -579,15 +580,41 @@ snit::type RunstateMachineSingleton {
 # Convenience functions
 #
 
+##
+# Global start proc to transition from NotReady -> Starting -> Halted
+#
+#  The transition from NotReady to Halted involves an intermediate
+#  transition through the Starting state. We therefore perform two
+#  transitions in this proc. If either of them fail, the state
+#  machine is forced to do an emergency transition to NotReady.
+#
 proc start {} {
-  set machine [RunstateMachineSingleton %AUTO%]
-  if { [catch { $machine transition Starting } msg] } {
 
+
+  set machine [RunstateMachineSingleton %AUTO%]
+  # Transition NotReady -> Starting
+  if { [catch { $machine transition Starting } msg] } {
     forceFailure
+    $machine destroy
     error "start failed with message : $msg"
   }
+
   $machine destroy
+
+  # Transition Starting -> Halted
+  after idle {
+    set machine [RunstateMachineSingleton %AUTO%]
+    if {[catch {$machine transition Halted} msg]} {
+      forceFailure
+      $machine destroy
+      error "transition to halted failed with message : $msg"
+    }
+    $machine destroy
+  }
+
 }
+
+
 
 proc begin {} {
   set machine [RunstateMachineSingleton %AUTO%]
