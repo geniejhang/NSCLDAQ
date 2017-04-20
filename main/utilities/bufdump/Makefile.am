@@ -24,7 +24,8 @@ dumper_CPPFLAGS =	-I@top_srcdir@/utilities/common 				\
         -I@top_srcdir@/utilities/IO		\
         -I@top_srcdir@/base/os \
         -I@top_srcdir@/utilities/nscldaq-format/Buffer \
-        -I@top_srcdir@/utilities/nscldaq-format/FormattedIO
+        -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
+        -I@top_srcdir@/base/sfinae_tools
 
 dumper_LDADD		=	@top_builddir@/utilities/common/libUtilCommon.la 	\
 				@top_builddir@/base/uri/liburl.la			\
