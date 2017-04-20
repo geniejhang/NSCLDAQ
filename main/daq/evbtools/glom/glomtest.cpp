@@ -30,6 +30,9 @@ class CGlomTests : public CppUnit::TestFixture
     CPPUNIT_TEST(accumulate_0);
     CPPUNIT_TEST(accumulate_1);
     CPPUNIT_TEST(accumulate_2);
+    CPPUNIT_TEST(timestampPolicy_0);
+    CPPUNIT_TEST(timestampPolicy_1);
+    CPPUNIT_TEST(timestampPolicy_2);
     CPPUNIT_TEST_SUITE_END();
 
     CTestSourceSinkPtr m_pSink;
@@ -219,6 +222,75 @@ public:
         EQMSG("type of first outputted item", V12::COMP_PHYSICS_EVENT, item.type());
         EQMSG("number of children", size_t(2), comp.count());
         EQMSG("Timestamp", uint64_t(1), comp.getEventTimestamp());
+
+    }
+
+
+    // test the timestamp policy logic for the CGlomParameters::first policy
+    void timestampPolicy_0() {
+
+        auto pItem0 = std::make_shared<V12::CPhysicsEventItem>(1, 2);
+        auto pItem1 = std::make_shared<V12::CPhysicsEventItem>(2, 2);
+
+        {
+            CGlom glommer(m_pSink);
+            glommer.setCorrelationTime(5);
+            glommer.setTimestampPolicy(V12::CGlomParameters::first);
+
+            glommer.handleItem(pItem0);
+            glommer.handleItem(pItem1);
+        }
+
+        V12::CRawRingItem item;
+        readItem(*m_pSink, item);
+
+        EQMSG("Timestamp", uint64_t(1), item.getEventTimestamp());
+
+    }
+
+
+    // test the timestamp policy logic for the CGlomParameters::last policy
+    void timestampPolicy_1() {
+
+        auto pItem0 = std::make_shared<V12::CPhysicsEventItem>(1, 2);
+        auto pItem1 = std::make_shared<V12::CPhysicsEventItem>(2, 2);
+
+        {
+            CGlom glommer(m_pSink);
+            glommer.setCorrelationTime(5);
+            glommer.setTimestampPolicy(V12::CGlomParameters::last);
+
+            glommer.handleItem(pItem0);
+            glommer.handleItem(pItem1);
+        }
+
+        V12::CRawRingItem item;
+        readItem(*m_pSink, item);
+
+        EQMSG("Timestamp", uint64_t(2), item.getEventTimestamp());
+
+    }
+
+
+    // test the timestamp policy logic for the CGlomParameters::average policy
+    void timestampPolicy_2() {
+
+        auto pItem0 = std::make_shared<V12::CPhysicsEventItem>(1, 2);
+        auto pItem1 = std::make_shared<V12::CPhysicsEventItem>(5, 2);
+
+        {
+            CGlom glommer(m_pSink);
+            glommer.setCorrelationTime(5);
+            glommer.setTimestampPolicy(V12::CGlomParameters::average);
+
+            glommer.handleItem(pItem0);
+            glommer.handleItem(pItem1);
+        }
+
+        V12::CRawRingItem item;
+        readItem(*m_pSink, item);
+
+        EQMSG("Timestamp", uint64_t(3), item.getEventTimestamp());
 
     }
 

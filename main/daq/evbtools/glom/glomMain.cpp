@@ -255,7 +255,28 @@ main(int argc, char**  argv)
 
     glommer.outputEventFormat();
 
-    return glommer();
+    try {
+        glommer();
+    }
+    catch (std::string msg) {
+        std::cerr << "glom: " << msg << std::endl;
+    }
+    catch (const char* msg) {
+        std::cerr << "glom: " << msg << std::endl;
+    }
+    catch (int e) {
+        std::string msg = "glom: Integer error: ";
+        msg += strerror(e);
+        std::cerr << msg << std::endl;
+    }
+    catch (std::exception& except) {
+        std::string msg = "glom: ";
+        msg += except.what();
+        std::cerr << msg << std::endl;
+    }
+    catch(...) {
+        std::cerr << "Unanticipated exception caught\n";
 
-    return 0;
+    }
+
 }

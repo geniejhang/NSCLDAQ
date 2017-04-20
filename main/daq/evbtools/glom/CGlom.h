@@ -23,28 +23,26 @@ namespace DAQ {
 class CGlom
 {
     private:
-     uint64_t m_firstTimestamp;
-     uint64_t m_lastTimestamp;
-     uint64_t m_timestampSum;
-     uint32_t m_sourceId;
-     uint64_t m_fragmentCount;
-     uint32_t m_currentType;
-     uint64_t m_dtInt;
+     uint64_t m_firstTimestamp; ///< stores earliest timestamp in accumulated items
+     uint64_t m_lastTimestamp;  ///< stores latest timestamp in accumulated items
+     uint64_t m_timestampSum;   ///< stores sum of timestamps in accumulated items for average
+     uint32_t m_sourceId;       ///< source id to assign to all outputted items
+     uint32_t m_currentType;    ///< current type of items being accumulated
+     uint64_t m_dtInt;          ///< correlation time width
 
-     bool     m_firstEvent;
-     bool     m_nobuild;
-     V12::CGlomParameters::TimestampPolicy m_timestampPolicy;
-     unsigned m_stateChangeNesting;
-     bool m_firstBarrier;
+     bool     m_nobuild;        ///< indicates whether or not correlation will occur
+     V12::CGlomParameters::TimestampPolicy m_timestampPolicy; ///< policy for assigning timestamps
+     unsigned m_stateChangeNesting;  ///< sum of all BEGIN_RUN and END_RUN items where BEGIN_RUN=1, END_RUN=-1
+     bool m_firstBarrier;  ///< flag to assist with glom info outputting logic
 
-    std::vector<V12::CRingItemPtr> m_accumulatedItems;
-    CDataSinkPtr m_pSink;
+    std::vector<V12::CRingItemPtr> m_accumulatedItems; ///< the correlated items for output
+    CDataSinkPtr m_pSink;  ///< the data sink to write to
 
 public:
     CGlom(CDataSinkPtr pSink);
     ~CGlom();
 
-    int operator()();
+    void operator ()();
 
     void outputGlomParameters(uint64_t dt, bool building);
     void emitAbnormalEnd();

@@ -24,14 +24,17 @@
 
 namespace DAQ {
 
+/*!
+ * \brief Constructor
+ *
+ * \param pSink   the data sink
+ */
 CGlom::CGlom(CDataSinkPtr pSink)
     : m_firstTimestamp(0),
       m_lastTimestamp(0),
       m_timestampSum(0),
       m_sourceId(0),
-      m_fragmentCount(0),
       m_currentType(V12::UNDEFINED),
-      m_firstEvent(true),
       m_nobuild(false),
       m_timestampPolicy(V12::CGlomParameters::first),
       m_stateChangeNesting(0),
@@ -41,7 +44,11 @@ CGlom::CGlom(CDataSinkPtr pSink)
 {
 }
 
-
+/*!
+ * \brief Destructor
+ *
+ * Flush all events that have not been flushed to date
+ */
 CGlom::~CGlom()
 {
     flushEvent();
@@ -65,10 +72,15 @@ CGlom::outputGlomParameters(uint64_t dt, bool building)
 /**
  * flushEvent
  *
- * Flush the physics event that has been accumulated
+ * Flush the items that have been correlated together
  * so far.
  *
  * If nothing has been accumulated, this is a noop.
+ *
+ * The items that have been correlated together will become the child of
+ * a composite ring item. The composite ring item will be given a source
+ * id according to m_sourceId and a timestamp based on the timestamp policy.
+ * The composite ring item will be outputted.
  *
  */
 void
@@ -88,7 +100,7 @@ CGlom::flushEvent()
             eventTimestamp = m_lastTimestamp;
             break;
         case CGlomParameters::average :
-            eventTimestamp = (m_timestampSum/m_fragmentCount);
+            eventTimestamp = (m_timestampSum/m_accumulatedItems.size());
             break;
         default:
             // Default to earliest...but should not occur:
@@ -109,8 +121,6 @@ CGlom::flushEvent()
         if (builtItem.type() == COMP_END_RUN)         m_stateChangeNesting--;
         if (builtItem.type() == COMP_ABNORMAL_ENDRUN) m_stateChangeNesting = 0;
 
-        m_firstEvent        = true;
-        m_fragmentCount     = 0;
         m_currentType       = UNDEFINED;
         m_accumulatedItems.clear();
     }
@@ -129,20 +139,10 @@ void CGlom::emitAbnormalEnd()
 /**
  * acumulateEvent
  *
- *  This function is the meat of the program.  It
- *  glues fragments together (header and payload)
- *  into a dynamically resized chunk of memory pointed
- *  to by pAccumulatedEvent where  totalEventSize
- *  is the number of bytes that have been accumulated
- *  so far.
- *
- *  firstTimestamp is the timestamp of the first fragment
- *  in the acccumulated data.though it is only valid if
- *  firstEvent is false.
- *
- *  Once the event timestamp exceeds the coincidence
- *  interval from firstTimestamp, the event is flushed
- *  and the process starts all over again.
+ * Append ring item to the set of accumulated items that correlate together.
+ * If it is the first,
+ * store the timestamp and type and also reset the timestamp sum. For every
+ * time this is called, the timestamp sum and last timestamp are updated.
  *
  * @param dt - Coincidence interval in timestamp ticks.
  * @param pFrag - Pointer to the next event fragment.
@@ -152,33 +152,47 @@ CGlom::accumulateEvent(uint64_t dt, V12::CRingItemPtr pItem)
 {
     uint64_t timestamp = pItem->getEventTimestamp();
 
-    // If firstEvent...our timestamp starts the interval:
-
-    if (m_firstEvent) {
+    // Reset/set some data to be ready for next set of correlatable items
+    if (m_accumulatedItems.size() == 0) {
         m_firstTimestamp = timestamp;
-        m_firstEvent     = false;
-        m_fragmentCount  = 0;
         m_timestampSum   = 0;
         m_currentType    = pItem->type();
     }
     m_lastTimestamp    = timestamp;
-    m_fragmentCount++;
     m_timestampSum    += timestamp;
-
-    // Figure out how much we're going to add to the
-    // event:
 
     m_accumulatedItems.push_back(pItem);
 
 }
 
+/*!
+ * \brief CGlom::outputEventFormat
+ *
+ * Write a generic CDataFormatItem to the sink.
+ */
 void CGlom::outputEventFormat()
 {
     V12::CDataFormatItem format;
     writeItem(*m_pSink, format);
 }
 
-
+/**
+ * \brief Handle ring items
+ *
+ *  This function is the meat of the program.  It
+ *  manages whether data should be flushed or correlated
+ *  with other items before it.
+ *
+ *  Once the event timestamp exceeds the coincidence
+ *  interval from firstTimestamp, the event is flushed
+ *  and the process starts all over again.
+ *
+ * If a begin run is observed and it is the first during the
+ * program or since an end run, an EVB_GLOM_INFO item will be outputted.
+ *
+ * @param dt - Coincidence interval in timestamp ticks.
+ * @param pFrag - Pointer to the next event fragment.
+ */
 void CGlom::handleItem(V12::CRingItemPtr pItem)
 {
     if ( pItem->type() == V12::BEGIN_RUN && m_firstBarrier) {
@@ -194,9 +208,10 @@ void CGlom::handleItem(V12::CRingItemPtr pItem)
         m_firstBarrier = true;
     }
 
+    bool firstEvent = (m_accumulatedItems.size() == 0);
     if (m_nobuild
-            || (!m_firstEvent && ((pItem->getEventTimestamp() - m_firstTimestamp) > m_dtInt))
-            || (!m_firstEvent && (( 0x7fff & m_currentType) != (0x7fff & pItem->type()) ))
+            || (!firstEvent && ((pItem->getEventTimestamp() - m_firstTimestamp) > m_dtInt))
+            || (!firstEvent && (( 0x7fff & m_currentType) != (0x7fff & pItem->type()) ))
             ) {
         flushEvent();
     }
@@ -204,58 +219,45 @@ void CGlom::handleItem(V12::CRingItemPtr pItem)
     accumulateEvent(m_dtInt, pItem);
 }
 
-int CGlom::operator ()()
+
+/*!
+ * \brief Main loop
+ *
+ * In the call operator (i.e. the main loop), the sequence:
+ *
+ * 1. Read a fragment
+ * 2. handle item
+ *
+ * Will be repeated over and over again until either an error occurs or CFragIO::readFragment
+ * returns a nullptr. The latter condition occurs for an EOF condition.
+ */
+void CGlom::operator ()()
 {
     /*
      main loop.. .get fragments and handle them.
      accumulateEvent - for non-barriers.
   */
 
-    m_fragmentCount = 0;
-    try {
-        while (1) {
-            std::unique_ptr<EVB::Fragment> p(CFragIO::readFragment(STDIN_FILENO));
+    while (1) {
+        std::unique_ptr<EVB::Fragment> p(CFragIO::readFragment(STDIN_FILENO));
 
-            // If error or EOF flush the event and break from
-            // the loop:
+        // If error or EOF flush the event and break from
+        // the loop:
 
-            if (!p) {
-                flushEvent();
-                std::cerr << "glom: EOF on input\n";
-                if(m_stateChangeNesting) {
-                    emitAbnormalEnd();
-                }
-                break;
+        if (!p) {
+            flushEvent();
+            std::cerr << "glom: EOF on input\n";
+            if(m_stateChangeNesting) {
+                emitAbnormalEnd();
             }
-            // We have a fragment:
-
-            V12::CRingItemPtr pItem = V12::CRingItemFactory::createRingItem(p->s_pBody,
-                                                                            p->s_pBody + p->s_header.s_size);
-
-            handleItem(pItem);
+            break;
         }
-    }
-    catch (std::string msg) {
-        std::cerr << "glom: " << msg << std::endl;
-    }
-    catch (const char* msg) {
-        std::cerr << "glom: " << msg << std::endl;
-    }
-    catch (int e) {
-        std::string msg = "glom: Integer error: ";
-        msg += strerror(e);
-        std::cerr << msg << std::endl;
-    }
-    catch (std::exception& except) {
-        std::string msg = "glom: ";
-        msg += except.what();
-        std::cerr << msg << std::endl;
-    }
-    catch(...) {
-        std::cerr << "Unanticipated exception caught\n";
 
+        V12::CRingItemPtr pItem = V12::CRingItemFactory::createRingItem(p->s_pBody,
+                                                                        p->s_pBody + p->s_header.s_size);
+
+        handleItem(pItem);
     }
-    // Out of main loop because we need to exit.
 
 }
 
