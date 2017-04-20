@@ -66,6 +66,8 @@ namespace eval state {
 
 ::state::client onStateChange stateChanged
 
+after 100 incr subscribed;	      # Wait for subscriptions to establish(?)
+vwait subscribed
 
 # enable callback to andle state transitions:
 

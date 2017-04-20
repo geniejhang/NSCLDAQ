@@ -29,7 +29,21 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <iostream>
+#include <fstream>
 static const std::string DefaultSubscriptionService("vardb-changes");
+
+std::map<CStateTransitionMonitor::NotificationType, std::string>
+    CStateTransitionMonitor::m_typeToString = {
+        {GlobalStateChange, "GlobalStateChange"},
+        {ProgramStateChange, "ProgramStateChange"},
+        {ProgramJoins,     "ProgramJoins"},
+        {ProgramLeaves,    "ProgramLeaves"},
+        {VarChanged,       "VarChanged"}
+    };
+// #define DEBUG
+#ifdef DEBUG
+static const char* logfile="TransitionMonitorLog.log";
+#endif
 
 /**
  * constructor
@@ -48,6 +62,13 @@ CStateTransitionMonitor::CStateTransitionMonitor(
     m_pSubscriptions(0),
     m_pMonitor(0)
 {
+#ifdef DEBUG
+    {
+        std::ofstream log(logfile, std::ios_base::trunc);          // New log file.
+        log << "CStateTransitionMonitor logfile\n";
+        log.flush();
+    }
+#endif
     Enter();
     try {
         createReqAPI(reqURI);
@@ -464,10 +485,17 @@ CStateTransitionMonitor::MonitorThread::operator()()
         CVarMgrSubscriptions::Message msg;
         if (m_pApi->waitmsg(0)) {
             msg = m_pApi->read();
+#ifdef DEBUG
+            std::ofstream log(logfile, std::ios_base::ate);
+            log << "Raw message received\n";
+#endif
             bool post = false;
             CStateTransitionMonitor::Notification notmsg; // s_type, s_state, s_program.
             if (m_pApi->checkFilters(msg.s_path.c_str())) {
-                
+#ifdef DEBUG
+            
+                log << "Passed filters\n";
+#endif
                 // Something involving states or programs:
                 
                 
@@ -523,8 +551,24 @@ CStateTransitionMonitor::MonitorThread::operator()()
             // Only post if the operation resulted in  postable op.
                 
             if (post) {
+#ifdef DEBUG
+                log << "Posting message:\n";
+                log << "  Type:    " << m_typeToString[notmsg.s_type] << std::endl;
+                log << "  state:   " << notmsg.s_state << std::endl;
+                log << "  program: " << notmsg.s_program << std::endl;
+#endif
                 m_pParent->postNotification(notmsg);
-            } 
+            }
+#ifdef DEBUG
+            else {
+                log << "Unpostable message: \n";
+                log << "   op:   " << msg.s_operation << std::endl;
+                log << "   path: " << msg.s_path      << std::endl;
+                log << "   data: " << msg.s_data      << std::endl;
+            }
+            log.flush();           // Flush all log messages in this pass.
+#endif
+            
         } else {
 	  usleep(100*1000);
 	}

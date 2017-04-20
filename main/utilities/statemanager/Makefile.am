@@ -301,6 +301,10 @@ TCL_PACKAGES = rdoCalloutPkg.tcl
 PYTHON_MODULES=RunControl.py StateControllerWidget.py StateMonitorWidget.py ReadoutGui.py
 
 
+DOC_IMAGES=statediagram.jpg
+
+DOCS=stateclient.xml statemanager.xml vardbrdoco.xml
+
 
 EXTRA_DIST+=$(PYTHON_MODULES) 
 
@@ -312,6 +316,8 @@ install-exec-hook:
 	$(LN_S)         @libdir@/libTclstateclient.so @prefix@/TclLibs/stateclient/libTclstateclient.so
 	for f in $(TCL_PACKAGES); do $(INSTALL_SCRIPT) @srcdir@/$$f @prefix@/TclLibs/stateclient; done
 	echo pkg_mkIndex -verbose @prefix@/TclLibs/stateclient "*.so" "*.tcl" | @TCLSH_CMD@
+	$(mkinstalldirs) @prefix@/share/html
+	for f in $(DOC_IMAGES); do $(INSTALL_DATA) @srcdir@/$$f @prefix@/share/html; done
 	$(mkinstalldirs) @prefix@/pythonLibs/nscldaq/vardb
 	$(mkinstalldirs) @prefix@/pythonLibs/nscldaq/rctl
 	$(INSTALL_PROGRAM) @libdir@/libPyStateClient.so  @prefix@/pythonLibs/nscldaq/vardb/stateclient.so
@@ -322,9 +328,6 @@ install-exec-hook:
 	echo from nscldaq.rctl import ReadoutGui >> @bindir@/ReadoutGui
 	echo "ReadoutGui.main()" >> @bindir@/ReadoutGui
 	chmod a+x @bindir@/ReadoutGui
-
-
-DOCS=stateclient.xml statemanager.xml vardbrdoco.xml
 
 #---------------------------------------------------------------------------------
 # tests:
@@ -348,7 +351,7 @@ stateTests_LDADD=@builddir@/libstateclient.la $(COMMON_LOADFLAGS) $(CPPUNIT_LDFL
 EXTRA_DIST+= stateclient.test statemgr.test  StateClientTests.py testBase.py StateManagerTests.py \
 	rdoco.test RGPGuiTests.test
 EXTRA_DIST+=$(TCL_PACKAGES)
-EXTRA_DIST+= $(DOCS)
+EXTRA_DIST+= $(DOCS) $(DOC_IMAGES)
 
 # Test setup and specification.
 
