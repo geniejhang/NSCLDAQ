@@ -36,6 +36,7 @@ template <class T>
 class CCreator
 {
 public:
+  virtual ~CCreator() {}
   virtual T* operator()() = 0;
   virtual std::string describe() const = 0;
 };

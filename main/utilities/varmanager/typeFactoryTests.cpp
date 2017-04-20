@@ -488,8 +488,8 @@ public:
     }
 };
 
-CDummyDataTypeHandler successfulHandler;
-CNomatchDataTypeHandler failingHandler;
+//CDummyDataTypeHandler successfulHandler;
+//CNomatchDataTypeHandler failingHandler;
 
 
  void TypeFactoryTests::unknownTypeHandlersCalled()
@@ -498,7 +498,7 @@ CNomatchDataTypeHandler failingHandler;
     CTypeFactory::createSchema(*m_db);
     CTypeFactory fact(*m_db);
     
-    fact.addUnknownTypeHandler(&successfulHandler);
+    fact.addUnknownTypeHandler(new CDummyDataTypeHandler);
     CDataType* pType = fact.create(std::string("dummytype-instance"));
     
     EQ(reinterpret_cast<CDataType*>(&aType), pType);
@@ -511,8 +511,8 @@ CNomatchDataTypeHandler failingHandler;
     CTypeFactory::createSchema(*m_db);
     CTypeFactory fact(*m_db);
     
-    fact.addUnknownTypeHandler(&successfulHandler);
-    fact.addUnknownTypeHandler(&failingHandler);   // should not get called:
+    fact.addUnknownTypeHandler(new CDummyDataTypeHandler);
+    fact.addUnknownTypeHandler(new CNomatchDataTypeHandler);   // should not get called:
     
     CDataType* pType = fact.create(std::string("dummytype-instance"));
     

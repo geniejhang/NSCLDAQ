@@ -199,6 +199,7 @@ class databaseServer():
                 nscldaq.vardb.variable.create(self._database, None, path, dType)
                 var = nscldaq.vardb.variable.Variable(self._database, path=path)
                 value = var.get()        # Be able to return the actual value.
+                del var
             else:                        # default supplied:
                 nscldaq.vardb.variable.create(
                     self._database, None, path, dType, value
@@ -219,6 +220,7 @@ class databaseServer():
         try:
             var = nscldaq.vardb.variable.Variable(self._database, path=path)
             var.set(value)
+            del var
             self._req.send('OK:')
             self._notifySet(path, value)
         except nscldaq.vardb.variable.error as e:
@@ -267,6 +269,7 @@ class databaseServer():
         try:
             var = nscldaq.vardb.variable.Variable(self._database, path=path)
             self._req.send('OK:%s' % var.get())
+            del var
         except nscldaq.vardb.variable.error as e:
             self._req.send('FAIL:%s' % (e,))
         
@@ -319,6 +322,7 @@ class databaseServer():
         try:
             dir = nscldaq.vardb.dirtree.DirTree(self._database)
             nscldaq.vardb.variable.destroy(self._database, dir, path)
+            del dir
             self._req.send('OK:')
             self._publishMessage(path, 'RMVAR', '')
         except nscldaq.vardb.variable.error as e:
