@@ -30,6 +30,7 @@ class CGlomTests : public CppUnit::TestFixture
     CPPUNIT_TEST(accumulate_0);
     CPPUNIT_TEST(accumulate_1);
     CPPUNIT_TEST(accumulate_2);
+    CPPUNIT_TEST(accumulate_3);
     CPPUNIT_TEST(timestampPolicy_0);
     CPPUNIT_TEST(timestampPolicy_1);
     CPPUNIT_TEST(timestampPolicy_2);
@@ -223,6 +224,30 @@ public:
         EQMSG("number of children", size_t(2), comp.count());
         EQMSG("Timestamp", uint64_t(1), comp.getEventTimestamp());
 
+    }
+
+
+    // test that when the state change nesting reaches 0, state change items are
+    // flushed.
+    void accumulate_3() {
+
+        auto pItem0 = std::make_shared<V12::CRawRingItem>(V12::BEGIN_RUN);
+        auto pItem1 = std::make_shared<V12::CRawRingItem>(V12::END_RUN);
+
+        CGlom glommer(m_pSink);
+
+        glommer.handleItem(pItem0);
+        glommer.handleItem(pItem1);
+
+        // note that the glommer is still in scope and won't flush as a result of destruction
+        // as happens in many other tests
+        V12::CRawRingItem item;
+        readItem(*m_pSink, item);
+
+        ASSERTMSG("there is more data to read after first begin", m_pSink->getBuffer().size() > 0);
+
+        readItem(*m_pSink, item);
+        EQMSG("end run item flushed", V12::END_RUN, item.type());
     }
 
 

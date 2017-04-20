@@ -75,6 +75,7 @@ libTclRingBuffer_la_CPPFLAGS=-I@top_srcdir@/base/dataflow \
                                 -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
                                 -I@top_srcdir@/utilities/IO \
                                 -I@top_srcdir@/base/os \
+                                -I@top_srcdir@/base/sfinae_tools \
                                 @LIBTCLPLUS_CFLAGS@ @TCL_FLAGS@ @THREADCXX_FLAGS@
 
 noinst_HEADERS=CTclRingCommand.h
@@ -88,6 +89,7 @@ ringTests_CPPFLAGS =    -I@top_srcdir@/utilities/nscldaq-format/format \
                         -I@top_srcdir@/base/dataflow \
                         -I@top_srcdir@/base/os \
                         -I@top_srcdir@/base/testutils \
+                        -I@top_srcdir@/base/sfinae_tools \
                         @LIBTCLPLUS_CFLAGS@ @CPPUNIT_CFLAGS@ @TCL_FLAGS@ @THREADCXX_FLAGS@
 
 ringTests_LDADD    =  libTclRingBuffer.la \

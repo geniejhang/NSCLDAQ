@@ -12,6 +12,7 @@ sumscaler_CPPFLAGS=-I@top_srcdir@/utilities/IO 			\
 		    -I@top_srcdir@/utilities/nscldaq-format/FormattedIO			\
 		    -I@top_srcdir@/utilities/IO			\
 		    -I@top_srcdir@/base/os			\
+                    -I@top_srcdir@/base/sfinae_tools \
 		    @LIBTCLPLUS_CFLAGS@
 
 sumscaler_LDFLAGS = @top_builddir@/utilities/IO/libdaqio.la 	\

@@ -5,7 +5,9 @@ COMMON_CFLAGS = -I@top_srcdir@/utilities/nscldaq-format/format \
                 -I@top_srcdir@/utilities/nscldaq-format/Buffer \
                 -I@top_srcdir@/base/os \
                 -I@top_srcdir@/utilities/IO  \
+                -I@top_srcdir@/base/sfinae_tools \
                 @LIBTCLPLUS_CFLAGS@
+
 COMMON_LOADFLAGS= @top_builddir@/utilities/nscldaq-format/format/V10/libdataformatv10.la \
                     @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
                     @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \

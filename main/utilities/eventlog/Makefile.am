@@ -24,6 +24,7 @@ eventlog_CPPFLAGS       =	-I@top_srcdir@/base/headers		\
 				-I@top_srcdir@/diagnostics/status	\
 				-I@top_srcdir@/utilities/statemanager  \
 				-I@top_srcdir@/utlities/varmanager    \
+                                -I@top_srcdir@/base/sfinae_tools \
 				@OPENSSL_INCLUDES@
 
 eventlog_LDADD		=	@top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\
@@ -85,6 +86,7 @@ fakeruns_CPPFLAGS=-I@top_srcdir@/base/headers		\
                                 -I@top_srcdir@/utilities/IO		\
 			        -I@top_srcdir@/base/dataflow	\
 				-I@top_srcdir@/base/os		\
+                                -I@top_srcdir@/base/sfinae_tools \
 				@OPENSSL_INCLUDES@
 
 eventlogTests_SOURCES = TestRunner.cpp eventlogTests.cpp
@@ -97,6 +99,7 @@ eventlogTests_CPPFLAGS=@CPPUNIT_CFLAGS@ -I@top_srcdir@/base/headers		\
                                 -I@top_srcdir@/utilities/IO		\
 			        -I@top_srcdir@/base/dataflow	\
 				-I@top_srcdir@/base/os		\
+                                -I@top_srcdir@/base/sfinae_tools \
 				@OPENSSL_INCLUDES@
 
 eventlogTests_LDADD   = @CPPUNIT_LDFLAGS@ \
