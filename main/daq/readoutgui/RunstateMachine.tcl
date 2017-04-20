@@ -319,7 +319,6 @@ snit::type RunstateMachine {
     #
     method _callback {method args} {
         foreach cb $callouts {
-          puts "$cb $method $args"
             if {[info command ::${cb}::${method}] ne ""} {
                 $cb $method {*}$args
             }
