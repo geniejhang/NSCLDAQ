@@ -66,6 +66,8 @@ namespace eval state {
 
 ::state::client onStateChange stateChanged
 
+after 100 incr subscribed;	      # Wait for subscriptions to establish(?)
+vwait subscribed
 
 #  When we start the global state had better be "Readying"
 #  We'll try to set our state to "Ready" and if that fails,
