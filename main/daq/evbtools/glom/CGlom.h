@@ -9,6 +9,17 @@
 
 namespace DAQ {
 
+
+/*!
+ * \brief The CGlom class
+ *
+ * The CGlom class is the logic of the glom program. It is responsible for
+ * reading in fragments from stdin, stripping off the fragment header, performing
+ * any correlation necessary, and then outputting the built item to stdout. There is
+ * so extra logic besides that to ensure that the glom parameters are outputted when
+ * the first barrier BEGIN_RUN arrives.
+ *
+ */
 class CGlom
 {
     private:

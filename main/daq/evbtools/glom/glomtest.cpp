@@ -26,6 +26,7 @@ class CGlomTests : public CppUnit::TestFixture
     CPPUNIT_TEST(firstBarrier_0);
     CPPUNIT_TEST(firstBarrier_1);
     CPPUNIT_TEST(firstBarrier_2);
+    CPPUNIT_TEST(firstBarrier_3);
     CPPUNIT_TEST(accumulate_0);
     CPPUNIT_TEST(accumulate_1);
     CPPUNIT_TEST(accumulate_2);
@@ -94,6 +95,35 @@ public:
         readItem(*m_pSink, item);
         EQMSG("non-barriers outputted without glom info when waiting for first barrier",
               V12::COMP_PHYSICS_EVENT, item.type());
+
+    }
+
+    // The glom parameters should be outputted before the first begin run and before a begin
+    // run after an end run has been received.
+    void firstBarrier_3() {
+        auto pBegin = std::make_shared<V12::CRingStateChangeItem>(V12::BEGIN_RUN);
+        auto pEnd   = std::make_shared<V12::CRingStateChangeItem>(V12::END_RUN);
+
+        {
+            CGlom glommer(m_pSink);
+
+            glommer.handleItem(pBegin);
+            glommer.handleItem(pEnd);
+            glommer.handleItem(pBegin);
+        }
+
+        V12::CRawRingItem item;
+        readItem(*m_pSink, item);
+        EQMSG("first begin run should trigger an evb_glom_info to be outputted",
+              V12::EVB_GLOM_INFO, item.type());
+
+        item.setType(V12::UNDEFINED);
+        readItem(*m_pSink, item);
+        readItem(*m_pSink, item); // end
+        readItem(*m_pSink, item);
+
+        EQMSG("first begin run after end run should trigger an evb_glom_info to be outputted",
+              V12::EVB_GLOM_INFO, item.type());
 
     }
 

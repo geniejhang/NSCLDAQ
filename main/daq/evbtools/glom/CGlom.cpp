@@ -182,8 +182,16 @@ void CGlom::outputEventFormat()
 void CGlom::handleItem(V12::CRingItemPtr pItem)
 {
     if ( pItem->type() == V12::BEGIN_RUN && m_firstBarrier) {
+        flushEvent();
         outputGlomParameters(m_dtInt, m_nobuild);
         m_firstBarrier = false;
+    }
+
+    // in case the glom program run persistently over many runs, it is important that
+    // a new glom parameters item be outputted at the start of the next run. Therefore,
+    // arm the logic for outputting the glom info when an end run item is observed.
+    if ( pItem->type() == V12::END_RUN) {
+        m_firstBarrier = true;
     }
 
     if (m_nobuild
