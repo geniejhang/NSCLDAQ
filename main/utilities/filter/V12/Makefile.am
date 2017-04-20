@@ -71,7 +71,8 @@ unittests_CPPFLAGS= -I@top_srcdir@/utilities/filter \
                     -I@top_srcdir@/base/headers		\
                     -I@top_srcdir@/base/dataflow \
                     -I@top_srcdir@/base/testutils \
-                    -I@top_srcdir@/base/os
+                    -I@top_srcdir@/base/os \
+                    -I@top_srcdir@/base/sfinae_tools
 
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 
