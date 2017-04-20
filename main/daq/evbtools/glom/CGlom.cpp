@@ -86,7 +86,7 @@ CGlom::outputGlomParameters(uint64_t dt, bool building)
 void
 CGlom::flushEvent()
 {
-    using namespace ::DAQ::V12;
+    using namespace DAQ::V12;
     if (m_accumulatedItems.size() > 0) {
 
         // Figure out which timestamp to use in the generated event:
@@ -109,7 +109,7 @@ CGlom::flushEvent()
         }
 
         CCompositeRingItem builtItem;
-        builtItem.setType(COMPOSITE_BIT | m_accumulatedItems.front()->type());
+        builtItem.setType(V12::COMPOSITE_BIT | m_accumulatedItems.front()->type());
         builtItem.setEventTimestamp(eventTimestamp);
         builtItem.setSourceId(m_sourceId);
 
@@ -117,11 +117,7 @@ CGlom::flushEvent()
 
         writeItem(*m_pSink, builtItem);
 
-        if (builtItem.type() == COMP_BEGIN_RUN)       m_stateChangeNesting++;
-        if (builtItem.type() == COMP_END_RUN)         m_stateChangeNesting--;
-        if (builtItem.type() == COMP_ABNORMAL_ENDRUN) m_stateChangeNesting = 0;
-
-        m_currentType       = UNDEFINED;
+        m_currentType       = V12::UNDEFINED;
         m_accumulatedItems.clear();
     }
 }
@@ -150,6 +146,8 @@ void CGlom::emitAbnormalEnd()
 void
 CGlom::accumulateEvent(uint64_t dt, V12::CRingItemPtr pItem)
 {
+    using namespace ::DAQ::V12;
+
     uint64_t timestamp = pItem->getEventTimestamp();
 
     // Reset/set some data to be ready for next set of correlatable items
@@ -160,6 +158,10 @@ CGlom::accumulateEvent(uint64_t dt, V12::CRingItemPtr pItem)
     }
     m_lastTimestamp    = timestamp;
     m_timestampSum    += timestamp;
+
+    if ((pItem->type() & 0x7fff) == BEGIN_RUN)       m_stateChangeNesting++;
+    if ((pItem->type() & 0x7fff) == END_RUN)         m_stateChangeNesting--;
+    if ((pItem->type() & 0x7fff) == ABNORMAL_ENDRUN) m_stateChangeNesting = 0;
 
     m_accumulatedItems.push_back(pItem);
 
@@ -217,6 +219,13 @@ void CGlom::handleItem(V12::CRingItemPtr pItem)
     }
 
     accumulateEvent(m_dtInt, pItem);
+
+
+    if ((pItem->type() == V12::END_RUN
+            || pItem->type() == V12::BEGIN_RUN)
+            && (m_stateChangeNesting==0)) {
+        flushEvent();
+    }
 }
 
 

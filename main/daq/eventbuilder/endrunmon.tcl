@@ -136,15 +136,15 @@ proc EndrunMon::startMonitor ringUrl {
             set ercount 0
             while {1} {
 
-                set item [ring get -timeout 2 $ringurl [list 2]];  #end run only.
+                set item [ring get -timeout 2 $ringurl [list 0x8002]];  # composite end run only.
                 if {$item ne {}} {
 
-                    if {[dict get $item type] eq "End Run"} {
+                    if {[dict get $item type] eq "Composite End Run"} {
                         incr  ercount
                         #
-                        #  Signal if we've seen enough end runs.
+                        #  Signal if we've seen an end runs.
                         #
-                        if {$ercount >= [tsv::get EndrunMon endsExpected]} {
+                        if {$ercount > 0} {
                             thread::mutex lock $mutex
                             thread::cond  notify $condvar
                             thread::mutex unlock $mutex

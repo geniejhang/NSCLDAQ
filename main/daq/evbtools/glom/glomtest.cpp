@@ -231,8 +231,8 @@ public:
     // flushed.
     void accumulate_3() {
 
-        auto pItem0 = std::make_shared<V12::CRawRingItem>(V12::BEGIN_RUN);
-        auto pItem1 = std::make_shared<V12::CRawRingItem>(V12::END_RUN);
+        auto pItem0 = std::make_shared<V12::CRingStateChangeItem>(V12::BEGIN_RUN);
+        auto pItem1 = std::make_shared<V12::CRingStateChangeItem>(V12::END_RUN);
 
         CGlom glommer(m_pSink);
 
@@ -242,12 +242,13 @@ public:
         // note that the glommer is still in scope and won't flush as a result of destruction
         // as happens in many other tests
         V12::CRawRingItem item;
-        readItem(*m_pSink, item);
+        readItem(*m_pSink, item); // glom info
+        readItem(*m_pSink, item); // begin
 
         ASSERTMSG("there is more data to read after first begin", m_pSink->getBuffer().size() > 0);
 
         readItem(*m_pSink, item);
-        EQMSG("end run item flushed", V12::END_RUN, item.type());
+        EQMSG("end run item flushed", V12::COMP_END_RUN, item.type());
     }
 
 
