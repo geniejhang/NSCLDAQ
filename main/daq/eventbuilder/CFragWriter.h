@@ -23,6 +23,8 @@
 #ifndef CFRAGWRITER_H
 #define CFRAGWRITER_H
 
+#include <ByteBuffer.h>
+
 #include <stdlib.h>		/* for size_t */
 
 /**
@@ -32,33 +34,29 @@
  *  To use construct on the output file descriptor.  Invoke operator()
  *  passing it a pointer to a flattened ring item.
  *
- *  A flattened ring item is a EBB::FragmentHeader immediately followed by
- *  its payloads (size determined by s_size.
+ *  A flattened ring item is a EVB::FragmentHeader immediately followed by
+ *  its payload (size determined by s_size).
  */
 class CFragWriter
 {
   // private data:
 private:
   int m_fd;			// output file descriptor.
-  bool m_stripHeaders;  //!< selects whether to strip frag headers or convert
-                        //   them to EVB_FRAGMENT items
 
   // Canonicals we need:
 
 public:
-  CFragWriter(int fd, bool strip=false);
+  CFragWriter(int fd);
 
   // public operations:
 
 public:
-  void operator()(void* pFragment);
+  void operator()(const DAQ::Buffer::ByteBuffer& fragment);
 
   // Private utilities:
 
 private:
-  void Write(size_t nBytes, void* pBuffer);
-  void convertAndWrite(void* pFragment);
-  void stripAndWrite(void* pFragment);
+  void Write(size_t nBytes, const void *pBuffer);
 
 };
 

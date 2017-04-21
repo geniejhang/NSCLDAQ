@@ -50,7 +50,7 @@ CFragReader::CFragReader(int fd) :
  * @return void*
  * @retval Pointer to dynanmically allocated storage that contains the fragment.
  */
-void*
+DAQ::Buffer::ByteBuffer
 CFragReader::operator()()
 {
   // first read the header:
@@ -64,18 +64,19 @@ CFragReader::operator()()
   //
 
   size_t fragmentSize = sizeof(header) + header.s_size;
-  uint8_t* pResult = reinterpret_cast<uint8_t*>(malloc(fragmentSize));
-  if (pResult==0) {
-    throw std::string("CFragReader:::operator()() Failed to allocate requested memory");
-  }
-  memcpy(pResult, &header, sizeof(header));
-  uint8_t* pBody = pResult + sizeof(header);
+  DAQ::Buffer::ByteBuffer fragment;
+  fragment.reserve(fragmentSize);
+  fragment << header.s_timestamp;
+  fragment << header.s_sourceId;
+  fragment << header.s_size;
+  fragment << header.s_barrier;
 
+  fragment.resize(fragmentSize);
   // Read the body and return the result:
 
-  Read(header.s_size, pBody);
+  Read(header.s_size, fragment.data() + 20); // pointer to beginnin of payload
 
-  return pResult;
+  return fragment;
 }
 /**
  * Read

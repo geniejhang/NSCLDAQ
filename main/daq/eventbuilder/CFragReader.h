@@ -22,6 +22,7 @@
 #ifndef CFRAGREADER_H
 #define CFRAGREADER_H
 
+#include <ByteBuffer.h>
 #include <stdlib.h>		/* for size_t */
 
 /**
@@ -44,7 +45,7 @@ public:
 
   // public methods:
 public:
-  void* operator()();
+  DAQ::Buffer::ByteBuffer operator()();
 
   // Private utilities:
 
