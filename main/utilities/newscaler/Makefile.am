@@ -24,6 +24,9 @@ INTERACTIVE_TESTS=pagetest.tcl
 
 if BUILD_DOCS
 DOCS:
+	$(mkinstalldirs) $(GRAPHDIR)
+	$(mkinstalldirs) $(FIGUREDIR)
+	$(mkinstalldirs) @prefix@/share/pdfs
 	$(CHAPTER2BOOK) -s @srcdir@/scalerdisplay_user.xml -b @srcdir@/scalerdisplay_user_bookinfo.xml -o .
 	$(INSTALL_DATA)  $(BOOK) @prefix@/share/pdfs
 	(cd @srcdir@; install $(IMAGES) $(GRAPHDIR))
