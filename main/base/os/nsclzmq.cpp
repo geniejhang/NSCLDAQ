@@ -132,7 +132,7 @@ zmq::context_t*
 ZmqObjectFactory::getContextInstance()
 {
   if (!m_pContext) {
-    m_pContext = new zmq::context_t(0);
+    m_pContext = new zmq::context_t(5);
   }
   return m_pContext;
 }
