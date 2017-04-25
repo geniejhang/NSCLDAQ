@@ -88,9 +88,9 @@ class TestBase(unittest.TestCase):
         pm   = PortManager.PortManager('localhost')
         waited = 0
         
-        # Give the subprocess up to 30 secondsto publish its service.
+        # Give the subprocess up to 10.00 secondsto publish its service.
         
-        while waited < 30:
+        while waited < 100:
             portList = pm.find(service=service, user=getpass.getuser())
             if len(portList) > 0:
                 time.sleep(.1)
