@@ -21,7 +21,7 @@ libvarmgr_la_CPPFLAGS=$(COMMON_CPPFLAGS) @LIBTCLPLUS_CFLAGS@
 libvarmgr_la_LDFLAGS = $(COMMONLDFLAGS)  @LIBEXCEPTION_LDFLAGS@ @GLIB_LIBS@
 
 libvarmgrtcl_la_CPPFLAGS=@TCL_FLAGS@ @LIBTCLPLUS_CFLAGS@ $(COMMON_CPPFLAGS) 
-libvarmgrtcl_la_LDFLAGS= @builddir@/libvarmgr.la \
+libvarmgrtcl_la_LDFLAGS= @builddir@/libvarmgr.la @top_builddir@/base/os/libdaqshm.la \
 	$(COMMONLDFLAGS) @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
 
 libvarmgrtcl_la_SOURCES=varmgrTCLPackage.cpp \
@@ -47,7 +47,6 @@ libvarmgrpy_la_SOURCES=pyVarMgr.cpp
 
 libnotifierpy_la_CPPFLAGS=$(COMMON_CPPFLAGS) @LIBTCLPLUS_CFLAGS@ @PYTHON_CPPFLAGS@
 libnotifierpy_la_LDFLAGS= @top_builddir@/base/uri/liburl.la \
-			@top_builddir@/base/os/libdaqshm.la \
 			@top_builddir@/servers/portmanager/libPortManager.la \
 			@LIBEXCEPTION_LDFLAGS@ \
 			@PYTHON_LDFLAGS@ libvarmgr.la $(libvarmgr_la_LDFLAGS)
