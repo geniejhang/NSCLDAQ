@@ -1163,3 +1163,4 @@ Work on 11.0-rc11 begins
 11.1-011
 	* Fixes performance regression in CCUSB driver that was introduced in
 	11.1-010.
+	* Adds GIT_COMMIT file containing the current commit hash to installation.
