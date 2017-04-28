@@ -28,6 +28,7 @@
 #include "CStateManager.h"
 #include "CStateProgram.h"
 #include "PyStateManager.h"
+#include <iostream>
 
 /* Module specific error: */
 
@@ -39,7 +40,6 @@ typedef struct {
     PyObject*   s_callback;
     PyObject*   s_calldata;
 } CallbackInfo, *pCallbackInfo;
-
 
 
 /*

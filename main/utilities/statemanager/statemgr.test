@@ -32,7 +32,7 @@ package require portAllocator
 package require tcltest
 package require Thread
 
-# tcltest::configure -verbose [list start body error]
+tcltest::configure -verbose [list start]
 
 # A quick note on -constraints below.  In tcltest a test with constraints is
 # only run if its constraints are true. Since the setup/teardown of most tests
@@ -1859,6 +1859,7 @@ proc programSequencer {mutex condvar transitions} {
     vwait ::done
     ::nscldaq::stateclient -delete client
     thread::release;     # Allow exit.
+    thread::exit
 
 }
 

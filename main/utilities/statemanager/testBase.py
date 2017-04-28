@@ -87,7 +87,6 @@ class TestBase(unittest.TestCase):
     def waitPortGone(self, service):
         pm   = PortManager.PortManager('localhost')
         waited = 0
-        
         # Give the subprocess up to 10.00 secondsto publish its service.
         
         while waited < 100:

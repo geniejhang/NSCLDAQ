@@ -31,6 +31,16 @@
 #include <stdlib.h>
 
 #include <iostream>
+#include <fstream>
+#include <time.h>
+
+
+// #define DEBUG 1
+#ifdef DEBUG
+static const char* logfile = "statemanager.log";
+#endif
+
+
 /**
  * constructor
  *   @param requestURI  - URI of the REQ port of the server.
@@ -66,7 +76,11 @@ CStateManager::CStateManager(const char* requestURI, const char* subscriptionURI
     
     m_finalStates["Ending"]   = "Ending";
     m_finalStates["Ready"]    = "Ready";
-    
+#ifdef DEBUG
+    std::ofstream log(logfile, std::ios_base::trunc);
+    log << "Logfile for CStateManager.cpp\n";
+    log.flush();
+#endif
     
     
 }
@@ -91,6 +105,7 @@ CStateManager::~CStateManager()
 std::string
 CStateManager::getProgramParentDir()
 {
+    m_pMonitor->locateParentPath();
     return m_pMonitor->programParentDir();
 }
 /**
@@ -505,30 +520,75 @@ CStateManager::waitTransition(TransitionCallback cb, void* clientData)
     
     std::string gblState  = getGlobalState();
     std::string nextState = m_finalStates[gblState];   // State we expect next:
+    CVarMgrApi* pApi     = m_pMonitor->getApi();
+#ifdef DEBUG
+    {
+      std::ofstream log(logfile, std::ios_base::app);
+      log << "Wait transition: " << gblState << " : " << nextState << std::endl;;
+      log.flush();
+    }
+#endif    
+    
     std::vector<std::string> programs = listActivePrograms();
+
+    // Make a set of the programs that are not in the next state yet.
     
     std::set<std::string> stillWaiting;
     for (int i = 0; i < programs.size(); i++) {
+#ifdef DEBUG
+      std::ofstream log(logfile, std::ios_base::app);
+      log << "Program: " << programs[i] << " state: "
+	  << getProgramState(programs[i].c_str()) << std::endl;
+      log.flush();
+#endif
+      if (getProgramState(programs[i].c_str()) != nextState) {
         stillWaiting.insert(programs[i]);
+      }
     }
-
+    if (stillWaiting.empty()) {
+#ifdef DEBUG
+      {
+	std::ofstream log(logfile, std::ios_base::app);
+	log << "State transition complete prior to processing messages\n";
+	log.flush();
+      }
+#endif
+      pApi->set("/RunState/SystemStatus", "Consistent");
+      return;			// Already transitioned.
+    }
     
     // Process state transitions until timeout or the conditions are
     // met.
     
-    CVarMgrApi* pApi = m_pMonitor->getApi();
     std::string timeoutString = pApi->get("/RunState/Timeout");
     int timeout;
     sscanf(timeoutString.c_str(), "%d", &timeout);   // Seconds.
-    timeout *= 1000;                        // Milliseconds.
+    timeout *= 1000;
     
     std::vector<CStateTransitionMonitor::Notification> notifications;
     notifications = m_pMonitor->getNotifications(-1, 0); // Clear backlog.
    
     do {
+#ifdef DEBUG
+      {
+	std::ofstream log(logfile, std::ios_base::app);
+	log << "Got " << notifications.size() << " notifications\n";
+	log.flush();
+      }
+#endif      
         // Process messages:
         
          for (int i = 0; i < notifications.size(); i++) {
+#ifdef DEBUG
+	   {
+	     std::ofstream log(logfile, std::ios_base::app);
+	     log << "Notification: " << i << std::endl;
+	     log << "  type:       " <<  CStateTransitionMonitor::m_typeToString[notifications[i].s_type] << std::endl;
+	     log << "  state:      " <<  notifications[i].s_state;
+	     log << "  program:    " <<  notifications[i].s_program;
+	     log.flush();
+	   }
+#endif
             if (
                 (notifications[i].s_type ==
                     CStateTransitionMonitor::ProgramStateChange)
@@ -543,13 +603,46 @@ CStateManager::waitTransition(TransitionCallback cb, void* clientData)
                 // Remove appropriate programs for the waiting set:
                 
                 if (notifications[i].s_state == nextState) {
+#ifdef DEBUG
+		  {
+		    std::ofstream log(logfile, std::ios_base::app);
+		    log << " Removing " << notifications[i].s_program << " From wait list \n";
+		    log.flush();
+		  }
+#endif		  
                     stillWaiting.erase(notifications[i].s_program);
                 }
             }
         }
-        // if stilWaiting is empty the state transition completed:
+	 // Update stillWaiting - note that it's possible for another thread/program
+	 // to be doing wait transition so we need to re-poll the states.
+	 // Note that erase invalidates iterators:
+	 
+	 auto wp = stillWaiting.begin();
+	 while (wp != stillWaiting.end()) {
+	   if (getProgramState((*wp).c_str()) == nextState) {
+#ifdef DEBUG
+	     {
+	       std::ofstream log(logfile, std::ios_base::app);
+	       log << "after message removing " << *wp << " from wait list.\n";
+	       log.flush();
+	     }
+#endif	     
+	     stillWaiting.erase(wp);
+	     wp = stillWaiting.begin();    // it's end if empty.
+	   } else {
+	     wp++;
+	   }
+	 }
         
         if(stillWaiting.empty()) {
+#ifdef DEBUG
+	  {
+	    std::ofstream log(logfile, std::ios_base::app);
+	    log << "State transition completed to " << nextState << std::endl;
+	    log.flush();
+	  }
+#endif	  
             if (gblState != nextState) {
                 setGlobalState(nextState.c_str());
             }
@@ -560,10 +653,55 @@ CStateManager::waitTransition(TransitionCallback cb, void* clientData)
         // Get the next notifications -- with timeout
         
         notifications.clear();
+#ifdef DEBUG
+	{
+           std::ofstream log(logfile, std::ios_base::app);
+	   log << "Starting get with timeout: " << time(NULL) << std::endl;
+        }
+#endif	
         notifications = m_pMonitor->getNotifications(-1, timeout);
+#ifdef DEBUG
+	{
+	  std::ofstream log(logfile, std::ios_base::app);
+	  log << "Bottom of loop get notifications with " << timeout <<
+	    " got " << notifications.size() << " notifications"
+	      << " at " << time(NULL) << std::endl;
+	  log.flush();
+	}
+#endif	
         
     } while (notifications.size() > 0);  // Timeout if no notifs.
-    throw std::runtime_error("State transition timeout");
+
+      // It's possible the state transtion was processed elsewhere so:
+      
+      auto wp = stillWaiting.begin();
+      while (wp != stillWaiting.end()) {
+         if(getProgramState((*wp).c_str()) == nextState) {
+#ifdef DEBUG
+	     {
+	       std::ofstream log(logfile, std::ios_base::app);
+	       log << "after timeout removing " << *wp << " from wait list.\n";
+	       log.flush();
+	     }
+#endif      
+            stillWaiting.erase(wp);
+	    wp = stillWaiting.begin();       // iterator invalidated.
+         } else {
+#ifdef DEBUG
+      {
+         std::ofstream log(logfile, std::ios_base::app);
+	 log << "Can't remove: " << *wp << " state is : "
+	     << getProgramState((*wp).c_str()) << std::endl;
+      }
+#endif      
+            wp++;
+         }
+      }
+      if (stillWaiting.empty()) {
+         pApi->set("/RunState/SystemStatus", "Inconsistent");
+         return;            // Transition succeeded.
+      }
+      throw std::runtime_error("State transition timeout");
 }
 /**
  * processMessages

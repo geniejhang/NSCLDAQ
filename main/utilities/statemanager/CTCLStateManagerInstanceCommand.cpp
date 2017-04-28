@@ -30,6 +30,13 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
+
+// #define DEBUG
+#ifdef DEBUG
+static const char* logfile("sminstance.log");
+#endif
+
 /**
  * constructor:
  *   @param interp - interpreter on which the command is registered.
@@ -62,6 +69,28 @@ CTCLStateManagerInstanceCommand::CTCLStateManagerInstanceCommand(
 {
     m_pPrograms = new CStateProgram(requrl.c_str());
 }
+
+/**
+ * constructor - enclosed by a statemonitor instance.
+ *   @param interp - the interpreter.
+ *   @param api    - The state manager api used by both.
+ */
+CTCLStateManagerInstanceCommand::CTCLStateManagerInstanceCommand(								 
+    CTCLInterpreter& interp,
+    CStateManager* pApi
+) : CTCLObjectProcessor(interp, "junk", false),          //not registered.
+        m_pApi(pApi), m_pPrograms(pApi->getProgramApi())
+{
+#ifdef DEBUG
+  {
+    std::ofstream log(logfile, std::ios_base::trunc);
+    log << "State manager instance command log\n";
+    log.flush();
+  }
+#endif  
+}
+
+
 /**
  * destructor:
  */
@@ -90,7 +119,12 @@ CTCLStateManagerInstanceCommand::operator()(
     try {
         requireAtLeast(objv, 2, "Command reuires a subcommand");
         std::string subCommand = objv[1];
-        
+#ifdef DEBUG
+	{
+	  std::ofstream log(logfile, std::ios_base::app);
+	  log << "SM Instance subcommand: " << subCommand << std::endl;
+	}
+#endif	
         if (subCommand == "programParentDir") {
             programParentDir(interp, objv);
         } else if (subCommand == "addProgram") {
@@ -942,9 +976,30 @@ CTCLStateManagerInstanceCommand::waitTransition(
             cinfo.s_pInterp = &interp;
             cinfo.s_scriptBase = std::string(objv[2]);
         }
+#ifdef DEBUG
+	{
+	  std::ofstream log(logfile, std::ios_base::app);
+	  log << "Waiting for transition to complete\n ";
+	  log.flush();
+	}
+#endif
         m_pApi->waitTransition(cb, cd);
+#ifdef DEBUG
+	{
+	  std::ofstream log(logfile, std::ios_base::app);
+	  log << "Successful transition\n";
+	  log.flush();
+	}
+#endif
         interp.setResult("1");
     } catch(...) {
+#ifdef DEBUG
+      {
+	std::ofstream log(logfile, std::ios_base::app);
+	log << "Timeout on waittransition\n";
+	log.flush();
+      }
+#endif      
         interp.setResult("0");
     }
 }

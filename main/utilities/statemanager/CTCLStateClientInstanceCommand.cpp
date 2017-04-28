@@ -29,9 +29,15 @@
 #include "CStateClientApi.h"
 #include <stdexcept>
 #include <stdio.h>
+#include <fstream>
 
 
+//#define DEBUG  1
 
+#ifdef DEBUG
+static const char* instlog = "instancecommand.log";
+static const char* pumplog = "messagepump.log";
+#endif
 /**
  * constructor
  *
@@ -54,6 +60,13 @@ CTCLStateClientInstanceCommand::CTCLStateClientInstanceCommand(
     m_pPumpThread(0),
     m_pSm(0)
 {
+#ifdef DEBUG
+  {
+    std::ofstream log(instlog, std::ios_base::trunc);
+    log << "Log file for StateClientInstanceCommand main thread\n";
+    log.flush();
+  }
+#endif  
     m_pClient = new CStateClientApi(
         requri.c_str(), suburi.c_str(), programName.c_str()
     );
@@ -71,9 +84,12 @@ CTCLStateClientInstanceCommand::CTCLStateClientInstanceCommand(
  */
 CTCLStateClientInstanceCommand::~CTCLStateClientInstanceCommand()
 {
+  if (m_pPumpThread) {
     m_pPumpThread->scheduleExit();
     m_pPumpThread->join();
     delete m_pPumpThread;
+  }
+  delete m_pSm;
     
     // delete m_pClient;   // deleted by state manager instance.
 }
@@ -110,6 +126,8 @@ CTCLStateClientInstanceCommand::operator()(
             inring(interp,objv);
         } else if (subcommand == "onStateChange") {
             onStateChange(interp, objv);
+	} else if (subcommand == "disableMessagePump") {
+	    disableMessagePump(interp, objv);
         } else {
             return (*m_pSm)(interp, objv);
         }
@@ -296,6 +314,32 @@ CTCLStateClientInstanceCommand::onStateChange(
     requireExactly(objv, 3, "onStateChange needs (only) a script parameter");
     m_stateChangeScript = std::string(objv[2]);
 }
+/**
+ * disableMessagePump
+ *    Needed if the client wants to use methods in the state manager  that
+ *    directly access message queues.  Otherwise the message pump will race
+ *    against us for picking up messages.
+ *
+ *  Stops the message pump thread.  Note that there is no way to restart the
+ *  Thread once it's been stopped (at present),
+ *  @param interp - interpreter running the command.
+ *  @param objv   - Command word objects.. needs a script parameter.
+ */
+void
+CTCLStateClientInstanceCommand::disableMessagePump(
+    CTCLInterpreter& interp, std::vector<CTCLObject>& objv
+)
+{
+  requireExactly(objv, 2, "disableMessagePump requires no parameters");
+  if (m_pPumpThread) {
+    // No -op if already disabled:
+
+    m_pPumpThread->scheduleExit();
+    m_pPumpThread->join();
+    delete m_pPumpThread;
+    m_pPumpThread = 0;                 // Mark it's gone for destructor.
+  }
+}
 /*-----------------------------------------------------------------------
  * Callback handling
  */
@@ -313,6 +357,13 @@ CTCLStateClientInstanceCommand::onStateChange(
 int
 CTCLStateClientInstanceCommand::stateChangeHandler(Tcl_Event* pEvent, int flags)
 {
+#ifdef DEBUG
+  {
+    std::ofstream log(instlog, std::ios_base::app);
+    log << "Staste change handler called\n";
+    log.flush();
+  }
+#endif  
     pUEvent pE = reinterpret_cast<pUEvent>(pEvent);
 
     /* If the object no longer exists we need to get out of here real damned quick */
@@ -320,6 +371,13 @@ CTCLStateClientInstanceCommand::stateChangeHandler(Tcl_Event* pEvent, int flags)
     if (pE->u_fullEvent.s_pRegistry->isViable(pE->u_fullEvent.s_pObject)) {
     
         std::string newState(pE->u_fullEvent.s_newState);
+#ifdef DEBUG
+	{
+	  std::ofstream log(instlog, std::ios_base::app);
+	  log << "There's a viable instance to handle the transition to " << newState << std::endl;
+	  log.flush();
+	}
+#endif	
         
         CTCLStateClientInstanceCommand* pObject = pE->u_fullEvent.s_pObject;
         
@@ -331,7 +389,21 @@ CTCLStateClientInstanceCommand::stateChangeHandler(Tcl_Event* pEvent, int flags)
             script += newState;
             CTCLInterpreter* pInterp = pObject->getInterpreter();
             try {
+#ifdef DEBUG
+	      {
+		std::ofstream log(instlog, std::ios_base::app);
+		log << "running handler script: " << script << std::endl;
+		log.flush();
+	      }	  
+#endif
                 pInterp->GlobalEval(script);
+#ifdef DEBUG
+		{
+		  std::ofstream log(instlog, std::ios_base::app);
+		  log << "Successful completion of script" << script << std::endl;
+		  log.flush();
+		}
+#endif		
             }
             catch (CException& e) {
                 std::string msg = "statchange handler failed: ";
@@ -352,6 +424,8 @@ CTCLStateClientInstanceCommand::stateChangeHandler(Tcl_Event* pEvent, int flags)
  *  Message pump implementation:
  */
 
+
+
 /**
  * construtor
  *   @param pClient - pointer to the shared client api.
@@ -363,7 +437,15 @@ CTCLStateClientInstanceCommand::MessagePump::MessagePump(
     CTCLStateClientCommand* pRegistry
 ) : m_pRegistry(pRegistry), m_pClient(pClient), m_parent(parent), m_exit(false),
     m_pOuterObject(outerObject)
-{}
+{
+#ifdef DEBUG
+  {
+    std::ofstream log(pumplog, std::ios_base::trunc);
+    log << "Message pump log file \n";
+    log.flush();
+  }
+#endif  
+}
 
 /**
  * init - synchronized init
@@ -392,11 +474,25 @@ CTCLStateClientInstanceCommand::MessagePump::operator()()
     while(! m_exit) {
         std::string newState;
         if (m_pClient->waitTransition(newState,  250)) {
+#ifdef DEBUG
+	  {
+	    std::ofstream log(pumplog, std::ios_base::app);
+	    log << "Message pump got a transtion to : " << newState << std::endl;
+	    log.flush();
+	  }
+#endif
 
             // If our outer object is interested:
             // Create the event structure and fill it in:
             
             if (m_pOuterObject->m_stateChangeScript != "") {
+#ifdef DEBUG
+	      {
+		std::ofstream log(pumplog, std::ios_base::app);
+		log << "Message pump - there's a handler.  Queuing an event to our parent thread\n";
+		log.flush();
+	      }
+#endif	      
                 pUEvent pEvent = reinterpret_cast<pUEvent>(Tcl_Alloc(sizeof(UEvent)));
                 
                 pEvent->u_fullEvent.s_pObject = m_pOuterObject;

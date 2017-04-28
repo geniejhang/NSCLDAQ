@@ -106,6 +106,7 @@ public:
     // operations available to clients:
     
     std::string programParentDir() const {return m_programParentPath; }
+    void locateParentPath();
     CVarMgrApi* getApi(){ return m_pRequestApi; }
     
     std::vector<std::string> activePrograms();
@@ -161,7 +162,6 @@ private:
 private:
     void createReqAPI(const char* uri);
     void createSubAPI(const char* uri);
-    void locateParentPath();
     void releaseResources();
     bool isActive(std::string name);
     bool getBool(std::string program, std::string name);

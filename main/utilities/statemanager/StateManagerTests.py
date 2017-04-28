@@ -1,4 +1,4 @@
-
+#
 #    This software is Copyright by the Board of Trustees of Michigan
 #    State University (c) Copyright 2013.
 #
@@ -31,6 +31,9 @@ import nscldaq.vardb.varmgr
 
 import nscldaq.vardb.statemanager
 import testBase
+
+import sys
+import gc
 
 class StateManagerTests(testBase.TestBase):
     
@@ -108,61 +111,52 @@ class StateManagerTests(testBase.TestBase):
         self.startServer(['--database', self._dbName, '--create-ok', 'yes'])
         p = self.getport('vardb-request')       # Wait for server to publish services.
         self._api = nscldaq.vardb.varmgr.Api('tcp://localhost:%d' % p)
+        self._sm =nscldaq.vardb.statemanager.Api(
+            'tcp://localhost', 'tcp://localhost'
+        )
+
 
     def tearDown(self):
+        
         if self._pid is not None:
             os.kill(self._pid, signal.SIGKILL)
             os.waitpid(self._pid,0)
             self.waitPortGone('vardb-request')
+            self._pid = None
         if self._stdout is not None:
             self._stdout.close()
         if os.path.isfile(self._dbName):
             os.unlink(self._dbName)
+            del self._api
+        del self._sm
+        gc.collect()
+            
 
-class Creation(StateManagerTests):
-    def test_creation(self):
-        api = nscldaq.vardb.statemanager.Api(
-            'tcp://localhost', 'tcp://localhost'
-        )
-        
 class ProgramParentDir(StateManagerTests):
+        
     def test_getprogramparentdir_initial(self):
-        api = nscldaq.vardb.statemanager.Api(
-            'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual('/RunState', api.getProgramParentDir())
+        self.assertEqual('/RunState', self._sm.getProgramParentDir())
         
     def test_getprogramparentdir_changed(self):
         self._api.mkdir('/programs')
         self._api.set('/RunState/ReadoutParentDir', '/programs')
-        api = nscldaq.vardb.statemanager.Api(
-            'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual('/programs', api.getProgramParentDir())
+        time.sleep(0.5)           # Let the threads update this.
+        self.assertEqual('/programs', self._sm.getProgramParentDir())
         
     def test_getprogramparentdir_argchecks(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error):
-            api.getProgramParentDir('abcde')
+            self._sm.getProgramParentDir('abcde')
             
     def test_setprogramparentdir(self):
         self._api.mkdir('/programs')
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setProgramParentDir('/programs')
-        self.assertEqual('/programs', api.getProgramParentDir())
+        self._sm.setProgramParentDir('/programs')
+        self.assertEqual('/programs', self._sm.getProgramParentDir())
     def test_setprogramparentdir_argchecks(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error):
-            api.setProgramParentDir()         # too few
+            self._sm.setProgramParentDir()         # too few
         with self.assertRaises(nscldaq.vardb.statemanager.error):
-            api.setProgramParentDir('/a', '/b') # too many
-
+            self._sm.setProgramParentDir('/a', '/b') # too many
+        
 class ProgramDef(StateManagerTests):
     def test_addProgram_ok(self):     # Fully specified program:
         program = {
@@ -170,10 +164,8 @@ class ProgramDef(StateManagerTests):
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
             'outring' : 'output', 'inring' : 'tcp://localhost/george'
         }
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.addProgram('myprogram', program)
+
+        self._sm.addProgram('myprogram', program)
         self.assertEqual(('myprogram', 'test'), self._api.ls('/RunState'))
         self.assertEqual('true', self._api.get('/RunState/myprogram/enable'))
         self.assertEqual('false', self._api.get('/RunState/myprogram/standalone'))
@@ -182,15 +174,12 @@ class ProgramDef(StateManagerTests):
         self.assertEqual('output', self._api.get('/RunState/myprogram/outring'))
         self.assertEqual('tcp://localhost/george',self._api.get('/RunState/myprogram/inring'))
         
-        
     def test_addProgram_defaults(self):    # Partially speced gives defaults.
         program = {
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
         }                         # Minimal def.
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.addProgram('myprogram', program)
+
+        self._sm.addProgram('myprogram', program)
         self.assertEqual(('myprogram', 'test'), self._api.ls('/RunState'))
         self.assertEqual('true', self._api.get('/RunState/myprogram/enable'))
         self.assertEqual('false', self._api.get('/RunState/myprogram/standalone'))
@@ -200,291 +189,207 @@ class ProgramDef(StateManagerTests):
         self.assertEqual('',self._api.get('/RunState/myprogram/inring'))
                 
     def test_addProgram_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error):
-            api.addProgram('myprogram')
+            self._sm.addProgram('myprogram')
         program = {
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
         }  
         with self.assertRaises(nscldaq.vardb.statemanager.error):
-            api.addProgram('myprogram', program, 'junk')
+            self._sm.addProgram('myprogram', program, 'junk')
         with self.assertRaises(nscldaq.vardb.statemanager.error):
-            api.addProgram('myprogram', 'junk')   # program def mb dict.
-            
+            self._sm.addProgram('myprogram', 'junk')   # program def mb dict.
+        
     def test_addProgram_dupname(self):
         program = {
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
         }                         # Minimal def.
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.addProgram('myprogram', program)
+        self._sm.addProgram('myprogram', program)
         with self.assertRaises(nscldaq.vardb.statemanager.error):
-            api.addProgram('myprogram', program)
-            
+            self._sm.addProgram('myprogram', program)
+        
     def test_addProgram_underspecified(self):
         program = {
              'host' : 'charlie.nscl.msu.edu',
         }
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error):
-            api.addProgram('myprogram', program)
+            self._sm.addProgram('myprogram', program)
          
         program = { 'path' : '/user/fox/junk' }
         with self.assertRaises(nscldaq.vardb.statemanager.error):
-            api.addProgram('myprogram', program)
-
+            self._sm.addProgram('myprogram', program)
+        
     def test_getProgramDef_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         self.assertEqual(
             {'standalone' : False, 'enabled' : True, 'path' : '', 'host' : '',
              'outring' : '', 'inring' : ''},
-            api.getProgramDefinition('test'))
+            self._sm.getProgramDefinition('test'))
+        
     def test_getProgramDef_badName(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.getProgramDefinition('junk')
-            
+            self._sm.getProgramDefinition('junk')
+        
     def test_getProgramDef_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.getProgramDefinition()
+            self._sm.getProgramDefinition()
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.getProgramDefinition('test', 'junk')
-            
+            self._sm.getProgramDefinition('test', 'junk')
+        
     def test_modifyProgram_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        progDef = api.getProgramDefinition('test')
+
+        progDef = self._sm.getProgramDefinition('test')
         #
         #  Make some mods:
         #
         progDef['path'] = '/home/fox/stuff'
         progDef['host'] = 'spdaq20.nscl.msu.edu'
     
-        api.modifyProgram('test', progDef)
+        self._sm.modifyProgram('test', progDef)
         
         #  Check that they took.
         
-        self.assertEqual(progDef, api.getProgramDefinition('test'))
+        self.assertEqual(progDef, self._sm.getProgramDefinition('test'))
         
         
     def test_modifyProgram_nosuch(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        progDef = api.getProgramDefinition('test')
+        progDef = self._sm.getProgramDefinition('test')
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.modifyProgram('junk', progDef)    # No such program.
+            self._sm.modifyProgram('junk', progDef)    # No such program.
+
         
     def test_modifyProgram_checkargs(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        progDef = api.getProgramDefinition('test')
+        progDef = self._sm.getProgramDefinition('test')
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.modifyProgram('test')     # need def.
+            self._sm.modifyProgram('test')     # need def.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.modifyProgram('test', progDef, 'junk')   #extra stuff
+            self._sm.modifyProgram('test', progDef, 'junk')   #extra stuff
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.modifyProgram('test', 'junk')    # def not dict.
-
+            self._sm.modifyProgram('test', 'junk')    # def not dict.
+        
     def test_setEditorPosition(self):
-        api = nscldaq.vardb.statemanager.Api(
-            'tcp://localhost', 'tcp://localhost'
-        )
-        api.setEditorPosition('test', 100, 200)
+        self._sm.setEditorPosition('test', 100, 200)
         
         self.assertEqual("100", self._api.get('/RunState/test/editorx'))
         self.assertEqual("200", self._api.get('/RunState/test/editory'))
-    
-    def test_getXpos(self):
-        api = nscldaq.vardb.statemanager.Api(
-            'tcp://localhost', 'tcp://localhost'
-        )
         
-        api.setEditorPosition('test', 100, 200)
-        self.assertEqual(100, api.getEditorXPosition('test'))
+    def test_getXpos(self):
+
+        
+        self._sm.setEditorPosition('test', 100, 200)
+        self.assertEqual(100, self._sm.getEditorXPosition('test'))
+
         
     def test_getYpos(self):
-        api = nscldaq.vardb.statemanager.Api(
-            'tcp://localhost', 'tcp://localhost'
-        )
-        api.setEditorPosition('test', 100, 200)
-        self.assertEqual(200, api.getEditorYPosition('test'))
-    
+        self._sm.setEditorPosition('test', 100, 200)
+        self.assertEqual(200, self._sm.getEditorYPosition('test'))
 
 class ProgramParticipation(StateManagerTests):        
     def test_enableProgram_ok(self):
         self._api.set('/RunState/test/enable', 'false')   # first disable.
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.enableProgram('test')
+
+        self._sm.enableProgram('test')
         self.assertEqual('true', self._api.get('/RunState/test/enable'))
+
         
     def test_enableProgram_nosuch(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
+
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.enableProgram('junk')
+            self._sm.enableProgram('junk')
+        
     def test_enableProgram_argCheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.enableProgram()            # need name.
+            self._sm.enableProgram()            # need name.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.enableProgram('test', 'junk') # Extra param
-   
+            self._sm.enableProgram('test', 'junk') # Extra param
+        
     def test_disableProgram_Ok(self):
         self._api.set('/RunState/test/enable', 'true')   # first enable.
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.disableProgram('test')
+
+        self._sm.disableProgram('test')
         self.assertEqual('false', self._api.get('/RunState/test/enable'))
         
     def test_disableProgram_nosuch(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.disableProgram('junk')
+            self._sm.disableProgram('junk')
         
     def test_disablProgram_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-               'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.disableProgram()
+            self._sm.disableProgram()
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.disableProgram('test', 'junk')
-            
-    def test_isProgramEnabled_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.enableProgram('test')
-        self.assertTrue(api.isProgramEnabled('test'))
+            self._sm.disableProgram('test', 'junk')
         
-        api.disableProgram('test')
-        self.assertFalse(api.isProgramEnabled('test'))
+    def test_isProgramEnabled_ok(self):
+        self._sm.enableProgram('test')
+        self.assertTrue(self._sm.isProgramEnabled('test'))
+        
+        self._sm.disableProgram('test')
+        self.assertFalse(self._sm.isProgramEnabled('test'))
         
     def test_isProgramEnabled_nosuch(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.isProgramEnabled('junk')
+            self._sm.isProgramEnabled('junk')
         
     def test_isProgramEnabled_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.isProgramEnabled()
+            self._sm.isProgramEnabled()
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.isProgramEnabled('test', 'junk')
-            
+            self._sm.isProgramEnabled('test', 'junk')
+        
     def test_setStandalone_ok(self):
         self._api.set('/RunState/test/standalone', 'false')  #ensure false first.
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setProgramStandalone('test')
+
+        self._sm.setProgramStandalone('test')
         self.assertEqual('true', self._api.get('/RunState/test/standalone'))
         
     def test_setStandalone_nosuch(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setProgramStandalone('junk')
-            
+            self._sm.setProgramStandalone('junk')
+        
     def test_setStandalone_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setProgramStandalone()
+            self._sm.setProgramStandalone()
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setProgramStandalone('test', 'junk')
-            
+            self._sm.setProgramStandalone('test', 'junk')
+        
     def test_setNostandalone_ok(self):
         self._api.set('/RunState/test/standalone', 'true')  #ensure true
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setProgramNoStandalone('test')
+        self._sm.setProgramNoStandalone('test')
         self.assertEqual('false', self._api.get('/RunState/test/standalone'))
         
     def test_setNostandalone_nosuch(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setProgramNoStandalone('junk')
-            
+            self._sm.setProgramNoStandalone('junk')
+        
     def test_setNostandalone_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
+
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setProgramNoStandalone()
+            self._sm.setProgramNoStandalone()
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setProgramNoStandalone('test', 'junk')
-            
+            self._sm.setProgramNoStandalone('test', 'junk')
+
     def test_isStandalone_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setProgramStandalone('test')
-        self.assertTrue(api.isProgramStandalone('test'))
+        self._sm.setProgramStandalone('test')
+        self.assertTrue(self._sm.isProgramStandalone('test'))
         
-        api.setProgramNoStandalone('test')
-        self.assertFalse(api.isProgramStandalone('test'))
-        
+        self._sm.setProgramNoStandalone('test')
+        self.assertFalse(self._sm.isProgramStandalone('test'))
         
         
     def test_isStandalone_nosuch(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.isProgramStandalone('junk')
-            
+            self._sm.isProgramStandalone('junk')
+        
     def test_isStandalone_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.isProgramStandalone()
+            self._sm.isProgramStandalone()
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.isProgramStandalone('test', 'junk')
- 
+            self._sm.isProgramStandalone('test', 'junk')
+        
 class ProgramListing(StateManagerTests):   
     def test_listprograms_1(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEquals(['test'], api.listPrograms())
+        self.assertEquals(['test'], self._sm.listPrograms())
+        
     def test_listprograms_a_few(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
+
         # Add some programs:
         
         program = {
@@ -492,39 +397,29 @@ class ProgramListing(StateManagerTests):
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
             'outring' : 'output', 'inring' : 'tcp://localhost/george'
         }
-        api.addProgram('atest', program)
-        api.addProgram('btest', program)
-        api.addProgram('ztest', program)
+        self._sm.addProgram('atest', program)
+        self._sm.addProgram('btest', program)
+        self._sm.addProgram('ztest', program)
         
         self.assertEquals(
             ['atest', 'btest', 'test', 'ztest'],
-            api.listPrograms()
+            self._sm.listPrograms()
         )
+        
     def test_listprograms_none(self):
         self._api.mkdir("/programs")         # empty.
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setProgramParentDir('/programs')
-        self.assertEquals([], api.listPrograms())
-    
+
+        self._sm.setProgramParentDir('/programs')
+        self.assertEquals([], self._sm.listPrograms())
+        
     def test_listprograms_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.listPrograms('junk')
+            self._sm.listPrograms('junk')
         
     def test_listenabled_1(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEquals(['test'], api.listEnabledPrograms())
+        self.assertEquals(['test'], self._sm.listEnabledPrograms())
         
     def test_listenabled_multiple(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         # Add some programs (all enabled):
         
         program = {
@@ -532,258 +427,192 @@ class ProgramListing(StateManagerTests):
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
             'outring' : 'output', 'inring' : 'tcp://localhost/george'
         }
-        api.addProgram('atest', program)
-        api.addProgram('btest', program)
-        api.addProgram('ztest', program)
+        self._sm.addProgram('atest', program)
+        self._sm.addProgram('btest', program)
+        self._sm.addProgram('ztest', program)
         
         self.assertEquals(
             ['atest', 'btest', 'test', 'ztest'],
-            api.listEnabledPrograms()
+            self._sm.listEnabledPrograms()
         )
+        
     def test_listenabled_none(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         # disable test:
         
-        api.disableProgram('test')
+        self._sm.disableProgram('test')
         
-        self.assertEquals([], api.listEnabledPrograms())
+        self.assertEquals([], self._sm.listEnabledPrograms())
         
     def test_listenabled_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.listEnabledPrograms('junk')
-    
+            self._sm.listEnabledPrograms('junk')
+
+        
     def test_liststandalone_none(self) :
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEquals([], api.listStandalonePrograms())
+        self.assertEquals([], self._sm.listStandalonePrograms())
         
     def test_liststandalone_1(self) :
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setProgramStandalone('test')
-        self.assertEquals(['test'], api.listStandalonePrograms())
+        self._sm.setProgramStandalone('test')
+        self.assertEquals(['test'], self._sm.listStandalonePrograms())
         
     def test_liststandalone_many(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         program = {
             'enabled' : True, 'standalone' : True,
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
             'outring' : 'output', 'inring' : 'tcp://localhost/george'
         }
-        api.addProgram('atest', program)
-        api.addProgram('btest', program)
-        api.addProgram('ztest', program)
+        self._sm.addProgram('atest', program)
+        self._sm.addProgram('btest', program)
+        self._sm.addProgram('ztest', program)
         
         self.assertEquals(
             ['atest', 'btest', 'ztest'],
-            api.listStandalonePrograms()
+            self._sm.listStandalonePrograms()
         )
+        
     def test_liststandalone_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.listStandalonePrograms('junk')
-    
+            self._sm.listStandalonePrograms('junk')
+        
     # Active programs are those that are enabled and not standalone.
     
     def test_listinactive_none(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEquals([], api.listInactivePrograms())
+        self.assertEquals([], self._sm.listInactivePrograms())
         
     def test_listinactive_1(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.disableProgram('test')
-        self.assertEquals(['test'], api.listInactivePrograms())
+
+        self._sm.disableProgram('test')
+        self.assertEquals(['test'], self._sm.listInactivePrograms())
         
-        api.enableProgram('test')
-        api.setProgramStandalone('test')
-        self.assertEquals(['test'], api.listInactivePrograms())
-        
+        self._sm.enableProgram('test')
+        self._sm.setProgramStandalone('test')
+        self.assertEquals(['test'], self._sm.listInactivePrograms())
         
     def test_listinactive_several(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         program = {
             'enabled' : True, 'standalone' : True,
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
             'outring' : 'output', 'inring' : 'tcp://localhost/george'
         }
-        api.addProgram('atest', program)
+        self._sm.addProgram('atest', program)
         
         program['standalone'] = False
         program['enabled']    = False
-        api.addProgram('btest', program)
+        self._sm.addProgram('btest', program)
         
         program['standalone'] = True
-        api.addProgram('ztest', program)
+        self._sm.addProgram('ztest', program)
         
         self.assertEquals(
-            ['atest', 'btest', 'ztest'], api.listInactivePrograms()
+            ['atest', 'btest', 'ztest'], self._sm.listInactivePrograms()
         )
+        
     def test_listinactive_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.listInactivePrograms('junk')
-            
+            self._sm.listInactivePrograms('junk')
+        
     def test_listactive_1(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEquals(['test'], api.listActivePrograms())
+        self.assertEquals(['test'], self._sm.listActivePrograms())
         
     def test_listactive_0(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.disableProgram('test')
-        self.assertEquals([], api.listActivePrograms())
+        self._sm.disableProgram('test')
+        self.assertEquals([], self._sm.listActivePrograms())
         
-        api.enableProgram('test')
-        api.setProgramStandalone('test')
-        self.assertEquals([], api.listActivePrograms())
+        self._sm.enableProgram('test')
+        self._sm.setProgramStandalone('test')
+        self.assertEquals([], self._sm.listActivePrograms())
         
     def test_listactive_many(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         program = {
             'enabled' : True, 'standalone' : True,
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
             'outring' : 'output', 'inring' : 'tcp://localhost/george'
         }
-        api.addProgram('atest', program)
+        self._sm.addProgram('atest', program)
         
         program['standalone'] = False
-        api.addProgram('btest', program)
+        self._sm.addProgram('btest', program)
         
         program ['enabled'] = False
-        api.addProgram('ztest', program)
+        self._sm.addProgram('ztest', program)
         
-        self.assertEqual(['btest', 'test'], api.listActivePrograms())
+        self.assertEqual(['btest', 'test'], self._sm.listActivePrograms())
         
     def test_listactive_argcheck(self) :
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.listActivePrograms('junk')
-            
+            self._sm.listActivePrograms('junk')
+        
 class DeleteProgram(StateManagerTests):
     def test_deleteprog_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.deleteProgram('test')
-        self.assertEqual([], api.listPrograms())
+
+        self._sm.deleteProgram('test')
+        self.assertEqual([], self._sm.listPrograms())
         
     def test_deleteprog_nox(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.deleteProgram('nosuch')
+            self._sm.deleteProgram('nosuch')
+        
     def test_deleteprog_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.deleteProgram()
+            self._sm.deleteProgram()
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.deleteProgram('test', 'junk')
-
+            self._sm.deleteProgram('test', 'junk')
+        
 class StateS(StateManagerTests):
     def test_setglobalstate_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setGlobalState('NotReady')
+        self._sm.setGlobalState('NotReady')
         self.assertEquals('NotReady', self._api.get('/RunState/State'))
+
         
     def test_setglobalstate_badstate(self) :
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setGlobalState('Readying')        # Inv transtion.
+            self._sm.setGlobalState('Readying')        # Inv transtion.
         
     def test_setglobalstate_argcheck(self) :
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setGlobalState()        # Missing param.
+            self._sm.setGlobalState()        # Missing param.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setGlobalState('NotReady', 'junk')
-            
+            self._sm.setGlobalState('NotReady', 'junk')
+        
     def test_getglobalstate_initial(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual('0Initial', api.getGlobalState())
+        self.assertEqual('0Initial', self._sm.getGlobalState())
+        
     def test_getglobalstate_changed(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setGlobalState('NotReady')
-        self.assertEqual('NotReady', api.getGlobalState())
+        self._sm.setGlobalState('NotReady')
+        self.assertEqual('NotReady', self._sm.getGlobalState())
+        
     def test_getglobalstate_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.getGlobalState('junk')
-    
+            self._sm.getGlobalState('junk')
+        
     def test_getpartstates_initial(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         self.assertEqual(
-            {'test' : '0Initial'}, api.getParticipantStates()
+            {'test' : '0Initial'}, self._sm.getParticipantStates()
         )
+        
     def test_getpartstates_seversl(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
+
         programDef = {
         'enabled' : True, 'standalone' : False,
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
             'outring' : 'output', 'inring' : 'tcp://localhost/george'
         }
-        api.addProgram('atest', programDef)
-        api.addProgram('ztest', programDef)
+        self._sm.addProgram('atest', programDef)
+        self._sm.addProgram('ztest', programDef)
         
         self.assertEqual(
             {'atest' : '0Initial', 'test': '0Initial', 'ztest' : '0Initial'},
-            api.getParticipantStates()
+            self._sm.getParticipantStates()
         )
+        
     def test_getpartstates_modified(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         programDef = {
         'enabled' : True, 'standalone' : False,
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
             'outring' : 'output', 'inring' : 'tcp://localhost/george'
         }
-        api.addProgram('atest', programDef)
-        api.addProgram('ztest', programDef)
+        self._sm.addProgram('atest', programDef)
+        self._sm.addProgram('ztest', programDef)
         
         #  Diddle some states:
         
@@ -795,277 +624,177 @@ class StateS(StateManagerTests):
         
         self.assertEqual(
             {'atest' : 'NotReady', 'test' : 'Readying', 'ztest': 'NotReady'},
-            api.getParticipantStates()
+            self._sm.getParticipantStates()
         )
+        
     def test_getpartstates_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.getParticipantStates(0)
-            
+            self._sm.getParticipantStates(0)
+        
     def test_getSystemStatusConsistent(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual('Consistent', api.getSystemStatus())
+        self.assertEqual('Consistent', self._sm.getSystemStatus())
+
     def test_getSystemStatusInconsistent(self):
         self._api.set('/RunState/SystemStatus', 'Inconsistent')
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual('Inconsistent', api.getSystemStatus())
-    
+        self.assertEqual('Inconsistent', self._sm.getSystemStatus())
+
+        
 class RunParameters(StateManagerTests):   
     def test_gettitle_initial(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual('', api.getTitle())
-
+        self.assertEqual('', self._sm.getTitle())
+        
     def test_gettitle_modified(self):
         title = 'A new title'
         
         self._api.set('/RunState/Title', title)
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual(title, api.getTitle())
+        self.assertEqual(title, self._sm.getTitle())
         
     def test_gettitle_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
+
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.getTitle(0)
-            
+            self._sm.getTitle(0)
+        
     def test_settitle_ok(self):
         title = 'This is a test title'
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setTitle(title)
-        self.assertEqual(title, api.getTitle())
+        self._sm.setTitle(title)
+        self.assertEqual(title, self._sm.getTitle())
         
     def test_settitle_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setTitle()           # Need parameter.
+            self._sm.setTitle()           # Need parameter.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setTitle('abcde', 0)   # extra param.
- 
+            self._sm.setTitle('abcde', 0)   # extra param.
+        
     def test_gettimeout_initial(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual(60, api.getTimeout())
+        self.assertEqual(60, self._sm.getTimeout())
         
     def test_gettimeout_modified(self):
         self._api.set("/RunState/Timeout", '45')
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual(45, api.getTimeout())
+        self.assertEqual(45, self._sm.getTimeout())
         
     def test_gettimeout_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.getTimeout(0)
-    
+            self._sm.getTimeout(0)
+        
     def test_settimeout_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setTimeout(1234)
-        self.assertEqual(1234, api.getTimeout())
+        self._sm.setTimeout(1234)
+        self.assertEqual(1234, self._sm.getTimeout())
         
     def test_settimeout_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setTimeout()    # missing arg.
+            self._sm.setTimeout()    # missing arg.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setTimeout('bad')   # Bad time.
+            self._sm.setTimeout('bad')   # Bad time.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setTimeout(1234, 42)   #Extra args.
-            
+            self._sm.setTimeout(1234, 42)   #Extra args.
+        
     def test_isrecording_initial(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertFalse(api.isRecording())
+        self.assertFalse(self._sm.isRecording())
+        
     def test_isrecording_changed(self):
         self._api.set('/RunState/Recording', 'false')
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertFalse(api.isRecording())
+        self.assertFalse(self._sm.isRecording())
         
     def test_isrecording_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.isRecording(0)
-    
-    def test_setrecording_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setRecording(True)
-        self.assertTrue(api.isRecording())
+            self._sm.isRecording(0)
         
-        api.setRecording(False)
-        self.assertFalse(api.isRecording())
+    def test_setrecording_ok(self):
+        self._sm.setRecording(True)
+        self.assertTrue(self._sm.isRecording())
+        
+        self._sm.setRecording(False)
+        self.assertFalse(self._sm.isRecording())
         
     def test_setrecording_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setRecording()      # Missing parameter.
+            self._sm.setRecording()      # Missing parameter.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setRecording(True, 0)   # Extra param.
+            self._sm.setRecording(True, 0)   # Extra param.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setRecording('1234')      # not a bool.
-   
+            self._sm.setRecording('1234')      # not a bool.
+        
     def test_getrunnum_initial(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual(0, api.getRunNumber())
+        self.assertEqual(0, self._sm.getRunNumber())
+
     def test_getrunnum_changed(self):
         self._api.set("/RunState/RunNumber", "1234")
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual(1234, api.getRunNumber())
+        self.assertEqual(1234, self._sm.getRunNumber())
+
+        
     def test_getrunnum_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.getRunNumber(0)
-            
+            self._sm.getRunNumber(0)
+        
     def test_setrunnum_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setRunNumber(1234)
-        self.assertEqual(1234, api.getRunNumber())
+        self._sm.setRunNumber(1234)
+        self.assertEqual(1234, self._sm.getRunNumber())
         
     def test_setrunnum_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setRunNumber()
+            self._sm.setRunNumber()
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setRunNumber(1234, 0)
+            self._sm.setRunNumber(1234, 0)
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setRunNumber('abcd')
-            
+            self._sm.setRunNumber('abcd')
+        
 
 class WaitTransitionTests(StateManagerTests):
     def __init__(self, *args, **kwargs):
         super(WaitTransitionTests, self).__init__(*args, **kwargs)
         self._callbacklist = None
+
     
     def StateTransitionCallback(self, api, program, state, cd):
+        self._api.set('/RunState/%s/State' % program, state)
         self._callbacklist.append([program, state, cd])
-    
+
+        
     def test_waittransition_timeout(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setTimeout(1)     # 1 second shortest timeout possible.
-        api.setGlobalState('NotReady')
-        self.assertFalse(api.waitTransition())
+        self._sm.setTimeout(1)     # 1 second shortest timeout possible.
+        self._sm.setGlobalState('NotReady')
+        self.assertFalse(self._sm.waitTransition())
         
     def test_waittransition_onestep(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setGlobalState('NotReady')
+        self._sm.setGlobalState('NotReady')
         self._api.set('/RunState/test/State', 'NotReady')
-        self.assertTrue(api.waitTransition())
+        self.assertTrue(self._sm.waitTransition())
         
-    def test_waittransition_multistep(self):
-        self._api.set('/RunState/State', 'NotReady')
-        self._api.set('/RunState/test/State', 'NotReady')
-        time.sleep(1)       # Let the pubs settle.
-        
-        # Both global and 'test' state is 'NotReady'.
-        
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setGlobalState('Readying')
-        self._api.set('/RunState/test/State', 'Readying')
-        self._api.set('/RunState/test/State', 'Ready')
-        self.assertTrue(api.waitTransition())
-        
-        # Global state should have also advanced:
-        
-        self.assertEqual('Ready', api.getGlobalState())
-        
-    def test_waittransition_callbacks(self):
-        self._callbacklist = []
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setGlobalState('NotReady')
-        self._api.set('/RunState/test/State', 'NotReady')
-        self.assertTrue(api.waitTransition(self.StateTransitionCallback, 1))
-        self.assertEqual(
-            [['test', 'NotReady', 1],], self._callbacklist
-        )
         
     def test_waittransition_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.waitTransition(1, 0)    # Not callable!
+            self._sm.waitTransition(1, 0)    # Not callable!
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.waitTransition(
+            self._sm.waitTransition(
                 self.test_waittransition_argcheck, 0, 1
             )                          # too many params.
-            
+        
 class ProcessMessageTests(StateManagerTests):
     def __init__(self, *args, **kwargs):
         super(ProcessMessageTests, self).__init__(*args, **kwargs)
-        self._callbacklist = None
-    
+       
+        
     def setUp(self) :
         super(ProcessMessageTests, self).setUp()
-        self._callbacklist = []
+        self._callbacklist = list()
         
+    def tearDown(self):
+        super(ProcessMessageTests, self).tearDown()
         
     def Callback(self, api, Notification, cd):
         self._callbacklist.append([Notification, cd])
     
     def test_processMessages_noCallbacks(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.processMessages(self.Callback, 1)
+
+        self._sm.processMessages(self.Callback, 1)
         self.assertEquals(
             [], self._callbacklist
         )
         
     def test_processMessages_gblchange(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setGlobalState('NotReady')
-        time.sleep(1)        # Wait for the publications.
-        api.processMessages(self.Callback, 2)
+        self._sm.setGlobalState('NotReady')
+        time.sleep(0.5)        # Wait for the publications.
+        self._sm.processMessages(self.Callback, 2)
         self.assertEquals(
             [
                 [{'type' : "GlobalStateChange", "state" : "NotReady"}, 2],
@@ -1074,13 +803,11 @@ class ProcessMessageTests(StateManagerTests):
             
             self._callbacklist
         )
+        
     def test_processMessage_programchange(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         self._api.set('/RunState/test/State', 'NotReady')
-        time.sleep(1)
-        api.processMessages(self.Callback, 3)
+        time.sleep(0.5)
+        self._sm.processMessages(self.Callback, 3)
         self.assertEquals(
             [[{'type' : "ProgramStateChange",
                "state" : "NotReady",
@@ -1094,115 +821,78 @@ class ProcessMessageTests(StateManagerTests):
             'path' : '/users/fox/test', 'host' : 'charlie.nscl.msu.edu',
             'outring' : 'output', 'inring' : 'tcp://localhost/george'
         }
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.addProgram('newprogram', program)
-        time.sleep(1)
-        api.processMessages(self.Callback, 4)
+        self._sm.addProgram('newprogram', program)
+        time.sleep(0.5)
+        self._sm.processMessages(self.Callback, 4)
         self.assertEquals(
             [[{'type' : 'ProgramJoins', 'program': 'newprogram'}, 4]],
             self._callbacklist
         )
         
     def test_processMessage_leaves(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.deleteProgram('test')
-        time.sleep(1)
-        api.processMessages(self.Callback, 5)
+        self._sm.deleteProgram('test')
+        time.sleep(0.5)
+        self._sm.processMessages(self.Callback, 5)
         self.assertEquals(
             [[{'type' : 'ProgramLeaves', 'program' : 'test'}, 5]],
             self._callbacklist
         )
         
     def test_processMessages_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.processMessages()
+            self._sm.processMessages()
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.processMessages(1)
+            self._sm.processMessages(1)
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.processMessages(self.Callback, 1, 2)
-    
+            self._sm.processMessages(self.Callback, 1, 2)
 
 class ProgramStates(StateManagerTests):
     def test_isactive_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertTrue(api.isActive('test'))
+        self.assertTrue(self._sm.isActive('test'))
         
-        api.disableProgram('test')
-        self.assertFalse(api.isActive('test'))
+        self._sm.disableProgram('test')
+        self.assertFalse(self._sm.isActive('test'))
         
     def test_isactive_nosuch(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.isActive('no-such-program')
-            
+            self._sm.isActive('no-such-program')
+        
     def test_isactive_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.isActive()           # Need program.
+            self._sm.isActive()           # Need program.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.isActive('test', 'junk') # Extra param.
-
+            self._sm.isActive('test', 'junk') # Extra param.
+        
     def test_setprogstate_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        api.setProgramState('test', 'NotReady')
+        self._sm.setProgramState('test', 'NotReady')
         self.assertEquals(
-            {'test' : 'NotReady'}, api.getParticipantStates()
+            {'test' : 'NotReady'}, self._sm.getParticipantStates()
         )
+        
     def test_setprogstate_nosuch(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setProgramState('nosuch', 'NotReady')
+            self._sm.setProgramState('nosuch', 'NotReady')
         
     def test_setprogstate_badstate(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setProgramState('test', 'Ready')
-            
+            self._sm.setProgramState('test', 'Ready')
+        
     def test_setprogstate_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setProgramState('test')  # Too few args.
+            self._sm.setProgramState('test')  # Too few args.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.setProgramState('test', 'NotReady', 0) #Too many
-    
+            self._sm.setProgramState('test', 'NotReady', 0) #Too many
+        
     def test_getprogstate_ok(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
-        self.assertEqual('0Initial', api.getProgramState('test'))
-        api.setProgramState('test', 'NotReady')
-        self.assertEqual('NotReady', api.getProgramState('test'))
+        self.assertEqual('0Initial', self._sm.getProgramState('test'))
+        self._sm.setProgramState('test', 'NotReady')
+        self.assertEqual('NotReady', self._sm.getProgramState('test'))
         
     def test_getprogstate_argcheck(self):
-        api = nscldaq.vardb.statemanager.Api(
-                'tcp://localhost', 'tcp://localhost'
-        )
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.getProgramState()    # Need program.
+            self._sm.getProgramState()    # Need program.
         with self.assertRaises(nscldaq.vardb.statemanager.error) :
-            api.getProgramState('test', 0) # Extra param.
-    
+            self._sm.getProgramState('test', 0) # Extra param.
 
 # Where the api only uses one URI
 
@@ -1212,39 +902,48 @@ class ProgramOnlyTests(StateManagerTests):
         api = nscldaq.vardb.statemanager.Api('tcp://localhost')
         api.setProgramParentDir('/')
         self.assertEqual('/', api.getProgramParentDir())
-
+        del api
+        
     def test_badmethod(self):
         api = nscldaq.vardb.statemanager.Api('tcp://localhost')
         with self.assertRaises(nscldaq.vardb.statemanager.error):
             api.setGlobalState('NotReady')
-
+        del api
+        
     def test_setProperty_create(self ):
         api = nscldaq.vardb.statemanager.Api('tcp://localhost')
         api.setProgramProperty('test', 'myprop', 'avalue')
         self.assertEqual('avalue' , self._api.get('/RunState/test/myprop'))
+        del api
         
     def test_setProperty_afterCreation(self):
         api = nscldaq.vardb.statemanager.Api('tcp://localhost')
         api.setProgramProperty('test', 'myprop', 'avalue')
         api.setProgramProperty('test', 'myprop', 'bvalue', False)
         self.assertEqual('bvalue' , self._api.get('/RunState/test/myprop'))
-    
+        del api
+        
     def test_setProperty_nosuch(self):
         api = nscldaq.vardb.statemanager.Api('tcp://localhost')
         with self.assertRaises(nscldaq.vardb.statemanager.error):
             api.setProgramProperty('test', 'myprop', 'bvalue', False)
-    
+        del api
+        
     def test_getProperty(self):
         api = nscldaq.vardb.statemanager.Api('tcp://localhost')
         api.setProgramProperty('test', 'myprop', 'avalue')
         self.assertEqual('avalue', api.getProgramProperty('test', 'myprop'))
+        del api
+        
     def test_getProperty_nosuch(self):
         api = nscldaq.vardb.statemanager.Api('tcp://localhost')
         with self.assertRaises(nscldaq.vardb.statemanager.error):
             api.getProgramProperty('test', 'myprop')
-    
+        del api
+        
 # Run the tests if this is main:
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)
+    gc.collect()

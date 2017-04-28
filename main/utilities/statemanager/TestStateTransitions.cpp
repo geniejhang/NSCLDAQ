@@ -156,7 +156,6 @@ class TestStateTransitions : public CppUnit::TestFixture {
   
   // State transitions
   
-  CPPUNIT_TEST(waitAlreadyThere);
   CPPUNIT_TEST(waitNotReady);
   CPPUNIT_TEST(waitNotReadyCallback);
   CPPUNIT_TEST(waitNotReadyTimeout);
@@ -201,7 +200,6 @@ protected:
   
  // Tests for waitTransition:
   
-  void waitAlreadyThere();
   void waitNotReady();
   void waitNotReadyCallback();
   void waitNotReadyTimeout();
@@ -445,20 +443,7 @@ void* gpTCLApplication(0);
 
 // tests for waitTransition:
 
-// Waiting we're not transitioning will timeout.
 
-void TestStateTransitions::waitAlreadyThere()
-{
-    // Dial down the timeout to a second:
-    
-    m_pApi->set("/RunState/Timeout", "1");
-    
-    CStateManager sm("tcp://localhost", "tcp://localhost");
-    CPPUNIT_ASSERT_THROW(
-        sm.waitTransition(),
-        std::runtime_error
-    );
-}
 // Waiting for transition to NotReady from anything:
 //  * Use forked process to watch global state and set
 //    local state.

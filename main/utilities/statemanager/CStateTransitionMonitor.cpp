@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
+#include <time.h>
 static const std::string DefaultSubscriptionService("vardb-changes");
 
 std::map<CStateTransitionMonitor::NotificationType, std::string>
@@ -40,10 +41,15 @@ std::map<CStateTransitionMonitor::NotificationType, std::string>
         {ProgramLeaves,    "ProgramLeaves"},
         {VarChanged,       "VarChanged"}
     };
-// #define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 static const char* logfile="TransitionMonitorLog.log";
+static const char* logthread = "TransitionMonitorThreadLog.log";
+
+
+
 #endif
+
 
 /**
  * constructor
@@ -62,14 +68,17 @@ CStateTransitionMonitor::CStateTransitionMonitor(
     m_pSubscriptions(0),
     m_pMonitor(0)
 {
+    Enter();
 #ifdef DEBUG
     {
-        std::ofstream log(logfile, std::ios_base::trunc);          // New log file.
-        log << "CStateTransitionMonitor logfile\n";
-        log.flush();
+      std::ofstream log(logfile, std::ios_base::trunc);          // New log file.
+      log << "CStateTransitionMonitor logfile\n";
+      log.flush();
+      std::ofstream logt(logthread, std::ios_base::trunc);
+      logt << "CStateTransitinoMonitor thread\n";
+      logt.flush();
     }
 #endif
-    Enter();
     try {
         createReqAPI(reqURI);
         createSubAPI(subURI);
@@ -208,6 +217,13 @@ CStateTransitionMonitor::setTransitionTimeout(int secs)
 std::vector<CStateTransitionMonitor::Notification>
 CStateTransitionMonitor::getNotifications(int max, int timeout)
 {
+#ifdef DEBUG
+  {
+    std::ofstream log(logfile, std::ios_base::app);
+    log << "getNotifications; max " << max << " timeout " << timeout << std::endl;
+    log.flush();
+  }
+#endif
     std::vector<Notification> result;
     
     if (max == 0) {
@@ -219,25 +235,69 @@ CStateTransitionMonitor::getNotifications(int max, int timeout)
     while (m_notifications.getnow(Not) &&
         ((result.size() < max) || (max == -1))
     ) {
-        result.push_back(Not);    
+#ifdef DEBUG
+      {
+	Enter();
+	std::ofstream log(logfile, std::ios_base::app);
+	log << "Main thread getting  immediate from notification list\n";
+	log << "Notification\n";
+	log << "type:          : " << m_typeToString[Not.s_type] << std::endl;
+	log << "state          : " << Not.s_state << std::endl;
+	log << "s_program      : " << Not.s_program << std::endl;
+	log.flush();
+	Leave();
+      }
+#endif
+        result.push_back(Not);
+
     }
     
     // Otherwise block, then get stuff after we awaken:
     
     if (result.size() == 0) {
+#ifdef DEBUG
+    {
+      std::ofstream log(logfile, std::ios_base::app);
+      log << "Entering read loop at : " << time(NULL) << " Timeout " << timeout << std::endl;
+      log.flush();
+	
+    }
+#endif    
+
         m_notifications.wait(timeout);
         while (m_notifications.getnow(Not) &&            // Refactor.
             ((result.size() < max) || (max == -1))
         ) {
+#ifdef DEBUG
+	  {
+	    Enter();
+	    std::ofstream log(logfile, std::ios_base::app);
+	    log << "Main thread getting after wait from notification list "
+		<< time(NULL) << std::endl;
+	    log << "Notification\n";
+	    log << "type:          : " << m_typeToString[Not.s_type] << std::endl;
+	    log << "state          : " << Not.s_state << std::endl;
+	    log << "s_program      : " << Not.s_program << std::endl;
+	    log.flush();
+	    Leave();
+	  }
+#endif	  
             result.push_back(Not);    
         }
     }
+#ifdef DEBUG
+    {
+      std::ofstream log(logfile, std::ios_base::app);
+      log << " Returning " << result.size() << " notifications "
+	  << time(NULL) << std::endl;;
+      log.flush();
+    }
+#endif    
     return result;
 }
 /**
  * updateProgramParentPath
- *    - Set our new cached parent.
- *    - Kill the monitor thread
+ *    - Set our new cached parent. *    - Kill the monitor thread
  *    - Start a new monitor thread with the updated info.
  * @param path - new parent dir path
  */
@@ -259,6 +319,19 @@ CStateTransitionMonitor::updateProgramParentPath(const char* path)
 void
 CStateTransitionMonitor::postNotification(CStateTransitionMonitor::Notification n)
 {
+#ifdef DEBUG
+	  {
+	    Enter();
+	    std::ofstream log(logthread, std::ios_base::app);
+	    log << "Posting notification:\n";
+	    log << "Notification\n";
+	    log << "type:          : " << m_typeToString[n.s_type] << std::endl;
+	    log << "state          : " << n.s_state << std::endl;
+	    log << "s_program      : " << n.s_program << std::endl;
+	    log.flush();
+	    Leave();
+	  }
+#endif	  
     m_notifications.queue(n);
 }
 
@@ -480,13 +553,23 @@ CStateTransitionMonitor::MonitorThread::init()
 void
 CStateTransitionMonitor::MonitorThread::operator()()
 {
+#ifdef DEBUG
+  {
+    m_pParent->Enter();
+    std::ofstream log(logthread, std::ios_base::app);
+    log << "Monitor thread starts\n";
+    log.flush();
+    m_pParent->Leave();
+  }
+#endif
     std::string notificationType;
     while (!m_exiting) {
         CVarMgrSubscriptions::Message msg;
         if (m_pApi->waitmsg(0)) {
             msg = m_pApi->read();
 #ifdef DEBUG
-            std::ofstream log(logfile, std::ios_base::ate);
+	    m_pParent->Enter();
+            std::ofstream log(logthread, std::ios_base::app);
             log << "Raw message received\n";
 #endif
             bool post = false;
@@ -567,6 +650,7 @@ CStateTransitionMonitor::MonitorThread::operator()()
                 log << "   data: " << msg.s_data      << std::endl;
             }
             log.flush();           // Flush all log messages in this pass.
+	    m_pParent->Leave();
 #endif
             
         } else {
