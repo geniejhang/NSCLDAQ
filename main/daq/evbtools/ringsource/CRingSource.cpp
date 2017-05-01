@@ -247,9 +247,15 @@ CRingSource::getEvents()
     CEVBClientFramework::submitFragmentList(m_frags);
   }
 
+
   if (oneshotComplete()) {
     exit(EXIT_SUCCESS);
   }
+
+  for (auto& frag : m_frags) {
+      delete [] frag.s_payload;
+  }
+
 
 }
 

@@ -459,13 +459,10 @@ proc EVBC::getOrdererPort {} {
 # the ring sources.
 #
 # @param sourceRingUrl          - URL of the source ring.
-# @param timestampExtractorLib  - Path to the timestamp extractor shared object.
 # @param id                     - Source id used to associate event fragments
 #                                 with an input queue.
 # @param info                   - Long description used to identify the source
 #                                 in the event orderer GUI.
-# @param expectHdrs             - All data must have body headers. Timestamp lib
-#                                 and id can be left as empty strings
 # @param oneshot                - If provided number of ends that result in exit.
 # @param timeout                - If provided, timeout in seconds after first end to 
 #                                 wait for all ends in --oneshot mode.
@@ -475,8 +472,8 @@ proc EVBC::getOrdererPort {} {
 #
 #
 
-proc ::EVBC::registerRingSource {source lib id info {expectHdrs 0} {oneshot {}} {timeout {}} {timeoffset 0}} {
-   ::RingSourceMgr::addSource $source $lib $id $info $expectHdrs $oneshot $timeout $timeoffset
+proc ::EVBC::registerRingSource {source id info {oneshot {}} {timeout {}} {timeoffset 0}} {
+   ::RingSourceMgr::addSource $source $id $info $oneshot $timeout $timeoffset
 
 }
 
@@ -557,32 +554,24 @@ proc EVBC::initialize args {
     # Create and optionally configure the application objects.
     #
     if {!$EVBC::initialized} {
-	puts "0"
         set EVBC::initialized true
         set EVBC::applicationOptions [EVBC::AppOptions %AUTO%]
         
-	puts "1"
         if {[llength $args] > 0} {
             $EVBC::applicationOptions configure {*}$args
         }
-	puts "2"
         EVBC::_ValidateOptions $EVBC::applicationOptions
         
-	puts "3"
         # if -gui is true, start it and paste it:
         
         if {[$EVBC::applicationOptions cget -gui] && [$EVBC::applicationOptions cget -restart]} {
             EVBC::_StartGui
         }
 
-	puts "4"
         # if -gui is true, start it
         if {[$EVBC::applicationOptions cget -gui] && ![::EVBC::_guiExists]} {
             EVBC::_StartGui
-        }
-
-	puts "5"
-         
+        } 
     }
     #
     #  If the app is being destroyed kill the event builder too:

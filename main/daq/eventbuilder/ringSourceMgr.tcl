@@ -60,26 +60,23 @@ namespace eval ::RingSourceMgr {
 # happen.
 # 
 # @param source     uri of data source
-# @param tstamplib  path to timestamp extractor library
 # @param id         source id 
 # @param info       textual description for source
-# @param expectHdrs whether the source should have headers or not
 # @param oneshot    If provided number of ends that result in exit.
 # @param timeout    If provided, timeout in seconds after first end to wait for all ends
 #                   in --oneshot mode.
 # @param offset     Time offset added to the timestamp from this source.
 #
-proc ::RingSourceMgr::addSource [list source tstamplib {id ""} \
-  {info ""} {expectHeaders 0} {oneshot ""} {timeout ""} {offset 0} ] {
+proc ::RingSourceMgr::addSource [list source {id ""} \
+  {info ""} {oneshot ""} {timeout ""} {offset 0} ] {
 
     variable sourceDict
 
     # there will only ever be 1 ringFragmentSource launched per ring at a given a time
     # by using the ring url as the key.
-    dict set sourceDict $source [dict create tstamplib $tstamplib \
+    dict set sourceDict $source [dict create \
       id         $id            \
       info       $info          \
-      expecthdrs $expectHeaders \
       oneshot    $oneshot       \
       timeout    $timeout       \
       offset     $offset        \
@@ -154,13 +151,10 @@ proc ::RingSourceMgr::resetSources {} {
 #   Starts a ring buffer event source
 #
 # @param sourceRingUrl          - URL of the source ring.
-# @param timestampExtractorLib  - Path to the timestamp extractor shared object.
 # @param id                     - Source id used to associate event fragments
 #                                 with an input queue.
 # @param info                   - Long description used to identify the source
 #                                 in the event orderer GUI.
-# @param expectHeders True if body headers are expected and will be used to
-#                    extract timestamp and ids.
 # @param oneshot    If provided number of ends that result in exit.
 # @param timeout    If provided, timeout in seconds after first end to wait for all ends
 #                   in --oneshot mode.
@@ -168,9 +162,8 @@ proc ::RingSourceMgr::resetSources {} {
 #       the event building pipeline.
 #
 # @returns file handle
-proc ::RingSourceMgr::startSource {sourceRingUrl timestampExtractorLib id info
-
-  {expectHeaders 0} {oneshot ""} {timeout ""} {offset 0} } {
+proc ::RingSourceMgr::startSource {sourceRingUrl id info
+                                   {oneshot ""} {timeout ""} {offset 0} } {
 
   set port [::RingSourceMgr::getOrdererPort]
   #  Construct the command we're going to run
@@ -178,10 +171,9 @@ proc ::RingSourceMgr::startSource {sourceRingUrl timestampExtractorLib id info
   set ringSource [file join [InstallRoot::Where] bin ringFragmentSource]
 
   set switches [::RingSourceMgr::_computeRingSourceSwitches $port $sourceRingUrl \
-    $timestampExtractorLib \
     $id \
     $info \
-    $expectHeaders $oneshot $timeout $offset]
+    $oneshot $timeout $offset]
 
 
   append ringSource $switches
@@ -199,7 +191,7 @@ proc ::RingSourceMgr::startSource {sourceRingUrl timestampExtractorLib id info
   EndrunMon::incEndRunCount
   
   ::RingSourceMgr::addSource  \
-    $sourceRingUrl $timestampExtractorLib $id $info  $expectHeaders \
+    $sourceRingUrl $id $info \
     $oneshot $timeout
   dict set ::RingSourceMgr::sourceDict $sourceRingUrl fd $fd
   
@@ -223,14 +215,12 @@ proc ::RingSourceMgr::onBegin {} {
     set fd [dict get $paramDict fd]
     # only start it if it is not already started.
     if {$fd eq ""} {
-      set lib [dict get $paramDict tstamplib]
       set id [dict get $paramDict id]
       set info [dict get $paramDict info]
-      set expectHeaders [dict get $paramDict expecthdrs]
       set oneshot [dict get $paramDict oneshot]
       set timeout [dict get $paramDict timeout]
-      set fd [::RingSourceMgr::startSource $source $lib $id $info \
-                                           $expectHeaders $oneshot $timeout]
+      set fd [::RingSourceMgr::startSource $source $id $info \
+                                           $oneshot $timeout]
       dict set sourceDict $source fd $fd
     }
   }
@@ -311,33 +301,22 @@ namespace eval ::RingSourceMgr {
 #
 # @param port             the port of the orderer server
 # @param url              url of the ring 
-# @param tstampExtractor  path to tstamp extractor lib
 # @param id               source id associated with source
 # @param ids              list of source ids associated with source
 # @param info             description of the source
-# @param expectHeaders    boolean to specify --expectbodyheaders flag
 # @param oneshot          --oneshot count "" if not using.
 # @param timeout          --timeout seconds or "" if default.
 # @param offset           --offset dt in timestamp ticks.
 # @returns string containing command line arguments to use
 #
-proc ::RingSourceMgr::_computeRingSourceSwitches {port url tstampExtractor ids
-  info expectHeaders oneshot timeout offset} {
+proc ::RingSourceMgr::_computeRingSourceSwitches {port url ids
+  info oneshot timeout offset} {
 
   set switches ""
   append switches " --evbhost=localhost --evbport=$port"
   append switches " --info=$info --ring=$url"
   foreach id $ids {
     append switches " --ids=$id"
-  }
-
-
-  if {$tstampExtractor ne ""} {
-    append switches " --timestampextractor=[file normalize $tstampExtractor]"
-  }
-
-  if {[string is true $expectHeaders]} {
-    append switches " --expectbodyheaders"
   }
   
   if {$oneshot ne ""} {

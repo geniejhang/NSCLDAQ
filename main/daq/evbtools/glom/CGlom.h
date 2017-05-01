@@ -53,6 +53,7 @@ public:
     void setCorrelationTime(uint64_t dt);
     void setTimestampPolicy(V12::CGlomParameters::TimestampPolicy policy);
     void setFirstBarrier(bool expectingBarrier);
+    void setSourceId(uint32_t id);
 
     void handleItem(V12::CRingItemPtr pItem);
 private:

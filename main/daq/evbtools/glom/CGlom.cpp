@@ -66,6 +66,7 @@ void
 CGlom::outputGlomParameters(uint64_t dt, bool building)
 {
     V12::CGlomParameters item(dt, building, m_timestampPolicy);
+    item.setSourceId(m_sourceId);
     writeItem(*m_pSink, item);
 }
 
@@ -129,6 +130,7 @@ CGlom::flushEvent()
 void CGlom::emitAbnormalEnd()
 {
     V12::CAbnormalEndItem item;
+    item.setSourceId(m_sourceId);
     writeItem(*m_pSink, item);
 }
 
@@ -175,6 +177,7 @@ CGlom::accumulateEvent(uint64_t dt, V12::CRingItemPtr pItem)
 void CGlom::outputEventFormat()
 {
     V12::CDataFormatItem format;
+    format.setSourceId(m_sourceId);
     writeItem(*m_pSink, format);
 }
 
@@ -206,7 +209,7 @@ void CGlom::handleItem(V12::CRingItemPtr pItem)
     // in case the glom program run persistently over many runs, it is important that
     // a new glom parameters item be outputted at the start of the next run. Therefore,
     // arm the logic for outputting the glom info when an end run item is observed.
-    if ( pItem->type() == V12::END_RUN) {
+    if ( (pItem->type() & 0x7fff) == V12::END_RUN) {
         m_firstBarrier = true;
     }
 
@@ -221,13 +224,12 @@ void CGlom::handleItem(V12::CRingItemPtr pItem)
     accumulateEvent(m_dtInt, pItem);
 
 
-    if ((pItem->type() == V12::END_RUN
-            || pItem->type() == V12::BEGIN_RUN)
+    if (((pItem->type() & 0x7fff) == V12::END_RUN
+            || ((pItem->type() & 0x7fff) == V12::BEGIN_RUN))
             && (m_stateChangeNesting==0)) {
         flushEvent();
     }
 }
-
 
 /*!
  * \brief Main loop
@@ -248,7 +250,8 @@ void CGlom::operator ()()
   */
 
     while (1) {
-        std::unique_ptr<EVB::Fragment> p(CFragIO::readFragment(STDIN_FILENO));
+        std::unique_ptr<EVB::Fragment, void(*)(EVB::pFragment)>
+                p(CFragIO::readFragment(STDIN_FILENO), ::freeFragment);
 
         // If error or EOF flush the event and break from
         // the loop:
@@ -284,6 +287,10 @@ void CGlom::setCorrelationTime(uint64_t dt)
 void CGlom::setTimestampPolicy(V12::CGlomParameters::TimestampPolicy policy)
 {
     m_timestampPolicy = policy;
+}
+
+void CGlom::setSourceId(uint32_t id) {
+    m_sourceId = id;
 }
 
 void CGlom::setFirstBarrier(bool expectingBarrier)

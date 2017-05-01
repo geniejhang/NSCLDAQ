@@ -101,6 +101,12 @@ CRingItemToFragmentTransform::operator()(const V12::CRawRingItem& item)
   case V12::RESUME_RUN:
       frag.s_barrierType = item.type();
       break;
+  case V12::COMP_BEGIN_RUN:
+  case V12::COMP_END_RUN:
+  case V12::COMP_PAUSE_RUN:
+  case V12::COMP_RESUME_RUN:
+      frag.s_barrierType = item.type() & 0x7fff;
+      break;
   case V12::PHYSICS_EVENT:
       if (formatPhysicsEvent(item, frag)) {
           lastTimestamp = frag.s_timestamp;

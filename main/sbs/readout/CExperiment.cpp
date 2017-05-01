@@ -239,6 +239,7 @@ CExperiment::Start(bool resume)
     V12::CRawRingItem serializedItem;
 
     V12::CDataFormatItem format;
+    format.setSourceId(m_nSourceId);
     format.toRawRingItem(serializedItem);
     *m_pRing << serializedItem;
 

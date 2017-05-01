@@ -33,7 +33,7 @@ void freeFragment(pFragment p)
 /**
  * Create a new dynamically allocated fragment from an existing
  * header that has been filled in .k
- * - Ther etruned fragment can be freed via freeFragment.
+ * - The returned fragment can be freed via freeFragment.
  * - We need the s_size field filled in because that's what determines
  *  the full size of the storage.
  *

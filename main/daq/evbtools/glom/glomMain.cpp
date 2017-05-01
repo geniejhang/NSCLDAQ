@@ -90,6 +90,7 @@ main(int argc, char**  argv)
 
     uint64_t dt      = static_cast<uint64_t>(dtInt);
     bool     nobuild = args.nobuild_flag;
+    int      sid     = args.sourceid_arg;
 
     std::cerr << (nobuild ? " glom: not building " : "glom: building") << std::endl;
 
@@ -104,6 +105,7 @@ main(int argc, char**  argv)
     glommer.disableBuilding(nobuild);
     glommer.setCorrelationTime(dt);
     glommer.setTimestampPolicy(timestampPolicy);
+    glommer.setSourceId(sid);
 
     glommer.outputEventFormat();
 
