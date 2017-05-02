@@ -35,6 +35,7 @@
 
 #include <CStatusMessage.h>
 #include <zmq.hpp>
+#include <nsclzmq.h>
 
 // Forward class definitions.
 
@@ -78,7 +79,7 @@ class EventLogMain
   std::string       m_appname;
   
   std::string       m_logService;
-  zmq::socket_t*    m_pLogSocket;
+  ZmqSocket*    m_pLogSocket;
   CStatusDefinitions::LogMessage* m_pLogger;
   
   CStateClientApi*  m_pStateApi;

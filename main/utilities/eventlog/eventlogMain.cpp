@@ -1076,10 +1076,8 @@ EventLogMain::getLogger()
       // In case of error we're just going to return null.
       try {
 	std::string uri = getAggregatorURI();
-	m_pLogSocket    = new zmq::socket_t(
-	  CStatusDefinitions::ZmqContext::getInstance(), ZMQ_PUSH
-	);
-	m_pLogSocket->connect(uri.c_str());
+	m_pLogSocket    = ZmqObjectFactory::createSocket( ZMQ_PUSH);
+        (*m_pLogSocket)->connect(uri.c_str());
 	pResult = new CStatusDefinitions::LogMessage(*m_pLogSocket, m_appname);
 	m_pLogger = pResult;
       }
