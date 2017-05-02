@@ -21,6 +21,7 @@
 */
 
 #include <zmq.hpp>
+#include <nsclzmq.h>
 
 class CPublishRingStatistics;
 
@@ -45,7 +46,7 @@ private:
     CPublishRingStatistics* m_pPublisher;
     bool                    m_active;
 public:
-    CRingStatusDaemon(zmq::socket_t& socket, unsigned interval);
+    CRingStatusDaemon(ZmqSocket& socket, unsigned interval);
     virtual ~CRingStatusDaemon();
     
 public:

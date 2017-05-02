@@ -138,7 +138,7 @@ CTCLLogMessage::create(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
     
     // Create the socket and the API object:
     
-    zmq::socket_t*                   pSocket(0);
+    ZmqSocket*                   pSocket(0);
     CStatusDefinitions::LogMessage* pApiObject(0);
     TCLLogMessage*                   pWrapperObject(0);
     std::stringstream                commandStream;
@@ -148,15 +148,11 @@ CTCLLogMessage::create(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
         // aggregator:
         
         if (m_testing) {
-            pSocket = new zmq::socket_t(
-                CStatusDefinitions::ZmqContext::getInstance(),  ZMQ_PUB
-            );
-            pSocket->bind(uri.c_str());            
+	    pSocket = ZmqObjectFactory::createSocket(ZMQ_PUB);
+	(*pSocket)->bind(uri.c_str());            
         } else {
-            pSocket = new zmq::socket_t(
-                CStatusDefinitions::ZmqContext::getInstance(),  ZMQ_PUSH 
-            );
-            pSocket->connect(uri.c_str());            
+            pSocket = ZmqObjectFactory::createSocket(ZMQ_PUSH);
+            (*pSocket)->connect(uri.c_str());            
         }
         
         pApiObject = new CStatusDefinitions::LogMessage(*pSocket, app);
@@ -165,7 +161,7 @@ CTCLLogMessage::create(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
         
         commandStream << "log_" << m_instanceNumber++;
         pWrapperObject =
-            new TCLLogMessage(interp, commandStream.str().c_str(), pApiObject, pSocket);
+            new TCLLogMessage(interp, commandStream.str().c_str(), pApiObject, *pSocket);
         m_registry[commandStream.str()] = pWrapperObject;
         
     }
@@ -243,7 +239,7 @@ CTCLLogMessage::test(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
  */
 CTCLLogMessage::TCLLogMessage::TCLLogMessage(
     CTCLInterpreter& interp, const char* command,
-    CStatusDefinitions::LogMessage* pObject, zmq::socket_t* pSocket
+    CStatusDefinitions::LogMessage* pObject, ZmqSocket& pSocket
 ) :
     CTCLObjectProcessor(interp, command, true),
     m_pObject(pObject),
@@ -257,7 +253,7 @@ CTCLLogMessage::TCLLogMessage::TCLLogMessage(
 CTCLLogMessage::TCLLogMessage::~TCLLogMessage()
 {
     delete m_pObject;
-    delete m_pSocket;
+    delete &m_pSocket;
 }
 
 /**

@@ -21,21 +21,19 @@ class SubTests : public CppUnit::TestFixture {
 
 
 private:
-  zmq::context_t*   m_pContext;
-  zmq::socket_t*    m_pSender;
-  zmq::socket_t*    m_pReceiver;
+  ZmqSocket*    m_pSender;
+  ZmqSocket*    m_pReceiver;
   
   CStatusSubscription* m_pObject;
 public:
   void setUp() {
-    m_pContext = &CStatusDefinitions::ZmqContext::getInstance();
-    m_pSender  = new zmq::socket_t(*m_pContext, ZMQ_PUB);  // Sender publishes.
-    m_pReceiver= new zmq::socket_t(*m_pContext, ZMQ_SUB);  // Receiver subscribes.
+    m_pSender  = ZmqObjectFactory::createSocket( ZMQ_PUB);  // Sender publishes.
+    m_pReceiver= ZmqObjectFactory::createSocket( ZMQ_SUB);  // Receiver subscribes.
     
     // Connect the subscriber to the publisher:
     
-    m_pSender->bind(uri);
-    m_pReceiver->connect(uri);
+    (*m_pSender)->bind(uri);
+    (*m_pReceiver)->connect(uri);
     
     // Make the test object:
     
@@ -48,7 +46,7 @@ public:
     
     delete m_pReceiver;
     delete m_pSender;
-    CStatusDefinitions::ZmqContext::reset();
+    ZmqObjectFactory::shutdown();
   }
 protected:
   void suball();
@@ -77,13 +75,13 @@ SubTests::checkLogMessage(uint32_t sev, const char* msg)
   uint64_t       more(0);
   size_t         s(sizeof(more));
   
-  m_pReceiver->recv(&hdr);
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &more, &s);
+  (*m_pReceiver)->recv(&hdr);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &more, &s);
   ASSERT(more);
   
   
-  m_pReceiver->recv(&body);
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &more, &s);
+  (*m_pReceiver)->recv(&body);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &more, &s);
   ASSERT(!more);
   
   // Make sure the header is a log message with the stated severity.
@@ -110,13 +108,13 @@ SubTests::checkStateChange(const char* leaving, const char* entering)
   uint64_t       more(0);
   size_t         s(sizeof(more));
   
-  m_pReceiver->recv(&hdr);
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &more, &s);
+  (*m_pReceiver)->recv(&hdr);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &more, &s);
   ASSERT(more);
   
   
-  m_pReceiver->recv(&body);
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &more, &s);
+  (*m_pReceiver)->recv(&body);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &more, &s);
   ASSERT(!more);
 
   // Header should have a type of STATE_CHANGE with severity INFO:

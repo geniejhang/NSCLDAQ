@@ -22,10 +22,6 @@
 #include <CStatusMessage.h>
 
 
-static const unsigned ZMQ_THREADS(5);                 // Some arbitrary number.
-
-zmq::context_t*  CStatusDefinitions::ZmqContext::m_context(0);
-
 /**
  * getInstance
  *    Return a reference to an instance of the singleton context.
@@ -34,10 +30,8 @@ zmq::context_t*  CStatusDefinitions::ZmqContext::m_context(0);
 zmq::context_t&
 CStatusDefinitions::ZmqContext::getInstance()
 {
-    if (!m_context) {
-        m_context = new zmq::context_t(ZMQ_THREADS);
-    }
-    return *m_context;
+  return *(ZmqObjectFactory::getContextInstance());
+
 }
 /**
  * reset
@@ -46,6 +40,5 @@ CStatusDefinitions::ZmqContext::getInstance()
 void
 CStatusDefinitions::ZmqContext::reset()
 {
-    delete m_context;            // No op if there's no context at this time.
-    m_context = 0;
+  ZmqObjectFactory::shutdown();	// Accomplishes what this used to.
 }

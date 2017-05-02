@@ -27,6 +27,7 @@
 #include <list>
 #include <string>
 #include <ctime>
+#include <nsclzmq.h>
 
 class CPortManager;
 
@@ -63,9 +64,8 @@ class CPortManager;
 class CMultiAggregator
 {
 private:
-    zmq::context_t&   m_zmqContext;
-    zmq::socket_t    m_XSUBSocket;
-    zmq::socket_t    m_XPUBSocket;
+    ZmqSocket&    m_XSUBSocket;
+    ZmqSocket&    m_XPUBSocket;
     CPortManager*    m_pPortManager;
     
     std::string      m_subscriptionService;
@@ -96,7 +96,7 @@ public:
         return m_publisherURI;
     }
     zmq::context_t& getZmqContext() {
-        return m_zmqContext;
+      return *(ZmqObjectFactory::getContextInstance());
     }
     
 private:
@@ -108,8 +108,8 @@ private:
     int  translatePort(const std::string& node, const std::string& service);
     void trimSavedMessages();
     void replaySubscriptions();
-    std::list<zmq::message_t*> readMultipart(zmq::socket_t& s);
-    void sendMultipart(zmq::socket_t& s, const std::list<zmq::message_t*>& parts);
+    std::list<zmq::message_t*> readMultipart(ZmqSocket& s);
+    void sendMultipart(ZmqSocket& s, const std::list<zmq::message_t*>& parts);
     void freeMultiPart(std::list<zmq::message_t*>& parts);
 public:
     static size_t MAX_SAVED_SUBSCRIPTION_MESSAGES;

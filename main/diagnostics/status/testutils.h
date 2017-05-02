@@ -25,11 +25,12 @@
 #include <vector>
 #include <iostream>
 #include <zmq.hpp>
+#include <nsclzmq.h>
 
 std::vector<std::string> marshallVector(const char* s);
 std::ostream& operator<<(std::ostream& s, const std::vector<std::string>& v);
 void killRings();
-std::vector<zmq::message_t*>  receiveMessage(zmq::socket_t* socket);
+std::vector<zmq::message_t*>  receiveMessage(ZmqSocket& socket);
 void freeMessage(std::vector<zmq::message_t*>& message);
 
 #endif

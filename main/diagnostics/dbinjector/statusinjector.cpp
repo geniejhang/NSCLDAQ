@@ -9,6 +9,7 @@
 #include <string>
 #include <memory>
 #include <thread>
+#include <nsclzmq.h>
 
 static void
 aggregatorThread(CMultiAggregator& agg)
@@ -35,9 +36,8 @@ int main(int argc, char** argv)
     // Connect to the subscription service from the multi aggregator and
     // make our subscriptions.  We want everything.
     
-    zmq::context_t& context(aggregationThread.getZmqContext());
-    zmq::socket_t  statusSocket(context, ZMQ_SUB);
-    statusSocket.connect(subscribeTo.c_str());
+    ZmqSocket&  statusSocket( *(ZmqObjectFactory::createSocket(ZMQ_SUB)));
+    statusSocket->connect(subscribeTo.c_str());
     CStatusSubscription subs(statusSocket);
     
     // Note empty type and severity lists subscribe to all.
@@ -73,14 +73,14 @@ int main(int argc, char** argv)
             db.insert(message);
             CStatusDefinitions::freeMessage(message);
             
-            statusSocket.getsockopt(ZMQ_EVENTS, &eventFlag, &evflagSize);
+            statusSocket->getsockopt(ZMQ_EVENTS, &eventFlag, &evflagSize);
             while (eventFlag & ZMQ_POLLIN) {
                 
                 CStatusDefinitions::readMessage(message, statusSocket);
                 db.insert(message);
                 CStatusDefinitions::freeMessage(message);
                 
-                statusSocket.getsockopt(ZMQ_EVENTS, &eventFlag, &evflagSize);
+                statusSocket->getsockopt(ZMQ_EVENTS, &eventFlag, &evflagSize);
             }
             
         }                                       // Savepoint commits here.

@@ -27,6 +27,15 @@ exec tclsh "$0" ${1+"$@"}
 #
 package require tcltest
 
+tcltest::verbose [list t b p]
+set debug 0
+
+proc Debug msg {
+    if {$::debug} {
+	puts $msg
+    }
+}
+
 set LOG_MESSAGE 3
 set INFO        1
 
@@ -76,26 +85,31 @@ proc receive msg {
 ##
 #  Test package load:
 #
+Debug pkgLoad
 tcltest::test pkgLoad {Test ability to load package} \
 -body {
     catch {package require statusMessage} msg
 } -result 0 
+Debug subcommand
 
 tcltest::test subcommand {Test for defined statusSubscription command} \
 -body {
     info commands statusSubscription
 } -result statusSubscription
 
+Debug create-toofew
 tcltest::test create-toofew {Subcommand 'create' requires two parameters} \
 -body {
     catch {statusSubscripton create tcp://localhost:20001}
 } -result 1
 
+Debug destroy-toofew
 tcltest::test destroy-toofew {Subcommand 'destroy' requires an additional parameter} \
 -body {
     catch {statusSubscription destroy}
 } -result 1
 
+Debug create-destroy
 tcltest::test create-destroy {Create and destroy a subscription} \
 -setup {
     commonSetup
@@ -112,6 +126,7 @@ tcltest::test create-destroy {Create and destroy a subscription} \
 
 } -result [list 0 0]
 
+Debug readmessage
 tcltest::test readmessage {Create a null subscription, send a log message/read it} \
 -setup {
     commonSetup
@@ -120,6 +135,7 @@ tcltest::test readmessage {Create a null subscription, send a log message/read i
     statusSubscription destroy $::cmd
 } -body {
     set ::cmd [statusSubscription create tcp://localhost:$::port [list]]; #subscribe all.
+    after 100
     $::log Log INFO {This is a test}
     set msg [$::cmd receive]
     
@@ -127,7 +143,7 @@ tcltest::test readmessage {Create a null subscription, send a log message/read i
     
     llength $msg
 } -result 2
-
+Debug subscribe
 tcltest::test subscribe {Create a subscription ensure we only get matching} \
 -setup {
     commonSetup
@@ -162,7 +178,7 @@ tcltest::test subscribe {Create a subscription ensure we only get matching} \
     
     list $type $sev $app $msg
 } -result [list $::LOG_MESSAGE $::INFO myapplication {Should receive this}]
-
+Debug onmsbg
 tcltest::test onmsg {Test that onMessage can deliver us an event} \
 -setup {
     commonSetup

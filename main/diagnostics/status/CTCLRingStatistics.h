@@ -26,6 +26,7 @@
 #include <CStatusMessage.h>
 #include <map>
 #include <zmq.hpp>
+#include <nsclzmq.h>
 
 #include <CStatusMessage.h>
 
@@ -41,9 +42,7 @@ class CTCLObject;
  *    This is implemented as an outer class that handles construction, registration
  *    and destruction of instance of an inner class that actually implement
  *    the api.
- *    Note that we rely on the global external gpZmqContext to point to a
- *    zmq::context_t that was created at package initialization
- *    time.
+
 */
 class CTCLRingStatistics : public CTCLObjectProcessor {
 private:
@@ -80,12 +79,12 @@ private:
     class RingStatistics: public CTCLObjectProcessor {
         private:
             CStatusDefinitions::RingStatistics* m_pObject;
-            zmq::socket_t*                      m_pSocket;
+            ZmqSocket&                          m_pSocket;
             
         public:    
             RingStatistics(
                 CTCLInterpreter& interp, const char* command,
-                CStatusDefinitions::RingStatistics* pApi, zmq::socket_t* sock
+                CStatusDefinitions::RingStatistics* pApi, ZmqSocket& sock
             );
             virtual ~RingStatistics();
         public:

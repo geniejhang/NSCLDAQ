@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <testutils.h>
+#include <nsclzmq.h>
 
 static const char* uri="inproc://test";
 static std::vector<std::string> command(Os::getProcessCommand(getpid()));
@@ -60,9 +61,8 @@ class RingPubTests : public CppUnit::TestFixture {
 
 
 private:
-  zmq::context_t*         m_pZmqContext;
-  zmq::socket_t*          m_pSender;
-  zmq::socket_t*          m_pReceiver;
+  ZmqSocket*          m_pSender;
+  ZmqSocket*          m_pReceiver;
   CPublishRingStatistics* m_pPublisher;
   
 public:
@@ -72,12 +72,11 @@ public:
     // Setup the zmq connections sender is a PUSH and receiver a PULL, and we'll
     // directly receive/analyze raw messages.
     
-    m_pZmqContext = &CStatusDefinitions::ZmqContext::getInstance();
-    m_pSender     = new zmq::socket_t(*m_pZmqContext, ZMQ_PUSH);
-    m_pReceiver   = new zmq::socket_t(*m_pZmqContext, ZMQ_PULL);
+    m_pSender     = ZmqObjectFactory::createSocket( ZMQ_PUSH);
+    m_pReceiver   = ZmqObjectFactory::createSocket( ZMQ_PULL);
     
-    m_pSender->bind(uri);
-    m_pReceiver->connect(uri);
+    (*m_pSender)->bind(uri);
+    (*m_pReceiver)->connect(uri);
     
     // Now we can set up the publisher
     
@@ -88,7 +87,7 @@ public:
     delete m_pPublisher;
     delete m_pSender;
     delete m_pReceiver;
-    CStatusDefinitions::ZmqContext::reset();
+    ZmqObjectFactory::shutdown();
     killRings();                        // no rings on exit too.
   }
 protected:
@@ -123,7 +122,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(RingPubTests);
 std::vector<zmq::message_t*>
 RingPubTests::receiveMessage()
 {
-  return ::receiveMessage(m_pReceiver);
+  return ::receiveMessage(*m_pReceiver);
 }
 
 /*-------------------------------------- Tests ----------------------------*/
@@ -163,7 +162,7 @@ void RingPubTests::emptyring() {
   // Should be no more messages in the queue:
   
   zmq::message_t dummy;
-  ASSERT(!m_pReceiver->recv(&dummy, ZMQ_NOBLOCK));
+  ASSERT(!(*m_pReceiver)->recv(&dummy, ZMQ_NOBLOCK));
   EQ(EAGAIN, errno);
   
 

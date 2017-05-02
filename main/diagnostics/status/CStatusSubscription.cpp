@@ -30,7 +30,7 @@
  *
  *  @param sock - the zmq socket that will be used for making the subscriptions.
  */
-CStatusSubscription::CStatusSubscription(zmq::socket_t& sock) :
+CStatusSubscription::CStatusSubscription(ZmqSocket& sock) :
     m_socket(sock), m_sequence(0)
 {}
 
@@ -96,7 +96,7 @@ CStatusSubscription::subscribe(Subscription& sub)
         while (p != sub.end()) {
             size_t bytes = p->first;
             CStatusDefinitions::Header& header(p->second);
-            m_socket.setsockopt(ZMQ_SUBSCRIBE, &header, bytes);
+            m_socket->setsockopt(ZMQ_SUBSCRIBE, &header, bytes);
             
             p++;
         }
@@ -294,7 +294,7 @@ CStatusSubscription::unsubscribe(SubscriptionIterator s, SubscriptionIterator e)
     std::for_each(
         s, e,
         [this](std::pair<size_t, CStatusDefinitions::Header>& item) mutable {
-            m_socket.setsockopt(ZMQ_UNSUBSCRIBE, &(item.second), item.first);
+            m_socket->setsockopt(ZMQ_UNSUBSCRIBE, &(item.second), item.first);
         }
     );
 }

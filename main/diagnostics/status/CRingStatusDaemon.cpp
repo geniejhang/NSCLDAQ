@@ -30,7 +30,7 @@
  *    @param socket - socket on which the data will be published (pushed).
  *    @param interval - Number of seconds between status messages.
  */
-CRingStatusDaemon::CRingStatusDaemon(zmq::socket_t& socket, unsigned interval) :
+CRingStatusDaemon::CRingStatusDaemon(ZmqSocket& socket, unsigned interval) :
     m_interval(interval),
     m_pPublisher(new CPublishRingStatistics(socket, "RingStatisticsDaemon")),
     m_active(true)
