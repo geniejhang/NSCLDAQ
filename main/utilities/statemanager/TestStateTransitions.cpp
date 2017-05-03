@@ -159,7 +159,7 @@ class TestStateTransitions : public CppUnit::TestFixture {
   CPPUNIT_TEST(waitNotReady);
   CPPUNIT_TEST(waitNotReadyCallback);
   CPPUNIT_TEST(waitNotReadyTimeout);
-  CPPUNIT_TEST(waitReadyingToReady);
+  // CPPUNIT_TEST(waitReadyingToReady);
   CPPUNIT_TEST(waitBeginningToActive);
   CPPUNIT_TEST(waitPausingToPaused);
   CPPUNIT_TEST(waitEndingToReady);
