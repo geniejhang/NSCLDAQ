@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 <!-- chapter libraries -->
 <chapter>
     <title>Shared memory</title>
@@ -749,7 +749,7 @@ g++ -o myprogram obj1.o obj2.o obj3.o -L$DAQHOME/lib -ldaqshm \
   </refentryinfo>  
        <refmeta>
           <refentrytitle>CDAQShm</refentrytitle>
-          <manvolnum>3</manvolnum>
+          <manvolnum>3daq</manvolnum>
 	   <refmiscinfo class='empty'></refmiscinfo>
        </refmeta>
        <refnamediv>
@@ -1157,4 +1157,235 @@ class <classname>CDAQShm</classname>
             
         </refsect1>
      </refentry>     
-
+<refentry>
+    <refentryinfo>
+        <author>
+        <personname>
+            <firstname>Ron</firstname>
+            <surname>Fox</surname>
+        </personname>
+        <personblurb><para></para></personblurb>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+    </refentryinfo>
+    <refmeta>
+        <refentrytitle>NSCLZmq</refentrytitle>
+        <manvolnum>3daq</manvolnum>
+        <refmiscinfo class='empty' />
+    </refmeta>
+    <refnamediv>
+        <refname>NSCLZmq</refname>
+        <refname>ZmqObjectFactory</refname>
+        <refpurpose>Auto cleanup factory for Zmq objects</refpurpose>
+        
+    </refnamediv>
+    <refsynopsisdiv>
+        <synopsis>
+#include &lt;nsclzmq.h&gt;
+<ooclass>
+    <classname>ZmqObjectFactory</classname> 
+</ooclass>
+{
+public:
+    <methodsynopsis>
+        <modifier>static </modifier>
+        <type>zmq::context_t*   </type>
+        <methodname>
+            getContextInstance
+        </methodname>
+        <void />
+    </methodsynopsis>
+    <methodsynopsis>
+        <modifier>static ZmqSocket*</modifier>
+        <methodname>createSocket</methodname>
+        <methodparam>
+            <type>int </type><parameter>type</parameter>
+        </methodparam>
+    </methodsynopsis>
+    <methodsynopsis>
+        <modifier>static</modifier><type>void</type>
+        <methodname>shutdown</methodname>
+        <void />
+    </methodsynopsis>
+};
+        </synopsis>
+    </refsynopsisdiv>
+    <refsection>
+        <title>DESCRIPTION</title>
+        <para>
+            The ZeroMQ messaging library places some stringent requirements
+            on an application.  Specifically:
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    There should be one <classname>zmq::context_t</classname>
+                    object classwide (singleton).
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    At process exit ZMQ must be properly shutdown which means:
+                </para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            All sockets must be closed and drained.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+                <listitem>
+                    <para>
+                        The singleton <classname>zmq::context_t</classname>
+                        object must be destroyed after all sockets are closed
+                        and drained.
+                    </para>
+                </listitem>
+            </listitem>
+        </itemizedlist>
+        <para>
+            The <classname>ZmqObjectFactory</classname> maintains an applications
+            singleton <classname>zmq::context_t</classname> object and provides
+            factory methods for pointer like objects that wrap
+            <classname>zmq::socket_t*</classname> pointers.  These objects are
+            registered on creation and unregistered at deletion.
+        </para>
+        <para>
+            A static object is created which is automatically destroyed
+            on exit by the C++ runtime system.  On destruction it
+            shuts down all remaining registered socket wrappers and deletes them.
+            Once that's been completed the context singleton is destroyed.
+        </para>
+    </refsection>
+    <refsection>
+        <title>METHODS</title>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>static </modifier>
+                        <type>zmq::context_t*   </type>
+                        <methodname>
+                            getContextInstance
+                        </methodname>
+                        <void />
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Returns a pointer to the zmq::context_t singleton. If you
+                        use the creational methods of this class you should
+                        not need to use this.  See <methodname>createSocket</methodname>
+                        below.
+                    </para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>static ZmqSocket*</modifier>
+                        <methodname>createSocket</methodname>
+                        <methodparam>
+                            <type>int </type><parameter>type</parameter>
+                        </methodparam>
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Creates a pointer like object that wraps a
+                        <classname>zmq::socket_t</classname>.  The
+                        socket is constructed on the
+                        <classname>zmq::context_t</classname> singleton maintained
+                        by this class.  
+                    </para>
+                    <para>
+                        The resulting <classname>ZmqSocket</classname> object
+                        is dynamically allocated and registered.  If not destroyed
+                        by the end of program execution, it will be shutdown and
+                        destroyed at the time the global destructors are invoked.
+                        Once all registered <classname>ZmqSocket</classname> objects
+                        are destroyed at that time, the singleton
+                        <classname>zmq::context_t</classname> object is also
+                        destroyed.
+                    </para>
+                    <para>
+                        A <classname>ZmqSocket&amp;</classname> (reference
+                        to a <classname>ZmqSocket</classname>) can be treated
+                        exactly as if it were a <classname>zmq::socket_t*</classname>.
+                        This it what make the object a pointer-like object.
+                    </para>
+                    <para>
+                        The <parameter>type</parameter> parameter is the
+                        socket type (e.g. <literal>ZMQ_REQ</literal>).
+                    </para>
+                    <example>
+                        <title>Creating and using <classname>ZmqSocket</classname>s</title>
+                        <programlisting>
+#include &lt;nsclzmq.h&gt;
+...
+   ZmqSocket& sock(ZmqObjectFactory::createSocket(ZMQ_REQ));
+   sock->connect("tcp://localhost:1234");
+...
+                        </programlisting>
+                    </example>
+                </listitem>
+            </varlistentry>        
+            <varlistentry>
+                <term>
+                    <methodsynopsis>
+                        <modifier>static</modifier><type>void</type>
+                        <methodname>shutdown</methodname>
+                        <void />
+                    </methodsynopsis>
+                </term>
+                <listitem>
+                    <para>
+                        Shuts the socket factory down:
+                    </para>
+                    <orderedlist>
+                        <listitem>
+                            <para>
+                                Registered sockets are shutdown with a short
+                                linger time so they disappear quickly the
+                                encapsulating <classname>ZmqSocket</classname>
+                                objects are deleted.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                The singleton <classname>zmq::context_t</classname>
+                                singleton object is destroyed.
+                            </para>
+                        </listitem>
+                    </orderedlist>
+                    <para>
+                        This method is automatically invoked at program exit.
+                        Normally your application won't need to invoke it.
+                        Exceptions are 
+                    </para>
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                Unit tests which want to ensure that zmq is used
+                                in and idempotent manner from test to test.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Pathalogical programs that want to shut down zmq
+                                while they are running.  Note that if
+                                <methodname>shutdown</methodname> is invoked by
+                                such a program and subsequently
+                                e.g. <methodname>createSocket</methodname> is
+                                invoked a new <classname>zmq::context_t</classname>
+                                object is created as the application singleton.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </listitem>
+            </varlistentry>        
+        </variablelist>
+    </refsection>
+</refentry>   
+<!-- /manpage -->

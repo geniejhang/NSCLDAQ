@@ -2,6 +2,7 @@ lib_LTLIBRARIES=libvardbRingBuffer.la libtclvardbringbuffer.la libPyVardbRingBuf
 
 COMMONLDFLAGS = @top_builddir@/utilities/varmanager/server/libvarmgr.la \
 		@top_builddir@/utilities/varmanager/libvardb.la         \
+		@top_builddir@/base/os/libdaqshm.la			\
 		@top_builddir@/base/sqlite++/libsqlite3pp.la @SQLITE3_LDFLAGS@ \
 		@ZMQ_LDFLAGS@							\
 		-Wl,"-rpath=@libdir@"

@@ -1853,11 +1853,131 @@ vwait forever
       </variablelist>
       <para>
         Sub folders, with the same name as the <literal>name</literal> property
-        of the program contain variables associated with the program itself:
+        of the program contain variables associated with the program itself.  All
+        programs have a standard set of variables:
       </para>
       <variablelist>
-        
+        <varlistentry>
+          <term>
+            <varname>Input Ring</varname> (string)
+          </term>
+          <listitem>
+            <para>
+              If an input ring has been specified for the program this variable
+              contains its URI.  If no input ring was specified, this variable
+              will be an empty string.
+            </para>
+          </listitem>
+        </varlistentry>  
+        <varlistentry>
+          <term>
+            <varname>Output Ring</varname> (string)
+          </term>
+          <listitem>
+            <para>
+              If an output ring has been specified for the program, this variable
+              will contain its name.  Note that since ringbuffer producers must
+              run in the same host as the ring into which they put data, this is
+              a ring name and not a ring URI.  If no output ring was specified,
+              this variable will contain an empty string.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>State</varname> (RunStateMachine)</term>
+          <listitem>
+            <para>
+              Contains the current state of the program's local state machine.
+              Global state transitions happen when the global state machine
+              value is changed.  As state programs react to that state change, they
+              must update their current state in this variable.  When all state
+              programs have updated their current state to match the global state,
+              the state transition has successfully completed.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><vaname>editorx</vaname> (integer)</term>
+          <listitem>
+            <para>
+              Used only by the graphical editor, and data flow dashboards.
+              This holds the x position of
+              the state program on the canvas.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>editory</varname> (integer)</term>
+          <listitem>
+            <para>
+              Used only by the graphical editor and the dataflow dashboard.
+              This holds the y position of the state program on the canvas.
+            </para>
+          </listitem>
+        </varlistentry>     
+        <varlistentry>
+          <term><varname>enable</varname> (bool)</term>
+          <listitem>
+            <para>
+              This boolean variable is <literal>true</literal> if the program
+              is enabled and <literal>false</literal> if not.  Enabled programs
+              participate in global state transitions while disabled programs
+              do not.  This allows incremental assembly of the data acquisition
+              system during setup and test.  See also <varname>standalong</varname>
+              below.   This value is initialized to <literal>true</literal>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>standalone</varname> (bool)</term>
+          <listitem>
+            <para>
+              This boolean variable is <literal>false</literal> if the program's
+              state transitions are driven by the global state machine.  If this
+              value is <literal>true</literal>, the program does standalone
+              state transitions.
+            </para>
+            <para>
+              A program doing standalone state transitions make state transitions
+              as a result of changes to its own state variable rather than the
+              global state variable.  This allows you to test a program independent
+              of the rest of the system.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>host </varname> (string)</term>
+          <listitem>
+            <para>
+              Specifies the host in which the program will be started.  If this
+              variable is false, the experiment editor will declare
+              a validation error.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>name </varname> (string)</term>
+          <listitem>
+            <para>
+              Name of the program.  This matches the name of the subdirectory.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>path </varname> (string)</term>
+          <listitem>
+            <para>
+              Path of the executable to run.  This can be an executable or a
+              script.  Basically it can be anything that's executable by the
+              user's shell.
+            </para>
+          </listitem>
+        </varlistentry>          
       </variablelist>
+      <para>
+        Some program types have additional variables needed to describe their
+        special needs.
+      </para>
     </section>
     <section>
       <title>Event builders and their data sources</title>
