@@ -555,11 +555,15 @@ void TestStateTransitions::waitReadyingToReady()
     // Global state is Ready.
     
     EQ(std::string("Ready"), sm.getGlobalState());
+    CPPUNIT_ASSERT_NO_THROW(
+        sm.waitTransition(CallbackRecorder::Callback, &r)
     
-    // Recorded -> Readying -> Ready
+    );
+    
+    // Recorded -> Ready -> Ready
     
     EQ(size_t(2), r.m_states.size());
-    EQ(std::string("Readying"), r.m_states[0]);
+    EQ(std::string("Ready"), r.m_states[0]);
     EQ(std::string("Ready"),    r.m_states[1]);
 }
 // Ready -> Beginning -> Active.
