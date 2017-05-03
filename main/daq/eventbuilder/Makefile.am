@@ -82,7 +82,7 @@ TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 	DuplicateTimestamp.tcl OutOfOrderUI.tcl evbui.tcl
 
 
-TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl evbRdoCallouts10.tcl EVBStateCallouts.tcl \
+TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl EVBStateCallouts.tcl \
 			 ringSourceMgr.tcl endrunmon.tcl
 
 TCL_TEST_FILES=tclTests.tcl cbmanagerTests.test cmanagerCallbacks.test ringsourcemgr.test
