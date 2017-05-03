@@ -211,7 +211,7 @@ void CRingSource::transformAvailableData()
         readItem(*m_pBuffer, item);
 
         // check for end runs for oneshot logic
-        if (item.type() == V12::END_RUN) {
+        if ((item.type() & 0x7fff) == V12::END_RUN) {
             m_nEndsSeen++;
         }
 
