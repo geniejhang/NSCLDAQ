@@ -543,6 +543,10 @@ CStateManager::waitTransition(TransitionCallback cb, void* clientData)
 #endif
       if (getProgramState(programs[i].c_str()) != nextState) {
         stillWaiting.insert(programs[i]);
+      } else {
+        if (cb) {
+            (*cb)(*this, programs[i], nextState, clientData);
+        }
       }
     }
     if (stillWaiting.empty()) {
@@ -627,7 +631,12 @@ CStateManager::waitTransition(TransitionCallback cb, void* clientData)
 	       log << "after message removing " << *wp << " from wait list.\n";
 	       log.flush();
 	     }
-#endif	     
+#endif
+         if(cb) {
+            (*cb) (
+                *this, *wp, nextState, clientData
+            );
+         }
 	     stillWaiting.erase(wp);
 	     wp = stillWaiting.begin();    // it's end if empty.
 	   } else {
@@ -668,8 +677,9 @@ CStateManager::waitTransition(TransitionCallback cb, void* clientData)
 	      << " at " << time(NULL) << std::endl;
 	  log.flush();
 	}
-#endif	
-        
+#endif
+
+
     } while (notifications.size() > 0);  // Timeout if no notifs.
 
       // It's possible the state transtion was processed elsewhere so:
@@ -684,6 +694,12 @@ CStateManager::waitTransition(TransitionCallback cb, void* clientData)
 	       log.flush();
 	     }
 #endif      
+         if(cb) {
+            (*cb) (
+                *this, *wp, nextState, clientData
+            );
+         }
+
             stillWaiting.erase(wp);
 	    wp = stillWaiting.begin();       // iterator invalidated.
          } else {
