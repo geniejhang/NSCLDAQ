@@ -32,7 +32,7 @@ package require portAllocator
 package require tcltest
 package require Thread
 
-tcltest::configure -verbose [list start]
+#tcltest::configure -verbose [list start]
 
 # A quick note on -constraints below.  In tcltest a test with constraints is
 # only run if its constraints are true. Since the setup/teardown of most tests
@@ -1123,7 +1123,6 @@ tcltest::test listStandalone-1 {set test to standalone -list} \
 tcltest::test listStandalone-many {Many programs all standalone} \
  -setup {
     setup
-    ::nscldaq::statemanager mgr tcp://localhost tcp://localhost
     ::nscldaq::statemanager mgr tcp://localhost tcp://localhost
     set h [varmgr::open tcp://localhost]
     createProgram $h atest
