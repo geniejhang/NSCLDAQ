@@ -147,7 +147,7 @@ CTCLStateChangeMessage::create(
     std::string app(objv[3]);
     
     std::stringstream                cmdName;
-    zmq::socket_t*                   pSocket(0);
+    ZmqSocket*                   pSocket(0);
     CStatusDefinitions::StateChange* pApiObject(0);
     TCLStateChangeMessage*           pWrapper(0);
     
@@ -162,19 +162,15 @@ CTCLStateChangeMessage::create(
         // aggregator.  Otherwise we push at the aggregator.
         
         if (m_testing) {
-             pSocket = new zmq::socket_t(
-                CStatusDefinitions::ZmqContext::getInstance(),  ZMQ_PUB
-            );
-            pSocket->bind(uri.c_str());           
+	    pSocket = ZmqObjectFactory::createSocket(ZMQ_PUB);
+            (*pSocket)->bind(uri.c_str());           
         } else {
-            pSocket = new zmq::socket_t(
-                CStatusDefinitions::ZmqContext::getInstance(), ZMQ_PUSH 
-            );
-            pSocket->connect(uri.c_str());
+	    pSocket = ZmqObjectFactory::createSocket( ZMQ_PUSH );
+            (*pSocket)->connect(uri.c_str());
         }
         pApiObject  = new CStatusDefinitions::StateChange(*pSocket, app);
         pWrapper    = new TCLStateChangeMessage(
-            interp, cmdName.str().c_str(), pApiObject, pSocket
+            interp, cmdName.str().c_str(), pApiObject, *pSocket
         );
     }
     catch(...) {
@@ -230,7 +226,7 @@ CTCLStateChangeMessage::destroy(
  */
 CTCLStateChangeMessage::TCLStateChangeMessage::TCLStateChangeMessage(
     CTCLInterpreter& interp, const char* command,
-    CStatusDefinitions::StateChange* pObject, zmq::socket_t* pSock
+    CStatusDefinitions::StateChange* pObject, ZmqSocket& pSock
 ) :
     CTCLObjectProcessor(interp, command, true),
     m_pObject(pObject),
@@ -244,7 +240,7 @@ CTCLStateChangeMessage::TCLStateChangeMessage::TCLStateChangeMessage(
 CTCLStateChangeMessage::TCLStateChangeMessage::~TCLStateChangeMessage()
 {
     delete m_pObject;
-    delete m_pSocket;
+    delete &m_pSocket;
 }
 /**
  * TclStateChangeMessage - operator()

@@ -366,25 +366,30 @@ set ::ReadoutControl::waitTransitionTid [thread::create -joinable {
     #
     # @param[in] requri - Request URI for the vardbServer.
     # @param[in] suburi - Subscription URI for the vardbServer.
+    # @param[in] state  - Desired new State
     # @param[in] progname - Name of our program.
     # @param[in] mutexid - Id of the mutex used to protect the condition var.
     # @param[in] condid  - Id of the condition variable used to signal init and transition.
     # @param[in] tid     - Thread id on behalf of whom we're waiting
     # @param[in] script  - Script to execute when the transition completes (in tid).
     #
-    proc waitTransition {requri suburi progname mutexid condid tid script} {
-        
+    proc waitTransition {requri suburi state progname mutexid condid tid script} {
         # Initialize and notify:
         
         nscldaq::stateclient client $requri $suburi $progname
+	client disableMessagePump;           # Needed for wait transition.
         thread::mutex lock $mutexid
         thread::cond  notify $condid
         thread::mutex unlock $mutexid
-        
+
+	client   setGlobalState $state
+
         # Wait for the transition and notify.
         
-        client waitTransition
-        
+        set status [client waitTransition]
+	if {$status == 0} {
+	    error "State transition timed out $status"
+	}
         thread::send -async $tid $script
         
         nscldaq::stateclient -delete client
@@ -446,19 +451,23 @@ proc ReadoutControl::_transition s {
     
     thread::send -async $::ReadoutControl::waitTransitionTid "             \
         waitTransition                                                 \
-            $::state::reqUri $::state::subUri $::state::programName \
+            $::state::reqUri $::state::subUri $s $::state::programName \
             $::ReadoutControl::mutexid $::ReadoutControl::condid    \
             [thread::id] {incr ::ReadoutControl::completedCount}    \
     "
     #  Wait for initialization:
-    
+
     thread::cond wait $::ReadoutControl::condid $::ReadoutControl::mutexid
     thread::mutex unlock $::ReadoutControl::mutexid
     
     #  Start the state transition requested:
     
-    $api   setGlobalState $s
     vwait ::ReadoutControl::completedCount
+    set myState [$api getProgramState $::state::programName]
+    if {$myState ne $s} {
+	error "My state did not make a transition: is $myState sb $s"
+    }
+    
 }
 ##
 # Begin
@@ -467,7 +476,6 @@ proc ReadoutControl::_transition s {
 #
 proc ReadoutControl::Begin {} {
     ::ReadoutControl::_transition Beginning
-    after 10
     ::ReadoutControl::_transition Active
 }
 ##
@@ -477,7 +485,6 @@ proc ReadoutControl::Begin {} {
 #
 proc ReadoutControl::End {} {
     ::ReadoutControl::_transition Ending
-    after 10
     ::ReadoutControl::_transition Ready
 }
 ##
@@ -486,7 +493,6 @@ proc ReadoutControl::End {} {
 #
 proc ReadoutControl::Pause {} {
     ::ReadoutControl::_transition Pausing
-    after 10
     ::ReadoutControl::_transition Paused
 }
 ##
@@ -495,7 +501,6 @@ proc ReadoutControl::Pause {} {
 #
 proc ReadoutControl::Resume {} {
     ::ReadoutControl::_transition Resuming
-    after 10
     ::ReadoutControl::_transition Active
 }
 #-----------------------------------------------------------------------------

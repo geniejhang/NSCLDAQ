@@ -25,7 +25,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cctype>
-
+#include <nsclzmq.h>
 
 
 /*----------------------------------------------------------------------------*/
@@ -37,7 +37,7 @@
 
 
 /**
-* constrructor
+* constructor
 *   
 */
 CZMQEventLoop::CZMQEventLoop() 
@@ -64,7 +64,7 @@ CZMQEventLoop::CZMQEventLoop()
  */
 void
 CZMQEventLoop::Register(
-    zmq::socket_t& socket, int mask , CZMQEventLoop::Callback callback, void* param)
+    ZmqSocket& socket, int mask , CZMQEventLoop::Callback callback, void* param)
 {
     unregister(socket);                      // Get rid of any existing registration.
     
@@ -114,10 +114,9 @@ CZMQEventLoop::Register(int fd, int mask, CZMQEventLoop::Callback callback, void
  *  @param socket - the socket to unregister.
  */
 void
-CZMQEventLoop::unregister(zmq::socket_t& socket)
+CZMQEventLoop::unregister(ZmqSocket& socket)
 {
-    for(std::vector<SocketRegistration>::iterator p = m_socketRegistrations.begin();
-        p != m_socketRegistrations.end(); p++) {
+    for(auto p = m_socketRegistrations.begin(); p != m_socketRegistrations.end(); p++) {
         if (p->s_event.s_socket == socket) {
             m_socketRegistrations.erase(p);
             break;                                 // p has been invalidated by this.
@@ -198,9 +197,8 @@ CZMQEventLoop::makePollItems(zmq::pollitem_t** ppItems)
     
     // Put in the zmq::socket-t's first.
     
-    for (std::vector<SocketRegistration>::iterator p = m_socketRegistrations.begin();
-         p != m_socketRegistrations.end(); p++) {
-         pItem->socket   = *(p->s_event.s_socket);
+    for (auto p = m_socketRegistrations.begin(); p != m_socketRegistrations.end(); p++) {
+      pItem->socket   = (void*)(*(p->s_event.s_socket));
          pItem->fd       = 0;
          pItem->events   = p->s_event.s_events;
          pItem->revents  = 0;
@@ -240,17 +238,15 @@ CZMQEventLoop::findCallback(zmq::pollitem_t* pItem)
 {
     if(pItem->revents != 0) {
         if (pItem->socket) {
-            for (std::vector<SocketRegistration>::iterator p = m_socketRegistrations.begin();
-                 p != m_socketRegistrations.end(); p++) {
-	      if (*(p->s_event.s_socket) == (pItem->socket)) {
+            for (auto p = m_socketRegistrations.begin();  p != m_socketRegistrations.end(); p++) {
+	      if ((void *)(*(p->s_event.s_socket)) == (pItem->socket)) {
                     return std::pair<Callback, void*>(p->s_cb, p->s_param);
                 }
             }
             
             return std::pair<Callback, void*>(0,0);
         } else {
-             for (std::vector<FdRegistration>::iterator p = m_fdRegistrations.begin();
-                 p != m_fdRegistrations.end(); p++) {
+             for (auto p = m_fdRegistrations.begin(); p != m_fdRegistrations.end(); p++) {
                 if (p->s_event.s_fd == pItem->fd) {
                     return std::pair<Callback, void*>(p->s_cb, p->s_param);
                 }
@@ -306,26 +302,26 @@ CStateMonitorBase::CStateMonitorBase(
     
     // Create the ZMQ context and and the sockets:
     
-    m_pContext = new zmq::context_t(1);
+  m_pContext = new zmq::context_t(1);ZmqObjectFactory::getConetextInstance();
     
-    m_pRequestSocket = new zmq::socket_t(*m_pContext, ZMQ_REQ);
-    m_pRequestSocket->connect(transitionReqURI.c_str());
+  m_pRequestSocket = ZmqObjectFactory::createSocket(ZMQ_REQ);
+  (*m_pRequestSocket)->connect(transitionReqURI.c_str());
     
-    m_pStateSocket   = new zmq::socket_t(*m_pContext, ZMQ_SUB);
-    m_pStateSocket->connect(statePublisherURI.c_str());
+  m_pStateSocket   = ZmqObjectFactory::createSocket(ZMQ_SUB);
+  (*m_pStateSocket)->connect(statePublisherURI.c_str());
     
     // Set up the subscriptions for TRANSITION: and STATE:
     
-    m_pStateSocket->setsockopt(ZMQ_SUBSCRIBE, "STATE:", 6);
-    m_pStateSocket->setsockopt(ZMQ_SUBSCRIBE, "TRANSITION:", 10);
-    m_pStateSocket->setsockopt(ZMQ_SUBSCRIBE, "RUN:", 4);
-    m_pStateSocket->setsockopt(ZMQ_SUBSCRIBE, "TITLE:", 6);
-    m_pStateSocket->setsockopt(ZMQ_SUBSCRIBE, "RECORD:", 7);
+  (*m_pStateSocket)->setsockopt(ZMQ_SUBSCRIBE, "STATE:", 6);
+  (*m_pStateSocket)->setsockopt(ZMQ_SUBSCRIBE, "TRANSITION:", 10);
+  (*m_pStateSocket)->setsockopt(ZMQ_SUBSCRIBE, "RUN:", 4);
+  (*m_pStateSocket)->setsockopt(ZMQ_SUBSCRIBE, "TITLE:", 6);
+  (*m_pStateSocket)->setsockopt(ZMQ_SUBSCRIBE, "RECORD:", 7);
     
     // ZMQ lore says that the following ensures subscsriptions actually happen:
     
     zmq::message_t msg;
-    m_pStateSocket->recv(&msg, ZMQ_NOBLOCK);
+    (*m_pStateSocket)->recv(&msg, ZMQ_NOBLOCK);
     
     
     //  Register the state socket readability with the event loop:
@@ -352,13 +348,9 @@ CStateMonitorBase::~CStateMonitorBase()
 {
     m_eventLoop.unregister(*m_pStateSocket);
     
-    m_pRequestSocket->close();
-    m_pStateSocket->close();
-    
-    delete m_pRequestSocket;
+    delete m_pRequestSocket;  // Closes.
     delete m_pStateSocket;
     
-    delete m_pContext;               // Maps to zmq_term according to docs.
 }
 /*
  * Implementation of public methods:
@@ -391,7 +383,7 @@ std::string
 CStateMonitorBase::sendRequestMessage(std::string msg)
 {
     zmq::message_t trMessage(const_cast<char*>(msg.c_str()), msg.size(), 0);
-    m_pRequestSocket->send(trMessage);
+    (*m_pRequestSocket)->send(trMessage);
     
     return getMessage(*m_pRequestSocket);
 }
@@ -452,7 +444,7 @@ void
 CStateMonitorBase::initialState(std::string state)
 {
     m_currentState = state;
-    m_pStateSocket->setsockopt(ZMQ_UNSUBSCRIBE, "STATE:", 6);
+    (*m_pStateSocket)->setsockopt(ZMQ_UNSUBSCRIBE, "STATE:", 6);
 }
 
 /**

@@ -26,7 +26,7 @@
 #include <zmq.hpp>
 #include "CStatusMessage.h"
 #include <map>
-
+#include <nsclzmq.h>
 
 class CTCLInterpreter;
 class CTCLObject;
@@ -38,9 +38,9 @@ class CTCLObject;
  *    can instantiate and destroy wrapped instances of
  *    CStatusDefinitions::ReadoutStatistics.  Our inner class TCLReadoutStatistics
  *    implements the Tcl wrapper around that class.
- *    @note - we're going to use the context that is defined in CTCLRingStatistics,
- *            a static zmq::context_t since ZMQ really only wants us to have
- *            a single context for the entire application.
+ *    @note - Sockets are wrapped in auto shutdown pointer like objects
+ *            produced by ZmqObjectFactory.  This also ensures a single ZMQ
+ *            context for the whole app.
  */
 class CTCLReadoutStatistics : public CTCLObjectProcessor
 {
@@ -78,11 +78,11 @@ private:
     class TCLReadoutStatistics : public CTCLObjectProcessor {
     private:
         CStatusDefinitions::ReadoutStatistics* m_pObject;
-        zmq::socket_t*                          m_pSocket;
+        ZmqSocket&                             m_pSocket;
     public:
         TCLReadoutStatistics(
             CTCLInterpreter& interp, const char* cmd,
-            CStatusDefinitions::ReadoutStatistics* object, zmq::socket_t* sock
+            CStatusDefinitions::ReadoutStatistics* object, ZmqSocket& sock
         );
         virtual ~TCLReadoutStatistics();
         

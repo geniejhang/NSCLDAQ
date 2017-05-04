@@ -45,9 +45,9 @@ static const double BACKLOG_OK_THRESHOLD(0.8);
  *  @param appName - Application name sent in messages.
  */
 CPublishRingStatistics::CPublishRingStatistics(
-    zmq::socket_t& socket, std::string appName
+    ZmqSocket& socket, std::string appName
 ) :
-    m_pSocket(&socket),
+    m_pSocket(socket),
     m_appName(appName)
 {}
 
@@ -251,8 +251,8 @@ CPublishRingStatistics::publish(std::vector<Usage>& usage)
     // If a large backlog is detected for a consumer we'll emit that as well.
     // To do the latter, we need some history for the consumers.
     
-    CStatusDefinitions::RingStatistics publisher(*m_pSocket, m_appName);
-    CStatusDefinitions::LogMessage     logger(*m_pSocket, m_appName);
+    CStatusDefinitions::RingStatistics publisher(m_pSocket, m_appName);
+    CStatusDefinitions::LogMessage     logger(m_pSocket, m_appName);
     
     std::set<std::string>              ringNames;
     for (int i = 0; i < usage.size(); i++) {

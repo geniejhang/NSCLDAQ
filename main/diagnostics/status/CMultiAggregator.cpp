@@ -56,9 +56,8 @@ CMultiAggregator::CMultiAggregator(
     const char* subscriptionService, const char* publicationService,
     int discoveryInterval
 ) :
-    m_zmqContext(CStatusDefinitions::ZmqContext::getInstance()),
-    m_XSUBSocket(m_zmqContext, ZMQ_XSUB),
-    m_XPUBSocket(m_zmqContext, ZMQ_XPUB),
+    m_XSUBSocket(*(ZmqObjectFactory::createSocket(ZMQ_XSUB))),
+    m_XPUBSocket(*(ZmqObjectFactory::createSocket(ZMQ_XPUB))),
     m_pPortManager(0),
     m_subscriptionService(subscriptionService),
     m_publicationService(publicationService),
@@ -78,7 +77,7 @@ CMultiAggregator::CMultiAggregator(
     
     std::stringstream uri;
     uri << "tcp://*:" << port;
-    m_XPUBSocket.bind(uri.str().c_str());       // Connections on all interfaces.
+    m_XPUBSocket->bind(uri.str().c_str());       // Connections on all interfaces.
     m_publisherURI = uri.str();                 // save for getPublisherURI
 }
 
@@ -96,15 +95,14 @@ CMultiAggregator::CMultiAggregator(
 CMultiAggregator::CMultiAggregator(
     const char* subscriptionService, int discoveryInterval
 ) :
-    m_zmqContext(CStatusDefinitions::ZmqContext::getInstance()),
-    m_XSUBSocket(m_zmqContext, ZMQ_XSUB),
-    m_XPUBSocket(m_zmqContext, ZMQ_XPUB),
+    m_XSUBSocket(*(ZmqObjectFactory::createSocket( ZMQ_XSUB))),
+    m_XPUBSocket(*(ZmqObjectFactory::createSocket(ZMQ_XPUB))),
     m_pPortManager(0),
     m_subscriptionService(subscriptionService),
     m_nDiscoveryInterval(discoveryInterval),
     m_publisherURI(InProcURI)
 {
-    m_XPUBSocket.bind(InProcURI.c_str());
+    m_XPUBSocket->bind(InProcURI.c_str());
 }
 
 /**
@@ -179,7 +177,7 @@ CMultiAggregator::disconnectDeadNodes(const std::set<std::string>& current)
             if (!in(item, current)) {
                 try {
                     std::string uri = createUri(item, m_subscriptionService);
-                    m_XSUBSocket.disconnect(uri.c_str());
+                    m_XSUBSocket->disconnect(uri.c_str());
                 } catch(...) {}                   // In case service vanished.
             }
         }
@@ -201,7 +199,7 @@ CMultiAggregator::connectNewNodes(const std::set<std::string>& current)
         if(!in(item, m_connectedNodes)) {
             try {
                 std::string uri = createUri(item, m_subscriptionService);
-                m_XSUBSocket.connect(uri.c_str());
+                m_XSUBSocket->connect(uri.c_str());
                 replay = true;                // At least one connection added.
             } catch (...) {}                 // in case service vanished.
         }
@@ -224,8 +222,8 @@ CMultiAggregator::forwardMessages()
     
     while((now - m_nLastDiscoveryTime) < m_nDiscoveryInterval) {
         zmq_pollitem_t items[2] = {
-            {(void*)(m_XSUBSocket), -1, ZMQ_POLLIN, 0},
-            {(void*)(m_XPUBSocket), -1, ZMQ_POLLIN, 0}
+            {(void*)(*m_XSUBSocket), -1, ZMQ_POLLIN, 0},
+            {(void*)(*m_XPUBSocket), -1, ZMQ_POLLIN, 0}
         };
         long timeout = m_nDiscoveryInterval - (now - m_nLastDiscoveryTime); // Remainder of interval
         
@@ -345,17 +343,17 @@ CMultiAggregator::replaySubscriptions()
  *               full message.
  */
 std::list<zmq::message_t*>
-CMultiAggregator::readMultipart(zmq::socket_t& s)
+CMultiAggregator::readMultipart(ZmqSocket& s)
 {
     std::list<zmq::message_t*> result;
     uint64_t more(0);
     size_t   sMore(sizeof(more));
     do {
         zmq::message_t* pMessage = new zmq::message_t;
-        s.recv(pMessage);
+        s->recv(pMessage);
         result.push_back(pMessage);
         
-        s.getsockopt(ZMQ_RCVMORE, &more, &sMore);
+        s->getsockopt(ZMQ_RCVMORE, &more, &sMore);
     } while (more);
     
     return result;
@@ -368,14 +366,14 @@ CMultiAggregator::readMultipart(zmq::socket_t& s)
  *  @param message - list of message part pointers.
  */
 void
-CMultiAggregator::sendMultipart(zmq::socket_t& s, const std::list<zmq::message_t*>& message)
+CMultiAggregator::sendMultipart(ZmqSocket& s, const std::list<zmq::message_t*>& message)
 {
     auto p = message.begin();
     do {
         zmq::message_t* part = *p;
         p++;                          // Do this now so we know if ZMQ_SNDMORE:
         
-        s.send(*part, (p == message.end()) ? 0 : ZMQ_SNDMORE);
+        s->send(*part, (p == message.end()) ? 0 : ZMQ_SNDMORE);
         
     } while (p != message.end());
 }

@@ -31,6 +31,8 @@
 #include <glib.h>
 #include <list>
 
+class ZmqSocket;
+
 /**
  * @class CVarMgrSubscriptions
  *
@@ -63,7 +65,7 @@ private:
 private:
     Subscriptions m_subscriptions;
     zmq::context_t* m_pContext;
-    zmq::socket_t*  m_pSocket;
+    ZmqSocket*  m_pSocket;
     Filters         m_acceptFilters;
     Filters         m_rejectFilters;
     
@@ -75,7 +77,7 @@ public:
     
     // Selectors:
     
-    zmq::socket_t* socket();
+    ZmqSocket& socket();
     int  fd();
     
     // Changing the subsriptions:

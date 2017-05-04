@@ -94,7 +94,7 @@ protected:
     void outring(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
     void inring(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
     void onStateChange(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
-    
+    void disableMessagePump(CTCLInterpreter& interp, std::vector<CTCLObject>& objv);
     // Utility methods:
     
 private:

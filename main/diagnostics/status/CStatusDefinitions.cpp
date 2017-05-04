@@ -345,7 +345,7 @@ CStatusDefinitions::formatHeader(Header& hdr, uint32_t type, uint32_t severity, 
  */
 void
 CStatusDefinitions::readMessage(
-    std::vector<zmq::message_t*>& message, zmq::socket_t& sock
+    std::vector<zmq::message_t*>& message, ZmqSocket& sock
 )
 {
    
@@ -358,10 +358,10 @@ CStatusDefinitions::readMessage(
     
     
         zmq::message_t* part = new zmq::message_t;
-        sock.recv(part);
+        sock->recv(part);
         message.push_back(part);
         
-        sock.getsockopt(ZMQ_RCVMORE, &more, &moreSize);
+        sock->getsockopt(ZMQ_RCVMORE, &more, &moreSize);
     } while(more);
     
 }

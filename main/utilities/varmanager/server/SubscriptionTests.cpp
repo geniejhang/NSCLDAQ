@@ -26,7 +26,7 @@
 
 #include "CVarMgrSubscriptions.h"
 #include <errno.h>
-
+#include <nsclzmq.h>
 
 
 static const std::string requestServiceName("vardb-request");
@@ -288,7 +288,7 @@ void SubTests::constructSvcBadHost()
 void SubTests::getSocket()
 {
     CVarMgrSubscriptions sub("localhost", m_serverSubPort);
-    zmq::socket_t* pSocket = sub.socket();
+    ZmqSocket& pSocket = sub.socket();
     
     int type;
     size_t size(sizeof(type));
@@ -302,7 +302,7 @@ void SubTests::getSocket()
 void SubTests::getFd()
 {
     CVarMgrSubscriptions sub("localhost", m_serverSubPort);
-    zmq::socket_t* pSocket = sub.socket();
+    ZmqSocket& pSocket = sub.socket();
     int fd    = sub.fd();
     
     int fdopt;
@@ -321,7 +321,7 @@ void SubTests::subOk()
 {
     CVarMgrSubscriptions sub("localhost", m_serverSubPort);
     sub.subscribe("/test1");
-    zmq::socket_t* pSocket = sub.socket();
+    ZmqSocket& pSocket = sub.socket();
     
     // Make a pollitem for us:
     
@@ -372,7 +372,7 @@ void SubTests::subDupFail()
 void SubTests::unsubOk()
 {
     CVarMgrSubscriptions sub("localhost", m_serverSubPort);
-    zmq::socket_t* pSocket = sub.socket();
+    ZmqSocket& pSocket = sub.socket();
     m_pApi->mkdir("/test1/subdir");
     sub.subscribe("/test1");           // Notify on /test1.
     
@@ -428,7 +428,7 @@ void SubTests::waitMsg()
     m_pApi->mkdir("/test/testing");
     
     ASSERT(sub.waitmsg(100));
-    zmq::socket_t* pSocket = sub.socket();
+    ZmqSocket& pSocket = sub.socket();
     zmq::message_t msg(100);
     ASSERT(pSocket->recv(&msg, ZMQ_NOBLOCK));   // Should not need to wait.
 }
@@ -443,7 +443,7 @@ void SubTests::readable()
     
     ASSERT(sub.waitmsg(100));
     ASSERT(sub.readable());
-    zmq::socket_t* pSocket = sub.socket();
+    ZmqSocket& pSocket = sub.socket();
     zmq::message_t msg(100);
     ASSERT(pSocket->recv(&msg, ZMQ_NOBLOCK));   // Should not need to wait.    
 }
@@ -516,6 +516,7 @@ void SubTests::acceptFilter()
     m_pApi->declare("/test/anothertest", "integer");    // match
     m_pApi->declare("/test/btest", "integer");          // no match.
     
+    usleep(100*1000);                                 // Wait for the notifications to go out before subscribing.
     
     // Yes I know this is a silly test could have subed to /test/a
     // but that's not the point.
@@ -559,6 +560,8 @@ void SubTests::acceptMultiple()
     m_pApi->declare("/test/ctest", "integer");          // match
     
     m_pApi->declare("/test/btest", "integer");          // no match.
+
+    usleep(100*100);                                    // Allow notifications to go out.
     
     // Subscribe and filter.  This set can't be done with subs only:
     
@@ -586,7 +589,7 @@ void SubTests::acceptMultiple()
     // This should not notify:
     
     m_pApi->set("/test/btest", "666");    // no match.
-    sub();
+    sub(500);
     ASSERT(!sub.notified);    
 }
 
@@ -594,18 +597,28 @@ void SubTests::acceptMultiple()
 
 void SubTests::rejectFilter()
 {
+  //  std::cerr << "reject filter \n";
     // Build up the variables we are going to carea bout
     m_pApi->mkdir("/test");
     m_pApi->declare("/test/atest", "integer");          // match
     m_pApi->declare("/test/anothertest", "integer");    // match
     m_pApi->declare("/test/btest", "integer");          // no match.
+
+    usleep(100*100);                                    // Allow notifications to go out.
+
     
     NotTest sub("localhost", m_serverSubPort);
     sub.subscribe("/test");          // Blanket for stuff in /test.
     sub.addFilter(CVarMgrSubscriptions::reject, "/test/a*"); // a* rejected.
-    
+
+    //    std::cerr << "Setting btest\n";
+    //    std::cerr.flush();
     m_pApi->set("/test/btest", "1234");
+    //    std::cerr << "getting message\n";
+    //    std::cerr.flush();
     sub();
+    //     std::cerr << "Gotten\n";
+    //     std::cerr.flush();
     ASSERT(sub.notified);
     
     sub.reset();
@@ -613,7 +626,7 @@ void SubTests::rejectFilter()
     // Won't notify:
     
     m_pApi->set("/test/atest", "666");
-    sub();
+    sub(500);
     ASSERT(!sub.notified);
     
 }
@@ -627,6 +640,9 @@ void SubTests::rejectMultiple()
     m_pApi->declare("/test/anothertest", "integer");    // match
     m_pApi->declare("/test/ctest", "integer");          // match
     m_pApi->declare("/test/btest", "integer");          // no match.
+
+    usleep(100*100);                                    // Allow notifications to go out.
+
     
     NotTest sub("localhost", m_serverSubPort);
     sub.subscribe("/test");          // Blanket for stuff in /test.
@@ -639,16 +655,16 @@ void SubTests::rejectMultiple()
     sub.reset();
     
     m_pApi->set("/test/atest", "666");            // Match/reject.
-    sub();
-    if (sub.notified) {
+    sub(500);
+    if (sub.notified && 0) {	// debug output just take the && 0 out.
       sub.dumpmsg(std::cout);
     }
     ASSERT(!sub.notified);
     sub.reset();
     
     m_pApi->set("/test/ctest", "777");         // Match reject
-    sub();
-    if (sub.notified) sub.dumpmsg(std::cout);
+    sub(500);
+    if (sub.notified && 0) sub.dumpmsg(std::cout); // debug output.
     ASSERT(!sub.notified);
     sub.reset();
 }
@@ -661,6 +677,9 @@ void SubTests::rejectB4Accept()
     m_pApi->declare("/test/atest", "integer");          // reject match
     m_pApi->declare("/test/ctest", "integer");          // Reject match
     m_pApi->declare("/test/bTest", "integer");          // accept match.
+
+    usleep(100*100);                                    // Allow notifications to go out.
+	
     
     NotTest sub("localhost", m_serverSubPort);
     sub.subscribe("/test");          // Blanket for stuff in /test.
@@ -668,7 +687,7 @@ void SubTests::rejectB4Accept()
     sub.addFilter(CVarMgrSubscriptions::accept, "/test/*est");
     
     m_pApi->set("/test/atest", "1234");
-    sub();
+    sub(500);
     ASSERT(!sub.notified);
     sub.reset();
     

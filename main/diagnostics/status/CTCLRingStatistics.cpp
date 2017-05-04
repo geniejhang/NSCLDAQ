@@ -186,17 +186,13 @@ CTCLRingStatistics::operator()(
     // a publisher so that subscriptions can test directly against the publisher
     // command.
     
-    zmq::socket_t* pEndpoint;
+    ZmqSocket* pEndpoint;
     if (m_testMode) {
-        pEndpoint = new zmq::socket_t(
-            CStatusDefinitions::ZmqContext::getInstance(), ZMQ_PUB
-        );
-        pEndpoint->bind(uri.c_str());
+        pEndpoint = ZmqObjectFactory::createSocket(ZMQ_PUB);
+        (*pEndpoint)->bind(uri.c_str());
     } else {
-        pEndpoint = new zmq::socket_t(
-            CStatusDefinitions::ZmqContext::getInstance(), ZMQ_PUSH
-        );
-        pEndpoint->connect(uri.c_str());
+        pEndpoint = ZmqObjectFactory::createSocket( ZMQ_PUSH);
+        (*pEndpoint)->connect(uri.c_str());
         
     }
     
@@ -213,7 +209,7 @@ CTCLRingStatistics::operator()(
     
         commandGenerator << "ringstat_" << m_instanceNumber++;
         pCommandObject  = new RingStatistics(
-                interp, commandGenerator.str().c_str(),  pApiObject, pEndpoint
+                interp, commandGenerator.str().c_str(),  pApiObject, *pEndpoint
         );
     }
     catch (...) {
@@ -286,7 +282,7 @@ CTCLRingStatistics::operator()(
   */
 CTCLRingStatistics::RingStatistics::RingStatistics(
     CTCLInterpreter& interp, const char* command,
-    CStatusDefinitions::RingStatistics* pApi, zmq::socket_t* sock
+    CStatusDefinitions::RingStatistics* pApi, ZmqSocket& sock
 ) :
  CTCLObjectProcessor(interp, command, true),
  m_pObject(pApi), m_pSocket(sock)
@@ -299,7 +295,7 @@ CTCLRingStatistics::RingStatistics::RingStatistics(
 CTCLRingStatistics::RingStatistics::~RingStatistics()
 {
     delete m_pObject;
-    delete m_pSocket;
+    delete &m_pSocket;
 }
 
 /**

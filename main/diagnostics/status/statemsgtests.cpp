@@ -25,21 +25,19 @@ class StateTests : public CppUnit::TestFixture {
 
 
 private:
-  zmq::context_t*  m_pContext;
-  zmq::socket_t*   m_pSender;
-  zmq::socket_t*   m_pReceiver;
+  ZmqSocket*   m_pSender;
+  ZmqSocket*   m_pReceiver;
   CStatusDefinitions::StateChange* m_pTestObject;
 public:
   void setUp() {
-    m_pContext = &CStatusDefinitions::ZmqContext::getInstance();
     
     // Create an internal push/pull pair between sender/receiver:
     
-    m_pSender   = new zmq::socket_t(*m_pContext, ZMQ_PUSH);
-    m_pReceiver = new zmq::socket_t(*m_pContext, ZMQ_PULL);
+    m_pSender   = ZmqObjectFactory::createSocket( ZMQ_PUSH);
+    m_pReceiver = ZmqObjectFactory::createSocket(ZMQ_PULL);
     
-    m_pReceiver->bind(uri.c_str());
-    m_pSender->connect(uri.c_str());
+    (*m_pReceiver)->bind(uri.c_str());
+    (*m_pSender)->connect(uri.c_str());
     
     // Create an object using the sender socket:
     
@@ -49,7 +47,7 @@ public:
     delete m_pTestObject;
     delete m_pSender;
     delete m_pReceiver;
-    CStatusDefinitions::ZmqContext::reset();
+    ZmqObjectFactory::shutdown();
   }
 protected:
   void construct();
@@ -79,12 +77,12 @@ void StateTests::message()
   int64_t        haveMore(0);
   size_t         s(sizeof(haveMore));
   
-  m_pReceiver->recv(&hMsg);
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &haveMore, &s);
+  (*m_pReceiver)->recv(&hMsg);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &haveMore, &s);
   ASSERT(haveMore);
   
-  m_pReceiver->recv(&bMsg);
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &haveMore, &s);
+  (*m_pReceiver)->recv(&bMsg);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &haveMore, &s);
   ASSERT(!haveMore);
   
   // Analyze the header:

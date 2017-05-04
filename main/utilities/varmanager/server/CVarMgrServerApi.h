@@ -25,6 +25,8 @@
 
 #include <zmq.hpp>
 
+class ZmqSocket;
+
 /**
  * @class CVarMgrServerApi
  *
@@ -38,7 +40,7 @@ class CVarMgrServerApi : public CVarMgrApi
     //                     objects?
 private:
     static zmq::context_t* m_pContext;
-    zmq::socket_t*  m_pSocket;
+    ZmqSocket*  m_pSocket;
     std::string     m_wd;
     
     // Canonicals:

@@ -27,6 +27,11 @@
 #include <Exception.h>
 #include <string.h>
 #include <errno.h>
+#include <nsclzmq.h>
+
+
+#include <iostream>
+//#define DEBUG 1
 
 /**
  * constructor
@@ -59,7 +64,6 @@ CVarMgrSubscriptions::CVarMgrSubscriptions(const char* host, const char* service
 CVarMgrSubscriptions::~CVarMgrSubscriptions()
 {
     delete m_pSocket;
-    delete m_pContext;
     
     // Delete the pattern specs in the filters:
     
@@ -86,7 +90,7 @@ int  CVarMgrSubscriptions::fd()
     int fd;
     size_t size(sizeof(fd));
 
-    m_pSocket->getsockopt(ZMQ_FD, &fd, &size);
+    (*m_pSocket)->getsockopt(ZMQ_FD, &fd, &size);
     
     return fd;
 }
@@ -96,9 +100,9 @@ int  CVarMgrSubscriptions::fd()
  *
  *  @return zmq::socket_t - socket to the publisher.
  */
-zmq::socket_t* CVarMgrSubscriptions::socket()
+ZmqSocket& CVarMgrSubscriptions::socket()
 {
-    return m_pSocket;
+    return *m_pSocket;
 };
 /**
  *  subscribe
@@ -113,11 +117,11 @@ void CVarMgrSubscriptions::subscribe(const char* pathPrefix)
         throw CException("Duplicate subscription");
     }
     
-    m_pSocket->setsockopt(ZMQ_SUBSCRIBE, pathPrefix, strlen(pathPrefix));
+    (*m_pSocket)->setsockopt(ZMQ_SUBSCRIBE, pathPrefix, strlen(pathPrefix));
     // ZMQ lore says this helps the subscsription happen:
     
     zmq::message_t msg;
-    m_pSocket->recv(&msg, ZMQ_NOBLOCK);
+    (*m_pSocket)->recv(&msg, ZMQ_NOBLOCK);
     
     m_subscriptions.insert(pathPrefix);
 }
@@ -132,7 +136,7 @@ void CVarMgrSubscriptions::unsubscribe(const char* pathPrefix)
     if (m_subscriptions.count(pathPrefix) == 0) {
         throw CException("No such subscription");
     }
-    m_pSocket->setsockopt(ZMQ_UNSUBSCRIBE, pathPrefix, strlen(pathPrefix));
+    (*m_pSocket)->setsockopt(ZMQ_UNSUBSCRIBE, pathPrefix, strlen(pathPrefix));
     m_subscriptions.erase(m_subscriptions.find(pathPrefix));
 }
 /**
@@ -205,7 +209,7 @@ CVarMgrSubscriptions::checkFilters(const char* path)
  */
 bool CVarMgrSubscriptions::waitmsg(int milliseconds)
 {
-    zmq_pollitem_t item =  { (void*)(*m_pSocket), -1, ZMQ_POLLIN, 0};
+    zmq_pollitem_t item =  { (void*)(**m_pSocket), -1, ZMQ_POLLIN, 0};
     
     int nItems = zmq_poll(&item, 1, (milliseconds == -1) ? -1 : milliseconds*1000);
     
@@ -233,7 +237,7 @@ CVarMgrSubscriptions::Message CVarMgrSubscriptions::read() {
     Message decodedMessage;
     zmq::message_t msg(1000);
 
-    while(!m_pSocket->recv(&msg)) {
+    while(!(*m_pSocket)->recv(&msg)) {
         if ((errno != EAGAIN) && (errno != EINTR )) {
             throw CException(strerror(errno));
         }
@@ -276,9 +280,28 @@ CVarMgrSubscriptions::Message CVarMgrSubscriptions::read() {
  */
 void CVarMgrSubscriptions::operator()(int milliseconds)
 {
+#ifdef DEBUG
+  std::cerr << "Waiting for a message for at most " << milliseconds << std::endl;
+  std::cerr.flush();
+#endif
     if (waitmsg(milliseconds)) {
+#ifdef DEBUG
+      std::cerr << "Got a message\n";
+      std::cerr.flush();
+#endif
         Message msg = read();
+#ifdef DEBUG
+	std::cerr << "Message read\n";
+	std::cerr << "   path   : " << msg.s_path << std::endl;
+	std::cerr << "   op     : " << msg.s_operation << std::endl;
+	std::cerr << "   data   : " << msg.s_data << std::endl;
+	std::cerr.flush();
+#endif
         if (checkFilters(msg.s_path.c_str())) {
+#ifdef DEBUG	  
+	  std::cerr << "Message passed filters\n";
+	  std::cerr.flush();
+#endif
             notify(&msg);
         }
     }
@@ -333,15 +356,15 @@ CVarMgrSubscriptions::initialize(const char* host, int port)
 {
     // Create the context and socket:
     
-    m_pContext = new zmq::context_t(1);
-    m_pSocket  = new zmq::socket_t(*m_pContext, ZMQ_SUB);
+    m_pContext = ZmqObjectFactory::getContextInstance();
+    m_pSocket  = ZmqObjectFactory::createSocket(ZMQ_SUB);
     
     // Construct the URI and connect the socket to the server:
     
     char uri[200];
     sprintf(uri, "tcp://%s:%d", host, port);
     try {
-        m_pSocket->connect(uri);
+      (*m_pSocket)->connect(uri);
     } catch (zmq::error_t& e) {
         throw CException(e.what());
     }

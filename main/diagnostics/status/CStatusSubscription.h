@@ -26,10 +26,11 @@
 #include <list>
 #include "CStatusMessage.h"
 #include <zmq.hpp>
+#include <nsclzmq.h>
 
 /**
  * @class CStatusSubscription
- *    Encapsulates a set of status message subscriptions on a zmq::socket_t
+ *    Encapsulates a set of status message subscriptions on a ZmqSocket reference
  *    For more information about this, see:
  *
  *     https://swdev-redmine.nscl.msu.edu/projects/sfnscldaq/wiki/Subscription_API
@@ -56,13 +57,13 @@ private:
     
     // Instance data
 private:
-    zmq::socket_t&          m_socket;
+    ZmqSocket&          m_socket;
     unsigned                m_sequence;
     SubscriptionRegistry    m_registry;
     
     // Canonicals:
 public:    
-    CStatusSubscription(zmq::socket_t& sock);
+    CStatusSubscription(ZmqSocket& sock);
     virtual ~CStatusSubscription();
     
 public:

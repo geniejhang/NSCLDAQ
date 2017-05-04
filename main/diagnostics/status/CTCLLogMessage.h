@@ -26,7 +26,8 @@
 #include "CStatusMessage.h"
 #include <map>
 #include <zmq.hpp>
-
+#include <nsclzmq.h>
+#include <nsclzmq.h>
 
 class CTCLInterpreter;
 class CTCLObject;
@@ -82,11 +83,11 @@ private:
     {
     private:
         CStatusDefinitions::LogMessage* m_pObject;
-        zmq::socket_t*                  m_pSocket;
+        ZmqSocket&                      m_pSocket;
     public:
         TCLLogMessage(
             CTCLInterpreter& interp, const char* command,
-            CStatusDefinitions::LogMessage* pObject, zmq::socket_t* pSocket
+            CStatusDefinitions::LogMessage* pObject, ZmqSocket& pSocket
         );
         virtual ~TCLLogMessage();
         

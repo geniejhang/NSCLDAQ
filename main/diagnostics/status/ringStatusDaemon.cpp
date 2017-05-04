@@ -34,6 +34,7 @@
 #include <Exception.h>
 #include "CStatusMessage.h"
 #include "CRingStatusDaemon.h"
+#include <nsclzmq.h>
 
 
 static const unsigned MAX_SERVICE_CHECKS(10);
@@ -103,12 +104,11 @@ int main(int argc, char** argv)
     try {
         unsigned port = translateService(parsedArgs.service_arg);
 	std::this_thread::sleep_for(std::chrono::seconds(SERVICE_STARTUP_DELAY));
-        zmq::context_t& context(CStatusDefinitions::ZmqContext::getInstance());
-        zmq::socket_t  pusher(context, ZMQ_PUSH);
+        ZmqSocket&  pusher(*ZmqObjectFactory::createSocket(ZMQ_PUSH));
         
         std::stringstream uri;
         uri << "tcp://localhost:" << port;
-        pusher.connect(uri.str().c_str());
+        pusher->connect(uri.str().c_str());
         
         // here's where we start the application:
         

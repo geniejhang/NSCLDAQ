@@ -136,7 +136,7 @@ CTCLReadoutStatistics::create(
     CTCLInterpreter& interp, std::vector<CTCLObject>& objv
 )
 {
-    zmq::socket_t*                         pConnection(0);
+    ZmqSocket*                             pConnection(0);
     CStatusDefinitions::ReadoutStatistics* pApiObject(0);
     TCLReadoutStatistics*                  pCommandObject(0);
     std::string app = "Readout";
@@ -160,22 +160,18 @@ CTCLReadoutStatistics::create(
         // an aggregator. Normally we push at the aggregator.
         
         if (m_testing) {
-            pConnection = new zmq::socket_t(
-                CStatusDefinitions::ZmqContext::getInstance(), ZMQ_PUB
-            );
-            pConnection->bind(uri.c_str());
+	    pConnection = ZmqObjectFactory::createSocket(ZMQ_PUB);
+            (*pConnection)->bind(uri.c_str());
         } else {
-            pConnection = new zmq::socket_t(
-                CStatusDefinitions::ZmqContext::getInstance(), ZMQ_PUSH
-            );
-            pConnection->connect(uri.c_str());
+	    pConnection = ZmqObjectFactory::createSocket(ZMQ_PUSH);
+            (*pConnection)->connect(uri.c_str());
         }
         
         pApiObject = new CStatusDefinitions::ReadoutStatistics(*pConnection, app);
         
         commandName << "readoutstats_" << m_instanceCounter++;
         pCommandObject = new TCLReadoutStatistics(
-            interp, commandName.str().c_str(), pApiObject, pConnection
+            interp, commandName.str().c_str(), pApiObject, *pConnection
         );
         m_registry[commandName.str()] = pCommandObject;
     }
@@ -228,11 +224,11 @@ CTCLReadoutStatistics::destroy(
  * @param interp   - interpreter on which the wrapper command will be registered.
  * @param cmd      - The command name string.
  * @param object   - Pointer to the object to wrap.
- * @param sock     - Pointer to a ZMQ socket to be used to transport the messages.
+ * @param sock     - Pointer like object encapsulating a zmq::socket_t
  */
 CTCLReadoutStatistics::TCLReadoutStatistics::TCLReadoutStatistics(
     CTCLInterpreter& interp, const char* cmd,
-    CStatusDefinitions::ReadoutStatistics* object, zmq::socket_t* sock
+    CStatusDefinitions::ReadoutStatistics* object, ZmqSocket& sock
 ) :
     CTCLObjectProcessor(interp, cmd, true),
     m_pObject(object), m_pSocket(sock)
@@ -246,7 +242,7 @@ CTCLReadoutStatistics::TCLReadoutStatistics::TCLReadoutStatistics(
 CTCLReadoutStatistics::TCLReadoutStatistics::~TCLReadoutStatistics()
 {
     delete m_pObject;
-    delete m_pSocket; 
+    delete &m_pSocket; 
 }
 
 /**

@@ -28,6 +28,7 @@
 #include <zmq.hpp>
 #include <tcl.h>
 #include <CStatusSubscription.h>
+#include <nsclzmq.h>
 
 class CTCLInterpreter;
 class CTCLObject;
@@ -50,7 +51,6 @@ private:
 private:
     Registry        m_registry;
     static unsigned m_sequence;
-    static zmq::context_t& m_zmqContext;
 
     
 public:
@@ -71,7 +71,7 @@ private:
     {
     private:
         typedef struct _ThreadParameter {
-            zmq::socket_t*        s_pSocket;
+            ZmqSocket&            s_pSocket;
             SubscriptionInstance* s_pInstance;
             Tcl_ThreadId          s_NotifyMe;
         } ThreadParameter, *pThreadParameter;
@@ -82,7 +82,7 @@ private:
             
         } NotificationEvent, *pNotificationEvent;
     private:
-        zmq::socket_t&       m_socket;
+        ZmqSocket&           m_socket;
         CStatusSubscription& m_Subscription;
         std::string          m_script;
         bool                 m_dispatching;
@@ -92,7 +92,7 @@ private:
         Tcl_Condition       m_condition;
     public:
         SubscriptionInstance(
-            CTCLInterpreter& interp, const char* cmd, zmq::socket_t& sock,
+            CTCLInterpreter& interp, const char* cmd, ZmqSocket& sock,
             CTCLObject& subdef
         );
         virtual ~SubscriptionInstance();

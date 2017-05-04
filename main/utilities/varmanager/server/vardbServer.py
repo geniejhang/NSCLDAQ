@@ -522,6 +522,7 @@ class databaseServer():
         while True:
             msg = self._req.recv(0, True)
             self._processRequest(msg)
+            msg = None
 
 if __name__ == '__main__':
     # Die if the paraent dies:

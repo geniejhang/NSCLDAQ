@@ -48,7 +48,7 @@
  *  @param app     - Identifies the application.  This is put unmodified in the
  *                   message header part.
  */
-CStatusDefinitions::RingStatistics::RingStatistics(zmq::socket_t& sock, std::string app) :
+CStatusDefinitions::RingStatistics::RingStatistics(ZmqSocket& sock, std::string app) :
     m_socket(sock),
     m_applicationName(app),
     m_msgOpen(false),
@@ -155,7 +155,7 @@ CStatusDefinitions::RingStatistics::endMessage()
     zmq::message_t msgHeader(sizeof(hdr));
     std::memcpy(msgHeader.data(), &hdr, sizeof(hdr));
     
-    m_socket.send(msgHeader, ZMQ_SNDMORE);          // We have at least the ring id part.
+    m_socket->send(msgHeader, ZMQ_SNDMORE);          // We have at least the ring id part.
     
     RingStatIdentification* pId =
         CStatusDefinitions::makeRingid(m_ringName.c_str());
@@ -167,7 +167,7 @@ CStatusDefinitions::RingStatistics::endMessage()
     int flags = ((!m_producer) && (m_consumers.size() == 0)) ? 0 : ZMQ_SNDMORE;
     zmq::message_t msgId(idSize);
     std::memcpy(msgId.data(), pId, idSize);
-    m_socket.send(msgId, flags);
+    m_socket->send(msgId, flags);
     std::free(pId);                         // Done with that storage now.
    
     
@@ -178,7 +178,7 @@ CStatusDefinitions::RingStatistics::endMessage()
         size_t prodSize = sizeClient(m_producer);
         zmq::message_t producer(prodSize);
         std::memcpy(producer.data(), m_producer, prodSize);
-        m_socket.send(producer, flags);
+        m_socket->send(producer, flags);
     }
     
     // If there are consumers, send those message parts as well.
@@ -190,7 +190,7 @@ CStatusDefinitions::RingStatistics::endMessage()
         size_t s = sizeClient(pClient);
         zmq::message_t client(s);
         std::memcpy(client.data(), pClient, s);
-        m_socket.send(client, flags);
+        m_socket->send(client, flags);
     }
     
     // We did copy based data transmission so we can release the storage now

@@ -136,15 +136,13 @@ CStatusReporting::aggregatorPort(const char* service)
  *  @param port - port on which the status aggregator is listening.
  *  @return zmq::socket_t*  - the created socket.
  */
-zmq::socket_t*
+ZmqSocket*
 CStatusReporting::connectSocket(int port)
 {
     std::ostringstream uri;
     uri << "tcp://localhost:" << port;
-    
-    zmq::context_t&  context(CStatusDefinitions::ZmqContext::getInstance());
-    zmq::socket_t* result = new zmq::socket_t(context, ZMQ_PUSH);
-    result->connect(uri.str().c_str());
+    ZmqSocket* result = ZmqObjectFactory::createSocket(ZMQ_PUSH);
+    (*result)->connect(uri.str().c_str());
     
     return result;
 }

@@ -32,7 +32,7 @@
  *  @param socket - socket on which the messages will be emitted.
  *  @param app    - Name of the application.
  */
-CStatusDefinitions::LogMessage::LogMessage(zmq::socket_t& socket, std::string app) :
+CStatusDefinitions::LogMessage::LogMessage(ZmqSocket& socket, std::string app) :
     m_socket(socket), m_application(app) {}
     
 /** destructor:
@@ -73,12 +73,12 @@ CStatusDefinitions::LogMessage::Log(uint32_t sev, std::string message)
     // The header:
     
     std::memcpy(header.data(), &hdr, sizeof(hdr));
-    m_socket.send(header, ZMQ_SNDMORE);
+    m_socket->send(header, ZMQ_SNDMORE);
     
     // The body:
     
     std::memcpy(body.data(), logBody, bodySize);
-    m_socket.send(body, 0);
+    m_socket->send(body, 0);
     
     free(logBody);
     
