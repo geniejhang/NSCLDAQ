@@ -35,7 +35,7 @@
  *  @param app    - Name of the application.
  */
 CStatusDefinitions::StateChange::StateChange(
-    zmq::socket_t& socket, std::string app
+    ZmqSocket& socket, std::string app
 ) :
     m_socket(socket), m_application(app)
 {}
@@ -98,7 +98,7 @@ CStatusDefinitions::StateChange::logChange(
     
     // Send the messages:
     
-    m_socket.send(hMsg, ZMQ_SNDMORE);
-    m_socket.send(bodyMsg, 0);
+    m_socket->send(hMsg, ZMQ_SNDMORE);
+    m_socket->send(bodyMsg, 0);
     
 }

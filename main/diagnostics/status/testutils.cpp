@@ -75,7 +75,7 @@ void killRings()
 }
 
 std::vector<zmq::message_t*>
-receiveMessage(zmq::socket_t* socket)
+receiveMessage(ZmqSocket& socket)
 {
   std::vector<zmq::message_t*> result;
   std::uint64_t more(0);

@@ -31,6 +31,7 @@
 #include <ctime>
 #include <sys/types.h>
 #include <unistd.h>
+#include <nsclzmq.h>
 
 /**
  *  @class CStatusDefinitions
@@ -138,7 +139,7 @@ public:
     public:
     class RingStatistics {
     private:
-        zmq::socket_t&            m_socket;
+        ZmqSocket&                m_socket;
         std::string               m_applicationName;
         bool                      m_msgOpen;
         std::string               m_ringName;
@@ -146,7 +147,7 @@ public:
         std::list<RingStatClient*> m_consumers;
         
     public:
-        RingStatistics(zmq::socket_t& socket, std::string app="RingStatDaemon");
+        RingStatistics(ZmqSocket& socket, std::string app="RingStatDaemon");
         virtual ~RingStatistics();
         
         void startMessage(std::string ring);
@@ -179,7 +180,7 @@ public:
     class EventBuilderStatistics
     {
     public:
-        EventBuilderStatistics(zmq::socket_t& socket, std::string app="NSCLEventBuilder");
+        EventBuilderStatistics(ZmqSocket& socket, std::string app="NSCLEventBuilder");
         ~EventBuilderStatistics();
         
         // The format of this message is not yet known and  therefore the
@@ -194,14 +195,14 @@ public:
     public:
     class ReadoutStatistics {
     private:
-        zmq::socket_t&  m_socket;
+        ZmqSocket&  m_socket;
         std::string     m_appName;
         std::time_t     m_runStartTime;
         bool            m_haveOpenRun;
         uint32_t        m_runNumber;
         std::string     m_title;
     public:
-        ReadoutStatistics(zmq::socket_t& socket, std::string app = "Readout");
+        ReadoutStatistics(ZmqSocket& socket, std::string app = "Readout");
         virtual ~ReadoutStatistics();
         
         
@@ -220,10 +221,10 @@ public:
     public:
     class LogMessage {
     private:
-        zmq::socket_t& m_socket;
+        ZmqSocket& m_socket;
         std::string    m_application;
     public:
-        LogMessage(zmq::socket_t& socket, std::string app);
+        LogMessage(ZmqSocket& socket, std::string app);
         virtual ~LogMessage();
         
         void Log(uint32_t sev, std::string message);
@@ -236,10 +237,10 @@ public:
     class StateChange
     {
     private:
-        zmq::socket_t& m_socket;
+        ZmqSocket& m_socket;
         std::string    m_application;
     public:
-        StateChange(zmq::socket_t& socket, std::string app);
+        StateChange(ZmqSocket& socket, std::string app);
         virtual ~StateChange();
         
         void logChange(std::string leaving, std::string entering);
@@ -247,13 +248,16 @@ public:
 public:
      /**
      * @class ZmqContext
-     *     ZMQ likes to have a single application context (especially if inproc
-     *     protocols are used).  This is a singleton class that wraps a zmq::context_t
-     *     appropriately.
+     *     ZMQ likes to have a single application context.  This used to be
+     *     managed by this class however it has been factored out into
+     *     /base/os/nsclzmq's ZmqObjectFactory among other things.
+     *     this is now a thin wrapper for that class and is mostly not needed
+     *     since that class provides a mechanism to instantiate sockets using its
+     *     singleton context_t.
+     *     Other nice zmq methods are provided.
      */
 
     class ZmqContext {
-        static zmq::context_t* m_context;
     public:
         static zmq::context_t& getInstance();  // Returns the singleton context.
         static void reset();                // Used for testing.
@@ -282,7 +286,7 @@ public:
         static size_t ringClientSize(RingStatClient* pClient);
         
         static void readMessage(
-            std::vector<zmq::message_t*>& message, zmq::socket_t& sock
+            std::vector<zmq::message_t*>& message, ZmqSocket& sock
         );
         static void freeMessage(std::vector<zmq::message_t*>& message);
         

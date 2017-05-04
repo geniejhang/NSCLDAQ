@@ -882,9 +882,10 @@ tcltest::test Begin {ReadoutControl::Begin should start a run.} \
 -body {
     set line1 [gets $fd]
     set line2 [gets $fd]
-    
     list $line1 $line2
 } -result [list PreBegin Begin]
+
+
 
 tcltest::test End {ReadoutControl::End - ends a run.} \
 -setup {

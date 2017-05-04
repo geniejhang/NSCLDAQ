@@ -25,6 +25,7 @@
 #include <TCLObjectProcessor.h>
 #include "CStatusMessage.h"
 #include <zmq.hpp>
+#include <nsclzmq.h>
 #include <map>
 
 class CTCLInterpreter;
@@ -67,11 +68,11 @@ private:
     {
     private:
         CStatusDefinitions::StateChange*   m_pObject;
-        zmq::socket_t*                     m_pSocket;
+        ZmqSocket&                         m_pSocket;
     public:
         TCLStateChangeMessage(
             CTCLInterpreter& interp, const char* cmd,
-            CStatusDefinitions::StateChange* pObject, zmq::socket_t* pSocket
+            CStatusDefinitions::StateChange* pObject, ZmqSocket&  pSocket
         );
         virtual ~TCLStateChangeMessage();
         

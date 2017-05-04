@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <iostream>
 #include "CStatusMessage.h"
+#include <nsclzmq.h>
 
 /**
  * This program advertises two services via the NSCL port manager.
@@ -53,19 +54,18 @@ static const char* PUB_SERVICE  = "StatusPublisher";
  *     -  binds the socket to the port indicated by the port manager.
  *
  *   @param manager - References the DAQ Port manager object.
- *   @param context - ZMQ context reference.
  *   @return zmq::socket_t*  - Pointerr to newly created socket.
  */
-zmq::socket_t*
-openPubSocket(CPortManager& manager, zmq::context_t& context)
+ZmqSocket*
+openPubSocket(CPortManager& manager)
 {
-    zmq::socket_t* result;
+    ZmqSocket* result;
     int port = manager.allocatePort(PUB_SERVICE);
-    result   = new zmq::socket_t(context, ZMQ_PUB);
+    result   = ZmqObjectFactory::createSocket(ZMQ_PUB);
     
     std::stringstream binding;
     binding << "tcp://*:" << port;
-    result->bind(binding.str().c_str());
+    (*result)->bind(binding.str().c_str());
     
     return result;
 }
@@ -77,18 +77,17 @@ openPubSocket(CPortManager& manager, zmq::context_t& context)
  *     for connections.
  *
  *   @param manager - DAQ port manager object.
- *   @param context - ZMQ Context (reference).
  *   @return zmq::socket_t* - socket bound to the allocated port.
  */
-zmq::socket_t*
-openPullSocket(CPortManager& manager, zmq::context_t& context)   
+ZmqSocket*
+openPullSocket(CPortManager& manager)
 {
     int port = manager.allocatePort(PULL_SERVICE);
-    zmq::socket_t* result = new zmq::socket_t(context, ZMQ_PULL);
+    ZmqSocket* result = ZmqObjectFactory::createSocket(ZMQ_PULL);
     
     std::stringstream binding;
     binding << "tcp://*:" << port;
-    result->bind(binding.str().c_str());
+    (*result)->bind(binding.str().c_str());
     
     return result;
 }
@@ -109,9 +108,8 @@ main(int argc, char** argv)
     }
     
     CPortManager manager;
-    zmq::context_t& context(CStatusDefinitions::ZmqContext::getInstance());
-    zmq::socket_t*  receiver  = openPullSocket(manager, context);
-    zmq::socket_t*  publisher = openPubSocket(manager, context);
+    ZmqSocket&  receiver(*openPullSocket(manager));
+    ZmqSocket&  publisher(*openPubSocket(manager));
     
     while(1) {
         std::uint64_t more(0);

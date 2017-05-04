@@ -51,6 +51,7 @@
 #endif
 #endif
 
+class ZmqSocket;
 
 /*
 * @class CZMQPollEventLoop
@@ -63,7 +64,7 @@ class CZMQEventLoop {
 private:
     
     struct SocketEvent {
-        zmq::socket_t*         s_socket;
+        ZmqSocket*         s_socket;
         int                    s_events;
     };
     struct FdEvent {
@@ -94,9 +95,9 @@ private:
 public:
     CZMQEventLoop();
     
-    void Register(zmq::socket_t& sock, int mask, Callback cb, void* param = 0);
+    void Register(ZmqSocket& sock, int mask, Callback cb, void* param = 0);
     void Register(int fd, int mask, Callback cb, void* param = 0);
-    void unregister(zmq::socket_t& sock);
+    void unregister(ZmqSocket& sock);
     void unregister(int fd);
     void poll(int timeout);
     void pollForever(int timeout, IdleCallback idler=0);
@@ -125,8 +126,8 @@ public:
 private:
     
     zmq::context_t*     m_pContext;
-    zmq::socket_t*      m_pRequestSocket;
-    zmq::socket_t*      m_pStateSocket;
+    ZmqSocket*      m_pRequestSocket;
+    ZmqSocket*      m_pStateSocket;
     CZMQEventLoop       m_eventLoop;
     std::string         m_currentState;
     int                 m_runNumber;

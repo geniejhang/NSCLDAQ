@@ -27,7 +27,7 @@
 #include <vector>
 #include <string>
 #include <map>
-
+#include <nsclzmq.h>
 
 class CTCLInterpreter;
 class CTCLObject;
@@ -53,12 +53,12 @@ private:
     } Usage, *pUsage;
  
 private:
-    zmq::socket_t*   m_pSocket;                  // Publication socket.
+    ZmqSocket&   m_pSocket;                  // Publication socket.
     std::string      m_appName;
     std::map<std::string, Usage>  m_history;
     
 public:
-    CPublishRingStatistics(zmq::socket_t& socket, std::string appName);
+    CPublishRingStatistics(ZmqSocket& socket, std::string appName);
     virtual ~CPublishRingStatistics();
     
 public:

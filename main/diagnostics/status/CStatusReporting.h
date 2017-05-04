@@ -26,6 +26,7 @@
 #include <CStatusMessage.h>
 #include <string>
 #include <zmq.hpp>
+#include <nsclzmq.h>
 
 /**
  * @class CStatusReporting
@@ -42,7 +43,7 @@ public:
 private:
     CStatusDefinitions::ReadoutStatistics* m_pStatistics;
     CStatusDefinitions::LogMessage*        m_pLogger;
-    zmq::socket_t*                         m_pSocket;
+    ZmqSocket*                             m_pSocket;
     
 public:
     CStatusReporting(const char* application, const char* aggregator);
@@ -60,7 +61,7 @@ public:
     
 private:
     int aggregatorPort(const char* service);
-    zmq::socket_t* connectSocket(int port);
+    ZmqSocket* connectSocket(int port);
 };
 
 #endif

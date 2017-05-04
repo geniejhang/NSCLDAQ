@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <iostream>
 
-
+#include <nsclzmq>
 
 bool tick(CZMQEventLoop* pLoop)
 {
@@ -39,7 +39,7 @@ void subHandler(CZMQEventLoop* pLoop, zmq::pollitem_t* pItem, void* param)
   zmq_msg_t message;
   zmq_msg_init(&message);
 
-  zmq_recv(pItem->socket, &message,  0);
+  zmq_recv(**(pItem->socket), &message,  0);
 
   size_t n = zmq_msg_size(&message);
   char msg[n+1];
@@ -58,11 +58,11 @@ int main(int argc, char**argv)
     
     // Make a SUBscription socket to the URI passed in:
     
-    zmq::context_t context(1);
-    zmq::socket_t  receiver(context, ZMQ_SUB);
-    receiver.connect(pStateURI);
-    receiver.setsockopt(ZMQ_SUBSCRIBE, "STATE:", 6);
-    receiver.setsockopt(ZMQ_SUBSCRIBE, "TRANSITION:", 10);
+    zmq::context_t ZmqObjectFactory::getContextInstance();
+    ZmqSocket* receiver = ZmqObjectFactory::createSocket(ZMQ_SUB);
+    (*receiver)->connect(pStateURI);
+    (*receiver)->setsockopt(ZMQ_SUBSCRIBE, "STATE:", 6);
+    (*receiver)->setsockopt(ZMQ_SUBSCRIBE, "TRANSITION:", 10);
     
     eventLoop.Register(receiver, ZMQ_POLLIN, subHandler);
     eventLoop.pollForever(1000*1000, tick);

@@ -9,11 +9,13 @@ TCL_PACKAGES=
 
 COMPILATION_FLAGS= -I@top_srcdir@/base/os -I@top_srcdir@/base/dataflow \
 	-I@top_srcdir@/servers/portmanager -I@top_srcdir@/base/sqlite++ \
+	-I@top_srcdir@/base/os	\
 	@LIBTCLPLUS_CFLAGS@ @TCL_FLAGS@
 COMMON_LIBS      = @top_builddir@/base/os/libdaqshm.la  \
 	@top_builddir@/base/dataflow/libDataFlow.la	\
 	@top_builddir@/servers/portmanager/libPortManager.la \
 	@top_builddir@/base/sqlite++/libsqlite3pp.la	\
+	@top_builddir@/base/os/libdaqshm.la	\
 	@ZMQ_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
 
 libStatusMessages_la_SOURCES=Constants.cpp CZmqContext.cpp \
@@ -40,7 +42,7 @@ ringstatusdaemon_SOURCES  = ringStatusDaemon.cpp \
 	CRingStatusDaemon.cpp CRingStatusDaemon.h
 
 ringstatusdaemon_CPPFLAGS = -I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@ \
-	-I@top_srcdir@/base/dataflow
+	-I@top_srcdir@/base/dataflow -I@top_srcdir@/base/os
 ringstatusdaemon_LDADD  = @builddir@/libStatusMessages.la \
                             $(COMMON_LIBS) \
                             @LIBEXCEPTION_LDFLAGS@
@@ -52,7 +54,9 @@ nodist_ringstatusdaemon_SOURCES = ringstatus.c ringstatus.h
 
 
 statusaggregator_SOURCES  = aggregator.cpp
-statusaggregator_CPPFLAGS = -I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@
+statusaggregator_CPPFLAGS = -I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@ \
+	-I@top_srcdir@/base/os
+
 statusaggregator_LDADD  = @builddir@/libStatusMessages.la						  \
 													$(COMMON_LIBS) \
 													@LIBEXCEPTION_LDFLAGS@

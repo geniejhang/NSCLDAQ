@@ -138,10 +138,8 @@ CTCLSubscription::create(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
     
     // Create the socket as a sub socket and connect it to the URI:
     
-    zmq::socket_t& sock = *(new zmq::socket_t(
-        CStatusDefinitions::ZmqContext::getInstance(), ZMQ_SUB
-    ));
-    sock.connect(uri.c_str());
+    ZmqSocket& sock(* ZmqObjectFactory::createSocket( ZMQ_SUB));
+    sock->connect(uri.c_str());
     
     // Create the instance object and add it to the registry:
     
@@ -193,7 +191,7 @@ CTCLSubscription::destroy(CTCLInterpreter& interp, std::vector<CTCLObject>& objv
  *   @param subs    - CTCLObject that specifies the list of subscription definitions.
  */
 CTCLSubscription::SubscriptionInstance::SubscriptionInstance(
-    CTCLInterpreter& interp, const char* command, zmq::socket_t& sock,
+    CTCLInterpreter& interp, const char* command, ZmqSocket& sock,
     CTCLObject& obj
 ) :
     CTCLObjectProcessor(interp, command, true),
@@ -382,13 +380,13 @@ CTCLSubscription::SubscriptionInstance::onMessage(
         
         do {
             zmq::message_t part;
-            m_socket.recv(&part, 0);
+            m_socket->recv(&part, 0);
             Tcl_Obj* partObj = Tcl_NewByteArrayObj(
                 reinterpret_cast<const unsigned char*>(part.data()), part.size()
             );
             Tcl_ListObjAppendElement(pInterp, result, partObj);
             
-            m_socket.getsockopt(ZMQ_RCVMORE, &haveMore, &n);
+            m_socket->getsockopt(ZMQ_RCVMORE, &haveMore, &n);
         } while (haveMore);
         Tcl_MutexUnlock(&m_socketLock);
         return result;
@@ -570,11 +568,13 @@ CTCLSubscription::SubscriptionInstance::startPollThread()
     if (!m_dispatching) {
         
         // Marshall the thread parameter block:
-        
-        pThreadParameter param = new ThreadParameter;
-        param->s_pSocket   = &m_socket;
-        param->s_pInstance = this;
-        param->s_NotifyMe  = Tcl_GetCurrentThread();
+
+      ThreadParameter copyMe = {
+	m_socket, this, Tcl_GetCurrentThread()
+      };
+      
+      pThreadParameter param = new ThreadParameter(copyMe);
+
         
         // Thread book keeping so that the caller knows the thread is running
         // and the thread knows it's not supposed to stop:
@@ -695,7 +695,7 @@ void
 CTCLSubscription::SubscriptionInstance::pollThread(ClientData pInfo)
 {
     pThreadParameter      params       = reinterpret_cast<pThreadParameter>(pInfo);
-    zmq::socket_t*        sock         = params->s_pSocket;
+    ZmqSocket&            sock(params->s_pSocket);
     SubscriptionInstance* pInstance    = params->s_pInstance;
     Tcl_ThreadId          targetThread = params->s_NotifyMe;
     

@@ -5,6 +5,7 @@
 #include <zmq.hpp>
 #include "Asserts.h"
 #include <stdexcept>
+#include <nsclzmq.h>
 
 #include <os.h>
 
@@ -25,21 +26,19 @@ class ReadoutStatTests : public CppUnit::TestFixture {
 
 
 private:
-  zmq::context_t*  m_pContext;
-  zmq::socket_t*   m_pSender;
-  zmq::socket_t*   m_pReceiver;
+  ZmqSocket*   m_pSender;
+  ZmqSocket*   m_pReceiver;
   CStatusDefinitions::ReadoutStatistics* m_pTestObject;
 public:
   void setUp() {
-    m_pContext = &(CStatusDefinitions::ZmqContext::getInstance());
     
     // Create an internal push/pull pair between sender/receiver:
     
-    m_pSender   = new zmq::socket_t(*m_pContext, ZMQ_PUSH);
-    m_pReceiver = new zmq::socket_t(*m_pContext, ZMQ_PULL);
+    m_pSender   = ZmqObjectFactory::createSocket( ZMQ_PUSH);
+    m_pReceiver = ZmqObjectFactory::createSocket( ZMQ_PULL);
     
-    m_pReceiver->bind(uri.c_str());
-    m_pSender->connect(uri.c_str());
+    (*m_pReceiver)->bind(uri.c_str());
+    (*m_pSender)->connect(uri.c_str());
     
     // Create an object using the sender socket:
     
@@ -49,8 +48,7 @@ public:
     delete m_pTestObject;
     delete m_pSender;
     delete m_pReceiver;
-    CStatusDefinitions::ZmqContext::reset();
-    m_pContext = 0;
+    ZmqObjectFactory::shutdown();
   }
 protected:
   void construct();
@@ -81,7 +79,7 @@ void ReadoutStatTests::begin()
   zmq::message_t header;
   zmq::message_t beg;
   
-  m_pReceiver->recv(&header);
+  (*m_pReceiver)->recv(&header);
   CStatusDefinitions::Header* pHeader =
     reinterpret_cast<CStatusDefinitions::Header*>(header.data());
   
@@ -94,12 +92,12 @@ void ReadoutStatTests::begin()
  
   int64_t haveMore(0);
   size_t size(sizeof(haveMore));
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &haveMore, &size);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &haveMore, &size);
   ASSERT(haveMore);
   
   // Receive the message body part:
   
-  m_pReceiver->recv(&beg);
+  (*m_pReceiver)->recv(&beg);
   CStatusDefinitions::ReadoutStatRunInfo* pInfo =
     reinterpret_cast<CStatusDefinitions::ReadoutStatRunInfo*>(beg.data());
     
@@ -108,7 +106,7 @@ void ReadoutStatTests::begin()
   EQ(int64_t(m_pTestObject->m_runStartTime), pInfo->s_startTime);
   EQ(uint32_t(1234), pInfo->s_runNumber);
   EQ(std::string("This is a title"), std::string(pInfo->s_title));
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &haveMore, &size);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &haveMore, &size);
   ASSERT(!haveMore);
   
   // Check that the haveOpenRunFlag is now true:
@@ -135,16 +133,16 @@ void ReadoutStatTests::stats()
   int64_t haveMore(0);
   size_t s(sizeof(haveMore));
   
-  m_pReceiver->recv(&header);
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &haveMore, &s);
+  (*m_pReceiver)->recv(&header);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &haveMore, &s);
   ASSERT(haveMore);
   
-  m_pReceiver->recv(&ident);
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &haveMore, &s);
+  (*m_pReceiver)->recv(&ident);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &haveMore, &s);
   ASSERT(haveMore);
   
-  m_pReceiver->recv(&statistics);
-  m_pReceiver->getsockopt(ZMQ_RCVMORE, &haveMore, &s);
+  (*m_pReceiver)->recv(&statistics);
+  (*m_pReceiver)->getsockopt(ZMQ_RCVMORE, &haveMore, &s);
   ASSERT(!haveMore);
 
   // We're only going to bother to check the ident and statistics messages

@@ -26,6 +26,7 @@
 #include <string>
 #include <iostream>
 #include <unistd.h>
+#include <nsclzmq.h>
 
 zmq::context_t* CVarMgrServerApi::m_pContext(0);
 
@@ -42,15 +43,15 @@ CVarMgrServerApi::CVarMgrServerApi(const char* server, int port) :
     m_wd("/")
 {
     char Uri[strlen(server) + 1 + 200];
-    if (!m_pContext)  m_pContext = new zmq::context_t(2);
+    if (!m_pContext)  m_pContext = ZmqObjectFactory::getContextInstance();
     
     try {
        
-        m_pSocket  = new zmq::socket_t(*m_pContext, ZMQ_REQ);
+      m_pSocket  = ZmqObjectFactory::createSocket(ZMQ_REQ);
         
         
         sprintf(Uri, "tcp://%s:%d", server, port);
-        m_pSocket->connect(Uri);
+        (*m_pSocket)->connect(Uri);
         transaction("PING", "", "");
     }
     catch (...) {
@@ -354,7 +355,7 @@ CVarMgrServerApi::sendMessage(std::string command, std::string data1, std::strin
     memcpy(request.data(), reqsz, messageString.size());
     
     
-    if(!m_pSocket->send(request)) {
+    if(!(*m_pSocket)->send(request)) {
         perror("Failed to send");
         throw CException("Failed to send");
     }
@@ -371,7 +372,7 @@ std::pair<std::string, std::string>
 CVarMgrServerApi::getReply()
 {
     zmq::message_t reply;
-    m_pSocket->recv(&reply);
+    (*m_pSocket)->recv(&reply);
     
     // Recover the message as a string:
     

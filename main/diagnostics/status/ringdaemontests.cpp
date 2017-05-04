@@ -15,6 +15,7 @@
 #include <TCLObject.h>
 #include "testutils.h"
 #include <cstdint>
+#include <nsclzmq.h>
 
 
 static const char* uri="inproc://test";
@@ -33,9 +34,8 @@ class rsdTest : public CppUnit::TestFixture {
 
 
 private:
-  zmq::context_t*   m_zmqContext;
-  zmq::socket_t*    m_publisher;
-  zmq::socket_t*    m_subscriber;
+  ZmqSocket*    m_publisher;
+  ZmqSocket*    m_subscriber;
   
   CRingStatusDaemon* m_pDaemon;
   
@@ -46,12 +46,11 @@ public:
     killRings();
     // Setup the push/pull zmq connection between publisher and subscribder:
     
-    m_zmqContext = &CStatusDefinitions::ZmqContext::getInstance();
-    m_publisher  = new zmq::socket_t(*m_zmqContext, ZMQ_PUSH);
-    m_subscriber = new zmq::socket_t(*m_zmqContext, ZMQ_PULL);
+    m_publisher  = ZmqObjectFactory::createSocket( ZMQ_PUSH);
+    m_subscriber = ZmqObjectFactory::createSocket( ZMQ_PULL);
     
-    m_subscriber->bind(uri);
-    m_publisher->connect(uri);
+    (*m_subscriber)->bind(uri);
+    (*m_publisher)->connect(uri);
     
     // Make the object under test.
     
@@ -64,7 +63,7 @@ public:
       delete m_pDaemon;
       delete m_subscriber;
       delete m_publisher;
-      CStatusDefinitions::ZmqContext::reset();
+      ZmqObjectFactory::shutdown();
       killRings();
   }
 protected:
@@ -114,7 +113,7 @@ void rsdTest::norings() {
   // setup ensures there are no rings:
   
   startDaemon();
-  zmq_pollitem_t item = {(void*)(*m_subscriber), -1, ZMQ_POLLIN, 0};
+  zmq_pollitem_t item = {(void*)(**m_subscriber), -1, ZMQ_POLLIN, 0};
   int status = zmq_poll(&item, 1, 1000);    // 1/2 second.
   EQ(0, status);
   stopDaemon();
@@ -127,7 +126,7 @@ void rsdTest::aring()
   
   startDaemon();
   
-  std::vector<zmq::message_t*> message = receiveMessage(m_subscriber);
+  std::vector<zmq::message_t*> message = receiveMessage(*m_subscriber);
   EQ(size_t(2), message.size());
   
   // For this case we want to see that the header and body are correct:
@@ -153,13 +152,13 @@ void rsdTest::aringPeriodic()
   CRingBuffer::create("testring");
   startDaemon();
   
-  std::vector<zmq::message_t*> message = receiveMessage(m_subscriber);
+  std::vector<zmq::message_t*> message = receiveMessage(*m_subscriber);
   EQ(size_t(2), message.size());
   
   freeMessage(message);
   message.clear();
   
-  message = receiveMessage(m_subscriber);    // within a second in any event.
+  message = receiveMessage(*m_subscriber);    // within a second in any event.
   EQ(size_t(2), message.size());
   
   stopDaemon();
@@ -198,7 +197,7 @@ void rsdTest::aringWithStatistics()
   // header, ring id, producer, cons1, cons2, cons3 message parts in that order.
   
   startDaemon();
-  std::vector<zmq::message_t*> message = receiveMessage(m_subscriber);
+  std::vector<zmq::message_t*> message = receiveMessage(*m_subscriber);
   stopDaemon();
   
   EQ(size_t(6), message.size());
@@ -284,8 +283,8 @@ void rsdTest::coupleORings()
   // Start the daemon get the two message we should now get and stop the daemon:
   
   startDaemon();
-  std::vector<zmq::message_t*> m1 = receiveMessage(m_subscriber);
-  std::vector<zmq::message_t*> m2 = receiveMessage(m_subscriber);
+  std::vector<zmq::message_t*> m1 = receiveMessage(*m_subscriber);
+  std::vector<zmq::message_t*> m2 = receiveMessage(*m_subscriber);
   stopDaemon();
   
   // M1 m2 sizes are 4.

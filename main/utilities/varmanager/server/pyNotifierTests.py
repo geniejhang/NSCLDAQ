@@ -41,10 +41,11 @@ import getpass
 class NotifierTest(testBase.TestBase):
     def setUp(self):
         # Get a temp file name..
-        
+        print('setup')
         myVarDb = tempfile.NamedTemporaryFile()
         self._dbName = myVarDb.name
         myVarDb.close()                    # Unix specfic.
+        print('database is %s' % self._dbName)
         
         #  Locate the server (it's in $BINDIR/vardbServer)
         #  This is normally a shell script that runs the server
@@ -52,6 +53,7 @@ class NotifierTest(testBase.TestBase):
         
         bindir = os.getenv('BINDIR')
         self._server = os.path.join(bindir, 'vardbServer')
+        print('server is %s' % self._server)
         #
         #  Now initialize variables that startServer might create
         #  to None
@@ -61,18 +63,29 @@ class NotifierTest(testBase.TestBase):
         #
         #  Start the server unconditionally
         #
+        print('starting server')
         self.startServer(['--database', self._dbName, '--create-ok', 'yes'])
+        print('started - getting service port')
         p = self.getport('vardb-request')       # Wait for server to publish services.
+        print('port is %d making api' % p)
         self._api = nscldaq.vardb.varmgr.Api('tcp://localhost:%d' % p)
+        print('made setup complete')
         
     def tearDown(self):
+        print('teardown')
         if self._pid is not None:
+            print('killing pid %d' % self._pid)
             os.kill(self._pid, signal.SIGKILL)
+            print('waidpid for %d' % self._pid)
             os.waitpid(self._pid, 0)
+        print('server killed')
+        print ('closing stdout if needed')
         if self._stdout is not None:
             self._stdout.close()
+        print('done removing database file')
         if os.path.isfile(self._dbName):
             os.unlink(self._dbName)
+        print('done - teardown complete')
     #
     #  Create a notifier object (success)
     #
@@ -157,10 +170,12 @@ class NotifierTest(testBase.TestBase):
         self.assertTrue(n.filter("test"))
     
     def test_addFilterAccept(self):
+        print('Starting addFilterAccept')
         n = nscldaq.vardb.notifier.Notifier('tcp://localhost')
         n.addFilter(n.Accept, '/test/t*')
         self.assertTrue(n.filter("/test/testing"))
         self.assertFalse(n.filter("/test/nomathc"))
+        print('finished')
     
     def test_addFilterReject(self):
         n = nscldaq.vardb.notifier.Notifier('tcp://localhost')
@@ -170,4 +185,5 @@ class NotifierTest(testBase.TestBase):
     
     
 if __name__ == '__main__':
-    unittest.main()
+    suite = unittest.TestLoader().loadTestsFromTestCase(NotifierTest)
+    unittest.TextTestRunner(verbosity=5).run(suite)

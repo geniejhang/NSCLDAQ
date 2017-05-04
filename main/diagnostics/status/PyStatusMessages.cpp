@@ -31,42 +31,42 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <thread>
-
+#include <nsclzmq.h>
 
 static PyObject*  exception;
 
 static bool       testMode(false);                  // if true, sockets are ZMQ_PUSH,
-zmq::context_t*   pContext(&CStatusDefinitions::ZmqContext::getInstance());
+
 
 typedef struct _ringstatistics_Data {
     PyObject_HEAD
     CStatusDefinitions::RingStatistics* m_pObject;
-    zmq::socket_t*                      m_pSocket;
+    ZmqSocket*                          m_pSocket;
 } ringStatisticsData, *pRingStatisticsData;
 
 typedef struct _readoutStatisticsData {
     PyObject_HEAD
     CStatusDefinitions::ReadoutStatistics* m_pObject;
-    zmq::socket_t*                         m_pSocket;
+    ZmqSocket*                             m_pSocket;
 
 } readoutStatisticsData, *pReadoutStatisticsData;
 
 typedef struct _logmessage_Data {
     PyObject_HEAD
     CStatusDefinitions::LogMessage*   m_pObject;
-    zmq::socket_t*                    m_pSocket;
+    ZmqSocket*                        m_pSocket;
 } logMessageData, *pLogMessageData;
 
 typedef struct _statechange_Data {
     PyObject_HEAD
     CStatusDefinitions::StateChange*   m_pObject;
-    zmq::socket_t*                    m_pSocket;
+    ZmqSocket*                         m_pSocket;
 } stateChangeData, *pStateChangeData;
 
 typedef struct _subscriptionData {
     PyObject_HEAD
     CStatusSubscription*       m_pObject;
-    zmq::socket_t*             m_pSocket;
+     ZmqSocket*                m_pSocket;
 } subscriptionData, *pSubscriptionData;
 
 /**
@@ -304,11 +304,11 @@ statechange_init(PyObject* self, PyObject* args, PyObject* kwargs)
         // otherwise we get a PUSH connect socket.
         
         if (testMode) {
-            pThis->m_pSocket = new zmq::socket_t(*pContext,  ZMQ_PUB);
-            pThis->m_pSocket->bind(uri);
+   	    pThis->m_pSocket = ZmqObjectFactory::createSocket(ZMQ_PUB);
+            (*(pThis->m_pSocket))->bind(uri);
         } else {
-            pThis->m_pSocket = new zmq::socket_t(*pContext, ZMQ_PUSH );
-            pThis->m_pSocket->connect(uri);
+	  pThis->m_pSocket = ZmqObjectFactory::createSocket( ZMQ_PUSH );
+	  (*(pThis->m_pSocket))->connect(uri);
         }
         pThis->m_pObject =
             new CStatusDefinitions::StateChange(*pThis->m_pSocket, app);
@@ -524,11 +524,11 @@ logmessage_init(PyObject* self, PyObject* args, PyObject* kwargs)
         // the services of an aggregator process.
         
         if (testMode) {
-            pThis->m_pSocket = new zmq::socket_t(*pContext,  ZMQ_PUB);
-            pThis->m_pSocket->bind(uri);
+	  pThis->m_pSocket = ZmqObjectFactory::createSocket(  ZMQ_PUB);
+	  (*(pThis->m_pSocket))->bind(uri);
         } else {
-            pThis->m_pSocket = new zmq::socket_t(*pContext, ZMQ_PUSH );
-            pThis->m_pSocket->connect(uri);
+	     pThis->m_pSocket = ZmqObjectFactory::createSocket( ZMQ_PUSH );
+            (*(pThis->m_pSocket))->connect(uri);
         }
         pThis->m_pObject =
             new CStatusDefinitions::LogMessage(*pThis->m_pSocket, app);
@@ -751,12 +751,12 @@ readoutstatistics_init(PyObject* self, PyObject*args, PyObject* kwargs)
         // to the requested URI:
         
         if (testMode) {
-            pThis->m_pSocket = new zmq::socket_t(*pContext,  ZMQ_PUB);
-            pThis->m_pSocket->bind(uri);
+	    pThis->m_pSocket =ZmqObjectFactory::createSocket( ZMQ_PUB);
+            (*(pThis->m_pSocket))->bind(uri);
         } else {
             
-            pThis->m_pSocket = new zmq::socket_t(*pContext, ZMQ_PUSH);
-            pThis->m_pSocket->connect(uri);
+	    pThis->m_pSocket = ZmqObjectFactory::createSocket( ZMQ_PUSH);
+            (*(pThis->m_pSocket))->connect(uri);
         }
         pThis->m_pObject =
             new CStatusDefinitions::ReadoutStatistics(*pThis->m_pSocket, app);
@@ -1013,11 +1013,11 @@ ringstatistics_init(PyObject* self, PyObject* args, PyObject* kwargs)
         // a pub which binds to the URI:
         
         if (testMode) {
-            pThis->m_pSocket = new zmq::socket_t(*pContext, ZMQ_PUB);
-            pThis->m_pSocket->bind(uri);
+	    pThis->m_pSocket = ZmqObjectFactory::createSocket( ZMQ_PUB);
+            (*(pThis->m_pSocket))->bind(uri);
         } else {
-            pThis->m_pSocket = new zmq::socket_t(*pContext, ZMQ_PUSH);
-            pThis->m_pSocket->connect(uri);    
+	      pThis->m_pSocket = ZmqObjectFactory::createSocket(ZMQ_PUSH);
+	      (*pThis->m_pSocket)->connect(uri);    
         }
         
         pThis->m_pObject =
@@ -1365,8 +1365,8 @@ subscription_init(PyObject* self, PyObject* args, PyObject* kwargs)
         // a pub which binds to the URI:
         
         
-        pThis->m_pSocket = new zmq::socket_t(*pContext, ZMQ_SUB);
-        pThis->m_pSocket->connect(uri);
+        pThis->m_pSocket = ZmqObjectFactory::createSocket( ZMQ_SUB);
+        (*(pThis->m_pSocket))->connect(uri);
         
         pThis->m_pObject = new CStatusSubscription(*pThis->m_pSocket);
      }
@@ -1572,7 +1572,7 @@ subscription_receive(PyObject* self, PyObject* args)
     try {
         std::vector<zmq::message_t*> messageParts;
         pSubscriptionData pThis = reinterpret_cast<pSubscriptionData>(self);
-        zmq::socket_t*    pSock = pThis->m_pSocket;
+        ZmqSocket&    pSock(*pThis->m_pSocket);
         uint64_t more(0);
         size_t   n(sizeof(more));
         do {

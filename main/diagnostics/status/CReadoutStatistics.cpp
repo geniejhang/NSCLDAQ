@@ -28,7 +28,7 @@
  *   Create an instance of the class.
  */
 CStatusDefinitions::ReadoutStatistics::ReadoutStatistics(
-    zmq::socket_t& socket, std::string app
+    ZmqSocket& socket, std::string app
 ) :
     m_socket(socket),
     m_appName(app),
@@ -80,7 +80,7 @@ CStatusDefinitions::ReadoutStatistics::beginRun(
     zmq::message_t infoMsg(sizeof(info));
     memcpy(infoMsg.data(), &info, sizeof(info));
     
-    m_socket.send(infoMsg, 0);
+    m_socket->send(infoMsg, 0);
     
 }
 /**
@@ -126,8 +126,8 @@ void CStatusDefinitions::ReadoutStatistics::emitStatistics(
     std::memcpy(id.data(), &info, sizeof(info));
     std::memcpy(stat.data(), &stats, sizeof(stats));
     
-    m_socket.send(id,  ZMQ_SNDMORE);
-    m_socket.send(stat, 0);
+    m_socket->send(id,  ZMQ_SNDMORE);
+    m_socket->send(stat, 0);
 }
 /*----------------------------------------------------------------------------
  * Private utilities.
@@ -164,5 +164,5 @@ CStatusDefinitions::ReadoutStatistics::emitHeader()
     );
    zmq::message_t h(sizeof(hdr));
    std::memcpy(h.data(), &hdr, sizeof(hdr));
-   m_socket.send(h, ZMQ_SNDMORE);
+   m_socket->send(h, ZMQ_SNDMORE);
 }

@@ -32,6 +32,7 @@
 #include <cstring>
 #include <CMultiAggregator.h>
 #include <thread>
+#include <nsclzmq.h>
 
 /**
  *  This test program subscribes to ring status updates and just dumps
@@ -82,7 +83,7 @@ getPort()
  * @return  Susbcription object
  */
 static CStatusSubscription*
-subscribe(zmq::socket_t& sock)
+subscribe(ZmqSocket& sock)
 {
     CStatusSubscription* pSub = new CStatusSubscription(sock);
     CStatusSubscription::RequestedTypes types = {
@@ -142,7 +143,6 @@ int main(int argc, char** argv)
     // The special Service 'THREAD' starts off the multi aggregator as a thread.
     
     std::string subscriptionUri;
-    zmq::context_t*  pContext = &CStatusDefinitions::ZmqContext::getInstance();
     if (std::string("THREAD") == Service) {
         static CMultiAggregator agg("StatusPublisher", 10);
         subscriptionUri = agg.getPublisherURI();
@@ -158,8 +158,8 @@ int main(int argc, char** argv)
         subscriptionUri = connection.str();
     }
     
-    zmq::socket_t sock(*pContext, ZMQ_SUB);
-    sock.connect(subscriptionUri.c_str());
+    ZmqSocket& sock(*(ZmqObjectFactory::createSocket(ZMQ_SUB)));
+    sock->connect(subscriptionUri.c_str());
     
     CStatusSubscription* sub = subscribe(sock);
     
@@ -173,14 +173,14 @@ int main(int argc, char** argv)
         
         // Get the header and ensure it's really a ring status message:
         
-        sock.recv(&header);
+        sock->recv(&header);
         CStatusDefinitions::Header* pHeader =
             reinterpret_cast<CStatusDefinitions::Header*>(header.data());
         assert(pHeader->s_type == CStatusDefinitions::MessageTypes::RING_STATISTICS);
         
         std::cout << *pHeader << std::endl;
         
-        sock.recv(&ringId);
+        sock->recv(&ringId);
         CStatusDefinitions::RingStatIdentification* pRingId =
             reinterpret_cast<CStatusDefinitions::RingStatIdentification*>(ringId.data());
         std::cout  << *pRingId << std::endl;
@@ -188,19 +188,19 @@ int main(int argc, char** argv)
         std::uint64_t more(0);
         size_t        s(sizeof(more));
         
-        sock.getsockopt(ZMQ_RCVMORE, &more, &s);
+        sock->getsockopt(ZMQ_RCVMORE, &more, &s);
         
         // Process the statistics message segments;
         
         while(more) {
             zmq::message_t client;
-            sock.recv(&client);
+            sock->recv(&client);
             CStatusDefinitions::RingStatClient* pClient =
                 reinterpret_cast<CStatusDefinitions::RingStatClient*>(client.data());
                 
             std::cout << *pClient << std::endl;
             
-            sock.getsockopt(ZMQ_RCVMORE, &more, &s);
+            sock->getsockopt(ZMQ_RCVMORE, &more, &s);
         }
         std::cout << "-------------------------\n";
     }

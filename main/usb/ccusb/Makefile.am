@@ -28,6 +28,7 @@ CCUSBReadout_CPPFLAGS = -I@top_srcdir@/usb/ccusb/ccusb \
 	-I@top_srcdir@/base/dataflow	                       \
         -I@top_srcdir@/servers/portmanager \
 	-I@top_srcdir@/diagnostics/status  \
+	-I@top_srcdir@/base/os			\
 	$(TCL_FLAGS) @THREADCXX_FLAGS@ 
 
 
@@ -40,6 +41,7 @@ CCUSBReadout_LDADD	= \
 	@top_builddir@/base/dataflow/libDataFlow.la \
 	@top_builddir@/base/thread/libdaqthreads.la		\
 	@top_builddir@/diagnostics/status/libStatusMessages.la \
+	@top_builddir@/base/os/libdaqshm.la			\
 	@ZMQ_LDFLAGS@						\
 	@LIBTCLPLUS_LDFLAGS@	\
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@ 
