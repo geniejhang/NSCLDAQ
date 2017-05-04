@@ -247,8 +247,6 @@ proc EVBC::start args {
     set orderer [file join $bindir startOrderer]
     set pipecommand "tclsh 2>orderer.err";        # TODO - this should be @TCLSH_CMD@
     
-    #  If -teering is not null hook teering into the pipeline:
-    
     set intermediateRing [$options cget -teering]
     if {$intermediateRing} {
         set teering "[file join $bindir teering] --ring=[$options cget -teeringname]"
@@ -582,8 +580,8 @@ proc EVBC::onBegin {} {
 
     set teering [$EVBC::applicationOptions cget -teering]
     set teeringname [$EVBC::applicationOptions cget -teeringname]
-    if {$teering ne ""} {
-	catch {ringbuffer create $teeringname}
+    if {$teering} {
+      catch {ringbuffer create $teeringname}
     }
     set destring [$EVBC::applicationOptions cget -destring]
     if {$destring ne ""} {
@@ -1110,6 +1108,7 @@ proc ::EVBC::enter {from to} {
     if {($from eq "Active") && ($to eq "Halted")} {
         ::EVBC::onEnd
     }
+
     if {$to eq "NotReady"} {
         catch {::EVBC::stop}
     }
