@@ -152,6 +152,12 @@ proc EndrunMon::startMonitor ringUrl {
                   thread::mutex unlock $mutex
                   break
                 }
+
+                # if there are no ends runs to wait for... then just stop waiting.
+                if {[tsv::get EndrunMon endsExpected] == 0} {
+                  break;
+                }
+
                 #
                 # Handle requests to abort without signalling.
                 #

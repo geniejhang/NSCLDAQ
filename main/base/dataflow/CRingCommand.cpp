@@ -213,9 +213,16 @@ CRingCommand::create(CTCLInterpreter& interp,
     interp.setResult(result);
     return TCL_ERROR;
   }
+  catch (std::exception& exc) {
+    string result;
+    result += "Failed to create ring buffer\n";
+    result += exc.what();
+    interp.setResult(result);
+    return TCL_ERROR;
+  }
   catch (...) {
     string result;
-    result += "Faile to create ring buffer\n";
+    result += "Failed to create ring buffer\n";
     interp.setResult(result);
     return TCL_ERROR;
   }
