@@ -134,6 +134,12 @@ CRingBuffer::create(std::string name,
 		     bool   tempMasterConnection)
 {
 
+    if (name.size() == 0) {
+        std::string msg("CRingBuffer::create() cannot create ring with name ");
+        msg +=          " that is an empty string";
+        throw std::runtime_error(msg);
+    }
+
     // Figure out the entire size of the shared memory region and truncate the file to that
     // size:
     size_t headerSize = sizeof(RingHeader) +

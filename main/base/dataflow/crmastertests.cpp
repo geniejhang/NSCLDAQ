@@ -40,6 +40,7 @@ class rmasterTests : public CppUnit::TestFixture {
   CPPUNIT_TEST(registration_0);
   CPPUNIT_TEST(registration_1);
   CPPUNIT_TEST(registration_2);
+  CPPUNIT_TEST(registration_3);
   CPPUNIT_TEST(unregister_0);
   CPPUNIT_TEST(unregister_1);
   CPPUNIT_TEST(unregister_2);
@@ -70,6 +71,7 @@ protected:
   void registration_0();
   void registration_1();
   void registration_2();
+  void registration_3();
   void unregister_0();
   void unregister_1();
   void unregister_2();
@@ -167,6 +169,16 @@ void rmasterTests::registration_2() {
    
   CRingBuffer::remove("_mytestring_");
 }
+
+void rmasterTests::registration_3() {
+  // local ringmaster cannot register (i.e. create) ring with an empty string for a name...
+  //  we will use the CRingBuffer class to test this.
+  CPPUNIT_ASSERT_THROW_MESSAGE(
+      "Registering ring buffer with existing shared mem",
+      CRingBuffer::create(""),
+              std::runtime_error);
+   }
+
 // Ensure we can remove rings.
 // 1. Removing a ring that exists should work as localhost
 // 2. Removing a ring that exists should fail as remote host.
