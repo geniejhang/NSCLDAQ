@@ -406,7 +406,9 @@ CMTDC32::Initialize(CVMUSB& controller)
     
     addWrite(list, base+ReadoutReset, 1);
     addWrite(list, base+InitFifo, 0);
-    addWrite(list, base+StartAcq, 1);
+    //    addWrite(list, base+StartAcq, 1);   // Must not terminate lists in delays:
+
+    list.addWrite16(base+InitFifo, initamod, 0);
     
     // Run the list:
 
