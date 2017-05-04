@@ -58,7 +58,7 @@ CTCLStateManagerCommand::~CTCLStateManagerCommand()
         std::map<std::string, CTCLStateManagerInstanceCommand*>::iterator
             p = m_instances.begin();
             destroy(p);
-            
+            m_instances.erase(p);
     }
 }
 /**
