@@ -26,6 +26,7 @@
 #include <V12/CRingItem.h>
 #include <V12/CRawRingItem.h>
 #include <V12/CRingStateChangeItem.h>
+#include <V12/CCompositeRingItem.h>
 #include <V12/DataFormat.h>
 #include <V12/CDataFormatItem.h>
 #include <V12/format_cast.h>
@@ -343,9 +344,9 @@ class noData :  public CRingBuffer::CRingBufferPredicate
                 to be one or more ring format items.
                */
 
-               if (rawItem.type() == RING_FORMAT) {
+               if ((rawItem.type() & 0x7fff) == RING_FORMAT) {
                    formatItem = rawItem;
-               } else if (rawItem.type() == BEGIN_RUN) {
+               } else if ((rawItem.type() & 0x7fff) == BEGIN_RUN) {
                    m_nBeginsSeen = 1;
                    break;
                }
@@ -447,10 +448,16 @@ class noData :  public CRingBuffer::CRingBufferPredicate
      readItem(*m_pRing, rawItem);
    } else {
      if (recording) {
-       auto stateItem = format_cast<CRingStateChangeItem>(rawStateItem);
+         if (rawStateItem.isComposite()) {
+             auto compStateItem = format_cast<CCompositeRingItem>(rawStateItem);
+             auto pStateItem = std::dynamic_pointer_cast<CRingStateChangeItem>(compStateItem[0]);
+             runNumber = pStateItem->getRunNumber();
 
-       runNumber  = stateItem.getRunNumber();
-       fd         = openEventSegment(runNumber, segment);
+         } else {
+             auto stateItem = format_cast<CRingStateChangeItem>(rawStateItem);
+             runNumber  = stateItem.getRunNumber();
+         }
+         fd         = openEventSegment(runNumber, segment);
      }
 
      rawItem = rawStateItem;
@@ -567,7 +574,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
        }
      }
 
-     if(itemType == END_RUN) {
+     if((itemType & 0x7fff) == END_RUN) {
        log("Got an end run item", CStatusDefinitions::SeverityLevels::DEBUG);
        endsRemaining--;
        // If we're participating in the state manager and our state is not
@@ -579,7 +586,7 @@ class noData :  public CRingBuffer::CRingBufferPredicate
          break;
        }
      }
-     if (itemType == ABNORMAL_ENDRUN) {
+     if ((itemType & 0x7fff) == ABNORMAL_ENDRUN) {
        endsRemaining = 0;             // In case we're not --one-shot
        break;                         // unconditionally ends the run.
      }
