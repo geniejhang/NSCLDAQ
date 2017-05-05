@@ -466,7 +466,7 @@ proc ::EventLog::_finalizeRun {} {
         #  Now what's left gets recursively/link-followed copied to the destDir
         #  using tar.
         
-        set tarcmd "(cd $srcdir; tar chf - .) | (cd $destDir; tar --warning=no-timestamp xpf -)"
+        set tarcmd "(cd $srcdir; tar chf - .) | (cd $destDir; tar xpf - --warning=no-timestamp)"
         set tarStatus [catch {exec sh << $tarcmd} msg]
         if {$tarStatus} {
             tk_messageBox -title {Tar Failed} -icon error -type ok \
@@ -694,7 +694,6 @@ proc ::EventLog::runEnding {} {
     
     set startFile [file join [::ExpFileSystem::getCurrentRunDir] .started]
     set exitFile [file join [::ExpFileSystem::getCurrentRunDir] .exited]
-    set ui [::RunControlSingleton::getInstance]
 
     # ne is used below because the logger could be a pipeline in which case
     # ::EventLog::loggerPid will be a list of pids which freaks out ==.
@@ -702,15 +701,6 @@ proc ::EventLog::runEnding {} {
     if {$::EventLog::loggerPid ne -1} {
         
         set ::EventLog::expectingExit 1
-        
-        #  First do a vwait for eventLogEnded after disabling the
-        #  begin/end etc. buttons.
-        #  A timeout is used in case there's a problem and the event log
-        #  never exists.
-        
-
-        $ui configure -state disabled
-
         
         set timeoutId [after \
             [expr {$::EventLog::shutdownTimeout*1000}]    \
@@ -754,7 +744,6 @@ proc ::EventLog::runEnding {} {
                 {Run ended}
         }
     }
-    $ui configure -state normal
 
     ReadoutGUIPanel::normalColors
 }
