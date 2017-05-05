@@ -166,14 +166,12 @@ snit::type JobProcessor {
        $runStateObserver attachToRing
      }
       vwait [myvar processingComplete]
-      puts "done waiting on processingComplete"
 
       # wait for some time to finish getting all of the end runs
       after 100
 
       if {$processingComplete == 1} {
         # job ended normally
-        puts "we are going to try to end this thing"
 
         if {$::EventLog::loggerPid != -1} { 
           ::EventLog::runEnding
@@ -192,7 +190,6 @@ snit::type JobProcessor {
 
       } else {
         # run aborted
-         puts "aborted"
         set completionStatus ABORT
         $self forceStopProcessing
       }
@@ -203,7 +200,6 @@ snit::type JobProcessor {
   }
 
   method onEndRun {item} {
-    puts "onEndRun"
     set processingComplete 1
   }
 
