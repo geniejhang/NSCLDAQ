@@ -190,9 +190,7 @@ proc ::EndrunMon::waitEndRun {} {
     # and on the thread exit.
     #
     
-    set ui [::RunControlSingleton::getInstance]
-    $ui configure -state disabled
-    
+
     while {[thread::exists $::EndrunMon::tid]} {
         thread::cond wait $EndrunMon::condVar $::EndrunMon::mutex 300
         update;              #Keep UI alive.
@@ -207,8 +205,7 @@ proc ::EndrunMon::waitEndRun {} {
     #
     set EndrunMon::tid ""
     thread::mutex unlock $EndrunMon::mutex
-    
-    $ui configure -state normal
+
 }
 ##
 # abort
