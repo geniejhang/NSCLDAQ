@@ -6,6 +6,7 @@ COMPILATION_FLAGS	=	-I@top_srcdir@/sbs/vmemodules	\
 			-I@top_srcdir@/base/headers	\
 			-I@top_srcdir@/servers/portmanager	\
 			-I@top_srcdir@/base/dataflow		\
+                        -I@top_srcdir@/base/sfinae_tools \
       -I@top_srcdir@/utilities/IO		\
       -I@top_srcdir@/utilities/nscldaq-format/format		\
       -I@top_srcdir@/utilities/nscldaq-format/Buffer		\
