@@ -58,7 +58,7 @@ snit::type OfflineEVBInputPipeParams {
     set errors [list]
 
     $self validateFiles errors
-    $self validateUnglomId errors
+#    $self validateUnglomId errors
     $self validateInputRing errors
 
     return $errors
@@ -291,7 +291,6 @@ snit::type OfflineEVBInputPipeline {
   # @returns the command pipeline 
   method _createPipelineCommand {params} {
 
-    set unglomid  [$params cget -unglomid]
     set inputring [$params cget -inputring]
     set fnames     [$params cget -file]
 
@@ -300,7 +299,7 @@ snit::type OfflineEVBInputPipeline {
     foreach file $fnames {
       append pipeline "$file "
     }
-    append pipeline  "| $daqbin/unglom --id $unglomid "
+    append pipeline  "| $daqbin/unglom "
     append pipeline  "| $daqbin/frag2ring --strip "
     append pipeline  "| $daqbin/stdintoring $inputring "
     append pipeline  "|& cat"

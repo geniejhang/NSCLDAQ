@@ -47,7 +47,6 @@ namespace eval HoistConfig {
   variable info
   variable ring
   variable id
-  variable expectbh 
 }
 
 
@@ -96,7 +95,8 @@ snit::type JobProcessor {
     set stateMachine  [RunstateMachineSingleton %AUTO%]
     set processingComplete 0
 
-    set runStateObserver [RunStateObserver %AUTO% -onend [mymethod onEndRun]]
+    set runStateObserver [RunStateObserver %AUTO% -onend [mymethod onEndRun] \
+                              -oncompositeend [mymethod onEndRun]]
 
     $self configurelist $args
 
@@ -123,9 +123,10 @@ snit::type JobProcessor {
   method setupStateMachine {} {
     # rdoCalloutsBundle has already been registered
     ::EventLog::register
-    ::EVBStateCallouts::register
-    ::RingSourceMgr::register
-    ::EVBConfigure::register
+#    ::EVBStateCallouts::register
+#    ::RingSourceMgr::register
+#    ::EVBConfigure::register
+    ::EVBC::useEventBuilder
     ::DataSourceMgr::register
   }
 
@@ -164,8 +165,8 @@ snit::type JobProcessor {
        $runStateObserver configure -ringurl $newRing
        $runStateObserver attachToRing
      }
-
       vwait [myvar processingComplete]
+      puts "done waiting on processingComplete"
 
       # wait for some time to finish getting all of the end runs
       after 100
@@ -177,6 +178,7 @@ snit::type JobProcessor {
         if {$::EventLog::loggerPid != -1} { 
           ::EventLog::runEnding
         }
+
         # the transition to active was successful so we should expect that 
         # processing succeeds.
         #
@@ -201,6 +203,7 @@ snit::type JobProcessor {
   }
 
   method onEndRun {item} {
+    puts "onEndRun"
     set processingComplete 1
   }
 
@@ -233,13 +236,20 @@ snit::type JobProcessor {
   method startProcessing {} {
     variable stateMachine
 
-    # Transition the state machine to Starting (note this schedules
-    # a transition to Active on its own)
+    # Transition the state machine to Starting ... then to Halted
     if {[catch {$stateMachine transition Starting} msg]} {
       # things may not like being forced back to NotReady
       catch {$stateMachine transition NotReady}
       $self tearDown
       set msg "JobProcessor::startProcessing failed to transition to Starting : $msg"
+      tk_messageBox -icon error -message $msg
+      return -code error $msg 
+    }
+    if {[catch {$stateMachine transition Halted} msg]} {
+      # things may not like being forced back to NotReady
+      catch {$stateMachine transition NotReady}
+      $self tearDown
+      set msg "JobProcessor::startProcessing failed to transition to Halted : $msg"
       tk_messageBox -icon error -message $msg
       return -code error $msg 
     }
@@ -349,17 +359,13 @@ snit::type JobProcessor {
       append msg  "-hoistparams are nonexistent."
       return -code error $msg
     }
-    set ::HoistConfig::tstamplib  [$options(-hoistparams) cget -tstamplib]
     set ::HoistConfig::info       [$options(-hoistparams) cget -info]
     set ::HoistConfig::ring       [$options(-hoistparams) cget -sourcering]
     set ::HoistConfig::id         [$options(-hoistparams) cget -id]
-    set ::HoistConfig::expectbh   [$options(-hoistparams) cget -expectbheaders]
 
     ::EVBC::registerRingSource tcp://localhost/$::HoistConfig::ring \
-      $::HoistConfig::tstamplib \
       $::HoistConfig::id \
       $::HoistConfig::info \
-      $::HoistConfig::expectbh
   }
 
   ## Pass the configuration information to the ::EVBC:: parameters
@@ -405,10 +411,8 @@ snit::type JobProcessor {
     Configuration::Set EventLoggerRing           [$options(-outputparams) cget -ringname]
     Configuration::Set EventLogUseNsrcsFlag      1 
 
-    # when starting the eventlog the builder will compute how many data sources are 
-    # registered and uses that number to set the value of the --number-of-sources
-    # parameter. Since we are only expecting 1 data source, then we can set up the
-    Configuration::Set EventLogAdditionalSources [expr [$options(-outputparams) cget -nsources]-1] 
+    Configuration::Set EventLogAdditionalSources 0 ; # the output of glom will always have one end item
+                                                   ; # unless, of course, something goes wrong
     Configuration::Set EventLogUseChecksumFlag   1 
   }
 
