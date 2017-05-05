@@ -1849,7 +1849,101 @@ vwait forever
         global state.  These are:
       </para>
       <variablelist>
-      
+        <varlistentry>
+          <term><varname>ReadoutParentDir </varname>(string)</term>
+          <listitem>
+            <para>
+              If this variable is not empty, it will be interpreted as the
+              directory name in which the state program definitions are.
+              If empty the state program definitions will be in directorys
+              below <filename>RunState</filename>.  The intent of this
+              is to support muliple configurations.  This support is not
+              yet complete however.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>Recording </varname>(bool)</term>
+          <listitem>
+            <para>
+              Event loggers are expected to check this variable at the start
+              of each run (transition from <literal>Ready</literal> to
+              <literal>Beginning</literal> and thence to <literal>Active</literal>).
+              If this variable is <literal>true</literal>, event loggers are
+              expected to log the data they receive to file.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>RunNumber</varname> (integer)</term>
+          <listitem>
+            <para>
+              When a run begins, this variable contains the run number.
+              Run numbers should be unique across an experiment.  The control
+              panel will increment the run number as it ends each run.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>Title </varname>(string)</term>
+          <listitem>
+            <para>
+              When a run begins, this variable contains the run title.
+              The run title is intended to describe the run to the experimenter.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>State</varname> (RunStateMachine)</term>
+          <listitem>
+            <para>
+              The Global state variable.  State transitions are initiated by
+              setting this variable to a new, allowable state.  State programs
+              are expected to subscribe to changes in this variable and
+              to echo their completed state transitions back into their own
+              state variables.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>SystemStatus </varname> (StateStatus)</term>
+          <listitem>
+            <para>
+              This enum can have one of two values:
+              <literal>Consistent</literal>, or <literal>Inconsistent</literal>.
+              When a state transition is requested, this variable is set to
+              <literal>Inconsistent</literal> to indicate that not all
+              participants have completed their transitions.
+              When all participates state variables match that of the
+              global state variable, this variable gets set to
+              <literal>Consistent</literal>
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>Timeout</varname> (integer)</term>
+          <listitem>
+            <para>
+              The maximum number of seconds a state transition is allowed to take
+              before it times out.  If a state transition requires more than
+              that time it is considered failed and the system is
+              transitioned to <literal>NotReady</literal>. 
+            </para>
+            <para>
+              A global state change to not ready requests that all programs
+              set their state variables to <literal>NotReady</literal> and
+              then exit.   The boot manager participates in this transition.
+              Any programs that don't properly transition to
+              <literal>NotReady</literal> are killed off by the boot manager
+              which subsequently sets their state variables to <literal>NotReady</literal>.
+            </para>
+            <para>
+              This participation ensures that if a program is hung up and unable
+              to respond to a state transition, transitions of the system
+              as a whole to <literal>NotReady</literal> will complete.k
+            </para>
+          </listitem>
+        </varlistentry>       
       </variablelist>
       <para>
         Sub folders, with the same name as the <literal>name</literal> property
@@ -1897,7 +1991,7 @@ vwait forever
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><vaname>editorx</vaname> (integer)</term>
+          <term><varname>editorx</varname> (integer)</term>
           <listitem>
             <para>
               Used only by the graphical editor, and data flow dashboards.
@@ -1976,21 +2070,417 @@ vwait forever
       </variablelist>
       <para>
         Some program types have additional variables needed to describe their
-        special needs.
+        special needs.  These will be described below:
       </para>
-    </section>
-    <section>
-      <title>Event builders and their data sources</title>
-      <para>
-        
-      </para>
+      <section>
+        <title>Readout program specific variables</title>
+        <para>
+          Readout programs have additional variables associated with them.
+          These variables supply values for some of the options that are common
+          between all readout program frameworks:
+        </para>
+        <variablelist>
+          <varlistentry>
+            <term><varname>appname </varname>(string)</term>
+            <listitem>
+              <para>
+                The Readout programs emit status messages.  Each status message
+                emitter is identified by an application name and the host in which
+                it is running.  This variable holds the application name.
+                It is strongly recommended that within a host, the
+                <varname>appname</varname> values are all unique.
+              </para>
+              <para>
+                The value of this variable is passed to the Readout program's
+                <option>--appname</option> command line option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>init script </varname>(string)</term>
+            <listitem>
+              <para>
+                All Readout programs are command line programs that are based
+                on a Tcl interpreter.   Readout frameworks aslo support the
+                specification of an initialization script that is run
+                immediately after the software initializes.  This variable specifies
+                the filesystem path to that script.  
+              </para>
+              <para>
+                The value of this variable is passed to the
+                <option>--init-script</option> Readout program command line
+                options.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>port</varname> (string)</term>
+            <listitem>
+              <para>
+                Readout program frameworks can run Tcl servers.  For the
+                XXUSBReadout frameworks, this capability provides slow
+                controls.   For the SBSReadout framework, this capability
+                is most often used to push the values of run variables (e.g.
+                EPIC channel values) to the Readout program for inclusion into
+                the event data stream.
+              </para>
+              <para>
+                The value of this variable is used as the value for
+                <option> --port</option>
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>sourceid </varname> (string)</term>
+            <listitem>
+              <para>
+                Provides the source id placed in event fragments emitted by this
+                readout.   Source Ids should be unique across the data acquisition
+                system.  Note that event builders also have source ids associated
+                with them when allocating these values.
+              </para>
+              <para>
+                The value of this variable is used as the value of the
+                <option>--sourceid</option> option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>status service </varname> (string)</term>
+            <listitem>
+              <para>
+                Readout programs produce log messages and status messages in
+                within the NSCLDAQ status distribution system.  The first stage
+                of aggregation of status messages is a server to which all
+                status emitters in a host send their messages.
+              </para>
+              <para>
+                The value of this variable is the name of the service the per
+                node aggregator advertises.  This defaults to <literal>StatusAggregator</literal>
+                and normally does not have to be changed.  The value of this
+                variable is used as the <option>--status-service</option>
+                command line option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>type </varname> (string)</term>
+            <listitem>
+              <para>
+                This will have the value <literal>Readout</literal> which
+                indicates that this program is a readout program.  The
+                <literal>type</literal> variable is used by
+              </para>
+              <itemizedlist>
+                <listitem>
+                  <para>
+                    The graphical program editor to select the graphical
+                    representation of the object and the set of properties
+                    it provides.
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    The status dashboard to select the graphical representation
+                    of the program in the dataflow graph.
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    The boot manager to know how to construct the full command
+                    that runs the program from the set of properties and their
+                    values.
+                  </para>
+                </listitem>
+              </itemizedlist>
+            </listitem>
+          </varlistentry>   
+        </variablelist>
+      </section>
+      <section>
+        <title>Eventlogger specific variables.</title>
+        <para>
+           In addition to the base set of variables all state programs have,
+           event log programs have these variables:
+        </para>
+        <variablelist>
+          <varlistentry>
+            <term><varname>Program Parameters</varname> (string)</term>
+            <listitem>
+              <para>
+                This variable is a well formatted Tcl list of additional
+                command line parameters (program options and their values
+                are also parameters) to pass to the event logger when starting.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>appname </varname> (string)</term>
+            <listitem>
+              <para>
+                The application name this event logger should use when emittting
+                status/log messages.  Status message sources are identified by the
+                originating host and an application name that should be unique
+                within that host.  
+              </para>
+              <para>
+                The value of this variable will be used as the value of the
+                eventlog's <option>--appname</option> option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>checksum </varname> (boolean)</term>
+            <listitem>
+              <para>
+                If true, the event logger will produce an sha512 checksum
+                of data taking runs.  If true, the <option>--checksum</option>
+                will be added to the event logger command line.  If not this
+                option wll be omitted.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>combine runs</varname> (boolean)</term>
+            <listitem>
+              <para>
+                If <literal>true</literal> the <option>--combine-runs</option>
+                is added to the event log startup command line.  If not it is not.
+                <option>--combine-runs</option> all the runs the event logger
+                receives will be put in a single set of output files.  Ntoe that
+                this only applies to <option>--one-shot</option> runs of the event
+                loggger.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>destdir </varname> (string)</term>
+            <listitem>
+              <para>
+                Path to the directory in which this event logger will store event
+                files.  Value of the <option>--path</option> option
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>freesevere </varname> (integer)</term>
+            <listitem>
+              <para>
+                The event logger will emit a severe status message if the
+                amount of free space is lower than this percentage of total
+                space. This is the value of the <option>--freesevere</option>
+                option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>freewarn </varname>(string)</term>
+            <listitem>
+              <para>
+                The event logger will emit a warning status meesage when the
+                free space is lower than this percentage of total space.
+                This will be used as the value of the
+                <option>--freewarn</option> option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>prefix </varname> (string)</term>
+            <listitem>
+              <para>
+                String which is prefixed to the event file names produced
+                by this event logger.  Value given to the
+                <option>--prefix</option> option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>segmentsize </varname> (string)</term>
+            <listitem>
+              <para>
+                The event logger will chunk the event file into segments that are
+                no more than this number of bytes.  This allows use on
+                filesystems that may have limits on file size.  Note that
+                the values may be an integer or may be an integer suffixed with
+                a unit like <literal>g</literal> for giga or <literal>m</literal>
+                for mega.  So a value like <literal>2g</literal> means segments
+                of about 2GB.
+              </para>
+              <para>
+                This will be the value of the <option>--segmentsize </option> option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>status service </varname>(string)</term>
+            <listitem>
+              <para>
+                Event log programs produce log messages and status messages in
+                within the NSCLDAQ status distribution system.  The first stage
+                of aggregation of status messages is a server to which all
+                status emitters in a host send their messages.
+              </para>
+              <para>
+                The value of this variable is the name of the service the per
+                node aggregator advertises.  This defaults to <literal>StatusAggregator</literal>
+                and normally does not have to be changed.  The value of this
+                variable is used as the <option>--service</option>
+                command line option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>type</varname> (string)</term>
+            <listitem>
+              <para>
+                Always has the value <literal>EventLog</literal>.   This informs
+                software (and humans) that this program is an event logger.
+              </para>
+              <para>
+                The type is used to determine how to display the object on the
+                editing and dashboard canvases.  It's also used to determine
+                how to translate the variables into a command that starts up
+                the object.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </section>
     </section>
     <section>
       <title>Services and Data Analysis programs</title>
       <para>
-        
+        A service is a program that must run but is not in the data flow.  A
+        data anlysis program is a program that connects to the data flow but
+        neither participates in state transitions nor is an event builder data
+        source.
       </para>
+      <para>
+        Data analysis programs are actually represented as services that have
+        additional information that allows them to be linked to input and or
+        output rings.
+      </para>
+      <note>
+        <title>NOTE</title>
+        <para>
+          Data analysis programs are not intended to represent transient
+          programs like SpecTcl or root that can start and stop a the
+          user's will.   If a data analysis program or a service exits, a system
+          failure is declared.
+        </para>
+        <para>
+          Data analysis programs are intended to capture programs such as the
+          S800 re-formatting filter, which live in the data flow and are
+          essential to the health of the experiment.
+        </para>
+      </note>
+      <para>
+        This section will look at how Services and data anaylsis programs
+        are represented in the variable database.
+      </para>
+      <para>
+        Both Services and data analysis software represented as subdirectories
+        in the <filename>/Services</filename> top level directory.  The name
+        of the subdirectory is the same as the name of the service or
+        analysis program.  Therefore if you name the boot server <literal>bootserver</literal>,
+        it will be described in the directory
+        <filename>/Services/bootserver</filename>.
+      </para>
+      <para>
+        Here are the variables that define a service:
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term><varname>args </varname> (string)</term>
+          <listitem>
+            <para>
+              Valid Tcl list that contains additional command line arguments
+              passed to the service when it's started.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>host </varname> (string)</term>
+          <listitem>
+            <para>
+              The host on which the service should be run.  This can be  dotted
+              IP address or a DNS name.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>path </varname> (string)</term>
+          <listitem>
+            <para>
+              File system path that describes where the service program lives.
+              This is used to start the service.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>type </varname> (string)</term>
+          <listitem>
+            <para>
+              Will always have the value <literal>service</literal> to indicate
+              that this is a service.   This determines how the program is
+              started as well as how the program is represented on displays
+              of the data flow (e.g. in the program editor or status dashboard).
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>editorx </varname>(integer)</term>
+          <listitem>
+            <para>
+              The X position on at which this service should be placed
+              on the canvas for
+              programs that display the dataflow
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>editory </varname>(integer)</term>
+          <listitem>
+            <para>
+              The Y position on at which this service should be placed
+              on the canvas for
+              programs that display the dataflow
+            </para>
+          </listitem>
+        </varlistentry>        
+      </variablelist>
+      <para>
+        In adition to the variables above, analysis programs get the following
+        additional variables.  These are loaded into environment variables
+        for the service when it starts.
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term><varname>inring</varname> (string)</term>
+          <listitem>
+            <para>
+              URI that describes the ringbuffer (if any) the program takes
+              data from.  Note that at startup, this value of this variable
+              will be available to the program in the
+              <literal>INRING</literal> environment variable.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>outring</varname> (string)</term>
+          <listitem>
+            <para>
+              The name of the program's output ring.  Since programs may only
+              provide data t local ringbuffers, this is a ring name, not a URI.
+              When the program is started, the value of this variable is
+              available to it in the <literal>INRING</literal> environment
+              variable.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
     </section>
+  </section>
   </section>
 </chapter>
 

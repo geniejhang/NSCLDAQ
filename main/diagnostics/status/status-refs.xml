@@ -325,7 +325,7 @@ public:
         <constructorsynopsis>
           <methodname>RingStatistics</methodname>
           <methodparam>
-            <type>zmq::socket_t&amp;</type> <parameter> socket</parameter>
+            <type>ZmqSocket&amp;</type> <parameter> socket</parameter>
           </methodparam>
           <methodparam>
             <type>std::string </type><parameter>app</parameter>
@@ -375,7 +375,7 @@ public:
       <constructorsynopsis>
         <methodname>ReadoutStatistics</methodname>
         <methodparam>
-          <type>(zmq::socket_t&amp; </type> <parameter>socket</parameter>
+          <type>(ZmqSocket&amp; </type> <parameter>socket</parameter>
         </methodparam>
         <methodparam>
           <type>std::string</type> <parameter> app</parameter>
@@ -409,7 +409,7 @@ public:
         <constructorsynopsis>
           <methodname>LogMessage</methodname>
           <methodparam>
-            <type>zmq::socket_t&amp;</type> <parameter>socket</parameter>
+            <type>ZmqSocket&amp;</type> <parameter>socket</parameter>
           </methodparam>
           <methodparam>
             <type>std::string </type> <parameter>app</parameter>
@@ -433,7 +433,7 @@ public:
         <constructorsynopsis>
           <methodname>StateChange</methodname>
           <methodparam>
-            <type>(zmq::socket_t&amp;</type> <parameter> socket</parameter>
+            <type>(ZmqSocket&amp;</type> <parameter> socket</parameter>
           </methodparam>
           <methodparam>
             <type>std::string </type><parameter>app</parameter>
@@ -556,7 +556,7 @@ public:
               <constructorsynopsis>
                   <methodname>RingStatistics</methodname>
                   <methodparam>
-                    <type>zmq::socket_t&amp;</type> <parameter> socket</parameter>
+                    <type>ZmqContext&amp;</type> <parameter> socket</parameter>
                   </methodparam>
                   <methodparam>
                     <type>std::string </type><parameter>app</parameter>
@@ -567,10 +567,12 @@ public:
             <listitem>
                 <para>
                   Constructs an instance of the class. <parameter>socket</parameter>
-                  is a reference to the ZMQ socket that will be used to
+                  is a reference to the ZMQ socket pointer like object that will be used to
                   PUSH data out of the application.  This socket must be created
                   by the caller and hooked into the appropriate communication
-                  type.   
+                  type.    Use
+                  <classname>ZmqObjectFactory</classname>::<methodname>createSocket</methodname>
+                  to create this object.
                 </para>
                 <para>
                   <parameter>app</parameter> is the name of the application to
@@ -702,7 +704,7 @@ public:
               <constructorsynopsis>
                 <methodname>ReadoutStatistics</methodname>
                 <methodparam>
-                  <type>(zmq::socket_t&amp; </type> <parameter>socket</parameter>
+                  <type>(ZmqSocket&amp; </type> <parameter>socket</parameter>
                 </methodparam>
                 <methodparam>
                   <type>std::string</type> <parameter> app</parameter>
@@ -713,7 +715,13 @@ public:
             <listitem>
                 <para>
                   Constructs the object.  <parameter>socket</parameter> is a ZMQ
-                  socket object.  It is the caller's responsibility to connect/bind
+                  socket object pointer like object.
+                  Use
+                  <classname>ZmqObjectFactory</classname>::<methodname>createSocket</methodname>
+                  to create this object.
+                </para>
+                <para>
+                  It is the caller's responsibility to connect/bind
                   that socket to an endpoint.   In normal use, this socket
                   would be a PUSH socket that is connnected to the status
                   aggregator.
@@ -790,7 +798,7 @@ public:
               <constructorsynopsis>
                 <methodname>LogMessage</methodname>
                 <methodparam>
-                  <type>zmq::socket_t&amp;</type> <parameter>socket</parameter>
+                  <type>ZmqSocket&amp;</type> <parameter>socket</parameter>
                 </methodparam>
                 <methodparam>
                   <type>std::string </type> <parameter>app</parameter>
@@ -801,7 +809,13 @@ public:
                 <para>
                   Constructs an object that can be used to emit log
                   messages.  <parameter>socket</parameter> is the ZMQ socket
-                  along which messages will be emitted.  
+                  pointer like object
+                  along which messages will be emitted.
+                  Use
+                  <classname>ZmqObjectFactory</classname>::<methodname>createSocket</methodname>
+                  to create this object.
+                </para>
+                <para>
                   It is the responsibility of the caller to bind/connect the
                   socket.  In normal use, the socket should be a PUSH type socket
                   connected to the status aggregator.
@@ -860,7 +874,7 @@ public:
               <constructorsynopsis>
                 <methodname>StateChange</methodname>
                 <methodparam>
-                  <type>(zmq::socket_t&amp;</type> <parameter> socket</parameter>
+                  <type>(ZmqSocket&amp;</type> <parameter> socket</parameter>
                 </methodparam>
                 <methodparam>
                   <type>std::string </type><parameter>app</parameter>
@@ -875,8 +889,15 @@ public:
                   the state being entered.
                 </para>
                 <para>
-                  <parameter>socket</parameter> is the ZMQ socket on which
-                  messages will be sent.  Note that it is the caller's
+                  <parameter>socket</parameter> is the ZMQ socket pointer like
+                  objecton which
+                  messages will be sent.
+                  Use
+                  <classname>ZmqObjectFactory</classname>::<methodname>createSocket</methodname>
+                  to create this object.
+                </para>
+                <para>
+                  Note that it is the caller's
                   responsibility to bind/connect the socket to an endpoint.
                   In normal use the socket will be a PUSH socket and connected
                   to the status aggregator.
@@ -925,8 +946,21 @@ public:
         <classname>ZmqContext</classname> wraps a single
          <classname>zmq::context_t</classname> objects with a singleton
          pattern.  Users of the status message class should use this singleton
-         to obtain a commonb application ZMQ context object.
+         to obtain a common application ZMQ context object.
       </para>
+      <note>
+        <title>NOTE</title>
+        <para>
+          This method is deprecated. The
+          <filename>nsclzmq.h</filename> header provides the interface to
+          a <classname>ZmqObjectFactory</classname> class which maintains
+          an application <classname>zmq::context_t</classname> singleton.
+        </para>
+        <para>
+          This method just wraps to that class's
+          <methodname>getContextInstance</methodname> method.
+        </para>
+      </note>
       <para>
         The need for a single application ZMQ context object has a certain
         design tension with unit test programs which will want a fresh
@@ -983,6 +1017,18 @@ public:
                 <para>
                   Normally only test programs invoke <methodname>reset</methodname>
                   as part of the teardown for a specific test.
+                </para>
+                <para>
+                  This now just calls
+                  <classname>ZmqObjectFactory</classname>::<methodname>shutdown</methodname>.
+                  That shuts down all sockets that have been created with
+                  <classname>ZmqObjectFactory</classname>::<methodname>createSocket</methodname>
+                  and then destroys the context singleton.  Subsequent calls to either
+                  <classname>ZmqObjectFactory</classname>::<methodname>createSocket</methodname>
+                  or
+                  <classname>ZmqObjectFactory</classname>::<methodname>getContextInstance</methodname>
+                  create a new application global <classname>zmq::context_t</classname>
+                  object.
                 </para>
             </listitem>
         </varlistentry>
@@ -1550,7 +1596,7 @@ public:
         CStatusSubscription    
       </methodname>
       <methodparam>
-        <type>zmq::socket_t&amp;</type> <parameter> sock</parameter>
+        <type>ZmqSocket&amp;</type> <parameter> sock</parameter>
       </methodparam>
     </constructorsynopsis>
     <methodsynopsis>
@@ -1625,16 +1671,21 @@ public:
               CStatusSubscription    
             </methodname>
             <methodparam>
-              <type>zmq::socket_t&amp;</type> <parameter> sock</parameter>
+              <type>ZmqSocket&amp;</type> <parameter> sock</parameter>
             </methodparam>
           </constructorsynopsis>
         </term>
         <listitem>
             <para>
               Constructor.   The <parameter>sock</parameter> parameter is a
-              ZMQ socket that is administered by the caller.  This must be a
+              ZMQ socket pointer like object that is administered by the caller.
+              This should be created using
+              <classname>ZmqObjectFactory</classname>::<methodname>createSocket</methodname>.
+            </para>
+            <para>
+              This must be a
               SUB socket.  It usually is connected to either a local message
-              aggregator or a multi-node messasge aggregator.
+              aggregator or a multi-node message aggregator.
             </para>
         </listitem>
     </varlistentry>
@@ -1780,7 +1831,7 @@ public:
     <constructorsynopsis>
       <methodname>CPublishRingStatistics</methodname>
       <methodparam>
-        <type>zmq::socket_t&amp;</type> <parameter>socket</parameter>
+        <type>ZmqSocket&amp;</type> <parameter>socket</parameter>
       </methodparam>
       <methodparam>
         <type>std::string </type><parameter>appName</parameter>

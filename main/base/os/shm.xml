@@ -1183,9 +1183,7 @@ class <classname>CDAQShm</classname>
     <refsynopsisdiv>
         <synopsis>
 #include &lt;nsclzmq.h&gt;
-<ooclass>
-    <classname>ZmqObjectFactory</classname> 
-</ooclass>
+class <classname>ZmqObjectFactory</classname> 
 {
 public:
     <methodsynopsis>
@@ -1211,7 +1209,7 @@ public:
 };
         </synopsis>
     </refsynopsisdiv>
-    <refsection>
+    <refsect1>
         <title>DESCRIPTION</title>
         <para>
             The ZeroMQ messaging library places some stringent requirements
@@ -1234,14 +1232,14 @@ public:
                             All sockets must be closed and drained.
                         </para>
                     </listitem>
+                    <listitem>
+                        <para>
+                            The singleton <classname>zmq::context_t</classname>
+                            object must be destroyed after all sockets are closed
+                            and drained.
+                        </para>
+                    </listitem>
                 </itemizedlist>
-                <listitem>
-                    <para>
-                        The singleton <classname>zmq::context_t</classname>
-                        object must be destroyed after all sockets are closed
-                        and drained.
-                    </para>
-                </listitem>
             </listitem>
         </itemizedlist>
         <para>
@@ -1257,8 +1255,8 @@ public:
             shuts down all remaining registered socket wrappers and deletes them.
             Once that's been completed the context singleton is destroyed.
         </para>
-    </refsection>
-    <refsection>
+    </refsect1>
+    <refsect1>
         <title>METHODS</title>
         <variablelist>
             <varlistentry>
@@ -1386,6 +1384,6 @@ public:
                 </listitem>
             </varlistentry>        
         </variablelist>
-    </refsection>
+    </refsect1>
 </refentry>   
 <!-- /manpage -->
