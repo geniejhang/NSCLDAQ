@@ -12,7 +12,8 @@ unglom_CPPFLAGS=-I@top_srcdir@/daq/eventbuilder \
         -I@top_srcdir@/utilities/IO       \
 	@LIBTCLPLUS_CFLAGS@	\
 	-I@top_srcdir@/base/os		\
-	-I@top_srcdir@/base/headers  
+        -I@top_srcdir@/base/headers   \
+        -I@top_srcdir@/base/sfinae_tools
 
 unglom_LDADD = @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la  \
         @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
