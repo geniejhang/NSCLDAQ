@@ -20,11 +20,9 @@
 # ############################################################
 
 
-package provide Process 2.0
+package provide Process 1.0
 
 package require snit
-
-puts "Temporary: Process 2.0"
 
 ## @brief Encapsulation of a pipeline process
 #
