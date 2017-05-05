@@ -69,7 +69,8 @@ libVMUSBCore_la_CPPFLAGS = \
       -I@top_srcdir@/utilities/nscldaq-format/FormattedIO	\
       -I@top_srcdir@/utilities/IO \
 			-I@top_srcdir@/daq/eventbuilder \
-			-I@top_srcdir@/diagnostics/status
+                        -I@top_srcdir@/diagnostics/status \
+                        -I@top_srcdir@/base/sfinae_tools
 
 # add -DREPORT_ERRORS to INCLUDES below for verbose
 # error reporting info.
