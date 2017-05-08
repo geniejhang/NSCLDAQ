@@ -6462,6 +6462,69 @@ $outputMonitor configure -host spdaq123.nscl.msu.edu
                 </para>
             </refsect1>
         </refentry>
-      
+
+<refentry>
+ <refentryinfo>
+   
+        <author>
+                <personname>
+                        <firstname>Ron</firstname>
+                        <surname>Fox</surname>
+                </personname>
+                <personblurb><para></para></personblurb>
+        </author>
+        <productname>NSCLDAQ</productname>
+        <productnumber></productnumber>
+ </refentryinfo>
+ <refmeta>
+  <refentrytitle>multilogger</refentrytitle>
+  <manvolnum>3rdogui</manvolnum>
+  <refmiscinfo class='emtpy'/>
+ </refmeta>
+ <refnamediv>
+  <refname>multilogger</refname>
+  <refpurpose>Log data from multiple rings</refpurpose>
+ </refnamediv>
+ <refsynopsisdiv>
+  <programlisting>
+package require multilogger
+<optional> set ::mutilogger::recordAlways 1</optional>
+  </programlisting>
+ </refsynopsisdiv>
+ <refsect1>
+  <title>
+   DESCRIPTION
+  </title>
+  <para>
+   This package provides an extension to the readoutGui that allows users to
+   specify event recording should be done from multiple ring buffers in addition
+   to the primary event recording done on the top level ring buffer.  The
+   package adds a menu to the program that supports the addition of event loggers,
+   removal of event loggers and selective enabling of existing loggers.
+  </para>
+  <para>
+   After each change a configuration file <filename>~/.multiloggers</filename>
+   is written describing the loggers.  This file is read when the package is
+   incorporated to restore the prior set of multiloggers.
+  </para>
+  <para>
+   Normally, events are only logged if recording is enabled.  This may not be
+   suitable if a ReadoutGui is the target of enslavement by a master GUI.
+   This is because such GUI's will always see the event recording state as
+   disabled.   This behavior can be changed by setting the variable
+   <varname>::multilogger::recordAlways</varname> to a Tcl boolean true
+   value.
+  </para>
+  <para>
+   If <varname>::multilogger::recordAlways</varname> is <literal>1</literal>,
+   multilogger could try to recordthe same run number several times.  Normally
+   this would result in eventlog's exit as it tried to overwrite the existing
+   run.  Multilogger, however specifies an <option>--prefix</option> consisting
+   of the formatted date and time at which the file was created.  Since it's
+   highly unlikely runs will start at the same second, this creates
+   unique event file naes.
+  </para>
+ </refsect1>
+</refentry>      
 <!-- /manpage -->
 
