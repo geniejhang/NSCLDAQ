@@ -1271,3 +1271,6 @@ Work on 11.0-rc11 begins
 	* Use savepoints in CStatusDb rather than transactions.
 	* Make savepoints for CStatusDb available for callers wanting to
 	bactch operations (e.g. inserts).
+        * Feature 6960 added - --tod option to dumper so that we can
+	log when data were received by that program.  Off by default.
+	
