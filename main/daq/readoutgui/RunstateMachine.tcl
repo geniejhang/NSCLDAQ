@@ -21,6 +21,10 @@
 package provide RunstateMachine 1.0
 package require snit
 
+namespace eval ::RunStateUtilities {
+    
+}
+
 ##
 # @class RunstateMachine
 #
@@ -574,10 +578,36 @@ snit::type RunstateMachineSingleton {
     }
 }
 
+##
+#-------------------------------------------------------------
+# Utility functions:
+
+##
+# ::RunStateUtilities::_transitionFailed
+#
+#   Common code for handling state transition failures for
+#   transitions initiated by the convenience procs below.
+#   -  Get the error traceback.
+#   -  force failure (Transition to NotReady).
+#   -  report an error indicating the transitino attempted, the
+#      error message gotten and the traceback showing where it was
+#
+# @param state  - Attempted new state.
+# @param msg    - Error message emitted by transition attempt.
+#
+proc ::::RunStateUtilities::_transitionFailed {state msg} {
+    set traceback $::errorInfo
+    forceFailure
+    
+    error "$state failed with message: $msg \nFrom: $traceback"
+}
+
 
 ##------------------------------------------------------------
 # Convenience functions
 #
+
+
 
 ##
 # Global start proc to transition from NotReady -> Starting -> Halted
@@ -593,20 +623,21 @@ proc start {} {
   set machine [RunstateMachineSingleton %AUTO%]
   # Transition NotReady -> Starting
   if { [catch { $machine transition Starting } msg] } {
-    forceFailure
     $machine destroy
-    error "start failed with message : $msg"
+    ::RunStateUtilities::_transitionFailed start $msg
   }
 
   $machine destroy
 
   # Transition Starting -> Halted
+  # TODO - I think we can remove the after idle.
+  
   after idle {
     set machine [RunstateMachineSingleton %AUTO%]
     if {[catch {$machine transition Halted} msg]} {
-      forceFailure
+
       $machine destroy
-      error "transition to halted failed with message : $msg"
+      ::RunStateUtilities::_transitionFailed halted $msg
     }
 
     $machine destroy
@@ -619,10 +650,9 @@ proc start {} {
 proc begin {} {
   set machine [RunstateMachineSingleton %AUTO%]
   if { [catch { $machine transition Active } msg] } {
-
-    forceFailure
-
-    error "begin failed with message : $msg"
+    $machine destroy
+    
+    ::RunStateUtilities::_transitionFailed begin $msg
   }
   $machine destroy
 }
@@ -630,10 +660,9 @@ proc begin {} {
 proc end {} {
   set machine [RunstateMachineSingleton %AUTO%]
   if { [catch { $machine transition Halted } msg] } {
-
-    forceFailure
-
-    error "end failed with message : $msg"
+    $machine destroy
+    
+    ::RunStateUtilities::_transitionFailed end $msg
   }
   $machine destroy
 }
@@ -641,10 +670,9 @@ proc end {} {
 proc pause {} {
   set machine [RunstateMachineSingleton %AUTO%]
   if { [catch { $machine transition Paused } msg] } {
-
-    forceFailure
-
-    error "pause failed with message : $msg"
+    $machine destroy
+    
+    ::RunStateUtilities::_transitionFailed pause $msg
   }
   $machine destroy
 }
@@ -652,9 +680,8 @@ proc pause {} {
 proc resume {} {
   set machine [RunstateMachineSingleton %AUTO%]
   if { [catch { $machine transition Active } msg] } {
-
-    forceFailure
-    error "resume failed with message : $msg"
+    $machine destroy
+    ::RunStateUtilities::_transitionFailed resume $msg
   }
   $machine destroy
 }
@@ -662,6 +689,7 @@ proc resume {} {
 proc forceFailure {} {
   set machine [RunstateMachineSingleton %AUTO%]
   if { [catch { $machine transition NotReady } msg] } {
+    $machine destroy
     error "Transition to not ready failed with message : $msg"
   }
   $machine destroy    
