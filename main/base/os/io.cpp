@@ -21,6 +21,7 @@
  */
 
 #include "io.h"
+#include <CTimeout.h>
 
 #include <errno.h>
 #include <unistd.h>
@@ -28,6 +29,8 @@
 #include <set>
 #include <sys/statvfs.h>
 
+#include <system_error>
+#include <cmath>
 
 
 static std::set<int>                 okErrors;	// Acceptable errors in I/O operations.
@@ -118,7 +121,7 @@ void writeData (int fd, const void* pData , size_t size)
  *
  * @throw int - errno on error.
  */
-  size_t readData (int fd, void* pBuffer,  size_t nBytes)
+  ssize_t readData(int fd, void* pBuffer,  size_t nBytes)
 {
   uint8_t* pDest(reinterpret_cast<uint8_t*>(pBuffer));
   size_t    residual(nBytes);
@@ -156,6 +159,98 @@ void writeData (int fd, const void* pData , size_t size)
 
   return nBytes;		// Complete read.
 }
+
+  /**
+   * Get a buffer of data from a file descriptor with a timeout
+   * If necessary multiple read() operations are performed to deal
+   * with potential buffering between the source and us (e.g. we are typically
+   * on the end of a pipe where the pipe buffer may be smaller than an
+   * event buffer.
+   * @param fd      - File descriptor to read from.
+   * @param pBuffer - Pointer to a buffer big enough to hold the event buffer.
+   * @param size    - Number of bytes in the buffer.
+   * @param timeout - a timeout specifier
+   *
+   * @return size_t - Number of bytes read (might be fewer than nBytes if the EOF was hit
+   *                  during the read.
+   *
+   * @throw int - errno on error.
+   */
+  std::pair<ssize_t, ReturnCode>
+  timedReadData(int fd, void* pBuffer,  size_t nBytes, const ::DAQ::CTimeout& timeout)
+  {
+      using namespace std::chrono;
+
+    uint8_t*  pDest(reinterpret_cast<uint8_t*>(pBuffer));
+    size_t    residual(nBytes);
+    ssize_t   nRead = 0;
+
+    // perform a read with a timeout iteratively until there is a timeout or something
+    // else stops the reading.
+    while (residual) {
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(fd, &readfds);
+
+        struct timeval tv;
+        // break up the remaining time into complete seconds and fractional seconds
+        auto time = duration_cast<microseconds>(timeout.getRemainingTime());
+
+        tv.tv_sec  = time.count()/1000000;
+        tv.tv_usec = time.count()%1000000;
+
+        // wait until fd is readable with the timeout
+        int status = select(fd+1, &readfds, nullptr, nullptr, &tv);
+
+        if (status < 0) {
+            // error state... don't worry about EAGAIN, EINTR... just try again
+            if ((errno == EAGAIN || errno == EINTR)) {
+                if (timeout.expired()) {
+                    return std::make_pair(nRead, TIMED_OUT);
+                } else {
+                    continue;
+                }
+            } else {
+                // bad error
+                throw std::system_error(errno, std::system_category(),
+                                        "Failed while waiting on fd to become readable");
+            }
+        } else if (status == 0) {
+            // timeout
+            return std::make_pair(nRead, TIMED_OUT);
+        } else {
+            // there is a file descriptor set for reading ... read it!
+            ssize_t result = read(fd, pDest, residual);
+            if (result == 0) {
+                return std::make_pair(nRead, END_OF_FILE);
+            } else if ((result < 0)) {
+                // error condition
+
+                if (badError(errno) ) {
+                    throw std::system_error(errno, std::system_category(),
+                                            "Failed while reading from file descriptor");
+                } else if (!timeout.expired()) {
+                    continue;
+                } else {
+                    return std::make_pair(nRead, ERROR);
+                }
+            } else {
+                // good data to read...
+                nRead    += result;
+                pDest    += result;
+                residual -= result;
+            }
+        }
+
+        if (timeout.expired()) {
+            break;
+        }
+    }
+    // If we get here the read worked:
+
+    return std::make_pair(nRead, SUCCESS);	// Complete read.
+  }
+
 
 /**
  * freeSpacePercent

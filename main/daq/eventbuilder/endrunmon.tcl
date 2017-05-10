@@ -136,22 +136,28 @@ proc EndrunMon::startMonitor ringUrl {
             set ercount 0
             while {1} {
 
-                set item [ring get -timeout 2 $ringurl [list 2]];  #end run only.
+                set item [ring get -timeout 2 $ringurl [list 0x8002]];  # composite end run only.
                 if {$item ne {}} {
 
-                    if {[dict get $item type] eq "End Run"} {
+                    if {[dict get $item type] eq "Composite End Run"} {
                         incr  ercount
-                        #
-                        #  Signal if we've seen enough end runs.
-                        #
-                        if {$ercount >= [tsv::get EndrunMon endsExpected]} {
-                            thread::mutex lock $mutex
-                            thread::cond  notify $condvar
-                            thread::mutex unlock $mutex
-                            break
-                        }
                      }
                 }
+                #
+                #  Signal if we've seen an end runs.
+                #
+                if {$ercount > 0} {
+                  thread::mutex lock $mutex
+                  thread::cond  notify $condvar
+                  thread::mutex unlock $mutex
+                  break
+                }
+
+                # if there are no ends runs to wait for... then just stop waiting.
+                if {[tsv::get EndrunMon endsExpected] == 0} {
+                  break;
+                }
+
                 #
                 # Handle requests to abort without signalling.
                 #
@@ -278,14 +284,14 @@ proc EndrunMon::enter {from to} {
 # @param from - the state being left.
 # @param to   - the state being entered.
 #
-# @note   EVBC::destRing contains the ring to monitor.
+# @note  [EVBC::applicationOptions cget -destring] contains the ring to monitor.
 # TODO:  Should really provide a mechanism to make this available that is
 #        not event builder specific.
 #
 
 proc EndrunMon::leave {from to} {
     if {($from eq "Halted") && ($to eq "Active")  && ($::EndrunMon::tid eq "")} {
-        set ring tcp://localhost/$::EVBC::destRing
+        set ring tcp://localhost/[$::EVBC::applicationOptions cget -destring]
         ::EndrunMon::startMonitor $ring
     }
 }

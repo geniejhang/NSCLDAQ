@@ -13,32 +13,21 @@
              Michigan State University
              East Lansing, MI 48824-1321
 */
-#ifndef __RINGSELECTORMAIN_H
-#define __RINGSELECTORMAIN_H
+#ifndef RINGSELECTORMAIN_H
+#define RINGSELECTORMAIN_H
 
-#ifndef __STL_STRING
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
 
-
-#ifndef __RINGBUFFERQUEUE_H
 #include "RingBufferQueue.h"
-#endif
-
-#ifndef __CRT_UNISTD_H
 #include <unistd.h>
-#ifndef __CRT_UNISTD_H
-#define __CRT_UNISTD_H
-#endif
-#endif
+#include <memory>
 
-
-class CRingBuffer;
 class CRingSelectionPredicate;
 struct gengetopt_args_info;
+
+namespace DAQ {
+class CDataSource;
+}
 
 /*!
    This class is the ring selector application. Written as a separate class, we
@@ -47,8 +36,8 @@ struct gengetopt_args_info;
 class RingSelectorMain {
   // Object storage:
 private:
-  CRingBuffer*              m_pRing;          // Data source.
-  CRingSelectionPredicate*  m_pPredicate;     // Predicate used to select data.
+  DAQ::CDataSource*              m_pRing;          // Data source.
+  std::shared_ptr<CRingSelectionPredicate>  m_pPredicate;     // Predicate used to select data.
   bool                      m_formatted;      // Format output.
   bool                      m_exitOnEnd;      // If true exit when end run seen.
   bool                      m_nonBlocking;    // IF true use non-blocking mode.
@@ -73,8 +62,8 @@ public:
 
   // Sub-chunks of the program:
 
-  CRingSelectionPredicate*  createPredicate(struct gengetopt_args_info* parse);
-  CRingBuffer*              selectRing(struct gengetopt_args_info* parse);
+  std::shared_ptr<CRingSelectionPredicate>  createPredicate(struct gengetopt_args_info* parse);
+  DAQ::CDataSource*                selectRing(struct gengetopt_args_info* parse);
   void                      processData();
 
 

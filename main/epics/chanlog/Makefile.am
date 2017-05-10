@@ -1,7 +1,6 @@
 #  Makefile template for chanlog : log epics channels to file or stdout.
 #  This can only be built if Epics was detected.
 
-if EPICS
 bin_PROGRAMS = chanlog
 
 
@@ -15,5 +14,3 @@ chanlog_CXXFLAGS= $(THREADCXX_FLAGS) $(AM_CXXFLAGS) $(EPICS_BIN) $(EPICS_INCLUDE
 
 
 EXTRA_DIST = chanlog.xml
-
-endif

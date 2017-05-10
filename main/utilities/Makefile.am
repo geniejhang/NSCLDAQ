@@ -2,18 +2,16 @@ SUBDIRS = 				common	\
 					daqstart \
 					dvdburn \
 					sequencer \
-                                        Buffer \
-                                        format \
-                                        IO \
-					FormattedIO \
+					nscldaq-format/Buffer \
+          IO \
+          nscldaq-format \
 					filter \
 					conversion \
-					ringselector \
+          ringselector \
 					bufdump	\
 					sclclient \
 					tkbufdump \
-					compatibility \
-					newscaler	\
+          newscaler	\
 					varmanager	\
 					varmanager/server	\
 					varmanager/scripts \

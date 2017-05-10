@@ -16,10 +16,12 @@
 
 
 
-#ifndef CDATASINKFACTORY_H
-#define CDATASINKFACTORY_H
+#ifndef DAQ_CDATASINKFACTORY_H
+#define DAQ_CDATASINKFACTORY_H
 
 #include <string>
+
+namespace DAQ {
 
 class CDataSink;
 
@@ -56,5 +58,7 @@ private:
     */
     CDataSink* makeRingSink(std::string ringname); 
 };
+
+} // end DAQ
 
 #endif

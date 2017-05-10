@@ -30,6 +30,7 @@ package require varmgr
 package require portAllocator
 package require stateclient
 
+puts "rdoco.test"
 
 ##
 # waitService

@@ -21,10 +21,10 @@
 #include <V10/CRingStateChangeItem.h>
 #include <V10/CPhysicsEventItem.h>
 #include <V10/CRingTextItem.h>
-#include <V10/DataFormatV10.h>
+#include <V10/DataFormat.h>
 
 #include <V8/CRawBuffer.h>
-#include <V8/DataFormatV8.h>
+#include <V8/DataFormat.h>
 #include <V8/format_cast.h>
 #include <V8/ChangeBufferSize.h>
 
@@ -43,11 +43,11 @@
 #include <algorithm>
 #include <ctime>
 #include <chrono>
+#include <memory>
 
 using namespace std;
 
 using namespace DAQ;
-
 
 
 /*!
@@ -79,10 +79,10 @@ public:
       V8::gBufferSize = 8192; // default size
 
       std::unique_ptr<CDataSource> pSource(new CTestSourceSink);
-      m_mediator.setDataSource(pSource);
+      m_mediator.setDataSource(std::move(pSource));
 
       std::unique_ptr<CDataSink> pSink(new CTestSourceSink);
-      m_mediator.setDataSink(pSink);
+      m_mediator.setDataSink(std::move(pSink));
 
     }
 
@@ -98,8 +98,8 @@ public:
     V10::CPhysicsEventItem item(V10::PHYSICS_EVENT);
     item.fillBody(std::vector<std::uint16_t>({2,0}));
 
-    auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
-    auto pSink = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSink());
+    auto pSource = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSource());
+    auto pSink = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSink());
 
     *pSource << item;
 
@@ -117,8 +117,8 @@ void physEventFlush_1() {
   V10::CPhysicsEventItem item(V10::PHYSICS_EVENT);
   item.fillBody(std::vector<std::uint16_t>({2,0}));
 
-  auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
-  auto pSink = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSink());
+  auto pSource = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSource());
+  auto pSink = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSink());
 
   *pSource << begin;
 
@@ -139,8 +139,8 @@ void physEventFlush_1() {
     V10::CPhysicsEventItem event(V10::PHYSICS_EVENT);
     event.fillBody(std::vector<std::uint16_t>({2,0}));
 
-    auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
-    auto pSink = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSink());
+    auto pSource = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSource());
+    auto pSink = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSink());
 
     *pSource << event;
     bool good = m_mediator.processOne();
@@ -179,8 +179,8 @@ void physEventFlush_1() {
         bodyData.at(0) = 50;
         event.fillBody(bodyData);
 
-        auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
-        auto pSink = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSink());
+        auto pSource = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSource());
+        auto pSink = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSink());
 
         // Load the source with the test data
         *pSource << begin;
@@ -233,8 +233,8 @@ void physEventFlush_1() {
         bodyData.at(0) = 50;
         event.fillBody(bodyData);
 
-        auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
-        auto pSink = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSink());
+        auto pSource = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSource());
+        auto pSink = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSink());
 
         // Load the source with test data
         *pSource << begin;
@@ -298,10 +298,10 @@ public:
 
       V8::gBufferSize = 43; // just big enough to fit two 3-letter words each buffer
       std::unique_ptr<CDataSource> pSource(new CTestSourceSink);
-      m_mediator.setDataSource(pSource);
+      m_mediator.setDataSource(std::move(pSource));
 
       std::unique_ptr<CDataSink> pSink(new CTestSourceSink);
-      m_mediator.setDataSink(pSink);
+      m_mediator.setDataSink(std::move(pSink));
 
     }
 
@@ -320,8 +320,8 @@ public:
     auto v10item = V10::CRingTextItem(V10::MONITORED_VARIABLES,
                                             m_strings, 0x12345678, tstamp);
 
-    auto pSource = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSource());
-    auto pSink = dynamic_cast<CTestSourceSink*>(m_mediator.getDataSink());
+    auto pSource = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSource());
+    auto pSink = dynamic_pointer_cast<CTestSourceSink>(m_mediator.getDataSink());
 
     // load the source with test data
     *pSource << v10item;

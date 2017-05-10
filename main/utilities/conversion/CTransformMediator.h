@@ -19,15 +19,18 @@
 #define CTRANSFORMMEDIATOR_H
 
 #include <CPredicate.h>
-#include <CBaseMediator.h>
+#include <CPredicatedMediator.h>
 
 #include <memory>
+
+
+namespace DAQ {
 
 class CDataSource;
 class CDataSink;
 
-namespace DAQ {
-  namespace Transform {
+
+namespace Transform {
 
 
 /**! \brief A mediator that never quits unless count is satisfied or stream ends.
@@ -38,16 +41,17 @@ namespace DAQ {
  *
  */
 template<class Transform>
-class CTransformMediator  : public CBaseMediator
+class CTransformMediator  : public CPredicatedMediator
 {
   private:
     Transform m_transform;
-    std::unique_ptr<CPredicate> m_pPredicate;
+    std::shared_ptr<CPredicate> m_pPredicate;
+    Action           m_currentAction;
 
   public:
     // The constructor
-    CTransformMediator(std::unique_ptr<CDataSource> source = std::unique_ptr<CDataSource>(),
-                       std::unique_ptr<CDataSink> sink = std::unique_ptr<CDataSink>(),
+    CTransformMediator(CDataSourcePtr source = CDataSourcePtr(),
+                       CDataSinkPtr sink = CDataSinkPtr(),
                        Transform trans=Transform());
 
     virtual ~CTransformMediator();
@@ -76,9 +80,13 @@ class CTransformMediator  : public CBaseMediator
      */
     virtual void finalize();
 
-  private:
-    void updatePredicate();
-    bool processOne();
+    bool keepProcessing() const { return m_currentAction != ABORT; }
+
+    void setPredicate(CPredicatePtr pPredicate);
+    CPredicatePtr getPredicate();
+private:
+
+    void processOne();
 
 };
 

@@ -69,6 +69,11 @@ namespace eval state {
 after 100 incr subscribed;	      # Wait for subscriptions to establish(?)
 vwait subscribed
 
+# enable callback to andle state transitions:
+
+::state::client onStateChange stateChanged
+
+
 #  When we start the global state had better be "Readying"
 #  We'll try to set our state to "Ready" and if that fails,
 #  We must fail too:
@@ -82,8 +87,6 @@ if {[catch {::state::client setstate Ready} msg]} {
     error "Unable to set program state to 'Ready': $msg"
     exit 1
 }
-
-
 
 
 ##

@@ -20,8 +20,10 @@
 #include <CCompositePredicate.h>
 #include <V10/CRingItem.h>
 #include <V11/CRingItem.h>
+#include <V12/CRawRingItem.h>
 #include <RingIOV10.h>
 #include <RingIOV11.h>
+#include <RingIOV12.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -36,16 +38,17 @@ namespace DAQ {
 
   \param source a pointer to a CDataSource
   \param filter a pointer to a CFilter
-  \param sink a pointer to a CDataSink
+  \param sink   a pointer to a CDataSink
 
 */
 template<class Transform>
-CTransformMediator<Transform>::CTransformMediator(std::unique_ptr<CDataSource> source,
-                                       std::unique_ptr<CDataSink> sink,
+CTransformMediator<Transform>::CTransformMediator(std::shared_ptr<CDataSource> source,
+                                       std::shared_ptr<CDataSink> sink,
                                        Transform transform)
-: CBaseMediator(move(source), move(sink)),
+: CPredicatedMediator(source, sink),
   m_transform(transform),
-  m_pPredicate(new CCompositePredicate)
+  m_pPredicate(new CCompositePredicate),
+  m_currentAction(CONTINUE)
 {}
 
 /**! Destructor
@@ -80,22 +83,27 @@ void CTransformMediator<Transform>::mainLoop()
     throw std::runtime_error(errmsg);
   }
 
-  // Dereference our pointers before entering
-  // the main loop
+  while (keepProcessing()) {
+      processOne();
 
-  while (processOne()) {}
-
+      if (m_currentAction == SKIP) continue;
+      else if (m_currentAction == ABORT) break;
+  }
 }
+
 template<class Transform>
 void CTransformMediator<Transform>::initialize()
 {
+    m_pPredicate->reset();
 }
+
 template<class Transform>
 void CTransformMediator<Transform>::finalize()
 {
 }
+
 template<class Transform>
-bool CTransformMediator<Transform>::processOne()
+void CTransformMediator<Transform>::processOne()
 {
   CDataSource& source    = *getDataSource();
   CDataSink&   sink      = *getDataSink();
@@ -103,34 +111,56 @@ bool CTransformMediator<Transform>::processOne()
   using T1 = typename Transform::InitialType;
   using T2 = typename Transform::FinalType;
 
-  T1 item1(1);
+  m_currentAction = m_pPredicate->preInputUpdate(*this);
+  if (m_currentAction != CONTINUE) return;
+
+  T1 item1;
   source >> item1;
 
   if (source.eof()) {
-    return false;
+      m_currentAction = ABORT;
+      return;
   }
 
-  updatePredicate();
+  m_currentAction = m_pPredicate->postInputUpdate(*this, item1.type());
+  if (m_currentAction != CONTINUE ) return;
 
   try {
 
       T2 item2 = m_transform(item1);
 
+      m_currentAction = m_pPredicate->preOutputUpdate(*this, item2.type());
+      if (m_currentAction != CONTINUE) return;
+
       if (item2.type() != 0) {
         sink << item2;
       }
+
+      m_currentAction = m_pPredicate->postOutputUpdate(*this, item2.type());
+      if (m_currentAction != CONTINUE) return;
+
   } catch (std::exception& exc) {
     std::cout << exc.what() << std::endl;
   } catch (...) {
     std::cout << "Caught an error" << std::endl;
   }
 
-  return true;
 }
 
+
 template<class Transform>
-void CTransformMediator<Transform>::updatePredicate()
-{}
+void CTransformMediator<Transform>::setPredicate(CPredicatePtr pPred)
+{
+    m_pPredicate = pPred;
+}
+
+
+template<class Transform>
+CPredicatePtr CTransformMediator<Transform>::getPredicate()
+{
+    return m_pPredicate;
+}
+
 
   } // end of Transform
 } // end of DAQ

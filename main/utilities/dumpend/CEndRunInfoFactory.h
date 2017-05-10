@@ -33,7 +33,7 @@ class CEndRunInfoFactory
 {
 public:
     typedef enum _DAQVersion {
-        nscldaq11, nscldaq10
+        nscldaq11, nscldaq10, nscldaq12
     } DAQVersion;
 public:
     static CEndRunInfo* create(int fd);                      // Create on on an open file.

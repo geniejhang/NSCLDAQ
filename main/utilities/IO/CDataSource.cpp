@@ -13,9 +13,10 @@
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
-#include <config.h>
 #include "CDataSource.h"
+#include <CTimeout.h>
 
+namespace DAQ {
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -24,3 +25,12 @@
 
 CDataSource::CDataSource() : m_eof(false) {}
 CDataSource::~CDataSource() {}
+
+
+size_t CDataSource::read(char *pBuffer, size_t nBytes)
+{
+    CTimeout timeout(std::numeric_limits<size_t>::max());
+    return timedRead(pBuffer, nBytes, timeout);
+}
+
+} // end DAQ

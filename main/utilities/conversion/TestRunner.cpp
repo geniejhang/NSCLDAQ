@@ -42,10 +42,16 @@ int main(int argc, char** argv)
   return !wasSucessful;
 }
 
-namespace DAQ {
-  namespace V8 {
-    std::size_t gBufferSize = 8192;
-  }
-}
 
 int gpTCLApplication = 0;
+
+std::ostream& operator<<(std::ostream& stream, const std::vector<std::string>& strs)
+{
+    stream << "(";
+    for (auto& str : strs) {
+        stream << "'" << str << "' ";
+    }
+    stream << ")";
+    return stream;
+}
+

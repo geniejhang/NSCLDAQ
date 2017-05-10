@@ -43,8 +43,8 @@
 
 #include <V11/CDataFormatItem.h>
 
-#include <V10/DataFormatV10.h>
-#include <V11/DataFormatV11.h>
+#include <V10/DataFormat.h>
+#include <V11/DataFormat.h>
 
 #define private public
 #define protected public
@@ -768,12 +768,12 @@ protected:
 void Test_0() {
     V11::CDataFormatItem item;
     CPPUNIT_ASSERT_EQUAL_MESSAGE( "Data format item do not convert",
-                                  V10::VOID, m_transform(item).type() );
+                                  V10::UNDEFINED, m_transform(item).type() );
 }
 void Test_1() {
     V11::CRingItem item(V11::EVB_GLOM_INFO);
     CPPUNIT_ASSERT_EQUAL_MESSAGE( "Glom info items do not convert",
-                                  V10::VOID, m_transform(item).type() );
+                                  V10::UNDEFINED, m_transform(item).type() );
 }
 
 }; // end of Fragment tests

@@ -1,5 +1,6 @@
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
+#include <CStatusReporting.h>
 #include <string>
 #include <iostream>
 #include <sys/types.h>
@@ -11,6 +12,9 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+
+  CStatusReporting::pInstance = new CStatusReporting("someApp", "StatusAggregator");
+
   CppUnit::TextUi::TestRunner   
                runner; // Control tests.
   CppUnit::TestFactoryRegistry& 
@@ -20,7 +24,7 @@ int main(int argc, char** argv)
 
   bool wasSucessful;
   try {
-    wasSucessful = runner.run("",true);
+    wasSucessful = runner.run("",false);
   } 
   catch(string& rFailure) {
     cerr << "Caught a string exception from test suites.: \n";

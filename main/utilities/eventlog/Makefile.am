@@ -13,17 +13,24 @@ eventlog_DEPENDENCIES	=	eventlogargs.o
 
 eventlog_CPPFLAGS       =	-I@top_srcdir@/base/headers		\
 				@LIBTCLPLUS_CFLAGS@			\
-				-I@top_srcdir@/daq/format		\
-			        -I@top_srcdir@/base/dataflow	\
+                                -I@top_srcdir@/utilities/nscldaq-format/format		\
+                                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
+                                -I@top_srcdir@/utilities/nscldaq-format/Buffer \
+                                -I@top_srcdir@/base/dataflow	\
+                                -I@top_srcdir@/utilities/IO \
 				-I@top_srcdir@/base/os		\
 				-I@top_srcdir@/base/thread	\
 				-I@top_srcdir@/servers/portmanager \
 				-I@top_srcdir@/diagnostics/status	\
 				-I@top_srcdir@/utilities/statemanager  \
 				-I@top_srcdir@/utlities/varmanager    \
+                                -I@top_srcdir@/base/sfinae_tools \
 				@OPENSSL_INCLUDES@
 
-eventlog_LDADD		=	@top_builddir@/daq/format/libdataformat.la	\
+eventlog_LDADD		=	@top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\
+                                @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+                                @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
+                                @top_builddir@/utilities/IO/libdaqio.la \
 				@top_builddir@/servers/portmanager/libPortManager.la \
 				@top_builddir@/base/dataflow/libDataFlow.la	\
 				@top_builddir@/diagnostics/status/libStatusMessages.la \
@@ -63,28 +70,44 @@ noinst_PROGRAMS		=	fakeruns eventlogTests
 
 fakeruns_SOURCES	= 	fakeruns.cpp
 
-fakeruns_LDADD		=	@top_builddir@/daq/format/libdataformat.la	\
+fakeruns_LDADD		=	@top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\
+                                @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la	\
+                                @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la	\
+                                @top_builddir@/utilities/IO/libdaqio.la	\
 				@top_builddir@/base/dataflow/libDataFlow.la	\
 				@top_builddir@/base/os/libdaqshm.la              \
 				@LIBEXCEPTION_LDFLAGS@
 fakeruns_CPPFLAGS=-I@top_srcdir@/base/headers		\
 				@LIBTCLPLUS_CFLAGS@			\
-				-I@top_srcdir@/daq/format		\
+                                -I@top_srcdir@/utilities/nscldaq-format/format		\
+                                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO		\
+                                -I@top_srcdir@/utilities/nscldaq-format/Buffer		\
+                                -I@top_srcdir@/utilities/nscldaq-format/V12		\
+                                -I@top_srcdir@/utilities/IO		\
 			        -I@top_srcdir@/base/dataflow	\
 				-I@top_srcdir@/base/os		\
+                                -I@top_srcdir@/base/sfinae_tools \
 				@OPENSSL_INCLUDES@
 
 eventlogTests_SOURCES = TestRunner.cpp eventlogTests.cpp
 eventlogTests_CPPFLAGS=@CPPUNIT_CFLAGS@ -I@top_srcdir@/base/headers		\
 				@LIBTCLPLUS_CFLAGS@			\
-				-I@top_srcdir@/daq/format		\
+                                -I@top_srcdir@/utilities/nscldaq-format/format		\
+                                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO		\
+                                -I@top_srcdir@/utilities/nscldaq-format/Buffer		\
+                                -I@top_srcdir@/utilities/nscldaq-format/V12		\
+                                -I@top_srcdir@/utilities/IO		\
 			        -I@top_srcdir@/base/dataflow	\
 				-I@top_srcdir@/base/os		\
+                                -I@top_srcdir@/base/sfinae_tools \
 				@OPENSSL_INCLUDES@
 
 eventlogTests_LDADD   = @CPPUNIT_LDFLAGS@ \
-				@top_builddir@/daq/format/libdataformat.la	\
-				@top_builddir@/base/dataflow/libDataFlow.la	\
+                                @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\
+                                @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la	\
+                                @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la	\
+                                @top_builddir@/utilities/IO/libdaqio.la	\
+                                @top_builddir@/base/dataflow/libDataFlow.la	\
 				@LIBEXCEPTION_LDFLAGS@			\
 				@top_builddir@/base/os/libdaqshm.la		\
 				$(THREADLD_FLAGS)

@@ -17,30 +17,30 @@
  * @file CRingSource.h
  * @brief defines ring specific event builder data source class.
  */
-#ifndef CRINGSOURCE_H
-#define CRINGSOURCE_H
+#ifndef DAQ_CRINGSOURCE_H
+#define DAQ_CRINGSOURCE_H
 
-#include <config.h>
+#include <CRingItemToFragmentTransform.h>
 
 #include <CEVBClientApp.h>
 #include <EVBFramework.h>
-#include <DataFormat.h>
-#include <CRingSource.h>
-#include <CRingItemToFragmentTransform.h>
+
+#include <CDataSource.h>
 
 #include <string>
 #include <vector>
-#include <stdint.h>
+#include <cstdint>
 
 // Forward definitions:
 
-class CRingBuffer;
-class CRingItem;
-struct _PhysicsEventItem;
-typedef _PhysicsEventItem *pPhysicsEventItem;
-
 struct gengetopt_args_info;
 struct timespec;
+
+namespace DAQ {
+
+namespace V12 {
+    class CRawRingItem;
+}
 
 /**
  * Provides experiment specific code for the Ring Buffer experiment specific
@@ -61,42 +61,30 @@ struct timespec;
  */
 class CRingSource : public CEVBClientApp 
 {
-  // Prototype for the timestamp getter:
-
-  typedef uint64_t (*tsExtractor)(pPhysicsEventItem item);
-
   // attributes:
 
 private:
   struct gengetopt_args_info* m_pArgs;
-  CRingBuffer*          m_pBuffer;
-  std::vector<uint32_t> m_allowedSourceIds;
-  uint32_t              m_defaultSourceId;
-  tsExtractor           m_timestamp;
-  bool                  m_stall;
-  uint32_t              m_stallCount;
-  bool                  m_expectBodyHeaders;
-  bool             m_fOneshot;
-  unsigned         m_nEndRuns;
-  unsigned         m_nEndsSeen;
-  unsigned         m_nTimeout;
-  unsigned         m_nTimeWaited;
+  CDataSourcePtr              m_pBuffer;
+  std::vector<uint32_t>       m_allowedSourceIds;
+  bool                        m_fOneshot;
+  unsigned                    m_nEndRuns;
+  unsigned                    m_nEndsSeen;
+  unsigned                    m_nTimeout;
+  unsigned                    m_nTimeWaited;
 
-  int              m_nTimeOffset;
-  CEVBFragmentList  m_frags;
-
-  CRingItemToFragmentTransform  m_wrapper;
-  bool             m_myRing;
- 
+  int                         m_nTimeOffset;
+  CEVBFragmentList            m_frags;
+  CRingItemToFragmentTransform m_wrapper;
   
   // Canonicals:
 
 public:
-  CRingSource(CRingBuffer* pBuffer, 
-              const std::vector<uint32_t>& allowedIds, 
-              uint32_t defaultId, 
-              tsExtractor extractor);
+  // Constructor for testing purposes
+  CRingSource(CDataSourcePtr pBuffer,
+              const std::vector<uint32_t>& allowedIds);
 
+  // Constructor for production
   CRingSource(int argc, char** argv);
   virtual ~CRingSource();
 
@@ -112,17 +100,21 @@ public:
   virtual void getEvents();
   virtual void shutdown();
 
-  void transformAvailableData(uint8_t*& pBuffer);
   const CEVBFragmentList& getFragmentList() const { return m_frags; }
 
   void setOneshot(bool val) { m_fOneshot = val; }
   void setNumberOfSources(unsigned nsources) { m_nEndRuns = nsources; }
   bool oneshotComplete();
+  void setAllowedSourceIds(const std::vector<uint32_t>& ids);
+  void setTimestampOffset(int offset);
 
+  void validateItem(const V12::CRingItem& item);
 
 public:
-  std::string copyLib(std::string original);
   uint64_t timedifMs(struct timespec& later, struct timespec& earlier);
+  void transformAvailableData();
 };
+
+} // end DAQ
 
 #endif

@@ -16,10 +16,13 @@
      @file Convert10to11.cpp
      @brief Filter to convert nscldaq-10.x to nscldaq-11+ data.
 */
-#include <DataFormat.h>
-#include "OldDataFormat.h"
+#include <V12/DataFormat.h>
+#include "V8/DataFormat.h"
+
 #include <CFileDataSource.h>
-#include <CRingItem.h>
+#include <V12/CRawRingItem.h>
+#include <RingIOV12.h>
+
 #include <io.h>
 #include <string>
 #include <iostream>
@@ -451,12 +454,11 @@ translateTriggerCount(pRingItem pOld)
 int
 main(int argc, char** argv)
 {
-  std::vector<uint16_t> exclude;
-  CFileDataSource ds(STDIN_FILENO, exclude);
+  CFileDataSource ds(STDIN_FILENO);
   
   writeDataFormatItem();                   // Prepend with data format item.
 
-  CRingItem* pItem;
+  V12::CRingItem* pItem;
   while (pItem = ds.getItem()) {
     pRingItem pOld = pItem->getItemPointer();
     

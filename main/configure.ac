@@ -111,7 +111,6 @@ AX_CHECK_COMPILE_FLAG([-Wno-error=date-time], [NODATEWARN="-Wno-error=date-time"
 AC_SUBST(NODATEWARN)
 
 
-
 # check to find the size of address
 AC_CHECK_SIZEOF([void*])
 AS_IF([test "$ac_cv_sizeof_voidp" -eq 8],
@@ -361,6 +360,7 @@ then
    AC_DEFINE([ZMQ_HAVE_DISCONNECT], [], [ZMQ library has zmq_disconnect funtion])
 fi
 
+AM_CONDITIONAL([FORMAT_STANDALONE], [false])
 
 
 ##
@@ -387,6 +387,8 @@ AC_SUBST(TCLSH_CMD)
 
 
 AC_SUBST(CPPUNIT_LDFLAGS)
+AC_SUBST([AM_CPPFLAGS],[-DNSCLDAQ_BUILD])
+AC_SUBST([AM_CXXFLAGS],[-DNSCLDAQ_BUILD])
 
 #
 #  Threading is hard coded to -pthread now.
@@ -441,6 +443,7 @@ AC_CONFIG_FILES([Makefile
 		 base/factories/Makefile
 		 base/tclutils/Makefile
 		 base/testutils/Makefile
+     base/sfinae_tools/Makefile
 		 caenfw-common/Makefile
 		 servers/Makefile
 		 servers/tclserver/Makefile
@@ -451,7 +454,6 @@ AC_CONFIG_FILES([Makefile
 		diagnostics/viewers/Makefile
 		 utilities/Makefile
 		utilities/common/Makefile
-		 utilities/Buffer/Makefile
                  utilities/daqstart/Makefile
                  utilities/dvdburn/Makefile
 		 utilities/scalerdisplay/ScalerDisplay
@@ -462,21 +464,16 @@ AC_CONFIG_FILES([Makefile
 		 utilities/sclclient/Makefile
 		 utilities/tkbufdump/Makefile
 		 utilities/filter/Makefile
-		 utilities/filter/Makefile-template
-		 utilities/filter/FilterIncludes
-		 utilities/compatibility/Makefile
-		 utilities/compatibility/eventlog-compat
-		 utilities/compatibility/spectcldaq
-		 utilities/compatibility/s800toring
-		 utilities/compatibility/bufdump
-		utilities/conversion/Makefile
+                 utilities/filter/core/Makefile
+                 utilities/filter/V10/Makefile
+                 utilities/filter/V11/Makefile
+                 utilities/filter/V12/Makefile
+                 utilities/filter/filterkit/Makefile
+                 utilities/filter/filterkit/Makefile-template
+                 utilities/filter/filterkit/FilterIncludes
+                 utilities/conversion/Makefile
     		utilities/fileanalyzer/Makefile
-    		utilities/format/Makefile
-    		utilities/format/V8/Makefile
-    		utilities/format/V10/Makefile
-    		utilities/format/V11/Makefile
     		utilities/IO/Makefile
-    		utilities/FormattedIO/Makefile
 		 utilities/newscaler/Makefile
 		 utilities/newscaler/ScalerDisplay.tcl
 		 utilities/varmanager/Makefile
@@ -512,6 +509,16 @@ AC_CONFIG_FILES([Makefile
 		 epics/Makefile
 		 daq/Makefile
 		 daq/format/Makefile
+     utilities/nscldaq-format/Makefile
+     utilities/nscldaq-format/utils/Makefile
+     utilities/nscldaq-format/testutils/Makefile
+     utilities/nscldaq-format/format/Makefile
+     utilities/nscldaq-format/format/V8/Makefile
+     utilities/nscldaq-format/format/V10/Makefile
+     utilities/nscldaq-format/format/V11/Makefile
+     utilities/nscldaq-format/format/V12/Makefile
+     utilities/nscldaq-format/FormattedIO/Makefile
+     utilities/nscldaq-format/Buffer/Makefile
 		 daq/readoutgui/Makefile
 		 daq/readoutgui/InstallRoot.tcl
 		 daq/readoutgui/ReadoutShell.tcl

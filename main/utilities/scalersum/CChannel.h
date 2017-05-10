@@ -25,6 +25,8 @@
 
 #include <stdint.h>
 
+namespace DAQ {
+
 /**
  * @class
  *     Encapsulates a scaler channel.  This is an abstract base class
@@ -38,4 +40,5 @@ public:
     virtual operator uint64_t() = 0;                        // fetch sum.
 };
 
+} // end DAQ
 #endif

@@ -1,16 +1,14 @@
 bin_PROGRAMS= frag2ring
 
 COMPILATION_FLAGS =  \
-	-I@top_srcdir@/daq/format \
 	-I@top_srcdir@/base/tcpip \
-	@LIBTCLPLUS_CFLAGS@	\
 	-I@top_srcdir@/base/headers	\
 	-I@top_srcdir@/base/tcpip        \
 	-I@top_srcdir@/servers/portmanager \
 	-I@top_srcdir@/base/os \
 	-I@top_srcdir@/base/thread \
 	@LIBTCLPLUS_CFLAGS@ \
-	@THREADCXX_FLAGS@ @TCL_FLAGS@
+        @THREADCXX_FLAGS@ @TCL_FLAGS@
 
 
 lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la 
@@ -38,9 +36,10 @@ libEventBuilderClient_la_CPPFLAGS=$(COMPILATION_FLAGS)
 
 frag2ring_SOURCES=frag2ring.cpp CFragReader.cpp CFragWriter.cpp
 
-frag2ring_CPPFLAGS=$(COMPILATION_FLAGS)
+frag2ring_CPPFLAGS=$(COMPILATION_FLAGS) \
+                    -I@top_srcdir@/utilities/nscldaq-format/Buffer
 
-frag2ring_LDADD = @top_builddir@/daq/format/libdataformat.la \
+frag2ring_LDADD = @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
                     @top_builddir@/base/os/libdaqshm.la $(THREADLD_FLAGS)
 
 FRAMEWORK_SOURCEFILES =  GetOpt.cpp Main.cpp options.ggo
@@ -83,7 +82,7 @@ TCL_PACKAGE_FILES=ConnectionManager.tcl callbackManager.tcl eventOrderer.tcl \
 	DuplicateTimestamp.tcl OutOfOrderUI.tcl evbui.tcl
 
 
-TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl evbRdoCallouts10.tcl EVBStateCallouts.tcl \
+TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl EVBStateCallouts.tcl \
 			 ringSourceMgr.tcl endrunmon.tcl
 
 TCL_TEST_FILES=tclTests.tcl cbmanagerTests.test cmanagerCallbacks.test ringsourcemgr.test
@@ -121,7 +120,7 @@ install-exec-hook:
 
 noinst_PROGRAMS = unittests ordertests
 
-unittests_DEPENDENCIES = libEventBuilderClient.la cmdline.o cmdline.h
+unittests_DEPENDENCIES = @builddir@/libEventBuilderClient.la cmdline.o cmdline.h
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
 	connectTest.cpp  
 nodist_unittests_SOURCES = cmdline.c cmdline.h
@@ -133,8 +132,7 @@ unittests_LDADD = @builddir@/libEventBuilderClient.la \
 	@top_builddir@/base/tcpip/libTcp.la 	\
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
 
-unittests_CPPFLAGS=$(COMPILATION_FLAGS)
-
+unittests_CPPFLAGS=$(COMPILATION_FLAGS) -I@top_srcdir@/base/testutils
 
 
 ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
@@ -144,9 +142,12 @@ ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
 
 
 ordertests_LDADD = 	@top_builddir@/base/thread/libdaqthreads.la 	\
-	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
+                        @CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@ \
+                        @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
 
-ordertests_CXXFLAGS=$(COMPILATION_FLAGS) @TCL_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@
+ordertests_CPPFLAGS=$(COMPILATION_FLAGS) \
+                    -I@top_srcdir@/base/testutils \
+                    @TCL_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@
 
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs HERE=@srcdir@ tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl
@@ -160,8 +161,7 @@ BUILT_SOURCES=cmdline.h cmdline.c
 cmdline.c: cmdline.h
 
 cmdline.h: options.ggo
-	$(GENGETOPT) --input=@srcdir@/options.ggo \
-		--output-dir=@builddir@
+	$(GENGETOPT) --input=@srcdir@/options.ggo --output-dir=@builddir@
 
 
 

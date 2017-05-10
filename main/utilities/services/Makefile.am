@@ -17,12 +17,13 @@ libTclServices_la_SOURCES = TclServicesPackage.cpp \
 	CTCLServiceApiCommand.cpp CTCLServiceApiCommand.h \
 	CTCLServiceApiInstance.cpp CTCLServiceApiInstance.h
 libTclServices_la_CPPFLAGS=$(libServices_la_CPPFLAGS) @TCL_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@
-libTclServices_la_LDFLAGS=libServices.la $(libServices_la_LDFLAGS) \
+libTclServices_la_LIBADD=@builddir@/libServices.la \
+        $(libServices_la_LDFLAGS) \
 	@LIBTCLPLUS_LDFLAGS@ @TCL_LIBS@
 
 libPyServices_la_SOURCES=pyServices.cpp
 libPyServices_la_CPPFLAGS=@PYTHON_CPPFLAGS@ $(libServices_la_CPPFLAGS)
-libPyServices_la_LDFLAGS=@PYTHON_LDFLAGS@ libServices.la $(libServices_la_LDLFAGS) 
+libPyServices_la_LIBADD=@builddir@/libServices.la @PYTHON_LDFLAGS@ $(libServices_la_LDLFAGS)
 
 
 include_HEADERS = CServiceApi.h
@@ -33,7 +34,7 @@ unittest_SOURCES=TestRunner.cpp apiTests.cpp   \
 	$(libServices_la_SOURCES)
 
 unittest_CPPFLAGS=$(libServices_la_CPPFLAGS) @CPPUNIT_CFLAGS@
-unittest_LDFLAGS =$(libServices_la_LDFLAGS) @CPPUNIT_LDFLAGS@
+unittest_LDADD =$(libServices_la_LDFLAGS) @CPPUNIT_LDFLAGS@
 
 EXTRA_DIST=TclServices.test apiTests.py services.xml ServiceWizard.py \
 	addsysprogram.in lsservices.in modsysprogram.in rmsysprogram.in \

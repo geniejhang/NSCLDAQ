@@ -9,26 +9,22 @@
 
      Author:
              Ron Fox
+             Jeromy Tompkins
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
-#ifndef __IO_H
-#define __IO_H
+#ifndef IO_H
+#define IO_H
 
-#ifndef __CRT_UNISTD_H
+#include <cstdint>
+#include <utility>
+
 #include <unistd.h>
-#ifndef __CRT_UNISTD_H
-#define __CRT_UNISTD_H
-#endif
-#endif
 
-#ifndef __CRT_STDINT_H
-#include <stdint.h>
-#ifndef __CRT_STDINT_H
-#define __CRT_STDINT_H
-#endif
-#endif
+namespace DAQ {
+class CTimeout;
+}
 
 /**
  * @file io.h
@@ -37,8 +33,20 @@
  */
 
 namespace io {
+
+    enum ReturnCode {
+        SUCCESS     = 0,
+        ERROR       = 1,
+        END_OF_FILE = 2,
+        TIMED_OUT   = 3
+    };
+
   void writeData (int fd, const void* pData , size_t size);
-  size_t readData (int fd, void* pBuffer,  size_t nBytes);
+  ssize_t readData (int fd, void* pBuffer,  size_t nBytes);
+
+  std::pair<ssize_t, ReturnCode>
+  timedReadData(int fd, void* pBuffer,  size_t nBytes,
+                        const ::DAQ::CTimeout& timeout);
   double freeSpacePercent(int fd);
 }
 

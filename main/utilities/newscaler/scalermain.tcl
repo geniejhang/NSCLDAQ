@@ -448,11 +448,8 @@ proc scaler item {
     #  Figure out if there's a source id that needs to appended to the channel
     #  number:
     
-    if {[dict exists $item bodyheader]} {
-        set sourceId .[dict get $item bodyheader source]
-    } else {
-        set sourceId "";                   # No source id.
-    }
+    set sourceId .[dict get $item source]
+
     # Figure out the interval over which the scalers accumulated
     # Note the divisor changes whatever timebase used for the start/end
     # values to floating point seconds.
@@ -492,10 +489,7 @@ proc scaler item {
     # Set the dt in seconds for the source, if there is no  body
     # header to supply  an sid, just make a blank source id:
     
-    set sid ""
-    if {[dict exists $item bodyheader]} {
-        set sid [dict get $item bodyheader source]
-    }
+    set sid [dict get $item source]
     $h update $sid $dt
     
     # If the user has extended us with a UserUpdate call that:

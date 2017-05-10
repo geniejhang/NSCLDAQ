@@ -5,12 +5,18 @@
 #include "Asserts.h"
 #include <sys/types.h>
 #include <unistd.h>
+#include <CDataSink.h>
 #include <CRingBuffer.h>
+#include <CRingDataSource.h>
+#include <CRingDataSink.h>
+#include <CDataSourceFactory.h>
 #include <RunState.h>
 #include <StateException.h>
-#include <CRingItem.h>
-#include <CRingStateChangeItem.h>
-#include <CAllButPredicate.h>
+#include <V12/CRingItem.h>
+#include <V12/CRawRingItem.h>
+#include <V12/CRingStateChangeItem.h>
+#include <RingIOV12.h>
+#include <CTriggerLoop.h>
 #include <string.h>
 #include <string>
 #include <CNullTrigger.h>
@@ -29,6 +35,7 @@
 extern std::string uniqueName(std::string);
 
 using namespace std;
+using namespace DAQ::V12;
 
 static const string ringName(uniqueName("experimentTest"));
 static string testTitle("This is my title");
@@ -57,7 +64,7 @@ public:
   }
   void tearDown() {
     delete m_pExperiment;
-    m_pExperiment = reinterpret_cast<CExperiment*>(0);
+    m_pExperiment = nullptr;
     CRingBuffer::remove(ringName);
   }
 protected:
@@ -108,7 +115,9 @@ void experimentTests::construct() {
   EQ(static_cast<size_t>(4096), 
      m_pExperiment->m_nDataBufferSize);
 
-  CRingBuffer::Usage usage =  m_pExperiment->m_pRing->getUsage();
+  auto pRingSource = dynamic_cast<DAQ::CRingDataSink*>(m_pExperiment->m_pRing);
+  ASSERT(pRingSource);
+  CRingBuffer::Usage usage =  pRingSource->getRing().getUsage();
   ASSERT(usage.s_bufferSpace > 4096);
   EQ(getpid(), usage.s_producer);
 
@@ -141,8 +150,11 @@ void experimentTests::buffersize()
 //
 void experimentTests::start()
 {
-  CRingBuffer consumer(ringName);
-  CAllButPredicate  pred;
+
+    // order is important! The ring must be attached to prior to calling "start"
+    // so that we do not attach too late and miss the state change item.
+    DAQ::CDataSource* pConsumer =
+            DAQ::CDataSourceFactory::makeSource(string("tcp://localhost/") + ringName, {}, {});
 
   m_pExperiment->m_pRunState->m_runNumber = 1234;
   m_pExperiment->m_pRunState->m_timeOffset = 5678;
@@ -155,15 +167,18 @@ void experimentTests::start()
 
   EQ(RunState::active, m_pExperiment->m_pRunState->m_state);
 
-  CRingItem* pItem = CRingItem::getFromRing(consumer, pred);
+
+  CRawRingItem stateChangeItem, formatItem;
+  *pConsumer >> formatItem >> stateChangeItem;
   CRingStateChangeItem* pState(0);
-  
+
+  delete pConsumer;
+
   try {
-    pState = new CRingStateChangeItem(*pItem);
+    pState = new CRingStateChangeItem(stateChangeItem);
   }
   catch(bad_cast) {
   }
-  delete pItem;
 
 
   // Got a state change item:
@@ -220,27 +235,30 @@ experimentTests::stop()
   m_pExperiment->m_pRunState->m_timeOffset = 666;
   renewTitle();
 
-  CRingBuffer consumer(ringName);
-  CAllButPredicate  pred;
 
-  m_pExperiment->Stop();	// This should now work.
+  // order is important. This must be created before we stop so that
+  // we do not attach to the ring too late.
+  DAQ::CDataSource* pConsumer
+          = DAQ::CDataSourceFactory::makeSource(string("tcp://localhost/") + ringName,
+                                            {}, {});
+
+  m_pExperiment->syncEndRun(false);	// This should now work.
 
   // Need to run the event loop a bit:
 
-  Tcl_Interp* pInterp = Tcl_CreateInterp();
-  while (!Tcl_DoOneEvent(0)) {
-    Os::usleep(500);
-  }
+  CRawRingItem countItem, stateItem;
+  *pConsumer >> countItem >> stateItem;
 
-  CRingItem* pItem = CRingItem::getFromRing(consumer, pred);
+
   CRingStateChangeItem* pState(0);
   
+  delete pConsumer;
+
   try {
-    pState = new CRingStateChangeItem(*pItem);
+    pState = new CRingStateChangeItem(stateItem);
   }
   catch(bad_cast) {
   }
-  delete pItem;
 
 
   // Got a state change item:
@@ -258,7 +276,6 @@ experimentTests::stop()
 
   EQ(RunState::inactive, m_pExperiment->m_pRunState->m_state);
 
-  Tcl_DeleteInterp(pInterp);
 
 }
 

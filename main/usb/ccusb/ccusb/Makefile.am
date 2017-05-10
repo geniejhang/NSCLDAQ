@@ -95,7 +95,8 @@ noinst_PROGRAMS = unittests tests remotetests camactests
 ## Manual test programs for CCUSBusb
 tests_SOURCES = TestRunner.cpp \
 		regTests.cpp
-tests_LDADD = $(CPPUNIT_LDFLAGS) @builddir@/libCCUSB.la \
+tests_LDADD = $(CPPUNIT_LDFLAGS) \
+		@builddir@/libCCUSB.la \
 		@TCL_LDFLAGS@ \
 		@LIBTCLPLUS_LDFLAGS@
 tests_CXXFLAGS = -I@top_srcdir@/base/thread $(AM_CXXFLAGS)

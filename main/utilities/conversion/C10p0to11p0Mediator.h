@@ -48,9 +48,8 @@ namespace DAQ {
      * of a standard CTransformMediator.
      *
      */
-    class C10p0to11p0Mediator : public CBaseMediator
+    class C10p0to11p0Mediator : public CTransformMediator<CTransform10p0to11p0>
     {
-      CTransformMediator<CTransform10p0to11p0> m_mediator; // actual mediator
 
     public:
       /*!
@@ -61,8 +60,8 @@ namespace DAQ {
        * \param source data source
        * \param sink   data sink
        */
-      C10p0to11p0Mediator(std::unique_ptr<CDataSource> source = std::unique_ptr<CDataSource>(),
-                         std::unique_ptr<CDataSink> sink = std::unique_ptr<CDataSink>());
+      C10p0to11p0Mediator(std::shared_ptr<CDataSource> source = std::shared_ptr<CDataSource>(),
+                         std::shared_ptr<CDataSink> sink = std::shared_ptr<CDataSink>());
 
       /*!
        * \brief mainLoop
@@ -71,17 +70,8 @@ namespace DAQ {
        */
       virtual void mainLoop();
 
-      virtual void initialize() { m_mediator.initialize();}
-      virtual void finalize() { m_mediator.finalize();}
-
-      virtual CDataSource* getDataSource() { return m_mediator.getDataSource(); }
-      virtual CDataSink*   getDataSink()   { return m_mediator.getDataSink(); }
-
-      virtual void setDataSource(std::unique_ptr<CDataSource> &pSource)
-      { m_mediator.setDataSource(pSource); }
-
-      virtual void setDataSink(std::unique_ptr<CDataSink> &pSink)
-      { m_mediator.setDataSink(pSink); }
+      virtual void initialize() { CTransformMediator::initialize();}
+      virtual void finalize() { CTransformMediator::finalize();}
 
     private:
 

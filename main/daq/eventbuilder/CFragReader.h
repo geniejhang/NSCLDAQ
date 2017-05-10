@@ -19,14 +19,11 @@
  * @brief Fragment reader (from file number) class definition.
  */
 
-#ifndef __CFRAGREADER_H
-#define __CFRAGREADER_H
+#ifndef CFRAGREADER_H
+#define CFRAGREADER_H
 
-#ifndef __CRT_STDLIB_H
+#include <ByteBuffer.h>
 #include <stdlib.h>		/* for size_t */
-#ifndef __CRT_STDLIB_H
-#endif
-#endif
 
 /**
  * CFragReader
@@ -48,7 +45,7 @@ public:
 
   // public methods:
 public:
-  void* operator()();
+  DAQ::Buffer::ByteBuffer operator()();
 
   // Private utilities:
 

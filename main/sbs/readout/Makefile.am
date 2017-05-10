@@ -6,9 +6,13 @@ COMPILATION_FLAGS	=	-I@top_srcdir@/sbs/vmemodules	\
 			-I@top_srcdir@/base/headers	\
 			-I@top_srcdir@/servers/portmanager	\
 			-I@top_srcdir@/base/dataflow		\
-			-I@top_srcdir@/daq/format		\
+                        -I@top_srcdir@/base/sfinae_tools \
+      -I@top_srcdir@/utilities/IO		\
+      -I@top_srcdir@/utilities/nscldaq-format/format		\
+      -I@top_srcdir@/utilities/nscldaq-format/Buffer		\
+      -I@top_srcdir@/utilities/nscldaq-format/FormattedIO	\
 			-I@top_srcdir@/base/thread 		\
-                        -I@top_srcdir@/daq/eventbuilder         \
+      -I@top_srcdir@/daq/eventbuilder         \
 			-I@top_srcdir@/base/os			\
 			-I@top_srcdir@/diagnostics/status	\
 			$(TCL_FLAGS) $(THREADCXX_FLAGS)	\
@@ -86,7 +90,10 @@ noinst_HEADERS	=	CReadoutMain.h Skeleton.h CTCLAuthorizer.h	\
 
 libSBSProductionReadout_la_LIBADD	=	@top_builddir@/sbs/vmemodules/libSBSDeviceSupport.la	\
 						@top_builddir@/sbs/nsclapi/libSBSVmeAPI.la		\
-						@top_builddir@/daq/format/libdataformat.la		\
+						@top_builddir@/utilities/IO/libdaqio.la		\
+            @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la		\
+            @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la		\
+            @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la		\
 						@top_builddir@/servers/portmanager/libPortManager.la \
 						@top_builddir@/base/dataflow/libDataFlow.la	\
 						@top_builddir@/sbs/				\
@@ -103,7 +110,7 @@ EXTRA_DIST	=	options.ggo Skeleton.cpp UserMakefile.in SBSRdoMakeIncludes.in SBSR
 			$(TCLPACKAGES)
 
 
-noinst_PROGRAMS	= Readout #tests
+noinst_PROGRAMS	= Readout tests
 
 Readout_SOURCES = Skeleton.cpp
 
@@ -147,56 +154,59 @@ options.h:	options.ggo
 clean-local:
 	-rm -f options.c options.h
 
-
-#tests_SOURCES=TestRunner.cpp experimentTests.cpp \
-#		compositeTests.cpp scalerbankTests.cpp	\
-#		compoundevsegTest.cpp			\
-#		triggerresponseTests.cpp 	\
-#		timedtriggerTest.cpp		\
-#		testRunStatePkg.cpp		\
-#		packettests.cpp			\
-#		eventpackettests.cpp		\
-#		varlisttest.cpp docvartests.cpp	\
-#		testVariableBuffers.cpp	
-#
-#tests_DEPENDENCIES=libSBSProductionReadout.la
-
-#tests_CPPFLAGS=$(COMPILATION_FLAGS)
-
-#tests_LDADD = 	libSBSProductionReadout_la-CExperiment.lo	\
-#		libSBSProductionReadout_la-CComposite.lo	\
-#		libSBSProductionReadout_la-CScaler.lo libSBSProductionReadout_la-CScalerBank.lo	\
-#		libSBSProductionReadout_la-CEventSegment.lo libSBSProductionReadout_la-CCompoundEventSegment.lo \
-#		libSBSProductionReadout_la-RunState.lo	\
-#		libSBSProductionReadout_la-CEventTrigger.lo libSBSProductionReadout_la-CTimedTrigger.lo	\
-#		libSBSProductionReadout_la-CNullTrigger.lo	libSBSProductionReadout_la-CRunControlPackage.lo		\
-#		libSBSProductionReadout_la-CBeginCommand.lo				\
-#		libSBSProductionReadout_la-CPreBeginCommand.lo	\
-#		libSBSProductionReadout_la-CPauseCommand.lo				\
-#		libSBSProductionReadout_la-CResumeCommand.lo				\
-#		libSBSProductionReadout_la-CPreEndCommand.lo	\
-#		libSBSProductionReadout_la-CPrePauseCommand.lo	\
-#		libSBSProductionReadout_la-CPreResumeCommand.o \
-#		libSBSProductionReadout_la-CEndCommand.lo					\
-#		libSBSProductionReadout_la-CInitCommand.lo					\
-#		libSBSProductionReadout_la-CTriggerLoop.lo					\
-#		libSBSProductionReadout_la-CDocumentedPacket.lo libSBSProductionReadout_la-CDocumentedPacketManager.lo \
-#		libSBSProductionReadout_la-CReadoutException.lo libSBSProductionReadout_la-CInvalidPacketStateException.lo \
-#		libSBSProductionReadout_la-CEventPacket.lo					\
-#		libSBSProductionReadout_la-CDocumentedVars.lo				\
-#		libSBSProductionReadout_la-CVarList.lo					\
-#		libSBSProductionReadout_la-CVariableBuffers.lo				\
-#		@top_builddir@/daq/format/libdataformat.la	\
-#		@top_builddir@/base/dataflow/libDataFlow.la	\
-#		@top_builddir@/sbs/nsclapi/libSBSVmeAPI.la	\
-#		@top_builddir@/base/thread/libdaqthreads.la	\
-#		@top_builddir@/base/os/libdaqshm.la		\
-#		@top_builddir@/diagnostics/status/libStatusMessages.la \
-#		$(TCL_LDFLAGS) 					\
-#		$(CPPUNIT_LDFLAGS)  $(THREADLD_FLAGS)
-#
-#tests_LDFLAGS= @LIBTCLPLUS_LDFLAGS@ -Wl,"-rpath-link=$(libdir)"
+tests_SOURCES=TestRunner.cpp experimentTests.cpp \
+		compositeTests.cpp scalerbankTests.cpp	\
+		compoundevsegTest.cpp			\
+		triggerresponseTests.cpp 	\
+		timedtriggerTest.cpp		\
+                packettests.cpp			\
+		eventpackettests.cpp		\
+		varlisttest.cpp docvartests.cpp	\
+                testRunStatePkg.cpp \
+                testVariableBuffers.cpp
 
 
+tests_DEPENDENCIES=libSBSProductionReadout.la
 
-# TESTS=./tests
+tests_CPPFLAGS=$(COMPILATION_FLAGS)
+
+tests_LDADD = 	libSBSProductionReadout_la-CExperiment.lo	\
+		libSBSProductionReadout_la-CComposite.lo	\
+		libSBSProductionReadout_la-CScaler.lo libSBSProductionReadout_la-CScalerBank.lo	\
+		libSBSProductionReadout_la-CEventSegment.lo libSBSProductionReadout_la-CCompoundEventSegment.lo \
+		libSBSProductionReadout_la-RunState.lo	\
+		libSBSProductionReadout_la-CEventTrigger.lo libSBSProductionReadout_la-CTimedTrigger.lo	\
+		libSBSProductionReadout_la-CNullTrigger.lo	libSBSProductionReadout_la-CRunControlPackage.lo		\
+		libSBSProductionReadout_la-CBeginCommand.lo				\
+		libSBSProductionReadout_la-CPreBeginCommand.lo	\
+		libSBSProductionReadout_la-CPauseCommand.lo				\
+		libSBSProductionReadout_la-CResumeCommand.lo				\
+		libSBSProductionReadout_la-CPreEndCommand.lo	\
+		libSBSProductionReadout_la-CPrePauseCommand.lo	\
+		libSBSProductionReadout_la-CPreResumeCommand.o \
+		libSBSProductionReadout_la-CEndCommand.lo					\
+		libSBSProductionReadout_la-CInitCommand.lo					\
+		libSBSProductionReadout_la-CTriggerLoop.lo					\
+		libSBSProductionReadout_la-CDocumentedPacket.lo libSBSProductionReadout_la-CDocumentedPacketManager.lo \
+		libSBSProductionReadout_la-CReadoutException.lo libSBSProductionReadout_la-CInvalidPacketStateException.lo \
+		libSBSProductionReadout_la-CEventPacket.lo					\
+		libSBSProductionReadout_la-CDocumentedVars.lo				\
+		libSBSProductionReadout_la-CVarList.lo					\
+		libSBSProductionReadout_la-CVariableBuffers.lo				\
+    @top_builddir@/utilities/IO/libdaqio.la		\
+    @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la		\
+    @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la		\
+    @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la		\
+    @top_builddir@/base/dataflow/libDataFlow.la	\
+	  @top_builddir@/diagnostics/status/libStatusMessages.la  \
+		@top_builddir@/sbs/nsclapi/libSBSVmeAPI.la	\
+		@top_builddir@/base/thread/libdaqthreads.la	\
+		@top_builddir@/base/os/libdaqshm.la		\
+		$(TCL_LDFLAGS) 					\
+		$(CPPUNIT_LDFLAGS)  $(THREADLD_FLAGS)
+
+tests_LDFLAGS= @LIBTCLPLUS_LDFLAGS@ -Wl,"-rpath-link=$(libdir)"
+
+
+
+TESTS=./tests

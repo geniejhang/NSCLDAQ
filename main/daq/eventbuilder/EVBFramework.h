@@ -58,7 +58,7 @@ typedef struct __attribute__((__packed__)) _ClientEventFragment {
   uint32_t s_sourceId;
   uint32_t s_size;
   uint32_t s_barrierType;
-  void*    s_payload;
+  uint8_t* s_payload;
   
 } ClientEventFragment, *pClientEventFragment;
 

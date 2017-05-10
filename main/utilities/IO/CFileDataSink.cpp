@@ -15,14 +15,16 @@
 */
 
 #include "CFileDataSink.h"
-#include <CRingItem.h>
-#include <DataFormat.h>
 #include <io.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <iostream>
+
+
+namespace DAQ {
+
 
 /**! Construct from a file descriptor
 * Ownership of this file descriptor is transferred to the
@@ -95,27 +97,6 @@ CFileDataSink::~CFileDataSink()
 }
 
 
-/**! Write ring item to the sink
-*
-* Writes the data to the file. This delegates the writing to
-* a static function io::writeData(int,void*,int).
-*
-* \param item refers to a CRingItem that contains the data
-*
-*
-* \throw CErrnoException when io failure
-*
-*/
-void CFileDataSink::putItem(const CRingItem& item)
-{
-    // Get the underlying structure containing the state 
-    const RingItem* pItem = item.getItemPointer();
-
-    // Set up variable for writing it to stream
-    put(pItem, item.size());
-
-}
-
 /**
  * put
  *    Puts an arbitrary chunk of data to the sink (file)
@@ -142,6 +123,13 @@ void CFileDataSink::put(const void* pData, size_t nBytes)
 }
 
 
+void CFileDataSink::putv(const std::vector<std::pair<const void *, size_t> > &buffers)
+{
+    for (auto& buffer : buffers) {
+        put(buffer.first, buffer.second);
+    }
+}
+
 /**! Check if write operates are allowed on file
 *
 * \throw CErrnoException if fcntl failed while checking
@@ -161,3 +149,6 @@ bool CFileDataSink::isWritable()
   return ( (status&O_WRONLY)!=0 || (status&O_RDWR)!=0 );
    
 }
+
+}
+ // end DAQ

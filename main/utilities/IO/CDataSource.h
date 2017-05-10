@@ -15,15 +15,20 @@
 */
 
 
-#ifndef CDATASOURCE_H
-#define CDATASOURCE_H
+#ifndef DAQ_CDATASOURCE_H
+#define DAQ_CDATASOURCE_H
 
 #include <cstddef> // for size_T
+#include <memory>
 
-// forward definitions:
 
-class CRingItem;
+namespace DAQ {
 
+class CDataSource;
+class CTimeout;
+
+typedef std::unique_ptr<CDataSource> CDataSourceUPtr;
+typedef std::shared_ptr<CDataSource> CDataSourcePtr;
 
 /*! 
    Abstract base class that defines an interface that all dumper data sources 
@@ -36,6 +41,12 @@ class CDataSource
   // constructors and canonicals.  In general most canonicals are not allowed.
   //
   bool m_eof;
+
+private:
+  CDataSource(const CDataSource& rhs);
+  CDataSource& operator=(const CDataSource& rhs);
+  int operator==(const CDataSource& rhs) const;
+  int operator!=(const CDataSource& rhs) const;
 
 public:
   CDataSource();
@@ -52,33 +63,23 @@ public:
    */
   void clear() { setEOF(false); }
 
-private:
-  CDataSource(const CDataSource& rhs);
-  CDataSource& operator=(const CDataSource& rhs);
-  int operator==(const CDataSource& rhs) const;
-  int operator!=(const CDataSource& rhs) const;
-
-public:
-
-  /*!
-   * \brief DEPRECATED - Extract complete CRingItem from source
-   *
-   * The operation will block until the complete ring item is received.
-   * The caller receives ownership of the returned object.
-   *
-   * \return a new ring item
-   */
-  virtual CRingItem* getItem() = 0;
+  virtual size_t availableData() = 0;
+  virtual void ignore(size_t nBytes) = 0;
+  virtual size_t peek(char* pBuffer, size_t nBytes) = 0;
+  virtual size_t tell() const = 0;
 
   /*!
    * \brief Read a block of data from the sink
    * \param pBuffer   block of data to copy data into
    * \param nBytes    number of bytes to read from the source
    */
-  virtual void read(char* pBuffer, size_t nBytes) = 0;
+  virtual size_t read(char* pBuffer, size_t nBytes);
+  virtual size_t timedRead(char* pBuffer, size_t nBytes, const CTimeout& timeout) = 0;
 
 protected:
   void setEOF(bool state) { m_eof = state; }
 };
+
+} // end DAQ
 
 #endif

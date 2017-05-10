@@ -16,17 +16,24 @@ BUILT_SOURCES	= parser.h parser.c
 ringselector_CPPFLAGS		= 	@LIBTCLPLUS_CFLAGS@	\
 				-I@top_srcdir@/utilities/common	\
 				-I@top_srcdir@/base/headers	\
-				-I@top_srcdir@/daq/format	\
 			        -I@top_srcdir@/base/dataflow \
 				-I@top_srcdir@/base/os	\
-				-I@top_srcdir@/base/thread
+                                -I@top_srcdir@/base/thread \
+                                -I@top_srcdir@/utilities/IO	\
+                                -I@top_srcdir@/utilities/nscldaq-format/format	\
+                                -I@top_srcdir@/utilities/nscldaq-format/Buffer	\
+                                -I@top_srcdir@/utilities/nscldaq-format/FormattedIO \
+                                -I@top_srcdir@/base/sfinae_tools
 
 
 
 ringselector_LDADD	=	@top_builddir@/utilities/common/libUtilCommon.la \
-				@top_builddir@/daq/format/libdataformat.la	\
-				@top_builddir@/base/dataflow/libDataFlow.la	\
-				@top_builddir@/base/os/libdaqshm.la		\
+                                @top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\
+                                @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la	\
+                                @top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la	\
+                                @top_builddir@/utilities/IO/libdaqio.la	\
+                                @top_builddir@/base/dataflow/libDataFlow.la	\
+                                @top_builddir@/base/os/libdaqshm.la		\
 				@top_builddir@/base/thread/libdaqthreads.la     \
 				@LIBEXCEPTION_LDFLAGS@				\
 				$(THREADLD_FLAGS) 
@@ -74,13 +81,18 @@ selectortests_SOURCES	=	TestRunner.cpp selectortests.cpp
 selectortests_LDADD	=	$(CPPUNIT_LDFLAGS)	\
 				@top_builddir@/utilities/common/libUtilCommon.la	\
 				@top_builddir@/base/os/libdaqshm.la \
-				@top_builddir@/daq/format/libdataformat.la	\
+				@top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la	\
+				@top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
+				@top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+				@top_builddir@/utilities/IO/libdaqio.la \
 				@top_builddir@/base/dataflow/libDataFlow.la			\
 				@LIBEXCEPTION_LDFLAGS@
 
 selectortests_LDFLAGS	=	-Wl,"-rpath=link=$(libdir)"
 
-selectortests_CPPFLAGS	=	$(ringselector_CPPFLAGS) -DBINDIR="\"$(bindir)\""
+selectortests_CPPFLAGS	=	$(ringselector_CPPFLAGS) \
+                                -I@top_srcdir@/base/testutils \
+                                -DBINDIR="\"$(bindir)\""
 
 
 

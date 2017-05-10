@@ -6,8 +6,15 @@
 
 #include <string>
 #include <io.h>
+
 #include "CEndRunInfo10.h"
-#include <DataFormat10.h>
+
+#include <V10/DataFormat.h>
+#include <V10/CRingStateChangeItem.h>
+
+#include <CFileDataSink.h>
+#include <RingIOV10.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -15,6 +22,8 @@
 #include <string.h>
 #include <time.h>
 #include <stdexcept>
+
+using namespace DAQ;
 
 class EndInfo10Test : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(EndInfo10Test);
@@ -27,9 +36,13 @@ class EndInfo10Test : public CppUnit::TestFixture {
 
 
 private:
+  int fd;
 
 public:
   void setUp() {
+      char tmplate[] = "testrunXXXXXX";
+      fd = mkstemp(tmplate);
+      unlink(tmplate);
   }
   void tearDown() {
   }
@@ -46,31 +59,22 @@ CPPUNIT_TEST_SUITE_REGISTRATION(EndInfo10Test);
 void EndInfo10Test::emptyFile() {
   // Open /dev/null and use that as the file:
   
-  int fd = open("/dev/null", O_RDONLY);
-  CEndRunInfo10 e(fd);
-  close(fd);
-  
-  EQ(unsigned(0), e.numEnds());
+  int nullFd = open("/dev/null", O_RDONLY);
+
+  CEndRunInfo10 e(nullFd);
+  EQMSG("empty files have zero end runs", 0u, e.numEnds());
+
+  close(nullFd);
 }
 
 void EndInfo10Test::oneEnd()
 {
-  // Open a tempfile and write a single end item.
-
-  
-  char tmplate[] = "testrunXXXXXX";
-  int fd = mkstemp(tmplate);
+  // write a single end item.
+  CFileDataSink sink(fd);
   
   time_t now = time(NULL);
-  NSCLDAQ10::StateChangeItem item;
-  item.s_header.s_size = sizeof(item);
-  item.s_header.s_type = NSCLDAQ10::END_RUN;
-  item.s_runNumber = 1234;
-  item.s_timeOffset = 456;
-  item.s_Timestamp = now;
-  strcpy(item.s_title, "This is a title");
-  
-  io::writeData(fd, &item, sizeof(item));
+  V10::CRingStateChangeItem item(V10::END_RUN, 1234, 456, now, "This is a title");
+  writeItem(sink, item);
   
   // Rewind the file and create an end run info object on it:
   
@@ -91,30 +95,21 @@ void EndInfo10Test::oneEnd()
 
 void EndInfo10Test::twoEnds()
 {
-  // Open the temp file:
-  
-  char tmplate[] = "testrunXXXXXX";
-  int fd = mkstemp(tmplate);
-  
+  CFileDataSink sink(fd);
+
   // Create and write the first end run:
   
   time_t now = time(NULL);
-  NSCLDAQ10::StateChangeItem item;
-  item.s_header.s_size = sizeof(item);
-  item.s_header.s_type = NSCLDAQ10::END_RUN;
-  item.s_runNumber = 1234;
-  item.s_timeOffset = 456;
-  item.s_Timestamp = now;
-  strcpy(item.s_title, "This is a title");
+  V10::CRingStateChangeItem item(V10::END_RUN, 1234, 456, now, "This is a title");
   
-  io::writeData(fd, &item, sizeof(item));
-  
+  writeItem(sink, item);
+
   // Slightly modify the item and write it a second time:
   
-  item.s_Timestamp = now+10;
-  item.s_timeOffset= 466;
-  
-  io::writeData(fd, &item, sizeof(item));
+  item.setTimestamp(now+10);
+  item.setElapsedTime(466);
+
+  writeItem(sink, item);
   
   // Create the ER info item and close the file:
   
@@ -136,24 +131,15 @@ void EndInfo10Test::twoEnds()
 }
 
 void EndInfo10Test::bodyHeaderThrows()
-{
-  // Open the temp file:
-  
-  char tmplate[] = "testrunXXXXXX";
-  int fd = mkstemp(tmplate);
-  
+{  
+  CFileDataSink sink(fd);
+
   // Create and write the first end run:
   
   time_t now = time(NULL);
-  NSCLDAQ10::StateChangeItem item;
-  item.s_header.s_size = sizeof(item);
-  item.s_header.s_type = NSCLDAQ10::END_RUN;
-  item.s_runNumber = 1234;
-  item.s_timeOffset = 456;
-  item.s_Timestamp = now;
-  strcpy(item.s_title, "This is a title");
+  V10::CRingStateChangeItem item(V10::END_RUN, 1234, 456, now, "This is a title");
   
-  io::writeData(fd, &item, sizeof(item));
+  writeItem(sink, item);
   
   // Create the ER info item and close the file:
   
@@ -181,23 +167,14 @@ void EndInfo10Test::bodyHeaderThrows()
 
 void EndInfo10Test::rangeThrows()
 {
-  // Open the temp file:
-  
-  char tmplate[] = "testrunXXXXXX";
-  int fd = mkstemp(tmplate);
-  
+  CFileDataSink sink(fd);
+
   // Create and write the first end run:
   
   time_t now = time(NULL);
-  NSCLDAQ10::StateChangeItem item;
-  item.s_header.s_size = sizeof(item);
-  item.s_header.s_type = NSCLDAQ10::END_RUN;
-  item.s_runNumber = 1234;
-  item.s_timeOffset = 456;
-  item.s_Timestamp = now;
-  strcpy(item.s_title, "This is a title");
+  V10::CRingStateChangeItem item(V10::END_RUN, 1234, 456, now, "This is a title");
   
-  io::writeData(fd, &item, sizeof(item));
+  writeItem(sink, item);
   
   // Create the ER info item and close the file:
   

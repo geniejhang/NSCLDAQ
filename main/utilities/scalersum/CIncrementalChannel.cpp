@@ -23,6 +23,8 @@
 
 #include "CIncrementalChannel.h"
 
+namespace DAQ {
+
 /**
  * construtor
  *    Zeros the sum.
@@ -62,3 +64,5 @@ CIncrementalChannel::operator uint64_t()
 {
     return m_sum;
 }
+
+} // end DAQ

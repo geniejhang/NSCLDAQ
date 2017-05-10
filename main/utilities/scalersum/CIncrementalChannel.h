@@ -26,6 +26,8 @@
 #include "CChannel.h"
 #include <stdint.h>
 
+namespace DAQ {
+
 /**
  * @class CIncrementalChannel
  *     Encapsulates the sum of an incremental scaler channel.
@@ -41,4 +43,5 @@ public:
     operator uint64_t();
 };
 
+} // end DAQ
 #endif

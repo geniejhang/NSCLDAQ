@@ -4,12 +4,15 @@
 // Date   : 3/2014
 //
 
-#ifndef FRAGMENTINDEX_H
-#define FRAGMENTINDEX_H
+#ifndef DAQ_V11_FRAGMENTINDEX_H
+#define DAQ_V11_FRAGMENTINDEX_H
 
 #include <vector>
 #include <stdint.h>
 #include <cstdlib>
+
+
+namespace EVB {
 
 /**! A convenient, copiable piece formatting of 
 *   a fragment. Similar to a EVB::FlatFragment but
@@ -115,5 +118,8 @@ class FragmentIndex
   iterator end() { return m_frags.end(); }
   const_iterator end() const { return m_frags.end(); }
 };
+
+
+} // end DAQ
 
 #endif

@@ -35,10 +35,9 @@ namespace DAQ {
     ///////////////////////////////////////////////////////////////////////////
 
     //
-    C10p0to11p0Mediator::C10p0to11p0Mediator(std::unique_ptr<CDataSource> source,
-                                           std::unique_ptr<CDataSink> sink)
-      : CBaseMediator(std::unique_ptr<CDataSource>(), std::unique_ptr<CDataSink>()),
-        m_mediator(std::move(source), std::move(sink))
+    C10p0to11p0Mediator::C10p0to11p0Mediator(std::shared_ptr<CDataSource> source,
+                                           std::shared_ptr<CDataSink> sink)
+      : CTransformMediator<CTransform10p0to11p0>(source, sink)
     {
     }
 
@@ -49,13 +48,13 @@ namespace DAQ {
 
       outputRingFormat();
 
-      m_mediator.mainLoop();
+      CTransformMediator::mainLoop();
     }
 
     //
     void C10p0to11p0Mediator::outputRingFormat()
     {
-      CDataSink& sink = *m_mediator.getDataSink();
+      CDataSink& sink = *getDataSink();
       sink << V11::CDataFormatItem();
     }
 

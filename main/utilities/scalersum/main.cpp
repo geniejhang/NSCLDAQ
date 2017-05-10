@@ -20,12 +20,17 @@
 # @author <fox@nscl.msu.edu>
 */
 
-#include <iostream>
-#include <stdlib.h>
-#include <exception>
 #include "App.h"
 
 #include "options.h"
+
+#include <iostream>
+#include <cstdlib>
+#include <memory>
+#include <exception>
+
+
+using namespace std;
 
 
 /**
@@ -39,14 +44,14 @@
 int main(int argc, char** argv)
 {
     struct gengetopt_args_info processParams;
-    App* pApp;
+    unique_ptr<DAQ::App> pApp;
     
     if (cmdline_parser(argc, argv, &processParams)) {
         exit(EXIT_FAILURE);             // cmdline_parser writes error msgs.
     }
     try {
-        pApp = new App(processParams);
-        App& app(*pApp);
+        pApp.reset(new DAQ::App(processParams));
+        DAQ::App& app(*pApp);
         app();
         app.outputResults(std::cout);
         

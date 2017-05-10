@@ -1,11 +1,12 @@
 lib_LTLIBRARIES=libvarmgr.la libvarmgrtcl.la libvarmgrpy.la libnotifierpy.la
 
-COMMONLDFLAGS = @builddir@/../libvardb.la 	\
+COMMONLIBS = @builddir@/../libvardb.la 	\
 		@top_builddir@/base/sqlite++/libsqlite3pp.la 	\
 		@top_builddir@/base/uri/liburl.la		\
 		@top_builddir@/base/os/libdaqshm.la \
 		@top_builddir@/servers/portmanager/libPortManager.la \
-		@SQLITE3_LDFLAGS@ @ZMQ_LDFLAGS@ -Wl,"-rpath=@libdir@"
+		@SQLITE3_LDFLAGS@ @ZMQ_LDFLAGS@
+COMMONLDFLAGS =  -Wl,"-rpath=@libdir@"
 
 COMMON_CPPFLAGS=-I@srcdir@/..  @SQLITE3_CFLAGS@ -I@top_srcdir@/base/sqlite++ \
 	-I@top_srcdir@/base/uri -I@top_srcdir@/base/os -I@top_srcdir@/servers/portmanager @GLIB_CFLAGS@
@@ -18,11 +19,14 @@ include_HEADERS= CVarMgrApi.h CVarMgrFileApi.h CVarMgrServerApi.h CVarMgrApiFact
 
 
 libvarmgr_la_CPPFLAGS=$(COMMON_CPPFLAGS) @LIBTCLPLUS_CFLAGS@ 
-libvarmgr_la_LDFLAGS = $(COMMONLDFLAGS)  @LIBEXCEPTION_LDFLAGS@ @GLIB_LIBS@
+libvarmgr_la_LIBADD = $(COMMONLIBS)  @LIBEXCEPTION_LDFLAGS@ @GLIB_LIBS@
+libvarmgr_la_LDFLAGS = $(COMMONLDFLAGS)
 
 libvarmgrtcl_la_CPPFLAGS=@TCL_FLAGS@ @LIBTCLPLUS_CFLAGS@ $(COMMON_CPPFLAGS) 
-libvarmgrtcl_la_LDFLAGS= @builddir@/libvarmgr.la @top_builddir@/base/os/libdaqshm.la \
-	$(COMMONLDFLAGS) @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
+libvarmgrtcl_la_LIBADD= @builddir@/libvarmgr.la \
+	$(COMMONLIBS) @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
+libvarmgrtcl_la_LDFLAGS = $(COMMONLDFLAGS)
+
 
 libvarmgrtcl_la_SOURCES=varmgrTCLPackage.cpp \
 	CVarMgrCreateCommand.h CVarMgrCreateCommand.cpp \
@@ -42,14 +46,17 @@ libvarmgrtcl_la_SOURCES=varmgrTCLPackage.cpp \
 
 
 libvarmgrpy_la_CPPFLAGS=$(COMMON_CPPFLAGS) @PYTHON_CPPFLAGS@
-libvarmgrpy_la_LDFLAGS= @PYTHON_LDFLAGS@ libvarmgr.la $(libvarmgr_la_LDFLAGS)
+libvarmgrpy_la_LIBADD= @PYTHON_LDFLAGS@ @builddir@/libvarmgr.la $(libvarmgr_la_LIBADD)
+libvarmgrpy_la_LDFLAGS= $(libvarmgr_la_LDFLAGS)
 libvarmgrpy_la_SOURCES=pyVarMgr.cpp
 
 libnotifierpy_la_CPPFLAGS=$(COMMON_CPPFLAGS) @LIBTCLPLUS_CFLAGS@ @PYTHON_CPPFLAGS@
-libnotifierpy_la_LDFLAGS= @top_builddir@/base/uri/liburl.la \
+libnotifierpy_la_LIBADD= @top_builddir@/base/uri/liburl.la \
+			@top_builddir@/base/os/libdaqshm.la \
 			@top_builddir@/servers/portmanager/libPortManager.la \
 			@LIBEXCEPTION_LDFLAGS@ \
-			@PYTHON_LDFLAGS@ libvarmgr.la $(libvarmgr_la_LDFLAGS)
+			@PYTHON_LDFLAGS@ @builddir@/libvarmgr.la $(libvarmgr_la_LIBADD)
+libnotifierpy_la_LDFLAGS= $(libvarmgr_la_LDFLAGS)
 libnotifierpy_la_SOURCES=pyNotifier.cpp
 
 
@@ -83,11 +90,12 @@ testApi_CPPFLAGS=-DBINDIR=\"@bindir@\" \
 	$(COMMON_CPPFLAGS)   \
 	 @LIBTCLPLUS_CFLAGS@ \
 	@CPPUNIT_CFLAGS@ 
-testApi_LDFLAGS = $(COMMONLDFLAGS) \
+testApi_LDADD = $(COMMONLIBS) \
 	@top_builddir@/servers/portmanager/libPortManager.la \
 	@top_builddir@/base/os/libdaqshm.la	\
 	@LIBEXCEPTION_LDFLAGS@	\
 	 @CPPUNIT_LDFLAGS@ @GLIB_LIBS@
+testApi_LDFLAGS = $(COMMONLDFLAGS)
 
 
 
@@ -99,11 +107,12 @@ testSub_CPPFLAGS=-DBINDIR=\"@bindir@\" \
 	 @LIBTCLPLUS_CFLAGS@ \
 	@CPPUNIT_CFLAGS@ @GLIB_LIBS@
 
-testSub_LDFLAGS = $(COMMONLDFLAGS) \
+testSub_LDADD = $(COMMONLIBS) \
 	@top_builddir@/servers/portmanager/libPortManager.la \
 	@top_builddir@/base/os/libdaqshm.la	\
 	@LIBEXCEPTION_LDFLAGS@	\
 	 @CPPUNIT_LDFLAGS@ @GLIB_LIBS@
+testSub_LDFLAGS = $(COMMONLDFLAGS)
 
 TEST_EXTENSIONS = .test .py
 TEST_LOG_COMPILER = @TCLSH@

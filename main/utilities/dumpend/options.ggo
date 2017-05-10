@@ -2,4 +2,4 @@ package  "dumpends"
 version  "1.0"
 purpose "Dump information about the end run(s) in an event file segment."
 
-option "daqversion" d "Version of NSCLDAQ to use"  values="11","10" enum optional
+option "daqversion" d "Version of NSCLDAQ to use"  values="12","11","10" enum optional

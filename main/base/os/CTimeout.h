@@ -20,6 +20,8 @@
 
 #include <chrono>
 
+namespace DAQ {
+
 /*!
  * \brief The CTimeout class
  *
@@ -31,17 +33,66 @@
 class CTimeout
 {
 private:
-    double                                         m_nSeconds;
     std::chrono::high_resolution_clock::time_point m_start;
+    std::chrono::high_resolution_clock::time_point m_end;
 
 public:
     /*!
      * \brief Constructor
      *
-     * \param nSeconds - length of timeout in units of seconds
+     * \param nMicroseconds - length of timeout in units of us
      *
      */
-    CTimeout(double nSeconds);
+    CTimeout(long nMicroseconds);
+
+    /*!
+     * \brief Construct from a duration
+     * \param duration  any duration value
+     *
+     * \code
+     *  using namespace std::chrono;
+     *
+     *  CTimeout t0(milliseconds(124));
+     *  CTimeout t1(hours(1));
+     *  CTimeout t2(nanoseconds(12343234));
+     *  CTimeout t3(seconds(3));
+     *  CTimeout t4(microseconds(12312312));
+     *
+     * \endcode
+     */
+    CTimeout(const std::chrono::high_resolution_clock::duration& duration);
+    CTimeout(const CTimeout& rhs) = default;
+    CTimeout(CTimeout&& rhs) = default;
+    CTimeout& operator=(const CTimeout&) = default;
+
+    /*!
+     * \brief getTotalTime
+     *
+     * \return the total length of the timeout (in std::chrono::nanoseconds)
+     *
+     * If the length of the timeout is zero, a function should assume
+     * polling functionality.
+     *
+     * Also, you can convert to any timebase you want by using std::chrono::duration_cast.
+     * \code
+     *
+     *  using namespace std::chrono;
+     *
+     *  nanoseconds nanos = timeout.getTotalTime();
+     *  auto millis = duration_cast<milliseconds>(nanos);
+     * \endcode
+     */
+    std::chrono::nanoseconds getTotalTime() const;
+
+
+    /*!
+     * \brief isPoll
+     * \retval true if period is 0 seconds
+     * \retval false otherwise
+     */
+    bool isPoll() const {
+        return (m_start == m_end);
+    }
 
     /*!
      * \brief getRemainingSeconds
@@ -51,7 +102,18 @@ public:
      * \retval 0 - timeout has elapsed
      * \retval >0 - otherwise
      */
-    double getRemainingSeconds();
+    double getRemainingSeconds() const;
+
+
+    /*!
+     * \brief getRemainingTime in nanoseconds
+     *
+     * \return returns remaining nanoseconds if not expired
+     * \retval 0 if expired
+     *
+     * The return value can be manipulated like with getTotalTime()
+     */
+    std::chrono::nanoseconds getRemainingTime() const;
 
     /*!
      * \brief expired
@@ -62,7 +124,16 @@ public:
      * \retval false - not expired
      * \retval ture  - expired
      */
-    bool expired();
+    bool expired() const;
+
+    /*!
+     * \brief reset
+     *
+     * Resets the start time to the present.
+     */
+    void reset();
 };
+
+} // end DAQ
 
 #endif // CTIMEOUT_H

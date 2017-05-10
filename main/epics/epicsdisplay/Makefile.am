@@ -1,5 +1,3 @@
-if EPICS
-
 HELPFILES=add.html alarmconfig.html channelmenu.html \
 	config.html filemenu.html gui.html \
 	helpmenu.html overview.html
@@ -25,7 +23,5 @@ install-exec-local:
 EXTRA_DIST = channels.txt  EpicsDisplay.tcl displayepics.tcl \
 	epicsdisplay.xml epicsdisplay.in \
 	$(HELPFILES)
-
-endif
 
 

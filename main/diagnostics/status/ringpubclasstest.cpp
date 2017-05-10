@@ -83,6 +83,7 @@ public:
     m_pPublisher = new CPublishRingStatistics(*m_pSender, "Test Application");
   
   }
+
   void tearDown() {
     delete m_pPublisher;
     delete m_pSender;

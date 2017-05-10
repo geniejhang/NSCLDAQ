@@ -22,6 +22,7 @@
 
 using namespace std;
 
+namespace DAQ {
 
 //
 CTestSourceSink::CTestSourceSink()
@@ -42,11 +43,6 @@ CTestSourceSink::~CTestSourceSink() {}
 
 
 //
-void CTestSourceSink::putItem(const CRingItem& item)
-{}
-
-
-//
 void
 CTestSourceSink::put(const void* pData, size_t nBytes)
 {
@@ -56,9 +52,15 @@ CTestSourceSink::put(const void* pData, size_t nBytes)
   copy(pBegin, pEnd, back_inserter(m_buffer));
 }
 
+void CTestSourceSink::putv(const std::vector<std::pair<const void *, size_t> > &buffers)
+{
+    for (auto& buffer : buffers) {
+        put(buffer.first, buffer.second);
+    }
+}
 
 //
-void CTestSourceSink::read(char* pBuffer, size_t nBytes)
+size_t CTestSourceSink::timedRead(char* pBuffer, size_t nBytes, const CTimeout &)
 {
   if (m_buffer.size() < nBytes) {
     throw std::runtime_error("TestSourceSink::get() does not have requested bytes stored");
@@ -74,4 +76,43 @@ void CTestSourceSink::read(char* pBuffer, size_t nBytes)
 
   // erase the bytes sent out
   m_buffer.erase(itBegin, itEnd);
+
+  return nBytes;
 }
+
+
+size_t CTestSourceSink::availableData()
+{
+    return m_buffer.size();
+}
+
+size_t CTestSourceSink::peek(char *pBuffer, size_t nBytes)
+{
+
+    size_t length = std::min(m_buffer.size(), nBytes);
+
+    auto itBegin = m_buffer.begin();
+    auto itEnd   = itBegin + length;
+
+    auto itOut = reinterpret_cast<uint8_t*>(pBuffer);
+
+    // copy the bytes requested
+    copy(itBegin, itEnd, itOut);
+
+    return length;
+}
+
+
+void CTestSourceSink::ignore(size_t nBytes)
+{
+    // erase the bytes sent out
+    m_buffer.erase(m_buffer.begin(), m_buffer.begin()+nBytes);
+}
+
+size_t CTestSourceSink::tell() const
+{
+    return 0;
+}
+
+
+} // end DAQ

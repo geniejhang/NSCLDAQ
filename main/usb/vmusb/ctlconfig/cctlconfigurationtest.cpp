@@ -94,8 +94,8 @@ void CCtlConfigurationTests::addModule_0() {
   CCtlConfiguration config;
 
   // create the control module
-  auto pHdwr = make_unique( new CMxDCReset );
-  auto pModule = make_unique( new CControlModule( "test", move(pHdwr) ));
+  auto pHdwr = DAQ::make_unique<CMxDCReset>();
+  auto pModule = DAQ::make_unique<CControlModule>( "test", move(pHdwr) );
   
   // store the location of our module for testing purposes
   CControlModule* pMod = pModule.get();
@@ -115,8 +115,8 @@ void CCtlConfigurationTests::findModule_0() {
   CCtlConfiguration config;
 
   // create the control module
-  auto pHdwr = make_unique( new CMxDCReset );
-  auto pModule = make_unique( new CControlModule( "test", move(pHdwr) ));
+  auto pHdwr = DAQ::make_unique<CMxDCReset>();
+  auto pModule = DAQ::make_unique<CControlModule>( "test", move(pHdwr) );
   
   // store the location of our module for testing purposes
   CControlModule* pMod = pModule.get();
@@ -139,7 +139,7 @@ void CCtlConfigurationTests::addCommand_0()
 
   // create out fake command
   CTCLInterpreter interp;
-  auto pCommand = make_unique( new CTestCmd(interp) );
+  auto pCommand = DAQ::make_unique<CTestCmd>(interp) ;
 
   // store address for testing purposes
   CTCLObjectProcessor* pCmd = pCommand.get();

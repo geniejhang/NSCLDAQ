@@ -17,15 +17,19 @@
 
 
 
-#ifndef CRINGDATASINK_H
-#define CRINGDATASINK_H
+#ifndef DAQ_CRINGDATASINK_H
+#define DAQ_CRINGDATASINK_H
 
 #include <CDataSink.h>
 
 #include <string>
 
-class CRingItem;
+//class CRingItem;
 class CRingBuffer;
+
+
+namespace DAQ {
+
 
 class CRingDataSink : public CDataSink
 {
@@ -45,11 +49,16 @@ class CRingDataSink : public CDataSink
 
     // The interface functions required by the ABC:
   public:
-    void putItem(const CRingItem& item);
     void put(const void* pData, size_t nBytes);
+    void putv(const std::vector<std::pair<const void*, size_t> >& buffers);
+
+    CRingBuffer& getRing();
+    const CRingBuffer& getRing() const;
 
   private:
     void openRing();
 
 };
+
+} // end DAQ
 #endif

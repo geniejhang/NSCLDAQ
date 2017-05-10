@@ -14,30 +14,13 @@
 	     East Lansing, MI 48824-1321
 */
 
-#ifndef __COUTPUTTHREAD_H
-#define __COUTPUTTHREAD_H
+#ifndef COUTPUTTHREAD_H
+#define COUTPUTTHREAD_H
 
 
-#ifndef __CRT_STDINT_H
 #include <stdint.h>
-#ifndef __CRT_STDINT_H
-#define __CRT_STDINT_H
-#endif
-#endif
-
-#ifndef __STL_STRING
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
-
-#ifndef __THREAD_H
 #include <Thread.h>
-#ifndef __THREAD_H
-#define __THREAD_H
-#endif
-#endif
 
 // Forward definitions:
 
@@ -46,6 +29,11 @@ typedef struct _StringsBuffer StringsBuffer;
 
 class  CRingBuffer;
 class CSystemControl;
+
+namespace DAQ {
+    class CDataSink;
+}
+
 
 /*!
     This class bridges the gap between the buffer format of the
@@ -125,7 +113,7 @@ private:
   uint8_t*    m_pCursor;           //!< Where next event goes in buffer.
   size_t      m_nWordsInBuffer;    //!< Number of words already in the buffer.
   std::string m_ringName;           //!< Name of destination ringbuffer.
-  CRingBuffer* m_pRing;		    //!< The actual ring in which we put data.
+  DAQ::CDataSink* m_pRing;		    //!< The actual ring in which we put data.
   uint64_t    m_nEventsSeen;        //!< Events processed so far for the physics trigger item.
   unsigned    m_nBuffersBeforeEventCount; //!< Buffers to go before an event count item.
   TimestampExtractor m_pEvtTimestampExtractor;
@@ -183,6 +171,8 @@ private:
   bool hasOptionalHeader();
 
   void scheduleApplicationExit(int status);
+
+  std::string createRingURL(const std::string& name);
 };
 
 

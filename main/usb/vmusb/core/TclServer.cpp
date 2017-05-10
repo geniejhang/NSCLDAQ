@@ -30,7 +30,7 @@ using namespace std;
 #include <CCtlConfiguration.h>
 #include <DataBuffer.h>
 #include <CBufferQueue.h>
-#include <DataFormat.h>
+#include <V12/DataFormat.h>
 #include <make_unique.h>
 #include <CControlQueues.h>
 #include <CSystemControl.h>
@@ -55,6 +55,8 @@ using namespace std;
 #include <iostream>
 
 #include <vector>
+
+using namespace DAQ;
 
 static const int MonitorInterval(1);   // Number of seconds between monitor interval.
 static const int VarUpdateInterval(1); // Number of seconds between variable update items
@@ -248,22 +250,22 @@ TclServer::initInterpreter()
   
   // Add the commands... these don't get saved.. as they will live forever
 
-  m_config.addCommand( make_unique( new CModuleCommand(*m_pInterpreter,
-                                                       m_config)) );
-  m_config.addCommand( make_unique( new CSetCommand(*m_pInterpreter,
+  m_config.addCommand( DAQ::make_unique<CModuleCommand>(*m_pInterpreter,
+                                                       m_config));
+  m_config.addCommand( DAQ::make_unique<CSetCommand>(*m_pInterpreter,
                                                      m_config,
-                                                    *m_pVme)) );
-  m_config.addCommand( make_unique( new CGetCommand(*m_pInterpreter,
+                                                    *m_pVme));
+  m_config.addCommand( DAQ::make_unique<CGetCommand>(*m_pInterpreter,
                                                      m_config,
-                                                    *m_pVme)) );
-  m_config.addCommand( make_unique( new CUpdateCommand(*m_pInterpreter,
+                                                    *m_pVme)) ;
+  m_config.addCommand( DAQ::make_unique<CUpdateCommand>(*m_pInterpreter,
                                                         m_config,
-                                                       *m_pVme)) );
-  m_config.addCommand( make_unique( new CMonCommand(*m_pInterpreter,
-                                                    m_config)) );
-  m_config.addCommand( make_unique( new CWatchCommand(*m_pInterpreter)));
-  m_config.addCommand( make_unique( new CRunStateCommand(*m_pInterpreter,
-                                                          m_config)) );
+                                                       *m_pVme));
+  m_config.addCommand( DAQ::make_unique<CMonCommand>(*m_pInterpreter,
+                                                    m_config));
+  m_config.addCommand( DAQ::make_unique<CWatchCommand>(*m_pInterpreter));
+  m_config.addCommand( DAQ::make_unique<CRunStateCommand>(*m_pInterpreter,
+                                                          m_config));
 }
 /*
    Read the configuration file.  This is just sourcing the the file
@@ -629,7 +631,7 @@ TclServer::sendWatchedVariables()
 	  pBuffer->s_bufferType = TYPE_STRINGS;
 	  pStrings              = reinterpret_cast<pStringsBuffer>(pBuffer->s_rawData);
 	  pStrings->s_stringCount = 0;
-	  pStrings->s_ringType    = MONITORED_VARIABLES;
+      pStrings->s_ringType  = V12::MONITORED_VARIABLES;
 	  pDest                 = pStrings->s_strings;
 	}
 	
@@ -665,7 +667,7 @@ TclServer::sendWatchedVariables()
 	    pBuffer->s_bufferType = TYPE_STRINGS;
 	    pStrings              = reinterpret_cast<pStringsBuffer>(pBuffer->s_rawData);
 	    pStrings->s_stringCount = 0;
-	    pStrings->s_ringType    = MONITORED_VARIABLES;
+        pStrings->s_ringType    = V12::MONITORED_VARIABLES;
 	    pDest                 = pStrings->s_strings;
 	    
 	  }

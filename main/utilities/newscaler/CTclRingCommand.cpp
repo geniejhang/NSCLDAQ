@@ -21,33 +21,39 @@
 */
 
 #include "CTclRingCommand.h"
-#include <TCLInterpreter.h>
-#include <TCLObject.h>
-#include <CRingBuffer.h>
-#include <CRingItem.h>
-#include <CRingStateChangeItem.h>
-#include <CRingScalerItem.h>
-#include <CRingTextItem.h>
-#include <CDataFormatItem.h>
-#include <CRingFragmentItem.h>
-#include <CRingPhysicsEventCountItem.h>
-#include <CGlomParameters.h>
 
-#include <CRemoteAccess.h>
-#include <CAllButPredicate.h>
-#include <CDesiredTypesPredicate.h>
-#include <CRingItemFactory.h>
-#include <CAbnormalEndItem.h>
+#include <V12/CRawRingItem.h>
+#include <V12/CPhysicsEventItem.h>
+#include <V12/CRingStateChangeItem.h>
+#include <V12/CRingScalerItem.h>
+#include <V12/CRingTextItem.h>
+#include <V12/CDataFormatItem.h>
+#include <V12/CRingPhysicsEventCountItem.h>
+#include <V12/CGlomParameters.h>
+#include <V12/CRingItemParser.h>
+#include <RingIOV12.h>
+
+#include <CDataSourceFactory.h>
+#include <CRingBuffer.h>
+
+#include <CSimpleAllButPredicate.h>
+#include <CSimpleDesiredTypesPredicate.h>
 #include <CTimeout.h>
 
-#include <tcl.h>
+#include <TCLInterpreter.h>
+#include <TCLObject.h>
 
 #include <limits>
 #include <chrono>
 #include <thread>
 #include <iostream>
 
+#include <tcl.h>
+
 using namespace std;
+
+namespace DAQ {
+namespace V12 {
 
 /**
  * construction
@@ -63,11 +69,7 @@ CTclRingCommand::CTclRingCommand(CTCLInterpreter& interp) :
  */
 CTclRingCommand::~CTclRingCommand()
 {
-    while(! m_attachedRings.empty()) {
-        CRingBuffer* pRing = (m_attachedRings.begin())->second;    // First item.
-        delete pRing;
-        m_attachedRings.erase(m_attachedRings.begin());
-    }
+    m_attachedRings.clear();
 }
 
 /**
@@ -135,12 +137,12 @@ CTclRingCommand::attach(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
     
     requireExactly(objv, 3, "ring attach needs a ring URI");
     std::string uri = objv[2];
-    CRingBuffer* pRing(0);
+    CDataSourcePtr pRing;
     try {
         if (m_attachedRings.find(uri) != m_attachedRings.end()) {
             throw std::string("ring already attached");
         }
-        pRing = CRingAccess::daqConsumeFrom(uri);
+        pRing = CDataSourceFactory().makeSource(uri);
         m_attachedRings[uri] = pRing;
     }
     catch(std::string) {
@@ -171,13 +173,11 @@ CTclRingCommand::detach(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
     requireExactly(objv, 3, "ring detach needs a URI");
     
     std::string uri = objv[2];
-    std::map<std::string, CRingBuffer*>::iterator p = m_attachedRings.find(uri);
+    std::map<std::string, CDataSourcePtr>::iterator p = m_attachedRings.find(uri);
     if (p == m_attachedRings.end()) {
         throw std::string("ring is not attached");
     }
-    CRingBuffer* pRing = p->second;
     m_attachedRings.erase(p);
-    delete pRing;
 }                             
 
 /**
@@ -195,27 +195,80 @@ CTclRingCommand::detach(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
  *   @throw std::string error message to put in result string if TCL_ERROR
  *          should be returned from operator().
  */
+CTCLObject CTclRingCommand::dispatch(CRingItemPtr pSpecificItem, CTCLInterpreter& interp)
+{
+    switch(pSpecificItem->type()) {
+    case BEGIN_RUN:
+    case END_RUN:
+    case PAUSE_RUN:
+    case RESUME_RUN:
+        return formatStateChangeItem(interp, pSpecificItem);
+
+    case PERIODIC_SCALERS:
+        return formatScalerItem(interp, pSpecificItem);
+
+    case PACKET_TYPES:
+    case MONITORED_VARIABLES:
+        return formatStringItem(interp, pSpecificItem);
+
+    case RING_FORMAT:
+        return formatFormatItem(interp, pSpecificItem);
+
+    case PHYSICS_EVENT:
+        return formatEvent(interp, pSpecificItem);
+
+    case PHYSICS_EVENT_COUNT:
+        return formatTriggerCount(interp, pSpecificItem);
+
+    case EVB_GLOM_INFO:
+        return formatGlomParams(interp,  pSpecificItem);
+
+    case ABNORMAL_ENDRUN:
+        return formatAbnormalEnd(interp, pSpecificItem);
+
+    case COMP_BEGIN_RUN:
+    case COMP_END_RUN:
+    case COMP_PAUSE_RUN:
+    case COMP_RESUME_RUN:
+    case COMP_PERIODIC_SCALERS:
+    case COMP_PACKET_TYPES:
+    case COMP_MONITORED_VARIABLES:
+    case COMP_RING_FORMAT:
+    case COMP_PHYSICS_EVENT:
+    case COMP_PHYSICS_EVENT_COUNT:
+    case COMP_EVB_GLOM_INFO:
+    case COMP_ABNORMAL_ENDRUN:
+        return formatComposite(interp, pSpecificItem);
+    default:
+        return CTCLObject();
+        // TO DO:
+    }
+}
+
 void
 CTclRingCommand::get(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
 {
     requireAtLeast(objv, 3, "ring get needs a URI");
     requireAtMost(objv, 6, "Too many command parameters");
 
-    CAllButPredicate all;
-    CDesiredTypesPredicate some;
-    CRingSelectionPredicate* pred;
+    CSimpleAllButPredicate all;
+    CSimpleDesiredTypesPredicate some;
+    CDataSourcePredicate* pred;
     pred = &all;
     
     // If there's a 4th parameter it must be a list of item types to select
     // from
 
-    unsigned long timeout = std::numeric_limits<unsigned long>::max();
+    long nSeconds = 3600*24; // timeout after one day
 
     size_t paramIndexOffset = 0;
     if (std::string(objv[2]) == "-timeout") {
         if (objv.size() >= 4) {
             CTCLObject object = objv[3];
-            timeout = int(object.lindex(0));
+            nSeconds = int(object.lindex(0));
+            if (nSeconds == 0) {
+                throw std::string("A nonzero timeout value must be provided.");
+            }
         } else {
             throw std::string("Insufficient number of parameters");
         }
@@ -223,7 +276,7 @@ CTclRingCommand::get(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
     }
 
     std::string uri  = std::string(objv[2+paramIndexOffset]);
-    std::map<std::string, CRingBuffer*>::iterator p =  m_attachedRings.find(uri);
+    std::map<std::string, CDataSourcePtr>::iterator p =  m_attachedRings.find(uri);
     if (p == m_attachedRings.end()) {
         throw std::string("ring is not attached");
     }
@@ -232,18 +285,19 @@ CTclRingCommand::get(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
         CTCLObject types = objv[3+paramIndexOffset];
         for (int i = 0; i < types.llength(); i++) {
             int type = int(types.lindex(i));
-            some.addDesiredType(type);
+            some.addDesiredType(type);            
         }
         pred = &some;
     }
     
     // Get the item from the ring.
     
-    
-    CRingBuffer* pRing = p->second;
+    std::chrono::seconds time(nSeconds);
+    CTimeout timeout( time );
+    CDataSourcePtr pRing = p->second;
     auto pSpecificItem = getFromRing(*pRing, *pred, timeout);
 
-    if (pSpecificItem == nullptr) {
+    if (!pSpecificItem) {
         // oops... we timed out. return an empty string
         CTCLObject result;
         result.Bind(&interp);
@@ -254,45 +308,9 @@ CTclRingCommand::get(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
     // Actual upcast depends on the type...and that describes how to format:
     
     
-    switch(pSpecificItem->type()) {
-        case BEGIN_RUN:
-        case END_RUN:
-        case PAUSE_RUN:
-        case RESUME_RUN:
-            formatStateChangeItem(interp, pSpecificItem);
-            break;
-        case PERIODIC_SCALERS:
-            formatScalerItem(interp, pSpecificItem);
-            break;
-        case PACKET_TYPES:
-        case MONITORED_VARIABLES:
-            formatStringItem(interp, pSpecificItem);
-            break;
-        case RING_FORMAT:
-            formatFormatItem(interp, pSpecificItem);
-            break;
-        case PHYSICS_EVENT:
-            formatEvent(interp, pSpecificItem);
-            break;
-        case EVB_FRAGMENT:
-        case EVB_UNKNOWN_PAYLOAD:
-            formatFragment(interp, pSpecificItem);
-            break;
-        case PHYSICS_EVENT_COUNT:
-            formatTriggerCount(interp, pSpecificItem);
-            break;
-        case EVB_GLOM_INFO:
-            formatGlomParams(interp,  pSpecificItem);
-            break;
-        case ABNORMAL_ENDRUN:
-            formatAbnormalEnd(interp, pSpecificItem);
-        default:
-            break;;
-            // TO DO:
-    }
+    CTCLObject result = dispatch(pSpecificItem, interp);
     
-    
-    delete pSpecificItem;
+    interp.setResult(result);
 }
 
 /*-----------------------------------------------------------------------------
@@ -300,33 +318,6 @@ CTclRingCommand::get(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
  */
 
 
-/**
- *  formatBodyHeader
- *  
- * Given that the object has a body header, this function creates the body header
- * dict for it
- *
- * @param interp - The interpreter to use when building the dict.
- * @parma p      - Pointer to the item.
- * @return CTCLObject - Really a list but in a format that can shimmer to a dict.
- */
-CTCLObject
-CTclRingCommand::formatBodyHeader(CTCLInterpreter& interp, CRingItem* p)
-{
-    CTCLObject subDict;
-    subDict.Bind(interp);
-    Tcl_Obj* tstamp = Tcl_NewWideIntObj(p->getEventTimestamp());
-    subDict += "timestamp";
-    subDict += CTCLObject(tstamp);
-    
-    subDict += "source";
-    subDict += static_cast<int>(p->getSourceId());
-    
-    subDict += "barrier";
-    subDict += static_cast<int>(p->getBarrierType());
-    
-    return subDict;        
-}
 
 /**
  *  format a ring state change item.  We're going to use the trick that a dict
@@ -347,10 +338,9 @@ CTclRingCommand::formatBodyHeader(CTCLInterpreter& interp, CRingItem* p)
  *                   timestamp, source, and barrier keys.
  */
  
-void
-CTclRingCommand::formatStateChangeItem(CTCLInterpreter& interp, CRingItem* pItem)
+CTCLObject CTclRingCommand::formatStateChangeItem(CTCLInterpreter& interp, CRingItemPtr pItem)
 {
-    CRingStateChangeItem* p = reinterpret_cast<CRingStateChangeItem*>(pItem);
+    CRingStateChangeItemPtr p = std::dynamic_pointer_cast<CRingStateChangeItem>(pItem);
     CTCLObject result;
     result.Bind(interp);
     
@@ -371,14 +361,9 @@ CTclRingCommand::formatStateChangeItem(CTCLInterpreter& interp, CRingItem* pItem
     result += "title";
     result += p->getTitle();
     
-    
-    if (p->hasBodyHeader()) {
-        result += "bodyheader";
-        result += formatBodyHeader(interp, p);        
-    }
-    
-    interp.setResult(result);
-    
+    formatHeaderInfo(p, result);
+
+    return result;
     
 }
 /**
@@ -399,10 +384,9 @@ CTclRingCommand::formatStateChangeItem(CTCLInterpreter& interp, CRingItem* pItem
  *    @param interp - the intepreter object whose result will be set by this.
  *    @param pSpecificItem - Actually a CRingScalerItem pointer.
  */
-void
-CTclRingCommand::formatScalerItem(CTCLInterpreter& interp, CRingItem* pSpecificItem)
+CTCLObject CTclRingCommand::formatScalerItem(CTCLInterpreter& interp, CRingItemPtr pSpecificItem)
 {
-    CRingScalerItem* pItem = reinterpret_cast<CRingScalerItem*>(pSpecificItem);
+    CRingScalerItemPtr pItem = std::dynamic_pointer_cast<CRingScalerItem>(pSpecificItem);
     
     // Stuff outside the body header
    
@@ -427,6 +411,9 @@ CTclRingCommand::formatScalerItem(CTCLInterpreter& interp, CRingItem* pSpecificI
     result += "incremental";
     result += static_cast<int>(pItem->isIncremental() ? 1 : 0);
     
+    result += "scalerwidth";
+    result += static_cast<int>(pItem->getScalerWidth());
+
     // Now the scaler vector itself:
     
     std::vector<uint32_t> scalerVec = pItem->getScalers();
@@ -438,16 +425,9 @@ CTclRingCommand::formatScalerItem(CTCLInterpreter& interp, CRingItem* pSpecificI
     result += "scalers";
     result += scalerList;
     
-    
-    // If there is a body header add it too.
-    
-    if (pItem->hasBodyHeader()) {
-        result += "bodyheader";
-        result += formatBodyHeader(interp, pItem);
-    }
-    
-    
-    interp.setResult(result);
+    formatHeaderInfo(pItem, result);
+
+    return result;
 }
 /**
  * formatStringItem:
@@ -463,10 +443,9 @@ CTclRingCommand::formatScalerItem(CTCLInterpreter& interp, CRingItem* pSpecificI
 *     @param interp - the intepreter object whose result will be set by this.
 *     @param pSpecificItem - Actually a CRingTextItem pointer.
 *     */
-void
-CTclRingCommand::formatStringItem(CTCLInterpreter& interp, CRingItem* pSpecificItem)
+CTCLObject CTclRingCommand::formatStringItem(CTCLInterpreter& interp, CRingItemPtr pSpecificItem)
 {
-    CRingTextItem* p = reinterpret_cast<CRingTextItem*>(pSpecificItem);
+    CRingTextItemPtr p = std::dynamic_pointer_cast<CRingTextItem>(pSpecificItem);
     
     CTCLObject result;
     result.Bind(interp);
@@ -492,12 +471,9 @@ CTclRingCommand::formatStringItem(CTCLInterpreter& interp, CRingItem* pSpecificI
     result += "strings";
     result += stringList;
     
-    if (p->hasBodyHeader()) {
-        result += "bodyheader";
-        result += formatBodyHeader(interp, p);
-    }
-    
-    interp.setResult(result);
+    formatHeaderInfo(p, result);
+
+    return result;
 }
 /**
  * formatFormatitem
@@ -510,10 +486,24 @@ CTclRingCommand::formatStringItem(CTCLInterpreter& interp, CRingItem* pSpecificI
  *    @param interp - the intepreter object whose result will be set by this.
  *    @param pSpecificItem - Actually a CDataFormatItem pointer.
 */ 
-void
-CTclRingCommand::formatFormatItem(CTCLInterpreter& interp, CRingItem* pSpecificItem)
+void CTclRingCommand::formatHeaderInfo(CRingItemPtr p, CTCLObject& result)
 {
-    CDataFormatItem* p = reinterpret_cast<CDataFormatItem*>(pSpecificItem);
+    result += "timestamp";
+    if (p->getEventTimestamp() == V12::NULL_TIMESTAMP) {
+        result += "NULL_TIMESTAMP";
+    } else {
+        Tcl_Obj* tstamp = Tcl_NewWideIntObj(p->getEventTimestamp());
+        result += CTCLObject(tstamp);
+    }
+
+    result += "source";
+    result += static_cast<int>(p->getSourceId());
+}
+
+CTCLObject
+CTclRingCommand::formatFormatItem(CTCLInterpreter& interp, CRingItemPtr pSpecificItem)
+{
+    CDataFormatItemPtr p = std::dynamic_pointer_cast<CDataFormatItem>(pSpecificItem);
     
     CTCLObject result;
     result.Bind(interp);
@@ -527,8 +517,9 @@ CTclRingCommand::formatFormatItem(CTCLInterpreter& interp, CRingItem* pSpecificI
     result += "minor";
     result += static_cast<int>(p->getMinor());
     
-    
-    interp.setResult(result);
+    formatHeaderInfo(p, result);
+
+    return result;
 }
 /**
  * formatEvent
@@ -541,85 +532,34 @@ CTclRingCommand::formatFormatItem(CTCLInterpreter& interp, CRingItem* pSpecificI
  *    @param pSpecificItem - The ring item.
 */ 
 
-void
-CTclRingCommand::formatEvent(CTCLInterpreter& interp, CRingItem* pSpecificItem)
+CTCLObject CTclRingCommand::formatEvent(CTCLInterpreter& interp, CRingItemPtr pSpecificItem)
 {
+    CPhysicsEventItemPtr pItem = std::dynamic_pointer_cast<CPhysicsEventItem>(pSpecificItem);
+
     CTCLObject result;
     result.Bind(interp);
     
     result += "type";
     result += pSpecificItem->typeName();
     
+    const auto& body = pItem->getBody();
+
     result += "size";
-    result += static_cast<int>(pSpecificItem->getBodySize());
-    
+    result += static_cast<int>(body.size());
+
     result += "body";
-    Tcl_Obj* body = Tcl_NewByteArrayObj(
-        reinterpret_cast<const unsigned char*>(pSpecificItem->getBodyPointer()),
-        static_cast<int>(pSpecificItem->getBodySize()));
-    CTCLObject obj(body);
+    Tcl_Obj* tclBody = Tcl_NewByteArrayObj(body.data(), body.size());
+
+    CTCLObject obj(tclBody);
     obj.Bind(interp);
     result += obj;
     
-    if (pSpecificItem->hasBodyHeader()) {
-        result += "bodyheader";
-        result += formatBodyHeader(interp, pSpecificItem);
-    }
-    
-    interp.setResult(result);
+    formatHeaderInfo(pItem, result);
+
+    return result;
 }
 
-/**
- * formatFragment
- *
- *   Format an EVB_FRAGMENT ring item.
- *    *   type - "Event fragment"
- *    *   - timestamp - the 64 bit timestamp.
- *    *   - source    - The source id.
- *    *   - barrier   - The barrier type.
- *    *   - size      - payload size.
- *    *   - body      - Byte array containing the body.
- *
- *    @param interp - the intepreter object whose result will be set by this.
- *    @param pSpecificItem - The ring item.
- */
-void
-CTclRingCommand::formatFragment(CTCLInterpreter& interp, CRingItem* pSpecificItem)
-{
-    CTCLObject result;
-    result.Bind(interp);
-    
-    result += "type";
-    result += pSpecificItem->typeName();
-    
-    CRingFragmentItem* p = reinterpret_cast<CRingFragmentItem*>(pSpecificItem);
-    
-    result += "timestamp";
-    Tcl_Obj* pTs = Tcl_NewWideIntObj(static_cast<Tcl_WideInt>(p->timestamp()));
-    CTCLObject stamp(pTs);
-    stamp.Bind(interp);
-    result += stamp;
-    
-    result += "source";
-    result += static_cast<int>(p->source());
-    
-    result += "barrier";
-    result += static_cast<int>(p->barrierType());
-    
-    result += "size";
-    result += static_cast<int>(p->payloadSize());
-    
-    result += "body";
-    Tcl_Obj* pBody =Tcl_NewByteArrayObj(
-        reinterpret_cast<unsigned char*>(p->payloadPointer()),
-        static_cast<int>(p->payloadSize()));
-    CTCLObject body(pBody);
-    body.Bind(interp);
-    result += body;
-    
-    
-    interp.setResult(result);
-}
+
 /**
  * formatTriggerCount
  *
@@ -634,11 +574,10 @@ CTclRingCommand::formatFragment(CTCLInterpreter& interp, CRingItem* pSpecificIte
 *     *   realtime   - 0 time of day emitted.
 */
     
-void
-CTclRingCommand::formatTriggerCount(CTCLInterpreter& interp, CRingItem* pSpecificItem)
+CTCLObject CTclRingCommand::formatTriggerCount(CTCLInterpreter& interp, CRingItemPtr pSpecificItem)
 {
-    CRingPhysicsEventCountItem* p =
-        reinterpret_cast<CRingPhysicsEventCountItem*>(pSpecificItem);
+    CRingPhysicsEventCountItemPtr p =
+            std::dynamic_pointer_cast<CRingPhysicsEventCountItem>(pSpecificItem);
     
     CTCLObject result;
     result.Bind(interp);
@@ -662,13 +601,9 @@ CTclRingCommand::formatTriggerCount(CTCLInterpreter& interp, CRingItem* pSpecifi
     result += "triggers";
     result += eventCountObj;
     
-    if (p->hasBodyHeader()) {
-        result += "bodyheader";
-        result += formatBodyHeader(interp, pSpecificItem);
-    }
+    formatHeaderInfo(p, result);
     
-    
-    interp.setResult(result);
+    return result;
 }
 /**
  * formatGlomParams
@@ -682,9 +617,9 @@ CTclRingCommand::formatTriggerCount(CTCLInterpreter& interp, CRingItem* pSpecifi
  *        how the timestamp for the items are derived fromt he timestamps
  *        of their constituent fragments.
 */
-void CTclRingCommand::formatGlomParams(CTCLInterpreter& interp, CRingItem* pSpecificItem)
+CTCLObject CTclRingCommand::formatGlomParams(CTCLInterpreter& interp, CRingItemPtr pSpecificItem)
 {
-    CGlomParameters *p = reinterpret_cast<CGlomParameters*>(pSpecificItem);
+    CGlomParametersPtr p = std::dynamic_pointer_cast<CGlomParameters>(pSpecificItem);
     CTCLObject result;
     result.Bind(interp);
     
@@ -712,126 +647,84 @@ void CTclRingCommand::formatGlomParams(CTCLInterpreter& interp, CRingItem* pSpec
         result += "average";
     }
     
+    formatHeaderInfo(p, result);
     
-    interp.setResult(result);
-    
+    return result;
 }
 /**
  * formatAbnormalEnd
  *   We only provide  the type (Abnormal End).
  */
-void
-CTclRingCommand::formatAbnormalEnd(CTCLInterpreter& interp, CRingItem* pSpecificItem)
+CTCLObject CTclRingCommand::formatAbnormalEnd(CTCLInterpreter& interp, CRingItemPtr pSpecificItem)
 {
 
     CTCLObject result;
     result.Bind(interp);
     result += "type";
     result += pSpecificItem->typeName();
-    interp.setResult(result);
+
+    formatHeaderInfo(pSpecificItem, result);
+
+    return result;
 }
 
-CRingItem*
-CTclRingCommand::getFromRing(CRingBuffer &ring, CRingSelectionPredicate &predicate,
-                             unsigned long timeout)
+CTCLObject CTclRingCommand::formatComposite(CTCLInterpreter &interp, CRingItemPtr pSpecificItem)
+{
+    CCompositeRingItemPtr pItem = std::dynamic_pointer_cast<CCompositeRingItem>(pSpecificItem);
+
+    CTCLObject result;
+    result.Bind(interp);
+    result += "type";
+    result += pItem->typeName();
+
+    formatHeaderInfo(pItem, result);
+
+
+    CTCLObject children;
+    children.Bind(interp);
+    for (auto& pChild : pItem->getChildren()) {
+        auto childResult = dispatch(pChild, interp);
+        children += childResult;
+    }
+
+    result += "children";
+    result += children;
+
+    return result;
+}
+
+
+CRingItemPtr
+CTclRingCommand::getFromRing(CDataSource &ring, CDataSourcePredicate &predicate,
+                             const CTimeout& timer)
 {
 
-    CTimeout timer(timeout);
+    CRawRingItem item;
+    readItemIf(ring, item, predicate, timer);
 
-    CRingItem* pItem = nullptr;
-
-    do {
-        pItem = getFromRing(ring, timer);
-
-        if (pItem) {
-            if (!predicate.selectThis(pItem->type())
-                    || (predicate.getNumberOfSelections() == 0) ) {
-                break;
-            }
-
-        }
-
-        delete pItem;
-        pItem = nullptr;
-    } while (! timer.expired());
-
-    return pItem;
+    if (ring.eof() || timer.expired()) {
+        return nullptr;
+    } else {
+        return CRingItemFactory::createRingItem(item);
+    }
 }
 
-CRingItem*
-CTclRingCommand::getFromRing(CRingBuffer &ring, CTimeout& timer)
+CRingItemPtr
+CTclRingCommand::getFromRing(CDataSource &ring, const CTimeout& timer)
 {
-    using namespace std::chrono;
+    CRawRingItem item;
+    readItem(ring, item, timer);
 
-    // look at the header, figure out the byte order and count so we can
-    // create the item and fill it in.
-    RingItemHeader header;
-
-    // block with a timeout
-    while ((ring.availableData() < sizeof(header)) && !timer.expired()) {
-        std::this_thread::sleep_for(milliseconds(200));
-    }
-
-    // stop if we have no data and we timed out...
-    // if we have timed out but there is data, then try to continue.
-    if (timer.expired() && (ring.availableData() <= sizeof(header))) {
+    if (timer.expired() || ring.eof()) {
         return nullptr;
+    } else {
+        return CRingItemFactory::createRingItem(item);
     }
-
-    ring.peek(&header, sizeof(header));
-    bool otherOrder(false);
-    uint32_t size = header.s_size;
-    if ((header.s_type & 0xffff0000) != 0) {
-      otherOrder = true;
-      size = swal(size);
-    }
-
-    // prevent a thrown range error caused by attempting to read more data
-    // than is in the buffer.
-    if (ring.availableData() < size) {
-        return nullptr;
-    }
-
-
-    std::vector<uint8_t> buffer(size);
-    size_t gotSize    = ring.get(buffer.data(),
-                                 buffer.size(),
-                                 buffer.size(),
-                                 timer.getRemainingSeconds());// Read the item from the ring.
-    if(gotSize  != buffer.size()) {
-      if (gotSize == 0) {
-        // operation timed out
-        return nullptr;
-      }
-
-      std::cerr << "Mismatch in CRingItem::getItem required size: sb " << size << " was " << gotSize
-                << std::endl;
-    }
-
-    return CRingItemFactory::createRingItem(buffer.data());
 }
 
 
-
-uint32_t CTclRingCommand::swal(uint32_t value)
-{
-    union {
-        uint32_t asValue;
-        char asBytes[sizeof(uint32_t)];
-    } value1, value2;
-
-    value1.asValue = value;
-
-    for (int fwIndex=0, bkwdIndex=sizeof(uint32_t);
-         fwIndex<sizeof(uint32_t) && bkwdIndex>=0;
-         fwIndex++, bkwdIndex--) {
-        value2.asBytes[fwIndex] = value1.asBytes[bkwdIndex];
-    }
-
-    return value2.asValue;
-
-}
-
+} // end V12
+} // end DAQ
 
 /*-------------------------------------------------------------------------------
  * Package initialization:
@@ -842,7 +735,7 @@ int Tclringbuffer_Init(Tcl_Interp* pInterp)
 {
     Tcl_PkgProvide(pInterp, "TclRingBuffer", "1.0");
     CTCLInterpreter* interp = new CTCLInterpreter(pInterp);
-    CTclRingCommand* pCommand = new CTclRingCommand(*interp);
+    DAQ::V12::CTclRingCommand* pCommand = new DAQ::V12::CTclRingCommand(*interp);
     
     return TCL_OK;
 }

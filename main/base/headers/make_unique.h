@@ -18,6 +18,9 @@
 #define MAKEUNIQUE_H
 
 #include <memory>
+#include <utility>
+
+namespace DAQ {
 
 /**! \brief Utility to turn an pointer into a unique ptr
  *
@@ -30,14 +33,19 @@
  *  the argument. It is the callers responsibility to make sure that 
  *  no other objects own it and try to delete it.
  *
+ * The implementation here is taken directly from the sample implementation
+ * provided here http://en.cppreference.com/w/cpp/memory/unique_ptr/make_unique
+ * on 3/8/2017
+ *
  * \param pObject   pointer to be transformed into a unique_ptr
  *
  * \return std::unique_ptr<T> that owns object passed in
  */
-template<class T>
-std::unique_ptr<T> make_unique(T* pObject) 
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
 {
-  return std::unique_ptr<T>(pObject);
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
+} // end DAQ
 #endif

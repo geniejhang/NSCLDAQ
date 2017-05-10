@@ -293,7 +293,7 @@ CAcquisitionThread::processCommand(CControlQueues::opCode command)
       stopDaq();
     }
     queues->Acknowledge();
-    throw 1;
+    throw int(1);
   }
   else if (command == CControlQueues::PAUSE) {
     pauseRun();
@@ -453,7 +453,7 @@ CAcquisitionThread::pauseDaq()
     else if (req == CControlQueues::END) {
       queues->Acknowledge();
       pState->setState(CRunState::Idle);
-      throw 1;                 // Integer exception is exit.
+      throw int(1);                 // Integer exception is exit.
     }
     else if (req == CControlQueues::RESUME) {
       resumeRun();

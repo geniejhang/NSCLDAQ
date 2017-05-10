@@ -31,8 +31,8 @@
 #include <V8/CTextBuffer.h>
 #include <V10/CRingTextItem.h>
 
-#include <V8/DataFormatV8.h>
-#include <V10/DataFormatV10.h>
+#include <V8/DataFormat.h>
+#include <V10/DataFormat.h>
 
 #include <V8/format_cast.h>
 #include <DebugUtils.h>
@@ -682,8 +682,8 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
 
       void MultiEvent_0 () {
         v8item = m_transform( v10item );
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Return VOID when space remains in buffer",
-                                     std::uint16_t(V8::VOID), v8item.getHeader().type);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Return UNDEFINED when space remains in buffer",
+                                     std::uint16_t(V8::UNDEFINED), v8item.getHeader().type);
       }
 
       void MultiEvent_1 () {

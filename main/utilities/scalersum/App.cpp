@@ -25,12 +25,14 @@
 
 #include <CDataSource.h>
 #include <CDataSourceFactory.h>
-#include <CRingItem.h>
-#include <CRingStateChangeItem.h>
-#include <CRingScalerItem.h>
-#include <CRingItemFactory.h>
-#include <CDataFormatItem.h>
-#include <DataFormat.h>
+#include <V12/CRawRingItem.h>
+#include <V12/CRingStateChangeItem.h>
+#include <V12/CRingScalerItem.h>
+#include <V12/CRingItemFactory.h>
+#include <V12/CDataFormatItem.h>
+#include <V12/DataFormat.h>
+#include <V12/format_cast.h>
+#include <RingIOV12.h>
 
 #include <ErrnoException.h>
 
@@ -47,6 +49,7 @@
 #include <string.h>
 #include <errno.h>
 
+using namespace DAQ;
 
 
 /**
@@ -219,22 +222,24 @@ App::outputResults(std::ostream& out)
 void
 App::processFile(CDataSource& ds) {
     try {
-        CRingItem* pRawItem;
-        while (pRawItem = ds.getItem()) {
+      V12::CRawRingItem rawItem;
+        while (!ds.eof()) {
+            readItem(ds, rawItem);
+
             // What we do depends on type and state:
             
-            switch (pRawItem->type()) {
-            case BEGIN_RUN:
+            switch (rawItem.type()) {
+              case V12::BEGIN_RUN:
                 if(m_state == expectingEnd) {
                     std::cerr << "Warning, got a begin run in the middle of processing run ";
                     std::cerr << m_pCurrentRun->getRun() << std::endl;
                     std::cerr << "Saving partial run  sums and continuing.";
                     end();
                 }
-                begin(*pRawItem);
+                begin(rawItem);
                 m_state = expectingEnd;
                 break;
-            case END_RUN:
+              case V12::END_RUN:
                 if (m_state == expectingStart) {
                     std::cerr << "Warning - got an end run while expecting a begin\n";
                     std::cerr << "Continuing processing\n";
@@ -248,16 +253,15 @@ App::processFile(CDataSource& ds) {
                     m_state = expectingStart;
                 }
                 break;
-            case PERIODIC_SCALERS:
+              case V12::PERIODIC_SCALERS:
                 if (m_state == expectingEnd) {
-                    scaler(*pRawItem);
+                    scaler(rawItem);
                 }
                 break;
             defaut:
                 break;
             }
             
-            delete pRawItem;       // - it was dynamic.
         }
         // Null item be sure this is an EOF else throw the errno.
         
@@ -427,14 +431,12 @@ App::makeFileUri(std::string name)
  * @param item - the undifferentiated item.
  */
 void
-App::begin(CRingItem& item)
+App::begin(V12::CRingItem& item)
 {
-    CRingStateChangeItem* pBegin =
-        dynamic_cast<CRingStateChangeItem*>(CRingItemFactory::createRingItem(item));
-    m_pCurrentRun = new CRun(pBegin->getRunNumber());
+  auto begin = V12::format_cast<V12::CRingStateChangeItem>(item);
+  m_pCurrentRun = new CRun(begin.getRunNumber());
     
-    delete pBegin;
-    m_state = expectingEnd;
+  m_state = expectingEnd;
 }
 /**
  * end
@@ -460,23 +462,18 @@ App::end()
  * @param item - references the ring item that is being processed.
  */
 void
-App::scaler(CRingItem& item)
+App::scaler(V12::CRingItem& item)
 {
-    CRingScalerItem* pScaler =
-        reinterpret_cast<CRingScalerItem*>(CRingItemFactory::createRingItem(item));
+  auto scaler = V12::format_cast<V12::CRingScalerItem>(item);
         
     // Source id is 0 if there's no body header:
     
     unsigned srcId;
-    if (pScaler->hasBodyHeader()) {
-        srcId = pScaler->getSourceId();
-    } else {
-        srcId = 0;
-    }
+    srcId = scaler.getSourceId();
     // Figure out if the scalers are incremental or not and get the counters.
     
-    bool incremental = pScaler->isIncremental();
-    std::vector<uint32_t> scalers = pScaler->getScalers();
+    bool incremental = scaler.isIncremental();
+    std::vector<uint32_t> scalers = scaler.getScalers();
     
     // Make a Channel struct and use it to iterate over the scalers in the
     // vector:

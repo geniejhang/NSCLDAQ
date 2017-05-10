@@ -20,10 +20,16 @@
 */
 
 #include "CEndRunInfo10.h"
+#include <CFileDataSource.h>
+#include "V10/CRingStateChangeItem.h"
+#include "V10/DataFormat.h"
+#include <RingIOV10.h>
 #include <stdexcept>
 #include <fstream>
 #include <io.h>
+#include <ostream>
 
+using namespace DAQ;
 
 /**
  * constructor
@@ -113,7 +119,7 @@ uint32_t
 CEndRunInfo10::getRunNumber(int which) const
 {
   throwIfBadIndex(which);
-  return m_endRuns[which]->s_runNumber;
+  return m_endRuns[which]->getRunNumber();
 }
 /**
  * getElapsedTime
@@ -126,7 +132,7 @@ float
 CEndRunInfo10::getElapsedTime(int which) const
 {
   throwIfBadIndex(which);
-  return m_endRuns[which]->s_timeOffset;
+  return m_endRuns[which]->getElapsedTime();
 }
 
 /**
@@ -140,7 +146,7 @@ std::string
 CEndRunInfo10::getTitle(int which) const
 {
   throwIfBadIndex(which);
-  return m_endRuns[which]->s_title;        // Required to be null terminated.
+  return m_endRuns[which]->getTitle();        // Required to be null terminated.
 }
 /**
  * getTod
@@ -153,7 +159,7 @@ time_t
 CEndRunInfo10::getTod(int which) const
 {
   throwIfBadIndex(which);
-  return m_endRuns[which]->s_Timestamp;
+  return m_endRuns[which]->getTimestamp();
 }
 /*----------------------------------------------------------------------------------------------------
 ** Private utilities.
@@ -184,23 +190,24 @@ CEndRunInfo10::throwIfBadIndex(int which) const
 void
 CEndRunInfo10::loadEndRuns()
 {
-  while (true) {
-    NSCLDAQ10::RingItemHeader header;
-    size_t nRead = io::readData(m_nFd, &header, sizeof(header));
-    if (nRead == 0) {
-      return;                         // Eof.
-    }
-    if (header.s_type == NSCLDAQ10::END_RUN) {
-      NSCLDAQ10::pStateChangeItem pItem = new NSCLDAQ10::StateChangeItem;
-      pItem->s_header = header;
-      io::readData(m_nFd, &pItem->s_runNumber, header.s_size - sizeof(header));
-      m_endRuns.push_back(std::unique_ptr<NSCLDAQ10::StateChangeItem>(pItem));
-    } else {
-      size_t skipBytes = header.s_size - sizeof(header);
-      if (lseek(m_nFd,  skipBytes, SEEK_CUR) == -1)
-        throw std::ifstream::failure(
-          "Seek operation failed to skip ring item body"
-        );
-    }
+    CFileDataSource source(m_nFd);
+    V10::CRingItem item(V10::UNDEFINED);
+
+    readItem(source, item);
+
+    while (!source.eof()) {
+        if (item.type() == V10::END_RUN) {
+
+            std::unique_ptr<V10::CRingStateChangeItem>
+                    pItem(new V10::CRingStateChangeItem(item));
+            m_endRuns.push_back(std::move(pItem));
+
+        }
+
+        readItem(source, item);
   }
 }
+
+
+void CEndRunInfo10::dumpBodyHeader(int i, const CEndRunInfo &e, std::ostream& stream) const
+{}

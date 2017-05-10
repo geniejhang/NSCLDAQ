@@ -1,8 +1,8 @@
-#ifndef __SCLCLIENTMAIN_H
-#define __SCLCLIENTMAIN_H
+#ifndef SCLCLIENTMAIN_H
+#define SCLCLIENTMAIN_H
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2005.
+    State University (c) Copyright 2017.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -16,41 +16,27 @@
 	     East Lansing, MI 48824-1321
 */
 
-#ifndef __STL_STRING
+#include <CDataSource.h>
+
 #include <string>
-#ifndef __STL_STRING
-#define __STL_STRING
-#endif
-#endif
-
-#ifndef __STL_VECTOR
 #include <vector>
-#ifndef __STL_VECTOR
-#define __STL_VECTOR
-#endif
-#endif
-
-#ifndef __STL_MAP
 #include <map>
-#ifndef __STL_MAP
-#define __STL_MAP
-#endif
-#endif
-
-#ifndef __CRT_STDINT_H
 #include <stdint.h>
-#ifndef __CRT_STDINT_H
-#define __CRT_STDINT_H
-#endif
-#endif
 
 // forward class definitions:
 
-class CDataSource;
-class CRingScalerItem;
-class CRingStateChangeItem;
+
 class TclServerConnection;
 class TcpClientConnection;
+
+namespace DAQ {
+
+namespace V12 {
+class CRingScalerItem;
+class CRingStateChangeItem;
+} // end V12
+
+} // end DAQ
 
 /*!
   Main application class.  This should be instantiated by main() an
@@ -60,7 +46,7 @@ class SclClientMain {
   // Private per object data.
 
 private:
-  CDataSource*         m_pRing;
+  DAQ::CDataSourcePtr         m_pRing;
   std::string          m_Host;
   int                  m_Port;
   TclServerConnection* m_pServer;
@@ -87,10 +73,10 @@ public:
 private:
   int  getDisplayPort(std::string portArg);
   void processItems();
-  void processScalers(const CRingScalerItem& item);
+  void processScalers(const DAQ::V12::CRingScalerItem& item);
   void processScalers(uint32_t sourceId, float start, float end,
                       std::vector<uint32_t> values, bool incremental);
-  void processStateChange(const CRingStateChangeItem& item);
+  void processStateChange(const DAQ::V12::CRingStateChangeItem& item);
   void initializeStateChange();
   void connectTclServer();
   void ConnectionLost();

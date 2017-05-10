@@ -19,9 +19,7 @@
 
 // Headers:
 
-#ifndef __DAQHWAPI_THREAD_H
-#include <Thread.h>
-#endif
+#include <CSynchronizedThread.h>
 
 
 // Forward class definitions
@@ -38,7 +36,7 @@ class CEventTrigger;
   conditions.
 
 */
-class CTriggerLoop : public Thread
+class CTriggerLoop : public CSynchronizedThread
 {
 private:
   CExperiment*       m_pExperiment;
@@ -65,8 +63,8 @@ private:
 public:
   virtual void start();
   void         stop(bool pausing);          // stop/join.
+  virtual void operator()();
   bool         running() const {return m_running; }
-  virtual void run();
 
 protected:
   void         mainLoop();

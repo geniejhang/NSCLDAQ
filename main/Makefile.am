@@ -1,5 +1,8 @@
 ACLOCAL_AMFLAGS=-I m4
+AM_CPPFLAGS = -DNSCLDAQ_BUILD
+
 AUTOMAKE_OPTIONS=subdir-objects
+
 if BUILD_SBS_DRIVER
   SBSDIRS=sbs
 endif
@@ -19,11 +22,12 @@ if BUILD_DOCS
 endif
 
 SUBDIRS =	 base caenfw-common servers base/dataflow diagnostics \
-		daq utilities $(DOCDIR) \
+                utilities daq $(DOCDIR) \
 		$(SBSDIRS) $(EPICSDIRS) $(USBDIR)
 
-DIST_SUBDIRS = base caenfw-common servers  base/dataflow diagnostics daq utilities \
+DIST_SUBDIRS = base caenfw-common servers  base/dataflow diagnostics utilities daq \
 		 docbuild docconfig simplesetups sbs epics usb
+
 
 INTROFIGURES = @srcdir@/figures/intro-data-flow-diagram.png \
 								@srcdir@/figures/intro-data-flow-diagram-diagnostics.png 
@@ -39,6 +43,7 @@ install-data-local:
 	echo "Version: "NSCLDAQ-$(VERSION) built on `hostname` `date` > @prefix@/VERSION
 	$(INSTALL_SCRIPT) daqsetup.bash @prefix@
 	$(INSTALL_DATA) @srcdir@/figures/*.png @prefix@/share/html/figures
+	(cd @top_srcdir@ ; echo "`git rev-parse HEAD`" > @prefix@/GIT_COMMIT)
 
 
 EXTRA_DIST=dotests introduction.xml libtcl $(INTROFIGURES) 

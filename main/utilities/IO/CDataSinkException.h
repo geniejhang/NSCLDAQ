@@ -14,10 +14,12 @@
              East Lansing, MI 48824-1321
 */
 
-#ifndef CDATASINKEXCEPTION_H
-#define CDATASINKEXCEPTION_H
+#ifndef DAQ_CDATASINKEXCEPTION_H
+#define DAQ_CDATASINKEXCEPTION_H
 
 #include <Exception.h>
+
+namespace DAQ {
 
 /*! An exception for data sink errors
 *
@@ -38,5 +40,7 @@ class CDataSinkException : public CException
 
     virtual const char* ReasonText() const;
 };
+
+} // end DAQ
 
 #endif

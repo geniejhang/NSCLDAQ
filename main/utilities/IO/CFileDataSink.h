@@ -14,8 +14,8 @@
        East Lansing, MI 48824-1321
 */
 
-#ifndef CFILEDATASINK_H
-#define CFILEDATASINK_H
+#ifndef DAQ_CFILEDATASINK_H
+#define DAQ_CFILEDATASINK_H
 
 #include "CDataSink.h"
 #include <unistd.h>
@@ -23,7 +23,7 @@
 #include <string>
 #include <CErrnoException.h>
 
-class CRingItem;
+namespace DAQ {
 
 ///! \brief A "file" data sink
 /**!
@@ -59,8 +59,8 @@ public:
     /*
      *  Implementation of the required interface methods
     */
-    virtual void putItem(const CRingItem& item);
     virtual void put(const void* pData, size_t nBytes);
+    virtual void putv(const std::vector<std::pair<const void*, size_t> >& buffers);
 
     /**! Flush file to syncronize
     */
@@ -77,5 +77,8 @@ private:
     bool isWritable();
 
 };
+
+
+} // end DAQ
 
 #endif

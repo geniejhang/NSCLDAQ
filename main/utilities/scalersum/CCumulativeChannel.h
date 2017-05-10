@@ -26,6 +26,8 @@
 #include "CChannel.h"
 #include <stdint.h>
 
+namespace DAQ {
+
 /**
  * @class CCumulativeChannel
  *
@@ -53,4 +55,5 @@ public:
     operator uint64_t();
 };
 
+} // end DAQ
 #endif

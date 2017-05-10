@@ -14,15 +14,24 @@
              East Lansing, MI 48824-1321
 */
 #include <config.h>
+
 #include "RingSelectorMain.h"
-#include <CRingBuffer.h>
+
+#include <CDataSource.h>
+#include <CDataSourceFactory.h>
+
 #include <CRingSelectionPredicate.h>
 #include <CAllButPredicate.h>
 #include <CDesiredTypesPredicate.h>
-#include <StringsToIntegers.h>
-#include <CRemoteAccess.h>
-#include <CRingItem.h>
-#include <DataFormat.h>
+#include <CRingSelectPredWrapper.h>
+
+#include <V12/StringsToIntegers.h>
+#include <V12/CRingItem.h>
+#include <V12/CRawRingItem.h>
+#include <V12/DataFormat.h>
+#include <V12/StringsToIntegers.h>
+#include <RingIOV12.h>
+
 #include <ErrnoException.h>
 #include <io.h>
 
@@ -40,20 +49,22 @@
 #include "COutputter.h"
 
 
+using namespace DAQ;
+using namespace DAQ::V12;
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Constructor and canonical implementations:
 
 RingSelectorMain::RingSelectorMain() :
   m_pRing(0),
-  m_pPredicate(0),
+  m_pPredicate(),
   m_queues(1000)		// # of ring items that can be in transit.
 {}
 
 RingSelectorMain::~RingSelectorMain()
 {
   delete m_pRing;
-  delete m_pPredicate;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +114,7 @@ RingSelectorMain::operator()(int argc, char** argv)
 **   If both the --exclude and --select switches are presnt, that's an error we report and exit.
 **
 */
-CRingSelectionPredicate*
+std::shared_ptr<CRingSelectionPredicate>
 RingSelectorMain::createPredicate(struct gengetopt_args_info* parse)
 {
   // Check for illegal switch combos:
@@ -117,12 +128,12 @@ RingSelectorMain::createPredicate(struct gengetopt_args_info* parse)
   // The default predicate type is an all but predicate...where the sampled switch
   // provides the only exceptions.
 
-  CRingSelectionPredicate* returnValue;
+  std::shared_ptr<CRingSelectionPredicate> returnValue;
 
   if (parse->accept_given) {
     // desired....
 
-    CDesiredTypesPredicate* p = new CDesiredTypesPredicate();
+    auto p = std::unique_ptr<CDesiredTypesPredicate>(new CDesiredTypesPredicate());
 
     std::string types = parse->accept_arg;
     std::vector<int> acceptTypes = stringListToIntegers(types);
@@ -138,14 +149,14 @@ RingSelectorMain::createPredicate(struct gengetopt_args_info* parse)
 	p->addDesiredType(sampleTypes[i], true);
       }
     }
-    returnValue = p;
+    returnValue = std::move(p);
 
   }
   else {
     
     // All but predicate:
 
-    CAllButPredicate* p = new CAllButPredicate();
+    auto p = std::unique_ptr<CAllButPredicate>(new CAllButPredicate());
 
     // If there excluded ones remove them.
     
@@ -169,7 +180,7 @@ RingSelectorMain::createPredicate(struct gengetopt_args_info* parse)
 	p->addExceptionType(sampleTypes[i], true);
       }
     }
-    returnValue = p;
+    returnValue = std::move(p);
   }
 
   return returnValue;
@@ -183,7 +194,7 @@ RingSelectorMain::createPredicate(struct gengetopt_args_info* parse)
 ** Side effects:
 **  Can throw an exception if the ring does not exist.
 */
-CRingBuffer*
+DAQ::CDataSource*
 RingSelectorMain::selectRing(struct gengetopt_args_info* parse)
 {
   std::string url;
@@ -194,7 +205,7 @@ RingSelectorMain::selectRing(struct gengetopt_args_info* parse)
     url = CRingBuffer::defaultRingUrl();
   }
   
-  CRingBuffer* pRing = CRingAccess::daqConsumeFrom(url);
+  DAQ::CDataSource* pRing = CDataSourceFactory::makeSource(url, {}, {});
 
   if (!pRing) {
     throw std::string("Could not access the --source ring buffer");
@@ -209,27 +220,34 @@ RingSelectorMain::selectRing(struct gengetopt_args_info* parse)
 void
 RingSelectorMain::processData()
 {
-  COutputter outputThread(m_queues, m_exitOnEnd);
-  outputThread.start();
-  while(1) {
-    CRingItem* pItem = CRingItem::getFromRing(*m_pRing, *m_pPredicate);
-    RingItem*  pData = pItem->getItemPointer();
-    size_t     size  = pData->s_header.s_size;
-    if (m_nonBlocking) {
-      CRingItem* pQueueElement = m_queues.getFree();
-      if(pQueueElement) {
-	pQueueElement = pItem;
-	m_queues.send(pQueueElement);
-      } else {
-	delete pItem;		// no free elements and non-blocking
-      }
-    } else {
-      CRingItem* pQueueElement = m_queues.getFreeW();
-      pQueueElement = pItem;
-      m_queues.send(pQueueElement);
-    }
+    COutputter outputThread(m_queues, m_exitOnEnd);
+    outputThread.start();
 
-  }
+    CRingSelectPredWrapper predicate(m_pPredicate);
+    while(1) {
+        auto pItem = new CRawRingItem;
+
+        auto result = DAQ::readItemIf(*m_pRing, *pItem, predicate);
+        if (result != CDataSourcePredicate::FOUND) {
+            delete pItem;
+            continue;
+        }
+
+        size_t  size  = pItem->size();
+        if (m_nonBlocking) {
+            DAQ::V12::CRingItem* pQueueElement = m_queues.getFree();
+            if(pQueueElement) {
+                pQueueElement = pItem;
+                m_queues.send(pQueueElement);
+            } else {
+                delete pItem;		// no free elements and non-blocking
+            }
+        } else {
+            DAQ::V12::CRingItem* pQueueElement = m_queues.getFreeW();
+            pQueueElement = pItem;
+            m_queues.send(pQueueElement);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////

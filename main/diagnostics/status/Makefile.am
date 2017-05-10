@@ -31,7 +31,7 @@ libStatusMessages_la_SOURCES=Constants.cpp CZmqContext.cpp \
 
 
 libStatusMessages_la_CPPFLAGS = $(COMPILATION_FLAGS)
-libStatusMessages_la_LDFLAGS  = $(COMMON_LIBS)
+libStatusMessages_la_LIBADD   = $(COMMON_LIBS)
 
 include_HEADERS = CStatusMessage.h CPublishRingStatistics.h \
 	CStatusSubscription.h CMultiAggregator.h CStatusReporting.h
@@ -43,10 +43,9 @@ ringstatusdaemon_SOURCES  = ringStatusDaemon.cpp \
 
 ringstatusdaemon_CPPFLAGS = -I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/dataflow -I@top_srcdir@/base/os
-ringstatusdaemon_LDFLAGS  = @top_builddir@/servers/portmanager/libPortManager.la \
-	@builddir@/libStatusMessages.la	@top_builddir@/base/dataflow/libDataFlow.la \
-	@top_builddir@/base/os/libdaqshm.la	\
-	@LIBEXCEPTION_LDFLAGS@
+ringstatusdaemon_LDADD  = @builddir@/libStatusMessages.la \
+                            $(COMMON_LIBS) \
+                            @LIBEXCEPTION_LDFLAGS@
 
 nodist_ringstatusdaemon_SOURCES = ringstatus.c ringstatus.h
 
@@ -57,21 +56,19 @@ nodist_ringstatusdaemon_SOURCES = ringstatus.c ringstatus.h
 statusaggregator_SOURCES  = aggregator.cpp
 statusaggregator_CPPFLAGS = -I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/os
-statusaggregator_LDFLAGS  =  @top_builddir@/servers/portmanager/libPortManager.la \
-	@builddir@/libStatusMessages.la	@top_builddir@/base/os/libdaqshm.la	  \
-	@ZMQ_LDFLAGS@								\
-	@LIBEXCEPTION_LDFLAGS@
+
+statusaggregator_LDADD  = @builddir@/libStatusMessages.la						  \
+													$(COMMON_LIBS) \
+													@LIBEXCEPTION_LDFLAGS@
 
 #--------------- aggregator with node discovery.
 
 multiaggregator_SOURCES = multiaggmain.cpp CMultiAggregator.cpp CMultiAggregator.h
 multiaggregator_CPPFLAGS=-I@top_srcdir@/servers/portmanager @LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/dataflow -I@top_srcdir@/base/os
-multiaggregator_LDFLAGS = @top_builddir@/servers/portmanager/libPortManager.la \
-	@builddir@/libStatusMessages.la @top_builddir@/base/dataflow/libDataFlow.la \
-	@top_builddir@/base/os/libdaqshm.la					\
-	@ZMQ_LDFLAGS@								\
-	@LIBEXCEPTION_LDFLAGS@
+multiaggregator_LDADD = @builddir@/libStatusMessages.la \
+												$(COMMON_LIBS) \
+												@LIBEXCEPTION_LDFLAGS@
 
 nodist_multiaggregator_SOURCES = multiaggregator.h multiaggregator.c
 
@@ -105,7 +102,7 @@ libTclStatusMessages_la_SOURCES= TclPackage.cpp             \
 	TclUtilities.cpp TclUtilities.h 
 
 libTclStatusMessages_la_CPPFLAGS=$(COMPILATION_FLAGS) @TCL_FLAGS@ @LIBTCLPLUS_CFLAGS@ @TCL_DEFS@
-libTclStatusMessages_la_LDFLAGS=$(COMMON_LIBS)  	\
+libTclStatusMessages_la_LIBADD=$(COMMON_LIBS)  	\
 				@builddir@/libStatusMessages.la   \
 				@LIBTCLPLUS_LDFLAGS@ 	\
 				@TCL_LDFLAGS@
@@ -125,12 +122,12 @@ tclAppInstall::
 
 libPyStatusMessages_la_SOURCES= PyStatusMessages.cpp
 libPyStatusMessages_la_CPPFLAGS=$(COMPILATION_FLAGS) @PYTHON_CPPFLAGS@
-libPyStatusMessages_la_LDFLAGS=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
+libPyStatusMessages_la_LIBADD=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
 				@PYTHON_LDFLAGS@
 
 libPyStatusDb_la_SOURCES=PyStatusDb.cpp
 libPyStatusDb_la_CPPFLAGS=$(COMPILATION_FLAGS) @PYTHON_CPPFLAGS@
-libPyStatusDb_la_LDFLAGS=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
+libPyStatusDb_la_LIBADD=$(COMMON_LIBS) @builddir@/libStatusMessages.la \
 				@top_builddir@/base/sqlite++/libsqlite3pp.la \
 				@PYTHON_LDFLAGS@ @SQLITE3_LDFLAGS@
 
@@ -173,7 +170,7 @@ dbtests_SOURCES=TestRunner.cpp Asserts.h statusdbSchema.cpp \
 	readoutquerytests.cpp
 
 dbtests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
-dbtests_LDFLAGS=libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
+dbtests_LDADD=@builddir@/libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
 
 
 ringstattests_SOURCES=TestRunner.cpp Asserts.h ringstattests.cpp \
@@ -181,7 +178,7 @@ ringstattests_SOURCES=TestRunner.cpp Asserts.h ringstattests.cpp \
 	testutils.cpp testutils.h
 
 ringstattests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
-ringstattests_LDFLAGS=libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
+ringstattests_LDADD=@builddir@/libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
 
 tclpkgtests_SOURCES = TestRunner.cpp Asserts.h pkgloads.cpp \
 	tclringstatustests.cpp testutils.cpp testutils.h \
@@ -189,22 +186,22 @@ tclpkgtests_SOURCES = TestRunner.cpp Asserts.h pkgloads.cpp \
 
 tclpkgtests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@ @LIBTCLPLUS_CFLAGS@ @TCL_FLAGS@ \
 					-DTCLLIBPATH="\"@prefix@/TclLibs\""
-tclpkgtests_LDFLAGS=$(COMMON_LIBS) libTclStatusMessages.la \
-		libStatusMessages.la	\
+tclpkgtests_LDADD=$(COMMON_LIBS) @builddir@/libTclStatusMessages.la \
+                @builddir@/libStatusMessages.la	\
 		@LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@ @CPPUNIT_LDFLAGS@
 
 subtests_SOURCES=TestRunner.cpp subtest.cpp
 subtests_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
-subtests_LDFLAGS=libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
+subtests_LDADD=@builddir@/libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
 
 ringpubclasstest_SOURCES=TestRunner.cpp ringpubclasstest.cpp testutils.cpp testutils.h
 ringpubclasstest_CPPFLAGS=$(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
-ringpubclasstest_LDFLAGS  =libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
+ringpubclasstest_LDADD  =@builddir@/libStatusMessages.la $(COMMON_LIBS) @CPPUNIT_LDFLAGS@
 
 ringdaemontests_SOURCES=TestRunner.cpp ringdaemontests.cpp \
 	CRingStatusDaemon.cpp CRingStatusDaemon.h testutils.cpp
 ringdaemontests_CPPFLAGS = $(COMPILATION_FLAGS) @CPPUNIT_CFLAGS@
-ringdaemontests_LDFLAGS  = libStatusMessages.la $(COMMON_LIBS) \
+ringdaemontests_LDADD  = @builddir@/libStatusMessages.la $(COMMON_LIBS) \
 	@CPPUNIT_LDFLAGS@
 
 
@@ -212,7 +209,7 @@ ringdaemontests_LDFLAGS  = libStatusMessages.la $(COMMON_LIBS) \
 
 testringstatus_SOURCES = testringstatus.cpp CMultiAggregator.cpp CMultiAggregator.h
 testringstatus_CPPFLAGS= $(COMPILATION_FLAGS) -I@top_srcdir@/servers/portmanager
-testringstatus_LDFLAGS= libStatusMessages.la \
+testringstatus_LDADD= @builddir@/libStatusMessages.la \
 	@top_builddir@/servers/portmanager/libPortManager.la \
 	$(COMMON_LIBS)
 

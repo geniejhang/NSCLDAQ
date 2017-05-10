@@ -48,8 +48,6 @@ public:
 private:
     void processFile(const char* name);
     void dumpEndRunInfo(const char* name, CEndRunInfo& erInfo);
-    void dumpBodyHeader(int i, CEndRunInfo& erInfo);
-    void dumpBody(int i, CEndRunInfo& erInfo);
 };
 
 #endif

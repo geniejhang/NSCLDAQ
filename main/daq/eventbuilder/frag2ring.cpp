@@ -52,8 +52,6 @@ void printUsage() {
   std::cout << "frag2ring [options]                                               " << std::endl;  
   std::cout << "                                                                  " << std::endl;  
   std::cout << "Options:                                                          " << std::endl;  
-  std::cout << "   -s,--strip  Strip fragment headers rather than converting" << std::endl;
-  std::cout << "               them into EVB_FRAGMENT items, which is the default." << std::endl;
   std::cout << "   -h,--help   Print this message" << std::endl;
 }
 
@@ -72,16 +70,12 @@ void printUsage() {
  */
 int main(int argc, const char** argv)
 {
-  bool stripHeaders = false;
-
   // Parse the cmdline args
   if (argc != 1) {
     for (int index=1; index<argc; ++index) {
       std::string param(argv[index]);
       
-      if ((param == "--strip") || (param == "-s")) {
-         stripHeaders = true; 
-      } else if ((param == "--help") || (param == "-h" )) {
+      if ((param == "--help") || (param == "-h" )) {
         printUsage();
         exit(0);
       }
@@ -89,14 +83,12 @@ int main(int argc, const char** argv)
     }
   }
 
-  CFragReader reader(STDIN_FILENO);
-  CFragWriter writer(STDOUT_FILENO, stripHeaders);
+  CFragReader readData(STDIN_FILENO);
+  CFragWriter writeData(STDOUT_FILENO);
 
   try {
     while(1) {
-      void* pData = reader();
-      writer(pData);
-      free(pData);
+      writeData(readData());
     }
   }
   catch(std::string errorMessage) {

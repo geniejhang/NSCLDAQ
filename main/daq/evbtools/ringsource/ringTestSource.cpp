@@ -63,7 +63,7 @@ int main(int argc, char** argv)
   cmdline_parser(argc, argv, &args);
 
   try {
-    TestSource source(ringName, eventSize,genBufferHeaders);
+    DAQ::TestSource source(ringName, eventSize);
     source.setTimestampIncrement(args.increment_arg);
     source.setDelay(args.delay_arg);
     source();

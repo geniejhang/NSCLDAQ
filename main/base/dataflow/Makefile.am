@@ -12,21 +12,21 @@ include_HEADERS        = CRingBuffer.h CTestRingBuffer.h CRingMaster.h CRemoteAc
 			CConnectivity.h 
 
 
-noinst_HEADERS         = ringbufint.h Asserts.h testcommon.h CRingCommand.h CPidToCommand.h \
+noinst_HEADERS         = ringbufint.h testcommon.h CRingCommand.h CPidToCommand.h \
 	CGetProducersCommand.h CGetConsumersCommand.h CAllParticipantsCommand.h
 
 COMPILATION_FLAGS =  -I@top_srcdir@/base/headers 	\
-	   -I@top_srcdir@/servers/portmanager \
-	   -I@top_srcdir@/base/uri	\
-	   -I@top_srcdir@/base/os	\
+		-I@top_srcdir@/servers/portmanager \
+		-I@top_srcdir@/base/uri	\
+		-I@top_srcdir@/base/os	\
 		@LIBTCLPLUS_CFLAGS@	\
 		$(TCL_FLAGS)		\
-	-DBINDIR='"@prefix@/bin"'
+		-DBINDIR='"@prefix@/bin"'
 
 libDataFlow_la_LDFLAGS = @top_builddir@/base/os/libdaqshm.la  @LIBTCLPLUS_LDFLAGS@		\
 			@TCL_LDFLAGS@			\
 			-version-info $(SOVERSION) 	\
-	                -Wl,"-rpath-link=$(libdir)" 	\
+			-Wl,"-rpath-link=$(libdir)" 	\
 			-lrt $(THREADLD_FLAGS)
 
 libDataFlow_la_LIBADD  = @top_builddir@/servers/portmanager/libPortManager.la \
@@ -57,6 +57,7 @@ libRingBuffer_la_CXXFLAGS	=	-I@top_srcdir@/base/os \
 
 #  Python bindings to CRingMaster entries that are useful.
 
+libRingPy_la_DEPENDENCIES = libDataFlow.la
 libRingPy_la_SOURCES  = PyRingMaster.cpp
 libRingPy_la_CPPFLAGS = -I@top_srcdir@/base/os @PYTHON_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@ @TCL_FLAGS@
 libRingPy_la_LDFLAGS  =   @PYTHON_LDFLAGS@ @builddir@/libDataFlow.la \
@@ -130,7 +131,7 @@ unittests_LDADD   = -L@prefix@/lib $(CPPUNIT_LDFLAGS) \
 
 unittests_LDFLAGS = @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@ -Wl,"-rpath-link=$(libdir)"
 
-unittests_CPPFLAGS=$(COMPILATION_FLAGS)
+unittests_CPPFLAGS=$(COMPILATION_FLAGS) -I@top_srcdir@/base/testutils
 
 producer_SOURCES	=	producer.cpp
 
@@ -157,11 +158,11 @@ EXTRA_DIST=ringprimitives.xml ringbuffer_user.xml ringbuffer_man.xml ringlib.xml
 
 #-------------- My installation... includes tcl scripts/packages.
 
-install-exec-local: 
+install-exec-hook:
 	$(INSTALL_SCRIPT) @srcdir@/RingMaster.tcl @bindir@/RingMaster
 	$(mkinstalldirs)  @prefix@/TclLibs
 	$(INSTALL_SCRIPT) @builddir@/.libs/libRingBuffer.* @prefix@/TclLibs
 	echo "pkg_mkIndex -verbose @prefix@/TclLibs *.so" | $(TCLSH_CMD)
 	$(mkinstalldirs)  @prefix@/pythonLibs/nscldaq/ringbuffer
-	$(INSTALL_PROGRAM) @libdir@/libRingPy.so @prefix@/pythonLibs/nscldaq/ringbuffer/ringmaster.so
-	touch              @prefix@/pythonLibs/nscldaq/ringbuffer/__init__.py
+	$(INSTALL_SCRIPT) @libdir@/libRingPy.so @prefix@/pythonLibs/nscldaq/ringbuffer/ringmaster.so
+	touch             @prefix@/pythonLibs/nscldaq/ringbuffer/__init__.py

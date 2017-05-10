@@ -28,8 +28,12 @@ using namespace std;
 
 struct DataBuffer;
 typedef struct _StringsBuffer StringsBuffer;
-class CRingBuffer;
+
 class CSystemControl;
+
+namespace DAQ {
+class CDataSink;
+}
 
 /*!
     This class bridges the gap between the buffer format of the
@@ -95,16 +99,16 @@ private:
 
   // other data:
 private:
-  unsigned int m_elapsedSeconds;   // Seconds into the run.
-  uint32_t    m_sequence;	   // Buffer sequence number.
-  uint32_t    m_outputBufferSize;  // Bytes in output buffers.
-  timespec      m_startTimestamp;    //!< Run start time.
-  timespec      m_lastStampedBuffer; //!< Seconds into run of last stamped buffer.
-  timespec      m_lastStatsMessage;
-  std::string m_ringName;
-  CRingBuffer* m_pRing;
-  uint64_t    m_nEventsSeen;
-  unsigned    m_nBuffersBeforeCount;
+  unsigned int    m_elapsedSeconds;   // Seconds into the run.
+  uint32_t        m_sequence;	   // Buffer sequence number.
+  uint32_t        m_outputBufferSize;  // Bytes in output buffers.
+  timespec        m_startTimestamp;    //!< Run start time.
+  timespec        m_lastStampedBuffer; //!< Seconds into run of last stamped buffer.
+  timespec        m_lastStatsMessage;
+  std::string     m_ringName;
+  DAQ::CDataSink* m_pRing;             ///< sink to write data
+  uint64_t        m_nEventsSeen;
+  unsigned        m_nBuffersBeforeCount;
   
   // Event assembly buffer:
 
@@ -169,6 +173,7 @@ private:
   uint8_t* newOutputBuffer();
   void outputTriggerCount(uint32_t runOffset);
 
+  std::string createRingURL(const std::string& name);
 };
 
 #endif

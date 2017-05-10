@@ -15,7 +15,6 @@
 
 #  This application requires epics:
 
-if EPICS
 LIBDIR=@prefix@/TclLibs
 
 bin_PROGRAMS        = controlpush
@@ -70,7 +69,7 @@ unittests_SOURCES = TestRunner.cpp ChannelListTests.cpp  \
 		$(APPITEMS)
 
 unittests_LDADD = $(CPPUNIT_LDFLAGS) $(controlpush_LDADD)
-unittests_CPPFLAGS=$(COMPILATION_FLAGS)
+unittests_CPPFLAGS=$(COMPILATION_FLAGS) -I@top_srcdir@/base/testutils
 
 
 #
@@ -81,5 +80,3 @@ unittests_CPPFLAGS=$(COMPILATION_FLAGS)
 
 clean-local:
 	rm -f cmdline.c rmcline.h
-
-endif
