@@ -52,11 +52,8 @@ private:
   size_t                m_itemCount;   // Number of items to dump before exiting (0 means infinite).
   std::vector<uint16_t> m_sampleTypes; // Items that should be sampled only (ring buffers).
   std::vector<uint16_t> m_excludeTypes; // Items that should not be dumped at all.
-<<<<<<< HEAD
   int                   m_scalerWidth;
-=======
   bool                  m_stamp;        // True to timestamp entries.
->>>>>>> Feature #6960 - Added --tod option to dumper
 
   // Canonicals... no need for copy construction etc.
   //

@@ -278,7 +278,7 @@ BufdumpMain::processItem(const CRawRingItem& item)
     time_t now = time(nullptr);
     cout << ctime(&now) << std::endl;
   }
-  CRingItem* pActualItem = CRingItemFactory::createRingItem(item);
+  
   cout << pActualItem->toString();
 
 }
