@@ -125,8 +125,10 @@ CCCUSBHighLevelController::initializeController()
     //  - 4k buffer.
     //  - single event separator word.
     //  - single header word:
-    
+    //  - Latch triggers during a scaler read. (Bug #6979)
+    //
     m_pController->writeGlobalMode(
+        (CCCUSB::GlobalModeRegister::latchTrigger)  |
         (CCCUSB::GlobalModeRegister::bufferLen4K <<
             CCCUSB::GlobalModeRegister::bufferLenShift)
     );

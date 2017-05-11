@@ -468,7 +468,7 @@ public:
     static const uint16_t bufferLen128     = 5;
     static const uint16_t bufferLen64      = 6;
     static const uint16_t bufferLenSingle  = 7;
-    
+    static const uint16_t latchTrigger     = 0x10;   // Latch trigger during scaler read.
     static const uint16_t mixedBuffers     = 0x20;
     
     static const uint16_t doubleHeader     = 0x100;
