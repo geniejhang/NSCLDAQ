@@ -46,14 +46,14 @@ tcltest::test addSource-0 {Ability to add a ring fragment source
 
   lappend resList [set ::RingSourceMgr::sourceDict]
 
-  ::RingSourceMgr::addSource tcp://thesrc/ring lib 43 asdf 1
+  ::RingSourceMgr::addSource tcp://thesrc/ring 43 asdf
 
   lappend resList [set ::RingSourceMgr::sourceDict]
 
   set ::RingSourceMgr::sourceDict [dict create]
 
   set resList
-} {{} {tcp://thesrc/ring {tstamplib lib id 43 info asdf expecthdrs 1 oneshot {} timeout {} offset 0 fd {}}}}
+} {{} {tcp://thesrc/ring {id 43 info asdf oneshot {} timeout {} offset 0 fd {}}}}
 
 
 #
@@ -74,15 +74,15 @@ tcltest::test transition-0 {Transition from halted to active starts sources
   set body0 [info body ::RingSourceMgr::startSource]
   set ::opList [list]
 
-  proc ::RingSourceMgr::startSource {src lib id info hdr one time} {
-    lappend ::opList [list $src $lib $id $info $hdr $one $time]
+  proc ::RingSourceMgr::startSource {src id info {one ""} {time ""}} {
+    lappend ::opList [list $src $id $info $one $time]
 
   }
 
 
-  ::RingSourceMgr::addSource a b c d e
-  ::RingSourceMgr::addSource f g h i j
-  ::RingSourceMgr::addSource k l m n o
+  ::RingSourceMgr::addSource a b c
+  ::RingSourceMgr::addSource f g h
+  ::RingSourceMgr::addSource k l m
 
   RunstateMachine sm
   sm addCalloutBundle ::RingSourceMgr
@@ -92,14 +92,13 @@ tcltest::test transition-0 {Transition from halted to active starts sources
 
   sm destroy
 
-  proc ::RingSourceMgr::startSource {src lib id {info ""} {hdr ""} {one ""} {time ""}} $body0
-
+  proc ::RingSourceMgr::startSource {src id {info ""} {one ""} {time ""}} $body0
 
   ::RingSourceMgr::clearSources
 
   set ::opList
 
-} {{a b c d e {} {}} {f g h i j {} {}} {k l m n o {} {}}}
+} {{a b c {} {}} {f g h {} {}} {k l m {} {}}}
 
 
 
@@ -110,12 +109,12 @@ tcltest::test multipleTransitions-0 {Only first transition should start a source
   set body0 [info body ::RingSourceMgr::startSource]
   set ::opList [list]
 
-  proc ::RingSourceMgr::startSource {src lib id info hdr one time} {
-    lappend ::opList [list $src $lib $id $info $hdr $one $time]
+  proc ::RingSourceMgr::startSource {src id info one time} {
+    lappend ::opList [list $src $id $info $one $time]
     return "chan1"
   }
 
-  ::RingSourceMgr::addSource a b c d e
+  ::RingSourceMgr::addSource a b c
 
   RunstateMachine sm
   sm addCalloutBundle ::RingSourceMgr
@@ -136,13 +135,13 @@ tcltest::test multipleTransitions-0 {Only first transition should start a source
 
   sm destroy
 
-  proc ::RingSourceMgr::startSource {src lib id {info ""} {hdr ""} {one ""} {time ""}} $body0
+  proc ::RingSourceMgr::startSource {src id {info ""} {one ""} {time ""}} $body0
 
   ::RingSourceMgr::clearSources
 
   set ::opList
 
-} {{a b c d e {} {}}}
+} {{a b c {} {}}}
 
 
 
@@ -152,12 +151,12 @@ tcltest::test multipleTransitions-1 {Transition to NotReady resets for next tran
 } {
   set body0 [info body ::RingSourceMgr::startSource]
   set ::opList [list]
-  proc ::RingSourceMgr::startSource {src lib id info hdr one time} {
-    lappend ::opList [list $src $lib $id $info $hdr $one $time]
+  proc ::RingSourceMgr::startSource {src id info one time} {
+    lappend ::opList [list $src $id $info $one $time]
     return "chan1"
   }
 
-  ::RingSourceMgr::addSource a b c d e
+  ::RingSourceMgr::addSource a b c
 
   RunstateMachine sm
   sm addCalloutBundle ::RingSourceMgr
@@ -180,36 +179,15 @@ tcltest::test multipleTransitions-1 {Transition to NotReady resets for next tran
   sm transition Active
 
   sm destroy
-  proc ::RingSourceMgr::startSource {src lib id {info ""} {hdr ""} {one ""} {time ""}} $body0
+  proc ::RingSourceMgr::startSource {src id {info ""} {one ""} {time ""}} $body0
 
   ::RingSourceMgr::clearSources
 
   set ::opList
 
-} {{a b c d e {} {}} {a b c d e {} {}}}
+} {{a b c {} {}} {a b c {} {}}}
 
 
-#
-#
-tcltest::test ringsource-0 {Test that expect body headers 0 does not add anything to switches
-} -body {
-   # this calls the switches
-   set switches [::RingSourceMgr::_computeRingSourceSwitches a b c d e 0  0  0 0]
-
-
-   string match "*--expectbodyheaders*" $switches 
-} -result 0 
-
-#
-#
-tcltest::test ringsource-1 {Test that expect body headers 1 does not add anything to switches
-} -body {
-   # this calls the switches
-   set switches [::RingSourceMgr::_computeRingSourceSwitches a b c d e 1 0 0 0]
-
-
-   string match "*--expectbodyheaders*" $switches 
-} -result 1 
 
 #
 #

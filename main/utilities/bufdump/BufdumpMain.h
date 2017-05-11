@@ -53,6 +53,7 @@ private:
   std::vector<uint16_t> m_sampleTypes; // Items that should be sampled only (ring buffers).
   std::vector<uint16_t> m_excludeTypes; // Items that should not be dumped at all.
   int                   m_scalerWidth;
+  bool                  m_stamp;        // True to timestamp entries.
 
   // Canonicals... no need for copy construction etc.
   //

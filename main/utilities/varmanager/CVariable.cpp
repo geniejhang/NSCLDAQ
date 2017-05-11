@@ -228,8 +228,9 @@ void
 CVariable::destroy(CVariable* pVar, bool doDelete)
 {
     int id = pVar->m_myId;
-    if (doDelete) delete pVar;
     destroy(pVar->m_db, id);
+    if (doDelete) delete pVar;
+    
     
     
 }

@@ -3498,7 +3498,7 @@ public:
     </methodsynopsis>  
     <methodsynopsis>
         <modifier></modifier>
-        <type>zmq::socket_t* </type>
+        <type>ZmqSocket& </type>
         <methodname>socket</methodname>
         <void />
         <modifier></modifier>
@@ -3734,7 +3734,7 @@ public:
             <term>
                 <methodsynopsis>
                     <modifier></modifier>
-                    <type>zmq::socket_t* </type>
+                    <type>ZmqSocket& </type>
                     <methodname>socket</methodname>
                     <void />
                     <modifier></modifier>
@@ -3742,11 +3742,16 @@ public:
             </term>
             <listitem>
                 <para>
-                    Returns a pointer to the underlying ZMQ socket object
+                    Returns a reference to the underlying
+                    <classname>ZmqSocket</classname>
                     that is connected to the publish/subscribe service.
                     This is intended to allow the
                     zmq <methodname>poll</methodname> function to be
                     called with sockets from this and other ZMQ connections.
+                    Note that <classname>ZmqSocket</classname> is a pointer-like
+                    object that encapsulates a <classname>zmq::socket_t</classname>*
+                    and can, in most cases, be used as if it were a
+                    <classname>zmq::socket_t</classname>*
                 </para>
                 <para>
                     For simplicity, actually reading or checking for readability
@@ -4018,7 +4023,7 @@ if (waitmsg(milliseconds)) {
             <listitem>
                 <para>
                     If necessary blocks until a message can be read.  The message
-                    is read from the underlying <classname>zmq::socket_t</classname>
+                    is read from the underlying <classname>ZmqSocket</classname>
                     object and processed into a <classname>CVarMgrSubscriptions::Message</classname>
                     type which is returned.
                 </para>

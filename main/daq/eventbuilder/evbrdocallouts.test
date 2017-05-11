@@ -26,18 +26,23 @@ if {[catch {
 tcltest::test rdo11-0 {test computeLoggerSwitches uses EVBC destRing} -setup {
       # set RINGNAME to something
       array set env [list RINGNAME elephant]
+      EVBC::AppOptions opts
 
       # choose to use the dest ring
-      set EVBC::setsEvtlogSource true
+      opts configure -setdestringasevtlogsource true
 
       # set destRing to something... 
-      EVBC::applicationOptions configure -destring hehehe
+      opts configure -destring hehehe
+
+} -cleanup {
+
+ opts destroy
 
 } -body {
    # this calls the switches
    set switches [::EventLog::_computeLoggerSwitches 11.0-rc12]
    return [lindex $switches 0] 
-} -result "--source=tcp://localhost/[$::EVBC::applicationOptions cget -destring]"
+} -result "--source=tcp://localhost/hehehe"
 
 tcltest::test rdo11-1 {test computeLoggerSwitches doesn't use EVBC destRing} -setup {
 
@@ -45,10 +50,15 @@ tcltest::test rdo11-1 {test computeLoggerSwitches doesn't use EVBC destRing} -se
       array set env [list RINGNAME elephant]
 
       # choose to use the dest ring
-      set EVBC::setsEvtlogSource false
+      EVBC::AppOptions opts
+      opts configure -setdestringasevtlogsource false 
 
       # set destRing to something... 
-      EVBC::applicationOptions configure -destring hehehe
+      opts configure -destring hehehe
+
+} -cleanup {
+
+ opts destroy
 
 } -body {
    # this calls the switches
@@ -81,20 +91,11 @@ tcltest::test getAppName-0 { Retrieve the name of the application for finding th
 
 tcltest::test registerRingSource-0 {
 } {
-  ::EVBC::registerRingSource a b c d e
+  ::EVBC::registerRingSource a b c
   set dict $::RingSourceMgr::sourceDict
   ::RingSourceMgr::clearSources
   set dict
-} {a {tstamplib b id c info d expecthdrs e oneshot {} timeout {} offset 0 fd {}}}
-
-tcltest::test registerS800Source-0 {
-} {
-  ::EVBC::registerS800Source a b c
-  set dict $::RingSourceMgr::sourceDict
-  ::RingSourceMgr::clearSources
-  set dict
-} [dict create a [dict create tstamplib [file join $::EVBC::daqtop lib libS800TimeExtractor.so]\
-                              id b info c expecthdrs 0 oneshot {} timeout {} offset 0 fd ""]]
+} {a {id b info c oneshot {} timeout {} offset 0 fd {}}}
 
 
 tcltest::cleanupTests

@@ -74,7 +74,7 @@ CStateTransitionMonitor::CStateTransitionMonitor(
       std::ofstream log(logfile, std::ios_base::trunc);          // New log file.
       log << "CStateTransitionMonitor logfile\n";
       log.flush();
-      std::ofstream logt(logthread, std::ios_base::trunc);
+      std::ofstream log(logthread, std::ios_base::trunc);
       logt << "CStateTransitinoMonitor thread\n";
       logt.flush();
     }

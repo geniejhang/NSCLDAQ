@@ -153,6 +153,19 @@ dumper <replaceable>?options?</replaceable>
                 </para>
             </listitem>
         </varlistentry>
+	<varlistentry>
+	  <term><option>--tod</option> </term>
+	  <listitem>
+	    <para>
+	      If this flag is present, each item will be output along with a
+	      time of day (e.g. from ctime(3).  This time is the time the item
+	      was processed by the dumper.  A such it's pretty worthless for
+	      looking at data from a file, but there are cases when looking at
+	      online data dumpe to a file that a time of day on events can
+	      be useful.
+	    </para>
+	  </listitem>
+	</varlistentry>
         <varlistentry>
             <term><option>--version</option></term>
             <listitem>

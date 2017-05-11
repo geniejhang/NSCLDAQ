@@ -5910,7 +5910,7 @@ sm.run()
           <type>void</type>
              <methodname>Register</methodname>
              <methodparam>
-                <type>zmq::socket_t&amp;</type> <parameter> sock</parameter>
+                <type>ZmqSocket&amp;</type> <parameter> sock</parameter>
              </methodparam>
              <methodparam>
                 <type>int</type> <parameter>mask</parameter>
@@ -5942,7 +5942,7 @@ sm.run()
                <type>void</type>
                <methodname>unregister</methodname>
                <methodparam>
-                <type>zmq::socket_t&amp;</type> <parameter>sock</parameter>
+                <type>ZmqSocket&amp;</type> <parameter>sock</parameter>
                </methodparam>
                <exceptionname></exceptionname>
                <modifier></modifier>
@@ -6014,7 +6014,7 @@ sm.run()
                    <type>void</type>
                       <methodname>Register</methodname>
                       <methodparam>
-                         <type>zmq::socket_t&amp;</type> <parameter> sock</parameter>
+                         <type>ZmqSocket&amp;</type> <parameter> sock</parameter>
                       </methodparam>
                       <methodparam>
                          <type>int</type> <parameter>mask</parameter>
@@ -6032,7 +6032,9 @@ sm.run()
                 <listitem>
                     <para>
                         Registers interest in one or more events on a
-                        ZeroMQ socket; <parameter>sock</parameter>.
+                        ZeroMQ socket; <parameter>sock</parameter>.  The socket
+                        must be creaed using
+                        <classname>ZmqObjectFactory</classname>::<methodname>createSocket()</methodname>.
                         <parameter>mask</parameter> defines which events
                         are of interest and is a bitwise or of the masks:
                         <literal>ZMQ_POLLIN</literal> and <literal>ZMQ_POLLOUT</literal>.
@@ -6090,7 +6092,7 @@ sm.run()
                         <type>void</type>
                         <methodname>unregister</methodname>
                         <methodparam>
-                         <type>zmq::socket_t&amp;</type> <parameter>sock</parameter>
+                         <type>ZmqSocket&amp;</type> <parameter>sock</parameter>
                         </methodparam>
                         <exceptionname></exceptionname>
                         <modifier></modifier>
@@ -6100,7 +6102,7 @@ sm.run()
                     <para>
                         Unregisters interest in events from the
                         <parameter>sock</parameter> ZeroMQ Socket.
-                        Once this is called, any callback establisedh on
+                        Once this is called, any callback established on
                         events from this socket are no longer delivered.
                     </para>
                 </listitem>
@@ -6490,11 +6492,22 @@ protected:
             </term>
             <listitem>
                 <para>
-                    Returns a pointer to the ZeroMQ context object that is
-                    used by the <classname>CStateMonitor</classname> to
-                    create <classname>zmq::socket_t</classname> objects.
-                    If you will create your own sockets, it is best to use
-                    this context rather than creating a new one.
+                    <emphasis>DEPRECATED</emphasis>.
+                    This method has been modifed to call
+                    <classname>ZmqObjectFactory</classname>::<methodname>getContextInstance</methodname>
+                    which retuns the application singleton ZMQ context.
+                    While this can be used to directly create
+                    <classname>zmq::socket_t</classname> objects the recommended
+                    proceure for creating a Zmq socket is to invoke
+                    <classname>ZmqObjectFactory::createSocket</classname>
+                    (see <filename>nsclzmq.h</filename>).
+                </para>
+                <para>
+                    The resulting <classname>ZmqSocket</classname> is a
+                    pointer-like object that can be used as if it were a
+                    <classname>zmq::socket_t</classname>* but is also
+                    guaranteed to shutdown properly at application exit if
+                    it's not been destructed.
                 </para>
             </listitem>
         </varlistentry>

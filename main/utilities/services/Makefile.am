@@ -9,6 +9,7 @@ libServices_la_CPPFLAGS= @SQLITE3_CFLAGS@ -I@top_srcdir@/base/factories \
 libServices_la_LDFLAGS= @top_builddir@/utilities/varmanager/server/libvarmgr.la \
 	@top_builddir@/utilities/varmanager/libvardb.la \
 	@top_builddir@/base/sqlite++/libsqlite3pp.la 	\
+	@top_builddir@/base/os/libdaqshm.la             \
 	@SQLITE3_LDFLAGS@
 
 

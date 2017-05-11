@@ -1,745 +1,2486 @@
 <!-- chapter utilities -->
 
 <chapter id='chap.expconfig'>
-  <title id='chap.expconfig.title'>Experiment configuration editor </title>
+  <title id='chap.expconfig.title'>Graphically configuring an experiment's dataflow. </title>
   <para>
-    The experiment configuration editor is a tool that simplifies the description
-    of the software components of experiments with complex data flows.  Using
-    this system may be overkill for simple experiments involving a single readout.
-    Using the experiment configuration editor, you can visually lay out the
-    data flow and components that are state sensitive along the data flow paths.
+    NSCLDAQ-12.0 features an graphical tool that allows you to describe the
+    elements of an experiment's dataflow.   This chapter:
+    <itemizedlist>
+      <listitem>
+        <para>
+          The basic theory behind this system and its components.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          How to use the experiment editor to define your experiment graphically.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          How to boot and control your experiment
+        </para>
+      </listitem>
+    </itemizedlist>
   </para>
   <para>
-    The output of the experiment configuration editor (expEditor) is a variable
-    database the describes the executable and static components of the system.
-    The boot manager can take this database filea s input and instantiate all
-    of the system components and monitor their execution.  Entities described
-    by expEditor are considered critical.  If they exit, the boot manager
-    will declare a transition to <literal>NotReady</literal> which will
-    all all system components.
+    In this chapter, we make the assumption that all systems involved in an
+    experiment:
   </para>
+  <itemizedlist>
+    <listitem>
+      <para>
+        Share a common file system.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Have SSH configured for the experiment so that passwords are not
+        needed to login to remote systems involved in the experiment from
+        a system involved in the experiment.
+      </para>
+    </listitem>
+    <listitem>
+      <para>
+        Have setup your bash initialization script (e.g. <filename>~/.bashrc</filename>)
+        to source the nscldaq environment setup script (<filename>daqsetup.bash</filename>)
+        for a version 12.0 or higher release of NSCLDAQ.
+      </para>
+    </listitem>
+  </itemizedlist>
+    <para>
+      The first of these pre-requisites is normally met by serving out experiment
+      account home directory trees via NFS from some centralized server.
+      The second is met by setting up login user keys and adding them to the
+      <filename>.ssh/autorized_keys</filename> file. How to do this, given
+      shared home directories is described here.
+    </para>
+      <procedure>
+        <title>Setting up ssh logins without passwords</title>
+        <step>
+          <cmdsynopsis>
+            <command>
+  cd ~/.ssh
+            </command>
+          </cmdsynopsis>
+        </step>
+        <step>
+          <cmdsynopsis>
+            <command>
+  ssh-keygen -t rsa          # hit enter for each of the prompts.            
+            </command>
+          </cmdsynopsis>
+        </step>
+        <step>
+          <cmdsynopsis>
+            <command>
+  cat id_rsa.pub >> authorized_keys
+            </command>
+          </cmdsynopsis>
+        </step>
+        <step>
+          <cmdsynopsis>
+            <command>
+  chmod 600 authorized_keys id_rsa
+            </command>
+          </cmdsynopsis>
+        </step>
+      </procedure>
   <para>
-    This chapter describes how to use the expEditor.  Command examples will
-    assume that the <filename>daqsetup.bash</filename> file for the data
-    acquisition system version you are using has been sourced into
-    your shell.  The expEditor component is available in NSCLDAQ 11.2 and later.
+    This procedure creates public and private rsa keys.  The public key is added
+    to the <filename>authorized_keys</filename> file. The private key is used
+    by ssh to negotiate the login.  If there's a matching public key in
+    <filename>authorized_keys</filename> no password is required.
   </para>
   <section>
-    <title>Starting the expEditor.</title>
+    <title>How this all works.</title>
     <para>
-      There are two ways to run the expEditor:
+      The system relies on several components:
     </para>
-    <informalexample>
-      <programlisting>
-$DAQBIN/expEditor
-      </programlisting>
-    </informalexample>
+    <orderedlist>
+      <listitem>
+        <para>
+          A database definition that can describe the components of the
+          experiment and how the hang together.  This database is an SQLite database
+          that lives in a single file.
+        </para>
+        <para>
+          The database schema sets up a typed, hierarchical variable store.  You can
+          think of it as organized as a hierarchy of directories where each
+          directory can contain additional directories or variables.  Variables
+          have strict data types.
+        </para>
+        <para>
+          The directory structure of the database is used by the system.  You
+          can think of some directories as storing a set of variables that
+          describe some component of the experiment (for example a Readout program).
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A graphical experiment editor allows you to layout the dataflow of the
+          system, and programs that are sources and sinks of data flows without
+          any need to know how variables represented by the database are used.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          One variable type is a <firstterm>state machine</firstterm> you can
+          think of this as an enumerated type where the next value the variable
+          is allowed to take is constrained by its current value.  State machines
+          are used to describe the parts of the system that are actively involved in
+          run state transitions (for example programs that must do something
+          when a run begins).
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A variable database server provides for serialized changes to the
+          database by multiple clients.  It also layers a publish/subscribe
+          system on top of the database which allows programs to express
+          interest in changes to values in subdirectory trees of the database.
+        </para>
+        <para>
+          The allocation of this server to a host is done by the graphical
+          experiment editor.  This server is an example of a
+          <firstterm>experiment service</firstterm>.  Experiment services are
+          programs that are required for the experiment to work but don't
+          participate in the dataflow.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A boot server can bring up and shutdown the ring buffers and
+          process elements of the experiment as defined by the experiment database.
+          The boot server is an experiment service.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A status injector aggregates status messages from elements of the
+          system into a single sqlite database from which they can be observed
+          by viewers.  The status injector is considered an experiment service.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A simple control panel can be run by the user as a client to the
+          variable database server.  It is notified of changes to the database
+          element that are displayed and controlled by the panel.  It also
+          can instruct the boot server to bring up or take down the experiment.
+          When the experiment has been booted, it can instruct the system
+          to make state transitions (start data taking runs for example).
+        </para>
+      </listitem>
+    </orderedlist>
     <para>
-      This form of invocation does not connect the program with any existing
-      database file.  The <guimenu>File</guimenu><guimenuitem>Save</guimenuitem>
-      menu command connects the editor to a database and saves the current
-      configuration to that database file.  The 
-      <guimenu>File</guimenu><guimenuitem>Restore...</guimenuitem> connects the
-      editor to a file, reads in the configuration from that file replacing
-      any existing configuration.
-    </para>
-    <para>
-      You may also start the expEditor:
-    </para>
-    <informalexample>
-      <cmdsynopsis><command>
-$DAQBIN/expEditor <replaceable>database-filename</replaceable>  
-      </command></cmdsynopsis>
-    </informalexample>
-    <para>
-      This form of the command connects the editor to a database file;
-      <replaceable>database-filename</replaceable>and
-      reads the configuration from that file.  Note that
-      <replaceable>database-filename</replaceable> is a filesystem path,
-      not a URI.
-      When invoked in that way,
-      <guimenu>File</guimenu><guimenuitem>Save</guimenuitem> saves the configuration
-      to <replaceable>database-file</replaceable> without prompting for the name
-      of the save file.  <guimenu>File</guimenu><guimenuitem>Restore...</guimenuitem>
-      Connects the editor to the new file, replacing the configuration with
-      the configuration in that file.
-    </para>
-    <para>
-      In either case, if you use the <guimenu>File</guimenu><guimenuitem>Exit</guimenuitem>
-      menu command after changes to the configuration have been made you'll be
-      prompted to save the state.
+      Running an experiment, given the software has been prepared is just a matter of
+      using the graphical editor to describe the experiment, running the service
+      manager (which will start all of the experiment services), and finally
+      using the control panel to boot the system and run it through the desired
+      set of state transitions.
     </para>
   </section>
   <section>
-    <title>
-      Components of the editor.
-    </title>
+    <title>Defining the dataflow graphically</title>
     <para>
-      The figure below shows what the editor looks like.
+      The NSCLDAQ tool <filename>expEditor</filename> allows you to create, edit,
+      and validate an experiment setup.    This section describes:
     </para>
-    <figure>
-      <title>The experiment editor</title>
-      <mediaobject>
-         <imageobject>
-          <imagedata fileref='expEditorinitial.jpg' format='JPEG' />
-        </imageobject>
-      </mediaobject>
-    </figure>
-    <para>
-      At the top of the window is the menu.  In the previous section, we've
-      already described the contents of the <guimenu>File</guimenu> menu.
-      The <guimenu>File</guimenu> menu also has an
-      <guimenu>File</guimenu><guimenuitem>Exit...</guimenuitem>.
-      The <guimenu>View</guimenu> menu has the command
-      <guimenu>View</guimenu><guimenuitem>Validation...</guimenuitem>
-      which performs several validation and consistency checks on your
-      configuration and reports potential problems to you.
-    </para>
-    <para>
-      At the left of the window is a toolbox of items you can add to the configuration.
-      A configuration item is added by double clicking it.  When double clicked,
-      the item appears at the left end of the editing window and can then
-      be dragged to the desired position on the editor canvas.
-    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          How to invoke <filename>expEditor</filename>
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          How to use the <filename>expEditor</filename> to create and modify
+          an existing experiment configuration.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          How to use the <filename>expEditor</filename> to validate an experiment
+          configuration and ensure that your configuration is valid.
+        </para>
+      </listitem>
+    </itemizedlist>
     <section>
-      <title>Toolbox items</title>
+      <title>Invoking the <filename>expEditor</filename> application</title>
       <para>
-        This section describes the objects.s in the toolbar, what they represent and
-        the properties associated with them.  The next section describes how to
-        modify the properties of an object.
+        Invoke the experiment editor with the following command:
+      </para>
+      <informalexample>
+        <cmdsynopsis>
+          <command>
+$DAQBIN/expEditor <optional><replaceable>config-file-name</replaceable></optional>
+          </command>
+        </cmdsynopsis>
+      </informalexample>
+      <para>
+        If <optional><replaceable>config-file-name</replaceable></optional> is
+        supplied, this will be the name of the experiment configuration.  If
+        this configuration file does not exist, it will be created.  If it does
+        exist, any experiment configuration will be loaded into the editor.
+        Saving the configuration will overwrite the filename.
+      </para>
+      <para>
+        If <optional><replaceable>config-file-name</replaceable></optional> is
+        not supplied, a new configuration is created, and you will be prompted
+        for a file when you attempt to save the configuration. 
+      </para>
+      <para>
+        To start from an existing configuration to create a new configuration,
+        simply copy the old configuration to a new file and specify that on
+        the command line.  You can also start from an existing configuration by
+        not specifying a configuration on the command line, restoring an old
+        configuration and then doing a save.  You'll be prompted for a new
+        file at that point.
+      </para>
+      <figure id='expeditor_fig_emtpyEditor'>
+        <title>Parts of the experiment editor</title>
+        <graphic format='PNG' fileref='doc-emptyEditor.png' />
+      </figure>
+      <para>
+        <link linkend='expeditor_fig_emtpyEditor'>the figure above</link> shows
+        the experiment editor with its three primary areas labeled.  These areas
+        are described below.  The next subsection will cover the operation of the
+        editor in much greater detail.
       </para>
       <variablelist>
         <varlistentry>
-            <term>
-              Ring buffer: 
-                <inlinemediaobject>
-                   <imageobject>
-                    <imagedata fileref='ringbuffer.png' format='PNG' />
-                  </imageobject>
-                </inlinemediaobject>
-            </term>
-            <listitem>
-                <para>
-                  Ring buffers represent the primary data flow mechanism of NSCLDAQ.
-                  Ring buffers have a host, the system in which they are created,
-                  and a name.  NSCLDAQ allows remote access to ring buffers from
-                  systems other than their host.
-                </para>
-            </listitem>
+          <term><firstterm>Menu Bar</firstterm></term>
+          <listitem>
+            <para>
+              The Menu bar provides access to infrequently used commands.
+              The <menuchoice><guimenuitem>File</guimenuitem></menuchoice> menu provides file manipulation
+              commands that allow you to restore an existing setup, save this
+              setup and exit the program.
+            </para>
+            <para>
+              The <menuchoice><guimenuitem>View</guimenuitem></menuchoice> menu entry provides access to the
+              validation subsystem allowing you to view detectable problems in
+              the configuration that may cause the experiment to fail to boot.
+            </para>
+            <para>
+              The <menuchoice><guimenuitem>Help</guimenuitem></menuchoice> menu provides access to information
+              about the program.  Currently this is limited to the program
+              version. At a later time, online help may be added here.
+            </para>
+          </listitem>
         </varlistentry>
         <varlistentry>
-            <term>
-              State sensitive programs
-              <inlinemediaobject>
-                 <imageobject>
-                  <imagedata fileref='program.png' format='PNG' />
-                </imageobject>
-              </inlinemediaobject>
-            </term>
-            <listitem>
-                <para>
-                  State sensitive programs are programs that must react to
-                  changes in the state of the global state machine.  They must
-                  have their own local state machine and reflect global state
-                  transitions and local state transition in their own state
-                  machine.
-                </para>
-                <para>
-                  State sensitive programs have the following properties:
-                </para>
-                <variablelist>
-                  <varlistentry>
-                      <term><literal>name</literal></term>
-                      <listitem>
-                          <para>
-                            The name of the program as it is know to the
-                            variable data base.  This will be used to create a
-                            subdirectory by that name under <filename>RunState</filename>
-                            directory.  All of the properties and the state
-                            associated with the program will be stored in variables
-                            inside that subdirectory.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>enable</literal></term>
-                      <listitem>
-                          <para>
-                            This value defaults to
-                            <literal>true</literal>.  It indicates if the
-                            program is enabled or not.  Disabled programs
-                            are not expected to react to state changes in either
-                            their local or the global state machine.
-                          </para>
-                          <para>
-                            This flag allows you to temporarily switch off a program.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>standalone</literal></term>
-                      <listitem>
-                          <para>
-                            Defaults to <literal>false</literal>.   If
-                            <literal>true</literal>, the program should
-                            respond to changes in its local state machine
-                            rather than the global state machine.  This provides
-                            a mechanism to test a program independent of the
-                            entire system.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>path</literal></term>
-                      <listitem>
-                          <para>
-                            The directory path to the program or script
-                            to execute with the
-                            system starts up.   Note that the program starts up
-                            with current working directory set to the user's home
-                            directory, the environment variables defined in the
-                            users's <filename>.bashrc</filename> and the
-                            following environment names set by the boot manager:
-                          </para>
-                          <variablelist>
-                            <varlistentry>
-                                <term><literal>REQ_URI</literal></term>
-                                <listitem>
-                                    <para>
-                                      The request URI for the variable database
-                                      manager service.
-                                    </para>
-                                </listitem>
-                            </varlistentry>
-                            <varlistentry>
-                                <term><literal>SUB_URI</literal></term>
-                                <listitem>
-                                    <para>
-                                      The subscription URI for the variable
-                                      database manager service.
-                                    </para>
-                                </listitem>
-                            </varlistentry>
-                            <varlistentry>
-                                <term><literal>PROGRAM</literal></term>
-                                <listitem>
-                                    <para>
-                                      The value of the program property.  This
-                                      allows several instances of the same program
-                                      to know which has been started.  It is also
-                                      necessary for some of the API calls.
-                                    </para>
-                                </listitem>
-                            </varlistentry>
-                            <varlistentry>
-                                <term><literal>DAQROOT</literal></term>
-                                <listitem>
-                                    <para>
-                                      Points to the top level directory of the
-                                      version of NSCLDAQ being used.
-                                    </para>
-                                </listitem>
-                            </varlistentry>
-                            <varlistentry>
-                                <term><literal>DAQBIN</literal></term>
-                                <listitem>
-                                    <para>
-                                      Points to the <filename>bin</filename>
-                                      directory of the version of NSCLDAQ
-                                      being run.
-                                    </para>
-                                </listitem>
-                            </varlistentry>
-                            <varlistentry>
-                                <term><literal>DAQLIB</literal></term>
-                                <listitem>
-                                    <para>
-                                      Points to the <filename>lib</filename>
-                                      directory of the version of
-                                      NSCLDAQ being run.
-                                    </para>
-                                </listitem>
-                            </varlistentry>
-                            <varlistentry>
-                                <term><literal>PYTHONPATH</literal></term>
-                                <listitem>
-                                    <para>
-                                      Path to Python libraries that includes
-                                      the path to the python libraries
-                                      for the current version of NSCLDAQ.
-                                    </para>
-                                </listitem>
-                            </varlistentry>
-                            <varlistentry>
-                                <term><literal>OUTRING</literal></term>
-                                <listitem>
-                                    <para>
-                                      If the program is a source of data
-                                      (e.g. a Readout program, or a filter),
-                                      this specifies the name (not URI) of the
-                                      ring into which to place data.
-                                    </para>
-                                </listitem>
-                            </varlistentry>
-                            <varlistentry>
-                                <term><literal>INRING</literal></term>
-                                <listitem>
-                                    <para>
-                                      If the program is a sink of data
-                                      (e.g. eventlog or a filter), this
-                                      specifies the URI of the ring from which
-                                      to take data.
-                                    </para>
-                                </listitem>
-                            </varlistentry>
-                          </variablelist>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>host</literal></term>
-                      <listitem>
-                          <para>
-                            The host in which the program will be run.
-                            Note that this can be changed or if the program
-                            gets connected to an output ring.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>Input Ring</literal></term>
-                      <listitem>
-                          <para>
-                            The program's input ring.  This cannot be manually
-                            set.  Set this property by drawing a dataflow from
-                            a ring buffer object to the program.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>Output Ring</literal></term>
-                      <listitem>
-                          <para>
-                            The program's output ring.  This cannot be manually
-                            set.  Set this property by drawing a dataflow
-                            from this program to a ring buffer object.
-                          </para>
-                          <para>
-                            Note that since a producer for a ring buffer must
-                            run in the same host that the ring buffer lives in,
-                            doing this will force the <literal>host</literal>
-                            property to be the ring buffer's host and disable
-                            editing of that property as long as the
-                            ring buffer remains the program's output ring.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                </variablelist>
-            </listitem>
+          <term><firstterm>Editing Area</firstterm></term>
+          <listitem>
+            <para>
+              The Editing area is where the picture of the experiment and its
+              data flows are displated and modified.  Editing is done by
+              dropping items onto this canvas and connecting them together
+              with arrows indicating data flow.  The editing area will stretch or
+              shrink if you stratch or shrink the editor window.
+            </para>
+          </listitem>
         </varlistentry>
         <varlistentry>
-            <term>
-                Data source
-                <inlinemediaobject>
-                   <imageobject>
-                    <imagedata fileref='dsource.png' format='PNG' />
-                  </imageobject>
-                </inlinemediaobject>
-            </term>
-            <listitem>
-                <para>
-                  A data source provides a stream of event fragments to an
-                  event builder.  It normally connects from a ring buffer
-                  object to an event builder object.  It has the following properties:
-                </para>
-                <variablelist>
-                  <varlistentry>
-                      <term><literal>name</literal></term>
-                      <listitem>
-                          <para>
-                            The name of the data source.  This becomes the
-                            directory name of the database variables that
-                            capture the program's persistent state.   These
-                            directories are located inside the
-                            <filename>/EventBuilder</filename> directory.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>host</literal></term>
-                      <listitem>
-                          <para>
-                            The host in which the data source runs.  This need
-                            not be in either the system that has the data source
-                            ring buffer nor the system running the event builder.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>path</literal></term>
-                      <listitem>
-                          <para>
-                            Path to the data source.  This defaults to the
-                            ring fragment source for the current version of
-                            NSCLDAQ.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>info</literal></term>
-                      <listitem>
-                          <para>
-                            A string that is passed to the event builder at
-                            when the data source connects.  This string is
-                            supplied to allow you to document the purpose of the
-                            data source.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>ids</literal></term>
-                      <listitem>
-                          <para>
-                            A space separated list of the integer data source
-                            ids for which this program will send fragments to the
-                            event builder.  The event builder will be unhappy if
-                            the data  source sends data tagged with other data
-                            sources to it.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>ring</literal></term>
-                      <listitem>
-                          <para>
-                            The URI of the ring buffer from which the source
-                            is taking data.  This cannot be entered manually
-                            but should be set by connecting a ring buffer to
-                            the data source.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                        <term><literal>defaultId</literal></term>
-                          <listitem>
-                              <para>
-                                NSCLDAQ 11.x has a mechanism to interact with
-                                NSCLDAQ 10.x data.  Specifically ring items can
-                                have  a body header which contains the event
-                                fragemnt's timestamp and source id, or they
-                                may have an empty body header in which case this
-                                information must be derived somehow.  
-                              </para>
-                              <para>
-                                The <literal>defaultId</literal> is the source id
-                                that will be supplied for ring items that don't
-                                have body headers.  It defaults to <literal>0</literal>.
-                                Ring items with body headers will get the source
-                                id that is in their body header.
-                              </para>
-                          </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term><literal>timestampExtractor</literal></term>
-                        <listitem>
-                            <para>
-                              See <literal>defaultId</literal> above for a
-                              descsription of body headers and their purpose.
-                              The <literal>timestampExtractor</literal>
-                              value should be a filesystem path to a shared
-                              object library that knows how to extract
-                              timestamps from ringitems that don't have body
-                              headers.
-                            </para>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term><literal>expectBodyHeaders</literal></term>
-                        <listitem>
-                            <para>
-                              Default is <literal>true</literal>.  When
-                              <literal>true</literal> the ringFragmentSource
-                              expects that all ring items will have body headers
-                              and will signal an error if it comes across items
-                              that don't.
-                            </para>
-                            <para>
-                              If this is <literal>true</literal>, the
-                              <literal>defaultId</literal> and
-                              <literal>timestampExtractor</literal>
-                              parameters can be left empty.  If
-                              <literal>false</literal> it is an error
-                              to leave either of these blank.
-                            </para>
-                        </listitem>
-                    </varlistentry>
-                    <varlistentry>
-                        <term>
-                          Event Builder
-                            <inlinemediaobject>
-                               <imageobject>
-                                <imagedata fileref='eventBuilder.png' format='PNG' />
-                              </imageobject>
-                               
-                            </inlinemediaobject>
-                        </term>
-                        <listitem>
-                            <para>
-                              An event builder receives time stamped event fragments
-                              from one or more data sources and glues them together
-                              into events.  An event is a set of fragments that
-                              have timestamps within some fixed
-                              coincidence interval of a first fragment.
-                            </para>
-                            <para>
-                              Event builders are described in the
-                              <literal>/EventBuilder</literal> directory
-                              of the the variable database.   Event builders
-                              have the following properties:
-                            </para>
-                            <variablelist>
-                              <varlistentry>
-                                  <term><literal>name</literal></term>
-                                  <listitem>
-                                      <para>
-                                        The name of the event builder. This
-                                        becomes a subdirectory inside the
-                                        <filename>/EventBuilder</filename>
-                                        directory of the variable database.
-                                        Furthermore,  event builders that
-                                        feed data to this event builder
-                                        will be located in subdirectories
-                                        below the event builder's.
-                                      </para>
-                                  </listitem>
-                              </varlistentry>
-                              <varlistentry>
-                                  <term><literal>host</literal></term>
-                                  <listitem>
-                                      <para>
-                                        The host in which the event builder
-                                        will be run.
-                                      </para>
-                                  </listitem>
-                              </varlistentry>
-                              <varlistentry>
-                                  <term><literal>servicePrefix</literal></term>
-                                  <listitem>
-                                      <para>
-                                        Defaults to <literal>ORDERER</literal>
-                                      </para>
-                                      <para>
-                                        The event builder advertises itself with
-                                        the NSLDAQ port manager application.
-                                        That application provides named services,
-                                        qualified with a username, with TCP/IP
-                                        ports.
-                                      </para>
-                                      <para>
-                                        The service name the event builder uses
-                                        is of the form
-                                        <replaceable>prefix:username:suffix</replaceable>
-                                        where <replaceable>prefix</replaceable>
-                                        is the value of this property,
-                                        <replaceable>username</replaceable>is
-                                         the name of the user that is running
-                                         the event builder and
-                                         <replaceable>suffix</replaceable>
-                                         is a settable service suffix value.
-                                      </para>
-                                  </listitem>
-                              </varlistentry>
-                              <varlistentry>
-                                  <term><literal>serviceSuffix</literal></term>
-                                  <listitem>
-                                      <para>
-                                        Defaults to empty.  Provides the service
-                                        suffix of the event builder's port.
-                                        If blank a unique numeric value will
-                                        be chosen at run time (specifically
-                                        the unix timestamp at startup).
-                                      </para>
-                                  </listitem>
-                              </varlistentry>
-                              <varlistentry>
-                                  <term><literal>coincidenceInterval</literal></term>
-                                  <listitem>
-                                      <para>
-                                        The conicidence interval for event building.
-                                        All event fragments that are within this
-                                        number of timestamp ticks of a first fragment
-                                        are included in an event.  Note that it is
-                                        possible for there to be multiple fragments
-                                        from a single data source.  The meaning
-                                        of that depends on the experiment.
-                                      </para>
-                                  </listitem>
-                              </varlistentry>
-                              <varlistentry>
-                                  <term><literal>build</literal></term>
-                                  <listitem>
-                                      <para>
-                                        Defaults to <literal>true</literal>. If
-                                        <literal>true</literal>, event building is
-                                        performed.   If <literal>false</literal>,
-                                        the system only produces a list fragments
-                                        that are totally ordered over all data
-                                        sources.
-                                      </para>
-                                  </listitem>
-                              </varlistentry>
-                              <varlistentry>
-                                  <term><literal>timestampPolicy</literal></term>
-                                  <listitem>
-                                      <para>
-                                        Only relevant when <literal>build</literal>
-                                        is <literal>true</literal>.
-                                        Built events are assigned a new timestamp
-                                        in accordance with the policy selected by
-                                        this property.  Valid values are:
-                                        <literal>earliest</literal> (the default),
-                                        <literal>latest</literal>, <literal>average</literal>
-                                      </para>
-                                  </listitem>
-                              </varlistentry>
-                            </variablelist>
-                        </listitem>
-                    </varlistentry>
-                </variablelist>
-            </listitem>
-        </varlistentry>
-        <varlistentry>
-            <term>
-              System Programs
-                <inlinemediaobject>
-                   <imageobject>
-                    <imagedata fileref='sysprogram.png' format='PNG' />
-                  </imageobject>
-                </inlinemediaobject>
-            </term>
-            <listitem>
-                <para>
-                  System programs are programs that are an indispensible part of
-                  the system but do not participate in the data flow.  One example
-                  of a system program is the variable database server.
-                </para>
-                <para>
-                  System programs have the following properties:
-                </para>
-                <variablelist>
-                  <varlistentry>
-                      <term><literal>name</literal></term>
-                      <listitem>
-                          <para>
-                            Name of the system program.  This will be the
-                            subdirectory name under
-                            <filename>/Services</filename> that will hold the
-                            persistent state of the program.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>host</literal></term>
-                      <listitem>
-                          <para>
-                            Host in which the program should run.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                  <varlistentry>
-                      <term><literal>path</literal></term>
-                      <listitem>
-                          <para>
-                            Path to the system program.
-                          </para>
-                      </listitem>
-                  </varlistentry>
-                </variablelist>
-            </listitem>
+          <term><firstterm>Tools</firstterm></term>
+          <listitem>
+          <para>
+            The tools area contains a list of icons that represent the items
+            that can occur in the experiment.   How these are used and what they
+            mean is described in the next section.  To be brief an experiment
+            is edited by dropping an approprate set of these items on the
+            Editing Area, configuring their properties and linking them together
+            with data flows.
+          </para>
+          </listitem>
         </varlistentry>
       </variablelist>
     </section>
     <section>
-      <title>Modifying properites</title>
+      <title>Creating and modifying an experiment definition</title>
       <para>
-        Once an object has been put on the editor canvas (right part of the
-        experiment editor window), you can move it around by dragging it
-        with the mouse.   Right clicking an object brings up a context menu
-        for that object which allows you to delete the object or to edit its
-        properties.
+        This section describes how to manipulate the editor.  We will describe:
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            The set of Tools availalable in the left margin of the editor and
+            how to drop these tools onto the Editing Area.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            How to configure the properties of a tool.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            How to link two appropriate tools together with a data flow.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>
+        At the end of the section we'll show a simple data flow as it might appear
+        on the editor and describe its elements.
       </para>
       <para>
-        Each object type has its own set of properties as described in the previous
-        section.  All use a common property editor.  The picture below is
-        the property editor for a program object:
+        One caveat before we start.  The editor is intended to configure the
+        permanent elements of the data flow without which the experiment will
+        fail to properly run.   Transient elements like SpecTcl or Root, which
+        are started by users on demand, though they may, in fact live for the
+        length of an experiment, are not intended to be configured via the
+        experiment editor.
       </para>
-      <figure>
-        <title>Property editor example.</title>
-        <mediaobject>
-           <imageobject>
-            <imagedata fileref='propertyeditor.png' format='PNG' />
-          </imageobject>
-        </mediaobject>
-      </figure>
+      <section>
+        <title>Tools and how to use them</title>
         <para>
-          You can type in property values to the right of the property you
-          want to modify.  Note that greyed out properties cannot be directly
-          modified but are normally modified by making a connection to or from
-          the object (see next section).
+          Tools represent elements of a data acquisition system.  The left side
+          of the editor provides a set of tools that can be dropped on to the
+          editing area by double clicking a tool.  Once dropped you can drag
+          the tool around the editing area, configure it and connect tools
+          together with data flows.
         </para>
         <para>
-          When done, the <guibutton>Ok</guibutton> button saves the object properties
-          while <guibutton>Cancel</guibutton> abandons all changes.  Some
-          property values have a restricted set of values.   For example
-          in the figure above, <literal>enable</literal> can only be
-          <literal>true</literal> or <literal>false</literal>.  If you click
-          <guibutton>Ok</guibutton> and a property has an invalid value a dialog
-          will pop up indicating which value is illegal and no changes
-          will be made.  The property editor will then remain open allowing
-          you to fix your error.
+          Let's look at the set of tools that are available and what they mean.
+          In the next section we'll say more about tool properties, which are
+          used to configure each tool.
         </para>
+        <variablelist>
+          <varlistentry>
+            <term>
+              <inlinegraphic format='PNG' fileref='ringbuffer.png' />
+            </term>
+            <listitem>
+              <para>
+                This tool is a ringbuffer.  Ringbuffers are the medium by
+                which event data are transported from data sources to
+                data sinks.  You don't need to drop a ring buffer for the remote
+                <firstterm>proxy rings</firstterm> of a ring. You only need
+                to drop the ring buffer for the <firstterm>primary ring</firstterm>,
+                that is the one its data source connects to.  Connecting a ring
+                buffer to a data sink that's been configured to live in a remote
+                system will cause the appropriate set of proxy rings to be
+                created.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <inlinegraphic format='PNG' fileref='readout.png' />
+            </term>
+            <listitem>
+              <para>
+                This tool is a readout program.  Readout programs take data
+                from hardware associated with some detector system and deposit that
+                data in a ring buffer (see above).   A readout program is a
+                specific instance of a general class of programs that participate
+                in run state transitions.   
+              </para>
+              <para>
+                What we mean by this is that, for example,  when starting a run,
+                it is necessary for a readout program to positively indicate that
+                it has done its part to start a run before the run can be considered
+                as actually having started successfully.
+              </para>
+              <para>
+                Programs that participate in state transitions in this way are
+                called <firstterm>state sensitive</firstterm> programs.  The
+                experiment editor stores the configuration of state sensitive
+                in the configuration database in a way that the software responsible
+                for performing state transitions knows to expect them to participate.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <inlinegraphic format='PNG' fileref='eventlog.png' />
+            </term>
+            <listitem>
+              <para>
+                Represents an event logger.  Event loggers take data from a ringbuffer
+                and log them to event files.   You can have event loggers wherever
+                you have a ring buffer.  Generally you'll at least want an event
+                logger to log data coming out of the top level event builder
+                (if you need event building) or the Readout program if not.
+              </para>
+              <para>
+                Event loggers are considered state sensitive programs.   This
+                is used to ensure that an end of run does nt complete until all
+                the data associated with the run is logged to file (if recording is
+                enabled).
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <inlinegraphic format='PNG' fileref='program.png' />
+            </term>
+            <listitem>
+              <para>
+                Represents an arbitrary state program.  If you have your own
+                state sensitive program that does not fit one of the categories
+                above, you can drop this tool on the Editing area and configure
+                it to meet your needs.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <inlinegraphic format='PNG' fileref='eventBuilder.png' />
+            </term>
+            <listitem>
+              <para>
+                This tool represents and event builder.  Event builders are
+                state insensitive programs that take fragments 
+                data from event sources an emit events that consist of aggregations
+                of time correlated fragments.  Event builders can be connected
+                to event sources (see below) as input and connect to ringbuffers
+                as output. 
+              </para>
+              <para>
+                NSCLDAQ supports hierarchical event building.  This means that
+                you can have as many event builders as is conventient to your
+                system and that event builders can feed data into next level
+                eventbuilders as convenient.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <inlinegraphic format='PNG' fileref='dsource.png' />
+            </term>
+            <listitem>
+              <para>
+                This tool represents a source of event fragments to an event
+                builder.   It takes as input data from a ring buffer and
+                feeds that data, properly tagged, to an event builder.
+                Each event builder can have as many data sources connected to it
+                as demanded by the experiment.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <inlinegraphic format='PNG' fileref='sysprogram.png' />
+            </term>
+            <listitem>
+              <para>
+                Some programs are necessary for system operation but don't
+                actually connect to the data flow. These are called
+                <firstterm>services</firstterm>.  A valid data acquisition
+                system instance requires the following services:
+              </para>
+              <itemizedlist>
+                <listitem>
+                  <para>
+                    Variable database server; Serializes change requests and
+                    supports the publish subscribe subsystem of the database.
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    Status message injector; Aggregates status messages from
+                    throughout the system into a database from which they can
+                    be displayed and queried.
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    Boot manager.   This is the program that is responsible
+                    for starting the entire DAQ system.  We'll say more about
+                    this service in
+                    <link linkend='sec_booting_controlling'
+                          endterm='title_booting_controlling'  />.
+                  </para>
+                </listitem>
+              </itemizedlist>
+              <para>
+                If the required services have not been specified and allocated
+                to hosts, validation will fail and indicate which services
+                are missing.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <inlinegraphic format='PNG' fileref='analysis.png' />
+            </term>
+            <listitem>
+              <para>
+                An analysis program is one that lives in the data flow but
+                is not state sensitive.  Typical analysis programs a filters,
+                such as the program in the S800 that filters raw data into
+                the original S800 event structure.  Filters can take a ring buffer
+                as input and/or a ring buffer as output.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>
+              <inlinegraphic format='PNG' fileref='arrow.png' />
+            </term>
+            <listitem>
+              <para>
+                Represents a dataflow.  Dataflows indicate the flow of event
+                data (partial or whole) through the system.  For information
+                about how to manipulate data flows see;
+                <link linkend='sec_dataflow_tool' endterm='title_dataflow_tool' />
+                below.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </section>
+      <section>
+        <title>Tool properties and how to configure them.</title>
+        <para>
+          This section describes how to:
+        </para>
+        <itemizedlist>
+          <listitem>
+            <para>
+              Place tools in the editing area.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Edit the tool properties
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Remove tools from the editing area.
+            </para>
+          </listitem>
+        </itemizedlist>
+        <para>
+          To place a tool in the editing area, simply double click it.  The tool
+          will be placed close to the left side of the editing area. You can drag
+          the tool to any part of the editing area at any time.  I recommend that
+          you initially drag the new tool away from its drop site so that you
+          are not confused by additional drops.
+        </para>
+        <para>
+          Each tool has a set of properties associated with it.  A property is
+          a name/value pair.  The values are strongly typed.  Right clicking a
+          tool that has been placed in the editing area brings up a context menu.
+          The first entry in the context menu allows you to delete the tool.
+          The second entry in the context menu is <literal>Properties...</literal>
+          and will pop up the property editor for the object.
+        </para>
+        <para>
+          The figure below shows the property editor for a readout program with
+          a few annotations.
+        </para>
+        <figure>
+          <title>Property Editor for a Readout Program object/tool</title>
+          <graphic format='PNG' fileref='ReadoutPropertyEditor.png' />
+        </figure>
+        <para>
+          The left column of the editor contains property names.  The right column
+          is where you would edit property values.  Many of the properties are
+          string valued.  You can place any value you want in the property by
+          simply typing the value in the entry widget for the value.
+        </para>
+        <para>
+          Other properties have types that are constrained and therefore use
+          other data entry widgets.  See the annotations in the figure above.
+        </para>
+        <variablelist>
+          <varlistentry>
+            <term>Enumerated Properties</term>
+            <listitem>
+              <para>
+                These properties have a limited set of allowed values.  The
+                pulldown menu for each of the entries allows you to select from
+                the allowed values.  A special case of an enumerated property
+                is a boolean value.  This is just an enumerated property that
+                an have the value <literal>true</literal> or <literal>false</literal>.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Read only properties</term>
+            <listitem>
+              <para>
+                Some properties cannot be edited.  For example, the input and
+                output
+                ring properties are set by making connections between
+                ring buffers and this program. 
+              </para>
+              <para>
+                The set of properties that are readonly may change dynamically.
+                For example, programs that are data sources for ring buffers
+                must live in the same host as their output ring.  When a program
+                is connected to a ring buffer as an output ring, therefore,
+                the editor will set the program's host name and mark it readonly.
+                If the ringbuffer is allocated to a different host, any source
+                program will also be automatically relocated.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>List properties</term>
+            <listitem>
+              <para>
+                Some properties, such as program parameters, can be a list.
+                To add an item to the list, type it into the entry and click
+                the right pointing arrow.  To remove an item from the list,
+                double click it.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Integer properties</term>
+            <listitem>
+              <para>
+                Other properties may be integers.  These are represented by spin
+                boxes.  You can use the up/down arrows to change the value or you
+                can just type a new integer into the entry part of the spinbox.
+              </para>
+            </listitem>
+            </varlistentry>
+        </variablelist>
+        <para>
+          When you click the <guibutton>Ok</guibutton> button, the values
+          in the property list editor are committed to the oject's properties.
+          As this is done, each object will validate the value for each property
+          against its data type and any constraints on the data type.  If
+          there are validation errors, an error message will be output and
+          no further property changes will be made.
+        </para>
+        <para>
+          If you select <literal>Delete...</literal> from the pop up context menu,
+          you'll be prompted to confirm deletion of the object.  If you confirm,
+          the object is removed from the editing area and any connections to or
+          from it are also deleted.
+        </para>
+      </section>
+      <section id='sec_dataflow_tool'>
+        <title id='title_dataflow_tool'>Connecting tools with data flows</title>
+        <para>
+          One of the points of the <filename>expEditor</filename> is to describe
+          the flow of event data through the software components that make up
+          your experiment.  This is done by using the data flow tool
+          (the arrow).  Dataflows are directed in the sense that they come from
+          somewhere (a source) and go to somewhere (a sink).
+        </para>
+        <para>
+          To create/indicate a data flow:
+        </para>
+        <orderedlist>
+          <listitem>
+            <para>
+              Double click the dataflow tool to indicate you want to specify
+              a dataflow.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Click the source of the dataflow (click, do not hold down the
+              mouse button).
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Using the mouse stretch the dashed arrow that then appears until you
+              are over the dataflow sink.  Click to indicate that object is the
+              sink.  The arrow will turn into a solid arrow.
+            </para>
+          </listitem>
+        </orderedlist>
+        <para>
+          Dataflow connections will be retained as you move objects on the eding
+          area.
+        </para>
+        <para>
+          A dataflow connection mistakenly created can be destroyed by right clicking
+          anywhere along its path and selecting <literal>Delete...</literal>
+          from its context menu.
+        </para>
+        <para>
+          The following constraints apply and are enforeced for dataflow
+          connections.
+        </para>
+        <variablelist>
+          <varlistentry>
+            <term>Source is a state program</term>
+            <listitem>
+              <para>
+                Recall that state programs are readouts, eventlogs and generic
+                state programs.  These can source data only into ring buffers.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Sink is a state program</term>
+            <listitem>
+              <para>
+                These can only get data from ring buffers.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Source is a ring buffer</term>
+            <listitem>
+              <para>
+                These can source data to any state program, an event builder
+                data source or an analysis program.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Sink is a ring buffer</term>
+            <listitem>
+              <para>
+                Ring buffers can sink data from any state program, an event
+                builder or any analysis program.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Source is an event builder data source</term>
+            <listitem>
+              <para>
+                Sink can only be an event builder data source.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Source is an event builder</term>
+            <listitem>
+              <para>
+                Sink can only be a ring buffer.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term>Sink is an event builder</term>
+            <listitem>
+              <para>
+                Source can only be an event builder data source.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+        <para>
+          The connector tool will not allow you to create illegal data flows.
+        </para>
+      </section>
     </section>
     <section>
-      <title>Making connections</title>
+      <title>Validating and fixing validation errors in an experiment definition</title>
       <para>
-        The point of the expEditor is not only to describe objects but how
-        even data and event fragments flow through the system.  Data flow is
-        indicated by connecting elements via arrows.
-        
-          <inlinemediaobject>
-             <imageobject>
-              <imagedata fileref='arrow.png' format='PNG' />
-            </imageobject>
-             
-          </inlinemediaobject>
+        Defining dataflows can be complicated and painstaking.  It is easy to
+        create invalid experiments.  The <guimenuitem>Validation...</guimenuitem>
+        menu entry of the <guimenu>View</guimenu> menu can check your experiment
+        for several common errors.  If you have suggestions for additional
+        validation checks, we are always interested in improving this part of the
+        experiment editor.  Send an email to
+        <email>scientificsoftware@nscl.msu.edu</email>
+        and we will take that change under advisement.
       </para>
       <para>
-        Define a connection by first double clicking the arrow in the toolbox.
-        Next click the object from which the the dataflows and finally
-        click the object to which the data flows.  Once tow objects are
-        connected moving one, the other or both will stretch the connections as
-        needed to maintain the connections in the editor.
-        Not all pairs of object types can be connected.
+        Let's have a look at what the validation produces.   Consider
+        the experiment  in the figure below.  All tools have been dropped but
+        no properties have been configured:
+      </para>
+      <figure>
+        <title>Example of an invalid experiment</title>
+        <graphic fileref='InvalidExperiment.png' format='PNG' />
+      </figure>
+      <para>
+        This produces the following validation errors:
+        <inlinegraphic fileref='ValidationExample.png' format='PNG' />
+      </para>
+      
+      <para>
+        The validation output is in the form of a non-modal dialog (non-modal
+        dialogs allow you to interact with the rest of the program while they
+        are visible).  The main part of the dialog is a checklist of problems
+        that must be fixed.  As you fix each problem I encourage you to check
+        off the problem on the validation dialog.
       </para>
       <para>
-        A connection can be removed by right clicking the line part of the
-        connection and selecting <guimenuitem>Delete...</guimenuitem>
-        from the pop up context menu.
+        At any time you can click the <guibutton>Remove Completed</guibutton>
+        button to remove the items you have checked from the validation
+        output. You can also dismiss the dialog at any time.
       </para>
       <para>
-        Note that connecting two objects usually has side effects on the the
-        properties of one or both of the objects.  For example, connecting a program
-        to a ring buffer will
+        You can save your experiment configuration even if it does not pass
+        validation.  This allows you to build up your experiment in several
+        sessions.  Your experiment will not run, however if it has not passed
+        validation.
       </para>
-      <orderedlist>
-        <listitem><para>
-          Set the output ring of the program to the ring's name.
-        </para></listitem>
-        <listitem><para>
-          Set the program's host to the host of the ringbuffer as producers
-          must run in the same host a the ring they produce for.
-        </para></listitem>
-      </orderedlist>
     </section>
+  </section>
+  <section id='sec_booting_controlling'>
+    <title id='title_booting_controlling' >
+      Booting and controlling your experiment 
+    </title>
+    <para>
+      The exciting thing about the experiment editor is that the output is not
+      just a design document.  The database produced can be used as input
+      to a set of NSCLDAQ tools that allow you to start, stop and control runs
+      in an experiment described by the database file you produced with the
+      editor.
+    </para>
+    <para>
+      Furthermore the database can be used as input to a status dashboard
+      that allows you to easily see dataflow backlogs and their causes.
+      For information about that, see the chapter titled
+      <literal>Status Dashboard</literal>.
+    </para>
+    <para>
+      This Section describes:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          How to setup your experiment to boot.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          How to run the control panel application
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          How to use the control panel application to boot your experiment
+        </para>
+      </listitem>
+      <listitem>
+      <para>
+        How to manage data taking runs using the control panel application.
+      </para>
+      </listitem>
+      <listitem>
+        <para>
+          How to cleanly shut down your experiment using the control panel
+          application.
+        </para>
+      </listitem>
+    </itemizedlist>
+    
+    <para>
+      The first piece of the puzzle for executing your experiment from the
+      database file created by the experiment editor is the
+      <firstterm>service manager</firstterm>.  This program starts and stops
+      services that have been defined by the experiment editor.
+    </para>
+    <para>
+      Recall that services are programs that are not necessarily state sensitive,
+      are required for the proper execution of the experiment and don't
+      interact with the dataflow.  Recall as well that a valid experiment requires
+      several services.  Here's a bit more detail about each of those
+      required services.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term>Variable Database Server</term>
+        <listitem>
+          <para>
+            The experiment editor produces an SQLite database.  The database
+            schema provides a hierarchical, typed, variable data store.  This
+            means that at the application, the database has directories.  Directories
+            can have other directories or variables.  Variables have strict data
+            types that are enforced by the APIs that access the database.
+          </para>
+          <para>
+            The variable database server is a program that has two functions;
+          </para>
+          <para>
+            First, SQLite databases do not do a very good job when multiple
+            applications must write to them.  They are considered single writer,
+            multiple reader databases.   The Variable database server provides
+            a socket to which application can connect to request that the
+            server perform write operations to the database.  The server, a singly
+            threaded program, serializes database operations.
+          </para>
+          <para>
+            Secondly, the variable database server provides a subscription service
+            that allows participants in the data acquisition service to register
+            interest in changes made to subdirectory trees and to be actively notified
+            when these chanes take place.
+          </para>
+          <para>
+            The run control subsystem makes exensive use of this service.   Other
+            services could be layered on top of this at a later date.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>The boot server</term>
+        <listitem>
+          <para>
+            The boot server manages a very limited set of state transitions.
+            Specifically the transition from <literal>NotReady</literal>
+            to <literal>Ready</literal> involves creating all of the
+            necessary ring buffers and starting the programs described
+            by the diagram produced by the experiment editor.  The boot
+            manager manages that.  This transition is normally initiated by
+            the control panel.
+          </para>
+          <para>
+            Similarly, transitioning to <literal>NotReady</literal> requires
+            that the programs which make up the system be stopped in an orderly
+            manner.  It also requiers that the ring buffers described by the
+            experiment editor be removed from their systems.  This transition
+            can be initiated by the control panel or by the failure of any
+            state sensitive program or service in the system.
+          </para>
+          <para>
+            In this context failure means the transition of any
+            state sensitive program to
+            <literal>NotReady</literal> or the unanticipated exit of any program
+            the boot manager knows about.  
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Status injector</term>
+        <listitem>
+          <para>
+            The NSCLDAQ status subsystem allows programs that make up a
+            data acquisition system to emit status messages.  These messages range
+            from log messages, which are just some severity tagged, timestamped
+            text, to messages  logging the transition of programs that are
+            state sensitive.
+          </para>
+          <para>
+            The emission of status messages is purely optional on the part of
+            program authors, however it is encouraged as a comprehensive status
+            message set make it much easier to reconstruct the sequence of events
+            that led to a problem.
+          </para>
+          <para>
+            Status messages within each system are aggregated and published
+            by a persistent daemon.  This approach, however, is not suitable
+            for use to aggregate all messages associated with an experiment as
+            the set of systems is not easily known and can change with time.
+          </para>
+          <para>
+            The status injector periodically probes the set of systems that are
+            involved in the dataflow of an experiment and aggregates status messages
+            emitted in all systems in that dataflow.   Messages it receives are
+            inserted as entries into a database.  Status display software can then
+            simply poll the database fo rchanges and, thus, not need to know
+            anything about the experiment other than the location of the database
+            file.
+          </para>
+          <para>
+            In addition to centralizing the message store, placing all status
+            messages in a database allows for post mortem analysis of failures
+            by querying the database to reconstruct the history of the failure.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>
+      The service manager program is a command line program that provides
+      for the orderly start up and shutdown of services.   To run it:
+      <informalexample>
+        <cmdsynopsis>
+          <command>
+$DAQBIN/svcmanager <replaceable>db-file</replaceable>
+          </command>
+        </cmdsynopsis>
+      </informalexample>
+      where <replaceable>db-file</replaceable> is the filesystem path to the
+      database file that describes the experiment (the output of the experiment
+      editor).
+    </para>
+    <para>
+      Once started, the service manager supports the following commands:
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><command>start</command></term>
+        <listitem>
+          <para>
+            Starts all of the services.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>stop</command></term>
+        <listitem>
+          <para>
+            Stops all of the services
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><command>exit</command></term>
+        <listitem>
+          <para>
+            If the services are runnning, stops them.  Exits the service manager.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>
+      The first step to starting the experiment is to run the service manager
+      and start the services.
+    </para>
+    <section>
+      <title>Starting and using the run control control panel</title>
+      <para>
+        The run control control panel provides control and monitoring over the
+        system's state transitions.  It an be run after the service manager has
+        started the services.  It relies on the assistance of the boot manager
+        to bring the system up.
+      </para>
+      <para>
+        The run control panel relies on the variable database manager to
+        both to request state transitions and to monitor the progress of
+        state transitions.  Its subscriptions to the variable database also allow
+        it to remain synchronized with the system state if more than one instance
+        of the control panel is run.
+      </para>
+      <para>
+        Start the control panel as follows:
+      </para>
+      <informalexample>
+        <cmdsynopsis>
+          <command>
+$DAQBIN/ReadoutGui tcp://<replaceable>varmgrhost</replaceable> tcp://<replaceable>varmgrhost</replaceable>
+          </command>
+        </cmdsynopsis>
+      </informalexample>
+      <para>
+        Where <replaceable>varmgrhost</replaceable> is the host in which you requested
+        the variable database manager service be started.  The actual parameters are
+        URI's for the variable database's change request and subscription
+        services.  The service names default to the normal values used by the
+        variable database server.
+      </para>
+      <para>
+        When the system has not yet been booted, the control panel looks like
+        this:
+        <inlinegraphic format='PNG' fileref='controlpanelunbooted.png' />
+      </para>
+      
+      <itemizedlist>
+        <listitem>
+          <para>
+            There are two tabs the <literal>Run Control</literal> tab shows
+            the status and controls for running the experiment.  The
+            <literal>Program states</literal> tab shows all of the state sensitive
+            programs and their current states.  It can be used to monitor the
+            progress of long running state transitions.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The top part of the <literal>Run Control</literal> tab shows the
+            title and run number of the next run to be started.  If the
+            <literal>Recording</literal> checkbox is checked, any event loggers
+            will log event data for the next run.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The middle section of the control panel will contain the run
+            control controls when the system is booted and shows the global status.
+            In this case, <literal>NotReady</literal> means that the system
+            is not yet booted. <literal>(Consistent)</literal> means that
+            no state transition in progress as all programs have the same state.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The <guibutton>Boot</guibutton> button at the bottom of the
+            panel must be clicked in order to boot the system.  Booting the system
+            tells the system to transition to the <literal>Readying</literal>
+            state.  The boot manager, sensing that transition will create all
+            ring buffers, start non state sensitive programs, set all state
+            sensitive programs into the <literal>Readying</literal> state
+            and start them.  As each program completes its initialization, it
+            will set its state to <literal>Ready</literal> completing the
+            transition of the entire system to <literal>Reay</literal>.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>
+        Once the system is booted, the control panel will look like this:
+        <inlinegraphic format='PNG' fileref='controlpanelready.png' />
+      </para>
+      
+      <para>
+        Depending on the programs you have configured into the experiment, additional
+        windows may open.  For example, each event builder will open its status window.
+        Note that the controlpanel now has:
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            Indicated a consistent state of <literal>Ready</literal> indicating
+            a successful system boot.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Added a <guibutton>Pre-Begin</guibutton> button to the panel.
+            This can be used to initiate the first stages of starting a run.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The bottom button is now a <guibutton>Shutdown</guibutton> button.
+            Clicking it will ask the boot manager to transition the system
+            to <literal>NotReady</literal> by stopping all programs and
+            deleting all defined ring buffers.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>
+        See
+        <link linkend='sec_system_state_diagram'
+              endterm='title_system_state_diagram' />.
+        The variable database provides a global state variable and state variables
+        for each state sensitive program.  The data type of these variables is
+        a state diagram which means that it is an enumerated variable whose next
+        value is constrained by its current value.
+      </para>
+      <para>
+        Once the system is booted, state transitions are initiated by setting the
+        global state variable to the desired state.  Each state sensitive program
+        performs its own state transition and echoes the desired state in its
+        own state varaible.  When all programs have echoed the desired state,
+        the transition has completed.
+      </para>
+      <para>
+        Transitions can fail.  If a program is not able to complete its transiton,
+        it sets it state to <literal>NotReady</literal> and exists.  The
+        boot manager then sets the global state to <literal>NotReady</literal>
+        and all state sensitive programs are expected to exit.  Once they have,
+        the boot manager shuts down the remaining programs.  State transitions
+        can also timeout.   If that happens, the control panel sets the global
+        state to <literal>NotReady</literal> and once more the boot manager
+        oversees the orderly shutdown of the system.
+      </para>
+      <para>
+        Most run state transitions are two phase transitions.   This allows the
+        preparation for the state transition to perform barrier synchronization
+        with the rest of the system before performing a relatively quick transition
+        to the actual end state.  For example, to start a run, first
+        a <literal>Pre-Begin</literal> (actually <literal>Beginning</literal>)
+        transition is performed.  During this
+        state transition all initialization is supposed to be done short of
+        enabling data taking.  The following transition to <literal>Active</literal>
+        is relatively rapid and starts actual data taking.
+      </para>
+      <para>
+        To start a run, therefore, first click the <guibutton>Pre Begin </guibutton>
+        button. When the Pre begin operation is complete, the state will be
+        <literal>Beginning</literal> and the button will turn into a
+        <guibutton>Begin</guibutton> button.  Click that to actually
+        start data taking.
+      </para>
+      <para>
+        All other state transitions, ending, pausing, resuming a run work in the
+        same way.  A pre-operation is performed and then the actual final
+        state transition is requested.
+      </para>
+    </section>
+    <section>
+      <title>Configuring the required services</title>
+      <para>
+        As we have seen the system requires three services to run correctly.
+        In this section we'll describe how to configure those services using
+        the experiment editor.  Several wrapper scripts are installed in the
+        NSCLDAQ bin directory that make configuration quite simple.
+      </para>
+      <para>
+        Let's start with the variable database server.  The following
+        properties must be configured:
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term><literal>name</literal></term>
+          <listitem>
+            <para>
+              Conventionally, this is set to <literal>vardb-service</literal>
+              though you can use other names.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>host</literal></term>
+          <listitem>
+            <para>
+              Select in which host you want this program to run.  Normally
+              this is a data U system, however nothing stops you from locating
+              this server in an spdaq system.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>path</literal></term>
+          <listitem>
+            <para>
+              This must be the exact literal path to the script:
+              <filename>vardb-service</filename>.  The directory part of the
+              path must be the translation of the <literal>DAQBIN</literal>
+              environment variable.  Unfortunately at this time, there's no
+              way to ask expEditor to substitute that for you.  Therefore,
+              if you are using nscldaq 12.0-002 at the NSCL you  should used:
+              <filename>/usr/opt/daq/12.0-002/bin/vardb-service</filename>
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>
+        The service manager ensures that the <filename>vardb-service</filename>
+        script knows which database file to use.
+      </para>
+      <para>
+        The boot manager is similarly easy to setup:
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term><literal>name</literal></term>
+          <listitem>
+            <para>
+              By convention use <literal>bootserver</literal>, however again
+              you can choose a different name if you want.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>host</literal></term>
+          <listitem>
+            <para>
+              Select which host you want the boot server to run on.
+              This can be an spdaq or a data U system as you choose.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>path</literal></term>
+          <listitem>
+            <para>
+              Should be <filename>boot-service</filename> in the
+              bin directory of the selected nscldaq installation.  For example,
+              at the NSCL, using 12.0-002:
+              <filename>/usr/opt/daq/12.0-002/bin/boot-service</filename>
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+      <para>
+        The service manager and script will conspire to tell the boot server
+        where to find the database file.
+      </para>
+      <para>
+        Lastly let's set up the status injector.  The status injector is responsible
+        for aggregating status messages sent by any and all components of the
+        system.  This aggregation is a two level process.  
+      </para>
+      <para>
+        Each host in the data acquisition system runs a host status aggregtor.
+        The aggregator advertises a status aggregation service through the
+        NSCL Port manager.  Programs that emit status messages send them to this
+        service. 
+      </para>
+      <para>
+        Host aggregators also advertise a status subscription service that allows
+        programs to be notified and receive status aggregated from that host.
+        Status injector crawls the ring buffers and proxy rings to maintain
+        a map of the set of systems that are involved in the experiment data
+        flow.  It subscribes to the host status aggregators in all involved hosts.
+        When it receives messages, it inserts entries in an sqlite database
+        from which status display/retrieval applications can both poll for
+        real-time updates and historical information.
+      </para>
+      <para>
+        In order for this system to work, the status injector must be
+        allocated to run in a host that has at least one ring buffer
+        associated with the experiment data flow.  Under the assumption that
+        at some point all dataflow is aggregated via event builders, the
+        status injector can then probe outward from that ring buffer to
+        discover all of the hosts involved in the dataflow.
+      </para>
+      <para>
+          Here are the parameters that must be configured. 
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term><literal>name</literal></term>
+          <listitem>
+            <para>
+              Conventionally use <literal>StatusInjector</literal> though the name
+              is only for your convenience.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>host</literal></term>
+          <listitem>
+            <para>
+              You must choose a host that is part of your experiment's dataflow.
+              If you isolate the status injector on a system out of the dataflow
+              it will not be able to create a map of the involved systems.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>path</literal></term>
+          <listitem>
+            <para>
+              The program <filename>statusinjector</filename> is located in
+              the bin directory of the NSCLDAQ installation you are using.
+              If, for example, you are at the NSCL using 12.0-002 you'd
+              use
+              <filename>/usr/opt/daq/12.0-002/bin/statusinjector</filename>
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>args</literal></term>
+          <listitem>
+            <para>
+              By default, the status injector puts status information in the
+              database file <filename>~/status.db</filename>  if you want to
+              change the location or name of that file, you can add a
+              command line <option>--file</option> option.  For example, to put
+              the database in the stagearea:  <option>--file=~/stagearea/status.db</option>
+              could be added to thep rogram arguments.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </section>
+  <section>
+    <title>
+      Configuring readout programs to run with the state manager.
+    </title>
+    <para>
+      The NSCLDAQ readout program frameworks
+      are relatively neutral with respect to the
+      environment in which they run.   SBS, VMUSB and CCUSB readout frameworks
+      can still be used with the old ssh pipe based readout GUI.  To be used
+      with the variable database state manager, however they must be properly
+      configured.
+    </para>
+    <para>
+      Configuration hinges on the fact that the main threads of all of these
+      programs are Tcl interpreters and that they have a common set of commands
+      for controlling their runs.  The <option>--initscript</option> option,
+      also present in all of these frameworks, tells Readout programs to source
+      a Tcl script just after startup.
+    </para>
+    <para>
+      A Tcl package is distributed with NSCLDAQ called <literal>StateManagerControl</literal>.
+      This package subscribes to the variable database server in a manner that
+      allows it to help the Readout program it runs in participate in global
+      state transitions.  The script uses environment variables set up by the
+      boot manager to know how to perform its subscriptions.
+    </para>
+    <para>
+      Using an existing Readout program with the new state management system is
+      therefore just a matter of 
+    </para>
+    <orderedlist>
+      <listitem>
+        <para>
+          Creating a Tcl script that incorporates the <literal>StateManagerControl</literal>
+          package into the Tcl interpreter of the Readout program.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Specifying that script as the <literal>init script</literal> property
+          of that readout program when configuring it in the graphical experiment
+          editor.
+        </para>
+      </listitem>
+    </orderedlist>
+    <para>
+      Here's a sample initialization script fragment.
+    </para>
+    <example>
+      <title>Readout Initialization script for the distributed state manager</title>
+      <programlisting>
+        ...
+set daqTclLibs [file join $::env(DAQROOT) TclLibs];    # Here's where NSCLDAQ packages are
+lappend auto_path $daqTclLibs;                         # package require now searches there too.
+package require StateManagerControl;                   # Load/initialize the package.
+        ...
+      </programlisting>
+    </example>
+    <para>
+      Sophisticated Tcl programmers
+      may have noticed that we are not doing anything
+      to enter a Tcl event loop (this is normally done either with a
+      <command>vwait</command> command or by requiring the <literal>Tk</literal>
+      package).   This is not necessary for NSCLDAQ readout programs because
+      the interpreter they are running initializes in a way that its commands
+      are processed from inside an event loop in much the same way as
+      <literal>Tk</literal>, but without the need to pop up a GUI window.
+    </para>
+    <para>
+      The <literal>StateManagerControl</literal> package arranges for
+      <command>proc</command>s it defines to be called as a result of state
+      change requests.  These procs, in turn, may execute readout commands that
+      can control runs.
+    </para>
+    <para>
+      Once you've created a script that has the lines above, fill in your
+      Readout programs <literal>init script</literal> properties with the filesystem
+      path to this script.  If the only thing you do is load the state manager,
+      all of the readout programs can naturally share the same script.
+    </para>
+  </section>
+  <section>
+    <title>
+      What do I do with my ReadoutCallout Scripts?
+    </title>
+    <para>
+      Users of versions of NSCLDAQ prior to version 12.0 often created scripts
+      that extended the functionality of the <command>ReadoutShell</command>.
+      These scripts were called <filename>ReadoutCallouts.tcl</filename> and
+      were planted in an appropriate location where the ReadoutShell
+      automatically loaded them.  These scripts are known as
+      <firstterm>ReadoutCallout scripts</firstterm>.
+    </para>
+    <para>
+      As you start to use the new state manager features of NSCLDAQ 12 and
+      later, you may wonder how to use your ReadoutCallouts scripts from
+      NSCLDAQ 11 and earlier. 
+    </para>
+    <para>
+      The first thing you should do is evaluate the contents of the script
+      and see if what the script does could not be done better using the
+      facilities of NSCLDAQ-12's state manager.   There may be cases, however
+      where this is either too difficult or you just won't have the time to
+      make the transition in the time frame required.
+    </para>
+    <para>
+      Note as well that some operations now done in ReadoutCallouts script are
+      set up in the experiment editor.  For example, setting up event builders
+      and their data sources were done in ReadouCallouts and are now done
+      in the experimental editor.  Similarly the setup of data pipelines that
+      run from input ring to output ring can be done in the experiment editor.
+      Since the boot manager monitors the status of processes it started and
+      declares a failure if a process unexpectedly exits, there are clear
+      advantages to using it rather than ReadoutCallouts.
+    </para>
+    <para>
+      NSCLDAQ-12.0 and later provide a package, <literal>ReadoutCalloutsHarness</literal>
+      that allows you to make your <filename>ReadoutCallouts.tcl</filename> script
+      into a stand alone participant in state transitions.  To use it you must:
+    </para>
+    <orderedlist>
+      <listitem>
+        <para>
+          Write a script that incorporates both the <literal>ReadoutCalloutsHarness</literal>
+          package and your ReadoutCallouts.tcl script.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Use <command>chmod</command> to make this script executable.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Add a generic state program to the experiment editor properly configured
+          to use the script you created in the previous steps.
+        </para>
+      </listitem>
+    </orderedlist>
+    <para>
+      Here's a sample readout callouts script adapter:
+    </para>
+    <example>
+      <title>Wrapper script to put ReadoutCallouts.tcl in to the state manager</title>
+      <programlisting>
+#!/bin/sh
+# -*- tcl -*-
+# The next line is executed by /bin/sh, but not tcl \
+exec tclsh "$0" ${1+"$@"}
+        
+
+set daqTclLibs [file join $::env(DAQROOT) TclLibs];    # Here's where NSCLDAQ packages are
+lappend auto_path $daqTclLibs;                         # package require now searches there too.
+
+package require ReadoutCalloutsHarness;                # Pull the state manager adaptor.
+source ~/stagearea/experiment/current/ReadoutCallouts.tcl;
+vwait forever
+      </programlisting>
+    </example>
+    <para>
+      The comment block at the top of the script allows the script to be
+      treated both as a shell script and as a Tcl script.  This works because
+      in Tcl <literal>\</literal> continues comments to the next line while in
+      <command>bash</command>  it does not.
+    </para>
+    <para>
+      It is important to note that after the package and
+      <filename>ReadoutCallouts.tcl</filename> have been sourced,
+      <command>vwait</command> creates and enters a Tcl event loop until
+      the variable <varname>forever</varname> is modified (it never is).
+      All state change operations are dispatched as script callback from the
+      event loop and, where appropriate, those callbacks invoke the
+      ReadoutCallouts procs.
+    </para>
+    <para>
+      When you set up the readout callouts wrapper script to run using the experiment
+      editor, use the <inlinegraphic format='PNG' fileref='program.png' />
+      tool.  Specify the <literal>path</literal> property to be the filesystem
+      path to your script.  Specify for the <literal>host</literal> property
+      the host in which you want your readout callouts script to run.
+    </para>
+    <para>
+      If you do not connect your readout callouts wrapper to a ringbuffer,
+      validation will indicate this script hasn neither an input nor an output
+      ring.  You can either ignore this warning or just connect any arbitrary
+      ring buffer as input, as that just sets the <literal>INPUT_RING</literal>
+      environment variable for the process.  It's always up to the program
+      itself to form any ringbuffer connection.
+    </para>
+  </section>
+  <section>
+    <title>The environment under which programs run</title>
+    <para>
+      Services and dataflow relevant programs run with a set of environment
+      variables they can use to determine who and what they are and how to
+      locate bits and pieces of software or files they probably need.
+    </para>
+    <para>
+      Here are the environment variables created for services by the service
+      manager.  Note that the service manager cannot assume that a variable
+      database server is running.  Therefore all references to the variable
+      database are file URIs or direct file paths.
+    </para>
+
+    <variablelist>
+      <varlistentry>
+        <term><literal>HOST</literal></term>
+        <listitem>
+          <para>
+            The value of the program's host property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>PROGRAM_NAME</literal></term>
+        <listitem>
+          <para>
+            The value of the program's name property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>DAQROOT</literal></term>
+        <listitem>
+          <para>
+            The top directory of the version of NSCLDAQ whose service manager
+            is being run.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>DAQLIB</literal></term>
+        <listitem>
+          <para>
+            The lib directory of the verson of NSCLDAQ whose service manager
+            is being run.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>DAQBIN</term>
+        <listitem>
+          <para>
+            The bin directory of the version of NSCLDAQ whose service manager
+            is being run.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>PYTHONPATH</term>
+        <listitem>
+          <para>
+            Python module path for the version of NSCLDAQ whose service manager
+            is being run.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>DB_URI</literal></term>
+        <listitem>
+          <para>
+            file:  URI that points to the variable database file that contains
+            the experiment definition and run control state variables.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>DB_PATH</literal></term>
+        <listitem>
+          <para>
+            The file path to the variable database file that contains
+            the experiment definitiuon and run control state variables.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <para>
+      Note that programs started by the service manager and the boot manager
+      have the user's home directory as their current working diretory.
+    </para>
+    <para>
+      The boot manager starts out programs that are not services.  It also
+      starts them out with a set of well defined environment variables:
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><literal>PROGRAM</literal></term>
+        <listitem>
+          <para>
+            Value of the <literal>name</literal> property of the program.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>REQ_URI</literal></term>
+        <listitem>
+          <para>
+            Value of the variable database server's change request URI.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>SUB_URI</literal></term>
+        <listitem>
+          <para>
+            Value of the variable database server's change notification
+            subscription URI.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>OUTRING</literal></term>
+        <listitem>
+          <para>
+            Value of the program's <literal>Output Ring</literal> property.
+            Since ring buffer data sources must live in the same system as the
+            ring buffer, this is a ring name not a URI.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>INRING</literal></term>
+        <listitem>
+          <para>
+            Value of the program's <literal>Input Ring</literal> property.
+            Since this ring can be local or remote, this property should
+            be a URI.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>DAQROOT</literal></term>
+        <listitem>
+          <para>
+            Top level directory of the installation of the version of NSCLDAQ
+            from which the boot manager is running.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>DAQBIN</literal></term>
+        <listitem>
+          <para>
+            The bin directory of the installation of the version of NSCLDAQ
+            from which the boot manager is running.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>DAQLIB</literal></term>
+        <listitem>
+          <para>
+            The lib directory of the installation of the version of NSCLDAQ
+            from which the boot manager is running.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><literal>PYTHONPATH</literal></term>
+        <listitem>
+          <para>
+            Path to python modules for the version of NSCLDAQ from which
+            the boot manager is running.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </section>
+  <section id='sec_system_state_diagram'>
+    <title id='title_system_state_diagram'>The state diagram of the run control system</title>
+    <para>
+      Below is the state diagram that shows the states and valid transitions
+      for the run control system.  This state diagram is implemented in both
+      the global state variable and the local state variables of programs
+      participating in global state transitions. 
+    </para>
+    <figure>
+      <title>State diagram for the run control system</title>
+      <graphic format='JPEG' fileref='statediagram.jpg' />
+    </figure>
+    <para>
+      In the figure above, the circles represent states and the arrows the
+      allowed transitions from an initial state to a final state.  The labels
+      in the circles are state names and the labels on the arrows indicate the
+      operation that will request the indicated state transition.
+    </para>
+  </section>
+  <section>
+    <title>How the database stores its information</title>
+    <para>
+      In this section, I'm not going to describe the low level database schema
+      of SQLite tables.   I'm going to examine the database at the level of
+      directories (folders) and the variables in those folders and what they mean.
+      I'll also give a brief description of the way global state transitions
+      are carried out.
+    </para>
+    <para>
+      The database must provide descriptions for the following classes of objects:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Ringbuffers.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          State sensitive programs.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Event builders and their data sources.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Services
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      We'll take up each of these object classes one by one in the subsections
+      below.  Before we do, however a bit of orientation.  The way to think
+      about the database is that each object class as its own folder and sub
+      folders within that object type are the actual objects.  Variables within
+      <emphasis>those</emphasis> folders are the object properties.
+    </para>
+    <section>
+      <title>RingBuffers</title>
+      <para>
+        The <filename>RingBuffers</filename> folder holds all ring buffer objects.
+        Each subfolder in <filename>RingBuffers</filename> represents a ring buffer.
+        The names of the subfolders are
+        <replaceable>ringname</replaceable>@<replaceable>hostname</replaceable>.
+        Thus the ring <literal>fox</literal> located in the host <literal>charlie</literal>
+        will be called <literal>fox@charlie</literal>.
+      </para>
+      <para>
+        The contents of each ring buffer object provide the parameters that determine
+        how the ring buffer is created.  The name and host are derived by splitting
+        up the folder name.  Other parameters are held by the variables:
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term><literal>datasize</literal></term>
+          <listitem>
+            <para>
+              Number of bytes in the data area of the ring buffer.  This defaults
+              to 8Mbytes but should be set to be several times larger than the
+              size of the biggerst ring item that will be put in the ring.
+            </para>
+            <para>
+              This cannot be configured by the experiment editor.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>editorx</literal>, <literal>editory</literal></term>
+          <listitem>
+            <para>
+              Coordinates of the ringbuffer  on the editor cavnvas.  This is only
+              used to reconstruct the dataflow drawing when the database is
+              read back into the experiment editor and the status dashboard.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><literal>maxconsumers</literal></term>
+          <listitem>
+            <para>
+              Maximum number of consumers that can simultaneously get data from
+              the ring buffer.  This defaults to 100 which is normally more than
+              sufficient.
+            </para>
+            <para>
+              This cannot currently be configured by the experiment editor.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </section>
+    <section>
+      <title>State Sensitive Programs</title>
+      <para>
+        State sensitive programs include generic state sensitive programs, readout
+        programs and event loggers.  These programs participate in system
+        state transitions.   
+      </para>
+      <para>
+        The folder <filename>RunState</filename> is the parent folder for all
+        state programs.  It also contains variables that represent the system
+        global state.  These are:
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term><varname>ReadoutParentDir </varname>(string)</term>
+          <listitem>
+            <para>
+              If this variable is not empty, it will be interpreted as the
+              directory name in which the state program definitions are.
+              If empty the state program definitions will be in directorys
+              below <filename>RunState</filename>.  The intent of this
+              is to support muliple configurations.  This support is not
+              yet complete however.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>Recording </varname>(bool)</term>
+          <listitem>
+            <para>
+              Event loggers are expected to check this variable at the start
+              of each run (transition from <literal>Ready</literal> to
+              <literal>Beginning</literal> and thence to <literal>Active</literal>).
+              If this variable is <literal>true</literal>, event loggers are
+              expected to log the data they receive to file.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>RunNumber</varname> (integer)</term>
+          <listitem>
+            <para>
+              When a run begins, this variable contains the run number.
+              Run numbers should be unique across an experiment.  The control
+              panel will increment the run number as it ends each run.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>Title </varname>(string)</term>
+          <listitem>
+            <para>
+              When a run begins, this variable contains the run title.
+              The run title is intended to describe the run to the experimenter.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>State</varname> (RunStateMachine)</term>
+          <listitem>
+            <para>
+              The Global state variable.  State transitions are initiated by
+              setting this variable to a new, allowable state.  State programs
+              are expected to subscribe to changes in this variable and
+              to echo their completed state transitions back into their own
+              state variables.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>SystemStatus </varname> (StateStatus)</term>
+          <listitem>
+            <para>
+              This enum can have one of two values:
+              <literal>Consistent</literal>, or <literal>Inconsistent</literal>.
+              When a state transition is requested, this variable is set to
+              <literal>Inconsistent</literal> to indicate that not all
+              participants have completed their transitions.
+              When all participates state variables match that of the
+              global state variable, this variable gets set to
+              <literal>Consistent</literal>
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>Timeout</varname> (integer)</term>
+          <listitem>
+            <para>
+              The maximum number of seconds a state transition is allowed to take
+              before it times out.  If a state transition requires more than
+              that time it is considered failed and the system is
+              transitioned to <literal>NotReady</literal>. 
+            </para>
+            <para>
+              A global state change to not ready requests that all programs
+              set their state variables to <literal>NotReady</literal> and
+              then exit.   The boot manager participates in this transition.
+              Any programs that don't properly transition to
+              <literal>NotReady</literal> are killed off by the boot manager
+              which subsequently sets their state variables to <literal>NotReady</literal>.
+            </para>
+            <para>
+              This participation ensures that if a program is hung up and unable
+              to respond to a state transition, transitions of the system
+              as a whole to <literal>NotReady</literal> will complete.k
+            </para>
+          </listitem>
+        </varlistentry>       
+      </variablelist>
+      <para>
+        Sub folders, with the same name as the <literal>name</literal> property
+        of the program contain variables associated with the program itself.  All
+        programs have a standard set of variables:
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term>
+            <varname>Input Ring</varname> (string)
+          </term>
+          <listitem>
+            <para>
+              If an input ring has been specified for the program this variable
+              contains its URI.  If no input ring was specified, this variable
+              will be an empty string.
+            </para>
+          </listitem>
+        </varlistentry>  
+        <varlistentry>
+          <term>
+            <varname>Output Ring</varname> (string)
+          </term>
+          <listitem>
+            <para>
+              If an output ring has been specified for the program, this variable
+              will contain its name.  Note that since ringbuffer producers must
+              run in the same host as the ring into which they put data, this is
+              a ring name and not a ring URI.  If no output ring was specified,
+              this variable will contain an empty string.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>State</varname> (RunStateMachine)</term>
+          <listitem>
+            <para>
+              Contains the current state of the program's local state machine.
+              Global state transitions happen when the global state machine
+              value is changed.  As state programs react to that state change, they
+              must update their current state in this variable.  When all state
+              programs have updated their current state to match the global state,
+              the state transition has successfully completed.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>editorx</varname> (integer)</term>
+          <listitem>
+            <para>
+              Used only by the graphical editor, and data flow dashboards.
+              This holds the x position of
+              the state program on the canvas.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>editory</varname> (integer)</term>
+          <listitem>
+            <para>
+              Used only by the graphical editor and the dataflow dashboard.
+              This holds the y position of the state program on the canvas.
+            </para>
+          </listitem>
+        </varlistentry>     
+        <varlistentry>
+          <term><varname>enable</varname> (bool)</term>
+          <listitem>
+            <para>
+              This boolean variable is <literal>true</literal> if the program
+              is enabled and <literal>false</literal> if not.  Enabled programs
+              participate in global state transitions while disabled programs
+              do not.  This allows incremental assembly of the data acquisition
+              system during setup and test.  See also <varname>standalong</varname>
+              below.   This value is initialized to <literal>true</literal>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>standalone</varname> (bool)</term>
+          <listitem>
+            <para>
+              This boolean variable is <literal>false</literal> if the program's
+              state transitions are driven by the global state machine.  If this
+              value is <literal>true</literal>, the program does standalone
+              state transitions.
+            </para>
+            <para>
+              A program doing standalone state transitions make state transitions
+              as a result of changes to its own state variable rather than the
+              global state variable.  This allows you to test a program independent
+              of the rest of the system.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>host </varname> (string)</term>
+          <listitem>
+            <para>
+              Specifies the host in which the program will be started.  If this
+              variable is false, the experiment editor will declare
+              a validation error.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>name </varname> (string)</term>
+          <listitem>
+            <para>
+              Name of the program.  This matches the name of the subdirectory.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>path </varname> (string)</term>
+          <listitem>
+            <para>
+              Path of the executable to run.  This can be an executable or a
+              script.  Basically it can be anything that's executable by the
+              user's shell.
+            </para>
+          </listitem>
+        </varlistentry>          
+      </variablelist>
+      <para>
+        Some program types have additional variables needed to describe their
+        special needs.  These will be described below:
+      </para>
+      <section>
+        <title>Readout program specific variables</title>
+        <para>
+          Readout programs have additional variables associated with them.
+          These variables supply values for some of the options that are common
+          between all readout program frameworks:
+        </para>
+        <variablelist>
+          <varlistentry>
+            <term><varname>appname </varname>(string)</term>
+            <listitem>
+              <para>
+                The Readout programs emit status messages.  Each status message
+                emitter is identified by an application name and the host in which
+                it is running.  This variable holds the application name.
+                It is strongly recommended that within a host, the
+                <varname>appname</varname> values are all unique.
+              </para>
+              <para>
+                The value of this variable is passed to the Readout program's
+                <option>--appname</option> command line option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>init script </varname>(string)</term>
+            <listitem>
+              <para>
+                All Readout programs are command line programs that are based
+                on a Tcl interpreter.   Readout frameworks aslo support the
+                specification of an initialization script that is run
+                immediately after the software initializes.  This variable specifies
+                the filesystem path to that script.  
+              </para>
+              <para>
+                The value of this variable is passed to the
+                <option>--init-script</option> Readout program command line
+                options.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>port</varname> (string)</term>
+            <listitem>
+              <para>
+                Readout program frameworks can run Tcl servers.  For the
+                XXUSBReadout frameworks, this capability provides slow
+                controls.   For the SBSReadout framework, this capability
+                is most often used to push the values of run variables (e.g.
+                EPIC channel values) to the Readout program for inclusion into
+                the event data stream.
+              </para>
+              <para>
+                The value of this variable is used as the value for
+                <option> --port</option>
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>sourceid </varname> (string)</term>
+            <listitem>
+              <para>
+                Provides the source id placed in event fragments emitted by this
+                readout.   Source Ids should be unique across the data acquisition
+                system.  Note that event builders also have source ids associated
+                with them when allocating these values.
+              </para>
+              <para>
+                The value of this variable is used as the value of the
+                <option>--sourceid</option> option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>status service </varname> (string)</term>
+            <listitem>
+              <para>
+                Readout programs produce log messages and status messages in
+                within the NSCLDAQ status distribution system.  The first stage
+                of aggregation of status messages is a server to which all
+                status emitters in a host send their messages.
+              </para>
+              <para>
+                The value of this variable is the name of the service the per
+                node aggregator advertises.  This defaults to <literal>StatusAggregator</literal>
+                and normally does not have to be changed.  The value of this
+                variable is used as the <option>--status-service</option>
+                command line option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>type </varname> (string)</term>
+            <listitem>
+              <para>
+                This will have the value <literal>Readout</literal> which
+                indicates that this program is a readout program.  The
+                <literal>type</literal> variable is used by
+              </para>
+              <itemizedlist>
+                <listitem>
+                  <para>
+                    The graphical program editor to select the graphical
+                    representation of the object and the set of properties
+                    it provides.
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    The status dashboard to select the graphical representation
+                    of the program in the dataflow graph.
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    The boot manager to know how to construct the full command
+                    that runs the program from the set of properties and their
+                    values.
+                  </para>
+                </listitem>
+              </itemizedlist>
+            </listitem>
+          </varlistentry>   
+        </variablelist>
+      </section>
+      <section>
+        <title>Eventlogger specific variables.</title>
+        <para>
+           In addition to the base set of variables all state programs have,
+           event log programs have these variables:
+        </para>
+        <variablelist>
+          <varlistentry>
+            <term><varname>Program Parameters</varname> (string)</term>
+            <listitem>
+              <para>
+                This variable is a well formatted Tcl list of additional
+                command line parameters (program options and their values
+                are also parameters) to pass to the event logger when starting.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>appname </varname> (string)</term>
+            <listitem>
+              <para>
+                The application name this event logger should use when emittting
+                status/log messages.  Status message sources are identified by the
+                originating host and an application name that should be unique
+                within that host.  
+              </para>
+              <para>
+                The value of this variable will be used as the value of the
+                eventlog's <option>--appname</option> option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>checksum </varname> (boolean)</term>
+            <listitem>
+              <para>
+                If true, the event logger will produce an sha512 checksum
+                of data taking runs.  If true, the <option>--checksum</option>
+                will be added to the event logger command line.  If not this
+                option wll be omitted.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>combine runs</varname> (boolean)</term>
+            <listitem>
+              <para>
+                If <literal>true</literal> the <option>--combine-runs</option>
+                is added to the event log startup command line.  If not it is not.
+                <option>--combine-runs</option> all the runs the event logger
+                receives will be put in a single set of output files.  Ntoe that
+                this only applies to <option>--one-shot</option> runs of the event
+                loggger.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>destdir </varname> (string)</term>
+            <listitem>
+              <para>
+                Path to the directory in which this event logger will store event
+                files.  Value of the <option>--path</option> option
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>freesevere </varname> (integer)</term>
+            <listitem>
+              <para>
+                The event logger will emit a severe status message if the
+                amount of free space is lower than this percentage of total
+                space. This is the value of the <option>--freesevere</option>
+                option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>freewarn </varname>(string)</term>
+            <listitem>
+              <para>
+                The event logger will emit a warning status meesage when the
+                free space is lower than this percentage of total space.
+                This will be used as the value of the
+                <option>--freewarn</option> option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>prefix </varname> (string)</term>
+            <listitem>
+              <para>
+                String which is prefixed to the event file names produced
+                by this event logger.  Value given to the
+                <option>--prefix</option> option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>segmentsize </varname> (string)</term>
+            <listitem>
+              <para>
+                The event logger will chunk the event file into segments that are
+                no more than this number of bytes.  This allows use on
+                filesystems that may have limits on file size.  Note that
+                the values may be an integer or may be an integer suffixed with
+                a unit like <literal>g</literal> for giga or <literal>m</literal>
+                for mega.  So a value like <literal>2g</literal> means segments
+                of about 2GB.
+              </para>
+              <para>
+                This will be the value of the <option>--segmentsize </option> option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>status service </varname>(string)</term>
+            <listitem>
+              <para>
+                Event log programs produce log messages and status messages in
+                within the NSCLDAQ status distribution system.  The first stage
+                of aggregation of status messages is a server to which all
+                status emitters in a host send their messages.
+              </para>
+              <para>
+                The value of this variable is the name of the service the per
+                node aggregator advertises.  This defaults to <literal>StatusAggregator</literal>
+                and normally does not have to be changed.  The value of this
+                variable is used as the <option>--service</option>
+                command line option.
+              </para>
+            </listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><varname>type</varname> (string)</term>
+            <listitem>
+              <para>
+                Always has the value <literal>EventLog</literal>.   This informs
+                software (and humans) that this program is an event logger.
+              </para>
+              <para>
+                The type is used to determine how to display the object on the
+                editing and dashboard canvases.  It's also used to determine
+                how to translate the variables into a command that starts up
+                the object.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
+      </section>
+    </section>
+    <section>
+      <title>Services and Data Analysis programs</title>
+      <para>
+        A service is a program that must run but is not in the data flow.  A
+        data anlysis program is a program that connects to the data flow but
+        neither participates in state transitions nor is an event builder data
+        source.
+      </para>
+      <para>
+        Data analysis programs are actually represented as services that have
+        additional information that allows them to be linked to input and or
+        output rings.
+      </para>
+      <note>
+        <title>NOTE</title>
+        <para>
+          Data analysis programs are not intended to represent transient
+          programs like SpecTcl or root that can start and stop a the
+          user's will.   If a data analysis program or a service exits, a system
+          failure is declared.
+        </para>
+        <para>
+          Data analysis programs are intended to capture programs such as the
+          S800 re-formatting filter, which live in the data flow and are
+          essential to the health of the experiment.
+        </para>
+      </note>
+      <para>
+        This section will look at how Services and data anaylsis programs
+        are represented in the variable database.
+      </para>
+      <para>
+        Both Services and data analysis software represented as subdirectories
+        in the <filename>/Services</filename> top level directory.  The name
+        of the subdirectory is the same as the name of the service or
+        analysis program.  Therefore if you name the boot server <literal>bootserver</literal>,
+        it will be described in the directory
+        <filename>/Services/bootserver</filename>.
+      </para>
+      <para>
+        Here are the variables that define a service:
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term><varname>args </varname> (string)</term>
+          <listitem>
+            <para>
+              Valid Tcl list that contains additional command line arguments
+              passed to the service when it's started.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>host </varname> (string)</term>
+          <listitem>
+            <para>
+              The host on which the service should be run.  This can be  dotted
+              IP address or a DNS name.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>path </varname> (string)</term>
+          <listitem>
+            <para>
+              File system path that describes where the service program lives.
+              This is used to start the service.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>type </varname> (string)</term>
+          <listitem>
+            <para>
+              Will always have the value <literal>service</literal> to indicate
+              that this is a service.   This determines how the program is
+              started as well as how the program is represented on displays
+              of the data flow (e.g. in the program editor or status dashboard).
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>editorx </varname>(integer)</term>
+          <listitem>
+            <para>
+              The X position on at which this service should be placed
+              on the canvas for
+              programs that display the dataflow
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>editory </varname>(integer)</term>
+          <listitem>
+            <para>
+              The Y position on at which this service should be placed
+              on the canvas for
+              programs that display the dataflow
+            </para>
+          </listitem>
+        </varlistentry>        
+      </variablelist>
+      <para>
+        In adition to the variables above, analysis programs get the following
+        additional variables.  These are loaded into environment variables
+        for the service when it starts.
+      </para>
+      <variablelist>
+        <varlistentry>
+          <term><varname>inring</varname> (string)</term>
+          <listitem>
+            <para>
+              URI that describes the ringbuffer (if any) the program takes
+              data from.  Note that at startup, this value of this variable
+              will be available to the program in the
+              <literal>INRING</literal> environment variable.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>outring</varname> (string)</term>
+          <listitem>
+            <para>
+              The name of the program's output ring.  Since programs may only
+              provide data t local ringbuffers, this is a ring name, not a URI.
+              When the program is started, the value of this variable is
+              available to it in the <literal>INRING</literal> environment
+              variable.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </section>
+  </section>
   </section>
 </chapter>
 

@@ -13,7 +13,9 @@ TCLPACKAGES=properties.tcl propertyEditor.tcl daqobject.tcl ringBuffer.tcl \
 
 IMAGES=program.png ringbuffer.png sysprogram.png arrow.png eventBuilder.png \
 	dsource.png readout.png eventlog.png analysis.png
-DOC_IMAGES=propertyeditor.png expEditorinitial.jpg
+DOC_IMAGES= doc-emptyEditor.png ReadoutPropertyEditor.png \
+	InvalidExperiment.png ValidationExample.png controlpanelunbooted.png \
+	controlpanelready.png
 
 
 install-exec-hook:
