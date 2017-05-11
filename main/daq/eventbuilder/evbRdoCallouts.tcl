@@ -102,7 +102,8 @@ snit::type EVBC::StartOptions {
     option -glomdt 1 
     option -glomid -default 0
     option -glomtspolicy -configuremethod checkTsPolicy -default earliest
-    option -destring $::tcl_platform(user)
+    option -destring -default $::tcl_platform(user) -configuremethod _onDestRingChanged
+    option -setdestringasevtlogsource -default 0 -configuremethod _onSetEvtLogSourceChanged
     
     variable policyValues [list earliest latest average]
     
@@ -147,6 +148,20 @@ snit::type EVBC::StartOptions {
       set options(-glombuild) [string is true $val]
     }
     
+
+    method _onSetEvtLogSourceChanged {opt val} {
+      set options(-setdestringasevtlogsource) $val
+      if {$val} {
+        ::Configuration::Set EventLoggerRing "tcp://localhost/$val"
+      }
+    }
+
+    method _onDestRingChanged {opt val} {
+      set options(-destring) $val
+      if {$options(-setdestringasevtlogsource)} {
+        ::Configuration::Set EventLoggerRing "tcp://localhost/$options(-destring)"
+      }
+    }
 }
 
 
@@ -167,7 +182,6 @@ snit::type EVBC::AppOptions {
     
     option -gui     true
     option -restart true
-    option -setdestringasevtlogsource 0
 
     delegate option * to startOptions
     delegate method * to startOptions
@@ -198,6 +212,7 @@ snit::type EVBC::AppOptions {
       return [[$self info type] %AUTO% {*}$state]
 
     }
+
 }
 
 ##############################################################################
@@ -451,27 +466,6 @@ proc ::EVBC::registerRingSource {source id info {oneshot {}} {timeout {}} {timeo
    ::RingSourceMgr::addSource $source $id $info $oneshot $timeout $timeoffset
 }
 
-#------------------------------------------------------------------------------
-## @fn EVBC::registerS800Source
-#
-# Convenience method for registering an S800 source. It is just a call to 
-# EVBC:registerRingSource but the s800 timestamp extractor is provided for
-# the user.
-#
-# @param ringUrl          - URL of the source ring.
-# @param id               - Source id used to associate event fragments
-#                           with an input queue.
-# @param desc             - Long description used to identify the source
-#                           in the event orderer GUI.
-#
-proc ::EVBC::registerS800Source {ringUrl id {desc {S800 USB data}}} { 
-    #
-    # Figure out the timestamp extractor path:
-    #
-    set extractor  [file join $EVBC::daqtop lib libS800TimeExtractor.so]
-    
-    ::EVBC::registerRingSource $ringUrl $extractor $id $desc
-}
 #------------------------------------------------------------------------------
 ##
 # @fn EVBC::startRingSource [obsolete - use RingSourceMgr::startSource for new apps]
@@ -934,9 +928,6 @@ proc ::EVBC::_onDestRingChanged w {
         $::EVBC::applicationOptions configure -destring [$w cget -ring]
         $::EVBC::applicationOptions configure \
             -setdestringasevtlogsource [$w cget -record] 
-        if {[$EVBC::applicationOptions cget -setdestringasevtlogsource] } {
-            ::Configuration::Set EventLoggerRing "tcp://localhost/[$::EVBC::applicationOptions cget -destring]"
-        }
     } else {
         $w configure -ring [$::EVBC::applicationOptions cget -destring]
         $w configure -record [$::EVBC::applicationOptions cget -setdestringasevtlogsource]
