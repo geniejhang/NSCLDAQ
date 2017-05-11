@@ -84,7 +84,7 @@ static const int    MININTERVAL(5);     // Minimum update interval
 static const string DataArrayName("EPICS_DATA"); // Name of data tcl array.
 static const string UnitsArrayName("EPICS_UNITS"); // Name of units tcl array.
 static const string UpdateArrayName("EPICS_UPDATED"); // when last updated.
-
+static const string StampArrayName("EPICS_TIMESTAMP");
 /*!
     Construct the application.  We only fill in the default
     values for the setup file, port, host and interval. Much
@@ -200,8 +200,8 @@ CApplication::operator()(gengetopt_args_info& Parameters)
       m_Channels.foreach(ChannelInitializer);	// Lookup channels and revive.
       cerr << "Channel lookup complete\n";
       while(m_Socket.getState() == CSocket::Connected) {
-	Update();
-	Delay(m_nInterval);
+        Update();
+        Delay(m_nInterval);
       }
     }
     throw "Unable to form a connection to the server";
@@ -340,6 +340,10 @@ CApplication::ChannelsToServer(CBuildChannelData& chans)
     string value    = i->second.m_sValue;
     string units    = i->second.m_sUnits;
     string updated  = FormatTime(i->second.m_Updated);
+    
+    ostringstream stampStream;
+    stampStream << i->second.m_Updated;         // stringified time_t.
+    string stamp    = stampStream.str();
 
     // Format the commands and send them on to the server.
     // If we lose the connection then break from the loop.
@@ -357,6 +361,9 @@ CApplication::ChannelsToServer(CBuildChannelData& chans)
       }
       
       command = GenerateSet(UpdateArrayName, name, updated);
+      m_Socket.Write((void*)command.c_str(), command.size());
+      
+      command = GenerateSet(StampArrayName, name, stamp);
       m_Socket.Write((void*)command.c_str(), command.size());
     }
     catch (CException& problem) {
