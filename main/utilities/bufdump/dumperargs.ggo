@@ -8,4 +8,5 @@ option "count"  c "Number of items to dump before exiting" int optional
 option "sample" S "List of item types to sample" string optional
 option "exclude" e "List of item types to exclude from the dump" string optional
 option "scaler-width" w "Number of bits wide scaler counters are" int optional default="32"
+option "tod"    t  "Put time of day on each output item - useful when from ring" flag off
 

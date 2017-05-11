@@ -61,7 +61,8 @@ using namespace std;
 */
 BufdumpMain::BufdumpMain() :
   m_skipCount(0),
-  m_itemCount(0)
+  m_itemCount(0),
+  m_stamp(false)
 {
 }
 
@@ -212,6 +213,13 @@ BufdumpMain::operator()(int argc, char** argv)
   }
 
   CSimpleAllButPredicate predicate;
+  if (parse.tod_flag) {
+    m_stamp = true;
+  } else {
+    m_stamp = false;
+  }
+  // Skip any items that need to be skipped:
+
 
   for (int i=0; i < exclude.size(); i++) {
     predicate.addExceptionType(exclude[i]);
@@ -263,7 +271,14 @@ BufdumpMain::processItem(const CRawRingItem& item)
 {
 
   cout << "-----------------------------------------------------------\n";
+
   auto pActualItem = CRingItemFactory::createRingItem(item);
+
+  if (m_stamp) {
+    time_t now = time(nullptr);
+    cout << ctime(&now) << std::endl;
+  }
+  
   cout << pActualItem->toString();
 
 }
