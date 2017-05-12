@@ -88,7 +88,7 @@ TCL_EVB_PACKAGE_FILES=evbRdoCallouts.tcl EVBStateCallouts.tcl \
 TCL_TEST_FILES=tclTests.tcl cbmanagerTests.test cmanagerCallbacks.test ringsourcemgr.test
 
 
-EXTRA_DIST=eventbuilder_user.xml protocol.xml api.xml orderer.xml frag2ring.xml Asserts.h \
+EXTRA_DIST=eventbuilder_user.xml protocol.xml api.xml orderer.xml frag2ring.xml \
 	$(TCL_PACKAGE_FILES) \
 	$(TCL_TEST_FILES) options.ggo \
         $(TCL_EVB_PACKAGE_FILES)       \
@@ -118,21 +118,7 @@ install-exec-hook:
 #
 # Tests:
 
-noinst_PROGRAMS = unittests ordertests
-
-unittests_DEPENDENCIES = @builddir@/libEventBuilderClient.la cmdline.o cmdline.h
-unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
-	connectTest.cpp  
-nodist_unittests_SOURCES = cmdline.c cmdline.h
-
-
-unittests_LDADD = @builddir@/libEventBuilderClient.la \
-	$(libEventBuilder_la_LIBADD) \
-	@top_builddir@/servers/portmanager/libPortManager.la \
-	@top_builddir@/base/tcpip/libTcp.la 	\
-	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@
-
-unittests_CPPFLAGS=$(COMPILATION_FLAGS) -I@top_srcdir@/base/testutils
+noinst_PROGRAMS =  ordertests
 
 
 ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
@@ -152,7 +138,6 @@ ordertests_CPPFLAGS=$(COMPILATION_FLAGS) \
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs HERE=@srcdir@ tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl
 	./ordertests
-#	./unittests 
 
 
 BUILT_SOURCES=cmdline.h cmdline.c
