@@ -23,7 +23,7 @@ package require RunstateMachine
 package require StateManager
 package require DataSourceUI
 package require img::png
-
+package require dialogWrapper
 package provide ui   1.0
 package provide ReadoutGUIPanel 1.0
 
@@ -2356,6 +2356,8 @@ snit::widgetadaptor TabbedOutput {
     # log file if open [list] if not...used to bring new windows into the log:
     
     variable logFile [list]
+    
+    variable waitvar 0
 
     ##
     #  constructor
@@ -2389,6 +2391,10 @@ snit::widgetadaptor TabbedOutput {
 # It's lines have been read.
 
         bind $win <<NotebookTabChanged>> [mymethod _TabChanged]
+        
+        # Provide a binding that allows users to rename the tabs:
+        
+        bind $win <Button-3> [mymethod _renameTab %x %y]
     }
 
     #---------------------------------------------------------------------------------
@@ -2503,6 +2509,33 @@ snit::widgetadaptor TabbedOutput {
     # Private utility methods.
     #
 
+    ##
+    # _renameTab
+    #   Pops up a dialog that lets users rename the output tabs:
+    #
+    # @param x - X position of the mouse hit.
+    # @param y - Y position of the mouse hit.
+    #
+    method _renameTab {x y} {
+        set tabId [$win index @$x,$y]
+        toplevel .tabrename
+        set d    [DialogWrapper .tabrename.d]
+        set c    [$d controlarea]
+        set t    [ttk::entry $c.e]
+        $d configure -form $t
+        pack $d -fill both -expand 1
+        
+        #  Sometimes modal happens before the display so:
+        
+        after 100 [list incr [myvar waitvar]]
+        vwait [myvar waitvar]
+        set result [$d modal]
+        if {$result eq "Ok"} {
+            $win tab $tabId -text [$t get]
+        }
+        
+        destroy .tabrename
+    }
     ##
     #  _DoAll
     #    Do the same command in all windows.
