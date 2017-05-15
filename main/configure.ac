@@ -361,7 +361,7 @@ then
 fi
 
 AM_CONDITIONAL([FORMAT_STANDALONE], [false])
-FORMAT_DIR="$srcdir"/utilities/nscldaq-format
+FORMAT_DIR=utilities/nscldaq-format
 
 AC_SUBST(FORMAT_DIR)
 
