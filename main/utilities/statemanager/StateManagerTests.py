@@ -947,3 +947,4 @@ class ProgramOnlyTests(StateManagerTests):
 if __name__ == '__main__':
     unittest.main(verbosity=0)
     gc.collect()
+    sys.exit(0)
