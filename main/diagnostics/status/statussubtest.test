@@ -152,6 +152,7 @@ tcltest::test subscribe {Create a subscription ensure we only get matching} \
     set ::cmd [statusSubscription create tcp://localhost:$::port    \
         [list [list LOG_MESSAGE INFO]]                              \
     ]
+    after 100
 } \
 -cleanup {
     commonCleanup
@@ -187,6 +188,7 @@ tcltest::test onmsg {Test that onMessage can deliver us an event} \
     set ::cmd [statusSubscription create tcp://localhost:$::port    \
         [list [list LOG_MESSAGE INFO]]                              \
     ]
+    after 100
 } \
 -cleanup {
     commonCleanup
