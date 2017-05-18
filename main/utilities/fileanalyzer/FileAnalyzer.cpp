@@ -36,15 +36,30 @@ struct CmdlineArgs {
   bool   s_built;
 };
 
-void printSpecialUsage() {
-  cout << "  -O" << endl;
-  cout << "  --output-file   The name of the file to write statistics to" << endl;
 
-  cout << "\n  -u" << endl;
-  cout << "  --unbuilt       If present, data is not treated as built data." << endl;
+/*!
+ * \brief printSpecialUsage
+ *
+ * Print a description of options beyond those provided by the core filter framework.
+ */
+void printSpecialUsage() {
+  cout << "  -O, --output-file            [MANDATORY] The name of the file to write statistics to" << endl;
+
+  cout << "\n  -u, --unbuilt                If present, data is not treated as built data." << endl;
 }
 
 
+/*!
+ * \brief Create a vector<string> from argv and argc
+ *
+ * \param argc  the number of command line args
+ * \param argv  the command line args
+ *
+ * I personally find it easier to work with a vector than a POD-array.
+ * For that reason, I am converting.
+ *
+ * \return a copy of the command line arguments
+ */
 vector<string> 
 cArgsToCppArgs(int argc, char* argv[]) 
 {
@@ -55,7 +70,14 @@ cArgsToCppArgs(int argc, char* argv[])
   return args;
 }
 
-
+/*!
+ * \brief Locate, handle, and remove special arguments
+ *
+ * \param argv  the command line arguments
+ *
+ * \return a pair. the first element is the filtered argument list and the
+ *         second element contains the state of the special arguments after parsing
+ */
 pair<vector<string>, CmdlineArgs>
 processAndRemoveSpecialArgs(const vector<string>& argv)
 {
@@ -82,6 +104,9 @@ processAndRemoveSpecialArgs(const vector<string>& argv)
       cmdArgs.s_built = false;
     } else if (option == "--help" || option == "-h") {
       atexit( printSpecialUsage );
+      // the --help or -h needs to be appended to the filtered args in order
+      // to cause the core filter framework to output its help information
+      filteredArgv.push_back(string(argv.at(i)));
     } else {
       filteredArgv.push_back(string(argv.at(i)));
     } 
@@ -89,6 +114,16 @@ processAndRemoveSpecialArgs(const vector<string>& argv)
   return make_pair(filteredArgv, cmdArgs);
 }
 
+
+/*!
+ * \brief Recreate the argv based on a vector<string>
+ *
+ * \param argV  the list of arguments
+ *
+ *  This is just the opposite of cArgsToCppArgs
+ *
+ * \return  a pointer to an array of c-strings
+ */
 char** createNewCArgV(const vector<string>& argV)
 {
   char** pArgV = new char*[argV.size()];
@@ -102,7 +137,6 @@ char** createNewCArgV(const vector<string>& argV)
   return pArgV;
 }
 
-/// The main function
 /**! main function
   Creates a CFilterMain object and 
   executes its operator()() method. 
@@ -121,16 +155,18 @@ int main(int argc, char* argv[])
     auto parserResult    = processAndRemoveSpecialArgs(argV);
     vector<string> newArgV  = parserResult.first;
 
-    if (newArgV == argV) {
-      cout << "User did not provide an output file. Specify --output-file or -O option" << endl;
-      return 1;
-    }
-
     argc = newArgV.size();
     argv = createNewCArgV(newArgV);
 
     // Create the main
-    CFilterMain theApp(argc,argv);
+    CFilterMain theApp(argc, argv);
+
+    if (newArgV == argV) {
+      cout << "User did not provide an output file. Specify --output-file or -O option" << endl;
+      theApp.printUsageString();
+      printSpecialUsage();
+      return 1;
+    }
 
     V12::CFilterAbstractionPtr pVersion(new V12::CFilterAbstraction);
 
