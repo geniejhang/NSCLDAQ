@@ -152,14 +152,14 @@ snit::type EVBC::StartOptions {
     method _onSetEvtLogSourceChanged {opt val} {
       set options(-setdestringasevtlogsource) $val
       if {$val} {
-        ::Configuration::Set EventLoggerRing "tcp://localhost/$val"
+        ::Configuration::Set EventLoggerRing "tcp://localhost/$options(-destring)"
       }
     }
 
     method _onDestRingChanged {opt val} {
       set options(-destring) $val
       if {$options(-setdestringasevtlogsource)} {
-        ::Configuration::Set EventLoggerRing "tcp://localhost/$options(-destring)"
+        ::Configuration::Set EventLoggerRing "tcp://localhost/$val"
       }
     }
 }
