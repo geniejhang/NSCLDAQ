@@ -154,8 +154,8 @@ snit::type MCFD16Memorizer {
     dict set _memory trig0_source NA
     dict set _memory trig1_source NA
     dict set _memory trig2_source NA
-    dict set _memory or0_pattern NA
-    dict set _memory or1_pattern NA
+    dict set _memory or0_pattern 255
+    dict set _memory or1_pattern 255
     dict set _memory fast_veto NA
 
   }

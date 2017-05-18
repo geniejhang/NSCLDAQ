@@ -400,7 +400,6 @@ snit::widget MCFD16IndividualView {
                         -defaultstring "Ch$ch"
 
     ttk::spinbox $w.th$ch -textvariable "[$self mcfd](th$ch)" -width 4 \
-
       -style "$style.TSpinbox" -from 0 -to 255 ;# -state readonly
 
 
