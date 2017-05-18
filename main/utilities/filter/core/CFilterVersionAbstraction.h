@@ -113,6 +113,13 @@ public:
      * \return a pinter to the cached filter mediator
      */
     virtual CFilterMediator* getFilterMediator() = 0;
+
+    /*!
+     * \return the major version of the filter version abstraction
+     */
+    virtual int getMajorVersion() const = 0;
+
+    virtual void setOneShotMode(int nSources) = 0;
 };
 
 

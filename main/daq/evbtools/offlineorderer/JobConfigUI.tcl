@@ -23,7 +23,7 @@
 package provide OfflineEVBJobConfigUI 11.0
 
 package require FileListWidget
-package require OfflineEVBMissingSourceUI
+#package require OfflineEVBMissingSourceUI
 
 package require OfflineEVBInputPipeline
 package require OfflineEVBHoistPipeline
@@ -217,7 +217,7 @@ snit::type JobConfigUIPresenter {
 
   variable m_model     ;#< The model  a job 
   variable m_view      ;#< The view, owned by this
-  variable m_missing   ;#< The missing source presenter 
+#  variable m_missing   ;#< The missing source presenter 
   variable m_build     ;#< The build event widgetpresenter 
 
   variable m_filelist ;#< the view's file list widget
@@ -276,13 +276,13 @@ snit::type JobConfigUIPresenter {
     #
     set m_filelist [$m_view getFileListPresenter]
 
-    # Create a new dictionary containing a parameter set to pass to the 
-    # the MissingSourceConfigUIPresenter to operate on.
-    set m_missingModel [dict create -inputparams [dict get $m_model -inputparams] \
-                                    -hoistparams [dict get $m_model -hoistparams]]
-    set m_missing [MissingSourceConfigUIPresenter %AUTO% \
-                                  -widgetname $options(-widgetname).missing]
-    $m_missing setModel $m_missingModel
+#    # Create a new dictionary containing a parameter set to pass to the 
+#    # the MissingSourceConfigUIPresenter to operate on.
+#    set m_missingModel [dict create -inputparams [dict get $m_model -inputparams] \
+#                                    -hoistparams [dict get $m_model -hoistparams]]
+#    set m_missing [MissingSourceConfigUIPresenter %AUTO% \
+#                                  -widgetname $options(-widgetname).missing]
+#    $m_missing setModel $m_missingModel
 
     # The build event widget is much simpler to set up because it only
     # operates on a single parameter set. We just send it the EVBC::AppOptions
@@ -291,7 +291,7 @@ snit::type JobConfigUIPresenter {
                                   -widgetname $options(-widgetname).build]
     $m_build setModel [dict get $m_model -evbparams]
 
-    $m_view gridMissingWidget $options(-widgetname).missing
+    #$m_view gridMissingWidget $options(-widgetname).missing
     $m_view gridBuildWidget   $options(-widgetname).build
 
     # Tree the model as though we don't own it so that we prevent deleting it
@@ -327,6 +327,7 @@ snit::type JobConfigUIPresenter {
   method setModel {model {own 0}} {
     # if we own the model, the destroy it so it doesn't hang around
     if {$options(-ownmodel)} {
+      puts "destroying $m_model"
       Job::destroy $m_model
     }
 
@@ -335,7 +336,7 @@ snit::type JobConfigUIPresenter {
     set options(-ownmodel) $own
 
     # update the missing source and build event presenter's models too
-    $m_missing setModel $m_model $own
+#    $m_missing setModel $m_model $own
     $m_build   setModel [dict get $m_model -evbparams] $own
 
     # sync the view to the model
@@ -364,7 +365,7 @@ snit::type JobConfigUIPresenter {
   #
   method updateViewData {model} {
 
-    $m_missing updateViewData $model
+#    $m_missing updateViewData $model
     $m_build   updateViewData [dict get $model -evbparams]
 
     # build the display info from scratch for simplicity 
@@ -382,7 +383,7 @@ snit::type JobConfigUIPresenter {
   method commitViewDataToModel {} {
 
     # update the values for the missing sources and evb 
-    $m_missing commitViewDataToModel
+#    $m_missing commitViewDataToModel
     $m_build   commitViewDataToModel
 
     # set the files from the files dialogue
@@ -395,7 +396,7 @@ snit::type JobConfigUIPresenter {
     # form the range of accepted ids
     set ids [$m_view cget -expectedids]
     set ids [split $ids ","]
-    set cleanedIds [list]
+    set cleanIds [list]
     foreach id $ids {
       lappend cleanIds [string trim $id]
     }
@@ -618,37 +619,10 @@ snit::type JobConfigUIPresenter {
     # clean up.
     file delete $resultFile
 
-    # Do some basic analysis
+    # in the old days, glom would output as many end runs as were input to it.
+    # in the 12.0 era, glom should correlate all end runs into a single COMP_END_RUN item
+    $m_view configure -nsources 1
     
-    # count the number of sources
-    set beginCount 0
-    set endCount 0
-    dict for {id itemCounts} $sourceMap {
-      incr beginCount [dict get $itemCounts BEGIN_RUN]
-      incr endCount   [dict get $itemCounts END_RUN]
-
-    }
-
-    if {$beginCount != $endCount} {
-      set msg "Analysis found $beginCount begin items and $endCount end items. "
-      append msg "Because these are different numbers, the file cannot be safely processed."
-      tk_messageBox -icon error -message $msg -parent $m_view
-      return ""
-    }
-    $m_view configure -nsources $endCount
-    
-    if {[dict exists $sourceMap 4294967295]} {
-      set missingWidget [$m_view cget -missingwidget]
-      $missingWidget configure -missing 1
-      set suggestedId [$self generateSuggestedID $sourceMap]
-      $missingWidget setSourceID $suggestedId
-    }
-
-
-    dict for {id value} $sourceMap {
-      puts "$id:"
-      puts "\t$value"
-    }
     set ids [dict keys $sourceMap]
 
     set index [lsearch -exact $ids 4294967295]
@@ -657,8 +631,6 @@ snit::type JobConfigUIPresenter {
     }
     set idString [join $ids ", "]
     $m_view configure -expectedids $idString
-
-
   }
 
   ## @brief Break the vwait
@@ -935,6 +907,7 @@ snit::type BuildEventsPresenter {
   # @param own    boolean for whether this can destroy the model
   method setModel {model {own 0}} {
     if {$options(-ownmodel)} {
+      puts "destroying $m_model"
       $m_model destroy
     }
     set m_model $model

@@ -77,6 +77,7 @@ class CFilterMain
 
     void setMediator(CFilterMediatorPtr pMediator) { m_pMediator = pMediator; }
 
+    void printUsageString() const;
 
   private:
     // Private utility functions 

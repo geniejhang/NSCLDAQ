@@ -4,11 +4,15 @@
 #include <V12/CFilterAbstraction.h>
 #include <CFilterMediator.h>
 
+#include <stdexcept>
+
 namespace DAQ {
 namespace V12 {
 
 COneShotLogicFilter::COneShotLogicFilter(int nSources, CFilterAbstraction& abstraction)
-    : m_handler(nSources, BEGIN_RUN, END_RUN, {BEGIN_RUN, END_RUN, PAUSE_RUN, RESUME_RUN}),
+    : m_handler(nSources, BEGIN_RUN, END_RUN, {BEGIN_RUN, END_RUN, PAUSE_RUN, RESUME_RUN,
+                                               COMP_BEGIN_RUN, COMP_END_RUN,
+                                               COMP_PAUSE_RUN, COMP_RESUME_RUN}),
       m_pAbstraction(&abstraction)
 {
 }
@@ -132,7 +136,7 @@ COneShotLogicFilter::handleStateChangeItem(CRingStateChangeItemPtr pItem)
         return pItem;
     } else {
 
-        if (m_handler.waitingForBegin() && (pItem->type() != BEGIN_RUN)) {
+        if (m_handler.waitingForBegin() && ((pItem->type() & 0x7fff) != BEGIN_RUN)) {
             return nullptr;
         } else {
             return pItem;
@@ -157,7 +161,49 @@ CRingTextItemPtr COneShotLogicFilter::handleTextItem(CRingTextItemPtr pItem)
  */
 CCompositeRingItemPtr COneShotLogicFilter::handleCompositeItem(CCompositeRingItemPtr pItem)
 {
-    return handleItem(pItem);
+    if ( pItem->type() == COMP_BEGIN_RUN
+            || pItem->type() == COMP_END_RUN
+            || pItem->type() == COMP_PAUSE_RUN
+            || pItem->type() == COMP_RESUME_RUN ) {
+
+        CRingStateChangeItemPtr pState;
+        if (pItem->count() > 0) {
+            pState = std::dynamic_pointer_cast<CRingStateChangeItem>((*pItem)[0]);
+        } else {
+            // The composite item has not children... this is not a sane item in a normal
+            // data stream.
+            std::string mesg("V12::COneShotLogicFilter::handleCompositeItem() ");
+            mesg += "Composite ring item has no children!";
+            throw std::runtime_error(mesg);
+        }
+
+        // pass in the type of the parent object but with the run number extracted from a child
+        m_handler.update(pItem->type() & 0x7fff, pState->getRunNumber());
+
+        if (m_handler.complete()) {
+            // this will cause the mediator to stop after outputting this event.
+            // not that if this is in a composite filter, any filter that is after
+            // this filter will still process this item. However, no new items
+            // will be processed.
+            CFilterMediator* pMediator = m_pAbstraction->getFilterMediator();
+            if (pMediator) {
+                pMediator->setAbort();
+            }
+
+            return pItem;
+        } else {
+
+            if (m_handler.waitingForBegin() && ((pItem->type() & 0x7fff) != BEGIN_RUN)) {
+                return nullptr;
+            } else {
+                return pItem;
+            }
+        }
+    } else {
+
+        // not a state change item... just treat it as anything else...
+        return handleItem(pItem);
+    }
 }
 
 /*!
@@ -167,5 +213,5 @@ const COneShotHandler& COneShotLogicFilter::getOneShotLogic() const {
     return m_handler;
 }
 
-} // end V11
+} // end V12
 } // end DAQ

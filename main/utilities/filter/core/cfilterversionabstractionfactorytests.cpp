@@ -52,6 +52,8 @@ public:
     void setExcludeList(const std::string&) {}
     void setSampleList(const std::string&) {}
     void setFilterMediator(CFilterMediator &mediator) {}
+    int getMajorVersion() const { return 0; }
+    void setOneShotMode(int nSources) {}
     CFilterMediator* getFilterMediator() { return nullptr; }
 };
 
@@ -74,7 +76,6 @@ class CFilterVersionAbstractionFactoryTest : public CppUnit::TestFixture
 {
 
   public:
-
     CPPUNIT_TEST_SUITE( CFilterVersionAbstractionFactoryTest );
     CPPUNIT_TEST ( addGetCreator_0 );
     CPPUNIT_TEST ( getCreator_0 );

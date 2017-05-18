@@ -26,46 +26,78 @@ CSourceCounterFilter::~CSourceCounterFilter()
 // The default handlers
 CRingItemPtr CSourceCounterFilter::handleRingItem(CRingItemPtr pItem)
 {
-  return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CRingStateChangeItemPtr CSourceCounterFilter::handleStateChangeItem(CRingStateChangeItemPtr pItem) 
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+      return handleItem(pItem);
+    }
 }
 
 CRingScalerItemPtr CSourceCounterFilter::handleScalerItem(CRingScalerItemPtr pItem) 
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CRingTextItemPtr CSourceCounterFilter::handleTextItem(CRingTextItemPtr pItem) 
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CPhysicsEventItemPtr CSourceCounterFilter::handlePhysicsEventItem(CPhysicsEventItemPtr pItem) 
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CRingPhysicsEventCountItemPtr
 CSourceCounterFilter::handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr pItem)
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CDataFormatItemPtr
 CSourceCounterFilter::handleDataFormatItem(CDataFormatItemPtr pItem)
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 
 CAbnormalEndItemPtr
 CSourceCounterFilter::handleAbnormalEndItem(CAbnormalEndItemPtr pItem)
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CCompositeRingItemPtr
@@ -133,6 +165,18 @@ string CSourceCounterFilter::translate(uint32_t type) const
   namemap[PHYSICS_EVENT_COUNT]  = "PHYSICS_EVENT_COUNT";
   namemap[EVB_GLOM_INFO]        = "EVB_GLOM_INFO";
   namemap[ABNORMAL_ENDRUN]      = "ABNORMAL_ENDRUN";
+  namemap[COMP_BEGIN_RUN]            = "COMP_BEGIN_RUN";
+  namemap[COMP_END_RUN]              = "COMP_END_RUN";
+  namemap[COMP_PAUSE_RUN]            = "COMP_PAUSE_RUN";
+  namemap[COMP_RESUME_RUN]           = "COMP_RESUME_RUN";
+  namemap[COMP_PACKET_TYPES]         = "COMP_PACKET_TYPES";
+  namemap[COMP_MONITORED_VARIABLES]  = "COMP_MONITORED_VARIABLES";
+  namemap[COMP_RING_FORMAT]          = "COMP_RING_FORMAT";
+  namemap[COMP_PERIODIC_SCALERS]     = "COMP_PERIODIC_SCALERS";
+  namemap[COMP_PHYSICS_EVENT]        = "COMP_PHYSICS_EVENT";
+  namemap[COMP_PHYSICS_EVENT_COUNT]  = "COMP_PHYSICS_EVENT_COUNT";
+  namemap[COMP_EVB_GLOM_INFO]        = "COMP_EVB_GLOM_INFO";
+  namemap[COMP_ABNORMAL_ENDRUN]      = "COMP_ABNORMAL_ENDRUN";
 
   map<uint32_t,string>::const_iterator it;
   it = namemap.find(type);
@@ -182,8 +226,26 @@ void CSourceCounterFilter::setupCounters(uint32_t id)
   m_counters[id][EVB_GLOM_INFO]       = 0;
 
   m_counters[id][ABNORMAL_ENDRUN]     = 0;
+
+  m_counters[id][COMP_BEGIN_RUN]           = 0;
+  m_counters[id][COMP_END_RUN]             = 0;
+  m_counters[id][COMP_PAUSE_RUN]           = 0;
+  m_counters[id][COMP_RESUME_RUN]          = 0;
+
+  m_counters[id][COMP_PACKET_TYPES]        = 0;
+  m_counters[id][COMP_MONITORED_VARIABLES] = 0;
+  m_counters[id][COMP_RING_FORMAT]         = 0;
+
+  m_counters[id][COMP_PERIODIC_SCALERS]    = 0;
+
+  m_counters[id][COMP_PHYSICS_EVENT]       = 0;
+  m_counters[id][COMP_PHYSICS_EVENT_COUNT] = 0;
+
+  m_counters[id][COMP_EVB_GLOM_INFO]       = 0;
+
+  m_counters[id][COMP_ABNORMAL_ENDRUN]     = 0;
 }
 
 
-} // end V11
+} // end V12
 } // end DAQ

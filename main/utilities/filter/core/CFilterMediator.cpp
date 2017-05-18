@@ -64,6 +64,9 @@ void CFilterMediator::mainLoop()
         }
 
         m_pVsnAbstraction->readDatum(source);
+        if (source.eof()) {
+            break;
+        }
 
         action = m_pPredicate->postInputUpdate(*this, m_pVsnAbstraction->getDatumType());
         if (action == CPredicatedMediator::SKIP) {

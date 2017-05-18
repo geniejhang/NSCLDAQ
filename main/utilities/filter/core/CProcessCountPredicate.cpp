@@ -61,12 +61,15 @@ CProcessCountPredicate::preInputUpdate(CPredicatedMediator &transform)
 CPredicatedMediator::Action
 CProcessCountPredicate::postInputUpdate(CPredicatedMediator &transform, int type)
 {
-    if (m_skipped < m_toSkip) {
+    if (m_skipped < m_toSkip && m_toSkip != 0) {
         m_skipped++;
         return CPredicatedMediator::SKIP;
     }
 
-    if (m_processed < m_toProcess) {
+    if (m_toProcess == 0) {
+        // there is no set number to process... just continue processing
+        return CPredicatedMediator::CONTINUE;
+    } else if (m_processed < m_toProcess ) {
         m_processed++;
         return CPredicatedMediator::CONTINUE;
     } else {

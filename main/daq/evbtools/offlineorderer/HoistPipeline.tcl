@@ -31,13 +31,9 @@ package require snit
 snit::type OfflineEVBHoistPipeParams {
 
   option -sourcering  -default "OfflineEVBIn"   ;#< ring to attach to 
-  option -tstamplib   -default ""               ;#< tstamp lib
   option -id          -default [list 0]                ;#< source id 
 
   option -info        -default "Data from OfflineEVBIn" ;#< Info message to display 
-  option -expectbheaders -default 1             ;#< Whether to use 
-                                                ;#  --expectbodyheaders flag
-
 
 
   ## @brief Basic constructor to parse options
@@ -59,7 +55,6 @@ snit::type OfflineEVBHoistPipeParams {
      set errors [list]
 
      $self validateSourceRing errors
-     $self validateTstampLib errors
      $self validateId errors
      $self validateInfo errors
 
@@ -80,28 +75,6 @@ snit::type OfflineEVBHoistPipeParams {
        lappend errors "Ring $options(-sourcering) does not exist on localhost."
     }
   }
-
-  ## @brief Validate the tstamp library
-  #
-  # Ensure that the tstamp library has been specified if the -expectbheaders
-  # option is false, and also ensure that it actually exists if it was 
-  # specified.
-  #
-  # @param errors_  the variable name of the list
-  #
-  method validateTstampLib {errors_} {
-    upvar $errors_ errors
-    # check for missing tstamplib
-    if {$options(-tstamplib) eq "" } {
-      # this is only bad if the -exectbheaders option is specified
-      if { ! $options(-expectbheaders) } {
-        lappend errors "Timestamp extractor library has not been specified and is mandatory."
-      }
-    } elseif {! [file exists $options(-tstamplib)] } {
-       lappend errors "Timestamp extractor library \"$options(-tstamplib)\" does not exist."
-    }
-  }
-
 
   ## @brief Validate the source id provided
   # 

@@ -16,6 +16,7 @@ snit::type RunStateObserver {
   option -onpause -default {}
   option -onresume -default {}
   option -onend   -default {}
+  option -oncompositeend   -default {}
 
   variable acqThread {}
 
@@ -81,7 +82,7 @@ snit::type RunStateObserver {
     set myThread [thread::id]
     set getItems "proc getItems {obj tid uri} { 
         while {\[tsv::get \$::instance continue\]} {                                             
-            set ringItem \[ring get \$uri {1 2 3 4}]             
+            set ringItem \[ring get \$uri {1 2 3 4 0x8002}]
             thread::send \$tid \[list \$obj handleData \$ringItem]     
         }                                                     
     }                                                         
@@ -108,6 +109,11 @@ snit::type RunStateObserver {
       "End Run"  { 
         if {$options(-onend) ne {} } {
           uplevel #0 $options(-onend) [list $item]
+        }
+      }
+      "Composite End Run"  { 
+        if {$options(-oncompositeend) ne {} } {
+          uplevel #0 $options(-oncompositeend) [list $item]
         }
       }
       "Pause Run"  { 
