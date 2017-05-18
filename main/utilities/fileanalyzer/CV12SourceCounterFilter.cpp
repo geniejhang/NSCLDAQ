@@ -26,46 +26,78 @@ CSourceCounterFilter::~CSourceCounterFilter()
 // The default handlers
 CRingItemPtr CSourceCounterFilter::handleRingItem(CRingItemPtr pItem)
 {
-  return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CRingStateChangeItemPtr CSourceCounterFilter::handleStateChangeItem(CRingStateChangeItemPtr pItem) 
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+      return handleItem(pItem);
+    }
 }
 
 CRingScalerItemPtr CSourceCounterFilter::handleScalerItem(CRingScalerItemPtr pItem) 
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CRingTextItemPtr CSourceCounterFilter::handleTextItem(CRingTextItemPtr pItem) 
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CPhysicsEventItemPtr CSourceCounterFilter::handlePhysicsEventItem(CPhysicsEventItemPtr pItem) 
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CRingPhysicsEventCountItemPtr
 CSourceCounterFilter::handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr pItem)
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CDataFormatItemPtr
 CSourceCounterFilter::handleDataFormatItem(CDataFormatItemPtr pItem)
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 
 CAbnormalEndItemPtr
 CSourceCounterFilter::handleAbnormalEndItem(CAbnormalEndItemPtr pItem)
 {
-    return handleItem(pItem);
+    if (m_builtData) {
+        return nullptr;
+    } else {
+        return handleItem(pItem);
+    }
 }
 
 CCompositeRingItemPtr
