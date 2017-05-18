@@ -56,13 +56,6 @@ CFilterMain::CFilterMain(int argc, char** argv)
 
       auto pPred = std::make_shared<CCompositePredicate>();
 
-//     if (m_argsInfo->oneshot_given) {
-//      m_mediator = new COneShotMediator(0,new CCompositeFilter,0,
-//          m_argsInfo->number_of_sources_arg);
-//    } else {
-//      m_mediator = new CInfiniteMediator(0,new CCompositeFilter,0);
-//    }
-
     // Set up the data source 
     auto pSource = constructDataSource();
     m_pMediator->setDataSource(std::move(pSource));
@@ -113,27 +106,21 @@ CFilterMain::~CFilterMain()
   delete m_argsInfo;
 }
 
-///**! Append a filter to the mediator's ccomposite filter
-//  Note that because the filter argument will be used solely
-//  to call a clone, it is very important that any derived class
-//  will provide its own clone method.
-
-//  \param filter a template of the filter to register
-// */
-//void CFilterMain::registerFilter(const CFilter* filter)
-//{
-//  // We will always have a composite filter in this main
-//  CCompositeFilter* main_filter=0;
-//  main_filter = dynamic_cast<CCompositeFilter*>(m_pMediator->getFilter());
-
-//  main_filter->registerFilter(filter);
-//}
 
 void CFilterMain::setVersionAbstraction(CFilterVersionAbstractionPtr pAbstraction)
 {
     m_pMediator->setVersionAbstraction(pAbstraction);
+
+    if (m_argsInfo->oneshot_given) {
+        pAbstraction->setOneShotMode(m_argsInfo->number_of_sources_arg);
+    }
 }
 
+
+void CFilterMain::printUsageString() const
+{
+    cmdline_parser_print_help();
+}
 
 /////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////
