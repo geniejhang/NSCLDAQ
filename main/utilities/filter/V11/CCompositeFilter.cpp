@@ -115,6 +115,11 @@ void CCompositeFilter::registerFilter(CFilterPtr filter)
   m_filter.push_back(filter);
 }
 
+CCompositeFilter::FilterContainer& CCompositeFilter::getFilters()
+{
+    return m_filter;
+}
+
 /**! Handle a generic ring item
  *
     This handler iterates through the set of

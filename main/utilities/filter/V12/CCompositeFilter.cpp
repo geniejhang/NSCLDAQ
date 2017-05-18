@@ -113,6 +113,12 @@ void CCompositeFilter::registerFilter(CFilterPtr filter)
   m_filter.push_back(filter);
 }
 
+
+CCompositeFilter::FilterContainer& CCompositeFilter::getFilters()
+{
+    return m_filter;
+}
+
 /**! Handle a generic ring item
     The handler iterates through the set of
     registered filters and calls their respective handleRingItem(CRingItemPtr)
@@ -240,7 +246,8 @@ CPhysicsEventItemPtr CCompositeFilter::handlePhysicsEventItem(CPhysicsEventItemP
    is done except that handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr) is
    called.
 */
-CRingPhysicsEventCountItemPtr CCompositeFilter::handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr pItem)
+CRingPhysicsEventCountItemPtr
+CCompositeFilter::handlePhysicsEventCountItem(CRingPhysicsEventCountItemPtr pItem)
 {
   iterator it = begin(); 
   iterator itend = end(); 
@@ -315,7 +322,6 @@ CCompositeRingItemPtr CCompositeFilter::handleCompositeItem(CCompositeRingItemPt
   iterator itend = end();
 
   while (it!=itend && pItem) {
-
     // pass the first item to the filter and get the filtered item
     pItem = (*it)->handleCompositeItem(pItem);
 

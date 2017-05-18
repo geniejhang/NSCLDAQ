@@ -63,6 +63,7 @@ class CCompositeFilter : public CFilter
 
     // Filter registration
     void registerFilter(CFilterPtr filter);
+    FilterContainer& getFilters();
 
     // Virtual copy constructor 
     CCompositeFilter* clone() const;
