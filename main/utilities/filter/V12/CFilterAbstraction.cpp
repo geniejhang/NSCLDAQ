@@ -1,4 +1,5 @@
 #include <V12/CFilterAbstraction.h>
+#include <V12/COneShotLogicFilter.h>
 
 #include <V12/CRingItemFactory.h>
 #include <V12/CRingItem.h>
@@ -224,6 +225,22 @@ CFilterMediator* CFilterAbstraction::getFilterMediator()
     return m_pMediator;
 }
 
+
+int CFilterAbstraction::getMajorVersion() const
+{
+    return 12;
+}
+
+
+void CFilterAbstraction::setOneShotMode(int nSources)
+{
+    COneShotLogicFilterPtr pOneShot(new COneShotLogicFilter(nSources, *this));
+
+    CCompositeFilter::FilterContainer& filters = m_pFilter->getFilters();
+
+    filters.insert(filters.begin(), pOneShot);
+}
+
 /*!
  * \brief CFilterAbstraction::setExcludeList
  *
@@ -339,9 +356,24 @@ CFilterAbstraction::dispatch(CRingItemPtr pItem)
       pFilteredItem = m_pFilter->handleGlomParameters(std::static_pointer_cast<CGlomParameters>(pItem));
       break;
 
+  case COMP_BEGIN_RUN:
+  case COMP_END_RUN:
+  case COMP_PAUSE_RUN:
+  case COMP_RESUME_RUN:
+  case COMP_PACKET_TYPES:
+  case COMP_MONITORED_VARIABLES:
+  case COMP_PERIODIC_SCALERS:
+  case COMP_PHYSICS_EVENT:
+  case COMP_PHYSICS_EVENT_COUNT:
+  case COMP_ABNORMAL_ENDRUN:
+  case COMP_RING_FORMAT:
+  case COMP_EVB_GLOM_INFO:
+      pFilteredItem = m_pFilter->handleCompositeItem(std::static_pointer_cast<CCompositeRingItem>(pItem));
+      break;
+
       // Handle any other generic ring item...this can be
       // the hook for handling user-defined items
-    default:
+  default:
       pFilteredItem = m_pFilter->handleRingItem(pItem);
       break;
   }

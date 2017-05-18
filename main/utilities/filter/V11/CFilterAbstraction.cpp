@@ -1,4 +1,5 @@
 #include <V11/CFilterAbstraction.h>
+#include <V11/COneShotLogicFilter.h>
 
 #include <V11/CRingItemFactory.h>
 #include <V11/CRingItem.h>
@@ -11,6 +12,7 @@
 #include <V11/StringsToIntegers.h>
 #include <V11/DataFormat.h>
 #include <V11/CRingItemFactory.h>
+
 
 #include <RingIOV11.h>
 
@@ -139,6 +141,19 @@ void CFilterAbstraction::setFilterMediator(CFilterMediator &mediator)
 CFilterMediator* CFilterAbstraction::getFilterMediator()
 {
     return m_pMediator;
+}
+
+int CFilterAbstraction::getMajorVersion() const
+{
+    return 11;
+}
+
+void CFilterAbstraction::setOneShotMode(int nSources)
+{
+    COneShotLogicFilterPtr pOneShot(new COneShotLogicFilter(nSources, *this));
+
+    CCompositeFilter::FilterContainer& filters = m_pFilter->getFilters();
+    filters.insert(filters.begin(), pOneShot);
 }
 
 void CFilterAbstraction::setExcludeList(const std::string &excludeList)

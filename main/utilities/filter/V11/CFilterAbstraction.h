@@ -49,6 +49,9 @@ public:
     virtual void setFilterMediator(CFilterMediator& mediator);
     virtual CFilterMediator* getFilterMediator();
 
+    virtual int getMajorVersion() const;
+    void setOneShotMode(int nSources);
+
     virtual void setExcludeList(const std::string& excludeList);
     virtual void setSampleList(const std::string& sampleList);
 

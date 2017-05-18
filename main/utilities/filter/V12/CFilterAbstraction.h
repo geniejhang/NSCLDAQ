@@ -76,6 +76,9 @@ public:
     virtual void setFilterMediator(CFilterMediator& mediator);
     virtual CFilterMediator* getFilterMediator();
 
+    virtual int getMajorVersion() const;
+    virtual void setOneShotMode(int nSources);
+
     void registerFilter(CFilterPtr pFilter);
     CCompositeFilterPtr getFilter() const;
     CRingItemPtr dispatch(CRingItemPtr item);
