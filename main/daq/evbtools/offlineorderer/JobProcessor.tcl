@@ -201,6 +201,7 @@ snit::type JobProcessor {
 
   method onEndRun {item} {
     set processingComplete 1
+    $runStateObserver detachFromRing
   }
 
   ## @brief Load and configure the callout bundles 
@@ -343,6 +344,10 @@ snit::type JobProcessor {
       $stateMachine removeCalloutBundle $bundle
     }
 
+    # the evb callback bundle protects against multiple registrations in 
+    # one application session. Make sure to inform it that the bundle is
+    # no longer registered
+    set EVBC::registered 0
   }
 
 
@@ -361,7 +366,7 @@ snit::type JobProcessor {
 
     ::EVBC::registerRingSource tcp://localhost/$::HoistConfig::ring \
       $::HoistConfig::id \
-      $::HoistConfig::info \
+      $::HoistConfig::info 1
   }
 
   ## Pass the configuration information to the ::EVBC:: parameters

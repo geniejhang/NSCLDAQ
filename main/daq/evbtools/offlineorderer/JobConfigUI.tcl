@@ -619,39 +619,10 @@ snit::type JobConfigUIPresenter {
     # clean up.
     file delete $resultFile
 
-    # Do some basic analysis
+    # in the old days, glom would output as many end runs as were input to it.
+    # in the 12.0 era, glom should correlate all end runs into a single COMP_END_RUN item
+    $m_view configure -nsources 1
     
-    # count the number of sources
-    set beginCount 0
-    set endCount 0
-    dict for {id itemCounts} $sourceMap {
-      incr beginCount [dict get $itemCounts BEGIN_RUN]
-      incr beginCount [dict get $itemCounts COMP_BEGIN_RUN]
-      incr endCount   [dict get $itemCounts END_RUN]
-      incr endCount   [dict get $itemCounts COMP_END_RUN]
-
-    }
-
-    if {$beginCount != $endCount} {
-      set msg "Analysis found $beginCount begin items and $endCount end items. "
-      append msg "Because these are different numbers, the file cannot be safely processed."
-      tk_messageBox -icon error -message $msg -parent $m_view
-      return ""
-    }
-    $m_view configure -nsources $endCount
-    
-    if {[dict exists $sourceMap 4294967295]} {
-      set missingWidget [$m_view cget -missingwidget]
-      $missingWidget configure -missing 1
-      set suggestedId [$self generateSuggestedID $sourceMap]
-      $missingWidget setSourceID $suggestedId
-    }
-
-
-    dict for {id value} $sourceMap {
-      puts "$id:"
-      puts "\t$value"
-    }
     set ids [dict keys $sourceMap]
 
     set index [lsearch -exact $ids 4294967295]
@@ -660,8 +631,6 @@ snit::type JobConfigUIPresenter {
     }
     set idString [join $ids ", "]
     $m_view configure -expectedids $idString
-
-
   }
 
   ## @brief Break the vwait
