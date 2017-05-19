@@ -80,60 +80,6 @@ tcltest::test validateSourceRing-0 {Test that a non existent source ring append 
 
 
 
-tcltest::test validateTstamp-0 {Test that a non existent file appends a message
-} -setup {
-  set params [OfflineEVBHoistPipeParams %AUTO%]
-} -cleanup {
-  $params destroy
-} -body {
-  $params configure -tstamplib $::absentFile -expectbheaders 0
-
-  set errors [list]
-  $params validateTstampLib errors
-  set errors
-} -result [list "Timestamp extractor library \"$::absentFile\" does not exist."]
-
-tcltest::test validateTstamp-1 {Test that a null entry for tstamplib appends a message
-} -setup {
-  set params [OfflineEVBHoistPipeParams %AUTO%]
-} -cleanup {
-  $params destroy
-} -body {
-  $params configure -tstamplib "" -expectbheaders 0
-
-  set errors [list]
-  $params validateTstampLib errors
-  set errors
-} -result [list "Timestamp extractor library has not been specified and is mandatory."]
-
-tcltest::test validateTstamp-2 {Test that an existing file appends no message
-} -setup {
-  set params [OfflineEVBHoistPipeParams %AUTO%]
-} -cleanup {
-  $params destroy
-} -body {
-  $params configure -tstamplib [info script] -expectbheaders 0
-
-  set errors [list]
-  $params validateTstampLib errors
-  set errors
-} -result  ""
-
-
-tcltest::test validateTstamp-3 {Test that a null tstamplib is ignored if expect body header 
-} -setup {
-  set params [OfflineEVBHoistPipeParams %AUTO%]
-} -cleanup {
-  $params destroy
-} -body {
-  $params configure -expectbheaders 1
-
-  set errors [list]
-  $params validateTstampLib errors
-  set errors
-} -result  ""
-
-
 
 tcltest::test validateId-0 {Test that a negative id appends a message 
 } -setup {
@@ -201,11 +147,10 @@ tcltest::test clone-0 {Test that state can be cloned
   $newparams destroy
 } -body {
   
-  $params configure -sourcering "Falsehoods" -tstamplib "another_farse" -id "12345" -info "Data from Falsehoods" \
-                    -expectbheaders 0
+  $params configure -sourcering "Falsehoods" -id "12345" -info "Data from Falsehoods"
 
   set newparams [$params clone]
   pickle $newparams
-} -result "-sourcering Falsehoods -tstamplib another_farse -id 12345 -info {Data from Falsehoods} -expectbheaders 0"
+} -result "-sourcering Falsehoods -id 12345 -info {Data from Falsehoods}"
 
 tcltest::cleanupTests
