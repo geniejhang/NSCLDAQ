@@ -27,7 +27,8 @@ import os
 import signal
 import subprocess
 import time
-
+import gc
+import sys
 
 import nscldaq.vardb.vardb
 import nscldaq.vardb.varmgr
@@ -303,3 +304,5 @@ class StateClientTests(testBase.TestBase):
 
 if __name__ == '__main__':
     unittest.main(verbosity=0)
+    gc.collect()
+    sys.exit(0)

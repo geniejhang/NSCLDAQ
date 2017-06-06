@@ -259,7 +259,8 @@ snit::type Plotchart::series {
     method _ReducePts {} {
 	set pts [expr $options(-ptlimit)/4]
 	
-	for {set i 0} {$i < $pts} {incr i} {
+	for {set i 0} {$i < $pts} {incr i 2} { # every other point.
+	    
 	    set options(-xdata) [lreplace $options(-xdata) $i $i]
 	    set options(-ydata) [lreplace $options(-ydata) $i $i]
 	}
