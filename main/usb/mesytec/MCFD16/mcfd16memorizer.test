@@ -286,7 +286,7 @@ tcltest::test setTriggerOrPattern-0 {Written trigger or pattern is remembered
   lappend res [::dev GetTriggerOrPattern 1]
 
   set res
-} -result {NA NA 257 17476}
+} -result {255 255 257 17476}
 
 
 tcltest::test setFastVeto-0 {Written fast veto gets remembered
