@@ -148,7 +148,12 @@ snit::type RingBufferObject {
     #                    to if we are the sink for the connection.
     # @param object    - Object we are being connected to/from.
     #
+    #  It is an error for the object to be another ring buffer.
+    #
     method connect {direction object} {
+        if {[$object type] eq "ring"} {
+            error "Ring buffers cannot connect to each other."
+        }
         if {$direction eq "to"} {
             set sourceObject $object
         } else {

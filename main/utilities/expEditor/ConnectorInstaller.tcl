@@ -401,7 +401,7 @@ snit::type ConnectorInstaller {
         if {$status} {
             $self _abortConnection $c
             tk_messageBox -type ok -icon error -title "not allowed" \
-                -message "Connection is rejected by one of the objects as illegal from/to type: $msg $::errorInfo"
+                -message "Connection is rejected by one of the objects as illegal from/to type: $msg"
             return
         }
         
