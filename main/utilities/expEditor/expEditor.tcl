@@ -308,7 +308,7 @@ proc connectStateProgramsToRings {statePrograms rings} {
     #
     #  Output Ring - A ring name for the host the state propgram is in.
     #  Input Ring  - A ring URI of the form: tcp://hostname/ringname
-    
+
     foreach sp $statePrograms {
         set p [$sp getProperties]
         set host [[$p find host] cget -value];   # In case we have an out ring.

@@ -295,7 +295,7 @@ CTCLServiceApiInstance::listAll(
         info.Bind(interp);
         
         name = progName;
-        info = path;
+        info += path;
         info += host;
         
         result += progName;
