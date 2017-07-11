@@ -602,6 +602,8 @@ snit::type ConnectorInstaller {
     #
     method _abortConnection c {
         $self _removeBindings $c
+        bind $c <B1-Motion> ""
+        bind $c <ButtonRelease-1> ""
         $self _removeTags     $c
         
         if {$tempArrowId ne ""} {
@@ -610,7 +612,7 @@ snit::type ConnectorInstaller {
         if {$item1 ne ""} {
             $self _enableConnectorDrag $item1 $c
             set o1 [$self _findObject $currentObjects($item1) $c]
-            $options(-objectinstaller) enableDrag($o1)
+            $options(-objectinstaller) enableDrag $o1
         }
         
         set item1 ""
