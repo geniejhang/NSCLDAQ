@@ -98,13 +98,10 @@ snit::type connector {
         # - We have a multi-touch sort of device.
         
         $c addtag t${id}_from withtag $f
-        $c bind t${id}_from <Button-1>  [mymethod _startMove %x %y]
-        $c bind t${id}_from <B1-Motion> [mymethod _moveFrom %x %y]
-        
         $c addtag t${id}_to withtag $t
-        $c bind t${id}_to <Button-1>  [mymethod _startMove %x %y]
-        $c bind t${id}_to <B1-Motion> [mymethod _moveTo %x %y]
         
+        $self enableMovement
+       
     }
     ##
     # destructor
@@ -117,6 +114,30 @@ snit::type connector {
             $c dtag t${id}_from
             $c dtag t${id}_to
         }
+    }
+    ##
+    # enableMovement
+    #   Allow the connector to move with the object it's connected to.
+    #
+    method enableMovement {} {
+        set c $options(-canvas)
+        $c bind t${id}_from <Button-1>  [mymethod _startMove %x %y]
+        $c bind t${id}_from <B1-Motion> [mymethod _moveFrom %x %y]
+        $c bind t${id}_to <Button-1>  [mymethod _startMove %x %y]
+        $c bind t${id}_to <B1-Motion> [mymethod _moveTo %x %y]
+          
+    }
+    ##
+    # disableMovement
+    #   Turn off the motion bindings.
+    #
+    method disableMovement {} {
+        set c $options(-canvas)
+        $c bind t${id}_from <Button-1> ""
+        $c bind t${id}_from <B1-Motion>  ""
+        $c bind t${id}_to <Button-1> ""
+        $c bind t${id}_to <B1-Motion> ""
+        
     }
     #--------------------------------------------------------------------------
     #  Private methods.

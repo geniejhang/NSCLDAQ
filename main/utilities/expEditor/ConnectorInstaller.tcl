@@ -383,6 +383,56 @@ snit::type ConnectorInstaller {
         .connectorContextmenu post $x $y
     }
     ##
+    # _findConnectorObjects
+    #    Find all connector objects that go in and/or out of the
+    #    specified item id.  That is the ids of all currentConnectors
+    #    That have as from or to the specified item id.
+    #
+    # @param item    - Id of item we want connections in/out of.
+    # @param c       - Relevant canvas.
+    # @return list   - possibly empty list of connector ids.
+    #
+    method _findConnectorObjects {item c} {
+        set result [list]
+        foreach object $currentConnectors {
+            if {($c == [dict get $object canvas]) &&
+                (($item == [dict get $object from]) ||
+                  ($item == [dict get $object to])
+            )} {
+                lappend result [dict get $object object]
+            }
+        }
+        return $result
+    }
+    ##
+    # _disableConnectorDrag
+    #    Disables the mouse motion bindings on connectors to or from the
+    #    specified item.
+    #
+    # @param item - the item id of the object connected to/from
+    # @param c    - the canvas.
+    #
+    method _disableConnectorDrag {item c} {
+        set connectors [$self _findConnectorObjects $item $c]
+        foreach connector $connectors {
+            $connector disableMovement
+        }
+    }
+    ##
+    # _enableConnectorDrag
+    #    Re-enables mouse motion bindings on connectors to/from the
+    #    specified item.
+    #
+    # @param item - the item id of the object connected to/from
+    # @param c    - the relevant canvas.
+    #
+    method _enableConnectorDrag {item c} {
+        set connectors [$self _findConnectorObjects $item $c]
+        foreach connector $connectors {
+            $connector enableMovement
+        }
+    }
+    ##
     # _connect
     #   item1 and item2 will be connected.
     #
@@ -472,7 +522,7 @@ snit::type ConnectorInstaller {
             
             set object [$self _findObject $currentObjects($item) $c]
             $options(-objectinstaller) disableDrag $object
-            
+            $self _disableConnectorDrag $item1 $c
            
             $self _createRubberBandArrow $c $x $y
             
@@ -509,6 +559,7 @@ snit::type ConnectorInstaller {
                 set item2 $item
 
                 $options(-objectinstaller) enableDrag $ofrom
+                $self _enableConnectorDrag $item1 $c
                 $self _removeTags $c
                 $self _removeBindings $c
                 $self _connect $c
@@ -555,6 +606,11 @@ snit::type ConnectorInstaller {
         
         if {$tempArrowId ne ""} {
             $c delete $tempArrowId
+        }
+        if {$item1 ne ""} {
+            $self _enableConnectorDrag $item1 $c
+            set o1 [$self _findObject $currentObjects($item1) $c]
+            $options(-objectinstaller) enableDrag($o1)
         }
         
         set item1 ""
