@@ -590,3 +590,105 @@ snit::type ListEditor {
         $prop configure -value [$path cget -value]
     }
 }
+
+##
+# @class FilePropertyView
+#     Provides a view for a file property.    This is an entry widget
+#     with a button that's labeled "..."  clicking that button brings up
+#     a tk_getOpenFile dialog which will modify the value in the
+#     entry.
+#      -readonly both disables the entry and the buttton.
+#
+snit::widgetadaptor FilePropertyView {
+    component fileEntry
+    
+    option -name  -default ""
+    option -value -default ""
+    option -readonly -default 0 -readonly 1
+    
+    option -defaultdir -default $::env(DAQBIN)
+    option -filetypes  -default [list [list "All Files" *]]
+    
+    ##
+    # constructor
+    #    Creates and lays out the entry and the button:
+    #
+    constructor args  {
+        installhull using ttk::frame
+        
+        install fileEntry using ttk::entry $win.entry -width 35 -textvariable [myvar options(-value)]
+        button  $win.browse -text "..." -command [mymethod _browseForFile]
+        
+        grid $fileEntry $win.browse -sticky nsw
+        grid columnconfigure $win 0 -weight 1
+        grid columnconfigure $win 1 -weight 0
+        grid rowconfigure $win 0 -weight 0
+        
+        
+        $self configurelist $args
+        
+        if {$options(-readonly)} {
+            $fileEntry configure -state disabled
+            $win.browse configure -state disabled
+        }
+        set lastDir [pwd];               # last default dir is here.
+    }
+    
+    ##
+    # _browseForFile
+    #    In response to the button, browse for a new file and set it in the
+    #    -value option if one is chosen.
+    #
+    method _browseForFile {} {
+        set newFile [tk_getOpenFile \
+            -filetypes $options(-filetypes) -initialdir $options(-defaultdir) \
+            -parent $win -title "Choose file for $options(-name)"             \
+        ]
+        if {$newFile ne ""} {
+            set options(-value) $newFile
+            set options(-defaultdir) [file dirname $newFile]
+        }
+    }
+        
+}
+
+##
+# @class FileEditor
+#    Provides an editor for properties whose values should be filenames.
+#
+snit::type FileEditor {
+    component prop
+    delegate option * to prop
+    delegate method * to prop
+    
+    ##
+    # constructor
+    #   Wrap the property and configure it.  We look like the property except that
+    #   we cancreate an editor.
+    #
+    constructor args {
+        install prop using property %AUTO% {*}$args
+    }
+    ##
+    # makeEditor
+    #    Create an editor GUI.  This is a FilePropertyView
+    #
+    # @param[in] path - widget the view should have.
+    #
+    method makeEditor path {
+        FilePropertyView $path -name [$prop cget -name] -value [$prop cget -value] \
+            -readonly [expr {![$prop cget -editable]}]
+        
+        return $path
+    }
+    ##
+    # saveValues
+    #   Save the values from an editor into the property.
+    #
+    # @param[in] path - widget path of the editor widget.
+    #
+    method saveValues path {
+        $prop configure -value [$path cget -value]
+    }
+}
+

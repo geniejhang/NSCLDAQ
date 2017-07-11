@@ -56,7 +56,7 @@ snit::type StateProgramData {
             -name enable -value true]
         $properties add [EnumeratedEditor %AUTO% -values {true false} \
             -name standalone -value false ]
-        $properties add [GenericPropertyEditor %AUTO% -name path ]
+        $properties add [FileEditor %AUTO% -name path ]
        
         $properties add [GenericPropertyEditor %AUTO% -name {Input Ring} -editable 0]
         $properties add [GenericPropertyEditor %AUTO% -name {Output Ring} -editable 0]
@@ -221,6 +221,7 @@ snit::type EventLogProgram {
         # Set the type property to Readout:
         
         [$properties find type] configure -value EventLog
+        [$properties find path] configure -value [file join $::env(DAQBIN) eventlog]
         
         # process construction time configuration.
     
