@@ -57,6 +57,7 @@ package require propertyEditor
 snit::type ObjectInstaller {
     option -installcmd [list]
     option -deletecmd  [list]
+   
     
     #
     #  The array below maintains the object context menus for
@@ -190,6 +191,12 @@ snit::type ObjectInstaller {
     #-------------------------------------------------------------------------
     # Public methods:
     
+    method enableDrag object {
+        $object bind <B1-Motion> [mymethod _drag $object %x %y]
+    }
+    method disableDrag object {
+        $object bind <B1-Motion> "";        # Turn off the drag.
+    }
     
     ##
     # install
@@ -222,7 +229,8 @@ snit::type ObjectInstaller {
         set id [$newObject getId]
         set ctxMenu [$self _getContextMenu $to] 
         
-        $newObject bind <B1-Motion> [mymethod _drag $newObject %x %y ]; # Drag.
+        $self enableDrag $newObject
+        # $newObject bind <B1-Motion> [mymethod _drag $newObject %x %y ]; # Drag.
         $newObject bind <Button-3>  [mymethod \
             _popupContextMenu $ctxMenu %X %Y $newObject \
         ];                                                      # context menu.

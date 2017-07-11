@@ -52,7 +52,8 @@ package require Tk
 #
 snit::type ConnectorInstaller {
     option -installcmd [list]
-    
+    option -objectinstaller [list]
+     
     #  These are the from (item1) and to (item2) objects being connecte.
     
     
@@ -95,6 +96,9 @@ snit::type ConnectorInstaller {
     #
     
     variable currentObjects -array [list]
+    variable tempArrowId
+    variable tempArrowStartX
+    variable tempArrowStartY
     
     ##
     # typeconstructor
@@ -132,8 +136,11 @@ snit::type ConnectorInstaller {
         set tempArrowStartX $x
         set tempArrowStartY $y
         set tempArrowId [$c create line $x $y [incr x] [incr y] -dash - -arrow last]
-        bind $c <Motion> [list $c coords $tempArrowId $tempArrowStartX $tempArrowStartY %x %y]
-        $c bind $tempArrowId <Button-1> [mymethod _select $c %x %y]
+        bind $c <B1-Motion> [mymethod _moveRubberBandArrow $c %x %y] ;   # [list $c coords $tempArrowId $tempArrowStartX $tempArrowStartY %x %y]
+        #$c bind $tempArrowId <ButtonRelease-1> [mymethod _select $c %x %y]
+        bind $c <ButtonRelease-1> [mymethod _select $c %x %y]
+        $c bind $tempArrowId <Button-1>        [mymethod _select $c %x %y]
+
     }
 
     ##
@@ -229,7 +236,7 @@ snit::type ConnectorInstaller {
     #
     method _makeBindings c {
         $c bind connectable <Button-1> [mymethod _select %W %x %y]
-        #  Arrange for the escape key to abor the process of creating the connection.
+        #  Arrange for the escape key to abort the process of creating the connection.
         
         focus $c
         bind $c <KeyPress-Escape> [mymethod _abortConnection $c]
@@ -397,6 +404,7 @@ snit::type ConnectorInstaller {
             $fromObj connect from $toObj
             $toObj   connect to   $fromObj
             
+            
         } msg]
         if {$status} {
             $self _abortConnection $c
@@ -458,11 +466,14 @@ snit::type ConnectorInstaller {
     # @param x,y - coordinates of the pointer.
     #
     method _select {c x y} {
-        
         if  {$item1 eq ""} {
             set item [$c find closest $x $y]
             set item1 $item
             
+            set object [$self _findObject $currentObjects($item) $c]
+            $options(-objectinstaller) disableDrag $object
+            
+           
             $self _createRubberBandArrow $c $x $y
             
             # Bind to the objects that can be destinations:
@@ -472,6 +483,7 @@ snit::type ConnectorInstaller {
             
             $self _tagAllItems $c to
             $self _makeBindings $c
+            
             
         } else {
             set item [$c find closest $x $y 5 $tempArrowId]
@@ -491,17 +503,20 @@ snit::type ConnectorInstaller {
                 if {($o eq "") || ![$o isConnectable to]} {
                     return
                 }
-                
+                set ofrom  [$self _findObject $currentObjects($item1) $c]
                 # Connection can proceed
                 
                 set item2 $item
+
+                $options(-objectinstaller) enableDrag $ofrom
                 $self _removeTags $c
                 $self _removeBindings $c
                 $self _connect $c
                
                 $c delete $tempArrowId;               # Destroy rubberband arrow.
                 set tempArrowId ""
-                bind $c <Motion> ""
+                bind $c <B1-Motion> ""
+                bind $c <ButtonRelease-1> ""
             }
         }
     }

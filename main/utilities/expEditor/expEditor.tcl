@@ -597,7 +597,7 @@ tool dataFlow [DataFlow %AUTO%] $os
 
 # Connector
 
-set cs [ConnectorInstaller %AUTO%]
+set cs [ConnectorInstaller %AUTO% -objectinstaller $os]
 $os configure -deletecmd [list $cs uninstall %O %I %W]
 $os configure -installcmd [list $cs newObject %O %I %W]
 tool knect [ConnectorObject %AUTO%] $cs;   # Need new installer
