@@ -26,8 +26,25 @@ exec tclsh "$0" ${1+"$@"}
 # @author Ron Fox <fox@nscl.msu.edu>
 #
 package provide serviceValidator 1.0
+package require Service
+package require objectInstaller
+package require connectorInstaller
 
-namespace eval ::Validation {}
+namespace eval ::Validation {
+    variable requiredServiceDescriptions
+    array set requiredServiceDescriptions [list                                \
+        vardb-service     {The variable database server daemon}                \
+        boot-service      {The DAQ experiment boot service}                    \
+        statusinjector    {The status message to database injection service}   \
+    ]
+    
+    variable requiredServiceDefaultPaths
+    array set requiredServiceDefaultPaths [list                                \
+        vardb-service  [file join $::env(DAQBIN) vardb-service]                \
+        boot-service   [file join $::env(DAQBIN) boot-service]                 \
+        statusinjector [file join $::env(DAQBIN) statusinjector]              \
+    ]
+}
 ##
 # ::Validation::validateServices
 #   For each service provided, checks that:
@@ -49,12 +66,8 @@ namespace eval ::Validation {}
 # @return list - possibily empty list of validation failure messages.
 #
 proc ::Validation::validateServices svcs {
-    
-    array set requiredServiceDescriptions [list                                \
-        vardb-service     {The variable database server daemon}                \
-        boot-service      {The DAQ experiment boot service}                    \
-        statusinjector    {The status message to database injection service}   \
-    ]
+    variable requiredServiceDescriptions   
+
     set namelessCount 0
     set result [list]
     array set names [list]
@@ -62,6 +75,7 @@ proc ::Validation::validateServices svcs {
     foreach svc $svcs {
         set p [$svc getProperties]
         set name [[$p find name] cget -value]
+
         if {$name eq ""} {
             incr namelessCount
             set name -no-name-
@@ -87,6 +101,7 @@ proc ::Validation::validateServices svcs {
     #
     #  Check for required services:
     #
+
     foreach requiredService [array names requiredServiceDescriptions] {
             
         
@@ -99,4 +114,55 @@ proc ::Validation::validateServices svcs {
     }
     
     return $result
+}
+
+##
+# Validation::createMandatoryServices
+#   Create/install the mandatory services if they're not
+#   already there.  We configure the service name and the service path from
+#   requiredServiceDefaultPaths but the user will have to configure a few other
+#   items.
+#
+# @param c   - Canvas on which the objects will be installed.
+# @param oi  - Installer object (ObjectInstaller).
+# @param ci  - Connector installer.
+#
+#
+proc Validation::createMandatoryServices {c oi ci} {
+    variable requiredServiceDefaultPaths
+    set svcs [$ci listObjects .c service]
+    
+    #  Get names of existing services (those that have nonempty names that is).
+    
+    set existingNames [list]
+    foreach svc $svcs {
+       set p [$svc getProperties]
+       set name [[$p find name] cget -value]
+       if {$name ne ""} {
+           lappend existingNames $name
+       }
+    }
+    #  Now iterate over required services making those that are not yet
+    #  in existence and installing them.
+     
+    set x 10
+    set y 10
+    
+    foreach svcname [array names requiredServiceDefaultPaths] {
+        if {$svcname ni $existingNames} {
+            set path $requiredServiceDefaultPaths($svcname)
+            set svcObj [Service %AUTO% -canvas $c]
+            set p [$svcObj getProperties]
+            set nprop [$p find name]
+            set pprop [$p find path]
+            
+            $nprop configure -value $svcname
+            $pprop configure -value $path
+            
+            $oi installAt $svcObj  $c $x $y
+            
+            incr x 20
+            incr y 20
+        }
+    }
 }

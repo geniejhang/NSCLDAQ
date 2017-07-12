@@ -197,6 +197,34 @@ snit::type ObjectInstaller {
     method disableDrag object {
         $object bind <B1-Motion> "";        # Turn off the drag.
     }
+    ##
+    # installAt
+    #   Install an existing object on canvas at a specified position.
+    #
+    #  @param object - object to install (won't be cloned).
+    #  @param c      - Canvas to install in.
+    #  @param x      - X position on canvas.
+    #  @param y      - Y Position on canvas.
+    #
+    method installAt {object c x y} {
+        $object configure -canvas $c
+        $object drawat $x $y
+        
+        
+        #  Now set up the object's behavior in the GUI.
+        
+        set id [$object getId]
+        set ctxMenu [$self _getContextMenu $c] 
+        
+        $self enableDrag $object
+        # $newObject bind <B1-Motion> [mymethod _drag $newObject %x %y ]; # Drag.
+        $object bind <Button-3>  [mymethod \
+            _popupContextMenu $ctxMenu %X %Y $object \
+        ];                                                      # context menu.
+        
+        $self _dispatch -installcmd [list %W $c %O $object %I $id]
+        
+    }
     
     ##
     # install
@@ -219,24 +247,9 @@ snit::type ObjectInstaller {
         
         set y [dict get $from y]
         set x [lindex [$object size] 0]
-
-        $newObject configure -canvas $to
-        $newObject drawat $x $y
         
-        
-        #  Now set up the object's behavior in the GUI.
-        
-        set id [$newObject getId]
-        set ctxMenu [$self _getContextMenu $to] 
-        
-        $self enableDrag $newObject
-        # $newObject bind <B1-Motion> [mymethod _drag $newObject %x %y ]; # Drag.
-        $newObject bind <Button-3>  [mymethod \
-            _popupContextMenu $ctxMenu %X %Y $newObject \
-        ];                                                      # context menu.
-        
-        $self _dispatch -installcmd [list %W $to %O $newObject %I $id]
-        
+        $self installAt $newObject $to $x $y
         return $newObject
+
     }
 }

@@ -521,6 +521,10 @@ proc restoreState {} {
     if {$file eq ""} return;                # Cancelled.
     
     loadFile $file
+
+    #  Install any missing services with default names/values.
+    
+    Validation::createMandatoryServices .c $::os $::cs  
     
 }
 
@@ -619,6 +623,9 @@ if {[llength $argv] > 0} {
     }
 }
 
+#  Install any missing services with default names/values.
+
+Validation::createMandatoryServices .c $os $cs
 
 #  Establish the menubar and its menus:
 
