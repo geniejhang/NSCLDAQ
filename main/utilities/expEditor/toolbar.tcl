@@ -86,7 +86,7 @@ snit::widgetadaptor toolbar {
         
         set y $nextY
         
-        incr nextY [expr $ht  + 10]
+        incr nextY [expr $ht  + 30]
         return [list [expr {$wid/2}] $y]
     }
     #--------------------------------------------------------------------------

@@ -354,4 +354,18 @@ snit::type DataSourceObject {
         $gui moveby $dx $dy
         $options(-canvas) move $self $dx $dy;        # Moves the label.
     }
+    ##
+    # setLabelText
+    #   puts a hard coded label string in the label component.  This throws
+    #   an error if the label has not yet been installed.
+    #
+    # @param str  - new text string for the label.
+    #
+    method setLabelText {str} {
+        if {$Label eq ""} {
+            error "dataSourceObject::setLabelText - label not yet installed."
+        } else {
+            $Label configure -text $str
+        }
+    }
 }

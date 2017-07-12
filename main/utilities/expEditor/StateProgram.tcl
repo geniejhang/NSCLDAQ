@@ -428,6 +428,19 @@ Therefore the host that '$myName' runs in is being changed to '$ringHost'"
         }
         return $oldData
     }
+    ##
+    # setLabelText
+    #    Sets the label text.  If the Label component has not yet been
+    #    installed, this is an error.
+    # @param str - new label text string.
+    #
+    method setLabelText str {
+        if {$Label eq ""} {
+            error "StateProgram::setLabelText - Label component has not yet been installed."
+        } else {
+            $Label configure -text $str
+        }
+    }
 }
 ##
 # @class ReadoutObject

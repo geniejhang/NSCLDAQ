@@ -351,4 +351,18 @@ snit::type EventBuilderObject {
         $gui moveby $dx $dy
         $options(-canvas) move $self $dx $dy;        # Moves the label.
     }
+    ##
+    # setLabelText
+    #    Set the specified string as the label text.  Error if the label
+    #    has not yet been installed.
+    #
+    # @param str - New label string.
+    #
+    method setLabelText str {
+        if {$Label eq ""} {
+            error "eventBuilder::setLabelText Label not yet instantiated."
+        } else {
+            $Label configure -text $str
+        }
+    }
 }

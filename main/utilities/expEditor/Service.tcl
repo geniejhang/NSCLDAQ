@@ -206,6 +206,20 @@ snit::type Service {
         }
     }
     ##
+    # setLabelText
+    #   Set the text of the label.  It is an error to call this if Label has not
+    #   yet been installed.
+    #
+    # @param str
+    #
+    method setLabelText str {
+        if {$Label eq "" } {
+            error "Service::setLabelText - Label has not yet been installed"
+        } else {
+            $Label configure -text $str
+        }
+    }
+    ##
     #  movto
     #   Move the GUI to the specified coordinates and drag the
     #   label along with it:

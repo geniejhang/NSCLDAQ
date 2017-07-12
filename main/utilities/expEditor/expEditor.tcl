@@ -77,6 +77,7 @@ package require checklist
 # Global variables:
 
 set dbFile ""
+set version "1.1"
 
 ##
 #  initDbFile
@@ -126,7 +127,7 @@ proc createDbFile dbFile {
 #
 proc showAbout {} {
     tk_messageBox -parent . -icon info -title About: -type ok \
-        -message "Experiment editor \nv1.0, \nRon Fox"
+        -message "Experiment editor \nv$::version, \nRon Fox"
 }
 
 ##
@@ -560,11 +561,11 @@ proc exitProgram {} {
 
 # Make the tool bar:
 
-toolbar .t -width 60 -height 512
+toolbar .t -width 70 -height 512
 
 # Make the target canvas, bind the toolbar to it and layout the ui:
 
-canvas .c -width 512 -height 512
+canvas .c -width 512 -height 650
 .t configure -target .c
 grid .t .c -sticky nsew
 grid rowconfigure . 0 -weight 1
@@ -574,28 +575,46 @@ grid columnconfigure . 1 -weight 1
 
 set os [ObjectInstaller %AUTO%]
 
-tool ring [RingBufferObject %AUTO%] $os
+set ring  [RingBufferObject %AUTO%]
+tool ring  $ring $os
 .t add ring
+$ring setLabelText {Ring}
 
-tool Readout [ReadoutObject %AUTO%] $os
+
+set Readout [ReadoutObject %AUTO%] 
+tool Readout $Readout $os
 .t add Readout
+$Readout setLabelText {Readout}
 
-tool EventLog [EventLogObject %AUTO%] $os
+set Eventlog [EventLogObject %AUTO%]
+tool EventLog  $Eventlog $os
 .t add EventLog
+$Eventlog setLabelText "evtlog"
 
-tool statePgm [StateProgram %AUTO%] $os
+set statePgm [StateProgram %AUTO%]
+tool statePgm $statePgm $os
 .t add statePgm
+$statePgm setLabelText {State pgm}
 
-tool eventbuilder [EventBuilderObject %AUTO%] $os
+set eventbuilder [EventBuilderObject %AUTO%]
+tool eventbuilder  $eventbuilder $os
 .t add eventbuilder
-tool dsource      [DataSourceObject %AUTO%] $os
+$eventbuilder setLabelText {Evt Builder}
+
+set dsource  [DataSourceObject %AUTO%]
+tool dsource   $dsource   $os
 .t add dsource
+$dsource setLabelText "Data Src"
 
-tool service [Service %AUTO%] $os
+set service [Service %AUTO%]
+tool service $service $os
 .t add service
+$service setLabelText {Service}
 
-tool dataFlow [DataFlow %AUTO%] $os
+set dataflow [DataFlow %AUTO%]
+tool dataFlow $dataflow $os
 .t add dataFlow
+$dataflow setLabelText {Dflow Pgm}
 
 
 

@@ -247,6 +247,21 @@ snit::type RingBufferObject {
         }
     }
     ##
+    # setLabelText
+    #   Set text for the label.  It  is an error to call this prior to the
+    #   Label being installed (first all to drawat).
+    #
+    # @param str - string that will be used to label the object.
+    #
+    method setLabelText str {
+        if {$Label eq ""} {
+            error "ringBufferObject::setLabelText - Label component not yet installed."
+        } else {
+            $Label configure -text $str
+        }
+    }
+    
+    ##
     #  movto
     #   Move the GUI to the specified coordinates and drag the
     #   label along with it:
