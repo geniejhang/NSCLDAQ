@@ -221,6 +221,7 @@ snit::type ObjectInstaller {
         $object bind <Button-3>  [mymethod \
             _popupContextMenu $ctxMenu %X %Y $object \
         ];                                                      # context menu.
+        $object bind <Double-Button-1> [mymethod  _editProperties $object]  
         
         $self _dispatch -installcmd [list %W $c %O $object %I $id]
         
