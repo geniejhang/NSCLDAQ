@@ -263,12 +263,18 @@ class Programs:
         # Construct the command line depending on the program type:
         
         programType = self._client.getProgramProperty(program, 'type')
+        try:
+            wd          = self._client.getProgramProperty(program, 'wd')
+        except:
+            wd = None          # default working dir.
         args        = self.__programArguments(program, programType)
         command = path + args
         
         # Create the program and make map entries from its stdout/stderr for it.
         
-        programObj = ssh.program(host, command, programEnv, program)
+        programObj = ssh.program(host, command, programEnv, program, wd)
+        
+
         
         stdout = programObj.stdout()
         stderr = programObj.stderr()
@@ -291,9 +297,12 @@ class Programs:
         
         args = self.__getServiceParameters(programDef['name'])
         command = path + ' ' + args
-        
+        try:
+            wd          = self._client.getProgramProperty(program, 'wd')
+        except:
+            wd = None          # default working dir.
         print('starting' + command + '@', 'host')
-        programObj = ssh.program(host, command, programEnv, programDef['name'])
+        programObj = ssh.program(host, command, programEnv, programDef['name'], wd)
         stdout     = programObj.stdout()
         stderr      = programObj.stderr()
         self._filesToProgram[stdout] = programObj

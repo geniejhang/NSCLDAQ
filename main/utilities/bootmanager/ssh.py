@@ -241,7 +241,7 @@ class shell(object):
 #
 
 class program(shell):
-    def __init__(self, host, prog, envvars, name):
+    def __init__(self, host, prog, envvars, name, wd=None):
         
         super(program, self).__init__(host)
         
@@ -249,6 +249,9 @@ class program(shell):
         
         for key in envvars.keys():
             self.setenv(key, envvars[key])
+        
+        if wd is not None:
+            self.writeLine('cd ' + wd)
         
         # Start the app:
         

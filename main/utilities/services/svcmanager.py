@@ -138,6 +138,7 @@ def getDB(a):
 # @param name    - name of the program.
 # @param command - Command to execute in the program.
 # @param host    - Host in which the program is to run.
+# @param wd      - Working directory for program.  None means don't care (~).
 #
 # @return list - Read sides of the stdout and stderr pipes for the program.
 #
@@ -152,14 +153,14 @@ def getDB(a):
 #       * DAQBIN      - value of our daqbin
 #       * DAQLIB      - Value of our daqlib.
 #
-def startProgram(name, command, host):
+def startProgram(name, command, host, wd):
     global programs
     env = {
         'PROGRAM_NAME': name, 'HOST': host, 'DB_PATH': dbPath, 'DB_URI': uri,
         'PYTHONPATH' : os.getenv('PYTHONPATH'), 'DAQROOT' : os.getenv('DAQROOT'),
         'DAQBIN'      : os.getenv('DAQBIN'),      'DAQLIB'  : os.getenv('DAQLIB')
     }
-    program = ssh.program(host, command, env, name)
+    program = ssh.program(host, command, env, name, wd)
     programs.append(program)
     return (program.stdout(), program.stderr())
 
@@ -186,10 +187,14 @@ def startPrograms(db):
         type    = db.getProperty(name, 'type')
         if type == 'service' :
             additionalArgs = db.getProperty(name, 'args').strip()
+            try:
+                wd = db.getProperty(name, 'wd')
+            except:
+                wd = None
             if additionalArgs != '':
                 additionalArgs = processTclList(additionalArgs)
             command = command + ' ' + additionalArgs
-            progFds = startProgram(name, command, host)
+            progFds = startProgram(name, command, host, wd)
             fds.extend(progFds)
     active = True
     return tuple(fds)
