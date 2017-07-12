@@ -57,7 +57,7 @@ snit::type StateProgramData {
         $properties add [EnumeratedEditor %AUTO% -values {true false} \
             -name standalone -value false ]
         $properties add [FileEditor %AUTO% -name path ]
-       
+        $properties add [DirectoryEditor %AUTO% -name wd -value [pwd]]
         $properties add [GenericPropertyEditor %AUTO% -name {Input Ring} -editable 0]
         $properties add [GenericPropertyEditor %AUTO% -name {Output Ring} -editable 0]
         $properties add [GenericPropertyEditor %AUTO% -name {type} -editable 0 -value StateProgram]

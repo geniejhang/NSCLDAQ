@@ -51,6 +51,7 @@ snit::type ServiceData {
         $propertylist add [GenericPropertyEditor %AUTO% -name name]
         $propertylist add [GenericPropertyEditor %AUTO% -name host]
         $propertylist add [FileEditor %AUTO% -name path]
+        $propertylist add [DirectoryEditor %AUTO% -name wd -value [pwd]] 
         $propertylist add [GenericPropertyEditor %AUTO% -name type -value service -editable 0]
         $propertylist add [ListEditor %AUTO% -name args]
         

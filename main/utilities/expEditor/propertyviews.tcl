@@ -691,4 +691,95 @@ snit::type FileEditor {
         $prop configure -value [$path cget -value]
     }
 }
+##
+# @class DirectoryView
+#     Provides view for a property that is a directory.
+#     this is similar to the FileView except that the ... button pops up a
+#     tk_chooseDirectory dialog.
+#
+snit::widgetadaptor DirectoryView {
+    component direntry
+    
+    option -name     -default ""
+    option -value    -default ""
+    option -readonly -default 0 -readonly 1
+    option -defaultdir -default [pwd]
+    
+    ##
+    # constructor
+    #    Creates and lays out the view.  The view consists of an
+    #    entry that displays the path and allows editing.  To the right  of that
+    #    is a button labeled "..." that brings up a tk_chooseDirectory dialog
+    #    if clicked.
+    #
+    constructor args {
+        installhull using ttk::frame
+        
+        $self configurelist $args
+        
+        install direntry using entry $win.entry -width 32 -textvariable [myvar options(-value)]
+        button $win.browse -text ... -command [mymethod _browseDir]
+        
+        grid $direntry $win.browse
+        
+        #  Stretching the window horizontally should only allow the entry to expand
+        #  Stretching the window vertically should have no effect.
+        
+        grid columnconfigure $win 0 -weight 1
+        grid columnconfigure $win 1 -weight 0
+        grid columnconfigure $win 0 -weight 0
+        
+    }
+    ##
+    # _browseDir
+    #    Choose a replacement directory from  a browser.
+    #
+    method _browseDir {} {
+        
+        set newDir [tk_chooseDirectory                                 \
+            -initialdir $options(-defaultdir) -parent $win             \
+            -title {Choose Directory} -mustexist 0                     \
+        ]
+        if {$newDir ne ""} {
+            set options(-value) $newDir
+        }
+    }
+}
 
+##
+# DirectoryEditor
+#    Encapsulates a property and provides a factory for editing its value.
+#
+snit::type DirectoryEditor {
+    component prop
+    
+    delegate option * to prop
+    delegate method * to prop
+    
+    ##
+    # constructor
+    #   Wrap the property and configure it
+    #
+    constructor args {
+        install prop using property %AUTO% {*}$args
+    }
+    ##
+    # makeEditor
+    #    Create a new editor bound to the property:
+    #
+    method makeEditor path {
+        DirectoryView $path                             \
+            -value [$prop cget -value ]                 \
+            -name  [$prop cget -name]                   \
+            -readonly [expr {![$prop cget -editable]}]
+        return $path
+    }
+    ##
+    # saveValues
+    #    Save the value from the editor into the property.
+    #
+    # @param path - path to the editor megawidget.
+    method saveValues path {
+        $prop configure -value [$path cget -value]
+    }
+}

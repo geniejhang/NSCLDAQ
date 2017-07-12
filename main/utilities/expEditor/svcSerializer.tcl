@@ -82,6 +82,9 @@ proc ::Serialize::_saveService {api obj}  {
     set p [$props find args]
     set args [$p cget -value]
     
+    set p [$props find wd]
+    set wd [$p cget -value]
+    
     set position [$obj getPosition]
     
     # Now we can create the object and position it:
@@ -89,6 +92,7 @@ proc ::Serialize::_saveService {api obj}  {
     $api createprog $name $path $host
     $api setEditorPosition $name [lindex $position 0] [lindex $position 1]
     $api setProperty $name args $args
+    $api setProperty $name wd $wd
     
     #  Get the type and save it.  If the type is a dataflow item; save
     #  the input/output rings:
@@ -165,13 +169,16 @@ proc ::Serialize::deserializeServices dbUri {
             # Note again that the type property may not yet exist.
             
             catch {_svcDeserialize getProperty $name type} type;  #Error won't be 'dataflow'
-
+            if {[catch {svcDeserialize getProperty $name wd} wd]} {
+                    set wd [pwd];         #Default to pwd for older databases.
+            }
             if {$type eq "dataflow"} {
                 set obj [DataFlow %AUTO%]
                 set props [$obj getProperties]
                 
                 set inring [_svcDeserialize getProperty $name inring]
                 set outring [_svcDeserialize getProperty $name outring]
+                
                 [$props find {Input Ring}] configure -value $inring
                 [$props find {Output Ring}] configure -value $outring
                 
@@ -181,7 +188,7 @@ proc ::Serialize::deserializeServices dbUri {
             }
             
             
-            foreach prop [list name host path] value [list $name $host $command] {
+            foreach prop [list name host path wd] value [list $name $host $command $wd] {
                 [$props find $prop] configure -value $value
             }
             #  args may or may not be present depending on how old the db is:

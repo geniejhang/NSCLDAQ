@@ -91,7 +91,7 @@ snit::type DataSource {
         
         $properties add [GenericPropertyEditor %AUTO% -name name]
         $properties add [GenericPropertyEditor %AUTO% -name host]
-        $properties add [FileEditor %AUTO% -name path -value $fragsrc] 
+        $properties add [FileEditor %AUTO% -name path -value $fragsrc]
         $properties add [GenericPropertyEditor %AUTO% -name info]
         $properties add [ListEditor %AUTO% -name ids -validate IntegerList -value 0]
         $properties add [GenericPropertyEditor %AUTO% -name ring -editable 0]

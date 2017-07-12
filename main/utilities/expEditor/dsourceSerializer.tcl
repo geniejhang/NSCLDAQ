@@ -73,7 +73,7 @@ proc ::Serialize::_saveSource {api ds} {
     foreach key [list info expectBodyHeaders defaultId timestampExtractor] {
        dict set opts $key [list [[$props find $key] cget -value] ]
     }
-     
+    
      # Create the data source.
      
     $api addSource $evbName $name $host $path $ring  $ids $opts
