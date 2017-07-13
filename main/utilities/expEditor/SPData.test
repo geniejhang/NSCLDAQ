@@ -34,6 +34,8 @@ source [file join $here StateProgramData.tcl]
 source [file join $here StateProgram.tcl]
 source [file join $here ringBufferObject.tcl]
 
+set bindir $::env(BINDIR)
+
 proc getValue {obj propname} {
     set pl [$obj getProperties]
     set p [$pl find $propname]
@@ -317,13 +319,13 @@ tcltest::test changecmd-1 {If data are changed we should get notified} \
      set ps  [$plo get]
      
      foreach p $ps value [list \
-        test charlie false true /usr/bin/test  tcp://localhost/test fox StateProgram --help] {
+        test charlie false true /usr/bin/test  $bindir tcp://localhost/test fox StateProgram --help] {
         $p configure -value $value
      }
      set changelog
      
 } -result [list [list name test] [list host charlie] [list enable false] [list standalone true] \
-    [list path /usr/bin/test]  [list "Input Ring" tcp://localhost/test]  \
+    [list path /usr/bin/test]  [list wd $bindir] [list "Input Ring" tcp://localhost/test]  \
     [list "Output Ring" fox] [list type StateProgram]                   \
     [list "Program Parameters" --help]] 
 
@@ -340,13 +342,13 @@ tcltest::test changecmd-2 {If data are changed in the packaged object we get not
      set ps  [$plo get]
      
      foreach p $ps value [list \
-        test charlie false true /usr/bin/test  tcp://localhost/test fox StateProgram --help] {
+        test charlie false true /usr/bin/test  $bindir tcp://localhost/test fox StateProgram --help] {
         $p configure -value $value
      }
      set changelog
      
 } -result [list [list name test] [list host charlie] [list enable false] [list standalone true] \
-    [list path /usr/bin/test]  \
+    [list path /usr/bin/test]  [list wd $bindir] \
     [list "Input Ring" tcp://localhost/test] [list "Output Ring" fox]        \
     [list type StateProgram]  [list "Program Parameters" --help]]
 

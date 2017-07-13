@@ -38,7 +38,7 @@ TEST_EXTENSIONS=.test .py
 TEST_LOG_COMPILER=@TCLSH@
 PY_LOG_COMPILER=@PYTHON@
 TESTS_ENVIRONMENT=TCLLIBPATH=@prefix@/TclLibs; export TCLLIBPATH; \
-	PYTHONPATH=@prefix@/pythonLibs; export PYTHONPATH;
+	PYTHONPATH=@prefix@/pythonLibs; export PYTHONPATH; BINDIR=@prefix@/bin; export BINDIR;
 
 TESTS = $(TCLTESTS)
 

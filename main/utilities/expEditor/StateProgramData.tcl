@@ -221,7 +221,9 @@ snit::type EventLogProgram {
         # Set the type property to Readout:
         
         [$properties find type] configure -value EventLog
-        [$properties find path] configure -value [file join $::env(DAQBIN) eventlog]
+        [$properties find path] configure -value    \
+            [file normalize                         \
+            [file join [file dirname [info script]] .. bin eventlog]]
         
         # process construction time configuration.
     

@@ -606,7 +606,7 @@ snit::widgetadaptor FilePropertyView {
     option -value -default ""
     option -readonly -default 0 -readonly 1
     
-    option -defaultdir -default $::env(DAQBIN)
+    option -defaultdir -default [file normalize [file join [file dirname [info script]] .. bin]]
     option -filetypes  -default [list [list "All Files" *]]
     
     ##

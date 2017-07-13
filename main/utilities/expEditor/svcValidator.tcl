@@ -31,6 +31,7 @@ package require objectInstaller
 package require connectorInstaller
 
 namespace eval ::Validation {
+    variable bindir [file normalize [file join [file dirname [info script]] .. bin]]
     variable requiredServiceDescriptions
     array set requiredServiceDescriptions [list                                \
         vardb-service     {The variable database server daemon}                \
@@ -40,9 +41,9 @@ namespace eval ::Validation {
     
     variable requiredServiceDefaultPaths
     array set requiredServiceDefaultPaths [list                                \
-        vardb-service  [file join $::env(DAQBIN) vardb-service]                \
-        boot-service   [file join $::env(DAQBIN) boot-service]                 \
-        statusinjector [file join $::env(DAQBIN) statusinjector]              \
+        vardb-service  [file join $bindir vardb-service]                \
+        boot-service   [file join $bindir boot-service]                 \
+        statusinjector [file join $bindir statusinjector]              \
     ]
 }
 ##

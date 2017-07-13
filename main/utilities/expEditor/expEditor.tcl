@@ -87,7 +87,8 @@ set version "1.1"
 #
 proc initDbFile {dbFile} {
     set uri file://[file normalize $dbFile]
-    exec $::env(DAQBIN)/vardbsh $uri <  [file join $::env(DAQBIN) MakeRunControl.tcl]
+    set bindir [file normalize [file join $::here .. bin ]]
+    exec $bindir/vardbsh $uri <  [file join $bindir MakeRunControl.tcl]
     
     ::nscldaq::services svcapi $uri
     svcapi  create
