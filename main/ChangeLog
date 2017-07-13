@@ -1274,3 +1274,26 @@ Work on 11.0-rc11 begins
         * Feature 6960 added - --tod option to dumper so that we can
 	log when data were received by that program.  Off by default.
 	
+12.0-002
+	*  Bug #7083  Ring buffers no longer can accept/give connections
+	to other ring buffers.  Since proxy rings are automatically
+	created this was an abomination that led people to think they
+	could or needed to manually create the proxies.  Associated with
+	this and fixed automatically is Bug #7080
+	*  Feature #7077 Change connector drawing mechanics to a
+	click/drag/release rather than click, drag, click
+	*  Feature #7074 Add a file property editor.  This adds a button
+	that brings up a tk_GetOpenFile browser to the entry widget.
+	*  Feature #7071 Add required services if missing.  User still
+	needs to provide the host.
+	*  Feature #7068  label the toolbar tools so users know what they
+	are without having to read the manual.
+	*  Feature #7065 Add double click binding to elements with
+	properties (all but connectors).  This brings up the property
+	editor.
+	*  Feature #7062 Add wd (working directory) property to
+	appropriate item types.   Boot manager and Service manager will
+	perform the appropriate cd to the specified directory prior to
+	running the user's program.  wd editing mechanics are similar to
+	those of filenames.  An entry widget is provided along with a
+	... button that brings up a tk_chooseDirectory dialog.
