@@ -142,7 +142,8 @@ proc EndrunMon::startMonitor ringUrl {
                     if {[dict get $item type] eq "Composite End Run"} {
                         incr  ercount
                      }
-                }
+		}
+
                 #
                 #  Signal if we've seen an end runs.
                 #

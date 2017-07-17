@@ -6,6 +6,7 @@ AC_PREREQ(2.61)
 AC_INIT(nscldaq,12.0-003, fox@nscl.msu.edu,[], [http://www.sourceforge.net/projects/nscldaq])
 
 
+
 AC_CONFIG_SRCDIR([/base/CopyrightTools/CopyrightNotice.cpp])
 
 AC_CONFIG_HEADER([config.h])

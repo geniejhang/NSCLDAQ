@@ -32,17 +32,16 @@ tcltest::test rdo11-0 {test computeLoggerSwitches uses EVBC destRing} -setup {
       opts configure -setdestringasevtlogsource true
 
       # set destRing to something... 
-      opts configure -destring hehehe
-
-} -cleanup {
-
- opts destroy
+      $::EVBC::applicationOptions configure -destring hehehe
 
 } -body {
    # this calls the switches
    set switches [::EventLog::_computeLoggerSwitches 11.0-rc12]
    return [lindex $switches 0] 
-} -result "--source=tcp://localhost/hehehe"
+
+} -result "--source=tcp://localhost/[$::EVBC::applicationOptions cget -destring]"
+
+
 
 tcltest::test rdo11-1 {test computeLoggerSwitches doesn't use EVBC destRing} -setup {
 
@@ -54,11 +53,9 @@ tcltest::test rdo11-1 {test computeLoggerSwitches doesn't use EVBC destRing} -se
       opts configure -setdestringasevtlogsource false 
 
       # set destRing to something... 
-      opts configure -destring hehehe
 
-} -cleanup {
+      $::EVBC::applicationOptions configure -destring hehehe
 
- opts destroy
 
 } -body {
    # this calls the switches

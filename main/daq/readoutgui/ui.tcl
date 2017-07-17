@@ -1,4 +1,3 @@
-#
 #    This software is Copyright by the Board of Trustees of Michigan
 #    State University (c) Copyright 2013.
 #
@@ -23,7 +22,7 @@ package require RunstateMachine
 package require StateManager
 package require DataSourceUI
 package require img::png
-package require dialogWrapper
+
 package provide ui   1.0
 package provide ReadoutGUIPanel 1.0
 
@@ -517,6 +516,82 @@ proc ::ReadoutGUIPanel::incrRun {} {
     ::ReadoutGUIPanel::setRun $now
 }
 
+##
+# ErrorReporter widget
+#
+# A dialog that will take a list of errors associated with each callout bundle
+# and organize them into a treeview. The error list is passed in as an option
+# called -errorlist. For example, an error list might look like:
+#
+# @code
+# [list [list bundle1 [list "bundle1 error #0" "bundle1 error #1"]] [list bundle2 [list "bundle2 error"]]]
+# @endcode
+#
+# When a begin transition is attempted, the transition is prechecked for detectable 
+# error conditions and if any are found, this dialog displays the error conditions.
+#
+# This is not a modal dialog because that allows the user to investigate without 
+# being blocked.
+#
+snit::widget ErrorReporter {
+  hulltype toplevel
+
+  option -errorlist -default [list]
+
+
+  constructor {args} {
+
+    $self configurelist $args 
+
+    $self _buildWidget
+  }
+
+  ## Assemble the megawidget
+  method _buildWidget {} {
+
+    wm title ${win} "Detected Errors"
+
+      set msg "The errors listed below have been found. Please correct \nthese before attempting a transition."
+      ttk::label ${win}.info -text $msg
+
+      scrollbar ${win}.xscroll -orient horizontal
+      ttk::treeview ${win}.msg -xscrollcommand "${win}.xscroll set"
+      ${win}.xscroll configure -command "${win}.msg xview"
+
+      foreach entry $options(-errorlist) {
+        set bundleName [lindex $entry 0]
+        set errors [lindex $entry 1]
+        set id [${win}.msg insert {} end -text $bundleName -open true]
+
+
+        foreach msg $errors {
+          ${win}.msg insert $id end -text $msg
+        }
+      }
+
+      ${win}.msg column #0 -minwidth 1000 -stretch true
+
+      ttk::frame ${win}.buttons
+      ttk::button ${win}.buttons.dismiss -text "Dismiss" -command [mymethod _close]
+      grid ${win}.buttons.dismiss -sticky e
+
+      grid ${win}.info -padx 9 -pady 9 -sticky new
+      grid ${win}.msg -padx 9 -pady 9 -sticky nsew
+      grid ${win}.xscroll -sticky new
+      grid ${win}.buttons -padx 9 -pady 9 -sticky sew 
+
+      grid columnconfigure ${win} all -weight 1
+      grid rowconfigure ${win} {1} -weight 1
+
+  }
+
+  ## Callback for the dismiss button to close the dialog
+  method _close {} {
+    destroy ${win}
+  }
+}
+
+
 #-----------------------------------------------------------------------------
 #
 #  The next widget and API are involved in providing a UI for the run
@@ -744,7 +819,7 @@ snit::widgetadaptor RunControl {
 
       start
 
-      $stateMachine destroy
+      $stateMachine destroy 
     }
     ##
     #  _beginend
@@ -758,21 +833,36 @@ snit::widgetadaptor RunControl {
     #       to change the appearance of the button itself.
     # 
     method _beginend {} {
-        set stateMachine [RunstateMachineSingleton %AUTO%]
-        set state [$stateMachine getState]
-        $stateMachine destroy
+      set stateMachine [RunstateMachineSingleton %AUTO%]
+      set state [$stateMachine getState]
 
-        RunControlSingleton::updateStateBundleOrder
+      RunControlSingleton::updateStateBundleOrder
 
-        if {$state eq "Halted"} {
+      if {$state eq "Halted"} {
+        set responses [$stateMachine precheckTransitionForErrors Active]
+        if {[llength $responses] == 0} {
           begin
+        } else {
+          $self reportTransitionFailures $responses
+          }
         } elseif {$state in [list Paused Active]} {
           end
         } else {
           error "ERROR: begin/end button clicked when state is $state which should not happen"
         }
 
+      $stateMachine destroy
     }
+
+
+    method reportTransitionFailures {responses} {
+      
+      #toplevel .errors
+      #ErrorReporter .errors.dialog -errorlist $responses
+      #pack .errors.dialog -expand 1 -fill both
+      ErrorReporter .errors -errorlist $responses
+    }
+
     ##
     # _pauseresume
     #
@@ -1036,6 +1126,7 @@ proc ::RunControlSingleton::getInstance {{path ""} args} {
 # 
 proc ::RunControlSingleton::attach {state} {
 }
+
 ##
 # enter
 #    Called when the state machine enters a new state. 
@@ -1047,6 +1138,7 @@ proc ::RunControlSingleton::attach {state} {
 #
 proc ::RunControlSingleton::enter {from to} {
 }
+
 ##
 #  leave
 #   Called whenn the state machine leaves a state (unused)
@@ -1131,6 +1223,7 @@ snit::type Stopwatch {
     variable calledAlarms -array [list]
     
     variable timerResolution 250;   # Ms per tick.
+    variable stopTimeMs 0
     
     ##
     # destructor needs to kill off any after scheduled so it does not call into
@@ -1147,17 +1240,33 @@ snit::type Stopwatch {
     # Start the timer.  Note the elapsed time is not reset.  This is because
     # we are allowed to pause the timer (stop/restart)...e.g. if a run is paused.
     #
+    # @param resetStartTime   boolean indicating whether to reset the start time
+    #
     # @throw  if the timer is already running
     #
-    method start {} {
+    method start {{resetStartTime 1}} {
         if {![$self isRunning] } {
             $self _startTimer
-            set startMs [clock milliseconds]
+            if {$resetStartTime} {
+              set startMs [clock milliseconds]
+            }
             array set calledAlarms [list]
         } else {
             error "Timer is already running!"
         }
     }
+
+    ##
+    # Resume the timer. This is the same as starting the timer, but it does
+    # not reset the startMs. This makes sure that we continue right where 
+    # things left off.
+    #
+    method resume {} {
+      set now [clock milliseconds]
+      set startMs [expr $startMs + ($now - $stopTimeMs)] 
+      $self start 0
+    }
+
     ##
     # Stop the timer.
     #
@@ -1165,7 +1274,8 @@ snit::type Stopwatch {
     #
     method stop {} {
         if {[$self isRunning]} {
-            $self _stopTimer
+          $self _stopTimer
+          set stopTimeMs [clock milliseconds]
         } else {
             error "Timer is already stopped"
         }
@@ -1178,6 +1288,7 @@ snit::type Stopwatch {
     method reset {} {
         set elapsedTimeMs 0
         set startMs [clock milliseconds]
+        set stopTimeMs $startMs
         array unset calledAlarms 
         array set calledAlarms [list]
     }
@@ -1410,6 +1521,7 @@ snit::widgetadaptor ElapsedTimeDisplay {
 #
 namespace eval  ::ElapsedTime {
     variable theInstance ""
+    variable previousState ""
     namespace export attach enter leave
 }
 
@@ -1445,6 +1557,7 @@ proc ::ElapsedTime::attach {state} {
         $timer start
     }
 }
+
 ##
 # ::ElapsedTime::enter
 #
@@ -1462,7 +1575,7 @@ proc ::ElapsedTime::enter  {from to} {
         $timer reset
         $timer start
     } elseif {($from eq "Paused") && ($to eq "Active")} {
-        $timer start
+        $timer resume
     }
 }
 ##
@@ -1755,6 +1868,7 @@ proc ::TimedRun::attach {state} {
     }
     $w configure -state $state
 }
+
 ##
 # ::TimedRun::leave
 #    Called when a state is left (not used).
@@ -2356,8 +2470,6 @@ snit::widgetadaptor TabbedOutput {
     # log file if open [list] if not...used to bring new windows into the log:
     
     variable logFile [list]
-    
-    variable waitvar 0
 
     ##
     #  constructor
@@ -2391,10 +2503,6 @@ snit::widgetadaptor TabbedOutput {
 # It's lines have been read.
 
         bind $win <<NotebookTabChanged>> [mymethod _TabChanged]
-        
-        # Provide a binding that allows users to rename the tabs:
-        
-        bind $win <Button-3> [mymethod _renameTab %x %y]
     }
 
     #---------------------------------------------------------------------------------
@@ -2509,33 +2617,6 @@ snit::widgetadaptor TabbedOutput {
     # Private utility methods.
     #
 
-    ##
-    # _renameTab
-    #   Pops up a dialog that lets users rename the output tabs:
-    #
-    # @param x - X position of the mouse hit.
-    # @param y - Y position of the mouse hit.
-    #
-    method _renameTab {x y} {
-        set tabId [$win index @$x,$y]
-        toplevel .tabrename
-        set d    [DialogWrapper .tabrename.d]
-        set c    [$d controlarea]
-        set t    [ttk::entry $c.e]
-        $d configure -form $t
-        pack $d -fill both -expand 1
-        
-        #  Sometimes modal happens before the display so:
-        
-        after 100 [list incr [myvar waitvar]]
-        vwait [myvar waitvar]
-        set result [$d modal]
-        if {$result eq "Ok"} {
-            $win tab $tabId -text [$t get]
-        }
-        
-        destroy .tabrename
-    }
     ##
     #  _DoAll
     #    Do the same command in all windows.
@@ -3238,3 +3319,5 @@ snit::widgetadaptor ReadoutGUI {
         }
     }
 }
+
+

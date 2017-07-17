@@ -1,4 +1,4 @@
-install-exec-hook: 
+install-exec-hook:
 	$(mkinstalldirs) $(prefix)/bin
 	$(mkinstalldirs) $(prefix)/TclLibs/Stager
 	$(mkinstalldirs) @prefix@/share/html
@@ -44,14 +44,16 @@ TCLPACKAGES=Configuration.tcl \
 	delayProvider.tcl \
 	offlineProvider.tcl \
 	multilogger.tcl \
-	stageareaValidation.tcl
+	stageareaValidation.tcl \
+	ReadoutGUIAppLauncher.tcl icon.tcl
 
 
 
 TCLTESTS =    filesystem.test \
 	initconfig.test installroot.test system.test tests.test  ostest.test \
 	sshpipe.test s800.test  rstatemachine.test rdocallouts.test \
-	  state.test versionutils.test delayprovider.test
+	  state.test versionutils.test delayprovider.test \
+		applauncher.test
 
 
 TKTESTS =	readoutguitest.tk  scalerparametergui.tk \

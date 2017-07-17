@@ -575,7 +575,8 @@ proc EVBC::onBegin {} {
     set teering [$EVBC::applicationOptions cget -teering]
     set teeringname [$EVBC::applicationOptions cget -teeringname]
     if {$teering} {
-      catch {ringbuffer create $teeringname}
+
+	catch {ringbuffer create $teeringname}
     }
     set destring [$EVBC::applicationOptions cget -destring]
     if {$destring ne ""} {
@@ -928,6 +929,9 @@ proc ::EVBC::_onDestRingChanged w {
         $::EVBC::applicationOptions configure -destring [$w cget -ring]
         $::EVBC::applicationOptions configure \
             -setdestringasevtlogsource [$w cget -record] 
+        if {[$EVBC::applicationOptions cget -setdestringasevtlogsource] } {
+            ::Configuration::Set EventLoggerRing "tcp://localhost/[$::EVBC::applicationOptions cget -destring]"
+        }
     } else {
         $w configure -ring [$::EVBC::applicationOptions cget -destring]
         $w configure -record [$::EVBC::applicationOptions cget -setdestringasevtlogsource]
