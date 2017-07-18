@@ -947,4 +947,5 @@ class ProgramOnlyTests(StateManagerTests):
 if __name__ == '__main__':
     unittest.main(verbosity=0)
     gc.collect()
+    os.sleep(1.0);                     # Wait for the threads to run down.
     sys.exit(0)
