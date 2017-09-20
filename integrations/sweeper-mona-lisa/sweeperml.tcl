@@ -227,7 +227,7 @@ proc Integration::OnStart {} {
 	-glomdt   $::EventBuilderParameters::glomdt           \
 	-destring $::EventBuilderParameters::destring         \
 	-glomid   $::EventBuilderParameters::glomid           \
-	-teering ""
+	-teering 0
 
     
     if {"sweeper" in $::EventBuilderParameters::systems} {
