@@ -134,7 +134,11 @@ CSocket::CSocket ()
 CSocket::~CSocket ( )  //Destructor - Delete dynamic objects
 {
   if(m_State == Connected) {
-    Shutdown();
+    try {
+      Shutdown();
+    }
+    catch (...) {		//  In case the state lies.
+    }
   }
   if(m_Fd > 0) {
     close(m_Fd);
