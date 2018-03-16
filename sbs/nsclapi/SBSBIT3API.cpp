@@ -2,7 +2,7 @@ static const char* Copyright= "(C) Copyright Michigan State University 2002, All
 
 
 #include <config.h>
-
+#include <errno.h>
 #include "CVMEInterface.h"
 #include "SBSBit3API.h"		// Device specific api.
 
@@ -33,8 +33,8 @@ const char* CVMEInterface::m_szDriverName="SBSBIT3";
 typedef struct _DeviceEntry {
   CVMEInterface::AddressMode   s_eModeId;
   bt_dev_t                     s_eLogicalDevice;
-  int                          s_pioAmod; // If not UINT_MAX this is the the mmap amod.
-  int                          s_dmaAmod; // If not UINT_MAX this is the dma amod.
+  unsigned                          s_pioAmod; // If not UINT_MAX this is the the mmap amod.
+  unsigned                          s_dmaAmod; // If not UINT_MAX this is the dma amod.
 } DeviceEntry, *pDeviceEntry;
 
 static const DeviceEntry kaDeviceTable[] = {
