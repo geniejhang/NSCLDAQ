@@ -3,6 +3,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 #include "Asserts.h"
+#include <numeric>              // for std::iota.
 
 #include <V11/DataFormatV11.h>
 

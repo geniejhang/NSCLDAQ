@@ -45,6 +45,7 @@
 #include <iterator>
 #include <algorithm>
 #include <ctime>
+#include <numeric>
 
 using namespace std;
 
