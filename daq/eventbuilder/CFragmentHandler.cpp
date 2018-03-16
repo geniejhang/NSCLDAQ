@@ -1080,7 +1080,8 @@ CFragmentHandler::generateBarrier(std::vector<EVB::pFragment>& outputList)
 	outputList.push_back(pFront);
 	p->second.s_queue.pop();
 	result.s_typesPresent.push_back(
-            std::pair<uint32_t, uint32_t>(p->first, pFront->s_header.s_barrier)
+            std::pair<uint32_t, uint32_t>(p->first,
+					  static_cast<uint32_t>(pFront->s_header.s_barrier))
         );
       } else {
 
