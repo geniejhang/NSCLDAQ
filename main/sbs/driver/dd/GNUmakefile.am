@@ -1,5 +1,5 @@
 
-BTDRIVER=$(shell pwd)
+BTDRIVER=$(shell (cd @srcdir@; pwd))
 
 
 all-local:
@@ -19,7 +19,7 @@ install-exec-local:
 
 install-data-local:
 	$(mkinstalldirs) $(prefix)/include
-	$(INSTALL_DATA) *.h $(prefix)/include
+	$(INSTALL_DATA) @srcdir@/*.h $(prefix)/include
 
 EXTRA_DIST=bt_assert.h \
 bt_bit.c \
@@ -57,7 +57,6 @@ bt_setup.c \
 bt_trace.h \
 btunit.h \
 bt_xfer.c \
-mkbtp	\
-Makefile
+mkbtp Makefile
 
 
