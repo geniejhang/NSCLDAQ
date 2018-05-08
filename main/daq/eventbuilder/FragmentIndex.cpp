@@ -6,6 +6,7 @@
 #include <fragment.h> 
 #include <DataFormat.h>
 
+namespace EVB {
 
 FragmentIndex::FragmentIndex()
   : m_frags()
@@ -94,3 +95,4 @@ size_t FragmentIndex::computeWordsToNextFragment(uint16_t* data)
 
 }
 
+}

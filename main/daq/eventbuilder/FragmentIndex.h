@@ -34,6 +34,7 @@ struct FragmentInfo
 };
 
 
+
 /**! FragmentIndex
 *
 * A class that finds the start of every fragment in a built ring item.
@@ -120,6 +121,5 @@ class FragmentIndex
 };
 
 
-} // end DAQ
-
+} /* EVB Namespace */
 #endif
