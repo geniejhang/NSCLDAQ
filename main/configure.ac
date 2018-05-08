@@ -550,12 +550,12 @@ AC_CONFIG_FILES([Makefile
                  utilities/filter/filterkit/Makefile
                  utilities/filter/filterkit/Makefile-template
                  utilities/filter/filterkit/FilterIncludes
-                 utilities/conversion/Mautilities/fileanalyzer/Makefile
+                 utilities/conversion/Makefile
+		 utilities/fileanalyzer/Makefile
 		     utilities/format/Makefile
     		     utilities/format/V8/Makefile
     		     utilities/format/V10/Makefile
-    		     utilities/format/V11/Makefilekefile
-    		utilities/fileanalyzer/Makefile
+    		     utilities/format/V11/Makefile
     		utilities/IO/Makefile
 		utilities/FormattedIO/Makefile
 		 utilities/newscaler/Makefile
@@ -587,7 +587,6 @@ AC_CONFIG_FILES([Makefile
 		 utilities/expEditor/Makefile
 		 utilities/dumpend/Makefile
 		 utilities/ringbuffer/Makefile
-		 utilities/scalersum/Makefile
                  epics/chanlog/Makefile
                  epics/controlpush/Makefile
                  epics/epicsdisplay/Makefile
