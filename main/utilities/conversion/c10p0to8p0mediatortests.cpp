@@ -44,6 +44,7 @@
 #include <ctime>
 #include <chrono>
 #include <memory>
+#include <numeric>
 
 using namespace std;
 

@@ -17,6 +17,7 @@
 #include <config.h>
 
 using std::string;
+#include <iostream>
 
 #ifndef TRUE
 #define TRUE -1

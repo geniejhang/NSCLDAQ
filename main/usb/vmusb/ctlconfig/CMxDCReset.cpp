@@ -15,7 +15,7 @@ CMxDCReset::CMxDCReset()
 void CMxDCReset::onAttach(CControlModule& config)
 {
   m_pConfig = &config;
-  m_pConfig->addParameter("-base", CConfigurableObject::isInteger, NULL, "0");
+  m_pConfig->addParameter("-base", XXUSB::CConfigurableObject::isInteger, NULL, "0");
 }
 
 void CMxDCReset::Initialize(CVMUSB& controller)
@@ -31,10 +31,10 @@ void CMxDCReset::Initialize(CVMUSB& controller)
   sleep(1);
 }
 
-std::unique_ptr<CControlHardware> 
+CControlHardware*
 CMxDCReset::clone()  const
 {
-  return std::unique_ptr<CControlHardware>(new CMxDCReset(*this));
+  return (new CMxDCReset(*this));
 }
 
 string CMxDCReset::Update(CVMUSB& controller)

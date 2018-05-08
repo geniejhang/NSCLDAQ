@@ -175,7 +175,7 @@ CModuleCommand::create(CTCLInterpreter& interp,
   // If we made it here, the module doesn't already exist. We can not safely 
   // create it.
   CModuleFactory*   pFact = CModuleFactory::instance();
-  unique_ptr<CControlHardware> pHdwr = pFact->create(type);
+  CControlHardware* pHdwr(pFact->create(type));
   if (!pHdwr) {
     interp.setResult("Module create: Invalid type, must be one of jtecgdg, caenv812, caenvg895, vmusb, chicotrigger, v6533, xlm");
     return TCL_ERROR;
@@ -183,9 +183,12 @@ CModuleCommand::create(CTCLInterpreter& interp,
 
   // Hardware was successfully created, wrap it into a CControlModule and
   // register it with the CCtlConfiguration
+
   auto pModule = DAQ::make_unique<CControlModule>(name,std::move(pHdwr));
 
-  m_config.addModule( move(pModule) );
+  //  auto pModule = new CControlModule(name, pHdwr);    /* In case the above is not right. */y
+
+  m_config.addModule( pModule );
   interp.setResult(name);
   
 
@@ -276,7 +279,7 @@ CModuleCommand::cget(CTCLInterpreter& interp, vector<CTCLObject>& objv)
   // The two cases:
 
   if (objv.size() == 3) {	// module cget name - dump the lot.
-    CConfigurableObject::ConfigurationArray config = pModule->cget();
+    XXUSB::CConfigurableObject::ConfigurationArray config = pModule->cget();
     Tcl_Obj* result = Tcl_NewListObj(0, NULL);
     for (int i =0; i < config.size(); i++) {
       string key   = config[i].first;

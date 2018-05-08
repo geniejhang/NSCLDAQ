@@ -50,7 +50,7 @@ void  CULMTrigger<Controller,RdoList>::onAttach(CReadoutModule& config)
 //    std::cout << "Attaching CULMTrigger" << std::endl;
     m_pConfig = &config;
     m_pConfig->addParameter("-slot",
-                            CConfigurableObject::isInteger,
+                            XXUSB::CConfigurableObject::isInteger,
                             &SlotLimits,
                             "1");
 
@@ -295,7 +295,7 @@ CULMTrigger<Controller,RdoList>::loadFirmware2(Controller& controller,
 
     // load body of firmware into rdolist
     RdoList* body = controller.createReadoutList();
-    uint32_t dummy;
+    uint16_t dummy;
     size_t nbytes;
     int status = -100;
     

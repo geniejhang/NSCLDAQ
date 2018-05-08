@@ -182,7 +182,8 @@ CVMUSB::serialNo(struct usb_device* dev)
 CMutex& CVMUSB::getGlobalMutex()
 {
     if (m_pGlobalMutex == nullptr) {
-        m_pGlobalMutex = new CMutex;
+      CMutexAttr attribs;
+      m_pGlobalMutex = new CMutex();
     }
 
     return *m_pGlobalMutex;
@@ -888,13 +889,12 @@ CVMUSB::executeList(CVMUSBReadoutList& list, int maxBytes)
 
   int status = this->executeList(list, result.data(), result.size(), &nRead);
 
-  if (status == 0) {
+  if (status >= 0) {
     result.resize(nRead);
   } else {
     // failure ... get 
-    result.resize(0);
+    result.resize(0); 
   }
-
   return result;
 }
 
@@ -1027,7 +1027,7 @@ CVMUSB::doVMEWrite(CVMUSBReadoutList& list)
   if ((status == 0) && (reply == 0)) {
     status = -3;
   }
-  return status;
+  return status > 0 ? 0 : status;
 }
 
 

@@ -71,7 +71,7 @@ public:
 			  std::string value);
   virtual std::string Get(CVMUSB& vme, 
 			  std::string parameter);
-  virtual std::unique_ptr<CControlHardware> clone() const;
+  virtual CControlHardware* clone() const;
 
 };
 
@@ -90,7 +90,7 @@ CUserDriver::CUserDriver() :
  * onAttach
  *   Called when a driver instance is attached to the software.  This
  *   is where we maintain a pointer to our configuration (CControlModule) and
- *   provide configurable options.  The CControlModule is a CConfigurableObject
+ *   provide configurable options.  The CControlModule is a XXUSB::CConfigurableObject
  *   so that part works just like a readout driver.
  *
  * @param configuration - Reference to the configuration object.
@@ -183,10 +183,10 @@ CUserDriver::Get(CVMUSB& vme, std::string parameter)
  * 
  * @param rhs - the object we are being cloned from.
  */
-std::unique_ptr<CControlHardware>
+CControlHardware*
 CUserDriver::clone() const
 {
-  return std::unique_ptr<CControlHardware>(new CUserDriver(*this));
+  return (new CUserDriver(*this));
 }
 
 /*--------------------------------------------------------------------------------------
@@ -200,7 +200,7 @@ CUserDriver::clone() const
 class CUserDriverCreator : public CModuleCreator
 {
 public:
-  virtual std::unique_ptr<CControlHardware> operator()();
+  virtual CControlHardware* operator()();
 };
 /**
  * operator()
@@ -208,10 +208,10 @@ public:
  *
  * @return CControlHardware*  - Pointer to the newly, dynamically created object.
  */
-  std::unique_ptr<CControlHardware>
+CControlHardware*
 CUserDriverCreator::operator()()
 {
-  return std::unique_ptr<CControlHardware>(new CUserDriver);
+  return (new CUserDriver);
 }
 
 /*-----------------------------------------------------------------------------------

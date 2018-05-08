@@ -1,4 +1,5 @@
 lib_LTLIBRARIES		= libCCUSBCore.la
+
 libCCUSBCore_la_SOURCES	= Globals.cpp CAcquisitionThread.cpp 	\
 				CControlQueues.cpp \
 				COutputThread.cpp \
@@ -50,6 +51,7 @@ noinst_HEADERS		= CAcquisitionThread.h		\
 
 libCCUSBCore_la_CPPFLAGS = \
 		  @THREADCXX_FLAGS@ \
+			-I@top_srcdir@/usb/common/configurableobject \
 			-I@top_srcdir@/usb/ccusb/ccusb		\
 			-I@top_srcdir@/usb/ccusb/daqconfig	\
 			-I@top_srcdir@/usb/ccusb/ctlconfig	\
@@ -76,7 +78,8 @@ libCCUSBCore_la_CPPFLAGS = \
 libCCUSBCore_la_LIBADD	= \
 			@top_builddir@/usb/ccusb/daqconfig/libCCUSBDaqConfig.la	\
 			@top_builddir@/usb/ccusb/ctlconfig/libCCUSBCtlConfig.la	\
-		  @top_builddir@/usb/ccusb/ccusb/libCCUSB.la		\
+			@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
+		 	 @top_builddir@/usb/ccusb/ccusb/libCCUSB.la		\
 			@LIBTCLPLUS_LDFLAGS@					\
 			@top_builddir@/base/thread/libdaqthreads.la \
 			@top_builddir@/base/os/libdaqshm.la	\

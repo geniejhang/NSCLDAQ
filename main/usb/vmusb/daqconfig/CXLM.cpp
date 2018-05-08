@@ -36,6 +36,7 @@
 #include <iomanip>
 #include <chrono>
 #include <thread>
+#include <sstream>
 
 using namespace std;
 
@@ -148,7 +149,7 @@ CXLM::onAttach(CReadoutModule& configuration)
 
   // Define our base configuration parameters.
 
-  configuration.addParameter("-base", CConfigurableObject::isInteger, NULL, "0");
+  configuration.addParameter("-base", XXUSB::CConfigurableObject::isInteger, NULL, "0");
 
   configuration.addParameter("-firmware",
 			     Utils::validFirmwareFile, NULL, "");
@@ -176,7 +177,8 @@ void
 CXLM::loadFirmware(CVMUSB& controller, string path) throw(std::string)
 {
   uint32_t base = m_pConfiguration->getUnsignedParameter("-base");
-
+  std::cout << "XLM::loadFirmware " << path << " for module at "
+    << std::hex << base << std::dec <<std::endl;
   CFirmwareLoader loader(controller, base);
   loader(path);
 }
@@ -435,16 +437,20 @@ void CFirmwareLoader::loadSRAM0(uint32_t destAddr, uint32_t* image, uint32_t nBy
 
   if (nRemainingBytes == 0) return;	// Stupid edge case but we'll handle it correctly.
 
+#ifdef DUMPDEBUG  
+
   std::ofstream dump("fwloader.txt");
   dump << hex << setfill('0');
-
+#endif  
   uint32_t* p  = image;
   while (nRemainingBytes > blockSize*sizeof(uint32_t)) {
     CVMUSBReadoutList  loadList;
     for (int i =0; i < blockSize; i++) {
+#ifdef DUMPDEBUG      
       dump << "\n" << setw(8) << destAddr 
            << " " << setw(2)  << static_cast<int>(sramaAmod)
            << " " << setw(8) << *p;
+#endif      
       loadList.addWrite32(destAddr, sramaAmod,  *p++);
 //      loadList.addRead32(destAddr, sramaAmod);
       destAddr += sizeof(uint32_t);
@@ -466,9 +472,11 @@ void CFirmwareLoader::loadSRAM0(uint32_t destAddr, uint32_t* image, uint32_t nBy
   if (nRemainingBytes > 0) {
     CVMUSBReadoutList loadList;
     while (nRemainingBytes > 0) {
+#ifdef DUMPDEBUG     
       dump << "\n" << setw(8) << destAddr 
            << " " << setw(2)  << static_cast<int>(sramaAmod)
            << " " << setw(8) << *p;
+#endif      
       loadList.addWrite32(destAddr, sramaAmod, *p++);
 //      loadList.addRead32(destAddr, sramaAmod);
       destAddr += sizeof(uint32_t);
@@ -484,7 +492,9 @@ void CFirmwareLoader::loadSRAM0(uint32_t destAddr, uint32_t* image, uint32_t nBy
       throw msg;
     }
   }
+#ifdef DUMPDEBUG  
   dump << endl;
+#endif  
 }
 
 void CFirmwareLoader::loadSRAM1(uint32_t destAddr, uint32_t* image, uint32_t nBytes)
@@ -493,12 +503,15 @@ void CFirmwareLoader::loadSRAM1(uint32_t destAddr, uint32_t* image, uint32_t nBy
 
   if (nBytes == 0) return;	// Stupid edge case but we'll handle it correctly.
 
+#ifdef DUMPDEBUG
   std::ofstream dump("fwloader.txt");
   dump << hex << setfill('0');
-
+#endif
   CVMUSBReadoutList loadList;
   loadList.addBlockWrite32(destAddr, blockTransferAmod, image, nBytes/sizeof(uint32_t));
+#ifdef DUMPDEZBUG
   loadList.dump(dump);
+#endif 
   std::vector<uint8_t> retData = m_ctlr.executeList(loadList, sizeof(uint16_t));
   if (retData.size() == 0) {
     string error = strerror(errno);
@@ -590,24 +603,43 @@ void CFirmwareLoader::acquireBusses()
 
 
   // run the list:
-  vector<uint8_t> retData = m_ctlr.executeList(initList, sizeof(uint16_t));
+  
+  unsigned  retries = 10;
+  vector<uint8_t> retData;
+  do {
+    retries--;
+    retData = m_ctlr.executeList(initList, sizeof(uint16_t));
+  } while ((retries > 0) && (retData.size() == 0) && (errno == EAGAIN));
+
+  // Success or retries exhausted.
+  
   if (retData.size() == 0) {
     string reason = strerror(errno);
     string msg = "XLM::CFirmwareLoader::initialize - failed to execute initialization list: ";
     msg       += reason;
-
+    if (retries == 0) {
+      msg += " (retries exhausted)";
+    } 
     throw msg;
   }
 
   // I should have bus A:
   uint32_t busAOwner =0;
-  m_ctlr.vmeRead32(m_baseAddr + BUSAOwner, registerAmod, &busAOwner);
-  if (busAOwner != 1)  {
-    string reason = strerror(errno);
-    string msg = "CXLM::CFirmwareLoader::initialize - failed to acquire bus A ";
-    msg       += reason;
+  int status = m_ctlr.vmeRead32(m_baseAddr + BUSAOwner, registerAmod, &busAOwner);
+  
+  if ((busAOwner & 3) != 1)  {
+    std::stringstream msg;
+    msg << "CXLM::CFirmwareLoader::initialize - failed to acquire bus A ";
+    msg << std::hex << " Expected 1 got " << busAOwner << std::endl;
+    msg << " Read from " << m_baseAddr + BUSAOwner << std::dec << std::endl;
+    msg << " Claim bus gave " << (int)retData[0] << " " << (int)retData[1];
+    if (status < 0) {
+      string reason = strerror(errno);
+      msg << " VME Read 32 failed: " << reason;
+    }
+    
 
-    throw msg;
+    throw msg.str();
   }
 
 }

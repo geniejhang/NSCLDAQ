@@ -142,14 +142,14 @@ CModuleCommand::create(CTCLInterpreter& interp,
   }
 
   CModuleFactory* pFact = CModuleFactory::instance();
-  unique_ptr<CControlHardware> pHdwr = pFact->create(type);
+  CControlHardware* pHdwr = pFact->create(type);
   if (!pHdwr) {
     interp.setResult("Module create: Invalid type, must be one of caen894, ph7106, tcl, or ccusb.");
     return TCL_ERROR;
   }
 
-  unique_ptr<CControlModule> upConfig(new CControlModule(name, std::move(pHdwr)));
-  m_config.addModule( move(upConfig) );
+  CControlModule* upConfig(new CControlModule(name, pHdwr));
+  m_config.addModule(upConfig );
   interp.setResult(name);
 
   return TCL_OK;
@@ -239,7 +239,7 @@ CModuleCommand::cget(CTCLInterpreter& interp, vector<CTCLObject>& objv)
   // The two cases:
 
   if (objv.size() == 3) {	// module cget name - dump the lot.
-    CConfigurableObject::ConfigurationArray config = pModule->cget();
+    XXUSB::CConfigurableObject::ConfigurationArray config = pModule->cget();
     Tcl_Obj* result = Tcl_NewListObj(0, NULL);
     for (int i =0; i < config.size(); i++) {
       string key   = config[i].first;

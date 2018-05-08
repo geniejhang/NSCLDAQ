@@ -61,6 +61,12 @@
 
 typedef bool (*typeChecker)(std::string name, std::string value, void* arg);
 
+
+// This namespace disambiguates this class from the  CConfigurableObject
+// hiding in libTclPlus TODO - merge the capabilities of that class.
+
+namespace XXUSB {
+
 /*!
    Configurable object consist of a name and a configuration.
    A configuration is a set of name value pairs.  Each name value
@@ -118,10 +124,20 @@ public:
     limit s_atMost;
   } ListSizeConstraint;
 
-  typedef struct _isListParameter {
+  struct isListParameter {
     ListSizeConstraint s_allowedSize;
     TypeCheckInfo      s_checker;
-  } isListParameter;
+    isListParameter(limit atLeast, limit atMost, TypeCheckInfo checker) {
+      s_allowedSize.s_atLeast = atLeast;
+      s_allowedSize.s_atMost  = atMost;
+      s_checker               = checker;
+    }
+    isListParameter(ListSizeConstraint limits, TypeCheckInfo checker) {
+      s_allowedSize = limits;
+      s_checker     = checker;
+    }
+    isListParameter() {}  
+  };
 
   typedef void(*ConstraintFreer)(void*); // Free function for dynamic constraint objects.
   typedef struct _DynamicConstraint {	 // 
@@ -180,7 +196,8 @@ public:
   bool             getBoolParameter    (std::string name);
   double           getFloatParameter   (std::string name);
   std::vector<int> getIntegerList      (std::string name);
-  int              getEnumParameter    (std::string name, const char** pValues);
+  std::vector<std::string> getList     (std::string name);
+  int              getEnumParameter(std::string name, const char**pValues);
     
   // Operations:
 
@@ -215,6 +232,9 @@ public:
   void addIntListParameter(std::string name, unsigned size, int defaultVal = 0);
   void addIntListParameter(std::string name, unsigned minlength, unsigned maxLength,
 			   int defaultVal = 0, int defaultSize = -1);
+  void addIntListParameter(std::string name, int minValue, int maxValue,
+                           unsigned minlength, unsigned maxLength, unsigned defaultSize,
+			   int defaultVal);
  
 
   void addStringListParameter(std::string name, unsigned size, std::string defaultVal = "");
@@ -227,6 +247,7 @@ public:
   static bool isInteger(std::string name, std::string value, void* arg);
   static bool isBool(   std::string name, std::string value, void* arg);
   static bool isEnum(   std::string name, std::string value, void* arg);
+  static bool isFloat(  std::string name, std::string value, void* arg);
   static bool isList(   std::string name, std::string value, void* arg);
   static bool isBoolList(std::string name,std::string value, void* arg);
   static bool isIntList(std::string name, std::string value, void* arg);
@@ -259,5 +280,5 @@ private:
   static void releaseLimitsConstraint(void* pConstraint);
 };
 
-
+};
 #endif

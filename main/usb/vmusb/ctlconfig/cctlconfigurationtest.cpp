@@ -100,13 +100,13 @@ void CCtlConfigurationTests::addModule_0() {
   // store the location of our module for testing purposes
   CControlModule* pMod = pModule.get();
 
-  config.addModule( move(pModule) );
+  config.addModule( pModule.get() );
 
   // ensure that what we added is the same as what ended up in the 
   // configuration
   CPPUNIT_ASSERT_EQUAL_MESSAGE(
       "Adding module successfully registers the control module to ctl configuration",
-      pMod, config.getModules().at(0).get()
+      pMod, config.getModules().at(0)
       );
 }
 
@@ -115,6 +115,7 @@ void CCtlConfigurationTests::findModule_0() {
   CCtlConfiguration config;
 
   // create the control module
+
   auto pHdwr = DAQ::make_unique<CMxDCReset>();
   auto pModule = DAQ::make_unique<CControlModule>( "test", move(pHdwr) );
   
@@ -122,7 +123,7 @@ void CCtlConfigurationTests::findModule_0() {
   CControlModule* pMod = pModule.get();
 
   // explicitly insert the module into the list of registered modules
-  config.m_Modules.push_back( move(pModule) );
+  config.m_Modules.push_back( pModule.get() );
 
   // ensure that what we added is the same as what ended up in the 
   // configuration

@@ -393,6 +393,84 @@ CAcquisitionThread::startDaq()
 {
   CriticalSection lock(CVMUSB::getGlobalMutex());
 
+  //  First do a bulk read just to flush any crap that's in the VM-USB
+  // output fifo..as it appears to sometimes leave crap there.
+  // ignore any error status, and use a short timeout:
+
+  cerr << "Flushing any garbage in the VM-USB fifo...\n";
+
+  char junk[1000];
+  size_t moreJunk;
+  m_pVme->usbRead(junk, sizeof(junk), &moreJunk, 1*1000); // One second timeout.
+
+  cerr << "Starting VM-USB initialization\n";
+
+
+  // Now we can start preparing to read...
+
+  //  m_pVme->writeActionRegister(CVMUSB::ActionRegister::sysReset);
+  m_pVme->writeActionRegister(0);
+
+  // Set up the buffer size and mode:
+
+  m_pVme->writeBulkXferSetup(0 << CVMUSB::TransferSetupRegister::timeoutShift); // don't want multibuffering...1sec timeout is fine.
+
+  // The global mode:
+  //   13k buffer
+  //   Single event seperator.
+  //   Aligned on 16 bits.
+  //   Single header word.
+  //   Bus request level 4.
+  //   Flush scalers on a single event.
+  //
+  m_pVme->writeGlobalMode((4 << CVMUSB::GlobalModeRegister::busReqLevelShift) | 
+                            //        CVMUSB::GlobalModeRegister::flushScalers |
+                            // CVMUSB::GlobalModeRegister::mixedBuffers        |
+                            // CVMUSB::GlobalModeRegister::spanBuffers         |
+                            (CVMUSB::GlobalModeRegister::bufferLen13K << 
+                                  CVMUSB::GlobalModeRegister::bufferLenShift));
+
+
+
+  // Process the configuration. This must be done in a way that preserves the
+  // Interpreter since loadStack and Initialize for each stack will need the
+  // interpreter for our support of tcl drivers.
+
+  Globals::pConfig = new CConfiguration;
+  Globals::pConfig->processConfiguration(Globals::configurationFilename);
+  m_Stacks = Globals::pConfig->getStacks();
+
+  //  Get all of the stacks.  load and enable them.  First we'll reset the
+  // stack load offset.
+
+  CStack::resetStackOffset();
+
+  cerr << "Loading " << m_Stacks.size() << " stacks to vm-usb\n";
+  m_haveScalerStack = false;
+  for(int i =0; i < m_Stacks.size(); i++) {
+    CStack* pStack = dynamic_cast<CStack*>(m_Stacks[i]->getHardwarePointer());
+   
+    assert(pStack);
+    if (pStack->getTriggerType()  == CStack::Scaler) {
+      m_haveScalerStack = true;
+    }
+    pStack->loadStack(*m_pVme);     // Load into VM-USB
+    pStack->enableStack(*m_pVme);   // Enable the trigger logic for the stack.
+    pStack->Initialize(*m_pVme);    // INitialize daq hardware associated with the stack.
+
+
+  }
+
+  // there could be a TclServer stack as well:
+
+  TclServer*          pServer = ::Globals::pTclServer;
+  CVMUSBReadoutList   list    = pServer->getMonitorList();
+  if (list.size() != 0) {
+    std::cerr << "Loading monitor stack of size: " << list.size() << " at offset: " << CStack::getOffset() << std::endl;
+    size_t currentOffset = CStack::getOffset();
+    m_pVme->loadList(7, list, currentOffset); // The tcl server will periodically trigger the list.
+  }
+
 
   // Start the VMUSB in data taking mode:
 

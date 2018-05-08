@@ -142,7 +142,7 @@ void
 CV812::onAttach(CControlModule& configuration)
 {
   m_pConfiguration = &configuration;
-  configuration.addParameter("-base", CConfigurableObject::isInteger, NULL, string("0"));
+  configuration.addParameter("-base", XXUSB::CConfigurableObject::isInteger, NULL, string("0"));
   configuration.addParameter("-file", (typeChecker)NULL, NULL , string(""));
 
 }
@@ -287,7 +287,7 @@ CV812::Update(CVMUSB& vme)
 
   int status = vme.executeList(list, &dummy, sizeof(dummy), &dummysize);
 
-  if (status != 0) {
+  if (status < 0) {
     return string("ERROR - Could not execute update list in VM-USB");
   }
   else {
@@ -393,10 +393,10 @@ CV812::Get(CVMUSB& vme, string parameter)
 /*!
   At present, cloning is a no-op.
 */
-std::unique_ptr<CControlHardware>
+CControlHardware*
 CV812::clone() const
 {
-  return std::unique_ptr<CControlHardware>(new CV812(*this));
+  return (new CV812(*this));
 }
 
 //////////////////////////////////////////////////////////////////////////////////

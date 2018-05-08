@@ -41,6 +41,7 @@ libCCUSBCtlConfig_la_CPPFLAGS	= -I@top_srcdir@/usb/ccusb		\
 					-I@top_srcdir@/usb/ccusb/router	\
 					-I@top_srcdir@/usb/ccusb/core	\
 					-I@top_srcdir@/usb/common/slowcontrols	\
+					-I@top_srcdir@/usb/common/configurableobject \
 					@LIBTCLPLUS_CFLAGS@	\
 					-I@top_srcdir@/base/headers	\
 					-I@top_srcdir@/base/thread	\
@@ -49,6 +50,7 @@ libCCUSBCtlConfig_la_CPPFLAGS	= -I@top_srcdir@/usb/ccusb		\
 
 libCCUSBCtlConfig_la_LIBADD	= 	@top_builddir@/usb/ccusb/ccusb/libCCUSB.la          \
 					@top_builddir@/usb/ccusb/daqconfig/libCCUSBDaqConfig.la \
+					@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
 					@top_builddir@/base/tcpip/libTcp.la			\
 					@TCL_LDFLAGS@						\
 					@LIBTCLPLUS_LDFLAGS@					\
@@ -67,7 +69,7 @@ install-data-local:
 EXTRA_DIST=driver_Makefile.in sampleDriver.cpp
 
 ## UNIT TESTS
-bin_PROGRAMS = unittests
+noinst_PROGRAMS = unittests
 
 unittests_SOURCES = \
 			TestRunner.cpp \
@@ -98,6 +100,6 @@ unittests_LDADD = \
 unittests_DEPENDENCIES = \
 			@builddir@/libCCUSBCtlConfig.la 
 
-check-TESTS: 
-		./unittests
+TESTS = unittests
+
 

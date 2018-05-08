@@ -18,6 +18,7 @@
 #include "CVMUSBModule.h"
 #include "CControlModule.h"
 #include "CVMUSB.h"
+#include "CVMUSBusb.h"
 #include "CVMUSBReadoutList.h"	// for the AM codes.
 
 #include <TCLInterpreter.h>
@@ -120,8 +121,9 @@ CVMUSBModule::Update(CVMUSB& vme)
  *   ERROR - reason   not successful.
  */
 string
-CVMUSBModule::Set(CVMUSB& vme, string parameter, string value)
+CVMUSBModule::Set(CVMUSB& controller, string parameter, string value)
 {
+  CVMUSBusb& vme(dynamic_cast<CVMUSBusb&>(controller));
   if (parameter != "list") {
     return string ("ERROR - Invalid parameter name, must be 'list'");
   }
@@ -138,15 +140,18 @@ CVMUSBModule::Set(CVMUSB& vme, string parameter, string value)
     readdata                      = new uint8_t[maxBuffer];
     vector<uint32_t> listContents = decodeList(value);
     CVMUSBReadoutList theList(listContents);
+    int oldTimeout = vme.getDefaultTimeout();
+    vme.setDefaultTimeout(100);
     int status                    = vme.executeList(theList,
 						    readdata,
 						    maxBuffer, &bytesread);
-    if (status == 0) {
+    vme.setDefaultTimeout(oldTimeout);
+    if (status >= 0) {
       string result =  marshallOutput(readdata, bytesread);
       delete []readdata;
       return result;
     }
-    string msg = "ERROR - ";
+    string msg;
     int ecode  = errno;
     if (status == -1) {
       msg += "usb_bulk_write failed: ";
@@ -160,11 +165,11 @@ CVMUSBModule::Set(CVMUSB& vme, string parameter, string value)
     throw msg;
     
   }
-  catch (string msg) {		// Deep calls throw a string error message:
-    string error  = "ERROR - ";
+  catch (string msg) {		// Return to the caller rather than re-throw.
+    string error  = "ERROR - "; // That returns the status to the ultimate caller.
     error        += msg;
-    throw error;
     delete readdata;
+    return error;
   }
 }
 /**
@@ -177,10 +182,10 @@ CVMUSBModule::Get(CVMUSB& vme, string parameter)
 }
 /**
  */
-std::unique_ptr<CControlHardware>
+CControlHardware*
 CVMUSBModule::clone() const
 {
-  return std::unique_ptr<CControlHardware>(new CVMUSBModule(*this));
+  return (new CVMUSBModule(*this));
 }
 
 

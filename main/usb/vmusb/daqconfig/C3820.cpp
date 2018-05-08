@@ -24,7 +24,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-
+#include <map>
+#include <set>
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////
@@ -46,10 +47,12 @@ static const uint32_t AcqMode    = 0x00000100; // Acquisition mode register.
 static const uint32_t HighBits   = 0x00000210;
 
 
-static const uint32_t KeyReset   = 0x00000400;     // Writing here resets.
-static const uint32_t KeyLNE     = 0x00000410;
-static const uint32_t KeyArm     = 0x00000414;
-static const uint32_t KeyEnable  = 0x00000418;
+static const uint32_t KeyReset         = 0x00000400;     // Writing here resets.
+static const uint32_t KeyFifoReset     = 0x00000404;   // Clear memory fifo logic.
+static const uint32_t KeyClearCounters = 0x00000040c; // Clear scaler counters
+static const uint32_t KeyLNE           = 0x00000410;
+static const uint32_t KeyArm           = 0x00000414;
+static const uint32_t KeyEnable        = 0x00000418;
 
 
 static const uint32_t ShadowCounters = 0x00000800;
@@ -84,16 +87,61 @@ static const uint32_t acqInpLNEInhLNE  = 0x00010000;
 static const uint32_t acqInpLNEInhboth = 0x00020000;
 static const uint32_t acqInpLNEInhCount= 0x00030000;
 static const uint32_t acqInpLNEInh4s   = 0x00040000;
+static const uint32_t acqInpLNEHiscal  = 0x00050000;
+static const uint32_t acqInpLneInhClr  = 0x00060000;
 static const uint32_t acqInpInvert     = 0x00080000;
 static const uint32_t acqOutModeled    = 0x00000000;
 static const uint32_t acqOutMode50Mhz  = 0x00100000;
+static const uint32_t acqOutMode2x10Mhz= 0x00200000;
+static const uint32_t acqoutMode1x10Mhz= 0x00300000;
 static const uint32_t acqOutInvert     = 0x00800000;
 static const uint32_t acqModeLatch     = 0x00000000;
 static const uint32_t acqModeMCS       = 0x20000000;
 static const uint32_t acqModeHisto     = 0x30000000;
 static const uint32_t acqModeTest      = 0x70000000;
 
+// input modes note the special value "default" because the default value
+// depends on the 
 
+static const char* inputModes[] = {
+  "default", "None", "LNEInhLNE", "LNEInhboth", "LNEInhCount", "Inh4s",
+  "LNEHiscal", "LneInhClr",
+  nullptr
+};
+
+static std::map<std::string, uint32_t> inputModeValues  = {
+   {"default", 0xffffffff},                 // detectable funky value.
+   {"None", acqInpNone},                    // mode 0
+   {"LNEInhLNE", acqInpLNEInhLNE},          // mode 1
+   {"LNEInhboth", acqInpLNEInhboth},        // mode 2
+   {"LNEInhCount", acqInpLNEInhCount},      // mode 3
+   {"Inh4s", acqInpLNEInh4s},               // mode 4
+   {"LNEHiscal", acqInpLNEHiscal},          // mode 5
+   {"LneInhClr", acqInpLneInhClr}           // mode 6
+};
+
+//  These input modes are acceptable in timestamp mode.
+static std::set<uint32_t> goodTsInputModes = {
+  acqInpLNEInhLNE, acqInpLNEInhboth, acqInpLNEInhCount, acqInpLNEHiscal,
+  acqInpLneInhClr
+};
+
+
+// Output mode strings and their corresopnding acqOutMode values.
+// The default matches the hardcoded 11.2-007 value that puts a 50MHz
+// clock out on an output.
+
+static const char* outputModeStrings[] = {
+  "clock50Mhz", "LNEAndLed", "clock2x10Mhz", "clock1x10Mhz",
+  nullptr
+};
+
+static std::map<std::string, uint32_t> outputModeValues = {
+  {"clock50Mhz", acqOutMode50Mhz},
+  {"LNEAndLed", acqOutModeled},
+  {"clock2x10Mhz", acqOutMode2x10Mhz},
+  {"clock1x10Mhz", acqoutMode1x10Mhz}
+};
 
 //////////////////////////////////////////////////////////////////////////
 ////////////////////// Constructors and canonicals ///////////////////////
@@ -130,10 +178,13 @@ C3820::onAttach(CReadoutModule& configuration)
   // Add the base parameter:
 
   m_pConfiguration->addParameter("-base",
-				 CConfigurableObject::isInteger, 
+				 XXUSB::CConfigurableObject::isInteger, 
 				 NULL, "0");
   m_pConfiguration->addParameter("-timestamp",
-                                CConfigurableObject::isBool, NULL, "off");
+				 XXUSB::CConfigurableObject::isBool, NULL, "off");
+  
+  m_pConfiguration->addEnumParameter("-inputmode", inputModes, "default");
+  m_pConfiguration->addEnumParameter("-outputmode", outputModeStrings, "clock50Mhz");
 }
 /*!
    Called to setup the module for data taking. We'll make a small setup list
@@ -148,6 +199,12 @@ C3820::Initialize(CVMUSB& controller)
   // First figure out our base address:
 
   uint32_t base = getBase();
+  std::string inputModeString = m_pConfiguration->cget("-inputmode");
+  uint32_t    inputMode       = inputModeValues[inputModeString];
+  std::string outputModeStr   = m_pConfiguration->cget("-outputmode");
+  uint32_t    outputMode      = outputModeValues[outputModeStr];
+  
+  
 
   // Ensure that this module is an SIS 3820 and if so reset it. 
   // these are done as single shot operations so that the reset is conditional
@@ -185,20 +242,44 @@ C3820::Initialize(CVMUSB& controller)
   uint32_t lne;
   uint32_t inpmode;
 
+  // Figure out the input mode etc. part of the ACQ register note:
+  // Defaults depend on timestamp mode on/off.
+  // Modes that don't have LNE enabled output a warning in timestamp mode
+  // as there's no clear way to latch the sacler.
+  
   if(tsMode){
     clearing = acqNonClearing; //  Don't clear on latch.
     lne=acqLNEFP;
-    inpmode=acqInpLNEInhLNE;
-    cout << "We are in timestamp mode, using external LNE(1) and CLEARING IS DISABLED" << endl; 
+    if (inputMode == 0xffffffff) {
+      inpmode=acqInpLNEInhLNE;
+    } else {
+      inpmode = inputMode;
+    } 
+    cout << "We are in timestamp mode, using external LNE(1) and CLEARING IS DISABLED" << endl;
+    
+    // See if we need to warn that the input mode doesn't have LNE.
+    
+    if (goodTsInputModes.count(inpmode) == 0) {
+      cout << "***** WARNING **** you selected timestamp mode but your input mode has no external LNE *****\n";
+      cout << "***** WARNING **** this means I don't understand where the timestamp latch comes from.\n";
+      cout << "***** WARNING **** you'd better know what you're doing or choose a different input mode\n";
+    }
   } else {
     lne=acqLNEVME;
-    inpmode=acqInpLNEInh4s; //inhibit in 4 groups!!
+    
+    if (inputMode == 0xffffffff) {
+      inpmode=acqInpLNEInh4s; //inhibit in 4 groups!!
+    } else  {
+      inpmode = inputMode;                     // There are no 'bad' input modes
+    }                                          // if we're not a timestamp module.
     clearing = 0; //  clear on latch.
   }
     
   initList.addWrite32(base+AcqMode, CVMUSBReadoutList::a32UserData,
 		      acq32Bit    | lne   | acqArmWithFP | acqSRAMMemory |
-		       inpmode | acqOutModeled | acqModeLatch | clearing);
+		       inpmode | outputMode | acqModeLatch | clearing);
+  initList.addWrite32(base+KeyFifoReset, CVMUSBReadoutList::a32UserData, uint32_t(0));
+  initList.addWrite32(base+KeyClearCounters, CVMUSBReadoutList::a32UserData, uint32_t(0));
   initList.addWrite32(base+KeyArm, CVMUSBReadoutList::a32UserData, (uint32_t)0);
   initList.addWrite32(base+KeyEnable, CVMUSBReadoutList::a32UserData, (uint32_t)0);
 
@@ -207,7 +288,7 @@ C3820::Initialize(CVMUSB& controller)
   size_t   bytesRead;
   status = controller.executeList(initList,
 				      &inBuffer, sizeof(inBuffer), &bytesRead);
-  if (status) {
+  if (status < 0) {
     throw string("C3820::Could not initialize via executeList.");
   }
 }

@@ -26,6 +26,7 @@ namespace DAQ {
 class CTimeout;
 }
 
+#include <set>
 /**
  * @file io.h
  * @brief Commonly used I/O method definitions.
@@ -42,12 +43,15 @@ namespace io {
     };
 
   void writeData (int fd, const void* pData , size_t size);
+
   ssize_t readData (int fd, void* pBuffer,  size_t nBytes);
 
   std::pair<ssize_t, ReturnCode>
   timedReadData(int fd, void* pBuffer,  size_t nBytes,
                         const ::DAQ::CTimeout& timeout);
   double freeSpacePercent(int fd);
+  void closeUnusedFiles(std::set<int> keepOpen);
+
 }
 
 

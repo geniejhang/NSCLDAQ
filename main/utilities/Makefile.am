@@ -27,7 +27,8 @@ SUBDIRS = 				common	\
 					ringbuffer	\
 					fileanalyzer	\
 					eventlog \
-					scalersum
+					scalersum \
+					scalersum reglom
 
 
 # scalerdisplay - removed in favor of newscaler

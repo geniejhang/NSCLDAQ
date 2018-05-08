@@ -10,6 +10,7 @@ unittests_LDADD =  \
 		@top_builddir@/usb/ccusb/daqconfig/libCCUSBDaqConfig.la  \
 		@top_builddir@/base/thread/libdaqthreads.la		\
 		@top_builddir@/base/tcpip/libTcp.la                   \
+		@top_builddir@/usb/common/configurableobject/libConfigurableObject.la	\
 		@LIBTCLPLUS_LDFLAGS@                                  \
 		@LIBEXCEPTION_LDFLAGS@                                \
 		@TCL_LDFLAGS@				              \
@@ -17,6 +18,7 @@ unittests_LDADD =  \
 
 
 unittests_CPPFLAGS = \
+		-I@top_srcdir@/usb/common/configurableobject	\
 		@TCL_CPPFLAGS@ \
 		$(CPPUNIT_INCLUDES) \
 		$(THREADCXX_FLAGS) \

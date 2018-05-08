@@ -18,7 +18,7 @@
 #ifndef CCONTROLMODULET_H
 #define CCONTROLMODULET_H
 
-#include <CConfigurableObject.h>
+#include <XXUSBConfigurableObject.h>
 
 #include <string>
 
@@ -57,14 +57,16 @@ template<class Ctlr> class CControlHardwareT;
   however, if some other controller implements the proper functionality.
   */
 template<class Ctlr>
-class CControlModuleT : public CConfigurableObject
+class CControlModuleT : public XXUSB::CConfigurableObject
 {
-  public:
+ private:
+    CControlHardwareT<Ctlr>*         m_pHardware; //!< Hardware
+
+
+ public:
     using RdoList = typename Ctlr::RdoList; //!< Readoutlist compatible with
     //   Ctlr
 
-  private:
-    std::unique_ptr<CControlHardwareT<Ctlr>> m_pHardware; //!< Hardware 
 
   public:
 
@@ -76,7 +78,7 @@ class CControlModuleT : public CConfigurableObject
      *  identifies itself with a name.
      */
     CControlModuleT(std::string name, 
-                    std::unique_ptr<CControlHardwareT<Ctlr>> hardware);
+                    CControlHardwareT<Ctlr>* hardware);
 
     /**! \brief Destructor
      *
@@ -226,7 +228,7 @@ class CControlModuleT : public CConfigurableObject
      *
      * \param pointer to hardware
      */
-    CControlHardwareT<Ctlr>* getHardware() { return m_pHardware.get(); }
+    CControlHardwareT<Ctlr>* getHardware() { return m_pHardware; }
 };
 
 // the implementation

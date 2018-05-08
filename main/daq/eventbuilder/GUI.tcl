@@ -56,6 +56,11 @@ namespace eval ::EVB {
     array set lastinputstats [list]
     
     variable ooWidget
+    
+    variable lastLateSummary [list 0  0]
+    variable lastIncompleteStats [list]
+    variable lastLatewidgetStats [list]
+    
 }
 
 #-----------------------------------------------------------------------------
@@ -464,6 +469,9 @@ snit::widgetadaptor EVB::statusNotebook {
     delegate option * to hull
     delegate method * to hull
     
+    variable outOfOrderTabno
+    variable errorTabno
+    
     ##
     # constructor
     #
@@ -491,22 +499,67 @@ snit::widgetadaptor EVB::statusNotebook {
         
         install ooStats using OutOfOrderWindow $win.oo
         $hull add $ooStats -text {Out of order}
+        set outOfOrderTabno 3
         
         install barrierStats using EVB::barrierStatistics $win.barrier
         $hull add $barrierStats -text {Barriers}
         
         install errorStats using EVB::errorStatistics  $win.errors
         $hull add $errorStats -text {Errors}
+        set errorTabno 5
         
         $self configurelist $args
 
         grid rowconfigure $win 0 -weight 1
         grid columnconfigure $win 0 -weight 1
+        
 
+        # Load the red.gif image so that we can set the color of error-ing
+        # tabs to red:
+        
+        image create photo redbackground -file [file join $::here red.gif]
+        
+        #  If the tab changes to one of the red-able tabs, turn it back:
+        
+        bind $win <<NotebookTabChanged>> [mymethod _normalizeTabColor]
     }
     #------------------------------------------------------------------------
     # Public methods:
     
+    
+    ##$
+    # Set the out of order stats tab red.   This only will be done if that's not the
+    # current tab:
+    #
+    method setLateRed {} {
+        if {[$hull index current] != $outOfOrderTabno} {
+            $hull tab $outOfOrderTabno -image redbackground -compound center    
+        }
+        
+    }
+    ##
+    # Set the out of order stats tab to normal background.
+    #
+    method setLateNormal {} {
+        $hull tab $outOfOrderTabno -compound text
+        
+    }
+    ##
+    #  Set the error counters tab to red background.
+    #  This is only done if the tab is not currently displayed:
+    #
+    method setErrorsRed {} {
+        if {[$hull index current] != $errorTabno} {
+            $hull tab $errorTabno -image redbackground -compound center
+        }
+        
+    }
+    ##
+    # Set the error counters tab background to normal.
+    #
+    method setErrorsNormal {} {
+        $win tab $errorTabno -compound text
+    }
     
     ##
     # getRingStats
@@ -552,8 +605,27 @@ snit::widgetadaptor EVB::statusNotebook {
     method getErrorStats {} {
         return $errorStats
     }
-}
+    #-----------------------------------------------------------------------------
+    #  Private methods
+    #
+    
+    ##
+    # _normalizeTabColor
+    #    Called when tab changes.  Get the current tab.  If it's either of
+    #    outofOrderTabno or errorTabno, set the tab color to normal.
+    #
+    method _normalizeTabColor {} {
+        set current [$win index current]
+        
+        if {$current == $outOfOrderTabno} {
+            $self setLateNormal
+        }
+        if {$current == $errorTabno} {
+            $self setErrorsNormal
+        }
+    }
 
+}
 
 #-----------------------------------------------------------------------------
 #
@@ -610,7 +682,7 @@ proc EVB::createGui widget {
 # @param ms     - Number of ms between refresh requests.
 #                 This defaults to 2000.
 #
-proc EVB::maintainGUI {widget {ms 2000}} {
+proc EVB::maintainGUI {widget {ms 2000} } {
     global OutputRing
 
     # Get the UI pieces:
@@ -621,6 +693,7 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     set errors           [$widget getErrorStats]
     set incompleteWidget [$errors getIncompleteStatistics]
     set lateWidget       [$errors getLateStatistics]
+
     
     # Update the output ring status:
     
@@ -665,27 +738,27 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     set totalout      0;                  # total bytes out.
     
     foreach queue [lindex $inputStats 3] {
-	set quid [lindex $queue 0]
-        incr totalin  [lindex $queue 3]
-        incr totalout [lindex $queue 4]
-
-	# Create the empty dict if it does not exist yet.
-
-	if {[array names sourceStatistics $quid] eq ""} {
-	    set sourceStatistics($quid) [dict create]
-	}
-        if {[array names EVB::lastinputstats $quid] eq ""} {
-            set EVB::lastinputstats($quid) [list 0 0]
+        set quid [lindex $queue 0]
+            incr totalin  [lindex $queue 3]
+            incr totalout [lindex $queue 4]
+    
+        # Create the empty dict if it does not exist yet.
+    
+        if {[array names sourceStatistics $quid] eq ""} {
+            set sourceStatistics($quid) [dict create]
         }
-	dict append sourceStatistics($quid) inputstats $queue
-
-	# Figure out the deepest queue and its depth:
-
-	set depth [lindex $queue 1]
-	if {$depth > $deepestCount} {
-	    set deepest $quid
-	    set deepestCount $depth
-	}
+            if {[array names EVB::lastinputstats $quid] eq ""} {
+                set EVB::lastinputstats($quid) [list 0 0]
+            }
+        dict append sourceStatistics($quid) inputstats $queue
+    
+        # Figure out the deepest queue and its depth:
+    
+        set depth [lindex $queue 1]
+        if {$depth > $deepestCount} {
+            set deepest $quid
+            set deepestCount $depth
+        }
     }
     #  Byte rate in/out the multiplication by 1000.0 in the numerator
     #  serves the dual function of turning bytes/ms into bytes/sec and
@@ -705,29 +778,29 @@ proc EVB::maintainGUI {widget {ms 2000}} {
     set coldestCount 0xffffffff
 
     foreach queue [lindex $outputStats 1] {
-	set quid [lindex $queue 0]
-
-	# Create an empty dict if it does not yet exist:
-	
-	if {[array names sourceStatistics $quid] eq ""} {
-	    set sourceStatistics($quid) [dict create]
-	}
-	dict append sourceStatistics($quid) outputstats $queue
-
-
-	
-
-	# Update the hottest/codest if appropriate.
-
-	set counts [lindex $queue 1]
-	if {$counts > $hottestCount} {
-	    set hottestSrc $quid
-	    set hottestCount $counts
-	}
-	if {$counts < $coldestCount} {
-	    set coldestSrc $quid
-	    set coldestCount $counts
-	}
+        set quid [lindex $queue 0]
+    
+        # Create an empty dict if it does not yet exist:
+        
+        if {[array names sourceStatistics $quid] eq ""} {
+            set sourceStatistics($quid) [dict create]
+        }
+        dict append sourceStatistics($quid) outputstats $queue
+    
+    
+        
+    
+        # Update the hottest/codest if appropriate.
+    
+        set counts [lindex $queue 1]
+        if {$counts > $hottestCount} {
+            set hottestSrc $quid
+            set hottestCount $counts
+        }
+        if {$counts < $coldestCount} {
+            set coldestSrc $quid
+            set coldestCount $counts
+        }
     }
     set totalFrags [lindex $outputStats 0]
 
@@ -737,48 +810,47 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 
 
     foreach queue [lindex $completeBarriers 4] {
-	set srcId [lindex $queue 0]
-	
-	# If needed create an empty dict:
-
-	if {[array names sourceStatistics $srcId] eq ""} {
-	    set sourceStatistics($srcId) [dict create]
-	}
-	
-	dict append sourceStatistics($srcId) barrierstats $queue
+        set srcId [lindex $queue 0]
+        
+        # If needed create an empty dict:
+    
+        if {[array names sourceStatistics $srcId] eq ""} {
+            set sourceStatistics($srcId) [dict create]
+        }
+        
+        dict append sourceStatistics($srcId) barrierstats $queue
     }
  
 
     #     Incomplete
 
     foreach queue [lindex $incompleteBarriers 4] {
-	set src [lindex $queue 0]
-
-	# If needed make a cleared dict:
-
-	if {[array names sourceStatistics $src] eq ""} {
-	    set sourceStatistics($src) [dict create]
-	}
-	dict append sourceStatistics($src) incompletebarriers $queue
+        set src [lindex $queue 0]
+    
+        # If needed make a cleared dict:
+    
+        if {[array names sourceStatistics $src] eq ""} {
+            set sourceStatistics($src) [dict create]
+        }
+        dict append sourceStatistics($src) incompletebarriers $queue
     }
     # Late:
     
     set lateDetails [lindex $lateStats 2]
     foreach item $lateDetails {
-	set src [lindex $item 0]
-	set count [lindex $item 1]
-	set worst [lindex $item 2]
-
-	if {[array names sourceStatistics $src] eq ""} {
-	    set sourceStatistics($src) [dict create]
-	}
-	dict append sourceStatistics($src) late $item
+        set src [lindex $item 0]
+        set count [lindex $item 1]
+        set worst [lindex $item 2]
+    
+        if {[array names sourceStatistics $src] eq ""} {
+            set sourceStatistics($src) [dict create]
+        }
+        dict append sourceStatistics($src) late $item
+            
         
-	
     }
     EVB::updateLatePopup $lateDetails
         
-    
     # Fill in the summary page statistics: 
 
     $summary configure -infragments [lindex $inputStats 2]            \
@@ -797,78 +869,93 @@ proc EVB::maintainGUI {widget {ms 2000}} {
 	-heterogenouscount [lindex $completeBarriers 2]
 
     $lateWidget configure -count [lindex $lateStats 0] -worst [lindex $lateStats 1]
+    if {($lateStats ne $::EVB::lastLatewidgetStats) && ($::EVB::lastLatewidgetStats ne "")} {
+        $widget setErrorsRed
+    }
+
+    set ::EVB::lastLatewidgetStats $lateStats
 
 
-    # Fill in the source  statitics page:
+    # Fill in the source  statistics page:
 
     set iQStats [$source getQueueStatistics]
     set iBStats [$source getBarrierStatistics]
     foreach source [array names sourceStatistics] {
-	set depth "" 
-	set oldest ""
-	set outfrags ""
+        set depth "" 
+        set oldest ""
+        set outfrags ""
 
 
-	# Source statistics
-
-	if {[dict exists $sourceStatistics($source) inputstats]} {
-	    set inputStats [dict get $sourceStatistics($source) inputstats]
-	    set depth [lindex $inputStats 1]
-	    set oldest [lindex $inputStats 2]
-            
-            #input/output bytes/rates.
-            
-            set inb     [lindex $inputStats 3]
-            set inbt    [lindex $inputStats 5]
-            set outb   [lindex $inputStats 4]
-            set laststats  $::EVB::lastinputstats($source)
-            set lastinb  [lindex $laststats 0]
-            set lastoutb [lindex $laststats 1]
-            set ::EVB::lastinputstats($source) [list $inbt $outb]
-            
-            set qrate  [expr {1000.0*($inbt -  $lastinb)/$ms}]
-            set dqrate [expr {1000.0*($outb - $lastoutb)/$ms}]
-            
-            # IF the rates are negative we've had a counter reset so the prior is
-            # assumed to be zero.  Next time we'll have a good prior so we
-            # don't have to worry about this.
-            
-            if {$qrate < 0.0} {
-                set qrate [expr {1000.0*$inbt/$ms}]
+        # Source statistics
+    
+        if {[dict exists $sourceStatistics($source) inputstats]} {
+            set inputStats [dict get $sourceStatistics($source) inputstats]
+            set depth [lindex $inputStats 1]
+            set oldest [lindex $inputStats 2]
+                
+                #input/output bytes/rates.
+                
+                set inb     [lindex $inputStats 3]
+                set inbt    [lindex $inputStats 5]
+                set outb   [lindex $inputStats 4]
+                set laststats  $::EVB::lastinputstats($source)
+                set lastinb  [lindex $laststats 0]
+                set lastoutb [lindex $laststats 1]
+                set ::EVB::lastinputstats($source) [list $inbt $outb]
+                
+                set qrate  [expr {1000.0*($inbt -  $lastinb)/$ms}]
+                set dqrate [expr {1000.0*($outb - $lastoutb)/$ms}]
+                
+                # IF the rates are negative we've had a counter reset so the prior is
+                # assumed to be zero.  Next time we'll have a good prior so we
+                # don't have to worry about this.
+                
+                if {$qrate < 0.0} {
+                    set qrate [expr {1000.0*$inbt/$ms}]
+                }
+                if {$dqrate < 0.0} {
+                    set dqrate [expr {1000.0*$outb/$ms}]
+                }
+        }
+        if {[dict exists $sourceStatistics($source) outputstats]} {
+            set outputStats [dict get $sourceStatistics($source) outputstats]
+            set outfrags [lindex $outputStats 1]
+        }
+        $iQStats updateQueue $source $depth $oldest $outfrags $inb $qrate $outb $dqrate
+        
+        # Barrier statistics.
+    
+        if {[dict exists $sourceStatistics($source) barrierstats] } {
+            set stats [dict get $sourceStatistics($source) barrierstats]
+            foreach type [lindex $stats 1] {
+                $barriers setStatistic $source [lindex $type 0] [lindex $type 1]
+                $iBStats  setStatistic $source [lindex $type 0] [lindex $type 1]
             }
-            if {$dqrate < 0.0} {
-                set dqrate [expr {1000.0*$outb/$ms}]
+        }
+        # Incomplete barriers
+    
+        if {[dict exists $sourceStatistics($source)  incompletebarriers]} {
+            set stats [dict get $sourceStatistics($source) incompletebarriers]
+            $incompleteWidget setItem $source [lindex $stats 1]
+            if {$stats ne $::EVB::lastIncompleteStats} {
+                $widget setErrorsRed
             }
-	}
-	if {[dict exists $sourceStatistics($source) outputstats]} {
-	    set outputStats [dict get $sourceStatistics($source) outputstats]
-	    set outfrags [lindex $outputStats 1]
-	}
-	$iQStats updateQueue $source $depth $oldest $outfrags $inb $qrate $outb $dqrate
-
-	# Barrier statistics.
-
-	if {[dict exists $sourceStatistics($source) barrierstats] } {
-	    set stats [dict get $sourceStatistics($source) barrierstats]
-	    foreach type [lindex $stats 1] {
-		$barriers setStatistic $source [lindex $type 0] [lindex $type 1]
-		$iBStats  setStatistic $source [lindex $type 0] [lindex $type 1]
-	    }
-	}
-	# Incomplete barriers
-
-	if {[dict exists $sourceStatistics($source)  incompletebarriers]} {
-	    set stats [dict get $sourceStatistics($source) incompletebarriers]
-	    $incompleteWidget setItem $source [lindex $stats 1]
-	}
-	# Data late information:
-
-	if {[dict exists $sourceStatistics($source) late]} {
-	    set stats [dict get $sourceStatistics($source) late]
-	    $lateWidget source $source [lindex $stats 1] [lindex $stats 2]
-	}
-
+            set ::EVB::lastIncompleteStats $stats
+        }
+        # Data late information:
+    
+        if {[dict exists $sourceStatistics($source) late]} {
+            set stats [dict get $sourceStatistics($source) late]
+            if {$stats ne $::EVB::lastLateSummary}    {
+                $widget setLateRed
+            }
+            $lateWidget source $source [lindex $stats 1] [lindex $stats 2]
+            set ::EVB::lastLateSummary $stats
+        }
     }
+
+
+    
 
 
     after $ms [list EVB::maintainGUI $widget $ms]

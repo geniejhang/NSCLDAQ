@@ -95,6 +95,7 @@ BOOKDIRS = 	@top_srcdir@ \
 						@top_srcdir@/utilities/ringselector \
 						@top_srcdir@/utilities/compatibility \
 						@top_srcdir@/utilities/tkbufdump \
+						@top_srcdir@/utilities/reglom	\
 						@top_srcdir@/epics/controlpush \
 						@top_srcdir@/epics/epicsdisplay \
 						@top_srcdir@/epics/chanlog \
@@ -119,7 +120,8 @@ BOOKDIRS = 	@top_srcdir@ \
 						@top_srcdir@/utilities/boot		\
 						@top_srcdir@/utilities/expEditor		\
 						@top_srcdir@/libtcl/tclplus  \
-						@top_srcdir@/libtcl/exception 
+						@top_srcdir@/libtcl/exception \
+						@top_srcdir@/examples
 
 #						@top_srcdir@/utilities/boot 
 #						@top_srcdir@/utilities/statemanager 

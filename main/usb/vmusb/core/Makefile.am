@@ -56,6 +56,7 @@ libVMUSBCore_la_CPPFLAGS = \
 			-I@top_srcdir@/usb/vmusb/vmusb		\
 			-I@top_srcdir@/usb/vmusb/daqconfig	\
 			-I@top_srcdir@/usb/vmusb/ctlconfig	\
+			-I@top_srcdir@/usb/common/configurableobject \
 			-I@top_srcdir@/usb/common/slowcontrols	\
 			-I@top_srcdir@/usb/vmusb	\
 			@TCL_FLAGS@ \
@@ -79,6 +80,9 @@ libVMUSBCore_la_CPPFLAGS = \
 
 
 libVMUSBCore_la_LIBADD	= \
+			@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
+			@top_builddir@/usb/vmusb/daqconfig/libVMUSBDaqConfig.la	\
+			@top_builddir@/usb/vmusb/ctlconfig/libVMUSBCtlConfig.la	\
 		  @top_builddir@/usb/vmusb/vmusb/libVMUSB.la		\
 		  @top_builddir@/usb/vmusb/daqconfig/libVMUSBDaqConfig.la	\
 		  @top_builddir@/usb/vmusb/ctlconfig/libVMUSBCtlConfig.la		\

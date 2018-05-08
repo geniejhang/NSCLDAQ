@@ -58,6 +58,7 @@ snit::widgetadaptor EVB::connectionList {
   $self configurelist $args
 	$self _update;			# Stock the table and reschedule the update periodicity.
     }
+    
     #-----------------------------------------------------------------------
     # Internal (private) methods.
 

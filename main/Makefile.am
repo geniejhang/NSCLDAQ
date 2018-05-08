@@ -7,6 +7,7 @@ if BUILD_SBS_DRIVER
   SBSDIRS=sbs
 endif
 
+
 if BUILD_EPICS_TOOLS
 if EPICS
      EPICSDIRS=epics
@@ -21,12 +22,19 @@ if BUILD_DOCS
    DOCDIR=docbuild docconfig simplesetups
 endif
 
-SUBDIRS =	 base caenfw-common servers base/dataflow diagnostics \
-                utilities daq $(DOCDIR) \
-		$(SBSDIRS) $(EPICSDIRS) $(USBDIR)
 
-DIST_SUBDIRS = base caenfw-common servers  base/dataflow diagnostics utilities daq \
-		 docbuild docconfig simplesetups sbs epics usb
+
+
+if BUILD_DDAS
+  DDASDIR=ddas
+endif
+
+SUBDIRS =	 base caenfw-common servers base/dataflow  \
+		daq utilities $(DOCDIR) \
+		sbs $(EPICSDIRS) $(USBDIR) $(DDASDIR) examples
+
+DIST_SUBDIRS = base caenfw-common servers base/dataflow daq utilities \
+		 docbuild docconfig simplesetups sbs epics usb ddas examples
 
 
 INTROFIGURES = @srcdir@/figures/intro-data-flow-diagram.png \

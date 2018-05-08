@@ -48,8 +48,8 @@
 #include <ctime>
 #include <chrono>
 #include <cassert>
-
 #include <time.h>
+#include <numeric>
 
 
 using namespace std;
@@ -539,7 +539,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
           m_transform = Transform::CTransform10p0to8p0();
 
           V10::CPhysicsEventItem event(V10::PHYSICS_EVENT, 8192);
-          m_bodyData << std::vector<std::uint16_t>({4, 0, 1, 2});
+          m_bodyData << ystd::vector<std::uint16_t>({4, 0, 1, 2});
 
           event.fillBody(m_bodyData);
 

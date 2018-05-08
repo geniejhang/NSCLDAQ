@@ -21,7 +21,7 @@ using namespace std;
 
 class CMDGG16ControlTests : public CppUnit::TestFixture {
   private:
-    unique_ptr<CControlModule> m_pMod;
+    CControlModule* m_pMod;
 
   public:
     CPPUNIT_TEST_SUITE(CMDGG16ControlTests);
@@ -48,11 +48,12 @@ class CMDGG16ControlTests : public CppUnit::TestFixture {
   public:
     void setUp() {
       // create the control hardware
-      unique_ptr<CControlHardware> hdwr(new WienerMDGG16::CControlHdwr);
+      CControlHardware* hdwr = (new WienerMDGG16::CControlHdwr);
 
       // create control module and pass ownership of hardware to the 
       // CControlModule
-      m_pMod.reset(new CControlModule("test", move(hdwr)) );
+
+      m_pMod = new CControlModule("test", hdwr);
       m_pMod->configure("-base","0xff000000");
     }
     void tearDown() {
@@ -130,7 +131,7 @@ void print_vectors(const vector<T>& expected, const vector<T>& actual) {
   cout.flags(ios::dec);
 }
 
-// if the flags do not exist, then CConfigurableObject will throw.
+// if the flags do not exist, then XXUSB::CConfigurableObject will throw.
 // This just checks to see that after we have attached our hardware
 // to the m_pMod control module, that the required flags have been added and 
 // are locatable.

@@ -105,7 +105,7 @@ CPH7106::onAttach(CControlModule& configuration)
 {
   m_pConfig = &configuration;
   configuration.addParameter("-slot",
-			     CConfigurableObject::isInteger, NULL,  string("0"));
+			     XXUSB::CConfigurableObject::isInteger, NULL,  string("0"));
 
 }
 
@@ -183,13 +183,13 @@ CPH7106::Get(CCCUSB& camac, string parameter)
   }
 }
 /*!
-  dummy.
-
+  clone - virtual copy constructor.
 */
-std::unique_ptr<CControlHardware>
+
+CControlHardware*
 CPH7106::clone() const
 {
-  return std::unique_ptr<CControlHardware>(new CPH7106(*this));
+  return (new CPH7106(*this));
 }
 //////////////////////////////////////////////////////////////////////
 // Private utilities.

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!-- manpage 1daq -->
       <refentry id="s800ringsource">
         <refmeta>
@@ -160,5 +161,6 @@ $DAQROOT/bin/ringFragmentSource <replaceable>options...</replaceable>
         </refsect1>
 
       </refentry>
+
 
 <!-- /manpage -->

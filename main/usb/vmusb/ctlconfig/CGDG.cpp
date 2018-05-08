@@ -184,7 +184,7 @@ void
 CGDG::onAttach(CControlModule& configuration)
 {
   m_pConfiguration = &configuration;
-  configuration.addParameter("-base", CConfigurableObject::isInteger, NULL, 
+  configuration.addParameter("-base", XXUSB::CConfigurableObject::isInteger, NULL, 
 			     string("0"));
 
 }
@@ -274,7 +274,7 @@ CGDG::Update(CVMUSB& vme)
   uint32_t inputData[16];	// Data buffer for the list.
   size_t   readSize;
   int status = vme.executeList(ops, inputData, sizeof(inputData), &readSize);
-  if (status != 0) {
+  if (status < 0) {
     return string("ERROR - Could not execute Update List");
   }
   
@@ -360,10 +360,10 @@ CGDG::Get(CVMUSB& vme, string parameter)
 /*!
     Clone oursevles... a no op at this point
 */
-std::unique_ptr<CControlHardware>
+CControlHardware*
 CGDG::clone() const
 {
-  return std::unique_ptr<CControlHardware>(new CGDG(*this));
+  return (new CGDG(*this));
 }
 
 ////////////////////////////////////////////////////////////////////////////

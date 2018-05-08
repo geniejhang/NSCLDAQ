@@ -11,9 +11,12 @@ COMPILATION_FLAGS =  \
         @THREADCXX_FLAGS@ @TCL_FLAGS@
 
 
-lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la 
+lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la libFragmentIndex.la
 
 
+libFragmentIndex_la_SOURCES=FragmentIndex.cpp
+
+libFragmentIndex_la_CXXFLAGS=-I@top_srcdir@/daq/format @LIBTCLPLUS_CFLAGS@
 
 
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp \
@@ -48,7 +51,7 @@ FRAMEWORK_SKELETON =  $(FRAMEWORK_SOURCEFILES)
 
 
 include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h \
-	CEVBFrameworkApp.h  GetOpt.h fragio.h
+	CEVBFrameworkApp.h  GetOpt.h fragio.h FragmentIndex.h
 
 
 noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h  \
@@ -93,7 +96,7 @@ EXTRA_DIST=eventbuilder_user.xml protocol.xml api.xml orderer.xml frag2ring.xml 
 	$(TCL_TEST_FILES) options.ggo \
         $(TCL_EVB_PACKAGE_FILES)       \
 	$(FRAMEWORK_SOURCEFILES) \
-	Makefile_Skeleton.in startOrderer.in
+	Makefile_Skeleton.in startOrderer.in red.gif
 
 
 SKELDIR=@prefix@/skeletons/eventbuilder
@@ -101,6 +104,7 @@ SKELDIR=@prefix@/skeletons/eventbuilder
 install-exec-hook:
 	$(mkinstalldirs) $(prefix)/TclLibs/EventBuilder
 	for f in $(TCL_PACKAGE_FILES); do @INSTALL_SCRIPT@ @srcdir@/$$f $(prefix)/TclLibs/EventBuilder; done
+	$(INSTALL_DATA) @srcdir@/red.gif @prefix@/TclLibs/EventBuilder
 	rm -f $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
 	$(LN_S) @libdir@/libEventBuilder.so $(prefix)/TclLibs/EventBuilder/libEventBuilder.so
 	echo "pkg_mkIndex -verbose $(prefix)/TclLibs/EventBuilder *.tcl *.so" |@TCLSH_CMD@ 

@@ -29,6 +29,7 @@ package require Thread
 package require ringsourcemgr
 package require EndrunMon
 package require evbui;               # So we can use the megawidgets.
+package require DAQParameters
 
 namespace eval ::EVBC {
     variable registered 0;            # nonzero if the event bundle is registered.
@@ -101,9 +102,11 @@ snit::type EVBC::StartOptions {
     option -glombuild -configuremethod checkGlomBuild -default 0
     option -glomdt 1 
     option -glomid -default 0
-    option -glomtspolicy -configuremethod checkTsPolicy -default earliest
+
+    option -glomtspolicy -configuremethod checkTsPolicy -default latest
     option -destring -default $::tcl_platform(user) -configuremethod _onDestRingChanged
     option -setdestringasevtlogsource -default 0 -configuremethod _onSetEvtLogSourceChanged
+
     
     variable policyValues [list earliest latest average]
     
@@ -116,6 +119,21 @@ snit::type EVBC::StartOptions {
     #
     constructor args {
         $self configurelist $args
+    }
+    ##
+    # updateLoggerRing
+    #    Called when destring is modified.  This is needed to update the
+    #    readoutGUI configuration for the ring buffer used by eventLogBundle.
+    #
+    #  @param opt  - name of the option being modified (-destrin)
+    #  @param value - new value for the option.
+    #  @return <nothin>
+    #
+    method updateLoggerRing {opt value} {
+	set options($opt) $value
+
+	Configuration::Set EventLoggerRing tcp://localhost/$value
+	
     }
     ##
     # checkTsPolicy

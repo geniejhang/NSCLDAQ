@@ -1,6 +1,7 @@
 
 bin_PROGRAMS = FileAnalyzer
 
+
 FileAnalyzer_SOURCES = FileAnalyzer.cpp \
                     CV11SourceCounterFilter.cpp \
                     CV11SourceCounterFilter.h \

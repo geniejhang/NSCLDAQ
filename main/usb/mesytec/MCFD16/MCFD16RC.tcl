@@ -34,7 +34,8 @@ snit::type MCFD16RC {
   # @param proxy  a proxy object to communicate with a RCbus controller
   #
   constructor {proxy} {
-    set _proxy $proxy
+      set _proxy $proxy
+
   }
 
   destructor {
@@ -489,21 +490,19 @@ snit::type MCFD16RC {
   #
   # @returns list. first element is source, second element is veto enabled
   method GetTriggerSource {trigId} {
-
     if {$trigId ni [list 0 1 2]} {
         set msg "Invalid trigger id argument provided. Must be 0, 1, or 2."
         return -code error -errorinfo MCFD16RC::SetTriggerSource $msg
     }
 
-    set adr [dict get $offsetsMap trig${trigId}_source]
+      set adr [dict get $offsetsMap trig${trigId}_source]
     set code [$_proxy Read $adr]
-
 
     set vetoEnabled [expr {($code&0x40)!=0}]
     set source      [expr {$code&0xbf}]
   
-    set sourceNameMap [dict create  1 or 2 multiplicity 4 pair_coinc 8 \
-                                    mon 16 pat_or_0 32 pat_or_1 128 gg]
+    set sourceNameMap [dict create   1 or 2 multiplicity 4 pair_coinc 8 \
+                                    mon 16 pat_or_0 32 pat_or_1 64 veto 128 gg]
 
     return [list [dict get $sourceNameMap $source] $vetoEnabled]
   }
@@ -578,7 +577,7 @@ snit::type MCFD16RC {
   #
   # @returns  boolean
   method GetFastVeto {} {
-    set value [$_proxy Read [dict get $offsetsMap fast_veto]]
+      set value [$_proxy Read [dict get $offsetsMap fast_veto]]
     return $value
   }
 
@@ -789,17 +788,18 @@ snit::type MXDCRCProxy {
   # @throws error if Set command response starts with ERROR
   #
   method Read {paramAddr} {
+
+      
     # encode the parameter and device address
     set param [$self _formatParameter [$self cget -devno] $paramAddr]
     set result [$_comObject Get [$self cget -module] $param]
-
+      
     # check for failure responses
     if {[$self _transactionFailed $result]} {
       set errmsg [$self _transformToFailureMessage [list Get $param \
                                                              $result]]
       return -code error $errmsg
     }
-
     return $result
   }
 

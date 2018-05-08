@@ -122,7 +122,7 @@ ChicoTrigger::onAttach(CControlModule& configuration)
 {
   m_pConfiguration = &configuration;
   configuration.addParameter("-base", 
-			     CConfigurableObject::isInteger,
+			     XXUSB::CConfigurableObject::isInteger,
 			     NULL, string("0"));
 }
 /**
@@ -197,7 +197,7 @@ ChicoTrigger::Set(CVMUSB& vme, string parameter, string value)
     int status = vme.executeList(l, &buffer,
 				 sizeof(buffer),
 				 &buffer);
-    if (status != 0) {
+    if (status < 0) {
       return "ERROR - VME operation failed";
     }
     return "OK";
@@ -245,7 +245,7 @@ ChicoTrigger::Get(CVMUSB& vme, string parameter)
 
   int status = vme.executeList(l, buffer, sizeof(buffer), &actuallyRead);
 
-  if (status != 0) {
+  if (status <  0) {
     return "ERROR - VME operation failed";
   }
 
@@ -268,10 +268,10 @@ ChicoTrigger::Get(CVMUSB& vme, string parameter)
 /**
  * Create a new copy of the rhs into this.
  */
-std::unique_ptr<CControlHardware>
+CControlHardware*
 ChicoTrigger::clone() const
 {
-  return std::unique_ptr<CControlHardware>(new ChicoTrigger(*this));
+  return (new ChicoTrigger(*this));
 }
 /**
  * Return the base address.

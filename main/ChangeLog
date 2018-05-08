@@ -1280,7 +1280,35 @@ Work on 11.0-rc11 begins
 	bactch operations (e.g. inserts).
         * Feature 6960 added - --tod option to dumper so that we can
 	log when data were received by that program.  Off by default.
+
+
+
+11.2-006:
+	* Fix problems with the Cbus controller.
+	* Fix once and for all SEGFAULT problems on slow control system.
+	* Fix Bug #7146 - There are several CConfigurableObject classes
+	and conflicts can cause segfaults as well.  Put the one in
+	main/usb/common/configurableobject in the XXUSB namespace and use
+	that in the xxUSBReadout programs -- everywhere.
+	* In CXLM - firmware loader - got an EAGAIN from the init list; So
+	retry a few times if EAGAIN happens.
+	* Properly handle the fact that CVMUSBusb::executeList returns
+	  amount of data read on success.  Some code assumed non zero is
+	fail.
+	* In MADC32 VMUSBReadout driver - use more modern method to build
+	  gate generator parameter option - so that range checking of
+	values works.
+	* In MADC32 VMUSBReadout driver - if split gate mode is selecdted
+	and gate generators are in use, enable both ggs.
+	* Remove XLM firmware debug output.
+11.2-007
+	* Fix Bug #7179 - Glom dt spinbox was not sensitive to changes
+	from the keyboard - only up/down arrows.
+        * Reorder initialization in vmusb readout - first prime everything
+	  then initialize.
+
 	
+
 12.0-002
 	*  Bug #7083  Ring buffers no longer can accept/give connections
 	to other ring buffers.  Since proxy rings are automatically
@@ -1304,5 +1332,6 @@ Work on 11.0-rc11 begins
 	running the user's program.  wd editing mechanics are similar to
 	those of filenames.  An entry widget is provided along with a
 	... button that brings up a tk_chooseDirectory dialog.
+
 
 
