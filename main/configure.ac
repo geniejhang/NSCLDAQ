@@ -532,7 +532,6 @@ AC_CONFIG_FILES([Makefile
 		diagnostics/viewers/Makefile
 		 utilities/Makefile
 		utilities/common/Makefile
-		utilities/Buffer/Makefile
                  utilities/daqstart/Makefile
                  utilities/dvdburn/Makefile
 		 utilities/scalerdisplay/ScalerDisplay
@@ -552,12 +551,7 @@ AC_CONFIG_FILES([Makefile
                  utilities/filter/filterkit/FilterIncludes
                  utilities/conversion/Makefile
 		 utilities/fileanalyzer/Makefile
-		     utilities/format/Makefile
-    		     utilities/format/V8/Makefile
-    		     utilities/format/V10/Makefile
-    		     utilities/format/V11/Makefile
     		utilities/IO/Makefile
-		utilities/FormattedIO/Makefile
 		 utilities/newscaler/Makefile
 		 utilities/newscaler/ScalerDisplay.tcl
 		 utilities/varmanager/Makefile
