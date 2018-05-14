@@ -1,10 +1,22 @@
 bin_PROGRAMS=unglom timecheck reglom
 
 
-common_cxxflags=-I@top_srcdir@/daq/eventbuilder -I@top_srcdir@/daq/format -I@top_srcdir@/utilities/IO @LIBTCLPLUS_CFLAGS@
-common_ldflags=@top_builddir@/daq/eventbuilder/libFragmentIndex.la @top_builddir@/daq/format/libdataformat.la \
-	@top_builddir@/utilities/IO/libdaqio.la @top_builddir@/base/dataflow/libDataFlow.la \
-	@top_builddir@/base/uri/liburl.la @LIBEXCEPTION_LDFLAGS@ -Wl,"-rpath=@libdir@"
+common_cxxflags=-I@top_srcdir@/daq/eventbuilder  \
+	-I@top_srcdir@/utilities/IO \
+	-I@top_srcdir@/utilities/nscldaq-format/format	\
+	-I@top_srcdir@/utilities/nscldaq-format/utils \
+	-I@top_srcdir@/utilities/nscldaq-format/Buffer \
+	-I@top_srcdir@/base/os			\
+	-I@top_srcdir@/utilities/nscldaq-format/FormattedIO @LIBTCLPLUS_CFLAGS@
+
+common_ldflags=@top_builddir@/daq/eventbuilder/libFragmentIndex.la \
+	@top_builddir@/utilities/nscldaq-format/FormattedIO/libdaqformatio.la \
+	@top_builddir@/utilities/nscldaq-format/format/V12/libdataformatv12.la \
+	@top_builddir@/utilities/IO/libdaqio.la \
+	@top_builddir@/base/dataflow/libDataFlow.la \
+	@top_builddir@/base/os/libdaqshm.la \
+	@top_builddir@/base/uri/liburl.la @LIBEXCEPTION_LDFLAGS@ \
+	-Wl,"-rpath=@libdir@"
 
 unglom_SOURCES=Unglom.cpp CUnglom.cpp CUnglom.h
 unglom_CXXFLAGS=$(common_cxxflags)

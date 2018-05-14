@@ -1,4 +1,4 @@
-bin_PROGRAMS= frag2ring
+
 
 COMPILATION_FLAGS =  \
 	-I@top_srcdir@/base/tcpip \
@@ -37,13 +37,6 @@ libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.c \
 
 libEventBuilderClient_la_CPPFLAGS=$(COMPILATION_FLAGS)
 
-frag2ring_SOURCES=frag2ring.cpp CFragReader.cpp CFragWriter.cpp
-
-frag2ring_CPPFLAGS=$(COMPILATION_FLAGS) \
-                    -I@top_srcdir@/utilities/nscldaq-format/Buffer
-
-frag2ring_LDADD = @top_builddir@/utilities/nscldaq-format/Buffer/libbuffer.la \
-                    @top_builddir@/base/os/libdaqshm.la $(THREADLD_FLAGS)
 
 FRAMEWORK_SOURCEFILES =  GetOpt.cpp Main.cpp options.ggo
 
@@ -59,7 +52,7 @@ noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h  \
 	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h COnLateDataCommand.h \
 	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h CCompleteBarrierCallback.h \
 	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h CDeadSourceCommand.h \
-	CReviveSocketCommand.h CFragReader.h CFragWriter.h CFlushCommand.h CResetCommand.h \
+	CReviveSocketCommand.h  CFlushCommand.h CResetCommand.h \
 	CConfigure.h fragio.h CDuplicateTimeStatCommand.h CXonXOffCallbackCommand.h \
 	COutOfOrderTraceCommand.h COutputThread.h
 

@@ -94,20 +94,22 @@ void CCtlConfigurationTests::addModule_0() {
   CCtlConfiguration config;
 
   // create the control module
-  auto pHdwr = DAQ::make_unique<CMxDCReset>();
-  auto pModule = DAQ::make_unique<CControlModule>( "test", move(pHdwr) );
+  auto pHdwr = new CMxDCReset();
+  auto pMod = new CControlModule( "test", (pHdwr) );
   
   // store the location of our module for testing purposes
-  CControlModule* pMod = pModule.get();
 
-  config.addModule( pModule.get() );
+
+  config.addModule( pMod );
 
   // ensure that what we added is the same as what ended up in the 
   // configuration
+
   CPPUNIT_ASSERT_EQUAL_MESSAGE(
       "Adding module successfully registers the control module to ctl configuration",
       pMod, config.getModules().at(0)
       );
+  // For test programs memory leaks are no biggy.  
 }
 
 void CCtlConfigurationTests::findModule_0() {
@@ -116,14 +118,12 @@ void CCtlConfigurationTests::findModule_0() {
 
   // create the control module
 
-  auto pHdwr = DAQ::make_unique<CMxDCReset>();
-  auto pModule = DAQ::make_unique<CControlModule>( "test", move(pHdwr) );
+  auto pHdwr = new CMxDCReset();
+  auto pMod = new CControlModule( "test", (pHdwr) );
   
-  // store the location of our module for testing purposes
-  CControlModule* pMod = pModule.get();
 
   // explicitly insert the module into the list of registered modules
-  config.m_Modules.push_back( pModule.get() );
+  config.m_Modules.push_back( pMod);
 
   // ensure that what we added is the same as what ended up in the 
   // configuration
@@ -140,14 +140,12 @@ void CCtlConfigurationTests::addCommand_0()
 
   // create out fake command
   CTCLInterpreter interp;
-  auto pCommand = DAQ::make_unique<CTestCmd>(interp) ;
+  std::unique_ptr<CTestCmd> pCmd(new CTestCmd(interp)) ;
+  CTCLObjectProcessor* pPointer = pCmd.get();
 
-  // store address for testing purposes
-  CTCLObjectProcessor* pCmd = pCommand.get();
-
-  config.addCommand( move(pCommand) );
+  config.addCommand( std::move(pCmd) );
 
   CPPUNIT_ASSERT_EQUAL_MESSAGE( 
       "Adding command registers the object directly to configuration",
-      pCmd, config.m_Commands.at(0).get() );
+      pPointer, config.m_Commands.at(0).get());
 }

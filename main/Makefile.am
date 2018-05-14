@@ -30,7 +30,7 @@ if BUILD_DDAS
 endif
 
 SUBDIRS =	 base caenfw-common servers base/dataflow  \
-		daq utilities $(DOCDIR) \
+		daq diagnostics utilities $(DOCDIR) \
 		sbs $(EPICSDIRS) $(USBDIR) $(DDASDIR) examples
 
 DIST_SUBDIRS = base caenfw-common servers base/dataflow daq utilities \

@@ -22,19 +22,30 @@
 
 #ifndef CRINGITEMDECODER_H            // Multiple include gaurd.
 #define CRINGITEMDECODER_H
+#include <CDataSourceFactory.h>
+#include <CDataSource.h>
+#include <V12/CRingItemFactory.h>
+#include <V12/DataFormat.h>                    // Defines ring item types inter alia.
+#include <V12/CRingItem.h>                     // Base class for all ring items.
+#include <V12/CPhysicsEventItem.h>
+
+#include <RingIOV12.h>
+// Ordinary C++ includes.
+
+#include <map>
+#include <cstdint>
+#include "FragmentIndex.h"
+
+using namespace EVB;
+using namespace DAQ;
+using namespace DAQ::V12;
 
 /* forward class definitions. */
 
 class CFragmentHandler;
 class CEndOfEventHandler;
-class CRingItem;
-class CPhysicsEventItem;
-struct FragmentInfo;
 
-// Ordinary C++ includes.
 
-#include <map>
-#include <cstdint>
 
 /**
  * CRingItemDecoder - this class is independent of any data analysis

@@ -24,9 +24,9 @@
 #include <stdio.h>
 #include <vector>
 #include <cstdint>
+#include <CDataSource.h>
+#include <V12/CRingItem.h>
 
-class CDataSource;
-class CRingItem;
 
 
 /**
@@ -59,18 +59,18 @@ class CMerge
 {
 public:
     typedef struct _sourceInfo {
-        CRingItem*      s_pItem;         // most recent ring item from source.
+        DAQ::V12::CRingItem*      s_pItem;         // most recent ring item from source.
         std::uint64_t   s_thisStamp;     // Timestamp of current item.
         std::uint64_t   s_lastStamp;     // Last timestamp not NULL_TIMESTAMP.
     } sourceInfo, *pSourceInfo;
 private:
     FILE*                       m_pOutput;
-    std::vector<CDataSource*>   m_dataSources;
+    std::vector<DAQ::CDataSource*>   m_dataSources;
     pSourceInfo                 m_sources;
     
     
 public:
-    CMerge(FILE* output, std::vector<CDataSource*> sources);
+    CMerge(FILE* output, std::vector<DAQ::CDataSource*> sources);
     virtual ~CMerge();
     
     void operator()();
@@ -82,6 +82,7 @@ private:
     bool  atEnd();
     void  outputFragment(unsigned sourceIndex);
     void  readFragment(unsigned sourceIndex);
+    std::uint32_t barrierType(std::uint32_t itemType);
 
 };
 

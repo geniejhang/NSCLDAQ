@@ -36,6 +36,7 @@
 #include <stdio.h>
 
 
+using namespace DAQ;
 
 /**
  * reglom for usage see reglomopts.ggo   Note that URI's are allowed
@@ -115,7 +116,7 @@ main(int argc, char** argv)
         std::cerr << "reglomming only makes sense with at least two input sources\n";
         std::exit(EXIT_FAILURE);
     }
-    std::vector<CDataSource*> dataSources;
+    std::vector<DAQ::CDataSource*> dataSources;
     std::vector<std::uint16_t> sample;
     std::vector<std::uint16_t> exclude;
     int i;                            // So it's visible in the catch blocks

@@ -21,12 +21,15 @@
 
 #ifndef CTIMECHECKER_H
 #define CTIMECHECKER_H
+#include <V12/DataFormat.h>                    // Defines ring item types inter alia.
+#include <V12/CRingItem.h>                     // Base class for all ring items.
+#include <V12/CPhysicsEventItem.h>
+#include <FragmentIndex.h>
 class CFragmentHandler;
 class CEndOfEventHandler;
-class CRingItem;
-class CPhysicsEventItem;
 
-struct FragmentInfo;
+using namespace DAQ;
+using namespace DAQ::V12;
 
 #include <cstdint>
 

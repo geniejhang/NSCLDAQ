@@ -23,13 +23,19 @@
 
 #include "CMerge.h"
 #include <CDataSource.h>
-#include <CRingItem.h>
+
+#include <V12/CRawRingItem.h>
+#include <V12/CRingItemFactory.h>
 #include <stdio.h>
 #include <fragment.h>
 #include <algorithm>
 #include <ErrnoException.h>
-#include <DataFormat.h>
+#include <V12/DataFormat.h>
 #include <iostream>
+#include <RingIOV12.h>
+
+using namespace DAQ;
+using namespace DAQ::V12;
 
 /**
  * constructor
@@ -37,7 +43,7 @@
  *   - Copy in the data source pointer vector.
  *   - Allocate the source info  array.
  */
-CMerge::CMerge(FILE* output, std::vector<CDataSource*> sources) :
+CMerge::CMerge(FILE* output, std::vector<DAQ::CDataSource*> sources) :
     m_pOutput(output), m_dataSources(sources), m_sources(0)
 {
     m_sources = new sourceInfo[m_dataSources.size()];
@@ -200,20 +206,45 @@ CMerge::atEnd()
 void
 CMerge::outputFragment(unsigned sourceIndex)
 {
+    // We can't get a full item pointer so we need to rebuild the
+    // header, write it and then write the body.
+
+        
+    CRingItem* p = m_sources[sourceIndex].s_pItem;
+    CRawRingItem rItem;
+    CRawRingItem* pItem(&rItem);
+    p->toRawRingItem(rItem);
+    
+    RingItemHeader itemHeader;
+    itemHeader.s_size = pItem->size();
+    itemHeader.s_type  = pItem->type();
+    itemHeader.s_timestamp = pItem->getEventTimestamp();
+    itemHeader.s_sourceId =  pItem->getSourceId();
+
     EVB::FragmentHeader header;
-    pRingItemHeader pItem =
-        reinterpret_cast<pRingItemHeader>(m_sources[sourceIndex].s_pItem->getItemPointer());
     header.s_timestamp = m_sources[sourceIndex].s_thisStamp;
     header.s_sourceId  = m_sources[sourceIndex].s_pItem->getSourceId();
-    header.s_size      = pItem->s_size;
-    header.s_barrier   = m_sources[sourceIndex].s_pItem->getBarrierType();
+    header.s_size      = p->size();
+    
+    // In his not so infinite wisdome, Jeromy decided not to include the
+    // barrier type in the event header.  This means we have  to reconstruct
+    // it from the item type.  This is _bad_ because
+    //  *  Non NSCLDAQ systems my define barrier types we don't know.
+    //  *  NSCL May change how it determines barrier types in the future
+    //     so code here is maintenance nightmare.
+    
+    header.s_barrier   = barrierType(itemHeader.s_type);
     
     // Output the fragment header and the ring item to the pipe:
     
     size_t nWritten    = fwrite(&header, sizeof(header), 1, m_pOutput);
-    nWritten          += fwrite(pItem, pItem->s_size, 1, m_pOutput);
+    nWritten           += fwrite(&header, sizeof(header), 1, m_pOutput);
+    nWritten          += fwrite(
+        pItem->getBodyPointer(), header.s_size - sizeof(header),
+        1, m_pOutput
+    );
     
-    if (nWritten != 2) {
+    if (nWritten != 3) {
         throw CErrnoException("Unable to write an item to the glom pipe");
     }
     readFragment(sourceIndex);              // Restock the source.
@@ -235,14 +266,39 @@ void
 CMerge::readFragment(unsigned sourceIndex)
 {
     delete m_sources[sourceIndex].s_pItem;            // Kill off the old one.
-    m_sources[sourceIndex].s_pItem = m_dataSources[sourceIndex]->getItem();
+    m_sources[sourceIndex].s_pItem = nullptr;
     
-    if (m_sources[sourceIndex].s_pItem) {
+    
+    
+    if (!(m_dataSources[sourceIndex]->eof())) {
+        CRawRingItem raw;
+        readItem(*(m_dataSources[sourceIndex]), raw);
+        m_sources[sourceIndex].s_pItem = CRingItemFactory::CreateRingItem(raw);
         m_sources[sourceIndex].s_thisStamp = m_sources[sourceIndex].s_pItem->getEventTimestamp();
         if (m_sources[sourceIndex].s_thisStamp == NULL_TIMESTAMP) {
             m_sources[sourceIndex].s_thisStamp = m_sources[sourceIndex].s_lastStamp;
         } else {
             m_sources[sourceIndex].s_lastStamp  = m_sources[sourceIndex].s_thisStamp;
         }
+    }
+}
+/**
+ * barrierType
+ *    Given a ring item type, reconstructs the event builder barrier type.
+ *    -  Begin runs are type 1
+ *    -  End runs are type 2.
+ *    -  Everything else is not a barrier.
+ *
+ * @param itemType - type of the ring item.
+ * @return std::uint32_t barrier type corresponding to that.
+ */
+std::uint32_t
+CMerge::barrierType(std::uint32_t itemType) {
+    if (itemType == BEGIN_RUN) {
+        return 1;
+    } else if (itemType == END_RUN) {
+        return 2;
+    } else {
+        return 0;
     }
 }

@@ -26,17 +26,14 @@
  *  it creates the specific ring item object dynamically. This will be used
  *  to turn a CRingItem into a CPhysicsEventItem object..
 */
-#include <CRingItemFactory.h>
-#include <CRingItem.h>
-#include <CPhysicsEventItem.h>
 
-#include <DataFormat.h>           // Defines the ring item types.
+#include <V12/DataFormat.h>           // Defines the ring item types.
 
 
 // Fragment index provides iterator functionality on the fragments of a
 // built event.
 
-#include "FragmentIndex.h"         
+        
 
 
 #include <iostream>
@@ -47,6 +44,10 @@
 #include <unistd.h>
 
 #include <sstream>
+
+using namespace DAQ;
+using namespace DAQ::V12;
+using namespace EVB;
 
 /**
  *   constructor
@@ -73,7 +74,7 @@ void
 CRingItemDecoder::operator()(CRingItem* pItem)
 {
     std::uint32_t itemType = pItem->type();
-    CRingItem* pActualItem = CRingItemFactory::createRingItem(*pItem);
+    CRingItem* pActualItem = CRingItemFactory::CreateRingItem(*pItem);
     
     if (itemType == PHYSICS_EVENT) {
         CPhysicsEventItem* pPhysics =
@@ -104,21 +105,15 @@ CRingItemDecoder::operator()(CRingItem* pItem)
 void
 CRingItemDecoder::decodePhysicsEvent(CPhysicsEventItem* pItem)
 {
-    if (! pItem->hasBodyHeader()) {
-        std::cerr << "Warning - an event has no body header - won't be processed\n";
-        return;
-    }
     
     // Pull out the body header information:
     
     std::uint64_t timestamp = pItem->getEventTimestamp();
-    std::uint32_t srcid     = pItem->getSourceId();   // the source id for next stage building.
-    std::uint32_t btype     = pItem->getBarrierType();
-    
+    std::uint32_t srcid     = pItem->getSourceId();   // the source id for next stage building
     
     // Build the fragment iterator and ask it how many fragments the event has:
     
-    FragmentIndex iterator(reinterpret_cast<std::uint16_t*>(pItem->getBodyPointer()));
+    FragmentIndex iterator(reinterpret_cast<const std::uint16_t*>(pItem->getBodyPointer()));
     
     // For each fragment write the ring item that made it to its fragment files.
     // If there is no fragment file, create one and add its info to the source
@@ -136,8 +131,11 @@ CRingItemDecoder::decodePhysicsEvent(CPhysicsEventItem* pItem)
         }
         // Fetch the size of the ring item:
         
-        pRingItemHeader pItem = reinterpret_cast<pRingItemHeader>(info.s_itemhdr);
+        const RingItemHeader* pItem =
+            reinterpret_cast<const RingItemHeader*>(info.s_itemhdr);
         size_t    nBytes= pItem->s_size;
+        
+
         write(m_sourceMap[info.s_sourceId].s_nFd, pItem, nBytes);
         
         // See if the timestamp and update last timestamp.
@@ -153,20 +151,32 @@ CRingItemDecoder::decodePhysicsEvent(CPhysicsEventItem* pItem)
  * events.
  */
 void
-CRingItemDecoder::decodeOtherItems(CRingItem* pItem)
+CRingItemDecoder::decodeOtherItems(CRingItem* pI)
 {
+    CRawRingItem* pItem = reinterpret_cast<CRawRingItem*>(pI);
     // For now just elide any items that don't have body headers.
     
-    if (pItem->hasBodyHeader()) {
-        std::uint32_t sid = pItem->getSourceId();
-        if (m_sourceMap.count(sid) == 0) {
-            makeNewInfoItem(sid);
-        }
-        size_t nBytes = pItem->getItemPointer()->s_header.s_size;
-        write(m_sourceMap[sid].s_nFd, pItem->getItemPointer(), nBytes);
-        
-        // Don't update the timestmap.
+    std::uint32_t sid = pItem->getSourceId();
+    if (m_sourceMap.count(sid) == 0) {
+        makeNewInfoItem(sid);
     }
+    // The only hammer that jeromy allowed us (thanks a lot ) was iostreams.
+    // There's no good way to get a stream from an fd and back...
+    // There's now no way to get the item pointer for the entire
+    // ring item from the CRawRingItem and the storage makes that
+    // constitutionally impossible.
+    // Therfore
+    //  - Reconstruct the header and write it.
+    //  - Write the body.
+    RingItemHeader header;
+    header.s_size = pItem->size();
+    header.s_type = pItem->type();
+    header.s_timestamp = pItem->getEventTimestamp();
+    header.s_sourceId  = pItem->getSourceId();
+    
+    write(m_sourceMap[sid].s_nFd, &header, sizeof(header));
+    write(m_sourceMap[sid].s_nFd, pItem->getBodyPointer(), pItem->getBodySize());
+        
 }
 /**
  *  Called on end input file:

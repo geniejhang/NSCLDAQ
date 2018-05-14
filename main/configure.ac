@@ -604,6 +604,7 @@ AC_CONFIG_FILES([Makefile
      utilities/nscldaq-format/format/V12/Makefile
      utilities/nscldaq-format/FormattedIO/Makefile
      utilities/nscldaq-format/Buffer/Makefile
+		 utilities/evbtools/Makefile
 		 daq/readoutgui/Makefile
 		 daq/readoutgui/InstallRoot.tcl
 		 daq/readoutgui/ReadoutShell.tcl
@@ -611,13 +612,13 @@ AC_CONFIG_FILES([Makefile
 		 daq/eventbuilder/Makefile
 		 daq/eventbuilder/Makefile_Skeleton
 		 daq/eventbuilder/startOrderer
-		 daq/evbtools/Makefile
-		 daq/evbtools/ringsource/Makefile
-		 daq/evbtools/teering/Makefile
-		 daq/evbtools/glom/Makefile
-		 daq/evbtools/unglom/Makefile
-		 daq/evbtools/offlineorderer/Makefile
-     		 daq/evbtools/offlineorderer/figures/Makefile
+		 utilities/evbtools/ringsource/Makefile
+		 utilities/evbtools/teering/Makefile
+		 utilities/evbtools/glom/Makefile
+		 utilities/evbtools/unglom/Makefile
+		 utilities/evbtools/offlineorderer/Makefile
+     		 utilities/evbtools/offlineorderer/figures/Makefile
+		utilities/evbtools/frag2ring/Makefile
 		 daq/actions/Makefile
 		simplesetups/Makefile
     		simplesetups/v775/Makefile

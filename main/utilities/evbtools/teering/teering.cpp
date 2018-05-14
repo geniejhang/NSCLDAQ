@@ -23,19 +23,27 @@
 #include "tcmdline.h"
 #include <fragment.h>
 #include <fragio.h>
-#include <CRingFragmentItem.h>
-#include <CRingBuffer.h>
+
+#include <V12/CRawRingItem.h>
+#include <RingIOV12.h>
+
+#include <CDataSink.h>
+#include <CDataSinkFactory.h>
+
 #include <io.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <iostream>
 
+using namespace DAQ;
+using namespace DAQ::V12;
+
 /* Local functions: */
 
 static EVB::pFragment getFragment();
-static bool           fragmentToStdout(EVB::pFragment);
-static void           fragmentToRing(CRingBuffer&, EVB::pFragment);
+static bool           fragmentToStdout(EVB::pFragment pFragment);
+static void           fragmentToRing(CDataSink& sink,  EVB::pFragment pFragment);
 /**
  *  teering  is analagous to the unix tee program however it
  *  tees between stdout and rings.  Input is stdin and consists of
@@ -48,7 +56,8 @@ static void           fragmentToRing(CRingBuffer&, EVB::pFragment);
 int
 main(int argc, char** argv) 
 {
-
+  CDataSinkFactory outputFactory;
+  
   // Process command line parameters:
 
   struct gengetopt_args_info args; // Parsed arguments.
@@ -56,10 +65,11 @@ main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  // Open the output ring
-
-  CRingBuffer ring(args.ring_arg, CRingBuffer::producer);
-
+  // Create data sinks for  the output ring.
+ 
+  CDataSink* ring = outputFactory.makeSink(args.ring_arg);
+  
+  
   // Main loop:
 
   while(1) {
@@ -67,7 +77,7 @@ main(int argc, char** argv)
     if(!pF) break;
 
     if(!fragmentToStdout(pF)) break;
-    fragmentToRing(ring, pF);
+    fragmentToRing(*ring, pF);
     freeFragment(pF);
   }
   exit(EXIT_SUCCESS);
@@ -81,14 +91,18 @@ main(int argc, char** argv)
  * @param pFrag - Pointer to the fragment.
  */
 static void
-fragmentToRing(CRingBuffer& ring, EVB::pFragment pFrag)
+fragmentToRing(CDataSink& sink, EVB::pFragment pFrag)
 {
-  CRingFragmentItem frag(pFrag->s_header.s_timestamp,
-			 pFrag->s_header.s_sourceId,
-			 pFrag->s_header.s_size,
-			 pFrag->s_pBody,
-			 pFrag->s_header.s_barrier);
-  frag.commitToRing(ring);
+  // First we need to crate a raw ring item from the
+  // fragment:
+  
+  CRawRingItem item(
+    EVB_FRAGMENT, pFrag->s_header.s_timestamp, pFrag->s_header.s_sourceId,
+    pFrag->s_header.s_size, pFrag->s_pBody);
+  
+  sink << item;
+  
+  
 }
 
 /**

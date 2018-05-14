@@ -17,7 +17,7 @@ FragmentIndex::FragmentIndex()
 * @param a pointer to the first word in the body (this is b/4 the first fragment)
 *
 */
-FragmentIndex::FragmentIndex(uint16_t* data)
+FragmentIndex::FragmentIndex(const uint16_t* data)
   : m_frags()
 {
 
@@ -35,7 +35,7 @@ FragmentIndex::FragmentIndex(uint16_t* data)
   @param data a pointer to the first fragment
   @param nbytes the number of bytes from start of first fragment to end of the body
 */
-void FragmentIndex::indexFragments(uint16_t* begin, uint16_t* end)
+void FragmentIndex::indexFragments(const uint16_t* begin,const  uint16_t* end)
 {
   if (begin==0) {
     throw CErrnoException("Null pointer passed as argument, cannot proceed");
@@ -44,11 +44,11 @@ void FragmentIndex::indexFragments(uint16_t* begin, uint16_t* end)
   // clear what we have already found so we have a fresh search
   m_frags.clear();
 
-  uint16_t* data = begin;
+  const uint16_t* data = begin;
 
   size_t dist = computeWordsToNextFragment(data);
   while ((data+dist) <= end) {
-    EVB::FlatFragment* frag = reinterpret_cast<EVB::FlatFragment*>(data);
+    const EVB::FlatFragment* frag = reinterpret_cast<const EVB::FlatFragment*>(data);
   
     // Store the body of the fragment in a condensed version
     FragmentInfo info;
@@ -56,7 +56,7 @@ void FragmentIndex::indexFragments(uint16_t* begin, uint16_t* end)
     info.s_sourceId = frag->s_header.s_sourceId;
     info.s_size = frag->s_header.s_size;
     info.s_barrier = frag->s_header.s_barrier;
-    info.s_itemhdr = reinterpret_cast<uint16_t*>(frag->s_body);
+    info.s_itemhdr = reinterpret_cast<const uint16_t*>(frag->s_body);
     uint16_t sizeBodyHeader = *(info.s_itemhdr+4);
     if (sizeBodyHeader==0) {
       info.s_itembody = info.s_itemhdr
@@ -75,7 +75,7 @@ void FragmentIndex::indexFragments(uint16_t* begin, uint16_t* end)
 
 }
 
-size_t FragmentIndex::computeWordsToNextFragment(uint16_t* data)
+size_t FragmentIndex::computeWordsToNextFragment(const uint16_t* data)
 {
   // For reference, a fragment looks like this:
   // struct EVB::FlatFragment {
@@ -87,7 +87,7 @@ size_t FragmentIndex::computeWordsToNextFragment(uint16_t* data)
   //  }
   //
   
-  EVB::FlatFragment* frag = reinterpret_cast<EVB::FlatFragment*>(data);
+  const EVB::FlatFragment* frag = reinterpret_cast<const EVB::FlatFragment*>(data);
   uint32_t payload_size = frag->s_header.s_size; // in bytes
   uint32_t fraghdr_size = sizeof(EVB::FragmentHeader); // in bytes
 

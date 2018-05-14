@@ -95,8 +95,8 @@ void CCtlConfigurationTests::addModule_0() {
 
   // create the control module
 
-  auto pHdwr = DAQ::make_unique<C894>();
-  auto pModule = DAQ::make_unique<CControlModule>( "test", move(pHdwr) );
+  auto pHdwr = new C894();
+  auto pModule = DAQ::make_unique<CControlModule>( "test", pHdwr );
 
   
   // store the location of our module for testing purposes
@@ -117,8 +117,8 @@ void CCtlConfigurationTests::findModule_0() {
   CCtlConfiguration config;
 
   // create the control module
-  auto pHdwr = DAQ::make_unique<C894>();
-  auto pModule = DAQ::make_unique<CControlModule>( "test", move(pHdwr) );
+  auto pHdwr =new C894();
+  auto pModule = DAQ::make_unique<CControlModule>( "test", pHdwr );
   
   // store the location of our module for testing purposes
   CControlModule* pMod = pModule.get();

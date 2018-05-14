@@ -5,8 +5,6 @@ bin_PROGRAMS = FileAnalyzer
 FileAnalyzer_SOURCES = FileAnalyzer.cpp \
                     CV11SourceCounterFilter.cpp \
                     CV11SourceCounterFilter.h \
-                    FragmentIndex.cpp \
-                    FragmentIndex.h \
                     CV12SourceCounterFilter.cpp \
                     CV12SourceCounterFilter.h
 
@@ -19,9 +17,11 @@ FileAnalyzer_CXXFLAGS = -I@top_srcdir@/utilities/filter \
                         -I@top_srcdir@/daq/eventbuilder \
                         -I@top_srcdir@/base/headers \
                         -I@top_srcdir@/base/sfinae_tools \
+			-I@top_srcdir@/daq/eventbuilder  \
                         @LIBTCLPLUS_CFLAGS@
 
 FileAnalyzer_LDADD = @top_builddir@/utilities/filter/core/libfilter.la \
+			@top_builddir@/daq/eventbuilder/libFragmentIndex.la \
                     @top_builddir@/utilities/filter/V11/libfilterv11.la \
                     @top_builddir@/utilities/nscldaq-format/format/V11/libdataformatv11.la \
                     @top_builddir@/utilities/filter/V12/libfilterv12.la \

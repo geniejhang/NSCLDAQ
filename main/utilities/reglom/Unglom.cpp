@@ -72,11 +72,6 @@
 //  docs.nscl.msu.edu/daq/newsite/nscldaq-11.2/index.html has detailed
 // documentation of all the classes we're going to use.
 
-#include <CDataSourceFactory.h>
-#include <CDataSource.h>
-#include <DataFormat.h>                    // Defines ring item types inter alia.
-#include <CRingItem.h>                     // Base class for all ring items.
-
 
 #include "CUnglom.h"              // Sample code.
 
@@ -89,12 +84,16 @@
 #include <vector>
 #include <string>
 #include <errno.h>
+#include <V12/CRawRingItem.h>
 
 /* Note that not all errno.h's define ESUCCESS so:  */
 
 #ifndef ESUCCESS
 #define ESUCCESS 0
 #endif
+
+using namespace DAQ;
+using namespace DAQ::V12;
 
 /**
  *  usage:
@@ -163,7 +162,10 @@ main(int argc, char**argv)
     //    is defined under Linux (it's 0).
     try {
         CRingItem* pItem;
-        while (pItem = source.getItem()) {
+        CRawRingItem rawItem;
+        while (!source.eof()) {
+            readItem(source, rawItem);
+            pItem = CRingItemFactory::CreateRingItem(rawItem);
             decoder(pItem);
             delete pItem;
         }

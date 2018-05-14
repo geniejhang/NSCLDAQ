@@ -25,8 +25,8 @@ struct FragmentInfo
   uint32_t s_sourceId;
   uint32_t s_size;
   uint32_t s_barrier;
-  uint16_t* s_itemhdr;
-  uint16_t* s_itembody;
+  const uint16_t* s_itemhdr;
+  const uint16_t* s_itembody;
 
   FragmentInfo() : 
       s_timestamp(0), s_sourceId(0), s_size(0), s_barrier(0), 
@@ -63,7 +63,7 @@ class FragmentIndex
    raam a pointer to the first word in the body (this is b/4 the first fragment)
    *
    */
-  FragmentIndex(uint16_t* data);
+  FragmentIndex(const uint16_t* data);
 
   /**! Get a fragment
    * Checks whether the index provided is valid. If index is out of range, 
@@ -97,18 +97,18 @@ class FragmentIndex
   * @param begin a pointer to the first fragment
   * @param end pointer just beyond the last fragment 
   */
-  void indexFragments(uint16_t* begin, uint16_t* end);
+  void indexFragments(const uint16_t* begin, const uint16_t* end);
 
   /**! The indexing algorithm 
   * @param data a pointer to the first fragment
   * @param nbytes the number of bytes from start of first fragment to end of the body
   */
-  void indexFragments(uint16_t* data, size_t max_bytes) {
+  void indexFragments(const uint16_t* data, size_t max_bytes) {
     indexFragments(data, data+max_bytes/sizeof(uint16_t) );
   }
 
   private:
-  size_t computeWordsToNextFragment(uint16_t* data);
+  size_t computeWordsToNextFragment(const uint16_t* data);
 
 
   public:

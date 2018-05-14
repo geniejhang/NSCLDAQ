@@ -28,7 +28,8 @@ SUBDIRS = 				common	\
 					fileanalyzer	\
 					eventlog \
 					scalersum \
-					scalersum reglom
+					scalersum reglom \
+					evbtools
 
 
 # scalerdisplay - removed in favor of newscaler

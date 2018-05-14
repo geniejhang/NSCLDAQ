@@ -21,12 +21,13 @@
 
 #include "CTimeChecker.h"
 
-#include <CRingItem.h>
-#include <DataFormat.h>
+#include <V12/CRingItem.h>
+#include <V12/DataFormat.h>
 
 #include <iostream>
 
-
+using namespace DAQ;
+using namespace DAQ::V12;
 /**
  *  Constructor
  *     Just initialize stuff:
@@ -46,10 +47,6 @@ void
 CRingItemDecoder::operator()(CRingItem* pItem)
 {
     if (pItem->type() == PHYSICS_EVENT) {
-        if (!pItem->hasBodyHeader()) {
-            std::cerr << "Got a physics item without a body header\n";
-            return;
-        }
         std::uint64_t tstamp = pItem->getEventTimestamp();
         if (tstamp < m_lastStamp) {
             std::cerr << "Timestamp out of order; Last was: " << m_lastStamp

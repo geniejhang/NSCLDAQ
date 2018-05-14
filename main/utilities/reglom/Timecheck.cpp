@@ -16,7 +16,7 @@
 */
 
 /** @file:  Main.cpp
- *  @brief: Main program to read data from a ring data source,.
+ *  @brief: Main program to read datag from a ring data source,.
  */
 
 /**
@@ -74,12 +74,10 @@
 
 #include <CDataSourceFactory.h>
 #include <CDataSource.h>
-#include <DataFormat.h>                    // Defines ring item types inter alia.
-#include <CRingItem.h>                     // Base class for all ring items.
 
 
 #include "CTimeChecker.h"              // Sample code.
-
+#include <RingIOV12.h>
     
 // Includes that are standard c++ things:
 
@@ -95,6 +93,10 @@
 #ifndef ESUCCESS
 #define ESUCCESS 0
 #endif
+
+using namespace DAQ;
+
+using namespace DAQ::V12;
 
 /**
  *  usage:
@@ -162,10 +164,10 @@ main(int argc, char**argv)
     //    and errno of ESUCCESS;  Note that ESUCCESS  is not POSIX but
     //    is defined under Linux (it's 0).
     try {
-        CRingItem* pItem;
-        while (pItem = source.getItem()) {
-            decoder(pItem);
-            delete pItem;
+        CRawRingItem Item;
+        while (!source.eof()) {
+            readItem(source, Item);
+            decoder(&Item);
         }
         // If errno is ESUCCESS we're done, otherwise, just throw the errno
         //  
