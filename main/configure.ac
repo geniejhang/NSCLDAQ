@@ -224,7 +224,11 @@ else
   	then
       AC_MSG_RESULT([Need to build local tagged copy])
       AC_CHECK_FILE([${srcdir}/libtcl/configure], [havelibtcldir="yes"], [havelibtcldir="no"])
-		  (cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
+
+      #  May need to propagate TCLCONFIG and TKCONFIG
+
+
+		  (cd ${srcdir}/libtcl; ./configure --prefix=${prefix} --with-tclconfig=`dirname ${TCLCONFIG}` --with-tkconfig=`dirname ${TKCONFIG}`; make clean install)
 	  else
 		  AC_MSG_ERROR([I seem to be missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
 	  fi
