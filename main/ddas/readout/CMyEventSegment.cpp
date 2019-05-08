@@ -128,6 +128,7 @@ int channel::SetChannelLength(){
 int channel::SetChannel(){
     if(data.size()>=4){
         chanid = (data[0] & CHANNELIDMASK);
+	return 0;
     }
     else{
         return 1;
