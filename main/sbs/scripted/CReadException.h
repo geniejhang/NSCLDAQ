@@ -50,9 +50,9 @@ is then thrown if any exceptions occured.
 // Include files:
 //
 
-#ifndef __EXCEPTION_H
+
 #include <Exception.h>
-#endif
+
 
 #ifndef __STL_STRING
 #include <string>        //Required for include files  
