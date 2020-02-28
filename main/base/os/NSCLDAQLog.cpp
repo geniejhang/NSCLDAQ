@@ -57,7 +57,7 @@ static std::string logFile;
  */
 
 namespace daqlog {
-
+  void reset();
     class BoostLogWrapper {
 #ifdef HAVE_BOOST_LOG
     private:
