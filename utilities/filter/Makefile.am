@@ -13,7 +13,7 @@ libfilter_la_SOURCES = CFilterMain.cpp \
                        CAbnormalEndRunFilterHandler.cpp \
                        @srcdir@/../StringsToIntegers.cpp \
                        @srcdir@/filterargs.c
-                       
+
 BUILT_SOURCES = @srcdir@/filterargs.c
 
 noinst_HEADERS = @srcdir@/../StringsToIntegers.h \
@@ -93,7 +93,7 @@ unittests_CPPFLAGS=  -I@top_srcdir@/utilities \
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 
 unittests_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"
-
+unittests_DEPENDENCIDES = @builddir@/libfilter.la
 
 testapp_SOURCES = TestApp.cpp
 testapp_CPPFLAGS= -I@top_srcdir@/utilities \
@@ -108,6 +108,7 @@ testapp_LDADD = -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 			@top_builddir@/utilities/filter/libfilter.la	\
 			@LIBEXCEPTION_LDFLAGS@
 testapp_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"
+testapp_DEPENDENCIES=@builddir@/libfilter.la
 
 
 TESTS=./unittests

@@ -83,7 +83,7 @@ noinst_PROGRAMS = unittests tests remotetests
 tests_SOURCES = TestRunner.cpp \
 		regTests.cpp
 tests_LDADD = $(CPPUNIT_LDFLAGS) \
-		-L@libdir@ -lCCUSB \
+		-L@libdir@ @builddir@/libCCUSB.la \
 		@TCL_LDFLAGS@ \
 		@LIBTCLPLUS_LDFLAGS@
 tests_CXXFLAGS = -I@top_srcdir@/base/thread $(AM_CXXFLAGS)

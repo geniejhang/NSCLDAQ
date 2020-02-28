@@ -131,7 +131,7 @@ unittests_LDADD = libEventBuilderClient.la \
 
 unittests_CPPFLAGS=$(COMPILATION_FLAGS)
 
-unittests_DEPENDENCIES = cmdline.o cmdline.h
+unittests_DEPENDENCIES = cmdline.o cmdline.h @builddir@/libEventBuilderClient.la
 
 
 ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
@@ -142,6 +142,7 @@ ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
 ordertests_LDADD = 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
 
 ordertests_CXXFLAGS=$(COMPILATION_FLAGS) @TCL_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@
+
 
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs HERE=@srcdir@ tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl

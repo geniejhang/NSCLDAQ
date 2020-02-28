@@ -95,6 +95,8 @@ unittests_LDADD		= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 			@top_builddir@/daq/format/libdataformat.la	\
 			@LIBEXCEPTION_LDFLAGS@
 
+unittests_DEPENDENCIES=@builddir@/libdataformat.la
+
 unittests_CPPFLAGS=$(COMPILATION_FLAGS)
 
 unittests_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"

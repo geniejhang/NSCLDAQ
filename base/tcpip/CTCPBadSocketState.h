@@ -292,9 +292,7 @@ DAMAGES.
 
 // Headers:
 
-#ifndef __EXCEPTION_H
 #include <Exception.h>
-#endif
 
 #ifndef __CSOCKET_H
 #include <CSocket.h>

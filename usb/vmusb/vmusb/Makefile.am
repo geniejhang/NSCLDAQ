@@ -63,9 +63,11 @@ tests_CPPFLAGS = -std=c++11 -g -I@prefix@/include -I@top_srcdir@/base/thread \
 		$(CPPUNIT_INCLUDES)
 tests_LDADD = @top_builddir@/base/thread/libdaqthreads.la \
 		$(CPPUNIT_LDFLAGS) \
-		-L@prefix@/usb -lVMUSB \
+		-L@prefix@/usb  @builddir@/libVMUSB.la \
 		 @TCL_LDFLAGS@ \
 		 @LIBTCLPLUS_LDFLAGS@
+
+tests_DEPENDENCIES=@builddir@/libVMUSB.la
 
 #tests: $(TEST_MODULES)
 #	$(CXX) -g -o tests -I@srcdir@ -I@prefix@/include $(CPPUNIT_INCLUDES) \
@@ -95,6 +97,7 @@ unittests_LDADD = $(CPPUNIT_LDFLAGS) \
 								 	@top_builddir@/usb/vmusb/vmusb/libVMUSB.la  \
 									@TCL_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@
 unittests_LDFLAGS = -Wl,"-rpath=@prefix@/lib"
+unittests_DEPENDENCIES=libVMUSB.la
 
 installcheck-local: unittests
 	./unittests
