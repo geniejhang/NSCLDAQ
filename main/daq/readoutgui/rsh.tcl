@@ -41,7 +41,7 @@ package require Wait
 namespace eval  ssh {
 	#
 	# getSingularityBindings
-	#
+	#    Backported from 12.0-pre1.
 	#   @return string
 	#      This is either --bind bind1,bind2,...
 	#   if there are bindings or an empty string if there are none.
