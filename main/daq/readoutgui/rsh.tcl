@@ -85,18 +85,23 @@ namespace eval  ssh {
 		if {[array names ::env SINGULARITY_CONTAINER] eq ""} {
 			# not in a container env.
 			
-			return $command
+			# return $command
+		} else {
+			#
+			#  We're in a container:
+			
+			set container $::env(SINGULARITY_CONTAINER)
+			set bindings  [ssh::getSingularityBindings]
+			set command "singularity exec $bindings $container $command"
 		}
-		#
-		#  We're in a container:
+		puts "Command: $command"
+		return $command
 		
-		set container $::env(SINGULARITY_CONTAINER)
-		set bindings  [ssh::getSingularityBindings]
-		return "singularity exec $bindings $container $command"
 	}
 
     proc ssh {host command} {
 		set command [ssh::actualCommand $command]
+		
 		set stat [catch {set output [eval exec ssh $host $command]} error]
 		if {$stat != 0} {
 			append output "\n"  $error

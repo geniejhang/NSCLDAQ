@@ -371,12 +371,13 @@ CLocalMonitoredProgram::ProcessInputFd(int nFd, string& sOutline,
     else if (nRead > 0) {	// Characters available.
       sOutline += buffer;	// Append the string...
       if(index(buffer, '\n')) {
-	return true;
-      } else {
-	return false;
-      }
+      return true;
+    } else {
+     	return false;
+     }
     }
     else {			// No chars somehow.
+     return false;
       ;				// Grant forbearance even tho should be chars.
     }
   }
@@ -386,5 +387,6 @@ CLocalMonitoredProgram::ProcessInputFd(int nFd, string& sOutline,
   // Control should not land here.
 
   ENSURE(0, "Bug in control logic for ProcessInputFd");
+  return false;
 }
 

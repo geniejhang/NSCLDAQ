@@ -546,6 +546,7 @@ CSIS3600::Read() const throw (string)
     ThrowString("CSIS3600::Read",
 		"No data present");
   }
+	return 0;
 }
 /*!
    Read a block of events from the FIFO.  Events are read into

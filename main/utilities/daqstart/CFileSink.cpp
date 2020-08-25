@@ -154,7 +154,7 @@ CFileSink::Log(const std::string& Message)
     }
     exit(EXIT_FAILURE);
   }
-  
+	 return line.size();
 }
 /*!
    Create a functional duplicate of *this:

@@ -339,15 +339,19 @@ std::string
 CRingStateChangeItem::typeName() const
 {
   switch (type()) {
-  case BEGIN_RUN:
-    return "Begin Run";
-  case END_RUN:
-    return "End Run";
-  case PAUSE_RUN:
-    return "Pause Run";
-  case RESUME_RUN:
-    return "Resume Run";
+    case BEGIN_RUN:
+      return "Begin Run";
+    case END_RUN:
+      return "End Run";
+    case PAUSE_RUN:
+      return "Pause Run";
+    case RESUME_RUN:
+      return "Resume Run";
+    default:
+      break;
   }
+  return "Unknown item type";
+  
 }
 /**
  * toString

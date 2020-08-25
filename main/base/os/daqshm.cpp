@@ -247,7 +247,7 @@ CDAQShm::attach(std::string name)
   
   // Add a new mapping entry with refcount 1:
 
-  attachInformation initialInfo = {pMemory, fileSize, 1};
+  attachInformation initialInfo = {pMemory, (size_t)fileSize, 1};
   m_attachMap[name] = initialInfo;
 
   return pMemory;

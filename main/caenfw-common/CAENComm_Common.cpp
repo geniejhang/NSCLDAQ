@@ -61,6 +61,7 @@ CAENComm_ErrorCode STDCALL CAENComm_DecodeError(int ErrCode,  char *ErrMsg)
   int idx = -ErrCode;
   if (idx < nErrorMessages) {
     strcpy(ErrMsg, ErrorMessages[idx]);
+    return CAENComm_Success;
   } 
   else {
     return CAENComm_GenericError; // kind of ironic don't you think?

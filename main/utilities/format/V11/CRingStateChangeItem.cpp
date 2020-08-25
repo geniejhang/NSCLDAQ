@@ -372,7 +372,10 @@ CRingStateChangeItem::typeName() const
     return "Pause Run";
   case RESUME_RUN:
     return "Resume Run";
+  default:
+    break;
   }
+  return "Unknown item type";
 }
 /**
  * toString

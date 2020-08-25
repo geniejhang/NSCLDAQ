@@ -257,6 +257,7 @@ CRingSelectionPredicate::operator()(CRingBuffer& ring)
       return false;
     }
   }
+  return true;           // Should not get here but...
   
 }
 
