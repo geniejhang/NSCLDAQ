@@ -90,7 +90,7 @@ namespace eval  ssh {
 			#
 			#  We're in a container:
 			
-			set container $::env(SINGULARITY_CONTAINER)
+			set container $::env(SING_IMAGE)
 			set bindings  [ssh::getSingularityBindings]
 			set command "singularity exec $bindings $container $command"
 		}
