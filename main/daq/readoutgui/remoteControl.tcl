@@ -66,7 +66,8 @@ snit::type ReadoutGuiRemoteControl {
   variable manager  -1;            #< Port manager client instance.
 
   # verbs that we will process happily
-  variable legalVerbs [list set begin end get init masterTransition]
+  variable legalVerbs [list set begin end get init masterTransition package]
+  variable packages  [list]
 
   # For my status area:
 
@@ -114,7 +115,35 @@ snit::type ReadoutGuiRemoteControl {
       close $requestFd
     }
   }
+  ##
+  # addPackage
+  #   Adds a package that supports get/set operations for external entity
+  #   to the remote control package.  One example is the event builder
+  #   which is an optional component but has parameters the separator group
+  #   would like to remotely set due to their fixation that everything must
+  #   be EPICS.
+  #
+  #   A package  is a namespace that implements: proc remote {slavestate tail}
+  #  Where
+  #    - slavestate  is a boolean that's true if the system is in slave mode
+  #    - tail is the remainder of the command that invoked it.
+  #
+  #  The remote control server uses registered packages as follows.  If a
+  #  command is not in the legal verbs but is in the packages list,
+  #  It will transform that into packagename::remote slavestate tail
+  #  the return value from the proc call will be the result.  Thus:
+  #   - non-null returns are not allowed.
+  #   - the first word of the returned value must be either OK or ERROR
+  #
+  # @param packagename
+  #
+  method addPackage {packageName} {
+    lappend packages $packageName
+  }
 
+    
+  
+  
   ## @brief Send a message to the peer
   #
   # This is intended to be a symmetric communication such that a response is
@@ -319,6 +348,15 @@ snit::type ReadoutGuiRemoteControl {
     return [expr {$verb in $legalVerbs}]
   }
   ##
+  # _isPackage
+  #   @param line - command line.
+  #   @return true - if the line is a package operation.
+  #
+  method _isPackage {line} {
+    set pkg [lindex $line 0]
+    return [expr {$pkg in $packages}]
+  }
+  ##
   # _executeCommand
   #    Executes a command that has been determined to have a legal verb.
   #    Each legal verb maps to a method in this class..just precede the
@@ -380,7 +418,18 @@ snit::type ReadoutGuiRemoteControl {
     ::ReadoutGUIPanel::Log \
       RemoteControl debug "Received request '$line' from master"
     if {[$self _isLegalCommand [lindex $line 0]]} {
-      $self _executeCommand $line
+      $self _executeCommand $line\
+    } elseif {[$self _isPackage $line]} {
+        
+        # Package invocation:
+        
+      set namespace [lindex $line 0]
+      set tail      [lrange $line 1 end]
+      set slave     [$self _slaveMode]
+      set result [${namespace}::remote $slave $tail]
+      set status [lindex $result 0]
+      set msg    [lrange $result 1 end]
+      $self _reply $status $msg
     } else {
       $self _reply FAIL "Invalid command '$line'"
     }
