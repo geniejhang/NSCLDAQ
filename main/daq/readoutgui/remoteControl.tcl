@@ -598,7 +598,7 @@ snit::type ReadoutGuiRemoteControl {
         $self _reply ERROR "Not in slave mode"
         return
       }
-      ::Configuration::Set Stagearea $value
+      ::Configuration::Set StageArea $value
       ::Configuration::Set Experiment [file join $value experiment]
       $self _reply OK
     }
@@ -740,7 +740,19 @@ snit::type ReadoutGuiRemoteControl {
       set rctlPanel [::RunControlSingleton::getInstance]
       set current [$rctlPanel isSlave]
       $self _reply OK $current
-
+    } elseif {$what eq "run"} {
+      set result [::ReadoutGUIPanel::getRun]
+      $self _reply OK $result
+    } elseif {$what eq "title"} {
+      set title [::ReadoutGUIPanel::getTitle]
+      $self _reply OK $title
+    } elseif {$what eq "recording"} {
+      set result [::ReadoutGUIPanel::recordData]
+      $self _reply OK $result
+    } elseif {$what eq "destination"} {
+      set result [::Configuration::get StageArea]
+      $self _reply OK $result
+  
     } else {
       $self _reply ERROR "Invalid get: $what"
     }
