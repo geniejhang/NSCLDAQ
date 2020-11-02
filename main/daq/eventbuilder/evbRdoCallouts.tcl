@@ -71,11 +71,11 @@ namespace eval ::EVBC {
 
     # Configuration parameters for the event builder:
     
-    variable window             ""
+    variable window             20
     
     
-    variable XoffThreshold      ""
-    variable XonThreshold       ""
+    variable XoffThreshold      [expr 10*1024*1024]
+    variable XonThreshold       [expr 9*1024*1024]
 }
 
 
@@ -591,6 +591,15 @@ proc EVBC::initialize args {
     #  If the app is being destroyed kill the event builder too:
     
     bind . <Destroy> +[list EVBC::_Exiting %W]
+    
+    ##
+    #  Register with the remote control server if it's loaded:
+    
+    if  {[namespace exists ::RemoteControlClient]} {
+        if {$::RemoteControlClient::control ne ""} {
+            $::RemoteControlClient::control addPackage EVBC
+    }
+}
 
 }
 #------------------------------------------------------------------------------
@@ -1124,6 +1133,86 @@ proc EVBC::_waitForEventBuilder {} {
 	after 100
     }
     close $fd
+}
+##
+# EVBC::remote
+#   If the remote control server is running this adds additional
+#   operations to it to allow event builder parameters to be remotely set.
+#   See daqdev/NSCLDAQ#1058 and the registration code below.
+#
+# @param isSlave  - Boolean - if true, the system is enslaved.
+# @param tail     - Command tail (e.g. "set dt 100").
+# @return Result string to send back to the remote client.
+#
+proc EVBC::remote {isSlave tail} {
+    
+    
+    # The tail will be of the form:
+    #
+    #   set parameter value
+    # or
+    #   get parameter
+    
+    set verb [lindex $tail 0]
+    set param [lindex $tail 1]
+    set value [lindex $tail 2]
+    
+    if {$verb eq "set"} {
+        if {$param eq "build"} {
+            $EVBC::applicationOptions configure -glombuild $value
+            EVBC::updateGuiFromOptions $EVBC::applicationOptions 
+            return OK
+        } elseif {$param eq "dt"} {
+            $EVBC::applicationOptions configure -glomdt $value
+            EVBC::updateGuiFromOptions $EVBC::applicationOptions 
+            return OK
+        } elseif {$param eq "tspolicy"} {
+            $EVBC::applicationOptions configure -glomtspolicy $value
+            EVBC::updateGuiFromOptions $EVBC::applicationOptions
+            return OK
+        } elseif {$param eq "ring"} {
+            # Living dangerously...
+            
+            $EVBC::applicationOptions configure -destring $value
+            EVBC::updateGuiFromOptions $EVBC::applicationOptions
+            return OK
+        } elseif {$param eq "window"} {
+            EVBC::configParams window $value
+            return OK
+        } elseif {$param eq "xoffthreshold"} {
+            EVBC::configParams XoffThreshold $value
+            return OK
+        } elseif {$param eq "xonthreshold"} {
+            EVBC::configParams XonThreshold $value
+            return OK
+        
+        } else {
+            return "ERROR invalid event builder parameter: $param"
+        }
+    } elseif {$verb eq "get"} {
+        if {$param eq "build"} {
+            return "OK [$EVBC::applicationOptions cget -glombuild]"
+        } elseif {$param eq "dt"} {
+            return "OK [$EVBC::applicationOptions cget -glomdt]"
+        } elseif {$param eq "tspolicy"} {
+            return "OK [$EVBC::applicationOptions cget -glomtspolicy]"        
+        } elseif {$param eq "ring"} {
+            return "OK [$EVBC::applicationOptions cget -destring]"
+        } elseif {$param eq "window"} {
+            return "OK $EVBC::window"
+        } elseif {$param eq "xoffthreshold"} {
+            return "OK $EVBC::XoffThreshold"
+        } elseif {$param eq "xonthreshold"} {
+            return "OK $EVBC::XonThreshold"
+        } else {
+            return "ERROR Invalid event builder paramter: $param"
+        }
+        
+    } else {
+        return "ERROR only EVBC set and EVBC get are supported you sent EVBC $verb"        
+    }
+    
+
 }
 
 
