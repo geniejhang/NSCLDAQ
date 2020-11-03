@@ -66,7 +66,7 @@ snit::type ReadoutGuiRemoteControl {
   variable manager  -1;            #< Port manager client instance.
 
   # verbs that we will process happily
-  variable legalVerbs [list set begin end get init masterTransition package]
+  variable legalVerbs [list set begin end get init masterTransition]
   variable packages  [list]
 
   # For my status area:
