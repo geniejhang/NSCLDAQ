@@ -6998,7 +6998,7 @@ set info [::ssh::sshpid <replaceable>host command</replaceable> ]
       </cmdsynopsis>
     </refsynopsisdiv>
     <refsect1>
-          <title>SUMMARY</title>
+          <title>DESCRIPTION</title>
           <para>
             The ReadoutShell's remote control protocol allows external
             programs to take control of the Readout Shell and control it.
