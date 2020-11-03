@@ -241,3 +241,204 @@ typedef struct <type>_PacketHeader</type> {
     </variablelist>
   </refsect1>
 </refentry>
+<refentry>
+   <refmeta>
+      <refentrytitle>EventBuilder Remote control</refentrytitle>
+      <manvolnum>5daq</manvolnum>
+   </refmeta>
+   <refnamediv>
+      <refname>Event builder RemoteControl</refname>
+      <refpurpose>Remote control additions</refpurpose>
+    </refnamediv>
+    <refsynopsisdiv>
+      <cmdsynopsis>
+<command>EVBC set <replaceable>parameter value</replaceable></command>        
+      </cmdsynopsis>
+      <cmdsynopsis>
+<command>EVBC get <replaceable>parameter</replaceable></command>
+      </cmdsynopsis>
+    </refsynopsisdiv>
+    <refsect1>
+          <title>DESCRIPTION</title>
+          <para>
+            If the remote control server is enabled when the
+            event builder package is loaded, it will add the
+            <literal>EVBC</literal> package to the remote control
+            server.  This provides the new remote control server
+            verb <literal>EVBC</literal> with subcommands
+            <literal>set</literal> to set an event builder parameter
+            or <literal>get</literal> to return the value of an
+            event builder parameter.  
+          </para>
+          <para>
+            For example, to set a new event builder glom assembly window
+            of 200 timestamp ticks;
+            the remote control server can be sent the command:
+          </para>
+          <informalexample>
+            <programlisting>
+EVBC set dt 200
+            </programlisting>
+          </informalexample>
+          <para>
+            To enable these new remote control operations, it is necessary
+            to ensure that the remote control package is loaded and
+            initialized prior to loading the event builder package.
+            The <filename>ReadoutCallouts.tcl</filename> fragment
+            below shows how to to this:
+          </para>
+          <informalexample>
+            <programlisting>
+package require ReadoutGuiRemoteControl
+RemoteControlClient::initialize
+package require evbcallouts
+            </programlisting>
+          </informalexample>
+          <para>
+            If the <command>package require evbcallouts</command>
+            command is moved any earlier, the extension will not
+            be registered.
+          </para>
+    </refsect1>
+    <refsect1>
+      <title>EXTENSION DETAILS</title>
+      <para>
+        The extension registers as the package <literal>EVBC</literal>/
+        Processing the new <command>EVBC</command> verb supports two
+        subcommands <command>set <replaceable>parameter value</replaceable></command>
+        which modifies the value of a parameter.  Similarly
+        <command>get <replaceable>parameter</replaceable></command>
+        returns the value of <parameter>parameter</parameter> as
+        additional text after the <literal>OK</literal> returned from
+        a successful command.
+      </para>
+      <para>
+        The valid parameters are:
+      </para>
+      <variablelist>
+        <varlistentry>
+           <term><literal>build</literal></term>
+           <listitem>
+               <para>
+                This parameter is a boolean that specifies whether or
+                not the <firstterm>glom</firstterm> stage of the
+                event builder pipeline will build events or simply
+                pass fragments through.
+               </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+           <term><literal>dt</literal></term>
+           <listitem>
+               <para>
+                This parameter is a positive integer that specifies
+                the coincidence window in timestamp ticks that will be
+                used to build events when glom event building is enabled.
+               </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+           <term><literal>tspolicy</literal></term>
+           <listitem>
+               <para>
+                This enumerated type specifies the policy by which
+                glom will assign a timestamp to events it builds.
+                It can be one of the following values:
+               </para>
+               <variablelist>
+               <varlistentry>
+                  <term><literal>earliest</literal></term>
+                  <listitem>
+                      <para>
+                        The built event will be assigned the timestamp
+                        of the earliest (first) fragment in it.
+                   </para>
+                </listitem>
+               </varlistentry>
+               <varlistentry>
+                  <term><literal>latest</literal></term>
+                  <listitem>
+                    <para>
+                      The built event will be assigned the timestamp
+                      of the latest (last) fragment in it.
+                   </para>
+                </listitem>
+               </varlistentry>
+               <varlistentry>
+                  <term><literal>average</literal></term>
+                  <listitem>
+                    <para>
+                      Built event will be assigned a timestamp value
+                      that is the average of all of the timestamps
+                      of the fragments it contains.
+                   </para>
+                </listitem>
+               </varlistentry>
+      </variablelist>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+           <term><literal>ring</literal></term>
+           <listitem>
+               <para>
+                Specifies the name of the ring buffer into which the
+                event builder pipeline will place events. Note
+                that if this is changed, all prior consumers will
+                need to detach from the old ringbuffer and attach
+                to the new one.  Therefore, modification of this parameter
+                is not recommended.
+               </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+           <term><literal>window</literal></term>
+           <listitem>
+               <para>
+                The fragment ordering stage of the event builder pipeline
+                uses a combination of emitting fragments when all fragment
+                queues have data and emitting fragments that were received prior
+                to some specific interval from now.  This parameter
+                specifies the value of this time window in seconds.  Normally, this is
+                only required if there are massive rate differences between
+                buffered event sources which may result in data lates.
+               </para>
+               <para>
+                The default value for this parameter is 20 seconds.
+               </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+           <term><literal>xoffthreshold</literal></term>
+           <listitem>
+               <para>
+                If the order has sufficiently many bytes in flight (in fragment
+                queues, or in output queues), The orderer will pause
+                in accepting fragments to flow control the data rate.
+                This value specifies the number of bytes of in flight fragments
+                a which this flow control is initiated.  By default this
+                is 10Mbytes.
+               </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
+           <term><literal>xonthreshold</literal></term>
+           <listitem>
+               <para>
+                If flow control is initiated the orderer allows fragments to remain
+                queued in the data sources and their ring buffers until
+                it has fewer than the Xon threshold bytes in flight. This
+                parameter sets/gets the Xon threshold size in bytes.
+                the value is specified in bytes and defaults to 9Mbytes.
+               </para>
+               <para>
+                The <literal>xonthreshold</literal> must be less than
+                the <literal>xoffthreshold</literal> and there should
+                be sufficient space between the values to prevent/reduce
+                flow control thrashing.
+               </para>
+            </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect1>
+</refentry>
+<!-- /manpage -->
