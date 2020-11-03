@@ -6964,3 +6964,379 @@ set info [::ssh::sshpid <replaceable>host command</replaceable> ]
 
 </refentry>
 <!-- /manpage -->
+<!-- manpage 5daq -->
+<refentry>
+   <refmeta>
+      <refentrytitle>Readout GUI Remote Control Protocol</refentrytitle>
+      <manvolnum>5daq</manvolnum>
+   </refmeta>
+   <refnamediv>
+      <refname>Readout GUI Remote Control Protocol</refname>
+      <refpurpose>Control GUI</refpurpose>
+    </refnamediv>
+    <refsynopsisdiv>
+      <cmdsynopsis>
+<command>set <replaceable>parameter value</replaceable></command>
+      </cmdsynopsis>
+      <cmdsynopsis>
+<command>get <replaceable>parameter value</replaceable></command>
+      </cmdsynopsis>
+      <cmdsynopsis>
+<command>begin</command>
+      </cmdsynopsis>
+      <cmdsynopsis>
+<command>end</command>
+      </cmdsynopsis>
+      <cmdsynopsis>
+<command>init</command>
+      </cmdsynopsis>
+      <cmdsynopsis>
+<command>masterTransition <replaceable>newstate</replaceable></command>
+      </cmdsynopsis>
+      <cmdsynopsis>
+<command><replaceable>package-name ...</replaceable></command>
+      </cmdsynopsis>
+    </refsynopsisdiv>
+    <refsect1>
+          <title>SUMMARY</title>
+          <para>
+            The ReadoutShell's remote control protocol allows external
+            programs to take control of the Readout Shell and control it.
+            The normal use case for this is when building an experiment
+            out of several detector systems.  Initially during
+            experiment setup, the detector systems run independently
+            as the each system is debuggeed in parallel.  Once all systems
+            are working they get "bolted" together using a master GUI
+            that remotely controls each detector system; providing
+            a coordinated run control panel for the experiment as a whole.
+            Other use cases are, of course possible.
+          </para>
+          <para>
+            Enabling the remote control server in a ReadoutShell is d
+            described elsewhere, as is how to set up a ReadoutShell
+            to control another ReadoutShell.  This document describes
+            the user level protocol used to communicate between the
+            controlling program and the controlled shell.  These are
+            referred to by the politically incorrect terms of
+            <firstterm>master</firstterm> and <firstterm>slave</firstterm>
+            respectively.
+          </para>
+           <para>
+            When starting the slave's server component interacts with
+            the NSCLDAQ port manager to allocate a server port and
+            advertise it service name. By default the remote control
+            service is named <literal>ReadoutGuiRemoteControl</literal>.
+            Master look up this service and form a TCP/IP socket-stream
+            connection to it.
+           </para>
+           <para>
+            The dialog that then ensues is a pure,
+            ASCII, line-oriented
+            request/reply protocol  The master sends a request line
+            to the slave and expects a response line in return.
+            Each request consists of a command verb followed by
+            additional parameters that may be required by that verb.
+           </para>
+           <para>
+            The slave GUI operates in either emancipated or enslaved
+            mode.  The master controls the transition between these
+            two modes.  Some operations the master requests must be
+            performed when the slave is enslaved.  When enslaved,
+            the slave GUI removes several controls from it's GUI preventing
+            conflicts between remote control operations and operations
+            by users.  These controls will re-appear when the
+            slave GUI is emancipated.
+           </para>
+           <para>
+            Replies to requests take the form of a line that consist
+            of at least a status word followed by any other information
+            the slave needs to communicate with the master. The
+            status word will be on of <literal>OK</literal>, indicating
+            successful completion, or  <literal>ERROR</literal>,
+            indicating the request failed.
+           </para>
+           <para>
+            If the return status is <literal>OK</literal> any additional
+            information is information that was requested by the master's
+            request.  If the return status is
+            <literal>ERROR</literal>, the remainder of the returned
+            line is a human readable error message.
+           </para>
+           <para>
+            In addition to the built in requests, the ReadoutShell
+            supports registration of additional requests that allow
+            remote control of optional packages (such as the event
+            builder).  The mechanisms for registering and providing
+            these additional requests are described in this document.
+            Actual extensions will be described in other man pages.
+           </para>
+    </refsect1>
+    <refsect1>
+      <title>SUPPORTED REQUESTS</title>
+      <para>
+         This section lists the built-in requests supported by the
+         remote control server.
+      </para>
+      <variablelist>
+         <varlistentry>
+            <term><command>set  <replaceable>param-value</replaceable></command></term>
+            <listitem>
+                <para>
+                  Sets a parameter within the ReadoutShell. The
+                  successful request will only return <literal>OK\n</literal>.
+               </para>
+                <para>
+                  Valid parameters and the meaning of their values are:
+                </para>
+                <variablelist>
+                  <varlistentry>
+                     <term><literal>slave</literal> <replaceable>boolean</replaceable></term>
+                     <listitem>
+                         <para>
+                           Sets the controlled ReadoutShell either into
+                           slave mode (a true value) or emancipates
+                           it (a false value). While any valid Tcl boolean
+                           values should work the remote control
+                           client/master code normally uses 1 and 0.
+                       </para>
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                     <term><literal>run</literal> <replaceable>positive-integer</replaceable></term>
+                     <listitem>
+                         <para>
+                           Sets the run number.  The server must have first
+                           been put into slave mode.
+                       </para>
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                     <term><literal>title</literal> <replaceable>string</replaceable></term>
+                     <listitem>
+                         <para>
+                           Sets the title string.  It is safest to specify
+                           this as a bracketed string e.g.:
+                           <literal>{This is a title}</literal> as that
+                           will prevent unwanted Tcl substitutions.
+                           Note, however that care must be taken if the string
+                           has any internal brackets; these must be escaped
+                           as <literal>\{</literal> e.g. but note that the
+                           backslash is then part of the string.
+                           One can also use double quotes to quote the
+                           string however there are more things that require
+                           escaping as in Tcl, double quoting a string
+                           enables string substitutions.
+                       </para>
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                     <term><literal>recording</literal> <replaceable>boolean</replaceable></term>
+                     <listitem>
+                         <para>
+                           Enables or disables recording event data when
+                           the next run begins.
+                       </para>
+                    </listitem>
+                  </varlistentry>
+                  <varlistentry>
+                     <term><literal>destination</literal> <replaceable>path-string</replaceable></term>
+                     <listitem>
+                         <para>
+                           Specifies where event data will be recorded.
+                       </para>
+                    </listitem>
+                  </varlistentry>
+                </variablelist>
+            </listitem>
+         </varlistentry>
+         <varlistentry>
+            <term><command>begin</command></term>
+            <listitem>
+                <para>
+                  Begins a run. The ReadoutShell must be in the proper
+                  state to allow a run to be started. 
+               </para>
+            </listitem>
+         </varlistentry>
+         <varlistentry>
+            <term><command>end</command></term>
+            <listitem>
+                <para>
+                  Ends an active run. The ReadoutShell must be in the
+                  proper state to allow a run to be ended.
+               </para>
+            </listitem>
+         </varlistentry>
+         <varlistentry>
+            <term><command>masterTransition <replaceable>new-state</replaceable></command></term>
+            <listitem>
+                <para>
+                  Attempts a transition to the requested
+                  <parameter>new-state</parameter>.  The state machine
+                  embedded in the ReadoutShell must allow the transition.
+               </para>
+            </listitem>
+         </varlistentry>
+         <varlistentry>
+            <term><command>init</command></term>
+            <listitem>
+                <para>
+                  Sends a re-initialization request to all data
+                  sources controlled by the enslaved ReadoutShell.
+               </para>
+            </listitem>
+         </varlistentry>
+         <varlistentry>
+            <term><command>get <replaceable>parameter</replaceable></command></term>
+            <listitem>
+                <para>
+                  Returns the value of the requested
+                  <parameter>parameter</parameter> The returned value
+                  for a successful operation will be the text
+                  <literal>OK</literal> followed by the parameter value.
+                  String valued parameters  (e.g. the title) are returned
+                  bracket quoted e.g. <literal>{This is a title}</literal>.
+               </para>
+               <para>
+                  All of the parameters listed in the
+                  <command>set</command> command are now legal for
+                  <command>get</command>.
+               </para>
+            </listitem>
+         </varlistentry>
+      </variablelist>
+      <para>
+         In addition to these commands, loadable packages may register
+         with the remote control server.  These packages register a command
+         prefix name to be used by the client.  For example, the
+         event builder readout callouts package registers <literal>EVBC</literal>.
+         Clients access these extension by using the package name as
+         the command.  Additional parameters are defined as needed
+         by the package itself.
+      </para>
+    </refsect1>
+    <refsect1>
+      <title>EXTENDING THE SUPPORTED REQUESTS</title>
+      <para>
+         Loadable packages can extend the remote control system
+         to allow remote control clients to manipulate them.
+         To do so they must:
+      </para>
+      <itemizedlist>
+         <listitem>
+            <para>
+               Define a namespace which we will call the
+               <firstterm>package name</firstterm>.
+            </para>
+         </listitem>
+         <listitem>
+            <para>
+               Within that namespace, define a proc called
+               <literal>remote</literal>.  
+            </para>
+         </listitem>
+         <listitem>
+            <para>
+               If remote control is enabled, register the pacakge with
+               the remote control package.
+            </para>
+         </listitem>
+      </itemizedlist>
+      <para>
+        When the remote control server has been extended, anytime the
+        package name is provided as the command, the remote control
+        server will invoke the package's <literal>remote</literal>
+        proc with two parameters; First a boolean that is true if the
+        system is enslaved, second the remainder of the commandline passed
+        to the server. 
+      </para>
+      <para>
+        The package's <literal>remote</literal> proc is expected to
+        process the command and return the value to be sent back to the client.
+      </para>
+      <para>
+        Below is a minimal example of an extension and its registration:
+      </para>
+      <informalexample>
+        <programlisting>
+  namespace eval SampleExtension {
+     proc remote {slave tail} {       <co id='remote.proc' />
+        if  {$tail eq "valid"}  {
+           return "OK $tail is a valid extension command"
+        } else {
+           return "ERROR $tail is not a valid extension command"
+        }
+     }
+  }
+  
+  <co id='remote.registrationcode' />
+  
+  if {[namespace exists ::RemoteControlClient]} {  <co id="remote.installed" />
+      if {$::RemoteControlClient::control ne ""} { <co id="remote.initialized" />
+         $::RemoteControlClient::control addPackage SampleExtension <co id="remote.register" />
+      }
+  }
+  
+        </programlisting>
+      </informalexample>
+      <calloutlist>
+        <callout arearefs='remote.proc' >
+            <para>
+              This proc will be called to process remote control requests
+              for this extension.  <parameter>slave</parameter> is
+              a boolean that is true when the system is enslaved.
+              <parameter>tail</parameter> is the reminder of the command.
+           </para>
+           <para>
+               The proc simply checks that the tail is the string
+               <literal>valid</literal> and returns an error if it is not
+           </para>
+           <para>
+              The master must request this operation via the command:
+              <command>SampleExtension valid</command>.
+              The first command word is the extension name and the second
+              is normally a subcommand for the extension.
+           </para>
+        </callout>
+        <callout arearefs='remote.registrationcode' >
+            <para>
+              The code below registers the extension with the remote
+              control package.  Note that the registration code must
+              be prepared for the fact that the remote control package
+              may not be loaded and may not be initialized if loaded.
+          </para>
+          <para>
+           An important subtlety is that the remote control package should
+           be loaded and initialized prior to loading the package
+           that is providing extensions. All of this affects the order
+           of operations in your <filename>ReadoutCallouts.tcl</filename>
+           package.
+          </para>
+        </callout>
+        <callout arearefs='remote.installed' >
+            <para>
+              If the remote control package is loaded, it will define
+              the <literal>RemoteControlClient</literal> namespace
+              which will contain variables that will have the names of the
+              objects that it creates on initialization.  This code
+              requires that namespace be defined.
+          </para>
+        </callout>
+        <callout arearefs='remote.initialized' >
+            <para>
+              When the remote control package is initialied, the
+              variable <varname>::RemoteControlClient::control</varname>
+              will be set with the remote control server object.
+              This code ensures that's the case.
+          </para>
+        </callout>
+        <callout arearefs='remote.register' >
+            <para>
+              Finally the extension is registered.
+          </para>
+        </callout>
+      </calloutlist>      
+    </refsect1>
+
+</refentry>
+<!-- /manpage -->
