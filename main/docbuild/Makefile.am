@@ -64,6 +64,7 @@ BOOKDIRS = 	@top_srcdir@ \
 	@top_srcdir@/simplesetups/v785 \
 	@top_srcdir@/utilities/bufdump \
 	@top_srcdir@/utilities/eventlog \
+	@top_srcdir@/utilities/evtCreator \
 	@top_srcdir@/utilities/scalersum \
 	@top_srcdir@/servers/portmanager \
 	@top_srcdir@/servers/tclserver \

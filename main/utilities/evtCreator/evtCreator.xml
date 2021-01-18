@@ -1,0 +1,108 @@
+<!-- chapter utilities -->
+<chapter id="chap.evtCreator">
+    <title>The event creator program</title>
+    <para>
+        Most experiments will record event data.  Event data files are
+        record the data taken from the experiment event by event.
+        The format of event data files is identical to the format of data in
+        ring buffers. See the chapter:
+        <link linkend="chapter.ringformat">Format of EventData In Ring Buffers</link>
+        for a description of what to expect in an event file.   The
+        <filename>$DAQROOT/include/DataFormat.h</filename> header is
+        also helpful as it provides C/C++ structure definitions for
+        data in ring buffers and event files.
+	The event creator program (evtCreator) generates data from randomize gaussian distributions and outputs the result
+	in any ring (local or remote via the networked proxy ring subsystem) or file as specified in the URL for debugging/testing purposes.
+	Primarily, this program has been thought to work for the SpecTcl Skeleton application.
+    </para>
+    <para>
+        The full reference documentation for the program is in the
+        <link linkend="manpage.evtCreator">event creator reference page</link>.
+    </para>
+</chapter>
+    
+<!-- /chapter -->
+
+<!-- manpage 1daq -->
+
+<refentry id="manpage.evtCreator">
+  <refentryinfo>
+            <author>
+                <personname>
+                    <firstname>Giordano</firstname>
+                    <surname>Cerizza</surname>
+                </personname>
+                <personblurb><para></para></personblurb>
+            </author>
+            <productname>NSCLDAQ</productname>
+            <productnumber></productnumber>
+        </refentryinfo>  
+  <refmeta>
+     <refentrytitle id='manpage.evtCreator_title'>evtCreator</refentrytitle>
+     <manvolnum>1daq</manvolnum>
+     <refmiscinfo class='empty'></refmiscinfo>
+  </refmeta>
+  <refnamediv>
+     <refname>evtCreator</refname>
+     <refpurpose>Generate formatted data from Gaussian distributions and output to ring/disk.</refpurpose>
+  </refnamediv>
+  
+  <refsynopsisdiv>
+    <cmdsynopsis>
+	<command>
+evtCreate <optional>options...</optional>
+	</command>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+     <title>DESCRIPTION</title>
+     <para>
+	Generates event data to ring buffers and disk files.
+        Runs are recorded in files in the target directory as defined by the URL.
+        Options have do not sensible defaults.  See OPTIONS below.
+     </para>
+  </refsect1>
+  <refsect1>
+     <title>
+	OPTIONS
+     </title>
+     <variablelist>
+       <varlistentry>
+	 <term><option>--n-params</option></term>
+	 <listitem>
+	   <para>
+	     Defines the number of parameters one wants to create for SpecTcl.
+	   </para>
+	 </listitem>
+       </varlistentry>
+        <varlistentry>
+          <term><option>--n-events</option>=<replaceable>n</replaceable></term>
+          <listitem>
+            <para>
+	      Defines the number of events to generate following a Gaussian distribution with
+	      random seed that changes every event.
+            </para>
+            </listitem>
+        </varlistentry>
+	<varlistentry>
+	    <term><option>--sink</option>=<replaceable>ringuri</replaceable></term>
+	    <listitem>
+		<para>
+                    Defines the event output as a Ring buffer Uniform Resource
+                    Identifier (URI).  The URI can be for a local, a remote
+                    ring buffer
+                    <literal>tcp://localhost/</literal><replaceable>name</replaceable>
+		    or disk file
+                    <literal>file://path/</literal><replaceable>name.evt</replaceable>		    
+                    where <replaceable>name</replaceable> is whatever name one wants to choose. 
+		</para>
+	    </listitem>
+	</varlistentry>
+     </variablelist>
+  </refsect1>
+
+
+</refentry>
+
+
+<!-- /manpage -->

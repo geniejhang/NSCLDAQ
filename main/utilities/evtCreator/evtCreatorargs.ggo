@@ -1,0 +1,6 @@
+package "evtCreator"
+purpose "Generation of data to file/ring"
+
+option "n-params" p "Number of parameters to generate" int optional
+option "n-events" n "Number of events to generate" int optional
+option "sink"   s "URL of source ring buffer/evt file" string optional
