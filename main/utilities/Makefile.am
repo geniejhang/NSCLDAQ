@@ -20,7 +20,7 @@ SUBDIRS = 				common	\
 					newscaler	\
 					fileanalyzer	\
                                         scalerReader \
-					scalersum reglom evtCreator fakeruns
+					scalersum reglom evtCreator
 
 # scalerdisplay - removed in favor of newscaler
 
