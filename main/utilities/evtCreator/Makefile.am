@@ -47,6 +47,7 @@ evtCreatorTests_CPPFLAGS=@CPPUNIT_CFLAGS@ -I@top_srcdir@/base/headers           
 	-I@top_srcdir@/daq/format               \
 	-I@top_srcdir@/base/dataflow    \
 	-I@top_srcdir@/base/os          \
+	-I@top_srcdir@/utilities/IO \
 	@OPENSSL_INCLUDES@
 
 evtCreatorTests_LDADD   = @CPPUNIT_LDFLAGS@ \
