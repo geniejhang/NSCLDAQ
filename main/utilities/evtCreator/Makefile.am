@@ -14,6 +14,7 @@ evtCreator_CPPFLAGS       =	-I@top_srcdir@/base/headers		\
 				-I@top_srcdir@/daq/format		\
 			        -I@top_srcdir@/base/dataflow	\
 				-I@top_srcdir@/base/os		\
+				-I@top_srcdir@/utilities/IO \
 				@OPENSSL_INCLUDES@
 
 evtCreator_LDADD		=	@top_builddir@/daq/format/libdataformat.la	\
