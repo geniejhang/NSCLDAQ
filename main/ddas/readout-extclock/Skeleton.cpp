@@ -36,7 +36,7 @@ using namespace std;
 #include "CMyScaler.h"
 #include <CRunControlPackage.h>
 #include <CSyncCommand.h>
-#include "CBootCommand.h"
+#include <CBootCommand.h>
 
 CMyTrigger *mytrigger = new CMyTrigger();
 CMyEventSegment *myeventsegment = new CMyEventSegment(mytrigger);
@@ -176,6 +176,17 @@ Skeleton::SetupScalers(CExperiment* pExperiment)
   timespec t;
   t.tv_sec  = 16;
   t.tv_nsec = 0;
+  
+  /// Allow the default scaler readout seconds to be overidden by the
+  // SCALER_SECONDS environment variable.
+  
+  const char* scalersecs = getenv("SCALER_SECONDS");
+  if (scalersecs) {
+    int secs = atoi(scalersecs);
+    if (secs > 0) {
+      t.tv_sec = secs;
+    }
+  }
   CTimedTrigger* pTrigger = new CTimedTrigger(t);
   pExperiment->setScalerTrigger(pTrigger);
 
@@ -218,8 +229,9 @@ Skeleton::addCommands(CTCLInterpreter* pInterp)
   CRunControlPackage* pRctl = CRunControlPackage::getInstance(*pInterp);
   CMyEndCommand*      pMyEnd= new CMyEndCommand(*pInterp, myeventsegment);
   pRctl->addCommand(pMyEnd);
-
+  
   // Add the ddas_sync command
+
   CSyncCommand* pSyncCommand = new CSyncCommand(*pInterp, myeventsegment);
   CBootCommand* pBootCommand = new CBootCommand(*pInterp, "ddas_boot", myeventsegment);
 }
