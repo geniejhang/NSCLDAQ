@@ -21,7 +21,7 @@ endif
 
 SUBDIRS =	 base caenfw-common servers base/dataflow  \
 		daq utilities $(DOCDIR) \
-		sbs $(EPICSDIRS) $(USBDIR) $(DDASDIR) examples cookbooks
+		sbs $(EPICSDIRS) $(USBDIR) $(DDASDIR) examples cookbooks ddascook
 
 DIST_SUBDIRS = base caenfw-common servers base/dataflow daq utilities \
 		 docbuild docconfig simplesetups sbs epics usb ddas examples
@@ -43,7 +43,7 @@ install-data-local:
 	(cd @top_srcdir@ ; echo "`git rev-parse HEAD`" > @prefix@/GIT_COMMIT )
 
 
-EXTRA_DIST=dotests introduction.xml libtcl $(INTROFIGURES) cookbooks
+EXTRA_DIST=dotests introduction.xml libtcl $(INTROFIGURES) cookbooks ddascook
 
 check-TESTS:
 	@top_srcdir@/dotests $(SUBDIRS)

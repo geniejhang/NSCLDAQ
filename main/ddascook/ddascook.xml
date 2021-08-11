@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                      "file:///usr/share/xml/docbook/schema/dtd/4.5/docbookx.dtd
+"
+>
+<book>
+    <bookinfo>
+      <title>The DDAS cookbook</title>
+      <author><firstname>Giordano</firstname><surname>Cerizza</surname></author>
+      <revhistory> 
+          <revision>
+             <revnumber>0.1</revnumber>
+             <date>August 10, 2021</date>
+             <authorinitials>GC</authorinitials>
+             <revremark>Original Release</revremark>
+          </revision>
+      </revhistory>
+    </bookinfo>
+    <chapter>
+        <title>Introduction</title>
+        <para>
+            This document describes several programs that are distributed with DDAS since 5.0-000.  These programs are intended to show how to use DDAS events to perform some common tasks.  I anticipate that the set of examples and this documentation will grow with time.
+        </para>
+        <para>
+            The programs described in this cookbook are tested and available, along with Makefiles in the directory tree <filename>$DDAS_SHARE/recipes </filename>.  Each of the following chapters will describe one of these recipes as well as provide the actual directory in which the program lives.
+        </para>
+	<para>
+	  NB: To be able to use the provided libraries correctly please unload the ROOT module (if loaded by hand or automatically loaded via .bashrc). We compiled ROOT-dependent libraries against specific version of ROOT that are provided in the containers. For information on what version have been used please check the file located in i.e. /usr/opt/ddas/3.3-000/VERSION. Once, the ROOT version is identified please source the corresponding script (i.e. source /usr/opt/root/root-6.18.04/bin/thisroot.sh for DDAS 3.3-000).
+	</para>
+        <para>
+            At the time this is being written the following recipes are available:
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    <link linkend='ch.ddasevt' endterm='ch.ddasevt.title' /> describes how to read DDAS data.  The program presented can read data from the ROOT output files of the ddasdumper. 
+                </para>
+            </listitem>
+        </itemizedlist>
+    </chapter>
+    <chapter id='ch.ddasevt'>
+        <title id='ch.ddasevt.title'>Reading ROOT-formatted DDAS data events</title>
+        <para>
+	  Once the evt files have been converted to ROOT format with the ddasdumper, an initial starting to point to access the information and analyze the data event by event follows. 
+          <informalexample>
+            <programlisting>
+R__LOAD_LIBRARY(/usr/opt/ddas/3.3-000/lib/libddaschannel.so)
+
+void analyzer() {
+
+  TFile* pFile = new TFile("runXYZ.root");
+  TTree* pTree;
+  pFile-&gt;GetObject("dchan", pTree);
+  DDASEvent* pEvent = new DDASEvent;
+  pTree-&gt;SetBranchAddress("ddasevent", &amp;pEvent);
+
+  for (int i=0; i&lt;pTree-&gt;GetEntries(); ++i) {
+    // access each single event from the tree
+    pTree-&gt;GetEntry(i);
+
+    // read data event-by-event
+    for (int i=0; i&lt;pEvent-&gt;GetNEvents(); i++){
+      // get the variables
+      ddaschannel *dchan = pEvent-&gt;GetData()[i];
+      int crate  = dchan-&gt;GetCrateID();
+      int slot   = dchan-&gt;GetSlotID();
+      int chan   = dchan-&gt;GetChannelID();
+      float energy = dchan-&gt;GetEnergy();
+      float time   = dchan-&gt;GetTime();
+
+    }
+  }
+
+}
+
+            </programlisting>
+          </informalexample>
+        </para>
+    </chapter>
+</book> 
