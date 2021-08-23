@@ -520,6 +520,7 @@ AC_CONFIG_FILES([Makefile
     utilities/FormattedIO/Makefile
     utilities/newscaler/Makefile
     utilities/newscaler/ScalerDisplay.tcl
+    utilities/scaledown/Makefile
     utilities/scalersum/Makefile
     utilities/reglom/Makefile
     utilities/scalerReader/Makefile
