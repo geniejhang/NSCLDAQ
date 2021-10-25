@@ -3146,6 +3146,7 @@ snit::widgetadaptor ReadoutGUI {
         grid columnconfigure $win 0 -weight 1
         grid columnconfigure $win 1 -weight 1
 
+        bind $win <Destroy> [mymethod _OnDestroy %W]
         # configure
         
         $self configurelist $args
@@ -3318,5 +3319,13 @@ snit::widgetadaptor ReadoutGUI {
             exit 0;                     # since we're exiting now.
         }
     }
+    method _OnDestroy {wid} {
+           puts "OnDestroy $wid : $win"
+           if {$wid eq $win} {
+              puts "Stopping data sources"
+              $self _stopDataSources
+           }
+    }
+
 }
 
