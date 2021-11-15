@@ -5,7 +5,7 @@ COMPILATION_FLAGS	= $(USBSWITCHES) -I@top_srcdir@/base/headers @LIBTCLPLUS_CFLAG
 			-I@top_srcdir@/base/tcpip \
 			-I@top_srcdir@/base/os	\
 			-I@top_srcdir@/base/thread \
-			  @TCL_FLAGS@ @THREADCXX_FLAGS@
+			  @TCL_FLAGS@ @THREADCXX_FLAGS@ @PIXIE_CPPFLAGS@
 
 libVMUSB_la_SOURCES 	=  CVMUSBusb.cpp CVMUSBReadoutList.cpp CVMUSBEthernet.cpp \
 	CVMUSBFactory.cpp \
@@ -63,7 +63,7 @@ tests_SOURCES = @srcdir@/TestRunner.cpp \
 
 
 tests_CPPFLAGS = -std=c++11 -g -I@prefix@/include -I@top_srcdir@/base/thread \
-		$(CPPUNIT_INCLUDES)
+		$(CPPUNIT_INCLUDES)  @PIXIE_CPPFLAGS@
 tests_LDADD = @top_builddir@/base/thread/libdaqthreads.la \
 		$(CPPUNIT_LDFLAGS) \
 		@builddir@/libVMUSB.la \
@@ -81,22 +81,25 @@ REMOTE_TEST_MODULES = @srcdir@/TestRunner.cpp \
              @srcdir@/remoteVMETests.cpp 
 
 remotetests: $(REMOTE_TEST_MODULES)
-	$(CXX) -g -o remotetests -I@srcdir@ -I@prefix@/include $(CPPUNIT_INCLUDES) \
-	$(REMOTE_TEST_MODULES) $(CPPUNIT_LDFLAGS) -L@prefix@/lib -lVMUSB -lVMUSBRemote \
+	$(CXX) -g -o remotetests -I@srcdir@ -I@prefix@/include \
+	$(CPPUNIT_INCLUDES)  @PIXIE_CPPFLAGS@ \
+	$(REMOTE_TEST_MODULES) $(CPPUNIT_LDFLAGS) -L@prefix@/lib -lVMUSB \
+	-lVMUSBRemote \
 	-Wl,"-rpath=@prefix@/lib" @TCL_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@
 
 UNITTEST_MODULES = @srcdir@/TestRunner.cpp \
-									@srcdir@/vmusbrdolisttests.cpp \
-									@srcdir@/loggingrdolisttests.cpp \
-									@srcdir@/mockvmusbtests.cpp
+		@srcdir@/vmusbrdolisttests.cpp \
+		@srcdir@/loggingrdolisttests.cpp \
+		@srcdir@/mockvmusbtests.cpp
 
 noinst_PROGRAMS = unittests
 unittests_SOURCES = $(UNITTEST_MODULES)
 
-unittests_CPPFLAGS = -I@srcdir@ -I@prefix@/include $(CPPUNIT_INCLUDES)
+unittests_CPPFLAGS = -I@srcdir@ -I@prefix@/include \
+	$(CPPUNIT_INCLUDES)  @PIXIE_CPPFLAGS@
 unittests_LDADD = $(CPPUNIT_LDFLAGS) \
-								 	@builddir@/libVMUSB.la  \
-									@TCL_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@
+	 	@builddir@/libVMUSB.la  \
+		@TCL_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@
 unittests_LDFLAGS = -Wl,"-rpath=@prefix@/lib"
 
 installcheck-local: unittests

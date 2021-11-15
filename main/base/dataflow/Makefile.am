@@ -14,7 +14,7 @@ COMPILATION_FLAGS =  -I@top_srcdir@/base/headers 	\
 	   -I@top_srcdir@/base/os	\
 		@LIBTCLPLUS_CFLAGS@	\
 		$(TCL_FLAGS)		\
-	-DBINDIR='"@prefix@/bin"'
+	-DBINDIR='"@prefix@/bin"' @PIXIE_CPPFLAGS@
 
 libDataFlow_la_LDFLAGS =  -version-info $(SOVERSION) \
 	                  -Wl,"-rpath-link=$(libdir)" 	\
@@ -74,7 +74,8 @@ ringtostdout_LDADD	=  @builddir@/libDataFlow.la \
 			@top_builddir@/base/os/libdaqshm.la	\
 			$(THREADLD_FLAGS) -lrt
 
-ringtostdout_CXXFLAGS	=  $(AM_CXXFLAGS) $(THREADCXX_FLAGS)
+ringtostdout_CXXFLAGS	=  $(AM_CXXFLAGS) $(THREADCXX_FLAGS) @PIXIE_CPPFLAGS@
+
 
 stdintoring_SOURCES = stdintoring.cpp 
 nodist_stdintoring_SOURCES=stdintoringsw.c stdinringtosw.h
@@ -89,6 +90,7 @@ stdintoring_LDADD	=  @builddir@/libDataFlow.la	\
 			$(THREADLD_FLAGS) -lrt
 
 stdintoring_CXXFLAGS =	$(THREADCXX_FLAGS) $(AM_CXXFLAGS) $(COMPILATION_FLAGS)
+stdintoring_CFLAGS   = @PIXIE_CPPFLAGS@
 
 #   CLEANFILES=stdintoringsw.c stdintoringsw.h ringtostdoutsw.c ringtostdoutsw.h
 

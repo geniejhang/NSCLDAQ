@@ -10,8 +10,7 @@
 #include <config.h>
 #include <CScaler.h>
 #include <vector>
-//#include <stdint.h>
-//#include "pixie16app_globals.h"
+
 
 //#ifdef HAVE_STD_NAMESPACE
 using namespace std;

@@ -49,7 +49,7 @@ libfilter_la_CPPFLAGS	= -I@top_srcdir@/utilities/common \
 		-I@top_srcdir@/base/uri		\
 		-I@top_srcdir@/daq/format \
 		-I@top_srcdir@/base/os \
-		-I@top_srcdir@/base/headers
+		-I@top_srcdir@/base/headers @PIXIE_CPPFLAGS@
 
 libfilter_la_LDFLAGS	= -version-info $(SOVERSION)	\
 				-Wl,"-rpath-link=$(libdir)" -lrt \

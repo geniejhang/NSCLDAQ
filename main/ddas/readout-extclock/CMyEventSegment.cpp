@@ -8,8 +8,8 @@
 #include <iomanip>
 #include <float.h>
 
-#include "pixie16app_export.h"
-#include "pixie16sys_export.h"
+#include <config.h>
+
 #include <sstream>
 #include <iostream>
 #include <fstream>

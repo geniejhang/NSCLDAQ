@@ -10,10 +10,8 @@
 #include <TCLObject.h>
 #include <RunState.h>
 
-#include "pixie16app_export.h"
-#include "pixie16sys_export.h"
-//#include "MyScaler.h"
-#include "pixie16app_globals.h"
+#include <config.h>
+
 #include <stdlib.h>
 #include <CVMEInterface.h>
 
@@ -163,20 +161,13 @@ int CMyEndCommand::ExecutePreFunction()
             // Pixie16ComputeOutputCountRate code
             // first get upper 32 bits of the number and push them up 32 bits, then
             // append on the lower 32 bits. Not the greatest but should work.
-            ChanEvents = (double)statistics[ChanEventsA_Address[k] + i 
-                - DATA_MEMORY_ADDRESS - 
-                DSP_IO_BORDER] * pow(2.0, 32.0);
-            ChanEvents += (double)statistics[ChanEventsB_Address[k] 
-                + i - DATA_MEMORY_ADDRESS - 
-                DSP_IO_BORDER];
+
+	    ChanEvents = Pixie16ComputeOutputCountRate(statistics, k, i);
 
             // Pixie16ComputeInputCountRate code
-            FastPeaks = (double)statistics[FastPeaksA_Address[k] + i - 
-                DATA_MEMORY_ADDRESS 
-                - DSP_IO_BORDER] * pow(2.0, 32.0);
-            FastPeaks += (double)statistics[FastPeaksB_Address[k] + i 
-                - DATA_MEMORY_ADDRESS - 
-                DSP_IO_BORDER];
+
+	    FastPeaks = Pixie16ComputeInputCountRate(statistics, k, i);
+
 
             /* Print out final statistics to file */
             // "Channel #" "output events" "input events"

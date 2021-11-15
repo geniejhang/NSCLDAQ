@@ -7,7 +7,7 @@ BUILT_SOURCES = glom.c glom.h
 
 glom_CPPFLAGS = -I@top_srcdir@/daq/eventbuilder \
 	-I@top_srcdir@/daq/format          \
-	-I@top_srcdir@/base/os @LIBTCLPLUS_CFLAGS@
+	-I@top_srcdir@/base/os @LIBTCLPLUS_CFLAGS@ @PIXIE_CPPFLAGS@
 
 glom_LDADD = @top_builddir@/daq/eventbuilder/libEventBuilderClient.la  \
 	@top_builddir@/daq/format/libdataformat.la                     \

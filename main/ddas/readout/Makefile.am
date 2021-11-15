@@ -16,8 +16,10 @@ SHAREDIR=@prefix@/share/ddasreadout
 
 
 
-DDASReadout_SOURCES=Skeleton.cpp CMyEventSegment.cpp CMyTrigger.cpp CMyBusy.cpp CMyScaler.cpp CMyEndCommand.cpp \
-	Skeleton.h CMyEventSegment.h CMyTrigger.h CMyBusy.h CMyScaler.h CMyEndCommand.h \
+DDASReadout_SOURCES=Skeleton.cpp CMyEventSegment.cpp CMyTrigger.cpp \
+	CMyBusy.cpp CMyScaler.cpp CMyEndCommand.cpp \
+	Skeleton.h CMyEventSegment.h CMyTrigger.h CMyBusy.h \
+	CMyScaler.h CMyEndCommand.h \
 	CSyncCommand.cpp CSyncCommand.h CBootCommand.cpp CBootCommand.h
 
 DDASReadout_CPPFLAGS=-I@DDAS_INSTDIR@/include -I@top_srcdir@/daq/format \

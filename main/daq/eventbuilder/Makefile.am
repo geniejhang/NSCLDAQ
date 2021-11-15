@@ -10,7 +10,7 @@ COMPILATION_FLAGS =  \
 	-I@top_srcdir@/base/os \
 	-I@top_srcdir@/base/thread \
 	@LIBTCLPLUS_CFLAGS@ \
-	@THREADCXX_FLAGS@ @TCL_FLAGS@ 
+	@THREADCXX_FLAGS@ @TCL_FLAGS@  @PIXIE_CPPFLAGS@
 
 
 lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la libFragmentIndex.la
@@ -18,7 +18,8 @@ lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la libFragmentIndex.la
 
 libFragmentIndex_la_SOURCES=FragmentIndex.cpp
 
-libFragmentIndex_la_CXXFLAGS=-I@top_srcdir@/daq/format @LIBTCLPLUS_CFLAGS@
+libFragmentIndex_la_CXXFLAGS=-I@top_srcdir@/daq/format @LIBTCLPLUS_CFLAGS@ \
+	@PIXIE_CPPFLAGS@
 
 
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp \
@@ -35,7 +36,8 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 
 
 
-libEventBuilder_la_CPPFLAGS=$(COMPILATION_FLAGS)   
+libEventBuilder_la_CPPFLAGS=$(COMPILATION_FLAGS)
+libEventBuilder_la_CFLAGS=$(COMPILATION_FLAGS)
 libEventBuilder_la_LIBADD = @LIBTCLPLUS_LDFLAGS@	\
 	@top_builddir@/base/thread/libdaqthreads.la 	\
 	@top_builddir@/base/os/libdaqshm.la    \
@@ -145,10 +147,11 @@ install-exec-hook:
 
 noinst_PROGRAMS = unittests ordertests
 
-unittests_DEPENDENCIES = libEventBuilderClient.la cmdline.o cmdline.h
+unittests_DEPENDENCIES = @builddir@/libEventBuilderClient.la
 unittests_SOURCES = TestRunner.cpp lookupTest.cpp  \
 	connectTest.cpp  
 nodist_unittests_SOURCES = cmdline.c cmdline.h
+
 
 unittests_LDADD = @builddir@/libEventBuilderClient.la \
 	$(libEventBuilder_la_LIBADD) \
@@ -169,7 +172,7 @@ ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
 ordertests_LDADD = 	@top_builddir@/base/thread/libdaqthreads.la 	\
 	@CPPUNIT_LDFLAGS@ @THREADLD_FLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@
 
-ordertests_CXXFLAGS=$(COMPILATION_FLAGS) @TCL_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@
+ordertests_CPPFLAGS=$(COMPILATION_FLAGS) @TCL_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@
 
 check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs HERE=@srcdir@ tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl

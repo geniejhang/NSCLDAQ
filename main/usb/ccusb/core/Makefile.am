@@ -56,7 +56,7 @@ libCCUSBCore_la_CPPFLAGS = \
 			-I@top_srcdir@/base/os \
 			-I@top_srcdir@/daq/format	\
 			-I@top_srcdir@/daq/eventbuilder \
-			@OPENSSL_INCLUDES@
+			@OPENSSL_INCLUDES@ @PIXIE_CPPFLAGS@
 
 # add -DREPORT_ERRORS to INCLUDES below for verbose
 # error reporting info.
@@ -64,11 +64,11 @@ libCCUSBCore_la_CPPFLAGS = \
 
 
 libCCUSBCore_la_LIBADD	= \
-			@top_builddir@/usb/ccusb/daqconfig/libCCUSBDaqConfig.la	\
-			@top_builddir@/usb/ccusb/ctlconfig/libCCUSBCtlConfig.la	\
-			@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
-		 	 @top_builddir@/usb/ccusb/ccusb/libCCUSB.la		\
-			@LIBTCLPLUS_LDFLAGS@					\
+		@top_builddir@/usb/ccusb/daqconfig/libCCUSBDaqConfig.la	\
+		@top_builddir@/usb/ccusb/ctlconfig/libCCUSBCtlConfig.la	\
+	@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
+	 	 @top_builddir@/usb/ccusb/ccusb/libCCUSB.la		\
+		@LIBTCLPLUS_LDFLAGS@					\
 			@top_builddir@/base/thread/libdaqthreads.la \
 			@top_builddir@/base/os/libdaqshm.la	\
 			@top_builddir@/daq/format/libdataformat.la	\

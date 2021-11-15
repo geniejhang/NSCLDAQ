@@ -7,13 +7,13 @@ BUILT_SOURCES = rfcmdline.c rfcmdline.h  \
 
 
 libTimeExtractorTest_la_SOURCES = testTimeExtractor.c	
-libTimeExtractorTest_la_CPPFLAGS=-I@top_srcdir@/daq/format
+libTimeExtractorTest_la_CPPFLAGS=-I@top_srcdir@/daq/format @PIXIE_CPPFLAGS@
 
 libS800TimeExtractor_la_SOURCES = s800timestamp.c
-libS800TimeExtractor_la_CPPFLAGS=-I@top_srcdir@/daq/format
+libS800TimeExtractor_la_CPPFLAGS=-I@top_srcdir@/daq/format @PIXIE_CPPFLAGS@
 
 libGretinaTimeExtractor_la_SOURCES = gretinaTimestamp.c
-libGretinaTimeExtractor_la_CPPFLAGS=-I@top_srcdir@/daq/format
+libGretinaTimeExtractor_la_CPPFLAGS=-I@top_srcdir@/daq/format @PIXIE_CPPFLAGS@
 
 
 ringFragmentSource_SOURCES=	 CRingSource.cpp \
@@ -26,7 +26,7 @@ ringTestSource_SOURCES= ringTestSource.cpp TestSource.cpp
 nodist_ringTestSource_SOURCES=ringtestoptions.c ringtestoptinos.h
 
 ringTestSource_CPPFLAGS=@LIBTCLPLUS_CFLAGS@ -I@top_srcdir@/base/dataflow \
-	-I@top_srcdir@/daq/format -I@top_srcdir@/base/os
+	-I@top_srcdir@/daq/format -I@top_srcdir@/base/os @PIXIE_CPPFLAGS@
 
 noinst_HEADERS=CRingSource.h CRingItemToFragmentTransform.h s800.h TestSource.h
 
@@ -79,7 +79,7 @@ ringFragmentSource_CPPFLAGS=-I@top_srcdir@/daq/eventbuilder -I@top_srcdir@/base/
 	-I@top_srcdir@/daq/format \
 	@LIBTCLPLUS_CFLAGS@	 \
 	 -I@top_srcdir@/base/headers \
-	-I@top_srcdir@/base/os
+	-I@top_srcdir@/base/os @PIXIE_CPPFLAGS@
 
 ringFragmentSource_LDADD=  		 \
 	@top_builddir@/daq/eventbuilder/libEventBuilderClient.la \
@@ -110,7 +110,7 @@ unittests_CPPFLAGS = -I@top_srcdir@/daq/eventbuilder -I@top_srcdir@/base/dataflo
 	@LIBTCLPLUS_CFLAGS@	 \
 	 -I@top_srcdir@/base/headers \
 	@CPPUNIT_CFLAGS@ \
-	-I@top_srcdir@/base/os
+	-I@top_srcdir@/base/os @PIXIE_CPPFLAGS@
 
 
 srctests_SOURCES=TestRunner.cpp CRingSource.cpp CRingItemToFragmentTransform.cpp \
@@ -132,6 +132,6 @@ srctests_CPPFLAGS = -I@top_srcdir@/daq/eventbuilder -I@top_srcdir@/base/dataflow
 	@LIBTCLPLUS_CFLAGS@	 \
 	 -I@top_srcdir@/base/headers \
 	@CPPUNIT_CFLAGS@ \
-	-I@top_srcdir@/base/os
+	-I@top_srcdir@/base/os @PIXIE_CPPFLAGS@
 
 TESTS=	unittests srctests

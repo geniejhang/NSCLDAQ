@@ -11,7 +11,7 @@ tclserver_LDADD = @LIBTCLPLUS_LDFLAGS@ \
 	$(X11LIBS)  	\
 	$(THREADLD_FLAGS)
 
-tclserver_CXXFLAGS	=	$(THREADCXX_FLAGS) $(AM_CXXFLAGS)
+tclserver_CXXFLAGS	=	$(THREADCXX_FLAGS) $(AM_CXXFLAGS) @PIXIE_CPPFLAGS@
 
 tclserver_LDFLAGS=-Wl,"-rpath=$(libdir)"
 

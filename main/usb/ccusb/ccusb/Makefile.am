@@ -6,7 +6,7 @@ COMPILATION_FLAGS		= \
 				@TCL_FLAGS@ \
 				@USBSWITCHES@ \
 				@THREADCXX_FLAGS@ \
-				-I@top_srcdir@/base/tcpip 
+				-I@top_srcdir@/base/tcpip  @PIXIE_CPPFLAGS@
 
 
 
@@ -98,7 +98,7 @@ tests_SOURCES = TestRunner.cpp \
 tests_LDADD = $(CPPUNIT_LDFLAGS) @builddir@/libCCUSB.la \
 		@TCL_LDFLAGS@ \
 		@LIBTCLPLUS_LDFLAGS@
-tests_CXXFLAGS = -I@top_srcdir@/base/thread $(AM_CXXFLAGS)
+tests_CPPFLAGS = -I@top_srcdir@/base/thread $(AM_CXXFLAGS)  @PIXIE_CPPFLAGS@
 tests_LDFLAGS =  @top_builddir@/base/thread/libdaqthreads.la        \
 			@top_builddir@/base/tcpip/libTcp.la         \
 			@LIBTCLPLUS_LDFLAGS@                        \
@@ -112,7 +112,7 @@ tests_LDFLAGS =  @top_builddir@/base/thread/libdaqthreads.la        \
 remotetests_SOURCES = TestRunner.cpp \
 			remoteRegTests.cpp
 remotetests_LDADD = @builddir@/libCCUSB.la        \
- 		  $(CPPUNIT_LDFLAGS) 													\
+		  $(CPPUNIT_LDFLAGS)			\
 			@top_builddir@/base/tcpip/libTcp.la         \
 			@top_builddir@/base/thread/libdaqthreads.la \
 			@LIBTCLPLUS_LDFLAGS@                        \
@@ -121,7 +121,8 @@ remotetests_LDADD = @builddir@/libCCUSB.la        \
 	 		@USB_LIBS@   @THREADLD_FLAGS@ @TCL_LDFLAGS@
 
 
-remotetests_CXXFLAGS = $(AM_CXXFLAGS) -I@top_srcdir@/base/thread
+remotetests_CPPFLAGS = $(AM_CXXFLAGS) -I@top_srcdir@/base/thread \
+	 @PIXIE_CPPFLAGS@
 remotetests_LDFLAGS = @top_builddir@/base/thread/libdaqthreads.la \
 	-Wl,"-rpath=@libdir@" 
 
@@ -150,8 +151,8 @@ camactests_LDADD    = @builddir@/libCCUSB.la        \
 			@TCL_LDFLAGS@                               \
 			@LIBTCLPLUS_LDFLAGS@
 
-camactests_CXXFLAGS = -I@top_srcdir@/base/thread \
-			$(AM_CXXFLAGS)
+camactests_CPPFLAGS = -I@top_srcdir@/base/thread \
+			$(AM_CXXFLAGS) @PIXIE_CPPFLAGS@
 camactests_LDFLAGS  = -Wl,"-rpath=@libdir@" 
 
 TESTS = ./unittests

@@ -13,7 +13,7 @@ libSecurity_la_LDFLAGS = @top_builddir@/base/os/libdaqshm.la \
 		$(THREADLD_FLAGS)
 
 COMPILATION_FLAGS = -I@top_srcdir@/base/headers @LIBTCLPLUS_CFLAGS@ \
-	-I@top_srcdir@/base/os $(TCL_FLAGS) $(SPECTRODAQ_FLAGS)
+	-I@top_srcdir@/base/os $(TCL_FLAGS) $(SPECTRODAQ_FLAGS) @PIXIE_CPPFLAGS@
 
 libSecurity_la_CXXFLAGS	= $(THREADCXX_FLAGS) $(AM_CXXFLAGS) $(COMPILATION_FLAGS)
 

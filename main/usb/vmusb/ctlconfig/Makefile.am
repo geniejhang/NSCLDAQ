@@ -1,20 +1,20 @@
 lib_LTLIBRARIES			= libVMUSBCtlConfig.la libUserDriver.la
 
 
-COMPILATION_FLAGS=@THREADCXX_FLAGS@ -I@top_srcdir@/usb/vmusb/vmusb		\
+COMPILATION_FLAGS=@THREADCXX_FLAGS@ -I@top_srcdir@/usb/vmusb/vmusb	\
 					-I@top_srcdir@/usb/common/configurableobject \
 					-I@top_srcdir@/usb/common/slowcontrols \
 					-I@top_srcdir@/daq/format  \
-					-I@top_srcdir@/usb/vmusb/daqconfig	\
+					-I@top_srcdir@/usb/vmusb/daqconfig \
 					-I@top_srcdir@/usb/vmusb/core	\
 					-I@top_srcdir@/usb/vmusb	\
 					@LIBTCLPLUS_CFLAGS@	\
 					-I@top_srcdir@/base/headers \
 					-I@top_srcdir@/base/thread	\
 					-I@top_srcdir@/base/os		\
-					@TCL_FLAGS@
+					@TCL_FLAGS@ @PIXIE_CPPFLAGS@
 
-libVMUSBCtlConfig_la_CXXFLAGS	= $(COMPILATION_FLAGS)
+libVMUSBCtlConfig_la_CPPFLAGS	= $(COMPILATION_FLAGS)
 
 libVMUSBCtlConfig_la_SOURCES	= \
 					CCtlConfiguration.cpp \
@@ -109,7 +109,7 @@ unittests_SOURCES = \
 			TestRunner.cpp \
 		cctlconfigurationtest.cpp
 
-unittests_CXXFLAGS = \
+unittests_CPPFLAGS = \
 	    -I@top_srcdir@/base/headers \
 	    -I@top_srcdir@/base/testutils \
 	    -I@top_srcdir@/usb/vmusb/vmusb \
@@ -118,7 +118,7 @@ unittests_CXXFLAGS = \
 			-I@srcdir@ \
 			@TCL_FLAGS@ \
 			@LIBTCLPLUS_CFLAGS@ \
-			$(CPPUNIT_INCLUDES)
+			$(CPPUNIT_INCLUDES) @PIXIE_CPPFLAGS@
 
 unittests_LDADD = \
 			@builddir@/libVMUSBCtlConfig.la \

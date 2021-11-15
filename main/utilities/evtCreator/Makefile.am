@@ -6,7 +6,6 @@ nodist_evtCreator_SOURCES =       evtCreatorargs.c evtCreatorargs.h
 
 noinst_HEADERS		=	evtCreatorMain.h
 
-evtCreator_DEPENDENCIES	=	evtCreatorargs.o
 
 
 evtCreator_CPPFLAGS       =	-I@top_srcdir@/base/headers		\
@@ -15,7 +14,7 @@ evtCreator_CPPFLAGS       =	-I@top_srcdir@/base/headers		\
 			        -I@top_srcdir@/base/dataflow	\
 				-I@top_srcdir@/base/os		\
 				-I@top_srcdir@/utilities/IO \
-				@OPENSSL_INCLUDES@
+				@OPENSSL_INCLUDES@  @PIXIE_CPPFLAGS@
 
 evtCreator_LDADD		=	@top_builddir@/daq/format/libdataformat.la	\
 				@top_builddir@/base/dataflow/libDataFlow.la	\
@@ -48,7 +47,7 @@ evtCreatorTests_CPPFLAGS=@CPPUNIT_CFLAGS@ -I@top_srcdir@/base/headers           
 	-I@top_srcdir@/base/dataflow    \
 	-I@top_srcdir@/base/os          \
 	-I@top_srcdir@/utilities/IO \
-	@OPENSSL_INCLUDES@
+	@OPENSSL_INCLUDES@ @PIXIE_CPPFLAGS@
 
 evtCreatorTests_LDADD   = @CPPUNIT_LDFLAGS@ \
 	@top_builddir@/daq/format/libdataformat.la      \

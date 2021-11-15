@@ -14,7 +14,7 @@ noinst_HEADERS = cmdline.h CDAQStart.h  CFileSinkCreator.h \
 
 
 COMPILATION_FLAGS  =-I@top_srcdir@/base/os \
-	-I@top_srcdir@/base/headers @LIBTCLPLUS_CFLAGS@
+	-I@top_srcdir@/base/headers @LIBTCLPLUS_CFLAGS@ @PIXIE_CPPFLAGS@
 
 daqstart_CPPFLAGS	= $(COMPILATION_FLAGS)
 
@@ -22,7 +22,7 @@ daqstart_LDADD = @LIBEXCEPTION_LDFLAGS@ \
 	@top_builddir@/base/os/libdaqshm.la  \
 	$(THREADLD_FLAGS)
 
-daqstart_CXXFLAGS=$(THREADCXX_FLAGS) -D_GNU_SOURCE $(AM_CXXFLAGS)
+daqstart_CXXFLAGS=$(THREADCXX_FLAGS) -D_GNU_SOURCE $(AM_CXXFLAGS) @PIXIE_CPPFLAGS@
 
 
 cmdline.c: cmdline.h

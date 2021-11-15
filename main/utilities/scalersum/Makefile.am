@@ -7,7 +7,7 @@ nodist_sumscaler_SOURCES=options.c options.h
 
 sumscaler_CPPFLAGS=-I@top_srcdir@/utilities/IO 			\
 		    -I@top_srcdir@/daq/format			\
-		    @LIBTCLPLUS_CFLAGS@
+		    @LIBTCLPLUS_CFLAGS@ @PIXIE_CPPFLAGS@
 sumscaler_LDFLAGS = @top_builddir@/utilities/IO/libdaqio.la 	\
     @top_builddir@/daq/format/libdataformat.la			\
     @LIBEXCEPTION_LDFLAGS@
@@ -31,7 +31,7 @@ noinst_PROGRAMS=unittests
 unittests_SOURCES=Asserts.h TestRunner.cpp channelTests.cpp runTests.cpp \
 	CRun.cpp CCumulativeChannel.cpp CIncrementalChannel.cpp 
 
-unittests_CPPFLAGS=$(sumscaler_CPPFLAGS) @CPPUNIT_CFLAGS@
+unittests_CPPFLAGS=$(sumscaler_CPPFLAGS) @CPPUNIT_CFLAGS@ @PIXIE_CPPFLAGS@
 unittests_LDFLAGS=$(sumscaler_LDFLAGS)   @CPPUNIT_LDFLAGS@
 
 TESTS = unittests

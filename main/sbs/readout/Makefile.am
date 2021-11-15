@@ -11,7 +11,9 @@ COMPILATION_FLAGS	=	-I@top_srcdir@/sbs/vmemodules	\
                         -I@top_srcdir@/daq/eventbuilder         \
 			-I@top_srcdir@/base/os			\
 			$(TCL_FLAGS) $(THREADCXX_FLAGS)	\
-			-DHAVE_VME_MAPPING -DHAVE_SBSVME_INTERFACE
+			-DHAVE_VME_MAPPING \
+			-DHAVE_SBSVME_INTERFACE @PIXIE_CPPFLAGS@
+
 
 TCLPACKAGES = readoutStateHook.tcl
 TCLPKGDIR   = @prefix@/TclLibs/readoutStateHook
@@ -19,40 +21,40 @@ TCLPKGDIR   = @prefix@/TclLibs/readoutStateHook
 BUILT_SOURCES=options.c options.h
 
 libSBSProductionReadout_la_SOURCES	=				\
-						CReadoutMain.cpp		\
-						CTCLAuthorizer.cpp		\
-						CAuthorizedTclServer.cpp	\
-						CExperiment.cpp			\
-						RunState.cpp			\
-						CComposite.cpp			\
-						CScaler.cpp			\
-						CEventSegment.cpp		\
-						CScalerBank.cpp			\
-						CCompoundEventSegment.cpp	\
-						CEventTrigger.cpp		\
-						CNullTrigger.cpp		\
-						CTimedTrigger.cpp		\
-						CCAENV262Trigger.cpp		\
-						CV977Trigger.cpp		\
-						CTriggerLoop.cpp		\
-						CRunControlPackage.cpp		\
-						options.c			\
-						CBeginCommand.cpp		\
-						CPauseCommand.cpp		\
-						CResumeCommand.cpp		\
-						CEndCommand.cpp			\
-						CInitCommand.cpp			\
-						CDocumentedPacket.cpp		\
-						CDocumentedPacketManager.cpp	\
-						CReadoutException.cpp	\
-						CInvalidPacketStateException.cpp \
-						CEventPacket.cpp 	\
-						CVarList.cpp	\
-						CDocumentedVars.cpp		\
-						CVariableBuffers.cpp		\
-						CBusy.cpp			\
-						CCAENV262Busy.cpp		\
-						CV977Busy.cpp
+			CReadoutMain.cpp		\
+			CTCLAuthorizer.cpp		\
+			CAuthorizedTclServer.cpp	\
+			CExperiment.cpp			\
+			RunState.cpp			\
+			CComposite.cpp			\
+			CScaler.cpp			\
+			CEventSegment.cpp		\
+			CScalerBank.cpp			\
+			CCompoundEventSegment.cpp	\
+			CEventTrigger.cpp		\
+			CNullTrigger.cpp		\
+			CTimedTrigger.cpp		\
+			CCAENV262Trigger.cpp		\
+			CV977Trigger.cpp		\
+			CTriggerLoop.cpp		\
+			CRunControlPackage.cpp		\
+			options.c			\
+			CBeginCommand.cpp		\
+			CPauseCommand.cpp		\
+			CResumeCommand.cpp		\
+			CEndCommand.cpp			\
+			CInitCommand.cpp			\
+			CDocumentedPacket.cpp		\
+			CDocumentedPacketManager.cpp	\
+			CReadoutException.cpp	\
+			CInvalidPacketStateException.cpp \
+			CEventPacket.cpp 	\
+			CVarList.cpp	\
+			CDocumentedVars.cpp		\
+			CVariableBuffers.cpp		\
+			CBusy.cpp			\
+			CCAENV262Busy.cpp		\
+			CV977Busy.cpp
 
 
 libSBSProductionReadout_la_CPPFLAGS=$(COMPILATION_FLAGS)
@@ -74,21 +76,23 @@ noinst_HEADERS	=	CReadoutMain.h Skeleton.h CTCLAuthorizer.h	\
 
 
 
-libSBSProductionReadout_la_LIBADD	=	@top_builddir@/sbs/vmemodules/libSBSDeviceSupport.la	\
-						@top_builddir@/sbs/nsclapi/libSBSVmeAPI.la		\
-						@top_builddir@/daq/format/libdataformat.la		\
-						@top_builddir@/servers/portmanager/libPortManager.la \
-						@top_builddir@/base/dataflow/libDataFlow.la	\
-						@top_builddir@/sbs/				\
-						@top_builddir@/base/os/libdaqshm.la			\
-						@top_builddir@/sbs/driver/src/libbtp.la
+libSBSProductionReadout_la_LIBADD	= \
+	@top_builddir@/sbs/vmemodules/libSBSDeviceSupport.la	\
+	@top_builddir@/sbs/nsclapi/libSBSVmeAPI.la		\
+	@top_builddir@/daq/format/libdataformat.la		\
+	@top_builddir@/servers/portmanager/libPortManager.la \
+	@top_builddir@/base/dataflow/libDataFlow.la	\
+	@top_builddir@/sbs/				\
+	@top_builddir@/base/os/libdaqshm.la			\
+	@top_builddir@/sbs/driver/src/libbtp.la
 
 
 libSBSProductionReadout_la_LDFLAGS	=	-version-info	1:0:0	\
-						@LIBTCLPLUS_LDFLAGS@ $(TCL_LDFLAGS) $(THREADLD_FLAGS)
+		@LIBTCLPLUS_LDFLAGS@ $(TCL_LDFLAGS) $(THREADLD_FLAGS)
 
-EXTRA_DIST	=	options.ggo Skeleton.cpp UserMakefile.in SBSRdoMakeIncludes.in SBSReadout_user.xml \
-							SBSReadout_man.xml \
+EXTRA_DIST	=	options.ggo Skeleton.cpp UserMakefile.in \
+			SBSRdoMakeIncludes.in SBSReadout_user.xml \
+			SBSReadout_man.xml \
 			$(TCLPACKAGES)
 
 
@@ -121,9 +125,8 @@ install-exec-local:
 	echo "package ifneeded ReadoutStateHook 1.0 [list source [file join \$$dir readoutStateHook.tcl]]" > $(TCLPKGDIR)/pkgIndex.tcl
 
 
-options.c:	options.ggo
-	$(GENGETOPT) <@top_srcdir@/sbs/readout/options.ggo --file=options \
-		--output-dir=@top_srcdir@/sbs/readout
+options.c: options.h
+
 
 
 options.h:	options.ggo
@@ -150,23 +153,29 @@ tests_CPPFLAGS=$(COMPILATION_FLAGS)
 
 tests_LDADD = 	libSBSProductionReadout_la-CExperiment.lo	\
 		libSBSProductionReadout_la-CComposite.lo	\
-		libSBSProductionReadout_la-CScaler.lo libSBSProductionReadout_la-CScalerBank.lo	\
-		libSBSProductionReadout_la-CEventSegment.lo libSBSProductionReadout_la-CCompoundEventSegment.lo \
+		libSBSProductionReadout_la-CScaler.lo \
+		libSBSProductionReadout_la-CScalerBank.lo	\
+		libSBSProductionReadout_la-CEventSegment.lo \
+		libSBSProductionReadout_la-CCompoundEventSegment.lo \
 		libSBSProductionReadout_la-RunState.lo	\
-		libSBSProductionReadout_la-CEventTrigger.lo libSBSProductionReadout_la-CTimedTrigger.lo	\
-		libSBSProductionReadout_la-CNullTrigger.lo	libSBSProductionReadout_la-CRunControlPackage.lo		\
-		libSBSProductionReadout_la-CBeginCommand.lo				\
-		libSBSProductionReadout_la-CPauseCommand.lo				\
-		libSBSProductionReadout_la-CResumeCommand.lo				\
-		libSBSProductionReadout_la-CEndCommand.lo					\
-		libSBSProductionReadout_la-CInitCommand.lo					\
-		libSBSProductionReadout_la-CTriggerLoop.lo					\
-		libSBSProductionReadout_la-CDocumentedPacket.lo libSBSProductionReadout_la-CDocumentedPacketManager.lo \
-		libSBSProductionReadout_la-CReadoutException.lo libSBSProductionReadout_la-CInvalidPacketStateException.lo \
-		libSBSProductionReadout_la-CEventPacket.lo					\
-		libSBSProductionReadout_la-CDocumentedVars.lo				\
-		libSBSProductionReadout_la-CVarList.lo					\
-		libSBSProductionReadout_la-CVariableBuffers.lo				\
+		libSBSProductionReadout_la-CEventTrigger.lo \
+		libSBSProductionReadout_la-CTimedTrigger.lo	\
+		libSBSProductionReadout_la-CNullTrigger.lo	\
+		libSBSProductionReadout_la-CRunControlPackage.lo \
+		libSBSProductionReadout_la-CBeginCommand.lo	\
+		libSBSProductionReadout_la-CPauseCommand.lo	\
+		libSBSProductionReadout_la-CResumeCommand.lo	\
+		libSBSProductionReadout_la-CEndCommand.lo	\
+		libSBSProductionReadout_la-CInitCommand.lo	\
+		libSBSProductionReadout_la-CTriggerLoop.lo	\
+		libSBSProductionReadout_la-CDocumentedPacket.lo \
+		libSBSProductionReadout_la-CDocumentedPacketManager.lo \
+		libSBSProductionReadout_la-CReadoutException.lo \
+		libSBSProductionReadout_la-CInvalidPacketStateException.lo \
+		libSBSProductionReadout_la-CEventPacket.lo 	\
+		libSBSProductionReadout_la-CDocumentedVars.lo \
+		libSBSProductionReadout_la-CVarList.lo	\
+		libSBSProductionReadout_la-CVariableBuffers.lo	\
 		@top_builddir@/daq/format/libdataformat.la	\
 		@top_builddir@/base/dataflow/libDataFlow.la	\
 		@top_builddir@/sbs/nsclapi/libSBSVmeAPI.la	\
