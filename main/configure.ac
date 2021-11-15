@@ -295,6 +295,7 @@ if test "x$BUILD_DDAS" == "xyes"
 then
    AC_MSG_NOTICE([The XIA-DDAS Support software will be built support software in ${DDAS_INSTDIR}])
 
+  AC_DEFINE([USING_DDAS], [1], [DDAS Definitions are in use])
 
    AC_ARG_WITH([xiaapidir],
         [    -with-xiaapidir=path - Path to the XIAAPI installation.],
@@ -329,6 +330,8 @@ AH_TOP([
 AH_BOTTOM([
 /* Extract the Pixie16 API includes and conditionalize them on the API version */
 
+#ifdef USING_DDAS
+
 #if XIAAPI_VERSION >= 3
 #include <pixie16/pixie16.h>
 /*
@@ -362,6 +365,8 @@ AH_BOTTOM([
 #include <pixie16app_defs.h>
 #include <pixie16app_export.h>
 #include <xia_common.h>
+#endif
+
 #endif
 
 #endif
