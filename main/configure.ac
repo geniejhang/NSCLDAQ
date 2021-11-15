@@ -343,12 +343,11 @@ AH_BOTTOM([
 #define NEW_RUN 1
 #endif
 
-/** Definitions used for statistics array that have been internalized */
+/*  Readout programs need this to decide when to start reading */
 
-extern unsigned int ChanEventsA_Address[24];
-extern unsigned int ChanEventsB_Address[24];
-extern unsigned int FastPeaksA_Address[24];
-extern unsigned int FastPeaskB_Address[24];
+#ifndef EXTFIFO_READ_THRESH
+#define EXTFIFO_READ_THRESH   1024
+#endif
 
 
 

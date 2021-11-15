@@ -138,6 +138,8 @@ int CMyEndCommand::readOutRemainingData()
             // If retval==-1 then k is not a valid module number
             if (retval != 0) { 
                 EndOfRunRead = 1;
+		/* TODO:  figure this out for API 3.0 and larger */
+#if XIAAPI_VERSION < 3
                 sprintf(filnam, "lmdata_mod%d.bin", k);
                 retval = Pixie16SaveExternalFIFODataToFile(filnam, &mod_numwordsread, 
                         k, EndOfRunRead);
@@ -149,6 +151,7 @@ int CMyEndCommand::readOutRemainingData()
                 } // end error block
 
                 nFIFOWords[k] += mod_numwordsread;
+#endif		
             } else {
                 // No run is in progress
                 break;
@@ -170,6 +173,8 @@ int CMyEndCommand::readOutRemainingData()
 
     for(int k=0; k<NumModules; k++) {
         EndOfRunRead = 1;
+	/* TODO: Figure this out for 3.0 and later. */
+#if XIAAPI_VERSION < 3	
         sprintf(filnam, "lmdata_mod%d.bin", k);
         retval = Pixie16SaveExternalFIFODataToFile(filnam, &mod_numwordsread, k, EndOfRunRead);
         if(retval<0) {
@@ -179,7 +184,7 @@ int CMyEndCommand::readOutRemainingData()
 
         }
         nFIFOWords[k] += mod_numwordsread;
-
+#endif
         /* Get final statistics information */
         int retval;
         unsigned int statistics[448] = {0};
