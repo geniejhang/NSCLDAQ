@@ -1,7 +1,7 @@
 bin_PROGRAMS		=	eventlog
 BUILT_SOURCES		= 	eventlogargs.c eventlogargs.h
 
-eventlog_SOURCES	=	eventlog.cpp eventlogMain.cpp 
+eventlog_SOURCES	=	eventlog.cpp eventlogMain.cpp eventlogMain.h
 nodist_eventlog_SOURCES =       eventlogargs.c eventlogargs.h
 
 
