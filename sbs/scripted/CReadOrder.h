@@ -35,9 +35,9 @@
 #ifndef __CREADORDER_H  //Required for current class
 #define __CREADORDER_H
 
-#ifndef _CREADABLEOBJECT_H
+
 #include "CReadableObject.h"
-#endif
+
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;

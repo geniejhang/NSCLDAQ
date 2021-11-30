@@ -82,7 +82,7 @@ unittests_LDADD		= -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 			@top_builddir@/base/dataflow/libDataFlow.la 	\
 			@top_builddir@/base/uri/liburl.la 	\
 			@top_builddir@/daq/format/libdataformat.la	\
-			@top_builddir@/utilities/filter/libfilter.la	\
+			libfilter.la	\
 			@LIBEXCEPTION_LDFLAGS@
 
 unittests_CPPFLAGS=  -I@top_srcdir@/utilities \
@@ -93,7 +93,6 @@ unittests_CPPFLAGS=  -I@top_srcdir@/utilities \
 unittests_CXXFLAGS = $(AM_CXXFLAGS)
 
 unittests_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"
-unittests_DEPENDENCIDES = @builddir@/libfilter.la
 
 testapp_SOURCES = TestApp.cpp
 testapp_CPPFLAGS= -I@top_srcdir@/utilities \
@@ -105,10 +104,9 @@ testapp_LDADD = -L$(libdir) $(CPPUNIT_LDFLAGS) 		\
 			@top_builddir@/base/dataflow/libDataFlow.la 	\
 			@top_builddir@/base/uri/liburl.la 	\
 			@top_builddir@/daq/format/libdataformat.la	\
-			@top_builddir@/utilities/filter/libfilter.la	\
+			libfilter.la \
 			@LIBEXCEPTION_LDFLAGS@
 testapp_LDFLAGS	= -Wl,"-rpath-link=$(libdir)"
-testapp_DEPENDENCIES=@builddir@/libfilter.la
 
 
 TESTS=./unittests
