@@ -13,3 +13,4 @@ tag=$1
 git add libtcl
 git commit -m"Update libtcl tag to $tag"
 
+git submodule foreach 'autoreconf -if'
