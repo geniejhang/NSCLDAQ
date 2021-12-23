@@ -9,6 +9,8 @@
 
 tag=$1
 
+git submodule update --init
+
 (cd libtcl ; git checkout $tag)
 git add libtcl
 git commit -m"Update libtcl tag to $tag"
