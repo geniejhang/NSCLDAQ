@@ -34,9 +34,9 @@ unittests_CPPFLAGS= -I@srcdir@ \
                     @TCL_FLAGS@ 
 
 unittests_LDFLAGS	= @CPPUNIT_LDFLAGS@ \
-										@LIBEXCEPTION_LDFLAGS@ \
-										@TCL_LDFLAGS@ \
-										-Wl,"-rpath-link=$(libdir)"
+			@LIBEXCEPTION_LDFLAGS@ \
+			@TCL_LDFLAGS@ \
+			-Wl,"-rpath=@libdir@"
 
 TESTS=./unittests
 

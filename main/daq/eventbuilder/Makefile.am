@@ -64,6 +64,8 @@ libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.cpp \
 
 libEventBuilderClient_la_CPPFLAGS=$(COMPILATION_FLAGS)
 
+
+
 frag2ring_SOURCES=frag2ring.cpp CFragReader.cpp CFragWriter.cpp
 
 frag2ring_CPPFLAGS=$(COMPILATION_FLAGS)
