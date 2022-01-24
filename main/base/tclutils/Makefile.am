@@ -1,4 +1,4 @@
-lib_LTLIBRARIES = libWait.la
+lib_LTLIBRARIES = libWait.la libZcopy.la
 libWait_la_SOURCES = WaitPackage.cpp
 libWait_la_CPPFLAGS=@TCL_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@ \
 	-I@top_srcdir@/base/CopyrightTools @PIXIE_CPPFLAGS@
@@ -10,6 +10,19 @@ libWait_la_LDFLAGS =	@LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@	\
 libWait_la_LIBADD =  @LIBTCLPLUS_LDFLAGS@ \
 	$(TCL_LDFLAGS)	$(X11LIBS)  -lLicense  \
 	-lm -lstdc++ -lgcc -lc
+
+
+libZcopy_la_SOURCES=zcopy.cpp
+libZcopy_la_CPPFLAGS=@TCL_CPPFLAGS@ @LIBTCLPLUS_CFLAGS@ \
+         @PIXIE_CPPFLAGS@
+
+libZcopy_la_LDFLAGS =    @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@      \
+                              -version-info $(SOVERSION)
+
+libZcopy_la_LIBADD =  @LIBTCLPLUS_LDFLAGS@ \
+        $(TCL_LDFLAGS)  $(X11LIBS)  \
+        -lm -lstdc++ -lgcc -lc
+
 
 
 
@@ -27,8 +40,9 @@ install-exec-local:
 
 install-exec-hook:
 	echo Adjusting installation location of libWait.so compiled tcl extension.
-	mv $(prefix)/lib/libWait.* $(prefix)/TclLibs
-	echo "pkg_mkIndex -verbose $(prefix)/TclLibs *.so" | $(TCLSH_CMD)
+	mv @libdir@/libWait.* @prefix@/TclLibs
+	mv @libdir@/libZcopy.* @prefix@/TclLibs
+	echo "pkg_mkIndex -verbose @prefix@/TclLibs *.so" | $(TCLSH_CMD)
 
 
 DOCS=BlockCompleter.xml Process.xml TclSourceFilter.xml Utils.xml
