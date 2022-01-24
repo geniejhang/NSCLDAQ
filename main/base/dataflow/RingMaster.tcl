@@ -79,6 +79,7 @@ package require portAllocator
 package require log
 package require ring
 package require cmdline
+package require zcopy
 
 set options {
   {f.arg "" "log file path"}
@@ -736,7 +737,14 @@ emitLogMsg debug "PortManager allocated a listen port: $listenPort"
 enumerateRings
 
 
-socket -server onConnection $listenPort
+set listner [socket -server onConnection $listenPort]
+
+#  The zcopy::enable below also enables zero copy for all of the
+#  service sockets that the server accepts connections for:
+
+zcopy::enable $listner
+    
+
 
 emitLogMsg debug "Server listen established on port $listenPort entering event loop"
 
