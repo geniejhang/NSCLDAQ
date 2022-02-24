@@ -161,6 +161,11 @@ proc ::SSHPipe::stop source {
         ::SSHPipe::_attemptEnd $source
     }
     ::SSHPipe::_send $source exit
+
+    # For good measure kill the beast
+
+    catch {exec kill -9 [dict get $::SSHPipe::activeProviders($source) sshpid]}
+
     Wait -pid [dict get $::SSHPipe::activeProviders($source) sshpid]
     dict set ::SSHPipe::activeProviders($source) closing true
     
