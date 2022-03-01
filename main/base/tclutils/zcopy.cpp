@@ -22,7 +22,7 @@
 /**
  * The problem we're trying to solve here is that servers must have initialized
  * their listen socket to support zero copy transmission prior to accepting
- * a service socket.  This package provides the ability to set/check the SO_ZEROCOPY
+ * a service socket.  This package provides the ability to set/check the SO_ZROCOPY
  * socket option on a channel.
  *   Commands:
  *   -   zcopy::enable chan-name   - Enable zero copy
@@ -192,12 +192,13 @@ enable::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
             throw std::invalid_argument(msg);
         }
         int one = 1;                   // Since I need to pass a pointer
+#ifdef SO_ZEROCOPY	
         if (setsockopt(fd, SOL_SOCKET, SO_ZEROCOPY, &one, sizeof(one))) {
             throw std::system_error(
                 errno, std::generic_category(), "Failed to set socket option"
             );
         }
-        
+#endif        
     }
     catch (std::string& msg) {   // requireXxx methods throw these.
         interp.setResult(msg);
@@ -254,11 +255,15 @@ check::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
         
         int state(0);
         socklen_t size;
+#ifdef SO_ZEROCOPY	
         if (getsockopt(fd, SOL_SOCKET, SO_ZEROCOPY, &state, &size)) {
             throw std::system_error(
                 errno, std::generic_category(), "Failed to get socket option"
             );
         }
+#else
+	state = 0;
+#endif	
         if (state) {
             interp.setResult("1");
         } else {
