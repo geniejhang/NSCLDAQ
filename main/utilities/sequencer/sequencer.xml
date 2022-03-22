@@ -334,8 +334,7 @@ package require runSequencer
                 click the <guibutton>Execute Plan</guibutton> button to start the sequence.
                 The button is relabeled <guibutton>Abort Plan</guibutton> while the plan is running.
                 Clicking it while the plan is running ends the active run and stops the sequence.
-                If event recording was enabled for an aborted run plan you are given the option
-                to discard all the event data that was taken for the sequence.
+                
             </para>
         </refsect2>
             
