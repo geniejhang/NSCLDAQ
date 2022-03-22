@@ -213,7 +213,7 @@ putData(CRingBuffer& ring, void* pBuffer, size_t nBytes)
  *******************************************************************/
 
 int
-mainLoop(string ring, int timeout, int mindata)
+mainLoop(string ring, int timeout, unsigned  mindata)
 {
   // If stdin is a socket set keepalive so we're given a SIGPIPE if the other
   // end drops off (See Bug #6248).
@@ -340,7 +340,7 @@ mainLoop(string ring, int timeout, int mindata)
 	  if(firstItemSize > mindata) {
 	    if (firstItemSize > use.s_bufferSpace) {
 	      cerr << "Exiting because I just got an event that won't fit in the ring..enlarge the ring\n";
-        dumpWords(pHeader, 200);                     // Dump part of the ring.
+	      dumpWords(pHeader, 200);                     // Dump part of the ring.
 	      exit(EXIT_FAILURE);
 	    } else {
 	      cerr << "item larger than --minsize, reallocating bufer to " << firstItemSize + readOffset << endl;
