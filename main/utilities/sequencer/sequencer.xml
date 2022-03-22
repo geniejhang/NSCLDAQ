@@ -44,7 +44,8 @@
         </para>
         <para>
             The actions are defined in a file named
-            <filename>sequencer.conf</filename> in the current working directory
+            <filename>sequencer.config
+            </filename> in the current working directory
             at the time the sequencer starts.  This file describes one action
             on each line.  Each sequencer line contains several whitespace
             separated fields.  In order:
