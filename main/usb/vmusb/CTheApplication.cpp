@@ -453,6 +453,7 @@ CTheApplication::initializeLogging()
         daqlog::setLogLevel(daqlog::Debug);
         break;
       case 2:
+    case 3:
         daqlog::setLogLevel(daqlog::Trace);
         break;
       default:
