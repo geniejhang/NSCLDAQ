@@ -461,6 +461,7 @@ CTheApplication::initializeLogging()
           << "Must be 0, 1, or 2\n";
         exit(EXIT_FAILURE);
     }
+    CVMUSB::m_logTransactions   = m_logLevel > 2;           // Export that to the full app.
   }
  
 }

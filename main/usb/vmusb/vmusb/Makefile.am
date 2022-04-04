@@ -5,7 +5,8 @@ COMPILATION_FLAGS	= $(USBSWITCHES) -I@top_srcdir@/base/headers @LIBTCLPLUS_CFLAG
 			-I@top_srcdir@/base/tcpip \
 			-I@top_srcdir@/base/os	\
 			-I@top_srcdir@/base/thread \
-			  @TCL_FLAGS@ @THREADCXX_FLAGS@ @PIXIE_CPPFLAGS@
+			  @TCL_FLAGS@ @THREADCXX_FLAGS@ @PIXIE_CPPFLAGS@ \
+			-I@srcdir@/.. -I@top_srcdir@/base/os
 
 libVMUSB_la_SOURCES 	=  CVMUSBusb.cpp CVMUSBReadoutList.cpp CVMUSBEthernet.cpp \
 	CVMUSBFactory.cpp \
@@ -32,7 +33,7 @@ noinst_HEADERS		= CVMUSB.h   \
 	CLoggingReadoutList.h
 
 
-libVMUSB_CXXFLAGS=@THREADCXX_FLAGS@
+libVMUSB_CXXFLAGS=@THREADCXX_FLAGS@ -I@srcdir@/.. -I@top_srcdir@/base/os
 
 libVMUSB_la_LIBADD       = @top_builddir@/base/tcpip/libTcp.la \
 			@top_builddir@/base/thread/libdaqthreads.la \
