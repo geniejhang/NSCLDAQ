@@ -56,7 +56,7 @@ CBufferQueue<T>::CBufferQueue(size_t wakeLevel) :
 template<class T>
 CBufferQueue<T>::~CBufferQueue<T>() 
 {
-  pthread_cond_destroy(&m_condition);
+  //  pthread_cond_destroy(&m_condition);
 }
 
 /*!
