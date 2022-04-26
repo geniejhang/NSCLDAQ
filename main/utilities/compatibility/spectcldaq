@@ -15,7 +15,7 @@
 
 #  Establish the location of the installed binaries.
 
-bindir=/usr/opt/daq/11.4-028/bin
+bindir=/usr/opt/daq/11.4-029/bin
 
 
 # Ensure we have a url then collect it:

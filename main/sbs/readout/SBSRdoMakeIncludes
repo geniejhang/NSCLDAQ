@@ -7,7 +7,7 @@ CXX=/usr/opt/mpi/openmpi-4.0.1/bin/mpicxx -std=c++11
 CXXLD=/usr/opt/mpi/openmpi-4.0.1/bin/mpicxx
 CCLD=gcc
 
-COMMONFLAGS= -g -I. -I/usr/opt/daq/11.4-028/include -I/usr/opt/daq/11.4-028/include/sbsreadout \
+COMMONFLAGS= -g -I. -I/usr/opt/daq/11.4-029/include -I/usr/opt/daq/11.4-029/include/sbsreadout \
 	     -DHAVE_VME_MAPPING -DHAVE_SBSVME_INTERFACE \
 	      -I/usr/include/tcl8.6 -I/usr/include/tcl8.6 -pthread
 
@@ -21,7 +21,7 @@ CCFLAGS= $(COMMONFLAGS) $(USERCCFLAGS)
 #     be and results in double definitions if it appears twice on the link line.
 #
 
-LDFLAGS=-L/usr/opt/daq/11.4-028/lib -lSBSProductionReadout -lSBSDeviceSupport -lSBSVmeAPI \
+LDFLAGS=-L/usr/opt/daq/11.4-029/lib -lSBSProductionReadout -lSBSDeviceSupport -lSBSVmeAPI \
 		       -lException -ldaqthreads -ldaqshm -ltclPlus  \
 		       $(USERLDFLAGS) \
-		        -L/usr/lib/x86_64-linux-gnu -ltcl8.6 -ldl -lz  -lpthread -lm  -Wl,"-rpath=/usr/opt/daq/11.4-028/lib"
+		        -L/usr/lib/x86_64-linux-gnu -ltcl8.6 -ldl -lz  -lpthread -lm  -Wl,"-rpath=/usr/opt/daq/11.4-029/lib"

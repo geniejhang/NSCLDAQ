@@ -8,7 +8,7 @@
 # Assume that if DAQROOT is defined, we're already set up.
 
 function set_env() {
-    export DAQROOT=/usr/opt/daq/11.4-028
+    export DAQROOT=/usr/opt/daq/11.4-029
     export DAQBIN=$DAQROOT/bin
     export DAQLIB=$DAQROOT/lib
     export DAQINC=$DAQROOT/include
@@ -21,7 +21,7 @@ then
   echo ""
   echo "Description:"
   echo "  Set the DAQROOT, DAQLIB, DAQBIN, and PYTHONPATH environment variables"
-  echo "  to refer to "/usr/opt/daq/11.4-028
+  echo "  to refer to "/usr/opt/daq/11.4-029
   echo ""
   echo "Options:"
   echo "  -h  Display this help message"

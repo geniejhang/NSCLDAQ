@@ -38,4 +38,4 @@ exec tclsh "$0" ${1+"$@"}
 #
 
 set DDAS_INSTDIR 
-set DAQ_INSTDIR /usr/opt/daq/11.4-028
+set DAQ_INSTDIR /usr/opt/daq/11.4-029

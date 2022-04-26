@@ -17,7 +17,7 @@
 # part of a nscl-maintained debian package some day
 
 # The following are defaults that can be overidden in /etc/default/nscldaq:
-DAQHOME=/usr/opt/daq/11.4-028
+DAQHOME=/usr/opt/daq/11.4-029
 #export TCLLIBPATH="${DAQHOME}/Scripts" #not sure why this is here, nothing uses it
 BIT3DEVICES=5       # Number of bit 3 devices.
 LOGFILEDIR=~

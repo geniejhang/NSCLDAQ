@@ -192,11 +192,11 @@ INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 KERNEL_SOURCE_DIR = 
 LD = /usr/bin/ld -m elf_x86_64
 LDFLAGS = 
-LIBEXCEPTION_LDFLAGS = -L/usr/opt/daq/11.4-028/lib -lException -Wl,"-rpath=/usr/opt/daq/11.4-028/lib"
+LIBEXCEPTION_LDFLAGS = -L/usr/opt/daq/11.4-029/lib -lException -Wl,"-rpath=/usr/opt/daq/11.4-029/lib"
 LIBOBJS = 
 LIBS = -lzmq -lX11 
-LIBTCLPLUS_CFLAGS = -I/usr/opt/daq/11.4-028/include
-LIBTCLPLUS_LDFLAGS = -L/usr/opt/daq/11.4-028/lib -ltclPlus -L/usr/opt/daq/11.4-028/lib -lException -Wl,"-rpath=/usr/opt/daq/11.4-028/lib"
+LIBTCLPLUS_CFLAGS = -I/usr/opt/daq/11.4-029/include
+LIBTCLPLUS_LDFLAGS = -L/usr/opt/daq/11.4-029/lib -ltclPlus -L/usr/opt/daq/11.4-029/lib -lException -Wl,"-rpath=/usr/opt/daq/11.4-029/lib"
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIB_RUNTIME_DIR = /usr/lib/tcl8.6
 LIPO = 
@@ -222,10 +222,10 @@ OTOOL64 =
 PACKAGE = nscldaq
 PACKAGE_BUGREPORT = scientificsoftware@nscl.msu.edu
 PACKAGE_NAME = nscldaq
-PACKAGE_STRING = nscldaq 11.4-028
+PACKAGE_STRING = nscldaq 11.4-029
 PACKAGE_TARNAME = nscldaq
 PACKAGE_URL = http://www.sourceforge.net/projects/nscldaq
-PACKAGE_VERSION = 11.4-028
+PACKAGE_VERSION = 11.4-029
 PATH_SEPARATOR = :
 PIXIE_API_DIR = 
 PIXIE_CPPFLAGS = 
@@ -262,7 +262,7 @@ TK_DEFS = -DPACKAGE_NAME=\"tk\" -DPACKAGE_TARNAME=\"tk\" -DPACKAGE_VERSION=\"8.6
 TK_LIBS =  -L/usr/lib/x86_64-linux-gnu -ltk8.6 -lX11 -lXss -lXext -lXft -lfontconfig -lfreetype -lfontconfig  -lpthread -ldl -lz  -lpthread -lm
 USBSWITCHES = -I/usr/include
 USB_LIBS = -L/usr/lib/x86_64-linux-gnu -lusb
-VERSION = 11.4-028
+VERSION = 11.4-029
 WISH = 
 ZMQ_LDFLAGS = -lzmq
 abs_builddir = /aaron/NSCLDAQ/main/sbs/driver/dd
@@ -309,7 +309,7 @@ oldincludedir = /usr/include
 pdfdir = ${docdir}
 pkgpyexecdir = ${pyexecdir}/nscldaq
 pkgpythondir = ${pythondir}/nscldaq
-prefix = /usr/opt/daq/11.4-028
+prefix = /usr/opt/daq/11.4-029
 program_transform_name = s,x,x,
 psdir = ${docdir}
 pyexecdir = ${exec_prefix}/lib/python2.7/site-packages

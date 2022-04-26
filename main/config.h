@@ -196,7 +196,7 @@
 #define PACKAGE_NAME "nscldaq"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "nscldaq 11.4-028"
+#define PACKAGE_STRING "nscldaq 11.4-029"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "nscldaq"
@@ -205,7 +205,7 @@
 #define PACKAGE_URL "http://www.sourceforge.net/projects/nscldaq"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "11.4-028"
+#define PACKAGE_VERSION "11.4-029"
 
 /* The size of `void*', as computed by sizeof. */
 #define SIZEOF_VOIDP 8
@@ -223,7 +223,7 @@
 /* #undef USING_DDAS */
 
 /* Version number of package */
-#define VERSION "11.4-028"
+#define VERSION "11.4-029"
 
 /* Pixie16 version 2 or lower */
 /* #undef XIAAPI_VERSION */

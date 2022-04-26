@@ -7,7 +7,7 @@ SHMBASE=/dev/shm
 
 if [ xx$DAQROOT = xx ]
 then
-  DAQROOT=/usr/opt/daq/11.4-028
+  DAQROOT=/usr/opt/daq/11.4-029
 fi
 DAQBIN=$DAQROOT/bin
 

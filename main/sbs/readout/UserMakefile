@@ -3,7 +3,7 @@
 #  Supposedly  you only need to change this definition to update to a newer
 #  version of the software:
 
-INSTDIR=/usr/opt/daq/11.4-028
+INSTDIR=/usr/opt/daq/11.4-029
 
 include $(INSTDIR)/etc/SBSRdoMakeIncludes
 

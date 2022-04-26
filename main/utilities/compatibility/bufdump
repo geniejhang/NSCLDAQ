@@ -18,7 +18,7 @@
 #
 
 
-prefix=/usr/opt/daq/11.4-028
+prefix=/usr/opt/daq/11.4-029
 bindir=$prefix/bin
 
 

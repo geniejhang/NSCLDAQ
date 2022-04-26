@@ -1,7 +1,7 @@
-KITDIR   = /usr/opt/daq/11.4-028/vmusbdriver
-LIBDIR   = /usr/opt/daq/11.4-028/lib
-INCLUDES = /usr/opt/daq/11.4-028/vmusbdriver/includes
-MAININCLUDES = /usr/opt/daq/11.4-028/include
+KITDIR   = /usr/opt/daq/11.4-029/vmusbdriver
+LIBDIR   = /usr/opt/daq/11.4-029/lib
+INCLUDES = /usr/opt/daq/11.4-029/vmusbdriver/includes
+MAININCLUDES = /usr/opt/daq/11.4-029/include
 TCL_FLAGS= -I/usr/include/tcl8.6 -I/usr/include/tcl8.6
 TCL_LDFLAGS= -L/usr/lib/x86_64-linux-gnu -ltk8.6 -lX11 -lXss -lXext -lXft -lfontconfig -lfreetype -lfontconfig  -lpthread -ldl -lz  -lpthread -lm -L/usr/lib/x86_64-linux-gnu -ltcl8.6 -ldl -lz -lpthread -lm
 

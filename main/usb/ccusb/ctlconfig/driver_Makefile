@@ -1,4 +1,4 @@
-INSTDIR=/usr/opt/daq/11.4-028
+INSTDIR=/usr/opt/daq/11.4-029
 
 HEADER_DIR=$(INSTDIR)/ccusbdriver/includes
 LIB_DIR=$(INSTDIR)/lib
