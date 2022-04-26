@@ -1,0 +1,45 @@
+#!/bin/sh
+# Start tclsh \
+    exec /usr/bin/tclsh8.6 ${0} ${@}
+
+if {([array names ::env TCLLIBPATH] ne "") && ([array names ::env TCLLIBPATH_OK] eq "")} {
+	package require Tk
+	tk_messageBox -title {TCLLIBPATH Defined} -type ok -icon error \
+	    -message {The TCLLIBPATH environment variable is defined. If it contains daq directories prior other than this version that will cause 
+problems.  If you are sure your TCLLIBPATH is safe to use with ReadoutGUI also define the environment variable TCLLIBPATH_OK to anything}
+	exit
+
+}
+
+# This is a hack to get around problems with Tk's command line option interpreter
+set argv_tmp $argv
+set argv [list]
+package require Tk
+
+package require cmdline
+
+set options {
+	{-settingsfile.arg ".settings.tcl" "name of settings file in stagearea"}
+}
+
+set usage " ?--settingsfile value?"
+
+if {("-help" in $argv_tmp) || ("-?" in $argv_tmp)} {
+	puts [cmdline::usage $options $usage]
+	exit
+}
+
+set res [catch {array set ::params [::cmdline::getoptions argv_tmp $::options]} msg]
+if {$res == 1} {
+	puts $msg
+	exit
+}
+
+
+set here [file dirname [info script]]
+set tcllibs [file normalize [file join $here ../TclLibs]]
+set auto_path [concat $tcllibs $auto_path]
+
+package require ReadoutGui
+
+ReadoutGuiApp r {*}[array get ::params]
