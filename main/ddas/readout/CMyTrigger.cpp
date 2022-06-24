@@ -104,7 +104,7 @@ bool CMyTrigger::operator()()
                    pixie16app_defs.h */
 
                 if(nFIFOWords > m_fifoThreshold){
-		  //std::cerr << "---- CMyTrigger.cpp: " << nFIFOWords << " > " << m_fifoThreshold << " ----" << std::endl;
+		  std::cerr << "---- CMyTrigger.cpp: mod " << i << " " << nFIFOWords << " > " << m_fifoThreshold << " ----" << std::endl;
 #ifdef PRINTQUEINFO
 		  std::cout << "CMyTrigger:: trig satisfied...mod=" << i
                       << " nwords=" << nFIFOWords << std::endl;

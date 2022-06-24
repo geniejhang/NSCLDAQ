@@ -192,7 +192,7 @@ size_t CMyEventSegment::read(void* rBuffer, size_t maxwords)
 {
   bool debug = m_debug;
   
-  //memset(rBuffer, 0, maxwords);            // See what's been read.
+  memset(rBuffer, 0, maxwords);            // See what's been read.
     
     // This loop finds the first module that has at least one event in it
     // since the trigger fired.  We read the minimum of all complete events
@@ -220,9 +220,11 @@ size_t CMyEventSegment::read(void* rBuffer, size_t maxwords)
             readSize -= (readSize % ModEventLen[i]);  // only read full events.
 
             // Read the data right into the ring item:
-            
-            //std::cerr << "Going to read " << readSize
-            //    << "(" << words[i] <<") " << " from " << i << std::endl;
+	    auto prewords = words[i];
+	    unsigned int preread;
+	    Pixie16CheckExternalFIFOStatus(&preread, i);
+	    
+            //std::cerr << "Going to read " << readSize << "(" << words[i] <<") " << " from " << i << std::endl;
             int stat = Pixie16ReadDataFromExternalFIFO(
                 reinterpret_cast<unsigned int*>(p), (unsigned long)readSize, (unsigned short)i
             );
@@ -232,7 +234,11 @@ size_t CMyEventSegment::read(void* rBuffer, size_t maxwords)
                 reject();
                 return 0;
             }
-            m_pExperiment->haveMore();      // until we fall through the loop
+
+	    unsigned int postread;
+	    Pixie16CheckExternalFIFOStatus(&postread, i);
+	    
+	    m_pExperiment->haveMore();      // until we fall through the loop
             words[i] -= readSize;           // count down words still to read.
             
             return (readSize + 1) *sizeof(uint32_t)/sizeof(uint16_t);
