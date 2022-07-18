@@ -1,1 +1,2 @@
-SUBDIRS=include src dd
+SUBDIRS=include src
+#dd
