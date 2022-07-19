@@ -7,7 +7,7 @@
 
 
 #include <config.h>
-
+#include <config_pixie16api.h>
 #define TRIGGER_TIMEOUT_SECS 5        // If no triggers in 5 seconds, auto-trigger.
 
 //#ifdef HAVE_STD_NAMESPACE

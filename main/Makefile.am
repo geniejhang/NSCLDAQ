@@ -36,6 +36,7 @@ install-data-local:
 	echo "pkg_mkIndex @prefix@/TclLibs *.so" >makeindex.tcl
 	$(TCLSH_CMD) <makeindex.tcl
 	$(INSTALL_SCRIPT) config.h @prefix@/include
+	$(INSTALL_SCRIPT) config_pixie16api.h @prefix@/include
 	touch @prefix@/pythonLibs/nscldaq/__init__.py
 	echo "Version: "NSCLDAQ-$(VERSION) built on `hostname` `date` > @prefix@/VERSION
 	$(INSTALL_SCRIPT) daqsetup.bash @prefix@
@@ -46,7 +47,8 @@ install-data-local:
 #  (cd @top_srcdir@ ; echo "`git rev-parse HEAD`" > @prefix@/GIT_COMMIT )
 
 
-EXTRA_DIST=dotests introduction.xml libtcl $(INTROFIGURES) cookbooks ddascook
+EXTRA_DIST=dotests introduction.xml libtcl $(INTROFIGURES) cookbooks ddascook \
+	config_pixie16api.h
 
 check-TESTS:
 	@top_srcdir@/dotests $(SUBDIRS)

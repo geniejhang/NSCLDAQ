@@ -11,6 +11,7 @@
 #include <cmath>
 
 #include <config.h>
+#include <config_pixie16api.h>
 
 
 extern unsigned int ChanEventsB_Address[];

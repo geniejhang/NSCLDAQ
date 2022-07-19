@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include <config.h>
+#include <config_pixie16api.h>
 
 using namespace std;
 
