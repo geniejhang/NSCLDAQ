@@ -102,16 +102,17 @@ bool CMyTrigger::operator()()
                 /* Trigger a read if the number of words in the external FIFO of 
                    any pixie16 module in a crate exceeds a threshold defined in 
                    pixie16app_defs.h */
-
+		
                 if(nFIFOWords > m_fifoThreshold){
-		  std::cerr << "---- CMyTrigger.cpp: mod " << i << " " << nFIFOWords << " > " << m_fifoThreshold << " ----" << std::endl;
+		  std::cout << "CMyTrigger:: trig satisfied...mod=" << i
+			    << " nwords=" << nFIFOWords << std::endl;
 #ifdef PRINTQUEINFO
 		  std::cout << "CMyTrigger:: trig satisfied...mod=" << i
-                      << " nwords=" << nFIFOWords << std::endl;
+			    << " nwords=" << nFIFOWords << std::endl;
 #endif
-                    m_retrigger = true;
-                    thresholdMade =  true;   // Once polling is done, trigger.
-		    //std::cerr << "---- CMyTrigger.cpp: m_retrigger " << m_retrigger << " thesholdMade: " << thresholdMade << " ---- " << std::endl;
+		  m_retrigger = true;
+		  thresholdMade =  true;   // Once polling is done, trigger.
+		  //std::cerr << "---- CMyTrigger.cpp: m_retrigger " << m_retrigger << " thesholdMade: " << thresholdMade << " ---- " << std::endl;
                 }
 
             } // end module loop

@@ -171,7 +171,7 @@ void CMyEventSegment::initialize(){
         cout << "*ERROR* Pixie16StartListModeRun failed " << retval 
             << endl << flush;
     } else {
-        cout << "List Mode started OK " << retval << endl << flush;
+      cout << "List Mode started OK " << retval << " mode " << std::hex << std::showbase << LIST_MODE_RUN << std::dec << " " << NEW_RUN << endl << flush;
     }
 
     usleep(100000); // Delay for the DSP boot 
@@ -240,7 +240,7 @@ size_t CMyEventSegment::read(void* rBuffer, size_t maxwords)
 	    
 	    m_pExperiment->haveMore();      // until we fall through the loop
             words[i] -= readSize;           // count down words still to read.
-            
+	    std::cerr << "pre: " << preread << " preexpec: " << prewords << " readsize: " << readSize << " post: " << postread << " postexpec: " << words[i] << std::endl;
             return (readSize + 1) *sizeof(uint32_t)/sizeof(uint16_t);
         }
     }
