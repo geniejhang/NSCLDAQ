@@ -192,7 +192,7 @@ size_t CMyEventSegment::read(void* rBuffer, size_t maxwords)
 {
   bool debug = m_debug;
   
-  memset(rBuffer, 0, maxwords);            // See what's been read.
+  // memset(rBuffer, 0, maxwords);            // See what's been read.
     
     // This loop finds the first module that has at least one event in it
     // since the trigger fired.  We read the minimum of all complete events
@@ -240,7 +240,7 @@ size_t CMyEventSegment::read(void* rBuffer, size_t maxwords)
 	    
 	    m_pExperiment->haveMore();      // until we fall through the loop
             words[i] -= readSize;           // count down words still to read.
-	    std::cerr << "pre: " << preread << " preexpec: " << prewords << " readsize: " << readSize << " post: " << postread << " postexpec: " << words[i] << std::endl;
+	    // std::cerr << "pre: " << preread << " preexpec: " << prewords << " readsize: " << readSize << " post: " << postread << " postexpec: " << words[i] << std::endl;
             return (readSize + 1) *sizeof(uint32_t)/sizeof(uint16_t);
         }
     }
