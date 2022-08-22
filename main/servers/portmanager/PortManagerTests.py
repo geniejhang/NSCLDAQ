@@ -148,10 +148,11 @@ class PortManagerTests(unittest.TestCase):
     def test_list_afew(self):
         pm     = PortManager.PortManager('localhost', 30000)
         myport = pm.getPort('myport')
-        theport= pm.getPort('theport')
+        pm1     = PortManager.PortManager('localhost', 30000)
+        theport= pm1.getPort('theport')
         iam    = getpass.getuser()
-        
-        info   = pm.listPorts()
+        pm2     = PortManager.PortManager('localhost', 30000)
+        info   = pm2.listPorts()
         message = None
         if len(info) != 3:
             message = 'Number of ports... found ports {}'.format(info)
@@ -185,10 +186,11 @@ class PortManagerTests(unittest.TestCase):
     def test_find_byservice(self):
         pm     = PortManager.PortManager('localhost', 30000)
         myport = pm.getPort('myport')
-        theport= pm.getPort('theport')
+        pm1      = PortManager.PortManager('localhost', 30000)
+        theport= pm1.getPort('theport')
         iam    = getpass.getuser()
-        
-        info = pm.find(service = 'theport')
+        pm2      = PortManager.PortManager('localhost', 30000)
+        info = pm2.find(service = 'theport')
         self.assertEquals(1, len(info))
         pinfo = info[0]
         
@@ -204,10 +206,11 @@ class PortManagerTests(unittest.TestCase):
     def test_find_bybeginswith(self):
         pm     = PortManager.PortManager('localhost', 30000)
         myport = pm.getPort('myport')
-        theport= pm.getPort('theport')
+        pm1      = PortManager.PortManager('localhost', 30000)
+        theport= pm1.getPort('theport')
         iam    = getpass.getuser()
-        
-        info   = pm.find(beginswith = 'my')
+        pm2     = PortManager.PortManager('localhost', 30000)
+        info   = pm2.find(beginswith = 'my')
         self.assertEquals(1, len(info))
         pinfo = info[0]
         
@@ -224,10 +227,11 @@ class PortManagerTests(unittest.TestCase):
     def test_find_byuser(self):
         pm     = PortManager.PortManager('localhost', 30000)
         myport = pm.getPort('myport')
-        theport= pm.getPort('theport')
+        pm1     = PortManager.PortManager('localhost', 30000)
+        theport= pm1.getPort('theport')
         iam    = getpass.getuser()
-        
-        info = pm.find(user=iam)
+        pm2     = PortManager.PortManager('localhost', 30000)
+        info = pm2.find(user=iam)
         info = self._keyInfo(info)
         
         # We can assume that if the keys are there, the data are good.
