@@ -33,6 +33,11 @@ if {[array names env DAQTCLLIBS] ne ""} {
 package require kvclient
 package require rdoutils
 package require ReadoutRESTClient
+
+set ServiceName ReadoutREST
+if {[array names ::env ReadoutRESTService] ne ""} {
+    set ServiceName $::env(ReadoutRESTService)
+}
 #------------------------------------------------------------------------------
 #  Utility functions.
 ##
@@ -78,6 +83,6 @@ kv destroy
 #  Since the manager starts the Readout (we have to take their word this is a readout)
 #  We can use the same user:
 
-ReadoutRESTClient rest -host $programHost -user $user
+ReadoutRESTClient rest -host $programHost -user $user -service $ServiceName
 rest setTitle $title
 rest destroy

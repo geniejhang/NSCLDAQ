@@ -31,6 +31,11 @@ package require kvclient
 package require rdoutils
 package require ReadoutRESTClient
 
+set ServiceName ReadoutREST
+if {[array names ::env ReadoutRESTService] ne ""} {
+    set ServiceName $::env(ReadoutRESTService)
+}
+
 #------------------------------------------------------------------------------
 # Utility functions.
 #
@@ -72,6 +77,6 @@ KvClient kv -host $host -user $user
 set run [kv getValue run]
 kv destroy
 
-ReadoutRESTClient rest -host $programHost -user $user
+ReadoutRESTClient rest -host $programHost -user $user -service $ServiceName
 rest setRunNumber $run
 rest destroy
