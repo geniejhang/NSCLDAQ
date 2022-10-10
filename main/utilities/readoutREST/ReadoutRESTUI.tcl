@@ -291,7 +291,7 @@ snit::widgetadaptor ReadoutState {
     #        same state.
     #
     method _cfgState {optname value} {
-        if {$value in [list idle active paused inconsistent]} {
+        if {$value in [list idle active paused inconsistent SHUTDOWN]} {
             set options($optname) $value ;     # cget now works.
             
             if {$value eq "idle"} {
@@ -310,6 +310,9 @@ snit::widgetadaptor ReadoutState {
             } elseif {$value eq "inconsistent"} {
                 $win.beginend configure -state disabled
                 $win.init     configure -state disabled
+            } elseif {$value eq "SHUTDOWN"} {
+                $win.beginend configure -state disabled
+                $win.beginend configure -state disabled
             }
             
         } else {

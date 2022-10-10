@@ -342,15 +342,18 @@ snit::widgetadaptor ReadoutManagerControl {
     #
     method _cfgRdoState {optname value} {
         set state [lindex $value 0]
-        foreach s [lrange $value 1 end] {
-            if {$s ne $state} {
-                set state inconsistent
-                break
+        if {[llength $value] > 1} {
+            foreach s [lrange $value 1 end] {
+                if {$s ne $state} {
+                    set state inconsistent
+                    break
+                }
             }
         }
         if {$state eq ""} {
             set state inconsistent;               # If there's no values.
         }
+            
         #
         #  Turn off the parameters if the run is active.
         #
@@ -702,7 +705,7 @@ snit::type MultiReadoutStateTracker {
     # update
     #    Attempts to fetch the run state from the models we have.
     #    If any model cannot give us a state (e.g. the Readout is not running)
-    #    We'll put in the pseudo state 'inconsistent'  This will mean the
+    #    We'll put in the pseudo state 'SHUTDOWN'  This will mean the
     #    view will represent the state as inconsistent because:
     #    - Either all Readouts are done which results in inconsistent state
     #      due to unanimous consent.
@@ -714,7 +717,7 @@ snit::type MultiReadoutStateTracker {
         set statelist [list]
         foreach model $options(-models) {
             if {[catch {$model getState} state]} {
-                lappend statelist inconsistent
+                lappend statelist SHUTDOWN
             } else {
                 lappend statelist $state
             }
@@ -1260,15 +1263,24 @@ snit::type RunController {
                 set status [$options(-programmodel) status]
                 set programs [dict get $status programs]
                 foreach program $options(-readouts) {
-                    set host [_findProgramHost $program $programs]
+                    set name [lindex $program 0]
+                    set service [lindex $program 1]
+                    set host [_findProgramHost $name $programs]
                     if {$host eq ""} {
                         # No match can't make all models so bail.
                         
                         return
                     } else {
-                        lappend readoutModels [ReadoutRESTClient %AUTO% \
-                            -host $host -user [$options(-programmodel) cget -user] \
-                        ]
+                        if {$service eq ""} {
+                            lappend readoutModels [ReadoutRESTClient %AUTO% \
+                                -host $host -user [$options(-programmodel) cget -user] \
+                            ]
+                        } else {
+                                lappend readoutModels [ReadoutRESTClient %AUTO% \
+                                -host $host -service $service -user \
+                                [$options(-programmodel) cget -user] \
+                            ]
+                        }
                     }
                 }
             }
@@ -1304,11 +1316,15 @@ snit::type RunController {
         # In with the new
         
         $self _createReadoutModels;    # Empty lists possibly.
-        if {[llength $readoutModels] == [llength $options(-readouts)]} {
+        if {[llength $readoutModels] == [llength $options(-readouts)]}  {
+            set programNames [list]
+            foreach program $options(-readouts) {
+                lappend programNames [lindex $program 0]
+            }
             $multiReadoutStatisticsTracker configure \
-                -models $readoutModels -programs $options(-readouts)
+                -models $readoutModels -programs $programNames
             $multiReadoutStateTracker configure -models $readoutModels
-            $summaryTracker configure -readouts $options(-readouts)
+            $summaryTracker configure -readouts $programNames
         }
         
         
@@ -1440,6 +1456,9 @@ proc usage {msg} {
     puts stderr "   host  - is the host running the program manager"
     puts stderr "   user  - is the user the program manager is running under"
     puts stderr "   program... is a list of program names that are readouts."
+    puts stderr "        If a program is  a quoted pair of words, the first word"
+    puts stderr "        is the program name, the second the REST service advertised"
+    puts stderr "        by that Readout"
     
     exit -1
     
