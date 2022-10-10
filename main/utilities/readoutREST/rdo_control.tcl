@@ -33,7 +33,15 @@ package require report
 package require struct
 
 
-
+##
+#  The ReadoutRESTService env allows
+#  one to override the default advertised REST service name.
+#  Mostly to allow more than one Readout per host as in e.g. S800.
+#
+set ServiceName ReadoutREST
+if {[array names ::env ReadoutRESTService] ne ""} {
+    set ServiceName $::env(ReadoutRESTService)
+}
 ##
 # Usage:
 #    rdo_control host user subcommand ?...?
@@ -95,7 +103,7 @@ proc begin {host user args} {
     if {[llength $args] != 0} {
         usage "begin subcommand must not have any addition command parameters"
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     c begin
     c destroy
 }
@@ -111,7 +119,7 @@ proc end {host user args} {
     if {[llength $args] != 0} {
         usage "end subcommand must not have any addition command parameters"
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     c end
     c destroy
 }
@@ -128,7 +136,7 @@ proc init {host user args} {
     if {[llength $args] != 0} {
         usage "init subcommand must not have any addition command parameters"
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     c init
     c destroy
 }
@@ -145,7 +153,7 @@ proc shutdown {host user args} {
     if {[llength $args] != 0} {
         usage "shutdown subcommand must not have any addition command parameters"
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     c shutdown
     c destroy
 }
@@ -161,7 +169,7 @@ proc incRun {host user args} {
     if {[llength $args] != 0} {
         usage "incrun subcommand must not have any addition command parameters"
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     set run [c getRunNumber]
     incr run
     c setRunNumber $run
@@ -185,7 +193,7 @@ proc setRun {host user args} {
     if {[lindex $args 0] < 0} {
         usage "setRun's run  number must be at least 0"
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     c setRunNumber [lindex $args 0]
     c destroy
 }
@@ -201,7 +209,7 @@ proc setTitle {host user args} {
     if {[llength $args] == 0} {
         usage "setTitle subcommand requires a title."
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     c setTitle "$args"
     c destroy
 }
@@ -217,7 +225,7 @@ proc getRun {host user args} {
     if  {[llength $args] != 0} {
         usage "getRun has no additional command parameters"
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     puts [c getRunNumber]
     c destroy
 }
@@ -233,7 +241,7 @@ proc getTitle {host user args} {
     if {[llength $args] != 0} {
         usage "getTitle must not have any additional command parameters."
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     puts [c getTitle]
     c destroy
 }
@@ -249,7 +257,7 @@ proc getState {host user args} {
     if {[llength $args] != 0} {
         usage "getState must not have any additional command parameters"
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     puts [c getState]
     c destroy
 }
@@ -265,7 +273,7 @@ proc getStatistics {host user args} {
     if {[llength $args] != 0} {
         usage "getStatistics must not have any additional command parameters"
     }
-    ReadoutRESTClient c -host $host -user $user
+    ReadoutRESTClient c -host $host -user $user -service $::ServiceName
     set stats  [c getStatistics]
     c destroy
     
