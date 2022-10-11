@@ -366,6 +366,7 @@ proc ::eventlog::_exitForbidden {db} {
 #    Called when a logger exits.
 #    - Remove it from the list of loggers.
 #    - If the logger was critical, force a transition to SHUTDOWN
+#    - unless the state is not BEGIN
 #
 # @param db  - database verb.
 # @param def - logger definition.
@@ -407,9 +408,7 @@ proc ::eventlog::_handleOutput {def db fd} {
         ::eventlog::Log "Event logger in $host -> $dest exited."
         close $fd
         ::eventlog::_unregisterLogger $db $def
-        if {$isCritical} {
-            catch {::sequence::transition $db SHUTDOWN}
-        }
+
     } else {
         set line [gets $fd]    
         ::eventlog::Log "Event logger in $host -> $dest :  $line"
