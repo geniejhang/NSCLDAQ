@@ -93,7 +93,7 @@ proc locateIniFile { } {
             return $path
         }
     }
-    usage "Unable to find a containers.ini in search path: '::$DescriptionSearchPaths'"
+    usage "Unable to find a containers.ini in search path: '$::DescriptionSearchPaths'"
 }
 
 
