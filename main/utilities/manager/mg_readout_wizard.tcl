@@ -25,12 +25,16 @@ exec tclsh "$0" ${1+"$@"}
 # @author Ron Fox <fox@nscl.msu.edu>
 #
 
-if {[array names env DAQTCLLIBS]} {
+if {[array names env DAQTCLLIBS] ne ""} {
     lappend auto_path $env(DAQTCLLIBS)
 }
 package require Tk
+package require snit
+
 package require programs
 package require sequence
+package require containers
+
 ##
 # Provides a wizard that creates all of the stuff to make a readout program work.
 # This is not only the Readout program itself but the REST clients that
@@ -59,7 +63,7 @@ package require sequence
 #   *  Container - can be none or any of the defined containers.
 #   *  Host
 #   *  Working directory.
-#   *  If customized, the location of the Readout program.
+#   *  IF customized, the location of the Readout program.
 #   *  Source id  - for the event builder.
 #   *  ring   - Name of ring buffer.
 #   *  Rest service name (defaults to ReadoutREST)
@@ -79,6 +83,84 @@ package require sequence
 #
 
 
+ #------------------------------------------------------------------------------
+ #   GUIs.
+ #     The Main GUI has several components:
+ 
+ ##
+ #  Form to allow the input of common attributes;
+ #
+ # *   - -type -  one of: {ddas, vmusb, ccusb, custom}
+ # *   - -container  If not an empty string the container that will run the readout.
+ # *   - -host    Host in which the Readout will run.
+ # *   - -directory - working directory in which the Readout will run.
+ # *   - -sourceid - Event builder source id.
+ # *   - -ring  - output ring buffer.
+ # *   - -service - REST service name used to control the Readout.
+ #
+ #  Other OPTIONS:
+ #    -containers - containers to select between.
+ #    -typeselectcommand - script when the radio buttons holding the Readout Type
+ #        change.
+ #
+ snit::widgetadaptor rdo::CommonAttributes {
+    option -type
+    option -containers  -default [list] -configuremethod _configContainers;       # Containers to chose between
+    option -container;        # Selected container.
+    option -host
+    option -directory
+    option -sourceid -default 0
+    option -ring -default $::tcl_platform(user)
+    option -service -default ReadoutREST
+    option -typeselectcommand -default [list]
     
+    variable daqtypes [list XIA VMUSB CCUSB Custom]
+    
+    constructor args {
+        installhull using ttk::frame
+        
+        #  The Readout types
+        
+        ttk::labelframe $win.types -text {Readout Type}
+        set radios [list]
+        foreach type $daqtypes {
+            lappend radios [ttk::radiobutton $win.types.[string tolower $type] \
+                -variable [myvar options(-type)] -value $type -text $type]
+        }
+        set options(-type) [lindex $daqtypes 0]
+        grid {*}$radios
+        
+        #  Container and host:
+        
+        ttk::labelframe $win.container -text {Container}
+        ttk::combobox $win.container.container \
+            -values [list] \
+            -textvariable [myvar options(-container)]
+        grid $win.container.container
+        
+        
+        
+        
+        grid $win.types $win.container
+        
+    }
+    #--------------------------------------------------------------------------
+    #
+    # Configuration methods
+    
+    
+    ##
+    # _configContainers
+    #    Configure the containers in the $win.container.container combobox.
+    #
+    # @param name - name of configuration option
+    # @param value - new value
+    #
+    method _configContainers {name value} {
+        set options($name) $value
+        $win.container.container configure -value $value
+    }
+ }
+ 
 
 #
