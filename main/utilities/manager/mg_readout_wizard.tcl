@@ -125,7 +125,8 @@ package require containers
         set radios [list]
         foreach type $daqtypes {
             lappend radios [ttk::radiobutton $win.types.[string tolower $type] \
-                -variable [myvar options(-type)] -value $type -text $type]
+                -variable [myvar options(-type)] -value $type -text $type \
+                -command [mymethod _dispatchType]]
         }
         set options(-type) [lindex $daqtypes 0]
         grid {*}$radios
@@ -136,12 +137,28 @@ package require containers
         ttk::combobox $win.container.container \
             -values [list] \
             -textvariable [myvar options(-container)]
-        grid $win.container.container
+        ttk::entry $win.container.host -textvariable [myvar options(-host)]
+        ttk::label $win.container.hostlabel -text Host
+        grid $win.container.container  $win.container.host $win.container.hostlabel
         
+        # directory, sourceid
         
+        ttk::labelframe $win.dir -text {Directory}
+        ttk::entry $win.dir.dir -textvariable [myvar options(-directory)]
+        ttk::button $win.dir.browse -text {Browse...}
+        grid $win.dir.dir $win.dir.browse -sticky ew
+    
+        ttk::labelframe $win.sid -text {Source Id}
+        ttk::spinbox $win.sid.sid \
+            -from 0 -to 100000 -increment 1 \
+            -textvariable [myvar options(-sourceid)]
+        ttk::label $win.sid.label -text {Source Id}
+        grid $win.sid.sid $win.sid.label -sticky ew
         
-        
-        grid $win.types $win.container
+        grid $win.types $win.container -sticky ew
+        grid $win.dir $win.sid -sticky ew
+         
+        $self configurelist $args 
         
     }
     #--------------------------------------------------------------------------
@@ -159,6 +176,17 @@ package require containers
     method _configContainers {name value} {
         set options($name) $value
         $win.container.container configure -value $value
+    }
+    #-------------------------------------------------------------------------
+    #  Event handling
+    
+    
+    ##
+    # _dispatchType
+    #   Called when the type changes.
+    #
+    method _dispatchType {} {
+        puts "Dispatch type $options(-type)"
     }
  }
  
