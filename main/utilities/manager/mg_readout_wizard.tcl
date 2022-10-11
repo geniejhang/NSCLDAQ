@@ -83,11 +83,12 @@ package require containers
 #
 
 
- #------------------------------------------------------------------------------
- #   GUIs.
+ #==============================================================================
  #     The Main GUI has several components:
  
  ##
+ # @class rdo::CommonAttributes
+ #
  #  Form to allow the input of common attributes;
  #
  # *   - -type -  one of: {ddas, vmusb, ccusb, custom}
@@ -155,8 +156,24 @@ package require containers
         ttk::label $win.sid.label -text {Source Id}
         grid $win.sid.sid $win.sid.label -sticky ew
         
+        # ring and REST service.
+        
+        ttk::labelframe $win.ring -text {Output Ring}
+        ttk::entry $win.ring.ring -textvariable [myvar options(-ring)]
+        ttk::label $win.ring.label -text {Ring name}
+        grid $win.ring.ring $win.ring.label -sticky ew
+        
+        ttk::labelframe $win.service -text {REST service name}
+        ttk::entry $win.service.name -textvariable [myvar options(-service)]
+        ttk::label $win.service.label -text {Service}
+        grid $win.service.name $win.service.label -sticky ew
+        
+        #  Grid the top level frames:
+        
         grid $win.types $win.container -sticky ew
         grid $win.dir $win.sid -sticky ew
+        grid $win.ring $win.service -sticky ew
+        
          
         $self configurelist $args 
         
@@ -184,11 +201,119 @@ package require containers
     ##
     # _dispatchType
     #   Called when the type changes.
+    #   The user script, if it exists is called with the new type as a parameter.
     #
     method _dispatchType {} {
-        puts "Dispatch type $options(-type)"
+        set userscript $options(-typeselectcommand)
+        if {$userscript ne ""} {
+            lappend userscript $options(-type)
+            uplevel $userscript
+        }
+        
     }
  }
+ ##
+ # @class rdo::XIAAttributes
+ #
+ #   XIA readouts for version 11.4 experimental and later have
+ #   The following attributes (class options).
+ #
+ #  -  -sorthost   - host in which the sorter runs.
+ #  -  -sortring   - Ringbuffer that gets the sorted output.
+ #  -  -sortwindow - Sorter sliding window.
+ #  -  -fifothreshod - FIFO Threshold
+ #  -  -buffersize  - Readout program's buffersize (clump).
+ #  -  -infinityclock (bool true if infinity clock should be used).
+ #  -  -clockmultiplier - Multiply external clock by this to get ns.
+ #  -  -scalerperiod - Seconds between scaler readouts.
+ #
+ snit::widgetadaptor rdo::XIAAttributes {
+    option -sorthost   -default [info hostname]
+    option -sortring   -default $::tcl_platform(user)_sort
+    option -sortwindow -default 5
+    option -fifothreshold -default [expr 8192*10]
+    option -buffersize    -default 16384
+    option -infinityclock  -default 0
+    option -clockmultiplier -default 1
+    option -scalerperiod    -default 2
+    
+    constructor args {
+        installhull using ttk::frame
+        #  Title:
+        
+        ttk::label $win.title -text {XIA Readout Attributes}
+        
+        #  Sort host entry and label:
+        
+        ttk::labelframe $win.host -text {Sort host}
+        ttk::entry $win.host.host -textvariable [myvar options(-sorthost)]
+        ttk::label $win.host.label -text {Sort Host}
+        grid $win.host.host $win.host.label -sticky ew
+        
+        # Sort ring
+        
+        ttk::labelframe $win.ring -text {Sort output ring}
+        ttk::entry $win.ring.ring -textvariable [myvar options(-sortring)]
+        ttk::label $win.ring.label -text {Output Ring}
+        grid $win.ring.ring $win.ring.label -sticky ew
+        
+        #  sort window
+        
+        ttk::labelframe $win.sortwin -text {Sort window}
+        ttk::spinbox $win.sortwin.window \
+            -from 1 -to 1000 -increment 1 \
+            -textvariable [myvar options(-sortwindow)]
+        ttk::label $win.sortwin.label -text {Seconds}
+        grid $win.sortwin.window $win.sortwin.label -sticky ew
+        
+        #  FIFO Threshold
+        
+        ttk::labelframe $win.fifo -text {Readout Threshold}
+        ttk::spinbox $win.fifo.fifo \
+            -from 1024 -to [expr 128*1024] -increment 512 \
+            -textvariable [myvar options(-fifothreshold)]
+        ttk::label $win.fifo.label -text {FIFO Threshold}
+        grid $win.fifo.fifo $win.fifo.label -sticky ew
  
+        # Buffer size
+        
+        ttk::labelframe $win.bsize -text {Buffer Size}
+        ttk::spinbox    $win.bsize.bsize -from 8192 -to [expr 1024*1024] -increment 1024 \
+            -textvariable [myvar options(-buffersize)]
+        ttk::label $win.bsize.label -text {Readout Buffersize}
+        grid $win.bsize.bsize $win.bsize.label -sticky ew
+        
+        #clock parameters
+        
+        ttk::labelframe $win.clock -text {Clock parameters}
+        ttk::checkbutton $win.clock.infinity -text Infinity \
+             -onvalue 1 -offvalue 0 -variable [myvar options(-infinityclock)]
+        ttk::entry $win.clock.multiplier -textvariable [myvar options(-clockmultiplier)]
+        ttk::label $win.clock.mlabel -text {Multiplier}
+        grid $win.clock.infinity $win.clock.multiplier $win.clock.mlabel -sticky ew
+        
+        #scaler period:
+        
+        ttk::labelframe $win.scaler -text {Scalers}
+        ttk::spinbox $win.scaler.period -from 2 -to 3600 -increment 1 \
+            -textvariable [myvar options(-scalerperiod)]
+        ttk::label $win.scaler.label -text {Readout period}
+        
+        grid $win.scaler.period $win.scaler.label -sticky ew
+        
+        grid $win.title -sticky w
+        grid $win.host $win.ring -sticky ew
+        grid $win.sortwin $win.fifo -sticky ew
+        grid $win.bsize $win.clock -sticky ew
+        grid $win.scaler -columnspan 2 -sticky ew
+        
+        
+        $self configurelist $args
+    }
+    #------------------------------------------------------------------------
+    # Event handling
+    
+    
+ }
 
 #
