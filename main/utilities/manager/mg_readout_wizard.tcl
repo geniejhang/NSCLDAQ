@@ -146,7 +146,7 @@ package require containers
         
         ttk::labelframe $win.dir -text {Directory}
         ttk::entry $win.dir.dir -textvariable [myvar options(-directory)]
-        ttk::button $win.dir.browse -text {Browse...}
+        ttk::button $win.dir.browse -text {Browse...} -command [mymethod _browsedir]
         grid $win.dir.dir $win.dir.browse -sticky ew
     
         ttk::labelframe $win.sid -text {Source Id}
@@ -210,6 +210,19 @@ package require containers
             uplevel $userscript
         }
         
+    }
+    ##
+    # _browsedir
+    #   Browse for the current directory string.
+    #
+    method _browsedir {} {
+        set dir [tk_chooseDirectory -parent $win -title {Choose directory}]
+        
+        # Only change if one was chosen:
+        #
+        if {$dir ne ""} {
+            $self configure -directory $dir
+        }
     }
  }
  ##
@@ -310,10 +323,133 @@ package require containers
         
         $self configurelist $args
     }
-    #------------------------------------------------------------------------
-    # Event handling
-    
-    
+     
  }
-
+##
+# @class XXUSBAttributes
+#   Prompting form for attributes of an XXUSBReadout.  For this we need:
 #
+#  -  -byserial  - True if we want a specific serial number
+#  -  -serialstring - Serial number string.
+#  -  -daqconfig   - DAQ configuration file.
+#  -  -usectlserver - Enable control configuration
+#  -  -ctlconfig   - Control config file.
+#  -  -port        - ctlconfig port.
+#  -  -enablelogging - True to turn on logging.
+#  -  -logfile     - Log file name.
+#  -  -logverbosity - Verbosity of logfile.
+#
+snit::widgetadaptor rdo::XXUSBAttributes {
+    option -byserial -default 0
+    option -serialstring
+    
+    option -daqconfig
+    
+    option -usectlserver -default 0 -configuremethod _setCtlServerVisibility
+    option -ctlconfig
+    option -port -default 1024
+    
+    option -enablelogging -default 0
+    option -logfile
+    option -logverbosity -default 0
+    
+    constructor args {
+        installhull using ttk::frame
+        ttk::label $win.title -text {XXUSBReadout attributes}
+        
+        # DAQ Config file.
+        
+        ttk::labelframe $win.daqconfig -text {DAQ configuration}
+        ttk::entry $win.daqconfig.config -textvariable [myvar options(-daqconfig)]
+        ttk::button $win.daqconfig.browse -text {Browse...} -command [mymethod _browseDAQFile]
+        grid $win.daqconfig.config $win.daqconfig.browse -sticky ew
+        
+        # Control configuration :
+        
+        ttk::labelframe $win.ctlconfig -text {Control Configuration}
+        ttk::checkbutton $win.ctlconfig.enable -text {Use Control Server} \
+            -onvalue 1 -offvalue 0 -variable [myvar options(-usectlserver)] \
+            -command [mymethod _controlOptions]
+        ttk::entry $win.ctlconfig.ctlconfig \
+            -textvariable [myvar options(-ctlconfig)] 
+        ttk::button $win.ctlconfig.browse \
+            -text Browse... -command [mymethod _browseCtlConfig]
+        ttk::spinbox $win.ctlconfig.port -textvariable [myvar options(-port)] \
+            -from 1024 -to 65535 -increment 1
+        ttk::label $win.ctlconfig.plabel -text {Server Port}
+        grid $win.ctlconfig.enable -sticky w
+        grid $win.ctlconfig.ctlconfig $win.ctlconfig.browse $win.ctlconfig.port $win.ctlconfig.plabel -sticky ew
+        
+        grid $win.title     -sticky w
+        grid $win.daqconfig -sticky ew
+        grid $win.ctlconfig -sticky ew
+        
+        
+        $self configurelist $args
+        $self _controlOptions
+    }
+    #---------------------------------------------------------------------------
+    # Configuration handling.
+    
+    
+    
+    ##
+    #  _useCtlServer
+    #    Configure the flag that uses/does not use control server,
+    #    just set the options array and invoke _controlOptions.
+    #
+    method _useCtlServer {name value} {
+        set options($name) $value
+        
+        $self _controlOptions
+    }
+    #---------------------------------------------------------------------------
+    # Event handlers:
+    
+    ##
+    #  _browseDAQfile
+    #    Select a daqconfig file:
+    #
+    method _browseDAQFile {} {
+        set file [tk_getOpenFile -parent $win -title "DAQ config file" \
+            -filetypes [list                                           \
+                    {{Tcl Scripts} .tcl}                               \
+                    {{All Files}    *}                                  \
+        ]]
+        if {$file ne ""} {
+            $self configure -daqconfig $file
+        }
+    }
+    ##
+    # _browseCtlConfig
+    #   Browse for the control config file
+    #
+    method _browseCtlConfig {} {
+        set file [tk_getOpenFile -parent $win -title "DAQ config file" \
+            -filetypes [list                                           \
+                    {{Tcl Scripts} .tcl}                               \
+                    {{All Files}    *}                                  \
+        ]]
+        if {$file ne ""} {
+            $self configure -ctlconfig $file
+        }
+    }
+    
+    ##
+    # _coontrolOptions
+    #   Called when options(-usectlserver) changes
+    #
+    method _controlOptions {} {
+        if {$options(-usectlserver)} {
+            set state normal
+        } else {
+            set state disable
+        }
+        foreach subwidget [list ctlconfig browse port plabel] {
+            $win.ctlconfig.$subwidget config -state $state
+        }
+            
+        
+    }
+}
+
