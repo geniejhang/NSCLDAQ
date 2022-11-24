@@ -611,6 +611,7 @@ AC_CONFIG_FILES([Makefile
     base/tclutils/Makefile
     base/testutils/Makefile
     base/sqliteplus/Makefile
+    base/udp/Makefile
     caenfw-common/Makefile
     servers/Makefile
     servers/tclserver/Makefile
