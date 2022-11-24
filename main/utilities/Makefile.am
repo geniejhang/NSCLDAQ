@@ -23,7 +23,8 @@ SUBDIRS = 				common	\
 					swtrigger \
 					logbook \
 					manager \
-					readoutREST
+					readoutREST \
+          UDPBroker
 
 # scalerdisplay - removed in favor of newscaler
 

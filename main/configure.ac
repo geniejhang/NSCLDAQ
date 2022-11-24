@@ -653,6 +653,7 @@ AC_CONFIG_FILES([Makefile
     utilities/logbook/Makefile
     utilities/manager/Makefile
     utilities/readoutREST/Makefile
+    utilities/UDPBroker/Makefile
     epics/epicslib/Makefile
     epics/chanlog/Makefile
     epics/controlpush/Makefile

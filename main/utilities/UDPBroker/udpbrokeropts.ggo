@@ -1,0 +1,7 @@
+package "UDPBroker"
+version "1.0"
+purpose "Serving as a broker between a UDP source client and a RingBuffer"
+
+option "port" p "Port number on which to receive UDP messages" int required
+option "sink" s "Where to log the received data file or ring URI" string required
+option "sourceid" i "Source ID for the encapsulation. If not specified, FEC ID is used." int optional
