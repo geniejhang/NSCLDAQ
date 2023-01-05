@@ -113,7 +113,7 @@ proc ::program::_typeId {db type} {
     #  The assumption is there will be 0 or 1 results:
     #
     set result [$db eval {                                   
-        SELECT id FROM program_type WHERe type=$type
+        SELECT id FROM program_type WHERE type=$type
     }]
     if {$result eq ""} {
         return -1
@@ -245,6 +245,7 @@ proc ::program::_handleContainerInput {container host fd} {
     fconfigure $fd -blocking 0
     read $fd
     if {[eof $fd]} {
+        puts "Container input EOF on $container $host"
         array unset ::program::containeredPrograms ${container}@${host}
         set index [lsearch \
             -exact $::program::activeContainers [list $container $host] \
@@ -353,7 +354,7 @@ proc ::program::_runBare {db def} {
     ]
     ::program::_writeProgramScript $fname $def
     
-    set fd [open "|ssh $host $fname |& cat" w+]
+    set fd [open "|ssh -T  $host $fname |& cat" w+]
     
     
     return $fd
@@ -804,7 +805,7 @@ proc ::program::kill {db name} {
     #       The scheme below gives a better error message if that's the case
     #       as well as a potential log useful in troubleshooting.
     #
-    set programList [exec ssh $host ps axuww | \
+    set programList [exec ssh -T $host ps axuww | \
         grep "$command" | grep $::tcl_platform(user) \
          ];
     set programList [split $programList "\n"];   #list of lines.
@@ -815,7 +816,7 @@ proc ::program::kill {db name} {
     }
     set program [lindex $programList 0]
     set pid     [lindex $program 1];     # the pid in the remote host.
-    catch {exec ssh $host kill -9 $pid }
+    catch {exec ssh -T $host kill -9 $pid }
     
 }
     
