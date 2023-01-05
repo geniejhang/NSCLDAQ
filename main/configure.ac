@@ -321,11 +321,6 @@ AC_SUBST(LIBEXCEPTION_LDFLAGS)
 #  Configure and install tclhttpd
 #  We use that /usr/lib/tclx.y has tclConfig
 #  and /usr/include/tclx.y     has the headers.
-
-<<<<<<< HEAD
-#tcl_basename=`basename ${TCLSH}`
-=======
->>>>>>> origin/12.0-pre5
 tcl_basename=tcl${TCL_VERSION}
 tcl_configdir="/usr/lib/$tcl_basename"
 tcl_incdir="/usr/include/$tcl_basename"
