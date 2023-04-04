@@ -24,7 +24,7 @@ jobs:
           eval `ssh-agent -s`
           
           echo "${{ secrets.LIBTCLPLUS }}" | ssh-add -
-          ./tcl++incorp libtclplus-v4.3-002
+          ./tcl++incorp libtclplus-v3.0-010
           ssh-add -D
           
           eval `ssh-agent -k`
