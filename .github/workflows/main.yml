@@ -34,6 +34,9 @@ jobs:
         working-directory: ./main/oot
         shell: bash
         run: |
+          # temporary fix for missing header
+          cp ../config_pixie16api.h .
+          
           ../configure --prefix=$PWD/install \
              --enable-usb=yes \
              --enable-caen-digitizer-support \
