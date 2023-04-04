@@ -154,7 +154,7 @@ namespace zcopy {
  * @param command - The command string (zcopy::enabel).
  */
 enable::enable(CTCLInterpreter& interp, const char* command) :
-    CTCLObjectProcessor(interp, command, kfTRUE)
+    CTCLObjectProcessor(interp, command, TCLPLUS::kfTRUE)
 {}
 /**
  * destructor
@@ -218,7 +218,7 @@ enable::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
  * constructor
  */
 check::check(CTCLInterpreter& interp, const char* command) :
-    CTCLObjectProcessor(interp, command, kfTRUE)
+    CTCLObjectProcessor(interp, command, TCLPLUS::kfTRUE)
 {}
 
 /**
@@ -288,7 +288,7 @@ check::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
  * constructor:
  */
 issocket::issocket(CTCLInterpreter& interp, const char* command) :
-    CTCLObjectProcessor(interp, command, kfTRUE)
+    CTCLObjectProcessor(interp, command, TCLPLUS::kfTRUE)
 {}
 
 issocket::~issocket()
