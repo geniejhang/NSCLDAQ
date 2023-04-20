@@ -8,7 +8,7 @@
 | HIRA Lab | 2a, 3 | 61510a09 | vmeusb_062621_atm.spi | Issue with 2sec-periodic readout |
 | Gamma Lab | 2, 3a | 3d000a00 | ... | Issue with periodic readout affecting VME scalers |
 | ARIS | 2a, 3a | 61510a09 | vmeusb_062621_atm.spi | Issue with 2sec-periodic readout |
-| DetLab | 3a | 61510a09 | vmeusb_062621_atm.spi | Issue with 2sec-periodic readout |
+| DetLab | 2 | 3d000a00 | ... | Issue with periodic readout affecting VME scalers |
 
 ### Note
 
