@@ -7,7 +7,7 @@
 | Rea3 Diag | 3a | 3d000a00 | ... | Issue with periodic readout affecting VME scalers |
 | HIRA Lab | 2a, 3 | 61510a09 | vmeusb_062621_atm.spi | Issue with 2sec-periodic readout |
 | Gamma Lab | 2, 3a | 3d000a00 | ... | Issue with periodic readout affecting VME scalers |
-| ARIS | ... | 3d000a00 | ... | Issue with periodic readout affecting VME scalers |
+| ARIS | 2a, 3a | 61510a09 | vmeusb_062621_atm.spi | Issue with periodic readout affecting VME scalers |
 | DetLab | 3a | 61510a09 | vmeusb_062621_atm.spi | Issue with 2sec-periodic readout |
 
 ### Note
