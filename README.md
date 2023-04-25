@@ -3,11 +3,11 @@
 
 | Location/Area | Board rev | Firmware | Filename | Comments |
 | --- | --- | --- | --- | --- |
-| S800 | 3a | 61510a09 | vmeusb_062621_atm.bin | Issue with 2sec-periodic readout |
-| Rea3 Diag | 3a | 61510a09 | vmeusb_062621_atm.bin | Issue with 2sec-periodic readout |
-| HIRA Lab | 2a, 3 | 61510a09 | vmeusb_062621_atm.bin | Issue with 2sec-periodic readout |
+| S800 | 3a | 61510a09 | vmeusb_062621_atm.bin | Issue with 2sec-periodic readout, no end event signal |
+| Rea3 Diag | 3a | 61510a09 | vmeusb_062621_atm.bin | Issue with 2sec-periodic readout, no end event signal |
+| HIRA Lab | 2a, 3 | 61510a09 | vmeusb_062621_atm.bin | Issue with 2sec-periodic readout, no end event signal |
 | Gamma Lab | 2, 3a | 3d000a00 | ... | Issue with periodic readout affecting VME scalers |
-| ARIS | 2a, 3a | 61510a09 | vmeusb_062621_atm.bin | Issue with 2sec-periodic readout |
+| ARIS | 2a, 3a | 61510a09 | vmeusb_062621_atm.bin | Issue with 2sec-periodic readout, no end event signal |
 | DetLab | 2 | 3d000a00 | ... | Issue with periodic readout affecting VME scalers |
 
 ### Note
