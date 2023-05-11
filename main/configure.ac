@@ -155,7 +155,7 @@ SOVERSION="11:0:0"
 # Ensure Python is 2.7 or greater, and the packages/dependencies we need
 
 AM_PATH_PYTHON([2.7], [], [AC_MSG_ERROR([Python 2.7 or higher is needed for NSCLDAQ])])
-AX_PYQT
+
 
 # Ensure swig is installed: -- this is used to generate wrappers for the
 #  VMUSB and CCUSB libraries for use within Tcl drivers.
