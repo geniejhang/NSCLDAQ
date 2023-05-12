@@ -36,7 +36,7 @@ install-data-local:
 	echo "pkg_mkIndex @prefix@/TclLibs *.so" >makeindex.tcl
 	$(TCLSH_CMD) <makeindex.tcl
 	$(INSTALL_SCRIPT) config.h @prefix@/include
-	$(INSTALL_SCRIPT) config_pixie16api.h @prefix@/include
+	$(INSTALL_SCRIPT) @srcdir@/config_pixie16api.h @prefix@/include
 	touch @prefix@/pythonLibs/nscldaq/__init__.py
 	echo "Version: "NSCLDAQ-$(VERSION) built on `hostname` `date` > @prefix@/VERSION
 	$(INSTALL_SCRIPT) daqsetup.bash @prefix@
