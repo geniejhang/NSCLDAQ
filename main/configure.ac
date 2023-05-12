@@ -4,7 +4,7 @@
 AC_PREREQ(2.61)
 
 
-AC_INIT(nscldaq,11.3-032, [scientificsoftware@nscl.msu.edu],[], [http://www.sourceforge.net/projects/nscldaq])
+AC_INIT(nscldaq,11.3-033, [scientificsoftware@nscl.msu.edu],[], [http://www.sourceforge.net/projects/nscldaq])
 
 
 
@@ -152,9 +152,12 @@ SOVERSION="11:0:0"
 #  Local tests:
 #
 
-# Ensure Python is 2.7 or greater, and the packages/dependencies we need
+# Ensure Python is 3.0  or greater, and the packages/dependencies we need
 
-AM_PATH_PYTHON([2.7], [], [AC_MSG_ERROR([Python 2.7 or higher is needed for NSCLDAQ])])
+AM_PATH_PYTHON([3.0], [], [AC_MSG_ERROR([Python 3.0 or higher is needed for NSCLDAQ])])
+
+
+AC_MSG_RESULT([found Python ${PYTHON_VERSION}])
 
 
 # Ensure swig is installed: -- this is used to generate wrappers for the
@@ -444,7 +447,8 @@ AC_LANG_POP
 ##
 # check for presence of Python zmq package
 
-AC_PYTHON_MODULE([zmq])
+#AC_PYTHON_MODULE([zmq])
+AX_PYTHON_MODULE([zmq])
 
 #----------------------------------------------------------------------------
 
