@@ -204,16 +204,17 @@ docbook_decl = '<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN" ' \
 
 
 # write the new xml tree to an output file
-newfile = open(outputFile,'w+')
-newfile.write('<?xml version="1.0" encoding="ASCII"?>\n')
-newfile.write(docbook_decl+'\n')
-newfile.write(textTree+'\n')
+newfile = open(outputFile,'wb+')
+newfile.write(bytes('<?xml version="1.0" encoding="ASCII"?>\n', 'utf-8'))
+newfile.write(bytes(docbook_decl, 'utf-8'))
+newfile.write(bytes('\n', 'utf-8'))
+newfile.write(textTree)
 newfile.close()
 
 # generate the pdf is desired
 if args.pdf:
 	currentWd = os.getcwd()
-	print currentWd
+	print( currentWd)
 	subprocess.call(['docbook2pdf','-o',args.outdir,outputFile])
 
 # clean up generated xml if requested
