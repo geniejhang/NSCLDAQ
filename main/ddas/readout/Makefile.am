@@ -25,6 +25,7 @@ DDASReadout_SOURCES=Skeleton.cpp CMyEventSegment.cpp CMyTrigger.cpp \
 DDASReadout_CPPFLAGS=-I@DDAS_INSTDIR@/include -I@top_srcdir@/daq/format \
 	-I@top_srcdir@/sbs/readout -I@top_srcdir@/base/dataflow		\
 	-I@top_srcdir@/sbs/nsclapi					\
+	-I@top_srcdir@                                                  \
 	@LIBTCLPLUS_CFLAGS@ @TCL_FLAGS@         			\
 	@PIXIE_CPPFLAGS@						\
 	-fPIC -DFIRMWARE_FILE=\"@DDAS_INSTDIR@/share/readout/DDASFirmwareVersions.txt\"
