@@ -34,13 +34,13 @@ CPixieDSPUtilities::~CPixieDSPUtilities() {}
 int
 CPixieDSPUtilities::AdjustOffsets(int module)
 {
-  int retval = Pixie16AdjustOffsets(module);
+    int retval = Pixie16AdjustOffsets(module);
 
-  if (retval < 0) {
-    std::cerr << "CPixieDSPUtilities::AdjustOffsets() failed to adjust offsets in module: " << module << " with retval " << retval;
-  }
+    if (retval < 0) {
+	std::cerr << "CPixieDSPUtilities::AdjustOffsets() failed to adjust offsets in module: " << module << " with retval " << retval;
+    }
 
-  return retval;
+    return retval;
 }
 
 /**
@@ -57,17 +57,17 @@ CPixieDSPUtilities::AdjustOffsets(int module)
  * @return int  0 on success, XIA API error code on fail.
  */
 int
-CPixieDSPUtilities::WriteChanPar(int module, int channel, char* paramName, double value)
+CPixieDSPUtilities::WriteChanPar(
+    int module, int channel, char* paramName, double value
+    )
 {
-  int retval = Pixie16WriteSglChanPar(paramName, value, module, channel);
+    int retval = Pixie16WriteSglChanPar(paramName, value, module, channel);
   
-  if (retval < 0) {
-    std::cerr << "CPixieDSPUtilities::WriteChanPar() failed to write parameter "
-	      << paramName << " to module " << module << " channel "
-	      << channel << " with retval " << retval << std::endl;
-  }
+    if (retval < 0) {
+	std::cerr << "CPixieDSPUtilities::WriteChanPar() failed to write parameter " << paramName << " to module " << module << " channel " << channel << " with retval " << retval << std::endl;
+    }
     
-  return retval;
+    return retval;
 }
 
 /**
@@ -84,17 +84,17 @@ CPixieDSPUtilities::WriteChanPar(int module, int channel, char* paramName, doubl
  * @return int  0 on success, XIA API error code on fail.
  */
 int
-CPixieDSPUtilities::ReadChanPar(int module, int channel, char* paramName, double& value)
+CPixieDSPUtilities::ReadChanPar(
+    int module, int channel, char* paramName, double& value
+    )
 {
-  int retval = Pixie16ReadSglChanPar(paramName, &value, module, channel);
+    int retval = Pixie16ReadSglChanPar(paramName, &value, module, channel);
   
-  if (retval != 0) {
-    std::cerr << "CPixieDSPUtilities::ReadChanPar() failed to read parameter "
-	      << paramName << " from module " << module << " channel "
-	      << channel << " with retval " << retval << std::endl;
-  }  
+    if (retval != 0) {
+	std::cerr << "CPixieDSPUtilities::ReadChanPar() failed to read parameter " << paramName << " from module " << module << " channel " << channel << " with retval " << retval << std::endl;
+    }  
   
-  return retval;
+    return retval;
 }
 
 /**
@@ -112,17 +112,17 @@ CPixieDSPUtilities::ReadChanPar(int module, int channel, char* paramName, double
  * @return int  0 on success, XIA API error code on fail.
  */
 int
-CPixieDSPUtilities::WriteModPar(int module, char* paramName, unsigned int value)
+CPixieDSPUtilities::WriteModPar(
+    int module, char* paramName, unsigned int value
+    )
 {
-  int retval = Pixie16WriteSglModPar(paramName, value, module);
+    int retval = Pixie16WriteSglModPar(paramName, value, module);
   
-  if (retval < 0) {
-    std::cerr << "CPixieDSPUtilities::WriteModPar() failed to write parameter "
-	      << paramName << " to module " << module << " with retval "
-	      << retval << std::endl;
-  } 
+    if (retval < 0) {
+	std::cerr << "CPixieDSPUtilities::WriteModPar() failed to write parameter " << paramName << " to module " << module << " with retval " << retval << std::endl;
+    } 
   
-  return retval;
+    return retval;
 }
 
 /**
@@ -138,15 +138,15 @@ CPixieDSPUtilities::WriteModPar(int module, char* paramName, unsigned int value)
  * @return int  0 on success, XIA API error code on fail.
  */
 int
-CPixieDSPUtilities::ReadModPar(int module, char* paramName, unsigned int& value)
+CPixieDSPUtilities::ReadModPar(
+    int module, char* paramName, unsigned int& value
+    )
 {
-  int retval = Pixie16ReadSglModPar(paramName, &value, module);
+    int retval = Pixie16ReadSglModPar(paramName, &value, module);
   
-  if (retval != 0) {
-    std::cerr << "CPixieDSPUtilities::ReadModPar() failed to read parameter "
-	      << paramName << " from module " << module << " with retval "
-	      << retval << std::endl;
-  }
+    if (retval != 0) {
+	std::cerr << "CPixieDSPUtilities::ReadModPar() failed to read parameter " << paramName << " from module " << module << " with retval " << retval << std::endl;
+    }
  
-  return retval;
+    return retval;
 }

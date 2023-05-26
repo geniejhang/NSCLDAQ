@@ -3,40 +3,56 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 class GaussP1Fit:
-    """
-    Gaussian fitting function with a linear background: 
-    f(x) = A*exp(-(x-mu)^2 / (2*sd^2)) + a0 + a1*x
+    """Gaussian fitting function with a linear background
 
-    Attributes:
-        A (float): Amplitude.
-        mu (float): Mean.
-        sd (float): Standard deviation.
-        a0 (float): Constant term of linear background.
-        a1 (float): Slope of linear background.
-        form (str): Function formula.
+    Function formula is f(x) = A*exp(-(x-mu)^2 / (2*sd^2)) + a0 + a1*x where
+    A, mu, sd, a0, a1 are free parameters.
 
-    Methods:
-        gauss(): Returns the array of function values evaluated over the 
-                 fitting range.
-        set_initial_parameters(): Set initial parameter values. Guess from 
-                                  the data if none are provided.
-        start(): Implementation of the fitting algorithm.
+    Attributes
+    ----------
+    A : float
+        Amplitude.
+    mu : float
+        Mean.
+    sd : float
+        Standard deviation.
+    a0 : float
+        Constant term of linear background.
+    a1 : float
+        Slope of linear background.
+    form : str
+        Function formula.
+
+    Methods
+    -------
+    feval(x, A, mu, sd, a0, a1)
+        Returns the array of function values evaluated over the fitting range.
+    set_initial_parameters(x, y, params)
+        Set initial parameter values. Guess from the data if none are provided.
+    start(x, y, params, axis, results)
+        Implementation of the fitting algorithm.
     """
     
     def __init__(self, A, mu, sd, a0, a1, form):
-        """
-        Gaussian fit function with linear background class constructor. Sets 
-        initial fit parameters.
+        """Gaussian fit function with linear background class constructor. 
+
+        Sets initial fit parameters.
         
-        Arguments:
-            A (float): Amplitude.
-            mu (float): Mean.
-            sd (float): Standard deviation.
-            a0 (float): Constant term of linear background.
-            a1 (float): Slope of linear background.
-            form (str): Function formula.
-        """
-        
+        Parameters
+        ----------
+        A : float 
+            Amplitude.
+        mu : float 
+            Mean.
+        sd : float 
+            Standard deviation.
+        a0 : float 
+            Constant term of linear background.
+        a1 : float 
+            Slope of linear background.
+        form : str 
+            Function formula.
+        """        
         self.A = A
         self.mu = mu
         self.sd = sd
@@ -45,33 +61,45 @@ class GaussP1Fit:
         self.form = form
 
     def feval(self, x, A, mu, sd, a0, a1):
-        """
-        Evaluate the fit function over x.
+        """Evaluate the fit function over x.
 
-        Arguments:
-            x (ndarray): Array of x values in the fitting range.
-            A (float): Amplitude.
-            mu (float): Mean.
-            sd (float): Standard deviation.
-            a0 (float): Constant term of linear background.
-            a1 (float): Slope of linear background.
+        Parameters
+        ----------
+        x : ndarray 
+            Array of x values in the fitting range.
+        A : float 
+            Amplitude.
+        mu : float 
+            Mean.
+        sd : float 
+            Standard deviation.
+        a0 : float 
+            Constant term of linear background.
+        a1 : float 
+            Slope of linear background.
 
-        Returns:
-            ndarray: Array containing the fit values over the range.
-        """
-        
+        Returns
+        -------
+        ndarray
+            Array containing the fit values over the range.
+        """        
         return A*np.exp(-(x-mu)**2 / (2*sd**2)) + a0 + a1*x
 
     def set_initial_parameters(self, x, y, params):
-        """
-        Set initial parameter values. Guess at the amplitude, mean, and stddev 
-        using the defined fit range if no parameters are provided on the fit 
-        panel.
+        """Set initial parameter values. 
 
-        Arguments:
-            x (list): x data values.
-            y (list): y data values.
-            params (list): Array of fit parameters.
+        Guess at the amplitude, mean, and stddev using the defined fit range
+        if no parameters are provided on the fit panel. Guess offset and slope
+        from the first and last sample of the fitting range.
+
+        Parameters
+        ----------
+        x : list
+            x data values.
+        y : list
+            y data values.
+        params : list
+            Array of fit parameters.
         """
 
         if (params[0] != 0.0):
@@ -102,20 +130,26 @@ class GaussP1Fit:
             self.a1 = dy/dx 
 
     def start(self, x, y, params, axis, results):
-        """
-        Implementation of the fitting algorithm.
+        """Implementation of the fitting algorithm.
 
-        Arguments:
-            x (list): x data values.
-            y (list): y data values.
-            params (list): Array of fit parameters.
-            axis (matplotlib axes): Axes for the plot.
-            results (QTextEdit): Display widget for fit results.
+        Parameters
+        ----------
+        x : list
+            x data values.
+        y : list
+            y data values.
+        params : list
+            Array of fit parameters.
+        axis : matplotlib axes
+            Axes for the plot.
+        results : QTextEdit
+            Display widget for fit results.
         
-        Returns:
-            list of Line2D: List of lines representing the plotted fit data.
+        Returns
+        -------
+        fitln : list of Line2D objects
+            List of lines representing the plotted fit data.
         """
-        
         fitln = None
 
         self.set_initial_parameters(x, y, params)
@@ -125,7 +159,6 @@ class GaussP1Fit:
         perr = np.sqrt(np.diag(pcov)) # Parameter sigma from covariance matrix.
         
         # Fit data and print the results:
-        
         try:
             x_fit = np.linspace(x[0], x[-1], 10000)
             y_fit = self.feval(x_fit, *popt)
@@ -146,27 +179,35 @@ class GaussP1FitBuilder:
     """Builder method for factory creation."""
     
     def __init__(self):
-        """GaussP1FitBuilder class constructor."""
-        
+        """GaussP1FitBuilder class constructor."""        
         self._instance = None
 
     def __call__(self, A=0, mu=0, sd=0, a0=0, a1=0, form=""):
-        """
+        """Create the fit function.
+
         Create an instance of the fit function if it does not exist and 
         return it to the caller. Arguments passed as **kwargs from factory.
 
-        Arguments:
-            A (float): Amplitude.
-            mu (float): Mean.
-            sd (float): Standard deviation.
-            a0 (float): Constant term of linear background.
-            a1 (float): Slope of linear background.
-            form (str): Function formula.
-
-        Returns:
-            GaussP1Fit: Instance of the fit class.
-        """
-       
+        Parameters
+        ----------
+        A : float
+            Amplitude.
+        mu : float
+            Mean.
+        sd : float
+            Standard deviation.
+        a0 : float 
+            Constant term of linear background.
+        a1 : float
+            Slope of linear background.
+        form : str
+            Function formula.
+        
+        Returns
+        -------
+        GaussP1Fit
+            Instance of the fit class.
+        """       
         if not self._instance:
             self._instance = GaussP1Fit(A, mu, sd, a0, a1, form)
             

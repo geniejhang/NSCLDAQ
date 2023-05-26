@@ -3,31 +3,45 @@ from PyQt5.QtWidgets import QToolBar, QPushButton, QSpinBox, QWidget, QSizePolic
 import colors
 
 class DSPToolBar(QToolBar):
-    """
-    Toolbar for configuring module DSP (QToolBar).
+    """Toolbar for configuring module DSP.
 
-    Attributes:
-        b_apply (QPushButton): Button to apply parameters.
-        b_load (QPushButton): Button to load parameters.
-        b_copy_mod (QPushButton): Button to copy module DSP.
-        copy_mod(QSpinBox): Module selection spinbox.
-        b_copy_chan (QPushButton): Button to copy channel DSP.
-        copy_chan(QSpinBox): Channel selection spinbox.
-        b_cancel (QPushButton): Button to close the window.
-        copy_mod_action (QAction): Command interface for copy module button.
-        copy_mod_sb_action (QAction): Command interface for module spinbox.
-        copy_chan_action (QAction): Command interface for copy channel button.
-        copy_chan_sb_action (QAction): Command interface for channel spinbox.
+    Attributes
+    ----------
+    b_apply : QPushButton
+        Button to apply parameters.
+    b_load : QPushButton
+        Button to load parameters.
+    b_copy_mod : QPushButton
+        Button to copy module DSP.
+    copy_mod : QSpinBox
+        Module selection spinbox.
+    b_copy_chan : QPushButton
+        Button to copy channel DSP.
+    copy_chan : QSpinBox
+        Channel selection spinbox.
+    b_cancel : QPushButton
+        Button to close the window.
+    copy_mod_action : QAction
+        Command interface for copy module button.
+    copy_mod_sb_action : QAction
+        Command interface for module spinbox.
+    copy_chan_action : QAction
+        Command interface for copy channel button.
+    copy_chan_sb_action : QAction
+        Command interface for channel spinbox.
 
-    Methods:
-        disable(): Disable all toolbar widgets.
-        enable(): Enable all toolbar widgets.
-        enable_mod_dsp(): Enable widgets for module DSP.
+    Methods
+    -------
+    disable()
+        Disable all toolbar widgets.
+    enable()
+        Enable all toolbar widgets.
+    enable_mod_dsp()
+        Enable widgets for module DSP.
     """
     
     def __init__(self, *args, **kwargs):
-        """DSPToolBar class constructor."""
-        
+        """DSPToolBar class constructor."""        
         super().__init__(*args, **kwargs)
 
         self.setMovable(False)
@@ -37,9 +51,9 @@ class DSPToolBar(QToolBar):
         self.b_apply = QPushButton("Apply")
         self.b_load = QPushButton("Load")
         self.b_copy_mod = QPushButton("Copy mod.")
-        self.copy_mod = QSpinBox() # Range set on boot.
+        self.copy_mod = QSpinBox()  # Range set on boot.
         self.b_copy_chan = QPushButton("Copy chan.")
-        self.copy_chan = QSpinBox() # Range set on boot.
+        self.copy_chan = QSpinBox()  # Range set on boot.
         self.b_cancel = QPushButton("Cancel")
 
         self.b_apply .setStyleSheet(colors.CYAN)
@@ -67,26 +81,22 @@ class DSPToolBar(QToolBar):
         self.addWidget(self.b_cancel)
 
     def disable(self):
-        """Disable every child widget in the toolbar."""
-       
+        """Disable every child widget in the toolbar."""       
         for c in self.children():
             if(c.isWidgetType()):
                 c.setEnabled(False)
                 c.repaint()            
                 
     def enable(self):
-        """Enable every child widget in the toolbar."""
-        
+        """Enable every child widget in the toolbar."""        
         for c in self.children():
             if(c.isWidgetType()):
                 c.setEnabled(True)
                 c.repaint()
 
     def enable_mod_dsp(self):
-        """Enable module-DSP-specific actions."""
-        
-        self.disable()
-        
+        """Enable module-DSP-specific actions."""        
+        self.disable()        
         self.copy_mod_action.setVisible(False)
         self.copy_mod_sb_action.setVisible(False)
         self.copy_chan_action.setVisible(False)
@@ -102,11 +112,11 @@ class DSPToolBarBuilder:
         """DSPToolbarBuilder class constructor."""
         
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the toolbar and return it to the caller.
+        """Create an instance of the toolbar and return it to the caller.
 
-        Returns:
-            DSPToolBar: Instance of the toolbar class.
+        Returns
+        -------
+        DSPToolBar
+            Instance of the toolbar class.
         """
-
         return DSPToolBar(*args, **kwargs)

@@ -23,8 +23,7 @@ class PlotToolBar(NavigationToolbar2QT):
     """
     
     def __init__(self, *args, **kwargs):
-        """PlotToolBar class constructor."""
-        
+        """PlotToolBar class constructor."""        
         super().__init__(*args, **kwargs)
         
         self.logscale = QCheckBox("Log y-axis", self)
@@ -62,11 +61,11 @@ class PlotToolBarBuilder:
         """PlotToolbarBuilder class constructor."""
         
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the toolbar and return it to the caller.
+        """Create an instance of the toolbar and return it to the caller.
 
-        Returns:
-            PlotToolBar: Instance of the toolbar class.
-        """
-        
+        Returns
+        -------
+        PlotToolBar
+            Instance of the toolbar class.
+        """        
         return PlotToolBar(*args, **kwargs)

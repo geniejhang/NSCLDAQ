@@ -15,45 +15,58 @@ from fit_panel import FitPanel
 import xia_constants as xia
 from run_type import RunType
 
-DEBUG = False
-
 class Plot(QWidget):
-    """
-    Plotting widget for the GUI utilizing the matplotlib Qt5 backend.
+    """Plotting widget for the GUI utilizing the matplotlib Qt5 backend.
 
-    Attributes:
-        figure(pyplot figure): matplotlib pyplot figure instance.
-        canvas(FigureCanvasQTAgg): Canvas the figure renders onto imported 
-                                       from Qt5 backend.
-        fit_panel(QWidget): Trace and histogram fitting GUI widget.
-        fit_factory (FitFactory): Factory method for fitting plot data.
-        toolbar (NavigationToolbar2QT): Figure navigation toolbar imported 
-                                            from Qt5 backend.
+    Attributes
+    ----------
+    figure : pyplot figure 
+        matplotlib pyplot figure instance.
+    canvas : FigureCanvasQTAgg 
+        Canvas the figure renders onto imported from Qt5 backend.
+    fit_panel : QWidget 
+        Trace and histogram fitting GUI widget.
+    fit_factory : FitFactory 
+        Factory method for fitting plot data.
+    toolbar : NavigationToolbar2QT
+        Figure navigation toolbar imported from Qt5 backend.
+    debug : bool
+        True to enable debugging output.
 
-    Methods:
-        draw_trace_data(): Draw single- or multuple-channel ADC trace data.
-        draw_analyzed_trace(): Draw a single-channel ADC trace and its filter 
-                               outputs. 
-        draw_run_data(): Draw single- or multuple-channel energy histogram 
-                         or baseline data.
-        on_begin_run(): Draw a blank histogram-style canvas when starting
-                        a histogram run.
-        draw_test_data(): Draw a test figure with a random number of subplots.
-        test_draw(): Draw random numbers on subplot idx of a test plot.
+    Methods
+    -------
+    draw_trace_data(data, nrows=1, ncols=1, idx=1)
+        Draw single- or multuple-channel ADC trace data.
+    draw_analyzed_trace(trace, fast_filter, cfd, slow_filter)
+        Draw a single-channel ADC trace and its filter outputs. 
+    draw_run_data(data, run_type, nrows=1, ncols=1, idx=1)
+        Draw single- or multuple-channel energy histogram or baseline data.
+    on_begin_run(run_type)
+        Draw a blank histogram-style canvas when starting a histogram run.
+    draw_test_data(idx)
+        Draw a test figure with a random number of subplots.
+    test_draw() 
+        Draw random numbers on subplot idx of a test plot.
     """
     
-    def __init__(self, toolbar_factory, fit_factory, *args, **kwargs):
-        """
-        Plot class constructor.
+    def __init__(self, toolbar_factory, fit_factory, debug=False,
+                 *args, **kwargs):
+        """Plot class constructor.
 
-        Arguments:
-            toolbar_factory (ToolBarFactory): Factory for implemented toolbars.
-            fit_factory (FitFactory): Factory method for fitting plot data.
+        Arguments
+        ---------
+        toolbar_factory : ToolBarFactory
+            Factory for implemented toolbars.
+        fit_factory : FitFactory 
+            Factory method for fitting plot data.
+        debug : bool, optional, default=False
+            True to enable debugging output.
         """
-        
         super().__init__(*args, **kwargs)
+
+        self.debug = debug
         
-        #
+        ##
         # Main layout
         #
         
@@ -87,7 +100,7 @@ class Plot(QWidget):
         layout.addWidget(self.canvas)
         self.setLayout(layout)
 
-        #
+        ##
         # Signal connections
         #
         
@@ -102,16 +115,19 @@ class Plot(QWidget):
         )
         
     def draw_trace_data(self, data, nrows=1, ncols=1, idx=1):
-        """
-        Draws an ADC trace on the plot canvas.
+        """Draws an ADC trace on the plot canvas.
 
-        Arguments:
-            data (array): Array of trace data values.
-            nrows (int):  Number of subplot rows (optional, default=1).
-            ncols (int):  Number of subplot columns (optional, default=1).
-            idx (int):  Subplot index in [1, nrows*ncols] (optional).
-        """
-        
+        Parameters
+        ----------
+        data : array
+            Array of trace data values.
+        nrows : int  
+            Number of subplot rows (optional, default=1).
+        ncols : int  
+            Number of subplot columns (optional, default=1).
+        idx : int 
+            Subplot index in [1, nrows*ncols] (optional).
+        """        
         ax = self.figure.add_subplot(nrows, ncols, idx)            
         ax.plot(data, "-")            
         ax.set_xlabel("Sample number (60 ns/sample)")
@@ -120,7 +136,7 @@ class Plot(QWidget):
         self._set_yscale(ax)
 
         if (nrows*ncols) > 1:
-            ax.set_title("Channel {}".format(idx-1))#  Channels are 0-indexed.
+            ax.set_title("Channel {}".format(idx-1))  # Channels are 0-indexed.
             ax.tick_params(axis='x', labelsize=6)
             ax.tick_params(axis='y', labelsize=6)
             ax.xaxis.label.set_size(6)
@@ -129,16 +145,19 @@ class Plot(QWidget):
         self.canvas.draw_idle()
         
     def draw_analyzed_trace(self, trace, fast_filter, cfd, slow_filter):
-        """
-        Draw a trace and its filter outputs.
+        """Draw a trace and its filter outputs.
 
-        Arugments:
-            trace (array): Single-channel ADC trace data.
-            fast_filter (list): Computed fast filter output.
-            cfd (list): computed CFD output.
-            slow_filter (list): Computed slow filter output.
-        """
-        
+        Parameters
+        ----------
+        trace : array
+            Single-channel ADC trace data.
+        fast_filter : list
+            Computed fast filter output.
+        cfd : list
+            Computed CFD output.
+        slow_filter : list
+            Computed slow filter output.
+        """        
         ax1 = self.figure.add_subplot(3, 1, 1)
         ax1.set_title("Trace")
         ax1.plot(trace, "-")
@@ -153,8 +172,7 @@ class Plot(QWidget):
         ax3.set_title("Energy filter")
         ax3.plot(slow_filter, "-")
 
-        # Get y range from data:
-        
+        # Get y range from data:        
         margin = 0.1
         for ax in self.figure.get_axes():
             ymin = sys.float_info.max
@@ -175,17 +193,21 @@ class Plot(QWidget):
         self.canvas.draw_idle()
         
     def draw_run_data(self, data, run_type, nrows=1, ncols=1, idx=1):
-        """
-        Draws an energy histogram on the plot canvas.
+        """Draws a data histogram on the plot canvas.
 
-        Arguments:
-            data (array): Single-channel run data.
-            run_type (Enum member): Type of run data to draw.
-            nrows (int): Number of subplot rows (optional, default=1).
-            ncols (int): Number of subplot columns (optional, default=1).
-            idx (int): Subplot index in [1, nrows*ncols] (optional).
-        """
-        
+        Parameters
+        ----------
+        data : array 
+            Single-channel run data.
+        run_type : Enum member 
+            Type of run data to draw.
+        nrows : int, optional, default=1
+            Number of subplot rows.
+        ncols : int, optional, default=1
+            Number of subplot columns.
+        idx : int, optional, default=1
+            Subplot index in [1, nrows*ncols].
+        """        
         ax = self.figure.add_subplot(nrows, ncols, idx)
         ax.plot(data, "-")
         
@@ -199,7 +221,7 @@ class Plot(QWidget):
         self._set_yscale(ax)
         
         if (nrows*ncols) > 1:
-            chan = idx - 1 # Channels are zero-indexed.
+            chan = idx - 1  # Channels are zero-indexed.
             ax.set_title("Channel {}".format(chan))
             ax.tick_params(axis='x', labelsize=6)
             ax.tick_params(axis='y', labelsize=6)
@@ -209,11 +231,12 @@ class Plot(QWidget):
         self.canvas.draw_idle()
                         
     def on_begin_run(self, run_type):
-        """
-        Draws a blank histogram canvas when beginning a new run.
+        """Draws a blank histogram canvas when beginning a new run.
         
-        Arguments:
-            run_type (Enum member): Type of run data to draw.
+        Parameters
+        ----------
+        run_type : Enum member
+            Type of run data to draw.
         """
         self.figure.clear()
 
@@ -235,18 +258,21 @@ class Plot(QWidget):
             self.canvas.draw_idle()
 
     def get_subplot_data(self, idx):
-        """
-        Get y data from a single subplot by axis index. Returns an empty list 
-        if the subplot does not have any associated data.
+        """Get y data from a single subplot by axis index. 
 
-        Arguments:
-            idx (int): Axes index number (note this is 0-indexed while the 
-                       subplots are 1-indexed!)
+        Returns an empty list if the subplot does not have any associated data.
 
-        Returns:
-            list: Data from the selected subplot.
-        """
-        
+        Parameters
+        ----------
+        idx : int 
+            Axes index number (note this is 0-indexed while the subplots 
+            are 1-indexed!).
+
+        Returns
+        -------
+        list
+            Data from the selected subplot.
+        """        
         axes = self.figure.get_axes()
         if axes[idx].get_lines():
             return np.ndarray.tolist(axes[idx].lines[0].get_ydata())
@@ -254,11 +280,11 @@ class Plot(QWidget):
             return []        
 
     def draw_test_data(self):
-        """
+        """Draw test data. 
+
         Draw data points in (-1, 1) on a test canvas with a random number of 
         rows and columns with rows, columns in [1, 4]
-        """
-        
+        """        
         self.figure.clear()
         
         rng = np.random.default_rng()
@@ -274,19 +300,16 @@ class Plot(QWidget):
                 
         self.canvas.draw_idle()
         
-    #
+    ##
     # Private methods
     #
     
     def _set_yscale(self, ax=None):
-        """
-        Configurs the axes display on the canvas.
+        """Configurs the axes display on the canvas.
 
         If the log scale checkbox is selected, immidiately redraw all subplots.
-        """
-        
-        # Button clicked, redraw all otherwise just the current one:
-        
+        """        
+        # Button clicked, redraw all otherwise just the current one:        
         if self.sender():
             for ax in self.figure.get_axes():
                 self._set_subplot_yscale(ax)
@@ -295,41 +318,35 @@ class Plot(QWidget):
             self._set_subplot_yscale(ax)
                     
     def _set_subplot_yscale(self, ax):
-        """
-        Sets the y-axis display for a single figure (linear or log).
+        """Sets the y-axis display for a single figure (linear or log).
     
         The y-axis is autoscaled in log for trace data because all values are 
         greater than zero. For histogram data the axis scaling in log is 
         handled automatically, but in linear the y-axis is set to start at zero.
 
-        Arguments:
-            ax (matplotlib Axes): matplotlib class containing the figure 
-                                  elements.
-        """
-        
+        Parameters
+        ----------
+        ax : matplotlib Axes
+            matplotlib class containing the figure elements.
+        """        
         # Check number of data points to determine if this is a histogram:
-        
         is_hist = False
         ymax = sys.float_info.min
         for line in ax.get_lines():
             ydata = line.get_ydata()
             lmax = np.amax(ydata)
             if lmax > ymax:
-                ymax = lmax
-                
+                ymax = lmax               
             # This is a kludge, since we assume all histograms are max length.
             # Stop looking if we've found a histogram:
-            
             if len(ydata) == xia.MAX_HISTOGRAM_LENGTH:
                 is_hist = True
                 break
 
         ax.autoscale(axis="y")
-        if self.toolbar.logscale.isChecked():
-            
+        if self.toolbar.logscale.isChecked():           
             # Also a potential kludge: symmetric log handles possible zeroes
-            # nicely in the case of empty histograms or inverted traces:
-            
+            # nicely in the case of empty histograms or inverted traces.
             if ymax > 0:
                 ax.set_yscale("log")
             else:
@@ -345,12 +362,10 @@ class Plot(QWidget):
 
     def _show_fit_panel(self):
         """Show the fit panel GUI in a popup window."""
-
         self.fit_panel.show()
 
     def _fit(self):
-        """Perform the fit based on the current fit panel settings."""
-        
+        """Perform the fit based on the current fit panel settings."""        
         if len(self.figure.get_axes()) == 1:
             ydata = self.get_subplot_data(0)
             if len(ydata) > 0:
@@ -369,21 +384,19 @@ class Plot(QWidget):
                 ]
 
                 # Get data in fitting range [xmin, xmax):
-
-                x = [] # Just the plain x-axis value.
+                x = []  # Just the plain x-axis value.
                 y = []
                 for i in range(len(ydata)):
                     if i >= xmin and i < xmax:
                         x.append(i)
                         y.append(ydata[i])
                         
-                if DEBUG:
+                if self.debug:
                     print("Function config params:", config)
                     print("Fit limits: {}, {}".format(xmin, xmax))
                     print("Initial guess params:", params)
                 
                 fitln = fit.start(x, y, params, ax, self.fit_panel.results)
-
                 self.canvas.draw_idle()
             else:
                 QMessageBox.about(self, "Warning", "Cannot perform the fit! There is no data on the displayed plot. Please acquire single-channel data and attempt the fit again.")
@@ -391,18 +404,21 @@ class Plot(QWidget):
             QMessageBox.about(self, "Warning", "Cannot perform the fit! Currently displaying data from multiple channels or an analyzed trace. Please acquire single-channel data and attempt the fit again.")
             
     def _axis_limits(self, ax):
-        """
-        Get the fit limits based on the selected range. If no range is
-        provided the currently displayed axes limits are assumed to be the 
-        fit range.
+        """Get the fit limits based on the selected range. 
 
-        Arguments:
-            ax (PyPlot axes): Currently displayed single channel data plot axis.
+        If no range is provided the currently displayed axes limits are assumed
+        to be the fit range.
+
+        Parameters
+        ----------
+        ax : PyPlot axes
+            Currently displayed single channel data plot axis.
         
-        Returns:
-            int, int: Left and right axis limits.
-        """
-        
+        Returns
+        -------
+        int, int
+            Left and right axis limits.
+        """        
         left, right = ax.get_xlim()
         if self.fit_panel.range_min.text():
             left = int(self.fit_panel.range_min.text())
@@ -417,32 +433,22 @@ class Plot(QWidget):
 
     def _clear_fit(self):
         """Clear previous fits and reset the fit panel GUI."""
-
         if len(self.figure.get_axes()) == 1:
-
-            # Delete all plots except for the data:
-            
+            # Delete all plots except for the data:            
             ax = plt.gca()
             if len(ax.lines) > 1:
                 for i in range(len(ax.lines) - 1):
                     ax.lines.pop(1)
                 self.canvas.draw_idle()
-
-            # Reset fit panel display:
-                    
+            # Reset fit panel display:                    
             self.fit_panel.reset()
 
     def _update_formula(self):
-        """
-        Update the fit function formula when a new fitting function is 
-        selected from the drop down menu.
-        """
-
+        """Update the fit function formula when a new function is selected."""
         fcn = self.fit_panel.function_list.currentText()
         config = self.fit_factory.configs.get(fcn)
         self.fit_panel.function_formula.setText(config["form"])
 
     def _close_fit_panel(self):
         """Close the fit panel window."""
-
         self.fit_panel.close()

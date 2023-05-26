@@ -17,11 +17,21 @@ class Trace(ChanDSPWidget):
     """Trace DSP tab (ChanDSPWidget)."""
     
     def __init__(self, *args, **kwargs):
-        """
-        Trace class constructor.  
+        """Trace class constructor.  
 
-        Keyword arguments:
-            module (int): Module number from factory create method.
+        Keyword arguments
+        -----------------
+        module : int
+            Module number from factory create method.
+
+        Methods
+        -------
+        configure(mgr, mod)
+            Configure the Trace class. Overridden from base class.
+        update(mgr, mod)
+            Update DSP from GUI. Overridden from base class.
+        display_dsp(mgr, mod)
+            Display DSP from the dataframe. Overridden from base class.
         """
         
         # XIA API parameter names:
@@ -59,26 +69,28 @@ class Trace(ChanDSPWidget):
         layout.addWidget(widget)
         self.setLayout(layout)
 
-    #
-    # Override class methods
+    ##
+    # Overriden class methods
     #
 
     def configure(self, mgr, mod):
         """
         Overridden configure options.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
+        Parameters
+        ----------
+        mgr : DSPManager 
+            Manager for internal DSP and interface for XIA API read/write 
+            operations.
+        mod : int
+            Module number.
 
-        Raises:
-            ValueError: If trace enable bits are not consistent for all 
-                        channels on the module.
+        Raises
+        ------
+        ValueError: 
+            If trace enable bits are not consistent for all channels on 
+            the module.
         """
-
-        # Check trace enable bit value consistency for all channels:
-
         enb_list = []
         for i in range(self.nchannels):
             csra = int2ba(
@@ -91,7 +103,7 @@ class Trace(ChanDSPWidget):
             if not all(enb == enb_list[0] for enb in enb_list):
                 raise ValueError("Inconsistent trace enable CSRA bits read on Mod. {}: read {}, expected {}".format(mod, enb, enb_list[0]))
         except ValueError as e:
-            print("{}:{}: Caught exception -- {}. Setting all trace enable CSRA bits to the trace enable CSRA bit value read from Ch. 0. Click 'Apply' to update settings. Check your settings file, it may be corrupt.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            print("{}:{}: Caught exception -- {}. Setting all trace enable CSRA bits to the trace enable CSRA bit value read from Ch. 0. Click 'Apply' on the Mod. {} CSRA tab to update settings. Check your settings file, it may be corrupt.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e, mod))
             for i in range(self.nchannels):
                 csra = int2ba(
                     int(mgr.get_chan_par(mod, i, "CHANNEL_CSRA")), 32, "little"
@@ -102,50 +114,45 @@ class Trace(ChanDSPWidget):
             super().configure(mgr, mod)
     
     def update_dsp(self, mgr, mod):
-        """
-        Overridden update operations.
+        """Overridden update operations.
 
         Update DSP storage CSRA from based on the trace enable setting from 
         the GUI.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
-        """
-        
-        enb = self.cb_enabled.isChecked()
-        
-        for i in range(self.nchannels):
-            
-            # Read the CSRA and set the bit based on the checkbox:
-            
+        Parameters
+        ----------
+        mgr : DSPManager 
+            Manager for internal DSP and interface for XIA API read/write 
+            operations.
+        mod : int
+            Module number.
+        """        
+        enb = self.cb_enabled.isChecked()        
+        for i in range(self.nchannels):            
             csra = int2ba(
                 int(mgr.get_chan_par(mod, i, "CHANNEL_CSRA")), 32, "little"
             )
-            csra[xia.CSRA_TRACE_ENABLE] = enb
-            
-            # Convert back from bit array to value and write:
-            
+            csra[xia.CSRA_TRACE_ENABLE] = enb            
             mgr.set_chan_par(mod, i, "CHANNEL_CSRA", float(ba2int(csra)))
             
         super().update_dsp(mgr, mod)
             
     def display_dsp(self, mgr, mod):
-        """
-        Overridden display operations.
+        """Overridden display operations.
 
         Display trace enable bit from CSRA. Consistency of trace enable bits 
         across channels is checked on configure and individual channels cannot 
         be manipulated on the GUI, so we assume here that CSRA trace enable bit
         on channel 0 is shared by all other channels.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
-        """
-        
+        Parameters
+        ----------
+        mgr : DSPManager 
+            Manager for internal DSP and interface for XIA API read/write 
+            operations.
+        mod : int
+            Module number.
+        """        
         csra = int2ba (
             int(mgr.get_chan_par(mod, 0, "CHANNEL_CSRA")), 32, "little"
         )
@@ -160,11 +167,11 @@ class TraceBuilder:
         """TraceBuilder class constructor."""
         
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the widget and return it to the caller.
+        """Create an instance of the widget and return it to the caller.
 
-        Returns:
-            Trace: Instance of the DSP class widget.
-        """        
-            
+        Returns
+        -------
+        Trace
+            Instance of the DSP class widget.
+        """            
         return Trace(*args, **kwargs)

@@ -11,8 +11,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QPushButton, QBu
 import colors
 
 class CSRB(QWidget):
-    """
-    Module CSRB grid widget (QWidget).
+    """Module CSRB grid widget.
     
     This class interacts only with the internal DSP settings and its own 
     display. param_names is a single parameter, MODULE_CSRB, param_labels 
@@ -20,46 +19,58 @@ class CSRB(QWidget):
     in the associated tooltips. See Pixie-16 User Manual Sec. 3.3.7, Table 3-1
     for more information.
 
-    Attributes:
-        param_names (list): List of DSP parameter names.
-        param_labels (dict): Dictionary of DSP parameter GUI column
-                             titles and tooltips.
-        disabled (list): Disabled settings on the CSRB GUI .
-        grid (QWidget): Parent widget for the CSRB GUI display.
-        param_grid (QGridLayout): Gridded layout for the CSRB GUI.
-        nmodules (int): Number of installed modules in the crate.
-        rb_group (QButtonGroup): Radio button group for common crate 
-                                 configurations.
-        rb_dict (dict): Dictionary of CSRB settings for common crate 
-                        configurations.
-        b_show_csrb (QPushButton): Button to display the CSRB GUI (grid of 
-                                   CSRB bits).
+    Attributes
+    ----------
+    param_names : list
+        List of DSP parameter names.
+    param_labels : dict
+        Dictionary of DSP parameter GUI column titles and tooltips.
+    disabled : list
+        Disabled settings on the CSRB GUI .
+    grid : QWidget
+        Parent widget for the CSRB GUI display.
+    param_grid : QGridLayout
+        Gridded layout for the CSRB GUI.
+    nmodules : int
+        Number of installed modules in the crate.
+    rb_group : QButtonGroup
+        Radio button group for common crate configurations.
+    rb_dict : dict
+        Dictionary of CSRB settings for common crate configurations.
+    b_show_csrb : QPushButton
+        Button to display the CSRB GUI (grid of CSRB bits).
 
     Methods:
-        configure(): Initialize GUI.
-        update_dsp(): Update DSP from GUI.
-        display_dsp(): Display current DSP in GUI.
-        set_param_grid(): Set CSRB values for known crate configurations.
+    --------
+    configure(mgr) 
+        Initialize GUI.
+    update_dsp(mgr)
+        Update DSP from GUI.
+    display_dsp(mgr, set_state=False)
+        Display current DSP in GUI.
+    set_param_grid(mgr) 
+        Set CSRB values for known crate configurations.
     """
     
     def __init__(self, nmodules=None, *args, **kwargs):
-        """
-        CSRB class constructor.
+        """CSRB class constructor.
         
         Initialize CSRB widget and set labels. Module DSP is displayed on an 
         nchannel x nDSP grid of QCheckBox widgets. Radio buttons allow for 
         quick setup for common crate configurations. Note that the actual DSP 
         parameters are 1-indexed while the grid is 0-indexed. 
         
-        Arguments:
-            nmodules (int): Number of installed modules in the system.
+        Parameters
+        ----------
+        nmodules : int
+            Number of installed modules in the system.
         """
         super().__init__(*args, **kwargs)
         
         self.param_names = ["MODULE_CSRB"]
         self.nmodules = nmodules
 
-        #
+        ##
         # Display widget
         #
         
@@ -99,7 +110,7 @@ class CSRB(QWidget):
         layout.addWidget(self.b_show_csrb)            
         self.setLayout(layout)
 
-        #
+        ##
         # CSRB settings grid
         #
         
@@ -140,21 +151,21 @@ class CSRB(QWidget):
             w.setToolTip(pdict["tooltip"])
             self.param_grid.addWidget(w, 0, bit+1, Qt.AlignCenter)
             
-        #
+        ##
         # Signal connections
         #
         
         self.b_show_csrb.clicked.connect(self._show_csrb)
 
     def configure(self, mgr):
-        """                
-        Initialize and display widget settings from the DSP dataframe.
+        """Initialize and display widget settings from the DSP dataframe.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-        """
-        
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API read/write 
+            operations.
+        """        
         for i in range(self.nmodules): 
             self.param_grid.addWidget(QLabel("Mod. %i" %i), i+1, 0)
             for bit in self.param_labels:
@@ -164,14 +175,14 @@ class CSRB(QWidget):
         self.display_dsp(mgr, set_state=True)
 
     def update_dsp(self, mgr):
-        """
-        Update dataframe from GUI values.
+        """Update dataframe from GUI values.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-        """
-        
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API read/write 
+            operations.
+        """        
         for i in range(self.nmodules):
             csrb = zeros(32, "little")
             for bit in self.param_labels:
@@ -179,44 +190,43 @@ class CSRB(QWidget):
             mgr.set_mod_par(i, self.param_names[0], ba2int(csrb))
     
     def display_dsp(self, mgr, set_state=False):
-        """
-        Update GUI with dataframe values
+        """Update GUI with dataframe values
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            set_state(bool): Set the CSRB button state based on the current 
-                             confiugration settings (optional, default=False).
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API read/write 
+            operations.
+        set_state : bool, default=False
+            Set the CSRB button state based on the current confiugration 
+            settings.
         """
-
         if set_state:
             self.rbgroup.button(self._get_crate_config(mgr)).setChecked(True)
             
         for i in range(self.nmodules):
             val = mgr.get_mod_par(i, self.param_names[0])
             csrb = int2ba(int(val), 32, "little")
-
             for bit, _ in zip(self.param_labels, csrb):
                 self.param_grid.itemAtPosition(i+1, bit+1).widget().setChecked(csrb[bit])
 
         self._disable_settings()
 
     def set_param_grid(self, mgr):
-        """
-        Set the CSRB parameter grid based on the crate configuration.
+        """Set the CSRB parameter grid based on the crate configuration.
 
         If the crate configuration is one of the known settings, configure 
         according to the rb_dict settings for module 0 and other installed 
         modules. For a custom config show whatever is currently in the
         dataframe.
         
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API read/write 
+            operations.
         """
-
-        config = self.rbgroup.checkedId()
-        
+        config = self.rbgroup.checkedId()        
         if self.rb_dict[config]["mod0"]:
             mod0 = self.rb_dict[config]["mod0"]
             csrb = int2ba(self.rb_dict[config]["mod0"], 32, "little")
@@ -230,48 +240,44 @@ class CSRB(QWidget):
         else:
             self.display_dsp(mgr)
             
-    #
+    ##
     # Private methods
     #
     
     def _show_csrb(self):
-        """Display the CSRB GUI."""
-        
+        """Display the CSRB GUI."""        
         self.grid.show()
             
     def _get_crate_config(self, mgr):
-        """
-        Get the crate configuration from the internal DSP settings.
+        """Get the crate configuration from the internal DSP settings.
 
-        Arugments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API read/write 
+            operations.
 
-        Returns:
-            int: Value corresponding to the crate configuration stored in 
-                 the CSRB settings.
-        """
-        
+        Returns
+        -------
+        config: int
+            Value corresponding to the crate configuration stored in the 
+            CSRB settings.
+        """        
         config = -1
-        custom = -1        
+        custom = -1
         
-        # Assume the configuration is custom until proven otherwise:
-  
+        # Assume the configuration is custom until proven otherwise:  
         for idx, info in self.rb_dict.items():
             if info["name"] == "Custom":
                 config = idx
                 custom = idx
 
-        for idx, info in self.rb_dict.items():
-            
-            # Check first module CSRB value:
-            
+        for idx, info in self.rb_dict.items():            
+            # Check first module CSRB value:            
             mod0 = mgr.get_mod_par(0, self.param_names[0])
             if mod0 == info["mod0"]:
-                config = idx
-                
-                # Check all other modules:
-                
+                config = idx                
+                # Check all other modules:                
                 for i in range(1, self.nmodules):
                     modx = mgr.get_mod_par(i, self.param_names[0])
                     if modx != info["modx"]:
@@ -281,11 +287,9 @@ class CSRB(QWidget):
         return config
             
     def _disable_settings(self):
-        """Mask CSRB settings in non-custom crate configurations."""
-        
+        """Mask CSRB settings in non-custom crate configurations."""        
         # Mask everything if the crate configuration is not custom to prevent
         # users from incorrectly configuring CSRB settings for common setups:
-
         if self.rbgroup.checkedButton().text() == "Custom":
             for i in range(self.nmodules):
                 for bit, pdict in self.param_labels.items():
@@ -305,13 +309,13 @@ class CSRBBuilder:
         """CSRBBuilder class constructor."""
 
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the widget and return it to the caller.
+        """Create an instance of the widget and return it to the caller.
 
-        Returns:
-            CSRB: Instance of the DSP class widget.
-        """      
-            
+        Returns
+        -------
+        CSRB 
+            Instance of the DSP class widget.
+        """            
         return CSRB(*args, **kwargs)
 
                         

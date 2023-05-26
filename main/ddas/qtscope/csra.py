@@ -11,8 +11,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QVBoxLayout, QCheckBox, QFrame
 
 class CSRA(QWidget):
-    """
-    Channel CSRA grid widget (QWidget).
+    """Channel CSRA grid widget.
     
     This class interacts only with the internal DSP settings and its own 
     display. param_names is a single parameter, CHANNEL_CSRA, param_labels 
@@ -20,34 +19,46 @@ class CSRA(QWidget):
     in the associated tooltips. See Pixie-16 User Manual sec. 3.3.7, Table 3-2
     for more information.
 
-    Attributes:
-        param_names (list): List of DSP parameter names.
-        param_labels (dict): Dictionary of DSP parameter GUI column
-                             titles and tooltips.
-        nchannels (int): Number of channels per module.
-        has_extra_params (bool): Extra parameter flag.
-        param_grid (QGridLayout): Grid of QWidgets to display DSP parameters.
-
-    Methods:
-        configure(): Initialize GUI.
-        update_dsp(): Update DSP from GUI.
-        display_dsp(): Display current DSP in GUI.
-        copy_mod_dsp(): display copy_dsp in GUI.
-        copy_chan_dsp(): Copy DSP from channel idx in GUI.
+    Attributes
+    ----------
+    param_names : list 
+        List of DSP parameter names.
+    param_labels : dict 
+        Dictionary of DSP parameter GUI column titles and tooltips.
+    nchannels : int 
+        Number of channels per module.
+    has_extra_params : bool 
+        Extra parameter flag.
+    param_grid : QGridLayout 
+        Grid of QWidgets to display DSP parameters.
+    
+    Methods
+    -------
+    configure(mgr, mod)
+        Initialize GUI.
+    update_dsp(mgr, mod)
+        Update DSP from GUI.
+    display_dsp(mgr, mod)
+        Display current DSP in GUI.
+    copy_mod_dsp(mgr, mod)
+        Copy another module's DSP to this module's GUI.
+    copy_chan_dsp(idx)
+        Copy DSP from channel idx in GUI.
     """
     
     def __init__(self, module=None, nchannels=16, *args, **kwargs):
-        """
-        CSRA class constructor.
+        """CSRA class constructor.
         
         Initialize CSRA widget and set labels. Channel DSP is displayed on an 
         nchannel x nDSP grid of QCheckBox widgets. Note that the actual DSP 
         parameters are 1-indexed while the grid is 0-indexed. 
         
-        Arguments:
-            module (int): Module number from factory create method.
-            nchannels (int): Number of channels per module (optional, 
-                             default=16).
+        Parameters
+        ----------
+        module : int
+            Module number from factory create method.
+        nchannels : int, default=16
+            Number of channels per module.
         """
         super().__init__(*args, **kwargs)
         
@@ -113,8 +124,8 @@ class CSRA(QWidget):
 
         # Horizontal line to separate individual channels from the bit toggle:
         
-        row = self.nchannels + 2 # +1 each for title and for this.
-        span = len(self.param_labels) + 1 # +1 for Ch. column.
+        row = self.nchannels + 2  # +1 each for title and for this.
+        span = len(self.param_labels) + 1  # +1 for Ch. column.
         hline = QFrame()
         hline.setFrameShape(QFrame.HLine)
         self.param_grid.addWidget(hline, row, 0, 1, span)
@@ -138,27 +149,29 @@ class CSRA(QWidget):
         self.setLayout(layout)
 
     def configure(self, mgr, mod):
-        """        
-        Initialize and display widget settings from the DSP dataframe.
+        """Initialize and display widget settings from the DSP dataframe.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API 
+            read/write operations.
+        mod : int 
+            Module number.
         """
-
         self.display_dsp(mgr, mod)
 
     def update_dsp(self, mgr, mod):
-        """
-        Update dataframe from GUI values.
+        """Update dataframe from GUI values.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
-        """
-        
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API 
+            read/write operations.
+        mod : int 
+            Module number. 
+        """        
         for i in range(self.nchannels):
             csra = zeros(32, "little")
             for bit in self.param_labels:
@@ -166,15 +179,16 @@ class CSRA(QWidget):
             mgr.set_chan_par(mod, i, "CHANNEL_CSRA", float(ba2int(csra)))
             
     def display_dsp(self, mgr, mod):
-        """
-        Update GUI with dataframe values.
+        """Update GUI with dataframe values.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
-        """
-        
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API 
+            read/write operations.
+        mod : int 
+            Module number.
+        """        
         for i in range(self.nchannels):
             csra = int2ba(
                 int(mgr.get_chan_par(mod, i, "CHANNEL_CSRA")), 32, "little"
@@ -184,37 +198,39 @@ class CSRA(QWidget):
                 self.param_grid.itemAtPosition(i+1, bit+1).widget().setChecked(val)
                 
     def copy_chan_dsp(self, idx):
-        """
+        """Copy channel DSP parameters.
+
         Copy channel parameters from a single channel (row) to all other 
         channels on the module. Do not modify the underlying dataframe.
 
-        Arguments:
-            idx (int): Channel (row) index to copy parameters from.
-        """
-        
+        Parameters
+        ----------
+        idx : int
+            Channel (row) index to copy parameters from.
+        """        
         copy_params = []       
         for col, _ in enumerate(self.param_labels, 1):
             copy_params.append(
                 self.param_grid.itemAtPosition(idx+1, col).widget().isChecked()
             )
-
         for i in range(self.nchannels):
             for col, p in enumerate(copy_params, 1):
                 self.param_grid.itemAtPosition(i+1, col).widget().setChecked(p)
 
-    #
+    ##
     # Private methods
     #
     
     def _select_all(self, bit, state):
-        """
-        Toggle the values of a single bit for all channels on a module.
+        """Toggle the values of a single bit for all channels on a module.
 
-        Arguments:
-            bit (int): CSRA parameter bit index.
-            state (int): The bit state to set for all channels.
+        Parameters
+        ----------
+        bit : int
+            CSRA parameter bit index.
+        state : int
+            The bit state to set for all channels.
         """
-
         for i in range(self.nchannels):
             self.param_grid.itemAtPosition(i+1, bit+1).widget().setChecked(state)
          
@@ -225,11 +241,11 @@ class CSRABuilder:
         """CSRABuilder class constructor."""
         
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the widget and return it to the caller.
+        """Create an instance of the widget and return it to the caller.
 
-        Returns:
-            CSRA: Instance of the DSP class widget.
-        """        
-            
+        Returns
+        -------
+        CSRA
+            Instance of the DSP class widget.
+        """            
         return CSRA(*args, **kwargs)

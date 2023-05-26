@@ -1,8 +1,7 @@
 from PyQt5.QtWidgets import QTabWidget, QWidget
 
 class ChanDSPLayout(QTabWidget):
-    """
-    Layout of channel DSP parameters (QTabWidget).
+    """Layout of channel DSP parameters.
 
     Uses the chan_dsp_factory to configure a set of tabs. Each of these tabbed 
     widgets belong to a module tab; this is the lowest level of the nested 
@@ -10,15 +9,15 @@ class ChanDSPLayout(QTabWidget):
     """
     
     def __init__(self, factory, module, *args, **kwargs):
-        """
-        ChanDSPLayout class constructor.
+        """ChanDSPLayout class constructor.
         
-        Arguments:
-            factory (WidgetFactory): Factory object for creating channel 
-                                      DSP widgets.
-            module (int): Module number from ChanDSPManager. 
-        """
-        
+        Parameters
+        ----------
+        factory : WidgetFactory
+            Factory object for creating channel DSP widgets.
+        module : int
+            Module number from ChanDSPManager. 
+        """        
         super().__init__(*args, **kwargs)
         
         # Setup tabs for each module from the following list. The factory
