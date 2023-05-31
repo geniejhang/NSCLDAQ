@@ -54,7 +54,7 @@ class SystemUtilities:
         Load XIA settings file called name.
     exit_system() 
         Release resources used by the modules prior to exit.
-    set_boot_mode(mode)
+    boot_offline(offline)
         Set the system boot mode.
     get_boot_mode() 
         Get the system boot mode.
@@ -196,7 +196,7 @@ class SystemUtilities:
         except RuntimeError as e:
             print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e)) 
     
-    def set_boot_mode(self, mode):
+    def boot_offline(self, offline=False):
         """Wrapper to set system boot mode.
 
         Boot modules in offline mode with no attached hardware or online 
@@ -205,10 +205,17 @@ class SystemUtilities:
 
         Parameters
         ----------
-        mode : int
-            Offline (1) or online (0) module boot mode flag.
-        """        
-        return lib.CPixieSystemUtilities_SetBootMode(self.obj, mode)
+        offline : bool, default=False
+            If True, boot the system in offline mode.
+
+        Note
+        ----
+        Offline boot only supported in XIA API 2 as of 5/26/23.
+        """
+        boot_mode = 0  # Value of OfflineMode in Pixie16InitSystem().
+        if offline:
+            boot_mode = 1  # 1 == OFFLINE
+        return lib.CPixieSystemUtilities_SetBootMode(self.obj, boot_mode)
 
     def get_boot_mode(self):
         """Wrapper to get system boot mode (online or offline).
@@ -505,7 +512,7 @@ class RunUtilities:
         Get single channel run_type data.
     get_run_active() 
         Get the active run status of the system.
-    set_use_generator(mode) 
+    use_generator_data(mode) 
         Set ParameterManager offline mode.
     """
     
@@ -717,7 +724,7 @@ class RunUtilities:
         """        
         return lib.CPixieRunUtilities_GetRunActive(self.obj)
 
-    def set_use_generator(self, mode):
+    def use_generator_data(self, mode):
         """Wrapper to set the manager to use generated data.
 
         Parameters
@@ -751,7 +758,7 @@ class TraceUtilities:
         Read unvalidated trace from module/channel.
     get_trace_data() 
         Access the trace data.
-    set_use_generator(mode) 
+    use_generator_data(mode) 
         Set use of trace data generator to bool value for testing.
     """
     
@@ -843,7 +850,7 @@ class TraceUtilities:
         """        
         return lib.CPixieTraceUtilities_GetTraceData(self.obj).contents
 
-    def set_use_generator(self, mode):
+    def use_generator_data(self, mode):
         """ Wrapper to set the manager to use generated data.
 
         Parameters

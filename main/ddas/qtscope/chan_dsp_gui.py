@@ -1,5 +1,6 @@
 import inspect
 import os
+import logging
 
 from PyQt5.QtCore import Qt, QThreadPool
 from PyQt5.QtGui import QCloseEvent, QPixmap
@@ -7,8 +8,6 @@ from PyQt5.QtWidgets import QMainWindow, QTabWidget, QVBoxLayout, QLabel
 
 from chan_dsp_layout import ChanDSPLayout
 from worker import Worker
-
-DEBUG = False
 
 # @todo Control draw width on widgets either by fixing sizes (not ideal) or by
 # using separators which expand to fill the full window (better, probably).
@@ -140,8 +139,14 @@ class ChanDSPGUI(QMainWindow):
         self.dsp_mgr = dsp_manager
 
         # Length of msps_list == number of modules.
-        if DEBUG:
-            print("{}.{}: Configuring GUI for {} modules using {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, len(msps_list), self.dsp_mgr))
+        logging.getLogger("qtscope_logger").debug(
+            "{}.{}: Configuring GUI for {} modules using {}".format(
+                self.__class__.__name__,
+                inspect.currentframe().f_code.co_name,
+                len(msps_list),
+                self.dsp_mgr
+            )
+        )
 
         # Configure toolbar:        
         self.toolbar.copy_mod.setRange(0, len(msps_list)-1)

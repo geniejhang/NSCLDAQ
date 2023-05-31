@@ -82,7 +82,7 @@ class MainWindow(QMainWindow):
     
     def __init__(
             self,chan_dsp_factory, mod_dsp_factory, toolbar_factory,
-            fit_factory, version, offline=False, *args, **kwargs
+            fit_factory, version, offline=0, *args, **kwargs
     ):
         """GUI MainWindow constructor.
         
@@ -98,8 +98,9 @@ class MainWindow(QMainWindow):
             Factory for implemented fitting methods.
         version : int 
             XIA API major version number.
-        offline : bool, optional, default=False
-            If True, run in offline mode with no hardware and simulated data.
+        offline : int, optional, default=0
+            If any non-zero number, run in offline mode with no hardware and 
+            simulated data.
         """        
         super().__init__(*args, **kwargs)
             
@@ -125,12 +126,13 @@ class MainWindow(QMainWindow):
         # Configure managers:
 
         if offline:
-            print("\n-----------------------------------")
-            print("QtScope running in offline mode!!!")
-            print("-----------------------------------\n")
-            self.sys_utils.set_boot_mode(1) # 1: offline, 0: online.
-            self.trace_utils.set_use_generator(True) # Use generator data.
-            self.run_utils.set_use_generator(True) # Use generator data.
+            # Boot the modules in offline mode to test the API calls.
+            # Configure trace and run control to use generated data so
+            # that reading traces and histograms actually updates the
+            # the plot(s).
+            self.sys_utils.boot_offline(True)
+            self.trace_utils.use_generator_data(True)
+            self.run_utils.use_generator_data(True)
             
         # DSP and trace analysis:
         

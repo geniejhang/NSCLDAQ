@@ -1,10 +1,9 @@
+import logging
 import pandas as pd
 import inspect
 
 from pixie_utilities import DSPUtilities
 import xia_constants as xia
-
-DEBUG = False
 
 class DSPManager:
     """Internal DSP parameter management class. 
@@ -129,11 +128,16 @@ class DSPManager:
         """
         try:
             if pname not in xia.CHAN_PARS:
-                raise ValueError(
-                    "{} is not a channel paramter name".format(pname)
+                raise ValueError(f"{pname} is not a channel paramter name")
                 )
         except ValueError as e:
-            print("{}:{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            print(
+                "{}:{}: Caught exception -- {}.".format(
+                    self.__class__.__name__,
+                    inspect.currentframe().f_code.co_name,
+                    e
+                )
+            )
             return None
         else:
             return self._dsp[mod]["chan_par"].at[chan, pname]
@@ -160,16 +164,21 @@ class DSPManager:
             Channel parameter name is unknown.
         """
         if type(value) is not float:
-            print("WARNING -- {} value {} is type {}, converting to float.".format(pname, value, type(value)))
+            print(f"WARNING -- {pname} value {value} is type {type(value)}, converting to float.")
             value = float(value)
         
         try:
             if pname not in xia.CHAN_PARS:
-                raise ValueError(
-                    "{} is not a channel paramter name".format(pname)
+                raise ValueError(f"{pname} is not a channel paramter name")
                 )
         except ValueError as e:
-            print("{}:{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            print(
+                "{}:{}: Caught exception -- {}.".format(
+                    self.__class__.__name__,
+                    inspect.currentframe().f_code.co_name,
+                    e
+                )
+            )
         else:
             self._dsp[mod]["chan_par"].at[chan, pname] = value
     
@@ -225,13 +234,12 @@ class DSPManager:
             Module parameter name is unknown.
         """
         if type(value) is not int:
-            print("WARNING -- {} value {} is type {}, converting to int.".format(pname, value, type(value)))
+            print(f"WARNING -- {pname} value {value} is type {type(value)}, converting to int.")
             value = int(value)
         
         try:
             if pname not in xia.MOD_PARS:
-                raise ValueError(
-                    "{} is not a channel module name".format(pname)
+                raise ValueError(f"{pname} is not a channel module name")
                 )
         except ValueError as e:
             print("{}:{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
@@ -254,15 +262,25 @@ class DSPManager:
                     val = self._utils.read_chan_par(mod, i, p)
                     self.set_chan_par(mod, i, p, val)
                     
-                    if DEBUG:
-                        print("{}.{}: Read {} {} {} {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, mod, i, p, val))
+                    logging.getLogger("qtscope_logger").debug(
+                        "{}.{}: Read {} {} {} {}".format(
+                            self.__class__.__name__,
+                            inspect.currentframe().f_code.co_name,
+                            mod, i, p, val
+                        )
+                    )
                         
             elif p in xia.MOD_PARS:
                 val = self._utils.read_mod_par(mod, p)
                 self.set_mod_par(mod, p, val)
                 
-                if DEBUG:
-                    print("{}.{}: Read {} {} {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, mod, p, val))
+                logging.getLogger("qtscope_logger").debug(
+                    "{}.{}: Read {} {} {}".format(
+                        self.__class__.__name__,
+                        inspect.currentframe().f_code.co_name,
+                        mod, p, val
+                    )
+                )
                     
             else:                
                 # @todo Exception handling for passing a bad parameter or do
@@ -282,9 +300,15 @@ class DSPManager:
         for p in pnames:
             if p in xia.CHAN_PARS:
                 for i in range(self._nchannels):
-                    val = self.get_chan_par(mod, i, p)                    
-                    if DEBUG:
-                        print("{}.{}: Write {} {} {} {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, mod, i, p, val))
+                    val = self.get_chan_par(mod, i, p)
+                    
+                    logging.getLogger("qtscope_logger").debug(
+                        "{}.{}: Write {} {} {} {}".format(
+                            self.__class__.__name__,
+                            inspect.currentframe().f_code.co_name,
+                            mod, i, p, val
+                        )
+                    )
                         
                     # Write, read back, and set parameters:
                     self._utils.write_chan_par(mod, i, p, val)
@@ -297,15 +321,28 @@ class DSPManager:
                     if p in self._dsp_deps:
                         for dp in self._dsp_deps[p]:
                             val = self.get_chan_par(mod, i, dp)
-                            if DEBUG:
-                                print("{}.{}: Write deps  {} {} {} {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, mod, i, dp, val))
+                            
+                            logging.getLogger("qtscope_logger").debug(
+                                "{}.{}: Write deps  {} {} {} {}".format(
+                                    self.__class__.__name__,
+                                    inspect.currentframe().f_code.co_name,
+                                    mod, i, dp, val
+                                )
+                            )
+                            
                             self._utils.write_chan_par(mod, i, dp, val)
                             val = self._utils.read_chan_par(mod, i, dp)
                             self.set_chan_par(mod, i, dp, val)
             elif p in xia.MOD_PARS:               
                 val = self.get_mod_par(mod, p)
-                if DEBUG:
-                    print("{}.{}: Write {} {} {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, mod, p, val))
+                
+                logging.getLogger("qtscope_logger").debug(
+                    "{}.{}: Write {} {} {}".format(
+                        self.__class__.__name__,
+                        inspect.currentframe().f_code.co_name,
+                        mod, p, val
+                    )
+                )
                     
                 # Write, read back, and set parameters:                
                 if p == "SLOW_FILTER_RANGE":
@@ -328,8 +365,15 @@ class DSPManager:
                     if p in self._dsp_deps:
                         for dp in self._dsp_deps[p]:
                             val = self.get_chan_par(mod, i, dp)
-                            if DEBUG:
-                                print("{}.{}: Write deps  {} {} {} {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, mod, i, dp, val))
+                            
+                            logging.getLogger("qtscope_logger").debug(
+                                "{}.{}: Write deps {} {} {} {}".format(
+                                    self.__class__.__name__,
+                                    inspect.currentframe().f_code.co_name,
+                                    mod, i, dp, val
+                                )
+                            )
+                            
                             self._utils.write_chan_par(mod, i, dp, val)
                             val = self._utils.read_chan_par(mod, i, dp)
                             self.set_chan_par(mod, i, dp, val)
