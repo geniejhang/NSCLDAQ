@@ -129,7 +129,6 @@ class DSPManager:
         try:
             if pname not in xia.CHAN_PARS:
                 raise ValueError(f"{pname} is not a channel paramter name")
-                )
         except ValueError as e:
             print(
                 "{}:{}: Caught exception -- {}.".format(
@@ -170,7 +169,6 @@ class DSPManager:
         try:
             if pname not in xia.CHAN_PARS:
                 raise ValueError(f"{pname} is not a channel paramter name")
-                )
         except ValueError as e:
             print(
                 "{}:{}: Caught exception -- {}.".format(
@@ -240,7 +238,6 @@ class DSPManager:
         try:
             if pname not in xia.MOD_PARS:
                 raise ValueError(f"{pname} is not a channel module name")
-                )
         except ValueError as e:
             print("{}:{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
         else:
