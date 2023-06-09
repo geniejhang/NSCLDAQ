@@ -33,6 +33,8 @@ class DSPManager:
         Number of modules installed in the crate.
     _nchannels : int 
         Number of channels per module.
+    _logger : Logger
+        QtScope Logger object.
 
     Methods
     -------
@@ -81,6 +83,10 @@ class DSPManager:
             Number of channels per module.
         """
         self._dsp = {}
+
+        # Get Logger instance:
+
+        self._logger = logging.getLogger("qtscope_logger")
         
         self._nmodules = nmod
         self._nchannels = nchan
@@ -130,13 +136,7 @@ class DSPManager:
             if pname not in xia.CHAN_PARS:
                 raise ValueError(f"{pname} is not a channel paramter name")
         except ValueError as e:
-            print(
-                "{}:{}: Caught exception -- {}.".format(
-                    self.__class__.__name__,
-                    inspect.currentframe().f_code.co_name,
-                    e
-                )
-            )
+            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
             return None
         else:
             return self._dsp[mod]["chan_par"].at[chan, pname]
@@ -170,13 +170,7 @@ class DSPManager:
             if pname not in xia.CHAN_PARS:
                 raise ValueError(f"{pname} is not a channel paramter name")
         except ValueError as e:
-            print(
-                "{}:{}: Caught exception -- {}.".format(
-                    self.__class__.__name__,
-                    inspect.currentframe().f_code.co_name,
-                    e
-                )
-            )
+            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
         else:
             self._dsp[mod]["chan_par"].at[chan, pname] = value
     
@@ -205,10 +199,10 @@ class DSPManager:
         try:
             if pname not in xia.MOD_PARS:
                 raise ValueError(
-                    "{} is not a module paramter name".format(pname)
+                    f"{pname} is not a module paramter name"
                 )
         except ValueError as e:
-            print("{}:{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
             return None
         else:        
             return self._dsp[mod]["mod_par"].at[0, pname]
@@ -239,7 +233,7 @@ class DSPManager:
             if pname not in xia.MOD_PARS:
                 raise ValueError(f"{pname} is not a channel module name")
         except ValueError as e:
-            print("{}:{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
         else:
             self._dsp[mod]["mod_par"].at[0, pname] = value
 
@@ -257,28 +251,12 @@ class DSPManager:
             if p in xia.CHAN_PARS:
                 for i in range(self._nchannels):
                     val = self._utils.read_chan_par(mod, i, p)
+                    self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Read Mod. {mod} Chan. {i} {p} {val}")
                     self.set_chan_par(mod, i, p, val)
-                    
-                    logging.getLogger("qtscope_logger").debug(
-                        "{}.{}: Read {} {} {} {}".format(
-                            self.__class__.__name__,
-                            inspect.currentframe().f_code.co_name,
-                            mod, i, p, val
-                        )
-                    )
-                        
             elif p in xia.MOD_PARS:
                 val = self._utils.read_mod_par(mod, p)
-                self.set_mod_par(mod, p, val)
-                
-                logging.getLogger("qtscope_logger").debug(
-                    "{}.{}: Read {} {} {}".format(
-                        self.__class__.__name__,
-                        inspect.currentframe().f_code.co_name,
-                        mod, p, val
-                    )
-                )
-                    
+                self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Read Mod. {mod} {p} {val}")  
+                self.set_mod_par(mod, p, val)                 
             else:                
                 # @todo Exception handling for passing a bad parameter or do
                 # we just let the API handle it?                
@@ -293,22 +271,17 @@ class DSPManager:
             Module number.
         pnames : list 
             List of XIA DSP parameter names.
-        """        
+        """
+        # @todo (ASC 6/9/23): This whole block of code looks ripe for
+        # refactoring. The process of get -> write -> log -> read -> set
+        # is repeated. Too many logic statements and loops, etc.
         for p in pnames:
             if p in xia.CHAN_PARS:
                 for i in range(self._nchannels):
                     val = self.get_chan_par(mod, i, p)
-                    
-                    logging.getLogger("qtscope_logger").debug(
-                        "{}.{}: Write {} {} {} {}".format(
-                            self.__class__.__name__,
-                            inspect.currentframe().f_code.co_name,
-                            mod, i, p, val
-                        )
-                    )
-                        
                     # Write, read back, and set parameters:
                     self._utils.write_chan_par(mod, i, p, val)
+                    self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write Mod. {mod} Chan. {i} {p} {val}")
                     val = self._utils.read_chan_par(mod, i, p)
                     self.set_chan_par(mod, i, p, val)
                     
@@ -318,40 +291,26 @@ class DSPManager:
                     if p in self._dsp_deps:
                         for dp in self._dsp_deps[p]:
                             val = self.get_chan_par(mod, i, dp)
-                            
-                            logging.getLogger("qtscope_logger").debug(
-                                "{}.{}: Write deps  {} {} {} {}".format(
-                                    self.__class__.__name__,
-                                    inspect.currentframe().f_code.co_name,
-                                    mod, i, dp, val
-                                )
-                            )
-                            
                             self._utils.write_chan_par(mod, i, dp, val)
+                            self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write deps Mod. {mod} Chan. {i} {dp} {val}")
                             val = self._utils.read_chan_par(mod, i, dp)
                             self.set_chan_par(mod, i, dp, val)
-            elif p in xia.MOD_PARS:               
-                val = self.get_mod_par(mod, p)
-                
-                logging.getLogger("qtscope_logger").debug(
-                    "{}.{}: Write {} {} {}".format(
-                        self.__class__.__name__,
-                        inspect.currentframe().f_code.co_name,
-                        mod, p, val
-                    )
-                )
-                    
+            elif p in xia.MOD_PARS:
+                # @todo (ASC 6/9/23): filter range check can be simpler.
+                # Does it really need its own call to write? (Doubt it).
+                val = self.get_mod_par(mod, p)                   
                 # Write, read back, and set parameters:                
                 if p == "SLOW_FILTER_RANGE":
                     # Slow filter range recalculates filter parameters and
-                    # is slow, only write if changed. @todo: Only write the
-                    # changed parameters.                    
+                    # is slow, only write if changed.        
                     current_val = self._utils.read_mod_par(mod, p)
                     if current_val != val:
                         self._utils.write_mod_par(mod, p, val)
-                        print("Module {}: New energy filter range = {} -- filter parameters may have changed!".format(mod, val))
+                        self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write Mod. {mod} {p} {val}")
+                        print(f"Module {mod}: New energy filter range = {val} -- filter parameters may have changed!")
                 else:
-                    self._utils.write_mod_par(mod, p, val)                
+                    self._utils.write_mod_par(mod, p, val)
+                    self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write Mod. {mod} {p} {val}")
                 val = self._utils.read_mod_par(mod, p)
                 self.set_mod_par(mod, p, val)  
 
@@ -362,16 +321,8 @@ class DSPManager:
                     if p in self._dsp_deps:
                         for dp in self._dsp_deps[p]:
                             val = self.get_chan_par(mod, i, dp)
-                            
-                            logging.getLogger("qtscope_logger").debug(
-                                "{}.{}: Write deps {} {} {} {}".format(
-                                    self.__class__.__name__,
-                                    inspect.currentframe().f_code.co_name,
-                                    mod, i, dp, val
-                                )
-                            )
-                            
                             self._utils.write_chan_par(mod, i, dp, val)
+                            self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write deps Mod. {mod} Chan. {i} {dp} {val}")
                             val = self._utils.read_chan_par(mod, i, dp)
                             self.set_chan_par(mod, i, dp, val)
             else:

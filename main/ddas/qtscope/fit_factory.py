@@ -1,10 +1,12 @@
-DEBUG=False
+import logging
 
 class FitFactory:
     """Factory method for fitting functions.
     
     Attributes
     ----------
+    logger : Logger
+        QtScope Logger object.
     builders : dict 
         Dictionary of builder methods.
     config : dict 
@@ -21,7 +23,8 @@ class FitFactory:
     """
     
     def __init__(self):
-        """FitFactory constructor."""        
+        """FitFactory constructor."""
+        self.logger = logging.getLogger("qtscope_logger")
         self.builders = {}
         self.configs = {}
 
@@ -39,8 +42,7 @@ class FitFactory:
         """        
         self.builders[key] = builder
         self.configs[key] = config
-        if DEBUG:
-            print("  Registered: {}".format(key))
+        self.logger.debug(f"\tRegistered: {key}")
 
     def create(self, key, **kwargs):
         """Create an instance of the fit function from a key value. 
@@ -81,9 +83,7 @@ class FitFactory:
             Add known fit methods to a widget. Practically this is a QComboBox
             in the FitPanel.
         """
-        if DEBUG:
-            print("Initializing fit functions:")        
+        self.logger.debug("Initializing fit functions:")     
         for key in self.builders:
             item.addItem(key)
-            if DEBUG:
-                print("  Added:", key)
+            self.logger.debug(f"\tAdded: {key}")

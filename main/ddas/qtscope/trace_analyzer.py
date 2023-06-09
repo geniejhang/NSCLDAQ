@@ -1,8 +1,7 @@
 import inspect
+import logging
 import math
 import numpy as np
-
-DEBUG = False
 
 class TraceAnalyzer:
     """TraceAnalyzer class.
@@ -12,6 +11,8 @@ class TraceAnalyzer:
 
     Attributes
     ----------
+    logger : Logger
+        QtScope Logger object.
     dsp_mgr : DSPManager
         Manager for internal DSP and interface for XIA API read/write 
         operations.
@@ -35,6 +36,8 @@ class TraceAnalyzer:
             operations.
         """
         self.dsp_mgr = mgr
+        self.logger = logging.getLogger("qtscope_logger")
+        
         self.trace = None
         self.fast_filter = None
         self.cfd = None
@@ -122,18 +125,15 @@ class TraceAnalyzer:
             tau = int(round(tau/xdt))
 
         ns = xdt*1000  # Convert from samples to time in ns.
-        print("{}.{}: Filter calculation requires parameters to be an integer multiple of XDT.\nParameters have not been changed for acquisition.\n\t XDT (ns): {:.0f}\n\t Trig. risetime (ns): {:.0f}\n\t Trig. gap (ns): {:.0f}\n\t CFD scale: {:.0f}\n\t CFD delay (ns): {:.0f}\n\t Ene. risetime (ns): {:.0f}\n\t Ene. gap (ns): {:.0f}\n\t Tau (ns): {:.0f}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, ns, fast_risetime*ns, fast_gap*ns, cfd_scale, cfd_delay*ns, slow_risetime*ns, slow_gap*ns, tau*ns))
-            
-        if DEBUG:
-            print("{}.{}: Calculating fast filter output for trace from Mod. {} Ch. {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, mod, chan))
+        print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Filter calculation requires parameters to be an integer multiple of XDT.\nParameters have not been changed for acquisition.\n\t XDT (ns): {ns:.0f}\n\t Trig. risetime (ns): {fast_risetime*ns:.0f}\n\t Trig. gap (ns): {fast_gap*ns:.0f}\n\t CFD scale: {cfd_scale:.0f}\n\t CFD delay (ns): {cfd_delay*ns:.0f}\n\t Ene. risetime (ns): {slow_risetime*ns:.0f}\n\t Ene. gap (ns): {slow_gap*ns:.0f}\n\t Tau (ns): {tau*ns:.0f}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, ns, fast_risetime*ns, fast_gap*ns, cfd_scale, cfd_delay*ns, slow_risetime*ns, slow_gap*ns, tau*ns))
+
+        self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Calculating fast filter output for trace from Mod. {mod} Ch. {chan}")
         self._compute_fast_filter(fast_risetime, fast_gap)
-        
-        if DEBUG:
-            print("{}.{}: Calculating CFD output for fast filter output from Mod. {} Ch. {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, mod, chan))
+
+        self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Calculating CFD output for fast filter output from Mod. {mod} Ch. {chan}")
         self._compute_cfd(cfd_scale, cfd_delay)
 
-        if DEBUG:
-            print("{}.{}: Calculating slow filter output for trace from Mod. {} Ch. {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, mod, chan))
+        self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Calculating slow filter output for trace from Mod. {mod} Ch. {chan}")
         self._compute_slow_filter(slow_risetime, slow_gap, tau)
         
     def _compute_fast_filter(self, risetime, gap):
@@ -219,9 +219,8 @@ class TraceAnalyzer:
         # Guess a baseline value by averaging 5 samples at the start and end
         # of the trace and taking the minimum value:        
         baseline = min(np.mean(self.trace[:5]), np.mean(self.trace[-5:]))
-        
-        if DEBUG:
-            print("{}.{}: Estimated baseline {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name,baseline))
+
+        self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Estimated baseline {baseline}")
 
         # Using notation from Tan unless otherwise noted, with time in samples:
         b1 = math.exp(-1/tau)  # Constant ratio for geometric series sum Eq. 1.
@@ -233,8 +232,7 @@ class TraceAnalyzer:
         ag = 1
         a1 = 1/(1 - bL)
 
-        if DEBUG:
-            print("{}.{}: Ratio {:.3f}, coefficients {:.3f} {:.3f} {:.3f}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, b1, a0, ag, a1))
+        self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Ratio {b1:.3f}, coefficients {a0:.3f} {ag:.3f} {a1:.3f}")
 
         for i, _ in enumerate(self.trace):
             s0 = 0  # Trailing sum.
@@ -261,5 +259,5 @@ class TraceAnalyzer:
                     # of the trace for the leading sum:                    
                     self.slow_filter[i] = a0*s0 + ag*sg + a1*s1
 
-                if DEBUG and i == len(self.trace)/2:
-                    print("{}.{}: Sums {:.1f} {:.1f} {:.1f} filter {:.1f}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, s0, sg, s1, self.slow_filter[i]))
+                if i == len(self.trace)/2:
+                    self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Sums {s0:.1f} {sg:.1f} {s1:.1f} filter {self.slow_filter[i]:.1f}")

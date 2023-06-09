@@ -1,4 +1,5 @@
 import inspect
+import logging
 
 from PyQt5.QtCore import Qt, QThreadPool
 from PyQt5.QtGui import QCloseEvent
@@ -6,8 +7,6 @@ from PyQt5.QtWidgets import QMainWindow
 
 from mod_dsp_layout import ModDSPLayout
 from worker import Worker
-
-DEBUG = False
 
 class ModDSPGUI(QMainWindow):
     """Module DSP GUI class.
@@ -17,6 +16,8 @@ class ModDSPGUI(QMainWindow):
 
     Attributes
     ----------
+    logger : Logger
+        QtScope Logger object.
     pool : QThreadPool
         Global thread pool.
     mod_dsp_factory : ModDSPFactory
@@ -58,6 +59,10 @@ class ModDSPGUI(QMainWindow):
         super().__init__(*args, **kwargs)
         
         self.setWindowTitle("Module DSP configuration")
+        
+        # Get Logger instance:
+
+        self.logger = logging.getLogger("qtscope_logger")
         
         # Access to global thread pool for this applicaition:
         
@@ -102,8 +107,7 @@ class ModDSPGUI(QMainWindow):
         self.nmodules = nmodules
         self.dsp_mgr = mgr
 
-        if DEBUG:
-            print("{}.{}: Configuring GUI for {} modules using {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, nmodules, self.dsp_mgr))
+        self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Configuring GUI for {self.nmodules} modules using {self.dsp_mgr}")
 
         # Crate the module DSP layout and insert it on top of the
         # manager layout above the toolbar:        

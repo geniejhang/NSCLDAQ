@@ -1,5 +1,6 @@
 import numpy as np
 import inspect
+import logging
 
 import bitarray
 ver = [int(i) for i in bitarray.__version__.split(".")]
@@ -13,8 +14,6 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QRadioButton, QBu
 
 import xia_constants as xia
 import colors
-
-DEBUG = False
 
 class MultCoincidence(QWidget):
     """Multiplicity and coincidence tab widget.
@@ -76,7 +75,7 @@ class MultCoincidence(QWidget):
             Number of channels per module.
         """        
         super().__init__(*args, **kwargs)
-
+        
         self.param_names = [
             "MultiplicityMaskL",
             "MultiplicityMaskH",
@@ -249,12 +248,14 @@ class MultCoincidence(QWidget):
         # not be their intention.        
         try:
             if not all(enb == enb_list[0] for enb in enb_list):
-                raise ValueError("Custom CSRA settings detected on Mod. {}".format(mod))
+                raise ValueError(
+                    f"Custom CSRA settings detected on Mod. {mod}"
+                )
             if enb_list[0]:
                 self.status.setText("<b>Enabled</b>")
                 self.status.setStyleSheet(colors.GREEN_TEXT)                
         except ValueError as e:
-            print("{}:{}: Caught exception -- {}.\n\tThis may be intended, verify your CSRA and MultCoincidence settings.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.\n\tThis may be intended, verify your CSRA and MultCoincidence settings.")
             self.status.setText("<b>Custom</b>")
             self.status.setStyleSheet(colors.ORANGE_TEXT)
 
@@ -262,18 +263,18 @@ class MultCoincidence(QWidget):
         # be the same across the entire module:        
         try:
             if not all (win == win_list[0] for win in win_list):
-                raise ValueError("Inconsistent channel coincidence width values read on Mod. {}".format(mod))
+                raise ValueError(f"Inconsistent channel coincidence width values read on Mod. {mod}")
         except ValueError as e:
-            print("{}:{}: Caught exception -- {}. Setting all channel coincidence window lengths to match the channel coincidence window length read from Ch. 0.\n\tClick 'Apply' on the MultCoincidence tab to update the module parameters.\n\tCheck your settings file, it may be corrupt.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}. Setting all channel coincidence window lengths to match the channel coincidence window length read from Ch. 0.\n\tClick 'Apply' on the MultCoincidence tab to update the module parameters.\n\tCheck your settings file, it may be corrupt.")
             for i in range(self.nchannels):
                 mgr.set_chan_par(mod, i, "ChanTrigStretch", win_list[0])
 
         # Check the threshold. Thresholds _have_ to be the same as well:
         try:
             if not all(mult == mult_list[0] for mult in mult_list):
-                raise ValueError("Inconsistent multiplicity threshold values on Mod. {}".format(mod))
+                raise ValueError(f"Inconsistent multiplicity threshold values on Mod. {mod}")
         except ValueError as e:
-            print("{}.{}: Caught exception -- {}. Setting all mulitplicity thresholds to match the multiplicity threshold read from Ch. 0.\n\tClick 'Apply' on the MultCoincidence tab to update the module parameters.\n\tCheck your settings file, it may be corrupt.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}. Setting all mulitplicity thresholds to match the multiplicity threshold read from Ch. 0.\n\tClick 'Apply' on the MultCoincidence tab to update the module parameters.\n\tCheck your settings file, it may be corrupt.")
             for i in range(self.nchannels):
                 mask = int2ba(
                 int(mgr.get_chan_par(mod, i, "MultiplicityMaskH")),
@@ -456,7 +457,7 @@ class MultCoincidence(QWidget):
                     return idx
 
         # If nothing was found, return the Unknown id value:        
-        print("{}.{}: Encountered unknown channel multiplicity state!".format(self.__class__.__name__, inspect.currentframe().f_code.co_name))
+        print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Encountered unknown channel multiplicity state!")
         key_list = self.mode_dict.keys()
         val_list = self.mode_dict.values()
         return key_list(val_list.index("Unknown"))
@@ -483,7 +484,7 @@ class MultCoincidence(QWidget):
             if mode["name"] == "Unknown":
                 raise ValueError("Attempting to set multiplicity mask on Mod. {} for unknown channel multiplicity group".format(mod))            
         except ValueError as e:
-            print("{}.{}: Caught exception -- {}. Please select a known multiplicty group and click 'Apply' to update your settings.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}. Please select a known multiplicty group and click 'Apply' to update your settings.")
         else:            
             # Multiplicity mask slice indices:            
             shift = mode["shift"]
@@ -532,9 +533,9 @@ class MultCoincidence(QWidget):
             self.multiplicity_threshold.setRange(0, max_mult)
             
             if mult > max_mult:
-                raise ValueError("Old multiplicity threshold value {} is greater than maximum allowed multiplicity threshold {} for mode {}".format(mult, max_mult, self.mode_dict[self.rbgroup.checkedId()]["name"], max_mult))            
+                raise ValueError(f"Old multiplicity threshold value {mult} is greater than maximum allowed multiplicity threshold {max_mult} for mode {self.mode_dict[self.rbgroup.checkedId()]['name']}")            
         except ValueError as e:
-            print("{}.{}: Caught exception -- {}. Setting maximum multiplicity to {}. Click 'Apply' to update your settings.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e, max_mult))
+            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}. Setting maximum multiplicity to {max_mult}. Click 'Apply' to update your settings.")
             self.multiplicity_threshold.setValue(max_mult)
             
     def print(self, mgr, mod):
@@ -555,12 +556,12 @@ class MultCoincidence(QWidget):
             width = float(self.coinc_width.text())
             mult = ba2int(high_mask[xia.MULT_OFFSET:xia.MULT_END])
 
-            print("----- {}.{}: Mod. {}, Ch. {} -----".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, mod, i))
-            print("Mask low:", low_mask)
-            print("Mask high:", high_mask)
-            print("Coincidence width:", width, "[us]") 
-            print("Mult. to trigger:", mult)
-            print("Mode:", name)
+            print(f"----- {self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Mod. {mod}, Ch. {i} -----")
+            print(f"Mask low: {low_mask}")
+            print(f"Mask high: {high_mask}")
+            print(f"Coincidence width: {width} [us]") 
+            print(f"Mult. to trigger: {mult}")
+            print(f"Mode: {name}")
 
 class MultCoincidenceBuilder:
     """Builder method for factory creation."""

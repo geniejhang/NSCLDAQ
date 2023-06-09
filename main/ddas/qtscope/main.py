@@ -10,10 +10,10 @@ import logging
 
 logging.basicConfig(
     filename="qtscope.log",
-    format="%(asctime)s - %(levelname)s: %(message)s"
+    format="%(levelname)s - %(asctime)s: %(message)s"
 )
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 
 from widget_factory import WidgetFactory
 from fit_factory import FitFactory
@@ -52,7 +52,7 @@ def main():
     # Read environment variables and configure global settings for this
     # instance of QtScope. Environment variables QTSCOPE_OFFLINE and
     # QTSCOPE_LOG_LEVEL set whether or not to run QtScope in offline mode
-    # without any hardware and control the program debugging log output.    
+    # without any hardware and control the program logging output.    
 
     try:
         offline = int(os.getenv("QTSCOPE_OFFLINE", 0))
@@ -66,7 +66,7 @@ def main():
             print("-----------------------------------\n")
 
     try:
-        log_level = os.getenv("QTSCOPE_LOG_LEVEL", "WARNING").upper()
+        log_level = os.getenv("QTSCOPE_LOG_LEVEL", "INFO").upper()
         if log_level not in logging._levelToName.values():
             allowed = logging._levelToName.values()
             raise RuntimeError(f"QTSCOPE_LOG_LEVEL must be one of {allowed}.")
@@ -76,17 +76,17 @@ def main():
     else:
         logger = logging.getLogger("qtscope_logger")
         logger.setLevel(log_level)
-        logger.debug(f"PATH is {sys.path}")
-        logger.debug(f"Runtime environment is {os.environ}")
+        logger.info(f"PATH: {sys.path}")
+        logger.debug(f"Environ: {os.environ}")
 
     # Get the XIA API major version used to compile this program:
     
     ver = int(sys.argv[0])
-    logger.debug(f"QtScope compiled with XIA API major version {ver}")
+    logger.info(f"QtScope compiled with XIA API major version {ver}")
     
     # Create the factories:
 
-    logger.debug("Creating factory methods and registering builders...")
+    logger.info("Creating factory methods and registering builders")
     cdf = create_chan_dsp_factory()
     mdf = create_mod_dsp_factory()
     tbf = create_toolbar_factory()
@@ -94,7 +94,10 @@ def main():
     
     # Start application and open the main GUI window:
 
-    logger.debug("Factory creation complete, starting GUI...")
+    logger.info("Factory creation complete, starting GUI")
+    QtWidgets.QApplication.setAttribute(
+        QtCore.Qt.AA_EnableHighDpiScaling, True
+    )
     app = QtWidgets.QApplication(sys.argv)
     gui = MainWindow(cdf, mdf, tbf, ftf, ver, offline)
     gui.show()
@@ -109,7 +112,7 @@ def create_chan_dsp_factory():
         Factory with registered channel DSP widgets.
     """
     factory = WidgetFactory()
-    logging.getLogger("qtscope_logger").debug("Registering channel DSP...")    
+    logging.getLogger("qtscope_logger").debug("Registering channel DSP")    
     factory.register_builder("AnalogSignal", AnalogSignalBuilder())
     factory.register_builder("TriggerFilter", TriggerFilterBuilder())
     factory.register_builder("EnergyFilter", EnergyFilterBuilder())
@@ -133,7 +136,7 @@ def create_mod_dsp_factory():
         Factory with registered module DSP widgets.
     """                       
     factory = WidgetFactory()
-    logging.getLogger("qtscope_logger").debug("Registering module DSP...")    
+    logging.getLogger("qtscope_logger").debug("Registering module DSP")    
     factory.register_builder("CrateID", CrateIDBuilder())
     factory.register_builder("CSRB", CSRBBuilder())
     factory.register_builder("TrigConfig0", TrigConfig0Builder())
@@ -149,7 +152,7 @@ def create_toolbar_factory():
         Factory with registered toolbar widgets.
     """               
     factory = WidgetFactory()
-    logging.getLogger("qtscope_logger").debug("Registering toolbars...")    
+    logging.getLogger("qtscope_logger").debug("Registering toolbars")    
     factory.register_builder("sys", SystemToolBarBuilder())
     factory.register_builder("acq", AcquisitionToolBarBuilder())
     factory.register_builder("dsp", DSPToolBarBuilder())
@@ -206,7 +209,7 @@ def create_fit_factory():
     # Register fit factory classes:
     
     factory = FitFactory()
-    logging.getLogger("qtscope_logger").debug("Registering fit functions...")
+    logging.getLogger("qtscope_logger").debug("Registering fit functions")
     factory.register_builder("Exponential", ExpFitBuilder(), config_fit_exp)
     factory.register_builder("Gaussian", GaussFitBuilder(), config_fit_gauss)
     factory.register_builder(

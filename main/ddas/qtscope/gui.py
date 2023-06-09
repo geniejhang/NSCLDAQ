@@ -1,9 +1,11 @@
-import sys, os
+import sys
+import os
 import pandas as pd
 import json
 import inspect
 import copy
 import time
+import logging
 
 from PyQt5.QtCore import Qt, QThreadPool
 from PyQt5.QtGui import QCloseEvent
@@ -20,8 +22,6 @@ from run_type import RunType
 from trace_analyzer import TraceAnalyzer
 
 import colors
-
-DEBUG = False
 
 # @todo Would like to run the system as per custom DSP parameter formatted
 # text file output -- as currently implemented the save DSP settings do not
@@ -42,6 +42,8 @@ class MainWindow(QMainWindow):
 
     Attributes
     ----------
+    logger : Logger
+        QtScope Logger object.
     xia_api_version : int 
         XIA API version QtScope was compiled against.
     pool : QThreadPool
@@ -110,6 +112,16 @@ class MainWindow(QMainWindow):
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
         self.setMouseTracking(True)
 
+        # Get the Logger instance:
+
+        self.logger = logging.getLogger("qtscope_logger")
+
+        # Set XIA API version. This is needed to support XIA API 3 JSON
+        # settings files with a .json extension iff QtScope was compiled
+        # against API 3. @todo (ASC 6/9/23): may not be needed after we
+        # fully migrate to API 3, but for now its an option to allow
+        # user's some ability to distinguish between the two formats.
+        
         self.xia_api_version = version
         
         # Access to global thread pool for this applicaition:
@@ -254,11 +266,14 @@ class MainWindow(QMainWindow):
             self.acq_toolbar.current_mod.setRange(0, len(msps_list)-1)
             self.acq_toolbar.current_chan.setRange(0, 15)
             self.mplplot.toolbar.enable()
-            
+
             print("QtScope system configuration complete!")
+            self.logger.info("QtScope system configuration complete!")
 
     # @todo (ASC 3/21/23): Define another custom human-readable text format
     # independent of the XIA API version.
+    # @todo (ASC 6/9/23): Add some GUI blocking to save/load to prevent
+    # settings file corruption.
     
     def _save_settings(self):
         """Save DSP parameters to an XIA settings file. 
@@ -281,19 +296,23 @@ class MainWindow(QMainWindow):
             try:
                 if self.xia_api_version >= 3:
                     if opt != "XIA settings file (*.set, *.json)":
-                        raise RuntimeError("Unrecognized file extension format option '{}'".format(ext))
+                        raise RuntimeError(
+                            f"Unrecognized file extension '{ext}'"
+                        )
                     elif fext != ".set" and fext != ".json":
-                        raise RuntimeError("Unsupported extension for settings file: '{}.'\n\tSupported extenstions are: .set or .json. Your settings file has not been saved".format(fext))
+                        raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extenstions are: .set or .json. Your settings file has not been saved")
                 else:
                     if opt != "XIA settings file (*.set)":
-                        raise RuntimeError("Unrecognized file extension format option '{}'".format(ext))
+                        raise RuntimeError(
+                            f"Unrecognized file extension '{ext}'"
+                        )
                     elif fext != ".set":
-                        raise RuntimeError("Unsupported extension for settings file: '{}.'\n\tSupported extension are: .set. Your settings file has not been saved".format(fext))                
+                        raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extension are: .set. Your settings file has not been saved")                
             except RuntimeError as e:
-                print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+                print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
             else:
                 self.sys_utils.save_set_file(fname)
-                print("DSP parameter file saved to:", fname)
+                print(f"DSP parameter file saved to: {fname}")
             
     def _load_settings(self):
         """Load DSP parameters from an XIA settings file.
@@ -309,9 +328,11 @@ class MainWindow(QMainWindow):
                 if opt == "XIA settings file (*.set)" or "XIA JSON settings file (*.json)":
                     self.sys_utils.load_set_file(fname)
                 else:
-                    raise RuntimeError("Unrecognized file extension format option '{}'".format(ext))
+                    raise RuntimeError(
+                        f"Unrecognized file extension '{ext}'"
+                    )
             except RuntimeError:
-                print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+                print(f"{self.__class__.__name__,}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
 
         # If the system has been booted, reload the DSP into the dataframe,
         # and reload the current channel DSP tab and module DSP (other channel
@@ -424,16 +445,14 @@ class MainWindow(QMainWindow):
         # Access thread from global thread pool for the begin/end operation
         # If a run is active, end it, otherwise start a new one:        
         if self.run_active:
-            if DEBUG:
-                print("{}.{}: Run active status is {}, ending the current run".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, self.run_active))                
+            self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Run active {self.run_active}, type {self.active_type} -- ending the run")           
             worker = Worker(self._end_run)
             worker.signals.finished.connect(self.chan_gui.toolbar.enable)
             worker.signals.finished.connect(self.mod_gui.toolbar.enable)
             worker.signals.finished.connect(self.acq_toolbar.enable)
             self.pool.start(worker)
-        else:            
-            if DEBUG:
-                print("{}.{}: Run active status is {}, beginning a new run".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, self.run_active))                
+        else:
+            self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Run active {self.run_active}, type {self.active_type} -- beginning new run")            
             worker = Worker(self._begin_run)
             worker.signals.running.connect(self.chan_gui.toolbar.disable)
             worker.signals.running.connect(self.mod_gui.toolbar.disable)
@@ -447,17 +466,13 @@ class MainWindow(QMainWindow):
         the acquisition toolbar button states.
         """        
         module = self.acq_toolbar.current_mod.value()
-        self.active_type = RunType(self.acq_toolbar.run_type.currentIndex())
+        self.active_type = RunType(self.acq_toolbar.run_type.currentIndex())    
+        self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Beginning {self.active_type} run in Mod. {module}")
         
-        if DEBUG:
-            print("{}.{}: Beginning run in Mod. {} with run type {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, module, self.active_type))
-
         # XIA API call to begin run in the current module:        
         self.run_utils.begin_run(module, self.active_type)
         self.run_active = self.run_utils.get_run_active()
-        
-        if DEBUG:
-            print("{}.{}: Run started, active status is {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, self.run_active))
+        self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Started, run active {self.run_active}")        
             
         # Reconfigure the run control button and communicate run status:        
         if self.run_active:
@@ -473,9 +488,7 @@ class MainWindow(QMainWindow):
         button states.
         """        
         module = self.acq_toolbar.current_mod.value()
-        
-        if DEBUG:
-            print("{}.{}: Ending run in Mod. {} with run type {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, module, self.active_type))
+        self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Ending {self.active_type} run in Mod. {module}")
 
         # XIA API call to end run in the current module:        
         self.run_utils.end_run(module, self.active_type)
@@ -489,10 +502,9 @@ class MainWindow(QMainWindow):
             self.mod_gui.setEnabled(True)
             self.chan_gui.setEnabled(True)
             self.active_type = RunType.INACTIVE
-            
-        if DEBUG:
-            print("{}.{}: End of run finalized, active type set to {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, self.active_type))
 
+        self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: End run finalized, run active {self.run_active}, type {self.active_type}")
+        
     def _read_data(self):
         """Configure worker to read data from a module.
 
@@ -649,7 +661,7 @@ class MainWindow(QMainWindow):
                 # recover because traces for the new module have not been
                 # acquired, and analyze is designed to analyze a trace shown on
                 # the current canvas.
-                raise ValueError("Stored trace data for Mod. {}, Ch. {} does not match the current selection box Mod. {}, Ch. {}".format(self.trace_info["module"], self.trace_info["channel"], module, channel))
+                raise ValueError(f"Stored trace data for Mod. {self.trace_info['module']} Ch. {self.trace_info['channel']} does not match the current selection box Mod. {module} Ch. {channel}")
             elif self.acq_toolbar.read_all.isChecked() and channel != self.trace_info["channel"]:
                 # Channel changed between acquisition and analysis. All traces
                 # have been read, so get the correct data from its subplot.
@@ -662,9 +674,9 @@ class MainWindow(QMainWindow):
                 # Single channel acquisition mode channel has been switched
                 # since acquiring a trace (trace on the canvas does not match
                 # current selection box).
-                raise ValueError("Stored trace data for Mod. {}, Ch. {} does not match the current selection box Mod. {}, Ch. {}".format(self.trace_info["module"], self.trace_info["channel"], module, channel))
+                raise ValueError(f"Stored trace data for Mod. {self.trace_info['module']} Ch. {self.trace_info['channel']} does not match the current selection box Mod. {module} Ch. {channel}")
         except ValueError as e:
-            print("{}.{}: Caught exception -- {}. New trace data must be acquired by clicking the 'Read trace' button prior to analysis.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.\nNew trace data must be acquired by clicking the 'Read trace' button prior to analysis.")
         else:            
             # No exceptions, analyze and draw:
             try:
@@ -674,7 +686,7 @@ class MainWindow(QMainWindow):
                     self.trace_info["trace"]
                 )
             except Exception as e:
-                print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+                print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
             else:                
                 self.mplplot.draw_analyzed_trace(
                     self.trace_info["trace"],
@@ -692,4 +704,4 @@ class MainWindow(QMainWindow):
             
     def _test(self):
         """A dummy function which can be hooked up to signals for testing."""
-        print("{}.{}: Called".format(self.__class__.__name__, inspect.currentframe().f_code.co_name))
+        print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Hey I just wrote you, and this is crazy\nBut here's my purpose, you should call me, maybe")
