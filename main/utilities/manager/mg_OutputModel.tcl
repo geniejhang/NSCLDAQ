@@ -138,6 +138,16 @@ snit::type ManagerOutputModel {
         } else {
             set input [gets $socket]
             $self _dispatch -output $self $input
+
+            # If we have a non empty log file then
+            # Append the input to that file:
+            #
+            if {$options(-logfile) ne ""} {
+                set fd [open $options(-logfile) a]
+                set ts [clock format [clock seconds] -format {%D %T}]
+                puts $fd "$ts: $input"
+                close $fd
+            }
         }
     }
     
