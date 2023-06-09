@@ -75,6 +75,7 @@ snit::type ManagerOutputModel {
     option -connectionretries -default 100
     option -connectioninterval -default 1
     option -connectionabandoned -default [list]
+    option -logfile -default ""
     
     variable socket [list]
     variable afterid -1
