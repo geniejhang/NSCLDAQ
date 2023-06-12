@@ -5,6 +5,12 @@ if CAENSUPPORT
 CAENSUPPORTDIRS=caendigitizers
 endif
 
+if CAENNEXTGEN
+CAENNGDIR=caen-nextgen
+else
+CAENNGDIR=
+endif
+
 if BUILD_EPICS_TOOLS
 if EPICS
      EPICSDIRS=epics
@@ -23,9 +29,6 @@ if BUILD_DDAS
   DDASDIR=ddas
 endif
 
-if CAENNEXTGEN
-	CAENNGDIR=caen-nextgen
-endif
 
 SUBDIRS = base caenfw-common servers base/dataflow \
 	daq utilities $(DOCDIR) \

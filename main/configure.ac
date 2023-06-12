@@ -89,13 +89,16 @@ AC_ARG_ENABLE([caen-nextgen],
       ],
       enable_caennextgen="false"
     )
-  AM_CONDITIONAL([CAENNEXTGEN], [$enable_caennextgen])
+  
   if test $enable_caennextgen="true"
   then
+    AM_CONDITIONAL([CAENNEXTGEN], [true])
     CAENNG_CPPFLAGS="-I/usr/local/include"
     CAENNG_LDFLAGS="-L/usr/local/lib -lCAEN_FELib -lCAENDig2"
     AC_SUBST(CAENNG_CPPFLAGS)
     AC_SUBST(CAENNG_LDFLAGS)
+  else 
+    AM_CONDITIONAL([CAENNEXTGEN], [false])
   fi
 
 # Pandoc is needed for printed versions of the logbook:
