@@ -198,9 +198,7 @@ class DSPManager:
         """        
         try:
             if pname not in xia.MOD_PARS:
-                raise ValueError(
-                    f"{pname} is not a module paramter name"
-                )
+                raise ValueError("{pname} is not a module paramter name")
         except ValueError as e:
             print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
             return None
@@ -231,7 +229,7 @@ class DSPManager:
         
         try:
             if pname not in xia.MOD_PARS:
-                raise ValueError(f"{pname} is not a channel module name")
+                raise ValueError(f"{pname} is not a module parameter name")
         except ValueError as e:
             print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
         else:
@@ -246,21 +244,12 @@ class DSPManager:
             Module number.
         pnames : list
             List of XIA DSP parameter names.
-        """        
-        for p in pnames:
-            if p in xia.CHAN_PARS:
-                for i in range(self._nchannels):
-                    val = self._utils.read_chan_par(mod, i, p)
-                    self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Read Mod. {mod} Chan. {i} {p} {val}")
-                    self.set_chan_par(mod, i, p, val)
-            elif p in xia.MOD_PARS:
-                val = self._utils.read_mod_par(mod, p)
-                self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Read Mod. {mod} {p} {val}")  
-                self.set_mod_par(mod, p, val)                 
-            else:                
-                # @todo Exception handling for passing a bad parameter or do
-                # we just let the API handle it?                
-                pass
+        """
+        try:
+            for p in pnames:
+                self._read_and_set_par(mod, p)
+        except ValueError as e:
+             print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
 
     def write(self, mod, pnames):
         """Write DSP settings from internal storage.
@@ -272,64 +261,12 @@ class DSPManager:
         pnames : list 
             List of XIA DSP parameter names.
         """
-        # @todo (ASC 6/9/23): This whole block of code looks ripe for
-        # refactoring. The process of get -> write -> log -> read -> set
-        # is repeated. Too many logic statements and loops, etc.
-        for p in pnames:
-            if p in xia.CHAN_PARS:
-                for i in range(self._nchannels):
-                    val = self.get_chan_par(mod, i, p)
-                    # Write, read back, and set parameters:
-                    self._utils.write_chan_par(mod, i, p, val)
-                    self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write Mod. {mod} Chan. {i} {p} {val}")
-                    val = self._utils.read_chan_par(mod, i, p)
-                    self.set_chan_par(mod, i, p, val)
-                    
-                    # If this parameter has dependents, write, read, and set
-                    # as well. We know dependent parameters are always channel
-                    # parameters:                    
-                    if p in self._dsp_deps:
-                        for dp in self._dsp_deps[p]:
-                            val = self.get_chan_par(mod, i, dp)
-                            self._utils.write_chan_par(mod, i, dp, val)
-                            self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write deps Mod. {mod} Chan. {i} {dp} {val}")
-                            val = self._utils.read_chan_par(mod, i, dp)
-                            self.set_chan_par(mod, i, dp, val)
-            elif p in xia.MOD_PARS:
-                # @todo (ASC 6/9/23): filter range check can be simpler.
-                # Does it really need its own call to write? (Doubt it).
-                val = self.get_mod_par(mod, p)                   
-                # Write, read back, and set parameters:                
-                if p == "SLOW_FILTER_RANGE":
-                    # Slow filter range recalculates filter parameters and
-                    # is slow, only write if changed.        
-                    current_val = self._utils.read_mod_par(mod, p)
-                    if current_val != val:
-                        self._utils.write_mod_par(mod, p, val)
-                        self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write Mod. {mod} {p} {val}")
-                        print(f"Module {mod}: New energy filter range = {val} -- filter parameters may have changed!")
-                else:
-                    self._utils.write_mod_par(mod, p, val)
-                    self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write Mod. {mod} {p} {val}")
-                val = self._utils.read_mod_par(mod, p)
-                self.set_mod_par(mod, p, val)  
-
-                # If this parameter has dependents, write, read, and set
-                # as well. We know dependent parameters are always channel
-                # parameters:                                    
-                for i in range(self._nchannels):
-                    if p in self._dsp_deps:
-                        for dp in self._dsp_deps[p]:
-                            val = self.get_chan_par(mod, i, dp)
-                            self._utils.write_chan_par(mod, i, dp, val)
-                            self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write deps Mod. {mod} Chan. {i} {dp} {val}")
-                            val = self._utils.read_chan_par(mod, i, dp)
-                            self.set_chan_par(mod, i, dp, val)
-            else:
-                # @todo Exception handling for passing a bad parameter or do
-                # we just let the API handle it?
-                pass
-
+        try:
+            for p in pnames:
+                self._get_and_write_par(mod, p)
+        except ValueError as e:
+            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
+            
     def adjust_offsets(self, mod):
         """Adjust DC offsets for all channels on a single module.
 
@@ -351,3 +288,151 @@ class DSPManager:
         """        
         for mod in range(self._nmodules):
             self.read(mod, [*xia.CHAN_PARS, *xia.MOD_PARS])
+
+    ##
+    # Private methods
+    #
+
+    def _read_and_set_par(self, mod, pname):
+        """Read a DSP parameter value from a single module and set the value
+        in the dataframe. The parameter to read and set can be either a module 
+        or channel parameter.
+
+        Parameters
+        ----------
+        mod : int 
+            Module number.
+        pname : str 
+            Module or channel parameter name.
+
+        Raises
+        ------
+        ValueError 
+            If the parameter name is not known.
+        """
+        if pname in xia.CHAN_PARS:
+            for i in range(self._nchannels):
+                self._read_and_set_chan_par(mod, i, pname)
+        elif pname in xia.MOD_PARS:
+            self._read_and_set_mod_par(mod, pname)         
+        else:                
+            raise ValueError(
+                f"{pname} is not a valid module or channel parameter name"
+            )
+    
+    def _read_and_set_chan_par(self, mod, chan, pname):
+        """Read a single channel parameter value and set it in the dataframe.
+
+        Parameters
+        ----------
+        mod : int 
+            Module number.
+        chan : int
+            Channel number.
+        pname : str 
+            Channel parameter name.
+        """
+        val = self._utils.read_chan_par(mod, chan, pname)
+        self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Read Mod. {mod} Chan. {chan} {pname} {val}")
+        self.set_chan_par(mod, chan, pname, val)
+
+    def _read_and_set_mod_par(self, mod, pname):
+        """Read a module parameter value and set it in the dataframe.
+
+        Parameters
+        ----------
+        mod : int 
+            Module number.
+        pname : str 
+            Module parameter name.
+        """
+        val = self._utils.read_mod_par(mod, pname)
+        self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Read Mod. {mod} {pname} {val}")  
+        self.set_mod_par(mod, pname, val)
+        
+    def _get_and_write_par(self, mod, pname):
+        """Get a parameter value from the dataframe and write it to a module. 
+        The parameter to get and write can be either a module or channel 
+        parameter.
+
+        Parameters
+        ----------
+        mod : int 
+            Module number.
+        pname : str 
+            Module or channel parameter name.
+
+        Raises
+        ------
+        ValueError 
+            If the parameter name is not known.
+        """
+        if pname in xia.CHAN_PARS:
+            for i in range(self._nchannels):
+                self._get_and_write_chan_par(mod, i, pname)
+                self._check_and_write_dependent_pars(mod, i, pname)
+        elif pname in xia.MOD_PARS:
+            self._get_and_write_mod_par(mod, pname)              
+            for i in range(self._nchannels):
+                self._check_and_write_dependent_pars(mod, i, pname)
+        else:
+            raise ValueError(
+                f"{pname} is not a valid module or channel parameter name"
+            )
+        
+    def _get_and_write_chan_par(self, mod, chan, pname):
+        """Get a single channel parameter value from the dataframe and write 
+        it to a module.
+
+        Parameters
+        ----------
+        mod : int 
+            Module number.
+        chan : int
+            Channel number.
+        pname : str 
+            Channel parameter name.
+        """
+        val = self.get_chan_par(mod, chan, pname)
+        self._utils.write_chan_par(mod, chan, pname, val)
+        self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write Mod. {mod} Chan. {chan} {pname} {val}")
+        # Read back and set parameters:
+        self._read_and_set_chan_par(mod, chan, pname)
+
+    def _get_and_write_mod_par(self, mod, pname):
+        """Get a module parameter value from the dataframe and write it to 
+        a module.
+
+        Parameters
+        ----------
+        mod : int 
+            Module number.
+        pname : str 
+            Channel parameter name.
+        """
+        val = self.get_mod_par(mod, pname)                   
+        if (pname == "SLOW_FILTER_RANGE"
+            and self._utils.read_mod_par(mod, pname) != val):
+            print(f"Module {mod}: New energy filter range = {val} -- filter parameters may have changed!")
+        self._utils.write_mod_par(mod, pname, val)
+        self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Write Mod. {mod} {pname} {val}")
+        self._read_and_set_mod_par(mod, pname)
+
+    def _check_and_write_dependent_pars(self, mod, chan, pname):
+        """Check if the passed parameter name has any dependent parameters. 
+        If so, get them from the dataframe and write them to the module.
+        Dependent parameters are, for now, assumed to be channel parameters.
+
+        Parameters
+        ----------
+        mod : int 
+            Module number.
+        chan : int
+            Channel number.
+        pname : str 
+            Channel parameter name.
+        """
+        if pname in self._dsp_deps:
+            for dep_par in self._dsp_deps[pname]:
+                self._logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Get and write dependent {dep_par} for {pname}")
+                self._get_and_write_chan_par(mod, chan, dep_par)          
