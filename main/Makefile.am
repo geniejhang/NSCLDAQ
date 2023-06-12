@@ -25,7 +25,7 @@ endif
 
 SUBDIRS = base caenfw-common servers base/dataflow \
 	daq utilities $(DOCDIR) \
-	sbs $(EPICSDIRS) $(USBDIR) $(DDASDIR) $(CAENSUPPORTDIRS) examples
+	sbs usb/common/configurableobject $(EPICSDIRS) $(USBDIR) $(DDASDIR) $(CAENSUPPORTDIRS) examples
 
 DIST_SUBDIRS = base caenfw-common servers base/dataflow daq utilities \
 	docbuild docconfig simplesetups sbs epics usb ddas \
