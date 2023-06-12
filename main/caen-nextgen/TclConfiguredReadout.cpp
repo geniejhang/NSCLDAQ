@@ -25,7 +25,7 @@
 #include "DynamicMultiTrigger.h"
 #include <VX2750EventSegment.h>
 #include <VX2750MultiTrigger.h>
-#include <CAENVx2750PhaTrigger.h>
+#include <CAENVX2750PhaTrigger.h>
 #include <VX2750MultiModuleEventSegment.h>
 #include <VX2750TclConfig.h>
 #include <VX2750TclConfig.h>

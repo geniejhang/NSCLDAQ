@@ -1,9 +1,9 @@
-lib_LTLBRARIES=libCaenVx2750.la
+lib_LTLIBRARIES=libCaenVx2750.la
 
-include_HEADERS=CAENVX2750PhaTriger.h \
+include_HEADERS=CAENVX2750PhaTrigger.h \
     Dig2Device.h \
     DynamicMultiTrigger.h \
-    TclConifiguredReadout.h \
+    TclConfiguredReadout.h \
     VX2750EventSegment.h \
     VX2750MultiModuleEventSegment.h \
     VX2750MultiTrigger.h \
@@ -11,16 +11,20 @@ include_HEADERS=CAENVX2750PhaTriger.h \
     VX2750Pha.h \
     VX2750TclConfig.h
 
-libCAENVx2750_la_CPPFLAGS=@BOOST_CPPFLAGS@ @BOOST_EXTRA_CPPFLAGS@ \
-    @TCL_CPPFLAGS@ @CAENNG_CPPFLAGS@ -I@top_srcdir@/usb/common/configurableobject
+libCaenVx2750_la_CPPFLAGS=@BOOST_CPPFLAGS@ @BOOST_EXTRA_CPPFLAGS@ \
+    @TCL_CPPFLAGS@ @CAENNG_CPPFLAGS@ -I@top_srcdir@/usb/common/configurableobject \
+    -I@top_srcdir@/sbs/readout @JSON_CFLAGS@ @LIBTCLPLUS_CFLAGS@
 
-libCAENVx2750_la_LDFLAGS=@BOOST_LDFLAGS@ @BOST_LOG_LIB@  \
-    @TCL_LDFLAGS@ @CAENNG_LDFLAGS@ \
-    @top_builddir@/libConfigurableObject.la
+libCaenVx2750_la_LDFLAGS=@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
+    @top_builddir@/sbs/readout/libSBSProductionReadout.la \
+    @BOOST_LDFLAGS@ @BOOST_LOG_LIB@  \
+    @LIBTCLPLUS_LDFLAGS@ \
+    @TCL_LDFLAGS@ @CAENNG_LDFLAGS@ @JSON_LIBS@
+    
 
 
-libCAENVx2750_la_SOURCES= CAENVX2750PhaTrigger.cpp \
-    Deg2Device.cpp \
+libCaenVx2750_la_SOURCES= CAENVX2750PhaTrigger.cpp \
+    Dig2Device.cpp \
     DynamicMultiTrigger.cpp \
     TclConfiguredReadout.cpp \
     VX2750EventSegment.cpp \
@@ -28,7 +32,7 @@ libCAENVx2750_la_SOURCES= CAENVX2750PhaTrigger.cpp \
     VX2750MultiTrigger.cpp \
     VX2750PHAConfiguration.cpp \
     VX2750Pha.cpp \
-    VBX2750TclConfig.cpp 
+    VX2750TclConfig.cpp 
 
 
 

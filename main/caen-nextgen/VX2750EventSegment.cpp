@@ -26,7 +26,7 @@
 
 #include "VX2750EventSegment.h"
 #include "VX2750TclConfig.h"
-#include "VX2750PhaConfiguration.h"
+#include "VX2750PHAConfiguration.h"
 #include "VX2750Pha.h"
 #include <Exception.h>
 #include <stdexcept>

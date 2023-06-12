@@ -23,7 +23,7 @@
 */
 #ifndef CAENVX2750MULTITRIGGER_H
 #define CAENVX2750MULTITRIGGER_H
-#include <sbsreadout/CEventTrigger.h>
+#include <CEventTrigger.h>
 #include <vector>
 
 

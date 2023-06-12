@@ -22,7 +22,7 @@
 *
 */
 #ifndef CAENV2750PHATRIGGER_H
-#include <sbsreadout/CEventTrigger.h>      // base class.
+#include <CEventTrigger.h>      // base class.
 
 namespace caen_nscldaq {
 class VX2750EventSegment;                // referenced class.
