@@ -65,6 +65,39 @@ else
 	AM_CONDITIONAL([CAENSUPPORT], [false])
 fi
 
+#  CAEN Nextgen digitizer support is also optional  the CAEN support
+#  libraries are awful in that they require installation in
+#  specific locations:
+
+AC_ARG_ENABLE([caen-nextgen], 
+  [AS_HELP_STRING([--enable-caen-nextgen], 
+    [To enable support for CAEN Nextgen digitizers.])],
+    [
+      AC_MSG_CHECKING([Checking for CAEN FElib installed])
+      AC_CHECK_FILE([/usr/local/include/CAEN_FELib.h], 
+        [AC_MSG_RESULT([Found header])], 
+        [AC_MSG_ERROR([Can't find /usr/local/CAEN_FELib.h - install CAEN Nextgen digitizer support libraries])])
+      AC_CHECK_FILES([/usr/local/lib/libCAEN_Dig2.so /usr/local/lib/libCAEN_FELib.so], 
+        [AC_MSG_RESULT([Found CAEN FELib library files])],
+        [AC_MSG_ERROR([Can't fid the /usr/local/lib/{libCAEN_Dig2.so, libCAEN_FELib.so files install CAEN nextgen digitizer support libraries}]
+        )])
+
+      #  Set the make file variables:
+
+      enable_caennextgen="true"  
+
+      ],
+      enable_caennextgen="false"
+    )
+  AM_CONDITIONAL([CAENNEXTGEN], [$enable_caennextgen])
+  if test $enable_caennextgen="true"
+  then
+    CAENNG_CPPFLAGS="-I/usr/local/include"
+    CAENNG_LDFLAGS="-L/usr/local/lib -lCAEN_FELib -lCAENDig2"
+    AC_SUBST(CAENNG_CPPFLAGS)
+    AC_SUBST(CAENNG_LDFLAGS)
+  fi
+
 # Pandoc is needed for printed versions of the logbook:
 
 AC_CHECK_PROG(HAVE_PANDOC, [pandoc], [true], [false])
@@ -915,6 +948,7 @@ AC_CONFIG_FILES([Makefile
     caendigitizers/dpp-psd/skel/Makefile
     caendigitizers/caendump/Makefile
     caendigitizers/tweaker/Makefile
+    caen-nextgen/Makefile
     cookbooks/Makefile
     ])
 

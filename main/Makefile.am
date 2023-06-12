@@ -23,13 +23,19 @@ if BUILD_DDAS
   DDASDIR=ddas
 endif
 
+if CAENNEXTGEN
+	CAENNGDIR=caen-nextgen
+endif
+
 SUBDIRS = base caenfw-common servers base/dataflow \
 	daq utilities $(DOCDIR) \
-	sbs usb/common/configurableobject $(EPICSDIRS) $(USBDIR) $(DDASDIR) $(CAENSUPPORTDIRS) examples
+	sbs usb/common/configurableobject $(EPICSDIRS) $(USBDIR) $(DDASDIR) $(CAENSUPPORTDIRS) \
+	$(CAENNGDIR) \
+	examples
 
 DIST_SUBDIRS = base caenfw-common servers base/dataflow daq utilities \
 	docbuild docconfig simplesetups sbs epics usb ddas \
-	caendigitizers examples
+	caendigitizers examples caen-nextgen
 
 INTROFIGURES = @srcdir@/figures/intro-data-flow-diagram.png \
 	@srcdir@/figures/intro-data-flow-diagram-diagnostics.png
