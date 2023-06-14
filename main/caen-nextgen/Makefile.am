@@ -42,10 +42,23 @@ noinst_HEADERS=Asserts.h
 #  These are test programs but can only be run
 #  If there is hardware to run them on.
 
-noinst_PROGRAMS=fejackettests #triggertests configtests
+noinst_PROGRAMS=fejackettests triggertests configtests
 
-fejackettests_SOURCES=TestRunner.o devtests.o vx2750phatests.o
-fejackettests_CPPFLAGS=@CAENNG_CPPFLAGS@ @CPPUNIT_CFLAGS
-fejackettests_LDFLAGS=libCaenVx2750.la @CAENNG_LDFLAGS@ \
+ONLINETESTSCPPFLAGS=@CAENNG_CPPFLAGS@ @CPPUNIT_CFLAGS@ @JSON_CFLAGS@
+ONLINETESTSLDFLAGS=libCaenVx2750.la @CAENNG_LDFLAGS@ \
      @CPPUNIT_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@ @JSON_LIBS@ \
      @OPENSSL_LIBS@
+fejackettests_SOURCES=TestRunner.cpp devtests.cpp vx2750phatests.cpp
+fejackettests_CPPFLAGS=$(ONLINETESTSCPPFLAGS)
+fejackettests_LDFLAGS=$(ONLINETESTSLDFLAGS)
+
+triggertests_SOURCES=TestRunner.cpp triggertests.cpp
+triggertests_CPPFLAGS=$(ONLINETESTSCPPFLAGS)
+triggertests_LDFLAGS=$(ONLINETESTSLDFLAGS)
+
+configtests_SOURCES=TestRunner.cpp configtests.cpp
+configtests_CPPFLAGS=$(ONLINETESTSCPPFLAGS) \
+    -I@top_srcdir@/usb/common/configurableobject
+configtests_LDFLAGS=@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
+    $(ONLINETESTSLDFLAGS)
+

@@ -24,7 +24,7 @@
 #define private public
 #include "VX2750Pha.h"     // Base module. -- white box it.
 #undef private
-#include "VX2750PhaConfiguration.h"  // Configuration module Tcl style.
+#include "VX2750PHAConfiguration.h"  // Configuration module Tcl style.
 #include <cstdint>
 #include <vector>
 #include <string>
