@@ -62,3 +62,16 @@ configtests_CPPFLAGS=$(ONLINETESTSCPPFLAGS) \
 configtests_LDFLAGS=@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
     $(ONLINETESTSLDFLAGS)
 
+
+#
+#  This target requires two environment/Makefile variables:
+#    TEST_MODULE_ISUSB - Nonzero if the connection to the module
+#       used for testing is a USB direct connection. 0 if ethernet.
+#    TEST_MODULE_CONNECTION - the connection string to the module. 
+#       For usb modules, this is the module id from the sticker on the PCB
+#       For Ethernet modules, this is the IP address.
+#
+ONLINE_TESTS:
+	@builddir@/fejackettests $(TEST_MODULE_CONNECTION) $(TEST_MODULE_ISUSB)
+	@builddir@/triggertests  $(TEST_MODULE_CONNECTION) $(TEST_MODULE_ISUSB)
+	@builddir@/configtests  $(TEST_MODULE_CONNECTION) $(TEST_MODULE_ISUSB)
