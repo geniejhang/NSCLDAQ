@@ -13,7 +13,7 @@ include_HEADERS=CAENVX2750PhaTrigger.h \
 
 libCaenVx2750_la_CPPFLAGS=@BOOST_CPPFLAGS@ @BOOST_EXTRA_CPPFLAGS@ \
     @TCL_CPPFLAGS@ @CAENNG_CPPFLAGS@ -I@top_srcdir@/usb/common/configurableobject \
-    -I@top_srcdir@/sbs/readout @JSON_CFLAGS@ @LIBTCLPLUS_CFLAGS@
+    -I@top_srcdir@/sbs/readout @JSON_CFLAGS@ @LIBTCLPLUS_CFLAGS@ -I@top_srcdir@/base/os
 
 libCaenVx2750_la_LDFLAGS=@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
     @top_builddir@/sbs/readout/libSBSProductionReadout.la \
@@ -44,7 +44,8 @@ noinst_HEADERS=Asserts.h
 
 noinst_PROGRAMS=fejackettests triggertests configtests
 
-ONLINETESTSCPPFLAGS=@CAENNG_CPPFLAGS@ @CPPUNIT_CFLAGS@ @JSON_CFLAGS@
+ONLINETESTSCPPFLAGS=@CAENNG_CPPFLAGS@ @CPPUNIT_CFLAGS@ @JSON_CFLAGS@ \
+    -I@top_srcdir@/base/os
 ONLINETESTSLDFLAGS=@builddir@/libCaenVx2750.la @CAENNG_LDFLAGS@ \
      @CPPUNIT_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@ @JSON_LIBS@ \
      @OPENSSL_LIBS@
@@ -67,6 +68,13 @@ configtests_LDFLAGS=@top_builddir@/usb/common/configurableobject/libConfigurable
 configtests_DEPENDENCIES=$(ONLINEDEPENDENCIES)    
 
 
+install-data-local:
+	$(mkinstalldirs) @datarootdir@/recipes
+	$(mkinstalldirs) @datarootdir@/recipes/caen-nextgen
+	$(INSTALL_DATA) @srcdir@/tclreadout/* \
+			@datarootdir@/recipes/caen-nextgen
+    
+
 #
 #  This target requires two environment/Makefile variables:
 #    TEST_MODULE_ISUSB - Nonzero if the connection to the module
@@ -79,3 +87,7 @@ ONLINE_TESTS:
 	@builddir@/fejackettests $(TEST_MODULE_CONNECTION) $(TEST_MODULE_ISUSB)
 	@builddir@/triggertests  $(TEST_MODULE_CONNECTION) $(TEST_MODULE_ISUSB)
 	@builddir@/configtests  $(TEST_MODULE_CONNECTION) $(TEST_MODULE_ISUSB)
+
+EXTRA_DIST=tclreadout
+
+
