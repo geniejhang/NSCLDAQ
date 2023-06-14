@@ -30,6 +30,7 @@ namespace eval ::Delay {
   
   variable instances;    # holds parameterizations of each instance
   array set instances [list] ; # indexed by source id.
+  variable delay_index 0;  #index to append to delay variable.
   
 }
 
@@ -149,12 +150,25 @@ proc ::Delay::capabilities {} {
     ]
 }
 
+## 
+#  Called to initiate the delay. Since the delay is
+#  by definition synchronous we can assume only
+#  one delay is in progress at a time and, therefore,
+#  use a single, common variable to synchronize
+#  nonetheless - being chicken, Each delay
+#  _will_ use a separate variable named
+#  ::Delay::done_n where n is an integer
+#  from delay_index.
+#  This is probably not needed -- after all there's only 
+#  one Delay progress user interface element.
+#
 proc ::Delay::_delayWithFeedback {duration} {
   if {[winfo exists .delay]} {
     catch {after cancel $::Delay::destroyCmd}
     destroy .delay
 
   } 
+  #  Make the user interface.
   toplevel .delay
   ttk::label .delay.title -text "Delay in progress"
   ttk::progressbar .delay.progress -orient horizontal -mode determinate \
@@ -165,20 +179,50 @@ proc ::Delay::_delayWithFeedback {duration} {
   grid columnconfigure .delay 0 -weight 1
   
   
-  
+  # Compute the sub-delay lengths in ms:
 
-  set increment [expr $duration/10]
+  set increment [expr int($duration/10)]; 
   if {$increment == 0} {set increment 1}
   
-  for {set elapsed 0} {$elapsed < $duration} {incr elapsed $increment} {
-    after $increment
-    .delay.progress configure -value $elapsed
-    update
-  }
-  .delay.progress configure -value $duration
-  .delay.title configure -text "Delay complete"
-  update
-  set ::Delay::destroyCmd [after 1000 destroy .delay]
+  #  increment the delay variable index:
+
+  incr ::Delay::delay_index
+
+  #  kick off the delay:
+
+  ::Delay::_delay $increment $duration ::Delay::done_${::Delay::delay_index} 0 .delay.progress
+
+  vwait ::Delay::done_${::Delay::delay_index}
   
+  set ::Delay::destroyCmd [after 1000 destroy .delay]; 
+  
+}
+##
+# ::Delay::_delay:
+#
+#  This sets iself up to be called from the event loop after each
+#   delay increment.  Doing so, solves issue #19 - excessive delays
+#   due to the pile up of events during synchronous segmented delays
+#   (I think).
+#
+# @param increment - ms between each delay.
+# @param total     - Total duration.
+# @param signalVar - Fully qualified name of ariable used to signal completion.
+# @param progress  - Progress through the delay.
+# @param widget    - ttk::progressbar being used to keep track of delay progress.
+#
+proc ::Delay::_delay {increment total signalVar progress widget} {
+    #  Are we done yet?
+
+    if {$progress >= $total} {
+        incr $signalVar
+    } else {
+        $widget configure -value $progress
+        set progress [expr {$progress + $increment }]
+
+        # queue the next iteration:
+
+        after $increment [list ::Delay::_delay $increment $total $signalVar $progress $widget]
+    }
 }
 
