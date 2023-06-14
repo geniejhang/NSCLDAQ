@@ -1,4 +1,5 @@
 import inspect
+import logging
 
 from PyQt5.QtWidgets import QWidget, QSpinBox, QLabel, QHBoxLayout
 
@@ -17,6 +18,8 @@ class CrateID(QWidget):
         Number of modules installed in the crate.
     crate_id : QSpinBox
         Spin box to set the crate ID value.
+    logger : Logger
+        QtScope Logging instance.
 
     Methods
     -------
@@ -35,9 +38,10 @@ class CrateID(QWidget):
         ----------
         nmodules : int 
             Number of installed modules in the system.
-        """
-        
+        """        
         super().__init__(*args, **kwargs)
+
+        self.logger = logging.getLogger("qtscope_logger")
 
         self.param_names = ["CrateID"]
         self.nmodules = nmodules
@@ -75,11 +79,12 @@ class CrateID(QWidget):
 
         try:
             if not all(id == id_list[0] for id in id_list):
-                raise ValueError("Inconsistent crate IDs on Mod. {}: read {}, expected {}".format(i, id, id_list[0]))
+                raise ValueError(f"Inconsistent crate IDs read on Mod. {mod}")
         except ValueError as e:
-            print("{}:{}: Caught exception -- {}. Setting crate IDs to the crate ID value read from Mod. 0. Click 'Apply' to update settings. Check your settings file, it may be corrupt.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
-            for i in range(self.nmodules):
-                mgr.set_mod_par(i, self.param_names[0], id_list[0])
+            self.logger.exception(
+                f"Inconsistent crate ID values Mod. {mod}: {id_list}"
+            )
+            print(f"{e}:\n\tRe-apply your module DSP parameters and check your settings file, it may be corrupt.")
         finally:
             self.display_dsp(mgr)
         

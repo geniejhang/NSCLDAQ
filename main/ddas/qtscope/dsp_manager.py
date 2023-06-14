@@ -83,9 +83,7 @@ class DSPManager:
             Number of channels per module.
         """
         self._dsp = {}
-
-        # Get Logger instance:
-
+        
         self._logger = logging.getLogger("qtscope_logger")
         
         self._nmodules = nmod
@@ -136,7 +134,10 @@ class DSPManager:
             if pname not in xia.CHAN_PARS:
                 raise ValueError(f"{pname} is not a channel paramter name")
         except ValueError as e:
-            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
+            self._logger.exception(
+                f"Unrecognized channel parameter name {pname}: {xia.CHAN_PARS}"
+            )
+            print(e)
             return None
         else:
             return self._dsp[mod]["chan_par"].at[chan, pname]
@@ -163,14 +164,17 @@ class DSPManager:
             Channel parameter name is unknown.
         """
         if type(value) is not float:
-            print(f"WARNING -- {pname} value {value} is type {type(value)}, converting to float.")
+            self._logger.warning(f"{pname} value {value} is type {type(value)}, converting to float")
             value = float(value)
         
         try:
             if pname not in xia.CHAN_PARS:
                 raise ValueError(f"{pname} is not a channel paramter name")
         except ValueError as e:
-            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
+            self._logger.exception(
+                f"Unrecognized channel parameter name {pname}: {xia.CHAN_PARS}"
+            )
+            print(e)
         else:
             self._dsp[mod]["chan_par"].at[chan, pname] = value
     
@@ -200,7 +204,10 @@ class DSPManager:
             if pname not in xia.MOD_PARS:
                 raise ValueError("{pname} is not a module paramter name")
         except ValueError as e:
-            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
+            self._logger.exception(
+                f"Unrecognized module parameter name {pname}: {xia.MOD_PARS}"
+            )
+            print(e)
             return None
         else:        
             return self._dsp[mod]["mod_par"].at[0, pname]
@@ -224,14 +231,17 @@ class DSPManager:
             Module parameter name is unknown.
         """
         if type(value) is not int:
-            print(f"WARNING -- {pname} value {value} is type {type(value)}, converting to int.")
+            self._logger.warning("{pname} value {value} is type {type(value)}, converting to int")
             value = int(value)
         
         try:
             if pname not in xia.MOD_PARS:
                 raise ValueError(f"{pname} is not a module parameter name")
         except ValueError as e:
-            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
+            self._logger.exception(
+                f"Unrecognized module parameter name {pname}: {xia.MOD_PARS}"
+            )
+            print(e)
         else:
             self._dsp[mod]["mod_par"].at[0, pname] = value
 
@@ -249,7 +259,7 @@ class DSPManager:
             for p in pnames:
                 self._read_and_set_par(mod, p)
         except ValueError as e:
-             print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
+            self._logger.exception("Failed to read and set DSP parameter(s)")
 
     def write(self, mod, pnames):
         """Write DSP settings from internal storage.
@@ -265,7 +275,7 @@ class DSPManager:
             for p in pnames:
                 self._get_and_write_par(mod, p)
         except ValueError as e:
-            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
+            self._logger.exception("Failed to get and write DSP parameter(s)")
             
     def adjust_offsets(self, mod):
         """Adjust DC offsets for all channels on a single module.

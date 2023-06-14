@@ -1,5 +1,8 @@
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QTextEdit, QGridLayout, QGroupBox
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton,
+    QLabel, QLineEdit, QTextEdit, QGridLayout, QGroupBox
+)
 
 import colors
 

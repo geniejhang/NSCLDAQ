@@ -10,7 +10,10 @@ else:
     from converters import ba2int, int2ba, zeros
 
 from PyQt5.QtGui import QDoubleValidator
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QRadioButton, QButtonGroup, QSpinBox, QGroupBox, QLineEdit, QCheckBox, QLabel, QSizePolicy
+from PyQt5.QtWidgets import (
+    QWidget, QHBoxLayout, QVBoxLayout, QRadioButton, QButtonGroup,
+    QSpinBox, QGroupBox, QLineEdit, QCheckBox, QLabel, QSizePolicy
+)
 
 import xia_constants as xia
 import colors
@@ -47,6 +50,8 @@ class MultCoincidence(QWidget):
     multiplicity_threshold : QSpinBox
         Minimum multiplicity required to trigger for the selected channel 
         coincidence mode set for all channels on the selected module.
+    logger : Logger
+        QtScope Logging instance.
 
     Methods
     -------
@@ -75,6 +80,8 @@ class MultCoincidence(QWidget):
             Number of channels per module.
         """        
         super().__init__(*args, **kwargs)
+
+        self.logger = logging.getLogger("qtscope_logger")
         
         self.param_names = [
             "MultiplicityMaskL",
@@ -255,7 +262,10 @@ class MultCoincidence(QWidget):
                 self.status.setText("<b>Enabled</b>")
                 self.status.setStyleSheet(colors.GREEN_TEXT)                
         except ValueError as e:
-            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.\n\tThis may be intended, verify your CSRA and MultCoincidence settings.")
+            self.logger.warning(
+                f"Custom CSRA settings on Mod. {mod}: {enb_list}"
+            )
+            print(f"{e}:\n\tThis may be intended, verify your CSRA and MultCoincidence settings.")
             self.status.setText("<b>Custom</b>")
             self.status.setStyleSheet(colors.ORANGE_TEXT)
 
@@ -265,26 +275,21 @@ class MultCoincidence(QWidget):
             if not all (win == win_list[0] for win in win_list):
                 raise ValueError(f"Inconsistent channel coincidence width values read on Mod. {mod}")
         except ValueError as e:
-            print(f"{self.__class__.__name__}:{inspect.currentframe().f_code.co_name}: Caught exception -- {e}. Setting all channel coincidence window lengths to match the channel coincidence window length read from Ch. 0.\n\tClick 'Apply' on the MultCoincidence tab to update the module parameters.\n\tCheck your settings file, it may be corrupt.")
-            for i in range(self.nchannels):
-                mgr.set_chan_par(mod, i, "ChanTrigStretch", win_list[0])
+            self.logger.exception(
+                f"Channel coincidence widths on Mod. {mod}: {win_list}"
+            )
+            print(f"{e}:n\tVerify MultCoincidence settings and re-apply.\n\tCheck your settings file, it may be corrupt.")
 
         # Check the threshold. Thresholds _have_ to be the same as well:
         try:
             if not all(mult == mult_list[0] for mult in mult_list):
                 raise ValueError(f"Inconsistent multiplicity threshold values on Mod. {mod}")
         except ValueError as e:
-            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}. Setting all mulitplicity thresholds to match the multiplicity threshold read from Ch. 0.\n\tClick 'Apply' on the MultCoincidence tab to update the module parameters.\n\tCheck your settings file, it may be corrupt.")
-            for i in range(self.nchannels):
-                mask = int2ba(
-                int(mgr.get_chan_par(mod, i, "MultiplicityMaskH")),
-                    32, "little"
-                )
-                mask[xia.MULT_OFFSET:xia.MULT_END] = mult_list[0]
-                mgr.set_chan_par(
-                    mod, i, "MultiplicityMaskH", float(ba2int(mask))
-                )
-                
+            self.logger.exception(
+                f"Multiplicity thresholds on Mod. {mod}: {mult_list}"
+            )
+            print(f"{e}:\n\tVerify MultCoincidence settings and re-apply.\n\tCheck your settings file, it may be corrupt.")
+            
         # Whatever happens, display the DSP:        
         self.display_dsp(mgr, mod)
             
@@ -482,9 +487,12 @@ class MultCoincidence(QWidget):
 
         try:            
             if mode["name"] == "Unknown":
-                raise ValueError("Attempting to set multiplicity mask on Mod. {} for unknown channel multiplicity group".format(mod))            
+                raise ValueError(f"Attempting to set multiplicity mask on Mod. {mod} for unknown channel multiplicity group")            
         except ValueError as e:
-            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}. Please select a known multiplicty group and click 'Apply' to update your settings.")
+            self.logger.warning(
+                f"Attempting to set unknown multiplicity mode on Mod. {mod}"
+            )
+            print(f"{e}:\n\tPlease select a known multiplicty group and click 'Apply' to update your settings.")
         else:            
             # Multiplicity mask slice indices:            
             shift = mode["shift"]
@@ -526,16 +534,18 @@ class MultCoincidence(QWidget):
         ValueError
             If the multiplicity threshold is greater than the maxmimum 
             multiplicity threshold for the selected channel grouping.
-        """        
+        """
+        mode = self.mode_dict[self.rbgroup.checkedId()]["name"]
         mult = self.multiplicity_threshold.value()
         max_mult = self.mode_dict[self.rbgroup.checkedId()]["max_mult"]        
         try:
             self.multiplicity_threshold.setRange(0, max_mult)
             
             if mult > max_mult:
-                raise ValueError(f"Old multiplicity threshold value {mult} is greater than maximum allowed multiplicity threshold {max_mult} for mode {self.mode_dict[self.rbgroup.checkedId()]['name']}")            
+                raise ValueError(f"Old multiplicity threshold value {mult} is greater than maximum allowed multiplicity threshold {max_mult} for mode {mode}")
         except ValueError as e:
-            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}. Setting maximum multiplicity to {max_mult}. Click 'Apply' to update your settings.")
+            self.logger.info(f"Resetting displayed mult {mult} to allowed max mult {max_mult} for mode {mode}. Settings have not been applied.")
+            print(f"{e}:\n\tSetting maximum multiplicity to {max_mult}. Click 'Apply' to update your settings.")
             self.multiplicity_threshold.setValue(max_mult)
             
     def print(self, mgr, mod):

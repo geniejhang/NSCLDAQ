@@ -1,5 +1,3 @@
-import inspect
-
 import bitarray as ba
 ver = [int(i) for i in ba.__version__.split(".")]
 if bool(ver[0] >= 1 or (ver[0] == 1 and ver[1] >= 6)):
@@ -105,7 +103,10 @@ class Trace(ChanDSPWidget):
                     f"Inconsistent trace enable CSRA bits read on Mod. {mod}"
                 )
         except ValueError as e:
-            print("{}:{}: Caught exception -- {}. Check your settings file, it may be corrupt.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            self.logger.exception(
+                f"Inconsistent trace enable CSRA bits Mod. {mod}: {enb_list}"
+            )
+            print(f"{e}:\n\tCheck your settings file, it may be corrupt.")
         finally:
             super().configure(mgr, mod)
     

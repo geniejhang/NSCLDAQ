@@ -1,6 +1,7 @@
 import sys
 from ctypes import *
 import inspect
+import logging
 
 from run_type import RunType
 from converters import str2char
@@ -44,6 +45,8 @@ class SystemUtilities:
     ----------
     obj : POINTER(c_char)
         Handle for the SystemUtilities object.
+    logger : Logger
+        QtScope Logger instance.
 
     Methods:
     boot()
@@ -111,6 +114,7 @@ class SystemUtilities:
         lib.CPixieSystemUtilities_delete.argtypes = [POINTER(c_char)]
 
         self.obj = lib.CPixieSystemUtilities_new()
+        self.logger = logging.getLogger("qtscope_logger")
         
     def boot(self):
         """Wrapper function to system boot.
@@ -123,11 +127,12 @@ class SystemUtilities:
         try: 
             retval = lib.CPixieSystemUtilities_Boot(self.obj)       
             if retval < 0:
-                raise RuntimeError(
-                    "System boot failed with retval {}".format(retval)
-                )
+                raise RuntimeError(f"System boot failed with retval {retval}")
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            self.logger.exception("Failed to boot Pixie modules")
+            print(e)
+        else:
+            self.logger.info("System boot successful")
             
     def save_set_file(self, name):
         """Wrapper function to save an XIA settings file.
@@ -148,10 +153,11 @@ class SystemUtilities:
             )            
             if retval < 0:
                 raise RuntimeError(
-                    "Save settings file failed with retval {}".format(retval)
+                    f"Save settings file failed with retval {retval}"
                 )            
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))    
+            self.logger.exception("Failed to save settings file")
+            print(e)    
             
     def load_set_file(self, name):
         """Wrapper function to load an XIA settings file.
@@ -172,10 +178,11 @@ class SystemUtilities:
             )            
             if retval < 0:
                 raise RuntimeError(
-                    "Load settings file failed with retval {}".format(retval)
+                    f"Load settings file failed with retval {retval}"
                 )            
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))  
+            self.logger.exception("Failed to load settings file")
+            print(e)  
     
     def exit_system(self):
         """Wrapper for system exit. 
@@ -190,11 +197,12 @@ class SystemUtilities:
         try: 
             retval = lib.CPixieSystemUtilities_ExitSystem(self.obj)            
             if retval < 0:
-                raise RuntimeError(
-                    "System exit failed with retval {}".format(retval)
-                )            
+                raise RuntimeError(f"System exit failed with retval {retval}")
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e)) 
+            self.logger.exception("System failed to exit properly")
+            print(e)
+        else:
+            self.logger.info("Exit system successful")
     
     def boot_offline(self, offline=False):
         """Wrapper to set system boot mode.
@@ -274,6 +282,8 @@ class DSPUtilities:
     ----------
     obj : POINTER(c_char)
         Handle for the DSPUtilities object.
+    logger : Logger
+        QtScope Logger instance.
 
     Methods
     -------
@@ -326,6 +336,7 @@ class DSPUtilities:
         lib.CPixieDSPUtilities_delete.argtypes = [POINTER(c_char)]
 
         self.obj = lib.CPixieDSPUtilities_new()
+        self.logger = logging.getLogger("qtscope_logger")
     
     def adjust_offsets(self, module):
         """Wrapper to adjust DC offsets for all channels on a given module.
@@ -343,9 +354,10 @@ class DSPUtilities:
         try:
             retval = lib.CPixieDSPUtilities_AdjustOffsets(self.obj, module)
             if retval < 0:
-                raise RuntimeError("Failed to adjust offsets in Mod. {} with retval {}".format(module, retval))            
+                raise RuntimeError(f"Failed to adjust offsets in Mod. {mod} with retval {retval}")            
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))            
+            self.logger.exception(f"Failed to adjust offsets")
+            print(e)
         
     def write_chan_par(self, module, channel, name, val):
         """Wrapper to write a channel parameter to a module.
@@ -373,9 +385,10 @@ class DSPUtilities:
                 self.obj, module, channel, str2char(name), val
             )            
             if retval < 0:
-                raise RuntimeError("Failed to write parameter {} to Mod. {}, Ch. {} with retval {}".format(name, module, channel, retval))            
+                raise RuntimeError(f"Failed to write parameter {name} to Mod. {module}, Ch. {channel} with retval {retval}")         
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))     
+            self.logger.exception(f"Failed to write channel parameter")
+            print(e)     
     
     def read_chan_par(self, module, channel, name):
         """Wrapper to read a channel parameter from a module.
@@ -409,9 +422,10 @@ class DSPUtilities:
                 self.obj, module, channel, str2char(name), byref(read_param)
             )            
             if retval < 0:
-                raise RuntimeError("Failed to read parameter {} from Mod. {}, Ch. {} with retval {}".format(name, module, channel, retval))            
+                raise RuntimeError(f"Failed to read parameter {name} from Mod. {module}, Ch. {channel} with retval {retval}")
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            self.logger.exception(f"Failed to read channel parameter")
+            print(e)
             return None        
         else:
             return read_param.value
@@ -441,9 +455,10 @@ class DSPUtilities:
                 self.obj, module, str2char(name), int(val)
             )            
             if retval < 0:
-                raise RuntimeError("Failed to write parameter {} to Mod. {} with retval {}".format(name, module, retval))            
+                raise RuntimeError(f"Failed to write parameter {name} to Mod. {module} with retval {retval}") 
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))             
+            self.logger.exception(f"Failed to write module parameter")
+            print(e)             
         
     def read_mod_par(self, module, name):
         """Wrapper to read a module parameter.
@@ -475,9 +490,10 @@ class DSPUtilities:
                 self.obj, module, str2char(name), byref(read_param)
             )            
             if retval < 0:
-                raise RuntimeError("Failed to read paramter {} from Mod. {} with retval {}".format(name, module, retval))            
+                raise RuntimeError(f"Failed to read paramter {name} from Mod. {module} with retval {retval}")            
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            self.logger.exception(f"Failed to read module parameter")
+            print(e)
             return None        
         else:
             return read_param.value
@@ -497,6 +513,8 @@ class RunUtilities:
     ----------
     obj : POINTER(c_char)
         Handle for the RunUtilities object.
+    logger : Logging
+        QtScope Logging instance.
 
     Methods
     -------
@@ -573,6 +591,7 @@ class RunUtilities:
         lib.CPixieRunUtilities_delete.argtypes = [POINTER(c_char)]
 
         self.obj = lib.CPixieRunUtilities_new()
+        self.logger = logging.getLogger("qtscope_logger")
     
     def begin_run(self, module, run_type):
         """Wrapper to begin a histogram run in a single module.
@@ -597,19 +616,21 @@ class RunUtilities:
                     self.obj, module
                 )     
                 if retval < 0:
-                    raise RuntimeError("Begin histogram run in Mod. {} failed with retval {}".format(retval, module))                
+                    raise RuntimeError(f"Begin histogram run in Mod. {mod} failed with retval {retval}")                
             elif run_type == RunType.BASELINE:                
                 retval =  lib.CPixieRunUtilities_BeginBaselineRun(
                     self.obj, module
                 )
                 if retval < 0:
-                    raise RuntimeError("Begin baseline run in Mod. {} failed with retval {}".format(retval, module))                
+                    raise RuntimeError(f"Begin baseline run in Mod. {mod} failed with retval {retval}")                
             else:
-                raise ValueError("Unable to begin run in Mod. {}, run type {} is not a valid type of data run".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, module, run_type))            
+                raise ValueError(f"Unable to begin run in Mod. {mod}, run type {run_type} is not a valid type of data run")            
         except ValueError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))            
+            self.logger.exception("Attempted to begin unrecognized run type")
+            print(e)            
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))    
+            self.logger.exception("Failed to begin run")
+            print(e)    
             
     def end_run(self, module, run_type):
         """Wrapper to end a histogram run in a single module.
@@ -632,9 +653,10 @@ class RunUtilities:
             elif run_type == RunType.BASELINE:
                 lib.CPixieRunUtilities_EndBaselineRun(self.obj, module)
             else:
-                raise ValueError("{}.{}: Unable to end run in Mod. {}, run type {} is not a valid type of data run.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, module, run_type))            
+                raise ValueError(f"Unable to end run in Mod. {mod} with unknown run type {run_type}")         
         except ValueError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            self.logger.exception(f"Failed to end data run")
+            print(e)
             
     def read_data(self, module, channel, run_type):
         """Wrapper to read run data from a single channel.
@@ -661,19 +683,21 @@ class RunUtilities:
                     self.obj, module, channel
                 )
                 if retval < 0:
-                    raise RuntimeError("Histogram read from Mod. {}, Ch. {} failed with retval {}".format(module, channel, retval))                
+                    raise RuntimeError(f"Histogram read from Mod. {module}, Ch. {channel} failed with retval {retval}")               
             elif run_type == RunType.BASELINE:
                 retval = lib.CPixieRunUtilities_ReadBaseline(
                     self.obj, module, channel
                 )
                 if retval < 0:
-                    raise RuntimeError("Baseline read from Mod. {}, Ch. {} failed with retval {}".format(module, channel, retval))                
+                    raise RuntimeError(f"Baseline read from Mod. {module}, Ch. {channel} failed with retval {retval}")           
             else:
-                raise ValueError("{}.{}: unable to read data from Mod. {}, run type {} is not a valid type of data run".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, module, run_type))            
+                raise ValueError(f"Unable to read data from Mod. {mod} for unknown run type {run_type}")           
         except ValueError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))            
+            self.logger.exception(f"Encountered unknown run type")
+            print(e)            
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))
+            self.logger.exception(f"Failed to read run data")
+            print(e)
 
     def read_stats(self, module):
         """Wrapper to read the run statistics from a single module.
@@ -691,9 +715,10 @@ class RunUtilities:
         try: 
             retval = lib.CPixieRunUtilities_ReadModuleStats(self.obj, module)   
             if retval < 0:
-                raise RuntimeError("Reading statistics from Mod. {} failed with retval {}".format(module, retval))            
+                raise RuntimeError("Reading statistics from Mod. {mod} failed with retval {retval}")    
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))    
+            self.logger.exception(f"Failed to read run statistics")
+            print(e)    
     
     def get_data(self, run_type):
         """
@@ -812,9 +837,10 @@ class TraceUtilities:
                 self.obj, module, channel
             )            
             if retval < 0:
-                raise RuntimeError("Read trace from Mod. {}, Ch. {} failed with retval {}".format(module, channel, retval))            
+                raise RuntimeError(f"Read trace from Mod. {module} Ch. {chanel} failed with retval {retval}")          
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))        
+            self.logger.exception(f"Failed to read ADC trace data")
+            print(e)        
             
     def read_fast_trace(self, module, channel):
         """Wrapper to read an unvalidated trace from an single channel.
@@ -836,9 +862,10 @@ class TraceUtilities:
                 self.obj, module, channel
             )            
             if retval < 0:
-                raise RuntimeError("Read trace from Mod. {}, Ch. {} failed with retval {}".format(module, channel, retval))            
+                raise RuntimeError(f"Read trace from Mod. {module} Ch. {chanel} failed with retval {retval}")          
         except RuntimeError as e:
-            print("{}.{}: Caught exception -- {}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))    
+            self.logger.exception(f"Failed to read ADC trace data")
+            print(e)        
     
     def get_trace_data(self):
         """Wrapper to provide access the acquired trace data.

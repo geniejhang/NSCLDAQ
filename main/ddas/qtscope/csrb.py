@@ -6,7 +6,10 @@ else:
     from converters import ba2int, int2ba, zeros
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QPushButton, QButtonGroup, QGridLayout, QLabel, QCheckBox
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QRadioButton, QPushButton, QButtonGroup,
+    QGridLayout, QLabel, QCheckBox
+)
 
 import colors
 

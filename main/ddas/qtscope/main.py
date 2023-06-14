@@ -55,29 +55,33 @@ def main():
     # without any hardware and control the program logging output.    
 
     try:
-        offline = int(os.getenv("QTSCOPE_OFFLINE", 0))
-    except Exception as e:
-        print(f"QtScope main caught an exception -- {e}.")
-        sys.exit()
-    else:
-        if offline:
-            print("\n-----------------------------------")
-            print("QtScope running in offline mode!!!")
-            print("-----------------------------------\n")
-
-    try:
         log_level = os.getenv("QTSCOPE_LOG_LEVEL", "INFO").upper()
         if log_level not in logging._levelToName.values():
             allowed = logging._levelToName.values()
-            raise RuntimeError(f"QTSCOPE_LOG_LEVEL must be one of {allowed}.")
+            raise ValueError(
+                f"QTSCOPE_LOG_LEVEL={log_level} not in {allowed}"
+            )
     except Exception as e:
-        print(f"QtScope main caught an exception -- {e}.")
+        logging.exception("Error occured while configuring logger")
+        print(f"Failed to configure logger. See qtscope.log for details.")
         sys.exit()
     else:
         logger = logging.getLogger("qtscope_logger")
         logger.setLevel(log_level)
         logger.info(f"PATH: {sys.path}")
         logger.debug(f"Environ: {os.environ}")
+        
+    try:
+        offline = int(os.getenv("QTSCOPE_OFFLINE", 0))
+    except Exception as e:
+        print(f"QtScope main caught an exception:\n\t{e}.")
+        logger.exception("Failed to read QTSCOPE_OFFLINE from env")
+        sys.exit()
+    else:
+        if offline:
+            print("\n-----------------------------------")
+            print("QtScope running in offline mode!!!")
+            print("-----------------------------------\n")  
 
     # Get the XIA API major version used to compile this program:
     

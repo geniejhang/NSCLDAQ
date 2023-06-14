@@ -1,4 +1,7 @@
-from PyQt5.QtWidgets import QToolBar, QPushButton, QSpinBox, QCheckBox, QHBoxLayout, QGroupBox, QComboBox
+from PyQt5.QtWidgets import (
+    QToolBar, QPushButton, QSpinBox, QCheckBox, QHBoxLayout,
+    QGroupBox, QComboBox
+)
 
 import colors
 from run_type import RunType
@@ -65,13 +68,14 @@ class AcquisitionToolBar(QToolBar):
         run_control_layout = QHBoxLayout()
         
         self.b_read_data = QPushButton("Read data")
-        self.b_run_control = QPushButton("Begin run")      
+        self.b_read_data.setStyleSheet(colors.CYAN)
+
+        self.b_run_control = QPushButton("Begin run")
+        self.b_run_control.setStyleSheet(colors.CYAN)
+        
         self.run_type = QComboBox()
         self.run_type.insertItem(RunType.HISTOGRAM.value, "Energy hist.")
         self.run_type.insertItem(RunType.BASELINE.value, "Baseline")
-
-        self.b_read_data.setStyleSheet(colors.CYAN)
-        self.b_run_control.setStyleSheet(colors.CYAN)
         
         run_control_layout.addWidget(self.b_read_data)
         run_control_layout.addWidget(self.b_run_control)

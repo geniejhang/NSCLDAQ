@@ -1,5 +1,6 @@
 import sys
 import traceback
+import logging
 
 from PyQt5.QtCore import QObject, QRunnable, pyqtSignal, pyqtSlot
 
@@ -37,6 +38,8 @@ class Worker(QRunnable):
         Keyword arguments to pass to the callback function.
     signals : WorkerSignals
         Signals emitted by the worker.
+    logger : Logger
+        QtScope Logger instance.
 
     Methods
     -------
@@ -63,6 +66,8 @@ class Worker(QRunnable):
             Keyword arguments to pass to the callback function.
         """        
         super().__init__()
+
+        self.logger = logging.getLogger("qtscope_logger")
         
         # Store constructor arguments (re-used for processing):        
         self.fn = fn
@@ -79,6 +84,9 @@ class Worker(QRunnable):
         except:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
+            self.logger.exception(
+                f"Error running worker thread: {exctype} {value}"
+            )
             self.signals.error.emit((exctype, value, traceback.format_exc()))
         else:
             self.signals.result.emit(result)

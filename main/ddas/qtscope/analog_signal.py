@@ -9,7 +9,10 @@ else:
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QDoubleValidator
-from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QVBoxLayout, QComboBox, QPushButton, QFrame
+from PyQt5.QtWidgets import (
+    QWidget, QGridLayout, QLabel, QLineEdit, QVBoxLayout,
+    QComboBox, QPushButton, QFrame
+)
 
 import xia_constants as xia
 import colors

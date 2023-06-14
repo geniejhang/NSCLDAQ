@@ -9,7 +9,9 @@ import logging
 
 from PyQt5.QtCore import Qt, QThreadPool
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget,QApplication, QFileDialog
+from PyQt5.QtWidgets import (
+    QMainWindow, QVBoxLayout, QWidget,QApplication, QFileDialog
+)
 
 from pixie_utilities import SystemUtilities, RunUtilities, TraceUtilities
 from dsp_manager import DSPManager
@@ -268,7 +270,7 @@ class MainWindow(QMainWindow):
             self.mplplot.toolbar.enable()
 
             print("QtScope system configuration complete!")
-            self.logger.info("QtScope system configuration complete!")
+            self.logger.info("System configuration successful")
 
     # @todo (ASC 3/21/23): Define another custom human-readable text format
     # independent of the XIA API version.
@@ -309,7 +311,8 @@ class MainWindow(QMainWindow):
                     elif fext != ".set":
                         raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extension are: .set. Your settings file has not been saved")                
             except RuntimeError as e:
-                print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
+                self.logger.exception("Error saving settings file")
+                print(e)
             else:
                 self.sys_utils.save_set_file(fname)
                 print(f"DSP parameter file saved to: {fname}")
@@ -325,14 +328,14 @@ class MainWindow(QMainWindow):
         fname, opt = self._load_dialog()
         if fname and opt:
             try:
-                if opt == "XIA settings file (*.set)" or "XIA JSON settings file (*.json)":
+                if (opt == "XIA settings file (*.set)"
+                    or "XIA JSON settings file (*.json)"):
                     self.sys_utils.load_set_file(fname)
                 else:
-                    raise RuntimeError(
-                        f"Unrecognized file extension '{ext}'"
-                    )
+                    raise RuntimeError(f"Unrecognized file extension '{ext}'")
             except RuntimeError:
-                print(f"{self.__class__.__name__,}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
+                self.logger.exception("Error loading settings file")
+                print(e)
 
         # If the system has been booted, reload the DSP into the dataframe,
         # and reload the current channel DSP tab and module DSP (other channel
@@ -445,14 +448,14 @@ class MainWindow(QMainWindow):
         # Access thread from global thread pool for the begin/end operation
         # If a run is active, end it, otherwise start a new one:        
         if self.run_active:
-            self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Run active {self.run_active}, type {self.active_type} -- ending the run")           
+            self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Run active {self.run_active}, type {self.active_type}; Ending current run")           
             worker = Worker(self._end_run)
             worker.signals.finished.connect(self.chan_gui.toolbar.enable)
             worker.signals.finished.connect(self.mod_gui.toolbar.enable)
             worker.signals.finished.connect(self.acq_toolbar.enable)
             self.pool.start(worker)
         else:
-            self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Run active {self.run_active}, type {self.active_type} -- beginning new run")            
+            self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Run active {self.run_active}, type {self.active_type}; Beginning new run")            
             worker = Worker(self._begin_run)
             worker.signals.running.connect(self.chan_gui.toolbar.disable)
             worker.signals.running.connect(self.mod_gui.toolbar.disable)
@@ -635,7 +638,8 @@ class MainWindow(QMainWindow):
         ------
         ValueError
             If the module number is changed between acquisition and analyze 
-            attempt, if the channel number for a single-channel read is changed 
+            attempt.
+            If the channel number for a single-channel read is changed 
             between acquisition and analysis.
         """        
         self.mplplot.figure.clear()
@@ -662,7 +666,8 @@ class MainWindow(QMainWindow):
                 # acquired, and analyze is designed to analyze a trace shown on
                 # the current canvas.
                 raise ValueError(f"Stored trace data for Mod. {self.trace_info['module']} Ch. {self.trace_info['channel']} does not match the current selection box Mod. {module} Ch. {channel}")
-            elif self.acq_toolbar.read_all.isChecked() and channel != self.trace_info["channel"]:
+            elif (self.acq_toolbar.read_all.isChecked()
+                  and channel != self.trace_info["channel"]):
                 # Channel changed between acquisition and analysis. All traces
                 # have been read, so get the correct data from its subplot.
                 self.trace_info.update({
@@ -670,13 +675,17 @@ class MainWindow(QMainWindow):
                     "module": module,
                     "channel": channel
                 })
-            elif not self.acq_toolbar.read_all.isChecked() and channel != self.trace_info["channel"]:
+            elif not (self.acq_toolbar.read_all.isChecked()
+                    and channel != self.trace_info["channel"]):
                 # Single channel acquisition mode channel has been switched
                 # since acquiring a trace (trace on the canvas does not match
                 # current selection box).
                 raise ValueError(f"Stored trace data for Mod. {self.trace_info['module']} Ch. {self.trace_info['channel']} does not match the current selection box Mod. {module} Ch. {channel}")
         except ValueError as e:
-            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.\nNew trace data must be acquired by clicking the 'Read trace' button prior to analysis.")
+            self.logger.exception(
+                "Channel selection changed between acquisition and analysis"
+            )
+            print(f"{e}:\n\tNew trace data must be acquired by clicking the 'Read trace' button prior to analysis.")
         else:            
             # No exceptions, analyze and draw:
             try:
@@ -686,7 +695,8 @@ class MainWindow(QMainWindow):
                     self.trace_info["trace"]
                 )
             except Exception as e:
-                print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Caught exception -- {e}.")
+                self.logger.exception("Error analyzing acquired trace")
+                print(e)
             else:                
                 self.mplplot.draw_analyzed_trace(
                     self.trace_info["trace"],

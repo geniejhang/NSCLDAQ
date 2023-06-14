@@ -1,7 +1,9 @@
 import numpy as np
 
 from PyQt5.QtGui import QDoubleValidator
-from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QVBoxLayout, QSizePolicy
+from PyQt5.QtWidgets import (
+    QWidget, QGridLayout, QLabel, QLineEdit, QVBoxLayout, QSizePolicy
+)
 
 import colors
 
@@ -62,10 +64,9 @@ class ChanDSPWidget(QWidget):
             Column labels for the GUI.
         nchannels : int, default=16
             Number of channels per module. 
-        """
-        
+        """        
         super().__init__(*args, **kwargs)
-
+        
         self.param_names = param_names
         self.param_labels = param_labels
         self.nchannels = nchannels

@@ -82,7 +82,7 @@ def zeros(length, endian="big"):
         If the length is not an integer.
     """
     if not isinstance(length, (int, long) if _is_py2 else int):
-        raise TypeError("integer expected")
+        raise TypeError("Integer expected")    
 
     a = bitarray(length, endian)
     a.setall(0)
@@ -112,18 +112,18 @@ def strip(a, mode='right'):
     Raises
     ------
     TypeError
-        If the argument to strip is not a bitarray, if mode argument is 
-        not a string.
+        If the argument to strip is not a bitarray.
+        If mode argument is not a string.
     ValueError
         If the mode string is not "left," "right," or "both."
     """
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
     if not isinstance(mode, str):
-        raise TypeError("string expected for mode")
+        raise TypeError("String expected for mode")
     if mode not in ('left', 'right', 'both'):
         raise ValueError(
-            "allowed values 'left', 'right', 'both', got: %r" % mode
+            "Allowed values 'left', 'right', 'both', got: %r" % mode
         )
     
     first = 0
@@ -239,8 +239,9 @@ def int2ba(i, length=None, endian="big", signed=False):
     Raises
     ------
     TypeError
-        If the argument to convert is not an integer, if no output bitarray 
-        length is provided, if output is a signed integer and length is zero.
+        If the argument to convert is not an integer.
+        If no output bitarray length is provided.
+        If output is a signed integer and length is zero.
     ValueError
         The output bitarray length is zero.
     OverflowError

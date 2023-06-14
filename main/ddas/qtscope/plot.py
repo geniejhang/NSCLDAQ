@@ -6,6 +6,7 @@ import numpy as np
 import inspect
 import copy
 import sys
+import logging
 
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox
 from PyQt5.QtGui import QPaintEvent
@@ -30,8 +31,8 @@ class Plot(QWidget):
         Factory method for fitting plot data.
     toolbar : NavigationToolbar2QT
         Figure navigation toolbar imported from Qt5 backend.
-    debug : bool
-        True to enable debugging output.
+    logger : Logger
+        QtScope Logger object.
 
     Methods
     -------
@@ -45,12 +46,9 @@ class Plot(QWidget):
         Draw a blank histogram-style canvas when starting a histogram run.
     draw_test_data(idx)
         Draw a test figure with a random number of subplots.
-    test_draw() 
-        Draw random numbers on subplot idx of a test plot.
     """
     
-    def __init__(self, toolbar_factory, fit_factory, debug=False,
-                 *args, **kwargs):
+    def __init__(self, toolbar_factory, fit_factory, *args, **kwargs):
         """Plot class constructor.
 
         Arguments
@@ -64,7 +62,7 @@ class Plot(QWidget):
         """
         super().__init__(*args, **kwargs)
 
-        self.debug = debug
+        self.logger = logging.getLogger("qtscope_logger")
         
         ##
         # Main layout
@@ -171,7 +169,7 @@ class Plot(QWidget):
         ax3 = self.figure.add_subplot(3, 1, 3)
         ax3.set_title("Energy filter")
         ax3.plot(slow_filter, "-")
-
+        
         # Get y range from data:        
         margin = 0.1
         for ax in self.figure.get_axes():
@@ -216,7 +214,7 @@ class Plot(QWidget):
         elif run_type == RunType.BASELINE:
             ax.set_xlabel("Baseline value (ADC units)")
             
-        ax.set_ylabel("Counts/1 ADC unit")
+        ax.set_ylabel("Counts/bin")
         ax.set_xlim(0, xia.MAX_HISTOGRAM_LENGTH)
         self._set_yscale(ax)
         
@@ -242,16 +240,17 @@ class Plot(QWidget):
 
         try:
             if run_type != RunType.HISTOGRAM and run_type != RunType.BASELINE:
-                raise ValueError("Encountered unexpected run type {}, select a valid run type and begin a new run".format(run_type))            
+                raise ValueError(f"Encountered unexpected run type {run_type}, select a valid run type and begin a new run")  
         except ValueError as e:
-            print("{}.{}: Caught exception -- {}.".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, e))            
+            self.logger.exception("Encountered unknown run type")
+            print(e)            
         else:
             ax = self.figure.add_subplot(1, 1, 1)
             if run_type == RunType.HISTOGRAM:
                 ax.set_xlabel("ADC energy")
             elif run_type == RunType.BASELINE:
                 ax.set_xlabel("Baseline value")
-            ax.set_ylabel("Counts/1 ADC unit")
+            ax.set_ylabel("Counts/bin")
             ax.set_xlim(0, xia.MAX_HISTOGRAM_LENGTH)
             ax.set_ylim(0, 1)
             self._set_yscale(ax)        
@@ -270,14 +269,15 @@ class Plot(QWidget):
 
         Returns
         -------
-        list
-            Data from the selected subplot.
+        array
+            Data from the selected subplot. Empty if the subplot does not
+            contain any data.
         """        
         axes = self.figure.get_axes()
         if axes[idx].get_lines():
-            return np.ndarray.tolist(axes[idx].lines[0].get_ydata())
+            return axes[idx].lines[0].get_ydata()
         else:
-            return []        
+            return np.empty(0)
 
     def draw_test_data(self):
         """Draw test data. 
@@ -359,7 +359,7 @@ class Plot(QWidget):
                     ax.set_ylim(0,None)
             else:
                 ax.set_ylim(0, 1)
-
+              
     def _show_fit_panel(self):
         """Show the fit panel GUI in a popup window."""
         self.fit_panel.show()
@@ -368,7 +368,7 @@ class Plot(QWidget):
         """Perform the fit based on the current fit panel settings."""        
         if len(self.figure.get_axes()) == 1:
             ydata = self.get_subplot_data(0)
-            if len(ydata) > 0:
+            if ydata.size > 0:
                 ax = plt.gca()
                 fcn = self.fit_panel.function_list.currentText()
                 config = self.fit_factory.configs.get(fcn)
@@ -386,15 +386,14 @@ class Plot(QWidget):
                 # Get data in fitting range [xmin, xmax):
                 x = []  # Just the plain x-axis value.
                 y = []
-                for i in range(len(ydata)):
+                for i in range(ydata.size):
                     if i >= xmin and i < xmax:
                         x.append(i)
                         y.append(ydata[i])
-                        
-                if self.debug:
-                    print("Function config params:", config)
-                    print("Fit limits: {}, {}".format(xmin, xmax))
-                    print("Initial guess params:", params)
+
+                self.logger.debug(f"Function config params: {config}")
+                self.logger.debug(f"Fit limits: {xmin}, {xmax}")
+                self.logger.debug(f"Initial guess params: {params}")
                 
                 fitln = fit.start(x, y, params, ax, self.fit_panel.results)
                 self.canvas.draw_idle()

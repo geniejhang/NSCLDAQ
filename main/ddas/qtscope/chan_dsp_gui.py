@@ -140,7 +140,7 @@ class ChanDSPGUI(QMainWindow):
         """        
         self.dsp_mgr = dsp_manager
 
-        # Length of msps_list == number of modules.
+        # Length of msps_list == number of modules:
         logging.getLogger("qtscope_logger").debug(
             "{}.{}: Configuring GUI for {} modules using {}".format(
                 self.__class__.__name__,
@@ -150,7 +150,7 @@ class ChanDSPGUI(QMainWindow):
             )
         )
 
-        # Configure toolbar:        
+        # Configure toolbar:   
         self.toolbar.copy_mod.setRange(0, len(msps_list)-1)
         self.toolbar.copy_chan.setRange(0, 15)
 

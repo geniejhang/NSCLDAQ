@@ -8,7 +8,9 @@ else:
     from converters import ba2int, int2ba, zeros
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QVBoxLayout, QCheckBox, QFrame
+from PyQt5.QtWidgets import (
+    QWidget, QGridLayout, QLabel, QLineEdit, QVBoxLayout, QCheckBox, QFrame
+)
 
 class CSRA(QWidget):
     """Channel CSRA grid widget.
