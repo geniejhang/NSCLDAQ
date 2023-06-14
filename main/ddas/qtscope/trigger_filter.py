@@ -4,11 +4,12 @@ class TriggerFilter(ChanDSPWidget):
     """Trigger filter DSP tab (ChanDSPWidget)."""
     
     def __init__(self, *args, **kwargs):
-        """
-        TriggerFilter class constructor.  
+        """TriggerFilter class constructor.  
 
-        Keyword arguments:
-            module (int): Module number from factory create method.
+        Keyword arguments
+        -----------------
+        module : int
+            Module number from factory create method.
         """
         
         # XIA API parameter names:
@@ -38,11 +39,11 @@ class TriggerFilterBuilder:
         """TriggerFilterBuilder class constructor."""
         
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the widget and return it to the caller.
+        """Create an instance of the widget and return it to the caller.
 
-        Returns:
-            TriggerFilter: Instance of the DSP class widget.
-        """        
-            
+        Returns
+        -------
+        TriggerFilter
+            Instance of the DSP class widget.
+        """  
         return TriggerFilter(*args, **kwargs)

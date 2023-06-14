@@ -7904,6 +7904,51 @@ mdpp32qdc cget <replaceable>name</replaceable>
                      </listitem>
                  </varlistentry>
                  <varlistentry>
+                     <term><option>-triggersource</option> <replaceable>int 0-1023 (0-0x3ff)</replaceable></term>
+                     <listitem>
+                         <para>
+                             (From MDPP-32 documentation) Defines the trigger which creates the window of interest.
+                             This can be: one or both of the trigger inputs, lower 16 channels(B0), upper 16 channels(B1),
+                             or both banks (all channels). 
+                         </para>
+                         <informalexample>
+                             <programlisting>
++-------------------------------------------+
+| Whole bank |    16 channels     |  trig   |
+|   2 bits   |       6 bits       | 2 bits  |
++-------------------------------------------+
+|  B1  | B0  | active | Chan[4:0] | T1 | T0 |
++-------------------------------------------+
+                             </programlisting>
+                         </informalexample>
+                         <para>
+                             The default value is 0x100.
+                         </para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term><option>-triggersource</option> <replaceable>int 0-1023 (0-0x3ff)</replaceable></term>
+                     <listitem>
+                         <para>
+                             (From MDPP-32 documentation) Defines the trigger which creates output trigger.
+                             This can be: one or both of the trigger inputs, lower 16 channels(B0), upper 16 channels(B1),
+                             or both banks (all channels). 
+                         </para>
+                         <informalexample>
+                             <programlisting>
++-----------------------------------------+
+| Whole bank |    16 channels     |   00  |
++-----------------------------------------+
+|  B1  | B0  | active | Chan[4:0] | 0 | 0 |
++-----------------------------------------+
+                             </programlisting>
+                         </informalexample>
+                         <para>
+                             The default value is 0x100.
+                         </para>
+                     </listitem>
+                 </varlistentry>
+                 <varlistentry>
                      <term>
                          <option>-signalwidth</option>
                          <replaceable>int[8] 0-1023 (FWHM value in ns)</replaceable>
@@ -8156,6 +8201,8 @@ set windowWidth         32
 set firstHit            1
 set testPulser          1
 set pulserAmplitude     400
+set triggerSource       0x100
+set triggerOutput       0x100
 
 mdpp32qdc create qdc -base 0x00030000
 mdpp32qdc config qdc -signalwidth $signalWidth \
@@ -8171,6 +8218,8 @@ mdpp32qdc config qdc -signalwidth $signalWidth \
                      -firsthit $firstHit \
                      -testpulser $testPulser \
                      -pulseramplitude $pulserAmplitude \
+                     -triggersource $triggerSource \
+                     -triggeroutput $triggerOutput \
                      -printregisters 1
                  </programlisting>
              </example>

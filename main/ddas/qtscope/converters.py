@@ -9,31 +9,39 @@ Utilities for converting between data types and bitarray utilities
 needed by QtScope which may not be present in the bitarray module 
 provided in the OS repos.
 
-Methods:
-    str2char(): Convert a Python string to C-type char*.
-    zeros(): Create a bitarray of given length and endianness filled 
-             with all zeroes.
-    strip(): Strip zeroes off the end(s) of a bitarray.
-    ba2int(): Convert a bitarray to an integer.
-    int2ba(): Convert an integer to a bitarray.
+Methods
+-------
+str2char(pystr)
+    Convert a Python string to C-type char*.
+zeros(length, endian="big") 
+    Create a bitarray of given length and endianness filled with all zeroes.
+strip(a, mode='right') 
+    Strip zeroes off the end(s) of a bitarray.
+ba2int(a, signed=False) 
+    Convert a bitarray to an integer.
+int2ba(i, length=None, endian="big", signed=False) 
+    Convert an integer to a bitarray.
 """
 
 _is_py2 = bool(sys.version_info[0] == 2)
 
 def str2char(pystr):
-    """
-    Convert Python string to char*.
+    """Convert Python string to char*.
 
-    Arguments:
-        pystr (str): Python string.
+    Parameters
+    ----------
+    pystr : str
+        Python string.
     
-    Returns:
-        char*: Mutable memory string buffer generated from input Python string.
+    Returns
+    -------
+    char*
+        Mutable memory string buffer generated from input Python string.
     """    
     bstr = pystr.encode("utf-8")
     return create_string_buffer(bstr)
 
-###
+##
 # bitarray utils
 #
 
@@ -42,7 +50,8 @@ def str2char(pystr):
 # version prior to the development of bitarray.utils.
 
 def zeros(length, endian="big"):
-    """
+    """Create a bitarray of zeroes.
+
     Create a bitarray of length, with all values 0, and optional
     endianness, which may be 'big', 'little'.
 
@@ -55,52 +64,68 @@ def zeros(length, endian="big"):
     Copied from tag 1.6.3, which is the version of the bitarray module 
     available in the Debian 11 repo.
 
-    Arguments:
-        length (int): Length of the bitarray.
-        endian (str): bitarray endianness (optional parameter, default="big").
+    Parameters
+    ----------
+    length : int
+        Length of the bitarray.
+    endian : str, optional, default='big'
+        bitarray endianness.
 
-    Raises:
-        TypeError: If the length is not an integer.
+    Returns
+    -------
+    bitarray
+        bitarray of zeroes of the given length and endianness.
 
-    Returns:
-        bitarray: bitarray of zeroes of the given length and endianness.
+    Raises
+    ------
+    TypeError
+        If the length is not an integer.
     """
     if not isinstance(length, (int, long) if _is_py2 else int):
-        raise TypeError("integer expected")
+        raise TypeError("Integer expected")    
 
     a = bitarray(length, endian)
     a.setall(0)
     return a
 
 def strip(a, mode='right'):
-    """
-    Strip zeros from left, right or both ends. Allowed values for mode are 
-    the strings: `left`, `right`, `both`.
+    """Strip zeros from left, right or both ends.
+
+    Allowed values for mode are the strings: `left`, `right`, `both`.
 
     See https://github.com/ilanschnell/bitarray/blob/master/bitarray/util.py.
     Copied from tag 1.6.3, which is the version of the bitarray module 
     available in the Debian 11 repo.
 
-    Arguments:
-        a (bitarray): A bitarray object.
-        mode (str): End of the bitarray to strip zeroes from (optional 
-                    parameter, default="right").
+    Parameters
+    ----------
+    a : bitarray
+        A bitarray object.
+    mode : str, optional, default='right'
+        End of the bitarray to strip zeroes from.
 
-    Raises:
-        TypeError: If the argument to strip is not a bitarray.
-        TypeError: If mode argument is not a string.
-        ValueError: If the mode string is not "left," "right," or "both."
+    Returns
+    -------
+    bitarray 
+        bitarray with zeroes stripped of the end(s).
 
-    Returns:
-        a (bitarray): bitarray with zeroes stripped of the end(s).
+    Raises
+    ------
+    TypeError
+        If the argument to strip is not a bitarray.
+        If mode argument is not a string.
+    ValueError
+        If the mode string is not "left," "right," or "both."
     """
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
     if not isinstance(mode, str):
-        raise TypeError("string expected for mode")
+        raise TypeError("String expected for mode")
     if mode not in ('left', 'right', 'both'):
-        raise ValueError("allowed values 'left', 'right', 'both', got: %r" %
-                         mode)
+        raise ValueError(
+            "Allowed values 'left', 'right', 'both', got: %r" % mode
+        )
+    
     first = 0
     if mode in ('left', 'both'):
         try:
@@ -118,27 +143,35 @@ def strip(a, mode='right'):
     return a[first:last + 1]
 
 def ba2int(a, signed=False):
-    """
-    Convert the given bitarray to an integer. The bit-endianness of the 
-    bitarray is respected. `signed` indicates whether two's complement is used 
-    to represent the integer. Added for compatibility with older versions of 
-    bitarray found in the Debian repos that do not install with the utilities 
-    module. 
+    """Convert the given bitarray to an integer. 
+
+    The bit-endianness of the bitarray is respected. `signed` indicates 
+    whether two's complement is used to represent the integer. Added for 
+    compatibility with older versions of bitarray found in the Debian repos 
+    that do not install with the utilities module. 
 
     See https://github.com/ilanschnell/bitarray/blob/master/bitarray/util.py.
     Copied from tag 1.6.3, which is the version of the bitarray module 
     available in the Debian 11 repo.
 
-    Arguments:
-        a (bitarray): bitarray to convert.
-        signed (bool): Two's complement (opitional parameter, default=False).
+    Parameters
+    ----------
+    a : bitarray
+        bitarray to convert.
+    signed : bool, default=False
+        Two's complement.
 
-    Raises:
-        TypeError: If the argument to convert is not a bitarray.
-        ValueError: If the bitarray is empty (length 0).
+    Returns
+    -------
+    int 
+        Integer representation of the bitarray.
 
-    Returns:
-        int: Integer representation of the bitarray.
+    Raises
+    ------
+    TypeError 
+        If the argument to convert is not a bitarray.
+    ValueError 
+        If the bitarray is empty (length 0).
     """
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
@@ -168,14 +201,15 @@ def ba2int(a, signed=False):
     return res
 
 def int2ba(i, length=None, endian="big", signed=False):
-    """
-    Convert the given integer to a bitarray (with given endianness, and no 
-    leading (big-endian) / trailing (little-endian) zeros), unless the `length`
-    of the bitarray is provided.  An `OverflowError` is raised if the integer
-    is not representable with the given number of bits. `signed` determines 
-    whether two's complement is used to represent the integer, and requires 
-    `length` to be provided. If signed is False and a negative integer is
-    given, an OverflowError is raised.
+    """Convert the given integer to a bitarray.
+
+    Convert integer to bitarray with given endianness, and no leading 
+    (big-endian) / trailing (little-endian) zeros, unless the `length` 
+    of the bitarray is provided.  An `OverflowError` is raised if the 
+    integer is not representable with the given number of bits. `signed` 
+    determines  whether two's complement is used to represent the integer, 
+    and requires `length` to be provided. If signed is False and a negative
+    integer is given, an OverflowError is raised.
 
     Older bitarray module versions which require us to define this function
     do not necessarily support a gettable/settable  default endianness, so 
@@ -186,24 +220,33 @@ def int2ba(i, length=None, endian="big", signed=False):
     Copied largely from tag 1.6.3, which is the version of the bitarray module 
     available in the Debian 11 repo. 
     
-    Arguments:
-        i (int): Integer to convert to bitarray.
-        length (int): Length of the bitarray (optional parameter, 
-                      default = None).
-        endian (str): Endianness of the bitarray (optional parameter, 
-                      default = "big").
-        signed (bool): Two's complement signed (optional parameter, 
-                       default = False).
-    Raises:
-        TypeError: If the argument to convert is not an integer.
-        TypeError: If no output bitarray length is provided.
-        ValueError: The output bitarray length is zero.
-        TypeError: Output is a signed integer and length is zero.
-        OverflowError: If the integer value is too large to be represented by 
-                       the number of provided bits.
+    Parameters
+    ----------
+    i : int
+        Integer to convert to bitarray.
+    length : int, default=None
+        Length of the bitarray.
+    endian : str, {'big', 'little'}
+        Endianness of the bitarray.
+    signed : bool, default=False
+        Two's complement signed.
 
-    Returns:
-        int: bitarray representation of the integer.
+    Returns
+    -------
+    int
+        bitarray representation of the integer.
+
+    Raises
+    ------
+    TypeError
+        If the argument to convert is not an integer.
+        If no output bitarray length is provided.
+        If output is a signed integer and length is zero.
+    ValueError
+        The output bitarray length is zero.
+    OverflowError
+        If the integer value is too large to be represented by the number of
+        provided bits.
     """
     if not isinstance(i, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
