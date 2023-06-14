@@ -42,4 +42,10 @@ noinst_HEADERS=Asserts.h
 #  These are test programs but can only be run
 #  If there is hardware to run them on.
 
-#noinst_PROGRAMS=fejackettests triggertests configtests
+noinst_PROGRAMS=fejackettests #triggertests configtests
+
+fejackettests_SOURCES=TestRunner.o devtests.o vx2750phatests.o
+fejackettests_CPPFLAGS=@CAENNG_CPPFLAGS@ @CPPUNIT_CFLAGS
+fejackettests_LDFLAGS=libCaenVx2750.la @CAENNG_LDFLAGS@ \
+     @CPPUNIT_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@ @JSON_LIBS@ \
+     @OPENSSL_LIBS@
