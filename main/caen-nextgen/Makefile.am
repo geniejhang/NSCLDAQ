@@ -45,22 +45,26 @@ noinst_HEADERS=Asserts.h
 noinst_PROGRAMS=fejackettests triggertests configtests
 
 ONLINETESTSCPPFLAGS=@CAENNG_CPPFLAGS@ @CPPUNIT_CFLAGS@ @JSON_CFLAGS@
-ONLINETESTSLDFLAGS=libCaenVx2750.la @CAENNG_LDFLAGS@ \
+ONLINETESTSLDFLAGS=@builddir@/libCaenVx2750.la @CAENNG_LDFLAGS@ \
      @CPPUNIT_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@ @TCL_LDFLAGS@ @JSON_LIBS@ \
      @OPENSSL_LIBS@
+ONLINEDEPENDENCIES=@builddir@/libCaenVx2750.la
 fejackettests_SOURCES=TestRunner.cpp devtests.cpp vx2750phatests.cpp
 fejackettests_CPPFLAGS=$(ONLINETESTSCPPFLAGS)
 fejackettests_LDFLAGS=$(ONLINETESTSLDFLAGS)
+fejackettests_DEPENDENCIES=$(ONLINEDEPENDENCIES)
 
 triggertests_SOURCES=TestRunner.cpp triggertests.cpp
 triggertests_CPPFLAGS=$(ONLINETESTSCPPFLAGS)
 triggertests_LDFLAGS=$(ONLINETESTSLDFLAGS)
+triggertests_DEPENDENCIES=$(ONLINEDEPENDENCIES)
 
 configtests_SOURCES=TestRunner.cpp configtests.cpp
 configtests_CPPFLAGS=$(ONLINETESTSCPPFLAGS) \
     -I@top_srcdir@/usb/common/configurableobject
 configtests_LDFLAGS=@top_builddir@/usb/common/configurableobject/libConfigurableObject.la \
     $(ONLINETESTSLDFLAGS)
+configtests_DEPENDENCIES=$(ONLINEDEPENDENCIES)    
 
 
 #
