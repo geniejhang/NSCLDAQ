@@ -958,6 +958,7 @@ AC_CONFIG_FILES([Makefile
     caendigitizers/caendump/Makefile
     caendigitizers/tweaker/Makefile
     caen-nextgen/Makefile
+    caen-nextgen/tclreadout/Makefile
     cookbooks/Makefile
     ])
 
