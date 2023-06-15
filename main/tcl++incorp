@@ -8,6 +8,13 @@
 #
 
 tag=$1
+
+# if not argument is provided, use default value
+if [[ ! $tag ]];
+then
+  tag=`cat LIBTCL_VERSION`
+fi
+
 git submodule update --init --remote;    # Pull in the new repository
 (cd libtcl ; git checkout $tag)
 git add libtcl
