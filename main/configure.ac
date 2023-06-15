@@ -90,7 +90,7 @@ AC_ARG_ENABLE([caen-nextgen],
       enable_caennextgen="false"
 )
   
-if test $enable_caennextgen="true"
+if test $enable_caennextgen = "true"
 then
   AM_CONDITIONAL([CAENNEXTGEN], [true])
   CAENNG_CPPFLAGS="-I/usr/local/include"
