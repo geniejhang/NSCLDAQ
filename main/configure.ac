@@ -82,29 +82,32 @@ AC_ARG_ENABLE([caen-nextgen],
         [AC_MSG_ERROR([Can't fid the /usr/local/lib/{libCAEN_Dig2.so, libCAEN_FELib.so files install CAEN nextgen digitizer support libraries}]
         )])
 
-      #  Set the make file variables:
-
       enable_caennextgen="true"  
 
-      ],
-      enable_caennextgen="false"
+      ],[enable_caennextgen="false"]
 )
   
-if test $enable_caennextgen = "true"
+
+if test "${enable_caennextgen}" = "true"
 then
-  AM_CONDITIONAL([CAENNEXTGEN], [true])
+  AC_MSG_NOTICE([Enabled support for CAEN Nextgen digitizers])
+
+  #  Set the make file variables:
+
   CAENNG_CPPFLAGS="-I/usr/local/include"
   CAENNG_LDFLAGS="-L/usr/local/lib -lCAEN_FELib -lCAEN_Dig2"
-  AC_SUBST(CAENNG_CPPFLAGS)
-  AC_SUBST(CAENNG_LDFLAGS)
-
-  # CAEN Nextgen digitizers, if used require jsoncpp:
-
-  PKG_CHECK_MODULES(JSON, jsoncpp)
+  AC_SUBST([CAENNG_CPPFLAGS])
+  AC_SUBST([CAENNG_LDFLAGS])
+  AM_CONDITIONAL([CAENNEXTGEN], [true])
 else 
+  AC_MSG_NOTICE([Disabled support for  CAEN Nextgen digitizers])
   AM_CONDITIONAL([CAENNEXTGEN], [false])
 fi
 
+
+# CAEN Nextgen digitizers, if used require jsoncpp:
+
+PKG_CHECK_MODULES([JSON], [jsoncpp])
 
 
 # Pandoc is needed for printed versions of the logbook:
