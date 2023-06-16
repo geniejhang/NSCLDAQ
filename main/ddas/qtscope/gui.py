@@ -675,8 +675,8 @@ class MainWindow(QMainWindow):
                     "module": module,
                     "channel": channel
                 })
-            elif not (self.acq_toolbar.read_all.isChecked()
-                    and channel != self.trace_info["channel"]):
+            elif (not self.acq_toolbar.read_all.isChecked()
+                  and channel != self.trace_info["channel"]):
                 # Single channel acquisition mode channel has been switched
                 # since acquiring a trace (trace on the canvas does not match
                 # current selection box).
