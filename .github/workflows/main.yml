@@ -1,4 +1,4 @@
-name: 12.0-maint workflow
+name: 12.1-dev workflow
 on:
   push:
     branches: [ "12.1-dev" ]
