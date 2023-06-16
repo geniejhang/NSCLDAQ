@@ -1,35 +1,51 @@
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton, QLabel, QLineEdit, QTextEdit, QGridLayout, QGroupBox
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QComboBox, QPushButton,
+    QLabel, QLineEdit, QTextEdit, QGridLayout, QGroupBox
+)
 
 import colors
 
 class FitPanel(QWidget):
-    """
-    Fit panel GUI class with a similar interface to QtPy.
+    """Fit panel GUI class with a similar interface to QtPy.
 
-    Attributes:
-        function_list (!ComboBox): List of available fitting functions.
-        b_fit (QPushButton): Perform the fit when button is clicked.
-        b_clear (QPushButton): Clear the previous fit results and reset the 
-                               fit panel.
-        b_cancel (QPushButton): Button to close the FitPanel popup window.
-        range_min (QLineEdit): Fitting range lower limit.
-        range_max (QLineEdit): Fitting range upper limit.
-        p0 (QLineEdit): Fitting parameter 0.
-        p1 (QLineEdit): Fitting parameter 1.
-        p2 (QLineEdit): Fitting parameter 2.
-        p3 (QLineEdit): Fitting parameter 3.
-        p4 (QLineEdit): Fitting parameter 4.
-        p5 (QLineEdit): Fitting parameter 5.
-        results (QTextEdit): Display widget for the fit results.
+    Attributes
+    ----------
+    function_list : QComboBox
+        List of available fitting functions.
+    b_fit : QPushButton
+        Perform the fit when button is clicked.
+    b_clear : QPushButton
+        Clear the previous fit results and reset the fit panel.
+    b_cancel : QPushButton
+        Button to close the FitPanel popup window.
+    range_min : QLineEdit
+        Fitting range lower limit.
+    range_max : QLineEdit
+        Fitting range upper limit.
+    p0 : QLineEdit
+        Fitting parameter 0.
+    p1 : QLineEdit
+        Fitting parameter 1.
+    p2 : QLineEdit
+        Fitting parameter 2.
+    p3 : QLineEdit
+        Fitting parameter 3.
+    p4 : QLineEdit
+        Fitting parameter 4.
+    p5 : QLineEdit
+        Fitting parameter 5.
+    results : QTextEdit
+        Display widget for the fit results.
 
-    Methods:
-        reset(): Reset fit panel display.
+    Methods
+    -------
+    reset()
+        Reset fit panel display.
     """
 
     def __init__(self, *args, **kwargs):
-        """FitPanel class constructor."""
-        
+        """FitPanel class constructor."""        
         super().__init__()
         
         self.setWindowTitle("QtScope fit panel")
@@ -126,11 +142,11 @@ class FitPanel(QWidget):
         self.setLayout(layout)
 
     def reset(self):
+        """Reset fit panel display. 
+        
+        Clear fit ranges, reset parameter values to zero, and clear the 
+        fit results.
         """
-        Reset fit panel display. Clear fit ranges, reset parameter values to 
-        zero, and clear the fit results.
-        """
-
         self.range_min.clear()
         self.range_max.clear()
 

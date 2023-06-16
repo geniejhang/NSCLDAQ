@@ -26,7 +26,7 @@ MULT_END = MULT_OFFSET + MULT_NBITS
 
 # TrigConfig0 bits:
 
-TC0_INT_FAST_TRIG_OFFSET = 0 # Internal fast trigger
+TC0_INT_FAST_TRIG_OFFSET = 0                     # Internal fast trigger
 TC0_INT_FAST_TRIG_END = 4
 TC0_EXT_FAST_TRIG_OFFSET = TC0_INT_FAST_TRIG_END # External trigger.
 TC0_EXT_FAST_TRIG_END = 8

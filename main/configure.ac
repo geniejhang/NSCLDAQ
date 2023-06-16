@@ -87,6 +87,7 @@ AC_ARG_ENABLE([caen-nextgen],
       ],[enable_caennextgen="false"]
 )
   
+
 if test "${enable_caennextgen}" = "true"
 then
   AC_MSG_NOTICE([Enabled support for CAEN Nextgen digitizers])
