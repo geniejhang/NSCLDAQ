@@ -33,6 +33,10 @@ class Plot(QWidget):
         Figure navigation toolbar imported from Qt5 backend.
     logger : Logger
         QtScope Logger object.
+    trace_x : array
+        Trace data x values. Defines the left bin edge [i, i+1).
+    hist_x : array
+        Histogram data x values. Defines the left bin edge [i, i+1).
 
     Methods
     -------
@@ -63,6 +67,10 @@ class Plot(QWidget):
         super().__init__(*args, **kwargs)
 
         self.logger = logging.getLogger("qtscope_logger")
+
+        # Set histogram x-ranges for trace and run data.
+        self.hist_x = [i for i in range(xia.MAX_HISTOGRAM_LENGTH)]
+        self.trace_x = [i for i in range(xia.MAX_ADC_TRACE_LEN)]
         
         ##
         # Main layout
@@ -207,8 +215,23 @@ class Plot(QWidget):
             Subplot index in [1, nrows*ncols].
         """        
         ax = self.figure.add_subplot(nrows, ncols, idx)
-        ax.plot(data, "-")
+        #ax.plot(data, "-")
+
+        # Some stuff to consider:
+        # - how do we get the data to the fitter?
+        # - pass the data to this function already list'd?
+        # - calculate the x range during init and assume always max
+        # - do the same thing for trace data
+        # - if len(data) != MAX_HISTOGRAM_LENGTH we have a problem I suppose...
         
+        self.binned_data, self.bins, _ = ax.hist(
+            self.hist_x,
+            range=(0,xia.MAX_HISTOGRAM_LENGTH),
+            bins=xia.MAX_HISTOGRAM_LENGTH,
+            weights=[data[i] for i in range(xia.MAX_HISTOGRAM_LENGTH)],
+            histtype="step"
+        )        
+               
         if run_type == RunType.HISTOGRAM:
             ax.set_xlabel("Energy (ADC units)")
         elif run_type == RunType.BASELINE:
@@ -367,38 +390,7 @@ class Plot(QWidget):
     def _fit(self):
         """Perform the fit based on the current fit panel settings."""        
         if len(self.figure.get_axes()) == 1:
-            ydata = self.get_subplot_data(0)
-            if ydata.size > 0:
-                ax = plt.gca()
-                fcn = self.fit_panel.function_list.currentText()
-                config = self.fit_factory.configs.get(fcn)
-                fit = self.fit_factory.create(fcn, **config)
-                xmin, xmax = self._axis_limits(ax)
-                params = [
-                    float(self.fit_panel.p0.text()),
-                    float(self.fit_panel.p1.text()),
-                    float(self.fit_panel.p2.text()),
-                    float(self.fit_panel.p3.text()),
-                    float(self.fit_panel.p4.text()),
-                    float(self.fit_panel.p5.text())
-                ]
-
-                # Get data in fitting range [xmin, xmax):
-                x = []  # Just the plain x-axis value.
-                y = []
-                for i in range(ydata.size):
-                    if i >= xmin and i < xmax:
-                        x.append(i)
-                        y.append(ydata[i])
-
-                self.logger.debug(f"Function config params: {config}")
-                self.logger.debug(f"Fit limits: {xmin}, {xmax}")
-                self.logger.debug(f"Initial guess params: {params}")
-                
-                fitln = fit.start(x, y, params, ax, self.fit_panel.results)
-                self.canvas.draw_idle()
-            else:
-                QMessageBox.about(self, "Warning", "Cannot perform the fit! There is no data on the displayed plot. Please acquire single-channel data and attempt the fit again.")
+            pass
         else:
             QMessageBox.about(self, "Warning", "Cannot perform the fit! Currently displaying data from multiple channels or an analyzed trace. Please acquire single-channel data and attempt the fit again.")
             

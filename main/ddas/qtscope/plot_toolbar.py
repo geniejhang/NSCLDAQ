@@ -60,8 +60,9 @@ class PlotToolBar(NavigationToolbar2QT):
         self.addWidget(self.b_fit_panel)
 
         # Remove buttons from toolbar:
-        
-        unwanted_buttons = ["Back", "Forward", "Subplots", "Pan", "Customize"]
+
+        unwanted_buttons = ["Back", "Forward"]
+        #unwanted_buttons = ["Back", "Forward", "Subplots", "Pan", "Customize"]
         for action in self.actions():
             if action.text() in unwanted_buttons:
                 self.removeAction(action)
