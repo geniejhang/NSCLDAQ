@@ -1,7 +1,7 @@
 name: 12.0-maint workflow
 on:
   push:
-    branches: [ "12.0-maint" ]
+    branches: [ "12.1-dev" ]
 jobs:
   container-test-job:
     runs-on: ubuntu-latest
