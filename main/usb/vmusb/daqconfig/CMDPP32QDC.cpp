@@ -620,6 +620,7 @@ CMDPP32QDC::printRegisters(CVMUSB& controller)
   if (status < 0) {
     cerr << "Error in reading register" << endl;
   } else {
+    data = data&0xfff;
     cout << setw(30) << "Pulser amplitude: " << data << " (0x" << std::hex << data << std::dec << ")" << endl;
   }
 
