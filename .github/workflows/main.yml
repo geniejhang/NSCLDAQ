@@ -120,7 +120,7 @@ jobs:
                        --with-plx-sdk=/usr/opt/plx \
                        --with-firmwaredir=/usr/opt/ddas/firmware/2.2-000/firmware \
                        --with-dspdir=/usr/opt/ddas/firmware/2.2-000/dsp \
-                       --with-rootsys=/usr/opt/root/root-6.26.04 \
+                       --with-rootsys=/usr/opt/root/6.26.04 \
                        CXX=/usr/opt/mpi/openmpi-4.1.4/bin/mpicxx
       - name: Make
         working-directory: ./main/oot
