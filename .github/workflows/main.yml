@@ -116,7 +116,7 @@ jobs:
                        --with-caen-digitizer-libroot=/usr/opt/caendigitizerlibs \
                        --with-epics-rootdir=/usr/opt/epics \
                        --enable-ddas=yes \
-                       --with-xiaapidir=/usr/opt/xiaapi/3.5.0 \
+                       --with-xiaapidir=/usr/opt/xiaapi/3.5 \
                        --with-plx-sdk=/usr/opt/plx \
                        --with-firmwaredir=/usr/opt/ddas/firmware/2.2-000/firmware \
                        --with-dspdir=/usr/opt/ddas/firmware/2.2-000/dsp \
