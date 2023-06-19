@@ -116,11 +116,11 @@ jobs:
                        --with-caen-digitizer-libroot=/usr/opt/caendigitizerlibs \
                        --with-epics-rootdir=/usr/opt/epics \
                        --enable-ddas=yes \
-                       --with-xiaapidir=/usr/opt/xiaapi/2.13.0 \
+                       --with-xiaapidir=/usr/opt/xiaapi/3.5.0 \
                        --with-plx-sdk=/usr/opt/plx \
-                       --with-firmwaredir=/usr/opt/ddas/firmware/2.1-000/firmware \
-                       --with-dspdir=/usr/opt/ddas/firmware/2.1-000/dsp \
-                       --with-rootsys=/usr/opt/root/root-6.24.06 \
+                       --with-firmwaredir=/usr/opt/ddas/firmware/2.2-000/firmware \
+                       --with-dspdir=/usr/opt/ddas/firmware/2.2-000/dsp \
+                       --with-rootsys=/usr/opt/root/root-6.26.04 \
                        CXX=/usr/opt/mpi/openmpi-4.1.4/bin/mpicxx
       - name: Make
         working-directory: ./main/oot
