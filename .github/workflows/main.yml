@@ -121,7 +121,7 @@ jobs:
                        --with-firmwaredir=/usr/opt/ddas/firmware/2.1-000/firmware \
                        --with-dspdir=/usr/opt/ddas/firmware/2.1-000/dsp \
                        --with-rootsys=/usr/opt/root/root-6.24.06 \
-                       CXX=/usr/opt/mpi/openmpi-4.0.1/bin/mpicxx
+                       CXX=/usr/opt/mpi/openmpi-4.1.4/bin/mpicxx
       - name: Make
         working-directory: ./main/oot
         run: make -j2 clean && make -j2 all && make -j2 install
