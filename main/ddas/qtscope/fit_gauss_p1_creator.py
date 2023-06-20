@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.optimize import curve_fit
+import logging
 
 class GaussP1Fit:
     """Gaussian fitting function with a linear background
@@ -22,6 +23,8 @@ class GaussP1Fit:
         Slope of linear background.
     form : str
         Function formula.
+    logger : Logger
+        QtScope Logger instance.
 
     Methods
     -------
@@ -52,7 +55,8 @@ class GaussP1Fit:
             Slope of linear background.
         form : str 
             Function formula.
-        """        
+        """
+        self.logger = logging.getLogger("qtscope_logger")
         self.A = A
         self.mu = mu
         self.sd = sd
@@ -151,12 +155,20 @@ class GaussP1Fit:
             List of lines representing the plotted fit data.
         """
         fitln = None
-
         self.set_initial_parameters(x, y, params)
-
-        p_init = [self.A, self.mu, self.sd, self.a0, self.a1]
-        popt, pcov = curve_fit(self.feval, x, y, p0=p_init, maxfev=5000)
+        pinit = [self.A, self.mu, self.sd, self.a0, self.a1]
+        self.logger.debug(f"Parameter initial guesses: {pinit}")
+        pbounds = (
+            [-np.inf, -np.inf, 0, -np.inf, -np.inf],
+            [np.inf, np.inf, np.inf, np.inf, np.inf]
+        )
+        popt, pcov = curve_fit(
+            self.feval, x, y, p0=pinit, bounds=pbounds, maxfev=5000
+        )
         perr = np.sqrt(np.diag(pcov)) # Parameter sigma from covariance matrix.
+        self.logger.debug(f"Fit parameters: {popt}")
+        self.logger.debug(f"Fit covariance matrix:\n{pcov}")
+        self.logger.debug(f"Fit parameter errors: {perr}")
         
         # Fit data and print the results:
         try:

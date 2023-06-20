@@ -7,6 +7,8 @@ import inspect
 import copy
 import sys
 import logging
+import time
+from math import ceil, floor
 
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox
 from PyQt5.QtGui import QPaintEvent
@@ -33,6 +35,26 @@ class Plot(QWidget):
         Figure navigation toolbar imported from Qt5 backend.
     logger : Logger
         QtScope Logger object.
+    trace_x : list
+        Trace data x values. Defines the left bin edge [i, i+1).
+    hist_x : list
+        Histogram data x values. Defines the left bin edge [i, i+1).
+    raw_data : list
+        "Raw" data returned from the digitizers transformed into a Python list.
+        This data maintains the same size as the data array returned from the 
+        digitizers if the histograms are rebinned.
+    data : numpy.ndarray
+        Re-histogrammed data; possibly with different binning than the raw 
+        data. First index of the tuple returned from matplotlib.axes.Axes.hist.
+    bins : numpy.ndarray
+        Bin edges used to create NumPy histograms. Second index of the tuple 
+        returned from matplotlib.axes.Axes.hist.
+    artists : list
+        Container of individual artists used to create the histogram. Third 
+        index of the tuple returned from matplotlib.axes.Axes.hist.
+    warned : bool
+        Flag is true if the histogram interactive rebinning message has already
+        been displayed.
 
     Methods
     -------
@@ -57,12 +79,22 @@ class Plot(QWidget):
             Factory for implemented toolbars.
         fit_factory : FitFactory 
             Factory method for fitting plot data.
-        debug : bool, optional, default=False
-            True to enable debugging output.
         """
         super().__init__(*args, **kwargs)
 
+        # Get the logger instance:
+
         self.logger = logging.getLogger("qtscope_logger")
+
+        # Initialize histogram ranges and data:
+        
+        self.hist_x = [i for i in range(xia.MAX_HISTOGRAM_LENGTH)]
+        self.trace_x = [i for i in range(xia.MAX_ADC_TRACE_LEN)]
+        self.raw_data = []
+        self.data = np.empty(0)
+        self.bins = np.empty(0)
+        self.artists = []
+        self.warned = False
         
         ##
         # Main layout
@@ -102,8 +134,11 @@ class Plot(QWidget):
         # Signal connections
         #
         
-        self.toolbar.logscale.clicked.connect(self._set_yscale)
+        self.toolbar.logscale.clicked.connect(
+            lambda ax=None: self._set_yscale(ax=None)
+        )
         self.toolbar.b_fit_panel.clicked.connect(self._show_fit_panel)
+        self.toolbar.bin_slider.valueChanged.connect(self._rebin)
 
         self.fit_panel.b_fit.clicked.connect(self._fit)
         self.fit_panel.b_clear.clicked.connect(self._clear_fit)
@@ -117,8 +152,8 @@ class Plot(QWidget):
 
         Parameters
         ----------
-        data : array
-            Array of trace data values.
+        data : list
+            List of trace data values.
         nrows : int  
             Number of subplot rows (optional, default=1).
         ncols : int  
@@ -127,7 +162,7 @@ class Plot(QWidget):
             Subplot index in [1, nrows*ncols] (optional).
         """        
         ax = self.figure.add_subplot(nrows, ncols, idx)            
-        ax.plot(data, "-")            
+        self._histogram_data(ax, data, xia.MAX_ADC_TRACE_LEN, "trace")        
         ax.set_xlabel("Sample number (60 ns/sample)")
         ax.set_ylabel("Voltage (ADC units)")
         ax.set_xlim(0, xia.MAX_ADC_TRACE_LEN)
@@ -147,7 +182,7 @@ class Plot(QWidget):
 
         Parameters
         ----------
-        trace : array
+        trace : list
             Single-channel ADC trace data.
         fast_filter : list
             Computed fast filter output.
@@ -155,38 +190,32 @@ class Plot(QWidget):
             Computed CFD output.
         slow_filter : list
             Computed slow filter output.
-        """        
+        """
         ax1 = self.figure.add_subplot(3, 1, 1)
         ax1.set_title("Trace")
-        ax1.plot(trace, "-")
+        self._histogram_data(ax1, trace, xia.MAX_ADC_TRACE_LEN, "trace")
+        self._set_yscale(ax1, pad=0.1)
         
         ax2 = self.figure.add_subplot(3, 1, 2)
         ax2.set_title("Timing filters")
-        ax2.plot(fast_filter, "-")
-        ax2.plot(cfd, "-")
+        self._histogram_data(
+            ax2, fast_filter, xia.MAX_ADC_TRACE_LEN, "trace"
+        )
+        self._set_yscale(ax2, pad=0.1) # Let the fast filter set the range.
+        self._histogram_data(
+            ax2, cfd, xia.MAX_ADC_TRACE_LEN, "trace", color = "tab:orange"
+        )        
         ax2.legend(["Trigger filter", "CFD"], loc="upper right")
         
         ax3 = self.figure.add_subplot(3, 1, 3)
         ax3.set_title("Energy filter")
-        ax3.plot(slow_filter, "-")
-        
-        # Get y range from data:        
-        margin = 0.1
+        self._histogram_data(
+            ax3, slow_filter, xia.MAX_ADC_TRACE_LEN, "trace"
+        )
+        self._set_yscale(ax3, pad=0.1)
+
         for ax in self.figure.get_axes():
-            ymin = sys.float_info.max
-            ymax = sys.float_info.min
-            
-            for line in ax.get_lines():
-                lmin = np.amin(line.get_ydata())
-                lmax = np.amax(line.get_ydata())
-                if lmin < ymin:
-                    ymin = lmin
-                if lmax > ymax:
-                    ymax = lmax
-                    
-            yrange = ymax - ymin
             ax.set_xlim(0, xia.MAX_ADC_TRACE_LEN)
-            ax.set_ylim(ymin - margin*yrange, ymax + margin*yrange)
             
         self.canvas.draw_idle()
         
@@ -207,8 +236,10 @@ class Plot(QWidget):
             Subplot index in [1, nrows*ncols].
         """        
         ax = self.figure.add_subplot(nrows, ncols, idx)
-        ax.plot(data, "-")
-        
+        factor = int(self.toolbar.bin_factor.text())
+        nbins = int(xia.MAX_HISTOGRAM_LENGTH/factor)
+        self._histogram_data(ax, data, nbins, "hist")
+                
         if run_type == RunType.HISTOGRAM:
             ax.set_xlabel("Energy (ADC units)")
         elif run_type == RunType.BASELINE:
@@ -237,7 +268,6 @@ class Plot(QWidget):
             Type of run data to draw.
         """
         self.figure.clear()
-
         try:
             if run_type != RunType.HISTOGRAM and run_type != RunType.BASELINE:
                 raise ValueError(f"Encountered unexpected run type {run_type}, select a valid run type and begin a new run")  
@@ -256,68 +286,50 @@ class Plot(QWidget):
             self._set_yscale(ax)        
             self.canvas.draw_idle()
 
-    def get_subplot_data(self, idx):
-        """Get y data from a single subplot by axis index. 
-
-        Returns an empty list if the subplot does not have any associated data.
-
-        Parameters
-        ----------
-        idx : int 
-            Axes index number (note this is 0-indexed while the subplots 
-            are 1-indexed!).
-
-        Returns
-        -------
-        array
-            Data from the selected subplot. Empty if the subplot does not
-            contain any data.
-        """        
-        axes = self.figure.get_axes()
-        if axes[idx].get_lines():
-            return axes[idx].lines[0].get_ydata()
-        else:
-            return np.empty(0)
-
     def draw_test_data(self):
         """Draw test data. 
 
         Draw data points in (-1, 1) on a test canvas with a random number of 
         rows and columns with rows, columns in [1, 4]
         """        
-        self.figure.clear()
-        
+        self.figure.clear()        
         rng = np.random.default_rng()
         nrows = rng.integers(1, 5)
-        ncols = rng.integers(1, 5)
-        
+        ncols = rng.integers(1, 5)        
         for i in range(nrows):
             for j in range(ncols):
                 idx = ncols*i + j + 1
                 ax = self.figure.add_subplot(nrows, ncols, idx)
                 data = 2*rng.random(size=5) - 1
-                ax.plot(data, "-")
-                
+                ax.plot(data, "-")                
         self.canvas.draw_idle()
         
     ##
     # Private methods
     #
     
-    def _set_yscale(self, ax=None):
+    def _set_yscale(self, ax, pad=0.05):
         """Configurs the axes display on the canvas.
 
-        If the log scale checkbox is selected, immidiately redraw all subplots.
+        If the log scale checkbox is selected while displaying data, 
+        immidiately redraw all subplots.
+
+        Parameters
+        ----------
+        ax : matplotlib Axes
+            matplotlib class containing the figure elements.
+        pad : float, optional, default=0.05
+            Padding as a percent of the full data range added to the y-axis 
+            limits when drawing the canvas.
         """        
-        # Button clicked, redraw all otherwise just the current one:        
         if self.sender():
             for ax in self.figure.get_axes():
-                self._set_subplot_yscale(ax)
+                self._set_subplot_yscale(ax, pad)
             self.canvas.draw_idle()
         else:
-            self._set_subplot_yscale(ax)
+            self._set_subplot_yscale(ax, pad)
                     
-    def _set_subplot_yscale(self, ax):
+    def _set_subplot_yscale(self, ax, pad):
         """Sets the y-axis display for a single figure (linear or log).
     
         The y-axis is autoscaled in log for trace data because all values are 
@@ -328,25 +340,24 @@ class Plot(QWidget):
         ----------
         ax : matplotlib Axes
             matplotlib class containing the figure elements.
+        pad : float
+            Padding as a percent of the full data range added to the y-axis 
+            limits when drawing the canvas.
         """        
-        # Check number of data points to determine if this is a histogram:
-        is_hist = False
-        ymax = sys.float_info.min
-        for line in ax.get_lines():
-            ydata = line.get_ydata()
-            lmax = np.amax(ydata)
-            if lmax > ymax:
-                ymax = lmax               
-            # This is a kludge, since we assume all histograms are max length.
-            # Stop looking if we've found a histogram:
-            if len(ydata) == xia.MAX_HISTOGRAM_LENGTH:
-                is_hist = True
-                break
-
+        if len(self.data) > 0:
+            maxval = max(self.data)
+            minval = min(self.data)
+            yrange = maxval - minval
+            ymax = maxval + pad*yrange
+            ymin = minval - pad*yrange
+        else:
+            ymax, ymin = 0, 0
+            
         ax.autoscale(axis="y")
+        
         if self.toolbar.logscale.isChecked():           
-            # Also a potential kludge: symmetric log handles possible zeroes
-            # nicely in the case of empty histograms or inverted traces.
+            # Symmetric log (should?) handle possible zeroes nicely in the
+            # case of empty histograms or inverted traces.
             if ymax > 0:
                 ax.set_yscale("log")
             else:
@@ -354,9 +365,11 @@ class Plot(QWidget):
                 ax.set_ylim(0.1, 1)
         else:
             ax.set_yscale("linear")
-            if ymax > 0:
-                if is_hist:
-                    ax.set_ylim(0,None)
+            npts = len(self.raw_data)
+            if npts == xia.MAX_HISTOGRAM_LENGTH:
+                ax.set_ylim(0, ymax)
+            elif npts == xia.MAX_ADC_TRACE_LEN:
+                ax.set_ylim(ymin, ymax)
             else:
                 ax.set_ylim(0, 1)
               
@@ -364,41 +377,63 @@ class Plot(QWidget):
         """Show the fit panel GUI in a popup window."""
         self.fit_panel.show()
 
+    def _rebin(self):
+        """Rebin histogrammed data."""
+        # Check length of last raw data. There are no mixed plots, so the last
+        # data will do. Only immidiately rebin using the slider for a single
+        # histogram, as the plotter only keeps track of the last data it saw.
+        naxes = len(self.figure.get_axes())
+        if len(self.raw_data) == xia.MAX_HISTOGRAM_LENGTH and naxes == 1:
+            ax = plt.gca()
+            factor = int(self.toolbar.bin_factor.text())
+            nbins = int(xia.MAX_HISTOGRAM_LENGTH/factor)
+            # Remove all drawn histograms but not any axis labeling, etc.
+            for artist in self.artists:
+                artist.remove()                
+            self._histogram_data(ax, self.raw_data, nbins, "hist")           
+            self._set_yscale(ax)
+            self.canvas.draw_idle()
+        else:
+            if not self.warned:
+                QMessageBox.about(self, "Warning", "Interactive rebinning using the slider is only enabled for single-channel list-mode histogram or baseline plots. Multi-channel list-mode histogram or baseline data will be binned using the value set on the slider the next time they are acquired.")
+                self.warned = True
+            
     def _fit(self):
         """Perform the fit based on the current fit panel settings."""        
         if len(self.figure.get_axes()) == 1:
-            ydata = self.get_subplot_data(0)
-            if ydata.size > 0:
-                ax = plt.gca()
-                fcn = self.fit_panel.function_list.currentText()
-                config = self.fit_factory.configs.get(fcn)
-                fit = self.fit_factory.create(fcn, **config)
-                xmin, xmax = self._axis_limits(ax)
-                params = [
-                    float(self.fit_panel.p0.text()),
-                    float(self.fit_panel.p1.text()),
-                    float(self.fit_panel.p2.text()),
-                    float(self.fit_panel.p3.text()),
-                    float(self.fit_panel.p4.text()),
-                    float(self.fit_panel.p5.text())
-                ]
+            ax = plt.gca()
+            fcn = self.fit_panel.function_list.currentText()
+            config = self.fit_factory.configs.get(fcn)
+            fit = self.fit_factory.create(fcn, **config)
+            xmin, xmax = self._axis_limits(ax)
+            params = [
+                float(self.fit_panel.p0.text()),
+                float(self.fit_panel.p1.text()),
+                float(self.fit_panel.p2.text()),
+                float(self.fit_panel.p3.text()),
+                float(self.fit_panel.p4.text()),
+                float(self.fit_panel.p5.text())
+            ]
 
-                # Get data in fitting range [xmin, xmax):
-                x = []  # Just the plain x-axis value.
-                y = []
-                for i in range(ydata.size):
-                    if i >= xmin and i < xmax:
-                        x.append(i)
-                        y.append(ydata[i])
-
-                self.logger.debug(f"Function config params: {config}")
-                self.logger.debug(f"Fit limits: {xmin}, {xmax}")
-                self.logger.debug(f"Initial guess params: {params}")
+            factor = int(self.toolbar.bin_factor.text())
+            idx_min = xmin
+            idx_max = xmax
+            if len(self.raw_data) == xia.MAX_HISTOGRAM_LENGTH:
+                idx_min = ceil(int(idx_min/factor))
+                idx_max = floor(int(idx_max/factor))
                 
-                fitln = fit.start(x, y, params, ax, self.fit_panel.results)
-                self.canvas.draw_idle()
-            else:
-                QMessageBox.about(self, "Warning", "Cannot perform the fit! There is no data on the displayed plot. Please acquire single-channel data and attempt the fit again.")
+            self.logger.debug(f"Function config params: {config}")
+            self.logger.debug(f"Fit limits: {xmin}, {xmax}")
+            self.logger.debug(f"Fit limit indices: {idx_min}, {idx_max}")
+            self.logger.debug(f"Fit panel guess params: {params}")
+            self.logger.debug(f"Run data binning factor: {factor}")
+            
+            x = (self.bins[:-1] + self.bins[1:])/2 # Bin centers
+            fitln = fit.start(
+                x[idx_min:idx_max], self.data[idx_min:idx_max], params,
+                ax, self.fit_panel.results
+            )
+            self.canvas.draw_idle()            
         else:
             QMessageBox.about(self, "Warning", "Cannot perform the fit! Currently displaying data from multiple channels or an analyzed trace. Please acquire single-channel data and attempt the fit again.")
             
@@ -406,7 +441,9 @@ class Plot(QWidget):
         """Get the fit limits based on the selected range. 
 
         If no range is provided the currently displayed axes limits are assumed
-        to be the fit range.
+        to be the fit range. Fit limits are rounded to the nearest bin edge 
+        within the fitting range using the ceil (left limit) and floor (right 
+        limit) functions.
 
         Parameters
         ----------
@@ -420,26 +457,23 @@ class Plot(QWidget):
         """        
         left, right = ax.get_xlim()
         if self.fit_panel.range_min.text():
-            left = int(self.fit_panel.range_min.text())
+            left = ceil(float(self.fit_panel.range_min.text()))
         else:
-            left = int(ax.get_xlim()[0]) 
+            left = ceil(ax.get_xlim()[0]) 
         if self.fit_panel.range_max.text():
-            right = int(self.fit_panel.range_max.text())
+            right = floor(float(self.fit_panel.range_max.text()))
         else:
-            right = int(ax.get_xlim()[1])
+            right = floor(ax.get_xlim()[1])
             
         return left, right
 
     def _clear_fit(self):
         """Clear previous fits and reset the fit panel GUI."""
         if len(self.figure.get_axes()) == 1:
-            # Delete all plots except for the data:            
             ax = plt.gca()
-            if len(ax.lines) > 1:
-                for i in range(len(ax.lines) - 1):
-                    ax.lines.pop(1)
-                self.canvas.draw_idle()
-            # Reset fit panel display:                    
+            for i in range(len(ax.lines)):
+                ax.lines.pop()
+            self.canvas.draw_idle()
             self.fit_panel.reset()
 
     def _update_formula(self):
@@ -451,3 +485,53 @@ class Plot(QWidget):
     def _close_fit_panel(self):
         """Close the fit panel window."""
         self.fit_panel.close()
+   
+    def _histogram_data(
+            self, ax, raw_data, nbins, data_type, color="tab:blue"
+    ):
+        """Make a histogram out of array-like raw data.
+
+        Parameters
+        ----------
+        ax : matplotlib Axes
+            matplotlib class containing the figure elements.
+        raw_data : list
+            "Raw" data with default binning from XIA modules used to create
+            the histogram.
+        nbins : int
+            Number of histogram bins.
+        data_type : str
+            Type of data to histogram. Characterized by the length of the data
+            and assumed to be the maximum size allowed by the API. Valid types
+            are 'hist' or 'trace'.
+        color : str, optional, default="tab:blue"
+            Histogram line color. Can be any of 
+            https://matplotlib.org/stable/tutorials/colors/colors.html.
+
+        Raises
+        ------
+        ValueError
+            If the data type argument is an invalid value.
+        """
+        try:
+            if data_type == "hist":
+                x = self.hist_x
+                data_range = (0, xia.MAX_HISTOGRAM_LENGTH)
+            elif data_type == "trace":
+                x = self.trace_x
+                data_range = (0, xia.MAX_ADC_TRACE_LEN)
+            else:
+                raise ValueError(f"Unrecognized data type {data_type}. Allowed values are 'hist' or 'trace.'")
+        except ValueError as e:
+            self.logger.exception("Failed to histogram run data")
+            print(e)
+        else:
+            self.raw_data = raw_data
+            self.data, self.bins, self.artists = ax.hist(
+                x,
+                range=data_range,
+                bins=nbins,
+                weights=self.raw_data,
+                histtype="step",
+                color=color
+            )
