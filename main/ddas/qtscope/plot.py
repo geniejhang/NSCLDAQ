@@ -7,7 +7,7 @@ import inspect
 import copy
 import sys
 import logging
-import time
+from time import sleep
 from math import ceil, floor
 
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox
@@ -43,6 +43,8 @@ class Plot(QWidget):
         "Raw" data returned from the digitizers transformed into a Python list.
         This data maintains the same size as the data array returned from the 
         digitizers if the histograms are rebinned.
+    bin_width : int
+        Bin width in ADC units/bin.
     data : numpy.ndarray
         Re-histogrammed data; possibly with different binning than the raw 
         data. First index of the tuple returned from matplotlib.axes.Axes.hist.
@@ -52,9 +54,6 @@ class Plot(QWidget):
     artists : list
         Container of individual artists used to create the histogram. Third 
         index of the tuple returned from matplotlib.axes.Axes.hist.
-    warned : bool
-        Flag is true if the histogram interactive rebinning message has already
-        been displayed.
 
     Methods
     -------
@@ -94,7 +93,6 @@ class Plot(QWidget):
         self.data = np.empty(0)
         self.bins = np.empty(0)
         self.artists = []
-        self.warned = False
         
         ##
         # Main layout
@@ -138,7 +136,6 @@ class Plot(QWidget):
             lambda ax=None: self._set_yscale(ax=None)
         )
         self.toolbar.b_fit_panel.clicked.connect(self._show_fit_panel)
-        self.toolbar.bin_slider.valueChanged.connect(self._rebin)
 
         self.fit_panel.b_fit.clicked.connect(self._fit)
         self.fit_panel.b_clear.clicked.connect(self._clear_fit)
@@ -219,7 +216,9 @@ class Plot(QWidget):
             
         self.canvas.draw_idle()
         
-    def draw_run_data(self, data, run_type, nrows=1, ncols=1, idx=1):
+    def draw_run_data(
+            self, data, run_type, bin_width, nrows=1, ncols=1, idx=1
+    ):
         """Draws a data histogram on the plot canvas.
 
         Parameters
@@ -228,6 +227,8 @@ class Plot(QWidget):
             Single-channel run data.
         run_type : Enum member 
             Type of run data to draw.
+        bin_width : int
+            Width of each bin in ADC units.
         nrows : int, optional, default=1
             Number of subplot rows.
         ncols : int, optional, default=1
@@ -236,8 +237,8 @@ class Plot(QWidget):
             Subplot index in [1, nrows*ncols].
         """        
         ax = self.figure.add_subplot(nrows, ncols, idx)
-        factor = int(self.toolbar.bin_factor.text())
-        nbins = int(xia.MAX_HISTOGRAM_LENGTH/factor)
+        self.bin_width = bin_width
+        nbins = int(xia.MAX_HISTOGRAM_LENGTH/self.bin_width)
         self._histogram_data(ax, data, nbins, "hist")
                 
         if run_type == RunType.HISTOGRAM:
@@ -256,7 +257,8 @@ class Plot(QWidget):
             ax.tick_params(axis='y', labelsize=6)
             ax.xaxis.label.set_size(6)
             ax.yaxis.label.set_size(6)
-            
+
+        sleep(1)
         self.canvas.draw_idle()
                         
     def on_begin_run(self, run_type):
@@ -376,27 +378,6 @@ class Plot(QWidget):
     def _show_fit_panel(self):
         """Show the fit panel GUI in a popup window."""
         self.fit_panel.show()
-
-    def _rebin(self):
-        """Rebin histogrammed data."""
-        # Check length of last raw data. There are no mixed plots, so the last
-        # data will do. Only immidiately rebin using the slider for a single
-        # histogram, as the plotter only keeps track of the last data it saw.
-        naxes = len(self.figure.get_axes())
-        if len(self.raw_data) == xia.MAX_HISTOGRAM_LENGTH and naxes == 1:
-            ax = plt.gca()
-            factor = int(self.toolbar.bin_factor.text())
-            nbins = int(xia.MAX_HISTOGRAM_LENGTH/factor)
-            # Remove all drawn histograms but not any axis labeling, etc.
-            for artist in self.artists:
-                artist.remove()                
-            self._histogram_data(ax, self.raw_data, nbins, "hist")           
-            self._set_yscale(ax)
-            self.canvas.draw_idle()
-        else:
-            if not self.warned:
-                QMessageBox.about(self, "Warning", "Interactive rebinning using the slider is only enabled for single-channel list-mode histogram or baseline plots. Multi-channel list-mode histogram or baseline data will be binned using the value set on the slider the next time they are acquired.")
-                self.warned = True
             
     def _fit(self):
         """Perform the fit based on the current fit panel settings."""        
@@ -415,18 +396,17 @@ class Plot(QWidget):
                 float(self.fit_panel.p5.text())
             ]
 
-            factor = int(self.toolbar.bin_factor.text())
             idx_min = xmin
             idx_max = xmax
             if len(self.raw_data) == xia.MAX_HISTOGRAM_LENGTH:
-                idx_min = ceil(int(idx_min/factor))
-                idx_max = floor(int(idx_max/factor))
+                idx_min = ceil(int(idx_min/self.bin_width))
+                idx_max = floor(int(idx_max/self.bin_width))
                 
             self.logger.debug(f"Function config params: {config}")
             self.logger.debug(f"Fit limits: {xmin}, {xmax}")
             self.logger.debug(f"Fit limit indices: {idx_min}, {idx_max}")
             self.logger.debug(f"Fit panel guess params: {params}")
-            self.logger.debug(f"Run data binning factor: {factor}")
+            self.logger.debug(f"Run data binning factor: {self.bin_width}")
             
             x = (self.bins[:-1] + self.bins[1:])/2 # Bin centers
             fitln = fit.start(

@@ -4,7 +4,7 @@ import pandas as pd
 import json
 import inspect
 import copy
-import time
+from time import sleep
 import logging
 
 from PyQt5.QtCore import Qt, QThreadPool
@@ -555,17 +555,24 @@ class MainWindow(QMainWindow):
         self.mplplot.figure.clear()
         module = self.acq_toolbar.current_mod.value()
         channel = self.acq_toolbar.current_chan.value()
-  
+        bin_width = int(self.acq_toolbar.binning.currentText())
+
         # Read from module and get data, then draw:        
         if self.acq_toolbar.read_all.isChecked():
             for i in range(16):
                 self.run_utils.read_data(module, i, self.active_type)
                 data = self.run_utils.get_data(self.active_type)
-                self.mplplot.draw_run_data(data, self.active_type, 4, 4, i+1)
+                self.mplplot.draw_run_data(
+                    data, self.active_type, bin_width, 4, 4, i+1
+                )
+            # Wait 500 ms and redraw the whole canvas to ensure that
+            # the last few histograms are displayed properly.
+            sleep(0.5)
+            self.mplplot.canvas.draw()
         else:           
             self.run_utils.read_data(module, channel, self.active_type)
             data = self.run_utils.get_data(self.active_type)
-            self.mplplot.draw_run_data(data, self.active_type)
+            self.mplplot.draw_run_data(data, self.active_type, bin_width)
             
     def _read_trace_data(self):
         """Read trace data.
@@ -599,7 +606,11 @@ class MainWindow(QMainWindow):
                         "trace": copy.copy(data),
                         "module": module,
                         "channel": channel
-                    })                  
+                    })
+            # Wait 500 ms and redraw the whole canvas to ensure that
+            # the last few histograms are displayed properly.
+            sleep(0.5)
+            self.mplplot.canvas.draw()
         else:           
             # Check signal validation and read:            
             if self.acq_toolbar.fast_acq.isChecked():

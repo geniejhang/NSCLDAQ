@@ -38,24 +38,11 @@ class PlotToolBar(NavigationToolbar2QT):
         """PlotToolBar class constructor."""        
         super().__init__(*args, **kwargs)
 
-        self.bin_slider = QSlider(Qt.Horizontal)
-        self.bin_slider.setRange(0, 4)
-        self.bin_slider.setSliderPosition(0)
-        self.bin_slider.setSingleStep(1)
-        self.bin_slider.setMaximumWidth(100)
-        label = QLabel("Run histogram ADC units/bin:")
-        self.bin_factor = QLabel(f"{pow(2, self.bin_slider.value())}")
-        self.bin_factor.setMinimumWidth(20)
-
-        
         self.logscale = QCheckBox("Log y-axis", self)
         
         self.b_fit_panel = QPushButton("Fit panel", self)        
         self.b_fit_panel.setStyleSheet(colors.YELLOW)
 
-        self.addWidget(label)
-        self.addWidget(self.bin_slider)
-        self.addWidget(self.bin_factor)
         self.addWidget(self.logscale)
         self.addWidget(self.b_fit_panel)
 
@@ -66,12 +53,6 @@ class PlotToolBar(NavigationToolbar2QT):
             if action.text() in unwanted_buttons:
                 self.removeAction(action)
 
-        ##
-        # Signal connections
-        #
-
-        self.bin_slider.valueChanged.connect(self._set_factor)
-
     def disable(self):
         """Disable child widgets in the plot toolbar."""
         self.logscale.setEnabled(False)
@@ -81,14 +62,6 @@ class PlotToolBar(NavigationToolbar2QT):
         """Enable child widgets in the plot toolbar."""
         self.logscale.setEnabled(True)
         self.b_fit_panel.setEnabled(True)
-
-    ##
-    # Private methods
-    #
-
-    def _set_factor(self):
-        """Change the bin factor label when the slider value changes."""
-        self.bin_factor.setText(f"{pow(2, self.bin_slider.value())}")
 
 class PlotToolBarBuilder:
     """Builder method for factory creation."""
