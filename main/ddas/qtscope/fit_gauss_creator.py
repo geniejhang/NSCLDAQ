@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.optimize import curve_fit
+import logging
 
 class GaussFit:
     """Gaussian fitting function.
@@ -44,7 +45,10 @@ class GaussFit:
             Standard deviation.
         form : str 
             Function formula to display on the fitting panel.
-        """        
+        logger : Logger
+            QtScope Logger instance.
+        """
+        self.logger = logging.getLogger("qtscope_logger")
         self.A = A
         self.mu = mu
         self.sd = sd
@@ -68,7 +72,7 @@ class GaussFit:
         -------
         ndarray
             Array containing the fit values over the range.
-        """        
+        """
         return A*np.exp(-(x-mu)**2 / (2*sd**2))
 
     def set_initial_parameters(self, x, y, params):
@@ -123,12 +127,20 @@ class GaussFit:
             List of lines representing the plotted fit data.
         """        
         fitln = None
-
         self.set_initial_parameters(x, y, params)
-
-        p_init = [self.A, self.mu, self.sd]
-        popt, pcov = curve_fit(self.feval, x, y, p0=p_init, maxfev=5000)
+        pinit = [self.A, self.mu, self.sd]
+        self.logger.debug(f"Parameter initial guesses: {pinit}")
+        pbounds = (
+            [-np.inf, -np.inf, 0],
+            [np.inf, np.inf, np.inf]
+        )
+        popt, pcov = curve_fit(
+            self.feval, x, y, p0=pinit, bounds=pbounds, maxfev=5000
+        )
         perr = np.sqrt(np.diag(pcov))  # Parameter sigma from cov. matrix.
+        self.logger.debug(f"Fit parameters: {popt}")
+        self.logger.debug(f"Fit covariance matrix:\n{pcov}")
+        self.logger.debug(f"Fit parameter errors: {perr}")
         
         # Fit data and print the results:        
         try:

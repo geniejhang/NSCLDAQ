@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.optimize import curve_fit
+import logging
 
 class ExpFit:
     """Exponential fitting function
@@ -17,6 +18,8 @@ class ExpFit:
         Constant baseline.
     form : str
         Function formula.
+    logger : Logger
+        QtScope Logger instance.
 
     Methods
     -------
@@ -43,7 +46,8 @@ class ExpFit:
             Constant baseline.
         form : str
             Function formula to display on the fitting panel.
-        """        
+        """
+        self.logger = logging.getLogger("qtscope_logger")
         self.A = A
         self.k = k
         self.C = C
@@ -118,15 +122,15 @@ class ExpFit:
         fitln: list of Line2D objects
             List of lines representing the plotted fit data.
         """
-        fitln = None
-        
-        self.set_initial_parameters(y, params)
-        
-        p_init = [self.A, self.k, self.C]
-        popt, pcov = curve_fit(self.feval, x, y, p0=p_init, maxfev=5000)
+        fitln = None        
+        self.set_initial_parameters(y, params)        
+        pinit = [self.A, self.k, self.C]
+        self.logger.debug(f"Parameter initial guesses: {pinit}")
+        popt, pcov = curve_fit(self.feval, x, y, p0=pinit, maxfev=5000)
         perr = np.sqrt(np.diag(pcov))  # Parameter sigma from cov. matrix.
-        
-        # Fit data and print the results:        
+        self.logger.debug(f"Fit parameters: {popt}")
+        self.logger.debug(f"Fit covariance matrix:\n{pcov}")
+        self.logger.debug(f"Fit parameter errors: {perr}")
         try:
             x_fit = np.linspace(x[0], x[-1], 10000)
             y_fit = self.feval(x_fit, *popt)

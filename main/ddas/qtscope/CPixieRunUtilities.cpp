@@ -26,6 +26,9 @@ CPixieRunUtilities::CPixieRunUtilities() :
     m_baselineHistograms(
 	16, std::vector<unsigned int>(MAX_HISTOGRAM_LENGTH, 0)
 	),
+    m_genHistograms(
+	16, std::vector<unsigned int>(MAX_HISTOGRAM_LENGTH, 0)
+	),
     m_runActive(false),
     m_useGenerator(false),
     m_pGenerator(new CDataGenerator)
@@ -52,26 +55,25 @@ CPixieRunUtilities::~CPixieRunUtilities()
 int
 CPixieRunUtilities::BeginHistogramRun(int module)
 {
-    // Reset internal histogram data:
-  
+    // Reset internal histogram data:  
     std::fill(m_histogram.begin(), m_histogram.end(), 0);
+    for (auto& v : m_genHistograms) {
+	std::fill(v.begin(), v.end(), 0);
+    }  
   
-    // Set the "infinite" run time of 99999 seconds:
-  
+    // Set the "infinite" run time of 99999 seconds:  
     std::string paramName = "HOST_RT_PRESET";
     int retval = Pixie16WriteSglModPar(
 	paramName.c_str(), Decimal2IEEEFloating(99999), module
 	);
   
     if (retval < 0) {
-	std::cerr << "Run time not properly set. CPixieRunUtilities::BeginHistogramRun() failed to write parameter: " << paramName << " to module " << module  << " with retval " << retval << std::endl;
-    
+	std::cerr << "Run time not properly set. CPixieRunUtilities::BeginHistogramRun() failed to write parameter: " << paramName << " to module " << module  << " with retval " << retval << std::endl;    
 	return retval;
     }
 
     // If the run time is properly set, begin a histogram run for this module
-    // turn off synchronization (0):
-  
+    // turn off synchronization (0):  
     paramName = "SYNCH_WAIT";
     retval = Pixie16WriteSglModPar(paramName.c_str(), 0, module);
   
@@ -80,8 +82,7 @@ CPixieRunUtilities::BeginHistogramRun(int module)
 	return retval;    
     }
 
-    // Begin the run:
-  
+    // Begin the run:  
     retval = Pixie16StartHistogramRun(module, NEW_RUN);
   
     if (retval < 0) {
@@ -117,17 +118,13 @@ CPixieRunUtilities::EndHistogramRun(int module)
     int nRetries = 0;
     const int maxRetries = 10;
     while ((runEnded == false) && (nRetries < maxRetries)) {
-	retval = Pixie16CheckRunStatus(module);
-    
+	retval = Pixie16CheckRunStatus(module);    
 	if (retval < 0) {
 	    std::cerr << "CPixieRunUtilities::EndHistogramRun() failed to get current run status in module " << module << " with retval " << retval << std::endl;
-	}
-    
+	}    
 	runEnded = (retval == 0); // True if run ended.
-	nRetries++;
-    
-	// Wait before checking again:
-    
+	nRetries++;    
+	// Wait before checking again:    
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
   
@@ -144,8 +141,6 @@ CPixieRunUtilities::EndHistogramRun(int module)
 /**
  * @brief Read energy histogram from single channel.
  *
- * Histogram data will be saved to a file if debugging mode is enabled.
- *
  * @param module   Module number.
  * @param channel  Channel number on module to read histogram from.
  *
@@ -160,11 +155,13 @@ CPixieRunUtilities::ReadHistogram(int module, int channel)
   
     if (!m_useGenerator) {
 	retval = Pixie16ReadHistogramFromModule(
-	    m_histogram.data(), MAX_HISTOGRAM_LENGTH, module, channel);
+	    m_histogram.data(), MAX_HISTOGRAM_LENGTH, module, channel
+	    );
     } else {
 	retval = m_pGenerator->GetHistogramData(
-	    m_histogram.data(), MAX_HISTOGRAM_LENGTH
+	    m_genHistograms[channel].data(), MAX_HISTOGRAM_LENGTH
 	    );
+	m_histogram = m_genHistograms[channel];
     }
   
     if (retval < 0) {
@@ -210,8 +207,7 @@ int
 CPixieRunUtilities::EndBaselineRun(int module)
 {
     m_runActive = false;
-    std::cout << "Ended baseline run in Mod. " << module << std::endl;
-    
+    std::cout << "Ended baseline run in Mod. " << module << std::endl;    
     return 0;
 }
 
@@ -285,8 +281,13 @@ CPixieRunUtilities::ReadModuleStats(int module)
 	    double outRate = Pixie16ComputeOutputCountRate(
 		statistics.data(), module, i
 		);
-	    double liveTime = Pixie16ComputeLiveTime(statistics.data(), module, i);      
-	    std::cout << "Module " << module << " channel " << i << " input " << inpRate << " output " << outRate << " livetime " << liveTime << " runtime " << realTime << std::endl;
+	    double liveTime = Pixie16ComputeLiveTime(
+		statistics.data(), module, i
+		);      
+	    std::cout << "Module " << module << " channel " << i
+		      << " input " << inpRate << " output " << outRate
+		      << " livetime " << liveTime << " runtime " << realTime
+		      << std::endl;
 	}
     }
   
@@ -312,8 +313,8 @@ CPixieRunUtilities::UpdateBaselineHistograms(int module)
 	// data generator to get data for testing:    
 	if (!m_useGenerator) {
 	    retval = Pixie16ReadSglChanBaselines(
-		baselines.data(), timestamps.data(),
-		MAX_NUM_BASELINES, module, i
+		baselines.data(), timestamps.data(), MAX_NUM_BASELINES,
+		module, i
 		);      
 	} else {
 	    retval = m_pGenerator->GetBaselineData(

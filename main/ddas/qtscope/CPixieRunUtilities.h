@@ -50,7 +50,8 @@ public:
 private:
     std::vector<unsigned int> m_histogram; //!< Single channel histogram.
     std::vector<unsigned int> m_baseline; //!< Single channel baseline histogram.
-    std::vector<std::vector <unsigned int>> m_baselineHistograms; //!< All channels.
+    std::vector<std::vector<unsigned int>> m_baselineHistograms; //!< All channels.
+    std::vector<std::vector<unsigned int>> m_genHistograms; //!< Generated run data histograms for all channels.
     bool m_runActive; //!< True when running.
     bool m_useGenerator; //!< True to use generator test data.
     CDataGenerator* m_pGenerator; //!< Test data for debugging/offline mode.

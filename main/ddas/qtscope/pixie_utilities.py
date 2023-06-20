@@ -129,7 +129,7 @@ class SystemUtilities:
             if retval < 0:
                 raise RuntimeError(f"System boot failed with retval {retval}")
         except RuntimeError as e:
-            self.logger.exception("Failed to boot Pixie modules")
+            self.logger.exception("Failed to boot Pixie modules, see Pixie-16 log file for more information")
             print(e)
         else:
             self.logger.info("System boot successful")
@@ -731,13 +731,15 @@ class RunUtilities:
         
         Returns
         -------
-        array
-            Array of list-mode histogram or baseline run data.
+        list
+            Python list containing the list-mode run histogram or baseline 
+            histogram data with default 1 ADC unit/channel binning.
         """        
         if run_type == RunType.HISTOGRAM:
-            return lib.CPixieRunUtilities_GetHistogramData(self.obj).contents
+            d = lib.CPixieRunUtilities_GetHistogramData(self.obj).contents
         elif run_type == RunType.BASELINE:
-            return lib.CPixieRunUtilities_GetBaselineData(self.obj).contents
+            d = lib.CPixieRunUtilities_GetBaselineData(self.obj).contents
+        return [d[i] for i in range(len(d))]
                 
     def get_run_active(self):
         """Wrapper to get the active run status.
@@ -872,10 +874,11 @@ class TraceUtilities:
 
         Returns
         -------
-        array 
-            Python array of trace data.
-        """        
-        return lib.CPixieTraceUtilities_GetTraceData(self.obj).contents
+        list 
+            Python list of trace data.
+        """
+        d = lib.CPixieTraceUtilities_GetTraceData(self.obj).contents
+        return [d[i] for i in range(len(d))]
 
     def use_generator_data(self, mode):
         """ Wrapper to set the manager to use generated data.
