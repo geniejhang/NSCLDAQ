@@ -50,20 +50,20 @@ jobs:
         working-directory: ./main/oot
         shell: bash
         run: |
-          ../configure --prefix=$PWD/install \
+          ../configure --prefix=/usr/opt/nscldaq/$GITHUB_REF_NAME \
                        --enable-usb=yes \
                        --enable-caen-digitizer-support \
                        --enable-docs \
                        --enable-epics-tools=yes \
-                       --with-caen-digitizer-libroot=/usr/opt/caendigitizerlibs \
-                       --with-epics-rootdir=/usr/opt/epics \
+                       --with-caen-digitizer-libroot=`cat /usr/opt/CAENDIGITIZERLIBS_PATH` \
+                       --with-epics-rootdir=`cat /usr/opt/EPICS_PATH` \
                        --enable-ddas=yes \
-                       --with-xiaapidir=/usr/opt/xiaapi/2.13.0 \
-                       --with-plx-sdk=/usr/opt/plx \
-                       --with-firmwaredir=/usr/opt/ddas/firmware/2.1-000/firmware \
-                       --with-dspdir=/usr/opt/ddas/firmware/2.1-000/dsp \
-                       --with-rootsys=/usr/opt/root/root-6.24.06 \
-                       CXX=/usr/opt/mpi/openmpi-4.0.1/bin/mpicxx
+                       --with-xiaapidir=`cat /usr/opt/XIAAPI_PATH` \
+                       --with-plx-sdk=`cat /usr/opt/PLX_PATH` \
+                       --with-firmwaredir=`cat /usr/opt/DDASFIRMWARE_PATH` \
+                       --with-dspdir=`cat /usr/opt/DDASDSP_PATH` \
+                       --with-rootsys=`cat /usr/opt/ROOT_PATH` \
+                       CXX=`cat /usr/opt/MPI_PATH`
       - name: Make
         working-directory: ./main/oot
         run: make -j2 clean && make -j2 all && make -j2 install
@@ -114,20 +114,20 @@ jobs:
         working-directory: ./main/oot
         shell: bash
         run: |
-          ../configure --prefix=$PWD/install \
+          ../configure --prefix=/usr/opt/nscldaq/$GITHUB_REF_NAME \
                        --enable-usb=yes \
                        --enable-caen-digitizer-support \
                        --enable-docs \
                        --enable-epics-tools=yes \
-                       --with-caen-digitizer-libroot=/usr/opt/caendigitizerlibs \
-                       --with-epics-rootdir=/usr/opt/epics \
+                       --with-caen-digitizer-libroot=`cat /usr/opt/CAENDIGITIZERLIBS_PATH` \
+                       --with-epics-rootdir=`cat /usr/opt/EPICS_PATH` \
                        --enable-ddas=yes \
-                       --with-xiaapidir=/usr/opt/xiaapi/3.5 \
-                       --with-plx-sdk=/usr/opt/plx \
-                       --with-firmwaredir=/usr/opt/ddas/firmware/2.2-000/firmware \
-                       --with-dspdir=/usr/opt/ddas/firmware/2.2-000/dsp \
-                       --with-rootsys=/usr/opt/root/6.26.04 \
-                       CXX=/usr/opt/mpi/openmpi-4.1.4/bin/mpicxx
+                       --with-xiaapidir=`cat /usr/opt/XIAAPI_PATH` \
+                       --with-plx-sdk=`cat /usr/opt/PLX_PATH` \
+                       --with-firmwaredir=`cat /usr/opt/DDASFIRMWARE_PATH` \
+                       --with-dspdir=`cat /usr/opt/DDASDSP_PATH` \
+                       --with-rootsys=`cat /usr/opt/ROOT_PATH` \
+                       CXX=`cat /usr/opt/MPI_PATH`
       - name: Make
         working-directory: ./main/oot
         run: make -j2 clean && make -j2 all && make -j2 install
