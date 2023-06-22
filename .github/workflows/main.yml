@@ -6,12 +6,12 @@ on:
 
 jobs:
   buster-build:
-    uses: .github/workflows/build.yml@12.0-maint
+    uses: ./.github/workflows/build.yml@12.0-maint
     with:
       os-version: buster
       packaging: false
   bullseye-build:
-    uses: .github/workflows/build.yml@12.0-maint
+    uses: ./.github/workflows/build.yml@12.0-maint
     with:
       os-version: bullseye
       packaging: false
