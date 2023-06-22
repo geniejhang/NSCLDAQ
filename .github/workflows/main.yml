@@ -12,6 +12,8 @@ jobs:
       packaging: false
     secrets:
       dockerhub: ${{ secrets.DOCKERHUB_CHANGJ0FRIB_FOR_CI_READONLY }}
+      LIBTCLPLUS: ${{ secrets.LIBTCLPLUS }}
+      UNIFIEDFMT: ${{ secrets.UNIFIEDFMT }}
   bullseye-build:
     uses: ./.github/workflows/build.yml
     with:
@@ -19,3 +21,5 @@ jobs:
       packaging: false
     secrets:
       dockerhub: ${{ secrets.DOCKERHUB_CHANGJ0FRIB_FOR_CI_READONLY }}
+      LIBTCLPLUS: ${{ secrets.LIBTCLPLUS }}
+      UNIFIEDFMT: ${{ secrets.UNIFIEDFMT }}
