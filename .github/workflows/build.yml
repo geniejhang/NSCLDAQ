@@ -1,0 +1,77 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      os-version:
+        required: true
+        type: string
+      packaging:
+        required: true
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: fribdaq/frib-${{ inputs.os-version }}-ci
+      credentials:
+        username: changj0frib
+        password: ${{ secrets.DOCKERHUB_CHANGJ0FRIB_FOR_CI_READONLY }}
+      options: --cpus 2
+    steps:
+      - uses: actions/checkout@v3
+      - name: autoreconf
+        working-directory: ./main
+        run: autoreconf -if
+      - name: Configure tcl++
+        env:
+          GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
+        working-directory: ./main
+        shell: bash
+        run: |
+          git config --global --add safe.directory '*'
+          eval `ssh-agent -s`
+          
+          echo "${{ secrets.LIBTCLPLUS }}" | ssh-add -
+          ./tcl++incorp
+          ssh-add -D
+          
+          eval `ssh-agent -k`
+      - name: Incorporate unified format
+        env:
+          GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
+        working-directory: ./main
+        shell: bash
+        run: |
+          git config --global --add safe.directory '*'
+          eval `ssh-agent -s`
+          
+          echo "${{ secrets.UNIFIEDFMT }}" | ssh-add -
+          ./unifiedfmt-incorp.sh
+          ssh-add -D
+          
+          eval `ssh-agent -k`
+      - name: Creating build directory
+        run: mkdir main/oot
+      - name: Configuring
+        working-directory: ./main/oot
+        shell: bash
+        run: |
+          ../configure --prefix=/usr/opt/nscldaq/$GITHUB_REF_NAME \
+                       --enable-usb=yes \
+                       --enable-caen-digitizer-support \
+                       --enable-docs \
+                       --enable-epics-tools=yes \
+                       --with-caen-digitizer-libroot=`cat /usr/opt/CAENDIGITIZERLIBS_PATH` \
+                       --with-epics-rootdir=`cat /usr/opt/EPICS_PATH` \
+                       --enable-ddas=yes \
+                       --with-xiaapidir=`cat /usr/opt/XIAAPI_PATH` \
+                       --with-plx-sdk=`cat /usr/opt/PLX_PATH` \
+                       --with-firmwaredir=`cat /usr/opt/DDASFIRMWARE_PATH` \
+                       --with-dspdir=`cat /usr/opt/DDASDSP_PATH` \
+                       --with-rootsys=`cat /usr/opt/ROOT_PATH` \
+                       CXX=`cat /usr/opt/MPI_PATH`
+      - name: Make
+        working-directory: ./main/oot
+        run: make -j2 clean && make -j2 all && make -j2 install
