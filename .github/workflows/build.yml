@@ -9,13 +9,6 @@ on:
       packaging:
         required: true
         type: boolean
-    secrets:
-      dockerhub:
-        required: true
-      LIBTCLPLUS:
-        required: true
-      UNIFIEDFMT:
-        required: true
 
 jobs:
   build:
