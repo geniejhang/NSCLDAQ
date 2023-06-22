@@ -5,21 +5,15 @@ on:
     branches: [ "12.0-maint" ]
 
 jobs:
-  buster-build:
+  buster:
     uses: ./.github/workflows/build.yml
     with:
       os-version: buster
       packaging: false
-    secrets:
-      dockerhub: ${{ secrets.DOCKERHUB_CHANGJ0FRIB_FOR_CI_READONLY }}
-      LIBTCLPLUS: ${{ secrets.LIBTCLPLUS }}
-      UNIFIEDFMT: ${{ secrets.UNIFIEDFMT }}
-  bullseye-build:
+    secrets: inherit
+  bullseye:
     uses: ./.github/workflows/build.yml
     with:
       os-version: bullseye
       packaging: false
-    secrets:
-      dockerhub: ${{ secrets.DOCKERHUB_CHANGJ0FRIB_FOR_CI_READONLY }}
-      LIBTCLPLUS: ${{ secrets.LIBTCLPLUS }}
-      UNIFIEDFMT: ${{ secrets.UNIFIEDFMT }}
+    secrets: inherit

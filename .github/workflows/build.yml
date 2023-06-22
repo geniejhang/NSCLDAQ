@@ -24,7 +24,7 @@ jobs:
       image: fribdaq/frib-${{ inputs.os-version }}-ci
       credentials:
         username: changj0frib
-        password: ${{ secrets.dockerhub }}
+        password: ${{ secrets.DOCKERHUB_CHANGJ0FRIB_FOR_CI_READONLY }}
       options: --cpus 2
     steps:
       - uses: actions/checkout@v3
