@@ -4,7 +4,7 @@ import pandas as pd
 import json
 import inspect
 import copy
-import time
+from time import sleep
 import logging
 
 from PyQt5.QtCore import Qt, QThreadPool
@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
          otherwise.
     active_type : Enum member
          The run type set at run start, INACTIVE if when no run is active.
-    trace_info :dict
+    trace_info : dict
         Single channel ADC trace information from last single channel 
         acquisition.
 
@@ -204,6 +204,9 @@ class MainWindow(QMainWindow):
         self.acq_toolbar.b_analyze_trace.clicked.connect(self._analyze_trace)
         self.acq_toolbar.b_read_data.clicked.connect(self._read_data)
         self.acq_toolbar.b_run_control.clicked.connect(self._run_control)
+        self.acq_toolbar.binning.currentTextChanged.connect(
+            lambda bw: self.mplplot.rebin(int(bw))
+        )
 
     ##
     # Public methods
@@ -555,17 +558,23 @@ class MainWindow(QMainWindow):
         self.mplplot.figure.clear()
         module = self.acq_toolbar.current_mod.value()
         channel = self.acq_toolbar.current_chan.value()
-  
+        bin_width = int(self.acq_toolbar.binning.currentText())
+
         # Read from module and get data, then draw:        
         if self.acq_toolbar.read_all.isChecked():
             for i in range(16):
                 self.run_utils.read_data(module, i, self.active_type)
                 data = self.run_utils.get_data(self.active_type)
-                self.mplplot.draw_run_data(data, self.active_type, 4, 4, i+1)
+                self.mplplot.draw_run_data(
+                    data, self.active_type, bin_width, 4, 4, i+1
+                )
+            self.mplplot.update_canvas()
         else:           
             self.run_utils.read_data(module, channel, self.active_type)
             data = self.run_utils.get_data(self.active_type)
-            self.mplplot.draw_run_data(data, self.active_type)
+            self.mplplot.draw_run_data(
+                data, self.active_type, bin_width
+            )
             
     def _read_trace_data(self):
         """Read trace data.
@@ -599,7 +608,9 @@ class MainWindow(QMainWindow):
                         "trace": copy.copy(data),
                         "module": module,
                         "channel": channel
-                    })                  
+                    })
+                    
+            self.mplplot.update_canvas()   
         else:           
             # Check signal validation and read:            
             if self.acq_toolbar.fast_acq.isChecked():
