@@ -87,7 +87,7 @@ jobs:
         working-directory: ./main/oot
         uses: actions/upload-artifact@v3
         with:
-          name: $GITHUB_REF_NAME source distribution
+          name: a
           path: nscldaq-$VERSION-dist-${{ inputs.os-version}}.tar.gz
       - name: Packaging for binary distribution
         if: ${{ inputs.packaging == true }}
@@ -98,5 +98,5 @@ jobs:
         working-directory: /usr/opt/nscldaq
         uses: actions/upload-artifact@v3
         with:
-          name: $GITHUB_REF_NAME binary distribution
+          name: b
           path: nscldaq-$VERSION-binary-${{ inputs.os-version}}.tar.gz
