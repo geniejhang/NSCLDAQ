@@ -10,8 +10,12 @@ jobs:
     with:
       os-version: buster
       packaging: false
+    secrets:
+      dockerhub: ${{ secrets.DOCKERHUB_CHANGJ0FRIB_FOR_CI_READONLY }}
   bullseye-build:
     uses: ./.github/workflows/build.yml
     with:
       os-version: bullseye
       packaging: false
+    secrets:
+      dockerhub: ${{ secrets.DOCKERHUB_CHANGJ0FRIB_FOR_CI_READONLY }}

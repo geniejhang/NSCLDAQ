@@ -9,6 +9,9 @@ on:
       packaging:
         required: true
         type: boolean
+    secrets:
+      dockerhub:
+        required: true
 
 jobs:
   build:
@@ -17,7 +20,7 @@ jobs:
       image: fribdaq/frib-${{ inputs.os-version }}-ci
       credentials:
         username: changj0frib
-        password: ${{ secrets.DOCKERHUB_CHANGJ0FRIB_FOR_CI_READONLY }}
+        password: ${{ secrets.dockerhub }}
       options: --cpus 2
     steps:
       - uses: actions/checkout@v3
