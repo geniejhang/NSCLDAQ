@@ -9,11 +9,11 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       os-version: buster
-      packaging: false
+      packaging: true
     secrets: inherit
   bullseye:
     uses: ./.github/workflows/build.yml
     with:
       os-version: bullseye
-      packaging: false
+      packaging: true
     secrets: inherit

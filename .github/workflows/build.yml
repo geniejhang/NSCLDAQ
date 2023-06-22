@@ -24,7 +24,7 @@ jobs:
       - name: autoreconf
         working-directory: ./main
         run: autoreconf -if
-      - name: Configure tcl++
+      - name: Configure libtcl++
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
         working-directory: ./main
@@ -75,3 +75,29 @@ jobs:
       - name: Make
         working-directory: ./main/oot
         run: make -j2 clean && make -j2 all && make -j2 install
+      - name: Packaging for source distribution
+        if: ${{ inputs.packaging == true }}
+        working-directory: ./main/oot
+        run: |
+          make -j2 dist
+          echo "VERSION=`cat Makefile | grep \"PACKAGE_VERSION =\" | awk -F'=' '{print $2}' | xargs`" >> $GITHUB_ENV
+          mv nscldaq-$VERSION.tar.gz nscldaq-$VERSION-dist-${{ inputs.os-version }}.tar.gz
+      - name: Upload source distribution package
+        if: ${{ inputs.packaging == true }}
+        working-directory: ./main/oot
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.os-version }} source distribution
+          path: nscldaq-$VERSION-dist-${{ inputs.os-version}}.tar.gz
+      - name: Packaging for binary distribution
+        if: ${{ inputs.packaging == true }}
+        working-directory: /usr/opt/nscldaq
+        run: |
+          tar -czf nscldaq-$VERSION-binary-${{ inputs.os-version }}.tar.gz $VERSION
+      - name: Upload binary distribution package
+        if: ${{ inputs.packaging == true }}
+        working-directory: /usr/opt/nscldaq
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.os-version }} binary distribution
+          path: nscldaq-$VERSION-binary-${{ inputs.os-version}}.tar.gz
