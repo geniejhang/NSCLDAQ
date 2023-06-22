@@ -87,7 +87,7 @@ jobs:
         working-directory: ./main/oot
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.os-version }} source distribution
+          name: ${{ inputs.os-version }}-source-distribution
           path: nscldaq-$VERSION-dist-${{ inputs.os-version}}.tar.gz
       - name: Packaging for binary distribution
         if: ${{ inputs.packaging == true }}
@@ -99,5 +99,5 @@ jobs:
         working-directory: /usr/opt/nscldaq
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.os-version }} binary distribution
+          name: ${{ inputs.os-version }}-binary-distribution
           path: nscldaq-$VERSION-binary-${{ inputs.os-version}}.tar.gz
