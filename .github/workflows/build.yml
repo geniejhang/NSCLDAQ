@@ -99,4 +99,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.os-version }} binary distribution
-          path: /usr/opt/nscldaq/nscldaq-${{ github.ref_name }}-binary-${{ inputs.os-version }}.tar.gz
+          path: /usr/opt/nscldaq/nscldaq-${{ github.ref_name }}-${{ inputs.os-version }}.tar.gz
