@@ -88,15 +88,15 @@ jobs:
         if: ${{ inputs.packaging == true }}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.os-version }} source distribution
+          name: ${{ inputs.os-version }} object distribution
           path: ./main/oot/nscldaq-${{ env.VERSION }}-dist-${{ inputs.os-version}}.tar.gz
       - name: Packaging for binary distribution
         if: ${{ inputs.packaging == true }}
         working-directory: /usr/opt/nscldaq
-        run: tar -czf nscldaq-$GITHUB_REF_NAME-binary-${{ inputs.os-version }}.tar.gz $GITHUB_REF_NAME
+        run: tar -czf nscldaq-$GITHUB_REF_NAME-${{ inputs.os-version }}.tar.gz $GITHUB_REF_NAME
       - name: Upload binary distribution package
         if: ${{ inputs.packaging == true }}
         uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.os-version }} binary distribution
-          path: /usr/opt/nscldaq/nscldaq-$GITHUB_REF_NAME-binary-${{ inputs.os-version}}.tar.gz
+          path: /usr/opt/nscldaq/nscldaq-${{ github.ref_name }}-binary-${{ inputs.os-version }}.tar.gz
