@@ -11,7 +11,8 @@ on:
         type: boolean
 
 jobs:
-  build:
+  build-and-packaging:
+    name: Build (and packaging)
     runs-on: ubuntu-latest
     container:
       image: fribdaq/frib-${{ inputs.os-version }}-ci
@@ -75,15 +76,12 @@ jobs:
       - name: Make
         working-directory: ./main/oot
         run: make -j2 clean && make -j2 all && make -j2 install
-      - name: Extract version from Makefile (Temporary)
-        working-directory: ./main/oot
-        run: echo "VERSION=`cat Makefile | grep \"PACKAGE_VERSION =\" | awk -F'=' '{print $2}' | xargs`" >> $GITHUB_ENV
       - name: Packaging for source distribution
         if: ${{ inputs.packaging == true }}
         working-directory: ./main/oot
         run: |
           make -j2 dist
-          mv nscldaq-${{ env.VERSION }}.tar.gz nscldaq-${{ env.VERSION }}-dist-${{ inputs.os-version }}.tar.gz
+          mv nscldaq-$GITHUB_REF_NAME.tar.gz nscldaq-$GITHUB_REF_NAME-dist-${{ inputs.os-version }}.tar.gz
       - name: Upload source distribution package
         if: ${{ inputs.packaging == true }}
         uses: actions/upload-artifact@v3
