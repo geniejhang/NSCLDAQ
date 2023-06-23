@@ -83,13 +83,13 @@ jobs:
         working-directory: ./main/oot
         run: |
           make -j2 dist
-          mv nscldaq-${{ env.VERSION }}.tar.gz nscldaq-${{ env.VERSION}}-dist-${{ inputs.os-version }}.tar.gz
+          mv nscldaq-${{ env.VERSION }}.tar.gz nscldaq-${{ env.VERSION }}-dist-${{ inputs.os-version }}.tar.gz
       - name: Upload source distribution package
         if: ${{ inputs.packaging == true }}
         uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.os-version }} source distribution
-          path: ./main/oot/nscldaq-$VERSION-dist-${{ inputs.os-version}}.tar.gz
+          path: ./main/oot/nscldaq-${{ env.VERSION }}-dist-${{ inputs.os-version}}.tar.gz
       - name: Packaging for binary distribution
         if: ${{ inputs.packaging == true }}
         working-directory: /usr/opt/nscldaq
@@ -99,4 +99,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.os-version }} binary distribution
-          path: /usr/opt/nscldaq/nscldaq-${{ env.VERSION }}-binary-${{ inputs.os-version}}.tar.gz
+          path: /usr/opt/nscldaq/nscldaq-$GITHUB_REF_NAME-binary-${{ inputs.os-version}}.tar.gz
