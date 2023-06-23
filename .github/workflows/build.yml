@@ -87,7 +87,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.os-version }} object distribution
-          path: ./main/oot/nscldaq-${{ env.VERSION }}-dist-${{ inputs.os-version}}.tar.gz
+          path: ./main/oot/nscldaq-${{ github.ref_name }}-dist-${{ inputs.os-version }}.tar.gz
       - name: Packaging for binary distribution
         if: ${{ inputs.packaging == true }}
         working-directory: /usr/opt/nscldaq
