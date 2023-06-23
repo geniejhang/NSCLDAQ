@@ -75,12 +75,14 @@ jobs:
       - name: Make
         working-directory: ./main/oot
         run: make -j2 clean && make -j2 all && make -j2 install
+      - name: Extract version from Makefile (Temporary)
+        working-directory: ./main/oot
+        run: echo "VERSION=`cat Makefile | grep \"PACKAGE_VERSION =\" | awk -F'=' '{print $2}' | xargs`" >> $GITHUB_ENV
       - name: Packaging for source distribution
         if: ${{ inputs.packaging == true }}
         working-directory: ./main/oot
         run: |
           make -j2 dist
-          echo "VERSION=`cat Makefile | grep \"PACKAGE_VERSION =\" | awk -F'=' '{print $2}' | xargs`" >> $GITHUB_ENV
           mv nscldaq-${{ env.VERSION }}.tar.gz nscldaq-${{ env.VERSION}}-dist-${{ inputs.os-version }}.tar.gz
       - name: Upload source distribution package
         if: ${{ inputs.packaging == true }}
