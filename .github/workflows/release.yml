@@ -23,6 +23,6 @@ jobs:
       - name: Create a release
         uses: softprops/action-gh-release@v0.1.15
         with:
-          files: *.tar.gz
+          files: ./*.tar.gz
           name: Relase of ${{ inputs.tag }}
           body_path: release_body
