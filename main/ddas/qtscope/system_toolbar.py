@@ -6,22 +6,31 @@ class SystemToolBar(QToolBar):
     """
     System-level function toolbar (QToolBar).
 
-    Attributes:
-        b_boot (QPushButton): Button for system boot.
-        b_chan_gui (QPushButton): Button to open channel DSP GUI.
-        b_mod_gui (QPushButton): Button to open module DSP GUI.
-        b_load_set (QPushButton): Button to load a settings file.
-        b_save_set (QPushButton): Button to save a settings file.
-        b_exit (QPushButton): Button to exit the application.
+    Attributes
+    ----------
+    b_boot : QPushButton 
+        Button for system boot.
+    b_chan_gui : QPushButton
+        Button to open channel DSP GUI.
+    b_mod_gui : QPushButton
+        Button to open module DSP GUI.
+    b_load_set : QPushButton
+        Button to load a settings file.
+    b_save_set : QPushButton
+        Button to save a settings file.
+    b_exit : QPushButton 
+        Button to exit the application.
 
-    Methods:
-        disable(): Disable all toolbar widgets.
-        enable(): Enable all toolbar widgets.
+    Methods
+    -------
+    disable()
+        Disable all toolbar widgets.
+    enable()
+        Enable all toolbar widgets.
     """
     
     def __init__(self, *args, **kwargs):
-        """SystemToolBar class constructor."""
-        
+        """SystemToolBar class constructor."""        
         super().__init__(*args, **kwargs)
 
         self.setMovable(False)
@@ -57,20 +66,17 @@ class SystemToolBar(QToolBar):
         self.b_boot.setEnabled(True)
                 
     def disable(self):
-        """Disable every child widget in the toolbar."""
-        
+        """Disable every child widget in the toolbar."""        
         for c in self.children():
             if(c.isWidgetType()):
                 c.setEnabled(False)
                 c.repaint()
 
-        # Exit button is always enabled:
-                
+        # Exit button is always enabled:                
         self.b_exit.setEnabled(True)
 
     def enable(self):
-        """Enable every child widget in the toolbar."""
-        
+        """Enable every child widget in the toolbar."""        
         for c in self.children():
             if(c.isWidgetType()):
                 c.setEnabled(True)
@@ -86,8 +92,9 @@ class SystemToolBarBuilder:
         """
         Create an instance of the toolbar and return it to the caller.
 
-        Returns:
-            SystemToolBar: Instance of the toolbar class.
-        """
-                    
+        Returns
+        -------
+        SystemToolBar
+            Instance of the toolbar class.
+        """                    
         return SystemToolBar(*args, **kwargs)

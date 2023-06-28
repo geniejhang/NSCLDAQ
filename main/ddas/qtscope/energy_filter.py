@@ -6,21 +6,20 @@ from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QSpinBox
 from chan_dsp_widget import ChanDSPWidget
 
 class EnergyFilter(ChanDSPWidget):
-    """
-    Energy filter DSP tab (ChanDSPWidget).
+    """Energy filter DSP tab (ChanDSPWidget).
     
-    Attributes:
-        extra_params (Python list): Extra DSP settings configured on this tab.
+    Attributes
+    ----------
+    extra_params : list
+        Extra DSP settings configured on this tab.
     """
     
     def __init__(self, *args, **kwargs):
-        """
-        EnergyFilter class constructor.  
+        """EnergyFilter class constructor.  
 
         Keyword arguments:
             module (int): Module number from factory create method.
-        """
-        
+        """        
         # XIA API parameter names:
         
         param_names = [
@@ -60,55 +59,58 @@ class EnergyFilter(ChanDSPWidget):
         layout.addWidget(widget)
         self.setLayout(layout)
 
-    #
+    ##
     # Overridden class methods
     #
     
     def configure(self, mgr, mod):
-        """
-        Overridden configuration operations.
+        """Overridden configuration operations.
 
         Initializes and displays configurable SLOW_FILTER_RANGE module 
         parameter on the tab.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API 
+            read/write operations.
+        mod : int 
+            Module number.
         """
-
         self.filter_range.setValue(
             mgr.get_mod_par(mod, "SLOW_FILTER_RANGE")
         )
         super().configure(mgr, mod)
         
     def update_dsp(self, mgr, mod):
-        """
-        Overridden update operations.
+        """Overridden update operations.
 
         Update DSP storage SLOW_FILTER_RANGE from the GUI.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
-        """
-        
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API 
+            read/write operations.
+        mod : int 
+            Module number.
+        """        
         mgr.set_mod_par(mod, "SLOW_FILTER_RANGE", self.filter_range.value())
         super().update_dsp(mgr, mod)
         
     def display_dsp(self, mgr, mod):
-        """
-        Overridden template display operations.
+        """Overridden template display operations.
 
         Display SLOW_FILTER_RANGE.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
-        """
-               
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API 
+            read/write operations.
+        mod : int 
+            Module number.
+        """               
         self.filter_range.setValue(mgr.get_mod_par(mod, "SLOW_FILTER_RANGE"))
         super().display_dsp(mgr, mod)
         
@@ -119,11 +121,11 @@ class EnergyFilterBuilder:
         """EnergyFilterBuilder class constructor."""
         
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the widget and return it to the caller.
+        """Create an instance of the widget and return it to the caller.
 
-        Returns:
-            EnergyFilter: Instance of the DSP class widget.
-        """        
-            
+        Returns
+        -------
+        EnergyFilter
+            Instance of the DSP class widget.
+        """            
         return EnergyFilter(*args, **kwargs)

@@ -45,11 +45,11 @@ class QDCLenBuilder:
         """QDCLenBuilder class constructor."""
         
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the widget and return it to the caller.
+        """Create an instance of the widget and return it to the caller.
 
-        Returns:
-            QDCLen: Instance of the DSP class widget.
-        """        
-            
+        Returns
+        -------
+        QDCLen
+            Instance of the DSP class widget.
+        """
         return QDCLen(*args, **kwargs)

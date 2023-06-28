@@ -25,11 +25,11 @@ class TauBuilder:
         """TauBuilder class constructor."""
         
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the widget and return it to the caller.
+        """Create an instance of the widget and return it to the caller.
 
-        Returns:
-            Tau: Instance of the DSP class widget.
-        """        
-            
+        Returns
+        -------
+        Tau
+            Instance of the DSP class widget.
+        """                    
         return Tau(*args, **kwargs)

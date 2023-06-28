@@ -17,18 +17,20 @@
 class CDataGenerator
 {
 public:
-  CDataGenerator();
-  ~CDataGenerator();
+    CDataGenerator();
+    ~CDataGenerator();
 
-  int GetTraceData(unsigned short* data, int dataSize, double binWidth);
-  int GetHistogramData(unsigned int* data, int dataSize);
-  int GetBaselineData(double* data, int dataSize);
+    int GetTraceData(unsigned short* data, int dataSize, double binWidth);
+    int GetHistogramData(unsigned int* data, int dataSize);
+    int GetBaselineData(double* data, int dataSize);
   
 private:
-  std::mt19937 m_engine; //!< Random number generator engine.
+    std::mt19937 m_engine; //!< Random number generator engine.
   
-  unsigned short SinglePulse(double C, double A, double t0, double rise,
-			     double decay, int sample, double binWidth);
+    unsigned short SinglePulse(
+	double C, double A, double t0, double rise, double decay,
+	int sample, double binWidth
+	);
 };
 
 #endif

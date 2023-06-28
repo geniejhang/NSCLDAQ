@@ -5,14 +5,17 @@ from PyQt5.QtGui import QIntValidator
 from chan_dsp_widget import ChanDSPWidget
 
 class CFD(ChanDSPWidget):
-    """
-    CFD DSP tab (ChanDSPWidget).
+    """CFD DSP tab.
     
-    Methods:
-        disable_settings(): Disable CFD delay and scale.
-        display_dsp(): Overridden display_dsp method.
-    """
-    
+    Methods
+    -------
+    disable_settings()
+        Disable CFD delay and scale.
+    configure(mgr, mod)
+        Configure the CFD display. Overridden from the base class.
+    display_dsp(mgr, mod) 
+        Display DSP settings from the dataframe. Overridden from base class.
+    """    
     def __init__(self, *args, **kwargs):
         """CFD class constructor."""
         
@@ -37,33 +40,32 @@ class CFD(ChanDSPWidget):
         super().__init__(param_names, param_labels, *args, **kwargs)
 
     def disable_settings(self):
-        """
-        Disable CFD delay and scale.
+        """Disable CFD delay and scale.
         
         Used to disable CFD settings for 500 MSPS modules which are not 
         configurable. See Pixie-16 User's Manual Sec. 3.3.8.2 for details.
-        """
-        
+        """        
         for i in range(self.nchannels):
             self.param_grid.itemAtPosition(i+1, 1).widget().setEnabled(False)
             self.param_grid.itemAtPosition(i+1, 2).widget().setEnabled(False)
         
-    #
+    ##
     # Overridden class methods
     #
     
     def configure(self, mgr, mod):
-        """
-        Overridden template configuration operations.
+        """Overridden template configuration operations.
 
         Setup integer validator for CFDScale parameter.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
-        """
-        
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API 
+            read/write operations.
+        mod : int 
+            Module number.
+        """        
         col = self.param_names.index("CFDScale") + 1        
         for row in range(1, self.nchannels+1):
             w = self.param_grid.itemAtPosition(row, col).widget()
@@ -71,17 +73,18 @@ class CFD(ChanDSPWidget):
         super().configure(mgr, mod)
     
     def display_dsp(self, mgr, mod):
-        """
-        Overridden display_dsp.
+        """Overridden display_dsp.
         
         Limits precision of CFDScale display to integers.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            mod (int): Module number.
-        """
-        
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API 
+            read/write operations.
+        mod : int 
+            Module number.
+        """        
         for i in range(self.nchannels):
             for col, name in enumerate(self.param_names, 1):
                 if name == "CFDScale":
@@ -105,11 +108,11 @@ class CFDBuilder:
         """CFDBuilder class constructor."""
         
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the widget and return it to the caller.
+        """Create an instance of the widget and return it to the caller.
 
-        Returns:
-            CFD: Instance of the DSP class widget.
-        """        
-            
+        Returns
+        -------
+        CFD 
+            Instance of the DSP class widget.
+        """
         return CFD(*args, **kwargs)

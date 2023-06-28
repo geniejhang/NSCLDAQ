@@ -1,28 +1,31 @@
 from PyQt5.QtWidgets import QWidget, QGroupBox, QVBoxLayout
 
 class ModDSPLayout(QWidget):
-    """
-    Layout of module DSP parameters (QWidget).
+    """Layout of module DSP parameters.
 
     Uses the mod_dsp_factory to configure a set of widgets. Each of these 
     widgets is contained in a group box of similar settings.
 
-    Attributes:
-        param_widgets (list): List of widgets contained in the layout.
-        box_dict (dict): Dictionary of DSP parameter widgets and their factory 
-                         creation methods to be included in each group box.
+    Attributes
+    ----------
+    param_widgets : list
+        List of widgets contained in the layout.
+    box_dict : dict
+        Dictionary of DSP parameter widgets and their factory creation methods
+        to be included in each group box.
     """
     
     def __init__(self, factory, nmodules, *args, **kwargs):
         """
         ModDSPLayout class constructor.
 
-        Arguments:
-            factory (WidgetFactory): Factory for implemented module DSP
-                                     parameters.
-            nmodules (int): Number of modules from ModDSPManager.
-        """
-        
+        Parameters
+        ----------
+        factory : WidgetFactory
+            Factory for implemented module DSP parameters.
+        nmodules : int
+            Number of modules from ModDSPManager.
+        """        
         super().__init__(*args, **kwargs)
 
         # List of DSP parameter widgets. Unlike the channel DSP tabbed widget,
@@ -48,9 +51,7 @@ class ModDSPLayout(QWidget):
         for box_name, widget_names in self.box_dict.items():
             box = QGroupBox(box_name)
             box_layout = QVBoxLayout()
-
-            # Create the widget and add it to the list and group layout:
-            
+            # Create the widget and add it to the list and group layout:        
             for name  in widget_names:
                 w = factory.create(name, nmodules=nmodules)            
                 if w:
