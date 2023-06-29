@@ -59,7 +59,7 @@ jobs:
         working-directory: ./main/oot
         shell: bash
         run: |
-	  # temporary fix for missing header
+          # temporary fix for missing header
           cp ../config_pixie16api.h .
 	  
           ../configure --prefix=/usr/opt/nscldaq/$GITHUB_REF_NAME \
