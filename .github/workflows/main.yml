@@ -6,6 +6,8 @@ on:
       - '11.3-maint'
     tags:
       - '*'
+    paths-ignore:
+      - 'release_notes'
 
 jobs:
   buster:
