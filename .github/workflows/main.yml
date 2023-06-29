@@ -6,6 +6,8 @@ on:
       - '12.1-dev'
     tags:
       - '*'
+    paths-ignore:
+      - 'release_notes'
 
 jobs:
   buster:
