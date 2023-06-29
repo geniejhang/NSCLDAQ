@@ -5,7 +5,13 @@ from chan_dsp_widget import ChanDSPWidget
 import colors
 
 class TimingControl(ChanDSPWidget):
-    """Timing control DSP tab (ChanDSPWidget)."""
+    """Timing control DSP tab (ChanDSPWidget).
+
+    Methods
+    -------
+    configure(mgr, mod)
+        Configure the TimingControl widget. Overridden from the base class.
+    """
 
     def __init__(self, *args, **kwargs):
         """TimingControl class constructor."""
@@ -51,13 +57,12 @@ class TimingControl(ChanDSPWidget):
         layout.addStretch()
         self.setLayout(layout)
 
-    #
+    ##
     # Overridden class methods
     #
     
     def configure(self, mgr, mod):
-        """
-        Overridden template configuration operations.
+        """Overridden template configuration operations.
 
         Display but disable ChanCoincWidth on this tab.
 
@@ -78,11 +83,10 @@ class TimingControlBuilder:
         """TimingControlBuilder class constructor."""
         
     def __call__(self, *args, **kwargs):
-        """
-        Create an instance of the widget and return it to the caller.
+        """Create an instance of the widget and return it to the caller.
 
         Returns:
-            TimingControl: Instance of the DSP class widget.
+        TimingControl
+            Instance of the DSP class widget.
         """        
-            
         return TimingControl(*args, **kwargs)

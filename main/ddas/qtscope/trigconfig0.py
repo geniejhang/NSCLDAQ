@@ -12,8 +12,7 @@ import colors
 import xia_constants as xia
 
 class TrigConfig0(QWidget):
-    """
-    Module TrigConfig0 widget (QWidget).
+    """Module TrigConfig0 widget.
 
     This class interacts only with the internal DSP settings and its own 
     display. param_names is a single parameter, TrigConfig0, param_labels 
@@ -21,26 +20,38 @@ class TrigConfig0(QWidget):
     in the associated tooltips. See Pixie-16 User Manual Sec. 3.3.11.2, 
     Table 3-9 for more information.
     
-    Attributes:
-        param_names (list): List of DSP parameter names.
-        param_labels (dict): Dictionary of DSP parameter GUI column titles 
-                             and tooltips.
-        nmodules (int): Number of installed modules in the crate.
-        nchannels (int): Number of channels per moduele.
-        grid (QWidget): Grid widget shown on the GUI.
-        param_grid (QGridLayout): Gridded layout for the CSRB GUI.
-        rb_group (QButtonGroup): Radio button group for common crate 
-                                 configurations.
-        rb_dict (dict): Dictionary of TrigConfig0 settings for common trigger 
-                        settings.
-        b_show_config (QPushButton): button to display the TrigConfig0 GUI 
-                                     (grid of TrigConfig0 settings options).
+    Attributes
+    ----------
+    param_names : list 
+        List of DSP parameter names.
+    param_labels : dict 
+        Dictionary of DSP parameter GUI column titles and tooltips.
+    nmodules : int 
+        Number of installed modules in the crate.
+    nchannels : int 
+        Number of channels per moduele.
+    grid : QWidget 
+        Grid widget shown on the GUI.
+    param_grid : QGridLayout 
+        Gridded layout for the CSRB GUI.
+    rb_group : QButtonGroup 
+        Radio button group for common crate configurations.
+    rb_dict : dict 
+        Dictionary of TrigConfig0 settings for common trigger settings.
+    b_show_config : QPushButton 
+        Button to display the TrigConfig0 GUI (grid of TrigConfig0 settings 
+        options).
 
-    Methods:
-        configure(): Initialize GUI.
-        update_dsp(): Update DSP from GUI.
-        display_dsp(): Display current DSP in GUI.
-        set_param_grid(): Setup TrigConfig0 for known trigger settings.
+    Methods
+    -------
+    configure(mgr)
+        Initialize GUI.
+    update_dsp(mgr)
+        Update DSP from GUI.
+    display_dsp(mgr, set_state=False)
+        Display current DSP in GUI.
+    set_param_grid(mgr)
+        Setup TrigConfig0 for known trigger settings.
     """
     
     def __init__(self, nmodules=None, nchannels=16, *args, **kwargs):
@@ -51,15 +62,14 @@ class TrigConfig0(QWidget):
             nmodules (int): Number of modules installed in the system.
             nchannels (int): Number of channels per module (optional, 
                              default=16).
-        """
-        
+        """        
         super().__init__(*args, **kwargs)
         
         self.param_names = ["TrigConfig0"]
         self.nmodules = nmodules
         self.nchannels = nchannels
         
-        #
+        ##
         # Display widget
         #
         
@@ -92,7 +102,7 @@ class TrigConfig0(QWidget):
         layout.addWidget(self.b_show_config)
         self.setLayout(layout)
         
-        #
+        ##
         # TrigConfig0 settings grid
         #
         
@@ -129,21 +139,21 @@ class TrigConfig0(QWidget):
             w.setToolTip(param["tooltip"])
             self.param_grid.addWidget(w, 0, idx+1, Qt.AlignCenter)
         
-        #
+        ##
         # Signal connections
         #
         
         self.b_show_config.clicked.connect(self._show_config)
         
     def configure(self, mgr):
-        """                
-        Initialize and display widget settings from the DSP dataframe.
+        """Initialize and display widget settings from the DSP dataframe.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
+        Parameters
+        ----------
+        mgr : DSPManager
+             Manager for internal DSP and interface for XIA API read/write 
+             operations.
         """
-
         for i in range(self.nmodules): 
             self.param_grid.addWidget(QLabel("Mod. %i" %i), i+1, 0)
             for j, pdict in self.param_labels.items():
@@ -158,12 +168,13 @@ class TrigConfig0(QWidget):
         self.display_dsp(mgr, set_state=True)
 
     def update_dsp(self, mgr):
-        """
-        Update dataframe from GUI values.
+        """Update dataframe from GUI values.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
+        Parameters
+        ----------
+        mgr : DSPManager
+             Manager for internal DSP and interface for XIA API read/write 
+             operations.
         """
         
         for i in range(self.nmodules):
@@ -177,41 +188,40 @@ class TrigConfig0(QWidget):
             mgr.set_mod_par(i, self.param_names[0], ba2int(tc))
         
     def display_dsp(self, mgr, set_state=False):
-        """
-        Update GUI with dataframe values.
+        """Update GUI with dataframe values.
 
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
-            set_state(bool): Set the TrigConfig0 button state based on the 
-                             current confiugration settings (optional, 
-                             default=False).
+        Parameters
+        ----------
+        mgr : DSPManager
+             Manager for internal DSP and interface for XIA API read/write 
+             operations.
+        set_state : bool, default=False
+            Set the TrigConfig0 button state based on the current confiugration
+            settings.
         """
-
         if set_state:
             self.rbgroup.button(self._get_crate_config(mgr)).setChecked(True)
         
         for i in range(self.nmodules):
             val = mgr.get_mod_par(i, self.param_names[0])
-            tc = int2ba(int(val), 32, "little")
-            
+            tc = int2ba(int(val), 32, "little")            
             for j, pdict in self.param_labels.items():                    
                 self.param_grid.itemAtPosition(i+1, j+1).widget().setCurrentIndex(ba2int(tc[pdict["bit_low"]:pdict["bit_high"]]))
 
         self._disable_settings()
 
     def set_param_grid(self, mgr):
-        """
-        Set the TrigConfig0 parameter grid based on the crate configuration.
+        """Set the TrigConfig0 parameter grid based on the crate configuration.
 
         If the trigger settings are known, configure according to the rb_dict. 
         For custom TrigConfig0 show whatever is currently in the dataframe.
         
-        Arguments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
+        Parameters
+        ----------
+        mgr : DSPManager 
+            Manager for internal DSP and interface for XIA API read/write 
+            operations.
         """
-
         if self.rbgroup.checkedId() == 0:
             for i in range(self.nmodules):
                 for j, _ in enumerate(self.param_labels):                    
@@ -220,38 +230,37 @@ class TrigConfig0(QWidget):
         else:
             self.display_dsp(mgr)    
         
-    #
+    ##
     # Private methods
     #
     
     def _show_config(self):
-        """Display the TrigConfig0 GUI."""
-        
+        """Display the TrigConfig0 GUI."""        
         self.grid.show()
             
     def _get_crate_config(self, mgr):
-        """
-        Get the trigger configuration settings from the internal DSP.
+        """Get the trigger configuration settings from the internal DSP.
 
-        Arugments:
-            mgr (DSPManager): Manager for internal DSP and interface for 
-                              XIA API read/write operations.
+        Parameters
+        ----------
+        mgr : DSPManager
+             Manager for internal DSP and interface for XIA API read/write 
+             operations.
 
-        Returns:
-            int: Value corresponding to the crate configuration stored in the 
-                 CSRB settings.
-        """
-       
+        Returns
+        -------
+        int
+            Value corresponding to the crate configuration stored in the
+            CSRB settings.
+        """       
         config = -1
         
-        # Assume the configuration is default until proven otherwise:
-        
+        # Assume the configuration is default until proven otherwise:        
         for idx, info in self.rb_dict.items():
             if info["name"] == "Default (self-trigger)":
                 config = idx
 
         # Custom is any module having a TrigConfig0 value not equal to 0:
-        
         for i in range(self.nmodules):
             if mgr.get_mod_par(i, self.param_names[0]) != 0:
                 for idx, info in self.rb_dict.items():
@@ -262,11 +271,9 @@ class TrigConfig0(QWidget):
         return config
 
     def _disable_settings(self):
-        """Mask TrigConfig0 settings for non-custom triggering."""
-        
+        """Mask TrigConfig0 settings for non-custom triggering."""        
         # Mask everything if all modules in the crate are self-triggering to
         # prevent users from incorrectly configuring TrigConfig0 settings.
-
         if self.rbgroup.checkedButton().text() == "Custom":
             for i in range(self.nmodules):
                 for j in self.param_labels:
@@ -286,8 +293,9 @@ class TrigConfig0Builder:
         """
         Create an instance of the widget and return it to the caller.
 
-        Returns:
-            TrigConfig0: Instance of the DSP class widget.
-        """
-            
+        Returns
+        -------
+        TrigConfig0
+            Instance of the DSP class widget.
+        """            
         return TrigConfig0(*args, **kwargs)
