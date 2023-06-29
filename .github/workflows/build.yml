@@ -61,18 +61,18 @@ jobs:
         run: |
           # temporary fix for missing header
           cp ../config_pixie16api.h .
-	  
-          ../configure --prefix=/usr/opt/nscldaq/$GITHUB_REF_NAME \
-                       --enable-usb=yes \
-                       --enable-docs \
-                       --enable-epics-tools=yes \
-		       --with-epics-rootdir=`cat /usr/opt/EPICS_PATH` \
-		       --enable-caen-digitizer-support \
-                       --with-caen-digitizer-libroot=`cat /usr/opt/CAENDIGITIZERLIBS_PATH` \
-                       --enable-ddas=/usr/opt/ddas/5.0-004 \
-                       --with-xiaapidir=`cat /usr/opt/XIAAPI_PATH` \
-                       --with-plx-sdk=`cat /usr/opt/PLX_PATH` \
-                       CXX=`cat /usr/opt/MPI_PATH`
+          
+          ../configure --prefix=$PWD/install \
+             --enable-usb=yes \
+             --enable-caen-digitizer-support \
+             --enable-docs \
+             --enable-epics-tools=yes \
+             --enable-ddas=/usr/opt/ddas/5.0-004 \
+             --with-caen-digitizer-libroot=/usr/opt/caendigitizerlibs \
+             --with-epics-rootdir=/usr/opt/epics \
+             --with-xiaapidir=/usr/opt/xiaapi/2.13.0/ \
+             --with-plx-sdk=/usr/opt/plx \
+             CXX=/usr/opt/mpi/openmpi-4.0.1/bin/mpicxx
       - name: Make
         working-directory: ./main/oot
         run: make -j2 clean && make -j2 all && make -j2 install
