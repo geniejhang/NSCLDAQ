@@ -325,31 +325,28 @@ AC_SUBST(PIXIE_API_DIR)
 AC_SUBST(PIXIE_CPPFLAGS)
 AC_SUBST(PIXIE_LDFLAGS)
 
-
-
-
-
-   #  If --with-plx-sdk was provided we're done and that's that.
-   #  If not:
-   #
-   #  See if we can find PLX_SDK_DIR -- we try /usr/opt/plx and
-   #  $(prefix)/../../plx
-   #
-   #  If that fails, error out suggesting the user give us --with-plx-sdk
-   #
+   # Specify the location of the Plx installation. This will default to
+   # /usr/opt/plx.
    
    AC_ARG_WITH([plx-sdk],
-      [ --with-plx-sdk=path-to-plx-sdk],
-      [PLX_SDK_DIR=$withval], [PLX_SKD_DIR=""]
-   )
-   
+   [  --with-plx-sdk=path - path to the PLX software installation],
+   [PLX_SDK_DIR=$withval], [PLX_SDK_DIR=""])
+
    if test -z "$PLX_SDK_DIR"
    then
       for d in /usr/opt/plx $(prefix)/../../plx
       do
          if test -z "$PLX_SDK_DIR"
          then
-            AC_CHECK_FILE([$d/PlxApi/Library/libPlxApi.a], [PLX_SDK_DIR="$d"], [PLX_SDK_DIR=""])
+
+	    # Its probably one of these:
+
+            AC_CHECK_FILE([$d/PlxApi/Library/libPlxApi.a],
+	    [PLX_SDK_DIR="$d"],[PLX_SDK_DIR=""])
+	    
+	    AC_CHECK_FILE([$d/PlxApi/Library/PlxApi.so],
+	    [PLX_SDK_DIR="$d"],[PLX_SDK_DIR=""])
+	    
          fi
       done
    fi
@@ -360,17 +357,23 @@ AC_SUBST(PIXIE_LDFLAGS)
    then
       AC_MSG_FAILURE([Could not locate the PLX SDK directory, use --with-plx-sdk to help me])
    fi
+
+   PLX_CPPFLAGS="-I${PLX_SDK_DIR}/Include -I${PLX_SDK_DIR}/PlxApi"
+
+   # Use the shared library PlxApi.so (plx 8+) otherwise libPlxApi.a:
    
-   #  If found then:
-   
-   PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -lPlxApi -Wl,-rpath=${PLX_SDK_DIR}/PlxApi/Library"
-   
-   #  Now export all the variables to the Makefile.
+   AC_CHECK_FILE([${PLX_SDK_DIR}/PlxApi/Library/PlxApi.so],
+   [PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -l:PlxApi.so -Wl,-rpath=${PLX_SDK_DIR}/PlxApi/Library"],
+   [PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -lPlxApi"])
+
+   AC_SUBST(PLX_SDK_DIR)
+   AC_SUBST(PLX_CPPFLAGS)
+   AC_SUBST(PLX_LDFLAGS)
+
+   # Now export all the variables to the makefile:
    
    AM_CONDITIONAL([BUILD_DDAS], [true])
    AC_SUBST(DDAS_INSTDIR)
-   AC_SUBST(PLX_LDFLAGS)
-   
 else
    AM_CONDITIONAL([BUILD_DDAS],[false])
 fi
