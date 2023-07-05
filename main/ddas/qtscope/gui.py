@@ -302,14 +302,14 @@ class MainWindow(QMainWindow):
                 if self.xia_api_version >= 3:
                     if opt != "XIA settings file (*.set, *.json)":
                         raise RuntimeError(
-                            f"Unrecognized file extension '{ext}'"
+                            f"Unrecognized option '{opt}'"
                         )
                     elif fext != ".set" and fext != ".json":
                         raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extenstions are: .set or .json. Your settings file has not been saved")
                 else:
                     if opt != "XIA settings file (*.set)":
                         raise RuntimeError(
-                            f"Unrecognized file extension '{ext}'"
+                            f"Unrecognized option '{opt}'"
                         )
                     elif fext != ".set":
                         raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extension are: .set. Your settings file has not been saved")                
@@ -329,13 +329,14 @@ class MainWindow(QMainWindow):
             If file format is unrecognized.
         """        
         fname, opt = self._load_dialog()
+        fext = os.path.splitext(fname)[-1].lower()
         if fname and opt:
             try:
                 if (opt == "XIA settings file (*.set)"
-                    or "XIA JSON settings file (*.json)"):
+                    or "XIA settings file (*.set, *.json)"):
                     self.sys_utils.load_set_file(fname)
                 else:
-                    raise RuntimeError(f"Unrecognized file extension '{ext}'")
+                    raise RuntimeError(f"Unrecognized option '{opt}'")
             except RuntimeError:
                 self.logger.exception("Error loading settings file")
                 print(e)
@@ -364,7 +365,7 @@ class MainWindow(QMainWindow):
         if self.xia_api_version >= 3:
             fname, opt = QFileDialog.getSaveFileName(
                 self, "Save file", "",
-                "XIA settings files (*.set, *.json)",
+                "XIA settings file (*.set, *.json)",
                 options=options
             )
         else:
