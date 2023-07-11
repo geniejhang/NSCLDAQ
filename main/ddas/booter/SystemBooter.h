@@ -1,4 +1,13 @@
 /**
+ * @addtogroup booter libSystemBooter.so
+ * @brief DDAS Pixie-16 system booter library.
+ *
+ * A library containing code used by other DDAS programs which boots Pixie 
+ * modules and sets hardware configuration for the booted system.
+ * @{
+ */
+
+/**
  * @file SystemBooter.h
  * @brief Defines a class to manage the booting process for DDAS.
  */
@@ -79,3 +88,5 @@ namespace DAQ {
 } // end DAQ namespace
 
 #endif // SYSTEMBOOTER_H
+
+/** @} */

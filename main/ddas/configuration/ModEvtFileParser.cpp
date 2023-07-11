@@ -1,4 +1,14 @@
 /**
+ * @addtogroup configuration libConfiguration.so
+ * @brief DDAS Pixie-16 hardware configuration library.
+ *
+ * Shared library containing classes to manage the internal configuration of a 
+ * DDAS system and store information about its hardware. Contains all functions
+ * defined in the DAQ::DDAS::HardwareRegistry namespace.
+ * @{
+ */
+
+/**
  * @file ModEvtFileParser.cpp
  * @brief Implementation of the modevtlen.txt file parser.
  */
@@ -8,9 +18,6 @@
 #include <iostream>
 
 #include "Configuration.h"
-
-namespace DAQ {
-    namespace DDAS {
 
 /*!
  * \brief Parse and store the contents of the modevtlen.txt file in a 
@@ -27,39 +34,39 @@ namespace DAQ {
  * \throws std::runtime_error  If a line is encountered with a value less 
  *   than 4.
  */
-	void ModEvtFileParser::parse(
-	    std::istream &input, Configuration &config
-	    )
-	{
-	    int NumModules = config.getNumberOfModules();
-	    std::vector<int> modEvtLenData(NumModules);
+void
+DAQ::DDAS::ModEvtFileParser::parse(
+    std::istream &input, DAQ::DDAS::Configuration &config
+    )
+{
+    int NumModules = config.getNumberOfModules();
+    std::vector<int> modEvtLenData(NumModules);
 
-	    for(int i=0; i<NumModules; i++) {
-		input >> modEvtLenData[i];
+    for(int i=0; i<NumModules; i++) {
+	input >> modEvtLenData[i];
 
-		if (input.fail() || input.bad()) {
-		    std::string errmsg(
-			"Failure while reading module event length "
-			);
-		    errmsg += "configuration file. ";
-		    errmsg += "Expected " + std::to_string(NumModules)
-			+ " entries but found ";
-		    errmsg += "only " + std::to_string(i) + ".";
-		    throw std::runtime_error(errmsg);
-		}
-		if (modEvtLenData[i] < 4) {
-		    std::string errmsg(
-			"Failure while reading module event length "
-			);
-		    errmsg += "configuration file. Found event length ";
-		    errmsg += std::to_string(modEvtLenData[i]);
-		    errmsg += " less than 4.";
-		    throw std::runtime_error(errmsg);
-		}
-	    }
-
-	    config.setModuleEventLengths(modEvtLenData);
+	if (input.fail() || input.bad()) {
+	    std::string errmsg(
+		"Failure while reading module event length "
+		);
+	    errmsg += "configuration file. ";
+	    errmsg += "Expected " + std::to_string(NumModules)
+		+ " entries but found ";
+	    errmsg += "only " + std::to_string(i) + ".";
+	    throw std::runtime_error(errmsg);
 	}
+	if (modEvtLenData[i] < 4) {
+	    std::string errmsg(
+		"Failure while reading module event length "
+		);
+	    errmsg += "configuration file. Found event length ";
+	    errmsg += std::to_string(modEvtLenData[i]);
+	    errmsg += " less than 4.";
+	    throw std::runtime_error(errmsg);
+	}
+    }
 
-    } // end DDAS namespace
-} // end DAQ namespace
+    config.setModuleEventLengths(modEvtLenData);
+}
+
+/** @} */

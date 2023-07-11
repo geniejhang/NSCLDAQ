@@ -37,11 +37,11 @@ namespace DAQ {
 	 * \brief Encapsulation of a generic DDAS event.
 	 *
 	 * The DDASHit class is intended to encapsulate the information that
-	 * is emitted by the Pixie-16 dgitizer for a single event. It contains
+	 * is emitted by the Pixie-16 digitizer for a single event. It contains
 	 * information for a single channel only. It is generic because it can
 	 * store data for the 100 MSPS, 250 MSPS, and 500 MSPS Pixie-16 
 	 * digitizers used at the lab. In general all of these contain the 
-	 * same set of  information, however, the meaning of the CFD data is 
+	 * same set of information, however, the meaning of the CFD data is 
 	 * different for each. The DDASHit class abstracts these differences 
 	 * away from the user.
 	 *
@@ -54,6 +54,8 @@ namespace DAQ {
 	 * DDASHitUnpacker unpacker;
 	 * unpacker.unpack(pData, pData+sizeOfData, channel);
 	 * \endcode
+	 *
+	 * where pData is a pointer to the first word of the event.
 	 */
 	class DDASHit { 
 
@@ -126,26 +128,22 @@ namespace DAQ {
 	     *
 	     * \return uint32_t  The energy.
 	     */
-	    uint32_t GetEnergy() const { return energy; }
-	    
+	    uint32_t GetEnergy() const { return energy; }	    
 	    /*! 
 	     * \brief Retrieve most significant 16-bits of raw timestamp.
-	     * \return uint32_t  The upper 16 bits of the 48 bit timestamp. 
+	     * \return uint32_t  The upper 16 bits of the 48-bit timestamp. 
 	     */
-	    uint32_t GetTimeHigh() const { return timehigh; }
-	    
+	    uint32_t GetTimeHigh() const { return timehigh; }	    
 	    /*! 
 	     * \brief Retrieve least significant 32-bit of raw timestamp .
-	     * \return uint32_t  The lower 16 bits of the 48 bit timestamp. 
+	     * \return uint32_t  The lower 16 bits of the 48-bit timestamp. 
 	     */
-	    uint32_t GetTimeLow() const { return timelow; }
-	    
+	    uint32_t GetTimeLow() const { return timelow; }	    
 	    /*!
 	     * \brief Retrieve the raw CFD time.
 	     * \return uint32_t  The raw CFD time value from the data word. 
 	     */
-	    uint32_t GetTimeCFD() const { return timecfd; }
-	    
+	    uint32_t GetTimeCFD() const { return timecfd; }	    
 	    /*! 
 	     * \brief Retrieve computed time 
 	     *
@@ -159,29 +157,30 @@ namespace DAQ {
 	     *
 	     * For the 100 MSPS modules:
 	     *
-	     *   time = 10*((timehigh << 32) + timelow)
+	     * \f[\text{time} = 10\times((\text{timehigh} << 32) 
+	     * + \text{timelow})\f]
 	     *  
 	     * For the 250 MSPS modules:
 	     *
-	     *   time = 8*(timehigh << 32 + timelow) + 4*(timecfd/(2^14) 
-	     *            - cfdtrigsourcebit)
+	     * \f[\text{time} = 8\times((\text{timehigh} << 32) 
+	     * + \text{timelow}) + 4\times(\text{timecfd}/2^{14}
+	     * - \text{cfdtrigsourcebit})\f]
 	     *
 	     * For the 500 MSPS modules:
 	     *
-	     *   time = 10*(timehigh << 32 + timelow) + 2*(timecfd/(2^13) 
-	     *            + cfdtrigsourcebit - 1)
+	     * \f[\text{time} = 10\times((\text{timehigh} << 32) 
+	     * + \text{timelow}) + 2\times(\text{timecfd}/2^{13}
+	     * + \text{cfdtrigsourcebit} - 1)\f]
 	     *
 	     * \return double  The timestamp in units of nanoseconds.
 	     */
-	    double GetTime() const { return time; }
-	    
+	    double GetTime() const { return time; }	    
 	    /*! 
 	     * \brief Retrieve the 48-bit timestamp in nanoseconds without 
 	     * any CFD correction.
 	     * \return uint64_t  The raw 48-bit timestamp in nanoseconds. 
 	     */
-	    uint64_t GetCoarseTime() const { return coarsetime; }
-	    
+	    uint64_t GetCoarseTime() const { return coarsetime; }	    
 	    /*! 
 	     * \brief Retrieve finish code
 	     *
@@ -189,8 +188,7 @@ namespace DAQ {
 	     * 
 	     * \return uint32_t  The finish code.
 	     */
-	    uint32_t GetFinishCode() const { return finishcode; }
-	    
+	    uint32_t GetFinishCode() const { return finishcode; }	    
 	    /*! 
 	     * \brief Retrieve number of 32-bit words that were in original 
 	     * data packet.
@@ -200,63 +198,54 @@ namespace DAQ {
 	     *
 	     * \return uint32_t  The number of 32-bit words in the event.
 	     */
-	    uint32_t GetChannelLength() const { return channellength; }
-	    
+	    uint32_t GetChannelLength() const { return channellength; }	    
 	    /*! 
 	     * \brief Retrieve length of header in original data packet. 
 	     * \return uint32_t  Length of the channel header. 
 	     */
-	    uint32_t GetChannelLengthHeader() const
-		{ return channelheaderlength; }
-	    
+	    uint32_t GetChannelLengthHeader()
+		const { return channelheaderlength; }	    
 	    /*! 
 	     * \brief Retrieve the overflow code. 
 	     * \return uint32_t  The overflow code. 
 	     */
-	    uint32_t GetOverflowCode() const { return overflowcode; }
-	    
+	    uint32_t GetOverflowCode() const { return overflowcode; }	    
 	    /*! 
 	     * \brief Retrieve the slot that the module resided in. 
 	     * \return uint32_t  Module slot. 
 	     */
-	    uint32_t GetSlotID() const { return slotid; }
-	    
+	    uint32_t GetSlotID() const { return slotid; }	    
 	    /*! 
 	     * \brief Retrieve the index of the crate the module resided in. 
 	     * \return uint32_t  Module crate ID. 
 	     */
-	    uint32_t GetCrateID() const { return crateid; }
-	    
+	    uint32_t GetCrateID() const { return crateid; }	    
 	    /*! 
 	     * \brief Retrieve the channel index. 
 	     * \return uint32_t  Channel index on the module. 
 	     */
-	    uint32_t GetChannelID() const { return chanid; }
-	    
+	    uint32_t GetChannelID() const { return chanid; }	    
 	    /*! 
 	     * \brief Retrieve the ADC frequency of the module. 
 	     * \return uint32_t  Module ADC MSPS. 
 	     */
-	    uint32_t GetModMSPS() const { return ModMSPS; }
-	    
+	    uint32_t GetModMSPS() const { return ModMSPS; }	    
 	    /*! 
 	     * \brief Retrieve the hardware revision. 
 	     * \return int  Module hardware revision number. 
 	     */
-	    int GetHardwareRevision() const { return m_hdwrRevision; }
-	    
+	    int GetHardwareRevision() const { return m_hdwrRevision; }	    
 	    /*! 
 	     * \brief Retrieve the ADC resolution.
 	     \return int  Module ADC resolution (bit depth). 
 	    */
-	    int GetADCResolution() const { return m_adcResolution; }
-	    
+	    int GetADCResolution() const { return m_adcResolution; }	    
 	    /*! 
 	     * \brief Retrieve trigger source bit from CFD data. 
 	     * \return uint32_t  The CFD trigger source bit.
 	     */
-	    uint32_t GetCFDTrigSource() const { return cfdtrigsourcebit; }
-	    
+	    uint32_t GetCFDTrigSource()
+		const { return cfdtrigsourcebit; }
 	    /*! 
 	     * \brief Retreive failure bit from CFD data.
 	     *
@@ -264,69 +253,60 @@ namespace DAQ {
 	     *
 	     * \return uint32_t  The CFD fail bit.
 	     */
-	    uint32_t GetCFDFailBit() const { return cfdfailbit; }
-	    
+	    uint32_t GetCFDFailBit() const { return cfdfailbit; }	    
 	    /*!
 	     * \brief Retrieve trace length 
 	     * \return uint32_t  The trace length in ADC samples.
 	     */
-	    uint32_t GetTraceLength() const { return tracelength; }
-	    
+	    uint32_t GetTraceLength() const { return tracelength; }	    
 	    /*! 
 	     * \brief Access the trace data 
 	     * \return std::vector<uint16_t>  The ADC trace.
 	     */
 	    std::vector<uint16_t>& GetTrace() { return trace; }
-	    
 	    /*! 
 	     * \brief Access the trace data 
 	     * \return const std::vector<uint16_t>  The ADC trace.
 	     */
 	    const std::vector<uint16_t>& GetTrace() const { return trace; }
-	    
 	    /*! 
 	     * \brief Access the energy/baseline sum data.
 	     * \return std::vector<uint32_t>  The energy sum data.
 	     */
 	    std::vector<uint32_t>& GetEnergySums() { return energySums; }
-	    
 	    /*! 
 	     * \brief Access the energy/baseline sum data.
 	     * \return const std::vector<uint32_t>  The energy sum data.
 	     */
-	    const std::vector<uint32_t>& GetEnergySums() const
-		{ return energySums; }
-	    
+	    const std::vector<uint32_t>& GetEnergySums()
+		const { return energySums; }	    
 	    /*! 
 	     * \brief Access the QDC data.
 	     * \return std::vector<uint32_t>  The QDC sum data.
 	     */
-	    std::vector<uint32_t>& GetQDCSums() { return qdcSums; }
-	    
+	    std::vector<uint32_t>& GetQDCSums() { return qdcSums; }	    
 	    /*! 
 	     * \brief Access the QDC data.
 	     * \return const std::vector<uint32_t>  The QDC sum data.
 	     */
 	    const std::vector<uint32_t>& GetQDCSums() const { return qdcSums; }
-	    
 	    /*!
 	     * \brief Retrieve the external timestamp.
 	     * \return uint64_t  The 48-bit external timestamp in nanoseconds.
 	     */
 	    uint64_t GetExternalTimestamp() const { return externalTimestamp; }
-	    
 	    /*! \brief Retrieve the ADC overflow/underflow status
 	     *
-	     * In the 12 and 14 bit modules, this is value of bit 15 in the 
-	     * 4th header word. In the 16 bit modules, this is the value of 
-	     * bit 31 in the 4th header word.
+	     * In the 12 and 14 bit modules, this is the value of bit 15 in 
+	     * the 4th header word. In the 16 bit modules, this is the value 
+	     * of bit 31 in the 4th header word.
 	     *
 	     * \return bool
 	     * \retval true   If the ADC over- or underflows.
 	     * \retval false  Otherwise.
 	     */
-	    bool GetADCOverflowUnderflow() const
-		{ return m_adcOverflowUnderflow; }
+	    bool GetADCOverflowUnderflow()
+		const { return m_adcOverflowUnderflow; }
 	    
 	    void setChannel(uint32_t channel);
 	    void setSlot(uint32_t slot);

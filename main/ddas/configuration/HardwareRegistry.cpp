@@ -1,4 +1,14 @@
 /**
+ * @addtogroup configuration libConfiguration.so
+ * @brief DDAS Pixie-16 hardware configuration library.
+ *
+ * Shared library containing classes to manage the internal configuration of a 
+ * DDAS system and store information about its hardware. Contains all functions
+ * defined in the DAQ::DDAS::HardwareRegistry namespace.
+ * @{
+ */
+
+/**
  * @file HardwareRegistry.cpp
  * @brief Implement functions in the namespace used to store the DDAS 
  * hardware information.
@@ -88,12 +98,7 @@ operator==(
     return ((lhs.s_adcFrequency == rhs.s_adcFrequency)
             && (lhs.s_adcResolution == rhs.s_adcResolution)
             && (lhs.s_hdwrRevision == rhs.s_hdwrRevision));
-}
-
-
-namespace DAQ {
-    namespace DDAS {
-	namespace HardwareRegistry {
+}    
 
 /*!
  * \brief Configure the specifications associated with a hardware type.
@@ -104,13 +109,13 @@ namespace DAQ {
  * \param type  The enumerated hardware type.
  * \param spec  A specification to assign.
  */
-	    void
-	    configureHardwareType(
-		int type, const HardwareSpecification &spec
-		)
-	    {
-		getRegistry()[type] = spec;
-	    }
+void
+DAQ::DDAS::HardwareRegistry::configureHardwareType(
+    int type, const DAQ::DDAS::HardwareRegistry::HardwareSpecification &spec
+    )
+{
+    getRegistry()[type] = spec;
+}
 
 /*!
  * \brief Retrieve a reference to the current hdwr specification for a 
@@ -123,33 +128,33 @@ namespace DAQ {
  *
  * \return HardwareSpecification&  Reference to a hardware specificiation.
  */
-	    HardwareSpecification&
-	    getSpecification(int type)
-	    {
-		Registry& registry = getRegistry();
+DAQ::DDAS::HardwareRegistry::HardwareSpecification&
+DAQ::DDAS::HardwareRegistry::getSpecification(int type)
+{
+    Registry& registry = getRegistry();
 
-		auto pFound = registry.find(type);
-		if (pFound == registry.end()) {
-		    std::string errmsg("HardwareRegistry::getSpecification() ");
-		    errmsg += "Failed to locate specification for provided ";
-		    errmsg += "hardware type.";
-		    throw std::runtime_error(errmsg);
-		}
+    auto pFound = registry.find(type);
+    if (pFound == registry.end()) {
+	std::string errmsg("HardwareRegistry::getSpecification() ");
+	errmsg += "Failed to locate specification for provided ";
+	errmsg += "hardware type.";
+	throw std::runtime_error(errmsg);
+    }
 
-		return pFound->second;
-	    }
+    return pFound->second;
+}
 
 /*!
  * \brief Reset the contents of the registry to the default state
  */
-	    void
-	    resetToDefaults()
-	    {
-		Registry& registry = getRegistry();
-		registry.clear();
-		sNextAvailableUserType = sDefaultFirstAvailableUserType;
-		setUpRegistry(registry);
-	    }
+void
+DAQ::DDAS::HardwareRegistry::resetToDefaults()
+{
+    Registry& registry = getRegistry();
+    registry.clear();
+    sNextAvailableUserType = sDefaultFirstAvailableUserType;
+    setUpRegistry(registry);
+}
 
 
 /*!
@@ -161,25 +166,27 @@ namespace DAQ {
  *
  * \return int  An enumerated hardware type.
  */
-	    int
-	    computeHardwareType(int hdwrVersion, int adcFreq, int adcRes)
+int
+DAQ::DDAS::HardwareRegistry::computeHardwareType(
+    int hdwrVersion, int adcFreq, int adcRes
+    )
+{
+    HardwareSpecification spec = {adcFreq, adcRes, hdwrVersion};
+    Registry& registry = getRegistry();
+    auto res = std::find_if(
+	registry.begin(), registry.end(),
+	[&spec](const Registry::value_type& element)
 	    {
-		HardwareSpecification spec = {adcFreq, adcRes, hdwrVersion};
-		Registry& registry = getRegistry();
-		auto res = std::find_if(
-		    registry.begin(), registry.end(),
-		    [&spec](const Registry::value_type& element)
-			{
-			    return (element.second == spec);
-			}
-		    );
-
-		if (res != registry.end()) {
-		    return res->first;
-		} else {
-		    return Unknown;
-		}
+		return (element.second == spec);
 	    }
+	);
+
+    if (res != registry.end()) {
+	return res->first;
+    } else {
+	return Unknown;
+    }
+}
 
 /*!
  * \brief Create an enumerated hardware type from input specifications.
@@ -191,25 +198,22 @@ namespace DAQ {
  *
  * \return int  An enumerated hardware type.
  */   
-	    int
-	    createHardwareType(
-		int hdwrVersion, int adcFreq, int adcRes,
-		double clockCalibration
-		)
-	    {
-		Registry& registry = getRegistry();
-		int type = computeHardwareType(hdwrVersion, adcFreq, adcRes);
+int
+DAQ::DDAS::HardwareRegistry::createHardwareType(
+    int hdwrVersion, int adcFreq, int adcRes, double clockCalibration
+    )
+{
+    Registry& registry = getRegistry();
+    int type = computeHardwareType(hdwrVersion, adcFreq, adcRes);
 		
-		if (type == Unknown) {
-		    registry[sNextAvailableUserType] = {
-			adcFreq, adcRes, hdwrVersion, clockCalibration
-		    };
-		    type = sNextAvailableUserType++;
-		}
+    if (type == Unknown) {
+	registry[sNextAvailableUserType] = {
+	    adcFreq, adcRes, hdwrVersion, clockCalibration
+	};
+	type = sNextAvailableUserType++;
+    }
 		
-		return type;
-	    }
+    return type;
+}
 
-	} // end HardwareRegistry namespace
-    } // end DDAS namespace
-} // end DAQ namespace
+/** @} */

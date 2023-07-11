@@ -1,4 +1,14 @@
 /**
+ * @addtogroup configuration libConfiguration.so
+ * @brief DDAS Pixie-16 hardware configuration library.
+ *
+ * Shared library containing classes to manage the internal configuration of a 
+ * DDAS system and store information about its hardware. Contains all functions
+ * defined in the DAQ::DDAS::HardwareRegistry namespace.
+ * @{
+ */
+
+/**
  * @file ModEvtFileParser.h
  * @brief Defines a parser for the modevtlen.txt file.
  */
@@ -14,7 +24,6 @@ namespace DAQ {
     namespace DDAS {
 	
 	class Configuration;
-
 
 /*!
  * \brief A parser for the modevtlen.txt file
@@ -49,3 +58,5 @@ namespace DAQ {
 } // end DAQ namespace
 
 #endif // MODEVTFILEPARSER_H
+
+/** @} */

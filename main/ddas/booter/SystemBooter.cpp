@@ -1,4 +1,13 @@
 /**
+ * @addtogroup booter libSystemBooter.so
+ * @brief DDAS Pixie-16 system booter library.
+ *
+ * A library containing code used by other DDAS programs which boots Pixie 
+ * modules and sets hardware configuration for the booted system.
+ * @{
+ */
+
+/**
  * @file SystemBooter.cpp
  * @brief Implementation of the system booter class for DDAS.
  */
@@ -327,3 +336,5 @@ unsigned int DAQ::DDAS::SystemBooter::computeBootMask(BootType type)
 	return 0x70;
     }
 }
+
+/** @} */

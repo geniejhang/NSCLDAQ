@@ -1,4 +1,16 @@
 /**
+ * @addtogroup utilities libPixieUtilities.so
+ * @brief Pixie-16 utilities for QtScope.
+ *
+ * This utility library is used by QtScope. It contains a number of classes
+ * which call other parts of the DDAS code to boot and manage the modules. 
+ * This library defines an API by which the pure-Python QtScope code can 
+ * interact with the C/C++ FRIBDAQ and XIA API code needed to run a system of 
+ * Pixie modules.
+ * @{ 
+ */
+
+/**
  * @file  CPixieTraceUtilities.cpp
  * @brief Implementation of the trace utilities class.
  */
@@ -213,3 +225,5 @@ CPixieTraceUtilities::GetMedianValue(std::vector<T> v)
 	return (double)(*midItr);
     }
 }
+
+/** @} */

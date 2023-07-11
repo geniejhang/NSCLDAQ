@@ -1,4 +1,14 @@
 /**
+ * @addtogroup configuration libConfiguration.so
+ * @brief DDAS Pixie-16 hardware configuration library.
+ *
+ * Shared library containing classes to manage the internal configuration of a 
+ * DDAS system and store information about its hardware. Contains all functions
+ * defined in the DAQ::DDAS::HardwareRegistry namespace.
+ * @{
+ */
+
+/**
  * @file Configuration.cpp
  * @brief Implementation of the system storage configuration.
  */
@@ -11,10 +21,7 @@
 #include "FirmwareVersionFileParser.h"
 #include "ConfigurationParser.h"
 #include "ModEvtFileParser.h"
-
-namespace DAQ {
-    namespace DDAS {
-
+ 
 /*!
  * \brief Set the crate id for the module.
  *
@@ -22,22 +29,22 @@ namespace DAQ {
  *
  * \param id  The id to assign.
  */
-	void
-	Configuration::setCrateId(int id)
-	{
-	    m_crateId = id;
-	}
+void
+DAQ::DDAS::Configuration::setCrateId(int id)
+{
+    m_crateId = id;
+}
 
 /*!
  * \brief Return the crate id value.
  *
  * \return int  The crate id.
  */
-	int
-	Configuration::getCrateId() const
-	{
-	    return m_crateId;
-	}
+int
+DAQ::DDAS::Configuration::getCrateId() const
+{
+    return m_crateId;
+}
 
 /*!
  * \brief Set the number of modules in the crate.
@@ -48,24 +55,24 @@ namespace DAQ {
  *
  * \param size  Number of modules.
  */
-	void
-	Configuration::setNumberOfModules(size_t size)
-	{
-	    m_slotMap.resize(size);
-	    m_modEvtLengths.resize(size);
-	    m_hardwareMap.resize(size);
-	}
+void
+DAQ::DDAS::Configuration::setNumberOfModules(size_t size)
+{
+    m_slotMap.resize(size);
+    m_modEvtLengths.resize(size);
+    m_hardwareMap.resize(size);
+}
 
 /*!
  * \brief Return the number of modules in the crate.
  *
  * \return size_t  The number of modules.
  */
-	size_t
-	Configuration::getNumberOfModules() const
-	{
-	    return m_slotMap.size();
-	}
+size_t
+DAQ::DDAS::Configuration::getNumberOfModules() const
+{
+    return m_slotMap.size();
+}
 
 /*!
  * \brief Assign a new slot map.
@@ -88,20 +95,20 @@ namespace DAQ {
  * \throws std::runtime_error  When length of argument is different than 
  *     length of stored modevtlen vector.
  */
-	void
-	Configuration::setSlotMap(const std::vector<unsigned short> &map)
-	{
-	    if (map.size() != m_modEvtLengths.size()) {
-		std::string errmsg;
-		errmsg += "Configuration::setSlotMap(): ";
-		errmsg += "Inconsistent data for module evt lengths and ";
-		errmsg += "slot mapping. Set number of modules first using ";
-		errmsg += "Configuration::setNumberOfModules().";
-		throw std::runtime_error(errmsg);
-	    }
+void
+DAQ::DDAS::Configuration::setSlotMap(const std::vector<unsigned short> &map)
+{
+    if (map.size() != m_modEvtLengths.size()) {
+	std::string errmsg;
+	errmsg += "Configuration::setSlotMap(): ";
+	errmsg += "Inconsistent data for module evt lengths and ";
+	errmsg += "slot mapping. Set number of modules first using ";
+	errmsg += "Configuration::setNumberOfModules().";
+	throw std::runtime_error(errmsg);
+    }
 
-	    m_slotMap = map;
-	}
+    m_slotMap = map;
+}
 
 /*!
  * \brief Return the vector containing the filled slots.
@@ -109,32 +116,33 @@ namespace DAQ {
  * \return std::vector<unsigned short>  The vector containing the slots that 
  *   are filled.
  */
-	std::vector<unsigned short>
-	Configuration::getSlotMap() const
-	{
-	    return m_slotMap;
-	}
+std::vector<unsigned short>
+DAQ::DDAS::Configuration::getSlotMap() const
+{
+    return m_slotMap;
+}
 
 /*!
  * \brief Set the path to the .set file.
  *
  * \param path  The path to the settings file.
  */
-	void
-	Configuration::setSettingsFilePath(const std::string &path)
-	{
-	    m_settingsFilePath = path;
-	}
+void
+DAQ::DDAS::Configuration::setSettingsFilePath(const std::string &path)
+{
+    m_settingsFilePath = path;
+}
 
 /*!
  * \brief Return the path to the .set file.
  * 
  * \return std::string  The settings file path.
  */
-	std::string Configuration::getSettingsFilePath() const
-	{
-	    return m_settingsFilePath;
-	}
+std::string
+DAQ::DDAS::Configuration::getSettingsFilePath() const
+{
+    return m_settingsFilePath;
+}
 
 /*!
  * \brief Set the firmware configuration for a hardware type
@@ -146,13 +154,13 @@ namespace DAQ {
  * \param specifier  The hardware type.
  * \param config     The new configuration.
  */
-	void
-	Configuration::setFirmwareConfiguration(
-	    int specifier, const FirmwareConfiguration &config
-	    )
-	{
-	    m_fwMap[specifier] = config;
-	}
+void
+DAQ::DDAS::Configuration::setFirmwareConfiguration(
+    int specifier, const FirmwareConfiguration &config
+    )
+{
+    m_fwMap[specifier] = config;
+}
 
 
 /*!
@@ -162,25 +170,26 @@ namespace DAQ {
  * \param hdwrType  The hardware specifier associated with the firmware 
  *   configuration.
  *
- * \return FirmwareConfiguration&  The firmware configuration associated with 
- *   the hdwrType.
+ * \return FirmwareConfiguration&  The firmware configuration 
+ *   associated with the hdwrType.
  *
  * \throws std::runtime_error  If no firmware configuration exists for the 
  *   provided hdwrType.
  */
-	FirmwareConfiguration& Configuration::getFirmwareConfiguration(
-	    int hdwrType
-	    )
-	{
-	    auto pSpec = m_fwMap.find(hdwrType);
-	    if (pSpec == m_fwMap.end()) {
-		std::string errmsg = "Unable to locate firmware ";
-		errmsg += "configuration for firmware specifier";
-		throw std::runtime_error(errmsg);
-	    }
+DAQ::DDAS::FirmwareConfiguration&
+DAQ::DDAS::Configuration::getFirmwareConfiguration(
+    int hdwrType
+    )
+{
+    auto pSpec = m_fwMap.find(hdwrType);
+    if (pSpec == m_fwMap.end()) {
+	std::string errmsg = "Unable to locate firmware ";
+	errmsg += "configuration for firmware specifier";
+	throw std::runtime_error(errmsg);
+    }
 
-	    return pSpec->second;
-	}
+    return pSpec->second;
+}
 
 /*!
  * \brief Set the lengths of events for each module
@@ -195,33 +204,33 @@ namespace DAQ {
  * \throws std::runtime_error if size of lengths does not match size of 
  *   stored slot map.
  */
-	void
-	Configuration::setModuleEventLengths(
-	    const std::vector<int> &lengths
-	    )
-	{
-	    if (lengths.size() != m_slotMap.size()) {
-		std::string errmsg;
-		errmsg += "Configuration::setModuleEventLengths() ";
-		errmsg += "Inconsistent data for module evt lengths and ";
-		errmsg += "slot mapping. Set number of modules first using ";
-		errmsg += "Configuration::setNumberOfModules().";
-		throw std::runtime_error(errmsg);
-	    }
+void
+DAQ::DDAS::Configuration::setModuleEventLengths(
+    const std::vector<int> &lengths
+    )
+{
+    if (lengths.size() != m_slotMap.size()) {
+	std::string errmsg;
+	errmsg += "Configuration::setModuleEventLengths() ";
+	errmsg += "Inconsistent data for module evt lengths and ";
+	errmsg += "slot mapping. Set number of modules first using ";
+	errmsg += "Configuration::setNumberOfModules().";
+	throw std::runtime_error(errmsg);
+    }
 
-	    m_modEvtLengths = lengths;
-	}
+    m_modEvtLengths = lengths;
+}
 
 /*!
  * \brief Return a copy of the module event length vector.
  *
  * \return std::vector<int>  Copy of module event lengths vector.
  */
-	std::vector<int>
-	Configuration::getModuleEventLengths() const
-	{
-	    return m_modEvtLengths;
-	}
+std::vector<int>
+DAQ::DDAS::Configuration::getModuleEventLengths() const
+{
+    return m_modEvtLengths;
+}
 
 /*!
  * \brief Set the hardware map for each module.
@@ -236,31 +245,31 @@ namespace DAQ {
  * \throws std::runtime_error if size of lengths does not match size of 
  *   stored slot map.
  */
-	void
-	Configuration::setHardwareMap(const std::vector<int> &map)
-	{
-	    if (map.size() != m_slotMap.size()) {
-		std::string errmsg;
-		errmsg += "Configuration::setModuleEventLengths() ";
-		errmsg += "Inconsistent data for hardware mapping and ";
-		errmsg += "slot mapping. Set number of modules first using ";
-		errmsg += "Configuration::setNumberOfModules().";
-		throw std::runtime_error(errmsg);
-	    }
+void
+DAQ::DDAS::Configuration::setHardwareMap(const std::vector<int> &map)
+{
+    if (map.size() != m_slotMap.size()) {
+	std::string errmsg;
+	errmsg += "Configuration::setModuleEventLengths() ";
+	errmsg += "Inconsistent data for hardware mapping and ";
+	errmsg += "slot mapping. Set number of modules first using ";
+	errmsg += "Configuration::setNumberOfModules().";
+	throw std::runtime_error(errmsg);
+    }
 
-	    m_hardwareMap = map;
-	}
+    m_hardwareMap = map;
+}
 
 /*!
  * \brief Return a copy of the hardware map vector.
  *
  * \return std::vector<int>  Copy of hardware map vector.
  */
-	std::vector<int>
-	Configuration::getHardwareMap() const
-	{
-	    return m_hardwareMap;
-	}
+std::vector<int>
+DAQ::DDAS::Configuration::getHardwareMap() const
+{
+    return m_hardwareMap;
+}
 	
 
 /*!
@@ -271,20 +280,17 @@ namespace DAQ {
  *
  * \param stream  The ostream to write to.
  */
-	void
-	Configuration::print(std::ostream &stream)
-	{
-	    stream << "Crate number " << m_crateId;
-	    stream << ": " << m_slotMap.size() << " modules, in slots:";
+void
+DAQ::DDAS::Configuration::print(std::ostream &stream)
+{
+    stream << "Crate number " << m_crateId;
+    stream << ": " << m_slotMap.size() << " modules, in slots:";
 
-	    for(auto& slot : m_slotMap){
-		stream << slot << " ";
-	    }
-	    stream << "DSPParFile: " << m_settingsFilePath;
-
-
-	}
-
+    for(auto& slot : m_slotMap){
+	stream << slot << " ";
+    }
+    stream << "DSPParFile: " << m_settingsFilePath;
+}
 
 /**
  * \brief Generate a configuration from a firmware version file and 
@@ -298,44 +304,43 @@ namespace DAQ {
  *
  * \return std::unique_ptr<Configuration>  Pointer to Configuration.
  */
-	std::unique_ptr<Configuration>
-	Configuration::generate(
-	    const std::string &fwVsnPath, const std::string &cfgPixiePath
-	    )
-	{
-	    std::unique_ptr<Configuration> pConfig(new Configuration);
+std::unique_ptr<DAQ::DDAS::Configuration>
+DAQ::DDAS::Configuration::generate(
+    const std::string &fwVsnPath, const std::string &cfgPixiePath
+    )
+{
+    std::unique_ptr<Configuration> pConfig(new Configuration);
 
-	    FirmwareVersionFileParser fwFileParser;
-	    ConfigurationParser       configParser;
+    FirmwareVersionFileParser fwFileParser;
+    ConfigurationParser       configParser;
 
-	    std::ifstream input(fwVsnPath.c_str(), std::ios::in);
+    std::ifstream input(fwVsnPath.c_str(), std::ios::in);
 
-	    if(input.fail()) {
-		std::string errmsg("Configuration::generate() ");
-		errmsg += "Failed to open the firmware version file: ";
-		errmsg += fwVsnPath;
-		throw std::runtime_error(errmsg);
-	    }
+    if(input.fail()) {
+	std::string errmsg("Configuration::generate() ");
+	errmsg += "Failed to open the firmware version file: ";
+	errmsg += fwVsnPath;
+	throw std::runtime_error(errmsg);
+    }
 
-	    fwFileParser.parse(input, pConfig->m_fwMap);
+    fwFileParser.parse(input, pConfig->m_fwMap);
 
-	    input.close();
-	    input.clear();
+    input.close();
+    input.clear();
 
-	    input.open(cfgPixiePath.c_str(), std::ios::in);
+    input.open(cfgPixiePath.c_str(), std::ios::in);
 
-	    if(input.fail()){
-		std::string errmsg("Configuration::generate() ");
-		errmsg += "Failed to open the system configuration file : ";
-		errmsg += cfgPixiePath;
-		throw std::runtime_error(errmsg);
-	    }
+    if(input.fail()){
+	std::string errmsg("Configuration::generate() ");
+	errmsg += "Failed to open the system configuration file : ";
+	errmsg += cfgPixiePath;
+	throw std::runtime_error(errmsg);
+    }
 
-	    configParser.parse(input, *pConfig);
+    configParser.parse(input, *pConfig);
 
-	    return std::move(pConfig);
-
-	}
+    return std::move(pConfig);
+}
 
 /**
  * \brief Generate a configuration from a firmware version file and 
@@ -350,36 +355,36 @@ namespace DAQ {
  *
  * \return std::unique_ptr<Configuration>  Pointer to Configuration.
  */
-	std::unique_ptr<Configuration>
-	Configuration::generate(
-	    const std::string &fwVsnPath, const std::string &cfgPixiePath,
-	    const std::string &modEvtLenPath
-	    )
-	{
-	    ModEvtFileParser modEvtParser;
+std::unique_ptr<DAQ::DDAS::Configuration>
+DAQ::DDAS::Configuration::generate(
+    const std::string &fwVsnPath, const std::string &cfgPixiePath,
+    const std::string &modEvtLenPath
+    )
+{
+    ModEvtFileParser modEvtParser;
 
-	    std::unique_ptr<Configuration> pConfig = generate(fwVsnPath, cfgPixiePath);
+    std::unique_ptr<Configuration> pConfig = generate(fwVsnPath, cfgPixiePath);
 
-	    int moduleCount = pConfig->getNumberOfModules();
+    int moduleCount = pConfig->getNumberOfModules();
 
-	    // read a configration file to tell Pixie16 how big an event is in
-	    // a particular module.  Within one module all channels MUST be set to
-	    // the same event length
+    // read a configration file to tell Pixie16 how big an event is in
+    // a particular module.  Within one module all channels MUST be set to
+    // the same event length
 
-	    std::ifstream modevt;
-	    modevt.open(modEvtLenPath.c_str(), std::ios::in);
+    std::ifstream modevt;
+    modevt.open(modEvtLenPath.c_str(), std::ios::in);
 
-	    if(!modevt.is_open()){
-		std::string errmsg("Configuration::generate() ");
-		errmsg += "Failed to open the module event length configuration file : ";
-		errmsg += modEvtLenPath;
-		throw std::runtime_error(errmsg);
-	    }
+    if(!modevt.is_open()){
+	std::string errmsg("Configuration::generate() ");
+	errmsg += "Failed to open the module event length configuration file : ";
+	errmsg += modEvtLenPath;
+	throw std::runtime_error(errmsg);
+    }
 
-	    modEvtParser.parse(modevt, *pConfig);
+    modEvtParser.parse(modevt, *pConfig);
 
-	    return std::move(pConfig);
-	}
+    return std::move(pConfig);
+}
 
 /*----------------------------------------------------------------------
  * daqdev/DDAS#106 - additions for per module setfiles and firmware maps.
@@ -389,16 +394,16 @@ namespace DAQ {
  * \brief Sets a per module DSP Settings (.set) file.
  *
  * \param modNum  Module number.
- * \param path    Filename path. This should have been checked for 
- *   readability by the caller.
+ * \param path  Filename path. This should have been checked for readability 
+ *   by the caller.
  */
-	void
-	Configuration::setModuleSettingsFilePath(
-	    int modNum, const std::string& path
-	    )
-	{
-	    m_moduleSetFileMap[modNum] = path;
-	}
+void
+DAQ::DDAS::Configuration::setModuleSettingsFilePath(
+    int modNum, const std::string& path
+    )
+{
+    m_moduleSetFileMap[modNum] = path;
+}
 
 /**
  * \brief Returns a settings file associated with a specific module.
@@ -410,15 +415,15 @@ namespace DAQ {
  *
  * \return std::string  The full path to the settings file.
  */
-	std::string
-	Configuration::getSettingsFilePath(int modnum)
-	{
-	    if (m_moduleSetFileMap.count(modnum) > 0) {
-		return m_moduleSetFileMap[modnum];
-	    } else {
-		return m_settingsFilePath;
-	    }
-	}
+std::string
+DAQ::DDAS::Configuration::getSettingsFilePath(int modnum)
+{
+    if (m_moduleSetFileMap.count(modnum) > 0) {
+	return m_moduleSetFileMap[modnum];
+    } else {
+	return m_settingsFilePath;
+    }
+}
 
 /**
  *  \brief Sets a firmware map specific to a module.
@@ -428,13 +433,13 @@ namespace DAQ {
  *
  *  \note  An existing map is ovewritten.
  */
-	void
-	Configuration::setModuleFirmwareMap(
-	    int module, const FirmwareMap& mapping
-	    )
-	{
-	    m_moduleFirmwareMaps[module] = mapping;
-	}
+void
+DAQ::DDAS::Configuration::setModuleFirmwareMap(
+    int module, const FirmwareMap& mapping
+    )
+{
+    m_moduleFirmwareMaps[module] = mapping;
+}
 
 /**
  * \brief Get the module firmware configuration information.
@@ -445,29 +450,28 @@ namespace DAQ {
  * \param hwType  The hardware type detected in the module.
  * \param modnum  Module number.
  *
- * \return FirmwareConfiguration& - the firmware configuraiton
+ * \return FirmwareConfiguration&  The firmware configuration.
  * 
  * \note  It is an error to have a firmware configuration map file but
  *   not to have a configuration for the hardware type.
  */
-	FirmwareConfiguration&
-	Configuration::getModuleFirmwareConfiguration(
-	    int hwType, int modnum
-	    )
-	{
-	    if (m_moduleFirmwareMaps.count(modnum) > 0) {   // There's a map.
-		FirmwareMap& mapping = m_moduleFirmwareMaps[modnum];
-		if (mapping.count(hwType) > 0) {
-		    return mapping[hwType];
-		} else {
-		    std::string errmsg = "Unable to locate firmware configuration ";
-		    errmsg += "for firmware specifier in per module map";
-		    throw std::runtime_error(errmsg);
-		}
-	    } else {
-		return getFirmwareConfiguration(hwType);
-	    }
+DAQ::DDAS::FirmwareConfiguration&
+DAQ::DDAS::Configuration::getModuleFirmwareConfiguration(
+    int hwType, int modnum
+    )
+{
+    if (m_moduleFirmwareMaps.count(modnum) > 0) {   // There's a map.
+	FirmwareMap& mapping = m_moduleFirmwareMaps[modnum];
+	if (mapping.count(hwType) > 0) {
+	    return mapping[hwType];
+	} else {
+	    std::string errmsg = "Unable to locate firmware configuration ";
+	    errmsg += "for firmware specifier in per module map";
+	    throw std::runtime_error(errmsg);
 	}
+    } else {
+	return getFirmwareConfiguration(hwType);
+    }
+}
 
-    } // namespace DDAS
-} // namespace DAQ
+/** @} */

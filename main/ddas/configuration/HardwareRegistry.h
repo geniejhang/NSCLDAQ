@@ -1,4 +1,14 @@
 /**
+ * @addtogroup configuration libConfiguration.so
+ * @brief DDAS Pixie-16 hardware configuration library.
+ *
+ * Shared library containing classes to manage the internal configuration of a 
+ * DDAS system and store information about its hardware. Contains all functions
+ * defined in the DAQ::DDAS::HardwareRegistry namespace.
+ * @{
+ */
+
+/**
  * @file HardwareRegistry.h
  * @brief Defines a namespace used to store 
  * information about known DDAS modules.
@@ -93,3 +103,5 @@ bool operator==(const DAQ::DDAS::HardwareRegistry::HardwareSpecification& lhs,
                 const DAQ::DDAS::HardwareRegistry::HardwareSpecification& rhs);
 
 #endif // HARDWAREREGISTRY_H
+
+/** @} */
