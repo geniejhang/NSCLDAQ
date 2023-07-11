@@ -1,6 +1,7 @@
 /**
  * @file CPixieSystemUtilities.h
- * @brief Define a class for managing the state of Pixie DAQ systems.
+ * @brief Defines a class for managing the state of Pixie DAQ systems and 
+ * a ctypes interface for the class.
  */
 
 #ifndef CPIXIESYSTEMUTILITIES_H
@@ -12,7 +13,7 @@
 
 /**
  * @class CPixieSystemUtilities
- * @brief Pixie DAQ system manager class.
+ * @brief System manager class for DDAS.
  *
  * This class manages the Pixie DAQ system. It controls loading and saving 
  * settings files, booting and exiting, and stores information about the state
@@ -32,17 +33,23 @@ public:
 
     /**
      * @brief Set the boot mode.
-     * @param mode  Value to set the boot mode to.
+     * @warning Offline boot mode is currently only allowed for XIA API 2!
+     * @param mode  Set the boot mode to this value.
      */
     void SetBootMode(int mode) {m_bootMode = mode;};
     /**
-     * @brief Set the boot mode.
-     * @param mode  Value to set the boot mode to.
+     * @brief Get the boot mode.
+     * @warning Offline boot mode is currently only allowed for XIA API 2!
+     * @return int The boot mode.
+     * @retval 0 Online mode.
+     * @retval 1 Offline mode (no hardware).
      */
     int GetBootMode() {return m_bootMode;};
     /**
      * @brief Get the crate boot status.
-     * @return bool  True if system is booted, false otherwise.
+     * @return bool
+     * @retval true   If the system has been booted.
+     * @retval false  Otherwise.
      */
     bool GetBootStatus() {return m_booted;};
     /**
@@ -54,8 +61,8 @@ public:
     
 private:
     DAQ::DDAS::Configuration m_config; //!< Hardware configuration information.
-    int m_bootMode; //<! Offline (1) or online (0) boot mode.
-    bool m_booted; //<! True when the system is booted, false otherwise.
+    int m_bootMode; //!< Offline (1) or online (0) boot mode.
+    bool m_booted; //!< True when the system is booted, false otherwise.
     bool m_ovrSetFile;  //!< True if a settings file has been re-loaded since boot.
     unsigned short m_numModules; //!< Number of modules in the crate.
     std::vector<int> m_modEvtLength;           //!< event length in 32 bit words.

@@ -1,6 +1,6 @@
 /**
  * @file  CPixieTraceUtilities.cpp
- * @breif Implement the trace manager class.
+ * @brief Implementation of the trace utilities class.
  */
 
 #include "CPixieTraceUtilities.h"
@@ -15,7 +15,7 @@
 #include "CDataGenerator.h"
 
 /**
- * @breif Constructor.
+ * @brief Constructor.
  */
 CPixieTraceUtilities::CPixieTraceUtilities() :
     m_pGenerator(new CDataGenerator),

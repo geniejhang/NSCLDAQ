@@ -1,7 +1,7 @@
 /**
  * @file CPixieRunUtilities.cpp
- * @brief Implement class for managing list-mode and baseline runs.
- */
+ * @brief Implementation of the run utilities class.
+*/
 
 #include "CPixieRunUtilities.h"
 
@@ -48,7 +48,9 @@ CPixieRunUtilities::~CPixieRunUtilities()
  *
  * @param module  Module number.
  *
- * @return int  0 on success, XIA error code on failure.
+ * @return int  
+ * @retval 0  Success.
+ * @retval !=0  XIA API error code.
  *
  * @todo Disable multiple modules from running in non-sync mode.
  */
@@ -101,7 +103,8 @@ CPixieRunUtilities::BeginHistogramRun(int module)
  *
  * @param module  Module number.
  *
- * @return int  0 (even if run has not ended properly).
+ * @return int
+ * @retval 0  Always returns 0 even if the run ended improperly.
  *
  * @todo Control for active non-sync runs in multiple modules (or end all).
  */
@@ -144,7 +147,9 @@ CPixieRunUtilities::EndHistogramRun(int module)
  * @param module   Module number.
  * @param channel  Channel number on module to read histogram from.
  *
- * @return int  0 on success, XIA error code on failure.
+ * @return int  
+ * @retval 0  Success.
+ * @retval !=0  XIA API error code.
  */
 int
 CPixieRunUtilities::ReadHistogram(int module, int channel)
@@ -180,7 +185,8 @@ CPixieRunUtilities::ReadHistogram(int module, int channel)
  * baseline statistics to make judgements about e.g. manually setting 
  * baseline cuts, it needs to be treated as such in our manager.
  *
- * @return int  Always 0 (success).
+ * @return int
+ * @retval 0  Always.
  */
 int
 CPixieRunUtilities::BeginBaselineRun(int module)
@@ -201,7 +207,8 @@ CPixieRunUtilities::BeginBaselineRun(int module)
  *
  * @param module  Module number.
  *
- * @return int  Always 0 (success).
+ * @return int
+ * @retval 0  Always.
  */
 int
 CPixieRunUtilities::EndBaselineRun(int module)
@@ -215,11 +222,12 @@ CPixieRunUtilities::EndBaselineRun(int module)
  * @brief Acquire baselines and read baseline data from a single channel.
  *
  * @param module  Module number.
+ * @param channel  Channel number on the module.
  *
  * @return int 
- * @retval 0 on success.
- * @retval -1 if baseline memory cannot be allocated.
- * @retval -2 if updating the baseline histograms fails.
+ * @retval 0  Success.
+ * @retval -1  If baseline memory cannot be allocated.
+ * @retval -2  If updating the baseline histograms fails.
  */
 int
 CPixieRunUtilities::ReadBaseline(int module, int channel)
@@ -253,7 +261,9 @@ CPixieRunUtilities::ReadBaseline(int module, int channel)
  *
  * @param module  Module number.
  *
- * @return int  0 on success, XIA API error code on failure.
+ * @return int  
+ * @retval 0  Success.
+ * @retval !=0  XIA API error code.
  *
  * @todo Confirm end of run and handle if not ended properly.
  */

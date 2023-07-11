@@ -1,6 +1,6 @@
 /**
  * @file CPixieDSPUtilities.cpp
- * @brief Implement the class to read and write settings to XIA Pixie modules.
+ * @brief Implementation DSP utilities class.
  */
 
 #include "CPixieDSPUtilities.h"
@@ -25,11 +25,13 @@ CPixieDSPUtilities::CPixieDSPUtilities() {}
 CPixieDSPUtilities::~CPixieDSPUtilities() {}
 
 /**
- * @brief Adjust DC offsets of all channels on a given module.
+ * @brief Adjust DC offsets of all channels for a single module.
  *
  * @param module  Module number.
  *
- * @return int  0 on success, XIA API error code on fail.
+ * @return int  
+ * @retval 0  Success.
+ * @retval !=0  XIA API error code.
  */
 int
 CPixieDSPUtilities::AdjustOffsets(int module)
@@ -44,7 +46,7 @@ CPixieDSPUtilities::AdjustOffsets(int module)
 }
 
 /**
- * @brief Write a Parameter parameter to a single channel. 
+ * @brief Write a channel parameter for a single channel. 
  *
  * Channel parameters are doubles. For a list of parameters and their units, 
  * see the Pixie-16 Programmers Manual, pgs. 60-61.
@@ -54,7 +56,9 @@ CPixieDSPUtilities::AdjustOffsets(int module)
  * @param paramName  XIA API chanel parameter name.
  * @param value      Parameter value to write.
  *
- * @return int  0 on success, XIA API error code on fail.
+ * @return int  
+ * @retval 0  Success.
+ * @retval !=0  XIA API error code.
  */
 int
 CPixieDSPUtilities::WriteChanPar(
@@ -71,7 +75,7 @@ CPixieDSPUtilities::WriteChanPar(
 }
 
 /**
- * @brief Read a Parameter parameter from a single channel.
+ * @brief Read a channel parameter for a single channel.
  *
  * Channel parameters are doubles. For a list of parameters and their units, 
  * see the Pixie-16 Programmers Manual, pgs. 60-61.
@@ -81,7 +85,9 @@ CPixieDSPUtilities::WriteChanPar(
  * @param[in] paramName  XIA API channel parameter name.
  * @param[in,out] value  Reference to read parameter value.
  *
- * @return int  0 on success, XIA API error code on fail.
+ * @return int  
+ * @retval 0  Success.
+ * @retval !=0  XIA API error code.
  */
 int
 CPixieDSPUtilities::ReadChanPar(
@@ -100,7 +106,7 @@ CPixieDSPUtilities::ReadChanPar(
 /**
  * WriteModPar
  *
- * @brief Write a module-level Parameter parameter to a single module. 
+ * @brief Write a module parameter for a single module. 
  *
  * Module parameters are unsigned ints. For a list of parameters and their 
  * units, see the Pixie-16 Programmers Manual, pgs. 62-63. 
@@ -109,7 +115,9 @@ CPixieDSPUtilities::ReadChanPar(
  * @param paramName  XIA API chanel parameter name.
  * @param value      Parameter value to write.
  *
- * @return int  0 on success, XIA API error code on fail.
+ * @return int  
+ * @retval 0  Success.
+ * @retval !=0  XIA API error code.
  */
 int
 CPixieDSPUtilities::WriteModPar(
@@ -126,7 +134,7 @@ CPixieDSPUtilities::WriteModPar(
 }
 
 /**
- * @brief Read a module-level Parameter parameter to a single module. 
+ * @brief Read a module parameter for a single module. 
  *
  * Module parameters are unsigned ints. For a list of parameters and their 
  * units, see the Pixie-16 Programmers Manual, pgs. 62-63. 
@@ -135,7 +143,9 @@ CPixieDSPUtilities::WriteModPar(
  * @param[in] paramName  XIA API chanel parameter name.
  * @param[in,out] value  Reference to read parameter value.
  *
- * @return int  0 on success, XIA API error code on fail.
+ * @return int  
+ * @retval 0  Success.
+ * @retval !=0  XIA API error code.
  */
 int
 CPixieDSPUtilities::ReadModPar(

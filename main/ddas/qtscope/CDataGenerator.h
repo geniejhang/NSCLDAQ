@@ -1,6 +1,7 @@
 /**
  * @file CDataGenerator.h
- * @brief Define a class for generating offline data for testing/debugging.
+ * @brief Defines a class for generating offline data for testing/debugging 
+ * and a ctypes interface for the class.
  */
 
 #ifndef CDATAGENERATOR_H

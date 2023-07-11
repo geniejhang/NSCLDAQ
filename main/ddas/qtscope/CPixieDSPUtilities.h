@@ -1,6 +1,7 @@
 /**
  * @file CPixieDSPUtilities.h
- * @brief Define a class to read and write settings to XIA Pixie modules.
+ * @brief Defines a class to read and write settings to XIA Pixie modules 
+ * and a ctypes interface for the class.
  */
 
 #ifndef CPIXIEDSPUTILITIES_H
@@ -8,10 +9,10 @@
 
 /**
  * @class CPixieDSPUtilities
- * @brief This class reads and writes both channel-level and module-level 
- * settings to XIA Pixie modules. The class also contains a function to adjust
- * the DC offsets on a single module, as the DC offset is itself a channel
- * parameter.
+ * @brief Read and writes both channel-level and module-level DSP settings.
+ *
+ * The class also contains a function to adjust the DC offsets on a single 
+ * module, as the DC offset is itself a channel parameter.
  */
 
 class CPixieDSPUtilities

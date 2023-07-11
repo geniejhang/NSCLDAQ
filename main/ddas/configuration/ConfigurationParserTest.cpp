@@ -197,7 +197,7 @@ class ConfigurationParserTest : public CppUnit::TestFixture
         ASSERTMSG("Failure should occur if insufficient slot mapping data exists",
                   threwException);
         EQMSG("Error message should be informative",
-              message, string("Unable to parse a slot number from : /path/to/my/settings/file.set"));
+              message, string("Unable to parse a slot number from: /path/to/my/settings/file.set"));
     }
 
     void parseCfgPixieFile_5a() {

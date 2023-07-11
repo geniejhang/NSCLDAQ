@@ -1,5 +1,7 @@
-
-/* DDASHit class definition header file */
+/**
+ * @file DDASHitUnpacker.h
+ * @brief Define an unpacker for DDAS data.
+ */
 
 #ifndef DAQ_DDAS_DDASHITUNPACKER_H
 #define DAQ_DDAS_DDASHITUNPACKER_H
@@ -10,8 +12,9 @@
 #include <cstdint>
 #include <tuple>
 
-
+/** @namespace DAQ */
 namespace DAQ {
+    /** @namespace DAQ::DDAS */
   namespace DDAS {
 
     /*! \brief Parse the DDAS Readout event data

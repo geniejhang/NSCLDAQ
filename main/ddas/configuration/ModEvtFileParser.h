@@ -1,12 +1,19 @@
+/**
+ * @file ModEvtFileParser.h
+ * @brief Defines a parser for the modevtlen.txt file.
+ */
+
 #ifndef MODEVTFILEPARSER_H
 #define MODEVTFILEPARSER_H
 
 #include <iosfwd>
 
+/** @namespace DAQ */
 namespace DAQ {
-namespace DDAS {
-
-class Configuration;
+    /** @namespace DAQ::DDAS */
+    namespace DDAS {
+	
+	class Configuration;
 
 
 /*!
@@ -29,16 +36,16 @@ class Configuration;
  * modules in the system. It _IS_ an error for the file to contain fewer
  * lines than there are in the system.
  */
-class ModEvtFileParser
-{
-public:
-    ModEvtFileParser() = default;
+	class ModEvtFileParser
+	{
+	public:
+	    ModEvtFileParser() = default;
 
-    void parse(std::istream& input, Configuration& config);
-};
+	    void parse(std::istream& input, Configuration& config);
+	};
 
 
-} // end DDAS namespace
+    } // end DDAS namespace
 } // end DAQ namespace
 
 #endif // MODEVTFILEPARSER_H

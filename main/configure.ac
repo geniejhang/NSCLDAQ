@@ -121,8 +121,6 @@ fi
 
 # Documentation
 
-
-
 AC_ARG_ENABLE([docs],
               AS_HELP_STRING([--enable-docs],[Build the documentation]),
               [], [enable_docs=no])
@@ -167,6 +165,29 @@ then
 else
   AM_CONDITIONAL([BUILD_DOCS],[false])
   AC_MSG_NOTICE([Documentation disabled])
+fi
+
+AC_ARG_ENABLE([ddas-docs],
+              AS_HELP_STRING([--enable-ddas-docs],
+	      [Build the DDAS documentation]),
+              [], [enable_ddas_docs=no])
+
+if test "x$enable_ddas_docs" == "xyes"
+then
+  AC_MSG_NOTICE([DDAS documentation enabled])
+
+  AC_CHECK_PROG(HAVE_DOXYGEN, [doxygen], [true], [false])
+  if test "$HAVE_DOXYGEN" == "false"
+  then
+    AC_MSG_FAILURE([Doxygen is required to build the DDAS documentation but was not found])
+  else
+    AC_SUBST(DOXYGEN,[doxygen])
+  fi
+
+  AM_CONDITIONAL([BUILD_DDAS_DOCS],[true])
+else
+  AM_CONDITIONAL([BUILD_DDAS_DOCS],[false])
+  AC_MSG_NOTICE([DDAS documentation disabled])
 fi
 
 AC_CHECK_LIB([X11], [XSetWindowBackground])
@@ -407,7 +428,7 @@ tcl_configdir="/usr/lib/$tcl_basename"
 tcl_incdir="/usr/include/$tcl_basename"
 
 (cd ${srcdir}/tclhttpd3.5.1; ./configure --prefix=${prefix}/share/tclhttpd --enable-gcc --with-tclinclude=$tcl_incdir --with-tcl=$tcl_configdir)
-(cd ${srcdir}/tclhttpd3.5.1; make all install)
+(cd ${srcdir}/tclhttpd3.5.1; make -j26 all install)
 
 
 # Epics
@@ -588,7 +609,7 @@ AC_MSG_NOTICE([The XIA-DDAS Support software will be built])
    rm -rf unifiedformat/build
    mkdir -p unifiedformat/build
    sourcedir="`realpath ${srcdir}`"
-   (cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make all test install)
+   (cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make -j26 all test install)
    UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
    UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lAbstractFormat -lV10Format -lV11Format -lV12Format -Wl,-rpath=${prefix}/unifiedformat/lib"
    AC_SUBST(UFMT_CPPFLAGS)
@@ -953,6 +974,8 @@ AC_CONFIG_FILES([Makefile
     ddas/qtscope/qtscope
     ddas/simple_setups/Makefile
     ddas/tclconfig/Makefile
+    ddas/docs/Makefile
+    ddas/docs/Doxyfile
     caendigitizers/Makefile
     caendigitizers/dpp-pha/Makefile
     caendigitizers/dpp-pha/skel/Makefile

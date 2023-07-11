@@ -1,7 +1,7 @@
 /**
  * @file  CPixieTraceUtilities.h
- * @breif Defines a class for trace management and an interface accessable by 
- * Python ctypes
+ * @brief Defines a class for trace management and a ctypes interface for 
+ * the class.
  */
 
 #ifndef CPIXIETRACEUTILITIES_H
@@ -13,12 +13,14 @@ class CDataGenerator;
 
 /**
  * @class CPixieTraceUtilities
- * @brief A trace manager to read trace data from Pixie modules and marshall 
- * the trace data to Python.
-
- * This class provides a ctypes-friendly interfaace which can be called from 
- * Python. Anything callable must be extern "C" to avoid name mangling by the
- * C++ compiler.
+ * @brief A class to read and fetch trace data from Pixie-16 modules.
+ *
+ * This class provides a ctypes-friendly interface to acquire "validated" 
+ * (traces which are likely to contain a good signal pulse) and unvalidated 
+ * traces. The class also provides methods to access the trace data.
+ *
+ * @todo Instead of validated traces can we process the trace using the fast 
+ * filter parameters and wait for a real trigger?
  */
 
 class CPixieTraceUtilities
@@ -36,8 +38,8 @@ public:
      */
     unsigned short* GetTraceData() {return m_trace.data();}
     /**
-     * @brief Set flag for offline running using the data generator.
-     * @param mode  Generator flag is set to input value.
+     * @brief Set the flag for offline mode using the data generator.
+     * @param mode  The generator flag is set to this input value.
      */
     void SetUseGenerator(bool mode) {m_useGenerator = mode;}
   

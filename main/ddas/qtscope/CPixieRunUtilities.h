@@ -1,6 +1,7 @@
 /**
  * @file CPixieRunUtilities.h
- * @brief Defines a class for managing list-mode and baseline runs.
+ * @brief Defines a class for managing list-mode and baseline runs and a 
+ * ctypes interface for the class.
  */
 
 #ifndef CPIXIERUNUTILITIES_H
@@ -10,6 +11,15 @@
 #include <random>
 
 class CDataGenerator;
+
+/**
+ * @class CPixieRunUtilities
+ * @brief Manage list-mode histogram and baseline runs for a 
+ * Pixie-16 system. 
+ * 
+ * This class provides functionality to start and stop runs as well 
+ * as read data from the modules and return it to the caller.
+ */
 
 class CPixieRunUtilities
 {
@@ -43,7 +53,7 @@ public:
     bool GetRunActive() {return m_runActive;};
     /** 
      * @brief Set the use of the generator for offline data.
-     * @param mode  Set generator mode to input value.
+     * @param mode  Set the generator use flag to this value.
      */
     void SetUseGenerator(bool mode) {m_useGenerator = mode;};
 
