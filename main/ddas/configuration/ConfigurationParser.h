@@ -1,14 +1,4 @@
 /**
- * @addtogroup configuration libConfiguration.so
- * @brief DDAS Pixie-16 hardware configuration library.
- *
- * Shared library containing classes to manage the internal configuration of a 
- * DDAS system and store information about its hardware. Contains all functions
- * defined in the DAQ::DDAS::HardwareRegistry namespace.
- * @{
- */
-
-/**
  * @file ConfigurationParser.h
  * @brief Define a class to parse the contents of the cfgPixie16.txt file.
  */
@@ -28,6 +18,11 @@ namespace DAQ {
 	class Configuration;
 	class FirmwareConfiguration;
 
+/**
+ * @addtogroup configuration libConfiguration.so
+ * @{
+ */
+	
 /*!
  * \brief A class to parse the contents ofthe cfgPixie16.txt file.
  *
@@ -114,9 +109,10 @@ namespace DAQ {
 	    SlotSpecification parseSlotLine(std::istream& input);    
 	};
 
+	
+/** @} */
+
     } // end DDAS namespace
 } // end DAQ namespace
 
 #endif // CONFIGURATIONPARSER_H
-
-/** @} */

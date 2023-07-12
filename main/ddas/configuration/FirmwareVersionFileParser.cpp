@@ -1,14 +1,4 @@
 /**
- * @addtogroup configuration libConfiguration.so
- * @brief DDAS Pixie-16 hardware configuration library.
- *
- * Shared library containing classes to manage the internal configuration of a 
- * DDAS system and store information about its hardware. Contains all functions
- * defined in the DAQ::DDAS::HardwareRegistry namespace.
- * @{
- */
-
-/**
  * @file FirmwareVersionFileParser.cpp
  * @brief Implementation of the class used to parse DDASFirmwareVersion.txt.
  */
@@ -56,7 +46,7 @@ DAQ::DDAS::FirmwareVersionFileParser::parse(
 {
     FirmwareConfiguration empty;
 
-    // these will overwrite any existing firmware configurations with
+    // These will overwrite any existing firmware configurations with
     // an empty configuration.
     config[HardwareRegistry::RevB_100MHz_12Bit] = empty;
     config[HardwareRegistry::RevC_100MHz_12Bit] = empty;
@@ -69,7 +59,7 @@ DAQ::DDAS::FirmwareVersionFileParser::parse(
     config[HardwareRegistry::RevF_500MHz_12Bit] = empty;
     config[HardwareRegistry::RevF_500MHz_14Bit] = empty;
 
-    // read input file with code provided by XIA using XIA defined
+    // Read input file with code provided by XIA using XIA defined
     // formatted file
     for(std::string line; std::getline(input, line,'\n');) {
 	if (std::regex_match(line , m_matchExpr) ) {
@@ -135,5 +125,3 @@ DAQ::DDAS::FirmwareVersionFileParser::parse(
 	}
     }
 }
-
-/** @} */

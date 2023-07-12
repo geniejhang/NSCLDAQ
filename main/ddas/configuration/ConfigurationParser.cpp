@@ -1,14 +1,4 @@
 /**
- * @addtogroup configuration libConfiguration.so
- * @brief DDAS Pixie-16 hardware configuration library.
- *
- * Shared library containing classes to manage the internal configuration of a 
- * DDAS system and store information about its hardware. Contains all functions
- * defined in the DAQ::DDAS::HardwareRegistry namespace.
- * @{ 
- */
-
-/**
  * @file ConfigurationParser.cpp
  * @brief Define a class to parse the cfgPixie16.txt file.
  */
@@ -81,11 +71,13 @@ DAQ::DDAS::ConfigurationParser::parse(
     // Maps capture nosuch better than arrays...
     std::map<int, FirmwareMap> perModuleFirmware;
     std::map<int, std::string> perModuleSetfiles;
-	    
+
+    // Extract the first value and skip the next FILENAME_STR_MAXLEN
+    // characters from this line.
     input >> CrateNum;
-    input.getline(temp, FILENAME_STR_MAXLEN); // skip rest of line
+    input.getline(temp, FILENAME_STR_MAXLEN);
     input >> NumModules;
-    input.getline(temp, FILENAME_STR_MAXLEN); // skip rest of line
+    input.getline(temp, FILENAME_STR_MAXLEN);
     PXISlotMap.resize(NumModules);
     for(int i = 0; i < NumModules; i++){
 	auto slotInfo = parseSlotLine(input);
@@ -108,14 +100,24 @@ DAQ::DDAS::ConfigurationParser::parse(
     input >> DSPParFile;
     input.getline(temp,FILENAME_STR_MAXLEN);
 
+    /**
+     * @todo (ASC 7/12/23): Checking ".set" with std::string::find_last_of as 
+     * a method to see if the file has a .set extension will almost always 
+     * succeed, as it returns the last character matching _any_ of ".set." 
+     * Check the substring defining the extension (assume its after last "." ?)
+     * or remove the check entirely if we dont want to enforce a naming 
+     * convention. API 3 supports JSON settings files so .json would be an 
+     * obvious choice to support in that case as well. 
+     */
+    
     // Check to make sure that this line contains a set file
     // (.set extension) since the format has changed from previous
     // versions of the code.
     if( DSPParFile.find_last_of(".set") == std::string::npos) {
 	std::string errmsg("The file ");
 	errmsg += DSPParFile;
-	errmsg += " read in from configuration file";
-	errmsg += " does not appear to be a *.set file ";
+	errmsg += " read in from configuration file ";
+	errmsg += "does not appear to be a *.set file ";
 	errmsg += "required by DDAS";
 	throw std::runtime_error(errmsg);
     }
@@ -205,14 +207,12 @@ DAQ::DDAS::ConfigurationParser::parse(
     config.setSlotMap(PXISlotMap);
     config.setSettingsFilePath(DSPParFile);
     
-    // Set the per module firmware maps:
-    
+    // Set the per module firmware maps:    
     for (auto const& p : perModuleFirmware) {
 	config.setModuleFirmwareMap(p.first, p.second);
     }
 	    
-    // Set the per module DSP Parameter maps:
-    
+    // Set the per module DSP Parameter maps:    
     for (auto const& p : perModuleSetfiles) {
 	config.setModuleSettingsFilePath(p.first, p.second);
     }
@@ -221,7 +221,7 @@ DAQ::DDAS::ConfigurationParser::parse(
 /**
  * @brief Update the clock calibration for a specific hardware specification.
  * 
- * @param type         The hardware type enum value.
+ * @param type  The hardware type enum value.
  * @param calibration  The new clock calibration in ns/clock tick.
  */
 void
@@ -289,27 +289,36 @@ DAQ::DDAS::ConfigurationParser::extractFirmwareConfiguration(
     )
 {
     FirmwareConfiguration fwConfig;
-    // load in files to overide defaults
+    
+    // Load in files to overide defaults
 
-    // load syspixie
+    // Load syspixie
     input >> fwConfig.s_ComFPGAConfigFile;
     if (!input.good())
-	throw std::runtime_error("Configuration file contains incomplete hardware specification!");
+	throw std::runtime_error(
+	    "Configuration file contains incomplete hardware specification!"
+	    );
 
-    // load fippipixe
+    // Load fippipixe
     input >> fwConfig.s_SPFPGAConfigFile;
     if (!input.good())
-	throw std::runtime_error("Configuration file contains incomplete hardware specification!");
+	throw std::runtime_error(
+	    "Configuration file contains incomplete hardware specification!"
+	    );
 
-    // load ldr file
+    // Load ldr file
     input >> fwConfig.s_DSPCodeFile;
     if (!input.good())
-	throw std::runtime_error("Configuration file contains incomplete hardware specification!");
+	throw std::runtime_error(
+	    "Configuration file contains incomplete hardware specification!"
+	    );
 
-    // load var file
+    // Load var file
     input >> fwConfig.s_DSPVarFile;
     if (!input.good())
-	throw std::runtime_error("Configuration file contains incomplete hardware specification!");
+	throw std::runtime_error(
+	    "Configuration file contains incomplete hardware specification!"
+	    );
 
     return fwConfig;
 }
@@ -329,7 +338,9 @@ DAQ::DDAS::ConfigurationParser::extractClockCalibration(std::istream& input)
     double calibration;
     input >> calibration;
     if (!input.good()) {
-	throw std::runtime_error("ConfigurationParser attempted to parse an incomplete hardware specification!");
+	std::string errmsg = "ConfigurationParser attempted to parse an "
+	    "incomplete hardware specification!";
+	throw std::runtime_error(errmsg);
     }
     return calibration;
 }
@@ -364,7 +375,9 @@ DAQ::DDAS::ConfigurationParser::parseSlotLine(std::istream& input)
     std::getline(input, line);
     
     if (!input.good()) { // Maybe eof?
-	throw std::runtime_error("Unable to read a line from the input file when parsing a slot line");
+	std::string errmsg = "Unable to read a line from the input file "
+	    "when parsing a slot line";
+	throw std::runtime_error(errmsg);
     }
     std::stringstream lineStream(line);
     
@@ -372,26 +385,26 @@ DAQ::DDAS::ConfigurationParser::parseSlotLine(std::istream& input)
     std::string firmwareMap;
     std::string setFile;
     
-    // do the slot separately so that we can indicate we can't parse:
+    // Do the slot separately so that we can indicate we can't parse:
     
     if (!(lineStream >> slot)) {    
-	std::string msg("Unable to parse a slot number from: ");
-	msg += line;       
-	throw std::runtime_error(msg);
+	std::string errmsg("Unable to parse a slot number from: ");
+	errmsg += line;       
+	throw std::runtime_error(errmsg);
     }
     
     // Now the files:
     
     lineStream >> firmwareMap >> setFile;
     
-    // Handle leading #'s which imply a comment.
-    
-    if (firmwareMap[0] == '#') { // both are comments.
+    // Handle leading #'s which imply a comment.    
+    if (firmwareMap[0] == '#') { // Both are comments.
 	firmwareMap.clear();
 	setFile.clear();
-    } else if (setFile[0] == '#') { // setfile is a comment
+    } else if (setFile[0] == '#') { // Setfile is a comment
 	setFile.clear();               
     }
+    
     // Check readability of any files:
     
     if (firmwareMap != "") {
@@ -417,5 +430,3 @@ DAQ::DDAS::ConfigurationParser::parseSlotLine(std::istream& input)
     
     return std::make_tuple(slot, firmwareMap, setFile);
 }
-
-/** @} */

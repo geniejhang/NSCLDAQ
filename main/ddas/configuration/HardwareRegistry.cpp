@@ -1,14 +1,4 @@
 /**
- * @addtogroup configuration libConfiguration.so
- * @brief DDAS Pixie-16 hardware configuration library.
- *
- * Shared library containing classes to manage the internal configuration of a 
- * DDAS system and store information about its hardware. Contains all functions
- * defined in the DAQ::DDAS::HardwareRegistry namespace.
- * @{
- */
-
-/**
  * @file HardwareRegistry.cpp
  * @brief Implement functions in the namespace used to store the DDAS 
  * hardware information.
@@ -35,9 +25,9 @@ static int sDefaultFirstAvailableUserType = 100;
 static int sNextAvailableUserType = sDefaultFirstAvailableUserType;
 
 //////////////////////////////////////////////////////////////////////////////
-// static utility methods
+// Static utility methods
 
-// set up the registry with default parameters
+// Set up the registry with default parameters
 static void
 setUpRegistry(Registry& registry) {
     // {freq, bits, hdwr rev, calib}
@@ -54,7 +44,7 @@ setUpRegistry(Registry& registry) {
     registry[HR::RevF_500MHz_16Bit] = {500, 16, 15, 10. };
 }
 
-// create a new register and set default values
+// Create a new register and set default values
 static Registry*
 createRegistry()
 {
@@ -63,7 +53,7 @@ createRegistry()
     return gpRegistry;
 }
 
-// avoid static initialization order fiasco by using a construct on first
+// Avoid static initialization order fiasco by using a construct on first
 // use idiom
 static Registry&
 getRegistry()
@@ -75,7 +65,7 @@ getRegistry()
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Check if two HardwareSpecifications are the same.
@@ -215,5 +205,3 @@ DAQ::DDAS::HardwareRegistry::createHardwareType(
 		
     return type;
 }
-
-/** @} */

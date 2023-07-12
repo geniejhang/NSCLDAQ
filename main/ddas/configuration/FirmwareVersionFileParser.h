@@ -1,14 +1,4 @@
 /**
- * @addtogroup configuration libConfiguration.so
- * @brief DDAS Pixie-16 hardware configuration library.
- *
- * Shared library containing classes to manage the internal configuration of a 
- * DDAS system and store information about its hardware. Contains all functions
- * defined in the DAQ::DDAS::HardwareRegistry namespace.
- * @{
- */
-
-/**
  * @file FirmwareVersionFileParser.h
  * @brief Defines the class used to parse the DDASFirmwareVersion.txt file 
  * defnining the firmware and DSP configuration code used by the Pixie modules.
@@ -27,6 +17,11 @@ namespace DAQ {
     /** @namespace DAQ::DDAS */
     namespace DDAS {
 
+/**
+ * @addtogroup configuration libConfiguration.so
+ * @{
+ */
+	
 /*!
  * \brief The FirmwareVersionFileParser class
  *
@@ -51,10 +46,10 @@ namespace DAQ {
 	    FirmwareVersionFileParser();
 	    void parse(std::istream& input, FirmwareMap& config);
 	};
+	
+/** @} */
 
     } // end DDAS namespace
 } // end DAQ namespace
 
 #endif // FIRMWAREVERSIONFILEPARSER_H
-
-/** @} */

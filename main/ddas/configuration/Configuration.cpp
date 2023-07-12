@@ -1,14 +1,4 @@
 /**
- * @addtogroup configuration libConfiguration.so
- * @brief DDAS Pixie-16 hardware configuration library.
- *
- * Shared library containing classes to manage the internal configuration of a 
- * DDAS system and store information about its hardware. Contains all functions
- * defined in the DAQ::DDAS::HardwareRegistry namespace.
- * @{
- */
-
-/**
  * @file Configuration.cpp
  * @brief Implementation of the system storage configuration.
  */
@@ -99,11 +89,9 @@ void
 DAQ::DDAS::Configuration::setSlotMap(const std::vector<unsigned short> &map)
 {
     if (map.size() != m_modEvtLengths.size()) {
-	std::string errmsg;
-	errmsg += "Configuration::setSlotMap(): ";
-	errmsg += "Inconsistent data for module evt lengths and ";
-	errmsg += "slot mapping. Set number of modules first using ";
-	errmsg += "Configuration::setNumberOfModules().";
+	std::string errmsg = "Configuration::setSlotMap(): Inconsistent data "
+	    "for module evt lengths and slot mapping. Set number of modules "
+	    "first using Configuration::setNumberOfModules().";
 	throw std::runtime_error(errmsg);
     }
 
@@ -183,8 +171,8 @@ DAQ::DDAS::Configuration::getFirmwareConfiguration(
 {
     auto pSpec = m_fwMap.find(hdwrType);
     if (pSpec == m_fwMap.end()) {
-	std::string errmsg = "Unable to locate firmware ";
-	errmsg += "configuration for firmware specifier";
+	std::string errmsg = "Unable to locate firmware configuration for "
+	    "firmware specifier";
 	throw std::runtime_error(errmsg);
     }
 
@@ -210,11 +198,10 @@ DAQ::DDAS::Configuration::setModuleEventLengths(
     )
 {
     if (lengths.size() != m_slotMap.size()) {
-	std::string errmsg;
-	errmsg += "Configuration::setModuleEventLengths() ";
-	errmsg += "Inconsistent data for module evt lengths and ";
-	errmsg += "slot mapping. Set number of modules first using ";
-	errmsg += "Configuration::setNumberOfModules().";
+	std::string errmsg = "Configuration::setModuleEventLengths() "
+	    "Inconsistent data for module evt lengths and slot mapping. "
+	    "Set number of modules first using "
+	    "Configuration::setNumberOfModules().";
 	throw std::runtime_error(errmsg);
     }
 
@@ -249,11 +236,10 @@ void
 DAQ::DDAS::Configuration::setHardwareMap(const std::vector<int> &map)
 {
     if (map.size() != m_slotMap.size()) {
-	std::string errmsg;
-	errmsg += "Configuration::setModuleEventLengths() ";
-	errmsg += "Inconsistent data for hardware mapping and ";
-	errmsg += "slot mapping. Set number of modules first using ";
-	errmsg += "Configuration::setNumberOfModules().";
+	std::string errmsg = "Configuration::setModuleEventLengths() "
+	    "Inconsistent data for hardware mapping and slot mapping. "
+	    "Set number of modules first using "
+	    "Configuration::setNumberOfModules().";
 	throw std::runtime_error(errmsg);
     }
 
@@ -285,7 +271,6 @@ DAQ::DDAS::Configuration::print(std::ostream &stream)
 {
     stream << "Crate number " << m_crateId;
     stream << ": " << m_slotMap.size() << " modules, in slots:";
-
     for(auto& slot : m_slotMap){
 	stream << slot << " ";
     }
@@ -374,9 +359,10 @@ DAQ::DDAS::Configuration::generate(
     std::ifstream modevt;
     modevt.open(modEvtLenPath.c_str(), std::ios::in);
 
-    if(!modevt.is_open()){
+    if(!modevt.is_open()) {
 	std::string errmsg("Configuration::generate() ");
-	errmsg += "Failed to open the module event length configuration file : ";
+	errmsg += "Failed to open the module event length ";
+	errmsg += "configuration file: ";
 	errmsg += modEvtLenPath;
 	throw std::runtime_error(errmsg);
     }
@@ -465,8 +451,8 @@ DAQ::DDAS::Configuration::getModuleFirmwareConfiguration(
 	if (mapping.count(hwType) > 0) {
 	    return mapping[hwType];
 	} else {
-	    std::string errmsg = "Unable to locate firmware configuration ";
-	    errmsg += "for firmware specifier in per module map";
+	    std::string errmsg = "Unable to locate firmware configuration "
+		"for firmware specifier in per module map";
 	    throw std::runtime_error(errmsg);
 	}
     } else {
@@ -474,4 +460,3 @@ DAQ::DDAS::Configuration::getModuleFirmwareConfiguration(
     }
 }
 
-/** @} */

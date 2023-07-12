@@ -1,14 +1,4 @@
 /**
- * @addtogroup configuration libConfiguration.so
- * @brief DDAS Pixie-16 hardware configuration library.
- *
- * Shared library containing classes to manage the internal configuration of a 
- * DDAS system and store information about its hardware. Contains all functions
- * defined in the DAQ::DDAS::HardwareRegistry namespace.
- * @{
- */
-
-/**
  * @file Configuration.h
  * @brief Defines a class for storing system configuration information.
  */
@@ -29,13 +19,25 @@ namespace DAQ {
     /** @namespace DAQ::DDAS */
     namespace DDAS {
 
-/*!
- * \brief The FirmwareConfiguration struct
- *
- * A simple structure to hold the paths to all firmware/settings files
- * for a specific hardware type. These objects will be stored in a map
- * of the Configuration class and keyed by a hardware type.
- */
+	/**
+	 * @addtogroup configuration libConfiguration.so
+	 * @brief DDAS Pixie-16 hardware configuration library.
+	 *
+	 * Shared library containing classes to manage the internal 
+	 * configuration of a DDAS system and store information about its
+	 * hardware. Contains all functions defined in the 
+	 * DAQ::DDAS::HardwareRegistry namespace.
+	 * @{
+	 */
+
+	/*!
+	 * \brief The FirmwareConfiguration struct
+	 *
+	 * A simple structure to hold the paths to all firmware/settings files
+	 * for a specific hardware type. These objects will be stored in a map
+	 * of the Configuration class and keyed by a hardware type defined in 
+	 * HardwareRegistry.h
+	 */
 	struct FirmwareConfiguration
 	{
 	    std::string s_ComFPGAConfigFile; //!< Name of communications FPGA config. file.
@@ -46,29 +48,31 @@ namespace DAQ {
 
 	/** 
 	 * @typedef FirmwareMap
-	 * @brief A map of firmware configurations keyed by the hardware type.
+	 * @brief A map of firmware configurations keyed by the hardware type 
+	 * defined in HardwareRegistry.h
 	 */
 	typedef std::map<int, FirmwareConfiguration> FirmwareMap;
 
-/*!
- * \brief The Configuration class
- *
- * The Configuration class stores all of the system configuration for
- * a Readout program. It maintains the configuration that is read in
- * from the DDASFirmwareVersion.txt, modevtlen.txt, and cfgPixie16.txt
- * configuration files. The configuration therefore keeps track of
- * the crate id, slot map, setting file path, module event lengths,
- * module count, and all of the available firmware files for each 
- * hardware type.
- *
- * It can be configured either manually or by passing it as an argument to
- * a ConfigurationParser::parse(), FirmwareVersionFileParser::parse(), or
- * ModEvtFileParser::parse() methods as it is in the Readout programs.
- *
- * At the moment, modules are expected to output events of equal length for
- * all channels. There is no attempt to read out channels with different
- * lengths in a module.
- */
+	/*!
+	 * \brief The Configuration class
+	 *
+	 * The Configuration class stores all of the system configuration for
+	 * a Readout program. It maintains the configuration that is read in
+	 * from the DDASFirmwareVersion.txt, modevtlen.txt, and cfgPixie16.txt
+	 * configuration files. The configuration therefore keeps track of
+	 * the crate id, slot map, setting file path, module event lengths,
+	 * module count, and all of the available firmware files for each 
+	 * hardware type.
+	 *
+	 * It can be configured either manually or by passing it as an 
+	 * argument to a ConfigurationParser::parse(), 
+	 * FirmwareVersionFileParser::parse(), or ModEvtFileParser::parse() 
+	 * methods as it is in the Readout programs.
+	 *
+	 * At the moment, modules are expected to output events of equal 
+	 * length for all channels. There is no attempt to read out channels 
+	 * with different lengths in a module.
+	 */
 	class Configuration
 	{
 	private:
@@ -152,12 +156,11 @@ namespace DAQ {
 		const std::string& fwVsnPath, const std::string& cfgPixiePath,
 		const std::string& modEvtLenPath
 		);
-
 	};
+
+	/** @} */
 
     } // end DDAS namespace
 } // end DAQ namesapce
 
 #endif // CONFIGURATION_H
-
-/** @} */

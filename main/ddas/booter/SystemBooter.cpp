@@ -1,13 +1,4 @@
 /**
- * @addtogroup booter libSystemBooter.so
- * @brief DDAS Pixie-16 system booter library.
- *
- * A library containing code used by other DDAS programs which boots Pixie 
- * modules and sets hardware configuration for the booted system.
- * @{
- */
-
-/**
  * @file SystemBooter.cpp
  * @brief Implementation of the system booter class for DDAS.
  */
@@ -23,8 +14,6 @@
 #include <config.h>
 #include <config_pixie16api.h>
 #include <Configuration.h>
-
-using namespace std;
 
 /*!
  * \brief Constructor.
@@ -56,9 +45,9 @@ DAQ::DDAS::SystemBooter::SystemBooter() :
  */
 void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
 {
-    cout << "------------------------\n";
-    cout << "Initializing PXI access... \n";
-    cout.flush();
+    std::cout << "------------------------\n";
+    std::cout << "Initializing PXI access... \n";
+    std::cout.flush();
 
     int NumModules = config.getNumberOfModules();
     int retval = Pixie16InitSystem(
@@ -70,7 +59,7 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
 	       << retval << ".";
 	throw std::runtime_error(errmsg.str());
     } else {
-	cout << "System initialized successfully. " << endl;
+	std::cout << "System initialized successfully. " << std::endl;
     }
 
     // Give the system some time to settle after initialization.
@@ -83,11 +72,10 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
     }
 
     if (m_verbose) {
-	cout << "All modules ok " << endl;
+	std::cout << "All modules ok " << std::endl;
     }
 
 }
-
 
 /*!
  * \brief Read and store hardware info from each of the modules in the system.
@@ -163,7 +151,7 @@ void DAQ::DDAS::SystemBooter::logModuleInfo(
     std::cout << ", Rev = " << ModRev;
     std::cout << ", S/N = " << ModSerNum << ", Bits = " << ModADCBits;
     std::cout << ", MSPS = " << ModADCMSPS;
-    std::cout << endl;
+    std::cout << std::endl;
 }
 
 
@@ -193,7 +181,6 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
     int modIndex, Configuration& m_config, BootType type
     )
 {
-
     const size_t FILENAME_STR_MAXLEN = 256;
     char Pixie16_Com_FPGA_File[FILENAME_STR_MAXLEN];
     char Pixie16_SP_FPGA_File[FILENAME_STR_MAXLEN];
@@ -206,8 +193,8 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
     std::vector<int> hdwrMap = m_config.getHardwareMap();
     if (hdwrMap[modIndex] == HardwareRegistry::Unknown) {
 	std::stringstream errmsg;
-	errmsg <<"Cannot boot module "<< modIndex
-	       << ". Hardware type not recognized" << std::endl;
+	errmsg << "Cannot boot module " << modIndex
+	       << ", hardware type not recognized." << std::endl;
 	throw std::runtime_error(errmsg.str());
     }
 
@@ -232,17 +219,24 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
 
     if (m_verbose) {
 	if (type == FullBoot) {
-	    cout << "\nBooting Pixie-16 module #" << modIndex << endl;
-	    cout << "\tComFPGAConfigFile:  " << Pixie16_Com_FPGA_File << endl;
-	    cout << "\tSPFPGAConfigFile:   " << Pixie16_SP_FPGA_File << endl;
-	    cout << "\tDSPCodeFile:        " << Pixie16_DSP_Code_File << endl;
-	    cout << "\tDSPVarFile:         " << Pixie16_DSP_Var_File << endl;
-	    cout << "\tDSPParFile:         " << DSPParFile << endl;
-	    cout << "------------------------------------------------------";
-	    cout << "\n\n";
+	    std::cout << "\nBooting Pixie-16 module #"
+		      << modIndex << std::endl;
+	    std::cout << "\tComFPGAConfigFile:  "
+		      << Pixie16_Com_FPGA_File << std::endl;
+	    std::cout << "\tSPFPGAConfigFile:   "
+		      << Pixie16_SP_FPGA_File << std::endl;
+	    std::cout << "\tDSPCodeFile:        "
+		      << Pixie16_DSP_Code_File << std::endl;
+	    std::cout << "\tDSPVarFile:         "
+		      << Pixie16_DSP_Var_File << std::endl;
+	    std::cout << "\tDSPParFile:         "
+		      << DSPParFile << std::endl;
+	    std::cout
+		<< "------------------------------------------------------";
+	    std::cout << "\n\n";
 	} else {
-	    cout << "\nEstablishing communication parameters with module #"
-		 << modIndex << std::endl;
+	    std::cout << "\nEstablishing communication parameters "
+		      << "with module #" << modIndex << std::endl;
 	    std::cout << "\tSkipping firmware load." << std::endl;
 	}
     }
@@ -264,8 +258,8 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
     
     if(retval != 0) {
 	std::stringstream errmsg;
-	errmsg << "Failed for module " << modIndex << " error code "
-	       << retval << " !";
+	errmsg << "Boot failed for module " << modIndex
+	       << " with Pixie16BootModule() retval = " << retval << "!";
 	throw std::runtime_error(errmsg.str());
     }
 }
@@ -336,5 +330,3 @@ unsigned int DAQ::DDAS::SystemBooter::computeBootMask(BootType type)
 	return 0x70;
     }
 }
-
-/** @} */

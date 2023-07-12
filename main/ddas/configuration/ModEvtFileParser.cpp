@@ -1,14 +1,4 @@
 /**
- * @addtogroup configuration libConfiguration.so
- * @brief DDAS Pixie-16 hardware configuration library.
- *
- * Shared library containing classes to manage the internal configuration of a 
- * DDAS system and store information about its hardware. Contains all functions
- * defined in the DAQ::DDAS::HardwareRegistry namespace.
- * @{
- */
-
-/**
  * @file ModEvtFileParser.cpp
  * @brief Implementation of the modevtlen.txt file parser.
  */
@@ -46,13 +36,10 @@ DAQ::DDAS::ModEvtFileParser::parse(
 	input >> modEvtLenData[i];
 
 	if (input.fail() || input.bad()) {
-	    std::string errmsg(
-		"Failure while reading module event length "
-		);
-	    errmsg += "configuration file. ";
-	    errmsg += "Expected " + std::to_string(NumModules)
-		+ " entries but found ";
-	    errmsg += "only " + std::to_string(i) + ".";
+	    std::string errmsg = "Failure while reading module event length ";
+	    errmsg += "configuration file. Expected "
+		+ std::to_string(NumModules);
+	    errmsg += "entries but found only " + std::to_string(i) + ".";
 	    throw std::runtime_error(errmsg);
 	}
 	if (modEvtLenData[i] < 4) {
@@ -68,5 +55,3 @@ DAQ::DDAS::ModEvtFileParser::parse(
 
     config.setModuleEventLengths(modEvtLenData);
 }
-
-/** @} */

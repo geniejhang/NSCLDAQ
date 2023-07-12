@@ -15,7 +15,6 @@
   East Lansing, MI 48824-1321
 */
 
-
 /**
  * @file DDASHit.h
  * @brief DDASHit class definition. 
@@ -31,6 +30,23 @@
 namespace DAQ {
     /** @namespace DAQ::DDAS */
     namespace DDAS {
+	/**
+	 * @addtogroup format libddasformat.so
+	 * @brief DDAS data format library.
+	 *
+	 * This library contains the DDASHitUnpacker, a class to unpack 
+	 * Pixie-16 data recorded by FRIBDAQ into a generic, module-independent
+	 * format defined by the DDASHit class. The DDASHit class comes with a
+	 * collection of getter and setter functions to access and manipulate 
+	 * data.
+	 * @{
+	 */
+
+	/**
+	 * @todo (ASC 7/12/23): Should follow relatively normal FRIBDAQ 
+	 * conventions for DDASHit and use m_X to denote member variables.
+	 */
+	
 	/*!
 	 * \class DDASHit
 	 * 
@@ -55,7 +71,7 @@ namespace DAQ {
 	 * unpacker.unpack(pData, pData+sizeOfData, channel);
 	 * \endcode
 	 *
-	 * where pData is a pointer to the first word of the event.
+	 * where pData is a pointer to the first word of the event body.
 	 */
 	class DDASHit { 
 
@@ -333,6 +349,8 @@ namespace DAQ {
 	    void setExternalTimestamp(uint64_t tstamp);
 	    void setADCOverflowUnderflow(bool state);
 	};
+
+	/** @} */
 	
     } // end DDAS namespace
 } // end DAQ namespace

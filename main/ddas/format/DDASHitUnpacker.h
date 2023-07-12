@@ -16,7 +16,11 @@
 namespace DAQ {
     /** @namespace DAQ::DDAS */
     namespace DDAS {
-
+	/**
+	 * @addtogroup format libddasformat.so
+	 * @{
+	 */
+	
 	/** 
 	 * @class DDASHitUnpacker
 	 *
@@ -25,8 +29,8 @@ namespace DAQ {
 	 * This class unpacks NSCLDAQ-formatted Pixie-16 data recorded by a
 	 * DDAS readout program into DDASHits which encapsulate the information
 	 * recorded by a single DDAS channel. This is a generic unpacker which 
-	 *can accomodate information from all Pixie-16 digitizer types at FRIB. 
-	 * In general, all of the digitizer outputs contain the same 
+	 * can accomodate information from all Pixie-16 digitizer types at 
+	 * FRIB. In general, all of the digitizer outputs contain the same 
 	 * information but importantly the meaning of the CFD data depends on 
 	 * the digitizer type. The unpacker class abstracts this difference 
 	 * away from the user. 
@@ -41,7 +45,7 @@ namespace DAQ {
 	 * unpacker.unpack(pData, pData+sizeOfData, hit);
 	 * \endcode
 	 *
-	 * where pData is a pointer to the first word of the event.
+	 * where pData is a pointer to the first word of the event body.
 	 */
 	class DDASHitUnpacker {
 	public:
@@ -129,9 +133,12 @@ namespace DAQ {
 	    const uint32_t* extractExternalTimestamp(
 		const uint32_t* data, DDASHit& hit
 		);
-
 	};
+
+	/** @} */
 
     } // end DDAS namespace
 } // end DAQ namespace
+
 #endif
+

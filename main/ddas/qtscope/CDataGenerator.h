@@ -1,4 +1,15 @@
 /**
+ * @file CDataGenerator.h
+ * @brief Defines a class for generating offline data for testing/debugging 
+ * and a ctypes interface for the class.
+ */
+
+#ifndef CDATAGENERATOR_H
+#define CDATAGENERATOR_H
+
+#include <random>
+
+/**
  * @addtogroup utilities libPixieUtilities.so
  * @brief Pixie-16 utilities for QtScope.
  *
@@ -9,17 +20,6 @@
  * Pixie modules.
  * @{ 
  */
-
-/**
- * @file CDataGenerator.h
- * @brief Defines a class for generating offline data for testing/debugging 
- * and a ctypes interface for the class.
- */
-
-#ifndef CDATAGENERATOR_H
-#define CDATAGENERATOR_H
-
-#include <random>
 
 /**
  * @class CDataGenerator
@@ -46,6 +46,6 @@ private:
 	);
 };
 
-#endif
-
 /** @} */
+
+#endif
