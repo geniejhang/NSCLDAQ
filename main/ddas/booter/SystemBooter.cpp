@@ -15,9 +15,8 @@
 #include <config_pixie16api.h>
 #include <Configuration.h>
 
-/*!
- * \brief Constructor.
- *
+/**
+ * @details
  * Enables verbose output by default.
  */
 DAQ::DDAS::SystemBooter::SystemBooter() :
@@ -25,9 +24,8 @@ DAQ::DDAS::SystemBooter::SystemBooter() :
     m_offlineMode(0)
 {}
 
-/*!
- * \brief Boot the entire system.
- *
+/**
+ * @details
  * Provided a configuration, all modules will be booted. The configuration 
  * contains the firmware files for each hardware type, the slot map, and the 
  * number of modules. During the course of booting, the hardware will be 
@@ -35,14 +33,7 @@ DAQ::DDAS::SystemBooter::SystemBooter() :
  * frequency, and resolution. The revision, adc frequency, and resolution 
  * will all be parsed and the information will be stored in the configuration
  * as a HardwareRegistry::HardwareType.
- *
- * \param config  A configuration describing the system.
- * \param type    Style of boot.
- *
- * \throws std::runtime_error If Pixie16InitSystem() call returns an error.
- * \throws std::runtime_error If populateHardwareMap() throws.
- * \throws std::runtime_error If bootModuleByIndex() throws.
- */
+*/
 void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
 {
     std::cout << "------------------------\n";
@@ -77,87 +68,8 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
 
 }
 
-/*!
- * \brief Read and store hardware info from each of the modules in the system.
- *
- * To retrieve information about all of the modules in the system, 
- * Pixie16ReadModuleInfo is called for each module index. The resulting 
- * revision number, ADC bits, and ADC frequency is printed (if verbose output
- * enabled) and the hardware mapping is stored in the configuration that was
- * passed in.
- * 
- * \param config  The system configuration.
- * 
- * \throws std::runtime_error  If Pixie16ReadModuleInfo returns error code.
- */
-void DAQ::DDAS::SystemBooter::populateHardwareMap(Configuration &config)
-{
-    unsigned short ModRev;
-    unsigned int   ModSerNum;
-    unsigned short ModADCBits;
-    unsigned short ModADCMSPS;
-    unsigned short nchannels;
-
-    int NumModules = config.getNumberOfModules();
-    std::vector<int> hdwrMapping(NumModules);
-
-    for(unsigned short k=0; k<NumModules; k++) {
-	int retval = Pixie16ReadModuleInfo(
-	    k, &ModRev, &ModSerNum, &ModADCBits, &ModADCMSPS
-	    );
-	if (retval < 0)
-	{
-	    std::stringstream errmsg;
-	    errmsg << "SystemBooter::boot() Reading hardware variant ";
-	    errmsg << "information (i.e. Pixie16ReadModuleInfo()) failed ";
-	    errmsg << "for module " << k << " with retval = " << retval;
-	    throw std::runtime_error(errmsg.str());
-	} else {
-	    if (m_verbose) {
-		logModuleInfo(k, ModRev, ModSerNum, ModADCBits, ModADCMSPS);
-	    }
-	    auto type = HardwareRegistry::computeHardwareType(
-		ModRev, ModADCMSPS, ModADCBits
-		);
-	    hdwrMapping[k] = type;
-	}
-    }
-
-    // Store the hardware map in the configuration so other components of the
-    // program can understand more about the hardware being used.
-    config.setHardwareMap(hdwrMapping);
-}
-
-
-/*!
- * \brief Print out some basic information regarding the module
- *
- * \todo ASC 7/7/23: Lots of arguments to this function. Can we pack info 
- * into a struct and pass it around that way instead to clean up these 
- * signatures/calls?
- *
- * \param modIndex    Index of the module in the system.
- * \param ModRev      Hardware revision.
- * \param ModSerNum   Serial number.
- * \param ModADCBits  ADC resolution (number of bits).
- * \param ModADCMSPS  ADC frequency (MSPS).
- */
-void DAQ::DDAS::SystemBooter::logModuleInfo(
-    int modIndex, unsigned short ModRev, unsigned short ModSerNum,
-    unsigned short ModADCBits, unsigned short ModADCMSPS
-    )
-{
-    std::cout << "Found Pixie-16 module #" << modIndex;
-    std::cout << ", Rev = " << ModRev;
-    std::cout << ", S/N = " << ModSerNum << ", Bits = " << ModADCBits;
-    std::cout << ", MSPS = " << ModADCMSPS;
-    std::cout << std::endl;
-}
-
-
-/*!
- * \brief Boot a single module
- *
+/**
+ * @details
  * The system is booted into a usable state. The mechanics of booting involve
  * either loading firmware and settings or just settings, depending on the type
  * parameter that was passed as a second argument to the method. If the user
@@ -166,14 +78,7 @@ void DAQ::DDAS::SystemBooter::logModuleInfo(
  * file that will be used in any boot type, will be the path stored in the
  * configuration.
 
- * \param modIndex  Index of the module in the system.
- * \param m_config  The system configuration.
- * \param type      Boot style (load firmware or settings only).
- *
- * \throws std::runtime_error If hardware type is unknown.
- * \throws std::runtime_error If Pixie16BootModule returns an error code.
- *
- * \todo Check that the firmware file paths are less than 256 characters in 
+ * @todo Check that the firmware file paths are less than 256 characters in 
  * length.
  */
 void
@@ -264,63 +169,97 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
     }
 }
 
-/*!
- * \brief Enable or disable verbose output
- *
+/**
+ * @details
  * By default, the output verbosity setting is enabled. If it is disabled,
  * there will be no output printed to the terminal.
- *
- * \param enable  Enables output messages if true.
  */
 void DAQ::DDAS::SystemBooter::setVerbose(bool enable)
 {
     m_verbose = enable;
 }
 
-/*!
- * \brief Return the state of verbosity.
- *
- * \return bool  The state.
- */
-bool DAQ::DDAS::SystemBooter::isVerbose() const
-{
-    return m_verbose;
-}
-
-/*!
- * \brief Enable or disable online boot
- *
- * By default, the boot mode is set to online mode (0). If it is set
- * to offline mode (1), calls to the API functions can still be tested
+/**
+ * @details
+ * By default, the boot mode is set to online mode. If it is set
+ * to offline mode, calls to the API functions can still be tested
  * with no modules present.
- *
- * \warning Offline boot mode is only supported in XIA API 2!
- *
- * \param mode  Boot mode.
  */
 void DAQ::DDAS::SystemBooter::setOfflineMode(unsigned short mode)
 {
     m_offlineMode = mode;
 }
 
-/*!
- * \brief Return the boot mode of the system.
- *
- * \return bool  The boot mode.
+/**
+ * @details
+ * To retrieve information about all of the modules in the system, 
+ * Pixie16ReadModuleInfo is called for each module index. The resulting 
+ * revision number, ADC bits, and ADC frequency is printed (if verbose output
+ * enabled) and the hardware mapping is stored in the configuration that was
+ * passed in.
  */
-unsigned short DAQ::DDAS::SystemBooter::getOfflineMode() const
+void DAQ::DDAS::SystemBooter::populateHardwareMap(Configuration &config)
 {
-    return m_offlineMode;
-} 
+    unsigned short ModRev;
+    unsigned int   ModSerNum;
+    unsigned short ModADCBits;
+    unsigned short ModADCMSPS;
+    unsigned short nchannels;
 
-/*!
- * \brief Convert BootType enumeration to usable boot mask.
- *
+    int NumModules = config.getNumberOfModules();
+    std::vector<int> hdwrMapping(NumModules);
+
+    for(unsigned short k=0; k<NumModules; k++) {
+	int retval = Pixie16ReadModuleInfo(
+	    k, &ModRev, &ModSerNum, &ModADCBits, &ModADCMSPS
+	    );
+	if (retval < 0)
+	{
+	    std::stringstream errmsg;
+	    errmsg << "SystemBooter::boot() Reading hardware variant ";
+	    errmsg << "information (i.e. Pixie16ReadModuleInfo()) failed ";
+	    errmsg << "for module " << k << " with retval = " << retval;
+	    throw std::runtime_error(errmsg.str());
+	} else {
+	    if (m_verbose) {
+		logModuleInfo(k, ModRev, ModSerNum, ModADCBits, ModADCMSPS);
+	    }
+	    auto type = HardwareRegistry::computeHardwareType(
+		ModRev, ModADCMSPS, ModADCBits
+		);
+	    hdwrMapping[k] = type;
+	}
+    }
+
+    // Store the hardware map in the configuration so other components of the
+    // program can understand more about the hardware being used.
+    config.setHardwareMap(hdwrMapping);
+}
+
+///
+// Private methods
+//
+
+/**
+ * @todo (ASC 7/7/23): Lots of arguments to this function. Can we pack info 
+ * into a struct and pass it around that way instead to clean up these 
+ * signatures/calls?
+ */
+void DAQ::DDAS::SystemBooter::logModuleInfo(
+    int modIndex, unsigned short ModRev, unsigned short ModSerNum,
+    unsigned short ModADCBits, unsigned short ModADCMSPS
+    )
+{
+    std::cout << "Found Pixie-16 module #" << modIndex;
+    std::cout << ", Rev = " << ModRev;
+    std::cout << ", S/N = " << ModSerNum << ", Bits = " << ModADCBits;
+    std::cout << ", MSPS = " << ModADCMSPS;
+    std::cout << std::endl;
+}
+
+/**
+ * @details
  * The bootmask is ultimately used in the Pixie16BootModule function.
- *
- * \param type  Either BootType::FullBoot or BootType::SettingsOnly.
- *
- * \return unsigned int  0x7f for FullBoot, 0x70 for SettingsOnly.
  */
 unsigned int DAQ::DDAS::SystemBooter::computeBootMask(BootType type)
 {

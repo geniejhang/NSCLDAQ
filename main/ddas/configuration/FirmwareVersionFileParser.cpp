@@ -16,28 +16,19 @@ namespace {
 }
 
 /**
- * @brief Constructor.
- *
+ * @details
  * Regular expression matching 
- * \verbatim "(^\[Rev([xXa-fA-F0-9]+)-(\d+)Bit-(\d+)MSPS\]$)" \endverbatim 
+ * @verbatim "(^\[Rev([xXa-fA-F0-9]+)-(\d+)Bit-(\d+)MSPS\]$)" @endverbatim 
  * to extract the firmware, bit depth, and module MSPS.
  */
 DAQ::DDAS::FirmwareVersionFileParser::FirmwareVersionFileParser()
     : m_matchExpr(R"(^\[Rev([xXa-fA-F0-9]+)-(\d+)Bit-(\d+)MSPS\]$)")
 {}
 
-
-/*!
- * \brief Main entry point for parsing DDASFirmwareVersions.txt file
- *
+/**
+ * @details
  * Any firmware configurations that were stored in the configuration object
  * before this will be overwritten with new content.
- *
- * \param input   The stream to read file content from.
- * \param config  The FirmwareMap in which to store this.
- *
- * throw std::runtime_error  If DDASFirmwareVersionFile.txt is missing any 
- *   expected field.
  */
 void
 DAQ::DDAS::FirmwareVersionFileParser::parse(

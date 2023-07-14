@@ -28,6 +28,7 @@ namespace DAQ {
  * @class ddaschannel ddaschannel.h
  * @brief Encapsulation of a generic DDAS event.
  *
+ * @details
  * The ddaschannel class is intended to encapsulate the information that is
  * emitted by the Pixie-16 dgitizer for a single event. It contains information
  * for a single channel only. It is generic because it can store data for

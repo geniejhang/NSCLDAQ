@@ -10,19 +10,10 @@
 #include "Configuration.h"
 
 /*!
- * \brief Parse and store the contents of the modevtlen.txt file in a 
- * configuration object
- *
+ * @details
  * The parser will read in as many lines as the value returned by
  * config.getNumberOfModules(). For that reason, the caller must have already
  * set the number of modules in the configuration object.
- *
- * \param input   The stream from which the contents of the file are read.
- * \param config  The configuration to store the results in.
- *
- * \throws std::runtime_error  If fewer lines than there are modules are found.
- * \throws std::runtime_error  If a line is encountered with a value less 
- *   than 4.
  */
 void
 DAQ::DDAS::ModEvtFileParser::parse(

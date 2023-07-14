@@ -31,6 +31,7 @@
  * @class DDASEvent DDASEvent.h
  * @brief Encapsulates a Built DDAS event 
  *
+ * @details
  * Any data that was written to disk downstream of the NSCLDAQ event
  * builder will have a "built" structure. What that means is that the body
  * of the physics event item will contain data from more than one DDAS 
@@ -90,5 +91,7 @@ public:
 
     ClassDef(DDASEvent,1);
 };
+
+/** @} */
 
 #endif

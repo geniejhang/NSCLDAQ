@@ -44,7 +44,7 @@ setUpRegistry(Registry& registry) {
     registry[HR::RevF_500MHz_16Bit] = {500, 16, 15, 10. };
 }
 
-// Create a new register and set default values
+// Create a new registry and set default values
 static Registry*
 createRegistry()
 {

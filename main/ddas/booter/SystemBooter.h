@@ -6,13 +6,15 @@
 #ifndef SYSTEMBOOTER_H
 #define SYSTEMBOOTER_H
 
+/** @namespace DAQ */
 namespace DAQ {
+    /** @namespace DAQ::DDAS */
     namespace DDAS {
 
 	class Configuration;
 
 	/**
-	 * @addtogroup booter libSystemBooter.so
+	 * @addtogroup libSystemBooter libSystemBooter.so
 	 * @brief DDAS Pixie-16 system booter library.
 	 *
 	 * A library containing code used by other DDAS programs which boots 
@@ -20,9 +22,11 @@ namespace DAQ {
 	 * @{
 	 */	
 	
-	/*!
-	 * \brief The SystemBooter class
+	/**
+	 * @class SystemBooter SystemBooter.h
+	 * @brief The SystemBooter class.
 	 *
+	 * @details
 	 * A class to manage the booting process for DDAS. All Readout and 
 	 * slow controls programs rely on this class to boot the system. 
 	 * There are two separate boot types: FullBoot and SettingsOnly. 
@@ -30,7 +34,7 @@ namespace DAQ {
 	 * latter just loads the settings. The basic usage pattern is 
 	 * demonstrated below.
 	 *
-	 * \code
+	 * @code
 	 *
 	 * using namespace DAQ::DDAS;
 	 *
@@ -41,7 +45,7 @@ namespace DAQ {
 	 * SystemBooter booter;
 	 * booter.boot(*pConfig, SystemBooter::FullBoot);
 	 *
-	 * \endcode
+	 * @endcode
 	 *
 	 * One should realize that this does not handle any of the logic 
 	 * regarding when and when not to synchronize or load firmware. 
@@ -62,22 +66,82 @@ namespace DAQ {
 
 	private:
 	    bool m_verbose; //!< Enable or disable output.
-	    unsigned short m_offlineMode; //!< 0 for online, 1 for offline (no modules). Only supported in XIA API 2.
+	    unsigned short m_offlineMode; //!< 0 for online, 1 for offline
+	                                  //!< (no modules). Only supported in
+	                                  //!< XIA API 2.
 	    
 	public:
+	    /** @brief Constructor */
 	    SystemBooter();
+	    /*
+	     * @brief Boot the entire system.
+	     * @param config A configuration describing the system.
+	     * @param type Style of boot.
+	     * @throws std::runtime_error If Pixie16InitSystem() call returns 
+	     *   an error.
+	     * @throws std::runtime_error If populateHardwareMap() throws.
+	     * @throws std::runtime_error If bootModuleByIndex() throws.
+	     */
 	    void boot(Configuration& config, BootType type);
+	    /**
+	     * @brief Boot a single module
+	     * @param modIndex Index of the module in the system.
+	     * @param m_config The system configuration.
+	     * @param type     Boot style (load firmware or settings only).
+	     * @throws std::runtime_error If hardware type is unknown.
+	     * @throws std::runtime_error If Pixie16BootModule returns an 
+	     *   error code.
+	     */
 	    void bootModuleByIndex(
 		int modIndex, Configuration& config, BootType type
 		);
+	    /**
+	     * @brief Enable or disable verbose output
+	     * @param enable Enables output messages if true.
+	     */
 	    void setVerbose(bool enable);
-	    bool isVerbose() const;
+	    /**
+	     * @brief Return the state of verbosity.
+	     * @return The state.
+	     */
+	    bool isVerbose() const { return m_verbose; };
+	    /**
+	     * @brief Enable or disable online boot
+	     * @param mode Boot mode, 0 for online, 1 for offline.
+	     * @warning Offline boot mode is only supported in XIA API 2!
+	     */
 	    void setOfflineMode(unsigned short mode);
-	    unsigned short getOfflineMode() const;
+	    /**
+	     * @brief Return the boot mode of the system.
+	     * @return The boot mode.
+	     */
+	    unsigned short getOfflineMode() const { return m_offlineMode; };
+	    /**
+	     * @brief Read and store hardware info from each of the modules 
+	     *   in the system.
+	     * @param config The system configuration.
+	     * @throws std::runtime_error If Pixie16ReadModuleInfo returns 
+	     *   error code.
+	     */
 	    void populateHardwareMap(Configuration &config);
 	    
 	private:
+	    /**
+	     * @brief Convert BootType enumeration to usable boot mask.
+	     * @param type Either BootType::FullBoot or BootType::SettingsOnly.
+	     * @return unsigned int  
+	     * @retval 0x7f FullBoot
+	     * @retval 0x70 SettingsOnly.
+	     */
 	    unsigned int computeBootMask(BootType type);
+	    /**
+	     * @brief Print out some basic information regarding the module
+	     * @param modIndex   Index of the module in the system.
+	     * @param ModRev     Hardware revision.
+	     * @param ModSerNum  Serial number.
+	     * @param ModADCBits ADC resolution (number of bits).
+	     * @param ModADCMSPS ADC frequency (MSPS).
+	     */
 	    void logModuleInfo(
 		int modIndex, unsigned short ModRev, unsigned short ModSerNum,
 		unsigned short ModADCBits, unsigned short ModADCMSPS

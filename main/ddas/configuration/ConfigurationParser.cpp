@@ -18,27 +18,18 @@
 #define FILENAME_STR_MAXLEN 256 //!< Number of characters to skip when parsing a line. Maximum allowed length of any comment added by a user.
 
 /**
- * @brief Constructor.
- *
+ * @details
  * Regular expression matching 
- * \verbatim "(^\[Rev([xXa-fA-F0-9]+)-(\d+)Bit-(\d+)MSPS\]$)" \endverbatim 
+ * @verbatim "(^\[Rev([xXa-fA-F0-9]+)-(\d+)Bit-(\d+)MSPS\]$)" \endverbatim 
  * to extract the firmware, bit depth, and module MSPS.
  */
 DAQ::DDAS::ConfigurationParser::ConfigurationParser()
     : m_matchExpr(R"(^\[Rev([xXa-fA-F0-9]+)-(\d+)Bit-(\d+)MSPS\]$)")
 {}
 
-/*!
- * \brief Parse the contents of the cfgPixie16.txt file.
- *
- * \param input  The input stream associated with the cfgPixie16 content 
- *   (likely an std::ifstream)
- * \param config  A configuration to store the parsed data.
- *
- * \throws std::runtime_error If failed to read in sufficient slot map 
- *   data for number of modules
- * \throws std::runtime_error If settings file does not end in .set.
- *
+/**
+ * @details
+ * Check for file extension ending in .set is not fully implemented. 
  */
 void
 DAQ::DDAS::ConfigurationParser::parse(
@@ -218,35 +209,10 @@ DAQ::DDAS::ConfigurationParser::parse(
     }
 }
 
-/**
- * @brief Update the clock calibration for a specific hardware specification.
- * 
- * @param type  The hardware type enum value.
- * @param calibration  The new clock calibration in ns/clock tick.
- */
-void
-DAQ::DDAS::ConfigurationParser::updateClockCalibration(
-    int type, double calibration
-    )
-{
-    HardwareRegistry::HardwareSpecification& hdwrSpec
-	= HardwareRegistry::getSpecification(type);
-    hdwrSpec.s_clockCalibration = calibration;
-}
 
-/*!
- * \brief Parse the hardware specifications into a hardware tag.
- *
+/**
+ * @details
  * Parses the values of X, Y, and Z from a tag of the form [RevX-YBit-ZMSPS].
- *
- * \param line          The tag to parse.
- * \param revision      Integer variable to store X into.
- * \param freq          Integer variable to store Y into.
- * \param resolution    Integer variable to store Z into.
- *
- * \return bool
- * \retval false  If line is not in the format [RevX-YBit-ZMSPS].
- * \retval true   Otherwise.
  */
 bool
 DAQ::DDAS::ConfigurationParser::parseHardwareTypeTag(
@@ -271,17 +237,10 @@ DAQ::DDAS::ConfigurationParser::parseHardwareTypeTag(
     return result;
 }
 
-/*!
- * \brief Extract firmware configuration from the firmware versions file.
- *
+/**
+ * @details
  * The current implementation does not support reading firmware paths with
  * whitespace in them.
- *
- * \param input  The stream to read from.
- * 
- * \throw std::runtimer_error if an error occurs while processing next 4 lines.
- *
- * \return A firmware configuration encapsulating the data read from the file.
  */
 DAQ::DDAS::FirmwareConfiguration
 DAQ::DDAS::ConfigurationParser::extractFirmwareConfiguration(
@@ -323,15 +282,7 @@ DAQ::DDAS::ConfigurationParser::extractFirmwareConfiguration(
     return fwConfig;
 }
 
-/*!
- * \brief Extract the clock calibration from the firmware versions file.
- *
- * \param input the stream to read from
- *
- * \return the clock calibration integer that was read from the file
- *
- * \throw std::runtime_error if an error occurs while processing the next line
- */
+// Returns the clock calibration in ns/clock tick.
 double
 DAQ::DDAS::ConfigurationParser::extractClockCalibration(std::istream& input)
 {
@@ -342,12 +293,32 @@ DAQ::DDAS::ConfigurationParser::extractClockCalibration(std::istream& input)
 	    "incomplete hardware specification!";
 	throw std::runtime_error(errmsg);
     }
+    
     return calibration;
 }
 
 /**
- * @brief Parses a slot line.  
- * 
+ * @details
+ * Retrieve hardware specification from the type enum and set its clock
+ * calibration to the new value specified by the calibration param. The 
+ * type may be Unknown or not mapped, in which case trying to update its
+ * clock calibration is an error.
+ *
+ * @todo (ASC 7/14/23): Catch and handle exceptions thrown by 
+ * HardwareRegistry::getSpecification(). 
+ */
+void
+DAQ::DDAS::ConfigurationParser::updateClockCalibration(
+    int type, double calibration
+    )
+{
+    HardwareRegistry::HardwareSpecification& hdwrSpec
+	= HardwareRegistry::getSpecification(type);
+    hdwrSpec.s_clockCalibration = calibration;
+}
+
+/**
+ * @details 
  * Slot lines consist of a mandatory slot number, and optional substitute
  * firmware mapping file and an optional .set file for that module. Care must
  * be taken since any populated field (other than the slot number) might 
@@ -358,15 +329,6 @@ DAQ::DDAS::ConfigurationParser::extractClockCalibration(std::istream& input)
  *      1 firmwaremap#  this is an error but,
  *      2 firmwaremap  # This is ok,
  *      3 firmwaremap setfile.set # as is this.
- *   
- * @param input  Input stream from which the line is parsed.
- *
- * @throw std::runtime_error if there are errors processing this line. E.g. 
- *   the slot cannot be decoded or a file is not readable.
- *
- * @return ConfigurationParser::SlotSpecification  A tuple that 
- *   contains the slot number and and file paths. The filepaths will be empty
- *   strings if omitted.
  */
 DAQ::DDAS::ConfigurationParser::SlotSpecification
 DAQ::DDAS::ConfigurationParser::parseSlotLine(std::istream& input)

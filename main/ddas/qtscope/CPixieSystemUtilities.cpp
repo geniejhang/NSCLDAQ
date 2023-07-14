@@ -16,9 +16,6 @@
 using namespace DAQ::DDAS;
 namespace HR = DAQ::DDAS::HardwareRegistry;
 
-/**
- * @brief Constructor.
- */
 CPixieSystemUtilities::CPixieSystemUtilities() :
     m_bootMode(0), // 1: offline, 0: online
     m_booted(false),
@@ -31,21 +28,13 @@ CPixieSystemUtilities::CPixieSystemUtilities() :
     m_modClockCal(0)
 {}
 
-/**
- * @brief Destructor.
- */
 CPixieSystemUtilities::~CPixieSystemUtilities()
 {}
 
 /**
- * @brief Boot the entire system.
- *
+ * @details
  * Reads in configuration information from cfgPixie16.txt, loads settings file 
  * information, boots modules and saves configuration info.
- * 
- * @return  int 
- * @retval 0   On successful boot.
- * @retval -1  If the boot fails.
  */
 int
 CPixieSystemUtilities::Boot()
@@ -102,17 +91,10 @@ CPixieSystemUtilities::Boot()
 }
 
 /**
- * @brief Save the currently loaded DSP settings to a settings file. 
- *
- * Format depends on what is supported by the version of the XIA API being 
+ * @details
+ * File format depends on what is supported by the version of the XIA API being 
  * used. Version 3+ will save the settings file as a JSON file while in version
  * 2 it is binary.
- * 
- * @param fileName  Name of file to save.
- *
- * @return int  
- * @retval 0  Success.
- * @retval !=0  XIA API error code.
  */
 int
 CPixieSystemUtilities::SaveSetFile(char* fileName)
@@ -120,25 +102,20 @@ CPixieSystemUtilities::SaveSetFile(char* fileName)
     int retval = Pixie16SaveDSPParametersToFile(fileName);
     
     if (retval < 0) {
-	std::cerr << "CPixieSystemUtilities::SaveSetFile() failed to save DSP parameter file to: " << fileName << " with retval " << retval;
+	std::cerr << "CPixieSystemUtilities::SaveSetFile() failed";
+	std::cerr << " to save DSP parameter file to: " << fileName
+		  << " with retval " << retval;
     }
   
     return retval;
 }
 
 /**
- * @brief Load a new settings file.
- *
+ * @details
  * Check and see if the system is booted. If so, load the parameters from 
  * the settings file. If not flag that a new settings file path (potentially 
  * different from that in the cfgPixie16.txt) has been set. The flag is 
  * checked at boot to load the new settings file.
- * 
- * @param fileName  Settings file name we are attempting to open.
- *
- * @return int  
- * @retval 0  Success.
- * @retval !=0  XIA API error code.
  */
 int
 CPixieSystemUtilities::LoadSetFile(char* fileName)
@@ -164,11 +141,10 @@ CPixieSystemUtilities::LoadSetFile(char* fileName)
 }
 
 /**
- * @brief Exit the system and release resources from the modules.
- *
- * @return int  
- * @retval 0  Success.
- * @retval !=0  XIA API error code.
+ * @details
+ * If the call to Pixie16ExitSystem() fails for any module, return the error 
+ * code and set the booted state flag to false. The system is likely in a bad 
+ * state.
  */
 int
 CPixieSystemUtilities::ExitSystem()
@@ -179,7 +155,9 @@ CPixieSystemUtilities::ExitSystem()
 	for (int i = 0 ; i < m_numModules; i++) {      
 	    retval = Pixie16ExitSystem(i);      
 	    if (retval < 0) {
-		std::cerr << "CPixieSystemUtilities::ExitSystem() failed to exit " << "module " << i << " with retval = " << retval << std::endl;
+		std::cerr << "CPixieSystemUtilities::ExitSystem() failed";
+		std::cerr <<" to exit " << "module " << i
+			  << " with retval = " << retval << std::endl;
 		m_booted = false;	
 		return retval;
 	    }
@@ -192,16 +170,9 @@ CPixieSystemUtilities::ExitSystem()
 }
 
 /**
- * @brief Get the module ADC sampling rate in MSPS.
- *
- * @returns unsigned short The module ADC sampling rate in MSPS.
- * @retval  0 if the module number is invalid.
- *
- * @throws std::runtime_error  If the module number is invalid.
- *
- * @todo  Would be better to return max(unsigned int) or something besides 0 
- * if the module does not exist. Must also be checked wherever this return 
- * value is used on the Python side.
+ * @todo (ASC 7/14/23): Would be better to return max(unsigned int) or 
+ * something besides 0 if an exception is raised. Must also be checked 
+ * wherever this return value is used on the Python side.
  */
 unsigned short
 CPixieSystemUtilities::GetModuleMSPS(int module)

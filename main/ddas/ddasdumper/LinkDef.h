@@ -1,5 +1,5 @@
 /**
- * @addtogroup ddaschannel libddaschannel.so
+ * @addtogroup libddaschannel libddaschannel.so
  * @{
  */
 
