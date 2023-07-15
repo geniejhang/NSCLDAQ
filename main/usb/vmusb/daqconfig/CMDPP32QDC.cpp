@@ -541,7 +541,7 @@ CMDPP32QDC::printRegisters(CVMUSB& controller)
   if (status < 0) {
     cerr << "Error in reading register" << endl;
   } else {
-    cout << setw(30) << "Multi event(bin): " << (std::bitset<4>data) << endl;
+    cout << setw(30) << "Multi event(bin): " << std::bitset<4>(data) << endl;
   }
 
   status = controller.vmeRead16(base + MarkType, initamod, &data); 
