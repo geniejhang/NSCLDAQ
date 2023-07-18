@@ -95,3 +95,13 @@ jobs:
         with:
           name: ${{ inputs.os-version }} binary distribution
           path: /usr/opt/nscldaq/nscldaq-${{ github.ref_name }}-${{ inputs.os-version }}.tar.gz
+      - name: Packaging usropt for distribution
+        if: ${{ inputs.packaging == true }}
+        working-directory: /usr/opt
+        run: tar -czf usropt-nscldaq-${{ github.ref_name }}-${{ inputs.os-version }}.tar.gz opt-${{ inputs.os-version }}
+      - name: Upload usropt distribution package
+        if: ${{ inputs.packaging == true }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.os-version }} usropt distribution
+          path: /usr/opt/usropt-nscldaq-${{ github.ref_name }}-${{ inputs.os-version }}.tar.gz
