@@ -1,0 +1,99 @@
+/**
+@page qtscope QtScope
+
+@authors Aaron Chester, Jeromy Tompkins
+@date 7/17/23
+
+@tableofcontents
+
+@section qtscope_intro Introduction
+@par
+The QtScope program provides a slow-control graphical-user interface (GUI) used to configure digital signal processing (DSP) parameters for DDAS systems. Available starting with the release of FRIBDAQ 12.0, QtScope is a full replacement for the nscope program, which will no longer be actively supported and maintained.
+
+@par
+QtScope was written using a set of Python bindings for Qt5 called PyQt5 and takes advantage of both the GUI design capabilities of Qt as well as familiar Python tools matplotlib and the NumPy package for scientific computing. Communication with the Pixie-16 modules via the XIA API is implemented using the Python ctypes foreign function library. QtScope implements a model-view-controller (MVC) architecture for user interaction with the Pixie-16 hardware and manages the DSP parameters internally using a Python dataframe.
+
+@par
+In this guide we will cover:
+- The feature set of QtScope.
+- How to get started using QtScope to configure DSP parameters.
+- How to use QtScope to inspect data acquired with the parameters you configure.
+
+@subsection qtscope_features QtScope feature set
+@par
+QtScope provides a number of useful features for configuring DDAS systems, including:
+- Configuration of multiple modules in a single crate.
+- Control over all parameters for the energy and trigger filters.
+- Control over the CSRA and CSRB registers and the ability to configure individual register bits.
+- Limited control over the coincidence settings of the modules in the crate.
+- Automatic baseline calculations.
+- Histogram acquisition for a single module at a time.
+- Trace and trapezoidal filter visualization.
+- Reading and writing firmware settings files.
+
+@par
+QtScope is the lab-supported software for configuring DDAS systems, replacing the nscope program many users are familiar with. In addition to the features provided by nscope, QtScope offers some of improvments:
+- Utilizes the Python/C API to extend the Python interpreter with modules written in C/C++ to interact with the Pixie-16 hardware.
+- Adoption of common Python libraries for numerical methods.
+- A flexable and extensible GUI written in PyQt5.
+- Improved UI blocking for safety.
+- Unified interfaces for configuring channel-level and module-level DSP parameters.
+- Pre-defined crate configurations for common single- and multi-crate setups.
+- Event logging for debugging/troubleshooting, described in more detail below.
+
+@subsection qtscope_features_logging Event logging
+@par
+An important new feature of QtScope which was not implemented in the nscope program is event logging, which is described in more detail here. Information about the program execution, warnings and errors are written to a file called qtscope.log (the "logfile") in the runtime location of the program. What exactly gets written to the logfile is determined by a "logging level," which defines the minimum severity event written to the logfile. Users have control over the logging level via the environment variable `QTSCOPE_LOG_LEVEL`. Allowed levels are, in increasing order of severity: `debug`, `info`, `warning`, `error` and `critical`. If `QTSCOPE_LOG_LEVEL` is not set, the logging level defaults to `info`. In order to overwrite the default logging level, set the value of `QTSCOPE_LOG_LEVEL` to your desired value, for example: @verbatim export QTSCOPE_LOG_LEVEL=debug @endverbatim sets the logging level to write debugging information (and all elevated severity levels!) to the logfile. The logging level is configured on QtScope startup.
+
+@section qtscope_quickstart Getting started
+@par
+To run QtScope, the FRIBDAQ environment must be configured by sourcing its daqsetup.bash script: @verbatim . /usr/opt/daq/12.0-005/daqsetup.bash @endverbatim for QtScope from FRIBDAQ version 12.0-005. Once complete, the QtScope executable can be launched with the following command: @verbatim $DAQBN/qtscope @endverbatim
+Note that QtScope expects to be run on a machine connected to Pixie-16 hardware--at FRIB this is typcally an spdaq computer--and from a directory containing the necessary @ref cfgpixie16 "cfgPixie16.txt" and @ref modevtlen "modevtlen.txt" configuration files.
+
+@par
+The very first thing that a user needs to do to run nscope is to connect a PXI crate with at least one Pixie-16 card to a host PC. The PXI crate must be powered on.
+@attention
+If you have not set up a DDAS system before, it is probably best to stop reading this and work your way through a set up tutorial (e.g. @ref single_crate "Single-crate system setup guide").
+Running the `qtscope` executable launches the QtScope GUI. The various elements of the GUI are shown on the figure below.
+
+@image html qtscope/qtscope_unbooted_wtoolbars.png "The QtScope GUI state on startup with labeled GUI elements. Note that most GUI elements besides ''Boot system'' and ''Exit'' on the system toolbar are disabled." width=1280px
+
+@par
+Upon startup, the majority of the GUI elements besides "Boot system" and "Exit" on the system toolbar are disabled. This is because no firmware or DSP parameters have been loaded onto the modules. The process of programming the module firmware and DSP settings onto a module is colloquially called "booting." Clicking the "Boot system" button on the left side of the system toolbar will attempt to boot the Pixie-16 modules using the configuration files present in the runtime directory. During the boot process, firmware is loaded and the parameter configuration file is written to the modules in the crate. Summary output is written to the terminal during this process:
+@verbatim
+------------------------
+Initializing PXI access...
+System initialized successfully.
+Found Pixie-16 module #0, Rev=15, S/N=1150, Bits=16, MSPS=250
+
+Booting Pixie-16 module #0
+        ComFPGAConfigFile:  /usr/opt/ddas/firmware/2.2-000/firmware/syspixie16_current_16b250m.bin
+        SPFPGAConfigFile:   /usr/opt/ddas/firmware/2.2-000/firmware/fippixie16_current_16b250m.bin
+        DSPCodeFile:        /usr/opt/ddas/firmware/2.2-000/dsp/Pixie16_current_16b250m.ldr
+        DSPVarFile:         /usr/opt/ddas/firmware/2.2-000/dsp/Pixie16_current_16b250m.var
+        DSPParFile:         /user/0400x/ddas_xiatest/readout/crate_1/crate_1.set
+--------------------------------------------------------
+
+Start to boot Communication FPGA in module 0
+Start to boot signal processing FPGA in module 0
+Start to boot DSP in module 0
+@endverbatim
+Any errors encountered during the boot process will be written to the terminal and to the logfile. The error messages are invaluable for troubleshooting a non-working system and can be used to identify and fix issues which cause a failed boot. If all the modules in the system boot correctly, the following message is displayed:
+@verbatim
+All modules ok
+QtScope system configuration complete!
+@endverbatim
+If the system has booted without any errors the "Boot system" button will indicate that the system is "Booted" and turn green. The GUI elements on the various toolbars will also be enabled; these GUI elements are explained in more detail in the subsequent sections.
+
+@image html qtscope/qtscope_booted.PNG "The QtScope GUI state after a successful system boot. Note that the button previously displaying ''Boot system'' is now green and reads ''Booted'' and that the GUI elements are enabled." width=1280px
+
+@section qtscope_gui The QtScope GUI
+@subsection qtscope_gui_sys The system toolbar
+@subsection qtscope_gui_sys The acquisition toolbar
+@subsection qtscope_gui_sys The plot toolbar
+
+@section qtscope_chandsp Configuring channel DSP settings
+
+@section qtscope_moddsp Configuring module DSP settings
+
+*/
