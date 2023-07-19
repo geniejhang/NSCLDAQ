@@ -61,7 +61,7 @@ jobs:
         working-directory: ./main/oot
         run: make -j2 clean && make -j2 all && make -j2 install
       - name: Packaging for complete source distribution
-        if: ${{ inputs.packaging == true && inputs.dist-packaging = true}}
+        if: ${{ inputs.packaging == true && inputs.dist-packaging == true}}
         working-directory: ./main/oot
         run: |
           cd ../libtcl
@@ -73,7 +73,7 @@ jobs:
           cd ../oot
           make -j2 dist
       - name: Complete source distribution package
-        if: ${{ inputs.packaging == true && inputs.dist-packaging = true}}
+        if: ${{ inputs.packaging == true && inputs.dist-packaging == true}}
         uses: actions/upload-artifact@v3
         with:
           name: Complete source distribution
