@@ -27,6 +27,8 @@ jobs:
           OUTFILE=release_body
 
           STARTED=false
+          
+          echo "" > \$OUTFILE
 
           while IFS= read -r line
           do
