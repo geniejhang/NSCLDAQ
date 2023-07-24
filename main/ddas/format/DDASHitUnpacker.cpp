@@ -13,8 +13,7 @@
 #include <stdexcept>
 	
 /**
- * @brief Unpack data into a DDASHit.
- *
+ * @details
  * This expects data from a DDAS readout program. It will parse the entire 
  * body of the event in a manner that is consistent with the data present. 
  * In other words, it uses the sizes of the event encoded in the data to 
@@ -23,17 +22,6 @@
  * While it parses, it stores the results into the data members of the object 
  * hit. Prior to parsing, all data members are reset to 0 using the Reset() 
  * method. 
- *
- * @param[in] beg  Pointer to the first 32-bit word of the hit body.
- * @param[in] sentinel  Pointer to the first word after the end of the body.
- * @param[in,out]  hit  Reference to the DDASHit object filled during 
- *   unpacking.
- *
- * @throw std::runtime_error  If the hit data buffer is empty.
- * @throw std::runtime_error  If the hit's length is not the value specified 
- *   in the header.
- *
- * @return uint32_t*  Pointer to the next data word after the hit.
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::unpack(
@@ -74,8 +62,13 @@ DAQ::DDAS::DDASHitUnpacker::unpack(
 	throw std::runtime_error(errmsg.str());
     }
 
-    // If channel header length is 8 then the extra 4 words are energy
-    // sums and baselines
+    // Longwords per optional enabled data output:
+    // External TS: 2
+    // Energy sums: 4
+    // QDC sums:    8
+    // Trace:       ceil(0.5*L*f)
+    //   where L = trace length in microseconds, f = module MSPS
+     
     if(channelheaderlength == 6) {
 	data = extractExternalTimestamp(data, hit);
 
@@ -117,8 +110,7 @@ DAQ::DDAS::DDASHitUnpacker::unpack(
 }
 
 /**
- * @brief Unpack data into a DDASHit.
- *
+ * @details
  * This expects data from a DDAS readout program. It will parse the entire 
  * body of the event in a manner that is consistent with the data present. 
  * In other words, it uses the sizes of the event encoded in the data to 
@@ -127,12 +119,6 @@ DAQ::DDAS::DDASHitUnpacker::unpack(
  * While it parses, it stores the results into the data members of the object 
  * hit. Prior to parsing, all data members are reset to 0 using the Reset() 
  * method. 
- *
- * @param beg  Pointer to the first word of the hit body.
- * @param sentinel  Pointer to the first word after the end of the body.
- *
- * @return std::tuple<DDASHit, const uint32_t*>  The first element is a filled
- *   DDASHit, the second element a pointer to the next data word after the hit.
  */
 std::tuple<DAQ::DDAS::DDASHit, const uint32_t*>
 DAQ::DDAS::DDASHitUnpacker::unpack(
@@ -145,48 +131,9 @@ DAQ::DDAS::DDASHitUnpacker::unpack(
 }
 
 /**
- * @brief Unpack the trace data.
- *
- * The 16-bit trace data is stored two samples to one 32-bit word in 
- * little-endian. The data for sample i is stored in the lower 16 bits while 
- * the data for sample i+1 is stored in the upper 16 bits. For ADCs with less 
- * than 16-bit resolution, those bits are set to 0.
- *
- * @param hit  References the hit we are unpacking.
- * @param data  Pointer to the 32-bit trace word to unpack. The 32-bit trace 
- *   word contains two 16-bit trace ADC values.
- *
- * @return const uint32_t*  Pointer to the next 32-bit word.
- */
-const uint32_t*
-DAQ::DDAS::DDASHitUnpacker::parseTraceData(
-    DDASHit& hit, const uint32_t* data
-    )
-{
-    std::vector<uint16_t>& trace = hit.GetTrace();
-    size_t tracelength = hit.GetTraceLength();
-    trace.reserve(tracelength);
-    for(size_t i = 0; i < tracelength/2; i++){
-	uint32_t datum = *data++;
-	trace.push_back(datum & LOWER16BITMASK);
-	trace.push_back((datum & UPPER16BITMASK)>>16);
-    }
-
-    return data;
-}
-
-/**
- * @brief Ensure there is enough data to parse.
- *
+ * @details
  * The first word of the body passed to this function is the self-inclusive 
  * event size in 16-bit words. 
- *
- * @param data  Pointer to the hit body.
- * @param sentinel  Pointer to the first word after the body.
- * 
- * @throws std::runtime_error  If there are an incorrect number of 16-bit data words in the event (words exceed sentinal boundry) and the pointer to the last data word is not a nullptr.
- *
- * @return uint32_t*  Pointer to the next data word. 
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::parseBodySize(
@@ -207,13 +154,9 @@ DAQ::DDAS::DDASHitUnpacker::parseBodySize(
 }
 
 /**
- * @brief Parse the module identifying information encoded in the hit.
- *
- * @param hit  References the DDASHit we are unpacking.
- * @param data  The 32-bit data word containing the module identifying
- *   information.
- *
- * @return uint32_t*  Pointer to the next data word.
+ * @details
+ * The lower 16 bits encode the ADC frequency, the upper 16 bits encode the 
+ * hardware revision and ADC resolution.
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::parseModuleInfo(
@@ -229,18 +172,12 @@ DAQ::DDAS::DDASHitUnpacker::parseModuleInfo(
 }
 
 /**
- * @brief Parse the word 0 of the Pixie-16 data header.
- *
+ * @details
  * Word 0 contains:
  * - Crate/slot/channel information.
  * - The header and channel lengths in 32-bit words.
  * - The ADC overflow code.
  * - The module finish code (equals 1 if piled up).
- *
- * @param hit  References the DDASHit we are unpacking.
- * @param data  The 32-bit data word to parse.
- *
- * @return uint32_t*  Pointer to the next data word (word 1).
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::parseHeaderWord0(
@@ -260,8 +197,7 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWord0(
 }
 
 /**
- * @brief Parse words 1 and 2 of the Pixie-16 data header.
- *
+ * @details
  * Words 1 and 2 contain the timestamp and CFD information. The meaning of the 
  * CFD word depends on the module type. The unpacker abstracts this meaning 
  * away from the user. Note that we know the module type  if the module 
@@ -272,11 +208,6 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWord0(
  * Word 2 contains:
  * - The upper 16 bits of the 48-bit timestamp.
  * - The CFD result.
- *
- * @param hit  References the DDASHit we are unpacking.
- * @param data  Pointer to word 1.
- *
- * @return uint32_t*  Pointer to word 3.
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::parseHeaderWords1And2(
@@ -304,17 +235,11 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWords1And2(
 }
 
 /**
- * @brief Parse word 3 of the Pixie-16 data header.
- *
+ * @details
  * Word 3 contains:
  * - The ADC trace overflow flag.
  * - The trace length in samples (16-bit words).
  * - The hit energy.
- *
- * @param hit  References the DDASHit we are unpacking.
- * @param data  Pointer to word 3.
- *
- * @return uint32_t*  Pointer to the first word of the Pixie-16 data body.
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::parseHeaderWord3(
@@ -329,19 +254,34 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWord3(
 }
 
 /**
- * @brief Determine the CFD correction to the leading-edge time in 
- * nanoseconds from the CFD word.
- *
+ * @details
+ * The 16-bit trace data is stored two samples to one 32-bit word in 
+ * little-endian. The data for sample i is stored in the lower 16 bits while 
+ * the data for sample i+1 is stored in the upper 16 bits. For ADCs with less 
+ * than 16-bit resolution, those bits are set to 0.
+ */
+const uint32_t*
+DAQ::DDAS::DDASHitUnpacker::parseTraceData(
+    DDASHit& hit, const uint32_t* data
+    )
+{
+    std::vector<uint16_t>& trace = hit.GetTrace();
+    size_t tracelength = hit.GetTraceLength();
+    trace.reserve(tracelength);
+    for(size_t i = 0; i < tracelength/2; i++){
+	uint32_t datum = *data++;
+	trace.push_back(datum & LOWER16BITMASK);
+	trace.push_back((datum & UPPER16BITMASK)>>16);
+    }
+
+    return data;
+}
+
+/**
+ * @details
  * The value of the CFD correction depends on the module. Because the module 
  * information is encoded in the data, this function should be called after 
  * parseModuleInfo().
- *
- * @param ModMSPS  The module ADC frequency in MSPS.
- * @param data  The 32-bit data word encoding the CFD information.
- *
- * @return std::tuple<double, uint32_t, uint32_t, uint32_t>  (CFD correction 
- *   in nanoseconds, value of the CFD encoded in the data, CFD trigger source
- *   bit, CFD fail bit).
  */
 std::tuple<double, uint32_t, uint32_t, uint32_t>
 DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(uint32_t ModMSPS, uint32_t data)
@@ -367,7 +307,6 @@ DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(uint32_t ModMSPS, uint32_t data)
     }
     else if (ModMSPS == 500) {
 	// no fail bit in 500 MSPS modules
-
 	cfdtrigsource = ((data & BIT31to29MASK) >> 29 );
 	timecfd       = ((data & BIT28to16MASK) >> 16);
 	correction    = (timecfd/8192.0 + cfdtrigsource - 1)*2.0;
@@ -379,17 +318,10 @@ DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(uint32_t ModMSPS, uint32_t data)
 }
 
 /**
- * @brief Determine the CFD correction to the leading-edge time in nanoseconds
- * from the CFD word.
- *
+ * @details
  * The value of the CFD correction depends on the module. Because the module 
  * information is encoded in the data, this function should be called after 
  * parseModuleInfo().
- *
- * @param hit  References the DDASHit we are unpacking.
- * @param data  The 32-bit data word encoding the CFD information.
- *
- * @return double  The CFD correction in nanoseconds.
  */
 double
 DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(DDASHit& hit, uint32_t data)
@@ -429,12 +361,10 @@ DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(DDASHit& hit, uint32_t data)
     return correction;
 }
 
-/*! @brief Compute time in nanoseconds from raw data (no CFD 
- * correction).
- *
- * This method is very similar to the SetTime() method. It differs in that it 
- * does not apply a correction for the CFD time. It simply forms the timestamp
- * from the low and high bits and then converts it to a time in nanoseconds.
+/** 
+ * @details
+ * Form the timestamp from the low and high bits and convert it to a time in 
+ * nanoseconds.
  *
  * The calculations for the various modules are as follows:
  *
@@ -452,14 +382,6 @@ DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(DDASHit& hit, uint32_t data)
  *
  * \f[\text{time} = 10\times((\text{timehigh} << 32) 
  * + \text{timelow})\f]
- *
- * @param adcFrequency  Module ADC frequency in MSPS.
- * @param timelow  Data word containing the lower 32 bits of the 
- *   48-bit timestamp.
- * @param timehigh  Data word containing the upper 16 bits of the 
- *   48-bit timestamp. 
- * 
- * @return uint64_t  The 48-bit coarse timestamp in nanoseconds.
  */
 uint64_t
 DAQ::DDAS::DDASHitUnpacker::computeCoarseTime(
@@ -487,8 +409,7 @@ DAQ::DDAS::DDASHitUnpacker::computeCoarseTime(
 }
 
 /**
- * @brief Unpack energy sums.
- *
+ * @details
  * Energy sums consist of 4 32-bit words, which are, in order:
  * 0. The trailing (pre-gap ) sum.
  * 1. The gap sum.
@@ -497,12 +418,6 @@ DAQ::DDAS::DDASHitUnpacker::computeCoarseTime(
  *
  * If the hit is not reset between calls to this function, the energy sum 
  * data will be appended to the end of the exisiting energy sums.
- *
- * @param data  Pointer to the first 32-bit word containing the energy 
- *   sum data.
- * @param hit  References the DDASHit we are unpacking.
- *
- * @return  uint32_t*  Pointer to the word after the energy sums.
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::extractEnergySums(
@@ -516,16 +431,10 @@ DAQ::DDAS::DDASHitUnpacker::extractEnergySums(
 }
 
 /**
- * @brief Unpack QDC values.
- *
+ * @details
  * QDC sums consist of 8 32-bit words. If the hit is not reset between calls 
  * to this function, the QDC sum data will be appended to the end of the 
  * exisiting QDC sums.
- *
- * @param data  Pointer to the first 32-bit word containing the QDC sum data.
- * @param hit  References the DDASHit we are unpacking.
- *
- * @return  uint32_t*  Pointer to the word after the QDC sums.
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::extractQDC(const uint32_t* data, DDASHit& hit)
@@ -537,16 +446,11 @@ DAQ::DDAS::DDASHitUnpacker::extractQDC(const uint32_t* data, DDASHit& hit)
 }
 
 /**
- * @brief Unpack the external timestamp data.
- *
- * Unpack and set the external timestamp. The external timestamp supplied to 
- * DDAS can be up to 64 bits long.
- *
- * @param data  Pointer to the 32-bit word containing the lower 16 bits of the 
- *   64-bit external timestamp.
- * @param hit  References the DDASHit we are unpacking.
- *
- * @return  uint32_t*  Pointer to the word after the external timestamp.
+ * @details
+ * Unpack and set the 48-bit external timestamp. Unlike the internal timestamp 
+ * where the conversion from clock tics to nanoseconds is known, for the 
+ * external timestamp no unit conversion is applied. Converting the timestamp 
+ * to proper units is left to the user.
  */
 const uint32_t* 
 DAQ::DDAS::DDASHitUnpacker::extractExternalTimestamp(

@@ -13,9 +13,10 @@
  */
 
 /**
- * @class CPixieDSPUtilities
+ * @class CPixieDSPUtilities CPixieDSPUtilities.h
  * @brief Read and writes both channel-level and module-level DSP settings.
  *
+ * @details
  * The class also contains a function to adjust the DC offsets on a single 
  * module, as the DC offset is itself a channel parameter.
  */
@@ -24,9 +25,9 @@ class CPixieDSPUtilities
 {
 public:
     /** Constructor. */
-    CPixieDSPUtilities();
+    CPixieDSPUtilities() {};
     /** Destructor. */
-    ~CPixieDSPUtilities();
+    ~CPixieDSPUtilities() {};
 
     /**
      * @brief Adjust DC offsets of all channels for a single module.

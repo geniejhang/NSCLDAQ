@@ -20,6 +20,7 @@ class CDataGenerator;
  * @class CPixieTraceUtilities CPixieTraceUtilities.h
  * @brief A class to read and fetch trace data from Pixie-16 modules.
  *
+ * @details
  * This class provides a ctypes-friendly interface to acquire "validated" 
  * (traces which are likely to contain a good signal pulse) and unvalidated 
  * traces. The class also provides methods to access the trace data.

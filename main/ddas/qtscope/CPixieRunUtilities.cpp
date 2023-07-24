@@ -262,7 +262,7 @@ CPixieRunUtilities::ReadModuleStats(int module)
 	std::cerr << "CPixieRunUtilities::ReadModuleStats() error accessing scaler statistics " << "from module " << module << " with retval " << retval << std::endl;
 	return retval;
     } else {
-	double realTime = Pixie16ComputeRealTime(statistics.data(),module);
+	double realTime = Pixie16ComputeRealTime(statistics.data(), module);
 	for (int i = 0; i < 16; i++) {
 	    double inpRate = Pixie16ComputeInputCountRate(
 		statistics.data(), module, i

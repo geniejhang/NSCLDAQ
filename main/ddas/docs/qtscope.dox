@@ -1,5 +1,5 @@
 /**
-@page qtscope QtScope
+@page qtscope QtScope Manual
 
 @authors Aaron Chester, Jeromy Tompkins
 @date 7/17/23
@@ -51,15 +51,15 @@ To run QtScope, the FRIBDAQ environment must be configured by sourcing its daqse
 Note that QtScope expects to be run on a machine connected to Pixie-16 hardware--at FRIB this is typcally an spdaq computer--and from a directory containing the necessary @ref cfgpixie16 "cfgPixie16.txt" and @ref modevtlen "modevtlen.txt" configuration files.
 
 @par
-The very first thing that a user needs to do to run nscope is to connect a PXI crate with at least one Pixie-16 card to a host PC. The PXI crate must be powered on.
+The very first thing that a user needs to do to run QtScope is to connect a PXI crate with at least one Pixie-16 card to a host PC. The PXI crate must be powered on.
 @attention
 If you have not set up a DDAS system before, it is probably best to stop reading this and work your way through a set up tutorial (e.g. @ref single_crate "Single-crate system setup guide").
-Running the `qtscope` executable launches the QtScope GUI. The various elements of the GUI are shown on the figure below.
+Running the `qtscope` executable launches the QtScope GUI. The various elements of the GUI are labeled on the figure below.
 
-@image html qtscope/qtscope_unbooted_wtoolbars.png "The QtScope GUI state on startup with labeled GUI elements. Note that most GUI elements besides ''Boot system'' and ''Exit'' on the system toolbar are disabled." width=1280px
+@image html qtscope/qtscope_unbooted_wtoolbars.png "The QtScope GUI state on startup with labeled GUI elements. Note that most GUI elements besides [Boot system] and [Exit] on the system toolbar are disabled." width=1280px
 
 @par
-Upon startup, the majority of the GUI elements besides "Boot system" and "Exit" on the system toolbar are disabled. This is because no firmware or DSP parameters have been loaded onto the modules. The process of programming the module firmware and DSP settings onto a module is colloquially called "booting." Clicking the "Boot system" button on the left side of the system toolbar will attempt to boot the Pixie-16 modules using the configuration files present in the runtime directory. During the boot process, firmware is loaded and the parameter configuration file is written to the modules in the crate. Summary output is written to the terminal during this process:
+Upon startup, the majority of the GUI elements besides **[Boot system]** and **[Exit]** on the system toolbar are disabled. This is because no firmware or DSP parameters have been loaded onto the modules. The process of programming the module firmware and DSP settings onto a module is colloquially called "booting." Clicking the **[Boot system]** button on the left side of the system toolbar will attempt to boot the Pixie-16 modules using the configuration files present in the runtime directory. During the boot process, firmware is loaded and the parameter configuration file is written to the modules in the crate. Summary output is written to the terminal during this process:
 @verbatim
 ------------------------
 Initializing PXI access...
@@ -83,16 +83,172 @@ Any errors encountered during the boot process will be written to the terminal a
 All modules ok
 QtScope system configuration complete!
 @endverbatim
-If the system has booted without any errors the "Boot system" button will indicate that the system is "Booted" and turn green. The GUI elements on the various toolbars will also be enabled; these GUI elements are explained in more detail in the subsequent sections.
+If the system has booted without any errors the **[Boot system]** button will read **[Booted]** and turn green. The GUI elements on the various toolbars will also be enabled; these GUI elements are explained in more detail in the subsequent sections.
 
-@image html qtscope/qtscope_booted.PNG "The QtScope GUI state after a successful system boot. Note that the button previously displaying ''Boot system'' is now green and reads ''Booted'' and that the GUI elements are enabled." width=1280px
+@image html qtscope/qtscope_booted.PNG "The QtScope GUI state after a successful system boot. Note that the button previously displaying [Boot system] is now green and reads [Booted]. The GUI elements are enabled upon a successful boot." width=1280px
 
 @section qtscope_gui The QtScope GUI
+@par
+In this section the GUI elements of QtScope are described in detail.
+
 @subsection qtscope_gui_sys The system toolbar
-@subsection qtscope_gui_sys The acquisition toolbar
-@subsection qtscope_gui_sys The plot toolbar
+@image html qtscope/system_toolbar.PNG "The QtScope system toolbar."
+
+@par
+The system toolbar is used to manage the state of the system. The buttons on this toolbar allow the user to:
+- Boot modules
+- Configure channel- and module-level DSP parameters
+- Save and load DSP settings files
+- Cleanly exit the program, releasing resources from the modules.
+
+@par Boot system
+Upon startup the first thing a user should do is click the **[Boot system]** button to load firmware and DSP parameters onto the modules. Upon successful boot, the **[Boot system]** button will turn green and change its displayed text to "Booted." Clicking this button will have no effect if the system has already been booted.
+
+@par Channel DSP
+Clicking the **Channel DSP]** button will open a popup window which allows you to configure channel DSP parameters for the entire system. Channel DSP parameters are applied on a single channel on a module, for example the fast filter parameters used to trigger the channel. The channel DSP parameters are organized using a series of nested tabs. There is a top-level tab for each installed module in the system. DSP parameters for a single module tab are organized by function into a set of tabs under the module tab. Selecting a tab will display that tab's DSP parameters. The DSP parameters configurable on each tab are described in more detail in the @ref qtscope_chandsp section.
+
+@image html qtscope/analog_signal.PNG "The channel DSP popup window displayed when clicking the [Channel DSP] button. The tab controlling the analog signal properties and DC offset on module 0 is selected. If more modules were installed, additional tabs reading ''Mod. 1,'' ''Mod. 2,'' etc. would be present."
+
+@par
+A common feature of all channel DSP parameter tabs are the **[Apply]**, **[Load]**, **[Copy mod.]** and **[Copy chan.]** buttons. The **[Apply]** button will write the channel parameters displayed on the GUI to every channel on the corresponding module. Clicking **[Load]** will load the currently displayed channel DSP parameters from the module and display them on the GUI. To copy all displayed DSP parameters from another module in the system to the currently displayed module, select a module number to copy from using the spin box next to the **[Copy mod.]** button, then click **[Copy mod.]**. Similarly, to copy DSP parameters from a single channel on the currently displayed DSP parameter tab to all channels on the module, select a channel using the spin box next to the **[Copy chan.]** button, then click **[Copy chan.]**. The **[Cancel]** button will close the channel DSP popup window.
+@attention
+The copy buttons modify data in the underlying Python dataframe used internally by QtScope to manage the DSP parameters. In order to write the parameters to the module, you must click **[Apply]** after copying.
+
+@par Module DSP
+Clicking **[Module DSP]** will open a popup window which allows you to configure module DSP parameters. Module DSP parameters are applied at the module level, for example the crate ID value specifiying where these modules reside. The module DSP window allows the user to automatically configure the CSRB control register and trigger configuration for some common setups. The DSP parameters configurable in this window are discussed further in @ref qtscope_moddsp.
+
+@par
+Similar to the channel DSP parameters, the **[Apply]** and **[Load]** buttons will write and read parameters from the modules based on what is set on this window, respectively. The **[Cancel]** button will close the popup.
+
+@image html qtscope/module_dsp.PNG "The module DSP popup window displayed when clicking the [Module DSP] button."
+
+@par Load/save settings
+The **[Load settings]** and **[Save settings]** buttons allow the user to load a new set of DSP parameters onto the modules and to save DSP parameters to a settings file. Clicking either button will open a file dialog. The file dialog windows are similar for loading and saving module, the save dialog window is shown below. For both the  file name can be entered on the ''File name:'' line or an existing file can be selected by using the navigation menu. Existing DSP settings files with the same name will be overwritten.
+
+@image html qtscope/save_dialog.PNG "The QtScope save dialog window opened when the [Save settings] button is clicked. The [Load settings] button will popup a dialog window which looks and functions similarly."
+
+@par
+The format of the DSP settings file depends on the version of the XIA API that QtScope and FRIBDAQ were compiled with. For XIA API version 2, the DSP settings file is a binary file and is not human-readable, while in XIA API version 3+, the DSP settings file is JSON format and is human-readable. One thing to note is that the DSP parameter values in a JSON-formatted settings file are given in the units used internally by the modules, e.g. the fast filter risetime is given in units of ADC samples rather than microseconds.
+
+@par Exit
+The **[Exit]** button exits the QtScope program and frees resources used by the module. Clicking the **[X]** in the upper right of the main GUI window has the same effect. This is the safest way to exit the program (as opposed to, say, Ctrl-C).
+
+@subsection qtscope_gui_acq The acquisition toolbar
+@image html qtscope/acquisition_toolbar.PNG "The QtScope acquisition toolbar."
+
+@par
+The acquisition toolbar allows you to inspect data acquired using the DSP settings programmed with QtScope. Using the acquisition toolbar you can:
+- Select the module and channel(s) to read data from,
+- Acquire and display ADC traces,
+- Display simulated timing and energy filter outputs,
+- Acquire and display energy histogram and baseline data.
+
+@subsubsection qtscope_gui_acq_chansel Channel selection
+@par
+The "Channel selection" box allows the user to specify which module and channel in the crate to read data from. Modules are numbered sequentially starting from 0. If the **[Read all]** button is checked, data from all modules will be read and displayed on the canvas. Note that acquiring and rendering data from all channels on the canvas may take longer than for a single-channel acquisition. Be patient.
+
+@subsubsection qtscope_gui_acq_trace Trace acquisition
+@par
+The "Trace acquisition" box buttons allow a user to view ADC trace data on the canvas. When the **[Read trace]** button is clicked, QtScope will attempt to acquire an ADC trace from the channel(s) specified in the "Channel selection" box. The program will search for what it thinks is a good pulse (a "validated" signal), or reaches a reacquire limit. In the case that no validated trace is found during this process, the last acquired trace will be shown. If the **[  ] Fast acquire** button is checked, QtScope will display ADC traces without the validation requirement. Acquired traces are 8192 60-ns samples long. The 60-ns sampling time is a limitation of the XIA API used to acquire traces for display and cannot be modified by the user. This limitation is not present when trace data is written to disk. The QtScope GUI displaying an acquired trace is shown below.
+
+@image html qtscope/captured_trace.PNG "QtScope displaying an acquired trace from Mod. 0, Chan. 0 using the [Read trace] button." width=1280px
+
+@par
+Simulated filter outputs for an acquired trace displayed on the canvas can be viewed by clicking the **[Analyze trace]** button. Clicking this button will divide the canvas into three sub-canvases, displaying, from top to bottom, the trace, the timing filter and CFD output, and the energy filter output. These outputs can be used to guide the choice of DSP parameters. If no trace is displayed on the canvas and the **[Analyze trace]** button is clicked, QtScope will attempt to acquire a trace to analyze.
+
+@image html qtscope/analyzed_trace.PNG "QtScope displaying a trace and its simulated filter outputs from Mod. 0, Chan. 0 after clicking the [Analyze trace] button." width=1280px
+
+@subsubsection qtscope_gui_acq_runctl Run control
+@par
+The "Run control" group box widgets allow the user to begin and end energy histogram or baseline data runs, read data from the module while the run is active and set the histogram binning. The run type is controlled by the first of the two combo boxes in the group box and is by default configured to display channel energy histograms ("Energy hist."). Clicking on the combo box allows you to select a different run type. The next combo box controls the histogram binning in ADC units per bin. By default, this is set to 1 ADC unit/bin. Selecting another value from the binning combo box will rebin all run histogams currently displayed on the screen. A copy of the underlying data used to construct the histograms is maintained by QtScope, so the binning can be adjusted freely.
+
+@par
+Clicking **[Begin run]** will begin a data run in the selected module. The toolbar state will change to reflect the run active status. The **[Begin run]** button will switch to read **[End run]** and the **[Read data]** button will be enabled. Something like the message @verbatim Beginning histogram run in Mod. 0 @endverbatim will be displayed on the terminal. Additionally, QtScope features that cannot be used while a run is active will be disabled. Clicking on a disabled feature will have no effect while the run is active.
+
+@image html qtscope/acquisition_toolbar_runactive.PNG "The acquisition toolbar state while a run is active. Some GUI elements are disabled while a run is active, for example, the buttons to read and analyze ADC traces."
+
+@par
+To read run data and display a histogram on the canvas, click the **[Read data]** button. The canvas will be updated with the acquired data as shown below.
+
+@image html qtscope/histogram.PNG "Energy histogram for a pulser signal connected to a Pixie-16 module. The spectrum was displayed on the canvas using the [Read data] button." width=1280px
+
+@par
+When the **[End run]** button is clicked, the run will end and QtScope will return to its run inactive state. An end run message similar to @verbatim Ended histogram run in Mod. 0 @endverbatim will be printed to the terminal. Run statistics will be printed to the terminal display for energy histogram runs. The statistics output will look similar to the following:
+@verbatim
+Module 0 channel 0 input 534.613 output 534.613 livetime 11.932 runtime 11.932
+Module 0 channel 1 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 2 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 3 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 4 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 5 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 6 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 7 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 8 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 9 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 10 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 11 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 12 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 13 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 14 input 0 output 0 livetime 11.932 runtime 11.932
+Module 0 channel 15 input 534.613 output 534.613 livetime 11.932 runtime 11.932
+@endverbatim
+For each channel, the number of triggers per second (`input`), the number of accepted triggers per second (`output`), the active time (`livetime`) and the total run time for the acquisition (`runtime`) are shown. In this case, you can see that a signal with a frequency of approximately 535 Hz was present in channels 0 and 15 on Module 0. 
+
+@subsection qtscope_gui_plot The plot toolbar
+@image html qtscope/plot_toolbar.PNG "The QtScope plot toolbar." width=1280px
+
+@par
+The plot toolbar allows the user to:
+- Zoom in and out on the canvas,
+- Save the canvas to a file (many different file formats are supported),
+- Configure plots to display with linear or logrithmic y-axis scaling,
+- Fit the displayed data using some basic fitting functions.
+
+@par
+To zoom in, select the mangnifying glass and select a region of the canvas to magnify. The home button (the one that looks like a house) will reset the canvas to its default axis limits. Clicking the 3.5" floppy disk button will open a save dialog and allow you to save the canvas to one of many supported file types. Checking the **[  ] Log y-axis** box will redraw all plots on the canvas using logrithmic y-axis scaling.
+
+@par
+The "Fit panel" button opens a popup window which allows you to select a fitting function, define fit limits and set guesses for initial parameters. The **[Fit]** button at the bottom of the fit panel window will fit the displayed data using the fit limits and parameters--either supplied by the user or determined by QtScope from the data--and draw the selected function on the canvas using the best-fit parameters. Multiple fits will be superimposed on the canvas. To clear all the fit data and the best-fit parameter values displayed in the "Fit output" text box, click the **[Clear]** button. To close the fit panel window, click **[Cancel]**."
+
+@image html qtscope/fit_panel.PNG "The QtScope fit panel."
+
+@par
+Implemented fitting functions can be selected using the combo box at the top of the panel. Displayed below the fitting function is its functional form. The fit limits are taken from the currently displayed axis limits if they are not provided by the user in the "Min x" and "Max x" boxes. The parameters `p[0]`, `p[1]`, etc. shown in the "Fit function" box correspond to the parameters `p0`, `p1`, etc. in the "Fit range and parameters" box. If initial parameters are not supplied by the user, QtScope will do its best to guess initial parameters from the displayed data.
+
+@image html qtscope/histogram_with_fit_and_panel.png "(Left) A single-channel energy histogram fit with a Gaussian function. The zoom function of the plot toolbar was used to select a subset of the canvas containing the peak. (Right) The QtScope fit panel displaying fit results in the ''Fit output'' text box. The fit limits and inital parameters were determined by QtScope using the displayed data." width=1280px
+
+@par
+The above figures shows the best-fit Gaussian curve to the displayed data on the QtScope canvas as well as the best-fit parameter values 
 
 @section qtscope_chandsp Configuring channel DSP settings
+@par
+Each module tab contains a full set of configurable channel DSP parameters which can be written to and read from the Pixie-16 modules. Changes made to these parameters will produce visible changes to the way the device triggers and computes energy and timing information for a given signal. The tabs present on the channel parameter GUI are descibed in more detail in this section.
+
+@subsection qtscope_chandsp_analogsignal The AnalogSignal tab
+@par
+Signals that are input to the Pixie-16 digitizers are first processed as analog signals prior to digitization. There are three parameters per channel that can be set to control the analog conditioning which are set on this tab. The Pixie-16 digitizers apply a DC offset to the analog signal, amplification, and a possible inversion of the signal.
+
+@image html qtscope/analog_signal.PNG "The AnalogSignal tab."
+
+@par
+The tab provides control over all three the aspects of the analog conditioning circuit. The parameter in the column labeled "Offset [V]" will control the DC offset (in volts), the "Gain" column will control the amplification and the polarity is controlled by the "Polarity" column. Automatic adjustment of the DC offset can be perofrmed by clicking the **[Adjust offsets]** button. This will allow the Pixie-16 software to calibrate the channel DC offsets such that the signal baseline lies at approximately 10% of the maximum ADC range, i.e. 6500 for a 16-bit ADC.
+
+@subsection qtscope_chandsp_trigger The TriggerFilter tab
+@par
+This tab provides control over the risetime (integration time) "TriggerRise [us]" and gap "TriggerGap [us]" which define the trapezoidal filter used to generate the channel fast trigger. Both the risetime and gap are displayed in units of microseconds. The rightmost column "Threshold [arb.]" defines the threshold setting for the channel. The threshold is used with the trigger filter output to implement a leading-edge discriminator. Once the output of the trigger filter exceeds the threshold, a fast trigger is generated.
+@attention
+For more information about the implementation of digital filters on the Pixie-16 modules, please refer to <a href="https://docs.nscl.msu.edu/daq/newsite/pixie16/Pixie16_UserManual.pdf">the Pixie-16 User's Manual</a>.
+
+@image html qtscope/trigger_filter.PNG "The TriggerFilter tab."
+
+@par
+If the CFD triggering is disabled (see @ref qtscope_chandsp_csra "the CSRA tab"), the trigger time is given by the leading-edge time. Alternatively, if the CFD is enabled then the rise and gap times are used in conjunction with the CFD scale and delay factors to implement a digital CFD algorithm to generate a trigger time. If the CFD output fails to exceed the CFD threshold, the trigger filter threshold will be used instead to generate a fast trigger. Refer to @ref qtscope_chandsp_cfd "the CFD tab" for more infomration).
+
+@subsection qtscope_chandsp_energy The EnergyFilter tab
+
+@subsection qtscope_chandsp_cfd The CFD tab
+
+@subsection qtscope_chandsp_csra The CSRA tab
 
 @section qtscope_moddsp Configuring module DSP settings
 

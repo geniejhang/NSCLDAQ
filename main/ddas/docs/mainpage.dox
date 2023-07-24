@@ -1,8 +1,10 @@
 /**
 @mainpage
 
-@authors Aaron Chester, Ron Fox, Jeromy Tompkins, Sean Liddick
+@authors Aaron Chester, Ron Fox, Sean Liddick, Jeromy Tompkins
 @date 7/6/23
+
+@tableofcontents
 
 @section main_intro Introduction
 @par
@@ -17,24 +19,23 @@ The purpose of this site is to have, in one place:
 @par
 Refer to the <a href="pages.html">DDAS User Guides</a> page to browse the available guides and manual pages.
 
-@par 
+@par
 DDAS is supported as part of the larger FRIBDAQ software suite. Further information about data acquisition at FRIB can be found on the <a href="https://docs.nscl.msu.edu/daq/newsite/index.php">FRIBDAQ docs page</a> and as part of the <a href="https://docs.nscl.msu.edu/daq/newsite/nscldaq-11.3/index.html">FRIBDAQ User's Guide</a>. Refer all questions, comments, and concerns to daqhelp@frib.msu.edu.
 
 @section main_tutorials Tutorials
-@par 
+@par
 Useful guide(s) to get up and running with a DDAS system are:
-- Single-crate system setup guide
+- @ref single_crate "Single-crate system setup guide"
 - Multi-crate system setup guide
 - Analyzing DDAS data in SpecTcl
 - Converting DDAS data to ROOT format
 - How to write a help ticket
 
 @section main_further Further Reading
-@par 
+@par
 For more information on DDAS, its applications, and the Pixie-16 modules themselves, please refer to the following resources.
 - <a href="https://www.sciencedirect.com/science/article/pii/S0168900209017392">"Digital Data Acquisition System for experiments with segmented detectors at National Superconducting Cyclotron Laboratory." K. Starosta et al., Nucl. Inst. and Meth. A 610 (2009) 700.</a>
 - <a href="https://www.sciencedirect.com/science/article/pii/S0168900213017488">"Digital data acquisition system implementation at the National Superconducting Cyclotron Laboratory." C. J. Prokop et al., Nucl. Inst. and Meth. A 741 (2014) 163.</a>
 - <a href="https://xia.com/products/pixie-16/">The XIA Pixie-16 product website</a>
-
 
 */

@@ -9,6 +9,9 @@
    viewBox="0 0 1283.5297 752"
    sodipodi:docname="qtscope_unbooted_wtoolbars.svg"
    inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   inkscape:export-filename="qtscope_unbooted_wtoolbars.png"
+   inkscape:export-xdpi="600"
+   inkscape:export-ydpi="600"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -27,7 +30,7 @@
      inkscape:deskcolor="#d1d1d1"
      showgrid="true"
      inkscape:zoom="0.5412234"
-     inkscape:cx="427.73464"
+     inkscape:cx="343.66585"
      inkscape:cy="212.48157"
      inkscape:window-width="1920"
      inkscape:window-height="1017"
@@ -813,17 +816,17 @@ r6+PfVb/cwztH1exbm+qRUP7GtU/LwajPY3t2Rr7/aa19efUnxt39o3i81q8TnNba7947fYa+9WL
          style="font-size:32px;fill:#1270cf;fill-opacity:1">System toolbar</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:32px;line-height:1.25;font-family:sans-serif;white-space:pre;inline-size:190;fill:#0066cc;fill-opacity:1;stroke:none"
+       style="font-style:normal;font-weight:normal;font-size:32px;line-height:1.25;font-family:sans-serif;white-space:pre;inline-size:190;display:inline;fill:#0066cc;fill-opacity:1;stroke:none"
        x="500"
        y="-60"
        id="text1897"
        transform="translate(519.96875,147.9624)"><tspan
          x="500"
          y="-60"
-         id="tspan9836">Acquisition </tspan><tspan
+         id="tspan10228">Acquisition </tspan><tspan
          x="500"
          y="-20.000002"
-         id="tspan9838">toolbar</tspan></text>
+         id="tspan10230">toolbar</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:32px;line-height:1.25;font-family:sans-serif;fill:#0066cc;fill-opacity:1;stroke:none"

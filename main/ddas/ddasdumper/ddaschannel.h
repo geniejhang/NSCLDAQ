@@ -84,7 +84,8 @@ public:
     Int_t crateid;              ///< Crate index.
     Int_t id;                   ///< \deprecated (ASC 7/12/23): Remove.
 
-    Int_t cfdtrigsourcebit;     ///< Value of trigger source bit(s) for 250 MSPS and 500 MSPS.
+    Int_t cfdtrigsourcebit;     ///< Value of trigger source bit(s) for
+                                ///< 250 MSPS and 500 MSPS.
     Int_t cfdfailbit;           ///< Indicates whether the CFD algo failed.
 
     Int_t tracelength;          ///< Length of stored trace.

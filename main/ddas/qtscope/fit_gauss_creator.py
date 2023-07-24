@@ -142,7 +142,6 @@ class GaussFit:
         self.logger.debug(f"Fit covariance matrix:\n{pcov}")
         self.logger.debug(f"Fit parameter errors: {perr}")
         
-        # Fit data and print the results:        
         try:
             x_fit = np.linspace(x[0], x[-1], 10000)
             y_fit = self.feval(x_fit, *popt)
