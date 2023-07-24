@@ -90,6 +90,7 @@ DAQ::DDAS::DDASHit::setChannel(uint32_t channel)
     chanid = channel;
 }
 
+void
 DAQ::DDAS::DDASHit::setSlot(uint32_t slot)
 {
     slotid = slot;
@@ -230,6 +231,7 @@ DAQ::DDAS::DDASHit::appendQDCSum(uint32_t value)
     qdcSums.push_back(value);
 }
 
+void
 DAQ::DDAS::DDASHit::appendTraceSample(uint16_t value)
 {
     trace.push_back(value);
