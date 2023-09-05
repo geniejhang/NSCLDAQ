@@ -172,6 +172,10 @@ AC_ARG_ENABLE([ddas-docs],
 	      [Build the DDAS documentation]),
               [], [enable_ddas_docs=no])
 
+# DDAS documentation
+# DDAS docs are written in Doxygen, so if enabled check to make sure that
+# Doxygen and dot (for graphs) are installed
+
 if test "x$enable_ddas_docs" == "xyes"
 then
   AC_MSG_NOTICE([DDAS documentation enabled])

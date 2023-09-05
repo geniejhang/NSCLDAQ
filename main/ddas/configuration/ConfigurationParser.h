@@ -106,7 +106,7 @@ namespace DAQ {
 	     *   content (likely an std::ifstream)
 	     * @param config A configuration to store the parsed data.
 	     * @throws std::runtime_error If failed to read in sufficient slot 
-	     *   map data for number of modules.
+	     *   map data for the number of modules.
 	     */
 	    void parse(std::istream& input, Configuration& config);
 	    /**

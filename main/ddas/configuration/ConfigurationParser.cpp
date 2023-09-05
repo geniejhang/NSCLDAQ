@@ -29,7 +29,8 @@ DAQ::DDAS::ConfigurationParser::ConfigurationParser()
 
 /**
  * @details
- * Check for file extension ending in .set is not fully implemented. 
+ * Supported hardware tags have the format RevX-YBit-ZMSPS and are:
+ * - Matched by regular expression to check that the format is good.
  */
 void
 DAQ::DDAS::ConfigurationParser::parse(
@@ -89,108 +90,31 @@ DAQ::DDAS::ConfigurationParser::parse(
         
     }
     input >> DSPParFile;
-    input.getline(temp,FILENAME_STR_MAXLEN);
+    input.getline(temp, FILENAME_STR_MAXLEN);
 
     /**
-     * @todo (ASC 7/12/23): Checking ".set" with std::string::find_last_of as 
-     * a method to see if the file has a .set extension will almost always 
-     * succeed, as it returns the last character matching _any_ of ".set." 
-     * Check the substring defining the extension (assume its after last "." ?)
-     * or remove the check entirely if we dont want to enforce a naming 
-     * convention. API 3 supports JSON settings files so .json would be an 
-     * obvious choice to support in that case as well. 
+     * @note (ASC 9/5/23): Deprecated and removed:
+     * - Broken check for ".set" extension. The configuration parser does not
+     *   care what (if any) file extension the DSPParFile has. 
+     * - Old [XXXMSPS] tags for reading firmware configurations. Firmware
+     *   configuration tags must follow the expected RevX-YBit-ZMSPS format.
      */
-    
-    // Check to make sure that this line contains a set file
-    // (.set extension) since the format has changed from previous
-    // versions of the code.
-    if( DSPParFile.find_last_of(".set") == std::string::npos) {
-	std::string errmsg("The file ");
-	errmsg += DSPParFile;
-	errmsg += " read in from configuration file ";
-	errmsg += "does not appear to be a *.set file ";
-	errmsg += "required by DDAS";
-	throw std::runtime_error(errmsg);
-    }
 
-    /** 
-     * @todo (ASC 7/7/23): The ability to read the [XXXMSPS] tags is
-     * deprecated and should be removed.
-     */
-    // The [100MSPS], [250MSPS], and [500MSPS] tags are still
-    // supported but should not be used.
     while (getline(input, line)) {
-	if (line == "[100MSPS]") {
+	int revision, adcFreq, adcRes;
+	if (parseHardwareTypeTag(line, revision, adcFreq, adcRes)) {
 	    FirmwareConfiguration fwConfig
 		= extractFirmwareConfiguration(input);
 	    double calibration = extractClockCalibration(input);
-
-	    config.setFirmwareConfiguration(
-		HardwareRegistry::RevB_100MHz_12Bit, fwConfig
+	    int type = HardwareRegistry::createHardwareType(
+		revision, adcFreq, adcRes, calibration
 		);
-	    updateClockCalibration(
-		HardwareRegistry::RevB_100MHz_12Bit, calibration
-		);
-
-	    config.setFirmwareConfiguration(
-		HardwareRegistry::RevC_100MHz_12Bit, fwConfig
-		);
-	    updateClockCalibration(
-		HardwareRegistry::RevC_100MHz_12Bit, calibration
-		);
-
-	    config.setFirmwareConfiguration(
-		HardwareRegistry::RevD_100MHz_12Bit, fwConfig
-		);
-	    updateClockCalibration(
-		HardwareRegistry::RevD_100MHz_12Bit, calibration
-		);
-
-	} else if (line == "[250MSPS]"){
-	    FirmwareConfiguration fwConfig
-		= extractFirmwareConfiguration(input);
-	    double calibration = extractClockCalibration(input);
-
-	    config.setFirmwareConfiguration(
-		HardwareRegistry::RevF_250MHz_14Bit, fwConfig
-		);
-	    updateClockCalibration(
-		HardwareRegistry::RevF_250MHz_14Bit, calibration
-		);
-
-	} else if (line == "[500MSPS]"){
-	    FirmwareConfiguration fwConfig
-		= extractFirmwareConfiguration(input);
-	    double calibration = extractClockCalibration(input);
-
-	    config.setFirmwareConfiguration(
-		HardwareRegistry::RevF_500MHz_12Bit, fwConfig
-		);
-	    updateClockCalibration(
-		HardwareRegistry::RevF_500MHz_12Bit, calibration
-		);
-
-	} else if (std::regex_match(line , m_matchExpr) ) {
-	    int revision, adcFreq, adcRes;
-	    if (
-		parseHardwareTypeTag(line, revision, adcFreq, adcRes)
-		) {
-
-		FirmwareConfiguration fwConfig
-		    = extractFirmwareConfiguration(input);
-		double calibration = extractClockCalibration(input);
-		int type = HardwareRegistry::createHardwareType(
-		    revision, adcFreq, adcRes, calibration
-		    );
-		config.setFirmwareConfiguration(type, fwConfig);
-	    } else {
-		std::string msg(
-		    "ConfigurationParser::parse() Failed to parse "
-		    );
-		msg += " the hardware tag '" + line + "'";
-		throw std::runtime_error(msg);
-	    }
-	}
+	    config.setFirmwareConfiguration(type, fwConfig);
+	} else {
+	    std::string msg("ConfigurationParser::parse() Failed to parse ");
+	    msg += " the hardware tag '" + line + "'";
+	    throw std::runtime_error(msg);
+	}	
     }
 
     config.setCrateId(CrateNum);
