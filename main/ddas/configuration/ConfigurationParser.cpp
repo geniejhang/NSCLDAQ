@@ -29,8 +29,8 @@ DAQ::DDAS::ConfigurationParser::ConfigurationParser()
 
 /**
  * @details
- * Supported hardware tags have the format RevX-YBit-ZMSPS and are:
- * - Matched by regular expression to check that the format is good.
+ * Supported hardware tags have the format RevX-YBit-ZMSPS and are
+ * matched by regular expression to check that the format is good.
  */
 void
 DAQ::DDAS::ConfigurationParser::parse(
