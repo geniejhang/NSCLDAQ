@@ -329,6 +329,7 @@ class MainWindow(QMainWindow):
             If file format is unrecognized.
         """        
         fname, opt = self._load_dialog()
+        fext = os.path.splitext(fname)[-1].lower()
         if fname and opt:
             try:
                 if (opt == "XIA settings file (*.set)"
@@ -364,7 +365,7 @@ class MainWindow(QMainWindow):
         if self.xia_api_version >= 3:
             fname, opt = QFileDialog.getSaveFileName(
                 self, "Save file", "",
-                "XIA settings files (*.set, *.json)",
+                "XIA settings file (*.set, *.json)",
                 options=options
             )
         else:

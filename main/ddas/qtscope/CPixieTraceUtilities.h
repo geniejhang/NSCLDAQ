@@ -99,7 +99,6 @@ extern "C" {
     {
 	return new CPixieTraceUtilities();
     }
-    
     /** @brief Wrapper for reading a validated trace. */
     int CPixieTraceUtilities_ReadTrace(
 	CPixieTraceUtilities* utils, int mod, int chan

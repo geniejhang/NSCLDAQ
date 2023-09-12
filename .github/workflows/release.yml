@@ -27,6 +27,8 @@ jobs:
           OUTFILE=release_body
 
           STARTED=false
+          
+          echo "" > \$OUTFILE
 
           while IFS= read -r line
           do
@@ -39,10 +41,14 @@ jobs:
 
             if [[ \$line == *"\$WRAPPER"* && \$STARTED == true ]]
             then
+              STARTED=false
               break
             fi
-
-            echo \$line >> \$OUTFILE
+            
+            if [[ \$STARTED == true ]]
+            then
+              echo "\$line" >> \$OUTFILE
+            fi
           done < \$INFILE
           EOF
           
