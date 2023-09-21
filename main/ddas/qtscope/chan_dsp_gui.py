@@ -1,6 +1,5 @@
 import inspect
 import os
-import logging
 
 from PyQt5.QtCore import Qt, QThreadPool
 from PyQt5.QtGui import QCloseEvent, QPixmap
