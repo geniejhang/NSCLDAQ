@@ -8,6 +8,13 @@ on:
       - '*'
     paths-ignore:
       - 'release_notes'
+      - '**.md'
+      - '**/README'
+      - '**/NEWS'
+      - '**/AUTHORS'
+      - '**/COPYING'
+      - '**/INSTALL'
+      - '**/ChangeLog'
 
 jobs:
   buster:
@@ -15,6 +22,7 @@ jobs:
     with:
       os-version: buster
       packaging: ${{ startsWith(github.ref, 'refs/tags') }}
+      dist-packaging: true
     secrets: inherit
   bullseye:
     uses: ./.github/workflows/build.yml
