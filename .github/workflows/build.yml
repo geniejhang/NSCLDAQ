@@ -9,6 +9,9 @@ on:
       packaging:
         required: true
         type: boolean
+      dist-packaging:
+        default: false
+        type: boolean
 
 jobs:
   build-and-packaging:
@@ -16,9 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: fribdaq/frib-${{ inputs.os-version }}-ci
-      credentials:
-        username: changj0frib
-        password: ${{ secrets.DOCKERHUB_CHANGJ0FRIB_FOR_CI_READONLY }}
       options: --cpus 2
     steps:
       - uses: actions/checkout@v3
@@ -76,18 +76,24 @@ jobs:
       - name: Make
         working-directory: ./main/oot
         run: make -j2 clean && make -j2 all && make -j2 install
-      - name: Packaging for source distribution
-        if: ${{ inputs.packaging == true }}
+      - name: Packaging for complete source distribution
+        if: ${{ inputs.packaging == true && inputs.dist-packaging == true}}
         working-directory: ./main/oot
         run: |
+          cd ../libtcl
+          make clean
+          cd ../unifiedformat
+          rm -rf build
+          cd ../tclhttpd*
+          make clean
+          cd ../oot
           make -j2 dist
-          mv nscldaq-$GITHUB_REF_NAME.tar.gz nscldaq-$GITHUB_REF_NAME-dist-${{ inputs.os-version }}.tar.gz
-      - name: Upload source distribution package
-        if: ${{ inputs.packaging == true }}
+      - name: Complete source distribution package
+        if: ${{ inputs.packaging == true && inputs.dist-packaging == true}}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.os-version }} object distribution
-          path: ./main/oot/nscldaq-${{ github.ref_name }}-dist-${{ inputs.os-version }}.tar.gz
+          name: Complete source distribution
+          path: ./main/oot/nscldaq-${{ github.ref_name }}-dist.tar.gz
       - name: Packaging for binary distribution
         if: ${{ inputs.packaging == true }}
         working-directory: /usr/opt/nscldaq
@@ -98,3 +104,13 @@ jobs:
         with:
           name: ${{ inputs.os-version }} binary distribution
           path: /usr/opt/nscldaq/nscldaq-${{ github.ref_name }}-${{ inputs.os-version }}.tar.gz
+      - name: Packaging usropt for distribution
+        if: ${{ inputs.packaging == true }}
+        working-directory: /usr/opt
+        run: tar -czf usropt-nscldaq-${{ github.ref_name }}-${{ inputs.os-version }}.tar.gz opt-${{ inputs.os-version }}
+      - name: Upload usropt distribution package
+        if: ${{ inputs.packaging == true }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.os-version }} usropt distribution
+          path: /usr/opt/usropt-nscldaq-${{ github.ref_name }}-${{ inputs.os-version }}.tar.gz
