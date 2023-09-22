@@ -52,7 +52,7 @@ namespace DAQ {
 	/** 
 	 * @typedef FirmwareMap
 	 * @brief A map of firmware configurations keyed by the hardware type 
-	 *   defined in HardwareRegistry.h
+	 * defined in HardwareRegistry.h
 	 */
 	typedef std::map<int, FirmwareConfiguration> FirmwareMap;
 

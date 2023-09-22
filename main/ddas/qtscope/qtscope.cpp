@@ -8,8 +8,6 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <Python.h>
-
 #include <config.h>
 #include "CPyHelper.h"
 

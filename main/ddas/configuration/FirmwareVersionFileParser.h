@@ -10,13 +10,20 @@
 #include <iosfwd>
 #include <regex>
 
+/**
+ * @todo (ASC 9/22/23): Firmware configuration map imposes some circular 
+ * dependencies here, as we start including Configuration.h and 
+ * HardwareRegistry.h in multiple places. Include guards should handle this 
+ * but may be nice to redesign things to avoid the multiple inclusions in 
+ * the first place.
+ */
 #include "Configuration.h"
 
 /** @namespace DAQ */
 namespace DAQ {
     /** @namespace DAQ::DDAS */
     namespace DDAS {
-
+	
 	/**
 	 * @addtogroup configuration libConfiguration.so
 	 * @{
