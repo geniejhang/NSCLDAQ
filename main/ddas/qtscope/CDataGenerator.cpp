@@ -58,7 +58,7 @@ CDataGenerator::GetTraceData(
 }
 
 /**
- * @brief Generate test gaussian peaks.
+ * @brief Generate test Gaussian-distributed data.
  *
  * Params are a pointer to the start of the data storage and a size, as is 
  * done in the XIA API for easier integration/consistency.
@@ -66,29 +66,19 @@ CDataGenerator::GetTraceData(
  * @param[in,out] data  Pointer to the start of the baseline data storarge.
  * @param[in] dataSize  How many data points to store.
  *
- * @return int  
- * @retval 0  Success.
+ * @return 0 (always).
+ *
+ * @details
+ * Data is stored as a histogram, default binning 1 ADC unit per bin.
  */
 int
 CDataGenerator::GetHistogramData(unsigned int* data, int dataSize)
 {
-    int nEvents = 500;
-    std::uniform_real_distribution<double> rand(0, 1);
-  
-    // Location is 1/3 and 2/3 of the histogram size:  
-    std::normal_distribution<double> p1(0.33*dataSize, 10); // Mean, stddev.
-    std::normal_distribution<double> p2(0.67*dataSize, 10); // Mean, stddev.
-
-    // nEvents into histogram per read:  
-    double p2Fraction = 0.67; // Fraction of total intensity in p2.
+    int nEvents = 1000;
+    std::normal_distribution<double> gaus(dataSize/4, 10); // Mean, stddev.    
     int ene = 0; // Event energy.
     for (int i = 0; i < nEvents; i++) {
-	double roll = rand(m_engine);
-	if (roll < p2Fraction) {
-	    ene = static_cast<unsigned int>(p1(m_engine));
-	} else {
-	    ene = static_cast<unsigned int>(p2(m_engine));
-	}
+	ene = static_cast<unsigned int>(gaus(m_engine));
 	data[ene]++;	
     }  
 

@@ -39,10 +39,10 @@ install-exec-hook:
 	$(INSTALL_PROGRAM) qtscope @prefix@/bin
 
 EXTRA_DIST = acquisition_toolbar.py adc_trace.py analog_signal.py baseline.py \
-	cfd.py chan_dsp_gui.py chan_dsp_layout.py \
-	chan_dsp_widget.py colors.py converters.py crate_id.py csra.py csrb.py \
-	dsp_manager.py dsp_toolbar.py energy_filter.py fit_exp_creator.py \
-	fit_factory.py fit_gauss_creator.py fit_gauss_p1_creator.py \
+	cfd.py chan_dsp_gui.py chan_dsp_layout.py chan_dsp_widget.py \
+	colors.py converters.py crate_id.py csra.py csrb.py dsp_manager.py \
+	dsp_toolbar.py energy_filter.py fit_exp_creator.py fit_factory.py \
+	fit_function.py fit_gauss_creator.py fit_gauss_p1_creator.py \
 	fit_gauss_p2_creator.py fit_panel.py gui.py main.py mod_dsp_gui.py \
 	mod_dsp_layout.py mult_coincidence.py pixie_utilities.py plot.py \
 	plot_toolbar.py qdclen.py run_type.py system_toolbar.py tau.py \
