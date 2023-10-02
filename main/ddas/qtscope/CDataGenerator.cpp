@@ -8,30 +8,16 @@
 #include <iostream>
 #include <cmath>
 
-/**
- * @brief Constructor.
- */
 CDataGenerator::CDataGenerator() :
     m_engine((std::random_device())())
 {}
 
-/**
- * @brief Destructor.
- */
 CDataGenerator::~CDataGenerator() {}
 
 /**
- * @brief Generate test trace data.
- *
+ * @details
  * Params are a pointer to the start of the data storage and a size, as is 
  * done in the XIA API for easier integration/consistency.
- *
- * @param[in,out] data  Pointer to the start of the trace data storage.
- * @param[in] dataSize  How many data points to store.
- * @param[in] binWidth  Histogram bin width in microseconds.
- *
- * @return int  
- * @retval 0  Success.
  */
 int
 CDataGenerator::GetTraceData(
@@ -58,26 +44,17 @@ CDataGenerator::GetTraceData(
 }
 
 /**
- * @brief Generate test Gaussian-distributed data.
- *
- * Params are a pointer to the start of the data storage and a size, as is 
- * done in the XIA API for easier integration/consistency.
- *
- * @param[in,out] data  Pointer to the start of the baseline data storarge.
- * @param[in] dataSize  How many data points to store.
- *
- * @return 0 (always).
- *
  * @details
- * Data is stored as a histogram, default binning 1 ADC unit per bin.
+ * Params are a pointer to the start of the data storage and a size, as 
+ * is done in the XIA API for easier integration/consistency. Data is 
+ * stored as a histogram, default binning 1 ADC unit per bin.
  */
 int
 CDataGenerator::GetHistogramData(unsigned int* data, int dataSize)
 {
-    int nEvents = 1000;
     std::normal_distribution<double> gaus(dataSize/4, 10); // Mean, stddev.    
     int ene = 0; // Event energy.
-    for (int i = 0; i < nEvents; i++) {
+    for (int i = 0; i < 10000; i++) {
 	ene = static_cast<unsigned int>(gaus(m_engine));
 	data[ene]++;	
     }  
@@ -86,16 +63,9 @@ CDataGenerator::GetHistogramData(unsigned int* data, int dataSize)
 }
 
 /**
- * @brief Generate randomly distributed test baseline data.
- *
+ * @details
  * Params are a pointer to the start of the data storage and a size, as is 
  * done in the XIA API for easier integration/consistency.
- *
- * @param[in,out] data  Pointer to the start of the baseline data storarge.
- * @param[in] dataSize  How many data points to store.
- *
- * @return int  
- * @retval 0  Success.
  */
 int
 CDataGenerator::GetBaselineData(double* data, int dataSize)
@@ -108,19 +78,6 @@ CDataGenerator::GetBaselineData(double* data, int dataSize)
     return 0;  
 }
 
-/**
- * @brief Analytical function for a single pulse with exponential rise and 
- * decay constants.
- *
- * @param C       Constant baseline.
- * @param A       Pulse amplitude.
- * @param t0      Start of the pulse.
- * @param rise    Pulse risetime in ns.
- * @param decay   Pulse exponential decay time in ns.
- * @param sample  Sample number where we compute the pulse.
- *
- * @return unsigned short  Pulse value at input sample number.
- */
 unsigned short
 CDataGenerator::SinglePulse(
     double C, double A, double t0, double rise, double decay,

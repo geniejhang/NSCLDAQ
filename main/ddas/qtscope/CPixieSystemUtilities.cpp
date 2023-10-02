@@ -16,15 +16,14 @@
 using namespace DAQ::DDAS;
 namespace HR = DAQ::DDAS::HardwareRegistry;
 
+/**
+ * @details
+ * Default is to boot in online mode and read the settings file specified 
+ * in cfgPixie16.txt.
+ */
 CPixieSystemUtilities::CPixieSystemUtilities() :
-    m_bootMode(0), // 1: offline, 0: online
-    m_booted(false),
-    m_ovrSetFile(false), // use settings file from cfgPixie16.txt
-    m_numModules(0),
-    m_modEvtLength(0),
-    m_modADCMSPS(0),
-    m_modADCBits(0),
-    m_modRev(0),
+    m_bootMode(0), m_booted(false), m_ovrSetFile(false), m_numModules(0),
+    m_modEvtLength(0), m_modADCMSPS(0), m_modADCBits(0), m_modRev(0),
     m_modClockCal(0)
 {}
 
@@ -69,13 +68,11 @@ CPixieSystemUtilities::Boot()
 	return -1;
     }
 
-    // Get number of modules and set event lengths based on modevtlen file:
-  
+    // Get number of modules and set event lengths based on modevtlen file:  
     m_numModules = m_config.getNumberOfModules();
     m_modEvtLength = m_config.getModuleEventLengths();
   
-    // The hardware map is set up during boot time:
-  
+    // The hardware map is set up during boot time:  
     std::vector<int> hdwrMap = m_config.getHardwareMap();
     for (size_t i = 0; i < hdwrMap.size(); i++) {
 	HR::HardwareSpecification spec = HR::getSpecification(hdwrMap.at(i));

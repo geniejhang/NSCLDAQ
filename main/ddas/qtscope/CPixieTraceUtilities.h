@@ -74,7 +74,7 @@ private:
     double m_validAmplitude; //!< Minimum amplitude for a validated trace.
     /**
      * @brief Call to Pixie-16 API to acquire an ADC trace from a single 
-     *   channel.
+     * channel.
      * @param module  Module number.
      * @param channel Channel number on module for trace read.
      * @throws std::runtime_error If ADC traces cannot be acquired (internal

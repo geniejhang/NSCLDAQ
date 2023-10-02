@@ -33,8 +33,8 @@ public:
      * @brief Adjust DC offsets of all channels for a single module.
      * @param module Module number.
      * @return int
-     * @retval 0    Success.
-     * @retval !=0  XIA API error code.
+     * @retval 0   Success.
+     * @retval !=0 XIA API error code.
      */
     int AdjustOffsets(int module);
     /**
@@ -75,8 +75,8 @@ public:
      * @param[in] paramName  XIA API chanel parameter name.
      * @param[in,out] value  Reference to read parameter value.
      * @return int  
-     * @retval 0  Success.
-     * @retval !=0  XIA API error code.
+     * @retval 0   Success.
+     * @retval !=0 XIA API error code.
      */
     int ReadModPar(int module, char* paramName, unsigned int& value);
 };

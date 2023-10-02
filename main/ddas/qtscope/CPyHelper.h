@@ -20,7 +20,7 @@ class CPyHelper
 public:
     /**
      * @brief Constructor
-     *
+     * @details
      * Initializes the Python interpreter.
      */
     CPyHelper()
@@ -29,7 +29,7 @@ public:
 	}
     /**
      * @brief Destructor.
-     *
+     * @details
      * Undo initializations, destroy all (sub-)interpreters.
      */
     ~CPyHelper()
@@ -58,6 +58,7 @@ public:
     CPyObject(PyObject* _p) : p(_p) {}
     /** 
      * @brief Destructor.
+     * @details
      * Release memory allocated to the object.
      */
     ~CPyObject()
@@ -67,7 +68,7 @@ public:
     
     /**
      * @brief Get the object.
-     * @return p  Pointer to the PyObject.
+     * @return p Pointer to the PyObject.
      */
     PyObject* getObject()
 	{
@@ -75,7 +76,7 @@ public:
 	}    
     /**
      * @brief Set the object.
-     * @param _p  Pointer to the PyObject to set.
+     * @param _p Pointer to the PyObject to set.
      */
     PyObject* setObject(PyObject* _p)
 	{
@@ -104,7 +105,7 @@ public:
 	}
     /**
      * @brief Arrow operator.
-     * @return p  Pointer to the wrapped PyObject.
+     * @return p Pointer to the wrapped PyObject.
      */
     PyObject* operator ->()
 	{
@@ -112,9 +113,9 @@ public:
 	}
     /**
      * @brief Arrow operator.
-     * @return bool.
-     * @retval true   If the member object exists.
-     * @retval false  If the member object does not exist.
+     * @return bool
+     * @retval true  If the member object exists.
+     * @retval false If the member object does not exist.
      */
     bool is()
 	{
@@ -122,7 +123,7 @@ public:
 	}
     /**
      * @brief Conversion operator.
-     * @return p  Pointer to the wrapped PyObject.
+     * @return p Pointer to the wrapped PyObject.
      */
     operator PyObject*()
 	{
@@ -130,7 +131,7 @@ public:
 	}
     /**
      * @brief Conversion operator.
-     * @return p  Pointer to the wrapped PyObject.
+     * @return p Pointer to the wrapped PyObject.
      */
     PyObject* operator = (PyObject* pp)
 	{
@@ -140,8 +141,8 @@ public:
     /**
      * @brief Boolean operator
      * @return bool
-     * @retval true   If the member object exists.
-     * @retval false  If the member object does not exist.
+     * @retval true  If the member object exists.
+     * @retval false If the member object does not exist.
      */
     operator bool()
 	{

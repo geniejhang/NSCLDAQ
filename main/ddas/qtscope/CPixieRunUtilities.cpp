@@ -244,7 +244,7 @@ CPixieRunUtilities::ReadBaseline(int module, int channel)
  * the statistics size ourselves or use a hardcoded value. Accessing the run
  * statistics using the wrong method results in a segfault.
  *
- * @todo Confirm end of run and handle if not ended properly.
+ * @todo (ASC 9/27/23): Confirm end of run and handle if not ended properly.
  */
 int
 CPixieRunUtilities::ReadModuleStats(int module)

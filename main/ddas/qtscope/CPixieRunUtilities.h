@@ -36,7 +36,7 @@ public:
 
     /**
      * @brief Begin a histogram (MCA) run for a single module. Explicitly sets 
-     *   module synchronization to OFF.
+     * module synchronization to OFF.
      * @param module Module number.
      * @return int  
      * @retval 0   Success.
@@ -48,7 +48,7 @@ public:
      * synchronization is OFF __but__ only stops a run in a single module.
      * @param module Module number.
      * @return int
-     * @retval 0 Always returns 0 even if the run ended improperly.
+     * @retval 0 Always, even if the run ended improperly.
      */
     int EndHistogramRun(int module);
     /**
@@ -79,53 +79,51 @@ public:
      * @param module  Module number.
      * @param channel Channel number on the module.
      * @return int 
-     * @retval 0  Success.
+     * @retval  0 Success.
      * @retval -1 If baseline memory cannot be allocated.
      * @retval -2 If updating the baseline histograms fails.
      */
     int ReadBaseline(int module, int channel);
     /**
      * @brief Read statistics for a single module after a run is ended.
-     * @param module  Module number.
+     * @param module Module number.
      * @return int  
-     * @retval 0  Success.
-     * @retval !=0  XIA API error code.
-     * @todo Confirm end of run and handle if not ended properly.
+     * @retval 0   Success.
+     * @retval !=0 XIA API error code.
      */
     int ReadModuleStats(int module);
     /**
      * @brief Get the histogram data from a list-mode run.
-     * @return unsigned int* Pointer to the underlying histogram storage.
+     * @return Pointer to the underlying histogram storage.
      */
     unsigned int* GetHistogramData() {return m_histogram.data();};
     /**
      * @brief Get the baseline run data.
-     * @return unsigned int* Pointer to the underlying baseline storage.
+     * @return Pointer to the underlying baseline storage.
      */
     unsigned int* GetBaselineData() {return m_baseline.data();};
     /**
      * @brief Get the current run status.
-     * @return bool  True if a run is active, false otherwise.
+     * @return bool True if a run is active, false otherwise.
      */
     bool GetRunActive() {return m_runActive;};
     /** 
      * @brief Set the use of the generator for offline data.
-     * @param mode  Set the generator use flag to this value.
+     * @param mode Set the generator use flag to this value.
      */
     void SetUseGenerator(bool mode) {m_useGenerator = mode;};
 
 private:
     std::vector<unsigned int> m_histogram; //!< Single channel histogram.
-    std::vector<unsigned int> m_baseline;  //!< Single channel baseline
-                                           //!< histogram.
-    std::vector<std::vector<unsigned int>> m_baselineHistograms; //!< All
-                                                                 //!< chans.
-    std::vector<std::vector<unsigned int>> m_genHistograms; //!< Generated run
-                                                            //!< data histos
-                                                            //!< for all chans.
-    bool m_runActive;    //!< True when running.
-    bool m_useGenerator; //!< True to use generator test data.
+    std::vector<unsigned int> m_baseline;  //!< Single channel baseline histos.
+    /** Baseline histograms for all channels. */
+    std::vector<std::vector<unsigned int>> m_baselineHistograms;
+    /** Generated run data histograms for all channels. */
+    std::vector<std::vector<unsigned int>> m_genHistograms;
+    bool m_runActive;             //!< True when running.
+    bool m_useGenerator;          //!< True to use generator test data.
     CDataGenerator* m_pGenerator; //!< Test data for debugging/offline mode.
+    
     /**
      * @brief Update baseline histograms for all channels on a single module.
      * @param module Module number.
