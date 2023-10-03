@@ -483,14 +483,11 @@ class MultCoincidence(QWidget):
                     return idx
 
         # If nothing was found, return the Unknown id value and log the
-        # details in a warning:
-
-        
-        
+        # details in a warning:       
         print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Encountered unknown channel multiplicity state!")
-        key_list = self.mode_dict.keys()
-        val_list = self.mode_dict.values()
-        return key_list(val_list.index("Unknown"))
+        for idx, mode in self.mode_dict.items():
+            if mode["name"] == "Unknown":
+                return idx
     
     def _set_channel_group(self, mgr, mod):
         """Set the channel group from the selected GUI button.
