@@ -8,7 +8,7 @@
 #     http://www.gnu.org/licenses/gpl.txt
 #
 #    Author:
-#             Ron Fox
+#            Ron Fox
 #	     NSCL
 #	     Michigan State University
 #	     East Lansing, MI 48824-1321
@@ -21,14 +21,14 @@
 #
 
 #NOTE:  This version has a basic understanding of singularity containers.
-#       specifically, if the envirionment variable
-#       SINGULARITY_CONTAINER is defined, it is assumed to be the path
-#       of a singularity container running the application.  It's also assumed
-#       that
+#       specifically, if the envirionment variables APPTAINER_CONTAINER,
+#       SING_IMAGE or SINGULARITY_CONTAINER are defined, they are assumed
+#       to be the path of a apptainer or singularity container running the
+#       application.  It's also assumed that
 #         1.   The same container exists in the remote system.
 #         2.   The user wants to run the command inside that container environment.
 #       This gets done by ssh-ing a singularity exec container-name command.
-#       To make things more exciting, if the ~/stagarea is defined,
+#       To make things more exciting, if the ~/stagearea is defined,
 #       it is read and the container runs with a bindpoint matching the link
 #       target.  Additional bindpoints can be defined in the file
 #       ~/.singularity_bindpoints which must consist sources which get mapped
@@ -130,23 +130,31 @@ namespace eval  ssh {
 	#   Return the path to the container image file (full path).
 	#
 	#   There are a couple of possibilitites:
-	#   
-	#   1.  APPTAINER_CONTAINER - is defined - in that case that's the full image path.
-	#   2.  SING_IMAGE          - is defined - that's the full image path.
-	#   3.  None of the above -running natively.
-	#
+        #  
+        #   1.  APPTAINER_CONTAINER - is defined - in that case that's the
+        #         full image path.
+        #   2.  SING_IMAGE - is defined - SINGULARTIY_CONTAINER *may* contain
+        #         the full image path depending on the installed version, but
+        #         the user has defined a path using SING_IMAGE, use that one.
+        #   3.  SINGULARITY_CONTAINER - is defined - if no user-defined path,
+        #         fallback here. For singularity 3.6+ this is the full path.
+        #   4.  Running natively - return an empty string.
+        #
 	#  @return string
 	#  @retval "" if running natively.
 	proc getContainerImage {} {
-		if {[array names ::env APPTAINER_CONTAINER] ne ""} {
-			return $::env(APPTAINER_CONTAINER)
-		} elseif {[array names ::env SINGULARITY_CONTAINER] ne ""} {
-			return $::env(SINGULARITY_CONTAINER)
-		}
-		if {[array names ::env SING_IMAGE] ne ""} {
-			return $::env(SING_IMAGE)
-		}
-		return ""
+
+	    if {[array names ::env APPTAINER_CONTAINER] ne ""} {
+		return $::env(APPTAINER_CONTAINER)
+	    }
+
+	    if {[array names ::env SING_IMAGE] ne ""} {
+		return $::env(SING_IMAGE)
+	    } elseif {[array names ::env SINGULARITY_CONTAINER] ne ""} {
+		return $::env(SINGULARITY_CONTAINER)
+	    }
+	    	    
+	    return ""
 	}
 	# actualCommand
 	#    If we are in a singularity container the command returned runs
