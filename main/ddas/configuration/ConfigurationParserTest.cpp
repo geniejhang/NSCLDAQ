@@ -54,6 +54,7 @@ public:
     CPPUNIT_TEST(parseSlotMap);
     CPPUNIT_TEST(parseSettingsPath);
     CPPUNIT_TEST(parseBadSlotMap);
+    CPPUNIT_TEST(parseBadSettingsFile);
     CPPUNIT_TEST_SUITE_END();
 
     vector<string> m_cfgFileContent;
@@ -158,6 +159,18 @@ public:
 	    "/path/to/my/settings/file.set";
 	EQMSG("Error message should be informative", message, errmsg);
     }
+
+    void parseBadSettingsFile() {
+	ConfigurationParser parser;
+	Configuration config;
+	auto lines = createSampleFileContent();
+	// Bad settings file name (no extension):
+	lines.at(5) = "/path/to/settings/file";
+	stringstream stream(mergeLines(lines));
+	// It's a failure if this _does not_ throw:
+	CPPUNIT_ASSERT_THROW(parser.parse(stream, config), std::runtime_error);
+    }
+    
 };
 
 // Register it with the test factory

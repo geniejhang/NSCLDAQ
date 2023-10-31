@@ -33,8 +33,8 @@
 #include "Configuration.h"
 #undef private
 
-static const char* FirmwareFileTemplate="FirmwareXXXXXX";
-static const char* DSPParameterFileTemplate="DSPParametersXXXXXX";
+static const char* FirmwareFileTemplate="FirmwareFileXXXXXX";
+static const char* DSPParameterFileTemplate="DSPParametersFileXXXXXX";
 static const char* fwOverrideFileContents =  "\
 [Rev0xD-12Bit-100MSPS]                    \n\
 a                            \n\
@@ -88,7 +88,7 @@ static std::string makeFirmwareFile()
  */
 static std::string makeDSPParametersFile ()
 {
-    char filename[1000];
+    char filename[100];
     strncpy(filename, DSPParameterFileTemplate, sizeof(filename));
     int fd = mkstemp(filename);
     close (fd);                     // Zero length file is fine.
@@ -246,10 +246,7 @@ void NewParseTest::bad_1()
     
     std::stringstream  line(l);
     
-    CPPUNIT_ASSERT_THROW(
-        m_parser->parseSlotLine(line),
-        std::runtime_error
-	);
+    CPPUNIT_ASSERT_THROW(m_parser->parseSlotLine(line), std::runtime_error);
     
     
 }
@@ -266,10 +263,7 @@ void NewParseTest::bad_2()
     
     std::stringstream  line(l);
     
-    CPPUNIT_ASSERT_THROW(
-        m_parser->parseSlotLine(line),
-        std::runtime_error
-	);
+    CPPUNIT_ASSERT_THROW(m_parser->parseSlotLine(line), std::runtime_error);
 }
 //////////////////////////////////////////////////////////////////////////////
 
@@ -285,8 +279,8 @@ void NewParseTest::permodule_1()
 3\n\
 4\n\
 ";
-    cfgPixie += m_setfile;        // Add the set file.
-    cfgPixie +=  "\n";
+    cfgPixie += m_setfile;        // Add the set file...
+    cfgPixie +=  ".set\n";        // ...with a proper extension
     DAQ::DDAS::Configuration config;          // empty.
     std::stringstream configStream(cfgPixie);
     m_parser->parse(configStream, config);
@@ -310,8 +304,8 @@ void NewParseTest::permodule_2()
     cfgPixie += "\n\
 4\n\
 ";
-    cfgPixie += m_setfile;        // Add the set file.
-    cfgPixie +=  "\n";
+    cfgPixie += m_setfile;        // Add the set file...
+    cfgPixie +=  ".set\n";        // ...with a proper extension
     DAQ::DDAS::Configuration config;          // empty.
     std::stringstream configStream(cfgPixie);
     m_parser->parse(configStream, config);
@@ -337,8 +331,8 @@ void NewParseTest::permodule_3()
     cfgPixie += "\n\
 4\n\
 ";
-    cfgPixie += m_setfile;        // Add the set file.
-    cfgPixie +=  "\n";
+    cfgPixie += m_setfile;        // Add the set file...
+    cfgPixie +=  ".set\n";        // ...with a proper extension
     DAQ::DDAS::Configuration config;          // empty.
     std::stringstream configStream(cfgPixie);
     m_parser->parse(configStream, config);
@@ -350,5 +344,7 @@ void NewParseTest::permodule_3()
 	);
     
     ASSERT(!config.m_moduleSetFileMap.empty());
-    ASSERT(config.m_moduleSetFileMap.find(1) != config.m_moduleSetFileMap.end());
+    ASSERT(
+	config.m_moduleSetFileMap.find(1) != config.m_moduleSetFileMap.end()
+	);
 }

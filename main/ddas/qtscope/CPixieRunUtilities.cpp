@@ -338,6 +338,7 @@ CPixieRunUtilities::UpdateBaselineHistograms(int module)
     
 	// If we have the baseline, update its histogram for valid values:    
 	for (const auto &ele : baselines) {
+	    //std::cout << ele << " " << IEEEFloating2Decimal(ele) << std::endl;
 	    int bin = static_cast<int>(ele);
 	    if (bin >= 0 && bin < MAX_HISTOGRAM_LENGTH) {
 		m_baselineHistograms[i][bin]++;

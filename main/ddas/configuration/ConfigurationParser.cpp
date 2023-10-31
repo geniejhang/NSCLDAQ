@@ -52,13 +52,7 @@ DAQ::DDAS::ConfigurationParser::parse(
     input.getline(temp, FILENAME_STR_MAXLEN);
     PXISlotMap.resize(NumModules);
     for(int i = 0; i < NumModules; i++) {
-	DAQ::DDAS::ConfigurationParser::SlotSpecification slotInfo;
-	try {
-	    slotInfo = parseSlotLine(input);
-	}
-	catch (std::runtime_error& e) {
-	    std::cerr << e.what() << std::endl;
-	}
+	auto slotInfo = parseSlotLine(input);
 	PXISlotMap[i] = std::get<0>(slotInfo);
         
 	std::string perModuleMap = std::get<1>(slotInfo);
