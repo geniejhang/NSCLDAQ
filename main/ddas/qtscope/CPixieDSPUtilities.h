@@ -24,11 +24,6 @@
 class CPixieDSPUtilities
 {
 public:
-    /** Constructor. */
-    CPixieDSPUtilities() {};
-    /** Destructor. */
-    ~CPixieDSPUtilities() {};
-
     /**
      * @brief Adjust DC offsets of all channels for a single module.
      * @param module Module number.

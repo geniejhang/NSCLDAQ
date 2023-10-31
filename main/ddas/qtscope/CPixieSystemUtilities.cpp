@@ -18,16 +18,13 @@ namespace HR = DAQ::DDAS::HardwareRegistry;
 
 /**
  * @details
- * Default is to boot in online mode and read the settings file specified 
- * in cfgPixie16.txt.
+ * Default: boot in online mode and read the settings file specified in 
+ * cfgPixie16.txt.
  */
 CPixieSystemUtilities::CPixieSystemUtilities() :
     m_bootMode(0), m_booted(false), m_ovrSetFile(false), m_numModules(0),
     m_modEvtLength(0), m_modADCMSPS(0), m_modADCBits(0), m_modRev(0),
     m_modClockCal(0)
-{}
-
-CPixieSystemUtilities::~CPixieSystemUtilities()
 {}
 
 /**
@@ -123,15 +120,19 @@ CPixieSystemUtilities::LoadSetFile(char* fileName)
 	retval = Pixie16LoadDSPParametersFromFile(fileName);
     
 	if (retval < 0) {
-	    std::cerr << "CPixieSystemUtilities::LoadSetFile() failed to load DSP parameter file from: " << fileName << " with retval " << retval;      
+	    std::cerr << "CPixieSystemUtilities::LoadSetFile() failed to"
+		      << " load DSP parameter file from: " << fileName
+		      << " with retval " << retval;      
 	    return retval;
 	} else {
-	    std::cout << "Loading new DSP parameter file from: " << fileName << std::endl;
+	    std::cout << "Loading new DSP parameter file from: "
+		      << fileName << std::endl;
 	}  
     } else { // Not booted so hold on to the name.
 	m_ovrSetFile = true;
 	m_config.setSettingsFilePath(fileName);
-	std::cout << "New DSP parameter file " << fileName << " will be loaded on system boot" << std::endl;
+	std::cout << "New DSP parameter file " << fileName
+		  << " will be loaded on system boot" << std::endl;
     }
   
     return retval;

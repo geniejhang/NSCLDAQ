@@ -8,8 +8,9 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <Python.h>
+
 #include <config.h>
-#include "CPyHelper.h"
 
 /**
  * @brief QtScope main.
@@ -25,8 +26,8 @@
  */
 int main(int argc, char *argv[])
 {  
-    CPyHelper pInstance;
-
+    Py_Initialize();
+    
     wchar_t* version = Py_DecodeLocale(
 	std::to_string(XIAAPI_VERSION).c_str(), NULL
 	);
@@ -51,6 +52,8 @@ int main(int argc, char *argv[])
 		  << e.what() << std::endl;
 	exit(EXIT_FAILURE);
     }
+
+    Py_Finalize();
 
     return 0;
 }

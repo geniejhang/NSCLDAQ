@@ -32,18 +32,8 @@ CPixieRunUtilities::CPixieRunUtilities() :
 	16, std::vector<unsigned int>(MAX_HISTOGRAM_LENGTH, 0)
 	),
     m_runActive(false),
-    m_useGenerator(false),
-    m_pGenerator(new CDataGenerator)
+    m_useGenerator(false)
 {}
-
-/**
- * @details
- * Delete the CDataGenerator object owned by this class.
- */
-CPixieRunUtilities::~CPixieRunUtilities()
-{
-    delete m_pGenerator;
-}
 
 /**
  * @todo Disable multiple modules from running in non-sync mode.
@@ -64,7 +54,11 @@ CPixieRunUtilities::BeginHistogramRun(int module)
 	);
   
     if (retval < 0) {
-	std::cerr << "Run time not properly set. CPixieRunUtilities::BeginHistogramRun() failed to write parameter: " << paramName << " to module " << module  << " with retval " << retval << std::endl;    
+	std::cerr << "Run time not properly set."
+		  << " CPixieRunUtilities::BeginHistogramRun() failed to"
+		  << " write parameter: " << paramName
+		  << " to module " << module
+		  << " with retval " << retval << std::endl;    
 	return retval;
     }
 
@@ -74,7 +68,10 @@ CPixieRunUtilities::BeginHistogramRun(int module)
     retval = Pixie16WriteSglModPar(paramName.c_str(), 0, module);
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::BeginHistogramRun() failed to disable " << paramName << " in module " << module << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::BeginHistogramRun() failed to"
+		  << " disable " << paramName
+		  << " in module " << module
+		  << " with retval " << retval << std::endl;
 	return retval;    
     }
 
@@ -82,7 +79,9 @@ CPixieRunUtilities::BeginHistogramRun(int module)
     retval = Pixie16StartHistogramRun(module, NEW_RUN);
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::BeginHistogramRun() failed to start run module " << module << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::BeginHistogramRun() failed to"
+		  << " start run module " << module
+		  << " with retval " << retval << std::endl;
     } else {
 	std::cout << "Beginning histogram run in Mod. " << module << std::endl;
 	m_runActive = true;
@@ -103,7 +102,9 @@ CPixieRunUtilities::EndHistogramRun(int module)
     int retval = Pixie16EndRun(module);
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::EndHistogramRun() failed to communicate end run operation to module " << module << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::EndHistogramRun() failed to"
+		  << " communicate end run operation to module " << module
+		  << " with retval " << retval << std::endl;
     }
 
     bool runEnded = false;
@@ -112,7 +113,9 @@ CPixieRunUtilities::EndHistogramRun(int module)
     while ((runEnded == false) && (nRetries < maxRetries)) {
 	retval = Pixie16CheckRunStatus(module);    
 	if (retval < 0) {
-	    std::cerr << "CPixieRunUtilities::EndHistogramRun() failed to get current run status in module " << module << " with retval " << retval << std::endl;
+	    std::cerr << "CPixieRunUtilities::EndHistogramRun() failed to"
+		      << " get current run status in module " << module
+		      << " with retval " << retval << std::endl;
 	}    
 	runEnded = (retval == 0); // True if run ended.
 	nRetries++;    
@@ -121,7 +124,8 @@ CPixieRunUtilities::EndHistogramRun(int module)
     }
   
     if (nRetries == maxRetries) {
-	std::cout << "CPixieRunUtilities::EndHistogramRun() failed to end run in module " << module << std::endl;
+	std::cout << "CPixieRunUtilities::EndHistogramRun() failed to"
+		  << " end run in module " << module << std::endl;
     } else if (runEnded) {
 	std::cout << "Ended histogram run in Mod. " << module << std::endl;
 	m_runActive = false;
@@ -147,14 +151,18 @@ CPixieRunUtilities::ReadHistogram(int module, int channel)
 	    m_histogram.data(), MAX_HISTOGRAM_LENGTH, module, channel
 	    );
     } else {
-	retval = m_pGenerator->GetHistogramData(
+	CDataGenerator gen;
+	retval = gen.GetHistogramData(
 	    m_genHistograms[channel].data(), MAX_HISTOGRAM_LENGTH
 	    );
 	m_histogram = m_genHistograms[channel];
     }
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::ReadHistogram() failed to read histogram from module " << module << " channel " << channel << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::ReadHistogram() failed to"
+		  << " read histogram from module " << module
+		  << " channel " << channel
+		  << " with retval " << retval << std::endl;
     }
 
     return retval;
@@ -217,7 +225,9 @@ CPixieRunUtilities::ReadBaseline(int module, int channel)
     int retval = Pixie16AcquireBaselines(module);
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::ReadBaseline() failed to allocate memory for trace in module " << module << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::ReadBaseline() failed to"
+		  << " allocate memory for trace in module " << module
+		  << " with retval " << retval << std::endl;
 	return -1;
     }
 
@@ -259,7 +269,10 @@ CPixieRunUtilities::ReadModuleStats(int module)
     int retval = Pixie16ReadStatisticsFromModule(statistics.data(), module);
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::ReadModuleStats() error accessing scaler statistics " << "from module " << module << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::ReadModuleStats()"
+		  << " error accessing scaler statistics from"
+		  << " module " << module
+		  << " with retval " << retval << std::endl;
 	return retval;
     } else {
 	double realTime = Pixie16ComputeRealTime(statistics.data(), module);
@@ -310,14 +323,16 @@ CPixieRunUtilities::UpdateBaselineHistograms(int module)
 		module, i
 		);      
 	} else {
-	    retval = m_pGenerator->GetBaselineData(
-		baselines.data(), MAX_NUM_BASELINES
-		);
+	    CDataGenerator gen;
+	    retval = gen.GetBaselineData(baselines.data(), MAX_NUM_BASELINES);
 	}
   
 	if (retval < 0) {
 	    std::stringstream errmsg;
-	    errmsg << "CPixieRunUtilities::UpdateBaselineHistograms() failed to read baseline from module " << module << " channel " << i << " with retval " << retval;
+	    errmsg << "CPixieRunUtilities::UpdateBaselineHistograms() failed"
+		   << " to read baseline from module " << module
+		   << " channel " << i
+		   << " with retval " << retval;
 	    throw std::runtime_error(errmsg.str());
 	}
     

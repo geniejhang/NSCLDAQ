@@ -8,12 +8,6 @@
 #include <iostream>
 #include <cmath>
 
-CDataGenerator::CDataGenerator() :
-    m_engine((std::random_device())())
-{}
-
-CDataGenerator::~CDataGenerator() {}
-
 /**
  * @details
  * Params are a pointer to the start of the data storage and a size, as is 

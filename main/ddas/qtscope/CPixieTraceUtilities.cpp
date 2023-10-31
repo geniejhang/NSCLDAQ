@@ -21,20 +21,10 @@
  * and is responsible for managing it.
  */
 CPixieTraceUtilities::CPixieTraceUtilities() :
-    m_pGenerator(new CDataGenerator),
     m_useGenerator(false),
     m_trace(MAX_ADC_TRACE_LEN, 0),
     m_validAmplitude(20)
 {}
-
-/**
- * @details
- * Delete the CDataGenerator object owned by this class.
- */
-CPixieTraceUtilities::~CPixieTraceUtilities()
-{
-    delete m_pGenerator;
-}
 
 /**
  * @details
@@ -60,24 +50,24 @@ CPixieTraceUtilities::ReadTrace(int module, int channel)
     
 	    // Check for good trace (signal likely present) and validate.
 	    // Median is more robust measure of baseline than mean for signals
-	    // with long decay time e.g. HPGe detectors, Si.
-      
+	    // with long decay time e.g. HPGe detectors, Si.      
 	    double median = GetMedianValue(m_trace);
 	    std::vector<double> traceMAD; // To hold the med. abs. dev. values.
 	    for (const auto &ele : m_trace) {
 		traceMAD.push_back(std::abs(ele-median));
 	    }
-	    double mad = GetMedianValue(traceMAD); // Med. abs. deviation.
-	    double sigma = 1.4826 * mad; // Estimate of std. dev.
+	    // Unbiased estimator of Gaussian SD.
+	    double sigma = 1.4826*GetMedianValue(traceMAD); 
 
 	    // iterators
 	    auto max = std::max_element(m_trace.begin(), m_trace.end());
 	    auto min = std::min_element(m_trace.begin(), m_trace.end());
     
 	    // 10 standard deviations ought to do it for a good signal. Check
-	    // negative as well in case the signal polarity is wrong.
-      
-	    if ((*max > median + 10.0*sigma) || (*min < median - 10.0*sigma)) {
+	    // negative as well in case the signal polarity is wrong.      
+	    if (
+		(*max > median + 10.0*sigma) || (*min < median - 10.0*sigma)
+		) {
 		if (
 		    ((*max - median) > m_validAmplitude)
 		    || (std::abs(*min-median) > m_validAmplitude)
@@ -177,20 +167,18 @@ CPixieTraceUtilities::AcquireADCTrace(int module, int channel)
 		       << " with retval " << retval;
 		throw std::runtime_error(errmsg.str());
 	    }
-    
-	    retval = m_pGenerator->GetTraceData(
-		m_trace.data(), MAX_ADC_TRACE_LEN, xdt
-		);
+
+	    CDataGenerator gen;
+	    retval = gen.GetTraceData(m_trace.data(), MAX_ADC_TRACE_LEN, xdt);
 
 	    if (retval < 0) {
 		std::stringstream errmsg;
 		errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed";
-		errmsg << "to read trace from module " << module
+		errmsg << " to read trace from module " << module
 		       << " channel " << channel
 		       << " with retval " << retval;
 		throw std::runtime_error(errmsg.str());
 	    }
-      
 	}
     }
     catch (std::runtime_error& e) {
@@ -210,8 +198,8 @@ CPixieTraceUtilities::GetMedianValue(std::vector<T> v)
     if (v.empty()) {
 	std::stringstream errmsg;
 	errmsg << "CPixieTraceUtilities::GetMedianValue() failed";
-	errmsg << "to calculate the median value: the trace is empty";
-	errmsg << "and the median is undefined";
+	errmsg << " to calculate the median value: the trace is empty";
+	errmsg << " and the median is undefined";
 	throw std::invalid_argument(errmsg.str());
     }
   

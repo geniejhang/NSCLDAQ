@@ -1,5 +1,4 @@
 bin_PROGRAMS = qtscope.bin
-include_HEADERS = CPyHelper.h
 
 lib_LTLIBRARIES = libPixieUtilities.la
 

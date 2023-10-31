@@ -28,12 +28,22 @@
 
 class CPixieSystemUtilities
 {
+private:
+    DAQ::DDAS::Configuration m_config; //!< Hardware configuration information.
+    int m_bootMode; //!< Offline (1) or online (0) boot mode.
+    bool m_booted;  //!< True when the system is booted, false otherwise.
+    bool m_ovrSetFile; //!< True if loading a settings file after booting.
+    unsigned short m_numModules; //!< Number of modules in the crate.
+    std::vector<int> m_modEvtLength; //!< Event length in 32 bit words.
+    std::vector<unsigned short> m_modADCMSPS; //!< Sampling rate of a module.
+    std::vector<unsigned short> m_modADCBits; //!< ADC bits of a module.
+    std::vector<unsigned short> m_modRev; //!< Module revision in hex format.
+    std::vector<unsigned short> m_modClockCal; //!< ns per clock tick.
+    
 public:
     /** @brief Constructor. */
     CPixieSystemUtilities();
-    /** @brief Destructor. */
-    ~CPixieSystemUtilities();
-
+    
     /**
      * @brief Boot the entire system.
      * @return int 
@@ -97,18 +107,6 @@ public:
      * @retval 0 if the module number is invalid.
      */
     unsigned short GetModuleMSPS(int module);
-    
-private:
-    DAQ::DDAS::Configuration m_config; //!< Hardware configuration information.
-    int m_bootMode; //!< Offline (1) or online (0) boot mode.
-    bool m_booted;  //!< True when the system is booted, false otherwise.
-    bool m_ovrSetFile; //!< True if loading a settings file after booting.
-    unsigned short m_numModules; //!< Number of modules in the crate.
-    std::vector<int> m_modEvtLength; //!< Event length in 32 bit words.
-    std::vector<unsigned short> m_modADCMSPS; //!< Sampling rate of a module.
-    std::vector<unsigned short> m_modADCBits; //!< ADC bits of a module.
-    std::vector<unsigned short> m_modRev; //!< Module revision in hex format.
-    std::vector<unsigned short> m_modClockCal; //!< ns per clock tick.
 };
 
 /** @} */

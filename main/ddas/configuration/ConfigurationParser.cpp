@@ -12,6 +12,8 @@
 #include <vector>
 #include <unistd.h>
 
+#include <config.h>
+
 #include "Configuration.h"
 #include "FirmwareVersionFileParser.h"
 
@@ -19,8 +21,11 @@
 
 /**
  * @details
- * Supported hardware tags have the format RevX-YBit-ZMSPS and are
- * matched by regular expression to check that the format is good.
+ * Parses the configuration file line by line, extracting slot information, 
+ * optional per-module firmware and DSP settings files, and the (default) 
+ * per-crate DSP settings file. DSP settings files must have the file extension
+ * .set for XIA API 2 and either .set or .json for XIA API 3. Exits on any 
+ * error processing the configuration file.
  */
 void
 DAQ::DDAS::ConfigurationParser::parse(
@@ -35,21 +40,6 @@ DAQ::DDAS::ConfigurationParser::parse(
     std::string line;
     std::string DSPParFile;
 
-    // std::string ComFPGAConfigFile_RevBCD;
-    // std::string SPFPGAConfigFile_RevBCD;
-    // std::string DSPCodeFile_RevBCD;
-    // std::string DSPVarFile_RevBCD;
-
-    // std::string ComFPGAConfigFile_RevF_250MHz_14Bit;
-    // std::string SPFPGAConfigFile_RevF_250MHz_14Bit;
-    // std::string DSPCodeFile_RevF_250MHz_14Bit;
-    // std::string DSPVarFile_RevF_250MHz_14Bit;
-
-    // std::string ComFPGAConfigFile_RevF_500MHz_12Bit;
-    // std::string SPFPGAConfigFile_RevF_500MHz_12Bit;
-    // std::string DSPCodeFile_RevF_500MHz_12Bit;
-    // std::string DSPVarFile_RevF_500MHz_12Bit;
-
     // Maps capture nosuch better than arrays...
     std::map<int, FirmwareMap> perModuleFirmware;
     std::map<int, std::string> perModuleSetfiles;
@@ -61,8 +51,14 @@ DAQ::DDAS::ConfigurationParser::parse(
     input >> NumModules;
     input.getline(temp, FILENAME_STR_MAXLEN);
     PXISlotMap.resize(NumModules);
-    for(int i = 0; i < NumModules; i++){
-	auto slotInfo = parseSlotLine(input);
+    for(int i = 0; i < NumModules; i++) {
+	DAQ::DDAS::ConfigurationParser::SlotSpecification slotInfo;
+	try {
+	    slotInfo = parseSlotLine(input);
+	}
+	catch (std::runtime_error& e) {
+	    std::cerr << e.what() << std::endl;
+	}
 	PXISlotMap[i] = std::get<0>(slotInfo);
         
 	std::string perModuleMap = std::get<1>(slotInfo);
@@ -82,33 +78,45 @@ DAQ::DDAS::ConfigurationParser::parse(
     input >> DSPParFile;
     input.getline(temp, FILENAME_STR_MAXLEN);
 
-    /**
-     * @note (ASC 9/5/23): Deprecated and removed:
-     * - Broken check for ".set" extension. The configuration parser does not
-     *   care what (if any) file extension the DSPParFile has. 
-     * - Reading firmware configuration using hardware tags from lines past the
-     *   path to the settings file. Firmware for each module is deduced from
-     *   the module type itself on boot and any custom firmware should be
-     *   loaded on a per-module basis when calling parse().
-     */
-
-    // while (getline(input, line)) {
-    // 	int revision, adcFreq, adcRes;
-    // 	if (parseHardwareTypeTag(line, revision, adcFreq, adcRes)) {
-    // 	    FirmwareConfiguration fwConfig
-    // 		= extractFirmwareConfiguration(input);
-    // 	    double calibration = extractClockCalibration(input);
-    // 	    int type = HardwareRegistry::createHardwareType(
-    // 		revision, adcFreq, adcRes, calibration
-    // 		);
-    // 	    config.setFirmwareConfiguration(type, fwConfig);
-    // 	} else {
-    // 	    std::string msg("ConfigurationParser::parse() Failed to parse ");
-    // 	    msg += " the hardware tag '" + line + "'";
-    // 	    throw std::runtime_error(msg);
-    // 	}	
-    // }
-
+    // Check the file extension. If XIA API 2, it must be .set, if XIA API 3,
+    // it can be either .set or .json. Assume whatever comes after the last '.'
+    // is the extension.
+    size_t pos = DSPParFile.find_last_of('.');
+    if (pos != std::string::npos) {
+	std::string ext = DSPParFile.substr(pos + 1);
+	std::transform(
+	    ext.begin(), ext.end(), ext.begin(),
+	    [](unsigned char c){ return std::tolower(c); }
+	    );
+#if XIAAPI_VERSION >= 3
+	if (ext != "set" && ext != "json") {
+	    std::stringstream errmsg;
+	    errmsg << "The DSP settings file " << DSPParFile << " read from"
+		   << " cfgPixie16.txt must have the extension 'set' or"
+		   << " 'json' but read '" << ext << "'.";
+	    throw std::runtime_error(errmsg.str()); 
+	}
+#else
+	if (ext != "set") {
+	    std::stringstream errmsg;
+	    errmsg << "The DSP settings file " << DSPParFile << " read from"
+		   << " cfgPixie16.txt must have the extension 'set' but"
+		   << " read '" << ext << "'.";
+	    throw std::runtime_error(errmsg.str()); 
+	}
+#endif
+    } else {
+	std::stringstream errmsg;
+#if XIAAPI_VERSION >= 3
+	errmsg << "The DSP settings file " << DSPParFile << " read from"
+	       << " cfgPixie16.txt must have the extension 'set' or 'json'.";
+#else
+	errmsg << "The DSP settings file " << DSPParFile << " read from"
+	       << " cfgPixie16.txt must have the extension 'set'.";
+#endif
+	throw std::runtime_error(errmsg.str());
+    }    
+    
     config.setCrateId(CrateNum);
     config.setNumberOfModules(NumModules);
     config.setSlotMap(PXISlotMap);
@@ -155,16 +163,14 @@ DAQ::DDAS::ConfigurationParser::parseSlotLine(std::istream& input)
     std::string firmwareMap;
     std::string setFile;
     
-    // Do the slot separately so that we can indicate we can't parse:
-    
+    // Do the slot separately so that we can indicate we can't parse:    
     if (!(lineStream >> slot)) {    
 	std::string errmsg("Unable to parse a slot number from: ");
 	errmsg += line;       
 	throw std::runtime_error(errmsg);
     }
     
-    // Now the files:
-    
+    // Now the files:    
     lineStream >> firmwareMap >> setFile;
     
     // Handle leading #'s which imply a comment.    
@@ -175,8 +181,7 @@ DAQ::DDAS::ConfigurationParser::parseSlotLine(std::istream& input)
 	setFile.clear();               
     }
     
-    // Check readability of any files:
-    
+    // Check readability of any files:    
     if (firmwareMap != "") {
 	if (access(firmwareMap.c_str(), R_OK)) {
 	    std::string msg("Unable to read firmware mapping file ");

@@ -10,8 +10,6 @@
 #include <vector>
 #include <random>
 
-class CDataGenerator;
-
 /**
  * @addtogroup utilities libPixieUtilities.so
  * @{ 
@@ -28,11 +26,19 @@ class CDataGenerator;
 
 class CPixieRunUtilities
 {
+private:
+    std::vector<unsigned int> m_histogram; //!< Single channel histogram.
+    std::vector<unsigned int> m_baseline;  //!< Single channel baseline histos.
+    /** Baseline histograms for all channels. */
+    std::vector<std::vector<unsigned int>> m_baselineHistograms;
+    /** Generated run data histograms for all channels. */
+    std::vector<std::vector<unsigned int>> m_genHistograms;
+    bool m_runActive;             //!< True when running.
+    bool m_useGenerator;          //!< True to use generator test data.
+    
 public:
     /** @brief Constructor. */
     CPixieRunUtilities();
-    /** @brief Destructor. */
-    ~CPixieRunUtilities();
 
     /**
      * @brief Begin a histogram (MCA) run for a single module. Explicitly sets 
@@ -113,17 +119,7 @@ public:
      */
     void SetUseGenerator(bool mode) {m_useGenerator = mode;};
 
-private:
-    std::vector<unsigned int> m_histogram; //!< Single channel histogram.
-    std::vector<unsigned int> m_baseline;  //!< Single channel baseline histos.
-    /** Baseline histograms for all channels. */
-    std::vector<std::vector<unsigned int>> m_baselineHistograms;
-    /** Generated run data histograms for all channels. */
-    std::vector<std::vector<unsigned int>> m_genHistograms;
-    bool m_runActive;             //!< True when running.
-    bool m_useGenerator;          //!< True to use generator test data.
-    CDataGenerator* m_pGenerator; //!< Test data for debugging/offline mode.
-    
+private:    
     /**
      * @brief Update baseline histograms for all channels on a single module.
      * @param module Module number.

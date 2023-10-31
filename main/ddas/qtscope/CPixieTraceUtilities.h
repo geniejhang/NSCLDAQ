@@ -9,8 +9,6 @@
 
 #include <vector>
 
-class CDataGenerator;
-
 /**
  * @addtogroup utilities libPixieUtilities.so
  * @{ 
@@ -31,11 +29,14 @@ class CDataGenerator;
 
 class CPixieTraceUtilities
 {
+private:
+    bool m_useGenerator; //!< True if using generated data, else online data.
+    std::vector<unsigned short> m_trace; //!< Single channel trace data.
+    double m_validAmplitude; //!< Minimum amplitude for a validated trace.
+    
 public:
     /** @brief Constructor. */
     CPixieTraceUtilities();
-    /** @brief Destructor. */
-    ~CPixieTraceUtilities();
     
     /**
      * @brief Read a validated ADC trace from single channel.
@@ -58,7 +59,7 @@ public:
     int ReadFastTrace(int module, int channel);
     /**
      * @brief Return the trace data.
-     * @return unsigned short*  Pointer to the underlying trace storage.
+     * @return Pointer to the underlying trace storage.
      */
     unsigned short* GetTraceData() {return m_trace.data();}
     /**
@@ -68,10 +69,6 @@ public:
     void SetUseGenerator(bool mode) {m_useGenerator = mode;}
   
 private:
-    CDataGenerator* m_pGenerator; //!< The offline data generator.
-    bool m_useGenerator; //!< True if using generated data, else online data.
-    std::vector<unsigned short> m_trace; //!< Single channel trace data.
-    double m_validAmplitude; //!< Minimum amplitude for a validated trace.
     /**
      * @brief Call to Pixie-16 API to acquire an ADC trace from a single 
      * channel.

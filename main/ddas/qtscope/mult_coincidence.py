@@ -336,7 +336,11 @@ class MultCoincidence(QWidget):
         # Note that selecting a channel grouping _will not_ enable CSRA bits.
         if self.mode_dict[self.rbgroup.checkedId()]["name"] == "Off":
             for i in range(self.nchannels):
-                mgr.set_chan_par(mod, i, "CHANNEL_CSRA", 0)
+                csra = int2ba(
+                    int(mgr.get_chan_par(mod, i, "CHANNEL_CSRA")), 32, "little"
+                )
+                csra[xia.CSRA_CHAN_VALIDATION] = 0
+                mgr.set_chan_par(mod, i, "CHANNEL_CSRA", float(ba2int(csra)))
 
         # Set the multiplicity threshold from the high multiplicity mask:
         mult_bits = int2ba(
@@ -348,7 +352,7 @@ class MultCoincidence(QWidget):
                 32, "little"
             )
             mask[xia.MULT_OFFSET:xia.MULT_END] = mult_bits
-            #print(f"Chan. {i} MultiplicityMaskH: 0x{ba2int(tc):08x}")
+            #print(f"Chan. {i} MultiplicityMaskH: 0x{ba2int(mask):08x}")
             mgr.set_chan_par(mod, i, "MultiplicityMaskH", float(ba2int(mask)))
 
     def display_dsp(self, mgr, mod):

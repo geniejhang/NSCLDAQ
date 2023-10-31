@@ -30,11 +30,12 @@
 
 class CDataGenerator
 {
+private:
+    std::mt19937 m_engine; //!< Random number generator engine.
+    
 public:
     /** @brief Constructor. */
-    CDataGenerator();
-    /** @brief Destructor. */
-    ~CDataGenerator();
+    CDataGenerator() : m_engine((std::random_device())()) {};
 
     /**
      * @brief Generate test trace data.
@@ -62,8 +63,6 @@ public:
     int GetBaselineData(double* data, int dataSize);
   
 private:
-    std::mt19937 m_engine; //!< Random number generator engine.
-
     /**
      * @brief Analytical function for a single pulse with exponential rise and 
      * decay constants.

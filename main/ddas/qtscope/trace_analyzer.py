@@ -149,18 +149,9 @@ class TraceAnalyzer:
         """        
         self.cfd = [0.0] * len(self.fast_filter)
         
-        # Compute the CFD. See Pixie-16 User's Manual Sec. 3.3.8.1,
-        # Eq. 3-2 for details:        
-        for i, _ in enumerate(self.cfd):
-            if (i + fp.cfd_delay) < len(self.fast_filter) and i >= 2*fp.fast_risetime + fp.fast_gap - 1:
-                self.cfd[i + fp.cfd_delay] = self.fast_filter[i + fp.cfd_delay]*(1 - 0.125*fp.cfd_scale) - self.fast_filter[i]
-                if(i < 20):
-                    print(i, i+fp.cfd_delay, self.fast_filter[i + fp.cfd_delay]*(1 - 0.125*fp.cfd_scale), self.fast_filter[i], self.cfd[i + fp.cfd_delay])
-                
         # Compute the CFD from the raw trace. See Pixie-16 User's Manual
         # Sec. 3.3.8.2. This method is preferred because some derived
         # parameters are fixed for 500 MSPS modules. See Eq. 3-5.
-        newcfd = [0.0] * len(self.trace)
 
         # Adopting the Manual convention:
         w = 1 - fp.cfd_scale/8
@@ -168,31 +159,15 @@ class TraceAnalyzer:
         B = fp.fast_risetime + fp.fast_gap
         D = fp.cfd_delay
 
-        print(w, L, B, D)
-        
         for i, _ in enumerate(self.trace):
             s0, s1, s2, s3 = 0, 0, 0, 0
             k = i + D - L
-            if k < 10: print(i, k, k - D - B)
             if ((k - D - B) >= 0) and ((k + L) < len(self.trace)):
                 s0 = np.sum(self.trace[k:k+L])
                 s1 = np.sum(self.trace[k-B:k-B+L])
                 s2 = np.sum(self.trace[k-D:k-D+L])
                 s3 = np.sum(self.trace[k-D-B:k-D-B+L])
-                newcfd[k] = w*(s0 - s1) - (s2 - s3)                
-            #if k >= 0 and (k + L) < len(self.trace):
-            #    s0 = np.sum(self.trace[k:k+L])
-            #if (k - B) >= 0 and (k - B + L) < len(self.trace):
-            #    s1 = np.sum(self.trace[k-B:k-B+L])
-            #if (k - D) >= 0 and (k - D + L) < len(self.trace):
-            #    s2 = np.sum(self.trace[k-D:k-D+L])
-            #if (k - D - B) >= 0 and (k - D - B + L) < len(self.trace):
-            #    s3 = np.sum(self.trace[k-D-B:k-D-B+L])
-            #if all(s > 0 for s in [s0, s1, s2, s3]):
-            #    newcfd[k] = w*(s0 - s1) - (s2 - s3)
-        print(self.fast_filter[0:20])
-        print(self.cfd[0:20])
-        print(newcfd[0:20])
+                self.cfd[k] = w*(s0 - s1) - (s2 - s3)                
 
     def _compute_slow_filter(self, fp):
         """Compute the slow filter output.

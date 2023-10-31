@@ -64,7 +64,7 @@ CPixieDSPUtilities::ReadChanPar(
 {
     int retval = Pixie16ReadSglChanPar(paramName, &value, module, channel);
   
-    if (retval != 0) {
+    if (retval < 0) {
 	std::stringstream errmsg;
 	errmsg << "CPixieDSPUtilities::ReadChanPar() failed";
 	errmsg << " to read parameter " << paramName
@@ -113,7 +113,7 @@ CPixieDSPUtilities::ReadModPar(
 {
     int retval = Pixie16ReadSglModPar(paramName, &value, module);
   
-    if (retval != 0) {
+    if (retval < 0) {
 	std::stringstream errmsg;
 	errmsg << "CPixieDSPUtilities::ReadModPar() failed";
 	errmsg << " to read parameter " << paramName

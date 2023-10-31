@@ -101,14 +101,14 @@ namespace DAQ {
     	     * @param input The input stream associated with the cfgPixie16 
 	     *   content (likely an std::ifstream)
 	     * @param config A configuration to store the parsed data.
-	     * @throws std::runtime_error If failed to read in sufficient slot 
-	     *   map data for the number of modules.
+	     * @throws std::runtime_error If the DSP parameter file has an 
+	     *   invalid file extension.
 	     */
 	    void parse(std::istream& input, Configuration& config);
      	    /**
 	     * @brief Parses a slot line.  
 	     * @param input Input stream from which the line is parsed.
-	     * @throw std::runtime_error if there are errors processing this 
+	     * @throw std::runtime_error If there are errors processing this 
 	     *   line, e.g. the slot cannot be decoded or a file is not 
 	     *   readable.
 	     * @return Tuple containing the slot number and and file paths. 
