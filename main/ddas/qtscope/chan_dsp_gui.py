@@ -57,6 +57,8 @@ class ChanDSPGUI(QMainWindow):
         Copy DSP settings from another channel on this module.
     adjust_offsets() 
         Adjust DC offsets for a single module.
+    print_masks()
+        Print channel multiplicity masks and coincidence settings.
     show_diagram() 
         Show coincidence timing help diagram descibing the settings.
     cancel() 
@@ -180,13 +182,15 @@ class ChanDSPGUI(QMainWindow):
                 tab = self.chan_params.widget(i).widget(j)
                 tab.configure(self.dsp_mgr, i)
                 # Extra configuration for channel parameter widgets. Disable
-                # CFD settings for 500 MSPS modules, connect signals for
-                # adjusting DC offsets and dispalying the timing diagram.
+                # CFD settings for 500 MSPS modules, hook up some tab-specific
+                # signals e.g. adjust offsets.
                 tab_name = self.chan_params.widget(i).tabText(j)
                 if tab_name == "CFD" and msps == 500:
                     tab.disable_settings() 
                 if tab_name == "AnalogSignal":
                     tab.b_adjust_offsets.clicked.connect(self.adjust_offsets)
+                if tab_name == "MultCoincidence":
+                    tab.b_print.clicked.connect(self.print_masks)
                 if tab_name == "TimingControl":
                     tab.b_show_diagram.clicked.connect(self.show_diagram)
 
@@ -272,7 +276,12 @@ class ChanDSPGUI(QMainWindow):
             lambda enb=True: self.tab.b_adjust_offsets.setEnabled(enb)
         )
         worker.signals.finished.connect(self.toolbar.enable)
-        self.pool.start(worker)     
+        self.pool.start(worker)
+
+    def print_masks(self):
+        """Print the multiplicity and coincidence masks."""
+        self._get_current_tab()
+        self.tab.print_masks(self.dsp_mgr, self.mod_idx)
 
     def show_diagram(self):
         """Shows the timing diagram in a new window. 

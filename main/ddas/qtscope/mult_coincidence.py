@@ -12,7 +12,8 @@ else:
 from PyQt5.QtGui import QDoubleValidator
 from PyQt5.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QRadioButton, QButtonGroup,
-    QSpinBox, QGroupBox, QLineEdit, QCheckBox, QLabel, QSizePolicy
+    QSpinBox, QGroupBox, QLineEdit, QCheckBox, QLabel, QSizePolicy,
+    QPushButton
 )
 
 import xia_constants as xia
@@ -61,8 +62,8 @@ class MultCoincidence(QWidget):
         Update DSP from GUI.
     display_dsp(mgr, mod)
         Display current DSP in GUI.
-    copy_mod_dsp(mgr, mod)
-        Display copy_dsp in GUI.
+    print_masks(mgr, mod)
+        Print the multiplicity mask and channel coincidence information.
     """
     
     def __init__(self, module=None, nchannels=16, *args, **kwargs):
@@ -175,6 +176,12 @@ class MultCoincidence(QWidget):
         self.multiplicity_threshold = QSpinBox()
         settings_layout.addWidget(QLabel("Minimum multiplicity to trigger"))
         settings_layout.addWidget(self.multiplicity_threshold)
+
+        # Add a button to print out the mask information:
+                
+        self.b_print = QPushButton("Print mask info")
+        self.b_print.setStyleSheet(colors.YELLOW)
+        self.b_print.setFixedSize(160,23)
         
         # Add subwidgets to the settings box:
         
@@ -196,6 +203,7 @@ class MultCoincidence(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(top_widget)
         layout.addStretch()
+        layout.addWidget(self.b_print)
         self.setLayout(layout)
         
         ##
@@ -310,9 +318,8 @@ class MultCoincidence(QWidget):
     def update_dsp(self, mgr, mod):
         """Update dataframe from GUI values.
 
-        Unlike many other update functions, because the bitmasks have to be 
-        configured for each channel based on the GUI settings, this updates 
-        parameters "by hand" rather than looping over param_names.
+        Update parameters one-by-one because the bitmasks must be configured 
+        based on the selected channel grouping.
 
         Parameters
         ----------
@@ -352,7 +359,6 @@ class MultCoincidence(QWidget):
                 32, "little"
             )
             mask[xia.MULT_OFFSET:xia.MULT_END] = mult_bits
-            #print(f"Chan. {i} MultiplicityMaskH: 0x{ba2int(mask):08x}")
             mgr.set_chan_par(mod, i, "MultiplicityMaskH", float(ba2int(mask)))
 
     def display_dsp(self, mgr, mod):
@@ -412,6 +418,41 @@ class MultCoincidence(QWidget):
         )
         mult = mask[xia.MULT_OFFSET:xia.MULT_END]
         self.multiplicity_threshold.setValue(ba2int(mult))
+
+    def print_masks(self, mgr, mod):
+        """Print the channel multiplicity and coincidence settings.
+
+        Parameters
+        ----------
+        mgr : DSPManager
+            Manager for internal DSP and interface for XIA API read/write 
+            operations.
+        mod : int
+            Module number.
+        """        
+        # Coincidence channel grouping and name:        
+        name = self.mode_dict[self.rbgroup.checkedId()]["name"]
+
+        # Grab the data from the dataframe:
+        print(f"-------------------------------")
+        for i in range(self.nchannels):            
+            low_mask = int2ba(
+                int(mgr.get_chan_par(mod, i, "MultiplicityMaskL")),
+                32, "little"
+            )
+            high_mask = int2ba(
+                int(mgr.get_chan_par(mod, i, "MultiplicityMaskH")),
+                32, "little"
+            )
+            width = float(self.coinc_width.text())
+            mult = ba2int(high_mask[xia.MULT_OFFSET:xia.MULT_END])
+            
+            print(f"----- Mod. {mod}, Ch. {i} -----")
+            print(f"Mask low: 0x{ba2int(low_mask):08x}")
+            print(f"Mask high: 0x{ba2int(high_mask):08x}")
+            print(f"Coincidence width: {width} [us]") 
+            print(f"Mult. to trigger: {mult}")
+            print(f"Mode: {name}")
         
     ##
     # Private methods
@@ -588,31 +629,6 @@ class MultCoincidence(QWidget):
                 "Click 'Apply' to update your settings."
             )
             self.multiplicity_threshold.setValue(max_mult)
-            
-    def print(self, mgr, mod):
-        """Print the channel multiplicity and coincidence settings."""        
-        # Coincidence channel grouping and name:        
-        name = self.mode_dict[self.rbgroup.checkedId()]["name"]
-
-        # Grab the data from the dataframe:        
-        for i in range(self.nchannels):            
-            low_mask = int2ba(
-                int(mgr.get_chan_par(mod, i, "MultiplicityMaskL")),
-                32, "little"
-            )
-            high_mask = int2ba(
-                int(mgr.get_chan_par(mod, i, "MultiplicityMaskH")),
-                32, "little"
-            )
-            width = float(self.coinc_width.text())
-            mult = ba2int(high_mask[xia.MULT_OFFSET:xia.MULT_END])
-
-            print(f"----- {self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Mod. {mod}, Ch. {i} -----")
-            print(f"Mask low: {low_mask}")
-            print(f"Mask high: {high_mask}")
-            print(f"Coincidence width: {width} [us]") 
-            print(f"Mult. to trigger: {mult}")
-            print(f"Mode: {name}")
 
 class MultCoincidenceBuilder:
     """Builder method for factory creation."""

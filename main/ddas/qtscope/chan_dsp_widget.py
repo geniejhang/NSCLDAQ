@@ -44,8 +44,6 @@ class ChanDSPWidget(QWidget):
         Display current DSP in GUI.
     copy_chan_dsp(mgr, mod) 
         Copy DSP from channel idx in GUI.
-    copy_mod_dsp(mgr, mod) 
-        Display copy_dsp in GUI.
     """
     
     def __init__(

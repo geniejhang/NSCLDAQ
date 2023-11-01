@@ -27,14 +27,14 @@
 class CPixieRunUtilities
 {
 private:
-    std::vector<unsigned int> m_histogram; //!< Single channel histogram.
-    std::vector<unsigned int> m_baseline;  //!< Single channel baseline histos.
+    std::vector<unsigned int> m_histogram; //!< Single channel histo.
+    std::vector<unsigned int> m_baseline;  //!< Single channel baseline histo.
     /** Baseline histograms for all channels. */
     std::vector<std::vector<unsigned int>> m_baselineHistograms;
     /** Generated run data histograms for all channels. */
     std::vector<std::vector<unsigned int>> m_genHistograms;
-    bool m_runActive;             //!< True when running.
-    bool m_useGenerator;          //!< True to use generator test data.
+    bool m_runActive;    //!< True when running.
+    bool m_useGenerator; //!< True to use generator test data.
     
 public:
     /** @brief Constructor. */
@@ -102,22 +102,22 @@ public:
      * @brief Get the histogram data from a list-mode run.
      * @return Pointer to the underlying histogram storage.
      */
-    unsigned int* GetHistogramData() {return m_histogram.data();};
+    unsigned int* GetHistogramData() { return m_histogram.data(); };
     /**
      * @brief Get the baseline run data.
      * @return Pointer to the underlying baseline storage.
      */
-    unsigned int* GetBaselineData() {return m_baseline.data();};
+    unsigned int* GetBaselineData() { return m_baseline.data(); };
     /**
      * @brief Get the current run status.
      * @return bool True if a run is active, false otherwise.
      */
-    bool GetRunActive() {return m_runActive;};
+    bool GetRunActive() { return m_runActive; };
     /** 
      * @brief Set the use of the generator for offline data.
      * @param mode Set the generator use flag to this value.
      */
-    void SetUseGenerator(bool mode) {m_useGenerator = mode;};
+    void SetUseGenerator(bool mode) { m_useGenerator = mode; };
 
 private:    
     /**

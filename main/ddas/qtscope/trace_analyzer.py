@@ -4,6 +4,11 @@ import math
 import numpy as np
 from dataclasses import dataclass    
 
+# @todo This class needs to know the module MSPS so it can set the fixed values
+# for the CFD parameters. Probably the easiest way is to have some module
+# configuration information known by the DSP manager which can be accessed by
+# this class.
+
 @dataclass
 class FilterParameters:
     xdt: float = 0.0
