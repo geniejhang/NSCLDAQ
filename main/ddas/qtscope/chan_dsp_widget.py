@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 
 from PyQt5.QtGui import QDoubleValidator
 from PyQt5.QtWidgets import (
@@ -30,6 +31,8 @@ class ChanDSPWidget(QWidget):
         Extra parameter flag.
     param_grid : QGridLayout
         Grid of QWidgets to display DSP parameters.
+    logger : Logger
+        QtScope Logging instance.
 
     Methods
     -------
@@ -41,8 +44,6 @@ class ChanDSPWidget(QWidget):
         Display current DSP in GUI.
     copy_chan_dsp(mgr, mod) 
         Copy DSP from channel idx in GUI.
-    copy_mod_dsp(mgr, mod) 
-        Display copy_dsp in GUI.
     """
     
     def __init__(
@@ -66,6 +67,8 @@ class ChanDSPWidget(QWidget):
             Number of channels per module. 
         """        
         super().__init__(*args, **kwargs)
+
+        self.logger = logging.getLogger("qtscope_logger")
         
         self.param_names = param_names
         self.param_labels = param_labels

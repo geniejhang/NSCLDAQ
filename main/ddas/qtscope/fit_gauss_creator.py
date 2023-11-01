@@ -1,79 +1,32 @@
-import pandas as pd
+from fit_function import FitFunction
 import numpy as np
-from scipy.optimize import curve_fit
-import logging
 
-class GaussFit:
-    """Gaussian fitting function.
+class GaussFit(FitFunction):
+    """Gaussian fitting function class used by QtScope.
 
-    Fit function is f(x) = A*exp(-(x-mu)^2 / (2*sd^2)) where A, mu, sd are 
-    free parameters.
-
-    Attributes
-    ----------
-    A : float 
-        Amplitude.
-    mu : float 
-        Mean.
-    sd : float 
-        Standard deviation.
-    form : str 
-        Function formula.
-
-    Methods
-    -------
-    feval(x, A, mu, sd)
-        Returns the array of function values evaluated over the fitting range.
-    set_initial_parameters(x, y, params)
-        Set initial parameter values. Guess from the data if none are provided.
-    start(x, y, params, axis, results)
-        Implementation of the fitting algorithm.
+    Implements function-specific feval and set_initial_parameters methods from
+    the base class. See the documentation for the FitFunction base class in 
+    fit_function.py for details.
     """
     
-    def __init__(self, A, mu, sd, form):
-        """Gaussian fit function class constructor. 
-
-        Sets initial fit parameters.
-        
-        Parameters
-        ---------
-        A : float 
-            Amplitude.
-        mu : float 
-            Mean.
-        sd : float 
-            Standard deviation.
-        form : str 
-            Function formula to display on the fitting panel.
-        logger : Logger
-            QtScope Logger instance.
-        """
-        self.logger = logging.getLogger("qtscope_logger")
-        self.A = A
-        self.mu = mu
-        self.sd = sd
-        self.form = form
-
-    def feval(self, x, A, mu, sd):
+    def feval(self, x, *p):
         """Evaluate the fit function over x.
+
+        Implement a Gaussian fitting function.
 
         Parameters
         ----------
         x : ndarray
             Array of x values in the fitting range.
-        A : float 
-            Amplitude.
-        mu : float 
-            Mean.
-        sd : float 
-            Standard deviation.
-        
+        p : array-like
+            Parameters used to evaluate the function over x.
+
         Returns
-        -------
+        ------
         ndarray
             Array containing the fit values over the range.
         """
-        return A*np.exp(-(x-mu)**2 / (2*sd**2))
+        return p[0]*np.exp(-(x-p[1])**2 / (2*p[2]**2))
 
     def set_initial_parameters(self, x, y, params):
         """Set initial parameter values. 
@@ -90,74 +43,13 @@ class GaussFit:
         params : list
             Array of fit parameters.
         """
-        if (params[0] != 0.0):
-            self.A = params[0]
-        else:
-            self.A = max(y)
-            
-        if (params[1] != 0.0):
-            self.mu = params[1]
-        else:
-            self.mu = np.mean(x)
-            
-        if (params[2] != 0.0):
-            self.sd = params[2]
-        else:
-            self.sd = np.std(x)
-
-    def start(self, x, y, params, axis, results):
-        """Implementation of the fitting algorithm.
-
-        Parameters
-        ----------
-        x : list
-            x data values.
-        y : list
-            y data values.
-        params : list
-            Array of fit parameters.
-        axis : matplotlib axes
-            Axes for the plot.
-        results : QTextEdit
-            Display widget for fit results.
-        
-        Returns
-        -------
-        fitln : list of Line2D objects 
-            List of lines representing the plotted fit data.
-        """        
-        fitln = None
-        self.set_initial_parameters(x, y, params)
-        pinit = [self.A, self.mu, self.sd]
-        self.logger.debug(f"Parameter initial guesses: {pinit}")
-        pbounds = (
-            [-np.inf, -np.inf, 0],
-            [np.inf, np.inf, np.inf]
-        )
-        popt, pcov = curve_fit(
-            self.feval, x, y, p0=pinit, bounds=pbounds, maxfev=5000
-        )
-        perr = np.sqrt(np.diag(pcov))  # Parameter sigma from cov. matrix.
-        self.logger.debug(f"Fit parameters: {popt}")
-        self.logger.debug(f"Fit covariance matrix:\n{pcov}")
-        self.logger.debug(f"Fit parameter errors: {perr}")
-        
-        # Fit data and print the results:        
-        try:
-            x_fit = np.linspace(x[0], x[-1], 10000)
-            y_fit = self.feval(x_fit, *popt)
-            
-            fitln = axis.plot(x_fit, y_fit, 'r-')
-            
-            for i in range(len(popt)):
-                s = "p[{}]: {:.6e} +/- {:.6e}".format(i, popt[i], perr[i])
-                results.append(s)
-                if i == (len(popt) - 1):
-                    results.append("\n")
-        except:
-            pass
-        
-        return fitln        
+        super().set_initial_parameters(x, y, params)
+        if self.pinit[0] == 0.0:
+            self.pinit[0] = max(y)
+        if self.pinit[1] == 0.0:
+            self.pinit[1] = np.mean(x)
+        if self.pinit[2] == 0.0:
+            self.pinit[2] = np.std(x)
 
 class GaussFitBuilder:
     """Builder method for factory creation."""
@@ -166,20 +58,19 @@ class GaussFitBuilder:
         """GaussFitBuilder class constructor."""        
         self._instance = None
 
-    def __call__(self, A=0, mu=0, sd=0, form=""):
+    def __call__(self, params=[], form=""):
         """Create the fitting function.
 
         Create an instance of the fit function if it does not exist and 
-        return it to the caller. Parameters passed as **kwargs from factory.
+        return it to the caller. Parameters passed as unpacked **kwargs 
+        from the fit factory.
 
         Parameters
         ----------
-        A : float 
-            Amplitude.
-        mu : float 
-            Mean.
-        sd : float 
-            Standard deviation.
+        params : array-like
+            Array of initial parameters. In general not used, but at least 
+            ensures the class is initialized with valid and/or reasonable 
+            starting guesses.
         form : str 
             Function formula.
 
@@ -189,6 +80,6 @@ class GaussFitBuilder:
             Instance of the fit class.
         """       
         if not self._instance:
-            self._instance = GaussFit(A, mu, sd, form)
+            self._instance = GaussFit(params, form)
             
         return self._instance

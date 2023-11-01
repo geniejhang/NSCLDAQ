@@ -11,17 +11,23 @@
 #include <Python.h>
 
 #include <config.h>
-#include "CPyHelper.h"
 
 /**
  * @brief QtScope main.
  *
+ * @param argc Number of command line options.
+ * @param argv The command line options.
+ *
+ * @return int
+ * @retval 0 Success.
+ *
+ * @details
  * Uses Python C++ API to call main.py to configure and run QtScope.
  */
 int main(int argc, char *argv[])
 {  
-    CPyHelper pInstance;
-
+    Py_Initialize();
+    
     wchar_t* version = Py_DecodeLocale(
 	std::to_string(XIAAPI_VERSION).c_str(), NULL
 	);
@@ -46,6 +52,8 @@ int main(int argc, char *argv[])
 		  << e.what() << std::endl;
 	exit(EXIT_FAILURE);
     }
+
+    Py_Finalize();
 
     return 0;
 }

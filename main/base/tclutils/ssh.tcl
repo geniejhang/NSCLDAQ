@@ -130,23 +130,31 @@ namespace eval  ssh {
 	#   Return the path to the container image file (full path).
 	#
 	#   There are a couple of possibilitites:
-	#   
-	#   1.  APPTAINER_CONTAINER - is defined - in that case that's the full image path.
-	#   2.  SING_IMAGE          - is defined - that's the full image path.
-	#   3.  None of the above -running natively.
-	#
+        #  
+        #   1.  APPTAINER_CONTAINER - is defined - in that case that's the
+        #         full image path.
+        #   2.  SING_IMAGE - is defined - SINGULARTIY_CONTAINER *may* contain
+        #         the full image path depending on the installed version, but
+        #         the user has defined a path using SING_IMAGE, use that one.
+        #   3.  SINGULARITY_CONTAINER - is defined - if no user-defined path,
+        #         fallback here. For singularity 3.6+ this is the full path.
+        #   4.  Running natively - return an empty string.
+        #
 	#  @return string
 	#  @retval "" if running natively.
 	proc getContainerImage {} {
-		if {[array names ::env APPTAINER_CONTAINER] ne ""} {
-			return $::env(APPTAINER_CONTAINER)
-		} elseif {[array names ::env SINGULARITY_CONTAINER] ne ""} {
-			return $::env(SINGULARITY_CONTAINER)
-		}
-		if {[array names ::env SING_IMAGE] ne ""} {
-			return $::env(SING_IMAGE)
-		}
-		return ""
+
+	    if {[array names ::env APPTAINER_CONTAINER] ne ""} {
+		return $::env(APPTAINER_CONTAINER)
+	    }
+
+	    if {[array names ::env SING_IMAGE] ne ""} {
+		return $::env(SING_IMAGE)
+	    } elseif {[array names ::env SINGULARITY_CONTAINER] ne ""} {
+		return $::env(SINGULARITY_CONTAINER)
+	    }
+	    	    
+	    return ""
 	}
 	# actualCommand
 	#    If we are in a singularity container the command returned runs

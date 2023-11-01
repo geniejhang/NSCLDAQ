@@ -1,12 +1,26 @@
 /**
  * @file CDataGenerator.h
- * @brief Define a class for generating offline data for testing/debugging.
+ * @brief Defines a class for generating offline data for testing/debugging 
+ * and a ctypes interface for the class.
  */
 
 #ifndef CDATAGENERATOR_H
 #define CDATAGENERATOR_H
 
 #include <random>
+
+/**
+ * @addtogroup utilities libPixieUtilities.so
+ * @brief Pixie-16 utilities for QtScope.
+ *
+ * @details
+ * This utility library is used by QtScope. It contains a number of classes
+ * which call other parts of the DDAS code to boot and manage the modules. 
+ * This library defines an API by which the pure-Python QtScope code can 
+ * interact with the C/C++ FRIBDAQ and XIA API code needed to run a system of 
+ * Pixie modules.
+ * @{ 
+ */
 
 /**
  * @class CDataGenerator
@@ -16,21 +30,56 @@
 
 class CDataGenerator
 {
+private:
+    std::mt19937 m_engine; //!< Random number generator engine.
+    
 public:
-    CDataGenerator();
-    ~CDataGenerator();
+    /** @brief Constructor. */
+    CDataGenerator() : m_engine((std::random_device())()) {};
 
+    /**
+     * @brief Generate test trace data.
+     * @param[in,out] data Pointer to the start of the trace data storage.
+     * @param[in] dataSize How many data points to store.
+     * @param[in] binWidth Histogram bin width in microseconds.
+     * @return int  
+     * @retval 0 Success.
+     */
     int GetTraceData(unsigned short* data, int dataSize, double binWidth);
+    /**
+     * @brief Generate test Gaussian-distributed data.
+     * @param[in,out] data Pointer to the start of the baseline data storage.
+     * @param[in] dataSize How many data points to store.
+     * @return 0 (always).
+     */
     int GetHistogramData(unsigned int* data, int dataSize);
+    /**
+     * @brief Generate randomly distributed test baseline data.
+     * @param[in,out] data Pointer to the start of the baseline data storarge.
+     * @param[in] dataSize How many data points to store.
+     * @return int  
+     * @retval 0 Success.
+     */
     int GetBaselineData(double* data, int dataSize);
   
 private:
-    std::mt19937 m_engine; //!< Random number generator engine.
-  
+    /**
+     * @brief Analytical function for a single pulse with exponential rise and 
+     * decay constants.
+     * @param C      Constant baseline.
+     * @param A      Pulse amplitude.
+     * @param t0     Start of the pulse.
+     * @param rise   Pulse risetime in ns.
+     * @param decay  Pulse exponential decay time in ns.
+     * @param sample Sample number where we compute the pulse.
+     * @return Pulse value at input sample number.
+     */
     unsigned short SinglePulse(
 	double C, double A, double t0, double rise, double decay,
 	int sample, double binWidth
 	);
 };
+
+/** @} */
 
 #endif

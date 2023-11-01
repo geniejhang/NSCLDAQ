@@ -1,3 +1,17 @@
+<<<<<<< HEAD
+== 12.0-007 ==
+* DDAS documentation, QtScope fixes, updating DDAS configuration test suite
+== 12.0-007 ==
+
+== 12.0-006 ==
+* Fixing minor issue in MDPP-32 QDC support
+== 12.0-006 ==
+
+== 12.0-005 ==
+* Release for deploying the version. No significant update except for minor bug fixing.
+== 12.0-005 ==
+=======
 == 12.1-pre1 ==
 * Minor bug fix in MDPP-32 QDC support
 == 12.1-pre1 ==
+>>>>>>> 12.1-dev

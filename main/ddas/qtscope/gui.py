@@ -115,30 +115,25 @@ class MainWindow(QMainWindow):
         self.setMouseTracking(True)
 
         # Get the Logger instance:
-
         self.logger = logging.getLogger("qtscope_logger")
 
         # Set XIA API version. This is needed to support XIA API 3 JSON
         # settings files with a .json extension iff QtScope was compiled
         # against API 3. @todo (ASC 6/9/23): may not be needed after we
         # fully migrate to API 3, but for now its an option to allow
-        # user's some ability to distinguish between the two formats.
-        
+        # user's some ability to distinguish between the two formats.        
         self.xia_api_version = version
         
-        # Access to global thread pool for this applicaition:
-        
+        # Access to global thread pool for this applicaition:        
         self.pool = QThreadPool.globalInstance()
             
         # XIA API managers:
-
         self.dsp_mgr = DSPManager()
         self.sys_utils = SystemUtilities()
         self.trace_utils = TraceUtilities()
         self.run_utils = RunUtilities()
         
         # Configure managers:
-
         if offline:
             # Boot the modules in offline mode to test the API calls.
             # Configure trace and run control to use generated data so
@@ -148,8 +143,7 @@ class MainWindow(QMainWindow):
             self.trace_utils.use_generator_data(True)
             self.run_utils.use_generator_data(True)
             
-        # DSP and trace analysis:
-        
+        # DSP and trace analysis:        
         self.trace_analyzer = TraceAnalyzer(self.dsp_mgr)
         self.trace_info = {
             "trace": None,
@@ -157,8 +151,7 @@ class MainWindow(QMainWindow):
             "channel": None
         }
 
-        # Create managers for manipulating DSP settings:
-        
+        # Create managers for manipulating DSP settings:        
         self.mod_gui = ModDSPGUI(mod_dsp_factory, toolbar_factory)
         self.chan_gui = ChanDSPGUI(chan_dsp_factory, toolbar_factory)
 
@@ -170,27 +163,23 @@ class MainWindow(QMainWindow):
         self.acq_toolbar = toolbar_factory.create("acq")
         self.mplplot = Plot(toolbar_factory, fit_factory)
 
-        # Set initial run state information from the manager and toolbar:
-        
+        # Set initial run state information from the manager and toolbar:       
         self.run_active = False
         self.active_type = RunType.INACTIVE
 
         # Define the main layout and add widgets:
-
         self.addToolBar(self.sys_toolbar)
         self.addToolBarBreak()
         self.addToolBar(self.acq_toolbar)
         
-        # Central widget for the main window:
-        
+        # Central widget for the main window:        
         self.setCentralWidget(self.mplplot)
         
         ##
         # Signal connections
         #
         
-        # System toolbar:
-        
+        # System toolbar:        
         self.sys_toolbar.b_boot.clicked.connect(self._boot)
         self.sys_toolbar.b_chan_gui.clicked.connect(self._show_chan_gui)
         self.sys_toolbar.b_mod_gui.clicked.connect(self._show_mod_gui)
@@ -198,8 +187,7 @@ class MainWindow(QMainWindow):
         self.sys_toolbar.b_load.clicked.connect(self._load_settings)
         self.sys_toolbar.b_exit.clicked.connect(self._system_exit)
         
-        # Acquisition toolbar:
-        
+        # Acquisition toolbar:        
         self.acq_toolbar.b_read_trace.clicked.connect(self._read_data)
         self.acq_toolbar.b_analyze_trace.clicked.connect(self._analyze_trace)
         self.acq_toolbar.b_read_data.clicked.connect(self._read_data)
@@ -245,7 +233,10 @@ class MainWindow(QMainWindow):
             worker.signals.running.connect(self.acq_toolbar.disable)
             worker.signals.finished.connect(self._on_boot)
             self.pool.start(worker)
-            
+
+    # @todo (ASC 10/31/23): Module MSPS information should be easily accessible
+    # to other parts of the program, most notably the trace analyzer to set the
+    # CFD values.
     def _on_boot(self):
         """Configure the system following a successful boot."""
         if self.sys_utils.get_boot_status() == True:
@@ -278,8 +269,7 @@ class MainWindow(QMainWindow):
     # @todo (ASC 3/21/23): Define another custom human-readable text format
     # independent of the XIA API version.
     # @todo (ASC 6/9/23): Add some GUI blocking to save/load to prevent
-    # settings file corruption.
-    
+    # settings file corruption.    
     def _save_settings(self):
         """Save DSP parameters to an XIA settings file. 
 
@@ -301,18 +291,22 @@ class MainWindow(QMainWindow):
             try:
                 if self.xia_api_version >= 3:
                     if opt != "XIA settings file (*.set, *.json)":
-                        raise RuntimeError(
-                            f"Unrecognized option '{opt}'"
-                        )
+                        raise RuntimeError(f"Unrecognized option '{opt}'")
                     elif fext != ".set" and fext != ".json":
-                        raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extenstions are: .set or .json. Your settings file has not been saved")
+                        raise RuntimeError(
+                            "Unsupported extension for settings file: " \
+                            f"'{fext}.'\n\tSupported extenstions are: .set" \
+                            "or .json. Your settings file has not been saved"
+                        )
                 else:
                     if opt != "XIA settings file (*.set)":
-                        raise RuntimeError(
-                            f"Unrecognized option '{opt}'"
-                        )
+                        raise RuntimeError(f"Unrecognized option '{opt}'")
                     elif fext != ".set":
-                        raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extension are: .set. Your settings file has not been saved")                
+                        raise RuntimeError(
+                            "Unsupported extension for settings file:" \
+                            f"'{fext}.'\n\tSupported extension are: .set." \
+                            "Your settings file has not been saved"
+                        )                
             except RuntimeError as e:
                 self.logger.exception("Error saving settings file")
                 print(e)

@@ -1,7 +1,7 @@
 /**
  * @file CPixieRunUtilities.cpp
- * @brief Implement class for managing list-mode and baseline runs.
- */
+ * @brief Implementation of the run utilities class.
+*/
 
 #include "CPixieRunUtilities.h"
 
@@ -18,7 +18,9 @@
 #include "CDataGenerator.h"
 
 /**
- * @brief Constructor.
+ * @details
+ * The CPixieRunUtilities class has ownership of a CDataGenerator object and is 
+ * responsible for managing it.
  */
 CPixieRunUtilities::CPixieRunUtilities() :
     m_histogram(MAX_HISTOGRAM_LENGTH, 0),
@@ -30,26 +32,10 @@ CPixieRunUtilities::CPixieRunUtilities() :
 	16, std::vector<unsigned int>(MAX_HISTOGRAM_LENGTH, 0)
 	),
     m_runActive(false),
-    m_useGenerator(false),
-    m_pGenerator(new CDataGenerator)
+    m_useGenerator(false)
 {}
 
 /**
- * @brief Destructor.
- */
-CPixieRunUtilities::~CPixieRunUtilities()
-{
-    delete m_pGenerator;
-}
-
-/**
- * @brief Begin a histogram (MCA) run for a single module. Explicitly sets 
- * module synchronization to OFF.
- *
- * @param module  Module number.
- *
- * @return int  0 on success, XIA error code on failure.
- *
  * @todo Disable multiple modules from running in non-sync mode.
  */
 int
@@ -68,7 +54,11 @@ CPixieRunUtilities::BeginHistogramRun(int module)
 	);
   
     if (retval < 0) {
-	std::cerr << "Run time not properly set. CPixieRunUtilities::BeginHistogramRun() failed to write parameter: " << paramName << " to module " << module  << " with retval " << retval << std::endl;    
+	std::cerr << "Run time not properly set."
+		  << " CPixieRunUtilities::BeginHistogramRun() failed to"
+		  << " write parameter: " << paramName
+		  << " to module " << module
+		  << " with retval " << retval << std::endl;    
 	return retval;
     }
 
@@ -78,7 +68,10 @@ CPixieRunUtilities::BeginHistogramRun(int module)
     retval = Pixie16WriteSglModPar(paramName.c_str(), 0, module);
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::BeginHistogramRun() failed to disable " << paramName << " in module " << module << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::BeginHistogramRun() failed to"
+		  << " disable " << paramName
+		  << " in module " << module
+		  << " with retval " << retval << std::endl;
 	return retval;    
     }
 
@@ -86,7 +79,9 @@ CPixieRunUtilities::BeginHistogramRun(int module)
     retval = Pixie16StartHistogramRun(module, NEW_RUN);
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::BeginHistogramRun() failed to start run module " << module << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::BeginHistogramRun() failed to"
+		  << " start run module " << module
+		  << " with retval " << retval << std::endl;
     } else {
 	std::cout << "Beginning histogram run in Mod. " << module << std::endl;
 	m_runActive = true;
@@ -96,14 +91,10 @@ CPixieRunUtilities::BeginHistogramRun(int module)
 }
 
 /**
- * @brief End a histogram (MCA) run for a single module. Assumes module 
- * synchronization is OFF __but__ only stops a run in a single module.
- *
- * @param module  Module number.
- *
- * @return int  0 (even if run has not ended properly).
- *
- * @todo Control for active non-sync runs in multiple modules (or end all).
+ * @details
+ * If the run cannot be ended on the first attempt, retry 10 times before 
+ * reporting that the run could not be ended properly. Generally speaking, this
+ * is caused when one or more channels has a very high trigger rate.
  */
 int
 CPixieRunUtilities::EndHistogramRun(int module)
@@ -111,7 +102,9 @@ CPixieRunUtilities::EndHistogramRun(int module)
     int retval = Pixie16EndRun(module);
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::EndHistogramRun() failed to communicate end run operation to module " << module << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::EndHistogramRun() failed to"
+		  << " communicate end run operation to module " << module
+		  << " with retval " << retval << std::endl;
     }
 
     bool runEnded = false;
@@ -120,7 +113,9 @@ CPixieRunUtilities::EndHistogramRun(int module)
     while ((runEnded == false) && (nRetries < maxRetries)) {
 	retval = Pixie16CheckRunStatus(module);    
 	if (retval < 0) {
-	    std::cerr << "CPixieRunUtilities::EndHistogramRun() failed to get current run status in module " << module << " with retval " << retval << std::endl;
+	    std::cerr << "CPixieRunUtilities::EndHistogramRun() failed to"
+		      << " get current run status in module " << module
+		      << " with retval " << retval << std::endl;
 	}    
 	runEnded = (retval == 0); // True if run ended.
 	nRetries++;    
@@ -129,7 +124,8 @@ CPixieRunUtilities::EndHistogramRun(int module)
     }
   
     if (nRetries == maxRetries) {
-	std::cout << "CPixieRunUtilities::EndHistogramRun() failed to end run in module " << module << std::endl;
+	std::cout << "CPixieRunUtilities::EndHistogramRun() failed to"
+		  << " end run in module " << module << std::endl;
     } else if (runEnded) {
 	std::cout << "Ended histogram run in Mod. " << module << std::endl;
 	m_runActive = false;
@@ -139,12 +135,9 @@ CPixieRunUtilities::EndHistogramRun(int module)
 }
 
 /**
- * @brief Read energy histogram from single channel.
- *
- * @param module   Module number.
- * @param channel  Channel number on module to read histogram from.
- *
- * @return int  0 on success, XIA error code on failure.
+ * @details
+ * Histogram data comes either from the module itself if running in online
+ * mode or from the data generator.
  */
 int
 CPixieRunUtilities::ReadHistogram(int module, int channel)
@@ -158,29 +151,34 @@ CPixieRunUtilities::ReadHistogram(int module, int channel)
 	    m_histogram.data(), MAX_HISTOGRAM_LENGTH, module, channel
 	    );
     } else {
-	retval = m_pGenerator->GetHistogramData(
+	CDataGenerator gen;
+	retval = gen.GetHistogramData(
 	    m_genHistograms[channel].data(), MAX_HISTOGRAM_LENGTH
 	    );
 	m_histogram = m_genHistograms[channel];
     }
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::ReadHistogram() failed to read histogram from module " << module << " channel " << channel << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::ReadHistogram() failed to"
+		  << " read histogram from module " << module
+		  << " channel " << channel
+		  << " with retval " << retval << std::endl;
     }
 
     return retval;
 }
 
 /**
- * @brief Begin a baseline run.
- *
+ * @details
  * Baseline acquisition is not a "run" in the same sense that histogram runs
  * or list mode data taking is a "run" to the API (no begin/end functions, 
  * no run status change). However, in order for a user to accumulate enough 
  * baseline statistics to make judgements about e.g. manually setting 
- * baseline cuts, it needs to be treated as such in our manager.
+ * baseline cuts, it needs to be treated as such in our manager. The active
+ * run flag is set to true when taking a baseline "run."
  *
- * @return int  Always 0 (success).
+ * The baseline data itself is stored internally as a histogram of values in 
+ * [0, MAX_HISTOGRAM_LENGTH). This data structure is reset on begin.
  */
 int
 CPixieRunUtilities::BeginBaselineRun(int module)
@@ -197,11 +195,8 @@ CPixieRunUtilities::BeginBaselineRun(int module)
 }
 
 /**
- * @brief "End" a baseline run.
- *
- * @param module  Module number.
- *
- * @return int  Always 0 (success).
+ * @details
+ * Really all we need to do here is set the active run flag to false.
  */
 int
 CPixieRunUtilities::EndBaselineRun(int module)
@@ -212,14 +207,16 @@ CPixieRunUtilities::EndBaselineRun(int module)
 }
 
 /**
- * @brief Acquire baselines and read baseline data from a single channel.
- *
- * @param module  Module number.
- *
- * @return int 
- * @retval 0 on success.
- * @retval -1 if baseline memory cannot be allocated.
- * @retval -2 if updating the baseline histograms fails.
+ * @details
+ * Acquire baseline values for all channels on a module using 
+ * Pixie16AcquireBaselines() and update the internal storage for baseline data.
+ * The single channel baseline data we want, specified by the input channel 
+ * parameter, is copied into a local variable which is accessible via a getter 
+ * function.
+ * 
+ * @todo (ASC 7/14/23): Why not just have the getter take a channel as an 
+ * input parameter and return the correct baseline data. It seems unnecessary 
+ * to maintain a separate copy.
  */
 int
 CPixieRunUtilities::ReadBaseline(int module, int channel)
@@ -228,7 +225,9 @@ CPixieRunUtilities::ReadBaseline(int module, int channel)
     int retval = Pixie16AcquireBaselines(module);
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::ReadBaseline() failed to allocate memory for trace in module " << module << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::ReadBaseline() failed to"
+		  << " allocate memory for trace in module " << module
+		  << " with retval " << retval << std::endl;
 	return -1;
     }
 
@@ -249,13 +248,13 @@ CPixieRunUtilities::ReadBaseline(int module, int channel)
 }
 
 /**
- * @brief Read statistics for a single module after a run is ended.
+ * @details
+ * Statistics size is different between XIA API version 2 and 3. 3.x provides
+ * a Pixie16GetStatisticsSize() so we don't have to worry about calculating
+ * the statistics size ourselves or use a hardcoded value. Accessing the run
+ * statistics using the wrong method results in a segfault.
  *
- * @param module  Module number.
- *
- * @return int  0 on success, XIA API error code on failure.
- *
- * @todo Confirm end of run and handle if not ended properly.
+ * @todo (ASC 9/27/23): Confirm end of run and handle if not ended properly.
  */
 int
 CPixieRunUtilities::ReadModuleStats(int module)
@@ -264,16 +263,19 @@ CPixieRunUtilities::ReadModuleStats(int module)
 #if XIAAPI_VERSION >= 3
     std::vector<unsigned int> statistics(Pixie16GetStatisticsSize(), 0);
 #else
-    std::vector<unsigned int> statistics(448,0); // see any v11.3.
+    std::vector<unsigned int> statistics(448, 0); // see any v11.3.
 #endif
   
     int retval = Pixie16ReadStatisticsFromModule(statistics.data(), module);
   
     if (retval < 0) {
-	std::cerr << "CPixieRunUtilities::ReadModuleStats() error accessing scaler statistics " << "from module " << module << " with retval " << retval << std::endl;
+	std::cerr << "CPixieRunUtilities::ReadModuleStats()"
+		  << " error accessing scaler statistics from"
+		  << " module " << module
+		  << " with retval " << retval << std::endl;
 	return retval;
     } else {
-	double realTime = Pixie16ComputeRealTime(statistics.data(),module);
+	double realTime = Pixie16ComputeRealTime(statistics.data(), module);
 	for (int i = 0; i < 16; i++) {
 	    double inpRate = Pixie16ComputeInputCountRate(
 		statistics.data(), module, i
@@ -295,11 +297,15 @@ CPixieRunUtilities::ReadModuleStats(int module)
 }
 
 /**
- * @brief Update baseline histograms for all channels on a single module.
+ * @details
+ * Update baseline histograms using data read from the module or the data
+ * generator. Note that the internal histogram maintained by this class has 
+ * MAX_HISTOGRAM_LENGTH bins, [), 1 ADC unit/bin. Values outside this range 
+ * are dropped and not dispayed. This may result in partial or no data being 
+ * displayed for a baseline run depending on how the baseline looks.
  *
- * @param module  Module number.
- *
- * @throw std::runtime_error  If the baseline read fails.
+ * @todo (ASC 7/14/23): Handle out of range values better, at least warning 
+ * the user that something has been dropped.
  */
 void
 CPixieRunUtilities::UpdateBaselineHistograms(int module)
@@ -317,14 +323,16 @@ CPixieRunUtilities::UpdateBaselineHistograms(int module)
 		module, i
 		);      
 	} else {
-	    retval = m_pGenerator->GetBaselineData(
-		baselines.data(), MAX_NUM_BASELINES
-		);
+	    CDataGenerator gen;
+	    retval = gen.GetBaselineData(baselines.data(), MAX_NUM_BASELINES);
 	}
   
 	if (retval < 0) {
 	    std::stringstream errmsg;
-	    errmsg << "CPixieRunUtilities::UpdateBaselineHistograms() failed to read baseline from module " << module << " channel " << i << " with retval " << retval;
+	    errmsg << "CPixieRunUtilities::UpdateBaselineHistograms() failed"
+		   << " to read baseline from module " << module
+		   << " channel " << i
+		   << " with retval " << retval;
 	    throw std::runtime_error(errmsg.str());
 	}
     

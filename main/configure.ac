@@ -121,8 +121,6 @@ fi
 
 # Documentation
 
-
-
 AC_ARG_ENABLE([docs],
               AS_HELP_STRING([--enable-docs],[Build the documentation]),
               [], [enable_docs=no])
@@ -167,6 +165,39 @@ then
 else
   AM_CONDITIONAL([BUILD_DOCS],[false])
   AC_MSG_NOTICE([Documentation disabled])
+fi
+
+AC_ARG_ENABLE([ddas-docs],
+              AS_HELP_STRING([--enable-ddas-docs],
+	      [Build the DDAS documentation]),
+              [], [enable_ddas_docs=no])
+
+# DDAS documentation
+# DDAS docs are written in Doxygen, so if enabled check to make sure that
+# Doxygen and dot (for graphs) are installed
+
+if test "x$enable_ddas_docs" == "xyes"
+then
+  AC_MSG_NOTICE([DDAS documentation enabled])
+
+  AC_CHECK_PROG(HAVE_DOXYGEN, [doxygen], [true], [false])
+  if test "$HAVE_DOXYGEN" == "false"
+  then
+    AC_MSG_FAILURE([Doxygen is required to build the DDAS documentation but was not found])
+  else
+    AC_SUBST(DOXYGEN,[doxygen])
+  fi
+
+  AC_CHECK_PROG(HAVE_DOT, [dot], [true], [false])
+  if test "$HAVE_DOT" == "false"
+  then
+    AC_MSG_FAILURE([DOT is required by Doxygen to build the DDAS documentation but was not found])
+  fi
+
+  AM_CONDITIONAL([BUILD_DDAS_DOCS],[true])
+else
+  AM_CONDITIONAL([BUILD_DDAS_DOCS],[false])
+  AC_MSG_NOTICE([DDAS documentation disabled])
 fi
 
 AC_CHECK_LIB([X11], [XSetWindowBackground])
@@ -953,6 +984,9 @@ AC_CONFIG_FILES([Makefile
     ddas/qtscope/qtscope
     ddas/simple_setups/Makefile
     ddas/tclconfig/Makefile
+    ddas/docs/Makefile
+    ddas/docs/Doxyfile
+    ddas/docs/DoxygenLayout.xml
     caendigitizers/Makefile
     caendigitizers/dpp-pha/Makefile
     caendigitizers/dpp-pha/skel/Makefile
