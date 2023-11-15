@@ -62,12 +62,9 @@ namespace eval  ssh {
 	#
 	# getSingularityBindings
 	#
-	#   We want to allow for getting the bindings from the environment,
-	#   if possible (APPTAINER_BIND and if that's not defined SINGULARITY_BIND)
-	#   and then retaining ~/.singularity_bindpoints as an additional set of bindings the
-	#   user might want in containers started by ssh.
-	# 
-	#   We also need to unquify source:targets between the various possibilities.
+	#   Read the user's  ~/.singularity_bindpoints file to set the bindings the
+	#   user wants in containers started by ssh. Unquify source:targets in case
+	#   of duplicates.
 	#
 	#   @return string
 	#      This is either --bind bind1,bind2,...
@@ -75,28 +72,16 @@ namespace eval  ssh {
 	#
 	proc getSingularityBindings {} {
 
-		# If we can get bindings from APPTAINER_BIND do so:
-
-		set bindings "";                               # so it's defined.
-		if {[array names ::env APPTAINER_BIND] ne ""} {
-			set bindings $::env(APPTAINER_BIND)
-		} elseif {[array names ::env SINGULARITY_BIND] ne ""} {
-			set bindings $::env(SINGULARITY_BIND)
-		}
-
-
-		#  Turn the bindings from the environment into a Tcl list:
-
-		set bindings [split $bindings ","]
+	        set bindings [list]
 
 		# Add in the stagearea link as a favor to the users.
-		
+
 		set status [catch {file readlink ~/stagearea} value]
 		if {!$status} {
 			lappend bindings $value;                  # stagearea link auto-binds.
 		}
 		
-		#  Add in the bindings in the user's ~/.singularity_bindpoints file as well:
+		#  Add in the bindings in the user's ~/.singularity_bindpoints file:
 
 		if {[file readable ~/.singularity_bindpoints]} {
 			# User has additional bind points:
@@ -111,9 +96,9 @@ namespace eval  ssh {
 			
 			close $fd
 		}
-		# Bindings is now the full list of bindings and may have some dups
-		# 
 
+		# Remove duplicates if they exist:
+		
 		set bindings [ssh::_uniquifyList $bindings]
 	
 		# If at the end of this we have any bindings we need to return a --bind
