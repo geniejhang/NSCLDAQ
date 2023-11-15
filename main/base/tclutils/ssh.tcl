@@ -79,7 +79,7 @@ namespace eval  ssh {
 
 		set bindings "";                               # so it's defined.
 		if {[array names ::env APPTAINER_BIND] ne ""} {
-			set bindings $::env(APPTAINER_BIND))
+			set bindings $::env(APPTAINER_BIND)
 		} elseif {[array names ::env SINGULARITY_BIND] ne ""} {
 			set bindings $::env(SINGULARITY_BIND)
 		}
