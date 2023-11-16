@@ -1368,17 +1368,17 @@ class <ooclass><classname>CConfigurableObject</classname></ooclass>
     <methodsynopsis>
         <modifier></modifier>
         <type>void</type>
-        <methodname>addIntListParam</methodname>
+        <methodname>addIntListParameter</methodname>
         <methodparam><type>std::string</type> <parameter>name</parameter></methodparam>
         <methodparam><type>int</type> <parameter>minvalue</parameter></methodparam>
         <methodparam><type>int</type> <parameter>maxvalue</parameter></methodparam>
         <methodparam><type>unsigned</type> <parameter>minlength</parameter></methodparam>
         <methodparam><type>unsigned</type> <parameter>maxlength</parameter></methodparam>
          <methodparam>
-            <type>int</type> <parameter>defaultVal</parameter>
+            <type>int</type> <parameter>defaultSize</parameter>
         </methodparam>
         <methodparam>
-            <type>int</type> <parameter>defaultSize</parameter>
+            <type>int64_t</type> <parameter>defaultVal</parameter>
         </methodparam>       
         
         <exceptionname></exceptionname>
