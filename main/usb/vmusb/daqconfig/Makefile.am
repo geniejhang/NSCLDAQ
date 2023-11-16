@@ -119,6 +119,7 @@ noinst_HEADERS		=	CADCCommand.h  		\
 				CMQDC32StackBuilder.h \
 				CMQDC32RdoHdwr.h \
 				MQDC32Registers.h \
+				CMDPP32.h \
 				CMDPP32QDC.h \
 				CMDPP32SCP.h
 
