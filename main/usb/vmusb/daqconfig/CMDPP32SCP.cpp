@@ -185,14 +185,14 @@ CMDPP32SCP::Initialize(CVMUSB& controller)
   uint16_t       triggersource       = m_pConfiguration -> getIntegerParameter("-triggersource");
   uint16_t       triggeroutput       = m_pConfiguration -> getIntegerParameter("-triggeroutput");
 
-  uint16_t       tfintdiff           = m_pConfiguration -> getIntegerList("-tfintdiff");
-  uint16_t       pz                  = m_pConfiguration -> getIntegerList("-pz");
-  uint16_t       gain                = m_pConfiguration -> getIntegerList("-gain");
-  uint16_t       threshold           = m_pConfiguration -> getIntegerList("-threshold");
-  uint16_t       shapingtime         = m_pConfiguration -> getIntegerList("-shapingtime");
-  uint16_t       blr                 = m_pConfiguration -> getIntegerList("-blr");
-  uint16_t       signalrisetime      = m_pConfiguration -> getIntegerList("-signalrisetime");
-  uint16_t       resettime           = m_pConfiguration -> getIntegerList("-resettime");
+  auto           tfintdiff           = m_pConfiguration -> getIntegerList("-tfintdiff");
+  auto           pz                  = m_pConfiguration -> getIntegerList("-pz");
+  auto           gain                = m_pConfiguration -> getIntegerList("-gain");
+  auto           threshold           = m_pConfiguration -> getIntegerList("-threshold");
+  auto           shapingtime         = m_pConfiguration -> getIntegerList("-shapingtime");
+  auto           blr                 = m_pConfiguration -> getIntegerList("-blr");
+  auto           signalrisetime      = m_pConfiguration -> getIntegerList("-signalrisetime");
+  auto           resettime           = m_pConfiguration -> getIntegerList("-resettime");
   bool           isPrintRegisters    = m_pConfiguration -> getBoolParameter("-printregisters");
 
   list.addWrite16(base + ModuleId,          initamod, id); // Module id.
@@ -640,7 +640,7 @@ CMDPP32SCP::printRegisters(CVMUSB& controller)
       if (data == 0xffff) {
           cout << "(Infinity)" << endl;
       } else {
-          cout << " (* 12.5 [ns], " << (data&0xffff)*12.5 << " ns)") << endl;
+          cout << " (* 12.5 [ns], " << (data&0xffff)*12.5 << " ns)" << endl;
       }
     }
 
@@ -654,7 +654,7 @@ CMDPP32SCP::printRegisters(CVMUSB& controller)
         if (data == 0xffff) {
             cout << "(Infinity)" << endl;
         } else {
-            cout << " (* 12.5 [ns], " << (data&0xffff)*12.5 << " ns)") << endl;
+            cout << " (* 12.5 [ns], " << (data&0xffff)*12.5 << " ns)" << endl;
         }
     }
 
@@ -668,7 +668,7 @@ CMDPP32SCP::printRegisters(CVMUSB& controller)
         if (data == 0xffff) {
             cout << "(Infinity)" << endl;
         } else {
-            cout << " (* 12.5 [ns], " << (data&0xffff)*12.5 << " ns)") << endl;
+            cout << " (* 12.5 [ns], " << (data&0xffff)*12.5 << " ns)" << endl;
         }
     }
 
@@ -682,7 +682,7 @@ CMDPP32SCP::printRegisters(CVMUSB& controller)
         if (data == 0xffff) {
             cout << "(Infinity)" << endl;
         } else {
-            cout << " (* 12.5 [ns], " << (data&0xffff)*12.5 << " ns)") << endl;
+            cout << " (* 12.5 [ns], " << (data&0xffff)*12.5 << " ns)" << endl;
         }
     }
 
