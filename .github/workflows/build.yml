@@ -66,10 +66,6 @@ jobs:
         run: |
           cd ../libtcl
           make clean
-          cd ../unifiedformat
-          rm -rf build
-          cd ../tclhttpd*
-          make clean
           cd ../oot
           make -j2 dist
       - name: Complete source distribution package
