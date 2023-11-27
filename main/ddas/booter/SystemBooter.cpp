@@ -216,9 +216,9 @@ void DAQ::DDAS::SystemBooter::populateHardwareMap(Configuration &config)
 	if (retval < 0)
 	{
 	    std::stringstream errmsg;
-	    errmsg << "SystemBooter::boot() Reading hardware variant ";
-	    errmsg << "information (i.e. Pixie16ReadModuleInfo()) failed ";
-	    errmsg << "for module " << k << " with retval = " << retval;
+	    errmsg << "SystemBooter::boot() Reading hardware variant"
+		   << " information (i.e. Pixie16ReadModuleInfo()) failed"
+		   << " for module " << k << " with retval = " << retval;
 	    throw std::runtime_error(errmsg.str());
 	} else {
 	    if (m_verbose) {

@@ -46,9 +46,9 @@ void
 DAQ::DDAS::Configuration::setSlotMap(const std::vector<unsigned short> &map)
 {
     if (map.size() != m_modEvtLengths.size()) {
-	std::string errmsg = "Configuration::setSlotMap(): Inconsistent data "
-	    "for module evt lengths and slot mapping. Set number of modules "
-	    "first using Configuration::setNumberOfModules().";
+	std::string errmsg = "Configuration::setSlotMap(): Inconsistent data"
+	    " for module evt lengths and slot mapping. Set number of modules"
+	    " first using Configuration::setNumberOfModules().";
 	throw std::runtime_error(errmsg);
     }
 
@@ -170,10 +170,10 @@ void
 DAQ::DDAS::Configuration::setHardwareMap(const std::vector<int> &map)
 {
     if (map.size() != m_slotMap.size()) {
-	std::string errmsg = "Configuration::setModuleEventLengths() "
-	    "Inconsistent data for hardware mapping and slot mapping. "
-	    "Set number of modules first using "
-	    "Configuration::setNumberOfModules().";
+	std::string errmsg = "Configuration::setModuleEventLengths()"
+	    "Inconsistent data for hardware mapping and slot mapping."
+	    " Set number of modules first using"
+	    " Configuration::setNumberOfModules().";
 	throw std::runtime_error(errmsg);
     }
 

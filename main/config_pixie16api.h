@@ -1,20 +1,25 @@
 /*
-  Extract the Pixie16 API includes and conditionalize them on 
-  the API version 
-*/
+ * Extract the Pixie16 API includes and conditionalize them on 
+ * the API version 
+ */
 #if XIAAPI_VERSION >= 3
 
 /*
-  Need to include additional header for size_t because pixie16.h 
-  is not inclusive as of version 3.7.0
-*/
+ * Need to include additional header for size_t because pixie16.h 
+ * is not inclusive as of version 3.7.0
+ */
 #include <cstddef>
 #include <pixie16/pixie16.h>
 
+// Max return code buffer size to store XIA API error code messages.
+#ifndef BUF_SIZE
+#define BUF_SIZE 1024
+#endif
+
 /* 
-   The transition manual says these will be deprecated but the API 
-   still needs them and I'm damned if I'll use magic numbers instead so:
-*/
+ * The transition manual says these will be deprecated but the API 
+ * still needs them and I'm damned if I'll use magic numbers instead so:
+ */
 #ifndef LIST_MODE_RUN
 #define LIST_MODE_RUN 0x100
 #endif
@@ -23,15 +28,30 @@
 #define NEW_RUN 1
 #endif
 
+#ifndef RESUME_RUN
+#define RESUME_RUN 0
+#endif
+
+/* 
+ * More deprecated constants used by nscope and QtScope:
+ */
+#ifndef MAX_HISTOGRAM_LENGTH
+#define MAX_HISTOGRAM_LENGTH 32768
+#endif
+
+#ifndef MAX_NUM_BASELINES
+#define MAX_NUM_BASELINES 3640
+#endif
+
 /* Readout programs need this to decide when to start reading */
 #ifndef EXTFIFO_READ_THRESH
 #define EXTFIFO_READ_THRESH   1024
 #endif
 
 /*
-  More things that will be deprecated but still rather avoid magic numbers:
-  Below are all from SetFileWriter.cpp in xml...
-*/
+ * More things that will be deprecated but still rather avoid magic numbers:
+ * Below are all from SetFileWriter.cpp in xml...
+ */
 #ifndef N_DSP_PAR
 #define N_DSP_PAR 1280
 #endif
