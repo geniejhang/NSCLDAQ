@@ -68,6 +68,7 @@ jobs:
           make clean
           cd ../oot
           make -j2 dist
+          mv nscldaq-$GITHUB_REF_NAME.tar.gz nscldaq-$GITHUB_REF_NAME-dist.tar.gz
       - name: Complete source distribution package
         if: ${{ inputs.packaging == true && inputs.dist-packaging == true}}
         uses: actions/upload-artifact@v3
