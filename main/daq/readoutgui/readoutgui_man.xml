@@ -5406,7 +5406,14 @@ package require multilogger
                     <para>
                      Is a menu checkbutton that, when checked makes
                      the enabled loggers log data even if the Record button
-                     on the ReadoutGui is not checked.
+                     on the ReadoutGui is not checked.  If this is checked,
+                     by default, multilogger will increment the run number after
+                     each run when recording in the readout GUI was not enabled.
+                     If, however the ReadoutCallouts.tcl e.g., sets the variable
+                     <varname>::multilogger::suppressIncrement</varname> to 
+                     a non-zero value, this is inhibited.   This can be useful
+                     to suppress run number flickering when a detector system
+                     such as Gretina is in charge of setting the run number.
                     </para>
                 </listitem>
               </varlistentry>             
