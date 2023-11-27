@@ -60,6 +60,9 @@ exec tclsh "$0" ${1+"$@"}
 #
 #   Normally the loggers only function when the readoutGUI is recording, however
 #   if the ::multilogger::recordAlways flag is set, recording is always done.
+#   If the ::multilogger::suppressIncrement flag is set, and recordAlways is set,
+#   multilogger won't increment the run number. See
+#   Issue #73 in NSCLDAQ
 #   NOTE: in that case it's important to always ensure there are unique
 #         run numbers as the eventloggers will refuse to write over existing
 #         event files.
@@ -91,6 +94,7 @@ namespace eval multilogger {
     variable Loggers   [list];                    # List of EventLogger objects.
     variable configFile [file join ~ .multiloggers] ; # Initial configuration file
     variable recordAlways 0;                      # If true, always record data.
+    variable suppressIncrement 0;                 # if true never increment the run number.
     namespace export enter leave attach
 }
 
@@ -894,7 +898,7 @@ proc ::multilogger::enter {from to} {
             
             
         }
-        if {$::multilogger::recordAlways && ![::ReadoutGUIPanel::recordData]} {
+        if {$::multilogger::recordAlways && ![::ReadoutGUIPanel::recordData] && (!$::multilogger::suppressIncrement)} {
                 ::ReadoutGUIPanel::setRun [expr {[::ReadoutGUIPanel::getRun] + 1}]
             }
     }
