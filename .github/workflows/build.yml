@@ -48,7 +48,7 @@ jobs:
           # temporary fix for missing header
           cp ../config_pixie16api.h .
           
-          ../configure --prefix=$PWD/install \
+          ../configure --prefix=/usr/opt/nscldaq/$GITHUB_REF_NAME \
              --enable-usb=yes \
              --enable-docs \
              --enable-epics-tools=yes \
