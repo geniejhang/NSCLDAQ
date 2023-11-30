@@ -73,7 +73,7 @@ namespace DAQ {
 	public:
 	    /** @brief Constructor */
 	    SystemBooter();
-	    /*
+	    /**
 	     * @brief Boot the entire system.
 	     * @param config A configuration describing the system.
 	     * @param type Style of boot.

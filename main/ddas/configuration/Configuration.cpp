@@ -12,7 +12,7 @@
 #include "ConfigurationParser.h"
 #include "ModEvtFileParser.h"
  
-/*!
+/**
  * @details
  * This resizes the vectors storing the slot map, module event lengths, and
  * hardware map to be consistent. The caller should call setNumberOfModules
@@ -26,7 +26,7 @@ DAQ::DDAS::Configuration::setNumberOfModules(size_t size)
     m_hardwareMap.resize(size);
 }
 
-/*!
+/**
  * @brief Assign a new slot map.
  *
  * It is important for the caller to first call setNumberOfModules()
@@ -136,7 +136,7 @@ DAQ::DDAS::Configuration::getModuleFirmwareConfiguration(
     }
 }
 
-/*!
+/**
  * @details
  * It is necessary that the caller has previously invoked setNumberOfModules()
  * before calling this. The logic of this method aims to keep the slot map
@@ -159,7 +159,7 @@ DAQ::DDAS::Configuration::setModuleEventLengths(
     m_modEvtLengths = lengths;
 }
 
-/*!
+/**
  * @details
  * It is necessary that the caller has previously invoked setNumberOfModules()
  * before calling this. The logic of this method aims to keep the slot map
@@ -180,7 +180,7 @@ DAQ::DDAS::Configuration::setHardwareMap(const std::vector<int> &map)
     m_hardwareMap = map;
 }
 
-/*!
+/**
  * @details
  * Prints out a message similar to:
  * "Crate number 1: 2 modules, in slots:2 3 DSPParFile: /path/to/file.set"
