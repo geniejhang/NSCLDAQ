@@ -74,7 +74,7 @@ namespace DAQ {
 	    /** @brief Constructor */
 	    SystemBooter();
 	    /**
-	     * @brief Boot the entire system.
+	     * @brief Boot the entire system module-by-module in sequence.
 	     * @param config A configuration describing the system.
 	     * @param type Style of boot.
 	     * @throws std::runtime_error If Pixie16InitSystem() call returns 
@@ -83,6 +83,15 @@ namespace DAQ {
 	     * @throws std::runtime_error If bootModuleByIndex() throws.
 	     */
 	    void boot(Configuration& config, BootType type);
+	    /**
+	     * @brief Parallel boot the system using pre-registered firmware.
+	     * @param config A configuration describing the system.
+	     * @param type Style of boot.
+	     * @throws std::runtime_error If Pixie16InitSystem() call returns 
+	     *   an error.
+	     * @throws std::runtime_error If populateHardwareMap() throws.
+	     */
+	    void parallel_boot(Configuration& config, BootType type);
 	    /**
 	     * @brief Boot a single module
 	     * @param modIndex Index of the module in the system.
