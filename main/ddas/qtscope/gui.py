@@ -302,17 +302,17 @@ class MainWindow(QMainWindow):
                 if self.xia_api_version >= 3:
                     if opt != "XIA settings file (*.set, *.json)":
                         raise RuntimeError(
-                            f"Unrecognized file extension '{ext}'"
+                            f"Unrecognized file extension '{fext}'"
                         )
                     elif fext != ".set" and fext != ".json":
-                        raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extenstions are: .set or .json. Your settings file has not been saved")
+                        raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extenstions are: .set or .json. Your settings file has not been saved.")
                 else:
                     if opt != "XIA settings file (*.set)":
                         raise RuntimeError(
-                            f"Unrecognized file extension '{ext}'"
+                            f"Unrecognized file extension '{fext}'"
                         )
                     elif fext != ".set":
-                        raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extension are: .set. Your settings file has not been saved")                
+                        raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extension are: .set. Your settings file has not been saved.")                
             except RuntimeError as e:
                 self.logger.exception("Error saving settings file")
                 print(e)
@@ -335,7 +335,9 @@ class MainWindow(QMainWindow):
                     or "XIA JSON settings file (*.json)"):
                     self.sys_utils.load_set_file(fname)
                 else:
-                    raise RuntimeError(f"Unrecognized file extension '{ext}'")
+                    raise RuntimeError(
+                        f"Unrecognized file extension option: {opt}"
+                    )
             except RuntimeError:
                 self.logger.exception("Error loading settings file")
                 print(e)
@@ -364,7 +366,7 @@ class MainWindow(QMainWindow):
         if self.xia_api_version >= 3:
             fname, opt = QFileDialog.getSaveFileName(
                 self, "Save file", "",
-                "XIA settings files (*.set, *.json)",
+                "XIA settings file (*.set, *.json)",
                 options=options
             )
         else:
