@@ -45,6 +45,8 @@ CPixieSystemUtilities::Boot()
   
     // Create a configuration from the default settings:  
     const char* fwFile =  FIRMWARE_FILE; // From $DDAS_SHARE.
+    char* alternateFirmwareFile = getenv("FIRMWARE_FILE");
+    if (alternateFirmwareFile) fwFile = alternateFirmwareFile;
     m_config = *(
 	Configuration::generate(fwFile, "cfgPixie16.txt", "modevtlen.txt")
 	);

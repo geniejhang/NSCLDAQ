@@ -44,7 +44,7 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
     int retval = Pixie16InitSystem(
 	NumModules, config.getSlotMap().data(), m_offlineMode
 	);
-    if(retval < 0) {
+    if (retval < 0) {
 	std::stringstream errmsg;
 	errmsg << "SystemBooter::boot() Failure. Pixie16InitSystem returned = "
 	       << retval << ".";
@@ -58,7 +58,7 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
 
     populateHardwareMap(config);
 
-    for (int index=0; index<NumModules; ++index) {
+    for (int index = 0; index < NumModules; ++index) {
 	bootModuleByIndex(index, config, type);
     }
 
@@ -161,7 +161,7 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
 	modIndex, computeBootMask(type)
 	);
     
-    if(retval != 0) {
+    if(retval < 0) {
 	std::stringstream errmsg;
 	errmsg << "Boot failed for module " << modIndex
 	       << " with Pixie16BootModule() retval = " << retval << "!";
@@ -209,16 +209,16 @@ void DAQ::DDAS::SystemBooter::populateHardwareMap(Configuration &config)
     int NumModules = config.getNumberOfModules();
     std::vector<int> hdwrMapping(NumModules);
 
-    for(unsigned short k=0; k<NumModules; k++) {
+    for(unsigned short k = 0; k < NumModules; k++) {
 	int retval = Pixie16ReadModuleInfo(
 	    k, &ModRev, &ModSerNum, &ModADCBits, &ModADCMSPS
 	    );
 	if (retval < 0)
 	{
 	    std::stringstream errmsg;
-	    errmsg << "SystemBooter::boot() Reading hardware variant ";
-	    errmsg << "information (i.e. Pixie16ReadModuleInfo()) failed ";
-	    errmsg << "for module " << k << " with retval = " << retval;
+	    errmsg << "SystemBooter::boot() Reading hardware variant"
+		   << " information (i.e. Pixie16ReadModuleInfo()) failed"
+		   << " for module " << k << " with retval = " << retval;
 	    throw std::runtime_error(errmsg.str());
 	} else {
 	    if (m_verbose) {
