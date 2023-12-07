@@ -4,11 +4,6 @@
 */
 #if XIAAPI_VERSION >= 3
 
-/*
-  Need to include additional header for size_t because pixie16.h 
-  is not inclusive as of version 3.7.0
-*/
-#include <cstddef>
 #include <pixie16/pixie16.h>
 
 /* 
@@ -28,8 +23,8 @@
 #endif
 
 /* 
-   More deprecated constants used by nscope and QtScope:
- */
+   More deprecated constants used by QtScope:
+*/
 #ifndef MAX_HISTOGRAM_LENGTH
 #define MAX_HISTOGRAM_LENGTH 32768
 #endif
@@ -42,7 +37,9 @@
 #define MAX_NUM_BASELINES 3640
 #endif
 
-/* Readout programs need this to decide when to start reading */
+/* 
+   Readout programs need this to decide when to start reading 
+*/
 #ifndef EXTFIFO_READ_THRESH
 #define EXTFIFO_READ_THRESH   1024
 #endif
