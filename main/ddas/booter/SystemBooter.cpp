@@ -13,6 +13,7 @@
 
 #include <config.h>
 #include <config_pixie16api.h>
+
 #include <Configuration.h>
 
 /**
@@ -45,9 +46,11 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
 	NumModules, config.getSlotMap().data(), m_offlineMode
 	);
     if (retval < 0) {
+	char buf[MAX_ERRMSG_LENGTH];
+	PixieGetReturnCodeText(retval, buf, MAX_ERRMSG_LENGTH);
 	std::stringstream errmsg;
-	errmsg << "SystemBooter::boot() Failure. Pixie16InitSystem returned = "
-	       << retval << ".";
+	errmsg << "SystemBooter::boot() Failure. Pixie16InitSystem returned "
+	       << retval << ": " << buf;
 	throw std::runtime_error(errmsg.str());
     } else {
 	std::cout << "System initialized successfully. " << std::endl;

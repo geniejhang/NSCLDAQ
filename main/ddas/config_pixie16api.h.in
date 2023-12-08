@@ -6,6 +6,13 @@
 
 #include <pixie16/pixie16.h>
 
+/*
+  Supposedly future-proof max buffer size for translated Pixie error codes:
+*/
+#ifndef MAX_ERRMSG_LENGTH
+#define MAX_ERRMSG_LENGTH 1024
+#endif
+
 /* 
    The transition manual says these will be deprecated but the API 
    still needs them and I'm damned if I'll use magic numbers instead so:

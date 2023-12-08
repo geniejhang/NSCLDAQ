@@ -19,7 +19,7 @@ DDASReadout_SOURCES=Skeleton.cpp Skeleton.h 			\
 	CDDASStatisticsCommand.cpp CDDASStatisticsCommand.h
 
 DDASReadout_CPPFLAGS= \
-	-I@top_srcdir@ 							\
+	-I@top_builddir@/ddas 						\
 	-I@top_srcdir@/sbs/readout 					\
 	-I@top_srcdir@/sbs/nsclapi					\
 	-I@top_srcdir@/base/dataflow					\
@@ -30,7 +30,7 @@ DDASReadout_CPPFLAGS= \
 	@PIXIE_CPPFLAGS@						\
 	@LIBTCLPLUS_CFLAGS@						\
 	@TCL_FLAGS@         						\
-	-fPIC -DFIRMWARE_FILE=\"${SHAREDIR}/DDASFirmwareVersions.txt\" \
+	-fPIC -DFIRMWARE_FILE=\"${SHAREDIR}/DDASFirmwareVersions.txt\"  \
 	-DSORTING
 
 DDASReadout_LDFLAGS= \

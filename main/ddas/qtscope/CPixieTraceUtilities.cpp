@@ -127,12 +127,13 @@ CPixieTraceUtilities::AcquireADCTrace(int module, int channel)
     int retval = Pixie16AcquireADCTrace(module);
     
     if (retval < 0) {
-	char buf[BUF_SIZE];
-	PixieGetReturnCodeText(retval, buf, BUF_SIZE);	
+	std::string msg;
+	msg.resize(1024);
+	PixieGetReturnCodeText(retval, &msg[0], msg.size());
 	std::stringstream errmsg;
 	errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed"
 	       << " to allocate memory for trace in module " << module
-	       << " with errmsg " << buf;
+	       << " with errmsg " << msg;
 	throw std::runtime_error(errmsg.str());
     }
 
@@ -147,12 +148,13 @@ CPixieTraceUtilities::AcquireADCTrace(int module, int channel)
 		);
 	    
 	    if (retval < 0) {
-		char buf[BUF_SIZE];
-		PixieGetReturnCodeText(retval, buf, BUF_SIZE);
+		std::string msg;
+		msg.resize(1024);
+		PixieGetReturnCodeText(retval, &msg[0], msg.size());
 		std::stringstream errmsg;
 		errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed"
 		       << " to read trace from module " << module
-		       << " channel " << channel << " with errmsg " << buf;	
+		       << " channel " << channel << " with errmsg " << msg;	
 		throw std::runtime_error(errmsg.str());
 	    }
 	} else {

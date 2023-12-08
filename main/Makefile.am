@@ -32,8 +32,8 @@ endif
 
 SUBDIRS = base caenfw-common servers base/dataflow \
 	daq utilities $(DOCDIR) \
-	sbs usb/common/configurableobject $(EPICSDIRS) $(USBDIR) $(DDASDIR) $(CAENSUPPORTDIRS) \
-	$(CAENNGDIR) \
+	sbs usb/common/configurableobject $(EPICSDIRS) $(USBDIR) $(DDASDIR) \
+	$(CAENSUPPORTDIRS) $(CAENNGDIR) \
 	examples
 
 DIST_SUBDIRS = base caenfw-common servers base/dataflow daq utilities \
@@ -51,7 +51,7 @@ install-data-local:
 	echo "pkg_mkIndex @prefix@/TclLibs *.so" >makeindex.tcl
 	$(TCLSH_CMD) <makeindex.tcl
 	$(INSTALL_SCRIPT) config.h @prefix@/include
-	$(INSTALL_SCRIPT) @top_srcdir@/config_pixie16api.h @prefix@/include
+	$(INSTALL_SCRIPT) @top_builddir@/ddas/config_pixie16api.h @prefix@/include
 	touch @prefix@/pythonLibs/nscldaq/__init__.py
 	echo "Version: "NSCLDAQ-$(VERSION) built on `hostname` `date` > @prefix@/VERSION
 	$(INSTALL_DATA) @srcdir@/ChangeLog @prefix@
@@ -62,7 +62,7 @@ install-data-local:
 	chmod a+x @prefix@/share/tclhttpd/bin/*
 
 EXTRA_DIST=dotests introduction.xml libtcl $(INTROFIGURES) cookbooks \
-	tclhttpd3.5.1 config_pixie16api.h unifiedformat
+	tclhttpd3.5.1 unifiedformat
 
 #check-TESTS:
 #	@top_srcdir@/dotests $(SUBDIRS)
