@@ -1,3 +1,7 @@
+== 11.3-036 ==
+offlinereglom will accept a single data source. Should resolve issue #82.
+== 11.3-036 ==
+
 == 11.3-034 ==
 Release note TBW
 == 11.3-034 ==
