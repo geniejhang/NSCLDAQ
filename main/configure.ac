@@ -673,7 +673,7 @@ fi
 AC_ARG_ENABLE([usb],
 	AS_HELP_STRING([--enable-usb], [Build support for CC/VM usb data taking]),
 	[],
-	[enableusb=no])
+	[enable_usb=no])
 
 #  If building is turned on we need to locate the headers and the includes.
 
