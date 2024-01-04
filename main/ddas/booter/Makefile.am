@@ -8,11 +8,12 @@ include_HEADERS = SystemBooter.h
 libSystemBooter_la_SOURCES = SystemBooter.cpp
 libSystemBooter_la_CPPFLAGS = -I@top_srcdir@/ddas/configuration \
 	@PIXIE_CPPFLAGS@ \
-	-I@top_builddir@/ddas
+	-I@top_builddir@/ddas \
+	-I@top_srcdir@/ddas/exception @LIBTCLPLUS_CFLAGS@
 libSystemBooter_la_LIBADD = \
 	@top_builddir@/ddas/configuration/libConfiguration.la \
-	@PIXIE_LDFLAGS@ @PLX_LDFLAGS@
-
+	@PIXIE_LDFLAGS@ @PLX_LDFLAGS@ \
+	@top_builddir@/ddas/exception/libXIAException.la @LIBEXCEPTION_LDFLAGS@
 
 boot_SOURCES = boot.cpp
 boot_CPPFLAGS = -I@srcdir@ -I@top_builddir@/ddas \

@@ -493,14 +493,14 @@ fi
 BUILD_DDAS="no"
 AC_ARG_ENABLE([ddas],
     AS_HELP_STRING([--enable-ddas=yes/no],
-                   [Build the DDAS support software (default no)]),
+    [Build the DDAS support software (default no)]),
     [BUILD_DDAS="yes"]
 )
 
 if test "x$BUILD_DDAS" == "xyes"
 then
 AC_MSG_NOTICE([The XIA-DDAS Support software will be built])
-   AC_DEFINE([USING_DDAS],[1],  [DDAS SUpport Enabled])
+   AC_DEFINE([USING_DDAS],[1],  [DDAS Support Enabled])
 
    AC_ARG_WITH([xiaapidir],
 	[  --with-xiaapidir=path - Path to the XIAAPI installation. Required if --enable-ddas=yes.],
@@ -520,10 +520,10 @@ AC_MSG_NOTICE([The XIA-DDAS Support software will be built])
    [${xiaapidir}/include/pixie16/pixie16.h],
    [PIXIE_CPPFLAGS="${PIXIE_CPPFLAGS} -DXIAAPI_V3"
    PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"
-   AC_DEFINE([XIAAPI_VERSION], [3], [Pixie16 version 3 api])
+   AC_DEFINE([XIAAPI_VERSION], [3], [XIA API version 3+])
    ],
    [PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixieSDK -lm -Wl,-rpath=${xiaapidir}/lib"
-   AC_DEFINE([XIAAPI_VERSION], [2], [Pixie16 version 2 or lower])
+   AC_DEFINE([XIAAPI_VERSION], [2], [XIA API version 2])
    xiaapiver=2
    ])
 
@@ -964,6 +964,7 @@ AC_CONFIG_FILES([Makefile
     examples/ReadNSCLDAQFiles/Makefile
     ddas/config_pixie16api.h
     ddas/Makefile
+    ddas/exception/Makefile
     ddas/configuration/Makefile
     ddas/xiatest/Makefile
     ddas/booter/Makefile
