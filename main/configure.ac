@@ -449,13 +449,13 @@ tcl_incdir="/usr/include/$tcl_basename"
 #
 
 
-BUILD_EPICS_TOOLS=no
 AC_ARG_ENABLE([epics-tools],
 	AS_HELP_STRING([--enable-epics-tools=yes/no], 
 	[Build software that requires EPICS (default no)]),
-	[BUILD_EPICS_TOOLS="yes"])
+	[],
+	[enable_epics_tools=no])
 
-if test "$BUILD_EPICS_TOOLS" == "yes"
+if test "$enable_epics_tools" = "yes"
 then
 
 	AX_EPICS
@@ -490,14 +490,13 @@ fi
 # ROOT_CFLAGS    - ROOT cflags (automatically generated from ROOT config)
 # ROOT_LDFLAGS   - ROOT libraries (automatically generated from ROOT config)
 
-BUILD_DDAS="no"
 AC_ARG_ENABLE([ddas],
     AS_HELP_STRING([--enable-ddas=yes/no],
                    [Build the DDAS support software (default no)]),
-    [BUILD_DDAS="yes"]
-)
+    [],
+    [enable_ddas=no])
 
-if test "x$BUILD_DDAS" == "xyes"
+if test "$enable_ddas" = yes
 then
 AC_MSG_NOTICE([The XIA-DDAS Support software will be built])
    AC_DEFINE([USING_DDAS],[1],  [DDAS SUpport Enabled])
@@ -665,47 +664,20 @@ AC_MSG_NOTICE([The XIA-DDAS Support software will be built])
    AM_CONDITIONAL([BUILD_DDAS], [true])   
 else
    AM_CONDITIONAL([BUILD_DDAS],[false])
+   AM_CONDITIONAL([USING_XIAAPI_V2], [false])
 fi
-
-#
-#  The SBS software will only be built if
-#  --enable-sbs=kernel-source-dir was supplied.
-#  In that case, the configured kernel source is assumed to be in 
-#  kernel-source-dir and that will be used to compile the device driver
-#  as well.  
-#  The default is to _not_ build the sbs stuff.
-#
-
-BUILD_SBS="no"
-
-AC_ARG_ENABLE([sbs], 
-	      AS_HELP_STRING([--enable-sbs=kernel-source-dir], [Build SBS software using kernel-source-dir as directory with configured kernel source]),
-	      [BUILD_SBS="yes"
-	       KERNEL_SOURCE_DIR="$enableval"])
-
-
-
-
-if test "$BUILD_SBS" == "yes"
-then
-  AC_MSG_NOTICE([Building SBS software with kernel source at: $KERNEL_SOURCE_DIR])
-else
-  AC_MSG_NOTICE([SBS software support not selected!])
-fi
-
 
 #
 #  If --enable-usb is turned on, we build the VM/CC-usb support directories
 #
-enableusb="no"
 AC_ARG_ENABLE([usb],
 	AS_HELP_STRING([--enable-usb], [Build support for CC/VM usb data taking]),
-	[enableusb="yes"])
+	[],
+	[enableusb=no])
 
 #  If building is turned on we need to locate the headers and the includes.
 
-
-if test "$enableusb" == "yes"
+if test "$enable_usb" = "yes"
 then
 	AX_LIBUSB
 	PKG_CHECK_MODULES([libusb_1_0], [libusb-1.0])
