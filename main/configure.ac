@@ -663,6 +663,40 @@ else
 fi
 
 #
+# The SBS software will only be built if --enable-sbs was supplied.
+# In that case, the configured kernel source path is set using
+# --with-sbs-kernel-source-dir and that will be used to compile the
+# device driver as well. The default is to _not_ build the sbs stuff.
+#
+
+AC_ARG_ENABLE([sbs],
+	AS_HELP_STRING([--enable-sbs],  [Build SBS software with a configured kernel source]),
+	[],
+	[enable_sbs=no])
+
+if test "$enable_sbs" = "yes"
+then
+	AC_ARG_WITH([sbsdir],
+		[  --with-sbsdir=path - Specify path to the configured SBS kernel directory. Required if SBS support is enabled.],
+		[sbsdir=$withval])
+
+	if test x$sbsdir = x
+	then
+		AC_MSG_ERROR([--with-sbsdir is a mandatory option if SBS kernel support is enabled])
+	fi
+	
+	if test ! -d $sbsdir
+	then
+		AC_MSG_ERROR([SBS directory specified: $sbsdir does not exist!])
+	fi
+
+	KERNEL_SOURCE_DIR=$sbsdir
+	AC_MSG_NOTICE([Building SBS software with kernel source at: $KERNEL_SOURCE_DIR])
+else
+	AC_MSG_NOTICE([SBS software is not enabled.])
+fi
+
+#
 #  If --enable-usb is turned on, we build the VM/CC-usb support directories
 #
 AC_ARG_ENABLE([usb],
