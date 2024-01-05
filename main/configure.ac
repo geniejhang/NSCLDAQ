@@ -450,8 +450,7 @@ tcl_incdir="/usr/include/$tcl_basename"
 
 
 AC_ARG_ENABLE([epics-tools],
-	AS_HELP_STRING([--enable-epics-tools], 
-	[Build software that requires EPICS (default no)]),
+	AS_HELP_STRING([--enable-epics-tools], [Build software that requires EPICS (default no)]),
 	[],
 	[enable_epics_tools=no])
 
@@ -489,12 +488,11 @@ fi
 # ROOT_LDFLAGS   - ROOT libraries (automatically generated from ROOT config)
 
 AC_ARG_ENABLE([ddas],
-	AS_HELP_STRING([--enable-ddas],
-	[Build the DDAS support software (default no)]),
+	AS_HELP_STRING([--enable-ddas],	[Build the DDAS support software (default no)]),
 	[],
 	[enable_ddas=no])
 
-if test "$enable_ddas" = yes
+if test "$enable_ddas" = "yes"
 then
 	AC_MSG_NOTICE([The XIA-DDAS support software will be built])
 	AC_DEFINE([USING_DDAS], [1], [DDAS support enabled])
@@ -661,6 +659,40 @@ then
 else
 	AM_CONDITIONAL([BUILD_DDAS],[false])
 	AM_CONDITIONAL([USING_XIAAPI_V2], [false])
+fi
+
+#
+# The SBS software will only be built if --enable-sbs was supplied.
+# In that case, the configured kernel source path is set using
+# --with-sbs-kernel-source-dir and that will be used to compile the
+# device driver as well. The default is to _not_ build the sbs stuff.
+#
+
+AC_ARG_ENABLE([sbs],
+	AS_HELP_STRING([--enable-sbs],  [Build SBS software with a configured kernel source]),
+	[],
+	[enable_sbs=no])
+
+if test "$enable_sbs" = "yes"
+then
+	AC_ARG_WITH([sbsdir],
+		[  --with-sbsdir=path - Specify path to the configured SBS kernel directory. Required if SBS support is enabled.],
+		[sbsdir=$withval])
+
+	if test x$sbsdir = x
+	then
+		AC_MSG_ERROR([--with-sbsdir is a mandatory option if SBS kernel support is enabled])
+	fi
+	
+	if test ! -d $sbsdir
+	then
+		AC_MSG_ERROR([SBS directory specified: $sbsdir does not exist!])
+	fi
+
+	KERNEL_SOURCE_DIR=$sbsdir
+	AC_MSG_NOTICE([Building SBS software with kernel source at: $KERNEL_SOURCE_DIR])
+else
+	AC_MSG_NOTICE([SBS software is not enabled.])
 fi
 
 #
