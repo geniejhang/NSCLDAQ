@@ -450,14 +450,13 @@ tcl_incdir="/usr/include/$tcl_basename"
 
 
 AC_ARG_ENABLE([epics-tools],
-	AS_HELP_STRING([--enable-epics-tools=yes/no], 
+	AS_HELP_STRING([--enable-epics-tools], 
 	[Build software that requires EPICS (default no)]),
 	[],
 	[enable_epics_tools=no])
 
 if test "$enable_epics_tools" = "yes"
 then
-
 	AX_EPICS
 	AM_CONDITIONAL([EPICS], [true])
 	AM_CONDITIONAL(BUILD_EPICS_TOOLS, [true])
@@ -465,7 +464,6 @@ then
 else
 	AM_CONDITIONAL([EPICS], [false])
 	AM_CONDITIONAL(BUILD_EPICS_TOOLS, [false])
-
 fi
 
 # The DDAS Software will only be built if --enable-ddas=yes is supplied by
@@ -491,180 +489,178 @@ fi
 # ROOT_LDFLAGS   - ROOT libraries (automatically generated from ROOT config)
 
 AC_ARG_ENABLE([ddas],
-    AS_HELP_STRING([--enable-ddas=yes/no],
-                   [Build the DDAS support software (default no)]),
-    [],
-    [enable_ddas=no])
+	AS_HELP_STRING([--enable-ddas],
+	[Build the DDAS support software (default no)]),
+	[],
+	[enable_ddas=no])
 
 if test "$enable_ddas" = yes
 then
-AC_MSG_NOTICE([The XIA-DDAS Support software will be built])
-   AC_DEFINE([USING_DDAS],[1],  [DDAS SUpport Enabled])
+	AC_MSG_NOTICE([The XIA-DDAS support software will be built])
+	AC_DEFINE([USING_DDAS], [1], [DDAS support enabled])
 
-   AC_ARG_WITH([xiaapidir],
-	[  --with-xiaapidir=path - Path to the XIAAPI installation. Required if --enable-ddas=yes.],
+	AC_ARG_WITH([xiaapidir],
+	[  --with-xiaapidir=path - Path to the XIAAPI installation. Required if DDAS support is enabled.],
 	[xiaapidir=$withval])
-   if test -n -d ${xiaapidir}
-   then
-	AC_MSG_ERROR([Specify --with-xiaapidir to point to the actual installation of the XIA API])
-   fi
-   PIXIE_API_DIR=${xiaapidir}
+	
+	if test -n -d ${xiaapidir}
+	then
+		AC_MSG_ERROR([Specify --with-xiaapidir to point to the actual installation of the XIA API])
+	fi
+	PIXIE_API_DIR=${xiaapidir}
 
-   # If the xiaapidir/include/pixie16/pixie16.h exists we're using the
-   # XIAAPI_V3 or higher stuff:
+	# If the xiaapidir/include/pixie16/pixie16.h exists we're using the
+	# XIAAPI_V3 or higher stuff:
 
-   xiaapiver=3
-   PIXIE_CPPFLAGS="-I${xiaapidir}/include"
-   AC_CHECK_FILE(
-   [${xiaapidir}/include/pixie16/pixie16.h],
-   [PIXIE_CPPFLAGS="${PIXIE_CPPFLAGS} -DXIAAPI_V3"
-   PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"
-   AC_DEFINE([XIAAPI_VERSION], [3], [Pixie16 version 3 api])
-   ],
-   [PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixieSDK -lm -Wl,-rpath=${xiaapidir}/lib"
-   AC_DEFINE([XIAAPI_VERSION], [2], [Pixie16 version 2 or lower])
-   xiaapiver=2
-   ])
+	xiaapiver=3
+	PIXIE_CPPFLAGS="-I${xiaapidir}/include"
+	AC_CHECK_FILE([${xiaapidir}/include/pixie16/pixie16.h],
+		[PIXIE_CPPFLAGS="${PIXIE_CPPFLAGS} -DXIAAPI_V3"	PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"
+		AC_DEFINE([XIAAPI_VERSION], [3], [Pixie16 version 3 api])],
+		[PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixieSDK -lm -Wl,-rpath=${xiaapidir}/lib"
+		AC_DEFINE([XIAAPI_VERSION], [2], [Pixie16 version 2 or lower])
+		xiaapiver=2])
 
-   AM_CONDITIONAL([USING_XIAAPI_V2], [test ${xiaapiver} -eq 2])
+	AM_CONDITIONAL([USING_XIAAPI_V2], [test ${xiaapiver} -eq 2])
 
-   AC_SUBST(PIXIE_API_DIR)
-   AC_SUBST(PIXIE_CPPFLAGS)
-   AC_SUBST(PIXIE_LDFLAGS)
+	AC_SUBST(PIXIE_API_DIR)
+	AC_SUBST(PIXIE_CPPFLAGS)
+	AC_SUBST(PIXIE_LDFLAGS)
 
-   # Specify the location of the Plx installation. This will default to
-   # /usr/opt/plx.
-   
-   AC_ARG_WITH([plx-sdk],
-   [  --with-plx-sdk=path - path to the PLX software installation],
-   [PLX_SDK_DIR=$withval], [PLX_SDK_DIR=""])
+	# Specify the location of the Plx installation. This will default to
+	# /usr/opt/plx.
 
-   if test -z "$PLX_SDK_DIR"
-   then
-      for d in /usr/opt/plx $(prefix)/../../plx
-      do
-         if test -z "$PLX_SDK_DIR"
-         then
+	AC_ARG_WITH([plx-sdk],
+		[  --with-plx-sdk=path - Path to the PLX software installation. Required if DDAS support is enabled.],
+		[PLX_SDK_DIR=$withval], [PLX_SDK_DIR=""])
 
-	    # Its probably one of these:
+	if test -z "$PLX_SDK_DIR"
+	then
+		for d in /usr/opt/plx $(prefix)/../../plx
+		do
+			if test -z "$PLX_SDK_DIR"
+			then
+		
+			# Its probably one of these:
+		
+				AC_CHECK_FILE([$d/PlxApi/Library/libPlxApi.a],
+					[PLX_SDK_DIR="$d"],
+					[PLX_SDK_DIR=""])
 
-            AC_CHECK_FILE([$d/PlxApi/Library/libPlxApi.a],
-	    [PLX_SDK_DIR="$d"],[PLX_SDK_DIR=""])
-	    
-	    AC_CHECK_FILE([$d/PlxApi/Library/PlxApi.so],
-	    [PLX_SDK_DIR="$d"],[PLX_SDK_DIR=""])
-	    
-         fi
-      done
-   fi
-   
-   #  If PLX_SDK_DIR is still "" then we toss an error:
-   
-   if test -z "$PLX_SDK_DIR"
-   then
-      AC_MSG_FAILURE([Could not locate the PLX SDK directory, use --with-plx-sdk to help me])
-   fi
+				AC_CHECK_FILE([$d/PlxApi/Library/PlxApi.so],
+					[PLX_SDK_DIR="$d"],
+					[PLX_SDK_DIR=""])
+			fi
+		done
+	fi
 
-   PLX_CPPFLAGS="-I${PLX_SDK_DIR}/Include -I${PLX_SDK_DIR}/PlxApi"
+	#  If PLX_SDK_DIR is still "" then we toss an error:
 
-   # Use the shared library PlxApi.so (plx 8+) otherwise libPlxApi.a:
-   
-   AC_CHECK_FILE([${PLX_SDK_DIR}/PlxApi/Library/PlxApi.so],
-   [PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -l:PlxApi.so -Wl,-rpath=${PLX_SDK_DIR}/PlxApi/Library"],
-   [PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -lPlxApi"])
+	if test -z "$PLX_SDK_DIR"
+	then
+		AC_MSG_FAILURE([Could not locate the PLX SDK directory, use --with-plx-sdk to help me])
+	fi
 
-   AC_SUBST(PLX_SDK_DIR)
-   AC_SUBST(PLX_CPPFLAGS)
-   AC_SUBST(PLX_LDFLAGS)
+	PLX_CPPFLAGS="-I${PLX_SDK_DIR}/Include -I${PLX_SDK_DIR}/PlxApi"
 
-   # Also need to know where the Pixie firmware is installed:
+	# Use the shared library PlxApi.so (plx 8+) otherwise libPlxApi.a:
 
-   AC_ARG_WITH([firmwaredir],
-   [  --with-firmwaredir=path - Specify path to firmware directory tree. Required if --enable-ddas=yes.],
-   [firmwaredir=$withval])
+  	AC_CHECK_FILE([${PLX_SDK_DIR}/PlxApi/Library/PlxApi.so],
+		[PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -l:PlxApi.so -Wl,-rpath=${PLX_SDK_DIR}/PlxApi/Library"],
+		[PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -lPlxApi"])
 
-   if test x$firmwaredir = x
-   then
-	AC_MSG_ERROR([ --with-firmwaredir is a mandatory option])
-   fi
+	AC_SUBST(PLX_SDK_DIR)
+	AC_SUBST(PLX_CPPFLAGS)
+	AC_SUBST(PLX_LDFLAGS)
 
-   AC_SUBST(firmwaredir)
+	# Also need to know where the Pixie firmware is installed:
 
-   # Establish the dsp load image directory. These files are also not
-   # redistributable so the user must have licensed them and installed
-   # them somewhere.
-   
-   AC_ARG_WITH([dspdir],
-   [  --with-dspdir=path - Specify path to the DSP software directory tree. Required if --enable-ddas=yes.],
-   [dspdir=$withval])
-   
-   if test x$dspdir = x
-   then
-	AC_MSG_ERROR([--with-dspdir is a mandatory option])
-   fi
+	AC_ARG_WITH([firmwaredir],
+		[  --with-firmwaredir=path - Specify path to firmware directory tree. Required if DDAS support is enabled.],
+		[firmwaredir=$withval])
 
-   AC_SUBST(dspdir)
+	if test x$firmwaredir = x
+	then
+		AC_MSG_ERROR([ --with-firmwaredir is a mandatory option])
+	fi
 
-   # Check that the unified format library has been incorporated into
-   # the source tree and configure/build it into $prefix/unifiedformat
+	AC_SUBST(firmwaredir)
 
-   AC_CHECK_PROG([havecmake], cmake, [1], [0])
-   if `test ${havcmake} = 0`
-   then
-	AC_MSG_ERROR([cmake must be in the path to build SpecTcl])
-   fi
+	# Establish the dsp load image directory. These files are also not
+	# redistributable so the user must have licensed them and installed
+	# them somewhere.
 
-   AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt], [
-   rm -rf unifiedformat/build
-   mkdir -p unifiedformat/build
-   sourcedir="`realpath ${srcdir}`"
-   (cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make all test install)
-   UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
-   UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lAbstractFormat -lV10Format -lV11Format -lV12Format -Wl,-rpath=${prefix}/unifiedformat/lib"
-   AC_SUBST(UFMT_CPPFLAGS)
-   AC_SUBST(UFMT_LDFLAGS)
-   ],
-   [AC_MSG_ERROR([You need to incorporate the unified format library with unifiedfmt-incorp.sh])
-   ])
+	AC_ARG_WITH([dspdir],
+		[  --with-dspdir=path - Specify path to the DSP software directory tree. Required if DDAS support is enabled.],
+		[dspdir=$withval])
 
-   #  Check for Root.  -- we're just going to add a --with-rootsys and 
-   #  use rootconfig to add the following to the Makefile macro set.
-   #
-   #  ROOT_CPPFLAGS
-   #  ROOT_LDFLAGS
-   #
+	if test x$dspdir = x
+	then
+		AC_MSG_ERROR([--with-dspdir is a mandatory option])
+	fi
 
-   rootdir=$ROOTSYS
-   AC_ARG_WITH([rootsys], 
-   [  --with-rootsys=path - path to the root installation to use],
-   [rootdir=$withval])
-   if test  x$rootdir = x 
-   then
-	AC_MSG_ERROR([Use --with-rootsys to specify where root is installed])
-   fi
-   if test ! -d $rootdir
-   then
-	AC_MSG_ERROR([ROOTSYS directory specified: $rootdir does not exist])
-   fi
+	AC_SUBST(dspdir)
 
-   ROOTSYS=$rootdir
-   ROOT_CFLAGS=`$rootdir/bin/root-config --cflags`
-   ROOT_LD1=`$rootdir/bin/root-config --glibs`
-   ROOT_LD2=`$rootdir/bin/root-config --ldflags`
-   ROOT_RPATH="-Wl,-rpath=`$rootdir/bin/root-config --libdir`"
+	# Check that the unified format library has been incorporated into
+	# the source tree and configure/build it into $prefix/unifiedformat
 
-   ROOT_LDFLAGS="$ROOT_LD1 $ROOT_LD2 $ROOT_RPATH"
+	AC_CHECK_PROG([havecmake], cmake, [1], [0])
+	if `test ${havcmake} = 0`
+	then
+		AC_MSG_ERROR([cmake must be in the path to build DDAS support software])
+	fi
 
-   AC_SUBST(ROOTSYS)
-   AC_SUBST(ROOT_CFLAGS)
-   AC_SUBST(ROOT_LDFLAGS)
+	AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt],
+		[rm -rf unifiedformat/build
+		mkdir -p unifiedformat/build
+		sourcedir="`realpath ${srcdir}`"
+		(cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make all test install)
+		UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
+		UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lAbstractFormat -lV10Format -lV11Format -lV12Format -Wl,-rpath=${prefix}/unifiedformat/lib"
+		AC_SUBST(UFMT_CPPFLAGS)
+		AC_SUBST(UFMT_LDFLAGS)],
+		[AC_MSG_ERROR([You need to incorporate the unified format library with unifiedfmt-incorp.sh])])
 
-   #  Now export all the variables to the Makefile.
-   
-   AM_CONDITIONAL([BUILD_DDAS], [true])   
+	#  Check for ROOT -- we're just going to add a --with-rootsys and 
+	#  use rootconfig to add the following to the Makefile macro set:
+	#
+	#  ROOT_CPPFLAGS - compiler flags for ROOT.
+	#  ROOT_LDFLAGS - ROOT libraries location.
+   	#
+
+	rootdir=$ROOTSYS
+	AC_ARG_WITH([rootsys],
+		[  --with-rootsys=path - Path to the ROOT installation to use. Required if DDAS support is enabled.],
+		[rootdir=$withval])
+	
+	if test  x$rootdir = x 
+	then
+		AC_MSG_ERROR([Use --with-rootsys to specify where root is installed])
+	fi
+	
+	if test ! -d $rootdir
+	then
+		AC_MSG_ERROR([ROOTSYS directory specified: $rootdir does not exist])
+	fi
+
+	ROOTSYS=$rootdir
+	ROOT_CFLAGS=`$rootdir/bin/root-config --cflags`
+	ROOT_LD1=`$rootdir/bin/root-config --glibs`
+	ROOT_LD2=`$rootdir/bin/root-config --ldflags`
+	ROOT_RPATH="-Wl,-rpath=`$rootdir/bin/root-config --libdir`"
+
+	ROOT_LDFLAGS="$ROOT_LD1 $ROOT_LD2 $ROOT_RPATH"
+
+	AC_SUBST(ROOTSYS)
+	AC_SUBST(ROOT_CFLAGS)
+	AC_SUBST(ROOT_LDFLAGS)
+
+	#  Now export all the variables to the Makefile:
+
+	AM_CONDITIONAL([BUILD_DDAS], [true])   
 else
-   AM_CONDITIONAL([BUILD_DDAS],[false])
-   AM_CONDITIONAL([USING_XIAAPI_V2], [false])
+	AM_CONDITIONAL([BUILD_DDAS],[false])
+	AM_CONDITIONAL([USING_XIAAPI_V2], [false])
 fi
 
 #
