@@ -691,8 +691,11 @@ then
 	fi
 
 	KERNEL_SOURCE_DIR=$sbsdir
+	AC_SUBST(KERNEL_SOURCE_DIR)
+	AM_CONDITIONAL([BUILD_SBS_DRIVER], [true])
 	AC_MSG_NOTICE([Building SBS software with kernel source at: $KERNEL_SOURCE_DIR])
 else
+	AM_CONDITIONAL([BUILD_SBS_DRIVER], [false])
 	AC_MSG_NOTICE([SBS software is not enabled.])
 fi
 
