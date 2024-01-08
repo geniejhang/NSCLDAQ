@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT(nscldaq,12.1-xiaapi4, [scientificsoftware@nscl.msu.edu],[], [http://www.sourceforge.net/projects/nscldaq])
+AC_INIT(nscldaq, 12.1-xiaapi4, [daqhelp@nscl.msu.edu], [], [https://github.com/FRIBDAQ/NSCLDAQ])
 
 AC_CONFIG_SRCDIR([/base/dataflow/CRingBuffer.h])
 AC_CONFIG_HEADER([config.h])
@@ -13,34 +13,337 @@ AH_TOP([
 #ifndef CONFIG_H
 #define CONFIG_H
 ])
-
 AH_BOTTOM([
 #endif
 ])
 
-# Checks for programs.
+# Checks for programs:
+
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
-
 AX_CXX_COMPILE_STDCXX_11([noext])
 
 # MPI defined/usable to build MPI chunks:
 
 AC_LANG_PUSH(C++)
-AX_MPI([
-	AM_CONDITIONAL([MPI], true)
-	AC_DEFINE([HAVE_MPI], 1, [MPI exists])], [AM_CONDITIONAL([MPI], false)])
+AX_MPI([AM_CONDITIONAL([MPI], true) AC_DEFINE([HAVE_MPI], 1, [MPI exists])], [AM_CONDITIONAL([MPI], false)])
 AC_LANG_POP
+
+# Pandoc is needed for printed versions of the logbook:
+
+AC_CHECK_PROG(HAVE_PANDOC, [pandoc], [true], [false])
+if test "$HAVE_PANDOC" ==  "false"
+then
+	AC_MSG_FAILURE([pandoc is required to produce PDF output from the logbook utilities])
+	
+fi
+
+# Documentation
+
+AC_ARG_ENABLE([docs],
+              AS_HELP_STRING([--enable-docs], [Build the documentation]),
+              [], [enable_docs=no])
+
+if test "x$enable_docs" == "xyes"
+then
+	AC_MSG_NOTICE([Documentation enabled])
+
+	AC_CHECK_PROG(HAVE_DOCBOOK2PDF, [docbook2pdf], [true], [false])
+	if test "$HAVE_DOCBOOK2PDF" == "false"
+	then
+		AC_MSG_FAILURE([docbook2pdf is required to build documentation but was not found])
+	else
+		AC_SUBST(DOCBOOK2PDF,[docbook2pdf])
+	fi
+
+	AC_CHECK_PROG(HAVE_DOCBOOK2HTML, [docbook2html], [true], [false])
+	if test "$HAVE_DOCBOOK2HTML" == "false"
+	then
+		AC_MSG_FAILURE([docbook2html is required to build documentation but was not found])
+	else
+		AC_SUBST(DOCBOOK2HTML,[docbook2html])
+	fi
+
+	AC_CHECK_PROG(HAVE_XMLTO, [xmlto], [true], [false])
+	if test "$HAVE_XMLTO" == "false"
+	then
+		AC_MSG_FAILURE([xmlto is required to build documentation but was not found])
+	else
+		AC_SUBST(DOCBOOK2MAN,["xmlto man"])
+	fi
+
+	AC_CHECK_PROG(HAVE_MANDB, mandb, [true], [false])
+	if test "$HAVE_MANDB" == "false"
+	then
+		AC_MSG_FAILURE([mandb is required to build documentation but was not found])
+	else
+		AC_SUBST(MANDB,[mandb])
+	fi
+
+	AM_CONDITIONAL([BUILD_DOCS],[true])
+else
+	AM_CONDITIONAL([BUILD_DOCS],[false])
+	AC_MSG_NOTICE([Documentation disabled])
+fi
+
+# DDAS documentation
+# DDAS docs are written in Doxygen, so if enabled check to make sure that
+# Doxygen and dot (for graphs) are installed
+
+AC_ARG_ENABLE([ddas-docs],
+              AS_HELP_STRING([--enable-ddas-docs],
+	      [Build the DDAS documentation]),
+              [], [enable_ddas_docs=no])
+
+if test "$enable_ddas_docs" = "yes"
+then
+	AC_MSG_NOTICE([DDAS documentation enabled])
+
+  	AC_CHECK_PROG(HAVE_DOXYGEN, [doxygen], [true], [false])
+  	if test "$HAVE_DOXYGEN" = "false"
+	then
+		AC_MSG_FAILURE([Doxygen is required to build the DDAS documentation but was not found])
+  	else
+    		AC_SUBST(DOXYGEN,[doxygen])
+  	fi
+
+  	AC_CHECK_PROG(HAVE_DOT, [dot], [true], [false])
+  	if test "$HAVE_DOT" = "false"
+  	then
+		AC_MSG_FAILURE([DOT is required by Doxygen to build the DDAS documentation but was not found])
+  	fi
+
+  	AM_CONDITIONAL([BUILD_DDAS_DOCS],[true])
+else
+	AM_CONDITIONAL([BUILD_DDAS_DOCS],[false])
+  	AC_MSG_NOTICE([DDAS documentation disabled])
+fi
+
+AC_CHECK_LIB([X11], [XSetWindowBackground])
+AC_CHECK_LIB([Xt], [XtManage])
+
+AM_PATH_CPPUNIT
+
+# Checksums in eventlog require openssl for the digest libs:
+
+AX_CHECK_OPENSSL([AC_MSG_RESULT([Found OpenSSL])], [AC_MSG_ERROR([OpenSSL is required but cannot be found])])
+
+# For compatibility with existing AC_Substs:
+
+CPPUNIT_LDFLAGS="${CPPUNIT_LIBS}"
+
+AC_SUBST([AM_CXXFLAGS], [-fno-strict-aliasing])
+
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h malloc.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/socket.h sys/time.h unistd.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+
+AC_HEADER_STDBOOL
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_OFF_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+AC_TYPE_UID_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT8_T
+
+AX_CHECK_COMPILE_FLAG([-Wno-error=date-time], [NODATEWARN="-Wno-error=date-time"])
+AC_SUBST(NODATEWARN)
+
+# check to find the size of address
+AC_CHECK_SIZEOF([void*])
+AS_IF([test "$ac_cv_sizeof_voidp" -eq 8],
+	    AC_DEFINE([ADDR64], 1, [Specifies that memory addresses are 64-bits ]),
+     	    [])
+   
+# Checks for library functions.
+
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_FORK
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([dup2 gethostbyaddr gethostbyname gettimeofday inet_ntoa memmove memset regcomp socket strchr strcspn strdup strerror strspn strtol])
+
+AC_CHECK_FUNCS([ftruncate munmap])
+AC_FUNC_MMAP
+AC_FUNC_STAT
+
+# Additional checks from DDAS/main/configure.ac added for refactoring:
+# --ASC 4/6/23
+
+AC_TYPE_INT16_T
+AC_TYPE_INT64_T
+AC_TYPE_UINT64_T
+AC_CHECK_TYPES([ptrdiff_t])
+AC_CHECK_FUNCS([floor pow select sqrt strstr])
+AC_CHECK_HEADERS([float.h values.h])
+
+# Bits and pieces of NSCLDAQ can do logging via boostlog. This stuff tells us
+# if that's present and if so, how to incorporate it:
+
+AX_BOOST_BASE([],
+	[BOOST_EXTRA_CPPFLAGS="-DBOOST_ALL_DYN_LINK"],
+	[BOOST_EXTRA_CPPFLAGS=""])
+AX_BOOST_LOG
+AC_SUBST(BOOST_EXTRA_CPPFLAGS)
+
+# Automake:
+
+AM_INIT_AUTOMAKE([tar-ustar foreign subdir-objects])
+
+# Makefile exports:
+
+SOVERSION="11:0:0"
+
+#---------------------------------------------------------------------
+#
+#  Local tests:
+#
+
+# Ensure Python is 3.0  or greater, and the packages/dependencies we need
+
+AM_PATH_PYTHON([3.0],
+	[],
+	[AC_MSG_ERROR([Python 3.0 or higher is needed for NSCLDAQ])])
+AX_PYQT
+PKG_CHECK_MODULES(PYTHON3, python3)
+
+# Also need to set compilation/link flags for QtScope:
+# Thanks to Giordano for figuring this portable way to do it:
+
+PKG_CHECK_MODULES(PYTHON,
+	[python3-embed],
+	[PYTHON3_CXXFLAGS=`pkg-config --cflags python3-embed`; PYTHON3_LIBS=`pkg-config --libs python3-embed`],
+	[PYTHON3_CXXFLAGS=`pkg-config python3 --cflags`, PYTHON3_LIBS=`pkg-config python3 --libs`])
+AC_SUBST(PYTHON3_CXXFLAGS)
+AC_SUBST(PYTHON3_LIBS)
+
+# Ensure swig is installed: -- this is used to generate wrappers for the
+# VMUSB and CCUSB libraries for use within Tcl drivers.
+#
+# Earlier swig versions than 1.3 may well work, however this is the
+# version I used when first successfully building the wrappers
+# (Ubuntu Lucid Lynx).
+
+AX_PKG_SWIG([1.3], [], [ AC_MSG_ERROR([Swig is required to build nscldaq])])
+
+# We use gengetopt in a few places.  Ideally it's been found by now in the
+# path if not we'll need to do the withval thing... or prompt the user to
+# give us a --with-gengetopt-path
+
+AX_GENGETOPT
+
+# Tcl/Tk is pervasive in NSCLDAQ so we need to have it too:
+
+AX_TCL
+
+#  The substs below are for compatibility sake 
+#  eventually we should migrate Makefile.am defs to use
+#  those in m4/tcl.m4
+
+TCL_FLAGS="${TCL_CPPFLAGS} ${TK_CPPFLAGS}"
+
+# Check for redundancy of libieee in the LD_LIBS
+
+TCL_LDFLAGS=${TK_LIBS}
+for tclname in ${TCL_LIBS}
+do
+    if test $tclname != "-lieee" 
+    then 
+        TCL_LDFLAGS="$TCL_LDFLAGS $tclname"
+    fi
+done
+TCLSH_CMD=${TCLSH} 
+
+#  If systemtcl is yes we're pretty much done.. otherwise
+#  we need to configure/build/install libtcl into prefix and then set
+#  the flags:
+
+if false
+then
+	AC_MSG_CHECKING([libtcl++ installed as package (e.g. .deb)])
+
+	AC_CHECK_FILE([/usr/include/TCLInterpreterObject.h],
+		[systemtcl="yes"], [systemtcl="no"])
+
+	if test $systemtcl = "yes"
+	then
+		LIBTCLPLUS_CFLAGS=""
+		LIBEXCEPTION_LDFLAGS="-lException"
+		LIBTCLPLUS_LDFLAGS="-ltclPlus ${LIBEXCEPTION_LDFLAGS}"
+		AC_MSG_RESULT([Found in  system libraries])
+	else
+		AC_CHECK_FILE([${prefix}/lib/libException.so], [libtclinstalled="yes"], [libtclinstalled="no"])
+		AC_CHECK_FILE([${prefix}/lib/libtclPlus.so], [libexceptioninstalled="yes"],[libexceptioninstalled="no"])
+		AC_CHECK_FILE([${prefix}/include/TCLInterpreterObject.h], [tclinterpobjinstalled="yes"],[tclinterpobjinstalled="no"])
+	
+		if [ [ $libtclinstalled = "no" ] || [ $libexceptioninstalled = "no" ] || [ $tclinterpobjinstalled = "no" ] ]
+		then
+			AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
+			if test $havelibtcldir = "yes"
+			then
+				AC_MSG_RESULT([Need to build local tagged copy])
+				AC_CHECK_FILE([${srcdir}/libtcl/configure], [havelibtcldir="yes"], [havelibtcldir="no"])
+				(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)'
+			else
+				AC_MSG_ERROR([I seem to be missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
+			fi
+		else
+		AC_MSG_RESULT([Previously built version found in ${prefix}])
+		fi
+	
+	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
+	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
+	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
+	
+	fi
+fi
+
+# Hard code use of local libtcl:
+
+AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
+if test $havelibtcldir = "yes"
+then
+	AC_MSG_RESULT([Need to build local tagged copy])
+	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
+
+	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
+	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
+	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
+else
+	AC_MSG_ERROR([I seem to be missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
+fi
+
+AC_SUBST(LIBTCLPLUS_CFLAGS)
+AC_SUBST(LIBTCLPLUS_LDFLAGS)
+AC_SUBST(LIBEXCEPTION_LDFLAGS)
+
+#  Configure and install tclhttpd
+#  We use that /usr/lib/tclx.y has tclConfig
+#  and /usr/include/tclx.y     has the headers.
+
+tcl_basename=tcl${TCL_VERSION}
+tcl_configdir="/usr/lib/$tcl_basename"
+tcl_incdir="/usr/include/$tcl_basename"
+
+(cd ${srcdir}/tclhttpd3.5.1; ./configure --prefix=${prefix}/share/tclhttpd --enable-gcc --with-tclinclude=$tcl_incdir --with-tcl=$tcl_configdir)
+(cd ${srcdir}/tclhttpd3.5.1; make -j26 all install)
 
 #  CAEN Digitizer support is optional:
 
-AC_ARG_ENABLE([caen-digitizer-support], 
-	     AC_HELP_STRING([--enable-caen-digitizer-support],
-	     [Build support for CAEN Digitizers]), 
-	     [enable_caen=$enableval], [enable_caen=no])
+AC_ARG_ENABLE([caen-digitizer-support],
+	AC_HELP_STRING([--enable-caen-digitizer-support],
+	[Build support for CAEN Digitizers]),
+	[enable_caen=$enableval],
+	[enable_caen=no])
 
 if test "x$enable_caen" = "xyes"
 then
@@ -69,377 +372,39 @@ fi
 #  libraries are awful in that they require installation in
 #  specific locations:
 
-AC_ARG_ENABLE([caen-nextgen], 
-  [AS_HELP_STRING([--enable-caen-nextgen], 
-    [To enable support for CAEN Nextgen digitizers.])],
-    [
-      AC_MSG_CHECKING([Checking for CAEN FElib installed])
-      AC_CHECK_FILE([/usr/local/include/CAEN_FELib.h], 
-        [AC_MSG_RESULT([Found header])], 
+AC_ARG_ENABLE([caen-nextgen],
+	[AS_HELP_STRING([--enable-caen-nextgen],
+	[To enable support for CAEN Nextgen digitizers.])],
+	[AC_MSG_CHECKING([Checking for CAEN FElib installed])
+	AC_CHECK_FILE([/usr/local/include/CAEN_FELib.h], 
+        [AC_MSG_RESULT([Found header])],
         [AC_MSG_ERROR([Can't find /usr/local/CAEN_FELib.h - install CAEN Nextgen digitizer support libraries])])
-      AC_CHECK_FILES([/usr/local/lib/libCAEN_Dig2.so /usr/local/lib/libCAEN_FELib.so], 
+	AC_CHECK_FILES([/usr/local/lib/libCAEN_Dig2.so /usr/local/lib/libCAEN_FELib.so],
         [AC_MSG_RESULT([Found CAEN FELib library files])],
         [AC_MSG_ERROR([Can't fid the /usr/local/lib/{libCAEN_Dig2.so, libCAEN_FELib.so files install CAEN nextgen digitizer support libraries}]
         )])
-
-      enable_caennextgen="true"  
-
-      ],[enable_caennextgen="false"]
-)
-  
+	enable_caennextgen="true"],
+	[enable_caennextgen="false"])  
 
 if test "${enable_caennextgen}" = "true"
 then
-  AC_MSG_NOTICE([Enabled support for CAEN Nextgen digitizers])
+	AC_MSG_NOTICE([Enabled support for CAEN Nextgen digitizers])
 
-  #  Set the make file variables:
+	#  Set the make file variables:
 
-  CAENNG_CPPFLAGS="-I/usr/local/include"
-  CAENNG_LDFLAGS="-L/usr/local/lib -lCAEN_FELib -lCAEN_Dig2"
-  AC_SUBST([CAENNG_CPPFLAGS])
-  AC_SUBST([CAENNG_LDFLAGS])
-  AM_CONDITIONAL([CAENNEXTGEN], [true])
+	CAENNG_CPPFLAGS="-I/usr/local/include"
+	CAENNG_LDFLAGS="-L/usr/local/lib -lCAEN_FELib -lCAEN_Dig2"
+	AC_SUBST([CAENNG_CPPFLAGS])
+	AC_SUBST([CAENNG_LDFLAGS])
+	AM_CONDITIONAL([CAENNEXTGEN], [true])
 else 
-  AC_MSG_NOTICE([Disabled support for  CAEN Nextgen digitizers])
-  AM_CONDITIONAL([CAENNEXTGEN], [false])
+     AC_MSG_NOTICE([Disabled support for  CAEN Nextgen digitizers])
+     AM_CONDITIONAL([CAENNEXTGEN], [false])
 fi
-
 
 # CAEN Nextgen digitizers, if used require jsoncpp:
 
 PKG_CHECK_MODULES([JSON], [jsoncpp])
-
-
-# Pandoc is needed for printed versions of the logbook:
-
-AC_CHECK_PROG(HAVE_PANDOC, [pandoc], [true], [false])
-if test "$HAVE_PANDOC" ==  "false"
-then
-	AC_MSG_FAILURE([pandoc is required to produce PDF output from the logbook utilities])
-	
-fi
-
-# Documentation
-
-AC_ARG_ENABLE([docs],
-              AS_HELP_STRING([--enable-docs],[Build the documentation]),
-              [], [enable_docs=no])
-
-if test "x$enable_docs" == "xyes"
-then
-  AC_MSG_NOTICE([Documentation enabled])
-
-  AC_CHECK_PROG(HAVE_DOCBOOK2PDF, [docbook2pdf], [true], [false])
-  if test "$HAVE_DOCBOOK2PDF" == "false"
-  then
-    AC_MSG_FAILURE([docbook2pdf is required to build documentation but was not found])
-  else
-    AC_SUBST(DOCBOOK2PDF,[docbook2pdf])
-  fi
-
-  AC_CHECK_PROG(HAVE_DOCBOOK2HTML, [docbook2html], [true], [false])
-  if test "$HAVE_DOCBOOK2HTML" == "false"
-  then
-    AC_MSG_FAILURE([docbook2html is required to build documentation but was not found])
-  else
-    AC_SUBST(DOCBOOK2HTML,[docbook2html])
-  fi
-
--  AC_CHECK_PROG(HAVE_XMLTO, [xmlto], [true], [false])
-  if test "$HAVE_XMLTO" == "false"
-  then
-    AC_MSG_FAILURE([xmlto is required to build documentation but was not found])
-  else
-    AC_SUBST(DOCBOOK2MAN,["xmlto man"])
-  fi
-
-  AC_CHECK_PROG(HAVE_MANDB, mandb, [true], [false])
-  if test "$HAVE_MANDB" == "false"
-  then
-    AC_MSG_FAILURE([mandb is required to build documentation but was not found])
-  else
-    AC_SUBST(MANDB,[mandb])
-  fi
-
-  AM_CONDITIONAL([BUILD_DOCS],[true])
-else
-  AM_CONDITIONAL([BUILD_DOCS],[false])
-  AC_MSG_NOTICE([Documentation disabled])
-fi
-
-AC_ARG_ENABLE([ddas-docs],
-              AS_HELP_STRING([--enable-ddas-docs],
-	      [Build the DDAS documentation]),
-              [], [enable_ddas_docs=no])
-
-# DDAS documentation
-# DDAS docs are written in Doxygen, so if enabled check to make sure that
-# Doxygen and dot (for graphs) are installed
-
-if test "x$enable_ddas_docs" == "xyes"
-then
-  AC_MSG_NOTICE([DDAS documentation enabled])
-
-  AC_CHECK_PROG(HAVE_DOXYGEN, [doxygen], [true], [false])
-  if test "$HAVE_DOXYGEN" == "false"
-  then
-    AC_MSG_FAILURE([Doxygen is required to build the DDAS documentation but was not found])
-  else
-    AC_SUBST(DOXYGEN,[doxygen])
-  fi
-
-  AC_CHECK_PROG(HAVE_DOT, [dot], [true], [false])
-  if test "$HAVE_DOT" == "false"
-  then
-    AC_MSG_FAILURE([DOT is required by Doxygen to build the DDAS documentation but was not found])
-  fi
-
-  AM_CONDITIONAL([BUILD_DDAS_DOCS],[true])
-else
-  AM_CONDITIONAL([BUILD_DDAS_DOCS],[false])
-  AC_MSG_NOTICE([DDAS documentation disabled])
-fi
-
-AC_CHECK_LIB([X11], [XSetWindowBackground])
-AC_CHECK_LIB([Xt], [XtManage])
-
-AM_PATH_CPPUNIT
-
-# Checksums in eventlog require openssl for the digest libs:
-
-AX_CHECK_OPENSSL([AC_MSG_RESULT([found openssl])],[AC_MSG_ERROR([OpenSSL is required but cannot be found])])
-
-
-#
-#   For compatibility with existing AC_Substs:
-
-CPPUNIT_LDFLAGS="${CPPUNIT_LIBS}"
-
-AC_SUBST([AM_CXXFLAGS], [-fno-strict-aliasing])
-
-AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h malloc.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/socket.h sys/time.h unistd.h])
-
-# Checks for typedefs, structures, and compiler characteristics.
-
-AC_HEADER_STDBOOL
-AC_C_CONST
-AC_C_INLINE
-AC_TYPE_OFF_T
-AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_HEADER_TIME
-AC_STRUCT_TM
-AC_TYPE_UID_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT8_T
-
-# Additional checks from DDAS/main/configure.ac added for refactoring:
-# --ASC 4/6/23
-
-# End additional checks
-
-AX_CHECK_COMPILE_FLAG([-Wno-error=date-time], [NODATEWARN="-Wno-error=date-time"])
-AC_SUBST(NODATEWARN)
-
-
-# check to find the size of address
-AC_CHECK_SIZEOF([void*])
-AS_IF([test "$ac_cv_sizeof_voidp" -eq 8],
-    AC_DEFINE([ADDR64],1,[Specifies that memory addresses are 64-bits ]),
-     [])
-   
-
-# Checks for library functions.
-
-AC_FUNC_ERROR_AT_LINE
-AC_FUNC_FORK
-AC_FUNC_MALLOC
-AC_CHECK_FUNCS([dup2 gethostbyaddr gethostbyname gettimeofday inet_ntoa memmove memset regcomp socket strchr strcspn strdup strerror strspn strtol])
-
-AC_CHECK_FUNCS([ftruncate munmap])
-AC_FUNC_MMAP
-AC_FUNC_STAT
-
-# Additional checks from DDAS/main/configure.ac added for refactoring:
-# --ASC 4/6/23
-
-AC_TYPE_INT16_T
-AC_TYPE_INT64_T
-AC_TYPE_UINT64_T
-AC_CHECK_TYPES([ptrdiff_t])
-AC_CHECK_FUNCS([floor pow select sqrt strstr])
-AC_CHECK_HEADERS([float.h values.h])
-
-# End additional checks
-
-# Bits and pieces of NSCDAQ can do logging via boostlog. This stuff tells us
-# if that's present and if so, how to incorporate it:
-
-AX_BOOST_BASE([], [BOOST_EXTRA_CPPFLAGS="-DBOOST_ALL_DYN_LINK"], [BOOST_EXTRA_CPPFLAGS=""])
-AX_BOOST_LOG
-AC_SUBST(BOOST_EXTRA_CPPFLAGS)
-
-
-
-# Automake:
-
-AM_INIT_AUTOMAKE([tar-ustar foreign subdir-objects])
-
-# Makefile exports:
-
-SOVERSION="11:0:0"
-
-
-
-
-
-#---------------------------------------------------------------------
-#
-#  Local tests:
-#
-
-# Ensure Python is 3.0  or greater, and the packages/dependencies we need
-
-
-AM_PATH_PYTHON([3.0], [], [AC_MSG_ERROR([Python 3.0  or higher is needed for NSCLDAQ])])
-AX_PYQT
-PKG_CHECK_MODULES(PYTHON3, python3)
-
-
-# Also need to set compilation/link flags for qtnscope:
-#  Thanks to Giordano for figuring this portable way to  do it:
-
-PKG_CHECK_MODULES(PYTHON, [python3-embed], [PYTHON3_CFLAGS=`pkg-config --cflags python3-embed`; PYTHON3_LIBS=`pkg-config --libs pyth\
-on3-embed`],
-                          [PYTHON3_CFLAGS=`pkg-config python3 --cflags`, PYTHON3_LIBS=`pkg-config python3 --libs`])
-AC_SUBST(PYTHON3_CXXFLAGS)
-AC_SUBST(PYTHON3_LIBS)
-
-
-
-# Ensure swig is installed: -- this is used to generate wrappers for the
-#  VMUSB and CCUSB libraries for use within Tcl drivers.
-#
-#  Earlier swig versions than 1.3 may well work, however this is the
-#  version I used when first successfully building the wrappers
-# (ubuntu lucid lynx).
-#
-AX_PKG_SWIG([1.3], [], [ AC_MSG_ERROR([Swig is required to build nscldaq])])
-
-
-# We use gengetopt in a few places.  Ideally it's been found by now in the
-# path if not we'll need to do the withval thing.. or prompt the user to
-# give us a --with-gengetopt-path
-#
-AX_GENGETOPT
-
-# Tcl/Tk is pervasive in NCLDAQ so we need to have it too:
-
-AX_TCL
-
-
-
-#
-#  The substs below are for compatibility sake 
-#  eventually we should migrate Makefile.am defs to use
-#  those in m4/tcl.m4
-#
-TCL_FLAGS="${TCL_CPPFLAGS} ${TK_CPPFLAGS}"
-
-# Check for redundancy of libieee in the LD_LIBS
-TCL_LDFLAGS=${TK_LIBS}
-for tclname in ${TCL_LIBS}
-do
-    if test $tclname != "-lieee" 
-    then 
-        TCL_LDFLAGS="$TCL_LDFLAGS $tclname"
-    fi
-done
-#TCL_LDFLAGS="${TK_LIBS} ${TCL_LIBS}"
-TCLSH_CMD=${TCLSH} 
-
-
-
-#
-#  IF systemtcl is yes we're pretty much done.. otherwise
-#  we need to configure/build/install libtcl into prefix and then set
-#  the flags:
-
-if false
-then
-AC_MSG_CHECKING([libtcl++ installed as package (e.g. .deb)])
-
-AC_CHECK_FILE([/usr/include/TCLInterpreterObject.h], [systemtcl="yes"], [systemtcl="no"])
-
-if test $systemtcl = "yes"
-then
-	LIBTCLPLUS_CFLAGS=""
-	LIBEXCEPTION_LDFLAGS="-lException"
-	LIBTCLPLUS_LDFLAGS="-ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-	AC_MSG_RESULT([Found in  system libraries])
-else
-  AC_CHECK_FILE([${prefix}/lib/libException.so],[libtclinstalled="yes"],[libtclinstalled="no"])
-  AC_CHECK_FILE([${prefix}/lib/libtclPlus.so],[libexceptioninstalled="yes"],[libexceptioninstalled="no"])
-  AC_CHECK_FILE([${prefix}/include/TCLInterpreterObject.h],[tclinterpobjinstalled="yes"],[tclinterpobjinstalled="no"])
-  if [ [ $libtclinstalled = "no" ] || [ $libexceptioninstalled = "no" ] || [ $tclinterpobjinstalled = "no" ] ]
-  then
-    AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
-	  if test $havelibtcldir = "yes"
-  	then
-      AC_MSG_RESULT([Need to build local tagged copy])
-      AC_CHECK_FILE([${srcdir}/libtcl/configure], [havelibtcldir="yes"], [havelibtcldir="no"])
-		  (cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
-	  else
-		  AC_MSG_ERROR([I seem to be missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-	  fi
-  else
-    AC_MSG_RESULT([Previously built version found in ${prefix}])
-  fi
-  LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-  LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-
-fi
-fi
-
-#
-#  Hard code use of local libtcl:
-#
-AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
-if test $havelibtcldir = "yes"
-then
-  AC_MSG_RESULT([Need to build local tagged copy])
-  (cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
-
-  LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-  LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-  LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-
-
-
-else
-   AC_MSG_ERROR([I seem to be missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-fi
-								  
-
-AC_SUBST(LIBTCLPLUS_CFLAGS)
-AC_SUBST(LIBTCLPLUS_LDFLAGS)
-AC_SUBST(LIBEXCEPTION_LDFLAGS)
-
-#  Configure and install tclhttpd
-#  We use that /usr/lib/tclx.y has tclConfig
-#  and /usr/include/tclx.y     has the headers.
-
-tcl_basename=tcl${TCL_VERSION}
-tcl_configdir="/usr/lib/$tcl_basename"
-tcl_incdir="/usr/include/$tcl_basename"
-
-(cd ${srcdir}/tclhttpd3.5.1; ./configure --prefix=${prefix}/share/tclhttpd --enable-gcc --with-tclinclude=$tcl_incdir --with-tcl=$tcl_configdir)
-(cd ${srcdir}/tclhttpd3.5.1; make -j26 all install)
-
 
 # Epics
 #
@@ -514,10 +479,8 @@ then
 	xiaapiver=3
 	PIXIE_CPPFLAGS="-I${xiaapidir}/include"
 	AC_CHECK_FILE([${xiaapidir}/include/pixie16/pixie16.h],
-		[PIXIE_CPPFLAGS="${PIXIE_CPPFLAGS} -DXIAAPI_V3"	PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"
-		AC_DEFINE([XIAAPI_VERSION], [3], [Pixie16 version 3 api])],
-		[PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixieSDK -lm -Wl,-rpath=${xiaapidir}/lib"
-		AC_DEFINE([XIAAPI_VERSION], [2], [Pixie16 version 2 or lower])
+		[PIXIE_CPPFLAGS="${PIXIE_CPPFLAGS} -DXIAAPI_V3"	PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"	AC_DEFINE([XIAAPI_VERSION], [3], [Pixie16 version 3 api])],
+		[PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixieSDK -lm -Wl,-rpath=${xiaapidir}/lib" AC_DEFINE([XIAAPI_VERSION], [2], [Pixie16 version 2 or lower])
 		xiaapiver=2])
 
 	AM_CONDITIONAL([USING_XIAAPI_V2], [test ${xiaapiver} -eq 2])
@@ -538,14 +501,11 @@ then
 		for d in /usr/opt/plx $(prefix)/../../plx
 		do
 			if test -z "$PLX_SDK_DIR"
-			then
-		
-			# Its probably one of these:
-		
+			then		
+			# Its probably one of these:		
 				AC_CHECK_FILE([$d/PlxApi/Library/libPlxApi.a],
 					[PLX_SDK_DIR="$d"],
 					[PLX_SDK_DIR=""])
-
 				AC_CHECK_FILE([$d/PlxApi/Library/PlxApi.so],
 					[PLX_SDK_DIR="$d"],
 					[PLX_SDK_DIR=""])
@@ -625,7 +585,6 @@ then
 	#
 	#  ROOT_CPPFLAGS - compiler flags for ROOT.
 	#  ROOT_LDFLAGS - ROOT libraries location.
-   	#
 
 	rootdir=$ROOTSYS
 	AC_ARG_WITH([rootsys],
@@ -662,12 +621,10 @@ else
 	AM_CONDITIONAL([USING_XIAAPI_V2], [false])
 fi
 
-#
 # The SBS software will only be built if --enable-sbs was supplied.
 # In that case, the configured kernel source path is set using
 # --with-sbs-kernel-source-dir and that will be used to compile the
 # device driver as well. The default is to _not_ build the sbs stuff.
-#
 
 AC_ARG_ENABLE([sbs],
 	AS_HELP_STRING([--enable-sbs],  [Build SBS software with a configured kernel source]),
@@ -691,14 +648,17 @@ then
 	fi
 
 	KERNEL_SOURCE_DIR=$sbsdir
+	AC_SUBST(KERNEL_SOURCE_DIR)
+	AM_CONDITIONAL([BUILD_SBS_DRIVER], [true])
 	AC_MSG_NOTICE([Building SBS software with kernel source at: $KERNEL_SOURCE_DIR])
+	
 else
+	AM_CONDITIONAL([BUILD_SBS_DRIVER], [false])
 	AC_MSG_NOTICE([SBS software is not enabled.])
 fi
 
-#
-#  If --enable-usb is turned on, we build the VM/CC-usb support directories
-#
+# If --enable-usb is turned on, we build the VM/CC-usb support directories
+
 AC_ARG_ENABLE([usb],
 	AS_HELP_STRING([--enable-usb], [Build support for CC/VM usb data taking]),
 	[],
@@ -725,11 +685,12 @@ PKG_CHECK_MODULES([SQLITE3], [sqlite3])
 #
 
 AC_SEARCH_LIBS([zmq_init], [zmq], [result=$ac_cv_search_zmq_init], [AC_MSG_ERROR([The zeromq library was not found and is now required for nscldaq])])
+
 if test $result = "none required"
 then
-   ZMQ_LDFLAGS=""
+	ZMQ_LDFLAGS=""
 else
-   ZMQ_LDFLAGS=$result
+	ZMQ_LDFLAGS=$result
 fi
 
 AC_SUBST(ZMQ_LDFLAGS)
@@ -738,11 +699,8 @@ AC_SUBST(ZMQ_LDFLAGS)
 # need the zmq c++ bindings
 #  note in some c++11's we need to include <algorithm> to include zmq.hpp:
 AC_LANG_PUSH(C++)
-AC_CHECK_HEADERS([algorithm zmq.hpp],[], [AC_MSG_ERROR([The zeromq C++ header (zmq.hpp) is missing and is required for nscldaq])],
-			    [#include <algorithm>])
+AC_CHECK_HEADERS([algorithm zmq.hpp], [], [AC_MSG_ERROR([The zeromq C++ header (zmq.hpp) is missing and is required for nscldaq])], [#include <algorithm>])
 AC_LANG_POP
-
-
 
 #----------------------------------------------------------------------------
 
@@ -757,16 +715,10 @@ AC_SUBST(TCL_FLAGS)
 AC_SUBST(TCL_LDFLAGS)
 AC_SUBST(TCLSH_CMD)
 
-
-
-
-
-
 AC_SUBST(CPPUNIT_LDFLAGS)
 
-#
 #  Threading is hard coded to -pthread now.
-#
+
 THREADCXX_FLAGS="-pthread"
 THREADC_FLAGS="-pthread"
 THREADLD_FLAGS="-lpthread -lrt"
@@ -775,18 +727,9 @@ AC_SUBST(THREADCXX_FLAGS)
 AC_SUBST(THREADC_FLAGS)
 AC_SUBST(THREADLD_FLAGS)
 
-# SBS stuff:
+# Ensure that resources for testing are accessible for out of tree builds
 
-AC_SUBST(KERNEL_SOURCE_DIR)
-AM_CONDITIONAL([BUILD_SBS_DRIVER], [test "$BUILD_SBS" == "yes"])
-
-
-#
-# Ensure that resources for testing are accessible
-# for out of tree builds
-#
 AC_CONFIG_LINKS([utilities/filter/run-0000-00.evt:utilities/filter/run-0000-00.evt])
-
 
 #---------------------------------------------------------------------------
 # Generate the following from their .in's (note that Automake takes
@@ -797,209 +740,209 @@ AC_CONFIG_LINKS([utilities/filter/run-0000-00.evt:utilities/filter/run-0000-00.e
 # Sept 25, 2014
 
 AC_CONFIG_FILES([Makefile
-		nscldaq
-		daqsetup.bash
-		base/pugi/Makefile
-		base/iniparser/Makefile
-    base/Makefile
-    base/factories/Makefile
-    base/os/Makefile
-    base/CopyrightTools/Makefile
-    base/bltsubst/Makefile
-    base/cvt/Makefile
-    base/thread/Makefile
-    base/headers/Makefile
-    base/security/Makefile
-    base/tclwidgets/Makefile
-    base/uri/Makefile
-    base/dataflow/Makefile
-    base/plotchart/Makefile
-    base/plotcontainer/Makefile
-    base/tcpip/Makefile
-    base/tclutils/Makefile
-    base/testutils/Makefile
-    base/sqliteplus/Makefile
-    caenfw-common/Makefile
-    servers/Makefile
-    servers/tclserver/Makefile
-    servers/portmanager/Makefile
-    servers/tclhttpdlaunch/Makefile
-    utilities/Makefile
-    utilities/common/Makefile
-    utilities/Buffer/Makefile
-    utilities/daqstart/Makefile
-    utilities/dvdburn/Makefile
-    utilities/scalerdisplay/ScalerDisplay
-    utilities/sequencer/Makefile
-    utilities/ringselector/Makefile
-    utilities/bufdump/Makefile
-    utilities/eventlog/Makefile
-    utilities/sclclient/Makefile
-    utilities/tkbufdump/Makefile
-    utilities/filter/Makefile
-    utilities/filter/Makefile-template
-    utilities/filter/FilterIncludes
-    utilities/compatibility/Makefile
-    utilities/compatibility/eventlog-compat
-    utilities/compatibility/spectcldaq
-    utilities/compatibility/s800toring
-    utilities/compatibility/bufdump
-    utilities/conversion/Makefile
-    utilities/fileanalyzer/Makefile
-    utilities/format/Makefile
-    utilities/format/V8/Makefile
-    utilities/format/V10/Makefile
-    utilities/format/V11/Makefile
-    utilities/FormattedIO/Makefile
-    utilities/newscaler/Makefile
-    utilities/newscaler/ScalerDisplay.tcl
-    utilities/scalersum/Makefile
-    utilities/reglom/Makefile
-    utilities/scalerReader/Makefile
-    utilities/swtrigger/Makefile
-    utilities/logbook/Makefile
-    utilities/manager/Makefile
-    utilities/readoutREST/Makefile
-    epics/epicslib/Makefile
-    epics/chanlog/Makefile
-    epics/controlpush/Makefile
-    epics/epicsdisplay/Makefile
-    epics/epicsdisplay/epicsdisplay
-    epics/Makefile
-    daq/Makefile
-    daq/format/Makefile
-    daq/IO/Makefile
-    daq/readoutgui/Makefile
-    daq/readoutgui/InstallRoot.tcl
-    daq/readoutgui/ReadoutShell.tcl
-    daq/s800callouts/Makefile
-    daq/eventbuilder/Makefile
-    daq/eventbuilder/Makefile_Skeleton
-    daq/eventbuilder/startOrderer
-    daq/evbtools/Makefile
-    daq/evbtools/ringsource/Makefile
-    daq/evbtools/teering/Makefile
-    daq/evbtools/glom/Makefile
-    daq/evbtools/unglom/Makefile
-    daq/evbtools/offlineorderer/Makefile
-    daq/evbtools/offlineorderer/figures/Makefile
-    daq/evbtools/evts2frags/Makefile
-    daq/actions/Makefile
-    daq/evbtools/evblite/Makefile
-    simplesetups/Makefile
-    simplesetups/v775/Makefile
-    simplesetups/v785/Makefile
-    simplesetups/vmusb/Makefile
-    simplesetups/vmusb/src/Makefile
-    simplesetups/vmusb/src/Example_Makefile
-    sbs/Makefile
-    sbs/driver/Makefile
-    sbs/driver/src/Makefile
-    sbs/driver/include/Makefile
-    sbs/driver/dd/GNUmakefile
-    sbs/nsclapi/Makefile
-    sbs/tclpackage/Makefile
-    sbs/puretcl/Makefile
-    sbs/vmemodules/Makefile
-    sbs/readout/Makefile
-    sbs/readout/UserMakefile
-    sbs/readout/SBSRdoMakeIncludes
-    sbs/slowcontrols/Makefile
-    sbs/slowcontrols/vhq/Makefile
-    sbs/slowcontrols/caenv812/Makefile
-    sbs/slowcontrols/n568b/Makefile
-    sbs/slowcontrols/bcnaf/Makefile
-    sbs/slowcontrols/vhs/Makefile
-    sbs/scripted/Makefile
-    sbs/VmeDevice/Makefile
-    sbs/caenfwloader/Makefile
-    usb/Makefile
-    usb/usb1/Makefile
-    usb/usb0.1/Makefile
-    usb/loaders/Makefile
-    usb/vmusb/Makefile
-    usb/vmusb/vmusb/Makefile 
-    usb/vmusb/core/Makefile 
-    usb/vmusb/ctlconfig/Makefile 
-    usb/vmusb/daqconfig/Makefile  
-    usb/vmusb/driverkit/Makefile 
-    usb/vmusb/driverkit/Makefile-template
-    usb/vmusb/tcldrivers/Makefile
-    usb/vmusb/driverkit/VMUSBDriverIncludes
-    usb/vmusb/controlpanels/Makefile 
-    usb/vmusb/controlpanels/cv6533/Makefile
-    usb/vmusb/controlpanels/figures/Makefile
-    usb/vmusb/devtests/Makefile
-    usb/vmusb/vmusbPackage/Makefile
-    usb/vmusb/tclservertests/Makefile
-    usb/ccusb/Makefile
-    usb/ccusb/ccusb/Makefile 
-    usb/ccusb/core/Makefile
-    usb/ccusb/daqconfig/Makefile 
-    usb/ccusb/ctlconfig/Makefile 
-    usb/ccusb/ctlconfig/driver_Makefile
-    usb/ccusb/tclpackage/Makefile
-    usb/ccusb/tcldrivers/Makefile
-    usb/ccusb/driverkit/Makefile
-    usb/ccusb/driverkit/Makefile-template
-    usb/ccusb/driverkit/CCUSBDriverIncludes
-    usb/ccusb/controlpanels/Makefile
-    usb/ccusb/devtests/Makefile
-    usb/ccusb/tclservertests/Makefile
-    usb/caenfwloader/Makefile
-    usb/common/Makefile
-    usb/common/tcldrivers/Makefile
-    usb/common/devices/Makefile
-    usb/common/configurableobject/Makefile
-    usb/common/slowcontrols/Makefile
-    usb/mesytec/Makefile
-    usb/mesytec/MCFD16/Makefile
-    usb/mesytec/MCFD16/figures/Makefile
-    usb/mesytec/MSCF16/Makefile
-    usb/mesytec/MSCF16/figures/Makefile
-    docbuild/Makefile
-    docbuild/images/Makefile
-    docbuild/images/callouts/Makefile
-    docconfig/Makefile
-    examples/Makefile
-    examples/ReadNSCLDAQFiles/Makefile
-    ddas/config_pixie16api.h
-    ddas/Makefile
-    ddas/exception/Makefile
-    ddas/configuration/Makefile
-    ddas/xiatest/Makefile
-    ddas/booter/Makefile
-    ddas/format/Makefile
-    ddas/ddasdumper/Makefile
-    ddas/ddasdumper/ddasdumper
-    ddas/nscope/Makefile
-    ddas/nscope/nscope
-    ddas/readout/Makefile
-    ddas/readout/DDASFirmwareVersions.txt
-    ddas/sorter/Makefile
-    ddas/readoutdriver/Makefile
-    ddas/pixieplugin/Makefile
-    ddas/pixieplugin/definitions.tcl
-    ddas/dumpsetfile/Makefile
-    ddas/xml/tinyxml/Makefile
-    ddas/xml/Makefile
-    ddas/qtscope/Makefile
-    ddas/qtscope/qtscope
-    ddas/simple_setups/Makefile
-    ddas/tclconfig/Makefile
-    ddas/docs/Makefile
-    ddas/docs/Doxyfile
-    ddas/docs/DoxygenLayout.xml
-    caendigitizers/Makefile
-    caendigitizers/dpp-pha/Makefile
-    caendigitizers/dpp-pha/skel/Makefile
-    caendigitizers/dpp-psd/Makefile
-    caendigitizers/dpp-psd/skel/Makefile
-    caendigitizers/caendump/Makefile
-    caendigitizers/tweaker/Makefile
-    caen-nextgen/Makefile
-    caen-nextgen/tclreadout/Makefile
-    cookbooks/Makefile
-    ])
+	nscldaq
+	daqsetup.bash
+	base/pugi/Makefile
+	base/iniparser/Makefile
+	base/Makefile
+	base/factories/Makefile
+	base/os/Makefile
+	base/CopyrightTools/Makefile
+	base/bltsubst/Makefile
+	base/cvt/Makefile
+	base/thread/Makefile
+	base/headers/Makefile
+	base/security/Makefile
+	base/tclwidgets/Makefile
+	base/uri/Makefile
+	base/dataflow/Makefile
+	base/plotchart/Makefile
+	base/plotcontainer/Makefile
+	base/tcpip/Makefile
+	base/tclutils/Makefile
+	base/testutils/Makefile
+	base/sqliteplus/Makefile
+	caenfw-common/Makefile
+	servers/Makefile
+	servers/tclserver/Makefile
+	servers/portmanager/Makefile
+	servers/tclhttpdlaunch/Makefile
+	utilities/Makefile
+	utilities/common/Makefile
+	utilities/Buffer/Makefile
+	utilities/daqstart/Makefile
+	utilities/dvdburn/Makefile
+	utilities/scalerdisplay/ScalerDisplay
+	utilities/sequencer/Makefile
+	utilities/ringselector/Makefile
+	utilities/bufdump/Makefile
+	utilities/eventlog/Makefile
+	utilities/sclclient/Makefile
+	utilities/tkbufdump/Makefile
+	utilities/filter/Makefile
+	utilities/filter/Makefile-template
+	utilities/filter/FilterIncludes
+	utilities/compatibility/Makefile
+	utilities/compatibility/eventlog-compat
+	utilities/compatibility/spectcldaq
+	utilities/compatibility/s800toring
+	utilities/compatibility/bufdump
+	utilities/conversion/Makefile
+	utilities/fileanalyzer/Makefile
+	utilities/format/Makefile
+	utilities/format/V8/Makefile
+	utilities/format/V10/Makefile
+	utilities/format/V11/Makefile
+	utilities/FormattedIO/Makefile
+	utilities/newscaler/Makefile
+	utilities/newscaler/ScalerDisplay.tcl
+	utilities/scalersum/Makefile
+	utilities/reglom/Makefile
+	utilities/scalerReader/Makefile
+	utilities/swtrigger/Makefile
+	utilities/logbook/Makefile
+	utilities/manager/Makefile
+	utilities/readoutREST/Makefile
+	epics/epicslib/Makefile
+	epics/chanlog/Makefile
+	epics/controlpush/Makefile
+	epics/epicsdisplay/Makefile
+	epics/epicsdisplay/epicsdisplay
+	epics/Makefile
+	daq/Makefile
+	daq/format/Makefile
+	daq/IO/Makefile
+	daq/readoutgui/Makefile
+	daq/readoutgui/InstallRoot.tcl
+	daq/readoutgui/ReadoutShell.tcl
+	daq/s800callouts/Makefile
+	daq/eventbuilder/Makefile
+	daq/eventbuilder/Makefile_Skeleton
+	daq/eventbuilder/startOrderer
+	daq/evbtools/Makefile
+	daq/evbtools/ringsource/Makefile
+	daq/evbtools/teering/Makefile
+	daq/evbtools/glom/Makefile
+	daq/evbtools/unglom/Makefile
+	daq/evbtools/offlineorderer/Makefile
+	daq/evbtools/offlineorderer/figures/Makefile
+	daq/evbtools/evts2frags/Makefile
+	daq/actions/Makefile
+	daq/evbtools/evblite/Makefile
+	simplesetups/Makefile
+	simplesetups/v775/Makefile
+	simplesetups/v785/Makefile
+	simplesetups/vmusb/Makefile
+	simplesetups/vmusb/src/Makefile
+	simplesetups/vmusb/src/Example_Makefile
+	sbs/Makefile
+	sbs/driver/Makefile
+	sbs/driver/src/Makefile
+	sbs/driver/include/Makefile
+	sbs/driver/dd/GNUmakefile
+	sbs/nsclapi/Makefile
+	sbs/tclpackage/Makefile
+	sbs/puretcl/Makefile
+	sbs/vmemodules/Makefile
+	sbs/readout/Makefile
+	sbs/readout/UserMakefile
+	sbs/readout/SBSRdoMakeIncludes
+	sbs/slowcontrols/Makefile
+	sbs/slowcontrols/vhq/Makefile
+	sbs/slowcontrols/caenv812/Makefile
+	sbs/slowcontrols/n568b/Makefile
+	sbs/slowcontrols/bcnaf/Makefile
+	sbs/slowcontrols/vhs/Makefile
+	sbs/scripted/Makefile
+	sbs/VmeDevice/Makefile
+	sbs/caenfwloader/Makefile
+	usb/Makefile
+	usb/usb1/Makefile
+	usb/usb0.1/Makefile
+	usb/loaders/Makefile
+	usb/vmusb/Makefile
+	usb/vmusb/vmusb/Makefile 
+	usb/vmusb/core/Makefile 
+	usb/vmusb/ctlconfig/Makefile 
+	usb/vmusb/daqconfig/Makefile  
+	usb/vmusb/driverkit/Makefile 
+	usb/vmusb/driverkit/Makefile-template
+	usb/vmusb/tcldrivers/Makefile
+	usb/vmusb/driverkit/VMUSBDriverIncludes
+	usb/vmusb/controlpanels/Makefile 
+	usb/vmusb/controlpanels/cv6533/Makefile
+	usb/vmusb/controlpanels/figures/Makefile
+	usb/vmusb/devtests/Makefile
+	usb/vmusb/vmusbPackage/Makefile
+	usb/vmusb/tclservertests/Makefile
+	usb/ccusb/Makefile
+	usb/ccusb/ccusb/Makefile 
+	usb/ccusb/core/Makefile
+	usb/ccusb/daqconfig/Makefile 
+	usb/ccusb/ctlconfig/Makefile 
+	usb/ccusb/ctlconfig/driver_Makefile
+	usb/ccusb/tclpackage/Makefile
+	usb/ccusb/tcldrivers/Makefile
+	usb/ccusb/driverkit/Makefile
+	usb/ccusb/driverkit/Makefile-template
+	usb/ccusb/driverkit/CCUSBDriverIncludes
+	usb/ccusb/controlpanels/Makefile
+	usb/ccusb/devtests/Makefile
+	usb/ccusb/tclservertests/Makefile
+	usb/caenfwloader/Makefile
+	usb/common/Makefile
+	usb/common/tcldrivers/Makefile
+	usb/common/devices/Makefile
+	usb/common/configurableobject/Makefile
+	usb/common/slowcontrols/Makefile
+	usb/mesytec/Makefile
+	usb/mesytec/MCFD16/Makefile
+	usb/mesytec/MCFD16/figures/Makefile
+	usb/mesytec/MSCF16/Makefile
+	usb/mesytec/MSCF16/figures/Makefile
+	docbuild/Makefile
+	docbuild/images/Makefile
+	docbuild/images/callouts/Makefile
+	docconfig/Makefile
+	examples/Makefile
+	examples/ReadNSCLDAQFiles/Makefile
+	ddas/config_pixie16api.h
+	ddas/Makefile
+	ddas/exception/Makefile
+	ddas/configuration/Makefile
+	ddas/xiatest/Makefile
+	ddas/booter/Makefile
+	ddas/format/Makefile
+	ddas/ddasdumper/Makefile
+	ddas/ddasdumper/ddasdumper
+	ddas/nscope/Makefile
+	ddas/nscope/nscope
+	ddas/readout/Makefile
+	ddas/readout/DDASFirmwareVersions.txt
+	ddas/sorter/Makefile
+	ddas/readoutdriver/Makefile
+	ddas/pixieplugin/Makefile
+	ddas/pixieplugin/definitions.tcl
+	ddas/dumpsetfile/Makefile
+	ddas/xml/tinyxml/Makefile
+	ddas/xml/Makefile
+	ddas/qtscope/Makefile
+	ddas/qtscope/qtscope
+	ddas/simple_setups/Makefile
+	ddas/tclconfig/Makefile
+	ddas/docs/Makefile
+	ddas/docs/Doxyfile
+	ddas/docs/DoxygenLayout.xml
+	caendigitizers/Makefile
+	caendigitizers/dpp-pha/Makefile
+	caendigitizers/dpp-pha/skel/Makefile
+	caendigitizers/dpp-psd/Makefile
+	caendigitizers/dpp-psd/skel/Makefile
+	caendigitizers/caendump/Makefile
+	caendigitizers/tweaker/Makefile
+	caen-nextgen/Makefile
+	caen-nextgen/tclreadout/Makefile
+	cookbooks/Makefile
+])
 
 AC_OUTPUT
