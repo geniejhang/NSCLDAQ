@@ -690,8 +690,11 @@ then
 	fi
 
 	KERNEL_SOURCE_DIR=$sbsdir
+	AC_SUBST(KERNEL_SOURCE_DIR)
+	AM_CONDITIONAL([BUILD_SBS_DRIVER], [true])
 	AC_MSG_NOTICE([Building SBS software with kernel source at: $KERNEL_SOURCE_DIR])
 else
+	AM_CONDITIONAL([BUILD_SBS_DRIVER], [false])
 	AC_MSG_NOTICE([SBS software is not enabled.])
 fi
 
@@ -756,11 +759,6 @@ AC_SUBST(TCL_FLAGS)
 AC_SUBST(TCL_LDFLAGS)
 AC_SUBST(TCLSH_CMD)
 
-
-
-
-
-
 AC_SUBST(CPPUNIT_LDFLAGS)
 
 #
@@ -773,12 +771,6 @@ THREADLD_FLAGS="-lpthread -lrt"
 AC_SUBST(THREADCXX_FLAGS)
 AC_SUBST(THREADC_FLAGS)
 AC_SUBST(THREADLD_FLAGS)
-
-# SBS stuff:
-
-AC_SUBST(KERNEL_SOURCE_DIR)
-AM_CONDITIONAL([BUILD_SBS_DRIVER], [test "$BUILD_SBS" == "yes"])
-
 
 #
 # Ensure that resources for testing are accessible
