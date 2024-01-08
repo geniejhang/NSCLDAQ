@@ -778,12 +778,6 @@ AC_SUBST(THREADCXX_FLAGS)
 AC_SUBST(THREADC_FLAGS)
 AC_SUBST(THREADLD_FLAGS)
 
-# SBS stuff:
-
-AC_SUBST(KERNEL_SOURCE_DIR)
-AM_CONDITIONAL([BUILD_SBS_DRIVER], [test "$BUILD_SBS" == "yes"])
-
-
 #
 # Ensure that resources for testing are accessible
 # for out of tree builds
