@@ -11,7 +11,7 @@ libSystemBooter_la_CPPFLAGS = -I@top_srcdir@/ddas/configuration \
 libSystemBooter_la_LIBADD = \
 	@top_builddir@/ddas/configuration/libConfiguration.la \
 	@PIXIE_LDFLAGS@ @PLX_LDFLAGS@ \
-	@top_builddir@/ddas/exception/libXIAException.la @LIBEXCEPTION_LDFLAGS@
+	@top_builddir@/ddas/exception/libDDASException.la @LIBEXCEPTION_LDFLAGS@
 
 boot_SOURCES = boot.cpp
 boot_CPPFLAGS = -I@srcdir@ -I@top_builddir@/ddas \

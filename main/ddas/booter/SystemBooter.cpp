@@ -15,7 +15,7 @@
 #include <config_pixie16api.h>
 
 #include <Configuration.h>
-#include <CXIAException.h>
+#include <CDDASException.h>
 
 /** @todo (ASC 12/14/23): Make sure to re-write the exception handling here if the exception class itself changes! */
 
@@ -49,7 +49,7 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
 	NumModules, config.getSlotMap().data(), m_offlineMode
 	);
     if (retval < 0) {
-	throw CXIAException(
+	throw CDDASException(
 	    retval, "Pixie16InitSystem()", "SystemBooter::boot() failed"
 	    );
     } else {
@@ -165,7 +165,7 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
 	);    
     if(retval < 0) {	
 	std::string msg = "Boot failed module " + modIndex;
-	throw CXIAException(retval, "Pixie16BootModule()", msg);
+	throw CDDASException(retval, "Pixie16BootModule()", msg);
     }
 }
 
@@ -209,8 +209,11 @@ void DAQ::DDAS::SystemBooter::populateHardwareMap(Configuration &config)
     int NumModules = config.getNumberOfModules();
     std::vector<int> hdwrMapping(NumModules);
 
-    /** @todo (ASC 12/14/23): read the module_config struct. We may not even 
-     * need to log it (just put them in a vector) */
+    /** 
+     * @todo (ASC 12/14/23): For the API transition we want to read the 
+     * module_config struct. We may not even need to log it (just put them 
+     * in a vector) 
+     */
     for(unsigned short i = 0; i < NumModules; i++) {
 	int retval = Pixie16ReadModuleInfo(
 	    i, &ModRev, &ModSerNum, &ModADCBits, &ModADCMSPS
@@ -218,7 +221,7 @@ void DAQ::DDAS::SystemBooter::populateHardwareMap(Configuration &config)
 	if (retval < 0)
 	{
 	    std::string msg = "Failed to read hardware variant module " + i;
-	    throw CXIAException(retval, "Pixie16ReadModuleInfo()", msg);
+	    throw CDDASException(retval, "Pixie16ReadModuleInfo()", msg);
 	} else {
 	    if (m_verbose) {
 		logModuleInfo(i, ModRev, ModSerNum, ModADCBits, ModADCMSPS);
