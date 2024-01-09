@@ -1,25 +1,24 @@
 /* Null trigger */
 
-#include <config.h>
-#include <config_pixie16api.h>
+#include "CMyEndCommand.h"
+
 #include <iostream>
 #include <fstream>
 #include <cmath>
-#include "CMyEndCommand.h"
-#include "CMyEventSegment.h"
-#include "TCLInterpreter.h"
+#include <cstdlib>
+#include <functional>
+#include <tuple>
+#include <chrono>
+#include <thread>
+
 #include <TCLObject.h>
 #include <RunState.h>
 #include <CVMEInterface.h>
 
 #include <config.h>
-
-#include <stdlib.h>
-
-#include <functional>
-#include <tuple>
-#include <chrono>
-#include <thread>
+#include <config_pixie16api.h>
+#include "CMyEventSegment.h"
+#include "TCLInterpreter.h"
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
@@ -141,21 +140,7 @@ int CMyEndCommand::readOutRemainingData()
             // If retval==1 then run is still in progress...
             // If retval==-1 then k is not a valid module number
             if (retval != 0) { 
-                EndOfRunRead = 1;
-		/* TODO:  figure this out for API 3.0 and larger */
-#if XIAAPI_VERSION < 3
-                sprintf(filnam, "lmdata_mod%d.bin", k);
-                retval = Pixie16SaveExternalFIFODataToFile(filnam, &mod_numwordsread, 
-                        k, EndOfRunRead);
-                if(retval<0) {
-		  cout << "*ERROR* Pixie16SaveExternalFIFODataToFile failed in module " << k
-		       << "  retval = " << retval << endl << flush;
-                    // Pixie_Print_MSG (ErrMSG);
-                    //return -5;
-                } // end error block
-
-                nFIFOWords[k] += mod_numwordsread;
-#endif		
+                EndOfRunRead = 1;	
             } else {
                 // No run is in progress
                 break;
@@ -177,24 +162,9 @@ int CMyEndCommand::readOutRemainingData()
 
     for(int k=0; k<NumModules; k++) {
         EndOfRunRead = 1;
-	/* TODO: Figure this out for 3.0 and later. */
-#if XIAAPI_VERSION < 3	
-        sprintf(filnam, "lmdata_mod%d.bin", k);
-        retval = Pixie16SaveExternalFIFODataToFile(filnam, &mod_numwordsread, k, EndOfRunRead);
-        if(retval<0) {
-
-	  cout << "*ERROR* Pixie16SaveExternalFIFODataToFile failed in module "
-	       << k << " retval = " << retval << endl << flush;
-
-        }
-        nFIFOWords[k] += mod_numwordsread;
-#endif
+	
         /* Get final statistics information */
-#if XIAAPI_VERSION >= 3
 	std::vector<unsigned int> statistics(Pixie16GetStatisticsSize(),0);
-#else
-	std::vector<unsigned int> statistics(448,0); // see any v11.3
-#endif	
 
         int retval = Pixie16ReadStatisticsFromModule(statistics.data(), k);
         if (retval < 0) {

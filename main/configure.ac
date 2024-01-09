@@ -1,6 +1,5 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-
 AC_PREREQ(2.61)
 
 AC_INIT(nscldaq, 12.1-xiaapi4, [daqhelp@nscl.msu.edu], [], [https://github.com/FRIBDAQ/NSCLDAQ])
@@ -40,6 +39,75 @@ then
 	AC_MSG_FAILURE([pandoc is required to produce PDF output from the logbook utilities])
 	
 fi
+
+#  CAEN Digitizer support is optional:
+
+AC_ARG_ENABLE([caen-digitizer-support],
+	AC_HELP_STRING([--enable-caen-digitizer-support],
+	[Build support for CAEN Digitizers]),
+	[enable_caen=$enableval],
+	[enable_caen=no])
+
+if test "x$enable_caen" = "xyes"
+then
+	AC_ARG_WITH([caen-digitizer-libroot],
+	AC_HELP_STRING([ --with-caen-digitizer-libroot],
+	[Root directory for CAEN Digitizer/VME/Comm library installation]),
+	[caen_root=$withval],[caen_root=""])
+
+	if test "xx$caen_root" != "xx"
+	then
+		AC_MSG_NOTICE([Enabling CAEN digitizer DPP support])
+		CAENCCFLAGS=-I$caen_root/include
+		CAENLDFLAGS="-L$caen_root/lib -lCAENDigitizer -lCAENVME -lCAENComm -Wl,-rpath=$caen_root/lib"
+		AM_CONDITIONAL([CAENSUPPORT], [true])
+		AC_SUBST(CAENCCFLAGS)
+		AC_SUBST(CAENLDFLAGS)
+	else
+		AM_CONDITIONAL([CAENSUPPORT], [false])
+		AC_MSG_ERROR([using --enable-caen-digitizer-support also requires --with-caen-dgitizer-libroot to specifiy where the CAEN libraries/headers are])
+	fi
+else
+	AM_CONDITIONAL([CAENSUPPORT], [false])
+fi
+
+#  CAEN Nextgen digitizer support is also optional  the CAEN support
+#  libraries are awful in that they require installation in
+#  specific locations:
+
+AC_ARG_ENABLE([caen-nextgen],
+	[AS_HELP_STRING([--enable-caen-nextgen],
+	[To enable support for CAEN Nextgen digitizers.])],
+	[AC_MSG_CHECKING([Checking for CAEN FElib installed])
+	AC_CHECK_FILE([/usr/local/include/CAEN_FELib.h], 
+        [AC_MSG_RESULT([Found header])],
+        [AC_MSG_ERROR([cannot find /usr/local/CAEN_FELib.h - install CAEN Nextgen digitizer support libraries])])
+	AC_CHECK_FILES([/usr/local/lib/libCAEN_Dig2.so /usr/local/lib/libCAEN_FELib.so],
+        [AC_MSG_RESULT([Found CAEN FELib library files])],
+        [AC_MSG_ERROR([cannot find the /usr/local/lib/{libCAEN_Dig2.so, libCAEN_FELib.so files install CAEN nextgen digitizer support libraries}]
+        )])
+	enable_caennextgen="true"],
+	[enable_caennextgen="false"])  
+
+if test "${enable_caennextgen}" = "true"
+then
+	AC_MSG_NOTICE([Enabled support for CAEN Nextgen digitizers])
+
+	#  Set the make file variables:
+
+	CAENNG_CPPFLAGS="-I/usr/local/include"
+	CAENNG_LDFLAGS="-L/usr/local/lib -lCAEN_FELib -lCAEN_Dig2"
+	AC_SUBST([CAENNG_CPPFLAGS])
+	AC_SUBST([CAENNG_LDFLAGS])
+	AM_CONDITIONAL([CAENNEXTGEN], [true])
+else 
+     AC_MSG_NOTICE([Disabled support for  CAEN Nextgen digitizers])
+     AM_CONDITIONAL([CAENNEXTGEN], [false])
+fi
+
+# CAEN Nextgen digitizers, if used require jsoncpp:
+
+PKG_CHECK_MODULES([JSON], [jsoncpp])
 
 # Documentation
 
@@ -127,9 +195,9 @@ AC_CHECK_LIB([Xt], [XtManage])
 
 AM_PATH_CPPUNIT
 
-# Checksums in eventlog require openssl for the digest libs:
+# Checksums in eventlog require OpenSSL for the digest libs:
 
-AX_CHECK_OPENSSL([AC_MSG_RESULT([Found OpenSSL])], [AC_MSG_ERROR([OpenSSL is required but cannot be found])])
+AX_CHECK_OPENSSL([AC_MSG_RESULT([Found OpenSSL])], [AC_MSG_ERROR([cannot find OpenSSL installation required by NSCLDAQ])])
 
 # For compatibility with existing AC_Substs:
 
@@ -208,11 +276,11 @@ SOVERSION="11:0:0"
 #  Local tests:
 #
 
-# Ensure Python is 3.0  or greater, and the packages/dependencies we need
+# Ensure python is 3.0 or greater, and the packages/dependencies we need:
 
 AM_PATH_PYTHON([3.0],
 	[],
-	[AC_MSG_ERROR([Python 3.0 or higher is needed for NSCLDAQ])])
+	[AC_MSG_ERROR([python 3.0 or higher is needed for NSCLDAQ])])
 AX_PYQT
 PKG_CHECK_MODULES(PYTHON3, python3)
 
@@ -233,7 +301,7 @@ AC_SUBST(PYTHON3_LIBS)
 # version I used when first successfully building the wrappers
 # (Ubuntu Lucid Lynx).
 
-AX_PKG_SWIG([1.3], [], [ AC_MSG_ERROR([Swig is required to build nscldaq])])
+AX_PKG_SWIG([1.3], [], [ AC_MSG_ERROR([swig is required to build NSCLDAQ])])
 
 # We use gengetopt in a few places.  Ideally it's been found by now in the
 # path if not we'll need to do the withval thing... or prompt the user to
@@ -292,12 +360,12 @@ then
 			then
 				AC_MSG_RESULT([Need to build local tagged copy])
 				AC_CHECK_FILE([${srcdir}/libtcl/configure], [havelibtcldir="yes"], [havelibtcldir="no"])
-				(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)'
+				(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
 			else
-				AC_MSG_ERROR([I seem to be missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
+				AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
 			fi
 		else
-		AC_MSG_RESULT([Previously built version found in ${prefix}])
+			AC_MSG_RESULT([Previously built version found in ${prefix}])
 		fi
 	
 	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
@@ -313,13 +381,12 @@ AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
 if test $havelibtcldir = "yes"
 then
 	AC_MSG_RESULT([Need to build local tagged copy])
-	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
-
+	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
 	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
 	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
 	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
 else
-	AC_MSG_ERROR([I seem to be missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
+	AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
 fi
 
 AC_SUBST(LIBTCLPLUS_CFLAGS)
@@ -335,76 +402,7 @@ tcl_configdir="/usr/lib/$tcl_basename"
 tcl_incdir="/usr/include/$tcl_basename"
 
 (cd ${srcdir}/tclhttpd3.5.1; ./configure --prefix=${prefix}/share/tclhttpd --enable-gcc --with-tclinclude=$tcl_incdir --with-tcl=$tcl_configdir)
-(cd ${srcdir}/tclhttpd3.5.1; make -j26 all install)
-
-#  CAEN Digitizer support is optional:
-
-AC_ARG_ENABLE([caen-digitizer-support],
-	AC_HELP_STRING([--enable-caen-digitizer-support],
-	[Build support for CAEN Digitizers]),
-	[enable_caen=$enableval],
-	[enable_caen=no])
-
-if test "x$enable_caen" = "xyes"
-then
-	AC_ARG_WITH([caen-digitizer-libroot],
-	AC_HELP_STRING([ --with-caen-digitizer-libroot],
-	[Root directory for CAEN Digitizer/VME/Comm library installation]),
-	[caen_root=$withval],[caen_root=""])
-
-	if test "xx$caen_root" != "xx"
-	then
-		AC_MSG_NOTICE([Enabling CAEN digitizer DPP support])
-		CAENCCFLAGS=-I$caen_root/include
-		CAENLDFLAGS="-L$caen_root/lib -lCAENDigitizer -lCAENVME -lCAENComm -Wl,-rpath=$caen_root/lib"
-		AM_CONDITIONAL([CAENSUPPORT], [true])
-		AC_SUBST(CAENCCFLAGS)
-		AC_SUBST(CAENLDFLAGS)
-	else
-		AM_CONDITIONAL([CAENSUPPORT], [false])
-		AC_MSG_ERROR([Using --enable-caen-digitizer-support also requires --with-caen-dgitizer-libroot to specifiy where the CAEN libraries/headers are])
-	fi
-else
-	AM_CONDITIONAL([CAENSUPPORT], [false])
-fi
-
-#  CAEN Nextgen digitizer support is also optional  the CAEN support
-#  libraries are awful in that they require installation in
-#  specific locations:
-
-AC_ARG_ENABLE([caen-nextgen],
-	[AS_HELP_STRING([--enable-caen-nextgen],
-	[To enable support for CAEN Nextgen digitizers.])],
-	[AC_MSG_CHECKING([Checking for CAEN FElib installed])
-	AC_CHECK_FILE([/usr/local/include/CAEN_FELib.h], 
-        [AC_MSG_RESULT([Found header])],
-        [AC_MSG_ERROR([Can't find /usr/local/CAEN_FELib.h - install CAEN Nextgen digitizer support libraries])])
-	AC_CHECK_FILES([/usr/local/lib/libCAEN_Dig2.so /usr/local/lib/libCAEN_FELib.so],
-        [AC_MSG_RESULT([Found CAEN FELib library files])],
-        [AC_MSG_ERROR([Can't fid the /usr/local/lib/{libCAEN_Dig2.so, libCAEN_FELib.so files install CAEN nextgen digitizer support libraries}]
-        )])
-	enable_caennextgen="true"],
-	[enable_caennextgen="false"])  
-
-if test "${enable_caennextgen}" = "true"
-then
-	AC_MSG_NOTICE([Enabled support for CAEN Nextgen digitizers])
-
-	#  Set the make file variables:
-
-	CAENNG_CPPFLAGS="-I/usr/local/include"
-	CAENNG_LDFLAGS="-L/usr/local/lib -lCAEN_FELib -lCAEN_Dig2"
-	AC_SUBST([CAENNG_CPPFLAGS])
-	AC_SUBST([CAENNG_LDFLAGS])
-	AM_CONDITIONAL([CAENNEXTGEN], [true])
-else 
-     AC_MSG_NOTICE([Disabled support for  CAEN Nextgen digitizers])
-     AM_CONDITIONAL([CAENNEXTGEN], [false])
-fi
-
-# CAEN Nextgen digitizers, if used require jsoncpp:
-
-PKG_CHECK_MODULES([JSON], [jsoncpp])
+(cd ${srcdir}/tclhttpd3.5.1; make  all install)
 
 # Epics
 #
@@ -458,54 +456,50 @@ AC_ARG_ENABLE([ddas],
 	[],
 	[enable_ddas=no])
 
-if test "$enable_ddas" = yes
+if test "$enable_ddas" = "yes"
 then
 	AC_MSG_NOTICE([The XIA-DDAS support software will be built])
 	AC_DEFINE([USING_DDAS], [1], [DDAS support enabled])
 
 	AC_ARG_WITH([xiaapidir],
-	[  --with-xiaapidir=path - Path to the XIAAPI installation. Required if DDAS support is enabled.],
-	[xiaapidir=$withval])
+	[  --with-xiaapidir=path - Path to the XIA API installation. Required if DDAS support is enabled.],
+	[xiaapidir=$withval],
+	[AC_MSG_ERROR([use --with-xiaapidir to point to the actual installation of the XIA API])])
+
+	# Check that the XIA API installation directory is correct by looking
+	# for the pixie16.h header there. If found, define vars; if not,
+	# print an error message and exit:
 	
-	if test -n -d ${xiaapidir}
-	then
-		AC_MSG_ERROR([Specify --with-xiaapidir to point to the actual installation of the XIA API])
-	fi
-	PIXIE_API_DIR=${xiaapidir}
-
-	# If the xiaapidir/include/pixie16/pixie16.h exists we're using the
-	# XIAAPI_V3 or higher stuff:
-
-	xiaapiver=3
-	PIXIE_CPPFLAGS="-I${xiaapidir}/include"
 	AC_CHECK_FILE([${xiaapidir}/include/pixie16/pixie16.h],
-		[PIXIE_CPPFLAGS="${PIXIE_CPPFLAGS} -DXIAAPI_V3"	PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"	AC_DEFINE([XIAAPI_VERSION], [3], [Pixie16 version 3 api])],
-		[PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixieSDK -lm -Wl,-rpath=${xiaapidir}/lib" AC_DEFINE([XIAAPI_VERSION], [2], [Pixie16 version 2 or lower])
-		xiaapiver=2])
+	[PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"],
+	[AC_MSG_ERROR([invalid XIA API installation directory ${xiaapidir}, use --with-xiaapidir to point to the correct one (this version of NSCLDAQ supports only XIA API major version 3+)])])
 
-	AM_CONDITIONAL([USING_XIAAPI_V2], [test ${xiaapiver} -eq 2])
+	PIXIE_API_DIR=$xiaapidir
+	PIXIE_CPPFLAGS="-I${xiaapidir}/include"
 
 	AC_SUBST(PIXIE_API_DIR)
 	AC_SUBST(PIXIE_CPPFLAGS)
 	AC_SUBST(PIXIE_LDFLAGS)
 
-	# Specify the location of the Plx installation. This will default to
-	# /usr/opt/plx.
+	# Specify the location of the PLX installation. This will default to
+	# /usr/opt/plx or $(prefix)/../../plx if no argument is provided.
+	# Since we know its version 8+ to support XIA API 3+, the correct
+	# install directory can be verified by the presence of the shared lib.
 
 	AC_ARG_WITH([plx-sdk],
 		[  --with-plx-sdk=path - Path to the PLX software installation. Required if DDAS support is enabled.],
 		[PLX_SDK_DIR=$withval], [PLX_SDK_DIR=""])
+
+	# Check the default install locations. If no arg is supplied and the
+	# installation directory isn't in the default search paths,
+	# PLX_SDK_DIR is "":
 
 	if test -z "$PLX_SDK_DIR"
 	then
 		for d in /usr/opt/plx $(prefix)/../../plx
 		do
 			if test -z "$PLX_SDK_DIR"
-			then		
-			# Its probably one of these:		
-				AC_CHECK_FILE([$d/PlxApi/Library/libPlxApi.a],
-					[PLX_SDK_DIR="$d"],
-					[PLX_SDK_DIR=""])
+			then
 				AC_CHECK_FILE([$d/PlxApi/Library/PlxApi.so],
 					[PLX_SDK_DIR="$d"],
 					[PLX_SDK_DIR=""])
@@ -517,16 +511,16 @@ then
 
 	if test -z "$PLX_SDK_DIR"
 	then
-		AC_MSG_FAILURE([Could not locate the PLX SDK directory, use --with-plx-sdk to help me])
+		AC_MSG_FAILURE([Could not locate the PLX SDK directory, specify the correct path using --with-plx-sdk])
 	fi
 
 	PLX_CPPFLAGS="-I${PLX_SDK_DIR}/Include -I${PLX_SDK_DIR}/PlxApi"
 
-	# Use the shared library PlxApi.so (plx 8+) otherwise libPlxApi.a:
+	# For PLX SDK 8+ we're looking for the shared library:
 
   	AC_CHECK_FILE([${PLX_SDK_DIR}/PlxApi/Library/PlxApi.so],
 		[PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -l:PlxApi.so -Wl,-rpath=${PLX_SDK_DIR}/PlxApi/Library"],
-		[PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -lPlxApi"])
+		[AC_MSG_ERROR(invalid PLX SDK installation directory, specify the correct path using --with-plx-sdk)])
 
 	AC_SUBST(PLX_SDK_DIR)
 	AC_SUBST(PLX_CPPFLAGS)
@@ -540,7 +534,7 @@ then
 
 	if test x$firmwaredir = x
 	then
-		AC_MSG_ERROR([ --with-firmwaredir is a mandatory option])
+		AC_MSG_ERROR([specifying a firmware install directory using --with-firmwaredir is a mandatory option if DDAS support is enabled])
 	fi
 
 	AC_SUBST(firmwaredir)
@@ -555,7 +549,7 @@ then
 
 	if test x$dspdir = x
 	then
-		AC_MSG_ERROR([--with-dspdir is a mandatory option])
+		AC_MSG_ERROR([specifying a firmware install directory using --with-dspdir is a mandatory option if DDAS support is enabled])
 	fi
 
 	AC_SUBST(dspdir)
@@ -564,7 +558,7 @@ then
 	# the source tree and configure/build it into $prefix/unifiedformat
 
 	AC_CHECK_PROG([havecmake], cmake, [1], [0])
-	if `test ${havcmake} = 0`
+	if test $havecmake = 0
 	then
 		AC_MSG_ERROR([cmake must be in the path to build DDAS support software])
 	fi
@@ -578,7 +572,7 @@ then
 		UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lAbstractFormat -lV10Format -lV11Format -lV12Format -Wl,-rpath=${prefix}/unifiedformat/lib"
 		AC_SUBST(UFMT_CPPFLAGS)
 		AC_SUBST(UFMT_LDFLAGS)],
-		[AC_MSG_ERROR([You need to incorporate the unified format library with unifiedfmt-incorp.sh])])
+		[AC_MSG_ERROR([incorporate the unified format library with unifiedfmt-incorp.sh])])
 
 	#  Check for ROOT -- we're just going to add a --with-rootsys and 
 	#  use rootconfig to add the following to the Makefile macro set:
@@ -591,14 +585,14 @@ then
 		[  --with-rootsys=path - Path to the ROOT installation to use. Required if DDAS support is enabled.],
 		[rootdir=$withval])
 	
-	if test  x$rootdir = x 
+	if test x$rootdir = x 
 	then
-		AC_MSG_ERROR([Use --with-rootsys to specify where root is installed])
+		AC_MSG_ERROR([use --with-rootsys to specify where ROOT is installed])
 	fi
 	
 	if test ! -d $rootdir
 	then
-		AC_MSG_ERROR([ROOTSYS directory specified: $rootdir does not exist])
+		AC_MSG_ERROR([the specified ROOTSYS directory $rootdir does not exist!])
 	fi
 
 	ROOTSYS=$rootdir
@@ -615,10 +609,9 @@ then
 
 	#  Now export all the variables to the Makefile:
 
-	AM_CONDITIONAL([BUILD_DDAS], [true])   
+	AM_CONDITIONAL([BUILD_DDAS], [true])
 else
 	AM_CONDITIONAL([BUILD_DDAS],[false])
-	AM_CONDITIONAL([USING_XIAAPI_V2], [false])
 fi
 
 # The SBS software will only be built if --enable-sbs was supplied.
@@ -627,7 +620,7 @@ fi
 # device driver as well. The default is to _not_ build the sbs stuff.
 
 AC_ARG_ENABLE([sbs],
-	AS_HELP_STRING([--enable-sbs],  [Build SBS software with a configured kernel source]),
+	AS_HELP_STRING([--enable-sbs], [Build SBS software with a configured kernel source]),
 	[],
 	[enable_sbs=no])
 
@@ -639,12 +632,12 @@ then
 
 	if test x$sbsdir = x
 	then
-		AC_MSG_ERROR([--with-sbsdir is a mandatory option if SBS kernel support is enabled])
+		AC_MSG_ERROR([specifiying an SBS kernel directory using --with-sbsdir is a mandatory option if SBS kernel support is enabled])
 	fi
 	
 	if test ! -d $sbsdir
 	then
-		AC_MSG_ERROR([SBS directory specified: $sbsdir does not exist!])
+		AC_MSG_ERROR([the specified SBS directory $sbsdir does not exist!])
 	fi
 
 	KERNEL_SOURCE_DIR=$sbsdir
@@ -684,7 +677,7 @@ PKG_CHECK_MODULES([SQLITE3], [sqlite3])
 #  Check for zmq presence:
 #
 
-AC_SEARCH_LIBS([zmq_init], [zmq], [result=$ac_cv_search_zmq_init], [AC_MSG_ERROR([The zeromq library was not found and is now required for nscldaq])])
+AC_SEARCH_LIBS([zmq_init], [zmq], [result=$ac_cv_search_zmq_init], [AC_MSG_ERROR([the ZeroMQ library was not found and is now required for NSCLDAQ])])
 
 if test $result = "none required"
 then
@@ -699,7 +692,7 @@ AC_SUBST(ZMQ_LDFLAGS)
 # need the zmq c++ bindings
 #  note in some c++11's we need to include <algorithm> to include zmq.hpp:
 AC_LANG_PUSH(C++)
-AC_CHECK_HEADERS([algorithm zmq.hpp], [], [AC_MSG_ERROR([The zeromq C++ header (zmq.hpp) is missing and is required for nscldaq])], [#include <algorithm>])
+AC_CHECK_HEADERS([algorithm zmq.hpp], [], [AC_MSG_ERROR([the ZeroMQ C++ header zmq.hpp is missing and is required for NSCLDAQ])], [#include <algorithm>])
 AC_LANG_POP
 
 #----------------------------------------------------------------------------

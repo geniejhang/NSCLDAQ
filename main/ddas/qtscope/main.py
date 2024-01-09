@@ -82,11 +82,6 @@ def main():
             print("\n-----------------------------------")
             print("QtScope running in offline mode!!!")
             print("-----------------------------------\n")  
-
-    # Get the XIA API major version used to compile this program:
-    
-    ver = int(sys.argv[0])
-    logger.info(f"QtScope compiled with XIA API major version {ver}")
     
     # Create the factories:
 
