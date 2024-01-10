@@ -16,7 +16,7 @@
 */
 
 /** 
- * @file:ZeroCopyHit.h
+ * @file ZeroCopyHit.h
  * @brief Class to manage a zero copy RawChannel that comes from inside a 
  * buffer from a buffer arena.
  */

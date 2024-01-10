@@ -48,14 +48,15 @@ class CExperiment;
  * override and implement to perform user specific initialization.
  * 
  * These are:
- *    AddCommands         - Extend the Tcl interpreter with additional commands.
- *    SetupRunVariables   - Creates an initial set of run variables.
- *    SetupStateVariables - Creates an initial set of state variables.
- *    SetupReadout        - Sets up the software's trigger and its response to 
- *                          that trigger.
- *    SetupScalers        - Sets up the response to the scaler trigger and, if 
- *      desired, modifies the scaler trigger from a periodic trigger controlled
- *      by the 'frequency' Tcl variable to something else.
+ * - AddCommands         : Extend the Tcl interpreter with additional commands.
+ * - SetupRunVariables   : Creates an initial set of run variables.
+ * - SetupStateVariables : Creates an initial set of state variables.
+ * - SetupReadout        : Sets up the software's trigger and its response to 
+ *                         that trigger.
+ * - SetupScalers        : Sets up the response to the scaler trigger and, if 
+ *                         desired, modifies the scaler trigger from a periodic
+ *                         trigger controlled by the 'frequency' Tcl variable 
+ *                         to something else.
  *
  * For more information about how to tailor this skeleton, see the comments 
  * in Skeleton.cpp

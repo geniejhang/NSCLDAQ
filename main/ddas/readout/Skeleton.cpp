@@ -55,7 +55,7 @@ std::vector<CMyScaler*> scalerModules; //!< List of scalar modules/
 CTCLApplication* gpTCLApplication = new Skeleton;
 
 /**
- * @detials 
+ * @details 
  * This function must define the trigger as well as the response of the 
  * program to triggers.  A trigger is an object that describes when an event 
  * happens. Triggers are objects derived from CEventTrigger

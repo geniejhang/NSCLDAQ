@@ -1,42 +1,36 @@
-/**
+/* 
+   This software is Copyright by the Board of Trustees of Michigan
+   State University (c) Copyright 2013.
 
-#    This software is Copyright by the Board of Trustees of Michigan
-#    State University (c) Copyright 2013.
-#
-#    You may use this software under the terms of the GNU public license
-#    (GPL).  The terms of this license are described at:
-#
-#     http://www.gnu.org/licenses/gpl.txt
-#
-#    Author:
-#            Ron Fox
-#            NSCL
-#            Michigan State University
-#            East Lansing, MI 48824-1321
+   You may use this software under the terms of the GNU public license
+   (GPL).  The terms of this license are described at:
 
-##
-# @file   CBootCommand.cpp
-# @brief  Implement ddasboot command.
-# @author <fox@nscl.msu.edu>
+   http://www.gnu.org/licenses/gpl.txt
+
+   Author:
+       Ron Fox
+       NSCL
+       Michigan State University
+       East Lansing, MI 48824-1321
 */
 
+/**
+ * @file   CBootCommand.cpp
+ * @brief  Implement ddasboot command.
+ */
+
 #include "CBootCommand.h"
-#include "CMyEventSegment.h"
-#include "RunState.h"
+
+#include <stdexcept>
 
 #include <TCLInterpreter.h>
 #include <TCLObject.h>
-#include <stdexcept>
+#include "CMyEventSegment.h"
+#include "RunState.h"
 
-/**
- * constructor
- *   @param interp - Reference to the interpreter.
- *   @param pCmd   - Command string.
- *   @param pSeg   - Event segment to manipulate.
- */
 CBootCommand::CBootCommand(
     CTCLInterpreter& interp, const char* pCmd, CMyEventSegment* pSeg
-) :
+    ) :
     CTCLObjectProcessor(interp, pCmd),
     m_pSegment(pSeg)
 {}
@@ -47,17 +41,10 @@ CBootCommand::CBootCommand(
 CBootCommand::~CBootCommand() {}
 
 /**
- * operator()
- *    Gets control when the command is invoked.
- *    - Ensures there are no additional command parameters.
- *    - Invokes the segments's boot method.
- *
- *  @param interp - interpreter executing the command.
- *  @param objv   - command words.
- *  @return int -  Status of the command:
- *                 - TCL_OK - successful completion.
- *                 - TCL_ERROR - failure.  Human readable reason is in
- *                   the intepreter result.
+ * @details
+ * Gets control when the command is invoked.
+ * - Ensures there are no additional command parameters.
+ * - Invokes the segments's boot method.
  */
 int
 CBootCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
@@ -69,7 +56,9 @@ CBootCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>& objv)
         if (RunState::getInstance()->m_state == RunState::inactive) {
             m_pSegment->boot();
         } else {
-            throw std::runtime_error("Cannot boot system while a run is active or paused.");
+            throw std::runtime_error(
+		"Cannot boot system while a run is active or paused."
+		);
         }
     }
     catch (std::string msg) {
