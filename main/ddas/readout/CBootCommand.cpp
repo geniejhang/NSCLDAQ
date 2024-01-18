@@ -35,9 +35,6 @@ CBootCommand::CBootCommand(
     m_pSegment(pSeg)
 {}
 
-/**
- * Destructor:
- */
 CBootCommand::~CBootCommand() {}
 
 /**

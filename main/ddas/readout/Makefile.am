@@ -31,7 +31,8 @@ DDASReadout_CPPFLAGS= \
 	@LIBTCLPLUS_CFLAGS@						\
 	@TCL_FLAGS@         						\
 	-fPIC -DFIRMWARE_FILE=\"${SHAREDIR}/DDASFirmwareVersions.txt\"  \
-	-DSORTING
+	-DSORTING 							\
+	-I@top_srcdir@/ddas/exception
 
 DDASReadout_LDFLAGS= \
 	@top_builddir@/sbs/readout/libSBSProductionReadout.la   \
@@ -43,7 +44,10 @@ DDASReadout_LDFLAGS= \
 	@PIXIE_LDFLAGS@						\
 	@PLX_LDFLAGS@ 						\
 	@LIBTCLPLUS_LDFLAGS@ 					\
-	@TCL_LDFLAGS@
+	@TCL_LDFLAGS@						\
+	@top_builddir@/ddas/exception/libDDASException.la 	\
+	@LIBEXCEPTION_LDFLAGS@
+
 
 libddastimestampextractor_la_SOURCES=ddastimestamp.cpp
 libddastimestampextractor_la_CPPFLAGS=$(DDASReadout_CPPFLAGS) $(CXXFLAGS)
