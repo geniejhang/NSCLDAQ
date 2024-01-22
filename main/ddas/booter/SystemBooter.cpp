@@ -163,7 +163,7 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
 	Pixie16_DSP_Code_File, DSPParFile, Pixie16_DSP_Var_File,
 	modIndex, computeBootMask(type)
 	);    
-    if(retval < 0) {	
+    if (retval < 0) {	
 	std::string msg = "Boot failed module " + modIndex;
 	throw CDDASException(retval, "Pixie16BootModule()", msg);
     }

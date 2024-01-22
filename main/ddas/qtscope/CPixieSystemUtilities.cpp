@@ -12,6 +12,7 @@
 #include <config_pixie16api.h>
 
 #include <SystemBooter.h>
+#include <CDDASException.h>
 
 using namespace DAQ::DDAS;
 namespace HR = DAQ::DDAS::HardwareRegistry;
@@ -62,8 +63,8 @@ CPixieSystemUtilities::Boot()
     try {
 	booter.boot(m_config, SystemBooter::FullBoot);
     }
-    catch (std::runtime_error& e) {
-	std::cerr << e.what() << std::endl;    
+    catch (const CDDASException& e) {
+	std::cerr << e.ReasonText() << std::endl;    
 	return -1;
     }
 

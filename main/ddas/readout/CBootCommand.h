@@ -30,10 +30,11 @@ class CTCLObject;
 
 /**
  * @class CBootCommand
+ * @brief Implement the ddasboot command.
  * @details
- * This class implements the ddasboot command.  It is added to to the
- * Tcl interpreter that runs ddasreadout so that the DDAS modules can be
- * booted on demand rather than every time the Readout program starts.
+ * This command is added to to the Tcl interpreter that runs ddasreadout so 
+ * that the DDAS modules can be booted on demand rather than every time the 
+ * Readout program starts.
  *
  * Syntax:
  * @verbatim

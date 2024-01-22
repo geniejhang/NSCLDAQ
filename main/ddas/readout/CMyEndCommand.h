@@ -6,8 +6,9 @@
 #ifndef CMYEND_H
 #define CMYEND_H
 
-#include <CEndCommand.h>
 #include <tcl.h>
+
+#include <CEndCommand.h>
 
 class CTCLInterpreter;
 class CTCLObject;
@@ -16,7 +17,7 @@ class CExperiment;
 
 /**
  * @class CMyEndCommand
- * @brief Provide an end command to permanently end a data-taking run 
+ * @brief Provide an end command to permanently end a data-taking run
  * (list-mode data in the XIA-verse).
  */
 

@@ -33,16 +33,15 @@
 namespace DDASReadout {
 /**
  * @class CHitManager
- *
+ * @brief Collect hits from modules and retains them in a sorted deque. 
  * @details
- * Collects hits from modules and retains them in a sorted deque. 
  * On request, provides hits that were accepted within some sliding
  * time interval. The time interval is defined at construction time
- * and is in units of seconds (1.0E9 timestamp ticks as timestamps are
+ * and is in units of seconds (1.0e9 timestamp ticks as timestamps are
  * in ns).
  *
- * This module does no storage manager, the receiver of all hits is expected
- * to release any events that have been output.
+ * This module does no storage management, the receiver of all hits is 
+ * expected to release any events that have been output.
  */
     class CHitManager {
     private:

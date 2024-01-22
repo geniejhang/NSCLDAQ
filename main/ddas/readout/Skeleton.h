@@ -29,17 +29,16 @@ class CTCLInterpreter;
 class CExperiment;
 
 /**
- * @brief class Skeleton
+ * @class Skeleton
+ * @brief A skeleton for the production readout software for NSCLDAQ 10.0
+ * and later.
  * @details
- * This file is a skeleton for the production readout software for NSCLDAQ 10.0
- * and later. The programmatic interface to NSCLDAQ 10.0 at the application 
- * level is a 'close match' to that of earlier versions. The software itself is
- * a complete re-write so some incompatibilities may exist. If you find an 
- * incompatibility, please post it at daqbugs.nscl.msu.edu so that it can be 
- * documented, and addressed. Note that this does not necessarily mean that 
- * the incompatibility will be 'fixed'.
- *
- * ---------------------------------------------------------------
+ * The programmatic interface to NSCLDAQ 10.0 at the application level is a 
+ * 'close match' to that of earlier versions. The software itself is a 
+ * complete re-write so some incompatibilities may exist. If you find an 
+ * incompatibility, please post it at daqbugs.nscl.msu.edu so that it can 
+ * be documented, and addressed. Note that this does not necessarily mean 
+ * that the incompatibility will be 'fixed'.
  *
  * How to use this skeleton:
  *
@@ -66,7 +65,7 @@ class Skeleton : public CReadoutMain
 {
 private:
     
-    // if you need per instance data add it here.
+    // If you need per instance data add it here.
 
 public:
     

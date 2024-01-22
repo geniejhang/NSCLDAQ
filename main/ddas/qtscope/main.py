@@ -98,7 +98,7 @@ def main():
         QtCore.Qt.AA_EnableHighDpiScaling, True
     )
     app = QtWidgets.QApplication(sys.argv)
-    gui = MainWindow(cdf, mdf, tbf, ftf, ver, offline)
+    gui = MainWindow(cdf, mdf, tbf, ftf, 4, offline)
     gui.show()
     sys.exit(app.exec_())
 

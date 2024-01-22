@@ -14,19 +14,15 @@
 #include <chrono>
 #include <thread>
 
+#include <TCLInterpreter.h>
 #include <TCLObject.h>
-#include <RunState.h>
-#include <CVMEInterface.h>
 
 #include <config.h>
 #include <config_pixie16api.h>
+#include <CVMEInterface.h>
+#include <RunState.h>
 #include <CDDASException.h>
 #include "CMyEventSegment.h"
-#include "TCLInterpreter.h"
-
-#ifdef HAVE_STD_NAMESPACE
-using namespace std;
-#endif
 
 CMyEndCommand::CMyEndCommand(
     CTCLInterpreter& rInterp, CMyEventSegment *myevseg, CExperiment* pexp

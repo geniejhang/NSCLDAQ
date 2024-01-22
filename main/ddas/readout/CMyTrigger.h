@@ -1,39 +1,61 @@
+#ifndef CMYTRIGGER_H
+#define CMYTRIGGER_H
+
+#include <ctime>
+
 #include <CEventTrigger.h>
-#include <time.h>
 
 class CMyTrigger : public CEventTrigger
-{
- 
+{ 
 private:
 
-  bool           m_retrigger;           // retrigger flag for pixie16 buffer readout
-  unsigned int   nFIFOWords;   // words in pixie16 output data buffer
-  int            NumberOfModules;        // number of pixie16 modules
-  unsigned short ModNum;      // pixie16 module number
-  unsigned       m_fifoThreshold;
-	time_t         m_lastTriggerTime;   // Last time operator() returned true.
-	unsigned int*  m_wordsInEachModule;
+    bool           m_retrigger; //!< Retrigger flag for Pixie buffer readout.
+    unsigned int   nFIFOWords;  //!< Words in Pixie output data buffer.
+    int            NumberOfModules;   //!< Number of Pixie modules.
+    unsigned short ModNum;            //!< Pixie module number.
+    unsigned       m_fifoThreshold;   //!< FIFO readout threshold.
+    time_t         m_lastTriggerTime; //!< Last time operator() returned true.
+    unsigned int*  m_wordsInEachModule; //!< Current FIFO sizes.
 public:
-	// Constructors, destructors and other cannonical operations: 
-  
-  CMyTrigger ();                      //!< Default constructor.
-  ~CMyTrigger (); //!< Destructor.
-  
-  
-  // Selectors for class attributes:
-public:
-  time_t start,end;
-  // Mutators:
+    // Constructors, destructors and other cannonical operations:
+    /** @brief Default constructor. */
+    CMyTrigger();
+    /** @brief Destructor. */
+    ~CMyTrigger();
+       
+    // Mutators:
 protected:  
   
-  // Class operations:
-public:  
-  virtual void setup();
-  virtual void teardown();
-  virtual   bool operator() ();
-  virtual   void Initialize( int nummod ); 
-  void Reset();
-	unsigned int* getWordsInModules() const;
-  //int GetNumberOfModules() {return NumberOfModules;}
-
+    // Class operations:
+public:
+    /** @brief Start the trigger timeout. */
+    virtual void setup();
+    /** @brief Called as data taking ends. */
+    virtual void teardown();
+    /**
+     * @brief operator()
+     * @return bool
+     * @retval true Good trigger, pass control back to the event segment.
+     * @retfal false Not enough data to trigger.
+     */
+    virtual bool operator()();
+    /**
+     * @brief Setup the trigger and FIFO words array.
+     * @param nummod The number of installed modules in the Pixie setup. 
+     *     Received from the event segment class.
+     */
+    virtual void Initialize(int nummod);
+    /**
+     * @brief Control for determing if trigger should poll modules or pass 
+     * control back to CEventSegment for processing the previous block of data. 
+     */
+    void Reset();
+    /**
+     * @brief Get the number of words in each module.
+     * @return Pointer to the array containing the number of words each 
+     *     module has.
+     */
+    unsigned int* getWordsInModules() const { return m_wordsInEachModule; };
 };
+
+#endif

@@ -21,8 +21,10 @@
  */
 
 #include "BufferArena.h"
-#include "ReferenceCountedBuffer.h"
+
 #include <stdexcept>
+
+#include "ReferenceCountedBuffer.h"
 
 namespace DDASReadout {
     /**

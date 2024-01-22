@@ -11,10 +11,11 @@
 
 /**
  * @class CMyBusy
+ * @brief A class to handle busy.
  * @details
- * A class to handle busy. This is used by the skeleton code to define busy as 
- * part of its trigger configuration. This class subclasses the abstract base 
- * class CBusy and implements its mandatory interface as a mock up.
+ * This is used by the skeleton code to define busy as part of its trigger 
+ * configuration. This class subclasses the abstract base class CBusy and 
+ * implements its mandatory interface as a mock up.
  */
 
 class CMyBusy : public CBusy

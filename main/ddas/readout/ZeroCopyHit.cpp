@@ -24,8 +24,7 @@
 #include "ReferenceCountedBuffer.h"
 #include "BufferArena.h"
 
-namespace DDASReadout {
-    
+namespace DDASReadout {    
     /**
      * @details
      * Creates a hit. The hit must be initialized with setHit before 

@@ -7,19 +7,13 @@
 
 #include <iostream>
 
-#include <config.h>
-
-#ifdef HAVE_STD_NAMESPACE
-using namespace std;
-#endif
-
 void CMyBusy::GoBusy() 
 {
-    // cout << "Going busy "<< endl << flush;
+    // std::cout << "Going busy "<< std::endl << std::flush;
 }
 
 void CMyBusy::GoClear() 
 {  
-    // cout << "going clear "<< endl << flush;
+    // std::cout << "Going clear "<< std::endl << std::flush;
 }
 

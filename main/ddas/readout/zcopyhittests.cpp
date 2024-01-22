@@ -1,7 +1,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
-#include "Asserts.h"
 
+#include "Asserts.h"
 #include "ZeroCopyHit.h"
 #include "BufferArena.h"
 #include "ReferenceCountedBuffer.h"

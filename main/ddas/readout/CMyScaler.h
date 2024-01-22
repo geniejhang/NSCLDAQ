@@ -1,53 +1,72 @@
-/*********************************************************
- Declaration of Scaler class for DDAS
- Access statistics directly from the Pixie16 modules
- H.L. Crawford 6/13/2010
-*********************************************************/
+#ifndef CMYSCALER_H
+#define CMYSCALER_H
 
-#ifndef MYSCALER_H
-#define MYSCALER_H
+#include <vector>
 
 #include <config.h>
 #include <CScaler.h>
-#include <vector>
-
-//#ifdef HAVE_STD_NAMESPACE
-using namespace std;
-//#endif
 
 class CMyScaler : public CScaler
 {
 public:
-   typedef struct _Counters {
-     size_t s_nTriggers;
-     size_t s_nAcceptedTriggers;
-   } Counters;
-   typedef struct _Statistics {
-      Counters s_cumulative;
-      Counters s_perRun;
-   } Statistics;
- private:
-  unsigned short numModules;
-  unsigned short crateID;
-  unsigned short moduleNumber;
-  double PreviousCounts[16];
-  double PreviousCountsLive[16];
-
-  vector<uint32_t> scalers;
-  Statistics m_Statistics;
- public:
-  CMyScaler(unsigned short moduleNr, unsigned short crateid); // Constructor
-  ~CMyScaler();
-  virtual void initialize();
-  virtual vector<uint32_t> read();
-  virtual void clear();
-  virtual void disable();
-  virtual unsigned int size() {return 32;};
-  
-  //
-  const Statistics& getStatistics() const { return m_Statistics;}
+    /** @brief Count raw and accepted triggers. */
+    typedef struct _Counters {
+	size_t s_nTriggers; //!< Raw triggers.
+	size_t s_nAcceptedTriggers; //!< Accepted triggers (i.e. by the FPGA).
+    } Counters;
+    /** @brief Statistics are counters for cumulative and per-run triggers. */
+    typedef struct _Statistics {
+	Counters s_cumulative; //!< Cumulative. Not cleared on initialize.
+	Counters s_perRun; //!< Per-run. Cleared on initialize.
+    } Statistics;
+    
 private:
-  void clearCounters(Counters& c);
+    unsigned short m_crate; //!< Crate ID value.
+    unsigned short m_module; //!< Module number.
+    double m_prevIC[16]; //!< Previous input counts (# raw fast triggers.)
+    double m_prevOC[16]; //!< Previous output counts (# accepted triggers) 
+
+    std::vector<uint32_t> m_scalers; //!< Vector of scaler data for the module.
+    Statistics m_statistics; //!< Storage for calculated scaler data.
+public:
+    /**
+     * @brief Constructor.
+     * @param mod The module number.
+     * @param crate The crate ID where the module resides.
+     */
+    CMyScaler(unsigned short mod, unsigned short crate);
+    /** @brief Destructor. */
+    ~CMyScaler();
+
+    /** @brief Zero the per-run statistics and counters. */
+    virtual void initialize();
+    /**
+     * @brief Read scalar data from a module.
+     * @return Vector of scalar data for a single module.
+     */
+    virtual std::vector<uint32_t> read();
+    /** @brief Cannot clear with Pixies. Does nothing. */
+    virtual void clear() {};
+    /** 
+     * @brief Disable. Scalars do not need to be disabled at the end of a run.
+     */
+    virtual void disable() {};
+    /** 
+     * @breif Return the size of the scaler data.
+     * @return Always 32 (only for 16-channel cards!)
+     */
+    virtual unsigned int size() { return 32; };
+    /** 
+     * @brief Get the run statistics.
+     * @return Reference to the statistics storage object.
+     */
+    const Statistics& getStatistics() const { return m_statistics; }
+private:
+    /** 
+     * @brief Clear the run counters.
+     * @param[in,out] c Reference to the Counters struct to be cleared.
+     */
+    void clearCounters(Counters& c);
 };
 
 #endif

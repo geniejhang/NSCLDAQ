@@ -19,11 +19,14 @@ libPixieUtilities_la_CPPFLAGS = \
 	-I@top_srcdir@/ddas/configuration \
 	-I@top_srcdir@/ddas/booter \
 	@PIXIE_CPPFLAGS@ \
+	-I@top_srcdir@/ddas/exception @LIBTCLPLUS_CFLAGS@ \
 	-DFIRMWARE_FILE=\"@prefix@/share/ddasreadout/DDASFirmwareVersions.txt\"
 libPixieUtilities_la_LIBADD = \
 	@top_builddir@/ddas/configuration/libConfiguration.la \
         @top_builddir@/ddas/booter/libSystemBooter.la \
-	@PIXIE_LDFLAGS@
+	@PIXIE_LDFLAGS@ @PLX_LDFLAGS@ \
+	@top_builddir@/ddas/exception/libDDASException.la \
+	@LIBEXCEPTION_LDFLAGS@
 
 FIGURES = @srcdir@/figures/timing_diagram.png
 

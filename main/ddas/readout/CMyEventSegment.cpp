@@ -26,7 +26,6 @@
 #include "CMyTrigger.h"
 #include <string.h>
 
-
 #include <stdexcept>
 
 #ifdef HAVE_STD_NAMESPACE

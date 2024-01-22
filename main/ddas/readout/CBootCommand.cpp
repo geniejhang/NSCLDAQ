@@ -15,8 +15,8 @@
 */
 
 /**
- * @file   CBootCommand.cpp
- * @brief  Implement ddasboot command.
+ * @file  CBootCommand.cpp
+ * @brief Implement ddasboot command.
  */
 
 #include "CBootCommand.h"
@@ -25,8 +25,9 @@
 
 #include <TCLInterpreter.h>
 #include <TCLObject.h>
+
+#include <RunState.h>
 #include "CMyEventSegment.h"
-#include "RunState.h"
 
 CBootCommand::CBootCommand(
     CTCLInterpreter& interp, const char* pCmd, CMyEventSegment* pSeg
