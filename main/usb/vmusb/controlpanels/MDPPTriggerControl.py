@@ -102,6 +102,11 @@ class Window(QtWidgets.QMainWindow):
         self.show()
 
     def applyToModule(self):
+        confirmation = self._popupConfirmation()
+        if confirmation == QtWidgets.QMessageBox.No:
+            self._setLog(LOG_WARNING, 'Operation cancelled!')
+            return;
+
         triggerSource = self._encodeTriggerSource()
         triggerOutput = self._encodeTriggerOutput()
 
@@ -130,6 +135,11 @@ class Window(QtWidgets.QMainWindow):
             self._setLog(LOG_ERROR, msg)
 
     def updateFromModule(self):
+        confirmation = self._popupConfirmation()
+        if confirmation == QtWidgets.QMessageBox.No:
+            self._setLog(LOG_WARNING, 'Operation cancelled!')
+            return;
+
         self._updateTriggerSource(int(self.tcl.eval('conn Get triggerSource')))
         self._updateTriggerOutput(int(self.tcl.eval('conn Get triggerOutput')))
 
@@ -319,6 +329,19 @@ class Window(QtWidgets.QMainWindow):
         
         font.setPointSize(size)
         self.LB_log.setFont(font)
+
+    def _popupConfirmation(self):
+        confirmation = QtWidgets.QMessageBox()
+        confirmation.setIcon(QtWidgets.QMessageBox.Warning)
+        confirmation.setText('Are you sure the DAQ is not running?\n\nClicking Yes on running will pause DAQ multiple times.')
+        confirmation.setStandardButtons(QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes)
+        confirmation.setDefaultButton(QtWidgets.QMessageBox.No)
+
+        font = confirmation.font()
+        font.setPointSize(20)
+        confirmation.setFont(font)
+
+        return confirmation.exec()
         
 
 if __name__ == "__main__":
