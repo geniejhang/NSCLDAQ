@@ -31,17 +31,11 @@ using std::setw;
 /////////////////////////////////////////////////////////////////////////////////
 // Arrays for ENUM parameters
 
-static const char*    DataLengthFormatStrings[] = {"8bit", "16bit", "32bit", "64bit", "numevents"};
-static const uint16_t DataLengthFormatValues[] = {0, 1, 2, 3, 4};
-
 static const char*    MarkTypeStrings[] = {"eventcount", "timestamp", "extended-timestamp"};
 static const uint16_t MarkTypeValues[] = {0, 1, 3};
 
 static const char*    TDCResolutionStrings[] = {"24ps", "49ps", "98ps", "195ps", "391ps", "781ps"};
 static const uint16_t TDCResolutionValues[]  = {0, 1, 2, 3, 4, 5};
-
-static const char*    ADCResolutionStrings[] = {"16b", "15b", "14b", "13b", "12b"};
-static const uint16_t ADCResolutionValues[]  = {0, 1, 2, 3, 4};
 
 static const char*    IrqSourceStrings[] = {"event", "data"};
 static const uint16_t IrqSourceValues[]  = {0, 1};
@@ -105,19 +99,17 @@ CMDPP32SCP::onAttach(CReadoutModule& configuration)
 
   m_pConfiguration -> addIntegerParameter("-irqdatathreshold",  0, 32256, 1);
   m_pConfiguration -> addIntegerParameter("-maxtransfer",       0, 32256, 1);
-  m_pConfiguration -> addEnumParameter("-irqsource", IrqSourceStrings, IrqSourceStrings[1]);
-  m_pConfiguration -> addIntegerParameter("-irqeventthreshold", 0, 32256, 1);
+  m_pConfiguration -> addEnumParameter("-irqsource", IrqSourceStrings, IrqSourceStrings[0]);
+  m_pConfiguration -> addIntegerParameter("-irqeventthreshold", 0, 32256, 3);
 
-  m_pConfiguration -> addEnumParameter("-datalenformat", DataLengthFormatStrings, DataLengthFormatStrings[2]);
-  m_pConfiguration -> addIntegerParameter("-multievent",    0, 15, 0);
-  m_pConfiguration -> addEnumParameter("-marktype", MarkTypeStrings, MarkTypeStrings[0]);
+  m_pConfiguration -> addIntegerParameter("-multievent",    0, 15, 11);
+  m_pConfiguration -> addEnumParameter("-marktype", MarkTypeStrings, MarkTypeStrings[1]);
 
-  m_pConfiguration -> addEnumParameter("-tdcresolution", TDCResolutionStrings, TDCResolutionStrings[5]);
+  m_pConfiguration -> addEnumParameter("-tdcresolution", TDCResolutionStrings, TDCResolutionStrings[0]);
   m_pConfiguration -> addIntegerParameter("-outputformat",  0,  2, 0);
-  m_pConfiguration -> addEnumParameter("-adcresolution", ADCResolutionStrings, ADCResolutionStrings[4]);
 
   m_pConfiguration -> addIntegerParameter("-windowstart", 0, 0x7fff, 0x3fc0);
-  m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x4000, 32);
+  m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x4000, 0x32);
   m_pConfiguration -> addBooleanParameter("-firsthit", true);
   m_pConfiguration -> addBooleanParameter("-testpulser", false);
   m_pConfiguration -> addIntegerParameter("-pulseramplitude",  0,  0xfff, 400);
@@ -169,13 +161,11 @@ CMDPP32SCP::Initialize(CVMUSB& controller)
   uint16_t       irqsource           = IrqSourceValues[m_pConfiguration -> getEnumParameter("-irqsource", IrqSourceStrings)];
   uint16_t       irqeventthreshold   = m_pConfiguration -> getIntegerParameter("-irqeventthreshold");
 
-  uint16_t       datalenformat       = DataLengthFormatValues[m_pConfiguration -> getEnumParameter("-datalenformat", DataLengthFormatStrings)];
   uint16_t       multievent          = m_pConfiguration -> getIntegerParameter("-multievent");
   uint16_t       marktype            = MarkTypeValues[m_pConfiguration -> getEnumParameter("-marktype", MarkTypeStrings)];
 
   uint16_t       tdcresolution       = TDCResolutionValues[m_pConfiguration -> getEnumParameter("-tdcresolution", TDCResolutionStrings)];
   uint16_t       outputformat        = m_pConfiguration -> getIntegerParameter("-outputformat");
-  uint16_t       adcresolution       = ADCResolutionValues[m_pConfiguration -> getEnumParameter("-adcresolution", ADCResolutionStrings)];
 
   uint16_t       windowstart         = m_pConfiguration -> getIntegerParameter("-windowstart");
   uint16_t       windowwidth         = m_pConfiguration -> getIntegerParameter("-windowwidth");
@@ -197,13 +187,11 @@ CMDPP32SCP::Initialize(CVMUSB& controller)
 
   list.addWrite16(base + ModuleId,          initamod, id); // Module id.
 
-  list.addWrite16(base + DataFormat,        initamod, datalenformat);
   list.addWrite16(base + MultiEvent,        initamod, multievent);
   list.addWrite16(base + MarkType,          initamod, marktype);
 
   list.addWrite16(base + TDCResolution,     initamod, tdcresolution);
   list.addWrite16(base + OutputFormat,      initamod, outputformat);
-  list.addWrite16(base + ADCResolution,     initamod, adcresolution);
 
   list.addWrite16(base + WindowStart,       initamod, windowstart);
   list.addWrite16(base + WindowWidth,       initamod, windowwidth);
@@ -285,7 +273,7 @@ CMDPP32SCP::addReadoutList(CVMUSBReadoutList& list)
 {
   uint32_t base  = m_pConfiguration -> getUnsignedParameter("-base"); // Get the value of -slot.
 
-  list.addFifoRead32(base + eventBuffer, readamod, (size_t)1024); 
+  list.addFifoRead32(base + eventBuffer, readamod, (size_t)65535);
   list.addWrite16(base + ReadoutReset, initamod, (uint16_t)1);
 }
 
@@ -502,20 +490,6 @@ CMDPP32SCP::printRegisters(CVMUSB& controller)
     cout << setw(30) << "IRQ event threshold: " << (data&0x7f) << " [# of 32 bit words]" << endl;
   }
 
-  status = controller.vmeRead16(base + DataFormat, initamod, &data);
-  if (status < 0) {
-    cerr << "Error in reading register" << endl;
-  } else {
-    cout << setw(30) << "Data Length Format: " << data << " ";
-    if (data == 0)      cout << "(8 bit)";
-    else if (data == 1) cout << "(16 bit)";
-    else if (data == 2) cout << "(32 bit)";
-    else if (data == 3) cout << "(64 bit)";
-    else if (data == 4) cout << "(Number of events in FIFO)";
-    else                cout << "(error)";
-    cout << endl;
-  }
-
   status = controller.vmeRead16(base + MultiEvent, initamod, &data);
   if (status < 0) {
     cerr << "Error in reading register" << endl;
@@ -553,14 +527,6 @@ CMDPP32SCP::printRegisters(CVMUSB& controller)
     else if (data == 2) cout << "(time only)";
     else                cout << "(error)";
     cout << endl;
-  }
-
-  status = controller.vmeRead16(base + ADCResolution, initamod, &data);
-  if (status < 0) {
-    cerr << "Error in reading register" << endl;
-  } else {
-    data = data&0x7;
-    cout << setw(30) << "ADC resolution: " << data << " (" << (16 - data) << " bits" << (data == 4 ? " [default])" : ")") << endl;
   }
 
   status = controller.vmeRead16(base + WindowStart, initamod, &data);
