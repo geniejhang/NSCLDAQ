@@ -1,10 +1,11 @@
 #include "CMyScaler.h"
 
+#include <math.h>
+#include <string.h>
+
 #include <iostream>
 #include <fstream> 
-#include <cmath>
 #include <string>
-#include <cstring>
 
 #include <config.h>
 #include <config_pixie16api.h>

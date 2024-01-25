@@ -77,28 +77,21 @@ namespace DAQ {
 	     * @brief Boot the entire system module-by-module in sequence.
 	     * @param config A configuration describing the system.
 	     * @param type Style of boot.
-	     * @throws std::runtime_error If Pixie16InitSystem() call returns 
+	     * @throws CDDASException If Pixie16InitSystem() call returns 
 	     *   an error.
-	     * @throws std::runtime_error If populateHardwareMap() throws.
-	     * @throws std::runtime_error If bootModuleByIndex() throws.
+	     * @throws CDDASException If populateHardwareMap() throws.
+	     * @throws std::runtime_error If registered hardware is 
+	     *   unrecognized when attempting to boot.
+	     * @throws CDDASException If the Pixie boot fails.
 	     */
 	    void boot(Configuration& config, BootType type);
-	    /**
-	     * @brief Parallel boot the system using pre-registered firmware.
-	     * @param config A configuration describing the system.
-	     * @param type Style of boot.
-	     * @throws std::runtime_error If Pixie16InitSystem() call returns 
-	     *   an error.
-	     * @throws std::runtime_error If populateHardwareMap() throws.
-	     */
-	    void parallel_boot(Configuration& config, BootType type);
 	    /**
 	     * @brief Boot a single module
 	     * @param modIndex Index of the module in the system.
 	     * @param m_config The system configuration.
 	     * @param type     Boot style (load firmware or settings only).
 	     * @throws std::runtime_error If hardware type is unknown.
-	     * @throws std::runtime_error If Pixie16BootModule returns an 
+	     * @throws CDDASException If Pixie16BootModule returns an 
 	     *   error code.
 	     */
 	    void bootModuleByIndex(
@@ -129,7 +122,7 @@ namespace DAQ {
 	     * @brief Read and store hardware info from each of the modules 
 	     *   in the system.
 	     * @param config The system configuration.
-	     * @throws std::runtime_error If Pixie16ReadModuleInfo returns 
+	     * @throws CDDASException If Pixie16ReadModuleInfo returns 
 	     *   error code.
 	     */
 	    void populateHardwareMap(Configuration &config);

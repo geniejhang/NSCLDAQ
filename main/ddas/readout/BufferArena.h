@@ -23,8 +23,9 @@
 #ifndef BUFFERARENA_H
 #define BUFFERARENA_H
 
+#include <stddef.h>
+
 #include <deque>
-#include <cstddef>
 
 /** @namespace DDASReadout */
 namespace DDASReadout {

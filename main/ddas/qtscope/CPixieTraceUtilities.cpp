@@ -5,10 +5,11 @@
 
 #include "CPixieTraceUtilities.h"
 
+#include <math.h>
+
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#include <cmath>
 
 #include <config.h>
 #include <config_pixie16api.h>

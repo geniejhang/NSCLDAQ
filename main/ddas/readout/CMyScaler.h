@@ -6,18 +6,25 @@
 #include <config.h>
 #include <CScaler.h>
 
+/**
+ * @class CMyScaler
+ * @brief Read in scaler data for DDAS systems.
+ * @details Generates scaler information from the run statistics read from
+ * the module(s).
+ */
+
 class CMyScaler : public CScaler
 {
 public:
     /** @brief Count raw and accepted triggers. */
     typedef struct _Counters {
-	size_t s_nTriggers; //!< Raw triggers.
+	size_t s_nTriggers;         //!< Raw triggers.
 	size_t s_nAcceptedTriggers; //!< Accepted triggers (i.e. by the FPGA).
     } Counters;
     /** @brief Statistics are counters for cumulative and per-run triggers. */
     typedef struct _Statistics {
 	Counters s_cumulative; //!< Cumulative. Not cleared on initialize.
-	Counters s_perRun; //!< Per-run. Cleared on initialize.
+	Counters s_perRun;     //!< Per-run. Cleared on initialize.
     } Statistics;
     
 private:
@@ -52,7 +59,7 @@ public:
      */
     virtual void disable() {};
     /** 
-     * @breif Return the size of the scaler data.
+     * @brief Return the size of the scaler data.
      * @return Always 32 (only for 16-channel cards!)
      */
     virtual unsigned int size() { return 32; };

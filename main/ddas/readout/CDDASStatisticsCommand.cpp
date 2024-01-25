@@ -22,9 +22,10 @@
 
 #include "CDDASStatisticsCommand.h"
 
+#include <string.h>
+
 #include <stdexcept>
 #include <string>
-#include <cstring>
 
 #include <TCLInterpreter.h>
 #include <TCLObject.h>

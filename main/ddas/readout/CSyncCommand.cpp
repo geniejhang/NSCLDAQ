@@ -27,6 +27,7 @@
 #include <TCLObject.h>
 
 #include "CMyEventSegment.h"
+#include <CDDASException.h>
 
 /**
  * @details
@@ -54,14 +55,14 @@ CSyncCommand::operator()(
             objv, 1, "ddas_sync command takes no parameters"
         ); // can throw std::string
         
-        m_pSegment->synchronize(); // can throw std::exception sublcass
+        m_pSegment->synchronize(); // can throw CDDASException
     }
     catch (std::string msg) {
         interp.setResult(msg);
         return TCL_ERROR;
     }
-    catch (std::exception& e) {
-        interp.setResult(e.what());
+    catch (CDDASException& e) {
+        interp.setResult(e.ReasonText());
         return TCL_ERROR;
     }
     

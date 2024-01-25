@@ -24,7 +24,7 @@ class CMyBusy : public CBusy
 public:
     /** @brief Constructor. */
     CMyBusy() {};
-    /** @breif Destructor. */
+    /** @brief Destructor. */
     ~CMyBusy() {} 
   
     // Selectors for class attributes:

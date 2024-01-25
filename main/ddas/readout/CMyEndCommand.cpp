@@ -5,10 +5,12 @@
 
 #include "CMyEndCommand.h"
 
+#include <math.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include <iostream>
 #include <fstream>
-#include <cmath>
-#include <cstdlib>
 #include <functional>
 #include <tuple>
 #include <chrono>
@@ -51,7 +53,7 @@ CMyEndCommand::~CMyEndCommand()
  */
 int CMyEndCommand::transitionToInactive() 
 {
-    cout << "Transitioning Pixies to Inactive" << endl;
+    std::cout << "Transitioning Pixies to Inactive" << std::endl;
 
     if (::getenv("INFINITY_CLOCK") == nullptr) {
 	try {
@@ -102,7 +104,7 @@ int CMyEndCommand::transitionToInactive()
 	    }    
 	    runEnded = (retval == 0);
 	    nRetries ++;
-	    this_thread::sleep_for(chrono::milliseconds(100));
+	    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 	if (nRetries == nMaxRetries) {
 	    std::cout << "Failed to end run in module " << i << std::endl;
@@ -144,7 +146,8 @@ int CMyEndCommand::readOutRemainingData()
     unsigned short EndOfRunRead;
 
     if ((lmdata = (unsigned long *)malloc(sizeof(unsigned long)*131072)) == nullptr) {
-        cout << "Failed to allocate memory block lmdata" << endl << flush;
+        std::cout << "Failed to allocate memory block lmdata"
+		  << std::endl << std::flush;
     }
 
     // Clear counters to 0 (counters keep track of how many words each 
@@ -188,14 +191,15 @@ int CMyEndCommand::readOutRemainingData()
         } while (count < 10);
 
         if (count == 10) {
-            cout << "End run in module " << i << " failed" << endl << flush;
+            std::cout << "End run in module " << i << " failed"
+		      << std::endl << std::flush;
         }
     }
 
     // All modules have their run stopped successfully. Now read out the 
     // possible last words from the external FIFO, and get statistics.
-    ofstream outputfile;
-    outputfile.open("EndofRunScalers.txt", ios::app);
+    std::ofstream outputfile;
+    outputfile.open("EndofRunScalers.txt", std::ios::app);
 
     for(int i = 0; i < NumModules; i++) {
         EndOfRunRead = 1;
@@ -217,7 +221,7 @@ int CMyEndCommand::readOutRemainingData()
 	}
 
 	// Write the stats to the output file:
-        outputfile << "Module " << i << endl;	
+        outputfile << "Module " << i << std::endl;	
         for (int j = 0; j < 16; j++) {
 	    double ocr = Pixie16ComputeOutputCountRate(
 		statistics.data(), i, j
@@ -226,7 +230,7 @@ int CMyEndCommand::readOutRemainingData()
 		statistics.data(), i, j
 		);
             outputfile << "   Channel " << i << ": "
-		       << ocr << " "  << icr << endl;
+		       << ocr << " "  << icr << std::endl;
         }
     }
 
@@ -274,8 +278,8 @@ int CMyEndCommand::endRun()
 	    CVMEInterface::Unlock();
 	    
 	    int triggerEndStatus;
-	    string result;
-	    tie(triggerEndStatus, result) = CEndCommand::end();
+	    std::string result;
+	    std::tie(triggerEndStatus, result) = CEndCommand::end();
 	    
 	    if (deviceEndStatus != TCL_OK || triggerEndStatus != TCL_OK) {
 		return TCL_ERROR;

@@ -1,9 +1,24 @@
+/**
+ * @file CMyTrigger.h
+ * @brief Define a trigger class for DDAS.
+ */
+
 #ifndef CMYTRIGGER_H
 #define CMYTRIGGER_H
 
 #include <ctime>
 
 #include <CEventTrigger.h>
+
+/**
+ * @class CMyTrigger
+ * @brief Trigger class for DDAS.
+ * @details
+ * A trigger for DDAS systems intended to run inside a polling loop that asks 
+ * the trigger if it has enough data to read out. The trigger logic is defined 
+ * in the call operator which triggers a read for a crate of Pixie modules if 
+ * any module in the crate exceeds its trigger threshold (FIFO threshold value).
+ */
 
 class CMyTrigger : public CEventTrigger
 { 
@@ -36,7 +51,7 @@ public:
      * @brief operator()
      * @return bool
      * @retval true Good trigger, pass control back to the event segment.
-     * @retfal false Not enough data to trigger.
+     * @retval false Not enough data to trigger.
      */
     virtual bool operator()();
     /**

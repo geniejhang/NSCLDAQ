@@ -23,11 +23,12 @@ using namespace std;
 
 #include "Skeleton.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <sstream>
 #include <iostream>
 #include <fstream>
-#include <cstdio>
-#include <cstdlib>
 #include <vector>
 
 #include <config.h>

@@ -19,31 +19,32 @@
  * @file ModuleReader.h
  * @brief Provides a class that can read data from a Pixie-16 module.
  */
+
 #ifndef MODULEREADER_H
 #define MODULEREADER_H
 
+#include <stdint.h>
+
 #include <deque>
-#include <cstdint>
 
 #include "BufferArena.h"
 
 /** @namespace DDASReadout */
 namespace DDASReadout {
-
     class ZeroCopyHit;
     
-/**
- * @class ModuleReader
- * @brief A minimal-copy module reader for Pixie-16 modules.
- * @details
- * It tries to provide for minimal-copy readout from the module by maintining 
- * a BufferArena into which data are read. Data are then parsed into 
- * ZeroCopyHits. Pointers to these ZeroCopyHits are placed into dequeues and 
- * made available to the caller.
- * 
- * @note The zero-copy hits themselves can be recycled.
- *     
- */
+    /**
+     * @class ModuleReader
+     * @brief A minimal-copy module reader for Pixie-16 modules.
+     * @details
+     * It tries to provide for minimal-copy readout from the module by 
+     * maintining a BufferArena into which data are read. Data are then 
+     * parsed into ZeroCopyHits. Pointers to these ZeroCopyHits are placed 
+     * into dequeues and  made available to the caller.
+     * 
+     * @note The zero-copy hits themselves can be recycled.
+     *     
+     */
 
     class ModuleReader {
     public:

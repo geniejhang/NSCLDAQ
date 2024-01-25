@@ -26,6 +26,7 @@ class CMyEndCommand : public CEndCommand
 public:
     /**
      * @struct EndEvent.
+     * @brief Tcl event and Tcl interpreter command for end event.
      */
     struct EndEvent {
 	Tcl_Event s_rawEvent; //!< Generic event for the Tcl event system.

@@ -6,18 +6,16 @@
 #include "SystemBooter.h"
 
 #include <unistd.h>
+#include <string.h>
+
 #include <iostream>
 #include <iomanip>
-#include <cstring>
 #include <sstream>
 
 #include <config.h>
 #include <config_pixie16api.h>
-
 #include <Configuration.h>
 #include <CDDASException.h>
-
-/** @todo (ASC 12/14/23): Make sure to re-write the exception handling here if the exception class itself changes! */
 
 /**
  * @details

@@ -1,7 +1,13 @@
+/**
+ * @file CMyTrigger.cpp
+ * @brief Implement the DDAS trigger.
+ */
+
 #include "CMyTrigger.h"
 
+#include <stdlib.h>
+
 #include <iostream>
-#include <cstdlib>
 
 #include <config.h>
 #include <config_pixie16api.h>
@@ -81,7 +87,7 @@ CMyTrigger::Initialize(int nummod)
 /**
  * @details
  * Defines the trigger logic. Trigger a read if the number of words in the 
- * external FIFO of any pixie16 module in a crate exceeds a defined threshold.
+ * external FIFO of any Pixie-16 module in a crate exceeds a defined threshold.
  * - If the module is in the middle of processing a data buffer in the event 
  * segment, continue processing the data buffer. Return a true trigger to pass 
  * control back the event segment.

@@ -17,15 +17,16 @@
 
 /** 
  * @file ModuleReader.cpp
- * @brief Implement the ModuleReader
+ * @brief Implement the ModuleReader.
  */
 
 #include "ModuleReader.h"
 
+#include <string.h>
+
 #include <sstream>
 #include <stdexcept>
 #include <iostream>
-#include <cstring>
 
 #include <config.h>
 #include <config_pixie16api.h>
