@@ -131,7 +131,7 @@ class Window(QtWidgets.QMainWindow):
 
     def updateFromModule(self):
         self._updateTriggerSource(int(self.tcl.eval('conn Get triggerSource')))
-        self._updateTriggerSource(int(self.tcl.eval('conn Get triggerOutput')))
+        self._updateTriggerOutput(int(self.tcl.eval('conn Get triggerOutput')))
 
         self._setLog(LOG_GOOD, 'Successfully updated the settings!')
 
