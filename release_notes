@@ -1,3 +1,9 @@
+== 12.0-011 ==
+- MDPP-16 QDC support
+- MDPP-32 SCP support
+- MDPPTriggerControl GUI for MDPP modules
+== 12.0-011 ==
+
 == 12.0-010 ==
 Optional build of XIA-DDAS support software.
 == 12.0-010 ==
