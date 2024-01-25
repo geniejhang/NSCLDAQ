@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2005.
+    State University (c) Copyright 2024.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -14,8 +14,8 @@
 	     East Lansing, MI 48824-1321
 */
 
-#ifndef __CMDPP32_H
-#define __CMDPP32_H
+#ifndef __CMDPP_H
+#define __CMDPP_H
 
 #ifndef __CMESYTECBASE_H
 #include "CMesytecBase.h"

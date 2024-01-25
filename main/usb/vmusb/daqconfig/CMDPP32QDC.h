@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2005.
+    State University (c) Copyright 2024.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -17,19 +17,13 @@
 #ifndef __CMDPP32QDC_H
 #define __CMDPP32QDC_H
 
-#ifndef __CMDPP32_H
-#include "CMDPP32.h"
+#ifndef __CMDPP_H
+#include "CMDPP.h"
 #endif
 
-Const(SignalWidth)          0x6110;
-Const(InputAmplitude)       0x6112;
-Const(JumperRange)          0x6114;
-Const(QDCJumper)            0x6116;
-Const(IntegrationLong)      0x6118;
-Const(IntegrationShort)     0x611a;
-Const(LongGainCorrection)   0x612a;
-Const(ShortGainCorrection)  0x612e;
-
+#ifndef __CMDPPQDC_H
+#include "CMDPPQDC.h"
+#endif
 
 /*!
    The MDPP-32 is a 32 channel fast high resolution time and amplitude digitizer module produced by Mesytec.

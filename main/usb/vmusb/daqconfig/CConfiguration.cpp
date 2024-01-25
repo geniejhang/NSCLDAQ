@@ -53,6 +53,7 @@
 #include <CV977.h>
 #include <CV1x90.h>
 
+#include "CMDPP16QDC.h"
 #include "CMDPP32QDC.h"
 #include "CMDPP32SCP.h"
 
@@ -124,8 +125,9 @@ CConfiguration::CConfiguration() :
   m_Commands.push_back(new CUserCommand(*m_pInterp, *this, "XLMTimestamp", 
                                         new CXLMTimestamp) );
   m_Commands.push_back(new CUserCommand(*m_pInterp, *this, "mqdc", new CMQDC32RdoHdwr) );
+  m_Commands.push_back(new CUserCommand(*m_pInterp, *this, "mdpp16qdc", new CMDPP16QDC));
   m_Commands.push_back(new CUserCommand(*m_pInterp, *this, "mdpp32qdc", new CMDPP32QDC));
-    m_Commands.push_back(new CUserCommand(*m_pInterp, *this, "mdpp32scp", new CMDPP32SCP));
+  m_Commands.push_back(new CUserCommand(*m_pInterp, *this, "mdpp32scp", new CMDPP32SCP));
 
   // Add hybrid drivers
   typedef CCBD8210CrateController Ctlr;
