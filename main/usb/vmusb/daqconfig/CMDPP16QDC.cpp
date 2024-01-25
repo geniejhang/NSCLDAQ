@@ -14,7 +14,7 @@
 	     East Lansing, MI 48824-1321
 */
 
-#include "CMDPP32QDC.h"
+#include "CMDPP16QDC.h"
 #include "CReadoutModule.h"
 #include <unistd.h>
 #include <CVMUSB.h>
@@ -44,7 +44,7 @@ static const char*    ADCResolutionStrings[] = {"64k", "32k", "16k", "8k", "4k"}
 static const uint16_t ADCResolutionValues[]  = {0, 1, 2, 3, 4};
 
 static const char*         GainCorrectionStrings[] = {"div4", "mult4", "none"};
-static CMDPP32QDC::EnumMap GainCorrectionMap(CMDPP32QDC::gainCorrectionMap());
+static CMDPP16QDC::EnumMap GainCorrectionMap(CMDPP16QDC::gainCorrectionMap());
 
 static const char*    IrqSourceStrings[] = {"event", "data"};
 static const uint16_t IrqSourceValues[]  = {0, 1};
@@ -55,7 +55,7 @@ static const uint16_t IrqSourceValues[]  = {0, 1};
 /**
  * Constructor
  */
-CMDPP32QDC::CMDPP32QDC() 
+CMDPP16QDC::CMDPP16QDC() 
 {
   m_pConfiguration = 0;
 }
@@ -64,9 +64,9 @@ CMDPP32QDC::CMDPP32QDC()
  * Copy construction.  This cannot be virtual by the rules of C++ the clone()
  * method normally creates a new object from an existing template object.
  * 
- * @param rhs  - MDPP32QDC is being copied to create the new device.
+ * @param rhs  - MDPP16QDC is being copied to create the new device.
  */
-CMDPP32QDC::CMDPP32QDC(const CMDPP32QDC& rhs)
+CMDPP16QDC::CMDPP16QDC(const CMDPP16QDC& rhs)
 {
   m_pConfiguration = 0;
   if (rhs.m_pConfiguration) {
@@ -76,7 +76,7 @@ CMDPP32QDC::CMDPP32QDC(const CMDPP32QDC& rhs)
 /**
  * Destruction.  If your object creatd any dynamic data it must be freed here:
  */
-CMDPP32QDC::~CMDPP32QDC() 
+CMDPP16QDC::~CMDPP16QDC() 
 {
 }
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ CMDPP32QDC::~CMDPP32QDC()
  * @parm configuration - Reference to the configuration object for this instance of the driver.
  */
 void
-CMDPP32QDC::onAttach(CReadoutModule& configuration)
+CMDPP16QDC::onAttach(CReadoutModule& configuration)
 {
   m_pConfiguration = &configuration; 
 
@@ -120,7 +120,7 @@ CMDPP32QDC::onAttach(CReadoutModule& configuration)
   m_pConfiguration -> addEnumParameter("-adcresolution", ADCResolutionStrings, ADCResolutionStrings[4]);
 
   m_pConfiguration -> addIntegerParameter("-windowstart", 0, 0x7fff, 0x3fc0);
-  m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x4000, 32);
+  m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x4000, 16);
   m_pConfiguration -> addBooleanParameter("-firsthit", true);
   m_pConfiguration -> addBooleanParameter("-testpulser", false);
   m_pConfiguration -> addIntegerParameter("-pulseramplitude",  0,  0xfff, 400);
@@ -133,7 +133,7 @@ CMDPP32QDC::onAttach(CReadoutModule& configuration)
   m_pConfiguration -> addBoolListParameter("-qdcjumper", 8, false);
   m_pConfiguration -> addIntListParameter("-intlong",        2,    506,  8,  8,  8,   16);
   m_pConfiguration -> addIntListParameter("-intshort",       1,    127,  8,  8,  8,    2);
-  m_pConfiguration -> addIntListParameter("-threshold",      1, 0xffff, 32, 32, 32, 0xff);
+  m_pConfiguration -> addIntListParameter("-threshold",      1, 0xffff, 16, 16, 16, 0xff);
   m_pConfiguration -> addIntListParameter("-resettime",      0, 0x03ff,  8,  8,  8,   32);
   m_pConfiguration -> addStringListParameter("-gaincorrectionlong",  8, GainCorrectionStrings[2]);
   m_pConfiguration -> addStringListParameter("-gaincorrectionshort", 8, GainCorrectionStrings[2]);
@@ -150,7 +150,7 @@ CMDPP32QDC::onAttach(CReadoutModule& configuration)
  *
  */
 void
-CMDPP32QDC::Initialize(CVMUSB& controller)
+CMDPP16QDC::Initialize(CVMUSB& controller)
 {
   uint32_t base = m_pConfiguration -> getUnsignedParameter("-base");
 
@@ -158,13 +158,12 @@ CMDPP32QDC::Initialize(CVMUSB& controller)
   uint16_t triggersource = m_pConfiguration -> getIntegerParameter("-triggersource");
   if (triggersource == 0x400) {
     controller.vmeRead16(base + TriggerSource, initamod, &triggersource);
-  }
+  } 
 
   uint16_t triggeroutput = m_pConfiguration -> getIntegerParameter("-triggeroutput");
   if (triggeroutput == 0x400) {
     controller.vmeRead16(base + TriggerOutput, initamod, &triggeroutput);
-  }
-
+  } 
   controller.vmeWrite16(base + Reset,        initamod, 0);
   sleep(1);
   controller.vmeWrite16(base + StartAcq,     initamod, 0);
@@ -244,13 +243,9 @@ CMDPP32QDC::Initialize(CVMUSB& controller)
     list.addDelay(MDPPCHCONFIGDELAY);
     list.addWrite16(base + IntegrationShort,    initamod, (uint16_t)intshort.at(channelPair));
     list.addDelay(MDPPCHCONFIGDELAY);
-    list.addWrite16(base + Threshold0,          initamod, (uint16_t)threshold.at(channelPair*4));
+    list.addWrite16(base + Threshold0,          initamod, (uint16_t)threshold.at(channelPair*2));
     list.addDelay(MDPPCHCONFIGDELAY);
-    list.addWrite16(base + Threshold1,          initamod, (uint16_t)threshold.at(channelPair*4 + 1));
-    list.addDelay(MDPPCHCONFIGDELAY);
-    list.addWrite16(base + Threshold2,          initamod, (uint16_t)threshold.at(channelPair*4 + 2));
-    list.addDelay(MDPPCHCONFIGDELAY);
-    list.addWrite16(base + Threshold3,          initamod, (uint16_t)threshold.at(channelPair*4 + 3));
+    list.addWrite16(base + Threshold1,          initamod, (uint16_t)threshold.at(channelPair*2 + 1));
     list.addDelay(MDPPCHCONFIGDELAY);
     list.addWrite16(base + ResetTime,           initamod, (uint16_t)resettime.at(channelPair));
     list.addDelay(MDPPCHCONFIGDELAY);
@@ -279,7 +274,7 @@ CMDPP32QDC::Initialize(CVMUSB& controller)
   size_t bytesRead;
   int status = controller.executeList(list, readBuffer, sizeof(readBuffer), &bytesRead);
   if (status < 0) {
-     throw string("List excecution to initialize an MDPP32QDC failed");
+     throw string("List excecution to initialize an MDPP16QDC failed");
   }
 
   if (isPrintRegisters) {
@@ -296,11 +291,11 @@ CMDPP32QDC::Initialize(CVMUSB& controller)
  *               VMUSB.
  */
 void
-CMDPP32QDC::addReadoutList(CVMUSBReadoutList& list)
+CMDPP16QDC::addReadoutList(CVMUSBReadoutList& list)
 {
   uint32_t base  = m_pConfiguration -> getUnsignedParameter("-base"); // Get the value of -slot.
 
-  list.addFifoRead32(base + eventBuffer, readamod, (size_t)1024); 
+  list.addFifoRead32(base + eventBuffer, readamod, (size_t)65535); 
   list.addWrite16(base + ReadoutReset, initamod, (uint16_t)1);
 }
 
@@ -314,7 +309,7 @@ CMDPP32QDC::addReadoutList(CVMUSBReadoutList& list)
  *  @param controller - a vmusb controller
  */
 void
-CMDPP32QDC::onEndRun(CVMUSB& controller)
+CMDPP16QDC::onEndRun(CVMUSB& controller)
 {
 }
 
@@ -322,22 +317,22 @@ CMDPP32QDC::onEndRun(CVMUSB& controller)
  * This method virtualizes copy construction by providing a virtual method that
  * invokes it. Usually you don't have to modify this code.
  *
- * @return CMDPP32QDC*
+ * @return CMDPP16QDC*
  * @retval Pointer to a dynamically allocated driver instance created by copy construction
  *         from *this
  */
 CReadoutHardware*
-CMDPP32QDC::clone() const
+CMDPP16QDC::clone() const
 {
-  return new CMDPP32QDC(*this);
+  return new CMDPP16QDC(*this);
 }
 
 /*
   Creates a map from the value of -gaincorrectionlong and -gaincorrectionshort
   to the values that can be programmed into the system.
 */
-CMDPP32QDC::EnumMap
-CMDPP32QDC::gainCorrectionMap()
+CMDPP16QDC::EnumMap
+CMDPP16QDC::gainCorrectionMap()
 {
   EnumMap result;
   
@@ -354,7 +349,7 @@ CMDPP32QDC::gainCorrectionMap()
  * Called by the chain to insert this module into a CBLT readout with common
  * CBLT base address and MCST address.
  *
- * This method is not tested with MDPP32QDC.
+ * This method is not tested with MDPP16QDC.
  *
  *   @param controller - The controller object.
  *   @param position   - indicator of the position of the module in chain (begining, middle, end)
@@ -362,7 +357,7 @@ CMDPP32QDC::gainCorrectionMap()
  *   @param mcstBase   - Base address for multicast writes.
  */
 void
-CMDPP32QDC::setChainAddresses(CVMUSB& controller, CMesytecBase::ChainPosition position,
+CMDPP16QDC::setChainAddresses(CVMUSB& controller, CMesytecBase::ChainPosition position,
                               uint32_t cbltBase, uint32_t mcastBase)
 {                                                                 
   uint32_t base = m_pConfiguration -> getIntegerParameter("-base");
@@ -387,7 +382,7 @@ CMDPP32QDC::setChainAddresses(CVMUSB& controller, CMesytecBase::ChainPosition po
     cerr << "Last\n";
     break;
   }
-  cerr << "Setting mdpp32-qdc chain address with " << std::hex << controlRegister << std::dec << endl;
+  cerr << "Setting mdpp16-qdc chain address with " << std::hex << controlRegister << std::dec << endl;
 
   // program the registers, note that the address registers take only the top 8 bits.
   controller.vmeWrite16(base + CbltAddress,     initamod, (uint16_t)(cbltBase >> 24));
@@ -399,14 +394,14 @@ CMDPP32QDC::setChainAddresses(CVMUSB& controller, CMesytecBase::ChainPosition po
  *  initCBLTReadout
  *
  *  Initialize the readout for CBLT transfer (called by chain).
- *  This method is not tested with MDPP32QDC.
+ *  This method is not tested with MDPP16QDC.
  *
  *    @param controller - the controller object.
  *    @param cbltAddress - the chain block/broadcast address.
  *    @param wordsPerModule - Maximum number of words that can be read by this mod
  */
 void
-CMDPP32QDC::initCBLTReadout(CVMUSB& controller,
+CMDPP16QDC::initCBLTReadout(CVMUSB& controller,
                             uint32_t cbltAddress,
                             int wordsPermodule)
 {
@@ -462,14 +457,14 @@ CMDPP32QDC::initCBLTReadout(CVMUSB& controller,
 }
 
 /**
- * Printing all register values in MDPP-32 module with QDC firmware
+ * Printing all register values in MDPP-16 module with QDC firmware
  * read from the module, not the user-input values.
  *
  *  @param controller - a vmusb controller
  */
 
 void
-CMDPP32QDC::printRegisters(CVMUSB& controller)
+CMDPP16QDC::printRegisters(CVMUSB& controller)
 {
   uint32_t base = m_pConfiguration -> getIntegerParameter("-base");
 
@@ -654,7 +649,7 @@ CMDPP32QDC::printRegisters(CVMUSB& controller)
     controller.vmeWrite16(base + ChannelSelection, initamod, channelPair);
 
     usleep(21);
-    cout << setw(30) << "Channels: " << channelPair*4 << "-" << (channelPair + 1)*4 - 1 << endl;
+    cout << setw(30) << "Channels: " << channelPair*2 << "-" << (channelPair + 1)*2 - 1 << endl;
 
     status = controller.vmeRead16(base + SignalWidth, initamod, &data);
     if (status < 0) {
@@ -705,7 +700,7 @@ CMDPP32QDC::printRegisters(CVMUSB& controller)
       cerr << "Error in reading register" << endl;
     } else {
       char channelNumber[100] = "";
-      sprintf(channelNumber, "Ch %d Threshold: ", channelPair*4);
+      sprintf(channelNumber, "Ch %d Threshold: ", channelPair*2);
       data = data&0xffff;
       double percentage = ((double)data/0xffff)*100;
       char percentageString[8] = "";
@@ -718,33 +713,7 @@ CMDPP32QDC::printRegisters(CVMUSB& controller)
       cerr << "Error in reading register" << endl;
     } else {
       char channelNumber[100] = "";
-      sprintf(channelNumber, "Ch %d Threshold: ", channelPair*4 + 1);
-      data = data&0xffff;
-      double percentage = ((double)data/0xffff)*100;
-      char percentageString[8] = "";
-      sprintf(percentageString, "%.02f %%", percentage);
-      cout << setw(30) << channelNumber << data << " (0x" << std::hex << data << std::dec << ", " << percentageString << ")" << endl;
-    }
-
-    status = controller.vmeRead16(base + Threshold2, initamod, &data);
-    if (status < 0) {
-      cerr << "Error in reading register" << endl;
-    } else {
-      char channelNumber[100] = "";
-      sprintf(channelNumber, "Ch %d Threshold: ", channelPair*4 + 2);
-      data = data&0xffff;
-      double percentage = ((double)data/0xffff)*100;
-      char percentageString[8] = "";
-      sprintf(percentageString, "%.02f %%", percentage);
-      cout << setw(30) << channelNumber << data << " (0x" << std::hex << data << std::dec << ", " << percentageString << ")" << endl;
-    }
-
-    status = controller.vmeRead16(base + Threshold3, initamod, &data);
-    if (status < 0) {
-      cerr << "Error in reading register" << endl;
-    } else {
-      char channelNumber[100] = "";
-      sprintf(channelNumber, "Ch %d Threshold: ", channelPair*4 + 3);
+      sprintf(channelNumber, "Ch %d Threshold: ", channelPair*2 + 1);
       data = data&0xffff;
       double percentage = ((double)data/0xffff)*100;
       char percentageString[8] = "";

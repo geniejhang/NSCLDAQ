@@ -1,6 +1,6 @@
 /*
     This software is Copyright by the Board of Trustees of Michigan
-    State University (c) Copyright 2005.
+    State University (c) Copyright 2024.
 
     You may use this software under the terms of the GNU public license
     (GPL).  The terms of this license are described at:
@@ -113,8 +113,8 @@ CMDPP32SCP::onAttach(CReadoutModule& configuration)
   m_pConfiguration -> addBooleanParameter("-firsthit", true);
   m_pConfiguration -> addBooleanParameter("-testpulser", false);
   m_pConfiguration -> addIntegerParameter("-pulseramplitude",  0,  0xfff, 400);
-  m_pConfiguration -> addIntegerParameter("-triggersource", 0, 0x3ff, 0x100);
-  m_pConfiguration -> addIntegerParameter("-triggeroutput", 0, 0x3ff, 0x100);
+  m_pConfiguration -> addIntegerParameter("-triggersource", 0, 0x400, 0x400);
+  m_pConfiguration -> addIntegerParameter("-triggeroutput", 0, 0x400, 0x400);
  
   m_pConfiguration -> addIntListParameter("-tfintdiff",        1, 0x007f,  8,  8,  8,     20);
   m_pConfiguration -> addIntListParameter("-pz",              64, 0xffff, 32, 32, 32, 0xffff);
@@ -140,6 +140,18 @@ void
 CMDPP32SCP::Initialize(CVMUSB& controller)
 {
   uint32_t base = m_pConfiguration -> getUnsignedParameter("-base");
+
+  // Retreiving trigger information before the module reset
+  uint16_t triggersource = m_pConfiguration -> getIntegerParameter("-triggersource");
+  if (triggersource == 0x400) {
+    controller.vmeRead16(base + TriggerSource, initamod, &triggersource);
+  }
+
+  uint16_t triggeroutput = m_pConfiguration -> getIntegerParameter("-triggeroutput");
+  if (triggeroutput == 0x400) {
+    controller.vmeRead16(base + TriggerOutput, initamod, &triggeroutput);
+  }
+
   controller.vmeWrite16(base + Reset,        initamod, 0);
   sleep(1);
   controller.vmeWrite16(base + StartAcq,     initamod, 0);
@@ -172,8 +184,6 @@ CMDPP32SCP::Initialize(CVMUSB& controller)
   bool           firsthit            = m_pConfiguration -> getBoolParameter("-firsthit");
   bool           testpulser          = m_pConfiguration -> getBoolParameter("-testpulser");
   uint16_t       pulseramplitude     = m_pConfiguration -> getIntegerParameter("-pulseramplitude");
-  uint16_t       triggersource       = m_pConfiguration -> getIntegerParameter("-triggersource");
-  uint16_t       triggeroutput       = m_pConfiguration -> getIntegerParameter("-triggeroutput");
 
   auto           tfintdiff           = m_pConfiguration -> getIntegerList("-tfintdiff");
   auto           pz                  = m_pConfiguration -> getIntegerList("-pz");
@@ -198,8 +208,8 @@ CMDPP32SCP::Initialize(CVMUSB& controller)
   list.addWrite16(base + FirstHit,          initamod, firsthit);
   list.addWrite16(base + TestPulser,        initamod, testpulser);
   list.addWrite16(base + PulserAmplitude,   initamod, pulseramplitude);
-  list.addWrite16(base + TriggerSource,     initamod, triggersource);
-  list.addWrite16(base + TriggerOutput,     initamod, triggeroutput);
+  list.addWrite16(base + TriggerSource,     initamod, triggersource&0x3ff);
+  list.addWrite16(base + TriggerOutput,     initamod, triggeroutput&0x3ff);
 
   for (uint16_t channelPair = 0; channelPair < 8; channelPair++) {
     list.addWrite16(base + ChannelSelection,    initamod, channelPair);
