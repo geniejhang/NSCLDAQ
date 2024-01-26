@@ -138,6 +138,7 @@ CMDPP16QDC::onAttach(CReadoutModule& configuration)
   m_pConfiguration -> addStringListParameter("-gaincorrectionlong",  8, GainCorrectionStrings[2]);
   m_pConfiguration -> addStringListParameter("-gaincorrectionshort", 8, GainCorrectionStrings[2]);
   m_pConfiguration -> addBooleanParameter("-printregisters", false);
+  m_pConfiguration -> addIntListParameter("-trigtoirq",      0, 0xffff,  7,  7,  7,    0);
 }
 /**
  * This method is called when a driver instance is being asked to initialize the hardware
@@ -210,6 +211,7 @@ CMDPP16QDC::Initialize(CVMUSB& controller)
   vector<string> gaincorrectionlong  = m_pConfiguration -> getList("-gaincorrectionlong");
   vector<string> gaincorrectionshort = m_pConfiguration -> getList("-gaincorrectionshort");
   bool           isPrintRegisters    = m_pConfiguration -> getBoolParameter("-printregisters");
+  auto           trigtoirq           = m_pConfiguration -> getIntegerList("-trigtoirq");
 
   list.addWrite16(base + ModuleId,          initamod, id); // Module id.
 
@@ -228,6 +230,9 @@ CMDPP16QDC::Initialize(CVMUSB& controller)
   list.addWrite16(base + PulserAmplitude,   initamod, pulseramplitude);
   list.addWrite16(base + TriggerSource,     initamod, triggersource&0x3ff);
   list.addWrite16(base + TriggerOutput,     initamod, triggeroutput&0x3ff);
+  for (uint16_t iIncr = 0; iIncr < 7; iIncr++) {
+    list.addWrite16(base + TrigToIRQ1L + 4*iIncr, initamod, (uint16_t)trigtoirq.at(iIncr));
+  }
 
   for (uint16_t channelPair = 0; channelPair < 8; channelPair++) {
     list.addWrite16(base + ChannelSelection,    initamod, channelPair);
