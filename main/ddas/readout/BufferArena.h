@@ -17,7 +17,7 @@
 
 /** 
  * @file BufferArena.h
- * @brief Manager for a set of ReferenceCountedBuffer objects
+ * @brief Manager for a set of ReferenceCountedBuffer objects.
  */
 
 #ifndef BUFFERARENA_H

@@ -1,16 +1,36 @@
+/** 
+ * @file CMyScaler.h
+ * @brief A scaler class for DDAS.
+ */
+
 #ifndef CMYSCALER_H
 #define CMYSCALER_H
 
-#include <vector>
-
-#include <config.h>
 #include <CScaler.h>
+
+#include <vector>
 
 /**
  * @class CMyScaler
  * @brief Read in scaler data for DDAS systems.
- * @details Generates scaler information from the run statistics read from
- * the module(s).
+ * @details 
+ * Generates scaler information from the run statistics read from the module(s). A DDAS module with N channels has a scalar bank of 2N + 1 values. The first value in index zero (0) for that module is used to store the crate ID, which is read from the cfgPixie16.txt file. The crate ID value is reported on stdout when the modules are booted e.g. when running a readout code: "Scalers know crate ID = <myID>". Following the ID are N pairs of channel scaler data corresponding to the number of observed (input) and accepted (output) fast triggers since the last scaler read.
+ *
+ * For example, a 16-channel module scalar bank has the format:
+ *
+ * @verbatim
+ scaler[0]  = crateID
+ scaler[1]  = input[0]
+ scaler[2]  = output[0]
+ scaler[3]  = input[1]
+ scaler[4]  = output[1]
+ ...
+ scaler[31] = input[15]
+ scaler[32] = output[15]
+ @endverbatim
+ *
+ * where input[0] and output[0] refer to the observed and accepted triggers 
+ * seen by channel 0 on the module.
  */
 
 class CMyScaler : public CScaler

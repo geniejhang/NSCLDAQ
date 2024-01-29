@@ -1,3 +1,8 @@
+/** 
+ * @file CMyScaler.cpp
+ * @brief Implement the DDAS scaler class.
+ */
+
 #include "CMyScaler.h"
 
 #include <math.h>
@@ -11,10 +16,10 @@
 #include <config_pixie16api.h>
 #include <CDDASException.h>
 
-extern unsigned int ChanEventsB_Address[];
-extern unsigned int ChanEventsA_Address[];
-extern unsigned int FastPeaksA_Address[];
-extern unsigned int FastPeaksB_Address[];
+// extern unsigned int ChanEventsB_Address[];
+// extern unsigned int ChanEventsA_Address[];
+// extern unsigned int FastPeaksA_Address[];
+// extern unsigned int FastPeaksB_Address[];
 
 CMyScaler::CMyScaler(unsigned short mod, unsigned short crate) :
     m_module(mod), m_crate(crate)
@@ -32,7 +37,8 @@ CMyScaler::CMyScaler(unsigned short mod, unsigned short crate) :
 CMyScaler::~CMyScaler()
 {}
 
-void CMyScaler::initialize() 
+void
+CMyScaler::initialize() 
 {
     for (int i = 0; i < 16; i++) {
 	m_prevIC[i] = 0;
@@ -51,7 +57,8 @@ void CMyScaler::initialize()
  * Input counts (IC) and rate (ICR) are fast triggers. Output counts (OC) and 
  * rate (OCR) are accepted triggers.
  */
-std::vector<uint32_t> CMyScaler::read()
+std::vector<uint32_t>
+CMyScaler::read()
 {
     try {
 	std::vector<unsigned int> statistics(Pixie16GetStatisticsSize(),0);  
@@ -127,7 +134,8 @@ std::vector<uint32_t> CMyScaler::read()
     }
 }
 
-void CMyScaler::clearCounters(Counters& c)
+void
+CMyScaler::clearCounters(Counters& c)
 {
     memset(&c, 0, sizeof(Counters));
 }
