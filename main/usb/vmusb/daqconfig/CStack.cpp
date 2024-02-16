@@ -491,7 +491,6 @@ CStack::enableStack(CVMUSB& controller)
     extValue |= ((vectorNumber >> 8) << shift); // or in the new bits.
   }
 
-  cout << "Setting: 0x" << std::hex << extValue << std::dec << endl;
   controller.writeRegister(which, extValue);
   
   // Ensure the IPL's bit is not set in the interrupt mask:
