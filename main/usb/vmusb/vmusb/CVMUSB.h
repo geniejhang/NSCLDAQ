@@ -88,7 +88,7 @@ class CVMUSB
       uint32_t dggB; 
       uint32_t dggExtended; 
       uint16_t eventsPerBuffer;
-      std::vector<uint16_t> interruptVectors;
+      std::vector<uint32_t> interruptVectors;
       uint16_t irqMask;
       uint32_t bulkTransferSetup;
 

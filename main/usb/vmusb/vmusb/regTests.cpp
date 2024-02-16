@@ -206,24 +206,24 @@ void registerTests::dgg()
 // Vectors: only some bits are used.
 void registerTests::vectors()
 {
-  uint32_t usedBits = 0x77ff;
+  uint32_t usedBits = 0x77ff77ff;
 
   for (int vec =1; vec<=4; vec++) {
     char msg[100];
     
     sprintf(msg, "vector %d, 1's", vec);
-    m_pInterface->writeVector(vec, 0xffff);
-    EQMSG("wrote shadow ones", (uint16_t)0xffff, m_pShadow->interruptVectors.at(2*vec-1));
+    m_pInterface->writeVector(vec, 0xffffffff);
+    EQMSG("wrote shadow ones", (uint32_t)0xffffffff, m_pShadow->interruptVectors.at(2*vec-1));
     uint32_t value = m_pInterface->readVector(vec);
     EQMSG(msg, (uint32_t)usedBits, (value & usedBits));
-    EQMSG("read shadow ones", (uint16_t)0xffff, m_pShadow->interruptVectors.at(2*vec-1));
+    EQMSG("read shadow ones", (uint32_t)0xffffffff, m_pShadow->interruptVectors.at(2*vec-1));
 
     sprintf(msg, "vector %d 0's", vec);
     m_pInterface->writeVector(vec, 0);
-    EQMSG("wrote shadow zeroes", (uint16_t)0, m_pShadow->interruptVectors.at(2*vec-1));
+    EQMSG("wrote shadow zeroes", (uint32_t)0, m_pShadow->interruptVectors.at(2*vec-1));
     value = m_pInterface->readVector(vec);
     EQMSG(msg, (uint32_t)0, (value & usedBits));
-    EQMSG("read shadow zeroes", (uint16_t)0, m_pShadow->interruptVectors.at(2*vec-1));
+    EQMSG("read shadow zeroes", (uint32_t)0, m_pShadow->interruptVectors.at(2*vec-1));
 
   }
 }
