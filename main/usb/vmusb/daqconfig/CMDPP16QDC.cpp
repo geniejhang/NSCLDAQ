@@ -108,16 +108,16 @@ CMDPP16QDC::onAttach(CReadoutModule& configuration)
 
   m_pConfiguration -> addIntegerParameter("-irqdatathreshold",  0, 32256, 1);
   m_pConfiguration -> addIntegerParameter("-maxtransfer",       0, 32256, 1);
-  m_pConfiguration -> addEnumParameter("-irqsource", IrqSourceStrings, IrqSourceStrings[1]);
-  m_pConfiguration -> addIntegerParameter("-irqeventthreshold", 0, 32256, 1);
+  m_pConfiguration -> addEnumParameter("-irqsource", IrqSourceStrings, IrqSourceStrings[0]);
+  m_pConfiguration -> addIntegerParameter("-irqeventthreshold", 0, 32256, 3);
 
   m_pConfiguration -> addEnumParameter("-datalenformat", DataLengthFormatStrings, DataLengthFormatStrings[2]);
-  m_pConfiguration -> addIntegerParameter("-multievent",    0, 15, 0);
-  m_pConfiguration -> addEnumParameter("-marktype", MarkTypeStrings, MarkTypeStrings[0]);
+  m_pConfiguration -> addIntegerParameter("-multievent",    0, 15, 0xb);
+  m_pConfiguration -> addEnumParameter("-marktype", MarkTypeStrings, MarkTypeStrings[1]);
 
-  m_pConfiguration -> addEnumParameter("-tdcresolution", TDCResolutionStrings, TDCResolutionStrings[5]);
+  m_pConfiguration -> addEnumParameter("-tdcresolution", TDCResolutionStrings, TDCResolutionStrings[0]);
   m_pConfiguration -> addIntegerParameter("-outputformat",  0,  3, 3);
-  m_pConfiguration -> addEnumParameter("-adcresolution", ADCResolutionStrings, ADCResolutionStrings[4]);
+  m_pConfiguration -> addEnumParameter("-adcresolution", ADCResolutionStrings, ADCResolutionStrings[0]);
 
   m_pConfiguration -> addIntegerParameter("-windowstart", 0, 0x7fff, 0x3fc0);
   m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x4000, 16);
@@ -168,7 +168,8 @@ CMDPP16QDC::Initialize(CVMUSB& controller)
   controller.vmeWrite16(base + Reset,        initamod, 0);
   sleep(1);
   controller.vmeWrite16(base + StartAcq,     initamod, 0);
-  controller.vmeWrite16(base + ReadoutReset, initamod, 0);
+  controller.vmeWrite16(base + InitFifo,     initamod, 1);
+  controller.vmeWrite16(base + ReadoutReset, initamod, 1);
 
   CVMUSBReadoutList list;	// Initialization instructions will be added to this.
 
@@ -270,10 +271,10 @@ CMDPP16QDC::Initialize(CVMUSB& controller)
   list.addWrite16(base + IrqEventThreshold, initamod, irqeventthreshold);
 
   // Now reset again and start daq:
-  list.addWrite16(base + ReadoutReset,      initamod, 1);
-  list.addWrite16(base + InitFifo,          initamod, 0);
+  list.addWrite16(base + InitFifo,          initamod, 1);
 
   list.addWrite16(base + StartAcq,          initamod, 1);
+  list.addWrite16(base + ReadoutReset,      initamod, 1);
 
   char readBuffer[100];		// really a dummy as these are all write...
   size_t bytesRead;
@@ -456,8 +457,8 @@ CMDPP16QDC::initCBLTReadout(CVMUSB& controller,
   }
 
   // Init the buffer and start data taking.
-  controller.vmeWrite16(cbltAddress + InitFifo,     initamod, 0);
-  controller.vmeWrite16(cbltAddress + ReadoutReset, initamod, 0);
+  controller.vmeWrite16(cbltAddress + InitFifo,     initamod, 1);
+  controller.vmeWrite16(cbltAddress + ReadoutReset, initamod, 1);
   controller.vmeWrite16(cbltAddress + StartAcq,     initamod, 1);
 }
 
