@@ -184,6 +184,7 @@ CStack::onAttach(CReadoutModule& configuration)
 				 XXUSB::CConfigurableObject::isInteger, &delayRange, "0");
   m_pConfiguration->addParameter("-vector",
 				 XXUSB::CConfigurableObject::isInteger, &vectorRange, "0");
+  m_pConfiguration->addBooleanParameter("-vector8bit", "false");
   m_pConfiguration->addParameter("-ipl",
 				 XXUSB::CConfigurableObject::isInteger, &iplRange, "6");
   m_pConfiguration->addParameter("-modules",
@@ -474,29 +475,29 @@ CStack::enableStack(CVMUSB& controller)
   // Now deal with the top 8 bits of the vector:  These are packed four to a
   // register in USBVHIGH1 and USBVHIGH2.  Since we've allocated vector numbers
   // by stack we can compute the register and its shift count:
+  // These registers are untouched if -vector8bit is set
   
   which          = (((stackNumber - 2) / 4) == 0) ? CVMUSB::USBVHIGH1 : CVMUSB::USBVHIGH2;
 
-
-
-  uint32_t shift = ((stackNumber -2) % 4) * 8;
+  uint32_t shift = ((stackNumber - 2) % 4) * 8;
   uint32_t mask  = 0xff << shift;
-  
+
   uint32_t extValue = controller.readRegister(which);
 
   extValue &= ~mask;                   // Remove the old bits.
-  extValue |= ((vectorNumber >> 8) << shift); // or in the new bits.
+  if (m_pConfiguration->getBoolParameter("-vector8bit")) {
+    extValue |= (0xff << shift); // or in the new bits.
+  } else {
+    extValue |= ((vectorNumber >> 8) << shift); // or in the new bits.
+  }
 
-
-
+  cout << "Setting: 0x" << std::hex << extValue << std::dec << endl;
   controller.writeRegister(which, extValue);
-
   
   // Ensure the IPL's bit is not set in the interrupt mask:
   
   uint8_t irqmask = controller.readIrqMask();
   irqmask        &= ~(1 << irq);                // Clear our irq bit.
-  
   
   irqmask        =  0;		// Enable all the damned interrupts.
   controller.writeIrqMask(irqmask);
