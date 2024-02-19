@@ -1567,7 +1567,7 @@ snit::widgetadaptor ElapsedTimeDisplay {
         
         set now [expr {int($now/1000)}]
         
-        return [Utils::formatDeltaTime $now]
+        set formattedNow [Utils::formatDeltaTime $now]
     }
 }
 ##
