@@ -7488,9 +7488,12 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              vector produced by this module is 8 bits wide.
                              The VME standard is ambiguous about how such modules
                              produce the top eight bits of the vector under these
-                             circumstances.  These modules set those top bits
-                             to zero.  E.g. <option>-vector </option> <literal>0x80</literal>
-                             produces a vector, as see by the VMUSB of <literal>0x0080</literal>
+                             circumstances. Mesytec modules set those top bits
+                             to 0xFF.  E.g. <option>-vector </option> <literal>0x80</literal>
+                             produces a vector, as see by the VMUSB of <literal>0xFF80</literal>.
+                             One important thing to note in this case is that one must pass
+                             <option>-vector</option> option to the stack as <literal>0xFF80</literal>
+                             to use interrupt-triggered stack. <literal>0x0080</literal> won't work.
                          </para>
                          <para>
                              By default, the value is <literal>0</literal>.
@@ -7509,7 +7512,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              <literal>0x3FFF (32757)</literal>
                          </para>
                          <para>
-                             By default, the value is <literal>1</literal>.
+                             By default, the value is <literal>3</literal>.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -7553,8 +7556,8 @@ mdpp32qdc cget <replaceable>name</replaceable>
                                  </listitem>
                              </varlistentry>
                          </variablelist>
-			 <para>
-                           By default, the value is <literal>data</literal>
+                         <para>
+                           By default, the value is <literal>event</literal>
                          </para>
 
                      </listitem>
@@ -7613,7 +7616,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                      <term><option>-multievent</option> <replaceable>See detail</replaceable></term>
                      <listitem>
                          <para>
-                             By default, the value is <literal>0</literal>.
+                             By default, the value is <literal>0xb</literal>.
                          </para>
                          <informalexample>
                              <programlisting>
@@ -7714,7 +7717,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                      </term>
                      <listitem>
                          <para>
-                             By default, the value is <literal>eventcount</literal>.
+                             By default, the value is <literal>timestamp</literal>.
                          </para>
                          <variablelist>
                              <varlistentry>
@@ -7767,7 +7770,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              raw register value with formula: 25ns/pow(2, 10-value)
                          </para>
                          <para>
-                             By default, the value is <literal>781ps</literal>.
+                             By default, the value is <literal>24ps</literal>.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -7782,7 +7785,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              raw register value with formula: pow(2, 6-value)k
                          </para>
                          <para>
-                             By default, the value is <literal>4k</literal>.
+                             By default, the value is <literal>64k</literal>.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -7841,7 +7844,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              < 16k, window starts before Trigger, > 16k, window is delayed.
                         </para>
                         <para>
-                             By default, this parameter is 0x3fc0(=16320).
+                             By default, this parameter is 0x3fbe(=16318).
                         </para>
                      </listitem>
                  </varlistentry>
@@ -7852,7 +7855,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              (From MDPP-32 documentation) Unit: 1.56 ns, max 16k = 25.56 us
                         </para>
                         <para>
-                             By default, this parameter is 0x20(=32).
+                             By default, this parameter is 0x80(=128).
                         </para>
                      </listitem>
                  </varlistentry>
@@ -7911,6 +7914,10 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              This can be: one or both of the trigger inputs, lower 16 channels(B0), upper 16 channels(B1),
                              or both banks (all channels). 
                          </para>
+                         <para>
+                           MDPPTriggerControl GUI is included in the FRIBDAQ package. This value needs to be set to 0x400
+                           to use the GUI controller. In this case, the last setting is preserved while start/stop runs.
+                         </param>
                          <informalexample>
                              <programlisting>
 +-------------------------------------------+
@@ -7922,7 +7929,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              </programlisting>
                          </informalexample>
                          <para>
-                             The default value is 0x100.
+                             The default value is 0x400.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -7934,6 +7941,10 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              This can be: one or both of the trigger inputs, lower 16 channels(B0), upper 16 channels(B1),
                              or both banks (all channels). 
                          </para>
+                         <para>
+                           MDPPTriggerControl GUI is included in the FRIBDAQ package. This value needs to be set to 0x400
+                           to use the GUI controller. In this case, the last setting is preserved while start/stop runs.
+                         </param>
                          <informalexample>
                              <programlisting>
 +-----------------------------------------+
@@ -7944,7 +7955,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              </programlisting>
                          </informalexample>
                          <para>
-                             The default value is 0x100.
+                             The default value is 0x400.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -7986,8 +7997,8 @@ mdpp32qdc cget <replaceable>name</replaceable>
                          </para>
                          <para>
                              By default, the value is
-                             <literal>[list 1024 1024 1024 1024  1024 1024 1024 1024]</literal>,
-                             which is 1024 mV for all channels.
+                             <literal>[list 1000 1000 1000 1000  1000 1000 1000 1000]</literal>,
+                             which is 1000 mV for all channels.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -8007,8 +8018,8 @@ mdpp32qdc cget <replaceable>name</replaceable>
                          </para>
                          <para>
                              By default, the value is
-                             <literal>[list 3072 3072 3072 3072  3072 3072 3072 3072]</literal>,
-                             which is 3072 mV for all channels.
+                             <literal>[list 3000 3000 3000 3000  3000 3000 3000 3000]</literal>,
+                             which is 3000 mV for all channels.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -8090,8 +8101,8 @@ mdpp32qdc cget <replaceable>name</replaceable>
                          </para>
                          <para>
                              By default, the value is
-                             <literal>[list 0xFF 0xFF 0xFF 0xFF ... 0xFF 0xFF 0xFF 0xFF]</literal>,
-                             which is 255 (~0.4%) for all channels.
+                             <literal>[list 0x4FF 0x4FF 0x4FF 0x4FF ... 0x4FF 0x4FF 0x4FF 0x4FF]</literal>,
+                             which is 1279 (~1.95%) for all channels.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -8231,7 +8242,8 @@ mdpp32qdc config qdc -signalwidth $signalWidth \
              </para>
              <para>
                  If any of the parameters are not specified in <literal>config</literal>,
-                 it uses the default values.
+                 it uses the default values. It is recommeneded only define variables
+                 need to change and omit others for taking default values.
              </para>
          </refsect1>
      </refentry>
