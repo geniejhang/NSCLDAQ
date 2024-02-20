@@ -108,37 +108,37 @@ CMDPP32QDC::onAttach(CReadoutModule& configuration)
 
   m_pConfiguration -> addIntegerParameter("-irqdatathreshold",  0, 32256, 1);
   m_pConfiguration -> addIntegerParameter("-maxtransfer",       0, 32256, 1);
-  m_pConfiguration -> addEnumParameter("-irqsource", IrqSourceStrings, IrqSourceStrings[1]);
-  m_pConfiguration -> addIntegerParameter("-irqeventthreshold", 0, 32256, 1);
+  m_pConfiguration -> addEnumParameter("-irqsource", IrqSourceStrings, IrqSourceStrings[0]);
+  m_pConfiguration -> addIntegerParameter("-irqeventthreshold", 0, 32256, 3);
 
   m_pConfiguration -> addEnumParameter("-datalenformat", DataLengthFormatStrings, DataLengthFormatStrings[2]);
-  m_pConfiguration -> addIntegerParameter("-multievent",    0, 15, 0);
+  m_pConfiguration -> addIntegerParameter("-multievent",    0, 15, 0xb);
   m_pConfiguration -> addEnumParameter("-marktype", MarkTypeStrings, MarkTypeStrings[0]);
 
-  m_pConfiguration -> addEnumParameter("-tdcresolution", TDCResolutionStrings, TDCResolutionStrings[5]);
+  m_pConfiguration -> addEnumParameter("-tdcresolution", TDCResolutionStrings, TDCResolutionStrings[0]);
   m_pConfiguration -> addIntegerParameter("-outputformat",  0,  3, 3);
-  m_pConfiguration -> addEnumParameter("-adcresolution", ADCResolutionStrings, ADCResolutionStrings[4]);
+  m_pConfiguration -> addEnumParameter("-adcresolution", ADCResolutionStrings, ADCResolutionStrings[0]);
 
-  m_pConfiguration -> addIntegerParameter("-windowstart", 0, 0x7fff, 0x3fc0);
-  m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x4000, 32);
+  m_pConfiguration -> addIntegerParameter("-windowstart", 0, 0x7fff, 0x3fbe);
+  m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x3fff, 0x80);
   m_pConfiguration -> addBooleanParameter("-firsthit", true);
   m_pConfiguration -> addBooleanParameter("-testpulser", false);
   m_pConfiguration -> addIntegerParameter("-pulseramplitude",  0,  0xfff, 400);
   m_pConfiguration -> addIntegerParameter("-triggersource", 0, 0x400, 0x400);
   m_pConfiguration -> addIntegerParameter("-triggeroutput", 0, 0x400, 0x400);
  
-  m_pConfiguration -> addIntListParameter("-signalwidth",    0, 0x03ff,  8,  8,  8,   16);
-  m_pConfiguration -> addIntListParameter("-inputamplitude", 0, 0xffff,  8,  8,  8, 1024);
-  m_pConfiguration -> addIntListParameter("-jumperrange",    0, 0xffff,  8,  8,  8, 3072);
+  m_pConfiguration -> addIntListParameter("-signalwidth",    0, 0x03ff,  8,  8,  8,    30);
+  m_pConfiguration -> addIntListParameter("-inputamplitude", 0, 0xffff,  8,  8,  8,  1000);
+  m_pConfiguration -> addIntListParameter("-jumperrange",    0, 0xffff,  8,  8,  8,  2000);
   m_pConfiguration -> addBoolListParameter("-qdcjumper", 8, false);
-  m_pConfiguration -> addIntListParameter("-intlong",        2,    506,  8,  8,  8,   16);
-  m_pConfiguration -> addIntListParameter("-intshort",       1,    127,  8,  8,  8,    2);
-  m_pConfiguration -> addIntListParameter("-threshold",      1, 0xffff, 32, 32, 32, 0xff);
-  m_pConfiguration -> addIntListParameter("-resettime",      0, 0x03ff,  8,  8,  8,   32);
+  m_pConfiguration -> addIntListParameter("-intlong",        2,    506,  8,  8,  8,    16);
+  m_pConfiguration -> addIntListParameter("-intshort",       1,    127,  8,  8,  8,     2);
+  m_pConfiguration -> addIntListParameter("-threshold",      1, 0xffff, 32, 32, 32, 0x4ff);
+  m_pConfiguration -> addIntListParameter("-resettime",      0, 0x03ff,  8,  8,  8,    32);
   m_pConfiguration -> addStringListParameter("-gaincorrectionlong",  8, GainCorrectionStrings[2]);
   m_pConfiguration -> addStringListParameter("-gaincorrectionshort", 8, GainCorrectionStrings[2]);
   m_pConfiguration -> addBooleanParameter("-printregisters", false);
-  m_pConfiguration -> addIntListParameter("-trigtoirq",      0, 0xffff, 14, 14, 14,    0);
+  m_pConfiguration -> addIntListParameter("-trigtoirq",      0, 0xffff, 14, 14, 14,     0);
 }
 /**
  * This method is called when a driver instance is being asked to initialize the hardware
@@ -166,10 +166,11 @@ CMDPP32QDC::Initialize(CVMUSB& controller)
     controller.vmeRead16(base + TriggerOutput, initamod, &triggeroutput);
   }
 
-  controller.vmeWrite16(base + Reset,        initamod, 0);
+  controller.vmeWrite16(base + Reset,        initamod, 1);
   sleep(1);
   controller.vmeWrite16(base + StartAcq,     initamod, 0);
-  controller.vmeWrite16(base + ReadoutReset, initamod, 0);
+  controller.vmeWrite16(base + InitFifo,     initamod, 1);
+  controller.vmeWrite16(base + ReadoutReset, initamod, 1);
 
   CVMUSBReadoutList list;	// Initialization instructions will be added to this.
 
@@ -201,14 +202,14 @@ CMDPP32QDC::Initialize(CVMUSB& controller)
   bool           testpulser          = m_pConfiguration -> getBoolParameter("-testpulser");
   uint16_t       pulseramplitude     = m_pConfiguration -> getIntegerParameter("-pulseramplitude");
 
-  auto    signalwidths        = m_pConfiguration -> getIntegerList("-signalwidth");
-  auto    inputamplitude      = m_pConfiguration -> getIntegerList("-inputamplitude");
-  auto    jumperrange         = m_pConfiguration -> getIntegerList("-jumperrange");
-  auto    qdcjumper           = m_pConfiguration -> getIntegerList("-qdcjumper");
-  auto    intlong             = m_pConfiguration -> getIntegerList("-intlong");
-  auto    intshort            = m_pConfiguration -> getIntegerList("-intshort");
-  auto    threshold           = m_pConfiguration -> getIntegerList("-threshold");
-  auto    resettime           = m_pConfiguration -> getIntegerList("-resettime");
+  auto           signalwidths        = m_pConfiguration -> getIntegerList("-signalwidth");
+  auto           inputamplitude      = m_pConfiguration -> getIntegerList("-inputamplitude");
+  auto           jumperrange         = m_pConfiguration -> getIntegerList("-jumperrange");
+  auto           qdcjumper           = m_pConfiguration -> getIntegerList("-qdcjumper");
+  auto           intlong             = m_pConfiguration -> getIntegerList("-intlong");
+  auto           intshort            = m_pConfiguration -> getIntegerList("-intshort");
+  auto           threshold           = m_pConfiguration -> getIntegerList("-threshold");
+  auto           resettime           = m_pConfiguration -> getIntegerList("-resettime");
   vector<string> gaincorrectionlong  = m_pConfiguration -> getList("-gaincorrectionlong");
   vector<string> gaincorrectionshort = m_pConfiguration -> getList("-gaincorrectionshort");
   bool           isPrintRegisters    = m_pConfiguration -> getBoolParameter("-printregisters");
@@ -231,6 +232,7 @@ CMDPP32QDC::Initialize(CVMUSB& controller)
   list.addWrite16(base + PulserAmplitude,   initamod, pulseramplitude);
   list.addWrite16(base + TriggerSource,     initamod, triggersource&0x3ff);
   list.addWrite16(base + TriggerOutput,     initamod, triggeroutput&0x3ff);
+
   for (uint16_t iIncr = 0; iIncr < 14; iIncr++) {
     list.addWrite16(base + TrigToIRQ1L + 2*iIncr, initamod, (uint16_t)trigtoirq.at(iIncr));
   }
@@ -275,10 +277,10 @@ CMDPP32QDC::Initialize(CVMUSB& controller)
   list.addWrite16(base + IrqEventThreshold, initamod, irqeventthreshold);
 
   // Now reset again and start daq:
-  list.addWrite16(base + ReadoutReset,      initamod, 1);
-  list.addWrite16(base + InitFifo,          initamod, 0);
+  list.addWrite16(base + InitFifo,          initamod, 1);
 
   list.addWrite16(base + StartAcq,          initamod, 1);
+  list.addWrite16(base + ReadoutReset,      initamod, 1);
 
   char readBuffer[100];		// really a dummy as these are all write...
   size_t bytesRead;
@@ -305,7 +307,7 @@ CMDPP32QDC::addReadoutList(CVMUSBReadoutList& list)
 {
   uint32_t base  = m_pConfiguration -> getUnsignedParameter("-base"); // Get the value of -slot.
 
-  list.addFifoRead32(base + eventBuffer, readamod, (size_t)1024); 
+  list.addFifoRead32(base + eventBuffer, readamod, (size_t)65535); 
   list.addWrite16(base + ReadoutReset, initamod, (uint16_t)1);
 }
 
