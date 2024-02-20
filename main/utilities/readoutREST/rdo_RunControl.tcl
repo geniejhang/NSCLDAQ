@@ -292,12 +292,14 @@ snit::widgetadaptor ReadoutManagerControl {
         ttk::button $win.manager.shutdown -text Shutdown \
             -command [mymethod _dispatchShutdown] \
             -state disabled
+	ttk::label $win.elapsed -text "           "
         
         grid $win.manager.statelabel $win.manager.state -sticky w
         grid $win.manager.boot $win.manager.shutdown    -sticky w -padx 3
         
         grid $parameters -columnspan 3
         grid $win.manager $control
+	grid $win.elapsed 
         
         $self configurelist $args
         
