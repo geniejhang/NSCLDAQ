@@ -1399,7 +1399,7 @@
      <section id='sec.mgr.runcontrol'>
         <title id='sec.mgr.runcontrol.title'>The Run Control Panel</title>
         <para>
-          The run control panel application, <command>mg_RunControl</command>
+          The run control panel application, <command>rdo_RunControl</command>
           provides a control panel that can manage state transitions, run
           metadata, event logging and can monitor trigger statistics from
           compatible readout programs.
