@@ -1,3 +1,9 @@
+#!/bin/sh
+# -*- tcl -*-
+# The next line is executed by /bin/sh, but not tcl \
+exec tclsh "$0" ${1+"$@"}
+
+
 ##
 #   rdo_stamp.tcl
 #     This program should be added to the end of the BEGIN sequence.
