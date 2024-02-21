@@ -8375,9 +8375,12 @@ mdpp32scp cget <replaceable>name</replaceable>
                              vector produced by this module is 8 bits wide.
                              The VME standard is ambiguous about how such modules
                              produce the top eight bits of the vector under these
-                             circumstances.  These modules set those top bits
-                             to zero.  E.g. <option>-vector </option> <literal>0x80</literal>
-                             produces a vector, as see by the VMUSB of <literal>0x0080</literal>
+                             circumstances. Mesytec modules set those top bits
+                             to 0xFF.  E.g. <option>-vector </option> <literal>0x80</literal>
+                             produces a vector, as see by the VMUSB of <literal>0xFF80</literal>.
+                             One important thing to note in this case is that one must pass
+                             <option>-vector</option> option to the stack as <literal>0xFF80</literal>
+                             to use interrupt-triggered stack. <literal>0x0080</literal> won't work.
                          </para>
                          <para>
                              By default, the value is <literal>0</literal>.
@@ -8396,7 +8399,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                              <literal>0x3FFF (32757)</literal>
                          </para>
                          <para>
-                             By default, the value is <literal>1</literal>.
+                             By default, the value is <literal>3</literal>.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -8441,7 +8444,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                              </varlistentry>
                          </variablelist>
 			 <para>
-                           By default, the value is <literal>data</literal>
+                           By default, the value is <literal>event</literal>
                          </para>
 
                      </listitem>
@@ -8472,35 +8475,10 @@ mdpp32scp cget <replaceable>name</replaceable>
                      </listitem>
                  </varlistentry>
                  <varlistentry>
-                     <term>
-                         <option>-datalenformat</option>
-                         <replaceable>8bit | 16bit | 32bit | 64bit | numevents</replaceable>
-                     </term>
-                     <listitem>
-                         <variablelist>
-                             <varlistentry>
-                               <term><literal>numevents</literal></term>
-			       <listitem>
-                                 <para>Show number of events in FIFO</para>
-			       </listitem>
-                             </varlistentry>
-                         </variablelist>
-                         <para>
-                             (From MDPP-32 SCP documnetation) The number of 32 bit words is always even.
-                             If necessary the fill word "0" is added. For the setting <literal>0</literal>
-                             and <literal>1</literal>, the max value <literal>0xFFFF</literal> is shown
-                             when number exceeds the 16 bit format. The FIFO is not affected.
-                         </para>
-                         <para>
-                             By default, the value is <literal>32bit</literal>.
-                         </para>
-                     </listitem>
-                 </varlistentry>
-                 <varlistentry>
                      <term><option>-multievent</option> <replaceable>See detail</replaceable></term>
                      <listitem>
                          <para>
-                             By default, the value is <literal>0</literal>.
+                             By default, the value is <literal>0xb</literal>.
                          </para>
                          <informalexample>
                              <programlisting>
@@ -8601,7 +8579,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                      </term>
                      <listitem>
                          <para>
-                             By default, the value is <literal>eventcount</literal>.
+                             By default, the value is <literal>timestamp</literal>.
                          </para>
                          <variablelist>
                              <varlistentry>
@@ -8654,34 +8632,19 @@ mdpp32scp cget <replaceable>name</replaceable>
                              raw register value with formula: 25ns/pow(2, 10-value)
                          </para>
                          <para>
-                             By default, the value is <literal>781ps</literal>.
+                             By default, the value is <literal>24ps</literal>.
                          </para>
                      </listitem>
                  </varlistentry>
                  <varlistentry>
-                     <term>
-                         <option>-adcresolution</option>
-                         <replaceable>64k | 32k | 16k | 8k | 4k</replaceable>
-                     </term>
-                     <listitem>
-                         <para>
-                             Just for your information, ADC resolution is calculated using the
-                             raw register value with formula: pow(2, 6-value)k
-                         </para>
-                         <para>
-                             By default, the value is <literal>4k</literal>.
-                         </para>
-                     </listitem>
-                 </varlistentry>
-                 <varlistentry>
-                     <term><option>-outputformat</option> <replaceable>0-3</replaceable></term>
+                     <term><option>-outputformat</option> <replaceable>0-2</replaceable></term>
                      <listitem>
                          <variablelist>
                              <varlistentry>
                                <term><literal>0</literal></term>
 			       <listitem>
                                  <para>
-                                     Time and long integral
+                                     Standard (time and amplitude)
                                  </para>
 			       </listitem>
                              </varlistentry>
@@ -8689,7 +8652,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                                <term><literal>1</literal></term>
 			       <listitem>
                                  <para>
-                                     Long integral only (SCP mode)
+                                     Amplitude only
                                  </para>
 			       </listitem>
                              </varlistentry>
@@ -8697,21 +8660,13 @@ mdpp32scp cget <replaceable>name</replaceable>
                                <term><literal>2</literal></term>
 			       <listitem>
                                  <para>
-                                     Time only (TDC mode)
-                                 </para>
-			       </listitem>
-                             </varlistentry>
-                             <varlistentry>
-                               <term><literal>3</literal></term>
-			       <listitem>
-                                 <para>
-                                     Long integral, short integral and time
+                                     Time only
                                  </para>
 			       </listitem>
                              </varlistentry>
                          </variablelist>
                          <para>
-                             By default, the value is <literal>3</literal>.
+                             By default, the value is <literal>0</literal>.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -8728,7 +8683,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                              < 16k, window starts before Trigger, > 16k, window is delayed.
                         </para>
                         <para>
-                             By default, this parameter is 0x3fc0(=16320).
+                             By default, this parameter is 0x3fbe(=16318).
                         </para>
                      </listitem>
                  </varlistentry>
@@ -8798,6 +8753,10 @@ mdpp32scp cget <replaceable>name</replaceable>
                              This can be: one or both of the trigger inputs, lower 16 channels(B0), upper 16 channels(B1),
                              or both banks (all channels). 
                          </para>
+                         <para>
+                           MDPPTriggerControl GUI is included in the FRIBDAQ package. This value needs to be set to 0x400
+                           to use the GUI controller. In this case, the last setting is preserved while start/stop runs.
+                         </param>
                          <informalexample>
                              <programlisting>
 +-------------------------------------------+
@@ -8809,18 +8768,22 @@ mdpp32scp cget <replaceable>name</replaceable>
                              </programlisting>
                          </informalexample>
                          <para>
-                             The default value is 0x100.
+                             The default value is 0x400.
                          </para>
                      </listitem>
                  </varlistentry>
                  <varlistentry>
-                     <term><option>-triggersource</option> <replaceable>int 0-1023 (0-0x3ff)</replaceable></term>
+                     <term><option>-triggeroutput</option> <replaceable>int 0-1023 (0-0x3ff)</replaceable></term>
                      <listitem>
                          <para>
                              (From MDPP-32 documentation) Defines the trigger which creates output trigger.
                              This can be: one or both of the trigger inputs, lower 16 channels(B0), upper 16 channels(B1),
                              or both banks (all channels). 
                          </para>
+                         <para>
+                           MDPPTriggerControl GUI is included in the FRIBDAQ package. This value needs to be set to 0x400
+                           to use the GUI controller. In this case, the last setting is preserved while start/stop runs.
+                         </param>
                          <informalexample>
                              <programlisting>
 +-----------------------------------------+
@@ -8831,7 +8794,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                              </programlisting>
                          </informalexample>
                          <para>
-                             The default value is 0x100.
+                             The default value is 0x400.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -8903,8 +8866,6 @@ mdpp32scp cget <replaceable>name</replaceable>
                      </term>
                      <listitem>
                          <para>
-                         </para>
-                         <para>
                              The parameter provided must be a list of 32 integers. Each element sets
                              the threshold to each channel.
                          </para>
@@ -8917,11 +8878,11 @@ mdpp32scp cget <replaceable>name</replaceable>
                  <varlistentry>
                      <term>
                          <option>-shapingtime</option>
-                         <replaceable>int[8] 0-65535 (mV)</replaceable>
+                         <replaceable>int[8] 8-2000 (=100ns-25us)</replaceable>
                      </term>
                      <listitem>
                          <para>
-                             Range printed on the jumper installed on the module in mV.
+                             FWHM-width of input signals in multiple of 12.5 ns
                          </para>
                          <para>
                              The parameter provided must be a list of 8 integers.
@@ -8930,8 +8891,8 @@ mdpp32scp cget <replaceable>name</replaceable>
                          </para>
                          <para>
                              By default, the value is
-                             <literal>[list 3072 3072 3072 3072  3072 3072 3072 3072]</literal>,
-                             which is 3072 mV for all channels.
+                             <literal>[list 200 200 200 200  200 200 200 200]</literal>,
+                             which is 200 for all channels which is 2.5us.
                          </para>
                      </listitem>
                  </varlistentry>
@@ -9051,12 +9012,12 @@ mdpp32scp config scp -tfintdiff $tfintdiff \
              <para>
                  Defines a module with base address <literal>0x00030000</literal>.
                  While many register values are defined with lists, not all of them are
-                 used to configure the module (<literal>qdcJumper</literal>
-                 is not used).
+                 used to configure the module.
              </para>
              <para>
                  If any of the parameters are not specified in <literal>config</literal>,
-                 it uses the default values.
+                 it uses the default values. It is recommeneded only define variables
+                 need to change and omit others for taking default values.
              </para>
          </refsect1>
      </refentry>
