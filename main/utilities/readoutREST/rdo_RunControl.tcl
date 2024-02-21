@@ -36,6 +36,7 @@ package require programstatusclient;     # To query programs from manager.
 package require stateclient;             # To query/control manager state.
 package require kvclient;                # Title and run# are in kv store.
 package require Tk
+package require rdo_ElapsedTime;          # For elapsed run time
 
 #-------------------------------------------------------------------------------
 #   User interface megawidgets.
@@ -257,6 +258,7 @@ snit::widgetadaptor ReadoutManagerControl {
     option -readoutstate -configuremethod _cfgRdoState 
     option -bootcommand [list]
     option -shutdowncommand [list]
+    option -elapsed "*Unknown*"
     
     # Options delegated ton the parameters widget:
     
@@ -292,7 +294,7 @@ snit::widgetadaptor ReadoutManagerControl {
         ttk::button $win.manager.shutdown -text Shutdown \
             -command [mymethod _dispatchShutdown] \
             -state disabled
-	ttk::label $win.elapsed -text "           "
+	ttk::label $win.elapsed -text -textvariable [myvar options(-elapsed)
         
         grid $win.manager.statelabel $win.manager.state -sticky w
         grid $win.manager.boot $win.manager.shutdown    -sticky w -padx 3
@@ -554,6 +556,7 @@ snit::widgetadaptor RunControlGUI {
     delegate option -runcommand to controls
     delegate option -parameterstate to controls
     delegate option -statecommand to controls
+    delegate option -elapsed to controls
     
     # Summary methods:
     
@@ -675,6 +678,12 @@ snit::type SystemStateTracker {
         } else {
             
             $view configure -state $state
+	    #
+	    #  Update the elapsed time if we're in a run
+	    #
+	    if {$state eq "BEGIN"} {
+		$model configure -elapsed [ElapsedTime::get]
+	    }
         }
     }
 }
@@ -1121,6 +1130,7 @@ snit::type RunControlActionHandler {
             $model transition HWINIT
         } elseif {$what eq "begin"} {
             $model transition BEGIN
+	    ElapsedTime::begin;	# Elapsed time packge fetches the run start time.
         } elseif {$what eq "end"} {
             $model transition END
         } elseif {$what eq "shutdown" } {
@@ -1194,7 +1204,7 @@ snit::type RunController {
             $actionHandler $summaryTracker $readoutParameterTracker \
             $multiReadoutStatisticsTracker                          \
             $multiReadoutStateTracker                               \
-            $systemStateTracker                                     \
+	    $systemStateTracker                                     \
         ]
         
         $self configurelist $args
@@ -1223,6 +1233,9 @@ snit::type RunController {
     }
     #--------------------------------------------------------------------------
     # Private utilities
+
+    ##
+    # _up
 
     ##
     # _canUpdate
@@ -1423,6 +1436,7 @@ snit::type RunController {
         if {$options(-recordingcontroller) ne ""} {
             $options(-recordingcontroller) update
         }
+	
         after $options(-refresh) $self _update
     }
 }
