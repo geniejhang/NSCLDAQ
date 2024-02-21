@@ -109,7 +109,7 @@ CMDPP32SCP::onAttach(CReadoutModule& configuration)
   m_pConfiguration -> addIntegerParameter("-outputformat",  0,  2, 0);
 
   m_pConfiguration -> addIntegerParameter("-windowstart", 0, 0x7fff, 0x3fbe);
-  m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x3fff, 0x32);
+  m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x3fff, 0x20);
   m_pConfiguration -> addBooleanParameter("-firsthit", true);
   m_pConfiguration -> addBooleanParameter("-testpulser", false);
   m_pConfiguration -> addIntegerParameter("-pulseramplitude",  0,  0xfff, 400);
