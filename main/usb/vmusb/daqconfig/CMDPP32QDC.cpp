@@ -113,7 +113,7 @@ CMDPP32QDC::onAttach(CReadoutModule& configuration)
 
   m_pConfiguration -> addEnumParameter("-datalenformat", DataLengthFormatStrings, DataLengthFormatStrings[2]);
   m_pConfiguration -> addIntegerParameter("-multievent",    0, 15, 0xb);
-  m_pConfiguration -> addEnumParameter("-marktype", MarkTypeStrings, MarkTypeStrings[0]);
+  m_pConfiguration -> addEnumParameter("-marktype", MarkTypeStrings, MarkTypeStrings[1]);
 
   m_pConfiguration -> addEnumParameter("-tdcresolution", TDCResolutionStrings, TDCResolutionStrings[0]);
   m_pConfiguration -> addIntegerParameter("-outputformat",  0,  3, 3);

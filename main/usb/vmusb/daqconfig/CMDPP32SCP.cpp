@@ -102,14 +102,14 @@ CMDPP32SCP::onAttach(CReadoutModule& configuration)
   m_pConfiguration -> addEnumParameter("-irqsource", IrqSourceStrings, IrqSourceStrings[0]);
   m_pConfiguration -> addIntegerParameter("-irqeventthreshold", 0, 32256, 3);
 
-  m_pConfiguration -> addIntegerParameter("-multievent",    0, 15, 11);
+  m_pConfiguration -> addIntegerParameter("-multievent",    0, 15, 0xb);
   m_pConfiguration -> addEnumParameter("-marktype", MarkTypeStrings, MarkTypeStrings[1]);
 
   m_pConfiguration -> addEnumParameter("-tdcresolution", TDCResolutionStrings, TDCResolutionStrings[0]);
   m_pConfiguration -> addIntegerParameter("-outputformat",  0,  2, 0);
 
-  m_pConfiguration -> addIntegerParameter("-windowstart", 0, 0x7fff, 0x3fc0);
-  m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x4000, 0x32);
+  m_pConfiguration -> addIntegerParameter("-windowstart", 0, 0x7fff, 0x3fbe);
+  m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x3fff, 0x32);
   m_pConfiguration -> addBooleanParameter("-firsthit", true);
   m_pConfiguration -> addBooleanParameter("-testpulser", false);
   m_pConfiguration -> addIntegerParameter("-pulseramplitude",  0,  0xfff, 400);
@@ -120,7 +120,7 @@ CMDPP32SCP::onAttach(CReadoutModule& configuration)
   m_pConfiguration -> addIntListParameter("-pz",              64, 0xffff, 32, 32, 32, 0xffff);
   m_pConfiguration -> addIntListParameter("-gain",           100,  25000,  8,  8,  8,    200);
   m_pConfiguration -> addIntListParameter("-threshold",        0, 0xfa00, 32, 32, 32,   2000);
-  m_pConfiguration -> addIntListParameter("-shapingtime",      8,   2000,  8,  8,  8,    100);
+  m_pConfiguration -> addIntListParameter("-shapingtime",      8,   2000,  8,  8,  8,    200);
   m_pConfiguration -> addIntListParameter("-blr",              0, 0x0003,  8,  8,  8,      2);
   m_pConfiguration -> addIntListParameter("-signalrisetime",   0, 0x007f,  8,  8,  8,      0);
   m_pConfiguration -> addIntListParameter("-resettime",       16, 0x03ff,  8,  8,  8,     16);
@@ -153,10 +153,11 @@ CMDPP32SCP::Initialize(CVMUSB& controller)
     controller.vmeRead16(base + TriggerOutput, initamod, &triggeroutput);
   }
 
-  controller.vmeWrite16(base + Reset,        initamod, 0);
+  controller.vmeWrite16(base + Reset,        initamod, 1);
   sleep(1);
   controller.vmeWrite16(base + StartAcq,     initamod, 0);
-  controller.vmeWrite16(base + ReadoutReset, initamod, 0);
+  controller.vmeWrite16(base + InitFifo,     initamod, 1);
+  controller.vmeWrite16(base + ReadoutReset, initamod, 1);
 
   CVMUSBReadoutList list;	// Initialization instructions will be added to this.
 
@@ -258,10 +259,10 @@ CMDPP32SCP::Initialize(CVMUSB& controller)
   list.addWrite16(base + IrqEventThreshold, initamod, irqeventthreshold);
 
   // Now reset again and start daq:
-  list.addWrite16(base + ReadoutReset,      initamod, 1);
-  list.addWrite16(base + InitFifo,          initamod, 0);
+  list.addWrite16(base + InitFifo,          initamod, 1);
 
   list.addWrite16(base + StartAcq,          initamod, 1);
+  list.addWrite16(base + ReadoutReset,      initamod, 1);
 
   char readBuffer[100];		// really a dummy as these are all write...
   size_t bytesRead;
