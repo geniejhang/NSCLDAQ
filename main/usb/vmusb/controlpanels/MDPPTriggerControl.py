@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+
 
 #    This software is Copyright by the Board of Trustees of Michigan
 #    State University (c) Copyright 2024.
@@ -45,6 +45,12 @@ class MDPPProxy:
 
     def getProxy(self):
         return self.tcl
+
+class About(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        uic.loadUi(DAQBIN + '/MDPPTriggerControl_about.ui', self);
 
 class Window(QtWidgets.QMainWindow):
     def __init__(self, tcl, data):
@@ -98,6 +104,9 @@ class Window(QtWidgets.QMainWindow):
 
         if data != None:
             self._updateFromJson(data)
+
+        PB_about = self.findChild(QtWidgets.QPushButton, "PB_about")
+        PB_about.pressed.connect(self._openAboutDialog)
 
         self.show()
 
@@ -342,6 +351,9 @@ class Window(QtWidgets.QMainWindow):
         confirmation.setFont(font)
 
         return confirmation.exec()
+
+    def _openAboutDialog(self):
+        Dialog(self).exec_()
         
 
 if __name__ == "__main__":
