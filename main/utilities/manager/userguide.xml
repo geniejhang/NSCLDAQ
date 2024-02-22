@@ -1490,6 +1490,50 @@
             for the current run will be shown.  These statistics will update
             approximately every second.
           </para>
+          <section>
+            <title>Displaying an elapsed run time</title>
+            <para>
+               Starting with 12.0-012, the run control panel can be made to display 
+               the elapsed time for the active run.   In 12.0, this requires
+               configuration.  In 12.1, no configuration will be required.
+               This section describes the cofiguration needed to get an elapsed run time
+               displayed in the run control panel.
+            </para>
+            <orderedlist>
+               <listitem>
+                  <para>
+                     Add a program to the configuration.  In this discussion we will call 
+                     the program <literal>begin_stamp</literal>.  The program should 
+                     run <literal>$DAQBIN/rdo_stamp</literal> and should be parameterized,
+                     in order, by the host in which the manager is running and the user
+                     that starte the manager.  The working directory is unimportent.
+                     The container must be a container that's initialized for 
+                     <literal>NSCLDAQ 12.0-012</literal> or higher,
+                     but, be a <literal>12.0</literal> not a <literal>12.1</literal> 
+                     version.
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                     Create a key value (kvstore) store variable named
+                     <literal>run_start_time</literal>. Set its initial value to zero.
+                  </para>
+               </listitem>
+               <listitem>
+                  <para>
+                     In a sequence that's triggered by the <emphasis>BEGIN</emphasis>
+                     transition, at a point where you want to declare that the run has started,
+                     add the program <literal>begin_stamp</literal> created in the first step
+                     of that process.
+                  </para>
+               </listitem>
+            </orderedlist>
+            <para>
+               Be sure that the run control panel you run comes from <literal>NSCLDAQ-12.0-012</literal>
+               or later.  Note again, that while this configuration is not needed for 12.1 and later, 
+               it is not harmful either.
+            </para>
+          </section>
      </section>
      <section id='sec.mgr.eventbuilderstats'>
         <title id='sec.mgr.eventbuilderstats.title'>Event Builder Statistics Panel.</title>
@@ -4043,7 +4087,44 @@ $DAQBIN/rdo_runFromKv <replaceable>mgr_host mgr_user readout-name</replaceable>
       </para>
     </refsect1>
 </refentry>
-
+<refentry id='daq1.rdo_stamp'>
+   <refmeta>
+      <refentrytitle id='daq1.rdo_stamp.title'>rdo_stamp</refentrytitle>
+      <manvolnum>1daq</manvolnum>
+   </refmeta>
+   <refnamediv>
+      <refname>rdo_stamp</refname>
+      <refpurpose>Set begin run timestamp</refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+      <cmdsynopsis>
+         <command>
+$DAQBIN/rdo_stamp <replaceable>mgr_host mgr_user</replaceable>         
+         </command>
+      </cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+      <title>DESCRIPTION</title>
+      <para>
+         When run, updates the <literal>run_start_time</literal> Key Value Store
+         variable to the current time.   This is used by the run control GUI
+         to compute and display the elapsed time of active runs.
+      </para>
+      <para>
+         This command was introduced in NSCLDAQ 12.0-012 and is not available in
+         NSCLDAQ-12.1 and later as this functionality was handled by the manager
+         state machine in a different way.  The user must have created
+         the <literal>run_start_time</literal> variable before the first run of
+         <literal>rdo_stamp</literal>.  In addition the program must be run
+         during the <literal>BEGIN</literal> transition at the time the user
+         wants he run to have been delcared started.
+      </para>
+      <para>
+         <emphasis>mgr_host</emphasis> is the host in which the manager is running.
+         <emphasis>mgr_user</emphasis> is the username that started the manager.
+      </para>
+   </refsect1>
+</refentry>
 <refentry id='daq1.rdo_titleFromKv'>
    <refmeta>
       <refentrytitle id='daq1.rdo_titleFromKv.title'>rdo_titleFromKv</refentrytitle>
