@@ -1122,7 +1122,7 @@ snit::widgetadaptor rdo::CustomAttributes {
         ttk::labelframe $win.program -text {Readout Program}
         ttk::label      $win.program.label -text {Program}
         ttk::entry      $win.program.entry -textvariable [myvar options(-program)]
-        ttk::button     $win.program.browse -text {Browse...}
+        ttk::button     $win.program.browse -text {Browse...} -command [mymethod _browseFile]
         set fields(program) $win.program.label
         
         grid $win.program.label $win.program.entry $win.program.browse -sticky ew
@@ -1177,7 +1177,19 @@ snit::widgetadaptor rdo::CustomAttributes {
             $fields($field) configure -foreground black
         }
     }
-     
+    
+    #-- private methods:
+
+    ##
+    #   browse for the readout file:
+    #
+    method _browseFile {} {
+	set program [tk_getOpenFile -parent $win -title "Readout File"]
+	if {$program ne "" } {
+	    $win.program.entry delete 0 end
+	    $win.program.entry insert 0 $program
+	}
+    }
 } 
 
 #----------------------------------------------------------------------------
@@ -1462,10 +1474,10 @@ proc checkCommonMandatories {attributes} {
 proc makeRunControlProgram {dbcmd name executable params args} {
 
     set parameters [list [dict get $params host] [dict get $params manageruser] {*}$args]
-    if {[dict exists $params name]} {
-	lappend parameters [dict get $params name]
-    }
+    
     set env [list [list SERVICE_NAME [dict get $params service]]]
+
+
     
     program::add $dbcmd $name $executable Transitory [dict get $params host] \
         [dict create                           \
@@ -1524,12 +1536,13 @@ proc ensureSequencesExist {db} {
 # @param parameters - the program parameterization.
 #
 proc makeRunControlPrograms {dbcmd name parameters} {
+
     set kvparams $parameters
     dict set kvparams name ${name}_readout
     makeRunControlProgram \
-        $dbcmd ${name}_settitle [file join \$DAQBIN rdo_titleFromKv] $kvparams
+        $dbcmd ${name}_settitle [file join \$DAQBIN rdo_titleFromKv] $kvparams [dict get $parameters name]
     makeRunControlProgram \
-        $dbcmd ${name}_setrun [file join \$DAQBIN rdo_runFromKv] $kvparams
+        $dbcmd ${name}_setrun [file join \$DAQBIN rdo_runFromKv] $kvparams [dict get $parameters name]
     makeRunControlProgram \
         $dbcmd ${name}_beginrun [file join \$DAQBIN rdo_control] $parameters begin
     makeRunControlProgram \
