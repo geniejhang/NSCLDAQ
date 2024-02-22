@@ -214,7 +214,7 @@ snit::widgetadaptor NameValueList {
            if {$name ne ""} {
                set item [list $name]
                if {$value ne ""} {
-                   lappend item $value
+                   append item " "  $value
                }
                $l insert end $item
            }
@@ -268,7 +268,7 @@ snit::widgetadaptor NameValueList {
                $win.entries.value delete 0 end
                
                $win.entries.name  insert 0 [lindex $selection 0]
-               $win.entries.value insert 0 [lrange $selection 1 end]
+               $win.entries.value insert 0 {*}[lrange $selection 1 end]
                
                $l delete $selindex $selindex
            }
