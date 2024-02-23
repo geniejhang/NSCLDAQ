@@ -565,6 +565,8 @@ tcltest::test log_5 {_lastTransitionTime only returns successful times} \
     set ts [::sequence::_lastTransitionTime db BEGIN]
     expr {$now == $ts}
 } -result 1
+
+# Test to distinguish by type of transition.
     
 #----------------------------------------------------
 
