@@ -436,6 +436,136 @@ tcltest::test transition_9 {SHUTDOWN is always ok.} \
     ::sequence::transition db SHUTDOWN t9done
     
 } -result -1
+
+#  Test the transtion log table:
+
+tcltest::test log_1 {_createLogTable makes the log table} \
+    -setup {
+        commonSetup
+    } \
+    -cleanup {
+        commonCleanup
+    } \
+    -body {
+        ::sequence::_createLogTable db
+
+        # The followig shoud generate no data but also should
+        # not have an error:
+
+        db eval {
+            SELECT id, transition_id, timestamp, success FROM transition_log
+        }
+    } -result {}
+
+
+tcltest::test log_2 {_logTransition can log a single transition} \
+    -setup {
+        commonSetup
+    } \
+    -cleanup {
+        commonCleanup
+    } \
+    -body {
+        ::sequence::_createLogTable db
+        ::sequence::_logTransition db BEGIN
+
+        # Should b a single BEGIN run transition in the log table 
+        #  timestamp -- we'll give a seconds tolerance:
+
+        set stamp [clock seconds]
+        set data [db eval {
+            SELECT name, timestamp, success FROM transition_log
+            INNER JOIN transition_name on transition_name.id = transition_log.transition_id
+        }  ]
+        set len [llength $data];    # should be 3.
+        set name [lindex $data 0]
+        set ts   [lindex $data 1]
+        set ok   [lindex $data 2]
+
+        set difok [expr {($stamp - $ts) <= 1}]
+
+        list $len $name $difok $ok
+
+    } -result [list 3 BEGIN 1 1]
+
+tcltest::test log_3 {_Log transaction makes multiples ok} \
+-setup {
+    commonSetup
+} \
+-cleanup {
+    commonCleanup
+} \
+-body {
+    ::sequence::_createLogTable db
+    ::sequence::_logTransition db BEGIN
+    ::sequence::_logTransition db END 0   ;   # Failed.....
+
+    
+    set data [db eval {
+        SELECT name, success FROM transition_log
+        INNER JOIN transition_name on transition_name.id = transition_log.transition_id
+        ORDER BY transition_log.id ASC
+    }  ]
+    set data
+} -result [list BEGIN 1 END 0]
+
+tcltest::test log_4 {_lastTransitionTime is correct..} \
+-setup {
+    commonSetup
+} \
+-cleanup {
+    commonCleanup
+} \
+-body {
+    ::sequence::_createLogTable db
+
+    # We need to put stuff in manually so there's a time separation.
+
+    set beginid [::sequence::_stateId db BEGIN]
+    set endid   [::sequence::_stateId db END]
+
+    set now [clock seconds]
+    set nowplus10 [expr {$now + 10}]
+    db eval {
+        INSERT INTO transition_log (transition_id, timestamp, success)
+            VALUES ($beginid, $now, 1), ($endid, $nowplus10, 1)
+    }
+    #  Last end is at $nowplus10,
+
+    set lastend [::sequence::_lastTransitionTime db END]
+    set lastbeg [::sequence::_lastTransitionTime db BEGIN]
+
+    list [expr $lastend == $nowplus10] [expr $lastbeg == $now]
+
+} -result [list 1 1]
+
+tcltest::test log_5 {_lastTransitionTime only returns successful times} \
+-setup {
+    commonSetup
+} \
+-cleanup {
+    commonCleanup
+} \
+-body {
+    ::sequence::_createLogTable db
+
+    # We need to put stuff in manually so there's a time separation.
+
+    set beginid [::sequence::_stateId db BEGIN]
+    set now [clock seconds]
+    set nowplus10 [expr {$now + 10}]
+
+    db eval {
+        INSERT INTO transition_log (transition_id, timestamp, success)
+        VALUES ($beginid, $now, 1), ($beginid, $nowplus10, 0)
+    }
+
+    # Should only get the first begin since the second failed.
+
+    set ts [::sequence::_lastTransitionTime db BEGIN]
+    expr {$now == $ts}
+} -result 1
+    
 #----------------------------------------------------
 
 proc tcltest::cleanupTestHook {} {

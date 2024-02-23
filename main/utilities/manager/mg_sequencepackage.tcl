@@ -123,6 +123,8 @@ namespace eval sequence {
     variable outputClients [list];                      # list of sockets of output clients.
     variable outputServiceName $::env(SERVICE_NAME)-outputMonitor ; # Name of port manager serice.
     variable exitCounter;                        # Used in transient program wait.
+
+    variable logtableMade 0;                     # IF we haven't made the transition_log table.
 }
 
 
@@ -644,7 +646,69 @@ snit::type ::sequence::ShutdownManager {
 #-------------------------------------------------------------------------------
 #  Utiltities not intended to be used by package clients.
 
+##
+#  ::sequence::_createLogTable
+#     If necessary, create a table into which transitions are logged
+#     (transition_log)
+#     Fields are:
+#     *   id  - The usual primary key.
+#     *   transition_id - foreign key to the transition_name table defining the
+#                   transition attempted
+#     *   timestamp - When ([clock seconds]) the transition completed.
+#     *   success   - flag that is 1 if the transition suceeded or 0 if not.
+#
+#  Parameters:
+#     db - holds the datbase handle.
+#
+proc ::sequence::_createLogTable {db} {
+    $db eval {
+        CREATE TABLE IF NOT EXISTS transition_log  (
+            id            INTEGER PRIMARY KEY,
+            transition_id INTEGER,  -- FK to transition_name
+            timestamp     INTEGER,
+            success       INTEGER
+        )
+    }
+}
 
+##
+#  Log a transition:
+# 
+# Parameters:
+#    @param db   - database handle
+#    @param type - Textual name of the type of transition.
+#    #param success - Non zero if successful (default).
+#
+proc ::sequence::_logTransition {db type {success 1}} {
+    set stamp [clock seconds]
+    set transitionId [::sequence::_stateId $db $type]
+    $db eval {
+        INSERT INTO transition_log (transition_id, timestamp, success)
+               VALUES ($transitionId, $stamp, $success)
+    }
+}
+##
+#  Get the timestamp of the most recent successful transition of a specific type:
+#
+#   Parameters:
+#      @param db    - Database handle.
+#      @param type  - Transition type (textual).
+#   Returns:
+#     @return either a [clock seconds] value at which the transition
+#        occured or an empty string there is no matching transition.
+#
+proc ::sequence::_lastTransitionTime {db type} {
+    set result [$db eval {
+        SELECT timestamp FROM transition_log
+        INNER JOIN transition_name ON transition_name.id = transition_log.transition_id
+        WHERE transition_name.name = $type AND success = 1
+        ORDER BY timestamp DESC
+        LIMIT 1
+    }]
+    return $result
+}
+
+ 
 ##
 # ::sequence::_isTransient
 #
@@ -1485,8 +1549,18 @@ proc ::sequence::callstack {} {
 #   @return int - 0 if the transition was started -1 if the transition was
 #                   redundant (e.g. SHUTDOWn when state was SHUTDOWN.)
 proc ::sequence::transition {db transition {endscript {}}} {
+
     ::sequence::relayOutput "======================================"
     ::sequence::relayOutput "Asked to transition to $transition"
+
+    # In 12.0+ we log all transitions to a log table (transition_log).
+    # In case we have an 11.x database, at the first transition,
+    # we make the log table if it does not exist
+
+    if {!$::sequence::logtableMade} {
+        ::sequence::_createLogTable $db
+        set ::sequence::logtableMade 1;                    # Don't keep trying to do it.
+    }
 
     #
     #   Additional diagnostics about how a shutdown was triggered.
@@ -1558,6 +1632,18 @@ proc ::sequence::transition {db transition {endscript {}}} {
 #
 proc ::sequence::getCurrentTransition { } {
     return $::sequence::currentTransitionManager
+}
+
+##
+#  get the elapsed time in seconds since the most recent begin run:
+#  Error if the run never began,
+proc ::sequence::runSeconds db {
+    set result [::sequence::_lastTransitionTime BEGIN]
+    if {$result eq ""} {
+        error "Run was never successfully begun"
+    } else {
+        return expr {[clock seconds] - $result}
+    }
 }
 
 #
