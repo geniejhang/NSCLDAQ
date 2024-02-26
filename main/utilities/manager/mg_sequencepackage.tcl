@@ -482,10 +482,11 @@ snit::type sequence::TransitionManager {
     #   - We start sequence execution.
     #
     method start {} {
-    
+        
         if {$active} {
             error "Transition to $options(-type) is already active."
         }
+        
         if {[llength $Sequences] == 0} {
     
             #  This after ensures that if someone runs an evnt loop that
@@ -606,8 +607,12 @@ snit::type sequence::TransitionManager {
     #
     method _completeTransition {how} {
 	
-	::sequence::relayOutput "Completing transition: $how"
-	::sequence::relayOutput "----------------------------------------"
+        ::sequence::relayOutput "Completing transition: $how"
+        ::sequence::relayOutput "----------------------------------------"
+
+        set success [expr {$how eq "OK"}]
+
+        ::sequence::_logTransition $options(-database) $options(-type) $success
         # Run any user end transition script.
         
         set userscript $options(-endscript)
