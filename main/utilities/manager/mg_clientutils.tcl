@@ -94,6 +94,7 @@ proc clientutils::checkResult {token} {
     set parseOk [catch {
         set json [http::data $token]
         http::cleanup $token
+        #puts "Raw return \n--------\n $json"
         set jsondict [json::json2dict $json]
     } msg] 
     if {$parseOk} {
