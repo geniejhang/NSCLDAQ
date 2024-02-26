@@ -1638,11 +1638,11 @@ proc ::sequence::getCurrentTransition { } {
 #  get the elapsed time in seconds since the most recent begin run:
 #  Error if the run never began,
 proc ::sequence::runSeconds db {
-    set result [::sequence::_lastTransitionTime BEGIN]
+    set result [::sequence::_lastTransitionTime $db BEGIN]
     if {$result eq ""} {
         error "Run was never successfully begun"
     } else {
-        return expr {[clock seconds] - $result}
+        return [expr {[clock seconds] - $result}]
     }
 }
 

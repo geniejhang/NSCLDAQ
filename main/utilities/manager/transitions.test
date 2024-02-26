@@ -566,8 +566,67 @@ tcltest::test log_5 {_lastTransitionTime only returns successful times} \
     expr {$now == $ts}
 } -result 1
 
-# Test to distinguish by type of transition.
+tcltest::test log_6 {_lastTransitinoTime returns the correct transition type:} \
+-setup {
+    commonSetup
+} \
+-cleanup {
+    commonCleanup
+} \
+-body {
+    ::sequence::_createLogTable db
+
+    # Put begin and end:
+
+    set beginid [::sequence::_stateId db BEGIN]
+    set endid   [::sequence::_stateId db END]
+
+    set now [clock seconds]
+    set nowplus10 [expr {$now + 10}]
+
+    # Begin and end run 10 seconds apart:
+
+    db eval {
+        INSERT INTO transition_log (transition_id, timestamp, success)
+            VALUES ($beginid, $now, 1), ($endid, $nowplus10, 1)
+    }
+
+    set bts [::sequence::_lastTransitionTime db BEGIN]
+    set ets [::sequence::_lastTransitionTime db END]
+
+    set dif1 [expr {$bts - $now} <= 1];     # Should be like $now
+    set dif2 [expr {$ets - $nowplus10} <= 1]; # Should be like $nowplus10
+    list $dif1 $dif2
+} -result {1 1}
+
+tcltest::test log_7 {Elapsed run time} \
+-setup {
+    commonSetup
+} \
+-cleanup {
+    commonCleanup
+} \
+-body {
+    ::sequence::_createLogTable db
+
+    # Put begin and end:
+
+    set beginid [::sequence::_stateId db BEGIN]
+    set now [clock seconds]
+    set nowminus10 [expr {$now - 10}]
+
+    # Begin run about 10 seconds ago:
+
+db eval {
+        INSERT INTO transition_log (transition_id, timestamp, success)
+            VALUES ($beginid, $nowminus10, 1)
+    }
+
+set elapsed [::sequence::runSeconds db]
+set diff [expr {$elapsed  - 10} <= 1]
+} -result 1
     
+
 #----------------------------------------------------
 
 proc tcltest::cleanupTestHook {} {
