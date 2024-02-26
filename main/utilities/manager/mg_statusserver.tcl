@@ -129,19 +129,19 @@ proc stateHandler {sock suffix} {
             message [json::write string ""]                            \
             states [json::write array {*}$resultStrings]                  \
         ]
-    } elseif {$suffix EQ /elapsed} {
+    } elseif {$suffix eq "/elapsed"} {
         set state [::sequence::currentState db]
 
         # IF the state is BEGIN then sequence::runSeconds gives what we need:
 
         if {$state eq "BEGIN"} {
-            if {[catch {::seqeunce::runSeconds} secs]} {
-                set elapsedText "*Unknown*"
+            if {[catch {::sequence::runSeconds db} secs]} {
+                set elapsedText "Failed: $secs"
             } else {
                 set hrs [expr {int($secs / 3600)}]
                 set minsec [expr {$secs % 3600}]
                 set min [expr {int ($minsec/60)}]
-                set sec [expr {$misec % 60}]
+                set sec [expr {$minsec % 60}]
                 set elapsedText [format "%d:%02d:%02d" $hrs $min $sec]
 
             }

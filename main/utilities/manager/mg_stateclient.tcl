@@ -155,7 +155,7 @@ snit::type StateClient {
     # #return string - elapsed run time.  
     method elapsedRunTime {} {
         set port [_getServerPort $options(-host) $options(-user)]
-        set baseUri http://$ooptions(-host):$port
+        set baseuri http://$options(-host):$port
         set uri "$baseuri/$stateclient::base/$stateclient::elapsed"
 
         set token [http::geturl $uri]
