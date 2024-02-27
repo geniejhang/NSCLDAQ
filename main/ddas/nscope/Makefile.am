@@ -12,7 +12,7 @@ libNscope_la_SOURCES=AnalogSignal.cpp ExpertMod.cpp MaxEvent.cpp Baseline.cpp Hi
 
 libNscope_la_CPPFLAGS=-g -Wall @PLX_CPPFLAGS@ \
 	@PIXIE_CPPFLAGS@  @ROOT_CFLAGS@ -DFIRMWARE_FILE=\"@prefix@/share/ddasreadout/DDASFirmwareVersions.txt\" \
-        -DPREFIX='"@prefix@"' -I@top_builddir@/ddas -I@top_srcdir@/ddas/configuration -I@top_srcdir@/ddas/booter
+        -DPREFIX='"@prefix@"' -I@top_srcdir@ -I@top_srcdir@/ddas/configuration -I@top_srcdir@/ddas/booter
 libNscope_la_LIBADD=@PIXIE_LDFLAGS@ \
         @ROOT_LDFLAGS@ @PLX_LDFLAGS@ -ldl @top_builddir@/ddas/configuration/libConfiguration.la \
         @top_builddir@/ddas/booter/libSystemBooter.la
@@ -43,7 +43,7 @@ install-exec-local:
 unittests_SOURCES = TestRunner.cpp \
 										MediaLocatorTests.cpp
 
-unittests_CPPFLAGS = @CPPUNIT_CFLAGS@ -I@srcdir@ -I@top_builddir@/ddas
+unittests_CPPFLAGS = @CPPUNIT_CFLAGS@ -I@srcdir@ -I@top_srcdir@
 unittests_LDADD    = $(nscope_bin_LDADD) @CPPUNIT_LIBS@
 
 TESTS = unittests

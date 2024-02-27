@@ -8,9 +8,8 @@
 
 #include "DDASHit.h"
 
-#include <stdint.h>
-
 #include <vector>
+#include <cstdint>
 #include <tuple>
 
 /** @namespace DAQ */

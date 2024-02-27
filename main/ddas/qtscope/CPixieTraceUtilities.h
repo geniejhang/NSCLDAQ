@@ -86,11 +86,6 @@ private:
      * @return Median value of the trace.
      */
     template<typename T> double GetMedianValue(std::vector<T> v);
-    /**
-     * @brief Reset the trace storage vector.
-     * @param len Trace length to read.
-     */
-    void ResetTrace(unsigned int len);
 };
 
 /** @} */

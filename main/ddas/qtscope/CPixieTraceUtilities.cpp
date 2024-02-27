@@ -5,11 +5,10 @@
 
 #include "CPixieTraceUtilities.h"
 
-#include <math.h>
-
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <cmath>
 
 #include <config.h>
 #include <config_pixie16api.h>
@@ -23,6 +22,7 @@
  */
 CPixieTraceUtilities::CPixieTraceUtilities() :
     m_useGenerator(false),
+    m_trace(MAX_ADC_TRACE_LEN, 0),
     m_validAmplitude(20)
 {}
 
@@ -123,50 +123,11 @@ CPixieTraceUtilities::ReadFastTrace(int module, int channel)
 void
 CPixieTraceUtilities::AcquireADCTrace(int module, int channel)
 {
-#if XIAAPI_VERSION >= 3
-    // Fill internal DSP memory prior to trace read:
+    std::fill(m_trace.begin(), m_trace.end(), 0); // Reset trace.
+  
+    // Fill internal DSP memory prior to trace read:  
     int retval = Pixie16AcquireADCTrace(module);
-    
-    if (retval < 0) {
-	std::string msg;
-	msg.resize(1024);
-	PixieGetReturnCodeText(retval, &msg[0], msg.size());
-	std::stringstream errmsg;
-	errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed"
-	       << " to allocate memory for trace in module " << module
-	       << " with errmsg " << msg;
-	throw std::runtime_error(errmsg.str());
-    }
-
-    try {
-	if (!m_useGenerator) {
-	    unsigned int len;
-	    PixieGetTraceLength(module, channel, &len);
-	    ResetTrace(len);
-
-	    retval = Pixie16ReadSglChanADCTrace(
-		m_trace.data(), len, module, channel
-		);
-	    
-	    if (retval < 0) {
-		std::string msg;
-		msg.resize(1024);
-		PixieGetReturnCodeText(retval, &msg[0], msg.size());
-		std::stringstream errmsg;
-		errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed"
-		       << " to read trace from module " << module
-		       << " channel " << channel << " with errmsg " << msg;	
-		throw std::runtime_error(errmsg.str());
-	    }
-	} else {
-	    std::cerr << "Offline data generation using the generator is not"
-		      << " supported for API " << XIAAPI_VERSION << "!!"
-		      << std::endl;
-	}
-    }    
-#else
-    int retval = Pixie16AcquireADCTrace(module);
-    
+  
     if (retval < 0) {
 	std::stringstream errmsg;
 	errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed";
@@ -174,10 +135,10 @@ CPixieTraceUtilities::AcquireADCTrace(int module, int channel)
 	       << " with retval " << retval;
 	throw std::runtime_error(errmsg.str());
     }
-    
+ 
+    // Traces are in memory and can be read out, or read generator data:  
     try {
 	if (!m_useGenerator) {
-	    ResetTrace(MAX_ADC_TRACE_LEN);
 	    retval = Pixie16ReadSglChanADCTrace(
 		m_trace.data(), MAX_ADC_TRACE_LEN, module, channel
 		);
@@ -186,10 +147,12 @@ CPixieTraceUtilities::AcquireADCTrace(int module, int channel)
 		std::stringstream errmsg;
 		errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed";
 		errmsg << " to read trace from module " << module
-		       << " channel " << channel << " with retval " << retval;
+		       << " channel " << channel
+		       << " with retval " << retval;	
 		throw std::runtime_error(errmsg.str());
 	    }
-	} else {
+      
+	} else {      
 	    // Get the trace binning and if successful generate a pulse:      
 	    const char* pXDT = "XDT";
 	    double xdt = 0;
@@ -199,13 +162,13 @@ CPixieTraceUtilities::AcquireADCTrace(int module, int channel)
 		std::stringstream errmsg;
 		errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed";
 		errmsg << " to read parameter " << pXDT
-		       << " from module " << module << " channel " << channel
+		       << " from module " << module
+		       << " channel " << channel
 		       << " with retval " << retval;
 		throw std::runtime_error(errmsg.str());
 	    }
 
 	    CDataGenerator gen;
-	    ResetTrace(MAX_ADC_TRACE_LEN);
 	    retval = gen.GetTraceData(m_trace.data(), MAX_ADC_TRACE_LEN, xdt);
 
 	    if (retval < 0) {
@@ -218,12 +181,17 @@ CPixieTraceUtilities::AcquireADCTrace(int module, int channel)
 	    }
 	}
     }
-#endif
     catch (std::runtime_error& e) {
 	throw e;
     }
 }
 
+/**
+ * @details
+ * By default the trace length is 8192 samples. This function will calculate 
+ * the median value for any trace length, whether or not the number of samples
+ * is even or odd. All exceptions are raised to the caller.
+ */
 template<typename T> double
 CPixieTraceUtilities::GetMedianValue(std::vector<T> v)
 {  
@@ -244,18 +212,4 @@ CPixieTraceUtilities::GetMedianValue(std::vector<T> v)
     } else { // Odd number of samples, just in case someone changes it.
 	return (double)(*midItr);
     }
-}
-
-/**
- * @details
- * Resize the trace storage if necessary based on the length of the data to be
- * read. Reset stored trace values to 0.
- */
-void
-CPixieTraceUtilities::ResetTrace(unsigned int len)
-{
-    if (m_trace.size() != len) {
-	m_trace.resize(len);
-    }
-    std::fill(m_trace.begin(), m_trace.end(), 0);
 }

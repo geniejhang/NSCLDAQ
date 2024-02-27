@@ -5,8 +5,7 @@
 
 #include "DDASHit.h"
 
-#include <stdlib.h>
-
+#include <cstdlib>
 #include <stdexcept>
 #include <sstream>
 #include <iomanip>

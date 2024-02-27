@@ -14,8 +14,6 @@
 	     East Lansing, MI 48824-1321
 */
 
-#include <math.h>
-#include <stdint.h>
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -24,8 +22,10 @@
 
 #include <iostream>
 #include <iomanip>
+#include <cstdint>
 #include <vector>
 #include <tuple>
+#include <cmath>
 
 using namespace std;
 using namespace ::DAQ::DDAS;
