@@ -17,8 +17,8 @@ libpixie16_la_SOURCES = Pixie16Package.cpp \
 	CAdjustOffsets.h CAdjustOffsets.cpp
 
 libpixie16_la_CXXFLAGS = @TCL_CPPFLAGS@     \
-	-I@top_srcdir@/ddas/configuration   \
-	-I@top_builddir@/ddas               \
+	-I@top_srcdir@/ddas/configuration    \
+	-I@top_srcdir@                      \
 	@PIXIE_CPPFLAGS@                    \
 	-g                                  \
 	-DFIRMWARE_FILE=\"${SHAREDIR}/DDASFirmwareVersions.txt\"

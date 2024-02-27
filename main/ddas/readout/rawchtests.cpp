@@ -1,8 +1,9 @@
-#include "RawChannel.h"
+// Template for a test suite.
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 #include "Asserts.h"
+#include "RawChannel.h"
 
 
 class RawChTest : public CppUnit::TestFixture {
@@ -27,7 +28,8 @@ class RawChTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(eq);
   CPPUNIT_TEST(gt);
   CPPUNIT_TEST_SUITE_END();
-    
+
+
 private:
 
 public:

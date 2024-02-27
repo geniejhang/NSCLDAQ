@@ -17,15 +17,14 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <stdint.h>
-#include <math.h>
-
-#include <vector>
-
 #include "Asserts.h"
 #include <ddaschannel.h>
+
 #include <DDASHit.h>
 #include <DDASHitUnpacker.h>
+#include <cstdint>
+#include <cmath>
+#include <vector>
 
 using namespace std;
 using namespace ::DAQ::DDAS;

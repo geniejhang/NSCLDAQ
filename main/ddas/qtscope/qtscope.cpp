@@ -3,9 +3,8 @@
  * @brief QtScope main.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 
@@ -28,8 +27,16 @@
 int main(int argc, char *argv[])
 {  
     Py_Initialize();
+    
+    wchar_t* version = Py_DecodeLocale(
+	std::to_string(XIAAPI_VERSION).c_str(), NULL
+	);
+    int pyargc = 1;
+    wchar_t* pyargv[1];
+    pyargv[0] = version;
   
     try {
+	PySys_SetArgv(pyargc, pyargv);
 	std::string filename(PREFIX"/ddas/qtscope/main.py");
 	PyObject *obj = Py_BuildValue("s", filename.c_str());    
 	FILE *file = _Py_fopen_obj(obj, "r");
@@ -48,5 +55,5 @@ int main(int argc, char *argv[])
 
     Py_Finalize();
 
-    return EXIT_SUCCESS;
+    return 0;
 }

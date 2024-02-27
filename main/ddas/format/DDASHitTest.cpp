@@ -14,18 +14,18 @@
 	     East Lansing, MI 48824-1321
 */
 
-#include <stdint.h>
-#include <math.h>
-
-#include <vector>
-#include <array>
-#include <tuple>
 
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "Asserts.h"
 #include "DDASHit.h"
 #include "DDASHitUnpacker.h"
+
+#include <cstdint>
+#include <cmath>
+#include <vector>
+#include <array>
+#include <tuple>
 
 using namespace std;
 using namespace ::DAQ::DDAS;
