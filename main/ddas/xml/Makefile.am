@@ -1,6 +1,6 @@
 lib_LTLIBRARIES=libDSPParameters.la
 
-COMMONCXXFLAGS=-I@srcdir@/tinyxml -I@top_srcdir@ @PIXIE_CPPFLAGS@ -g \
+COMMONCXXFLAGS=-I@srcdir@/tinyxml -I@top_builddir@/ddas @PIXIE_CPPFLAGS@ -g \
 	-I@top_srcdir@/ddas/configuration \
 	-DFIRMWARE_DEF_FILE=\"@prefix@/share/ddasreadout/DDASFirmwareVersions.txt\" \
 	-DSOURCE_DIR=\"@srcdir@\" \

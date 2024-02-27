@@ -6,14 +6,16 @@
 #include "SystemBooter.h"
 
 #include <unistd.h>
+#include <string.h>
+
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include <cstring>
 
 #include <config.h>
 #include <config_pixie16api.h>
 #include <Configuration.h>
+#include <CDDASException.h>
 
 /**
  * @details
@@ -44,11 +46,10 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
     int retval = Pixie16InitSystem(
 	NumModules, config.getSlotMap().data(), m_offlineMode
 	);
-    if(retval < 0) {
-	std::stringstream errmsg;
-	errmsg << "SystemBooter::boot() Failure. Pixie16InitSystem returned = "
-	       << retval << ".";
-	throw std::runtime_error(errmsg.str());
+    if (retval < 0) {
+	throw CDDASException(
+	    retval, "Pixie16InitSystem()", "SystemBooter::boot() failed"
+	    );
     } else {
 	std::cout << "System initialized successfully. " << std::endl;
     }
@@ -58,7 +59,7 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
 
     populateHardwareMap(config);
 
-    for (int index=0; index<NumModules; ++index) {
+    for (int index = 0; index < NumModules; ++index) {
 	bootModuleByIndex(index, config, type);
     }
 
@@ -159,13 +160,10 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
 	Pixie16_Com_FPGA_File, Pixie16_SP_FPGA_File, Pixie16_Trig_FPGA_File,
 	Pixie16_DSP_Code_File, DSPParFile, Pixie16_DSP_Var_File,
 	modIndex, computeBootMask(type)
-	);
-    
-    if(retval != 0) {
-	std::stringstream errmsg;
-	errmsg << "Boot failed for module " << modIndex
-	       << " with Pixie16BootModule() retval = " << retval << "!";
-	throw std::runtime_error(errmsg.str());
+	);    
+    if (retval < 0) {	
+	std::string msg = "Boot failed module " + modIndex;
+	throw CDDASException(retval, "Pixie16BootModule()", msg);
     }
 }
 
@@ -209,25 +207,27 @@ void DAQ::DDAS::SystemBooter::populateHardwareMap(Configuration &config)
     int NumModules = config.getNumberOfModules();
     std::vector<int> hdwrMapping(NumModules);
 
-    for(unsigned short k=0; k<NumModules; k++) {
+    /** 
+     * @todo (ASC 12/14/23): For the API transition we want to read the 
+     * module_config struct. We may not even need to log it (just put them 
+     * in a vector) 
+     */
+    for(unsigned short i = 0; i < NumModules; i++) {
 	int retval = Pixie16ReadModuleInfo(
-	    k, &ModRev, &ModSerNum, &ModADCBits, &ModADCMSPS
+	    i, &ModRev, &ModSerNum, &ModADCBits, &ModADCMSPS
 	    );
 	if (retval < 0)
 	{
-	    std::stringstream errmsg;
-	    errmsg << "SystemBooter::boot() Reading hardware variant ";
-	    errmsg << "information (i.e. Pixie16ReadModuleInfo()) failed ";
-	    errmsg << "for module " << k << " with retval = " << retval;
-	    throw std::runtime_error(errmsg.str());
+	    std::string msg = "Failed to read hardware variant module " + i;
+	    throw CDDASException(retval, "Pixie16ReadModuleInfo()", msg);
 	} else {
 	    if (m_verbose) {
-		logModuleInfo(k, ModRev, ModSerNum, ModADCBits, ModADCMSPS);
+		logModuleInfo(i, ModRev, ModSerNum, ModADCBits, ModADCMSPS);
 	    }
 	    auto type = HardwareRegistry::computeHardwareType(
 		ModRev, ModADCMSPS, ModADCBits
 		);
-	    hdwrMapping[k] = type;
+	    hdwrMapping[i] = type;
 	}
     }
 

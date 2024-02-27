@@ -1,5 +1,4 @@
 bin_PROGRAMS=DDASReadout
-lib_LTLIBRARIES=libddastimestampextractor.la
 SHAREDIR=@prefix@/share/ddasreadout
 
 DDASReadout_SOURCES=Skeleton.cpp Skeleton.h 			\
@@ -19,7 +18,7 @@ DDASReadout_SOURCES=Skeleton.cpp Skeleton.h 			\
 	CDDASStatisticsCommand.cpp CDDASStatisticsCommand.h
 
 DDASReadout_CPPFLAGS= \
-	-I@top_srcdir@ 							\
+	-I@top_builddir@/ddas 						\
 	-I@top_srcdir@/sbs/readout 					\
 	-I@top_srcdir@/sbs/nsclapi					\
 	-I@top_srcdir@/base/dataflow					\
@@ -30,8 +29,9 @@ DDASReadout_CPPFLAGS= \
 	@PIXIE_CPPFLAGS@						\
 	@LIBTCLPLUS_CFLAGS@						\
 	@TCL_FLAGS@         						\
-	-fPIC -DFIRMWARE_FILE=\"${SHAREDIR}/DDASFirmwareVersions.txt\" \
-	-DSORTING
+	-fPIC -DFIRMWARE_FILE=\"${SHAREDIR}/DDASFirmwareVersions.txt\"  \
+	-DSORTING 							\
+	-I@top_srcdir@/ddas/exception
 
 DDASReadout_LDFLAGS= \
 	@top_builddir@/sbs/readout/libSBSProductionReadout.la   \
@@ -43,10 +43,22 @@ DDASReadout_LDFLAGS= \
 	@PIXIE_LDFLAGS@						\
 	@PLX_LDFLAGS@ 						\
 	@LIBTCLPLUS_LDFLAGS@ 					\
-	@TCL_LDFLAGS@
+	@TCL_LDFLAGS@						\
+	@top_builddir@/ddas/exception/libDDASException.la 	\
+	@LIBEXCEPTION_LDFLAGS@
 
-libddastimestampextractor_la_SOURCES=ddastimestamp.cpp
-libddastimestampextractor_la_CPPFLAGS=$(DDASReadout_CPPFLAGS) $(CXXFLAGS)
+noinst_PROGRAMS = unittests
+unittests_SOURCES = TestRunner.cpp arenatests.cpp hmtests.cpp 		\
+	mreadertests.cpp rawchtests.cpp refcbtests.cpp zcopyhittests.cpp
+unittests_CPPFLAGS = $(DDASReadout_CPPFLAGS) 
+unittests_LDADD = @CPPUNIT_LIBS@ DDASReadout-BufferArena.o 		\
+	DDASReadout-ReferenceCountedBuffer.o DDASReadout-CHitManager.o 	\
+	DDASReadout-ZeroCopyHit.o DDASReadout-RawChannel.o 		\
+	DDASReadout-ModuleReader.o 					\
+	@PIXIE_LDFLAGS@							\
+	@top_builddir@/ddas/exception/libDDASException.la 		\
+	@LIBEXCEPTION_LDFLAGS@
+TESTS = ./unittests
 
 #
 #   *  Install the firmware versions file in @prefix@/share/readout

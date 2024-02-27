@@ -1,5 +1,3 @@
-// Template for a test suite.
-
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 #include "Asserts.h"

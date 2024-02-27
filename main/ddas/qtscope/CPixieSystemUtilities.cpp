@@ -12,6 +12,7 @@
 #include <config_pixie16api.h>
 
 #include <SystemBooter.h>
+#include <CDDASException.h>
 
 using namespace DAQ::DDAS;
 namespace HR = DAQ::DDAS::HardwareRegistry;
@@ -45,6 +46,8 @@ CPixieSystemUtilities::Boot()
   
     // Create a configuration from the default settings:  
     const char* fwFile =  FIRMWARE_FILE; // From $DDAS_SHARE.
+    char* alternateFirmwareFile = getenv("FIRMWARE_FILE");
+    if (alternateFirmwareFile) fwFile = alternateFirmwareFile;
     m_config = *(
 	Configuration::generate(fwFile, "cfgPixie16.txt", "modevtlen.txt")
 	);
@@ -60,8 +63,8 @@ CPixieSystemUtilities::Boot()
     try {
 	booter.boot(m_config, SystemBooter::FullBoot);
     }
-    catch (std::runtime_error& e) {
-	std::cerr << e.what() << std::endl;    
+    catch (const CDDASException& e) {
+	std::cerr << e.ReasonText() << std::endl;    
 	return -1;
     }
 

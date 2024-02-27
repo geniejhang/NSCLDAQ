@@ -23,8 +23,9 @@
 #ifndef DAQ_DDAS_DDASHIT_H
 #define DAQ_DDAS_DDASHIT_H
 
+#include <stdint.h>
+
 #include <vector>
-#include <cstdint>
 
 /** @namespace DAQ */
 namespace DAQ {
