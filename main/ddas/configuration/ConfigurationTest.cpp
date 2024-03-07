@@ -9,29 +9,28 @@
      http://www.gnu.org/licenses/gpl.txt
 
      Author:
-             Jeromy Tompkins
+         Jeromy Tompkins
+	 Aaron Chester
          NSCL
          Michigan State University
          East Lansing, MI 48824-1321
 */
 
+#include "Configuration.h"
 
 #include <cppunit/extensions/HelperMacros.h>
-
-#include "Asserts.h"
-
-#include "Configuration.h"
 
 #include <sstream>
 #include <vector>
 #include <string>
 
+#include "Asserts.h"
+
 using namespace std;
 using namespace ::DAQ::DDAS;
 
-
 /*!
- * \brief Test some basic logic of the Configuration class
+ * @brief Test some basic logic of the Configuration class.
  */
 class ConfigurationTest : public CppUnit::TestFixture
 {

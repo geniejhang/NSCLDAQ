@@ -220,7 +220,14 @@ DAQ::DDAS::Configuration::generate(
 	throw std::runtime_error(errmsg);
     }
 
-    fwFileParser.parse(input, pConfig->m_fwMap);
+    try {
+	fwFileParser.parse(input, pConfig->m_fwMap);
+    } catch (const std::runtime_error& e) {
+	std::string errmsg("Configuration::generate() ");
+	errmsg += "Failed to parse the firmware version file: ";
+	errmsg +=  fwVsnPath + ": " + e.what();
+	throw std::runtime_error(errmsg);
+    }
 
     input.close();
     input.clear();
@@ -229,12 +236,19 @@ DAQ::DDAS::Configuration::generate(
 
     if(input.fail()){
 	std::string errmsg("Configuration::generate() ");
-	errmsg += "Failed to open the system configuration file : ";
+	errmsg += "Failed to open the system configuration file: ";
 	errmsg += cfgPixiePath;
 	throw std::runtime_error(errmsg);
     }
 
-    configParser.parse(input, *pConfig);
+    try {
+	configParser.parse(input, *pConfig);
+    } catch (const std::runtime_error& e) {
+	std::string errmsg("Configuration::generate() ");
+	errmsg += "Failed to parse the system configuration file: ";
+	errmsg += cfgPixiePath + ": " + e.what();
+	throw std::runtime_error(errmsg);
+    }
 
     return std::move(pConfig);
 }
