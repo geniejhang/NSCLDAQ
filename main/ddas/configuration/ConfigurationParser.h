@@ -94,12 +94,8 @@ namespace DAQ {
 	     * (empty if not given).
 	     */
 	    typedef std::tuple<int, std::string, std::string> SlotSpecification;
-	private:
-	    std::regex m_matchExpr; //!< Expression for pattern matching.
-
+	    
 	public:
-	    /** @brief Constructor. */
-	    ConfigurationParser();
 	    /**
 	     * @brief Parse the contents of the cfgPixie16.txt file.
     	     * @param input The input stream associated with the cfgPixie16 

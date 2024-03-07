@@ -40,16 +40,6 @@ static inline std::string &trim(std::string &s) {
 
 /**
  * @details
- * Regular expression matching 
- * @verbatim "(^\[Rev([xXa-fA-F0-9]+)-(\d+)Bit-(\d+)MSPS\]$)" \endverbatim 
- * to extract the firmware, bit depth, and module MSPS.
- */
-DAQ::DDAS::ConfigurationParser::ConfigurationParser()
-    : m_matchExpr(R"(^\[Rev([xXa-fA-F0-9]+)-(\d+)Bit-(\d+)MSPS\]$)")
-{}
-
-/**
- * @details
  * Supported hardware tags have the format RevX-YBit-ZMSPS and are:
  * - Matched by regular expression to check that the format is good.
  */
