@@ -54,6 +54,7 @@ public:
     CPPUNIT_TEST(parseSlotMap);
     CPPUNIT_TEST(parseSettingsPath);
     CPPUNIT_TEST(parseBadSlotMap);
+    CPPUNIT_TEST(parseBadConfigLine);
     CPPUNIT_TEST_SUITE_END();
 
     vector<string> m_cfgFileContent;
@@ -71,7 +72,8 @@ public:
         linesOfFile.push_back("2 # slot for mod 0");
         linesOfFile.push_back("3");
         linesOfFile.push_back("4");
-        linesOfFile.push_back("/path/to/my/settings/file.set");
+	linesOfFile.push_back("/path/to/my/settings/file.set");
+	linesOfFile.push_back("");
 
         return linesOfFile;
     }
@@ -154,10 +156,38 @@ public:
 	    "Failure should occur if insufficient slot mapping data exists",
 	    threwException
 	    );
-	std::string errmsg = "Unable to parse a slot number from: " \
-	    "/path/to/my/settings/file.set";
+	std::string errmsg = "Unable to parse a slot number from: "
+	    + lines.at(5);
 	EQMSG("Error message should be informative", message, errmsg);
     }
+    
+    void parseBadConfigLine() {
+	ConfigurationParser parser;
+	auto lines = createSampleFileContent();
+
+	// Replace a comment after the DSPParFile with a bad one:
+	std::string badLine = "invalid line contains non-whitespace chars";
+	lines.at(6) = badLine;
+	
+	Configuration config;
+	std::string message;
+	bool threwException = false;
+	stringstream stream(mergeLines(lines));
+	try {
+	    parser.parse(stream, config);
+	} catch (std::exception& exc) {
+	    threwException = true;
+	    message = exc.what();
+	}
+	ASSERTMSG(
+	    "Failure should occur if an invalid config file line exists",
+	    threwException
+	    );
+	std::string errmsg = "Unable to parse line '"
+	    + badLine + "'";
+	EQMSG("Error message should be informative", message, errmsg);
+    }
+
 };
 
 // Register it with the test factory

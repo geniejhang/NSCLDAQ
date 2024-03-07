@@ -110,48 +110,6 @@ namespace DAQ {
 	     */
 	    void parse(std::istream& input, Configuration& config);
 	    /**
-	     * @brief Parse the hardware specifications into a hardware tag.
-	     * @param line       The tag to parse.
-	     * @param revision   Integer variable to store X into.
-	     * @param freq       Integer variable to store Y into.
-	     * @param resolution Integer variable to store Z into.
-	     * @return bool
-	     * @retval false If line is not in the format [RevX-YBit-ZMSPS].
-	     * @retval true  Otherwise.
-	     */
-	    bool parseHardwareTypeTag(
-		const std::string& line, int& revision, int& freq,
-		int& resolution
-		);
-	    /**
-	     * @brief Extract firmware configuration from the firmware 
-	     *   versions file.
-	     * @param input The stream to read from.
-	     * @throw std::runtime_error if an error occurs while processing 
-	     *   the next 4 lines containing the configuration info.
-	     * @return A firmware configuration encapsulating the data read 
-	     *   from the file.
-	     */
-	    FirmwareConfiguration extractFirmwareConfiguration(
-		std::istream &input
-		);
-	    /**
-	     * @brief Extract the clock calibration from the firmware versions 
-	     *   file.
-	     * @param input The stream to read from.
-	     * @return The clock calibration in nanoseconds/clock tick.
-	     * @throw std::runtime_error if an error occurs while processing 
-	     *   the next line.
-	     */
-	    double extractClockCalibration(std::istream &input);
-	    /**
-	     * @brief Update the clock calibration for a specific hardware 
-	     *   specification.
-	     * @param type        The hardware type enum value.
-	     * @param calibration The new clock calibration in ns/clock tick.
-	     */
-	    void updateClockCalibration(int type, double calibration);
-	    /**
 	     * @brief Parses a slot line.  
 	     * @param input Input stream from which the line is parsed.
 	     * @throw std::runtime_error if there are errors processing this 

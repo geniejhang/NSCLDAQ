@@ -20,8 +20,7 @@
  * Enables verbose output by default.
  */
 DAQ::DDAS::SystemBooter::SystemBooter() :
-    m_verbose(true),
-    m_offlineMode(0)
+    m_verbose(true), m_offlineMode(0)
 {}
 
 /**

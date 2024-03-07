@@ -40,19 +40,19 @@ namespace DAQ {
 	 */
 	struct FirmwareConfiguration
 	{
-	    std::string s_ComFPGAConfigFile; //!< Name of communications FPGA
-	                                     //!< config. file.
-	    std::string s_SPFPGAConfigFile;  //!< Name of signal processing 
-	                                     //!< FPGA config. file.
-	    std::string s_DSPCodeFile; //!< Name of executable code file for
-	                               //!< digital signal processor (DSP)
-	    std::string s_DSPVarFile; //!< Name of DSP variable names file
+	    /** Name of communications FPGA config. file. */
+	    std::string s_ComFPGAConfigFile;
+	    /** Name of signal processing FPGA config. file. */
+	    std::string s_SPFPGAConfigFile;
+	    /** Name of executable code file for digital signal processor. */
+	    std::string s_DSPCodeFile;
+	    std::string s_DSPVarFile; //!< Name of DSP variable names file.
 	};
 
 	/** 
 	 * @typedef FirmwareMap
 	 * @brief A map of firmware configurations keyed by the hardware type 
-	 *   defined in HardwareRegistry.h
+	 * defined in HardwareRegistry.h
 	 */
 	typedef std::map<int, FirmwareConfiguration> FirmwareMap;
 
@@ -81,19 +81,15 @@ namespace DAQ {
 	class Configuration
 	{
 	private:
-	    int m_crateId; //!< Crate ID from cfgPixie16 (not necessarily
-	                   //!< what is in settings file).
-	    std::vector<unsigned short> m_slotMap; //!< Mapping of what slots
-	                                           //!< are occupied.
-	    std::string m_settingsFilePath;   //!< Path to default .set file.
-	    std::vector<int> m_modEvtLengths; //!< Event length for each
-	                                      //!< module (units of 32-bit
-	                                      //!< integers).    
-	    FirmwareMap m_fwMap; //!< Default map of firmware configuration
-	                         //!< from hardware type.
+	    int m_crateId; //!< Crate ID from cfgPixie16 e.g. for scalars.
+	    std::vector<unsigned short> m_slotMap; //!< Occupied slots.
+	    std::string m_settingsFilePath; //!< Path to default .set file.
+	    std::vector<int> m_modEvtLengths; //!< 32-bit words per event.
+	    FirmwareMap m_fwMap; //!< Firmware map for hardware types.
 	    std::vector<int> m_hardwareMap; //!< Map of HardwareRegistry types.
     
-	    // These additions support per module firmware maps and .set files:
+	    // These additions support per module firmware maps
+	    // and .set files:
 
 	    /** Per-module firmware maps */
 	    std::map<int, FirmwareMap> m_moduleFirmwareMaps;
@@ -118,7 +114,7 @@ namespace DAQ {
 	     * @brief Set the crate id for the module.
 	     * @param id The id to assign.
 	     * @todo (ASC 7/14/23): If this is not used, should it be 
-	     *   considered deprecated and removed?
+	     * considered deprecated and removed?
 	     */
 	    void setCrateId(int id) { m_crateId = id; };
 	    /**
@@ -138,7 +134,7 @@ namespace DAQ {
 	    size_t getNumberOfModules() const { return m_slotMap.size(); };
 	    /**
 	     * @brief Assign a new slot map.
-	     * @param map  The slots that are occupied.
+	     * @param map The slots that are occupied.
 	     * @throws std::runtime_error When length of argument is 
 	     *   different than the length of stored modevtlen vector.
 	     */
@@ -159,7 +155,7 @@ namespace DAQ {
 	    /**
 	     * @brief Set a per-module DSP settings file.
 	     * @param modNum Module number.
-	     * @param path The path to the settings file.
+	     * @param path   The path to the settings file.
 	     */
 	    void setModuleSettingsFilePath(
 		int modnum, const std::string& path
@@ -172,9 +168,9 @@ namespace DAQ {
 		const { return m_settingsFilePath; };
 	    /**
 	     * @brief Returns the DSP settings file path specific to a single 
-	     *   module.
+	     * module.
 	     * @param modnum Module number.
-	     * @return std::string  The full path to the settings file.
+	     * @return std::string The full path to the settings file.
 	    */
 	    std::string getSettingsFilePath(int modNum);	    
 	    /**
@@ -191,7 +187,7 @@ namespace DAQ {
 		) { m_fwMap[specifier] = config; };
 	    /**
 	     * @brief Retrieve the current firmware specifier for a particular 
-	     *   hardware type.
+	     * hardware type.
 	     * @param hdwrType The hardware specifier associated with the 
 	     *   firmware configuration.
 	     * @throws std::runtime_error If no firmware configuration exists
@@ -235,11 +231,11 @@ namespace DAQ {
 	    std::vector<int> getModuleEventLengths()
 		const { return m_modEvtLengths; };
 	    /**
-	       @brief Set the hardware map for each module.
-	       @param map  The hardware map.
-	       * @throws std::runtime_error if size of lengths does not match 
-	       *   size of stored slot map.
-	       */
+	     * @brief Set the hardware map for each module.
+	     * @param map  The hardware map.
+	     * @throws std::runtime_error if size of lengths does not match 
+	     *   size of stored slot map.
+	     */
 	    void setHardwareMap(const std::vector<int>& map);
 	    /**@brief Return a copy of the hardware map vector.
 	     * @return std::vector<int>  Copy of hardware map vector.
@@ -252,7 +248,7 @@ namespace DAQ {
 	    void print(std::ostream& stream);
 	    /**
 	     * @brief Generate a Configuration class object from a firmware 
-	     *   version file and cfgPixie16.txt.
+	     * version file and cfgPixie16.txt.
 	     * @param fwVsnPath    Path to the firmware version file.
 	     * @param cfgPixiePath Path to cfgPixie16.txt.
 	     * @return Pointer to the generated Configuration object.
@@ -263,7 +259,7 @@ namespace DAQ {
 		);
 	    /**
 	     * @brief Generate a Configuration class object from a firmware 
-	     *   version file and cfgPixie16.txt.
+	     * version file and cfgPixie16.txt.
 	     * @param fwVsnPath     Path to the firmware version file.
 	     * @param cfgPixiePath  Path to cfgPixie16.txt.
 	     * @param modEvtLenPath Path to the modevtlen.txt file.

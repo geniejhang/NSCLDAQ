@@ -17,6 +17,27 @@
 
 #define FILENAME_STR_MAXLEN 256 //!< Number of characters to skip when parsing a line. Maximum allowed length of any comment added by a user.
 
+///
+// Local trim functions
+//
+
+/** @brief Trim from beginning. */
+static inline std::string &ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
+}
+
+/** @brief Trim from end. */
+static inline std::string &rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
+
+/** @brief Trim from both ends. */
+static inline std::string &trim(std::string &s) {
+    return ltrim(rtrim(s));
+}
+
 /**
  * @details
  * Regular expression matching 
@@ -45,21 +66,6 @@ DAQ::DDAS::ConfigurationParser::parse(
     std::string line;
     std::string DSPParFile;
 
-    std::string ComFPGAConfigFile_RevBCD;
-    std::string SPFPGAConfigFile_RevBCD;
-    std::string DSPCodeFile_RevBCD;
-    std::string DSPVarFile_RevBCD;
-
-    std::string ComFPGAConfigFile_RevF_250MHz_14Bit;
-    std::string SPFPGAConfigFile_RevF_250MHz_14Bit;
-    std::string DSPCodeFile_RevF_250MHz_14Bit;
-    std::string DSPVarFile_RevF_250MHz_14Bit;
-
-    std::string ComFPGAConfigFile_RevF_500MHz_12Bit;
-    std::string SPFPGAConfigFile_RevF_500MHz_12Bit;
-    std::string DSPCodeFile_RevF_500MHz_12Bit;
-    std::string DSPVarFile_RevF_500MHz_12Bit;
-
     // Maps capture nosuch better than arrays...
     std::map<int, FirmwareMap> perModuleFirmware;
     std::map<int, std::string> perModuleSetfiles;
@@ -73,8 +79,7 @@ DAQ::DDAS::ConfigurationParser::parse(
     PXISlotMap.resize(NumModules);
     for(int i = 0; i < NumModules; i++){
 	auto slotInfo = parseSlotLine(input);
-	PXISlotMap[i] = std::get<0>(slotInfo);
-        
+	PXISlotMap[i] = std::get<0>(slotInfo);        
 	std::string perModuleMap = std::get<1>(slotInfo);
 	if (!perModuleMap.empty()) {
 	    std::ifstream fwMapStream(perModuleMap);
@@ -87,35 +92,20 @@ DAQ::DDAS::ConfigurationParser::parse(
 		perModuleSetfiles[i] = perModuleSetfile;
 	    }
 	}
-        
     }
+
     input >> DSPParFile;
     input.getline(temp, FILENAME_STR_MAXLEN);
-
-    /**
-     * @note (ASC 9/5/23): Deprecated and removed:
-     * - Broken check for ".set" extension. The configuration parser does not
-     *   care what (if any) file extension the DSPParFile has. 
-     * - Old [XXXMSPS] tags for reading firmware configurations. Firmware
-     *   configuration tags must follow the expected RevX-YBit-ZMSPS format.
-     */
-
+    
+    // After the settings file, only whitespace/comments are allowed:
     while (getline(input, line)) {
-	int revision, adcFreq, adcRes;
-	if (parseHardwareTypeTag(line, revision, adcFreq, adcRes)) {
-	    FirmwareConfiguration fwConfig
-		= extractFirmwareConfiguration(input);
-	    double calibration = extractClockCalibration(input);
-	    int type = HardwareRegistry::createHardwareType(
-		revision, adcFreq, adcRes, calibration
-		);
-	    config.setFirmwareConfiguration(type, fwConfig);
-	} else {
-	    std::string msg("ConfigurationParser::parse() Failed to parse ");
-	    msg += " the hardware tag '" + line + "'";
+        trim(line); // Modifies line
+	if (!line.empty()) {
+	    std::string msg("Unable to parse line '");
+	    msg += line + "'";
 	    throw std::runtime_error(msg);
-	}	
-    }
+	}
+    }    
 
     config.setCrateId(CrateNum);
     config.setNumberOfModules(NumModules);
@@ -131,114 +121,6 @@ DAQ::DDAS::ConfigurationParser::parse(
     for (auto const& p : perModuleSetfiles) {
 	config.setModuleSettingsFilePath(p.first, p.second);
     }
-}
-
-
-/**
- * @details
- * Parses the values of X, Y, and Z from a tag of the form [RevX-YBit-ZMSPS].
- */
-bool
-DAQ::DDAS::ConfigurationParser::parseHardwareTypeTag(
-    const std::string& line, int &revision, int &freq, int &resolution
-    )
-{
-    bool result = false;
-    std::smatch color_match;
-    std::regex_search(line, color_match, m_matchExpr);
-
-    if (color_match.size() == 4) {
-	std::string revStr(color_match[1].first, color_match[1].second);
-	revision = std::stoi(revStr, 0, 0); // auto detect base
-	resolution = std::stoi(
-	    std::string(color_match[2].first, color_match[2].second)
-	    );
-	freq = std::stoi(
-	    std::string(color_match[3].first, color_match[3].second)
-	    );
-	result = true;
-    }
-    return result;
-}
-
-/**
- * @details
- * The current implementation does not support reading firmware paths with
- * whitespace in them.
- */
-DAQ::DDAS::FirmwareConfiguration
-DAQ::DDAS::ConfigurationParser::extractFirmwareConfiguration(
-    std::istream &input
-    )
-{
-    FirmwareConfiguration fwConfig;
-    
-    // Load in files to overide defaults
-
-    // Load syspixie
-    input >> fwConfig.s_ComFPGAConfigFile;
-    if (!input.good())
-	throw std::runtime_error(
-	    "Configuration file contains incomplete hardware specification!"
-	    );
-
-    // Load fippipixe
-    input >> fwConfig.s_SPFPGAConfigFile;
-    if (!input.good())
-	throw std::runtime_error(
-	    "Configuration file contains incomplete hardware specification!"
-	    );
-
-    // Load ldr file
-    input >> fwConfig.s_DSPCodeFile;
-    if (!input.good())
-	throw std::runtime_error(
-	    "Configuration file contains incomplete hardware specification!"
-	    );
-
-    // Load var file
-    input >> fwConfig.s_DSPVarFile;
-    if (!input.good())
-	throw std::runtime_error(
-	    "Configuration file contains incomplete hardware specification!"
-	    );
-
-    return fwConfig;
-}
-
-// Returns the clock calibration in ns/clock tick.
-double
-DAQ::DDAS::ConfigurationParser::extractClockCalibration(std::istream& input)
-{
-    double calibration;
-    input >> calibration;
-    if (!input.good()) {
-	std::string errmsg = "ConfigurationParser attempted to parse an "
-	    "incomplete hardware specification!";
-	throw std::runtime_error(errmsg);
-    }
-    
-    return calibration;
-}
-
-/**
- * @details
- * Retrieve hardware specification from the type enum and set its clock
- * calibration to the new value specified by the calibration param. The 
- * type may be Unknown or not mapped, in which case trying to update its
- * clock calibration is an error.
- *
- * @todo (ASC 7/14/23): Catch and handle exceptions thrown by 
- * HardwareRegistry::getSpecification(). 
- */
-void
-DAQ::DDAS::ConfigurationParser::updateClockCalibration(
-    int type, double calibration
-    )
-{
-    HardwareRegistry::HardwareSpecification& hdwrSpec
-	= HardwareRegistry::getSpecification(type);
-    hdwrSpec.s_clockCalibration = calibration;
 }
 
 /**
