@@ -68,7 +68,7 @@ static size_t defaultDataSize() {
     }
     // Try to convert to a number:
 
-    cout << "Env var: " << pStrDefault <<  std::endl;
+
     char* endptr;
     unsigned long mbytes = strtoul(pStrDefault, &endptr, 0);
 
@@ -81,7 +81,6 @@ static size_t defaultDataSize() {
 
     size_t nBytes = mbytes;
     nBytes *= 1024*1024;
-    std::cout << " Size in bytes: " << nBytes << std::endl;
     return nBytes;
 
 }
@@ -158,7 +157,7 @@ CRingBuffer::create(std::string name,
 		     bool   tempMasterConnection)
 {
 
-  std::cout << "Size: " << dataBytes << std::endl;
+
     // Figure out the entire size of the shared memory region and truncate the file to that
     // size:
     size_t headerSize = sizeof(RingHeader) +
