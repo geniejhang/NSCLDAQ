@@ -40,6 +40,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <daqshm.h>
+#include <stdlib.h>
 
 #include <iostream>
 
@@ -56,9 +57,35 @@ static string localhost("127.0.0.1");
 */
 
 
+// Returns the default data size:
+
+static size_t defaultDataSize() {
+    const char* pStrDefault = getenv("NSCLDAQ_DEFAULT_RINGMBYTES");
+    if (!pStrDefault) {
+      return DEFAULT_DATASIZE;
+    }
+    // Try to convert to a number:
+
+    char* endptr;
+    unsigned long mbytes = strtoul(pStrDefault, &endptr, 0);
+
+    // Return the normal default if it did not convert:
+
+    if (endptr == pStrDefault) {
+      return DEFAULT_DATASIZE;
+    }
+    // In mbytes:
+
+    size_t nBytes = mbytes;
+    nBytes *= 1024*1024;
+
+    return nBytes;
+
+}
+
 // Class Data.
 
-size_t CRingBuffer::m_defaultDataSize(DEFAULT_DATASIZE);
+size_t CRingBuffer::m_defaultDataSize(defaultDataSize());
 size_t CRingBuffer::m_defaultMaxConsumers(DEFAULT_MAX_CONSUMERS);
 
 CRingMaster* CRingBuffer::m_pMaster(NULL);
