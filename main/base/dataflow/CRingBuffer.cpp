@@ -60,7 +60,7 @@ static string localhost("127.0.0.1");
 // Returns the default data size:
 
 static size_t defaultDataSize() {
-    cout << "default data size\n";
+  
     const char* pStrDefault = getenv("NSCLDAQ_DEFAULT_RINGMBYTES");
 
     if (!pStrDefault) {
@@ -469,6 +469,11 @@ size_t
 CRingBuffer::getDefaultRingSize()
 {
   return m_defaultDataSize;
+}
+
+size_t
+CRingBuffer::getInitialDefaultRingSize() {
+  return defaultDataSize();
 }
 /*!
   Set the default maximum consumer count.
