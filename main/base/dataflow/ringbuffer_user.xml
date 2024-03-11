@@ -90,6 +90,27 @@
       processes. For illustration, I will delete the ring I just
       created.
     </para>
+    <para>
+      The default value for data-size is normally large enough but there are two ways
+      to modify it:
+      <orderedlist>
+        <listitem><para>
+          The <command>ringbuffer create</command> can accept the command option
+          <option>--datasize</option> which allows you to specify the size of the
+          data part of the ringbuffer.  For example
+          <command>ringbuffer create myring --datasize=30m </command> makes the
+          ringbuffer <literal>myring</literal> with a 30Mbyte data size.
+        </para></listitem>
+        <listitem><para>
+          If the environment variable NSCLDAQ_DEFAULT_RINGMBYTES is defined and can be
+          evaluated as an integer, it will be the default data size for all ring buffers
+          created in megabytes.
+        </para></listitem>
+      </orderedlist>
+    </para>
+    <para>
+      Note that in the description above a megabytes is <literal>1024*1024</literal> bytes.
+    </para>
     <screen>
 <literal>spdaqxx&gt;</literal> <command>ringbuffer delete myring</command>
 <literal>spdaqxx&gt;</literal> <command>ringbuffer status</command>

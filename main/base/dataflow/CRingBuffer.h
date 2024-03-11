@@ -89,6 +89,7 @@ public:
   static bool isRing(std::string name);
   static void   setDefaultRingSize(size_t byteCount);
   static size_t getDefaultRingSize();
+  static size_t getInitialDefaultRingSize();
   static void   setDefaultMaxConsumers(size_t numConsumers);
   static size_t getDefaultMaxConsumers();
   static std::string defaultRing();

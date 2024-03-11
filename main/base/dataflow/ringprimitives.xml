@@ -643,6 +643,13 @@ int main(int argc, char** argv)
         Ring buffer names can be just about anything as long as there are no
         <literal>/</literal> characters embedded in them.
       </para>
+      <para>
+        <varname>m_defaultDataSize</varname> is set from a compilation constant in NSCLDAQ
+        however it can be overidden by defining the environment variable
+        <literal>NSCLDAQ_DEFAULT_RINGMBYTES</literal> to be an integer number of megabytes
+        that will replace the compiled value of <varname>m_defaultDataSize</varname> effectively
+        setting the default ring buffer data size.
+      </para>
     <variablelist>
         <varlistentry>
             <term><type>std::string</type> <parameter>name</parameter></term>

@@ -7917,7 +7917,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                          <para>
                            MDPPTriggerControl GUI is included in the FRIBDAQ package. This value needs to be set to 0x400
                            to use the GUI controller. In this case, the last setting is preserved while start/stop runs.
-                         </param>
+                         </para>
                          <informalexample>
                              <programlisting>
 +-------------------------------------------+
@@ -7944,7 +7944,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                          <para>
                            MDPPTriggerControl GUI is included in the FRIBDAQ package. This value needs to be set to 0x400
                            to use the GUI controller. In this case, the last setting is preserved while start/stop runs.
-                         </param>
+                         </para>
                          <informalexample>
                              <programlisting>
 +-----------------------------------------+
@@ -8804,7 +8804,7 @@ mdpp16qdc cget <replaceable>name</replaceable>
                          <para>
                            MDPPTriggerControl GUI is included in the FRIBDAQ package. This value needs to be set to 0x400
                            to use the GUI controller. In this case, the last setting is preserved while start/stop runs.
-                         </param>
+                         </para>
                          <informalexample>
                              <programlisting>
 +-------------------------------------------+
@@ -8831,7 +8831,7 @@ mdpp16qdc cget <replaceable>name</replaceable>
                          <para>
                            MDPPTriggerControl GUI is included in the FRIBDAQ package. This value needs to be set to 0x400
                            to use the GUI controller. In this case, the last setting is preserved while start/stop runs.
-                         </param>
+                         </para>
                          <informalexample>
                              <programlisting>
 +-----------------------------------------+
@@ -9643,7 +9643,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                          <para>
                            MDPPTriggerControl GUI is included in the FRIBDAQ package. This value needs to be set to 0x400
                            to use the GUI controller. In this case, the last setting is preserved while start/stop runs.
-                         </param>
+                         </para>
                          <informalexample>
                              <programlisting>
 +-------------------------------------------+
@@ -9670,7 +9670,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                          <para>
                            MDPPTriggerControl GUI is included in the FRIBDAQ package. This value needs to be set to 0x400
                            to use the GUI controller. In this case, the last setting is preserved while start/stop runs.
-                         </param>
+                         </para>
                          <informalexample>
                              <programlisting>
 +-----------------------------------------+
