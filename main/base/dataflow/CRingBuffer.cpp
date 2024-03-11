@@ -60,12 +60,15 @@ static string localhost("127.0.0.1");
 // Returns the default data size:
 
 static size_t defaultDataSize() {
+    cout << "default data size\n";
     const char* pStrDefault = getenv("NSCLDAQ_DEFAULT_RINGMBYTES");
+
     if (!pStrDefault) {
       return DEFAULT_DATASIZE;
     }
     // Try to convert to a number:
 
+    cout << "Env var: " << pStrDefault <<  std::endl;
     char* endptr;
     unsigned long mbytes = strtoul(pStrDefault, &endptr, 0);
 
@@ -78,7 +81,7 @@ static size_t defaultDataSize() {
 
     size_t nBytes = mbytes;
     nBytes *= 1024*1024;
-
+    std::cout << " Size in bytes: " << nBytes << std::endl;
     return nBytes;
 
 }
@@ -155,6 +158,7 @@ CRingBuffer::create(std::string name,
 		     bool   tempMasterConnection)
 {
 
+  std::cout << "Size: " << dataBytes << std::endl;
     // Figure out the entire size of the shared memory region and truncate the file to that
     // size:
     size_t headerSize = sizeof(RingHeader) +
