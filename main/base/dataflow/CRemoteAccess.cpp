@@ -49,12 +49,12 @@ using namespace std;
 /** 
  * getDefaultSize 
  *    Return the default ring size.  This is either DEFAULT_DATASIZE or,
- *   if the environment variable NSCLDAQ_DEFAULT_PROXYMBYTES is
+ *   if the environment variable NSCLDAQ_DEFAULT_PROXYMB is
  *   defined and translates to an unsigned
  *   integer, the number of megabytes specified by that env variable.
 */
 static size_t getDefaultSize() {
-  const char* pStrValue = getenv("NSCLDAQ_DEFAULT_PROXYMBYTES");
+  const char* pStrValue = getenv("NSCLDAQ_DEFAULT_PROXYMB");
   if (!pStrValue) {
     return DEFAULT_DATASIZE;
   }

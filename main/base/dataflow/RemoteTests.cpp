@@ -5,11 +5,15 @@
 #include "Asserts.h"
 #include <CRingMaster.h>
 #include <CRingBuffer.h>
+#include "ringbufint.h"
 #include <CRemoteAccess.h>
 #include <string.h>
 #include "testcommon.h"
+#include <stdlib.h>
 
 using namespace std;
+
+const char* sizeEnv = "NSCLDAQ_DEFAULT_PROXYMB";
 
 class RemoteTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(RemoteTests);
@@ -19,6 +23,9 @@ class RemoteTests : public CppUnit::TestFixture {
   CPPUNIT_TEST(timeoutTest);
   CPPUNIT_TEST(urllocal);
   CPPUNIT_TEST(urlremote);
+  CPPUNIT_TEST(default_1);
+  CPPUNIT_TEST(default_2);
+  CPPUNIT_TEST(default_3);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -38,6 +45,10 @@ protected:
   void timeoutTest();
   void urllocal();
   void urlremote();
+
+  void default_1();
+  void default_2();
+  void default_3();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(RemoteTests);
@@ -211,4 +222,23 @@ RemoteTests::urlremote()
 
   ASSERT(!caught);
   delete pConsumer;		// Destroy the proxy ring.
+}
+
+void RemoteTests::default_1() {
+  // With no env name, we get DEFAULT_DATASIZE:
+
+  unsetenv(sizeEnv);         // Make sure it's not defined.
+
+  EQ(size_t(DEFAULT_DATASIZE), CRingAccess::getDefaultProxyRingSize());
+}
+void RemoteTests::default_2() {
+  // Valid size modifies the default:
+  setenv(sizeEnv, "10", 1);    //  10mbytes.
+  EQ(size_t(1024*1024*10), CRingAccess::getDefaultProxyRingSize());
+}
+void RemoteTests::default_3() {
+  // Invalid size silently falls back to the default.
+
+  setenv(sizeEnv, "Ron", 1);   // invalid integer.
+  EQ(size_t(DEFAULT_DATASIZE), CRingAccess::getDefaultProxyRingSize());
 }
