@@ -30,7 +30,7 @@
 
 #include <config.h>
 #include <config_pixie16api.h>
-#include <CDDASException.h>
+#include <CXIAException.h>
 #include "ReferenceCountedBuffer.h"
 #include "ZeroCopyHit.h"
 
@@ -99,11 +99,11 @@ namespace DDASReadout {
 			<< " FIFO. Tried to read " << nWords
 			<< " uint32_t words of data."
 			<< " Acting as if there are no words to read.";
-		    throw CDDASException(
-			rv, "Pixie16ReadDataFromExternalFIFO", msg.str()
+		    throw CXIAException(
+			msg.str(), "Pixie16ReadDataFromExternalFIFO", rv
 			);
 		}
-	    } catch (const CDDASException& e) {
+	    } catch (const CXIAException& e) {
 		std::cerr << e.ReasonText() << std::endl;
 
 		return 0;

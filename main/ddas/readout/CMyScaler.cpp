@@ -14,12 +14,7 @@
 
 #include <config.h>
 #include <config_pixie16api.h>
-#include <CDDASException.h>
-
-// extern unsigned int ChanEventsB_Address[];
-// extern unsigned int ChanEventsA_Address[];
-// extern unsigned int FastPeaksA_Address[];
-// extern unsigned int FastPeaksB_Address[];
+#include <CXIAException.h>
 
 CMyScaler::CMyScaler(unsigned short mod, unsigned short crate) :
     m_module(mod), m_crate(crate)
@@ -69,9 +64,7 @@ CMyScaler::read()
 	if (retval < 0) {
 	    std::string msg("Error accessing scalar statistics from module ");
 	    msg += m_module;
-	    throw CDDASException(
-		retval, "Pixie16ReadStatisticsFromModule", msg
-		);
+	    throw CXIAException(msg, "Pixie16ReadStatisticsFromModule", retval);
 	}    
 
   	double inputCounts[16] = {0};
@@ -120,16 +113,14 @@ CMyScaler::read()
     
 	    idx += 2;
 	}
-	
+
 	return m_scalers;
 	
-    } catch (const CDDASException& e) {
-	std::cerr << e.ReasonText() << std::endl;
-	
+    } catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;	
 	return m_scalers;
     } catch(...) {
 	std::cerr << "Unexpected exception encountered in CMyScaler::read!\n";
-	
 	return m_scalers;
     }
 }

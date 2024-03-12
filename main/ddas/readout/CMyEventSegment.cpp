@@ -26,7 +26,7 @@
 #include <CExperiment.h>
 #include "HardwareRegistry.h"
 #include "CMyTrigger.h"
-#include <CDDASException.h>
+#include <CXIAException.h>
 
 using namespace DAQ::DDAS;
 
@@ -128,9 +128,9 @@ CMyEventSegment::CMyEventSegment(CMyTrigger *trig, CExperiment& exp)
 	    if (rv < 0) {
 		std::string msg("Failed to read channel CSRA in module ");
 		msg += i;
-		throw CDDASException(rv, "Pixie16ReadSglChanPar", msg);
+		throw CXIAException(msg, "Pixie16ReadSglChanPar", rv);
 	    }
-	} catch (const CDDASException& e) {
+	} catch (const CXIAException& e) {
 	    std::cerr << e.ReasonText() << std::endl;
 	    std::exit(EXIT_FAILURE); // Fatality!
 	}
@@ -255,11 +255,11 @@ size_t CMyEventSegment::read(void* rBuffer, size_t maxBytes)
 		int rv = Pixie16CheckExternalFIFOStatus(&preread, i);
 		if (rv < 0) {
 		    std::string msg("Failed to read Pixie FIFO status!");
-		    throw CDDASException(
-			rv, "Pixie16CheckExternalFIFOStatus", msg
+		    throw CXIAException(
+			msg, "Pixie16CheckExternalFIFOStatus", rv
 			);
 		}
-	    } catch (const CDDASException& e) {
+	    } catch (const CXIAException& e) {
 		std::cerr << e.ReasonText() << std::endl;
 	    }
 
@@ -272,11 +272,11 @@ size_t CMyEventSegment::read(void* rBuffer, size_t maxBytes)
 		if (rv < 0) {
 		    std::string msg("Read failed from module ");
 		    msg += i;
-		    throw CDDASException(
-			rv, "Pixie16ReadDataFromExternalFIFO", msg
+		    throw CXIAException(
+			msg, "Pixie16ReadDataFromExternalFIFO", rv
 			);
 		}
-	    } catch (CDDASException& e) {
+	    } catch (CXIAException& e) {
 		std::cerr << e.ReasonText() << std::endl;
 		m_pExperiment->haveMore();
                 reject();
@@ -331,13 +331,13 @@ CMyEventSegment::onBegin()
     try {
 	if (rv < 0) {
 	    std::string msg("*ERROR* Failed to begin list mode run");
-	    throw CDDASException(rv, "Pixie16StartListModeRun", msg);
+	    throw CXIAException(msg, "Pixie16StartListModeRun", rv);
 	} else {
 	    std::cout << "List mode run started OK " << rv << " mode "
 		      << std::hex << std::showbase << LIST_MODE_RUN
 		      << std::dec << " " << NEW_RUN << std::endl << std::flush;
 	}
-    } catch (const CDDASException& e) {
+    } catch (const CXIAException& e) {
 	std::cerr << e.ReasonText() << std::endl;
     }    
     m_nBytesPerRun = 0; // New run presumably.
@@ -357,7 +357,7 @@ CMyEventSegment::onResume()
     try {
 	if (rv < 0) {
 	    std::string msg("*ERROR* Failed to resume list mode run");
-	    throw CDDASException(rv, "Pixie16StartListModeRun", msg);
+	    throw CXIAException(msg, "Pixie16StartListModeRun", rv);
 	
 	} else {
 	    std::cout << "List mode run resumed OK " << rv << " mode "
@@ -365,7 +365,7 @@ CMyEventSegment::onResume()
 		      << std::dec << " " << RESUME_RUN << std::endl
 		      << std::flush;
 	}
-    } catch (const CDDASException& e) {
+    } catch (const CXIAException& e) {
 	std::cerr << e.ReasonText() << std::endl;
     }
 }
@@ -401,8 +401,8 @@ CMyEventSegment::synchronize()
     
     int rv = Pixie16WriteSglModPar("SYNCH_WAIT", 1, 0);
     if (rv < 0) {
-	throw CDDASException(
-	    rv, "Pixie16WriteSglModPar", "Synch wait problem"
+	throw CXIAException(
+	    "Synch wait problem", "Pixie16WriteSglModPar", rv
 	    );
     } else {
         std::cout << "Synch Wait OK " << rv << std::endl;
@@ -410,7 +410,7 @@ CMyEventSegment::synchronize()
 
     rv = Pixie16WriteSglModPar("IN_SYNCH", 0, 0);
     if (rv < 0) {
-	throw CDDASException(rv, "Pixie16WriteSglModPar", "In synch problem");
+	throw CXIAException("In-synch problem", "Pixie16WriteSglModPar", rv);
     } else {
         std::cout << "In Synch OK " << rv << std::endl;
     }
@@ -423,7 +423,7 @@ CMyEventSegment::boot(SystemBooter::BootType type)
         int rv = Pixie16ExitSystem(m_config.getNumberOfModules());
         if (rv < 0) {
 	    std::string msg("CMyEventSegment::boot() failed to exit system");
-	    throw CDDASException(rv, "Pixie16ExitSystem", msg);
+	    throw CXIAException(msg, "Pixie16ExitSystem", rv);
         } // This is handled (or not) much higher up the stack...
         m_systemInitialized = false;
     }
@@ -438,7 +438,7 @@ CMyEventSegment::boot(SystemBooter::BootType type)
         // Keep track of whether we loaded firmware... if we did, then we need
         // to sync next time around:
         m_firmwareLoadedRecently = (type == SystemBooter::FullBoot);
-    } catch (const CDDASException& e) {
+    } catch (const CXIAException& e) {
 	m_systemInitialized = false;
 	std::cerr << e.ReasonText() << std::endl;
     } catch (std::exception& e) {

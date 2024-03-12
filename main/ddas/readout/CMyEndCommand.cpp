@@ -23,7 +23,7 @@
 #include <config_pixie16api.h>
 #include <CVMEInterface.h>
 #include <RunState.h>
-#include <CDDASException.h>
+#include <CXIAException.h>
 #include "CMyEventSegment.h"
 
 CMyEndCommand::CMyEndCommand(
@@ -61,10 +61,10 @@ int CMyEndCommand::transitionToInactive()
 	    if (retval < 0) {
 		std::string msg = "Failed to communicate end run operation to"
 		    " the director module.";
-		throw CDDASException(retval, "Pixie16EndRun", msg);
+		throw CXIAException(msg, "Pixie16EndRun", retval);
 	    }
 	}
-	catch (const CDDASException& e) {
+	catch (const CXIAException& e) {
 	    std::cerr << e.ReasonText() << std::endl;
 	    return TCL_ERROR;
 	}
@@ -75,10 +75,10 @@ int CMyEndCommand::transitionToInactive()
 		if (retval < 0) {
 		    std::string msg = "Failed to communicate end run"
 			" operation in module " + i;
-		    throw CDDASException(retval, "Pixie16EndRun", msg);
+		    throw CXIAException(msg, "Pixie16EndRun", retval);
 		}
 	    }
-	    catch (const CDDASException& e) {
+	    catch (const CXIAException& e) {
 		std::cerr << e.ReasonText() << std::endl;
 		return TCL_ERROR;
 	    }
@@ -96,10 +96,10 @@ int CMyEndCommand::transitionToInactive()
 		if (retval < 0) {
 		    std::string msg = "Failed to check run status"
 			" trying again...";
-		    throw CDDASException(retval, "Pixie16CheckRunStatus", msg);
+		    throw CXIAException(msg, "Pixie16CheckRunStatus", retval);
 		}
 	    }
-	    catch (const CDDASException& e) {
+	    catch (const CXIAException& e) {
 		std::cerr << e.ReasonText() << std::endl;
 	    }    
 	    runEnded = (retval == 0);
@@ -173,7 +173,7 @@ int CMyEndCommand::readOutRemainingData()
 		// retval == 0: Run is ended.
 		if (retval < 0) {
 		    std::string msg = "Failed check run status in module " + i;
-		    throw CDDASException(retval, "Pixie16CheckRunStatus", msg);
+		    throw CXIAException(msg, "Pixie16CheckRunStatus", retval);
 		}
 		else if (retval == 1) {
 		    EndOfRunRead = 1;	
@@ -182,7 +182,7 @@ int CMyEndCommand::readOutRemainingData()
 		    break;
 		}
 	    }
-	    catch (const CDDASException& e) {
+	    catch (const CXIAException& e) {
 		EndOfRunRead = 1; // We failed, so...
 		std::cerr << e.ReasonText() << std::endl;
 	    }
@@ -211,12 +211,12 @@ int CMyEndCommand::readOutRemainingData()
 	    if (retval < 0) {
 		std::string msg = "Error accessing scaler statistics"
 		    " from module " + i;
-		throw CDDASException(
-		    retval, "Pixie16ReadStatisticsFromModule", msg
+		throw CXIAException(
+		    msg, "Pixie16ReadStatisticsFromModule", retval
 		    );
 	    }
 	}
-	catch (const CDDASException& e) {
+	catch (const CXIAException& e) {
 	    std::cerr << e.ReasonText() << std::endl;
 	}
 

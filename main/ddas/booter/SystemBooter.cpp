@@ -15,7 +15,7 @@
 #include <config.h>
 #include <config_pixie16api.h>
 #include <Configuration.h>
-#include <CDDASException.h>
+#include <CXIAException.h>
 
 /**
  * @details
@@ -47,8 +47,8 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
 	NumModules, config.getSlotMap().data(), m_offlineMode
 	);
     if (retval < 0) {
-	throw CDDASException(
-	    retval, "Pixie16InitSystem()", "SystemBooter::boot() failed"
+	throw CXIAException(
+	    "SystemBooter::boot() failed", "Pixie16InitSystem()", retval
 	    );
     } else {
 	std::cout << "System initialized successfully. " << std::endl;
@@ -163,7 +163,7 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
 	);    
     if (retval < 0) {	
 	std::string msg = "Boot failed module " + modIndex;
-	throw CDDASException(retval, "Pixie16BootModule()", msg);
+	throw CXIAException(msg, "Pixie16BootModule()", retval);
     }
 }
 
@@ -219,7 +219,7 @@ void DAQ::DDAS::SystemBooter::populateHardwareMap(Configuration &config)
 	if (retval < 0)
 	{
 	    std::string msg = "Failed to read hardware variant module " + i;
-	    throw CDDASException(retval, "Pixie16ReadModuleInfo()", msg);
+	    throw CXIAException(msg, "Pixie16ReadModuleInfo()", retval);
 	} else {
 	    if (m_verbose) {
 		logModuleInfo(i, ModRev, ModSerNum, ModADCBits, ModADCMSPS);

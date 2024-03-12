@@ -11,7 +11,7 @@
 
 #include <config.h>
 #include <config_pixie16api.h>
-#include <CDDASException.h>
+#include <CXIAException.h>
 
 const int TRIGGER_TIMEOUT_SECS = 5; //!< Auto-trigger timeout in seconds.
 
@@ -122,11 +122,13 @@ CMyTrigger::operator()()
 			    "Failed to read external FIFO status for module "
 			    );
 			msg += ModNum;
-			throw CDDASException(retval, "", msg);
+			throw CXIAException(
+			    msg, "Pixie16CheckExternalFIFOStatus", retval
+			    );
 			nFIFOWords = 0; // For safety.
 		    }
 		}
-		catch (const CDDASException& e) {
+		catch (const CXIAException& e) {
 		    std::cerr << e.ReasonText() << std::endl;
 		}
 
