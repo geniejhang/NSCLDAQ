@@ -27,6 +27,16 @@ AC_PROG_LIBTOOL
 
 AX_CXX_COMPILE_STDCXX_11([noext])
 
+# Git is needed to create the VERSION file:
+
+AC_CHECK_PROG(GIT, git, git, [])
+if test "xGIT" = "x"
+then 
+  AC_MSG_ERROR([please install git so we can generate some version information])
+fi
+
+AC_SUBST(GIT)
+
 # MPI defined/usable to build MPI chunks:
 
 AC_LANG_PUSH(C++)
