@@ -58,7 +58,13 @@ static size_t getDefaultSize() {
   if (!pStrValue) {
     return DEFAULT_DATASIZE;
   }
-  
+  char* pEnd;
+  size_t result = strtoul(pStrValue, &pEnd, 0);
+  if (pEnd == pStrValue) {
+    return DEFAULT_DATASIZE;
+  } else {
+    return result*1024*1024;
+  }
 }
 
 /*!
@@ -126,7 +132,14 @@ CRingAccess::getProxyRingSize()
 {
   return m_proxyRingSize;
 }
-
+/**
+ * getDefaultProxyRingSize - mostly for testing... determine what the proxy
+ * ring size would be if allowed to default (just call getDefaultSize);
+*/
+size_t
+CRingAccess::getDefaultProxyRingSize() {
+  return getDefaultSize();
+}
 /*!
    Set a new value for the maximum number of consumers that will be allowed
    to connect to new proxy rings.  See the comments  for setProxyRingSize, as the same caveats 

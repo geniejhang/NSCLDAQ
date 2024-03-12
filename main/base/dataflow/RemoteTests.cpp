@@ -46,6 +46,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(RemoteTests);
 
 void RemoteTests::sizeTest() 
 {
+  
   size_t value = CRingAccess::getProxyRingSize();
   size_t old   = CRingAccess::setProxyRingSize(value*2);
   EQ(old, value);
