@@ -54,7 +54,7 @@ install-data-local:
 	$(INSTALL_SCRIPT) @top_srcdir@/config_pixie16api.h @prefix@/include
 	touch @prefix@/pythonLibs/nscldaq/__init__.py
 	echo "Version: "NSCLDAQ-$(VERSION) built on `hostname` `date` by `whoami` > @prefix@/VERSION
-	head  @top_srcdir@/config.log| grep  -- --prefix >> @prefix@/VERSION
+	head  @top_builddir@/config.log| grep  -- --prefix >> @prefix@/VERSION
 	echo libtcl++ `(cd @top_srcdir@/libtcl; @GIT@ status | head -1|cut -d" " -f4)` >> @prefix@/VERSION
 	echo unifiedformat `(cd @top_srcdir@/unifiedformat; @GIT@ status |head -1| cut -d" " -f4)` >> @prefix@/VERSION
 	$(INSTALL_DATA) @srcdir@/ChangeLog @prefix@
