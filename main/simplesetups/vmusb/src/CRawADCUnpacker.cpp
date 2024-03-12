@@ -176,7 +176,7 @@ void CRawADCUnpacker::unpackEOE(uint32_t word, ParsedADCEvent& event)
   event.s_eventNumber = (word & TRAIL_COUNT_MASK);
 }
 
-void CRawAdcUnpacker::incompleteEvent(const char* whence)
+void CRawADCUnpacker::incompleteEvent(const char* whence)
 {
   string errmsg(whence);
   errmsg += "Incomplete event found in buffer.";
