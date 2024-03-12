@@ -270,6 +270,11 @@
             and arranging for data from the ring to be copied to the proxy ring.
         </para>
         <para>
+            The size of the local proxy ring defaults to 8Megabytes.  This can be
+            altered to suit your application by setting the environment variable
+            NSCLDAQ_DEFAULT_PROXYMB to the desired number of megabytes for proxy ringbuffers.
+        </para>
+        <para>
             The
             <literal>REMOTE</literal>
             command requests data from a ring.  If successful, the

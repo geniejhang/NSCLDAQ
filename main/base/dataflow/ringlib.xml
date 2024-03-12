@@ -68,6 +68,11 @@ g++ -o myprogram myprogram.cpp -L$DAQROOT/lib -ldataflow -Wl,"-rpath=$DAQROOT/li
         remote ring are simply connected to the proxy ring.
     </para>
     <para>
+        The size of the local proxy ringbuffer defaults to 8MB.  This can be modified
+        by setting the environment variable <literal>NSCLDAQ_DEFAULT_PROXYMB</literal>
+        to the desired proxy ringbuffer size in MegaBytes.
+    </para>
+    <para>
         The networked ring buffer access class
         <classname>CRingAccess</classname> provides member functions that make
         this operation completely transparent to application code.  Ring buffers
