@@ -292,10 +292,14 @@ class Window(QtWidgets.QMainWindow):
             self.CB_TO_SC.setCurrentIndex(TO_SC_IDX)
 
     def _syncComboBoxes(self, value):
-        if self.sender().objectName() == 'CB_TS_SC':
-            self.CB_TO_SC.setItemText(self.sender().currentIndex(), value)
-        elif self.sender().objectName() == 'CB_TO_SC':
-            self.CB_TS_SC.setItemText(self.sender().currentIndex(), value)
+        self.CB_TS_SC.currentTextChanged.disconnect()
+        self.CB_TO_SC.currentTextChanged.disconnect()
+
+        self.CB_TS_SC.setItemText(self.sender().currentIndex(), value)
+        self.CB_TO_SC.setItemText(self.sender().currentIndex(), value)
+
+        self.CB_TS_SC.currentTextChanged.connect(self._syncComboBoxes)
+        self.CB_TO_SC.currentTextChanged.connect(self._syncComboBoxes)
 
     def _updateFromJson(self, data):
         self._updateTriggerSource(int(str(data['triggerSource']), 16 if str(data['triggerSource']).startswith('0x') else 10))
