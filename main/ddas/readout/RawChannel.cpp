@@ -15,9 +15,8 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** 
- * @file RawChannel.cpp
- * @brief Implement the raw channel struct.
+/** @file:  RawChannel.cpp
+ *  @brief: Implement the raw channel struct.
  */
 
 #include "RawChannel.h"
@@ -25,10 +24,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <iostream>
 #include <new>
+#include <iostream>
+#include <sstream>
+#include <map>
+#include <stdexcept>
 
-namespace DDASReadout {    
+namespace DDASReadout {
     static const uint32_t CHANNELIDMASK(0xF); //!< Bits 0-3 inclusive.
     /** Bits 17-29 inclusive. */
     static const uint32_t CHANNELLENGTHMASK(0x3FFE0000); 
@@ -43,8 +45,8 @@ namespace DDASReadout {
      * set false since we don't need to delete.
      */
     RawChannel::RawChannel() :
-	s_time(0.0), s_chanid(0), s_ownData(false), s_ownDataSize(0),
-	s_channelLength(0), s_data(nullptr)
+	s_moduleType(0),s_time(0.0), s_chanid(0), s_ownData(false),
+	s_ownDataSize(0), s_channelLength(0), s_data(nullptr)
     {}
 
     /**
@@ -60,25 +62,26 @@ namespace DDASReadout {
      * nWords.
      */
     RawChannel::RawChannel(size_t nWords) :
-	s_time(0.0), s_chanid(0), s_ownData(true), s_ownDataSize(nWords),
-	s_channelLength(0), s_data(nullptr)
+	s_moduleType(0), s_time(0.0), s_chanid(0), s_ownData(true),
+	s_ownDataSize(nWords), s_channelLength(0), s_data(nullptr)
     {
 	s_data = static_cast<uint32_t*>(malloc(nWords * sizeof(uint32_t)));
 	if (!s_data) {
 	    throw std::bad_alloc();
 	}
     }
-    
+
     /**
-     * @note The data pointed to by pZcopyData must be in scope for the 
+     * @note The data pointed to by pZCopyData must be in scope for the 
      * duration of this object's lifetime else probably segfaults or bus 
      * errors will happen in the best case.
      */
     RawChannel::RawChannel(size_t nWords, void* pZCopyData) :
-	s_time(0.0), s_chanid(0), s_ownData(false), s_ownDataSize(nWords),
-	s_channelLength(nWords), s_data(static_cast<uint32_t*>(pZCopyData))
+	s_moduleType(0), s_time(0.0), s_chanid(0), s_ownData(false),
+	s_ownDataSize(nWords), s_channelLength(nWords),
+	s_data(static_cast<uint32_t*>(pZCopyData))
     {}
-    
+
     /**
      * @details
      * If we own the data, this will free it.
@@ -97,30 +100,26 @@ namespace DDASReadout {
      *
      * @note If the data have not yet been set, number of words is 0 so this 
      * is well behaved.
-     */
+     */    
     int
     RawChannel::SetTime()
     {
 	if (s_channelLength >= 4) {
-	    // Upper 16 bits of the timestamp:
 	    uint64_t t = s_data[2] & LOWER16BITMASK;
-	    // Shift the upper bits, create full timestamp:
-	    t = t << 32;
+	    t  = t << 32;
 	    t |= (s_data[1]);
-	    
 	    s_time = t;
-	    
 	    return 0;
 	} else {
 	    return 1;
 	}
     }
-    
+
     /**
      * @details
      * Assumes that the data are set (either by zero copy or by copyInData). 
      * Determines the calibrated timestamp from the 48-bit timestamp data in 
-     * the hit  and sets it in s_time. The timestamp is extracted from data 
+     * the hit and sets it in s_time. The timestamp is extracted from data 
      * words 1 and 2 of the Pixie-16 list mode event header structure in the 
      * hit. The clock calibration passed to this function is used to convert 
      * the time to nanoseconds from clock ticks. 
@@ -130,7 +129,7 @@ namespace DDASReadout {
      * is well behaved.
      */
     int
-    RawChannel::SetTime(double clockCal, bool useExt)
+    RawChannel::SetTime(double ticksPerNs, bool useExt)
     {
 	// The external timestamp requires a header length of at least 6 words
 	// and is always the last two words of the header:
@@ -143,20 +142,16 @@ namespace DDASReadout {
 		s_time = stamp;
 	    } else {
 		return 1; // There's no external timestamp!
-	    }        
-	} else {
-	    if (s_channelLength >= 4) {
-		SetTime();        
-	    } else {
-		return 1;
 	    }
+	} else if (SetTime()) {
+	    return 1; // SetTime() fails: channel length < 4.
 	}
 	
-	s_time *= clockCal;
+	s_time *= ticksPerNs;
 	
 	return 0;
     }
-    
+
     int
     RawChannel::SetLength()
     {
@@ -167,14 +162,14 @@ namespace DDASReadout {
     int
     RawChannel::SetChannel()
     {
-	if (s_channelLength >=4) {
+	if (s_channelLength >= 4) {
 	    s_chanid = (s_data[0] & CHANNELIDMASK);
 	    return 0;
 	} else {
 	    return 1;
 	}
     }
-    
+
     /**
      * @details
      * Retains rough compatibility with the old channel class.
@@ -188,8 +183,8 @@ namespace DDASReadout {
 	if (s_channelLength == expecting) {
 	    return 0;
 	} else {
-	    std::cerr << "Data is corrupt or the setting in "
-		      << "modevtlen.txt is wrong\n";
+	    std::cerr << "Data is corrupt or the setting in modevtlen.txt "
+		"is wrong!" << std::endl;
 	    std::cerr << "Expected " << expecting
 		      << " got " << s_channelLength << std::endl;
 	    return 1;
@@ -213,7 +208,7 @@ namespace DDASReadout {
 	s_channelLength = nWords;
 	s_data          = static_cast<uint32_t*>(pZCopyData);
     }
-    
+
     /**
      * @details
      * - If s_ownData is false, then allocate sufficient storage for the hit.
@@ -268,13 +263,12 @@ namespace DDASReadout {
 		const void* p = static_cast<const void*>(rhs.s_data);
 		setData(rhs.s_channelLength, const_cast<void*>(p));
 	    }
-	    
-	    // Now all the other stuff not set by the above:
+	    // now all the other stuff not set by the above:
         
 	    s_time = rhs.s_time;
-	    s_chanid = rhs.s_chanid;        
+	    s_chanid = rhs.s_chanid;
+        
 	}
-	
 	return *this;
     }
 
@@ -282,13 +276,33 @@ namespace DDASReadout {
     RawChannel::channelLength(void* pData)
     {
 	uint32_t* p = static_cast<uint32_t*>(pData);
-	
-	return (*p & CHANNELLENGTHMASK) >> CHANNELLENGTHSHIFT;
-    }    
+	uint32_t result = (*p & CHANNELLENGTHMASK) >> CHANNELLENGTHSHIFT;
+	return result;
+    }
+
+    /** Map of module frequency to clock calibration. */
+    static std::map<uint32_t, double> freqToCalibration = {
+	{100, 10.0}, {250, 8.0}, {500, 10.0}
+
+    };
+
+    double
+    RawChannel::moduleCalibration(uint32_t moduleType)
+    {
+	uint32_t freq = moduleType & 0xffff;
+	double result = freqToCalibration[freq];
+	if (result == 0.0) { // No map entry!!
+	    std::stringstream  err;
+	    err << " No frequency calibration for " << freq << "MSPS modules ";
+	    err << " update freqToCalibration in RawChannel.cpp";
+	    throw std::invalid_argument(err.str());
+	}
+	return result;
+    
+    }
  
 } // Namespace.
 
-// Comparison operations allow sorts to work without anything special:
 
 /**
  * @details 

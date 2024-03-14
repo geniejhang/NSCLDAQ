@@ -1,12 +1,11 @@
-#include <SystemBooter.h>
-#include <Configuration.h>
+#include "SystemBooter.h"
 
-#include <memory>
+#include <Configuration.h>
 
 using namespace DAQ::DDAS;
 
-int main() {
-
+int main()
+{
     SystemBooter booter;
     auto pConfig = Configuration::generate(FIRMWARE_FILE, "cfgPixie16.txt");
     booter.boot(*pConfig, SystemBooter::FullBoot);

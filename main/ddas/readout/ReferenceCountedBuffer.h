@@ -49,7 +49,8 @@ namespace DDASReadout {
      * other data structures.
      */
     
-    struct ReferenceCountedBuffer {
+    struct ReferenceCountedBuffer
+    {
 	size_t s_size;       //!< Number of bytes of data.
 	size_t s_references; //!< Number of references.
 	void*  s_pData;      //!< Data pointer.
@@ -94,7 +95,6 @@ namespace DDASReadout {
 	operator uint8_t*()  { return static_cast<uint8_t*>(s_pData); }
 	operator uint16_t*() { return static_cast<uint16_t*>(s_pData); }
 	operator uint32_t*() { return static_cast<uint32_t*>(s_pData); }
-    
     };
 
 } // Namespace

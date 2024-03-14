@@ -26,7 +26,6 @@ namespace DAQ {
 	/**
 	 * @class ConfigurationParser ConfigurationParser.h
 	 * @brief A class to parse the contents of the cfgPixie16.txt file.
-	 *
 	 * @details
 	 * This file is pretty basic. It contains information about the slot 
 	 * map, crate id, and settings file path. It has the following form:
@@ -69,14 +68,10 @@ namespace DAQ {
 	 *
 	 * @code
 	 * using namespace DAQ::DDAS;
-	 *
 	 * Configuration config;
 	 * ConfigurationParser parser;
-	 *
 	 * std::ifstream configFile("cfgPixie16.txt", std::ios::in);
-	 *
 	 * parser.parse(configFile, config);
-	 *
 	 * @endcode
 	 *
 	 */
@@ -86,7 +81,7 @@ namespace DAQ {
 	    /**
 	     * @typedef SlotSpecification
 	     * @brief Data returned when parsing a slot.
-	     * 
+	     * @details
 	     * daqdev/DDAS#106. This typedef defines the data that can be 
 	     * returned when parsing a slot line. The int is the slot number.
 	     * The first string is the optional firmware map (empty string if
@@ -101,8 +96,10 @@ namespace DAQ {
     	     * @param input The input stream associated with the cfgPixie16 
 	     *   content (likely an std::ifstream)
 	     * @param config A configuration to store the parsed data.
-	     * @throws std::runtime_error If the DSP parameter file has an 
+	     * @throw std::runtime_error If the DSP parameter file has an 
 	     *   invalid file extension.
+	     * @throw std::runtime_error If the configuration file contains
+	     *   anything other than whitespace after reading the settings file.
 	     */
 	    void parse(std::istream& input, Configuration& config);
      	    /**

@@ -28,7 +28,6 @@ DAQ::DDAS::DDASHitUnpacker::unpack(
     const uint32_t* beg, const uint32_t* sentinel, DDASHit& hit
     )
 {
-
     if (beg == sentinel) {
 	std::stringstream errmsg;
 	errmsg << "DDASHitUnpacker::unpack() ";
@@ -165,8 +164,8 @@ DAQ::DDAS::DDASHitUnpacker::parseModuleInfo(
 {
     uint32_t datum = *data++;
     hit.setADCFrequency(datum & LOWER16BITMASK);
-    hit.setADCResolution((datum>>16) & 0xff);
-    hit.setHardwareRevision((datum>>24) & 0xff);
+    hit.setADCResolution((datum >> 16) & 0xff);
+    hit.setHardwareRevision((datum >> 24) & 0xff);
 
     return data;
 }
@@ -216,7 +215,7 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWords1And2(
 {
     uint32_t timelow      = *data++;
     uint32_t datum1       = *data++;
-    uint32_t timehigh     = datum1&0xffff;
+    uint32_t timehigh     = datum1 & 0xffff;
     uint32_t adcFrequency = hit.GetModMSPS();
 
     double   cfdCorrection;
@@ -300,21 +299,20 @@ DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(uint32_t ModMSPS, uint32_t data)
     }
     else if (ModMSPS == 250) {
 	// CFD fail bit in bit 31
-	cfdfailbit    = ((data & BIT31MASK) >> 31 );
-	cfdtrigsource = ((data & BIT30MASK) >> 30 );
+	cfdfailbit    = ((data & BIT31MASK) >> 31);
+	cfdtrigsource = ((data & BIT30MASK) >> 30);
 	timecfd       = ((data & BIT29to16MASK) >> 16);
 	correction    = (timecfd/16384.0 - cfdtrigsource)*4.0; 
     }
     else if (ModMSPS == 500) {
 	// no fail bit in 500 MSPS modules
-	cfdtrigsource = ((data & BIT31to29MASK) >> 29 );
+	cfdtrigsource = ((data & BIT31to29MASK) >> 29);
 	timecfd       = ((data & BIT28to16MASK) >> 16);
 	correction    = (timecfd/8192.0 + cfdtrigsource - 1)*2.0;
 	cfdfailbit    = (cfdtrigsource == 7) ? 1 : 0;
     }
 
     return std::make_tuple(correction, timecfd, cfdtrigsource, cfdfailbit);
-
 }
 
 /**
@@ -426,7 +424,8 @@ DAQ::DDAS::DDASHitUnpacker::extractEnergySums(
 {
     std::vector<uint32_t>& energies = hit.GetEnergySums();
     energies.reserve(4);
-    energies.insert(energies.end(), data, data+4);
+    energies.insert(energies.end(), data, data + 4);
+    
     return data + 4;
 }
 

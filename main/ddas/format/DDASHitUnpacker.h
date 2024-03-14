@@ -26,7 +26,7 @@ namespace DAQ {
 	 * @class DDASHitUnpacker DDASHitUnpacker.h
 	 *
 	 * @brief Unpacker for DDAS data recorded by NSCLDAQ/FRIBDAQ.
-	 *
+	 * @details
 	 * This class unpacks NSCLDAQ-formatted Pixie-16 data recorded by a
 	 * DDAS readout program into DDASHits which encapsulate the information
 	 * recorded by a single DDAS channel. This is a generic unpacker which 
@@ -40,11 +40,11 @@ namespace DAQ {
 	 * companion class ddasdumper. To fill this with data, you should use 
 	 * the associated DDASHit class. Here is how you use it:
 	 *
-	 * \code
+	 * @code
 	 * DDASHit hit;
 	 * DDASHitUnpacker unpacker;
 	 * unpacker.unpack(pData, pData+sizeOfData, hit);
-	 * \endcode
+	 * @endcode
 	 *
 	 * where pData is a pointer to the first word of the event body.
 	 */
@@ -82,7 +82,7 @@ namespace DAQ {
 	     * @brief Ensure there is enough data to parse.
 	     * @param data     Pointer to the hit body.
 	     * @param sentinel Pointer to the first word after the body.
-	     * @throws std::runtime_error If there are an incorrect number of 
+	     * @throw std::runtime_error If there are an incorrect number of 
 	     *   16-bit data words in the event (words exceed sentinal boundry)
 	     *   and the pointer to the last data word is not a nullptr.
 	     * @return Pointer to the next data word. 

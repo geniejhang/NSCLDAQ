@@ -1,5 +1,3 @@
-
-
 lib_LTLIBRARIES=libddasformat.la
 
 libddasformat_la_SOURCES = DDASHit.cpp DDASHitUnpacker.cpp

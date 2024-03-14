@@ -6,11 +6,15 @@
 #include "CXIAException.h"
 
 #include <cstdio>
-#include <iostream>
 
 #include <config.h>
 #include <config_pixie16api.h>
 
+/**
+ * @details
+ * Get the XIA API error message from the passed return value and construct
+ * the full error message.
+ */
 CXIAException::CXIAException(std::string msg, std::string fcn, int rv) :
     CException(msg), m_reasonCode(rv)
 {

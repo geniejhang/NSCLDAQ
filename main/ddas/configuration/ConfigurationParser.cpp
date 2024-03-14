@@ -19,6 +19,27 @@
 
 #define FILENAME_STR_MAXLEN 256 //!< Number of characters to skip when parsing a line. Maximum allowed length of any comment added by a user.
 
+///
+// Local trim functions
+//
+
+/** @brief Trim from beginning. */
+static inline std::string &ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
+}
+
+/** @brief Trim from end. */
+static inline std::string &rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
+
+/** @brief Trim from both ends. */
+static inline std::string &trim(std::string &s) {
+    return ltrim(rtrim(s));
+}
+
 /**
  * @details
  * Parses the configuration file line by line, extracting slot information, 
@@ -72,9 +93,8 @@ DAQ::DDAS::ConfigurationParser::parse(
     input >> DSPParFile;
     input.getline(temp, FILENAME_STR_MAXLEN);
 
-    // Check the file extension. If XIA API 2, it must be .set, if XIA API 3,
-    // it can be either .set or .json. Assume whatever comes after the last '.'
-    // is the extension.
+    // Check the file extension:
+    
     size_t pos = DSPParFile.find_last_of('.');
     if (pos != std::string::npos) {
 	std::string ext = DSPParFile.substr(pos + 1);
@@ -82,7 +102,6 @@ DAQ::DDAS::ConfigurationParser::parse(
 	    ext.begin(), ext.end(), ext.begin(),
 	    [](unsigned char c){ return std::tolower(c); }
 	    );
-#if XIAAPI_VERSION >= 3
 	if (ext != "set" && ext != "json") {
 	    std::stringstream errmsg;
 	    errmsg << "The DSP settings file " << DSPParFile << " read from"
@@ -90,26 +109,29 @@ DAQ::DDAS::ConfigurationParser::parse(
 		   << " 'json' but read '" << ext << "'.";
 	    throw std::runtime_error(errmsg.str()); 
 	}
-#else
-	if (ext != "set") {
-	    std::stringstream errmsg;
-	    errmsg << "The DSP settings file " << DSPParFile << " read from"
-		   << " cfgPixie16.txt must have the extension 'set' but"
-		   << " read '" << ext << "'.";
-	    throw std::runtime_error(errmsg.str()); 
-	}
-#endif
     } else {
 	std::stringstream errmsg;
-#if XIAAPI_VERSION >= 3
 	errmsg << "The DSP settings file " << DSPParFile << " read from"
 	       << " cfgPixie16.txt must have the extension 'set' or 'json'.";
-#else
-	errmsg << "The DSP settings file " << DSPParFile << " read from"
-	       << " cfgPixie16.txt must have the extension 'set'.";
-#endif
 	throw std::runtime_error(errmsg.str());
-    }    
+    }
+
+    // After the settings file, only whitespace is allowed:
+
+    /** 
+     * @todo (ASC 3/13/24): Whitespace-tolerant comments could be allowed 
+     * using this trim-and-inspect framework i.e. check that first character 
+     * of trimmed line is a comment character. For now, anything besides 
+     * whitespace will throw when parsing the configuration file.
+     */
+    while (getline(input, line)) {
+        trim(line); // Modifies line
+	if (!line.empty()) {
+	    std::string msg("Unable to parse line '");
+	    msg += line + "'";
+	    throw std::runtime_error(msg);
+	}
+    }  
     
     config.setCrateId(CrateNum);
     config.setNumberOfModules(NumModules);
@@ -136,9 +158,9 @@ DAQ::DDAS::ConfigurationParser::parse(
  *  - Filenames cannot have spaces in their paths.
  *  - Files must be readable by the user.
  *  - #'s must be spaced from the last file e.g.:
- *      1 firmwaremap#  this is an error but,
- *      2 firmwaremap  # This is ok,
- *      3 firmwaremap setfile.set # as is this.
+ *      1 firmwaremap.txt# This is an error but,
+ *      2 firmwaremap.txt  # This is ok,
+ *      3 firmwaremap.txt setfile.set # As is this.
  */
 DAQ::DDAS::ConfigurationParser::SlotSpecification
 DAQ::DDAS::ConfigurationParser::parseSlotLine(std::istream& input)

@@ -21,10 +21,14 @@
  */
 
 #include "ZeroCopyHit.h"
+
+#include <iostream>
+
 #include "ReferenceCountedBuffer.h"
 #include "BufferArena.h"
 
-namespace DDASReadout {    
+namespace DDASReadout {
+    
     /**
      * @details
      * Creates a hit. The hit must be initialized with setHit before 
@@ -33,7 +37,7 @@ namespace DDASReadout {
     ZeroCopyHit::ZeroCopyHit() :
 	m_pBuffer(nullptr), m_pArena(nullptr)
     {}
-    
+
     /**
      * @details
      * Stores stuff away and increments the refrence count on the 
@@ -60,17 +64,6 @@ namespace DDASReadout {
     
     /**
      * @details
-     * Dereference.
-     */
-    ZeroCopyHit::~ZeroCopyHit()
-    {
-	if(m_pBuffer && m_pArena) {
-	    dereference();
-	}
-    }
-
-    /**
-     * @details
      * Dereference, copy in, reference.
      */
     ZeroCopyHit&
@@ -84,8 +77,19 @@ namespace DDASReadout {
 	    reference();
 	}
 	return *this;
-    }  
+    }
     
+    /**
+     * @details
+     * Dereference.
+     */
+    ZeroCopyHit::~ZeroCopyHit()
+    {
+	if(m_pBuffer && m_pArena) {
+	    dereference();
+	}
+    }
+
     /**
      * @details
      * If the hit is associated with a zero copy buffer, the reference is 
@@ -97,14 +101,31 @@ namespace DDASReadout {
 	BufferArena* pArena
 	)
     {
-	if (m_pBuffer) dereference();
-    
+	// We have to be really careful here. If pBuffer is the same as
+	// m_pBuffer, this dance can prematurely return the buffer to
+	// the pool. If that's the case, this operations m_pBuffer is
+	// initially null as well until first use. See: daqdev/NSCLDAQ#1036
+	// issue (on the old GitLab).
+      	if (m_pBuffer && (m_pBuffer != pBuffer)) {
+	    dereference();
+	}
+
 	setData(nWords, pHitData);
+	ReferenceCountedBuffer* pPriorBuffer = m_pBuffer;
 	m_pBuffer = pBuffer;
 	m_pArena = pArena;
-	reference();
-    }
     
+	// Finish off the refcount business of only modifying the reference
+	// count for a different buffer. In this branch of code we don't have
+	// to worry about pPrior being null because:
+	//   1. That's going to be different than pBuffer by definition.
+	//   2. In that case of course we want to reference the buffer.
+    
+	if (pBuffer != pPriorBuffer) {
+	    reference();
+	}
+    }
+
     /**
      * @details
      * If this hit is associated with data, disassociates.
@@ -113,11 +134,11 @@ namespace DDASReadout {
     ZeroCopyHit::freeHit()
     {
 	if (m_pArena && m_pBuffer) {
-	    dereference(); // Returns buffer to arena if appropriate.
+	    dereference(); // Returns buffer to arena if appropriate
 	    m_pArena = nullptr;
 	    m_pBuffer = nullptr;
 	    s_data    = nullptr;
-	    s_channelLength = 0;        
+	    s_channelLength = 0;
 	}
     }
 
@@ -138,4 +159,4 @@ namespace DDASReadout {
 	m_pArena  = nullptr;
     }
 
-}
+} // Namespace.

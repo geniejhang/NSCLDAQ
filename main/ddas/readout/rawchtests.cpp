@@ -1,162 +1,227 @@
-#include "RawChannel.h"
-
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 #include "Asserts.h"
 
+#include <string.h>
+#include <stdint.h>
 
-class RawChTest : public CppUnit::TestFixture {
-  CPPUNIT_TEST_SUITE(RawChTest);
+#include <stdexcept>
 
-  // Zero copy tests since that's what's important:
+#include "RawChannel.h"
+#include "testcommon.h"
+
+class rawchTest : public CppUnit::TestFixture
+{
+    CPPUNIT_TEST_SUITE(rawchTest);
+    CPPUNIT_TEST(construct_1);
+    CPPUNIT_TEST(construct_2);
+    CPPUNIT_TEST(construct_3);
   
-  CPPUNIT_TEST(zCopyConstruct);
+    CPPUNIT_TEST(copyin_1);
+    CPPUNIT_TEST(setdata_1);
   
-  CPPUNIT_TEST(length_1);
-  CPPUNIT_TEST(length_2);
-  CPPUNIT_TEST(length_3);
+    CPPUNIT_TEST(settime_1);
+    CPPUNIT_TEST(settime_2);
+    CPPUNIT_TEST(settime_3);
   
-  CPPUNIT_TEST(time_1);
-  CPPUNIT_TEST(time_2);
+    CPPUNIT_TEST(setlength_1);
+    CPPUNIT_TEST(setlength_2);
   
-  CPPUNIT_TEST(channel);
+    CPPUNIT_TEST(setchan_1);
   
-  CPPUNIT_TEST(validate);
-  
-  CPPUNIT_TEST(lt);
-  CPPUNIT_TEST(eq);
-  CPPUNIT_TEST(gt);
-  CPPUNIT_TEST_SUITE_END();
-    
-private:
+    CPPUNIT_TEST(validate_1);
+    CPPUNIT_TEST(validate_2);
+    CPPUNIT_TEST_SUITE_END();
 
 public:
-  void setUp() {
-  }
-  void tearDown() {
-  }
+    void setUp() {}
+    void tearDown() {}
+    
 protected:
-  void zCopyConstruct();
+    void construct_1();
+    void construct_2();
+    void construct_3();
   
-  void length_1();         // Event length is in bits 17:30 of the first word.
-  void length_2();
-  void length_3();
+    void copyin_1();
+    void setdata_1();
   
-  void time_1();           // raw time.
-  void time_2();           // calibrated time.
+    void settime_1();
+    void settime_2();
+    void settime_3();
   
-  void channel();
+    void setlength_1();
+    void setlength_2();
   
-  void validate();
+    void setchan_1();
   
-  void lt();
-  void eq();
-  void gt();
+    void validate_1();
+    void validate_2();
 };
 
-CPPUNIT_TEST_SUITE_REGISTRATION(RawChTest);
+CPPUNIT_TEST_SUITE_REGISTRATION(rawchTest);
 
-void RawChTest::zCopyConstruct() {
-  uint32_t buffer[] = {1, 2, 3, 4, 5, 6, 7};
-  DDASReadout::RawChannel c(7, buffer);
-  ASSERT(!c.s_ownData);
-  EQ(7, c.s_channelLength);
-  for (int i =0; i < 7; i++) {
-    EQ(buffer[i], c.s_data[i]);
-  }
-}
-
-void RawChTest::length_1()           // From zerocopy:
-{
-  uint32_t buffer[] = {7 << 17, 2, 3, 4, 5, 6, 7, 8};
-  DDASReadout::RawChannel c(8, buffer);
-  c.SetLength();
-  
-  EQ(7, c.s_channelLength);
-}
-void RawChTest::length_2()              // From copyInData:
-{
-  uint32_t buffer[] = {7 << 17, 2, 3, 4, 5, 6, 7, 8};
-  DDASReadout::RawChannel c;
-  c.copyInData(8, buffer);
-  c.SetLength();
-  
-  EQ(7, c.s_channelLength);
-}
-void RawChTest::length_3()           // static length getter.
-{
-  uint32_t buffer[] = {7 << 17, 2, 3, 4, 5, 6, 7, 8};
-  EQ(uint32_t(7), DDASReadout::RawChannel::channelLength(buffer));
+/** @brief Default constructor zeroes a bunch of fields. */
+void rawchTest::construct_1()
+{ 
+    DDASReadout::RawChannel ch;
+    EQ(uint32_t(0), ch.s_moduleType);
+    EQ(double(0.0), ch.s_time);
+    EQ(0, ch.s_chanid);
+    EQ(false, ch.s_ownData);
+    EQ(0, ch.s_ownDataSize);
+    EQ(0, ch.s_channelLength);
+    EQ((uint32_t*)(nullptr), ch.s_data);
 }
 
-void RawChTest::time_1()
-{
-  uint32_t buffer[] = { 4 << 17, 0x12345678, 0xabcd, 0};
-  DDASReadout::RawChannel c(4, buffer);
-  c.SetTime();
-  EQ(double(0xabcd12345678), c.s_time);
-}
-void RawChTest::time_2()
-{
-  uint32_t buffer[] = {4 << 17, 0xa5a5a5a5, 0, 0};
-  DDASReadout::RawChannel c(4, buffer);
-  c.SetTime(10.0);
-  
-  double expected = 10.0*buffer[1];
-  EQ(expected, c.s_time);
+/** @brief Construct with locally owned storage. */
+void rawchTest::construct_2()
+{ 
+    DDASReadout::RawChannel ch(100); // Local owned storage.
+    EQ(uint32_t(0), ch.s_moduleType);
+    EQ(double(0.0), ch.s_time);
+    EQ(0, ch.s_chanid);
+    EQ(true, ch.s_ownData);
+    EQ(100, ch.s_ownDataSize);
+    EQ(0, ch.s_channelLength);
+    ASSERT(ch.s_data);
 }
 
-void RawChTest::channel()
+/** @brief Construct with user owned storage (support zero copy). */
+void rawchTest::construct_3()
 {
-  uint32_t buffer[] = {4 << 17 | 3, 0x1234, 0x5678, 0, };
-  DDASReadout::RawChannel c(4, buffer);
-  c.SetChannel();
-  EQ(3, c.s_chanid);
+    uint32_t data[100]; 
+    DDASReadout::RawChannel ch(100, data);  // Zero-copy storage.
+    
+    EQ(uint32_t(0), ch.s_moduleType);
+    EQ(double(0.0), ch.s_time);
+    EQ(0, ch.s_chanid);
+    EQ(false, ch.s_ownData);
+    EQ(100, ch.s_ownDataSize);
+    EQ(100, ch.s_channelLength); // b/c it's already assumed a hit.
+    EQ((uint32_t*)(data), ch.s_data);
 }
 
-void RawChTest::validate()
-{
-  uint32_t buffer[] = {4 << 17, 0, 0, 0};
-  DDASReadout::RawChannel c(4, buffer);
-  c.SetLength();
+/** @brief Copy in a hit. */
+void rawchTest::copyin_1()
+{ 
+    uint32_t data[4];
+    makeHit(data, 1, 2,3, 0x12345, 100);
+    DDASReadout::RawChannel ch;
+    ch.copyInData(4, data);
   
-  EQ(0, c.Validate(4));
-  EQ(1, c.Validate(10));
+    EQ(true, ch.s_ownData);
+    EQ(4, ch.s_ownDataSize);
+    EQ(4, ch.s_channelLength);
+    EQ(0, memcmp(data, ch.s_data, sizeof(data)));
 }
-void RawChTest::lt()
-{
-  uint32_t b1[] = {4 << 17,  0, 0 , 0};        // timestamp 0.
-  uint32_t b2[] = { 4<< 17, 100, 0, 0};       // ts = 100.
-  
-  DDASReadout::RawChannel c1(4, b1);
-  DDASReadout::RawChannel c2(4, b2);
-  c1.SetTime();
-  c2.SetTime();
-  
-  ASSERT(c1 < c2);
-  ASSERT(!(c2 < c1));
+
+/** @breif Zero-copy in a hit. */
+void rawchTest::setdata_1()
+{ 
+    uint32_t data[4];
+    makeHit(data, 1, 2,3, 0x12345, 100);
+    DDASReadout::RawChannel ch;
+    ch.setData(4, data);
+    EQ(0, ch.s_ownDataSize); // I don't own any data!
+    EQ(4, ch.s_channelLength);
+    EQ((uint32_t*)(data), ch.s_data);
 }
-void RawChTest::eq()
+
+/** @brief Set the time without a clock calibration. */
+void rawchTest::settime_1()
 {
-  uint32_t b1[] = {4 << 17, 100, 1, 2};
-  uint32_t b2[] = {4 << 17, 100, 3, 4};
-  
-  DDASReadout::RawChannel c1(4, b1);
-  DDASReadout::RawChannel c2(4, b2);
-  
-  ASSERT(c1 == c2);
-  ASSERT(c2 == c1);
+    uint32_t data[4];
+    makeHit(data, 1,2,3, 12345678, 100);
+    DDASReadout::RawChannel ch;
+    ch.setData(4, data);
+    ch.SetTime();  
+    EQ(double(12345678), ch.s_time);
 }
-void RawChTest::gt()
+
+/** @brief Set a time with clock calibration parameter. */
+void rawchTest::settime_2()
 {
-  uint32_t b1[] = {4 << 17,  0, 0 , 0};        // timestamp 0.
-  uint32_t b2[] = { 4<< 17, 100, 0, 0};       // ts = 100.
+    uint32_t data[4];
+    makeHit(data, 1,2,3, 12345678, 100);
+    DDASReadout::RawChannel ch;
+    ch.setData(4, data);
+    ch.SetTime(2.0);
+    EQ(double(12345678*2), ch.s_time);
+}
+
+/** @brief Set time from an external timestamp and calibration parameter. */
+void rawchTest::settime_3()
+{
+    uint32_t data[6];
+    makeHit(data, 1,2,3, 12345678, 100);
+    data[4] = 0x54321;
+    data[5] = 0x1234;
   
-  DDASReadout::RawChannel c1(4, b1);
-  DDASReadout::RawChannel c2(4, b2);
-  c1.SetTime();
-  c2.SetTime();
+    // Fix up data[0] as well (yikes!). We made the hit with an event and
+    // header size of 4 (see makeHit in testcommon.cpp) but now we have two
+    // extra words so:
   
-  ASSERT(c2 > c1);
-  ASSERT(!(c1 > c2));
+    data[0] = (6 << 17) | (6 << 12) | (1 << 8) | (2 << 4) | 3;
+  
+    DDASReadout::RawChannel ch;
+    ch.setData(6, data);
+    ch.SetTime(2.0, true);
+  
+    EQ(double(0x123400054321*2), ch.s_time);
+}
+
+/** @brief Can set the channel length. */
+void rawchTest::setlength_1()
+{ 
+    uint32_t data[4];
+    makeHit(data, 1,2,3, 12345678, 100); // Length is 4.
+    DDASReadout::RawChannel ch;
+    ch.setData(4, data);
+    ch.SetLength();  
+    EQ(4, ch.s_channelLength);
+}
+
+/** Changing the eventlength field in the hit changes the channel length. */
+void rawchTest::setlength_2()
+{
+    uint32_t data[8];
+    makeHit(data, 1,2,3, 12345678, 100);
+    data[0] = (data[0] & 0x80010000) |  (8 << 17); // Event length 4 -> 8
+    DDASReadout::RawChannel ch;
+    ch.setData(8, data);
+    ch.SetLength();
+    EQ(8, ch.s_channelLength);
+}
+
+/** @brief Extract the channel ID. */
+void rawchTest::setchan_1()
+{ 
+    uint32_t data[4];
+    makeHit(data, 1,2,3, 12345678, 100);
+    DDASReadout::RawChannel ch;
+    ch.setData(4, data);
+    ch.SetChannel();
+    EQ(3, ch.s_chanid);
+}
+
+/** @brief Check valid event length. */
+void rawchTest::validate_1()
+{ 
+    uint32_t data[4];
+    makeHit(data, 1,2,3, 12345678, 100);
+    DDASReadout::RawChannel ch;
+    ch.setData(4, data);
+    ch.SetLength();
+    EQ(0, ch.Validate(4));
+}
+
+/** @brief Fail on invalid length. */
+void rawchTest::validate_2()
+{  
+    uint32_t data[8];
+    makeHit(data, 1,2,3, 12345678, 100);
+    DDASReadout::RawChannel ch;
+    ch.setData(8, data);
+    ch.SetLength();
+    EQ(1, ch.Validate(8)); // Size field says 4!
 }

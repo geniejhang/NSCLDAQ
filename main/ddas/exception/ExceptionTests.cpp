@@ -37,10 +37,10 @@ public:
 CPPUNIT_TEST_SUITE_REGISTRATION(ExceptionTests);
 
 /**
+ * @brief Check the return code and text for CXIAException.
  * @note (ASC 3/12/24): XIA exception tests assume that a return code of 0
  * will result in a context message 'success.'
  */
-
 void ExceptionTests::xiaException() {
     CXIAException e("This is a test", "myFunction", 0);
     EQ(0, e.ReasonCode());

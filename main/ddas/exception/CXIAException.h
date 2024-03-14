@@ -12,7 +12,7 @@
 
 /**
  * @class CXIAException
- * @brief XIA API major version 3+ implements a return code and context
+ * @brief XIA API major version 4+ implements a return code and context
  * message for non-zero return values from API functions. This class provides
  * a wrapper for that business using the CException class:
  * * m_reasonCode holds the XIA API return value,
@@ -22,7 +22,8 @@
  * to the CException constructor as-is).
  * The full error message incorporating the XIA API return code and its 
  * associated context message as well as the user-provided context can be 
- * accessed using the class' `ReasonText()` method.
+ * accessed using the class' `ReasonText()` method. The value of the return
+ * code can be accessed using the `ReasonCode()` method.
  */
 
 const size_t kXIABUFSIZE = 1024; //!< XIA API return code max buffer length.
@@ -36,18 +37,27 @@ private:
      
 public:
     /**
-     * @brief Constructor.
+     * @brief Constructor from arguments.
      * @param msg User context message for the error.
      * @param fcn XIA API function name.
      * @param rv  XIA API function return value.
      */
     CXIAException(std::string msg, std::string fcn, int rv);
-     
+
+    /** @brief Destructor. Nothing to do here. */
     virtual ~CXIAException() {};
   
     // Exception interface:
 
+    /**
+     * @brief Get the reason code.
+     * @return The reason code: non-zero return value from the XIA API.
+     */
     virtual int ReasonCode() const;
+    /**
+     * @brief Get the return text.
+     * @return Full context message describing the error.
+     */
     virtual const char* ReasonText() const;
 
 };

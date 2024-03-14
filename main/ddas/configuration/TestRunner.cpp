@@ -8,7 +8,7 @@
      http://www.gnu.org/licenses/gpl.txt
 
      Author:
-             Jeromy Tompkins
+         Jeromy Tompkins
          NSCL
          Michigan State University
          East Lansing, MI 48824-1321
@@ -16,10 +16,11 @@
 
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
+
 #include <string>
 #include <iostream>
-using namespace std;
 
+using namespace std;
 
 // Boilerplate code for CPPUNIT tests
 int main(int argc, char** argv)

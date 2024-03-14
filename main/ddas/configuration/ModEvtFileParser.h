@@ -20,10 +20,10 @@ namespace DAQ {
 	 * @{
 	 */
 	
-	/*!
-	 * @class ModEvtFileParser ModEvtFileParser.h
-	 * \brief A parser for the modevtlen.txt file.
-	 *
+	/**
+	 * @class ModEvtFileParser
+	 * @brief A parser for the modevtlen.txt file.
+	 * @details
 	 * The modevtlen.txt contains the length of each event to expect from 
 	 * each module. For each channel in a digitizer, the assumption is 
 	 * that the of the same length will be emitted. That implies that each 
@@ -41,21 +41,20 @@ namespace DAQ {
 	 * are modules in the system. It _IS_ an error for the file to contain 
 	 * fewer lines than there are in the system.
 	 */
+	
 	class ModEvtFileParser
 	{
 	public:
 	    /** @brief Constructor. */
 	    ModEvtFileParser() = default;
 	    /** 
-	     * \brief Parse and store the contents of the modevtlen.txt file 
-	     *   in a configuration object
-	     * \param input  The stream from which the contents of the file 
-	     *   are read.
-	     * \param config The configuration to store the results in.
-	     * \throws std::runtime_error If fewer lines than there are modules
-	     *    are found.
-	     * \throws std::runtime_error If a line is encountered with a value
-	     *    less than 4.
+	     * @brief Parse and store the contents of the modevtlen.txt file 
+	     * in a configuration object
+	     * @param input Input stream for reading.
+	     * @param config The configuration to store the results in.
+	     * @throws std::runtime_error Fewer lines in modevtlen.txt than 
+	     *   installed modules.
+	     * @throws std::runtime_error Event length < 4.
 	     */
 	    void parse(std::istream& input, Configuration& config);
 	};

@@ -242,8 +242,7 @@ void DAQ::DDAS::SystemBooter::populateHardwareMap(Configuration &config)
 
 /**
  * @todo (ASC 7/7/23): Lots of arguments to this function. Can we pack info 
- * into a struct and pass it around that way instead to clean up these 
- * signatures/calls?
+ * into a struct and pass it around that way?
  */
 void DAQ::DDAS::SystemBooter::logModuleInfo(
     int modIndex, unsigned short ModRev, unsigned short ModSerNum,

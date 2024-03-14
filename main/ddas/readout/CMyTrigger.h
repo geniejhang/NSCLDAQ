@@ -31,8 +31,9 @@ private:
     unsigned       m_fifoThreshold;   //!< FIFO readout threshold.
     time_t         m_lastTriggerTime; //!< Last time operator() returned true.
     unsigned int*  m_wordsInEachModule; //!< Current FIFO sizes.
-public:
+
     // Constructors, destructors and other cannonical operations:
+public:   
     /** @brief Default constructor. */
     CMyTrigger();
     /** @brief Destructor. */

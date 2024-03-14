@@ -34,7 +34,7 @@ namespace DDASReadout {
     /**
      * @details
      * If initailSize is zero (the default) no storage is allocated and the 
-     * user must do a resize  at some point to get storage.
+     * user must do a resize at some point to get storage.
      */
     ReferenceCountedBuffer::ReferenceCountedBuffer(size_t initialSize) :
 	s_size(0), s_references(0), s_pData(nullptr)

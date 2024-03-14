@@ -14,7 +14,14 @@
  * @class CMyScaler
  * @brief Read in scaler data for DDAS systems.
  * @details 
- * Generates scaler information from the run statistics read from the module(s). A DDAS module with N channels has a scalar bank of 2N + 1 values. The first value in index zero (0) for that module is used to store the crate ID, which is read from the cfgPixie16.txt file. The crate ID value is reported on stdout when the modules are booted e.g. when running a readout code: "Scalers know crate ID = <myID>". Following the ID are N pairs of channel scaler data corresponding to the number of observed (input) and accepted (output) fast triggers since the last scaler read.
+ * Generates scaler information from the run statistics read from the 
+ * module(s). A DDAS module with N channels has a scalar bank of 2N + 1 values.
+ * The first value in index zero (0) for that module is used to store the crate
+ * ID, which is read from the cfgPixie16.txt file. The crate ID value is 
+ * reported on stdout when the modules are booted e.g. when running a readout 
+ * code: "Scalers know crate ID = <myID>". Following the ID are N pairs of 
+ * channel scaler data corresponding to the number of observed (input) and 
+ * accepted (output) fast triggers since the last scaler read.
  *
  * For example, a 16-channel module scalar bank has the format:
  *
@@ -48,13 +55,13 @@ public:
     } Statistics;
     
 private:
-    unsigned short m_crate; //!< Crate ID value.
+    unsigned short m_crate;  //!< Crate ID value.
     unsigned short m_module; //!< Module number.
     double m_prevIC[16]; //!< Previous input counts (# raw fast triggers.)
     double m_prevOC[16]; //!< Previous output counts (# accepted triggers) 
-
     std::vector<uint32_t> m_scalers; //!< Vector of scaler data for the module.
-    Statistics m_statistics; //!< Storage for calculated scaler data.
+    Statistics m_statistics;         //!< Storage for calculated scaler data.
+
 public:
     /**
      * @brief Constructor.
@@ -88,6 +95,7 @@ public:
      * @return Reference to the statistics storage object.
      */
     const Statistics& getStatistics() const { return m_statistics; }
+    
 private:
     /** 
      * @brief Clear the run counters.

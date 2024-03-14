@@ -32,20 +32,22 @@ namespace DDASReadout {
 
     struct ReferenceCountedBuffer;
     
-/**
- * @class BufferArena
- * @brief Provides a class for memory management in reference counted buffers.
- * @details
- * Clients request storage of a specific size, and return it later.
- * The storage is provided as a reference counted buffer.
- *
- * Storage allocation strategy is relatively simplistic with the idea
- * that statistically, all storage managed by this object will wind up
- * eventually being resized to the biggest required block.
- *
- * This is suitable for I/O buffers but very wasteful for ordinary
- * storage management. The primary use case is for buffers for PXI readout.
- */
+    /**
+     * @class BufferArena
+     * @brief Provides a class for memory management in reference-counted 
+     * buffers.
+     * @details
+     * Clients request storage of a specific size, and return it later.
+     * The storage is provided as a reference counted buffer.
+     *
+     * Storage allocation strategy is relatively simplistic with the idea
+     * that statistically, all storage managed by this object will wind up
+     * eventually being resized to the biggest required block.
+     *
+     * This is suitable for I/O buffers but very wasteful for ordinary
+     * storage management. The primary use case is for buffers for PXI readout.
+     */
+    
     class BufferArena {
     private:
 	std::deque<ReferenceCountedBuffer*> m_BufferPool; //!< All buffers.

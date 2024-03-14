@@ -15,11 +15,7 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** 
- * @file RawChannel.h
- * @brief Define a class to contain a raw channel of data,.
- * @note This can operate either in copy or zero copy mode.
- */
+
 
 #ifndef RAWCHANNEL_H
 #define RAWCHANNEL_H
@@ -27,7 +23,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/** @namespace DDASReadout */
 namespace DDASReadout {
     
     /**
@@ -41,7 +36,8 @@ namespace DDASReadout {
      */
     
     struct RawChannel {
-        double s_time;          //!< Extracted time, possibly calibrated.
+        uint32_t s_moduleType;  //!< Type of module this comes from.
+	double s_time;          //!< Extracted time, possibly calibrated.
         int    s_chanid;        //!< Channel within module.
         bool   s_ownData;       //!< True if we own s_data.
         int    s_ownDataSize;   //!< If we own data, how many uint32_t's.
@@ -61,7 +57,7 @@ namespace DDASReadout {
 	 * @param nWords Number of data words to pre-allocate.
 	 * @param pZCopyData Pointer to the data of the hit.
 	 */
-        RawChannel(size_t nWords, void* pZCopyData);
+        RawChannel(size_t nWords, void* pZcopyData);
 	/** @brief Destructor. */
         virtual ~RawChannel();
 
@@ -75,7 +71,7 @@ namespace DDASReadout {
 	/** 
 	 * @brief Set time time in ns.
 	 * @param clockCal Nanoseconds per clock tick.
-	 * @param useExt True if using an external timestamp.
+	 * @param useExt True if using an external timestamp (default=false).
 	 * @return int
 	 * @retval 0 Success.
 	 * @retval 1 If attempting to use the external timestamp but none is 
@@ -83,7 +79,7 @@ namespace DDASReadout {
 	 * @retval 1 If not using an external timestamp, but the number of 
 	 *   data words is insufficient (< 4).
 	 */
-	int SetTime(double clockCal, bool useExt=false);
+        int SetTime(double clockcal, bool useExt=false);
 	/** 
 	 * @brief Set the event length from the data. 
 	 * @return 0 Always.
@@ -106,8 +102,6 @@ namespace DDASReadout {
 	 */
         int Validate(int expecting);
         
-        // Zero copy suport:
-
 	/** 
 	 * @brief Set new data.
 	 * @param nWords The new channel length (32-bit words).
@@ -115,8 +109,6 @@ namespace DDASReadout {
 	 */
         void setData(size_t nWords, void* pZCopyData);
         
-        // Copy new data:
-
 	/**
 	 * @brief Copy in data.
 	 * @param nWords The new channel length (32-bit words).
@@ -124,8 +116,6 @@ namespace DDASReadout {
 	 */
         void copyInData(size_t nWords, const void* pData);
         
-        // Copy construction and assignment do deep copies if dynamic memory
-
 	/** 
 	 * @brief Copy constructor. 
 	 * @param rhs The object we're copying into this.
@@ -138,12 +128,21 @@ namespace DDASReadout {
 	 */
         RawChannel& operator=(const RawChannel& rhs);
 
-	/** @brief Extract the number of words in a hit.
+	/** 
+	 * @brief Extract the number of words in a hit.
 	 * @param pData Pointer to the hit data.
 	 * @return The length of the hit.
 	 */
         static uint32_t channelLength(void* pData);
-    };
+	/**
+	 * @brief Returns the multiplier used to convert the module raw 
+	 * timestamp into nanoseconds.
+	 * @param moduleType The module type/speed etc. word that's normally 
+	 *   prepended to hit data.
+	 * @return The timestamp multiplier.
+	 */
+        static double moduleCalibration(uint32_t moduleType);
+    };    
 }
 
 // Comparison operators -- operate on the timestamp:
@@ -155,7 +154,9 @@ namespace DDASReadout {
  * @retval true If c1 time < c2 time.
  * @retval false Otherwise.
  */
-bool operator<(const DDASReadout::RawChannel& c1, const DDASReadout::RawChannel& c2);
+bool operator<(
+    const DDASReadout::RawChannel& c1, const DDASReadout::RawChannel& c2
+    );
 /** 
  * @brief operator>
  * @param c1, c2 Channels with timestamps for comparison.
@@ -163,7 +164,9 @@ bool operator<(const DDASReadout::RawChannel& c1, const DDASReadout::RawChannel&
  * @retval true If c1 time > c2 time.
  * @retval false Otherwise.
  */
-bool operator>(const DDASReadout::RawChannel& c1, const DDASReadout::RawChannel& c2);
+bool operator>(
+    const DDASReadout::RawChannel& c1, const DDASReadout::RawChannel& c2
+    );
 /** 
  * @brief operator==
  * @param c1, c2 Channels with timestamps for comparison.
@@ -171,6 +174,8 @@ bool operator>(const DDASReadout::RawChannel& c1, const DDASReadout::RawChannel&
  * @retval true If c1 time, c2 time are equal.
  * @retval false Otherwise.
  */
-bool operator==(const DDASReadout::RawChannel& c1, const DDASReadout::RawChannel& c2);
+bool operator==(
+    const DDASReadout::RawChannel& c1, const DDASReadout::RawChannel& c2
+    );
 
 #endif

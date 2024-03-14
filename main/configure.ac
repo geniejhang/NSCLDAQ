@@ -34,7 +34,7 @@ AC_LANG_POP
 # Pandoc is needed for printed versions of the logbook:
 
 AC_CHECK_PROG(HAVE_PANDOC, [pandoc], [true], [false])
-if test "$HAVE_PANDOC" ==  "false"
+if test "$HAVE_PANDOC" == "false"
 then
 	AC_MSG_FAILURE([pandoc is required to produce PDF output from the logbook utilities])
 	
@@ -43,17 +43,15 @@ fi
 #  CAEN Digitizer support is optional:
 
 AC_ARG_ENABLE([caen-digitizer-support],
-	AC_HELP_STRING([--enable-caen-digitizer-support],
-	[Build support for CAEN Digitizers]),
+	AC_HELP_STRING([--enable-caen-digitizer-support], [Build support for CAEN Digitizers]),
 	[enable_caen=$enableval],
 	[enable_caen=no])
 
 if test "x$enable_caen" = "xyes"
 then
 	AC_ARG_WITH([caen-digitizer-libroot],
-	AC_HELP_STRING([ --with-caen-digitizer-libroot],
-	[Root directory for CAEN Digitizer/VME/Comm library installation]),
-	[caen_root=$withval],[caen_root=""])
+	AC_HELP_STRING([ --with-caen-digitizer-libroot], [Root directory for CAEN Digitizer/VME/Comm library installation]),
+	[caen_root=$withval], [caen_root=""])
 
 	if test "xx$caen_root" != "xx"
 	then
@@ -76,18 +74,16 @@ fi
 #  specific locations:
 
 AC_ARG_ENABLE([caen-nextgen],
-	[AS_HELP_STRING([--enable-caen-nextgen],
-	[To enable support for CAEN Nextgen digitizers.])],
+	[AS_HELP_STRING([--enable-caen-nextgen], [To enable support for CAEN Nextgen digitizers.])],
 	[AC_MSG_CHECKING([Checking for CAEN FElib installed])
 	AC_CHECK_FILE([/usr/local/include/CAEN_FELib.h], 
         [AC_MSG_RESULT([Found header])],
         [AC_MSG_ERROR([cannot find /usr/local/CAEN_FELib.h - install CAEN Nextgen digitizer support libraries])])
 	AC_CHECK_FILES([/usr/local/lib/libCAEN_Dig2.so /usr/local/lib/libCAEN_FELib.so],
         [AC_MSG_RESULT([Found CAEN FELib library files])],
-        [AC_MSG_ERROR([cannot find the /usr/local/lib/{libCAEN_Dig2.so, libCAEN_FELib.so files install CAEN nextgen digitizer support libraries}]
+        [AC_MSG_ERROR([cannot find the /usr/local/lib/{libCAEN_Dig2.so, libCAEN_FELib.so files - install CAEN nextgen digitizer support libraries}]
         )])
-	enable_caennextgen="true"],
-	[enable_caennextgen="false"])  
+	enable_caennextgen="true"], [enable_caennextgen="false"])  
 
 if test "${enable_caennextgen}" = "true"
 then
@@ -118,8 +114,8 @@ AC_ARG_ENABLE([docs],
 if test "x$enable_docs" == "xyes"
 then
 	AC_MSG_NOTICE([Documentation enabled])
-
-	AC_CHECK_PROG(HAVE_DOCBOOK2PDF, [docbook2pdf], [true], [false])
+	
+	AC_CHECK_PROG(HAVE_DOCBOOK2PDF, [docbook2pdf], [true], [false])	
 	if test "$HAVE_DOCBOOK2PDF" == "false"
 	then
 		AC_MSG_FAILURE([docbook2pdf is required to build documentation but was not found])
@@ -127,7 +123,7 @@ then
 		AC_SUBST(DOCBOOK2PDF,[docbook2pdf])
 	fi
 
-	AC_CHECK_PROG(HAVE_DOCBOOK2HTML, [docbook2html], [true], [false])
+	AC_CHECK_PROG(HAVE_DOCBOOK2HTML, [docbook2html], [true], [false])	
 	if test "$HAVE_DOCBOOK2HTML" == "false"
 	then
 		AC_MSG_FAILURE([docbook2html is required to build documentation but was not found])
@@ -135,7 +131,7 @@ then
 		AC_SUBST(DOCBOOK2HTML,[docbook2html])
 	fi
 
-	AC_CHECK_PROG(HAVE_XMLTO, [xmlto], [true], [false])
+	AC_CHECK_PROG(HAVE_XMLTO, [xmlto], [true], [false])	
 	if test "$HAVE_XMLTO" == "false"
 	then
 		AC_MSG_FAILURE([xmlto is required to build documentation but was not found])
@@ -143,7 +139,7 @@ then
 		AC_SUBST(DOCBOOK2MAN,["xmlto man"])
 	fi
 
-	AC_CHECK_PROG(HAVE_MANDB, mandb, [true], [false])
+	AC_CHECK_PROG(HAVE_MANDB, mandb, [true], [false])	
 	if test "$HAVE_MANDB" == "false"
 	then
 		AC_MSG_FAILURE([mandb is required to build documentation but was not found])
@@ -162,8 +158,7 @@ fi
 # Doxygen and dot (for graphs) are installed
 
 AC_ARG_ENABLE([ddas-docs],
-              AS_HELP_STRING([--enable-ddas-docs],
-	      [Build the DDAS documentation]),
+              AS_HELP_STRING([--enable-ddas-docs], [Build the DDAS documentation]),
               [], [enable_ddas_docs=no])
 
 if test "$enable_ddas_docs" = "yes"
@@ -181,7 +176,7 @@ then
   	AC_CHECK_PROG(HAVE_DOT, [dot], [true], [false])
   	if test "$HAVE_DOT" = "false"
   	then
-		AC_MSG_FAILURE([DOT is required by Doxygen to build the DDAS documentation but was not found])
+		AC_MSG_FAILURE([dot is required by Doxygen to build the DDAS documentation but was not found])
   	fi
 
   	AM_CONDITIONAL([BUILD_DDAS_DOCS],[true])
@@ -227,11 +222,10 @@ AC_TYPE_UINT8_T
 AX_CHECK_COMPILE_FLAG([-Wno-error=date-time], [NODATEWARN="-Wno-error=date-time"])
 AC_SUBST(NODATEWARN)
 
-# check to find the size of address
+# Check to find the size of address
+
 AC_CHECK_SIZEOF([void*])
-AS_IF([test "$ac_cv_sizeof_voidp" -eq 8],
-	    AC_DEFINE([ADDR64], 1, [Specifies that memory addresses are 64-bits ]),
-     	    [])
+AS_IF([test "$ac_cv_sizeof_voidp" -eq 8], AC_DEFINE([ADDR64], 1, [Specifies that memory addresses are 64-bits ]), [])
    
 # Checks for library functions.
 
@@ -340,7 +334,7 @@ then
 	AC_MSG_CHECKING([libtcl++ installed as package (e.g. .deb)])
 
 	AC_CHECK_FILE([/usr/include/TCLInterpreterObject.h],
-		[systemtcl="yes"], [systemtcl="no"])
+	[systemtcl="yes"], [systemtcl="no"])
 
 	if test $systemtcl = "yes"
 	then
@@ -349,18 +343,23 @@ then
 		LIBTCLPLUS_LDFLAGS="-ltclPlus ${LIBEXCEPTION_LDFLAGS}"
 		AC_MSG_RESULT([Found in  system libraries])
 	else
-		AC_CHECK_FILE([${prefix}/lib/libException.so], [libtclinstalled="yes"], [libtclinstalled="no"])
-		AC_CHECK_FILE([${prefix}/lib/libtclPlus.so], [libexceptioninstalled="yes"],[libexceptioninstalled="no"])
-		AC_CHECK_FILE([${prefix}/include/TCLInterpreterObject.h], [tclinterpobjinstalled="yes"],[tclinterpobjinstalled="no"])
+		AC_CHECK_FILE([${prefix}/lib/libException.so],
+		[libtclinstalled="yes"], [libtclinstalled="no"])
+		AC_CHECK_FILE([${prefix}/lib/libtclPlus.so],
+		[libexceptioninstalled="yes"],[libexceptioninstalled="no"])
+		AC_CHECK_FILE([${prefix}/include/TCLInterpreterObject.h],
+		[tclinterpobjinstalled="yes"],[tclinterpobjinstalled="no"])
 	
 		if [ [ $libtclinstalled = "no" ] || [ $libexceptioninstalled = "no" ] || [ $tclinterpobjinstalled = "no" ] ]
 		then
-			AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
+			AC_CHECK_FILE([${srcdir}/libtcl],
+			[havelibtcldir="yes"], [havelibtcldir="no"])
 			if test $havelibtcldir = "yes"
 			then
 				AC_MSG_RESULT([Need to build local tagged copy])
-				AC_CHECK_FILE([${srcdir}/libtcl/configure], [havelibtcldir="yes"], [havelibtcldir="no"])
-				(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
+				AC_CHECK_FILE([${srcdir}/libtcl/configure],
+				[havelibtcldir="yes"], [havelibtcldir="no"])
+				(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
 			else
 				AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
 			fi
@@ -381,7 +380,7 @@ AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
 if test $havelibtcldir = "yes"
 then
 	AC_MSG_RESULT([Need to build local tagged copy])
-	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
+	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
 	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
 	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
 	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
@@ -412,10 +411,8 @@ tcl_incdir="/usr/include/$tcl_basename"
 #
 
 AC_ARG_ENABLE([epics-tools],
-	AS_HELP_STRING([--enable-epics-tools], 
-	[Build software that requires EPICS (default no)]),
-	[],
-	[enable_epics_tools=no])
+	AS_HELP_STRING([--enable-epics-tools], [Build software that requires EPICS (default no)]),
+	[], [enable_epics_tools=no])
 
 if test "$enable_epics_tools" = "yes"
 then
@@ -451,10 +448,8 @@ fi
 # ROOT_LDFLAGS   - ROOT libraries (automatically generated from ROOT config)
 
 AC_ARG_ENABLE([ddas],
-	AS_HELP_STRING([--enable-ddas],
-	[Build the DDAS support software (default no)]),
-	[],
-	[enable_ddas=no])
+	AS_HELP_STRING([--enable-ddas], [Build the DDAS support software (default no)]),
+	[], [enable_ddas=no])
 
 if test "$enable_ddas" = "yes"
 then
@@ -463,16 +458,17 @@ then
 
 	AC_ARG_WITH([xiaapidir],
 	[  --with-xiaapidir=path - Path to the XIA API installation. Required if DDAS support is enabled.],
-	[xiaapidir=$withval],
-	[AC_MSG_ERROR([use --with-xiaapidir to point to the actual installation of the XIA API])])
+	[xiaapidir=$withval], [AC_MSG_ERROR([use --with-xiaapidir to point to the actual installation of the XIA API])])
 
 	# Check that the XIA API installation directory is correct by looking
 	# for the pixie16.h header there. If found, define vars; if not,
-	# print an error message and exit:
+	# print an error message and exit. Note that this version supports
+	# only XIA API major version 4 which incorporates "legacy mode"
+	# as a supported option as of release 4.x.y and later:
 	
 	AC_CHECK_FILE([${xiaapidir}/include/pixie16/pixie16.h],
 	[PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"],
-	[AC_MSG_ERROR([invalid XIA API installation directory ${xiaapidir}, use --with-xiaapidir to point to the correct one (this version of NSCLDAQ supports only XIA API major version 3+)])])
+	[AC_MSG_ERROR([invalid XIA API installation directory ${xiaapidir}, use --with-xiaapidir to point to the correct one (this version of NSCLDAQ supports only XIA API major version 4+)])])
 
 	PIXIE_API_DIR=$xiaapidir
 	PIXIE_CPPFLAGS="-I${xiaapidir}/include"
@@ -483,8 +479,9 @@ then
 
 	# Specify the location of the PLX installation. This will default to
 	# /usr/opt/plx or $(prefix)/../../plx if no argument is provided.
-	# Since we know its version 8+ to support XIA API 3+, the correct
-	# install directory can be verified by the presence of the shared lib.
+	# Since we know its must be version 8+ to support XIA API 4+, the
+	# correct install directory can be inferred from the presence of the
+	# shared library.
 
 	AC_ARG_WITH([plx-sdk],
 		[  --with-plx-sdk=path - Path to the PLX software installation. Required if DDAS support is enabled.],
@@ -903,26 +900,17 @@ AC_CONFIG_FILES([Makefile
 	ddas/Makefile
 	ddas/exception/Makefile
 	ddas/configuration/Makefile
-	ddas/xiatest/Makefile
 	ddas/booter/Makefile
 	ddas/format/Makefile
 	ddas/ddasdumper/Makefile
 	ddas/ddasdumper/ddasdumper
-	ddas/nscope/Makefile
-	ddas/nscope/nscope
 	ddas/readout/Makefile
 	ddas/readout/DDASFirmwareVersions.txt
-	ddas/sorter/Makefile
-	ddas/readoutdriver/Makefile
 	ddas/pixieplugin/Makefile
 	ddas/pixieplugin/definitions.tcl
-	ddas/dumpsetfile/Makefile
-	ddas/xml/tinyxml/Makefile
-	ddas/xml/Makefile
 	ddas/qtscope/Makefile
 	ddas/qtscope/qtscope
 	ddas/simple_setups/Makefile
-	ddas/tclconfig/Makefile
 	ddas/docs/Makefile
 	ddas/docs/Doxyfile
 	ddas/docs/DoxygenLayout.xml

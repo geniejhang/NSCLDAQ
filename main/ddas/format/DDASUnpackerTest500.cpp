@@ -8,14 +8,15 @@
      http://www.gnu.org/licenses/gpl.txt
 
      Author:
-             Jeromy Tompkins
-	     NSCL
-	     Michigan State University
-	     East Lansing, MI 48824-1321
+         Aaron Chester
+         Jeromy Tompkins
+	 NSCL
+	 Michigan State University
+	 East Lansing, MI 48824-1321
 */
-#include <stdint.h>
-#include <math.h>
 
+#include <math.h>
+#include <stdint.h>
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -32,10 +33,10 @@ using namespace ::DAQ::DDAS;
 // A test suite 
 class DDASUnpacker500Test : public CppUnit::TestFixture
 {
-  private:
+private:
     DDASHit hit;
 
-  public:
+public:
     CPPUNIT_TEST_SUITE( DDASUnpacker500Test );
     CPPUNIT_TEST( msps_0 );
     CPPUNIT_TEST( coarseTime_0 );
@@ -44,41 +45,67 @@ class DDASUnpacker500Test : public CppUnit::TestFixture
     CPPUNIT_TEST( cfdTrigSource_0 );
     CPPUNIT_TEST_SUITE_END();
 
-  public:
-    void setUp() {
+public:
+    /** @brief Define and unpack and event. */
+    void setUp()
+	{
 
-      vector<uint32_t> data = { 0x0000000c, 0x0c0c01f4, 0x00084321, 
-                                0x0000f687, 0x747f000a, 0x000008be};
-      
-      DDASHitUnpacker unpacker;
-      tie(hit, ignore) = unpacker.unpack(data.data(), data.data()+data.size());
-    }
+	    vector<uint32_t> data = { 0x0000000c, 0x0c0c01f4, 0x00084321, 
+		0x0000f687, 0x747f000a, 0x000008be};
+	    DDASHitUnpacker unpacker;
+	    tie(hit, ignore) = unpacker.unpack(
+		data.data(), data.data()+data.size()
+		);
+	}
 
-    void tearDown() {
+    void tearDown() {}
 
-    }
+    /// @name UnpackerTests500MSPS
+    ///@{
+    /** 
+     * @brief Tests for unpacking module info, time, CFD, etc. for 
+     * 500 MSPS modules. 
+     */
+    void msps_0 ()
+	{
+	    EQMSG(
+		"Simple body extracts adc frequency",
+		uint32_t(500), hit.GetModMSPS()
+		); 
+	}
 
-    void msps_0 () {
-      EQMSG("Simple body extracts adc frequency", uint32_t(500), hit.GetModMSPS()); 
-    }
+    void coarseTime_0 ()
+	{
+	    EQMSG(
+		"Simple body compute coarse time",
+		uint64_t(0x000a0000f687)*10, hit.GetCoarseTime()
+		); 
+	}
 
-    void coarseTime_0 () {
-      EQMSG("Simple body compute coarse time", uint64_t(0x000a0000f687)*10, hit.GetCoarseTime()); 
-    }
+    void time_0 ()
+	{
+	    ASSERTMSG(
+		"Simple body compute time",
+		std::abs(hit.GetTime() - 429497360715.281006) < 0.000001
+		); 
+	}
 
-    void time_0 () {
-      ASSERTMSG("Simple body compute time",
-                 std::abs(hit.GetTime() - 429497360715.281006)<0.000001); 
-    }
+    void cfdFail_0 ()
+	{
+	    EQMSG(
+		"Simple body computes cfd fail bit",
+		uint32_t(0), hit.GetCFDFailBit()
+		);
+	}
 
-    void cfdFail_0 () {
-      EQMSG("Simple body computes cfd fail bit", uint32_t(0), hit.GetCFDFailBit());
-    }
-
-    void cfdTrigSource_0 () {
-      EQMSG("Simple body compute cfd trig source bit", uint32_t(3), hit.GetCFDTrigSource());
-    }
+    void cfdTrigSource_0 ()
+	{
+	    EQMSG(
+		"Simple body compute cfd trig source bit",
+		uint32_t(3), hit.GetCFDTrigSource()
+		);
+	}
 };
 
 // Register it with the test factory
-CPPUNIT_TEST_SUITE_REGISTRATION( DDASUnpacker500Test );
+CPPUNIT_TEST_SUITE_REGISTRATION(DDASUnpacker500Test);
