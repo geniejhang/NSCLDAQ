@@ -35,11 +35,4 @@ void makeHit(
     uint64_t rawTime, uint16_t energy, uint16_t cfdTime = 0
     );
 
-/* /\** */
-/*  * @brief Return an uniformly distributed random integer in the range [0,n) */
-/*  * @param n Top end of range. */
-/*  * @return int */
-/*  *\/ */
-/* int randRange(int n); */
-
 #endif

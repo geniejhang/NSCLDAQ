@@ -7,7 +7,6 @@
 #include <vector>
 #include <algorithm>
 #include <random>
-#include <chrono>
 
 #define private public
 #include "ZeroCopyHit.h"
@@ -142,16 +141,8 @@ void zcopyhittest::refcheck_3()
   
     // Shuffle the hits and release them one by one:
 
-    /** 
-     * @note `std::random_shuffle(hits.begin(), hits.end(), randRange)` 
-     * should be good through C++17 where it may need to be replaced by 
-     * a `std::shuffle` and a UniformRandomBitGenerator (URBG).
-     */
-
-    //std::random_shuffle(hits.begin(), hits.end(), randRange);
-
-    auto rd = std::random_device();
-    auto rng = std::default_random_engine() { rd() };
+    std::random_device rd;
+    std::default_random_engine rng(rd());
     std::shuffle(hits.begin(), hits.end(), rng);
   
     // Now delete all but one item.

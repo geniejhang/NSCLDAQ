@@ -21,7 +21,7 @@
 #include <stdlib.h>
 
 void makeHit(
-    uint32_t* hit,int crate, int slot, int chan,
+    uint32_t* hit, int crate, int slot, int chan,
     uint64_t rawTime, uint16_t energy, uint16_t cfdTime
     )
 {
@@ -34,9 +34,3 @@ void makeHit(
   hit[2] = (rawTime >> 32) | (cfdTime << 16);
   hit[3] = energy;
 }
-
-// int randRange(int n)
-// {
-//     double r = std::rand();
-//     return (int)(r/RAND_MAX) * n;
-// }

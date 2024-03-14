@@ -72,9 +72,9 @@ ddasSortOptions.h:  ddasSortOptions.ggo
 
 noinst_PROGRAMS=unittests
 
-unittests_SOURCES=Asserts.h TestRunner.cpp \
+unittests_SOURCES=Asserts.h TestRunner.cpp testcommon.h testcommon.cpp \
 	hitmgrtests.cpp refcounttests.cpp arenatests.cpp rawchtests.cpp \
-	zcopyhittests.cpp testcommon.h testcommon.cpp
+	zcopyhittests.cpp
 
 unittests_LDADD=@CPPUNIT_LIBS@ 			\
 	ddasSort-BufferArena.o			\
