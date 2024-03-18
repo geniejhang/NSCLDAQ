@@ -167,7 +167,7 @@ DDASSorter::processHits(pRingItemHeader pItem)
     // This is ok because Readout does not put body header extensions in
     // its events:
     
-    uint32_t* pBodySize = static_cast<uint32_t*>(bodyPointer(pFullItem));    
+    uint32_t* pBodySize = static_cast<uint32_t*>(bodyPointer(pFullItem));
     
     uint32_t bodySize   = *pBodySize++;
     uint32_t moduleType = *pBodySize++;
@@ -179,7 +179,7 @@ DDASSorter::processHits(pRingItemHeader pItem)
     pBodySize           = reinterpret_cast<uint32_t*>(pScale);
     bodySize           -= (2*sizeof(uint32_t)+sizeof(double))/sizeof(uint16_t);
     bool useExtClock    = (moduleType & EXTCLKBIT) != 0;
-
+   
     // Copy the raw data:
     memcpy(pBuffer->s_pData, pBodySize, bodySize*sizeof(uint16_t));
     
@@ -216,6 +216,7 @@ DDASSorter::processHits(pRingItemHeader pItem)
 	
         p += hitSize*sizeof(uint32_t);
         size_t  hitWords = hitSize * sizeof(uint32_t)/sizeof(uint16_t);
+	
         if (hitWords > bodySize) {
 	    std::stringstream msgstr;
             msgstr << "ddasSorter is about to run off the end of a ring item. "

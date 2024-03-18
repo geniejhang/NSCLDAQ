@@ -91,6 +91,8 @@ private:
     /**
      * @brief Process a ring item for outputting.
      * @param pItem References the ring item to process.
+     * @throw std::string With a message if we're about to run off the end 
+     *   of a ring item while processing.
      */
     void processHits(pRingItemHeader pItem);
     /** @brief Flush hits on the end of run. */

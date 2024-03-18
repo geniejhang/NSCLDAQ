@@ -175,7 +175,8 @@ namespace DDASReadout {
      * Retains rough compatibility with the old channel class.
      *
      * @todo (ASC 1/23/24): An old and somewhat cryptic comment about "hating 
-     * the output" but maintaining it for compatibility. Why?
+     * the output" but maintaining it for compatibility. Perhaps because 
+     * we write to stderr and return 1 instead of raising an exception?
      */
     int
     RawChannel::Validate(int expecting)
@@ -184,9 +185,8 @@ namespace DDASReadout {
 	    return 0;
 	} else {
 	    std::cerr << "Data is corrupt or the setting in modevtlen.txt "
-		"is wrong!" << std::endl;
-	    std::cerr << "Expected " << expecting
-		      << " got " << s_channelLength << std::endl;
+		"is wrong! Expected: " << expecting
+		      << " got: " << s_channelLength << std::endl;
 	    return 1;
 	}
     }
@@ -275,7 +275,7 @@ namespace DDASReadout {
     uint32_t
     RawChannel::channelLength(void* pData)
     {
-	uint32_t* p = static_cast<uint32_t*>(pData);
+	uint32_t* p = static_cast<uint32_t*>(pData);	
 	uint32_t result = (*p & CHANNELLENGTHMASK) >> CHANNELLENGTHSHIFT;
 	return result;
     }

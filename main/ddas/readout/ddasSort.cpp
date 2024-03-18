@@ -33,7 +33,6 @@
 #include <Exception.h>
 #include "ddasSortOptions.h"
 
-
 /**
  * @brief Entry point to the sorter: process comand line arguments, 
  * instantiates and invokes the application class with appropriate parameters. 
@@ -71,10 +70,18 @@ int main(int argc, char**argv)
     
     try {
         // Using unique pointers below ensures cleanup regardless how we
-        // exit (e.g. including exceptions).        
+        // exit (e.g. including exceptions):
         std::unique_ptr<CRingBuffer> pSource(
 	    CRingAccess::daqConsumeFrom(sourceURI)
 	    );
+	/** 
+	 * @todo (ASC 3/18/24): Sometimes the sorter fails to create its 
+	 * sort ring. In my attempts to resurrect the sorter tests, I had 
+	 * some issues making multiple `createAndProduce` calls from within 
+	 * the same function. Here it had better be making that call only 
+	 * once. Is this more reliable if I call `CRingBuffer::create()` and 
+	 * `new CRingBuffer()` similar to whats done in sortertests.cpp? 
+	 */
         std::unique_ptr<CRingBuffer> pSink(
 	    CRingBuffer::createAndProduce(sinkRing)
 	    );        

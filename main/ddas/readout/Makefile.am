@@ -41,7 +41,7 @@ DDASReadout_LDFLAGS= \
 	@TCL_LDFLAGS@						\
 	@LIBEXCEPTION_LDFLAGS@
 
-ddasSort_SOURCES= ddasSort.cpp 					\
+ddasSort_SOURCES=ddasSort.cpp 					\
 	ddasSortOptions.c ddasSortOptions.h 			\
 	DDASSorter.cpp DDASSorter.h 				\
 	RawChannel.h RawChannel.cpp 				\
@@ -72,20 +72,19 @@ ddasSortOptions.h:  ddasSortOptions.ggo
 
 noinst_PROGRAMS=unittests
 
-unittests_SOURCES=Asserts.h TestRunner.cpp testcommon.h testcommon.cpp \
+unittests_SOURCES=TestRunner.cpp Asserts.h 				\
 	hitmgrtests.cpp refcounttests.cpp arenatests.cpp rawchtests.cpp \
-	zcopyhittests.cpp
-
-unittests_LDADD=@CPPUNIT_LIBS@ 			\
-	ddasSort-BufferArena.o			\
-	ddasSort-DDASSorter.o 			\
-	ddasSort-HitManager.o 			\
-	ddasSort-RawChannel.o			\
-	ddasSort-ReferenceCountedBuffer.o 	\
-	ddasSort-ZeroCopyHit.o
+	zcopyhittests.cpp sortertests.cpp testcommon.cpp testcommon.h 	\
+	DDASSorter.cpp DDASSorter.h 					\
+	HitManager.cpp HitManager.h 					\
+	ZeroCopyHit.h ZeroCopyHit.cpp 					\
+	RawChannel.h RawChannel.cpp 					\
+	ReferenceCountedBuffer.h ReferenceCountedBuffer.cpp 		\
+	BufferArena.h BufferArena.cpp 
 
 unittests_CXXFLAGS=$(ddasSort_CPPFLAGS) @CPPUNIT_CFLAGS@
 unittests_LDFLAGS=$(ddasSort_LDFLAGS) @CPPUNIT_LDFLAGS@
+unittests_LDADD=@CPPUNIT_LIBS@
 
 TESTS=./unittests
 

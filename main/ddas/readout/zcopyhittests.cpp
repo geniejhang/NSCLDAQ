@@ -19,6 +19,7 @@
 class zcopyhittest : public CppUnit::TestFixture
 {
     CPPUNIT_TEST_SUITE(zcopyhittest);
+    
     CPPUNIT_TEST(refcheck_1);
     CPPUNIT_TEST(refcheck_2);
     CPPUNIT_TEST(refcheck_3);
@@ -28,6 +29,7 @@ class zcopyhittest : public CppUnit::TestFixture
   
     CPPUNIT_TEST(free_1);
     CPPUNIT_TEST(free_2);
+    
     CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -77,7 +79,9 @@ void zcopyhittest::refcheck_1()
 	= m_pArena->allocate(4*sizeof(uint32_t)); // A single hit fits in this.
     makeHit((uint32_t*)(*pBuffer), 0, 1, 2, 3, 0x1234, 100);
     {
-	DDASReadout::ZeroCopyHit zhit(4, (uint32_t*)(*pBuffer), pBuffer, m_pArena);
+	DDASReadout::ZeroCopyHit zhit(
+	    4, (uint32_t*)(*pBuffer), pBuffer, m_pArena
+	    );
 	ASSERT(pBuffer->isReferenced());
     }
     ASSERT(!pBuffer->isReferenced());             // No longer referenced.
