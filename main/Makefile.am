@@ -7,8 +7,6 @@ endif
 
 if CAENNEXTGEN
 CAENNGDIR=caen-nextgen
-else
-CAENNGDIR=
 endif
 
 if BUILD_EPICS_TOOLS

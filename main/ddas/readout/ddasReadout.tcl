@@ -120,12 +120,11 @@ set options {
     {sortring.arg      "" "Ringbuffer into which the sorter puts its data" }
     {sorthost.arg      "" "Host in which the sorter runs"}
     {window.arg        10 "Sorting window in seconds."}
-    {fifothreshold.arg 20480 "FIFO Threshold value for DDAS Readout"}
-    {buffersize.arg    16384 "Buffer size value for DDAS Readout"}
+    {fifothreshold.arg 20480 "FIFO Threshold value for DDASReadout"}
+    {buffersize.arg    16384 "Buffer size value for DDASReadout"}
     {infinity.arg      "off" "Enable/disable infinity clock [on/off]"}
     {clockmultiplier.arg 1   "Timestamp multiplier for external clock"}
     {scalerseconds.arg   16  "Time between scaler reads"}
-        
 }
 
 set mandatory [list readouthost sortring sorthost cratedir]
@@ -155,14 +154,14 @@ set ddasOptionMap {
     {init-script --init-script} {log --log} {debug --debug}
 }
 
-set readoutDir [dict get $parsed cratedir]
-set readoutCmd [file join $bindir DDASReadout]
-set readoutHost [dict get $parsed readouthost]
+set readoutDir    [dict get $parsed cratedir]
+set readoutCmd    [file join $bindir DDASReadout]
+set readoutHost   [dict get $parsed readouthost]
 set fifoThreshold [dict get $parsed fifothreshold]
 set bufferSize    [dict get $parsed buffersize]
-set infinity    [dict get $parsed infinity]
-set clkmult      [dict get $parsed clockmultiplier]
-set scalerSecs   [dict get $parsed scalerseconds]
+set infinity      [dict get $parsed infinity]
+set clkmult       [dict get $parsed clockmultiplier]
+set scalerSecs    [dict get $parsed scalerseconds]
 
 if {$infinity} {
     set infstring "INFINITY_CLOCK=1"

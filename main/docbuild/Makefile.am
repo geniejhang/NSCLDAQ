@@ -30,8 +30,6 @@ install-exec-local: daq.html daq.mans tutorial.pdf tutorial.html
 	- $(INSTALL_DATA) tutorial.pdf @prefix@/share/pdfs
 	- $(INSTALL_DATA) tuthtml/*   @prefix@/share/tuthtml
 
-
-
 clean-local:
 	-rm -f *.pdf
 	-rm -f daq.xml
@@ -50,8 +48,8 @@ daq.mans: daq.xml
 
 #	touch daq.mans
 
-BOOKDIRS = 	@top_srcdir@ \
-            @top_srcdir@/base/dataflow\
+BOOKDIRS =@top_srcdir@ \
+	@top_srcdir@/base/dataflow \
 	@top_srcdir@/daq/format \
 	@top_srcdir@/utilities/manager \
 	@top_srcdir@/utilities/readoutREST \
@@ -63,7 +61,7 @@ BOOKDIRS = 	@top_srcdir@ \
 	@top_srcdir@/utilities/logbook \
 	@top_srcdir@/daq/eventbuilder \
 	@top_srcdir@/daq/evbtools/evblite \
-	@top_srcdir@/daq/evbtools/ringsource\
+	@top_srcdir@/daq/evbtools/ringsource \
 	@top_srcdir@/utilities/newscaler \
 	@top_srcdir@/simplesetups/vmusb \
 	@top_srcdir@/simplesetups/v775 \
@@ -116,12 +114,9 @@ BOOKDIRS = 	@top_srcdir@ \
 	@top_srcdir@/libtcl/tclplus  \
 	@top_srcdir@/libtcl/exception \
 	@top_srcdir@/examples \
-	@top_srcdir@/ddas/readoutdriver\
-	@top_srcdir@/ddas/sorter \
+	@top_srcdir@/ddas/readout\
 	@top_srcdir@/ddas/pixieplugin \
 	@top_srcdir@/caen-nextgen
-
-
 
 daq.html: daq.xml
 	- rm -rf html
@@ -132,7 +127,6 @@ daq.html: daq.xml
 daq.xml:
 	$(TCLSH_CMD) @srcdir@/docbuilder.tcl @top_srcdir@/docconfig "NSCL DAQ Software Documentation" ${BOOKDIRS} >daq.xml
 
-
 tutorial.pdf: @srcdir@/tutorial.xml
 	$(TOPDF) @srcdir@/tutorial.xml
 
@@ -141,7 +135,5 @@ tutorial.html: @srcdir@/tutorial.xml
 	mkdir @builddir@/tuthtml
 	- $(TOHTML) -o @builddir@/tuthtml @srcdir@/tutorial.xml
 	touch tutorial.html
-
-
 
 
