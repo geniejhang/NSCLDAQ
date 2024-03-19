@@ -365,7 +365,7 @@ CReadoutMain::setupLogging()
         level = daqlog::Trace;
         break;
       default:
-        std::cerr << "Error Invalid debug level, must be 0-3 was: "
+        std::cerr << "Error Invalid debug level, must be 0-2 was: "
           << m_nDebugLevel <<std::endl;
         exit(EXIT_FAILURE);
     }

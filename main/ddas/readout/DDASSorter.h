@@ -28,12 +28,12 @@
 #include <CRingBufferChunkAccess.h>
 
 class CRingBuffer;
-class HitManager;
 
 namespace DDASReadout {
     class BufferArena;
     class ReferenceCountedBuffer;
     class ZeroCopyHit;
+    class HitManager;
 }
 
 
@@ -57,7 +57,7 @@ class DDASSorter
 private:
     CRingBuffer& m_source; //!< Ringbuffer data source.
     CRingBuffer& m_sink; //!< Ringbuffer data sink.
-    HitManager* m_pHits; 
+    DDASReadout::HitManager* m_pHits; 
     DDASReadout::BufferArena* m_pArena;
     std::deque<DDASReadout::ZeroCopyHit*> m_hits;
     uint32_t m_sid; //!< Source ID.

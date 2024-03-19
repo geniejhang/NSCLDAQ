@@ -122,8 +122,8 @@ public:
     virtual void initialize();
     /** 
      * @brief Read data from the modules following a valid trigger. 
-     * @param rBuffer Read data into this buffer.
-     * @param maxBytes Max bytes of data we can stuff in the buffer.
+     * @param[in,out] rBuffer  Read data into this buffer.
+     * @param[in]     maxBytes Max bytes of data we can stuff in the buffer.
      * @return Number of 16-bit words in the ring item body.
      */
     virtual size_t read(void* rBuffer, size_t maxwords);

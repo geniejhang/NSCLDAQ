@@ -8,11 +8,11 @@
   http://www.gnu.org/licenses/gpl.txt
 
   Authors:
-    Ron Fox
-    Jeromy Tompkins 
-    NSCL
-    Michigan State University
-    East Lansing, MI 48824-1321
+      Ron Fox
+      Jeromy Tompkins 
+      NSCL
+      Michigan State University
+      East Lansing, MI 48824-1321
 */
 
 /**
@@ -31,6 +31,7 @@
 namespace DAQ {
     /** @namespace DAQ::DDAS */
     namespace DDAS {
+	
 	/**
 	 * @addtogroup format libddasformat.so
 	 * @brief DDAS data format library.
@@ -50,7 +51,7 @@ namespace DAQ {
 	 */
 	
 	/**
-	 * @class DDASHit DDASHit.h
+	 * @class DDASHit
 	 * 
 	 * @brief Encapsulation of a generic DDAS event.
 	 *
@@ -80,43 +81,32 @@ namespace DAQ {
 
 	private:
 	    /* Channel events always have the following info. */
-	    double time;         ///< Assembled time including cfd
-	    uint64_t coarsetime; ///< Assembled time without cfd
-
-	    uint32_t energy;   ///< Energy of event
-	    uint32_t timehigh; ///< Bits 32-47 of timestamp
-	    uint32_t timelow;  ///< Bits 0-31 of timestamp
-	    uint32_t timecfd;  ///< Raw cfd time
-
-	    uint32_t finishcode;    ///< Indicates whether pile-up occurred
-	    uint32_t channellength; ///< Number of 32-bit words of raw data
-	    uint32_t channelheaderlength; ///< Length of header
-	    uint32_t overflowcode;  ///< ADC overflow (1 = overflow)
-	    uint32_t chanid;        ///< Channel index
-	    uint32_t slotid;        ///< Slot index
-	    uint32_t crateid;       ///< Crate index
-
-	    uint32_t cfdtrigsourcebit; ///< Value of trigger source bit(s)
-	                               ///< for 250 MSPS and 500 MSPS
-	    uint32_t cfdfailbit;  ///< Indicates whether the CFD algo failed
-
-	    uint32_t tracelength; ///< Length of stored trace
-
-	    uint32_t ModMSPS;     ///< Sampling rate of the module (MSPS)
-
-	    /* A channel may have extra information... */
-	    std::vector<uint32_t> energySums; ///< Energy sum data
-	    std::vector<uint32_t> qdcSums;    ///< QDC sum data
-
-	    /* A waveform (trace) may be stored too... */
-	    std::vector<uint16_t> trace; ///< Trace data
-
-	    uint64_t externalTimestamp;  ///< External timestamp
-
-	    int      m_hdwrRevision;  ///< Hardware revision
-	    int      m_adcResolution; ///< ADC resolution
-	    bool     m_adcOverflowUnderflow; ///< Whether the ADC over- or
-	                                     ///< underflowed
+	    double   time;          //!< Assembled time including CFD.
+	    uint64_t coarsetime;    //!< Assembled time without CFD.
+	    uint32_t timehigh;      //!< Bits 32-47 of timestamp.
+	    uint32_t timelow;       //!< Bits 0-31 of timestamp.
+	    uint32_t timecfd;       //!< Raw cfd time.
+	    uint32_t energy;        //!< Energy of event.
+	    uint32_t finishcode;    //!< Indicates whether pile-up occurred.
+	    uint32_t channellength; //!< Number of 32-bit words of raw data.
+	    uint32_t channelheaderlength; //!< Length of header.
+	    uint32_t overflowcode;  //!< ADC overflow (1 = overflow).
+	    uint32_t chanid;        //!< Channel index.
+	    uint32_t slotid;        //!< Slot index.
+	    uint32_t crateid;       //!< Crate index.
+	    /** Value of trigger source bit for 250 MSPS and 500 MSPS. */
+	    uint32_t cfdtrigsourcebit;
+	    uint32_t cfdfailbit;    //!< Indicates whether the CFD algo failed.
+	    uint32_t tracelength;   //!< Length of stored trace.
+	    uint32_t ModMSPS;       //!< Sampling rate of the module (MSPS).
+	    std::vector<uint32_t> energySums; //!< Energy sum data.
+	    std::vector<uint32_t> qdcSums;    //!< QDC sum data.
+	    std::vector<uint16_t> trace;      //!< Trace data.
+	    uint64_t externalTimestamp;       //!< External timestamp.
+	    int      m_hdwrRevision;          //!< Hardware revision.
+	    int      m_adcResolution;         //!< ADC resolution.
+	    /** Whether the ADC over- or under-flowed. */
+	    bool     m_adcOverflowUnderflow;
 	    
 	public:
 	    /** @brief Default constructor. */
@@ -210,6 +200,17 @@ namespace DAQ {
 	    /** 
 	     * @brief Retrieve the 48-bit timestamp in nanoseconds without 
 	     * any CFD correction.
+	     * @details
+	     * Latching of the coarse timestamp depends on whether or not 
+	     * the CFD is enabled, and, if enabled, whether the CFD algorithm 
+	     * succeeds or not:
+	     * - If the CFD is enabled and a vaild CFD exists, the coarse 
+	     *   timestamp is latched to the trace sample immidiately prior 
+	     *   to the zero-crossing point.
+	     * - If the CFD is enabled and fails, the coarse timestamp is 
+	     *   latched to the leading-edge trigger point.
+	     * - If the CFD is disabled, the coarse timestamp is latched to 
+	     *   the leading-edge trigger point.
 	     * @return The raw 48-bit timestamp in nanoseconds. 
 	     */
 	    uint64_t GetCoarseTime() const { return coarsetime; }	    
@@ -379,7 +380,7 @@ namespace DAQ {
 	    void setFinishCode(bool finishCode);
 	    /**
 	     * @brief Set the coarse timestamp.
-	     * @param time The leading-edge time for this hit.
+	     * @param time The coarse timestamp.
 	     */
 	    void setCoarseTime(uint64_t time);
 	    /**

@@ -2,7 +2,7 @@ bin_PROGRAMS=DDASReadout ddasSort
 
 SHAREDIR=@prefix@/share/ddasreadout
 
-DDASReadout_SOURCES= Skeleton.cpp Skeleton.h 			\
+DDASReadout_SOURCES= DDASReadoutMain.cpp DDASReadoutMain.h 	\
 	CMyEventSegment.cpp CMyEventSegment.h 			\
 	CMyTrigger.cpp CMyTrigger.h 				\
 	CMyBusy.cpp CMyBusy.h 					\

@@ -109,22 +109,22 @@ if {[array names env DAQBIN] ne ""} {
 
 set usage "Driver for the split DDASReadout/ddasSort programs\nOptions:"
 set options {
-    {port.arg        "" "Enable DDASReadout TclServer functionality on specified port"}
+    {readouthost.arg "" "Host in which to run the DDASReadout program"}
     {readoutring.arg "" "Ring into which DDASReadout puts data"}
+    {sortring.arg    "" "Ringbuffer into which the sorter puts its data" }
+    {sorthost.arg    "" "Host in which the sorter runs"}    
     {cratedir.arg    "" "Directory in which to run DDASReadout"}
     {sourceid.arg    0  "Source ID with which to tag the data"}
-    {init-script.arg "" "DDASReadout initialization script run in the main interpreter"}
-    {log.arg   "" "DDASReadout log file"}
-    {debug.arg 0  "DDASReadout debug level [0-2]: higher numbers set more debugging output"}
-    {readouthost.arg   "" "Host in which to run the DDASReadout program"}
-    {sortring.arg      "" "Ringbuffer into which the sorter puts its data" }
-    {sorthost.arg      "" "Host in which the sorter runs"}
-    {window.arg        10 "Sorting window in seconds."}
     {fifothreshold.arg 20480 "FIFO Threshold value for DDASReadout"}
     {buffersize.arg    16384 "Buffer size value for DDASReadout"}
     {infinity.arg      "off" "Enable/disable infinity clock [on/off]"}
     {clockmultiplier.arg 1   "Timestamp multiplier for external clock"}
     {scalerseconds.arg   16  "Time between scaler reads"}
+    {window.arg          10 "Sorting window in seconds."}
+    {port.arg        "" "Enable DDASReadout TclServer functionality on specified port"}
+    {init-script.arg "" "DDASReadout initialization script run in the main interpreter"}
+    {log.arg     "" "DDASReadout log file"}
+    {debug.arg 0 "DDASReadout debug level [0-2]: higher numbers set more debugging output"}
 }
 
 set mandatory [list readouthost sortring sorthost cratedir]

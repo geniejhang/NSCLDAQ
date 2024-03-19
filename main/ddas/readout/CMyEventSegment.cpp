@@ -225,7 +225,7 @@ size_t CMyEventSegment::read(void* rBuffer, size_t maxBytes)
     maxLongs = maxLongs - 128; // To be really sure we don't fill it.
 
     unsigned int* words = m_pTrigger->getWordsInModules();
-    for (int i =0; i < m_nModules; i++) {
+    for (int i = 0; i < m_nModules; i++) {
         if (words[i] >= m_modEvtLens[i]) {
             // Figure out if we fill the buffer or just take the complete
             // events from the module:            
@@ -382,7 +382,7 @@ int CMyEventSegment::GetCrateID() const
 
 /**
  * @details
- * More or less straight from the XIA PixieSDK docs: configure the system to 
+ * More or less straight from the XIA Pixie SDK docs: configure the system to 
  * run synchronously through the backplane by setting Pixie module parameters. 
  * Synchronous running means that the last module ready to take data starts 
  * the run in all modules and the first module to end the run stops the run 

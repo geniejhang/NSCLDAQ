@@ -12,8 +12,10 @@
 #include "BufferArena.h"
 #include "ZeroCopyHit.h"
 
+using namespace DDASReadout;
+
 std::ostream& operator<<(
-    std::ostream& o, const std::deque<DDASReadout::ZeroCopyHit*>& hits
+    std::ostream& o, const std::deque<ZeroCopyHit*>& hits
     )
 {
     for (int i = 0; i < hits.size(); i++) {
@@ -108,13 +110,13 @@ void hitmgrtest::initial_2()
 void hitmgrtest::sort_1()
 { 
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 1234;
   
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 1111;
   
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
     hits.push_back(&hit1);
     hits.push_back(&hit2);
   
@@ -130,16 +132,16 @@ void hitmgrtest::sort_1()
 void hitmgrtest::sort_2()
 {
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 1234;
   
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 1111;         // newer.
 
-    DDASReadout::ZeroCopyHit hit3(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit3(100, buf->s_pData, buf, m_pArena);
     hit3.s_time = 1222;
   
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
     hits.push_back(&hit1);
     hits.push_back(&hit2);
     hits.push_back(&hit3);
@@ -155,16 +157,16 @@ void hitmgrtest::sort_2()
 void hitmgrtest::merge_1()
 {
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 1111;
   
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 1222;
 
-    DDASReadout::ZeroCopyHit hit3(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit3(100, buf->s_pData, buf, m_pArena);
     hit3.s_time = 1234;
   
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
     hits.push_back(&hit1);
     hits.push_back(&hit2);
     hits.push_back(&hit3);
@@ -178,17 +180,17 @@ void hitmgrtest::merge_2()
 {
     auto buf = m_pArena->allocate(1024);
   
-    DDASReadout::ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
     hit0.s_time = 0; // Everything's going to append to this.
     m_pTestObject->m_sortedHits.push_back(&hit0);
   
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
   
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 1234;
     hits.push_back(&hit1);
   
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 6789;
     hits.push_back(&hit2);
    
@@ -203,17 +205,17 @@ void hitmgrtest::merge_3()
 {
     auto buf = m_pArena->allocate(1024);
   
-    DDASReadout::ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
     hit0.s_time = 9999; // Everything's going to prepend to this.
     m_pTestObject->m_sortedHits.push_back(&hit0);
   
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
   
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 1234;
     hits.push_back(&hit1);
   
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 6789;
     hits.push_back(&hit2);
    
@@ -230,23 +232,23 @@ void hitmgrtest::merge_4()
 {
     auto buf = m_pArena->allocate(1024);
   
-    DDASReadout::ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
     hit0.s_time = 0; // Everything's going to append to this.
     m_pTestObject->m_sortedHits.push_back(&hit0);
   
-    DDASReadout::ZeroCopyHit hit00(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit00(100, buf->s_pData, buf, m_pArena);
     hit00.s_time = 2222;
     m_pTestObject->m_sortedHits.push_back(&hit00);
   
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
   
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 1234; // Will be second.
     hits.push_back(&hit1);
 
     // The "tail" way later than the other timestamps:
     
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 9999; // Will be last.
     hits.push_back(&hit2);
   
@@ -262,13 +264,13 @@ void hitmgrtest::merge_4()
 void hitmgrtest::add_1()
 { 
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 1234;
   
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 1111;
   
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
     hits.push_back(&hit1);
     hits.push_back(&hit2);
   
@@ -281,17 +283,17 @@ void hitmgrtest::add_1()
 void hitmgrtest::add_2()
 {
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 1234;
   
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 1111;
   
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
     hits.push_back(&hit1);
     hits.push_back(&hit2);
   
-    DDASReadout::ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
     hit0.s_time = 0;
     m_pTestObject->m_sortedHits.push_back(&hit0);
   
@@ -306,17 +308,17 @@ void hitmgrtest::add_2()
 void hitmgrtest::add_3()
 {
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 1234;
   
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 1111;
   
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
     hits.push_back(&hit1);
     hits.push_back(&hit2);
   
-    DDASReadout::ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
     hit0.s_time = 9999;
     m_pTestObject->m_sortedHits.push_back(&hit0);
   
@@ -331,21 +333,21 @@ void hitmgrtest::add_3()
 void hitmgrtest::add_4()
 {
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 1234;
   
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 1111;         // newer.
   
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
     hits.push_back(&hit1);
     hits.push_back(&hit2);
   
-    DDASReadout::ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit0(100, buf->s_pData, buf, m_pArena);
     hit0.s_time = 0;
     m_pTestObject->m_sortedHits.push_back(&hit0);
 
-    DDASReadout::ZeroCopyHit hit00(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit00(100, buf->s_pData, buf, m_pArena);
     hit00.s_time = 9999;
     m_pTestObject->m_sortedHits.push_back(&hit00);
   
@@ -362,7 +364,7 @@ void hitmgrtest::add_4()
 void hitmgrtest::havehit_1()
 {
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 0;  
     m_pTestObject->m_sortedHits.push_back(&hit1);  
     ASSERT(!m_pTestObject->haveHit());
@@ -372,11 +374,11 @@ void hitmgrtest::havehit_1()
 void hitmgrtest::havehit_2()
 {
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 0;
     m_pTestObject->m_sortedHits.push_back(&hit1);
 
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = 1234;
     m_pTestObject->m_sortedHits.push_back(&hit2);
   
@@ -387,11 +389,11 @@ void hitmgrtest::havehit_2()
 void hitmgrtest::havehit_3()            // 2 hits outside of window.
 {
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 0;
     m_pTestObject->m_sortedHits.push_back(&hit1);
 
-    DDASReadout::ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit2(100, buf->s_pData, buf, m_pArena);
     hit2.s_time = double(10)*1.0e9 + double(1);
     m_pTestObject->m_sortedHits.push_back(&hit2);
   
@@ -402,11 +404,11 @@ void hitmgrtest::havehit_3()            // 2 hits outside of window.
 void hitmgrtest::nexthit_1()
 {
     auto buf = m_pArena->allocate(1024);
-    DDASReadout::ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
+    ZeroCopyHit hit1(100, buf->s_pData, buf, m_pArena);
     hit1.s_time = 0;
     m_pTestObject->m_sortedHits.push_back(&hit1);
 
-    DDASReadout::ZeroCopyHit* pHit = m_pTestObject->nextHit();
+    ZeroCopyHit* pHit = m_pTestObject->nextHit();
     EQ(&hit1, pHit);
   
     pHit =  m_pTestObject->nextHit();

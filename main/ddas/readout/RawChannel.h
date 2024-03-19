@@ -70,16 +70,17 @@ namespace DDASReadout {
         int SetTime();
 	/** 
 	 * @brief Set time time in ns.
-	 * @param clockCal Nanoseconds per clock tick.
+	 * @param nsPerTick Clock calibration in nanoseconds per clock tick.
 	 * @param useExt True if using an external timestamp (default=false).
 	 * @return int
 	 * @retval 0 Success.
-	 * @retval 1 If attempting to use the external timestamp but none is 
-	 *   present in the data (header has insufficient words).
-	 * @retval 1 If not using an external timestamp, but the number of 
-	 *   data words is insufficient (< 4).
+	 * @retval 1 Failure, which can happen in the following ways:
+	 * * If attempting to use the external timestamp but none is present 
+	 *   in the data (header has insufficient words).
+	 * * If not using an external timestamp, but the number of data words 
+	 *   are insufficient (< 4).
 	 */
-        int SetTime(double clockcal, bool useExt=false);
+        int SetTime(double nsPerTick, bool useExt=false);
 	/** 
 	 * @brief Set the event length from the data. 
 	 * @return 0 Always.

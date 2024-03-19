@@ -18,8 +18,8 @@ const int TRIGGER_TIMEOUT_SECS = 5; //!< Auto-trigger timeout in seconds.
 /**
  * @details
  * If FIFO_THRESHOLD is defined and is a positive integer, it replaces the 
- * default value of m_fifoThreshold - the number of words that must be in the 
- * FIFO for the trigger to fire.
+ * default value of m_fifoThreshold. The FIFO threshold is the number of 
+ * 32-bit words that must be in the FIFO for the trigger to fire.
  */
 CMyTrigger::CMyTrigger()
     : m_retrigger(false), m_fifoThreshold(EXTFIFO_READ_THRESH*10),

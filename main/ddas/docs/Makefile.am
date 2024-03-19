@@ -1,4 +1,7 @@
+EXTRA_DIST=Doxyfile.in DoxygenLayout.xml.in mainpage.dox cfgpixie16.dox modevtlen.dox qtscope.dox single_crate.dox
+
 # Workaround for /usr/bin/install not having recursive copy
+
 install-exec-local:
 	$(mkinstalldirs) @prefix@/share/ddasdocs/html
 	$(mkinstalldirs) @prefix@/share/ddasdocs/html/search

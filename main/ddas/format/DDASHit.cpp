@@ -129,8 +129,16 @@ DAQ::DDAS::DDASHit::setFinishCode(bool finishCode)
 
 /**
  * @details
- * The coarse timestamp is the leading-edge time in nanoseconds, 
- * without the CFD correction applied.
+ * Latching of the coarse timestamp depends on whether or not the 
+ * CFD is enabled, and, if enabled, whether the CFD algorithm 
+ * succeeds or not:
+ * - If the CFD is enabled and a vaild CFD exists, the coarse 
+ *   timestamp is latched to the trace sample immidiately prior 
+ *   to the zero-crossing point.
+ * - If the CFD is enabled and fails, the coarse timestamp is 
+ *   latched to the leading-edge trigger point.
+ * - If the CFD is disabled, the coarse timestamp is latched to 
+ *   the leading-edge trigger point.
  */
 void
 DAQ::DDAS::DDASHit::setCoarseTime(uint64_t time)
@@ -181,7 +189,7 @@ DAQ::DDAS::DDASHit::setTimeLow(uint32_t datum)
 void
 DAQ::DDAS::DDASHit::setTimeHigh(uint32_t datum)
 {
-    timehigh = datum & 0xffff;
+    timehigh = datum & LOWER16BITMASK;
 }
 
 void

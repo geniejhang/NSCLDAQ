@@ -7,21 +7,22 @@
 
      http://www.gnu.org/licenses/gpl.txt
 
-     Author:
+     Authors
              Ron Fox
+	     Aaron Chester
 	     NSCL
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
 
 /** 
- * @file Skeleton.h
- * @brief Defines a skeleton for production readout software for NSCLDAQ 10.0 
- * and later.
+ * @file DDASReadoutMain.h
+ * @brief Defines the production readout software for DDAS systems using 
+ * NSCLDAQ 10.0 and later.
  */
 
-#ifndef SKELETON_H
-#define SKELETON_H
+#ifndef DDASREADOUTMAIN_H
+#define DDASREADOUTMAIN_H
 
 #include <CReadoutMain.h>
 
@@ -29,22 +30,13 @@ class CTCLInterpreter;
 class CExperiment;
 
 /**
- * @class Skeleton
- * @brief A skeleton for the production readout software for NSCLDAQ 10.0
- * and later.
+ * @class DDASReadoutMain
+ * @brief Production readout class for DDAS systems.
  * @details
- * The programmatic interface to NSCLDAQ 10.0 at the application level is a 
- * 'close match' to that of earlier versions. The software itself is a 
- * complete re-write so some incompatibilities may exist. If you find an 
- * incompatibility, please post it at daqbugs.nscl.msu.edu so that it can 
- * be documented, and addressed. Note that this does not necessarily mean 
- * that the incompatibility will be 'fixed'.
- *
- * How to use this skeleton:
- *
- * This skeleton is the 'application' class for the production readout 
- * software. The application class has several member functions you can 
- * override and implement to perform user specific initialization.
+ * DDASReadoutMain is the 'application' class for the production readout 
+ * software for DDAS systems i.e. systems utilizing XIA digitizer modules. 
+ * The application class has overridden and implemented several member 
+ * functions from the CReadoutMain base class for use in this application.
  * 
  * These are:
  * - AddCommands         : Extend the Tcl interpreter with additional commands.
@@ -57,20 +49,13 @@ class CExperiment;
  *                         trigger controlled by the 'frequency' Tcl variable 
  *                         to something else.
  *
- * For more information about how to tailor this skeleton, see the comments 
- * in Skeleton.cpp
+ * For more information about how to tailor this code, see the SBS readout 
+ * CReadoutMain and Skeleton classes.
  */
 
-class Skeleton : public CReadoutMain
+class DDASReadoutMain : public CReadoutMain
 {
-private:
-    
-    // If you need per instance data add it here.
-
 public:
-    
-    // Overrides for the base class members described above:
-
     /**
      * @brief Setup the Readout.
      * @param pExperiment Pointer to the experiment object.
@@ -99,11 +84,6 @@ public:
      *   Tcl_Interp* of our main interpreter.
      */
     virtual void SetupStateVariables(CTCLInterpreter* pInterp);
-
-private:
-    
-    // If you want to define some private member utilities, define them here.
-
 };
 
 #endif

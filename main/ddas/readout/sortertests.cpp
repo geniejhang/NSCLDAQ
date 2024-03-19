@@ -22,6 +22,8 @@
 #include "ReferenceCountedBuffer.h"
 #include "HitManager.h"
 
+using namespace DDASReadout;
+
 static const std::string srcRing("datasource");
 static const std::string sinkRing("datasink");
 
@@ -99,7 +101,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(sortertest);
 /** @brief Output a zero-copy hit. */
 void sortertest::hitout()
 {   
-    DDASReadout::ZeroCopyHit* pHit = m_pTestObject->allocateHit();
+    ZeroCopyHit* pHit = m_pTestObject->allocateHit();
     auto pBuf = m_pTestObject->m_pArena->allocate(128);
     uint8_t* p = (uint8_t*)(*pBuf);
     for (int i =0; i < 128; i++) { *p++ = i; }
@@ -165,15 +167,15 @@ void sortertest::ringitemOut()
 void sortertest::flush()
 {
     HitManager* pManager = m_pTestObject->m_pHits;
-    DDASReadout::BufferArena& arena(*(m_pTestObject->m_pArena));
+    BufferArena& arena(*(m_pTestObject->m_pArena));
   
     // Put a few nonesense hits into a buffer, put them in the hit manager
     // then call flushHitManager to push those into the ring buffer.
   
-    DDASReadout::ReferenceCountedBuffer& buf(
+    ReferenceCountedBuffer& buf(
 	*arena.allocate(1024*sizeof(uint32_t))
 	);
-    std::deque<DDASReadout::ZeroCopyHit*> hits;
+    std::deque<ZeroCopyHit*> hits;
     uint32_t* pData = (uint32_t*)(buf);
   
     for (int i = 0; i < 10; i++) {
@@ -251,7 +253,7 @@ void sortertest::processhits_1()
     // - Size,
     // - Module type.
   
-    double c = DDASReadout::RawChannel::moduleCalibration(moduleType);
+    double c = RawChannel::moduleCalibration(moduleType);
     for (int i = 0; i < 100; i++) {
 	CRingItem* pItem = CRingItem::getFromRing(*m_pSinkConsumer, all);
 	ASSERT(pItem->hasBodyHeader());
@@ -272,7 +274,7 @@ void sortertest::processhits_1()
 void sortertest::processhits_2()
 {
     uint32_t moduleType = 0x10100000 | 250;
-    double c = DDASReadout::RawChannel::moduleCalibration(moduleType);
+    double c = RawChannel::moduleCalibration(moduleType);
   
     CRingItem item(PHYSICS_EVENT, 0, 12, 0, 8192+100);
     uint32_t* pWords = static_cast<uint32_t*>(item.getBodyPointer());
@@ -388,7 +390,7 @@ void sortertest::processchunk_1()
   
     // The 100 physics items:
 
-    double tsc = DDASReadout::RawChannel::moduleCalibration(moduleType);
+    double tsc = RawChannel::moduleCalibration(moduleType);
     for (int  i = 0; i < 100; i++) {
 	pItem = CRingItem::getFromRing(*m_pSinkConsumer, all);
 	EQ(PHYSICS_EVENT, pItem->type());

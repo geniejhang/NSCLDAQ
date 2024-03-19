@@ -1,0 +1,64 @@
+/**
+@page readout ddasReadout: read data from DDAS systems
+
+@authors Aaron Chester, Ron Fox, Sean Liddick, Jeromy Tompkins
+@date 3/18/24
+
+@section readout_intro Introduction
+@par
+As of NSCLDAQ 11.4, the DDAS readout framework has been broken into a pair of programs, DDASReadout, which reads blocks of data from the XIA digitizer modules and ddasSort, which accepts those data and sorts them by timestamp. This was done to maximize performance:
+- DDASReadout and ddasSort take advantage of pipeline parallelism to do the sorting in parallel with digitizer readout.
+- If necessary, the ddasSort process can be run on a different node than DDASReadout making more processing power available.
+
+@par
+A driver, that looks to the ReadoutGUI like an SSHPipe data source, allows you to treat this pair of programs as if it were a single unified program. The driver program is called ddasReadout (note the lower case 'ddas'). This manpage describes the ddasReadout program.
+
+@section readout_features New features of ddasReadout
+@par
+While the readout process has been simplified greatly, it's still a complex beast and worthy of some documentation. The goals of the rewrite were as follows:
+- Make the logic clearer.
+- Eliminate data copying for bulk data.
+- Eliminate, where possible, dynamic memory management.
+
+@par
+The first of these goals promotes maintainability while the last promotes performance, as profiling of other NSCLDAQ code (specifically eventlog) suggested that performance can be dramatically improved by minimizing those actions.
+
+@subsection sec_framework The ddasReadout framework
+@par
+Logic clarification was done by dividing the actual acquisition code into three classes:
+- CMyEventSegment - Responsible for reading data from the Pixie module FIFO buffers.
+- DDASReadout::HitManager - Responsible for maintaining time ordered hits, indicating when a hit can be emitted and providing that hit.
+- DDASReadout::RawChannel - Data storage for a hit and its properties. The storage can be either locally allocated or provided by a client.
+
+@par
+Zero-copy and reduction of dynamic memory allocation were improved by the following classes:
+- DDASReadout::ReferenceCountedBuffer - Storage that can keep track of the references to it by external objects.
+- DDASReadout::BufferArena - A class that supports re-use of DDASReadout::ReferenceCountedBuffers.
+- DDASReadout::ZeroCopyHit - A DAQ::DDAS::DDASHit whose data are located in a DDAS::Readout::ReferenceCountedBuffer that came from a DDASReadout::BufferArena.
+
+@par
+Finally, note that DDASReadout::ZeroCopyHit is derived from DDASReadout::RawChannel. All of these classes  with the exception of CMyEventSegment, exist within the new DDASReadout namespace. CExperiment, the caller of the CMyEventSegment instance, has been edited to allow the read code to indicate it has more events to provide prior to entering the trigger loop again.
+
+@subsection sec_reading The data readout process
+@par
+Let's take a high level look at how `CMyEventSegment::read()` operates and then drill down into how the pieces it uses function. Read can be called for two reasons:
+1. It asked to be called because, after emitting a hit, it has more hits to emit.
+2. CMyTrigger indicated that at least one module had data in the FIFO that exceeded the FIFO threshold.
+
+@par
+The first case has priority. We want to emit as many events as possible before
+reading more data. Data are emitted on a per-module basis by the DDASReadout program into a raw ringbuffer. Each ring item is a collection of time-unordered hits coming from a single module.
+
+@par
+The ddasSort program reads data from this ringbuffer, time-orders them, and writes them into an output ringbuffer that can be read by the NSCLDAQ event builder. Ring items output by `ddasSort` look like the "old-style" NSCLDAQ 11.3 DDASReadout ring items. The sorter has a DDASReadout::HitManager. The sorter asks its hit manager whether it has any hits to emit, and if so, calls the `DDASReadout::HitManager::nextHit()` method to emit the earliest hit it is able to. If there are more hits to emit, the read process will tell the experiment that it has more events it can output without waiting for a new trigger. If a hit is emitted, `CMyEventSegment::read()` is finished and will returns the size of that hit.
+
+@par
+If the hit manager says there were no hits to emit, we must have been called in response to a trigger by CMyTrigger. In this case, we reset the trigger (a hold over from prior code). The trigger maintains an array of the number of words it saw in each module FIFO, so there is no need to ask it to look again. The hits are then sorted and added to the hit manager which maintains a time-ordered list of hits read so far. Note that the hit list is a deque of pointers to zero-copy hits. This allows data to be passed around without bulk data copying and for the storage management for malloc/free operations to be done at the module level for both the hits and the buffers which they come from.
+
+@par
+In the case where we have emittable hits, logic identical to the code at entry is invoked: emit the hit and ask to be called again if there are still more hits. Finally if the hit manager says there are no hits to emit, we invoke the case class `reject()` method which results in the event not producing a ring item.
+
+@par
+A bit about the data structures used. The hits are accumluated into a `std::deque<DDASReadout::ZeroCopyHit*>`. A single ring item consists of hits from one module only. Why keep module data separated in this way? 
+
+*/

@@ -93,10 +93,11 @@ namespace DDASReadout {
     
     /**
      * @details
-     * Assumes that the data are set (either by zero copy or by copyInData). 
-     * Determines the raw timestamp from the 48-bit timestamp data in the hit 
-     * and sets it in s_time. The timestamp is extracted from data words 1 and 
-     * 2 of the Pixie-16 list mode event header structure in the hit.
+     * Assumes that the data are set using the `setData()` or `copyInData()` 
+     * methods of this class. Determine the raw timestamp from the 48-bit 
+     * timestamp data in the hit and set it in s_time. The timestamp is 
+     * extracted from data words 1 and 2 of the Pixie-16 list mode event 
+     * header structure in the hit.
      *
      * @note If the data have not yet been set, number of words is 0 so this 
      * is well behaved.
@@ -117,19 +118,20 @@ namespace DDASReadout {
 
     /**
      * @details
-     * Assumes that the data are set (either by zero copy or by copyInData). 
-     * Determines the calibrated timestamp from the 48-bit timestamp data in 
-     * the hit and sets it in s_time. The timestamp is extracted from data 
-     * words 1 and 2 of the Pixie-16 list mode event header structure in the 
-     * hit. The clock calibration passed to this function is used to convert 
-     * the time to nanoseconds from clock ticks. 
+     * This function assumes that the data are set using either the `setData()` 
+     * or `copyInData()` methods of this class. Note that `setData()` is used 
+     * for zero-copy. Determine the calibrated timestamp from the 48-bit 
+     * timestamp  data in the hit and set it in s_time. The timestamp is 
+     * extracted from data words 1 and 2 of the Pixie-16 list mode event header
+     * structure in the hit. The clock calibration passed to this function is 
+     * used to convert the time to nanoseconds from clock ticks. 
      *
-     * @note In Pixie systems, the value of clockCal is module-dependent.
+     * @note In Pixie systems, the value of nsPerTick is module-dependent.
      * @note If the data have not yet been set, number of words is 0 so this 
      * is well behaved.
      */
     int
-    RawChannel::SetTime(double ticksPerNs, bool useExt)
+    RawChannel::SetTime(double nsPerTick, bool useExt)
     {
 	// The external timestamp requires a header length of at least 6 words
 	// and is always the last two words of the header:
@@ -146,8 +148,10 @@ namespace DDASReadout {
 	} else if (SetTime()) {
 	    return 1; // SetTime() fails: channel length < 4.
 	}
+
+	// Otherwise we're good, calibrate the time and return success:
 	
-	s_time *= ticksPerNs;
+	s_time *= nsPerTick;
 	
 	return 0;
     }
@@ -193,8 +197,10 @@ namespace DDASReadout {
 
     /**
      * @details
-     * - If we own data already, it's freed.
-     * - Our data and channelLength are set from the parameters.
+     * Perform at most two tasks:
+     * - If we own data already, it's freed and the channel length is reset 
+     *   to zero (0).
+     * - The data and channel length of the data are set from the parameters.
      */
     void
     RawChannel::setData(size_t nWords, void* pZCopyData)

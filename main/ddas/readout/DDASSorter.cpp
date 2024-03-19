@@ -45,7 +45,7 @@ DDASSorter::DDASSorter(CRingBuffer& source, CRingBuffer& sink, float window) :
     m_source(source), m_sink(sink), m_sid(0), m_lastEmittedTimestamp(0)
 {
     // Window in ns passed to HitManager constructor.
-    m_pHits = new HitManager(window*((uint64_t)(1000000000)));
+    m_pHits = new DDASReadout::HitManager(window*((uint64_t)(1000000000)));
     m_pArena = new DDASReadout::BufferArena;
 }
 
