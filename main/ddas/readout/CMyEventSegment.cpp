@@ -283,9 +283,6 @@ size_t CMyEventSegment::read(void* rBuffer, size_t maxBytes)
                 return 0;
 	    }
 
-	    unsigned int postread;
-	    Pixie16CheckExternalFIFOStatus(&postread, i);
-
 	    // Until we fall through the loop, count down the remaining words.
 	    m_pExperiment->haveMore();      
             words[i] -= readSize;

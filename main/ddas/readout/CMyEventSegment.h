@@ -25,6 +25,15 @@ class CExperiment;
  * The event segment reads out a logical chunk of an experiment. In the DDAS 
  * case, data from a single crate (single source ID). An experiment may 
  * consist of multiple crates arranged in a CCompoundEventSegment container.
+ *
+ * @todo (ASC 3/20/24): `Setup*` functions should throw exceptions which can 
+ * be handled by the base class. The base class needs to be modified to handle
+ * std::exception and its derived classes.
+ * 
+ * mytrigger, myeventsegment and scalerModules naively look like class members 
+ * rather than locally scoped variables... but then we need construction, 
+ * destruction, etc. For now, who manages their memory? One might guess that 
+ * CExperiment does, but the busy and triggers are not deleted on destruction.
  */
 
 class CMyEventSegment : public CEventSegment
@@ -42,9 +51,9 @@ private:
 	uint32_t s_tstampHighCFD; //!< Pixie list-mode event header word 2.
 	uint32_t s_traceInfo;     //!< Pixie list-mode event header word 3.
         
-	// Selectors -- a bit too magic numbery but sufficient for
-	// what we want to do in debugging. See the Pixie-16 manual
-	// for more information: "List Mode Data Structures."
+	// Selectors -- a bit too magic numbery but sufficient for what we
+	// want to do in debugging. See the Pixie-16 manual Sec. 4.2.2 "List
+	// Mode Data Structures" for more information.
 
 	/** 
 	 * @brief Get the channel ID from word 0.
@@ -85,23 +94,24 @@ private:
 #pragma pack(pop)
     
 private:
-    size_t m_nModules; //!< Number of modules in the crate.
+    size_t m_nModules;             //!< Number of modules in the crate.
     std::vector<int> m_modEvtLens; //!< Expected event lengths (32-bit words).
     /** Word to store rev, bit depth, and MSPS of module for insertion into 
      * the data stream.*/
     unsigned int m_modRevBitMSPSWord[MAX_MODULES_PER_CRATE];
-    /** Calibration constants: clock ticks --> nanoseconds. */
-    double m_modClockCal[MAX_MODULES_PER_CRATE];    
+    /** Calibration constants for each module in the crate in nanoseconds per 
+     * clock tick. */
+    double m_modClockCal[MAX_MODULES_PER_CRATE];
     DAQ::DDAS::Configuration m_config; //!< Configuration data for the segment.
-    bool m_systemInitialized; 
-    bool m_firmwareLoadedRecently;    
-    CMyTrigger* m_pTrigger; //!< Trigger definition.
-    CExperiment* m_pExperiment; //!< The experiment we're reading data from.
+    bool m_systemInitialized;          //!< Are modules are booted and online?
+    bool m_firmwareLoadedRecently;     //!< True when loading FW on full boot.
+    CMyTrigger* m_pTrigger;            //!< Trigger definition.
+    CExperiment* m_pExperiment;        //!< Experiment we're reading data from.
    
     // Statistics:
     
-    size_t m_nCumulativeBytes;
-    size_t m_nBytesPerRun;
+    size_t m_nCumulativeBytes; //!< Cumulative bytes of data read.
+    size_t m_nBytesPerRun;     //!< Bytes of data read this run.
     
 public:
     /**

@@ -139,14 +139,12 @@ namespace DAQ {
 	    void Reset();
 	    
 	    /** 
-	     * @brief Retrieve the energy
-	     *
+	     * @brief Retrieve the energy.
 	     * @details
 	     * With the advent of Pixie-16 modules with 16-bit ADCs, the 
 	     * GetEnergy() method no longer includes the ADC 
 	     * overflow/underflow bit. The overflow/underflow bit can be 
 	     * accessed via the GetADCOverflowUnderflow() method instead.
-	     *
 	     * @return The energy.
 	     */
 	    uint32_t GetEnergy() const { return energy; }	    
@@ -167,7 +165,6 @@ namespace DAQ {
 	    uint32_t GetTimeCFD() const { return timecfd; }	    
 	    /** 
 	     * @brief Retrieve computed time 
-	     *
 	     * @details
 	     * This method performs a computation that depends on the type of 
 	     * the digitizer that produced the data. In each case, the coarse 
@@ -217,7 +214,6 @@ namespace DAQ {
 	    /** 
 	     * @brief Retrieve finish code
 	     * @return The finish code.
-	     *
 	     * @details
 	     * The finish code will be set to 1 if pileup was detected.
 	     */
@@ -226,7 +222,6 @@ namespace DAQ {
 	     * @brief Retrieve number of 32-bit words that were in original 
 	     * data packet.
 	     * @return The number of 32-bit words in the event.
-	     *   
 	     * @details
 	     * Note that this only really makes sense to be used if the object 
 	     * was filled with data using UnpackChannelData().
@@ -282,7 +277,6 @@ namespace DAQ {
 	    /** 
 	     * @brief Retreive failure bit from CFD data.
 	     * @return The CFD fail bit.
-	     *
 	     * @details
 	     * The fail bit == 1 if the CFD fails, 0 otherwise.
 	     */
@@ -333,7 +327,6 @@ namespace DAQ {
 	     * @return bool
 	     * @retval true  If the ADC over- or underflows.
 	     * @retval false Otherwise.
-	     *
 	     * @details
 	     * In the 12 and 14 bit modules, this is the value of bit 15 in 
 	     * the 4th header word. In the 16 bit modules, this is the value 

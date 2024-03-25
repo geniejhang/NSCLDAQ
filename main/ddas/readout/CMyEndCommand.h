@@ -29,21 +29,24 @@ public:
      * @brief Tcl event and Tcl interpreter command for end event.
      */
     struct EndEvent {
-	Tcl_Event s_rawEvent; //!< Generic event for the Tcl event system.
-	CMyEndCommand* s_thisPtr; //!< Pointer to this command.
+	Tcl_Event      s_rawEvent; //!< Generic event for the Tcl event system.
+	CMyEndCommand* s_thisPtr;  //!< Pointer to this command.
     };
  
-private:
+private:        
+    CMyEventSegment* m_pSeg;     //!< End for modules in this segment.
+    CExperiment*     m_pExp;     //!< The experiment we're reading data from.
+    int              m_nModules; //!< Number of modules in the event segment.
 
 public:
     /**
      * @brief Constructor.
      * @param interp Reference to interpreter.
-     * @param myevseg The event segment to manipulate.
-     * @param exp The experiment we're reading data from.
+     * @param pSeg   Pointer to the event segment to manipulate.
+     * @param pExp   Pointer to the experiment we're reading data from.
      */
     CMyEndCommand(
-	CTCLInterpreter& interp, CMyEventSegment *myevseg, CExperiment* exp
+	CTCLInterpreter& interp, CMyEventSegment* pSeg, CExperiment* pExp
 	);
     /** @brief Destructor. */
     ~CMyEndCommand ();
@@ -70,10 +73,6 @@ private:
      * @param rhs References the CMyEndCommand for comparison.
      */
     int operator!=(const CMyEndCommand& rhs) const;
-    
-    CMyEventSegment *myeventsegment; //!< End for modules in this segment.
-    CExperiment* m_pExp; //!< The experiment we're reading data from.
-    int NumModules; //!< Total number of modules in the event segment.
   
     // Class operations:
 public:

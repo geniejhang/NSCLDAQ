@@ -27,12 +27,12 @@
 #include "CMyEventSegment.h"
 
 CMyEndCommand::CMyEndCommand(
-    CTCLInterpreter& rInterp, CMyEventSegment *myevseg, CExperiment* pexp
+    CTCLInterpreter& rInterp, CMyEventSegment *pSeg, CExperiment* pExp
     ) : CEndCommand(rInterp) 
 {
-    myeventsegment = myevseg;
-    m_pExp = pexp;
-    NumModules = myeventsegment->GetNumberOfModules();
+    m_pSeg = pSeg;
+    m_pExp = pExp;
+    m_nModules = m_pSeg->GetNumberOfModules();
 }
 
 CMyEndCommand::~CMyEndCommand()
@@ -40,11 +40,11 @@ CMyEndCommand::~CMyEndCommand()
 
 /**
  * @details
- * Stop run in the Director module (module #0) -- a SYNC interrupt should be 
- * generated to stop run in all modules simultaneously when running 
- * synchronously... We are not running synchronously when in INFINITY_CLOCK 
- * mode! If INFINITY_CLOCK mode is not set, then we need to end the run in 
- * every module!
+ * Stop run in the director module (module #0) -- a SYNC interrupt should be 
+ * generated to stop the run in all modules simultaneously when running 
+ * synchronously. We are not running synchronously when in INFINITY_CLOCK 
+ * mode. If the INFINITY_CLOCK mode is set, we must stop the run in each module
+ * individually.
  *
  * @note: If the end run signal is successfully communicated to the module(s), 
  * the transition to an inactive state cannot fail, only report which module(s)
@@ -57,6 +57,8 @@ int CMyEndCommand::transitionToInactive()
 
     if (::getenv("INFINITY_CLOCK") == nullptr) {
 	try {
+	    // No infinity clock: the module sync interrupt from module 0
+	    // is used to end the run simultaneously in each module.
 	    int retval = Pixie16EndRun(0);	
 	    if (retval < 0) {
 		std::string msg = "Failed to communicate end run operation to"
@@ -69,9 +71,10 @@ int CMyEndCommand::transitionToInactive()
 	    return TCL_ERROR;
 	}
     } else {
-	for (int i = 0; i < NumModules; ++i) {
+	for (int i = 0; i < m_nModules; ++i) {
 	    try {
-		int retval = Pixie16EndRun(0);	
+		// Infinity clock mode: stop the run for each module. 
+		int retval = Pixie16EndRun(i);	
 		if (retval < 0) {
 		    std::string msg = "Failed to communicate end run"
 			" operation in module " + i;
@@ -85,7 +88,7 @@ int CMyEndCommand::transitionToInactive()
 	}
     }
 
-    for (int i = 0; i < NumModules; ++i) {
+    for (int i = 0; i < m_nModules; ++i) {
 	bool runEnded = false;
 	int nRetries = 0;
 	const int nMaxRetries = 10;
@@ -137,36 +140,26 @@ int CMyEndCommand::readOutRemainingData()
 	return TCL_ERROR;
     }
 
-    int retval = 0;
     int count = 0;
-    char filnam[80];
     unsigned long nFIFOWords[24];
-    unsigned long *lmdata;
-    unsigned int mod_numwordsread;
-    unsigned short EndOfRunRead;
-
-    if ((lmdata = (unsigned long *)malloc(sizeof(unsigned long)*131072)) == nullptr) {
-        std::cout << "Failed to allocate memory block lmdata"
-		  << std::endl << std::flush;
-    }
 
     // Clear counters to 0 (counters keep track of how many words each 
     // module has read)
-    for (int i = 0; i < NumModules; i++) {
+    for (int i = 0; i < m_nModules; i++) {
         nFIFOWords[i] = 0;
     } 
 
     usleep(100);
     
     // Make sure all modules indeed finish their run successfully.
-    for(int i = 0; i < NumModules; i++) {
+    for(int i = 0; i < m_nModules; i++) {
         // For each module, check to see if a run is still in progress in the
 	// ith module. If it is still running, wait a little bit and check
 	// again. If after 10 attempts, we stop trying. Run ending failed.
         count = 0;
         do {
 	    try {
-		retval = Pixie16CheckRunStatus(i);
+		int retval = Pixie16CheckRunStatus(i);
             
 		// retval < 0: Error checking run status.
 		// retval == 1: A run is in progress.
@@ -176,14 +169,14 @@ int CMyEndCommand::readOutRemainingData()
 		    throw CXIAException(msg, "Pixie16CheckRunStatus", retval);
 		}
 		else if (retval == 1) {
-		    EndOfRunRead = 1;	
+		    // Keep trying...
+		    continue;
 		} else {
 		    // No run is in progress
 		    break;
 		}
 	    }
 	    catch (const CXIAException& e) {
-		EndOfRunRead = 1; // We failed, so...
 		std::cerr << e.ReasonText() << std::endl;
 	    }
             count ++;
@@ -196,14 +189,21 @@ int CMyEndCommand::readOutRemainingData()
         }
     }
 
+    /** 
+     * @todo (ASC 3/21/24): I believe we need to read here or else we drop 
+     * data on the floor which has accumulated in the FIFO since the last 
+     * trigger. I _think_ a single call to CExperiment::ReadEvent() should 
+     * read whatever's left in the FIFOs into the ring on end run. Then the 
+     * end run state change item is put into the ringbuffer and handled by 
+     * DDASSorter::processChunk(). Either here or CMyExperiment::onEnd().
+     */
+    
     // All modules have their run stopped successfully. Now read out the 
     // possible last words from the external FIFO, and get statistics.
     std::ofstream outputfile;
     outputfile.open("EndofRunScalers.txt", std::ios::app);
 
-    for(int i = 0; i < NumModules; i++) {
-        EndOfRunRead = 1;
-	
+    for(int i = 0; i < m_nModules; i++) {
         // Get final statistics:
 	std::vector<unsigned int> statistics(Pixie16GetStatisticsSize(), 0);
 	try {
@@ -235,7 +235,6 @@ int CMyEndCommand::readOutRemainingData()
     }
 
     outputfile.close();  
-    free(lmdata);
     CVMEInterface::Unlock();
     
     return 0;	

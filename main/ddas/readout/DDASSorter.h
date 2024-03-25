@@ -55,20 +55,20 @@ typedef struct _RingItemHeader *pRingItemHeader;
 class DDASSorter
 {
 private:
-    CRingBuffer& m_source; //!< Ringbuffer data source.
-    CRingBuffer& m_sink; //!< Ringbuffer data sink.
-    DDASReadout::HitManager* m_pHits; 
-    DDASReadout::BufferArena* m_pArena;
-    std::deque<DDASReadout::ZeroCopyHit*> m_hits;
-    uint32_t m_sid; //!< Source ID.
-    double m_lastEmittedTimestamp;
+    CRingBuffer& m_source;              //!< Ringbuffer data source.
+    CRingBuffer& m_sink;                //!< Ringbuffer data sink.
+    DDASReadout::HitManager* m_pHits;   //!< Management of sorted hits.
+    DDASReadout::BufferArena* m_pArena; //!< Raw ring item storage buffers.
+    std::deque<DDASReadout::ZeroCopyHit*> m_hits; //!< Reusable hit pool.
+    uint32_t m_sid;                     //!< Source ID.
+    double m_lastEmittedTimestamp;      //!< Timestamp of last emitted hit.
     
 public:
     /**
      * @brief Constructor.
-     *    @param source Input data ringbuffer.
-     *    @param sink   Output data ringbuffer.
-     *    @param window Accumulation window in seconds.
+     * @param source Input data ringbuffer.
+     * @param sink   Output data ringbuffer.
+     * @param window Accumulation window in seconds.
      */
     DDASSorter(CRingBuffer& source, CRingBuffer& sink, float window=10.0);
     /** @brief Destructor. */

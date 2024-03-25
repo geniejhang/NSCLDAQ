@@ -566,7 +566,7 @@ then
 		sourcedir="`realpath ${srcdir}`"
 		(cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make all test install)
 		UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
-		UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lAbstractFormat -lV10Format -lV11Format -lV12Format -Wl,-rpath=${prefix}/unifiedformat/lib"
+		UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
 		AC_SUBST(UFMT_CPPFLAGS)
 		AC_SUBST(UFMT_LDFLAGS)],
 		[AC_MSG_ERROR([incorporate the unified format library with unifiedfmt-incorp.sh])])
@@ -904,6 +904,8 @@ AC_CONFIG_FILES([Makefile
 	ddas/format/Makefile
 	ddas/ddasdumper/Makefile
 	ddas/ddasdumper/ddasdumper
+	ddas/newddasdumper/Makefile
+	ddas/newddasdumper/ddasdumper
 	ddas/readout/Makefile
 	ddas/readout/DDASFirmwareVersions.txt
 	ddas/pixieplugin/Makefile

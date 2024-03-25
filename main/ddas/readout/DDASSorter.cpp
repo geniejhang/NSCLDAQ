@@ -233,6 +233,7 @@ DDASSorter::processHits(pRingItemHeader pItem)
 	}
         bodySize -= hitWords;
     }
+    
     m_pHits->addHits(hitList);
     
     // Now see if there are any hits we can output:

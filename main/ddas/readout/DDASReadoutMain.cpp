@@ -45,19 +45,6 @@ using namespace std;
 #include "CMyEndCommand.h"
 #include "CMyScaler.h"
 
-/** 
- * @todo (ASC 3/20/24): `Setup*` functions should throw exceptions which can 
- * be handled by the base class. The base class needs to be modified to handle
- * std::exception and its derived classes.
- */
-
-/** 
- * @todo (ASC 3/20/24): mytrigger, myeventsegment and scalerModules naively 
- * look like class members rather than locally scoped variables... but then 
- * we need construction, destruction, etc. For now, who manages their memory? 
- * One might guess that CExperiment does, but the busy and triggers are not 
- * deleted on destruction...
- */
 // These are nullptr, nullptr... nothing really happens until we setup.
 CMyTrigger *mytrigger(0); //!< Newing them here makes order of construction.
 /** Un-controlled - now new'd in SetupReadout. */

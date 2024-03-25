@@ -1,4 +1,4 @@
-EXTRA_DIST=Doxyfile.in DoxygenLayout.xml.in mainpage.dox cfgpixie16.dox modevtlen.dox qtscope.dox single_crate.dox
+EXTRA_DIST=Doxyfile.in DoxygenLayout.xml.in mainpage.dox cfgpixie16.dox modevtlen.dox qtscope.dox readout.dox single_crate.dox
 
 # Workaround for /usr/bin/install not having recursive copy
 

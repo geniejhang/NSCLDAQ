@@ -117,13 +117,13 @@ namespace DDASReadout {
      *
      *  Special cases:
      *  - m_sortedHits is empty: assign it to new hits.
-     *  - m_sortedHits.last() <= newHits.front(): just insert the new hits at 
-     *    the end of the current sorted list.
      *  - m_sortedHits.front() >= newHits.back(): prepend the new hits.
-     *  - Otherwise the following steps are performed:
+     *  
+     * Otherwise a reduced append and merge approach is taken and the following
+     * steps are performed:
      *  1. Append the new hits to sorted hits.
      *  2. Search backwards in the existing hits until either we come to the 
-     *     first existing hit or we come to an element who's time is <= to 
+     *     first existing hit or we come to an element whose time is <= to 
      *     newhit's front.
      *  3. Do an in-place merge of those two ranges of the sorted_list.
      */
@@ -134,26 +134,41 @@ namespace DDASReadout {
 	    m_sortedHits = newHits; // Assign
 	} else {
 	    auto oldFront = m_sortedHits.front();
+	    auto oldBack  = m_sortedHits.back();
+	    auto newFront = newHits.front();
 	    auto newBack  = newHits.back();
 	    if (hitCompare(newBack, oldFront)) { // Prepend
 		m_sortedHits.insert(
 		    m_sortedHits.begin(), newHits.begin(), newHits.end()
 		    );
-	    } else {
+	    } else { // Reduced append and merge
+		/**
+		 * @todo (ASC 3/21/24): Does checking oldBack < newFront, 
+		 * appending and exiting without doing an inplace merge
+		 * offer any performance boost?
+		 */
 		// Start by appending:            
 		auto newPosition = m_sortedHits.insert(
 		    m_sortedHits.end(), newHits.begin(), newHits.end()
 		    );
-		auto oldEnd = newPosition;
-		--oldEnd;
+		auto oldPosition = newPosition;
+		--oldPosition;
 		while (
-		    !hitCompare(*oldEnd, *newPosition)
-		    && (oldEnd != m_sortedHits.begin())
+		    !hitCompare(*oldPosition, *newPosition)
+		    && (oldPosition != m_sortedHits.begin())
 		    ) {
-		    --oldEnd;
-		}    
+		    --oldPosition;
+		}
+		/** 
+		 * @todo (ASC 3/20/24): std::inplace_merge() dynamically 
+		 * allocates a temporary buffer and switches to a less 
+		 * efficient algorithm is used. _If_ sorting is rate-limiting, 
+		 * and we're pretty convinced we shouldn't have too much 
+		 * dynamic memory management, can we avoid it with a different 
+		 * merge algorithm?
+		 */
 		std::inplace_merge(
-		    oldEnd, newPosition, m_sortedHits.end(), hitCompare
+		    oldPosition, newPosition, m_sortedHits.end(), hitCompare
 		    );
 	    }
 	}
