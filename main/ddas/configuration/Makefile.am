@@ -19,3 +19,4 @@ unittests_LDADD = @builddir@/libConfiguration.la @CPPUNIT_LIBS@
 
 TESTS = unittests
 
+EXTRA_DIST = cfgpixie16.dox modevtlen.dox 

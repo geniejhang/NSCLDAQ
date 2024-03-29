@@ -12,7 +12,7 @@
 
 /**
  * @class CMyScaler
- * @brief Read in scaler data for DDAS systems.
+ * @brief Generate scaler data from run statistics.
  * @details 
  * Generates scaler information from the run statistics read from the 
  * module(s). A DDAS module with N channels has a scalar bank of 2N + 1 values.

@@ -12,8 +12,11 @@
 
 /**
  * @class CXIAException
- * @brief XIA API major version 4+ implements a return code and context
- * message for non-zero return values from API functions. This class provides
+ * @brief CException wrapper for XIA return codes containing the return code 
+ * and context message of the error.
+ * @details
+ * XIA API major version 4+ implements a return code and context message for 
+ * non-zero return values from API functions. This class provides
  * a wrapper for that business using the CException class:
  * * m_reasonCode holds the XIA API return value,
  * * The XIA API return value is used to generate an XIA API context message 

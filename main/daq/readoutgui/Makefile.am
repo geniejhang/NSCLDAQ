@@ -70,7 +70,8 @@ EXTRA_DIST = $(TCLPACKAGES) $(TCLAPPS) $(TCLTESTS) $(TKTESTS)\
 	readoutgui_user.xml RunState.eps RunState.jpg s800fake.tcl\
 	readoutshell.jpg readoutshell.eps \
 	sshsimulator.testscript start.bash \
-	eventlogsettings.jpg eventlogsettings.eps error.png evbwizard.tcl
+	eventlogsettings.jpg eventlogsettings.eps error.png evbwizard.tcl \
+	readoutgui_man.xml
 
 
 bin_PROGRAMS =  SecretTk

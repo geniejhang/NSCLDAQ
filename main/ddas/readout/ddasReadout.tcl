@@ -3,10 +3,8 @@
 # The next line is executed by /bin/sh, but not tcl \
 exec tclsh "$0" ${1+"$@"}
 
-##
-# @file ddasReadout.tcl
-# @brief Driver for DDASReadout/Sorter.
-#
+## @file ddasReadout.tcl
+# @brief Driver for DDASReadout/ddasSort.
 
 #    This software is Copyright by the Board of Trustees of Michigan
 #    State University (c) Copyright 2014.

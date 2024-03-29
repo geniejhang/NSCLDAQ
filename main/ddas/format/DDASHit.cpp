@@ -27,7 +27,6 @@ DAQ::DDAS::DDASHit::DDASHit() :
     finishcode(0),
     channellength(0),
     channelheaderlength(0),
-    overflowcode(0),
     chanid(0),
     slotid(0),
     crateid(0),
@@ -60,7 +59,6 @@ DAQ::DDAS::DDASHit::Reset() {
     finishcode = 0;
     channellength = 0;
     channelheaderlength = 0;
-    overflowcode = 0;
     chanid = 0;
     slotid = 0;
     crateid = 0;
@@ -113,12 +111,6 @@ void
 DAQ::DDAS::DDASHit::setChannelLength(uint32_t channelLength)
 {
     channellength = channelLength;
-}
-
-void
-DAQ::DDAS::DDASHit::setOverflowCode(uint32_t overflowBit)
-{
-    overflowcode = overflowBit;
 }
 
 void
@@ -189,7 +181,7 @@ DAQ::DDAS::DDASHit::setTimeLow(uint32_t datum)
 void
 DAQ::DDAS::DDASHit::setTimeHigh(uint32_t datum)
 {
-    timehigh = datum & LOWER16BITMASK;
+    timehigh = datum & LOWER_16_BIT_MASK;
 }
 
 void
@@ -273,7 +265,6 @@ DAQ::DDAS::DDASHit::copyIn(const DDASHit& rhs) {
     finishcode = rhs.finishcode;
     channellength = rhs.channellength;
     channelheaderlength = rhs.channelheaderlength;
-    overflowcode = rhs.overflowcode;
     chanid = rhs.chanid;
     slotid= rhs.slotid;
     crateid = rhs.crateid;

@@ -67,15 +67,17 @@ namespace DAQ {
 	 *
 	 * This class does not provide any parsing capabilities likes its
 	 * companion class ddasdumper. To fill this with data, you should use 
-	 * the associated DDASHitUnpacker class. Here is how you use it:
+	 * the DDASHitUnpacker class. Here is how you use it:
 	 *
 	 * @code
-	 * DDASHit channel;
+	 * DDASHit hit;
 	 * DDASHitUnpacker unpacker;
-	 * unpacker.unpack(pData, pData+sizeOfData, channel);
+	 * unpacker.unpack(pData, pData + sizeOfHit, hit);
 	 * @endcode
 	 *
-	 * where pData is a pointer to the first word of the event body.
+	 * where `pData` is a pointer to the first 32-bit word of the event 
+	 * and `sizeOfHit` is the size also in 32-bit words. Note that 
+	 * `pData + sizeOfHit` is a pointer off the end of the current hit.
 	 */
 	class DDASHit { 
 
@@ -90,7 +92,6 @@ namespace DAQ {
 	    uint32_t finishcode;    //!< Indicates whether pile-up occurred.
 	    uint32_t channellength; //!< Number of 32-bit words of raw data.
 	    uint32_t channelheaderlength; //!< Length of header.
-	    uint32_t overflowcode;  //!< ADC overflow (1 = overflow).
 	    uint32_t chanid;        //!< Channel index.
 	    uint32_t slotid;        //!< Slot index.
 	    uint32_t crateid;       //!< Crate index.
@@ -105,7 +106,7 @@ namespace DAQ {
 	    uint64_t externalTimestamp;       //!< External timestamp.
 	    int      m_hdwrRevision;          //!< Hardware revision.
 	    int      m_adcResolution;         //!< ADC resolution.
-	    /** Whether the ADC over- or under-flowed. */
+	    /** Whether the ADC over- or under-flowed (=1 if so)*/
 	    bool     m_adcOverflowUnderflow;
 	    
 	public:
@@ -232,12 +233,7 @@ namespace DAQ {
 	     * @return Length of the channel header. 
 	     */
 	    uint32_t GetChannelLengthHeader()
-		const { return channelheaderlength; }	    
-	    /** 
-	     * @brief Retrieve the overflow code. 
-	     * @return The overflow code. 
-	     */
-	    uint32_t GetOverflowCode() const { return overflowcode; }	    
+		const { return channelheaderlength; }	    	    
 	    /** 
 	     * @brief Retrieve the slot that the module resided in. 
 	     * @return Module slot. 
@@ -362,11 +358,6 @@ namespace DAQ {
 	     */
 	    void setChannelLength(uint32_t channelLength);
 	    /**
-	     * @brief Set the overflow code.
-	     * @param overflowBit The overflow bit value for this hit.
-	     */
-	    void setOverflowCode(uint32_t overflowBit);
-	    /**
 	     * @brief Set the finish code.
 	     * @param finishCode Finish code for this hit.
 	     */
@@ -459,7 +450,7 @@ namespace DAQ {
 	     */
 	    void setExternalTimestamp(uint64_t value);
 	    /**
-	     * @brief Set ADC OverflowUnderflow
+	     * @brief Set ADC over- or under-flow state.
 	     * @param state The ADC under-/overflow state. True if the ADC 
 	     *   under- or overflows the ADC.
 	     */	    

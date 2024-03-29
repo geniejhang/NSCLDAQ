@@ -15,7 +15,10 @@
 	     East Lansing, MI 48824-1321
 */
 
-
+/** 
+ * @file RawChannel.h
+ * @brief Defines a raw channel hit storage struct for Readout/sorting.
+ */
 
 #ifndef RAWCHANNEL_H
 #define RAWCHANNEL_H

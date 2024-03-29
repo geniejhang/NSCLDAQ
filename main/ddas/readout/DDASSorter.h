@@ -44,7 +44,7 @@ typedef struct _RingItemHeader *pRingItemHeader;
  * @brief Class to manage data flow and timestamp ordering.
  * @details 
  * The DDASSorter class processes ring items:
- * - Non event ring items are just passsed on through.
+ * - Non event ring items are just passed on through.
  * - Event items are parsed for hits which are added to the hit manager.
  * - If hits are available from the hit manager they are passsed as output 
  *   ring items.

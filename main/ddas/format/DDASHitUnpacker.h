@@ -8,9 +8,6 @@
 
 #include "DDASHit.h"
 
-#include <stdint.h>
-
-#include <vector>
 #include <tuple>
 
 /** @namespace DAQ */
@@ -25,28 +22,29 @@ namespace DAQ {
 	/** 
 	 * @class DDASHitUnpacker DDASHitUnpacker.h
 	 *
-	 * @brief Unpacker for DDAS data recorded by NSCLDAQ/FRIBDAQ.
+	 * @brief Unpacker for DDAS data recorded by NSCLDAQ.
 	 * @details
 	 * This class unpacks NSCLDAQ-formatted Pixie-16 data recorded by a
 	 * DDAS readout program into DDASHits which encapsulate the information
-	 * recorded by a single DDAS channel. This is a generic unpacker which 
+	 * recorded by a single Pixie channel. This is a generic unpacker which 
 	 * can accomodate information from all Pixie-16 digitizer types at 
 	 * FRIB. In general, all of the digitizer outputs contain the same 
 	 * information but importantly the meaning of the CFD data depends on 
 	 * the digitizer type. The unpacker class abstracts this difference 
 	 * away from the user. 
 	 *
-	 * This class does not provide any parsing capabilities likes its
-	 * companion class ddasdumper. To fill this with data, you should use 
-	 * the associated DDASHit class. Here is how you use it:
+	 * This class does not provide any parsing capabilities like the 
+	 * ddasdumper. You must create a DDASHit object and unpack data into 
+	 * it. Here is how you do that:
 	 *
 	 * @code
 	 * DDASHit hit;
 	 * DDASHitUnpacker unpacker;
-	 * unpacker.unpack(pData, pData+sizeOfData, hit);
+	 * unpacker.unpack(pData, pData + sizeOfData, hit);
 	 * @endcode
 	 *
-	 * where pData is a pointer to the first word of the event body.
+	 * where `pData` is a pointer to the first 32-bit word of the hit body 
+	 * and `sizeOfData` is the size of the hit in 32-bit words.
 	 */
 	class DDASHitUnpacker {
 	public:

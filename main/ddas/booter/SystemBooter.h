@@ -24,14 +24,13 @@ namespace DAQ {
 	
 	/**
 	 * @class SystemBooter SystemBooter.h
-	 * @brief The SystemBooter class.
+	 * @brief Manages the booting process for DDAS.
 	 * @details
-	 * A class to manage the booting process for DDAS. All Readout and 
-	 * slow controls programs rely on this class to boot the system. 
-	 * There are two separate boot types: FullBoot and SettingsOnly. 
-	 * The former loads firmware and settings into the system while the 
-	 * latter just loads the settings. The basic usage pattern is 
-	 * demonstrated below.
+	 * All Readout and slow controls programs rely on this class to boot 
+	 * the system. There are two separate boot types: FullBoot and 
+	 * SettingsOnly. The former loads firmware and settings into the 
+	 * system while the latter just loads the settings. The basic usage 
+	 * pattern is demonstrated below.
 	 *
 	 * @code
 	 * using namespace DAQ::DDAS;

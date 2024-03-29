@@ -5,12 +5,13 @@
  */
 
 #include "DDASHitUnpacker.h"
-#include "DDASBitMasks.h"
 
 #include <sstream>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
+
+#include "DDASBitMasks.h"
 	
 /**
  * @details
@@ -43,13 +44,13 @@ DAQ::DDAS::DDASHitUnpacker::unpack(
     data = parseHeaderWords1And2(hit, data);
     data = parseHeaderWord3(hit, data);
 
-    // finished upacking the minimum set of data
+    // Finished upacking the minimum set of data:
 	    
     uint32_t channelheaderlength = hit.GetChannelLengthHeader();
     uint32_t channellength = hit.GetChannelLength();
     size_t tracelength = hit.GetTraceLength();
 	    
-    // more unpacking data
+    // We may have more data to unpack:
 	    
     if(channellength != (channelheaderlength + tracelength/2)){
 	std::stringstream errmsg;
@@ -67,40 +68,45 @@ DAQ::DDAS::DDASHitUnpacker::unpack(
     // QDC sums:    8
     // Trace:       ceil(0.5*L*f)
     //   where L = trace length in microseconds, f = module MSPS
-     
-    if(channelheaderlength == 6) {
-	data = extractExternalTimestamp(data, hit);
 
-    } else if(channelheaderlength == 8) {
-	data = extractEnergySums(data, hit);
+    uint32_t extraWords = channelheaderlength - SIZE_OF_RAW_EVENT;
 
-    } else if (channelheaderlength == 10) {
-	data = extractEnergySums(data, hit);
-	data = extractExternalTimestamp(data, hit);
-
-    } else if(channelheaderlength == 12) {
-	data = extractQDC(data, hit);
-
-    } else if (channelheaderlength == 14) {
-	data = extractQDC(data, hit);
-	data = extractExternalTimestamp(data, hit);
-
-    } else if(channelheaderlength == 16) {
-	// If channel header length is 16 then the extra 12 words are
-	// energy and QDC sums
-	data = extractEnergySums(data, hit);
-	data = extractQDC(data, hit);
-
-    } else if(channelheaderlength == 18) {
-	// If channel header length is 18 then the extra 12 words are
-	// energy and QDC sums
-	data = extractEnergySums(data, hit);
-	data = extractQDC(data, hit);
-	data = extractExternalTimestamp(data, hit);
-
+    if (extraWords) {
+	if(extraWords == SIZE_OF_EXT_TS) {
+	    data = extractExternalTimestamp(data, hit);
+	
+	} else if(extraWords == SIZE_OF_ENE_SUMS) {
+	    data = extractEnergySums(data, hit);
+	
+	} else if (
+	    extraWords == (SIZE_OF_ENE_SUMS + SIZE_OF_EXT_TS)
+	    ) {
+	    data = extractEnergySums(data, hit);
+	    data = extractExternalTimestamp(data, hit);
+	
+	} else if(extraWords == SIZE_OF_QDC_SUMS) {
+	    data = extractQDC(data, hit);
+	
+	} else if (extraWords == (SIZE_OF_QDC_SUMS + SIZE_OF_EXT_TS)) {
+	    data = extractQDC(data, hit);
+	    data = extractExternalTimestamp(data, hit);
+	
+	} else if(extraWords == (SIZE_OF_ENE_SUMS + SIZE_OF_QDC_SUMS)) {
+	    data = extractEnergySums(data, hit);
+	    data = extractQDC(data, hit);
+	
+	} else if(
+	    extraWords == (SIZE_OF_ENE_SUMS + SIZE_OF_QDC_SUMS
+			   + SIZE_OF_EXT_TS)
+	    ) {
+	    data = extractEnergySums(data, hit);
+	    data = extractQDC(data, hit);
+	    data = extractExternalTimestamp(data, hit);
+	}
     }
 
-    // If trace length is non zero, retrieve the trace
+    // If trace length is non zero, unpack the trace data:
+    
     if(tracelength != 0) {
 	data = parseTraceData(hit, data);
     }
@@ -142,10 +148,11 @@ DAQ::DDAS::DDASHitUnpacker::parseBodySize(
     uint32_t nShorts = *data; 
     // Make sure there is enough data to parse
     if (
-	(data + nShorts/sizeof(uint16_t) > sentinel) && (sentinel != nullptr)
+	(data + nShorts/sizeof(uint16_t) > sentinel)
+	&& (sentinel != nullptr)
 	) {
 	throw std::runtime_error(
-	    "DDASHitUnpacker::unpack() Incomplete event data."
+	    "DDASHitUnpacker::parseBodySize() found incomplete event data!"
 	    );
     }
 
@@ -163,9 +170,9 @@ DAQ::DDAS::DDASHitUnpacker::parseModuleInfo(
     )
 {
     uint32_t datum = *data++;
-    hit.setADCFrequency(datum & LOWER16BITMASK);
-    hit.setADCResolution((datum >> 16) & 0xff);
-    hit.setHardwareRevision((datum >> 24) & 0xff);
+    hit.setADCFrequency(datum & LOWER_16_BIT_MASK);
+    hit.setADCResolution((datum & ADC_RESOLUTION_MASK) >> ADC_RESOLUTION_SHIFT);
+    hit.setHardwareRevision((datum & HW_REVISION_MASK) >> HW_REVISION_SHIFT);
 
     return data;
 }
@@ -173,10 +180,15 @@ DAQ::DDAS::DDASHitUnpacker::parseModuleInfo(
 /**
  * @details
  * Word 0 contains:
- * - Crate/slot/channel information.
- * - The header and channel lengths in 32-bit words.
- * - The ADC overflow code.
+ * - Crate/slot/channel information,
+ * - The header and channel lengths in 32-bit words,
  * - The module finish code (equals 1 if piled up).
+ *
+ * @note In previous versions of the Pixie data format, the ADC out-of-range 
+ * bit was stored in bit 30 of word 0 and the channel length was extracted 
+ * from bits [17:29]. In the current data format, the out-of-range flag has 
+ * been moved to word 3, bit 31, and the channel length mask is extracted 
+ * from bits [17:30] allowing up to 16383 32-bit words per channel hit.
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::parseHeaderWord0(
@@ -184,13 +196,14 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWord0(
     )
 {
     uint32_t datum = *data++;
-    hit.setChannel(datum & CHANNELIDMASK);
-    hit.setSlot((datum & SLOTIDMASK) >> 4);
-    hit.setCrate((datum & CRATEIDMASK) >> 8);
-    hit.setChannelHeaderLength((datum & HEADERLENGTHMASK) >> 12 );
-    hit.setChannelLength((datum & CHANNELLENGTHMASK) >> 17);
-    hit.setOverflowCode((datum & OVERFLOWMASK) >> 30);
-    hit.setFinishCode((datum & FINISHCODEMASK) >> 31 );
+    hit.setChannel(datum & CHANNEL_ID_MASK);
+    hit.setSlot((datum & SLOT_ID_MASK) >> SLOT_ID_SHIFT);
+    hit.setCrate((datum & CRATE_ID_MASK) >> CRATE_ID_SHIFT);
+    hit.setChannelHeaderLength(
+	(datum & HEADER_LENGTH_MASK) >> HEADER_LENGTH_SHIFT
+	);
+    hit.setChannelLength((datum & CHANNEL_LENGTH_MASK) >> CHANNEL_LENGTH_SHIFT);
+    hit.setFinishCode((datum & FINISH_CODE_MASK) >> FINISH_CODE_SHIFT);
       
     return data;
 }
@@ -205,7 +218,7 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWord0(
  * Word 1 contains:
  * - The lower 32 bits of the 48-bit timestamp.
  * Word 2 contains:
- * - The upper 16 bits of the 48-bit timestamp.
+ * - The upper 16 bits of the 48-bit timestamp,
  * - The CFD result.
  */
 const uint32_t*
@@ -215,7 +228,7 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWords1And2(
 {
     uint32_t timelow      = *data++;
     uint32_t datum1       = *data++;
-    uint32_t timehigh     = datum1 & 0xffff;
+    uint32_t timehigh     = datum1 & LOWER_16_BIT_MASK;
     uint32_t adcFrequency = hit.GetModMSPS();
 
     double   cfdCorrection;
@@ -227,7 +240,7 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWords1And2(
 
     hit.setTimeLow(timelow);
     hit.setTimeHigh(timehigh);
-    hit.setCoarseTime( coarseTime ); 
+    hit.setCoarseTime(coarseTime); 
     hit.setTime(static_cast<double>(coarseTime) + cfdCorrection);
 
     return data;
@@ -236,18 +249,22 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWords1And2(
 /**
  * @details
  * Word 3 contains:
- * - The ADC trace overflow flag.
- * - The trace length in samples (16-bit words).
+ * - The trace out-of-range (overflow/underflow) flag,
+ * - The trace length in samples (16-bit words),
  * - The hit energy.
+ * 
+ * @note In the current Pixie list mode data format, the ADC out-of-range flag 
+ * is stored in word 3, bit 31 rather than word 0, bit 30. See documentation 
+ * for `parseHeaderWord0()` for more info.
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::parseHeaderWord3(
     DDASHit& hit, const uint32_t* data
     )
 {
-    hit.setTraceLength((*data >> 16) & 0x7fff);
-    hit.setADCOverflowUnderflow(*data >> 31);
-    hit.setEnergy(*data & LOWER16BITMASK);
+    hit.setADCOverflowUnderflow(*data >> OUT_OF_RANGE_SHIFT); // Just bit 31.
+    hit.setTraceLength((*data & BIT_30_TO_16_MASK) >> 16);
+    hit.setEnergy(*data & LOWER_16_BIT_MASK);
 
     return (data+1);
 }
@@ -256,7 +273,7 @@ DAQ::DDAS::DDASHitUnpacker::parseHeaderWord3(
  * @details
  * The 16-bit trace data is stored two samples to one 32-bit word in 
  * little-endian. The data for sample i is stored in the lower 16 bits while 
- * the data for sample i+1 is stored in the upper 16 bits. For ADCs with less 
+ * the data for sample i + 1 is stored in the upper 16 bits. For ADCs with less 
  * than 16-bit resolution, those bits are set to 0.
  */
 const uint32_t*
@@ -269,8 +286,8 @@ DAQ::DDAS::DDASHitUnpacker::parseTraceData(
     trace.reserve(tracelength);
     for(size_t i = 0; i < tracelength/2; i++){
 	uint32_t datum = *data++;
-	trace.push_back(datum & LOWER16BITMASK);
-	trace.push_back((datum & UPPER16BITMASK)>>16);
+	trace.push_back(datum & LOWER_16_BIT_MASK);
+	trace.push_back((datum & UPPER_16_BIT_MASK) >> 16);
     }
 
     return data;
@@ -280,7 +297,7 @@ DAQ::DDAS::DDASHitUnpacker::parseTraceData(
  * @details
  * The value of the CFD correction depends on the module. Because the module 
  * information is encoded in the data, this function should be called after 
- * parseModuleInfo().
+ * `parseModuleInfo()`.
  */
 std::tuple<double, uint32_t, uint32_t, uint32_t>
 DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(uint32_t ModMSPS, uint32_t data)
@@ -292,22 +309,22 @@ DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(uint32_t ModMSPS, uint32_t data)
     // Check on the module MSPS and pick the correct CFD unpacking algorithm 
     if(ModMSPS == 100){
 	// 100 MSPS modules don't have trigger source bits
-	cfdfailbit    = ((data & BIT31MASK) >> 31) ; 
+	cfdfailbit    = ((data & BIT_31_MASK) >> 31) ; 
 	cfdtrigsource = 0;
-	timecfd       = ((data & BIT30to16MASK) >> 16);
-	correction    = (timecfd/32768.0) * 10.0; // 32768 = 2^15
+	timecfd       = ((data & BIT_30_TO_16_MASK) >> 16);
+	correction    = (timecfd/32768.0)*10.0; // 32768 = 2^15
     }
     else if (ModMSPS == 250) {
 	// CFD fail bit in bit 31
-	cfdfailbit    = ((data & BIT31MASK) >> 31);
-	cfdtrigsource = ((data & BIT30MASK) >> 30);
-	timecfd       = ((data & BIT29to16MASK) >> 16);
+	cfdfailbit    = ((data & BIT_31_MASK) >> 31);
+	cfdtrigsource = ((data & BIT_30_MASK) >> 30);
+	timecfd       = ((data & BIT_29_TO_16_MASK) >> 16);
 	correction    = (timecfd/16384.0 - cfdtrigsource)*4.0; 
     }
     else if (ModMSPS == 500) {
-	// no fail bit in 500 MSPS modules
-	cfdtrigsource = ((data & BIT31to29MASK) >> 29);
-	timecfd       = ((data & BIT28to16MASK) >> 16);
+	// No fail bit in 500 MSPS modules
+	cfdtrigsource = ((data & BIT_31_TO_29_MASK) >> 29);
+	timecfd       = ((data & BIT_28_TO_16_MASK) >> 16);
 	correction    = (timecfd/8192.0 + cfdtrigsource - 1)*2.0;
 	cfdfailbit    = (cfdtrigsource == 7) ? 1 : 0;
     }
@@ -319,7 +336,7 @@ DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(uint32_t ModMSPS, uint32_t data)
  * @details
  * The value of the CFD correction depends on the module. Because the module 
  * information is encoded in the data, this function should be called after 
- * parseModuleInfo().
+ * `parseModuleInfo()`.
  */
 double
 DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(DDASHit& hit, uint32_t data)
@@ -332,22 +349,22 @@ DAQ::DDAS::DDASHitUnpacker::parseAndComputeCFD(DDASHit& hit, uint32_t data)
     // check on the module MSPS and pick the correct CFD unpacking algorithm 
     if(ModMSPS == 100){
 	// 100 MSPS modules don't have trigger source bits
-	cfdfailbit    = ((data & BIT31MASK) >> 31) ; 
+	cfdfailbit    = ((data & BIT_31_MASK) >> 31) ; 
 	cfdtrigsource = 0;
-	timecfd       = ((data & BIT30to16MASK) >> 16);
-	correction    = (timecfd/32768.0) * 10.0; // 32768 = 2^15
+	timecfd       = ((data & BIT_30_TO_16_MASK) >> 16);
+	correction    = (timecfd/32768.0)*10.0; // 32768 = 2^15
     }
     else if (ModMSPS == 250) {
 	// CFD fail bit in bit 31
-	cfdfailbit    = ((data & BIT31MASK) >> 31 );
-	cfdtrigsource = ((data & BIT30MASK) >> 30 );
-	timecfd       = ((data & BIT29to16MASK) >> 16);
+	cfdfailbit    = ((data & BIT_31_MASK) >> 31 );
+	cfdtrigsource = ((data & BIT_30_MASK) >> 30 );
+	timecfd       = ((data & BIT_29_TO_16_MASK) >> 16);
 	correction    = (timecfd/16384.0 - cfdtrigsource)*4.0; 
     }
     else if (ModMSPS == 500) {
 	// no fail bit in 500 MSPS modules
-	cfdtrigsource = ((data & BIT31to29MASK) >> 29 );
-	timecfd       = ((data & BIT28to16MASK) >> 16);
+	cfdtrigsource = ((data & BIT_31_TO_29_MASK) >> 29 );
+	timecfd       = ((data & BIT_28_TO_16_MASK) >> 16);
 	correction    = (timecfd/8192.0 + cfdtrigsource - 1)*2.0;
 	cfdfailbit    = (cfdtrigsource == 7) ? 1 : 0;
     }
@@ -386,29 +403,24 @@ DAQ::DDAS::DDASHitUnpacker::computeCoarseTime(
     uint32_t adcFrequency, uint32_t timelow, uint32_t timehigh
     )
 {
-      
-    uint64_t toNanoseconds = 1;
-
-    if(adcFrequency == 100){
-	toNanoseconds = 10;
-    }
-    else if (adcFrequency == 250) {
-	toNanoseconds = 8;
-    }
-    else if (adcFrequency == 500) {
-	toNanoseconds = 10;
-    }
-
     uint64_t tstamp = timehigh;
     tstamp = tstamp << 32;
     tstamp |= timelow;
+
+    // Conversion to units of real time depends on module type:
+    
+    uint64_t toNanoseconds = 10;
+    if (adcFrequency == 250) {
+	toNanoseconds = 8;
+    } 
 
     return tstamp*toNanoseconds;
 }
 
 /**
  * @details
- * Energy sums consist of 4 32-bit words, which are, in order:
+ * Energy sums consist of SIZE_OF_ENE_SUMS (=4) 32-bit words, which are, 
+ * in order:
  * 0. The trailing (pre-gap ) sum.
  * 1. The gap sum.
  * 2. The leading (post-gap) sum.
@@ -423,25 +435,26 @@ DAQ::DDAS::DDASHitUnpacker::extractEnergySums(
     )
 {
     std::vector<uint32_t>& energies = hit.GetEnergySums();
-    energies.reserve(4);
-    energies.insert(energies.end(), data, data + 4);
+    energies.reserve(SIZE_OF_ENE_SUMS);
+    energies.insert(energies.end(), data, data + SIZE_OF_ENE_SUMS);
     
-    return data + 4;
+    return data + SIZE_OF_ENE_SUMS;
 }
 
 /**
  * @details
- * QDC sums consist of 8 32-bit words. If the hit is not reset between calls 
- * to this function, the QDC sum data will be appended to the end of the 
- * exisiting QDC sums.
+ * QDC sums consist of SIZE_OF_QDC_SUMS (=8) 32-bit words. If the hit is not 
+ * reset between calls  to this function, the QDC sum data will be appended 
+ * to the end of the exisiting QDC sums.
  */
 const uint32_t*
 DAQ::DDAS::DDASHitUnpacker::extractQDC(const uint32_t* data, DDASHit& hit)
 {
     std::vector<uint32_t>& qdcVals = hit.GetQDCSums();
-    qdcVals.reserve(8);
-    qdcVals.insert(qdcVals.end(), data, data+8);
-    return data + 8;
+    qdcVals.reserve(SIZE_OF_QDC_SUMS);
+    qdcVals.insert(qdcVals.end(), data, data + SIZE_OF_QDC_SUMS);
+    
+    return data + SIZE_OF_QDC_SUMS;
 }
 
 /**
@@ -458,8 +471,9 @@ DAQ::DDAS::DDASHitUnpacker::extractExternalTimestamp(
 {
     uint64_t tstamp = 0;
     uint32_t temp = *data++;
-    tstamp = *data++;
-    tstamp = ((tstamp << 32) | temp); 
+    tstamp = *data++;                 // Lower 32 bits.
+    tstamp = ((tstamp << 32) | temp); // Shift upper 32 bits and OR.
     hit.setExternalTimestamp(tstamp);
+    
     return data;
 }

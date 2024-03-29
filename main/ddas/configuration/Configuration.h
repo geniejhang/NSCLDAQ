@@ -31,7 +31,7 @@ namespace DAQ {
 	 */
 
 	/**
-	 * @brief The FirmwareConfiguration struct
+	 * @brief Storage for hardware-type firmware/settings paths.
 	 * @details
 	 * A simple structure to hold the paths to all firmware/settings files
 	 * for a specific hardware type. These objects will be stored in a map
@@ -42,7 +42,7 @@ namespace DAQ {
 	{
 	    /** Name of communications FPGRA configuration file. */
 	    std::string s_ComFPGAConfigFile;
-	    /**Name of signal processing FPGA configuration file. */
+	    /** Name of signal processing FPGA configuration file. */
 	    std::string s_SPFPGAConfigFile;
 	    std::string s_DSPCodeFile; //!< Name of executable DSP code file.
 	    std::string s_DSPVarFile;  //!< Name of DSP variable names file.
@@ -57,7 +57,7 @@ namespace DAQ {
 
 	/**
 	 * @class Configuration
-	 * @brief The Configuration class.
+	 * @brief Store the system configuration information needed by Readout.
 	 * @details
 	 * The Configuration class stores all of the system configuration for
 	 * a Readout program. It maintains the configuration that is read in

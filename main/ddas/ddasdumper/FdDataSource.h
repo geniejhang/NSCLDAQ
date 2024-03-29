@@ -16,19 +16,41 @@
 */
 #ifndef FDDATASOURCE_H
 #define FDDATASOURCE_H
-/** @file:  FdDataSource.cpp
- *  @brief: Data source of undifferentiated ring items from a file descriptor
- *  
+
+/** 
+ * @file  FdDataSource.cpp
+ * @brief Data source of undifferentiated ring items from a file descriptor 
  */
+
 #include "DataSource.h"
+
+/**
+ * @class FdDataSource
+ * @brief A class taking the file descriptor as a data source. Most commonly 
+ * used to construct a data source from stdin.
+ */
 
 class FdDataSource : public DataSource
 {
 private:
-    int m_fd;                         // File descrpitor data source.
+    int m_fd; //!< File descrpitor data source.
+
 public:
+    /**
+     * @brief Constructor. 
+     * @param pFactory Pointer to the factory used to get items.
+     * @param fd File descriptor open on the data source. The caller owns this,
+     *   we don't close it on destruction.
+     */
     FdDataSource(RingItemFactoryBase* pFactory, int fd);
+    /** @brief Destructor. */
     virtual ~FdDataSource();
+    /** 
+     * @brief Get a ring item from the soruce. Implementation of the mandatory 
+     * interface from the base class.
+     * @return Pointer to the next ring item from the stream.
+     * @retval nullptr If none.
+     */
     virtual CRingItem* getItem();
 };
 

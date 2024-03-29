@@ -30,7 +30,7 @@ namespace DAQ {
 	
 	/**
 	 * @class FirmwareVersionFileParser FirmwareVersionFileParser.h
-	 * @brief The FirmwareVersionFileParser class.
+	 * @brief A parser for the DDAS firmware specification file.
 	 * @details
 	 * The FirmwareVersionFileParser is designed to parse the
 	 * DDASFirmwareVersions.txt file that is installed by the project. 
