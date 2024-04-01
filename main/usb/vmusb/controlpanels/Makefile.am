@@ -37,4 +37,5 @@ check-TESTS:
 	TCLLIBPATH=@prefix@/TclLibs tcl=@TCLSH_CMD@ @TCLSH_CMD@ @srcdir@/tclTests.tcl
 
 EXTRA_DIST= $(APPS) $(PYAPP) $(PACKAGES) XLM72ScalerGUI.tcl $(TCL_TESTS) mdgg16control.xml \
-	XLM72GateDelayControl.tcl gd16_startup.png xlm72gatedelaycontrol.xml $(IMAGES)
+	XLM72GateDelayControl.tcl gd16_startup.png xlm72gatedelaycontrol.xml $(IMAGES)     \
+	MDPPTriggerControl.py MDPPTriggerControl.ui MDPPTriggerControl_about.ui
