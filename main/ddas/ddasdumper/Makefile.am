@@ -60,4 +60,4 @@ clean-local:
 	rm -f libddasrootformat.rootmap
 
 
-EXTRA_DIST = ddasdumper.in dumperargs.ggo
+EXTRA_DIST = ddasdumper.in dumperargs.ggo ddasdumper.dox

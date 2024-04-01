@@ -59,6 +59,7 @@ RootFileDataSink::RootFileDataSink(
     gDirectory->Cd("/"); // Have to start somewhere
     
     try {
+	ROOT::EnableImplicitMT();
 	m_pFile = new TFile(fileName, "RECREATE"); // Default directory.
 	m_pTree = new TTree(treeName, treeName);
 	m_pTree->Branch("rawevents", m_pTreeEvent, BUFFERSIZE);
@@ -81,6 +82,8 @@ RootFileDataSink::RootFileDataSink(
  */
 RootFileDataSink::~RootFileDataSink()
 {
+    ROOT::DisableImplicitMT();
+    
     m_pFile->Write();
     delete m_pUnpacker;  
     delete m_pTreeEvent;
@@ -121,8 +124,8 @@ RootFileDataSink::putItem(const CRingItem& item)
 	
 	    pBody += sizeof(EVB::FragmentHeader)/sizeof(uint32_t);
 
-	    // Use the factory to make a ring item and get a pointer to
-	    // its body:
+	    // Use the factory to make a ring item out of the fragment
+	    // and get a pointer to its body:
     
 	    const RingItem* pFrag = reinterpret_cast<const RingItem*>(pBody);
 	    std::unique_ptr<CRingItem> pUndiff(
