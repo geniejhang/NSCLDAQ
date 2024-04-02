@@ -147,7 +147,7 @@ class Plot(QWidget):
             Subplot index in [1, nrows*ncols] (optional).
         """
         self.raw_data[idx-1] = data
-        self.bin_width = 1 # Always and by definition.
+        self.bin_width = 0 # Trace data isn't binned.
         ax = self.figure.add_subplot(nrows, ncols, idx)
         ax.plot(self.raw_data[idx-1], drawstyle="steps-post")
         ax.set_xlabel("Sample number (60 ns/sample)")
@@ -156,7 +156,7 @@ class Plot(QWidget):
         self._set_yscale(ax)
 
         if (nrows*ncols) > 1:
-            ax.set_title("Channel {}".format(idx-1))  # Channels are 0-indexed.
+            ax.set_title("Channel {}".format(idx-1)) # Channels are 0-indexed.
             ax.tick_params(axis='x', labelsize=6)
             ax.tick_params(axis='y', labelsize=6)
             ax.xaxis.label.set_size(6)
