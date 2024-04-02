@@ -52,22 +52,21 @@ RootFileDataSink::RootFileDataSink(
     RingItemFactoryBase* pFactory, const char* fileName, const char* treeName
     ) :
     m_pFactory(pFactory), m_pUnpacker(new DAQ::DDAS::DDASHitUnpacker),
-    m_pTreeEvent(new DDASRootEvent), m_pTree(nullptr), m_pFile(nullptr),
+    m_pEvent(new DDASRootEvent), m_pTree(nullptr), m_pFile(nullptr),
     m_warnedPutUsed(false)
 {  
     const char* oldDir = gDirectory->GetPath();
     gDirectory->Cd("/"); // Have to start somewhere
     
     try {
-	ROOT::EnableImplicitMT();
 	m_pFile = new TFile(fileName, "RECREATE"); // Default directory.
 	m_pTree = new TTree(treeName, treeName);
-	m_pTree->Branch("rawevents", m_pTreeEvent, BUFFERSIZE);
+	m_pTree->Branch("rawevents", m_pEvent, BUFFERSIZE);
 	gDirectory->Cd(oldDir); // Restore the directory.
         
     } catch (...) {
 	delete m_pUnpacker;
-	delete m_pTreeEvent;
+	delete m_pEvent;
 	delete m_pTree;
 	delete m_pFile;
 	gDirectory->Cd(oldDir); // Back to original directory.
@@ -81,12 +80,10 @@ RootFileDataSink::RootFileDataSink(
  * @note The factory is owned by the caller and is the caller's responsibility.
  */
 RootFileDataSink::~RootFileDataSink()
-{
-    ROOT::DisableImplicitMT();
-    
+{  
     m_pFile->Write();
     delete m_pUnpacker;  
-    delete m_pTreeEvent;
+    delete m_pEvent;
     delete m_pTree;
     delete m_pFile; // Deleting the object saves and closes the file.
 }
@@ -112,8 +109,8 @@ RootFileDataSink::putItem(const CRingItem& item)
 	pBody++;          // Points at first event builder fragment.
 	processedWords++; // Count the first word.
 
-	m_pTreeEvent->Reset(); // Free dynamic hits from last event.
-
+	m_pEvent->Reset(); // Free dynamic hits from last event.
+	
 	// Process each fragment in the item:
     
 	const uint32_t* pPrevBody = pBody;
@@ -144,17 +141,17 @@ RootFileDataSink::putItem(const CRingItem& item)
 	    // take advantage of the polymorphism to upcast our DDASRootHit
 	    // to a DDASHit and unpack the data right into it.
 	
-	    DDASRootHit* pHit = new DDASRootHit;	
+	    DDASRootHit* pHit = new DDASRootHit;
 	    m_pUnpacker->unpack(pFragBody, pFragBody + fragmentWords, *pHit);
 
-	    // As of 3/28/24, ROOT 6.30.04 cannot handle I/O of
-	    // std::shared_ptr, so we'll make a pointer to the object,
-	    // copy-construct the pointer onto the vector and then point our
-	    // original pointer to nothing. The new pointer points to the
-	    // original DDASRootHit object. Once we cleanup, DDASRootEvent
-	    // owns the data and the only pointer to it:
+	    // As of 3/28/24, ROOT 6.30.04 cannot handle I/O of shared_ptrs,
+	    // so we'll make a pointer to the object, copy-construct the
+	    // pointer onto the vector and then point our original pointer to
+	    // nothing. The new pointer points to the original DDASRootHit
+	    // object. Once we cleanup, the DDASRootEvent owns the data and
+	    // the only pointer to it:
 	
-	    m_pTreeEvent->AddChannelData(pHit);
+	    m_pEvent->AddChannelData(pHit);
 	    pHit = nullptr;
 	    delete pHit;
 		

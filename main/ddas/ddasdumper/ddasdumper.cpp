@@ -59,7 +59,6 @@
 #include "DataSource.h"
 #include "FdDataSource.h"
 #include "StreamDataSource.h"
-#include "RingItemProcessor.h"
 #include "RootFileDataSink.h"
 
 // Map of exclusion type strings to type integers:
@@ -229,12 +228,11 @@ makeDataSource(RingItemFactoryBase* pFactory, const std::string& strUrl)
 }
 
 /**
- * @brief Use the processor to dump an item.
+ * @brief Process PHYSICS_EVENT data and dump items.
  *
- * @param pItem Pointer to the item.
+ * @param pItem   Pointer to the item.
  * @param factory Reference to the factory appropriate to the format.
- * @param processor References the ring item processor that handles the 
- *   factory items.
+ * @param pSink   Pointer to the data sink we're writing to.
  *
  * @throw std::logic_error If the wrong item type is specified.
  *
@@ -242,8 +240,9 @@ makeDataSource(RingItemFactoryBase* pFactory, const std::string& strUrl)
  * Steps performed by this function:
  * - Based on the item type, use the factory to get a new item using the same 
  *   data for the appropriate type.
- * - Use the processor to perform type-independent processing of ring items 
- *   created by the factory.
+ * - Process PHYSICS_EVENT items and write them to a data sink.
+ * - Process selected event types and dump them to stdout using their 
+ *   `toString()` method.
  *
  * @note This method is rather long but this is only due to the switch 
  *   statement that must handle every possible ring item type in DataFormat.h. 
@@ -257,7 +256,7 @@ makeDataSource(RingItemFactoryBase* pFactory, const std::string& strUrl)
 static void
 dumpItem(
     CRingItem* pItem, RingItemFactoryBase& factory,
-    RingItemProcessor& processor
+    CDataSink* pSink
     )
 {
     /** 
@@ -277,21 +276,21 @@ dumpItem(
     {
 	std::unique_ptr<CRingStateChangeItem>
 	    p(factory.makeStateChangeItem(*pItem));
-	processor.processStateChangeItem(*p.get());
+	std::cout << p->toString() << std::endl;
     }
     break;
     case ABNORMAL_ENDRUN:
     {
     	std::unique_ptr<CAbnormalEndItem>
 	    p(factory.makeAbnormalEndItem(*pItem));
-	processor.processAbnormalEndItem(*p.get());
+	std::cout << p->toString() << std::endl;
     }
     break;
     case PACKET_TYPES:
     case MONITORED_VARIABLES:
     {
 	std::unique_ptr<CRingTextItem> p(factory.makeTextItem(*pItem));
-	processor.processTextItem(*p.get());
+	std::cout << p->toString() << std::endl;
     }
     break;
     case RING_FORMAT:
@@ -299,7 +298,7 @@ dumpItem(
 	try {
 	    std::unique_ptr<CDataFormatItem>
 		p(factory.makeDataFormatItem(*pItem));
-	    processor.processFormatItem(*p.get());
+	    std::cout << p->toString() << std::endl;
 	}
 	catch (std::bad_cast e) {
 	    throw std::logic_error(
@@ -314,21 +313,23 @@ dumpItem(
     case TIMESTAMPED_NONINCR_SCALERS:
     {
 	std::unique_ptr<CRingScalerItem> p(factory.makeScalerItem(*pItem));
-	processor.processScalerItem(*p.get());
+	std::cout << p->toString() << std::endl;
     }
     break;
     case PHYSICS_EVENT:
     {
+	// This item type gets written:
+	
 	std::unique_ptr<CPhysicsEventItem>
 	    p(factory.makePhysicsEventItem(*pItem));
-	processor.processPhysicsEventItem(*p.get());
+	pSink->putItem(*p.get());
     }
     break;
     case PHYSICS_EVENT_COUNT:
     {
 	std::unique_ptr<CRingPhysicsEventCountItem>
 	    p(factory.makePhysicsEventCountItem(*pItem));
-	processor.processPhysicsEventCountItem(*p.get());
+	std::cout << p->toString() << std::endl;
     }
     break;
     case EVB_FRAGMENT:
@@ -337,11 +338,11 @@ dumpItem(
     case EVB_GLOM_INFO:
     {
 	std::unique_ptr<CGlomParameters> p(factory.makeGlomParameters(*pItem));
-	processor.processGlomParameters(*p.get());
+	std::cout << p->toString() << std::endl;
     }
     break;
     default:
-	processor.processUnknownItemType(*pItem);
+	std::cout << pItem->toString() << std::endl;
 	break;
     }
 }
@@ -372,12 +373,11 @@ main(int argc, char* argv[])
 	std::string excludeItems = args.exclude_arg;
         std::vector<uint32_t> exclusionList = makeExclusionList(excludeItems);
         int scalerBits = args.scaler_width_arg;
-        FormatSelector::SupportedVersions defaultVersion
-	    = mapVersion(args.format_arg);
+        FormatSelector::SupportedVersions version = mapVersion(args.format_arg);
 
 	// Factory for this format:
 	
-        auto& factory = FormatSelector::selectFactory(defaultVersion);
+        auto& factory = FormatSelector::selectFactory(version);
 
 	// Use the source name and factory to create a data source:
         
@@ -385,12 +385,11 @@ main(int argc, char* argv[])
 	    makeDataSource(&factory, dataSource)
 	    );
 
-	// Create the data sink and processor:
+	// Use the sink name and factory to create a ROOT file data sink:
 
 	std::unique_ptr<RootFileDataSink> pSink(
 	    new RootFileDataSink(&factory, dataSink.c_str())
 	    );
-	RingItemProcessor processor(pSink.get());
         
         // Proces the scalerBits value into a
 	// ::CRingScalerItem::m_ScalerFormatMask:
@@ -431,7 +430,7 @@ main(int argc, char* argv[])
 
 		// Dumpable:
 		
-                dumpItem(pItem.get(), factory, processor);
+                dumpItem(pItem.get(), factory, pSink.get());
                 
                 // Apply any limit to the count:
                 

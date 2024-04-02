@@ -52,6 +52,8 @@ class DDASRootHit;
  * ROOT's TObject and contains a `ClassDef()` macro which adds some reflection 
  * capability, allows for schema evolution and _in theory_ offers some 
  * performance benefit.
+ *
+ * @todo (ASC 4/2/24): Write tests for this class to validate its methods.
  */
 class DDASRootEvent : public TObject
 {
@@ -84,7 +86,7 @@ public:
      * @brief Return the number of hits in this event.
      * @return The number of hits in the event (size of the event vector).
      */
-    UInt_t GetNEvents() const { return m_data.size(); }
+    UInt_t GetNHits() const { return m_data.size(); }
     /** 
      * @brief Append channel data to event.
      * @param channel Pointer to a DDASRootHit object to append.

@@ -52,7 +52,7 @@ class RootFileDataSink : public CDataSink
 private:
     RingItemFactoryBase* m_pFactory; //!< Turns bodies into ring items.
     DAQ::DDAS::DDASHitUnpacker* m_pUnpacker; //!< Unpacker for our hits.
-    DDASRootEvent* m_pTreeEvent;     //!< The ROOT-ized event to write.
+    DDASRootEvent* m_pEvent;         //!< The ROOT-ized event to write.
     TTree* m_pTree;                  //!< Tree in the output file we write to.
     TFile* m_pFile;                  //!< The output ROOT file.
     bool m_warnedPutUsed;            //!< Warning flag to call the right put.

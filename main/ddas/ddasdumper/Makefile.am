@@ -11,7 +11,6 @@ ddasdumper_bin_SOURCES = ddasdumper.cpp 				\
 	DataSource.cpp DataSource.h					\
 	FdDataSource.cpp FdDataSource.h					\
 	StreamDataSource.cpp StreamDataSource.h				\
-	RingItemProcessor.cpp RingItemProcessor.h			\
 	RootFileDataSink.cpp RootFileDataSink.h
 ddasdumper_bin_CPPFLAGS = -I@top_srcdir@/ddas/format 			\
 	-I@top_srcdir@/base/uri 					\
