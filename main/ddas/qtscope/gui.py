@@ -10,7 +10,7 @@ import logging
 from PyQt5.QtCore import Qt, QThreadPool
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import (
-    QMainWindow, QVBoxLayout, QWidget,QApplication, QFileDialog
+    QMainWindow, QVBoxLayout, QWidget, QApplication, QFileDialog
 )
 
 from pixie_utilities import SystemUtilities, RunUtilities, TraceUtilities
