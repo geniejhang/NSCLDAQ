@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QToolBar, QPushButton
+from PyQt5.QtWidgets import (QToolBar, QPushButton, QMessageBox, QWidget,
+                             QSizePolicy)
 
 import colors
 
@@ -18,6 +19,8 @@ class SystemToolBar(QToolBar):
         Button to load a settings file.
     b_save_set : QPushButton
         Button to save a settings file.
+    b_about : QPushButton
+        Button to display program infomration and Qt acknowledgements
     b_exit : QPushButton 
         Button to exit the application.
 
@@ -27,6 +30,8 @@ class SystemToolBar(QToolBar):
         Disable all toolbar widgets.
     enable()
         Enable all toolbar widgets.
+    _about()
+        Display program information and Qt acknowledgements.
     """
     
     def __init__(self, *args, **kwargs):
@@ -42,6 +47,7 @@ class SystemToolBar(QToolBar):
         self.b_mod_gui = QPushButton("Module DSP")
         self.b_load = QPushButton("Load settings")
         self.b_save = QPushButton("Save settings")
+        self.b_about = QPushButton("About")
         self.b_exit = QPushButton("Exit")
 
         self.b_boot.setStyleSheet(colors.RED_TEXT)
@@ -49,8 +55,12 @@ class SystemToolBar(QToolBar):
         self.b_mod_gui.setStyleSheet(colors.YELLOW)
         self.b_load.setStyleSheet(colors.ORANGE)
         self.b_save.setStyleSheet(colors.ORANGE)
+        self.b_about.setStyleSheet(colors.YELLOW)
         self.b_exit.setStyleSheet(colors.RED)
 
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
         # Add widgets to the toolbar:
         
         self.addWidget(self.b_boot)
@@ -58,12 +68,19 @@ class SystemToolBar(QToolBar):
         self.addWidget(self.b_mod_gui)
         self.addWidget(self.b_load)
         self.addWidget(self.b_save)
+        self.addWidget(spacer)
+        self.addWidget(self.b_about)
         self.addWidget(self.b_exit)
 
         # Set initial states:
         
         self.disable()
         self.b_boot.setEnabled(True)
+
+        # The about button pops up a message box:
+
+        self.b_about.clicked.connect(self._about)
+
                 
     def disable(self):
         """Disable every child widget in the toolbar."""        
@@ -72,7 +89,8 @@ class SystemToolBar(QToolBar):
                 c.setEnabled(False)
                 c.repaint()
 
-        # Exit button is always enabled:                
+        # About and exit buttons are always enabled:
+        self.b_about.setEnabled(True)
         self.b_exit.setEnabled(True)
 
     def enable(self):
@@ -81,6 +99,15 @@ class SystemToolBar(QToolBar):
             if(c.isWidgetType()):
                 c.setEnabled(True)
                 c.repaint()
+
+    def _about(self):
+        """Popup a QMessageBox containing the relavent info."""
+        msg = """QtScope is the slow control program for NSCL DDAS, allowing users to program DSP settings on XIA Pixie digitizers.\n\nVersion: 1.0\n\nQtScope makes use of PyQt5, which in turn makes used of Qt 5.11.3/5.15.2. We use the open-source license of Qt and thus must also provide a means to download the code for Qt as well as the source code of this program.\n\nInstructions for obtaining the Qt source code can be found at: https://wiki.qt.io/Building_Qt_5_from_Git#Getting_the_source_code\n\nThis project is in the main/ddas/qtscope directory of the NSCLDAQ  project: https://github.com/FRIBDAQ/NSCLDAQ\n\nAuthor:\n    Aaron Chester\n    Facility for Rare Isotope Beams\n    Michigan State University\n    East Lansing, MI 48824"""        
+        msg_box = QMessageBox()
+        msg_box.setWindowTitle("About QtScope")
+        msg_box.setText(msg)
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.exec()
         
 class SystemToolBarBuilder:
     """Builder method for factory creation."""
