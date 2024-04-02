@@ -31,6 +31,7 @@ package require DataSourceUI
 package require DataSourceManager
 
 package require SSHPipe_Provider
+package require JanusSSHPipe_Provider
 package require RemoteGUI_Provider
 package require Delay_Provider
 package require ReadoutGui

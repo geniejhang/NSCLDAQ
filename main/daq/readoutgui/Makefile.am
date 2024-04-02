@@ -27,6 +27,7 @@ TCLPACKAGES=Configuration.tcl \
 	DataSourceUI.tcl     \
 	ui.tcl	\
 	sshProvider.tcl sshPrompt.tcl \
+	janusSshProvider.tcl janusSshPrompt.tcl janusCommunicator.tcl \
 	 s800Provider.tcl \
 	ReadoutGui.tcl \
 	state.tcl \
