@@ -130,7 +130,8 @@ Similar to the channel DSP parameters, the **[Apply]** and **[Load]** buttons wi
 
 @image html figures/module_dsp.PNG "The module DSP popup window displayed when clicking the [Module DSP] button."
 
-@par The Load and Save Settings Buttons
+@subsubsection sec_qtscope_loadsavebutton The Load and Save Settings Buttons
+@par
 The **[Load settings]** and **[Save settings]** buttons allow the user to load a new set of DSP parameters onto the modules and to save DSP parameters to a settings file. Clicking either button will open a file dialog. The file dialog windows are similar for loading and saving module, the save dialog window is shown below. For both the  file name can be entered on the ''File name:'' line or an existing file can be selected by using the browser. Existing DSP settings files with the same name will be overwritten.
 
 @image html figures/save_dialog.PNG "The QtScope save dialog window opened when the [Save settings] button is clicked. The [Load settings] button will popup a dialog window which looks and functions similarly."
