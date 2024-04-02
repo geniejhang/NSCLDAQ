@@ -126,7 +126,10 @@ class ExpFit:
         self.set_initial_parameters(y, params)        
         pinit = [self.A, self.k, self.C]
         self.logger.debug(f"Parameter initial guesses: {pinit}")
-        popt, pcov = curve_fit(self.feval, x, y, p0=pinit, maxfev=5000)
+        popt, pcov = curve_fit(
+            self.feval, x, y, p0=pinit, sigma=np.sqrt(y),
+            absolute_sigma=True, maxfev=5000
+        )
         perr = np.sqrt(np.diag(pcov))  # Parameter sigma from cov. matrix.
         self.logger.debug(f"Fit parameters: {popt}")
         self.logger.debug(f"Fit covariance matrix:\n{pcov}")
