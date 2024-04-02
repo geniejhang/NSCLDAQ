@@ -1,5 +1,6 @@
 == 12.0-015 ==
-Full manpage build for ReadoutGUI. 
+* Full manpage build for ReadoutGUI. 
+* Added Janus data source for FERS system
 == 12.0-015 ==
 
 == 12.0-014 ==
