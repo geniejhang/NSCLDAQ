@@ -101,10 +101,12 @@ The system toolbar is used to manage the state of the system. The buttons on thi
 - View information about the QtScope program,
 - Cleanly exit the program, releasing resources from the modules.
 
-@par The Boot System Button
+@subsubsection sec_qtscope_bootbutton The Boot System Button
+@par
 Upon startup the first thing a user should do is click the **[Boot system]** button to load firmware and DSP parameters onto the modules. Upon successful boot, the **[Boot system]** button will turn green and change its displayed text to "Booted." Clicking this button will have no effect if the system has already been booted.
 
-@par The Channel DSP Button
+@subsubsection sec_qtscope_chandspbutton The Channel DSP Button
+@par
 Clicking the **[Channel DSP]** button will open a popup window which allows you to configure channel DSP parameters for the entire system. Channel DSP parameters are applied on a single channel on a module, for example the fast filter parameters used to trigger the channel. The channel DSP parameters are organized using a series of nested tabs. There is a top-level tab for each installed module in the system. DSP parameters for a single module are organized by function into a set of tabs under the module tab.
 
 @note QtScope refers to modules using an internal zero-indexed counter. The module number displayed in QtScope should not be confused with the module's slot number in the PXI crate. If there are modules installed in slots 2 and 4, the module installed in slot 2 is module 0 and the module in slot 4 is module 1 in the QtScope GUI.
@@ -119,7 +121,8 @@ A common feature of all channel DSP parameter tabs are the **[Apply]**, **[Load]
 @attention
 The copy buttons modify data in the underlying Python dataframe used internally by QtScope to manage the DSP parameters. In order to write the parameters to the module, you must click **[Apply]** after copying.
 
-@par The Module DSP Button
+@subsubsection sec_qtscope_moddspbutton The Module DSP Button
+@par
 Clicking **[Module DSP]** will open a popup window which allows you to configure module DSP parameters. Module DSP parameters are applied at the module level, for example the crate ID value specifying where these modules are installed. The module DSP window allows the user to automatically configure the crate and trigger settings for common setups. The DSP parameters configurable in this window are discussed further in @ref sec_qtscope_moddsp.
 
 @par
@@ -135,10 +138,12 @@ The **[Load settings]** and **[Save settings]** buttons allow the user to load a
 @par
 The format of the DSP settings file depends on the version of the XIA API that QtScope and NSCLDAQ were compiled with. For XIA API version 2, the DSP settings file is a binary file and is not human-readable, while in XIA API version 3+, the DSP settings file is JSON format and is human-readable. One thing to note is that the DSP parameter values in a JSON-formatted settings file are given in the units used internally by the modules, e.g. the fast filter risetime is given in units of ADC samples rather than microseconds.
 
-@par The About Button
+@subsubsection sec_qtscope_aboutbutton The About Button
+@par
 Clicking the **[About]** button will bring up some information about the version of QtScope you are currently using. As part of the open-source licensing requirement for Qt, links with instructions for building Qt from source and the source code of the QtScope project are provided.
 
-@par The Exit Button
+@subsubsection sec_qtscope_exitbutton The Exit Button
+@par
 The **[Exit]** button exits the QtScope program and frees resources used by the module. Clicking the **[X]** in the upper right of the main GUI window has the same effect. This is the safest way to exit the program (as opposed to, say, Ctrl-C).
 
 @subsection sec_qtscope_gui_acq The Acquisition Toolbar
