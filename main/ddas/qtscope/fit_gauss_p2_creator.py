@@ -175,7 +175,8 @@ class GaussP2Fit:
             [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
         )
         popt, pcov = curve_fit(
-            self.feval, x, y, p0=pinit, bounds=pbounds, maxfev=5000
+            self.feval, x, y, p0=pinit, bounds=pbounds, sigma=np.sqrt(y),
+            absolute_sigma=True, maxfev=5000
         )
         perr = np.sqrt(np.diag(pcov)) # Parameter sigma from covariance matrix.
         self.logger.debug(f"Fit parameters: {popt}")

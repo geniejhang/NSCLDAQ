@@ -80,7 +80,7 @@ class Plot(QWidget):
         # Data storage and presentation:
         
         self.raw_data = {}
-        self.bin_width = None
+        self.bin_width = 1 # In samples
         
         ##
         # Main layout
@@ -147,6 +147,7 @@ class Plot(QWidget):
             Subplot index in [1, nrows*ncols] (optional).
         """
         self.raw_data[idx-1] = data
+        self.bin_width = 1 # Always and by definition.
         ax = self.figure.add_subplot(nrows, ncols, idx)
         ax.plot(self.raw_data[idx-1], drawstyle="steps-mid")
         ax.set_xlabel("Sample number (60 ns/sample)")
@@ -513,14 +514,35 @@ class Plot(QWidget):
             self.logger.debug(f"Fit panel guess params: {params}")
             self.logger.debug(f"Run data binning factor: {self.bin_width}")
             
-            x, y = self._get_subplot_data(0)
-            fitln = fit.start(
-                x[idx_min:idx_max], y[idx_min:idx_max],
-                params, ax, self.fit_panel.results
-            )
-            self.canvas.draw_idle()            
+            # If the current subplot has data, get the fit limits and call the
+            # fit function's start() rountine to perform the fit. Fitting is
+            # done using Neyman's chi-square and therefore we drop zeroes prior
+            # performing the fit. x-values passed to the fitter are offset by
+            # half the bin width ("true" bin value is the center).
+            if ax.get_lines():
+                x = ax.lines[0].get_xdata()[idx_min:idx_max]
+                y = ax.lines[0].get_ydata()[idx_min:idx_max]
+                zeroes = np.where(y == 0)[0]
+                fitln = fit.start(
+                    np.delete(x, zeroes) + self.bin_width/2,
+                    np.delete(y, zeroes),
+                    params, ax, self.fit_panel.results
+                )
+            else:
+                QMessageBox.about(
+                    self, "Warning",
+                    "Unable to get data from the current subplot axis. "     \
+                    "Please acquire valid single-channel trace or run data " \
+                    "and try again."
+                )
+            self.canvas.draw_idle()
         else:
-            QMessageBox.about(self, "Warning", "Cannot perform the fit! Currently displaying data from multiple channels or an analyzed trace. Please acquire single-channel data and attempt the fit again.")
+            QMessageBox.about(
+                self, "Warning",
+                "Cannot perform the fit! Currently displaying data from " \
+                "multiple channels or an analyzed trace. Please acquire " \
+                "single-channel data and attempt the fit again."
+            )
             
     def _get_fit_limits(self, ax):
         """Get the fit limits on the x-axis based on the selected range. 
