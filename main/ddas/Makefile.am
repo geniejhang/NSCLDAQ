@@ -1,4 +1,4 @@
-SUBDIRS = exception configuration booter format ddasdumper readout pixieplugin simple_setups qtscope
+SUBDIRS = exception configuration booter format ddasdumper readout pixieplugin qtscope
 
 if BUILD_DDAS_DOCS
 SUBDIRS += docs

@@ -18,6 +18,11 @@ from fit_panel import FitPanel
 import xia_constants as xia
 from run_type import RunType
 
+##
+# @todo (ASC 4/3/24): Get ns per sample from XDT value either here or
+# passed as a parameter by the caller.
+#
+
 class Plot(QWidget):
     """Plotting widget for the GUI utilizing the matplotlib Qt5 backend.
 

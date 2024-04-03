@@ -53,7 +53,7 @@ The very first thing that a user needs to do to run QtScope is to connect a PXI 
 If you have not set up a DDAS system before, it is probably best to stop reading this and work your way through a set up tutorial (e.g. @ref single_crate "Single-crate system setup guide").
 
 @par
-To run QtScope, the NSCLDAQ environment must be configured by sourcing its daqsetup.bash script: @verbatim . /usr/opt/daq/12.0-005/daqsetup.bash @endverbatim for QtScope from NSCLDAQ version 12.0-005. Sourcing this script will set the `DAQBIN` environment variable to point to the directory where the `qtscope` executable is installed for the selected version of NSCLDAQ. Once complete, the QtScope executable can be launched with the following command: @verbatim $DAQBIN/qtscope @endverbatim Note that QtScope expects to be run on a machine connected to Pixie-16 hardware--at FRIB this is typically an spdaq computer--and from a directory containing the necessary @ref cfgpixie16 "cfgPixie16.txt" and @ref modevtlen "modevtlen.txt" configuration files. Running the `qtscope` executable launches the QtScope GUI. The various elements of the GUI are labeled on the figure below.
+To run QtScope, the NSCLDAQ environment must be configured by sourcing its daqsetup.bash script: @verbatim . /usr/opt/daq/12.0-015/daqsetup.bash @endverbatim for QtScope from NSCLDAQ version 12.1-015. Sourcing this script will set the `DAQBIN` environment variable to point to the directory where the `qtscope` executable is installed for the selected version of NSCLDAQ. Once complete, the QtScope executable can be launched with the following command: @verbatim $DAQBIN/qtscope @endverbatim Note that QtScope expects to be run on a machine connected to Pixie-16 hardware--at FRIB this is typically an spdaq computer--and from a directory containing the necessary @ref cfgpixie16 "cfgPixie16.txt" and @ref modevtlen "modevtlen.txt" configuration files. Running the `qtscope` executable launches the QtScope GUI. The various elements of the GUI are labeled on the figure below.
 
 @image html figures/qtscope_unbooted_wtoolbars.png "The QtScope GUI state on startup with labeled GUI elements. Note that most GUI elements besides [Boot system] and [Exit] on the system toolbar are disabled." width=1200px
 
@@ -184,7 +184,7 @@ Clicking **[Begin run]** will begin a data run in the selected module. The toolb
 @par
 To read run data and display a histogram on the canvas, click the **[Read data]** button. The canvas will be updated with the acquired data as shown below.
 
-@image html figures/histogram.PNG "Energy histogram for a pulser signal connected to a Pixie-16 module. The spectrum was displayed on the canvas using the [Read data] button." width=1200px
+@image html figures/histogram.PNG "Energy histogram for a pulser signal connected to a Pixie-16 module. The spectrum was displayed on the canvas using the [Read data] button. Only the region of interest containing the peak is shown." width=1200px
 
 @par
 When the **[End run]** button is clicked, the run will end and QtScope will return to its run inactive state. An end run message similar to @verbatim Ended histogram run in Mod. 0 @endverbatim will be printed to the terminal. Run statistics will be printed to the terminal display for energy histogram runs. The statistics output will look similar to the following:
@@ -227,7 +227,7 @@ The "Fit panel" button opens a popup window which allows you to select a fitting
 @image html figures/fit_panel.PNG "The QtScope fit panel."
 
 @par
-Implemented fitting functions can be selected using the combo box at the top of the panel. Displayed below the fitting function is its functional form. The fit limits are taken from the currently displayed axis limits if they are not provided by the user in the "Min x" and "Max x" boxes. The parameters `p[0]`, `p[1]`, etc. shown in the "Fit function" box correspond to the parameters `p0`, `p1`, etc. in the "Fit range and parameters" box. If initial parameters are not supplied by the user, QtScope will do its best to guess initial parameters from the displayed data.
+Implemented fitting functions can be selected using the combo box at the top of the panel. Displayed below the fitting function is its functional form. The fit limits are taken from the currently displayed axis limits if they are not provided by the user in the "Min x" and "Max x" boxes. The parameters p[0], p[1], etc. shown in the "Fit function" box correspond to the parameters p0, p1, etc. in the "Fit range and parameters" box. If initial parameters are not supplied by the user, QtScope will do its best to guess initial parameters from the displayed data.
 
 @image html figures/histogram_with_fit_and_panel.png "(Left) A single-channel energy histogram fit with a Gaussian function. The zoom function of the plot toolbar was used to select a subset of the canvas containing the peak. (Right) The QtScope fit panel displaying fit results in the ''Fit output'' text box. The fit limits and initial parameters were determined by QtScope using the displayed data." width=1200px
 

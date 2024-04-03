@@ -1,10 +1,40 @@
 /**
 @page single_crate Single-Crate System Setup Guide
 
-@authors Aaron Chester, Jeromy Tompkins, Ron Fox
-@date 7/18/23
+@authors Aaron Chester, Ron Fox, Jeromy Tompkins
+@date 4/3/24
 
+@tableofcontents
+
+@attention This single-crate system setup guide is specific to NSCLDAQ 12.x and newer, where the module data readout and sorting processes are decoupled.
+
+@section sec_1crate_intro Introduction
 @par
-Placeholder page for single-crate setup.
+This document describes the simplest DDAS setup: A single PXI crate with one
+digitizer. Throughout, there will be suggestions on how to expand this setup so
+that it has several digitizers. This material is organized as follows:
+
+- First, an overview of the components of a single crate DDAS system are given.
+- Second, we provide a guide to setting up the hardware. A pulser will be used as a signal source.
+- The configuration files for the @ref cfgpixie16 "system" and @ref modevtlen "expected event length" required by DDAS are described.
+- @ref qtscope "QtScope" will be used to obtain an initial parameter setup.
+- We will set up a @ref readout "readout" so that data can be taken from the sample setup. We'll also look at a dump of the data from the simple setup with and without waveforms.
+- We'll show how to set up the ReadoutGUI and event builder so that data can be taken, built into events, recorded, and made available for online analysis.
+- We will set up a simple SpecTcl tailoring for data with and without waveforms.
+- We will import the data into ROOT so that offline analysis can @ref ddasdumper "proceed with that tool".
+
+@section sec_1crate_components Components of a DDAS System
+@par
+DDAS data acquisition systems and online analysis rely on several hardware and
+software components:
+
+- A PXI Crate. PXI is an extension to the compact PCI standard that supports precision timing.
+- One or more XIA digitizer cards.
+- An interface between an NSCL spdaq system and the PXI crate or a crate-resident single-board computer. These two options will be referred to as the data-collection computer.
+- A readout program that runs in the data-collection computer that reads data from the digitizer cards and places them into a <em>raw ringbuffer</em>. This readout program is the interface between the PXI crate and the NSCLDAQ system.
+- A sorter program which reads data from a raw ringbuffer, maintains a master list of sorted hits, and outputs those hits into a <em>sorted ringbuffer</em> for event building.
+- An event builder. The event builder takes data from sorted ringbuffers, builds events that satisfy a coincidence interval using the DDAS timestamp and places those built events in an <em>output ring buffer</em>. Note that while in principle the event builder is not necessary for single-crate systems, using it for those systems maintains a common event format between single- and multi-crate systems.
+- A ReadoutShell instance that manages readout, sorting, event logging and event building.
+- A SpecTcl tailored to decode DDAS data and analyze it in an experiment-specific manner.
 
 */
