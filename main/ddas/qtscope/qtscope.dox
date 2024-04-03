@@ -55,7 +55,7 @@ If you have not set up a DDAS system before, it is probably best to stop reading
 @par
 To run QtScope, the NSCLDAQ environment must be configured by sourcing its daqsetup.bash script: @verbatim . /usr/opt/daq/12.0-015/daqsetup.bash @endverbatim for QtScope from NSCLDAQ version 12.1-015. Sourcing this script will set the `DAQBIN` environment variable to point to the directory where the `qtscope` executable is installed for the selected version of NSCLDAQ. Once complete, the QtScope executable can be launched with the following command: @verbatim $DAQBIN/qtscope @endverbatim Note that QtScope expects to be run on a machine connected to Pixie-16 hardware--at FRIB this is typically an spdaq computer--and from a directory containing the necessary @ref cfgpixie16 "cfgPixie16.txt" and @ref modevtlen "modevtlen.txt" configuration files. Running the `qtscope` executable launches the QtScope GUI. The various elements of the GUI are labeled on the figure below.
 
-@image html figures/qtscope_unbooted_wtoolbars.png "The QtScope GUI state on startup with labeled GUI elements. Note that most GUI elements besides [Boot system] and [Exit] on the system toolbar are disabled." width=1200px
+@image html qtscope_unbooted_wtoolbars.png "The QtScope GUI state on startup with labeled GUI elements. Note that most GUI elements besides [Boot system] and [Exit] on the system toolbar are disabled." width=1200px
 
 @par
 Upon startup, the majority of the GUI elements besides **[Boot system]** and **[Exit]** on the system toolbar are disabled. This is because no firmware or DSP parameters have been loaded onto the modules. The process of programming the module firmware and DSP settings onto a module is colloquially called "booting." Clicking the **[Boot system]** button on the left side of the system toolbar will attempt to boot the Pixie-16 modules using the configuration files present in the runtime directory. During the boot process, firmware is loaded and the parameter configuration file is written to the modules in the crate. Summary output is written to the terminal during this process:
@@ -84,14 +84,14 @@ QtScope system configuration complete!
 @endverbatim
 and the **[Boot system]** button will turn green and read **[Booted]**. GUI elements on the various toolbars will also be enabled; these GUI elements are explained in more detail in the subsequent sections.
 
-@image html figures/qtscope_booted.PNG "The QtScope GUI state after a successful system boot. Note that the button previously displaying [Boot system] is now green and reads [Booted]. The GUI elements are enabled upon a successful boot." width=1200px
+@image html qtscope_booted.PNG "The QtScope GUI state after a successful system boot. Note that the button previously displaying [Boot system] is now green and reads [Booted]. The GUI elements are enabled upon a successful boot." width=1200px
 
 @section sec_qtscope_gui The QtScope GUI
 @par
 In this section the GUI elements of QtScope are described in detail.
 
 @subsection sec_qtscope_gui_sys The System Toolbar
-@image html figures/system_toolbar_cropped.png "The QtScope system toolbar." width=600px
+@image html system_toolbar_cropped.png "The QtScope system toolbar." width=600px
 
 @par
 The system toolbar is used to manage the state of the system. The buttons on this toolbar allow the user to:
@@ -114,7 +114,7 @@ Clicking the **[Channel DSP]** button will open a popup window which allows you 
 @par
 Selecting a tab will display that tab's DSP parameters. The DSP parameters which can be configured on each tab are described in more detail in the @ref sec_qtscope_chandsp section.
 
-@image html figures/analog_signal.PNG "The channel DSP popup window displayed when clicking the [Channel DSP] button. The tab controlling the analog signal properties and DC offset on module 0 is selected. If more modules were installed, additional tabs reading ''Mod. 1,'' ''Mod. 2,'' etc. would be present."
+@image html analog_signal.PNG "The channel DSP popup window displayed when clicking the [Channel DSP] button. The tab controlling the analog signal properties and DC offset on module 0 is selected. If more modules were installed, additional tabs reading ''Mod. 1,'' ''Mod. 2,'' etc. would be present."
 
 @par
 A common feature of all channel DSP parameter tabs are the **[Apply]**, **[Load]**, **[Copy mod.]** and **[Copy chan.]** buttons. The **[Apply]** button will write the channel parameters displayed on the GUI to every channel on the corresponding module. Clicking **[Load]** will load the currently displayed channel DSP parameters from the module and display them on the GUI. To copy all displayed DSP parameters from another module in the system to the currently displayed module, select a module number to copy from using the spin box next to the **[Copy mod.]** button, then click **[Copy mod.]**. Similarly, to copy DSP parameters from a single channel on the currently displayed DSP parameter tab to all channels on the module, select a channel using the spin box next to the **[Copy chan.]** button, then click **[Copy chan.]**. The **[Cancel]** button will close the channel DSP popup window.
@@ -128,13 +128,13 @@ Clicking **[Module DSP]** will open a popup window which allows you to configure
 @par
 Similar to the channel DSP parameters, the **[Apply]** and **[Load]** buttons will write and read parameters from the modules based on what is set on this window, respectively. The **[Cancel]** button will close the popup.
 
-@image html figures/module_dsp.PNG "The module DSP popup window displayed when clicking the [Module DSP] button."
+@image html module_dsp.PNG "The module DSP popup window displayed when clicking the [Module DSP] button."
 
 @subsubsection sec_qtscope_loadsavebutton The Load and Save Settings Buttons
 @par
 The **[Load settings]** and **[Save settings]** buttons allow the user to load a new set of DSP parameters onto the modules and to save DSP parameters to a settings file. Clicking either button will open a file dialog. The file dialog windows are similar for loading and saving module, the save dialog window is shown below. For both the  file name can be entered on the ''File name:'' line or an existing file can be selected by using the browser. Existing DSP settings files with the same name will be overwritten.
 
-@image html figures/save_dialog.PNG "The QtScope save dialog window opened when the [Save settings] button is clicked. The [Load settings] button will popup a dialog window which looks and functions similarly."
+@image html save_dialog.PNG "The QtScope save dialog window opened when the [Save settings] button is clicked. The [Load settings] button will popup a dialog window which looks and functions similarly."
 
 @par
 The format of the DSP settings file depends on the version of the XIA API that QtScope and NSCLDAQ were compiled with. For XIA API version 2, the DSP settings file is a binary file and is not human-readable, while in XIA API version 3+, the DSP settings file is JSON format and is human-readable. One thing to note is that the DSP parameter values in a JSON-formatted settings file are given in the units used internally by the modules, e.g. the fast filter risetime is given in units of ADC samples rather than microseconds.
@@ -148,7 +148,7 @@ Clicking the **[About]** button will bring up some information about the version
 The **[Exit]** button exits the QtScope program and frees resources used by the module. Clicking the **[X]** in the upper right of the main GUI window has the same effect. This is the safest way to exit the program (as opposed to, say, Ctrl-C).
 
 @subsection sec_qtscope_gui_acq The Acquisition Toolbar
-@image html figures/acquisition_toolbar.PNG "The QtScope acquisition toolbar."
+@image html acquisition_toolbar.PNG "The QtScope acquisition toolbar."
 
 @par
 The acquisition toolbar allows you to inspect data acquired using the DSP settings programmed with QtScope. Using the acquisition toolbar you can:
@@ -165,12 +165,12 @@ The "Channel selection" box allows the user to specify which module and channel 
 @par
 The "Trace acquisition" box buttons allow a user to view ADC trace data on the canvas. When the **[Read trace]** button is clicked, QtScope will attempt to acquire an ADC trace from the channel specified in the "Channel selection" box (or for each channel on the module, if the **[  ] Read all** button is checked). The program will search for what it thinks is a good pulse (a "validated" signal), or reaches a reacquire limit. In the case that no validated trace is found during this process, the last acquired trace will be shown. If the **[  ] Fast acquire** button is checked, QtScope will display ADC traces without the validation requirement. Acquired traces are 8192 60-ns samples long. The 60-ns sampling time is a limitation of the XIA API used to acquire traces for display and cannot be modified by the user. This limitation is not present when trace data is written to disk. The QtScope GUI displaying an acquired trace is shown below.
 
-@image html figures/captured_trace.PNG "QtScope displaying an acquired trace from Mod. 0, Chan. 0 using the [Read trace] button." width=1200px
+@image html captured_trace.PNG "QtScope displaying an acquired trace from Mod. 0, Chan. 0 using the [Read trace] button." width=1200px
 
 @par
 Simulated filter outputs for an acquired trace displayed on the canvas can be viewed by clicking the **[Analyze trace]** button. Clicking this button will divide the canvas into three sub-canvases, displaying, from top to bottom, the trace, the timing filter and CFD output, and the energy filter output. These outputs can be used to guide the choice of DSP parameters. If no trace is displayed on the canvas and the **[Analyze trace]** button is clicked, QtScope will attempt to acquire a trace to analyze.
 
-@image html figures/analyzed_trace.PNG "QtScope displaying a trace and its simulated filter outputs from Mod. 0, Chan. 0 after clicking the [Analyze trace] button." width=1200px
+@image html analyzed_trace.PNG "QtScope displaying a trace and its simulated filter outputs from Mod. 0, Chan. 0 after clicking the [Analyze trace] button." width=1200px
 
 @subsubsection sec_qtscope_gui_acq_runctl The Run Control Box
 @par
@@ -179,12 +179,12 @@ The "Run control" group box widgets allow the user to begin and end energy histo
 @par
 Clicking **[Begin run]** will begin a data run in the selected module. The toolbar state will change to reflect the run active status. The **[Begin run]** button will switch to read **[End run]** and the **[Read data]** button will be enabled. Something like the message @verbatim Beginning histogram run in Mod. 0 @endverbatim will be displayed on the terminal. Additionally, QtScope features that cannot be used while a run is active will be disabled. Clicking on a disabled feature will have no effect while the run is active.
 
-@image html figures/acquisition_toolbar_runactive.PNG "The acquisition toolbar state while a run is active. Some GUI elements are disabled while a run is active, for example, the buttons to read and analyze ADC traces."
+@image html acquisition_toolbar_runactive.PNG "The acquisition toolbar state while a run is active. Some GUI elements are disabled while a run is active, for example, the buttons to read and analyze ADC traces."
 
 @par
 To read run data and display a histogram on the canvas, click the **[Read data]** button. The canvas will be updated with the acquired data as shown below.
 
-@image html figures/histogram.PNG "Energy histogram for a pulser signal connected to a Pixie-16 module. The spectrum was displayed on the canvas using the [Read data] button. Only the region of interest containing the peak is shown." width=1200px
+@image html histogram.PNG "Energy histogram for a pulser signal connected to a Pixie-16 module. The spectrum was displayed on the canvas using the [Read data] button. Only the region of interest containing the peak is shown." width=1200px
 
 @par
 When the **[End run]** button is clicked, the run will end and QtScope will return to its run inactive state. An end run message similar to @verbatim Ended histogram run in Mod. 0 @endverbatim will be printed to the terminal. Run statistics will be printed to the terminal display for energy histogram runs. The statistics output will look similar to the following:
@@ -209,7 +209,7 @@ Module 0 channel 15 input 534.613 output 534.613 livetime 11.932 runtime 11.932
 For each channel, the number of triggers per second (input), the number of accepted triggers per second (output), the active time (livetime) and the total run time for the acquisition (runtime) are shown. In this case, you can see that a signal with a frequency of approximately 535 Hz was present in channels 0 and 15 on Module 0. 
 
 @subsection sec_qtscope_gui_plot The Plot Toolbar
-@image html figures/plot_toolbar.PNG "The QtScope plot toolbar." width=1200px
+@image html plot_toolbar.PNG "The QtScope plot toolbar." width=1200px
 
 @par
 The plot toolbar allows the user to:
@@ -224,12 +224,12 @@ To zoom in, select the magnifying glass and select a region of the canvas to mag
 @par
 The "Fit panel" button opens a popup window which allows you to select a fitting function, define fit limits and set guesses for initial parameters. The **[Fit]** button at the bottom of the fit panel window will fit the displayed data using the fit limits and parameters--either supplied by the user or determined by QtScope from the data--and draw the selected function on the canvas using the best-fit parameters. Multiple fits will be superimposed on the canvas. To clear all the fit data and the best-fit parameter values displayed in the "Fit output" text box, click the **[Clear]** button. To close the fit panel window, click **[Cancel]**."
 
-@image html figures/fit_panel.PNG "The QtScope fit panel."
+@image html fit_panel.PNG "The QtScope fit panel."
 
 @par
 Implemented fitting functions can be selected using the combo box at the top of the panel. Displayed below the fitting function is its functional form. The fit limits are taken from the currently displayed axis limits if they are not provided by the user in the "Min x" and "Max x" boxes. The parameters p[0], p[1], etc. shown in the "Fit function" box correspond to the parameters p0, p1, etc. in the "Fit range and parameters" box. If initial parameters are not supplied by the user, QtScope will do its best to guess initial parameters from the displayed data.
 
-@image html figures/histogram_with_fit_and_panel.png "(Left) A single-channel energy histogram fit with a Gaussian function. The zoom function of the plot toolbar was used to select a subset of the canvas containing the peak. (Right) The QtScope fit panel displaying fit results in the ''Fit output'' text box. The fit limits and initial parameters were determined by QtScope using the displayed data." width=1200px
+@image html histogram_with_fit_and_panel.png "(Left) A single-channel energy histogram fit with a Gaussian function. The zoom function of the plot toolbar was used to select a subset of the canvas containing the peak. (Right) The QtScope fit panel displaying fit results in the ''Fit output'' text box. The fit limits and initial parameters were determined by QtScope using the displayed data." width=1200px
 
 @par
 The above figures shows the best-fit Gaussian curve to the displayed data on the QtScope canvas as well as the best-fit parameter values 
@@ -242,7 +242,7 @@ Each module tab contains a full set of configurable channel DSP parameters which
 @par
 Signals that are input to the Pixie-16 digitizers are first processed as analog signals prior to digitization. There are three parameters per channel that can be set to control the analog conditioning which are set on this tab. The Pixie-16 digitizers apply a DC offset to the analog signal, amplification, and a possible inversion of the signal.
 
-@image html figures/analog_signal.PNG "The AnalogSignal tab."
+@image html analog_signal.PNG "The AnalogSignal tab."
 
 @par
 The tab provides control over all three the aspects of the analog conditioning circuit. The parameter in the column labeled "Offset [V]" will control the DC offset (in volts), the "Gain" column will control the amplification and the polarity is controlled by the "Polarity" column. Single-channel analog signal properties are displayed on each row, with the zero-indexed channel number shown on the left. Automatic adjustment of the DC offset can be performed by clicking the **[Adjust offsets]** button. This will allow the Pixie-16 software to calibrate the channel DC offsets such that the signal baseline lies at approximately 10% of the maximum ADC range (by default; see the @ref sec_qtscope_chandsp_baseline "Baseline" tab), i.e. approximately 6500 for a 16-bit ADC.
@@ -255,7 +255,7 @@ This tab provides control over the risetime "TriggerRise [us]" and gap "TriggerG
 @attention
 For more information about the implementation of digital filters on the Pixie-16 modules, please refer to <a href="https://docs.nscl.msu.edu/daq/newsite/pixie16/Pixie16_UserManual.pdf">the Pixie-16 User's Manual</a>. Note that the filter risetime is referred to as a filter "length" in the User's Manual. 
 
-@image html figures/trigger_filter.PNG "The TriggerFilter tab."
+@image html trigger_filter.PNG "The TriggerFilter tab."
 
 @par
 If the CFD triggering is disabled (see the @ref sec_qtscope_chandsp_csra "CSRA" tab), the trigger time is given by the leading-edge time. Alternatively, if the CFD is enabled then the rise and gap times are used in conjunction with the CFD scale and delay factors to implement a digital CFD algorithm to generate a trigger time. If the CFD output fails to exceed the CFD threshold, or no valid CFD zero-crossing point can be determined, the trigger filter will be used instead to generate a leading-edge fast trigger. Refer to the @ref sec_qtscope_chandsp_cfd "CFD" tab for more information).
@@ -264,13 +264,13 @@ If the CFD triggering is disabled (see the @ref sec_qtscope_chandsp_csra "CSRA" 
 @par
 This tab provides control over the risetime (integration time) "EnergyRise [us]" and gap "EnergyGap [us]" which define the trapezoidal filter used to determine the energy of a signal pulse. The "Filter range" allows the user to set longer filter lengths by averaging ADC samples prior to the energy filtering logic in the FPGA. For details on the implementation of the energy filter, refer to - <a href="https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=1323728&tag=1">"A Fast Digital Algorithm for Gamma-Ray Spectroscopy With Double-Exponential Decaying Scintillators." H. Tan et al., IEEE Trans. Nucl. Sci. 51(4) (2004) 1541.</a>
 
-@image html figures/energy_filter.PNG "The EnergyFilter tab."
+@image html energy_filter.PNG "The EnergyFilter tab."
 
 @subsection sec_qtscope_chandsp_cfd The CFD Tab
 @par
 The user can configure the device to use a digital CFD algorithm for determining channel hit timestamps. The CFD algorithm allows timestamps to be acquired with sub-sample resolution if the CFD bit is set on the @ref sec_qtscope_chandsp_csra "CSRA" tab. 
 
-@image html figures/cfd.PNG "The CFD tab."
+@image html cfd.PNG "The CFD tab."
 
 @par 
 A detailed description of the Pixie-16 digital CFD algorithm and its corresponding parameters are given in <a href="https://docs.nscl.msu.edu/daq/newsite/pixie16/Pixie16_UserManual.pdf">the Pixie-16 User's Manual</a>. The CFD is constructed by subtracting a delayed fast filter signal from itself. The "Delay [us]" parameter controls the length of this delay and the "Scale" parameter controls the fraction of the delayed signal to subtract (specifically \f$1-s/8\f$ where \f$s\in 0,1,\ldots,7\f$ is the scale factor). A CFD threshold, configured in the "Threshold [arb.]" column, is used to prevent noise-generated CFD zero-crossing points. If the CFD is not enabled on the @ref sec_qtscope_chandsp_csra "CSRA" tab, or if the CFD algorithm fails to find a valid zero-crossing point, channel timestamps will be determined using the leading-edge trigger generated using the @ref sec_qtscope_chandsp_trigger "trigger filter" settings. 
@@ -282,7 +282,7 @@ The values of the delay and scale parameters are fixed for 500-MSPS Pixie-16 mod
 @par
 The digital filtering algorithm used by the Pixie-16 modules to measure input pulse energy accounts for the fact that signals from radiation detectors decay exponentially back to some baseline value. For exponentially decaying signals, the value of tau set on this tab should equal the decay constant of the exponential tail of the pulse in microseconds.
 
-@image html figures/tau.PNG "The Tau tab."
+@image html tau.PNG "The Tau tab."
 
 @subsection sec_qtscope_chandsp_trace The Trace Tab
 @par
@@ -293,7 +293,7 @@ If the trace output is enabled, it is critical that the proper event length is s
 
 @note Enabling the trace output sets a bit in the channel CSRA register. The value of the trace enable bit is visible on the @ref sec_qtscope_chandsp_csra "CSRA" tab, but can only be set here.
 
-@image html figures/trace.PNG "The Trace tab. Trace output is currently not enabled for this module because the **[  ] Record traces** button is not checked."
+@image html trace.PNG "The Trace tab. Trace output is currently not enabled for this module because the **[  ] Record traces** button is not checked."
 
 @subsection sec_qtscope_chandsp_csra The CSRA Tab
 @par
@@ -301,7 +301,7 @@ Many features and settings of the Pixie-16 modules are controlled using the "Con
 
 @note Some CSRA settings must be set on another tab; for example the signal polarity and gain can be set only on the "AnalogSignal" tab. This is intended to prevent users from unintentionally changing previously set values. CSRA bits set on other tabs will display their status on this page, but the column will be grayed out.
 
-@image html figures/csra.PNG "The CSRA tab. Note that bits in the ''HiG'' column are enabled but the column is grayed out, indicating that the gain setting must be configured elsewhere in the GUI (in this case on the ''AnalogSignal'' tab). Tooltips describing CSRA bit values can be viewed by hovering the mouse over the column headings."
+@image html csra.PNG "The CSRA tab. Note that bits in the ''HiG'' column are enabled but the column is grayed out, indicating that the gain setting must be configured elsewhere in the GUI (in this case on the ''AnalogSignal'' tab). Tooltips describing CSRA bit values can be viewed by hovering the mouse over the column headings."
 
 @par
 The CSRA configurable CSRA bits and their meanings are summarized in the table below. CSRA bits are "enabled" (1) when the corresponding box is checked and "disabled" (0) when the corresponding box is not checked.
@@ -334,7 +334,7 @@ The CSRA configurable CSRA bits and their meanings are summarized in the table b
 @par
 The Pixie-16 modules measure the channel baseline when no pulse is present and stores a running average of the baseline value which is subtracted from the energy filter output prior to determining the pulse energy. If measured baselines differ from this average by "BaselineCut" they are rejected and not added to the running average. The automatic baseline adjustment routine run when clicking the **[Adjust offsets]** button on the "AnalogSignal" tab will set the baseline value to "Baseline %" of the maximum ADC range as well as automatically determine the value of "BaselineCut." It is generally recommended to keep both of these parameters at their default values. 
 
-@image html figures/baseline.PNG "The Baseline Tab."
+@image html baseline.PNG "The Baseline Tab."
 
 @subsection sec_qtscope_chandsp_multcoinc The MultCoincidence Tab
 @par
@@ -343,18 +343,18 @@ Six options are provided to the user to set the groupings of channels on a Pixie
 @par
 The "Coincidence settings" box allows the user to set parameters which determine how to read out grouped channels in coincidence. "Channel coincidence width [us]" defines the coincidence window for the channel grouping in microseconds and the "Minimum multiplicity to trigger" sets the minimum number of fast triggers required in each group [0, 1, ..., n-1] for an n-channel grouping. If the corresponding trigger validation CSRA bits for all channels on this module are checked, the "Channel validation" will display "Enabled" in green text, if all are disabled it will display "Disabled" in red text, and if trigger validation is only enabled for some channel groups on the module the text will show "Custom" in yellow.
 
-@image html figures/mult_coincidence.PNG "The MultCoincidence tab."
+@image html mult_coincidence.PNG "The MultCoincidence tab."
 
 @subsection sec_qtscope_chandsp_timing The TimingControl Tab
 @par
 Pixie-16 modules implement two-stage trigger logic to determine whether a particular channel will produce data which can be read out. The first stage of this process will generate a fast trigger on the module. At the second, or validation stage, the internal fast trigger is checked against some set of validation criteria. Validation criteria are configured using the channel CSRA and module CSRB settings and can include, for example, validation of a fast trigger with respect to an external validation trigger, a channel grouping coincidence requirement or an internally generated gate. If the fast trigger is validated, the associated data is accepted to be read out, otherwise it is dropped.
 
-@image html figures/timing_control.PNG "The TimingControl tab."
+@image html timing_control.PNG "The TimingControl tab."
 
 @par
 To configure the relative timing between the module fast triggers and the validation signal, the "TimingControl" tab provides a set of controllable timing parameters. Clicking the **[Show timing diagram]** button will display the following graphical representation of the timing parameters in a popup window:
 
-@image html figures/timing_diagram.png "A visual representation of the various timing parameters configurable on this tab. To show this diagram, click the [Show timing diagram] button. The nominal fast trigger point for the hit is given by the dashed vertical line at t = 0."
+@image html timing_diagram.png "A visual representation of the various timing parameters configurable on this tab. To show this diagram, click the [Show timing diagram] button. The nominal fast trigger point for the hit is given by the dashed vertical line at t = 0."
 
 @par
 The function of the timing control parameters can be inferred from the diagram. Two details are worth mentioning: the first is that the "ChanCoincWidth [us]" parameter is not configurable on this tab. This DSP parameter sets the coincidence window for channel validation and is set on the @ref sec_qtscope_chandsp_multcoinc "MultCoincidence" tab where other channel validation parameters are controlled. Secondly, the analogous setting for an external validation trigger is "ExtTrigWidth [us]" which functions similarly to the "Channel Coincidence Trigger" shown on the diagram. 
@@ -366,7 +366,7 @@ A complete description of the Pixie-16 multiplicity and coincidence triggering s
 @par
 As described in the @ref sec_qtscope_gui "QtScope GUI" section, clicking the **[Module DSP]** button on the @ref sec_qtscope_gui_sys "system toolbar" displays a popup window allowing the user to configure module-level parameters.
 
-@image html figures/module_dsp.PNG "The module DSP popup window displayed when clicking the [Module DSP] button."
+@image html module_dsp.PNG "The module DSP popup window displayed when clicking the [Module DSP] button."
 
 @subsection sec_qtscope_moddsp_crateid The Crate Settings Box
 @par
@@ -381,13 +381,13 @@ The crate configuration box allows the user automatically configure the module C
 - Custom -- Custom CSRB settings. In most cases it is not necessary to configure custom CSRB settings. Please refer to the <a href="https://docs.nscl.msu.edu/daq/newsite/pixie16/Pixie16_UserManual.pdf">Pixie-16 User Manual</a> for custom applications.
 Clicking the **[Display CSRB]** button will show a graphical representation of the CSRB bits, similar to @ref sec_qtscope_chandsp_csra "CSRA" tab are displayed:
 
-@image html figures/csrb.PNG "The CSRB settings for the current crate, shown after clicking the [Display CSRB] button. Each row contains a complete set of CSRB settings for a single module. Tooltips describing CSRB bit values can be viewed by hovering the mouse over the column headings. In order to directly manipulate the CSRB bit values, the ''Custom'' setting must be selected from the configuration list."
+@image html csrb.PNG "The CSRB settings for the current crate, shown after clicking the [Display CSRB] button. Each row contains a complete set of CSRB settings for a single module. Tooltips describing CSRB bit values can be viewed by hovering the mouse over the column headings. In order to directly manipulate the CSRB bit values, the ''Custom'' setting must be selected from the configuration list."
 
 @subsection sec_qtscope_moddsp_trigconfig The Trigger Configuration Box
 @par
 Different trigger operation modes can be set in the "Trigger configuration options" box. This box provides an interface which allows users to configure the TrigConfig0 register on the Pixie-16 module. Only two options are given: the default option, where all channels are self-triggering and a "Custom" option where the TrigConfig0 register is fully user-controlled. The status of the TrigConfig0 register can be viewed by clicking on the **[Display TrigConfig]** button; more information about the configurable options is given in mouse-over tooltips for each setting and in the <a href="https://docs.nscl.msu.edu/daq/newsite/pixie16/Pixie16_UserManual.pdf">Pixie-16 User Manual</a>.
 
-@image html figures/tc0.PNG "The user interface to the TrigConfig0 register. Each row contains a complete set of TrigConfig0 settings for a single module. Tooltips describing the configurable settings can be viewed by hovering the mouse over the column headings. In order to directly manipulate the TrigConfig0 register, select the ''Custom'' setting from the configuration list."
+@image html tc0.PNG "The user interface to the TrigConfig0 register. Each row contains a complete set of TrigConfig0 settings for a single module. Tooltips describing the configurable settings can be viewed by hovering the mouse over the column headings. In order to directly manipulate the TrigConfig0 register, select the ''Custom'' setting from the configuration list."
 
 @par
 The most common use case at the lab for configuring custom TrigConfig0 settings is to enable or disable outputs on the front panel LVDS of a module. In order to enable the front-panel output for a module, set the "TsEn" value for that module to "Enabled" and select a channel from the "TsCh" drop-down menu to send to the digital output.

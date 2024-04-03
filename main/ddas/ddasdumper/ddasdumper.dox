@@ -15,7 +15,7 @@ This guide will discuss how to use the ddasdumper program and its output format.
 
 @section sec_ddasdumper_run Running the ddasdumper Program
 @par
-The ddasdumper program is similar to many other NSCLDAQ utilities. Before running the ddasdumper it is important to setup the NSCLDAQ environment variables by sourcing the `daqsetup.bash` script from an appropriate NSCLDAQ installation (typically `/usr/opt/daq/MM.mm-sss/daqsetup.bash` for NSCLDAQ major version MM, minor version mm, and subversion sss e.g. 12.0-005). Running the program from the command line via `$DAQBIN/ddasdumper -h` will display the list of command-line options available:
+The ddasdumper program is similar to many other NSCLDAQ utilities. Before running the ddasdumper it is important to setup the NSCLDAQ environment variables by sourcing the `daqsetup.bash` script from an appropriate NSCLDAQ installation (typically `/usr/opt/daq/MM.mm-eee/daqsetup.bash` for NSCLDAQ major version MM, minor version mm, and edit level eee e.g. 12.0-005). Running the program from the command line via `$DAQBIN/ddasdumper -h` will display the list of command-line options available:
 
 @verbatim
 <genesis:~ >$DAQBIN/ddasdumper -h
@@ -74,7 +74,7 @@ The output ROOT file contains a single TTree named "ddas." The tree contains a s
 
 @section sec_ddasdumper_read Reading ddasdumper ROOT Output
 @par
-In order to process ddasdumper output, ROOT must know where to look for the headers and library which define the DDASRootEvent and DDASRootHit classes. The headers `DDASRootEvent.h` and `DDASRootHit.h` are installed in the "usual" NSCLDAQ header path: /usr/opt/daq/MM.mm-sss/include for NSCLDAQ MM.mm-sss; after sourcing the appropriate `daqsetup.bash` script, the environment variable `DAQINC` will point to this directory. You must add the `DAQINC` directory to the directories ROOT will search for header files:
+In order to process ddasdumper output, ROOT must know where to look for the headers and library which define the DDASRootEvent and DDASRootHit classes. The headers `DDASRootEvent.h` and `DDASRootHit.h` are installed in the "usual" NSCLDAQ header path: /usr/opt/daq/MM.mm-eee/include for NSCLDAQ MM.mm-eee; after sourcing the appropriate `daqsetup.bash` script, the environment variable `DAQINC` will point to this directory. You must add the `DAQINC` directory to the directories ROOT will search for header files:
 
 @verbatim
 export ROOT_INCLUDE_PATH=${DAQINC}:${ROOT_INCLUDE_PATH}

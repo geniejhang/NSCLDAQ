@@ -6,9 +6,13 @@
 
 @tableofcontents
 
-@attention This single-crate system setup guide is specific to NSCLDAQ 12.x and newer, where the module data readout and sorting processes are decoupled.
+@attention This single-crate system setup guide is specific to DDAS systems running NSCLDAQ 12 and later, which has a handful of major features that which were not part of previous releases:
+1. The module data readout and sorting processes are decoupled. As a consequence, readout program data sources must be configured in a slightly different manner.
+2. The DDAS codebase has been refactored into NSCLDAQ, there is no longer a broken-out DDAS installation in e.g. /usr/opt/ddas.
+3. External clock readout has been absorbed into the main readout program. There is no longer a separate version of the DDAS readout for this purpose.
+4. As part of the transition from API 2 to API 4, XIA settings files are in in JSON format. Files with names like `crate_1.json` are the API 4 version of the binary settings files generally named `crate_1.set` in previous versions.
 
-@section sec_1crate_intro Introduction
+@section sec_singlecrate_intro Introduction
 @par
 This document describes the simplest DDAS setup: A single PXI crate with one
 digitizer. Throughout, there will be suggestions on how to expand this setup so
@@ -23,18 +27,111 @@ that it has several digitizers. This material is organized as follows:
 - We will set up a simple SpecTcl tailoring for data with and without waveforms.
 - We will import the data into ROOT so that offline analysis can @ref ddasdumper "proceed with that tool".
 
-@section sec_1crate_components Components of a DDAS System
+@section sec_singlecrate_components Components of a DDAS System
 @par
 DDAS data acquisition systems and online analysis rely on several hardware and
 software components:
 
 - A PXI Crate. PXI is an extension to the compact PCI standard that supports precision timing.
 - One or more XIA digitizer cards.
-- An interface between an NSCL spdaq system and the PXI crate or a crate-resident single-board computer. These two options will be referred to as the data-collection computer.
+- An interface between an NSCL spdaq system and the PXI crate or a crate-resident single-board computer (SBC). These two options will be referred to as the data-collection computer.
 - A readout program that runs in the data-collection computer that reads data from the digitizer cards and places them into a <em>raw ringbuffer</em>. This readout program is the interface between the PXI crate and the NSCLDAQ system.
 - A sorter program which reads data from a raw ringbuffer, maintains a master list of sorted hits, and outputs those hits into a <em>sorted ringbuffer</em> for event building.
 - An event builder. The event builder takes data from sorted ringbuffers, builds events that satisfy a coincidence interval using the DDAS timestamp and places those built events in an <em>output ring buffer</em>. Note that while in principle the event builder is not necessary for single-crate systems, using it for those systems maintains a common event format between single- and multi-crate systems.
 - A ReadoutShell instance that manages readout, sorting, event logging and event building.
 - A SpecTcl tailored to decode DDAS data and analyze it in an experiment-specific manner.
+
+@par
+The following figure shows a schematic representation of a DDAS hardware configuration using one crate:
+
+@image html single_crate/hardware_schematic.png "A schematic DDAS hardware configuration. A PXI crate with an SBC used as the data-collection computer and a single Pixie module is connected via the NSCL DAQ network to an analysis computer." height=400px
+
+@par
+The data flow through such a system looks like:
+
+@image html dataflow.png "Data flow through a DDAS system running NSCLDAQ 12. Note the separation of module data readout and sorting, which were previously part of a single process. This configuration enables much higher data readout speeds." height=800px
+
+@par
+A couple of points are worth noting:
+- The analysis computer is not strictly necessary. All of the software can be run on the data-collection computer.
+- In the usual production configuration (i.e. during an experiment) the only program that will run on the data-collection computer is the readout program. All other pieces of the software shown on the above figure will run other places.
+- For multi-crate systems, the schematics can be expanded by adding additional crates to the hardware diagram and additional readout and sort paths feeding the event builder to the data flow diagram.
+- Adding additional digitizers to an already-configured system is (mostly) just a matter of editing the system configuration files.
+
+@section sec_singlecrate_setup Setting up NSCLDAQ to Run DDAS
+@par
+The DDAS software is installed as part of the NSCLDAQ software package. There may be several versions of NSCLDAQ installed concurrently on lab computers. In general these will be located under /usr/opt/daq on FRIB computer systems. Each NSCLDAQ installation has a version number MM.mm-eee where MM refers to the major version, mm to the minor version, and eee to an edit level e.g. 12.0-015 with major version 12, minor version 0, and edit level 15. Edit-level changes reflect minor defect fixes or enhancements, minor-version changes reflect more impactful bugfixes or enhancements. Major version changes are generally quite significant and may require significant rewrites of user code.
+
+@par
+Each NSCLDAQ version's top-level directory includes a `daqsetup.bash` script which can be sourced to set the following environment variables:
+- `DAQROOT`- Points to the top-level NSCLDAQ installation directory (containing the `daqsetup.bash` script.
+- `DAQBIN` - Points to `$DAQROOT/bin`, the directory containing NSCLDAQ executables.
+- `DAQLIB` - Points to `$DAQROOT/lib`, the directory containing NSCLDAQ libraries which DDAS applications and user code may need to link against.
+- `DAQINC` - Points to `$DAQROOT/include`, the directory containing NSCLDAQ header files including those for DDAS.
+- `DAQSHARE` - Points to `$DAQROOT/share`, a directory containing documentation, program skeletons, and scripts.
+
+@subsection sec_singlecrate_plx A Quick Note On Loading the PLX Kernel Driver
+@par
+Users are no longer required to load the PLX kernel module by hand on each data-readout computer installed as part of your DDAS system. The kernel module is loaded automatically on system startup.
+
+@section sec_singlecrate_config Configuration Files Needed by NSCL DDAS
+@par
+Many of the DDAS software components require a set of configuration files to be in the current working directory. These configuration files describe the configuration of modules in a crate and point at a settings file containing the parameters used by the digital pulse-processing (DPP) algorithms for each module in use. By convention a directory subtree is used to hold the configuration files for each crate. The tree will look something like:
+
+@verbatim
+home-directory
+      |
+      +--- readout
+              |
+              +--- crate_1  (configuration for crate 1).
+              +--- crate_2  (configuration for crate 2 if needed).
+              ...
+              +--- crate_n  (configuration for last crate, n).
+@endverbatim
+
+@par
+We can expand the full directory tree for a single-crate system:
+
+@verbatim
+home-directory
+     |
+     +-- readout
+            |
+            +--- crate_1
+                    |
+                    +--- cfgPixie16.txt
+                    +--- modevtlen.txt
+                    +--- crate_1.json
+
+@endverbatim
+
+@par
+An example crate_1 directory which can be copied to your system can be found at $DAQSHARE/ddasreadout/crate_1. This example directory contains the necessary configuration files to run a DDAS system. The files are:
+- cfgPixie16.txt - Indicates where modules are installed in the crates and points to a parameter settings file containing their DPP settings. See the documentation for this file @ref cfgpixie16 "here".
+- modevtlen.txt - Describes the number of 32-bit words in a hit for each module. See the documentation for this file @ref modevtlen "here".
+- crate_1.json - An XIA API 4 parameter settings file.
+
+@par
+See 
+
+@note While `$DAQSHARE`/ddasreadout/crate_1 contains a valid set of configuration files for DDAS, there is no guarantee that the configuration files or settings file in the example directory are correct for any given system. You will may need to edit all of these files in order to get your system running correctly. Typical changes are:
+- cfgPixie16.txt must be modified to reflect the layout of modules in your crate. The path to the settings file must be correct.
+- The name of the JSON settings file must match that within the cfgPixie16.txt file.
+- modevtlen.txt must be modified to reflect your actual event sizes if extra data words from e.g. QDC sums or trace data is expected.
+
+@section sec_singlecrate_setup Setting Up a Single-Crate System
+@par
+This part of the guide will discuss in detail how to setup a single-crate DDAS system with a single XIA digitizer card. You must:
+1. Ensure that there is an SBC or fiber interface in slot 1 of the PXI crate (the most common case). If a fiber interface is used, the fiber must be connected to the interface card and a PCI bridge card on the data-collection computer. The data-collection computer must be connected to the DAQ network.
+2. Install a Pixie module configured as a clock master in slot 2 of your crate.
+3. Attach signals to the digitizer inputs. One of the nice things about digital data acquisition modules is that only minimal signal conditioning is required and the modules themselves handle triggering. For this setup we're going to take singles data. The modules actually support very sophisticated internal triggering modes as well as cross-module trigger processing via a front-panel trigger bus.
+4. Configure your DPP settings.
+
+@warning SBCs, fiber cards and modules are **NOT** hot-swappable. **DO NOT** connect or disconnect SBCs, fiber cards or modules from the crate while it is powered on. Before installing or replacing any DDAS hardware, ensure that the crate is powered off.
+
+@par
+Steps 1 and 3 are relatively straightforward and will not be discussed further. Steps 2 and 4 are more complex and will be covered in detail in the subsequent sections.
+
+@subsection sec_singlecrate_clock Configuing a Clock Master Module
 
 */

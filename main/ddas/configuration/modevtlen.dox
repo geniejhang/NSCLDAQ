@@ -6,13 +6,13 @@
 
 @section sec_modevtlen_intro Introduction
 @par 
-The modevtlen.txt file contains the length of each event expected from each module in a PXI crate. Event lengths are given in 32-bit longwords. For each channel on a digitizer, the assumption is that events of equal length will be emitted. This implies that for a single module, all channels must be configured to have the same settings for trace capture, QDC sums, etc. If this is not the case, the `DDASReadout` program will fail. For systems containing multiple DDAS crates, one modevtlen.txt file is required for each crate.
+The modevtlen.txt file contains the length of each event expected from each module in a PXI crate. Event lengths are given in 32-bit longwords. For each channel on a digitizer, the assumption is that events of equal length will be emitted. This implies that for a single module, all channels must be configured to have the same settings for trace capture, QDC sums, etc. If this is not the case, the readout program will fail. For systems containing multiple DDAS crates, one modevtlen.txt file is required for each crate.
 @attention
 It is an error to have fewer entries in the modevtlen.txt file than there are modules installed in the PXI crate. It is not an error to have more entries than modules.
 
 @section sec_modevtlen_format modevtlen.txt Format
 @par
-The format of this file is very simple: there should be one line containing the expected event length in 32-bit words for each module in the system. The minimum number of words is determined by the XIA data format. By default this minimum read size is 4 words. Enabling optional features such as trace capture or QDC sums can increase the length of the event expected by the `DDASReadout` program.
+The format of this file is very simple: there should be one line containing the expected event length in 32-bit words for each module in the system. The minimum number of words is determined by the XIA data format. By default this minimum read size is 4 words. Enabling optional features such as trace capture or QDC sums can increase the length of the event expected by the readout program.
 
 @subsection sec_modevtlen_lengths Optional Output Data Sizes
 @par
