@@ -84,7 +84,7 @@ class CrateID(QWidget):
             self.logger.exception(
                 f"Inconsistent crate ID values Mod. {i}: {id_list}"
             )
-            print(f"{e}:\n\tRe-apply your module DSP parameters and check your settings file, it may be corrupt.")
+            print(f"{e}: Re-apply your module DSP parameters and check your settings file, it may be corrupt.")
         finally:
             self.display_dsp(mgr)
         
