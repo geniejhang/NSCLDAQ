@@ -10,18 +10,22 @@
 
 #include <config.h>
 #include <config_pixie16api.h>
+#include <CXIAException.h>
 
 int
 CPixieDSPUtilities::AdjustOffsets(int module)
 {
-    int retval = Pixie16AdjustOffsets(module);
-
-    if (retval < 0) {
-	std::stringstream errmsg;
-	errmsg << "CPixieDSPUtilities::AdjustOffsets() failed";
-	errmsg << " to adjust offsets in module: " << module
-	       << " with retval " << retval;
-	std::cerr << errmsg.str() << std::endl;
+    int retval;
+    try {
+	retval = Pixie16AdjustOffsets(module);
+	if (retval < 0) {
+	    std::stringstream msg;
+	    msg << "Failed to adjust offsets in module " << module;
+	    throw CXIAException(msg.str(), "Pixie16AdjustOffsets()", retval);
+	}
+    }
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;
     }
 
     return retval;
@@ -37,16 +41,18 @@ CPixieDSPUtilities::WriteChanPar(
     int module, int channel, char* paramName, double value
     )
 {
-    int retval = Pixie16WriteSglChanPar(paramName, value, module, channel);
-  
-    if (retval < 0) {
-	std::stringstream errmsg;
-	errmsg << "CPixieDSPUtilities::WriteChanPar() failed";
-	errmsg << " to write parameter " << paramName
-	       << " to module " << module
-	       << " channel " << channel
-	       << " with retval " << retval;
-	std::cerr << errmsg.str() << std::endl;
+    int retval;
+    try {
+	retval = Pixie16WriteSglChanPar(paramName, value, module, channel);
+	if (retval < 0) {
+	    std::stringstream msg;
+	    msg << "Failed to write channel parameter " << paramName
+		<< " to module " << module << " channel " << channel;
+	    throw CXIAException(msg.str(), "Pixie16WriteSglChanPar()", retval);
+	}
+    }
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;
     }
     
     return retval;
@@ -62,18 +68,20 @@ CPixieDSPUtilities::ReadChanPar(
     int module, int channel, char* paramName, double& value
     )
 {
-    int retval = Pixie16ReadSglChanPar(paramName, &value, module, channel);
-  
-    if (retval < 0) {
-	std::stringstream errmsg;
-	errmsg << "CPixieDSPUtilities::ReadChanPar() failed";
-	errmsg << " to read parameter " << paramName
-	       << " from module " << module
-	       << " channel " << channel
-	       << " with retval " << retval;
-	std::cerr << errmsg.str() << std::endl;
-    }  
-  
+    int retval;
+    try{
+	retval = Pixie16ReadSglChanPar(paramName, &value, module, channel);
+  	if (retval < 0) {
+	    std::stringstream msg;
+	    msg << "Failed to read channel parameter " << paramName
+		<< " from module " << module << " channel " << channel;
+	    throw CXIAException(msg.str(), "Pixie16ReadSglChanPar()", retval);
+	}
+    }
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;
+    }
+    
     return retval;
 }
 
@@ -87,16 +95,19 @@ CPixieDSPUtilities::WriteModPar(
     int module, char* paramName, unsigned int value
     )
 {
-    int retval = Pixie16WriteSglModPar(paramName, value, module);
-  
-    if (retval < 0) {
-	std::stringstream errmsg;
-	errmsg << "CPixieDSPUtilities::WriteModPar() failed";
-	errmsg << " to write parameter " << paramName
-	       << " to module " << module
-	       << " with retval " << retval;
-	std::cerr << errmsg.str() << std::endl;
-    } 
+    int retval;
+    try {
+	retval = Pixie16WriteSglModPar(paramName, value, module);
+  	if (retval < 0) {
+	    std::stringstream msg;
+	    msg << "Failed to write module parameter " << paramName
+		<< " to module " << module;
+	    throw CXIAException(msg.str(), "Pixie16WriteSglModPar()", retval);
+	}
+    }
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;
+    }
   
     return retval;
 }
@@ -111,16 +122,19 @@ CPixieDSPUtilities::ReadModPar(
     int module, char* paramName, unsigned int& value
     )
 {
-    int retval = Pixie16ReadSglModPar(paramName, &value, module);
-  
-    if (retval < 0) {
-	std::stringstream errmsg;
-	errmsg << "CPixieDSPUtilities::ReadModPar() failed";
-	errmsg << " to read parameter " << paramName
-	       << " from module " << module
-	       << " with retval " << retval;
-	std::cerr << errmsg.str() << std::endl;
+    int retval;
+    try {
+	retval = Pixie16ReadSglModPar(paramName, &value, module);
+  	if (retval < 0) {
+	    std::stringstream msg;
+	    msg << "Failed to read module parameter " << paramName
+		<< " from module " << module;
+	    throw CXIAException(msg.str(), "Pixie16ReadSglModPar()", retval);
+	}
     }
- 
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;
+    }
+    
     return retval;
 }

@@ -123,7 +123,7 @@ private:
     /**
      * @brief Update baseline histograms for all channels on a single module.
      * @param module Module number.
-     * @throw std::runtime_error If the baseline read fails.
+     * @throw CXIAExeption If the baseline read fails.
      */
     void UpdateBaselineHistograms(int module);
 };

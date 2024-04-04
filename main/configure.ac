@@ -359,7 +359,7 @@ then
 				AC_MSG_RESULT([Need to build local tagged copy])
 				AC_CHECK_FILE([${srcdir}/libtcl/configure],
 				[havelibtcldir="yes"], [havelibtcldir="no"])
-				(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make -j clean install)
+				(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
 			else
 				AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
 			fi
@@ -380,7 +380,7 @@ AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
 if test $havelibtcldir = "yes"
 then
 	AC_MSG_RESULT([Need to build local tagged copy])
-	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make -j clean install)
+	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
 	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
 	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
 	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
@@ -401,7 +401,7 @@ tcl_configdir="/usr/lib/$tcl_basename"
 tcl_incdir="/usr/include/$tcl_basename"
 
 (cd ${srcdir}/tclhttpd3.5.1; ./configure --prefix=${prefix}/share/tclhttpd --enable-gcc --with-tclinclude=$tcl_incdir --with-tcl=$tcl_configdir)
-(cd ${srcdir}/tclhttpd3.5.1; make -j  all install)
+(cd ${srcdir}/tclhttpd3.5.1; make   all install)
 
 # Epics
 #
@@ -432,7 +432,6 @@ fi
 #
 # BUILD_DDAS     - if this flag is provided that's defined to allow the top
 #                  level Makefile to enable the ddas support software build.
-# XIAAPI_VERSION - major version number of the XIA API we compile with
 # PIXIE_API_DIR  - installation directory of the XIA Pixie API
 # PIXIE_CPPFLAGS - compiler flags
 # PIXIE_LDFLAGS  - load flags
@@ -468,7 +467,7 @@ then
 	
 	AC_CHECK_FILE([${xiaapidir}/include/pixie16/pixie16.h],
 	[PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"],
-	[AC_MSG_ERROR([invalid XIA API installation directory ${xiaapidir}, use --with-xiaapidir to point to the correct one (this version of NSCLDAQ supports only XIA API major version 4+)])])
+	[AC_MSG_ERROR([invalid XIA API installation directory ${xiaapidir}, use --with-xiaapidir to point to the correct one (this version of NSCLDAQ supports only XIA API major version 3+)])])
 
 	PIXIE_API_DIR=$xiaapidir
 	PIXIE_CPPFLAGS="-I${xiaapidir}/include"
@@ -564,7 +563,7 @@ then
 		[rm -rf unifiedformat/build
 		mkdir -p unifiedformat/build
 		sourcedir="`realpath ${srcdir}`"
-		(cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make -j all test install)
+		(cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make all test install)
 		UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
 		UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
 		AC_SUBST(UFMT_CPPFLAGS)

@@ -49,7 +49,7 @@ The following figure shows a schematic representation of a DDAS hardware configu
 @par
 The data flow through such a system looks like:
 
-@image html dataflow.png "Data flow through a DDAS system running NSCLDAQ 12. Note the separation of module data readout and sorting, which were previously part of a single process. This configuration enables much higher data readout speeds." height=800px
+@image html single_crate/dataflow.png "Data flow through a DDAS system running NSCLDAQ 12. Note the separation of module data readout and sorting, which were previously part of a single process. This configuration enables much higher data readout speeds." height=800px
 
 @par
 A couple of points are worth noting:
@@ -124,14 +124,25 @@ See
 This part of the guide will discuss in detail how to setup a single-crate DDAS system with a single XIA digitizer card. You must:
 1. Ensure that there is an SBC or fiber interface in slot 1 of the PXI crate (the most common case). If a fiber interface is used, the fiber must be connected to the interface card and a PCI bridge card on the data-collection computer. The data-collection computer must be connected to the DAQ network.
 2. Install a Pixie module configured as a clock master in slot 2 of your crate.
-3. Attach signals to the digitizer inputs. One of the nice things about digital data acquisition modules is that only minimal signal conditioning is required and the modules themselves handle triggering. For this setup we're going to take singles data. The modules actually support very sophisticated internal triggering modes as well as cross-module trigger processing via a front-panel trigger bus.
+3. Attach signals to the digitizer inputs. One of the nice things about digital data acquisition modules is that only minimal signal conditioning is required and the modules themselves handle triggering. For this tutorial we're going to take singles data. The modules actually support very sophisticated internal triggering modes as well as cross-module trigger processing via a front-panel trigger bus.
 4. Configure your DPP settings.
 
 @warning SBCs, fiber cards and modules are **NOT** hot-swappable. **DO NOT** connect or disconnect SBCs, fiber cards or modules from the crate while it is powered on. Before installing or replacing any DDAS hardware, ensure that the crate is powered off.
 
 @par
-Steps 1 and 3 are relatively straightforward and will not be discussed further. Steps 2 and 4 are more complex and will be covered in detail in the subsequent sections.
+Step 1 is relatively straightforward and need not be discussed further. Steps 2-4 are more complex and will be covered in detail in the subsequent sections.
 
-@subsection sec_singlecrate_clock Configuing a Clock Master Module
+@subsection sec_singlecrate_clock Configuring a Clock Master Module
+@par
+When using several DDAS cards it is important to synchronize the digitizer clocks between them. This is done by setting the jumper block JP01 appropriately. The jumper block is a set of pins located on the board near the backplane connectors, shown on the figure below in the red box. Configure the connections between these pins with jumpers. In case your setup consists of a single module, be sure to configure the jumpers to match the top diagram for the PXI clock master.
+
+@image html single_crate/board_and_jumpers.png "[Left] A Pixie-16 board with the location of the JP01 jumper block shown in the red box. [Right] Schematic of the  jumper settings for distributing the clock across the PXI backplane for a single-crate system. Top: PXI clock master jumper settings (slot 2). Bottom: PXI clock recipient jumper settings (slots 3-14)." height=400px
+
+@par
+In this configuration your clock-master module must be installed in slot 2. If more modules are added to the system, their jumper configuration should match the configuration shown on the bottom right of the above figure.
+
+@subsection sec_singlecrate_testsignal Configuring an Input Signal
+@par
+A test signal from a pulser is used for this tutorial. Setup the pulser to output pulses that rise quickly but have an approximately 50 &mu;s decay time. The test pulse should be negative (-) polarity, have an input voltage of less than 1 V and a frequency less than 5 kHz. 
 
 */

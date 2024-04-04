@@ -74,15 +74,15 @@ private:
      * channel.
      * @param module  Module number.
      * @param channel Channel number on module for trace read.
-     * @throws std::runtime_error If ADC traces cannot be acquired (internal
+     * @throw std::runtime_error If ADC traces cannot be acquired (internal
      *   DSP memory fails to fill).
-     * @throws std::runtime_error If trace read fails.
+     * @throws CXIAException If trace allocation or read fails.
      */
     void AcquireADCTrace(int module, int channel);
     /**
      * @brief Calculate the median value from a trace.
      * @param v Input vector of type T.
-     * @throws std::invalid_argument If trace is empty (median is undefined).
+     * @throw std::invalid_argument If trace is empty (median is undefined).
      * @return Median value of the trace.
      */
     template<typename T> double GetMedianValue(std::vector<T> v);

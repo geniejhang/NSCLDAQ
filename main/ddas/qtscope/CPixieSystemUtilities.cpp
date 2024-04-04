@@ -96,12 +96,21 @@ CPixieSystemUtilities::Boot()
 int
 CPixieSystemUtilities::SaveSetFile(char* fileName)
 {
-    int retval = Pixie16SaveDSPParametersToFile(fileName);
+    int retval;
+    try {
+	int retval = Pixie16SaveDSPParametersToFile(fileName);
     
-    if (retval < 0) {
-	std::cerr << "CPixieSystemUtilities::SaveSetFile() failed";
-	std::cerr << " to save DSP parameter file to: " << fileName
-		  << " with retval " << retval;
+	if (retval < 0) {
+	    std::stringstream msg;
+	    msg << "CPixieSystemUtilities::SaveSetFile() failed to save"
+		<< " DSP parameter file to: " << fileName;
+	    throw CXIAException(
+		msg.str(), "Pixie16SaveDSPParametersToFile()", retval
+		);
+	}
+    }
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;
     }
   
     return retval;
@@ -117,25 +126,32 @@ CPixieSystemUtilities::SaveSetFile(char* fileName)
 int
 CPixieSystemUtilities::LoadSetFile(char* fileName)
 {
-    int retval = 0;
-  
-    if(m_booted) { // If system is booted just apply the params.    
-	retval = Pixie16LoadDSPParametersFromFile(fileName);
+    int retval;
+    try {  
+	if(m_booted) { // If system is booted just apply the params.    
+	    retval = Pixie16LoadDSPParametersFromFile(fileName);
     
-	if (retval < 0) {
-	    std::cerr << "CPixieSystemUtilities::LoadSetFile() failed to"
-		      << " load DSP parameter file from: " << fileName
-		      << " with retval " << retval;      
-	    return retval;
-	} else {
-	    std::cout << "Loading new DSP parameter file from: "
-		      << fileName << std::endl;
-	}  
-    } else { // Not booted so hold on to the name.
-	m_ovrSetFile = true;
-	m_config.setSettingsFilePath(fileName);
-	std::cout << "New DSP parameter file " << fileName
-		  << " will be loaded on system boot" << std::endl;
+	    if (retval < 0) {
+		std::stringstream msg;
+		msg << "CPixieSystemUtilities::LoadSetFile() failed to"
+		    << " load DSP parameter file from: " << fileName;
+		throw CXIAException(
+		    msg.str(), "Pixie16LoadDSPParametersFromFile()", retval
+		    );
+	    } else {
+		std::cout << "Loading new DSP parameter file from: "
+			  << fileName << std::endl;
+	    }  
+	} else { // Not booted so hold on to the name.
+	    m_ovrSetFile = true;
+	    m_config.setSettingsFilePath(fileName);
+	    std::cout << "New DSP parameter file " << fileName
+		      << " will be loaded on system boot" << std::endl;
+	}
+    }
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;
+	return e.ReasonCode();
     }
   
     return retval;
@@ -150,22 +166,28 @@ CPixieSystemUtilities::LoadSetFile(char* fileName)
 int
 CPixieSystemUtilities::ExitSystem()
 {
-    int retval = 0;
-  
-    if (m_booted) {
-	for (int i = 0 ; i < m_numModules; i++) {      
-	    retval = Pixie16ExitSystem(i);      
-	    if (retval < 0) {
-		std::cerr << "CPixieSystemUtilities::ExitSystem() failed";
-		std::cerr <<" to exit " << "module " << i
-			  << " with retval = " << retval << std::endl;
-		m_booted = false;	
-		return retval;
-	    }
-	}    
+    int retval;
+    try {
+	if (m_booted) {
+	    for (int i = 0 ; i < m_numModules; i++) {      
+		retval = Pixie16ExitSystem(i);      
+		if (retval < 0) {
+		    std::stringstream msg;
+		    msg << "CPixieSystemUtilities::ExitSystem() failed"
+			<< " to exit " << "module " << i;
+		    throw CXIAException(
+			msg.str(), "Pixie16ExitSystem()", retval
+			);
+		}
+	    }    
+	}  
+	m_booted = false;
     }
-  
-    m_booted = false;
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText();
+	m_booted = false;
+	return e.ReasonCode();
+    }
       
     return retval; // All good.
 }
@@ -179,7 +201,6 @@ unsigned short
 CPixieSystemUtilities::GetModuleMSPS(int module)
 {
     int nmodules = m_modADCMSPS.size() - 1;
-  
     try {
 	if (!m_booted) {
 	    std::stringstream errmsg;
@@ -191,12 +212,12 @@ CPixieSystemUtilities::GetModuleMSPS(int module)
 	    errmsg << "CPixieSystemUtilities::GetModuleMSPS() ";
 	    errmsg << "invalid module number ";
 	    errmsg << module << " for " << nmodules << " module system.";
-	    throw std::runtime_error(errmsg.str());
+	    throw std::range_error(errmsg.str());
 	} else {
 	    return m_modADCMSPS[module];
 	}
     }
-    catch (std::runtime_error& e) {
+    catch (const std::range_error& e) {
 	std::cerr << e.what() << std::endl;
 	return 0;
     }
