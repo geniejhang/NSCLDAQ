@@ -143,6 +143,65 @@ In this configuration your clock-master module must be installed in slot 2. If m
 
 @subsection sec_singlecrate_testsignal Configuring an Input Signal
 @par
-A test signal from a pulser is used for this tutorial. Setup the pulser to output pulses that rise quickly but have an approximately 50 &mu;s decay time. The test pulse should be negative (-) polarity, have an input voltage of less than 1 V and a frequency less than 5 kHz. 
+A test signal from a pulser is used for this tutorial. Setup the pulser to output pulses that rise quickly but have an approximately 50 &mu;s decay time. The test pulse should be negative (-) polarity, have an input voltage of less than 1 V and a frequency less than 5 kHz.
+
+@subsection sec_singlecrate_configfiles Example configuration files
+@par
+The setup described in this tutorial uses a single digitizer installed in slot 2 of the PXI crate. Our DPP settings are stored in the file crate_1.json in a readout directory on our development system. Our cfgPixie16.txt file looks like:
+
+@verbatim
+1  # crateID
+1  # number of modules
+2  # slot for mod 0
+/user/0400x/ddas_xiatest/readout/crate_1/crate_1.json
+@endverbatim
+
+@par
+The modevtlen.txt file must consist of (at least) a single line specifying that there are 4 expected data words (no optional settings are enabled).
+
+@subsection sec_singlecrate_setdpp Configuring DPP Settings Using QtScope
+@par
+Once you have a correctly configured working directory, it is time to program the module with appropriate settings for the test signal. The QtScope program is used to view input waveforms and set DPP parameters. QtScope is installed as part of the NSCLDAQ software package and should be run by:
+1. `source /usr/opt/daq/12.1-xiaapi4/daqsetup.bash`.
+2. `$DAQBIN/qtscope`
+
+@image html qtscope_unbooted.PNG "The QtScope GUI state on startup. Note that most GUI elements besides [Boot system], [About], and [Exit] on the system toolbar are disabled." width=1200px
+
+@par
+The QtScope GUI will launch. See the @ref qtscope "QtScope documentation" for more details, only the basics are covered in this guide. Most features of the GUI are inaccessible (greyed out) until the modules have been booted. To boot the modules, click the **[Boot system]** button. QtScope will print some information on the terminal where it was launched. A successful boot will look something like:
+
+@verbatim
+------------------------
+Initializing PXI access...
+System initialized successfully.
+Found Pixie-16 module #0, Rev = 15, S/N = 1150, Bits = 16, MSPS = 250
+
+Booting Pixie-16 module #0
+        ComFPGAConfigFile:  /usr/opt/ddas/firmware/2.2-000/firmware/syspixie16_current_16b250m.bin
+        SPFPGAConfigFile:   /usr/opt/ddas/firmware/2.2-000/firmware/fippixie16_current_16b250m.bin
+        DSPCodeFile:        /usr/opt/ddas/firmware/2.2-000/dsp/Pixie16_current_16b250m.ldr
+        DSPVarFile:         /usr/opt/ddas/firmware/2.2-000/dsp/Pixie16_current_16b250m.var
+        DSPParFile:         /user/0400x/ddas_xiatest/readout/crate_1/crate_1.json
+------------------------------------------------------
+
+All modules ok
+QtScope system configuration complete!
+@endverbatim
+
+@par
+If the boot fails, detailed error messages are written to Pixie16Msg.log and qtscope.log. Looking at the information contained in these log files should provide some context for the boot error and may point to a solution.
+
+@par
+The first thing we must do is condition the ADC for our input signal. First, lets look at a trace. Click the **[Read trace]** button until you see a full waveform trace. Here is an example:
+
+@image html single_crate/qtscope_badpol.PNG "A raw pulser trace captured by QtScope"
+
+@par
+No matter the input signal polarity, the QtScope canvas should display a positive-polarity signal. Two things immidiately jump out about the above example:
+1. The displayed signal polarity is wrong. The negative-polarity signal is assumed to be positive by the Pixie DSP FPGA.
+2. The signal is clipped at 0.
+
+@par
+
 
 */

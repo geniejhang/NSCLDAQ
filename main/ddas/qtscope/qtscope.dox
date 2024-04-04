@@ -8,7 +8,7 @@
 
 @section sec_qtscope_intro Introduction
 @par
-The QtScope program provides a slow-control graphical-user interface (GUI) used to configure digital signal processing (DSP) parameters for DDAS systems. Available starting with the release of NSCLDAQ 12.0, QtScope is a full replacement for the nscope program, which will no longer be actively supported and maintained.
+The QtScope program provides a slow-control graphical-user interface (GUI) used to configure digital signal processing (DSP) parameters for DDAS systems (often used interchangably with digial pulse processing or DPP parameters). Available starting with the release of NSCLDAQ 12.0, QtScope is a full replacement for the nscope program, which will no longer be actively supported and maintained.
 
 @par
 QtScope was written using a set of Python bindings for Qt5 called PyQt5 and takes advantage of both the GUI design capabilities of Qt as well as familiar Python tools matplotlib and the NumPy package for scientific computing. Communication with the Pixie-16 modules via the XIA API is implemented using the Python ctypes foreign function library. QtScope implements a model-view-controller (MVC) architecture for user interaction with the Pixie-16 hardware and manages the DSP parameters internally using a Python dataframe.
@@ -55,7 +55,7 @@ If you have not set up a DDAS system before, it is probably best to stop reading
 @par
 To run QtScope, the NSCLDAQ environment must be configured by sourcing its daqsetup.bash script: @verbatim . /usr/opt/daq/12.0-015/daqsetup.bash @endverbatim for QtScope from NSCLDAQ version 12.1-015. Sourcing this script will set the `DAQBIN` environment variable to point to the directory where the `qtscope` executable is installed for the selected version of NSCLDAQ. Once complete, the QtScope executable can be launched with the following command: @verbatim $DAQBIN/qtscope @endverbatim Note that QtScope expects to be run on a machine connected to Pixie-16 hardware--at FRIB this is typically an spdaq computer--and from a directory containing the necessary @ref cfgpixie16 "cfgPixie16.txt" and @ref modevtlen "modevtlen.txt" configuration files. Running the `qtscope` executable launches the QtScope GUI. The various elements of the GUI are labeled on the figure below.
 
-@image html qtscope_unbooted_wtoolbars.png "The QtScope GUI state on startup with labeled GUI elements. Note that most GUI elements besides [Boot system] and [Exit] on the system toolbar are disabled." width=1200px
+@image html qtscope_unbooted_wtoolbars.png "The QtScope GUI state on startup with labeled GUI elements. Note that most GUI elements besides [Boot system], [About] and [Exit] on the system toolbar are disabled." width=1200px
 
 @par
 Upon startup, the majority of the GUI elements besides **[Boot system]** and **[Exit]** on the system toolbar are disabled. This is because no firmware or DSP parameters have been loaded onto the modules. The process of programming the module firmware and DSP settings onto a module is colloquially called "booting." Clicking the **[Boot system]** button on the left side of the system toolbar will attempt to boot the Pixie-16 modules using the configuration files present in the runtime directory. During the boot process, firmware is loaded and the parameter configuration file is written to the modules in the crate. Summary output is written to the terminal during this process:
