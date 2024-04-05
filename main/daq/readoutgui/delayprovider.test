@@ -83,10 +83,12 @@ tcltest::test end-0 {Test that end of run delay is as long we expect
 
 } -result 1 -returnCodes 0
 
+# Delay 11ms and hope it's at least 10ms
+
 tcltest::test end-1 {Short delay works} \
 -body {
 
-  Delay::start [dict create delay 0 enddelay 1 sourceid 0]
+  Delay::start [dict create delay 0 enddelay 11 sourceid 0]
   set start [clock milliseconds]
   ::Delay::end 0
   set stop [clock milliseconds]
