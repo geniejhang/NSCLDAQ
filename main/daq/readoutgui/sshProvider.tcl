@@ -166,6 +166,7 @@ proc ::SSHPipe::stop source {
     catch {exec kill -9 [dict get $::SSHPipe::activeProviders($source) sshpid]}
     Wait -pid [dict get $::SSHPipe::activeProviders($source) sshpid]
     dict set ::SSHPipe::activeProviders($source) closing true
+
     
 }
 ##

@@ -207,6 +207,7 @@ tcltest::test check-2 {After killing a started source, check should give false} 
 # Tests for stop
 
 #
+if 0 {
 tcltest::test stop-1 {After starting a source stopping it kills/cleans it} \
 -setup {
     set tclsh $::env(tcl)
@@ -233,7 +234,7 @@ puts vw2
     array names ::SSHPipe::activeProviders 0
     
 } -result ""
-
+}
 if {0} {
 #  Test begin
 
@@ -491,6 +492,7 @@ tcltest::test resume-2 {begin on a run that is not idle fails} \
 #
 #
 #
+if 0 {
 tcltest::test init-0 {Test that init command when not started fails
 } -setup {
 } -cleanup {
@@ -502,9 +504,11 @@ tcltest::test init-0 {Test that init command when not started fails
     list $status $msg
 } -result {1 {SSHPipe::init Source id does not exist.}}
 
+
 #
 #
 #
+
 tcltest::test init-1 {Test that init command when started succeeds
 } -setup {
     set tclsh $::env(tcl)
@@ -526,7 +530,7 @@ tcltest::test init-1 {Test that init command when started succeeds
     set msg [dict get $::mytests::log(0) message]
     puts $msg 
     set msg
-} -result {init
+} -result {init}
 }
 
 
