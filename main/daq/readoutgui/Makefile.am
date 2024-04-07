@@ -57,6 +57,7 @@ TCLTESTS =    filesystem.test \
 #TCLTESTS+=sshpipe.test
 
 
+
 TKTESTS =	readoutguitest.tk  scalerparametergui.tk \
 	selectreadoutest.tk  tclTests.tcl \
 	testrunner.tk
