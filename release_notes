@@ -1,3 +1,7 @@
+== 12.0-016 ==
+* Added MDPP-36 SCP streaming readout mode support
+== 12.0-016 ==
+
 == 12.0-015 ==
 * Full manpage build for ReadoutGUI. 
 * Added Janus data source for FERS system

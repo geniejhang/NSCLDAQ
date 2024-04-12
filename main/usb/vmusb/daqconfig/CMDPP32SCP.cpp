@@ -106,7 +106,7 @@ CMDPP32SCP::onAttach(CReadoutModule& configuration)
   m_pConfiguration -> addEnumParameter("-marktype", MarkTypeStrings, MarkTypeStrings[1]);
 
   m_pConfiguration -> addEnumParameter("-tdcresolution", TDCResolutionStrings, TDCResolutionStrings[0]);
-  m_pConfiguration -> addIntegerParameter("-outputformat",  0,  2, 0);
+  m_pConfiguration -> addIntegerParameter("-outputformat",  0,  4, 0);
 
   m_pConfiguration -> addIntegerParameter("-windowstart", 0, 0x7fff, 0x3fbe);
   m_pConfiguration -> addIntegerParameter("-windowwidth", 0, 0x3fff, 0x20);
@@ -204,6 +204,9 @@ CMDPP32SCP::Initialize(CVMUSB& controller)
   list.addWrite16(base + MarkType,          initamod, marktype);
 
   list.addWrite16(base + TDCResolution,     initamod, tdcresolution);
+	if (outputformat == 3) {
+		throw string("3 is invalid value for outputformat!");
+	}
   list.addWrite16(base + OutputFormat,      initamod, outputformat);
 
   list.addWrite16(base + WindowStart,       initamod, windowstart);
@@ -541,6 +544,7 @@ CMDPP32SCP::printRegisters(CVMUSB& controller)
     if (data == 0)      cout << "(standard: time and amplitude)";
     else if (data == 1) cout << "(amplitude only)";
     else if (data == 2) cout << "(time only)";
+    else if (data == 4) cout << "(streaming readout mode)";
     else                cout << "(error)";
     cout << endl;
   }
