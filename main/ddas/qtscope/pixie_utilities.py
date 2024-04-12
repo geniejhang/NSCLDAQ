@@ -715,7 +715,7 @@ class RunUtilities:
         try: 
             retval = lib.CPixieRunUtilities_ReadModuleStats(self.obj, module)   
             if retval < 0:
-                raise RuntimeError("Reading statistics from Mod. {mod} failed with retval {retval}")    
+                raise RuntimeError(f"Reading statistics from Mod. {module} failed with retval {retval}")    
         except RuntimeError as e:
             self.logger.exception(f"Failed to read run statistics")
             print(e)    
@@ -839,7 +839,7 @@ class TraceUtilities:
                 self.obj, module, channel
             )            
             if retval < 0:
-                raise RuntimeError(f"Read trace from Mod. {module} Ch. {chanel} failed with retval {retval}")          
+                raise RuntimeError(f"Read trace from Mod. {module} Ch. {channel} failed with retval {retval}")          
         except RuntimeError as e:
             self.logger.exception(f"Failed to read ADC trace data")
             print(e)        

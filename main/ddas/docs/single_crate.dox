@@ -6,11 +6,11 @@
 
 @tableofcontents
 
-@attention This single-crate system setup guide is specific to DDAS systems running NSCLDAQ 12 and later, which has a handful of major features that which were not part of previous releases:
+@attention This single-crate system setup guide is specific to DDAS systems running FRIBDAQ 12 and later, which has a handful of major features that which were not part of previous releases:
 1. The module data readout and sorting processes are decoupled. As a consequence, readout program data sources must be configured in a slightly different manner.
-2. The DDAS codebase has been refactored into NSCLDAQ, there is no longer a broken-out DDAS installation in e.g. /usr/opt/ddas.
+2. The DDAS codebase has been refactored into FRIBDAQ, there is no need to source a DDAS setup script in e.g. /usr/opt/ddas.
 3. External clock readout has been absorbed into the main readout program. There is no longer a separate version of the DDAS readout for this purpose.
-4. As part of the transition from API 2 to API 4, XIA settings files are in in JSON format. Files with names like `crate_1.json` are the API 4 version of the binary settings files generally named `crate_1.set` in previous versions.
+4. As part of the transition from API 2 to API 4, XIA settings files are saved in JSON format. Files with names like crate_1.json are the API 4 version of the binary settings files generally named crate_1.set in previous versions.
 
 @section sec_singlecrate_intro Introduction
 @par
@@ -35,7 +35,7 @@ software components:
 - A PXI Crate. PXI is an extension to the compact PCI standard that supports precision timing.
 - One or more XIA digitizer cards.
 - An interface between an NSCL spdaq system and the PXI crate or a crate-resident single-board computer (SBC). These two options will be referred to as the data-collection computer.
-- A readout program that runs in the data-collection computer that reads data from the digitizer cards and places them into a <em>raw ringbuffer</em>. This readout program is the interface between the PXI crate and the NSCLDAQ system.
+- A readout program that runs in the data-collection computer that reads data from the digitizer cards and places them into a <em>raw ringbuffer</em>. This readout program is the interface between the PXI crate and the FRIBDAQ system.
 - A sorter program which reads data from a raw ringbuffer, maintains a master list of sorted hits, and outputs those hits into a <em>sorted ringbuffer</em> for event building.
 - An event builder. The event builder takes data from sorted ringbuffers, builds events that satisfy a coincidence interval using the DDAS timestamp and places those built events in an <em>output ring buffer</em>. Note that while in principle the event builder is not necessary for single-crate systems, using it for those systems maintains a common event format between single- and multi-crate systems.
 - A ReadoutShell instance that manages readout, sorting, event logging and event building.
@@ -49,7 +49,7 @@ The following figure shows a schematic representation of a DDAS hardware configu
 @par
 The data flow through such a system looks like:
 
-@image html single_crate/dataflow.png "Data flow through a DDAS system running NSCLDAQ 12. Note the separation of module data readout and sorting, which were previously part of a single process. This configuration enables much higher data readout speeds." height=800px
+@image html single_crate/dataflow.png "Data flow through a DDAS system running FRIBDAQ 12. Note the separation of module data readout and sorting, which were previously part of a single process. This configuration enables much higher data readout speeds." height=800px
 
 @par
 A couple of points are worth noting:
@@ -58,25 +58,25 @@ A couple of points are worth noting:
 - For multi-crate systems, the schematics can be expanded by adding additional crates to the hardware diagram and additional readout and sort paths feeding the event builder to the data flow diagram.
 - Adding additional digitizers to an already-configured system is (mostly) just a matter of editing the system configuration files.
 
-@section sec_singlecrate_setup Setting up NSCLDAQ to Run DDAS
+@section sec_singlecrate_setup Setting Up a Single-Crate System
 @par
-The DDAS software is installed as part of the NSCLDAQ software package. There may be several versions of NSCLDAQ installed concurrently on lab computers. In general these will be located under /usr/opt/daq on FRIB computer systems. Each NSCLDAQ installation has a version number MM.mm-eee where MM refers to the major version, mm to the minor version, and eee to an edit level e.g. 12.0-015 with major version 12, minor version 0, and edit level 15. Edit-level changes reflect minor defect fixes or enhancements, minor-version changes reflect more impactful bugfixes or enhancements. Major version changes are generally quite significant and may require significant rewrites of user code.
+The DDAS software is installed as part of the FRIBDAQ software package. There may be several versions of FRIBDAQ installed concurrently on lab computers. In general these will be located under /usr/opt/daq on FRIB computer systems. Each FRIBDAQ installation has a version number MM.mm-eee where MM refers to the major version, mm to the minor version, and eee to an edit level e.g. 12.0-015 with major version 12, minor version 0, and edit level 15. Edit-level changes reflect minor defect fixes or enhancements, minor-version changes reflect more impactful bugfixes or enhancements. Major version changes are generally quite significant and may require significant rewrites of user code.
 
 @par
-Each NSCLDAQ version's top-level directory includes a `daqsetup.bash` script which can be sourced to set the following environment variables:
-- `DAQROOT`- Points to the top-level NSCLDAQ installation directory (containing the `daqsetup.bash` script.
-- `DAQBIN` - Points to `$DAQROOT/bin`, the directory containing NSCLDAQ executables.
-- `DAQLIB` - Points to `$DAQROOT/lib`, the directory containing NSCLDAQ libraries which DDAS applications and user code may need to link against.
-- `DAQINC` - Points to `$DAQROOT/include`, the directory containing NSCLDAQ header files including those for DDAS.
+Each FRIBDAQ version's top-level directory includes a `daqsetup.bash` script which can be sourced to set the following environment variables:
+- `DAQROOT`- Points to the top-level FRIBDAQ installation directory (containing the `daqsetup.bash` script.
+- `DAQBIN` - Points to `$DAQROOT/bin`, the directory containing FRIBDAQ executables.
+- `DAQLIB` - Points to `$DAQROOT/lib`, the directory containing FRIBDAQ libraries which DDAS applications and user code may need to link against.
+- `DAQINC` - Points to `$DAQROOT/include`, the directory containing FRIBDAQ header files including those for DDAS.
 - `DAQSHARE` - Points to `$DAQROOT/share`, a directory containing documentation, program skeletons, and scripts.
 
-@subsection sec_singlecrate_plx A Quick Note On Loading the PLX Kernel Driver
+@subsection sec_singlecrate_plx A Brief Note On Loading the PLX Kernel Driver
 @par
 Users are no longer required to load the PLX kernel module by hand on each data-readout computer installed as part of your DDAS system. The kernel module is loaded automatically on system startup.
 
-@section sec_singlecrate_config Configuration Files Needed by NSCL DDAS
+@subsection sec_singlecrate_config Configuration Files Needed by NSCL DDAS
 @par
-Many of the DDAS software components require a set of configuration files to be in the current working directory. These configuration files describe the configuration of modules in a crate and point at a settings file containing the parameters used by the digital pulse-processing (DPP) algorithms for each module in use. By convention a directory subtree is used to hold the configuration files for each crate. The tree will look something like:
+Many of the DDAS software components require a set of configuration files to be in the current working directory. These configuration files describe the configuration of modules in a crate and point at a settings file containing the parameters used by the digital signal-processing (DSP) algorithms for each module in use. By convention a directory subtree is used to hold the configuration files for each crate. The tree will look something like:
 
 @verbatim
 home-directory
@@ -107,7 +107,7 @@ home-directory
 
 @par
 An example crate_1 directory which can be copied to your system can be found at $DAQSHARE/ddasreadout/crate_1. This example directory contains the necessary configuration files to run a DDAS system. The files are:
-- cfgPixie16.txt - Indicates where modules are installed in the crates and points to a parameter settings file containing their DPP settings. See the documentation for this file @ref cfgpixie16 "here".
+- cfgPixie16.txt - Indicates where modules are installed in the crates and points to a parameter settings file containing their DSP settings. See the documentation for this file @ref cfgpixie16 "here".
 - modevtlen.txt - Describes the number of 32-bit words in a hit for each module. See the documentation for this file @ref modevtlen "here".
 - crate_1.json - An XIA API 4 parameter settings file.
 
@@ -125,29 +125,29 @@ This part of the guide will discuss in detail how to setup a single-crate DDAS s
 1. Ensure that there is an SBC or fiber interface in slot 1 of the PXI crate (the most common case). If a fiber interface is used, the fiber must be connected to the interface card and a PCI bridge card on the data-collection computer. The data-collection computer must be connected to the DAQ network.
 2. Install a Pixie module configured as a clock master in slot 2 of your crate.
 3. Attach signals to the digitizer inputs. One of the nice things about digital data acquisition modules is that only minimal signal conditioning is required and the modules themselves handle triggering. For this tutorial we're going to take singles data. The modules actually support very sophisticated internal triggering modes as well as cross-module trigger processing via a front-panel trigger bus.
-4. Configure your DPP settings.
-
-@warning SBCs, fiber cards and modules are **NOT** hot-swappable. **DO NOT** connect or disconnect SBCs, fiber cards or modules from the crate while it is powered on. Before installing or replacing any DDAS hardware, ensure that the crate is powered off.
+4. Configure your DSP settings.
 
 @par
 Step 1 is relatively straightforward and need not be discussed further. Steps 2-4 are more complex and will be covered in detail in the subsequent sections.
+
+@warning SBCs, fiber cards and modules are **NOT** hot-swappable. **DO NOT** connect or disconnect SBCs, fiber cards or modules from the crate while it is powered on. Before installing or replacing any DDAS hardware, ensure that the crate is powered off.
 
 @subsection sec_singlecrate_clock Configuring a Clock Master Module
 @par
 When using several DDAS cards it is important to synchronize the digitizer clocks between them. This is done by setting the jumper block JP01 appropriately. The jumper block is a set of pins located on the board near the backplane connectors, shown on the figure below in the red box. Configure the connections between these pins with jumpers. In case your setup consists of a single module, be sure to configure the jumpers to match the top diagram for the PXI clock master.
 
-@image html single_crate/board_and_jumpers.png "[Left] A Pixie-16 board with the location of the JP01 jumper block shown in the red box. [Right] Schematic of the  jumper settings for distributing the clock across the PXI backplane for a single-crate system. Top: PXI clock master jumper settings (slot 2). Bottom: PXI clock recipient jumper settings (slots 3-14)." height=400px
+@image html single_crate/board_and_jumpers.png "[Left] A Pixie-16 board with the location of the JP01 jumper block shown in the red box. [Right] Schematic of the  jumper settings for distributing the clock across the PXI backplane for a single-crate system. Top: PXI clock master jumper settings (slot 2). Bottom: PXI clock recipient jumper settings (slots 3-14). " height=400px
 
 @par
 In this configuration your clock-master module must be installed in slot 2. If more modules are added to the system, their jumper configuration should match the configuration shown on the bottom right of the above figure.
 
 @subsection sec_singlecrate_testsignal Configuring an Input Signal
 @par
-A test signal from a pulser is used for this tutorial. Setup the pulser to output pulses that rise quickly but have an approximately 50 &mu;s decay time. The test pulse should be negative (-) polarity, have an input voltage of less than 1 V and a frequency less than 5 kHz.
+A test signal from a pulser is used for this tutorial. Setup the pulser to output pulses that rise quickly but have an approximately 50 &mu;s decay time. The test pulse should be negative (-) polarity, have an input voltage of less than 1 V and a frequency less than 5 kHz. Connect the test signal to channel 0 of the digitizer 
 
 @subsection sec_singlecrate_configfiles Example configuration files
 @par
-The setup described in this tutorial uses a single digitizer installed in slot 2 of the PXI crate. Our DPP settings are stored in the file crate_1.json in a readout directory on our development system. Our cfgPixie16.txt file looks like:
+The setup described in this tutorial uses a single digitizer installed in slot 2 of the PXI crate. Our DSP settings are stored in the file crate_1.json in a readout directory on our development system. Our cfgPixie16.txt file looks like:
 
 @verbatim
 1  # crateID
@@ -159,9 +159,9 @@ The setup described in this tutorial uses a single digitizer installed in slot 2
 @par
 The modevtlen.txt file must consist of (at least) a single line specifying that there are 4 expected data words (no optional settings are enabled).
 
-@subsection sec_singlecrate_setdpp Configuring DPP Settings Using QtScope
+@subsection sec_singlecrate_setdpp Configuring DSP Settings Using QtScope
 @par
-Once you have a correctly configured working directory, it is time to program the module with appropriate settings for the test signal. The QtScope program is used to view input waveforms and set DPP parameters. QtScope is installed as part of the NSCLDAQ software package and should be run by:
+Once you have a correctly configured working directory, it is time to program the module with appropriate settings for the test signal. The QtScope program is used to view input waveforms and set DSP parameters. QtScope is installed as part of the FRIBDAQ software package and should be run by:
 1. `source /usr/opt/daq/12.1-xiaapi4/daqsetup.bash`.
 2. `$DAQBIN/qtscope`
 
@@ -191,17 +191,62 @@ QtScope system configuration complete!
 @par
 If the boot fails, detailed error messages are written to Pixie16Msg.log and qtscope.log. Looking at the information contained in these log files should provide some context for the boot error and may point to a solution.
 
+@subsubsection sec_singlecrate_conditioning Analog Signal Conditioning
 @par
-The first thing we must do is condition the ADC for our input signal. First, lets look at a trace. Click the **[Read trace]** button until you see a full waveform trace. Here is an example:
+The first thing we must do is setup the ADC for our input signal. First, lets look at a trace. Click the **[Read trace]** button until you see a full waveform trace. Here is an example trace:
 
-@image html single_crate/qtscope_badpol.PNG "A raw pulser trace captured by QtScope"
-
-@par
-No matter the input signal polarity, the QtScope canvas should display a positive-polarity signal. Two things immidiately jump out about the above example:
-1. The displayed signal polarity is wrong. The negative-polarity signal is assumed to be positive by the Pixie DSP FPGA.
-2. The signal is clipped at 0.
+@image html single_crate/qtscope_badpol.PNG "A raw pulser trace captured by QtScope. The DSP settings have not been properly configured for the test pulse, see the text for details."
 
 @par
+No matter the input signal polarity, the QtScope canvas should display a positive-polarity signal. Knowing that, two things immidiately jump out about the above example:
+1. The displayed signal polarity is wrong. This is an indication that a negative-polarity signal is assumed to be positive by the Pixie DSP FPGA.
+2. The signal is clipped. That is, the pulse is out of range of the ADC, in this case, extending below 0.
 
+@par
+In order to correct these issues we need to configure some channel DSP settings on the module. Clicking on the **[Channel DSP]** button will open a popup menu that looks like:
+
+@image html analog_singnal_start.PNG "The QtScope analog signal conditioning tab." width=600px
+
+@par
+Our pulser test signal is plugged in to channel 0. Using the combo box in the polarity column, select negative (-) polarity for channel 0. Click the **[Apply]** button at the bottom of the channel DSP window to program the module with the new settings. Our analog signal tab now looks like:
+
+@image html analog_singnal_goodpol.PNG "The QtScope analog signal conditioning tab with the polarity on channel 0 set correctly for our negative-polarity test signal." width=600px
+
+@par
+If we acquire another trace with these settings, we see:
+
+@image html qtscope_tracesat.PNG "A raw pulser trace captured by QtScope. The pulse polarity has been set correctly (the pulse is displayed with positve polarity), but the waveform is still clipped and overflows the ADC." width=1200px
+
+@par
+While the signal polarity has been configured correctly, the trace is still clipped, this time at the top of the ADC range. The DC offset must be adjusted such that the digitized signal falls within the voltage range of the ADC. Fortunately, the Pixie modules have a way of determining this offset automatically. Click the **[Channel DSP]** button to again bring up the channel DSP manager popup window. Clicking the **[Adjust offsets]** button on the AnalogSignal tab will prompt the module to automatically determine good DC offset values. By default, the DC offset will be automatically set such that the signal baseline sits at approximately 10% of the full ADC range. Do not forget to click the **[Apply]** button after adjusting the offsets!
+
+@image html analog_singnal_conditioned.PNG "The QtScope analog signal conditioning tab after automatic adjustment of the DC offset values." width=600px
+
+@par
+Reading another waveform gives the expected signal:
+
+@image html qtscope_goodtrace.PNG "A raw pulser trace captured by QtScope with correctly configured polarity and DC offset. The full pulse is within the voltage range of the ADC." width=1200px
+
+@subsubsection sec_singlecrate_trigger Configuring the Trigger Filter
+@par
+Next we will configure the trigger settings for our test signal. Open the channel DSP manager window and select the TriggerFilter tab. This tab contains the DSP settings which parameterize the trapezoidal filter used to construct a leading-edge trigger for the input signal. An in-depth discussion of trapezoidal filters and other pulse-processing methods are beyond the scope of this guide; for more information refer to @ref sec_singlecrate_reading.
+
+@par
+Our test signal has a consistent pulse shape, fixed amplitdue and low baseline noise. We will use a triangular filter with a risetime of 100 ns and a gap of 0 ns. The triangular filter is simply a special case of a trapezoidal filter with a gap equal to 0. The value of the trigger threshold must be set such that we can trigger on the input test pulse; because we have a fixed-height pulse, there is not much to do here. In a production setup, the trigger threshold should typically be set as low as possible without triggering on noise.
+
+@subsubsection sec_singlecrate_enefilter Configuring the Energy Filter
+
+@subsection sec_singlecrate_readout Running ddasReadout
+
+@subsection sec_singlecrate_readoutgui Running ddasReadout Using the ReadoutGUI
+
+@subsection sec_singlecrate_cutiepy Analyzing Data With CutiePy
+
+@section sec_singlecrate_conclusion Conclusions
+@par
+This concludes the single-crate setup tutorial. You should now have a good understanding of how to perform the basic steps necessary to configure a simple DDAS system to take data. The modules have many features which are not discussed in detail in this section, including a digitial CFD for precision timing, the ability to run complex coincidence triggers, or take additional data such as QDC sums or, more commonly, ADC trace data. Refer to the @ref qtscope "QtScope Manual" for more information.
+
+@section sec_singlecrate_reading Further Reading
+- G.F. Knoll, "Radiation Detection and Measurement," (John Wiley and Sons, Hoboken, NJ, USA, 2010), Fourth Edition. Specifically Chapters 16 (Pulse Processing) and 17 (Pulse Shaping, Counting, and Timing).
 
 */

@@ -152,7 +152,7 @@ class Plot(QWidget):
             Subplot index in [1, nrows*ncols] (optional).
         """
         self.raw_data[idx-1] = data
-        self.bin_width = 0 # Trace data isn't binned.
+        self.bin_width = 1 # Trace data isn't binned.
         ax = self.figure.add_subplot(nrows, ncols, idx)
         ax.plot(self.raw_data[idx-1], drawstyle="steps-post")
         ax.set_xlabel("Sample number (60 ns/sample)")

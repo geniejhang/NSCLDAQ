@@ -170,16 +170,16 @@ CPixieRunUtilities::ReadHistogram(int module, int channel)
   
     int retval;
     try {
-	if (!m_useGenerator) {
-	    retval = Pixie16ReadHistogramFromModule(
-		m_histogram.data(), MAX_HISTOGRAM_LENGTH, module, channel
-		);
-	} else {
+	if (m_useGenerator) {
 	    CDataGenerator gen;
 	    retval = gen.GetHistogramData(
 		m_genHistograms[channel].data(), MAX_HISTOGRAM_LENGTH
 		);
 	    m_histogram = m_genHistograms[channel];
+	} else {
+	    retval = Pixie16ReadHistogramFromModule(
+		m_histogram.data(), MAX_HISTOGRAM_LENGTH, module, channel
+		);
 	}
 
 	if (retval < 0) {
@@ -301,7 +301,7 @@ CPixieRunUtilities::ReadModuleStats(int module)
 	// Fetch the proper stats block size:
 	std::vector<unsigned int> statistics(Pixie16GetStatisticsSize(), 0);
 	
-  	int retval = Pixie16ReadStatisticsFromModule(statistics.data(), module);
+  	retval = Pixie16ReadStatisticsFromModule(statistics.data(), module);
 	
 	if (retval < 0) {
 	    std::stringstream msg;
@@ -360,14 +360,15 @@ CPixieRunUtilities::UpdateBaselineHistograms(int module)
 	std::vector<double> timestamps(MAX_NUM_BASELINES, 0);    
 	// Allocate data structure for baselines and grab them or use the
 	// data generator to get data for testing:    
-	if (!m_useGenerator) {
+	if (m_useGenerator) {
+	    CDataGenerator gen;
+	    retval = gen.GetBaselineData(baselines.data(), MAX_NUM_BASELINES);
+     
+	} else {
 	    retval = Pixie16ReadSglChanBaselines(
 		baselines.data(), timestamps.data(), MAX_NUM_BASELINES,
 		module, i
-		);      
-	} else {
-	    CDataGenerator gen;
-	    retval = gen.GetBaselineData(baselines.data(), MAX_NUM_BASELINES);
+		); 
 	}
   
 	if (retval < 0) {
