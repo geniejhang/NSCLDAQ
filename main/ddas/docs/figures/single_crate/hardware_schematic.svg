@@ -28,14 +28,14 @@
      inkscape:document-units="mm"
      showgrid="true"
      inkscape:zoom="0.74564394"
-     inkscape:cx="59.009398"
-     inkscape:cy="461.3462"
-     inkscape:window-width="1920"
-     inkscape:window-height="1017"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="layer1">
+     inkscape:cx="-1.3411227"
+     inkscape:cy="464.69901"
+     inkscape:window-width="1486"
+     inkscape:window-height="1040"
+     inkscape:window-x="235"
+     inkscape:window-y="24"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g1315">
     <inkscape:grid
        type="xygrid"
        id="grid197"
@@ -116,7 +116,7 @@
            style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1040);display:inline;fill:#000000;fill-opacity:1;stroke:none"><tspan
              x="460"
              y="84.597285"
-             id="tspan2113">PXI crate</tspan></text>
+             id="tspan2813">PXI crate</tspan></text>
         <text
            xml:space="preserve"
            transform="matrix(0,-0.26458333,0.26458333,0,-53.562523,113.98787)"
@@ -124,10 +124,10 @@
            style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1096);display:inline;fill:#000000;fill-opacity:1;stroke:none"><tspan
              x="130"
              y="284.59729"
-             id="tspan2115">Single-board </tspan><tspan
+             id="tspan2815">Single-board </tspan><tspan
              x="130"
              y="304.59729"
-             id="tspan2117">computer</tspan></text>
+             id="tspan2817">computer</tspan></text>
         <text
            xml:space="preserve"
            transform="matrix(0,-0.26458333,0.26458333,0,-69.555345,156.32741)"
@@ -135,10 +135,10 @@
            style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1102);display:inline;fill:#000000;fill-opacity:1;stroke:none"><tspan
              x="290"
              y="394.59729"
-             id="tspan2119">Pixie </tspan><tspan
+             id="tspan2819">Pixie </tspan><tspan
              x="290"
              y="414.59729"
-             id="tspan2121">digitizer</tspan></text>
+             id="tspan2821">digitizer</tspan></text>
       </g>
       <path
          style="fill:none;stroke:#000000;stroke-width:0.658623;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
@@ -168,13 +168,13 @@
          transform="matrix(1.2446414,0,0,1.2446414,-6.0018393,2.0613502)"><tspan
            x="62.177082"
            y="68.791664"
-           id="tspan2123">Analysis/</tspan><tspan
+           id="tspan2823">Analysis/</tspan><tspan
            x="62.177082"
            y="74.083325"
-           id="tspan2125">control </tspan><tspan
+           id="tspan2825">control </tspan><tspan
            x="62.177082"
            y="79.37499"
-           id="tspan2127">computer</tspan></text>
+           id="tspan2827">computer</tspan></text>
       <text
          xml:space="preserve"
          style="font-style:normal;font-weight:normal;font-size:5.26898px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.329311"
@@ -185,7 +185,7 @@
            id="tspan1296"
            style="font-size:5.26898px;stroke-width:0.329311"
            x="32.322601"
-           y="61.262791">NSCL DAQ network</tspan></text>
+           y="61.262791">FRIB DAQ network</tspan></text>
     </g>
   </g>
 </svg>

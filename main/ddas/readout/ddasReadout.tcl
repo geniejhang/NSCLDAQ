@@ -121,8 +121,8 @@ set options {
     {window.arg          10 "Sorting window in seconds."}
     {port.arg        "" "Enable DDASReadout TclServer functionality on specified port"}
     {init-script.arg "" "DDASReadout initialization script run in the main interpreter"}
-    {log.arg     "" "DDASReadout log file"}
-    {debug.arg 0 "DDASReadout debug level [0-2]: higher numbers set more debugging output"}
+    {log.arg   "" "DDASReadout log file"}
+    {debug.arg  0 "DDASReadout debug level [0-2]: higher numbers set more debugging output"}
 }
 
 set mandatory [list readouthost sortring sorthost cratedir]

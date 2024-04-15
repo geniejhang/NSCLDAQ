@@ -6,11 +6,11 @@
 
 @tableofcontents
 
-@attention This single-crate system setup guide is specific to DDAS systems running FRIBDAQ 12 and later, which has a handful of major features that which were not part of previous releases:
+@attention This single-crate system setup guide is specific to DDAS systems running NSCLDAQ 12 and later, which has a handful of major features that which were not part of previous releases:
 1. The module data readout and sorting processes are decoupled. As a consequence, readout program data sources must be configured in a slightly different manner.
-2. The DDAS codebase has been refactored into FRIBDAQ, there is no need to source a DDAS setup script in e.g. /usr/opt/ddas.
+2. The DDAS codebase has been refactored into NSCLDAQ, there is no need to source a DDAS setup script in e.g. /usr/opt/ddas.
 3. External clock readout has been absorbed into the main readout program. There is no longer a separate version of the DDAS readout for this purpose.
-4. As part of the transition from API 2 to API 4, XIA settings files are saved in JSON format. Files with names like crate_1.json are the API 4 version of the binary settings files generally named crate_1.set in previous versions.
+4. As of XIA API major version 3, settings files are saved in JSON format. Files with names like crate_1.json are the JSON version of the binary settings files generally named crate_1.set for previous XIA API releases.
 
 @section sec_singlecrate_intro Introduction
 @par
@@ -35,9 +35,9 @@ software components:
 - A PXI Crate. PXI is an extension to the compact PCI standard that supports precision timing.
 - One or more XIA digitizer cards.
 - An interface between an NSCL spdaq system and the PXI crate or a crate-resident single-board computer (SBC). These two options will be referred to as the data-collection computer.
-- A readout program that runs in the data-collection computer that reads data from the digitizer cards and places them into a <em>raw ringbuffer</em>. This readout program is the interface between the PXI crate and the FRIBDAQ system.
+- A readout program that runs in the data-collection computer that reads data from the digitizer cards and places them into a <em>raw ringbuffer</em>. This readout program is the interface between the PXI crate and the NSCLDAQ software.
 - A sorter program which reads data from a raw ringbuffer, maintains a master list of sorted hits, and outputs those hits into a <em>sorted ringbuffer</em> for event building.
-- An event builder. The event builder takes data from sorted ringbuffers, builds events that satisfy a coincidence interval using the DDAS timestamp and places those built events in an <em>output ring buffer</em>. Note that while in principle the event builder is not necessary for single-crate systems, using it for those systems maintains a common event format between single- and multi-crate systems.
+- An event builder. The event builder takes data from sorted ringbuffers, builds events that satisfy a coincidence interval using the DDAS timestamp and places those built events in an <em>output ringbuffer</em>. Note that while in principle the event builder is not necessary for single-crate systems, using it for those systems maintains a common event format between single- and multi-crate systems.
 - A ReadoutShell instance that manages readout, sorting, event logging and event building.
 - A SpecTcl tailored to decode DDAS data and analyze it in an experiment-specific manner.
 
@@ -49,7 +49,7 @@ The following figure shows a schematic representation of a DDAS hardware configu
 @par
 The data flow through such a system looks like:
 
-@image html single_crate/dataflow.png "Data flow through a DDAS system running FRIBDAQ 12. Note the separation of module data readout and sorting, which were previously part of a single process. This configuration enables much higher data readout speeds." height=800px
+@image html single_crate/dataflow.png "Data flow through a DDAS system running NSCLDAQ 12. Note the separation of module data readout and sorting, which were previously part of a single process. This configuration enables much higher data readout speeds." height=800px
 
 @par
 A couple of points are worth noting:
@@ -60,17 +60,17 @@ A couple of points are worth noting:
 
 @section sec_singlecrate_setup Setting Up a Single-Crate System
 @par
-The DDAS software is installed as part of the FRIBDAQ software package. There may be several versions of FRIBDAQ installed concurrently on lab computers. In general these will be located under /usr/opt/daq on FRIB computer systems. Each FRIBDAQ installation has a version number MM.mm-eee where MM refers to the major version, mm to the minor version, and eee to an edit level e.g. 12.0-015 with major version 12, minor version 0, and edit level 15. Edit-level changes reflect minor defect fixes or enhancements, minor-version changes reflect more impactful bugfixes or enhancements. Major version changes are generally quite significant and may require significant rewrites of user code.
+The DDAS software is installed as part of the NSCLDAQ software package. There may be several versions of NSCLDAQ installed concurrently on lab computers. In general these will be located under /usr/opt/daq on FRIB computer systems. Each NSCLDAQ installation has a version number MM.mm-eee where MM refers to the major version, mm to the minor version, and eee to an edit level e.g. 12.0-017 with major version 12, minor version 0, and edit level 15. Edit-level changes reflect minor defect fixes or enhancements, minor-version changes reflect more impactful bugfixes or enhancements. Major version changes are generally quite significant and may require significant rewrites of user code.
 
 @par
-Each FRIBDAQ version's top-level directory includes a `daqsetup.bash` script which can be sourced to set the following environment variables:
-- `DAQROOT`- Points to the top-level FRIBDAQ installation directory (containing the `daqsetup.bash` script.
-- `DAQBIN` - Points to `$DAQROOT/bin`, the directory containing FRIBDAQ executables.
-- `DAQLIB` - Points to `$DAQROOT/lib`, the directory containing FRIBDAQ libraries which DDAS applications and user code may need to link against.
-- `DAQINC` - Points to `$DAQROOT/include`, the directory containing FRIBDAQ header files including those for DDAS.
-- `DAQSHARE` - Points to `$DAQROOT/share`, a directory containing documentation, program skeletons, and scripts.
+Each NSCLDAQ version's top-level directory includes a `daqsetup.bash` script which can be sourced to set the following environment variables:
+- `DAQROOT`- Points to the top-level NSCLDAQ installation directory (containing the `daqsetup.bash` script.
+- `DAQBIN` - Points to `$DAQROOT`/bin, the directory containing NSCLDAQ executables.
+- `DAQLIB` - Points to `$DAQROOT`/lib, the directory containing NSCLDAQ libraries which DDAS applications and user code may need to link against.
+- `DAQINC` - Points to `$DAQROOT`/include, the directory containing NSCLDAQ header files including those for DDAS.
+- `DAQSHARE` - Points to `$DAQROOT`/share, a directory containing documentation, program skeletons, and scripts.
 
-@subsection sec_singlecrate_plx A Brief Note On Loading the PLX Kernel Driver
+@subsection sec_singlecrate_plx Loading the PLX Kernel Driver
 @par
 Users are no longer required to load the PLX kernel module by hand on each data-readout computer installed as part of your DDAS system. The kernel module is loaded automatically on system startup.
 
@@ -106,7 +106,7 @@ home-directory
 @endverbatim
 
 @par
-An example crate_1 directory which can be copied to your system can be found at $DAQSHARE/ddasreadout/crate_1. This example directory contains the necessary configuration files to run a DDAS system. The files are:
+An example crate_1 directory which can be copied to your system can be found at `$DAQSHARE`/ddasreadout/crate_1. This example directory contains the necessary configuration files to run a DDAS system. The files are:
 - cfgPixie16.txt - Indicates where modules are installed in the crates and points to a parameter settings file containing their DSP settings. See the documentation for this file @ref cfgpixie16 "here".
 - modevtlen.txt - Describes the number of 32-bit words in a hit for each module. See the documentation for this file @ref modevtlen "here".
 - crate_1.json - An XIA API 4 parameter settings file.
@@ -136,7 +136,7 @@ Step 1 is relatively straightforward and need not be discussed further. Steps 2-
 @par
 When using several DDAS cards it is important to synchronize the digitizer clocks between them. This is done by setting the jumper block JP01 appropriately. The jumper block is a set of pins located on the board near the backplane connectors, shown on the figure below in the red box. Configure the connections between these pins with jumpers. In case your setup consists of a single module, be sure to configure the jumpers to match the top diagram for the PXI clock master.
 
-@image html single_crate/board_and_jumpers.png "[Left] A Pixie-16 board with the location of the JP01 jumper block shown in the red box. [Right] Schematic of the  jumper settings for distributing the clock across the PXI backplane for a single-crate system. Top: PXI clock master jumper settings (slot 2). Bottom: PXI clock recipient jumper settings (slots 3-14). " height=400px
+@image html single_crate/board_and_jumpers.png "[Left] A Pixie-16 board with the location of the JP01 jumper block shown in the red box. [Right] Schematic of the  jumper settings for distributing the clock across the PXI backplane for a single-crate system. Top: PXI clock master jumper settings (slot 2). Bottom: PXI clock recipient jumper settings (slots 3-14). Figures reprinted from 'Pixie-16 User Manual', Version 3.06, XIA LLC." height=400px
 
 @par
 In this configuration your clock-master module must be installed in slot 2. If more modules are added to the system, their jumper configuration should match the configuration shown on the bottom right of the above figure.
@@ -161,11 +161,11 @@ The modevtlen.txt file must consist of (at least) a single line specifying that 
 
 @subsection sec_singlecrate_setdpp Configuring DSP Settings Using QtScope
 @par
-Once you have a correctly configured working directory, it is time to program the module with appropriate settings for the test signal. The QtScope program is used to view input waveforms and set DSP parameters. QtScope is installed as part of the FRIBDAQ software package and should be run by:
+Once you have a correctly configured working directory, it is time to program the module with appropriate settings for the test signal. The QtScope program is used to view input waveforms and set DSP parameters. QtScope is installed as part of the NSCLDAQ software package and should be run by:
 1. `source /usr/opt/daq/12.1-xiaapi4/daqsetup.bash`.
 2. `$DAQBIN/qtscope`
 
-@image html qtscope_unbooted.PNG "The QtScope GUI state on startup. Note that most GUI elements besides [Boot system], [About], and [Exit] on the system toolbar are disabled." width=1200px
+@image html single_crate/qtscope_unbooted.PNG "The QtScope GUI state on startup. Note that most GUI elements besides [Boot system], [About], and [Exit] on the system toolbar are disabled." width=1200px
 
 @par
 The QtScope GUI will launch. See the @ref qtscope "QtScope documentation" for more details, only the basics are covered in this guide. Most features of the GUI are inaccessible (greyed out) until the modules have been booted. To boot the modules, click the **[Boot system]** button. QtScope will print some information on the terminal where it was launched. A successful boot will look something like:
@@ -232,11 +232,92 @@ Reading another waveform gives the expected signal:
 Next we will configure the trigger settings for our test signal. Open the channel DSP manager window and select the TriggerFilter tab. This tab contains the DSP settings which parameterize the trapezoidal filter used to construct a leading-edge trigger for the input signal. An in-depth discussion of trapezoidal filters and other pulse-processing methods are beyond the scope of this guide; for more information refer to @ref sec_singlecrate_reading.
 
 @par
-Our test signal has a consistent pulse shape, fixed amplitdue and low baseline noise. We will use a triangular filter with a risetime of 100 ns and a gap of 0 ns. The triangular filter is simply a special case of a trapezoidal filter with a gap equal to 0. The value of the trigger threshold must be set such that we can trigger on the input test pulse; because we have a fixed-height pulse, there is not much to do here. In a production setup, the trigger threshold should typically be set as low as possible without triggering on noise.
+Our test signal has a fixed amplitude and pulse shape and very little noise. Note that in general only some (or none!) of these things may be true. We will use a triangular filter with a risetime of 100 ns and a gap of 0 ns. The triangular filter is simply a special case of a trapezoidal filter with a gap equal to 0. The value of the trigger threshold must be set such that we can trigger on the input test pulse; because we have a fixed-height pulse, there is not much to do here: We set the trigger to have a risetime of 100 ns, gap of 0 ns, and a threshold of 50. Once the settings are applied, note that the channel DSP GUI reports a trigger risetime of 104 ns: the filter parameter values must be an integer number of FPGA clock cycles and are automatically rounded to a valid value if they are not. Because the 250 MSPS modules use a 125 MHz FPGA, the filter lengths must be an integer multiple of 8 ns.
 
-@subsubsection sec_singlecrate_enefilter Configuring the Energy Filter
+@image html trigger_filter_settings.PNG "The trigger filter settings for our test pulse. A triangular filter (gap = 0 ns) is used. Note that the risetime and gap of the filter must be integer multiples of the signal-processing FPGA clock cycyle which is equal to 10 ns for 100 MSPS and 500 MSPS modules and 8 ns for 250 MSPS modules." width=600px
 
-@subsection sec_singlecrate_readout Running ddasReadout
+@note In a production setup, the trigger threshold should typically be set as low as possible without triggering on noise and is detector- and environment-specific. 
+
+@subsubsection sec_singlecrate_enefilter Configuring the Energy Filter and Pole-Zero Correction
+@par
+Next we will configure the settings necessary to generate a good energy spectrum from our test pulse. We should expect to see a high-resolution Gaussian energy response without any background. Make sure that the Channel Selection Box is set to display results from the channel the test signal is plugged into and that the "Read all" option is disabled. Start a histogram run by ensuring that "Energy hist." is displayed in the drop-down menu in the Run Control Box of the Acquisition Toolbar and clicking **[Beigin run]**. You should see the text
+
+@verbatim
+Beginning histogram run in Mod. 0
+@endverbatim
+
+@par
+appear in the terminal window you used to launch QtScope. Click the **[Read data]** button a few times to read data into the histogram. If the DSP are set improperly, you might see the following:
+
+@image html energy_bad.PNG "An energy spectrum for our test pulse acquired with bad energy DSP settings. The response is not Gaussian and is much broader than one would expect from a pulser signal." width=1200px
+
+@par
+Click the **[End run]** button to stop taking data. When the run is ended, an end-of-run message and run statistics are printed to the terminal where QtScope is running:
+
+@verbatim
+Ended histogram run in Mod. 0
+Module 0 channel 0 input 1503.21 output 1503.21 livetime 48.5719 runtime 48.5719
+Module 0 channel 1 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 2 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 3 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 4 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 5 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 6 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 7 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 8 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 9 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 10 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 11 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 12 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 13 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 14 input 0 output 0 livetime 48.5719 runtime 48.5719
+Module 0 channel 15 input 0 output 0 livetime 48.5719 runtime 48.5719
+@endverbatim
+
+@par
+where the input and output count rates give the rates of seen and accepted triggers (in triggers per second). The livetime and realtime count the amount of time (in seconds) the system was live and the total length of the run. System deadtime is calculable from these values: deadtime = (1 - livetime)/realtime.
+
+@par
+The energy response for our test signal is clearly non-Gaussian and has a resolution of approximately 1.8% FWHM. This is an indication that the DSP settings which govern the energy response are not set correctly. Four DSP parameters govern the energy response: the energy filter risetime, gap, and filter range which parameterize the trapezoidal filter used to determine the energy, and the tau parameter which sets the pole-zero correction for the filter output.
+
+@par
+The filter range parameter controls how many samples are averaged together prior to the energy filtering logic. In general this value should be set to the smallest value which can accomodate the filter length you want to use. The energy filter risetime and gap again parameterize the trapezoidal filter. The gap, which cannot be 0 for the energy filter, should be set to a value longer than the longest-expected risetime from your input signal. Optimizing the risetime depends on the particular properties of the signal, expected rate, desired resolution, etc., which depend on your particular system. The tau parameter should be set to the decay time constant of the input signal (for example, from a preamplifier).
+
+@par
+For our test signal, a risetime of 600 ns, gap of 256 ns and tau of 50 &mu;s are reasonable initial guesses based on how we configured the signal from the pulser:
+
+@image html energy_settings.png "The EnergyFilter [left] and Tau [right] DSP settings used for our test signal in channel 0." width=1200px
+
+@par
+Once applied, a new energy spectrum is acquired:
+
+@image html energy_good.PNG "An energy spectrum for our test pulse acquired with good energy DSP settings. Note the Gaussian-like signal shape and improved energy resolution compared to the previous settings." width=1200px
+
+@par
+The peak more closely resembles the expected Gaussian shape, and the energy resolution is improved to approximately 0.2% FWHM. Further optimizations to the resolution and signal shape may be possible by varying the aforementioned parameters; this manner of detailed optmization is left as an exercise for the reader.
+
+@subsubsection sec_singlecrate_save Save Your Updated Settings
+@par
+Once your test channel DSP is set to your satisfaction, save your settings by clicking the **[Save settings]** button. Enter a file name and click the "Save" button. Make sure to update your cfgPixie16.txt file so that it points to your updated settings file if needed!
+
+@subsection sec_singlecrate_readout Taking Data With ddasReadout
+@par
+Now that you have a good settings file, you can take data using a readout program. In this section we will:
+- Run the `ddasReadout` program, the readout driver for DDAS systems,
+- Run the NSCLDAQ `dumper` program to look at raw event data,
+- Take a bit of data and describe its format.
+@par
+Full documentation for the `ddasReadout` program is available @ref readout "here".
+
+@par
+The DDAS readout program does not need to be modified by you. It uses a set of configuration files that are expected to live in the current working directory when readout is run. These files were discussed in @ref sec_singlecrate_config. In the previous step you should have generated a new settings file and edited your cfgPixie16.txt file if necessary. The modevtlen.txt file must be edited to reflect the size of the events we expect coming from each module. We are using only a single module and not taking waveforms from that module. Since the modevtlen.txt file format is simply the size of an event, in 32-bit units, from each digitizer's channels, one digitizer per line, in the same order as the cfgPixie16.txt file, the contents of this file should be:
+
+@verbatim
+4
+@endverbatim
+
+@par
+which is the default Pixie channel data length in 32-bit words.
 
 @subsection sec_singlecrate_readoutgui Running ddasReadout Using the ReadoutGUI
 
