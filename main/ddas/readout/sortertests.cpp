@@ -104,7 +104,7 @@ void sortertest::hitout()
     ZeroCopyHit* pHit = m_pTestObject->allocateHit();
     auto pBuf = m_pTestObject->m_pArena->allocate(128);
     uint8_t* p = (uint8_t*)(*pBuf);
-    for (int i =0; i < 128; i++) { *p++ = i; }
+    for (int i = 0; i < 128; i++) { *p++ = i; }
   
     pHit->setHit(
 	128/sizeof(uint32_t), pBuf->s_pData, pBuf, m_pTestObject->m_pArena

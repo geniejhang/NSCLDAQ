@@ -178,7 +178,7 @@ namespace DAQ {
 	     * For the 100 MSPS modules:
 	     *
 	     * \f[\text{time} = 10\times((\text{timehigh} << 32) 
-	     * + \text{timelow})\f]
+	     * + \text{timelow} + \text{timecfd}/2^{15})\f]
 	     *  
 	     * For the 250 MSPS modules:
 	     *

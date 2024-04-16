@@ -42,6 +42,7 @@ Finally, note that DDASReadout::ZeroCopyHit is derived from DDASReadout::RawChan
 Let's take a high-level look at how data readout using ddasReadout operates and then drill down into how the pieces it uses function.
 
 @subsection sec_rdo_ddasreadout DDASReadout: Read Data From Pixie Modules
+@par
 Reading data from a module requires a call to DDASReadout's `CMyEventSegment::read()` function. This call can happen for two reasons:
 1. It asked to be called because, after emitting a hit, it has more hits to emit.
 2. CMyTrigger indicated that at least one module had data in the FIFO that exceeded the FIFO threshold.
