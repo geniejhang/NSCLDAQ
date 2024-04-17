@@ -26,7 +26,7 @@ DDAS is supported as part of the larger FRIBDAQ software suite. Further informat
 @par
 A number of tutorials exist to assist users in setting up, configuring, and taking and analyzing data coming from DDAS systems. They can be found by clicking on the User Guides button at the top of the page. Some commonly used tutorials are:
 - @ref single_crate "Single-crate system setup guide"
-- Multi-crate system setup guide
+- @ref multi_crate "Multi-crate system setup guide"
 - Analyzing DDAS data in SpecTcl
 - @ref ddasdumper "Convert DDAS data to ROOT format"
 - How to write a help ticket

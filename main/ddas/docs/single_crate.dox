@@ -44,12 +44,12 @@ software components:
 @par
 The following figure shows a schematic representation of a DDAS hardware configuration using one crate:
 
-@image html single_crate/hardware_schematic.png "A schematic DDAS hardware configuration. A PXI crate with an SBC used as the data-collection computer and a single Pixie module is connected via the NSCL DAQ network to an analysis computer." height=400px
+@image html hardware_schematic_sc.png "A schematic DDAS hardware configuration. A PXI crate with an SBC used as the data-collection computer and a single Pixie module is connected via the FRIB DAQ network to an analysis computer." height=400px
 
 @par
 The data flow through such a system looks like:
 
-@image html single_crate/dataflow.png "Data flow through a DDAS system running NSCLDAQ 12. Note the separation of module data readout and sorting, which were previously part of a single process. This configuration enables much higher data readout speeds." height=600px
+@image html dataflow_sc.png "Data flow through a DDAS system running NSCLDAQ 12. Note the separation of module data readout and sorting, which were previously part of a single process. This configuration enables much higher data readout speeds." height=600px
 
 @par
 A couple of points are worth noting:
@@ -58,7 +58,7 @@ A couple of points are worth noting:
 - For multi-crate systems, the schematics can be expanded by adding additional crates to the hardware diagram and additional readout and sort paths feeding the event builder to the data flow diagram.
 - Adding additional digitizers to an already-configured system is (mostly) just a matter of editing the system configuration files.
 
-@section sec_singlecrate_gettingstarted Getting Started With DDAS
+@section sec_singlecrate_gettingstarted Getting Started
 @par
 The DDAS software is installed as part of the NSCLDAQ software package. There may be several versions of NSCLDAQ installed concurrently on lab computers. In general these will be located under /usr/opt/daq on FRIB computer systems. Each NSCLDAQ installation has a version number MM.mm-eee where MM refers to the major version, mm to the minor version, and eee to an edit level e.g. 12.0-017 with major version 12, minor version 0, and edit level 15. Edit-level changes reflect minor defect fixes or enhancements, minor-version changes reflect more impactful bug fixes or enhancements. Major version changes are generally quite significant and may require significant rewrites of user code.
 
@@ -83,10 +83,10 @@ home-directory
       |
       +--- readout
               |
-              +--- crate_1  (configuration for crate 1).
-              +--- crate_2  (configuration for crate 2 if needed).
+              +--- crate_1  (configuration for crate 1)
+              +--- crate_2  (configuration for crate 2, if needed)
               ...
-              +--- crate_n  (configuration for last crate, n).
+              +--- crate_n  (configuration for crate n, if needed)
 @endverbatim
 
 @par
@@ -134,11 +134,11 @@ Step 1 is relatively straightforward and need not be discussed further. Steps 2-
 
 @warning SBCs, fiber cards and modules are **NOT** hot-swappable. **DO NOT** connect or disconnect SBCs, fiber cards or modules from the crate while it is powered on. Before installing or replacing any DDAS hardware, ensure that the crate is powered off.
 
-@subsection sec_singlecrate_clock Configuring a Clock Master Module
+@subsection sec_singlecrate_clock lock Distribution Settings for a Single-Crate System
 @par
 When using several DDAS cards it is important to synchronize the digitizer clocks between them. This is done by setting the jumper block JP01 appropriately. The jumper block is a set of pins located on the board near the backplane connectors, shown on the figure below in the red box. Configure the connections between these pins with jumpers. In case your setup consists of a single module, be sure to configure the jumpers to match the top diagram for the PXI clock master.
 
-@image html single_crate/board_and_jumpers.png "[Left] A Pixie-16 board with the location of the JP01 jumper block shown in the red box. [Right] Schematic of the  jumper settings for distributing the clock across the PXI backplane for a single-crate system. Top: PXI clock master jumper settings (slot 2). Bottom: PXI clock recipient jumper settings (slots 3-14). Figures reprinted from 'Pixie-16 User Manual', Version 3.06, XIA LLC." height=400px
+@image html board_and_jumpers_sc.png "[Left] A Pixie-16 board with the location of the JP01 jumper block shown in the red box. [Right] Schematic of the  jumper settings for distributing the clock across the PXI backplane for a single-crate system. Top: PXI clock master jumper settings (slot 2). Bottom: PXI clock recipient jumper settings (slots 3-14). Figures reprinted from 'Pixie-16 User Manual', Version 3.06, XIA LLC." height=400px
 
 @par
 In this configuration your clock-master module must be installed in slot 2. If more modules are added to the system, their jumper configuration should match the configuration shown on the bottom right of the above figure.
@@ -167,10 +167,10 @@ Once you have a correctly configured working directory, it is time to program th
 1. `source /usr/opt/daq/12.1-xiaapi4/daqsetup.bash`.
 2. `$DAQBIN/qtscope`
 
-@image html single_crate/qtscope_unbooted.PNG "The QtScope GUI state on startup. Note that most GUI elements besides [Boot system], [About], and [Exit] on the system toolbar are disabled." width=1200px
+@image html qtscope/figures/qtscope_unbooted.PNG "The QtScope GUI state on startup. Note that most GUI elements besides [Boot system], [About], and [Exit] on the system toolbar are disabled." width=1200px
 
 @par
-The QtScope GUI will launch. See the @ref qtscope "QtScope documentation" for more details, only the basics are covered in this guide. Most features of the GUI are inaccessible (greyed out) until the modules have been booted. To boot the modules, click the **[Boot system]** button. QtScope will print some information on the terminal where it was launched. A successful boot will look something like:
+The QtScope GUI will launch. See the @ref qtscope "QtScope documentation" for more details, only the basics are covered in this guide. Most features of the GUI are inaccessible (grayed out) until the modules have been booted. To boot the modules, click the **[Boot system]** button. QtScope will print some information on the terminal where it was launched. A successful boot will look something like:
 
 @verbatim
 ------------------------
@@ -197,7 +197,7 @@ If the boot fails, detailed error messages are written to Pixie16Msg.log and qts
 @par
 The first thing we must do is setup the ADC for our input signal. First, lets look at a trace. Click the **[Read trace]** button until you see a full waveform trace. Here is an example trace:
 
-@image html single_crate/qtscope_badpol.PNG "A raw pulser trace captured by QtScope. The DSP settings have not been properly configured for the test pulse, see the text for details." width=1200px
+@image html qtscope_badpol.PNG "A raw pulser trace captured by QtScope. The DSP settings have not been properly configured for the test pulse, see the text for details." width=1200px
 
 @par
 No matter the input signal polarity, the QtScope canvas should display a positive-polarity signal. Knowing that, two things immediately jump out about the above example:
@@ -312,7 +312,7 @@ Now that you have a good settings file, you can take data using a readout progra
 Full documentation for the readout program is available @ref readout "here".
 
 @par
-The DDAS readout programs do not need to be modified. Theu use a set of configuration files that are expected to live in the current working directory when readout is run. These files were discussed in @ref sec_singlecrate_config. In the previous step you should have generated a new settings file and edited your cfgPixie16.txt file if necessary. The modevtlen.txt file must be edited to reflect the size of the events we expect coming from each module. We are using only a single module and not taking waveforms or any other addional data from that module. Since the modevtlen.txt file format is simply the size of an event, in 32-bit words, from each digitizer's channels, one digitizer per line, in the same order as the cfgPixie16.txt file, the contents of this file should be:
+The DDAS readout programs do not need to be modified. They use a set of configuration files that are expected to live in the current working directory when readout is run. These files were discussed in @ref sec_singlecrate_config. In the previous step you should have generated a new settings file and edited your cfgPixie16.txt file if necessary. The modevtlen.txt file must be edited to reflect the size of the events we expect coming from each module. We are using only a single module and not taking waveforms or any other additional data from that module. Since the modevtlen.txt file format is simply the size of an event, in 32-bit words, from each digitizer's channels, one digitizer per line, in the same order as the cfgPixie16.txt file, the contents of this file should be:
 
 @verbatim
 4
@@ -358,7 +358,7 @@ Scalers know crate ID = 1
 @endverbatim
 
 @par
-The information displayed here should reflect the physical hardware installed in your crate and match the slot map, settings file, and event lengths that you specified in the cfgPixie16.txt and modevten.txt configuration files. The program will wait in this ready state until it is told to begin taking data.
+The information displayed here should reflect the physical hardware installed in your crate and match the slot map, settings file, and event lengths that you specified in the cfgPixie16.txt and modevtlen.txt configuration files. The program will wait in this ready state until it is told to begin taking data.
 
 @subsection sec_singlecrate_dumper Starting the NSCLDAQ dumper Program
 @par
@@ -391,7 +391,7 @@ No body header
 @endverbatim
 
 @par
-This data comes from the first step of the full readout pipeline we will discuss in more detail as we progress in the tutorial. It contains some identifying infomration about the data and where it comes from followed by a collection of hits from that module. These hits may or may not be time-ordered. The first line contains identifying information about the module. Each line after the first contains 4 32-bit words of Pixie data as specified in the modevtlen.txt file.
+This data comes from the first step of the full readout pipeline we will discuss in more detail as we progress in the tutorial. It contains some identifying information about the data and where it comes from followed by a collection of hits from that module. These hits may or may not be time-ordered. The first line contains identifying information about the module. Each line after the first contains 4 32-bit words of Pixie data as specified in the modevtlen.txt file.
 
 @par
 The first two words of the event body `2010 0000` are the self-inclusive event size in 16-bit words, given in <em>little endian</em> format. This means that the first word is the least significant part while the second word is the most significant part. The event size is 8208 16-bit words (we are only showing part of the event above). Data from the digitizer comes in 32-bit longwords. Therefore each pair of values is a digitizer longword.
@@ -410,7 +410,7 @@ Data word              | Meaning
 `0x00000140` (32 bits) | Pixie event header word 3: energy (lower 16 bits) and trace info (upper 16 bits)
 
 @par
-The event has a 48-bit timestamp which is constructed by combining the low-order timestamp contained in word 1 with the high-order timestamp contained in the lower 16 bits of word 2. The timestamp given in the raw data is in FPGA clock ticks. The module clock calibration written in the third word of the event data allows us to convert this timestamp into nanoseconds allowing us to compare and correlate events coming from a hetergenous set of digitizers in the system. As you can see, the Pixie event header structure repeats on every line after the first. 
+The event has a 48-bit timestamp which is constructed by combining the low-order timestamp contained in word 1 with the high-order timestamp contained in the lower 16 bits of word 2. The timestamp given in the raw data is in FPGA clock ticks. The module clock calibration written in the third word of the event data allows us to convert this timestamp into nanoseconds allowing us to compare and correlate events coming from a heterogeneous set of digitizers in the system. As you can see, the Pixie event header structure repeats on every line after the first. 
 
 @section sec_singlecrate_readoutgui Running ddasReadout Using the ReadoutGUI
 @par
@@ -421,7 +421,7 @@ This section describes how to configure data sources, setup an event builder and
 ReadoutGUI is built to allow you to run your experiment software distributed across several systems. To do this, it runs your readout program on the end of an SSH pipeline. Normally, starting SSH requires that you provide a password to the account it logs into on the remote (or local) system. In this section we will describe how to avoid the need to provide a password every time ReadoutGUI starts up an SSH session. The process hinges on SSH's ability to not only use passwords to authenticate but also to use an asymmetric certificate, or key, to identify and authenticate a login.
 
 @par
-In this section we'll go through the procedure to create and install what are called the private and public keys. Once installed, these allow you to SSH to your account in any system that shared your home directory without provding a password. This process requires that you:
+In this section we'll go through the procedure to create and install what are called the private and public keys. Once installed, these allow you to SSH to your account in any system that shared your home directory without providing a password. This process requires that you:
 - Create public and private ssh keys.
 - Install your public key into your authorized keys file
 - Ensure that directory permissions are set up to SSH's satisfaction.
@@ -451,7 +451,7 @@ cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 
 @par
 We're almost there. SSH wants to secure your account so that:
-- Your private key, `~/.ssh/id_rsa` canot be stolen and
+- Your private key, `~/.ssh/id_rsa` cannot be stolen and
 - Nobody can implant additional keys into `~/.ssh/authorized_keys`.
 
 @verbatim
@@ -493,7 +493,7 @@ Field name           | Contents
 :------------------- | :--------
 Host name:           | Name of the host on which the readout will run.\n I used: spdaq05.
 Readout program:     | The readout driver program from your `$DAQBIN`.\n I used: /usr/opt/daq/12.1-xiaapi4/bin/ddasReadout.
-Working directory    | Set to the directory containing the DDAS configuration files. Uncheck the "Same as Readout" box and navigate to that directory.\n I used: /usr/0400x/ddas_xiatest/readout/crate_1
+Working directory    | Set to the directory containing the DDAS configuration files. Un-check the "Same as Readout" box and navigate to that directory.\n I used: /usr/0400x/ddas_xiatest/readout/crate_1
 Command line options | Options for running the readout driver code.\n I used: -readouthost spdaq05 -readoutring 0400x_raw_1 -sorthost spdaq05 -sortring 0400x_sort_1 -cratedir /user/0400x/ddas_xiatest/readout/crate_1
 
 @par
