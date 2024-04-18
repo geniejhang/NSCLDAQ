@@ -28,14 +28,14 @@
      inkscape:document-units="mm"
      showgrid="true"
      inkscape:zoom="1"
-     inkscape:cx="102"
+     inkscape:cx="57"
      inkscape:cy="236"
      inkscape:window-width="1920"
      inkscape:window-height="1017"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="g2209">
+     inkscape:current-layer="layer1">
     <inkscape:grid
        type="xygrid"
        id="grid686"
@@ -311,9 +311,9 @@
        style="font-size:40px;line-height:1.25;font-family:sans-serif;text-align:end;white-space:pre;shape-inside:url(#rect1201);display:inline"><tspan
          x="90"
          y="446.49321"
-         id="tspan7849"><tspan
+         id="tspan1435"><tspan
            dx="0 31.484375 25.3125 15.761719 24.921875 25.3125 15.761719 192.10938"
-           id="tspan7847">Output 1</tspan></tspan></text>
+           id="tspan1433">Output 1</tspan></tspan></text>
     <g
        id="g2209">
       <rect
@@ -330,7 +330,7 @@
          transform="translate(-0.97758807,1.7835011)"><tspan
            x="69.962525"
            y="53.418297"
-           id="tspan7851">o0</tspan></text>
+           id="tspan1437">o0</tspan></text>
       <rect
          style="fill:#cccccc;stroke:#000000;stroke-width:0.705556;stroke-dasharray:none"
          id="rect3197"
@@ -354,16 +354,16 @@
          y="0"><tspan
            x="495.05462"
            y="287.0302"
-           id="tspan7853">System </tspan><tspan
+           id="tspan1439">System </tspan><tspan
            x="497.23301"
            y="310.36357"
-           id="tspan7855">master </tspan><tspan
+           id="tspan1441">master </tspan><tspan
            x="498.60476"
            y="333.69694"
-           id="tspan7857">trigger </tspan><tspan
+           id="tspan1443">trigger </tspan><tspan
            x="503.11649"
            y="357.03032"
-           id="tspan7859">board</tspan></text>
+           id="tspan1445">board</tspan></text>
       <text
          xml:space="preserve"
          transform="matrix(0.26458333,0,0,0.26458333,-29.104164,47.881594)"
@@ -373,13 +373,13 @@
          y="0"><tspan
            x="494.8222"
            y="287.0302"
-           id="tspan7861">Chassis </tspan><tspan
+           id="tspan1447">Chassis </tspan><tspan
            x="498.60476"
            y="310.36357"
-           id="tspan7863">trigger </tspan><tspan
+           id="tspan1449">trigger </tspan><tspan
            x="503.11649"
            y="333.69694"
-           id="tspan7865">board</tspan></text>
+           id="tspan1451">board</tspan></text>
       <text
          xml:space="preserve"
          transform="matrix(0.26458333,0,0,0.26458333,-29.104164,-13.501739)"
@@ -389,16 +389,16 @@
          y="0"><tspan
            x="495.05462"
            y="287.0302"
-           id="tspan7867">System </tspan><tspan
+           id="tspan1453">System </tspan><tspan
            x="497.23301"
            y="310.36357"
-           id="tspan7869">master </tspan><tspan
+           id="tspan1455">master </tspan><tspan
            x="498.60476"
            y="333.69694"
-           id="tspan7871">trigger </tspan><tspan
+           id="tspan1457">trigger </tspan><tspan
            x="503.11649"
            y="357.03032"
-           id="tspan7873">board</tspan></text>
+           id="tspan1459">board</tspan></text>
       <path
          style="fill:none;stroke:#0000ff;stroke-width:1.05833;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
          d="m 127,47.624999 c 4.40999,0 8.81971,0 14.33185,8.599291 5.51215,8.599292 12.1266,25.796864 12.12645,42.994861 -1.6e-4,17.197999 -6.61461,34.395579 -12.12665,42.994459 -5.51203,8.59889 -9.92166,8.59889 -14.33165,8.59889"
@@ -419,7 +419,7 @@
          style="font-size:18.6667px;line-height:1.25;font-family:sans-serif;text-align:end;white-space:pre;shape-inside:url(#rect6044);display:inline"><tspan
            x="666.80334"
            y="207.0302"
-           id="tspan7875">o0</tspan></text>
+           id="tspan1461">o0</tspan></text>
       <text
          xml:space="preserve"
          transform="matrix(0.26458333,0,0,0.26458333,-47.034842,35.106836)"
@@ -427,7 +427,7 @@
          style="font-size:18.6667px;line-height:1.25;font-family:sans-serif;text-align:end;white-space:pre;shape-inside:url(#rect6044-1);display:inline"><tspan
            x="672.11716"
            y="207.0302"
-           id="tspan7877">iA</tspan></text>
+           id="tspan1463">iA</tspan></text>
       <text
          xml:space="preserve"
          transform="matrix(0.26458333,0,0,0.26458333,-48.356047,93.125343)"
@@ -435,7 +435,7 @@
          style="font-size:18.6667px;line-height:1.25;font-family:sans-serif;text-align:end;white-space:pre;shape-inside:url(#rect6044-1-7);display:inline"><tspan
            x="672.11716"
            y="207.0302"
-           id="tspan7879">iA</tspan></text>
+           id="tspan1465">iA</tspan></text>
       <text
          xml:space="preserve"
          transform="matrix(0.26458333,0,0,0.26458333,-47.034842,13.940169)"
@@ -443,7 +443,7 @@
          style="font-size:18.6667px;line-height:1.25;font-family:sans-serif;text-align:end;white-space:pre;shape-inside:url(#rect6044-9);display:inline"><tspan
            x="666.80334"
            y="207.0302"
-           id="tspan7881">o7</tspan></text>
+           id="tspan1467">o7</tspan></text>
     </g>
     <g
        id="g2209-5"
@@ -463,7 +463,7 @@
          transform="translate(-0.97758807,1.7835011)"><tspan
            x="69.962525"
            y="53.418297"
-           id="tspan7883">o1</tspan></text>
+           id="tspan1469">o1</tspan></text>
     </g>
     <g
        id="g2209-9"
@@ -483,7 +483,7 @@
          transform="translate(-0.97758807,1.7835011)"><tspan
            x="69.962525"
            y="53.418297"
-           id="tspan7885">o2</tspan></text>
+           id="tspan1471">o2</tspan></text>
     </g>
     <g
        id="g2209-5-6"
@@ -503,7 +503,7 @@
          transform="translate(-0.97758807,1.7835011)"><tspan
            x="69.962525"
            y="53.418297"
-           id="tspan7887">o3</tspan></text>
+           id="tspan1473">o3</tspan></text>
     </g>
     <g
        id="g2209-1"
@@ -523,7 +523,7 @@
          transform="translate(-0.97758807,1.7835011)"><tspan
            x="69.962525"
            y="53.418297"
-           id="tspan7889">o4</tspan></text>
+           id="tspan1475">o4</tspan></text>
     </g>
     <g
        id="g2209-5-7"
@@ -543,7 +543,7 @@
          transform="translate(-0.97758807,1.7835011)"><tspan
            x="69.962525"
            y="53.418297"
-           id="tspan7891">o5</tspan></text>
+           id="tspan1477">o5</tspan></text>
     </g>
     <g
        id="g2209-9-6"
@@ -563,7 +563,7 @@
          transform="translate(-0.97758803,1.7835011)"><tspan
            x="69.962525"
            y="53.418297"
-           id="tspan7893">o6</tspan></text>
+           id="tspan1479">o6</tspan></text>
     </g>
     <g
        id="g2209-5-6-1"
@@ -583,7 +583,7 @@
          transform="translate(-0.97758803,1.7835011)"><tspan
            x="69.962525"
            y="53.418297"
-           id="tspan7895">o7</tspan></text>
+           id="tspan1481">o7</tspan></text>
     </g>
     <g
        id="g2209-9-3"
@@ -601,9 +601,9 @@
          id="text1473-8-2"
          style="font-size:6.35px;line-height:1.25;font-family:sans-serif;text-align:end;white-space:pre;shape-inside:url(#rect798-5-2);display:inline;stroke-width:0.705556;stroke-dasharray:none"
          transform="translate(-2.0359214,1.7835011)"><tspan
-           x="71.770166"
+           x="71.757764"
            y="53.418297"
-           id="tspan7897">iA</tspan></text>
+           id="tspan1483">iB</tspan></text>
     </g>
     <g
        id="g2209-5-6-6"
@@ -621,9 +621,9 @@
          id="text1473-7-3-9"
          style="font-size:6.35px;line-height:1.25;font-family:sans-serif;text-align:end;white-space:pre;shape-inside:url(#rect798-6-5-6);display:inline;stroke-width:0.705556;stroke-dasharray:none"
          transform="translate(-2.0359214,1.7835011)"><tspan
-           x="71.757764"
+           x="71.770166"
            y="53.418297"
-           id="tspan7899">iB</tspan></text>
+           id="tspan1485">iA</tspan></text>
     </g>
   </g>
 </svg>

@@ -27,7 +27,7 @@ If you are new to using DDAS and have not setup a system before, it is highly re
 DDAS data acquisition systems and online analysis rely on several hardware and
 software components. Most of these are covered in the @ref sec_singlecrate_components "Single-Crate System Setup Guide". Of course, for a multi-crate system, two or more PXI crates, data-collection computers, and Pixie digitizer cards are required. In addition, you will need:
 - One Pixie trigger distribution board for each crate in the system.
-- One Cat 6 cable per crate to distribute the shared clock. There are standard 2 meter white Cat 6 cables available from the SDAQ group. For distributed systems where the crates are located far apart, longer cables can be used, though it is important that all cables are the same length to avoid introducing cable delays when distributing the clock.
+- One Cat 5 or Cat 6 cable per crate to distribute the shared clock. There are standard 2-meter Cat 6 cables available from the SDAQ group. For distributed systems where the crates are located far apart, longer cables can be used, though it is important that all cables are the same length to avoid introducing cable delays when distributing the clock.
 
 @par
 The architecture of a multi-crate system is quite similar to that of a single-crate system. The two crates share a common clock, distributed by the clock master through the PXI backplane to all other modules in the system (more on that later):
@@ -93,13 +93,14 @@ This part of the guide will discuss in detail how to setup a multi-crate DDAS sy
 2. Install a Pixie module configured as a system clock master in slot 2 of your clock master crate.
 3. Install a Pixie module configured as a chassis clock master in slot 2 of your clock receiver crate.
 4. Ensure all other modules in slots 3-14 of the clock master and clock receiver crates are configured to read the clock from the PXI backplane.
-5. Attach signals to the digitizer inputs.
-6. Configure your DSP settings.
+5. Setup the clock distribution between crates.
+6. Attach signals to the digitizer inputs.
+7. Configure your DSP settings.
 
 @attention At FRIB, the NSCLDAQ software is run from within a container. To run the NSCLDAQ software discussed in this tutorial, you may need to edit your container startup script or script(s) you use to launch NSCLDAQ programs following the instructions provided under "Containerized NSCLDAQ" found on the <a href="https://docs.nscl.msu.edu/daq/newsite/home.php">SDAQ homepage</a>. For systems running Singularity, you must define the environment variable `SING_IMAGE` to be the full image path and store the bindings you are using in the `~/.singularity_bindpoints` file.
 
 @par
-Step 1 is relatively straightforward and need not be discussed further. Steps 2-4 are more complex and will be covered in detail in the subsequent sections. Steps 5 and 6 are essentially the same as in single-crate systems, so only the differences will be discussed.
+Step 1 is relatively straightforward and need not be discussed further. Steps 2-5 are more complex and will be covered in detail in the subsequent sections. Steps 6 and 7 are essentially the same as in single-crate systems, so only the differences will be discussed.
 
 @warning SBCs, fiber cards and modules are **NOT** hot-swappable. **DO NOT** connect or disconnect SBCs, fiber cards or modules from the crate while it is powered on. Before installing or replacing any DDAS hardware, ensure that the crate is powered off.
 
