@@ -1,3 +1,7 @@
+== 12.0-018 ==
+* Improved logging/error handling in QtScope
+== 12.0-018 ==
+
 == 12.0-017 ==
 * Fix divide-by-0 bug in QtScope
 == 12.0-017 ==
