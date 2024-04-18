@@ -89,7 +89,7 @@ The example crate_1 directory located at `$DAQSHARE`/ddasreadout/crate_1 contain
 @section sec_multicrate_setup Setting Up a Multi-Crate System
 @par
 This part of the guide will discuss in detail how to setup a multi-crate DDAS system with one or more XIA digitizer cards in each crate. To keep things simple we will assume a two-crate system using a common clock with a clock master and clock receiver. Any additional crates should be configured as clock receiver crates. To get started you must:
-1. Ensure that there is an SBC or fiber interface in slot 1 of each PXI crate (the most common case). If a fiber interface is used, the fiber must be connected to the interface card and a PCI bridge card on the data-collection computer. The data-collection computer must be connected to the DAQ network.
+1. Ensure that there is an SBC or fiber interface in slot 1 of each PXI crate (the most common case). If a fiber interface is used, the fiber must be connected to the interface card and a PCI bridge card on the data-collection computer. The data-collection computers must be connected to the DAQ network.
 2. Install a Pixie module configured as a system clock master in slot 2 of your clock master crate.
 3. Install a Pixie module configured as a chassis clock master in slot 2 of your clock receiver crate.
 4. Ensure all other modules in slots 3-14 of the clock master and clock receiver crates are configured to read the clock from the PXI backplane.
@@ -98,7 +98,7 @@ This part of the guide will discuss in detail how to setup a multi-crate DDAS sy
 
 @attention At FRIB, the NSCLDAQ software is run from within a container. To run the NSCLDAQ software discussed in this tutorial, you may need to edit your container startup script or script(s) you use to launch NSCLDAQ programs following the instructions provided under "Containerized NSCLDAQ" found on the <a href="https://docs.nscl.msu.edu/daq/newsite/home.php">SDAQ homepage</a>. For systems running Singularity, you must define the environment variable `SING_IMAGE` to be the full image path and store the bindings you are using in the `~/.singularity_bindpoints` file.
 
-par
+@par
 Step 1 is relatively straightforward and need not be discussed further. Steps 2-4 are more complex and will be covered in detail in the subsequent sections. Steps 5 and 6 are essentially the same as in single-crate systems, so only the differences will be discussed.
 
 @warning SBCs, fiber cards and modules are **NOT** hot-swappable. **DO NOT** connect or disconnect SBCs, fiber cards or modules from the crate while it is powered on. Before installing or replacing any DDAS hardware, ensure that the crate is powered off.
@@ -108,7 +108,7 @@ Step 1 is relatively straightforward and need not be discussed further. Steps 2-
 When using several DDAS crates it is important to synchronize the digitizer clocks between them. This is done by setting the jumper block JP01 appropriately for every card in the system. The jumper block is a set of pins located on the board near the backplane connectors, shown on the figure below in the red box. Configure the connections between these pins with jumpers.
 
 @par
-The standard way to distribute clocks between Pixie modules at FRIB is to use the PXI backplane. In multi-crate systems, one of the Pixie modules can provide a global clock to the rest of the modules across multiple crates. This module or crate are referred to as the "system master module" or "system master crate," respectively. There is only one system master module. All other modules/crates are referred to as "chassis" (or, occasionally, "clock receiver" or "clock recipient") modules or crates. There are as many chassis master modules as there are additional crates.
+The standard way to distribute clocks between Pixie modules at FRIB is to use the PXI backplane. In multi-crate systems, one of the Pixie modules can provide a global clock to the rest of the modules across multiple crates. This module or crate are referred to as the "system master module" or "system master crate," respectively (sometimes, as above, "system clock master"). There is only one system master module. All other modules/crates are referred to as "chassis" (or, occasionally, "clock receiver" or "clock recipient") modules or crates. There are as many chassis master modules as there are additional crates.
 
 @par
 The module installed in slot 2 of the system master crate is configured to be the system master module and provides the global clock. The module installed in slot 2 of a chassis crate is called a "chassis master module" and is responsible for receiving the global clock and redistributing it to other modules installed in the chassis crate. All other modules read the clock from the PXI backplane.
