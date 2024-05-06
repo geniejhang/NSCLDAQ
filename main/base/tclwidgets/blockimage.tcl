@@ -50,3 +50,33 @@ proc makeBlock {name color width height} {
     
     return $name
 }
+
+##
+# getColorImage
+#   Gets a large, cached color image (uses makeBlock above) 
+#   suitable for using as background for widgets (which will clip it)
+#   The images are cached so that they are not continuously remade.
+#
+#  @param color - color of the widget to be made.
+#  @return image handle.
+#  
+
+namespace eval ColorImageCache {
+    array set cache [list] ;    # The image cache indexed by color.
+}
+
+proc getColorImage {color} {
+    # See if the request can be fulfilled from the cache
+
+    if {[array names ColorImageCache::cache $color] eq $color} {
+        return $ColorImageCache::cache($color)
+    }
+
+    # Have to make a new one
+
+    set name getColorImage.$color
+    set result [makeBlock $name $color 71 25] 
+
+    set ColorImageCache::cache($color) $result
+    return $result
+}
