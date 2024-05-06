@@ -54,7 +54,7 @@ package require scalerReport
 package require Plotchart::xyplotContainer
 package require scaleControl
 package require zoomPrompt
-
+package require blockimage
 
 ## Ensure the user supplied a configuration file:
 
@@ -299,7 +299,7 @@ proc startAcqThread {ringUrl} {
     set myThread [thread::id]
     set getItems "proc getItems {tid uri} { 
         while 1 {                                             
-            set ringItem \[ring get \$uri {1 2 20}]             
+            set ringItem \[ring get \$uri {1 2 20}]  
             thread::send \$tid \[list handleData \$ringItem]     
         }                                                     
     }                                                         
@@ -612,6 +612,7 @@ proc endRun   {item} {
 proc handleData item {
     #puts $item
     # Dispatch based on the type of event:
+    
     
     set type [dict get $item type]
     switch $type {
