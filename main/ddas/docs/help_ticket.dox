@@ -1,0 +1,103 @@
+/**
+@page help_ticket How to Write a Good Help Ticket
+
+@authors Aaron Chester
+@date 5/10/24
+
+@section sec_help_daqhelp How To Ask For Help
+@par
+For most issues, bug reports, etc. the best way to get help is to use the SDAQ ticketing system. To create a ticket, send an email to daqhelp@frib.msu.edu. For on-call support during an experiment, tell the control room that there is a DAQ issue and they will call the appropriate people.
+
+@section sec_help_submit Submitting a Good Help Ticket
+@par
+A good help ticket should provide context for the action being performed, messages or errors reported by the software being run, and any steps taken to troubleshoot the issue. If the problem is repeatable, the conditions which trigger the error should be spelled out as precisely as possible.
+
+@par
+As an example, lets consider a user "Aaron" who is trying to convert an event file to ROOT format using the @ref ddasdumper "ddasdumper" program. Aaron has an event file called run-1234-00.evt which he knows was taken last week using NSCLDAQ 11.3-034. He wants to convert to ROOT format using the ddasdumper program from NSCLDAQ version 12.1-xiaapi4 but the program exits without generating any output:
+
+@verbatim
+<genesis:rawdata >. /usr/opt/daq/12.1-xiaapi4/daqsetup.bash
+<genesis:rawdata >$DAQBIN/ddasdumper -s file:///scratch/chester/rawdata/run-1234-00.evt -f run-1234-00.root
+ddasdumper main caught a C++ exception: Unable to dump a data format item... likely you've specified the wrong --format
+@endverbatim
+
+@par
+Aaron immediately emails daqhelp@frib.msu.edu and says:
+
+<hr>
+"ddasdumper doesn't work for run-1234-00.evt, please help."
+<hr>
+
+@par
+This is an example of a bad daqhelp email. There is a great deal of missing context here which is crucial to understanding the underlying cause of the aborted conversion! A-A-Ron, the SDAQ group member answering responding to the help ticket, doesn't know where to begin, and it will take some back and forth with user Aaron to figure out what has gone wrong and how to fix it.
+
+@par
+A better version of this email would look something like:
+
+<hr>
+"I have a data file run-1234-00.evt which was recorded using NSCLDAQ version 11.3-034. I am trying to convert the file to ROOT format using the ddasdumper from NSCLDAQ version 12.1-xiaapi4. No output ROOT file is produced, and I see the following message: 
+
+$DAQBIN/ddasdumper -s file:///scratch/chester/rawdata/run-1234-00.evt -f run-1234-00.root
+ddasdumper main caught a C++ exception: Unable to dump a data format item... likely you've specified the wrong --format
+<hr>
+
+@par
+I do not understand what --format refers to or how I should set it. This issue is repeatable and occurs immediately after I attempt to dump the file."
+
+@par
+At this point it is easy to address the issue: there is a format mismatch between the run file's data format and the data format that the ddasdumper program expects. The response by SDAQ A-A-Ron would point user Aaron in the right direction:
+
+@verbatim
+<genesis:rawdata >$DAQBIN/ddasdumper -h
+Usage: ddasdumper [OPTION]...
+Write NSCLDAQ PHYSICS_EVENT data obtained using DDAS to a ROOT TTree and
+perform a formatted dump of selected data items.
+
+  -h, --help              Print help and exit
+  -V, --version           Print version and exit
+  -s, --source=STRING     Data source URL. Note that only file and streaming
+                            data sources
+  -f, --fileout=STRING    Path of output file
+  -c, --count=INT         Number of items to dump before exiting. If no count
+                            value is provided, all items are dumped
+  -k, --skip=INT          Number of items to skip before dumping
+  -e, --exclude=STRING    List of item types to exclude from the dump
+                            (default=`')
+  -w, --scaler-width=INT  Scaler counter width in bits  (default=`32')
+  -F, --format=ENUM       NSCLDAQ format version  (possible values="v12",
+                            "v11", "v10" default=`v12')
+@endverbatim
+
+@par
+Which shows two important things:
+1. The `--format` option expects one of v10, v11, and v12, corresponding to the major version of the NSCLDAQ code used to take the data.
+2. The default format expected by NSCLDAQ 12.1-xiaapi4 is for version 12 data.
+
+@par
+Specifying the correct format version allows the code to run as expected:
+
+@verbatim
+<genesis:rawdata >$DAQBIN/ddasdumper -s file:///scratch/chester/rawdata/run-1234-00.evt -f run-1234-00.root --format=v11
+Ring items formatted for: 11.0
+
+Mon May 16 17:39:43 2022
+ : Run State change : Begin Run at 0 seconds into the run
+Body Header:
+Timestamp:    18446744073709551615
+SourceID:     0
+Barrier Type: 1
+Title     :
+Run Number: 283
+
+Glom is building events
+Event building coincidence window is: 10000 timestamp ticks
+TimestampPolicy : last
+
+...
+@endverbatim
+
+@section sec_help_conclusion Conclusion
+@par
+We have seen in this section, using a fairly trivial example, how providing important contextual information can expedite the process of identifying and solving a user's issues.
+
+*/

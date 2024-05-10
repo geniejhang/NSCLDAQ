@@ -20,7 +20,7 @@ The purpose of this site is to have, in one place:
 Refer to the <a href="pages.html">DDAS User Guides</a> page to browse the available guides and manual pages.
 
 @par
-DDAS is supported as part of the larger FRIBDAQ software suite. Further information about data acquisition at FRIB can be found on the <a href="https://docs.nscl.msu.edu/daq/newsite/index.php">FRIBDAQ docs page</a> and as part of the <a href="https://docs.nscl.msu.edu/daq/newsite/nscldaq-11.3/index.html">FRIBDAQ User's Guide</a>. Refer all questions, comments, and concerns to daqhelp@frib.msu.edu.
+DDAS is supported as part of the larger FRIBDAQ software suite. Further information about data acquisition at FRIB can be found on the <a href="https://docs.nscl.msu.edu/daq/newsite/index.php">FRIBDAQ docs page</a> and as part of the <a href="https://docs.nscl.msu.edu/daq/newsite/nscldaq-12.0/index.html">FRIBDAQ User's Guide</a>. Refer all questions, comments, and concerns to daqhelp@frib.msu.edu.
 
 @section sec_main_tutorials Tutorials
 @par
@@ -29,7 +29,7 @@ A number of tutorials exist to assist users in setting up, configuring, and taki
 - @ref multi_crate "Multi-crate system setup guide"
 - Analyzing DDAS data in SpecTcl
 - @ref ddasdumper "Convert DDAS data to ROOT format"
-- How to write a help ticket
+- @ref help_ticket "How to write a help ticket"
 
 @section sec_main_further Further Reading
 @par

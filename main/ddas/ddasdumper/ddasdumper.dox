@@ -81,7 +81,7 @@ export ROOT_INCLUDE_PATH=${DAQINC}:${ROOT_INCLUDE_PATH}
 @endverbatim
 
 @par
-The shared library `libddasrootformat.so` containing code implementing the DDASRootEvent and DDASRootHit classes is installed in the "usual" library location: /usr/opt/daq/MM.mm-sss/lib for NSCLDAQ MM.mm-sss; after sourcing the appropriate `daqsetup.bash` script, the environment variable `DAQLIB` will point to this directory. The library can be loaded into the ROOT interpreter on startup:
+The shared library `libddasrootformat.so` containing code implementing the DDASRootEvent and DDASRootHit classes is installed in the "usual" library location: /usr/opt/daq/MM.mm-eee/lib for NSCLDAQ version MM.mm-eee; after sourcing the appropriate `daqsetup.bash` script, the environment variable `DAQLIB` will point to this directory. The library can be loaded into the ROOT interpreter on startup:
 
 @code
 <genesis:rawdata >root
@@ -139,7 +139,7 @@ void plotMult()
 The DDAS ROOT Format classes can be incorporated into compiled code. You must ensure the compiler knows where the NSCLDAQ headers are installed, for example as part of the `CXXFLAGS` specified in a GNU Makefile. Assuming the NSCLDAQ environment is set, something like:
 
 @verbatim
-CXXFLAGS = <other C++ compiler options> -I${DAQINC}
+CXXFLAGS = -I${DAQINC}
 @endverbatim
 
 @par
@@ -152,12 +152,12 @@ Linking the `libddasrootformat.so` library is also necessary. Most commonly this
 In a GNU Makefile, the third option can use the `LDFLAGS` and `LDLIBS` Makefile variables:
 
 @verbatim
-LDFLAGS = <other linker flags> -L${DAQLIB} -Wl,-rpath=${DAQLIB}
-LDLIBS = <other libs> -lddasrootformat
+LDFLAGS = -L${DAQLIB} -Wl,-rpath=${DAQLIB}
+LDLIBS = -lddasrootformat
 @endverbatim
 
 @par
-These flags should be used by GNU make when building your application code.
+These flags should be used by GNU make when building your application code in addition to any other compiler and linker options your code requires.
 
 
 */

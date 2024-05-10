@@ -134,7 +134,7 @@ Step 1 is relatively straightforward and need not be discussed further. Steps 2-
 
 @warning SBCs, fiber cards and modules are **NOT** hot-swappable. **DO NOT** connect or disconnect SBCs, fiber cards or modules from the crate while it is powered on. Before installing or replacing any DDAS hardware, ensure that the crate is powered off.
 
-@subsection sec_singlecrate_clock lock Distribution Settings for a Single-Crate System
+@subsection sec_singlecrate_clock Clock Distribution Settings for a Single-Crate System
 @par
 When using several DDAS cards it is important to synchronize the digitizer clocks between them. This is done by setting the jumper block JP01 appropriately. The jumper block is a set of pins located on the board near the backplane connectors, shown on the figure below in the red box. Configure the connections between these pins with jumpers. In case your setup consists of a single module, be sure to configure the jumpers to match the top diagram for the PXI clock master.
 
@@ -145,9 +145,9 @@ In this configuration your clock-master module must be installed in slot 2. If m
 
 @subsection sec_singlecrate_testsignal Configuring an Input Signal
 @par
-A test signal from a pulser is used for this tutorial. Setup the pulser to output pulses that rise quickly but have an approximately 50 &mu;s decay time. The test pulse should be negative (-) polarity, have an input voltage of less than 1 V and a frequency less than 5 kHz. Connect the test signal to channel 0 of the digitizer 
+A test signal from a pulser is used for this tutorial. Setup the pulser to output pulses that rise quickly but have an approximately 50 &mu;s decay time. The test pulse should be negative (-) polarity, have an input voltage of less than 1 V and a frequency less than 5 kHz. Connect the test signal to channel 0 of the digitizer.
 
-@subsection sec_singlecrate_configfiles Example configuration files
+@subsection sec_singlecrate_configfiles Example Configuration Files
 @par
 The setup described in this tutorial uses a single digitizer installed in slot 2 of the PXI crate. Our DSP settings are stored in the file crate_1.json in a readout directory on our development system. Our cfgPixie16.txt file looks like:
 
@@ -479,21 +479,36 @@ In addition to running the readout driver program, ReadoutGUI can initiate data 
 @par
 First we will setup the `ddasReadout` program as a data source. Data sources are programs that are managed by the ReadoutGUI and create data. We're going to use the convention that readout programs will produce raw data into rings named `username_raw_n` where `n` is the crate number. In our example, the user is `0400x`, so our raw ring name will be `0400x_raw_1`. The readout driver also manages a sorter. Data is read from the raw ring, sorted by timestamp, and output into a sorted ringbuffer. We will use the convention of `username_sort_n` for the sort ring, i.e. `0400x_sort_1`. At present, ReadoutGUI is not aware of environment variables. Thus you need to determine what `DAQBIN` means when setting up your data sources. For this example, we'll assume it translates to /usr/opt/daq/12.1-xiaapi4/bin.
 
+@par
 Start the ReadoutShell:
 
 @verbatim
 $DAQBIN/ReadoutShell
 @endverbatim
 
+@par
+This command opens the `ReadoutShell` GUI window:
+
+@image html ReadoutShell.PNG "The ReadoutShell GUI window. The GUI allows users to configure data sources and run the DAQ from a single interface." height=600px
+
+@par
+Once the GUI is open, 
 1. Use the `Data Source->Add...` menu entry to add a new data source.
 2. From the data source type dialog select SSHPipe from the list of data source types and click `Ok`.
-3. In the resulting dialog, fill in the fields as follows:
+
+@par
+This should bring up the following window:
+
+@image html SSHPipePrompt.PNG "The SSHPipe data source configuration prompt. The fields in this interface are used to configure the DDAS data sources for our experiment."
+
+@par
+In the resulting dialog, fill in the fields as follows:
 
 Field name           | Contents
 :------------------- | :--------
 Host name:           | Name of the host on which the readout will run.\n I used: spdaq05.
-Readout program:     | The readout driver program from your `$DAQBIN`.\n I used: /usr/opt/daq/12.1-xiaapi4/bin/ddasReadout.
-Working directory    | Set to the directory containing the DDAS configuration files. Un-check the "Same as Readout" box and navigate to that directory.\n I used: /usr/0400x/ddas_xiatest/readout/crate_1
+Readout program:     | The readout driver program from your `$DAQBIN`. Enter the full path or navigate to that directory using the `Browse` button.\n I used: /usr/opt/daq/12.1-xiaapi4/bin/ddasReadout.
+Working directory    | Set to the directory containing the DDAS configuration files. Un-check the "Same as Readout" box and either enter the full path or navigate to that directory using the `Browse` button.\n I used: /usr/0400x/ddas_xiatest/readout/crate_1
 Command line options | Options for running the readout driver code.\n I used: -readouthost spdaq05 -readoutring 0400x_raw_1 -sorthost spdaq05 -sortring 0400x_sort_1 -cratedir /user/0400x/ddas_xiatest/readout/crate_1
 
 @par
@@ -545,17 +560,15 @@ The event builder is used to create a single, ordered, merged data stream from a
 Here is an example of a `ReadoutCallouts.tcl` script that does this for our case:
 
 @verbatim
-package require evbcallouts                                        (1)
+package require evbcallouts                                                             (1)
 
-::EVBC::useEventBuilder                                            (2)
+::EVBC::useEventBuilder                                                                 (2)
 
 proc OnStart {} {
-    ::EVBC::initialize -restart true -glombuild true -glomdt 100 \ (3)
-    		       -destring 0400x_evb
+    ::EVBC::initialize -restart true -glombuild true -glomdt 100 -destring 0400x_evb    (3)
 }
 
-::EVBC::registerRingSource tcp://spdaq05/0400x_sort_1 \            (4)
-			 "" 0 Crate_1_DDAS 1 1 5 0
+::EVBC::registerRingSource tcp://spdaq05/0400x_sort_1 "" 0 Crate_1_DDAS 1 1 5 0         (4)
 @endverbatim
 
 1. This line incorporates the event builder API into the ReadoutGUI.
