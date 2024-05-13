@@ -1,5 +1,6 @@
 == 12.0-018 ==
 * Improved logging/error handling in QtScope
+* Adding data rate display in MultiLogger
 == 12.0-018 ==
 
 == 12.0-017 ==
