@@ -91,6 +91,7 @@ private:
                                              
   uint64_t                m_nEventTimestamp;
   uint32_t                m_nSourceId;
+  uint32_t                m_nRunNumber;
   bool                    m_needHeader;
   uint16_t                m_nDefaultSourceId;
   bool                    m_useBarriers;
@@ -148,6 +149,7 @@ public:
   void setTimestamp(uint64_t stamp);
   void setSourceId(uint32_t id);
   uint32_t getSourceId();
+  uint32_t getRunNumber();
   void triggerFail(std::string msg);
   void syncEndRun(bool pause);
   void haveMore() { m_fHavemore = true; }

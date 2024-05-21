@@ -1,0 +1,812 @@
+// /*
+//     This software is Copyright by the Board of Trustees of Michigan
+//     State University (c) Copyright 2022.
+
+//     You may use this software under the terms of the GNU public license
+//     (GPL).  The terms of this license are described at:
+
+//      http://www.gnu.org/licenses/gpl.txt
+
+//      Authors:
+//              Ron Fox
+//              Giordano Cerriza
+//              Genie Jhang
+//              Simon Giraud
+// 	     FRIB
+// 	     Michigan State University
+// 	     East Lansing, MI 48824-1321
+// */
+
+
+///////------------------------------------------------------
+#include "UDPBroker.h"
+#include "pcapHeader.h"
+#include "datagramHeader.h"
+#include "BitMath.h"
+
+#include <chrono>
+#include <iostream>
+#include <stdexcept>
+#include <memory>
+// #include <CUDPClient.h>
+#include <CDataSinkFactory.h>
+#include <CDataSink.h>
+#include <stdlib.h>
+#include <string>
+#include <string.h>
+#include <DataFormat.h>
+#include <CRingItem.h>
+#include <CRingStateChangeItem.h>
+#include <stdint.h>
+#include <errno.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <iomanip>
+#include <Exception.h>
+#include <bitset>
+
+static int channelsMap[16][16][64]={0};//[fec][vmm][ch]
+
+
+
+UDPBroker::UDPBroker() {
+}
+
+UDPBroker::~UDPBroker() {
+}
+
+/**
+ * UDPBroker initialization
+ *
+ *    @param port - the port from which to get data.
+ *    @param sinkType   - the sink to which to output data.
+ *    @param sid    - user provided source id if not -1.
+ *
+ */
+// void UDPBroker::initialize(int port, std::string sinkType, int sid) {
+// void UDPBroker::initialize(int port, std::vector<std::string> sinkType) {
+// void UDPBroker::initialize(int port, std::vector<int> sid) {
+// void UDPBroker::initialize(int port, std::vector<std::string> sinkType, std::vector<int> sid) {
+void UDPBroker::initialize(int port) {
+    m_port = port;
+    // m_sinkType = sinkType;
+    // m_sid = sid;
+    m_stopMainLoop = false;
+    m_pauseMainLoop = false;
+    m_socket = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if (m_socket < 0) {
+        throw std::runtime_error("Failed to create socket");
+    }
+    setChannelsMap();
+}
+
+// void UDPBroker::test(std::vector<std::string> sinkType) {
+
+//     std::cout<<"Simon in TEST"<<std::endl;
+
+// }
+
+void UDPBroker::addSink(std::string sinkType, int sid) {
+    // for (size_t id = 0; id < m_sinkType.size(); id++){
+    std::unique_ptr<CDataSink> dataSink;
+    // dataSink.reset(CDataSinkFactory().makeSink(m_sinkType[id])); 
+    dataSink.reset(CDataSinkFactory().makeSink(sinkType)); 
+    if (!dataSink) {
+        throw std::runtime_error("Failed to create data sink");
+    }
+    std::cout<<"Simon - test addSink : "<<sinkType<<" "<<sid<<std::endl;
+    m_dataSinks[sid] = std::move(dataSink);
+    // }
+}
+
+
+void UDPBroker::run() {
+    try {
+        // Create data sink
+        //reset(...) assigns ownership of CDataSink* raw pointer returned by makeSink to a unique_ptr
+        // m_dataSink.reset(CDataSinkFactory().makeSink(m_sinkType)); 
+        // if (!m_dataSink) {
+        //     throw std::runtime_error("Failed to create data sink");
+        // }
+        // for (auto sinkType : m_sinkType){
+        // for (size_t id = 0; id < m_sinkType.size(); id++){
+        //     std::unique_ptr<CDataSink> dataSink;
+        //     dataSink.reset(CDataSinkFactory().makeSink(m_sinkType[id])); 
+        //     // dataSink.reset(CDataSinkFactory().makeSink(sinkType)); 
+        //     if (!dataSink) {
+        //         throw std::runtime_error("Failed to create data sink");
+        //     }
+        //     std::cout<<"Simon test in run in loop : "<<m_sinkType[id]<<" "<<m_sid[id]<<std::endl;
+        //     m_dataSinks[m_sid[id]] = std::move(dataSink);; 
+        // }
+        //CUDPClient(in_addr_t targetHost, short targetPort)
+        // m_client = std::make_unique<UDP::CUDPClient>();
+
+        struct sockaddr_in servaddr;        
+        memset(&servaddr, 0, sizeof(servaddr));
+        servaddr.sin_family = AF_INET;
+        servaddr.sin_addr.s_addr = INADDR_ANY;
+        servaddr.sin_port = htons(m_port);
+
+        if (bind(m_socket, (const struct sockaddr*)&servaddr, sizeof(servaddr)) < 0) {
+            throw std::runtime_error("Failed to bind socket");
+        }
+
+        // m_client->bind(m_port);
+
+        // Main loop
+        mainLoop();
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+
+
+/**
+ * mainLoop
+ *    Accepts datagrams from the server object and forwards them to the
+ *    sink. Data sent looks like ring items of type FIRST_USER_ITEM_CODE
+ *    (or PHYSICS_EVENT?)
+ *    The body header will be filled in as:
+ *    - timestamp from the routing header.
+ *    - sourceid as (detectorId << 8) | (subdetectorId)
+ *    - barrier type 0.
+ *    The ring item payload will be the complete datagram including
+ *    routing header preceded by the IP address and port of the sender.
+ *
+ */
+// void UDPBroker::mainLoop() {
+//     uint8_t datagram[65536];
+//     while (!m_stopMainLoop) {
+//         in_addr_t from;
+//         short fromPort;
+//         int nrcv = m_client->receive(datagram, sizeof(datagram), from, fromPort);
+//         if (nrcv < 0) {
+//             perror("Unable to receive a datagram");
+//             return;
+//         }
+
+//         std::unique_ptr<CRingItem> pRingItem = makeRingItem(from, fromPort, m_sid, datagram, nrcv);
+//         m_dataSink->putItem(*pRingItem);
+
+//         // delete pRingItem;
+
+//         if (m_stopMainLoop) {
+//             break; 
+//         }
+//     }
+//     m_stopMainLoop = false;
+// }
+
+
+
+//Specific for SRS...
+void UDPBroker::extractHitTimeStamp(uint8_t sourceId, uint8_t* data)
+{
+    auto Data1Offset = 0;
+    auto Data2Offset = Data1Offset + Data1Size;
+    uint32_t data1 = htonl(*reinterpret_cast<uint32_t*>(&data[Data1Offset]));
+    uint16_t data2 = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+    uint8_t vmmid = MaxVMMs +1 ;
+    uint16_t idx = MaxFECs * MaxVMMs +1;
+    uint8_t triggerOffset = 0;
+    uint16_t bcid = 0;
+
+    int dataflag = (data2 >> 15) & 0x1;
+    if(dataflag){
+
+        // uint8_t vmmId = (data1 >> 22) & 0x1F;
+        // uint8_t chnoRaw = (data2 >> 8) & 0x3f;
+
+        // // Note chno takes only 6 bits (0-63) 
+        // uint8_t chnoMapped = channelsMap[fecId][vmmId][chnoRaw]; 
+
+
+        // printf("data1: 0x%08x, data2: 0x%04x \n", data1, data2);
+        // std::cout<<"bit rep of data1: "<<std::bitset<32>( data1 )<<std::endl;
+        // std::cout<<"bit rep of data2: "<<std::bitset<16>( data2 )<<std::endl;
+        // std::cout<<"bit rep of data1 >> 12: "<<std::bitset<32>( data1 >> 12 )<<std::endl;
+        // std::cout<<"bit rep of data1 >> 12: "<<std::bitset<32>( 0x3FF)<<std::endl;
+        // std::cout<<"bit rep of data1 >> 12: "<<std::bitset<32>( data1 >> 12 & 0x3FF)<<std::endl;
+
+
+        vmmid = (data1 >> 22) & 0x1F;
+        idx = (sourceId - 1) * MaxVMMs + vmmid;
+        triggerOffset = (data1 >> 27) & 0x1F;
+        bcid = BitMath::gray2bin32(data1 & 0xFFF);
+        uint8_t chno = (data2 >> 8) & 0x3f;
+
+        tsAndMappedChno.chnoMapped = channelsMap[sourceId][vmmid][chno]; 
+
+        //uint8_t tdc = data2 & 0xff;
+
+
+        //commented, only send data no markers, the markers are used to compute a fine time stamp
+        //every 65536 clock cycle a new marker is issued, every 4096 clock cycle triggerOffset is increased by 1, bcid max is 4095
+        uint64_t fineTS = markerSRS[idx].fecTimeStamp + triggerOffset*4096 + bcid;
+        //printf("SRS Data: sourceId: %d, vmm: %d, channel: %d, fecTimeStamp: %llu, fineTS: %llu, bcid: %d, tdc: %d\n",sourceId, vmmid, chno, markerSRS[idx].fecTimeStamp, fineTS, bcid, tdc);
+        // if (sourceId == 6){
+        //     printf("extractHitTimeStamp - fecTimeStamp: %llu, fineTS: %llu \n", markerSRS[idx].fecTimeStamp, fineTS);
+        // }
+        //if data come before the first markers set TS to 0 and these data will be skipped.
+        if (markerSRS[idx].fecTimeStamp == 0)
+        {
+            m_firstDataCounter++;
+            fineTS = 0;
+        }
+        tsAndMappedChno.hitTimeStamp = fineTS;
+    } else {
+        // Markers
+        vmmid = (data2 >> 10) & 0x1F;
+        idx = (sourceId - 1) * MaxVMMs + vmmid;
+        uint64_t timestamp_lower_10bit = data2 & 0x03FF;
+        uint64_t timestamp_upper_32bit = data1;
+        uint64_t timestamp_42bit = (timestamp_upper_32bit << 10) + timestamp_lower_10bit;
+        // printf("SRS Marker fecId %d vmmid %d: timestamp lower 10bit %lu, timestamp upper 32 bit %lu, 42 bit timestamp %lu \n", sourceId, vmmid, timestamp_lower_10bit, timestamp_upper_32bit, timestamp_42bit);
+
+        if(markerSRS[idx].fecTimeStamp > timestamp_42bit) {
+            if (markerSRS[idx].fecTimeStamp < 0x1FFFFFFF + timestamp_42bit) {
+                m_markerErrCounter++;
+                printf( "ParserTimestampSeqErrors:  ts %lu, marker ts %lu \n", timestamp_42bit, markerSRS[idx].fecTimeStamp);
+            }
+        }
+        // if(markerSRS[idx].calcTimeStamp == 0) {
+        //     markerSRS[idx].calcTimeStamp = timestamp_42bit;
+        // }
+        markerSRS[idx].fecTimeStamp = timestamp_42bit;
+        tsAndMappedChno.hitTimeStamp = 0;
+        tsAndMappedChno.chnoMapped = 0;
+    }
+    return;
+}
+
+
+
+void UDPBroker::mainLoop() {
+    uint8_t datagram[65536];
+    struct sockaddr_in senderAddr;
+    socklen_t senderAddrLen = sizeof(senderAddr);
+
+    //Specific to SRS
+    markerSRS = new VMM3Marker[MaxFECs * MaxVMMs];
+
+
+    //std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    //start = std::chrono::high_resolution_clock::now();
+
+    while (!m_stopMainLoop) {
+        if (m_pauseMainLoop) continue;
+        int bytesReceived = recvfrom(m_socket, datagram, sizeof(datagram), 0,
+                                     (struct sockaddr*)&senderAddr, &senderAddrLen);
+        if (bytesReceived < 0) {
+            perror("Error receiving datagram");
+            continue;
+        }
+
+        // Process received datagram
+        in_addr_t from = senderAddr.sin_addr.s_addr;
+        short fromPort = ntohs(senderAddr.sin_port);
+        // std::unique_ptr<CRingItem> pRingItem = makeRingItem(from, fromPort, m_sid, datagram, bytesReceived);
+        // m_dataSink->putItem(*pRingItem);
+
+        //Simon -  04/01/2024
+        //extract the sourceId (=fecId, should it be combination of FECID and VMMID?) from srs header in datagram
+        uint8_t* buffer = reinterpret_cast<uint8_t*>(datagram);
+        psrshdr hdr = reinterpret_cast<psrshdr>(buffer);
+        uint8_t sid = hdr -> fecId;
+        // extract all hits (data1&data2) from datagram, encapsulate the hits in ring items (one hit into one RI) and put RI in sink        
+        makeRingItems(from, fromPort, *m_dataSinks.find(sid)->second, sid, buffer, bytesReceived);
+
+        m_end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::nano> elapsed_time = m_end - m_start; 
+        auto elapsed_time_s = elapsed_time.count()/1e9; 
+        m_datagramCounter++;
+        std::cout<<"bytes received, elapsed_time_s: "<<bytesReceived<<" "<<elapsed_time_s<<std::endl;
+        std::cout<<"Counters: datagram, marker, markerErr, hit, firstData: "<<m_datagramCounter<<" "<<m_markerCounter<<" "<<m_markerErrCounter<<" "<<m_hitCounter<<" "<<m_firstDataCounter<<std::endl;
+        std::cout<<"Rates: datagram, marker, markerErr, hit: "<<m_datagramCounter/elapsed_time_s<<" "<<m_markerCounter/elapsed_time_s<<" "<<m_markerErrCounter/elapsed_time_s<<" "<<m_hitCounter/elapsed_time_s<<std::endl;
+        if (m_stopMainLoop) {
+            break;
+        }
+    }
+    m_stopMainLoop = false;
+    delete[] markerSRS;
+
+}
+
+
+/**
+ * begin
+ */
+void UDPBroker::begin() {
+    m_stopMainLoop = false;
+    m_pauseMainLoop = false;
+    m_hitCounter = 0;
+    m_datagramCounter = 0;
+    m_markerCounter = 0;
+    m_markerErrCounter = 0;
+    m_firstDataCounter = 0;
+    m_startChrono = true;
+    //m_start = std::chrono::high_resolution_clock::now();
+
+    // CRingStateChangeItem* pBegin = new CRingStateChangeItem(BEGIN_RUN);
+    // m_dataSink->putItem(*pBegin); 
+    std::map<int, std::unique_ptr<CDataSink>>::iterator it = m_dataSinks.begin();
+    while (it != m_dataSinks.end()) {
+        CRingStateChangeItem* pBegin = new CRingStateChangeItem(BEGIN_RUN);
+        it->second->putItem(*pBegin);
+        delete pBegin;
+        ++it;
+    }
+}
+
+
+/**
+ * end
+ */
+void UDPBroker::end() {
+    m_pauseMainLoop = true;
+    // CRingStateChangeItem* pEnd = new CRingStateChangeItem(END_RUN);
+    // m_dataSink->putItem(*pEnd);
+    // delete pEnd;
+
+    std::map<int, std::unique_ptr<CDataSink>>::iterator it = m_dataSinks.begin();
+    while (it != m_dataSinks.end()) {
+        CRingStateChangeItem* pEnd = new CRingStateChangeItem(END_RUN);
+        it->second->putItem(*pEnd);
+        delete pEnd;
+        ++it;
+    }
+
+    //clear markers 
+    for (size_t idx = 0; idx < MaxFECs * MaxVMMs; idx++) {
+        markerSRS[idx].fecTimeStamp = 0;
+        markerSRS[idx].calcTimeStamp = 0;
+        markerSRS[idx].lastTriggerOffset = 0;
+        markerSRS[idx].hasDataMarker = false;
+    }
+}
+
+/**
+ * stop mainLoop
+ */
+void UDPBroker::stop() {
+    m_stopMainLoop = true;
+}
+
+/**
+ * pause mainLoop
+ */
+void UDPBroker::pause() {
+    std::cout << "UDPBroker::pause() " << std::endl;
+    m_pauseMainLoop = true;
+}
+
+/**
+ * resume mainLoop
+ */
+void UDPBroker::resume() {
+    std::cout << "UDPBroker::resume() " << std::endl;
+    m_pauseMainLoop = false;
+}
+
+
+/**
+ * makeRingItems
+ *    Turn a datagram into a ring item.  Note that no transformation on the
+ *    data will be done which leaves the routing header in network byte ordering.
+ *
+ *  Create a ring item that encapsulates a datagram we received from some
+ *  remote system. Note that some information in the routing header is turned
+ *  into body header info.  The datagram itself is unmodified.
+ *
+ *  @param from - the IP address from which the data came in network byte order.
+ *  @param port - the port that sent the datagram in that host byte order.
+ *  @param sid  - user provided source id if not -1.
+ *  @param datagram - the datagram
+ *  @param nBytes   - number of bytes in the datagram.
+ *  @return CRingItem* - pointer to a dynamically allocated ring item that
+ *              must be deleted by the caller.
+ */
+// void UDPBroker::makeRingItems(in_addr_t from, short port, CDataSink& sink, int sid, uint8_t* buffer, size_t nBytes) {
+
+//   size_t bytes = nBytes;
+//   int readoutIndex = 0;
+//   //std::vector<uint8_t> accumulatedData; // Store accumulated data
+//   uint64_t prevHitTimeStamp = 0;
+
+//   while (bytes >= HitAndMarkerSize) {
+//     //printf("readoutIndex: %d, bytes %d\n", readoutIndex, bytes);
+//     // The datagram send from the slow controler has only srsHeader and data
+//     auto dataOffset = SRSHeaderSize + HitAndMarkerSize * readoutIndex;
+
+//     // Extract 6 bytes of data
+//     // uint8_t data[HitAndMarkerSize];
+//     uint8_t* data = new uint8_t[6];
+//     // printf("hitTimeStamp0");
+//     memcpy(data, buffer + dataOffset, HitAndMarkerSize);
+
+//     // printf("hitTimeStamp1");
+
+//     uint64_t hitTimeStamp = extractHitTimeStamp(sid, data);
+
+//     // std::unique_ptr<uint8_t[]> data(new uint8_t[6]);
+//     // memcpy(data.get(), buffer + dataOffset, HitAndMarkerSize);
+//     // data = mapping(data.get(), HitAndMarkerSize); // Pass ownership to function
+
+//     // hitTimeStamp==0 when markers or first data with no markers
+//     if (hitTimeStamp > 0){
+//         //printf("send ring item \n");
+//         CRingItem* pResult = new CRingItem(PHYSICS_EVENT, hitTimeStamp, sid, 0, nBytes + 1024);
+//         pResult->setBodyCursor(pResult->getBodyCursor()); // Set cursor to beginning of body
+//         // Copy the 6 bytes of data into the CRingItem's body
+//         memcpy(pResult->getBodyCursor(), data, HitAndMarkerSize);
+//         // Update cursor after copy
+//         pResult->setBodyCursor(reinterpret_cast<uint8_t*>(pResult->getBodyCursor()) + HitAndMarkerSize);
+//         pResult->updateSize();
+//         sink.putItem(*pResult); 
+//         delete pResult;
+//         // Deallocate memory used for temporary data buffer
+//         delete[] data; 
+//     }
+//     else {
+//         // Noting 
+//     }
+//     bytes -= 6;
+//     readoutIndex++;
+//   }
+// }
+
+
+// void UDPBroker::makeRingItems(in_addr_t from, short port, CDataSink& sink, int sid, uint8_t* buffer, size_t nBytes) {
+
+//     size_t bytes = nBytes;
+//     int readoutIndex = 0;
+
+//     while (bytes >= HitAndMarkerSize) {
+//         //printf("readoutIndex: %d, bytes %d\n", readoutIndex, bytes);
+//         // The datagram send from the slow controler has only srsHeader and data
+//         auto dataOffset = SRSHeaderSize + HitAndMarkerSize * readoutIndex;
+
+//         std::unique_ptr<uint8_t[]> data(new uint8_t[HitAndMarkerSize]);
+//         memcpy(data.get(), buffer + dataOffset, HitAndMarkerSize);
+
+//         uint64_t hitTimeStamp = extractHitTimeStamp(sid, data.get());
+
+//         // Pass ownership to mapping function for potential modification
+//         mapping(data.get(), sid);
+//         // testReadData(data.get());
+
+//         if (hitTimeStamp > 0){
+//             //printf("send ring item \n");
+//             CRingItem* pResult = new CRingItem(PHYSICS_EVENT, hitTimeStamp, sid, 0, nBytes + 1024);
+//             pResult->setBodyCursor(pResult->getBodyCursor()); // Set cursor to beginning of body
+//             // Copy the 6 bytes of data into the CRingItem's body
+//             memcpy(pResult->getBodyCursor(), data.get(), HitAndMarkerSize);
+//             // Update cursor after copy
+//             pResult->setBodyCursor(reinterpret_cast<uint8_t*>(pResult->getBodyCursor()) + HitAndMarkerSize);
+//             pResult->updateSize();
+//             sink.putItem(*pResult); 
+//             delete pResult;
+//         }
+//         else {
+//             // Noting 
+//         }
+//         bytes -= 6;
+//         readoutIndex++;
+//     }
+// }
+
+
+void UDPBroker::makeRingItems(in_addr_t from, short port, CDataSink& sink, int sid, uint8_t* buffer, size_t nBytes) {
+
+    size_t bytes = nBytes;
+    int readoutIndex = 0;
+
+    while (bytes >= HitAndMarkerSize) {
+        //printf("readoutIndex: %d, bytes %d\n", readoutIndex, bytes);
+        // The datagram send from the slow controler has only srsHeader and data
+        auto dataOffset = SRSHeaderSize + HitAndMarkerSize * readoutIndex;
+
+        // std::unique_ptr<uint8_t[]> data(new uint8_t[HitAndMarkerSize]);
+        std::unique_ptr<uint8_t[]> data(new uint8_t[HitAndMarkerSize + 2]);
+        memcpy(data.get(), buffer + dataOffset, HitAndMarkerSize);
+
+        tsAndMappedChno.hitTimeStamp = 0;
+        tsAndMappedChno.chnoMapped = 0;
+        extractHitTimeStamp(sid, data.get());
+
+        uint16_t chnoMapped = tsAndMappedChno.chnoMapped;
+        memcpy(data.get() + HitAndMarkerSize, &chnoMapped, sizeof(chnoMapped));
+
+        // if ((int)chnoMapped > 256)
+        //     std::cout<<"makeRingItems bit rep of data3: "<<std::bitset<16>( chnoMapped )<< " " <<(int)chnoMapped<<std::endl;
+        
+        // testReadData(data.get());
+
+        if (tsAndMappedChno.hitTimeStamp > 0){
+            //printf("send ring item \n");
+            CRingItem* pResult = new CRingItem(PHYSICS_EVENT, tsAndMappedChno.hitTimeStamp, sid, 0, nBytes + 1024);
+            pResult->setBodyCursor(pResult->getBodyCursor()); // Set cursor to beginning of body
+            // Copy the 6 bytes of data into the CRingItem's body
+            memcpy(pResult->getBodyCursor(), data.get(), HitAndMarkerSize + 2);
+            // Update cursor after copy
+            pResult->setBodyCursor(reinterpret_cast<uint8_t*>(pResult->getBodyCursor()) + HitAndMarkerSize + 2);
+            pResult->updateSize();
+            sink.putItem(*pResult); 
+            delete pResult;
+            if (m_startChrono){
+              m_start = std::chrono::high_resolution_clock::now();
+              m_startChrono = false;
+            }
+            m_hitCounter += 1;
+        }
+        else {
+            m_markerCounter +=1 ; 
+        }
+        bytes -= HitAndMarkerSize;
+        readoutIndex++;
+    }
+}
+
+
+// void UDPBroker::makeRingItems(in_addr_t from, short port, CDataSink& sink, int sid, uint8_t* buffer, size_t nBytes) {
+
+//     size_t bytes = nBytes;
+//     int readoutIndex = 0;
+
+//     while (bytes >= HitAndMarkerSize) {
+//         // ... other code ...
+
+//         // Use std::unique_ptr for automatic memory management of data
+//         std::unique_ptr<uint8_t[]> data(new uint8_t[HitAndMarkerSize]);
+//         memcpy(data.get(), buffer + dataOffset, HitAndMarkerSize);
+
+//         // Pass ownership to mapping function (modifies data in-place)
+//         mapping(data.get());  // No need to re-assign data
+
+//         // ... rest of the code using data as usual ...
+
+//         // No need to manually delete[] data anymore, unique_ptr handles it
+//     }
+// }
+
+
+// uint8_t* UDPBroker::mapping(uint8_t* data) {
+//     auto Data2Offset = Data1Size;
+//     uint16_t data2 = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+//     int dataflag = (data2 >> 15) & 0x1;
+
+//     if (dataflag) {
+//         uint8_t chno = (data2 >> 8) & 0x3f;
+//         chno = 85; // Modify chno here (replace with modifyChno if needed)
+//         *reinterpret_cast<uint8_t*>(&data[Data2Offset + 1]) = chno; // Update chno in data buffer
+//     }
+
+//     // No return value needed as data is modified in-place
+//     return data; // Can be removed for clarity (optional)
+// }
+
+uint16_t UDPBroker::invertByteOrder(uint16_t data) {
+    uint8_t lowerHalf = data & 0x00FF;
+    uint8_t upperHalf = (data & 0xFF00) >> 8;
+    return (lowerHalf << 8) | upperHalf;
+}
+
+
+void UDPBroker::testReadData(uint8_t* data){
+    auto Data2Offset = Data1Size;
+    auto Data3Offset = Data2Offset + Data2Size;
+    uint16_t data2 = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+    uint16_t data3 = htons(*reinterpret_cast<uint16_t*>(&data[Data3Offset]));
+    // uint16_t data3 = ntohs(*reinterpret_cast<uint16_t*>(&data[Data3Offset]));
+    int dataflag = (data2 >> 15) & 0x1;
+
+    // printf("testReadData - dataflag: %d \n",dataflag);
+
+    if (dataflag) {
+        uint8_t chno = (data2 >> 8) & 0x3f;
+
+        uint16_t chnoNew = invertByteOrder(data3);
+
+        std::cout<<"bit rep of data2: "<<std::bitset<16>( data2 )<<std::endl;
+        std::cout<<"bit rep of data3: "<<std::bitset<16>( data3 )<< " " <<(int)data3<<" "<<std::bitset<16>( chnoNew )<< " " <<(int)(chnoNew)<<std::endl;
+        // std::cout<<"bit rep data2Copy : "<<std::bitset<16>(data2Copy)<<std::endl;
+        // std::cout<<"bit rep data2Copy : "<<std::bitset<16>(data2Copy | ( (data2 >> 8 & 0xC0 | chnoCte) << 8) )<<std::endl;
+
+        printf("testReadData - chno: %d \n",chno);
+    }
+    // return data;
+    return;
+}
+
+// void UDPBroker::mapping(uint8_t* data) {
+//     auto Data2Offset = Data1Size;
+//     uint16_t data2 = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+//     int dataflag = (data2 >> 15) & 0x1;
+
+//     if (dataflag) {
+//         // uint8_t chno = (data2 >> 8) & 0x3f;
+
+//         // Clear the existing chno bits
+//         data2 &= ~0x3f00;  // Set bits 9-4 to 0
+
+//         // Set chno to 8 (bits 4-5 set, bits 6-9 cleared)
+//         data2 |= 0x0800;
+
+//         // Apply htons again for network byte order
+//         data2 = htons(data2);
+
+//         // Update the data buffer with the modified 16-bit value
+//         *reinterpret_cast<uint16_t*>(&data[Data2Offset]) = data2;
+
+//         // *reinterpret_cast<uint8_t*>(&data[Data2Offset + 1]) = 85;
+
+//         uint16_t data2New = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+//         uint8_t chnoNew = (data2New >> 8) & 0x3f;
+//         printf("mapping - chno: %d \n",chnoNew);
+//     }
+//     return;
+// }
+
+
+// void UDPBroker::mapping(uint8_t* data) {
+//     auto Data2Offset = Data1Size;
+//     uint16_t data2 = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+//     int dataflag = (data2 >> 15) & 0x1;
+
+//     if (dataflag) {
+
+//         uint8_t chnoCte = 85; 
+//         // Extract two least significant bits from chnoNew
+//         uint8_t chnoBits = chnoCte & 0x03;
+
+//         // Clear existing chno bits and shift new bits to position
+//         data2 &= ~0x0300;
+//         data2 |= (chnoBits << 4);
+
+//         // Apply htons again for network byte order
+//         data2 = htons(data2);
+
+//         // Update the data buffer with the modified 16-bit value
+//         *reinterpret_cast<uint16_t*>(&data[Data2Offset]) = data2;
+
+//         uint16_t data2New = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+//         uint8_t chnoNew = (data2New >> 8) & 0x3f;
+//         printf("mapping - chno: %d \n", chnoNew);  // Should now print 85
+//     }
+//     return;
+// }
+
+// void setChannelsMap(std::string mapFile){
+void UDPBroker::setChannelsMap(){
+
+    // if (!mapFile.is_open()) {
+    //     std::cerr << "UDPBroker::setChannelsMap - Error opening mapFile: " << mapFile << std::endl;
+    //     return;
+    // }
+    // std::string line;
+    // while (std::getline(mapFile, line)) {
+    //     std::istringstream iss(line);
+    //     int fecId, vmmId, chnoRaw, chnoMapped;
+    //     if (iss >> fecId >> vmmId >> chnoRaw >> chnoMapped) {
+    //         // Store values in the channelsMap
+    //         channelsMap[fecId][vmmId][chnoRaw] = chnoMapped;
+    //     } else {
+    //         std::cerr << "UDPBroker::setChannelsMap - Invalid line format: " << line << std::endl;
+    //     }
+    // }
+    // mapFile.close();
+
+    //harcode IC map for now...
+    uint8_t fecId = 2;
+    uint8_t minVmmId = 8;
+    uint8_t maxVmmId = 15;
+    uint8_t minRawCh = 2;
+    uint8_t maxRawCh = 61;
+    int shiftId[4] = {0, -2, -1, -1}; 
+    for (uint8_t vmmId = minVmmId; vmmId <= maxVmmId; vmmId++){
+        int tempId = 0;
+        for (uint8_t rawChId = minRawCh; rawChId <= maxRawCh; rawChId++){
+            if (tempId%4 == 0){
+                tempId = 0;
+            }
+            channelsMap[fecId][vmmId][rawChId] = (maxRawCh-minRawCh+1)*(vmmId-minVmmId) + rawChId + shiftId[tempId];
+            tempId++;
+            // std::cout<<"map "<<(int)vmmId<<" "<<(int)rawChId<<" "<<(int)channelsMap[fecId][vmmId][rawChId]<<std::endl;
+        }
+    }
+    return;
+}
+
+
+
+// void UDPBroker::mapping(uint8_t* data, int fecId) {
+//     auto Data1Offset = 0;
+//     auto Data2Offset = Data1Size;
+//     uint32_t data1 = htonl(*reinterpret_cast<uint32_t*>(&data[Data1Offset]));
+//     uint16_t data2 = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+//     int dataflag = (data2 >> 15) & 0x1;
+//     if (dataflag) {
+
+//         uint8_t vmmId = (data1 >> 22) & 0x1F;
+//         uint8_t chnoRaw = (data2 >> 8) & 0x3f;
+
+//         // Note chno takes only 6 bits (0-63) 
+//         uint8_t chnoMapped = channelsMap[fecId][vmmId][chnoRaw]; 
+//         // printf("mapping - chno and mapped : %d -- %d \n", chnoRaw, chnoMapped);
+//         // Clear all (6 bits of chno value) but the left two bits (overThreshold) and 8 right bits (tdc)
+//         uint16_t data2Copy = data2 & 0xC0FF;
+//         // First erase the chno 6 bits (data2 >> 8 & 0xC0) 
+//         // then set new chno value (...| chnoCte)
+//         // then shift chno 6 bits to correct location in 16 bits (...<< 8)
+//         // copy back the original data2 around new chno value (data2Copy | ...)
+//         // Might be a more direct way of updating chno value.. not (Simon) familiar with these operations...
+//         data2 = data2Copy | ( (data2 >> 8 & 0xC0 | chnoMapped) << 8) ;
+
+//         // std::cout<<"bit rep of data2: "<<std::bitset<16>( data2 )<<std::endl;
+//         // std::cout<<"bit rep data2Copy : "<<std::bitset<16>(data2Copy)<<std::endl;
+//         // std::cout<<"bit rep data2Copy : "<<std::bitset<16>(data2Copy | ( (data2 >> 8 & 0xC0 | chnoCte) << 8) )<<std::endl;
+
+//         // data2 = data2Copy | ( (data2 >> 8 & 0xC0 | chnoCte) << 8) ;
+
+//         // std::cout<<"bit rep data2 after : "<<std::bitset<16>(data2)<<std::endl;
+
+//         // Apply htons after modification (for network byte order)
+//         data2 = htons(data2); 
+//         *reinterpret_cast<uint16_t*>(&data[Data2Offset]) = data2;
+//         uint16_t data2New = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+//         uint8_t chnoNew = (data2New >> 8) & 0x3f;
+//         // std::cout<<"bit rep data2 after : "<<std::bitset<16>((data2New >> 8))<<std::endl;
+//         // std::cout<<"bit rep data2 after : "<<std::bitset<16>(0x3f)<<std::endl;
+//         // std::cout<<"bit rep data2 after : "<<std::bitset<16>((data2New >> 8) & 0x3f)<<std::endl;
+
+//         // printf("mapping - chno: %d \n", chnoNew);
+//     }
+//     return;
+// }
+
+
+// void UDPBroker::mapping(uint8_t* data) {
+//     auto Data2Offset = Data1Size;
+//     uint16_t data2 = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+//     int dataflag = (data2 >> 15) & 0x1;
+
+//     if (dataflag) {
+//         // Clear the existing chno bits
+//         data2 &= ~0x3f00;  // Set bits 9-4 to 0
+
+//         // Set chno to 8 (bits 4-5 set, bits 6-9 cleared)
+//         data2 |= 0x0800;
+
+//         // Apply htons again for network byte order
+//         data2 = htons(data2);
+
+//         // Update the data buffer with the modified 16-bit value
+//         *reinterpret_cast<uint16_t*>(&data[Data2Offset]) = data2;
+
+//         uint16_t data2New = htons(*reinterpret_cast<uint16_t*>(&data[Data2Offset]));
+//         uint8_t chnoNew = (data2New >> 8) & 0x3f;
+//         printf("mapping - chno: %d \n", chnoNew);  // Should now print 8
+//     }
+//     return;
+// }
+
+
+
+// /**
+//  * usage
+//  *    Output an error message, the program usage and
+//  *    exit with error status:
+//  * @param msg - the error message.
+//  */
+// void UDPBroker::usage(const char* msg)
+// {
+//     std::cerr << msg << std::endl;
+//     cmdline_parser_print_help();
+//     exit(EXIT_FAILURE);
+// }
+

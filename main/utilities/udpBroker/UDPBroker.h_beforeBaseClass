@@ -1,0 +1,114 @@
+#ifndef UDPBROKER_H
+#define UDPBROKER_H
+
+// #include <CUDPClient.h>
+// #include <CDataSinkFactory.h>
+#include <CDataSink.h>
+// #include <DataFormat.h>
+#include <CRingItem.h>
+#include <SRSMaps.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <iostream>
+#include <string>
+#include <memory>
+#include <map>
+#include <vector>
+#include <chrono>
+
+
+class UDPBroker {
+public:
+    // UDPBroker(int port, std::string sinkType, int sid = -1);
+    UDPBroker();
+    ~UDPBroker ();
+
+    // void initialize(int port, std::string sinkType, int sid = -1);
+    // void initialize(int port, std::vector<std::string> sinkType, std::vector<int> sid);
+    void initialize(int port);
+    // void initialize(int port, std::vector<std::string> sinkType);
+    // void initialize(int port, std::vector<int> sid);
+    // void test(std::vector<std::string> sinkType);
+    void run();
+    void begin();
+    void end();
+    void stop();
+    void pause();
+    void resume();
+    // void setChannelsMap(std::string mapFile);
+    void setChannelsMap();
+
+    void addSink(std::string sinkType, int sid);
+
+    void setTriggerMode(int triggerIn, int invTrigger);
+    void setClockMode(int extClock);
+    void setClockPeriod(double period);
+
+
+private:
+    void mainLoop();
+
+    // std::unique_ptr<CRingItem> makeRingItem(in_addr_t from, short port, int sid, void* datagram, size_t nBytes);
+    void makeRingItems(in_addr_t from, short port, CDataSink& sink, int sid, uint8_t* buffer, size_t nBytes);
+    void extractHitTimeStamp(uint8_t sourceId, uint8_t* data);
+    void mapping(uint8_t* data, int fecId);
+    void testReadData(uint8_t* data);
+    uint16_t invertByteOrder(uint16_t data);
+    // void usage(const char* msg);
+
+    int m_socket;
+    bool m_stopMainLoop;
+    bool m_pauseMainLoop;
+    int m_port;
+    // std::string m_sinkType;
+    std::vector<std::string> m_sinkType;
+    std::vector<int> m_sid;
+    // std::unique_ptr<UDP::CUDPClient> m_client;
+    // std::unique_ptr<CDataSink> m_dataSink;
+    std::map<int, std::unique_ptr<CDataSink>> m_dataSinks;
+
+    int m_triggerMode;
+    int m_extClock;
+    double m_clockPeriod;
+
+    //Specific to SRS, should move that in a specfic SRS header file
+    static const int MaxFECs{16};
+    //static const int MaxVMMs{16};
+    static const int MaxVMMs{32};//MaxVMMs used for markers, 16 normal trigger + 16 ext trigger
+    static const int MaxChns{64};
+    bool startedMarker[MaxFECs * MaxVMMs] = {false};
+
+    // int channelsMap[16][16][64];//[fec][vmm][ch]
+
+    int m_hitCounter;
+    int m_datagramCounter;
+    int m_markerCounter;
+    int m_markerErrCounter;
+    int m_firstDataCounter;
+    bool m_startChrono;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_start, m_end;
+
+    struct VMM3Marker
+    {
+      uint64_t fecTimeStamp{0};  /// 42 bit
+      uint64_t calcTimeStamp{0}; /// 42 bit
+      uint16_t lastTriggerOffset{0};
+      bool hasDataMarker{false};
+    } *markerSRS;
+
+    struct newData
+    {
+        uint64_t hitTimeStamp{0};
+        uint16_t chnoMapped{0};
+    } tsAndMappedChno;
+
+    static const int SRSHeaderSize{16};
+    static const int HitAndMarkerSize{6};
+    static const int Data1Size{4};
+    static const int Data2Size{2};
+
+    std::unique_ptr<SRSMaps> m_channelsMap;
+    
+};
+
+#endif

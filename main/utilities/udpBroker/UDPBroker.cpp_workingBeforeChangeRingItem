@@ -1,0 +1,263 @@
+// /*
+//     This software is Copyright by the Board of Trustees of Michigan
+//     State University (c) Copyright 2022.
+
+//     You may use this software under the terms of the GNU public license
+//     (GPL).  The terms of this license are described at:
+
+//      http://www.gnu.org/licenses/gpl.txt
+
+//      Authors:
+//              Ron Fox
+//              Giordano Cerriza
+//              Genie Jhang
+//              Simon Giraud
+// 	     FRIB
+// 	     Michigan State University
+// 	     East Lansing, MI 48824-1321
+// */
+
+
+///////------------------------------------------------------
+#include "UDPBroker.h"
+#include "pcapHeader.h"
+#include "datagramHeader.h"
+// #include "BitMath.h"
+
+#include <iostream>
+#include <stdexcept>
+#include <memory>
+// #include <CUDPClient.h>
+#include <CDataSinkFactory.h>
+#include <CDataSink.h>
+#include <stdlib.h>
+#include <string>
+#include <string.h>
+#include <DataFormat.h>
+#include <CRingItem.h>
+#include <stdint.h>
+#include <errno.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <iomanip>
+#include <Exception.h>
+#include <bitset>
+
+
+UDPBroker::UDPBroker() {
+}
+
+UDPBroker::~UDPBroker() {
+}
+
+/**
+ * UDPBroker initialization
+ *
+ *    @param port - the port from which to get data.
+ *    @param sinkType   - the sink to which to output data.
+ *    @param sid    - user provided source id if not -1.
+ *
+ */
+void UDPBroker::initialize(int port, std::string sinkType, int sid) {
+    m_port = port;
+    m_sinkType = sinkType;
+    m_sid = sid;
+    m_stopMainLoop = false;
+    m_pauseMainLoop = false;
+
+    m_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (m_socket < 0) {
+        throw std::runtime_error("Failed to create socket");
+    }
+}
+
+
+void UDPBroker::run() {
+    try {
+        // Create data sink
+        //reset(...) assigns ownership of CDataSink* raw pointer returned by makeSink to a unique_ptr
+        m_dataSink.reset(CDataSinkFactory().makeSink(m_sinkType)); 
+        if (!m_dataSink) {
+            throw std::runtime_error("Failed to create data sink");
+        }
+        //CUDPClient(in_addr_t targetHost, short targetPort)
+        // m_client = std::make_unique<UDP::CUDPClient>();
+
+        struct sockaddr_in servaddr;        
+        memset(&servaddr, 0, sizeof(servaddr));
+        servaddr.sin_family = AF_INET;
+        servaddr.sin_addr.s_addr = INADDR_ANY;
+        servaddr.sin_port = htons(m_port);
+
+        if (bind(m_socket, (const struct sockaddr*)&servaddr, sizeof(servaddr)) < 0) {
+            throw std::runtime_error("Failed to bind socket");
+        }
+
+        // m_client->bind(m_port);
+
+        // Main loop
+        mainLoop();
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+
+
+/**
+ * mainLoop
+ *    Accepts datagrams from the server object and forwards them to the
+ *    sink. Data sent looks like ring items of type FIRST_USER_ITEM_CODE
+ *    (or PHYSICS_EVENT?)
+ *    The body header will be filled in as:
+ *    - timestamp from the routing header.
+ *    - sourceid as (detectorId << 8) | (subdetectorId)
+ *    - barrier type 0.
+ *    The ring item payload will be the complete datagram including
+ *    routing header preceded by the IP address and port of the sender.
+ *
+ */
+// void UDPBroker::mainLoop() {
+//     uint8_t datagram[65536];
+//     while (!m_stopMainLoop) {
+//         in_addr_t from;
+//         short fromPort;
+//         int nrcv = m_client->receive(datagram, sizeof(datagram), from, fromPort);
+//         if (nrcv < 0) {
+//             perror("Unable to receive a datagram");
+//             return;
+//         }
+
+//         std::unique_ptr<CRingItem> pRingItem = makeRingItem(from, fromPort, m_sid, datagram, nrcv);
+//         m_dataSink->putItem(*pRingItem);
+
+//         // delete pRingItem;
+
+//         if (m_stopMainLoop) {
+//             break; 
+//         }
+//     }
+//     m_stopMainLoop = false;
+// }
+
+
+void UDPBroker::mainLoop() {
+    uint8_t datagram[65536];
+    struct sockaddr_in senderAddr;
+    socklen_t senderAddrLen = sizeof(senderAddr);
+
+    while (!m_stopMainLoop) {
+        if (m_pauseMainLoop) continue;
+        int bytesReceived = recvfrom(m_socket, datagram, sizeof(datagram), 0,
+                                     (struct sockaddr*)&senderAddr, &senderAddrLen);
+        if (bytesReceived < 0) {
+            perror("Error receiving datagram");
+            continue;
+        }
+
+        // Process received datagram
+        in_addr_t from = senderAddr.sin_addr.s_addr;
+        short fromPort = ntohs(senderAddr.sin_port);
+        std::unique_ptr<CRingItem> pRingItem = makeRingItem(from, fromPort, m_sid, datagram, bytesReceived);
+        m_dataSink->putItem(*pRingItem);
+
+        if (m_stopMainLoop) {
+            break;
+        }
+    }
+    m_stopMainLoop = false;
+}
+
+
+
+/**
+ * stop mainLoop
+ */
+void UDPBroker::stop() {
+    m_stopMainLoop = true;
+}
+
+/**
+ * pause mainLoop
+ */
+void UDPBroker::pause() {
+    std::cout << "UDPBroker::pause() " << std::endl;
+    m_pauseMainLoop = true;
+}
+
+/**
+ * resume mainLoop
+ */
+void UDPBroker::resume() {
+    std::cout << "UDPBroker::resume() " << std::endl;
+    m_pauseMainLoop = false;
+}
+
+
+/**
+ * makeRingItem
+ *    Turn a datagram into a ring item.  Note that no transformation on the
+ *    data will be done which leaves the routing header in network byte ordering.
+ *
+ *  Create a ring item that encapsulates a datagram we received from some
+ *  remote system. Note that some information in the routing header is turned
+ *  into body header info.  The datagram itself is unmodified.
+ *
+ *  @param from - the IP address from which the data came in network byte order.
+ *  @param port - the port that sent the datagram in that host byte order.
+ *  @param sid  - user provided source id if not -1.
+ *  @param datagram - the datagram
+ *  @param nBytes   - number of bytes in the datagram.
+ *  @return CRingItem* - pointer to a dynamically allocated ring item that
+ *              must be deleted by the caller.
+ */
+std::unique_ptr<CRingItem> UDPBroker::makeRingItem(in_addr_t from, short port, int sid, void* datagram, size_t nBytes) {
+// CRingItem* UDPBroker::makeRingItem(in_addr_t from, short port, int sid, void* datagram, size_t nBytes) {
+    // Let's get the stuff we need from the header to put into the body header
+    // before creating the ring item.
+    // The datagram send from the slow controler has only srsHeader and data
+    
+    uint8_t *buffer = reinterpret_cast<uint8_t*>(datagram);
+
+    psrshdr hdr = reinterpret_cast<psrshdr>(buffer);
+    uint64_t timestamp = ntohl(hdr -> udpTimestamp);
+    uint8_t sourceId = 0;
+    // If source id is not specified by user, use FEC ID as a source id
+    if (sid == -1) {
+        sourceId = hdr -> fecId;
+    } else {
+        sourceId = sid;
+    }
+
+    // Make the ring item
+//     CRingItem *pResult = new CRingItem(PHYSICS_EVENT, timestamp,
+// //    CRingItem *pResult = new CRingItem(FIRST_USER_ITEM_CODE, timestamp,
+//                                        sourceId, 0, nBytes + 1024);
+
+    std::unique_ptr<CRingItem> pResult = std::make_unique<CRingItem>(PHYSICS_EVENT, timestamp, sourceId, 0, nBytes + 1024);
+
+
+    uint8_t* pData = reinterpret_cast<uint8_t*>(pResult -> getBodyCursor());
+    memcpy(pData, buffer, nBytes);
+    pData += nBytes;
+    pResult -> setBodyCursor(pData);
+    pResult -> updateSize();
+    return pResult;
+}
+
+
+// /**
+//  * usage
+//  *    Output an error message, the program usage and
+//  *    exit with error status:
+//  * @param msg - the error message.
+//  */
+// void UDPBroker::usage(const char* msg)
+// {
+//     std::cerr << msg << std::endl;
+//     cmdline_parser_print_help();
+//     exit(EXIT_FAILURE);
+// }
+

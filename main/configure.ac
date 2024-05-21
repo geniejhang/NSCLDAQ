@@ -826,6 +826,7 @@ AC_CONFIG_FILES([Makefile
     base/tclutils/Makefile
     base/testutils/Makefile
     base/sqliteplus/Makefile
+    base/udp/Makefile
     caenfw-common/Makefile
     servers/Makefile
     servers/tclserver/Makefile
@@ -867,6 +868,7 @@ AC_CONFIG_FILES([Makefile
     utilities/logbook/Makefile
     utilities/manager/Makefile
     utilities/readoutREST/Makefile
+    utilities/udpBroker/Makefile
     epics/epicslib/Makefile
     epics/chanlog/Makefile
     epics/controlpush/Makefile
@@ -1005,6 +1007,10 @@ AC_CONFIG_FILES([Makefile
     caen-nextgen/Makefile
     caen-nextgen/tclreadout/Makefile
     cookbooks/Makefile
+    srs/Makefile
+    srs/maps/Makefile
+    srs/broker/Makefile
+    srs/readout/Makefile
     ])
 
 AC_OUTPUT
