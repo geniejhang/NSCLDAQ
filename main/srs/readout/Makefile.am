@@ -20,6 +20,7 @@ SRSReadout_CPPFLAGS= \
   	-I@top_srcdir@/base/udp         			\
 	-I@top_srcdir@/utilities/udpBroker/			\
 	-I@top_srcdir@/srs/broker/					\
+	-I@top_srcdir@/srs/maps/					\
 	@LIBTCLPLUS_CFLAGS@							\
 	@TCL_FLAGS@         						\
 	-DSORTING
@@ -31,6 +32,7 @@ SRSReadout_LDFLAGS= \
 	@top_builddir@/base/os/libdaqshm.la						\
 	@top_builddir@/utilities/udpBroker/libUDPBrokerBase.la	\
 	@top_builddir@/srs/broker/libUDPBrokerDerived.la	 	\
+	@top_builddir@/srs/maps/libSRSMaps.la	 				\
 	@PLX_LDFLAGS@ 											\
 	@LIBTCLPLUS_LDFLAGS@ 									\
 	@TCL_LDFLAGS@
