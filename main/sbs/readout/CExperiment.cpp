@@ -275,6 +275,8 @@ CExperiment::Start(bool resume)
         std::string(m_pRunState->m_pTitle).substr(0, TITLE_MAXSIZE), 1000);
     item.commitToRing(*m_pRing);
     pMain->logProgress("Emitted the state change object");
+
+    m_nRunNumber = m_pRunState->m_runNumber;
     
     // Now invoke either onBegin or onResume in the event segment.
 
@@ -825,6 +827,16 @@ uint32_t
 CExperiment::getSourceId()
 {
   return m_nSourceId;
+}
+/**
+ * getRunNumber
+ *   return the current run number.
+ * @return uint32_t
+ */
+uint32_t
+CExperiment::getRunNumber()
+{
+  return m_nRunNumber;
 }
 /**
  * triggerFail

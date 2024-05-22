@@ -13,5 +13,5 @@ then
 fi
 
 rm -rf unifiedformat
-git clone $REPOSITORY unifiedformat
+https_proxy=http://webproxy:3128 git clone $REPOSITORY unifiedformat
 (cd unifiedformat; git checkout $TAG)
