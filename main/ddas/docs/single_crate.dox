@@ -629,14 +629,13 @@ Data word              | Meaning
 @par
 if several fragments got glued together to create a single event (as will happen if you tee off your pulser into several channels), there will be a ring item in the fragment body for each fragment that made the coincidence requirement.
 
+@section sec_singlecrate_spectcl Analyzing Data With SpecTcl
+@par
+SpecTcl is the lab-supported framework for analyzing data online. DDAS comes with some tools to use in unpacking DDAS data within the context of SpecTcl, DAQ::DDAS::DDASUnpacker and DAQ::DDAS::DDASBuiltUnpacker. These both provide support for parsing the raw data of DDAS for you. It is in your best interest to leverage these tools rather than writing your own unpacker. To learn how to use the DAQ::DDAS::DDASBuiltUnpacker in your SpecTcl, please refer to @ref spectcl.
+
 @section sec_singlecrate_conclusion Conclusions
 @par
 This concludes the single-crate setup tutorial. You should now have a good understanding of how to perform the basic steps necessary to configure a simple DDAS system to take data. The modules have many features which are not discussed in detail in this section, including a digital CFD for precision timing, the ability to run complex coincidence triggers, or take additional data such as QDC sums or, more commonly, ADC trace data. Refer to the @ref qtscope "QtScope Manual" for more information.
-
-@section sec_singlecrate_spectcl Analyzing Data With SpecTcl
-@par
-SpecTcl is the lab-supported framework for analyzing data online. The DDAS comes with some tools to use in unpacking DDAS data within the context of SpecTcl, DAQ::DDAS::DDASUnpacker and DAQ::DDAS::DDASBuiltUnpacker. These both provide support for parsing the raw data of DDAS for you. It is in your best interest to leverage these tools rather than writing your own unpacker. To learn how to use the DAQ::DDAS::DDASBuiltUnpacker in your SpecTcl, please refer to ...
-@todo (ASC 4/16/24): Write a tutorial for DDAS SpecTcl and the CutiePie GUI. Link to it here.
 
 @section sec_singlecrate_reading Further Reading
 - G.F. Knoll, "Radiation Detection and Measurement," (John Wiley and Sons, Hoboken, NJ, USA, 2010), Fourth Edition. Specifically Chapters 16 (Pulse Processing) and 17 (Pulse Shaping, Counting, and Timing).

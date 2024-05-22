@@ -13,7 +13,7 @@ For most issues, bug reports, etc. the best way to get help is to use the SDAQ t
 A good help ticket should provide context for the action being performed, messages or errors reported by the software being run, and any steps taken to troubleshoot the issue. If the problem is repeatable, the conditions which trigger the error should be spelled out as precisely as possible.
 
 @par
-As an example, lets consider a user "Aaron" who is trying to convert an event file to ROOT format using the @ref ddasdumper "ddasdumper" program. Aaron has an event file called run-1234-00.evt which he knows was taken last week using NSCLDAQ 11.3-034. He wants to convert to ROOT format using the ddasdumper program from NSCLDAQ version 12.1-xiaapi4 but the program exits without generating any output:
+As an example, lets consider a user "Bob" who is trying to convert an event file to ROOT format using the @ref ddasdumper "ddasdumper" program. Bob has an event file called run-1234-00.evt which he knows was taken last week using NSCLDAQ 11.3-034. He wants to convert to ROOT format using the ddasdumper program from NSCLDAQ version 12.1-xiaapi4 but the program exits without generating any output:
 
 @verbatim
 <genesis:rawdata >. /usr/opt/daq/12.1-xiaapi4/daqsetup.bash
@@ -22,14 +22,14 @@ ddasdumper main caught a C++ exception: Unable to dump a data format item... lik
 @endverbatim
 
 @par
-Aaron immediately emails daqhelp@frib.msu.edu and says:
+Bob immediately emails daqhelp@frib.msu.edu and says:
 
 <hr>
 "ddasdumper doesn't work for run-1234-00.evt, please help."
 <hr>
 
 @par
-This is an example of a bad daqhelp email. There is a great deal of missing context here which is crucial to understanding the underlying cause of the aborted conversion! A-A-Ron, the SDAQ group member answering responding to the help ticket, doesn't know where to begin, and it will take some back and forth with user Aaron to figure out what has gone wrong and how to fix it.
+This is an example of a bad daqhelp email. There is a great deal of missing context here which is crucial to understanding the underlying cause of the aborted conversion! Alice, the SDAQ group member answering responding to the help ticket, doesn't know where to begin, and it will take some back and forth with Bob to figure out what has gone wrong and how to fix it.
 
 @par
 A better version of this email would look something like:
@@ -45,7 +45,7 @@ ddasdumper main caught a C++ exception: Unable to dump a data format item... lik
 I do not understand what --format refers to or how I should set it. This issue is repeatable and occurs immediately after I attempt to dump the file."
 
 @par
-At this point it is easy to address the issue: there is a format mismatch between the run file's data format and the data format that the ddasdumper program expects. The response by SDAQ A-A-Ron would point user Aaron in the right direction:
+At this point it is easy to address the issue: there is a format mismatch between the run file's data format and the data format that the ddasdumper program expects. The response by Alice would point user Bob in the right direction:
 
 @verbatim
 <genesis:rawdata >$DAQBIN/ddasdumper -h
