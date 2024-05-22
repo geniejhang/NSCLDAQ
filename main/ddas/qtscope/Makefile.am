@@ -28,12 +28,12 @@ libPixieUtilities_la_LIBADD = \
 	@top_builddir@/ddas/exception/libDDASException.la \
 	@LIBEXCEPTION_LDFLAGS@
 
-FIGURES = @srcdir@/figures/timing_diagram.png
+FIGURES = timing_diagram.png
 
 install-data-hook:
 	$(mkinstalldirs) @prefix@/ddas/qtscope
 	$(mkinstalldirs) @prefix@/ddas/qtscope/figures
-	for f in $(FIGURES) ; do $(INSTALL_DATA) $$f @prefix@/ddas/qtscope/figures/. ; done
+	for f in $(FIGURES) ; do $(INSTALL_DATA) @srcdir@/figures/$$f @prefix@/ddas/qtscope/figures/. ; done
 	$(INSTALL_DATA) @srcdir@/*.py @prefix@/ddas/qtscope
 
 install-exec-hook:
