@@ -97,17 +97,33 @@ CReadoutAppSRS::SetupReadout(CExperiment* pExperiment)
   //   std::cout << "CReadoutAppSRS::SetupReadout - Argument " << i + 1 << ": " << argv[i] << std::endl;
   // }
 
-  // Get SRS configuration file from .settings source parameters
-  std::string configFile;
+  // Get SRS configuration file and daqPort from .settings source parameters
+  // The default daq port is the SRS daq port, give choice of daqPort to be able to bind to a port for testing and send test datagrams
+  std::string configFile, daqPortStr = "6006";
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
     if (arg == "configFile") {
       // Check if next argument (i + 1) is within bounds and save it in configFile
       if (i + 1 < argc) {
         configFile = argv[i + 1];
-        break;  // Exit the loop after finding the configFile argument
+        // break;  // Exit the loop after finding the configFile argument
+        if (configFile == "daqPort") {
+          std::cerr << "Error: 'configFile' found without following file path." << std::endl;
+        }
       } else {
         std::cerr << "Error: 'configFile' found without following file path." << std::endl;
+      }
+    }
+    else if (arg == "daqPort") {
+      if (i + 1 < argc) {
+        daqPortStr = argv[i + 1];
+        if (daqPortStr == "configFile") {
+          std::cerr << "Error: 'daqPort' found without following port number." << std::endl;
+          daqPortStr = "6006";
+        }
+      } else {
+        std::cerr << "Error: 'daqPort' found without following port number." << std::endl;
+        daqPortStr = "6006";
       }
     }
   }
@@ -118,7 +134,7 @@ CReadoutAppSRS::SetupReadout(CExperiment* pExperiment)
 
   // Add SRS EventSegment
   myeventsegment = new CEventSegmentSRS(mytrigger, *pExperiment);
-  myeventsegment->configure(configFile);
+  myeventsegment->configure(configFile, daqPortStr);
   pExperiment->AddEventSegment(myeventsegment);
 
 }
