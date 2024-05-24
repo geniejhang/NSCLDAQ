@@ -108,7 +108,7 @@ class SystemUtilities:
         
         # Get module MSPS:        
         lib.CPixieSystemUtilities_GetModuleMSPS.argtypes = [c_void_p, c_int]
-        lib.CPixieSystemUtilities_GetModuleMSPS.restype = c_ushort
+        lib.CPixieSystemUtilities_GetModuleMSPS.restype = c_int
         
         # Dtor:        
         lib.CPixieSystemUtilities_delete.argtypes = [POINTER(c_char)]
@@ -262,8 +262,17 @@ class SystemUtilities:
         -------
         int
             Sampling rate in MSPS.
-        """        
-        return lib.CPixieSystemUtilities_GetModuleMSPS(self.obj, module)
+        """
+        try: 
+            retval = lib.CPixieSystemUtilities_GetModuleMSPS(self.obj, module)
+            if retval < 0:
+                raise RuntimeError(
+                    f"Failed to read Mod. {module} MSPS with retval {retval}"
+                ) 
+            return retval
+        except RuntimeError as e:
+            self.logger.exception(f"Failed to read module {module} MSPS")
+            print(e)
     
     def __del__(self):
         """SystemUtilities class destructor."""        

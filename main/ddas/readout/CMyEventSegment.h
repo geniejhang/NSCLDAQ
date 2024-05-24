@@ -25,15 +25,6 @@ class CExperiment;
  * The event segment reads out a logical chunk of an experiment. In the DDAS 
  * case, data from a single crate (single source ID). An experiment may 
  * consist of multiple crates arranged in a CCompoundEventSegment container.
- *
- * @todo (ASC 3/20/24): `Setup*` functions should throw exceptions which can 
- * be handled by the base class. The base class needs to be modified to handle
- * std::exception and its derived classes.
- * 
- * mytrigger, myeventsegment and scalerModules naively look like class members 
- * rather than locally scoped variables... but then we need construction, 
- * destruction, etc. For now, who manages their memory? One might guess that 
- * CExperiment does, but the busy and triggers are not deleted on destruction.
  */
 
 class CMyEventSegment : public CEventSegment

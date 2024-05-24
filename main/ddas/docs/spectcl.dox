@@ -13,12 +13,10 @@ NSCLDAQ supports a wide variety of data acquisition hardware which use different
 @note If you are not working with event-built data, use the DAQ::DDAS::DDASUnpacker rather than DAQ::DDAS::DDASBuiltUnpacker. Everything else should remain the same.
 
 @par
-The source code for the example discussed in this tutorial can be found at PREFIX/VERSION/DDASSkel/ where PREFIX is the installation prefix path and VERSION is some SpecTcl version 5.14 or later. On FRIB computer systems the PREFIX path is most likely /usr/opt/spectcl. The user does not have deal with the low-level raw data when building a SpecTcl. Rather, they just need to implement a class that uses the unpacked DDAS data to set tree parameters for histogramming. In this way, the user is isolated from the details of the DDAS data structure.
+The source code for the example discussed in this tutorial can be found at PREFIX/VERSION/DDASSkel/ where PREFIX is the installation prefix path and VERSION is some SpecTcl version 5.14 or later. On FRIB computer systems the PREFIX path is most likely /usr/opt/spectcl. The user does not have deal with the low-level raw data when building a SpecTcl. Rather, they just need to implement a class that uses the unpacked DDAS data to set tree parameters for histogramming. In this way, the user is isolated from the details of the DDAS data structure. In any case, let's get down to business constructing a tailored SpecTcl.
+
 
 @note You should never need to write your own DDAS event parser. We provide tools for this for SpecTcl and for other raw data.
-
-@par
-In any case, let's get down to business constructing a tailored SpecTcl.
 
 @section sec_spectcl_tailored Creating a Tailored SpecTcl
 @par
@@ -30,7 +28,7 @@ cd mySpecTcl
 @endverbatim
 
 @par
-Lets take a step back and try to understand what the DDAS SpecTcl skeleton is doing and how it is structured. We'll start with the raw data processing stage where you incorporate the unpacker.
+You can make and run this example code right away. But, in the interest of learning, we will take a step back and try to understand what the DDAS SpecTcl skeleton is doing and how it is structured. We'll start with the raw data processing stage which utilizes the unpacker we mentioned in @ref sec_spectcl_intro.
 
 @subsection sec_spectcl_unpacker Using the DDAS Unpacker
 @par

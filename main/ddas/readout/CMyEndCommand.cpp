@@ -46,7 +46,7 @@ CMyEndCommand::~CMyEndCommand()
  * mode. If the INFINITY_CLOCK mode is set, we must stop the run in each module
  * individually.
  *
- * @note: If the end run signal is successfully communicated to the module(s), 
+ * @note If the end run signal is successfully communicated to the module(s), 
  * the transition to an inactive state cannot fail, only report which module(s)
  * failed to properly end their run. One common cause of this failure is a 
  * very high input rate to one or more channels on that module.

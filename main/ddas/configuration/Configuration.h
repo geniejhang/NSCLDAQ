@@ -111,8 +111,6 @@ namespace DAQ {
 	    /**
 	     * @brief Set the crate id for the module.
 	     * @param id The id to assign.
-	     * @todo (ASC 7/14/23): If this is not used, should it be 
-	     * considered deprecated and removed?
 	     */
 	    void setCrateId(int id) { m_crateId = id; };
 	    /**

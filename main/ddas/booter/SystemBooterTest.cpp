@@ -54,6 +54,7 @@ class SystemBooterTest : public CppUnit::TestFixture
     CPPUNIT_TEST( boot_5 );
     CPPUNIT_TEST( boot_6 );
     CPPUNIT_TEST( boot_7 );
+    CPPUNIT_TEST( test
     CPPUNIT_TEST_SUITE_END();
 
     Configuration m_config;

@@ -23,9 +23,7 @@ namespace HR = DAQ::DDAS::HardwareRegistry;
  * cfgPixie16.txt.
  */
 CPixieSystemUtilities::CPixieSystemUtilities() :
-    m_bootMode(0), m_booted(false), m_ovrSetFile(false), m_numModules(0),
-    m_modEvtLength(0), m_modADCMSPS(0), m_modADCBits(0), m_modRev(0),
-    m_modClockCal(0)
+    m_bootMode(0), m_booted(false), m_ovrSetFile(false), m_numModules(0)
 {}
 
 /**
@@ -192,33 +190,25 @@ CPixieSystemUtilities::ExitSystem()
     return retval; // All good.
 }
 
-/**
- * @todo (ASC 7/14/23): Would be better to return max(unsigned int) or 
- * something besides 0 if an exception is raised. Must also be checked 
- * wherever this return value is used on the Python side.
- */
-unsigned short
+int
 CPixieSystemUtilities::GetModuleMSPS(int module)
 {
-    int nmodules = m_modADCMSPS.size() - 1;
-    try {
-	if (!m_booted) {
-	    std::stringstream errmsg;
-	    errmsg << "CPixieSystemUtilities::GetModuleMSPS() ";
-	    errmsg << "system not booted.";
-	    throw std::runtime_error(errmsg.str());
-	} else if ((module < 0) || (module > nmodules)) {
-	    std::stringstream errmsg;
-	    errmsg << "CPixieSystemUtilities::GetModuleMSPS() ";
-	    errmsg << "invalid module number ";
-	    errmsg << module << " for " << nmodules << " module system.";
-	    throw std::range_error(errmsg.str());
-	} else {
-	    return m_modADCMSPS[module];
-	}
-    }
-    catch (const std::range_error& e) {
-	std::cerr << e.what() << std::endl;
-	return 0;
+    // A correctly booted sysyem must be definition contain >= 1 module
+    // so I'm _pretty_ sure this is a good check for that too:
+    if (!m_booted) {
+	std::string msg(
+	    "CPixieSystemUtilities::GetModuleMSPS() system not booted."
+	    );
+	return -1;
+    } else if ((module < 0) || (module >= m_numModules)) {
+	std::stringstream msg;
+	msg << "CPixieSystemUtilities::GetModuleMSPS() ";
+	msg << "invalid module number ";
+	msg << module << " for " << m_numModules << " module system.";
+	std::cerr << msg.str() << std::endl;
+	return -2;
+    } else {
+	// Implicit conversion probably OK but:
+	return static_cast<int>(m_modADCMSPS[module]);
     }
 }

@@ -6,12 +6,15 @@
 #ifndef SYSTEMBOOTER_H
 #define SYSTEMBOOTER_H
 
+#include <stddef.h>
+
 /** @namespace DAQ */
 namespace DAQ {
     /** @namespace DAQ::DDAS */
     namespace DDAS {
 
 	class Configuration;
+	struct FirmwareConfiguration;
 
 	/**
 	 * @addtogroup libSystemBooter libSystemBooter.so
@@ -141,6 +144,16 @@ namespace DAQ {
 	    void logModuleInfo(
 		int modIndex, unsigned short ModRev, unsigned short ModSerNum,
 		unsigned short ModADCBits, unsigned short ModADCMSPS
+		);
+	    /**
+	     * @brief Check that the firmware path lengths can be copied 
+	     * into fixed-length arrays of size maxLen.
+	     * @param fwConfig Refernces the FW configuration.
+	     * @param maxLen   Maximum file path length.
+	     * @throw std::length_error Some path is too long.
+	     */
+	    void checkFWPathLengths(
+		FirmwareConfiguration& fwConfig, const size_t maxLen
 		);
 	};
 	

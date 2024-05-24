@@ -22,8 +22,7 @@
  * Enables verbose output by default.
  */
 DAQ::DDAS::SystemBooter::SystemBooter() :
-    m_verbose(true),
-    m_offlineMode(0)
+    m_verbose(true), m_offlineMode(0)
 {}
 
 /**
@@ -78,9 +77,6 @@ void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
  * configuration associated with the hardware will be used. The settings
  * file that will be used in any boot type, will be the path stored in the
  * configuration.
-
- * @todo Check that the firmware file paths are less than 256 characters in 
- * length.
  */
 void
 DAQ::DDAS::SystemBooter::bootModuleByIndex(
@@ -114,6 +110,15 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
     FirmwareConfiguration fwConfig = m_config.getModuleFirmwareConfiguration(
 	hdwrMap[modIndex], modIndex
 	);
+
+    // Check the lengths, throw whatever back up the stack
+    try {
+	checkFWPathLengths(fwConfig, FILENAME_STR_MAXLEN);
+    }
+    catch (...) {
+	throw;
+    }
+    
     strcpy(Pixie16_Com_FPGA_File, fwConfig.s_ComFPGAConfigFile.c_str());
     strcpy(Pixie16_SP_FPGA_File,  fwConfig.s_SPFPGAConfigFile.c_str());
     strcpy(Pixie16_DSP_Code_File, fwConfig.s_DSPCodeFile.c_str());
@@ -266,5 +271,30 @@ unsigned int DAQ::DDAS::SystemBooter::computeBootMask(BootType type)
 	return 0x7f;
     } else {
 	return 0x70;
+    }
+}
+
+/**
+ * @details
+ * Fails on first bad path length encountered.
+ *
+ * @todo (ASC 5/23/24): Unit test needed.
+ */
+void DAQ::DDAS::SystemBooter::checkFWPathLengths(
+    FirmwareConfiguration& fwConfig, const size_t maxLen
+    ) {
+
+    std::vector<std::string> paths = {
+	fwConfig.s_ComFPGAConfigFile, fwConfig.s_SPFPGAConfigFile,
+	fwConfig.s_DSPCodeFile, fwConfig.s_DSPVarFile
+    };
+
+    for (const auto& path : paths) {
+	if (path.size() > maxLen) {
+	    std::stringstream msg;
+	    msg << "FW file path " << path << " must be less than "
+		<< maxLen << " characters but is " << path.size();
+	    throw std::length_error(msg.str());
+	}
     }
 }
