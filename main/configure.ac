@@ -430,21 +430,23 @@ fi
 # be found, --with-plx-sdk can be used to provide it. What we provide to the
 # Makefiles:
 #
-# BUILD_DDAS     - if this flag is provided that's defined to allow the top
-#                  level Makefile to enable the ddas support software build.
-# PIXIE_API_DIR  - installation directory of the XIA Pixie API
-# PIXIE_CPPFLAGS - compiler flags
-# PIXIE_LDFLAGS  - load flags
-# PLX_SDK_DIR    - installation directory of the PLX API library
-# PLX_CPPFLAGS   - compiler flags
-# PLX_LDFLAGS    - load flags
-# firmwaredir    - Pixie firmware installation directory
-# dspdir         - Pixie DSP load image installaion directory
-# UFMT_CPPFLAGS  - Unified format CPP flags
-# UFMT_LDFLAGS   - Unified format library flags
-# ROOTSYS        - ROOT installation to compile e.g. ddasdumper against
-# ROOT_CFLAGS    - ROOT cflags (automatically generated from ROOT config)
-# ROOT_LDFLAGS   - ROOT libraries (automatically generated from ROOT config)
+# BUILD_DDAS       - If this flag is provided that's defined to allow the top
+#                    level Makefile to enable the ddas support software build.
+# PIXIE_API_DIR    - Installation directory of the XIA Pixie API
+# PIXIE_CPPFLAGS   - Compiler flags for Pixie API
+# PIXIE_LDFLAGS    - Linker flags for Pixie API
+# PLX_SDK_DIR      - Installation directory of the PLX API library
+# PLX_CPPFLAGS     - Compiler flags for PLX API
+# PLX_LDFLAGS      - Linker flags for PLX API
+# firmwaredir      - Pixie firmware installation directory
+# dspdir           - Pixie DSP load image installaion directory
+# UFMT_CPPFLAGS    - Unified format compiler flags
+# UFMT_LDFLAGS     - Unified format linker flags
+# DDASFMT_CPPFLAGS - DDAS format compiler flags
+# DDASFMT_LDFLAGS  - DDAS format linker flags
+# ROOTSYS          - ROOT installation to compile e.g. ddasdumper against
+# ROOT_CFLAGS      - ROOT cflags (automatically generated from ROOT config)
+# ROOT_LDFLAGS     - ROOT libraries (automatically generated from ROOT config)
 
 AC_ARG_ENABLE([ddas],
 	AS_HELP_STRING([--enable-ddas], [Build the DDAS support software (default no)]),
@@ -568,13 +570,33 @@ then
 		UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
 		AC_SUBST(UFMT_CPPFLAGS)
 		AC_SUBST(UFMT_LDFLAGS)],
-		[AC_MSG_ERROR([incorporate the unified format library with unifiedfmt-incorp.sh])])
+		[AC_MSG_ERROR([Incorporate the unified format library with unifiedfmt-incorp.sh])])
+
+	# Check that the DDAS format library has been incorporated into the
+	# source tree and configure/build it into $prefix/ddasformat.
+	# The DDAS format library provides a DDASHit class for encapsulating
+	# hit information and an unpacker to unpack list-mode event data
+	# into DDASHits.
+	#
+	# Note: Format library also depends on cmake, but we check above as
+	# part of the unified format stuff.
+
+	AC_CHECK_FILE([${srcdir}/ddasformat/CMakeLists.txt],
+		[rm -rf ddasformat/build
+		mkdir -p ddasformat/build
+		sourcedir="`realpath ${srcdir}`"
+		(cd ddasformat/build; cmake ${sourcedir}/ddasformat -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make all test install)
+		DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
+		DDASFMT_LDFLAGS="-L${prefix}/ddasformat/lib -lDDASFormat -Wl,-rpath=${prefix}/ddasformat/lib"
+		AC_SUBST(DDASFMT_CPPFLAGS)
+		AC_SUBST(DDASFMT_LDFLAGS)],
+		[AC_MSG_ERROR([Incorporate the DDAS format library with ddasfmt-incorp.sh])])
 
 	#  Check for ROOT -- we're just going to add a --with-rootsys and 
 	#  use rootconfig to add the following to the Makefile macro set:
 	#
-	#  ROOT_CPPFLAGS - compiler flags for ROOT.
-	#  ROOT_LDFLAGS - ROOT libraries location.
+	#  ROOT_CPPFLAGS - Compiler flags for ROOT.
+	#  ROOT_LDFLAGS  - ROOT libraries location.
 
 	rootdir=$ROOTSYS
 	AC_ARG_WITH([rootsys],
@@ -900,7 +922,6 @@ AC_CONFIG_FILES([Makefile
 	ddas/exception/Makefile
 	ddas/configuration/Makefile
 	ddas/booter/Makefile
-	ddas/format/Makefile
 	ddas/ddasdumper/Makefile
 	ddas/ddasdumper/ddasdumper
 	ddas/readout/Makefile

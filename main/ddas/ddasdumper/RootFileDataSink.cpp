@@ -144,17 +144,11 @@ RootFileDataSink::putItem(const CRingItem& item)
 	    DDASRootHit* pHit = new DDASRootHit;
 	    m_pUnpacker->unpack(pFragBody, pFragBody + fragmentWords, *pHit);
 
-	    // As of 3/28/24, ROOT 6.30.04 cannot handle I/O of shared_ptrs,
-	    // so we'll make a pointer to the object, copy-construct the
-	    // pointer onto the vector and then point our original pointer to
-	    // nothing. The new pointer points to the original DDASRootHit
-	    // object. Once we cleanup, the DDASRootEvent owns the data and
-	    // the only pointer to it:
-	
+	    // As of 3/28/24, ROOT 6.30.04 cannot handle I/O of shared_ptrs.
+	    // DDASRootEvent is responsible for managing and cleaning up
+	    // the hit data after we add it to the event:
+
 	    m_pEvent->AddChannelData(pHit);
-	    pHit = nullptr;
-	    delete pHit;
-		
 	    pBody += fragmentWords; // Point to next fragment.
 	
 	    // Increment the counters:

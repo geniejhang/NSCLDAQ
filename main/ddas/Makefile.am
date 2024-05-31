@@ -1,4 +1,4 @@
-SUBDIRS = exception configuration booter format ddasdumper readout pixieplugin qtscope
+SUBDIRS = exception configuration booter ddasdumper readout pixieplugin qtscope
 
 if BUILD_DDAS_DOCS
 SUBDIRS += docs
@@ -10,5 +10,10 @@ endif
 # files to XML format (and back) and the suite of unittests which faked a
 # version of the legacy API to test against.
 
-# readout-extclock - external clock handling is subsumed into readout.
-# traiter - legacy trace iterator class. Not installed for now.
+# Also not built:
+# * readout-extclock - external clock handling is subsumed into readout.
+# * traiter - legacy trace iterator class. Not installed for now.
+
+# (ASC 5/31/24): Refactored the DDAS format stuff out of FRIBDAQ into its own
+# module which can be incorp'd the same way as the unified format library and
+# libtcl.

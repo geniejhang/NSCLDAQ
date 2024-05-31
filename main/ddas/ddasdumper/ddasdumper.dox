@@ -110,7 +110,7 @@ You can access the data by calling the `TTree::GetEntry()`. As an example, consi
 
 @code
 #include <DDASRootEvent.h>            // Class defs. (in ROOT_INCLUDE_PATH)
-R__ADD_LIBRARY_PATH($DAQLIB)          // Where are library is installed.
+R__ADD_LIBRARY_PATH($DAQLIB)          // Where our library is installed.
 R__LOAD_LIBRARY(libddasrootformat.so) // Library containing our code.
 
 void plotMult()
