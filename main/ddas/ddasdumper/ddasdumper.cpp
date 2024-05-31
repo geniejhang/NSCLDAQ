@@ -19,7 +19,7 @@
 /**
  * @file ddasdumper.cpp
  * @brief Main program to use the format library to dump DDAS event files.
- * Based on the format library evtdump example code.
+ * Based on the unified format library evtdump example code.
  */
 
 #include <cstdlib>
@@ -164,7 +164,7 @@ makeExclusionList(const std::string& exclusions)
  *
  * @return Factory version ID (from the enum).
  *
- * @note we should never throw because gengetopt will enforce the enum.
+ * @note We should never throw because gengetopt will enforce the enum.
  */
 static FormatSelector::SupportedVersions
 mapVersion(enum_format fmtIn)
@@ -319,7 +319,6 @@ dumpItem(
     case PHYSICS_EVENT:
     {
 	// This item type gets written:
-	
 	std::unique_ptr<CPhysicsEventItem>
 	    p(factory.makePhysicsEventItem(*pItem));
 	pSink->putItem(*p.get());

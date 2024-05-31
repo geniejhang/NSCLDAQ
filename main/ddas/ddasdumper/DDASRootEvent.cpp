@@ -97,7 +97,7 @@ Double_t DDASRootEvent::GetFirstTime() const
 {
     Double_t time = 0;
     if (m_data.size() > 0) { 
-        time = m_data.front()->GetTime();
+        time = m_data.front()->getTime();
     }
     
     return time;
@@ -113,7 +113,7 @@ Double_t DDASRootEvent::GetLastTime() const
 {
     Double_t time = 0;
     if (m_data.size() > 0) { 
-        time = m_data.back()->GetTime();
+        time = m_data.back()->getTime();
     }
     
     return time;
