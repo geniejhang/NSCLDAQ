@@ -943,7 +943,6 @@ AC_CONFIG_FILES([Makefile
 	ddas/pixieplugin/definitions.tcl
 	ddas/qtscope/Makefile
 	ddas/qtscope/qtscope
-	ddas/simple_setups/Makefile
 	ddas/docs/Makefile
 	ddas/docs/Doxyfile
 	ddas/docs/DoxygenLayout.xml
