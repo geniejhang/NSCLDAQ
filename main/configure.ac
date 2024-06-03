@@ -4,6 +4,13 @@ AC_PREREQ(2.61)
 
 AC_INIT(nscldaq, 12.1-xiaapi4, [daqhelp@nscl.msu.edu], [], [https://github.com/FRIBDAQ/NSCLDAQ])
 
+# Default tag for DDAS format versio. If the builder has not explicitly run
+# the incorporation scripts, the versions below will be used to incorporate
+# for you:. Update as the "good" version is updated:
+
+DDAS_FMT_VERSION="1.1"
+UNIFIED_FMT_VERSION="1.2"
+
 AC_CONFIG_SRCDIR([/base/dataflow/CRingBuffer.h])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -323,7 +330,7 @@ do
         TCL_LDFLAGS="$TCL_LDFLAGS $tclname"
     fi
 done
-TCLSH_CMD=${TCLSH} 
+TCLSH_CMD=${TCLSH}
 
 #  If systemtcl is yes we're pretty much done.. otherwise
 #  we need to configure/build/install libtcl into prefix and then set
@@ -552,45 +559,51 @@ then
 
 	AC_SUBST(dspdir)
 
+ 	# The unified format and DDAS format libraries have builds that
+	# require cmake, so check for that:
+
+	AC_CHECK_PROG([have_cmake], cmake, yes)
+	AS_VAR_IF([have_cmake], [yes], [], AC_MSG_ERROR([cmake must be in the path to build DDAS support software]))
+
+	# Sync source tree directories (if present) for DDAS format and
+	# unified format to the build dir using rsync, so check for that too:
+
+	AC_CHECK_PROG([have_rsync], rsync, yes)
+	AS_VAR_IF([have_rsync], [yes], [], AC_MSG_ERROR([rsync is required to build DDAS support software]))
+
 	# Check that the unified format library has been incorporated into
 	# the source tree and configure/build it into $prefix/unifiedformat
 
-	AC_CHECK_PROG([havecmake], cmake, [1], [0])
-	if test $havecmake = 0
-	then
-		AC_MSG_ERROR([cmake must be in the path to build DDAS support software])
-	fi
-
 	AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt],
-		[rm -rf unifiedformat/build
-		mkdir -p unifiedformat/build
-		sourcedir="`realpath ${srcdir}`"
-		(cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make all test install)
-		UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
-		UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
-		AC_SUBST(UFMT_CPPFLAGS)
-		AC_SUBST(UFMT_LDFLAGS)],
-		[AC_MSG_ERROR([Incorporate the unified format library with unifiedfmt-incorp.sh])])
+		[AC_MSG_NOTICE([Unified format incorporated in the source tree at ${srcdir}/unifiedformat, using that version])
+		rsync -avz --exclude=".git" ${srcdir}/unifiedformat/ unifiedformat],
+		[AC_MSG_NOTICE([Incorporating unified format version ${UNIFIED_FMT_VERSION} for you])
+		${srcdir}/unifiedfmt-incorp.sh ${UNIFIED_FMT_VERSION}])
+	rm -rf unifiedformat/build
+	AS_MKDIR_P(unifiedformat/build)
+	AC_MSG_NOTICE([Building unified format])
+	(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make all test install)
+	UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
+	UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
+	AC_SUBST(UFMT_CPPFLAGS)
+	AC_SUBST(UFMT_LDFLAGS)
 
 	# Check that the DDAS format library has been incorporated into the
 	# source tree and configure/build it into $prefix/ddasformat.
-	# The DDAS format library provides a DDASHit class for encapsulating
-	# hit information and an unpacker to unpack list-mode event data
-	# into DDASHits.
-	#
-	# Note: Format library also depends on cmake, but we check above as
-	# part of the unified format stuff.
-
+		
 	AC_CHECK_FILE([${srcdir}/ddasformat/CMakeLists.txt],
-		[rm -rf ddasformat/build
-		mkdir -p ddasformat/build
-		sourcedir="`realpath ${srcdir}`"
-		(cd ddasformat/build; cmake ${sourcedir}/ddasformat -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make all test install)
-		DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
-		DDASFMT_LDFLAGS="-L${prefix}/ddasformat/lib -lDDASFormat -Wl,-rpath=${prefix}/ddasformat/lib"
-		AC_SUBST(DDASFMT_CPPFLAGS)
-		AC_SUBST(DDASFMT_LDFLAGS)],
-		[AC_MSG_ERROR([Incorporate the DDAS format library with ddasfmt-incorp.sh])])
+		[AC_MSG_NOTICE([DDAS format incorporated in the source tree at ${srcdir}/ddasformat, using that version])
+		rsync -avz --exclude=".git" ${srcdir}/ddasformat/ ddasformat],
+		[AC_MSG_NOTICE([Incorporating DDAS format version ${DDAS_FMT_VERSION} for you])
+		${srcdir}/ddasfmt-incorp.sh ${DDAS_FMT_VERSION}])
+	rm -rf ddasformat/build
+	AS_MKDIR_P(ddasformat/build)
+	AC_MSG_NOTICE([Building DDAS format])
+	(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make all test install)
+	DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
+	DDASFMT_LDFLAGS="-L${prefix}/ddasformat/lib -lDDASFormat -Wl,-rpath=${prefix}/ddasformat/lib"
+	AC_SUBST(DDASFMT_CPPFLAGS)
+	AC_SUBST(DDASFMT_LDFLAGS)
 
 	#  Check for ROOT -- we're just going to add a --with-rootsys and 
 	#  use rootconfig to add the following to the Makefile macro set:
