@@ -4,13 +4,6 @@ AC_PREREQ(2.61)
 
 AC_INIT(nscldaq, 12.1-xiaapi4, [daqhelp@nscl.msu.edu], [], [https://github.com/FRIBDAQ/NSCLDAQ])
 
-# Default tag for DDAS format versio. If the builder has not explicitly run
-# the incorporation scripts, the versions below will be used to incorporate
-# for you:. Update as the "good" version is updated:
-
-DDAS_FMT_VERSION="1.1"
-UNIFIED_FMT_VERSION="1.2"
-
 AC_CONFIG_SRCDIR([/base/dataflow/CRingBuffer.h])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -339,26 +332,16 @@ do
 done
 TCLSH_CMD=${TCLSH}
 
-# Hard code use of local libtcl:
+# Build and install the pinned version of the tcl++ submodule:
 
-#AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
-#if test $havelibtcldir = "yes"
-#then
-#	AC_MSG_RESULT([Need to build local tagged copy])
-#	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
-#	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-#	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-#	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-#else
-#	AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-#fi
-
-(cd ${srcdir}/libtcl; autoreconf -if; ./configure --prefix=${prefix}; make clean; make -j; make install)
+(cd ${srcdir}/libtcl; autoreconf -if; ./configure --prefix=${prefix}; make clean; make -j8; make install)
 result=$?
 AS_VAR_IF([result], [0], [], AC_MSG_ERROR([tcl++ installation failed with result: ${result}]))
+
 LIBTCLPLUS_CFLAGS="-I${prefix}/include"
 LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
 LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
+
 AC_SUBST(LIBTCLPLUS_CFLAGS)
 AC_SUBST(LIBTCLPLUS_LDFLAGS)
 AC_SUBST(LIBEXCEPTION_LDFLAGS)
@@ -529,45 +512,30 @@ then
 	AC_CHECK_PROG([have_cmake], cmake, yes)
 	AS_VAR_IF([have_cmake], [yes], [], AC_MSG_ERROR([cmake must be in the path to build DDAS support software]))
 
-	# Sync source tree directories (if present) for DDAS format and
-	# unified format to the build dir using rsync, so check for that too:
+	# Build and install the pinned unified format submodule:
 
-	#AC_CHECK_PROG([have_rsync], rsync, yes)
-	#AS_VAR_IF([have_rsync], [yes], [], AC_MSG_ERROR([rsync is required to build DDAS support software]))
-
-	# Check that the unified format library has been incorporated into
-	# the source tree and configure/build it into $prefix/unifiedformat
-
-#	AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt],
-#		[AC_MSG_NOTICE([Unified format incorporated in the source tree at ${srcdir}/unifiedformat, using that version])
-#		rsync -avz --exclude=".git" ${srcdir}/unifiedformat/ unifiedformat],
-#		[AC_MSG_NOTICE([Incorporating unified format version ${UNIFIED_FMT_VERSION} for you])
-#		${srcdir}/unifiedfmt-incorp.sh ${UNIFIED_FMT_VERSION}])
 	rm -rf unifiedformat/build
 	AS_MKDIR_P(unifiedformat/build)
+	
 	AC_MSG_NOTICE([Building unified format])
 	sourcedir=`realpath ${srcdir}`
-	(cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make -j all test install)
+	(cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make -j8 all; make test install)
 	result=$?
 	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([unifiedformat installation failed with result: ${result}]))
+	
 	UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
 	UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
+
 	AC_SUBST(UFMT_CPPFLAGS)
 	AC_SUBST(UFMT_LDFLAGS)
 
-	# Check that the DDAS format library has been incorporated into the
-	# source tree and configure/build it into $prefix/ddasformat.
-		
-#	AC_CHECK_FILE([${srcdir}/ddasformat/CMakeLists.txt],
-#		[AC_MSG_NOTICE([DDAS format incorporated in the source tree at ${srcdir}/ddasformat, using that version])
-#		rsync -avz --exclude=".git" ${srcdir}/ddasformat/ ddasformat],
-#		[AC_MSG_NOTICE([Incorporating DDAS format version ${DDAS_FMT_VERSION} for you])
-#		${srcdir}/ddasfmt-incorp.sh ${DDAS_FMT_VERSION}])
+	# Build and install the pinned DDAS format submodule:
+	
 	rm -rf ddasformat/build
 	AS_MKDIR_P(ddasformat/build)
 	AC_MSG_NOTICE([Building DDAS format])
 	sourcedir=`realpath ${srcdir}` # For safety
-	(cd ddasformat/build; cmake ${sourcedir}/ddasformat -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make -j all test install)
+	(cd ddasformat/build; cmake ${sourcedir}/ddasformat -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make -j8 all; make test install)
 	result=$?
 	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([ddasformat installation failed with result: ${result}]))
 	DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
