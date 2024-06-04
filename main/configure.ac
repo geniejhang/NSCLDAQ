@@ -44,7 +44,7 @@ fi
 # repo if you're in the business of using autotools to make a configure
 # script, this almost certainly will work, but lets check anyway:
 
-AC_CHECK_PROG([have_git], git, yes)
+AC_CHECK_PROG([have_git], [git], [yes])
 AS_VAR_IF([have_git], [yes], [git submodule update --init --remote], AC_MSG_ERROR([git is required for submodule management]))
 
 #  CAEN Digitizer support is optional:
@@ -509,7 +509,7 @@ then
  	# The unified format and DDAS format libraries have builds that
 	# require cmake, so check for that:
 
-	AC_CHECK_PROG([have_cmake], cmake, yes)
+	AC_CHECK_PROG([have_cmake], [cmake], [yes])
 	AS_VAR_IF([have_cmake], [yes], [], AC_MSG_ERROR([cmake must be in the path to build DDAS support software]))
 
 	# Build and install the pinned unified format submodule:
