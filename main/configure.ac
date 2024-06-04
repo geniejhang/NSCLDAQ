@@ -4,13 +4,6 @@ AC_PREREQ(2.61)
 
 AC_INIT(nscldaq, 12.1-xiaapi4, [daqhelp@nscl.msu.edu], [], [https://github.com/FRIBDAQ/NSCLDAQ])
 
-# Default tag for DDAS format versio. If the builder has not explicitly run
-# the incorporation scripts, the versions below will be used to incorporate
-# for you:. Update as the "good" version is updated:
-
-DDAS_FMT_VERSION="1.1"
-UNIFIED_FMT_VERSION="1.2"
-
 AC_CONFIG_SRCDIR([/base/dataflow/CRingBuffer.h])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -46,6 +39,13 @@ then
 	AC_MSG_FAILURE([pandoc is required to produce PDF output from the logbook utilities])
 	
 fi
+
+# Git is needed for submodule management. Since you've probably cloned the
+# repo if you're in the business of using autotools to make a configure
+# script, this almost certainly will work, but lets check anyway:
+
+AC_CHECK_PROG([have_git], [git], [yes])
+AS_VAR_IF([have_git], [yes], [git submodule update --init --remote], AC_MSG_ERROR([git is required for submodule management]))
 
 #  CAEN Digitizer support is optional:
 
@@ -332,68 +332,15 @@ do
 done
 TCLSH_CMD=${TCLSH}
 
-#  If systemtcl is yes we're pretty much done.. otherwise
-#  we need to configure/build/install libtcl into prefix and then set
-#  the flags:
+# Build and install the pinned version of the tcl++ submodule:
 
-if false
-then
-	AC_MSG_CHECKING([libtcl++ installed as package (e.g. .deb)])
+(cd ${srcdir}/libtcl; autoreconf -if; ./configure --prefix=${prefix}; make clean; make -j8; make install)
+result=$?
+AS_VAR_IF([result], [0], [], AC_MSG_ERROR([tcl++ installation failed with result: ${result}]))
 
-	AC_CHECK_FILE([/usr/include/TCLInterpreterObject.h],
-	[systemtcl="yes"], [systemtcl="no"])
-
-	if test $systemtcl = "yes"
-	then
-		LIBTCLPLUS_CFLAGS=""
-		LIBEXCEPTION_LDFLAGS="-lException"
-		LIBTCLPLUS_LDFLAGS="-ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-		AC_MSG_RESULT([Found in  system libraries])
-	else
-		AC_CHECK_FILE([${prefix}/lib/libException.so],
-		[libtclinstalled="yes"], [libtclinstalled="no"])
-		AC_CHECK_FILE([${prefix}/lib/libtclPlus.so],
-		[libexceptioninstalled="yes"],[libexceptioninstalled="no"])
-		AC_CHECK_FILE([${prefix}/include/TCLInterpreterObject.h],
-		[tclinterpobjinstalled="yes"],[tclinterpobjinstalled="no"])
-	
-		if [ [ $libtclinstalled = "no" ] || [ $libexceptioninstalled = "no" ] || [ $tclinterpobjinstalled = "no" ] ]
-		then
-			AC_CHECK_FILE([${srcdir}/libtcl],
-			[havelibtcldir="yes"], [havelibtcldir="no"])
-			if test $havelibtcldir = "yes"
-			then
-				AC_MSG_RESULT([Need to build local tagged copy])
-				AC_CHECK_FILE([${srcdir}/libtcl/configure],
-				[havelibtcldir="yes"], [havelibtcldir="no"])
-				(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
-			else
-				AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-			fi
-		else
-			AC_MSG_RESULT([Previously built version found in ${prefix}])
-		fi
-	
-	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-	
-	fi
-fi
-
-# Hard code use of local libtcl:
-
-AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
-if test $havelibtcldir = "yes"
-then
-	AC_MSG_RESULT([Need to build local tagged copy])
-	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
-	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-else
-	AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-fi
+LIBTCLPLUS_CFLAGS="-I${prefix}/include"
+LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
+LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
 
 AC_SUBST(LIBTCLPLUS_CFLAGS)
 AC_SUBST(LIBTCLPLUS_LDFLAGS)
@@ -562,44 +509,35 @@ then
  	# The unified format and DDAS format libraries have builds that
 	# require cmake, so check for that:
 
-	AC_CHECK_PROG([have_cmake], cmake, yes)
+	AC_CHECK_PROG([have_cmake], [cmake], [yes])
 	AS_VAR_IF([have_cmake], [yes], [], AC_MSG_ERROR([cmake must be in the path to build DDAS support software]))
 
-	# Sync source tree directories (if present) for DDAS format and
-	# unified format to the build dir using rsync, so check for that too:
+	# Build and install the pinned unified format submodule:
 
-	AC_CHECK_PROG([have_rsync], rsync, yes)
-	AS_VAR_IF([have_rsync], [yes], [], AC_MSG_ERROR([rsync is required to build DDAS support software]))
-
-	# Check that the unified format library has been incorporated into
-	# the source tree and configure/build it into $prefix/unifiedformat
-
-	AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt],
-		[AC_MSG_NOTICE([Unified format incorporated in the source tree at ${srcdir}/unifiedformat, using that version])
-		rsync -avz --exclude=".git" ${srcdir}/unifiedformat/ unifiedformat],
-		[AC_MSG_NOTICE([Incorporating unified format version ${UNIFIED_FMT_VERSION} for you])
-		${srcdir}/unifiedfmt-incorp.sh ${UNIFIED_FMT_VERSION}])
 	rm -rf unifiedformat/build
 	AS_MKDIR_P(unifiedformat/build)
+	
 	AC_MSG_NOTICE([Building unified format])
-	(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make all test install)
+	sourcedir=`realpath ${srcdir}`
+	(cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make -j8 all; make test install)
+	result=$?
+	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([unifiedformat installation failed with result: ${result}]))
+	
 	UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
 	UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
+
 	AC_SUBST(UFMT_CPPFLAGS)
 	AC_SUBST(UFMT_LDFLAGS)
 
-	# Check that the DDAS format library has been incorporated into the
-	# source tree and configure/build it into $prefix/ddasformat.
-		
-	AC_CHECK_FILE([${srcdir}/ddasformat/CMakeLists.txt],
-		[AC_MSG_NOTICE([DDAS format incorporated in the source tree at ${srcdir}/ddasformat, using that version])
-		rsync -avz --exclude=".git" ${srcdir}/ddasformat/ ddasformat],
-		[AC_MSG_NOTICE([Incorporating DDAS format version ${DDAS_FMT_VERSION} for you])
-		${srcdir}/ddasfmt-incorp.sh ${DDAS_FMT_VERSION}])
+	# Build and install the pinned DDAS format submodule:
+	
 	rm -rf ddasformat/build
 	AS_MKDIR_P(ddasformat/build)
 	AC_MSG_NOTICE([Building DDAS format])
-	(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make all test install)
+	sourcedir=`realpath ${srcdir}` # For safety
+	(cd ddasformat/build; cmake ${sourcedir}/ddasformat -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make -j8 all; make test install)
+	result=$?
+	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([ddasformat installation failed with result: ${result}]))
 	DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
 	DDASFMT_LDFLAGS="-L${prefix}/ddasformat/lib -lDDASFormat -Wl,-rpath=${prefix}/ddasformat/lib"
 	AC_SUBST(DDASFMT_CPPFLAGS)
