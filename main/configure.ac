@@ -47,6 +47,13 @@ then
 	
 fi
 
+# Git is needed for submodule management. Since you've probably cloned the
+# repo if you're in the business of using autotools to make a configure
+# script, this almost certainly will work, but lets check anyway:
+
+AC_CHECK_PROG([have_git], git, yes)
+AS_VAR_IF([have_git], [yes], [], AC_MSG_ERROR([git is required for submodule management]))
+
 #  CAEN Digitizer support is optional:
 
 AC_ARG_ENABLE([caen-digitizer-support],
@@ -332,68 +339,19 @@ do
 done
 TCLSH_CMD=${TCLSH}
 
-#  If systemtcl is yes we're pretty much done.. otherwise
-#  we need to configure/build/install libtcl into prefix and then set
-#  the flags:
-
-if false
-then
-	AC_MSG_CHECKING([libtcl++ installed as package (e.g. .deb)])
-
-	AC_CHECK_FILE([/usr/include/TCLInterpreterObject.h],
-	[systemtcl="yes"], [systemtcl="no"])
-
-	if test $systemtcl = "yes"
-	then
-		LIBTCLPLUS_CFLAGS=""
-		LIBEXCEPTION_LDFLAGS="-lException"
-		LIBTCLPLUS_LDFLAGS="-ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-		AC_MSG_RESULT([Found in  system libraries])
-	else
-		AC_CHECK_FILE([${prefix}/lib/libException.so],
-		[libtclinstalled="yes"], [libtclinstalled="no"])
-		AC_CHECK_FILE([${prefix}/lib/libtclPlus.so],
-		[libexceptioninstalled="yes"],[libexceptioninstalled="no"])
-		AC_CHECK_FILE([${prefix}/include/TCLInterpreterObject.h],
-		[tclinterpobjinstalled="yes"],[tclinterpobjinstalled="no"])
-	
-		if [ [ $libtclinstalled = "no" ] || [ $libexceptioninstalled = "no" ] || [ $tclinterpobjinstalled = "no" ] ]
-		then
-			AC_CHECK_FILE([${srcdir}/libtcl],
-			[havelibtcldir="yes"], [havelibtcldir="no"])
-			if test $havelibtcldir = "yes"
-			then
-				AC_MSG_RESULT([Need to build local tagged copy])
-				AC_CHECK_FILE([${srcdir}/libtcl/configure],
-				[havelibtcldir="yes"], [havelibtcldir="no"])
-				(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
-			else
-				AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-			fi
-		else
-			AC_MSG_RESULT([Previously built version found in ${prefix}])
-		fi
-	
-	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-	
-	fi
-fi
-
 # Hard code use of local libtcl:
 
-AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
-if test $havelibtcldir = "yes"
-then
-	AC_MSG_RESULT([Need to build local tagged copy])
-	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
-	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-else
-	AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-fi
+#AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
+#if test $havelibtcldir = "yes"
+#then
+#	AC_MSG_RESULT([Need to build local tagged copy])
+#	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
+#	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
+#	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
+#	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
+#else
+#	AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
+#fi
 
 AC_SUBST(LIBTCLPLUS_CFLAGS)
 AC_SUBST(LIBTCLPLUS_LDFLAGS)
