@@ -4,13 +4,6 @@ AC_PREREQ(2.61)
 
 AC_INIT(nscldaq, 12.1-xiaapi4, [daqhelp@nscl.msu.edu], [], [https://github.com/FRIBDAQ/NSCLDAQ])
 
-# Default tag for DDAS format versio. If the builder has not explicitly run
-# the incorporation scripts, the versions below will be used to incorporate
-# for you:. Update as the "good" version is updated:
-
-DDAS_FMT_VERSION="1.1"
-UNIFIED_FMT_VERSION="1.2"
-
 AC_CONFIG_SRCDIR([/base/dataflow/CRingBuffer.h])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -332,76 +325,25 @@ do
 done
 TCLSH_CMD=${TCLSH}
 
-#  If systemtcl is yes we're pretty much done.. otherwise
-#  we need to configure/build/install libtcl into prefix and then set
-#  the flags:
+# Incorporate and build libtcl:
 
-if false
-then
-	AC_MSG_CHECKING([libtcl++ installed as package (e.g. .deb)])
-
-	AC_CHECK_FILE([/usr/include/TCLInterpreterObject.h],
-	[systemtcl="yes"], [systemtcl="no"])
-
-	if test $systemtcl = "yes"
-	then
-		LIBTCLPLUS_CFLAGS=""
-		LIBEXCEPTION_LDFLAGS="-lException"
-		LIBTCLPLUS_LDFLAGS="-ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-		AC_MSG_RESULT([Found in  system libraries])
-	else
-		AC_CHECK_FILE([${prefix}/lib/libException.so],
-		[libtclinstalled="yes"], [libtclinstalled="no"])
-		AC_CHECK_FILE([${prefix}/lib/libtclPlus.so],
-		[libexceptioninstalled="yes"],[libexceptioninstalled="no"])
-		AC_CHECK_FILE([${prefix}/include/TCLInterpreterObject.h],
-		[tclinterpobjinstalled="yes"],[tclinterpobjinstalled="no"])
-	
-		if [ [ $libtclinstalled = "no" ] || [ $libexceptioninstalled = "no" ] || [ $tclinterpobjinstalled = "no" ] ]
-		then
-			AC_CHECK_FILE([${srcdir}/libtcl],
-			[havelibtcldir="yes"], [havelibtcldir="no"])
-			if test $havelibtcldir = "yes"
-			then
-				AC_MSG_RESULT([Need to build local tagged copy])
-				AC_CHECK_FILE([${srcdir}/libtcl/configure],
-				[havelibtcldir="yes"], [havelibtcldir="no"])
-				(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
-			else
-				AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-			fi
-		else
-			AC_MSG_RESULT([Previously built version found in ${prefix}])
-		fi
-	
-	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-	
-	fi
-fi
-
-# Hard code use of local libtcl:
-
-AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
-if test $havelibtcldir = "yes"
-then
-	AC_MSG_RESULT([Need to build local tagged copy])
-	(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make  clean install)
-	LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-	LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-else
-	AC_MSG_ERROR([missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-fi
-
+AC_CHECK_FILE([${srcdir}/libtcl/configure.ac],
+	[AC_MSG_NOTICE([libtcl incorporated in the source tree at ${srcdir}/libtcl, using that version])
+	[AC_MSG_NOTICE([Incorporating libtcl for you])
+	${srcdir}/tcl++incorp]))
+AC_MSG_NOTICE([Building libtcl])
+#(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
+(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean; make -j8 install)	
+LIBTCLPLUS_CFLAGS="-I${prefix}/include"
+LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
+LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
 AC_SUBST(LIBTCLPLUS_CFLAGS)
 AC_SUBST(LIBTCLPLUS_LDFLAGS)
 AC_SUBST(LIBEXCEPTION_LDFLAGS)
 
-#  Configure and install tclhttpd
-#  We use that /usr/lib/tclx.y has tclConfig
-#  and /usr/include/tclx.y     has the headers.
+#  Configure and install tclhttpd:
+#  /usr/lib/tclx.y     - Has tclConfig.
+#  /usr/include/tclx.y - Has the headers.
 
 tcl_basename=tcl${TCL_VERSION}
 tcl_configdir="/usr/lib/$tcl_basename"
@@ -576,13 +518,14 @@ then
 
 	AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt],
 		[AC_MSG_NOTICE([Unified format incorporated in the source tree at ${srcdir}/unifiedformat, using that version])
-		rsync -avz --exclude=".git" ${srcdir}/unifiedformat/ unifiedformat],
+		#rsync -avz --exclude=".git" ${srcdir}/unifiedformat/ unifiedformat],
 		[AC_MSG_NOTICE([Incorporating unified format version ${UNIFIED_FMT_VERSION} for you])
 		${srcdir}/unifiedfmt-incorp.sh ${UNIFIED_FMT_VERSION}])
 	rm -rf unifiedformat/build
 	AS_MKDIR_P(unifiedformat/build)
 	AC_MSG_NOTICE([Building unified format])
-	(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make all test install)
+	source_path=`realpath ${srcdir}`
+	(cd unifiedformat/build; cmake ${source_path}/ddasformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make -j8 all; make test install)
 	UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
 	UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
 	AC_SUBST(UFMT_CPPFLAGS)
@@ -593,13 +536,14 @@ then
 		
 	AC_CHECK_FILE([${srcdir}/ddasformat/CMakeLists.txt],
 		[AC_MSG_NOTICE([DDAS format incorporated in the source tree at ${srcdir}/ddasformat, using that version])
-		rsync -avz --exclude=".git" ${srcdir}/ddasformat/ ddasformat],
+		#rsync -avz --exclude=".git" ${srcdir}/ddasformat/ ddasformat],
 		[AC_MSG_NOTICE([Incorporating DDAS format version ${DDAS_FMT_VERSION} for you])
 		${srcdir}/ddasfmt-incorp.sh ${DDAS_FMT_VERSION}])
 	rm -rf ddasformat/build
 	AS_MKDIR_P(ddasformat/build)
 	AC_MSG_NOTICE([Building DDAS format])
-	(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make all test install)
+	sourcepath=`realpath ${srcdir}`
+	(cd ddasformat/build; cmake ${sourcepath}/ddasformat -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make -j8 all; make test install)
 	DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
 	DDASFMT_LDFLAGS="-L${prefix}/ddasformat/lib -lDDASFormat -Wl,-rpath=${prefix}/ddasformat/lib"
 	AC_SUBST(DDASFMT_CPPFLAGS)
