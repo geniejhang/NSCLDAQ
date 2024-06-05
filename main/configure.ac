@@ -332,7 +332,6 @@ do
 done
 TCLSH_CMD=${TCLSH}
 
-<<<<<<< HEAD
 # Incorporate and build tcl++:
 
 AC_CHECK_FILE([${srcdir}/libtcl/configure.ac],
@@ -347,18 +346,6 @@ AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install tcl++ wit
 LIBTCLPLUS_CFLAGS="-I${prefix}/include"
 LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
 LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-=======
-# Build and install the pinned version of the tcl++ submodule:
-
-(cd ${srcdir}/libtcl; autoreconf -if; ./configure --prefix=${prefix}; make clean; make -j8; make install)
-result=$?
-AS_VAR_IF([result], [0], [], AC_MSG_ERROR([tcl++ installation failed with result: ${result}]))
-
-LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-
->>>>>>> 12.1-xiaapi4
 AC_SUBST(LIBTCLPLUS_CFLAGS)
 AC_SUBST(LIBTCLPLUS_LDFLAGS)
 AC_SUBST(LIBEXCEPTION_LDFLAGS)
@@ -529,7 +516,6 @@ then
 	AC_CHECK_PROG([have_cmake], [cmake], [yes])
 	AS_VAR_IF([have_cmake], [yes], [], AC_MSG_ERROR([cmake must be in the path to build DDAS support software]))
 
-<<<<<<< HEAD
 	# Check that the unified format library has been incorporated into
 	# the source tree and configure/build it into $prefix/unifiedformat
 
@@ -538,32 +524,18 @@ then
 		cp -r ${srcdir}/unifiedformat .],
 		[AC_MSG_NOTICE([Incorporating unified format for you])
 		${srcdir}/unifiedfmt-incorp.sh ${UNIFIED_FMT_VERSION}])
-=======
-	# Build and install the pinned unified format submodule:
-
->>>>>>> 12.1-xiaapi4
 	rm -rf unifiedformat/build
-	AS_MKDIR_P(unifiedformat/build)
-	
+	AS_MKDIR_P(unifiedformat/build)	
 	AC_MSG_NOTICE([Building unified format])
-<<<<<<< HEAD
 	(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make clean install)
 	result=$?
 	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install unified format library with result: ${result}]))
-=======
-	sourcedir=`realpath ${srcdir}`
-	(cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make -j8 all; make test install)
-	result=$?
-	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([unifiedformat installation failed with result: ${result}]))
-	
->>>>>>> 12.1-xiaapi4
 	UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
 	UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
 
 	AC_SUBST(UFMT_CPPFLAGS)
 	AC_SUBST(UFMT_LDFLAGS)
 
-<<<<<<< HEAD
 	# Check that the DDAS format library has been incorporated into the
 	# source tree and configure/build it into $prefix/ddasformat.
 		
@@ -578,17 +550,6 @@ then
 	(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make clean install)
 	result=$?
 	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install ddasformat with result: ${result}]))
-=======
-	# Build and install the pinned DDAS format submodule:
-	
-	rm -rf ddasformat/build
-	AS_MKDIR_P(ddasformat/build)
-	AC_MSG_NOTICE([Building DDAS format])
-	sourcedir=`realpath ${srcdir}` # For safety
-	(cd ddasformat/build; cmake ${sourcedir}/ddasformat -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make -j8 all; make test install)
-	result=$?
-	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([ddasformat installation failed with result: ${result}]))
->>>>>>> 12.1-xiaapi4
 	DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
 	DDASFMT_LDFLAGS="-L${prefix}/ddasformat/lib -lDDASFormat -Wl,-rpath=${prefix}/ddasformat/lib"
 	AC_SUBST(DDASFMT_CPPFLAGS)
