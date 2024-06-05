@@ -325,15 +325,17 @@ do
 done
 TCLSH_CMD=${TCLSH}
 
-# Incorporate and build libtcl:
+# Incorporate and build tcl++:
 
 AC_CHECK_FILE([${srcdir}/libtcl/configure.ac],
-	[AC_MSG_NOTICE([libtcl incorporated in the source tree at ${srcdir}/libtcl, using that version])],
-	[AC_MSG_NOTICE([Incorporating libtcl for you])
-	${srcdir}/tcl++incorp]))
-AC_MSG_NOTICE([Building libtcl])
-#(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
-(cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean; make -j8 install)	
+		[AC_MSG_NOTICE([Using previously incorprated tcl++ from the source tree at ${srcdir}/libtcl])
+		cp -r ${srcdir}/libtcl .],
+		[AC_MSG_NOTICE([Incorporating tcl++ for you])
+		${srcdir}/tcl++incorp])
+AC_MSG_NOTICE([Building and installing tcl++])
+(cd libtcl; ./configure --prefix=${prefix}; make clean install)
+result=$?
+AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install tcl++ with result: ${result}]))
 LIBTCLPLUS_CFLAGS="-I${prefix}/include"
 LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
 LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
@@ -507,25 +509,20 @@ then
 	AC_CHECK_PROG([have_cmake], cmake, yes)
 	AS_VAR_IF([have_cmake], [yes], [], AC_MSG_ERROR([cmake must be in the path to build DDAS support software]))
 
-	# Sync source tree directories (if present) for DDAS format and
-	# unified format to the build dir using rsync, so check for that too:
-
-	AC_CHECK_PROG([have_rsync], rsync, yes)
-	AS_VAR_IF([have_rsync], [yes], [], AC_MSG_ERROR([rsync is required to build DDAS support software]))
-
 	# Check that the unified format library has been incorporated into
 	# the source tree and configure/build it into $prefix/unifiedformat
 
 	AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt],
-		[AC_MSG_NOTICE([Unified format incorporated in the source tree at ${srcdir}/unifiedformat, using that version])
-		#rsync -avz --exclude=".git" ${srcdir}/unifiedformat/ unifiedformat],
-		[AC_MSG_NOTICE([Incorporating unified format version ${UNIFIED_FMT_VERSION} for you])
+		[AC_MSG_NOTICE([Using previously incorporated unified format library at ${srcdir}/unifiedformat])
+		cp -r ${srcdir}/unifiedformat .],
+		[AC_MSG_NOTICE([Incorporating unified format for you])
 		${srcdir}/unifiedfmt-incorp.sh ${UNIFIED_FMT_VERSION}])
 	rm -rf unifiedformat/build
 	AS_MKDIR_P(unifiedformat/build)
 	AC_MSG_NOTICE([Building unified format])
-	source_path=`realpath ${srcdir}`
-	(cd unifiedformat/build; cmake ${source_path}/ddasformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make -j8 all; make test install)
+	(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make clean install)
+	result=$?
+	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install unified format library with result: ${result}]))
 	UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
 	UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
 	AC_SUBST(UFMT_CPPFLAGS)
@@ -535,25 +532,23 @@ then
 	# source tree and configure/build it into $prefix/ddasformat.
 		
 	AC_CHECK_FILE([${srcdir}/ddasformat/CMakeLists.txt],
-		[AC_MSG_NOTICE([DDAS format incorporated in the source tree at ${srcdir}/ddasformat, using that version])
-		#rsync -avz --exclude=".git" ${srcdir}/ddasformat/ ddasformat],
-		[AC_MSG_NOTICE([Incorporating DDAS format version ${DDAS_FMT_VERSION} for you])
+		[AC_MSG_NOTICE([Using previously incorprated ddasformat from the source tree at ${srcdir}/ddasformat])
+		cp -r ${srcdir}/ddasformat .],
+		[AC_MSG_NOTICE([Incorporating ddasformat for you])
 		${srcdir}/ddasfmt-incorp.sh ${DDAS_FMT_VERSION}])
 	rm -rf ddasformat/build
 	AS_MKDIR_P(ddasformat/build)
 	AC_MSG_NOTICE([Building DDAS format])
-	sourcepath=`realpath ${srcdir}`
-	(cd ddasformat/build; cmake ${sourcepath}/ddasformat -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make -j8 all; make test install)
+	(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make clean install)
+	result=$?
+	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install ddasformat with result: ${result}]))
 	DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
 	DDASFMT_LDFLAGS="-L${prefix}/ddasformat/lib -lDDASFormat -Wl,-rpath=${prefix}/ddasformat/lib"
 	AC_SUBST(DDASFMT_CPPFLAGS)
 	AC_SUBST(DDASFMT_LDFLAGS)
 
-	#  Check for ROOT -- we're just going to add a --with-rootsys and 
-	#  use rootconfig to add the following to the Makefile macro set:
-	#
-	#  ROOT_CPPFLAGS - Compiler flags for ROOT.
-	#  ROOT_LDFLAGS  - ROOT libraries location.
+	# Check for ROOT. Use rootcling to add ROOT flags and linker options
+	# to the Makefile macro set:
 
 	rootdir=$ROOTSYS
 	AC_ARG_WITH([rootsys],

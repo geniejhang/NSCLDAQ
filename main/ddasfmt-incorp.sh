@@ -10,7 +10,7 @@ TARGET="ddasformat"
 
 if [[ ! $TAG ]]
 then
-  TAG=`cat DDASFORMAT_VERSION`
+  TAG="1.0"
 fi
 
 rm -rf $TARGET
