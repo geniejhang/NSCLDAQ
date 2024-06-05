@@ -328,7 +328,7 @@ TCLSH_CMD=${TCLSH}
 # Incorporate and build libtcl:
 
 AC_CHECK_FILE([${srcdir}/libtcl/configure.ac],
-	[AC_MSG_NOTICE([libtcl incorporated in the source tree at ${srcdir}/libtcl, using that version])
+	[AC_MSG_NOTICE([libtcl incorporated in the source tree at ${srcdir}/libtcl, using that version])],
 	[AC_MSG_NOTICE([Incorporating libtcl for you])
 	${srcdir}/tcl++incorp]))
 AC_MSG_NOTICE([Building libtcl])
