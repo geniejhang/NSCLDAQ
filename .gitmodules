@@ -1,9 +1,0 @@
-[submodule "libtcl"]
-	path = main/libtcl
-	url = https://github.com/FRIBDAQ/libtclplus.git
-[submodule "main/unifiedformat"]
-	path = main/unifiedformat
-	url = https://github.com/FRIBDAQ/UnifiedFormat.git
-[submodule "main/ddasformat"]
-	path = main/ddasformat
-	url = https://github.com/FRIBDAQ/DDASFormat.git

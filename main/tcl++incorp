@@ -1,0 +1,19 @@
+#!/bin/bash
+
+##  Incorporate tcl++:
+
+# Most recently used version libtclplus-v4.3-002
+
+REPOSITORY="https://github.com/FRIBDAQ/libtclplus"
+TAG=$1
+TARGET="libtcl"
+
+if [[ ! $TAG ]]
+then
+  TAG="libtclplus-v4.3-002"
+fi
+
+rm -rf $TARGET
+git clone $REPOSITORY $TARGET
+(cd $TARGET; git checkout $TAG)
+(cd $TARGET; autoreconf -if)
