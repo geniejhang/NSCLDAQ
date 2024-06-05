@@ -6,12 +6,13 @@
 
 REPOSITORY="https://github.com/FRIBDAQ/DDASFormat.git"
 TAG=$1
+TARGET="ddasformat"
 
 if [[ ! $TAG ]]
 then
   TAG=`cat DDASFORMAT_VERSION`
 fi
 
-rm -rf ddasformat
-git clone $REPOSITORY ddasformat
-(cd ddasformat; git checkout $TAG)
+rm -rf $TARGET
+git clone $REPOSITORY $TARGET
+(cd $TARGET; git checkout $TAG)
