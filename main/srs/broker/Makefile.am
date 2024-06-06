@@ -18,4 +18,6 @@ libUDPBrokerDerived_la_LIBADD = @top_builddir@/utilities/udpBroker/libUDPBrokerB
 
 include_HEADERS = UDPBrokerDerived.h datagramHeader.h pcapHeader.h
 
+EXTRA_DIST = BitMath.h
+
 

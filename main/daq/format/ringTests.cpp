@@ -29,6 +29,7 @@
 #include <CRingScalerItem.h>
 
 #include <iostream>
+#include <unistd.h>
 
 class RingTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(RingTests);
@@ -1166,10 +1167,14 @@ void RingTests::getWithPredicate()
 
     // Timing issue with this loop leads to test failure. Emit fewer events.
     // --ASC 6/2/23
-    
+
+    usleep(200000);    
     for (int i =0; i < 10; i++) {
         emitEvent(false);
-    }    
+	usleep(200000);
+    }
+    usleep(200000);
+    
     insertStateChange(END_RUN, false);
     stat = tryCommand("ring get tcp://localhost/tcltestring [list 1 2]");
     Tcl_Obj* event1 = Tcl_GetObjResult(m_pInterp->getInterpreter());

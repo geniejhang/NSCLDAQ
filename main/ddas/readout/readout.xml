@@ -1,0 +1,86 @@
+<!-- manpage 1daq -->
+
+<refentry>
+  <refmeta>
+    <refentrytitle>DDASReadout</refentrytitle>
+    <manvolnum>1daq</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>DDASReadout</refname>
+    <refpurpose>Read data from XIA digitizer modules.</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>
+	$DAQBIN/DDASReadout <optional>options....</optional>       
+      </command>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+      Unlike NSCLDAQ 11.3, you will not normally need to directly run this program. Instead, specifying <filename>$DAQBIN/ddasReadout</filename> (rather than <filename>$DAQBIN/DDASReadout)</filename> as the data source will run both the <filename>DDASReadout</filename> and associated <filename>ddasSort</filename> programs.
+    </para>
+    <para>
+      Since NSCLDAQ 11.4, <filename>DDASReadout</filename> does not internally sort data from the DDAS modules. Deferring the sort to another process substantially improves performance by allowing that sort to run in parallel with the readout itself.
+    </para>
+    <para>
+      This version of <filename>DDASReadout</filename> is an upstream readout program. It reads data directly from XIA modules and outputs that data to a ringbuffer. Each module is read out in chunks, such that each output ring item contains multiple unsorted hits all coming from a single module.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Program options</title>
+    <variablelist>
+      <varlistentry>
+        <term><option>--port</option> <replaceable>integer</replaceable></term>
+        <listitem>
+          <para>
+            If Tcl server functionality is needed, this is the port on which that server will be listening for connections. If not specified, <filename>DDASReadout</filename> will have its Tcl server functionality disabled.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--ring</option> <replaceable>ringname</replaceable>(default=tcp://localhost/$USER)</term>
+        <listitem>
+          <para>
+            The output ringbuffer name on the host machine where <literal>DDASReadout</literal> is run. This specifies the name of the ringbuffer into which <filename>DDASReadout</filename> reads data. Defaults to your username.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--sourceid</option> <replaceable>value (default=0)</replaceable></term>
+        <listitem>
+          <para>
+            This determines the source ID value used to tag ring items from the readout program.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--init-script</option> <replaceable>path</replaceable></term>
+        <listitem>
+          <para>
+            The value should be a path to a Tcl script that will be run as the readout program starts.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--log</option> <replaceable>path</replaceable></term>
+        <listitem>
+          <para>
+           This specifies the path into which the readout program logs interesting information. If the file does not exist it is created. The path prefix must be a directory that's writable by the user.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--debug</option> <replaceable>log-level (default=0)</replaceable></term>
+        <listitem>
+          <para>
+            This parameter is an integer in the range 0-2 inclusive and determines the sort of information written to the log file. The higher the number, the more verbose the logging.
+          </para>
+        </listitem>
+      </varlistentry>      
+    </variablelist>
+  </refsect1>
+</refentry>
+
+<!-- /manpage -->

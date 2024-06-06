@@ -1,8 +1,8 @@
-bin_PROGRAMS=DDASReadout
-lib_LTLIBRARIES=libddastimestampextractor.la
+bin_PROGRAMS=DDASReadout ddasSort
+
 SHAREDIR=@prefix@/share/ddasreadout
 
-DDASReadout_SOURCES=Skeleton.cpp Skeleton.h 			\
+DDASReadout_SOURCES= DDASReadoutMain.cpp DDASReadoutMain.h 	\
 	CMyEventSegment.cpp CMyEventSegment.h 			\
 	CMyTrigger.cpp CMyTrigger.h 				\
 	CMyBusy.cpp CMyBusy.h 					\
@@ -10,16 +10,9 @@ DDASReadout_SOURCES=Skeleton.cpp Skeleton.h 			\
 	CMyEndCommand.cpp CMyEndCommand.h 			\
 	CSyncCommand.cpp CSyncCommand.h 			\
 	CBootCommand.cpp CBootCommand.h 			\
-	RawChannel.cpp RawChannel.h 				\
-	ReferenceCountedBuffer.cpp ReferenceCountedBuffer.h 	\
-	BufferArena.cpp BufferArena.h 				\
-	ZeroCopyHit.cpp ZeroCopyHit.h 				\
-	ModuleReader.cpp ModuleReader.h 			\
-	CHitManager.cpp CHitManager.h 				\
 	CDDASStatisticsCommand.cpp CDDASStatisticsCommand.h
 
-DDASReadout_CPPFLAGS= \
-	-I@top_srcdir@ 							\
+DDASReadout_CPPFLAGS=-I@top_builddir@/ddas 				\
 	-I@top_srcdir@/sbs/readout 					\
 	-I@top_srcdir@/sbs/nsclapi					\
 	-I@top_srcdir@/base/dataflow					\
@@ -27,11 +20,12 @@ DDASReadout_CPPFLAGS= \
 	-I@top_srcdir@/daq/format					\
 	-I@top_srcdir@/ddas/configuration				\
 	-I@top_srcdir@/ddas/booter					\
+	-I@top_srcdir@/ddas/exception					\
 	@PIXIE_CPPFLAGS@						\
 	@LIBTCLPLUS_CFLAGS@						\
 	@TCL_FLAGS@         						\
-	-fPIC -DFIRMWARE_FILE=\"${SHAREDIR}/DDASFirmwareVersions.txt\" \
-	-DSORTING
+	-fPIC -DFIRMWARE_FILE=\"${SHAREDIR}/DDASFirmwareVersions.txt\"  \
+	-DSORTING 							
 
 DDASReadout_LDFLAGS= \
 	@top_builddir@/sbs/readout/libSBSProductionReadout.la   \
@@ -40,17 +34,63 @@ DDASReadout_LDFLAGS= \
 	@top_builddir@/base/os/libdaqshm.la			\
 	@top_builddir@/ddas/configuration/libConfiguration.la	\
 	@top_builddir@/ddas/booter/libSystemBooter.la		\
+	@top_builddir@/ddas/exception/libDDASException.la 	\
 	@PIXIE_LDFLAGS@						\
 	@PLX_LDFLAGS@ 						\
 	@LIBTCLPLUS_LDFLAGS@ 					\
-	@TCL_LDFLAGS@
+	@TCL_LDFLAGS@						\
+	@LIBEXCEPTION_LDFLAGS@
 
-libddastimestampextractor_la_SOURCES=ddastimestamp.cpp
-libddastimestampextractor_la_CPPFLAGS=$(DDASReadout_CPPFLAGS) $(CXXFLAGS)
+ddasSort_SOURCES=ddasSort.cpp 					\
+	ddasSortOptions.c ddasSortOptions.h 			\
+	DDASSorter.cpp DDASSorter.h 				\
+	RawChannel.h RawChannel.cpp 				\
+	ZeroCopyHit.h ZeroCopyHit.cpp 				\
+	BufferArena.h BufferArena.cpp 				\
+	ReferenceCountedBuffer.h ReferenceCountedBuffer.cpp 	\
+	HitManager.h HitManager.cpp
+
+ddasSort_CPPFLAGS=-I@top_srcdir@/daq/format 			\
+	-I@top_srcdir@/base/dataflow 				\
+	@LIBTCLPLUS_CFLAGS@ 					\
+	@PIXIE_CPPFLAGS@
+
+ddasSort_LDFLAGS=@top_builddir@/daq/format/libdataformat.la 	\
+	@top_builddir@/base/dataflow/libDataFlow.la 		\
+	@LIBEXCEPTION_LDFLAGS@
+
+BUILT_SOURCES=ddasSortOptions.c ddasSortOptions.h
+
+ddasSortOptions.c: ddasSortOptions.h
+
+ddasSortOptions.h:  ddasSortOptions.ggo
+	$(GENGETOPT) <@srcdir@/ddasSortOptions.ggo --file=ddasSortOptions --output-dir=@srcdir@
 
 #
-#   *  Install the firmware versions file in @prefix@/share/readout
-#   *  Install the crate_1 dir in @prefix@/share/readout/crate_1
+# Unit tests
+#
+
+noinst_PROGRAMS=unittests
+
+unittests_SOURCES=TestRunner.cpp Asserts.h 				\
+	hitmgrtests.cpp refcounttests.cpp arenatests.cpp rawchtests.cpp \
+	zcopyhittests.cpp sortertests.cpp testcommon.cpp testcommon.h 	\
+	DDASSorter.cpp DDASSorter.h 					\
+	HitManager.cpp HitManager.h 					\
+	ZeroCopyHit.h ZeroCopyHit.cpp 					\
+	RawChannel.h RawChannel.cpp 					\
+	ReferenceCountedBuffer.h ReferenceCountedBuffer.cpp 		\
+	BufferArena.h BufferArena.cpp 
+
+unittests_CXXFLAGS=$(ddasSort_CPPFLAGS) @CPPUNIT_CFLAGS@
+unittests_LDFLAGS=$(ddasSort_LDFLAGS) @CPPUNIT_LDFLAGS@
+unittests_LDADD=@CPPUNIT_LIBS@
+
+TESTS=./unittests
+
+#
+# *  Install the firmware versions file in @prefix@/share/readout
+# *  Install the crate_1 dir in @prefix@/share/readout/crate_1
 #
 
 install-exec-hook:
@@ -58,6 +98,10 @@ install-exec-hook:
 	$(mkinstalldirs) $(SHAREDIR)/crate_1
 	$(INSTALL_DATA) DDASFirmwareVersions.txt $(SHAREDIR)
 	$(INSTALL_DATA) @srcdir@/crate_1/* $(SHAREDIR)/crate_1
-	$(INSTALL_DATA) @srcdir@/envset $(SHAREDIR)
+	$(mkinstalldirs) $(bindir)
+	@INSTALL_SCRIPT@ @srcdir@/ddasReadout.tcl @bindir@/ddasReadout
 
-EXTRA_DIST=DDASFirmwareVersions.txt.in envset README crate_1
+clean-local:
+	rm -f @srcdir@/ddasSortOptions.{h,c}
+
+EXTRA_DIST=DDASFirmwareVersions.txt.in crate_1 ddasSortOptions.ggo ddasReadout.tcl readout.xml sorter.xml readoutdriver.xml readout.dox

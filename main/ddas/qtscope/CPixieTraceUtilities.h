@@ -46,6 +46,7 @@ public:
      * @retval  0 Success.
      * @retval -1 XIA API call fails.
      * @retval -2 Acquired trace is empty (median undefined).
+     * @retval -3 Unhanded exception when reading trace and calculating median.
      */
     int ReadTrace(int module, int channel);
     /**
@@ -74,18 +75,23 @@ private:
      * channel.
      * @param module  Module number.
      * @param channel Channel number on module for trace read.
-     * @throws std::runtime_error If ADC traces cannot be acquired (internal
+     * @throw std::runtime_error If ADC traces cannot be acquired (internal
      *   DSP memory fails to fill).
-     * @throws std::runtime_error If trace read fails.
+     * @throws CXIAException If trace allocation or read fails.
      */
     void AcquireADCTrace(int module, int channel);
     /**
      * @brief Calculate the median value from a trace.
      * @param v Input vector of type T.
-     * @throws std::invalid_argument If trace is empty (median is undefined).
+     * @throw std::invalid_argument If trace is empty (median is undefined).
      * @return Median value of the trace.
      */
     template<typename T> double GetMedianValue(std::vector<T> v);
+    /**
+     * @brief Reset the trace storage vector.
+     * @param len Trace length to read.
+     */
+    void ResetTrace(unsigned int len);
 };
 
 /** @} */

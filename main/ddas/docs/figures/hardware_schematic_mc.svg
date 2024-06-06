@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="403.79556mm"
+   height="285.35181mm"
+   viewBox="0 0 403.79555 285.35181"
+   version="1.1"
+   id="svg174"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="hardware_schematic_mc.svg"
+   inkscape:export-filename="hardware_schematic_mc.png"
+   inkscape:export-xdpi="600"
+   inkscape:export-ydpi="600"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview176"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="0.37282197"
+     inkscape:cx="472.07519"
+     inkscape:cy="197.14504"
+     inkscape:window-width="1350"
+     inkscape:window-height="1040"
+     inkscape:window-x="189"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g1136-1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid197"
+       originx="-2.6280056"
+       originy="46.451555" />
+  </sodipodi:namedview>
+  <defs
+     id="defs171">
+    <rect
+       x="1510.0674"
+       y="535.56493"
+       width="220"
+       height="60"
+       id="rect2582" />
+    <rect
+       x="230.06738"
+       y="-329.93262"
+       width="480"
+       height="60"
+       id="rect1441" />
+    <rect
+       x="250.06738"
+       y="-489.93262"
+       width="840"
+       height="120"
+       id="rect1435" />
+    <rect
+       x="290"
+       y="380"
+       width="70.000008"
+       height="50.000004"
+       id="rect1102" />
+    <rect
+       x="130"
+       y="270"
+       width="110"
+       height="100"
+       id="rect1096" />
+    <rect
+       x="460"
+       y="70"
+       width="190.00002"
+       height="50.000004"
+       id="rect1040" />
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipEmfPath1">
+      <path
+         d="M 0,0 H 979.56632 V 369.37614 H 0 Z"
+         id="path178" />
+    </clipPath>
+    <pattern
+       id="EMFhbasepattern"
+       patternUnits="userSpaceOnUse"
+       width="6"
+       height="6"
+       x="0"
+       y="0" />
+    <rect
+       x="460"
+       y="70"
+       width="190.00002"
+       height="50.000004"
+       id="rect1040-7" />
+    <rect
+       x="130"
+       y="270"
+       width="110"
+       height="100"
+       id="rect1096-3" />
+    <rect
+       x="290"
+       y="380"
+       width="70.000008"
+       height="50.000004"
+       id="rect1102-6" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-2.6280059,46.451553)">
+    <g
+       id="g1315"
+       transform="matrix(2.4691876,0,0,2.4691876,-36.106236,-16.507051)">
+      <g
+         id="g1136"
+         transform="matrix(1.2446414,0,0,1.2446414,-0.59056492,-54.631657)">
+        <rect
+           style="fill:none;stroke:#000000;stroke-width:0.302039;stroke-dasharray:none"
+           id="rect303"
+           width="63.499996"
+           height="31.75"
+           x="13.229167"
+           y="50.270832" />
+        <rect
+           style="fill:none;stroke:#000000;stroke-width:0.30861;stroke-dasharray:none"
+           id="rect982"
+           width="11.855244"
+           height="28.92087"
+           x="16.561962"
+           y="51.59375" />
+        <rect
+           style="fill:none;stroke:#000000;stroke-width:0.30861;stroke-dasharray:none"
+           id="rect982-2"
+           width="11.855244"
+           height="28.92087"
+           x="30.478088"
+           y="51.685398" />
+        <text
+           xml:space="preserve"
+           transform="matrix(0.26458333,0,0,0.26458333,-95.71173,52.592504)"
+           id="text1038"
+           style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1040);display:inline;fill:#000000;fill-opacity:1;stroke:none"
+           x="113.74219"
+           y="0"><tspan
+             x="576.70312"
+             y="84.597285"
+             id="tspan2756"><tspan
+               style="text-align:end;text-anchor:end"
+               id="tspan2754">PXI crate
+</tspan></tspan><tspan
+             x="533.42969"
+             y="104.59729"
+             id="tspan2760"><tspan
+               style="text-align:end;text-anchor:end"
+               id="tspan2758">(clock master)</tspan></tspan></text>
+        <text
+           xml:space="preserve"
+           transform="matrix(0,-0.26458333,0.26458333,0,-53.562523,113.98787)"
+           id="text1094"
+           style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1096);display:inline;fill:#000000;fill-opacity:1;stroke:none"><tspan
+             x="130"
+             y="284.59729"
+             id="tspan2762">Single-board </tspan><tspan
+             x="130"
+             y="304.59729"
+             id="tspan2764">computer</tspan></text>
+        <text
+           xml:space="preserve"
+           transform="matrix(0,-0.26458333,0.26458333,0,-69.555345,156.32741)"
+           id="text1100"
+           style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1102);display:inline;fill:#000000;fill-opacity:1;stroke:none"><tspan
+             x="290"
+             y="394.59729"
+             id="tspan2766">Pixie </tspan><tspan
+             x="290"
+             y="414.59729"
+             id="tspan2768">digitizer</tspan></text>
+      </g>
+      <g
+         id="g1136-1"
+         transform="matrix(1.2446414,0,0,1.2446414,83.532547,-54.624438)">
+        <text
+           xml:space="preserve"
+           transform="matrix(0.26458333,0,0,0.26458333,-95.709291,52.70354)"
+           id="text1038-3"
+           style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1040-7);display:inline;fill:#000000;fill-opacity:1;stroke:none"
+           x="306.46484"
+           y="0"><tspan
+             x="576.70312"
+             y="84.597285"
+             id="tspan2772"><tspan
+               style="text-align:end;text-anchor:end"
+               id="tspan2770">PXI crate
+</tspan></tspan><tspan
+             x="524.58594"
+             y="104.59729"
+             id="tspan2776"><tspan
+               style="text-align:end;text-anchor:end"
+               id="tspan2774">(clock recpient)</tspan></tspan></text>
+        <rect
+           style="fill:none;stroke:#000000;stroke-width:0.302039;stroke-dasharray:none"
+           id="rect303-6"
+           width="63.499996"
+           height="31.75"
+           x="13.229167"
+           y="50.270832" />
+        <rect
+           style="fill:none;stroke:#000000;stroke-width:0.30861;stroke-dasharray:none"
+           id="rect982-0"
+           width="11.855244"
+           height="28.92087"
+           x="16.561962"
+           y="51.59375" />
+        <rect
+           style="fill:none;stroke:#000000;stroke-width:0.30861;stroke-dasharray:none"
+           id="rect982-2-8"
+           width="11.855244"
+           height="28.92087"
+           x="30.478088"
+           y="51.685398" />
+        <text
+           xml:space="preserve"
+           transform="matrix(0,-0.26458333,0.26458333,0,-53.562523,113.98787)"
+           id="text1094-3"
+           style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1096-3);display:inline;fill:#000000;fill-opacity:1;stroke:none"><tspan
+             x="130"
+             y="284.59729"
+             id="tspan2778">Single-board </tspan><tspan
+             x="130"
+             y="304.59729"
+             id="tspan2780">computer</tspan></text>
+        <text
+           xml:space="preserve"
+           transform="matrix(0,-0.26458333,0.26458333,0,-69.555345,156.32741)"
+           id="text1100-3"
+           style="font-style:normal;font-weight:normal;font-size:16px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1102-6);display:inline;fill:#000000;fill-opacity:1;stroke:none"><tspan
+             x="290"
+             y="394.59729"
+             id="tspan2782">Pixie </tspan><tspan
+             x="290"
+             y="414.59729"
+             id="tspan2784">digitizer</tspan></text>
+        <text
+           xml:space="preserve"
+           transform="matrix(0.08609227,0,0,0.08609227,-54.510085,34.144107)"
+           id="text2580"
+           style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect2582);display:inline;fill:#000000;fill-opacity:1;stroke:none" />
+      </g>
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.662748;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 15.875,63.920431 c 159.47872,0 159.47872,0 159.47872,0"
+         id="path1201" />
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.662758;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 27.400897,63.920431 c 0,-18.340261 0,-18.340261 0,-18.340261"
+         id="path1266" />
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.662758;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 112.13286,63.600917 c 0,-18.340261 0,-18.340261 0,-18.340261"
+         id="path1266-3" />
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.658516;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 83.383829,82.032556 c 0,-18.112124 0,-18.112124 0,-18.112124"
+         id="path1266-0" />
+      <rect
+         style="fill:none;stroke:#000000;stroke-width:0.500575;stroke-dasharray:none"
+         id="rect1290"
+         width="29.137451"
+         height="21.069323"
+         x="68.815102"
+         y="82.118179" />
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-weight:normal;font-size:4.23333px;line-height:1.25;font-family:sans-serif;white-space:pre;inline-size:22.4896;display:inline;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+         x="62.177082"
+         y="68.791664"
+         id="text1294"
+         transform="matrix(1.2446414,0,0,1.2446414,-6.0018393,2.0613502)"><tspan
+           x="62.177082"
+           y="68.791664"
+           id="tspan2786">Analysis/</tspan><tspan
+           x="62.177082"
+           y="74.083325"
+           id="tspan2788">control </tspan><tspan
+           x="62.177082"
+           y="79.37499"
+           id="tspan2790">computer</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-weight:normal;font-size:5.26898px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.329311"
+         x="32.322601"
+         y="61.262791"
+         id="text1298"><tspan
+           sodipodi:role="line"
+           id="tspan1296"
+           style="font-size:5.26898px;stroke-width:0.329311"
+           x="32.322601"
+           y="61.262791">FRIB DAQ network</tspan></text>
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.662566;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-end:"
+         d="m 44.840148,7.9710642 -10e-7,-7.71508864 84.437353,-1.9e-7 0,7.50078083"
+         id="path1065"
+         sodipodi:nodetypes="cccc" />
+      <g
+         id="g1504"
+         transform="translate(4.714776)">
+        <g
+           id="g1497"
+           transform="translate(-1.714464)">
+          <circle
+             style="fill:none;stroke:#000000;stroke-width:0.596309;stroke-dasharray:none"
+             id="path1321"
+             cx="88.7966"
+             cy="-7.0071869"
+             r="4.8219275" />
+          <path
+             style="fill:none;stroke:#000000;stroke-width:0.662566;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+             d="m 88.773287,-11.209501 v 4.2861602 l 2.67885,1.60731"
+             id="path1379" />
+        </g>
+        <text
+           xml:space="preserve"
+           transform="matrix(0.107154,0,0,0.107154,28.915326,42.417974)"
+           id="text1433"
+           style="font-style:normal;font-weight:normal;font-size:49.1733px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1435);display:inline;fill:#000000;fill-opacity:1;stroke:none"><tspan
+             x="250.06641"
+             y="-445.0713"
+             id="tspan2792">Common</tspan></text>
+        <text
+           xml:space="preserve"
+           transform="matrix(0.107154,0,0,0.107154,70.617988,25.590554)"
+           id="text1439"
+           style="font-style:normal;font-weight:normal;font-size:49.1733px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1441);display:inline;fill:#000000;fill-opacity:1;stroke:none"><tspan
+             x="230.06641"
+             y="-285.0713"
+             id="tspan2794">clock</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>

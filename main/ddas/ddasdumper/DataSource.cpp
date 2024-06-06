@@ -15,35 +15,38 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  DataSource.cpp
- *  @brief: Implementation of the non pure vir. methods of DataSource.
+/** 
+ * @file  DataSource.cpp
+ * @brief Implementation of the non pure vir. methods of DataSource.
  */
 
 #include "DataSource.h"
+
 #include <RingItemFactoryBase.h>
 
 /**
- * constructor
- *  Just saves the factory pointer - note that we gain ownershp of the factory and,
- *  therefore, it's deleted on our destruction.
+ * @details
+ * Just saves the factory pointer - note that we gain ownershp of the factory 
+ * and, therefore, it's deleted on our destruction.
  */
 DataSource::DataSource(RingItemFactoryBase* pFactory) :
     m_pFactory(pFactory)
 {}
 
 /**
- * destructor
- *    destroys the factory.
+ * @details
+ * Destroys the factory.
  */
 DataSource::~DataSource()
 {
     delete m_pFactory;
 }
+
 /**
- * setFactory
- *   - delete the current factory
- *   - set a new factory - this is done if the format changes.
- * @param pFactory - new factory to set.
+ * @details
+ * Pretty simple:
+ * - Delete the current factory.
+ * - Set a new factory e.g. if the format changes.
  */
 void
 DataSource::setFactory(RingItemFactoryBase* pFactory)

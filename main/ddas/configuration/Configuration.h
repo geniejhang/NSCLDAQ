@@ -22,7 +22,7 @@ namespace DAQ {
 	/**
 	 * @addtogroup configuration libConfiguration.so
 	 * @brief DDAS Pixie-16 hardware configuration library.
-	 *
+	 * @details
 	 * Shared library containing classes to manage the internal 
 	 * configuration of a DDAS system and store information about its
 	 * hardware. Contains all functions defined in the 
@@ -30,9 +30,9 @@ namespace DAQ {
 	 * @{
 	 */
 
-	/*!
-	 * @brief The FirmwareConfiguration struct
-	 *
+	/**
+	 * @brief Storage for hardware-type firmware/settings paths.
+	 * @details
 	 * A simple structure to hold the paths to all firmware/settings files
 	 * for a specific hardware type. These objects will be stored in a map
 	 * of the Configuration class and keyed by a hardware type defined in 
@@ -40,13 +40,12 @@ namespace DAQ {
 	 */
 	struct FirmwareConfiguration
 	{
-	    std::string s_ComFPGAConfigFile; //!< Name of communications FPGA
-	                                     //!< config. file.
-	    std::string s_SPFPGAConfigFile;  //!< Name of signal processing 
-	                                     //!< FPGA config. file.
-	    std::string s_DSPCodeFile; //!< Name of executable code file for
-	                               //!< digital signal processor (DSP)
-	    std::string s_DSPVarFile; //!< Name of DSP variable names file
+	    /** Name of communications FPGRA configuration file. */
+	    std::string s_ComFPGAConfigFile;
+	    /** Name of signal processing FPGA configuration file. */
+	    std::string s_SPFPGAConfigFile;
+	    std::string s_DSPCodeFile; //!< Name of executable DSP code file.
+	    std::string s_DSPVarFile;  //!< Name of DSP variable names file.
 	};
 
 	/** 
@@ -57,9 +56,8 @@ namespace DAQ {
 	typedef std::map<int, FirmwareConfiguration> FirmwareMap;
 
 	/**
-	 * @class Configuration Configuration.h
-	 * @brief The Configuration class.
-	 *
+	 * @class Configuration
+	 * @brief Store the system configuration information needed by Readout.
 	 * @details
 	 * The Configuration class stores all of the system configuration for
 	 * a Readout program. It maintains the configuration that is read in
@@ -70,27 +68,23 @@ namespace DAQ {
 	 * hardware type.
 	 *
 	 * It can be configured either manually or by passing it as an 
-	 * argument to a ConfigurationParser::parse(), 
-	 * FirmwareVersionFileParser::parse(), or ModEvtFileParser::parse() 
+	 * argument to a `ConfigurationParser::parse()`, 
+	 * `FirmwareVersionFileParser::parse()`, or `ModEvtFileParser::parse()` 
 	 * methods as it is in the Readout programs.
 	 *
 	 * At the moment, modules are expected to output events of equal 
 	 * length for all channels. There is no attempt to read out channels 
 	 * with different lengths in a module.
 	 */
+	
 	class Configuration
 	{
 	private:
-	    int m_crateId; //!< Crate ID from cfgPixie16 (not necessarily
-	                   //!< what is in settings file).
-	    std::vector<unsigned short> m_slotMap; //!< Mapping of what slots
-	                                           //!< are occupied.
-	    std::string m_settingsFilePath;   //!< Path to default .set file.
-	    std::vector<int> m_modEvtLengths; //!< Event length for each
-	                                      //!< module (units of 32-bit
-	                                      //!< integers).    
-	    FirmwareMap m_fwMap; //!< Default map of firmware configuration
-	                         //!< from hardware type.
+	    int m_crateId; //!< Crate ID from cfgPixie16.
+	    std::vector<unsigned short> m_slotMap; //!< Map of physical slots.
+	    std::string m_settingsFilePath; //!< Path to default .set file.
+	    std::vector<int> m_modEvtLengths; //!< Event lengths for modules.
+	    FirmwareMap m_fwMap; //!< Map of firmware for hardware types.
 	    std::vector<int> m_hardwareMap; //!< Map of HardwareRegistry types.
     
 	    // These additions support per module firmware maps and .set files:
@@ -101,7 +95,7 @@ namespace DAQ {
 	    std::map<int, std::string> m_moduleSetFileMap;
 	    
 	public:
-	    /** Constructor. */
+	    /** @brief Constructor. */
 	    Configuration() = default;
 	    /** @brief Copy constructor. */
 	    Configuration(const Configuration& rhs) :
@@ -112,13 +106,11 @@ namespace DAQ {
 		m_moduleFirmwareMaps(rhs.m_moduleFirmwareMaps),
 		m_moduleSetFileMap(rhs.m_moduleSetFileMap)
 		{}
-	    /** Destructor. */
+	    /** @brief Destructor. */
 	    ~Configuration() = default;
 	    /**
 	     * @brief Set the crate id for the module.
 	     * @param id The id to assign.
-	     * @todo (ASC 7/14/23): If this is not used, should it be 
-	     *   considered deprecated and removed?
 	     */
 	    void setCrateId(int id) { m_crateId = id; };
 	    /**
@@ -172,7 +164,7 @@ namespace DAQ {
 		const { return m_settingsFilePath; };
 	    /**
 	     * @brief Returns the DSP settings file path specific to a single 
-	     *   module.
+	     * module.
 	     * @param modnum Module number.
 	     * @return std::string  The full path to the settings file.
 	    */
@@ -191,7 +183,7 @@ namespace DAQ {
 		) { m_fwMap[specifier] = config; };
 	    /**
 	     * @brief Retrieve the current firmware specifier for a particular 
-	     *   hardware type.
+	     * hardware type.
 	     * @param hdwrType The hardware specifier associated with the 
 	     *   firmware configuration.
 	     * @throws std::runtime_error If no firmware configuration exists
@@ -224,7 +216,7 @@ namespace DAQ {
 	    /**
 	     * @brief Set the lengths of events for each module
 	     * @param lengths  The module event lengths.
-	     * @throws std::runtime_error if size of lengths does not match 
+	     * @throw std::runtime_error if size of lengths does not match 
 	     *   size of stored slot map.
 	     */
 	    void setModuleEventLengths(const std::vector<int>& lengths);
@@ -235,14 +227,15 @@ namespace DAQ {
 	    std::vector<int> getModuleEventLengths()
 		const { return m_modEvtLengths; };
 	    /**
-	       @brief Set the hardware map for each module.
-	       @param map  The hardware map.
-	       * @throws std::runtime_error if size of lengths does not match 
-	       *   size of stored slot map.
-	       */
+	     * @brief Set the hardware map for each module.
+	     * @param map The hardware map.
+	     * @throw std::runtime_error if size of lengths does not match 
+	     *   size of stored slot map.
+	     */
 	    void setHardwareMap(const std::vector<int>& map);
-	    /**@brief Return a copy of the hardware map vector.
-	     * @return std::vector<int>  Copy of hardware map vector.
+	    /**
+	     * @brief Return a copy of the hardware map vector.
+	     * @return A copy of hardware map vector.
 	     */
 	    std::vector<int> getHardwareMap() const { return m_hardwareMap; };
 	    /**
@@ -252,9 +245,11 @@ namespace DAQ {
 	    void print(std::ostream& stream);
 	    /**
 	     * @brief Generate a Configuration class object from a firmware 
-	     *   version file and cfgPixie16.txt.
+	     * version file and cfgPixie16.txt.
 	     * @param fwVsnPath    Path to the firmware version file.
 	     * @param cfgPixiePath Path to cfgPixie16.txt.
+	     * @throw std::runtime_error Any errors opening or parsing the 
+	     *   firmware and configuration files.
 	     * @return Pointer to the generated Configuration object.
 	     */
 	    static std::unique_ptr<Configuration>
@@ -263,10 +258,12 @@ namespace DAQ {
 		);
 	    /**
 	     * @brief Generate a Configuration class object from a firmware 
-	     *   version file and cfgPixie16.txt.
+	     * version file and cfgPixie16.txt.
 	     * @param fwVsnPath     Path to the firmware version file.
 	     * @param cfgPixiePath  Path to cfgPixie16.txt.
 	     * @param modEvtLenPath Path to the modevtlen.txt file.
+	     * @throw std::runtime_error Error opening or parsing the 
+	     *   modevtlen file.
 	     * @return Pointer to the generated Configuration object.
 	     */
 	    static std::unique_ptr<Configuration>

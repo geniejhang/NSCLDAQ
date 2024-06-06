@@ -1,12 +1,26 @@
-#include <SystemBooter.h>
-#include <Configuration.h>
+/**
+ * @file boot.cpp
+ * @brief Generate a configuration and perform a default (full) boot.
+ */
 
-#include <memory>
+#include "SystemBooter.h"
+
+#include <Configuration.h>
 
 using namespace DAQ::DDAS;
 
-int main() {
-
+/**
+ * @brief boot main.
+ *
+ * @details
+ * - Create a SystemBooter object.
+ * - Generate a configuration.
+ * - Attempt a system boot for the configuration.
+ *
+ * @return 0 Successful boot, no exceptions, etc.
+ */
+int main()
+{
     SystemBooter booter;
     auto pConfig = Configuration::generate(FIRMWARE_FILE, "cfgPixie16.txt");
     booter.boot(*pConfig, SystemBooter::FullBoot);

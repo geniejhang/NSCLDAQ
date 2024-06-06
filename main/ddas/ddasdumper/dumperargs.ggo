@@ -1,13 +1,11 @@
 package "ddasdumper"
-version "1.1"
-purpose "Formatted dump of selected data items and conversion of ddas PHYSICS_EVENTS to root trees."
+version "1.2"
+purpose "Write NSCLDAQ PHYSICS_EVENT data obtained using DDAS to a ROOT TTree and perform a formatted dump of selected data items."
 
-option "source" s "URL of source, ring buffer or file" string optional
-option "skip"   m "number of items to skip before dumping" int optional
-option "count"  c "Number of items to dump before exiting" int optional
-option "sample" S "*Deprecated* List of item types to sample" string optional
-option "exclude" e "List of item types to exclude from the dump" string optional
+option "source" s "Data source URL. Note that only file and streaming data sources " string
 option "fileout" f "Path of output file" string
-option "legacy-mode" l "*Deprecated* use --format* Legacy data format enabled. This is not a default setting" flag off
-option "format" F "Format of input data - replaces the legacy-mode flag" values="v12","v11","v10" enum default="v12" optional
-
+option "count" c "Number of items to dump before exiting. If no count value is provided, all items are dumped" int optional
+option "skip" k "Number of items to skip before dumping" int optional
+option "exclude" e "List of item types to exclude from the dump" string optional default=""
+option "scaler-width" w "Scaler counter width in bits" int optional default="32"
+option "format" F "NSCLDAQ format version" values="v12","v11","v10" enum default="v12" optional

@@ -16,7 +16,7 @@
  * @details
  * This resizes the vectors storing the slot map, module event lengths, and
  * hardware map to be consistent. The caller should call setNumberOfModules
- * prior to calling setSlotMap() or setModuleEventLengths().
+ * prior to calling `setSlotMap()` or `setModuleEventLengths()`.
  */
 void
 DAQ::DDAS::Configuration::setNumberOfModules(size_t size)
@@ -26,10 +26,9 @@ DAQ::DDAS::Configuration::setNumberOfModules(size_t size)
     m_hardwareMap.resize(size);
 }
 
-/*!
- * @brief Assign a new slot map.
- *
- * It is important for the caller to first call setNumberOfModules()
+/**
+ * @details
+ * It is important for the caller to first call `setNumberOfModules()`
  * before calling this to avoid an exception being thrown. To avoid
  * weird configurations, this ensures that the length of the slot map
  * is the same as the module event length vector at all times. If
@@ -58,7 +57,7 @@ DAQ::DDAS::Configuration::setSlotMap(const std::vector<unsigned short> &map)
 /**
  * @details
  * The filename path should be checked for readability by the caller.
-*/
+ */
 void
 DAQ::DDAS::Configuration::setModuleSettingsFilePath(
     int modNum, const std::string& path
@@ -97,7 +96,6 @@ DAQ::DDAS::Configuration::getFirmwareConfiguration(int hdwrType)
 
     return pSpec->second;
 }
-
 
 /**
  * @details
@@ -138,10 +136,11 @@ DAQ::DDAS::Configuration::getModuleFirmwareConfiguration(
 
 /*!
  * @details
- * It is necessary that the caller has previously invoked setNumberOfModules()
- * before calling this. The logic of this method aims to keep the slot map
- * and module event length vectors the same length. Without invoking
- * setNumberOfModules() this is most likely not going to be the case.
+ * It is necessary that the caller has previously invoked 
+ * `setNumberOfModules()` before calling this. The logic of this method aims 
+ * to keep the slot map and module event length vectors the same length. 
+ * Without invoking `setNumberOfModules()` this is most likely not going to be 
+ * the case.
  */
 void
 DAQ::DDAS::Configuration::setModuleEventLengths(
@@ -161,10 +160,11 @@ DAQ::DDAS::Configuration::setModuleEventLengths(
 
 /*!
  * @details
- * It is necessary that the caller has previously invoked setNumberOfModules()
- * before calling this. The logic of this method aims to keep the slot map
- * and module event length vectors the same length. Without invoking
- * setNumberOfModules() this is most likely not going to be the case.
+ * It is necessary that the caller has previously invoked 
+ * `setNumberOfModules()` before calling this. The logic of this method aims 
+ * to keep the slot map and module event length vectors the same length. 
+ * Without invoking `setNumberOfModules()` this is most likely not going to be 
+ * the case.
  */
 void
 DAQ::DDAS::Configuration::setHardwareMap(const std::vector<int> &map)
@@ -198,7 +198,7 @@ DAQ::DDAS::Configuration::print(std::ostream &stream)
 
 /**
  * @details
- * std::move() ensures correct ownership of the returned pointer, 
+ * `std::move()` ensures correct ownership of the returned pointer, 
  * though we _may_ be able to take advantage of some copy elision here.
  */
 std::unique_ptr<DAQ::DDAS::Configuration>
@@ -207,10 +207,8 @@ DAQ::DDAS::Configuration::generate(
     )
 {
     std::unique_ptr<Configuration> pConfig(new Configuration);
-
     FirmwareVersionFileParser fwFileParser;
     ConfigurationParser       configParser;
-
     std::ifstream input(fwVsnPath.c_str(), std::ios::in);
 
     if(input.fail()) {
@@ -220,7 +218,14 @@ DAQ::DDAS::Configuration::generate(
 	throw std::runtime_error(errmsg);
     }
 
-    fwFileParser.parse(input, pConfig->m_fwMap);
+    try {
+	fwFileParser.parse(input, pConfig->m_fwMap);
+    } catch (const std::runtime_error& e) {
+	std::string errmsg("Configuration::generate() ");
+	errmsg += "Failed to parse the firmware version file: ";
+	errmsg +=  fwVsnPath + ": " + e.what();
+	throw std::runtime_error(errmsg);
+    }
 
     input.close();
     input.clear();
@@ -234,14 +239,21 @@ DAQ::DDAS::Configuration::generate(
 	throw std::runtime_error(errmsg);
     }
 
-    configParser.parse(input, *pConfig);
+    try {
+	configParser.parse(input, *pConfig);
+    } catch (const std::runtime_error& e) {
+	std::string errmsg("Configuration::generate() ");
+	errmsg += "Failed to parse the system configuration file: ";
+	errmsg += cfgPixiePath + ": " + e.what();
+	throw std::runtime_error(errmsg);
+    }
 
     return std::move(pConfig);
 }
 
 /**
  * @details
- * std::move() ensures correct ownership of the returned pointer, 
+ * `std::move()` ensures correct ownership of the returned pointer, 
  * though we _may_ be able to take advantage of some copy elision here.
  */
 std::unique_ptr<DAQ::DDAS::Configuration>
@@ -251,12 +263,10 @@ DAQ::DDAS::Configuration::generate(
     )
 {
     ModEvtFileParser modEvtParser;
-
     std::unique_ptr<Configuration> pConfig = generate(fwVsnPath, cfgPixiePath);
-
     int moduleCount = pConfig->getNumberOfModules();
 
-    // read a configration file to tell Pixie16 how big an event is in
+    // Read a configration file to tell Pixie16 how big an event is in
     // a particular module.  Within one module all channels MUST be set to
     // the same event length
 
@@ -271,7 +281,14 @@ DAQ::DDAS::Configuration::generate(
 	throw std::runtime_error(errmsg);
     }
 
-    modEvtParser.parse(modevt, *pConfig);
+    try {
+	modEvtParser.parse(modevt, *pConfig);
+    } catch (const std::runtime_error& e) {
+	std::string errmsg("Configuration::generate() ");
+	errmsg += "Failed to parse the modevtlen configuration file: ";
+	errmsg += modEvtLenPath + ": " + e.what();
+	throw std::runtime_error(errmsg);
+    }
 
     return std::move(pConfig);
 }

@@ -30,8 +30,8 @@ class CPixieSystemUtilities
 {
 private:
     DAQ::DDAS::Configuration m_config; //!< Hardware configuration information.
-    int m_bootMode; //!< Offline (1) or online (0) boot mode.
-    bool m_booted;  //!< True when the system is booted, false otherwise.
+    int  m_bootMode; //!< Offline (1) or online (0) boot mode.
+    bool m_booted;   //!< True when the system is booted, false otherwise.
     bool m_ovrSetFile; //!< True if loading a settings file after booting.
     unsigned short m_numModules; //!< Number of modules in the crate.
     std::vector<int> m_modEvtLength; //!< Event length in 32 bit words.
@@ -99,14 +99,15 @@ public:
      * @brief Get the number of installed modules.
      * @return The number of modules in the crate.
      */
-    int GetNumModules() {return m_numModules;};
+    unsigned short GetNumModules() {return m_numModules;};
     /**
      * @brief Get the module ADC sampling rate in MSPS.
      * @throws std::runtime_error If the module number is invalid.
      * @returns The module ADC sampling rate in MSPS.
-     * @retval 0 if the module number is invalid.
+     * @retval -1 if the system is not booted.
+     * @retval -2 if the module number is invalid.
      */
-    unsigned short GetModuleMSPS(int module);
+    int GetModuleMSPS(int module);
 };
 
 /** @} */
@@ -168,7 +169,7 @@ extern "C" {
 	return utils->GetNumModules();
     }
     /** @brief Wrapper to get a single module ADC MSPS from the HW map. */
-    unsigned short CPixieSystemUtilities_GetModuleMSPS(
+    int CPixieSystemUtilities_GetModuleMSPS(
 	CPixieSystemUtilities* utils, int mod
 	)
     {

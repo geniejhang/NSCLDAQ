@@ -13,7 +13,9 @@
 #include <stdexcept>
 
 namespace HR = DAQ::DDAS::HardwareRegistry;
-/** @typedef Registry
+
+/** 
+ * @typedef Registry
  * @brief Map of hardware specifications (MSPS, bit depth, revision, 
  * calibration) keyed by the hardware type.
  */
@@ -53,8 +55,7 @@ createRegistry()
     return gpRegistry;
 }
 
-// Avoid static initialization order fiasco by using a construct on first
-// use idiom
+// Avoid static initialization order fiasco by construct-on-first-use idiom
 static Registry&
 getRegistry()
 {

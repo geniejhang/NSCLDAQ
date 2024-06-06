@@ -1,3 +1,0 @@
-#!/bin/sh
-
-LD_LIBRARY_PATH=@ROOTSYS@/lib @prefix@/bin/nscope.bin

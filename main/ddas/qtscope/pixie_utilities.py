@@ -108,7 +108,7 @@ class SystemUtilities:
         
         # Get module MSPS:        
         lib.CPixieSystemUtilities_GetModuleMSPS.argtypes = [c_void_p, c_int]
-        lib.CPixieSystemUtilities_GetModuleMSPS.restype = c_ushort
+        lib.CPixieSystemUtilities_GetModuleMSPS.restype = c_int
         
         # Dtor:        
         lib.CPixieSystemUtilities_delete.argtypes = [POINTER(c_char)]
@@ -262,8 +262,17 @@ class SystemUtilities:
         -------
         int
             Sampling rate in MSPS.
-        """        
-        return lib.CPixieSystemUtilities_GetModuleMSPS(self.obj, module)
+        """
+        try: 
+            retval = lib.CPixieSystemUtilities_GetModuleMSPS(self.obj, module)
+            if retval < 0:
+                raise RuntimeError(
+                    f"Failed to read Mod. {module} MSPS with retval {retval}"
+                ) 
+            return retval
+        except RuntimeError as e:
+            self.logger.exception(f"Failed to read module {module} MSPS")
+            print(e)
     
     def __del__(self):
         """SystemUtilities class destructor."""        
@@ -354,7 +363,7 @@ class DSPUtilities:
         try:
             retval = lib.CPixieDSPUtilities_AdjustOffsets(self.obj, module)
             if retval < 0:
-                raise RuntimeError(f"Failed to adjust offsets in Mod. {mod} with retval {retval}")            
+                raise RuntimeError(f"Failed to adjust offsets in Mod. {module} with retval {retval}")            
         except RuntimeError as e:
             self.logger.exception(f"Failed to adjust offsets")
             print(e)
@@ -616,15 +625,15 @@ class RunUtilities:
                     self.obj, module
                 )     
                 if retval < 0:
-                    raise RuntimeError(f"Begin histogram run in Mod. {mod} failed with retval {retval}")                
+                    raise RuntimeError(f"Begin histogram run in Mod. {module} failed with retval {retval}")                
             elif run_type == RunType.BASELINE:                
                 retval =  lib.CPixieRunUtilities_BeginBaselineRun(
                     self.obj, module
                 )
                 if retval < 0:
-                    raise RuntimeError(f"Begin baseline run in Mod. {mod} failed with retval {retval}")                
+                    raise RuntimeError(f"Begin baseline run in Mod. {module} failed with retval {retval}")                
             else:
-                raise ValueError(f"Unable to begin run in Mod. {mod}, run type {run_type} is not a valid type of data run")            
+                raise ValueError(f"Unable to begin run in Mod. {module}, run type {run_type} is not a valid type of data run")            
         except ValueError as e:
             self.logger.exception("Attempted to begin unrecognized run type")
             print(e)            
@@ -653,7 +662,7 @@ class RunUtilities:
             elif run_type == RunType.BASELINE:
                 lib.CPixieRunUtilities_EndBaselineRun(self.obj, module)
             else:
-                raise ValueError(f"Unable to end run in Mod. {mod} with unknown run type {run_type}")         
+                raise ValueError(f"Unable to end run in Mod. {module} with unknown run type {run_type}")         
         except ValueError as e:
             self.logger.exception(f"Failed to end data run")
             print(e)
@@ -691,7 +700,7 @@ class RunUtilities:
                 if retval < 0:
                     raise RuntimeError(f"Baseline read from Mod. {module}, Ch. {channel} failed with retval {retval}")           
             else:
-                raise ValueError(f"Unable to read data from Mod. {mod} for unknown run type {run_type}")           
+                raise ValueError(f"Unable to read data from Mod. {module} for unknown run type {run_type}")           
         except ValueError as e:
             self.logger.exception(f"Encountered unknown run type")
             print(e)            
@@ -715,7 +724,7 @@ class RunUtilities:
         try: 
             retval = lib.CPixieRunUtilities_ReadModuleStats(self.obj, module)   
             if retval < 0:
-                raise RuntimeError("Reading statistics from Mod. {mod} failed with retval {retval}")    
+                raise RuntimeError(f"Reading statistics from Mod. {module} failed with retval {retval}")    
         except RuntimeError as e:
             self.logger.exception(f"Failed to read run statistics")
             print(e)    
@@ -839,7 +848,7 @@ class TraceUtilities:
                 self.obj, module, channel
             )            
             if retval < 0:
-                raise RuntimeError(f"Read trace from Mod. {module} Ch. {chanel} failed with retval {retval}")          
+                raise RuntimeError(f"Read trace from Mod. {module} Ch. {channel} failed with retval {retval}")          
         except RuntimeError as e:
             self.logger.exception(f"Failed to read ADC trace data")
             print(e)        
@@ -864,7 +873,7 @@ class TraceUtilities:
                 self.obj, module, channel
             )            
             if retval < 0:
-                raise RuntimeError(f"Read trace from Mod. {module} Ch. {chanel} failed with retval {retval}")          
+                raise RuntimeError(f"Read trace from Mod. {module} Ch. {channel} failed with retval {retval}")          
         except RuntimeError as e:
             self.logger.exception(f"Failed to read ADC trace data")
             print(e)        

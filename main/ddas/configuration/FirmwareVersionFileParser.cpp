@@ -18,7 +18,7 @@ namespace {
 /**
  * @details
  * Regular expression matching 
- * @verbatim "(^\[Rev([xXa-fA-F0-9]+)-(\d+)Bit-(\d+)MSPS\]$)" @endverbatim 
+ @verbatim "(^\[Rev([xXa-fA-F0-9]+)-(\d+)Bit-(\d+)MSPS\]$)" @endverbatim 
  * to extract the firmware, bit depth, and module MSPS.
  */
 DAQ::DDAS::FirmwareVersionFileParser::FirmwareVersionFileParser()
@@ -73,40 +73,46 @@ DAQ::DDAS::FirmwareVersionFileParser::parse(
 		);
 	    int calibration;
 
+	    /** @todo (ASC 3/13/24): CFWFileParseError for exceptions. */
 	    FirmwareConfiguration fwConfig;
 	    input >> fwConfig.s_ComFPGAConfigFile;
 	    if (!input.good()) {
-		throw std::runtime_error(
-		    "DDASFirmwareVersionFile.txt is incomplete!"
-		    );
+		std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
+		msg += "Failed to read ComFPGAConfigFile from ";
+		msg += fwConfig.s_ComFPGAConfigFile;
+		throw std::runtime_error(msg);
 	    }
 
 	    input >> fwConfig.s_SPFPGAConfigFile;
 	    if (!input.good()) {
-		throw std::runtime_error(
-		    "DDASFirmwareVersionFile.txt is incomplete!"
-		    );
+		std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
+		msg += "Failed to read SPFPGAConfigFile from ";
+		msg += fwConfig.s_SPFPGAConfigFile;
+		throw std::runtime_error(msg);
 	    }
 
 	    input >> fwConfig.s_DSPCodeFile;
 	    if (!input.good()) {
-		throw std::runtime_error(
-		    "DDASFirmwareVersionFile.txt is incomplete!"
-		    );
+		std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
+		msg += "Failed to read DSPCodeFile from ";
+		msg += fwConfig.s_DSPCodeFile;
+		throw std::runtime_error(msg);
 	    }
 
 	    input >> fwConfig.s_DSPVarFile;
 	    if (!input.good()) {
-		throw std::runtime_error(
-		    "DDASFirmwareVersionFile.txt is incomplete!"
-		    );
+		std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
+		msg += "Failed to read DSPVarFile from ";
+		msg += fwConfig.s_DSPVarFile;
+		throw std::runtime_error(msg);
 	    }
 
 	    input >> calibration;
 	    if (!input.good()) {
-		throw std::runtime_error(
-		    "DDASFirmwareVersionFile.txt is incomplete!"
-		    );
+		std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
+		msg += "Failed to read clock calibration from ";
+		msg += calibration;
+		throw std::runtime_error(msg);
 	    }
 
 	    int type = HardwareRegistry::createHardwareType(

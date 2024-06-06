@@ -14,27 +14,50 @@ class CMyEndCommand : public CEndCommand
 {
   public:
     struct EndEvent {
-      Tcl_Event s_rawEvent;
-      CMyEndCommand* s_thisPtr;
+	Tcl_Event      s_rawEvent; //!< Generic event for the Tcl event system.
+	CMyEndCommand* s_thisPtr;  //!< Pointer to this command.
     };
  
-private:
+private:        
+    CMyEventSegment* m_pSeg;     //!< End for modules in this segment.
+    CExperiment*     m_pExp;     //!< The experiment we're reading data from.
+    int              m_nModules; //!< Number of modules in the event segment.
 
 public:
-	// Constructors, destructors and other cannonical operations: 
-  
-    CMyEndCommand(CTCLInterpreter& interp, CMyEventSegment *myevseg, CExperiment* exp);              //!< Default constructor.
-  ~CMyEndCommand (); //!< Destructor.
+    /**
+     * @brief Constructor.
+     * @param interp Reference to interpreter.
+     * @param pSeg   Pointer to the event segment to manipulate.
+     * @param pExp   Pointer to the experiment we're reading data from.
+     */
+    CMyEndCommand(
+	CTCLInterpreter& interp, CMyEventSegment* pSeg, CExperiment* pExp
+	);
+    /** @brief Destructor. */
+    ~CMyEndCommand ();
   
 private:
-  CMyEndCommand(const CMyEndCommand& rhs);
-  CMyEndCommand& operator=(const CMyEndCommand &rhs);
-  int operator==(const CMyEndCommand& rhs) const;
-  int operator!=(const CMyEndCommand& rhs) const;
-    
-  CMyEventSegment *myeventsegment;
-  CExperiment*     m_pExp;
-  int NumModules;
+    /**
+     * @brief Copy constructor.
+     * @param rhs References the CMyEndCommand we are copy-constructing.
+     */
+    CMyEndCommand(const CMyEndCommand& rhs);
+    /**
+     * @brief operator=
+     * @param rhs References the CMyEndCommand we are assigning to lhs.
+     * @return Reference to left-hand side operand.
+     */
+    CMyEndCommand& operator=(const CMyEndCommand &rhs);
+    /**
+     * @brief operator==
+     * @param rhs References the CMyEndCommand for comparison.
+     */
+    int operator==(const CMyEndCommand& rhs) const;
+    /**
+     * @brief operator!=
+     * @param rhs References the CMyEndCommand for comparison.
+     */
+    int operator!=(const CMyEndCommand& rhs) const;
   
   // Class operations:
 public:  
@@ -43,8 +66,9 @@ public:
   int endRun();
   void rescheduleEndTransition();
   void rescheduleEndRead();
-  virtual int operator()(CTCLInterpreter& interp,
-			 std::vector<CTCLObject>& objv);
+  virtual int operator()(
+      CTCLInterpreter& interp, std::vector<CTCLObject>& objv
+      );
 
 protected:
   static int handleEndRun(Tcl_Event* pEvt, int flags);

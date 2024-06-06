@@ -17,16 +17,18 @@ namespace DAQ {
 	 * @{
 	 */
 	
-	/*! \namespace DAQ::DDAS::HardwareRegistry
-	 *
-	 * The HardwareRegistry namespace is where information about all known 
-	 * DDAS modules are stored. The information that the user can access 
-	 * in this namespace's functions is not specific to a module but rather
-	 * to a hardware type. If the user wants to know basic information 
-	 * about the ADC resolution or frequency, this namespace will scratch 
-	 * that itch. However, if the user is looking for information about the
-	 * serial number, this is not the place for that. In fact, there 
-	 * currently is no place for that.
+	/** 
+	 * @namespace DAQ::DDAS::HardwareRegistry
+	 * @brief The HardwareRegistry namespace is where information about 
+	 * all known DDAS modules are stored.
+	 * @details
+	 * The information that the user can access in this namespace's 
+	 * functions is not specific to a module but rather to a hardware type.
+	 * If the user wants to know basic information  about the ADC 
+	 * resolution or frequency, this namespace will scratch that itch. 
+	 * However, if the user is looking for information about the serial 
+	 * number, this is not the place for that. In fact, there  currently 
+	 * is no place for that.
 	 *
 	 * The HardwareRegistry is fairly simple. It is just a map of 
 	 * HardwareRegistry::HardwareSpecifications that are keyed by 
@@ -43,31 +45,32 @@ namespace DAQ {
 	 * HardwareRegistry::getSpecification(HardwareType type). 
 	 * Together these two functions are probably the most useful tools.
 	 */
+	
 	namespace HardwareRegistry {
-
-	    /*!
-	     * \brief Generic hardware specs for hardware types.
+	    /**
+	     * @brief Generic hardware specs for hardware types.
 	     */
 	    struct HardwareSpecification {
-		int s_adcFrequency; //!< Module ADC frequency in MSPS.
+		int s_adcFrequency;  //!< Module ADC frequency in MSPS.
 		int s_adcResolution; //!< Module ADC resolution (bit depth).
-		int s_hdwrRevision; //!< Module hardware revision.
-		double s_clockCalibration; //!< FPGA clock calibraition in ns/clock tick.
+		int s_hdwrRevision;  //!< Module hardware revision.
+		/** FPGA clock calibration in ns/tick. */
+		double s_clockCalibration;
 	    };
 	    
-	    /*!
-	     * \brief The HardwareType enum
-	     *
+	    /**
+	     * @brief The HardwareType enum
+	     * @details
 	     * The HardwareType enumeration provides an identifier for each 
 	     * type of hardware that might be found in the system. The user 
 	     * can determine which hardware type they are dealing with by 
-	     * calling the Pixie16ReadModuleInfo() methods to access the ADC
+	     * calling the `Pixie16ReadModuleInfo()` methods to access the ADC
 	     * sampling frequency, the ADC resolution, and the hardware 
 	     * revision. Together with those three pieces of information, it 
 	     * is possible to determine the appropriate HardwareType.
 	     *
-	     * \todo Create a method that can query a module and compute the 
-	     * HardwareType.
+	     * @todo (ASC 3/13/24): Create a method that can query a module 
+	     * and compute the HardwareType.
 	     */
 	    enum HardwareType {
 		RevB_100MHz_12Bit=1,
@@ -87,9 +90,26 @@ namespace DAQ {
 	    void configureHardwareType(
 		int type, const HardwareSpecification& spec
 		);
+	    /**
+	     * @brief Retrieve a reference to the current hdwr specification 
+	     * for a hardware type.
+	     * @param type The enumerated hardware type.
+	     * @throw std::runtime_error If no specification exists for the 
+	     *   hardware type provided.
+	     * @return Reference to a hardware specificiation.
+	     */
 	    HardwareSpecification& getSpecification(int type);
 	    void resetToDefaults();
 	    int computeHardwareType(int hdwrVersion, int adcFreq, int adcRes);
+	    /**
+	     * @brief Create an enumerated hardware type from input 
+	     * specifications.
+	     * @param hdwrVersion      Hardware revision.
+	     * @param adcFreq          ADC sampling frequency.
+	     * @param adcRes           ADC bit resolution (e.g. 12, 14, etc.).
+	     * @param clockCalibration FPGA clock calibration in ns/clock tick.
+	     * @return An enumerated hardware type.
+	     */ 
 	    int createHardwareType(
 		int hdwrVersion, int adcFreq, int adcRes,
 		double clockCalibration
@@ -102,8 +122,17 @@ namespace DAQ {
     } // end DDAS namespace
 } // end DAQ namespace
 
-bool operator==(const DAQ::DDAS::HardwareRegistry::HardwareSpecification& lhs,
-                const DAQ::DDAS::HardwareRegistry::HardwareSpecification& rhs);
+/**
+ * @brief Check if two HardwareSpecifications are the same.
+ * @param lhs, rhs Left- and right-hand objects for comparison.
+ * @return bool
+ * @retval true  If lhs and rhs are equal.
+ * @retval false Otherwise.
+ */
+bool operator==(
+    const DAQ::DDAS::HardwareRegistry::HardwareSpecification& lhs,
+    const DAQ::DDAS::HardwareRegistry::HardwareSpecification& rhs
+    );
 
 #endif // HARDWAREREGISTRY_H
 

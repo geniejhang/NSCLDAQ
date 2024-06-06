@@ -9,7 +9,7 @@
      http://www.gnu.org/licenses/gpl.txt
 
      Author:
-             Jeromy Tompkins
+         Jeromy Tompkins
          NSCL
          Michigan State University
          East Lansing, MI 48824-1321
@@ -18,128 +18,146 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "Asserts.h"
-
-#include "Configuration.h"
-
 #include <sstream>
 #include <vector>
 #include <string>
 
+#include "Asserts.h"
+#include "Configuration.h"
+
 using namespace std;
 using namespace ::DAQ::DDAS;
 
-
-/*!
- * \brief Test some basic logic of the Configuration class
- */
 class ConfigurationTest : public CppUnit::TestFixture
 {
 
-  public:
-    CPPUNIT_TEST_SUITE( ConfigurationTest );
-    CPPUNIT_TEST( print_0 );
-    CPPUNIT_TEST( setModEvtLength_0 );
-    CPPUNIT_TEST( setModEvtLength_1 );
-    CPPUNIT_TEST( setSlotMap_0 );
-    CPPUNIT_TEST( setSlotMap_1 );
-    CPPUNIT_TEST( setHardwareMap_0 );
-    CPPUNIT_TEST( setHardwareMap_1 );
-    CPPUNIT_TEST( setHardwareMap_2 );
+public:
+    CPPUNIT_TEST_SUITE(ConfigurationTest);
+    CPPUNIT_TEST(print_0);
+    CPPUNIT_TEST(setModEvtLength_0);
+    CPPUNIT_TEST(setModEvtLength_1);
+    CPPUNIT_TEST(setSlotMap_0);
+    CPPUNIT_TEST(setSlotMap_1);
+    CPPUNIT_TEST(setHardwareMap_0);
+    CPPUNIT_TEST(setHardwareMap_1);
+    CPPUNIT_TEST(setHardwareMap_2);
     CPPUNIT_TEST_SUITE_END();
 
-  public:
-    void setUp() {
-    }
+public:
+    void setUp() {}
+    void tearDown() {}
 
-    void tearDown() {
-    }
+    /** @brief Print out crate configuration. */
+    void print_0()
+	{
+	    Configuration config;
+	    config.setNumberOfModules(2);
+	    config.setCrateId(123);
+	    config.setModuleEventLengths({123,345});
+	    config.setSlotMap({2,3});
+	    config.setSettingsFilePath("/path/to/settings.file");
+	    
+	    std::stringstream stream;
+	    config.print(stream);
+	    std::string msg(
+		"Crate number 123: 2 modules, in slots:2 3 DSPParFile: "
+		"/path/to/settings.file"
+		);
+	    EQMSG("Print output", msg, stream.str());
+	}
 
+    /** 
+     * @brief Setting module event lengths before setting number of modules 
+     * is an error. 
+     */
+    void setModEvtLength_0()
+	{
+	    Configuration config;
+	    CPPUNIT_ASSERT_THROW_MESSAGE(
+		"Setting modevtlen before setNumberOfModules is an error",
+		config.setModuleEventLengths({0}), std::runtime_error
+		);
+	}
 
-    void print_0() {
-        Configuration config;
-        config.setNumberOfModules(2);
-        config.setCrateId(123);
-        config.setModuleEventLengths({123,345});
-        config.setSlotMap({2,3});
-        config.setSettingsFilePath("/path/to/settings.file");
+    /** @brief Check setting event lengths. */
+    void setModEvtLength_1()
+	{
+	    Configuration config;
+	    config.setNumberOfModules(2);
+	    CPPUNIT_ASSERT_NO_THROW_MESSAGE(
+		"settings modevtlen correctly succeeds",
+		config.setModuleEventLengths({0, 2})
+		);
+	}
 
-        std::stringstream stream;
-        config.print(stream);
+    /** 
+     * @brief Setting a slot map before setting the number of modules is 
+     * an error. 
+     */
+    void setSlotMap_0()
+	{
+	    Configuration config;
+	    CPPUNIT_ASSERT_THROW_MESSAGE(
+		"Setting a slot map before setNumberOfModules is an error",
+		config.setSlotMap({0}), std::runtime_error
+		);
+	}
 
-        EQMSG("Print output",
-              std::string("Crate number 123: 2 modules, in slots:2 3 DSPParFile: /path/to/settings.file"),
-              stream.str());
-    }
+    /** @brief Check that we can correctly set slot maps. */
+    void setSlotMap_1()
+	{
+	    Configuration config;
+	    config.setNumberOfModules(2);
+	    CPPUNIT_ASSERT_NO_THROW_MESSAGE(
+		"settings slot map correctly succeeds",
+		config.setSlotMap({0, 2})
+		);
+	}
 
-    void setModEvtLength_0() {
-        Configuration config;
-        CPPUNIT_ASSERT_THROW_MESSAGE("settings modevtlen b/4 setNumberOfModules is an error",
-                                     config.setModuleEventLengths({0}),
-                                        std::runtime_error);
-    }
+    /** @brief Check setting a hardware map. */
+    void setHardwareMap_0()
+	{
+	    using namespace DAQ::DDAS::HardwareRegistry;
+	    Configuration config;
+	    config.setNumberOfModules(2);
+	    CPPUNIT_ASSERT_NO_THROW_MESSAGE(
+		"Setting the hardware map correctly succeeds",
+		config.setHardwareMap({RevB_100MHz_12Bit, RevF_250MHz_14Bit})
+		);
+	}
 
-    void setModEvtLength_1() {
-        Configuration config;
-        config.setNumberOfModules(2);
-        CPPUNIT_ASSERT_NO_THROW_MESSAGE("settings modevtlen correctly succeeds",
-                                     config.setModuleEventLengths({0, 2}));
-    }
+    /** 
+     * @brief Setting a hardware map before setting the number of modules 
+     * is an error. 
+     */
+    void setHardwareMap_1()
+	{
+	    using namespace DAQ::DDAS::HardwareRegistry;
+	    Configuration config;
+	    CPPUNIT_ASSERT_THROW_MESSAGE(
+		"Setting hardware map before setNumberOfModules is an error",
+		config.setHardwareMap({RevD_100MHz_12Bit, RevF_250MHz_14Bit}),
+		std::runtime_error
+		);
+	}
 
-    void setSlotMap_0() {
-        Configuration config;
-        CPPUNIT_ASSERT_THROW_MESSAGE("settings slot map b/4 setNumberOfModules is an error",
-                                     config.setSlotMap({0}),
-                                        std::runtime_error);
-    }
+    /** @brief Check that setting the hardware map modifies the map values. */
+    void setHardwareMap_2()
+	{
+	    using namespace DAQ::DDAS::HardwareRegistry;
+	    Configuration config;
+	    config.setNumberOfModules(1);
+	    std::vector<int> mapping = {RevC_100MHz_12Bit};
+	    config.setHardwareMap(mapping);
+	    ASSERTMSG(
+		"setting hdwr map actually creates change in map",
+		mapping == config.getHardwareMap()
+		);
 
-    void setSlotMap_1() {
-        Configuration config;
-        config.setNumberOfModules(2);
-        CPPUNIT_ASSERT_NO_THROW_MESSAGE("settings slot map correctly succeeds",
-                                     config.setSlotMap({0, 2}));
-    }
-
-
-    void setHardwareMap_0() {
-
-        using namespace DAQ::DDAS::HardwareRegistry;
-
-        Configuration config;
-        config.setNumberOfModules(2);
-        CPPUNIT_ASSERT_NO_THROW_MESSAGE("setting hdwr map correctly succeeds",
-                                     config.setHardwareMap({RevB_100MHz_12Bit, RevF_250MHz_14Bit}));
-    }
-
-    void setHardwareMap_1() {
-
-        using namespace DAQ::DDAS::HardwareRegistry;
-
-        Configuration config;
-        CPPUNIT_ASSERT_THROW_MESSAGE("setting hdwr map b/4 setNumberOfModules is an error",
-                                     config.setHardwareMap({RevD_100MHz_12Bit, RevF_250MHz_14Bit}),
-                                     std::runtime_error);
-    }
-
-    void setHardwareMap_2() {
-
-        using namespace DAQ::DDAS::HardwareRegistry;
-
-        Configuration config;
-        config.setNumberOfModules(1);
-
-        std::vector<int> mapping = {RevC_100MHz_12Bit};
-        config.setHardwareMap(mapping);
-
-        ASSERTMSG("setting hdwr map actually creates change in map",
-                  mapping == config.getHardwareMap());
-
-    }
-
+	}
 };
 
-
 // Register it with the test factory
-CPPUNIT_TEST_SUITE_REGISTRATION( ConfigurationTest );
+CPPUNIT_TEST_SUITE_REGISTRATION( ConfigurationTest);
 
 

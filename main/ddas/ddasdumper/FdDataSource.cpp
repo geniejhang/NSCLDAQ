@@ -15,31 +15,18 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  FdDataSource.cpp
- *  @brief: Implementation of the file descriptor data source.
+/** 
+ * @file FdDataSource.cpp
+ * @brief Implementation of the file descriptor data source.
  */
 #include "FdDataSource.h"
 #include <RingItemFactoryBase.h>
 
-/**
- * constructor
- * @param pFactory - pointer to the factory used to get items.
- * @param fd       - file descriptor open on the data source.
- *                   The caller owns this - we don't close it on destruction.
- */
 FdDataSource::FdDataSource(RingItemFactoryBase* pFactory, int fd) :
     DataSource(pFactory), m_fd(fd)
 {}
-/**
- * destructor
- */
-FdDataSource::~FdDataSource() {}
 
-/**
- *  getItem
- *     @return CRingItem* - undifferentiated ring item dynamically created.
- *                          nullptr if there's no more.
- */
+FdDataSource::~FdDataSource() {}
 
 CRingItem*
 FdDataSource::getItem()

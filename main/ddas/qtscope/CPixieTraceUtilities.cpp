@@ -12,6 +12,7 @@
 
 #include <config.h>
 #include <config_pixie16api.h>
+#include <CXIAException.h>
 
 #include "CDataGenerator.h"
 
@@ -22,7 +23,6 @@
  */
 CPixieTraceUtilities::CPixieTraceUtilities() :
     m_useGenerator(false),
-    m_trace(MAX_ADC_TRACE_LEN, 0),
     m_validAmplitude(20)
 {}
 
@@ -33,9 +33,6 @@ CPixieTraceUtilities::CPixieTraceUtilities() :
  *    standard deviation estimated from the median absolute deviation.
  * 2. The max/min value differs from the median value by at least 
  *    m_validAmplitude ADC units.
- *
- * @todo (ASC 7/14/23): Shorter, more focused try-catch blocks for acquisiton
- * and validation rather than wrapping the entire process in one.
  */ 
 int
 CPixieTraceUtilities::ReadTrace(int module, int channel)
@@ -79,11 +76,11 @@ CPixieTraceUtilities::ReadTrace(int module, int channel)
 	    // Try again
 	    attempt++;
 	}
-	catch (std::runtime_error& e) {
-	    std::cerr << e.what() << std::endl;      
+	catch (const CXIAException& e) {
+	    std::cerr << e.ReasonText() << std::endl;      
 	    return -1;
 	}
-	catch (std::invalid_argument& e) {
+	catch (const std::invalid_argument& e) {
 	    std::cerr << e.what() << std::endl;      
 	    return -2;
 	}
@@ -102,8 +99,8 @@ CPixieTraceUtilities::ReadFastTrace(int module, int channel)
     try {
 	AcquireADCTrace(module, channel);
     }
-    catch (std::runtime_error& e) {
-	std::cerr << e.what() << std::endl;    
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;    
 	return -1; 
     }
   
@@ -123,66 +120,34 @@ CPixieTraceUtilities::ReadFastTrace(int module, int channel)
 void
 CPixieTraceUtilities::AcquireADCTrace(int module, int channel)
 {
-    std::fill(m_trace.begin(), m_trace.end(), 0); // Reset trace.
-  
-    // Fill internal DSP memory prior to trace read:  
+    // Fill internal DSP memory prior to trace read:
     int retval = Pixie16AcquireADCTrace(module);
-  
-    if (retval < 0) {
-	std::stringstream errmsg;
-	errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed";
-	errmsg << " to allocate memory for trace in module " << module
-	       << " with retval " << retval;
-	throw std::runtime_error(errmsg.str());
-    }
- 
-    // Traces are in memory and can be read out, or read generator data:  
-    try {
-	if (!m_useGenerator) {
-	    retval = Pixie16ReadSglChanADCTrace(
-		m_trace.data(), MAX_ADC_TRACE_LEN, module, channel
-		);
     
-	    if (retval < 0) {
-		std::stringstream errmsg;
-		errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed";
-		errmsg << " to read trace from module " << module
-		       << " channel " << channel
-		       << " with retval " << retval;	
-		throw std::runtime_error(errmsg.str());
-	    }
-      
-	} else {      
-	    // Get the trace binning and if successful generate a pulse:      
-	    const char* pXDT = "XDT";
-	    double xdt = 0;
-	    retval = Pixie16ReadSglChanPar(pXDT, &xdt, module, channel);
-
-	    if (retval < 0) {
-		std::stringstream errmsg;
-		errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed";
-		errmsg << " to read parameter " << pXDT
-		       << " from module " << module
-		       << " channel " << channel
-		       << " with retval " << retval;
-		throw std::runtime_error(errmsg.str());
-	    }
-
-	    CDataGenerator gen;
-	    retval = gen.GetTraceData(m_trace.data(), MAX_ADC_TRACE_LEN, xdt);
-
-	    if (retval < 0) {
-		std::stringstream errmsg;
-		errmsg << "CPixieTraceUtilities::AcquireADCTrace() failed";
-		errmsg << " to read trace from module " << module
-		       << " channel " << channel
-		       << " with retval " << retval;
-		throw std::runtime_error(errmsg.str());
-	    }
-	}
+    if (retval < 0) {
+	std::stringstream msg;
+	msg << "Failed to allocate memory for trace in module " << module;
+	throw CXIAException(msg.str(), "Pixie16AcquireADCTrace()", retval);
     }
-    catch (std::runtime_error& e) {
-	throw e;
+
+    if (!m_useGenerator) {
+	unsigned int len;
+	PixieGetTraceLength(module, channel, &len);
+	ResetTrace(len);
+
+	retval = Pixie16ReadSglChanADCTrace(
+	    m_trace.data(), len, module, channel
+	    );
+	    
+	if (retval < 0) {
+	    std::stringstream msg;
+	    msg << "Failed to read trace from module " << module;
+	    throw CXIAException(
+		msg.str(), "PixieReadSglChanADCTrace()", retval
+		);
+	}
+    } else {
+	std::cerr << "Offline data generation using the generator is not"
+		  << " supported for XIA API 3+" << std::endl;
     }
 }
 
@@ -212,4 +177,18 @@ CPixieTraceUtilities::GetMedianValue(std::vector<T> v)
     } else { // Odd number of samples, just in case someone changes it.
 	return (double)(*midItr);
     }
+}
+
+/**
+ * @details
+ * Resize the trace storage if necessary based on the length of the data to be
+ * read. Reset stored trace values to 0.
+ */
+void
+CPixieTraceUtilities::ResetTrace(unsigned int len)
+{
+    if (m_trace.size() != len) {
+	m_trace.resize(len);
+    }
+    std::fill(m_trace.begin(), m_trace.end(), 0);
 }

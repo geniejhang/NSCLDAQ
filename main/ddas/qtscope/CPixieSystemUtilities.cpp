@@ -12,6 +12,7 @@
 #include <config_pixie16api.h>
 
 #include <SystemBooter.h>
+#include <CXIAException.h>
 
 using namespace DAQ::DDAS;
 namespace HR = DAQ::DDAS::HardwareRegistry;
@@ -22,9 +23,7 @@ namespace HR = DAQ::DDAS::HardwareRegistry;
  * cfgPixie16.txt.
  */
 CPixieSystemUtilities::CPixieSystemUtilities() :
-    m_bootMode(0), m_booted(false), m_ovrSetFile(false), m_numModules(0),
-    m_modEvtLength(0), m_modADCMSPS(0), m_modADCBits(0), m_modRev(0),
-    m_modClockCal(0)
+    m_bootMode(0), m_booted(false), m_ovrSetFile(false), m_numModules(0)
 {}
 
 /**
@@ -60,8 +59,8 @@ CPixieSystemUtilities::Boot()
     try {
 	booter.boot(m_config, SystemBooter::FullBoot);
     }
-    catch (std::runtime_error& e) {
-	std::cerr << e.what() << std::endl;    
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;    
 	return -1;
     }
 
@@ -93,12 +92,21 @@ CPixieSystemUtilities::Boot()
 int
 CPixieSystemUtilities::SaveSetFile(char* fileName)
 {
-    int retval = Pixie16SaveDSPParametersToFile(fileName);
+    int retval;
+    try {
+	int retval = Pixie16SaveDSPParametersToFile(fileName);
     
-    if (retval < 0) {
-	std::cerr << "CPixieSystemUtilities::SaveSetFile() failed";
-	std::cerr << " to save DSP parameter file to: " << fileName
-		  << " with retval " << retval;
+	if (retval < 0) {
+	    std::stringstream msg;
+	    msg << "CPixieSystemUtilities::SaveSetFile() failed to save"
+		<< " DSP parameter file to: " << fileName;
+	    throw CXIAException(
+		msg.str(), "Pixie16SaveDSPParametersToFile()", retval
+		);
+	}
+    }
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;
     }
   
     return retval;
@@ -114,25 +122,32 @@ CPixieSystemUtilities::SaveSetFile(char* fileName)
 int
 CPixieSystemUtilities::LoadSetFile(char* fileName)
 {
-    int retval = 0;
-  
-    if(m_booted) { // If system is booted just apply the params.    
-	retval = Pixie16LoadDSPParametersFromFile(fileName);
+    int retval;
+    try {  
+	if(m_booted) { // If system is booted just apply the params.    
+	    retval = Pixie16LoadDSPParametersFromFile(fileName);
     
-	if (retval < 0) {
-	    std::cerr << "CPixieSystemUtilities::LoadSetFile() failed to"
-		      << " load DSP parameter file from: " << fileName
-		      << " with retval " << retval;      
-	    return retval;
-	} else {
-	    std::cout << "Loading new DSP parameter file from: "
-		      << fileName << std::endl;
-	}  
-    } else { // Not booted so hold on to the name.
-	m_ovrSetFile = true;
-	m_config.setSettingsFilePath(fileName);
-	std::cout << "New DSP parameter file " << fileName
-		  << " will be loaded on system boot" << std::endl;
+	    if (retval < 0) {
+		std::stringstream msg;
+		msg << "CPixieSystemUtilities::LoadSetFile() failed to"
+		    << " load DSP parameter file from: " << fileName;
+		throw CXIAException(
+		    msg.str(), "Pixie16LoadDSPParametersFromFile()", retval
+		    );
+	    } else {
+		std::cout << "Loading new DSP parameter file from: "
+			  << fileName << std::endl;
+	    }  
+	} else { // Not booted so hold on to the name.
+	    m_ovrSetFile = true;
+	    m_config.setSettingsFilePath(fileName);
+	    std::cout << "New DSP parameter file " << fileName
+		      << " will be loaded on system boot" << std::endl;
+	}
+    }
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText() << std::endl;
+	return e.ReasonCode();
     }
   
     return retval;
@@ -147,54 +162,51 @@ CPixieSystemUtilities::LoadSetFile(char* fileName)
 int
 CPixieSystemUtilities::ExitSystem()
 {
-    int retval = 0;
-  
-    if (m_booted) {
-	for (int i = 0 ; i < m_numModules; i++) {      
-	    retval = Pixie16ExitSystem(i);      
-	    if (retval < 0) {
-		std::cerr << "CPixieSystemUtilities::ExitSystem() failed";
-		std::cerr <<" to exit " << "module " << i
-			  << " with retval = " << retval << std::endl;
-		m_booted = false;	
-		return retval;
-	    }
-	}    
+    int retval;
+    try {
+	if (m_booted) {
+	    for (int i = 0 ; i < m_numModules; i++) {      
+		retval = Pixie16ExitSystem(i);      
+		if (retval < 0) {
+		    std::stringstream msg;
+		    msg << "CPixieSystemUtilities::ExitSystem() failed"
+			<< " to exit " << "module " << i;
+		    throw CXIAException(
+			msg.str(), "Pixie16ExitSystem()", retval
+			);
+		}
+	    }    
+	}  
+	m_booted = false;
     }
-  
-    m_booted = false;
+    catch (const CXIAException& e) {
+	std::cerr << e.ReasonText();
+	m_booted = false;
+	return e.ReasonCode();
+    }
       
     return retval; // All good.
 }
 
-/**
- * @todo (ASC 7/14/23): Would be better to return max(unsigned int) or 
- * something besides 0 if an exception is raised. Must also be checked 
- * wherever this return value is used on the Python side.
- */
-unsigned short
+int
 CPixieSystemUtilities::GetModuleMSPS(int module)
 {
-    int nmodules = m_modADCMSPS.size() - 1;
-  
-    try {
-	if (!m_booted) {
-	    std::stringstream errmsg;
-	    errmsg << "CPixieSystemUtilities::GetModuleMSPS() ";
-	    errmsg << "system not booted.";
-	    throw std::runtime_error(errmsg.str());
-	} else if ((module < 0) || (module > nmodules)) {
-	    std::stringstream errmsg;
-	    errmsg << "CPixieSystemUtilities::GetModuleMSPS() ";
-	    errmsg << "invalid module number ";
-	    errmsg << module << " for " << nmodules << " module system.";
-	    throw std::runtime_error(errmsg.str());
-	} else {
-	    return m_modADCMSPS[module];
-	}
-    }
-    catch (std::runtime_error& e) {
-	std::cerr << e.what() << std::endl;
-	return 0;
+    // A correctly booted sysyem must be definition contain >= 1 module
+    // so I'm _pretty_ sure this is a good check for that too:
+    if (!m_booted) {
+	std::string msg(
+	    "CPixieSystemUtilities::GetModuleMSPS() system not booted."
+	    );
+	return -1;
+    } else if ((module < 0) || (module >= m_numModules)) {
+	std::stringstream msg;
+	msg << "CPixieSystemUtilities::GetModuleMSPS() ";
+	msg << "invalid module number ";
+	msg << module << " for " << m_numModules << " module system.";
+	std::cerr << msg.str() << std::endl;
+	return -2;
+    } else {
+	// Implicit conversion probably OK but:
+	return static_cast<int>(m_modADCMSPS[module]);
     }
 }

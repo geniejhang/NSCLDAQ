@@ -1,68 +1,82 @@
-/* Null trigger */
+/**
+ * @file CMyTrigger.cpp
+ * @brief Implement the DDAS trigger.
+ */
+
+#include "CMyTrigger.h"
+
+#include <stdlib.h>
+
+#include <iostream>
 
 #include <config.h>
 #include <config_pixie16api.h>
-#include <iostream>
-#include "CMyTrigger.h"
-#include <stdlib.h>
+#include <CXIAException.h>
 
+const int TRIGGER_TIMEOUT_SECS = 5; //!< Auto-trigger timeout in seconds.
 
-
-#define TRIGGER_TIMEOUT_SECS 5        // If no triggers in 5 seconds, auto-trigger.
-
-//#ifdef HAVE_STD_NAMESPACE
-using namespace std;
-//#endif
-
-CMyTrigger::CMyTrigger(): m_retrigger(false), m_fifoThreshold(EXTFIFO_READ_THRESH*10),
-  m_wordsInEachModule(nullptr)
+/**
+ * @details
+ * If FIFO_THRESHOLD is defined and is a positive integer, it replaces the 
+ * default value of m_fifoThreshold. The FIFO threshold is the number of 
+ * 32-bit words that must be in the FIFO for the trigger to fire.
+ */
+CMyTrigger::CMyTrigger()
+    : m_retrigger(false), m_fifoThreshold(EXTFIFO_READ_THRESH*10),
+      m_wordsInEachModule(nullptr)
 {
-  //  If FIFO_THRESHOLD is defined and is a positive integer, it replaces
-  //  the default value of m_fifoThreshold - the number of words that must be
-  //  in the fifo for the trigger to fire.
-  //
-  const char* pThreshold = getenv("FIFO_THRESHOLD");
-  if (pThreshold) {
-    char* pEnd;
-    unsigned long newThreshold = strtoul(pThreshold, &pEnd, 0);
-    if (newThreshold && (pEnd != pThreshold)) {
-      m_fifoThreshold = newThreshold;
+    const char* pThreshold = getenv("FIFO_THRESHOLD");
+    if (pThreshold) {
+	char* pEnd;
+	unsigned long newThreshold = strtoul(pThreshold, &pEnd, 0);
+	if (newThreshold && (pEnd != pThreshold)) {
+	    m_fifoThreshold = newThreshold;
+	}
     }
-  }
-  std::cerr << "Using a FIFO threshold of " << m_fifoThreshold << " words\n";
+    std::cerr << "Using a FIFO threshold of " << m_fifoThreshold << " words\n";
 }
 
+/**
+ * @details
+ * We need to deallocate memory used to store the FIFO words in each module.
+ */
 CMyTrigger::~CMyTrigger()
 {
-  delete []m_wordsInEachModule;
+    delete[] m_wordsInEachModule;
 }
 
-void CMyTrigger::setup()
-{
-    // Start the trigger timeout now:
-    
+void
+CMyTrigger::setup()
+{    
     m_lastTriggerTime = time(nullptr);
 }
 
-void CMyTrigger::teardown()
-{
-    // called as data taking ends.  
-    // DDAS does not need any further signal as data taking ends
-    // since this function is also called on a pause of data taking
-    // don't even think about desyncing modules here
-}
+/**
+ * @details
+ * DDAS does not need any further signal as data taking end since this 
+ * function is also called on a pause of data taking on't even think 
+ * about desyncing modules here.
+ */
+void
+CMyTrigger::teardown()
+{}
 
-
-// control for determing if trigger should poll modules or pass control back
-// to CEventSegment for processing the previous block of data
-void CMyTrigger::Reset()
+/**
+ * @details
+ * Retrigger: always false.
+ */
+void
+CMyTrigger::Reset()
 {
     m_retrigger = false;
 }
 
-/* Receive the number of modules in the pixie16 setup from the event 
-   segment class */
-void CMyTrigger::Initialize(int nummod)
+/**
+ * @details
+ * Delete and recreate the FIFO words array based on the number of modules.
+ */
+void
+CMyTrigger::Initialize(int nummod)
 {
     NumberOfModules = nummod;
     m_retrigger = false;
@@ -70,90 +84,97 @@ void CMyTrigger::Initialize(int nummod)
     m_wordsInEachModule = new unsigned int[NumberOfModules]; 
 }
 
-bool CMyTrigger::operator()() 
+/**
+ * @details
+ * Defines the trigger logic. Trigger a read if the number of words in the 
+ * external FIFO of any Pixie-16 module in a crate exceeds a defined threshold.
+ * - If the module is in the middle of processing a data buffer in the event 
+ * segment, continue processing the data buffer. Return a true trigger to pass 
+ * control back the event segment.
+ * - If there are no buffers currently being processed in the event segment 
+ * look at the Pixie hardware to see if data currently needs to be read out. 
+ * Do so if the FIFO threshold is exceeded.
+ * - If the trigger has timed out, trigger anyways.
+ */
+bool
+CMyTrigger::operator()() 
 {
-    try{
-
-        /* If pixie16 is in the middle of processing a data buffer in the event 
-           segment, continue processing the data buffer.  Return a true trigger 
-           to pass control back the event segment. */
-        if(m_retrigger){
-            m_lastTriggerTime = time(nullptr);   // Reset the trigger timeout.
+    try {
+	// Currently processing a data buffer in the event segment.
+	// Return a true trigger.
+        if (m_retrigger) {
+            m_lastTriggerTime = time(nullptr); // Reset the trigger timeout.
             return true;
         } else {
-            /* If there are no buffers currently being processed in the event segment 
-               look at the pixie16 hardware to see if data currently needs to be 
-               read out. */
-
-            // Read number of 32-bit words inside the FIFO on Pixie16
-            int retval = -1;
+	    // Read data from the FIFO on the module:
+            int retval;
             bool thresholdMade(false);
-            for (int i=0; i<NumberOfModules; i++) {
-                // Check how many words are stored in Pixie16's readout FIFO
+            for (int i = 0; i < NumberOfModules; i++) {
+                // Check how many words are stored in Pixie's readout FIFO:
                 ModNum = i;
                 nFIFOWords = 0;
-                retval = Pixie16CheckExternalFIFOStatus(&nFIFOWords,ModNum);
-                if (retval < 0) {
-                  std::cerr << "Failed to read ExtFiFo status for module: "
-                    << ModNum;
-                    nFIFOWords = 0;                         // For safety.
-                }
-                m_wordsInEachModule[i] = nFIFOWords;       // Save words each module has.
-                
-                /* Trigger a read if the number of words in the external FIFO of 
-                   any pixie16 module in a crate exceeds a threshold defined in 
-                   pixie16app_defs.h */
+		try {
+		    retval = Pixie16CheckExternalFIFOStatus(
+			&nFIFOWords, ModNum
+			);
+		    if (retval < 0) {
+			std::string msg(
+			    "Failed to read external FIFO status for module "
+			    );
+			msg += ModNum;
+			throw CXIAException(
+			    msg, "Pixie16CheckExternalFIFOStatus", retval
+			    );
+			nFIFOWords = 0; // For safety.
+		    }
+		}
+		catch (const CXIAException& e) {
+		    std::cerr << e.ReasonText() << std::endl;
+		}
 
+		// Save the number of words in each module:
+                m_wordsInEachModule[i] = nFIFOWords;
+
+		// Trigger a read if the threshold is exceeded:
                 if(nFIFOWords > m_fifoThreshold){
-		  // std::cout << "CMyTrigger:: trig satisfied...mod=" << i
-		  // 	    << " nwords=" << nFIFOWords << std::endl;
 #ifdef PRINTQUEINFO
-		  std::cout << "CMyTrigger:: trig satisfied...mod=" << i
-			    << " nwords=" << nFIFOWords << std::endl;
+		    std::cout << "CTrigger: trigger satisfied in module "
+			      << i << " nWords " << nFIFOWords
+			      << " threshold " << m_fifoThreshold
+			      << std::endl;
 #endif
-		  m_retrigger = true;
-		  thresholdMade =  true;   // Once polling is done, trigger.
-		  //std::cerr << "---- CMyTrigger.cpp: m_retrigger " << m_retrigger << " thesholdMade: " << thresholdMade << " ---- " << std::endl;
-                }
-		
-            } // end module loop
+		    m_retrigger = true;
+		    thresholdMade =  true; // Once polling is done, trigger.
+		}
+	    } // End module loop.
+
+	    // Good trigger:
             if (thresholdMade) {
-              m_lastTriggerTime = time(nullptr);   // Record the trigger time.
-              return true;   // Some module was above threshold
+		m_lastTriggerTime = time(nullptr); // Record the trigger time.
+		return true; // Some module was above threshold.
             }
+        }        
 
-        }
-        
-
-        // If the trigger has timed out, then trigger anyway:
-        
+        // If the trigger has timed out, then trigger anyway:        
         time_t now = time(nullptr);
-        if ((now - m_lastTriggerTime)  > TRIGGER_TIMEOUT_SECS) {
-          m_lastTriggerTime = now;
-          return true;
+        if ((now - m_lastTriggerTime) > TRIGGER_TIMEOUT_SECS) {
+	    m_lastTriggerTime = now;
+	    return true;
         }
-        return false;	// Currently not enough data to trigger
-
+	
+        return false; // Currently not enough data to trigger
     }
-    catch(...){
-        cout << "exception in trigger " << endl;
+    catch(...) {
+        std::cout << "Unknown exception in trigger!" << std::endl;
     }
-  time_t now = time(nullptr);
-  if ((now - m_lastTriggerTime)  > TRIGGER_TIMEOUT_SECS) {
-    m_lastTriggerTime = now;
-    return true;
-  }
-  return false;
-}
-/**
- * getWordsInModules
- *    @return unsigned int* - pointer to the array containing the
- *                            number of words each module has.
- */
-unsigned int*
-CMyTrigger::getWordsInModules() const
-{
-  return m_wordsInEachModule;
-}
 
+    // Poll the timeout again and trigger:
+    time_t now = time(nullptr);
+    if ((now - m_lastTriggerTime)  > TRIGGER_TIMEOUT_SECS) {
+	m_lastTriggerTime = now;
+	return true;
+    }
+    
+    return false;
+}
 

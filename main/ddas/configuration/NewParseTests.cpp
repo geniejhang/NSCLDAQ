@@ -15,9 +15,6 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  NewParseTests.cpp
- *  @brief: Test new cfgPixie16.txt features in daqdev/DDAS#106
- */
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 #include "Asserts.h"
@@ -62,9 +59,7 @@ o   \n\
 p   \n\
 2323.1";
 
-/**
- * Create the firmware override file and return its filename.
- */
+/** @brief Create the firmware override file and return its filename. */
 static std::string makeFirmwareFile()
 {
     char filename[100];
@@ -83,9 +78,8 @@ static std::string makeFirmwareFile()
     
     return filename;
 }
-/**
- * Like makeFirmwareFile but make an empty .set file.
- */
+
+/** @brief Like makeFirmwareFile but make an empty .set file. */
 static std::string makeDSPParametersFile ()
 {
     char filename[100];
@@ -117,23 +111,28 @@ class NewParseTest : public CppUnit::TestFixture {
     CPPUNIT_TEST(permodule_1);
     CPPUNIT_TEST(permodule_2);
     CPPUNIT_TEST(permodule_3);
+    
     CPPUNIT_TEST_SUITE_END();
     
 private:
     std::string m_FwFile;
     std::string m_setfile;
     DAQ::DDAS::ConfigurationParser* m_parser;
+    
 public:
-    void setUp() {
-        m_FwFile = makeFirmwareFile();
-        m_setfile = makeDSPParametersFile();
-        m_parser = new DAQ::DDAS::ConfigurationParser;
-    }
-    void tearDown() {
-        unlink(m_FwFile.c_str());
-        unlink(m_setfile.c_str());
-        delete m_parser;
-    }
+    void setUp()
+	{
+	    m_FwFile = makeFirmwareFile();
+	    m_setfile = makeDSPParametersFile();
+	    m_parser = new DAQ::DDAS::ConfigurationParser;
+	}
+    void tearDown()
+	{
+	    unlink(m_FwFile.c_str());
+	    unlink(m_setfile.c_str());
+	    delete m_parser;
+	}
+    
 protected:
     void good_1();
     void good_2();
@@ -152,8 +151,7 @@ protected:
 
 CPPUNIT_TEST_SUITE_REGISTRATION(NewParseTest);
 
-// Success with a line that's only the slot.
-
+/** @brief Success with a line that's only the slot. */
 void NewParseTest::good_1()
 {
     std::stringstream line("2\n");
@@ -163,8 +161,7 @@ void NewParseTest::good_1()
     EQ(std::string(""), std::get<2>(result));
 }
 
-// Slot + comment
-
+/** @brief Slot + comment. */
 void NewParseTest::good_2()
 {
     std::stringstream line("2 # this is a comment.\n");
@@ -174,8 +171,7 @@ void NewParseTest::good_2()
     EQ(std::string(""), std::get<2>(result));
 }
 
-// slot + firmware map file.
-
+/** @brief Slot + firmware map file. */
 void NewParseTest::good_3()
 {
     std::string l("2 ");
@@ -188,6 +184,8 @@ void NewParseTest::good_3()
     EQ(m_FwFile, std::get<1>(result));
     EQ(std::string(""), std::get<2>(result));
 }
+
+/** @brief Slot + firmware map file + comment. */
 void NewParseTest::good_4()
 {
     std::string l("2 ");
@@ -201,6 +199,7 @@ void NewParseTest::good_4()
     EQ(std::string(""), std::get<2>(result));
 }
 
+/** @brief Slot + firmware map file + set file. */
 void NewParseTest::good_5()
 {
     std::string l("2 ");
@@ -217,6 +216,7 @@ void NewParseTest::good_5()
     EQ(m_setfile, std::get<2>(result));
 }
 
+/** @brief Slot + firmware map file + set file + comment. */
 void NewParseTest::good_6()
 {
     std::string l("2 ");
@@ -233,9 +233,7 @@ void NewParseTest::good_6()
     EQ(m_setfile, std::get<2>(result));
 }
 
-
-// Bad parameters file.
-
+/** @brief Bad parameters file. */
 void NewParseTest::bad_1()
 {
     std::string l("2 ");
@@ -250,9 +248,8 @@ void NewParseTest::bad_1()
     
     
 }
-/**
- * Bad firmware override file
- */
+
+/** @brief Bad firmware override file */
 void NewParseTest::bad_2()
 {
     std::string l("2 ");
@@ -265,11 +262,10 @@ void NewParseTest::bad_2()
     
     CPPUNIT_ASSERT_THROW(m_parser->parseSlotLine(line), std::runtime_error);
 }
+
 //////////////////////////////////////////////////////////////////////////////
 
-/**
- *   String file for cfgpixie with no overrides.
- */
+/** @brief String file for cfgPixie  with no overrides. */
 void NewParseTest::permodule_1()
 {
     std::string cfgPixie = "\
@@ -279,9 +275,9 @@ void NewParseTest::permodule_1()
 3\n\
 4\n\
 ";
-    cfgPixie += m_setfile;        // Add the set file...
-    cfgPixie +=  ".set\n";        // ...with a proper extension
-    DAQ::DDAS::Configuration config;          // empty.
+    cfgPixie += m_setfile;           // Add the set file...
+    cfgPixie +=  ".set\n";           // ...with a proper extension
+    DAQ::DDAS::Configuration config; // empty.
     std::stringstream configStream(cfgPixie);
     m_parser->parse(configStream, config);
     
@@ -290,9 +286,8 @@ void NewParseTest::permodule_1()
     ASSERT(config.m_moduleFirmwareMaps.empty());
     ASSERT(config.m_moduleSetFileMap.empty());
 }
-/**
- * String file where module 3 has a firmware override:
- */
+
+/** @brief string file where module 3 has a firmware override. */
 void NewParseTest::permodule_2()
 {
     std::string cfgPixie = "\
@@ -304,9 +299,9 @@ void NewParseTest::permodule_2()
     cfgPixie += "\n\
 4\n\
 ";
-    cfgPixie += m_setfile;        // Add the set file...
-    cfgPixie +=  ".set\n";        // ...with a proper extension
-    DAQ::DDAS::Configuration config;          // empty.
+    cfgPixie += m_setfile;           // Add the set file...
+    cfgPixie +=  ".set\n";           // ...with a proper extension
+    DAQ::DDAS::Configuration config; // empty.
     std::stringstream configStream(cfgPixie);
     m_parser->parse(configStream, config);
     
@@ -316,8 +311,8 @@ void NewParseTest::permodule_2()
         config.m_moduleFirmwareMaps.end()
 	);
 }
-// Can add a per module .set file:
 
+/** @brief Add a per-module set file for slot 3. */
 void NewParseTest::permodule_3()
 {
     std::string cfgPixie = "\
@@ -331,9 +326,9 @@ void NewParseTest::permodule_3()
     cfgPixie += "\n\
 4\n\
 ";
-    cfgPixie += m_setfile;        // Add the set file...
-    cfgPixie +=  ".set\n";        // ...with a proper extension
-    DAQ::DDAS::Configuration config;          // empty.
+    cfgPixie += m_setfile;           // Add the set file...
+    cfgPixie +=  ".set\n";           // ...with a proper extension
+    DAQ::DDAS::Configuration config; // empty.
     std::stringstream configStream(cfgPixie);
     m_parser->parse(configStream, config);
     

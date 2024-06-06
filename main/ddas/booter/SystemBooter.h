@@ -6,17 +6,20 @@
 #ifndef SYSTEMBOOTER_H
 #define SYSTEMBOOTER_H
 
+#include <stddef.h>
+
 /** @namespace DAQ */
 namespace DAQ {
     /** @namespace DAQ::DDAS */
     namespace DDAS {
 
 	class Configuration;
+	struct FirmwareConfiguration;
 
 	/**
 	 * @addtogroup libSystemBooter libSystemBooter.so
 	 * @brief DDAS Pixie-16 system booter library.
-	 *
+	 * @details
 	 * A library containing code used by other DDAS programs which boots 
 	 * Pixie modules and sets hardware configuration for the booted system.
 	 * @{
@@ -24,32 +27,26 @@ namespace DAQ {
 	
 	/**
 	 * @class SystemBooter SystemBooter.h
-	 * @brief The SystemBooter class.
-	 *
+	 * @brief Manages the booting process for DDAS.
 	 * @details
-	 * A class to manage the booting process for DDAS. All Readout and 
-	 * slow controls programs rely on this class to boot the system. 
-	 * There are two separate boot types: FullBoot and SettingsOnly. 
-	 * The former loads firmware and settings into the system while the 
-	 * latter just loads the settings. The basic usage pattern is 
-	 * demonstrated below.
+	 * All Readout and slow controls programs rely on this class to boot 
+	 * the system. There are two separate boot types: FullBoot and 
+	 * SettingsOnly. The former loads firmware and settings into the 
+	 * system while the latter just loads the settings. The basic usage 
+	 * pattern is demonstrated below.
 	 *
 	 * @code
-	 *
 	 * using namespace DAQ::DDAS;
-	 *
 	 * unique_ptr<Configuration> pConfig = Configuration::generator(
 	 *     "DDASFirmwareVersions.txt", "cfgPixie16.txt"
 	 * );
-	 *
 	 * SystemBooter booter;
 	 * booter.boot(*pConfig, SystemBooter::FullBoot);
-	 *
 	 * @endcode
 	 *
 	 * One should realize that this does not handle any of the logic 
 	 * regarding when and when not to synchronize or load firmware. 
-	 * External logic to  this class will determine whether the system 
+	 * External logic to this class will determine whether the system 
 	 * should load the firmware or not. Synchronization is unrelated to 
 	 * the boot process besides the fact that a firmware load could ruin
 	 * synchronization.
@@ -66,31 +63,34 @@ namespace DAQ {
 
 	private:
 	    bool m_verbose; //!< Enable or disable output.
-	    unsigned short m_offlineMode; //!< 0 for online, 1 for offline
-	                                  //!< (no modules). Only supported in
-	                                  //!< XIA API 2.
+	    /** 
+	     * 0 for online, 1 for offline (no hardware). Only supported for 
+	     * XIA API v2 as of 3/13/24.
+	     */ 
+	    unsigned short m_offlineMode;
 	    
 	public:
-	    /** @brief Constructor */
+	    /** @brief Constructor. */
 	    SystemBooter();
 	    /*
 	     * @brief Boot the entire system.
 	     * @param config A configuration describing the system.
 	     * @param type Style of boot.
-	     * @throws std::runtime_error If Pixie16InitSystem() call returns 
+	     * @throw CXIAException If Pixie16InitSystem() call returns 
 	     *   an error.
-	     * @throws std::runtime_error If populateHardwareMap() throws.
-	     * @throws std::runtime_error If bootModuleByIndex() throws.
+	     * @throw CXIAException If populateHardwareMap() throws.
+	     * @throw std::runtime_error If registered hardware is 
+	     *   unrecognized when attempting to boot.
+	     * @throws CXIAException If the Pixie boot fails.
 	     */
 	    void boot(Configuration& config, BootType type);
 	    /**
 	     * @brief Boot a single module
 	     * @param modIndex Index of the module in the system.
 	     * @param m_config The system configuration.
-	     * @param type     Boot style (load firmware or settings only).
-	     * @throws std::runtime_error If hardware type is unknown.
-	     * @throws std::runtime_error If Pixie16BootModule returns an 
-	     *   error code.
+	     * @param type Boot style (load firmware or settings only).
+	     * @throw std::runtime_error If hardware type is unknown.
+	     * @throw CDDASException If Pixie16BootModule returns an error.
 	     */
 	    void bootModuleByIndex(
 		int modIndex, Configuration& config, BootType type
@@ -108,7 +108,7 @@ namespace DAQ {
 	    /**
 	     * @brief Enable or disable online boot
 	     * @param mode Boot mode, 0 for online, 1 for offline.
-	     * @warning Offline boot mode is only supported in XIA API 2!
+	     * @warning Offline boot mode is only supported in XIA API v2!
 	     */
 	    void setOfflineMode(unsigned short mode);
 	    /**
@@ -118,10 +118,9 @@ namespace DAQ {
 	    unsigned short getOfflineMode() const { return m_offlineMode; };
 	    /**
 	     * @brief Read and store hardware info from each of the modules 
-	     *   in the system.
+	     * in the system.
 	     * @param config The system configuration.
-	     * @throws std::runtime_error If Pixie16ReadModuleInfo returns 
-	     *   error code.
+	     * @throw CDDASException If Pixie16ReadModuleInfo returns an error.
 	     */
 	    void populateHardwareMap(Configuration &config);
 	    
@@ -145,6 +144,16 @@ namespace DAQ {
 	    void logModuleInfo(
 		int modIndex, unsigned short ModRev, unsigned short ModSerNum,
 		unsigned short ModADCBits, unsigned short ModADCMSPS
+		);
+	    /**
+	     * @brief Check that the firmware path lengths can be copied 
+	     * into fixed-length arrays of size maxLen.
+	     * @param fwConfig Refernces the FW configuration.
+	     * @param maxLen   Maximum file path length.
+	     * @throw std::length_error Some path is too long.
+	     */
+	    void checkFWPathLengths(
+		FirmwareConfiguration& fwConfig, const size_t maxLen
 		);
 	};
 	

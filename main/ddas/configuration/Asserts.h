@@ -1,7 +1,6 @@
-#ifndef __ASSERTS_H
-#define __ASSERTS_H
+#ifndef ASSERTS_H
+#define ASSERTS_H
 
-#include <iostream>
 #include <string>
 
 // Abbreviations for assertions in cppunit.
@@ -18,7 +17,7 @@
    {                               \
      bool ok = false;              \
      try {                         \
-         operation;                 \
+         operation;                \
      }                             \
      catch (type e) {              \
        ok = true;                  \

@@ -15,32 +15,23 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  StreamDataSource.cpp
- *  @brief:  Implement the stream data source
+/** 
+ * @file StreamDataSource.cpp
+ * @brief Implement the stream data source.
  */
+
 #include "StreamDataSource.h"
+
 #include <RingItemFactoryBase.h>
 
-
-/**
- * constructor
- *    @param pFactory - factory for ring items.
- *    @param str     - references stream from which to get ring items.
- */
-
-StreamDataSource::StreamDataSource(RingItemFactoryBase* pFactory, std::istream& str) :
+StreamDataSource::StreamDataSource(
+    RingItemFactoryBase* pFactory, std::istream& str
+    ) :
     DataSource(pFactory), m_str(str)
 {}
 
-/**
- * destructor
- */
 StreamDataSource::~StreamDataSource() {}
 
-/**
- * getItem
- *  @return CRingItem*  - pointer to the next ring item from the stream.  null if none.
- */
 CRingItem*
 StreamDataSource::getItem()
 {

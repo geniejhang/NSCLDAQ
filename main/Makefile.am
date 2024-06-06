@@ -7,8 +7,6 @@ endif
 
 if CAENNEXTGEN
 CAENNGDIR=caen-nextgen
-else
-CAENNGDIR=
 endif
 
 if BUILD_EPICS_TOOLS
@@ -53,12 +51,13 @@ install-data-local:
 	echo "pkg_mkIndex @prefix@/TclLibs *.so" >makeindex.tcl
 	$(TCLSH_CMD) <makeindex.tcl
 	$(INSTALL_SCRIPT) config.h @prefix@/include
-	$(INSTALL_SCRIPT) @top_srcdir@/config_pixie16api.h @prefix@/include
+	$(INSTALL_SCRIPT) @top_builddir@/ddas/config_pixie16api.h @prefix@/include
 	touch @prefix@/pythonLibs/nscldaq/__init__.py
 	echo "Version: "NSCLDAQ-$(VERSION) built on `hostname` `date` by `whoami` > @prefix@/VERSION
 	head  @top_builddir@/config.log| grep  -- --prefix >> @prefix@/VERSION
-	echo libtcl++ `(cd @top_srcdir@/libtcl; @GIT@ status | head -1|cut -d" " -f4)` >> @prefix@/VERSION
-	echo unifiedformat `(cd @top_srcdir@/unifiedformat; @GIT@ status |head -1| cut -d" " -f4)` >> @prefix@/VERSION
+	echo libtcl++ `(cd @top_builddir@/libtcl; @GIT@ status | head -1|cut -d" " -f4)` >> @prefix@/VERSION
+	echo unifiedformat `(cd @top_builddir@/unifiedformat; @GIT@ status |head -1| cut -d" " -f4)` >> @prefix@/VERSION
+	echo ddasformat `(cd @top_builddir@/ddasformat; @GIT@ status |head -1| cut -d" " -f4)` >> @prefix@/VERSION
 	$(INSTALL_DATA) @srcdir@/ChangeLog @prefix@
 	$(INSTALL_SCRIPT) daqsetup.bash @prefix@
 	$(INSTALL_DATA) @srcdir@/figures/*.png @prefix@/share/html/figures
@@ -67,7 +66,7 @@ install-data-local:
 	chmod a+x @prefix@/share/tclhttpd/bin/*
 
 EXTRA_DIST=dotests introduction.xml libtcl $(INTROFIGURES) cookbooks \
-	tclhttpd3.5.1 config_pixie16api.h unifiedformat
+	tclhttpd3.5.1 unifiedformat ddasformat
 
 #check-TESTS:
 #	@top_srcdir@/dotests $(SUBDIRS)

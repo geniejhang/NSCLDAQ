@@ -1,9 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-
 AC_PREREQ(2.61)
 
-AC_INIT(nscldaq,12.1-pre1, [scientificsoftware@nscl.msu.edu],[], [http://www.sourceforge.net/projects/nscldaq])
+AC_INIT(nscldaq, 12.1-pre2, [daqhelp@nscl.msu.edu], [], [https://github.com/FRIBDAQ/NSCLDAQ])
 
 AC_CONFIG_SRCDIR([/base/dataflow/CRingBuffer.h])
 AC_CONFIG_HEADER([config.h])
@@ -13,51 +12,52 @@ AH_TOP([
 #ifndef CONFIG_H
 #define CONFIG_H
 ])
-
 AH_BOTTOM([
 #endif
 ])
 
-# Checks for programs.
+# Checks for programs:
+
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
-
 AX_CXX_COMPILE_STDCXX_11([noext])
 
-# Git is needed to create the VERSION file:
+# Is git installed? Used to check incorp'd module versions to export to
+# VERSION in the install directory.
 
-AC_CHECK_PROG(GIT, git, git, [])
-if test "xGIT" = "x"
-then 
-  AC_MSG_ERROR([please install git so we can generate some version information])
-fi
-
-AC_SUBST(GIT)
+AC_CHECK_PROG(GIT, [git], [git], AC_MSG_ERROR([git is required for NSCLDAQ incorporated library management]))
+AC_SUBST(GIT) # Only if we have it
 
 # MPI defined/usable to build MPI chunks:
 
 AC_LANG_PUSH(C++)
-AX_MPI([
-	AM_CONDITIONAL([MPI], true)
-	AC_DEFINE([HAVE_MPI], 1, [MPI exists])], [AM_CONDITIONAL([MPI], false)])
+AX_MPI([AM_CONDITIONAL([MPI], true) AC_DEFINE([HAVE_MPI], 1, [MPI exists])], [AM_CONDITIONAL([MPI], false)])
 AC_LANG_POP
+
+# Pandoc is needed for printed versions of the logbook:
+
+AC_CHECK_PROG(HAVE_PANDOC, [pandoc], [true], [false])
+if test "$HAVE_PANDOC" == "false"
+then
+	AC_MSG_FAILURE([pandoc is required to produce PDF output from the logbook utilities])
+	
+fi
 
 #  CAEN Digitizer support is optional:
 
-AC_ARG_ENABLE([caen-digitizer-support], 
-	     AC_HELP_STRING([--enable-caen-digitizer-support],
-	     [Build support for CAEN Digitizers]), 
-	     [enable_caen=$enableval], [enable_caen=no])
+AC_ARG_ENABLE([caen-digitizer-support],
+	AC_HELP_STRING([--enable-caen-digitizer-support], [Build support for CAEN Digitizers]),
+	[enable_caen=$enableval],
+	[enable_caen=no])
 
 if test "x$enable_caen" = "xyes"
 then
 	AC_ARG_WITH([caen-digitizer-libroot],
-	AC_HELP_STRING([ --with-caen-digitizer-libroot],
-	[Root directory for CAEN Digitizer/VME/Comm library installation]),
-	[caen_root=$withval],[caen_root=""])
+	AC_HELP_STRING([ --with-caen-digitizer-libroot], [Root directory for CAEN Digitizer/VME/Comm library installation]),
+	[caen_root=$withval], [caen_root=""])
 
 	if test "xx$caen_root" != "xx"
 	then
@@ -69,7 +69,7 @@ then
 		AC_SUBST(CAENLDFLAGS)
 	else
 		AM_CONDITIONAL([CAENSUPPORT], [false])
-		AC_MSG_ERROR([Using --enable-caen-digitizer-support also requires --with-caen-dgitizer-libroot to specifiy where the CAEN libraries/headers are])
+		AC_MSG_ERROR([using --enable-caen-digitizer-support also requires --with-caen-dgitizer-libroot to specifiy where the CAEN libraries/headers are])
 	fi
 else
 	AM_CONDITIONAL([CAENSUPPORT], [false])
@@ -79,135 +79,115 @@ fi
 #  libraries are awful in that they require installation in
 #  specific locations:
 
-AC_ARG_ENABLE([caen-nextgen], 
-  [AS_HELP_STRING([--enable-caen-nextgen], 
-    [To enable support for CAEN Nextgen digitizers.])],
-    [
-      AC_MSG_CHECKING([Checking for CAEN FElib installed])
-      AC_CHECK_FILE([/usr/local/include/CAEN_FELib.h], 
-        [AC_MSG_RESULT([Found header])], 
-        [AC_MSG_ERROR([Can't find /usr/local/CAEN_FELib.h - install CAEN Nextgen digitizer support libraries])])
-      AC_CHECK_FILES([/usr/local/lib/libCAEN_Dig2.so /usr/local/lib/libCAEN_FELib.so], 
+AC_ARG_ENABLE([caen-nextgen],
+	[AS_HELP_STRING([--enable-caen-nextgen], [To enable support for CAEN Nextgen digitizers.])],
+	[AC_MSG_CHECKING([Checking for CAEN FElib installed])
+	AC_CHECK_FILE([/usr/local/include/CAEN_FELib.h], 
+        [AC_MSG_RESULT([Found header])],
+        [AC_MSG_ERROR([cannot find /usr/local/CAEN_FELib.h - install CAEN Nextgen digitizer support libraries])])
+	AC_CHECK_FILES([/usr/local/lib/libCAEN_Dig2.so /usr/local/lib/libCAEN_FELib.so],
         [AC_MSG_RESULT([Found CAEN FELib library files])],
-        [AC_MSG_ERROR([Can't fid the /usr/local/lib/{libCAEN_Dig2.so, libCAEN_FELib.so files install CAEN nextgen digitizer support libraries}]
+        [AC_MSG_ERROR([cannot find the /usr/local/lib/{libCAEN_Dig2.so, libCAEN_FELib.so files - install CAEN nextgen digitizer support libraries}]
         )])
-
-      enable_caennextgen="true"  
-
-      ],[enable_caennextgen="false"]
-)
-  
+	enable_caennextgen="true"], [enable_caennextgen="false"])  
 
 if test "${enable_caennextgen}" = "true"
 then
-  AC_MSG_NOTICE([Enabled support for CAEN Nextgen digitizers])
+	AC_MSG_NOTICE([Enabled support for CAEN Nextgen digitizers])
 
-  #  Set the make file variables:
+	#  Set the make file variables:
 
-  CAENNG_CPPFLAGS="-I/usr/local/include"
-  CAENNG_LDFLAGS="-L/usr/local/lib -lCAEN_FELib -lCAEN_Dig2"
-  AC_SUBST([CAENNG_CPPFLAGS])
-  AC_SUBST([CAENNG_LDFLAGS])
-  AM_CONDITIONAL([CAENNEXTGEN], [true])
+	CAENNG_CPPFLAGS="-I/usr/local/include"
+	CAENNG_LDFLAGS="-L/usr/local/lib -lCAEN_FELib -lCAEN_Dig2"
+	AC_SUBST([CAENNG_CPPFLAGS])
+	AC_SUBST([CAENNG_LDFLAGS])
+	AM_CONDITIONAL([CAENNEXTGEN], [true])
 else 
-  AC_MSG_NOTICE([Disabled support for  CAEN Nextgen digitizers])
-  AM_CONDITIONAL([CAENNEXTGEN], [false])
+     AC_MSG_NOTICE([Disabled support for  CAEN Nextgen digitizers])
+     AM_CONDITIONAL([CAENNEXTGEN], [false])
 fi
-
 
 # CAEN Nextgen digitizers, if used require jsoncpp:
 
 PKG_CHECK_MODULES([JSON], [jsoncpp])
 
-
-# Pandoc is needed for printed versions of the logbook:
-
-AC_CHECK_PROG(HAVE_PANDOC, [pandoc], [true], [false])
-if test "$HAVE_PANDOC" ==  "false"
-then
-	AC_MSG_FAILURE([pandoc is required to produce PDF output from the logbook utilities])
-	
-fi
-
 # Documentation
 
 AC_ARG_ENABLE([docs],
-              AS_HELP_STRING([--enable-docs],[Build the documentation]),
+              AS_HELP_STRING([--enable-docs], [Build the documentation]),
               [], [enable_docs=no])
 
 if test "x$enable_docs" == "xyes"
 then
-  AC_MSG_NOTICE([Documentation enabled])
+	AC_MSG_NOTICE([Documentation enabled])
+	
+	AC_CHECK_PROG(HAVE_DOCBOOK2PDF, [docbook2pdf], [true], [false])	
+	if test "$HAVE_DOCBOOK2PDF" == "false"
+	then
+		AC_MSG_FAILURE([docbook2pdf is required to build documentation but was not found])
+	else
+		AC_SUBST(DOCBOOK2PDF,[docbook2pdf])
+	fi
 
-  AC_CHECK_PROG(HAVE_DOCBOOK2PDF, [docbook2pdf], [true], [false])
-  if test "$HAVE_DOCBOOK2PDF" == "false"
-  then
-    AC_MSG_FAILURE([docbook2pdf is required to build documentation but was not found])
-  else
-    AC_SUBST(DOCBOOK2PDF,[docbook2pdf])
-  fi
+	AC_CHECK_PROG(HAVE_DOCBOOK2HTML, [docbook2html], [true], [false])	
+	if test "$HAVE_DOCBOOK2HTML" == "false"
+	then
+		AC_MSG_FAILURE([docbook2html is required to build documentation but was not found])
+	else
+		AC_SUBST(DOCBOOK2HTML,[docbook2html])
+	fi
 
-  AC_CHECK_PROG(HAVE_DOCBOOK2HTML, [docbook2html], [true], [false])
-  if test "$HAVE_DOCBOOK2HTML" == "false"
-  then
-    AC_MSG_FAILURE([docbook2html is required to build documentation but was not found])
-  else
-    AC_SUBST(DOCBOOK2HTML,[docbook2html])
-  fi
+	AC_CHECK_PROG(HAVE_XMLTO, [xmlto], [true], [false])	
+	if test "$HAVE_XMLTO" == "false"
+	then
+		AC_MSG_FAILURE([xmlto is required to build documentation but was not found])
+	else
+		AC_SUBST(DOCBOOK2MAN,["xmlto man"])
+	fi
 
--  AC_CHECK_PROG(HAVE_XMLTO, [xmlto], [true], [false])
-  if test "$HAVE_XMLTO" == "false"
-  then
-    AC_MSG_FAILURE([xmlto is required to build documentation but was not found])
-  else
-    AC_SUBST(DOCBOOK2MAN,["xmlto man"])
-  fi
-
-  AC_CHECK_PROG(HAVE_MANDB, mandb, [true], [false])
-  if test "$HAVE_MANDB" == "false"
-  then
-    AC_MSG_FAILURE([mandb is required to build documentation but was not found])
-  else
-    AC_SUBST(MANDB,[mandb])
-  fi
-
-  AM_CONDITIONAL([BUILD_DOCS],[true])
+	AC_CHECK_PROG(HAVE_MANDB, mandb, [true], [false])	
+	if test "$HAVE_MANDB" == "false"
+	then
+		AC_MSG_FAILURE([mandb is required to build documentation but was not found])
+	else
+		AC_SUBST(MANDB,[mandb])
+	fi
+	AM_CONDITIONAL([BUILD_DOCS],[true])
 else
-  AM_CONDITIONAL([BUILD_DOCS],[false])
-  AC_MSG_NOTICE([Documentation disabled])
+	AM_CONDITIONAL([BUILD_DOCS],[false])
+	AC_MSG_NOTICE([Documentation disabled])
 fi
-
-AC_ARG_ENABLE([ddas-docs],
-              AS_HELP_STRING([--enable-ddas-docs],
-	      [Build the DDAS documentation]),
-              [], [enable_ddas_docs=no])
 
 # DDAS documentation
 # DDAS docs are written in Doxygen, so if enabled check to make sure that
 # Doxygen and dot (for graphs) are installed
 
-if test "x$enable_ddas_docs" == "xyes"
+AC_ARG_ENABLE([ddas-docs],
+              AS_HELP_STRING([--enable-ddas-docs], [Build the DDAS documentation]),
+              [], [enable_ddas_docs=no])
+
+if test "$enable_ddas_docs" = "yes"
 then
-  AC_MSG_NOTICE([DDAS documentation enabled])
+	AC_MSG_NOTICE([DDAS documentation enabled])
 
-  AC_CHECK_PROG(HAVE_DOXYGEN, [doxygen], [true], [false])
-  if test "$HAVE_DOXYGEN" == "false"
-  then
-    AC_MSG_FAILURE([Doxygen is required to build the DDAS documentation but was not found])
-  else
-    AC_SUBST(DOXYGEN,[doxygen])
-  fi
+  	AC_CHECK_PROG(HAVE_DOXYGEN, [doxygen], [true], [false])
+  	if test "$HAVE_DOXYGEN" = "false"
+	then
+		AC_MSG_FAILURE([Doxygen is required to build the DDAS documentation but was not found])
+  	else
+    		AC_SUBST(DOXYGEN,[doxygen])
+  	fi
 
-  AC_CHECK_PROG(HAVE_DOT, [dot], [true], [false])
-  if test "$HAVE_DOT" == "false"
-  then
-    AC_MSG_FAILURE([DOT is required by Doxygen to build the DDAS documentation but was not found])
-  fi
+  	AC_CHECK_PROG(HAVE_DOT, [dot], [true], [false])
+  	if test "$HAVE_DOT" = "false"
+  	then
+		AC_MSG_FAILURE([dot is required by Doxygen to build the DDAS documentation but was not found])
+  	fi
 
-  AM_CONDITIONAL([BUILD_DDAS_DOCS],[true])
+  	AM_CONDITIONAL([BUILD_DDAS_DOCS],[true])
 else
-  AM_CONDITIONAL([BUILD_DDAS_DOCS],[false])
-  AC_MSG_NOTICE([DDAS documentation disabled])
+	AM_CONDITIONAL([BUILD_DDAS_DOCS],[false])
+  	AC_MSG_NOTICE([DDAS documentation disabled])
 fi
 
 AC_CHECK_LIB([X11], [XSetWindowBackground])
@@ -215,13 +195,11 @@ AC_CHECK_LIB([Xt], [XtManage])
 
 AM_PATH_CPPUNIT
 
-# Checksums in eventlog require openssl for the digest libs:
+# Checksums in eventlog require OpenSSL for the digest libs:
 
-AX_CHECK_OPENSSL([AC_MSG_RESULT([found openssl])],[AC_MSG_ERROR([OpenSSL is required but cannot be found])])
+AX_CHECK_OPENSSL([AC_MSG_RESULT([Found OpenSSL])], [AC_MSG_ERROR([cannot find OpenSSL installation required by NSCLDAQ])])
 
-
-#
-#   For compatibility with existing AC_Substs:
+# For compatibility with existing AC_Substs:
 
 CPPUNIT_LDFLAGS="${CPPUNIT_LIBS}"
 
@@ -246,22 +224,14 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 
-# Additional checks from DDAS/main/configure.ac added for refactoring:
-# --ASC 4/6/23
-
-# End additional checks
-
 AX_CHECK_COMPILE_FLAG([-Wno-error=date-time], [NODATEWARN="-Wno-error=date-time"])
 AC_SUBST(NODATEWARN)
 
+# Check to find the size of address
 
-# check to find the size of address
 AC_CHECK_SIZEOF([void*])
-AS_IF([test "$ac_cv_sizeof_voidp" -eq 8],
-    AC_DEFINE([ADDR64],1,[Specifies that memory addresses are 64-bits ]),
-     [])
+AS_IF([test "$ac_cv_sizeof_voidp" -eq 8], AC_DEFINE([ADDR64], 1, [Specifies that memory addresses are 64-bits ]), [])
    
-
 # Checks for library functions.
 
 AC_FUNC_ERROR_AT_LINE
@@ -283,16 +253,14 @@ AC_CHECK_TYPES([ptrdiff_t])
 AC_CHECK_FUNCS([floor pow select sqrt strstr])
 AC_CHECK_HEADERS([float.h values.h])
 
-# End additional checks
-
-# Bits and pieces of NSCDAQ can do logging via boostlog. This stuff tells us
+# Bits and pieces of NSCLDAQ can do logging via boostlog. This stuff tells us
 # if that's present and if so, how to incorporate it:
 
-AX_BOOST_BASE([], [BOOST_EXTRA_CPPFLAGS="-DBOOST_ALL_DYN_LINK"], [BOOST_EXTRA_CPPFLAGS=""])
+AX_BOOST_BASE([],
+	[BOOST_EXTRA_CPPFLAGS="-DBOOST_ALL_DYN_LINK"],
+	[BOOST_EXTRA_CPPFLAGS=""])
 AX_BOOST_LOG
 AC_SUBST(BOOST_EXTRA_CPPFLAGS)
-
-
 
 # Automake:
 
@@ -302,64 +270,56 @@ AM_INIT_AUTOMAKE([tar-ustar foreign subdir-objects])
 
 SOVERSION="11:0:0"
 
-
-
-
-
 #---------------------------------------------------------------------
 #
 #  Local tests:
 #
 
-# Ensure Python is 3.0  or greater, and the packages/dependencies we need
+# Ensure python is 3.0 or greater, and the packages/dependencies we need:
 
-
-AM_PATH_PYTHON([3.0], [], [AC_MSG_ERROR([Python 3.0  or higher is needed for NSCLDAQ])])
+AM_PATH_PYTHON([3.0],
+	[],
+	[AC_MSG_ERROR([python 3.0 or higher is needed for NSCLDAQ])])
 AX_PYQT
 PKG_CHECK_MODULES(PYTHON3, python3)
 
+# Also need to set compilation/link flags for QtScope:
+# Thanks to Giordano for figuring this portable way to do it:
 
-# Also need to set compilation/link flags for qtnscope:
-#  Thanks to Giordano for figuring this portable way to  do it:
-
-PKG_CHECK_MODULES(PYTHON, [python3-embed], [PYTHON3_CFLAGS=`pkg-config --cflags python3-embed`; PYTHON3_LIBS=`pkg-config --libs pyth\
-on3-embed`],
-                          [PYTHON3_CFLAGS=`pkg-config python3 --cflags`, PYTHON3_LIBS=`pkg-config python3 --libs`])
+PKG_CHECK_MODULES(PYTHON,
+	[python3-embed],
+	[PYTHON3_CXXFLAGS=`pkg-config --cflags python3-embed`; PYTHON3_LIBS=`pkg-config --libs python3-embed`],
+	[PYTHON3_CXXFLAGS=`pkg-config python3 --cflags`, PYTHON3_LIBS=`pkg-config python3 --libs`])
 AC_SUBST(PYTHON3_CXXFLAGS)
 AC_SUBST(PYTHON3_LIBS)
 
-
-
 # Ensure swig is installed: -- this is used to generate wrappers for the
-#  VMUSB and CCUSB libraries for use within Tcl drivers.
+# VMUSB and CCUSB libraries for use within Tcl drivers.
 #
-#  Earlier swig versions than 1.3 may well work, however this is the
-#  version I used when first successfully building the wrappers
-# (ubuntu lucid lynx).
-#
-AX_PKG_SWIG([1.3], [], [ AC_MSG_ERROR([Swig is required to build nscldaq])])
+# Earlier swig versions than 1.3 may well work, however this is the
+# version I used when first successfully building the wrappers
+# (Ubuntu Lucid Lynx).
 
+AX_PKG_SWIG([1.3], [], [ AC_MSG_ERROR([swig is required to build NSCLDAQ])])
 
 # We use gengetopt in a few places.  Ideally it's been found by now in the
-# path if not we'll need to do the withval thing.. or prompt the user to
+# path if not we'll need to do the withval thing... or prompt the user to
 # give us a --with-gengetopt-path
-#
+
 AX_GENGETOPT
 
-# Tcl/Tk is pervasive in NCLDAQ so we need to have it too:
+# Tcl/Tk is pervasive in NSCLDAQ so we need to have it too:
 
 AX_TCL
 
-
-
-#
 #  The substs below are for compatibility sake 
 #  eventually we should migrate Makefile.am defs to use
 #  those in m4/tcl.m4
-#
+
 TCL_FLAGS="${TCL_CPPFLAGS} ${TK_CPPFLAGS}"
 
 # Check for redundancy of libieee in the LD_LIBS
+
 TCL_LDFLAGS=${TK_LIBS}
 for tclname in ${TCL_LIBS}
 do
@@ -368,88 +328,36 @@ do
         TCL_LDFLAGS="$TCL_LDFLAGS $tclname"
     fi
 done
-#TCL_LDFLAGS="${TK_LIBS} ${TCL_LIBS}"
-TCLSH_CMD=${TCLSH} 
+TCLSH_CMD=${TCLSH}
 
+# Incorporate and build tcl++:
 
-
-#
-#  IF systemtcl is yes we're pretty much done.. otherwise
-#  we need to configure/build/install libtcl into prefix and then set
-#  the flags:
-
-if false
-then
-AC_MSG_CHECKING([libtcl++ installed as package (e.g. .deb)])
-
-AC_CHECK_FILE([/usr/include/TCLInterpreterObject.h], [systemtcl="yes"], [systemtcl="no"])
-
-if test $systemtcl = "yes"
-then
-	LIBTCLPLUS_CFLAGS=""
-	LIBEXCEPTION_LDFLAGS="-lException"
-	LIBTCLPLUS_LDFLAGS="-ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-	AC_MSG_RESULT([Found in  system libraries])
-else
-  AC_CHECK_FILE([${prefix}/lib/libException.so],[libtclinstalled="yes"],[libtclinstalled="no"])
-  AC_CHECK_FILE([${prefix}/lib/libtclPlus.so],[libexceptioninstalled="yes"],[libexceptioninstalled="no"])
-  AC_CHECK_FILE([${prefix}/include/TCLInterpreterObject.h],[tclinterpobjinstalled="yes"],[tclinterpobjinstalled="no"])
-  if [ [ $libtclinstalled = "no" ] || [ $libexceptioninstalled = "no" ] || [ $tclinterpobjinstalled = "no" ] ]
-  then
-    AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
-	  if test $havelibtcldir = "yes"
-  	then
-      AC_MSG_RESULT([Need to build local tagged copy])
-      AC_CHECK_FILE([${srcdir}/libtcl/configure], [havelibtcldir="yes"], [havelibtcldir="no"])
-		  (cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
-	  else
-		  AC_MSG_ERROR([I seem to be missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-	  fi
-  else
-    AC_MSG_RESULT([Previously built version found in ${prefix}])
-  fi
-  LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-  LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-	LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-
-fi
-fi
-
-#
-#  Hard code use of local libtcl:
-#
-AC_CHECK_FILE([${srcdir}/libtcl], [havelibtcldir="yes"], [havelibtcldir="no"])
-if test $havelibtcldir = "yes"
-then
-  AC_MSG_RESULT([Need to build local tagged copy])
-  (cd ${srcdir}/libtcl; ./configure --prefix=${prefix}; make clean install)
-
-  LIBTCLPLUS_CFLAGS="-I${prefix}/include"
-  LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
-  LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
-
-
-
-else
-   AC_MSG_ERROR([I seem to be missing libtcl, please use tcl++incorp.sh to fill it with a tagged release of libtclplus])
-fi
-								  
-
+AC_CHECK_FILE([${srcdir}/libtcl/configure.ac],
+		[AC_MSG_NOTICE([Using previously incorprated tcl++ from the source tree at ${srcdir}/libtcl])
+		cp -r ${srcdir}/libtcl .],
+		[AC_MSG_NOTICE([Incorporating tcl++ for you])
+		${srcdir}/tcl++incorp])
+AC_MSG_NOTICE([Building and installing tcl++])
+(cd libtcl; ./configure --prefix=${prefix}; make clean install)
+result=$?
+AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install tcl++ with result: ${result}]))
+LIBTCLPLUS_CFLAGS="-I${prefix}/include"
+LIBEXCEPTION_LDFLAGS="-L${prefix}/lib -lException -Wl,\"-rpath=${prefix}/lib\""
+LIBTCLPLUS_LDFLAGS="-L${prefix}/lib -ltclPlus ${LIBEXCEPTION_LDFLAGS}"
 AC_SUBST(LIBTCLPLUS_CFLAGS)
 AC_SUBST(LIBTCLPLUS_LDFLAGS)
 AC_SUBST(LIBEXCEPTION_LDFLAGS)
 
-#  Configure and install tclhttpd
-#  We use that /usr/lib/tclx.y has tclConfig
-#  and /usr/include/tclx.y     has the headers.
+#  Configure and install tclhttpd:
+#  /usr/lib/tclx.y     - Has tclConfig.
+#  /usr/include/tclx.y - Has the headers.
 
 tcl_basename=tcl${TCL_VERSION}
 tcl_configdir="/usr/lib/$tcl_basename"
 tcl_incdir="/usr/include/$tcl_basename"
 
 (cd ${srcdir}/tclhttpd3.5.1; ./configure --prefix=${prefix}/share/tclhttpd --enable-gcc --with-tclinclude=$tcl_incdir --with-tcl=$tcl_configdir)
-(cd ${srcdir}/tclhttpd3.5.1; make all install)
-
+(cd ${srcdir}/tclhttpd3.5.1; make   all install)
 
 # Epics
 #
@@ -459,10 +367,8 @@ tcl_incdir="/usr/include/$tcl_basename"
 #
 
 AC_ARG_ENABLE([epics-tools],
-	AS_HELP_STRING([--enable-epics-tools], 
-	[Build software that requires EPICS (default no)]),
-	[],
-	[enable_epics_tools=no])
+	AS_HELP_STRING([--enable-epics-tools], [Build software that requires EPICS (default no)]),
+	[], [enable_epics_tools=no])
 
 if test "$enable_epics_tools" = "yes"
 then
@@ -480,68 +386,67 @@ fi
 # be found, --with-plx-sdk can be used to provide it. What we provide to the
 # Makefiles:
 #
-# BUILD_DDAS     - if this flag is provided that's defined to allow the top
-#                  level Makefile to enable the ddas support software build.
-# XIAAPI_VERSION - major version number of the XIA API we compile with
-# PIXIE_API_DIR  - installation directory of the XIA Pixie API
-# PIXIE_CPPFLAGS - compiler flags
-# PIXIE_LDFLAGS  - load flags
-# PLX_SDK_DIR    - installation directory of the PLX API library
-# PLX_CPPFLAGS   - compiler flags
-# PLX_LDFLAGS    - load flags
-# firmwaredir    - Pixie firmware installation directory
-# dspdir         - Pixie DSP load image installaion directory
-# UFMT_CPPFLAGS  - Unified format CPP flags
-# UFMT_LDFLAGS   - Unified format library flags
-# ROOTSYS        - ROOT installation to compile e.g. ddasdumper against
-# ROOT_CFLAGS    - ROOT cflags (automatically generated from ROOT config)
-# ROOT_LDFLAGS   - ROOT libraries (automatically generated from ROOT config)
+# BUILD_DDAS       - If this flag is provided that's defined to allow the top
+#                    level Makefile to enable the ddas support software build.
+# PIXIE_API_DIR    - Installation directory of the XIA Pixie API
+# PIXIE_CPPFLAGS   - Compiler flags for Pixie API
+# PIXIE_LDFLAGS    - Linker flags for Pixie API
+# PLX_SDK_DIR      - Installation directory of the PLX API library
+# PLX_CPPFLAGS     - Compiler flags for PLX API
+# PLX_LDFLAGS      - Linker flags for PLX API
+# firmwaredir      - Pixie firmware installation directory
+# dspdir           - Pixie DSP load image installaion directory
+# UFMT_CPPFLAGS    - Unified format compiler flags
+# UFMT_LDFLAGS     - Unified format linker flags
+# DDASFMT_CPPFLAGS - DDAS format compiler flags
+# DDASFMT_LDFLAGS  - DDAS format linker flags
+# ROOTSYS          - ROOT installation to compile e.g. ddasdumper against
+# ROOT_CFLAGS      - ROOT cflags (automatically generated from ROOT config)
+# ROOT_LDFLAGS     - ROOT libraries (automatically generated from ROOT config)
 
 AC_ARG_ENABLE([ddas],
-	AS_HELP_STRING([--enable-ddas],
-	[Build the DDAS support software (default no)]),
-	[],
-	[enable_ddas=no])
+	AS_HELP_STRING([--enable-ddas], [Build the DDAS support software (default no)]),
+	[], [enable_ddas=no])
 
-if test "$enable_ddas" = yes
+if test "$enable_ddas" = "yes"
 then
 	AC_MSG_NOTICE([The XIA-DDAS support software will be built])
 	AC_DEFINE([USING_DDAS], [1], [DDAS support enabled])
 
 	AC_ARG_WITH([xiaapidir],
-	[  --with-xiaapidir=path - Path to the XIAAPI installation. Required if DDAS support is enabled.],
-	[xiaapidir=$withval])
+	[  --with-xiaapidir=path - Path to the XIA API installation. Required if DDAS support is enabled.],
+	[xiaapidir=$withval], [AC_MSG_ERROR([use --with-xiaapidir to point to the actual installation of the XIA API])])
+
+	# Check that the XIA API installation directory is correct by looking
+	# for the pixie16.h header there. If found, define vars; if not,
+	# print an error message and exit. Note that this version supports
+	# only XIA API major version 4 which incorporates "legacy mode"
+	# as a supported option as of release 4.x.y and later:
 	
-	if test -n -d ${xiaapidir}
-	then
-		AC_MSG_ERROR([Specify --with-xiaapidir to point to the actual installation of the XIA API])
-	fi
-	PIXIE_API_DIR=${xiaapidir}
-
-	# If the xiaapidir/include/pixie16/pixie16.h exists we're using the
-	# XIAAPI_V3 or higher stuff:
-
-	xiaapiver=3
-	PIXIE_CPPFLAGS="-I${xiaapidir}/include"
 	AC_CHECK_FILE([${xiaapidir}/include/pixie16/pixie16.h],
-		[PIXIE_CPPFLAGS="${PIXIE_CPPFLAGS} -DXIAAPI_V3"	PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"
-		AC_DEFINE([XIAAPI_VERSION], [3], [Pixie16 version 3 api])],
-		[PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixieSDK -lm -Wl,-rpath=${xiaapidir}/lib"
-		AC_DEFINE([XIAAPI_VERSION], [2], [Pixie16 version 2 or lower])
-		xiaapiver=2])
+	[PIXIE_LDFLAGS="-L${xiaapidir}/lib -lPixie16Api -lm -Wl,-rpath=${xiaapidir}/lib"],
+	[AC_MSG_ERROR([invalid XIA API installation directory ${xiaapidir}, use --with-xiaapidir to point to the correct one (this version of NSCLDAQ supports only XIA API major version 3+)])])
 
-	AM_CONDITIONAL([USING_XIAAPI_V2], [test ${xiaapiver} -eq 2])
+	PIXIE_API_DIR=$xiaapidir
+	PIXIE_CPPFLAGS="-I${xiaapidir}/include"
 
 	AC_SUBST(PIXIE_API_DIR)
 	AC_SUBST(PIXIE_CPPFLAGS)
 	AC_SUBST(PIXIE_LDFLAGS)
 
-	# Specify the location of the Plx installation. This will default to
-	# /usr/opt/plx.
+	# Specify the location of the PLX installation. This will default to
+	# /usr/opt/plx or $(prefix)/../../plx if no argument is provided.
+	# Since we know its must be version 8+ to support XIA API 4+, the
+	# correct install directory can be inferred from the presence of the
+	# shared library.
 
 	AC_ARG_WITH([plx-sdk],
 		[  --with-plx-sdk=path - Path to the PLX software installation. Required if DDAS support is enabled.],
 		[PLX_SDK_DIR=$withval], [PLX_SDK_DIR=""])
+
+	# Check the default install locations. If no arg is supplied and the
+	# installation directory isn't in the default search paths,
+	# PLX_SDK_DIR is "":
 
 	if test -z "$PLX_SDK_DIR"
 	then
@@ -549,13 +454,6 @@ then
 		do
 			if test -z "$PLX_SDK_DIR"
 			then
-		
-			# Its probably one of these:
-		
-				AC_CHECK_FILE([$d/PlxApi/Library/libPlxApi.a],
-					[PLX_SDK_DIR="$d"],
-					[PLX_SDK_DIR=""])
-
 				AC_CHECK_FILE([$d/PlxApi/Library/PlxApi.so],
 					[PLX_SDK_DIR="$d"],
 					[PLX_SDK_DIR=""])
@@ -567,16 +465,16 @@ then
 
 	if test -z "$PLX_SDK_DIR"
 	then
-		AC_MSG_FAILURE([Could not locate the PLX SDK directory, use --with-plx-sdk to help me])
+		AC_MSG_FAILURE([Could not locate the PLX SDK directory, specify the correct path using --with-plx-sdk])
 	fi
 
 	PLX_CPPFLAGS="-I${PLX_SDK_DIR}/Include -I${PLX_SDK_DIR}/PlxApi"
 
-	# Use the shared library PlxApi.so (plx 8+) otherwise libPlxApi.a:
+	# For PLX SDK 8+ we're looking for the shared library:
 
   	AC_CHECK_FILE([${PLX_SDK_DIR}/PlxApi/Library/PlxApi.so],
 		[PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -l:PlxApi.so -Wl,-rpath=${PLX_SDK_DIR}/PlxApi/Library"],
-		[PLX_LDFLAGS="-L${PLX_SDK_DIR}/PlxApi/Library -lPlxApi"])
+		[AC_MSG_ERROR(invalid PLX SDK installation directory, specify the correct path using --with-plx-sdk)])
 
 	AC_SUBST(PLX_SDK_DIR)
 	AC_SUBST(PLX_CPPFLAGS)
@@ -590,7 +488,7 @@ then
 
 	if test x$firmwaredir = x
 	then
-		AC_MSG_ERROR([ --with-firmwaredir is a mandatory option])
+		AC_MSG_ERROR([specifying a firmware install directory using --with-firmwaredir is a mandatory option if DDAS support is enabled])
 	fi
 
 	AC_SUBST(firmwaredir)
@@ -605,51 +503,72 @@ then
 
 	if test x$dspdir = x
 	then
-		AC_MSG_ERROR([--with-dspdir is a mandatory option])
+		AC_MSG_ERROR([specifying a firmware install directory using --with-dspdir is a mandatory option if DDAS support is enabled])
 	fi
 
 	AC_SUBST(dspdir)
 
+ 	# The unified format and DDAS format libraries have builds that
+	# require cmake, so check for that:
+
+	AC_CHECK_PROG([have_cmake], [cmake], [yes])
+	AS_VAR_IF([have_cmake], [yes], [], AC_MSG_ERROR([cmake must be in the path to build DDAS support software]))
+
 	# Check that the unified format library has been incorporated into
 	# the source tree and configure/build it into $prefix/unifiedformat
 
-	AC_CHECK_PROG([havecmake], cmake, [1], [0])
-	if `test ${havcmake} = 0`
-	then
-		AC_MSG_ERROR([cmake must be in the path to build DDAS support software])
-	fi
-
 	AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt],
-		[rm -rf unifiedformat/build
-		mkdir -p unifiedformat/build
-		sourcedir="`realpath ${srcdir}`"
-		(cd unifiedformat/build; cmake ${sourcedir}/unifiedformat -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make all test install)
-		UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
-		UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lAbstractFormat -lV10Format -lV11Format -lV12Format -Wl,-rpath=${prefix}/unifiedformat/lib"
-		AC_SUBST(UFMT_CPPFLAGS)
-		AC_SUBST(UFMT_LDFLAGS)],
-		[AC_MSG_ERROR([You need to incorporate the unified format library with unifiedfmt-incorp.sh])])
+		[AC_MSG_NOTICE([Using previously incorporated unified format library at ${srcdir}/unifiedformat])
+		cp -r ${srcdir}/unifiedformat .],
+		[AC_MSG_NOTICE([Incorporating unified format for you])
+		${srcdir}/unifiedfmt-incorp.sh ${UNIFIED_FMT_VERSION}])
+	rm -rf unifiedformat/build
+	AS_MKDIR_P(unifiedformat/build)	
+	AC_MSG_NOTICE([Building unified format])
+	(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make clean install)
+	result=$?
+	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install unified format library with result: ${result}]))
+	UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
+	UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
 
-	#  Check for ROOT -- we're just going to add a --with-rootsys and 
-	#  use rootconfig to add the following to the Makefile macro set:
-	#
-	#  ROOT_CPPFLAGS - compiler flags for ROOT.
-	#  ROOT_LDFLAGS - ROOT libraries location.
-   	#
+	AC_SUBST(UFMT_CPPFLAGS)
+	AC_SUBST(UFMT_LDFLAGS)
+
+	# Check that the DDAS format library has been incorporated into the
+	# source tree and configure/build it into $prefix/ddasformat.
+		
+	AC_CHECK_FILE([${srcdir}/ddasformat/CMakeLists.txt],
+		[AC_MSG_NOTICE([Using previously incorprated ddasformat from the source tree at ${srcdir}/ddasformat])
+		cp -r ${srcdir}/ddasformat .],
+		[AC_MSG_NOTICE([Incorporating ddasformat for you])
+		${srcdir}/ddasfmt-incorp.sh ${DDAS_FMT_VERSION}])
+	rm -rf ddasformat/build
+	AS_MKDIR_P(ddasformat/build)
+	AC_MSG_NOTICE([Building DDAS format])
+	(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make clean install)
+	result=$?
+	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install ddasformat with result: ${result}]))
+	DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
+	DDASFMT_LDFLAGS="-L${prefix}/ddasformat/lib -lDDASFormat -Wl,-rpath=${prefix}/ddasformat/lib"
+	AC_SUBST(DDASFMT_CPPFLAGS)
+	AC_SUBST(DDASFMT_LDFLAGS)
+
+	# Check for ROOT. Use rootcling to add ROOT flags and linker options
+	# to the Makefile macro set:
 
 	rootdir=$ROOTSYS
 	AC_ARG_WITH([rootsys],
 		[  --with-rootsys=path - Path to the ROOT installation to use. Required if DDAS support is enabled.],
 		[rootdir=$withval])
 	
-	if test  x$rootdir = x 
+	if test x$rootdir = x 
 	then
-		AC_MSG_ERROR([Use --with-rootsys to specify where root is installed])
+		AC_MSG_ERROR([use --with-rootsys to specify where ROOT is installed])
 	fi
 	
 	if test ! -d $rootdir
 	then
-		AC_MSG_ERROR([ROOTSYS directory specified: $rootdir does not exist])
+		AC_MSG_ERROR([the specified ROOTSYS directory $rootdir does not exist!])
 	fi
 
 	ROOTSYS=$rootdir
@@ -666,21 +585,18 @@ then
 
 	#  Now export all the variables to the Makefile:
 
-	AM_CONDITIONAL([BUILD_DDAS], [true])   
+	AM_CONDITIONAL([BUILD_DDAS], [true])
 else
 	AM_CONDITIONAL([BUILD_DDAS],[false])
-	AM_CONDITIONAL([USING_XIAAPI_V2], [false])
 fi
 
-#
 # The SBS software will only be built if --enable-sbs was supplied.
 # In that case, the configured kernel source path is set using
 # --with-sbs-kernel-source-dir and that will be used to compile the
 # device driver as well. The default is to _not_ build the sbs stuff.
-#
 
 AC_ARG_ENABLE([sbs],
-	AS_HELP_STRING([--enable-sbs],  [Build SBS software with a configured kernel source]),
+	AS_HELP_STRING([--enable-sbs], [Build SBS software with a configured kernel source]),
 	[],
 	[enable_sbs=no])
 
@@ -692,26 +608,26 @@ then
 
 	if test x$sbsdir = x
 	then
-		AC_MSG_ERROR([--with-sbsdir is a mandatory option if SBS kernel support is enabled])
+		AC_MSG_ERROR([specifiying an SBS kernel directory using --with-sbsdir is a mandatory option if SBS kernel support is enabled])
 	fi
 	
 	if test ! -d $sbsdir
 	then
-		AC_MSG_ERROR([SBS directory specified: $sbsdir does not exist!])
+		AC_MSG_ERROR([the specified SBS directory $sbsdir does not exist!])
 	fi
 
 	KERNEL_SOURCE_DIR=$sbsdir
 	AC_SUBST(KERNEL_SOURCE_DIR)
 	AM_CONDITIONAL([BUILD_SBS_DRIVER], [true])
 	AC_MSG_NOTICE([Building SBS software with kernel source at: $KERNEL_SOURCE_DIR])
+	
 else
 	AM_CONDITIONAL([BUILD_SBS_DRIVER], [false])
 	AC_MSG_NOTICE([SBS software is not enabled.])
 fi
 
-#
-#  If --enable-usb is turned on, we build the VM/CC-usb support directories
-#
+# If --enable-usb is turned on, we build the VM/CC-usb support directories
+
 AC_ARG_ENABLE([usb],
 	AS_HELP_STRING([--enable-usb], [Build support for CC/VM usb data taking]),
 	[],
@@ -737,12 +653,13 @@ PKG_CHECK_MODULES([SQLITE3], [sqlite3])
 #  Check for zmq presence:
 #
 
-AC_SEARCH_LIBS([zmq_init], [zmq], [result=$ac_cv_search_zmq_init], [AC_MSG_ERROR([The zeromq library was not found and is now required for nscldaq])])
+AC_SEARCH_LIBS([zmq_init], [zmq], [result=$ac_cv_search_zmq_init], [AC_MSG_ERROR([the ZeroMQ library was not found and is now required for NSCLDAQ])])
+
 if test $result = "none required"
 then
-   ZMQ_LDFLAGS=""
+	ZMQ_LDFLAGS=""
 else
-   ZMQ_LDFLAGS=$result
+	ZMQ_LDFLAGS=$result
 fi
 
 AC_SUBST(ZMQ_LDFLAGS)
@@ -751,11 +668,8 @@ AC_SUBST(ZMQ_LDFLAGS)
 # need the zmq c++ bindings
 #  note in some c++11's we need to include <algorithm> to include zmq.hpp:
 AC_LANG_PUSH(C++)
-AC_CHECK_HEADERS([algorithm zmq.hpp],[], [AC_MSG_ERROR([The zeromq C++ header (zmq.hpp) is missing and is required for nscldaq])],
-			    [#include <algorithm>])
+AC_CHECK_HEADERS([algorithm zmq.hpp], [], [AC_MSG_ERROR([the ZeroMQ C++ header zmq.hpp is missing and is required for NSCLDAQ])], [#include <algorithm>])
 AC_LANG_POP
-
-
 
 #----------------------------------------------------------------------------
 
@@ -770,16 +684,10 @@ AC_SUBST(TCL_FLAGS)
 AC_SUBST(TCL_LDFLAGS)
 AC_SUBST(TCLSH_CMD)
 
-
-
-
-
-
 AC_SUBST(CPPUNIT_LDFLAGS)
 
-#
 #  Threading is hard coded to -pthread now.
-#
+
 THREADCXX_FLAGS="-pthread"
 THREADC_FLAGS="-pthread"
 THREADLD_FLAGS="-lpthread -lrt"
@@ -788,12 +696,9 @@ AC_SUBST(THREADCXX_FLAGS)
 AC_SUBST(THREADC_FLAGS)
 AC_SUBST(THREADLD_FLAGS)
 
-#
-# Ensure that resources for testing are accessible
-# for out of tree builds
-#
-AC_CONFIG_LINKS([utilities/filter/run-0000-00.evt:utilities/filter/run-0000-00.evt])
+# Ensure that resources for testing are accessible for out of tree builds
 
+AC_CONFIG_LINKS([utilities/filter/run-0000-00.evt:utilities/filter/run-0000-00.evt])
 
 #---------------------------------------------------------------------------
 # Generate the following from their .in's (note that Automake takes
@@ -803,7 +708,8 @@ AC_CONFIG_LINKS([utilities/filter/run-0000-00.evt:utilities/filter/run-0000-00.e
 # Note removed utilities/scalerdisplay in favor of utilities/newscaler
 # Sept 25, 2014
 
-AC_CONFIG_FILES([Makefile
+AC_CONFIG_FILES([
+Makefile
 		nscldaq
 		daqsetup.bash
 		base/pugi/Makefile
@@ -972,28 +878,19 @@ AC_CONFIG_FILES([Makefile
     docconfig/Makefile
     examples/Makefile
     examples/ReadNSCLDAQFiles/Makefile
+    ddas/config_pixie16api.h
     ddas/Makefile
+    ddas/exception/Makefile
     ddas/configuration/Makefile
-    ddas/xiatest/Makefile
     ddas/booter/Makefile
-    ddas/format/Makefile
     ddas/ddasdumper/Makefile
     ddas/ddasdumper/ddasdumper
-    ddas/nscope/Makefile
-    ddas/nscope/nscope
     ddas/readout/Makefile
     ddas/readout/DDASFirmwareVersions.txt
-    ddas/sorter/Makefile
-    ddas/readoutdriver/Makefile
     ddas/pixieplugin/Makefile
     ddas/pixieplugin/definitions.tcl
-    ddas/dumpsetfile/Makefile
-    ddas/xml/tinyxml/Makefile
-    ddas/xml/Makefile
     ddas/qtscope/Makefile
     ddas/qtscope/qtscope
-    ddas/simple_setups/Makefile
-    ddas/tclconfig/Makefile
     ddas/docs/Makefile
     ddas/docs/Doxyfile
     ddas/docs/DoxygenLayout.xml
@@ -1006,11 +903,11 @@ AC_CONFIG_FILES([Makefile
     caendigitizers/tweaker/Makefile
     caen-nextgen/Makefile
     caen-nextgen/tclreadout/Makefile
-    cookbooks/Makefile
     srs/Makefile
     srs/maps/Makefile
     srs/broker/Makefile
     srs/readout/Makefile
-    ])
+    cookbooks/Makefile
+])
 
 AC_OUTPUT

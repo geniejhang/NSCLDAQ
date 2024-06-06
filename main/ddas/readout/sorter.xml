@@ -1,0 +1,65 @@
+<!-- manpage 1daq -->
+
+<refentry>
+  <refmeta>
+    <refentrytitle>ddasSort</refentrytitle>
+    <manvolnum>1daq</manvolnum>
+  </refmeta>
+  <refnamediv>
+    <refname>ddasSort</refname>
+    <refpurpose>Sort data obtained using `DDASReadout`.</refpurpose>
+  </refnamediv>
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>
+	$DAQBIN/ddasSort <optional>options....</optional>       
+      </command>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+  <refsect1>
+    <title>DESCRIPTION</title>
+    <para>
+      Normally you will not need to run this program directly. Instead, specifying <filename>$DAQBIN/ddasReadout</filename> (rather than <filename>$DAQBIN/DDASReadout)</filename> as the data source will run both the <filename>DDASReadout</filename> and associated <filename>ddasSort</filename> programs.
+    </para>
+    <para>
+      Since NSCLDAQ 11.4, <filename>DDASReadout</filename> does not internally sort data from the DDAS modules. Deferring the sort to another process substantially improves performance by allowing that sort to run in parallel with the readout itself.
+    </para>
+    <para>
+      <filename>ddasSort</filename> is that down stream sorter. It takes data from a ringbuffer into which <filename>DDASReadout</filename> puts unsorted raw DDAS hits and outputs time-ordered data to another ringbuffer.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Program options</title>
+    <para>
+      All options listed below are required by <filename>ddasSort</filename>.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><option>--source</option>=<replaceable>URI</replaceable></term>
+        <listitem>
+          <para>
+            Specifies the URI of the ringbuffer into which a DDASReadout reads module data.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--sink</option>=<replaceable>ringname</replaceable></term>
+        <listitem>
+          <para>
+            Specifies the name of the ringbuffer into which the sorter will emit sorted hits. The format of these hits will be identical to that of the 11.3 <filename>DDASReadout</filename> program prior to splitting off this sort function to <filename>ddasSort</filename>.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--window</option>=<replaceable>sort-window-in-seconds (default=10.0)</replaceable></term>
+        <listitem>
+          <para>
+            The number of seconds in the sort window (floating-point). Data older than the size of the sort window are emitted in sorted order. The sort window ensures that data arrives from all modules prior to being emitted to avoid out-of-order data.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+</refentry>
+
+<!-- /manpage -->

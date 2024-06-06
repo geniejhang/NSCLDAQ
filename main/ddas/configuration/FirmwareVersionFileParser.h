@@ -11,11 +11,10 @@
 #include <regex>
 
 /**
- * @todo (ASC 9/22/23): Firmware configuration map imposes some circular 
- * dependencies here, as we start including Configuration.h and 
- * HardwareRegistry.h in multiple places. Include guards should handle this 
- * but may be nice to redesign things to avoid the multiple inclusions in 
- * the first place.
+ * @todo (ASC 9/22/23): Firmware configuration map creates some circular 
+ * dependencies, as we start including Configuration.h and HardwareRegistry.h 
+ * in multiple places. Include guards should handle this but may be nice to 
+ * redesign things to avoid the multiple inclusions in the first place.
  */
 #include "Configuration.h"
 
@@ -31,8 +30,8 @@ namespace DAQ {
 	
 	/**
 	 * @class FirmwareVersionFileParser FirmwareVersionFileParser.h
-	 * @brief The FirmwareVersionFileParser class.
-	 *
+	 * @brief A parser for the DDAS firmware specification file.
+	 * @details
 	 * The FirmwareVersionFileParser is designed to parse the
 	 * DDASFirmwareVersions.txt file that is installed by the project. 
 	 * The DDASFirmwareVersions.txt file has two major sections. The top 
@@ -49,6 +48,7 @@ namespace DAQ {
 	 */
     	class FirmwareVersionFileParser
 	{
+	private:
 	    std::regex m_matchExpr; //!< Expression for pattern-matching. 
 	    
 	public:
