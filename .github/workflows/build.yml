@@ -81,6 +81,7 @@ jobs:
                        --with-caen-digitizer-libroot=`cat /usr/opt/CAENDIGITIZERLIBS_PATH` \
                        --with-epics-rootdir=`cat /usr/opt/EPICS_PATH` \
                        --enable-ddas=yes \
+                       --enable-ddas-docs=yes \
                        --with-xiaapidir=`cat /usr/opt/XIAAPI_PATH` \
                        --with-plx-sdk=`cat /usr/opt/PLX_PATH` \
                        --with-firmwaredir=`cat /usr/opt/DDASFIRMWARE_PATH` \
