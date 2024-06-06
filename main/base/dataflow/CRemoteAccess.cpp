@@ -46,11 +46,32 @@ using namespace std;
 #define K 1024
 #endif
 
+/** 
+ * getDefaultSize 
+ *    Return the default ring size.  This is either DEFAULT_DATASIZE or,
+ *   if the environment variable NSCLDAQ_DEFAULT_PROXYMB is
+ *   defined and translates to an unsigned
+ *   integer, the number of megabytes specified by that env variable.
+*/
+static size_t getDefaultSize() {
+  const char* pStrValue = getenv("NSCLDAQ_DEFAULT_PROXYMB");
+  if (!pStrValue) {
+    return DEFAULT_DATASIZE;
+  }
+  char* pEnd;
+  size_t result = strtoul(pStrValue, &pEnd, 0);
+  if (pEnd == pStrValue) {
+    return DEFAULT_DATASIZE;
+  } else {
+    return result*1024*1024;
+  }
+}
+
 /*!
    This static member determines the size of the data area of a proxy ring buffer.
    The CRingAccess:set/getProxyRingSize members can modify/read this value.
 */
-size_t CRingAccess::m_proxyRingSize(DEFAULT_DATASIZE);
+size_t CRingAccess::m_proxyRingSize(getDefaultSize());
 
 /*!
    This static member determines the number of consumers that will be allowed to 
@@ -111,7 +132,14 @@ CRingAccess::getProxyRingSize()
 {
   return m_proxyRingSize;
 }
-
+/**
+ * getDefaultProxyRingSize - mostly for testing... determine what the proxy
+ * ring size would be if allowed to default (just call getDefaultSize);
+*/
+size_t
+CRingAccess::getDefaultProxyRingSize() {
+  return getDefaultSize();
+}
 /*!
    Set a new value for the maximum number of consumers that will be allowed
    to connect to new proxy rings.  See the comments  for setProxyRingSize, as the same caveats 

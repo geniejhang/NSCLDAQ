@@ -87,12 +87,6 @@ namespace DAQ {
 		Unknown=0
 	    };
 
-	    /**
-	     * @brief Configure the specifications associated with a hardware 
-	     * type.
-	     * @param type The enumerated hardware type.
-	     * @param spec A specification to assign.
-	     */
 	    void configureHardwareType(
 		int type, const HardwareSpecification& spec
 		);
@@ -105,18 +99,7 @@ namespace DAQ {
 	     * @return Reference to a hardware specificiation.
 	     */
 	    HardwareSpecification& getSpecification(int type);
-	    /**
-	     * @brief Reset the contents of the registry to the default state
-	     */
 	    void resetToDefaults();
-	    /**
-	     * @brief Lookup a hardware type enumeration given info about 
-	     * a module
-	     * @param hdwrVersion Hardware revision.
-	     * @param adcFreq     ADC sampling frequency.
-	     * @param adcRes      ADC resolution (e.g. 12, 14, etc.).
-	     * @return An enumerated hardware type.
-	     */
 	    int computeHardwareType(int hdwrVersion, int adcFreq, int adcRes);
 	    /**
 	     * @brief Create an enumerated hardware type from input 

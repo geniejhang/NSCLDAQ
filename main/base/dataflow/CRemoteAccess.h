@@ -58,6 +58,7 @@ private:
 public:
   static size_t setProxyRingSize(size_t newSize);
   static size_t getProxyRingSize();
+  static size_t   getDefaultProxyRingSize();
   
   static size_t setProxyMaxConsumers(size_t newMax);
   static size_t getProxyMaxConsumers();
@@ -67,6 +68,7 @@ public:
 
   static unsigned setTimeout(unsigned newTimeout);
   static unsigned getTimeout();
+  
 
 
   static CRingBuffer* daqConsumeFrom(std::string uri);

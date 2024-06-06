@@ -1,17 +1,11 @@
-<<<<<<< HEAD
-== 12.0-007 ==
-* DDAS documentation, QtScope fixes, updating DDAS configuration test suite
-== 12.0-007 ==
+== 12.1-pre2 ==
+* Unified format library and tcl++ are automatically incorporated during build.
+* DDAS hit and DDAS unpacker refactored into an external module and automatically incorporated during build. See https://github.com/FRIBDAQ/DDASFormat.
+* Updated DDAS code documentation and new DDAS tutorials.
+* Updated DDAS codebase for XIA API 4 transition. NOTE/WARNING: Changes are NOT back-compatible with XIA API 2 and will not work with FRIBDAQ buster images.
+== 12.1-pre2 ==
 
-== 12.0-006 ==
-* Fixing minor issue in MDPP-32 QDC support
-== 12.0-006 ==
-
-== 12.0-005 ==
-* Release for deploying the version. No significant update except for minor bug fixing.
-== 12.0-005 ==
-=======
 == 12.1-pre1 ==
 * Minor bug fix in MDPP-32 QDC support
+* Adding data rate display in MultiLogger
 == 12.1-pre1 ==
->>>>>>> 12.1-dev

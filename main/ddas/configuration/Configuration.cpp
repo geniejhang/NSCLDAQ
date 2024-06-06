@@ -12,7 +12,7 @@
 #include "ConfigurationParser.h"
 #include "ModEvtFileParser.h"
  
-/**
+/*!
  * @details
  * This resizes the vectors storing the slot map, module event lengths, and
  * hardware map to be consistent. The caller should call setNumberOfModules
@@ -45,9 +45,9 @@ void
 DAQ::DDAS::Configuration::setSlotMap(const std::vector<unsigned short> &map)
 {
     if (map.size() != m_modEvtLengths.size()) {
-	std::string errmsg = "Configuration::setSlotMap(): Inconsistent data"
-	    " for module evt lengths and slot mapping. Set number of modules"
-	    " first using Configuration::setNumberOfModules().";
+	std::string errmsg = "Configuration::setSlotMap(): Inconsistent data "
+	    "for module evt lengths and slot mapping. Set number of modules "
+	    "first using Configuration::setNumberOfModules().";
 	throw std::runtime_error(errmsg);
     }
 
@@ -134,7 +134,7 @@ DAQ::DDAS::Configuration::getModuleFirmwareConfiguration(
     }
 }
 
-/**
+/*!
  * @details
  * It is necessary that the caller has previously invoked 
  * `setNumberOfModules()` before calling this. The logic of this method aims 
@@ -158,7 +158,7 @@ DAQ::DDAS::Configuration::setModuleEventLengths(
     m_modEvtLengths = lengths;
 }
 
-/**
+/*!
  * @details
  * It is necessary that the caller has previously invoked 
  * `setNumberOfModules()` before calling this. The logic of this method aims 
@@ -170,17 +170,17 @@ void
 DAQ::DDAS::Configuration::setHardwareMap(const std::vector<int> &map)
 {
     if (map.size() != m_slotMap.size()) {
-	std::string errmsg = "Configuration::setModuleEventLengths()"
-	    "Inconsistent data for hardware mapping and slot mapping."
-	    " Set number of modules first using"
-	    " Configuration::setNumberOfModules().";
+	std::string errmsg = "Configuration::setModuleEventLengths() "
+	    "Inconsistent data for hardware mapping and slot mapping. "
+	    "Set number of modules first using "
+	    "Configuration::setNumberOfModules().";
 	throw std::runtime_error(errmsg);
     }
 
     m_hardwareMap = map;
 }
 
-/**
+/*!
  * @details
  * Prints out a message similar to:
  * "Crate number 1: 2 modules, in slots:2 3 DSPParFile: /path/to/file.set"

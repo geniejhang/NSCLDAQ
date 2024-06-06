@@ -27,6 +27,7 @@ TCLPACKAGES=Configuration.tcl \
 	DataSourceUI.tcl     \
 	ui.tcl	\
 	sshProvider.tcl sshPrompt.tcl \
+	janusSshProvider.tcl janusSshPrompt.tcl janusCommunicator.tcl \
 	 s800Provider.tcl \
 	ReadoutGui.tcl \
 	state.tcl \
@@ -44,11 +45,17 @@ TCLPACKAGES=Configuration.tcl \
 
 
 
+# sshpipe.test - that can really only run if a system and the user are properly# set up.
+
 TCLTESTS =    filesystem.test \
 	initconfig.test installroot.test system.test tests.test  ostest.test \
-	sshpipe.test s800.test  rstatemachine.test rdocallouts.test \
+	s800.test  rstatemachine.test rdocallouts.test \
 	  state.test  delayprovider.test \
 		applauncher.test bundlemgr.test
+
+# to enable sshpipe.test uncomment the next line:
+#TCLTESTS+=sshpipe.test
+
 
 
 TKTESTS =	readoutguitest.tk  scalerparametergui.tk \

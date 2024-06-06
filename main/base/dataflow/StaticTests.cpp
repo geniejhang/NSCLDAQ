@@ -13,10 +13,14 @@
 #include <errno.h>
 #include <string.h>
 
+#include <sstream>
+
+
 #include <ErrnoException.h>
 
 #include "ringbufint.h"
 #include "testcommon.h"
+#include <os.h>
 
 using namespace std;
 
@@ -43,6 +47,8 @@ class StaticRingTest : public CppUnit::TestFixture {
   CPPUNIT_TEST(isring);
   CPPUNIT_TEST(ringname);
   CPPUNIT_TEST(ringUrl);
+  CPPUNIT_TEST(defaultSize_1);
+  CPPUNIT_TEST(defaultSize_2);
   CPPUNIT_TEST_SUITE_END();
 
 
@@ -79,6 +85,8 @@ protected:
   void isring();
   void ringname();
   void ringUrl();
+  void defaultSize_1();
+  void defaultSize_2();
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(StaticRingTest);
@@ -240,16 +248,38 @@ StaticRingTest::isring()
 void
 StaticRingTest::ringname()
 {
-  std::string username= getenv("LOGNAME");
+  std::string username= Os::whoami();
   std::string defaultName = CRingBuffer::defaultRing();
   EQ(username, defaultName);
 }
 void
 StaticRingTest::ringUrl()
 {
-  std::string username = getenv("LOGNAME");
+  std::string username = Os::whoami();
   std::string url      = "tcp://localhost/";
   url += username;
   std::string defaultUrl = CRingBuffer::defaultRingUrl();
   EQ(url, defaultUrl);
+}
+
+// Default size will get set to DEFAULT_DATASIZE If env not defined:
+
+void StaticRingTest::defaultSize_1() {
+  unsetenv("NSCLDAQ_DEFAULT_RINGMBYTES");  // Make sure it's not defined.
+
+  auto size = CRingBuffer::getInitialDefaultRingSize();
+  EQ(size_t(DEFAULT_DATASIZE), size);
+}
+
+// Default size set to env variable if defined:
+
+void StaticRingTest::defaultSize_2() {
+  std::stringstream mbytes;
+  mbytes << "32";
+  std::string m = mbytes.str();
+
+  setenv("NSCLDAQ_DEFAULT_RINGMBYTES", m.c_str(), 1);
+
+  auto size = CRingBuffer::getInitialDefaultRingSize();
+  EQ(size_t(32*1024*1024), size);
 }

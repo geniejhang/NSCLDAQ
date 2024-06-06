@@ -125,11 +125,14 @@ snit::type EventLogger {
     variable loggerPids [list]
     variable loggerFd     -1
     variable loggerProgram [file join $::env(DAQBIN) eventlog]
+    variable datafilePrefix ""
     
     variable expectingExit 0;             # Determines if pipe exists are bad.
     variable waitDone      0;             # for vwait when waiting on exits.
     variable run           -1;            # GUI run number.
     variable startTime     -1;            # When started.
+    variable currentDataSize 0;           # Current data size in MB for calculating rate
+    variable dataRate        0
     constructor args {
         $self configurelist $args
     }
@@ -158,12 +161,13 @@ snit::type EventLogger {
             # Construct the logger command and start it.
             
             set timestamp [clock format [clock seconds] -format {%d%b%Y-%H%M%S}]
+            set datafilePrefix $timestamp-run
             
             set command [list $loggerProgram                        \
                 --source=$options(-ring) --path=$options(-out)      \
                 --oneshot                                           \
                 --number-of-sources=$options(-sources)              \
-                --prefix=$timestamp-run                             \
+                --prefix=$datafilePrefix                            \
                 --segmentsize=[DAQParameters::getEventLoggerFileSegmentSize]g \
             ]
             if {[::DAQParameters::getUseChecksumFlag]} {
@@ -182,6 +186,9 @@ snit::type EventLogger {
             set out  $options(-out)
             set msg "$ring -> $out started eventlog as pid [lindex $loggerPids 0]"
             ::ReadoutGUIPanel::Log MultiLogger: log $msg
+
+            set currentDataSize 0.00
+            eval [mymethod _calculateDataRate]
         }
         
     }
@@ -219,6 +226,8 @@ snit::type EventLogger {
                     # Logger exit was observed:
                     
                     after cancel $afterId;             # Cancel timeout.
+
+                    set currentDataSize [lindex [eval [mymethod _getDataInfo]] 1]
                     
                 } else {
                     
@@ -343,6 +352,54 @@ snit::type EventLogger {
             }
         }
       }
+    }
+
+    ##
+    # _calculateDataRate
+    #    Updating data rate and total sizes periodically when running
+    #
+    method _calculateDataRate {} {
+        set currentInfo [eval [mymethod _getDataInfo]]
+        set dataRate [format %.2f [expr {([lindex $currentInfo 1]-$currentDataSize)/3.}]]
+        set currentDataSize [lindex $currentInfo 1]
+
+        if {! $expectingExit} {
+            after 3000 [mymethod _calculateDataRate]
+        } else {
+          set dataRate 0.00
+        }
+    }
+
+    ##
+    # _getDataInfo
+    #    Collecting data size information for all segments of a run
+    #
+    method _getDataInfo {} {
+        set eventDir $options(-out)
+        set fileBaseName [format $datafilePrefix-%04d $run]
+
+        # Which files exist:
+        set segments [glob -nocomplain \
+              [file join $eventDir $fileBaseName*.evt]]
+
+        set nsegments [llength $segments]
+        set size 0;             # For when there are no segments yet.
+        foreach segment $segments {
+            if {![catch {file size $segment} segsize]} {
+              set size [expr {$size + $segsize/1024.0}]
+            }
+        }
+        set size [format %.2f [expr {$size/1024.0}]]
+
+        return [list $nsegments $size]
+    }
+
+    method getRate {} {
+        return $dataRate
+    }
+
+    method getTotal {} {
+        return $currentDataSize
     }
 }
 
@@ -584,6 +641,112 @@ snit::widgetadaptor LoggerList {
         
     }
 }
+##
+# @class LoggingRateList
+#    List logging rates
+#
+# OPTIONS:
+#   -loggers  - List of objects that supply the EventLogger OPTIONs.
+#
+#
+snit::widgetadaptor LoggerRateList {
+    option -loggers -configuremethod _LoggersChanged -default [list]
+
+
+    ##
+    # Constructor:
+    #   1. Set up the frame as the hull
+    #   2. Process the configuration options.
+    #
+    #   @note  - the configuremethod for -loggers will take care of
+    #            creating and laying out the widgets.
+    #
+    constructor args {
+        installhull using toplevel
+        $self configurelist $args
+    }
+
+    ##
+    # _LoggersChanged
+    #    Get rid of children of the hull
+    #    Repopulate given the new list.
+    #
+    # @param optname - the option being configured.
+    # @param value    - its new value.
+    #
+    method _LoggersChanged {optname value} {
+        set options($optname) $value
+
+        # Destroy all children of the hull:
+
+        foreach w [winfo children $win] {
+            destroy $w
+        }
+        #  Rebuild the display
+
+        ttk::label $win.ringtitle -text "From Ring"
+        ttk::label $win.dirtitle  -text "To directory"
+        ttk::label $win.enabled   -text "Is enabled"
+        ttk::label $win.rate      -text "Rate (MB/s)"
+        ttk::label $win.total     -text "Total (MB)"
+        grid $win.ringtitle $win.dirtitle $win.enabled $win.rate \
+             $win.total                                          \
+            -sticky w  -padx 5 -pady 5
+
+        set idx 0
+        foreach logger $value {
+            set ring   [$logger cget -ring]
+            set dest   [$logger cget -out]
+            set enflag [$logger cget -enable]
+            if {$enflag} {
+                set enableText Yes
+            } else {
+                set enableText No
+            }
+            ttk::label $win.ring$idx  -text $ring
+            ttk::label $win.dest$idx  -text $dest
+            ttk::label $win.ena$idx   -text $enableText
+            ttk::label $win.rate$idx  -text 0.00 -justify right
+            eval [mymethod _updateLabel $win.rate$idx $logger rate]
+            ttk::label $win.total$idx -text 0.00 -justify right
+            eval [mymethod _updateLabel $win.total$idx $logger total]
+
+            grid $win.ring$idx $win.dest$idx $win.ena$idx $win.rate$idx \
+                $win.total$idx                                          \
+                -sticky w -padx 5
+
+            incr idx
+        }
+    }
+
+    ##
+    # _updateLabel
+    #     Updating data rate and total size labels periodically
+    #
+    #  @param label - widget object
+    #  @param logger - EventLogger object to retrieve information
+    #  @param target - either "rate" or "total" to update
+    #
+    method _updateLabel {label logger target} {
+        if {$target == "rate"} {
+            $label configure -text [eval [mymethod _formatText [$logger getRate]]]
+        } elseif {$target == "total"} {
+            $label configure -text [eval [mymethod _formatText [$logger getTotal]]]
+        }
+
+        after 3000 [mymethod _updateLabel $label $logger $target]
+    }
+
+    ##
+    # _formatText
+    #   Formatting number in float with two decimal points
+    #
+    # @param value - value to format
+    #
+    method _formatText {value} {
+        return [regsub -all {\d(?=(\d{3})+($|\.))} $value {\0,}]
+    }
+}
 
 #------------------------------------------------------------------------------
 #  Internal utility methods.
@@ -661,6 +824,9 @@ proc ::multilogger::addLogger {} {
                     -message {The logger was incompletely or improperly defined} 
             }
             ::multilogger::saveLoggers
+            if {[winfo exists .loggingRates]} {
+              ::multilogger::loggingRates
+            }
         }
         destroy .addlogger
     }
@@ -806,6 +972,9 @@ proc ::multilogger::deleteLoggers {} {
                         $logger destroy
                     }
                     ::multilogger::saveLoggers
+                    if {[winfo exists .loggingRates]} {
+                      ::multilogger::loggingRates
+                    }
                 }
             }
         } else {
@@ -941,6 +1110,20 @@ snit::widgetadaptor multilogger::LoggerDisplay {
             
         
 }
+##
+# ::multilogger::loggingRates
+#    A window for showing logging rate with file size change
+#
+proc ::multilogger::loggingRates {} {
+    #  Create the dialog if it's not up.
+
+    if {![winfo exists .loggingRates]} {
+        LoggerRateList .loggingRates -loggers $::multilogger::Loggers
+    } else {
+        # Update the -loggers values
+        .loggingRates configure -loggers $::multilogger::Loggers
+    }
+}
 
 #------------------------------------------------------------------------------
 #  Our state transition methods:
@@ -972,6 +1155,7 @@ proc ::multilogger::leave {from to} {
                 $logger start
             }
             after 1000;             # Allow loggers to initialize.
+            ::multilogger::loggingRates
         }
     }
     if {($from in {Active Paused}) && ($to eq "Halted")} {
@@ -1041,6 +1225,8 @@ proc ::multilogger::initPackage {} {
         $myMenu add separator
         $myMenu add command -label {Enable Loggers...} -command ::multilogger::enableLoggers
         $myMenu add command -label {Delete Loggers...} -command ::multilogger::deleteLoggers
+        $myMenu add separator
+        $myMenu add command -label {Show Loggers Data Rate...} -command ::multilogger::loggingRates
         $myMenu add separator
         $myMenu add checkbutton -offvalue 0 -onvalue 1 -variable ::multilogger::recordAlways -label {Record Always}
         

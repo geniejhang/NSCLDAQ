@@ -178,4 +178,3 @@ CMyTrigger::operator()()
     return false;
 }
 
-

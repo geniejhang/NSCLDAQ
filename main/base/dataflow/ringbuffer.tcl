@@ -62,6 +62,12 @@ package require report
 #  Global variables:
 
 set defaultDataSize     8m
+if {[array names env NSCLDAQ_DEFAULT_RINGMBYTES] eq "NSCLDAQ_DEFAULT_RINGMBYTES"} {
+    set s  $env(NSCLDAQ_DEFAULT_RINGMBYTES)
+    if {[string is integer $s]} {
+        set defaultDataSize  ${s}m
+    }
+}
 set defaultMaxConsumers 100
 set defaultHostname     localhost
 

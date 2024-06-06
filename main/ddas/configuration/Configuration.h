@@ -130,7 +130,7 @@ namespace DAQ {
 	    size_t getNumberOfModules() const { return m_slotMap.size(); };
 	    /**
 	     * @brief Assign a new slot map.
-	     * @param map The slots that are occupied.
+	     * @param map  The slots that are occupied.
 	     * @throws std::runtime_error When length of argument is 
 	     *   different than the length of stored modevtlen vector.
 	     */

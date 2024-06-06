@@ -12,8 +12,7 @@
 class arenaTest : public CppUnit::TestFixture
 {
     CPPUNIT_TEST_SUITE(arenaTest);
-    CPPUNIT_TEST(initial_1);
-  
+    CPPUNIT_TEST(initial_1);  
     CPPUNIT_TEST(alloc_1);
     CPPUNIT_TEST(alloc_2);
     CPPUNIT_TEST(alloc_3);

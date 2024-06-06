@@ -1,19 +1,27 @@
-/**
- * @file CMyBusy.cpp
- * @brief Implement mock busy class (it does nothing).
- */
-
+#include <config.h>
+#include <iostream>
 #include "CMyBusy.h"
 
-#include <iostream>
+#ifdef HAVE_STD_NAMESPACE
+using namespace std;
+#endif
+
+CMyBusy::CMyBusy() 
+{  
+}
 
 void CMyBusy::GoBusy() 
 {
-    // std::cout << "Going busy "<< std::endl << std::flush;
+  //   cout << "Going busy "<< endl << flush;
 }
 
 void CMyBusy::GoClear() 
 {  
-    // std::cout << "Going clear "<< std::endl << std::flush;
+  // cout << "going clear "<< endl << flush;
 }
+
+// void CMyStatus::ModuleClear() 
+// {  
+//   // cout << "clearing module "<< endl << flush;
+// }
 

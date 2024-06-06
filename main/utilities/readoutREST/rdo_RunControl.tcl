@@ -257,7 +257,9 @@ snit::widgetadaptor ReadoutManagerControl {
     option -readoutstate -configuremethod _cfgRdoState 
     option -bootcommand [list]
     option -shutdowncommand [list]
-    
+    option -elapsed -default "*Unknown*"
+
+
     # Options delegated ton the parameters widget:
     
     delegate option -title        to parameters
@@ -267,6 +269,7 @@ snit::widgetadaptor ReadoutManagerControl {
     delegate option -titlecommand to parameters
     delegate option -runcommand   to parameters
     delegate option -parameterstate to parameters as -state
+    
     
     # Delegated to ReadoutState:
     
@@ -293,8 +296,12 @@ snit::widgetadaptor ReadoutManagerControl {
             -command [mymethod _dispatchShutdown] \
             -state disabled
         
+        ttk::label $win.manager.lelapsed -text "Elapsed:"
+        ttk::label $win.manager.elapsed -textvariable [myvar options(-elapsed)]
+
         grid $win.manager.statelabel $win.manager.state -sticky w
         grid $win.manager.boot $win.manager.shutdown    -sticky w -padx 3
+        grid $win.manager.lelapsed $win.manager.elapsed
         
         grid $parameters -columnspan 3
         grid $win.manager $control
@@ -552,6 +559,7 @@ snit::widgetadaptor RunControlGUI {
     delegate option -runcommand to controls
     delegate option -parameterstate to controls
     delegate option -statecommand to controls
+    delegate option -elapsed to controls
     
     # Summary methods:
     
@@ -1416,6 +1424,13 @@ snit::type RunController {
             
             foreach object $updateList {
                 $object update
+            }
+            # Now the elapsed run time:
+
+            set stateAPI $options(-statemodel)
+            if {[$stateAPI currentState] eq "BEGIN"} {
+                set elapsedText [$stateAPI elapsedRunTime]
+                $options(-view) configure -elapsed $elapsedText
             }
         }
         if {$options(-recordingcontroller) ne ""} {

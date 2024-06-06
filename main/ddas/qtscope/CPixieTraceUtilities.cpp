@@ -5,11 +5,10 @@
 
 #include "CPixieTraceUtilities.h"
 
-#include <math.h>
-
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <cmath>
 
 #include <config.h>
 #include <config_pixie16api.h>
@@ -150,9 +149,14 @@ CPixieTraceUtilities::AcquireADCTrace(int module, int channel)
 	std::cerr << "Offline data generation using the generator is not"
 		  << " supported for XIA API 3+" << std::endl;
     }
-    
 }
 
+/**
+ * @details
+ * By default the trace length is 8192 samples. This function will calculate 
+ * the median value for any trace length, whether or not the number of samples
+ * is even or odd. All exceptions are raised to the caller.
+ */
 template<typename T> double
 CPixieTraceUtilities::GetMedianValue(std::vector<T> v)
 {  

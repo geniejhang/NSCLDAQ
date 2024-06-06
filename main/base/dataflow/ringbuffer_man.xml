@@ -75,6 +75,11 @@ ringbuffer list   <replaceable>?--host=hostname?</replaceable>
                     idea to avoid characters that have special meaning to Tcl
                     as well.
 		</para>
+        <para>
+            If the environment variable <literal>NSCLDAQ_DEFAULT_RINGMBYTES</literal> is defined and
+            can be decoded as an integer, the value sets the default megabytes of ring buffer data size.
+            <option>--datasize</option> can be used to explicitly set the data size.
+        </para>
 	    </listitem>
 	</varlistentry>
         <varlistentry>

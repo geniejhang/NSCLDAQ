@@ -38,6 +38,7 @@ namespace eval stateclient {
     variable base   "State";          # URI base.
     variable state  "status";         # subdomain with status.
     variable next   "allowed";        # subdomain with allowed next states.
+    variable elapsed "elapsed";
     variable transition "transition"; # Transition request subdomain
     variable forceExit "shutdown";    # Kill off the menager.
 }
@@ -148,6 +149,18 @@ snit::type StateClient {
         set jsondict [$self _checkResult $token]
         
         return [dict get $jsondict states]
+    }
+    # elapsedRunTime
+    #
+    # #return string - elapsed run time.  
+    method elapsedRunTime {} {
+        set port [_getServerPort $options(-host) $options(-user)]
+        set baseuri http://$options(-host):$port
+        set uri "$baseuri/$stateclient::base/$stateclient::elapsed"
+
+        set token [http::geturl $uri]
+        set jsondict [$self _checkResult $token]
+        return [dict get $jsondict elapsed]
     }
     ##
     # transition

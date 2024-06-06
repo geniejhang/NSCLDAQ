@@ -255,19 +255,14 @@ static void writeNonPhysicsItem(CRingItem* pItem)
     hdr.s_barrier   = pItem->getBarrierType();
   }
 
-  // Dynamically allocate the fragment body. Would _prefer_ to allocate with
-  // the fragment pool i.e. EVB::pFragment = allocateFragment(&hdr) but the
-  // destruction of the pools results in a double free or corruption error
-  // which has been stubborn and the performance increase is negligable, so...
-  EVB::Fragment frag;
-  frag.s_header = hdr;
-  frag.s_pBody = malloc(pRItem->s_header.s_size);
-  memcpy(frag.s_pBody, pRItem, pRItem->s_header.s_size);
-  CFragIO::writeFragment(STDOUT_FILENO, &frag);
-  free(frag.s_pBody);
-  frag.s_pBody = nullptr; // Just to be extra safe...  
-}
+  EVB::pFragment p = allocateFragment(&hdr);
+  memcpy(p->s_pBody, pRItem, pRItem->s_header.s_size);
+  CFragIO::writeFragment(STDOUT_FILENO, p);
 
+  freeFragment(p);
+
+  
+}
 /**
  * writePhysicsEvent
  *

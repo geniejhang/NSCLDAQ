@@ -3,9 +3,8 @@
  * @brief QtScope main.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 
@@ -48,5 +47,5 @@ int main(int argc, char *argv[])
 
     Py_Finalize();
 
-    return EXIT_SUCCESS;
+    return 0;
 }

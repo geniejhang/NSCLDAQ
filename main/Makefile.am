@@ -27,16 +27,18 @@ if BUILD_DDAS
   DDASDIR=ddas
 endif
 
+SRSDIR=srs
+
 
 SUBDIRS = base caenfw-common servers base/dataflow \
 	daq utilities $(DOCDIR) \
-	sbs usb/common/configurableobject $(EPICSDIRS) $(USBDIR) $(DDASDIR) \
-	$(CAENSUPPORTDIRS) $(CAENNGDIR) \
+	sbs usb/common/configurableobject $(EPICSDIRS) $(USBDIR) $(DDASDIR) $(CAENSUPPORTDIRS) \
+	$(CAENNGDIR) $(SRSDIR) \
 	examples
 
 DIST_SUBDIRS = base caenfw-common servers base/dataflow daq utilities \
 	docbuild docconfig simplesetups sbs epics usb ddas \
-	caendigitizers examples caen-nextgen
+	caendigitizers examples caen-nextgen srs
 
 INTROFIGURES = @srcdir@/figures/intro-data-flow-diagram.png \
 	@srcdir@/figures/intro-data-flow-diagram-diagnostics.png
@@ -51,7 +53,11 @@ install-data-local:
 	$(INSTALL_SCRIPT) config.h @prefix@/include
 	$(INSTALL_SCRIPT) @top_builddir@/ddas/config_pixie16api.h @prefix@/include
 	touch @prefix@/pythonLibs/nscldaq/__init__.py
-	echo "Version: "NSCLDAQ-$(VERSION) built on `hostname` `date` > @prefix@/VERSION
+	echo "Version: "NSCLDAQ-$(VERSION) built on `hostname` `date` by `whoami` > @prefix@/VERSION
+	head  @top_builddir@/config.log| grep  -- --prefix >> @prefix@/VERSION
+	echo libtcl++ `(cd @top_builddir@/libtcl; @GIT@ status | head -1|cut -d" " -f4)` >> @prefix@/VERSION
+	echo unifiedformat `(cd @top_builddir@/unifiedformat; @GIT@ status |head -1| cut -d" " -f4)` >> @prefix@/VERSION
+	echo ddasformat `(cd @top_builddir@/ddasformat; @GIT@ status |head -1| cut -d" " -f4)` >> @prefix@/VERSION
 	$(INSTALL_DATA) @srcdir@/ChangeLog @prefix@
 	$(INSTALL_SCRIPT) daqsetup.bash @prefix@
 	$(INSTALL_DATA) @srcdir@/figures/*.png @prefix@/share/html/figures

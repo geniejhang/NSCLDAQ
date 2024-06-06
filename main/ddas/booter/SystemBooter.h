@@ -72,8 +72,8 @@ namespace DAQ {
 	public:
 	    /** @brief Constructor. */
 	    SystemBooter();
-	    /**
-	     * @brief Boot the entire system module-by-module in sequence.
+	    /*
+	     * @brief Boot the entire system.
 	     * @param config A configuration describing the system.
 	     * @param type Style of boot.
 	     * @throw CXIAException If Pixie16InitSystem() call returns 

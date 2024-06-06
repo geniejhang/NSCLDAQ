@@ -1,13 +1,14 @@
-/** 
- * @file CMyScaler.h
- * @brief A scaler class for DDAS.
- */
+/*********************************************************
+ Declaration of Scaler class for DDAS
+ Access statistics directly from the Pixie16 modules
+ H.L. Crawford 6/13/2010
+*********************************************************/
 
-#ifndef CMYSCALER_H
-#define CMYSCALER_H
+#ifndef MYSCALER_H
+#define MYSCALER_H
 
+#include <config.h>
 #include <CScaler.h>
-
 #include <vector>
 
 /**
@@ -57,8 +58,8 @@ public:
 private:
     unsigned short m_crate;  //!< Crate ID value.
     unsigned short m_module; //!< Module number.
-    double m_prevIC[16]; //!< Previous input counts (# raw fast triggers.)
-    double m_prevOC[16]; //!< Previous output counts (# accepted triggers) 
+    double m_prevIC[16];     //!< Previous input counts (# raw fast triggers.).
+    double m_prevOC[16];     //!< Previous output counts (# accepted triggers).
     std::vector<uint32_t> m_scalers; //!< Vector of scaler data for the module.
     Statistics m_statistics;         //!< Storage for calculated scaler data.
 
@@ -97,11 +98,7 @@ public:
     const Statistics& getStatistics() const { return m_statistics; }
     
 private:
-    /** 
-     * @brief Clear the run counters.
-     * @param[in,out] c Reference to the Counters struct to be cleared.
-     */
-    void clearCounters(Counters& c);
+  void clearCounters(Counters& c);
 };
 
 #endif
