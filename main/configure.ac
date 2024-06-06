@@ -521,7 +521,7 @@ then
 		[AC_MSG_NOTICE([Using previously incorporated unified format library at ${srcdir}/unifiedformat])
 		cp -r ${srcdir}/unifiedformat .],
 		[AC_MSG_NOTICE([Incorporating unified format for you])
-		${srcdir}/unifiedfmt-incorp.sh ${UNIFIED_FMT_VERSION}])
+		${srcdir}/unifiedfmt-incorp.sh])
 	rm -rf unifiedformat/build
 	AS_MKDIR_P(unifiedformat/build)	
 	AC_MSG_NOTICE([Building unified format])
@@ -541,7 +541,7 @@ then
 		[AC_MSG_NOTICE([Using previously incorprated ddasformat from the source tree at ${srcdir}/ddasformat])
 		cp -r ${srcdir}/ddasformat .],
 		[AC_MSG_NOTICE([Incorporating ddasformat for you])
-		${srcdir}/ddasfmt-incorp.sh ${DDAS_FMT_VERSION}])
+		${srcdir}/ddasfmt-incorp.sh])
 	rm -rf ddasformat/build
 	AS_MKDIR_P(ddasformat/build)
 	AC_MSG_NOTICE([Building DDAS format])
