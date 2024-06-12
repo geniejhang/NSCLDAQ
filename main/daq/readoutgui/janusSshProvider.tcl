@@ -414,7 +414,7 @@ proc ::JanusSSHPipe::_notIdle source {
 # @param source - id of source to end.
 #
 proc ::JanusSSHPipe::_attemptEnd source {
-    ::JanusSSHPipe::_send $source end
+    ::JanusSSHPipe::_send $source "echo S ENDMSG > /dev/tcp/localhost/50007"
     dict set ::JanusSSHPipe::activeProviders($source) idle true
 }
 ##
