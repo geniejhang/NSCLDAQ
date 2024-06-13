@@ -51,6 +51,7 @@ namespace DDASReadout {
     class BufferArena {
     private:
 	std::deque<ReferenceCountedBuffer*> m_BufferPool; //!< All buffers.
+	
     public:
 	/** @brief Destructor. */
 	virtual ~BufferArena();

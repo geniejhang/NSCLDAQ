@@ -100,13 +100,20 @@ namespace DAQ {
 	     */
 	    HardwareSpecification& getSpecification(int type);
 	    void resetToDefaults();
+	    /**
+	     * @brief Compute the hardware type from input specifications.
+	     * @param hdwrVersion Hardware revision.
+	     * @param adcFreq ADC sampling frequency.
+	     * @param adcRes  ADC bit resolution (e.g. 12, 14, etc.).
+	     * @return An enumerated hardware type.
+	     */
 	    int computeHardwareType(int hdwrVersion, int adcFreq, int adcRes);
 	    /**
 	     * @brief Create an enumerated hardware type from input 
 	     * specifications.
-	     * @param hdwrVersion      Hardware revision.
-	     * @param adcFreq          ADC sampling frequency.
-	     * @param adcRes           ADC bit resolution (e.g. 12, 14, etc.).
+	     * @param hdwrVersion Hardware revision.
+	     * @param adcFreq ADC sampling frequency.
+	     * @param adcRes  ADC bit resolution (e.g. 12, 14, etc.).
 	     * @param clockCalibration FPGA clock calibration in ns/clock tick.
 	     * @return An enumerated hardware type.
 	     */ 
