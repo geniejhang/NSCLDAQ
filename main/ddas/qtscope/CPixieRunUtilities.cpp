@@ -9,7 +9,6 @@
 #include <sstream>
 #include <thread>
 #include <chrono>
-#include <vector>
 #include <algorithm>
 
 #include <config.h>

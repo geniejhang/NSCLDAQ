@@ -393,7 +393,6 @@ int CMyEventSegment::GetCrateID() const
 void
 CMyEventSegment::synchronize()
 {
-    // Pixie16WriteSglModPar(paramName, paramValue, modNum).
     // Since in synch, we only have to set for the first module:
     
     int rv = Pixie16WriteSglModPar("SYNCH_WAIT", 1, 0);
