@@ -178,15 +178,6 @@ int CMyEndCommand::readOutRemainingData()
 		      << std::endl << std::flush;
         }
     }
-
-    /** 
-     * @todo (ASC 3/21/24): I believe we need to read here or else we drop 
-     * data on the floor which has accumulated in the FIFO since the last 
-     * trigger. I _think_ a single call to CExperiment::ReadEvent() should 
-     * read whatever's left in the FIFOs into the ring on end run. Then the 
-     * end run state change item is put into the ringbuffer and handled by 
-     * DDASSorter::processChunk().
-     */
     
     // All modules have their run stopped... hopefully successfully from the
     // API's point of view. In any event, we will read out the possible last
