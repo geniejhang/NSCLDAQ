@@ -31,7 +31,8 @@
 
 /**
  * @details
- * Base class registers the command. We need to save the event segment pointer.
+ * Base class registers the command. We need to save the event processor 
+ * pointer.
  */
 CSyncCommand::CSyncCommand(CTCLInterpreter& interp, CMyEventSegment* pSeg) :
     CTCLObjectProcessor(interp, "ddas_sync", true), m_pSegment(pSeg)
@@ -41,8 +42,14 @@ CSyncCommand::CSyncCommand(CTCLInterpreter& interp, CMyEventSegment* pSeg) :
  * @details
  * Chain to superclass for now.
  */
-CSyncCommand::~CSyncCommand() {}
+CSyncCommand::~CSyncCommand()
+{}
 
+/**
+ * @details
+ * * Ensure there are no more parameters.
+ * * Invoke the event segment's synchronize method.
+ */
 int
 CSyncCommand::operator()(
     CTCLInterpreter& interp, std::vector<CTCLObject>& objv

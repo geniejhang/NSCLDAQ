@@ -24,14 +24,13 @@
 #include <CVMEInterface.h>
 #include <RunState.h>
 #include <CXIAException.h>
+#include <CExperiment.h>
 #include "CMyEventSegment.h"
 
 CMyEndCommand::CMyEndCommand(
     CTCLInterpreter& rInterp, CMyEventSegment *pSeg, CExperiment* pExp
-    ) : CEndCommand(rInterp) 
+    ) : CEndCommand(rInterp), m_pSeg(pSeg), m_pExp(pExp)
 {
-    m_pSeg = pSeg;
-    m_pExp = pExp;
     m_nModules = m_pSeg->GetNumberOfModules();
 }
 
@@ -140,15 +139,6 @@ int CMyEndCommand::readOutRemainingData()
 	return TCL_ERROR;
     }
 
-    int count = 0;
-    unsigned long nFIFOWords[24];
-
-    // Clear counters to 0 (counters keep track of how many words each 
-    // module has read)
-    for (int i = 0; i < m_nModules; i++) {
-        nFIFOWords[i] = 0;
-    } 
-
     usleep(100);
     
     // Make sure all modules indeed finish their run successfully.
@@ -156,7 +146,7 @@ int CMyEndCommand::readOutRemainingData()
         // For each module, check to see if a run is still in progress in the
 	// ith module. If it is still running, wait a little bit and check
 	// again. If after 10 attempts, we stop trying. Run ending failed.
-        count = 0;
+        int retries = 0;
         do {
 	    try {
 		int retval = Pixie16CheckRunStatus(i);
@@ -179,30 +169,25 @@ int CMyEndCommand::readOutRemainingData()
 	    catch (const CXIAException& e) {
 		std::cerr << e.ReasonText() << std::endl;
 	    }
-            count ++;
+            retries ++;
             usleep(100);
-        } while (count < 10);
+        } while (retries < 10);
 
-        if (count == 10) {
+        if (retries == 10) {
             std::cout << "End run in module " << i << " failed"
 		      << std::endl << std::flush;
         }
     }
-
-    /** 
-     * @todo (ASC 3/21/24): I believe we need to read here or else we drop 
-     * data on the floor which has accumulated in the FIFO since the last 
-     * trigger. I _think_ a single call to CExperiment::ReadEvent() should 
-     * read whatever's left in the FIFOs into the ring on end run. Then the 
-     * end run state change item is put into the ringbuffer and handled by 
-     * DDASSorter::processChunk(). Either here or CMyExperiment::onEnd().
-     */
     
-    // All modules have their run stopped successfully. Now read out the 
-    // possible last words from the external FIFO, and get statistics.
+    // All modules have their run stopped... hopefully successfully from the
+    // API's point of view. In any event, we will read out the possible last
+    // words from the external FIFO and get statistics.
+
+    m_pExp->ReadEvent(); // Final read.
+    
     std::ofstream outputfile;
     outputfile.open("EndofRunScalers.txt", std::ios::app);
-
+    
     for(int i = 0; i < m_nModules; i++) {
         // Get final statistics:
 	std::vector<unsigned int> statistics(Pixie16GetStatisticsSize(), 0);
@@ -244,7 +229,7 @@ int CMyEndCommand::endRun()
 {
     RunState* pState = RunState::getInstance();
 
-    // To end a run we must have no mor command parameters
+    // To end a run we must have no more command parameters
     // and the state must be either active or paused:
 
     bool okToEnd = (
@@ -253,9 +238,9 @@ int CMyEndCommand::endRun()
 	);
 
     // In case any of these end run stages fail, they will be rescheduled
-    // and picked up again
+    // and picked up again.
     if(okToEnd) { 
-	// we will poll trying to lock the mutex so that we have a better
+	// We will poll trying to lock the mutex so that we have a better
 	// chance of acquiring it.
 	const int nAllowedAttempts = 10;
 	int nAttemptsMade = 0;

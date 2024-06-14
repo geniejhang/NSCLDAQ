@@ -37,7 +37,7 @@ DAQ::DDAS::SystemBooter::SystemBooter() :
 */
 void DAQ::DDAS::SystemBooter::boot(Configuration &config, BootType type)
 {
-    std::cout << "------------------------\n";
+    std::cout << "---------------------------\n";
     std::cout << "Initializing PXI access... \n";
     std::cout.flush();
 

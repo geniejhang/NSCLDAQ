@@ -66,40 +66,6 @@ getRegistry()
     }
 }
 
-//////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief Check if two HardwareSpecifications are the same.
- *
- * Two HardwareSpecifications are equal to one another iff the ADC frequency, 
- * ADC resolution, and revision number are the same.
- *
- * @param lhs  Left hand side specs.
- * @param rhs  Right hand side specs.
- *
- * @return bool
- * @retval true   If lhs and rhs are equal.
- * @retval false  Otherwise.
- */
-bool
-operator==(
-    const HR::HardwareSpecification& lhs, const HR::HardwareSpecification& rhs
-    )
-{
-    return ((lhs.s_adcFrequency == rhs.s_adcFrequency)
-            && (lhs.s_adcResolution == rhs.s_adcResolution)
-            && (lhs.s_hdwrRevision == rhs.s_hdwrRevision));
-}    
-
-/*!
- * \brief Configure the specifications associated with a hardware type.
- *
- * This method replaces whatever specification prexisted that was associated 
- * with the hardware type.
- * 
- * \param type  The enumerated hardware type.
- * \param spec  A specification to assign.
- */
 void
 DAQ::DDAS::HardwareRegistry::configureHardwareType(
     int type, const DAQ::DDAS::HardwareRegistry::HardwareSpecification &spec
@@ -108,17 +74,6 @@ DAQ::DDAS::HardwareRegistry::configureHardwareType(
     getRegistry()[type] = spec;
 }
 
-/*!
- * \brief Retrieve a reference to the current hdwr specification for a 
- * hardware type.
- *
- * \param type  The enumerated hardware type.
- *
- * \throws std::runtime_error  If no specification exists for the hardware 
- *   type provided.
- *
- * \return HardwareSpecification&  Reference to a hardware specificiation.
- */
 DAQ::DDAS::HardwareRegistry::HardwareSpecification&
 DAQ::DDAS::HardwareRegistry::getSpecification(int type)
 {
@@ -135,9 +90,6 @@ DAQ::DDAS::HardwareRegistry::getSpecification(int type)
     return pFound->second;
 }
 
-/*!
- * \brief Reset the contents of the registry to the default state
- */
 void
 DAQ::DDAS::HardwareRegistry::resetToDefaults()
 {
@@ -147,16 +99,6 @@ DAQ::DDAS::HardwareRegistry::resetToDefaults()
     setUpRegistry(registry);
 }
 
-
-/*!
- * \brief Lookup a hardware type enumeration given info about a module
- *
- * \param hdwrVersion  Hardware revision.
- * \param adcFreq      ADC sampling frequency.
- * \param adcRes       ADC resolution (e.g. 12, 14, etc.).
- *
- * \return int  An enumerated hardware type.
- */
 int
 DAQ::DDAS::HardwareRegistry::computeHardwareType(
     int hdwrVersion, int adcFreq, int adcRes
@@ -179,16 +121,6 @@ DAQ::DDAS::HardwareRegistry::computeHardwareType(
     }
 }
 
-/*!
- * \brief Create an enumerated hardware type from input specifications.
- *
- * \param hdwrVersion       Hardware revision.
- * \param adcFreq           ADC sampling frequency.
- * \param adcRes            ADC resolution (e.g. 12, 14, etc.).
- * \param clockCalibration  FPGA clock calibration in ns/clock tick.
- *
- * \return int  An enumerated hardware type.
- */   
 int
 DAQ::DDAS::HardwareRegistry::createHardwareType(
     int hdwrVersion, int adcFreq, int adcRes, double clockCalibration
@@ -205,4 +137,16 @@ DAQ::DDAS::HardwareRegistry::createHardwareType(
     }
 		
     return type;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+bool
+operator==(
+    const HR::HardwareSpecification& lhs, const HR::HardwareSpecification& rhs
+    )
+{
+    return ((lhs.s_adcFrequency == rhs.s_adcFrequency)
+            && (lhs.s_adcResolution == rhs.s_adcResolution)
+            && (lhs.s_hdwrRevision == rhs.s_hdwrRevision));
 }

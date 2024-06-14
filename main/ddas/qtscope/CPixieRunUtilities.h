@@ -8,7 +8,6 @@
 #define CPIXIERUNUTILITIES_H
 
 #include <vector>
-#include <random>
 
 /**
  * @addtogroup utilities libPixieUtilities.so

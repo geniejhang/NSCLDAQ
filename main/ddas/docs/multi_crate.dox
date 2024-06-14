@@ -205,7 +205,7 @@ Refer to @ref sec_singlecrate_sshkeys in the single-crate tutorial for instructi
 @par
 Refer to @ref sec_singlecrate_stagearea in the single-crate tutorial for instructions on how to setup a stagearea.
 
-@subsection sec_singlecrate_datasource Setting Up the Data Sources
+@subsection sec_multicrate_datasource Setting Up the Data Sources
 @par
 Refer to @ref sec_singlecrate_datasource in the single-crate tutorial for instructions on how to set up an SSHPipe data source in the ReadoutGUI. In a multi-crate system, one data source is needed for each crate:
 

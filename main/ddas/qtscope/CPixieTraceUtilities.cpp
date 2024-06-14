@@ -33,6 +33,7 @@ CPixieTraceUtilities::CPixieTraceUtilities() :
  *    standard deviation estimated from the median absolute deviation.
  * 2. The max/min value differs from the median value by at least 
  *    m_validAmplitude ADC units.
+ * @todo (ASC 6/14/24): Improved baseline estimation for validation. 
  */ 
 int
 CPixieTraceUtilities::ReadTrace(int module, int channel)
