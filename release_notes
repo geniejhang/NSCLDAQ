@@ -3,6 +3,7 @@
 * DDAS hit and DDAS unpacker refactored into an external module and automatically incorporated during build. See https://github.com/FRIBDAQ/DDASFormat.
 * Updated DDAS code documentation and new DDAS tutorials.
 * Updated DDAS codebase for XIA API 4 transition. NOTE/WARNING: Changes are NOT back-compatible with XIA API 2 and will not work with FRIBDAQ buster images.
+* Janus datasource bug fix
 == 12.1-pre2 ==
 
 == 12.1-pre1 ==
