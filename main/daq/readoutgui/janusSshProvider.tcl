@@ -31,6 +31,7 @@ package require ssh
 package require Wait
 package require ReadoutGUIPanel
 package require InstallRoot
+package require portAllocator
 
 # Establish the namespace in which the methods live:
 
@@ -55,6 +56,7 @@ namespace eval ::JanusSSHPipe {
     #    parameterization - the parameterization dict.
     #
     variable activeProviders
+    variable tcpPipe
 }
 #-----------------------------------------------------------------------------
 #
@@ -125,7 +127,11 @@ proc ::JanusSSHPipe::start params {
     fconfigure [lindex $pipeinfo 1] -blocking 0 -buffering none -buffersize 10
     fileevent [lindex $pipeinfo 1] readable [list ::JanusSSHPipe::_readable $sid]
 
-    ::JanusSSHPipe::_send $sid "tclsh $::env(DAQROOT)/TclLibs/Stager/janusCommunicator.tcl $program $configfile &"
+    set mamanger [portAllocator %AUTO%]
+    set port [$manager allocatePort JanusC]
+    set ::JanusSSHPipe::tcpPipe "/dev/tcp/localhost/$port"
+
+    ::JanusSSHPipe::_send $sid "tclsh $::env(DAQROOT)/TclLibs/Stager/janusCommunicator.tcl $port $program $configfile &"
 }
 ##
 # check
@@ -158,7 +164,7 @@ proc ::JanusSSHPipe::stop source {
 	puts "Attempting to end."
         ::JanusSSHPipe::_attemptEnd $source
     }
-    ::JanusSSHPipe::_send $source "echo q ENDMSG > /dev/tcp/localhost/50007" 
+    ::JanusSSHPipe::_send $source "echo q ENDMSG > $::JanusSSHPipe::tcpPipe"
     #  For good measure and in case we can't do an end, kill-9 it
     
     catch {exec kill -9 [dict get $::JanusSSHPipe::activeProviders($source) sshpid]}
@@ -191,14 +197,14 @@ proc ::JanusSSHPipe::begin {source runNum title} {
     
     # Set the run metadata title is in [list] to quote it properly.:
     
-    ::JanusSSHPipe::_send $source "echo i[dict get $sourceInfo parameterization janussourceid] ENDMSG > /dev/tcp/localhost/50007"
-    ::JanusSSHPipe::_send $source "echo B[dict get $sourceInfo parameterization ring] ENDMSG > /dev/tcp/localhost/50007"
-    ::JanusSSHPipe::_send $source "echo N$runNum ENDMSG > /dev/tcp/localhost/50007"
-    ::JanusSSHPipe::_send $source "echo L$title ENDMSG > /dev/tcp/localhost/50007"
+    ::JanusSSHPipe::_send $source "echo i[dict get $sourceInfo parameterization janussourceid] ENDMSG > $::JanusSSHPipe::tcpPipe"
+    ::JanusSSHPipe::_send $source "echo B[dict get $sourceInfo parameterization ring] ENDMSG > $::JanusSSHPipe::tcpPipe"
+    ::JanusSSHPipe::_send $source "echo N$runNum ENDMSG > $::JanusSSHPipe::tcpPipe"
+    ::JanusSSHPipe::_send $source "echo L$title ENDMSG > $::JanusSSHPipe::tcpPipe"
     
     # Start the run and update our state:
     
-    ::JanusSSHPipe::_send $source "echo s ENDMSG > /dev/tcp/localhost/50007" 
+    ::JanusSSHPipe::_send $source "echo s ENDMSG > $::JanusSSHPipe::tcpPipe"
 
     dict set sourceInfo idle false
     set ::JanusSSHPipe::activeProviders($source) $sourceInfo
@@ -246,7 +252,7 @@ proc ::JanusSSHPipe::resume source {
 proc ::JanusSSHPipe::end source {
     ::JanusSSHPipe::_complainIfIdle $source end
     
-    ::JanusSSHPipe::_send $source "echo S ENDMSG > /dev/tcp/localhost/50007"
+    ::JanusSSHPipe::_send $source "echo S ENDMSG > $::JanusSSHPipe::tcpPipe"
     
     dict set ::JanusSSHPipe::activeProviders($source) idle true
 }
@@ -414,7 +420,7 @@ proc ::JanusSSHPipe::_notIdle source {
 # @param source - id of source to end.
 #
 proc ::JanusSSHPipe::_attemptEnd source {
-    ::JanusSSHPipe::_send $source "echo S ENDMSG > /dev/tcp/localhost/50007"
+    ::JanusSSHPipe::_send $source "echo S ENDMSG > $::JanusSSHPipe::tcpPipe"
     dict set ::JanusSSHPipe::activeProviders($source) idle true
 }
 ##

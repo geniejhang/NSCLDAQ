@@ -18,13 +18,14 @@
 # @author Genie Jhang <changj@frib.msu.edu>
 
 # Initialize the server socket
-socket -server Connection 50007
+set port [lindex $argv 0]
+socket -server Connection $port
 
 # Running JanusC
-if {$argc > 1} {
-	exec [lindex $argv 0] -g -d -c[lindex $argv 1] &
+if {$argc > 2} {
+	exec [lindex $argv 1] -g -d -c[lindex $argv 2] -p$port &
 } else {
-	exec [lindex $argv 0] -g -d &
+	exec [lindex $argv 1] -g -d -p$port &
 }
 
 set clients {}
