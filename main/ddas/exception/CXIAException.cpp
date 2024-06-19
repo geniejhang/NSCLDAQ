@@ -6,7 +6,6 @@
 #include "CXIAException.h"
 
 #include <cstdio>
-#include <iostream>
 
 #include <config.h>
 #include <config_pixie16api.h>
