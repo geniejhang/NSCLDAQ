@@ -161,7 +161,7 @@ class MainWindow(QMainWindow):
 
         self.sys_toolbar = toolbar_factory.create("sys")
         self.acq_toolbar = toolbar_factory.create("acq")
-        self.mplplot = Plot(toolbar_factory, fit_factory)
+        self.mplplot = Plot(self.dsp_mgr, toolbar_factory, fit_factory)
 
         # Set initial run state information from the manager and toolbar:       
         self.run_active = False
@@ -595,7 +595,7 @@ class MainWindow(QMainWindow):
                     self.trace_utils.read_trace(module, i)
 
                 data = self.trace_utils.get_trace_data()
-                self.mplplot.draw_trace_data(data, 4, 4, i+1)
+                self.mplplot.draw_trace_data(data, module, i, 4, 4, i+1)
                     
                 # Keep the single channel trace information:                
                 if i == channel:
@@ -614,7 +614,7 @@ class MainWindow(QMainWindow):
                 self.trace_utils.read_trace(module, channel)
 
             data = self.trace_utils.get_trace_data()
-            self.mplplot.draw_trace_data(data)
+            self.mplplot.draw_trace_data(data, module, channel)
             
             # Keep the single channel trace information:            
             self.trace_info.update({
