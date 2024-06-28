@@ -56,6 +56,7 @@ $DAQBIN/ringselector --source=tcp://localhost/myring | $DAQBIN/ddasdumper --sour
 @par
 The `--format` option, while not required, is important to consider. This option specifies which input data format is expected by ddasdumper. Three NSCLDAQ data formats exist: v10, v11, and v12, where 10, 11, and 12 refer to the major version of the NSCLDAQ software that each format is associated with. Each format version has its own set of class libraries for producing and handling data from it. The value passed to the `--format` option specifies which major version of the NSCLDAQ software was used to initially acquire the data. If the wrong format version is supplied, the program will exit with an error, as it cannot properly decode the data.
 
+@par
 The other options are described in the table below:
 
 | Option |  Description |

@@ -47,6 +47,8 @@ class Plot(QWidget):
         histograms are rebinned.
     bin_width : int
         Bin width in ADC units/bin.
+    mgr : DSPManager
+        DSP manager for calls to XIA API.
 
     Methods
     -------
@@ -66,11 +68,13 @@ class Plot(QWidget):
         Draw a test figure with a random number of subplots.
     """
     
-    def __init__(self, toolbar_factory, fit_factory, *args, **kwargs):
+    def __init__(self, mgr, toolbar_factory, fit_factory, *args, **kwargs):
         """Plot class constructor.
 
         Arguments
         ---------
+        mgr : DSPManager
+            DSP manager for calls to XIA API.
         toolbar_factory : ToolBarFactory
             Factory for implemented toolbars.
         fit_factory : FitFactory 
@@ -81,6 +85,11 @@ class Plot(QWidget):
         # Get the logger instance:
 
         self.logger = logging.getLogger("qtscope_logger")
+
+        # We need the manager to read the XDT value which sets the
+        # default trace bin width:
+
+        self.mgr = mgr
 
         # Data storage and presentation:
         
@@ -137,13 +146,17 @@ class Plot(QWidget):
             self._update_formula
         )
         
-    def draw_trace_data(self, data, nrows=1, ncols=1, idx=1):
+    def draw_trace_data(self, data, mod, chan, nrows=1, ncols=1, idx=1):
         """Draws an ADC trace on the plot canvas.
 
         Parameters
         ----------
         data : list
             List of trace data values.
+        mod : int
+            Trace data from this module.
+        chan : int
+            Channel number on the module.
         nrows : int  
             Number of subplot rows (optional, default=1).
         ncols : int  
@@ -155,7 +168,8 @@ class Plot(QWidget):
         self.bin_width = 1 # Trace data isn't binned.
         ax = self.figure.add_subplot(nrows, ncols, idx)
         ax.plot(self.raw_data[idx-1], drawstyle="steps-post")
-        ax.set_xlabel("Sample number (60 ns/sample)")
+        xdt = self.mgr.get_chan_par(mod, chan, "XDT")*1000 # in ns.
+        ax.set_xlabel(f"Sample number ({xdt} ns/sample)")
         ax.set_ylabel("Voltage (ADC units)")
         ax.set_xlim(0, xia.MAX_ADC_TRACE_LEN)
         self._set_yscale(ax)
