@@ -126,6 +126,9 @@ CMDPP16QDC::onAttach(CReadoutModule& configuration)
   m_pConfiguration -> addIntegerParameter("-pulseramplitude",  0,  0xfff, 400);
   m_pConfiguration -> addIntegerParameter("-triggersource", 0, 0x400, 0x400);
   m_pConfiguration -> addIntegerParameter("-triggeroutput", 0, 0x400, 0x400);
+	m_pConfiguration -> addBooleanParameter("-monitoron",     false);
+	m_pConfiguration -> addIntegerParameter("-setmonitorch",  0,    15,     0);
+	m_pConfiguration -> addIntegerParameter("-setwave",       0,     3,     0);
  
   m_pConfiguration -> addIntListParameter("-signalwidth",    0, 0x03ff,  8,  8,  8,   30);
   m_pConfiguration -> addIntListParameter("-inputamplitude", 0, 0xffff,  8,  8,  8, 1000);
@@ -200,6 +203,9 @@ CMDPP16QDC::Initialize(CVMUSB& controller)
   bool           firsthit            = m_pConfiguration -> getBoolParameter("-firsthit");
   bool           testpulser          = m_pConfiguration -> getBoolParameter("-testpulser");
   uint16_t       pulseramplitude     = m_pConfiguration -> getIntegerParameter("-pulseramplitude");
+	bool           monitoron           = m_pConfiguration -> getBoolParameter("-monitoron");
+	uint16_t       monitorchannel      = m_pConfiguration -> getIntegerParameter("-setmonitorch");
+	uint16_t       monitorwave         = m_pConfiguration -> getIntegerParameter("-setwave");
 
   auto           signalwidths        = m_pConfiguration -> getIntegerList("-signalwidth");
   auto           inputamplitude      = m_pConfiguration -> getIntegerList("-inputamplitude");
@@ -276,6 +282,10 @@ CMDPP16QDC::Initialize(CVMUSB& controller)
 
   list.addWrite16(base + StartAcq,          initamod, 1);
   list.addWrite16(base + ReadoutReset,      initamod, 1);
+
+	list.addWrite16(base + MonSwitch,         initamod, monitoron);
+	list.addWrite16(base + SetMonChannel,     initamod, monitorchannel);
+	list.addWrite16(base + SetWave,           initamod, monitorwave);
 
   char readBuffer[100];		// really a dummy as these are all write...
   size_t bytesRead;
@@ -648,6 +658,27 @@ CMDPP16QDC::printRegisters(CVMUSB& controller)
     cerr << "Error in reading register" << endl;
   } else {
     cout << setw(30) << "Trigger Output: " << data << " (0x" << std::hex << data << std::dec << ")" << endl;
+  }
+
+  status = controller.vmeRead16(base + MonSwitch, initamod, &data);
+  if (status < 0) {
+    cerr << "Error in reading register" << endl;
+  } else {
+    cout << setw(30) << "Monitor On: " << data << endl;
+  }
+
+  status = controller.vmeRead16(base + SetMonChannel, initamod, &data);
+  if (status < 0) {
+    cerr << "Error in reading register" << endl;
+  } else {
+    cout << setw(30) << "Monitor Channel: " << data << endl;
+  }
+
+  status = controller.vmeRead16(base + SetWave, initamod, &data);
+  if (status < 0) {
+    cerr << "Error in reading register" << endl;
+  } else {
+    cout << setw(30) << "Monitor Wave: " << data << endl;
   }
   
   cout << endl;
