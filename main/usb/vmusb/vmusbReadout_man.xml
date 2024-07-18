@@ -7961,6 +7961,42 @@ mdpp32qdc cget <replaceable>name</replaceable>
                  </varlistentry>
                  <varlistentry>
                      <term>
+                         <option>-monitoron</option>
+                         <replaceable>bool</replaceable>
+                     </term>
+                     <listitem>
+										 </listitem>
+                         <para>
+                             Switch monitor on
+                         </para>
+										 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                         <option>-setmonitorch</option>
+                         <replaceable>int 0-31</replaceable>
+                     </term>
+                     <listitem>
+										 </listitem>
+                         <para>
+                             Set channel to monitor
+                         </para>
+										 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                         <option>-setwave</option>
+                         <replaceable>int 0-3</replaceable>
+                     </term>
+                     <listitem>
+										 </listitem>
+                         <para>
+                             Set wave to monitior
+                         </para>
+										 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
                          <option>-signalwidth</option>
                          <replaceable>int[8] 0-1023 (FWHM value in ns)</replaceable>
                      </term>
@@ -8214,6 +8250,9 @@ set testPulser          1
 set pulserAmplitude     400
 set triggerSource       0x100
 set triggerOutput       0x100
+set monitorOn           0
+set monitorCh           0
+set monitorWave         0
 
 mdpp32qdc create qdc -base 0x00030000
 mdpp32qdc config qdc -signalwidth $signalWidth \
@@ -8231,6 +8270,9 @@ mdpp32qdc config qdc -signalwidth $signalWidth \
                      -pulseramplitude $pulserAmplitude \
                      -triggersource $triggerSource \
                      -triggeroutput $triggerOutput \
+                     -monitoron $monitorOn \
+                     -setmonitorch $monitorCh \
+                     -setwave $monitorWave \
                      -printregisters 1
                  </programlisting>
              </example>
@@ -8848,6 +8890,42 @@ mdpp16qdc cget <replaceable>name</replaceable>
                  </varlistentry>
                  <varlistentry>
                      <term>
+                         <option>-monitoron</option>
+                         <replaceable>bool</replaceable>
+                     </term>
+                     <listitem>
+										 </listitem>
+                         <para>
+                             Switch monitor on
+                         </para>
+										 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                         <option>-setmonitorch</option>
+                         <replaceable>int 0-31</replaceable>
+                     </term>
+                     <listitem>
+										 </listitem>
+                         <para>
+                             Set channel to monitor
+                         </para>
+										 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                         <option>-setwave</option>
+                         <replaceable>int 0-3</replaceable>
+                     </term>
+                     <listitem>
+										 </listitem>
+                         <para>
+                             Set wave to monitior
+                         </para>
+										 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
                          <option>-signalwidth</option>
                          <replaceable>int[8] 0-1023 (FWHM value in ns)</replaceable>
                      </term>
@@ -9101,6 +9179,9 @@ set testPulser          1
 set pulserAmplitude     400
 set triggerSource       0x100
 set triggerOutput       0x100
+set monitorOn           0
+set monitorCh           0
+set monitorWave         0
 
 mdpp16qdc create qdc -base 0x00030000
 mdpp16qdc config qdc -signalwidth $signalWidth \
@@ -9118,6 +9199,9 @@ mdpp16qdc config qdc -signalwidth $signalWidth \
                      -pulseramplitude $pulserAmplitude \
                      -triggersource $triggerSource \
                      -triggeroutput $triggerOutput \
+                     -monitoron $monitorOn \
+                     -setmonitorch $monitorCh \
+                     -setwave $monitorWave \
                      -printregisters 1
                  </programlisting>
              </example>
@@ -9687,6 +9771,42 @@ mdpp32scp cget <replaceable>name</replaceable>
                  </varlistentry>
                  <varlistentry>
                      <term>
+                         <option>-monitoron</option>
+                         <replaceable>bool</replaceable>
+                     </term>
+                     <listitem>
+										 </listitem>
+                         <para>
+                             Switch monitor on
+                         </para>
+										 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                         <option>-setmonitorch</option>
+                         <replaceable>int 0-31</replaceable>
+                     </term>
+                     <listitem>
+										 </listitem>
+                         <para>
+                             Set channel to monitor
+                         </para>
+										 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
+                         <option>-setwave</option>
+                         <replaceable>int 0-3</replaceable>
+                     </term>
+                     <listitem>
+										 </listitem>
+                         <para>
+                             Set wave to monitior
+                         </para>
+										 </listitem>
+                 </varlistentry>
+                 <varlistentry>
+                     <term>
                          <option>-tfintdiff</option>
                          <replaceable>int[8] 1-127</replaceable>
                      </term>
@@ -9877,6 +9997,9 @@ set testPulser          0
 set pulserAmplitude     400
 set triggerSource       0x100
 set triggerOutput       0x100
+set monitorOn           0
+set monitorCh           0
+set monitorWave         0
 
 mdpp32scp create scp -base 0x00030000
 mdpp32scp config scp -tfintdiff $tfintdiff \
@@ -9893,6 +10016,9 @@ mdpp32scp config scp -tfintdiff $tfintdiff \
                      -pulseramplitude $pulserAmplitude \
                      -triggersource $triggerSource \
                      -triggeroutput $triggerOutput \
+                     -monitoron $monitorOn \
+                     -setmonitorch $monitorCh \
+                     -setwave $monitorWave \
                      -printregisters 1
                  </programlisting>
              </example>
