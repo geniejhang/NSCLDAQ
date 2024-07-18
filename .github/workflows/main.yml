@@ -17,13 +17,13 @@ on:
       - '**/ChangeLog'
 
 jobs:
-  buster:
-     uses: ./.github/workflows/build.yml
-     with:
-       os-version: buster
-       packaging: true
-       dist-packaging: ${{ startsWith(github.ref, 'refs/tags') }}
-     secrets: inherit
+#  buster:
+#     uses: ./.github/workflows/build.yml
+#     with:
+#       os-version: buster
+#       packaging: true
+#       dist-packaging: ${{ startsWith(github.ref, 'refs/tags') }}
+#     secrets: inherit
   bullseye:
     uses: ./.github/workflows/build.yml
     with:
