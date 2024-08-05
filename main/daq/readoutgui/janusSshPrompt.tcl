@@ -55,8 +55,9 @@ namespace eval ::JanusSSHPipe {}
 #   Sets the default parameter value.  See the table above.
 #
 proc ::JanusSSHPipe::setParamDefaults {} {
+    Configuration::Set JanusSSHPipeSourceID "0"
     Configuration::Set JanusSSHPipeHost     "localhost"
-    Configuration::Set JanusSSHPipeProgram  ""
+    Configuration::Set JanusSSHPipePort     "41234"
 }
 ##
 #  ::JanusSSHPipe::paramEnvironmentOverrides
@@ -64,8 +65,6 @@ proc ::JanusSSHPipe::setParamDefaults {} {
 #  Apply any environment variables that override the defaults.
 #
 proc ::JanusSSHPipe::paramEnvironmentOverrides {} {
-    Configuration::readEnvironment JanusSSHPipeHost DAQHOST
-    Configuration::readEnvironment JanusSSHPipeProgram  RDOFILE
 }
 
 #
@@ -88,17 +87,21 @@ proc ::JanusSSHPipe::paramEnvironmentOverrides {} {
 #
 # LAYOUT:
 #    +--------------------------------------------------------------------+
-#    | Host:   [ entry widget ]                                           |
-#    | Readout:[ entry widget ]  <Browse...>                              |
-#    | ConfigFile: [ entry widget ] <Browse...>                           |
+#    | Client Script: [ entry widget ]  <Browse...>                       |
+#    |   Source ID:   [ entry widget ]                                    |
+#    | Server Host:   [ entry widget ]                                    |
+#    | Server Port:   [ entry widget ]                                    |
+#    | Output Ring:   [ entry widget ]                                    |
 #    +--------------------------------------------------------------------+
 #    | <Ok>   <Cancel>                                                    |
 #    +--------------------------------------------------------------------+
 #
 # OPTIONS:
-#   -host        - Name of the host the program runs on.
-#   -program     - Path to the readout program that is run on the ssh pipe.
-#   -configfile  - Janus_Config.txt with the absolute path
+#   -program       - Absolute path of client python script
+#   -janussourceid - Source ID to use for the Janus datasource
+#   -host          - Host name the client script connects to
+#   -port          - Port number the client script connects to
+#   -ring          - Output RingBuffer name
 #
 # METHODS
 #   modal    - Block until either OK or Cancel has been clicked (or the dialog
@@ -108,10 +111,10 @@ snit::widgetadaptor ::JanusSSHPipe::ParameterPromptDialog {
     component wrapper
     component form
     
+    option -program
 		option -janussourceid -default 0
-    option -host       
-    option -program    
-    option -configfile
+    option -host          -default localhost
+    option -port          -default 41234
 		option -ring
     
     delegate method modal to wrapper
@@ -129,33 +132,29 @@ snit::widgetadaptor ::JanusSSHPipe::ParameterPromptDialog {
     #
     constructor args {
         installhull using toplevel
+        set options(-program)       ""
         set options(-janussourceid) "0"
         set options(-host)          [Configuration::get JanusSSHPipeHost]
-        set options(-program)       [Configuration::get JanusSSHPipeProgram]
-        set options(-configfile)    ""
-        set options(-ring)          "janus"
+        set options(-port)          [Configuration::get JanusSSHPipePort]
+        set options(-ring)          ""
         
         install wrapper using DialogWrapper $win.wrapper
         install form using $wrapper controlarea
         set f $form
         
-        textprompt $f.janussourceid -text {Source ID:} -textvariable [myvar options(-janussourceid)]
-        textprompt $f.host -text {Host name:} -textvariable [myvar options(-host)]
-        
-        textprompt $f.program -text {Readout program:} \
+        textprompt $f.program -text {Client script:} \
             -textvariable [myvar options(-program)]
         ttk::button $f.findprogram  -text Browse... -command [mymethod _browseProgram]
         
-        textprompt $f.configfile -text {Janus config file:} \
-            -textvariable  [myvar options(-configfile)]
-        ttk::button $f.findconfigfile  -text Browse... -command [mymethod _browseConfigFile]
-
+        textprompt $f.janussourceid -text {Source ID:} -textvariable [myvar options(-janussourceid)]
+        textprompt $f.host -text {Server Host:} -textvariable [myvar options(-host)]
+        textprompt $f.port -text {Server Port:} -textvariable [myvar options(-port)]
         textprompt $f.ring -text {Output Ring:} -textvariable [myvar options(-ring)]
 
+        grid $f.program $f.findprogram
 				grid $f.janussourceid
         grid $f.host
-        grid $f.program $f.findprogram
-        grid $f.configfile $f.findconfigfile
+        grid $f.port
         grid $f.ring
         
         pack $wrapper
@@ -169,66 +168,18 @@ snit::widgetadaptor ::JanusSSHPipe::ParameterPromptDialog {
     #
     
     ##
-    # _browseWD
-    #
-    #   Browse for a directory to use as the cwd.
-    #   The result is set in the $form.dir field.
-    #   That field is assumed to  not be disbled because the browse button
-    #   -state is coupled to that of the entry.
-    #
-    method _browseWD      {} {
-        #
-        #  Initial dir is by priority
-        #  - The current value.
-        #  - The program's directory if it has one.
-        #  - The current working directory if not
-        
-        set programPath [$form.program get]
-        if {[$form.dir get] ne ""} {
-            set initialdir [file normalize [$form.dir get]]
-        } elseif {[$form.program get] ne ""} {
-            set initialdir [file dirname [$form.program get]]
-        } else {
-            set initialdir [pwd]
-        }
-        
-        set wd [tk_chooseDirectory -initialdir $initialdir -mustexist true \
-            -parent $win -title "Choose working directory"]
-        if {$wd ne ""} {
-            $form.dir delete 0 end
-            $form.dir insert end $wd
-        }
-    }
-
-    ##
     # _browseProgram
     #    Use tk_getSaveFile to select a readout program.
     #
     method _browseProgram {} {
         set filename [tk_getOpenFile -title {Choose Readout} -parent $win \
             -defaultextension "" -filetypes [list \
-                {{Exectuable files} *}            \
+                {{Python scripts} .py}            \
             ]]
         if {$filename ne ""} {
             set f [$wrapper controlarea]
             $f.program delete 0 end
             $f.program insert end $filename
-        }
-    }
-
-    ##
-    # _browseConfigFile
-    #    Use tk_getSaveFile to select a Janus_Config file.
-    #
-    method _browseConfigFile {} {
-        set filename [tk_getOpenFile -title {Choose Config File} -parent $win \
-            -defaultextension "" -filetypes [list \
-                {{Config files} .txt}            \
-            ]]
-        if {$filename ne ""} {
-            set f [$wrapper controlarea]
-            $f.configfile delete 0 end
-            $f.configfile insert end $filename
         }
     }
 }
@@ -247,8 +198,8 @@ proc ::JanusSSHPipe::promptParameters {} {
     set action [.janussshpipeprompt modal]
     if {$action eq "Ok"} {
         set result [::JanusSSHPipe::parameters]
-        array set optionlookup [list janussourceid -janussourceid host -host path -program \
-            configfile -configfile ring -ring]
+        array set optionlookup [list sourceid -janussourceid host -host port -port \
+				    program -program ring -ring]
         dict for {key value} $result {
           set val [.janussshpipeprompt cget $optionlookup($key)]
             dict lappend result $key [list] [string trim $val]

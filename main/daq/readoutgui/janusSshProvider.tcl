@@ -37,10 +37,10 @@ package require portAllocator
 
 namespace eval ::JanusSSHPipe {
     variable parameterization [dict create \
-        janussourceid [list {Janus source ID}]    \
-        host [list {Host name}]             \
-        path [list {Path to executable}]    \
-        configfile [list {Janus config file}]    \
+        program [list {Client Python script}]    \
+        janussourceid [list {Source ID for Janus data}]    \
+        host [list {Server Host}]             \
+        port [list {Server Port}]             \
         ring [list {Output RingBuffer}]    \
     ]
     #
@@ -90,16 +90,11 @@ proc ::JanusSSHPipe::start params {
     
     # Extract the parameters from the dict:
     
-    set sid        [dict get $params sourceid]
+    set program    [dict get $params program]
+    set sid        [dict get $params janussourceid]
     set host       [dict get $params host]
-    set program    [dict get $params path]
-    set configfile [dict get $params configfile]
-    
-    # Assume the path is locally valid as well.
-    
-    if {![file executable $program]} {
-        error "Janus SSHPipe data source: Cannot start '$program' as it is not executable"
-    }
+    set port       [dict get $params port]
+    set ring       [dict get $params ring]
     
     set starter [file join [InstallRoot::Where] bin start.bash]
     
@@ -127,11 +122,7 @@ proc ::JanusSSHPipe::start params {
     fconfigure [lindex $pipeinfo 1] -blocking 0 -buffering none -buffersize 10
     fileevent [lindex $pipeinfo 1] readable [list ::JanusSSHPipe::_readable $sid]
 
-    set mamanger [portAllocator %AUTO%]
-    set port [$manager allocatePort JanusC]
-    set ::JanusSSHPipe::tcpPipe "/dev/tcp/localhost/$port"
-
-    ::JanusSSHPipe::_send $sid "tclsh $::env(DAQROOT)/TclLibs/Stager/janusCommunicator.tcl $port $program $configfile &"
+    ::JanusSSHPipe::_send $sid "python3 $program localhost $port"
 }
 ##
 # check
@@ -164,7 +155,7 @@ proc ::JanusSSHPipe::stop source {
 	puts "Attempting to end."
         ::JanusSSHPipe::_attemptEnd $source
     }
-    ::JanusSSHPipe::_send $source "echo q ENDMSG > $::JanusSSHPipe::tcpPipe"
+    ::JanusSSHPipe::_send $source "exit"
     #  For good measure and in case we can't do an end, kill-9 it
     
     catch {exec kill -9 [dict get $::JanusSSHPipe::activeProviders($source) sshpid]}
@@ -191,20 +182,22 @@ proc ::JanusSSHPipe::begin {source runNum title} {
  
     if {[::JanusSSHPipe::_notIdle $source]} {
         set host [dict get $sourceInfo parameterization host]
-        set path [dict get $sourceInfo parameterization path]
-        error "A run is already active in $path@$host"
+        set program [dict get $sourceInfo parameterization program]
+        error "A run is already active in $program@$host"
     }
     
     # Set the run metadata title is in [list] to quote it properly.:
     
-    ::JanusSSHPipe::_send $source "echo i[dict get $sourceInfo parameterization janussourceid] ENDMSG > $::JanusSSHPipe::tcpPipe"
-    ::JanusSSHPipe::_send $source "echo B[dict get $sourceInfo parameterization ring] ENDMSG > $::JanusSSHPipe::tcpPipe"
-    ::JanusSSHPipe::_send $source "echo N$runNum ENDMSG > $::JanusSSHPipe::tcpPipe"
-    ::JanusSSHPipe::_send $source "echo L$title ENDMSG > $::JanusSSHPipe::tcpPipe"
+    ::JanusSSHPipe::_send $source "sid [dict get $sourceInfo parameterization janussourceid]"
+    ::JanusSSHPipe::_send $source "run $runNum"
+    ::JanusSSHPipe::_send $source "title $title"
+    ::JanusSSHPipe::_send $source "ringon"
+    ::JanusSSHPipe::_send $source "ring [dict get $sourceInfo parameterization ring]"
     
     # Start the run and update our state:
     
-    ::JanusSSHPipe::_send $source "echo s ENDMSG > $::JanusSSHPipe::tcpPipe"
+    ::JanusSSHPipe::_send $source "begin"
+    after 1500
 
     dict set sourceInfo idle false
     set ::JanusSSHPipe::activeProviders($source) $sourceInfo
@@ -252,7 +245,8 @@ proc ::JanusSSHPipe::resume source {
 proc ::JanusSSHPipe::end source {
     ::JanusSSHPipe::_complainIfIdle $source end
     
-    ::JanusSSHPipe::_send $source "echo S ENDMSG > $::JanusSSHPipe::tcpPipe"
+    ::JanusSSHPipe::_send $source "end"
+    after 1500
     
     dict set ::JanusSSHPipe::activeProviders($source) idle true
 }
@@ -299,8 +293,8 @@ proc ::JanusSSHPipe::_complainIfIdle {sid reqstate} {
    if {![::JanusSSHPipe::_notIdle $sid]} {
         set sourceInfo $::JanusSSHPipe::activeProviders($sid)
         set host [dict get $sourceInfo parameterization host]
-        set path [dict get $sourceInfo parameterization path]
-        error "A run is not active in $path@$host so no $reqstate is possible."
+        set program [dict get $sourceInfo parameterization program]
+        error "A run is not active in $program@$host so no $reqstate is possible."
     }    
     
 }
@@ -350,14 +344,14 @@ proc ::JanusSSHPipe::_sourceExited source {
     
     set input [dict get $sourceInfo line]
     set host  [dict get $sourceInfo parameterization host]
-    set path [dict get $sourceInfo parameterization path]
+    set program [dict get $sourceInfo parameterization program]
     
     if {$input ne  ""} {
         ReadoutGUIPanel::Log JanusSSHPipe@$host:$source output $input
         dict set sourceInfo line ""
     }
     ReadoutGUIPanel::Log JanusSSHPipe@$host:$source warning  \
-        "Source $path@$host exited"
+        "Source $program@$host exited"
 
 
     
@@ -388,7 +382,7 @@ proc ::JanusSSHPipe::_readInput source {
   
     set sourceInfo $::JanusSSHPipe::activeProviders($source)
     set host [dict get $sourceInfo parameterization host]
-    set path [dict get $sourceInfo parameterization path]
+    set program [dict get $sourceInfo parameterization program]
     
     set input [read [dict get $sourceInfo inpipe]]
     if {[string length $input] > 0} {
@@ -420,7 +414,7 @@ proc ::JanusSSHPipe::_notIdle source {
 # @param source - id of source to end.
 #
 proc ::JanusSSHPipe::_attemptEnd source {
-    ::JanusSSHPipe::_send $source "echo S ENDMSG > $::JanusSSHPipe::tcpPipe"
+    ::JanusSSHPipe::_send $source "end"
     dict set ::JanusSSHPipe::activeProviders($source) idle true
 }
 ##
@@ -456,7 +450,7 @@ proc ::JanusSSHPipe::_errorIfDead source {
     set sourceInfo $::JanusSSHPipe::activeProviders($source)
     
     set host       [dict get $sourceInfo parameterization host]
-    set program    [dict get $sourceInfo parameterization path]
+    set program    [dict get $sourceInfo parameterization program]
     
     if {(![::JanusSSHPipe::check $source]) || [dict get $sourceInfo closing]} {
         error "JanusSSHPipe source $program@$host is closing or no longer running"
