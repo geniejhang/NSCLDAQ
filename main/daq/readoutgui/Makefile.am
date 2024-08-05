@@ -41,7 +41,7 @@ TCLPACKAGES=Configuration.tcl \
 	stageareaValidation.tcl \
 	ReadoutGUIAppLauncher.tcl \
 	evbparameters.tcl evbsourceprompt.tcl sourceprompt.tcl  \
-	BundleManager.tcl
+	BundleManager.tcl runStateObserver.tcl
 
 
 
