@@ -25,7 +25,9 @@
 #include <stdexcept>
 #include <iostream>
 #include <stdlib.h>
-
+#include <os.h>
+#include <signal.h>
+#include <stdio.h>
 /**
  * This program takes an input stream of ring items on STDIN_FILENO
  * tags them with fragment headers and blasts them out on STDOUT_FILENO
@@ -47,6 +49,14 @@ int main (int argc, char** argv)
     int source = STDIN_FILENO;
     int sink   = STDOUT_FILENO;
     uint32_t sid = parsedArgs.sourceid_arg;
+
+    // Turn off SIGPIPE in case we're in a pipe we'll exit
+    // synchronously on input eof rather than async. SIGPIPE
+    // which scan prevent all data from being flushed out:
+
+    if (Os::blockSignal(SIGPIPE)) {
+        perror("evbtagger could not block SIGPIPE - output might not be flushed");
+    }
     
     ItemTagger tagger(
         source, sink, inputBufferSize, resetTimestampOnBeginRun, sid
