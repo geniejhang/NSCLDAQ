@@ -52,14 +52,14 @@ being installed anywhere other than their default location, so they are looked f
 the share subdirectoy tree and requires docbook2html.
 * ```--enable-ddas-docs```  Enables building and installing the documentation for
 NSCLDAQ's support for XIA Pixie16 digitizers.
-and ```--with-xiaapidir``` to supply the path to the XIA API installation directory tree
-and --with-firmwardir``` and ```--with-dspdir``` to provide paths to the FPGA and DSP firmware
-directories respectively.   Finally ```--with-rootsys``` is also required to specify the installtion
 directory tree for CERN-ROOT.
-*  --enable-epics-tools``` Enables some useful tools for interacting with EPICS process control
-variables.  This may require ```--with-epics-rootdir`` to specify where EPICS is installed.
-* ---enable-ddas```  Enable the build of the XIA Pixie16 support   Note this will require
+*  ```--enable-epics-tools`````` Enables some useful tools for interacting with EPICS process control
+variables.  This may require ``````--with-epics-rootdir``` to specify where EPICS is installed.
+* ```---enable-ddas```  Enable the build of the XIA Pixie16 support   Note this will require
 ```--with-plx-sdk``` to point to the installation path of the PLX software development kit
+and ```--with-xiaapidir``` to supply the path to the XIA API installation directory tree
+and ```--with-firmwardir``` and ```--with-dspdir``` to provide paths to the FPGA and DSP firmware
+directories respectively.   Finally ```--with-rootsys``` is also required to specify the installtion
 * ```--enable-sbs``` Enable support for the SBS, GE-FANUC, ... PCI/VME bus bridge.
 * ```--enable-usb``` Enable support for the VM?CC usb controllers
 * ```--with-bost-log``` Enable support of Boost's logging library.  This may require one of
