@@ -31,6 +31,9 @@
 #include <CAbnormalEndItem.h>
 #include <CBufferedOutput.h>
 #include <time.h>
+#include <signal.h>
+#include <os.h>
+#include <stdio.h>
 
 // File scoped  variables:
 
@@ -453,6 +456,13 @@ main(int argc, char**  argv)
   outputter = new io::CBufferedOutput(STDOUT_FILENO, BUFFER_SIZE);
   outputter->setTimeout(2);    // Flush every two sec if data rate is slow.
   
+  // Ignore sigpipe - deal, instead, witht he synchronous endfile on the pipe
+  // read.  See NSCLDAQ Issue #159
+
+ if (Os::blockSignal(SIGPIPE)) {
+    perror("Failed to block the SIGPIPE signal - end data may not be flushed");
+ }
+
   outputEventFormat();
   
 

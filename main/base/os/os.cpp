@@ -132,9 +132,9 @@ Os::blockSignal(int sigNum)
   // Build the sigaction struct:
 
   struct sigaction action;
-  action.sa_handler = 0;		// No signal handler.
+  action.sa_handler = SIG_IGN;		// No signal handler.
   sigemptyset(&action.sa_mask);
-  sigaddset(&action.sa_mask, sigNum);
+  sigaddset(&action.sa_mask, sigNum); // for good measure add to the block mask..
   action.sa_flags = 0 ;
 
   struct sigaction oldAction;
