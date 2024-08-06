@@ -53,8 +53,8 @@ the share subdirectoy tree and requires docbook2html.
 * ```--enable-ddas-docs```  Enables building and installing the documentation for
 NSCLDAQ's support for XIA Pixie16 digitizers.
 directory tree for CERN-ROOT.
-*  ```--enable-epics-tools`````` Enables some useful tools for interacting with EPICS process control
-variables.  This may require ``````--with-epics-rootdir``` to specify where EPICS is installed.
+*  ```--enable-epics-tools``` Enables some useful tools for interacting with EPICS process control
+variables.  This may require ```--with-epics-rootdir``` to specify where EPICS is installed.
 * ```---enable-ddas```  Enable the build of the XIA Pixie16 support   Note this will require
 ```--with-plx-sdk``` to point to the installation path of the PLX software development kit
 and ```--with-xiaapidir``` to supply the path to the XIA API installation directory tree
