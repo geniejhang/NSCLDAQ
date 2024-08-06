@@ -496,7 +496,9 @@ for $run either does not exist or is not a directory"
         set  fileBaseName [::ExpFileSystem::genEventfileBasename $run]
         set  eventFiles [glob -nocomplain [file join $srcdir ${fileBaseName}*.evt]]
         foreach file $eventFiles {
-          catch {file delete -force $file}
+          if {[catch {file delete -force $file} msg]} {
+            ::ReadoutGUIPanel::Log EventLogManager warning "Unable to remove link $file : $msg"
+          }
         }
         # Now we make links for all event files (.evt) files in the event directory
         # in the complete directory:
