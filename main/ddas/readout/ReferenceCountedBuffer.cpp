@@ -39,13 +39,13 @@ namespace DDASReadout {
     ReferenceCountedBuffer::ReferenceCountedBuffer(size_t initialSize) :
 	s_size(0), s_references(0), s_pData(nullptr)
     {
-	if (initialSize) {
-	    s_pData = malloc(initialSize);
-	    if (!s_pData) {
-		throw std::bad_alloc();
-	    }
-	    s_size = initialSize;
-	}
+        if (initialSize) {
+            s_pData = malloc(initialSize);
+            if (!s_pData) {
+            throw std::bad_alloc();
+            }
+            s_size = initialSize;
+        }
     }
 
     /**
@@ -55,14 +55,14 @@ namespace DDASReadout {
      */
     ReferenceCountedBuffer::~ReferenceCountedBuffer()
     {
-	// C++ does not allow exceptions to leave destructors -- in standard.
-    
-	if (s_references) {
-	    std::cerr << "FATAL - Reference counted buffer "
-		      << "is being destroyed with referencres active!\n";
-	    assert(s_references == 0);
-	}
-	free(s_pData); // Harmless if its nullptr.
+        // C++ does not allow exceptions to leave destructors -- in standard.
+        
+        if (s_references) {
+            std::cerr << "FATAL - Reference counted buffer "
+                << "is being destroyed with referencres active!\n";
+            assert(s_references == 0);
+        }
+        free(s_pData); // Harmless if its nullptr.
     }
 
     /** 
@@ -72,7 +72,7 @@ namespace DDASReadout {
     void
     ReferenceCountedBuffer::reference()
     {
-	s_references++;
+	    s_references++;
     }
     
     /**
@@ -82,13 +82,13 @@ namespace DDASReadout {
     void
     ReferenceCountedBuffer::dereference()
     {
-	--s_references;
+	    --s_references;
     }
     
     bool
     ReferenceCountedBuffer::isReferenced()
     {
-	return s_references > 0;
+	    return s_references > 0;
     }
     
     /**
@@ -103,22 +103,22 @@ namespace DDASReadout {
     void
     ReferenceCountedBuffer::resize(size_t newSize)
     {
-	if (s_references) {
-	    throw std::logic_error(
-		"Attempted resize of a referenced counted buffer "
-		"with active references"
-		);
-	}
-	
-	if (newSize > s_size) {
-	    free(s_pData);     // Harmless if s_size == 0/s_pData == nullptr.
-	    s_pData = nullptr; // Prevent double free on throw/destruct.
-	    s_pData = malloc(newSize);
-	    if (!s_pData) {
-		throw std::bad_alloc();       
-	    }
-	    s_size = newSize;
-	}
+        if (s_references) {
+            throw std::logic_error(
+            "Attempted resize of a referenced counted buffer "
+            "with active references"
+            );
+        }
+        
+        if (newSize > s_size) {
+            free(s_pData);     // Harmless if s_size == 0/s_pData == nullptr.
+            s_pData = nullptr; // Prevent double free on throw/destruct.
+            s_pData = malloc(newSize);
+            if (!s_pData) {
+            throw std::bad_alloc();       
+            }
+            s_size = newSize;
+        }
     }
 
 } // Namespace
