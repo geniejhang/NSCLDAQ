@@ -62,8 +62,8 @@ and ```--with-firmwardir``` and ```--with-dspdir``` to provide paths to the FPGA
 directories respectively.   Finally ```--with-rootsys``` is also required to specify the installtion
 * ```--enable-sbs``` Enable support for the SBS, GE-FANUC, ... PCI/VME bus bridge.
 * ```--enable-usb``` Enable support for the VM?CC usb controllers
-* ```--with-bost-log``` Enable support of Boost's logging library.  This may require one of
-```--with-bost``` or ```--with-boost-libdir```
+* ```--with-boost-log``` Enable support of Boost's logging library.  This may require one of
+```--with-boost``` or ```--with-boost-libdir```
 
 
 THere are many other options and more information can be gotten from
