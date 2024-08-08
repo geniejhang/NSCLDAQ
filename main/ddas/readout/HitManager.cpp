@@ -39,8 +39,8 @@ namespace DDASReadout {
     void
     HitManager::addHits(std::deque<DDASReadout::ZeroCopyHit*>& newHits)
     {
-	sortHits(newHits);  // First sort the incoming hits.
-	mergeHits(newHits); // Then merge them into the newHits deque.
+        sortHits(newHits);  // First sort the incoming hits.
+        mergeHits(newHits); // Then merge them into the newHits deque.
     }
 
     /**
@@ -50,13 +50,13 @@ namespace DDASReadout {
     bool
     HitManager::haveHit()
     {
-	if (m_sortedHits.size() < 2)
-	    return false;
-    
-	auto pfront = m_sortedHits.front();
-	auto pback  = m_sortedHits.back();
-    
-	return ((pback->s_time - pfront->s_time) > m_nWindow);
+        if (m_sortedHits.size() < 2)
+            return false;
+        
+        auto pfront = m_sortedHits.front();
+        auto pback  = m_sortedHits.back();
+        
+        return ((pback->s_time - pfront->s_time) > m_nWindow);
     }
 
     /** 
@@ -66,15 +66,15 @@ namespace DDASReadout {
     DDASReadout::ZeroCopyHit*
     HitManager::nextHit()
     {
-	DDASReadout::ZeroCopyHit* result;
-	if (m_sortedHits.empty()) {
-	    result = nullptr;
-	} else {
-	    result = m_sortedHits.front();
-	    m_sortedHits.pop_front();
-	}
-    
-	return result;
+        DDASReadout::ZeroCopyHit* result;
+        if (m_sortedHits.empty()) {
+            result = nullptr;
+        } else {
+            result = m_sortedHits.front();
+            m_sortedHits.pop_front();
+        }
+        
+        return result;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ namespace DDASReadout {
     static bool
     hitCompare(DDASReadout::ZeroCopyHit* p1, DDASReadout::ZeroCopyHit* p2)
     {
-	return *p1 < *p2;
+	    return *p1 < *p2;
     }
 
     /**
@@ -105,7 +105,7 @@ namespace DDASReadout {
     void
     HitManager::sortHits(std::deque<DDASReadout::ZeroCopyHit*>& newHits)
     {
-	std::sort(newHits.begin(), newHits.end(), hitCompare);
+	    std::sort(newHits.begin(), newHits.end(), hitCompare);
     }
 
     /**
@@ -130,48 +130,48 @@ namespace DDASReadout {
     void
     HitManager::mergeHits(std::deque<DDASReadout::ZeroCopyHit*>& newHits)
     {
-	if (m_sortedHits.empty()) {
-	    m_sortedHits = newHits; // Assign
-	} else {
-	    auto oldFront = m_sortedHits.front();
-	    auto oldBack  = m_sortedHits.back();
-	    auto newFront = newHits.front();
-	    auto newBack  = newHits.back();
-	    if (hitCompare(newBack, oldFront)) { // Prepend
-		m_sortedHits.insert(
-		    m_sortedHits.begin(), newHits.begin(), newHits.end()
-		    );
-	    } else { // Reduced append and merge
-		/**
-		 * @todo (ASC 3/21/24): Does checking oldBack < newFront, 
-		 * appending and exiting without doing an inplace merge
-		 * offer any performance boost?
-		 */
-		// Start by appending:            
-		auto newPosition = m_sortedHits.insert(
-		    m_sortedHits.end(), newHits.begin(), newHits.end()
-		    );
-		auto oldPosition = newPosition;
-		--oldPosition;
-		while (
-		    !hitCompare(*oldPosition, *newPosition)
-		    && (oldPosition != m_sortedHits.begin())
-		    ) {
-		    --oldPosition;
-		}
-		/** 
-		 * @todo (ASC 3/20/24): std::inplace_merge() dynamically 
-		 * allocates a temporary buffer and switches to a less 
-		 * efficient algorithm is used. _If_ sorting is rate-limiting, 
-		 * and we're pretty convinced we shouldn't have too much 
-		 * dynamic memory management, can we avoid it with a different 
-		 * merge algorithm?
-		 */
-		std::inplace_merge(
-		    oldPosition, newPosition, m_sortedHits.end(), hitCompare
-		    );
+        if (m_sortedHits.empty()) {
+            m_sortedHits = newHits; // Assign
+        } else {
+            auto oldFront = m_sortedHits.front();
+            auto oldBack  = m_sortedHits.back();
+            auto newFront = newHits.front();
+            auto newBack  = newHits.back();
+            if (hitCompare(newBack, oldFront)) { // Prepend
+            m_sortedHits.insert(
+                m_sortedHits.begin(), newHits.begin(), newHits.end()
+                );
+            } else { // Reduced append and merge
+            /**
+             * @todo (ASC 3/21/24): Does checking oldBack < newFront, 
+             * appending and exiting without doing an inplace merge
+             * offer any performance boost?
+             */
+            // Start by appending:            
+            auto newPosition = m_sortedHits.insert(
+                m_sortedHits.end(), newHits.begin(), newHits.end()
+                );
+            auto oldPosition = newPosition;
+            --oldPosition;
+            while (
+                !hitCompare(*oldPosition, *newPosition)
+                && (oldPosition != m_sortedHits.begin())
+                ) {
+                --oldPosition;
+            }
+            /** 
+             * @todo (ASC 3/20/24): std::inplace_merge() dynamically 
+             * allocates a temporary buffer and switches to a less 
+             * efficient algorithm is used. _If_ sorting is rate-limiting, 
+             * and we're pretty convinced we shouldn't have too much 
+             * dynamic memory management, can we avoid it with a different 
+             * merge algorithm?
+             */
+            std::inplace_merge(
+                oldPosition, newPosition, m_sortedHits.end(), hitCompare
+                );
+            }
 	    }
-	}
     }
 
 } // Namespace.

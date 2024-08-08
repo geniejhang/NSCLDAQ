@@ -49,7 +49,7 @@ namespace DDASReadout {
 	) :
 	RawChannel(nWords, pHitData), m_pBuffer(pBuffer), m_pArena(pArena)
     {
-	reference(); // Count a reference on the buffers.
+	    reference(); // Count a reference on the buffers.
     }
 
     /**
@@ -59,7 +59,7 @@ namespace DDASReadout {
     ZeroCopyHit::ZeroCopyHit(const ZeroCopyHit& rhs) :
 	RawChannel(rhs), m_pBuffer(rhs.m_pBuffer), m_pArena(rhs.m_pArena)
     {
-	reference();
+	    reference();
     }
     
     /**
@@ -69,14 +69,14 @@ namespace DDASReadout {
     ZeroCopyHit&
     ZeroCopyHit::operator=(const ZeroCopyHit& rhs)
     {
-	if (this != &rhs) {
-	    dereference();
-	    RawChannel::operator=(rhs);
-	    m_pBuffer = rhs.m_pBuffer;
-	    m_pArena  = rhs.m_pArena;
-	    reference();
-	}
-	return *this;
+        if (this != &rhs) {
+            dereference();
+            RawChannel::operator=(rhs);
+            m_pBuffer = rhs.m_pBuffer;
+            m_pArena  = rhs.m_pArena;
+            reference();
+        }
+        return *this;
     }
     
     /**
@@ -101,29 +101,29 @@ namespace DDASReadout {
 	BufferArena* pArena
 	)
     {
-	// We have to be really careful here. If pBuffer is the same as
-	// m_pBuffer, this dance can prematurely return the buffer to
-	// the pool. If that's the case, this operations m_pBuffer is
-	// initially null as well until first use. See: daqdev/NSCLDAQ#1036
-	// issue (on the old GitLab).
-      	if (m_pBuffer && (m_pBuffer != pBuffer)) {
-	    dereference();
-	}
+        // We have to be really careful here. If pBuffer is the same as
+        // m_pBuffer, this dance can prematurely return the buffer to
+        // the pool. If that's the case, this operations m_pBuffer is
+        // initially null as well until first use. See: daqdev/NSCLDAQ#1036
+        // issue (on the old GitLab).
+            if (m_pBuffer && (m_pBuffer != pBuffer)) {
+            dereference();
+        }
 
-	setData(nWords, pHitData);
-	ReferenceCountedBuffer* pPriorBuffer = m_pBuffer;
-	m_pBuffer = pBuffer;
-	m_pArena = pArena;
-    
-	// Finish off the refcount business of only modifying the reference
-	// count for a different buffer. In this branch of code we don't have
-	// to worry about pPrior being null because:
-	//   1. That's going to be different than pBuffer by definition.
-	//   2. In that case of course we want to reference the buffer.
-    
-	if (pBuffer != pPriorBuffer) {
-	    reference();
-	}
+        setData(nWords, pHitData);
+        ReferenceCountedBuffer* pPriorBuffer = m_pBuffer;
+        m_pBuffer = pBuffer;
+        m_pArena = pArena;
+        
+        // Finish off the refcount business of only modifying the reference
+        // count for a different buffer. In this branch of code we don't have
+        // to worry about pPrior being null because:
+        //   1. That's going to be different than pBuffer by definition.
+        //   2. In that case of course we want to reference the buffer.
+        
+        if (pBuffer != pPriorBuffer) {
+            reference();
+        }
     }
 
     /**
@@ -133,30 +133,30 @@ namespace DDASReadout {
     void
     ZeroCopyHit::freeHit()
     {
-	if (m_pArena && m_pBuffer) {
-	    dereference(); // Returns buffer to arena if appropriate
-	    m_pArena = nullptr;
-	    m_pBuffer = nullptr;
-	    s_data    = nullptr;
-	    s_channelLength = 0;
-	}
+        if (m_pArena && m_pBuffer) {
+            dereference(); // Returns buffer to arena if appropriate
+            m_pArena = nullptr;
+            m_pBuffer = nullptr;
+            s_data    = nullptr;
+            s_channelLength = 0;
+        }
     }
 
     void
     ZeroCopyHit::reference()
     {
-	m_pBuffer->reference();
+	    m_pBuffer->reference();
     }
 
     void
     ZeroCopyHit::dereference()
     {
-	m_pBuffer->dereference();
-	if(!m_pBuffer->isReferenced()) {
-	    m_pArena->free(m_pBuffer);
-	}
-	m_pBuffer = nullptr;
-	m_pArena  = nullptr;
+        m_pBuffer->dereference();
+        if(!m_pBuffer->isReferenced()) {
+            m_pArena->free(m_pBuffer);
+        }
+        m_pBuffer = nullptr;
+        m_pArena  = nullptr;
     }
 
 } // Namespace.

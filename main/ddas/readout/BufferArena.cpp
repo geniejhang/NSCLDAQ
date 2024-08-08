@@ -36,10 +36,10 @@ namespace DDASReadout {
      */
     BufferArena::~BufferArena()
     {
-	while (!m_BufferPool.empty()) {
-	    delete m_BufferPool.front();
-	    m_BufferPool.pop_front();
-	}
+        while (!m_BufferPool.empty()) {
+            delete m_BufferPool.front();
+            m_BufferPool.pop_front();
+        }
     }
     
     /**
@@ -50,14 +50,14 @@ namespace DDASReadout {
     ReferenceCountedBuffer*
     BufferArena::allocate(size_t nBytes)
     {
-	if (m_BufferPool.empty()) {
-	    m_BufferPool.push_back(new ReferenceCountedBuffer);
-	} 
-	ReferenceCountedBuffer* pResult = m_BufferPool.front();
-	m_BufferPool.pop_front();
-    
-	pResult->resize(nBytes);
-	return pResult;
+        if (m_BufferPool.empty()) {
+            m_BufferPool.push_back(new ReferenceCountedBuffer);
+        } 
+        ReferenceCountedBuffer* pResult = m_BufferPool.front();
+        m_BufferPool.pop_front();
+        
+        pResult->resize(nBytes);
+        return pResult;
     }
     
     /**
@@ -66,11 +66,11 @@ namespace DDASReadout {
     void
     BufferArena::free(ReferenceCountedBuffer* pBuffer)
     {
-	if (pBuffer->isReferenced()) {
-	    throw std::logic_error(
-		"Freeing a buffer to a buffer arena that's still referenced"
-		);
-	}
-	m_BufferPool.push_back(pBuffer);
+        if (pBuffer->isReferenced()) {
+            throw std::logic_error(
+            "Freeing a buffer to a buffer arena that's still referenced"
+            );
+        }
+        m_BufferPool.push_back(pBuffer);
     }
 }
