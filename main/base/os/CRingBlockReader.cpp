@@ -25,6 +25,7 @@
 #include <system_error>
 #include <assert.h>
 #include <string>
+#include <iostream>
 
 
 /**
@@ -107,6 +108,7 @@ CRingBlockReader::read(size_t nBytes)
   bool done = false;
   while (!done) {
     ssize_t nRead = readBlock(pNextBytes, numToRead);
+    
     if (nRead < 0) {
       if ((errno != EINTR ) && (errno != EAGAIN)) {
         throw std::system_error(
