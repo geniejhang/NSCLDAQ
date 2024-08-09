@@ -257,6 +257,17 @@ proc sequences {db} {
             INSERT INTO last_transition (state) VALUES ($sid)
         }
     }
+
+    #  Transition log table:
+
+    $db eval {
+        CREATE TABLE IF NOT EXISTS transition_log  (
+            id            INTEGER PRIMARY KEY,
+            transition_id INTEGER,  -- FK to transition_name
+            timestamp     INTEGER,
+            success       INTEGER
+        )
+    }
 }
 
 #  Event logging database:

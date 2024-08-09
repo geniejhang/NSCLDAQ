@@ -19,7 +19,7 @@
 #include <assert.h>
 #include <string>
 #include <poll.h>
-
+#include <io.h>
 
 #include <iostream>
 
@@ -84,6 +84,6 @@ CRingFileBlockReader::readBlock(void* pBuffer, size_t nBytes)
  // while (poll(&polls, 1, 100000) == 0)     // 100 seconds should be fine.
  //   ;
     
-  return ::read(m_nFd, pBuffer, nBytes);
+  return io::readData(m_nFd, pBuffer, nBytes);
   
 }
