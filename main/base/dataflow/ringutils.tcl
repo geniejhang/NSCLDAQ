@@ -71,3 +71,21 @@ proc getRingUsage {{host localhost}} {
     close $sock
     return $info
 }
+
+##
+# ringExists
+#   True if a specific ring buffer exists on 
+#   a host:
+#
+# @param name - name (not URL) of ringbuffer.
+# @param host - Optional host name  on which to check
+#               defaults to localhost
+#
+proc ringExists {name {host localhost}} {
+  set fullUsage [getRingUsage $host]
+
+  #  See if there's a ring that matches:
+
+  set index [lsearch -exact -index 0 $fullUsage $name]
+  return [expr {$index != -1}]
+}
