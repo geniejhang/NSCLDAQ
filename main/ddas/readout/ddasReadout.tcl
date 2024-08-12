@@ -39,6 +39,7 @@ if {[array names env DAQROOT] ne ""} {
 }
 package require removetcllibpath
 package require ssh
+package require ringutils
 
 ##
 # @brief Send a controlC to a file descriptor.
@@ -160,6 +161,8 @@ set bufferSize    [dict get $parsed buffersize]
 set infinity      [dict get $parsed infinity]
 set clkmult       [dict get $parsed clockmultiplier]
 set scalerSecs    [dict get $parsed scalerseconds]
+set rawRing       [dict get $parsed readoutring]
+
 
 if {$infinity} {
     set infstring "INFINITY_CLOCK=1"
@@ -194,6 +197,9 @@ if {$suppliedRing ne "" } {
     set rdoRing $suppliedRing
 }
 set rdoURI tcp://$readoutHost/$rdoRing
+
+
+
 append sortCmd " --source=$rdoURI"
 append sortCmd " --sink=[dict get $parsed sortring]"
 append sortCmd " --window=[dict get $parsed window]"
@@ -205,8 +211,10 @@ puts "To run in $sortHost"
 # daqdev/NSCLDAQ#1019 Issue: ddasReadout script must create the raw ring.
 # If not the sorter can come up and attempt to connect to the readout's ring
 # before it gets made.
+#  Issue #154 - fix typeo ofor readoutHost....
 
-catch {ssh::ssh $readouthost "$bindir/ringbuffer create $rdoring"}
+catch {ssh::ssh $readoutHost "$bindir/ringbuffer create $rdoRing"}
+
 
 # Start the two programs on SSH Pipes:
 # - We need the command input for readout.
@@ -215,6 +223,12 @@ catch {ssh::ssh $readouthost "$bindir/ringbuffer create $rdoring"}
 
 set readoutfd [ssh::sshcomplex $readoutHost "(cd $readoutDir; $readoutCmd)" a+]
 set readoutPid [pid $readoutfd]
+
+# Wait for the readout ring to materialize:
+
+if {![waitForRing $rdoRing 2 100 $readoutHost]} {
+    error "Waiting for raw ring tcp://$readouHost/$rdoRing to exist timed out"
+}
 
 set sorterfd [ssh::sshcomplex $sortHost $sortCmd a+]
 set sorterPid [pid $sorterfd]
