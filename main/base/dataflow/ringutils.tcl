@@ -80,7 +80,9 @@ proc getRingUsage {{host localhost}} {
 # @param name - name (not URL) of ringbuffer.
 # @param host - Optional host name  on which to check
 #               defaults to localhost
-#
+# @return bool - true if the ring exists.
+# @throw error if the host name does not exist or is not running
+#   a ring master.
 proc ringExists {name {host localhost}} {
   set fullUsage [getRingUsage $host]
 
@@ -88,4 +90,41 @@ proc ringExists {name {host localhost}} {
 
   set index [lsearch -exact -index 0 $fullUsage $name]
   return [expr {$index != -1}]
+}
+
+## 
+# waitForRing
+#   Wait for a ringbuffer to be created.  
+#  
+#  @param name - name (not url) of the ring.
+#  @param timeout - number of seconds to wait.
+#  @param interval - Number of milliseconds between checks.
+#  @param host  - Optional host name the ring lives in defaults to localhost.
+#  @return bool - indicating the wait succeeded.
+#  @throws an error if the host does not exist or is not running a functional
+#    ring amster.
+# 
+proc waitForRing {name timeout interval {host localhost}} {
+  # Compute the number of polls we'll perform:
+  
+  set timeoutms [expr {$timeout*1000}]
+  if {$interval > 0 && $interval < $timeoutms} {
+    set polls [expr {$timeoutms/$interval}]
+  } else {
+    set polls 1;    # interval > timeoutms or is idiotic.
+    set timeout 1;  # Make sure it's no longer itdiotic, if it was.
+  }
+  
+  while {$polls > 0} {
+    incr polls -1;        # So we don't wait on the last poll:
+
+    if {[ringExists $name $host]} {
+      return 1;           # Got it.
+    }
+    if {$polls > 0} {
+      after $interval;   # Only wait if not last pass.    
+    }
+    
+  }
+  return 0
 }
