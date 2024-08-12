@@ -213,7 +213,7 @@ puts "To run in $sortHost"
 # before it gets made.
 #  Issue #154 - fix typeo ofor readoutHost....
 
-catch {ssh::ssh $readoutHost "$bindir/ringbuffer create $rdoring"}
+catch {ssh::ssh $readoutHost "$bindir/ringbuffer create $rdoRing"}
 
 
 # Start the two programs on SSH Pipes:
