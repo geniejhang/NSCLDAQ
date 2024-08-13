@@ -142,6 +142,9 @@ Option           value type               Value meaning
                                           of digitizers e.g.).
 -vector           integer 0-0xffff         VME Interrupt status/ID that will be used to trigger this list.
                                           This is ignored if the trigger is not interrupt.
+          Issue #100 additions:
+-vector16         boolean                 If true, the vector is a 16 bit vector. Default false.
+          End Issue #100 additions.           
 -ipl              integer 1-7             Interrupt priority level of the interrupt that will trigger
                                           this stack.  This will be ignored if the trigger is not 
 					  interrupt.
@@ -189,6 +192,10 @@ CStack::onAttach(CReadoutModule& configuration)
   m_pConfiguration->addParameter("-modules",
 				CStack::moduleChecker, NULL, "");
   m_pConfiguration->addBooleanParameter("-incremental", "true");
+
+  // Issue #100:
+
+  m_pConfiguration->addBooleanParameter("-vector16", "false");
   
 }
 /*!
@@ -456,6 +463,16 @@ CStack::enableStack(CVMUSB& controller)
   uint32_t stackNumber = static_cast<uint32_t>(listNumber);
   uint32_t irq         = static_cast<uint32_t>(getIntegerParameter("-ipl"));
   uint32_t vectorNumber= static_cast<uint32_t>(getIntegerParameter("-vector"));
+  
+  // Issue #100 additions
+  bool     vec16       = m_pConfiguration->getBoolParameter("-vector16");
+  if (!vec16) {
+  // 8 bit vector statusIds must have the top 8  bits 0xff for 8 bit vectors:
+
+    vectorNumber |= 0xff00;
+  }
+  // Note the limits on -vector should prevent there from being any bits past 0xffff
+  // --
 
   if (highHalf) {
     isvValue |=  (stackNumber << CVMUSB::ISVRegister::BStackIDShift) | 
