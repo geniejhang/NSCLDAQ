@@ -1,4 +1,6 @@
 == 12.0-021 ==
+* Backporting issues #154 and #159 fixes to 12.0
+* DDAS readout driver checks and waits for input ring creation.
 == 12.0-021 ==
 
 == 12.0-020 ==
