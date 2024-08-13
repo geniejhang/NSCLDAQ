@@ -7135,27 +7135,31 @@ stack cget <replaceable>name</replaceable>
                   to the IN1 input of the VM-USB.  This forces the stack to be 
                   VM-USB stack number zero as that is the only stack that can be
                   triggered by the IN1.
-      		</para>
-                <para>
-                  <literal>scaler</literal>
-                  triggers the stack on the periodic scaler.  This forces the stack
-                  to be stack number 1 as that is the only peridically triggerable stack.
-                  We restrict periodic triggers to time based periodicity rather than
-                  event division periodicity.  The <option>-period</option> option
-                  defined below must be configured as well to define the periodicity
-                  of the scaler stack.
-                </para>
-                <para>
-                  <literal>interrupt</literal>
-                  indicates the stack will be interrupt triggered. This can be
-                  used for stacks 2 through 7 as defined by the <option>-stack</option>
-                  configuration parameter.   The actual VME interrupt that will trigger
-                  the stack is defined by both its interrupt priority level
-                  <option>-ipl</option> and the status id the interrupt source
-                  places on the backplane in response to the interrupt acknowledge
-                  cycle, and specified with the <option>-vector</option> configuration
-                  parameter.
-                </para>
+        </para>
+            <para>
+                <literal>scaler</literal>
+                triggers the stack on the periodic scaler.  This forces the stack
+                to be stack number 1 as that is the only peridically triggerable stack.
+                We restrict periodic triggers to time based periodicity rather than
+                event division periodicity.  The <option>-period</option> option
+                defined below must be configured as well to define the periodicity
+                of the scaler stack.
+            </para>
+            <para>
+                <literal>interrupt</literal>
+                indicates the stack will be interrupt triggered. This can be
+                used for stacks 2 through 7 as defined by the <option>-stack</option>
+                configuration parameter.   The actual VME interrupt that will trigger
+                the stack is defined by both its interrupt priority level
+                <option>-ipl</option> and the status id the interrupt source
+                places on the backplane in response to the interrupt acknowledge
+                cycle, and specified with the <option>-vector</option> configuration
+                parameter.
+            </para>
+            <para>
+                Vectors can be either 16 bit or 8 bit, as determined by the
+                <option>-vector16</option> boolean option.  
+            </para>
 		<para>
 		    The default value for <option>-trigger</option> is
 		    <literal>nim1</literal>.
@@ -7206,24 +7210,35 @@ stack cget <replaceable>name</replaceable>
                   <option>-ipl</option> configuration option defines the trigger
                   condition for these stacks. The <parameter>status-id</parameter>
                   must be a value between 0 and <literal>0xffff</literal>
-		  inclusive.
+		            inclusive.
                </para>
 	       <para>
-		    Note that while the <option>-vector</option> parameter is
-		    a 16 bit value, all modules we have produce 8 bit vectors.
-		    The VME standard is ambiguous about how the top bits of
-		    an 8 bit vector are returned when read by a 16 bit wide
-		    statusID cycle.  The standard allows these bits to either
-		    be set or clear.  Where we know what individual modules
-		    do, we have documented that.  If what your module
-		    does is not documented, we have not charted what the module
-		    does.  Try either setting those bits to 1 or 0 and please
-		    let us know what you find so that we can improve
-		    this documentation.
+                Interrupt vectors can be either 16 bit or 8 bit vectors. 
+                See <option>-vector16</option> below and make sure it matches
+                the interrupt status Id width from the module(s) you are using
+                to trigger the stack.
 	       </para>
 	       <para>
 		    This defaults to <literal>0</literal>.
 	       </para>
+            </listitem>
+         </varlistentry>
+         <varlistentry>
+            <term><option>-vector16</option> <replaceable>true|false</replaceable></term>
+            <listitem>
+                <para>
+                    Interrupt vectors (status ids in VME parlance), can be either 16
+                    bits or 8 bits wide.  If this flag is true, the 
+                    <option>-vector</option> value is taken to be a 16 bit status id.
+                    If false, the default, the <option>-vector</option> value is
+                    taken to be an 8 bit status id.  
+                </para>
+                <para>
+                    Since the VM-USB has different requirements for specifying 8 and 16
+                    bit status ids, this value must match the width of the status id
+                    produced by the module(s), whose interrupt(s) are triggering this
+                    stack.
+                </para>
             </listitem>
          </varlistentry>
          <varlistentry>
