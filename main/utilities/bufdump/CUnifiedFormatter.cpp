@@ -18,6 +18,20 @@
 #include <NSCLDAQFormatFactorySelector.h>  // unified fmt.
 #include <CRingItem.h>                    // unified fmt
 #include <DataFormat.h>                   // unified fmt.
+// Ring items from ufmt:
+
+#include <CAbnormalEndItem.h>
+#include <CDataFormatItem.h>
+#include <CGlomParameters.h>
+#include <CPhysicsEventItem.h>
+#include <CRingFragmentItem.h>
+#include <CRingItem.h>
+#include <CRingPhysicsEventCountItem.h>
+#include <CRingScalerItem.h>
+#include <CRingStateChangeItem.h>
+#include <CRingTextItem.h>
+#include  <CUnknownFragment.h>
+
 #include <stdexcept>
 #include <map>
 
@@ -51,7 +65,6 @@ makeActualItem(const CRingItem& raw, RingItemFactoryBase& fact) {
         return fact.makeTextItem(raw);
     case RING_FORMAT:
         return fact.makeDataFormatItem(raw);
-    case PERIODIC_SCALERS:
     case INCREMENTAL_SCALERS:
     case TIMESTAMPED_NONINCR_SCALERS:
         return fact.makeScalerItem(raw);
@@ -81,7 +94,7 @@ makeActualItem(const CRingItem& raw, RingItemFactoryBase& fact) {
  * 
  * @param version - major version of NSCLDAQ the ring items belong to.
  */
-CUnifiedFormatter::CUnifiedFormatter(int versions) : m_pFactory(0)
+CUnifiedFormatter::CUnifiedFormatter(int version) : m_pFactory(0)
 {
     auto p = versionMap.find(version);
     if (p == versionMap.end()) {
@@ -89,7 +102,7 @@ CUnifiedFormatter::CUnifiedFormatter(int versions) : m_pFactory(0)
 
         throw std::invalid_argument("Not a valid formt selector in CUnifiedFormatter constructor");
     }
-    m_pFactory = FormatSelector::selectFactory(p->second);
+    m_pFactory = &FormatSelector::selectFactory(p->second);
 }
 /**
  * destructor
@@ -110,7 +123,7 @@ CUnifiedFormatter::~CUnifiedFormatter() {
  */
 std::string
 CUnifiedFormatter::operator()(const void* pItem) {
-    const pRingItem pRaw = reinterpret_cast<const pRingitem>(pItem);
+    const RingItem* pRaw = reinterpret_cast<const RingItem*>(pItem);
 
     auto rawItem = m_pFactory->makeRingItem(pRaw);
     auto actualItem = makeActualItem(*rawItem, *m_pFactory);
@@ -118,7 +131,7 @@ CUnifiedFormatter::operator()(const void* pItem) {
     std::string result = actualItem->toString();
 
     delete rawItem;
-    delete actualItme;
+    delete actualItem;
 
 
     return result;
