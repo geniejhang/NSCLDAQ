@@ -41,7 +41,7 @@ class RingItemFactoryBase;
  */
 class CUnifiedFormatter {              // Final
 private:
-    RingItemFactoryBase* m_pBase;
+    RingItemFactoryBase* m_pFactory;
 public:
     CUnifiedFormatter(int version);
     ~CUnifiedFormatter();
