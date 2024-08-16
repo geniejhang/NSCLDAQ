@@ -1,6 +1,7 @@
 == 12.0-021 ==
 * Backporting issues #154 and #159 fixes to 12.0
 * DDAS readout driver checks and waits for input ring creation.
+* FERS interface bug fix: Error when datasource id and janussourceid are different
 == 12.0-021 ==
 
 == 12.0-020 ==
