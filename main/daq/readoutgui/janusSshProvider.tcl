@@ -91,10 +91,9 @@ proc ::JanusSSHPipe::start params {
     # Extract the parameters from the dict:
     
     set program    [dict get $params program]
-    set sid        [dict get $params janussourceid]
+    set sid        [dict get $params sourceid]
     set host       [dict get $params host]
     set port       [dict get $params port]
-    set ring       [dict get $params ring]
     
     set starter [file join [InstallRoot::Where] bin start.bash]
     

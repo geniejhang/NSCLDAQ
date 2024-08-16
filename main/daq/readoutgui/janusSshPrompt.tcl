@@ -198,7 +198,7 @@ proc ::JanusSSHPipe::promptParameters {} {
     set action [.janussshpipeprompt modal]
     if {$action eq "Ok"} {
         set result [::JanusSSHPipe::parameters]
-        array set optionlookup [list sourceid -janussourceid host -host port -port \
+        array set optionlookup [list janussourceid -janussourceid host -host port -port \
 				    program -program ring -ring]
         dict for {key value} $result {
           set val [.janussshpipeprompt cget $optionlookup($key)]
