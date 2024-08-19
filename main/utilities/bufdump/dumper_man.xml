@@ -154,6 +154,15 @@ dumper <replaceable>?options?</replaceable>
             </listitem>
         </varlistentry>
         <varlistentry>
+            <term><option>--nscldaq-version</option> <replaceable>10 | 11 | 12</replaceable></term>
+            <listitem>
+                <para>
+                    Specifies the version of NSCLDAQ the event file was written in.  
+                    Defaults to <literal>12</literal>
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
             <term><option>--version</option></term>
             <listitem>
                 <para>
