@@ -39,7 +39,7 @@ libStringifier_la_SOURCES = CUnifiedFormatter.cpp CUnifiedFormatter.headers
 
 libStringifier_la_CPPFLAGS = @UFMT_CPPFLAGS@
 libStringifier_la_LIBADD = @UFMT_LDFLAGS@
-libStringifier_la_LDFLAGS = -static      #make this static too.
+
 
 clean-local:
 	rm -f dumperargs.o $(BUILT_SOURCES)
