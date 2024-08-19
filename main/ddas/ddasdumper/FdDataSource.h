@@ -10,10 +10,12 @@
      Authors:
              Ron Fox
              Giordano Cerriza
+	     Aaron Chester
 	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
 */
+
 #ifndef FDDATASOURCE_H
 #define FDDATASOURCE_H
 
@@ -25,6 +27,7 @@
 #include "DataSource.h"
 
 using namespace ufmt;
+
 /**
  * @class FdDataSource
  * @brief A class taking the file descriptor as a data source. Most commonly 

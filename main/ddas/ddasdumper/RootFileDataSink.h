@@ -11,7 +11,7 @@
       Ron Fox
       Jeromy Tompkins
       Aaron Chester
-      NSCL
+      FRIB
       Michigan State University
       East Lansing, MI 48824-1321
 */
@@ -52,12 +52,12 @@ namespace ufmt {
 class RootFileDataSink 
 {
 private:
-    ufmt::RingItemFactoryBase* m_pFactory; //!< Turns bodies into ring items.
+    ufmt::RingItemFactoryBase* m_pFactory;   //!< Turns bodies into ring items.
     DAQ::DDAS::DDASHitUnpacker* m_pUnpacker; //!< Unpacker for our hits.
-    DDASRootEvent* m_pEvent;         //!< The ROOT-ized event to write.
-    TTree* m_pTree;                  //!< Tree in the output file we write to.
-    TFile* m_pFile;                  //!< The output ROOT file.
-    bool m_warnedPutUsed;            //!< Warning flag to call the right put.
+    DDASRootEvent* m_pEvent; //!< The ROOT-ized event to write.
+    TTree* m_pTree;          //!< Tree in the output file we write to.
+    TFile* m_pFile;          //!< The output ROOT file.
+    bool m_warnedPutUsed;    //!< Warning flag to call the right put.
     
 public:
     /**
@@ -88,12 +88,6 @@ public:
      * @param nBytes Number of bytes of data to put; actually ignored.
      */
     virtual void put(const void* pData, size_t nBytes);
-
-private:
-    /**
-     * @brief Process one fragment (hit).
-     * @param 
-     */
 };
 
 #endif

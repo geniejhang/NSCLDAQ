@@ -10,6 +10,7 @@
      Authors:
              Ron Fox
              Giordano Cerriza
+	     Aaron Chester
 	     FRIB
 	     Michigan State University
 	     East Lansing, MI 48824-1321
@@ -28,6 +29,7 @@ namespace ufmt {
     class RingItemFactoryBase;
 }
 using namespace ufmt;
+
 /**
  * @class DataSource
  * @brief Abstract base class for DDAS data sources.

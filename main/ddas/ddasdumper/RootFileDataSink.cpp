@@ -49,7 +49,8 @@ static const Int_t BUFFERSIZE(1024*1024); // 1 MB
  * our operation.
  */
 RootFileDataSink::RootFileDataSink(
-    ufmt::RingItemFactoryBase* pFactory, const char* fileName, const char* treeName
+    ufmt::RingItemFactoryBase* pFactory, const char* fileName,
+    const char* treeName
     ) :
     m_pFactory(pFactory), m_pUnpacker(new DAQ::DDAS::DDASHitUnpacker),
     m_pEvent(new DDASRootEvent), m_pTree(nullptr), m_pFile(nullptr),
@@ -124,7 +125,8 @@ RootFileDataSink::putItem(const ::ufmt::CRingItem& item)
 	    // Use the factory to make a ring item out of the fragment
 	    // and get a pointer to its body:
     
-	    const ::ufmt::RingItem* pFrag = reinterpret_cast<const ::ufmt::RingItem*>(pBody);
+	    const ::ufmt::RingItem* pFrag
+		= reinterpret_cast<const ::ufmt::RingItem*>(pBody);
 	    std::unique_ptr<ufmt::CRingItem> pUndiff(
 			m_pFactory->makeRingItem(pFrag)
 		);
@@ -191,7 +193,10 @@ RootFileDataSink::put(const void* pData, size_t nBytes)
 	std::cerr << msg << std::endl;
     }
     
-    const ::ufmt::RingItem* pRawItem = reinterpret_cast<const ::ufmt::RingItem*>(pData);
-    std::unique_ptr<::ufmt::CRingItem> pItem(m_pFactory->makeRingItem(pRawItem));
+    const ::ufmt::RingItem* pRawItem
+	= reinterpret_cast<const ::ufmt::RingItem*>(pData);
+    std::unique_ptr<::ufmt::CRingItem> pItem(
+	m_pFactory->makeRingItem(pRawItem)
+	);
     putItem(*pItem.get());
 }

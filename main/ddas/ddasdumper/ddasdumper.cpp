@@ -62,6 +62,7 @@
 #include "RootFileDataSink.h"
 
 using namespace ufmt;
+
 // Map of exclusion type strings to type integers:
 
 static std::map<std::string, uint32_t> TypeMap = {
@@ -171,11 +172,11 @@ static FormatSelector::SupportedVersions
 mapVersion(enum_format fmtIn)
 {
     switch (fmtIn) {
-    case format_arg_v12:
+    case nscldaq_format_arg_12:
 	return FormatSelector::v12;
-    case format_arg_v11:
+    case nscldaq_format_arg_11:
 	return FormatSelector::v11;
-    case format_arg_v10:
+    case nscldaq_format_arg_10:
 	return FormatSelector::v10;
     default:
 	throw std::invalid_argument("Invalid DAQ format version specifier");
@@ -184,7 +185,7 @@ mapVersion(enum_format fmtIn)
 
 /**
  * @brief Parse the URI of the source and based on the parse create the 
- * underlying connection. Create the correcte concrete instance of DataSource 
+ * underlying connection. Create the correct concrete instance of DataSource 
  * given all that.
  * 
  * @param pFactory Pointer to the ring item factory to use.
@@ -303,8 +304,8 @@ dumpItem(
 	}
 	catch (std::bad_cast e) {
 	    throw std::logic_error(
-		"Unable to dump a data format item... "
-		"likely you've specified the wrong --format"
+		"Unable to dump a data format item... likely you've "
+		"specified the wrong --nscldaq-format"
 		);
 	}
     }
@@ -373,7 +374,8 @@ main(int argc, char* argv[])
 	std::string excludeItems = args.exclude_arg;
         std::vector<uint32_t> exclusionList = makeExclusionList(excludeItems);
         int scalerBits = args.scaler_width_arg;
-        FormatSelector::SupportedVersions version = mapVersion(args.format_arg);
+        FormatSelector::SupportedVersions version
+	    = mapVersion(args.nscldaq_format_arg);
 
 	// Factory for this format:
 	

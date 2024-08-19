@@ -23,19 +23,19 @@ Usage: ddasdumper [OPTION]...
 Write NSCLDAQ PHYSICS_EVENT data obtained using DDAS to a ROOT TTree and
 perform a formatted dump of selected data items.
 
-  -h, --help              Print help and exit
-  -V, --version           Print version and exit
-  -s, --source=STRING     Data source URL. Note that only file and streaming
-                            data sources
-  -f, --fileout=STRING    Path of output file
-  -c, --count=INT         Number of items to dump before exiting. If no count
-                            value is provided, all items are dumped
-  -k, --skip=INT          Number of items to skip before dumping
-  -e, --exclude=STRING    List of item types to exclude from the dump
-                            (default=`')
-  -w, --scaler-width=INT  Scaler counter width in bits  (default=`32')
-  -F, --format=ENUM       NSCLDAQ format version  (possible values="v12",
-                            "v11", "v10" default=`v12')
+  -h, --help                 Print help and exit
+  -V, --version              Print version and exit
+  -s, --source=STRING        Data source URL. Note that only file and streaming
+                               data sources
+  -f, --fileout=STRING       Path of output file
+  -c, --count=INT            Number of items to dump before exiting. If no count
+                               value is provided, all items are dumped
+  -k, --skip=INT             Number of items to skip before dumping
+  -e, --exclude=STRING       List of item types to exclude from the dump
+                               (default=`')
+  -w, --scaler-width=INT     Scaler counter width in bits  (default=`32')
+  -F, --nscldaq-format=ENUM  NSCLDAQ format version  (possible values="12",
+                            "11", "10" default=`12')
 
 @endverbatim
 
@@ -54,7 +54,7 @@ $DAQBIN/ringselector --source=tcp://localhost/myring | $DAQBIN/ddasdumper --sour
 @endverbatim
 
 @par
-The `--format` option, while not required, is important to consider. This option specifies which input data format is expected by ddasdumper. Three NSCLDAQ data formats exist: v10, v11, and v12, where 10, 11, and 12 refer to the major version of the NSCLDAQ software that each format is associated with. Each format version has its own set of class libraries for producing and handling data from it. The value passed to the `--format` option specifies which major version of the NSCLDAQ software was used to initially acquire the data. If the wrong format version is supplied, the program will exit with an error, as it cannot properly decode the data.
+The `--nscldaq-format` option, while not required, is important to consider. This option specifies which input data format is expected by ddasdumper. Three NSCLDAQ data formats exist: 10, 11, and 12. Each format version has its own set of class libraries for producing and handling data. The value passed to the `--nscldaq-format` option specifies which major version of the NSCLDAQ software was used to initially acquire the data. If the wrong format version is supplied, the program will exit with an error, as it cannot properly decode the data.
 
 @par
 The other options are described in the table below:
