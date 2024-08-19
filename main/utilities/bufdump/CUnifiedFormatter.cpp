@@ -32,6 +32,8 @@
 #include <CRingTextItem.h>
 #include  <CUnknownFragment.h>
 
+#include <stdlib.h>
+#include <iostream>
 #include <stdexcept>
 #include <map>
 using namespace ufmt;
@@ -52,37 +54,40 @@ makeActualItem(const CRingItem& raw, ::ufmt::RingItemFactoryBase& fact) {
     // the cases in the switch below will need to be expanded 
     // as more ring item types are defined:
 
-    switch (raw.type()) {
-    case BEGIN_RUN:
-    case END_RUN:
-    case PAUSE_RUN:
-    case RESUME_RUN:
-        return fact.makeStateChangeItem(raw);
-    case ABNORMAL_ENDRUN:
-        return fact.makeAbnormalEndItem(raw);
-    case PACKET_TYPES:
-    case MONITORED_VARIABLES:
-        return fact.makeTextItem(raw);
-    case RING_FORMAT:
-        return fact.makeDataFormatItem(raw);
-    case INCREMENTAL_SCALERS:
-    case TIMESTAMPED_NONINCR_SCALERS:
-        return fact.makeScalerItem(raw);
-    case PHYSICS_EVENT:
-        return fact.makePhysicsEventItem(raw);
-    case PHYSICS_EVENT_COUNT:
-        return fact.makePhysicsEventCountItem(raw);
-    case  EVB_FRAGMENT:
-        return fact.makeRingFragmentItem(raw);
-    case EVB_UNKNOWN_PAYLOAD:
-        return fact.makeUnknownFragment(raw);
-    case EVB_GLOM_INFO:
-        return fact.makeGlomParameters(raw);
+    try {
+        switch (raw.type()) {
+        case BEGIN_RUN:
+        case END_RUN:
+        case PAUSE_RUN:
+        case RESUME_RUN:
+            return fact.makeStateChangeItem(raw);
+        case ABNORMAL_ENDRUN:
+            return fact.makeAbnormalEndItem(raw);
+        case PACKET_TYPES:
+        case MONITORED_VARIABLES:
+            return fact.makeTextItem(raw);
+        case RING_FORMAT:
+            return fact.makeDataFormatItem(raw);
+        case INCREMENTAL_SCALERS:
+        case TIMESTAMPED_NONINCR_SCALERS:
+            return fact.makeScalerItem(raw);
+        case PHYSICS_EVENT:
+            return fact.makePhysicsEventItem(raw);
+        case PHYSICS_EVENT_COUNT:
+            return fact.makePhysicsEventCountItem(raw);
+        case  EVB_FRAGMENT:
+            return fact.makeRingFragmentItem(raw);
+        case EVB_UNKNOWN_PAYLOAD:
+            return fact.makeUnknownFragment(raw);
+        case EVB_GLOM_INFO:
+            return fact.makeGlomParameters(raw);
+        }
+        return fact.makeRingItem(raw);
+    } catch (std::exception &e){
+        std::cerr << "could not convert raw ring item to specific one: \n";
+        std::cerr << e.what() << std::endl;
+        exit(EXIT_FAILURE);
     }
-
-
-
-    return fact.makeRingItem(raw);
 }
 
 //// Implement UnifiedFormatter:
