@@ -87,6 +87,7 @@ makeActualItem(const CRingItem& raw, ::ufmt::RingItemFactoryBase& fact) {
         std::cerr << "could not convert raw ring item to specific one: \n";
         std::cerr << e.what() << std::endl;
         std::cerr << "Ring item type was: " << std::hex << "0x" << raw.type() << std::endl;
+        std::cerr << raw.toString() << std::endl;
         exit(EXIT_FAILURE);
     }
 }
