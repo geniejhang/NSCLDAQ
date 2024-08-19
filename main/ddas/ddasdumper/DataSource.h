@@ -23,10 +23,11 @@
  * @brief Works with factories to provide a data source for undifferentiated 
  * ring items.
  */
-
-class CRingItem;
-class RingItemFactoryBase;
-
+namespace ufmt {
+    class CRingItem;
+    class RingItemFactoryBase;
+}
+using namespace ufmt;
 /**
  * @class DataSource
  * @brief Abstract base class for DDAS data sources.

@@ -24,6 +24,7 @@
 
 #include "DataSource.h"
 
+using namespace ufmt;
 /**
  * @class FdDataSource
  * @brief A class taking the file descriptor as a data source. Most commonly 
