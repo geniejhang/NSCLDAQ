@@ -25,7 +25,7 @@
 #include <CDataSource.h>
 #include <CDataSourceFactory.h>
 #include <CRingScalerItem.h>
-
+#include "CUnifiedFormatter.h"
 #include "dumperargs.h"
 
 #include <iostream>
@@ -37,6 +37,8 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <stdio.h>
+
+
 
 
 using namespace std;
@@ -215,12 +217,17 @@ BufdumpMain::operator()(int argc, char** argv)
     m_skipCount--;
   }
 
+  // Make an object to give us version specific strings
+  // for the ring items:
+
+  auto formatter = CUnifiedFormatter(parse.nscldaq_version_arg);
+
   size_t numToDo = m_itemCount;
   bool done = false;
   while (!done) {
     CRingItem *pItem = pSource->getItem();
     if (pItem) {
-      processItem(*pItem);
+      processItem(*pItem, formatter);
       delete pItem;
       
       numToDo--;
@@ -249,14 +256,14 @@ BufdumpMain::operator()(int argc, char** argv)
 **    item - Reference to the item to dump.
 */
 void
-BufdumpMain::processItem(const CRingItem& item)
+BufdumpMain::processItem(const CRingItem& item, CUnifiedFormatter& formatter)
 {
 
   cout << "-----------------------------------------------------------\n";
-  CRingItem* pActualItem = CRingItemFactory::createRingItem(item);
-  cout << pActualItem->toString();
+  
+  cout << formatter(item.getItemPointer());
   cout.flush();                           // in case it's a file.
-  delete pActualItem;
+  
 
 }
 

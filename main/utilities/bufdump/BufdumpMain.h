@@ -33,7 +33,7 @@ class CRingScalerItem;
 class CRingPhysicsEventCountItem;
 
 class CRingBuffer;
-
+class CUnifiedFormatter;
 
 
 /*!
@@ -77,7 +77,7 @@ public:
 
 private:
   CRingItem* getItem(CRingBuffer& ring);
-  void processItem(const CRingItem& item);
+  void processItem(const CRingItem& item, CUnifiedFormatter& formatter);
 
 
   std::string defaultSource() const; 

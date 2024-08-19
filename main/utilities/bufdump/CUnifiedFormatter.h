@@ -31,8 +31,10 @@
 
 
 
-class RingItemFactoryBase;
+namespace ufmt {
 
+    class RingItemFactoryBase;
+}
 /**
  * This class hides the use of the unified formatter in a separate library.
  * The idea is that the bufdumpmain can instantiate it and pass it ring item
@@ -41,7 +43,7 @@ class RingItemFactoryBase;
  */
 class CUnifiedFormatter {              // Final
 private:
-    RingItemFactoryBase* m_pFactory;
+    ufmt::RingItemFactoryBase* m_pFactory;
 public:
     CUnifiedFormatter(int version);
     ~CUnifiedFormatter();

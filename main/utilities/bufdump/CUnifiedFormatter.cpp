@@ -34,7 +34,7 @@
 
 #include <stdexcept>
 #include <map>
-
+using namespace ufmt;
 
 /// Data and static utilities -- with new major versions of NSCLDAQ
 /// This map needs to be extended.
@@ -48,7 +48,7 @@ std::map<int, FormatSelector::SupportedVersions> versionMap = {
 // This must be outside the class, again to avoid CRingItemConflicts:
 
 static CRingItem*
-makeActualItem(const CRingItem& raw, RingItemFactoryBase& fact) {
+makeActualItem(const CRingItem& raw, ::ufmt::RingItemFactoryBase& fact) {
     // the cases in the switch below will need to be expanded 
     // as more ring item types are defined:
 
