@@ -33,6 +33,8 @@ class CRingScalerItem;
 class CRingPhysicsEventCountItem;
 
 class CRingBuffer;
+class CUnifiedFormatter;
+
 
 /*!
   This class is the actual dumper program.  It defines a function object type
@@ -75,7 +77,7 @@ public:
 
 private:
   CRingItem* getItem(CRingBuffer& ring);
-  void processItem(const CRingItem& item);
+  void processItem(const CRingItem& item, CUnifiedFormatter& formatter);
 
 
   std::string defaultSource() const; 

@@ -61,6 +61,7 @@
 #include "StreamDataSource.h"
 #include "RootFileDataSink.h"
 
+using namespace ufmt;
 // Map of exclusion type strings to type integers:
 
 static std::map<std::string, uint32_t> TypeMap = {
@@ -196,7 +197,7 @@ mapVersion(enum_format fmtIn)
  * @return Dynamically allocated data source.
  */
 DataSource*
-makeDataSource(RingItemFactoryBase* pFactory, const std::string& strUrl)
+makeDataSource(::ufmt::RingItemFactoryBase* pFactory, const std::string& strUrl)
 {
     // Special case the url is just "-" then it's stdin, a file descriptor
     // data source:
@@ -255,8 +256,8 @@ makeDataSource(RingItemFactoryBase* pFactory, const std::string& strUrl)
  */
 static void
 dumpItem(
-    CRingItem* pItem, RingItemFactoryBase& factory,
-    CDataSink* pSink
+    ::ufmt::CRingItem* pItem, ::ufmt::RingItemFactoryBase& factory,
+    RootFileDataSink* pSink
     )
 {
     /** 
@@ -402,7 +403,7 @@ main(int argc, char* argv[])
 	
 	if (skipCount > 0) {
             for (int i = 0; i < skipCount; i++) {
-                std::unique_ptr<CRingItem> p(pSource->getItem());
+                std::unique_ptr<::ufmt::CRingItem> p(pSource->getItem());
                 if (!p.get()) { // End of source.
 		    std::cout << "End of data source encountered while "
 			      << "processing --skip items, exiting.\n";
@@ -416,7 +417,7 @@ main(int argc, char* argv[])
 
 	int remaining = dumpCount;
 	while (1) {
-	    std::unique_ptr<CRingItem> pItem(pSource->getItem());
+	    std::unique_ptr<::ufmt::CRingItem> pItem(pSource->getItem());
             if (!pItem.get()) { // End of source.
 		return EXIT_SUCCESS;
             }

@@ -1,4 +1,5 @@
 bin_PROGRAMS	=	dumper
+lib_LTLIBRARIES    =   libStringifier.la
 
 
 dumper_SOURCES	=	BufdumpMain.cpp		\
@@ -23,7 +24,8 @@ dumper_CPPFLAGS =	-I@srcdir@/.. 				\
 				-I@top_srcdir@/utilities/common \
 				@PIXIE_CPPFLAGS@
 
-dumper_LDADD		=	@top_builddir@/utilities/common/libUtilCommon.la 	\
+dumper_LDADD		=	 @builddir@/libStringifier.la \
+				@top_builddir@/utilities/common/libUtilCommon.la 	\
 				@top_builddir@/base/uri/liburl.la			\
                                 @top_builddir@/daq/IO/libdaqio.la			\
 				@top_builddir@/daq/format/libdataformat.la	\
@@ -32,6 +34,12 @@ dumper_LDADD		=	@top_builddir@/utilities/common/libUtilCommon.la 	\
 				@LIBEXCEPTION_LDFLAGS@				\
 				@top_builddir@/base/os/libdaqshm.la            \
 				$(THREADLD_FLAGS)
+dumper_DEPENDENCIES = libStringifier.la 
+libStringifier_la_SOURCES = CUnifiedFormatter.cpp CUnifiedFormatter.headers
+
+libStringifier_la_CPPFLAGS = @UFMT_CPPFLAGS@
+libStringifier_la_LIBADD = @UFMT_LDFLAGS@
+
 
 clean-local:
 	rm -f dumperargs.o $(BUILT_SOURCES)
