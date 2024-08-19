@@ -41,7 +41,7 @@ public:
     * Instead of using this method, the user should use the overload of the
     * insertion operator (operator<<) for CRingItems.
     */
-    virtual void putItem(const CRingItem& item) =0;
+    virtual void putItem(const ::CRingItem& item) =0;
     
   /*!
      * \brief Write a block of data to the sink
