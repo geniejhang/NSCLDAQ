@@ -1,3 +1,6 @@
+#include <iostream>
+#include <unistd.h>
+
 // Template for a test suite.
 
 #include <cppunit/extensions/HelperMacros.h>
@@ -27,8 +30,6 @@
 #include <CGlomParameters.h>
 #include <CAbnormalEndItem.h>
 #include <CRingScalerItem.h>
-
-#include <iostream>
 
 class RingTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(RingTests);
@@ -256,26 +257,27 @@ RingTests::emitFormat()
     CDataFormatItem item;
     item.commitToRing(ring);
 }
+
 void
 RingTests::emitEvent(bool bodyHeader)
 {
     CRingBuffer ring("tcltestring", CRingBuffer::producer);
     CPhysicsEventItem* pItem;
     if (bodyHeader) {
-        pItem = new CPhysicsEventItem(1234, 2, 0);
+	pItem = new CPhysicsEventItem(1234, 2, 0);
     } else {
-        pItem = new CPhysicsEventItem;
+	pItem = new CPhysicsEventItem;
     }
     CPhysicsEventItem& item(*pItem);
+    
     uint32_t* pN = reinterpret_cast<uint32_t*>(item.getBodyPointer());
     *pN++ = 12;
     uint16_t*  pd = reinterpret_cast<uint16_t*>(pN);
     for (int i = 0; i < 10; i++) {
-        *pd++ = i;
+	*pd++ = i;
     }
     item.setBodyCursor(pd);
-    item.updateSize();
-    
+    item.updateSize();    
     item.commitToRing(ring);
     delete pItem;
 }
@@ -1154,27 +1156,36 @@ void RingTests::getGlomInfo(){
     
 }
 void RingTests::getWithPredicate()
-{
-  
+{ 
     // We're going to request an item using a predicate that only allows
     // BEGIN_RUN and END_RUN items.  Then we'll emit a begin run and a bunch
     // of events and an end run.  We should only see the begin and
     // end runs.
     
     int stat = tryCommand("ring attach tcp://localhost/tcltestring");
-    insertStateChange(BEGIN_RUN, false);
 
     // Timing issue with this loop leads to test failure. Emit fewer events.
     // --ASC 6/2/23
+    // Pause after commiting to ring. Not sure how much an effect it has,
+    // but seems more stable. Trying to handle exceptions to figure out
+    // the cause of the failure has proven unsuccessful. Probably worth
+    // revisiting at some point and identifying an actual underlying cause.
+    // --ASC 8/20/24
     
+    insertStateChange(BEGIN_RUN, false);
+    usleep(100);
+
     for (int i =0; i < 10; i++) {
-        emitEvent(false);
-    }    
+	emitEvent(false);
+	usleep(100);
+    }
+
     insertStateChange(END_RUN, false);
+    usleep(100);	
+
     stat = tryCommand("ring get tcp://localhost/tcltestring [list 1 2]");
     Tcl_Obj* event1 = Tcl_GetObjResult(m_pInterp->getInterpreter());
-   
-    
+       
     std::string item;
     getDictItem(event1, "type", item);
     EQ(std::string("Begin Run"), item);
@@ -1183,10 +1194,9 @@ void RingTests::getWithPredicate()
     Tcl_Obj* event2 = Tcl_GetObjResult(m_pInterp->getInterpreter());
     
     getDictItem(event2, "type", item);
-    EQ(std::string("End Run"), item);
-    
-    
+    EQ(std::string("End Run"), item);     
 }
+
 void RingTests::getAbnormalEnd()
 {
     int stat = tryCommand("ring attach tcp://localhost/tcltestring");
