@@ -169,7 +169,7 @@ makeExclusionList(const std::string& exclusions)
  * @note We should never throw because gengetopt will enforce the enum.
  */
 static FormatSelector::SupportedVersions
-mapVersion(enum_format fmtIn)
+mapVersion(enum_nscldaq_format fmtIn)
 {
     switch (fmtIn) {
     case nscldaq_format_arg_12:
