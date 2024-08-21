@@ -124,6 +124,11 @@ class TraceAnalyzer:
         else:
             tau = int(round(tau/xdt))
 
+        # Warn user if the fast filter is <= to XDT sampling:
+        
+        if (2*fast_risetime + fast_gap <= xdt):
+            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: WARNING: Fast filter length {2*fast_risetime + fast_gap} <= XDT sampling {xdt}\n\tThe analyzed trace may not display properly!")
+
         ns = xdt*1000  # Convert from samples to time in ns.
         print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Filter calculation requires parameters to be an integer multiple of XDT.\nParameters have not been changed for acquisition.\n\t XDT (ns): {ns:.0f}\n\t Trig. risetime (ns): {fast_risetime*ns:.0f}\n\t Trig. gap (ns): {fast_gap*ns:.0f}\n\t CFD scale: {cfd_scale:.0f}\n\t CFD delay (ns): {cfd_delay*ns:.0f}\n\t Ene. risetime (ns): {slow_risetime*ns:.0f}\n\t Ene. gap (ns): {slow_gap*ns:.0f}\n\t Tau (ns): {tau*ns:.0f}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, ns, fast_risetime*ns, fast_gap*ns, cfd_scale, cfd_delay*ns, slow_risetime*ns, slow_gap*ns, tau*ns))
 
@@ -153,23 +158,14 @@ class TraceAnalyzer:
         # Calculate fast filter. See Pixie-16 User's Manual Sec. 3.3.8.1,
         # Eq. 3-1 for details.
        
-        for i, _ in enumerate(self.fast_filter):
+        for i, _ in enumerate(self.trace):
             s0 = 0  # Trailing sum.
             s1 = 0  # Leading sum.
-            ilow = i - 2*risetime - gap + 1
-            ihigh = ilow + risetime
-            if ilow >= 0:
-                s0  = sum(self.trace[ilow:ihigh])
-                
-                # If the trailing sum is computed, compute the leading sum if
-                # it does not run off the end of the trace:                
-                ilow = i - risetime + 1
-                ihigh = ilow + risetime
-                if ihigh < len(self.trace):
-                    s1  = sum(self.trace[ilow:ihigh])                        
-                    # Compute the filter value if we have not run off the end
-                    # of the trace for the leading sum:                    
-                    self.fast_filter[i] = s1 - s0
+            if i - 2*risetime - gap + 1 >= 0:
+                # +1 on high limit for inclusive sum:
+                s0 = np.sum(self.trace[i-2*risetime-gap+1:i-risetime-gap+1])
+                s1 = np.sum(self.trace[i-risetime+1:i+1])
+                self.fast_filter[i] = s1 - s0
                     
     def _compute_cfd(self, scale, delay):
         """Compute the CFD.
