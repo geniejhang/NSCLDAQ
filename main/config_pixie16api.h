@@ -23,6 +23,22 @@
 #define NEW_RUN 1
 #endif
 
+#ifndef RESUME_RUN
+#define RESUME_RUN 0
+#endif
+
+#ifndef MAX_HISTOGRAM_LENGTH
+#define MAX_HISTOGRAM_LENGTH 32768
+#endif
+
+#ifndef MAX_ADC_TRACE_LEN
+#define MAX_ADC_TRACE_LEN 8192
+#endif
+
+#ifndef MAX_NUM_BASELINES
+#define MAX_NUM_BASELINES 3640
+#endif
+
 /* Readout programs need this to decide when to start reading */
 #ifndef EXTFIFO_READ_THRESH
 #define EXTFIFO_READ_THRESH   1024
