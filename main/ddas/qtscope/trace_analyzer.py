@@ -256,10 +256,16 @@ class TraceAnalyzer:
         slow_gap = self.dsp_mgr.get_chan_par(mod, chan, "ENERGY_FLATTOP")
         tau = self.dsp_mgr.get_chan_par(mod, chan, "TAU")
 
+        # If the total fast filter length 2*rise + gap <= xdt, the analyzed
+        # trace will not display properly. Warn the users:
+
+        if (2*fast_risetime + fast_gap <= xdt):
+            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: WARNING: Fast filter length {2*fast_risetime + fast_gap} <= XDT sampling {xdt}\n\tThe analyzed trace may not display properly!")
+        
         # Since we're stuck with XDT binning, round the filter parameters to
         # the nearest integer multiple of the XDT value to convert to length
         # in samples. Because channel DSP paramters are double we must convert
-        # explicitly to integers. Minimum of 1 sample for filter risetime and
+        # explicitly to integers. Minimum of 1 sample for filter risetimes and
         # CFD delay. Triangular fast filters (gap = 0 samples) are allowed.
 
         if fast_risetime < xdt:

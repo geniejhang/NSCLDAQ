@@ -23,6 +23,14 @@ from run_type import RunType
 # passed as a parameter by the caller.
 #
 
+##
+# @todo (ASC 8/21/24): Remove the custom binning. There is DSP for energy
+# histogram binning, most people do not use it. Allow users to configure
+# that via a tab or spinbox when starting a run? What effect does it have
+# if set to some strage value for production data (should be none, as it
+# effects onboard histos only)?
+#
+
 class Plot(QWidget):
     """Plotting widget for the GUI utilizing the matplotlib Qt5 backend.
 
@@ -66,6 +74,7 @@ class Plot(QWidget):
         Rebin existing single-channel run histogram data and redraw the plot.
     draw_test_data(idx)
         Draw a test figure with a random number of subplots.
+
     """
     
     def __init__(self, mgr, toolbar_factory, fit_factory, *args, **kwargs):
@@ -79,6 +88,7 @@ class Plot(QWidget):
             Factory for implemented toolbars.
         fit_factory : FitFactory 
             Factory method for fitting plot data.
+
         """
         super().__init__(*args, **kwargs)
 
@@ -163,6 +173,7 @@ class Plot(QWidget):
             Number of subplot columns (optional, default=1).
         idx : int 
             Subplot index in [1, nrows*ncols] (optional).
+
         """
         self.raw_data[idx-1] = data
         self.bin_width = 1 # Trace data isn't binned.
@@ -196,6 +207,7 @@ class Plot(QWidget):
             Computed CFD output.
         slow_filter : list
             Computed slow filter output.
+
         """
         self.raw_data[0] = trace
         ax1 = self.figure.add_subplot(3, 1, 1)
@@ -239,6 +251,7 @@ class Plot(QWidget):
             Number of subplot columns.
         idx : int, optional, default=1
             Subplot index in [1, nrows*ncols].
+
         """
         self.raw_data[idx-1] = data
         self.bin_width = bin_width
@@ -271,6 +284,7 @@ class Plot(QWidget):
         ----------
         run_type : Enum member
             Type of run data to draw.
+
         """
         self.figure.clear()
         try:
@@ -309,6 +323,7 @@ class Plot(QWidget):
         ----------
         bin_width : int
             Histogramm bin width in ADC values/bin.
+
         """
         self.bin_width = bin_width
         axs = self.figure.get_axes()
@@ -329,7 +344,8 @@ class Plot(QWidget):
         """Draw test data. 
 
         Draw data points in (-1, 1) on a test canvas with a random number of 
-        rows and columns with rows, columns in [1, 4]
+        rows and columns with rows, columns in [1, 4].
+
         """        
         self.figure.clear()        
         rng = np.random.default_rng()
@@ -360,6 +376,7 @@ class Plot(QWidget):
         pad : float, optional, default=0.05
             Padding as a percent of the full data range added to the y-axis 
             limits when drawing the canvas.
+
         """        
         if self.sender():
             for ax in self.figure.get_axes():
@@ -382,6 +399,7 @@ class Plot(QWidget):
         pad : float
             Padding as a percent of the full data range added to the y-axis 
             limits when drawing the canvas.
+
         """
         ymin, ymax = self._get_ylimits(ax, pad)        
                 
@@ -427,6 +445,7 @@ class Plot(QWidget):
         ------
         ValueError
             If the data type argument is an invalid value.
+
         """
         data, bins = np.histogram(
             [i for i in range(xia.MAX_HISTOGRAM_LENGTH)], bins=nbins,
@@ -452,6 +471,7 @@ class Plot(QWidget):
         ymin, ymax : float, float
             Lower and upper y-axis display limits. If there is no plotted 
             data, returns (0.0, 1.0).
+
         """
         lines = ax.get_lines()
         if ax.get_lines():
