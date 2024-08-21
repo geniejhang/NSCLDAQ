@@ -124,10 +124,13 @@ class TraceAnalyzer:
         else:
             tau = int(round(tau/xdt))
 
-        # Warn user if the fast filter is <= to XDT sampling:
+        # Warn user if the  filters are short:
         
         if (2*fast_risetime + fast_gap <= xdt):
             print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: WARNING: Fast filter length {2*fast_risetime + fast_gap} <= XDT sampling {xdt}\n\tThe analyzed trace may not display properly!")
+
+        if (2*slow_risetime + slow_gap <= xdt):
+            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: WARNING: Slow filter length {2*slow_risetime + slow_gap} <= XDT sampling {xdt}\n\tThe analyzed trace may not display properly!")
 
         ns = xdt*1000  # Convert from samples to time in ns.
         print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Filter calculation requires parameters to be an integer multiple of XDT.\nParameters have not been changed for acquisition.\n\t XDT (ns): {ns:.0f}\n\t Trig. risetime (ns): {fast_risetime*ns:.0f}\n\t Trig. gap (ns): {fast_gap*ns:.0f}\n\t CFD scale: {cfd_scale:.0f}\n\t CFD delay (ns): {cfd_delay*ns:.0f}\n\t Ene. risetime (ns): {slow_risetime*ns:.0f}\n\t Ene. gap (ns): {slow_gap*ns:.0f}\n\t Tau (ns): {tau*ns:.0f}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, ns, fast_risetime*ns, fast_gap*ns, cfd_scale, cfd_delay*ns, slow_risetime*ns, slow_gap*ns, tau*ns))
@@ -236,21 +239,23 @@ class TraceAnalyzer:
             s1 = 0  # Leading sum.
             ilow = i - 2*risetime - gap + 1
             ihigh = ilow + risetime
+
+            # ihigh+1 as sums are inclusive:
             
             if ilow >= 0:
-                s0 = sum(self.trace[ilow:ihigh]-baseline)
+                s0 = sum(self.trace[ilow:ihigh+1]-baseline)
                 
                 # If the trailing sum is computed, compute the gap and leading
                 # sums if they do not run off the end of the trace:
                 ilow = ihigh
                 ihigh = ilow + gap                
                 if ihigh < len(self.trace):
-                    sg = sum(self.trace[ilow:ihigh] - baseline)
+                    sg = sum(self.trace[ilow:ihigh+1] - baseline)
                     
                 ilow = ihigh
                 ihigh = ilow + risetime
                 if ihigh < len(self.trace):
-                    s1 = sum(self.trace[ilow:ihigh] - baseline)
+                    s1 = sum(self.trace[ilow:ihigh+1] - baseline)
                     # Compute the filter value if we have not run off the end
                     # of the trace for the leading sum:                    
                     self.slow_filter[i] = a0*s0 + ag*sg + a1*s1
