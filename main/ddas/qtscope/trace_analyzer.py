@@ -218,21 +218,23 @@ class TraceAnalyzer:
             s1 = 0  # Leading sum.
             ilow = i - 2*fp.slow_risetime - fp.slow_gap + 1
             ihigh = ilow + fp.slow_risetime
+
+            # ihigh+1 since sums are inclusive:
             
             if ilow >= 0:
-                s0 = sum(self.trace[ilow:ihigh]-baseline)
+                s0 = sum(self.trace[ilow:ihigh+1]-baseline)
                 
                 # If the trailing sum is computed, compute the gap and leading
                 # sums if they do not run off the end of the trace:
                 ilow = ihigh
                 ihigh = ilow + fp.slow_gap                
                 if ihigh < len(self.trace):
-                    sg = sum(self.trace[ilow:ihigh] - baseline)
+                    sg = sum(self.trace[ilow:ihigh+1] - baseline)
                     
                 ilow = ihigh
                 ihigh = ilow + fp.slow_risetime
                 if ihigh < len(self.trace):
-                    s1 = sum(self.trace[ilow:ihigh] - baseline)
+                    s1 = sum(self.trace[ilow:ihigh+1] - baseline)
                     # Compute the filter value if we have not run off the end
                     # of the trace for the leading sum:                    
                     self.slow_filter[i] = a0*s0 + ag*sg + a1*s1
