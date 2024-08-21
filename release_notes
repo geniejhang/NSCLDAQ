@@ -6,6 +6,7 @@
 * Janus datasource bug fix
 * FERS interface bug fix: Error when datasource id and janussourceid are different
 * Added monitor output control in MDPP-16/32 QDC/SCP modules configuration
+* Issue #171 fix for QtScope filter display
 == 12.1-pre2 ==
 
 == 12.1-pre1 ==

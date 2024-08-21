@@ -8,4 +8,4 @@ option "count" c "Number of items to dump before exiting. If no count value is p
 option "skip" k "Number of items to skip before dumping" int optional
 option "exclude" e "List of item types to exclude from the dump" string optional default=""
 option "scaler-width" w "Scaler counter width in bits" int optional default="32"
-option "format" F "NSCLDAQ format version" values="v12","v11","v10" enum default="v12" optional
+option "nscldaq-format" F "NSCLDAQ format version" values="12","11","10" enum default="12" optional

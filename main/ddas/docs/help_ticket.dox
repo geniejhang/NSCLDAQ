@@ -18,7 +18,7 @@ As an example, lets consider a user "Bob" who is trying to convert an event file
 @verbatim
 <genesis:rawdata >. /usr/opt/daq/12.1-xiaapi4/daqsetup.bash
 <genesis:rawdata >$DAQBIN/ddasdumper -s file:///scratch/chester/rawdata/run-1234-00.evt -f run-1234-00.root
-ddasdumper main caught a C++ exception: Unable to dump a data format item... likely you've specified the wrong --format
+ddasdumper main caught a C++ exception: Unable to dump a data format item... likely you've specified the wrong --nscldaq-format
 @endverbatim
 
 @par
@@ -38,11 +38,11 @@ A better version of this email would look something like:
 "I have a data file run-1234-00.evt which was recorded using NSCLDAQ version 11.3-034. I am trying to convert the file to ROOT format using the ddasdumper from NSCLDAQ version 12.1-xiaapi4. No output ROOT file is produced, and I see the following message: 
 
 $DAQBIN/ddasdumper -s file:///scratch/chester/rawdata/run-1234-00.evt -f run-1234-00.root
-ddasdumper main caught a C++ exception: Unable to dump a data format item... likely you've specified the wrong --format
+ddasdumper main caught a C++ exception: Unable to dump a data format item... likely you've specified the wrong --nscldaq-format
 <hr>
 
 @par
-I do not understand what --format refers to or how I should set it. This issue is repeatable and occurs immediately after I attempt to dump the file."
+I do not understand what --nscldaq-format refers to or how I should set it. This issue is repeatable and occurs immediately after I attempt to dump the file."
 
 @par
 At this point it is easy to address the issue: there is a format mismatch between the run file's data format and the data format that the ddasdumper program expects. The response by Alice would point user Bob in the right direction:
@@ -53,31 +53,31 @@ Usage: ddasdumper [OPTION]...
 Write NSCLDAQ PHYSICS_EVENT data obtained using DDAS to a ROOT TTree and
 perform a formatted dump of selected data items.
 
-  -h, --help              Print help and exit
-  -V, --version           Print version and exit
-  -s, --source=STRING     Data source URL. Note that only file and streaming
-                            data sources
-  -f, --fileout=STRING    Path of output file
-  -c, --count=INT         Number of items to dump before exiting. If no count
-                            value is provided, all items are dumped
-  -k, --skip=INT          Number of items to skip before dumping
-  -e, --exclude=STRING    List of item types to exclude from the dump
-                            (default=`')
-  -w, --scaler-width=INT  Scaler counter width in bits  (default=`32')
-  -F, --format=ENUM       NSCLDAQ format version  (possible values="v12",
-                            "v11", "v10" default=`v12')
+  -h, --help                 Print help and exit
+  -V, --version              Print version and exit
+  -s, --source=STRING        Data source URL. Note that only file and streaming
+                               data sources
+  -f, --fileout=STRING       Path of output file
+  -c, --count=INT            Number of items to dump before exiting. If no count
+                               value is provided, all items are dumped
+  -k, --skip=INT             Number of items to skip before dumping
+  -e, --exclude=STRING       List of item types to exclude from the dump
+                               (default=`')
+  -w, --scaler-width=INT     Scaler counter width in bits  (default=`32')
+  -F, --nscldaq-format=ENUM  NSCLDAQ format version  (possible values="12",
+                            "11", "10" default=`12')
 @endverbatim
 
 @par
 Which shows two important things:
-1. The `--format` option expects one of v10, v11, and v12, corresponding to the major version of the NSCLDAQ code used to take the data.
+1. The `--nscldaq-format` option expects one of 10, 11, and 12, corresponding to the major version of the NSCLDAQ code used to take the data.
 2. The default format expected by NSCLDAQ 12.1-xiaapi4 is for version 12 data.
 
 @par
 Specifying the correct format version allows the code to run as expected:
 
 @verbatim
-<genesis:rawdata >$DAQBIN/ddasdumper -s file:///scratch/chester/rawdata/run-1234-00.evt -f run-1234-00.root --format=v11
+<genesis:rawdata >$DAQBIN/ddasdumper -s file:///scratch/chester/rawdata/run-1234-00.evt -f run-1234-00.root --nscldaq-format=11
 Ring items formatted for: 11.0
 
 Mon May 16 17:39:43 2022

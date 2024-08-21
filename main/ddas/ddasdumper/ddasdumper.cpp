@@ -62,6 +62,7 @@
 #include "RootFileDataSink.h"
 
 using namespace ufmt;
+
 // Map of exclusion type strings to type integers:
 
 static std::map<std::string, uint32_t> TypeMap = {
@@ -86,10 +87,8 @@ static std::map<std::string, uint32_t> TypeMap = {
 /**
  * @brief "Tokenize" a delimited string into a vector. Shamelessly stolen 
  * from https://www.techiedelight.com/split-string-cpp-using-delimiter/.
- * 
  * @param str   String to split up.
  * @param delim Delimimeter on which to split the string.
- *
  * @return Tokenized vector of strings.
  */
 static std::vector<std::string>
@@ -110,14 +109,10 @@ tokenize(std::string const &str, const char delim)
 /**
  * @brief Creates a vector of the ring item types to be excluded from the dump 
  * given a comma separated list of types.
- * 
  * @param exclusions - string containing the exclusion list.
- *
  * @throw std::invalid_argument an exclusion item is not a string and is not 
  *   in the map of recognized item types.
- *
  * @return Vector of items to exclude.
- *
  * @details
  * A type can be a string or a positive number. If it is a string, it is 
  * translated to the type id using TypeMap. If it is a number, it is used 
@@ -158,24 +153,20 @@ makeExclusionList(const std::string& exclusions)
 
 /**
  * @brief Map the version we get from the command line to a factory version.
- *
  * @param fmtIn Format the user requested.
- *
  * @throw std::invalid_argument Bad format version
- *
  * @return Factory version ID (from the enum).
- *
  * @note We should never throw because gengetopt will enforce the enum.
  */
 static FormatSelector::SupportedVersions
-mapVersion(enum_format fmtIn)
+mapVersion(enum_nscldaq_format fmtIn)
 {
     switch (fmtIn) {
-    case format_arg_v12:
+    case nscldaq_format_arg_12:
 	return FormatSelector::v12;
-    case format_arg_v11:
+    case nscldaq_format_arg_11:
 	return FormatSelector::v11;
-    case format_arg_v10:
+    case nscldaq_format_arg_10:
 	return FormatSelector::v10;
     default:
 	throw std::invalid_argument("Invalid DAQ format version specifier");
@@ -184,16 +175,13 @@ mapVersion(enum_format fmtIn)
 
 /**
  * @brief Parse the URI of the source and based on the parse create the 
- * underlying connection. Create the correcte concrete instance of DataSource 
+ * underlying connection. Create the correct concrete instance of DataSource 
  * given all that.
- * 
  * @param pFactory Pointer to the ring item factory to use.
  * @param strUrl   String URI of the connection.
- * 
  * @throw std::invalid_argument If a ringbuffer data source is requested.
  *   The unified format library is incorporated into the NSCLDAQ, but does
  *   not have NSCLDAQ support enabled as its installed first.
- *
  * @return Dynamically allocated data source.
  */
 DataSource*
@@ -230,13 +218,10 @@ makeDataSource(::ufmt::RingItemFactoryBase* pFactory, const std::string& strUrl)
 
 /**
  * @brief Process PHYSICS_EVENT data and dump items.
- *
  * @param pItem   Pointer to the item.
  * @param factory Reference to the factory appropriate to the format.
  * @param pSink   Pointer to the data sink we're writing to.
- *
  * @throw std::logic_error If the wrong item type is specified.
- *
  * @details
  * Steps performed by this function:
  * - Based on the item type, use the factory to get a new item using the same 
@@ -244,14 +229,11 @@ makeDataSource(::ufmt::RingItemFactoryBase* pFactory, const std::string& strUrl)
  * - Process PHYSICS_EVENT items and write them to a data sink.
  * - Process selected event types and dump them to stdout using their 
  *   `toString()` method.
- *
  * @note This method is rather long but this is only due to the switch 
  *   statement that must handle every possible ring item type in DataFormat.h. 
  *   The actual code is really quite simple (I think).
- *
  * @note Use of std::unique_ptrs ensure that temporary, specific ring item 
  *   objects are automatically deleted.
- *
  * @note EVB_FRAGMENT, EVB_UNKNOWN_PAYLOAD types are ignored.
  */
 static void
@@ -303,8 +285,8 @@ dumpItem(
 	}
 	catch (std::bad_cast e) {
 	    throw std::logic_error(
-		"Unable to dump a data format item... "
-		"likely you've specified the wrong --format"
+		"Unable to dump a data format item... likely you've "
+		"specified the wrong --nscldaq-format"
 		);
 	}
     }
@@ -349,11 +331,8 @@ dumpItem(
 
 /**
  * @brief Setup, configure dumper settings and dump events.
- *
  * @param argc, argv Argument count and argument vector.
- *
  * @return EXIT_SUCCESS Successful event dump
- *
  * @note All handled exceptions cause immidiate termination via 
  *   `std::exit(EXIT_FAILURE)`.
  */
@@ -373,7 +352,8 @@ main(int argc, char* argv[])
 	std::string excludeItems = args.exclude_arg;
         std::vector<uint32_t> exclusionList = makeExclusionList(excludeItems);
         int scalerBits = args.scaler_width_arg;
-        FormatSelector::SupportedVersions version = mapVersion(args.format_arg);
+        FormatSelector::SupportedVersions version
+	    = mapVersion(args.nscldaq_format_arg);
 
 	// Factory for this format:
 	

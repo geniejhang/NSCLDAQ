@@ -686,7 +686,6 @@ class MainWindow(QMainWindow):
                 # Single channel acquisition mode channel has been switched
                 # since acquiring a trace (trace on the canvas does not match
                 # current selection box).
-                print("this one")
                 raise ValueError(f"Stored trace data for Mod. {self.trace_info['module']} Ch. {self.trace_info['channel']} does not match the current selection box Mod. {module} Ch. {channel}")
         except ValueError as e:
             self.logger.exception(
