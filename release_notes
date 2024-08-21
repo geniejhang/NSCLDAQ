@@ -5,6 +5,7 @@
 * Updated DDAS codebase for XIA API 4 transition. NOTE/WARNING: Changes are NOT back-compatible with XIA API 2 and will not work with FRIBDAQ buster images.
 * Janus datasource bug fix
 * Added monitor output control in MDPP-16/32 QDC/SCP modules configuration
+* Issue #171 fix for QtScope filter display
 == 12.1-pre2 ==
 
 == 12.1-pre1 ==
