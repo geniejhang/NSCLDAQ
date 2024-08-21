@@ -332,7 +332,7 @@ class MainWindow(QMainWindow):
         if fname and opt:
             try:
                 if (opt == "XIA settings file (*.set)"
-                    or "XIA JSON settings file (*.json)"):
+                    or "XIA settings file (*.set, *.json)"):
                     self.sys_utils.load_set_file(fname)
                 else:
                     raise RuntimeError(
