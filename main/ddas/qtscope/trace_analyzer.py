@@ -134,12 +134,10 @@ class TraceAnalyzer:
         for i, _ in enumerate(self.trace):
             s0 = 0  # Trailing sum.
             s1 = 0  # Leading sum.
-            ilow = i - 2*fp.fast_risetime - fp.fast_gap + 1
-            if ilow >= 0:
-                ihigh = i - fp.fast_risetime - fp.fast_gap
-                s0 = np.sum(self.trace[ilow:ihigh])
-                ilow = i - fp.fast_risetime + 1
-                s1 = np.sum(self.trace[ilow:i])
+            if i - 2*fp.fast_risetime - fp.fast_gap + 1 >= 0:
+                # +1 on high limit for inclusive sum:
+                s0 = np.sum(self.trace[i-2*fp.fast_risetime-fp.fast_gap+1:i-fp.fast_risetime-fp.fast_gap+1])
+                s1 = np.sum(self.trace[i-fp.fast_risetime+1:i+1])
                 self.fast_filter[i] = s1 - s0
                     
     def _compute_cfd(self, fp):
@@ -168,10 +166,11 @@ class TraceAnalyzer:
             s0, s1, s2, s3 = 0, 0, 0, 0
             k = i + D - L
             if ((k - D - B) >= 0) and ((k + L) < len(self.trace)):
-                s0 = np.sum(self.trace[k:k+L])
-                s1 = np.sum(self.trace[k-B:k-B+L])
-                s2 = np.sum(self.trace[k-D:k-D+L])
-                s3 = np.sum(self.trace[k-D-B:k-D-B+L])
+                # +1 on high limit for inclusive sum:
+                s0 = np.sum(self.trace[k:k+L+1])
+                s1 = np.sum(self.trace[k-B:k-B+L+1])
+                s2 = np.sum(self.trace[k-D:k-D+L+1])
+                s3 = np.sum(self.trace[k-D-B:k-D-B+L+1])
                 self.cfd[k] = w*(s0 - s1) - (s2 - s3)                
 
     def _compute_slow_filter(self, fp):
@@ -256,11 +255,13 @@ class TraceAnalyzer:
         slow_gap = self.dsp_mgr.get_chan_par(mod, chan, "ENERGY_FLATTOP")
         tau = self.dsp_mgr.get_chan_par(mod, chan, "TAU")
 
-        # If the total fast filter length 2*rise + gap <= xdt, the analyzed
-        # trace will not display properly. Warn the users:
+        # Warn users that short filters may not display correctly:
 
         if (2*fast_risetime + fast_gap <= xdt):
             print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: WARNING: Fast filter length {2*fast_risetime + fast_gap} <= XDT sampling {xdt}\n\tThe analyzed trace may not display properly!")
+
+        if (2*slow_risetime + slow_gap <= xdt):
+            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: WARNING: Slow filter length {2*slow_risetime + slow_gap} <= XDT sampling {xdt}\n\tThe analyzed trace may not display properly!")
         
         # Since we're stuck with XDT binning, round the filter parameters to
         # the nearest integer multiple of the XDT value to convert to length
