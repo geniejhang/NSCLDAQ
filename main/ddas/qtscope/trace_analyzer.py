@@ -99,6 +99,14 @@ class TraceAnalyzer:
         slow_gap = self.dsp_mgr.get_chan_par(mod, chan, "ENERGY_FLATTOP")
         tau = self.dsp_mgr.get_chan_par(mod, chan, "TAU")
 
+        # Warn user if the  filters are short:
+        
+        if (2*fast_risetime + fast_gap <= xdt):
+            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: WARNING: Fast filter length {2*fast_risetime + fast_gap} <= XDT sampling {xdt}\n\tThe analyzed trace may not display properly!")
+
+        if (2*slow_risetime + slow_gap <= xdt):
+            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: WARNING: Slow filter length {2*slow_risetime + slow_gap} <= XDT sampling {xdt}\n\tThe analyzed trace may not display properly!")
+        
         # Since we're stuck with XDT binning, round the filter parameters to
         # the nearest integer multiple of the XDT value to convert to length
         # in samples. Because channel DSP paramters are double we must convert
@@ -123,14 +131,6 @@ class TraceAnalyzer:
             tau = int(1)
         else:
             tau = int(round(tau/xdt))
-
-        # Warn user if the  filters are short:
-        
-        if (2*fast_risetime + fast_gap <= xdt):
-            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: WARNING: Fast filter length {2*fast_risetime + fast_gap} <= XDT sampling {xdt}\n\tThe analyzed trace may not display properly!")
-
-        if (2*slow_risetime + slow_gap <= xdt):
-            print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: WARNING: Slow filter length {2*slow_risetime + slow_gap} <= XDT sampling {xdt}\n\tThe analyzed trace may not display properly!")
 
         ns = xdt*1000  # Convert from samples to time in ns.
         print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Filter calculation requires parameters to be an integer multiple of XDT.\nParameters have not been changed for acquisition.\n\t XDT (ns): {ns:.0f}\n\t Trig. risetime (ns): {fast_risetime*ns:.0f}\n\t Trig. gap (ns): {fast_gap*ns:.0f}\n\t CFD scale: {cfd_scale:.0f}\n\t CFD delay (ns): {cfd_delay*ns:.0f}\n\t Ene. risetime (ns): {slow_risetime*ns:.0f}\n\t Ene. gap (ns): {slow_gap*ns:.0f}\n\t Tau (ns): {tau*ns:.0f}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, ns, fast_risetime*ns, fast_gap*ns, cfd_scale, cfd_delay*ns, slow_risetime*ns, slow_gap*ns, tau*ns))
