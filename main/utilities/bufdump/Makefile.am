@@ -35,7 +35,7 @@ dumper_LDADD		=	 @builddir@/libStringifier.la \
 				@top_builddir@/base/os/libdaqshm.la            \
 				$(THREADLD_FLAGS)
 dumper_DEPENDENCIES = libStringifier.la 
-libStringifier_la_SOURCES = CUnifiedFormatter.cpp CUnifiedFormatter.headers
+libStringifier_la_SOURCES = CUnifiedFormatter.cpp CUnifiedFormatter.h
 
 libStringifier_la_CPPFLAGS = @UFMT_CPPFLAGS@
 libStringifier_la_LIBADD = @UFMT_LDFLAGS@
