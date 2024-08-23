@@ -1,4 +1,5 @@
 == 12.1-pre2 ==
+* Added SRS Readout
 * Unified format library and tcl++ are automatically incorporated during build.
 * DDAS hit and DDAS unpacker refactored into an external module and automatically incorporated during build. See https://github.com/FRIBDAQ/DDASFormat.
 * Updated DDAS code documentation and new DDAS tutorials.

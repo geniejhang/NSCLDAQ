@@ -139,6 +139,7 @@ void CEventSegmentSRS::configure(std::string configFile, std::string daqPortStr)
         std::cerr << "connection to Tcp server failed"<< std::endl;
         return;
     }
+    
     // std::cout<<"CEventSegmentSRS::configure - response: "<<response<<std::endl;
 
     //get the active FEC ids and pass them to udpBroker (m_clientUdp) so that a ring buffer per FEC is created
