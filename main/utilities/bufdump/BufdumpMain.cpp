@@ -220,7 +220,7 @@ BufdumpMain::operator()(int argc, char** argv)
   // Make an object to give us version specific strings
   // for the ring items:
 
-  auto formatter = CUnifiedFormatter(parse.nscldaq_version_arg);
+  auto formatter = CUnifiedFormatter(parse.nscldaq_version_arg, parse.detail_arg);
 
   size_t numToDo = m_itemCount;
   bool done = false;
