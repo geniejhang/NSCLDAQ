@@ -177,6 +177,8 @@ CUnifiedFormatter::operator()(const void* pItem) {
                 ufmt::CPhysicsEventItem& 
                     physics(reinterpret_cast<ufmt::CPhysicsEventItem&>(*actualItem));
                 result += listFragments(physics);
+            } else {
+                result = actualItem->toString();
             }
             break;
         default:             // Defensive programming.
@@ -194,9 +196,50 @@ CUnifiedFormatter::operator()(const void* pItem) {
 }
 
 /// private utilities:
- 
+
+/**
+ * listFragments
+ *     Called to produce a string that consists of the body of a physics
+ * event with the fragments dumped.  What we do:
+ * 1. Ask the item for its fragments.
+ * 2. For each fragment:
+ *    - Dump the header of the fragment.
+ *    - Convert the fragment payload to the appropriate ring item.
+ *    - Dump it.
+ * If the conversion threw an exception, dump the generic ring item.
+ */
 std::string
 CUnifiedFormatter::listFragments(ufmt::CPhysicsEventItem& event) {
-    std::string result = "stub";
+    std::string result;
+    auto fragments = event.getFragments();
+    for (auto& f : fragments) {
+        result += ">>>>>> Fragment\n";
+        std::stringstream fheader;
+        fheader << "Timestamp: " << std::hex << f.s_timestamp << std::dec << std::endl;
+        fheader << "Source id: " << f.s_sourceId << std::endl;
+        fheader << "Barrier  : " << f.s_barrier << std::endl;
+        fheader << "Payload size in bytes: " << f.s_size << std::endl;
+        fheader << "Payload: \n:";
+        result += fheader.str();
+
+        // Make a ring item of the payload and make it the right one:
+
+        ufmt::CRingItem* pRaw = 
+            m_pFactory->makeRingItem(reinterpret_cast<const ufmt::RingItem*>(f.s_itemhdr));
+        ufmt::CRingItem* pActual(0);
+        try {
+            pActual = makeActualItem(*pRaw, *m_pFactory);
+        }
+        catch (...) {
+            pActual = m_pFactory->makeRingItem(*pRaw);    // failed actual is just a raw item.
+        }
+        result += pActual->toString();
+
+        delete pRaw;
+        delete pActual;
+
+    }
+
+
     return result;
 }
