@@ -34,6 +34,7 @@
 namespace ufmt {
 
     class RingItemFactoryBase;
+    class CPhysicsEventItem;
 }
 /**
  * This class hides the use of the unified formatter in a separate library.
@@ -43,12 +44,19 @@ namespace ufmt {
  */
 class CUnifiedFormatter {              // Final
 private:
+    typedef enum _detail {
+        headers, bodies, fragments
+    } detail;
+private:
     ufmt::RingItemFactoryBase* m_pFactory;
+    detail m_detail;
 public:
-    CUnifiedFormatter(int version);
+    CUnifiedFormatter(int version, const char* pDetail);
     ~CUnifiedFormatter();
 
     std::string operator()(const void* pItem);    // Avoid use of CRingItem to void conflicts.
+private:
+    std::string listFragments(ufmt::CPhysicsEventItem& event);
 
 };
 

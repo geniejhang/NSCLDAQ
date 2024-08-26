@@ -19,6 +19,7 @@
 #include <string>
 #include <iostream>
 #include <stdlib.h>
+#include <stdexcept>
 
 int main(int argc, char** argv) 
 {
@@ -42,10 +43,14 @@ int main(int argc, char** argv)
     std::cerr << "exiting\n";
     exit(exitCode);
   }
+  catch (std::exception& e) {
+    std::cerr << "Dumper main caught an exception : " << e.what() << std::endl;
+    exit(EXIT_FAILURE);
+  }
   catch (...) {
     std::cerr << "dumper main caught an unexpected exception type \n";
     exit(EXIT_FAILURE);
   }
-
+  exit(EXIT_SUCCESS);
 
 }

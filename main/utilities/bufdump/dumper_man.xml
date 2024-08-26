@@ -163,6 +163,23 @@ dumper <replaceable>?options?</replaceable>
             </listitem>
         </varlistentry>
         <varlistentry>
+            <term><option>--detail</option> <replaceable>headers | bodies | fragments</replaceable></term>
+            <listitem>
+                <para>
+                    Controls the amount of information dumper displays for each ring item in the
+                    source.  <literal>headers</literal> displays only a brief header for each item.
+                    <literal>bodies</literal>, the default, displays the formatted ring item bodies.
+                    This is the information that dumper displayed prior to NSCLDAQ-12.1.
+                    <literal>fragments</literal>  breaks out the fragments for event built data
+                    for physics events.
+                </para>
+                <para>
+                    The use of <option>--detail</option><literal>=fragments</literal> on non-event-built
+                    data is undefined and likely to make dumper crash.
+                </para>
+            </listitem>
+        </varlistentry>
+        <varlistentry>
             <term><option>--version</option></term>
             <listitem>
                 <para>

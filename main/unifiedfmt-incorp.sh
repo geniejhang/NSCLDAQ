@@ -2,7 +2,8 @@
 
 ##  Incorporate the unfied formatting library:
 
-# Most recently used version 2.0
+# Most recently used version 2.1 minimum needed
+# for the new dumper additions.
 
 REPOSITORY="https://github.com/FRIBDAQ/UnifiedFormat.git"
 TAG=$1
@@ -10,7 +11,7 @@ TARGET="unifiedformat"
 
 if [[ ! $TAG ]]
 then
-  TAG="2.0"
+  TAG="2.1"
 fi
 
 rm -rf $TARGET
