@@ -31,10 +31,12 @@
 #include <CRingStateChangeItem.h>
 #include <CRingTextItem.h>
 #include  <CUnknownFragment.h>
+#include <DataFormat.h>
 
 #include <stdlib.h>
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
 #include <map>
 using namespace ufmt;
 
@@ -84,11 +86,13 @@ makeActualItem(const CRingItem& raw, ::ufmt::RingItemFactoryBase& fact) {
         }
         return fact.makeRingItem(raw);
     } catch (std::exception &e){
-        std::cerr << "could not convert raw ring item to specific one: \n";
-        std::cerr << e.what() << std::endl;
-        std::cerr << "Ring item type was: " << std::hex << "0x" << raw.type() << std::endl;
-        std::cerr << raw.toString() << std::endl;
-        exit(EXIT_FAILURE);
+        std::stringstream err;
+        err << "could not convert raw ring item to specific one: \n";
+        err << e.what() << std::endl;
+        err << "Ring item type was: " << std::hex << "0x" << raw.type() << std::endl;
+        err << raw.toString() << std::endl;
+        std::string errormsg = err.str();
+        throw std::runtime_error(errormsg);
     }
 }
 
@@ -100,8 +104,11 @@ makeActualItem(const CRingItem& raw, ::ufmt::RingItemFactoryBase& fact) {
  * and use their toString to format the item.
  * 
  * @param version - major version of NSCLDAQ the ring items belong to.
+ * @param pDetail - detail desired should be "headers", "bodies" or "fragments"
  */
-CUnifiedFormatter::CUnifiedFormatter(int version) : m_pFactory(0)
+CUnifiedFormatter::CUnifiedFormatter(int version, const char* pDetail) : 
+    m_pFactory(0) , m_detail(CUnifiedFormatter::bodies)
+
 {
     auto p = versionMap.find(version);
     if (p == versionMap.end()) {
@@ -110,6 +117,25 @@ CUnifiedFormatter::CUnifiedFormatter(int version) : m_pFactory(0)
         throw std::invalid_argument("Not a valid formt selector in CUnifiedFormatter constructor");
     }
     m_pFactory = &FormatSelector::selectFactory(p->second);
+
+    // Figure out the detail.  Will throw std::invalid_argument if it's not valid but
+    // gengetopt should make sure it is before we get to it:
+
+    std::string d(pDetail);    // easier to compare std::string.
+    if (d == "headers") {
+        m_detail = headers;
+    } else if (d == "bodies") {
+        m_detail = bodies;
+    } else if (d == "fragments") {
+        m_detail = fragments;
+    } else {
+        std::stringstream err;
+        err << pDetail << " Is not a valid dump detail value\n";
+        err << "Must be one of 'headers', 'bodies', or 'fragments'\n";
+        std::string errorMsg = err.str();
+        throw std::invalid_argument(errorMsg);
+    }
+
 }
 /**
  * destructor
@@ -135,7 +161,29 @@ CUnifiedFormatter::operator()(const void* pItem) {
     auto rawItem = m_pFactory->makeRingItem(pRaw);
     auto actualItem = makeActualItem(*rawItem, *m_pFactory);
 
-    std::string result = actualItem->toString();
+    // How we format it depends on the detail:
+
+    std::string result; 
+    switch (m_detail) {
+        case headers:
+            result = actualItem->headerToString();
+            break;
+        case bodies:
+            result  = actualItem->toString();
+            break;
+        case fragments:
+            if (actualItem->type() == ufmt::PHYSICS_EVENT) {
+                result = actualItem->headerToString();
+                ufmt::CPhysicsEventItem& 
+                    physics(reinterpret_cast<ufmt::CPhysicsEventItem&>(*actualItem));
+                result += listFragments(physics);
+            }
+            break;
+        default:             // Defensive programming.
+            throw std::runtime_error("Invalid value vfor m_detail in CUNifiedFormatter::operator()");
+    }
+
+    
 
     delete rawItem;
     delete actualItem;
@@ -143,4 +191,12 @@ CUnifiedFormatter::operator()(const void* pItem) {
 
     return result;
 
+}
+
+/// private utilities:
+ 
+std::string
+CUnifiedFormatter::listFragments(ufmt::CPhysicsEventItem& event) {
+    std::string result = "stub";
+    return result;
 }
