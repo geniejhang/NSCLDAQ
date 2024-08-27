@@ -10,20 +10,15 @@ COMPILATION_FLAGS =  \
 	-I@top_srcdir@/base/os \
 	-I@top_srcdir@/base/thread \
 	@LIBTCLPLUS_CFLAGS@ \
-	@THREADCXX_FLAGS@ @TCL_FLAGS@ @PIXIE_CPPFLAGS@
+	@THREADCXX_FLAGS@ @TCL_FLAGS@ @PIXIE_CPPFLAGS@ @UFMT_CPPFLAGS@
 
 
-lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la libFragmentIndex.la
+lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la
 
-
-libFragmentIndex_la_SOURCES=FragmentIndex.cpp
-
-libFragmentIndex_la_CXXFLAGS=-I@top_srcdir@/daq/format @LIBTCLPLUS_CFLAGS@ \
-	@PIXIE_CPPFLAGS@
 
 
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp \
-	CInputStatsCommand.cpp COrdererOutput.cpp fragment.cpp \
+	CInputStatsCommand.cpp COrdererOutput.cpp \
 	COutputStatsObserver.cpp COutputStatsCommand.cpp CDataLateStatistics.cpp \
 	CDLateStatsCommand.cpp CLateScriptObserver.cpp COnLateDataCommand.cpp  \
 	CBarrierStatsCommand.cpp CBarrierStats.cpp CIncompleteBarrierStats.cpp \
@@ -38,7 +33,7 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 
 
 libEventBuilder_la_CPPFLAGS=$(COMPILATION_FLAGS)   
-libEventBuilder_la_LIBADD = @LIBTCLPLUS_LDFLAGS@	\
+libEventBuilder_la_LIBADD = @UFMT_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@	\
 	@top_builddir@/base/thread/libdaqthreads.la 	\
 	@top_builddir@/base/os/libdaqshm.la    \
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@
@@ -77,8 +72,8 @@ FRAMEWORK_SOURCEFILES =  GetOpt.cpp Main.cpp options.ggo
 FRAMEWORK_SKELETON =  $(FRAMEWORK_SOURCEFILES)
 
 
-include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h \
-	CEVBFrameworkApp.h  GetOpt.h fragio.h FragmentIndex.h
+include_HEADERS = CEventOrderClient.h  CEVBClientApp.h EVBFramework.h \
+	CEVBFrameworkApp.h  GetOpt.h fragio.h 
 
 
 noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h  \
@@ -87,7 +82,7 @@ noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h  \
 	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h \
 	COnLateDataCommand.h \
 	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h \
-	CCompleteBarrierCallback.h \
+	CCompleteBarrierCallback.h fragment.h \
 	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h \
 	CDeadSourceCommand.h \
 	CReviveSocketCommand.h CFragReader.h CFragWriter.h CFlushCommand.h \
