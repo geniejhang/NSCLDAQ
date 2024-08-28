@@ -44,7 +44,7 @@ public:
     // private utilities:
 private:
     void processItems(const CRingBlockReader::DataDescriptor&  info);
-    void fillFragHeader(EVB::FragmentHeader& hdr, const RingItem* pItem);
+    void fillFragHeader(ufmt::EVB::FragmentHeader& hdr, const RingItem* pItem);
     
 };
 
