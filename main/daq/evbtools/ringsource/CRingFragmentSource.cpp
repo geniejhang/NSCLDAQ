@@ -196,7 +196,7 @@ CRingFragmentSource::sendChunk(CRingBufferChunkAccess::Chunk& c)
 {
     // Create the fragment headers and count the end runs.
     
-    std::pair<size_t, EVB::pFragment> frags = makeFragments(c);
+    std::pair<size_t, ufmt::EVB::pFragment> frags = makeFragments(c);
     
     // Send the fragments to the event builder.
     
@@ -221,8 +221,8 @@ void
 CRingFragmentSource::resizeFragments()
 {
     m_nFragments += FRAG_RESIZE_AMOUNT;
-    m_pFragments = static_cast<EVB::pFragment>(
-        realloc(m_pFragments, m_nFragments * sizeof(EVB::Fragment))
+    m_pFragments = static_cast<ufmt::EVB::pFragment>(
+        realloc(m_pFragments, m_nFragments * sizeof(ufmt::EVB::Fragment))
     );
     if (!m_pFragments) throw std::bad_alloc();
 }
@@ -310,7 +310,7 @@ CRingFragmentSource::barrierType(RingItem& item)
  * @return std::pair<size_t, EVB::pFragment> - first is number of fragments,
  *                                             second is pointer to the fragment array.
  */
-std::pair<size_t, EVB::pFragment>
+std::pair<size_t, ufmt::EVB::pFragment>
 CRingFragmentSource::makeFragments(CRingBufferChunkAccess::Chunk& c)
 {
     int n = 0;

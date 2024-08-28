@@ -53,7 +53,7 @@ private:
     uint64_t           m_timestampOffset;
     int                m_nDefaultSid;
     size_t             m_nFragments;  // size of the array below.
-    EVB::pFragment     m_pFragments;
+    ufmt::EVB::pFragment     m_pFragments;
     
     time_t             m_endRunTime;  // Most recent end run time.
     
@@ -81,7 +81,7 @@ private:
     uint64_t getTimestampFromUserCode(RingItem& item);
     uint32_t barrierType(RingItem& item);
     
-    std::pair<size_t, EVB::pFragment> makeFragments(CRingBufferChunkAccess::Chunk& c);
+    std::pair<size_t, ufmt::EVB::pFragment> makeFragments(CRingBufferChunkAccess::Chunk& c);
     bool timedOut();
     void throwIfNotExpectingBodyHeaders(const char* msg);
 };
