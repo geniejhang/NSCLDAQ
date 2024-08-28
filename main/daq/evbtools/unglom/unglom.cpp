@@ -231,7 +231,7 @@ static void writeNonPhysicsItem(CRingItem* pItem)
   pRingItem pRItem = pItem->getItemPointer();
 
   // Provide initial values
-  EVB::FragmentHeader hdr;
+  ufmt::EVB::FragmentHeader hdr;
   hdr.s_timestamp = NULL_TIMESTAMP;
   hdr.s_sourceId  = sourceId;
   hdr.s_size      = itemSize(pRItem);
@@ -255,7 +255,7 @@ static void writeNonPhysicsItem(CRingItem* pItem)
     hdr.s_barrier   = pItem->getBarrierType();
   }
 
-  EVB::pFragment p = allocateFragment(&hdr);
+  ufmt::EVB::pFragment p = allocateFragment(&hdr);
   memcpy(p->s_pBody, pRItem, pRItem->s_header.s_size);
   CFragIO::writeFragment(STDOUT_FILENO, p);
 
@@ -285,13 +285,13 @@ writePhysicsItem(CRingItem* pItem)
   residualSize         -= sizeof(uint32_t);
 
   while (residualSize) {
-    EVB::pFlatFragment pFrag = reinterpret_cast<EVB::pFlatFragment>(pBody);
-    EVB::Fragment      frag;
+    ufmt::EVB::pFlatFragment pFrag = reinterpret_cast<ufmt::EVB::pFlatFragment>(pBody);
+    ufmt::EVB::Fragment      frag;
     frag.s_header = pFrag->s_header;
     frag.s_pBody  = pFrag->s_body;
     CFragIO::writeFragment(STDOUT_FILENO, &frag);
 
-    uint32_t totalSize = sizeof(EVB::FragmentHeader) + pFrag->s_header.s_size;
+    uint32_t totalSize = sizeof(ufmt::EVB::FragmentHeader) + pFrag->s_header.s_size;
     pBody += totalSize;
     residualSize -= totalSize;
   }
