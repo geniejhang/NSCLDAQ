@@ -429,7 +429,7 @@ CEventOrderClient::getReplyString()
  * @param pChain - Pointer to the first chain element.
  */
 void
-CEventOrderClient::freeChain(EVB::pFragmentChain pChain)
+CEventOrderClient::freeChain(ufmt::EVB::pFragmentChain pChain)
 {
   while (pChain) {
     EVB::pFragmentChain pNext = pChain->s_pNext;
@@ -451,7 +451,7 @@ iovec*
 CEventOrderClient::makeIoVec(EVB::Fragment& Frag, iovec* pVecs)
 {
   pVecs->iov_base = &Frag;
-  pVecs->iov_len = sizeof(EVB::FragmentHeader);
+  pVecs->iov_len = sizeof(ufmt::EVB::FragmentHeader);
   pVecs++;
   pVecs->iov_base = Frag.s_pBody;
   pVecs->iov_len  = Frag.s_header.s_size;
@@ -487,7 +487,7 @@ CEventOrderClient::bytesInChain(EVB::pFragmentChain pFrags)
   EVB::pFragmentChain p = pFrags;
   size_t result(0);
   while (p) {
-    result += sizeof(EVB::FragmentHeader) + p->s_pFragment->s_header.s_size;
+    result += sizeof(ufmt::EVB::FragmentHeader) + p->s_pFragment->s_header.s_size;
     p      = p->s_pNext;
   }
   

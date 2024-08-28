@@ -17,6 +17,7 @@
 #define CFRAGMENTHANDLER_H
 
 #include <config.h>
+#include <fragment.h>
 #include <string>
 #include <queue>
 #include <map>
@@ -34,7 +35,10 @@ class COutputThread;
 class CSortThread;
 // Forward definitions:
 
-namespace EVB {
+using namespace ufmt;
+namespace EVB = ufmt::EVB;
+
+namespace ufmt::EVB {
   struct _Header;
   typedef struct _FragmentHeader FragmentHeader, *pFragmentHeader;
 

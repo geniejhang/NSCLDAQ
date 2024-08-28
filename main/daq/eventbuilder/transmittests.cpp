@@ -28,7 +28,7 @@
 
 #include <CPortManager.h>
 #include <CPortManagerException.h>
-#include "fragment.h"
+#include <fragment.h>
 
 #include <sys/uio.h>
 #include <stdint.h>
@@ -42,12 +42,14 @@
 #include <string.h>
 #include <stdexcept>
 
+using namespace ufmt;
+
 // This 'class' accepts a connecton on a port and then saves
 // data from the peer until the connection is broken.
 
 struct Simulator {
     struct Request {
-        EVB::ClientMessageHeader s_hdr;
+        ::EVB::ClientMessageHeader s_hdr;
         void*                   s_body;
     };
     std::vector<Request> m_requests;
@@ -87,7 +89,7 @@ void Simulator::operator()() {
     
     while (pConn->getState() == CSocket::Connected) {
         try {
-            EVB::ClientMessageHeader header;
+            ::EVB::ClientMessageHeader header;
             void*                   pBody(nullptr);
             
             int nBytes = pConn->Read(&header, sizeof(header));
@@ -237,15 +239,15 @@ void clienttest::chainbytes_2()
 {
     // One chain entry is the header size + body size.
     
-    EVB::Fragment      frag;
+    ufmt::EVB::Fragment      frag;
     frag.s_header.s_size = 100;
     
-    EVB::FragmentChain head;
+    ::EVB::FragmentChain head;
     head.s_pNext =nullptr;
     head.s_pFragment = &frag;
     
     size_t nBytes =  m_pClient->bytesInChain(&head);
-    EQ(sizeof(EVB::FragmentHeader) + frag.s_header.s_size, nBytes);
+    EQ(sizeof(ufmt::EVB::FragmentHeader) + frag.s_header.s_size, nBytes);
 }
 
 void clienttest::chainbytes_3()
@@ -253,8 +255,8 @@ void clienttest::chainbytes_3()
     
     // Several frags:
     
-    EVB::Fragment frags[10];
-    EVB::FragmentChain chain[10];
+    ufmt::EVB::Fragment frags[10];
+    ::EVB::FragmentChain chain[10];
     for (int i =0; i < 10; i++) {
         frags[i].s_header.s_size = 100;
         chain[i].s_pFragment = &(frags[i]);
@@ -266,7 +268,7 @@ void clienttest::chainbytes_3()
     }
     
     size_t nBytes = m_pClient->bytesInChain(chain);
-    EQ(10*(100 + sizeof(EVB::FragmentHeader)), nBytes);
+    EQ(10*(100 + sizeof(ufmt::EVB::FragmentHeader)), nBytes);
     
 }
 void clienttest::iovecs_1()
@@ -280,10 +282,10 @@ void clienttest::iovecs_2()
 {
     // One chain entry gives 2 (one for header, one for discontiguous body).
     
-    EVB::Fragment      frag;
+    ufmt::EVB::Fragment      frag;
     frag.s_header.s_size = 100;
     
-    EVB::FragmentChain head;
+    ufmt::EVB::FragmentChain head;
     head.s_pNext =nullptr;
     head.s_pFragment = &frag;
 
@@ -295,8 +297,8 @@ void clienttest::iovecs_3()
 {
     // 10 chain entries gives 20 iovecs:
     
-    EVB::Fragment frags[10];
-    EVB::FragmentChain chain[10];
+    ufmt::EVB::Fragment frags[10];
+    ufmt::EVB::FragmentChain chain[10];
     for (int i =0; i < 10; i++) {
         frags[i].s_header.s_size = 100;
         chain[i].s_pFragment = &(frags[i]);
@@ -325,19 +327,19 @@ void clienttest::fillvecs_2()
 {
     uint8_t data[100];
     
-    EVB::Fragment      frag;
+    ufmt::EVB::Fragment      frag;
     frag.s_header.s_size = 100;
     frag.s_pBody          = data;
     
     
-    EVB::FragmentChain head;
+    ufmt::EVB::FragmentChain head;
     head.s_pNext =nullptr;
     head.s_pFragment = &frag;
     
     iovec vec[2];
     m_pClient->fillFragmentDescriptors(vec, &head);
     
-    EQ(sizeof(EVB::FragmentHeader), vec[0].iov_len);
+    EQ(sizeof(ufmt::EVB::FragmentHeader), vec[0].iov_len);
     EQ((void*)(&(frag.s_header)), vec[0].iov_base);
     
     EQ(sizeof(data), vec[1].iov_len);
@@ -349,8 +351,8 @@ void clienttest::fillvecs_3()
     // Bunch of chain entries.
     
     uint8_t data[10*100];
-    EVB::Fragment frags[10];
-    EVB::FragmentChain chain[10];
+    ufmt::EVB::Fragment frags[10];
+    ufmt::EVB::FragmentChain chain[10];
     
     for (int i =0; i < 10; i++) {
         frags[i].s_header.s_size = 100;
@@ -367,7 +369,7 @@ void clienttest::fillvecs_3()
     m_pClient->fillFragmentDescriptors(vecs, chain);
     
     for (int i =0; i < 20; i+=2) {
-        EQ(sizeof(EVB::FragmentHeader), vecs[i].iov_len);
+        EQ(sizeof(ufmt::EVB::FragmentHeader), vecs[i].iov_len);
         EQ((void*)(&(frags[i/2].s_header)),        vecs[i].iov_base);
         
         EQ(size_t(100), vecs[i+1].iov_len);
@@ -411,9 +413,9 @@ void clienttest::connect_2()
     
     EQ(size_t(1), sim.m_requests.size());
     Simulator::Request r = sim.m_requests[0];
-    EQ(EVB::CONNECT, r.s_hdr.s_msgType);
-    EQ(sizeof(EVB::ConnectBody), size_t(r.s_hdr.s_bodySize));
-    EVB::pConnectBody b = static_cast<EVB::pConnectBody>(r.s_body);
+    EQ(::EVB::CONNECT, r.s_hdr.s_msgType);
+    EQ(sizeof(::EVB::ConnectBody), size_t(r.s_hdr.s_bodySize));
+    ::EVB::pConnectBody b = static_cast<::EVB::pConnectBody>(r.s_body);
     EQ(0, strcmp("A test", b->s_description));
     EQ(uint32_t(0), b->s_nSids);
     cleanupSimulator(thread);
@@ -441,7 +443,7 @@ void clienttest::connect_3()
     thread->join();                  // Wait on thread exit.
     
     Simulator::Request r = sim.m_requests[0];
-    EVB::pConnectBody b = static_cast<EVB::pConnectBody>(r.s_body);
+    ::EVB::pConnectBody b = static_cast<::EVB::pConnectBody>(r.s_body);
     EQ(uint32_t(3), b->s_nSids);
     for (int i =0; i < 3; i++) {
         EQ(uint32_t(i), b->s_sids[i]);
@@ -523,7 +525,7 @@ void clienttest::disconnect_2()
     // Only care about the second which should be a disconnect no body.
     
     Simulator::Request r = sim.m_requests[1];
-    EQ(EVB::DISCONNECT, r.s_hdr.s_msgType);
+    EQ(::EVB::DISCONNECT, r.s_hdr.s_msgType);
     EQ(uint32_t(0),     r.s_hdr.s_bodySize);
     cleanupSimulator(thread);
 
@@ -572,7 +574,7 @@ void clienttest::frag_1()
     EQ(size_t(2), sim.m_requests.size());
     Simulator::Request f = sim.m_requests[1];
     
-    EQ(EVB::FRAGMENTS, f.s_hdr.s_msgType);
+    EQ(::EVB::FRAGMENTS, f.s_hdr.s_msgType);
     EQ(uint32_t(0), f.s_hdr.s_bodySize);
     cleanupSimulator(thread);
 }
@@ -586,14 +588,14 @@ void clienttest::frag_2()
     uint8_t data[100];
     for (int i =0;i < 100; i++) { data[i] = i;}
     
-    EVB::Fragment      frag;
+    ufmt::EVB::Fragment      frag;
     frag.s_header.s_size = 100;
     frag.s_header.s_sourceId = 1;
     frag.s_header.s_timestamp = 0x123456789;
     frag.s_header.s_barrier = 0;
     frag.s_pBody = data;
     
-    EVB::FragmentChain head;
+    ufmt::EVB::FragmentChain head;
     head.s_pNext =nullptr;
     head.s_pFragment = &frag;
     
@@ -610,15 +612,15 @@ void clienttest::frag_2()
     // Lets' look at that second message.
     
     Simulator::Request m = sim.m_requests.at(1);
-    EVB::ClientMessageHeader& h(m.s_hdr);
-    EVB::pFlatFragment         f = static_cast<EVB::pFlatFragment>(m.s_body);
+    ::EVB::ClientMessageHeader& h(m.s_hdr);
+    ufmt::EVB::pFlatFragment         f = static_cast<ufmt::EVB::pFlatFragment>(m.s_body);
     
-    EQ(EVB::FRAGMENTS, h.s_msgType);
-    EQ(sizeof(EVB::FragmentHeader) + 100, size_t(h.s_bodySize));
+    EQ(::EVB::FRAGMENTS, h.s_msgType);
+    EQ(sizeof(ufmt::EVB::FragmentHeader) + 100, size_t(h.s_bodySize));
     
     // The fragment heder:
     
-    EVB::FragmentHeader& fh(f->s_header);
+    ufmt::EVB::FragmentHeader& fh(f->s_header);
     EQ(frag.s_header.s_size, fh.s_size);
     EQ(frag.s_header.s_sourceId, fh.s_sourceId);
     EQ(frag.s_header.s_timestamp, fh.s_timestamp);
@@ -646,14 +648,14 @@ void clienttest::frag_3()
     uint8_t data[100];
     for (int i =0;i < 100; i++) { data[i] = i;}
     
-    EVB::Fragment      frag;
+    ufmt::EVB::Fragment      frag;
     frag.s_header.s_size = 100;
     frag.s_header.s_sourceId = 1;
     frag.s_header.s_timestamp = 0x123456789;
     frag.s_header.s_barrier = 0;
     frag.s_pBody = data;
     
-    EVB::FragmentChain head;
+    ufmt::EVB::FragmentChain head;
     head.s_pNext =nullptr;
     head.s_pFragment = &frag;
     
@@ -681,10 +683,10 @@ void clienttest::frag_4()
     for (int i =0; i < 100; i++) {
         data[i] = i;
     }
-    EVB::Fragment frags[10];
+    ufmt::EVB::Fragment frags[10];
     uint64_t timestamp = 0x12456789;
     for (int i =0; i < 10; i++) {
-        EVB::Fragment& frag(frags[i]);
+        ufmt::EVB::Fragment& frag(frags[i]);
         frag.s_header.s_size = 10;
         frag.s_header.s_sourceId = 1;
         frag.s_header.s_timestamp = timestamp + i*10;
@@ -709,10 +711,10 @@ void clienttest::frag_4()
     
     EQ(size_t(2), sim.m_requests.size());
     auto req(sim.m_requests[1]);
-    EQ(uint32_t(10*sizeof(EVB::FragmentHeader) + sizeof(data)), req.s_hdr.s_bodySize);
+    EQ(uint32_t(10*sizeof(ufmt::EVB::FragmentHeader) + sizeof(data)), req.s_hdr.s_bodySize);
     
     
-    EVB::pFragmentHeader hdr = static_cast<EVB::pFragmentHeader>(req.s_body);
+    ufmt::EVB::pFragmentHeader hdr = static_cast<ufmt::EVB::pFragmentHeader>(req.s_body);
     for (int f =0; f < 10; f++) {
         EQ(frags[f].s_header.s_size, hdr->s_size);
         EQ(frags[f].s_header.s_sourceId, hdr->s_sourceId);
@@ -725,7 +727,7 @@ void clienttest::frag_4()
             sb++;
             is++;
         }
-        hdr = reinterpret_cast<EVB::pFragmentHeader>(is);
+        hdr = reinterpret_cast<ufmt::EVB::pFragmentHeader>(is);
     }
     cleanupSimulator(thread);
     
@@ -743,11 +745,11 @@ void clienttest::frag_5()
     for (int i =0; i < 100; i++) {
         data[i] = i;
     }
-    EVB::Fragment frags[10];
+    ufmt::EVB::Fragment frags[10];
     uint64_t timestamp = 0x12456789;
-    EVB::FragmentPointerList l;
+    ::EVB::FragmentPointerList l;
     for (int i =0; i < 10; i++) {
-        EVB::Fragment& frag(frags[i]);
+        ufmt::EVB::Fragment& frag(frags[i]);
         frag.s_header.s_size = 10;
         frag.s_header.s_sourceId = 1;
         frag.s_header.s_timestamp = timestamp + i*10;
@@ -772,10 +774,10 @@ void clienttest::frag_5()
     
     EQ(size_t(2), sim.m_requests.size());
     auto req(sim.m_requests[1]);
-    EQ(uint32_t(10*sizeof(EVB::FragmentHeader) + sizeof(data)), req.s_hdr.s_bodySize);
+    EQ(uint32_t(10*sizeof(ufmt::EVB::FragmentHeader) + sizeof(data)), req.s_hdr.s_bodySize);
     
     
-    EVB::pFragmentHeader hdr = static_cast<EVB::pFragmentHeader>(req.s_body);
+    ufmt::EVB::pFragmentHeader hdr = static_cast<ufmt::EVB::pFragmentHeader>(req.s_body);
     for (int f =0; f < 10; f++) {
         EQ(frags[f].s_header.s_size, hdr->s_size);
         EQ(frags[f].s_header.s_sourceId, hdr->s_sourceId);
@@ -788,7 +790,7 @@ void clienttest::frag_5()
             sb++;
             is++;
         }
-        hdr = reinterpret_cast<EVB::pFragmentHeader>(is);
+        hdr = reinterpret_cast<ufmt::EVB::pFragmentHeader>(is);
     }
     cleanupSimulator(thread);
 }

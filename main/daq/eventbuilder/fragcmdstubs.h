@@ -21,16 +21,16 @@
 
 #ifndef FRAGCMDSTUBS_H
 #define FRAGCMDSTUBS_H
-#include "fragment.h"
+#include <fragment.h>
 
 class CFragmentHandler
 {
 public:
     unsigned long      m_nLastSize;
-    const EVB::FlatFragment* m_pLastFrags;
+    const ufmt::EVB::FlatFragment* m_pLastFrags;
    static CFragmentHandler* m_pInstance;
 public:
-    void addFragments(unsigned long nFrags, const EVB::FlatFragment* pFrags);
+    void addFragments(unsigned long nFrags, const ufmt::EVB::FlatFragment* pFrags);
     static CFragmentHandler* getInstance();
 };
 

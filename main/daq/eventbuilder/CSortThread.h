@@ -27,7 +27,9 @@
 #include <list>
 #include <vector>
 #include <CBufferQueue.h>
-#include "fragment.h"
+#include <fragment.h>
+
+using namespace ufmt;
 
 #include <atomic>
 

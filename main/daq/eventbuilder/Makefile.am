@@ -46,18 +46,20 @@ Orderer_SOURCES= Orderer.cpp $(libEventBuilder_la_SOURCES)
 Orderer_CPPFLAGS=$(libEventBuilder_la_CPPFLAGS) $(TCL_CPPFLAGS)
 
 
-Orderer_LDFLAGS =  @LIBTCLPLUS_LDFLAGS@	\
+Orderer_LDFLAGS = @UFMT_LDFLAGS@ \
+	@LIBTCLPLUS_LDFLAGS@	\
 	@top_builddir@/base/os/libdaqshm.la    \
 	@top_builddir@/base/thread/libdaqthreads.la 	\
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@ 
 
 
 
-libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.cpp \
+libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp  \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
 	EVBFramework.cpp GetOpt.cpp fragio.cpp
 
 libEventBuilderClient_la_CPPFLAGS=$(COMPILATION_FLAGS)
+libEventBuilderClient_la_LIBADD=@UFMT_LDFLAGS@
 
 frag2ring_SOURCES=frag2ring.cpp CFragReader.cpp CFragWriter.cpp
 
@@ -82,7 +84,7 @@ noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h  \
 	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h \
 	COnLateDataCommand.h \
 	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h \
-	CCompleteBarrierCallback.h fragment.h \
+	CCompleteBarrierCallback.h \
 	CBarrierTraceCommand.h CPartialBarrierCallback.h CSourceCommand.h \
 	CDeadSourceCommand.h \
 	CReviveSocketCommand.h CFragReader.h CFragWriter.h CFlushCommand.h \
@@ -192,12 +194,12 @@ transmittests_CPPFLAGS=$(COMPILATION_FLAGS) @LIBTCLPLUS_CFLAGS@
 ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
 	configcmdtests.cpp tclflowtest.cpp fragalloctest.cpp \
 	evbclienttests.cpp	\
-	CFragmentHandler.cpp fragment.cpp CDuplicateTimeStatCommand.cpp \
+	CFragmentHandler.cpp  CDuplicateTimeStatCommand.cpp \
 	CConfigure.cpp CXonXOffCallbackCommand.cpp COutputThread.cpp CSortThread.cpp \
 	CEventOrderClient.cpp
 
 
-ordertests_LDADD = 	@top_builddir@/base/thread/libdaqthreads.la 	\
+ordertests_LDADD = 	@UFMT_LDFLAGS@ @top_builddir@/base/thread/libdaqthreads.la 	\
 	@top_builddir@/daq/format/libdataformat.la	\
 	@top_builddir@/servers/portmanager/libPortManager.la	\
 	@top_builddir@/base/os/libdaqshm.la			\

@@ -15,7 +15,7 @@
 */
 
 #include "CFragmentHandler.h"
-#include "fragment.h"
+#include <fragment.h>
 
 #include <string.h>
 #include <assert.h>
@@ -32,11 +32,14 @@
 
 #include "CopyPopUntil.h"
 
+using namespace ufmt;
+namespace EVB = ::ufmt::EVB;
+
 using std::uint32_t;
 using std::uint64_t;
 
-namespace EVB {
- extern bool debug;
+namespace ufmt::EVB {
+  extern bool debug;
 }
 /*---------------------------------------------------------------------
 ** Static  data:

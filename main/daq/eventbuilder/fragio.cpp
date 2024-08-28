@@ -19,6 +19,7 @@
 #include <io.h>
 #include <errno.h>
 
+using namespace ufmt;
 /**
  * readFragment
  *
@@ -31,12 +32,12 @@
  *             read.
  * @throw int - errno on error or 0 if eof.
  */
-EVB::Fragment* 
+ufmt::EVB::Fragment* 
 CFragIO::readFragment(int fd)
 {
-  EVB::pFragment pResult(0);
+  ufmt::EVB::pFragment pResult(0);
   
-  EVB::FragmentHeader hdr;
+  ufmt::EVB::FragmentHeader hdr;
   int nread;
   nread = io::readData(fd, &hdr, sizeof(EVB::FragmentHeader));
   if (!nread) return 0;
@@ -64,9 +65,9 @@ CFragIO::readFragment(int fd)
  *
  */
 void
-CFragIO::writeFragment(int fd, EVB::Fragment* pFrag)
+CFragIO::writeFragment(int fd, ufmt::EVB::Fragment* pFrag)
 {
-    io::writeData(STDOUT_FILENO, &pFrag->s_header, sizeof(EVB::FragmentHeader));
+    io::writeData(STDOUT_FILENO, &pFrag->s_header, sizeof(ufmt::EVB::FragmentHeader));
     io::writeData(STDOUT_FILENO, pFrag->s_pBody,   pFrag->s_header.s_size);
   
 }

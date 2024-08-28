@@ -23,7 +23,7 @@
 CFragmentHandler* CFragmentHandler::m_pInstance(nullptr);
 
 void
-CFragmentHandler::addFragments(unsigned long nFrags, const EVB::FlatFragment* pFrags)
+CFragmentHandler::addFragments(unsigned long nFrags, const ufmt::EVB::FlatFragment* pFrags)
 {
     m_nLastSize = nFrags;
     m_pLastFrags = pFrags;
