@@ -20,7 +20,7 @@
  */
 
 #include "CFragWriter.h"
-#include "fragment.h"
+#include <fragment.h>
 #include <io.h>
 
 #include <DataFormat.h>
@@ -35,6 +35,7 @@
 #include <CRingItemFactory.h>
 #include <CRingItem.h>
 
+using namespace ufmt;
 /**
  * Constructor
  *

@@ -59,7 +59,7 @@ CBuiltItemWorker::countFragments(const void* pEvent)
         pFragmentItem pItem = static_cast<pFragmentItem>(pFrag);
         
         pFrag = nextFragment(pFrag);
-        nBytes -= sizeof(EVB::FragmentHeader) + pItem->s_ringItemHeader.s_size;
+        nBytes -= sizeof(ufmt::EVB::FragmentHeader) + pItem->s_ringItemHeader.s_size;
     }
     
     return result;
@@ -93,7 +93,7 @@ void*
 CBuiltItemWorker::nextFragment(const void* pData)
 {
     const FragmentItem* pFrag = static_cast<const FragmentItem*>(pData);
-    size_t fragmentSize = sizeof(EVB::FragmentHeader) + pFrag->s_ringItemHeader.s_size;
+    size_t fragmentSize = sizeof(ufmt::EVB::FragmentHeader) + pFrag->s_ringItemHeader.s_size;
     
     uint8_t* pResult = reinterpret_cast<uint8_t*>(const_cast<pFragmentItem>(pFrag));
     pResult += fragmentSize;

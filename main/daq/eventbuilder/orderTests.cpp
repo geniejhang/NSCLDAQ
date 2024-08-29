@@ -15,9 +15,11 @@
 #undef private
 
 
-#include "fragment.h"
+#include <fragment.h>
 #include <stdlib.h>
 
+
+using namespace ufmt;
 
 class ObserverTests : public CppUnit::TestFixture {
   CPPUNIT_TEST_SUITE(ObserverTests);

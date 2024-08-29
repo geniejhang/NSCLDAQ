@@ -200,9 +200,9 @@ CMerge::atEnd()
 void
 CMerge::outputFragment(unsigned sourceIndex)
 {
-    EVB::FragmentHeader header;
-    pRingItemHeader pItem =
-        reinterpret_cast<pRingItemHeader>(m_sources[sourceIndex].s_pItem->getItemPointer());
+    ufmt::EVB::FragmentHeader header;
+    ::pRingItemHeader pItem =
+        reinterpret_cast<::pRingItemHeader>(m_sources[sourceIndex].s_pItem->getItemPointer());
     header.s_timestamp = m_sources[sourceIndex].s_thisStamp;
     header.s_sourceId  = m_sources[sourceIndex].s_pItem->getSourceId();
     header.s_size      = pItem->s_size;

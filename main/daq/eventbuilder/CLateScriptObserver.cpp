@@ -20,7 +20,7 @@
  */
 
 #include "CLateScriptObserver.h"
-#include "fragment.h"
+#include <fragment.h>
 #include <TCLInterpreter.h>
 #include <Exception.h>
 #include <TCLObject.h>
@@ -29,6 +29,7 @@
 #include <string>
 #include <iostream>
 
+using namespace ufmt;
 
 /*--------------------------------------------------------------------------------------
 ** Implementation of Canonical methods.

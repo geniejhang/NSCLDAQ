@@ -51,7 +51,7 @@ static io::CBufferedOutput* outputter;
 
 // We don't need threadsafe event fragment pools so:
 
-namespace EVB {
+namespace ufmt::EVB {
     extern bool threadsafe;
 }
 
@@ -283,7 +283,7 @@ outputEventCount(pRingItemHeader pItem)
  *
  */
 static void
-outputBarrier(EVB::pFragment p)
+outputBarrier(ufmt::EVB::pFragment p)
 {
   pRingItemHeader pH = 
       reinterpret_cast<pRingItemHeader>(p->s_pBody); 
@@ -317,11 +317,11 @@ outputBarrier(EVB::pFragment p)
     // Size is the fragment header + ring header + payload.
     // 
     uint32_t size = sizeof(RingItemHeader) +
-      sizeof(EVB::FragmentHeader) + p->s_header.s_size;
+      sizeof(ufmt::EVB::FragmentHeader) + p->s_header.s_size;
     unknownHdr.s_size = size;
 
     outputter->put( &unknownHdr, sizeof(RingItemHeader));
-    outputter->put( p, sizeof(EVB::FragmentHeader));
+    outputter->put( p, sizeof(ufmt::EVB::FragmentHeader));
     outputter->put(p->s_pBody, p->s_header.s_size);
     outputter->flush();  // So end runs are always seen quickly.
   }
@@ -334,7 +334,7 @@ void emitAbnormalEnd()
 {
     CAbnormalEndItem end;
     pRingItem pItem= end.getItemPointer();
-    EVB::Fragment frag = {{NULL_TIMESTAMP, 0xffffffff, pItem->s_header.s_size, 0}, pItem};
+    ufmt::EVB::Fragment frag = {{NULL_TIMESTAMP, 0xffffffff, pItem->s_header.s_size, 0}, pItem};
     outputBarrier(&frag);
 }
 
@@ -360,7 +360,7 @@ void emitAbnormalEnd()
  * @param pFrag - Pointer to the next event fragment.
  */
 void
-accumulateEvent(uint64_t dt, EVB::pFragment pFrag)
+accumulateEvent(uint64_t dt, ufmt::EVB::pFragment pFrag)
 {
   // See if we need to flush:
 
@@ -409,7 +409,7 @@ accumulateEvent(uint64_t dt, EVB::pFragment pFrag)
   
     // Add the data to the accumulated event:
   
-  addDataToAccumulatedEvent(&pFrag->s_header, sizeof(EVB::FragmentHeader));
+  addDataToAccumulatedEvent(&pFrag->s_header, sizeof(ufmt::EVB::FragmentHeader));
   addDataToAccumulatedEvent(pFrag->s_pBody, pFrag->s_header.s_size);
 
 }
@@ -451,7 +451,7 @@ main(int argc, char**  argv)
   sourceId       = args.sourceid_arg;
   maxFragments   = args.maxfragments_arg;
 
-  EVB::threadsafe = false;     // Don't need threadsafe fragment pools.
+  ufmt::EVB::threadsafe = false;     // Don't need threadsafe fragment pools.
 
   outputter = new io::CBufferedOutput(STDOUT_FILENO, BUFFER_SIZE);
   outputter->setTimeout(2);    // Flush every two sec if data rate is slow.
@@ -492,7 +492,7 @@ main(int argc, char**  argv)
   bool consecutiveBarrier(false);
   try {
     while (1) {
-      EVB::pFragment p = CFragIO::readFragment(STDIN_FILENO);
+      ufmt::EVB::pFragment p = CFragIO::readFragment(STDIN_FILENO);
       
       // If error or EOF flush the event and break from
       // the loop:

@@ -33,9 +33,9 @@
 
 /* Local functions: */
 
-static EVB::pFragment getFragment();
-static bool           fragmentToStdout(EVB::pFragment);
-static void           fragmentToRing(CRingBuffer&, EVB::pFragment);
+static ufmt::EVB::pFragment getFragment();
+static bool           fragmentToStdout(ufmt::EVB::pFragment);
+static void           fragmentToRing(::CRingBuffer&, ufmt::EVB::pFragment);
 /**
  *  teering  is analagous to the unix tee program however it
  *  tees between stdout and rings.  Input is stdin and consists of
@@ -63,7 +63,7 @@ main(int argc, char** argv)
   // Main loop:
 
   while(1) {
-    EVB::pFragment pF = getFragment();
+    ufmt::EVB::pFragment pF = getFragment();
     if(!pF) break;
 
     if(!fragmentToStdout(pF)) break;
@@ -81,9 +81,9 @@ main(int argc, char** argv)
  * @param pFrag - Pointer to the fragment.
  */
 static void
-fragmentToRing(CRingBuffer& ring, EVB::pFragment pFrag)
+fragmentToRing(::CRingBuffer& ring, ufmt::EVB::pFragment pFrag)
 {
-  CRingFragmentItem frag(pFrag->s_header.s_timestamp,
+  ::CRingFragmentItem frag(pFrag->s_header.s_timestamp,
 			 pFrag->s_header.s_sourceId,
 			 pFrag->s_header.s_size,
 			 pFrag->s_pBody,
@@ -100,10 +100,10 @@ fragmentToRing(CRingBuffer& ring, EVB::pFragment pFrag)
  * @retval NULL - Read failed for some reason (the error is written to stderr), or eof.
  * @retval other - Pointer to the fragment read.
  */
-static EVB::pFragment
+static ufmt::EVB::pFragment
 getFragment()
 {
-  EVB::pFragment pResult;
+  ufmt::EVB::pFragment pResult;
   try {
     return CFragIO::readFragment(STDIN_FILENO);
   }
@@ -128,7 +128,7 @@ getFragment()
  *
  */
 static bool
-fragmentToStdout(EVB::pFragment pFrag)
+fragmentToStdout(ufmt::EVB::pFragment pFrag)
 {
   try {
     CFragIO::writeFragment(STDOUT_FILENO, pFrag);

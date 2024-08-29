@@ -464,8 +464,8 @@ void apptests::fragmaker_begonly_1()
   // first read gives us the fragment header:
   
   std::pair<size_t, void*> h = m_pWriter->get();
-  EQ(sizeof(EVB::FragmentHeader), h.first);
-  EVB::pFragmentHeader pH = static_cast<EVB::pFragmentHeader>(h.second);
+  EQ(sizeof(ufmt::EVB::FragmentHeader), h.first);
+  ufmt::EVB::pFragmentHeader pH = static_cast<ufmt::EVB::pFragmentHeader>(h.second);
   
   EQ(uint64_t(0x12345), pH->s_timestamp);
   EQ(uint32_t(2), pH->s_sourceId);
@@ -508,8 +508,8 @@ void apptests::fragmaker_begonly_2()
   // default source id...and proper barrier type:
   
   std::pair<size_t, void*> h = m_pWriter->get();
-  EQ(sizeof(EVB::FragmentHeader), h.first);
-  EVB::pFragmentHeader pH = reinterpret_cast<EVB::pFragmentHeader>(h.second);
+  EQ(sizeof(ufmt::EVB::FragmentHeader), h.first);
+  ufmt::EVB::pFragmentHeader pH = reinterpret_cast<ufmt::EVB::pFragmentHeader>(h.second);
   EQ(m_pFragMaker->getLastTimestamp(), pH->s_timestamp);
   EQ(uint32_t(123), pH->s_sourceId);
   EQ(uint32_t(1), pH->s_barrier);
@@ -554,14 +554,14 @@ void apptests::fragmaker_complete_1()
   std::pair<size_t, void*> endHeader   = m_pWriter->get();
   std::pair<size_t, void*> endItem     = m_pWriter->get();
   
-  EVB::FragmentHeader* pBegHdr =
-    static_cast<EVB::FragmentHeader*>(beginHeader.second);
+  ufmt::EVB::FragmentHeader* pBegHdr =
+    static_cast<ufmt::EVB::FragmentHeader*>(beginHeader.second);
   EQ(uint64_t(0x100), pBegHdr->s_timestamp);
   EQ(uint32_t(1), pBegHdr->s_sourceId);
   EQ(uint32_t(1), pBegHdr->s_barrier);
   
-  EVB::FragmentHeader* pEndHdr =
-    static_cast<EVB::FragmentHeader*>(endHeader.second);
+  ufmt::EVB::FragmentHeader* pEndHdr =
+    static_cast<ufmt::EVB::FragmentHeader*>(endHeader.second);
   EQ(uint64_t(0x50000), pEndHdr->s_timestamp);
   EQ(uint32_t(1), pEndHdr->s_sourceId);
   EQ(uint32_t(2), pEndHdr->s_barrier);
@@ -591,7 +591,7 @@ void apptests::fragmaker_complete_2()
   
   std::pair<size_t, void*> endHeader   = m_pWriter->get();
   std::pair<size_t, void*> endItem     = m_pWriter->get();
-  EVB::FragmentHeader* pEndHdr =
-    static_cast<EVB::FragmentHeader*>(endHeader.second);
+  ufmt::EVB::FragmentHeader* pEndHdr =
+    static_cast<ufmt::EVB::FragmentHeader*>(endHeader.second);
   EQ(uint64_t(0x100), pEndHdr->s_timestamp);
 }

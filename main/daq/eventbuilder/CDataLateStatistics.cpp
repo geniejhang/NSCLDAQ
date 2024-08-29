@@ -14,7 +14,8 @@
 	     East Lansing, MI 48824-1321
 */
 #include "CDataLateStatistics.h"
-#include "fragment.h"
+#include <fragment.h>
+using namespace ufmt;
 
 /** 
  * @file CDataLateStatistics.cpp 

@@ -120,7 +120,7 @@ void FragmakerTests::hasHeader_1()
   StateChangeItem item;
 
   
-  EVB::FragmentHeader hdr = m_pTestObj->makeHeader(
+  ufmt::EVB::FragmentHeader hdr = m_pTestObj->makeHeader(
     makeBodyHeaderStateChange(item, BEGIN_RUN)
   );
   
@@ -157,7 +157,7 @@ void FragmakerTests::hasHeader_3()
     reinterpret_cast<pBodyHeader>(bodyHeader(reinterpret_cast<pRingItem>(&item)));
   pB->s_timestamp = NULL_TIMESTAMP;
   
-  EVB::FragmentHeader hdr = m_pTestObj->makeHeader(
+  ufmt::EVB::FragmentHeader hdr = m_pTestObj->makeHeader(
     reinterpret_cast<RingItem*>(&item)
   );
   
@@ -202,7 +202,7 @@ void FragmakerTests::noHeader_1()
     
   // This test relies on the fact that the result is initialized.
 
-  EVB::FragmentHeader h = m_pTestObj->makeHeader(pItem);
+  ufmt::EVB::FragmentHeader h = m_pTestObj->makeHeader(pItem);
   EQ(uint64_t(0x12345678), h.s_timestamp);       // Timestamp is prior
   EQ(uint32_t(123), h.s_sourceId);               // Sourceid is default.
   EQ(2, m_pTestObj->getEndRunsRemaining());      // run count still incremented.
@@ -212,7 +212,7 @@ void FragmakerTests::noHeader_1()
 void FragmakerTests::noHeader_2()
 {
   StateChangeItem item;
-  EVB::FragmentHeader h = m_pTestObj->makeHeader(
+  ufmt::EVB::FragmentHeader h = m_pTestObj->makeHeader(
     makeNoHeaderStateChange(item, BEGIN_RUN)
   );
   EQ(uint32_t(1), h.s_barrier);
@@ -222,7 +222,7 @@ void FragmakerTests::noHeader_2()
 void FragmakerTests::noHeader_3()
 {
   StateChangeItem item;
-  EVB::FragmentHeader h = m_pTestObj->makeHeader(
+  ufmt::EVB::FragmentHeader h = m_pTestObj->makeHeader(
     makeNoHeaderStateChange(item, END_RUN)
   );
   EQ(uint32_t(2), h.s_barrier);  
@@ -232,7 +232,7 @@ void FragmakerTests::noHeader_3()
 void FragmakerTests::noHeader_4()
 {
   StateChangeItem item;
-  EVB::FragmentHeader h = m_pTestObj->makeHeader(
+  ufmt::EVB::FragmentHeader h = m_pTestObj->makeHeader(
     makeNoHeaderStateChange(item, PAUSE_RUN)
   );
   EQ(uint32_t(0), h.s_barrier);    

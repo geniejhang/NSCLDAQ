@@ -21,6 +21,8 @@
 #include <sys/socket.h>
 #include <sstream>
 
+using namespace ufmt;
+
 static   int   m_nCurrentPort(2345);
 
 // To satisfy the application level protocol, the server
@@ -197,7 +199,7 @@ void clienttests::initial() {
 
 void clienttests::submit_1()
 {
-  CRingItem item(PHYSICS_EVENT, 0x123456789, 1, 0);
+  ::CRingItem item(PHYSICS_EVENT, 0x123456789, 1, 0);
   uint32_t* p = static_cast<uint32_t*>(item.getBodyCursor());
   for (int i =0; i < 10; i++) {
     *p++ = i;
@@ -206,7 +208,7 @@ void clienttests::submit_1()
   item.updateSize();
   pRingItem pItem = static_cast<pRingItem>(item.getItemPointer());
   
-  EVB::Fragment f;
+  ::ufmt::EVB::Fragment f;
   f.s_header.s_timestamp = item.getEventTimestamp();
   f.s_header.s_sourceId  = item.getSourceId();
   f.s_header.s_size      = pItem->s_header.s_size;
@@ -221,7 +223,7 @@ void clienttests::submit_1()
   
   uint32_t* pLast = static_cast<uint32_t*>(m_Server->m_messages.back());
   pLast++;                   // the ring item.
-  EVB::pFragmentHeader pH = reinterpret_cast<EVB::pFragmentHeader>(pLast);
+  ufmt::EVB::pFragmentHeader pH = reinterpret_cast<ufmt::EVB::pFragmentHeader>(pLast);
   EQ(f.s_header.s_timestamp, pH->s_timestamp);
   EQ(f.s_header.s_sourceId, pH->s_sourceId);
   EQ(f.s_header.s_size, pH->s_size);
@@ -234,8 +236,8 @@ void clienttests::submit_1()
 // Submits 10 items.
 void clienttests::submit_2()
 {
-  EVB::Fragment f[10];
-  CRingItem* pItems[10];
+  ::ufmt::EVB::Fragment f[10];
+  ::CRingItem* pItems[10];
   pRingItem  pRawItems[10];
   for (int i = 0; i < 10; i++) {
     pItems[i] = new CRingItem(PHYSICS_EVENT, i, 1, 0);
@@ -261,7 +263,7 @@ void clienttests::submit_2()
   uint32_t* p32 = static_cast<uint32_t*>(m_Server->m_messages.back());
   p32++;                 // Points to the first fragment header.
   for (int i = 0; i < 10; i ++) {
-    EVB::pFragmentHeader pH = reinterpret_cast<EVB::pFragmentHeader>(p32);
+    ::ufmt::EVB::pFragmentHeader pH = reinterpret_cast<::ufmt::EVB::pFragmentHeader>(p32);
     
     // Check the fragment header:
     

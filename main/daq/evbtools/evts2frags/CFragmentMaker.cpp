@@ -41,10 +41,10 @@ CFragmentMaker::CFragmentMaker(int defaultSourceId) :
  *    Pointer to the raw ring item
  * @return FragmentHeader - the appropriate fragment header.
  */
-EVB::FragmentHeader
+ufmt::EVB::FragmentHeader
 CFragmentMaker::makeHeader(RingItem* pItem)
 {
-    EVB::FragmentHeader result = {0, 0, 0, 0};
+    ufmt::EVB::FragmentHeader result = {0, 0, 0, 0};
     
     // The payload size is always the size of the ring item.
     

@@ -120,7 +120,7 @@ RootFileDataSink::putItem(const ::ufmt::CRingItem& item)
 	    // The first five 32-bit words of the fragment make up the
 	    // fragment header. Skip them: 
 	
-	    pBody += sizeof(EVB::FragmentHeader)/sizeof(uint32_t);
+	    pBody += sizeof(ufmt::EVB::FragmentHeader)/sizeof(uint32_t);
 
 	    // Use the factory to make a ring item out of the fragment
 	    // and get a pointer to its body:

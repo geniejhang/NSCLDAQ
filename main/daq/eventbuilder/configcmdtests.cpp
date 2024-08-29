@@ -11,8 +11,8 @@
 #include <TCLInterpreter.h>
 #include "CConfigure.h"
 #include <stdlib.h>
-#include <fragment.h>
-
+#include "fragment.h"
+using namespace ufmt;
 
 
 class ConfigCmdTest : public CppUnit::TestFixture {

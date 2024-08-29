@@ -30,6 +30,9 @@
 #include <string>
 #include <iostream>
 
+using namespace ufmt;
+namespace EVB = ::ufmt::EVB;
+
 /**
  * Construct the object:
  * @param interp - reference to an encapsulated interpreter.

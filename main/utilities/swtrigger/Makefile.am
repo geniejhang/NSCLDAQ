@@ -71,14 +71,16 @@ libSwTrigger_la_LDFLAGS=@top_builddir@/base/os/libdaqshm.la           \
 	@top_builddir@/base/thread/libdaqthreads.la		\
 	@top_builddir@/base/uri/liburl.la			\
 	@top_builddir@/base/dataflow/libDataFlow.la		\
-	@LIBEXCEPTION_LDFLAGS@ @ZMQ_LDFLAGS@ @THREADLD_FLAGS@ $(MPI_FLAGS)
+	@LIBEXCEPTION_LDFLAGS@ @ZMQ_LDFLAGS@ @THREADLD_FLAGS@ $(MPI_FLAGS) \
+	@UFMT_LDFLAGS@
 
 libSwTrigger_la_CPPFLAGS=-I@top_srcdir@/daq/IO -I@top_srcdir@/base/dataflow \
 	-I@top_srcdir@/base/os -I@top_srcdir@/daq/format \
 	-I@top_srcdir@/base/factories	\
 	-I@top_srcdir@/base/thread -I@top_srcdir@/base/uri \
 	-I@top_srcdir@/daq/eventbuilder \
-	@LIBTCLPLUS_CFLAGS@ @THREADCXX_FLAGS@ $(MPI_FLAGS) @PIXIE_CPPFLAGS@
+	@LIBTCLPLUS_CFLAGS@ @THREADCXX_FLAGS@ $(MPI_FLAGS) @PIXIE_CPPFLAGS@ \
+	@UFMT_CPPFLAGS@
 
 include_HEADERS = CTransport.h CReceiver.h CZMQTransport.h CZMQClientTransport.h \
 	CZMQServerTransport.h CSender.h CRingItemTransport.h CRingItemFileTransport.h \

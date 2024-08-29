@@ -95,7 +95,7 @@ private:
     void resizeIoVecs(size_t n);
     
     std::vector<BodySegment> editItem(pRingItemHeader pItem);
-    std::vector<BodySegment> editFragment(EVB::pFlatFragment pFrag);
+    std::vector<BodySegment> editFragment(ufmt::EVB::pFlatFragment pFrag);
     size_t countBytes(const std::vector<BodySegment>& segs);
     
 };

@@ -79,7 +79,7 @@ void fragcmdtest::frags_1()
     EQ(size_t(0), m_pStubs->m_nLastSize);
     
     int n;
-    EQ((const EVB::FlatFragment*)(Tcl_GetByteArrayFromObj(pFrags, &n)), m_pStubs->m_pLastFrags);
+    EQ((const ufmt::EVB::FlatFragment*)(Tcl_GetByteArrayFromObj(pFrags, &n)), m_pStubs->m_pLastFrags);
 }
 
 void fragcmdtest::frags_2()

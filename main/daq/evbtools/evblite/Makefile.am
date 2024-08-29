@@ -2,9 +2,12 @@ bin_PROGRAMS=evbtagger
 
 evbtagger_SOURCES=evbtagger.cpp evbtagger.h evbtaggerMain.cpp ItemTagger.h ItemTagger.cpp
 
-evbtagger_CPPFLAGS=-I@top_srcdir@/base/os -I@top_srcdir@/daq/eventbuilder -I@top_srcdir@/daq/format
+evbtagger_CPPFLAGS=-I@top_srcdir@/base/os -I@top_srcdir@/daq/eventbuilder \
+-I@top_srcdir@/daq/format \
+@UFMT_CPPFLAGS@
+
 evbtagger_LDFLAGS=@top_builddir@/base/os/libdaqshm.la \
-	@top_builddir@/daq/format/libdataformat.la
+	@top_builddir@/daq/format/libdataformat.la  @UFMT_LDFLAGS@
 
 BUILT_SOURCES=evbtagger.cpp evbtagger.h
 
