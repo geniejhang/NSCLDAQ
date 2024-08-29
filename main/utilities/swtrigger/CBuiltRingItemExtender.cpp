@@ -143,7 +143,7 @@ CBuiltRingItemExtender::process(void* pData, size_t nBytes)
                     
                     m_pIoVectors[m_nUsedIoVectors].iov_base =  pFrag;
                     m_pIoVectors[m_nUsedIoVectors].iov_len  =
-                        sizeof(EVB::FragmentHeader) +
+                        sizeof(ufmt::EVB::FragmentHeader) +
                         pFragFront->s_ringItemHeader.s_size;
                     m_nUsedIoVectors++;
                     
