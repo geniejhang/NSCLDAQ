@@ -357,7 +357,8 @@ tcl_configdir="/usr/lib/$tcl_basename"
 tcl_incdir="/usr/include/$tcl_basename"
 
 (cd ${srcdir}/tclhttpd3.5.1; ./configure --prefix=${prefix}/share/tclhttpd --enable-gcc --with-tclinclude=$tcl_incdir --with-tcl=$tcl_configdir)
-(cd ${srcdir}/tclhttpd3.5.1; make   all install)
+#(cd ${srcdir}/tclhttpd3.5.1; make all install)
+(cd ${srcdir}/tclhttpd3.5.1; make -j4 all install)
 
 # Epics
 #
@@ -525,7 +526,8 @@ then
 	rm -rf unifiedformat/build
 	AS_MKDIR_P(unifiedformat/build)	
 	AC_MSG_NOTICE([Building unified format])
-	(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make clean install)
+	#(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make clean install)
+	(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make clean; make -j26 all; make install)	
 	result=$?
 	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install unified format library with result: ${result}]))
 	UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
@@ -545,7 +547,8 @@ then
 	rm -rf ddasformat/build
 	AS_MKDIR_P(ddasformat/build)
 	AC_MSG_NOTICE([Building DDAS format])
-	(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make clean install)
+	#(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make clean install)
+	(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make clean ; make -j26 all ; make install)
 	result=$?
 	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install ddasformat with result: ${result}]))
 	DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
@@ -891,6 +894,8 @@ Makefile
     ddas/pixieplugin/definitions.tcl
     ddas/qtscope/Makefile
     ddas/qtscope/qtscope
+    ddas/utilities/Makefile
+    ddas/utilities/simulator/Makefile
     ddas/docs/Makefile
     ddas/docs/Doxyfile
     ddas/docs/DoxygenLayout.xml
