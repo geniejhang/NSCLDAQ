@@ -1,3 +1,7 @@
+== 12.1-pre3 ==
+* Fix error when logging rate window closed
+== 12.1-pre3 ==
+
 == 12.1-pre2 ==
 * Added SRS Readout
 * Unified format library and tcl++ are automatically incorporated during build.
