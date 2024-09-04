@@ -68,7 +68,8 @@ namespace DAQ {
 	 * To use this class in your own code:
 	 *   - Ensure `$DAQINC`, `$DAQROOT`/unifiedformat/include and 
 	 *     `$DAQROOT`/ddasformat/include are in the compiler include files 
-	 *     search path (add `-I<path>` in e.g., `CXXFLAGS`).
+	 *     search path (add `-I<path>` in e.g., `CXXFLAGS`) and include
+	 *     DDASDataSimulator.h and DDASHit.h.
 	 *   - Link against the installed DDASDataSimulator.so and 
 	 *     DDASFormat.so libraries in `$DAQLIB` and 
 	 *     `$DAQROOT`/ddasformat/lib (add `-L<path> 

@@ -15,9 +15,10 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file: ZeroCopyHit.h
- *  @brief: Class to manage a zero copy RawChannel that comes from insode
- *          a buffer from a buffer arena.
+/** 
+ * @file ZeroCopyHit.h
+ * @brief Class to manage a zero copy RawChannel that comes from inside a 
+ * buffer from a buffer arena.
  */
 #ifndef ZEROCOPYHIT_H
 #define ZEROCOPYHIT_H
@@ -61,7 +62,6 @@ class  BufferArena;
 	ZeroCopyHit();
 	/** 
 	 * @brief Construct from parameters.
-	 *
 	 * @param nWords   Number of uint32_t's in the hit.
 	 * @param pHitData Pointer to the hit data.
 	 * @param pBuffer  Underlying reference counted buffer.

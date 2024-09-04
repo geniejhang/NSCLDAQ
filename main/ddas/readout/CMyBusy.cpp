@@ -1,14 +1,20 @@
-#include <config.h>
-#include <iostream>
+/**
+ * @file CMyBusy.cpp
+ * @brief Implement a busy class for DDAS. Entirely No-ops.
+ */
+
 #include "CMyBusy.h"
+
+#include <iostream>
+
+#include <config.h>
 
 #ifdef HAVE_STD_NAMESPACE
 using namespace std;
 #endif
 
 CMyBusy::CMyBusy() 
-{  
-}
+{ }
 
 void CMyBusy::GoBusy() 
 {
@@ -19,9 +25,3 @@ void CMyBusy::GoClear()
 {  
   // cout << "going clear "<< endl << flush;
 }
-
-// void CMyStatus::ModuleClear() 
-// {  
-//   // cout << "clearing module "<< endl << flush;
-// }
-

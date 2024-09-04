@@ -20,7 +20,7 @@
 #define FDDATASOURCE_H
 
 /** 
- * @file  FdDataSource.cpp
+ * @file  FdDataSource.h
  * @brief Data source of undifferentiated ring items from a file descriptor 
  */
 

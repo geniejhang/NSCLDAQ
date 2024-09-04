@@ -15,30 +15,24 @@
 	     East Lansing, MI 48824-1321
 */
 
-/** @file:  CDDASStatisticsCommand.cpp
- *  @brief: Implement the statistics command specific to DDASReadout.
+/** 
+ * @file  CDDASStatisticsCommand.cpp
+ * @brief Implement the statistics command specific to DDASReadout.
  */
 
 #include "CDDASStatisticsCommand.h"
-#include "CMyEventSegment.h"
-#include "CMyScaler.h"
+
+#include <string.h>
+
+#include <stdexcept>
+#include <string>
+
 #include <TCLInterpreter.h>
 #include <TCLObject.h>
 #include <Exception.h>
-#include <stdexcept>
-#include <string>
-#include <string.h>
+#include "CMyEventSegment.h"
+#include "CMyScaler.h"
 
-
-/**
- * construcutor
- *   @param  interp - interpreter on which the command is registered.
- *   @param  command- name of the command 'should/must' be "statistics"
- *                    to smoothly replace the SBSReaout framework command.
- *   @param pSeg    - Pointer to the event segment which provides byte counters.
- *   @param scalers - Reference to the array of scaler segments that provide the
- *                    individual module trigger statistics information.
- */
 CDDASStatisticsCommand::CDDASStatisticsCommand(
     CTCLInterpreter& interp, const char* command, CMyEventSegment* pSeg,
     std::vector<CMyScaler*>& scalers
@@ -47,21 +41,9 @@ CDDASStatisticsCommand::CDDASStatisticsCommand(
     m_pEventSegment(pSeg), m_Scalers(scalers)
 {}
 
-/**
- * destructor
- */
 CDDASStatisticsCommand::~CDDASStatisticsCommand()
 {}
 
-/**
- * operator()
- *    Called to execute the Tcl command.
- *
- *  @param interp - references the interpreter executing the command.
- *  @param objv   - Command line parameters.
- *  @return int   - TCL_OK if success - TCL_ERROR on failure.
- *  
- */
 int
 CDDASStatisticsCommand::operator() (
     CTCLInterpreter& interp, std::vector<CTCLObject>& objv
@@ -98,28 +80,24 @@ CDDASStatisticsCommand::operator() (
     }
     return TCL_OK;
 }
+
 /*--------------------------------------------------------------------------
  * Private utilities.
  */
 
 /**
- * formatResult
- *    Computes and formats the result.  Note that we have to sum the trigger
- *    statistics over the modules in the system.
- * @param interp  - interpreter executing the command.
- * @param result  - reference to the CTCLObject in to which the result is formatted
- *                  must already be bound.
- * @param bytes   - Total number of bytes this program instance acquired.
- * @param runBytes -Number of bytes acquire over the last (or current) run.
+ * @details
  *
- *  The result is a two element list.  Each element is a three element sublist
- *  of statistics.  The first element contains cumulative statistics,
- *  the second the statistics from the current run or most recently ended run
- *  if data taking is not active.
- *  Each list has, in order, the following three subelements:
- *     -   Number of triggers.
- *     -   Number of accepted triggers.
- *     -   Number of bytes of data transferred.
+ * Note that we have to sum the trigger statistics over the modules in the 
+ * system. The result is a two element list. Each element is a three element 
+ * sublist of statistics.  The first element contains cumulative statistics, 
+ * the second the statistics from the current run or most recently ended run 
+ * if data taking is not active.
+ * 
+ * Each list has, in order, the following three subelements:
+ *  - Number of triggers.
+ *  - Number of accepted triggers.
+ *  - Number of bytes of data transferred.
  */
 void
 CDDASStatisticsCommand::formatResult(
@@ -161,17 +139,7 @@ CDDASStatisticsCommand::formatResult(
     result += totalobj;
     result += perRunObj;
 }
-/**
- * formatCounters
- *    Format a three element list from the individual counters for a statistics
- *    sublist.  See formatResult for a description of the resulting list.
- *
- *  @param result   - object into which the list will be created.
- *                    Must already be bound to an interpreter.
- *  @param triggers - Number of triggers.
- *  @param accepted - Number of accepted triggers.
- *  @param bytes    - Number of bytes.
- */
+
 void
 CDDASStatisticsCommand::formatCounters(
     CTCLObject& result, size_t triggers, size_t accepted, size_t bytes
