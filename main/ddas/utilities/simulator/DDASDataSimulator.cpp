@@ -100,11 +100,11 @@ DDASDataSimulator::beginRun()
 {
     m_fd = open(m_fname.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);    
     if (m_fd == -1) {
-	std::string errmsg(
+	std::string msg(
 	    "DDASDataSimulator::beginRun() failed to open output file "
 	    );
-	errmsg += m_fname;
-	throw CErrnoException(errmsg);
+	msg += m_fname;
+	throw CErrnoException(msg);
     }
 
     const auto now = std::chrono::system_clock::now();
@@ -147,7 +147,21 @@ DDASDataSimulator::endRun()
 	);
     m_pFactory->putRingItem(pEndItem.get(), m_fd);
 
-    close(m_fd);
+    if (fsync(m_fd) == -1) {
+	std::string msg(
+	    "DDASDataSimulator::endRun() failed to sync data to output file "
+	    );
+	msg += m_fname;
+	throw CErrnoException(msg);
+    }
+    
+    if (close(m_fd) == -1) {
+	std::string msg(
+	    "DDASDataSimulator::endRun() failed to close output file "
+	    );
+	msg += m_fname;
+	throw CErrnoException(msg);
+    }
 }
 
 /**
@@ -191,10 +205,9 @@ DDASDataSimulator::putHit(
 	);
     auto pBody = reinterpret_cast<uint32_t*>(pPhysicsItem->getBodyPointer());
     
-    // Make the DDASReadout-style hit:
+    // Make the DDASReadout-style hit. Note that the self-inclusive size and
+    // module identification word are added when we set the event buffer:
 
-    *pBody++ = (m_evtBuf.size() + 2)*sizeof(uint32_t)/sizeof(uint16_t);
-    *pBody++ = getModInfoWord(hit);
     std::copy(m_evtBuf.begin(), m_evtBuf.end(), pBody);
     pBody += m_evtBuf.size();
     pPhysicsItem->setBodyCursor(pBody);
@@ -215,6 +228,12 @@ DDASDataSimulator::setBuffer(const DAQ::DDAS::DDASHit& hit)
     
     uint32_t hdrLen = getHeaderLength(hit);
     uint32_t chanLen = hdrLen + std::ceil(hit.getTrace().size()/2);
+    uint32_t inclusiveSize = (chanLen + 2)*sizeof(uint32_t)/sizeof(uint16_t);
+    
+    // Add the first two data words:
+    
+    m_evtBuf.push_back(inclusiveSize);
+    m_evtBuf.push_back(getModInfoWord(hit));
    
     setWord0(hit);    
     setWords1And2(hit);
@@ -223,7 +242,7 @@ DDASDataSimulator::setBuffer(const DAQ::DDAS::DDASHit& hit)
     // Parse the optional event data and write it. There are a number of
     // cases to handle depending on what data is or isn't present:
 
-    uint32_t extraWords = chanLen - SIZE_OF_RAW_EVENT;
+    uint32_t extraWords = hdrLen - SIZE_OF_RAW_EVENT;
     if (extraWords == SIZE_OF_EXT_TS) {
 	setExternalTS(hit);
     } else if (extraWords == SIZE_OF_ENE_SUMS) {
@@ -249,7 +268,7 @@ DDASDataSimulator::setBuffer(const DAQ::DDAS::DDASHit& hit)
 
     // Last but not least, the trace:
 
-    setTraceData(hit);        
+    setTraceData(hit);
 }
 
 void
@@ -309,7 +328,7 @@ DDASDataSimulator::setWords1And2(const DAQ::DDAS::DDASHit& hit)
     // Lower 32 bits of coarse TS, word 1:
     
     uint32_t word = 0x0;
-    word = (coarseTime & LOWER_TS_BIT_MASK);    
+    word = (coarseTime & LOWER_TS_BIT_MASK);
     m_evtBuf.push_back(word);
     
     // Upper 16 bits of coarse timestamp, word 2, lower 16 bits:
@@ -320,7 +339,7 @@ DDASDataSimulator::setWords1And2(const DAQ::DDAS::DDASHit& hit)
     // Formatted CFD result, word 2, upper 16 bits:
     
     uint32_t cfdResult = getPackedCFDResult(hit, corr);
-    word |= (cfdResult & LOWER_16_BIT_MASK) << 16; 
+    word |= (cfdResult & LOWER_16_BIT_MASK) << 16;
     m_evtBuf.push_back(word);
 }
 
@@ -402,11 +421,10 @@ DDASDataSimulator::setTraceData(const DAQ::DDAS::DDASHit& hit)
 {    
     auto trace = hit.getTrace();
     int len = trace.size();
-    for (int i = 0; i < len/2; i++) {
+    for (int i = 0; i < len; i += 2) {
 	uint32_t word = 0x0;
 	word |= trace[i];
-	word |= (trace[i+1] << 16);
-	
+	word |= trace[i+1] << 16;	
 	m_evtBuf.push_back(word);
     }
 }
@@ -543,7 +561,9 @@ DDASDataSimulator::getSamplePeriod(const DAQ::DDAS::DDASHit& hit)
 
 /**
  * @details
- * The CFD is always assumed to succeed, even if no correction exists.
+ * The CFD is always assumed to succeed, even if no correction exists. 
+ * For 250 and 500 MSPS modules the CFD trigger source is identified based 
+ * on the sign and magnitude of the ZCP.
  */
 uint32_t
 DDASDataSimulator::getPackedCFDResult(
@@ -555,35 +575,39 @@ DDASDataSimulator::getPackedCFDResult(
     int failBit = 0; // Always succeed.
     int src; // Trigger source determined from the correction.
     int msps = hit.getModMSPS();
+    double zcp = corr/static_cast<double>(getSamplePeriod(hit));
     
     if (msps == 100) {
-	result |= failBit << 31;
-	rawCFD = 32768.0*corr/10.0;
-	result |= static_cast<uint32_t>(rawCFD);
+	rawCFD = 32768.0*zcp;
+	result |= static_cast<uint32_t>(std::floor(rawCFD));
+	result = result & 0x3FFF;
+	result |= failBit << 15;
     } else if (msps == 250) {
-	result |= (failBit << 31);
-	src = 1; // corr < 0 case.
-	if (corr >= 0) {
+	src = 1; // zcp < 0 case.
+	if (zcp >= 0) {
 	    src = 0;
 	}
-	rawCFD = 16384.0*((corr/4.0) + src);
-	result |= (src << 30);
-	result |= static_cast<uint32_t>(rawCFD);
+	rawCFD = 16384.0*(zcp + src);
+	result |= static_cast<uint32_t>(std::floor(rawCFD));
+	result = result & 0x7FFF;
+	result |= (src << 14);
+	result |= (failBit << 15);
     } else if (msps == 500) {
-	src = 0; // corr < 0 case.
-	if (corr >= 0 && corr < 2) {
+	src = 0; // zcp < 0 case.
+	if (zcp >= 0 && zcp < 1) {
 	    src = 1;
-	} else if (corr >= 2 && corr < 4) {
+	} else if (zcp >= 1 && zcp < 2) {
 	    src = 2;
-	} else if (corr >= 4 && corr < 6) {
+	} else if (zcp >= 2 && zcp < 3) {
 	    src = 3;
-	} else if (corr >= 6 && corr < 8) {
+	} else if (zcp >= 3 && zcp < 4) {
 	    src = 4;
 	}
-	rawCFD = 8192.0*((corr/2.0) - src + 1);
+	rawCFD = 8192.0*(zcp - src + 1);
+	result |= static_cast<uint32_t>(std::floor(rawCFD));
+	result = result & 0x1FFF;
 	// For 500 MSPS, src == 7 indicates forced CFD. We always succeed, so:
-	result |= (src << 29);
-	result |= static_cast<uint32_t>(rawCFD);
+	result |= (src << 13);
     }
 
     return result;

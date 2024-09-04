@@ -2,7 +2,7 @@
 
 ##  Incorporate the DDAS format library:
 
-# Most recently used version: 1.1
+# Most recently used version: 1.0-004
 
 REPOSITORY="https://github.com/FRIBDAQ/DDASFormat.git"
 TAG=$1

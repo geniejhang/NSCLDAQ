@@ -62,12 +62,14 @@ namespace ufmt {
  * correction is 0.
  *
  * To use this class in your own code:
- *   - Ensure $DAQINC, $DAQROOT/unifiedformat/include and 
- *     $DAQROOT/ddasformat/include are in the compiler include files search 
- *     path (`-I<path>`).
+ *   - Ensure `$DAQINC`, `$DAQROOT`/unifiedformat/include and 
+ *     `$DAQROOT`/ddasformat/include are in the compiler include files search 
+ *     path (add `-I<path>` in e.g., `CXXFLAGS`).
  *   - Link against the installed DDASDataSimulator.so and DDASFormat.so 
- *     libraries in $DAQLIB and $DAQROOT/ddasformat/lib (`LDFLAGS=-L<path> 
- *     -Wl,-rpath<path> LDLIBS=-l<libname>`).
+ *     libraries in `$DAQLIB` and `$DAQROOT`/ddasformat/lib (add `-L<path> 
+ *     -Wl,-rpath=<path>` to `LDFLAGS` and -l<libname>` to `LDLIBS`).
+ *   - Build your executable with the proper compiler and linker flags 
+ *     described above.
  *
  * Example code:
  ```
