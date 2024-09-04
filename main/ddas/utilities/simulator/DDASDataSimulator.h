@@ -94,12 +94,12 @@ namespace DAQ {
 	     hit.setSlotID(2);
 	     hit.setChannelID(0);
 	     hit.setEnergy(1000);
-	    hit.setTime(1234.5678);
-	    sim.putHit(hit);
+	     hit.setTime(1234.5678);
+	     sim.putHit(hit);
 
-	    sim.endRun();
+	     sim.endRun();
  
-	    return 0;
+	     return 0;
 	 }
 	 ```
 	 * 
