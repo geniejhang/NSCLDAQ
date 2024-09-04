@@ -2,7 +2,7 @@
 
 ##  Incorporate the unfied formatting library:
 
-# Most recently used version 2.2 minimum needed
+# Most recently used version 2.2-003 minimum needed
 # for the new dumper additions.
 # And moving FragmentIndex et al. into ufmt.
 
@@ -12,7 +12,7 @@ TARGET="unifiedformat"
 
 if [[ ! $TAG ]]
 then
-  TAG="2.2"
+  TAG="2.2-003"
 fi
 
 rm -rf $TARGET
