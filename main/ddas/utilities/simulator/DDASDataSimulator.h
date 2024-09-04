@@ -72,7 +72,7 @@ namespace DAQ {
 	 *   - Link against the installed DDASDataSimulator.so and 
 	 *     DDASFormat.so libraries in `$DAQLIB` and 
 	 *     `$DAQROOT`/ddasformat/lib (add `-L<path> 
-	 *     -Wl,-rpath=<path>` to `LDFLAGS` and -l<libname>` to `LDLIBS`).
+	 *     -Wl,-rpath=<path>` to `LDFLAGS` and `-l<libname>` to `LDLIBS`).
 	 *   - Build your executable with the proper compiler and linker flags 
 	 *     described above.
 	 *
