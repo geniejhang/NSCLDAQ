@@ -31,7 +31,10 @@ class CFragmentHandler;
 class CEndOfEventHandler;
 class CRingItem;
 class CPhysicsEventItem;
-struct FragmentInfo;
+
+namespace ufmt {
+    struct FragmentInfo;
+}
 
 // Ordinary C++ includes.
 
@@ -78,7 +81,7 @@ private:
     void decodePhysicsEvent(CPhysicsEventItem* pItem);
     void decodeOtherItems(CRingItem* pItem);
     void makeNewInfoItem(std::uint32_t sid);
-    void checkTimestamp(const FragmentInfo& finfo);
+    void checkTimestamp(const ufmt::FragmentInfo& finfo);
 };
 
 #endif

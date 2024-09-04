@@ -54,7 +54,7 @@ public:
     // and the ringitem header size if an extension is added on.
     
     typedef struct __attribute__((__packed__)) _FragmentItem {
-        EVB::FragmentHeader   s_fragHeader;
+        ufmt::EVB::FragmentHeader   s_fragHeader;
         RingItemHeader        s_ringItemHeader;
     } FragmentItem, *pFragmentItem;
 

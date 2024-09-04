@@ -91,7 +91,7 @@ ItemTagger::operator()()
 void
 ItemTagger::processItems(const CRingBlockReader::DataDescriptor&  info)
 {
-    EVB::FragmentHeader header;
+    ufmt::EVB::FragmentHeader header;
     iovec v[2];
     
     // the first element is constant:
@@ -142,7 +142,7 @@ ItemTagger::processItems(const CRingBlockReader::DataDescriptor&  info)
  * @throw std::invalid_argument -physics item without body header.
  */
 void
-ItemTagger::fillFragHeader(EVB::FragmentHeader& hdr, const RingItem* pItem)
+ItemTagger::fillFragHeader(ufmt::EVB::FragmentHeader& hdr, const RingItem* pItem)
 {
     
     hdr.s_size = pItem->s_header.s_size;

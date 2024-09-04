@@ -36,7 +36,7 @@
 // Fragment index provides iterator functionality on the fragments of a
 // built event.
 
-#include "FragmentIndex.h"         
+#include <FragmentIndex.h>
 
 
 #include <iostream>
@@ -118,7 +118,7 @@ CUnglomDecoder::decodePhysicsEvent(CPhysicsEventItem* pItem)
     
     // Build the fragment iterator and ask it how many fragments the event has:
     
-    FragmentIndex iterator(reinterpret_cast<std::uint16_t*>(pItem->getBodyPointer()));
+    ufmt::FragmentIndex iterator(reinterpret_cast<std::uint16_t*>(pItem->getBodyPointer()));
     
     // For each fragment write the ring item that made it to its fragment files.
     // If there is no fragment file, create one and add its info to the source
@@ -127,7 +127,7 @@ CUnglomDecoder::decodePhysicsEvent(CPhysicsEventItem* pItem)
     
     for (auto p = iterator.begin(); p != iterator.end(); p++)
     {
-        FragmentInfo info = *p;
+        ufmt::FragmentInfo info = *p;
         
         // If necessary make a new output file/etc.
         
@@ -136,8 +136,8 @@ CUnglomDecoder::decodePhysicsEvent(CPhysicsEventItem* pItem)
         }
         // Fetch the size of the ring item:
         
-        pRingItem pItem =
-            reinterpret_cast<pRingItem>(info.s_itemhdr);
+        const RingItem* pItem =
+            reinterpret_cast<const RingItem*>(info.s_itemhdr);
         size_t    nBytes= itemSize(pItem);
         write(m_sourceMap[info.s_sourceId].s_nFd, pItem, nBytes);
         
@@ -154,7 +154,7 @@ CUnglomDecoder::decodePhysicsEvent(CPhysicsEventItem* pItem)
  * events.
  */
 void
-CUnglomDecoder::decodeOtherItems(CRingItem* pItem)
+CUnglomDecoder::decodeOtherItems(::CRingItem* pItem)
 {
     // For now just elide any items that don't have body headers.
     
@@ -221,7 +221,7 @@ CUnglomDecoder::makeNewInfoItem(std::uint32_t sid)
  *    -  Update sht most recently received timestamp.
  */
 void
-CUnglomDecoder::checkTimestamp(const FragmentInfo& finfo)
+CUnglomDecoder::checkTimestamp(const ufmt::FragmentInfo& finfo)
 {
     std::uint32_t sid = finfo.s_sourceId;
     std::uint64_t ts  = finfo.s_timestamp;

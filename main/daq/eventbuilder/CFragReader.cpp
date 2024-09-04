@@ -19,7 +19,7 @@
  * @brief Fragment reader (from file number) class implementation.
  */
 #include "CFragReader.h"
-#include "fragment.h"
+#include <fragment.h>
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -31,6 +31,8 @@
 #include <iostream>
 
 #include <string>
+
+using namespace ufmt;
 
 /**
  * constructor

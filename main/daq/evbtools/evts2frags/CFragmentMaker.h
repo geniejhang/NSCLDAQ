@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 typedef struct _RingItem RingItem;
-namespace EVB {
+namespace ufmt::EVB {
     typedef struct _FragmentHeader FragmentHeader;
 }
 class CFragmentMaker
@@ -37,7 +37,7 @@ private:
 public:
     explicit CFragmentMaker(int defaultSourceId);
     
-    EVB::FragmentHeader makeHeader(RingItem* pItem);
+    ufmt::EVB::FragmentHeader makeHeader(RingItem* pItem);
     
     // Getters:
     

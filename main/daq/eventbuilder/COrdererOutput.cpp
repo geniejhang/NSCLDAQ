@@ -20,11 +20,13 @@
 #include <iostream>
 
 #include <string>
-#include "fragment.h"
+#include <fragment.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <io.h>
+
+using namespace ufmt;
 
 static const int BUFFERSIZE=1024*1024;  // Hard coded for now.
 /*------------------------------------------------------------------------

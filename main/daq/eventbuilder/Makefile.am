@@ -10,20 +10,15 @@ COMPILATION_FLAGS =  \
 	-I@top_srcdir@/base/os \
 	-I@top_srcdir@/base/thread \
 	@LIBTCLPLUS_CFLAGS@ \
-	@THREADCXX_FLAGS@ @TCL_FLAGS@ @PIXIE_CPPFLAGS@
+	@THREADCXX_FLAGS@ @TCL_FLAGS@ @PIXIE_CPPFLAGS@ @UFMT_CPPFLAGS@
 
 
-lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la libFragmentIndex.la
+lib_LTLIBRARIES=libEventBuilder.la libEventBuilderClient.la
 
-
-libFragmentIndex_la_SOURCES=FragmentIndex.cpp
-
-libFragmentIndex_la_CXXFLAGS=-I@top_srcdir@/daq/format @LIBTCLPLUS_CFLAGS@ \
-	@PIXIE_CPPFLAGS@
 
 
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp \
-	CInputStatsCommand.cpp COrdererOutput.cpp fragment.cpp \
+	CInputStatsCommand.cpp COrdererOutput.cpp \
 	COutputStatsObserver.cpp COutputStatsCommand.cpp CDataLateStatistics.cpp \
 	CDLateStatsCommand.cpp CLateScriptObserver.cpp COnLateDataCommand.cpp  \
 	CBarrierStatsCommand.cpp CBarrierStats.cpp CIncompleteBarrierStats.cpp \
@@ -38,7 +33,7 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 
 
 libEventBuilder_la_CPPFLAGS=$(COMPILATION_FLAGS)   
-libEventBuilder_la_LIBADD = @LIBTCLPLUS_LDFLAGS@	\
+libEventBuilder_la_LIBADD = @UFMT_LDFLAGS@ @LIBTCLPLUS_LDFLAGS@	\
 	@top_builddir@/base/thread/libdaqthreads.la 	\
 	@top_builddir@/base/os/libdaqshm.la    \
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@
@@ -51,18 +46,20 @@ Orderer_SOURCES= Orderer.cpp $(libEventBuilder_la_SOURCES)
 Orderer_CPPFLAGS=$(libEventBuilder_la_CPPFLAGS) $(TCL_CPPFLAGS)
 
 
-Orderer_LDFLAGS =  @LIBTCLPLUS_LDFLAGS@	\
+Orderer_LDFLAGS = @UFMT_LDFLAGS@ \
+	@LIBTCLPLUS_LDFLAGS@	\
 	@top_builddir@/base/os/libdaqshm.la    \
 	@top_builddir@/base/thread/libdaqthreads.la 	\
 	@TCL_LDFLAGS@ @THREADLD_FLAGS@ 
 
 
 
-libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp fragment.cpp \
+libEventBuilderClient_la_SOURCES=CEventOrderClient.cpp  \
 	CEVBClientApp.cpp  CEVBFrameworkApp.cpp \
 	EVBFramework.cpp GetOpt.cpp fragio.cpp
 
 libEventBuilderClient_la_CPPFLAGS=$(COMPILATION_FLAGS)
+libEventBuilderClient_la_LIBADD=@UFMT_LDFLAGS@
 
 frag2ring_SOURCES=frag2ring.cpp CFragReader.cpp CFragWriter.cpp
 
@@ -77,8 +74,8 @@ FRAMEWORK_SOURCEFILES =  GetOpt.cpp Main.cpp options.ggo
 FRAMEWORK_SKELETON =  $(FRAMEWORK_SOURCEFILES)
 
 
-include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h \
-	CEVBFrameworkApp.h  GetOpt.h fragio.h FragmentIndex.h
+include_HEADERS = CEventOrderClient.h  CEVBClientApp.h EVBFramework.h \
+	CEVBFrameworkApp.h  GetOpt.h fragio.h 
 
 
 noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h  \
@@ -197,12 +194,12 @@ transmittests_CPPFLAGS=$(COMPILATION_FLAGS) @LIBTCLPLUS_CFLAGS@
 ordertests_SOURCES = TestRunner.cpp orderTests.cpp duptscmdtest.cpp \
 	configcmdtests.cpp tclflowtest.cpp fragalloctest.cpp \
 	evbclienttests.cpp	\
-	CFragmentHandler.cpp fragment.cpp CDuplicateTimeStatCommand.cpp \
+	CFragmentHandler.cpp  CDuplicateTimeStatCommand.cpp \
 	CConfigure.cpp CXonXOffCallbackCommand.cpp COutputThread.cpp CSortThread.cpp \
 	CEventOrderClient.cpp
 
 
-ordertests_LDADD = 	@top_builddir@/base/thread/libdaqthreads.la 	\
+ordertests_LDADD = 	@UFMT_LDFLAGS@ @top_builddir@/base/thread/libdaqthreads.la 	\
 	@top_builddir@/daq/format/libdataformat.la	\
 	@top_builddir@/servers/portmanager/libPortManager.la	\
 	@top_builddir@/base/os/libdaqshm.la			\

@@ -14,8 +14,8 @@
 #include "COrdererOutput.h"
 #undef private
 
-#include "fragment.h"
-
+#include <fragment.h>
+using namespace ufmt;
 
 // We need some mocks:
 

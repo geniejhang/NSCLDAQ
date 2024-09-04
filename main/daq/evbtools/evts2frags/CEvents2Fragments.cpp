@@ -127,7 +127,7 @@ CEvents2Fragments::processItem(void* pItem)
 {
     pRingItem p = static_cast<pRingItem>(pItem);
     
-    EVB::FragmentHeader hdr = m_HeaderMaker.makeHeader(p);
+    ufmt::EVB::FragmentHeader hdr = m_HeaderMaker.makeHeader(p);
     
     m_Writer << hdr;
     m_Writer.put(p, itemSize(p));

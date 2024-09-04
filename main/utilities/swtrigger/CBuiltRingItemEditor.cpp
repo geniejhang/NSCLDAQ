@@ -242,8 +242,8 @@ CBuiltRingItemEditor::editItem(pRingItemHeader pItem)
     nBytes -= sizeof(uint32_t);
     void*  p = firstFragment(pBody);
     while(nBytes) {
-        EVB::pFlatFragment pFrag = static_cast<EVB::pFlatFragment>(p);
-        EVB::pFragmentHeader pFragHeader = reinterpret_cast<EVB::pFragmentHeader>(pFrag);  // Fragment header only.
+        ufmt::EVB::pFlatFragment pFrag = static_cast<ufmt::EVB::pFlatFragment>(p);
+        ufmt::EVB::pFragmentHeader pFragHeader = reinterpret_cast<ufmt::EVB::pFragmentHeader>(pFrag);  // Fragment header only.
         pRingItemHeader      pfRitemHdr  = reinterpret_cast<pRingItemHeader>(pFragHeader+1); // Ring item header follows.
         std::vector<BodySegment> fragSegs;
         
@@ -253,13 +253,13 @@ CBuiltRingItemEditor::editItem(pRingItemHeader pItem)
         //  In that case we stop processing the event and break out of the
         //  loop.
         
-        if (((sizeof(EVB::FragmentHeader) + pfRitemHdr->s_size) > nBytes) || (pfRitemHdr->s_type != PHYSICS_EVENT)) {
+        if (((sizeof(ufmt::EVB::FragmentHeader) + pfRitemHdr->s_size) > nBytes) || (pfRitemHdr->s_type != PHYSICS_EVENT)) {
             std::cerr << "The ring item header of a fragment either goes out of\n";
             std::cerr << "event bounds or the type is no PHYSICS_EVENT\n";
             std::cerr << "Going on to the next event, the fragments so far will be output\n";
             std::cerr << "The remainder of the event will not be output\n";
             
-            std::cerr << "Item size: " << sizeof(EVB::FragmentHeader) + pfRitemHdr->s_size <<"  bytes left: " << nBytes << std::endl;
+            std::cerr << "Item size: " << sizeof(ufmt::EVB::FragmentHeader) + pfRitemHdr->s_size <<"  bytes left: " << nBytes << std::endl;
             std::cerr << "Item type: " << pfRitemHdr->s_type << " Should be: " << PHYSICS_EVENT << std::endl;
             
             // This is safe because the caller uses the fragment descriptors so far
@@ -282,7 +282,7 @@ CBuiltRingItemEditor::editItem(pRingItemHeader pItem)
         // nbytes includes the ring item header and fragment header that precede
         // the body header:
         
-        if (fBodyHeaderSize +sizeof(RingItemHeader) + sizeof(EVB::FragmentHeader) > nBytes) {
+        if (fBodyHeaderSize +sizeof(RingItemHeader) + sizeof(ufmt::EVB::FragmentHeader) > nBytes) {
             std::cerr << " I got a body header size of " << fBodyHeaderSize
                 << " which, with the ring item and frag headers would push  me off the end of the data "
                 << nBytes << std::endl;
@@ -308,7 +308,7 @@ CBuiltRingItemEditor::editItem(pRingItemHeader pItem)
         // This has to come before the size adjustment.
         
         p = nextFragment(p);
-        nBytes -= (sizeof(EVB::FragmentHeader) + pFrag->s_header.s_size);
+        nBytes -= (sizeof(ufmt::EVB::FragmentHeader) + pFrag->s_header.s_size);
                    
 	// The fragment header and ring item header sizes must be adjusted.
 	// There's already a segment to write them to the output we just
@@ -316,7 +316,7 @@ CBuiltRingItemEditor::editItem(pRingItemHeader pItem)
 
         uint32_t fragmentSize = countBytes(fragSegs); // Includes the ring item hdr and frag hdr.
         if (fragmentSize) {
-            uint32_t finalFragBodySize = fragmentSize - sizeof(EVB::FragmentHeader);
+            uint32_t finalFragBodySize = fragmentSize - sizeof(ufmt::EVB::FragmentHeader);
             pFragHeader->s_size = finalFragBodySize;
             pfRitemHdr->s_size  = finalFragBodySize;
         }
@@ -349,7 +349,7 @@ CBuiltRingItemEditor::editItem(pRingItemHeader pItem)
  * @return std::vectory<BodySegment> Descriptors for the edited fragment.
  */
 std::vector<CBuiltRingItemEditor::BodySegment>
-CBuiltRingItemEditor::editFragment(EVB::pFlatFragment pFrag)
+CBuiltRingItemEditor::editFragment(ufmt::EVB::pFlatFragment pFrag)
 {
     std::vector<BodySegment> result;
 
@@ -368,7 +368,7 @@ CBuiltRingItemEditor::editFragment(EVB::pFlatFragment pFrag)
     // fragment's body header.
 
     BodySegment hdr( // Wrong if there's an extension.
-        sizeof(EVB::FragmentHeader) + sizeof(RingItemHeader) +
+        sizeof(ufmt::EVB::FragmentHeader) + sizeof(RingItemHeader) +
         bhdrSize, pFrag
     );
     result.push_back(hdr);

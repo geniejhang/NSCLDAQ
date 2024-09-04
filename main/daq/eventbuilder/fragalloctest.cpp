@@ -4,9 +4,10 @@
 #include <cppunit/Asserter.h>
 #include "Asserts.h"
 
-#include "fragment.h"
+#include <fragment.h>
+using namespace ufmt;
 
-namespace EVB {
+namespace ufmt::EVB {
 extern void resetFragmentPool();            // Frees fragments in pools.
 }
 
@@ -39,10 +40,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION(Fragalloctest);
 // Allocating a header,releasing it and allocating again should give the
 // same header
 void Fragalloctest::headerpool() {
-  EVB::FragmentHeader hdr = {0, 0, 100, 0};
-  EVB::pFragment first = allocateFragment(&hdr);
+  ufmt::EVB::FragmentHeader hdr = {0, 0, 100, 0};
+  ufmt::EVB::pFragment first = allocateFragment(&hdr);
   freeFragment(first);
-  EVB::pFragment second = allocateFragment(&hdr);
+  ufmt::EVB::pFragment second = allocateFragment(&hdr);
   
   EQ(first, second);
   
@@ -53,8 +54,8 @@ void Fragalloctest::headerpool() {
 
 void Fragalloctest::bodypool_1()
 {
-  EVB::FragmentHeader hdr = {0, 0, 100, 0};
-  EVB::pFragment frag = allocateFragment(&hdr);
+  ufmt::EVB::FragmentHeader hdr = {0, 0, 100, 0};
+  ufmt::EVB::pFragment frag = allocateFragment(&hdr);
   void* pBody1 = frag->s_pBody;
   
   freeFragment(frag);
@@ -71,13 +72,13 @@ void Fragalloctest::bodypool_1()
 
 void Fragalloctest::bodypool_2()
 {
-  EVB::FragmentHeader hdr = {0,0, 10, 0};
-  EVB::pFragment frag1 = allocateFragment(&hdr);
+  ufmt::EVB::FragmentHeader hdr = {0,0, 10, 0};
+  ufmt::EVB::pFragment frag1 = allocateFragment(&hdr);
   void* pBody1 = frag1->s_pBody;
   freeFragment(frag1);
   
   hdr.s_size = 257;                 // DIfferent pool from 100.
-  EVB::pFragment frag2 = allocateFragment(&hdr);
+  ufmt::EVB::pFragment frag2 = allocateFragment(&hdr);
   
   EQ(frag1, frag2);
   ASSERT(pBody1 != frag2->s_pBody);

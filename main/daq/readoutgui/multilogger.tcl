@@ -573,6 +573,8 @@ snit::widgetadaptor SelectLoggers {
 snit::widgetadaptor LoggerList {
     option -loggers -configuremethod _LoggersChanged -default [list]
     
+		variable rateSchedule
+		variable totalSchedule
     
     ##
     # Constructor:
@@ -667,6 +669,18 @@ snit::widgetadaptor LoggerRateList {
     }
 
     ##
+    # Destructor:
+    #   Clearing after jobs
+    #
+    destructor {
+        variable rateSchedule
+        variable totalSchedule
+
+        after cancel $rateSchedule
+        after cancel $totalSchedule
+    }
+
+    ##
     # _LoggersChanged
     #    Get rid of children of the hull
     #    Repopulate given the new list.
@@ -728,13 +742,16 @@ snit::widgetadaptor LoggerRateList {
     #  @param target - either "rate" or "total" to update
     #
     method _updateLabel {label logger target} {
+        variable rateSchedule
+        variable totalSchedule
+
         if {$target == "rate"} {
             $label configure -text [eval [mymethod _formatText [$logger getRate]]]
+            set rateSchedule [after 3000 [mymethod _updateLabel $label $logger $target]]
         } elseif {$target == "total"} {
             $label configure -text [eval [mymethod _formatText [$logger getTotal]]]
+            set totalSchedule [after 3000 [mymethod _updateLabel $label $logger $target]]
         }
-
-        after 3000 [mymethod _updateLabel $label $logger $target]
     }
 
     ##

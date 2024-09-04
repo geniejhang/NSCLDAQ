@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <iostream>
 
+using namespace ufmt;
+
 /**
  * Constructor
  *   For now this is null, just setting the thread name in the base class

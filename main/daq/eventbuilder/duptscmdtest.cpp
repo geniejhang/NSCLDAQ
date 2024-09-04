@@ -12,8 +12,9 @@
 #include "TCLInterpreter.h"
 #include "TCLObject.h"
 #include <tcl.h>
-#include "fragment.h"
+#include <fragment.h>
 
+using namespace ufmt;
 
 
 class DupStatCmdTests : public CppUnit::TestFixture {

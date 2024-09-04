@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <list>
 #include <sys/uio.h>
+#include <fragment.h>
 
 /**
  *  This client object is responsible for sending data to the event builder
@@ -54,9 +55,9 @@ namespace EVB {
 
 
 namespace EVB {
-  typedef struct _Fragment Fragment, *pFragment;
-  typedef struct _FragmentChain FragmentChain, *pFragmentChain;
-  typedef std::list<pFragment> FragmentPointerList;
+  typedef struct ::ufmt::EVB::_Fragment Fragment, *pFragment;
+  typedef struct ::ufmt::EVB::_FragmentChain FragmentChain, *pFragmentChain;
+  typedef std::list<::ufmt::EVB::pFragment> FragmentPointerList;
 }
 
 // Forward definition:

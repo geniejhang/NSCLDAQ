@@ -29,13 +29,13 @@ uint64_t fakeExtractor(pPhysicsEventItem pItem)
 
 class CEventOrderClient  {
 public:
-  std::vector<std::pair<size_t, EVB::pFragment>> m_submissions;
-  void submitFragments(size_t nFrags, EVB::pFragment frags);
+  std::vector<std::pair<size_t, ufmt::EVB::pFragment>> m_submissions;
+  void submitFragments(size_t nFrags, ufmt::EVB::pFragment frags);
 };
 class CRingBuffer {};
 
 void
-CEventOrderClient::submitFragments(size_t nFrags, EVB::pFragment frags)
+CEventOrderClient::submitFragments(size_t nFrags, ufmt::EVB::pFragment frags)
 {
   m_submissions.push_back({nFrags, frags});
 }
@@ -179,14 +179,14 @@ void fragsrctest::makefrags_1()
 
 void fragsrctest::makefrags_2()
 {
-  CRingItem r(PHYSICS_EVENT, 0x1234, 1, 0);
+  ::CRingItem r(PHYSICS_EVENT, 0x1234, 1, 0);
   uint32_t* p = static_cast<uint32_t*>(r.getBodyCursor());
   for (int i =0; i < 10; i++) {
     *p++ = i;
   }
   r.setBodyCursor(p);
   r.updateSize();
-  pRingItem pRawItem = r.getItemPointer();
+  ::pRingItem pRawItem = r.getItemPointer();
   
   CRingBufferChunkAccess::Chunk c;
   c.setChunk(pRawItem->s_header.s_size, pRawItem);
@@ -194,7 +194,7 @@ void fragsrctest::makefrags_2()
   auto result = m_pTestObj->makeFragments(c);
   EQ(size_t(1), result.first);
   
-  EVB::pFragment f(result.second);
+  ufmt::EVB::pFragment f(result.second);
   
   EQ(f->s_header.s_timestamp, r.getEventTimestamp());
   EQ(f->s_header.s_sourceId, r.getSourceId());
@@ -206,7 +206,7 @@ void fragsrctest::makefrags_3()
 {
   // Make a chunk with a bunch of ring items:
   
-  CRingItem* pItems[10];
+  ::CRingItem* pItems[10];
   uint32_t   d = 0;
   uint8_t*   pChunkStorage;
   size_t totalSize(0);
@@ -229,7 +229,7 @@ void fragsrctest::makefrags_3()
   uint8_t* p = pChunkStorage;
   
   for (int i =0; i < 10; i++) {
-    pRingItem pi = pItems[i]->getItemPointer();
+    ::pRingItem pi = pItems[i]->getItemPointer();
     memcpy(p, pi, itemSize(pi));
     p += itemSize(pi);
   }
@@ -244,7 +244,7 @@ void fragsrctest::makefrags_3()
   auto f = pFrags;
   for(int i =0; i < 10; i++) {
   
-    pRingItem pOriginal = pItems[i]->getItemPointer();
+    ::pRingItem pOriginal = pItems[i]->getItemPointer();
     EQ(f->s_header.s_timestamp, pItems[i]->getEventTimestamp());
     EQ(f->s_header.s_sourceId, pItems[i]->getSourceId());
     EQ(f->s_header.s_size,      pOriginal->s_header.s_size);
@@ -266,7 +266,7 @@ void fragsrctest::makefrags_3()
 
 void fragsrctest::makefrags_4()
 {
-  CRingItem item(PHYSICS_EVENT);
+  ::CRingItem item(PHYSICS_EVENT);
   uint32_t* p = static_cast<uint32_t*>(item.getBodyCursor());
   for (int i =0; i < 10; i++) {
     *p++ = i;
@@ -295,7 +295,7 @@ void fragsrctest::makefrags_4()
 
 void fragsrctest::btype_1()
 {
-  CRingItem item(BEGIN_RUN);
+  ::CRingItem item(BEGIN_RUN);
   
   EQ(uint32_t(1), m_pTestObj->barrierType(*(item.getItemPointer())));
 }
@@ -303,12 +303,12 @@ void fragsrctest::btype_1()
 
 void fragsrctest::btype_2()
 {
-  CRingItem item(END_RUN);
+  ::CRingItem item(END_RUN);
   EQ(uint32_t(2), m_pTestObj->barrierType(*(item.getItemPointer())));
 }
 void fragsrctest::btype_3()         // Rest are 0.
 {
-  CRingItem item(PHYSICS_EVENT);
+  ::CRingItem item(PHYSICS_EVENT);
   EQ(uint32_t(0), m_pTestObj->barrierType(*item.getItemPointer()));
 }
 
@@ -316,20 +316,20 @@ void fragsrctest::btype_3()         // Rest are 0.
 
 void fragsrctest::tstamp_1()
 {
-  RingItem item;
+  ::RingItem item;
   EQ(NULL_TIMESTAMP, m_pTestObj->getTimestampFromUserCode(item));
 }
 // Call the extractor if there is one:
 void fragsrctest::tstamp_2()
 {
-  RingItem item;
+  ::RingItem item;
   item.s_header.s_type = PHYSICS_EVENT;                // extractor for phys items.
   m_pTestObj->m_tsExtractor = fakeExtractor;
   EQ(uint64_t(0x123456789abcdef), m_pTestObj->getTimestampFromUserCode(item));
 }
 void fragsrctest::tstamp_3()
 {
-  RingItem item;
+  ::RingItem item;
   item.s_header.s_type = BEGIN_RUN;
   m_pTestObj->m_tsExtractor = fakeExtractor; // only called on physics items.
   EQ(NULL_TIMESTAMP, m_pTestObj->getTimestampFromUserCode(item));
@@ -351,13 +351,13 @@ void fragsrctest::sendchunk_2()
 {
   // Make a chunk with a bunch of ring items:
   
-  CRingItem* pItems[10];
+  ::CRingItem* pItems[10];
   uint32_t   d = 0;
   uint8_t*   pChunkStorage;
   size_t totalSize(0);
   
   for (int i =0; i < 10; i++) {
-    pItems[i] = new CRingItem(PHYSICS_EVENT, i, 1, 0);
+    pItems[i] = new ::CRingItem(PHYSICS_EVENT, i, 1, 0);
     uint32_t* p = static_cast<uint32_t*>(pItems[i]->getBodyCursor());
     for (int i =0; i < 10; i++) {
       *p++ = i;
@@ -374,7 +374,7 @@ void fragsrctest::sendchunk_2()
   uint8_t* p = pChunkStorage;
   
   for (int i =0; i < 10; i++) {
-    pRingItem pi = pItems[i]->getItemPointer();
+    ::pRingItem pi = pItems[i]->getItemPointer();
     memcpy(p, pi, itemSize(pi));
     p += itemSize(pi);
   }
@@ -386,9 +386,9 @@ void fragsrctest::sendchunk_2()
   EQ(size_t(1), m_pClient->m_submissions.size());
   auto sub = m_pClient->m_submissions[0];
   EQ(size_t(10), sub.first);           // # of fragments.
-  EVB::pFragment pFrags = sub.second;
+  ufmt::EVB::pFragment pFrags = sub.second;
   for (int i =0; i < 10; i++) {
-    pRingItem pItem = pItems[i]->getItemPointer();
+    ::pRingItem pItem = pItems[i]->getItemPointer();
     EQ(pItems[i]->getEventTimestamp(), pFrags->s_header.s_timestamp);
     EQ(pItems[i]->getSourceId(), pFrags->s_header.s_sourceId);
     EQ(pItems[i]->getBarrierType(), pFrags->s_header.s_barrier);

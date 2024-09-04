@@ -24,7 +24,7 @@
 
 
 
-namespace EVB {
+namespace ufmt::EVB {
   typedef struct _Fragment Fragment;
 
 }
@@ -36,7 +36,7 @@ namespace EVB {
 
 class CFragIO {
 public:
-  static EVB::Fragment* readFragment(int fd);
-  static void writeFragment(int fd, EVB::Fragment* pFrag);
+  static ufmt::EVB::Fragment* readFragment(int fd);
+  static void writeFragment(int fd, ufmt::EVB::Fragment* pFrag);
 };
 #endif

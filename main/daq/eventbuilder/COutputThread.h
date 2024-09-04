@@ -26,10 +26,12 @@
 #include "CFragmentHandler.h"
 #include <list>
 #include <vector>
-#include "fragment.h"
+#include  <fragment.h>
 #include <CMutex.h>
 #include <CBufferQueue.h>
 #include <atomic>
+
+using namespace ufmt;
 
 /**
  * @class COutputThread
