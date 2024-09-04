@@ -80,7 +80,7 @@ mapVersion(int version)
  * The format factory owns the concrete factory subclass. Any exceptions when 
  * mapping version specifiers are thrown to the caller.
  */
-DDASDataSimulator::DDASDataSimulator(std::string fname, int version)
+DAQ::DDAS::DDASDataSimulator::DDASDataSimulator(std::string fname, int version)
     : m_fname(fname), m_fd(-1), m_start(0), m_stop(0)
 {    
     auto mappedVersion = mapVersion(version);
@@ -96,7 +96,7 @@ DDASDataSimulator::DDASDataSimulator(std::string fname, int version)
  *   - Write the begin run item to the output file.
  */
 void
-DDASDataSimulator::beginRun()
+DAQ::DDAS::DDASDataSimulator::beginRun()
 {
     m_fd = open(m_fname.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);    
     if (m_fd == -1) {
@@ -134,7 +134,7 @@ DDASDataSimulator::beginRun()
  *  - Closes the output file.
  */
 void
-DDASDataSimulator::endRun()
+DAQ::DDAS::DDASDataSimulator::endRun()
 {
     const auto now = std::chrono::system_clock::now();
     m_stop = std::chrono::system_clock::to_time_t(now);
@@ -173,7 +173,7 @@ DDASDataSimulator::endRun()
  * hit are raised to the caller.
  */
 void
-DDASDataSimulator::putHit(
+DAQ::DDAS::DDASDataSimulator::putHit(
     const DAQ::DDAS::DDASHit& hit, int sourceID, bool useExtTS, double cal
     )
 {
@@ -222,7 +222,7 @@ DDASDataSimulator::putHit(
  * the input hit data is valid.
  */
 void
-DDASDataSimulator::setBuffer(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setBuffer(const DAQ::DDAS::DDASHit& hit)
 {
     m_evtBuf.clear(); // Clear buffer before adding data.
     
@@ -272,7 +272,7 @@ DDASDataSimulator::setBuffer(const DAQ::DDAS::DDASHit& hit)
 }
 
 void
-DDASDataSimulator::dumpBuffer()
+DAQ::DDAS::DDASDataSimulator::dumpBuffer()
 {
     for (int i = 0; i < m_evtBuf.size(); i++) {
 	char number[32];
@@ -294,7 +294,7 @@ DDASDataSimulator::dumpBuffer()
  * calculated from its input data.
  */
 void
-DDASDataSimulator::setWord0(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setWord0(const DAQ::DDAS::DDASHit& hit)
 {    
     uint32_t finishCode = hit.getFinishCode(); // Unless otherwise set, == 0.
     uint32_t hdrLen     = getHeaderLength(hit);
@@ -315,7 +315,7 @@ DDASDataSimulator::setWord0(const DAQ::DDAS::DDASHit& hit)
 }
 
 void
-DDASDataSimulator::setWords1And2(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setWords1And2(const DAQ::DDAS::DDASHit& hit)
 {
     double time = hit.getTime();
     if (time < 0) {
@@ -348,7 +348,7 @@ DDASDataSimulator::setWords1And2(const DAQ::DDAS::DDASHit& hit)
  * data for their simulated module type.
  */
 void
-DDASDataSimulator::setWord3(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setWord3(const DAQ::DDAS::DDASHit& hit)
 {
     uint32_t ene = hit.getEnergy();
     auto trace = hit.getTrace();
@@ -370,7 +370,7 @@ DDASDataSimulator::setWord3(const DAQ::DDAS::DDASHit& hit)
 }
 
 void
-DDASDataSimulator::setExternalTS(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setExternalTS(const DAQ::DDAS::DDASHit& hit)
 {
     uint64_t ts = hit.getExternalTimestamp();
     uint32_t word = (ts & LOWER_TS_BIT_MASK);
@@ -389,7 +389,7 @@ DDASDataSimulator::setExternalTS(const DAQ::DDAS::DDASHit& hit)
  * requirement.
  */ 
 void
-DDASDataSimulator::setEnergySums(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setEnergySums(const DAQ::DDAS::DDASHit& hit)
 {
     auto esums = hit.getEnergySums();
     for (const auto& e : esums) {
@@ -404,7 +404,7 @@ DDASDataSimulator::setEnergySums(const DAQ::DDAS::DDASHit& hit)
  * requirement.
  */
 void
-DDASDataSimulator::setQDCSums(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setQDCSums(const DAQ::DDAS::DDASHit& hit)
 {
     auto qdc = hit.getQDCSums();
     for (const auto& q : qdc) {
@@ -417,7 +417,7 @@ DDASDataSimulator::setQDCSums(const DAQ::DDAS::DDASHit& hit)
  * Packs two consecutive uint16_t trace sample data into one uint32_t word.
  */
 void
-DDASDataSimulator::setTraceData(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setTraceData(const DAQ::DDAS::DDASHit& hit)
 {    
     auto trace = hit.getTrace();
     int len = trace.size();
@@ -439,7 +439,7 @@ DDASDataSimulator::setTraceData(const DAQ::DDAS::DDASHit& hit)
  * the hit. It is generally safer to take this approach.
  */
 uint32_t
-DDASDataSimulator::getHeaderLength(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::getHeaderLength(const DAQ::DDAS::DDASHit& hit)
 {
     uint32_t hdrLen = hit.getChannelHeaderLength();
     if (hdrLen) {
@@ -464,7 +464,7 @@ DDASDataSimulator::getHeaderLength(const DAQ::DDAS::DDASHit& hit)
 
 
 uint32_t 
-DDASDataSimulator::getModInfoWord(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::getModInfoWord(const DAQ::DDAS::DDASHit& hit)
 {
     int rev  = hit.getHardwareRevision();
     int bits = hit.getADCResolution();
@@ -494,7 +494,7 @@ DDASDataSimulator::getModInfoWord(const DAQ::DDAS::DDASHit& hit)
  *  - 250 MSPS: CFD correction from the previous clock cycle > 4 ns.
  */
 uint64_t
-DDASDataSimulator::getCoarseTimestamp(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::getCoarseTimestamp(const DAQ::DDAS::DDASHit& hit)
 {
     double time = hit.getTime();
     int clockPeriod = getClockPeriod(hit);
@@ -520,7 +520,7 @@ DDASDataSimulator::getCoarseTimestamp(const DAQ::DDAS::DDASHit& hit)
 }
 
 int
-DDASDataSimulator::getClockPeriod(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::getClockPeriod(const DAQ::DDAS::DDASHit& hit)
 {
     int clockPeriod;
     int msps = hit.getModMSPS();
@@ -540,7 +540,7 @@ DDASDataSimulator::getClockPeriod(const DAQ::DDAS::DDASHit& hit)
 }
 
 int
-DDASDataSimulator::getSamplePeriod(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::getSamplePeriod(const DAQ::DDAS::DDASHit& hit)
 {
     int samplePeriod;
     int msps = hit.getModMSPS();
@@ -566,7 +566,7 @@ DDASDataSimulator::getSamplePeriod(const DAQ::DDAS::DDASHit& hit)
  * on the sign and magnitude of the ZCP.
  */
 uint32_t
-DDASDataSimulator::getPackedCFDResult(
+DAQ::DDAS::DDASDataSimulator::getPackedCFDResult(
     const DAQ::DDAS::DDASHit& hit, double corr
     )
 {

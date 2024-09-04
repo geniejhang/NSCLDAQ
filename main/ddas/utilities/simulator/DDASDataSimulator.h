@@ -36,209 +36,221 @@ namespace ufmt {
     class RingItemFactoryBase;
 }
 
-/**
- * @class DDASDataSimulator
- * @brief Simulates data produced by a DDAS readout program in user code.
- * @details
- * This class provides an interface to simulate the data output by an NSCLDAQ 
- * readout program running DDAS electronics. The DAQ::DDAS::DDASHit class is 
- * used to encapsulate the hit information. The `putHit()` method of this class
- * fills an event buffer with the Pixie data payload based on the contents of 
- * the passed DAQ::DDAS::DDASHit, including optional data like QDC sums or 
- * traces, wraps it in an NSCLDAQ header and writes it to a file data sink.
- *
- * The output NSCLDAQ data format is specified by the user when they 
- * instantiate the class. For completeness, the `beginRun()` and `endRun()` 
- * methods will write the expected data format and state change items you 
- * would see when starting and stopping a run.
- *
- * In general the code uses the information contained within the 
- * DAQ::DDAS::DDASHit to figure out its size. In order to calculate calibrated 
- * timestamps, the module MSPS must be defined as part of the DDASHit, or, if 
- * using an external timestamp,  the calibration must be provided when adding 
- * the hit. Trace data is _not checked_ for overflows or to ensure that the 
- * range of the trace matches the bit depth of the module, that responsiblity 
- * is on the user. It is always assumed that the CFD succeeds, even if the 
- * correction is 0.
- *
- * To use this class in your own code:
- *   - Ensure `$DAQINC`, `$DAQROOT`/unifiedformat/include and 
- *     `$DAQROOT`/ddasformat/include are in the compiler include files search 
- *     path (add `-I<path>` in e.g., `CXXFLAGS`).
- *   - Link against the installed DDASDataSimulator.so and DDASFormat.so 
- *     libraries in `$DAQLIB` and `$DAQROOT`/ddasformat/lib (add `-L<path> 
- *     -Wl,-rpath=<path>` to `LDFLAGS` and -l<libname>` to `LDLIBS`).
- *   - Build your executable with the proper compiler and linker flags 
- *     described above.
- *
- * Example code:
- ```
- #include <DDASDataSimulator.h>
- #include <DDASHit.h>
+namespace DAQ {
+    namespace DDAS {
+	/**
+	 * @class DAQ::DDAS::DDASDataSimulator
+	 * @brief Simulates data produced by a DDAS readout program in user 
+	 * code.
+	 * @details
+	 * This class provides an interface to simulate the data output by an 
+	 * NSCLDAQ readout program running DDAS electronics. The 
+	 * DAQ::DDAS::DDASHit class is used to encapsulate the hit information.
+	 * The `putHit()` method of this class fills an event buffer with the 
+	 * Pixie data payload based on the contents of the passed 
+	 * DAQ::DDAS::DDASHit, including optional data like QDC sums or traces,
+	 * wraps it in an NSCLDAQ header and writes it to a file data sink.
+	 *
+	 * The output NSCLDAQ data format is specified by the user when they 
+	 * instantiate the class. For completeness, the `beginRun()` and 
+	 * `endRun()` methods will write the expected data format and state 
+	 * change items you would see when starting and stopping a run.
+	 *
+	 * In general the code uses the information contained within the 
+	 * DAQ::DDAS::DDASHit to figure out its size. In order to calculate 
+	 * calibrated timestamps, the module MSPS must be defined as part of
+	 * the DDASHit, or, if  using an external timestamp,  the calibration 
+	 * must be provided when adding the hit. Trace data is _not checked_ 
+	 * for overflows or to ensure that the range of the trace matches the 
+	 * bit depth of the module, that responsiblity  is on the user. It is 
+	 * assumed that the CFD always succeeds, even if the correction is 0.
+	 *
+	 * To use this class in your own code:
+	 *   - Ensure `$DAQINC`, `$DAQROOT`/unifiedformat/include and 
+	 *     `$DAQROOT`/ddasformat/include are in the compiler include files 
+	 *     search path (add `-I<path>` in e.g., `CXXFLAGS`).
+	 *   - Link against the installed DDASDataSimulator.so and 
+	 *     DDASFormat.so libraries in `$DAQLIB` and 
+	 *     `$DAQROOT`/ddasformat/lib (add `-L<path> 
+	 *     -Wl,-rpath=<path>` to `LDFLAGS` and -l<libname>` to `LDLIBS`).
+	 *   - Build your executable with the proper compiler and linker flags 
+	 *     described above.
+	 *
+	 * Example code:
+	 ```
+	 #include <DDASDataSimulator.h>
+	 #include <DDASHit.h>
 
- using namespace DAQ::DDAS;
+	 using namespace DAQ::DDAS;
 
- int main () {
-     DDASDataSimulator sim("data.evt", 12);
-     DDASHit hit;
+	 int main () {
+	 DDASDataSimulator sim("data.evt", 12);
+	 DDASHit hit;
 
-     sim.beginRun();
+	 sim.beginRun();
 
-     hit.setModMSPS(250);
-     hit.setCrateID(0);
-     hit.setSlotID(2);
-     hit.setChannelID(0);
-     hit.setEnergy(1000);
-     hit.setTime(1234.5678);
-     sim.putHit(hit);
+	 hit.setModMSPS(250);
+	 hit.setCrateID(0);
+	 hit.setSlotID(2);
+	 hit.setChannelID(0);
+	 hit.setEnergy(1000);
+	 hit.setTime(1234.5678);
+	 sim.putHit(hit);
 
-     sim.endRun();
+	 sim.endRun();
  
-     return 0;
- }
- ```
- * 
- */
+	 return 0;
+	 }
+	 ```
+	 * 
+	 */
 
-class DDASDataSimulator
-{
-private:
-    std::string m_fname; //!< Output file name.
-    int m_fd; //!< File descriptor for output file.
-    ufmt::RingItemFactoryBase* m_pFactory; //!< Creates formatted ring items.
-    std::vector<uint32_t> m_evtBuf; //!< Event buffer containing Pixie payload.
-    std::time_t m_start; //!< Start time of the "run."
-    std::time_t m_stop;  //!< Stop time of the "run."
+	class DDASDataSimulator
+	{
+	private:
+	    std::string m_fname; //!< Output file name.
+	    int m_fd; //!< File descriptor for output file.
+	    ufmt::RingItemFactoryBase* m_pFactory; //!< Creates ring items.
+	    std::vector<uint32_t> m_evtBuf; //!< Buffer for Pixie payload.
+	    std::time_t m_start; //!< Start time of the "run."
+	    std::time_t m_stop;  //!< Stop time of the "run."
 
-public:
-    /**
-     * @brief Constructor.
-     * @param fname Output file name. 
-     * @param version NSLCDAQ data format version. Mapped to ufmt enum value.
-     */
-    DDASDataSimulator(std::string fname, int version);
+	public:
+	    /**
+	     * @brief Constructor.
+	     * @param fname Output file name. 
+	     * @param version NSLCDAQ data format version. Mapped to ufmt 
+	     *   enum value.
+	     */
+	    DDASDataSimulator(std::string fname, int version);
 
-    /** 
-     * @brief Begin a simulated run.
-     * @throws CErrnoExecption If the output file isn't opened properly.
-     */
-    void beginRun();
-    /** 
-     * @brief End a simulated run.
-     * @throws CErrnoExecption If the output file isn't closed properly.
-     */
-    void endRun();
-    /**
-     * @brief Write a hit to the output file. This is the normal way users 
-     * will add simulated data to the output.
-     * @param hit References the hit to write.
-     * @param sourceID The source ID value (optional, default=0).
-     * @param useExtTS Use an external timestamp (optional, default=false).
-     * @param cal Clock calibration in nanoseconds per clock cycle. 
-     *   Required if useExtTS is true (optional, default=0.0).
-     * @throws std::runtime_error If using an external timestamp with an 
-     *   invalid clock calibration (<= 0.0).
-     */
-    void putHit(
-	const DAQ::DDAS::DDASHit& hit, int sourceID=0,
-	bool useExtTS=false, double cal=0.0
-	);
+	    /** 
+	     * @brief Begin a simulated run.
+	     * @throws CErrnoExecption If the output file isn't opened properly.
+	     */
+	    void beginRun();
+	    /** 
+	     * @brief End a simulated run.
+	     * @throws CErrnoExecption If the output file isn't closed properly.
+	     */
+	    void endRun();
+	    /**
+	     * @brief Write a hit to the output file. This is the normal way 
+	     * users will add simulated data to the output.
+	     * @param hit References the hit to write.
+	     * @param sourceID The source ID value (optional, default=0).
+	     * @param useExtTS Use an external timestamp (optional, 
+	     *   default=false).
+	     * @param cal Clock calibration in nanoseconds per clock cycle. 
+	     *   Required if useExtTS is true (optional, default=0.0).
+	     * @throws std::runtime_error If using an external timestamp with 
+	     *   an invalid clock calibration (<= 0.0).
+	     */
+	    void putHit(
+		const DAQ::DDAS::DDASHit& hit, int sourceID=0,
+		bool useExtTS=false, double cal=0.0
+		);
 
-    /**
-     * @brief Set the data buffer from a DDASHit.
-     * @param hit References the hit to process.
-     */
-    void setBuffer(const DAQ::DDAS::DDASHit& hit);
-    /**
-     * @brief Get the data buffer.
-     * @return The data buffer. May or may not be empty, depending on whether 
-     *   `setBuffer()` is called first.
-     */
-    std::vector<uint32_t> getBuffer() { return m_evtBuf; }
-    /** @brief Formatted dump of data buffer to stdout. */
-    void dumpBuffer();
+	    /**
+	     * @brief Set the data buffer from a DDASHit.
+	     * @param hit References the hit to process.
+	     */
+	    void setBuffer(const DAQ::DDAS::DDASHit& hit);
+	    /**
+	     * @brief Get the data buffer.
+	     * @return The data buffer. May or may not be empty, depending on 
+	     *   whether `setBuffer()` is called first.
+	     */
+	    std::vector<uint32_t> getBuffer() { return m_evtBuf; }
+	    /** @brief Formatted dump of data buffer to stdout. */
+	    void dumpBuffer();
 
-private:
-    /** 
-     * @brief Set word 0 of the fixed Pixie list-mode event header. Contains 
-     * identifying information for the hit and its size.
-     * @param hit References the hit to process.
-     */
-    void setWord0(const DAQ::DDAS::DDASHit& hit);
-    /** 
-     * @brief Set words 1 and 2 of the fixed Pixie list-mode event header. 
-     * Word 1 Contains lower 32 bits of 48-bit timestamp, word 2 contains 
-     * upper 16 bits of 48-bit timestamp and CFD correction.
-     * @param hit References the hit to process.
-     * @throws std::runtime_error If the hit timestamp is < 0.
-     */
-    void setWords1And2(const DAQ::DDAS::DDASHit& hit);
-    /** 
-     * @brief Set word 3 of the fixed Pixie list-mode event header. Contains
-     * energy and trace length, overflow.
-     * @param hit References the hit to process.
-     */
-    void setWord3(const DAQ::DDAS::DDASHit& hit);
+	private:
+	    /** 
+	     * @brief Set word 0 of the fixed Pixie list-mode event header. 
+	     * Contains identifying information for the hit and its size.
+	     * @param hit References the hit to process.
+	     */
+	    void setWord0(const DAQ::DDAS::DDASHit& hit);
+	    /** 
+	     * @brief Set words 1 and 2 of the fixed Pixie list-mode event 
+	     * header. Word 1 Contains lower 32 bits of 48-bit timestamp, 
+	     * word 2 contains upper 16 bits of 48-bit timestamp and CFD 
+	     * correction.
+	     * @param hit References the hit to process.
+	     * @throws std::runtime_error If the hit timestamp is < 0.
+	     */
+	    void setWords1And2(const DAQ::DDAS::DDASHit& hit);
+	    /** 
+	     * @brief Set word 3 of the fixed Pixie list-mode event header. 
+	     * Contains energy and trace length, overflow.
+	     * @param hit References the hit to process.
+	     */
+	    void setWord3(const DAQ::DDAS::DDASHit& hit);
 
-    /**
-     * @brief Set the external timestamp from the hit.
-     * @param hit References the hit to process.
-     */
-    void setExternalTS(const DAQ::DDAS::DDASHit& hit);
-    /**
-     * @brief Set the energy sums from the hit.
-     * @param hit References the hit to process.
-     */
-    void setEnergySums(const DAQ::DDAS::DDASHit& hit);
-    /**
-     * @brief Set the QDC sums from the hit.
-     * @param hit References the hit to process.
-     */
-    void setQDCSums(const DAQ::DDAS::DDASHit& hit);
-    /**
-     * @brief Set the ADC trace from the hit.
-     * @param hit References the hit to process.
-     */
-    void setTraceData(const DAQ::DDAS::DDASHit& hit);
+	    /**
+	     * @brief Set the external timestamp from the hit.
+	     * @param hit References the hit to process.
+	     */
+	    void setExternalTS(const DAQ::DDAS::DDASHit& hit);
+	    /**
+	     * @brief Set the energy sums from the hit.
+	     * @param hit References the hit to process.
+	     */
+	    void setEnergySums(const DAQ::DDAS::DDASHit& hit);
+	    /**
+	     * @brief Set the QDC sums from the hit.
+	     * @param hit References the hit to process.
+	     */
+	    void setQDCSums(const DAQ::DDAS::DDASHit& hit);
+	    /**
+	     * @brief Set the ADC trace from the hit.
+	     * @param hit References the hit to process.
+	     */
+	    void setTraceData(const DAQ::DDAS::DDASHit& hit);
     
-    /**
-     * @brief Get the Pixie header length.
-     * @param hit References the hit to process.
-     * @return The Pixie header length in 32-bit words.
-     */
-    uint32_t getHeaderLength(const DAQ::DDAS::DDASHit& hit);
-    /**
-     * @brief Get the module identification word.
-     * @param hit References the hit to process.
-     * @return The module ID as a 32-bit data word.
-     */
-    uint32_t getModInfoWord(const DAQ::DDAS::DDASHit& hit);
-    /**
-     * @brief Get the coarse timestamp from the hit.
-     * @param hit References the hit to process.
-     * @return The coarse timestamp in clock ticks.
-     */
-    uint64_t getCoarseTimestamp(const DAQ::DDAS::DDASHit& hit);
-    /**
-     * @brief Get the FPGA clock period in nanoseconds.
-     * @param hit References the hit to process.
-     * @throws std::runtime_error If the module MSPS is not known.
-     * @return The clock period in nanoseconds.
-     */
-    int      getClockPeriod(const DAQ::DDAS::DDASHit& hit);
-    /**
-     * @brief Get the ADC sampling period in nanoseconds.
-     * @param hit References the hit to process.
-     * @throws std::runtime_error If the module MSPS is not known.
-     * @return The sampling period in nanoseconds.
-     */
-    int      getSamplePeriod(const DAQ::DDAS::DDASHit& hit);
-    /**
-     * @brief Get the packed CFD result (CFD as data word).
-     * @param hit References the hit to process.
-     * @return The packed CFD word as a uint32_t.
-     */
-    uint32_t getPackedCFDResult(const DAQ::DDAS::DDASHit& hit, double corr);    
-};
+	    /**
+	     * @brief Get the Pixie header length.
+	     * @param hit References the hit to process.
+	     * @return The Pixie header length in 32-bit words.
+	     */
+	    uint32_t getHeaderLength(const DAQ::DDAS::DDASHit& hit);
+	    /**
+	     * @brief Get the module identification word.
+	     * @param hit References the hit to process.
+	     * @return The module ID as a 32-bit data word.
+	     */
+	    uint32_t getModInfoWord(const DAQ::DDAS::DDASHit& hit);
+	    /**
+	     * @brief Get the coarse timestamp from the hit.
+	     * @param hit References the hit to process.
+	     * @return The coarse timestamp in clock ticks.
+	     */
+	    uint64_t getCoarseTimestamp(const DAQ::DDAS::DDASHit& hit);
+	    /**
+	     * @brief Get the FPGA clock period in nanoseconds.
+	     * @param hit References the hit to process.
+	     * @throws std::runtime_error If the module MSPS is not known.
+	     * @return The clock period in nanoseconds.
+	     */
+	    int      getClockPeriod(const DAQ::DDAS::DDASHit& hit);
+	    /**
+	     * @brief Get the ADC sampling period in nanoseconds.
+	     * @param hit References the hit to process.
+	     * @throws std::runtime_error If the module MSPS is not known.
+	     * @return The sampling period in nanoseconds.
+	     */
+	    int      getSamplePeriod(const DAQ::DDAS::DDASHit& hit);
+	    /**
+	     * @brief Get the packed CFD result (CFD as data word).
+	     * @param hit References the hit to process.
+	     * @return The packed CFD word as a uint32_t.
+	     */
+	    uint32_t getPackedCFDResult(
+		const DAQ::DDAS::DDASHit& hit, double corr
+		);    
+	};
+    }
+}
 
 #endif
