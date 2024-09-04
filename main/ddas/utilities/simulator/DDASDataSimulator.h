@@ -72,11 +72,11 @@ namespace DAQ {
 	 *   - Link against the installed DDASDataSimulator.so and 
 	 *     DDASFormat.so libraries in `$DAQLIB` and 
 	 *     `$DAQROOT`/ddasformat/lib (add `-L<path> 
-	 *     -Wl,-rpath=<path>` to `LDFLAGS` and -l<libname>` to `LDLIBS`).
+	 *     -Wl,-rpath=<path>` to `LDFLAGS` and `-l<libname>` to `LDLIBS`).
 	 *   - Build your executable with the proper compiler and linker flags 
 	 *     described above.
 	 *
-	 * Example code:
+	 * Example code to create a complete run with a single event:
 	 ```
 	 #include <DDASDataSimulator.h>
 	 #include <DDASHit.h>
@@ -84,22 +84,22 @@ namespace DAQ {
 	 using namespace DAQ::DDAS;
 
 	 int main () {
-	 DDASDataSimulator sim("data.evt", 12);
-	 DDASHit hit;
+	     DDASDataSimulator sim("data.evt", 12);
+	     DDASHit hit;
 
-	 sim.beginRun();
+	     sim.beginRun();
 
-	 hit.setModMSPS(250);
-	 hit.setCrateID(0);
-	 hit.setSlotID(2);
-	 hit.setChannelID(0);
-	 hit.setEnergy(1000);
-	 hit.setTime(1234.5678);
-	 sim.putHit(hit);
+	     hit.setModMSPS(250);
+	     hit.setCrateID(0);
+	     hit.setSlotID(2);
+	     hit.setChannelID(0);
+	     hit.setEnergy(1000);
+	    hit.setTime(1234.5678);
+	    sim.putHit(hit);
 
-	 sim.endRun();
+	    sim.endRun();
  
-	 return 0;
+	    return 0;
 	 }
 	 ```
 	 * 

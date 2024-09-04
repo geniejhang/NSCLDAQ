@@ -15,7 +15,7 @@
 */
 
 /**
- * @file DDASSimulator.cpp
+ * @file DDASDataSimulator.cpp
  * @brief Implements the class for simulating DDAS-style data recored by 
  * NSCLDAQ readout programs.
  */
@@ -166,11 +166,11 @@ DAQ::DDAS::DDASDataSimulator::endRun()
 
 /**
  * @details
- * Sets the internal data buffer and creates a PHYSICS_EVENT ring item from it.
- * For events with an external timestamp, the user must provide a clock
- * calibration in nanoseconds per clock tick. Otherwise the calibraton is 
- * determined from the module type. All exceptions thrown when parsing the 
- * hit are raised to the caller.
+ * Sets the internal data buffer using `setBuffer()` and creates a 
+ * PHYSICS_EVENT ring item from it. For events with an external timestamp, the 
+ * user must provide a clock calibration in nanoseconds per clock tick. 
+ * Otherwise the calibraton is determined from the module type. All exceptions 
+ * thrown when parsing the hit are raised to the caller.
  */
 void
 DAQ::DDAS::DDASDataSimulator::putHit(
