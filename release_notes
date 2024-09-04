@@ -1,5 +1,6 @@
 == 12.1-pre3 ==
-* Fix error when logging rate window closed
+* Fix error when logging rate window closed.
+* Add DDAS data simulation library.
 == 12.1-pre3 ==
 
 == 12.1-pre2 ==
