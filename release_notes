@@ -1,3 +1,7 @@
+== 12.1-pre4 ==
+* Fix bug: Delay datasource hangs with 0 delay
+== 12.1-pre4 ==
+
 == 12.1-pre3 ==
 * Fix error when logging rate window closed.
 * Add DDAS data simulation library.
