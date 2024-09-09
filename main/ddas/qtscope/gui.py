@@ -22,6 +22,7 @@ from mod_dsp_gui import ModDSPGUI
 from worker import Worker
 from run_type import RunType
 from trace_analyzer import TraceAnalyzer
+from thread_pool_manager import ThreadPoolManager
 
 import colors
 
@@ -125,7 +126,8 @@ class MainWindow(QMainWindow):
         self.xia_api_version = version
         
         # Access to global thread pool for this applicaition:        
-        self.pool = QThreadPool.globalInstance()
+        #self.pool = QThreadPool.globalInstance()
+        self.pool2 = ThreadPoolManager()
             
         # XIA API managers:
         self.dsp_mgr = DSPManager()
@@ -228,11 +230,16 @@ class MainWindow(QMainWindow):
         """        
         # Access thread from global thread pool to boot:        
         if self.sys_utils.get_boot_status() == False:
-            worker = Worker(self.sys_utils.boot)
-            worker.signals.running.connect(self.sys_toolbar.disable)
-            worker.signals.running.connect(self.acq_toolbar.disable)
-            worker.signals.finished.connect(self._on_boot)
-            self.pool.start(worker)
+            #worker = Worker(self.sys_utils.boot)
+            #worker.signals.running.connect(self.sys_toolbar.disable)
+            #worker.signals.running.connect(self.acq_toolbar.disable)
+            #worker.signals.finished.connect(self._on_boot)
+            #self.pool.start(worker)
+            self.pool2.start_thread(
+                fcn=self.sys_utils.boot,
+                running=[self.sys_toolbar.disable, self.acq_toolbar.disable],
+                finished=[self._on_boot]
+            )
 
     # @todo (ASC 10/31/23): Module MSPS information should be easily accessible
     # to other parts of the program, most notably the trace analyzer to set the
@@ -411,8 +418,9 @@ class MainWindow(QMainWindow):
     def _system_exit(self):
         """Closes connection to Pixie modules and exits the application."""
         self.sys_utils.exit_system()
-        self.pool.waitForDone(10000)
-        self.pool.clear()
+        #self.pool.waitForDone(10000)
+        #self.pool.clear()
+        self.pool2.exit()
         app = QApplication.instance()
         app.quit()
 
@@ -439,27 +447,43 @@ class MainWindow(QMainWindow):
     def _run_control(self):
         """Start or stop a run depending on current run status."""        
         # If there is a thread running, wait for it to exit:        
-        if self.pool.activeThreadCount() > 0:
-            print(self.pool.activeThreadCount(), "threads are currently communicating with the module(s). Waiting...")
-            self.pool.waitForDone(10000)
+        #if self.pool.activeThreadCount() > 0:
+        #    print(self.pool.activeThreadCount(), "threads are currently communicating with the module(s). Waiting...")
+        #    self.pool.waitForDone(10000)
+        nthreads = self.pool2.get_active_thread_count()
+        if nthreads > 0:
+            print(f"{nthreads} threads are currently communicating with the module(s). Waiting...")
+            self.pool2.wait()
             
         # Access thread from global thread pool for the begin/end operation
         # If a run is active, end it, otherwise start a new one:        
         if self.run_active:
             self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Run active {self.run_active}, type {self.active_type}; Ending current run")           
-            worker = Worker(self._end_run)
-            worker.signals.finished.connect(self.chan_gui.toolbar.enable)
-            worker.signals.finished.connect(self.mod_gui.toolbar.enable)
-            worker.signals.finished.connect(self.acq_toolbar.enable)
-            self.pool.start(worker)
+            #worker = Worker(self._end_run)
+            #worker.signals.finished.connect(self.chan_gui.toolbar.enable)
+            #worker.signals.finished.connect(self.mod_gui.toolbar.enable)
+            #worker.signals.finished.connect(self.acq_toolbar.enable)
+            #self.pool.start(worker)
+            self.pool2.start_thread(
+                fcn=self._end_run,
+                finished=[self.chan_gui.toolbar.enable,
+                          self.mod_gui.toolbar.enable,
+                          self.acq_toolbar.enable]
+            )
         else:
             self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Run active {self.run_active}, type {self.active_type}; Beginning new run")            
-            worker = Worker(self._begin_run)
-            worker.signals.running.connect(self.chan_gui.toolbar.disable)
-            worker.signals.running.connect(self.mod_gui.toolbar.disable)
-            worker.signals.running.connect(self.acq_toolbar.enable_run_active)
-            self.pool.start(worker)
-
+            #worker = Worker(self._begin_run)
+            #worker.signals.running.connect(self.chan_gui.toolbar.disable)
+            #worker.signals.running.connect(self.mod_gui.toolbar.disable)
+            #worker.signals.running.connect(self.acq_toolbar.enable_run_active)
+            #self.pool.start(worker)
+            self.pool2.start_thread(
+                fcn=self._begin_run,
+                running=[self.chan_gui.toolbar.disable,
+                         self.mod_gui.toolbar.disable,
+                         self.acq_toolbar.enable_run_active]
+            )
+            
     def _begin_run(self):
         """Start a data run in the currently selected module. 
 
@@ -513,36 +537,60 @@ class MainWindow(QMainWindow):
         active run type, otherwise read a trace.
         """        
         # If there is a thread running, wait for it to exit:        
-        if self.pool.activeThreadCount() > 0:
-            print(self.pool.activeThreadCount(), "threads are currently communicating with the module(s). Waiting...")
-            self.pool.waitForDone(10000)
+        #if self.pool.activeThreadCount() > 0:
+        #    print(self.pool.activeThreadCount(), "threads are currently communicating with the module(s). Waiting...")
+        #    self.pool.waitForDone(10000)
+        nthreads = self.pool2.get_active_thread_count()
+        if nthreads > 0:
+            print(nthreads, "threads are currently communicating with the module(s). Waiting...")
+            self.pool2.wait()
 
         # Access thread from global thread pool for the data read operation.
         # If a run is active, read either an energy histogram or baseline
         # depending on the run type, otherwise read a trace.
         
-        worker = Worker()
-        worker.signals.running.connect(self.acq_toolbar.disable)
+        #worker = Worker()
+        #worker.signals.running.connect(self.acq_toolbar.disable)
             
-        if self.run_active:     
-            worker.set_function(self._read_run_data)
-            worker.signals.finished.connect(self.acq_toolbar.enable_run_active)
-        else:
-            worker.set_function(self._read_trace_data)
-            worker.signals.running.connect(self.mod_gui.toolbar.disable)
-            worker.signals.running.connect(self.chan_gui.toolbar.disable)
-            worker.signals.running.connect(
-                lambda enb=False: self.chan_gui.setEnabled(enb)
-            )
-            worker.signals.finished.connect(self.acq_toolbar.enable)
-            worker.signals.finished.connect(self.mod_gui.toolbar.enable)
-            worker.signals.finished.connect(self.chan_gui.toolbar.enable)
-            worker.signals.finished.connect(
-                lambda enb=True: self.chan_gui.setEnabled(enb)
-            )
+        #if self.run_active: 
+        #    worker.set_function(self._read_run_data)
+        #    worker.signals.finished.connect(self.acq_toolbar.enable_run_active)
+        #else:
+        #    worker.set_function(self._read_trace_data)
+        #    worker.signals.running.connect(self.mod_gui.toolbar.disable)
+        #    worker.signals.running.connect(self.chan_gui.toolbar.disable)
+        #    worker.signals.running.connect(
+        #        lambda enb=False: self.chan_gui.setEnabled(enb)
+        #    )
+        #    worker.signals.finished.connect(self.acq_toolbar.enable)
+        #    worker.signals.finished.connect(self.mod_gui.toolbar.enable)
+        #    worker.signals.finished.connect(self.chan_gui.toolbar.enable)
+        #    worker.signals.finished.connect(
+        #        lambda enb=True: self.chan_gui.setEnabled(enb)
+        #    )
 
         # Start the worker now that its configured:        
-        self.pool.start(worker)
+        #self.pool.start(worker)
+
+        if self.run_active:
+            self.pool2.start_thread(
+                fcn=self._read_run_data,
+                running=[self.acq_toolbar.disable],
+                finished=[self.acq_toolbar.enable_run_active]
+            )           
+        else:
+            set_enb_true = lambda enb=True: self.chan_gui.setEnabled(enb)
+            set_enb_false = lambda enb=False: self.chan_gui.setEnabled(enb)
+            self.pool2.start_thread(
+                fcn=self._read_trace_data,
+                running=[self.mod_gui.toolbar.disable,
+                         self.chan_gui.toolbar.disable,
+                         set_enb_false],
+                finished=[self.acq_toolbar.enable,
+                          self.mod_gui.toolbar.enable,
+                          self.chan_gui.toolbar.enable,
+                          set_enb_true]
+            )  
 
     def _read_run_data(self):
         """Read run (energy histogram or baseline) data. 
@@ -625,14 +673,24 @@ class MainWindow(QMainWindow):
     
     def _analyze_trace(self):
         """Setup worker to analyze a single-channel ADC trace."""        
-        worker = Worker(self._analyze_and_show_trace)
-        worker.signals.running.connect(self.chan_gui.toolbar.disable)
-        worker.signals.running.connect(self.mod_gui.toolbar.disable)
-        worker.signals.running.connect(self.acq_toolbar.disable)
-        worker.signals.finished.connect(self.chan_gui.toolbar.enable)
-        worker.signals.finished.connect(self.mod_gui.toolbar.enable)
-        worker.signals.finished.connect(self.acq_toolbar.enable)
-        self.pool.start(worker)        
+        #worker = Worker(self._analyze_and_show_trace)
+        #worker.signals.running.connect(self.chan_gui.toolbar.disable)
+        #worker.signals.running.connect(self.mod_gui.toolbar.disable)
+        #worker.signals.running.connect(self.acq_toolbar.disable)
+        #worker.signals.finished.connect(self.chan_gui.toolbar.enable)
+        #worker.signals.finished.connect(self.mod_gui.toolbar.enable)
+        #worker.signals.finished.connect(self.acq_toolbar.enable)
+        #self.pool.start(worker)
+        self.pool2.start_thread(
+            fcn=self._analyze_and_show_trace,
+            running=[self.chan_gui.toolbar.disable,
+                     self.mod_gui.toolbar.disable,
+                     self.acq_toolbar.disable],
+            finished=[self.chan_gui.toolbar.enable,
+                      self.mod_gui.toolbar.enable,
+                      self.acq_toolbar.enable]
+        )
+        
         
     # @todo Should analyze trace be an available feature if read all?    
     # @todo try-except block is pretty long for a single function.
