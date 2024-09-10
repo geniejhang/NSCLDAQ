@@ -1,5 +1,6 @@
 == 12.1-pre4 ==
 * Fix bug: Delay datasource hangs with 0 delay
+* QtScope ThreadPoolManager manages all multithreading.
 == 12.1-pre4 ==
 
 == 12.1-pre3 ==
