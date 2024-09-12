@@ -111,13 +111,7 @@ DAQ::DDAS::SystemBooter::bootModuleByIndex(
 	hdwrMap[modIndex], modIndex
 	);
 
-    // Check the lengths, throw whatever back up the stack
-    try {
-	checkFWPathLengths(fwConfig, FILENAME_STR_MAXLEN);
-    }
-    catch (...) {
-	throw;
-    }
+    checkFWPathLengths(fwConfig, FILENAME_STR_MAXLEN);
     
     strcpy(Pixie16_Com_FPGA_File, fwConfig.s_ComFPGAConfigFile.c_str());
     strcpy(Pixie16_SP_FPGA_File,  fwConfig.s_SPFPGAConfigFile.c_str());

@@ -36,39 +36,68 @@ CPixieSystemUtilities::Boot()
 {
     // If the settings file path has been overwritten pre system boot, use
     // the new path. first we grab it, then reset it after initializing
-    // the configuration settings below.  
+    // the configuration settings below.
+    
     std::string newSetFile;
     if (m_ovrSetFile) {
 	newSetFile = m_config.getSettingsFilePath();
     }
   
-    // Create a configuration from the default settings:  
-    const char* fwFile =  FIRMWARE_FILE; // From $DDAS_SHARE.
+    // Create a configuration. A few things can happen here:
+    //   1. Default behavior: Use FW file from this version of NSCLDAQ.
+    //   2. FIRMWARE_FILE envvar exists: Boot from custom firmware defined in
+    //      the file this envvar points at. Expects the same format as the
+    //      default firmware configuration file.
+    //   3. Custom firmware defined in cfgPixie16.txt: handled by the
+    //      configuration class, overrides anything done here.
+    // If any configuration piece is incorrect, the configuration class will
+    // complain loudly.
+    
+    const char* fwFile =  FIRMWARE_FILE;
+    const char* alternateFirmwareFile = getenv("FIRMWARE_FILE");
+    if (alternateFirmwareFile) fwFile = alternateFirmwareFile;
     m_config = *(
 	Configuration::generate(fwFile, "cfgPixie16.txt", "modevtlen.txt")
 	);
 
-    // (Re)set the custom settings file path here if used:  
+    // (Re)set the custom settings file path here if used:
+    
     if (m_ovrSetFile) {
 	m_config.setSettingsFilePath(newSetFile);
     }
-  
-    // Assume full boot:
+
+    /** 
+     * @note (ASC 9/11/24): Check the same envvar as e.g. the readout code to 
+     * determine whether to perform a full boot or settings-only boot. 
+     * In principle this could be configurable on the QtScope GUI but for now 
+     * the boot mode is set the same way as it is for the readout code. 
+     * An important thing to keep in mind is that 
+     * `getenv("DDAS_BOOT_WHEN_REQUESTED")` is false iff 
+     * `DDAS_BOOT_WHEN_REQUESTED` is not set (`getenv()` returns pointer to 
+     * the value string which evaluates to true regardless of the value 
+     * itself). When running a containerized NSCLDAQ one needs to make sure the
+     * envvar is set _inside_ the container.
+     */
+    
+    SystemBooter::BootType type = SystemBooter::FullBoot;
+    if (getenv("DDAS_BOOT_WHEN_REQUESTED")) type = SystemBooter::SettingsOnly;
     SystemBooter booter;  
     booter.setOfflineMode(m_bootMode); // 1: offline, 0: online
     try {
-	booter.boot(m_config, SystemBooter::FullBoot);
+	booter.boot(m_config, type);
     }
     catch (const CXIAException& e) {
 	std::cerr << e.ReasonText() << std::endl;    
 	return -1;
     }
 
-    // Get number of modules and set event lengths based on modevtlen file:  
+    // Get number of modules and set event lengths based on modevtlen file:
+    
     m_numModules = m_config.getNumberOfModules();
     m_modEvtLength = m_config.getModuleEventLengths();
   
-    // The hardware map is set up during boot time:  
+    // The hardware map is set up during boot time:
+    
     std::vector<int> hdwrMap = m_config.getHardwareMap();
     for (size_t i = 0; i < hdwrMap.size(); i++) {
 	HR::HardwareSpecification spec = HR::getSpecification(hdwrMap.at(i));
@@ -85,9 +114,9 @@ CPixieSystemUtilities::Boot()
 
 /**
  * @details
- * File format depends on what is supported by the version of the XIA API being 
- * used. Version 3+ will save the settings file as a JSON file while in version
- * 2 it is binary.
+ * File format depends on what is supported by the version of the XIA API 
+ * being used. Version 3+ will save the settings file as a JSON file while in 
+ * version 2 it is binary.
  */
 int
 CPixieSystemUtilities::SaveSetFile(char* fileName)
@@ -191,8 +220,9 @@ CPixieSystemUtilities::ExitSystem()
 int
 CPixieSystemUtilities::GetModuleMSPS(int module)
 {
-    // A correctly booted sysyem must be definition contain >= 1 module
+    // A correctly booted system must be definition contain >= 1 module
     // so I'm _pretty_ sure this is a good check for that too:
+    
     if (!m_booted) {
 	std::string msg(
 	    "CPixieSystemUtilities::GetModuleMSPS() system not booted."
