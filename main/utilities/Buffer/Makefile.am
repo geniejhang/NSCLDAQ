@@ -21,7 +21,8 @@ unittests_SOURCES = TestRunner.cpp \
                     translatorptrtest.cpp \
                     byteordertest.cpp\
                     bytebuffertest.cpp \
-                    deserializertest.cpp
+                    deserializertest.cpp \
+                        ByteBuffer.cpp
 
 unittests_LDADD	= $(builddir)/libbuffer.la \
                     @CPPUNIT_LDFLAGS@ 		\

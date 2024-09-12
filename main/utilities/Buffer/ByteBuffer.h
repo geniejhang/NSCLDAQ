@@ -23,7 +23,9 @@ namespace DAQ
 // Support outputting Bytebuffers:
 
 
-
+namespace std {
+  extern std::ostream& operator<<(ostream& s, const DAQ::Buffer::ByteBuffer& d) ;
+}
 template<class T>
 DAQ::Buffer::ByteBuffer& operator<<(DAQ::Buffer::ByteBuffer& buffer,
                                     const T& value)
