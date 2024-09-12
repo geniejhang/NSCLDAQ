@@ -54,7 +54,7 @@ static void
 gather(char* pDest, const struct iovec* iovs, int iovcnt, size_t nBytes)
 {
   while (nBytes) {
-    if (reinterpret_cast<uint64_t>(iovs) <= 0) {
+    if (reinterpret_cast<int64_t>(iovs) <= 0) {
       CPPUNIT_FAIL("Tried to writev more data than described");
     }
     if (nBytes >= iovs->iov_len) {   // Copy the whole block.
