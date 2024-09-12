@@ -82,7 +82,7 @@ unittests_SOURCES=TestRunner.cpp Asserts.h 				\
 	ReferenceCountedBuffer.h ReferenceCountedBuffer.cpp 		\
 	BufferArena.h BufferArena.cpp 
 
-unittests_CXXFLAGS=$(ddasSort_CPPFLAGS) @CPPUNIT_CFLAGS@
+unittests_CXXFLAGS=$(ddasSort_CPPFLAGS) @CPPUNIT_CFLAGS@ 
 unittests_LDFLAGS=$(ddasSort_LDFLAGS) @CPPUNIT_LDFLAGS@
 unittests_LDADD=@CPPUNIT_LIBS@
 
