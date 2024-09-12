@@ -20,6 +20,7 @@ namespace DAQ
   }  // end of Buffer
 } // end of DAQ
 
+// Support outputting Bytebuffers:
 
 
 

@@ -11,6 +11,19 @@ using namespace std;
 
 using namespace DAQ::Buffer;
 
+namespace std {
+  
+  std::ostream& operator<<(ostream& s, const DAQ::Buffer::ByteBuffer& d) {
+    s << "{";
+    for (auto e: d) {
+      s << e << ' ';
+    }
+    s << "}";
+    return s;
+  }
+  
+}
+
 class bytebuffertest : public CppUnit::TestFixture {
   public:
   CPPUNIT_TEST_SUITE(bytebuffertest);
