@@ -16,10 +16,12 @@
 
 
 
+
+
+
+#include <V8/bheader.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
-
-
 
 #include <V8/DataFormatV8.h>
 #include <V8/CRawBuffer.h>
@@ -37,10 +39,12 @@
 #include <iomanip>
 #include <algorithm>
 
+
 using namespace std;
 
 using namespace DAQ::V8;
 using namespace DAQ::Buffer;
+
 
 class physicseventtest : public CppUnit::TestFixture {
 protected:
@@ -227,9 +231,10 @@ void rawBufferCtor_4() {
   rawBuf.setBuffer(buffer);
 
   CPhysicsEventBuffer physBuf(rawBuf);
+  auto hdr = physBuf.getHeader();
 
   CPPUNIT_ASSERT_EQUAL_MESSAGE("raw ctor swaps header properly",
-                         m_header,  physBuf.getHeader());
+                         m_header,  hdr);
   CPPUNIT_ASSERT_EQUAL_MESSAGE("raw ctor specifies properly whether data needs a swap",
                                true, physBuf.at(0)->dataNeedsSwap());
   CPPUNIT_ASSERT_EQUAL_MESSAGE("raw ctor specifies properly whether data needs a swap",

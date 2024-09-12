@@ -15,7 +15,7 @@
 */
 
 
-
+#include <V8/bheader.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 
@@ -41,6 +41,18 @@ using namespace std;
 
 using namespace DAQ::V8;
 using namespace DAQ::Buffer;
+
+namespace std {
+  template<typename T>
+  static std::ostream& operator<<(ostream& s, const std::vector<T>& v) {
+    s << "{ ";
+    for (auto e: v) {
+      s << e << " ";
+    }
+    s << "}\n";
+    return s;
+  }
+}
 
 class scalerbuffertest : public CppUnit::TestFixture {
 private:
