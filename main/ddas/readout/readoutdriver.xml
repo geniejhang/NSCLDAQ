@@ -141,6 +141,14 @@
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>-fastboot</option> <replaceable>enb (default=off)</replaceable></term>
+        <listitem>
+          <para>
+            Controls whether to perform a settings-only boot or not (on/off). The default behavior is to perform a full boot, in which the signal-processing FPGA and DSP are re-booted. This can be a time-consuming process for a full crate of modules. If <option>-fastboot</option> is enabled, the DSP settings are loaded onto the modules without (re-)booting the onboard chips.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>-port</option> <replaceable>integer</replaceable></term>
         <listitem>
           <para>

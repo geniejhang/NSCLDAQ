@@ -1,3 +1,8 @@
+/**
+ * @file CMyEndCommand.h
+ * @brief Define the end run command.
+ */
+
 #ifndef MYEND_H
 #define MYEND_H
 
@@ -9,10 +14,15 @@ class CTCLObject;
 class CMyEventSegment;
 class CExperiment;
 
+/**
+ * @class CMyEndCommand
+ * @brief Provides an end command to override the SBS one.
+ */
 
 class CMyEndCommand : public CEndCommand
 {
   public:
+    /** @brief Struct encapsulating the command and Tcl event to end the run. */
     struct EndEvent {
 	Tcl_Event      s_rawEvent; //!< Generic event for the Tcl event system.
 	CMyEndCommand* s_thisPtr;  //!< Pointer to this command.

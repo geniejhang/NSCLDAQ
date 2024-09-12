@@ -2,12 +2,12 @@ import inspect
 import os
 import logging
 
-from PyQt5.QtCore import Qt, QThreadPool
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent, QPixmap
 from PyQt5.QtWidgets import QMainWindow, QTabWidget, QVBoxLayout, QLabel
 
 from chan_dsp_layout import ChanDSPLayout
-from worker import Worker
+from thread_pool_manager import ThreadPoolManager
 
 # @todo Control draw width on widgets either by fixing sizes (not ideal) or by
 # using separators which expand to fill the full window (better, probably).
@@ -21,8 +21,8 @@ class ChanDSPGUI(QMainWindow):
 
     Attributes
     ----------
-    pool : QThreadPool 
-        Global thread pool.
+    pool_mgr : ThreadPoolManager 
+        Global thread pool manager.
     chan_params : QTabWidget 
         Tabbed widget of module DSP settings.
     chan_dsp_factory : WidgetFactory 
@@ -67,7 +67,11 @@ class ChanDSPGUI(QMainWindow):
         Overridden QWidget closeEvent.
     """
     
-    def __init__(self, chan_dsp_factory, toolbar_factory, *args, **kwargs):
+    def __init__(
+            self,
+            chan_dsp_factory, toolbar_factory, pool_mgr,
+            *args, **kwargs
+    ):
         """ChanDSPGUI class constructor.
 
         Parameters
@@ -76,6 +80,8 @@ class ChanDSPGUI(QMainWindow):
             Factory for implemented channel DSP widgets.
         toolbar_factory : WidgetFactory
             Factory for implemented toolbar widgets.
+        pool_mgr : ThreadPoolManager
+            Management for global thread pool.
         """        
         super().__init__(*args, **kwargs)
         
@@ -83,7 +89,7 @@ class ChanDSPGUI(QMainWindow):
         
         # Access to global thread pool for this applicaition:
         
-        self.pool = QThreadPool.globalInstance()
+        self.pool_mgr = pool_mgr
         
         ##
         # Main layout
@@ -143,6 +149,7 @@ class ChanDSPGUI(QMainWindow):
         self.dsp_mgr = dsp_manager
 
         # Length of msps_list == number of modules:
+        
         logging.getLogger("qtscope_logger").debug(
             "{}.{}: Configuring GUI for {} modules using {}".format(
                 self.__class__.__name__,
@@ -152,23 +159,29 @@ class ChanDSPGUI(QMainWindow):
             )
         )
 
-        # Configure toolbar:   
+        # Configure toolbar:
+        
         self.toolbar.copy_mod.setRange(0, len(msps_list)-1)
         self.toolbar.copy_chan.setRange(0, 15)
 
-        # Initialize tab indices and widget:        
+        # Initialize tab indices and widget:
+        
         self.mod_idx = 0
         self.par_idx = 0
         self.tab = None
         self.tab_name = ""
         
-        for i, msps in enumerate(msps_list):                  
-            # DSP tab layout for each module in the system:            
+        for i, msps in enumerate(msps_list):
+            
+            # DSP tab layout for each module in the system:
+            
             self.chan_params.insertTab(
                 i, ChanDSPLayout(self.chan_dsp_factory, i), "Mod. %i" %i
             )
+            
             # DSP tabs load from dataframe when switching. Just added the
-            # module tabbed widget so add the signal here as well:            
+            # module tabbed widget so add the signal here as well:
+            
             self.chan_params.widget(i).currentChanged.connect(
                 self._display_new_tab
             )                     
@@ -177,13 +190,16 @@ class ChanDSPGUI(QMainWindow):
             # the child widgets, so we use a C-style for loop indexed by j.
             # Can do something like add lists of widgets to the module and
             # channel dsp layouts and iterate over _those_ if something that
-            # feels more Pythonic is desired.            
+            # feels more Pythonic is desired.
+            
             for j in range(self.chan_params.widget(i).count()):                 
                 tab = self.chan_params.widget(i).widget(j)
                 tab.configure(self.dsp_mgr, i)
+                
                 # Extra configuration for channel parameter widgets. Disable
                 # CFD settings for 500 MSPS modules, hook up some tab-specific
-                # signals e.g. adjust offsets.
+                # signals e.g. adjust offsets:
+                
                 tab_name = self.chan_params.widget(i).tabText(j)
                 if tab_name == "CFD" and msps == 500:
                     tab.disable_settings() 
@@ -197,90 +213,87 @@ class ChanDSPGUI(QMainWindow):
     def apply_dsp(self):
         """Apply the channel DSP settings for the selected tab.
 
-        Updates internal DSP from the GUI values, starts a new thread, then 
-        writes the internal DSP storage to the module.
+        Updates internal DSP from the GUI values then writes the internal DSP 
+        to the module.
         """        
-        self._get_current_tab()        
+        self._set_current_tab_info()        
         self.tab.update_dsp(self.dsp_mgr, self.mod_idx)
-        worker = Worker(
-            lambda m=self.mod_idx, t=self.tab: self._write_chan_dsp(m, t)
-        )
+
+        _fcn = lambda: self._write_chan_dsp(self.mod_idx, self.tab)
+        _running = [self.toolbar.disable]
+        _finished = [
+            lambda: self.tab.display_dsp(self.dsp_mgr, self.mod_idx),
+            self.toolbar.enable
+        ]
+        
         if self.tab_name == "AnalogSignal":
-            worker.signals.running.connect(
-                lambda enb=False: self.tab.b_adjust_offsets.setEnabled(enb)
+            _running.append(
+                lambda: self.tab.b_adjust_offsets.setEnabled(False)
             )
-        worker.signals.running.connect(self.toolbar.disable)
-        worker.signals.finished.connect(
-            lambda mgr=self.dsp_mgr, m=self.mod_idx:
-            self.tab.display_dsp(mgr, m)
+            _finished.append(
+                lambda: self.tab.b_adjust_offsets.setEnabled(True)
+            )
+
+        self.pool_mgr.start_thread(
+            fcn=_fcn, running=_running, finished=_finished
         )
-        if self.tab_name == "AnalogSignal":
-            worker.signals.finished.connect(
-                lambda enb=True: self.tab.b_adjust_offsets.setEnabled(enb)
-            )
-        worker.signals.finished.connect(self.toolbar.enable)
-        self.pool.start(worker)
         
     def load_dsp(self):
         """Load the channel DSP settings for the selected tab.
 
-        Accesses a thread from the global thread pool, reads values from module
-        into the internal DSP, then updates the GUI values from the internal 
-        DSP. Reconfigure the tab toolbar if necessary.
+        Reads values from module into the internal DSP, then updates the GUI 
+        values from the internal DSP. Reconfigure the tab toolbar if necessary.
         """
-        self._get_current_tab()            
-        worker = Worker(
-            lambda m=self.mod_idx, t=self.tab: self._read_chan_dsp(m, t)
-        )
+        self._set_current_tab_info()
+
+        _fcn = lambda: self._read_chan_dsp(self.mod_idx, self.tab)
+        _running = [self.toolbar.disable]
+        _finished = [
+            lambda: self.tab.display_dsp(self.dsp_mgr, self.mod_idx),
+            self.toolbar.enable
+        ]
+        
         if self.tab_name == "AnalogSignal":
-            worker.signals.running.connect(
-                lambda enb=False: self.tab.b_adjust_offsets.setEnabled(enb)
+            _running.append(
+                lambda: self.tab.b_adjust_offsets.setEnabled(False)
             )
-        worker.signals.running.connect(self.toolbar.disable)
-        worker.signals.finished.connect(
-            lambda mgr=self.dsp_mgr, m=self.mod_idx:
-            self.tab.display_dsp(mgr, m)
+            _finished.append(
+                lambda: self.tab.b_adjust_offsets.setEnabled(True)
+            )
+            
+        self.pool_mgr.start_thread(
+            fcn=_fcn, running=_running, finished=_finished
         )
-        if self.tab_name == "AnalogSignal":
-            worker.signals.finished.connect(
-                lambda enb=True: self.tab.b_adjust_offsets.setEnabled(enb)
-            )
-        worker.signals.finished.connect(self.toolbar.enable)
-        self.pool.start(worker)
     
     def copy_mod_dsp(self):
         """Copy DSP from one module to another."""        
-        self._get_current_tab()
+        self._set_current_tab_info()
         self.tab.display_dsp(self.dsp_mgr, self.toolbar.copy_mod.value())
             
     def copy_chan_dsp(self):
         """Copy DSP from one channel to all others on the same module."""
-        self._get_current_tab()
+        self._set_current_tab_info()
         cchan_idx = self.toolbar.copy_chan.value() # Copy from here.
         self.tab.copy_chan_dsp(cchan_idx)
 
     def adjust_offsets(self):
         """Adjust DC offsets for the selected module.
 
-        Accesses a thread from the global thread pool, calls the API function 
-        to adjust offsets, updates the dataframe and the GUI.
+        Calls API function to automatically set DC offsets then updates GUI.
         """
-        self._get_current_tab()        
-        worker = Worker(lambda m=self.mod_idx: self.dsp_mgr.adjust_offsets(m))
-        worker.signals.running.connect(
-            lambda enb=False: self.tab.b_adjust_offsets.setEnabled(enb)
+        self._set_current_tab_info()
+        self.pool_mgr.start_thread(
+            fcn=lambda: self.dsp_mgr.adjust_offsets(self.mod_idx),
+            running=[lambda: self.tab.b_adjust_offsets.setEnabled(False),
+                     self.toolbar.disable],
+            finished=[self.load_dsp,
+                      lambda: self.tab.b_adjust_offsets.setEnabled(True),
+                      self.toolbar.enable]
         )
-        worker.signals.running.connect(self.toolbar.disable)
-        worker.signals.finished.connect(self.load_dsp)
-        worker.signals.finished.connect(
-            lambda enb=True: self.tab.b_adjust_offsets.setEnabled(enb)
-        )
-        worker.signals.finished.connect(self.toolbar.enable)
-        self.pool.start(worker)
 
     def print_masks(self):
         """Print the multiplicity and coincidence masks."""
-        self._get_current_tab()
+        self._set_current_tab_info()
         self.tab.print_masks(self.dsp_mgr, self.mod_idx)
 
     def show_diagram(self):
@@ -311,7 +324,7 @@ class ChanDSPGUI(QMainWindow):
         event : QCloseEvent
             Signal to intercept, always accepted.
         """        
-        self.pool.waitForDone(10000)
+        self.pool_mgr.wait()
         if self.timing_diagram.isVisible():
             self.timing_diagram.close()
         self.close()
@@ -321,12 +334,15 @@ class ChanDSPGUI(QMainWindow):
     # Private methods
     #
 
-    def _get_current_tab(self):
-        """Get the current module, parameter index and tab widget."""        
-        self.mod_idx = self.chan_params.currentIndex()
-        self.par_idx = self.chan_params.widget(self.mod_idx).currentIndex()
-        self.tab = self.chan_params.widget(self.mod_idx).widget(self.par_idx)
-        self.tab_name = self.chan_params.widget(self.mod_idx).tabText(self.par_idx)
+    def _set_current_tab_info(self):
+        """Set current tab information: module idx, tab, tab name, tab index.
+        """
+        m = self.chan_params.currentIndex()
+        p = self.chan_params.widget(m).currentIndex()
+        self.mod_idx = m
+        self.par_idx = p
+        self.tab = self.chan_params.widget(m).widget(p)
+        self.tab_name = self.chan_params.widget(m).tabText(p)
         
     def _display_new_tab(self):
         """Display channel DSP from the dataframe when switching tabs. 
@@ -334,10 +350,10 @@ class ChanDSPGUI(QMainWindow):
         If a new module tab is selected, switch to the same channel DSP tab 
         on the new module. Configure the toolbar for the new tab if necessary.
         """
-        m = self.chan_params.currentIndex()  # Currently selected module
+        m = self.chan_params.currentIndex()  # Currently selected module.
         if m != self.mod_idx:
             self.chan_params.widget(m).setCurrentIndex(self.par_idx)
-        self._get_current_tab()
+        self._set_current_tab_info()
         self.tab.display_dsp(self.dsp_mgr, self.mod_idx)        
         self._configure_toolbar(
             self.chan_params.widget(self.mod_idx).tabText(self.par_idx)

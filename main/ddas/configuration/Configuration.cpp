@@ -217,15 +217,8 @@ DAQ::DDAS::Configuration::generate(
 	errmsg += fwVsnPath;
 	throw std::runtime_error(errmsg);
     }
-
-    try {
-	fwFileParser.parse(input, pConfig->m_fwMap);
-    } catch (const std::runtime_error& e) {
-	std::string errmsg("Configuration::generate() ");
-	errmsg += "Failed to parse the firmware version file: ";
-	errmsg +=  fwVsnPath + ": " + e.what();
-	throw std::runtime_error(errmsg);
-    }
+    
+    fwFileParser.parse(input, pConfig->m_fwMap);    
 
     input.close();
     input.clear();
@@ -239,14 +232,7 @@ DAQ::DDAS::Configuration::generate(
 	throw std::runtime_error(errmsg);
     }
 
-    try {
-	configParser.parse(input, *pConfig);
-    } catch (const std::runtime_error& e) {
-	std::string errmsg("Configuration::generate() ");
-	errmsg += "Failed to parse the system configuration file: ";
-	errmsg += cfgPixiePath + ": " + e.what();
-	throw std::runtime_error(errmsg);
-    }
+    configParser.parse(input, *pConfig);
 
     return std::move(pConfig);
 }
@@ -281,14 +267,7 @@ DAQ::DDAS::Configuration::generate(
 	throw std::runtime_error(errmsg);
     }
 
-    try {
-	modEvtParser.parse(modevt, *pConfig);
-    } catch (const std::runtime_error& e) {
-	std::string errmsg("Configuration::generate() ");
-	errmsg += "Failed to parse the modevtlen configuration file: ";
-	errmsg += modEvtLenPath + ": " + e.what();
-	throw std::runtime_error(errmsg);
-    }
+    modEvtParser.parse(modevt, *pConfig);
 
     return std::move(pConfig);
 }

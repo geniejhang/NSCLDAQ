@@ -956,7 +956,7 @@ RECURSIVE              = NO
 # run.
 
 EXCLUDE                = @top_srcdir@/ddas/booter/boot.cpp \
-		         @top_srcdir@/ddas/readout/ddasSortOptions.cpp \
+		         @top_srcdir@/ddas/readout/ddasSortOptions.c \
 			 @top_srcdir@/ddas/readout/ddasSortOptions.h
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or

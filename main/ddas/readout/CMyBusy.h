@@ -1,23 +1,23 @@
+/**
+ * @file CMyBusy.h
+ * @brief Define a busy class for DDAS.
+ */
+
 #include <CBusy.h>
+
+/**
+ * @class CMyBusy
+ * @brief Provides a busy command to override the SBS one. There is no concept
+ * of "busy" for DDAS systems, so all of these class' functions are no-ops.
+ */
 
 class CMyBusy : public CBusy
 {
 public:
-	// Constructors, destructors and other cannonical operations: 
-  
-  CMyBusy();                      //!< Default constructor
+  CMyBusy(); //!< Default constructor
   ~CMyBusy() { } //!< Destructor.
-  
-  
-  // Selectors for class attributes:
-public:
-  
-  // Mutators:
-protected:  
-  
-  // Class operations:
+
 public:  
-  virtual   void GoBusy () ;
-  virtual   void GoClear ();
-  //virtual   void ModuleClear();
+    virtual   void GoBusy(); //!< Do nothing.
+    virtual   void GoClear(); //!< Do nothing.
 };
