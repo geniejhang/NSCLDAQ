@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "Asserts.h"
+#include <stdint.h>
 
 // The function we're testing is not exported via the header as it's
 // intended to be private...though this trick allows us to see it.
@@ -53,7 +54,7 @@ static void
 gather(char* pDest, const struct iovec* iovs, int iovcnt, size_t nBytes)
 {
   while (nBytes) {
-    if (iovs <= 0) {
+    if (reinterpret_cast<uint64_t>(iovs) <= 0) {
       CPPUNIT_FAIL("Tried to writev more data than described");
     }
     if (nBytes >= iovs->iov_len) {   // Copy the whole block.
