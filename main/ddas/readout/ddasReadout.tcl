@@ -174,8 +174,6 @@ if {$infinity} {
     set infstring ""
 }
 
-puts "infinity is $infinity str is '$infstring'"
-
 if {$fastboot} {
     set fbstring "DDAS_BOOT_WHEN_REQUESTED=1"
 } else {
