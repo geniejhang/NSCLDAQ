@@ -31,17 +31,6 @@ using namespace std;
 using namespace ::DAQ::DDAS;
 namespace HR = ::DAQ::DDAS::HardwareRegistry;
 
-template<class T>
-std::ostream& operator<<(std::ostream& stream, const std::vector<T>& vec)
-{
-    stream << "(";
-    for (auto& number : vec) {
-        stream << number << " ";
-    }
-    stream << ")";
-
-    return stream;
-}
 
 // A test suite
 class ConfigurationParserTest : public CppUnit::TestFixture
