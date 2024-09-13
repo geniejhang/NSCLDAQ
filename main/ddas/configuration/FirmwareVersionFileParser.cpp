@@ -74,10 +74,12 @@ DAQ::DDAS::FirmwareVersionFileParser::parse(
 	    int calibration;
 
 	    /** @todo (ASC 3/13/24): CFWFileParseError for exceptions. */
+	    
 	    FirmwareConfiguration fwConfig;
+	    std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
+	    
 	    input >> fwConfig.s_ComFPGAConfigFile;
 	    if (!input.good()) {
-		std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
 		msg += "Failed to read ComFPGAConfigFile from ";
 		msg += fwConfig.s_ComFPGAConfigFile;
 		throw std::runtime_error(msg);
@@ -85,7 +87,6 @@ DAQ::DDAS::FirmwareVersionFileParser::parse(
 
 	    input >> fwConfig.s_SPFPGAConfigFile;
 	    if (!input.good()) {
-		std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
 		msg += "Failed to read SPFPGAConfigFile from ";
 		msg += fwConfig.s_SPFPGAConfigFile;
 		throw std::runtime_error(msg);
@@ -93,7 +94,6 @@ DAQ::DDAS::FirmwareVersionFileParser::parse(
 
 	    input >> fwConfig.s_DSPCodeFile;
 	    if (!input.good()) {
-		std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
 		msg += "Failed to read DSPCodeFile from ";
 		msg += fwConfig.s_DSPCodeFile;
 		throw std::runtime_error(msg);
@@ -101,7 +101,6 @@ DAQ::DDAS::FirmwareVersionFileParser::parse(
 
 	    input >> fwConfig.s_DSPVarFile;
 	    if (!input.good()) {
-		std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
 		msg += "Failed to read DSPVarFile from ";
 		msg += fwConfig.s_DSPVarFile;
 		throw std::runtime_error(msg);
@@ -109,7 +108,6 @@ DAQ::DDAS::FirmwareVersionFileParser::parse(
 
 	    input >> calibration;
 	    if (!input.good()) {
-		std::string msg("DDASFirmwareVersionFile.txt is incomplete! ");
 		msg += "Failed to read clock calibration from ";
 		msg += calibration;
 		throw std::runtime_error(msg);

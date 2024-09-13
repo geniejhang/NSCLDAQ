@@ -1,12 +1,12 @@
 import inspect
 import logging
 
-from PyQt5.QtCore import Qt, QThreadPool
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QMainWindow
 
 from mod_dsp_layout import ModDSPLayout
-from worker import Worker
+from thread_pool_manager import ThreadPoolManager
 
 class ModDSPGUI(QMainWindow):
     """Module DSP GUI class.
@@ -18,8 +18,8 @@ class ModDSPGUI(QMainWindow):
     ----------
     logger : Logger
         QtScope Logger object.
-    pool : QThreadPool
-        Global thread pool.
+    pool_mgr : ThreadPoolManager 
+        Global thread pool manager.
     mod_dsp_factory : ModDSPFactory
         Factory for implemented module DSP parameters.
     toolbar : DSPToolBar
@@ -46,7 +46,9 @@ class ModDSPGUI(QMainWindow):
     closeEvent(event)
         Overridden QWidget closeEvent called by cancel().
     """    
-    def __init__(self, mod_dsp_factory, toolbar_factory, *args, **kwargs):
+    def __init__(
+            self, mod_dsp_factory, toolbar_factory, pool_mgr, *args, **kwargs
+    ):
         """ModDSPGUI class constructor.
 
         Parameters
@@ -55,6 +57,8 @@ class ModDSPGUI(QMainWindow):
             Factory for implemented module DSP parameters.
         toolbar_factory (ToolBarFactory): 
             Factory for implemented toolbars.
+        pool_mgr : ThreadPoolManager
+            Management for global thread pool.
         """        
         super().__init__(*args, **kwargs)
         
@@ -66,7 +70,7 @@ class ModDSPGUI(QMainWindow):
         
         # Access to global thread pool for this applicaition:
         
-        self.pool = QThreadPool.globalInstance()
+        self.pool_mgr = pool_mgr
         
         ##
         # Main layout
@@ -110,13 +114,15 @@ class ModDSPGUI(QMainWindow):
         self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Configuring GUI for {self.nmodules} modules using {self.dsp_mgr}")
 
         # Crate the module DSP layout and insert it on top of the
-        # manager layout above the toolbar:        
+        # manager layout above the toolbar:
+        
         self.mod_params = ModDSPLayout(self.mod_dsp_factory, self.nmodules)
         self.setCentralWidget(self.mod_params)
   
         # Configure the module parameter widgets. Connect signals for the CSRB
         # and TrigConfig0 radio button quick config functions which need access
-        # to the DSP.        
+        # to the DSP.
+        
         for w in self.mod_params.param_widgets:            
             w.configure(self.dsp_mgr)            
             name = type(w).__name__
@@ -135,27 +141,28 @@ class ModDSPGUI(QMainWindow):
         """Apply the module DSP settings.
 
         Updates internal DSP from the GUI values, then writes the internal DSP 
-        storage to the module.
+        to the module.
         """        
         for w in self.mod_params.param_widgets:
             w.update_dsp(self.dsp_mgr)
-            
-        worker = Worker(self._write_mod_dsp)
-        worker.signals.running.connect(self.toolbar.disable)
-        worker.signals.finished.connect(self.toolbar.enable_mod_dsp)
-        self.pool.start(worker)
+
+        self.pool_mgr.start_thread(
+            fcn=self._write_mod_dsp,
+            running=[self.toolbar.disable],
+            finished=[self.toolbar.enable_mod_dsp]
+            )
         
     def load_dsp(self):
         """Load the module DSP settings.
 
-        Accesses a thread from the global thread pool, reads values from module
-        into the internal DSP, then updates the GUI from the internal DSP.
-        """                   
-        worker = Worker(self._read_mod_dsp)
-        worker.signals.running.connect(self.toolbar.disable)
-        worker.signals.finished.connect(self._display_mod_dsp)
-        worker.signals.finished.connect(self.toolbar.enable_mod_dsp)
-        self.pool.start(worker)
+        Reads values from module into the internal DSP, then updates the GUI 
+        from the internal DSP.
+        """
+        self.pool_mgr.start_thread(
+            fcn=self._read_mod_dsp,
+            running=[self.toolbar.disable],
+            finished=[self._display_mod_dsp, self.toolbar.enable_mod_dsp]
+            )
             
     def cancel(self):
         """Close the ModDSPGUI window.
@@ -177,7 +184,7 @@ class ModDSPGUI(QMainWindow):
         event : QCloseEvent
             Signal to intercept, always accepted.
         """        
-        self.pool.waitForDone(10000)
+        self.pool_mgr.wait()
 
         for w in self.mod_params.param_widgets:
             name = type(w).__name__
@@ -205,8 +212,6 @@ class ModDSPGUI(QMainWindow):
         
     def _display_mod_dsp(self):
         """Display module DSP parameters in the GUI."""
-        # Either initial load or re-loading settings files, so check the
-        # configuration where appropriate and set the associated buttons:
         for w in self.mod_params.param_widgets:
            w.display_dsp(self.dsp_mgr, set_state=True)
         

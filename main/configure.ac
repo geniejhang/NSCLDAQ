@@ -357,7 +357,7 @@ tcl_configdir="/usr/lib/$tcl_basename"
 tcl_incdir="/usr/include/$tcl_basename"
 
 (cd ${srcdir}/tclhttpd3.5.1; ./configure --prefix=${prefix}/share/tclhttpd --enable-gcc --with-tclinclude=$tcl_incdir --with-tcl=$tcl_configdir)
-(cd ${srcdir}/tclhttpd3.5.1; make   all install)
+(cd ${srcdir}/tclhttpd3.5.1; make all install)
 
 # Epics
 #
@@ -891,6 +891,8 @@ Makefile
     ddas/pixieplugin/definitions.tcl
     ddas/qtscope/Makefile
     ddas/qtscope/qtscope
+    ddas/utilities/Makefile
+    ddas/utilities/simulator/Makefile
     ddas/docs/Makefile
     ddas/docs/Doxyfile
     ddas/docs/DoxygenLayout.xml

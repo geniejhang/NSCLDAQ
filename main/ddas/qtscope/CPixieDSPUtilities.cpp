@@ -69,7 +69,7 @@ CPixieDSPUtilities::ReadChanPar(
     )
 {
     int retval;
-    try{
+    try {
 	retval = Pixie16ReadSglChanPar(paramName, &value, module, channel);
   	if (retval < 0) {
 	    std::stringstream msg;

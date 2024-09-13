@@ -16,7 +16,7 @@
 
 /**
 * @file  CBootCommand.h
-* @brief Class for the ddasboot command
+* @brief Class definition for the ddasboot command.
 */
 
 #ifndef CBOOTCOMMAND_H
@@ -30,8 +30,7 @@ class CTCLObject;
 
 /**
  * @class CBootCommand
- * @details
- * This class implements the ddasboot command. It is added to to the Tcl 
+ * @brief This class implements the ddasboot command. It is added to to the Tcl 
  * interpreter that runs ddasreadout so that the DDAS modules can be booted 
  * on-demand rather than every time the Readout program starts.
  */

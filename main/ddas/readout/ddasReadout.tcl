@@ -3,9 +3,6 @@
 # The next line is executed by /bin/sh, but not tcl \
 exec tclsh "$0" ${1+"$@"}
 
-## @file ddasReadout.tcl
-# @brief Driver for DDASReadout/ddasSort.
-
 #    This software is Copyright by the Board of Trustees of Michigan
 #    State University (c) Copyright 2014.
 #
@@ -20,6 +17,11 @@ exec tclsh "$0" ${1+"$@"}
 #	     NSCL
 #	     Michigan State University
 #	     East Lansing, MI 48824-1321
+
+##
+# @file ddasReadout.tcl
+# @brief Driver for DDASReadout/ddasSort.
+#
 
 package require cmdline
 
@@ -110,8 +112,8 @@ set usage "Driver for the split DDASReadout/ddasSort programs\nOptions:"
 set options {
     {readouthost.arg "" "Host in which to run the DDASReadout program"}
     {readoutring.arg "" "Ring into which DDASReadout puts data"}
-    {sortring.arg    "" "Ringbuffer into which the sorter puts its data" }
     {sorthost.arg    "" "Host in which the sorter runs"}    
+    {sortring.arg    "" "Ringbuffer into which the sorter puts its data" }
     {cratedir.arg    "" "Directory in which to run DDASReadout"}
     {sourceid.arg    0  "Source ID with which to tag the data"}
     {fifothreshold.arg 20480 "FIFO Threshold value for DDASReadout"}
@@ -120,6 +122,7 @@ set options {
     {clockmultiplier.arg 1   "Timestamp multiplier for external clock"}
     {scalerseconds.arg   16  "Time between scaler reads"}
     {window.arg          10 "Sorting window in seconds."}
+    {fastboot.arg "off" "Perform a settings-only boot [on/off]"}
     {port.arg        "" "Enable DDASReadout TclServer functionality on specified port"}
     {init-script.arg "" "DDASReadout initialization script run in the main interpreter"}
     {log.arg   "" "DDASReadout log file"}
@@ -162,6 +165,7 @@ set infinity      [dict get $parsed infinity]
 set clkmult       [dict get $parsed clockmultiplier]
 set scalerSecs    [dict get $parsed scalerseconds]
 set rawRing       [dict get $parsed readoutring]
+set fastboot      [dict get $parsed fastboot]
 
 
 if {$infinity} {
@@ -170,7 +174,13 @@ if {$infinity} {
     set infstring ""
 }
 
-set readoutCmd "$infstring SCALER_SECONDS=$scalerSecs FIFO_THRESHOLD=$fifoThreshold EVENT_BUFFER_SIZE=$bufferSize $readoutCmd"
+if {$fastboot} {
+    set fbstring "DDAS_BOOT_WHEN_REQUESTED=1"
+} else {
+    set fbstring ""
+}
+
+set readoutCmd "$fbstring $infstring SCALER_SECONDS=$scalerSecs FIFO_THRESHOLD=$fifoThreshold EVENT_BUFFER_SIZE=$bufferSize $readoutCmd"
 
 foreach optMapEntry $ddasOptionMap {
     set opt [lindex $optMapEntry 0]

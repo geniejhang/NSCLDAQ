@@ -1,8 +1,7 @@
-/*********************************************************
- Declaration of Scaler class for DDAS
- Access statistics directly from the Pixie16 modules
- H.L. Crawford 6/13/2010
-*********************************************************/
+/** 
+ * @file CMyScaler.h
+ * @brief Define the DDAS scaler class.
+ */
 
 #ifndef MYSCALER_H
 #define MYSCALER_H
@@ -40,6 +39,9 @@
  *
  * where input[0] and output[0] refer to the observed and accepted triggers 
  * seen by channel 0 on the module.
+ *
+ * @note (ASC 9/4/24): Based on the DDAS scaler class originally written by 
+ * H. Crawford.
  */
 
 class CMyScaler : public CScaler

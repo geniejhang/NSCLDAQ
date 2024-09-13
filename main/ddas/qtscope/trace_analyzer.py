@@ -292,7 +292,7 @@ class TraceAnalyzer:
             tau = int(round(tau/xdt))
 
         ns = xdt*1000  # Convert from samples to time in ns.
-        print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Filter calculation requires parameters to\nbe an integer multiple of XDT. Parameters have not been changed for acquisition.\n\t XDT (ns): {ns:.0f}\n\t Trig. risetime (ns): {fast_risetime*ns:.0f}\n\t Trig. gap (ns): {fast_gap*ns:.0f}\n\t CFD scale: {cfd_scale:.0f}\n\t CFD delay (ns): {cfd_delay*ns:.0f}\n\t Ene. risetime (ns): {slow_risetime*ns:.0f}\n\t Ene. gap (ns): {slow_gap*ns:.0f}\n\t Tau (ns): {tau*ns:.0f}".format(self.__class__.__name__, inspect.currentframe().f_code.co_name, ns, fast_risetime*ns, fast_gap*ns, cfd_scale, cfd_delay*ns, slow_risetime*ns, slow_gap*ns, tau*ns))
+        print(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Filter calculation requires parameters to\nbe an integer multiple of XDT. Parameters have not been changed for acquisition.\n\t XDT (ns): {ns:.0f}\n\t Trig. risetime (ns): {fast_risetime*ns:.0f}\n\t Trig. gap (ns): {fast_gap*ns:.0f}\n\t CFD scale: {cfd_scale:.0f}\n\t CFD delay (ns): {cfd_delay*ns:.0f}\n\t Ene. risetime (ns): {slow_risetime*ns:.0f}\n\t Ene. gap (ns): {slow_gap*ns:.0f}\n\t Tau (ns): {tau*ns:.0f}")
         
         return FilterParameters(
             xdt=xdt, fast_risetime=fast_risetime, fast_gap=fast_gap,

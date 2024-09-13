@@ -108,7 +108,9 @@ proc ::Delay::begin {id run title} {
   set config $::Delay::instances($id)
   set delayTime [lindex $config 0]
   
-  ::Delay::_delayWithFeedback $delayTime
+  if {$delayTime != 0} {
+    ::Delay::_delayWithFeedback $delayTime
+  }
 }
 
 ##
@@ -124,7 +126,9 @@ proc ::Delay::end id {
   set config $::Delay::instances($id)
   set endDelayTime [lindex $config 1]
   
-  ::Delay::_delayWithFeedback $endDelayTime
+  if {$endDelayTime != 0} {
+    ::Delay::_delayWithFeedback $endDelayTime
+  }
 }
 
 ##
