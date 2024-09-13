@@ -1,3 +1,4 @@
+#include <DebugUtils.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 #include "Asserts.h"
@@ -21,7 +22,7 @@ namespace std {
         )
     {
         for (int i = 0; i < hits.size(); i++) {
-        o << hits[i]->s_time << std::endl;
+            o << hits[i]->s_time << std::endl;
         }
         return o;
     }

@@ -14,7 +14,7 @@
          Michigan State University
          East Lansing, MI 48824-1321
 */
-
+#include <DebugUtils.h>
 #include <cppunit/extensions/HelperMacros.h>
 
 #include <sstream>
@@ -28,17 +28,6 @@
 using namespace std;
 using namespace ::DAQ::DDAS;
 
-template<class T>
-std::ostream& operator<<(std::ostream& stream, const std::vector<T>& vec)
-{
-    stream << "(";
-    for (auto& number : vec) {
-        stream << number << " ";
-    }
-    stream << ")";
-
-    return stream;
-}
 
 class ModEvtFileParserTest : public CppUnit::TestFixture
 {
