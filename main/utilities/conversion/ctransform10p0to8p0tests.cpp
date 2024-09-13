@@ -457,7 +457,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CTransform10p0to8p0Tests_NonIncrScaler);
         }
 
         void tearDown() {
-
+          V8::gBufferSize  = 8192;
         }
 
         void MultiText_0()
