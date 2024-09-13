@@ -12,18 +12,20 @@
 #include "BufferArena.h"
 #include "ZeroCopyHit.h"
 
+
 using namespace DDASReadout;
 
-std::ostream& operator<<(
-    std::ostream& o, const std::deque<ZeroCopyHit*>& hits
-    )
-{
-    for (int i = 0; i < hits.size(); i++) {
-	o << hits[i]->s_time << std::endl;
+namespace std {
+    std::ostream& operator<<(
+        std::ostream& o, const std::deque<ZeroCopyHit*>& hits
+        )
+    {
+        for (int i = 0; i < hits.size(); i++) {
+        o << hits[i]->s_time << std::endl;
+        }
+        return o;
     }
-    return o;
 }
-
 class hitmgrtest : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(hitmgrtest);
     CPPUNIT_TEST(initial_1);

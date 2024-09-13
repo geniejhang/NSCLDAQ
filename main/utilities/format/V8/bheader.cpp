@@ -115,3 +115,36 @@ ByteBuffer& operator<<(ByteBuffer& buffer, const bheader& header)
 
   return buffer;
 }
+int operator==(const DAQ::V8::bftime& lhs, const DAQ::V8::bftime& rhs) {
+  int equal = 1;
+  equal &= (lhs.month==rhs.month);
+  equal &= (lhs.day==rhs.day);
+  equal &= (lhs.year==rhs.year);
+  equal &= (lhs.hours==rhs.hours);
+  equal &= (lhs.min==rhs.min);
+  equal &= (lhs.sec==rhs.sec);
+  equal &= (lhs.tenths==rhs.tenths);
+
+  return equal;
+}
+
+int operator==(const DAQ::V8::bheader& lhs, const DAQ::V8::bheader& rhs) {
+  int equal = 1;
+  equal &= (lhs.nwds==rhs.nwds);
+  equal &= (lhs.type==rhs.type);
+  equal &= (lhs.cks==rhs.cks);
+  equal &= (lhs.run==rhs.run);
+  equal &= (lhs.seq==rhs.seq);
+  equal &= (lhs.nevt==rhs.nevt);
+  equal &= (lhs.nlam==rhs.nlam);
+  equal &= (lhs.cpu==rhs.cpu);
+  equal &= (lhs.nbit==rhs.nbit);
+  equal &= (lhs.buffmt==rhs.buffmt);
+  equal &= (lhs.ssignature==rhs.ssignature);
+  equal &= (lhs.lsignature==rhs.lsignature);
+  equal &= (lhs.unused[0]==rhs.unused[0]);
+  equal &= (lhs.unused[1]==rhs.unused[1]);
+
+  return equal;
+}
+

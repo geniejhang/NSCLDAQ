@@ -21,6 +21,8 @@
 #include <vector>
 #include <string>
 
+#include <DebugUtils.h>
+
 #include "Asserts.h"
 #include "ConfigurationParser.h"
 #include "Configuration.h"

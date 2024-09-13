@@ -33,13 +33,14 @@ const int CAENV890::m_nTdcClock(25);	// TDC clock in ns.
 const int CAENV890::m_nTdcMaxVal(4095); // Maximum TDC value.
 
 
-typedef u_char byte;
+
 
 
 //   PROM layout
 
-struct CAENProm {
-  byte    m_pad0[0x26];		// 0x4000
+
+struct __attribute__ ((__packed__))  CAENProm {
+  uint8_t    m_pad0[0x26];		// 0x4000
   uint16_t m_OUIMsb;		// 0x4026
   uint16_t m_pad1;		// 0x4028
   uint16_t m_OUI;		// 0x402a
@@ -53,9 +54,9 @@ struct CAENProm {
   uint16_t m_BoardType;		// 0x403a
   uint16_t m_pad6;		// 0x403c
   uint16_t m_BoardTypeLSB;	// 0x403e
-  byte    m_pad7[0x0e];		// 0x4040
+  uint8_t    m_pad7[0x0e];		// 0x4040
   uint16_t m_Revision;		// 0x404e
-  byte    m_pad8[0xeb2];	// 0x4050
+  uint8_t    m_pad8[0xeb2];	// 0x4050
   uint16_t m_SerialMsb;		// 0x4f02
   uint16_t m_pad9;		// 0x4f04
   uint16_t m_SerialLsb;		// 0x4f06
@@ -65,7 +66,7 @@ static const unsigned int CAENPROMSize(sizeof(CAENProm));
 
 // Module register map.
 
-struct CAENRegisters {
+struct __attribute__ ((__packed__)) CAENRegisters {
   uint32_t  m_OutputBuffer[0x1000/sizeof(uint32_t)]; // 0x0000
   uint16_t m_ControlRegister;	// 0x1000
   uint16_t m_StatusRegister;	// 0x1002

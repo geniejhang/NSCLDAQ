@@ -11,6 +11,7 @@ using namespace std;
 
 using namespace DAQ::Buffer;
 
+
 class bytebuffertest : public CppUnit::TestFixture {
   public:
   CPPUNIT_TEST_SUITE(bytebuffertest);

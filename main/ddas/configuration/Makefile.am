@@ -14,7 +14,7 @@ unittests_SOURCES = TestRunner.cpp ConfigurationParserTest.cpp \
                     ModEvtLenFileParserTest.cpp ConfigurationTest.cpp \
                     HardwareRegistryTests.cpp Asserts.h NewParseTests.cpp
 unittests_CPPFLAGS = -I@srcdir@ @CPPUNIT_CFLAGS@ \
-	-DTOP_SRC_DIR="\"@top_srcdir@\""
+	-DTOP_SRC_DIR="\"@top_srcdir@\"" -I@top_srcdir@/base/testutils
 unittests_LDADD = @builddir@/libConfiguration.la @CPPUNIT_LIBS@
 
 TESTS = unittests

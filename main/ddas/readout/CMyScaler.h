@@ -9,6 +9,7 @@
 #include <config.h>
 #include <CScaler.h>
 #include <vector>
+#include <stddef.h>
 
 /**
  * @class CMyScaler
@@ -48,13 +49,13 @@ class CMyScaler : public CScaler
 public:
     /** @brief Count raw and accepted triggers. */
     typedef struct _Counters {
-	size_t s_nTriggers;         //!< Raw triggers.
-	size_t s_nAcceptedTriggers; //!< Accepted triggers (i.e. by the FPGA).
+        size_t s_nTriggers;         //!< Raw triggers.
+        size_t s_nAcceptedTriggers; //!< Accepted triggers (i.e. by the FPGA).
     } Counters;
     /** @brief Statistics are counters for cumulative and per-run triggers. */
     typedef struct _Statistics {
-	Counters s_cumulative; //!< Cumulative. Not cleared on initialize.
-	Counters s_perRun;     //!< Per-run. Cleared on initialize.
+        CMyScaler::Counters s_cumulative; //!< Cumulative. Not cleared on initialize.
+        CMyScaler::Counters s_perRun;     //!< Per-run. Cleared on initialize.
     } Statistics;
     
 private:

@@ -14,7 +14,7 @@
              East Lansing, MI 48824-1321
 */
 
-
+#include <V8/bheader.h>
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/Asserter.h>
 
@@ -41,6 +41,8 @@ using namespace std;
 
 using namespace DAQ::V8;
 using namespace DAQ::Buffer;
+
+
 
 class ctextbuffertest : public CppUnit::TestFixture {
 private:
