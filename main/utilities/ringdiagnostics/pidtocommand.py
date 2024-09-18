@@ -1,6 +1,12 @@
 '''
 Provides pidToCommandLine which takes a PID and turns it into an iterable 
 of command line words.
+
+NSCLDAQ should also install this as $DAQBIN/pidtocommand so that
+remote PIDs can be interrogated e.g.
+
+nsclda.ssh(remotehost $DAQBIN/pidtocommand somepid)
+
 '''
 import psutil
 import sys
