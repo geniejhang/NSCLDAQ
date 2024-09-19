@@ -4,19 +4,18 @@
 import subprocess
 import shutil
 import os
-ssh=shutil.which('ssh')
+import fcntl
+sshcmd=shutil.which('ssh')
 
 
 def _command(pipe, command):
-    #  Send a command to the ssh and return the 
-    #  result as an iterable set of lines.
     
-    pipe.stdin.write(command.encode('utf-8'))
+    command = command + "\n"
+    pipe.stdin.write(command)
     pipe.stdin.flush()
-    return pipe.stdout.read(100).decode('utf-8').split('\n')
-
+    
 def _iscontainer():
-    # Return True if we are running in a container.
+    # Return True if we are running in a container
     try:
         container = os.environ['SINGULARITY_NAME']
         return True
@@ -36,9 +35,31 @@ def _containerBindings():
     # Return a string that can be handed to the --bind option
     # for singularity/apptainer.
     
-    return os.environ['SINGULARITY_BIND']
+    return os.environ['SINGULARITY_BINDINGS']
 
-def ssh(host, comand):
+def _rebuildContainer(pipe):
+    #  Rebuild our container environment in the remote:
+    
+    sing_cmd = f"SINGULARITY_SHELL='/bin/bash' singularity shell --bind {_containerBindings()} {_containerName()}"
+    _command(pipe, sing_cmd)
+    
+def _setupEnvironment(pipe):
+    # Push our environment into the ssh shell.
+    # This is really intended to get people other than us to have an easier time.
+    
+    for name in os.environ:
+        value = os.environ[name]
+        cmd = f'export "{name}"="{value}"'  # Quotes because spaces might be there.
+        _command(pipe, cmd)
+
+def _setcwd(pipe):
+    #  Set the current directory to our current directory:
+    
+    command = f'cd "{os.path.abspath(os.curdir)}"'  # Quotes protect against spaces in the dirname.
+    _command(pipe, command)
+
+def ssh(host, command):
+    global sshcmd
     """ 
         Performs an ssh command in the current environment
         on a remote host.  
@@ -49,31 +70,64 @@ def ssh(host, comand):
         this includes
            -  THe container being run if any and its filesystem bindings.
            -  The environemt we run under.
+           -  Our current working directory.
            
         Parameters:
             host - host in which the command will run. 
             command - the command to run.
             
         Returns:
-            stdout from the command as an iterable of lines.
+            A two element list.  The first element contains stdout
+            captured by the entire sequence of command required to 
+            do the command.  That might be a lot of commands.
+            A line containing
+            
+            ---------- cut
+            
+            is added to the output just prior to the output for the command.
+            
+           The second element of the list is the captured stderr.
         Note: The ssh remote has exited when we return.
 
     
     """
     #  Establish the connection:
     
-    pipe = subprocess.Popen([ssh, host], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=None)
-    # Get the banner:
+    pipe = subprocess.Popen(
+        [sshcmd, host], 
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
+        stderr=subprocess.PIPE, text=True, encoding='utf-8')
     
-    banner = pipe.stdout.read1(1000)
+    # Get the banner:
     
         
     if _iscontainer() :
+
         # IF we are in a container set up the container environment in the remote host.
-        pass
+        _rebuildContainer(pipe)
     
     # Send our environment to the remote.
     
+    _setupEnvironment(pipe)
+    _setcwd(pipe)
+    
+    #  Provide a marker to allow clients to pull their own output
+    # from the aggregate output:
+
+    _command(pipe, "echo ---------- cut")
+    _command(pipe, "echo >&2 ---------- cut")
+
     # Send the command return the response.
+
+    _command(pipe, command)
+    
+    if _iscontainer():
+        _command(pipe, "exit")
     
     # Exit the ssh.
+    
+    _command(pipe, "exit")
+    
+    result = pipe.communicate()
+    
+    return result
