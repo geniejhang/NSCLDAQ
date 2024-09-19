@@ -4,7 +4,10 @@
 import subprocess
 import shutil
 import os
-import fcntl
+import socket
+from pyparsing import nestedExpr
+
+from nscldaq.portmanager.PortManager import PortManager 
 sshcmd=shutil.which('ssh')
 cutText='---------- cut'
 
@@ -78,7 +81,18 @@ def _afterCut(l):
     l.pop()
     
     return l
+
+def _getRingMasterPort(host):
+    # Return the port the ring master is running in on the host
+    # else throw an exception if it, or the port manager is not running.
     
+    pm = PortManager(host)
+    info = pm.find(service='RingMaster')
+    if len(info) == 0:
+        raise KeyError('cannot find ring master')
+    return info[0]['port']
+    
+        
 
 #--- Public entries.
 def ssh(host, command):
@@ -174,3 +188,51 @@ def getSshError(result):
     stderr = result[1].split('\n')
     return _afterCut(stderr)
     
+class RingMaster:
+    ''' 
+     This class is a proxy for a ring master in some host.
+     On creation, a connection is formed with the ring master
+     and maintained (if possible) for the life of the object.
+     
+    '''
+    def __init__(self, host):
+        '''
+        Initialization attempts to connect to the ring master.
+        '''
+        port = _getRingMasterPort(host)
+        self._socket = socket.socket()
+        self._socket.connect((host, port))
+    
+    def __del__(self):
+        self._socket.close()
+        self._socket = None
+        
+    def list_rings(self):
+        '''
+        Return a list of the ringbuffers, their characteristics and 
+        usage
+        '''
+        
+        self._socket.sendall(b'LIST\n')
+        raw_list = self._socket.recv(1024*1024)
+        lines = raw_list.decode('utf-8').split('\r\n')
+        
+        if len(lines) == 0:
+            # Lost connection.
+            self._socket.close()   # Render us unusable.
+            self._socket = None
+            raise ConnectionAbortedError('lost connection with ringmaster')
+        
+        # If the first line is not OK raise.
+        
+        if lines[0] != 'OK':
+            raise SystemError(f'Error response from Ringmaster: {lines[0]}')
+        
+        # Parse line 1 as a list of Tcl lists:
+        
+        tclList = nestedExpr("{", "}")
+        result =  []
+        for item in tclList.searchString(lines[1]):
+            result.append(item)
+            
+        return result
