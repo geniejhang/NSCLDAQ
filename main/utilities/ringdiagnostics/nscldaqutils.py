@@ -194,10 +194,27 @@ class RingMaster:
      On creation, a connection is formed with the ring master
      and maintained (if possible) for the life of the object.
      
+     What is a returned is an iterable/indexable (array) of dicts.
+     This could be empty.
+     
+     Each dict has the following key/values:
+     
+     * 'name' - name of the ringbuffer.
+     * 'size' - number of bytes in the data area of the ring buffer.
+     * 'free' - Number of free bytes in the data area.
+     * 'maxconsumers' - maximum number of consumers that can connect to the ring.
+     * 'producderpid' - The pid of the ringbuffer producer.
+     * 'maxget' - Largest get that could be made (biggest backlog).
+     * 'minget'  - smallest backlog.
+     * 'consumers' - ringbuffer consumers.  The value is an interable containing dicts that have the keys:
+         * 'consumerpid'  - PID of the consumer process.
+         * 'backlog'      - data backlog in bytes.
+     
     '''
     def __init__(self, host):
         '''
-        Initialization attempts to connect to the ring master.
+        Initialization attempts to connect to the ring master to the
+        host.
         '''
         port = _getRingMasterPort(host)
         self._socket = socket.socket()
