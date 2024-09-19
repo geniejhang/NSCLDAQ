@@ -36,7 +36,7 @@ if __name__  == "__main__":
     pid = int(sys.argv[1])
     try:
         command = pidToCommand(pid)
-        print(command)
+        print(' '.join(command))
         sys.exit(0)
     except KeyError as e:
         sys.stderr.write(str(e)+"\n");
