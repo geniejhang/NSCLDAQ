@@ -219,6 +219,7 @@ class RingMaster:
         port = _getRingMasterPort(host)
         self._socket = socket.socket()
         self._socket.connect((host, port))
+        self._host = host
     
     def __del__(self):
         self._socket.close()
@@ -257,6 +258,10 @@ class RingMaster:
 
             
         return result
+    
+    def host(self):
+        ''' Return the host we're talking to: '''
+        return self._host
     
     # Internal methods
     
