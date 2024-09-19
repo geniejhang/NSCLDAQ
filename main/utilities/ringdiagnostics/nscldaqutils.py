@@ -207,6 +207,8 @@ class RingMaster:
         self._socket.close()
         self._socket = None
         
+    # Public interface:
+    
     def list_rings(self):
         '''
         Return a list of the ringbuffers, their characteristics and 
@@ -233,6 +235,36 @@ class RingMaster:
         tclList = nestedExpr("{", "}")
         result =  []
         for item in tclList.searchString(lines[1]):
-            result.append(item)
+            result.append(self._makeRingDict(item.as_list()[0]))
             
+
+            
+        return result
+    
+    # Internal methods
+    
+    def _makeRingDict(self, item):
+        # Given a ring item defintion in raw form turn it into a dict.
+        
+        result =dict()
+        
+        result['name'] = item[0]
+        
+        properties = item[1]
+        result['size'] = properties[0]
+        result['free'] = properties[1]
+        result['maxconsumers'] = properties[2]
+        result['producerpid'] = properties[3]
+        result['maxget'] = properties[4]
+        result['minget'] = properties[5]
+        
+        consumers = properties[6]
+        consumerdicts = []
+        for c in consumers:
+            consumerdicts.append({
+                'consumerpid' : c[0],
+                'backlog'     : c[1]
+            })
+        result['consumers'] = consumerdicts
+    
         return result
