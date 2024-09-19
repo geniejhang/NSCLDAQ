@@ -6,7 +6,9 @@ import shutil
 import os
 import fcntl
 sshcmd=shutil.which('ssh')
+cutText='---------- cut'
 
+#------------- Internal utilities.
 
 def _command(pipe, command):
     
@@ -58,8 +60,30 @@ def _setcwd(pipe):
     command = f'cd "{os.path.abspath(os.curdir)}"'  # Quotes protect against spaces in the dirname.
     _command(pipe, command)
 
+
+def _afterCut(l):
+    global cutText
+    #  Returns all the lines in a list of lines after the line with
+    #  
+    
+    while l[0] != cutText:
+        l.remove(l[0])
+        
+    # Get rid of one more element... the cut line"
+    
+    l.remove(l[0])
+    
+    # There's always an empty line after this:
+    
+    l.pop()
+    
+    return l
+    
+
+#--- Public entries.
 def ssh(host, command):
     global sshcmd
+    global cutText
     """ 
         Performs an ssh command in the current environment
         on a remote host.  
@@ -114,8 +138,8 @@ def ssh(host, command):
     #  Provide a marker to allow clients to pull their own output
     # from the aggregate output:
 
-    _command(pipe, "echo ---------- cut")
-    _command(pipe, "echo >&2 ---------- cut")
+    _command(pipe, f"echo {cutText}")
+    _command(pipe, f"echo >&2 {cutText}")
 
     # Send the command return the response.
 
@@ -131,3 +155,22 @@ def ssh(host, command):
     result = pipe.communicate()
     
     return result
+
+def getSshOutput(result):
+    '''
+    Given the result from an ssh operation, returns the output from only 
+    the command as a list of lines.
+    '''
+    
+    stdout = result[0].split('\n')
+    return _afterCut(stdout)
+
+def getSshError(result):
+    '''
+    Given the restul of an ssh operation, returns the error from only the command.
+    as a list of lines.
+    '''
+    
+    stderr = result[1].split('\n')
+    return _afterCut(stderr)
+    
