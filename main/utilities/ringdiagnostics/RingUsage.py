@@ -85,6 +85,21 @@ def _getLocalCommand(pid):
         return ' '.join(pidtocommand.pidToCommand(pid))
     except:
         return '<unavailable>'
+    
+    
+# _getRemoteCommand
+#   Get the command associated with a pid in an external host
+#  (well really this will work with local commands if host is e.g. 'localhost' but will
+#  be much slower than _getLocalCommand)
+#
+# Prerequisistes:
+#   * The DAQ must have been setup (e.g. we relay on DAQBIN)
+#   * Passwordless ssh must have been set up for the account.
+#
+# Return value is, as for _getLocalCommand.
+#
+def _getRemoteCommand(host, pid):
+    return "<unavailable>"
 
 #------------------------ Public entries
 
@@ -123,10 +138,34 @@ def makeLocalRingInfo():
     return result
     
 
-def makeRemoteRingInfo():
+def makeRemoteRingInfo(host):
     '''
         Get the ring buffer information for rings in a remote system.
         See makeLocalRingInfor for what is returned.  Note that we need
         to use ssh to get the process name information in this case.
     '''
-    pass
+    rm = nscldaqutils.RingMaster(host)
+    usage = rm.list_rings()
+    
+    result = {'host': host, 'rings': []}
+    for ring in usage:
+        
+        # We dont' distentangle proxies but we _do_ make an empty list for them.
+        
+        ring['proxies'] = []
+        
+        #  Add the producer and consuer commands.
+        if ring['producer_pid'] != -1 :
+            ring['producer_command'] = _getRemoteCommand(host, ring['producer_pid'])
+            
+        else :
+            ring['producer_command'] = 'None'
+        
+        for consumer in ring['consumers']:
+            consumer['consumer_command'] = _getRemoteCommand(host, consumer['consumer_pid'])
+        
+        result['rings'].append(ring)
+
+    return result
+    
+    

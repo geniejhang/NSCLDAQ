@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 Provides pidToCommandLine which takes a PID and turns it into an iterable 
 of command line words.
