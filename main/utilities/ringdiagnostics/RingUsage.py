@@ -161,6 +161,33 @@ def _getHoistTarget(cmd):
         return hoister_target[command_name](command_words)
     
     return None
+
+##
+# _ProxyRing
+#   Given a ringbuffer name and host, return the ring name it is a proxy for or None if
+#  the ring name is not a proxy ring.  Proxy ring names are of the form
+#  FQDN.ring  where FQDN is the fully qualified host name from which the
+#  data are being hoisted in to the proxy and ring the name of the ring in that host.
+#  For example, if a ring is named
+#    spdaq10.frib.msu.edu.fox
+#
+#  it is a proxy for the ring named 'fox' in 'spdaq10.frib.msu.edu'
+#  Return is either a two element (host, ring) list or None if this is not a proxy ring.
+#  In the previous exmaple, we'd return ('spdaq10.frib.msu.edu', 'fox').  
+#
+#  NOTE:
+#    We will get fooled by names with periods in them.  A ring like george.of.the.jungle
+#    While not a proxy ring will appear to us like a proxy ring for jungle@george.of.the
+
+def _proxyRing(ringname):
+    components = ringname.split('.')
+    if (len(components) > 1):
+        ring = components.pop()
+        host = '.'.join(components)
+        return (host, ring)
+    else:
+        return None
+
 #------------------------ Public entries
 
 def makeLocalRingInfo():
@@ -246,6 +273,36 @@ def getHoistedHosts(info):
     
     return result
 
+def removeProxies(rings):
+    '''
+        Given a list of Rings for a host, removes the consumers that are
+        proxies.  The list of removed rings are returned as their original dicts
+        with two added keys:
+        proxyhost:  - Host that holds the original ring.
+        proxyring:  - Ring this is a proxy form.
+        
+    '''
+    result = []
+    removelist = []
+    for (n, ring) in enumerate(rings):
+        proxyInfo = _proxyRing(ring['name'])
+        if proxyInfo is not None:
+            ring['proxyhost'] = proxyInfo[0]
+            ring['proxyring'] = proxyInfo[1]
+            result.append(ring)
+            removelist.append(n)
+    # Now remove the indices in removelist from rings:
+    
+    print(result)
+    print(removelist)
+    
+    removelist.sort(reverse=True)
+    for i in removelist:
+        del rings[i]
+    
+    return result
+    
+
 def getUniqueNames(listOfLists):
     '''
     Given an  iterable of iterables (probably containing strings),
@@ -256,3 +313,4 @@ def getUniqueNames(listOfLists):
         for inner in outer:
             result[inner] = ''
     return [x for x in result.keys()]
+    
