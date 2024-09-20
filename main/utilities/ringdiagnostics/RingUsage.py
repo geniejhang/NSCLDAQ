@@ -66,3 +66,67 @@ What we do:
     stalls that we know, or think we know, are due to the failure of a specific data sourcde or
     the stalling of some consumer in that source's data flow.l
 '''
+
+import nscldaqutils
+import pidtocommand
+import socket
+
+
+#------------------------ Internal utiltities
+
+# _getLocalCommand
+#   Return a string that represents the 
+#   command associated with a pid.
+#   If pidtocommand.pidToCommand() raises,
+#   '<unavailable>' is returned.
+
+def _getLocalCommand(pid):
+    try:
+        return ' '.join(pidtocommand.pidToCommand(pid))
+    except:
+        return '<unavailable>'
+
+#------------------------ Public entries
+
+def makeLocalRingInfo():
+    ''' 
+        Get the ringbuffer information for the local rings.
+        For those we can directly ask the system what the 
+        commands are for the producer and consumers
+    
+        The return will be an element of the list of dicts that define the 
+        rings in a host.    
+    '''
+    host = socket.gethostname()
+    rm = nscldaqutils.RingMaster(host)
+    usage = rm.list_rings()
+    
+    result = {'host': host, 'rings': []}
+    for ring in usage:
+        
+        # We dont' distentangle proxies but we _do_ make an empty list for them.
+        
+        ring['proxies'] = []
+        
+        #  Add the producer and consuer commands.
+        if ring['producer_pid'] != -1 :
+            ring['producer_command'] = _getLocalCommand(ring['producer_pid'])
+            
+        else :
+            ring['producer_command'] = 'None'
+        
+        for consumer in ring['consumers']:
+            consumer['consumer_command'] = _getLocalCommand(consumer['consumer_pid'])
+        
+        result['rings'].append(ring)
+
+    return result
+    
+
+def makeRemoteRingInfo():
+    '''
+        Get the ring buffer information for rings in a remote system.
+        See makeLocalRingInfor for what is returned.  Note that we need
+        to use ssh to get the process name information in this case.
+    '''
+    pass

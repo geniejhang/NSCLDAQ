@@ -203,11 +203,11 @@ class RingMaster:
      * 'size' - number of bytes in the data area of the ring buffer.
      * 'free' - Number of free bytes in the data area.
      * 'maxconsumers' - maximum number of consumers that can connect to the ring.
-     * 'producderpid' - The pid of the ringbuffer producer.
+     * 'producder_pid' - The pid of the ringbuffer producer.
      * 'maxget' - Largest get that could be made (biggest backlog).
      * 'minget'  - smallest backlog.
      * 'consumers' - ringbuffer consumers.  The value is an interable containing dicts that have the keys:
-         * 'consumerpid'  - PID of the consumer process.
+         * 'consumer_pid'  - PID of the consumer process.
          * 'backlog'      - data backlog in bytes.
      
     '''
@@ -273,19 +273,19 @@ class RingMaster:
         result['name'] = item[0]
         
         properties = item[1]
-        result['size'] = properties[0]
-        result['free'] = properties[1]
-        result['maxconsumers'] = properties[2]
-        result['producerpid'] = properties[3]
-        result['maxget'] = properties[4]
-        result['minget'] = properties[5]
+        result['size'] = int(properties[0])
+        result['free'] = int(properties[1])
+        result['maxconsumers'] = int(properties[2])
+        result['producer_pid'] = int(properties[3])
+        result['maxget'] = int(properties[4])
+        result['minget'] = int(properties[5])
         
         consumers = properties[6]
         consumerdicts = []
         for c in consumers:
             consumerdicts.append({
-                'consumerpid' : c[0],
-                'backlog'     : c[1]
+                'consumer_pid' : int(c[0]),
+                'backlog'     : int(c[1])
             })
         result['consumers'] = consumerdicts
     
