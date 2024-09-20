@@ -775,6 +775,7 @@ Makefile
     utilities/manager/Makefile
     utilities/readoutREST/Makefile
     utilities/udpBroker/Makefile
+	utilities/ringdiagnostics/Makefile
     epics/epicslib/Makefile
     epics/chanlog/Makefile
     epics/controlpush/Makefile
