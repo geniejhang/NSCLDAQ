@@ -17,7 +17,7 @@ What we do:
   
   or
   
-  ring2stdout ... --comment Hoisting to host
+  ring2stdout ... --comment "Hoisting to host"
   
   The first of these can come from a native NSCLDAQ ringmaster, the
   second from the Rust ringmaster.
@@ -70,6 +70,7 @@ What we do:
 import nscldaqutils
 import pidtocommand
 import socket
+import os.path
 
 
 #------------------------ Internal utiltities
@@ -111,7 +112,55 @@ def _getRemoteCommand(host, pid):
     else:
         return "<unavailable>"
         
+## Get target from specific hoisters:
 
+# For the native hoister, the second command word is the host:
+# Note that it's possible to use ringtostdout in a non
+# hoisting capacity when (hopefully) it won't have a  parameter:
+# and will just liook like "ringtostdout ringname" rather than
+# "ringtostdout ringname hostname"
+def _native_hoister(command):
+    if len(command) == 3:
+        return command[2]
+    else :
+        return None
+
+# For the rust hoister, we have to find the text after --comment.
+#  The host will be the 3'd word of its parameter.
+def _rust_hoister(command):
+    for idx, param in enumerate(command):
+        if param == "--comment":
+            return  command[idx+3]
+    return None
+
+# Table of hoister target getters by command word.
+
+hoister_target = {
+    'ringtostdout' : _native_hoister,
+    'ring2stdout'  : _rust_hoister
+}
+
+##
+# _getHoistTarget
+#   Givnen a consumer command, determine the host to which
+#   that command is hoisted or return None if the command
+#   is not a hoisting command.
+#
+def _getHoistTarget(cmd):
+    global hoister_target
+    
+    #
+    #  Get the command word untangled from path stuff.
+    #
+    
+    command_words = cmd.split()
+    command = command_words[0]
+    command_name = os.path.split(command)[1]
+    
+    if command_name in hoister_target.keys():
+        return hoister_target[command_name](command_words)
+    
+    return None
 #------------------------ Public entries
 
 def makeLocalRingInfo():
@@ -180,3 +229,30 @@ def makeRemoteRingInfo(host):
     return result
     
     
+def getHoistedHosts(info):
+    '''
+        Given information about a ringbuffer, return the set of hosts that ring is
+        being hoisted to.  This is done by examining the consumers as described in the module
+        comments.
+        
+        Returns, an array of the names or IP addresss of hosts to which the ring is being hoisted.
+    '''
+    result = []
+    for consumer in info['consumers']:
+        cmd = consumer['consumer_command']
+        host = _getHoistTarget(cmd)
+        if host is not None:
+            result.append(host)
+    
+    return result
+
+def getUniqueNames(listOfLists):
+    '''
+    Given an  iterable of iterables (probably containing strings),
+    returns an iterable containing the unique names.
+    '''
+    result = {}
+    for outer in listOfLists:
+        for inner in outer:
+            result[inner] = ''
+    return [x for x in result.keys()]
