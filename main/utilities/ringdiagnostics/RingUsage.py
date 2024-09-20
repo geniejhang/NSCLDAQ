@@ -99,7 +99,18 @@ def _getLocalCommand(pid):
 # Return value is, as for _getLocalCommand.
 #
 def _getRemoteCommand(host, pid):
-    return "<unavailable>"
+    result = nscldaqutils.ssh(host, f'$DAQBIN/pidtocommand {pid}')
+    output = nscldaqutils.getSshOutput(result)
+    error  = nscldaqutils.getSshError(result)
+    
+    # If there are no lines in ouptput, then we got nothing:
+    
+    
+    if len(output) >0:
+        return output[0]
+    else:
+        return "<unavailable>"
+        
 
 #------------------------ Public entries
 
