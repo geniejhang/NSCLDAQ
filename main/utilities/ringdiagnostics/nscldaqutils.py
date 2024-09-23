@@ -5,6 +5,7 @@ import subprocess
 import shutil
 import os
 import socket
+import time
 from pyparsing import nestedExpr
 
 from nscldaq.portmanager.PortManager import PortManager 
@@ -234,6 +235,7 @@ class RingMaster:
         '''
         
         self._socket.sendall(b'LIST\n')
+        time.sleep(0.1)
         raw_list = self._socket.recv(1024*1024)
         lines = raw_list.decode('utf-8').split('\r\n')
         
@@ -253,10 +255,10 @@ class RingMaster:
         tclList = nestedExpr("{", "}")
         result =  []
         for item in tclList.searchString(lines[1]):
-            result.append(self._makeRingDict(item.as_list()[0]))
+            l = list(item)
+            result.append(self._makeRingDict(l[0]))
             
 
-            
         return result
     
     def host(self):

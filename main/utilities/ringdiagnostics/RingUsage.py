@@ -390,8 +390,9 @@ def systemUsage():
     
     local_rings = makeLocalRingInfo()
     proxies     = removeProxies(local_rings['rings'])
+
     for ring in local_rings['rings']:
-        remaining_hosts += getHoistedHosts(local_rings)
+        remaining_hosts += getHoistedHosts(ring)
     for p in proxies:
         remaining_hosts += p['proxyhost']
         
@@ -416,7 +417,7 @@ def systemUsage():
                 proxies += removeProxies(remote_rings['rings'])
                 result.append(remote_rings)
                 for ring in remote_rings['rings']:
-                    remaining_hosts += getHOistedHosts(ring)
+                    remaining_hosts += getHoistedHosts(ring)
                 for p in proxies:
                     remaining_hosts += ['proxyhost']
                 remaining_hosts = getUniqueNames(remaining_hosts)
