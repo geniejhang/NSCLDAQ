@@ -381,6 +381,58 @@ else
 	AM_CONDITIONAL(BUILD_EPICS_TOOLS, [false])
 fi
 
+
+#   Build the format libraries.
+#
+# UFMT_CPPFLAGS    - Unified format compiler flags
+# UFMT_LDFLAGS     - Unified format linker flags
+# DDASFMT_CPPFLAGS - DDAS format compiler flags
+# DDASFMT_LDFLAGS  - DDAS format linker flags
+# The unified format and DDAS format libraries have builds that
+# require cmake, so check for that:
+
+AC_CHECK_PROG([have_cmake], [cmake], [yes])
+AS_VAR_IF([have_cmake], [yes], [], AC_MSG_ERROR([cmake must be in the path to build DDAS support software]))
+
+# Check that the unified format library has been incorporated into
+# the source tree and configure/build it into $prefix/unifiedformat
+
+AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt],
+	[AC_MSG_NOTICE([Using previously incorporated unified format library at ${srcdir}/unifiedformat])
+	cp -r ${srcdir}/unifiedformat .],
+	[AC_MSG_NOTICE([Incorporating unified format for you])
+	${srcdir}/unifiedfmt-incorp.sh])
+rm -rf unifiedformat/build
+AS_MKDIR_P(unifiedformat/build)	
+AC_MSG_NOTICE([Building unified format])
+(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make clean install)
+result=$?
+AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install unified format library with result: ${result}]))
+UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
+UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
+
+AC_SUBST(UFMT_CPPFLAGS)
+AC_SUBST(UFMT_LDFLAGS)
+
+# Check that the DDAS format library has been incorporated into the
+# source tree and configure/build it into $prefix/ddasformat.
+	
+AC_CHECK_FILE([${srcdir}/ddasformat/CMakeLists.txt],
+	[AC_MSG_NOTICE([Using previously incorprated ddasformat from the source tree at ${srcdir}/ddasformat])
+	cp -r ${srcdir}/ddasformat .],
+	[AC_MSG_NOTICE([Incorporating ddasformat for you])
+	${srcdir}/ddasfmt-incorp.sh])
+rm -rf ddasformat/build
+AS_MKDIR_P(ddasformat/build)
+AC_MSG_NOTICE([Building DDAS format])
+(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make clean install)
+result=$?
+AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install ddasformat with result: ${result}]))
+DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
+DDASFMT_LDFLAGS="-L${prefix}/ddasformat/lib -lDDASFormat -Wl,-rpath=${prefix}/ddasformat/lib"
+AC_SUBST(DDASFMT_CPPFLAGS)
+AC_SUBST(DDASFMT_LDFLAGS)
+
 # The DDAS Software will only be built if --enable-ddas=yes is supplied by
 # the user. This will attempt to locate the PLX software but if that can't
 # be found, --with-plx-sdk can be used to provide it. What we provide to the
@@ -396,10 +448,7 @@ fi
 # PLX_LDFLAGS      - Linker flags for PLX API
 # firmwaredir      - Pixie firmware installation directory
 # dspdir           - Pixie DSP load image installaion directory
-# UFMT_CPPFLAGS    - Unified format compiler flags
-# UFMT_LDFLAGS     - Unified format linker flags
-# DDASFMT_CPPFLAGS - DDAS format compiler flags
-# DDASFMT_LDFLAGS  - DDAS format linker flags
+
 # ROOTSYS          - ROOT installation to compile e.g. ddasdumper against
 # ROOT_CFLAGS      - ROOT cflags (automatically generated from ROOT config)
 # ROOT_LDFLAGS     - ROOT libraries (automatically generated from ROOT config)
@@ -508,50 +557,7 @@ then
 
 	AC_SUBST(dspdir)
 
- 	# The unified format and DDAS format libraries have builds that
-	# require cmake, so check for that:
-
-	AC_CHECK_PROG([have_cmake], [cmake], [yes])
-	AS_VAR_IF([have_cmake], [yes], [], AC_MSG_ERROR([cmake must be in the path to build DDAS support software]))
-
-	# Check that the unified format library has been incorporated into
-	# the source tree and configure/build it into $prefix/unifiedformat
-
-	AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt],
-		[AC_MSG_NOTICE([Using previously incorporated unified format library at ${srcdir}/unifiedformat])
-		cp -r ${srcdir}/unifiedformat .],
-		[AC_MSG_NOTICE([Incorporating unified format for you])
-		${srcdir}/unifiedfmt-incorp.sh])
-	rm -rf unifiedformat/build
-	AS_MKDIR_P(unifiedformat/build)	
-	AC_MSG_NOTICE([Building unified format])
-	(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make clean install)
-	result=$?
-	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install unified format library with result: ${result}]))
-	UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
-	UFMT_LDFLAGS="-L${prefix}/unifiedformat/lib -lNSCLDAQFormat -lV10Format -lV11Format -lV12Format -lAbstractFormat -Wl,-rpath=${prefix}/unifiedformat/lib"
-
-	AC_SUBST(UFMT_CPPFLAGS)
-	AC_SUBST(UFMT_LDFLAGS)
-
-	# Check that the DDAS format library has been incorporated into the
-	# source tree and configure/build it into $prefix/ddasformat.
-		
-	AC_CHECK_FILE([${srcdir}/ddasformat/CMakeLists.txt],
-		[AC_MSG_NOTICE([Using previously incorprated ddasformat from the source tree at ${srcdir}/ddasformat])
-		cp -r ${srcdir}/ddasformat .],
-		[AC_MSG_NOTICE([Incorporating ddasformat for you])
-		${srcdir}/ddasfmt-incorp.sh])
-	rm -rf ddasformat/build
-	AS_MKDIR_P(ddasformat/build)
-	AC_MSG_NOTICE([Building DDAS format])
-	(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make clean install)
-	result=$?
-	AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install ddasformat with result: ${result}]))
-	DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
-	DDASFMT_LDFLAGS="-L${prefix}/ddasformat/lib -lDDASFormat -Wl,-rpath=${prefix}/ddasformat/lib"
-	AC_SUBST(DDASFMT_CPPFLAGS)
-	AC_SUBST(DDASFMT_LDFLAGS)
+ 	
 
 	# Check for ROOT. Use rootcling to add ROOT flags and linker options
 	# to the Makefile macro set:
