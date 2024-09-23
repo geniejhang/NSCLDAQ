@@ -46,7 +46,7 @@ def _containerBindings():
 def _rebuildContainer(pipe):
     #  Rebuild our container environment in the remote:
     
-    sing_cmd = f"SINGULARITY_SHELL='/bin/bash' singularity shell --bind {_containerBindings()} {_containerName()}"
+    sing_cmd = f"SINGULARITY_SHELL='/bin/bash' singularity shell --no-home --bind {_containerBindings()} {_containerName()}"
     _command(pipe, sing_cmd)
     
 def _setupEnvironment(pipe):
