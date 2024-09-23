@@ -223,8 +223,9 @@ class RingMaster:
         self._host = host
     
     def __del__(self):
-        self._socket.close()
-        self._socket = None
+        #self._socket.close()
+        #self._socket = None
+        pass
         
     # Public interface:
     
