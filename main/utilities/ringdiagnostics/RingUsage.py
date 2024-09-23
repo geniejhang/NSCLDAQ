@@ -50,7 +50,7 @@ What we do:
   ringbuffer dicts that come from nscldaqutils.RingMaster.list_rings with the addeed keys:
   'producer_command' with the producer (if any) command string.
   and for each consumer 'consumer_command" which is the command the consumer runs.
-  'proxyies' - which are the list of dicts that describe the proxy rings in remote system.
+  'proxies' - which are the list of dicts that describe the proxy rings in remote system.
      These are ringbuffer definition dicts with the ring name replaced by 
      ring@host where host is the host the proxy lives in.
      
@@ -220,7 +220,7 @@ def makeLocalRingInfo():
         The return will be an element of the list of dicts that define the 
         rings in a host.    
     '''
-    host = socket.gethostname()
+    host = socket.getfqdn()
     rm = nscldaqutils.RingMaster(host)
     usage = rm.list_rings()
     
@@ -255,7 +255,7 @@ def makeRemoteRingInfo(host):
     rm = nscldaqutils.RingMaster(host)
     usage = rm.list_rings()
     
-    result = {'host': host, 'rings': []}
+    result = {'host': socket.fqdn(host), 'rings': []}
     for ring in usage:
         
         # We dont' distentangle proxies but we _do_ make an empty list for them.
@@ -290,7 +290,7 @@ def getHoistedHosts(info):
         cmd = consumer['consumer_command']
         host = _getHoistTarget(cmd)
         if host is not None:
-            result.append(host)
+            result.append(socket.getfqdn(host))    # Always save the fully qualified name.
     
     return result
 
@@ -313,9 +313,7 @@ def removeProxies(rings):
             result.append(ring)
             removelist.append(n)
     # Now remove the indices in removelist from rings:
-    
-    print(result)
-    print(removelist)
+
     
     removelist.sort(reverse=True)
     for i in removelist:
@@ -371,3 +369,61 @@ def addProxies(proxies, rings):
     
     return proxies
 
+def systemUsage():
+    ''' 
+        This is the normal entry point.  It probes the entire system in a 
+        -   First the local system is probed and its proxies and hosters
+            are determined.
+        -   The hosts we hoist to and have proxies for a re used to generate a
+            single list of unique other hosts.
+        For each host in that list of unique hosts;
+           - We probe that host and _its_ proxies and hoistera are determined.
+           - All proxies are integrated into hosts as possible.
+           - Unique new hosts are added to the host list that we are looking at.
+        The loop above is executed until there are no more hosts in the host list.
+        Any hosts for which we cannot get information are ignored as they are clearly _not_
+        in the data flow since they've gone down.
+    '''
+    result = []
+    remaining_hosts = []
+    # Do the local host:
+    
+    local_rings = makeLocalRingInfo()
+    proxies     = removeProxies(local_rings['rings'])
+    for ring in local_rings['rings']:
+        remaining_hosts += getHoistedHosts(local_rings)
+    for p in proxies:
+        remaining_hosts += p['proxyhost']
+        
+    remaining_hosts = getUniqueNames(remaining_hosts)
+    result.append(local_rings)
+
+    
+    # In a sane system, we can't integrate the proxies as in a sane system
+    # There won't be proxies for local rings.
+    
+    while len(remaining_hosts) > 0:
+        host = remaining_hosts.pop(0)
+        host = socket.getfqdn(host)
+        
+        # It' spossible that we've already looked at the host
+        # Because we're processing a host found in a hoist or a proxy
+        # If that's the case we skip it.
+        
+        if host not in remaining_hosts:
+            try:
+                remote_rings = makeRemoteRingInfo(host)
+                proxies += removeProxies(remote_rings['rings'])
+                result.append(remote_rings)
+                for ring in remote_rings['rings']:
+                    remaining_hosts += getHOistedHosts(ring)
+                for p in proxies:
+                    remaining_hosts += ['proxyhost']
+                remaining_hosts = getUniqueNames(remaining_hosts)
+                
+            except:                                   
+                pass                               # Ignore hosts we can't talk to.
+    return result
+
+if __name__ == "__main__":
+    print(systemUsage())
