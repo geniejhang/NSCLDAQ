@@ -188,6 +188,27 @@ def _proxyRing(ringname):
     else:
         return None
 
+##
+# _findSourceRing
+#   Given a ring that is known to be a proxy ring and has been marked as such,
+#   and the system charted so far, find the ring that is the source for that
+#   proxy.
+# 
+#   Returns  None if there is not (yet) a match.
+#
+def _findSourceRing(proxy, system):
+    host = proxy['proxyhost']
+    ring = proxy['proxyring']
+    
+    for  h in system:
+         if h['host'] == host:
+             for r in h['host']['rings']:
+                 if r['name'] == ring:
+                     return r
+             break            # No such ring in the host - orphaned proxy.
+    
+    return None               # No matching host or ring in host.
+
 #------------------------ Public entries
 
 def makeLocalRingInfo():
@@ -275,7 +296,7 @@ def getHoistedHosts(info):
 
 def removeProxies(rings):
     '''
-        Given a list of Rings for a host, removes the consumers that are
+        Given a list of Rings for a host, removes the rings that are
         proxies.  The list of removed rings are returned as their original dicts
         with two added keys:
         proxyhost:  - Host that holds the original ring.
@@ -314,3 +335,39 @@ def getUniqueNames(listOfLists):
             result[inner] = ''
     return [x for x in result.keys()]
     
+def addProxies(proxies, rings):
+    '''
+        Given  proxy ring definitions gotten from removeProxies on some host, and the list of
+        dicts we have so far, Put the proxies in their rightful place.  It is possible that the
+        host for some proxy has not yet been scanned. 
+        
+        Therefore, the proxies is in/out.  As we add proxies to the rings, we remove them from
+        the input list. 
+        
+        Parameters:
+        proxies - the proxies we want to integrate if possible.
+        rings   - The rings for the hosts we have so far.
+        
+        Returns:
+        The proxies we were not able to integrate with the existing rings.
+    '''
+    
+    matched = []
+    
+    #  Integrate the proxies we can, recording their indices.
+    for (n, proxy) in enumerate(proxies):
+        source = _findSourceRing(proxy, ring)
+        if source is not None:
+            source['proxies'].append(proxy)
+            matched.append(n)
+
+    # Remove the matched ones:
+                
+    matched.sort(reverse=True)
+    for i in matched:
+        del proxies[i]
+        
+    # Return the remaining proxies:
+    
+    return proxies
+
