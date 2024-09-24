@@ -19,11 +19,11 @@ So the tree looks like:
 Hostname
   +--Rings
      +-- Name | Producer | Size | Free space|
-       +-------------------------------------|consumemr| backlog|
+       +-------------------------------------|consumer| pid | backlog|
           ...
        + Remotes
        +-- Host
-          +----------------------------------|Consumer| Backlog|
+          +----------------------------------|Consumer| pid | Backlog|
         ...
      +-- Name
      ... 
@@ -76,9 +76,11 @@ class RingView(QTreeView):
         self._headerItems.append(QStandardItem())      # Where the tree is (I think).
         self._headerItems.append(QStandardItem('Name'))
         self._headerItems.append(QStandardItem('Producer'))
+        self._headerItems.append(QStandardItem('Producer PID'))
         self._headerItems.append(QStandardItem('Size (kb)'))
         self._headerItems.append(QStandardItem('Free (kb)'))
         self._headerItems.append(QStandardItem('Consumer'))
+        self._headerItems.append(QStandardItem('Consumer PID'))
         self._headerItems.append(QStandardItem('Backlog (kb)'))
         self.model().appendRow(self._headerItems)
         
