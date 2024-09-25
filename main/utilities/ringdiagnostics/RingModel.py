@@ -14,13 +14,16 @@
         *  If a ring, or proxy (remote) is dangerously backlogged, its ring or proxy folder is 
         highglighted as is its host folder. This draws attention to problems even in a completely 
         closed hierarchy.
+    - 3'd development cycle - we prune the  model of items that are no longer 
+    there.
 '''
 
 from PyQt5.QtGui import QStandardItem
+from PyQt5.Qt import *
 
 class RingModel:
     def __init__(self, view):
-        self._model = view.getModel()
+        self._model = view.model()
         
     def update(self, data):
         #
@@ -66,7 +69,7 @@ class RingModel:
     def _find_proxies(self, ring_item):
         all_proxies = self._model.findItems('Remote', Qt.MatchExactly, 0)
         for proxy in  all_proxies:
-            if proxy.parent() = ring_item:
+            if proxy.parent() == ring_item:
                 return proxy
         
         # No match is an error - this will likely make a run time error.
@@ -145,5 +148,65 @@ class RingModel:
         
         return(ring_item[0], proxy_top)
     
+    
+    def _find_consumer(self, parent, consumer):
+        # Locates a set of consumer items.  There are three consumer items.
+        # in order:
+        #   The consumer command.
+        #   The consumer PID
+        #   The consumer's backlog.
+        # All three are returned.
+        #  If the consumer cannot be found, one is created and inserted
+        # into the parent and its items are returned.
+        #  
+        #  The consumer is identified by the item who's contents match
+        #  the consumer['consumer_pid']
+        #  and col0 has as a parent the parent passed in.
+        #
+        candidates = self._model.findItems(str(consumer['consumer_pid']))
+        for match in candidates:
+            row = match.row()
+            if self._model.item(row, 0).parent() == parent:
+                return (
+                    self._model.item(row,6),
+                    match,
+                    self._model.item(row,8)
+                )
+        # There is no matching consumer so make one:
+        
+        new_consumer = [
+            QStandardItem('', parent),   #hierarchy
+            QStandardItem(''),           #ringname.
+            QStandardItem(''),           #ring producer cmd
+            QStandardItem(''),           #ring producer PID.
+            QStandardItem(''),           #ring size.
+            QStandardItem(''),           #ring free.
+            QStandardItem(''),           #consumer cmd.
+            QStandardItem(''),           # Consumer pid.
+            QStandardItem(''),           # Backlog.
+        ]
+        self._model.insertRow(parent.row(), new_consumer)
+        return (
+            new_consumer[6], new_consumer[7], new_consumer[8]
+        )
     def _update_consumer(self, parent, consumer):
-        pass
+        consumer_items = self._find_consumer(parent, consumer)
+        consumer_items[0].setText(consumer['consumer_command'])
+        consumer_items[1].setText(consumer['consumer_pid'])
+        consumer_items[2].setText(consumer['backlog'])
+        
+if __name__ == '__main__':
+    import RingUsage
+    import RingView
+    
+    from PyQt5.QtWidgets import QApplication, QMainWindow
+    
+    app = QApplication(['ringview test'])
+    mw = QMainWindow()
+    tree = RingView.RingView()
+    contents = RingModel(tree)
+    usage = RingUsage.systemUsage()
+    contents.update(usage)
+    mw.setCentralWidget(tree)
+    mw.show()
+    app.exec()

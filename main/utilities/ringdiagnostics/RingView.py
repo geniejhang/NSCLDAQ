@@ -64,11 +64,17 @@ class RingView(QTreeView):
     '''
     def __init__(self, *args):
         super().__init__(*args)
-        self.setModel(QStandardItemModel())
+        self._model = QStandardItemModel()
+        self.setModel(self._model)
         self._buildHeader()
         self.setSelectionMode(QAbstractItemView.NoSelection)
         
-        
+    
+    def model(self):
+      '''Return the model associated with the view.'''
+      
+      return self._model
+    
     #  Buidl the header view and set it.
     def _buildHeader(self):
         self._header = QHeaderView(Qt.Horizontal)
