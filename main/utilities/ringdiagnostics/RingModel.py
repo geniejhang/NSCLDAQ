@@ -60,11 +60,9 @@ class RingModel:
         # We need to  insert the framework:
         
         host_item = QStandardItem(host_name)
-        rings     = QStandardItem('Rings')
         self._model.appendRow(host_item)
-        host_item.appendRow(rings)
         
-        return rings
+        return host_item
     
     def _find_proxies(self, ring_item):
         all_proxies = self._model.findItems('Remote', Qt.MatchExactly, 0)
