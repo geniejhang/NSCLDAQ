@@ -393,22 +393,17 @@ def systemUsage():
     for ring in local_rings['rings']:
         remaining_hosts += getHoistedHosts(ring)
     for p in proxies:
-        print("proxy: ", p)
         remaining_hosts.append(p['proxyhost'])
     
-    print("before uniq", remaining_hosts)    
     remaining_hosts = getUniqueNames(remaining_hosts)
-    print('after ', remaining_hosts)
     result.append(local_rings)
 
     
     # In a sane system, we can't integrate the proxies as in a sane system
     # There won't be proxies for local rings.
     
-    print("Remaining hosts", remaining_hosts)
     while len(remaining_hosts) > 0:
         host = remaining_hosts.pop(0)
-        print("Getting fqdn of ", host)
         host = socket.getfqdn(host)
         
         # It' spossible that we've already looked at the host
@@ -417,9 +412,7 @@ def systemUsage():
         
         if host not in remaining_hosts:
             try:
-                print('getting usage of', host)
                 remote_rings = makeRemoteRingInfo(host)
-                print('done', remote_rings)
                 proxies += removeProxies(remote_rings['rings'])
                 result.append(remote_rings)
                 for ring in remote_rings['rings']:
