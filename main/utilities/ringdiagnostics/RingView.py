@@ -17,7 +17,6 @@ Below each ring is the set of consumers which have the columns:
 So the tree looks like:
 
 Hostname
-  +--Rings
      +-- Name | Producer | Size | Free space|
        +-------------------------------------|consumer| pid | backlog|
           ...
