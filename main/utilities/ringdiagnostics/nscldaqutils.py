@@ -204,7 +204,7 @@ class RingMaster:
      * 'size' - number of bytes in the data area of the ring buffer.
      * 'free' - Number of free bytes in the data area.
      * 'maxconsumers' - maximum number of consumers that can connect to the ring.
-     * 'producder_pid' - The pid of the ringbuffer producer.
+     * 'producer_pid' - The pid of the ringbuffer producer.
      * 'maxget' - Largest get that could be made (biggest backlog).
      * 'minget'  - smallest backlog.
      * 'consumers' - ringbuffer consumers.  The value is an interable containing dicts that have the keys:
