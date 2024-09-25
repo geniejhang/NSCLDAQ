@@ -60,9 +60,9 @@ class RingModel:
         # We need to  insert the framework:
         
         host_item = QStandardItem(host_name)
-        rings     = QStandardItem('Rings', host_item)
+        rings     = QStandardItem('Rings')
         self._model.appendRow(host_item)
-        self._model.appendRow(rings)
+        host_item.appendRow(rings)
         
         return rings
     
@@ -107,19 +107,21 @@ class RingModel:
         # Need to create a new row. To make it easier, we'll insert it after
         # the parent (above all the other rings).
         
-        new_row = [tree_item]
-        new_row.append(QStandardItem(ring['name']))
-        new_row.append(QStandardItem(ring['producer_command']))
-        new_row.append(QStandardItem(str(ring['producer_pid'])))
-        new_row.append(QStandardItem(str(ring['size'])))
-        new_row.append(QStandardItem(str(ring['free'])))
+        new_row = [
+            QStandardItem(''),
+            QStandardItem(ring['name']),
+            QStandardItem(ring['producer_command']),
+            QStandardItem(str(ring['producer_pid'])),
+            QStandardItem(str(ring['size'])),
+            QStandardItem(str(ring['free']))
+        ]
         
-        self._model.insertRow(ring_top.row(), new_row)
+        ring_top.appendRow(new_row)
         
         # The proxies folder:
         
-        proxy_top = QStandardItem('Remote', tree_item)
-        self._model.insertRow(tree_item.row(), proxy_top)
+        proxy_top = QStandardItem('Remote')
+        ring_top.appendRow( proxy_top)
         
         
         return new_row
@@ -175,7 +177,7 @@ class RingModel:
         # There is no matching consumer so make one:
         
         new_consumer = [
-            QStandardItem('', parent),   #hierarchy
+            QStandardItem(''),   #hierarchy
             QStandardItem(''),           #ringname.
             QStandardItem(''),           #ring producer cmd
             QStandardItem(''),           #ring producer PID.
@@ -185,15 +187,15 @@ class RingModel:
             QStandardItem(''),           # Consumer pid.
             QStandardItem(''),           # Backlog.
         ]
-        self._model.insertRow(parent.row(), new_consumer)
+        parent.appendRow(new_consumer)
         return (
             new_consumer[6], new_consumer[7], new_consumer[8]
         )
     def _update_consumer(self, parent, consumer):
         consumer_items = self._find_consumer(parent, consumer)
         consumer_items[0].setText(consumer['consumer_command'])
-        consumer_items[1].setText(consumer['consumer_pid'])
-        consumer_items[2].setText(consumer['backlog'])
+        consumer_items[1].setText(str(consumer['consumer_pid']))
+        consumer_items[2].setText(str(consumer['backlog']))
         
 if __name__ == '__main__':
     import RingUsage
