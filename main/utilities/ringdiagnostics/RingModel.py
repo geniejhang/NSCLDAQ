@@ -18,17 +18,42 @@
     there.
 '''
 
-from PyQt5.QtGui import QStandardItem
+from PyQt5.QtGui import QStandardItem, QBrush
 from PyQt5.Qt import *
 
+
 class RingModel:
-    def __init__(self, view):
+    def __init__(self, view, alarm_pct):
+        '''
+        Initialize a RIngModel where:
+        view - is the RingView whose data we manage.
+            The view's model must be set and be a QStandardItemModel.
+        
+        alarm_pct - percentage backlog that represents a stall.
+            Rings are marked red if their free space is below 100-alarm_pct of ring size.
+            Consumers are marked red if their backlog is above alarm_pct of 
+            the ring size. 
+            Hosts and Proxy items are marked red if they have any rings that are red
+            (note that a red ring implies a consumer that's red by definition).
+            
+        
+        '''
         self._model = view.model()
+        self._alarm = alarm_pct
+        
+        #  Make an item so we can get the normal background brush:
+        
+        fake_item = QStandardItem('')
+        self._okbrush = fake_item.foreground()
+        self._errbrush = QBrush()
+        self._errbrush.setColor(Qt.red)
+        
+        print(self._errbrush, self._okbrush)
         
     def update(self, data):
-        #
-        #   Update the model with new data.
-        #
+        '''
+            Update the model with new data gotten from e.g. RingUsage.systemUsage()
+        '''
         for host_rings in data:
             host = host_rings['host']
             ring_top = self._find_host(host)
@@ -41,7 +66,10 @@ class RingModel:
                     (ring_item, junk) = self._update_ring(proxy_top, proxy, True)
                     for consumer in proxy['consumer']:
                         self._update_consumer(ring_item, consumer)
-                                  
+        
+        self._colorize()                          
+    
+    # Update data.
     
     def _get_children(self, item):
         # Return the, possibly empty list of children the item has.
@@ -210,7 +238,116 @@ class RingModel:
         consumer_items[0].setText(consumer['consumer_command'])
         consumer_items[1].setText(str(consumer['consumer_pid']))
         consumer_items[2].setText(str(consumer['backlog']))
+    
+    #   Alarm handling.
+    
+    #  colorize the consumers of a ring.
+    #  note that colorizing a consumer implies, if its in error, 
+    #  colorizing its parents as well.
+    #   ring - the col0 of the ring.
+    #   name - the name item of the ring.
+    #
+    #   Get the size of the ring and compute what backlogged means from
+    #   self_alarm.
+    # 
+    #   for each consumer, if the consumer backlog is bigger than the
+    #   alarm level,
+    #     * Color the command red.
+    #     * color the name of the ring red.
+    #     * Color the col 0 parents red \
+    #        That might be a 'host only or a "Remote' a ring and host.
+    #
+    def _colorize_ring(self, ring_item, name_item):
+        # Figure out the threshold
         
+        size_item = ring_item.parent().child(ring_item.row(), 4)
+        size = int(size_item.text())
+        threshold = (size * self._alarm)/100
+        
+        # Page through the consumer backlogs:
+        
+        consumer_row = 0
+        while True:
+            consumer_backlog = ring_item.child(consumer_row, 8)
+            consumer_command = ring_item.child(consumer_row, 6)
+            if consumer_backlog is None:
+                return
+            if int(consumer_backlog.text()) > threshold:
+                consumer_command.setForeground(self._okbrush)
+                if int(consumer_backlog.text()) > threshold:
+                    consumer_command.setForeground(self._errbrush)
+                    name_item.setForeground(self._errbrush)
+                    parent = name_item.parent()
+                    while parent is not None:
+                        parent.setForeground(self._errbrush)
+                        parent = parent.parent()
+            consumer_row = consumer_row+1
+                
+                
+    
+    def _colorize(self):
+        #  Look down into the hierarchy and colorize the things that should be colorized.
+        #  We really only need to look at the consumers in the ring and proxies.
+        # our approach is fairly simple
+        #  For each host, 
+        #    Color it normal
+        #    for each ring  in the host:
+        #      Color it normal
+        #      Color the proxy root normal.
+        #      for each consumer in the ring
+        #         If the consumer is backlogged:
+        #           color it red
+        #           color all parents read.
+        #         Else color it normal
+        #      for each proxy ring of the ring:
+        #         color it normal.
+        #         for each remote consumer:
+        #            if the consumer is backlogged, 
+        #               Color it red
+        #               color all parents red.
+        #
+        
+        # For all hosts:
+        
+        view_row = 1    # Zero is the headers.
+        while True:
+            host = self._model.item(view_row, 0)
+            if host is not None:
+                print("Host?", view_row, host.text())
+                host.setForeground(self._okbrush)
+                #
+                #  Children of a host are
+                #  Either a ringbuffer or a
+                #  Proxy.
+                #  RingBuffers have no text in col 0.
+                #
+                #  Proxies have the text "Remote" in col0.
+                #
+                host_row = 0
+                while True:
+                    ring_or_remote = host.child(host_row, 0)
+                    if ring_or_remote is None:
+                        break    
+                    elif ring_or_remote.text() == '':
+                        #ring:
+                        name_item = host.child(host_row, 1)
+                        name_item.setForeground(self._okbrush)
+                        self._colorize_ring(ring_or_remote, name_item)
+                    elif ring_or_remote.text() == 'Remote':
+                        ring_or_remote.setForeground(self._okbrush)
+                        rings = self._get_children(ring_or_remote)
+                        for ring in ring_or_remote:
+                            name_item = ring_or_remote.child(ring.row(), 1)
+                            name_item.setForeground(self._okbrush)
+                            self._colorize_ring(ring, name_Item)
+                    else:      
+                        # don't know what this is, skip
+                        pass
+                    host_row = host_row+1
+                view_row = view_row+1
+            else:
+                break
+        print("done colorizing")
 if __name__ == '__main__':
     import RingUsage
     import RingView
@@ -226,3 +363,6 @@ if __name__ == '__main__':
     mw.setCentralWidget(tree)
     mw.show()
     app.exec()
+    
+    
+    
