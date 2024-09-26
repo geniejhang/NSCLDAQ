@@ -272,8 +272,8 @@ class RingModel:
             consumer_command = ring_item.child(consumer_row, 6)
             if consumer_backlog is None:
                 return
+            consumer_command.setForeground(self._okbrush)
             if int(consumer_backlog.text()) > threshold:
-                consumer_command.setForeground(self._okbrush)
                 if int(consumer_backlog.text()) > threshold:
                     consumer_command.setForeground(self._errbrush)
                     name_item.setForeground(self._errbrush)
@@ -336,7 +336,7 @@ class RingModel:
                     elif ring_or_remote.text() == 'Remote':
                         ring_or_remote.setForeground(self._okbrush)
                         rings = self._get_children(ring_or_remote)
-                        for ring in ring_or_remote:
+                        for ring in self._get_children(ring_or_remote) :
                             name_item = ring_or_remote.child(ring.row(), 1)
                             name_item.setForeground(self._okbrush)
                             self._colorize_ring(ring, name_Item)
