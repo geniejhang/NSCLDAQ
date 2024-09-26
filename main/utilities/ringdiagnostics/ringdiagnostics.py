@@ -21,6 +21,7 @@ from nscldaq import RingUsage
 from nscldaq import  RingView
 from nscldaq import RingModel
 import argparse
+import sys
 
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QTimer
@@ -65,15 +66,30 @@ parser.add_argument(
     default='2',
     help='Seconds between updates (defaults to 2)'
 )
+parser.add_argument(
+    '-p', '--alarm_percentage', type=int, 
+    dest='alarm',
+    default='90',
+    help='Backlog percentage that constitutes a stall (default to 90)'
+)
 
 args = parser.parse_args()
 
 update_ms = args.update * 1000   # Milliseconds between updates
+alarm_pct = args.alarm
+
+if alarm_pct >= 100 or alarm_pct <= 0:
+    print(
+        f"Invalid alarm percentage must in the range (0,100) was {alarm_pct}",
+        file=sys.stderr
+    )
+    sys.exit(-1)
+    
 
 app = QApplication(['ringview test'])
 mw = QMainWindow()
 tree = RingView.RingView()
-contents = RingModel.RingModel(tree)
+contents = RingModel.RingModel(tree, alarm_pct)
 usage = RingUsage.systemUsage()
 contents.update(usage)
 auto_update = Updater(update_ms, contents)
