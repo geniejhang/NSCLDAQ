@@ -42,7 +42,20 @@ class RingModel:
                     for consumer in proxy['consumer']:
                         self._update_consumer(ring_item, consumer)
                                   
+    
+    def _get_children(self, item):
+        # Return the, possibly empty list of children the item has.
         
+        result = []
+        row = 0
+        if item.hasChildren():
+            while True:           
+                child = item.child(row, 0)
+                if child is None:
+                    break
+                result.append(child)
+                row = row + 1
+        return result    
         
     def _find_host(self, host_name):
         #  Find a host in the model.
@@ -60,6 +73,7 @@ class RingModel:
         # We need to  insert the framework:
         
         host_item = QStandardItem(host_name)
+        host_item.setEditable(False)
         self._model.appendRow(host_item)
         
         return host_item
@@ -85,25 +99,23 @@ class RingModel:
         #   4- The ring item size (considered invariant).
         #   5- The Free space in the ring.
         
-        matches = self._model.findItems(ring['name'])
-        for match in matches:
-            # We need to get the tree place holder it should have ring_top as its parent:
-            
-            row = match.row()
-            tree_item = self._model.item(row, 0)
-            if tree_item.parent() == ring_top:
-                # Matches..return the items:
-                
+        
+        children = self._get_children(ring_top)
+        for row_item in children:
+            row = row_item.row()
+            ring_name_item = ring_top.child(row, 1)
+            # Proxy has no row 1.
+            if ring_name_item is not None and ring_name_item.text() == ring['name']:
+
                 return (
-                    tree_item, 
-                    self._model.item(row, 1),
-                    self._model.item(row, 2),
-                    self._model.item(row, 3),
-                    self._model.item(row, 4),
-                    self._model.item(row, 5)
+                    row_item, ring_name_item,
+                    ring_top.child(row, 2),
+                    ring_top.child(row, 3),
+                    ring_top.child(row, 4),
+                    ring_top.child(row, 5)
                 )
-        # Need to create a new row. To make it easier, we'll insert it after
-        # the parent (above all the other rings).
+        
+        # Have to make a new ring item:
         
         new_row = [
             QStandardItem(''),
@@ -113,15 +125,15 @@ class RingModel:
             QStandardItem(str(ring['size'])),
             QStandardItem(str(ring['free']))
         ]
+        for item in new_row:
+            item.setEditable(False)
         
         ring_top.appendRow(new_row)
-        
+
         # The proxies folder:
         
         proxy_top = QStandardItem('Remote')
         ring_top.appendRow( proxy_top)
-        
-        
         return new_row
             
     
@@ -163,15 +175,17 @@ class RingModel:
         #  the consumer['consumer_pid']
         #  and col0 has as a parent the parent passed in.
         #
-        candidates = self._model.findItems(str(consumer['consumer_pid']))
-        for match in candidates:
-            row = match.row()
-            if self._model.item(row, 0).parent() == parent:
+        candidate_rows = self._get_children(parent)
+        for crow in candidate_rows:
+            row_num = crow.row()
+            pid_item = parent.child(row_num, 7)
+            if str(consumer['consumer_pid']) == pid_item.text():
                 return (
-                    self._model.item(row,6),
-                    match,
-                    self._model.item(row,8)
+                    parent.child(row_num, 6),
+                    pid_item,
+                    parent.child(row_num,8)
                 )
+        
         # There is no matching consumer so make one:
         
         new_consumer = [
@@ -185,6 +199,8 @@ class RingModel:
             QStandardItem(''),           # Consumer pid.
             QStandardItem(''),           # Backlog.
         ]
+        for c in new_consumer :
+            c.setEditable(False)
         parent.appendRow(new_consumer)
         return (
             new_consumer[6], new_consumer[7], new_consumer[8]
