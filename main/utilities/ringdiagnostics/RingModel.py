@@ -67,7 +67,9 @@ class RingModel:
                     for consumer in proxy['consumer']:
                         self._update_consumer(ring_item, consumer)
         
+        self._prune(data)      # Get rid of vanished stuff.
         self._colorize()                          
+        
     
     # Update data.
     
@@ -238,6 +240,107 @@ class RingModel:
         consumer_items[0].setText(consumer['consumer_command'])
         consumer_items[1].setText(str(consumer['consumer_pid']))
         consumer_items[2].setText(str(consumer['backlog']))
+    
+    #  Methods that have to do with pruning the tree:
+    
+    
+    def _getModelHosts(self):
+        # Return all the host name items:
+        
+        row = 1   # row 0 is headers.
+        result = []
+        while True:
+            host_item = self._model.item(row, 0)
+            if host_item .is not None:
+                result.append(host_item)
+                row += 1
+            else:
+                break
+        
+        return result
+   
+    def _enumerate_ui_rings(self, host):
+        # Return [(name, row), ...] for the ring items
+        # under the host.
+        
+        result = []
+        ring_row = 0
+        while True:
+            ring_item = host.child(ring_row, 1)
+            if ring_item is not None:
+                result.append((ring_item.text(), ring_row))
+                ring_row += 1
+            else:
+                break
+        return result
+        
+    def _enumerate_host_rings(self, host, data):
+        # Return a list oif the names of rings in a host.
+        #  host -name of the host.
+        #  data -data passed in  to update.
+        #  assumption: the host only appears once in the data.
+        
+        result = []
+        for host_dict in data:
+            if host_dict['host'] == host:
+                host_rings = host_dict['rings']
+                host_ring_names = [x['name'] for x in host_rings]    
+                result += host_ring_names
+        return result
+   
+    def _prune_rings(self, host, data):
+        # Prune rings that are no longer present in a host.
+        # This includes the remote rings.
+        #  host - the host item parenting the rings in the GUI.
+        #  data - the data passed into update.
+        ring_items = self._enumerate_ui_rings(host)  # [(name, row),...]
+        ring_names = self._enumerate_host_rings(host.text(), data)
+        
+        # Accumulate the child rows to kill:
+        
+        kill_rows = [x[1] : for x in ring_items if ring_items[0] not in ring_names]
+        kill_rows.sort(reverse=True)
+        
+        for row in kill_rows:
+            host.takeRows(row)
+    def _prune_hosts(self, data):
+        #
+        # Kill hosts from the model that are no longer present in 
+        # the data
+        
+        data_hosts = [x['host'] for x in data] # Host names
+        displayed_hosts = []  # [(name, row)]
+        host_row = 1
+        while True:
+            host = self._model.item(host_row, 0)
+            if host is None:
+                break
+            displayed_hosts.append((host.text()), host_row)
+            host_row = host_row+ 1
+        
+        # Make a list of rows that have hosts in displayed_hosts not in
+        # data_hosts
+        
+        kill_hosts = [x[1] for x in displayed_hosts if x[0] not in data_hosts]
+        
+        # Sort descending as that's how we have to remove them:
+        
+        kill_hosts.sort(reverse=True)
+        
+        # KIll those lines from the model.
+        
+        for r in kill_hosts:
+            self._model.takeRow(r)        
+    def _prune(self, data):
+        # Prune items from the tree that no longer exist.
+        
+        self._prune_hosts(data)
+        
+        model_hosts = self._getModelHosts()
+        for host in model_hosts:
+            self._prune_rings(host, data)
+            
+        
     
     #   Alarm handling.
     
