@@ -48,7 +48,7 @@ class RingModel:
         self._errbrush = QBrush()
         self._errbrush.setColor(Qt.red)
         
-        print(self._errbrush, self._okbrush)
+
         
     def update(self, data):
         '''
@@ -251,7 +251,7 @@ class RingModel:
         result = []
         while True:
             host_item = self._model.item(row, 0)
-            if host_item .is not None:
+            if host_item is not None:
                 result.append(host_item)
                 row += 1
             else:
@@ -260,15 +260,19 @@ class RingModel:
         return result
    
     def _enumerate_ui_rings(self, host):
-        # Return [(name, row), ...] for the ring items
+        # Return [(name, row, item), ...] for the ring items
         # under the host.
         
         result = []
         ring_row = 0
         while True:
-            ring_item = host.child(ring_row, 1)
-            if ring_item is not None:
-                result.append((ring_item.text(), ring_row))
+            proxy_or_empty = host.child(ring_row, 0)
+            if proxy_or_empty is not None:
+                if proxy_or_empty.text() == '':
+                    # Other wise it's the parent of the proxies.
+                    
+                    ring_item = host.child(ring_row, 1)
+                    result.append((ring_item.text(), ring_row, ring_item))
                 ring_row += 1
             else:
                 break
@@ -288,6 +292,11 @@ class RingModel:
                 result += host_ring_names
         return result
    
+    def _prune_consumers(self, host, ring_item, data):
+        #  For a ring buffer item, prune the consumers that 
+        # are gone.  We use the PID to identify consumers.
+        
+        pass
     def _prune_rings(self, host, data):
         # Prune rings that are no longer present in a host.
         # This includes the remote rings.
@@ -296,13 +305,16 @@ class RingModel:
         ring_items = self._enumerate_ui_rings(host)  # [(name, row),...]
         ring_names = self._enumerate_host_rings(host.text(), data)
         
+        ui_names = [name[0] for name in ring_items]
+        
         # Accumulate the child rows to kill:
         
-        kill_rows = [x[1] : for x in ring_items if ring_items[0] not in ring_names]
+        kill_rows = [x[1]  for x in ring_items if ring_items[0] not in ring_names]
         kill_rows.sort(reverse=True)
         
         for row in kill_rows:
-            host.takeRows(row)
+            host.takeRow(row+1)    # The remote item.
+            host.takeRow(row)      # The ring item
     def _prune_hosts(self, data):
         #
         # Kill hosts from the model that are no longer present in 
@@ -315,7 +327,7 @@ class RingModel:
             host = self._model.item(host_row, 0)
             if host is None:
                 break
-            displayed_hosts.append((host.text()), host_row)
+            displayed_hosts.append((host.text(), host_row))
             host_row = host_row+ 1
         
         # Make a list of rows that have hosts in displayed_hosts not in
@@ -338,7 +350,11 @@ class RingModel:
         
         model_hosts = self._getModelHosts()
         for host in model_hosts:
+            print("Prune rings in", host.text())
             self._prune_rings(host, data)
+            #ring_items = [x[2] for x in self._enumerate_ui_rings(host)]
+            #for ring in ring_items:
+            #    self._prune_consumers(host, ring, data)
             
         
     
@@ -416,7 +432,7 @@ class RingModel:
         while True:
             host = self._model.item(view_row, 0)
             if host is not None:
-                print("Host?", view_row, host.text())
+
                 host.setForeground(self._okbrush)
                 #
                 #  Children of a host are
@@ -450,7 +466,6 @@ class RingModel:
                 view_row = view_row+1
             else:
                 break
-        print("done colorizing")
 if __name__ == '__main__':
     import RingUsage
     import RingView
