@@ -20,7 +20,7 @@ public:
     UDPBrokerDerived();
     ~UDPBrokerDerived ();
 
-    virtual void initialize(short port);
+    virtual void initialize(short port, std::string mapStr);
     virtual void addSink(std::string sinkType, int sid);
 
     //void virtual run();

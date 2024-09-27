@@ -60,12 +60,12 @@ UDPBrokerDerived::~UDPBrokerDerived() {
 }
 
 
-void UDPBrokerDerived::initialize(short port) {
+void UDPBrokerDerived::initialize(short port, std::string mapStr) {
   UDPBrokerBase::initialize(port); // Call base class initialization
   // Add derived class specificities
   // Set the detector channel mapping
   m_channelsMap = std::make_unique<SRSMaps>();
-  m_channelsMap->setChannelsMap("dcS800");
+  m_channelsMap->setChannelsMap(mapStr);
   m_stopMainLoop = false;
   m_pauseMainLoop = true;
 }
@@ -131,11 +131,11 @@ void UDPBrokerDerived::extractHitTimeStamp(uint8_t fecId, uint8_t* data)
             //for now dont provide fineTS in ns but in clock tick, since with ext. clock the only way to know the frequency would be by user... 
             //kind of risky to convert in ns at this stage, user can provide wrong freq which will impact raw data, should do convertion at analysis stage.
             //fineTS = m_clockPeriod*markerSRS[idx].fecTimeStamp;
-            fineTS = markerSRS[idx].fecTimeStamp;
+            fineTS = markerSRS[idx].fecTimeStamp; 
         }
 
-        // uint8_t tdc = data2 & 0xff;
-        // printf("SRS Data: fecId: %d, vmm: %d, channel: %d, channelMapped: %d, fecTimeStamp: %llu, fineTS: %llu, bcid: %d, tdc: %d\n", fecId, vmmid, chno, tsAndMappedChno.chnoMapped, markerSRS[idx].fecTimeStamp, fineTS, bcid, tdc);
+        //uint8_t tdc = data2 & 0xff;
+        //printf("SRS Data: fecId: %d, vmm: %d, channel: %d, channelMapped: %d, fecTimeStamp: %llu, fineTS: %llu, bcid: %d, tdc: %d\n", fecId, vmmid, chno, tsAndMappedChno.chnoMapped, markerSRS[idx].fecTimeStamp, fineTS, bcid, tdc);
 
         //if data come before the first markers set TS to 0 and these data will be skipped.
         if (markerSRS[idx].fecTimeStamp == 0)

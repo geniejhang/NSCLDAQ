@@ -68,7 +68,7 @@ public:
 
   void boot();       
 
-  void configure(std::string configFile, std::string daqPortStr);         
+  void configure(std::string configFile, std::string daqPortStr , std::string mapStr);         
 
 };
 #endif

@@ -123,7 +123,7 @@ void CEventSegmentSRS::onEnd()
 
 // Start udpBroker, which is listenning to SRS daq port, on a detached thread.
 // Listen to udp within a while loop, skipped or not given certain flags set by run state changes.
-void CEventSegmentSRS::configure(std::string configFile, std::string daqPortStr)
+void CEventSegmentSRS::configure(std::string configFile, std::string daqPortStr, std::string mapStr)
 {
     std::string startCmd = "connect - " + configFile;
 
@@ -154,11 +154,8 @@ void CEventSegmentSRS::configure(std::string configFile, std::string daqPortStr)
     int daqPort = stoi(daqPortStr);
     // The ring buffer base name could/should be defined by user,
     // here choose to build it automatically from FEC id recceived from vmmsc response (parseResponse).
-    m_clientUdpThread = std::thread([&](int daqPort) {
-        m_clientUdp->initialize(daqPort);
-        // Could pass map file via cmd parameters (.settings.tcl)
-        // Not implemented yet but can imagine something like:
-        // m_clientUdp->setChannelsMap("mapFile");
+    m_clientUdpThread = std::thread([&](int daqPort, std::string mapStr) {
+        m_clientUdp->initialize(daqPort, mapStr);
         std::string dataSinkBase = "tcp://localhost/";
         for (size_t id = 0; id < m_activeFecs.size(); id++) {
             std::string aSink = dataSinkBase + m_activeFecs[id];
@@ -166,7 +163,7 @@ void CEventSegmentSRS::configure(std::string configFile, std::string daqPortStr)
             std::cout<<"CEventSegmentSRS::configure - added data sink: "<<aSink<<std::endl;
         }
         m_clientUdp->run();
-    }, daqPort);
+    }, daqPort, mapStr);
     m_clientUdpThread.detach();
 
     //useless for now

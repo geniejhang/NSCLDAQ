@@ -57,40 +57,64 @@ void SRSMaps::setChannelsMapFile(std::string mapFilePath){
 }
 
 
-void SRSMaps::setChannelsMap(std::string detector){
+void SRSMaps::setChannelsMap(std::string map){
 
-    //std::cout<<"Simon - SRSMaps::setChannelsMap - detector "<<detector<<std::endl;
-
-    if (detector == "dcS800") {
-        setChannelsMap_dcS800();
+    if (map == "dc1S800") {
+        setChannelsMap_dcS800(1);
+    }
+    else if (map == "dc2S800") {
+        setChannelsMap_dcS800(2);
+    }
+    else if (map == "dc12S800") {
+        setChannelsMap_dcS800(12);
     }
     else {
-        std::cerr << "SRSMaps::setChannelsMap - detector identifier unknown" << std::endl;
+        std::cout << "SRSMaps::setChannelsMap - filling detector map using: "<< map << std::endl;
+        setChannelsMapFile(map);
     }
+
+    std::cout << "SRSMaps::setChannelsMap - detector map filled" << std::endl;
 
     return;
 }
 
 
-void SRSMaps::setChannelsMap_dcS800(){
+void SRSMaps::setChannelsMap_dcS800(uint8_t dcId){
 
+    //std::ofstream outputMap("/user/0400x/srs/readout/outMap.txt");
     uint8_t fecId = 2;
-    uint8_t minVmmId = 8;
+    uint8_t minVmmId = 0;
     uint8_t maxVmmId = 15;
+    uint8_t offsetMinVmmId = 0;
+    if (dcId == 1) {
+        minVmmId = 0;
+        maxVmmId = 7;
+    }
+    else if (dcId == 2){
+        minVmmId = 8;
+        maxVmmId = 15;
+    } 
+    else if (dcId == 12){
+        minVmmId = 0;
+        maxVmmId = 15;
+    } 
     uint8_t minRawCh = 2;
     uint8_t maxRawCh = 61;
     int shiftId[4] = {0, -2, -1, -1}; 
     for (uint8_t vmmId = minVmmId; vmmId <= maxVmmId; vmmId++){
         int tempId = 0;
+        if (dcId == 12 && vmmId >= 8) offsetMinVmmId = 8;
         for (uint8_t rawChId = minRawCh; rawChId <= maxRawCh; rawChId++){
             if (tempId%4 == 0){
                 tempId = 0;
             }
-            m_channelsMap[fecId][vmmId][rawChId] = (maxRawCh-minRawCh+1)*(vmmId-minVmmId) + rawChId + shiftId[tempId];
+            m_channelsMap[fecId][vmmId][rawChId] = (maxRawCh-minRawCh+1)*(vmmId-(minVmmId+offsetMinVmmId)) + rawChId + shiftId[tempId];
             tempId++;
             //std::cout<<"SRSMaps::setChannelsMap_dcS800 "<<(int)vmmId<<" "<<(int)rawChId<<" "<<(int)m_channelsMap[fecId][vmmId][rawChId]<<std::endl;
+            //outputMap<<(int)fecId<<" "<<(int)vmmId<<" "<<(int)rawChId<<" "<<(int)m_channelsMap[fecId][vmmId][rawChId]<<std::endl;
         }
     }
+    //outputMap.close();
     return;
 }
 
