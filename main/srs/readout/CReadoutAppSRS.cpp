@@ -97,17 +97,17 @@ CReadoutAppSRS::SetupReadout(CExperiment* pExperiment)
   //   std::cout << "CReadoutAppSRS::SetupReadout - Argument " << i + 1 << ": " << argv[i] << std::endl;
   // }
 
-  // Get SRS configuration file and daqPort from .settings source parameters
+  // Get SRS configuration file, daqPort and map info from .settings source parameters
   // The default daq port is the SRS daq port, give choice of daqPort to be able to bind to a port for testing and send test datagrams
-  std::string configFile, daqPortStr = "6006";
+  // The default map info is to build map for both s800 DCs.
+  std::string configFile, daqPortStr = "6006", mapStr = "dc12S800";
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
     if (arg == "configFile") {
       // Check if next argument (i + 1) is within bounds and save it in configFile
       if (i + 1 < argc) {
         configFile = argv[i + 1];
-        // break;  // Exit the loop after finding the configFile argument
-        if (configFile == "daqPort") {
+        if (configFile == "daqPort" || configFile == "map") {
           std::cerr << "Error: 'configFile' found without following file path." << std::endl;
         }
       } else {
@@ -117,7 +117,7 @@ CReadoutAppSRS::SetupReadout(CExperiment* pExperiment)
     else if (arg == "daqPort") {
       if (i + 1 < argc) {
         daqPortStr = argv[i + 1];
-        if (daqPortStr == "configFile") {
+        if (daqPortStr == "configFile" || daqPortStr == "map") {
           std::cerr << "Error: 'daqPort' found without following port number." << std::endl;
           daqPortStr = "6006";
         }
@@ -126,6 +126,19 @@ CReadoutAppSRS::SetupReadout(CExperiment* pExperiment)
         daqPortStr = "6006";
       }
     }
+    else if (arg == "map") {
+      if (i + 1 < argc) {
+        mapStr = argv[i + 1];
+        if (mapStr == "configFile" || mapStr == "daqPort") {
+          std::cerr << "Error: 'map' found without following map argument." << std::endl;
+          mapStr = "dc12S800";
+        }
+      } else {
+        std::cerr << "Error: 'map' found without following map argument." << std::endl;
+        mapStr = "dc12S800";
+      }
+    }
+
   }
 
   // Dummy trigger
@@ -134,7 +147,7 @@ CReadoutAppSRS::SetupReadout(CExperiment* pExperiment)
 
   // Add SRS EventSegment
   myeventsegment = new CEventSegmentSRS(mytrigger, *pExperiment);
-  myeventsegment->configure(configFile, daqPortStr);
+  myeventsegment->configure(configFile, daqPortStr, mapStr);
   pExperiment->AddEventSegment(myeventsegment);
 
 }

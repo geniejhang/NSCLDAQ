@@ -16,7 +16,7 @@ public:
 
 private:
 
-    void setChannelsMap_dcS800();
+    void setChannelsMap_dcS800(uint8_t dcId);
 
     static const int MaxFECs{16};
     static const int MaxVMMs{16};
