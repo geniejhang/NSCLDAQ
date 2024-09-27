@@ -291,12 +291,52 @@ class RingModel:
                 host_ring_names = [x['name'] for x in host_rings]    
                 result += host_ring_names
         return result
-   
+    
+    def _enumerate_data_consumers(self, host_name, ring_name, data):
+        # Returns the pids of the consumers for 
+        # the named host, ring.
+        
+        result = []
+        for host in data:
+            if host['host'] == host_name:
+                for ring in host['rings']:
+                    if ring['name'] == ring_name:
+                        result += [x['consumer_pid'] for x in ring['consumers']]
+        return result
+    
+    def _enumerate_ui_consumers(self, ring_item):
+        # Returns a list of (consumer_pid, child_row) consumer descriptions.
+        # for ring_item in the model.
+        
+        result = []
+        row = 0
+        parent = ring_item.parent().child(ring_item.row(), 0)
+        
+        while True:
+            pid_item = parent.child(row, 7)
+            if pid_item is not None:
+                result.append((int(pid_item.text()), row))
+                row += 1
+            else:
+                break
+        
+        return result
     def _prune_consumers(self, host, ring_item, data):
         #  For a ring buffer item, prune the consumers that 
         # are gone.  We use the PID to identify consumers.
         
-        pass
+        host_name = host.text()
+        ring_name = ring_item.text()
+        ui_consumers = self._enumerate_ui_consumers(ring_item)
+        data_consumers = self._enumerate_data_consumers(host_name, ring_name, data)
+        
+        delete_rows = [x[1] for x in ui_consumers if x[0] not in data_consumers]
+        delete_rows.sort(reverse=True)
+        
+        parent = ring_item.parent().child(ring_item.row(), 0)
+        for row in delete_rows:
+            parent.takeRow(row)
+        
     def _prune_rings(self, host, data):
         # Prune rings that are no longer present in a host.
         # This includes the remote rings.
@@ -309,9 +349,9 @@ class RingModel:
         
         # Accumulate the child rows to kill:
         
-        kill_rows = [x[1]  for x in ring_items if ring_items[0] not in ring_names]
+        kill_rows = [x[1]  for x in ring_items if x[0] not in ring_names]
         kill_rows.sort(reverse=True)
-        
+
         for row in kill_rows:
             host.takeRow(row+1)    # The remote item.
             host.takeRow(row)      # The ring item
@@ -350,11 +390,10 @@ class RingModel:
         
         model_hosts = self._getModelHosts()
         for host in model_hosts:
-            print("Prune rings in", host.text())
             self._prune_rings(host, data)
-            #ring_items = [x[2] for x in self._enumerate_ui_rings(host)]
-            #for ring in ring_items:
-            #    self._prune_consumers(host, ring, data)
+            ring_items = [x[2] for x in self._enumerate_ui_rings(host)]
+            for ring in ring_items:
+                self._prune_consumers(host, ring, data)
             
         
     
