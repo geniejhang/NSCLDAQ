@@ -382,7 +382,49 @@ class RingModel:
         # KIll those lines from the model.
         
         for r in kill_hosts:
-            self._model.takeRow(r)        
+            self._model.takeRow(r)
+            
+    def _prune_proxy_rings(hostname, proxy_top, data):
+        # Remove rings (and the consumers) of any proxies
+        # that are no longer in the data.
+        # hostname - Name of the host.
+        # proxy_top - Parent of all proxies.
+        # data      - The data passed to update
+        
+        pass    
+    
+    def _get_ui_proxy_rings(self,  proxy_top):
+        # Enumemrate the ring items that are proxies for the given
+        # host and 'Remote' item
+        #
+        #  proxy_top 'Remote' item which is the parent of all proxy rings for a host.
+        return []
+    def _prune_proxy_consumers(host_name, proxy, proxy_ring, data):
+        #  For a proxy ring, prunes no longer existing consumers.
+        #  host_name - name of the host being scrutinized.
+        #  proxy     - Model itm that is the parent of all conusmers.
+        #  proxy_ring- Information about a proxy ring to purge.
+        #  data     - Data passed to update.
+        pass
+
+    def _prune_proxies(self, host_item, ring_item, data):
+        #
+        # Rings have zero or more proxies.
+        # This method prunes dead proxy rings and dead
+        # proxy consumers.
+        #
+        ring_row = ring_item.row()
+        proxy = ring_item.parent().child(ring_row+1, 0) # Proxy follows ring.
+        host_name = host_item.text()
+        
+        self._prune_proxy_rings(host_name, proxy) # Kill dead proxy rings.
+        proxy_ui_rings = self._get_ui_proxy_rings(proxy)
+        for proxy_ring in proxy_ui_rings:
+            self._prune_proxy_consumers(
+                host_name, proxy, proxy_ring, data
+        )
+        
+        pass    
     def _prune(self, data):
         # Prune items from the tree that no longer exist.
         
@@ -394,6 +436,7 @@ class RingModel:
             ring_items = [x[2] for x in self._enumerate_ui_rings(host)]
             for ring in ring_items:
                 self._prune_consumers(host, ring, data)
+                self._prune_proxies(host, ring, data)
             
         
     
