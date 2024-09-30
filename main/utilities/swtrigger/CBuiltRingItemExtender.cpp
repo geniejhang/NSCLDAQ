@@ -32,9 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-
-
 /**
  * constructor
  *   @param fanin - the data source.  We are taking data from a fanout transport.

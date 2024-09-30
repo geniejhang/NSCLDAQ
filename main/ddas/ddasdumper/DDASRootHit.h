@@ -31,6 +31,8 @@
  * 1. Does this class belong in some namespace or not?
  * 2. What namespace(s) is/are used for DDAS code?
  * 3. What purpose(s) do they serve?
+ * For example, DDASRootHit probably should be under some daq::ddas:: 
+ * namespace.
  */
 
 /**
@@ -53,12 +55,12 @@
  * is different for each. The DDASRootHit class abstracts these differences 
  * away from the user.
  *
- * This is a very, very simple class. It inherits from DAQ::DDAS::DDASHit and 
+ * This is a very, very simple class. It inherits from ddasfmt::DDASHit and 
  * ROOT's TObject class and adds a ROOT `ClassDef()` macro. Everything else, 
  * including copy construction, assignment, etc. is handled "for free" by the 
- * base classes. Because the class inherits from DAQ::DDAS::DDASHit, we can 
- * trivially use the DAQ::DDAS::DDASHitUnpacker to unpack the event data 
- * directly into the DAQ::DDAS::DDASHit members. 
+ * base classes. Because the class inherits from ddasfmt::DDASHit, we can 
+ * trivially use the ddasfmt::DDASHitUnpacker to unpack the event data 
+ * directly into the ddasfmt::DDASHit members. 
  * 
  * @note In previous versions of NSCLDAQ (prior to 12.1), this class is called 
  * ddaschannel and is part of the libddaschannel library. The class is now 
@@ -69,7 +71,7 @@
  * @note No namespace because we are going to refactor everything anyway...
  */
 
-class DDASRootHit : public DAQ::DDAS::DDASHit, public TObject
+class DDASRootHit : public ddasfmt::DDASHit, public TObject
 {
 public:
     /** @brief Default constructor. */

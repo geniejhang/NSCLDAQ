@@ -25,8 +25,6 @@
 
 #include <stdint.h>
 #include <sys/uio.h>
-#include <DataFormat.h>
-
 
 /**
  * @class CBuiltRingItemExtender

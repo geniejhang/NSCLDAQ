@@ -17,7 +17,7 @@
 #pragma link C++ class DDASRootEvent+;
 #pragma link C++ class std::vector<DDASRootHit*>!;
 #pragma link C++ class DDASRootHit+;
-#pragma link C++ class DAQ::DDAS::DDASHit+;
+#pragma link C++ class ddasfmt::DDASHit+;
 
 #endif
 

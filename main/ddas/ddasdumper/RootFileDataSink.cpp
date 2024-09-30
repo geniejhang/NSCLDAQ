@@ -40,6 +40,9 @@
 #include "DDASRootEvent.h"
 #include "DDASRootHit.h"
 
+using namespace ufmt;
+using namespace ddasfmt;
+
 static const Int_t BUFFERSIZE(1024*1024); // 1 MB
 
 /**
@@ -49,10 +52,10 @@ static const Int_t BUFFERSIZE(1024*1024); // 1 MB
  * our operation.
  */
 RootFileDataSink::RootFileDataSink(
-    ufmt::RingItemFactoryBase* pFactory, const char* fileName,
+    RingItemFactoryBase* pFactory, const char* fileName,
     const char* treeName
     ) :
-    m_pFactory(pFactory), m_pUnpacker(new DAQ::DDAS::DDASHitUnpacker),
+    m_pFactory(pFactory), m_pUnpacker(new DDASHitUnpacker),
     m_pEvent(new DDASRootEvent), m_pTree(nullptr), m_pFile(nullptr),
     m_warnedPutUsed(false)
 {  
@@ -96,7 +99,7 @@ RootFileDataSink::~RootFileDataSink()
  * that's done we can fill the tree and delete any dynamic storage we got.
  */
 void
-RootFileDataSink::putItem(const ::ufmt::CRingItem& item)
+RootFileDataSink::putItem(const CRingItem& item)
 {
     try {
 	const uint32_t* pBody
@@ -120,23 +123,19 @@ RootFileDataSink::putItem(const ::ufmt::CRingItem& item)
 	    // The first five 32-bit words of the fragment make up the
 	    // fragment header. Skip them: 
 	
-	    pBody += sizeof(ufmt::EVB::FragmentHeader)/sizeof(uint32_t);
+	    pBody += sizeof(EVB::FragmentHeader)/sizeof(uint32_t);
 
 	    // Use the factory to make a ring item out of the fragment
 	    // and get a pointer to its body:
     
-	    const ::ufmt::RingItem* pFrag
-		= reinterpret_cast<const ::ufmt::RingItem*>(pBody);
-	    std::unique_ptr<ufmt::CRingItem> pUndiff(
-			m_pFactory->makeRingItem(pFrag)
-		);
-	    std::unique_ptr<::ufmt:: CPhysicsEventItem> pPhysics(
+	    const RingItem* pFrag
+		= reinterpret_cast<const RingItem*>(pBody);
+	    std::unique_ptr<CRingItem> pUndiff(m_pFactory->makeRingItem(pFrag));
+	    std::unique_ptr<CPhysicsEventItem> pPhysics(
 		m_pFactory->makePhysicsEventItem(*pUndiff)
 		);
 	    const uint32_t* pFragBody
-		= reinterpret_cast<const uint32_t*>(
-		    pPhysics->getBodyPointer()
-		    );
+		= reinterpret_cast<const uint32_t*>(pPhysics->getBodyPointer());
 	    uint32_t fragmentWords = pPhysics->size()/sizeof(uint32_t);
 
 	    // Since the hit is passed by reference to the unpacker, we can
@@ -193,10 +192,7 @@ RootFileDataSink::put(const void* pData, size_t nBytes)
 	std::cerr << msg << std::endl;
     }
     
-    const ::ufmt::RingItem* pRawItem
-	= reinterpret_cast<const ::ufmt::RingItem*>(pData);
-    std::unique_ptr<::ufmt::CRingItem> pItem(
-	m_pFactory->makeRingItem(pRawItem)
-	);
+    const RingItem* pRawItem = reinterpret_cast<const RingItem*>(pData);
+    std::unique_ptr<CRingItem> pItem(m_pFactory->makeRingItem(pRawItem));
     putItem(*pItem.get());
 }

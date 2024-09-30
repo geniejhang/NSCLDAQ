@@ -21,6 +21,7 @@
 
 #ifndef CBUILTRINGITEMEDITOR_H
 #define CBUILTRINGITEMEDITOR_H
+
 #include "CBuiltItemWorker.h"
 
 #include <DataFormat.h>
@@ -30,8 +31,6 @@
 #include <vector>
 #include <stdint.h>
 #include <stddef.h>
-
-
 
 /**
  * @class CBuiltRingItemEditor

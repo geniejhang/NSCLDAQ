@@ -68,7 +68,7 @@ public:
     
     typedef struct _Item {
         uint64_t s_timestamp;
-        RingItem s_item;
+	RingItem s_item;
     } Item, *pItem;
 
 private:

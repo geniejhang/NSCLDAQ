@@ -2,7 +2,8 @@ bin_PROGRAMS = ddasdumper.bin
 lib_LTLIBRARIES = libddasrootformat.la
 
 
-BUILT_SOURCES = ddasrootformatDictionary.h ddasrootformatDictionary.cpp ddasrootformatDictionary_rdict.pcm dumperargs.cpp
+BUILT_SOURCES = ddasrootformatDictionary.h ddasrootformatDictionary.cpp \
+	ddasrootformatDictionary_rdict.pcm dumperargs.cpp
 include_HEADERS = DDASRootEvent.h DDASRootHit.h
 
 
@@ -12,8 +13,7 @@ ddasdumper_bin_SOURCES = ddasdumper.cpp 				\
 	FdDataSource.cpp FdDataSource.h					\
 	StreamDataSource.cpp StreamDataSource.h				\
 	RootFileDataSink.cpp RootFileDataSink.h
-ddasdumper_bin_CPPFLAGS = \
-	-I@top_srcdir@/base/uri 					\
+ddasdumper_bin_CPPFLAGS = -I@top_srcdir@/base/uri 			\
 	-I@top_srcdir@/daq/IO						\
 	-I@top_srcdir@/daq/eventbuilder					\
 	@UFMT_CPPFLAGS@ @DDASFMT_CPPFLAGS@                              \
@@ -26,8 +26,7 @@ ddasdumper_bin_LDFLAGS = @UFMT_LDFLAGS@ @DDASFMT_LDFLAGS@               \
 
 
 libddasrootformat_la_SOURCES = DDASRootEvent.cpp DDASRootHit.h LinkDef.h
-libddasrootformat_la_CPPFLAGS = -I@top_srcdir@ 				\
-	@DDASFMT_CPPFLAGS@ @ROOT_CFLAGS@
+libddasrootformat_la_CPPFLAGS = -I@top_srcdir@ @DDASFMT_CPPFLAGS@ @ROOT_CFLAGS@
 libddasrootformat_la_LIBADD = @DDASFMT_LDFLAGS@
 libddasrootformat_la_LDFLAGS = @ROOT_LDFLAGS@ 
 nodist_libddasrootformat_la_SOURCES = \

@@ -48,8 +48,12 @@
 const uint64_t LOWER_TS_BIT_MASK = 0x00000000FFFFFFFF; //!< Mask lower 16 bits.
 const uint64_t UPPER_TS_BIT_MASK = 0x0000FFFF00000000; //!< Mask upper 16 bits.
 const uint32_t PIXIE_MAX_ENERGY = 65535; //!< Max allowed energy value.
+const uint16_t CFD_100_MSPS_MASK = 0x7FFF; //!< CFD mask for 100 MSPS modules.
+const uint16_t CFD_250_MSPS_MASK = 0x3FFF; //!< CFD mask for 250 MSPS modules.
+const uint16_t CFD_500_MSPS_MASK = 0x1FFF; //!< CFD mask for 500 MSPS modules.
 
 using namespace ufmt;
+using namespace ddasfmt;
 
 /**
  * @brief Get the supported version from the integer specifier.
@@ -69,9 +73,7 @@ mapVersion(int version)
     case 10:
 	return FormatSelector::v10;
     default:
-	throw std::invalid_argument(
-	    "Invalid DAQ format version specifier"
-	    );
+	throw std::invalid_argument("Invalid DAQ format version specifier");
     }
 }
 
@@ -174,7 +176,7 @@ DAQ::DDAS::DDASDataSimulator::endRun()
  */
 void
 DAQ::DDAS::DDASDataSimulator::putHit(
-    const DAQ::DDAS::DDASHit& hit, int sourceID, bool useExtTS, double cal
+    const DDASHit& hit, int sourceID, bool useExtTS, double cal
     )
 {
     // Pack the hit into a data buffer:
@@ -222,7 +224,7 @@ DAQ::DDAS::DDASDataSimulator::putHit(
  * the input hit data is valid.
  */
 void
-DAQ::DDAS::DDASDataSimulator::setBuffer(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setBuffer(const DDASHit& hit)
 {
     m_evtBuf.clear(); // Clear buffer before adding data.
     
@@ -294,7 +296,7 @@ DAQ::DDAS::DDASDataSimulator::dumpBuffer()
  * calculated from its input data.
  */
 void
-DAQ::DDAS::DDASDataSimulator::setWord0(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setWord0(const DDASHit& hit)
 {    
     uint32_t finishCode = hit.getFinishCode(); // Unless otherwise set, == 0.
     uint32_t hdrLen     = getHeaderLength(hit);
@@ -315,7 +317,7 @@ DAQ::DDAS::DDASDataSimulator::setWord0(const DAQ::DDAS::DDASHit& hit)
 }
 
 void
-DAQ::DDAS::DDASDataSimulator::setWords1And2(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setWords1And2(const DDASHit& hit)
 {
     double time = hit.getTime();
     if (time < 0) {
@@ -348,7 +350,7 @@ DAQ::DDAS::DDASDataSimulator::setWords1And2(const DAQ::DDAS::DDASHit& hit)
  * data for their simulated module type.
  */
 void
-DAQ::DDAS::DDASDataSimulator::setWord3(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setWord3(const DDASHit& hit)
 {
     uint32_t ene = hit.getEnergy();
     auto trace = hit.getTrace();
@@ -370,7 +372,7 @@ DAQ::DDAS::DDASDataSimulator::setWord3(const DAQ::DDAS::DDASHit& hit)
 }
 
 void
-DAQ::DDAS::DDASDataSimulator::setExternalTS(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setExternalTS(const DDASHit& hit)
 {
     uint64_t ts = hit.getExternalTimestamp();
     uint32_t word = (ts & LOWER_TS_BIT_MASK);
@@ -385,11 +387,11 @@ DAQ::DDAS::DDASDataSimulator::setExternalTS(const DAQ::DDAS::DDASHit& hit)
 /**
  * @details
  * Assumes the energy sums are the correct size. Note that 
- * DAQ::DDAS::DDASHit.setEnergySums(std::vector<uint32_t>) enforces the size 
+ * ddasfmt::DDASHit.setEnergySums(std::vector<uint32_t>) enforces the size 
  * requirement.
  */ 
 void
-DAQ::DDAS::DDASDataSimulator::setEnergySums(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setEnergySums(const DDASHit& hit)
 {
     auto esums = hit.getEnergySums();
     for (const auto& e : esums) {
@@ -400,11 +402,11 @@ DAQ::DDAS::DDASDataSimulator::setEnergySums(const DAQ::DDAS::DDASHit& hit)
 /**
  * @details
  * Assumes the QDC sums are the correct size. Note that 
- * DAQ::DDAS::DDASHit.setQDCSums(std::vector<uint32_t>) enforces the size 
+ * ddasfmt::DDASHit.setQDCSums(std::vector<uint32_t>) enforces the size 
  * requirement.
  */
 void
-DAQ::DDAS::DDASDataSimulator::setQDCSums(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setQDCSums(const DDASHit& hit)
 {
     auto qdc = hit.getQDCSums();
     for (const auto& q : qdc) {
@@ -417,7 +419,7 @@ DAQ::DDAS::DDASDataSimulator::setQDCSums(const DAQ::DDAS::DDASHit& hit)
  * Packs two consecutive uint16_t trace sample data into one uint32_t word.
  */
 void
-DAQ::DDAS::DDASDataSimulator::setTraceData(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::setTraceData(const DDASHit& hit)
 {    
     auto trace = hit.getTrace();
     int len = trace.size();
@@ -439,7 +441,7 @@ DAQ::DDAS::DDASDataSimulator::setTraceData(const DAQ::DDAS::DDASHit& hit)
  * the hit. It is generally safer to take this approach.
  */
 uint32_t
-DAQ::DDAS::DDASDataSimulator::getHeaderLength(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::getHeaderLength(const DDASHit& hit)
 {
     uint32_t hdrLen = hit.getChannelHeaderLength();
     if (hdrLen) {
@@ -464,7 +466,7 @@ DAQ::DDAS::DDASDataSimulator::getHeaderLength(const DAQ::DDAS::DDASHit& hit)
 
 
 uint32_t 
-DAQ::DDAS::DDASDataSimulator::getModInfoWord(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::getModInfoWord(const DDASHit& hit)
 {
     int rev  = hit.getHardwareRevision();
     int bits = hit.getADCResolution();
@@ -494,7 +496,7 @@ DAQ::DDAS::DDASDataSimulator::getModInfoWord(const DAQ::DDAS::DDASHit& hit)
  *  - 250 MSPS: CFD correction from the previous clock cycle > 4 ns.
  */
 uint64_t
-DAQ::DDAS::DDASDataSimulator::getCoarseTimestamp(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::getCoarseTimestamp(const DDASHit& hit)
 {
     double time = hit.getTime();
     int clockPeriod = getClockPeriod(hit);
@@ -520,7 +522,7 @@ DAQ::DDAS::DDASDataSimulator::getCoarseTimestamp(const DAQ::DDAS::DDASHit& hit)
 }
 
 int
-DAQ::DDAS::DDASDataSimulator::getClockPeriod(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::getClockPeriod(const DDASHit& hit)
 {
     int clockPeriod;
     int msps = hit.getModMSPS();
@@ -540,7 +542,7 @@ DAQ::DDAS::DDASDataSimulator::getClockPeriod(const DAQ::DDAS::DDASHit& hit)
 }
 
 int
-DAQ::DDAS::DDASDataSimulator::getSamplePeriod(const DAQ::DDAS::DDASHit& hit)
+DAQ::DDAS::DDASDataSimulator::getSamplePeriod(const DDASHit& hit)
 {
     int samplePeriod;
     int msps = hit.getModMSPS();
@@ -567,7 +569,7 @@ DAQ::DDAS::DDASDataSimulator::getSamplePeriod(const DAQ::DDAS::DDASHit& hit)
  */
 uint32_t
 DAQ::DDAS::DDASDataSimulator::getPackedCFDResult(
-    const DAQ::DDAS::DDASHit& hit, double corr
+    const DDASHit& hit, double corr
     )
 {
     uint32_t result = 0x0;
@@ -580,7 +582,7 @@ DAQ::DDAS::DDASDataSimulator::getPackedCFDResult(
     if (msps == 100) {
 	rawCFD = 32768.0*zcp;
 	result |= static_cast<uint32_t>(std::floor(rawCFD));
-	result = result & 0x3FFF;
+	result = result & CFD_100_MSPS_MASK;
 	result |= failBit << 15;
     } else if (msps == 250) {
 	src = 1; // zcp < 0 case.
@@ -589,7 +591,7 @@ DAQ::DDAS::DDASDataSimulator::getPackedCFDResult(
 	}
 	rawCFD = 16384.0*(zcp + src);
 	result |= static_cast<uint32_t>(std::floor(rawCFD));
-	result = result & 0x7FFF;
+	result = result & CFD_250_MSPS_MASK;
 	result |= (src << 14);
 	result |= (failBit << 15);
     } else if (msps == 500) {
@@ -605,7 +607,7 @@ DAQ::DDAS::DDASDataSimulator::getPackedCFDResult(
 	}
 	rawCFD = 8192.0*(zcp - src + 1);
 	result |= static_cast<uint32_t>(std::floor(rawCFD));
-	result = result & 0x1FFF;
+	result = result &  CFD_500_MSPS_MASK;
 	// For 500 MSPS, src == 7 indicates forced CFD. We always succeed, so:
 	result |= (src << 13);
     }
