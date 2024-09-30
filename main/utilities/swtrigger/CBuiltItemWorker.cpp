@@ -21,8 +21,6 @@
 
 #include "CBuiltItemWorker.h"
 
-
-
 /**
  * constructor
  *    Just defers to CParallelWorker.

@@ -20,6 +20,7 @@
  */
 #ifndef CPARALLELWORKER_H
 #define CPARALLELWORKER_H
+
 #include "CProcessingElement.h"
 #include <stdint.h>
 

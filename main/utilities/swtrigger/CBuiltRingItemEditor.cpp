@@ -20,14 +20,15 @@
  */
 
 #include "CBuiltRingItemEditor.h"
-#include <fragment.h>
-#include <DataFormat.h>
-#include <CSender.h>
 
 #include <stdlib.h>
 #include <new>
 #include <stdexcept>
 #include <iostream>
+
+#include <fragment.h>
+#include <DataFormat.h>
+#include <CSender.h>
 
 /**
  * constructor

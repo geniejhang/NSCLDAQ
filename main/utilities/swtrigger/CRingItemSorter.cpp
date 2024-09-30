@@ -27,7 +27,6 @@
 #include <fstream>
 #include <stdexcept>
 
-
 /**
  * constructor
  *    @param fanin - the receiver for data fanned in from the data sources.

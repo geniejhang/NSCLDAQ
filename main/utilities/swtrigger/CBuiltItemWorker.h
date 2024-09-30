@@ -21,10 +21,14 @@
 
 #ifndef CBUILTITEMWORKER_H
 #define CBUILTITEMWORKER_H
+
 #include "CParallelWorker.h"
+
+#include <stddef.h>
+
 #include <DataFormat.h>
 #include <fragment.h>
-#include <stddef.h>
+
 /**
  * @class CBuiltItemWorker
  *   We have a few utiltities that, in some way, operate on event built
@@ -44,8 +48,8 @@ public:
     
     typedef struct __attribute__((__packed__)) _EventHeader {
         uint64_t             s_timestamp;  
-        RingItemHeader       s_ringHeader;
-        BodyHeader           s_bodyHeader;
+	RingItemHeader       s_ringHeader;
+	BodyHeader           s_bodyHeader;
         uint32_t             s_evbBodySize;
     } EventHeader, *pEventHeader;
 
@@ -54,8 +58,8 @@ public:
     // and the ringitem header size if an extension is added on.
     
     typedef struct __attribute__((__packed__)) _FragmentItem {
-        ufmt::EVB::FragmentHeader   s_fragHeader;
-        RingItemHeader        s_ringItemHeader;
+	ufmt::EVB::FragmentHeader   s_fragHeader;
+	RingItemHeader        s_ringItemHeader;
     } FragmentItem, *pFragmentItem;
 
 public:
