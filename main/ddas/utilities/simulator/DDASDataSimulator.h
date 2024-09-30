@@ -36,6 +36,17 @@ namespace ufmt {
 
 namespace DAQ {
     namespace DDAS {
+	
+	/**
+	 * @addtogroup libDDASDataSimulator libDDASDataSimulator.so
+	 * @brief Data simulation library for DDAS.
+	 * @details
+	 * The DDAS data simulation library allows users to write NSCLDAQ event
+	 * data with DDAS-style payloads to disk from any external program 
+	 * e.g., Geant4.
+	 * @{
+	 */
+	
 	/**
 	 * @class DAQ::DDAS::DDASDataSimulator
 	 * @brief Simulates data produced by a DDAS readout program in user 
@@ -57,10 +68,10 @@ namespace DAQ {
 	 * In general the code uses the information contained within the 
 	 * ddasfmt::DDASHit to figure out its size. In order to calculate 
 	 * calibrated timestamps, the module MSPS must be defined as part of
-	 * the DDASHit, or, if  using an external timestamp,  the calibration 
+	 * the hit, or, if using an external timestamp, the calibration 
 	 * must be provided when adding the hit. Trace data is _not checked_ 
 	 * for overflows or to ensure that the range of the trace matches the 
-	 * bit depth of the module, that responsiblity  is on the user. It is 
+	 * bit depth of the module, that responsiblity is on the user. It is 
 	 * assumed that the CFD always succeeds, even if the correction is 0.
 	 *
 	 * To use this class in your own code:
@@ -250,7 +261,10 @@ namespace DAQ {
 		const ddasfmt::DDASHit& hit, double corr
 		);    
 	};
-    }
-}
+
+	/** @} */
+
+    } // namespace DDAS.
+} // namespace DAQ.
 
 #endif
