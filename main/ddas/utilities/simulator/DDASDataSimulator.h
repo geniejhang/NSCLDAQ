@@ -27,10 +27,8 @@
 #include <string>
 #include <vector>
 
-namespace DAQ {
-    namespace DDAS {
+namespace ddasfmt {
 	class DDASHit;
-    }
 }
 namespace ufmt {
     class RingItemFactoryBase;
@@ -45,10 +43,10 @@ namespace DAQ {
 	 * @details
 	 * This class provides an interface to simulate the data output by an 
 	 * NSCLDAQ readout program running DDAS electronics. The 
-	 * DAQ::DDAS::DDASHit class is used to encapsulate the hit information.
+	 * ddasfmt::DDASHit class is used to encapsulate the hit information.
 	 * The `putHit()` method of this class fills an event buffer with the 
 	 * Pixie data payload based on the contents of the passed 
-	 * DAQ::DDAS::DDASHit, including optional data like QDC sums or traces,
+	 * ddasfmt::DDASHit, including optional data like QDC sums or traces,
 	 * wraps it in an NSCLDAQ header and writes it to a file data sink.
 	 *
 	 * The output NSCLDAQ data format is specified by the user when they 
@@ -57,7 +55,7 @@ namespace DAQ {
 	 * change items you would see when starting and stopping a run.
 	 *
 	 * In general the code uses the information contained within the 
-	 * DAQ::DDAS::DDASHit to figure out its size. In order to calculate 
+	 * ddasfmt::DDASHit to figure out its size. In order to calculate 
 	 * calibrated timestamps, the module MSPS must be defined as part of
 	 * the DDASHit, or, if  using an external timestamp,  the calibration 
 	 * must be provided when adding the hit. Trace data is _not checked_ 
@@ -83,6 +81,7 @@ namespace DAQ {
 	 #include <DDASHit.h>
 
 	 using namespace DAQ::DDAS;
+	 using namespace ddasfmt;
 
 	 int main () {
 	     DDASDataSimulator sim("data.evt", 12);
@@ -148,7 +147,7 @@ namespace DAQ {
 	     *   an invalid clock calibration (<= 0.0).
 	     */
 	    void putHit(
-		const DAQ::DDAS::DDASHit& hit, int sourceID=0,
+		const ddasfmt::DDASHit& hit, int sourceID=0,
 		bool useExtTS=false, double cal=0.0
 		);
 
@@ -156,7 +155,7 @@ namespace DAQ {
 	     * @brief Set the data buffer from a DDASHit.
 	     * @param hit References the hit to process.
 	     */
-	    void setBuffer(const DAQ::DDAS::DDASHit& hit);
+	    void setBuffer(const ddasfmt::DDASHit& hit);
 	    /**
 	     * @brief Get the data buffer.
 	     * @return The data buffer. May or may not be empty, depending on 
@@ -172,7 +171,7 @@ namespace DAQ {
 	     * Contains identifying information for the hit and its size.
 	     * @param hit References the hit to process.
 	     */
-	    void setWord0(const DAQ::DDAS::DDASHit& hit);
+	    void setWord0(const ddasfmt::DDASHit& hit);
 	    /** 
 	     * @brief Set words 1 and 2 of the fixed Pixie list-mode event 
 	     * header. Word 1 Contains lower 32 bits of 48-bit timestamp, 
@@ -181,74 +180,74 @@ namespace DAQ {
 	     * @param hit References the hit to process.
 	     * @throws std::runtime_error If the hit timestamp is < 0.
 	     */
-	    void setWords1And2(const DAQ::DDAS::DDASHit& hit);
+	    void setWords1And2(const ddasfmt::DDASHit& hit);
 	    /** 
 	     * @brief Set word 3 of the fixed Pixie list-mode event header. 
 	     * Contains energy and trace length, overflow.
 	     * @param hit References the hit to process.
 	     */
-	    void setWord3(const DAQ::DDAS::DDASHit& hit);
+	    void setWord3(const ddasfmt::DDASHit& hit);
 
 	    /**
 	     * @brief Set the external timestamp from the hit.
 	     * @param hit References the hit to process.
 	     */
-	    void setExternalTS(const DAQ::DDAS::DDASHit& hit);
+	    void setExternalTS(const ddasfmt::DDASHit& hit);
 	    /**
 	     * @brief Set the energy sums from the hit.
 	     * @param hit References the hit to process.
 	     */
-	    void setEnergySums(const DAQ::DDAS::DDASHit& hit);
+	    void setEnergySums(const ddasfmt::DDASHit& hit);
 	    /**
 	     * @brief Set the QDC sums from the hit.
 	     * @param hit References the hit to process.
 	     */
-	    void setQDCSums(const DAQ::DDAS::DDASHit& hit);
+	    void setQDCSums(const ddasfmt::DDASHit& hit);
 	    /**
 	     * @brief Set the ADC trace from the hit.
 	     * @param hit References the hit to process.
 	     */
-	    void setTraceData(const DAQ::DDAS::DDASHit& hit);
+	    void setTraceData(const ddasfmt::DDASHit& hit);
     
 	    /**
 	     * @brief Get the Pixie header length.
 	     * @param hit References the hit to process.
 	     * @return The Pixie header length in 32-bit words.
 	     */
-	    uint32_t getHeaderLength(const DAQ::DDAS::DDASHit& hit);
+	    uint32_t getHeaderLength(const ddasfmt::DDASHit& hit);
 	    /**
 	     * @brief Get the module identification word.
 	     * @param hit References the hit to process.
 	     * @return The module ID as a 32-bit data word.
 	     */
-	    uint32_t getModInfoWord(const DAQ::DDAS::DDASHit& hit);
+	    uint32_t getModInfoWord(const ddasfmt::DDASHit& hit);
 	    /**
 	     * @brief Get the coarse timestamp from the hit.
 	     * @param hit References the hit to process.
 	     * @return The coarse timestamp in clock ticks.
 	     */
-	    uint64_t getCoarseTimestamp(const DAQ::DDAS::DDASHit& hit);
+	    uint64_t getCoarseTimestamp(const ddasfmt::DDASHit& hit);
 	    /**
 	     * @brief Get the FPGA clock period in nanoseconds.
 	     * @param hit References the hit to process.
 	     * @throws std::runtime_error If the module MSPS is not known.
 	     * @return The clock period in nanoseconds.
 	     */
-	    int      getClockPeriod(const DAQ::DDAS::DDASHit& hit);
+	    int getClockPeriod(const ddasfmt::DDASHit& hit);
 	    /**
 	     * @brief Get the ADC sampling period in nanoseconds.
 	     * @param hit References the hit to process.
 	     * @throws std::runtime_error If the module MSPS is not known.
 	     * @return The sampling period in nanoseconds.
 	     */
-	    int      getSamplePeriod(const DAQ::DDAS::DDASHit& hit);
+	    int getSamplePeriod(const ddasfmt::DDASHit& hit);
 	    /**
 	     * @brief Get the packed CFD result (CFD as data word).
 	     * @param hit References the hit to process.
 	     * @return The packed CFD word as a uint32_t.
 	     */
 	    uint32_t getPackedCFDResult(
-		const DAQ::DDAS::DDASHit& hit, double corr
+		const ddasfmt::DDASHit& hit, double corr
 		);    
 	};
     }

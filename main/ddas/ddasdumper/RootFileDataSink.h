@@ -23,15 +23,13 @@
 
 #ifndef ROOTFILEDATASINK_H
 #define ROOTFILEDATASINK_H
+
 #include <stdlib.h>
 
 class TTree;
 class TFile;
-class CRingItem;
-namespace DAQ {
-    namespace DDAS {
-	class DDASHitUnpacker;
-    }
+namespace ddasfmt {
+    class DDASHitUnpacker;
 }
 class DDASRootEvent; // Holds the decoded event for output.
 namespace ufmt {
@@ -52,8 +50,8 @@ namespace ufmt {
 class RootFileDataSink 
 {
 private:
-    ufmt::RingItemFactoryBase* m_pFactory;   //!< Turns bodies into ring items.
-    DAQ::DDAS::DDASHitUnpacker* m_pUnpacker; //!< Unpacker for our hits.
+    ufmt::RingItemFactoryBase* m_pFactory;  //!< Turns bodies into ring items.
+    ddasfmt::DDASHitUnpacker*  m_pUnpacker; //!< Unpacker for our hits.
     DDASRootEvent* m_pEvent; //!< The ROOT-ized event to write.
     TTree* m_pTree;          //!< Tree in the output file we write to.
     TFile* m_pFile;          //!< The output ROOT file.
@@ -81,7 +79,7 @@ public:
      * @param item Reference to a ring item object.
      * @throw std::length_error If the event size is different than expected.
      */
-    virtual void putItem(const ::ufmt::CRingItem& item);
+    virtual void putItem(const ufmt::CRingItem& item);
     /**
      * @brief Called to put arbitrary data to the file. 
      * @param pData  Pointer to the data.

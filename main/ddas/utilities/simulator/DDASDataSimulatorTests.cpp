@@ -25,7 +25,8 @@
 
 #include "Asserts.h"
 
-using namespace DAQ::DDAS;
+using namespace ddasfmt; // Format, unpackers, etc.
+using namespace DAQ::DDAS; // Simulation framework.
 
 /**
  * @brief Test suite for the DDAS data simulation library.
