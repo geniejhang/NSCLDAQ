@@ -1,5 +1,6 @@
 == 12.1-001 ==
-* Use DDASFormat 1.1-000, ddasfmt namespace.
+* Use DDASFormat 1.1-000, ddasfmt namespace for DDASHit, DDASHitUnpacker.
+* Updated DDAS docs to include DDAS SpecTcl documentation.
 == 12.1-001 ==
 
 == 12.1-000 ==
