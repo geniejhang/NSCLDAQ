@@ -321,6 +321,7 @@ class RingModel:
                 break
         
         return result
+    
     def _prune_consumers(self, host, ring_item, data):
         #  For a ring buffer item, prune the consumers that 
         # are gone.  We use the PID to identify consumers.
@@ -384,29 +385,100 @@ class RingModel:
         for r in kill_hosts:
             self._model.takeRow(r)
             
-    def _prune_proxy_rings(hostname, proxy_top, data):
-        # Remove rings (and the consumers) of any proxies
-        # that are no longer in the data.
-        # hostname - Name of the host.
-        # proxy_top - Parent of all proxies.
-        # data      - The data passed to update
-        
-        pass    
     
     def _get_ui_proxy_rings(self,  proxy_top):
         # Enumemrate the ring items that are proxies for the given
         # host and 'Remote' item
         #
         #  proxy_top 'Remote' item which is the parent of all proxy rings for a host.
-        return []
-    def _prune_proxy_consumers(host_name, proxy, proxy_ring, data):
+        #
+        #  Returns a list of ring items
+        result = []
+        row = 0
+        while True:
+            child = proxy_top.child(row, 1)
+            if child is not None:
+                row = row + 1
+                result.append(child)
+            else:
+                break
+                
+        return result
+    
+    def  _get_data_proxy_rings(self, hostname, ring_name, data):
+        
+        #  Return a list of the proxy ring names associated with
+        #  A ring in a host.
+        
+        result = []
+        for h in data:
+            if h['host'] == hostname:
+                for r in h['rings']:
+                    if r['name'] == ring_name:
+                        result.append([x['name'] for x in r['proxies']])
+                        break
+        return result
+    
+    def _prune_proxy_rings(self, hostname, ring_name, proxy_top, data):
+        # Remove rings (and the consumers) of any proxies
+        # that are no longer in the data.
+        # hostname - Name of the host.
+        # proxy_top - Parent of all proxies.
+        # data      - The data passed to update
+        
+        proxy_ring_items = self._get_ui_proxy_rings(proxy_top)
+        data_proxy_rings = self._get_data_proxy_rings( hostname, ring_name, data)
+        
+        delete_rows = [x.row() for x in proxy_ring_items if x.text() not in data_proxy_rings]
+        delete_rows.sort(reverse=True)
+        
+        for row in delete_rows:
+            proxy_top.takeRow(row)
+            
+    def _get_data_proxy_consumers(self, host_name, ring_name, data):
+        # Returns a list of PIDS of consumers of proxies for a specific
+        # proxy ring name. 
+        result =[]
+        for h in data:
+            if h['host']  == host_name:
+                for pr in h['host']['rings']['proxies']:
+                    if pr['name'] == ring_name:
+                        result.append([x['consumer_pid'] for x in pr['consumers]'])
+        return result
+    
+    def _get_ui_proxy_consumers(self, parent):
+        #  Returns [(pid, row)] of consumers for a given ui proxy ring.
+        
+        result = []
+        row  = 0
+        while True:
+            pid_item = parent.child(row, 7)
+            result.append((int(pid_item(text)), row))
+            row = row + 1
+        else:
+            break;
+        
+        return result
+        
+            
+    def _prune_proxy_consumers(self, host_name, proxy, proxy_ring, data):
         #  For a proxy ring, prunes no longer existing consumers.
         #  host_name - name of the host being scrutinized.
         #  proxy     - Model itm that is the parent of all conusmers.
-        #  proxy_ring- Information about a proxy ring to purge.
+        #  proxy_ring- proxy ring item...col 0 of that is the parent.
         #  data     - Data passed to update.
-        pass
+        consumer_parent = proxy_ring.parent().item(proxy_ring.row(), 0)
+        data_consumers = self._get_data_proxy_consumers(
+            host_name, proxy_ring.text(), data
+        )
+        ui_consumers = self._get_ui_proxy_consumers(consumer_parent)
 
+        delete_rows = [x[1] for x in ui_consumers if ui_consumers[0] not in data_consumers]
+        delete_rows.sort(reverse=True)
+        
+        for row  in delete_rows:
+            consumer_parent.takeRow(row
+                                    )
     def _prune_proxies(self, host_item, ring_item, data):
         #
         # Rings have zero or more proxies.
@@ -416,8 +488,9 @@ class RingModel:
         ring_row = ring_item.row()
         proxy = ring_item.parent().child(ring_row+1, 0) # Proxy follows ring.
         host_name = host_item.text()
+        ring_name = ring_item.text()
         
-        self._prune_proxy_rings(host_name, proxy) # Kill dead proxy rings.
+        self._prune_proxy_rings(host_name, ring_name, proxy, data) # Kill dead proxy rings.
         proxy_ui_rings = self._get_ui_proxy_rings(proxy)
         for proxy_ring in proxy_ui_rings:
             self._prune_proxy_consumers(
