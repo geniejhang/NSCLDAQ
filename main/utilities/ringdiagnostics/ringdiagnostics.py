@@ -22,6 +22,7 @@ from nscldaq import  RingView
 from nscldaq import RingModel
 import argparse
 import sys
+import os
 
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QTimer
@@ -43,13 +44,14 @@ class Updater(QTimer):
         self._model  = model
         
         self.timeout.connect(self._update_model)
-
         self._update_model()
         
     def _update_model(self):
         print("update")
         usage = RingUsage.systemUsage()
+        print("Updated usage")
         self._model.update(usage)
+        print("updated model")
         self._schedule()
         print('done')
 
@@ -92,7 +94,8 @@ app = QApplication(['ringview test'])
 mw = QMainWindow()
 tree = RingView.RingView()
 contents = RingModel.RingModel(tree, alarm_pct)
-usage = RingUsage.systemUsage()
+if os.getenv("DEBUG") is not None:
+    contents.setDebug(True)
 auto_update = Updater(update_ms, contents)
 mw.setCentralWidget(tree)
 mw.show()
