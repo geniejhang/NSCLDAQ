@@ -177,7 +177,10 @@ class RingModel:
         # Proxy folder.
         #
         ring_item = self._find_ring(parent, ring)   # find or create - list of items.
-        ring_item[1].setText(ring['name'])
+        if isProxy:
+            ringitem[1].setText(f'{ring["name"]}@{ring["proxyhost"]}')
+        else:            
+            ring_item[1].setText(ring['name'])
         ring_item[2].setText(ring['producer_command'])
         ring_item[3].setText(str(ring['producer_pid']))
         ring_item[4].setText(str(ring['size']))     # In  case the ring was re-created.
@@ -443,7 +446,7 @@ class RingModel:
             if h['host']  == host_name:
                 for pr in h['host']['rings']['proxies']:
                     if pr['name'] == ring_name:
-                        result.append([x['consumer_pid'] for x in pr['consumers]'])
+                        result.append([x['consumer_pid'] for x in pr['consumers']])
         return result
     
     def _get_ui_proxy_consumers(self, parent):
@@ -453,10 +456,11 @@ class RingModel:
         row  = 0
         while True:
             pid_item = parent.child(row, 7)
-            result.append((int(pid_item(text)), row))
-            row = row + 1
-        else:
-            break;
+            if pid_item is not None:
+                result.append((int(pid_item(text)), row))
+                row = row + 1
+            else:
+                break
         
         return result
         
