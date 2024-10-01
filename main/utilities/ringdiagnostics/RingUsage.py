@@ -408,10 +408,11 @@ def systemUsage():
     # In a sane system, we can't integrate the proxies as in a sane system
     # There won't be proxies for local rings.
     
+    seen_hosts = []
     while len(remaining_hosts) > 0:
         host = remaining_hosts.pop(0)
         host = socket.getfqdn(host)
-        
+        seen_hosts.append(host)
         # It' spossible that we've already looked at the host
         # Because we're processing a host found in a hoist or a proxy
         # If that's the case we skip it.
@@ -432,6 +433,10 @@ def systemUsage():
             except:                                   
                 print("exception for", host)
                 pass                               # Ignore hosts we can't talk to.
+            # Prune the hosts we've already seen.. in case, some how, there are
+            # loops in the host graph.
+            
+            remaining_hosts = [x for x in remaining_hosts if x not in seen_hosts]
     return result
 
 if __name__ == "__main__":
