@@ -44,12 +44,14 @@ class Updater(QTimer):
         
         self.timeout.connect(self._update_model)
 
-        self._schedule()
+        self._update_model()
         
     def _update_model(self):
+        print("update")
         usage = RingUsage.systemUsage()
         self._model.update(usage)
         self._schedule()
+        print('done')
 
     def _schedule(self):
         self.setInterval(self._update)
@@ -91,7 +93,6 @@ mw = QMainWindow()
 tree = RingView.RingView()
 contents = RingModel.RingModel(tree, alarm_pct)
 usage = RingUsage.systemUsage()
-contents.update(usage)
 auto_update = Updater(update_ms, contents)
 mw.setCentralWidget(tree)
 mw.show()
