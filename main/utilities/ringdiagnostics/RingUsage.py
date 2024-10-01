@@ -67,8 +67,8 @@ What we do:
     the stalling of some consumer in that source's data flow.l
 '''
 
-import nscldaqutils
-import pidtocommand
+from nscldaq import nscldaqutils
+from nscldaq import pidtocommand
 import socket
 import os.path
 
@@ -103,7 +103,6 @@ def _getRemoteCommand(host, pid):
     result = nscldaqutils.ssh(host, f'$DAQBIN/pidtocommand {pid}')
     output = nscldaqutils.getSshOutput(result)
     error  = nscldaqutils.getSshError(result)
-    
     # If there are no lines in ouptput, then we got nothing:
     
     
@@ -199,13 +198,12 @@ def _proxyRing(ringname):
 def _findSourceRing(proxy, system):
     host = proxy['proxyhost']
     ring = proxy['proxyring']
-    
     for  h in system:
-         if h['host'] == host:
-             for r in h['host']['rings']:
-                 if r['name'] == ring:
-                     return r
-             break            # No such ring in the host - orphaned proxy.
+        if h['host'] == host:
+            for r in h['rings']:
+                if r['name'] == ring:
+                    return r
+            break            # No such ring in the host - orphaned proxy.
     
     return None               # No matching host or ring in host.
 
@@ -254,10 +252,8 @@ def makeRemoteRingInfo(host):
     '''
     rm = nscldaqutils.RingMaster(host)
     usage = rm.list_rings()
-    
-    result = {'host': socket.fqdn(host), 'rings': []}
+    result = {'host': socket.getfqdn(host), 'rings': []}
     for ring in usage:
-        
         # We dont' distentangle proxies but we _do_ make an empty list for them.
         
         ring['proxies'] = []
@@ -271,9 +267,9 @@ def makeRemoteRingInfo(host):
         
         for consumer in ring['consumers']:
             consumer['consumer_command'] = _getRemoteCommand(host, consumer['consumer_pid'])
+            
         
         result['rings'].append(ring)
-
     return result
     
     
@@ -294,7 +290,7 @@ def getHoistedHosts(info):
     
     return result
 
-def removeProxies(rings):
+def removeProxies(data):
     '''
         Given a list of Rings for a host, removes the rings that are
         proxies.  The list of removed rings are returned as their original dicts
@@ -303,6 +299,8 @@ def removeProxies(rings):
         proxyring:  - Ring this is a proxy form.
         
     '''
+    rings = data['rings']
+    host = data['host']
     result = []
     removelist = []
     for (n, ring) in enumerate(rings):
@@ -310,6 +308,7 @@ def removeProxies(rings):
         if proxyInfo is not None:
             ring['proxyhost'] = proxyInfo[0]
             ring['proxyring'] = proxyInfo[1]
+            ring['localhost'] = host
             result.append(ring)
             removelist.append(n)
     # Now remove the indices in removelist from rings:
@@ -327,12 +326,14 @@ def getUniqueNames(listOfLists):
     Given an  iterable of iterables (probably containing strings),
     returns an iterable containing the unique names.
     '''
+
     result = {}
     for outer in listOfLists:
         result[outer] =''
     return [x for x in result.keys()]
     
 def addProxies(proxies, rings):
+    
     '''
         Given  proxy ring definitions gotten from removeProxies on some host, and the list of
         dicts we have so far, Put the proxies in their rightful place.  It is possible that the
@@ -353,7 +354,7 @@ def addProxies(proxies, rings):
     
     #  Integrate the proxies we can, recording their indices.
     for (n, proxy) in enumerate(proxies):
-        source = _findSourceRing(proxy, ring)
+        source = _findSourceRing(proxy, rings)
         if source is not None:
             source['proxies'].append(proxy)
             matched.append(n)
@@ -368,6 +369,13 @@ def addProxies(proxies, rings):
     
     return proxies
 
+def removeCheckedHosts(data, hosts) :
+    #  Remove any hosts that have been checked from the  host list.
+    
+    # Enumerate the hosts in data:
+    
+    checked_hosts = [x['host'] for x in data]
+    return [h for h in hosts if h not in checked_hosts]
 def systemUsage():
     ''' 
         This is the normal entry point.  It probes the entire system in a 
@@ -388,16 +396,14 @@ def systemUsage():
     # Do the local host:
     
     local_rings = makeLocalRingInfo()
-    proxies     = removeProxies(local_rings['rings'])
+    proxies     = removeProxies(local_rings)
 
     for ring in local_rings['rings']:
         remaining_hosts += getHoistedHosts(ring)
     for p in proxies:
         remaining_hosts.append(p['proxyhost'])
-    
     remaining_hosts = getUniqueNames(remaining_hosts)
     result.append(local_rings)
-
     
     # In a sane system, we can't integrate the proxies as in a sane system
     # There won't be proxies for local rings.
@@ -411,19 +417,23 @@ def systemUsage():
         # If that's the case we skip it.
         
         if host not in remaining_hosts:
+            
             try:
                 remote_rings = makeRemoteRingInfo(host)
-                proxies += removeProxies(remote_rings['rings'])
+                proxies += removeProxies(remote_rings)
                 result.append(remote_rings)
                 for ring in remote_rings['rings']:
                     remaining_hosts += getHoistedHosts(ring)
                 for p in proxies:
-                    remaining_hosts += ['proxyhost']
+                    remaining_hosts.append(p['proxyhost'])
+                addProxies(proxies, result)
                 remaining_hosts = getUniqueNames(remaining_hosts)
-                
+                remaining_hosts = removeCheckedHosts(result, remaining_hosts)
             except:                                   
+                print("exception for", host)
                 pass                               # Ignore hosts we can't talk to.
     return result
 
 if __name__ == "__main__":
-    print(systemUsage())
+    import pprint
+    pprint.pp(systemUsage())
