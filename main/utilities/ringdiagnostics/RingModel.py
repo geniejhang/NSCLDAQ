@@ -17,7 +17,7 @@
     - 3'd development cycle - we prune the  model of items that are no longer 
     there.
 '''
-
+import pprint
 from PyQt5.QtGui import QStandardItem, QBrush
 from PyQt5.Qt import *
 
@@ -40,6 +40,7 @@ class RingModel:
         '''
         self._model = view.model()
         self._alarm = alarm_pct
+        self._debug = False   # Enable debug printing.
         
         #  Make an item so we can get the normal background brush:
         
@@ -49,22 +50,30 @@ class RingModel:
         self._errbrush.setColor(Qt.red)
         
 
-        
+    def setDebug(self, state):
+        self._debug =  state
     def update(self, data):
         '''
             Update the model with new data gotten from e.g. RingUsage.systemUsage()
         '''
+        if self._debug:
+            print('Updating with: ')
+            pprint.pp(data)
         for host_rings in data:
             host = host_rings['host']
             ring_top = self._find_host(host)
             rings = host_rings['rings']
             for ring in rings:
                 (ring_item, proxy_top) = self._update_ring(ring_top, ring, False)
+                if self._debug:
+                    print("After initial update:", ring_item, proxy_top)
                 for consumer in ring['consumers']:
                     self._update_consumer(ring_item, consumer)
                 for proxy in ring['proxies']:
+                    if self._debug:
+                        print('Updating proxies', proxy_top.text(), proxy, True)
                     (ring_item, junk) = self._update_ring(proxy_top, proxy, True)
-                    for consumer in proxy['consumer']:
+                    for consumer in proxy['consumers']:
                         self._update_consumer(ring_item, consumer)
         
         self._prune(data)      # Get rid of vanished stuff.
@@ -109,13 +118,12 @@ class RingModel:
         return host_item
     
     def _find_proxies(self, ring_item):
-        all_proxies = self._model.findItems('Remote', Qt.MatchExactly, 0)
-        for proxy in  all_proxies:
-            if proxy.parent() == ring_item:
-                return proxy
+        proxy = ring_item.parent().child(1, 0)
+        if self._debug:
+            print("proxy parent: ", proxy)
+            print(proxy.text())
         
-        # No match is an error - this will likely make a run time error.
-        return None
+        return proxy
      
     def _find_ring(self, ring_top, ring):
         #
@@ -176,9 +184,12 @@ class RingModel:
         # Returns the ring_item tree placeholder, and, if isProxy is False, the 
         # Proxy folder.
         #
+        if self._debug and isProxy:
+            print("update rings for proxies", parent, ring,)
+            
         ring_item = self._find_ring(parent, ring)   # find or create - list of items.
         if isProxy:
-            ringitem[1].setText(f'{ring["name"]}@{ring["proxyhost"]}')
+            ring_item[1].setText(f'{ring["name"]}@{ring["proxyhost"]}')
         else:            
             ring_item[1].setText(ring['name'])
         ring_item[2].setText(ring['producer_command'])
@@ -604,6 +615,8 @@ class RingModel:
                 host_row = 0
                 while True:
                     ring_or_remote = host.child(host_row, 0)
+                    if self._debug:
+                        print("Ring or remote text: ", ring_or_remote.text())
                     if ring_or_remote is None:
                         break    
                     elif ring_or_remote.text() == '':
@@ -614,10 +627,19 @@ class RingModel:
                     elif ring_or_remote.text() == 'Remote':
                         ring_or_remote.setForeground(self._okbrush)
                         rings = self._get_children(ring_or_remote)
-                        for ring in self._get_children(ring_or_remote) :
-                            name_item = ring_or_remote.child(ring.row(), 1)
+                        if self._debug:
+                            print('RIngs in colorize:', rings)
+                        for ring in rings:
+                            if self._debug:
+                                print("Processing ring: ", ring, ring.text())
+                                print("Parent and row are: is:", ring.parent(), ring.row(), ring.column())
+                                print("Parent has children? ", ring.parent().hasChildren()) 
+                                print("Parent's txt is", ring.parent().text())                                   
+                            name_item = ring_or_remote.child(ring.parent().child(ring.row(), 1))
+                            if self._debug:
+                                print("name_item", name_item)
                             name_item.setForeground(self._okbrush)
-                            self._colorize_ring(ring, name_Item)
+                            self._colorize_ring(ring, name_item)
                     else:      
                         # don't know what this is, skip
                         pass
