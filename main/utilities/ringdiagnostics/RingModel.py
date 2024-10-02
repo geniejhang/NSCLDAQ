@@ -83,6 +83,10 @@ class RingModel:
             for ring in host['rings']:
                 ring_item = self._find_or_create_ring(host_item, ring['name'])
                 self._update_ring(ring_item, ring)
+                
+                # Each ring may have consumers.
+                
+                # Each ring may have remote rings.
             
             
             
