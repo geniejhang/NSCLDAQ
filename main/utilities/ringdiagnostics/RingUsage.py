@@ -197,9 +197,10 @@ def _proxyRing(ringname):
 #
 def _findSourceRing(proxy, system):
     host = proxy['proxyhost']
+    hostfqdn = socket.getfqdn(host)
     ring = proxy['proxyring']
     for  h in system:
-        if h['host'] == host:
+        if h['host'] == host or h['host'] == hostfqdn:
             for r in h['rings']:
                 if r['name'] == ring:
                     return r
@@ -408,17 +409,20 @@ def systemUsage():
     # In a sane system, we can't integrate the proxies as in a sane system
     # There won't be proxies for local rings.
     
-    seen_hosts = []
+    seen_hosts = [socket.gethostname()]
+    
     while len(remaining_hosts) > 0:
         host = remaining_hosts.pop(0)
-        host = socket.getfqdn(host)
         seen_hosts.append(host)
+        raw_host = host
+        host = socket.getfqdn(host)
+        
+        
         # It' spossible that we've already looked at the host
         # Because we're processing a host found in a hoist or a proxy
         # If that's the case we skip it.
         
         if host not in remaining_hosts:
-            
             try:
                 remote_rings = makeRemoteRingInfo(host)
                 proxies += removeProxies(remote_rings)
@@ -426,7 +430,8 @@ def systemUsage():
                 for ring in remote_rings['rings']:
                     remaining_hosts += getHoistedHosts(ring)
                 for p in proxies:
-                    remaining_hosts.append(p['proxyhost'])
+                    if p['proxyhost'] not in seen_hosts:
+                        remaining_hosts.append(p['proxyhost'])
                 addProxies(proxies, result)
                 remaining_hosts = getUniqueNames(remaining_hosts)
                 remaining_hosts = removeCheckedHosts(result, remaining_hosts)
