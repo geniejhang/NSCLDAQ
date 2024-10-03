@@ -5,6 +5,7 @@
 #include <CDataSink.h>
 #include <CRingItem.h>
 #include <SRSMaps.h>
+#include <SRSSorter.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <iostream>
@@ -35,6 +36,7 @@ public:
     void setClockPeriod(double period);
     void setRunNumber(uint32_t runNb);
     void setSourceId(uint32_t sourceId);
+
 
 protected:
     virtual void mainLoop();
@@ -90,6 +92,7 @@ private:
     static const int Data2Size{2};
 
     std::unique_ptr<SRSMaps> m_channelsMap;
+    std::unique_ptr<SRSSorter> m_sorter;
     
 };
 
