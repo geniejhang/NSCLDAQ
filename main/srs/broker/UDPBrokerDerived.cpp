@@ -85,8 +85,9 @@ void UDPBrokerDerived::addSink(std::string sinkType, int sid) {
 
 // Return non zero timestamp only when data, not for markers. 
 // The markers are used to compute the data timestamp.
-void UDPBrokerDerived::extractHitTimeStamp(uint8_t fecId, uint8_t* data)
+int UDPBrokerDerived::extractHitTimeStamp(uint8_t fecId, uint8_t* data)
 {
+    int result = 0; 
     auto Data1Offset = 0;
     auto Data2Offset = Data1Offset + Data1Size;
     uint32_t data1 = htonl(*reinterpret_cast<uint32_t*>(&data[Data1Offset]));
@@ -150,6 +151,7 @@ void UDPBrokerDerived::extractHitTimeStamp(uint8_t fecId, uint8_t* data)
         }
         // Set the hit timestamp
         tsAndMappedChno.hitTimeStamp = fineTS;
+        result = 1;
     } else {
         // Enter here if marker
 
@@ -170,21 +172,29 @@ void UDPBrokerDerived::extractHitTimeStamp(uint8_t fecId, uint8_t* data)
         if (startedMarker[idx] && timestamp_42bit != 0) {
             // Good markers after first markers after run start
             markerSRS[idx].fecTimeStamp = timestamp_42bit;
+            tsAndMappedChno.hitTimeStamp = 0;
+            // requires startedMarker[idx] true so firt trig markers are missed.
+            if (m_triggerMode == 1 && vmmid > 15){
+                tsAndMappedChno.hitTimeStamp = timestamp_42bit;
+                result = -1;
+            }
         }
         else if (startedMarker[idx] && timestamp_42bit == 0) {
             // Likely not markers, e.g. it passes here for the last two 6 bytes at end of a datagram
             //printf( "ParserTimestampSeqErrors:  ts == 0 for not first marker\n");
+            tsAndMappedChno.hitTimeStamp = 0;
             m_markerErrCounter++;
         }
         else {
             // First markers after run start
             markerSRS[idx].fecTimeStamp = 0;
+            tsAndMappedChno.hitTimeStamp = 0;
             startedMarker[idx] = true;
         }
-        tsAndMappedChno.hitTimeStamp = 0;
+        //tsAndMappedChno.hitTimeStamp = 0;
         tsAndMappedChno.chnoMapped = 0;
     }
-    return;
+    return result;
 }
 
 
@@ -242,7 +252,7 @@ void UDPBrokerDerived::mainLoop() {
         m_datagramCounter++;
 
         // std::cout<<"Counters: dT, datagram, marker, markerErr, hit, firstData: "<<elapsed_time_s<<" "<<m_datagramCounter<<" "<<m_markerCounter<<" "<<m_markerErrCounter<<" "<<m_hitCounter<<" "<<m_firstDataCounter<<std::endl;
-        std::cout<<"Counters: datagram, marker, markerErr, hit, firstData: "<<m_datagramCounter<<" "<<m_markerCounter<<" "<<m_markerErrCounter<<" "<<m_hitCounter<<" "<<m_firstDataCounter<<std::endl;
+        std::cout<<"Counters: datagram, marker, trig. marker, markerErr, hit, firstData: "<<m_datagramCounter<<" "<<m_markerCounter<<" "<<m_trigMarkerCounter<<" "<<m_markerErrCounter<<" "<<m_hitCounter<<" "<<m_firstDataCounter<<std::endl;
 
         if (m_stopMainLoop) {
             break;
@@ -263,6 +273,7 @@ void UDPBrokerDerived::begin() {
     m_hitCounter = 0;
     m_datagramCounter = 0;
     m_markerCounter = 0;
+    m_trigMarkerCounter = 0;
     m_markerErrCounter = 0;
     m_firstDataCounter = 0;
     m_startChrono = true;
@@ -285,13 +296,13 @@ void UDPBrokerDerived::begin() {
  */
 void UDPBrokerDerived::end() {
     m_pauseMainLoop = true;
-    std::cout<<"Simon in UDPBrokerDerived - end function"<<std::endl;
+    std::cout<<"UDPBrokerDerived - end"<<std::endl;
 
     m_end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::ratio<1, 1>> elapsed_time = m_end - m_start;
     uint32_t elapsed_time_s = static_cast<uint32_t>(elapsed_time.count());
-    std::cout<<"Simon in UDPBrokerDerived - end function after chrono "<<elapsed_time_s<<std::endl;
+    std::cout<<"UDPBrokerDerived - end function after chrono "<<elapsed_time_s<<std::endl;
 
 
 
@@ -357,7 +368,7 @@ void UDPBrokerDerived::pause() {
 
     std::chrono::duration<double, std::ratio<1, 1>> elapsed_time = m_pause - m_start;
     uint32_t elapsed_time_s = static_cast<uint32_t>(elapsed_time.count());
-    std::cout<<"Simon in UDPBrokerDerived - pause function after chrono "<<elapsed_time_s<<std::endl;
+    std::cout<<"UDPBrokerDerived - pause function after chrono "<<elapsed_time_s<<std::endl;
 
     std::map<int, std::unique_ptr<CDataSink>>::iterator it = m_dataSinks.begin();
     while (it != m_dataSinks.end()) {
@@ -382,7 +393,7 @@ void UDPBrokerDerived::resume() {
     // Time into run provided to state change item is the same as at pause
     std::chrono::duration<double, std::ratio<1, 1>> elapsed_time = m_pause - m_start;
     uint32_t elapsed_time_s = static_cast<uint32_t>(elapsed_time.count());
-    std::cout<<"Simon in UDPBrokerDerived - resume function after chrono "<<elapsed_time_s<<std::endl;
+    std::cout<<"UDPBrokerDerived - resume function after chrono "<<elapsed_time_s<<std::endl;
 
     std::map<int, std::unique_ptr<CDataSink>>::iterator it = m_dataSinks.begin();
     while (it != m_dataSinks.end()) {
@@ -415,27 +426,28 @@ void UDPBrokerDerived::makeRingItems(in_addr_t from, short port, CDataSink& sink
         tsAndMappedChno.hitTimeStamp = 0;
         tsAndMappedChno.chnoMapped = 0;
         // Set hitTimeStamp and chnoMapped
-        extractHitTimeStamp(sid, data.get());
+        int proceed = extractHitTimeStamp(sid, data.get());
 
         uint16_t chnoMapped = tsAndMappedChno.chnoMapped;
         memcpy(data.get() + HitAndMarkerSize, &chnoMapped, sizeof(chnoMapped));
 
         // testReadData(data.get());
 
-        if (tsAndMappedChno.hitTimeStamp > 0){
+        // Only for hits
+        if (proceed > 0 && tsAndMappedChno.hitTimeStamp > 0){
 
-            //updates sorter, here pass: data, nBytes, sink.
             //keep feeding the sorter, it will manage the add to RI and put into sink when it is time... 
-            //and continue on a new RI...
-
             m_sorter->sort(data.get(), tsAndMappedChno.hitTimeStamp, sid, sink, nBytes);
-            
 
             //if (m_startChrono){
             //  m_start = std::chrono::high_resolution_clock::now();
             //  m_startChrono = false;
             //}
             m_hitCounter += 1;
+        } 
+        else if (proceed < 0 && tsAndMappedChno.hitTimeStamp > 0) { // Only for trigger markers
+            m_sorter->sort(data.get(), tsAndMappedChno.hitTimeStamp, sid, sink, 0); //set nBytes to 0 to flag trigg marker
+            m_trigMarkerCounter +=1 ; 
         }
         else {
             m_markerCounter +=1 ; 

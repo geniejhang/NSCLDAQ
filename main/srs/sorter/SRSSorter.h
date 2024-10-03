@@ -17,16 +17,13 @@ public:
 
 private:
 
-    void newRingItem(const uint64_t hitTimeStamp, int fecId, size_t nBytes, CDataSink& sink);
+    void newRingItem(const uint64_t hitTimeStamp, int fecId, CDataSink& sink);
     void appendRingItem(int fecId, uint8_t* data);
     void deleteRingItem(int fecId);
 
     static const int HitAndMarkerSizeExtended{8};
     static const int MaxFECs{16};
-
-    //uint64_t m_timestamp[MaxFECs] = {0};
-
-    //CRingItem* m_pRingItem[MaxFECs] = {nullptr};
+    static const size_t packetSize{8968};
 
     struct event {
         CRingItem* pRingItem{nullptr};
@@ -48,8 +45,6 @@ private:
     // m_dtHits: timestamp window for srs hits (ts in [0, m_dtHits]), should be a positive value
     uint16_t m_maxHits;
     int m_dtHits;
-
-
 
 
 };
