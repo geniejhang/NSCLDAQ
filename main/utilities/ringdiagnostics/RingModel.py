@@ -279,12 +279,14 @@ class RingModel:
                 pprint.pp(consumer_data)
                 print('setting ', self._sibling(consumer, CONSUMER_CMD).text(), 'red')
             self._sibling(consumer, CONSUMER_CMD).setForeground(self._errbrush)
-            parent = ring_item
+            parent = consumer.parent()
             while parent is not None:
                 if parent.parent() is None:
                     col0 = self._model.item(parent.row(), 0)
                     col0.setForeground(self._errbrush)
-                else:    
+                else:   
+                    if self._debug:
+                        print("making ", parent.text(), ' red') 
                     self._sibling(parent, 0).setForeground(self._errbrush)
                     name = self._sibling(parent, RING_NAME)
                     if name is not None:
