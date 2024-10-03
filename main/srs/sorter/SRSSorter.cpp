@@ -20,7 +20,6 @@
 
 
 #include "SRSSorter.h"
-#include "UDPBrokerDerived.h"
 
 #include <iostream>
 #include <fstream>
@@ -76,7 +75,7 @@ void SRSSorter::sort(uint8_t* data, const uint64_t hitTimeStamp, int sid, CDataS
         return;
     }
 
-    // Passed sanity checks, create RI and/or append data.
+    // Passed sanity checks, create RI 
     if (tsDiff > m_dtHits || hitTimeStamp == 0){
         newRingItem(hitTimeStamp, fecId, sink);
         m_event[fecId].timestamp = hitTimeStamp;
