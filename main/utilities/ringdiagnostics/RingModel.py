@@ -75,7 +75,10 @@ class RingModel:
             print('Updating with: ')
             pprint.pp(data)
     
+        # Clear alarms - they'll get re-asserted by consumer updates if appropriate:
         #  Each list is a host.
+        
+        self._clear_alarms()
         
         for host in data:
             host_item = self._find_or_create_host(host['host'])
@@ -90,7 +93,7 @@ class RingModel:
                 
                 consumers = ring['consumers']
                 for consumer in consumers:
-                    self._update_consumer(ring_item, consumer)
+                    self._update_consumer(ring_item, consumer, ring['size'])
                 
                 # Each ring may have remote rings.
                 # This all has identical structure to ring but
@@ -99,16 +102,57 @@ class RingModel:
                 remote_parent = ring_item.child(1, 0)    # The parent of all remotes:
                 remotes = ring['proxies']
                 for remote in remotes:
-                    remote_item = self._find_or_create_ring(remote_parent, remote_item['name'])
+                    remote_item = self._find_or_create_ring(remote_parent, remote['name'], True)
                     self._update_ring(remote_item, remote)
                     
                     # Remotes also have consumers:
                     
                     consumers = remote['consumers']
                     for consumer in consumers:
-                        self._update_consumer(remote_item, consumer)
+                        self._update_consumer(remote_item, consumer, remote['size'])
             
+    
+    def _clear_child_alarms(self, parent):
+        # Clear alarms on all children recursively:
+        # We clear the col 0 and, if they exist, 
+        global RING_NAME
+        global CONSUMER_CMD  
+        row = 0
+        while True:
+            child = parent.child(row, 0)
+            if child is None:
+                return
+            child.setForeground(self._okbrush)
+            name = self._sibling(child, RING_NAME)
+            if name is not None:
+                name.setForeground(self._okbrush)
+            consumer = self._sibling(child, CONSUMER_CMD)
+            if consumer is not None:
+                consumer.setForeground(self._okbrush)
             
+            # Do our children too:
+            
+            self._clear_child_alarms(child)
+            
+            row += 1
+    
+        
+    def _clear_alarms(self):
+        # Clear alarms by:
+        # For all model rows:
+        #   Setting col 0's background to the ok brush.
+        #   Recusively for each child, set it's col0 background to okbrush
+        #   and it's consumer_command to okbrush
+        
+        model_row = 0
+        while True:
+            top = self._model.item(model_row, 0)
+            if top is None:
+                return
+            top.setForeground(self._okbrush)
+            self._clear_child_alarms(top)
+            model_row += 1
+        
     def _sibling(self, item, column):
         #  Get the sibling of an item frequently used.
         
@@ -150,10 +194,10 @@ class RingModel:
         #    A child with text 'Remote
         #
         # Returns the column 0 ring item.
-        
+        global RING_NAME
         row =0
         while True:
-            ring_item = host_item.child(row, 1)
+            ring_item = host_item.child(row, RING_NAME)
             if ring_item is None:
                 break                        # Need to create
             else:
@@ -213,7 +257,7 @@ class RingModel:
         return self._insert_empty_row(consumer_parent)
         
     
-    def _update_consumer(self, ring_item, consumer_data):
+    def _update_consumer(self, ring_item, consumer_data, ring_size):
         global CONSUMER_CMD
         global CONSUMER_PID
         global CONSUMER_BACKLOG
@@ -224,6 +268,31 @@ class RingModel:
         self._sibling(consumer, CONSUMER_CMD).setText(consumer_data['consumer_command'])
         self._sibling(consumer, CONSUMER_PID).setText(str(consumer_data['consumer_pid']))
         self._sibling(consumer, CONSUMER_BACKLOG).setText(str(consumer_data['backlog']))
+        
+        # if the backlog > self.alarm_pct of the size of the ring,
+        # We color this and all parents red:
+        
+        threshold = ring_size * self._alarm /100
+        if consumer_data['backlog']  > threshold:
+            if self._debug:
+                print('alarm:')
+                pprint.pp(consumer_data)
+                print('setting ', self._sibling(consumer, CONSUMER_CMD).text(), 'red')
+            self._sibling(consumer, CONSUMER_CMD).setForeground(self._errbrush)
+            parent = ring_item
+            while parent is not None:
+                if parent.parent() is None:
+                    col0 = self._model.item(parent.row(), 0)
+                    col0.setForeground(self._errbrush)
+                else:    
+                    self._sibling(parent, 0).setForeground(self._errbrush)
+                    name = self._sibling(parent, RING_NAME)
+                    if name is not None:
+                        name.setForeground(self._errbrush)
+                parent = parent.parent()
+        
+        
+        
         
 if __name__ == '__main__':
     import RingUsage
