@@ -44,11 +44,6 @@ SRSSorter::SRSSorter(uint16_t maxHits = 960, int dtHits = 2) {
 
 
 SRSSorter::~SRSSorter() {
-    // for (int fecId = 0; fecId < MaxFECs; fecId++)
-    //     if (m_event[fecId].pRingItem != nullptr) {
-    //         delete m_event[fecId].pRingItem;
-    //         m_event[fecId].pRingItem = nullptr;
-    //     }
 }
 
 
@@ -57,91 +52,63 @@ void SRSSorter::reset() {
         m_event[fecId].reset();
 }
 
-// original no sorting
-// void SRSSorter::sort(uint8_t* data, const uint64_t hitTimeStamp, int sid, CDataSink& sink, size_t nBytes){
 
-//     CRingItem* pResult = new CRingItem(PHYSICS_EVENT, hitTimeStamp, sid, 0, nBytes + 1024);
-//     // Set cursor to beginning of body
-//     pResult->setBodyCursor(pResult->getBodyCursor()); 
-//     // Copy the 6 + 2 bytes of data into the CRingItem's body
-//     memcpy(pResult->getBodyCursor(), data, HitAndMarkerSizeExtended);
-//     // Update cursor after copy
-//     pResult->setBodyCursor(reinterpret_cast<uint8_t*>(pResult->getBodyCursor()) + HitAndMarkerSizeExtended);
-//     pResult->updateSize();
-//     sink.putItem(*pResult); 
-//     delete pResult;
-    
-
-//     return;
-// }
-
-// Hits (data) come here one by one
+// Hits (data) come here one by one.
 // Inputs also sid and sink because for the moment the sorter will just group, into a RI,
 // hits from the same fec (sink). Then, the event builder will sort the RI from different fec.  
 void SRSSorter::sort(uint8_t* data, const uint64_t hitTimeStamp, int sid, CDataSink& sink, size_t nBytes){
 
     int fecId = sid - 10;
+
     int64_t tsDiff = hitTimeStamp - m_event[fecId].timestamp;
 
+    // Sanity checks
+    // (1) Skip hit/trig marker if smaller timesamp.
     if (tsDiff < 0){
-        printf("Simon - SRSSorter::sort - tsDiff < 0 - currentTs: %llu prevTs : %llu\n", hitTimeStamp, m_event[fecId].timestamp);
+        printf("SRSSorter::sort - tsDiff < 0 - currentTs: %llu prevTs : %llu \n", hitTimeStamp, m_event[fecId].timestamp);
         return;
     }
+    // (2) If too many hits, delete the RI and dont't put in sink.
     if (m_event[fecId].nHits > m_maxHits){
-        printf("Simon - SRSSorter::sort - nHits > m_maxHits \n");
+        printf("SRSSorter::sort - nHits > m_maxHits \n");
         m_event[fecId].nHits = 0;
         deleteRingItem(fecId);
         return;
     }
-    ///* // For multi hit 
+
+    // Passed sanity checks, create RI and/or append data.
     if (tsDiff > m_dtHits || hitTimeStamp == 0){
-       // printf("Simon - SRSSorter::sort - fecId: %d absDiff: %llu \n", fecId, absDiff(hitTimeStamp, m_event[fecId].timestamp));
-        // Release RI into sink when the new timestamp is different enough from the current one
-        //sink.putItem(*m_event[fecId].pRingItem); 
-        // Delete if necessary and allocate memory for new RingItem
-        newRingItem(hitTimeStamp, fecId, nBytes, sink);
+        newRingItem(hitTimeStamp, fecId, sink);
         m_event[fecId].timestamp = hitTimeStamp;
         m_event[fecId].nHits = 0;
     }
-    else if (tsDiff >= 0 && tsDiff <= m_dtHits){
-        //printf("Simon - SRSSorter::sort - in window - currentTs: %llu preTs : %llu\n", hitTimeStamp, m_event[fecId].timestamp);
+    // else if (tsDiff >= 0 && tsDiff <= m_dtHits){
+    //     //printf("Simon - SRSSorter::sort - in window - currentTs: %llu preTs : %llu\n", hitTimeStamp, m_event[fecId].timestamp);
+    // }
+
+    // nBytes is set to 0 for trig marker in UDPBrokerDerived.
+    // Avoid appenning trig marker to RI.
+    // Note: If no hit with corresponding trig marker, the RI has null body size.
+    if (nBytes > 0){
+        appendRingItem(fecId, data);
     }
-
-    appendRingItem(fecId, data);
-    //*/
-
-        /* //For single hit
-        newRingItem(hitTimeStamp, fecId, nBytes, sink);
-        // Set cursor to beginning of body
-        //m_event[fecId].pRingItem->setBodyCursor(m_event[fecId].pRingItem->getBodyCursor()); 
-        // Copy the 6 + 2 bytes of data into the CRingItem's body
-        memcpy(m_event[fecId].pRingItem->getBodyCursor(), data, HitAndMarkerSizeExtended);
-        // Update cursor after copy
-        m_event[fecId].pRingItem->setBodyCursor(reinterpret_cast<uint8_t*>(m_event[fecId].pRingItem->getBodyCursor()) + HitAndMarkerSizeExtended);
-        m_event[fecId].pRingItem->updateSize();
-        sink.putItem(*m_event[fecId].pRingItem); 
-        delete m_event[fecId].pRingItem;
-        m_event[fecId].pRingItem = nullptr;
-        */    
+    // else if (nBytes == 0){
+    // }
 
     return;
 }
 
 
-void SRSSorter::newRingItem(const uint64_t hitTimeStamp, int fecId, size_t nBytes, CDataSink& sink){
+void SRSSorter::newRingItem(const uint64_t hitTimeStamp, int fecId, CDataSink& sink){
 
     if (m_event[fecId].pRingItem != nullptr) {
-        //printf("Simon - SRSSorter::newRingItem - before putItem - getBodySize: %llu \n", m_event[fecId].pRingItem->getBodySize());
-        sink.putItem(*m_event[fecId].pRingItem);// For multi hit (just comment that line and let the rest for single hit)
+        sink.putItem(*m_event[fecId].pRingItem);
         deleteRingItem(fecId);
-        m_event[fecId].pRingItem = new CRingItem(PHYSICS_EVENT, hitTimeStamp, fecId + 10, 0, nBytes + 1024);
+        m_event[fecId].pRingItem = new CRingItem(PHYSICS_EVENT, hitTimeStamp, fecId + 10, 0, packetSize + 1024);
         m_event[fecId].pRingItem->setBodyCursor(m_event[fecId].pRingItem->getBodyCursor());
-         
-
     } else {
-        m_event[fecId].pRingItem = new CRingItem(PHYSICS_EVENT, hitTimeStamp, fecId + 10, 0, nBytes + 1024);
+        m_event[fecId].pRingItem = new CRingItem(PHYSICS_EVENT, hitTimeStamp, fecId + 10, 0, packetSize + 1024);
         m_event[fecId].pRingItem->setBodyCursor(m_event[fecId].pRingItem->getBodyCursor());
-
     }
 
     return;
@@ -159,13 +126,12 @@ void SRSSorter::appendRingItem(int fecId, uint8_t* data){
     
     //printf("Simon - SRSSorter::appendRingItem - body size - old: %lu new : %lu\n", oldSize, m_event[fecId].pRingItem->getBodySize());
 
-    // Following true if data is not empty (is not trig. marker)
-    if (oldSize < m_event[fecId].pRingItem->getBodySize()){
+    // if (oldSize < m_event[fecId].pRingItem->getBodySize()){
         m_event[fecId].nHits = m_event[fecId].nHits + 1;
-    }
-    else {
-        printf("Simon - SRSSorter::appendRingItem - body size unchanged - old: %lu new : %lu\n", oldSize, m_event[fecId].pRingItem->getBodySize());
-    }
+    // }
+    // else {
+    //     printf("Simon - SRSSorter::appendRingItem - body size unchanged - old: %lu new : %lu\n", oldSize, m_event[fecId].pRingItem->getBodySize());
+    // }
 }
 
 

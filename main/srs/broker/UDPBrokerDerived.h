@@ -45,7 +45,7 @@ protected:
 private:
 
     void makeRingItems(in_addr_t from, short port, CDataSink& sink, int sid, uint8_t* buffer, size_t nBytes);
-    void extractHitTimeStamp(uint8_t sourceId, uint8_t* data);
+    int extractHitTimeStamp(uint8_t sourceId, uint8_t* data);
     void mapping(uint8_t* data, int fecId);
     void testReadData(uint8_t* data);
     uint16_t invertByteOrder(uint16_t data);
@@ -67,6 +67,7 @@ private:
     int m_hitCounter;
     int m_datagramCounter;
     int m_markerCounter;
+    int m_trigMarkerCounter;
     int m_markerErrCounter;
     int m_firstDataCounter;
     bool m_startChrono;
