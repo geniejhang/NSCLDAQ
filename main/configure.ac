@@ -909,6 +909,7 @@ Makefile
     srs/maps/Makefile
     srs/broker/Makefile
     srs/readout/Makefile
+    srs/sorter/Makefile
     cookbooks/Makefile
 ])
 

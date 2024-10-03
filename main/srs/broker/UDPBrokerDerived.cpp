@@ -46,6 +46,7 @@
 #include <Exception.h>
 #include <bitset>
 #include <SRSMaps.h>
+#include <SRSSorter.h>
 
 #define NULL_TIMESTAMP UINT64_C(0xffffffffffffffff)
 #define BARRIER_NOTBARRIER   0
@@ -66,6 +67,8 @@ void UDPBrokerDerived::initialize(short port, std::string mapStr) {
   // Set the detector channel mapping
   m_channelsMap = std::make_unique<SRSMaps>();
   m_channelsMap->setChannelsMap(mapStr);
+  // Initialize the sorter
+  m_sorter = std::make_unique<SRSSorter>();
   m_stopMainLoop = false;
   m_pauseMainLoop = true;
 }
@@ -116,6 +119,9 @@ void UDPBrokerDerived::extractHitTimeStamp(uint8_t fecId, uint8_t* data)
         // Set mapped channel
         tsAndMappedChno.chnoMapped = m_channelsMap->getMappedChannel(fecId, vmmid, chno);
 
+        //printf("SRS data fecId %d vmmid %d, idx %d: 42 bit timestamp %lu \n", fecId, vmmid, idx, markerSRS[idx].fecTimeStamp);
+
+
         //if (m_extClock == 1){
             // Get extClock freq/period - actually no information on that from vmmsc - should be provided by user 
             // no fineTS with ext. clock for now
@@ -136,7 +142,6 @@ void UDPBrokerDerived::extractHitTimeStamp(uint8_t fecId, uint8_t* data)
 
         //uint8_t tdc = data2 & 0xff;
         //printf("SRS Data: fecId: %d, vmm: %d, channel: %d, channelMapped: %d, fecTimeStamp: %llu, fineTS: %llu, bcid: %d, tdc: %d\n", fecId, vmmid, chno, tsAndMappedChno.chnoMapped, markerSRS[idx].fecTimeStamp, fineTS, bcid, tdc);
-
         //if data come before the first markers set TS to 0 and these data will be skipped.
         if (markerSRS[idx].fecTimeStamp == 0)
         {
@@ -153,7 +158,7 @@ void UDPBrokerDerived::extractHitTimeStamp(uint8_t fecId, uint8_t* data)
         uint64_t timestamp_lower_10bit = data2 & 0x03FF;
         uint64_t timestamp_upper_32bit = data1;
         uint64_t timestamp_42bit = (timestamp_upper_32bit << 10) + timestamp_lower_10bit;
-        // printf("SRS Marker fecId %d vmmid %d, idx %d: timestamp lower 10bit %lu, timestamp upper 32 bit %lu, 42 bit timestamp %lu \n", fecId, vmmid, idx, timestamp_lower_10bit, timestamp_upper_32bit, timestamp_42bit);
+        //printf("SRS Marker fecId %d vmmid %d, idx %d: timestamp lower 10bit %lu, timestamp upper 32 bit %lu, 42 bit timestamp %lu \n", fecId, vmmid, idx, timestamp_lower_10bit, timestamp_upper_32bit, timestamp_42bit);
 
         // if(markerSRS[idx].fecTimeStamp > timestamp_42bit) {
         //     if (markerSRS[idx].fecTimeStamp < 0x1FFFFFFF + timestamp_42bit) {
@@ -330,6 +335,7 @@ void UDPBrokerDerived::end() {
         markerSRS[idx].hasDataMarker = false;
         startedMarker[idx] = false;
     }
+    m_sorter->reset();
 }
 
 
@@ -402,7 +408,7 @@ void UDPBrokerDerived::makeRingItems(in_addr_t from, short port, CDataSink& sink
         // The datagram send from the slow controler has only srsHeader and data
         auto dataOffset = SRSHeaderSize + HitAndMarkerSize * readoutIndex;
 
-        // Add mapped chno to data (+ 2 bytes)
+        // Add mapped chno to data (+ 2 bytes: uint16_t chnoMapped)
         std::unique_ptr<uint8_t[]> data(new uint8_t[HitAndMarkerSize + 2]);
         memcpy(data.get(), buffer + dataOffset, HitAndMarkerSize);
 
@@ -417,16 +423,14 @@ void UDPBrokerDerived::makeRingItems(in_addr_t from, short port, CDataSink& sink
         // testReadData(data.get());
 
         if (tsAndMappedChno.hitTimeStamp > 0){
-            CRingItem* pResult = new CRingItem(PHYSICS_EVENT, tsAndMappedChno.hitTimeStamp, sid, 0, nBytes + 1024);
-            // Set cursor to beginning of body
-            pResult->setBodyCursor(pResult->getBodyCursor()); 
-            // Copy the 6 + 2 bytes of data into the CRingItem's body
-            memcpy(pResult->getBodyCursor(), data.get(), HitAndMarkerSize + 2);
-            // Update cursor after copy
-            pResult->setBodyCursor(reinterpret_cast<uint8_t*>(pResult->getBodyCursor()) + HitAndMarkerSize + 2);
-            pResult->updateSize();
-            sink.putItem(*pResult); 
-            delete pResult;
+
+            //updates sorter, here pass: data, nBytes, sink.
+            //keep feeding the sorter, it will manage the add to RI and put into sink when it is time... 
+            //and continue on a new RI...
+
+            m_sorter->sort(data.get(), tsAndMappedChno.hitTimeStamp, sid, sink, nBytes);
+            
+
             //if (m_startChrono){
             //  m_start = std::chrono::high_resolution_clock::now();
             //  m_startChrono = false;
