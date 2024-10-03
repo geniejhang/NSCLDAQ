@@ -35,6 +35,8 @@ CONSUMER_CMD = 6
 CONSUMER_PID = 7
 CONSUMER_BACKLOG = 8
 
+NUM_COLUMNS = 9
+
 class RingModel:
     def __init__(self, view, alarm_pct):
         '''
@@ -81,13 +83,30 @@ class RingModel:
             # Each host has rings as children
             
             for ring in host['rings']:
-                ring_item = self._find_or_create_ring(host_item, ring['name'])
+                ring_item = self._find_or_create_ring(host_item, ring['name'], False)
                 self._update_ring(ring_item, ring)
                 
                 # Each ring may have consumers.
                 
+                consumers = ring['consumers']
+                for consumer in consumers:
+                    self._update_consumer(ring_item, consumer)
+                
                 # Each ring may have remote rings.
-            
+                # This all has identical structure to ring but
+                # without a remot item on the ring.
+                #
+                remote_parent = ring_item.child(1, 0)    # The parent of all remotes:
+                remotes = ring['proxies']
+                for remote in remotes:
+                    remote_item = self._find_or_create_ring(remote_parent, remote_item['name'])
+                    self._update_ring(remote_item, remote)
+                    
+                    # Remotes also have consumers:
+                    
+                    consumers = remote['consumers']
+                    for consumer in consumers:
+                        self._update_consumer(remote_item, consumer)
             
             
     def _sibling(self, item, column):
@@ -95,6 +114,16 @@ class RingModel:
         
         return item.parent().child(item.row(), column)   
     
+    def _insert_empty_row(self, parent):
+        # insert an empty row under the parent and return the item in col 0.
+        global NUM_COLUMNS
+        row = []
+        for i in range(NUM_COLUMNS):
+            row.append(QStandardItem(''))
+        
+        parent.appendRow(row)
+        return row[0]
+        
     def _find_or_create_host(self, name):
         # The hosts are the top level of the hierarchy, their names
         # are in col 0.  If one already exists with text() == name,
@@ -113,7 +142,7 @@ class RingModel:
                 self._model.appendRow([host_name,])
                 return host_name
     
-    def _find_or_create_ring(self, host_item, ring_name):
+    def _find_or_create_ring(self, host_item, ring_name, is_remote):
         # If a ring of the given ringname exists, return its col 0.
         # if not create:
         #    The ring items, 
@@ -134,18 +163,11 @@ class RingModel:
         
         # Have to create a new ring item:
         
-        ring_row  = [
-            QStandardItem(''),
-            QStandardItem(ring_name),
-            QStandardItem('<none>'),    # Producer cmd.
-            QStandardItem('0'),         #Producer pid.
-            QStandardItem('0'),         # ring size
-            QStandardItem('0')          # free space.
-        ]
-        host_item.appendRow(ring_row)
-        result = ring_row[0]
+       
+        result = self._insert_empty_row(host_item)
         result.appendRow([QStandardItem('Consumers'),])
-        result.appendRow([QStandardItem('Remote')],)
+        if not is_remote:
+            result.appendRow([QStandardItem('Remote')],)
         
         return result
     
@@ -157,22 +179,63 @@ class RingModel:
         global RING_SIZE
         global RING_FREE
         
+        self._sibling(ring_item, RING_NAME).setText(ring['name'])
         self._sibling(ring_item, RING_PRODUCER).setText(ring['producer_command'])
         self._sibling(ring_item, RING_PRODUCER_PID).setText(str(ring['producer_pid']))
         self._sibling(ring_item, RING_SIZE).setText(str(ring['size']))
         self._sibling(ring_item, RING_FREE).setText(str(ring['free']))
     
     
+    def _find_or_create_consumer(self, ring_item, consumer_data):
+        #  Given a ring item (QStandardItemModel), and the data for a consumer,
+        #  either finds the row for the consumer with the same PID as consumer_data['consumer_pid']
+        #  Or creates a new one.
+        # 
+        #   THe caller should not assume anything about which item on that row is returned.
+        #
+        
+        #  The first child of ring_item is the parent for consumers:
+        
+        consumer_parent = ring_item.child(0, 0)
+        crow = 0
+        while True:
+            consumer_item = consumer_parent.child(crow, 0)
+            if consumer_item is not None:
+                pid_item = self._sibling(consumer_item, CONSUMER_PID)
+                if int(pid_item.text()) == consumer_data['consumer_pid']:
+                    return consumer_item
+                else:
+                    crow += 1
+            else:
+                break
+        # Didn't find, have to create.
+        
+        return self._insert_empty_row(consumer_parent)
+        
+    
+    def _update_consumer(self, ring_item, consumer_data):
+        global CONSUMER_CMD
+        global CONSUMER_PID
+        global CONSUMER_BACKLOG
+        #
+        #  Update the informationa about a consumer
+        #
+        consumer = self._find_or_create_consumer(ring_item, consumer_data)
+        self._sibling(consumer, CONSUMER_CMD).setText(consumer_data['consumer_command'])
+        self._sibling(consumer, CONSUMER_PID).setText(str(consumer_data['consumer_pid']))
+        self._sibling(consumer, CONSUMER_BACKLOG).setText(str(consumer_data['backlog']))
+        
 if __name__ == '__main__':
     import RingUsage
     import RingView
 
     from PyQt5.QtWidgets import QApplication, QMainWindow
+    
 
     app = QApplication(['ringview test'])
     mw = QMainWindow()
     tree = RingView.RingView()
-    contents = RingModel(tree)
+    contents = RingModel(tree, 0.9)
     usage = RingUsage.systemUsage()
     contents.update(usage)
     mw.setCentralWidget(tree)

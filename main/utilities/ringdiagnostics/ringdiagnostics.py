@@ -37,23 +37,31 @@ from PyQt5.QtCore import QTimer
 # 
 
 class Updater(QTimer):
-    def __init__(self, update, model, *args):
+    def __init__(self, update, model, debug, *args):
         super().__init__(*args)
 
         self._update = update
         self._model  = model
-        
+        if debug is not None:
+            self._debug = True
+        else:
+            self._debug = False
         self.timeout.connect(self._update_model)
         self._update_model()
         
+        
     def _update_model(self):
-        print("update")
+        if self._debug:
+            print("update")
         usage = RingUsage.systemUsage()
-        print("Updated usage")
+        if self._debug:
+            print("Updated usage")
         self._model.update(usage)
-        print("updated model")
+        if self._debug:
+            print("updated model")
         self._schedule()
-        print('done')
+        if self._debug:
+            print('done')
 
     def _schedule(self):
         self.setInterval(self._update)
@@ -96,7 +104,7 @@ tree = RingView.RingView()
 contents = RingModel.RingModel(tree, alarm_pct)
 if os.getenv("DEBUG") is not None:
     contents.setDebug(True)
-auto_update = Updater(update_ms, contents)
+auto_update = Updater(update_ms, contents, os.getenv("DEBUG"))
 mw.setCentralWidget(tree)
 mw.show()
 app.exec()
