@@ -23,7 +23,7 @@ private:
 
     static const int HitAndMarkerSizeExtended{8};
     static const int MaxFECs{16};
-    static const size_t packetSize{8968};
+    static const size_t packetSize{8968}; //carefull with that limit, it should be higher than maxHits bytes
 
     struct event {
         CRingItem* pRingItem{nullptr};
