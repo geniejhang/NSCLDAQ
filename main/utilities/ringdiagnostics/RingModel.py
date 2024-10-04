@@ -110,8 +110,66 @@ class RingModel:
                     consumers = remote['consumers']
                     for consumer in consumers:
                         self._update_consumer(remote_item, consumer, remote['size'])
+        
+        # Now that we've updated all existing items, we need to prune all items that
+        # no longer exist.
+        
+        self._prune(data)
             
+    def _collect(self, dictlist,  key):
+        # GIven a list of dicts with a 'key' returns the value of all of those keys:
+        
+        return [x[key] for x in dictlist]
+        
+    def _collect_hosts(self):
+        # Returns a list of all of the host items and their 
+        # row nummbers in the model.
+        # Sadly model rows need to be treated diferently than the
+        # children... almost enough to make one wish I had a super top node
+        # that _everytyhing_ is under...though the visual appeal of that
+        # is not as good:
+        
+        result = []
+        row = 0
+        while True:
+            host_item = self._model.item(row, 0)
+            if host_item is None:
+                break
+            result.append((host_item, row))
+            row += 1
+        return result
+        
+    def _collect_child_column(self, parent, column):
+        #  Given a parent item, returns a list of
+        #  item,row pairs for all children of the parent.
+        #
+        result = []
+        row = 0
+        while True:
+            item = parent.child(row, column)
+            if item is None:
+                break
+            result.append((item, row))
+            row += 1
+        
+        return result
     
+    def _remove_hosts(self, rows):
+        #  Given a list oif model rows, removes them.
+        #
+        
+        rows.sort(reverse=True)  # So row numbers of remaining rows don't change
+        
+        for row in rows:
+            self._model.removeRow(row)
+            
+    def _remove_children(self, parent, rows):
+        # GIven a list of child rows, removes them from the parent
+        
+        rows.sort(reverse=True)
+        for row in rows:
+            parent.removeRow(row)
+        
     def _clear_child_alarms(self, parent):
         # Clear alarms on all children recursively:
         # We clear the col 0 and, if they exist, 
@@ -136,6 +194,23 @@ class RingModel:
             
             row += 1
     
+    def _find_entry(self, dict_list, key, value):
+        # For a list of dicts, returns the item whose key matches a specific value
+        
+        for d in dict_list:
+            if d[key] == value:
+                return d
+        
+        return None
+        
+    def _find_item(self, items, text):
+        #  Finds an item with the matching text in a list of items:
+        
+        for item in items:
+            if item.text() == text:
+                return item
+        
+        return None
         
     def _clear_alarms(self):
         # Clear alarms by:
@@ -173,18 +248,14 @@ class RingModel:
         # are in col 0.  If one already exists with text() == name,
         # return it if not, make one and return it.
         
-        row = 0
-        while True:
-            host_name = self._model.item(row, 0)
-            if host_name is not None:
-                if host_name.text() == name:
-                    return host_name
-                else:
-                    row += 1
-            else:
-                host_name = QStandardItem(name)
-                self._model.appendRow([host_name,])
-                return host_name
+        matches = self._model.findItems(name,  Qt.MatchExactly, 0)
+        for match in matches:
+            if match.text() == name:
+                return match
+        
+        host_name = QStandardItem(name)
+        self._model.appendRow(host_name)
+        return host_name
     
     def _find_or_create_ring(self, host_item, ring_name, is_remote):
         # If a ring of the given ringname exists, return its col 0.
@@ -294,7 +365,56 @@ class RingModel:
                 parent = parent.parent()
         
         
+    # remove host items that no longer exist:
+    
+    def _prune_hosts(self, data):
+        # Remove hosts that dropped out of the data.
         
+        host_items = self._collect_hosts()     # (item, row) pairs.
+        hosts      = self._collect(data, 'host')
+        
+        dead_rows = [x[1] for x in host_items if x[0].text() not in hosts]
+        
+        self._remove_hosts(dead_rows)      
+    
+    def _prune_consumers(self, parent, consumer_data):
+        pass
+    def _prune_rings(self, host_item, ring_data):
+        global RING_NAME
+        # Remove rings froma  the host_item that don't appear in
+        # ring_data.
+        ring_names = self._collect(ring_data, 'name')
+        ring_items = self._collect_child_column(host_item, RING_NAME)
+        dead_rows = [x[1] for x in ring_items if x[0].text() not in ring_names]
+        self._remove_children(host_item, dead_rows)
+        
+        remaining_rings = [x[0] for x in self._collect_child_column(host_item, RING_NAME)]  # Could have killed off some
+        for ring_item in remaining_rings:
+            ring_0 = self._sibling(ring_item, 0)    #  parent of children.
+            consumer_item = ring_0.child(0,0)
+            remote_item   = ring_0.child(1, 0)     # could be null if host_item is actually a remote.
+            thering       = self._find_entry(ring_data, 'name', ring_item.text())
+            self._prune_consumers(consumer_item, thering['consumers'])
+            
+            if remote_item is not None:    
+                # Get the ring items in the remote and recurse witht he parent set to remote_item.
+                
+                proxies = thering['proxies']
+                self._prune_rings(remote_item, proxies)
+            
+        
+    def _prune(self, data):
+        #  Prune all of the items in the model that no longer are
+        # in the data:
+        
+        self._prune_hosts(data)
+        remaining_host_items = [x[0] for x in self._collect_hosts()]    # Some may have been deleted.
+        for host in data:
+            host_name = host['host']
+            host_rings = host['rings']
+            parent_host = self._find_item(remaining_host_items, host_name)
+            self._prune_rings(parent_host, host_rings)
+            
         
 if __name__ == '__main__':
     import RingUsage
