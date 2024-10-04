@@ -378,7 +378,24 @@ class RingModel:
         self._remove_hosts(dead_rows)      
     
     def _prune_consumers(self, parent, consumer_data):
-        pass
+        #  Prune consumers of a ring.  parent is  the parent of all
+        #  consumers in the model.
+        #  consumer_data is the information about the consumers for
+        #  the ring.
+        global CONSUMER_PID
+        
+        actual_pids = self._collect(consumer_data, 'consumer_pid')
+            
+        pid_items  = self._collect_child_column(parent, CONSUMER_PID)  #(item, column) from model.
+        if self._debug:
+            print('pruning consumers')
+            print("actual consumers:", actual_pids)
+            print('GUI pids.', [int(x[0].text()) for x in pid_items])
+            
+        dead_rows  = [x[1] for x in pid_items if int(x[0].text()) not in actual_pids]
+        self._remove_children(parent, dead_rows)
+        
+        
     def _prune_rings(self, host_item, ring_data):
         global RING_NAME
         # Remove rings froma  the host_item that don't appear in
