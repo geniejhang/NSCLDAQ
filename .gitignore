@@ -3,8 +3,14 @@
 *.trs
 *.lo
 *.la
+*~
+*#
+__pycache__
 .deps
 .libs
+*autobook*
 Makefile.in
 Makefile
-
+main/ddasformat
+main/libtcl
+main/unifiedformat+
