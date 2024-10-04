@@ -76,6 +76,7 @@ class RingView(QTreeView):
     
     #  Buidl the header view and set it.
     def _buildHeader(self):
+        print("building header")
         self._header = QHeaderView(Qt.Horizontal)
         self._headerItems = []
         self._headerItems.append(QStandardItem())      # Where the tree is (I think).
@@ -88,7 +89,10 @@ class RingView(QTreeView):
         self._headerItems.append(QStandardItem('Consumer PID'))
         self._headerItems.append(QStandardItem('Backlog (kb)'))
         self.model().appendRow(self._headerItems)
-        
+        self.model().setHorizontalHeaderLabels([
+          '', 'Name', 'Producer', 'Producer PID', 'Size(kb)', 'Free(kb)',
+          'Consumer', 'Consumer PID', 'Backlog (kb)'
+        ])
         self.setHeader(self._header)
         self.setHeaderHidden(False)
         
