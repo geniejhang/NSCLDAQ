@@ -310,6 +310,9 @@ def removeProxies(data):
             ring['proxyhost'] = proxyInfo[0]
             ring['proxyring'] = proxyInfo[1]
             ring['localhost'] = host
+            # Diddle the ring so it says where it lives not where it came from:
+            
+            ring['name'] = '@'.join([ring['proxyring'], host])
             result.append(ring)
             removelist.append(n)
     # Now remove the indices in removelist from rings:
