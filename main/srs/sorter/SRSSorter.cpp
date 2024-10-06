@@ -34,9 +34,9 @@
 #include <CRingItem.h>
 
 
-SRSSorter::SRSSorter() : m_maxHits(960), m_dtHits(2) {}
+SRSSorter::SRSSorter() : m_maxHits(960), m_dtHits(2) {}//960
 
-SRSSorter::SRSSorter(uint16_t maxHits = 960, int dtHits = 2) {
+SRSSorter::SRSSorter(uint16_t maxHits = 960, int dtHits = 2) {//960
     m_maxHits = maxHits;
     m_dtHits = dtHits;
 }
@@ -67,12 +67,14 @@ void SRSSorter::sort(uint8_t* data, const uint64_t hitTimeStamp, int sid, CDataS
         printf("SRSSorter::sort - tsDiff < 0 - currentTs: %llu prevTs : %llu \n", hitTimeStamp, m_event[fecId].timestamp);
         return;
     }
-    // (2) If too many hits, delete the RI and dont't put in sink.
+    // (2) If too many hits, delete the RI and dont't put in sink (discard).
     if (m_event[fecId].nHits > m_maxHits){
-        printf("SRSSorter::sort - nHits > m_maxHits \n");
+        printf("SRSSorter::sort - nHits > m_maxHits,  ts %llu \n", hitTimeStamp);
         m_event[fecId].nHits = 0;
+        // Delete RI with too many hits
         deleteRingItem(fecId);
-        return;
+        // To not fill the (deleted) RI
+        m_event[fecId].discard = true;
     }
 
     // Passed sanity checks, create RI 
@@ -80,19 +82,15 @@ void SRSSorter::sort(uint8_t* data, const uint64_t hitTimeStamp, int sid, CDataS
         newRingItem(hitTimeStamp, fecId, sink);
         m_event[fecId].timestamp = hitTimeStamp;
         m_event[fecId].nHits = 0;
+        m_event[fecId].discard = false;
     }
-    // else if (tsDiff >= 0 && tsDiff <= m_dtHits){
-    //     //printf("Simon - SRSSorter::sort - in window - currentTs: %llu preTs : %llu\n", hitTimeStamp, m_event[fecId].timestamp);
-    // }
 
     // nBytes is set to 0 for trig marker in UDPBrokerDerived.
     // Avoid appenning trig marker to RI.
     // Note: If no hit with corresponding trig marker, the RI has null body size.
-    if (nBytes > 0){
+    if (nBytes > 0 && !m_event[fecId].discard){
         appendRingItem(fecId, data);
     }
-    // else if (nBytes == 0){
-    // }
 
     return;
 }
@@ -103,10 +101,10 @@ void SRSSorter::newRingItem(const uint64_t hitTimeStamp, int fecId, CDataSink& s
     if (m_event[fecId].pRingItem != nullptr) {
         sink.putItem(*m_event[fecId].pRingItem);
         deleteRingItem(fecId);
-        m_event[fecId].pRingItem = new CRingItem(PHYSICS_EVENT, hitTimeStamp, fecId + 10, 0, packetSize + 1024);
+        m_event[fecId].pRingItem = new CRingItem(PHYSICS_EVENT, hitTimeStamp, fecId + 10, 0, m_packetSize + 1024);
         m_event[fecId].pRingItem->setBodyCursor(m_event[fecId].pRingItem->getBodyCursor());
     } else {
-        m_event[fecId].pRingItem = new CRingItem(PHYSICS_EVENT, hitTimeStamp, fecId + 10, 0, packetSize + 1024);
+        m_event[fecId].pRingItem = new CRingItem(PHYSICS_EVENT, hitTimeStamp, fecId + 10, 0, m_packetSize + 1024);
         m_event[fecId].pRingItem->setBodyCursor(m_event[fecId].pRingItem->getBodyCursor());
     }
 

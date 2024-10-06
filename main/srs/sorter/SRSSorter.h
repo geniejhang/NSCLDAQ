@@ -23,12 +23,13 @@ private:
 
     static const int HitAndMarkerSizeExtended{8};
     static const int MaxFECs{16};
-    static const size_t packetSize{8968}; //carefull with that limit, it should be higher than maxHits bytes
+    static const size_t m_packetSize{8968}; //carefull with that limit, it should be higher than maxHits bytes
 
     struct event {
         CRingItem* pRingItem{nullptr};
         uint64_t timestamp{0};
         uint16_t nHits{0};
+        bool discard{false};
 
         void reset(){
             if (pRingItem != nullptr){
@@ -37,6 +38,7 @@ private:
             pRingItem = nullptr;
             timestamp = 0;
             nHits = 0;
+            discard = false;
         }
     };
     event m_event[MaxFECs];

@@ -191,7 +191,6 @@ int UDPBrokerDerived::extractHitTimeStamp(uint8_t fecId, uint8_t* data)
             tsAndMappedChno.hitTimeStamp = 0;
             startedMarker[idx] = true;
         }
-        //tsAndMappedChno.hitTimeStamp = 0;
         tsAndMappedChno.chnoMapped = 0;
     }
     return result;
