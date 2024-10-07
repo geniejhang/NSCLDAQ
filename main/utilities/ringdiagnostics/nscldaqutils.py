@@ -41,7 +41,7 @@ def _containerBindings():
     # Return a string that can be handed to the --bind option
     # for singularity/apptainer.
     
-    return os.environ['SINGULARITY_BINDINGS']
+    return os.environ['CONTAINER_BINDINGS']
 
 def _rebuildContainer(pipe):
     #  Rebuild our container environment in the remote:
