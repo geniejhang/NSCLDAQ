@@ -1,3 +1,94 @@
+<!-- manpage 1daq -->
+
+<refentry id='daq1.ringdiagnostics'>
+
+    <refmeta>
+        <refentrytitle id='daq1.ringdiagnostics.title'>ringdiagnostics</refentrytitle>
+        <manvolnum>1daq</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>ringdiagnostics</refname>
+        <refpurpose> Diagnose ring data flow bottlenecks</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+    <cmdsynopsis>
+    <command>
+$DAQBIN/ringdiagnostics <optional><option>options...</option></optional>
+    </command>
+    </cmdsynopsis>
+    </refsynopsisdiv>
+
+
+    <refsect1><title>DESCRIPTION</title>
+        <para>
+            Provides a graphical description of the flow of data between
+            ringbuffers in a multi computer system.
+        </para>
+    </refsect1>
+    <refsect1><title>OPTIONS</title></title>
+    <variablelist>
+        <varlistentry>
+            <term><option>--help</option></term>
+            <listitem><para>
+                Prints a list of options and their descriptions to stdout.
+                Then exits without doing anything.
+            </para></listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><option>--update</option><replaceable> seconds</term>
+            <listitem><para>
+                Specifies the update rate in seconds.  THis defaults to 2 if not
+                specified.
+            </para></listitem>
+        </varlistentry>
+        <varlistentry>
+            <term><option>--alarm_percentage</option><replaceable> pct</replaceable></term>
+            <listitem><para>
+              Specifies the backlog level, as a percentage of ring size, that constitutes
+              a bottleneck.  This defaults to <literal>90</literal> if not specified.
+            </para></listitem>
+        </varlistentry>
+    </variablelist>
+    </refsect1>
+    <refsect1>
+        <title>Environment requirements in a containr</title>
+        <para>
+            If this is run in a container, its use of the 
+            <literal>nscldaq.nscldaqutils.ssh</literal> method imposes some
+            environment variable definitions:
+        </para>
+        <variablelist>
+            <varlistentry>
+                <term><literal>APPTAINER_CONTAINER</literal></term>
+                <listitem><para>
+                    Must be the full path to the container image.
+                </para></listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><literal>SINGULARITY_CONTAINER</literal></term>
+                <listitem><para>
+                    In older singularity systems, this must have the same value
+                    as <literal>APPTAINER_CONTAINER</literal>. In Apptainer systems,
+                    this is not needed.
+                </para></listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><literal>CONTAINER_BINDINGS</literal></term>
+                <listitem><para>
+                    Must be a string that can be passed to apptainer/singularity's 
+                    <option>--bind</option> option, that specifies the container bindings
+                    you care about, for example at the FRIB for the bookworm container,
+                    you  might have the value
+                    <literal>/usr/opt/opt-bookworm:/usr/opt</literal>.
+                </para>
+                </listitem>
+            </varlistentry>
+    </refsect1>
+</refentry>
+
+<!-- /manpage -->
 <!-- manpage 3python -->
 <refentry id='python3.pidtocommand'>
     <refmeta>
