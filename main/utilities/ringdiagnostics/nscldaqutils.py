@@ -70,9 +70,11 @@ def _afterCut(l):
     #  Returns all the lines in a list of lines after the line with
     #  
     
-    while l[0] != cutText:
+    while l[0].count(cutText) == 0 and len(l) > 0:
         l.remove(l[0])
         
+    if (len(l)) == 0:
+        return ''     # Nothing.
     # Get rid of one more element... the cut line"
     
     l.remove(l[0])
