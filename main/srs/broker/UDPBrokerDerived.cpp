@@ -251,7 +251,7 @@ void UDPBrokerDerived::mainLoop() {
         m_datagramCounter++;
 
         // std::cout<<"Counters: dT, datagram, marker, markerErr, hit, firstData: "<<elapsed_time_s<<" "<<m_datagramCounter<<" "<<m_markerCounter<<" "<<m_markerErrCounter<<" "<<m_hitCounter<<" "<<m_firstDataCounter<<std::endl;
-        std::cout<<"Counters: datagram, marker, trig. marker, markerErr, hit, firstData: "<<m_datagramCounter<<" "<<m_markerCounter<<" "<<m_trigMarkerCounter<<" "<<m_markerErrCounter<<" "<<m_hitCounter<<" "<<m_firstDataCounter<<std::endl;
+        //std::cout<<"Counters: datagram, marker, trig. marker, markerErr, hit, firstData: "<<m_datagramCounter<<" "<<m_markerCounter<<" "<<m_trigMarkerCounter<<" "<<m_markerErrCounter<<" "<<m_hitCounter<<" "<<m_firstDataCounter<<std::endl;
 
         if (m_stopMainLoop) {
             break;
