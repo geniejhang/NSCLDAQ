@@ -21,9 +21,9 @@ class Container:
         # True if name is already a container.
         
         c  = self._db.cursor()
-        c.execute('SELECT COUNT(*) FROM container WHERE container = ?', (name,))
+        res = c.execute('SELECT COUNT(*) FROM container WHERE container = ?', (name,))
         
-        (count, ) = c.fetchone()
+        (count, ) = res.fetchone()
         return count != 0
     
         
@@ -93,5 +93,49 @@ class Container:
             self._db.rollback()
             raise
         
+    def remove(self, name):
+        '''
+            Removes the named container definition.
+            Raises a value error if there is no such container.
+        '''
         
+        #  Get the id of the container.
         
+        cursor = self._db.cursor()
+        res = cursor.execute('''
+            SELECT id FROM container WHERE container = ?
+                                ''', (name,)                   
+        )
+        id = res.fetchone()
+        if id is None:
+            raise ValueError(f'No such container {name}')
+    
+        cursor.execute(
+            '''
+                DELETE FROM bindpoint WHERE container_id = ?
+            ''', id
+        )
+        cursor.execute(
+            '''
+                DELETE FROM container where id = ?
+            ''', id
+        )
+        
+        self._db.commit()
+    
+    def replace(self, oldname, newname, image, initscript, mountpoints):
+        '''
+            Removes the container 'oldname' and replaces it with the
+            container definition in newname, image, initsscript and
+            mountpoints.
+            
+            This is just a convenience  front end to 'remove' followed by add.
+            
+            Note that while delete and add are both done in a transaction,
+            those transactions are independent, so it's possible the delete will suceed
+            but somehow the add will fail.
+        '''
+        self.remove(oldname)
+        self.add(newname, image, initscript, mountpoints)
+    
+    
