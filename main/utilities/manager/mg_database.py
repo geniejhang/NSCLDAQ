@@ -64,5 +64,34 @@ class Container:
             with open(initscript, 'r') as file:
                 init_contents = file.read()
        
-
+        #  We have enough to create the container ...
+        # Which we do inside a transaction that is implicitly opened:
+        # In case of error, we roll it back:
+        cursor = self._db.cursor()
+        try:
+            cursor.execute(
+                '''INSERT INTO container (container, image_path, init_script)
+                        VALUES(?,?,?)
+                ''',
+                (name, image, init_contents)
+            )
+            container_id = cursor.lastrowid
+            for binding in mountpoints:
+                source = binding[0]
+                if len(binding) > 1:
+                    dest = binding[1]
+                else:
+                    dest = binding[0]
+                cursor.execute('''
+                        INSERT INTO bindpoint (container_id, path, mountpoint)
+                            VALUES (?,?,?)
+                    ''',
+                    (container_id, source, dest)
+                )
+            self._db.commit()
+        except:
+            self._db.rollback()
+            raise
+        
+        
         

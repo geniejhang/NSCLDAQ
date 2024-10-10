@@ -41,7 +41,7 @@ install-exec-local:
 		$(INSTALL_DATA) @srcdir@/$$f @prefix@/TclLibs/manager_server; \
 	done
 	rm -rf @prefix@/pythonLibs/nscldaq/__pycache__   # Force recompilation.
-	$(INSTALL_SCRIPT) @srcdir@/$(PYPACKAGES) @prefix@/pythonLibs/nscldaq
+	(cd @srcdir@; $(INSTALL_SCRIPT) $(PY_PACKAGES) @prefix@/pythonLibs/nscldaq)
 
 
 check:
