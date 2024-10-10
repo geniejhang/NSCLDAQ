@@ -14,6 +14,10 @@ class Container:
         ''' Construct an interface to the container part of a db.
             
             handle - is an sqlite3 handle open on the database.
+                Note handle ownership is not transferred to the 
+                object.. you can happily pass the same handle
+                to more than  one Container constructor or
+                even to more than one type of database object.
         '''
         self._db = handle
         
@@ -28,6 +32,10 @@ class Container:
     
         
     # Public interface:
+    
+    def exists(self, name):
+        ''' determines if the container 'name' exists. '''
+        return self._exists(name)
 
     def add(self, name, image, initscript, mountpoints):
         '''
@@ -138,4 +146,45 @@ class Container:
         self.remove(oldname)
         self.add(newname, image, initscript, mountpoints)
     
-    
+    def list(self):
+        '''
+            Returns a list of all containers.  Container lists are returned as
+            a list of dicts with the keys:
+            
+            * name  - Name of the container.
+            * image - Container image file.
+            * init_script - the contents of the init_script.
+            * bindings - The bindings specifications.  THese are an iterable containing
+             two element lists of binding source binding destination.  For example,
+             the binding of /usr/opt/opt-buster -> /usr/opt will be:
+             ('/usr/opt/opt-buster', '/usr/opt'), For identity bindings both elements will
+             be the same.
+        '''
+
+        containers = {}       # Indexed by container name.
+        cursor = self._db.cursor()
+        r = cursor.execute(
+            '''
+            SELECT container, image_path, init_script, path, mountpoint
+            FROM container
+            INNER JOIN bindpoint ON bindpoint.container_id = container.id
+            '''
+        )
+        while True:
+            row = r.fetchone()
+            if row is None:
+                break
+            
+            if row[0] not in containers.keys():
+                name = row[0]
+                image = row[1]
+                script = row[2]
+                containers[name] = {
+                    'name': name, 'image': image, 'init_script': script, 'bindings': []
+                }
+        
+            # Append the bindings to the container def:
+            
+            containers[name]['bindings'].append((row[3], row[4]))
+        
+        return list(containers.values())
