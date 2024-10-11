@@ -7,6 +7,7 @@ program_scripts=startServer.tcl mg_mkconfig.tcl mg_cfgcontainers.tcl \
 
 
 PY_PACKAGES=mg_database.py
+PYPROGRAMS=mg_logwizard.py
 server_scripts=mg_statusserver.tcl  mg_programserver.tcl \
 	mg_kvserver.tcl mg_evlogserver.tcl
 
@@ -42,6 +43,10 @@ install-exec-local:
 	done
 	rm -rf @prefix@/pythonLibs/nscldaq/__pycache__   # Force recompilation.
 	(cd @srcdir@; $(INSTALL_SCRIPT) $(PY_PACKAGES) @prefix@/pythonLibs/nscldaq)
+	for f in $(PYPROGRAMS); do \
+		$(INSTALL_PROGRAM) @srcdir@/$$f @bindir@/`basename $$f .py` ; \
+	done
+	
 
 
 check:
