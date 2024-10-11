@@ -27,9 +27,6 @@ docs=userguide.xml api.xml
 test_scripts=container.test program.test sequence.test transitions.test \
 	loggerdb.test kv.test authtest.test evlog.test
 
-EXTRA_DIST=$(program_scripts) $(library_scripts) $(test_scripts) \
-	$(server_scripts) $(docs) \
-	minimal.img singexists.sh
 
 install-exec-local:
 	for f in $(program_scripts); do $(INSTALL_PROGRAM) @srcdir@/$$f @bindir@/`basename $$f .tcl`; done
@@ -66,3 +63,6 @@ check:
 		echo No singularity manager tests will not be done; \
 	fi
 
+EXTRA_DIST=$(program_scripts) $(library_scripts) $(test_scripts) \
+	$(server_scripts) $(docs) \
+	minimal.img singexists.sh $(PYPROGRAMS) $(PY_PACKAGES)
