@@ -14,9 +14,10 @@ from nscldaq.mg_database import Container, EventLog
 
 
 from PyQt5.QtWidgets import (QWizard, QApplication, QWizardPage,
-    QLabel, QLineEdit, QPushButton, QFileDialog, QComboBox,
+    QLabel, QLineEdit, QPushButton, QFileDialog, QComboBox, QCheckBox,
     QVBoxLayout, QHBoxLayout
 )
+from PyQt5.Qt import *
 
 
 def Usage():
@@ -237,6 +238,56 @@ class OptionPage(QWizardPage):
         
         # The instructions:
         
+        self._instructions = QLabel(self)
+        self._instructions.setWordWrap(True)
+        self._instructions.setText(
+            '''
+            <p>
+            Several options are associated with each event logger.
+            These affect the way the loggers is run as well as how it is monitored
+            </p>
+            <ul>
+                <li><b>Partial</b> If this is enabled, the logger acts like a multilogger;
+                    event files are just stored in the destination without underlying structure.
+                    If disabled, the logger acts like the old ReadouGui primary event logger, 
+                    maintaining its structure and views.
+                </li>
+                <li><b>Critical</b> If this is enabled, the logger is considered critical to the
+                    operation of the experiment.  If it unexpectely exits, the experiment will
+                    shutdown and need to be rebooted once the condition that caused the failure is corrected.
+                </li>
+                <li><b>Enabled</b> If this is enabled, the logger itself is enabled to record
+                    data on the next begin run.  
+                </li>
+            </ul>
+            '''
+        )
+        layout.addWidget(self._instructions)
+        
+        options = QHBoxLayout()
+        self._partial = QCheckBox('Partial', self)
+        self._partial.setCheckState(Qt.Unchecked)
+        
+        self._critical = QCheckBox('Critical', self)
+        self._critical.setCheckState(Qt.Checked)
+        
+        self._enable = QCheckBox('Enabled', self)
+        self._enable.setCheckState(Qt.Checked)
+        
+        options.addWidget(self._partial)
+        options.addWidget(self._critical)
+        options.addWidget(self._enable)
+        
+        layout.addLayout(options)
+        
+        self.setLayout(layout)
+    
+    def partial(self):
+        return self._partial.checkState() == Qt.Checked    
+    def critical(self):
+        return self._critical.checkState() == Qt.Checked
+    def enabled(self):
+        return self._enable.checkState() == Qt.Checked
         
 class EvlogWizard(QWizard):
     def __init__(self):
@@ -249,6 +300,9 @@ class EvlogWizard(QWizard):
         
         self._root = DAQRootPage(self)
         self.addPage(self._root)
+        
+        self._options = OptionPage(self)
+        self.addPage(self._options)
     
     def source_url(self):
         return self._srcdestpg.source()
@@ -261,7 +315,12 @@ class EvlogWizard(QWizard):
         return self._where.container()
     def daqroot(self):
         return self._root.root()
-    
+    def partial(self):
+        return self._options.partial()
+    def critical(self):
+        return self._options.critical()
+    def enabled(self):
+        return self._options.enabled()
 #---------------------------------------------------------------------
 if len(sys.argv) != 2:
     Usage()
@@ -286,3 +345,4 @@ print('Destination', wizard.destination_dir())
 print('Host', wizard.host())
 print('Container', wizard.container())
 print('DAQROOT ', wizard.daqroot())
+print(f'Options: partial {wizard.partial()} critical {wizard.critical()} enabled {wizard.enabled()}')
