@@ -41,6 +41,7 @@ set ApplicationMenu [dict create                                 \
     "Containers"        [file join $daqbin mg_cfgcontainers]    \
     "Readout Wizard"    [file join $daqbin mg_readout_wizard]   \
     "Programs"          [file join $daqbin mg_cfgprogram]       \
+    "Event log wizard"   [file join $daqbin mg_logwizard]        \
     "Event logging"     [file join $daqbin mg_loggeredit]      \
     "State Machine"     [file join $daqbin mg_stateedit]        \
     "Sequence Definition" [file join $daqbin mg_seqedit]        \
@@ -109,7 +110,7 @@ proc _Launch {w f} {
     if {$idx ne ""} {
         set key [$w get $idx]
         set program [dict get $::ApplicationMenu $key]
-        exec $program $f
+        catch {exec $program $f}
     }
     
 }
