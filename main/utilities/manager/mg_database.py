@@ -196,8 +196,8 @@ class Container:
         
         cursor = self._db.cursor()
         result = cursor.execute('''
-            SELECT id FROM containr WHERE container = ?
-                                ''', name)
+            SELECT id FROM container WHERE container = ?
+                                ''', (name,))
         row = result.fetchone()
         if row is None:
             return None
@@ -231,7 +231,7 @@ class EventLog:
             'destination': row[5],
             'critical': True if row[6] > 0 else False,
             'enabled' : True if row[7] > 0 else False,
-            'container': Row[8]
+            'container': row[8]
             
         }
     
@@ -244,7 +244,7 @@ class EventLog:
                 SELECT COUNT(*) FROM logger WHERE id = ?
             ''', (id, )
         )
-        (count, ) = r.fectchone()
+        (count, ) = r.fetchone()
         return count > 0
     
     # PUblic methods
@@ -313,7 +313,7 @@ class EventLog:
             if type(opt) != bool:
                 raise ValueError(f'The value of the "critical" option must be a boolean it was {opt}')
             partial = opt
-        if 'enabled' in options_keys:
+        if 'enabled' in option_keys:
             opt = options['enabled']
             if type(opt) != bool:
                 raise ValueError(f'The value of the "enabled" option must be a boolean it was {opt}')
@@ -332,7 +332,9 @@ class EventLog:
             ''',
             (root, source_uri, host, partial, destination, critical, enabled, container_id)
         )
-        return cursor.lastrowid
+        result = cursor.lastrowid
+        self._db.commit()
+        return result
         
     def info(self, destination):
         '''
@@ -354,7 +356,7 @@ class EventLog:
         cursor = self._db.cursor()
         r = cursor.execute(
             '''
-            SELECT id, daqroot, ring, host, partial, destination, critical, enabled, container
+            SELECT logger.id, daqroot, ring, host, partial, destination, critical, enabled, container
             FROM logger
             INNER JOIN container ON container.id = container_id
             WHERE destination = ?
@@ -369,7 +371,7 @@ class EventLog:
         cursor = self._db.cursor()
         r = cursor.execute(
             '''
-            SELECT id, daqroot, ring, host, partial, destination, critical, enabled, container
+            SELECT logger.id, daqroot, ring, host, partial, destination, critical, enabled, container
             FROM logger
             INNER JOIN container ON container.id = container_id
             ''')
@@ -391,6 +393,7 @@ class EventLog:
             DELETE FROM logger WHERE id = ?
             ''', (id,)
         )
+        self._db.commit()
         
     def enable(self, id):
         if not self._idExists(id):
@@ -401,6 +404,7 @@ class EventLog:
             UPDATE logger SET enabled = 1 WHERE id = ?
             ''', (id,)
         )
+        self._db.commit()
     def disable(self, id):
         if not self._idExists(id):
             raise ValueError(f"There is no logger with the id {id}")
@@ -410,6 +414,7 @@ class EventLog:
             UPDATE logger SET enabled = 0 WHERE id = ?
             ''', (id,)
         )
+        self._db.commit()
     def enable_all(self):
         
         cursor = self._db.cursor()
@@ -418,6 +423,7 @@ class EventLog:
             UPDATE logger SET enabled = 1
             '''
         )
+        self._db.commit()
     def disable_all(self):
         cursor = self._db.cursor()
         cursor.execute(
@@ -425,6 +431,7 @@ class EventLog:
             UPDATE logger SET enabled = 0
             '''
         )
+        self._db.commit()
     def start_recording(self):
         cursor = self._db.cursor()
         cursor.execute(
@@ -439,6 +446,7 @@ class EventLog:
             UPDATE recording SET state = 0
             '''
         )
+        self._db.commit()
     def is_recording(self):
         cursor = self._db.cursor()
         res = cursor.execute(
