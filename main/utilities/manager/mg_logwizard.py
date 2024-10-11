@@ -20,6 +20,9 @@ from PyQt5.QtWidgets import (QWizard, QApplication, QWizardPage,
 from PyQt5.Qt import *
 
 
+def boolToInt(b):
+    return  1 if b else 0
+
 def Usage():
     #  Print program usage to stderr:
     
@@ -340,9 +343,25 @@ wizard = EvlogWizard()
 wizard.show()
 app.exec()
 
-print('Source', wizard.source_url())
-print('Destination', wizard.destination_dir())
-print('Host', wizard.host())
-print('Container', wizard.container())
-print('DAQROOT ', wizard.daqroot())
-print(f'Options: partial {wizard.partial()} critical {wizard.critical()} enabled {wizard.enabled()}')
+
+
+
+source =  wizard.source_url()
+destination = wizard.destination_dir()
+host = wizard.host()
+container = wizard.container()
+root= wizard.daqroot()
+
+options = {
+    'partial': wizard.partial(),
+    'critical': wizard.critical(),
+    'enabled': wizard.enabled()
+}
+loggers = EventLog(db)
+try:
+    loggers.add(root, source, destination, container, host, options)
+    exit(0)
+except Exception as e:
+    sys.stderr.write(f'Failed to make the new event logger: {str(e)}')
+    exit(-1)
+    

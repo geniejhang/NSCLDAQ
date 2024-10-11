@@ -7,6 +7,10 @@ and so on.
 '''
 
 import sqlite3
+def boolToInt(b):
+    return  1 if b else 0
+def boolToInt(b):
+    return  1 if b else 0
 
 
 class Container:
@@ -299,25 +303,25 @@ class EventLog:
         
         # Untangle the options:
         
-        partial = False
-        critical = True
-        enabled = True
+        partial = 0
+        critical = 0
+        enabled = 0
         option_keys = options.keys()
         if 'partial' in option_keys:
             opt = options['partial']
             if type(opt) != bool:
                 raise ValueError(f'The value of the "partial" option must be a boolean it was {opt}')
-            partial = opt
+            partial = boolToInt(opt)
         if 'critical' in option_keys:
             opt = options['critical']
             if type(opt) != bool:
                 raise ValueError(f'The value of the "critical" option must be a boolean it was {opt}')
-            partial = opt
+            critical = boolToInt(opt)
         if 'enabled' in option_keys:
             opt = options['enabled']
             if type(opt) != bool:
                 raise ValueError(f'The value of the "enabled" option must be a boolean it was {opt}')
-            partial = opt
+            enabled = boolToInt(opt)
             
         # Now we can do the insert.
         
