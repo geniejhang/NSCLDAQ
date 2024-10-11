@@ -188,3 +188,266 @@ class Container:
             containers[name]['bindings'].append((row[3], row[4]))
         
         return list(containers.values())
+    
+    def id(self, name):
+        '''
+           Returns either the id of the named container or None if there is no match.
+        '''
+        
+        cursor = self._db.cursor()
+        result = cursor.execute('''
+            SELECT id FROM containr WHERE container = ?
+                                ''', name)
+        row = result.fetchone()
+        if row is None:
+            return None
+        else:
+            return row[0]
+class EventLog:
+    def __init__(self, handle):
+        '''
+            Supports editing the event log definition database.
+            handle - the sqlite3 database handle open on the configuration database.
+               The caller retains ownership.
+               The same handle can be passed to as many database facade objects as desired.
+        '''
+        self._db = handle
+
+    # Private methods:
+    
+    def _makeDict(self, row):
+        '''
+           Given a row delected from e.g. info or list, produces a dict
+           that describes the logger in that row.  Note both of these do the
+           appropriate inner joing with container to get the container name not id.
+        '''
+        
+        return {
+            'id': row[0],
+            'root': row[1],
+            'ring' : row[2],
+            'host': row[3],
+            'partial': True if row[4] > 0 else False,
+            'destination': row[5],
+            'critical': True if row[6] > 0 else False,
+            'enabled' : True if row[7] > 0 else False,
+            'container': Row[8]
+            
+        }
+    
+    def _idExists(self, id):
+        # Return True if the logger specified by ID exists.
+        
+        r = cursor = self._db.cursor();
+        cursor.execute(
+            '''
+                SELECT COUNT(*) FROM logger WHERE id = ?
+            ''', (id, )
+        )
+        (count, ) = r.fectchone()
+        return count > 0
+    
+    # PUblic methods
+    def exists(self, destination):
+        '''
+           Determines if there's a logger on the destination. 
+           
+           Returns boolean, True if there is one and False if not
+        '''        
+        cursor = self._db.cursor()
+        r = cursor.execute(
+            '''
+            SELECT COUNT(*) from logger WHERE destination = ?
+            ''', (destination,)
+        )
+        (count, ) = r.fetchone()
+        return count != 0
+        
+    def add(self, root, source_uri, destination, container, host, options):
+        '''
+            Adds a new definition of an event logger to the syhstem.  One may only have
+            one logger to a destination. Parameters are:
+            *  root - NSCLDAQ root directory from which eventlog will be used.
+            *  source_uri - URI of the ringbuffer from which the data will be logged.
+            *  destination - Destination directory in which the logging will be done. 
+                 See, however  the 'partial' option.
+            * container - name of the container the logger will run in.  Note the
+                Tcl world allows containerless loggers, but we don't.
+            * host - the host in which the logger runs.
+            * options:  A dict of options which provide additional control over the
+               logger.  Keys that matter are:
+                * 'partial' - Boolean valued which, if true, specifies the event logger runs
+                    like the old multilogger, just accumulating event files in that directory.
+                    The default for this is False (note this is different from the Tcl API).
+                * 'critical' - Boolean, if True, If the logger exits unexpectedly,   
+                   The experiment shuts down and needs to be rebooted.  This is True by default 
+                * 'enabled' boolean that if True means the logger is enabled and will, once the
+                   next run begins, start logging data. Default is True.
+            On success, returns the id of the logger created.
+        '''
+        # Make sure the destination is unique.
+        
+        if self.exists(destination):
+            raise ValueError(f'There is already a logger saving data at {destination}')
+        
+        #  Get the container
+        
+        c = Container(self._db)
+        container_id = c.id(container)
+        if container_id is None:
+            raise ValueError(f'There is no container named {containr}')
+        
+        # Untangle the options:
+        
+        partial = False
+        critical = True
+        enabled = True
+        option_keys = options.keys()
+        if 'partial' in option_keys:
+            opt = options['partial']
+            if type(opt) != bool:
+                raise ValueError(f'The value of the "partial" option must be a boolean it was {opt}')
+            partial = opt
+        if 'critical' in option_keys:
+            opt = options['critical']
+            if type(opt) != bool:
+                raise ValueError(f'The value of the "critical" option must be a boolean it was {opt}')
+            partial = opt
+        if 'enabled' in options_keys:
+            opt = options['enabled']
+            if type(opt) != bool:
+                raise ValueError(f'The value of the "enabled" option must be a boolean it was {opt}')
+            partial = opt
+            
+        # Now we can do the insert.
+        
+        cursor = self._db.cursor()
+        cursor.execute(
+            '''
+            INSERT INTO logger 
+                (daqroot, ring, host, partial, destination, critical, enabled, container_id)
+            VALUES
+                (?,?,?,?,?,?,?,?)
+            
+            ''',
+            (root, source_uri, host, partial, destination, critical, enabled, container_id)
+        )
+        return cursor.lastrowid
+        
+    def info(self, destination):
+        '''
+        Returns a dict that describes the logger to destination (or  None if there is no such logger)
+        The return value has the following keys (note that the dict can be used as the options
+        for a create):
+        
+        * 'id'  -  Logger id (row' primary key).
+        * 'root' - DAQROOT for the logger.
+        * 'ring' - Ring URI from which the data are logged.
+        * 'host' - Host on which the logger runs.
+        * 'partial' - Bool that is true if the logger is partial.
+        * 'destination' - Where the data are being logged.
+        * 'critical' - Bool that is true if the logger is specified to be critical.
+        * 'enabled' - Bool that is true if the logger is enabled.
+        * 'container' - name of the container the logger runs in.
+        '''
+        
+        cursor = self._db.cursor()
+        r = cursor.execute(
+            '''
+            SELECT id, daqroot, ring, host, partial, destination, critical, enabled, container
+            FROM logger
+            INNER JOIN container ON container.id = container_id
+            WHERE destination = ?
+            ''', (destination,)
+        )
+        row = r.fetchone()
+        if row is None:
+            return None
+        
+        return self._makeDict(row)
+    def list(self):
+        cursor = self._db.cursor()
+        r = cursor.execute(
+            '''
+            SELECT id, daqroot, ring, host, partial, destination, critical, enabled, container
+            FROM logger
+            INNER JOIN container ON container.id = container_id
+            ''')
+        result = []
+        while True:
+            row = r.fetchone()
+            if row is None:
+                break
+            result.append(self._makeDict(row))
+        return result
+        
+    def delete(self, id):
+        if not self._idExists(id):
+            raise ValueError(f"There is no logger with the id {id}")
+
+        cursor = self._db.cursor()
+        cursor.execute(
+            '''
+            DELETE FROM logger WHERE id = ?
+            ''', (id,)
+        )
+        
+    def enable(self, id):
+        if not self._idExists(id):
+            raise ValueError(f"There is no logger with the id {id}")
+        cursor = self._db.cursor()
+        cursor.execute(
+            '''
+            UPDATE logger SET enabled = 1 WHERE id = ?
+            ''', (id,)
+        )
+    def disable(self, id):
+        if not self._idExists(id):
+            raise ValueError(f"There is no logger with the id {id}")
+        cursor = self._db.cursor()
+        cursor.execute(
+            '''
+            UPDATE logger SET enabled = 0 WHERE id = ?
+            ''', (id,)
+        )
+    def enable_all(self):
+        
+        cursor = self._db.cursor()
+        cursor.execute(
+            '''
+            UPDATE logger SET enabled = 1
+            '''
+        )
+    def disable_all(self):
+        cursor = self._db.cursor()
+        cursor.execute(
+            '''
+            UPDATE logger SET enabled = 0
+            '''
+        )
+    def start_recording(self):
+        cursor = self._db.cursor()
+        cursor.execute(
+            '''
+            UPDATE recording SET state = 1
+            '''
+        )
+    def stop_recording(self):
+        cursor = self._db.cursor()
+        cursor.execute(
+            '''
+            UPDATE recording SET state = 0
+            '''
+        )
+    def is_recording(self):
+        cursor = self._db.cursor()
+        res = cursor.execute(
+            '''
+            SELECT state FROM recording
+            '''
+        )
+        row = res.fetchone()
+        if row is None:
+            raise RuntimeError("is_recording - was not able to fetch a rwo from recording")
+        
+        return True if row[0] != 0 else False
