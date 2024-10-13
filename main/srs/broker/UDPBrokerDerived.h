@@ -84,8 +84,9 @@ private:
     struct newData
     {
         uint64_t hitTimeStamp{0};
+        uint64_t hitContinuousMarker{0};
         uint16_t chnoMapped{0};
-    } tsAndMappedChno;
+    } tsMarkersAndMappedChno;
 
     static const int SRSHeaderSize{16};
     static const int HitAndMarkerSize{6};

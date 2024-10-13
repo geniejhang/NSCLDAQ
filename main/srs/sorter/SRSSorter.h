@@ -21,9 +21,9 @@ private:
     void appendRingItem(int fecId, uint8_t* data);
     void deleteRingItem(int fecId);
 
-    static const int HitAndMarkerSizeExtended{8};
+    static const int HitAndMarkerSizeExtended{16};
     static const int MaxFECs{16};
-    static const size_t m_packetSize{8968}; //carefull with that limit, it should be higher than maxHits bytes
+    static const size_t m_packetSize{17936}; //8968 carefull with that limit, it should be higher than maxHits bytes
 
     struct event {
         CRingItem* pRingItem{nullptr};
