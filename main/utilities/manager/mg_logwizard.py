@@ -20,8 +20,6 @@ from PyQt5.QtWidgets import (QWizard, QApplication, QWizardPage,
 from PyQt5.Qt import *
 
 
-def boolToInt(b):
-    return  1 if b else 0
 
 def Usage():
     #  Print program usage to stderr:
