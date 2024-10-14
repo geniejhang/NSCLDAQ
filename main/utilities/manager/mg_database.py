@@ -778,3 +778,17 @@ class Program:
             result.append(program_dict)
         
         return result
+    def types(self):
+        ''' 
+        returns an interable containing the program typenames.
+        '''
+        
+        cursor = self._db.cursor()
+        rset = cursor.execute(
+            '''
+            SELECT TYPE from program_type ORDER BY type ASC
+            '''
+        )
+        rows = rset.fetchall()
+        return [x[0] for x in rows]
+        

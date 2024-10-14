@@ -7,7 +7,7 @@ program_scripts=startServer.tcl mg_mkconfig.tcl mg_cfgcontainers.tcl \
 
 
 PY_PACKAGES=mg_database.py
-PYPROGRAMS=mg_logwizard.py
+PYPROGRAMS=mg_logwizard.py mg_program_wizard.py
 server_scripts=mg_statusserver.tcl  mg_programserver.tcl \
 	mg_kvserver.tcl mg_evlogserver.tcl
 
