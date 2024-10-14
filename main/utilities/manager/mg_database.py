@@ -677,4 +677,104 @@ class Program:
         self._db.commit()
         
     def list(self):
-        pass
+        '''
+        Lists the programs in the database.  The listing will be a list of dicts.  Each
+        dict will have the following keys:
+        
+        *  id - primary key of the root record (program id)..
+        *  name - name of the progtram.
+        *  path - Path to the program in the container file system.
+        *  host - Host the program will run in .
+        *  directory  -directory in the container that will be the cwd of the program when started.
+        *  container - name of the container the program runs in.
+        *  more     - Dict of additionalal stuff.  This can be fed back to the 'options'
+        *       parameter on the 'add' method with the exception that 'initscript'
+        *       will be 'initscript_contents' and will contain the text of the initialization
+        *       script.
+        *  
+        '''
+        
+    
+        
+        result = []
+        cursor = self._db.cursor()
+        
+        # Get the root records:
+        
+        r = cursor.exec(
+            '''
+                SELECT program.id, name, path, type, host, directory, container, initscript FROM program
+                INNER JOIN program_type ON program_type.id = type_id
+                INNER JOIN containerr ON container.id = container_id
+            '''
+        )
+        # Iterate over them adding additional information to the resulting dict.
+        roots = r.fetchall()
+        for root in roots:
+            pgm_id        = root[0]
+            name          = root[1]
+            path          = root[2]
+            type          = root[3]
+            host          = root[4]
+            wd            = root[5]
+            container      = root[6]
+            init_contents = root[7]
+            
+            program_dict = {
+                'id': pgm_id, 'name': name, 'path' : path, 'host': host, 'directory': wd,
+                'container' : container,
+                'more': {
+                    'type' : type,
+                    'initscript_contents': init_contents,
+                    'options' : [], 'parameters': [], 'environment' : []
+                }
+            }
+            #  Fill in the program options orering ASC by primary key preserves order.
+            
+            c = self._db.cursor()
+            c.execute(
+                '''
+                SELECT option, value FROM program_option WHERE program_id = ?
+                ORDER BY id ASC
+                ''', (pgm_id,)
+            )
+            opts = c.fetchall()
+            for opt in opts :
+                if opt[1] == '':
+                    option = (opt[0],)
+                else:
+                     option = (opt[0], opt[1])
+                program_dict['more']['options'].append(option)
+            
+            # Fill in the program arguments:
+            
+            c.execute(
+                '''
+                SELECT parameter FROM program_parameter 
+                WHERE program_id = ? 
+                ORDER BY id ASC
+                ''', (pgm_id,)
+            )
+            params = c.fetchall()
+            program_dict = [x[0] for x in params]
+            
+            # Finally the environment variable:
+            
+            c.execute(
+                '''
+                SELECT name, value FROM environment
+                WHERE program_id = ?
+                ORDER BY id ASC
+                '''
+            )
+            env = c.fetchall()
+            for (e, v) in env:
+                if v == '':
+                   program_dict['more']['environment'].append((e,)) 
+                else:
+                    program_dict['more']['environment'].append((e,v))
+            # Add it to the return value:
+            
+            result.append(program_dict)
+        
+        return result
