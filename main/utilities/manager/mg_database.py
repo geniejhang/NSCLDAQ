@@ -463,3 +463,218 @@ class EventLog:
             raise RuntimeError("is_recording - was not able to fetch a rwo from recording")
         
         return True if row[0] != 0 else False
+
+class Program:
+    def __init__(self, db):
+        '''
+           Create an object facade for the programs part of the database.
+           The encompases tables for the program itself, it command line options 
+           and parameters as well as additional environment variables it might need.
+           
+        '''
+        self._db = db
+    
+    def _typeId(self, typeName):
+        # Return the id of the default type:
+        
+        cursor = self._db.cursor()
+        res = cursor.execute(
+            '''
+            SELECT id FROM program_type WHERE type = ?
+            ''', (typeName,)
+        )
+        result = res.fetchone()
+        if result is None:
+            return None
+        else:
+            return result[0]
+    def exists(self, name):
+        '''
+            Returns True if a program 'name' already exists.
+        '''
+        
+        cursor = self._db.cursor()
+        r = cursor.execute(
+            '''
+              SELECT COUNT(*) FROM program WHERE name = ?
+            ''', (name,)
+        )
+        (count, ) = r.fetchone()
+        return count > 0
+    def add(self, name, path, host, container, wd, options):
+        '''
+          Add a new program:
+          *  name - the name of the program, used to refer to it elsewhere - must be unique.
+          *  path - Path to the executable >in the container< in which it runs.
+          *  host - host in which the program runs.
+          *  container - name of the container the program runs in.
+          *  wd  - Working directory the program runs in.  This must be valid in the containe in
+                   which the program will ru7n.
+          *  options - dict containing program options keys we care about are:
+              * 'type' - one of the program types in the program_type table.
+                If not provided, this is 'Critical'.
+              * 'initscript' - path to a script that will run prior the program.
+               If not provided no script will run.  Note that the script's current contents
+               will be sucked into the database and stored, rather than the path.           
+              * options If provided, this is a list of option/value pairs e.g.
+                  [('--source-id', 123), ('--ring', 'fox') ...]  options can also be single
+                  elements if they have not value e.g. ('--debug',)
+                If not provided, no options are passed to the program at start time.
+              * parameters - if provided a list of parameters passed to the program on startup.
+              * environment - if provided a list of pairs containing environment variable names and
+                values which will be set prior to starting the program.
+        
+        '''
+        
+        # Ensure we really can make this program:
+        
+        if self.exists(name):
+            raise ValueError(f'A program named "{name}", is already defined')
+        containers = Container(self._db)
+        if not containers.exists(container):
+            raise ValueError(f'There is no container named "{container}"')
+        
+        container_id = containers.id(container)
+        
+        # Figure out the options and if user provided if it's legal:
+        
+        type_id = self._typeId('Critical')
+        init_script = ''
+        cmd_options = []
+        cmd_params  = []
+        cmd_environment = []
+        
+        option_keys = options.keys()
+        if 'type' in option_keys:
+            type_id = self._typeId(options['type'])
+            if type_id is None:
+                raise ValueError(f'Invalid program type: "{options["type"]}"')
+        if 'initscript' in option_keys:
+            init_file = option['initscript']
+            with open(init_file, 'r') as file:
+                init_script = file.read()
+        if 'options' in option_keys:
+            cmd_options = options['options']
+        if 'parameters' in option_keys:
+            cmd_params = options['parameters']
+        if 'environment' in option_keys:
+            cmd_environment = options['environment']
+            
+        #  The Creation of the program is done in a transaction.
+        # so it'll be all or nothiung with a consistent end result.
+        # We catch exceptions and rollback if one was raised:
+        
+        cursor = self._db.cursor()
+        try:
+            # Root record:
+            
+            cursor.execute(
+                '''
+                INSERT INTO program (
+                     name, path, type_id, host, directory, container_id, initscript, service
+                ) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, '')
+                ''',
+                (name, path, type_id, host,  wd, container_id, init_script)
+            )
+            program_id = cursor.lastrowid
+            # Program options:
+            
+            for opt in cmd_options:
+                name = opt[0]
+                if len (opt) > 1:
+                    value = opt[1]
+                else: 
+                    value = ''
+                
+                cursor.execute(
+                    '''
+                    INSERT INTO program_option (program_id, option, value)
+                    VALUES(?, ?, ?)
+                    ''', (program_id, name, value)
+                )
+            # Program parameters:
+            
+            for param  in cmd_params:
+                cursor.execute(
+                    '''
+                    INSERT INTO program_parameter (program_id, parameter)
+                    VALUES (?,?)
+                    ''', (program_id, param)
+                )
+            # Environment variables:
+            
+            for env in cmd_environment:
+                name = env[0]
+                if len(opt) > 1:
+                    value = opt[1]
+                else: 
+                    value = ''
+                cursor.execute(
+                    '''
+                    INSERT INTO program_environment
+                    VALUES (program_id, name, value)
+                    ''', (program_id, name, value)
+                )
+        except:
+            self._db.rollback()
+            raise
+            
+        # No exception so commit the complete add:
+        self._db.commit()
+        
+    def delete(self, name):
+        '''
+            Deletes all traces of the named program from the database.
+        '''
+        cursor = self._db.cursor()
+        
+        # First get the program's id and raise an error if there is no such program.
+        
+        r = cursor.execute(
+            '''
+            SELECT id FROM program WHERE name = ?
+            ''', (name,)
+        )
+        row = r.fetchone()
+        if row is None:
+            raise ValueError(f'There is no program with the name "{name}"')
+        program_id = row[0]
+        
+        try:
+            # Delete the root record:
+            
+            cursor.execute(
+                '''
+                DELETE FROM program WHERE  id = ?
+                ''', (program_id,)
+            )
+            #  The program options:
+            
+            cursor.execute(
+                '''
+                DELETE FROM program_option WHERE program_id = ?
+                ''', (program_id,)
+            )
+            # THe program parameters:
+            
+            cursor.execute(
+                '''
+                DELETE FROM program_parameter WHERE program_id = ?
+                ''', (program_id,)
+            )
+            #  The environment:
+            
+            cursor.execute(
+                '''
+                DELETE FROM program_environment WHERE program_id = ?
+                ''', (program_id,)
+            )
+        except:
+            self._db.rollback()
+        
+        
+        self._db.commit()
+        
+    def list(self):
+        pass
