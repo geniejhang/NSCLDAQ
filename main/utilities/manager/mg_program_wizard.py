@@ -306,7 +306,65 @@ class IniScriptAndOptions(QWizardPage):
         
         
         self.setLayout(layout)
-
+class ParameterPage(QWizardPage):
+    def __init__(self, *args):
+        super().__init__(*args)
+        
+        layout = QVBoxLayout()
+        
+        self._instructions = QLabel(self)
+        self._instructions.setWordWrap(True)
+        self._instructions.setText(
+            '''
+            <p>
+                Fill in the table below with the ordered list of parameters that will
+                be added to the program command line after the options filled in on the
+                previous page.
+            </p>
+            '''
+        )
+        layout.addWidget(self._instructions)
+        
+        self._paramlabel = QLabel('Parameters:', self)
+        layout.addWidget(self._paramlabel)
+        
+        self._paramtable = EditableTable(self)
+        self._parameters = self._paramtable.table()
+        self._parameters.setColumnCount(1)
+        self._parameters.setRowCount(1)
+        self._parameters.setHorizontalHeaderLabels(['Parameter',])
+        layout.addWidget(self._paramtable)
+        
+        self.setLayout(layout)
+    
+class Environment(QWizardPage):    
+        def __init__(self, *args):
+            super().__init__(*args)
+            layout = QVBoxLayout()
+            
+            self._instructions = QLabel(self)
+            self._instructions.setWordWrap(True)
+            self._instructions.setText(
+                '''
+                <p>
+                Fill in the table below with environment variable names and their values.
+                </p>
+                '''
+            )
+            layout.addWidget(self._instructions)
+            
+            self._envlabel = QLabel('Environment: ', self)
+            layout.addWidget(self._envlabel)
+            self._envtable = EditableTable(self)
+            self._env = self._envtable.table()
+            self._env.setColumnCount(2)
+            self._env.setRowCount(1)
+            self._env.setHorizontalHeaderLabels(['Variable', 'Value'])
+            layout.addWidget(self._env)
+            
+            self.setLayout(layout)
+            
+        
 class ProgramWizard(QWizard):
     def __init__(self, db):
         super().__init__()
@@ -319,7 +377,12 @@ class ProgramWizard(QWizard):
         
         self._iniopts = IniScriptAndOptions(self)
         self.addPage(self._iniopts)
+        
+        self._params = ParameterPage(self)
+        self.addPage(self._params)
 
+        self._env = Environment(self)
+        self.addPage(self._env)
 
 #-------------------------------------------------------------------------------------------
 
