@@ -264,7 +264,12 @@ class TypeAndWdPage(QWizardPage):
         
         
         self.setLayout(layout)
-    
+    # Accessors:
+    def program_type(self):
+        return self._type.currentText()
+    def wd(self):
+        return self._wd.text()
+        
 class IniScriptAndOptions(QWizardPage):
     def __init__(self, *args):
         super().__init__(*args)
@@ -420,6 +425,11 @@ class ProgramWizard(QWizard):
         return self._ident.host()
     def container(self):
         return self._ident.container()
+    
+    def program_type(self):
+        return self._wdtype.program_type()
+    def wd(self):
+        return self._wdtype.wd()
 #-------------------------------------------------------------------------------------------
 
 
@@ -468,6 +478,8 @@ executable = wizard.program()
 name       = wizard.name()
 host       = wizard.host()
 container   = wizard.container()
+type      = wizard.program_type()
+cwd        = wizard.wd()
 
 print(f'Name: {name} is {executable} will run in {container}@{host}')
-
+print(f'Program is {type}, and will run with cwd {cwd}')
