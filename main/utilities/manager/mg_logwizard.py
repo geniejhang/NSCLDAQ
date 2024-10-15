@@ -322,6 +322,11 @@ class EvlogWizard(QWizard):
         return self._options.critical()
     def enabled(self):
         return self._options.enabled()
+    
+#  Abort - cancel wizard or close without finsish
+def abort():
+    exit(0)
+    
 #---------------------------------------------------------------------
 if len(sys.argv) != 2:
     Usage()
@@ -338,6 +343,7 @@ db = sqlite3.connect(dbfile)
 
 app = QApplication(sys.argv)
 wizard = EvlogWizard()
+wizard.rejected.connect(abort)
 wizard.show()
 app.exec()
 
