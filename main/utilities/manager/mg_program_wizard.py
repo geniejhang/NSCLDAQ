@@ -63,6 +63,8 @@ class EditableTable(QWidget):
         layout = QHBoxLayout()
         
         self._table = QTableWidget(self)
+        defaultItem = QTableWidgetItem('')
+        self._table.setItemPrototype(defaultItem)
         layout.addWidget(self._table)
         
         #  The buttons:
@@ -83,6 +85,10 @@ class EditableTable(QWidget):
         
     def _addRow(self):
         self._table.setRowCount(self._table.rowCount() + 1)
+        new_row = self._table.rowCount() - 1
+        cols = self._table.columnCount()
+        for c in range(cols):
+            self._table.setItem(new_row, c, self._table.itemPrototype().clone())
     def _deleteRow(self):
         row = self._table.currentRow()
         self._table.removeRow(row)
@@ -331,12 +337,49 @@ class IniScriptAndOptions(QWizardPage):
         self._options = EditableTable(self)
         self._optiontable = self._options.table()
         self._optiontable.setColumnCount(2)
-        self._optiontable.setRowCount(1)
         self._optiontable.setHorizontalHeaderLabels(['Option', 'Value'])
         layout.addWidget(self._options)
-        
-        
+       
         self.setLayout(layout)
+        self._inibrowse.clicked.connect(self.browse)
+        
+    def browse(self):
+        dialog = QFileDialog(self)
+        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog.setFileMode(QFileDialog.ExistingFile)
+        dialog.exec()
+        
+        files = dialog.selectedFiles()
+        if len(files) > 0:
+            self._initscript.setText(files[0])
+    
+    # Accessors:
+    
+    def initscript(self):
+        return self._initscript.text()
+    def options(self):
+        #  Returns a list of name/value pairs or just name if there's no value.
+        #   We remove those for which the name is empty.
+        
+        rows = self._optiontable.rowCount()
+        result =[]
+        
+        rawoptions = [[self._optiontable.item(r, 0).text(), self._optiontable.item(r, 1).text()] 
+                       for r in range(rows) 
+                       if len(self._optiontable.item(r,0).text())> 0 
+                              and not self._optiontable.item(r, 0).text().isspace()]
+        
+        # Now we need to kill off elements that don't have a value:
+        
+        
+        for (option, value) in rawoptions:
+            if len(value) == 0 or value.isspace():
+                result.append((option,))
+            else:
+                result.append((option, value))
+        return result
+    
+        
 class ParameterPage(QWizardPage):
     def __init__(self, *args):
         super().__init__(*args)
@@ -362,7 +405,6 @@ class ParameterPage(QWizardPage):
         self._paramtable = EditableTable(self)
         self._parameters = self._paramtable.table()
         self._parameters.setColumnCount(1)
-        self._parameters.setRowCount(1)
         self._parameters.setHorizontalHeaderLabels(['Parameter',])
         layout.addWidget(self._paramtable)
         
@@ -389,7 +431,6 @@ class Environment(QWizardPage):
             self._envtable = EditableTable(self)
             self._env = self._envtable.table()
             self._env.setColumnCount(2)
-            self._env.setRowCount(1)
             self._env.setHorizontalHeaderLabels(['Variable', 'Value'])
             layout.addWidget(self._env)
             
@@ -430,6 +471,11 @@ class ProgramWizard(QWizard):
         return self._wdtype.program_type()
     def wd(self):
         return self._wdtype.wd()
+    
+    def initscript(self):
+        return self._iniopts.initscript()
+    def options(self):
+        return self._iniopts.options()
 #-------------------------------------------------------------------------------------------
 
 
@@ -481,5 +527,10 @@ container   = wizard.container()
 type      = wizard.program_type()
 cwd        = wizard.wd()
 
+iniscript  = wizard.initscript()
+options    = wizard.options()
+
 print(f'Name: {name} is {executable} will run in {container}@{host}')
 print(f'Program is {type}, and will run with cwd {cwd}')
+print(f'Initialization script: {iniscript}')
+print(f'Options:  {options}')
