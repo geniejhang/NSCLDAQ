@@ -45,7 +45,7 @@ protected:
 private:
 
     void makeRingItems(in_addr_t from, short port, CDataSink& sink, int sid, uint8_t* buffer, size_t nBytes);
-    int getExtraData(uint8_t sourceId, uint8_t* data);
+    int extractHitTimeStamp(uint8_t sourceId, uint8_t* data);
     void mapping(uint8_t* data, int fecId);
     void testReadData(uint8_t* data);
     uint16_t invertByteOrder(uint16_t data);
@@ -62,9 +62,7 @@ private:
     static const int MaxFECs{16};
     static const int MaxVMMs{32};//MaxVMMs used for markers, 16 normal trigger + 16 ext trigger
     static const int MaxChns{64};
-    bool m_startedMarker[MaxFECs * MaxVMMs] = {false};
-    bool m_dataEnded = true;
-
+    bool startedMarker[MaxFECs * MaxVMMs] = {false};
 
     int m_hitCounter;
     int m_datagramCounter;
@@ -78,16 +76,17 @@ private:
     struct VMM3Marker
     {
       uint64_t fecTimeStamp{0};  /// 42 bit
-      uint64_t hitMarker{0}; /// 42 bit
+      uint64_t calcTimeStamp{0}; /// 42 bit
+      uint16_t lastTriggerOffset{0};
+      bool hasDataMarker{false};
     } *markerSRS;
 
     struct newData
     {
         uint64_t hitTimeStamp{0};
         uint64_t hitContinuousMarker{0};
-        uint64_t hitMarker{0};
         uint16_t chnoMapped{0};
-    } extraData;
+    } tsMarkersAndMappedChno;
 
     static const int SRSHeaderSize{16};
     static const int HitAndMarkerSize{6};
