@@ -31,7 +31,7 @@ from pathlib import Path
 
 from PyQt5.QtWidgets import (
     QWizard, QApplication, QWizardPage, QLineEdit, QPushButton, QFileDialog,
-    QComboBox, QLabel,
+    QComboBox, QLabel, QTableWidget,
     QHBoxLayout, QVBoxLayout
 )
 
@@ -41,6 +41,54 @@ from PyQt5.Qt import *
 #--------------------------------------------------------------------------------------------
 #  GUI code:
 
+
+class EditableTable(QWidget):
+    #  Megawidget that has a table that can be edited.
+    #  Editing consists of supported deletion of the current row,
+    #  Adding rows to the end, and editing the entries.
+    # 
+    #  Layout is:
+    #   
+    #    +--------------------------+
+    #    |    The table             | [+]
+    #    |                          | [x]
+    #    +--------------------------+
+    #
+    #   The table() method returns the table widget.
+    #   this allows for things like setting the headers, the # of colomns
+    #   loading it etc.
+    #
+    def __init__(self, *args):
+        super().__init__(*args)
+        layout = QHBoxLayout()
+        
+        self._table = QTableWidget(self)
+        layout.addWidget(self._table)
+        
+        #  The buttons:
+        
+        buttonlayout = QVBoxLayout()
+        self._addrow = QPushButton('+', self)
+        buttonlayout.addWidget(self._addrow)
+        self._deleterow = QPushButton(self)
+        self._deleterow.setIcon(self.style().standardIcon(getattr(QStyle, 'SP_DialogCancelButton')))
+        buttonlayout.addWidget(self._deleterow)
+        
+        
+        layout.addLayout(buttonlayout)
+        
+        self.setLayout(layout)    
+        self._addrow.clicked.connect(self._addRow)
+        self._deleterow.clicked.connect(self._deleteRow)
+        
+    def _addRow(self):
+        self._table.setRowCount(self._table.rowCount() + 1)
+    def _deleteRow(self):
+        row = self._table.currentRow()
+        self._table.removeRow(row)
+        
+    def table(self):
+        return self._table
 
 class IdentificationPage(QWizardPage):
     def __init__(self, db, *args):
@@ -109,12 +157,155 @@ once you become a bit more confident in the process.
         self._container.addItems(containers)
         container.addWidget(self._container)
         
-        
-        
         layout.addLayout(container)
         
         self.setLayout(layout)
 
+class TypeAndWdPage(QWizardPage):
+    def __init__(self, db, *args):  
+        super().__init__(*args)
+        #
+        #  Get the list of program types:
+        #
+        p = Program(db)
+        types = p.types()
+        
+        layout = QVBoxLayout()
+        
+        #  The instructions:
+        
+        self._instructions = QLabel(self)
+        self._instructions.setWordWrap(True)
+        # Note that program types below must be updated if additional types are added
+        self._instructions.setText(
+            '''
+            <p> On this page we will set the working directory in effect when the program
+            starts.  That directory must be a valid directory in the container in which the
+            program is running.  We will also specify the program type.
+            </p>
+            <p>
+              Program types are used to describe to the system what you want to happen
+              if the program exits.  The following types are defined 
+            </p>
+            <ul>
+            <li><b>Critical</b> - Critical programs are considered essential to the data acquisition
+            system.  If a critical program exits, the experiment shuts down and has to be rebooted.
+            For example, an event builder data sourcde is typically critical.
+            </li>
+            <li><b>Persistent</b> - Persistent programs are not critical but are expected to run for the
+            life of the experiment.  If a critical program exits, a message will be emitted to the 
+            output window <em>but</em> the experiment continues to run.  For example, a histogrammer
+            failure does not need to shutdown the experiment.  Typically the current run can be cleanly
+            ended and then the experiment rebooted to restart it, or a histogrammer external to the managed
+            system can be attached to the data flow (interactively) and the experiment can continue
+            to run until it's convenient to restart everything.
+            </li>
+            <li><b>Transitory</b> - Transitory programs are expected to run for some short time and then
+            exit.  WHen they exit no special action is taken by the experiment manager. An example of a 
+            transitory program are the programs that interact with readout programs to tell them to start and
+            stop data taking.  These are clients of the Readout's REST plugin and simply send a REST request
+            to an associated Readout to tell them to do something and then exit.
+            </li>
+            </ul>
+            '''
+        )
+        layout.addWidget(self._instructions)
+        
+        #  Current working directory has a browse operation:
+        
+        wdlayout = QHBoxLayout()
+        self._wdlabel = QLabel('Working Directory: ', self)
+        wdlayout.addWidget(self._wdlabel)
+        
+        self._wd     = QLineEdit(self)
+        wdlayout.addWidget(self._wd)
+        
+        self._wdbrowse = QPushButton('Browse...', self)
+        wdlayout.addWidget(self._wdbrowse)
+        
+        layout.addLayout(wdlayout)
+        
+        # Combobox to select the program type:
+        
+        typelayout = QHBoxLayout()
+        self._typelbl = QLabel('Program Type: ', self)
+        typelayout.addWidget(self._typelbl)
+        self._type = QComboBox(self)
+        self._type.addItems(types)
+        typelayout.addWidget(self._type)
+        
+        layout.addLayout(typelayout)
+        
+        
+        self.setLayout(layout)
+    
+class IniScriptAndOptions(QWizardPage):
+    def __init__(self, *args):
+        super().__init__(*args)
+        
+        layout = QVBoxLayout()
+        self._instructions = QLabel(self)
+        self._instructions.setWordWrap(True)
+        self._instructions.setText(
+            '''
+            <p>
+                Now we will set up the way the program is called and its environment.
+                is started and its environment.
+            </p>
+            <ul>
+                <li>
+                    <b>initscriptK/b> - This is an optional shell script that is run prior
+                     to starting your program.   This can be used to perform complex setup operations
+                     or source scripts containing environment variables like a <tt>daqsetup.bash</tt>
+                     script.  Note that the script file path is interpreted in the context of this
+                     wizard and the contents of that file are sucked into the configuration databse.
+                </li>
+                <li>
+                    <b>options</b> - These are pairs of command parameters that are passed to the program on 
+                    its invocation command line.  For example <tt>--sourceid 0</tt> would be an option
+                    named <tt>--sourceid</tt> with mthe value <tt>0</tt>
+                </li>
+                <li>
+                    <b>parameters</b> - These are command line parameters.  For example the names of files
+                    needed by the program.  If you are passing file paths to a program they must make sense in
+                    the contenxt of the container and host in which you have chosen to run the program.
+                </li>
+                <li>
+                    <b>environmen</b>  - The program environment is a set of name/value pairs.
+                    The <tt>getenv(3)</tt> library function can be used to retrieve the values of
+                    an environment variable.  Each environment variable has a name and a value, for
+                    example <tt>DAQROOT</tt> might have the value <tt>/usr/opt/daq/12.1-003</tt>
+                </li>
+            </ul>
+            <p>
+            This page and subsequent ones will allow you to specify these bits of the program environment.
+            </p>
+            '''
+        )
+        layout.addWidget(self._instructions)
+        
+        iniscript = QHBoxLayout()
+        self._iniscrlabel = QLabel('Init script file: ', self)
+        iniscript.addWidget(self._iniscrlabel)
+        
+        self._initscript = QLineEdit(self)
+        iniscript.addWidget(self._initscript)
+        
+        self._inibrowse = QPushButton('Browse...', self)
+        iniscript.addWidget(self._inibrowse)
+        layout.addLayout(iniscript)
+        
+        self._optlabel = QLabel('Program options', self)
+        layout.addWidget(self._optlabel)
+        self._options = EditableTable(self)
+        self._optiontable = self._options.table()
+        self._optiontable.setColumnCount(2)
+        self._optiontable.setRowCount(1)
+        self._optiontable.setHorizontalHeaderLabels(['Option', 'Value'])
+        layout.addWidget(self._options)
+        
+        
+        self.setLayout(layout)
 
 class ProgramWizard(QWizard):
     def __init__(self, db):
@@ -122,6 +313,12 @@ class ProgramWizard(QWizard):
 
         self._ident = IdentificationPage(db, self)
         self.addPage(self._ident)
+        
+        self._wdtype = TypeAndWdPage(db, self)
+        self.addPage(self._wdtype)
+        
+        self._iniopts = IniScriptAndOptions(self)
+        self.addPage(self._iniopts)
 
 
 #-------------------------------------------------------------------------------------------
@@ -141,6 +338,10 @@ Where:
     
     
     
+# Handle cancel or premature close:
+
+def abort():
+    exit(0)
 
 #  Entry point:
 
@@ -161,5 +362,6 @@ db = sqlite3.connect(config)
 app = QApplication(sys.argv)
 wizard = ProgramWizard(db)
 wizard.show()
+wizard.rejected.connect(abort)
 app.exec()
 
