@@ -160,6 +160,32 @@ once you become a bit more confident in the process.
         layout.addLayout(container)
         
         self.setLayout(layout)
+        
+        self._pgmchooser.clicked.connect(self._browse)
+    
+    def _browse(self):
+        #  Browse for a program executable.
+        
+        dialog = QFileDialog(self)
+        dialog.setAcceptMode(QFileDialog.AcceptOpen)
+        dialog.setFileMode(QFileDialog.AnyFile)
+        dialog.exec()
+        
+        dest = dialog.selectedFiles()
+        if len(dest) != 0:
+            self._pgm.setText(dest[0])
+    
+    #  Accessors:
+    
+    def program(self):
+        return self._pgm.text()
+    def name(self):
+        return self._name.text()
+    def host(self):
+        return self._hostname.text()
+    def container(self):
+        return self._container.currentText()    
+        
 
 class TypeAndWdPage(QWizardPage):
     def __init__(self, db, *args):  
@@ -383,7 +409,17 @@ class ProgramWizard(QWizard):
 
         self._env = Environment(self)
         self.addPage(self._env)
-
+    
+    # Accessors:
+    
+    def program(self):
+        return self._ident.program()
+    def name(self):
+        return self._ident.name()
+    def host(self):
+        return self._ident.host()
+    def container(self):
+        return self._ident.container()
 #-------------------------------------------------------------------------------------------
 
 
@@ -427,4 +463,11 @@ wizard = ProgramWizard(db)
 wizard.show()
 wizard.rejected.connect(abort)
 app.exec()
+
+executable = wizard.program()
+name       = wizard.name()
+host       = wizard.host()
+container   = wizard.container()
+
+print(f'Name: {name} is {executable} will run in {container}@{host}')
 
