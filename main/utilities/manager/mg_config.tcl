@@ -40,6 +40,7 @@ set ApplicationMenu [dict create                                 \
     "Container wizrd"   [file join $daqbin mg_container_wizard] \
     "Containers"        [file join $daqbin mg_cfgcontainers]    \
     "Readout Wizard"    [file join $daqbin mg_readout_wizard]   \
+    "Program Wizard"    [file  join $daqbin mg_program_wizard]  \
     "Programs"          [file join $daqbin mg_cfgprogram]       \
     "Event log wizard"   [file join $daqbin mg_logwizard]        \
     "Event logging"     [file join $daqbin mg_cfgEvlog]        \
