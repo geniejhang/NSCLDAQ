@@ -8149,3 +8149,208 @@ singularity instance start --bind /usr/opt:/non-container \
     </refsect1>
 </refentry>
 <!-- /manpage -->
+<!-- manpage 3python -->
+
+<refentry>
+   <refmeta>
+      <refentrytitle>Container</refentrytitle>
+      <manvolnum>3python</manvolnum>
+   </refmeta>
+   <refnamediv>
+      <refname>Container</refname>
+      <refpurpose>Provide access to the container part of managed experiment configuration databases</refpurpose>
+   </refnamediv>
+
+   <refsynopsisdiv>
+      <programlisting>
+from nscldaq.mg_database import Container
+
+class Container:
+   def __init__(self, handle)...
+   def exists(self, name)...
+   def add(self, name, image, initscript, mountpoints)...
+   def remove(self, name)...
+   def replace(self, oldname, newname, image, initscript, mountpoints)...
+   def list(self)...
+   def id(self, name)...
+
+      </programlisting>
+   </refsynopsisdiv>
+   <refsect1>
+      <title>DESCRIPTION</title>
+      <para>
+         This provides python scripts with access to the Container part of the managed
+         experiment environment experiment configuration datababase.
+         Note that docstrings describe this class as well so you can recover
+         much of the information in this manpage from the Python help system.
+      </para>
+      <para>
+         This class was tested using Python3.  No warranty is made to its suitability for use with Python 2
+         scripts.
+      </para>
+   </refsect1>
+   <refsect1>
+      <title>METHODS</title>
+      <variablelist>
+         <varlistentry>
+            <term>
+               <synopsis><programlisting>
+def __init__(self, handle)
+               </programlisting></synopsis>
+            </term>
+            <listitem><para>
+             Class constructor.  <parameter>handle</parameter> should be
+             an sqlite3 connection object that is connected to the configuration database file.
+             See e.g. <ulink url='https://docs.python.org/3/library/sqlite3.html'>https://docs.python.org/3/library/sqlite3.html</ulink>
+             for information about how to construct an sqlite3 database connection object.
+             </para>
+             <para>
+               All operations performed by this class will be performed on the database connected to 
+               <parameter>handle</parameter>
+            </para></listitem>
+         </varlistentry>
+         <varlistentry>
+            <term>
+               <synopsis><programlisting>
+def id(self, name)
+               </programlisting></synopsis>
+            </term>
+            <listitem><para>
+               If there is a container named <parameter>name</parameter> the primary key for its
+               root table entry (<literal>container</literal> table) is returned.  If not, 
+               <literal>None</literal> is returned. 
+            </para>
+            <para>
+               In general user written code will not need this,  Other classes in the
+               <literal>nscldaq.mg_database</literal> module will use this to establish foreign keys
+               describing the containers used by database objects <emphasis>they</emphasis> create.
+            </para></listitem>
+         </varlistentry>
+         <varlistentry>
+            <term>
+               <synopsis><programlisting>
+def exists(self, name)      
+               </programlisting></synopsis>
+            </term>
+            <listitem><para>
+               Returns <literal>True</literal> if there is a container named <parameter>name</parameter>
+               <literal>False</literal> otherwise.
+            </para></listitem>
+         </varlistentry>
+         <varlistentry>
+            <term>
+               <synopsis><programlisting>
+def add(self, name, image, initsript, mountpoints)      
+               </programlisting></synopsis>
+            </term>
+            <listitem><para>
+               Creates a new container definition in the database.
+               <parameter>name</parameter> is the unique name by which that container will be
+               referred to by other <classname>Container</classname> methods.  This need not be the
+               <parameter>image</parameter> which is the container image file.
+               If a container by this name already exists, a <classname>ValueError</classname> is raised.
+            </para><para>
+               <parameter>initscript</parameter> specifies a file system path (in the context of
+               the wizard's execution) of a script that will be run before starting any program
+               in the container).  One use of that script can be to establish a version of FRIBDAQ
+               by running the <filename>daqconfig.bash</filename> of that version.
+               The contents of the script itself are sucked into the database.  Therefore, if you
+               modify the script you must re-create the container.  
+            </para><para>
+               <parameter>mountpoints</parameter> is an iterable object of binding specifications.
+               Each element of that iterable is a two or one element array.
+               If the element is a single elment array, that element specifies a host file system path
+               that is made available within the container at the same filesystem path as the host.
+               Note that bindings overlay and supersede filesystem paths within the container image.
+               If an element of <parameter>mountpoints</parameter> is a two element array, the first
+               element is a host file system path and the second one specifies where, in the active
+               container the contents of that path are bound.
+            </para><para>
+               Note that not only directories can be bound.  Even single files can be bound into the
+               running container.
+            </para></listitem>
+         </varlistentry>
+         <varlistentry>
+            <term>
+               <synopsis><programlisting>
+def remove(self, name)
+               </programlisting></synopsis>
+            </term>
+            <listitem><para>
+               Removes the container named <parameter>name</parameter> from the set of 
+               container definitions in that database file.  If there is no such container,
+               this method raises a <classname>ValueError</classname>
+            </para></listitem>
+         </varlistentry>
+         <varlistentry>
+            <term>
+               <synopsis><programlisting>
+               def replace(self, oldname, newname, image, initscript, mountpoints)
+               </programlisting></synopsis>
+            </term>
+            <listitem><para>
+               This is identical to 
+            </para>
+            <programlisting>
+            container.remove(oldname)
+            container.add(newname, image, initscript, mountpoints)
+            </programlisting>
+            </listitem>
+            
+         </varlistentry>
+         <varlistentry>
+            <term>
+               <synopsis><programlisting>
+def list(self)
+               </programlisting></synopsis>
+            </term>
+            <listitem><para>
+               Returns an iterable that describes all of the container definitions.
+               Each element of the iterable is a dict. With the keys:
+               <literal>name</literal>, <literal>image</literal>, <literal>init_script</literal>
+               and <literal>bindings</literal>.
+               With the exception of <literal>init_script</literal>  these are the 
+               parameter needed to create the container.  <literal>init_script</literal> however is
+               the <emphasis>contents</emphasis> of the initialization script, not its path.
+            </para></listitem>
+         </varlistentry>
+         
+      </variablelist>
+   </refsect1>
+</refentry>
+<refentry>
+   <refmeta>
+      <refentrytitle>EventLog</refentrytitle>
+      <manvolnum>3python</manvolnum>
+   </refmeta>
+   <refnamediv>
+      <refname>EventLog</refname>
+      <refpurpose>Python3 API for the Eventlogger part of the managed expeiment configuration file database.
+   </refnamediv>
+   <refsynopsisdiv>
+      <programlisting>
+from nscldaq.mg_database import EventLog
+
+class EventLog:
+   def __init__(self, handle)...
+   def exists(self, destination)...
+   def add(self, root, source_uri, destination, container, host, options)...
+   def info(self, destiniation)...
+   def list(self)...
+   def delete(self, id)
+   def enable(self, id)
+   def disable(self, id)
+   def enable_all(self)
+   def disable_all(self)
+   def start_recording(self)
+   def stop_recording(self)
+   def is_recording(self)
+      </programlisting>
+   </refsynopsisdiv>
+   <refsect1>
+      <title>DESCRIPTION</title>
+      <para>
+      </para>
+   </refsect1>
+</refentry>
+<!-- /manpage -->
