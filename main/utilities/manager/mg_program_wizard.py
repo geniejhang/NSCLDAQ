@@ -358,6 +358,9 @@ class IniScriptAndOptions(QWizardPage):
     def initscript(self):
         return self._initscript.text()
     def options(self):
+        # Factor this into the editable table
+        # Along with one for single col tables.
+        
         #  Returns a list of name/value pairs or just name if there's no value.
         #   We remove those for which the name is empty.
         
@@ -409,6 +412,12 @@ class ParameterPage(QWizardPage):
         layout.addWidget(self._paramtable)
         
         self.setLayout(layout)
+    # Accessors:
+    
+    def parameters(self):
+        rows = self._parameters.rowCount()
+        return [self._parameters.item(r, 0).text() for r in range(rows)]
+
     
 class Environment(QWizardPage):    
         def __init__(self, *args):
@@ -476,6 +485,10 @@ class ProgramWizard(QWizard):
         return self._iniopts.initscript()
     def options(self):
         return self._iniopts.options()
+    
+    def parameters(self):
+        return self._params.parameters()
+
 #-------------------------------------------------------------------------------------------
 
 
@@ -529,8 +542,10 @@ cwd        = wizard.wd()
 
 iniscript  = wizard.initscript()
 options    = wizard.options()
+params     = wizard.parameters()
 
 print(f'Name: {name} is {executable} will run in {container}@{host}')
 print(f'Program is {type}, and will run with cwd {cwd}')
 print(f'Initialization script: {iniscript}')
 print(f'Options:  {options}')
+print(f'Parameters: {params}')
