@@ -4724,10 +4724,10 @@ bindings=/scratch,/projects/daq:/daq
             </varlistentry>
         </variablelist>
     </refsect1>
-</refentry>
+</refentry id='daq1.mg_reaadout_wizard'>
 <refentry>
    <refmeta>
-      <refentrytitle>mg_readout_wizard</refentrytitle>
+      <refentrytitle id='daq1.mg_reaadout_wizard.title'>mg_readout_wizard</refentrytitle>
       <manvolnum>1daq</manvolnum>
    </refmeta>
    <refnamediv>
@@ -5336,5 +5336,81 @@ $DAQBIN/mg_readout_wizard <replaceable>database-file</replaceable>
             </varlistentry>
         </variablelist>
     </refsect1>
+</refentry>
+<refentry>
+   <refmeta>
+      <refentrytitle>mg_logwizard</refentrytitle>
+      <manvolnum>1daq</manvolnum>
+   </refmeta>
+   <refnamediv>
+      <refname>mg_logwizard</refname>
+      <refpurpose>Wizard to create event loggers for managed experiments</refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+      <cmdsynopsis><command>
+$DAQBIN/mg_logwizard <replaceable>config-fileK</replaceable>
+      </command></cmdsynopsis>
+   </refsynopsisdiv>
+
+   <refsect1>
+      <title>DESCRIPTION</title> 
+      <para>
+         This program is a wizard that leads the user through the process of creating an
+         event logger for the FRIBDAQ managed experiment environment.  The single parameter
+         is the path to the experiment's configuration database file.
+      </para>  
+      <para>
+         Since FRIBDAQ-12.1-003, this is also available from the <program>mg_config</program>
+         menu of configuration programs.  
+      </para>
+      <para>
+         The wizard pages should be self explanatory as they contain a lot of instructional text.  If you
+         have problems understanding what is required send email to the 
+         <literal>helpme at frib dot msu dot edu</literal> support address; we will help you and try to improve the wizard.
+      </para>
+   </refsect1>
+</refentry>
+
+<refentry>
+   <refmeta>
+      <refentrytitle>mg_program_wizard</rentrytitle>
+      <manvolnum>1daq</manvolnum>
+   </refmeta>
+   <refnamediv>
+      <refname>mg_program_wizard</refname>
+      <refpurpose>Wizard to create programs for managed experiments</refpurpose>
+   </refnamediv>
+   <refsynopsisdiv>
+      <cmdsynopsis><command>
+$DAQBIN/mg_program_wizard <replaceable>config-file</replaceable>
+      </command></cmdsynopsis>
+   </refsynopsisdiv>
+   <refsect1>
+      <title>DESCRIPTION</title>
+      <para>
+         This program is a wizard that leads users through the process of defining programs
+         that can be run in steps of sequences in the FRIBDAQ managed experiment environment.
+         It takes a single command line parameter, the path to the experiment configuration
+         database file.
+      </para>
+      <para>
+         This wizard should not be used for readout programs as there's a lot of baggage that
+         needs to go along with defining that.  Use the  wizard described in 
+         <link linkend='daq1.mg_readout_wizard' endterm='daq1.mg_readout_wizard.title' /> to
+         define readout programs.
+      </para>
+      <para>
+         Since FRIBDAQ-12.1-003, this is also available from the <program>mg_config</program>
+         menu of configuration programs.
+      </para>
+      <para>
+         The wizard pages should be self-explanatory as  a great deal of descriptive text
+         has been placed on the in addition to the controls needed to specify the program.
+         If you
+         have problems understanding what is required send email to the 
+         <literal>helpme at frib dot msu dot edu</literal> support address;
+            we will help you and try to improve the wizard.
+      </para>
+   </refsect1>
 </refentry>
 <!-- /manpage -->
