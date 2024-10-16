@@ -441,10 +441,25 @@ class Environment(QWizardPage):
             self._env = self._envtable.table()
             self._env.setColumnCount(2)
             self._env.setHorizontalHeaderLabels(['Variable', 'Value'])
-            layout.addWidget(self._env)
+            layout.addWidget(self._envtable)
             
             self.setLayout(layout)
+        def environment(self):
+            rows = self._env.rowCount()
+            result = []
             
+            rawvars = [[self._env.item(r, 0).text(), self._env.item(r, 1).text()] 
+                       for r in range(rows) 
+                       if len(self._env.item(r,0).text())> 0 
+                              and not self._env.item(r, 0).text().isspace()]
+            
+            for (name, value) in rawvars:
+                if len(value) == 0 or value.isspace():
+                    result.append((name,))
+                else:
+                    result.append((name, value))
+            return result
+                
         
 class ProgramWizard(QWizard):
     def __init__(self, db):
@@ -488,6 +503,9 @@ class ProgramWizard(QWizard):
     
     def parameters(self):
         return self._params.parameters()
+    
+    def environment(self):
+        return self._env.environment()
 
 #-------------------------------------------------------------------------------------------
 
@@ -543,9 +561,11 @@ cwd        = wizard.wd()
 iniscript  = wizard.initscript()
 options    = wizard.options()
 params     = wizard.parameters()
+env        = wizard.environment()
 
 print(f'Name: {name} is {executable} will run in {container}@{host}')
 print(f'Program is {type}, and will run with cwd {cwd}')
 print(f'Initialization script: {iniscript}')
 print(f'Options:  {options}')
 print(f'Parameters: {params}')
+print(f'Environemnt: {env}')
