@@ -15,6 +15,7 @@ from nscldaq.mg_database import Container, EventLog
 
 from PyQt5.QtWidgets import (QWizard, QApplication, QWizardPage,
     QLabel, QLineEdit, QPushButton, QFileDialog, QComboBox, QCheckBox,
+    QMessageBox,
     QVBoxLayout, QHBoxLayout
 )
 from PyQt5.Qt import *
@@ -366,6 +367,6 @@ try:
     loggers.add(root, source, destination, container, host, options)
     exit(0)
 except Exception as e:
-    sys.stderr.write(f'Failed to make the new event logger: {str(e)}')
+    QMessageBox.critical(wizard, 'Creation failed', f'Failed to make the new event logger: {str(e)}')
     exit(-1)
     

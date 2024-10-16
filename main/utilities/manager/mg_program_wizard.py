@@ -31,7 +31,7 @@ from pathlib import Path
 
 from PyQt5.QtWidgets import (
     QWizard, QApplication, QWizardPage, QLineEdit, QPushButton, QFileDialog,
-    QComboBox, QLabel, QTableWidget,
+    QComboBox, QLabel, QTableWidget, QMessageBox,
     QHBoxLayout, QVBoxLayout
 )
 
@@ -568,9 +568,23 @@ options    = wizard.options()
 params     = wizard.parameters()
 env        = wizard.environment()
 
-print(f'Name: {name} is {executable} will run in {container}@{host}')
-print(f'Program is {type}, and will run with cwd {cwd}')
-print(f'Initialization script: {iniscript}')
-print(f'Options:  {options}')
-print(f'Parameters: {params}')
-print(f'Environemnt: {env}')
+#  marshall up the options argument to Program.add():
+
+program_options = {
+    'tyoe': type,
+    'initscript': iniscript,
+    'options' : options,
+    'parameters': params,
+    'environment': env
+}
+
+#  We'll add the item in a try/except block so that the error can be posted as a  MessageBox.:
+
+pgmdb = Program(db)
+try:
+    pgmdb.add(name, executable, host, container, cwd, program_options)
+    exit(0)
+except Exception as e:
+    QMessageBox.critical(wizard, 'Creation Failed', f'Failed to make the program : {str(e)}')
+    raise
+    exit(-1)
