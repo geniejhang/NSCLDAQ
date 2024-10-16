@@ -94,7 +94,18 @@ class EditableTable(QWidget):
         self._table.removeRow(row)
         
     def table(self):
+        ''' Returns the table itself. '''
         return self._table
+    def col0List(self):
+        ''' Returns a list of the values in column 0 with empties suppressed: '''
+        
+        table = self._table
+        rows  = table.rowCount()
+        return [table.item(r, 0).text()
+                for r in range(rows)
+                if len(table.item(r,0).text()) > 0 
+                and not table.item(r, 0).text().isspace()]
+
 
 class IdentificationPage(QWizardPage):
     def __init__(self, db, *args):
@@ -415,8 +426,7 @@ class ParameterPage(QWizardPage):
     # Accessors:
     
     def parameters(self):
-        rows = self._parameters.rowCount()
-        return [self._parameters.item(r, 0).text() for r in range(rows)]
+        return self._paramtable.col0List()
 
     
 class Environment(QWizardPage):    
