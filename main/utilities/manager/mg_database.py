@@ -550,9 +550,10 @@ class Program:
             if type_id is None:
                 raise ValueError(f'Invalid program type: "{options["type"]}"')
         if 'initscript' in option_keys:
-            init_file = option['initscript']
-            with open(init_file, 'r') as file:
-                init_script = file.read()
+            init_file = options['initscript']
+            if len(init_file) > 0 and not init_file.isspace():
+                with open(init_file, 'r') as file:
+                    init_script = file.read()
         if 'options' in option_keys:
             cmd_options = options['options']
         if 'parameters' in option_keys:
@@ -612,8 +613,8 @@ class Program:
                     value = ''
                 cursor.execute(
                     '''
-                    INSERT INTO program_environment
-                    VALUES (program_id, name, value)
+                    INSERT INTO program_environment (program_id, name, value)
+                    VALUES (?, ?, ?)
                     ''', (program_id, name, value)
                 )
         except:
