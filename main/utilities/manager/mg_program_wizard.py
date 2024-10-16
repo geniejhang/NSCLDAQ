@@ -106,7 +106,32 @@ class EditableTable(QWidget):
                 if len(table.item(r,0).text()) > 0 
                 and not table.item(r, 0).text().isspace()]
 
-
+    def getPairs(self):
+        '''
+           Return a list of col0, col1 pairs with
+           Elements that have no col0 value omitted.
+           The result is a list of two element lists for cases
+           when both columns are filled in and one element lists if the
+           col1 is not filled in.
+        '''
+        
+        table = self._table
+        rows = table.rowCount()
+        result = []
+        
+        rawoptions = [[table.item(r, 0).text(), table.item(r, 1).text()] 
+                      for r in range(rows)
+                      if len(table.item(r, 0).text()) > 0
+                      and not table.item(r, 0).text().isspace()
+                      ]
+        for (option, value) in rawoptions:
+            if len(value) == 0 or value.isspace():
+                result.append((option,))
+            else:
+                result.append((option, value))
+        return result
+        
+        
 class IdentificationPage(QWizardPage):
     def __init__(self, db, *args):
         super().__init__(*args)
@@ -375,24 +400,8 @@ class IniScriptAndOptions(QWizardPage):
         #  Returns a list of name/value pairs or just name if there's no value.
         #   We remove those for which the name is empty.
         
-        rows = self._optiontable.rowCount()
-        result =[]
+        return self._options.getPairs()
         
-        rawoptions = [[self._optiontable.item(r, 0).text(), self._optiontable.item(r, 1).text()] 
-                       for r in range(rows) 
-                       if len(self._optiontable.item(r,0).text())> 0 
-                              and not self._optiontable.item(r, 0).text().isspace()]
-        
-        # Now we need to kill off elements that don't have a value:
-        
-        
-        for (option, value) in rawoptions:
-            if len(value) == 0 or value.isspace():
-                result.append((option,))
-            else:
-                result.append((option, value))
-        return result
-    
         
 class ParameterPage(QWizardPage):
     def __init__(self, *args):
@@ -455,22 +464,8 @@ class Environment(QWizardPage):
             
             self.setLayout(layout)
         def environment(self):
-            rows = self._env.rowCount()
-            result = []
+            return self._envtable.getPairs()
             
-            rawvars = [[self._env.item(r, 0).text(), self._env.item(r, 1).text()] 
-                       for r in range(rows) 
-                       if len(self._env.item(r,0).text())> 0 
-                              and not self._env.item(r, 0).text().isspace()]
-            
-            for (name, value) in rawvars:
-                if len(value) == 0 or value.isspace():
-                    result.append((name,))
-                else:
-                    result.append((name, value))
-            return result
-                
-        
 class ProgramWizard(QWizard):
     def __init__(self, db):
         super().__init__()
