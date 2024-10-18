@@ -5360,7 +5360,7 @@ $DAQBIN/mg_logwizard <replaceable>config-fileK</replaceable>
          is the path to the experiment's configuration database file.
       </para>  
       <para>
-         Since FRIBDAQ-12.1-003, this is also available from the <program>mg_config</program>
+         Since FRIBDAQ-12.1-003, this is also available from the <command>mg_config</command>
          menu of configuration programs.  
       </para>
       <para>
@@ -5400,7 +5400,7 @@ $DAQBIN/mg_program_wizard <replaceable>config-file</replaceable>
          define readout programs.
       </para>
       <para>
-         Since FRIBDAQ-12.1-003, this is also available from the <program>mg_config</program>
+         Since FRIBDAQ-12.1-003, this is also available from the <command>mg_config</command>
          menu of configuration programs.
       </para>
       <para>
