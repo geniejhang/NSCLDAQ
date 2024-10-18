@@ -5373,7 +5373,7 @@ $DAQBIN/mg_logwizard <replaceable>config-fileK</replaceable>
 
 <refentry>
    <refmeta>
-      <refentrytitle>mg_program_wizard</refntrytitle>
+      <refentrytitle>mg_program_wizard</refentrytitle>
       <manvolnum>1daq</manvolnum>
    </refmeta>
    <refnamediv>

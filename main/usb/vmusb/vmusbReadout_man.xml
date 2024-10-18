@@ -7965,11 +7965,11 @@ mdpp32qdc cget <replaceable>name</replaceable>
                          <replaceable>bool</replaceable>
                      </term>
                      <listitem>
-										 </listitem>
+										 
                          <para>
                              Switch monitor on
                          </para>
-										 </listitem>
+                        </listitem>
                  </varlistentry>
                  <varlistentry>
                      <term>
@@ -7977,11 +7977,11 @@ mdpp32qdc cget <replaceable>name</replaceable>
                          <replaceable>int 0-31</replaceable>
                      </term>
                      <listitem>
-										 </listitem>
+						
                          <para>
                              Set channel to monitor
                          </para>
-										 </listitem>
+					 </listitem>
                  </varlistentry>
                  <varlistentry>
                      <term>
@@ -7989,11 +7989,11 @@ mdpp32qdc cget <replaceable>name</replaceable>
                          <replaceable>int 0-3</replaceable>
                      </term>
                      <listitem>
-										 </listitem>
+										 
                          <para>
                              Set wave to monitior
                          </para>
-										 </listitem>
+					</listitem>
                  </varlistentry>
                  <varlistentry>
                      <term>
@@ -8894,7 +8894,7 @@ mdpp16qdc cget <replaceable>name</replaceable>
                          <replaceable>bool</replaceable>
                      </term>
                      <listitem>
-										 </listitem>
+										 
                          <para>
                              Switch monitor on
                          </para>
@@ -8906,7 +8906,7 @@ mdpp16qdc cget <replaceable>name</replaceable>
                          <replaceable>int 0-31</replaceable>
                      </term>
                      <listitem>
-										 </listitem>
+										 
                          <para>
                              Set channel to monitor
                          </para>
@@ -8918,7 +8918,7 @@ mdpp16qdc cget <replaceable>name</replaceable>
                          <replaceable>int 0-3</replaceable>
                      </term>
                      <listitem>
-										 </listitem>
+										 
                          <para>
                              Set wave to monitior
                          </para>

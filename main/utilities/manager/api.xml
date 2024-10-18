@@ -8325,7 +8325,7 @@ def list(self)
    </refmeta>
    <refnamediv>
       <refname>EventLog</refname>
-      <refpurpose>Python3 API for the Eventlogger part of the managed expeiment configuration file database.
+      <refpurpose>Python3 API for the Eventlogger part of the managed expeiment configuration file database.</refpurpose>
    </refnamediv>
    <refsynopsisdiv>
       <programlisting>
@@ -8478,9 +8478,9 @@ def delete(self, id)
             </code></term>
             <listitem><para>
                Deletes the event logger with <parameter>id</parameter> as the id returned from
-               e.g. <methodname>add</methodname> or <methodname>
+               e.g. <methodname>add</methodname> or
                <methodname>info</methodname>. If there is no corresponding logger, 
-               <classname>ValueError</calssname> is raised.
+               <classname>ValueError</classname> is raised.
             </para></listitem>
          </varlistentry>
          <varlistentry>
@@ -8592,7 +8592,7 @@ def init(self, db)
             </code></term>
             <listitem>
                <para>
-               Called when a <classname>Program is constructed.  
+               Called when a <classname>Program</classname> is constructed.  
                The <parameter>db</parameter> is an sqlite3 connection object that
                is connected to the FRIB managed experiment configuration/database file.
                See 
@@ -8629,7 +8629,7 @@ def add(self, name, path, host, container, wd, options)
                   file that will be run when the program is run.  This path must exist
                   within the context of the container in which the program is specified to run.
                   <parameter>host</parameter> is the host in which the program will run and
-                  <parameter>container</container> is the name of the container definition that
+                  <parameter>container</parameter> is the name of the container definition that
                   specifies the container in which the program will be run.
                   <parameter>wd</parameter> specifies the working directory in which the program
                   is started. Note this, as well is interpreted in the context of the container.
@@ -8649,7 +8649,7 @@ def add(self, name, path, host, container, wd, options)
                   values are just options.  For example <literal>[('--ring', 'fox'), (--debug,)]</literal>.
                   <literal>parameters</literal> are an iterable.  Each item of the iterable is a parameter passed to the
                   program as it starts.  For example <literal>['/user/fox/configuration.txt', 'output-file']</literal>
-                  <literal>environment specifies additional environment variables that are defined prior to running
+                  <literal>environment</literal> specifies additional environment variables that are defined prior to running
                   the program.  THe format of this value is the same as for <literal>options</literal> for 
                   example: <literal>[('DAQROOT', '12.1-003'), ('ENABLE_DEBUG', )]</literal>
                </para>
