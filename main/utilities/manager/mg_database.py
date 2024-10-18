@@ -299,7 +299,7 @@ class EventLog:
         c = Container(self._db)
         container_id = c.id(container)
         if container_id is None:
-            raise ValueError(f'There is no container named {containr}')
+            raise ValueError(f'There is no container named {container}')
         
         # Untangle the options:
         
