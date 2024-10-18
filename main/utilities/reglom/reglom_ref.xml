@@ -225,7 +225,7 @@ $DAQBIN/reglom <option>options...</option> <replaceable>files...</replaceable>
                 </para></listitem>
             </varlistentry>
             <varlistentry>
-                <term><option>--sourceid</option><replaceable>output-source-id</relaceable></term>
+                <term><option>--sourceid</option><replaceable>output-source-id</replaceable></term>
                 <listitem><para>
                     Defines the source id that will be assigned to output events.
                     This is normally a small counting number. If not
@@ -233,7 +233,7 @@ $DAQBIN/reglom <option>options...</option> <replaceable>files...</replaceable>
                 </para></listitem>
             </varlistentry>
             <varlistentry>
-                <term><option>--output</option><replaceable>filename</term>
+                <term><option>--output</option><replaceable>filename</replaceable></term>
                 <listitem><para>
                     Provides the name of the output file to be produced.
                     This has no default value.  Note that unlike event files
