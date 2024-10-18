@@ -9775,7 +9775,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                          <replaceable>bool</replaceable>
                      </term>
                      <listitem>
-										 </listitem>
+										 
                          <para>
                              Switch monitor on
                          </para>
@@ -9787,7 +9787,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                          <replaceable>int 0-31</replaceable>
                      </term>
                      <listitem>
-										 </listitem>
+										 
                          <para>
                              Set channel to monitor
                          </para>
@@ -9799,7 +9799,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                          <replaceable>int 0-3</replaceable>
                      </term>
                      <listitem>
-										 </listitem>
+										 
                          <para>
                              Set wave to monitior
                          </para>
