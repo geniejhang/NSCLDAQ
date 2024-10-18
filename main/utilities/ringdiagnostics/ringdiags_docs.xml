@@ -27,7 +27,7 @@ $DAQBIN/ringdiagnostics <optional><option>options...</option></optional>
             ringbuffers in a multi computer system.
         </para>
     </refsect1>
-    <refsect1><title>OPTIONS</title></title>
+    <refsect1><title>OPTIONS</title>
     <variablelist>
         <varlistentry>
             <term><option>--help</option></term>
@@ -37,7 +37,7 @@ $DAQBIN/ringdiagnostics <optional><option>options...</option></optional>
             </para></listitem>
         </varlistentry>
         <varlistentry>
-            <term><option>--update</option><replaceable> seconds</term>
+            <term><option>--update</option><replaceable> seconds</replaceable></term>
             <listitem><para>
                 Specifies the update rate in seconds.  THis defaults to 2 if not
                 specified.
@@ -85,6 +85,7 @@ $DAQBIN/ringdiagnostics <optional><option>options...</option></optional>
                 </para>
                 </listitem>
             </varlistentry>
+        </variablelist>
     </refsect1>
 </refentry>
 

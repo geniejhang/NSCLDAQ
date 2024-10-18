@@ -4724,10 +4724,10 @@ bindings=/scratch,/projects/daq:/daq
             </varlistentry>
         </variablelist>
     </refsect1>
-</refentry id='daq1.mg_reaadout_wizard'>
-<refentry>
+</refentry>
+<refentry id='daq1.mg_readout_wizard'>
    <refmeta>
-      <refentrytitle id='daq1.mg_reaadout_wizard.title'>mg_readout_wizard</refentrytitle>
+      <refentrytitle id='daq1.mg_readout_wizard.title'>mg_readout_wizard</refentrytitle>
       <manvolnum>1daq</manvolnum>
    </refmeta>
    <refnamediv>
@@ -5373,7 +5373,7 @@ $DAQBIN/mg_logwizard <replaceable>config-fileK</replaceable>
 
 <refentry>
    <refmeta>
-      <refentrytitle>mg_program_wizard</rentrytitle>
+      <refentrytitle>mg_program_wizard</refentrytitle>
       <manvolnum>1daq</manvolnum>
    </refmeta>
    <refnamediv>

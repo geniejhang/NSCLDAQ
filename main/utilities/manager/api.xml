@@ -8194,9 +8194,9 @@ class Container:
       <variablelist>
          <varlistentry>
             <term>
-               <synopsis><programlisting>
+               <code>
 def __init__(self, handle)
-               </programlisting></synopsis>
+               </code>
             </term>
             <listitem><para>
              Class constructor.  <parameter>handle</parameter> should be
@@ -8211,9 +8211,9 @@ def __init__(self, handle)
          </varlistentry>
          <varlistentry>
             <term>
-               <synopsis><programlisting>
+               <code>
 def id(self, name)
-               </programlisting></synopsis>
+               </code>
             </term>
             <listitem><para>
                If there is a container named <parameter>name</parameter> the primary key for its
@@ -8228,9 +8228,9 @@ def id(self, name)
          </varlistentry>
          <varlistentry>
             <term>
-               <synopsis><programlisting>
+               <code>
 def exists(self, name)      
-               </programlisting></synopsis>
+               </code>
             </term>
             <listitem><para>
                Returns <literal>True</literal> if there is a container named <parameter>name</parameter>
@@ -8239,9 +8239,9 @@ def exists(self, name)
          </varlistentry>
          <varlistentry>
             <term>
-               <synopsis><programlisting>
+               <code>
 def add(self, name, image, initsript, mountpoints)      
-               </programlisting></synopsis>
+               </code>
             </term>
             <listitem><para>
                Creates a new container definition in the database.
@@ -8272,9 +8272,9 @@ def add(self, name, image, initsript, mountpoints)
          </varlistentry>
          <varlistentry>
             <term>
-               <synopsis><programlisting>
+               <code>
 def remove(self, name)
-               </programlisting></synopsis>
+               </code>
             </term>
             <listitem><para>
                Removes the container named <parameter>name</parameter> from the set of 
@@ -8284,9 +8284,9 @@ def remove(self, name)
          </varlistentry>
          <varlistentry>
             <term>
-               <synopsis><programlisting>
+               <code>
                def replace(self, oldname, newname, image, initscript, mountpoints)
-               </programlisting></synopsis>
+               </code>
             </term>
             <listitem><para>
                This is identical to 
@@ -8300,9 +8300,9 @@ def remove(self, name)
          </varlistentry>
          <varlistentry>
             <term>
-               <synopsis><programlisting>
+               <code>
 def list(self)
-               </programlisting></synopsis>
+               </code>
             </term>
             <listitem><para>
                Returns an iterable that describes all of the container definitions.
@@ -8325,7 +8325,7 @@ def list(self)
    </refmeta>
    <refnamediv>
       <refname>EventLog</refname>
-      <refpurpose>Python3 API for the Eventlogger part of the managed expeiment configuration file database.
+      <refpurpose>Python3 API for the Eventlogger part of the managed expeiment configuration file database.</refpurpose>
    </refnamediv>
    <refsynopsisdiv>
       <programlisting>
@@ -8378,9 +8378,9 @@ class EventLog:
       <title>METHODS</title>
       <variablelist>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def __init__(self, handle)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Called when constructing an <classname>EventLog</classname> object.  The
                <parameter>handle</parameter> parameter is the sqlite3 database 
@@ -8393,18 +8393,18 @@ def __init__(self, handle)
             </para></listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def exists(self, destination)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Returns <literal>True</literal> if an event logger is already defined
                that writes to the specific <parameter>destination</parameter> directory.
             </para></listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def add(self, root, source_uri, destination, container, host, options)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Attempts to add a new event logger to the configuration database.
                The <parameter>root</parameter> specifies the top level directory of the
@@ -8440,9 +8440,9 @@ def add(self, root, source_uri, destination, container, host, options)
             </para></listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def info(self, destination)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Returns information about the logger which is defined with the
                <parameter>destination</parameter>.  The information is returned as a dict
@@ -8464,29 +8464,29 @@ def info(self, destination)
             </para></listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def list(self)            
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Returns a list of dicts, one for each defined loggers.  The contents of each dict
                is identical to that described for <methodname>info</methodname>.
             </para></listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def delete(self, id)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Deletes the event logger with <parameter>id</parameter> as the id returned from
-               e.g. <methodname>add</methodname> or <methodname>
+               e.g. <methodname>add</methodname> or
                <methodname>info</methodname>. If there is no corresponding logger, 
-               <classname>ValueError</calssname> is raised.
+               <classname>ValueError</classname> is raised.
             </para></listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def enable(self, id):
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Enables the logger with the id <parameter>id</parameter>
                This means that the next time a recorded run is started, this logger will
@@ -8495,17 +8495,17 @@ def enable(self, id):
             </para></listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
  def disable(self, id)           
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Disables the logger identified by <parameter>id</parameter>
             </para></listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def start_recording(self)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Sets the global recoring flag to <literal>True</literal>.
                The next begin run, will start all enabled event loggers to log event data
@@ -8514,9 +8514,9 @@ def start_recording(self)
             </para></listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def stop_recording(self)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Sets the global recording flag to <literal>False</literal>
                The next begin run will not start any event loggers.
@@ -8524,9 +8524,9 @@ def stop_recording(self)
          </varlistentry>
 
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def is_recording(self)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem><para>
                Returns the state of the global recording flag.
             </para></listitem>
@@ -8587,12 +8587,12 @@ def types(self)...
       <title>METHODS</title>
       <variablelist>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def init(self, db)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem>
                <para>
-               Called when a <classname>Program is constructed.  
+               Called when a <classname>Program</classname> is constructed.  
                The <parameter>db</parameter> is an sqlite3 connection object that
                is connected to the FRIB managed experiment configuration/database file.
                See 
@@ -8603,9 +8603,9 @@ def init(self, db)
             </listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def exists(self, name)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem>
                <para>
                Returns <literal>True</literal> if the program named <parameter>name</parameter>
@@ -8614,9 +8614,9 @@ def exists(self, name)
             </listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def add(self, name, path, host, container, wd, options)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem>
                <para>
                Attempts to add a new program  definition to the configuration.  
@@ -8629,7 +8629,7 @@ def add(self, name, path, host, container, wd, options)
                   file that will be run when the program is run.  This path must exist
                   within the context of the container in which the program is specified to run.
                   <parameter>host</parameter> is the host in which the program will run and
-                  <parameter>container</container> is the name of the container definition that
+                  <parameter>container</parameter> is the name of the container definition that
                   specifies the container in which the program will be run.
                   <parameter>wd</parameter> specifies the working directory in which the program
                   is started. Note this, as well is interpreted in the context of the container.
@@ -8649,16 +8649,16 @@ def add(self, name, path, host, container, wd, options)
                   values are just options.  For example <literal>[('--ring', 'fox'), (--debug,)]</literal>.
                   <literal>parameters</literal> are an iterable.  Each item of the iterable is a parameter passed to the
                   program as it starts.  For example <literal>['/user/fox/configuration.txt', 'output-file']</literal>
-                  <literal>environment specifies additional environment variables that are defined prior to running
+                  <literal>environment</literal> specifies additional environment variables that are defined prior to running
                   the program.  THe format of this value is the same as for <literal>options</literal> for 
                   example: <literal>[('DAQROOT', '12.1-003'), ('ENABLE_DEBUG', )]</literal>
                </para>
             </listitem>
          </varlistentry>
             <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def delete(self, name)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem>
                <para>
                Attempts to delete the program with the name <parameter>name</parameter>. If there is no
@@ -8667,9 +8667,9 @@ def delete(self, name)
             </listitem>
          </varlistentry>
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def list(self)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem>
                <para>
                Lists all programs and their properties.  The return value is a list of dicts.
@@ -8701,9 +8701,9 @@ def list(self)
 
 
          <varlistentry>
-            <term><synopsis><programlisting>
+            <term><code>
 def types(self)
-            </programlisting></synopsis></term>
+            </code></term>
             <listitem>
                <para>
                Returns a list of the legal program types.  At the time this is being written, th is is
