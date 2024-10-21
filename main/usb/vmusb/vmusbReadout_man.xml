@@ -118,6 +118,22 @@ caenv956 cget <replaceable>name</replaceable>
                 </para>
             </listitem>
         </varlistentry>
+        <varlistentry>
+            <term><command>-inputs</command> <replaceable>ribbon | nim</replaceable>
+            </term>
+            <listitem><para>
+                This is interpreted by SpecTcl 7.0-001 and later.  It allows it to 
+                distinguish between the N series (NIM Inputs) of digitizer and the others
+                (Ribbon cable inputs).  The channel number decoding differs between these module types.
+                Prior to the addition of this option, users of the N series digitizers (e.g. 785N)
+                had to specify only every other channel name for the decode to work correctly.
+                If one configures the module instead with <literal>-inputs nim</literal>
+                SpecTcl 7.0-001 and later can handle tight packed parameter definitions.
+            </para><para>
+                If not specified this defaults to <literal>ribbon</literal> with the
+                behavior before the addition of this option.
+            </para></listitem>
+        </varlistentry>
          <varlistentry>
             <term><command>-thresholds</command> <replaceable>values</replaceable></term>
             <listitem>
