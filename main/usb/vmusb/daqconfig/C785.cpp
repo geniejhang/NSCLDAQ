@@ -165,6 +165,8 @@ static XXUSB::CConfigurableObject::limit ipedLow(0);
 static XXUSB::CConfigurableObject::limit ipedHigh(255);
 static XXUSB::CConfigurableObject::Limits ipedRange(ipedLow, ipedHigh);
 
+static const char* inputsEnum[] = {"ribbon", "nim", 0};
+
 //////////////////////////////////////////////////////////////////////
 /////////////////// Canonical class/object operations ////////////////
 //////////////////////////////////////////////////////////////////////
@@ -334,6 +336,10 @@ C785::onAttach(CReadoutModule& configuration)
 				 NULL, "true");
   m_pConfiguration->addParameter("-commonstop", XXUSB::CConfigurableObject::isBool,
 				 NULL, "false");
+
+  // Issue 201 :
+
+  m_pConfiguration->addEnumParameter("-inputs", inputsEnum, "ribbon");
   
 }
 /*!
