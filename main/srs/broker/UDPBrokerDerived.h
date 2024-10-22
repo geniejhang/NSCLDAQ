@@ -64,6 +64,7 @@ private:
     static const int MaxChns{64};
     bool m_startedMarker[MaxFECs * MaxVMMs] = {false};
     bool m_dataEnded = true;
+    uint16_t m_prevIdxHitMarker{0};
 
 
     int m_hitCounter;
