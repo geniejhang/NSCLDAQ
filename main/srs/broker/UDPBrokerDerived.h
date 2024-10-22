@@ -64,7 +64,6 @@ private:
     static const int MaxChns{64};
     bool m_startedMarker[MaxFECs * MaxVMMs] = {false};
     bool m_dataEnded = true;
-    uint16_t m_prevIdxHitMarker{0};
 
 
     int m_hitCounter;
@@ -78,15 +77,14 @@ private:
 
     struct VMM3Marker
     {
-      uint64_t fecTimeStamp{0};  /// 42 bit
-      uint64_t hitMarker{0}; /// 42 bit
+      uint64_t fecTimestamp{0};  /// 42 bit
+      uint32_t hitMarker{0}; /// 42 bit
     } *markerSRS;
 
     struct newData
     {
-        uint64_t hitTimeStamp{0};
-        uint64_t hitContinuousMarker{0};
-        uint64_t hitMarker{0};
+        uint64_t hitTimestamp{0};
+        uint32_t hitMarker{0};
         uint16_t chnoMapped{0};
     } extraData;
 

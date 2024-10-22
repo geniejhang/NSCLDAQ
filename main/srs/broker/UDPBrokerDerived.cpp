@@ -110,191 +110,154 @@ int UDPBrokerDerived::getExtraData(uint8_t fecId, uint8_t* data)
     fecId -= 10;
 
     int dataflag = (data2 >> 15) & 0x1;
-    // Now dataflag can be 1 also for hit marker
     if(dataflag){
-        // Enter here if data or hit marker
+        // Enter here if data
 
-        //This vmmid is valid if not hit marker 
         vmmid = (data1 >> 22) & 0x1F;
         //if (m_datagramCounter < 10)printf("dataflag True fecId %d m_triggerMode %d, m_dataEnded %d: m_markerCounter %d \n",
         // fecId, m_triggerMode, m_dataEnded, m_markerCounter);
 
         // if ext. trigger get marker at vmmid +16
-        if (m_triggerMode == 1){
-            idx = (fecId - 1) * MaxVMMs + vmmid + 16;
-            //hit data ended so next dataflag==1 are hit markers 
-            if (m_dataEnded && m_markerCounter > 0){
-                //vmmidHitMarker is already vmmid+16 
-                vmmidHitMarker = (data2 >> 10) & 0x1F;
-                idxHitMarker = (fecId - 1) * MaxVMMs + vmmidHitMarker;
-                //if (m_datagramCounter < 10)printf("m_dataEnded True fecId %d vmmidHitMarker %d, idxHitMarker %d: idx %d \n", fecId, vmmidHitMarker, idxHitMarker, idx);
-
-                // if data ended but data are not hit marker, shouldn't happen
-                if (idxHitMarker >= (MaxFECs * MaxVMMs)) 
-                    return EXTRA_DATA_ERR;
-                uint64_t timestamp_lower_10bit = data2 & 0x03FF;
-                uint64_t timestamp_upper_32bit = data1;
-                uint64_t timestamp_42bit = (timestamp_upper_32bit << 10) + timestamp_lower_10bit;
-                //if (m_datagramCounter < 10)printf("m_dataEnded True prevHitMarker %llu timestamp_42bit %llu idxHitMarker %lu m_prevIdxHitMarker %lu \n", 
-                //    markerSRS[m_prevIdxHitMarker].hitMarker, timestamp_42bit, idxHitMarker, m_prevIdxHitMarker);
-
-                // Another check 
-                if (timestamp_42bit == 0x3FFFFFFFFFF)
-                    return EXTRA_DATA_ERR;
-                // We are reading the first hit if new "ts" is not same as previous. 
-                // Check that data of first hit is not equal to data of last hitMarker.
-                // Get ready to read next data as well m_dataEnded = false.
-                // Don't return because want to process following lines
-                if (markerSRS[m_prevIdxHitMarker].hitMarker != 0 &&
-                    (markerSRS[m_prevIdxHitMarker].hitMarker != timestamp_42bit )){
-                    m_dataEnded = false;
-                }
-                else {
-                    markerSRS[idxHitMarker].hitMarker = timestamp_42bit;
-                    m_prevIdxHitMarker = idxHitMarker;
-                    return EXTRA_DATA_HIT_MARKER;
-                }
-            }
-            // else {
-            //     //Here we read data the following timestamp have no meaning unless it is 0x1FFFFFFF
-            //     uint64_t timestamp_lower_10bit = data2 & 0x03FF;
-            //     uint64_t timestamp_upper_32bit = data1;
-            //     uint64_t timestamp_42bit = (timestamp_upper_32bit << 10) + timestamp_lower_10bit;
-            //     if (m_datagramCounter < 10)printf("m_dataEnded False timestamp_lower_10bit %x timestamp_upper_32bit %x timestamp_42bit %llu \n", timestamp_lower_10bit, timestamp_upper_32bit, timestamp_42bit);
-
-            //     //Check if hits end  
-            //     if (timestamp_42bit == 0x1FFFFFFF) {
-            //         // Get hit markers ready to be set with new values
-            //         m_dataEnded = true;
-            //         for (size_t im = 0; im < MaxFECs * MaxVMMs; im++) markerSRS[im].hitMarker = 0;
-            //         return EXTRA_DATA_PASS;
-            //     }
-            // }
-        }
-        else {
-            idx = (fecId - 1) * MaxVMMs + vmmid;
-        }
+        // if (m_triggerMode == 1){
+        //     idx = (fecId - 1) * MaxVMMs + vmmid + 16;
+        // }
+        // else {
+        //     idx = (fecId - 1) * MaxVMMs + vmmid;
+        // }
+        idx = (fecId - 1) * MaxVMMs + vmmid;
         triggerOffset = (data1 >> 27) & 0x1F;
         bcid = BitMath::gray2bin32(data1 & 0xFFF);
 
         // Note: chno takes only 6 bits (0-63) 
         uint8_t chno = (data2 >> 8) & 0x3f;
+        //!!!!!!!! for debug !!!!!!!!!
+        //if (chno > 10 ) chno = chno -10;
+        //!!!!!!!! for debug !!!!!!!!!
 
         // Set mapped channel
         extraData.chnoMapped = m_channelsMap->getMappedChannel(fecId, vmmid, chno);
 
 
-        // uint8_t tdcTemp = data2 & 0xff;
-        // uint16_t adcTemp = (data1 >> 12) & 0x3FF;
-        // if (adcTemp == 0 || tdcTemp == 0)  {
-            
-        //     printf("SRS data fecId %d, vmmid %d, chnoMapped %d, idx %d, 42 bit timestamp %lu, bcid %d, tdc %lu, adc %lu \n", 
-        //     fecId, vmmid, extraData.chnoMapped, idx, markerSRS[idx].fecTimeStamp, bcid, tdcTemp, adcTemp);
-        // } 
-
-        //printf("SRS data fecId %d vmmid %d, idx %d: 42 bit timestamp %lu \n", fecId, vmmid, idx, markerSRS[idx].fecTimeStamp);
-
-
-        //if (m_extClock == 1){
-            // Get extClock freq/period - actually no information on that from vmmsc - should be provided by user 
-            // no fineTS with ext. clock for now
-        //}
-
         // Every 65536 clock cycle a new marker is issued, every 4096 clock cycle triggerOffset is increased by 1, bcid max is 4095
-        uint64_t fineTS = markerSRS[idx].fecTimeStamp + triggerOffset*4096 + bcid;
-        // If want to convert in ns use following:
-        //uint64_t fineTS = m_clockPeriod*(markerSRS[idx].fecTimeStamp + triggerOffset*4096 + bcid);
+        uint64_t fineTS = markerSRS[idx].fecTimestamp + triggerOffset*4096 + bcid;
 
         // With ext. trigger we don't need the triggerOffset and bcid
         if (m_triggerMode == 1){
-            //for now dont provide fineTS in ns but in clock tick, since with ext. clock the only way to know the frequency would be by user... 
-            //kind of risky to convert in ns at this stage, user can provide wrong freq which will impact raw data, should do convertion at analysis stage.
-            //fineTS = m_clockPeriod*markerSRS[idx].fecTimeStamp;
-            fineTS = markerSRS[idx].fecTimeStamp; 
-            //10/2024 - add continuous markers
-            uint16_t idxCM = (fecId - 1) * MaxVMMs + vmmid;
-            extraData.hitContinuousMarker = markerSRS[idxCM].fecTimeStamp;
+            uint8_t idxTrigg = idx + 16;
+            fineTS = markerSRS[idxTrigg].fecTimestamp; 
+            if (fineTS == 0)
+            {
+                m_firstDataCounter++;
+            }
             // Associate hit marker to current hit
             extraData.hitMarker = markerSRS[idx].hitMarker;
 
             //calc. drift time
-            // uint8_t tdc = data2 & 0xff;
+            //uint8_t tdc = data2 & 0xff;
             // double timeFec = static_cast<double>(extraData.hitContinuousMarker)*22.5 + 
             //               static_cast<double>(triggerOffset)*4096.0*22.5;
+
+            // double timeFec = static_cast<double>(triggerOffset)*4096.0*22.5;
 
             // double timeChip =
             //     static_cast<double>(bcid)*22.5 +
             //     (1.5 * 22.5 - static_cast<double>(tdc)*60.0 / 255.0);
 
             // double driftTime = (timeFec + timeChip - extraData.hitMarker*22.5);
+            //double driftTime = (timeChip - extraData.hitMarker*22.5);
 
-            // if (m_datagramCounter < 10)printf("In hit fecId: %d vmmid: %d hitMarker: %llu hitContinuousMarker: %llu fecTimeStamp: %llu driftTime %lf \n",
-            //  fecId, vmmid, extraData.hitMarker, extraData.hitContinuousMarker, fineTS, driftTime );
+            // if (m_datagramCounter < 10)printf("In hit fecId: %d vmmid: %d idx : %d hitMarker: %llu timestamp: %llu driftTime %lf \n",
+            //  fecId, vmmid, idx, extraData.hitMarker, fineTS, driftTime );
         }
 
         //uint8_t tdc = data2 & 0xff;
-        //printf("SRS Data: fecId: %d, vmm: %d, channel: %d, channelMapped: %d, fecTimeStamp: %llu, fineTS: %llu, bcid: %d, tdc: %d\n", fecId, vmmid, chno, extraData.chnoMapped, markerSRS[idx].fecTimeStamp, fineTS, bcid, tdc);
+        //printf("SRS Data: fecId: %d, vmm: %d, channel: %d, channelMapped: %d, fecTimestamp: %llu, fineTS: %llu, bcid: %d, tdc: %d\n", fecId, vmmid, chno, extraData.chnoMapped, markerSRS[idx].fecTimestamp, fineTS, bcid, tdc);
         //if data come before the first markers set TS to 0 and these data will be skipped.
-        if (markerSRS[idx].fecTimeStamp == 0)
+        if (m_triggerMode != 1 && markerSRS[idx].fecTimestamp == 0)
         {
             m_firstDataCounter++;
             fineTS = 0;
         }
         // Set the hit timestamp
-        extraData.hitTimeStamp = fineTS;
+        extraData.hitTimestamp = fineTS;
         return EXTRA_DATA_HIT;
     } else {
         // Enter here if marker
 
         vmmid = (data2 >> 10) & 0x1F;
         idx = (fecId - 1) * MaxVMMs + vmmid;
-        uint64_t timestamp_lower_10bit = data2 & 0x03FF;
-        uint64_t timestamp_upper_32bit = data1;
-        uint64_t timestamp_42bit = (timestamp_upper_32bit << 10) + timestamp_lower_10bit;
+        extraData.chnoMapped = 0;
+        uint64_t lower_10bit_data2 = data2 & 0x03FF;
+        uint64_t upper_32bit_data1 = data1;
+        uint64_t lower_10bit_data1 = data1 & 0x03FF;
+        uint64_t timestamp_42bit = (upper_32bit_data1 << 10) + lower_10bit_data2;
+        uint64_t hitMarker_20bit = (lower_10bit_data1 << 10) + lower_10bit_data2;
+        uint32_t hitMarker = static_cast<uint32_t>(hitMarker_20bit);
         //if (m_datagramCounter < 10)printf("SRS Marker fecId %d vmmid %d, idx %d: timestamp lower 10bit %lu, timestamp upper 32 bit %lu, 42 bit timestamp %lu \n", fecId, vmmid, idx, timestamp_lower_10bit, timestamp_upper_32bit, timestamp_42bit);
+        //if (m_datagramCounter < 10)printf("SRS hit Marker m_startedMarker[idx] %d fecId %d vmmid %d, idx %d: d1 lower 10bit %x, d2 lower 10 bit %x, 20 bit marker %x hitMarker %llu \n", m_startedMarker[idx], fecId, vmmid, idx, lower_10bit_data1, lower_10bit_data2, hitMarker_20bit, hitMarker);
+        //if (m_datagramCounter < 10)printf("SRS trigg Marker m_startedMarker[idx] %d fecId %d vmmid %d, idx %d: lower 10bit %x, upper 32 bit %x, 42 bit timestamp %llu \n", m_startedMarker[idx], fecId, vmmid, idx, lower_10bit_data2, upper_32bit_data1, timestamp_42bit);
 
 
         //Check if hits end  
-        if (timestamp_42bit == 0x3FFFFFFFFFF) {
-            //if (m_datagramCounter < 10)printf("SRS Marker MAX fecId %d vmmid %d, idx %d: timestamp lower 10bit %lu, timestamp upper 32 bit %lu, 42 bit timestamp %lu \n", fecId, vmmid, idx, timestamp_lower_10bit, timestamp_upper_32bit, timestamp_42bit);
+        if (m_triggerMode == 1 && timestamp_42bit == 0x3FFFFFFFFFF) {
+            //if (m_datagramCounter < 10)printf("SRS Marker MAX fecId %d vmmid %d, idx %d: lower 10bit %x, upper 32 bit %x, 42 bit timestamp %llu \n", fecId, vmmid, idx, lower_10bit_data2, upper_32bit_data1, timestamp_42bit);
             // Get hit markers ready to be set with new values
             if (!m_dataEnded) for (size_t im = 0; im < MaxFECs * MaxVMMs; im++) markerSRS[im].hitMarker = 0;
-            m_prevIdxHitMarker = 0;
             m_dataEnded = true;
-            extraData.chnoMapped = 0;
             return EXTRA_DATA_PASS;
         }
-        // if(markerSRS[idx].fecTimeStamp > timestamp_42bit) {
-        //     if (markerSRS[idx].fecTimeStamp < 0x1FFFFFFF + timestamp_42bit) {
+        // if(markerSRS[idx].fecTimestamp > timestamp_42bit) {
+        //     if (markerSRS[idx].fecTimestamp < 0x1FFFFFFF + timestamp_42bit) {
         //         m_markerErrCounter++;
-        //         //printf( "ParserTimestampSeqErrors:  ts %lu, marker ts %lu \n", timestamp_42bit, markerSRS[idx].fecTimeStamp);
+        //         //printf( "ParserTimestampSeqErrors:  ts %lu, marker ts %lu \n", timestamp_42bit, markerSRS[idx].fecTimestamp);
         //     }
         // }
+        if (m_triggerMode == 1 && m_startedMarker[idx]) {
+            if (hitMarker != 0 && vmmid <= 15) {
+                // requires m_startedMarker[idx] true so first trig markers are missed.
+                markerSRS[idx].hitMarker = hitMarker;
+                result = EXTRA_DATA_MARKER;
+                //if (m_datagramCounter < 10)printf("SRS  set hit marker, idx %d: hitMarker %llu \n",  idx, hitMarker);
+            }
+            else if (timestamp_42bit != 0 && vmmid > 15) {
+                markerSRS[idx].fecTimestamp = timestamp_42bit;
+                //Give value to extraData.hitTimestamp, in case no hit follows, an empty RI with trigger ts will be send.
+                extraData.hitTimestamp = timestamp_42bit;
+                //if (m_datagramCounter < 10)printf("SRS  set hit timestamp, idx %d: timestamp %llu \n",  idx, timestamp_42bit);
 
-        if (m_startedMarker[idx] && timestamp_42bit != 0) {
-            // Good markers after first markers after run start
-            markerSRS[idx].fecTimeStamp = timestamp_42bit;
-            extraData.hitTimeStamp = 0;
-            // requires m_startedMarker[idx] true so first trig markers are missed.
-            if (m_triggerMode == 1 && vmmid > 15){
-                extraData.hitTimeStamp = timestamp_42bit;
                 result = EXTRA_DATA_TRIG_MARKER;
             }
+            else if ((vmmid > 15 && timestamp_42bit == 0)) {
+                // Likely not markers, e.g. it passes here for the last two 6 bytes at end of a datagram
+                //printf( "ParserTimestampSeqErrors:  ts == 0 for not first marker\n");
+                extraData.hitTimestamp = 0;
+                m_markerErrCounter++;
+                result = EXTRA_DATA_ERR;
+            }
         }
-        else if (m_startedMarker[idx] && timestamp_42bit == 0) {
-            // Likely not markers, e.g. it passes here for the last two 6 bytes at end of a datagram
-            //printf( "ParserTimestampSeqErrors:  ts == 0 for not first marker\n");
-            extraData.hitTimeStamp = 0;
-            m_markerErrCounter++;
+        else if (m_triggerMode != 1 && m_startedMarker[idx]) {
+            if (timestamp_42bit != 0 && vmmid < 15) {
+                markerSRS[idx].fecTimestamp = timestamp_42bit;
+                //Give value to extraData.hitTimestamp, in case no hit follows, an empty RI with trigger ts will be send.
+                extraData.hitTimestamp = timestamp_42bit;
+                result = EXTRA_DATA_MARKER;
+            }
+            else if ((vmmid < 15 && timestamp_42bit == 0)) {
+                // Likely not markers, e.g. it passes here for the last two 6 bytes at end of a datagram
+                //printf( "ParserTimestampSeqErrors:  ts == 0 for not first marker\n");
+                extraData.hitTimestamp = 0;
+                m_markerErrCounter++;
+                result = EXTRA_DATA_ERR;
+            }
         }
-        else {
+        else if (!m_startedMarker[idx])  {
             // First markers after run start
-            markerSRS[idx].fecTimeStamp = 0;
-            extraData.hitTimeStamp = 0;
+            markerSRS[idx].fecTimestamp = 0;
+            extraData.hitTimestamp = 0;
             m_startedMarker[idx] = true;
             m_dataEnded = true;
+            result = EXTRA_DATA_PASS;
         }
-        extraData.chnoMapped = 0;
     }
     return result;
 }
@@ -354,7 +317,7 @@ void UDPBrokerDerived::mainLoop() {
         m_datagramCounter++;
 
         // std::cout<<"Counters: dT, datagram, marker, markerErr, hit, firstData: "<<elapsed_time_s<<" "<<m_datagramCounter<<" "<<m_markerCounter<<" "<<m_markerErrCounter<<" "<<m_hitCounter<<" "<<m_firstDataCounter<<std::endl;
-        std::cout<<"Counters: datagram, marker, trig. marker, markerErr, hit, firstData: "<<m_datagramCounter<<" "<<m_markerCounter<<" "<<m_trigMarkerCounter<<" "<<m_markerErrCounter<<" "<<m_hitCounter<<" "<<m_firstDataCounter<<std::endl;
+        //std::cout<<"Counters: datagram, marker, trig. marker, markerErr, hit, firstData: "<<m_datagramCounter<<" "<<m_markerCounter<<" "<<m_trigMarkerCounter<<" "<<m_markerErrCounter<<" "<<m_hitCounter<<" "<<m_firstDataCounter<<std::endl;
 
         if (m_stopMainLoop) {
             break;
@@ -442,9 +405,8 @@ void UDPBrokerDerived::end() {
 
     //clear markers 
     for (size_t idx = 0; idx < MaxFECs * MaxVMMs; idx++) {
-        markerSRS[idx].fecTimeStamp = 0;
+        markerSRS[idx].fecTimestamp = 0;
         markerSRS[idx].hitMarker = 0;
-        m_prevIdxHitMarker = 0;
         m_startedMarker[idx] = false;
     }
     m_sorter->reset();
@@ -520,38 +482,34 @@ void UDPBrokerDerived::makeRingItems(in_addr_t from, short port, CDataSink& sink
         // The datagram send from the slow controler has only srsHeader and data
         auto dataOffset = SRSHeaderSize + HitAndMarkerSize * readoutIndex;
 
-        // Add mapped chno, continuous marker and hit marker to data (+ 2 bytes + 8 bytes + 8 bytes)
-        std::unique_ptr<uint8_t[]> data(new uint8_t[HitAndMarkerSize + 18]);
+        // Add mapped chno, and hit marker to data (+ 2 bytes + 4 bytes)
+        std::unique_ptr<uint8_t[]> data(new uint8_t[HitAndMarkerSize + 6]);
         memcpy(data.get(), buffer + dataOffset, HitAndMarkerSize);
 
-        extraData.hitTimeStamp = 0;
+        extraData.hitTimestamp = 0;
         extraData.chnoMapped = 0;
-        extraData.hitContinuousMarker = 0;
         extraData.hitMarker = 0;
-        // Set hitTimeStamp and chnoMapped
+        // Set hitTimestamp and chnoMapped
         int proceed = getExtraData(sid, data.get());
 
         // write chno mapped to data
         uint16_t chnoMapped = extraData.chnoMapped;
         memcpy(data.get() + HitAndMarkerSize, &chnoMapped, sizeof(chnoMapped));
 
-        // write continuous marker to data
-        uint64_t continuousMarker = extraData.hitContinuousMarker;
-        memcpy(data.get() + HitAndMarkerSize + sizeof(chnoMapped), &continuousMarker, sizeof(continuousMarker));
-
         // write hit marker to data
-        uint64_t hitMarker = extraData.hitMarker;
-        memcpy(data.get() + HitAndMarkerSize + sizeof(chnoMapped) + sizeof(continuousMarker), &hitMarker, sizeof(hitMarker));
-        //if (m_datagramCounter < 10)printf("chnoMapped %x continuousMarker%x hitMarker%x \n",chnoMapped,continuousMarker,hitMarker);
-        //if (m_datagramCounter < 10)printf("chnoMapped %lu continuousMarker%llu hitMarker%llu \n",chnoMapped,continuousMarker,hitMarker);
+        uint32_t hitMarker = extraData.hitMarker;
+        memcpy(data.get() + HitAndMarkerSize + sizeof(chnoMapped), &hitMarker, sizeof(hitMarker));
+        // if (m_datagramCounter < 10)printf("chnoMapped %x timestamp %x hitMarker %x \n",chnoMapped,extraData.hitTimestamp,hitMarker);
+        //if (m_datagramCounter < 10)printf("proceed %d chnoMapped %lu timestamp %llu hitMarker %llu \n",
+        //proceed, chnoMapped, extraData.hitTimestamp, hitMarker);
 
         // testReadData(data.get());
 
         // Only for hits
-        if (proceed == EXTRA_DATA_HIT && extraData.hitTimeStamp > 0){
+        if (proceed == EXTRA_DATA_HIT && extraData.hitTimestamp > 0){
 
             //keep feeding the sorter, it will manage the add to RI and put into sink when it is time... 
-            m_sorter->sort(data.get(), extraData.hitTimeStamp, sid, sink, nBytes);
+            m_sorter->sort(data.get(), extraData.hitTimestamp, sid, sink, nBytes);
 
             //if (m_startChrono){
             //  m_start = std::chrono::high_resolution_clock::now();
@@ -559,8 +517,8 @@ void UDPBrokerDerived::makeRingItems(in_addr_t from, short port, CDataSink& sink
             //}
             m_hitCounter += 1;
         } 
-        else if (proceed == EXTRA_DATA_TRIG_MARKER && extraData.hitTimeStamp > 0) { // Only for trigger markers
-            m_sorter->sort(data.get(), extraData.hitTimeStamp, sid, sink, 0); //set nBytes to 0 to flag trigg marker
+        else if (proceed == EXTRA_DATA_TRIG_MARKER && extraData.hitTimestamp > 0) { // Only for trigger markers
+            m_sorter->sort(data.get(), extraData.hitTimestamp, sid, sink, 0); //set nBytes to 0 to flag trigg marker
             m_trigMarkerCounter +=1 ; 
         }
         else if (proceed == EXTRA_DATA_MARKER) {
