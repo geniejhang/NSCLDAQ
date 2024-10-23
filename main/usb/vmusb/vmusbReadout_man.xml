@@ -7857,7 +7857,7 @@ mdpp32qdc cget <replaceable>name</replaceable>
                              Start window of interest: 0x0000 start at -25.56us, 0x7FFF start at +25.56us, 0x4000 = 16k no delay.
                         </para>
                         <para>
-                             < 16k, window starts before Trigger, > 16k, window is delayed.
+                             &lt; 16k, window starts before Trigger, &gt; 16k, window is delayed.
                         </para>
                         <para>
                              By default, this parameter is 0x3fbe(=16318).
@@ -8786,7 +8786,7 @@ mdpp16qdc cget <replaceable>name</replaceable>
                              Start window of interest: 0x0000 start at -25.56us, 0x7FFF start at +25.56us, 0x4000 = 16k no delay.
                         </para>
                         <para>
-                             < 16k, window starts before Trigger, > 16k, window is delayed.
+                             &lt; 16k, window starts before Trigger, &gt; 16k, window is delayed.
                         </para>
                         <para>
                              By default, this parameter is 0x3fbe(=16318).
@@ -9667,7 +9667,7 @@ mdpp32scp cget <replaceable>name</replaceable>
                              Start window of interest: 0x0000 start at -25.56us, 0x7FFF start at +25.56us, 0x4000 = 16k no delay.
                         </para>
                         <para>
-                             < 16k, window starts before Trigger, > 16k, window is delayed.
+                             &lt; 16k, window starts before Trigger, &gt; 16k, window is delayed.
                         </para>
                         <para>
                              By default, this parameter is 0x3fbe(=16318).
