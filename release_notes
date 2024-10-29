@@ -1,4 +1,8 @@
 == 12.0-022 ==
+* Use MLE for QtScope fitting.
+== 12.0-022 ==
+
+== 12.0-022 ==
 * Fix QtScope filter display issue #171.
 * Fix error when logging rate window closed
 * Fix bug: Delay datasource hangs with 0 delay

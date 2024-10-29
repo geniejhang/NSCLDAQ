@@ -489,9 +489,9 @@ class Plot(QWidget):
         """Perform the fit based on the current fit panel settings."""        
         if self.raw_data and len(self.figure.get_axes()) == 1:
             ax = plt.gca()
-            fcn = self.fit_panel.function_list.currentText()
-            config = self.fit_factory.configs.get(fcn)
-            fit = self.fit_factory.create(fcn, **config)
+            fit = self.fit_factory.create(
+                self.fit_panel.function_list.currentText()
+            )
             xmin, xmax = self._get_fit_limits(ax)
             params = [
                 float(self.fit_panel.p0.text()),
@@ -502,32 +502,47 @@ class Plot(QWidget):
                 float(self.fit_panel.p5.text())
             ]
 
+            # Get the indices of the x-data array corresponding to the limits.
+            # Greatly simplified by the following:
+            #     - Data comes with default binning 1 unit/bin,
+            #     - Data length always a power of 2,
+            #     - Traces cannot be rebinned,
+            #     - Histogram binning always a factor of 2.
+            # So we can simply use the bin width to reconstruct the index of
+            # potentially rebinned data by rounding, otherwise we just get the
+            # indices back.            
             idx_min = xmin
             idx_max = xmax
             if len(self.raw_data[0]) == xia.MAX_HISTOGRAM_LENGTH:
                 idx_min = ceil(int(idx_min/self.bin_width))
                 idx_max = floor(int(idx_max/self.bin_width))
-                
-            self.logger.debug(f"Function config params: {config}")
+
             self.logger.debug(f"Fit limits: {xmin}, {xmax}")
             self.logger.debug(f"Fit limit indices: {idx_min}, {idx_max}")
             self.logger.debug(f"Fit panel guess params: {params}")
-            self.logger.debug(f"Run data binning factor: {self.bin_width}")
+            self.logger.debug(f"Data binning factor: {self.bin_width}")
             
             # If the current subplot has data, get the fit limits and call the
-            # fit function's start() rountine to perform the fit. Fitting is
-            # done using Neyman's chi-square and therefore we drop zeroes prior
-            # performing the fit. x-values passed to the fitter are offset by
-            # half the bin width ("true" bin value is the center).
+            # fit function's start() rountine to perform the fit.
             if ax.get_lines():
                 x = ax.lines[0].get_xdata()[idx_min:idx_max]
                 y = ax.lines[0].get_ydata()[idx_min:idx_max]
-                zeroes = np.where(y == 0)[0]
-                fitln = fit.start(
-                    np.delete(x, zeroes) + self.bin_width/2,
-                    np.delete(y, zeroes),
-                    params, ax, self.fit_panel.results
-                )
+
+                result = fit.start(x, y, params, ax)
+
+                # Update the canvas with the results:
+                x_fit = np.linspace(xmin, xmax, 10000)
+                y_fit = fit.model(x_fit, result.x)
+                ax.plot(x_fit, y_fit, 'r-')
+                
+                # Print the fitted parameters and uncertainties:
+                for i in range(len(result.x)):
+                    s = "p[{}]: {:.6e} +/- {:.6e}".format(
+                        i, result.x[i], np.sqrt(result.hess_inv[i][i])
+                    )
+                    self.fit_panel.results.append(s)
+                    if i == (len(result.x) - 1):
+                        self.fit_panel.results.append("\n")
             else:
                 QMessageBox.about(
                     self, "Warning",
