@@ -3,7 +3,7 @@ from scipy.optimize import minimize
 import logging
 import warnings
 
-np.seterr(invalid='ignore')
+np.seterr(all='ignore')
 
 class FitFunction:
     """Base class for fitting functions used by QtScope.
@@ -27,9 +27,9 @@ class FitFunction:
         Sets initial parameter values. Derived classes can override this 
         function to e.g., make educated guesses at parameters based on data.
     neg_log_likelihood_p(params, x, y)
-        Poisson negative log likelihood.
+        Poisson negative log likelihood. Used if count_data == True.
     neg_log_likelihood_g(params, x, y)
-        Gaussian negative log likelihood.
+        Gaussian negative log likelihood. Used if count_data == False.
     start(x, y, params, axis)
         Implementation of the fitting algorithm.
 
@@ -119,7 +119,7 @@ class FitFunction:
             # jumps in the objective function value when the parameters are
             # close to values which give pred <= 0. Also the return value is
             # always defined.
-            pred = np.minimum(pred, 1e-10)
+            pred = np.maximum(pred, 1e-10)
             return -np.sum(y*np.log(pred) - pred)
 
     def neg_log_likelihood_g(self, params, x, y):
@@ -146,7 +146,7 @@ class FitFunction:
         else:
             # For Gaussian errors, the MLE reduces to OLS:
             res = y - pred
-            return np.sum(residual**2)
+            return np.sum(np.square(res))
 
     def start(self, x, y, params, axis):
         """Implementation of the fitting algorithm.
@@ -167,27 +167,21 @@ class FitFunction:
         result : OptimizeResult
             Contains fit results and other info. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.OptimizeResult.html.
         """
+        y = np.float64(y) # Make sure y data is floating point
         self.set_initial_parameters(x, y, params)
-        # If the data represents counts, use Poisson MLE, otherwise Gaussian.
-        # Use BFGS and higher-order Jacobian approx. BFGS provides appoximate
-        # Hessian for extracting parameter uncertainties without an additional
-        # step (as would be needed for e.g.,simplex method):
+        # If the data represents counts, use Poisson MLE, otherwise Gaussian:
         if self.count_data:
             result = minimize(self.neg_log_likelihood_p,
                           x0=self.p_init,
                               args=(x,y),
-                              method='bfgs',
-                              jac='3-point',
-                              options={'gtol': 1e-3})
+                              method='bfgs')
         else:
             result = minimize(self.neg_log_likelihood_g,
                               x0=self.p_init,
                               args=(x,y),
-                              method='bfgs',
-                              jac='3-point',
-                              options={'gtol': 1e-3})
-        # Most often an issue with final precision on error estimates:
-        if not result.success:
-            print(f"WARNING: fit did not terminate successfully:\n{result}")
+                              method='bfgs')
+        ## Most often an issue with final precision on error estimates:
+        #if not result.success:
+        #    print(f"WARNING: fit did not terminate successfully:\n{result}")
             
         return result
