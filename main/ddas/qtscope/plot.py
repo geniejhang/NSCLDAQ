@@ -19,11 +19,6 @@ import xia_constants as xia
 from run_type import RunType
 
 ##
-# @todo (ASC 4/3/24): Get ns per sample from XDT value either here or
-# passed as a parameter by the caller.
-#
-
-##
 # @todo (ASC 8/21/24): Remove the custom binning. There is DSP for energy
 # histogram binning, most people do not use it. Allow users to configure
 # that via a tab or spinbox when starting a run? What effect does it have
@@ -533,7 +528,7 @@ class Plot(QWidget):
                 x = ax.lines[0].get_xdata()[idx_min:idx_max]
                 y = ax.lines[0].get_ydata()[idx_min:idx_max]
 
-                result = fit.start(x, y, params, ax)
+                result = fit.start(x+self.bin_width/2, y, params, ax)
 
                 # Update the canvas with the results:
                 x_fit = np.linspace(limits[0], limits[1], 10000)
@@ -541,7 +536,7 @@ class Plot(QWidget):
                 ax.plot(x_fit, y_fit, 'r-')
 
                 # Print the fitted parameters and uncertainties:
-                for i in range(len(popt)):
+                for i in range(len(result.x)):
                     s = "p[{}]: {:.6e} +/- {:.6e}".format(
                         i, result.x[i], np.sqrt(result.hess_inv[i][i])
                     )
