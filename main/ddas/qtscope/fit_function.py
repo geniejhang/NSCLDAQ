@@ -3,8 +3,7 @@ from scipy.optimize import minimize
 import logging
 import warnings
 
-np.seterr(all='ignore')
-warnings.simplefilter('ignore')
+np.seterr(invalid='ignore')
 
 class FitFunction:
     """Base class for fitting functions used by QtScope.
@@ -114,13 +113,40 @@ class FitFunction:
             print("ERROR: Model function is not defined!")
             return np.inf
         else:
-            # Negative log likelihood (nll) or np.inf if data has values with
-            # invalid logaritms. Note only terms which depend on the params
-            # are kept in the nll. 
-            if np.any(pred <= 0):
-                return np.inf
-            else:
-                return -np.sum(y*np.log(pred) - pred)
+            # Replace small values with some small number to ensure log(pred)
+            # is valid. I chose to modify the likelihood this way over
+            # returning, e.g, np.inf if any pred <= 0 because it prevents huge
+            # jumps in the objective function value when the parameters are
+            # close to values which give pred <= 0. Also the return value is
+            # always defined.
+            pred = np.minimum(pred, 1e-10)
+            return -np.sum(y*np.log(pred) - pred)
+
+    def neg_log_likelihood_g(self, params, x, y):
+        """Gaussian negative log-likelihood. 
+
+        Fit parameters must be first argument and are initially set by x0 in 
+        the `minimize` call. x, y are passed as additional args.
+
+        Parameters
+        ----------
+        params : array-like
+            Array of fit parameters.
+        x : ndarray
+            x data values.
+        y : ndarray 
+            y data values.
+        """
+        # Make sure the model is implemented:
+        try:
+            pred = self.model(x, params)
+        except NotImplementedError:
+            print("ERROR: Model function is not defined!")
+            return np.inf
+        else:
+            # For Gaussian errors, the MLE reduces to OLS:
+            res = y - pred
+            return np.sum(residual**2)
 
     def start(self, x, y, params, axis):
         """Implementation of the fitting algorithm.
@@ -142,17 +168,26 @@ class FitFunction:
             Contains fit results and other info. See https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.OptimizeResult.html.
         """
         self.set_initial_parameters(x, y, params)
+        # If the data represents counts, use Poisson MLE, otherwise Gaussian.
         # Use BFGS and higher-order Jacobian approx. BFGS provides appoximate
         # Hessian for extracting parameter uncertainties without an additional
-        # step (as would be needed for e.g., simplex method):
-        result = minimize(self.neg_log_likelihood_p,
+        # step (as would be needed for e.g.,simplex method):
+        if self.count_data:
+            result = minimize(self.neg_log_likelihood_p,
                           x0=self.p_init,
-                          args=(x,y),
-                          method='bfgs',
-                          jac='3-point',
-                          options={'gtol': 1e-3})
+                              args=(x,y),
+                              method='bfgs',
+                              jac='3-point',
+                              options={'gtol': 1e-3})
+        else:
+            result = minimize(self.neg_log_likelihood_g,
+                              x0=self.p_init,
+                              args=(x,y),
+                              method='bfgs',
+                              jac='3-point',
+                              options={'gtol': 1e-3})
         # Most often an issue with final precision on error estimates:
-        #if not result.success:
-        #    print(f"WARNING: fit did not terminate successfully:\n{result}")
-
+        if not result.success:
+            print(f"WARNING: fit did not terminate successfully:\n{result}")
+            
         return result
