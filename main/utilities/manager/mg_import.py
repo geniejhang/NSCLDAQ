@@ -43,6 +43,36 @@ def import_containers(inp, name, out):
         )
     out.commit()
     
+#
+#  Import the programs from the database connected to inp 
+# into the database connected with out
+# Prefix the names of the programs with 'name'.
+#
+def import_programs(inp, name, out):
+    in_pgm_api = Program(inp)
+    out_pgm_api = Program(out)
+    
+    programs = in_pgm_api.list()
+    
+    #  Note we'll have to do a direct insert of the  init script6
+    #  since we don't have the filename....and it might not even exist.
+    
+    for program in programs:
+        program['name'] = qualify_name(program['name'], name)    # Munge the name.
+        out_pgm_api.add(
+            program['name'], program['path'], program['host'],  
+            qualify_name(program['container'], name), program['directory'], program['more']
+        )   # note we need to qualify the container name...
+        # No w put the init script content into the root recrod:
+        
+        cursor = out.cursor()
+        cursor.execute(
+            '''
+            UPDATE program SET initscript=? WHERE id = ?
+            ''',(program['more']['initscript_contents'], program['id'])
+        )
+        out.commit()     # COmmit this modification.
+                        
 
 
 if len(sys.argv) != 4:
@@ -68,5 +98,6 @@ exp_db        = sqlite3.connect(sys.argv[3])
 
 
 import_containers(db_to_import, import_name, exp_db)
+import_programs(db_to_import, import_name, exp_db)
 
                                              
