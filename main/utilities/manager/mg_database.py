@@ -524,6 +524,8 @@ class Program:
               * environment - if provided a list of pairs containing environment variable names and
                 values which will be set prior to starting the program.
         
+            Returns the program id (primary key of the added root record).
+        
         '''
         
         # Ensure we really can make this program:
@@ -623,7 +625,7 @@ class Program:
             
         # No exception so commit the complete add:
         self._db.commit()
-        
+        return program_id
     def delete(self, name):
         '''
             Deletes all traces of the named program from the database.
@@ -702,15 +704,16 @@ class Program:
         
         # Get the root records:
         
-        r = cursor.exec(
+        r = cursor.execute(
             '''
                 SELECT program.id, name, path, type, host, directory, container, initscript FROM program
                 INNER JOIN program_type ON program_type.id = type_id
-                INNER JOIN containerr ON container.id = container_id
+                INNER JOIN container ON container.id = container_id
             '''
         )
         # Iterate over them adding additional information to the resulting dict.
         roots = r.fetchall()
+        
         for root in roots:
             pgm_id        = root[0]
             name          = root[1]
@@ -730,6 +733,7 @@ class Program:
                     'options' : [], 'parameters': [], 'environment' : []
                 }
             }
+            
             #  Fill in the program options orering ASC by primary key preserves order.
             
             c = self._db.cursor()
@@ -757,16 +761,16 @@ class Program:
                 ''', (pgm_id,)
             )
             params = c.fetchall()
-            program_dict = [x[0] for x in params]
+            program_dict['more']['parameters'] = [x[0] for x in params]
             
             # Finally the environment variable:
             
             c.execute(
                 '''
-                SELECT name, value FROM environment
+                SELECT name, value FROM program_environment
                 WHERE program_id = ?
                 ORDER BY id ASC
-                '''
+                ''', (pgm_id,)
             )
             env = c.fetchall()
             for (e, v) in env:
