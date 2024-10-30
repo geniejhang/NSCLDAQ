@@ -854,19 +854,20 @@ class Sequence:
             SELECT COUNT(*) FROM sequence WHERE name =?
             ''', (name,)
         )
-        return cursor.fetchall()[0] > 0
+        return cursor.fetchone()[0] > 0
     def add(self, name, trigger, steps):
         '''
            Adds a new sequence.
            
            name  - is the name of the new seuqence,
            trigger -is the name of the transition that triggers the sequence e.g. 'BEGIN'
-           steps  - are the steps in the sequence.  These are an array of triples.  where each triple contains:
+           steps  - are the steps in the sequence.  These are an array of arrays.  where each triple contains:
                 [0] - program name,
                 [1] -  pre-delay,
                 [2] - post-delay.
                 
-            Note that step numbers will be assigned bu this method.    
+            Note that step numbers will be assigned bu this method.
+            Note - steps must not have any elements after post-delay.
         
         returns the sequence ID.
         '''
@@ -882,7 +883,8 @@ class Sequence:
         # Convert the program names in to program ids...which we append as element [3] of each step.
         
         for step in steps:
-            step[3] = self.program_id(step[0])
+            
+            step.append(self._program.id(step[0]))
             if step[3] is None:
                 raise ValueError(f'There is no program named {step[0]} in the steps')
         
@@ -896,7 +898,7 @@ class Sequence:
         )
         seq_id = cursor.lastrowid
         
-        stepno = self._step_increment
+        stepno = self.step_increment
         for step in steps:
             cursor.execute(
                 '''
@@ -905,7 +907,7 @@ class Sequence:
                 ''',
                 (seq_id, stepno, step[3], step[1], step[2])
             )
-            stepno += self._step_increment
+            stepno += self.step_increment
         
         self._db.commit()
         return seq_id
@@ -915,6 +917,7 @@ class Sequence:
             List all of the sequences that have been deefined and their steps.  This returns a list of dicts.  Each dict
             describes a sequence and hast the keys:
             
+            id     - id of the sequence.
             name  - Name ofthe sequnce
             trigger - name of the transition that triggers the sequence
             steps   - A list of 5 elment lists:
@@ -931,8 +934,8 @@ class Sequence:
         
         cursor.execute(
             '''
-            SELECT sequence.name, transition_name.name FROM sequence
-            INNER JOIN transition_name ON transition _name.id sequence.transition_id
+            SELECT sequence.name, transition_name.name, sequence.id FROM sequence
+            INNER JOIN transition_name ON transition_name.id = sequence.transition_id
             '''
         )
         sequence_roots = cursor.fetchall()
@@ -940,7 +943,7 @@ class Sequence:
         
         for sequence in sequence_roots:
             seq_dict = {
-                'name' : sequence[0], 'trigger': sequence[1],
+                'name' : sequence[0], 'trigger': sequence[1], 'id': sequence[2],
                 'steps': []
             }
             # Fetch the steps:
