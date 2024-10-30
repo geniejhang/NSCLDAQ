@@ -174,22 +174,26 @@ def create_fit_factory():
     # parameter values.
     config_fit_exp = {
         "params": [1, -0.003, 1], # k = -0.003 approx. 20 us in 60 ns samples.
-        "form": "f(x) = p[0]*exp(p[1]*x) + p[2]"
+        "form": "f(x) = p[0]*exp(p[1]*x) + p[2]",
+        "count_data": False
     }
     
     config_fit_gauss = {
         "params": [1, 0, 1],
-        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))"
+        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))",
+        "count_data": True
     }
     
     config_fit_gauss_p1 = {
         "params": [1, 0, 1, 0, 0],   
-        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))\n\t+ p[3] + p[4]*x"
+        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))\n\t+ p[3] + p[4]*x",
+        "count_data": True
     }
 
     config_fit_gauss_p2 = {
         "params": [1, 0, 1, 0, 0, 0],
-        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))\n\t+ p[3] + p[4]*x + p[5]*x^2"
+        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))\n\t+ p[3] + p[4]*x + p[5]*x^2",
+        "count_data": True
     }
     
     # Register fit factory classes:

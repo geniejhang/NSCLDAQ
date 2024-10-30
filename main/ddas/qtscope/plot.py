@@ -497,7 +497,7 @@ class Plot(QWidget):
         """Perform the fit based on the current fit panel settings."""        
         if self.raw_data and len(self.figure.get_axes()) == 1:
             ax = plt.gca()
-            fitter = self.fit_factory.create(
+            fit = self.fit_factory.create(
                 self.fit_panel.function_list.currentText()
             )
             limits = self._get_fit_limits(ax)
@@ -528,31 +528,25 @@ class Plot(QWidget):
             self.logger.debug(f"Data binning factor: {self.bin_width}")
 
             # If the current subplot has data, get the fit limits and call the
-            # fit function's start() rountine to perform the fit. Fitting is
-            # done using Neyman's chi-square and therefore we drop zeroes prior
-            # performing the fit. x-values passed to the fitter are offset by
-            # half the bin width ("true" bin value is the center).
+            # fit function's start() rountine to perform the fit.
             if ax.get_lines():
                 x = ax.lines[0].get_xdata()[idx_min:idx_max]
                 y = ax.lines[0].get_ydata()[idx_min:idx_max]
-                zeroes = np.where(y == 0)[0]
-                popt, pcov = fitter.start(
-                    np.delete(x, zeroes) + self.bin_width/2,
-                    np.delete(y, zeroes), params, ax
-                )
+
+                result = fit.start(x, y, params, ax)
 
                 # Update the canvas with the results:
                 x_fit = np.linspace(limits[0], limits[1], 10000)
-                y_fit = fitter.feval(x_fit, *popt)
+                y_fit = fit.model(x_fit, result.x)
                 ax.plot(x_fit, y_fit, 'r-')
 
                 # Print the fitted parameters and uncertainties:
                 for i in range(len(popt)):
                     s = "p[{}]: {:.6e} +/- {:.6e}".format(
-                        i, popt[i], np.sqrt(pcov[i][i])
+                        i, result.x[i], np.sqrt(result.hess_inv[i][i])
                     )
                     self.fit_panel.results.append(s)
-                    if i == (len(popt) - 1):
+                    if i == (len(result.x) - 1):
                         self.fit_panel.results.append("\n")
             else:
                 QMessageBox.about(
