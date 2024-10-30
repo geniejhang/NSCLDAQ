@@ -84,10 +84,10 @@ def main():
             print("-----------------------------------\n")  
 
     # Get the XIA API major version used to compile this program:
-    
+
     ver = int(sys.argv[0])
     logger.info(f"QtScope compiled with XIA API major version {ver}")
-    
+            
     # Create the factories:
 
     logger.info("Creating factory methods and registering builders")
@@ -178,36 +178,27 @@ def create_fit_factory():
     # however that we _always_ initialize the fitting functions with valid
     # parameter values.
     config_fit_exp = {
-        "A": 1,       
-        "k": -0.003,  # ~20 microseconds in 60 ns samples.
-        "C": 1,       
-        "form": "f(x) = p[0]*exp(p[1]*x) + p[2]" # Function formula.
+        "params": [1, -0.003, 1], # k = -0.003 approx. 20 us in 60 ns samples.
+        "form": "f(x) = p[0]*exp(p[1]*x) + p[2]",
+        "count_data": False
     }
     
     config_fit_gauss = {
-        "A": 1,   
-        "mu": 0,  
-        "sd": 1,  
-        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))"
+        "params": [1, 0, 1],
+        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))",
+        "count_data": True
     }
     
     config_fit_gauss_p1 = {
-        "A": 1,   
-        "mu": 0,  
-        "sd": 1,  
-        "a0": 0,  
-        "a1": 0,  
-        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))\n\t+ p[3] + p[4]*x"
+        "params": [1, 0, 1, 0, 0],   
+        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))\n\t+ p[3] + p[4]*x",
+        "count_data": True
     }
 
     config_fit_gauss_p2 = {
-        "A": 1,   
-        "mu": 0,  
-        "sd": 1,  
-        "a0": 0,  
-        "a1": 0,  
-        "a2": 0,  
-        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))\n\t+ p[3] + p[4]*x + p[5]*x^2"
+        "params": [1, 0, 1, 0, 0, 0],
+        "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))\n\t+ p[3] + p[4]*x + p[5]*x^2",
+        "count_data": True
     }
     
     # Register fit factory classes:

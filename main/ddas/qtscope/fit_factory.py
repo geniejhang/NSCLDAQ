@@ -43,22 +43,18 @@ class FitFactory:
         self.builders[key] = builder
         self.configs[key] = config
         self.logger.debug(f"\tRegistered: {key}")
+        self.logger.debug(f"\t\tConfig: {config}")
 
-    def create(self, key, **kwargs):
+    def create(self, key):
         """Create an instance of the fit function from a key value. 
 
-        Fit function parameters and their inital guesses are passed to the 
-        builder as **kwargs.
+        Uses the configuration dictionary registered with the factory for the 
+        provided key value if it exists.
 
         Parameters
         ----------
         key : str
             Key name for the fitting function.
-
-        Keyword arguments
-        -----------------
-        config : dict
-            Dictionary containing the fit parameters and initial guesses.
 
         Returns
         -------
@@ -69,10 +65,10 @@ class FitFactory:
         ValueError
             If the key does not correspond to a registered builder.
         """
-        builder = self.builders.get(key)        
+        builder = self.builders.get(key)
         if not builder:
             raise ValueError(key)        
-        return builder(**kwargs)
+        return builder(**self.configs.get(key))
         
     def initialize(self, item):
         """Initialize the list of fitting functions.
