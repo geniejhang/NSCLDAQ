@@ -501,6 +501,19 @@ class Program:
         )
         (count, ) = r.fetchone()
         return count > 0
+    def id(self, name):
+        '''
+           Return the id of a program else None if there is not one:
+        '''
+        cursor = self._db.cursor()
+        r = cursor.execute(
+            '''
+            SELECT id FROM program WHERE name =?
+            ''', (name, )
+        )
+        result = r.fetchone()
+        return result [0] if result is not None else None
+    
     def add(self, name, path, host, container, wd, options):
         '''
           Add a new program:
@@ -797,3 +810,151 @@ class Program:
         rows = rset.fetchall()
         return [x[0] for x in rows]
         
+class Sequence:
+    ''' 
+        Implements an API to the sequence part of the database.
+    
+    '''
+    step_increment = 10    # How much step numbers will be incremented by.
+    
+    def __init__(self, db):
+        
+        '''
+          Construct 
+          db - is an sqlite3 connection object open on the database we'll work with.
+        '''
+        self._db = db
+        self._program = Program(self._db)
+
+    def _trigger_id(self, trigger_name):
+        # Convert a trigger state/transition name into a trigger/transition id:
+        
+        cursor = self._db.cursor()
+        r = cursor.execute(
+            '''
+            SELECT id FROM transition_name WHERE name =?
+            ''', (trigger_name,)
+        )
+        # IF there's no match its a value error:
+        
+        result = r.fetchone()
+        if result is None:
+            raise ValueError(f'There is no transition named {trigger_name}')
+        
+        return result[0]
+    
+    def exists (self, name):
+        '''
+            Returns True if the sequence named exists.
+        '''
+        
+        cursor = self._db.cursor()
+        cursor.execute(
+            '''
+            SELECT COUNT(*) FROM sequence WHERE name =?
+            ''', (name,)
+        )
+        return cursor.fetchall()[0] > 0
+    def add(self, name, trigger, steps):
+        '''
+           Adds a new sequence.
+           
+           name  - is the name of the new seuqence,
+           trigger -is the name of the transition that triggers the sequence e.g. 'BEGIN'
+           steps  - are the steps in the sequence.  These are an array of triples.  where each triple contains:
+                [0] - program name,
+                [1] -  pre-delay,
+                [2] - post-delay.
+                
+            Note that step numbers will be assigned bu this method.    
+        
+        returns the sequence ID.
+        '''
+        # Dont' allow a duplicat name:
+        
+        if self.exists(name):
+            raise ValueError(f'A sequence named {name} already exists.')
+        
+        # Convert the trigger to a transition id:  
+        
+        trigger_id = self._trigger_id(trigger)
+        
+        # Convert the program names in to program ids...which we append as element [3] of each step.
+        
+        for step in steps:
+            step[3] = self.program_id(step[0])
+            if step[3] is None:
+                raise ValueError(f'There is no program named {step[0]} in the steps')
+        
+        # Everytihng is validated, so we can do the insertions:
+        
+        cursor = self._db.cursor()
+        cursor.execute(
+            '''
+              INSERT INTO sequence (name, transition_id) VALUES (?,?)
+            ''', (name, trigger_id)
+        )
+        seq_id = cursor.lastrowid
+        
+        stepno = self._step_increment
+        for step in steps:
+            cursor.execute(
+                '''
+                    INSERT INTO step (sequence_id, step, program_id, predelay, postdelay)
+                    VALUES(?, ?, ?, ?, ?)
+                ''',
+                (seq_id, stepno, step[3], step[1], step[2])
+            )
+            stepno += self._step_increment
+        
+        self._db.commit()
+        return seq_id
+    
+    def list(self):
+        '''
+            List all of the sequences that have been deefined and their steps.  This returns a list of dicts.  Each dict
+            describes a sequence and hast the keys:
+            
+            name  - Name ofthe sequnce
+            trigger - name of the transition that triggers the sequence
+            steps   - A list of 5 elment lists:
+                [0] - name of the program in the step
+                [1] - pre-delay
+                [2] - post -delay
+                [3] - program id (primary key in 'program' table)
+                [4] - step number
+        '''
+        result = []
+        cursor = self._db.cursor()
+        
+        #  Fetch  all elments in the root record.
+        
+        cursor.execute(
+            '''
+            SELECT sequence.name, transition_name.name FROM sequence
+            INNER JOIN transition_name ON transition _name.id sequence.transition_id
+            '''
+        )
+        sequence_roots = cursor.fetchall()
+        
+        
+        for sequence in sequence_roots:
+            seq_dict = {
+                'name' : sequence[0], 'trigger': sequence[1],
+                'steps': []
+            }
+            # Fetch the steps:
+            
+            cursor.execute(
+                '''
+                SELECT program.name, predelay, postdelay, program.id, step FROM step
+                INNER JOIN sequence ON sequence.id = step.sequence_id
+                INNER JOIN program ON program.id = step.program_id
+                WHERE sequence.name = ?
+                ORDER BY step.step ASC
+                ''', (seq_dict['name'], )
+            )
+            seq_dict['steps'] = cursor.fetchall()
+            result.append(seq_dict)
+        
+        return result
