@@ -80,6 +80,8 @@ def import_programs(inp, name, out):
 def import_eventloggers(inp, name, out):
     # Import event loggers from the database connected to inp to the database
     # connected to out - use the 'name' to prefix/uniquify things.
+    # Note that there might be loggers that duplicate the destiniation
+    #  We report them but continue.
     
     in_api = EventLog(inp)
     out_api = EventLog(out)
@@ -95,7 +97,10 @@ def import_eventloggers(inp, name, out):
             'critical' : logger['critical'],
             'enabled': logger['enabled']
         }
-        out_api.add(logger['root'], logger['ring'], logger['destination'], container, logger['host'], options)
+        try:
+            out_api.add(logger['root'], logger['ring'], logger['destination'], container, logger['host'], options)
+        except Exception as e:
+            sys.stderr.write(f"Could not import event logger  from {logger['ring']} to {logger['destination']} {str(e)}\n")
 
 
 def import_sequences(inp, name, outp):
