@@ -16,17 +16,18 @@
 /**
  * @brief QtScope main.
  *
- * Uses Python C++ API to call main.py to configure and run QtScope.
- *
- * @param argc  Number of command line options.
- * @param argv  The command line options.
+ * @param argc Number of command line options.
+ * @param argv The command line options.
  *
  * @return int
- * @retval 0  Success.
+ * @retval 0 Success.
+ *
+ * @details
+ * Uses Python C++ API to call main.py to configure and run QtScope.
  */
 int main(int argc, char *argv[])
 {  
-    CPyHelper pInstance;
+    Py_Initialize();
 
     wchar_t* version = Py_DecodeLocale(
 	std::to_string(XIAAPI_VERSION).c_str(), NULL
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
     int pyargc = 1;
     wchar_t* pyargv[1];
     pyargv[0] = version;
-  
+    
     try {
 	PySys_SetArgv(pyargc, pyargv);
 	std::string filename(PREFIX"/ddas/qtscope/main.py");
@@ -52,6 +53,8 @@ int main(int argc, char *argv[])
 		  << e.what() << std::endl;
 	exit(EXIT_FAILURE);
     }
+
+    Py_Finalize();
 
     return 0;
 }

@@ -84,10 +84,10 @@ def main():
             print("-----------------------------------\n")  
 
     # Get the XIA API major version used to compile this program:
-    
+
     ver = int(sys.argv[0])
     logger.info(f"QtScope compiled with XIA API major version {ver}")
-    
+            
     # Create the factories:
 
     logger.info("Creating factory methods and registering builders")
@@ -182,13 +182,13 @@ def create_fit_factory():
         "form": "f(x) = p[0]*exp(p[1]*x) + p[2]",
         "count_data": False
     }
-
+    
     config_fit_gauss = {
         "params": [1, 0, 1],
         "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))",
         "count_data": True
     }
-
+    
     config_fit_gauss_p1 = {
         "params": [1, 0, 1, 0, 0],   
         "form": "f(x) = p[0]*exp(-(x-p[1])^2 / (2*p[2]^2))\n\t+ p[3] + p[4]*x",

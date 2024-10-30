@@ -12,6 +12,15 @@ class EnergyFilter(ChanDSPWidget):
     ----------
     extra_params : list
         Extra DSP settings configured on this tab.
+
+    Methods
+    -------
+    configure(mgr, mod)
+        Configure the EnergyFilter class. Overridden from base class.
+    update(mgr, mod)
+        Update DSP from GUI. Overridden from base class.
+    display_dsp(mgr, mod)
+        Display DSP from the dataframe. Overridden from base class.
     """
     
     def __init__(self, *args, **kwargs):
