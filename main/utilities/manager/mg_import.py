@@ -75,6 +75,26 @@ def import_programs(inp, name, out):
                         
 
 
+def import_eventloggers(inp, name, out):
+    # Import event loggers from the database connected to inp to the database
+    # connected to out - use the 'name' to prefix/uniquify things.
+    
+    in_api = EventLog(inp)
+    out_api = EventLog(out)
+    
+    loggers = in_api.list()
+    
+    for logger in loggers:
+        # Qaulify the container name and make the options:
+        
+        container = qualify_name(logger['container'], name)
+        options = {
+            'partial' : logger['partial'],
+            'critical' : logger['critical'],
+            'enabled': logger['enabled']
+        }
+        out_api.add(logger['root'], logger['ring'], logger['destination'], container, logger['host'], options)
+
 if len(sys.argv) != 4:
     sys.stderr.write('''
 Usage:
@@ -99,5 +119,6 @@ exp_db        = sqlite3.connect(sys.argv[3])
 
 import_containers(db_to_import, import_name, exp_db)
 import_programs(db_to_import, import_name, exp_db)
+import_eventloggers(db_to_import, import_name, exp_db)
 
                                              
