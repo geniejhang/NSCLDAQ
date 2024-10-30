@@ -1,5 +1,7 @@
+#!/usr/bin/env python3
+
 from nscldaq.mg_database import (
-    Container, EventLog, Program
+    Container, EventLog, Program, Sequence,
 )
 import sqlite3
 
@@ -95,6 +97,25 @@ def import_eventloggers(inp, name, out):
         }
         out_api.add(logger['root'], logger['ring'], logger['destination'], container, logger['host'], options)
 
+
+def import_sequences(inp, name, outp):
+    in_api = Sequence(inp)
+    out_api = Sequence(outp)
+    
+    #  Get the sequence definitions and qualify the sequence and program names.
+    
+    sequences = in_api.list()
+    for seq in sequences:
+        seq['name'] = qualify_name(seq['name'], name)
+        steps = seq['steps']
+        seq['steps'] = []
+        for step in steps:
+            pgm_name = qualify_name(step[0], name)
+            seq['steps'].append([pgm_name, step[1], step[2]])
+    
+        out_api.add(seq['name'], seq['trigger'], seq['steps'])
+    
+#---------------------------------------------- main ----------------------------------
 if len(sys.argv) != 4:
     sys.stderr.write('''
 Usage:
@@ -120,5 +141,6 @@ exp_db        = sqlite3.connect(sys.argv[3])
 import_containers(db_to_import, import_name, exp_db)
 import_programs(db_to_import, import_name, exp_db)
 import_eventloggers(db_to_import, import_name, exp_db)
+import_sequences(db_to_import, import_name, exp_db)
 
                                              
