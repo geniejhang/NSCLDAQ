@@ -97,6 +97,7 @@ def main():
     QtWidgets.QApplication.setAttribute(
         QtCore.Qt.AA_EnableHighDpiScaling, True
     )
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
     app = QtWidgets.QApplication(sys.argv)
     gui = MainWindow(cdf, mdf, tbf, ftf, 4, offline)
     gui.show()
