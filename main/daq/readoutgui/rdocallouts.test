@@ -132,6 +132,7 @@ tcltest::test load-2 {Reload should supersede} \
         proc OnBegin {run} {
             
         }
+        proc OnStart {} {}  ;  # Needed in bullseye happens in buster.
     } ReadoutCallouts.tcl [pwd]
     ::rdoCallouts::reload
     list [info procs OnStart] [info procs OnBegin]
