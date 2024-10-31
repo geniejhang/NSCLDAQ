@@ -1,3 +1,12 @@
+== 12.1-003 ==
+* Use DDASFormat 1.1-002, ddasfmt namespace for DDASHit, DDASHitUnpacker
+* Update QtScope fitting to use Poisson or Gaussian MLE
+* Minor updates to QtScope high dpi scaling
+* Add Makefile for process recipe
+* Fix errors in manpage documentation
+* Manager updates
+== 12.1-003 ==
+
 == 12.1-001 ==
 * Use DDASFormat 1.1-000, ddasfmt namespace for DDASHit, DDASHitUnpacker.
 * Updated DDAS docs to include DDAS SpecTcl documentation.
