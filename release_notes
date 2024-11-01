@@ -5,7 +5,13 @@
 * Add Makefile for process recipe
 * Fix errors in manpage documentation
 * Manager updates
-== 12.1-003 ==
+    - eventlog editor did not correctly select logger to edit after editing one
+    - Several wizards were added to the configuration programs.
+    - Subexperiment incorporation added with mg_incorp
+* VMUSBReadout
+    -  In 'adc' module add -inputs option so SpecTcl can distinguish N modules and handle channel numbers properly.
+    -  Fix errors in documentation that made docbook fail.7
+== 12.1-002 ==
 
 == 12.1-001 ==
 * Use DDASFormat 1.1-000, ddasfmt namespace for DDASHit, DDASHitUnpacker.
