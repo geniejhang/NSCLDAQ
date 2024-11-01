@@ -3,7 +3,7 @@
 ##  Incorporate the DDAS format library:
 
 
-# Most recently used version: 1.0-005
+# See TAG definition for the default to incorp.
 
 REPOSITORY="https://github.com/FRIBDAQ/DDASFormat.git"
 TAG=$1
