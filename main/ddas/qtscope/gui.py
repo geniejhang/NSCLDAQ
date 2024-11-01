@@ -107,7 +107,6 @@ class MainWindow(QMainWindow):
         super().__init__(*args, **kwargs)
             
         self.setWindowTitle("QtScope -- ''Just the goods, bare and plain.''")
-        self.resize(1280, 720)
         self.setWindowFlag(Qt.WindowMinimizeButtonHint, True)
         self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
         self.setMouseTracking(True)
