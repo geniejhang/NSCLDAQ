@@ -112,7 +112,12 @@ class State:
         json = self._get(uri)
         return json['state']
    
-
+    def allowed(self):
+        """Return an iterable containing the allowed next state.
+        """
+        uri = self._create_uri('/State/allowed')
+        json = self._get(uri)
+        return json['states']
         
         
         
