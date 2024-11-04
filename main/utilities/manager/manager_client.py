@@ -71,6 +71,7 @@ class State:
         status -Get the current state.
         allowed - Get the names of the states we are allowed to transition to from here.
         transition - performa a transition.
+        elapsed   - Elapsed run time.
         shutdown - Transition to SHUTDOWN and exits the server.
         
         
@@ -100,6 +101,16 @@ class State:
             raise RuntimeError(json['message'])
         return json
     
+    def _post(self, uri, parameters):
+        print("posting", uri, parameters)
+        response = requests.post(uri, parameters)
+        response.raise_for_status()
+        json = response.json()
+        if json['status'] != 'OK':
+            raise RuntimeError(json['messages'])
+        return json
+    
+    
     def status(self):
         """Return the manager's  current state.  
         
@@ -119,5 +130,12 @@ class State:
         json = self._get(uri)
         return json['states']
         
-        
-        
+    def transition(self, newstate):
+        parameters = {'user': _getlogin(), 'state': newstate}  
+        uri = self._create_uri('/State/transition')
+        json = self._post(uri, parameters)
+        return json
+    
+    def elapsed(self):
+        uri = self._create_uri('/State/elapsed')
+        return self._get(uri)['elapsed']
