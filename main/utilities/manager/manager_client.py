@@ -202,3 +202,27 @@ class Programs(_Client):
         """
         uri = self._create_uri("/Programs/status")
         return self._get(uri)
+    
+class KVStore(_Client):
+    """This class provides an interface to the key value store table.
+    This is used to provide arbitrary associations between text strings and 
+    time varying values.
+
+    Args:
+        _Client - generic client utility base class.
+    """
+    def __init__(self, host, user=None, service='DAQManager'):
+        ''' See _Client.__init__'''
+        super().__init__(host, user, service)
+    
+    def value(self, name):
+        """Returns the value of a key in the KVStore.
+
+        Args:
+            name (str): Key whose value we'll return.
+        """
+        
+        uri = self._create_uri('/KVStore/value')
+        parameters = {'name': name}
+        json = self._get(uri, parameters)
+        return json['value'].strip('{').strip('}')
