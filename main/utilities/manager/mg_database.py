@@ -38,6 +38,7 @@ class Container:
     # Public interface:
     
     def exists(self, name):
+        ''''''
         ''' determines if the container 'name' exists. '''
         return self._exists(name)
 
@@ -913,6 +914,7 @@ class Sequence:
         return seq_id
     
     def list(self):
+        
         '''
             List all of the sequences that have been deefined and their steps.  This returns a list of dicts.  Each dict
             describes a sequence and hast the keys:
