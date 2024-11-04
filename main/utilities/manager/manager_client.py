@@ -315,3 +315,41 @@ class Logger(_Client):
         uri = self._create_uri("/Loggers/disable")
         parameters = {'logger': destination, 'user': _getlogin()}
         self._post(uri, parameters)
+    
+    def list(self):
+        """Fetch a list of the loggers.
+
+        Returns:
+            Iterable (e.g. list) each item describes a logger using a dict with
+            the following keys:
+            
+            id - Primary key of the logger.
+            daqroot - The NSCLDAQ root that will be use to find 'eventlog'
+            host  - Host the logger runs in.
+            partial - nonzero if the logger is a partial logger otherwise 0.
+            destination - where the data are logged (context of the container).
+            critical - 1 if the logger is critical, 0 if not.
+            enabled - 1 if the loggers is enabled else 0.
+            container - name of the container the logger runs in.
+            
+        """
+        uri = self._create_uri('/Loggers/list')
+        return self._get(uri)['loggers']
+    
+    def record(self, state):
+        """Enable/disable event recording.  Next time the run starts, all enabled loggers will record
+        data from that run.
+        
+        Paramters:
+          state (int)  - State of the recordinng, 0 not, 1 record.
+        """
+        
+        uri  = self._create_uri('/Loggers/record')
+        parameters = {'user': _getlogin(), 'state': state}
+        self._post(uri, parameters)
+    
+    def isRecording(self):
+        uri = self._create_uri('/Loggers/isrecording')
+        json = self._get(uri)
+        
+        return json['state'] != 0
