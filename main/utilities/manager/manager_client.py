@@ -63,21 +63,11 @@ def _service_port(host, name, port=30000, user=None):
     
     return matches[0]['port']
 
-
-class State:
-    """This class provides access to the /State part of a manager.
-        Besides construction  we provide:
-        
-        status -Get the current state.
-        allowed - Get the names of the states we are allowed to transition to from here.
-        transition - performa a transition.
-        elapsed   - Elapsed run time.
-        shutdown - Transition to SHUTDOWN and exits the server.
-        
-        
-    """
+class _Client:
+    #  This is a base class for REST clients, containing, as it does,
+    # the utilities that make REST requests easy
     def __init__(self, host, user=None, service="DAQManager"):
-        """Construct the State object.
+        """Construct the _Client object.
 
         Args:
             host (str): host running the manager program.
@@ -110,6 +100,23 @@ class State:
             raise RuntimeError(json['messages'])
         return json
     
+    
+    
+
+class State(_Client):
+    """This class provides access to the /State part of a manager.
+        Besides construction  we provide:
+        
+        status -Get the current state.
+        allowed - Get the names of the states we are allowed to transition to from here.
+        transition - performa a transition.
+        elapsed   - Elapsed run time.
+        shutdown - Transition to SHUTDOWN and exits the server.
+        
+        
+    """
+    def __init__(self, host, user=None, service='DAQManager'):
+        super().__init__(host, user, service)
     
     def status(self):
         """Return the manager's  current state.  
@@ -154,3 +161,44 @@ class State:
         uri = self._create_uri('/State/shutdown')
         parameters = {'user' : _getlogin()}
         return self._post(uri, parameters)
+
+class Programs(_Client):
+    """This class provides support for the '/Programs' family of URIs.
+
+    Args:
+        _Client (_type_): The standard client class is our base.
+    """
+    def __init__(self, host, user=None, service='DAQManager'):
+        super().__init__(host, user, service)
+        
+    def status(self):
+        """status
+              Returns the status of all defined programs.
+        Retuns:
+            A dict with the keys 'containers' and 'programs'.  Each is an array.
+            
+            'containers' has one element for each defined container.  The elements, 
+            are themselves dicts with the keys:
+            'name' - name of the container
+            'image' - container image file.
+            'bindings' - list of container bindings.   Each element of the list is a
+            colon separated pair of strinngs.  The left string is a host path, the
+            right where in the container that path is bound
+            Examples:
+                '/etc:/etc'  - host's /etc is bound into the containers /etc
+                '/usr/opt/opt-bookworm:/usr/opt/bookworm'  - hosts /usr/opt/opt-bookworm
+                  is bound into /usr/opt in the container.
+            'activations' area list of the hosts in which the container is acstive.
+            
+            'programs' has one element for each defined program.   Each element is a
+            dict with the following keys:
+            'name' - the program name.
+            'path'  - path of the program within the container it is to run.
+            'type'  - Type of program e.g. 'Critical'
+            'host'  - Host in which the container runs.
+            'container' - if a non-empty string, the container in which the program 
+               is run.
+            'active' - 0 if the program is not running, 1 if it is.
+        """
+        uri = self._create_uri("/Programs/status")
+        return self._get(uri)
