@@ -226,3 +226,11 @@ class KVStore(_Client):
         parameters = {'name': name}
         json = self._get(uri, parameters)
         return json['value'].strip('{').strip('}')
+    
+    def listNames(self):
+        """Returns:
+           The names of all of the keys in the KVStore.
+        """
+        uri = self._create_uri('/KVStore/listnames')
+        json = self._get(uri)
+        return json['names']
