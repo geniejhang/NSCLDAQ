@@ -269,3 +269,17 @@ class KVStore(_Client):
             title (str): new title string
         """
         self.set('title', title)
+    
+    def run(self):
+        """
+        Returns:
+            The run number as an integer.
+        """
+        return int(self.value('run'))
+    def setRun(self, runNumber):
+        """Set the the run number
+
+        Args:
+            runNumber (int): New run number.
+        """
+        self.set('run', str(runNumber))
