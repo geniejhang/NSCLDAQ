@@ -131,6 +131,16 @@ class State:
         return json['states']
         
     def transition(self, newstate):
+        """Request a state transition.
+
+        Args:
+            newstate (str): Textual name of the state (e.g. "BOOT")
+
+        Returns:
+            The full JSON returned by the server.
+        Note:
+            SHUTDOWN when already SHUTDOWN seems to hang...does for Tcl client as well
+        """
         parameters = {'user': _getlogin(), 'state': newstate}  
         uri = self._create_uri('/State/transition')
         json = self._post(uri, parameters)
@@ -139,3 +149,8 @@ class State:
     def elapsed(self):
         uri = self._create_uri('/State/elapsed')
         return self._get(uri)['elapsed']
+    
+    def shutdown(self):
+        uri = self._create_uri('/State/shutdown')
+        parameters = {'user' : _getlogin()}
+        return self._post(uri, parameters)
