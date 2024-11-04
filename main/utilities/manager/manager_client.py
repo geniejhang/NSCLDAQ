@@ -353,3 +353,11 @@ class Logger(_Client):
         json = self._get(uri)
         
         return json['state'] != 0
+    
+    def start(self):
+        """Start all enabled loggers.
+        """
+        
+        uri = self._create_uri('/Loggers/start')
+        parameters = {'user': _getlogin()}
+        self._post(uri, parameters)
