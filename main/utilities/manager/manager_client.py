@@ -95,8 +95,9 @@ class _Client:
         response = requests.post(uri, parameters)
         response.raise_for_status()
         json = response.json()
+
         if json['status'] != 'OK':
-            raise RuntimeError(json['messages'])
+            raise RuntimeError(json['message'])
         return json
     
     
@@ -283,3 +284,34 @@ class KVStore(_Client):
             runNumber (int): New run number.
         """
         self.set('run', str(runNumber))
+        
+
+class Logger(_Client):
+    """This class provides access to the event log subsystem.
+
+    Args:
+        _Client (class): Base class that provides common services for 
+        all ReST clients.
+    """
+    def __init__(self, host, user=None, service='DAQManager'):
+        super().__init__(host, user, service)
+        
+    def enable(self, destination):
+        """Enables a logger
+
+        Args:
+            destination (str): Logger destination.
+        """
+        uri = self._create_uri('/Loggers/enable')
+        parameters = {'logger': destination, 'user': _getlogin()}
+        self._post(uri, parameters)
+    
+    def disable(self, destination):
+        """Disable a loggers.
+
+        Args:
+            destination (str): Logger destination.
+        """
+        uri = self._create_uri("/Loggers/disable")
+        parameters = {'logger': destination, 'user': _getlogin()}
+        self._post(uri, parameters)
