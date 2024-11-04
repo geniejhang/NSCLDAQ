@@ -92,7 +92,6 @@ class _Client:
         return json
     
     def _post(self, uri, parameters):
-        print("posting", uri, parameters)
         response = requests.post(uri, parameters)
         response.raise_for_status()
         json = response.json()
@@ -234,3 +233,39 @@ class KVStore(_Client):
         uri = self._create_uri('/KVStore/listnames')
         json = self._get(uri)
         return json['names']
+    
+    def list(self):
+        """Returns the list of {'name': varname, 'value': value} dicts
+        """
+        uri = self._create_uri('/KVStore/list')
+        json = self._get(uri)
+        return json['variables']
+    
+    def set(self, name, value):
+        """Sets the value of a kvstore element.  Note it is an exception
+        to set the value of a 'name' that has not been created.
+
+        Args:
+            name (str): Name of the variable.
+            value (str): New value of the variable.
+        """
+        uri = self._create_uri('/KVStore/set')
+        parameters = {'user': _getlogin(), 'name': name, 'value': value}
+        json = self._post(uri, parameters)
+        return json
+    
+    # These are convenince methods based on the fact that 'title'
+    # and 'run' are always defined:
+    
+    def title(self):
+        """Returns the title:
+        """
+        return self.value('title')
+        
+    def setTitle(self, title):
+        """Set the new title value
+
+        Args:
+            title (str): new title string
+        """
+        self.set('title', title)
