@@ -14,6 +14,8 @@ REST control provided by Readout programs.
 '''
 import os
 import requests
+import socket
+import errno
 from nscldaq.portmanager.PortManager import PortManager
 
 
@@ -361,3 +363,109 @@ class Logger(_Client):
         uri = self._create_uri('/Loggers/start')
         parameters = {'user': _getlogin()}
         self._post(uri, parameters)
+        
+
+
+class Disconnected(Exception):
+    def __init__(self):
+        super().__init__("Connection dropped or never formed.")
+
+class OutputMonitor:
+    """Provides access to the output monitor service of the manager.
+    In normal usage, construction implies connection.  What you'd then normally
+    do is periodic 'read' calls to get the available data (if any).  
+    The read call will raise manager_client.Disconnected if the connection
+    is dropped (manager exits).  In that case, it's entirely up to the client of this
+    class to decide what to do; but one possibility is to invoke reconnect to 
+    attempt to reconnect...that too will raise Disconnected if the connection
+    fails.
+    
+    Construction can also raise Disconnected if the initial connection fails.
+    
+    
+    """
+    def __init__(self, host, user=None, service='DAQManager-outputMonitor'):
+        """
+           We just resolve the service and store the host and port.
+           Next we call our reconnect method to try to form a connection.
+           
+           Args:
+            host (str)  - The DNS address or dotted IP string of the host running the
+                        manager.
+            user (str)  - If supplied the username the manager is running under.  If not,
+                    the current user.
+            service (str) - The service to connect to, if supplied, defaults to 'DAQManager-outputMonitor'
+                    the default service name.
+        """
+        self._host = host
+        self._port = _service_port(host, service, 30000, user)
+        self._socket = None     # Not yet connected.
+        self.reconnect()
+        
+    def reconnect(self):
+        """Reconnect to the ouptput monitor service.
+            We make use of self._host and self_port to know how to do this.
+            As a side effect, self._socket will be modified.
+        
+        """
+        
+        # If necessary, shutdown the socket first.
+        if self._socket is not None:
+             self._socket.shutdown(socket.SHUT_RDWR)
+             self._socket = None     # To be sure the socket destructs.
+        
+        try:
+            s = socket.create_connection((self._host, self._port))
+            s.setblocking(False)    # So we can poll for input.
+            self._socket = s
+        except:
+            raise Disconnected
+        
+    def isConnected(self):
+        """
+            Returns (bool)
+            True  - if the connected
+            False - if not.
+        """   
+        return self._socket is not None
+    
+    def read(self):
+        """Read data from the socket.  The data are assumed to be textual
+        in nature and appropriately converted.  
+        
+        -  If no data are available, the underlying EWOULDBLOCK exception is
+           turned into a return value of 0.
+        -  If there's no exception but no data (connection closed), we 
+           close the socket from our side and fraise Disconnected.
+        
+        all this is calculated to allow users to e.g:
+        
+            mon = OutputMonitor('somehost')
+            from time to time:
+                try:
+                    data = mon.read()
+                    if len(data) > 0:
+                       do_something_with_the_data(data)
+                except Disconnected:
+                    mon.reconnect() - until successful or you give up.
+        """
+        if self._socket is None:
+            raise Disconnected     # Because we already were.
+        
+        try:
+            raw_data = self._socket.recv(1024)
+            if len(raw_data) == 0:
+                # Lost connection rais connnlost the exception
+                # handler will take care of the rest.
+                raise OSError(errno.ECONNRESET, 'Lost connection')
+            return raw_data.decode('ascii')
+        except OSError as e:
+            reason = e.errno
+            if reason == errno.EWOULDBLOCK or reason == errno.EINTR:
+                return ""        # Empty string instead
+            if reason == errno.ECONNRESET:
+                # Lost the connection:
+                self._socket.shutdown(socket.SHUT_RDWR)
+                self._socket = None
+                raise Disconnected     # Signal the caller we disconnected.
+            raise e              # Something else, so raise it.
