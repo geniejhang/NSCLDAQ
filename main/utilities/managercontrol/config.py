@@ -166,3 +166,35 @@ class Configuration:
         # Now we have a readouts array which might be empty but so what.
         
         self.config['programs']['readouts'].append(readout)
+        
+    def dump(self, file):
+        """Dump the configuration to file.
+        We recognize:
+           - The special key 'title' which has a string value.
+           - All other top level keys are sections 
+           - All values in sections are strings or lists of strings.
+
+        Line endings will be \n (unix)
+
+        Args:
+            file - Name of the file to write the configuration to.
+            
+        
+        """
+        with open(file, 'w') as f:
+            if 'title' in self.config.keys():
+                f.write( f'title = "{self.config["title"]}"\n')
+                for section in self.config.keys():
+                    if section != 'title':
+                        f.write(f'\n[{section}]\n')
+                        for key in self.config[section].keys():
+                            value = self.config[section][key]
+                            if isinstance(value, str):
+                                f.write(f'{key} = "{value}"\n')
+                            elif isinstance(value, list):
+                                # Wrap each item value in "" and join them with ','
+                                f.write(f'{key} = {value}\n')
+                                
+                           
+                        
+        
