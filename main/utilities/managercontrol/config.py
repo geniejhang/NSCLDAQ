@@ -184,16 +184,16 @@ class Configuration:
         with open(file, 'w') as f:
             if 'title' in self.config.keys():
                 f.write( f'title = "{self.config["title"]}"\n')
-                for section in self.config.keys():
-                    if section != 'title':
-                        f.write(f'\n[{section}]\n')
-                        for key in self.config[section].keys():
-                            value = self.config[section][key]
-                            if isinstance(value, str):
-                                f.write(f'{key} = "{value}"\n')
-                            elif isinstance(value, list):
-                                # Wrap each item value in "" and join them with ','
-                                f.write(f'{key} = {value}\n')
+            for section in self.config.keys():
+                if section != 'title':
+                    f.write(f'\n[{section}]\n')
+                    for key in self.config[section].keys():
+                        value = self.config[section][key]
+                        if isinstance(value, str):
+                            f.write(f'{key} = "{value}"\n')
+                        elif isinstance(value, list):
+                            # Wrap each item value in "" and join them with ','
+                            f.write(f'{key} = {value}\n')
                                 
                            
                         
