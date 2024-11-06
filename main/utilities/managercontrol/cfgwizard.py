@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout, QHBoxLayout
 )
 import os
+from nscldaq.manager_client import Programs
+from nscldaq.editablelist import ListToListEditor
 
 DEFAULT_REST_SERVICE='DAQManager'
 DEFAULT_OUTPUT_SERVICE='DAQManager-outputMonitor'
@@ -161,7 +163,69 @@ class ConnectionPage(QWizardPage):
         
         
         self.setLayout(layout)
+    # Attributes .. for now readonly:
     
+    def host(self):
+        return self._host.text()
+    def user(self):
+        return self._user.text()
+    def rest(self):
+        return  self._rest.text()
+    def output(self):
+        return self._outsvc.text()
+    
+class ReadoutPage(QWizardPage):
+    #  Prompt for the set of programs that are readouts.
+    
+    def __init__(self, connection):
+        super().__init__()
+        self._connection = connection
+        self._loaded = False
+        
+        # Now build the GUI:
+        
+        layout = QVBoxLayout()
+        
+        # Instructions:
+        self._instructions = QLabel(self)
+        self._instructions.setWordWrap(True)
+        self._instructions.setText("""
+<h2>Instructions</h2>
+<p>
+    The GUI can monitor programs that are supposed to be persistent.  Normally, one monitors
+    Readout programs, but others can be monitored as well.  Initiall, the names of all programs
+    that are not transitory are loaded into the left list box below.  Using the controls,
+    fill the right most listbox with the names of programs you want monitored.
+</p>
+<hr />                                   
+        """)
+        layout.addWidget(self._instructions)
+        
+        # The list box
+        
+        self._lists = ListToListEditor(self)
+        layout.addWidget(self._lists)
+        
+        self.setLayout(layout)
+    def initializePage(self):
+        # If we've not done so, load the editable list.
+        
+        if not self._loaded:
+            self._loaded = True
+            connection = self._connection
+            client = Programs(connection.host(), connection.user(), connection.rest())
+            programs = client.status()['programs']  # Don't care about containers.
+            programs = [p for p in programs  if p['type'] != 'Transitory']  # Can't monitor transitory programs.
+            
+            program_names = [p['name'] for p in programs]     # What we'll put in the listboxes.
+            self._lists.appendSource(program_names)
+    
+    def programs(self):
+        # Return what's been loaded in to the list box
+        
+        return self._lists.list()       
+            
+        
 class ConfigWizard(QWizard):
     """Provides a self contained wizard for 
         configuring the control GUI.
@@ -185,6 +249,9 @@ class ConfigWizard(QWizard):
         
         self._services = ConnectionPage()
         self.addPage(self._services)
+        
+        self._programs = ReadoutPage(self._services)
+        self.addPage(self._programs)
         
         
 if __name__ == "__main__":
