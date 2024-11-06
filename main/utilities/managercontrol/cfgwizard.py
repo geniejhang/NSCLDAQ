@@ -3,7 +3,7 @@
     
 from PyQt5.QtWidgets import (
     QWizard, QWizardPage, QLabel, QLineEdit,
-    QVBoxLayout, QHBoxLayout
+    QVBoxLayout, QHBoxLayout, QDialog
 )
 import os
 from nscldaq.manager_client import Programs
@@ -252,9 +252,28 @@ class ConfigWizard(QWizard):
         self.addPage(self._services)
         
         self._programs = ReadoutPage(self._services)
-        self._programsId = self.addPage(self._programs)
+        self.addPage(self._programs)
+
     def getProgramsId(self):
         return self._programsId    
+    def done(self, how):
+        # Called when finish or cancel is called if how is  QDialog.Accepted 
+        # Edit the configuration.
+        print('how', how, QDialog.Accepted)
+        if how == QDialog.Accepted:
+            #
+            #  Connection stuff:
+            
+            self._config.setHost(self._services.host())
+            self._config.setRest_service(self._services.rest())
+            self._config.setMonitor_service(self._services.output())
+            
+            # Program list:
+            
+            self._config.setReadouts(self._programs.programs())
+            
+        
+        super().done(how)  
         
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
