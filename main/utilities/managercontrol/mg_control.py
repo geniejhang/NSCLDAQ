@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
-    """This program provides the main program for the new control panel of the
-        Managed experiment control panel.
-    """
+"""This program provides the main program for the new control panel of the
+    Managed experiment control panel.
+"""
 
 from nscldaq.manager_control.config import Configuration
 from nscldaq.manager_control.cfgwizard import ConfigWizard
@@ -28,7 +28,7 @@ def get_configuration():
         c = Configuration ('/dev/null')   # All defaults.
         wiz = ConfigWizard(c)
         wiz.exec()
-        c.write(CONFIGURATION_FILE)
+        c.dump(CONFIGURATION_FILE)
         return c
 
 
@@ -36,7 +36,7 @@ def get_configuration():
 #
 
 
-app = QAPplication(sys.argv)
+app = QApplication(sys.argv)
 
 # We need to either read or create the configuration:
 

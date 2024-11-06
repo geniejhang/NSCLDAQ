@@ -2,8 +2,33 @@
 """
     
 from PyQt5.QtWidgets import (
-    QWizard, QWizardPage, QLabel, QLineEdit
+    QWizard, QWizardPage, QLabel, QLineEdit,
+    QVBoxLayout, QHBoxLayout
 )
+import os
+
+DEFAULT_REST_SERVICE='DAQManager'
+DEFAULT_OUTPUT_SERVICE='DAQManager-outputMonitor'
+
+def _getlogin():
+    """Return the login name.
+    Note that in a shell under WSL with MSVisual code, os.getlogin() fails 
+with the exception:
+    
+    Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+OSError: [Errno 6] No such device or address
+
+    Therefore we use os.getlogin() and if it throws an exception fallback t
+o os.getenv('USER').
+    
+    
+    """
+    try :
+        return os.getlogin()
+    except:
+        return os.getenv('USER')
+
 
 
 class IntroPage(QWizardPage):
@@ -13,7 +38,7 @@ class IntroPage(QWizardPage):
         super().__init__()
         
         layout = QVBoxLayout()
-        self._instructions - QLabel(self)
+        self._instructions = QLabel(self)
         self._instructions.setWordWrap(True)
         self._instructions.setText(
             """
@@ -48,10 +73,95 @@ class IntroPage(QWizardPage):
 <p>
 To get on with the wizard, click the <tt>Next</tt> button below.
 """
-        layout.addWidget(seslf._instructions)
+        )
+        layout.addWidget(self._instructions)
         
         self.setLayout(layout)
 
+
+class ConnectionPage(QWizardPage):
+    #  Page to prompt for the connection parameters:
+    
+    def __init__(self):
+        global DEFAULT_REST_SERVICE
+        global DEFAULT_OUTPUT_SERVICE
+        super().__init__()
+        
+        layout = QVBoxLayout()
+        
+        # Instructions:
+        
+        self._instructions = QLabel(self)
+        self._instructions.setWordWrap(True)
+        self._instructions.setText("""
+<h2>Instructions</h2>
+<p>
+    This page prompts for the manager service parameters. Note that
+    default values have been filled in but may not be appropriate for your case.
+    
+</p>
+<ul>
+    <li>Manager host - is the name of the computer in which the manager is running.</li>
+    <li>Manager user - is the name of the user that started the manager </li>
+    <liL>Manager ReST service - is the name the ReST service the manager can be controlled with is advertised as </li>
+    <li>Manager Output service - is the name the output realy service is advertised as</li>
+</ul>
+<hr />                                   
+        """)
+        layout.addWidget(self._instructions)
+        
+        #  mg host:
+        
+        host_layout = QHBoxLayout()
+        self._hostlabel = QLabel("Manager host:", self)
+        host_layout.addWidget(self._hostlabel)
+        
+        self._host = QLineEdit(self)
+        self._host.setText('localhost')
+        host_layout.addWidget(self._host)
+        
+        layout.addLayout(host_layout)
+        
+        # mg user:
+        
+        user_layout = QHBoxLayout()
+        self._userlabel = QLabel('Manager user', self)
+        user_layout.addWidget(self._userlabel)
+        
+        self._user = QLineEdit(_getlogin(), self)
+        user_layout.addWidget(self._user)
+        
+        
+        layout.addLayout(user_layout)
+        
+        #mg Rest Service:
+        
+        rest_layout = QHBoxLayout()
+    
+        self._restlabel = QLabel('Manager ReST service', self)
+        rest_layout.addWidget(self._restlabel)
+        
+        self._rest = QLineEdit(DEFAULT_REST_SERVICE, self)
+        rest_layout.addWidget(self._rest)
+        
+        layout.addLayout(rest_layout)
+        # mg Ouptut service:
+        
+        outlayout = QHBoxLayout()
+        self._outlabel = QLabel("Manager Output service", self)
+        outlayout.addWidget(self._outlabel)
+        
+        self._outsvc = QLineEdit(DEFAULT_OUTPUT_SERVICE, self)
+        outlayout.addWidget(self._outsvc)
+        
+        
+        layout.addLayout(outlayout)
+        
+        
+        
+        
+        self.setLayout(layout)
+    
 class ConfigWizard(QWizard):
     """Provides a self contained wizard for 
         configuring the control GUI.
@@ -68,8 +178,13 @@ class ConfigWizard(QWizard):
     def __init__(self, config):
         super().__init__()
         self._config = config
+        # Pages:
+        
         self._intro = IntroPage()
         self.addPage(self._intro)
+        
+        self._services = ConnectionPage()
+        self.addPage(self._services)
         
         
 if __name__ == "__main__":
