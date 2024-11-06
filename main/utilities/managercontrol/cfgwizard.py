@@ -181,7 +181,6 @@ class ReadoutPage(QWizardPage):
         super().__init__()
         self._connection = connection
         self._loaded = False
-        
         # Now build the GUI:
         
         layout = QVBoxLayout()
@@ -209,6 +208,8 @@ class ReadoutPage(QWizardPage):
         self.setLayout(layout)
     def initializePage(self):
         # If we've not done so, load the editable list.
+        # Can't use hasVisited because we don't want to reload if
+        # back/next and back removes us from the history.
         
         if not self._loaded:
             self._loaded = True
@@ -251,8 +252,9 @@ class ConfigWizard(QWizard):
         self.addPage(self._services)
         
         self._programs = ReadoutPage(self._services)
-        self.addPage(self._programs)
-        
+        self._programsId = self.addPage(self._programs)
+    def getProgramsId(self):
+        return self._programsId    
         
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
