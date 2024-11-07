@@ -255,6 +255,7 @@ class RunControlWidget(QWidget):
         
     Signals:
         transition(str) - A transition is requested to the new named state.
+           Note if the shtdown button is clickeed transtion('SHUTDOWN') is emitteed.
         
     """
     # Class storage:
@@ -272,6 +273,14 @@ class RunControlWidget(QWidget):
     _StateNames = {
         BOOT: 'BOOT', SHUTDOWN: 'SHUTDOWN', HWINIT: 'HWINIT', BEGIN: 'BEGIN', END: 'END'
     }
+    # Transition Button label table:
+    
+    _TransitionLabels = {
+        SHUTDOWN : 'Boot', BOOT: 'HW Init', HWINIT: 'Begin', END: 'Begin', BEGIN: 'END'
+    }
+    #  The Shutdown button can't be alive if we're already shutdown:
+    
+    _ShutdownDisaledState = [SHUTDOWN]
     def __init__(self, *args):
         super().__init__(*args)
         
@@ -299,8 +308,60 @@ class RunControlWidget(QWidget):
         
         self.setLayout(layout)
     
+    # Attributes
+    
+    def state(self):
+        """Return the current state id. This attribute has no direct setter.
+        """
+        return self._stateid
+    def state_name(self):
+        """return the name of the currdnt state.  This attribute has no setter.
+        """
+        return self._StateNames[self._stateid]
+    
+    # Public methods:
+    
+    def boot(self):
+        """ Transition to the 'BOOT' state._
+        """
+        self._transition(self.BOOT)
+    def shudown(self):
+        """Transitino to SHUTDOWN:
+        """
+        self._transition(self.SHUTDOWN)
+    def hwinit(self):
+        """Transition to the HWINIT state:
+        """
+        self._transition(self.HWINIT)
+    def begin(self):
+        """Transition to the BEGIN state:
+        """
+        self._transition(self.BEGIN)
+    def end(self):
+        """Transition to endid.
+        """
+        self._trasition(slef.END)
+    
+    # private methods
+    
+    def _transition(self, newid):
+        # Tranition to the new state in the newid:
+        
+        self._stateid = newid
+        self._update_buttons(self)
+        
+    
     def _update_buttons(self):
-        pass
+        # If necessary disable the SHUTDOWN button:
+        
+        if self._stateid in self._ShutdownDisaledState:
+            self._reqshutdown.setDisabled(True)
+        else:
+            self._reqshutdown.setDisabled(False)
+        
+        # Set the label on the transition button:
+        
+        self._transitionreq.setText(self._TransitionLabels[self._stateid])
     
     
 if __name__ == "__main__":
