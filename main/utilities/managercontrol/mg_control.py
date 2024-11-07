@@ -7,7 +7,7 @@ from nscldaq.manager_control.config import Configuration
 from nscldaq.manager_control.cfgwizard import ConfigWizard
 from PyQt5.QtWidgets import (
     QApplication, QLabel, QLineEdit,
-    QVBoxLayout, QHBoxLayout 
+    QMainWindow
 )
 import sys
 import os
@@ -41,3 +41,10 @@ app = QApplication(sys.argv)
 # We need to either read or create the configuration:
 
 config = get_configuration()
+
+# Now the GUI:
+
+main_window = QMainWindow()
+main_window.show()
+
+app.exec()
