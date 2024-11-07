@@ -227,7 +227,82 @@ class RunInfoWidget(QWidget):
             pass     #likely int conversion failed.
         
 
+class RunControlWidget(QWidget):
+    """Class that provides state transition controls. 
+        This provides  buttons and internal state
+        An internal state is used to control what the button look like:
+        *  A shutdown button is provided that is enabled if the state is not SHUTDOWN
+        *  A transition button is 
+           - disabled if the state is SHUTDOWN
+           - Labeled 'Initialize'  if the state is BOOT
+           - BEGIN if the state is HWINIT or END
+           - END if the state is BEGIN
+           
+
+    Parent class:
+        QWIdget 
+    Attributes:
+        state(readonly)  Provides a state e.g. RunControlWidget.SHUTDOWN
         
+    Methods:
+        boot - transition the widget to RunControlWidget.BOOT
+        shutdown - Transition the Widget to RunControlWidget.SHUTDOWN
+        hwinit - Transition the widget to RunControlWidget.HWINT
+        begin - Transition the widget to RunControlWidget.BEGIN
+        end   - Transition the widget to RunControl.END
+        
+        state_name - translates the state value (from state()) to a state name string.
+        
+    Signals:
+        transition(str) - A transition is requested to the new named state.
+        
+    """
+    # Class storage:
+    
+    # Any resemblance betwween these values and the id  field in the database
+    # should be treated as purely conncidental.
+    
+    BOOT = 1
+    SHUTDOWN = 2
+    HWINIT = 3
+    BEGIN = 4
+    END = 5
+    
+    
+    _StateNames = {
+        BOOT: 'BOOT', SHUTDOWN: 'SHUTDOWN', HWINIT: 'HWINIT', BEGIN: 'BEGIN', END: 'END'
+    }
+    def __init__(self, *args):
+        super().__init__(*args)
+        
+        layout = QHBoxLayout()
+        
+        # CUrrent state:
+        
+        self._statelabel = QLabel('State: ', self)
+        layout.addWidget(self._statelabel)
+        self._statename = QLabel('SHUTDOWN', self)
+        layout.addWidget(self._statename)
+        
+        # SHutdown button
+        
+        self._reqshutdown = QPushButton('Shutdown', self)
+        layout.addWidget(self._reqshutdown)
+        
+        #  State transition button:
+        
+        self._transitionreq  = QPushButton('BOOT', self)
+        layout.addWidget(self._transitionreq)
+        
+        self._stateid = self.SHUTDOWN
+        self._update_buttons()
+        
+        self.setLayout(layout)
+    
+    def _update_buttons(self):
+        pass
+    
+    
 if __name__ == "__main__":
     test_widget = None
     def titleHandler(title):
@@ -246,10 +321,7 @@ if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
     main_window = QMainWindow()
-    test_widget = RunInfoWidget()
-    test_widget.updateTitle.connect(titleHandler)
-    test_widget.updateRunNumber.connect(runhandler)
-    test_widget.incRun.connect(inchandler)
+    test_widget = RunControlWidget()
     main_window.setCentralWidget(test_widget)
 
     main_window.show()
