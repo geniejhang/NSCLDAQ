@@ -98,7 +98,7 @@ DAQ::DDAS::DDASDataSimulator::DDASDataSimulator(std::string fname, int version)
  *   - Write the begin run item to the output file.
  */
 void
-DAQ::DDAS::DDASDataSimulator::beginRun()
+DAQ::DDAS::DDASDataSimulator::beginRun(int sourceID)
 {
     m_fd = open(m_fname.c_str(), O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);    
     if (m_fd == -1) {
@@ -118,10 +118,11 @@ DAQ::DDAS::DDASDataSimulator::beginRun()
 	m_pFactory->makeDataFormatItem()
 	);
     m_pFactory->putRingItem(pFormatItem.get(), m_fd);
-
+    
     std::unique_ptr<CRingStateChangeItem> pBeginItem(
 	m_pFactory->makeStateChangeItem(BEGIN_RUN, 0, 0, m_start, title)
 	);
+    pBeginItem->setBodyHeader(UINT64_MAX, sourceID, 1); // BEGIN barrier = 1
     m_pFactory->putRingItem(pBeginItem.get(), m_fd);
 }
 
@@ -136,7 +137,7 @@ DAQ::DDAS::DDASDataSimulator::beginRun()
  *  - Closes the output file.
  */
 void
-DAQ::DDAS::DDASDataSimulator::endRun()
+DAQ::DDAS::DDASDataSimulator::endRun(int sourceID)
 {
     const auto now = std::chrono::system_clock::now();
     m_stop = std::chrono::system_clock::to_time_t(now);
@@ -147,6 +148,7 @@ DAQ::DDAS::DDASDataSimulator::endRun()
     std::unique_ptr<CRingStateChangeItem> pEndItem(
 	m_pFactory->makeStateChangeItem(END_RUN, 0, elapsed, m_stop, title)
 	);
+    pEndItem->setBodyHeader(UINT64_MAX, sourceID, 2); // END barrier = 2
     m_pFactory->putRingItem(pEndItem.get(), m_fd);
 
     if (fsync(m_fd) == -1) {
@@ -228,7 +230,7 @@ DAQ::DDAS::DDASDataSimulator::putHit(
 	+ sizeof(BodyHeader) + sizeof(RingItemHeader) + 100;    
     std::unique_ptr<CPhysicsEventItem> pPhysicsItem(
 	m_pFactory->makePhysicsEventItem(timestamp, sourceID, 0, bodySize)
-	);
+	); // Already has a correct body header.
     auto pBody = reinterpret_cast<uint32_t*>(pPhysicsItem->getBodyPointer());
     
     // Make the DDASReadout-style hit. Note that the self-inclusive size and

@@ -142,14 +142,16 @@ namespace DAQ {
 
 	    /** 
 	     * @brief Begin a simulated run.
+	     * @param sourceID The source ID value (optional, default=0).
 	     * @throws CErrnoExecption If the output file isn't opened properly.
 	     */
-	    void beginRun();
+	    void beginRun(int sourceID=0) ;
 	    /** 
 	     * @brief End a simulated run.
+	     * @param sourceID The source ID value (optional, default=0).
 	     * @throws CErrnoExecption If the output file isn't closed properly.
 	     */
-	    void endRun();
+	    void endRun(int sourceID=0);
 	    /**
 	     * @brief Write a hit to the output file. This is the normal way 
 	     * users will add simulated data to the output.
