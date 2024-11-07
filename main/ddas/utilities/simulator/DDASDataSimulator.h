@@ -66,13 +66,16 @@ namespace DAQ {
 	 * change items you would see when starting and stopping a run.
 	 *
 	 * In general the code uses the information contained within the 
-	 * ddasfmt::DDASHit to figure out its size. In order to calculate 
-	 * calibrated timestamps, the module MSPS must be defined as part of
-	 * the hit, or, if using an external timestamp, the calibration 
-	 * must be provided when adding the hit. Trace data is _not checked_ 
-	 * for overflows or to ensure that the range of the trace matches the 
-	 * bit depth of the module, that responsiblity is on the user. It is 
-	 * assumed that the CFD always succeeds, even if the correction is 0.
+	 * ddasfmt::DDASHit to figure out its size. The PHYSICS_ITEM's body 
+	 * header timestamp is set using a calibrated timestamp value derived 
+	 * from the full timestamp, which requires either the module MSPS OR an 
+	 * external timestamp AND clock calibration to be specified. In the 
+	 * case of the module timestamp, this value is given in nanoseconds, 
+	 * whereas an external timestamp is given in clock ticks. Trace data 
+	 * is _not checked_ for overflows or to ensure that the range of the 
+	 * trace matches the bit depth of the module, that responsiblity is 
+	 * on the user. It is  assumed that the CFD always succeeds, even if 
+	 * the correction is 0.
 	 *
 	 * To use this class in your own code:
 	 *   - Ensure `$DAQINC`, `$DAQROOT`/unifiedformat/include and 
@@ -99,6 +102,8 @@ namespace DAQ {
 	     DDASHit hit;
 
 	     sim.beginRun();
+
+	     // Coarse TS and CFD derived from full time:
 
 	     hit.setModMSPS(250);
 	     hit.setCrateID(0);
@@ -154,7 +159,9 @@ namespace DAQ {
 	     *   default=false).
 	     * @param cal Clock calibration in nanoseconds per clock cycle. 
 	     *   Required if useExtTS is true (optional, default=0.0).
-	     * @throws std::runtime_error If using an external timestamp with 
+	     * @throw std::runtime_error If timestamp or external timestamp
+	     *   are invalid (<= 0 or not provided when expected).
+	     * @throw std::runtime_error If using an external timestamp with 
 	     *   an invalid clock calibration (<= 0.0).
 	     */
 	    void putHit(
