@@ -251,11 +251,12 @@ class RunControlWidget(QWidget):
         begin - Transition the widget to RunControlWidget.BEGIN
         end   - Transition the widget to RunControl.END
         
+        
         state_name - translates the state value (from state()) to a state name string.
         
     Signals:
         transition(str) - A transition is requested to the new named state.
-           Note if the shtdown button is clickeed transtion('SHUTDOWN') is emitteed.
+           Note if the shtdown button is clicked transtion('SHUTDOWN') is emitteed.
         
     """
     # Class storage:
@@ -276,11 +277,17 @@ class RunControlWidget(QWidget):
     # Transition Button label table:
     
     _TransitionLabels = {
-        SHUTDOWN : 'Boot', BOOT: 'HW Init', HWINIT: 'Begin', END: 'Begin', BEGIN: 'END'
+        SHUTDOWN : 'Boot', BOOT: 'HW Init', HWINIT: 'Begin', END: 'Begin', BEGIN: 'End'
+    }
+    # Given a button label the transition it requests:
+    _TransitionRequests = {
+        'Boot' : BOOT, 'HW Init': HWINIT, 'Begin': BEGIN, 'End': END, 
     }
     #  The Shutdown button can't be alive if we're already shutdown:
     
-    _ShutdownDisaledState = [SHUTDOWN]
+    _ShutdownDisabledStates = [SHUTDOWN,]
+    
+    transition = pyqtSignal(str)
     def __init__(self, *args):
         super().__init__(*args)
         
@@ -307,13 +314,28 @@ class RunControlWidget(QWidget):
         self._update_buttons()
         
         self.setLayout(layout)
+        
+        # Hook in buttons:
+        
+        self._reqshutdown.clicked.connect(self._signalShutdown)
+        self._transitionreq.clicked.connect(self._signalChangeReq)
     
     # Attributes
     
     def state(self):
-        """Return the current state id. This attribute has no direct setter.
+        """Return the current state id. 
         """
         return self._stateid
+    def setStateName(self, name):
+        if not name in self._StateNames.values():
+            raise ValueError(f'{name} is not a valid state name.')
+        for state in self._StateNames:
+            label = self._StateNames[state]
+            if name == label:
+                self._stateid = state
+                self._statename.setText(label)
+                self._update_buttons()
+        
     def state_name(self):
         """return the name of the currdnt state.  This attribute has no setter.
         """
@@ -325,7 +347,7 @@ class RunControlWidget(QWidget):
         """ Transition to the 'BOOT' state._
         """
         self._transition(self.BOOT)
-    def shudown(self):
+    def shutdown(self):
         """Transitino to SHUTDOWN:
         """
         self._transition(self.SHUTDOWN)
@@ -340,21 +362,44 @@ class RunControlWidget(QWidget):
     def end(self):
         """Transition to endid.
         """
-        self._trasition(slef.END)
+        self._transition(self.END)
     
+    # Signal relays:
+    
+    def _signalShutdown(self):
+        #  Shutdown button was clicked, emit
+        
+        self.transition.emit(self._StateNames[self.SHUTDOWN])
+    
+    def _signalChangeReq(self):
+        # figure out what the button click means and signal the related transition request.
+        # the state requested is the state that is the key to the label on the button in
+        # self._TransitionLabels
+        
+        button_text = self._transitionreq.text()
+        if button_text in self._TransitionRequests.keys():
+            self.transition.emit(self._StateNames[self._TransitionRequests[button_text]])
+        else:
+            raise AssertionError(
+                f' The button label: {button_text}, could not be translated to a transiton state.'
+            )    
+        
+        
+                
+                    
     # private methods
     
     def _transition(self, newid):
         # Tranition to the new state in the newid:
         
         self._stateid = newid
-        self._update_buttons(self)
+        self._update_buttons()
         
     
     def _update_buttons(self):
         # If necessary disable the SHUTDOWN button:
         
-        if self._stateid in self._ShutdownDisaledState:
+        if self._stateid in self._ShutdownDisabledStates:
             self._reqshutdown.setDisabled(True)
         else:
             self._reqshutdown.setDisabled(False)
@@ -362,27 +407,235 @@ class RunControlWidget(QWidget):
         # Set the label on the transition button:
         
         self._transitionreq.setText(self._TransitionLabels[self._stateid])
+
+class RunControls(QWidget):
+    """Container widget for the RunInfoWidget and RunControlWidgets.  These are the top part of the
+    main GUI
+
+    SuperClass
+        QWidget
+        
+    Attributes (delegated to the subwidgets):
+    From RunInfoWidget
+        title - the contents of the title widget Not it's possible this differs from the 
+                title in the config data base if, e.g. more than one editor is involved.
+        actualTitle Actual title string value.
+        runNumber - contents of the run number text edit (this will be a positive integer).
+        actualRunNumber - contents of the actual run number string.
+    From RunControlWidget:
+        state(readonly)  Provides a state e.g. RunControlWidget.SHUTDOWN
+        
+    Signals:
+    From RunInfoWidget:
+        updateTitle(str) - Set title button was clicked.,
+        updatetRunNumber(int) - Set the run number button was clicked.
+        incrRun(int)   - Increment run number was clicked Note:
+              slots for this _probably_ should get the run number fromt he
+              config database, increment it set it back inboth run number and a tual run number.
+        transition(str) - A transition is requested to the new named state.
+           Note if the shtdown button is clicked transtion('SHUTDOWN') is emitteed.
+
+    The following methods are delegated to contained objects:
+    RunControlWidget:
+        boot - transition the widget to RunControlWidget.BOOT
+        shutdown - Transition the Widget to RunControlWidget.SHUTDOWN
+        hwinit - Transition the widget to RunControlWidget.HWINT
+        begin - Transition the widget to RunControlWidget.BEGIN
+        end   - Transition the widget to RunControl.END
+        
+        state_name - translates the state value (from state()) to a state name string.
     
+    Additionally, if clients prefer to interact with the subwidgets directly:
+        runInfo - Returns the RunInfoWidget object
+        runControls - Returns the RunControlWidget 
+        
+       
+        
+    """
+    updateTitle = pyqtSignal(str)
+    updateRunNumber = pyqtSignal(int)
+    incRun = pyqtSignal(int)
+    
+    transition = pyqtSignal(str)
+    
+    def __init__(self, *args):
+        super().__init__(*args)
+        
+        layout = QVBoxLayout()
+        
+        self._info = RunInfoWidget(self)
+        layout.addWidget(self._info)
+        
+        self._controls = RunControlWidget(self)
+        layout.addWidget(self._controls)
+        
+        self.setLayout(layout)
+        
+        # Hook signals to our signals:
+        
+        self._info.updateTitle.connect(self.updateTitle)
+        self._info.updateRunNumber.connect(self.updateRunNumber)
+        self._info.incRun.connect(self.incRun)
+        
+        self._controls.transition.connect(self.transition)
+    
+    #  Attributes (including exposing the subwidgets):
+    
+    def runInfo(self):
+        """
+
+        Returns:
+            RunInfoWidget: The run information subwidget.
+        """
+        return self._info
+    def runControls(self):
+        """
+
+        Returns:
+           RunControlWidget: The run controls subwidget.
+        """
+        return self._controls
+    
+    # Attributes from RunInfoWidget:
+    
+    def title(self):
+        """Return the user title string.
+        """
+        return self._info.title()
+    
+    def setTitle(self, title):
+        """Set the user title string. The actual title string is not modified.
+
+        Args:
+            title (str): new _user_ title string.
+        """
+        self._info.setTitle(title)
+        
+    def runNumber(self):
+        """Return the run number (integer).
+        """
+        return self._info.runNumer()
+    
+    def setRunNumber(self, run):
+        """
+        Set the user run number.
+
+        Args:
+            run (int): New run number should be a positive int.
+            
+        """
+        self._info.setRunNumber(run)
+        
+        
+    
+    # THe actual parameter attributes:
+    
+    def actualTitle(self):
+        """Retturn the value of the actual title.
+        """
+        return self._info.actualTitle()
+    
+    def setActualTitle(self, title):
+        """Set the value of the actual title.
+
+        Args:
+            title (str): new title.
+        """
+        self._info.setActualTitle(title)
+    
+    def actualRunNumber(self):
+        """Return actual run number value."""
+        return self._info.actualRunNumber()
+    def setActualRunNumber(self, run):
+        """Set the new actual run number value
+
+        Args:
+            run (int): _description_
+
+        Raises:
+            TypeError: If run isn't an int.
+            ValueError: run is an int but is negative.
+        """
+        self._info.setActualRunNumber(run)
+        
+    # Delegations from self._controls:
+    
+    def state(self):
+        """Return the current state id. This attribute has no direct setter.
+        """
+        return self._controls(state)
+    def setStateName(self, name):
+        self._controls.setStateName(name)
+        
+    def state_name(self):
+        """return the name of the currdnt state.  This attribute has no setter.
+        """
+        return self._controls()
+    
+    # Public methods:
+    
+    def boot(self):
+        """ Transition to the 'BOOT' state._
+        """
+        self._controls.boot()
+    def shutdown(self):
+        """Transitino to SHUTDOWN:
+        """
+        self._controls.shutdown()
+    def hwinit(self):
+        """Transition to the HWINIT state:
+        """
+        self._controls.hwinit()
+    def begin(self):
+        """Transition to the BEGIN state:
+        """
+        self._controls.begin()
+    def end(self):
+        """Transition to endid.
+        """
+        self._controls.end()
+
+
     
 if __name__ == "__main__":
     test_widget = None
-    def titleHandler(title):
-        test_widget.setActualTitle(title)
-        print('Updated to ', test_widget.actualTitle())
-
-    def runhandler(run):
-        test_widget.setActualRunNumber(run)
-        print('Updated to ', run)
     
-    def inchandler(run):
-        now =test_widget.runNumber()
-        test_widget.setRunNumber(now+1)
+    def updateTitle(title): 
+        test_widget.setActualTitle(title)
+    def updateRunNumber(n):
+        test_widget.setActualRunNumber(n)
+    def incrun(n):
+        n += 1
+        test_widget.setActualRunNumber(n)
+        test_widget.setRunNumber(n)
+        
+    def transition(name):
+        if name == 'SHUTDOWN':
+            test_widget.shutdown()
+        elif name == 'BOOT':
+            test_widget.boot()
+        elif name == 'HWINIT':
+            test_widget.hwinit()
+        elif name == "BEGIN":
+            test_widget.begin()
+        elif name == "END":
+            test_widget.end()
+        else:
+            print('unrecognized state', name)
+
+        test_widget.setStateName(name)
     
     from PyQt5.QtWidgets import (QApplication, QMainWindow)
     import sys
     app = QApplication(sys.argv)
     main_window = QMainWindow()
-    test_widget = RunControlWidget()
+    test_widget = RunControls()
+    
+    test_widget.updateTitle.connect(updateTitle)
+    test_widget.updateRunNumber.connect(updateRunNumber)
+    test_widget.incRun.connect(incrun)
+    test_widget.transition.connect(transition)
+
     main_window.setCentralWidget(test_widget)
 
     main_window.show()
