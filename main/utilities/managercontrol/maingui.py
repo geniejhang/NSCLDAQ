@@ -329,8 +329,7 @@ class RunControlWidget(QWidget):
     def setStateName(self, name):
         if not name in self._StateNames.values():
             raise ValueError(f'{name} is not a valid state name.')
-        for state in self._StateNames:
-            label = self._StateNames[state]
+        for state, label in self._StateNames.items():
             if name == label:
                 self._stateid = state
                 self._statename.setText(label)
