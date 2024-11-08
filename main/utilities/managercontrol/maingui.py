@@ -22,7 +22,11 @@ from PyQt5.QtGui import ( QStandardItemModel, QStandardItem, QIntValidator)
 
 from PyQt5.QtCore import pyqtSignal
 
-
+#---------------------------------------------------------------------------------------------
+#
+#  THe widgets in this section have to do with the top part of the GUI.
+#  There are widgets for the run information and managing state transitions,
+#  as well as one widget to rule them all.
 class RunInfoWidget(QWidget):
     """This class provides information about the run:
       - A text entry for the title. - with change button.
@@ -595,6 +599,136 @@ class RunControls(QWidget):
         self._controls.end()
 
 
+#-------------------------------------------------------------------------------------------------------
+#
+#  The widgets in this section  have to do with the bottom part of the GUI:
+#   Specifically, the contents of and the tabbed widget.
+
+class LogWindow(QTextEdit):
+    """This class provides a scrolling text widget that's suitable for logging stuff.
+    Specifically, the log is a limited number of lines of text and is readonly.
+    Text may only be appended and, if the number of lines of text is larger than the limit the
+    top lines of text are removed.
+    
+    Attributes:
+        maxlines - Maximum number of lines of text.
+        lines (readonly) maximum line count.
+    Methods:
+        append - Add a new line of text.
+        clear  - Clears the text completely.
+        
+        
+    Base class::
+        QTextEdit
+    Internals Note:
+    """
+    DEFAULT_MAX_LINES=1000
+    def __init__(self, *args):
+        super().__init__(*args)
+        self._maxlines = self.DEFAULT_MAX_LINES
+        
+        self._lines = []                 # The text.
+        
+        self.setReadOnly(True)
+        
+    def append(self, line):
+        self._lines.append(line)
+        if len(self._lines) > self._maxlines:
+            self._lines.pop(0)
+        
+        self.setPlainText('\n'.join(self._lines))
+    
+    def maxlines(self):
+        return self._maxlines
+    def setMaxLines(self, n):
+        self._maxlines = n
+        if len(self._lines) > n:
+            num_to_delete = len(self._lines) - n
+            del self._lines[0:num_to_delete] #     Kill the first few lines.
+            self.setPlainText('\n'.join(self._lines))   # Update the widget.
+    def clear(self):
+        self._lines = []
+        self.setPlainText('\n'.join(self.lines))                
+        
+        
+class LogCollection:
+    """Not really a widget, this  forms a collection of LogWindows that live in a tabbed widget parent.
+    Log messages are issued to sources.  Each source gets a LogWindow which, if necessary, is created dynamically.
+    The parent tab widget has tabs that are named after the data sources.
+    For now, the numbger of lines in each log window is the same.
+    
+    Methods:
+        log - Logs a message to a data source.  The message may be multiline in which case it is parsed up into
+            lines and each line appended to the approriate window.  If the source is new a new log is created and
+            added as a tab to the parent.
+        clear - Clears a data source or all.  Note that if needed a new data source is created.
+        maxlines - Returns the current maximum line count.
+        setMaxlines - sets the maximum line count.
+        
+    """
+    def __init__(self, tabwidget):
+        """Construction
+
+        Args:
+            tabwidget (QTabWidget): The tab widget in which the log widgets  are put.
+        """
+        self._tabs = tabwidget
+        self._maxlines = LogWindow.DEFAULT_MAX_LINES     # Usee the default for everyone to start.
+        self._logs = dict()                              # Dict of source:widget
+    
+    def log(self, source, message):
+        """Add a log message from a source.
+
+        Args:
+            source (str): Identifies the data source.
+            message (str): Possibly multiline message to add.
+        """
+        src = self._getSource(source)
+        lines = message.split('\n')
+        for line in lines:
+            src.append(line)
+    
+    def clear(self):
+        """clears all widgets:
+        """
+        
+        for w in self._logs.values():
+            w.clear()
+    
+    def maxlines(self):
+        """
+
+        Returns:
+            int: MNaximum number of text lines retaineed by the logs.
+        """
+        return self._maxlines
+    def setMaxlines(self, n):
+        """Set the maximum lines.
+
+        Args:
+            n (int): New max line count.
+        """
+        self._maxlines = n
+        for w in self._logs.values():
+            w.setMaxlines(n)
+            
+    # --- Private methods:
+    
+    def _getSource(self, src):
+        if not src in self._logs.keys():
+            
+            # Have to make a new one:
+            
+            log = LogWindow(self._tabs)
+            self._tabs.addTab(log, src)
+            self._logs[src] = log
+            
+        return self._logs[src]
+    
+#----------------------------------------------------------------------------------------------------------
+#
+# Test code.
+
     
 if __name__ == "__main__":
     test_widget = None
@@ -623,19 +757,41 @@ if __name__ == "__main__":
             print('unrecognized state', name)
 
         test_widget.setStateName(name)
+        
+    def append_text():
+        log.append(text.text())
+    
+    def logmsg():
+        source = src.text()
+        msg    = line.text()
+        logs.log(source, msg)
     
     from PyQt5.QtWidgets import (QApplication, QMainWindow)
     import sys
     app = QApplication(sys.argv)
     main_window = QMainWindow()
-    test_widget = RunControls()
+    test_widget = QWidget()
+    layout = QVBoxLayout()
     
-    test_widget.updateTitle.connect(updateTitle)
-    test_widget.updateRunNumber.connect(updateRunNumber)
-    test_widget.incRun.connect(incrun)
-    test_widget.transition.connect(transition)
-
+    tabs = QTabWidget()
+    tabs.setMinimumHeight(500)
+    tabs.setMinimumWidth(80*8)
+    logs = LogCollection(tabs)
+    layout.addWidget(tabs)
+    src = QLineEdit(test_widget)
+    layout.addWidget(src)
+    line = QLineEdit(test_widget)
+    layout.addWidget(line)
+    add = QPushButton('Log')
+    layout.addWidget(add)
+    
+    add.clicked.connect(logmsg)
+    
+    test_widget.setLayout(layout)
+    
+    
     main_window.setCentralWidget(test_widget)
+    
 
     main_window.show()
     app.exec()
