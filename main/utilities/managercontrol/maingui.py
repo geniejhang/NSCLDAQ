@@ -726,6 +726,42 @@ class LogCollection:
         return self._logs[src]
     
 #----------------------------------------------------------------------------------------------------------
+#  Tying this all together:
+
+class MainGui(QWidget):
+    """ This is the main GUI widget for the managed experiment run control system.  It has a 
+        RunControls widget at the top and a tabbed widget that's managed (mostly) by a log collection at the
+        bottom.  Rather than doing the painful explicit delegation, we provide accessors for the components:
+        
+        controls - returns the RunControls widget.
+        tabs     - Returns the tabbed widget.
+        log      - Returns the log manager.
+        
+        This should provide all the support we need (e.g. we can put a program status widget into tabs)
+        
+    Inherits from:
+        QWidget
+    """
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        
+        layout = QVBoxLayout()
+        
+        self._controls = RunControls(self)
+        layout.addWidget(self._controls)
+        
+        self._tabs = QTabWidget(self)
+        self._tabs.setMinimumHeight(50*8)
+        layout.addWidget(self._tabs)
+        
+        self._log = LogCollection(self._tabs)
+        
+        self.setLayout(layout)
+    
+    
+    
+#----------------------------------------------------------------------------------------------------------
 #
 # Test code.
 
@@ -770,25 +806,7 @@ if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
     main_window = QMainWindow()
-    test_widget = QWidget()
-    layout = QVBoxLayout()
-    
-    tabs = QTabWidget()
-    tabs.setMinimumHeight(500)
-    tabs.setMinimumWidth(80*8)
-    logs = LogCollection(tabs)
-    layout.addWidget(tabs)
-    src = QLineEdit(test_widget)
-    layout.addWidget(src)
-    line = QLineEdit(test_widget)
-    layout.addWidget(line)
-    add = QPushButton('Log')
-    layout.addWidget(add)
-    
-    add.clicked.connect(logmsg)
-    
-    test_widget.setLayout(layout)
-    
+    test_widget = MainGui()
     
     main_window.setCentralWidget(test_widget)
     
