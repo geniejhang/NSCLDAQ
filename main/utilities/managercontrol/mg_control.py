@@ -5,6 +5,7 @@
 
 from nscldaq.manager_control.config import Configuration
 from nscldaq.manager_control.cfgwizard import ConfigWizard
+from nscldaq.manager_control.maingui import MainGui
 from PyQt5.QtWidgets import (
     QApplication, QLabel, QLineEdit,
     QMainWindow
@@ -45,6 +46,10 @@ config = get_configuration()
 # Now the GUI:
 
 main_window = QMainWindow()
+
+gui = MainGui()
+main_window.setCentralWidget(gui)
+
 main_window.show()
 
 app.exec()
