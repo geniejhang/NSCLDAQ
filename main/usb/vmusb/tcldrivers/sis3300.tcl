@@ -21,7 +21,7 @@ exec tclsh "$0" ${1+"$@"}
 
 
 ##
-# @file sis330x.tcl
+# @file sis3300.tcl
 # @brief  generic driver for the sis 3300.  The sis330xDriver.tcl file seems to
 #         only work properly for HIRA applications.
 # @author Ron Fox <fox@nscl.msu.edu>
