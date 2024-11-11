@@ -142,6 +142,18 @@ def reqTransition(newstate):
     except Exception as e:
         gui.log().log('Aggregate output', str(e))
     
+    
+def load_initial_controls(w):
+    # Load the initial run, title, actuals of those from the KVStore:
+    
+    updateControls()   # Gest the actuals and as a bonus the state.
+    client = KVStore(config.host(), config.user(), config.rest_service())
+    title = client.title()
+    run = client.run()
+    
+    w.setTitle(title)
+    w.setRunNumber(run)
+    
 #---------------------------------- Entry point -----------------------
 #
 
@@ -177,6 +189,7 @@ Updater.timeout.connect(updateLogWindows)
 
 Updater.timeout.connect(updateControls)
 controls_widget = gui.controls()
+load_initial_controls(controls_widget)
 controls_widget.updateTitle.connect(setTitle)
 controls_widget.updateRunNumber.connect(setRun)
 controls_widget.incRun.connect(incRun)
