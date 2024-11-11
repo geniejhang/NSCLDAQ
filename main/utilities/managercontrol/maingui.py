@@ -723,7 +723,16 @@ class LogCollection:
             self._tabs.addTab(log, src)
             self._logs[src] = log
             
-        return self._logs[src]
+        # We're going to allow for movable tabs so find the right tab:
+        
+        for index in range(self._tabs.count()):
+            if src == self._tabs.tabText(index):
+                # Matches so give the widget:
+                
+                return self._tabs.widget(index)
+        #This is a bug:
+        
+        raise AssertionError("Could not find log tab even after creating!")
     
 #----------------------------------------------------------------------------------------------------------
 #  Tying this all together:
@@ -753,6 +762,7 @@ class MainGui(QWidget):
         
         self._tabs = QTabWidget(self)
         self._tabs.setMinimumHeight(50*8)
+        self._tabs.setMovable(True)
         layout.addWidget(self._tabs)
         
         self._log = LogCollection(self._tabs)
