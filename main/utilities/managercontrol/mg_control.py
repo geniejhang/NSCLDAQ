@@ -7,7 +7,7 @@ from nscldaq.manager_control.config import Configuration
 from nscldaq.manager_control.programlist import ProgramView
 from nscldaq.manager_control.cfgwizard import ConfigWizard
 from nscldaq.manager_control.maingui import MainGui
-from nscldaq.manager_client import Programs, OutputMonitor
+from nscldaq.manager_client import Programs, OutputMonitor, KVStore, State
 from PyQt5.QtWidgets import (
     QApplication, QLabel, QLineEdit,
     QMainWindow
@@ -83,7 +83,7 @@ def updateLogWindows():
         # Put it all in aggregated output:
         
         if len(full_output) > 0:
-            gui.log().log('Aggregate output', full_output)
+            gui.log().log('Aggregate output', str(datetime.datetime.now()) + " : " + full_output)
             
             # Now log to the programs  tab:  Each line that has a ':' is split into 
             # program: stuff
@@ -98,7 +98,50 @@ def updateLogWindows():
                         final_line = str(datetime.datetime.now()) + ' : ' + log_line
                         gui.log().log(program, final_line)
                     
+#----------------------------------------------------------------------------------------------
+#   Slots to handle the signals from the controls par tof the widget:
 
+def updateControls():
+    # Timer handler to update the actuals in the controls widget:
+    
+    client = KVStore(config.host(), config.user(), config.rest_service())
+    controls_widget.setActualTitle(client.title())
+    controls_widget.setActualRunNumber(client.run())
+    
+    state_client = State(config.host(), config.user(), config.rest_service())
+    state = state_client.status()
+    controls_widget.setStateName(state)
+    if state == 'BOOT':
+        controls_widget.boot()
+    elif state == 'SHUTDOWN':
+        controls_widget.shutdown
+    elif state == 'HWINIT':
+        controls_widget.hwinit()
+    elif state == 'BEGIN':
+        controls_widget.begin()
+    elif state == 'END':
+        controls_widget.end()
+
+def setTitle(newTitle):
+    client = KVStore(config.host(), config.user(), config.rest_service())
+    client.setTitle(newTitle)
+
+def setRun(newRun):
+    client= KVStore(config.host(), config.user(), config.rest_service())
+    client.setRun(newRun)
+    
+def incRun(oldRun):
+    new = oldRun+1
+    setRun(new)
+    controls_widget.setRunNumber(new)
+    
+def reqTransition(newstate):
+    client = State(config.host(), config.user(), config.rest_service())
+    try:
+        client.transition(newstate)
+    except Exception as e:
+        gui.log().log('Aggregate output', str(e))
+    
 #---------------------------------- Entry point -----------------------
 #
 
@@ -130,7 +173,16 @@ Updater.timeout.connect(updateProgramsTab)
 outputMonitor = OutputMonitor(config.host(), config.user(), config.monitor_service())
 Updater.timeout.connect(updateLogWindows)
 
+# set up the run info connections to th e gui: 
 
+Updater.timeout.connect(updateControls)
+controls_widget = gui.controls()
+controls_widget.updateTitle.connect(setTitle)
+controls_widget.updateRunNumber.connect(setRun)
+controls_widget.incRun.connect(incRun)
+controls_widget.transition.connect(reqTransition)
+
+# Show the main window and run the app.
 
 main_window.setCentralWidget(gui)
 
