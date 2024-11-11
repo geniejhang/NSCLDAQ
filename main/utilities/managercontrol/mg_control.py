@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QTimer
 import sys
 import os
+import datetime
 
 
 CONFIGURATION_FILE="mg_guiconfig.toml"
@@ -82,8 +83,21 @@ def updateLogWindows():
         # Put it all in aggregated output:
         
         if len(full_output) > 0:
-            
             gui.log().log('Aggregate output', full_output)
+            
+            # Now log to the programs  tab:  Each line that has a ':' is split into 
+            # program: stuff
+            # and the stuff is logged to program.
+            
+            for line in full_output.split('\n'):
+                if ':' in line:
+                    broken_line = line.split(':')
+                    program = broken_line.pop(0)
+                    if program not in ["Completing transition", 'Stacktrace'] and program[0] != ' ':
+                        log_line = ':'.join(broken_line)
+                        final_line = str(datetime.datetime.now()) + ' : ' + log_line
+                        gui.log().log(program, final_line)
+                    
 
 #---------------------------------- Entry point -----------------------
 #
