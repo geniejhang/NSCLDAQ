@@ -675,6 +675,7 @@ class LogCollection:
         self._tabs = tabwidget
         self._maxlines = LogWindow.DEFAULT_MAX_LINES     # Usee the default for everyone to start.
         self._logs = dict()                              # Dict of source:widget
+        self._tabs.tabCloseRequested.connect(self._closeTab)
     
     def log(self, source, message):
         """Add a log message from a source.
@@ -712,6 +713,20 @@ class LogCollection:
         for w in self._logs.values():
             w.setMaxlines(n)
             
+    # ---  Slots
+    
+    def _closeTab(self, index):
+        source = self._tabs.tabText(index)
+        if source in self._logs.keys():
+            self._tabs.removeTab(index)
+            
+            # Just in case
+            
+            try:
+                del self._logs[source]
+            except:
+                pass
+        
     # --- Private methods:
     
     def _getSource(self, src):
@@ -763,6 +778,7 @@ class MainGui(QWidget):
         self._tabs = QTabWidget(self)
         self._tabs.setMinimumHeight(50*8)
         self._tabs.setMovable(True)
+        self._tabs.setTabsClosable(True)
         layout.addWidget(self._tabs)
         
         self._log = LogCollection(self._tabs)
