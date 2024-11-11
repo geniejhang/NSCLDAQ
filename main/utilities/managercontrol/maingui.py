@@ -432,7 +432,7 @@ class RunControls(QWidget):
     From RunInfoWidget:
         updateTitle(str) - Set title button was clicked.,
         updatetRunNumber(int) - Set the run number button was clicked.
-        incrRun(int)   - Increment run number was clicked Note:
+        incRun(int)   - Increment run number was clicked Note:
               slots for this _probably_ should get the run number fromt he
               config database, increment it set it back inboth run number and a tual run number.
         transition(str) - A transition is requested to the new named state.
