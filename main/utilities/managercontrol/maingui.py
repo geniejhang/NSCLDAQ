@@ -759,6 +759,13 @@ class MainGui(QWidget):
         
         self.setLayout(layout)
     
+    def controls(self):
+        return self._controls
+    def tabs(self):
+        return self._tabs
+    def log(self):
+        return self._log
+        
     
     
 #----------------------------------------------------------------------------------------------------------
