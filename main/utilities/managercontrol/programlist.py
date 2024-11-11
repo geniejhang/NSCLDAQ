@@ -42,6 +42,14 @@ class ProgramModel(QStandardItemModel):
         to the constructor of QStandardItemModel.
         """
         super().__init__(*args)
+        self._filter = None
+    def setFilter(self, programs):
+        """Provide the list of programs to show.  None means all are shown.
+
+        Args:
+            programs (list): List of programs to show.
+        """
+        self._filter = programs
         
     def update(self, data):
         """Update the model data from data returned from Programs.status().  Note, since the table view 
@@ -51,18 +59,19 @@ class ProgramModel(QStandardItemModel):
         Args:
             data (dict): Data from Program.status() we only care about the data in the 'programs' key.
         """
-        
+        self.clear()
         programs = data['programs']
         for program in programs: 
             # Build the row:
             
-            name = QStandardItem(program['name'])
-            host = QStandardItem(program['host'])
-            container = QStandardItem(program['container'])
-            type = QStandardItem(program['type'])
-            active = QStandardItem('X' if program['active'] else ' ')
-            
-            self.appendRow([name, host, container, type, active])            
+            if self._filter is None or program['name'] in self._filter:
+                name = QStandardItem(program['name'])
+                host = QStandardItem(program['host'])
+                container = QStandardItem(program['container'])
+                type = QStandardItem(program['type'])
+                active = QStandardItem('X' if program['active'] else ' ')
+                
+                self.appendRow([name, host, container, type, active])            
     
     def headerData(self, col, orient, role):
         # Needed to provide headers to the view.
@@ -108,6 +117,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     mw = QMainWindow()
     table = ProgramView()
+    table.model().setFilter(['exp1-testing', 'exp2-testing', 'exp3-testing'])
     table.model().update(data)
     mw.setCentralWidget(table)
     
