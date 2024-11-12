@@ -58,6 +58,10 @@ class ProgramModel(QStandardItemModel):
 
         Args:
             data (dict): Data from Program.status() we only care about the data in the 'programs' key.
+        
+        TODO: 
+            Edit in place because what clear/install does is undo any column width changes the user die
+             to make things readable.
         """
         self.clear()
         programs = data['programs']
