@@ -156,14 +156,30 @@ class LoggerTable(QTableWidget):
         check.stateChanged.connect(self._checkToggled)
         
     def _checkToggled(self, state):
-        pass
+        # a checkbox was toggled... but which one??
+        # We need to find it in the table and send the associated 
+        # destinatino on to the toggle we'll emit.
         
+        widget = self.sender()
+        for row in range(self.rowCount()) :
+            if widget == self.cellWidget(row, 4):
+                destination = self.item(row, 1).text()
+                self.toggle.emit([state == Qt.Checked, destination])
+                return
+        
+        # No matching widget...for now lets mumble that.
         
         
 
 # Test code:
 
+
 if __name__ == "__main__":
+    def changeEnable(info):
+        newstate = info[0]
+        destination = info[1]
+        print('enable' if newstate else 'disable', destination)
+
     from PyQt5.QtWidgets import (QApplication, QMainWindow)
     import sys
     app = QApplication(sys.argv)
@@ -171,10 +187,10 @@ if __name__ == "__main__":
     
     widget = LoggerTable()
     main.setCentralWidget(widget)
-    
+    widget.toggle.connect(changeEnable)
     widget.update([ 
         {'ring': 'tcp://localhost/ron', 'destination': '/home/ron/events/complete', 'critical': 1, 'partial': 0, 'enabled': 0},
-        {'ring': 'tcp://localhost/fox', 'destination': '/home/ron/events/complete', 'critical': 0, 'partial': 1, 'enabled': 1}
+        {'ring': 'tcp://localhost/fox', 'destination': '/home/ron/events/partial', 'critical': 0, 'partial': 1, 'enabled': 1}
     ])
     
     main.show()
