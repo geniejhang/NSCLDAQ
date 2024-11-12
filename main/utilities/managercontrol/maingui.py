@@ -644,7 +644,7 @@ class LogWindow(QTextEdit):
         self._maxlines = n
         if len(self._lines) > n:
             num_to_delete = len(self._lines) - n
-            del self._lines[0:num_to_delete] #     Kill the first few lines.
+            del self._lines[0:num_to_delete]            # Kill the first few lines.
             self.setPlainText('\n'.join(self._lines))   # Update the widget.
     def clear(self):
         self._lines = []
