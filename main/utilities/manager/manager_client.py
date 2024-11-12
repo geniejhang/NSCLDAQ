@@ -326,6 +326,7 @@ class Logger(_Client):
             the following keys:
             
             id - Primary key of the logger.
+            ring - the data source ring buffer.
             daqroot - The NSCLDAQ root that will be use to find 'eventlog'
             host  - Host the logger runs in.
             partial - nonzero if the logger is a partial logger otherwise 0.
