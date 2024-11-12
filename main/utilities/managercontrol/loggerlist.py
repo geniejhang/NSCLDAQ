@@ -51,6 +51,7 @@ class LoggerTable(QTableWidget):
             
         )
     def update(self, listing):
+        print('update')
         """Update the table in place.  The algorithm is pretty simple:
            - For each row in the table
              *  Find the listing by destination - if not found kill that row.
@@ -65,11 +66,13 @@ class LoggerTable(QTableWidget):
         delete_rows = []
         delete_defs = []
         for row in range(self.rowCount()):
+            
             dest = self.item(row, 1).text()
             (index, definition) = self._findDest(dest, listing) 
             if index is None:
                 delete_rows.append(row)
             else:
+                print('update', row, definition)
                 self._updateRow(row, definition)
                 delete_defs.append(index)
         
@@ -78,13 +81,16 @@ class LoggerTable(QTableWidget):
         
         delete_rows.sort(reverse=True)
         delete_defs.sort(reverse=True)
+        print(delete_rows, delete_defs)
         
         for row in delete_rows:
             self.removeRow(row)
         
         for index in delete_defs:
             listing.pop(index)
-            
+        print('after delete', listing)
+        
+
         # Add rows for any remaining definitions:
         
         for definition in listing:
@@ -98,7 +104,8 @@ class LoggerTable(QTableWidget):
         # (None, None) if not found.
         
         for index, definition in enumerate(listing):
-            if definition['destination'] == listing:
+            if definition['destination'] == dest:
+                print("Found ", dest, index)
                 return (index, definition)
         return (None, None)      # stub - not found.)
     
@@ -112,21 +119,23 @@ class LoggerTable(QTableWidget):
         #  Value should change.
         
         # Data source:
-        
+        print("update row", row)
         sourceItem = self.item(row, 0)
         if sourceItem.text() != definition['ring']:
             sourceItem.setText(definition['ring'])
         
         # Critical flag:
         
-        critical_text = 'X' if definition['critial'] else '' 
+        critical_text = 'X' if definition['critical'] == 1 else '' 
         criticalItem = self.item(row, 2)
         if critical_text != criticalItem.text():
             criticalItem.setText(critical_text)
            
         # Partial flag:
         
-        partial_text = 'X' if definition['partial'] else '' 
+
+        partial_text = 'X' if definition['partial'] == 1 else '' 
+        print(partial_text, definition['destination'], definition['partial'])
         partialItem = self.item(row, 3)
         if partial_text != partialItem.text():
             partialItem.setText(partial_text)
@@ -146,8 +155,8 @@ class LoggerTable(QTableWidget):
         
         self.setItem(new_row, 0, QTableWidgetItem(definition['ring']))
         self.setItem(new_row, 1, QTableWidgetItem(definition['destination']))
-        self.setItem(new_row, 2, QTableWidgetItem('X' if definition['critical'] else ''))
-        self.setItem(new_row, 3, QTableWidgetItem('X' if definition['enabled'] else ''))
+        self.setItem(new_row, 2, QTableWidgetItem('X' if definition['critical'] == 1 else ''))
+        self.setItem(new_row, 3, QTableWidgetItem('X' if definition['partial'] == 1 else ''))
         check = QCheckBox(self)
         self.setCellWidget(new_row, 4, check)
         enabled = definition['enabled'] == 1 
@@ -169,25 +178,80 @@ class LoggerTable(QTableWidget):
         
         # No matching widget...for now lets mumble that.
         
+ 
+class LoggerManager(QWidget):
+    """
+        Just a logger table with a button at the bottom to request
+        an update.
         
+        Methods:
+            update - to update the table from a logger listing.
+        Signals:
+            toggle(list) - relays the toggle signal from the table.
+            requpdate       - Update buttonclicked.
+    """
+    toggle = pyqtSignal(list)
+    requpdate = pyqtSignal()
+    
+    def __init__(self, *args):
+        """Constructor.
+        Args:
+            args - passed to the base class initializer.
+            
+            
+        """
+        super().__init__(*args)
+        layout = QVBoxLayout()
+        
+        self._table = LoggerTable(self)
+        layout.addWidget(self._table)
+        
+        self._update = QPushButton('Update', self)
+        layout.addWidget(self._update)
+        
+        self.setLayout(layout)
+    
+        # Hook the signals:
+        
+        self._table.toggle.connect(self.toggle)
+        self._update.clicked.connect(self.requpdate)
+    
+    def update(self, definitions):
+        print('Definitions', definitions)
+        self._table.update(definitions)
 
 # Test code:
 
 
 if __name__ == "__main__":
+    from PyQt5.QtWidgets import (QApplication, QMainWindow)
+    from nscldaq.manager_client import Logger 
+    import sys
+    
     def changeEnable(info):
         newstate = info[0]
         destination = info[1]
         print('enable' if newstate else 'disable', destination)
+        client = Logger('localhost')
+        if newstate:
+            client.enable(destination)
+        else:
+            client.disable(destination)
+            
+        updater()
 
-    from PyQt5.QtWidgets import (QApplication, QMainWindow)
-    import sys
+    def updater():
+        print('clikced')
+        client = Logger('localhost')
+        widget.update(client.list())
+    
     app = QApplication(sys.argv)
     main = QMainWindow()
     
-    widget = LoggerTable()
+    widget = LoggerManager()
     main.setCentralWidget(widget)
     widget.toggle.connect(changeEnable)
+    widget.requpdate.connect(updater)
     widget.update([ 
         {'ring': 'tcp://localhost/ron', 'destination': '/home/ron/events/complete', 'critical': 1, 'partial': 0, 'enabled': 0},
         {'ring': 'tcp://localhost/fox', 'destination': '/home/ron/events/partial', 'critical': 0, 'partial': 1, 'enabled': 1}
