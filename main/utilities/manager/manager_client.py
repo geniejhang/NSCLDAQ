@@ -348,7 +348,7 @@ class Logger(_Client):
         """
         
         uri  = self._create_uri('/Loggers/record')
-        parameters = {'user': _getlogin(), 'state': state}
+        parameters = {'user': _getlogin(), 'state': 1 if state else 0}
         self._post(uri, parameters)
     
     def isRecording(self):
