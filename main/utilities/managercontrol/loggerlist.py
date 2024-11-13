@@ -50,8 +50,8 @@ class LoggerTable(QTableWidget):
         ]
             
         )
-    def update(self, listing):
-        print('update')
+    def updateData(self, listing):
+    
         """Update the table in place.  The algorithm is pretty simple:
            - For each row in the table
              *  Find the listing by destination - if not found kill that row.
@@ -63,6 +63,7 @@ class LoggerTable(QTableWidget):
         Args:
             listing (_type_): _description_
         """
+        
         delete_rows = []
         delete_defs = []
         for row in range(self.rowCount()):
@@ -72,7 +73,6 @@ class LoggerTable(QTableWidget):
             if index is None:
                 delete_rows.append(row)
             else:
-                print('update', row, definition)
                 self._updateRow(row, definition)
                 delete_defs.append(index)
         
@@ -81,21 +81,16 @@ class LoggerTable(QTableWidget):
         
         delete_rows.sort(reverse=True)
         delete_defs.sort(reverse=True)
-        print(delete_rows, delete_defs)
-        
         for row in delete_rows:
             self.removeRow(row)
-        
         for index in delete_defs:
             listing.pop(index)
-        print('after delete', listing)
-        
 
         # Add rows for any remaining definitions:
         
         for definition in listing:
             self._addRow(definition)
-                
+        return     
     # Private utility methods    
     
     def _findDest(self, dest, listing):
@@ -105,7 +100,6 @@ class LoggerTable(QTableWidget):
         
         for index, definition in enumerate(listing):
             if definition['destination'] == dest:
-                print("Found ", dest, index)
                 return (index, definition)
         return (None, None)      # stub - not found.)
     
@@ -119,7 +113,6 @@ class LoggerTable(QTableWidget):
         #  Value should change.
         
         # Data source:
-        print("update row", row)
         sourceItem = self.item(row, 0)
         if sourceItem.text() != definition['ring']:
             sourceItem.setText(definition['ring'])
@@ -135,7 +128,6 @@ class LoggerTable(QTableWidget):
         
 
         partial_text = 'X' if definition['partial'] == 1 else '' 
-        print(partial_text, definition['destination'], definition['partial'])
         partialItem = self.item(row, 3)
         if partial_text != partialItem.text():
             partialItem.setText(partial_text)
@@ -189,6 +181,8 @@ class LoggerManager(QWidget):
         Signals:
             toggle(list) - relays the toggle signal from the table.
             requpdate       - Update buttonclicked.
+            
+        This is really just for testing.
     """
     toggle = pyqtSignal(list)
     requpdate = pyqtSignal()
@@ -216,9 +210,8 @@ class LoggerManager(QWidget):
         self._table.toggle.connect(self.toggle)
         self._update.clicked.connect(self.requpdate)
     
-    def update(self, definitions):
-        print('Definitions', definitions)
-        self._table.update(definitions)
+    def updateData(self, definitions):
+        self._table.updateData(definitions)
 
 # Test code:
 
@@ -231,19 +224,19 @@ if __name__ == "__main__":
     def changeEnable(info):
         newstate = info[0]
         destination = info[1]
-        print('enable' if newstate else 'disable', destination)
         client = Logger('localhost')
         if newstate:
             client.enable(destination)
         else:
             client.disable(destination)
-            
-        updater()
+        
+        # Dont' update the table as this will be called for new toggles resulting
+        # in recursion in the update.   Hopefully the toggle state is correct anyway.    
+        #updater()
 
     def updater():
-        print('clikced')
         client = Logger('localhost')
-        widget.update(client.list())
+        widget.updateData(client.list())
     
     app = QApplication(sys.argv)
     main = QMainWindow()
@@ -252,7 +245,7 @@ if __name__ == "__main__":
     main.setCentralWidget(widget)
     widget.toggle.connect(changeEnable)
     widget.requpdate.connect(updater)
-    widget.update([ 
+    widget.updateData([ 
         {'ring': 'tcp://localhost/ron', 'destination': '/home/ron/events/complete', 'critical': 1, 'partial': 0, 'enabled': 0},
         {'ring': 'tcp://localhost/fox', 'destination': '/home/ron/events/partial', 'critical': 0, 'partial': 1, 'enabled': 1}
     ])
