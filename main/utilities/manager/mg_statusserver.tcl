@@ -97,6 +97,7 @@ proc _PrepareManagerShutdown {sock} {
 #                 /status - return current state
 #                 /allowed - return allowed next states.
 #                 /transition - post a request to transition.
+#                 /shutdown - shuts down the server.
 #                 /elapsed  -Elapsed run time to display.
 proc stateHandler {sock suffix} {
 
