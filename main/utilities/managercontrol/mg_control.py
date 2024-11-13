@@ -7,7 +7,8 @@ from nscldaq.manager_control.config import Configuration
 from nscldaq.manager_control.programlist import ProgramView
 from nscldaq.manager_control.cfgwizard import ConfigWizard
 from nscldaq.manager_control.maingui import MainGui
-from nscldaq.manager_client import Programs, OutputMonitor, KVStore, State
+from nscldaq.manager_control.loggerlist import LoggerTable
+from nscldaq.manager_client import Programs, OutputMonitor, KVStore, State, Logger
 from PyQt5.QtWidgets import (
     QApplication, QLabel, QLineEdit,
     QMainWindow
@@ -154,6 +155,27 @@ def load_initial_controls(w):
     w.setTitle(title)
     w.setRunNumber(run)
     
+    
+#---------------------------------------------------------------------
+#  Event log management:
+
+def UpdateLoggers():
+    # Called periodicaly to update loggers:
+    
+    client = Logger(config.host(), config.user(), config.rest_service())
+    listing = client.list()
+    eventlogWidget.updateData(listing)
+                    
+def enableDisableLogger(info):
+    #  Handle toggles from the logger list checkbuttons.
+    # Change the state of the loggers to what's requested by the button:
+    state = info[0]
+    dest = info[1]
+    client = Logger(config.host(), config.user(), config.rest_service())
+    if state:
+        client.enable(dest)
+    else:
+        client.disable(dest)
 #---------------------------------- Entry point -----------------------
 #
 
@@ -185,15 +207,27 @@ Updater.timeout.connect(updateProgramsTab)
 outputMonitor = OutputMonitor(config.host(), config.user(), config.monitor_service())
 Updater.timeout.connect(updateLogWindows)
 
-# set up the run info connections to th e gui: 
+# set up the run info connections to the gui: 
 
-Updater.timeout.connect(updateControls)
 controls_widget = gui.controls()
 load_initial_controls(controls_widget)
 controls_widget.updateTitle.connect(setTitle)
 controls_widget.updateRunNumber.connect(setRun)
 controls_widget.incRun.connect(incRun)
 controls_widget.transition.connect(reqTransition)
+Updater.timeout.connect(updateControls)
+
+
+# Set up the event log manager window:
+
+eventlogWidget = LoggerTable(gui)
+gui.tabs().addTab(eventlogWidget, 'Loggers')
+
+# Hook in slots for updating the eventlog widget and
+# the toggle signal so we can change the enables of event loggers:
+
+Updater.timeout.connect(UpdateLoggers)
+eventlogWidget.toggle.connect(enableDisableLogger)
 
 # Show the main window and run the app.
 
