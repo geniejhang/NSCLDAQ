@@ -779,6 +779,7 @@ Makefile
     utilities/swtrigger/Makefile
     utilities/logbook/Makefile
     utilities/manager/Makefile
+    utilities/managercontrol/Makefile
     utilities/readoutREST/Makefile
     utilities/udpBroker/Makefile
 	utilities/ringdiagnostics/Makefile
