@@ -25,6 +25,14 @@ AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AX_CXX_COMPILE_STDCXX_11([noext])
 
+# Set parallel build for incorps:
+
+AC_ARG_WITH([incorp-build-cores],
+	AC_HELP_STRING([--with-incorp-build-cores=N], [Number of cores used to build incorporated packages (default=1)]),
+	[incorp_cores=$withval],
+	[incorp_cores=1])
+AC_MSG_NOTICE([Building incorporated packages with ${incorp_cores} cores])
+
 # Is git installed? Used to check incorp'd module versions to export to
 # VERSION in the install directory.
 
@@ -338,7 +346,7 @@ AC_CHECK_FILE([${srcdir}/libtcl/configure.ac],
 		[AC_MSG_NOTICE([Incorporating tcl++ for you])
 		${srcdir}/tcl++incorp])
 AC_MSG_NOTICE([Building and installing tcl++])
-(cd libtcl; ./configure --prefix=${prefix}; make clean install)
+(cd libtcl; ./configure --prefix=${prefix}; make clean && make -j ${incorp_cores} install)
 result=$?
 AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install tcl++ with result: ${result}]))
 LIBTCLPLUS_CFLAGS="-I${prefix}/include"
@@ -357,7 +365,7 @@ tcl_configdir="/usr/lib/$tcl_basename"
 tcl_incdir="/usr/include/$tcl_basename"
 
 (cd ${srcdir}/tclhttpd3.5.1; ./configure --prefix=${prefix}/share/tclhttpd --enable-gcc --with-tclinclude=$tcl_incdir --with-tcl=$tcl_configdir)
-(cd ${srcdir}/tclhttpd3.5.1; make all install)
+(cd ${srcdir}/tclhttpd3.5.1; make clean && make -j ${incorp_cores} install)
 
 # Epics
 #
@@ -405,7 +413,7 @@ AC_CHECK_FILE([${srcdir}/unifiedformat/CMakeLists.txt],
 rm -rf unifiedformat/build
 AS_MKDIR_P(unifiedformat/build)	
 AC_MSG_NOTICE([Building unified format])
-(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make clean install)
+(cd unifiedformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/unifiedformat; make clean; make -j ${incorp_cores} install)
 result=$?
 AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install unified format library with result: ${result}]))
 UFMT_CPPFLAGS="-I${prefix}/unifiedformat/include"
@@ -425,7 +433,7 @@ AC_CHECK_FILE([${srcdir}/ddasformat/CMakeLists.txt],
 rm -rf ddasformat/build
 AS_MKDIR_P(ddasformat/build)
 AC_MSG_NOTICE([Building DDAS format])
-(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make clean install)
+(cd ddasformat/build; cmake .. -DCMAKE_INSTALL_PREFIX=${prefix}/ddasformat; make clean; make -j ${incorp_cores} install)
 result=$?
 AS_VAR_IF([result], [0], [], AC_MSG_ERROR([Failed to build and install ddasformat with result: ${result}]))
 DDASFMT_CPPFLAGS="-I${prefix}/ddasformat/include"
