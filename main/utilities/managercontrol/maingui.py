@@ -15,12 +15,12 @@ Note that the tabbed notebook is dynamic.  new tabs are added each time there's 
 from PyQt5.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QWidget, 
     QPushButton, QCheckBox, QLineEdit, QLabel, QTabWidget, 
-    QTextEdit, QTableView
+    QTextEdit
     
 )
 from PyQt5.QtGui import ( QStandardItemModel, QStandardItem, QIntValidator)
 
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 
 #---------------------------------------------------------------------------------------------
 #
@@ -241,6 +241,10 @@ class RunControlWidget(QWidget):
            - Labeled 'Initialize'  if the state is BOOT
            - BEGIN if the state is HWINIT or END
            - END if the state is BEGIN
+        * A Checkbox that both shows the state of event logging and 
+          changes it.  Note that if the state is BEGIN, we disable that widget
+          as it should not be changed during the run (though changing it during the
+          run is harmless since it's only looked at during transtions to BEGIN)
            
 
     Parent class:
@@ -261,6 +265,7 @@ class RunControlWidget(QWidget):
     Signals:
         transition(str) - A transition is requested to the new named state.
            Note if the shtdown button is clicked transtion('SHUTDOWN') is emitteed.
+        logtoggle(int) - Logbutton toggled.
         
     """
     # Class storage:
@@ -292,6 +297,7 @@ class RunControlWidget(QWidget):
     _ShutdownDisabledStates = [SHUTDOWN,]
     
     transition = pyqtSignal(str)
+    logtoggle  = pyqtSignal(int)
     def __init__(self, *args):
         super().__init__(*args)
         
@@ -314,6 +320,11 @@ class RunControlWidget(QWidget):
         self._transitionreq  = QPushButton('BOOT', self)
         layout.addWidget(self._transitionreq)
         
+        # Event logging button:
+        
+        self._log = QCheckBox("Record", self)
+        layout.addWidget(self._log)
+        
         self._stateid = self.SHUTDOWN
         self._update_buttons()
         
@@ -323,6 +334,7 @@ class RunControlWidget(QWidget):
         
         self._reqshutdown.clicked.connect(self._signalShutdown)
         self._transitionreq.clicked.connect(self._signalChangeReq)
+        self._log.stateChanged.connect(self.logtoggle)
     
     # Attributes
     
@@ -366,7 +378,17 @@ class RunControlWidget(QWidget):
         """Transition to endid.
         """
         self._transition(self.END)
-    
+    def setLoggerState(self, state):
+        """Set the state of the logger checkbox:
+
+        Args:
+            state (bool): global logger state from e.g. Logger.isRecording
+        """
+        if state:
+            self._log.setCheckState(Qt.Checked)
+        else:
+            self._log.setCheckState(Qt.Unchecked)
+        
     # Signal relays:
     
     def _signalShutdown(self):
@@ -410,6 +432,13 @@ class RunControlWidget(QWidget):
         # Set the label on the transition button:
         
         self._transitionreq.setText(self._TransitionLabels[self._stateid])
+        
+        #  IF the state is BEGIN, then we must turn off the log checkbutton.
+        
+        if self._stateid == self.BEGIN:
+            self._log.setDisabled(True)
+        else:
+            self._log.setDisabled(False)
 
 class RunControls(QWidget):
     """Container widget for the RunInfoWidget and RunControlWidgets.  These are the top part of the

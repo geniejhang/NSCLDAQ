@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QApplication, QLabel, QLineEdit,
     QMainWindow
 )
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, Qt
 import sys
 import os
 import datetime
@@ -142,6 +142,18 @@ def reqTransition(newstate):
         client.transition(newstate)
     except Exception as e:
         gui.log().log('Aggregate output', str(e))
+    # If transitioning to END and logging is enabled, increment the run numbers:
+    #  Note everyone will see the actual run number change but 
+    #  the editbox only gets updated on the gui that asked for the state change.
+    
+    if newstate == 'END':
+        info = gui.controls().runInfo()
+        nextrun = info.actualRunNumber() + 1
+        info.setRunNumber(nextrun)
+        kvclient = KVStore(config.host(), config.user(), config.rest_service())
+        kvclient.setRun(nextrun)
+        
+    
     
     
 def load_initial_controls(w):
@@ -165,6 +177,7 @@ def UpdateLoggers():
     client = Logger(config.host(), config.user(), config.rest_service())
     listing = client.list()
     eventlogWidget.updateData(listing)
+    gui.controls().runControls().setLoggerState(client.isRecording())
                     
 def enableDisableLogger(info):
     #  Handle toggles from the logger list checkbuttons.
@@ -176,6 +189,15 @@ def enableDisableLogger(info):
         client.enable(dest)
     else:
         client.disable(dest)
+
+def eventlogToggle(state):
+    # Set the global event log state
+    client = Logger(config.host(), config.user(), config.rest_service())
+    if state == Qt.Checked:
+        client.record(True)
+    else:
+        client.record(False)
+    
 #---------------------------------- Entry point -----------------------
 #
 
@@ -228,6 +250,7 @@ gui.tabs().addTab(eventlogWidget, 'Loggers')
 
 Updater.timeout.connect(UpdateLoggers)
 eventlogWidget.toggle.connect(enableDisableLogger)
+gui.controls().runControls().logtoggle.connect(eventlogToggle)
 
 # Show the main window and run the app.
 
