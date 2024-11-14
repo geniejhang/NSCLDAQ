@@ -96,7 +96,11 @@ class _Client:
     def _post(self, uri, parameters):
         response = requests.post(uri, parameters)
         response.raise_for_status()
-        json = response.json()
+        try:
+            json = response.json()
+        except Exception as e:
+            print('failed to parse\n', response.content)
+            raise e
 
         if json['status'] != 'OK':
             raise RuntimeError(json['message'])
