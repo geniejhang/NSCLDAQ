@@ -444,7 +444,7 @@ proc eventlog::_writeLoggerScript {db def} {
     set fd [open $fname w]
     
     puts $fd "#!/bin/bash"
-    puts $fd ". $root/daqsetup.bash"
+    puts $fd ". $root/daqsetup.bash -f"
     puts $fd "export RECORD_DEST=$rawdest"
     puts $fd "export RECORD_SRC=$ring"
     puts $fd "export RECORD_PARTIAL=$partial"
