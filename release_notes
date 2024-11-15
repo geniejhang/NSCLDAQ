@@ -1,3 +1,11 @@
+== 12.1-004 ==
+*  Add a better GUi for the managed experiment environment.
+*  Fix client hang when sending a transition SHUTDOWN when already SHUTDOWN in managed experiment environment
+*  Fix error in managed experiment readout wizard the generated programs to set the title and run number did not specify the correct target program.
+*  Fix error in new manged gui - was not starting appropriate event loggers at begin run.
+*  Add configuration option to support tossing a -j to the makes for incorporated pacakges
+*  Adjust timestamp DDAS simulator CFD computations when the ns timestamp is exa tly betwween two ticks.
+* Put the correct barrier flags on the state change items in the DDAS Simulator.
 == 12.1-003 ==
 * Use DDASFormat 1.1-002, ddasfmt namespace for DDASHit, DDASHitUnpacker
 * Update QtScope fitting to use Poisson or Gaussian MLE
