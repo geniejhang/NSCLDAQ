@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QApplication, QLabel, QLineEdit,
     QMainWindow
 )
-from PyQt5.QtCore import QTimer, Qt
+from PyQt5.QtCore import QTimer, Qt, QThread
 import sys
 import os
 import datetime
@@ -139,6 +139,15 @@ def incRun(oldRun):
 def reqTransition(newstate):
     client = State(config.host(), config.user(), config.rest_service())
     try:
+        # If the new state is BEGIN, then we must start the loggers:
+        
+        if newstate == 'BEGIN':
+            lclient = Logger(config.host(), config.user(), config.rest_service())
+            lclient.start()
+            
+            QThread.sleep(1)     # maybe we don't need this?
+        
+        # Start the run.
         client.transition(newstate)
     except Exception as e:
         gui.log().log('Aggregate output', str(e))
