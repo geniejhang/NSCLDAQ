@@ -137,6 +137,7 @@ SKELDIR=@prefix@/skeletons/eventbuilder
 install-exec-hook:
 	$(mkinstalldirs) @bindir@
 	$(mkinstalldirs) @prefix@/TclLibs/EventBuilder
+	$(mkinstalldirs) @prefix@/TclLibs/EventBuilderlib
 	$(mkinstalldirs) @prefix@/TclLibs/EventBuilder/REST
 	for f in $(TCL_PROGFILES); do \
 		@INSTALL_PROGRAM@ @srcdir@/$$f @bindir@/`basename $$f .tcl` \
