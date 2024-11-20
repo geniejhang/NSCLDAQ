@@ -44,8 +44,6 @@ class ChanDSPWidget(QWidget):
         Display current DSP in GUI.
     copy_chan_dsp(mgr, mod) 
         Copy DSP from channel idx in GUI.
-    copy_mod_dsp(mgr, mod) 
-        Display copy_dsp in GUI.
     """
     
     def __init__(
@@ -115,10 +113,10 @@ class ChanDSPWidget(QWidget):
         
         Parameters
         ----------
+        mgr : DSPManager
+            DSP manager for calls to XIA API.
         mod : int
             Currently selected module tab index.
-        tab : QWidget
-            Currently selected DSP tab.
         """        
         self.display_dsp(mgr, mod)
 
@@ -127,10 +125,10 @@ class ChanDSPWidget(QWidget):
 
         Parameters
         ----------
+        mgr : DSPManager
+            DSP manager for calls to XIA API.
         mod : int
             Currently selected module tab index.
-        tab : QWidget
-            Currently selected DSP tab.
         """        
         for i in range(self.nchannels):
             for col, name in enumerate(self.param_names, 1):
@@ -145,10 +143,10 @@ class ChanDSPWidget(QWidget):
 
         Parameters
         ----------
+        mgr : DSPManager
+            DSP manager for calls to XIA API.
         mod : int
             Currently selected module tab index.
-        tab : QWidget
-            Currently selected DSP tab.
         """        
         for i in range(self.nchannels):
             for col, name in enumerate(self.param_names, 1):

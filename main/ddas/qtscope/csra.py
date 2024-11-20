@@ -42,8 +42,6 @@ class CSRA(QWidget):
         Update DSP from GUI.
     display_dsp(mgr, mod)
         Display current DSP in GUI.
-    copy_mod_dsp(mgr, mod)
-        Copy another module's DSP to this module's GUI.
     copy_chan_dsp(idx)
         Copy DSP from channel idx in GUI.
     """

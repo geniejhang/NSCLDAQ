@@ -49,8 +49,6 @@ class AnalogSignal(QWidget):
         Update DSP from GUI.
     display_dsp(mgr, mod): 
         Display current DSP in GUI.
-    copy_mod_dsp(mgr, mod): 
-        Display copy_dsp in GUI.
     copy_chan_dsp(mgr, mod): 
         Copy DSP from channel idx in GUI.
     """

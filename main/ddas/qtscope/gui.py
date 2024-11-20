@@ -7,7 +7,7 @@ import copy
 from time import sleep
 import logging
 
-from PyQt5.QtCore import Qt, QThreadPool
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import (
     QMainWindow, QVBoxLayout, QWidget, QApplication, QFileDialog
@@ -15,14 +15,12 @@ from PyQt5.QtWidgets import (
 
 from pixie_utilities import SystemUtilities, RunUtilities, TraceUtilities
 from dsp_manager import DSPManager
-
-from plot import Plot 
+from plot import Plot
+from thread_pool_manager import ThreadPoolManager
 from chan_dsp_gui import ChanDSPGUI 
 from mod_dsp_gui import ModDSPGUI
-from worker import Worker
 from run_type import RunType
 from trace_analyzer import TraceAnalyzer
-
 import colors
 
 # @todo Would like to run the system as per custom DSP parameter formatted
@@ -48,8 +46,8 @@ class MainWindow(QMainWindow):
         QtScope Logger object.
     xia_api_version : int 
         XIA API version QtScope was compiled against.
-    pool : QThreadPool
-        Global thread pool.
+    pool_mgr : ThreadPoolManager
+        Global thread pool manager. Manages worker threads from global pool.
     dsp_mgr : DSPManager
         Manager for internal DSP and interface for XIA API read/write 
         operations.
@@ -115,7 +113,7 @@ class MainWindow(QMainWindow):
         self.setMouseTracking(True)
 
         # Get the Logger instance:
-
+        
         self.logger = logging.getLogger("qtscope_logger")
 
         # Set XIA API version. This is needed to support XIA API 3 JSON
@@ -128,24 +126,20 @@ class MainWindow(QMainWindow):
         
         # Access to global thread pool for this applicaition:
         
-        self.pool = QThreadPool.globalInstance()
+        self.pool_mgr = ThreadPoolManager()
             
         # XIA API managers:
-
+        
         self.dsp_mgr = DSPManager()
         self.sys_utils = SystemUtilities()
         self.trace_utils = TraceUtilities()
         self.run_utils = RunUtilities()
         
         # Configure managers:
-
+        
         if offline:
-            # Boot the modules in offline mode to test the API calls.
-            # Configure trace and run control to use generated data so
-            # that reading traces and histograms actually updates the
-            # the plot(s).
-            self.sys_utils.boot_offline(True)
-            self.trace_utils.use_generator_data(True)
+            self.sys_utils.boot_offline(True)         # No hardware.
+            self.trace_utils.use_generator_data(True) # Use synthetic data.
             self.run_utils.use_generator_data(True)
             
         # DSP and trace analysis:
@@ -159,8 +153,12 @@ class MainWindow(QMainWindow):
 
         # Create managers for manipulating DSP settings:
         
-        self.mod_gui = ModDSPGUI(mod_dsp_factory, toolbar_factory)
-        self.chan_gui = ChanDSPGUI(chan_dsp_factory, toolbar_factory)
+        self.mod_gui = ModDSPGUI(
+            mod_dsp_factory, toolbar_factory, self.pool_mgr
+        )
+        self.chan_gui = ChanDSPGUI(
+            chan_dsp_factory, toolbar_factory, self.pool_mgr
+        )
 
         ##
         # Main layout GUI
@@ -168,7 +166,7 @@ class MainWindow(QMainWindow):
 
         self.sys_toolbar = toolbar_factory.create("sys")
         self.acq_toolbar = toolbar_factory.create("acq")
-        self.mplplot = Plot(toolbar_factory, fit_factory)
+        self.mplplot = Plot(self.dsp_mgr, toolbar_factory, fit_factory)
 
         # Set initial run state information from the manager and toolbar:
         
@@ -176,7 +174,7 @@ class MainWindow(QMainWindow):
         self.active_type = RunType.INACTIVE
 
         # Define the main layout and add widgets:
-
+        
         self.addToolBar(self.sys_toolbar)
         self.addToolBarBreak()
         self.addToolBar(self.acq_toolbar)
@@ -238,34 +236,43 @@ class MainWindow(QMainWindow):
         functions. If the boot is successful, configure the DSP and DSP 
         GUIs. Only attempt to boot if the system has not been booted already.
         """        
-        # Access thread from global thread pool to boot:        
+        # Access thread from global thread pool to boot:
+        
         if self.sys_utils.get_boot_status() == False:
-            worker = Worker(self.sys_utils.boot)
-            worker.signals.running.connect(self.sys_toolbar.disable)
-            worker.signals.running.connect(self.acq_toolbar.disable)
-            worker.signals.finished.connect(self._on_boot)
-            self.pool.start(worker)
-            
+            self.pool_mgr.start_thread(
+                fcn=self.sys_utils.boot,
+                running=[self.sys_toolbar.disable, self.acq_toolbar.disable],
+                finished=[self._on_boot]
+            )
+
+    # @todo (ASC 10/31/23): Module MSPS information should be easily accessible
+    # to other parts of the program, most notably the trace analyzer to set the
+    # CFD values.
     def _on_boot(self):
         """Configure the system following a successful boot."""
         if self.sys_utils.get_boot_status() == True:
-            # Enable the toolbars only if the boot is successful:            
+            
+            # Enable the toolbars only if the boot is successful:
+            
             self.sys_toolbar.enable()
             self.acq_toolbar.enable()
             
             # Populate list of module MSPS. Length of list == number of
-            # installed modules in the crate:            
+            # installed modules in the crate:
+            
             msps_list = []
             for i in range(self.sys_utils.get_num_modules()):
                 msps_list.append(self.sys_utils.get_module_msps(i))
 
             # Configure DSP and managers. Performs first time load of DSP
-            # settings from the Pixie modules.            
+            # settings from the Pixie modules.
+            
             self.dsp_mgr.initialize_dsp(len(msps_list))
             self.chan_gui.configure(self.dsp_mgr, msps_list)
             self.mod_gui.configure(self.dsp_mgr, len(msps_list))
             
             # Repaint boot button, configure spinboxes, enable widgets:
+            
             self.sys_toolbar.b_boot.setText("Booted")
             self.sys_toolbar.b_boot.setStyleSheet(colors.GREEN)
             self.acq_toolbar.current_mod.setRange(0, len(msps_list)-1)
@@ -278,8 +285,7 @@ class MainWindow(QMainWindow):
     # @todo (ASC 3/21/23): Define another custom human-readable text format
     # independent of the XIA API version.
     # @todo (ASC 6/9/23): Add some GUI blocking to save/load to prevent
-    # settings file corruption.
-    
+    # settings file corruption.    
     def _save_settings(self):
         """Save DSP parameters to an XIA settings file. 
 
@@ -301,18 +307,22 @@ class MainWindow(QMainWindow):
             try:
                 if self.xia_api_version >= 3:
                     if opt != "XIA settings file (*.set, *.json)":
-                        raise RuntimeError(
-                            f"Unrecognized file extension '{fext}'"
-                        )
+                        raise RuntimeError(f"Unrecognized option '{opt}'")
                     elif fext != ".set" and fext != ".json":
-                        raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extenstions are: .set or .json. Your settings file has not been saved.")
+                        raise RuntimeError(
+                            "Unsupported extension for settings file: " \
+                            f"'{fext}.'\n\tSupported extenstions are: .set" \
+                            "or .json. Your settings file has not been saved"
+                        )
                 else:
                     if opt != "XIA settings file (*.set)":
-                        raise RuntimeError(
-                            f"Unrecognized file extension '{fext}'"
-                        )
+                        raise RuntimeError(f"Unrecognized option '{opt}'")
                     elif fext != ".set":
-                        raise RuntimeError(f"Unsupported extension for settings file: '{fext}.'\n\tSupported extension are: .set. Your settings file has not been saved.")                
+                        raise RuntimeError(
+                            "Unsupported extension for settings file:" \
+                            f"'{fext}.'\n\tSupported extension are: .set." \
+                            "Your settings file has not been saved"
+                        )                
             except RuntimeError as e:
                 self.logger.exception("Error saving settings file")
                 print(e)
@@ -329,15 +339,14 @@ class MainWindow(QMainWindow):
             If file format is unrecognized.
         """        
         fname, opt = self._load_dialog()
+        fext = os.path.splitext(fname)[-1].lower()
         if fname and opt:
             try:
                 if (opt == "XIA settings file (*.set)"
-                    or "XIA JSON settings file (*.json)"):
+                    or "XIA settings file (*.set, *.json)"):
                     self.sys_utils.load_set_file(fname)
                 else:
-                    raise RuntimeError(
-                        f"Unrecognized file extension option: {opt}"
-                    )
+                    raise RuntimeError(f"Unrecognized option '{opt}'")
             except RuntimeError:
                 self.logger.exception("Error loading settings file")
                 print(e)
@@ -345,7 +354,8 @@ class MainWindow(QMainWindow):
         # If the system has been booted, reload the DSP into the dataframe,
         # and reload the current channel DSP tab and module DSP (other channel
         # DSP loaded when a new tab is selected). Otherwise wait for system
-        # boot (message issued by SystemMananager.cpp in this case).        
+        # boot (message issued by SystemMananager.cpp in this case).
+        
         if self.sys_utils.get_boot_status() == True:
             self.dsp_mgr.load_new_dsp()
             self.chan_gui.load_dsp()
@@ -418,8 +428,7 @@ class MainWindow(QMainWindow):
     def _system_exit(self):
         """Closes connection to Pixie modules and exits the application."""
         self.sys_utils.exit_system()
-        self.pool.waitForDone(10000)
-        self.pool.clear()
+        self.pool_mgr.exit()
         app = QApplication.instance()
         app.quit()
 
@@ -444,29 +453,35 @@ class MainWindow(QMainWindow):
     #
     
     def _run_control(self):
-        """Start or stop a run depending on current run status."""        
+        """Start or stop a run depending on current run status."""
+        
         # If there is a thread running, wait for it to exit:        
-        if self.pool.activeThreadCount() > 0:
-            print(self.pool.activeThreadCount(), "threads are currently communicating with the module(s). Waiting...")
-            self.pool.waitForDone(10000)
+
+        nthreads = self.pool_mgr.get_active_thread_count()
+        if nthreads > 0:
+            print(f"{nthreads} threads are currently communicating with the module(s). Waiting...")
+            self.pool_mgr.wait()
             
         # Access thread from global thread pool for the begin/end operation
-        # If a run is active, end it, otherwise start a new one:        
+        # If a run is active, end it, otherwise start a new one:
+        
         if self.run_active:
             self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Run active {self.run_active}, type {self.active_type}; Ending current run")           
-            worker = Worker(self._end_run)
-            worker.signals.finished.connect(self.chan_gui.toolbar.enable)
-            worker.signals.finished.connect(self.mod_gui.toolbar.enable)
-            worker.signals.finished.connect(self.acq_toolbar.enable)
-            self.pool.start(worker)
+            self.pool_mgr.start_thread(
+                fcn=self._end_run,
+                finished=[self.chan_gui.toolbar.enable,
+                          self.mod_gui.toolbar.enable,
+                          self.acq_toolbar.enable]
+            )
         else:
             self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Run active {self.run_active}, type {self.active_type}; Beginning new run")            
-            worker = Worker(self._begin_run)
-            worker.signals.running.connect(self.chan_gui.toolbar.disable)
-            worker.signals.running.connect(self.mod_gui.toolbar.disable)
-            worker.signals.running.connect(self.acq_toolbar.enable_run_active)
-            self.pool.start(worker)
-
+            self.pool_mgr.start_thread(
+                fcn=self._begin_run,
+                running=[self.chan_gui.toolbar.disable,
+                         self.mod_gui.toolbar.disable,
+                         self.acq_toolbar.enable_run_active]
+            )
+            
     def _begin_run(self):
         """Start a data run in the currently selected module. 
 
@@ -477,12 +492,14 @@ class MainWindow(QMainWindow):
         self.active_type = RunType(self.acq_toolbar.run_type.currentIndex())    
         self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Beginning {self.active_type} run in Mod. {module}")
         
-        # XIA API call to begin run in the current module:        
+        # XIA API call to begin run in the current module:
+        
         self.run_utils.begin_run(module, self.active_type)
         self.run_active = self.run_utils.get_run_active()
         self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Started, run active {self.run_active}")        
             
-        # Reconfigure the run control button and communicate run status:        
+        # Reconfigure the run control button and communicate run status:
+        
         if self.run_active:
             self.acq_toolbar.b_run_control.setText("End run")
             self.mplplot.on_begin_run(self.active_type)
@@ -498,11 +515,13 @@ class MainWindow(QMainWindow):
         module = self.acq_toolbar.current_mod.value()
         self.logger.debug(f"{self.__class__.__name__}.{inspect.currentframe().f_code.co_name}: Ending {self.active_type} run in Mod. {module}")
 
-        # XIA API call to end run in the current module:        
+        # XIA API call to end run in the current module:
+        
         self.run_utils.end_run(module, self.active_type)
         self.run_active = self.run_utils.get_run_active()
             
-        # Print run stats for histogram run and reconfigure GUI:        
+        # Print run stats for histogram run and reconfigure GUI:
+        
         if not self.run_active:
             if self.active_type == RunType.HISTOGRAM:
                 self.run_utils.read_stats(module)
@@ -518,38 +537,37 @@ class MainWindow(QMainWindow):
 
         If a run is active, read histogram or baseline data based on the 
         active run type, otherwise read a trace.
-        """        
-        # If there is a thread running, wait for it to exit:        
-        if self.pool.activeThreadCount() > 0:
-            print(self.pool.activeThreadCount(), "threads are currently communicating with the module(s). Waiting...")
-            self.pool.waitForDone(10000)
+        """
+        
+        # If there is a thread running, wait for it to exit:
+        
+        nthreads = self.pool_mgr.get_active_thread_count()
+        if nthreads > 0:
+            print(nthreads, "threads are currently communicating with the module(s). Waiting...")
+            self.pool_mgr.wait()
 
         # Access thread from global thread pool for the data read operation.
         # If a run is active, read either an energy histogram or baseline
         # depending on the run type, otherwise read a trace.
         
-        worker = Worker()
-        worker.signals.running.connect(self.acq_toolbar.disable)
-            
-        if self.run_active:     
-            worker.set_function(self._read_run_data)
-            worker.signals.finished.connect(self.acq_toolbar.enable_run_active)
-        else:
-            worker.set_function(self._read_trace_data)
-            worker.signals.running.connect(self.mod_gui.toolbar.disable)
-            worker.signals.running.connect(self.chan_gui.toolbar.disable)
-            worker.signals.running.connect(
-                lambda enb=False: self.chan_gui.setEnabled(enb)
-            )
-            worker.signals.finished.connect(self.acq_toolbar.enable)
-            worker.signals.finished.connect(self.mod_gui.toolbar.enable)
-            worker.signals.finished.connect(self.chan_gui.toolbar.enable)
-            worker.signals.finished.connect(
-                lambda enb=True: self.chan_gui.setEnabled(enb)
-            )
-
-        # Start the worker now that its configured:        
-        self.pool.start(worker)
+        if self.run_active: # Histogram run.
+            self.pool_mgr.start_thread(
+                fcn=self._read_run_data,
+                running=[self.acq_toolbar.disable],
+                finished=[self.acq_toolbar.enable_run_active]
+            )           
+        else: # Trace acquisition.
+            self.pool_mgr.start_thread(
+                fcn=self._read_trace_data,
+                running=[self.chan_gui.toolbar.disable,
+                         self.mod_gui.toolbar.disable,
+                         lambda: self.chan_gui.setEnabled(False),
+                         lambda: self.mod_gui.setEnabled(False)],
+                finished=[self.chan_gui.toolbar.enable,
+                          self.mod_gui.toolbar.enable,
+                          lambda: self.chan_gui.setEnabled(True),
+                          lambda: self.mod_gui.setEnabled(True)]
+            )  
 
     def _read_run_data(self):
         """Read run (energy histogram or baseline) data. 
@@ -562,7 +580,8 @@ class MainWindow(QMainWindow):
         channel = self.acq_toolbar.current_chan.value()
         bin_width = int(self.acq_toolbar.binning.currentText())
 
-        # Read from module and get data, then draw:        
+        # Read from module and get data, then draw:
+        
         if self.acq_toolbar.read_all.isChecked():
             for i in range(16):
                 self.run_utils.read_data(module, i, self.active_type)
@@ -593,18 +612,18 @@ class MainWindow(QMainWindow):
         # selected), the read function will validate and reacquire trace
         # signals until it either finds a good trace or hits a retry limit.
         
-        if self.acq_toolbar.read_all.isChecked():
-            for i in range(16):
-                # Check signal validation and read:                
+        if self.acq_toolbar.read_all.isChecked(): # Read all.
+            for i in range(16):             
                 if self.acq_toolbar.fast_acq.isChecked():
                     self.trace_utils.read_fast_trace(module, i)
                 else:
                     self.trace_utils.read_trace(module, i)
 
                 data = self.trace_utils.get_trace_data()
-                self.mplplot.draw_trace_data(data, 4, 4, i+1)
+                self.mplplot.draw_trace_data(data, module, i, 4, 4, i+1)
                     
-                # Keep the single channel trace information:                
+                # Keep the single channel trace information:
+                
                 if i == channel:
                     self.trace_info.update({
                         "trace": copy.copy(data),
@@ -613,17 +632,17 @@ class MainWindow(QMainWindow):
                     })
                     
             self.mplplot.update_canvas()   
-        else:           
-            # Check signal validation and read:            
+        else: # Read single channel.
             if self.acq_toolbar.fast_acq.isChecked():
                 self.trace_utils.read_fast_trace(module, channel)
             else:
                 self.trace_utils.read_trace(module, channel)
 
             data = self.trace_utils.get_trace_data()
-            self.mplplot.draw_trace_data(data)
+            self.mplplot.draw_trace_data(data, module, channel)
             
-            # Keep the single channel trace information:            
+            # Keep the single channel trace information:
+            
             self.trace_info.update({
                 "trace": copy.copy(data),
                 "module": module,
@@ -631,19 +650,24 @@ class MainWindow(QMainWindow):
             })
     
     def _analyze_trace(self):
-        """Setup worker to analyze a single-channel ADC trace."""        
-        worker = Worker(self._analyze_and_show_trace)
-        worker.signals.running.connect(self.chan_gui.toolbar.disable)
-        worker.signals.running.connect(self.mod_gui.toolbar.disable)
-        worker.signals.running.connect(self.acq_toolbar.disable)
-        worker.signals.finished.connect(self.chan_gui.toolbar.enable)
-        worker.signals.finished.connect(self.mod_gui.toolbar.enable)
-        worker.signals.finished.connect(self.acq_toolbar.enable)
-        self.pool.start(worker)        
+        """Setup worker to analyze a single-channel ADC trace."""
+        self.pool_mgr.start_thread(
+            fcn=self._analyze_and_show_trace,
+            running=[self.chan_gui.toolbar.disable,
+                     self.mod_gui.toolbar.disable,
+                     self.acq_toolbar.disable,
+                     lambda: self.chan_gui.setEnabled(False),
+                     lambda: self.mod_gui.setEnabled(False)],
+            finished=[self.chan_gui.toolbar.enable,
+                      self.mod_gui.toolbar.enable,
+                      self.acq_toolbar.enable,
+                      lambda: self.chan_gui.setEnabled(True),
+                      lambda: self.mod_gui.setEnabled(True)]
+        )
+        
         
     # @todo Should analyze trace be an available feature if read all?    
-    # @todo try-except block is pretty long for a single function.
-    
+    # @todo try-except block is pretty long for a single function.    
     def _analyze_and_show_trace(self):
         """Display single channel trace filter output.
         
@@ -659,10 +683,15 @@ class MainWindow(QMainWindow):
         module = self.acq_toolbar.current_mod.value()
         channel = self.acq_toolbar.current_chan.value()
         
-        # If there is no current trace data, acquire a trace:        
+        # If there is no current trace data, acquire a trace. We have a whole
+        # bunch of possibilities depending on whether or not the user has
+        # toggled the module and channel selection boxes and what data was
+        # read on the last trace acquisition (single channel or all channels).
+        # Below we handle the various cases:
+        
         try: 
             if not self.trace_info["trace"]:
-                # Check signal validation and read, update trace info:
+                # If there is no trace data, acquire a new trace: 
                 if self.acq_toolbar.fast_acq.isChecked():
                     self.trace_utils.read_fast_trace(module, channel)
                 else:
@@ -673,32 +702,33 @@ class MainWindow(QMainWindow):
                     "module": module,
                     "channel": channel
                 })
-            elif module != self.trace_info["module"]:
-                # Module number changed between acquisition and analyze, cannot
-                # recover because traces for the new module have not been
-                # acquired, and analyze is designed to analyze a trace shown on
-                # the current canvas.
+            elif module != self.trace_info["module"]:                
+                # Module number changed between acquisition and
+                # analysis, user needs to acquire new trace for
+                # the currently selected channel:                
                 raise ValueError(f"Stored trace data for Mod. {self.trace_info['module']} Ch. {self.trace_info['channel']} does not match the current selection box Mod. {module} Ch. {channel}")
-            elif (self.acq_toolbar.read_all.isChecked()
-                  and channel != self.trace_info["channel"]):
-                # Channel changed between acquisition and analysis. All traces
-                # have been read, so get the correct data from its subplot.
+            elif (
+                    self.acq_toolbar.read_all.isChecked()
+                    and channel != self.trace_info["channel"]
+            ):
+                # Channel number changed between acquisition and
+                # analysis. We've read all channel trace data so
+                # we just need to grab the appropriate data:
                 self.trace_info.update({
                     "trace": copy.copy(self.mplplot.get_subplot_data(channel)),
                     "module": module,
                     "channel": channel
                 })
-            elif (not self.acq_toolbar.read_all.isChecked()
-                  and channel != self.trace_info["channel"]):
-                # Single channel acquisition mode channel has been switched
-                # since acquiring a trace (trace on the canvas does not match
-                # current selection box).
-                print("this one")
+            elif (
+                    not self.acq_toolbar.read_all.isChecked()
+                    and channel != self.trace_info["channel"]
+            ):
+                # Channel number changed between acquisition and
+                # analysis. We have _not_ read all channel trace
+                # data so user needs to re-acquire:
                 raise ValueError(f"Stored trace data for Mod. {self.trace_info['module']} Ch. {self.trace_info['channel']} does not match the current selection box Mod. {module} Ch. {channel}")
         except ValueError as e:
-            self.logger.exception(
-                "Channel selection changed between acquisition and analysis"
-            )
+            self.logger.exception("Channel selection changed between acquisition and analysis")
             print(f"{e}:\n\tNew trace data must be acquired by clicking the 'Read trace' button prior to analysis.")
         else:            
             # No exceptions, analyze and draw:
