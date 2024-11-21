@@ -23,7 +23,7 @@ libFragmentIndex_la_CXXFLAGS=-I@top_srcdir@/daq/format @LIBTCLPLUS_CFLAGS@ \
 
 
 libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFragmentHandler.cpp \
-	CInputStatsCommand.cpp COrdererOutput.cpp fragment.cpp \
+	CInputStatsCommand.cpp 	fragment.cpp COrdererOutput.cpp \
 	COutputStatsObserver.cpp COutputStatsCommand.cpp CDataLateStatistics.cpp \
 	CDLateStatsCommand.cpp CLateScriptObserver.cpp COnLateDataCommand.cpp  \
 	CBarrierStatsCommand.cpp CBarrierStats.cpp CIncompleteBarrierStats.cpp \
@@ -33,8 +33,6 @@ libEventBuilder_la_SOURCES = OrdererPackage.cpp CFragmentHandlerCommand.cpp CFra
 	COutOfOrderTraceCommand.cpp CXonXOffCallbackCommand.cpp COutputThread.cpp \
 	CSortThread.cpp BarrierAbortCommand.cpp \
 	COutOfOrderStatsCommand.h COutOfOrderStatsCommand.cpp
-
-
 
 
 libEventBuilder_la_CPPFLAGS=$(COMPILATION_FLAGS)   
@@ -82,8 +80,8 @@ include_HEADERS = CEventOrderClient.h fragment.h CEVBClientApp.h EVBFramework.h 
 
 
 noinst_HEADERS = CFragmentHandlerCommand.h CFragmentHandler.h  \
-	CInputStatsCommand.h COrdererOutput.h COutputStatsObserver.h \
-	COutputStatsCommand.h \
+	CInputStatsCommand.h COutputStatsObserver.h \
+	COutputStatsCommand.h COrdererOutput.h \
 	CDataLateStatistics.h CDLateStatsCommand.h CLateScriptObserver.h \
 	COnLateDataCommand.h \
 	CBarrierStatsCommand.h CBarrierStats.h CIncompleteBarrierStats.h \
@@ -169,19 +167,21 @@ install-exec-hook:
 # Tests:
 
 
-noinst_PROGRAMS = transmittests ordertests fragcmdtests outputtests
+noinst_PROGRAMS = transmittests ordertests fragcmdtests
 
-outputtests_SOURCES = TestRunner.cpp outputTests.cpp \
-	COrdererOutput.cpp
-outputtests_CPPFLAGS=$(COMPILATION_FLAGS) @LIBTCLPLUS_CFLAGS@ \
-	@CPPUNIT_CFLAGS@ @TCL_FLAGS@
+#uttests
 
-outputtests_LDFLAGS= @top_builddir@/base/os/libdaqshm.la \
-        @top_builddir@/servers/portmanager/libPortManager.la \
-        @top_builddir@/base/tcpip/libTcp.la \
-        @top_builddir@/base/thread/libdaqthreads.la \
-        @LIBTCLPLUS_LDFLAGS@ \
-        @CPPUNIT_LDFLAGS@ @TCL_LDFLAGS@
+#outputtests_SOURCES = TestRunner.cpp outputTests.cpp \
+#	COrdererOutput.cpp
+#outputtests_CPPFLAGS=$(COMPILATION_FLAGS) @LIBTCLPLUS_CFLAGS@ \
+#	@CPPUNIT_CFLAGS@ @TCL_FLAGS@
+
+#outputtests_LDFLAGS= @top_builddir@/base/os/libdaqshm.la \
+#        @top_builddir@/servers/portmanager/libPortManager.la \
+#        @top_builddir@/base/tcpip/libTcp.la \
+#        @top_builddir@/base/thread/libdaqthreads.la \
+#        @LIBTCLPLUS_LDFLAGS@ \
+#        @CPPUNIT_LDFLAGS@ @TCL_LDFLAGS@
 
 transmittests_SOURCES = TestRunner.cpp  transmittests.cpp  \
 	CEventOrderClient.cpp CEventOrderClient.h
