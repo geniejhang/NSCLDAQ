@@ -1,4 +1,4 @@
-/*
+gitpu/*
     This software is Copyright by the Board of Trustees of Michigan
     State University (c) Copyright 2009.
 
@@ -238,6 +238,7 @@ void freeFragment(pFragment p)
   p->s_pBody = 0;
   freeFragmentHeader(p);
 
+  // Deletes any CriticalSection that was reset into l.
 }
 }
 /**
