@@ -99,7 +99,10 @@ COnLateDataCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObject>&
       m_pDispatcher = 0;
       std::string newScript = static_cast<std::string>(objv[1]);
       if (newScript != "") {
-	m_pDispatcher = new CLateScriptObserver(interp, newScript);
+        // Yes this is a bit of a memory leak but it's creating observers at start
+        // time and the API does not give the ability delete them, so this has
+        // program lifetime.
+	      m_pDispatcher = new CLateScriptObserver(interp, newScript);
       }
     }
   }
