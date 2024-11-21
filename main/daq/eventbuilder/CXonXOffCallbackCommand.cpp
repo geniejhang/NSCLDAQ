@@ -196,7 +196,7 @@ CXonXoffCallbackCommand::add(
 {
     std::string xon  = objv[2];
     std::string xoff = objv[3];
-    TclFlowObserver* pObserver = new TclFlowObserver(interp, xon, xoff);
+    TclFlowObserver* pObserver = new TclFlowObserver(interp, xon, xoff);  // deleted when removed.
     m_observers.push_back(pObserver);
     CFragmentHandler::getInstance()->addFlowControlObserver(pObserver);
 }
