@@ -751,6 +751,9 @@ CFragmentHandler::markSourceFailed(uint32_t id)
   if(m_fBarrierPending) {
     if (countPresentBarriers() == m_liveSources.size()) {	
       std::cerr << "markSourceFailed -- generating barrier on source dead\n";
+      // Note that the obserer will pass sortedFragments on to the sort thread
+      // which in turn will pass them to the output thread which will do the
+      // actual delete of what's allocated below.
       auto& sortedFragments(*(new EvbFragments));
       generateMalformedBarrier(sortedFragments);
       observe(sortedFragments);
@@ -998,88 +1001,6 @@ CFragmentHandler::flushQueues(bool completely)
   }
 }
     
-
-/**
- * popOldest
- *
- *   Remove an oldest fragment from the sources queue and update m_nOldest
- *
- *   @return ::EVB::pFragment - pointer to a fragment whose timestamp
- *           matches m_nOldest
- *   @retval - Null is returned if there are no non-barrier events in the
- *             queues.
- *
- *   @note this is all very brute force.  A much quicker algorithm to find
- *         the oldest fragment would be to retain in addtion to m_nOldest
- *         the queue that it was put in...however we still need to iterate
- *         over the queues to update m_nOldest.  This is a bit
- *         short circuited by:
- *         - Keeping track of it as we search for the first match to m_nOldest
- *         - short circuiting the loop if we find another queue with
- *           an m_nOldest match as there can't be anything older than that
- *           by definition.
- */
-std::pair<time_t, ::EVB::pFragment>*
-CFragmentHandler::popOldest()
-{
-    uint64_t nextOldest = UINT64_MAX;   // Must be older than that.
-    Sources::iterator   pOldestQ;       // Iterator indicating the oldest fragment.
- 
-    /*
-      Find the oldest fragment:
-      *  Barrier fragments are immune from return.
-      *  If indeed we find one, it's removed from it's queue.
-      *  If indeed we find one, the oldest info is recomputed 
-      */
-
-
-    int i = 1;
-    for (Sources::iterator p = m_FragmentQueues.begin(); 
-        p != m_FragmentQueues.end(); p++) {
-      if (!p->second.s_queue.empty()) {
-        std::pair<time_t, ::EVB::pFragment> frag = p->second.s_queue.front();   // head of queue.
-        if (frag.second->s_header.s_barrier == 0) {                             // only non-barriers.
-          if (frag.second->s_header.s_timestamp < nextOldest) {                 // Oldest one yet.
-            pOldestQ = p;
-            nextOldest = frag.second->s_header.s_timestamp;
-          } 
-        } else {
-          m_fBarrierPending = true; // Mark a pending barrier.
-        } 
-      }
-
-      i++;
-    }
-
-
-
-    if (nextOldest != UINT64_MAX) { // Found one in pOldestQ.
-      std::pair<time_t, ::EVB::pFragment> oldestFrag = pOldestQ->second.s_queue.front();
-      uint64_t fragmentTimestamp  = oldestFrag.second->s_header.s_timestamp;
-      
-      pOldestQ->second.s_lastPoppedTimestamp = fragmentTimestamp;
-      pOldestQ->second.s_bytesDeQd          += oldestFrag.second->s_header.s_size;
-      pOldestQ->second.s_bytesInQ           -= oldestFrag.second->s_header.s_size;
-      pOldestQ->second.s_queue.pop_front();
-
-      // If this queue has been emptied mark that time:
-
-      if (pOldestQ->second.s_queue.empty()) {
-        m_nMostRecentlyEmptied = time(NULL);
-      }
-      findOldest();
-
-
-      return new std::pair<time_t, ::EVB::pFragment>(oldestFrag);
-    } else {			    // Either all barriers or all empty.
-      return 0;
-    }
-
-    // Should not get here but...
-    return 0;
-
-}
-
 /**
  * observe
  *
@@ -1097,7 +1018,7 @@ CFragmentHandler::observe(EvbFragments& event)
 {
   CSortThread::Fragments& frags(*new CSortThread::Fragments);
   frags.push_back(&event);
-  m_sorter.queueFragments(frags);
+  m_sorter.queueFragments(frags);   // Results in eventual deletion of the event and frags.
 }
 /**
  * abortBarrier

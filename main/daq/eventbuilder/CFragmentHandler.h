@@ -357,7 +357,6 @@ public:
 
 private:
   void flushQueues(bool completely=false);
-  std::pair<time_t, ::EVB::pFragment>* popOldest();
   void   dataLate(const ::EVB::Fragment& fragment);		    // Data late handler.
   void   addFragment(const EVB::FlatFragment* pFragment);
   size_t totalFragmentSize(const EVB::FragmentHeader* pHeader);
