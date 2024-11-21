@@ -68,8 +68,9 @@ CSortThread::run()
    
     while (1) {
         Fragments* newData = dequeueFragments();
-        if (!m_pHandler)
+        if (!m_pHandler) {
             m_pHandler = CFragmentHandler::getInstance(); // We know frag handler construction is done.
+        }
         FragmentList* mergedFrags = new FragmentList;  // Deleted by output thread.
         merge(*mergedFrags, *newData);
         
