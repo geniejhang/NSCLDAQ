@@ -31,7 +31,7 @@
  *   constructor.
  */
 COutputThread::COutputThread() :
-Thread(*(new std::string("OutputThread"))),
+Thread(*(new std::string("OutputThread"))),   
 m_nInflightCount(0)
 {
     
@@ -163,6 +163,7 @@ COutputThread::freeFragments(EvbFragments* frags)
         EVB::pFragment frag = p->second;
         freeFragment(frag);
     }
+    fs.clear();                        // Probably not needed but not harmful.
     // and now the vector itself:
     
     delete frags;
