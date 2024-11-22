@@ -23,6 +23,9 @@
 #include "CSortThread.h"
 #include "COutputThread.h"
 #include <map>
+#include <iostream>
+
+static bool debug = false;
 
 // Timestamp comparison for sorted merge:
 
@@ -68,13 +71,19 @@ CSortThread::run()
    
     while (1) {
         Fragments* newData = dequeueFragments();
+        if (debug) {
+            std::cerr << "Got " << newData->size() << " in sort thread from orderer\n";
+        }
+          
         if (!m_pHandler) {
             m_pHandler = CFragmentHandler::getInstance(); // We know frag handler construction is done.
         }
         FragmentList* mergedFrags = new FragmentList;  // Deleted by output thread.
         merge(*mergedFrags, *newData);
         
-        
+        if (debug) {
+          std::cerr << " Merged into " << mergedFrags->size() << std::endl;
+        }
         //m_pHandler->observe(*mergedFrags);
         
         COutputThread* pOutput = m_pHandler->getOutputThread();
@@ -127,6 +136,9 @@ CSortThread::merge(FragmentList& result, Fragments& lists)
   // If there's one list, we only need to append::
   
   if (lists.size() == 1) {
+    if (debug) {
+      std::cerr << " Single list case with " << lists[0]->size() << std::endl;
+    }
     merge(result, *(lists[0]));
     return;
   }

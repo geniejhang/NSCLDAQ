@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <iostream>
 
-bool debug = false;                         // Turn on/off debug output -> stderr.
+static bool debug = false;                         // Turn on/off debug output -> stderr.
 
 /**
  * Constructor
