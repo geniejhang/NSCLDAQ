@@ -244,7 +244,13 @@ CSortThread::clearBufferQueue()
 void
 CSortThread::releaseFragments(Fragments& frags)
 {
-
+    //Note the elements of the fragments dequeue are, themselves new'd into being.
+    // and must be deleted.  See Issue #231
+    // The elements of each dequeue are pointers that are passed on to the output thread
+    // and deleted there to avoid copying.
+    for (auto p : frags) {
+      delete p;
+    }
     delete &frags;
 }
 /**
