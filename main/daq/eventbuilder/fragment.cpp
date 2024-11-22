@@ -238,7 +238,7 @@ void freeFragment(pFragment p)
   p->s_pBody = 0;
   freeFragmentHeader(p);
 
-  // Deletes any CriticalSection that was reset into l.
+  // Deletes any CriticalSection that was reset into
 }
 }
 /**
@@ -263,6 +263,8 @@ pFragment allocateFragment(const FragmentHeader* pHeader)
   p->s_pBody = getFragmentBody(pHeader->s_size);
 
   return p;
+
+  // Deletes any CriticalSection that was reset into L.
 }
 }
 /**
