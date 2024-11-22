@@ -253,21 +253,3 @@ CSortThread::releaseFragments(Fragments& frags)
     }
     delete &frags;
 }
-/**
- * releaseFragmentList
- *    Frees all the fragments in a fragments list and the list iself
- *
- *  @param frags -fragment list reference.
- */
-void
-CSortThread::releaseFragmentList(FragmentList& frags)
-{
-    while(!frags.empty()) {
-        delete frags.front().second;
-        frags.pop_front();
-    }
-    delete &frags;
-}
-
-
-
