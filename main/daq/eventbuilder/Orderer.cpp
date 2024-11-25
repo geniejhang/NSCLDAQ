@@ -189,7 +189,7 @@ Tcl_AppInit(
      *
      * if (Mod_Init(interp) == TCL_ERROR) {
      *     return TCL_ERROR;
-     * }
+     * }man
      *
      * where "Mod" is the name of the module. (Dynamically-loadable packages
      * should have the same entry-point name.)
