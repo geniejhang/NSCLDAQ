@@ -46,11 +46,8 @@ static uint64_t outputEvents(0);
 static bool     firstEvent(true);
 static io::CBufferedOutput* outputter;
 
-// We don't need threadsafe event fragment pools so:
 
-namespace EVB {
-    extern bool threadsafe;
-}
+
 
 static const unsigned BUFFER_SIZE=1024*1024;
 
@@ -448,7 +445,7 @@ main(int argc, char**  argv)
   sourceId       = args.sourceid_arg;
   maxFragments   = args.maxfragments_arg;
 
-  EVB::threadsafe = false;     // Don't need threadsafe fragment pools.
+
 
   outputter = new io::CBufferedOutput(STDOUT_FILENO, BUFFER_SIZE);
   outputter->setTimeout(2);    // Flush every two sec if data rate is slow.
