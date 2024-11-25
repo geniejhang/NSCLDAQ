@@ -241,8 +241,8 @@ CDuplicateTimeStatCommand::get(CTCLInterpreter& interp, std::vector<CTCLObject>&
 CTCLObject
 CDuplicateTimeStatCommand::uint64Object(CTCLInterpreter& interp, uint64_t value)
 {
-    Tcl_Obj* nativeObject = Tcl_NewWideIntObj(value);
-    CTCLObject wrappedObject(nativeObject);
+    Tcl_Obj* nativeObject = Tcl_NewWideIntObj(value);  // Refcount = 0
+    CTCLObject wrappedObject(nativeObject);           // Rfcount = 1.
     wrappedObject.Bind(interp);
     
     return wrappedObject;

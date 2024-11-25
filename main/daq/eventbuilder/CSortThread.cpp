@@ -23,6 +23,9 @@
 #include "CSortThread.h"
 #include "COutputThread.h"
 #include <map>
+#include <iostream>
+
+static bool debug = false;
 
 // Timestamp comparison for sorted merge:
 
@@ -68,12 +71,19 @@ CSortThread::run()
    
     while (1) {
         Fragments* newData = dequeueFragments();
-        if (!m_pHandler)
+        if (debug) {
+            std::cerr << "Got " << newData->size() << " in sort thread from orderer\n";
+        }
+          
+        if (!m_pHandler) {
             m_pHandler = CFragmentHandler::getInstance(); // We know frag handler construction is done.
+        }
         FragmentList* mergedFrags = new FragmentList;  // Deleted by output thread.
         merge(*mergedFrags, *newData);
         
-        
+        if (debug) {
+          std::cerr << " Merged into " << mergedFrags->size() << std::endl;
+        }
         //m_pHandler->observe(*mergedFrags);
         
         COutputThread* pOutput = m_pHandler->getOutputThread();
@@ -126,6 +136,9 @@ CSortThread::merge(FragmentList& result, Fragments& lists)
   // If there's one list, we only need to append::
   
   if (lists.size() == 1) {
+    if (debug) {
+      std::cerr << " Single list case with " << lists[0]->size() << std::endl;
+    }
     merge(result, *(lists[0]));
     return;
   }
@@ -244,24 +257,12 @@ CSortThread::clearBufferQueue()
 void
 CSortThread::releaseFragments(Fragments& frags)
 {
-
-    delete &frags;
-}
-/**
- * releaseFragmentList
- *    Frees all the fragments in a fragments list and the list iself
- *
- *  @param frags -fragment list reference.
- */
-void
-CSortThread::releaseFragmentList(FragmentList& frags)
-{
-    while(!frags.empty()) {
-        delete frags.front().second;
-        frags.pop_front();
+    //Note the elements of the fragments dequeue are, themselves new'd into being.
+    // and must be deleted.  See Issue #231
+    // The elements of each dequeue are pointers that are passed on to the output thread
+    // and deleted there to avoid copying.
+    for (auto p : frags) {
+      delete p;
     }
     delete &frags;
 }
-
-
-

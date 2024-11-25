@@ -26,7 +26,7 @@
 
 namespace EVB {
 bool debug=false;
-bool threadsafe=true;   // By default threadsafe.
+
 /**
  * The following data structures are used to re-use both fragment headers
  * (easy) and their bodies.  This is done because profiling showed that
@@ -104,13 +104,17 @@ getPoolNumber(unsigned size)
 {
   // Yeah, this is O(n) for number of bits but it's not dependent on the
   // size of unsigned.  so we don't  use one of the O(log n) confusing algorithms.
-  
+  if (debug) {
+    std::cerr << " getting pool# for " << size;
+  }
   unsigned n = 0;               
   while (size) {
     size = size >> 1;
-    n++;                   // This gives one bigger.
+    n++;                   // This gives one bigger.<
   }
-  
+  if (debug) {
+    std::cerr << " got " << n << std::endl;
+  }
   return n;
 }
 /**
@@ -149,8 +153,12 @@ getPool(unsigned poolNo)
  */
 static unsigned
 poolSize(unsigned poolNo)
-{
-  return (1 << poolNo);
+{ 
+  unsigned size= 1 << poolNo;
+  if (debug) {
+    std::cerr << "pool # " << poolNo << " size " << size << std::endl;
+  }
+  return size;
 }
 /**
  * getFragmentDescription [static] - get a new fragment header
@@ -232,11 +240,12 @@ freeFragmentBody(pFragment pFrag)
 extern "C" {
 void freeFragment(pFragment p) 
 {
-  std::unique_ptr<CriticalSection> l;
-  if (threadsafe) l.reset(new CriticalSection(poolProtector));
+  CriticalSection critsect(poolProtector);
+
   freeFragmentBody(p);
   p->s_pBody = 0;
   freeFragmentHeader(p);
+
 
 }
 }
@@ -254,14 +263,16 @@ void freeFragment(pFragment p)
 extern "C" {
 pFragment allocateFragment(const FragmentHeader* pHeader)
 {
-  std::unique_ptr<CriticalSection> l;
-  if (threadsafe) l.reset(new CriticalSection(poolProtector));
+  CriticalSection critsect(poolProtector);
+  
   pFragment p = getFragmentDescription();
   memcpy(&(p->s_header), pHeader, sizeof(FragmentHeader));
 
   p->s_pBody = getFragmentBody(pHeader->s_size);
 
   return p;
+
+  
 }
 }
 /**

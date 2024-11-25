@@ -62,7 +62,9 @@ int Eventbuilder_Init(Tcl_Interp* pInterp)
 
   CTCLInterpreter* pInterpObject = new CTCLInterpreter(pInterp);
   
-  
+  // These are just command objects that are new'd to ensure they 
+  // have program lifetime and don't get deleted until exit()
+  // not a memory leak.
   
   new CFragmentHandlerCommand(*pInterpObject, "EVB::handleFragments");
   new CInputStatsCommand(*pInterpObject, "EVB::inputStats");

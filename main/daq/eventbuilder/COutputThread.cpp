@@ -25,13 +25,15 @@
 #include <algorithm>
 #include <iostream>
 
+static bool debug = false;                         // Turn on/off debug output -> stderr.
+
 /**
  * Constructor
  *   For now this is null, just setting the thread name in the base class
  *   constructor.
  */
 COutputThread::COutputThread() :
-Thread(*(new std::string("OutputThread"))),
+Thread(*(new std::string("OutputThread"))),   
 m_nInflightCount(0)
 {
     
@@ -54,6 +56,9 @@ COutputThread::run()
         auto pFrags = getFragments();
         m_nInflightCount -= (pFrags->size());
         {
+            if (debug) {
+                std::cerr <<"Outputting " << pFrags->size() << " fragments\n";
+            }
             CriticalSection c(m_observerGuard);
             for (auto p = m_observers.begin(); p != m_observers.end(); p++) {
                 CFragmentHandler::Observer* pO = *p;
@@ -159,10 +164,16 @@ COutputThread::freeFragments(EvbFragments* frags)
     auto& fs(*frags);
     // free storage associated with each fragment.
     
+    unsigned freed = 0;
     for (auto p = fs.begin(); p != fs.end(); p++) {
         EVB::pFragment frag = p->second;
         freeFragment(frag);
+        freed++;
     }
+    if (debug) {
+        std::cerr << "Counted " << freed << " Fragments freed\n";
+    }
+    fs.clear();                        // Probably not needed but not harmful.
     // and now the vector itself:
     
     delete frags;

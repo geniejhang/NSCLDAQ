@@ -178,13 +178,18 @@ Tcl_AppInit(
         interp, "EventBuilder", Eventbuilder_Init, Eventbuilder_Init
     );
 
+    if (Eventbuilder_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    
+
     /*
      * Call the init procedures for included packages. Each call should look
      * like this:
      *
      * if (Mod_Init(interp) == TCL_ERROR) {
      *     return TCL_ERROR;
-     * }
+     * }man
      *
      * where "Mod" is the name of the module. (Dynamically-loadable packages
      * should have the same entry-point name.)
