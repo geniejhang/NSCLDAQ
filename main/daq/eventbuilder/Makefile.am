@@ -167,21 +167,21 @@ install-exec-hook:
 # Tests:
 
 
-noinst_PROGRAMS = transmittests ordertests fragcmdtests
+noinst_PROGRAMS = transmittests ordertests fragcmdtests outputtests
 
-#uttests
 
-#outputtests_SOURCES = TestRunner.cpp outputTests.cpp \
-#	COrdererOutput.cpp
-#outputtests_CPPFLAGS=$(COMPILATION_FLAGS) @LIBTCLPLUS_CFLAGS@ \
-#	@CPPUNIT_CFLAGS@ @TCL_FLAGS@
 
-#outputtests_LDFLAGS= @top_builddir@/base/os/libdaqshm.la \
-#        @top_builddir@/servers/portmanager/libPortManager.la \
-#        @top_builddir@/base/tcpip/libTcp.la \
-#        @top_builddir@/base/thread/libdaqthreads.la \
-#        @LIBTCLPLUS_LDFLAGS@ \
-#        @CPPUNIT_LDFLAGS@ @TCL_LDFLAGS@
+outputtests_SOURCES = TestRunner.cpp outputTests.cpp \
+	COrdererOutput.cpp
+outputtests_CPPFLAGS=$(COMPILATION_FLAGS) @LIBTCLPLUS_CFLAGS@ \
+	@CPPUNIT_CFLAGS@ @TCL_FLAGS@
+
+outputtests_LDFLAGS= @top_builddir@/base/os/libdaqshm.la \
+        @top_builddir@/servers/portmanager/libPortManager.la \
+        @top_builddir@/base/tcpip/libTcp.la \
+        @top_builddir@/base/thread/libdaqthreads.la \
+        @LIBTCLPLUS_LDFLAGS@ \
+        @CPPUNIT_LDFLAGS@ @TCL_LDFLAGS@
 
 transmittests_SOURCES = TestRunner.cpp  transmittests.cpp  \
 	CEventOrderClient.cpp CEventOrderClient.h
