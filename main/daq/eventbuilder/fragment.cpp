@@ -26,7 +26,7 @@
 
 namespace EVB {
 bool debug=false;
-bool threadsafe=true;   // By default threadsafe.
+
 /**
  * The following data structures are used to re-use both fragment headers
  * (easy) and their bodies.  This is done because profiling showed that
@@ -240,13 +240,13 @@ freeFragmentBody(pFragment pFrag)
 extern "C" {
 void freeFragment(pFragment p) 
 {
-  std::unique_ptr<CriticalSection> l;
-  if (threadsafe) l.reset(new CriticalSection(poolProtector));
+  CriticalSection critsect(poolProtector);
+
   freeFragmentBody(p);
   p->s_pBody = 0;
   freeFragmentHeader(p);
 
-  // Deletes any CriticalSection that was reset into
+
 }
 }
 /**
@@ -263,8 +263,8 @@ void freeFragment(pFragment p)
 extern "C" {
 pFragment allocateFragment(const FragmentHeader* pHeader)
 {
-  std::unique_ptr<CriticalSection> l;
-  if (threadsafe) l.reset(new CriticalSection(poolProtector));
+  CriticalSection critsect(poolProtector);
+  
   pFragment p = getFragmentDescription();
   memcpy(&(p->s_header), pHeader, sizeof(FragmentHeader));
 
@@ -272,7 +272,7 @@ pFragment allocateFragment(const FragmentHeader* pHeader)
 
   return p;
 
-  // Deletes any CriticalSection that was reset into L.
+  
 }
 }
 /**
