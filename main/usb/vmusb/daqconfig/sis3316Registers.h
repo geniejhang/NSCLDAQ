@@ -199,6 +199,123 @@ struct adcFPGARegisters {
 
 
 }
+// Below are bit defintions for registers described above.
+
+// The CSR is a funky register.  Rather than setting bits to 
+// set things; the top 16 bits clear operations and the bottom
+// 32 bits set operations.  The bottom 32 bits read state.
+// e.g bit 32 clears the operation of restarting the FFPGAs
+// bit 16 starts rebooting the FPGAS and reads whether the FPGAs 
+// are being rebooted.  Don't blame me, blame STRUCK:
+// Blame me for the lazyness of not provideing e.g. CSR_READ_FPGA_BOOT
+// use the set bit as documented above.
+static const uint32_t CSR_CLEAR_FPGA_BOOT(0x80000000);
+static const uint32_t CSR_SET_FPGA_BOOT(0x00008000);
+
+static const uint32_t CSR_CLEAR_LED2_APPMODE (0x00400000);
+static const uint32_t CSR_SET_LED2_APPMODE   (0x00000040);
+static const uint32_t CSR_CLEAR_LED1_APPMODE (0x00200000);
+static const uint32_t CSR_SET_LED1_APPMODE   (0x00000020);   // LED application mode.
+static const uint32_t CSR_CLEAR_LEDU_APPMODE (0x00100000);
+static const uint32_t CSR_SET_LEDU_APPMODE   (0x00000010);
+static const uint32_t CSR_CLEAR_LED_APPMODE  (0x00080000);
+static const uint32_t CSR_SET_LED_APPMODE    (0x00000008);
+
+static const uint32_t CSR_CLEAR_LED2 (0x00040000);
+static const uint32_t CSR_SET_LED2   (0x00000004);
+static const uint32_t CSR_CLEAR_LED1 (0x00020000);
+static const uint32_t CSR_CLEAR_LEDU (0x00010000);
+static const uint32_t CSR_SET_LEDU   (0x00000001);
+
+// The firmware register include ths model number
+// as well as the firmware major and minor revision numbers.
+// The major revision actually is the functionality of the
+// firmware.
+
+static const uint32_t FWID_MODULEID_MASK(0XFFFF0000);
+static const uint32_t FWID_MODULEID_VALUE(0x33160000);   // reg and mask should give this.
+static const uint32_t FWID_MAJOR_MASK(0x0000ff00);
+static const uint32_t FWID_MINOR_MASK(0x000000ff);
+
+// Possible major firware values after anding with the mask:
+
+static const uint32_t FWID_STDNGAMMA(0X00002000);   // For sis 3316
+static const uint32_t FWID_STDNGAMMA_2(0x00004000);  // For sis 3316-2.
+
+// Interrupt configuration register bits... Note that these are plain old
+// bit fields.  For each we provide a mask and shift.
+// to read register & mask >> shift gives a value.
+// to write:  (value <<shift) | (register & ~mask).
+
+static const uint32_t IRQCFG_ROAK_MASK(0x1000);
+static const uint32_t IRQCFG_ROAK_SHIFT(12);
+static const uint32_t IRQCFG_ENA_MASK(0X800);
+static const uint32_t IRQCFG_ENA_SHIFT(11);
+static const uint32_t IRQCFG_IPL_MASK(0x700);
+static const uint32_t IRQCFG_IPL_SHIFT(8);
+static const uint32_t IRQCFG_VECTOR_MASK(0x00ff);
+static const uint32_t IRQCFG_VECTOR_SHIFT(0);
+
+// The interrupt control/status register is a mess, there are write
+// bits and read bits and they differ.  e.g. bit 31 when written is
+// "UPdate IRQ Pulse" when read is the status of IRQ source 7.
+// sigh so we have IRQCTL_RD and IRQCTL_WR bit/shifts/fields etc.
+// to distingquish.  Use an _RD_ bit to read and an WR bit to write.
+
+                  // the write bits.
+
+static const uint32_t IRQCTL_WR_UPDATEPULSE (0x80000000);
+static const uint32_t IRQCTL_WR_DISABLE_IRQ7_SRC(0x00800000);
+static const uint32_t IRQCTL_WR_DISABLE_IRQ6_SRC(0x00400000);
+static const uint32_t IRQCTL_WR_DISABLE_IRQ5_SRC(0x00200000);
+static const uint32_t IRQCTL_WR_DISABLE_IRQ4_SRC(0x00100000);
+static const uint32_t IRQCTL_WR_DISABLE_IRQ3_SRC(0x00080000);
+static const uint32_t IRQCTL_WR_DISABLE_IRQ2_SRC(0X00040000);
+static const uint32_t IRQCTL_WR_DISABLE_IRQ1_SRC(0x00020000);
+static const uint32_t IRQCTL_WR_DISABLE_IRQ0_SRC(0X00010000);
+static const uint32_t IRQCTL_WR_ENABLE_IRQ7_SRC(0x80);
+static const uint32_t IRQCTL_WR_ENABLE_IRQ6_SRC(0x40);
+static const uint32_t IRQCTL_WR_ENABLE_IRQ5_SRC(0x20);
+static const uint32_t IRQCTL_WR_ENABLE_IRQ4_SRC(0x10);
+static const uint32_t IRQCTL_WR_ENABLE_IRQ3_SRC(0x08);
+static const uint32_t IRQCTL_WR_ENABLE_IRQ2_SRC(0x04);
+static const uint32_t IRQCTL_WR_ENABLE_IRQ1_SRC(0x02);
+static const uint32_t IRQCTL_WR_ENABLE_IRQ0_SRC(0x01);
+
+                // the read bits.
+
+static const uint32_t IRQCTL_RD_STATUS_IRQ7(0x80000000);
+static const uint32_t IRQCTL_RD_STATUS_IRQ6(0x40000000);
+static const uint32_t IRQCTL_RD_STATUS_IRQ5(0x20000000);
+static const uint32_t IRQCTL_RD_STATUS_IRQ4(0x10000000);
+static const uint32_t IRQCTL_RD_STATUS_IRQ3(0x08000000); // End address threshold level
+static const uint32_t IRQCTL_RD_STATUS_IRQ2(0x04000000); // End address threshold edge
+static const uint32_t IRQCTL_RD_STATUS_IRQ1(0x02000000);
+static const uint32_t IRQCTL_RD_STATUS_IRQ0(0x01000000);
+
+static const uint32_t IRQCTL_RD_STATUS_FLAG7(0x00800000);
+static const uint32_t IRQCTL_RD_STATUS_FLAG6(0x00400000);
+static const uint32_t IRQCTL_RD_STATUS_FLAG5(0x00200000);
+static const uint32_t IRQCTL_RD_STATUS_FLAG4(0x00100000);
+static const uint32_t IRQCTL_RD_STATUS_FLAG3(0x00080000);
+static const uint32_t IRQCTL_RD_STATUS_FLAG2(0x00040000);
+static const uint32_t IRQCTL_RD_STATUS_FLAG1(0x00020000);
+static const uint32_t IRQCTL_RD_STATUS_FLAG0(0x00010000);
+
+static const uint32_t IRQCTL_RD_VMEIRQSTATUS(0x8000);
+static const uint32_t IRQCTL_RD_INTIRQSTATUS(0x4000);
+static const uint32_t IRQCTL_RD_ENABLE_IRQ7_SRC(0x80);
+static const uint32_t IRQCTL_RD_ENABLE_IRQ6_SRC(0x40);
+static const uint32_t IRQCTL_RD_ENABLE_IRQ5_SRC(0x20);
+static const uint32_t IRQCTL_RD_ENABLE_IRQ4_SRC(0x10);
+static const uint32_t IRQCTL_RD_ENABLE_IRQ3_SRC(0x08);
+static const uint32_t IRQCTL_RD_ENABLE_IRQ2_SRC(0x04);
+static const uint32_t IRQCTL_RD_ENABLE_IRQ1_SRC(0x02);
+static const uint32_t IRQCTL_RD_ENABLE_IRQ0_SRC(0x01);
+
++
+
+
 
 #pragma pack (pop)
 
