@@ -43,7 +43,7 @@ struct FpgaRegisters {
     uint32_t  s_irqcontrol;
     
     uint32_t  s_arbitrationcsr;
-    uint32_t  s_cbltsetup;
+    uint32_t  s_bcstsetup;
     uint32_t  s_internalTest;
     uint32_t  s_hwversion;
     
@@ -139,7 +139,7 @@ static const FIFOBASES[4] = {0x1000000, 0x2000000, 0x3000000, 0x4000000};
 
 // there are a few peradc. registers:
 
-strcut adcRegisters {
+struct adcRegisters {
     uint32_t s_firtrgsetup_a;
     uint32_t s_threshold_a;
     uint32_t s_hethreshold_a;
@@ -313,8 +313,26 @@ static const uint32_t IRQCTL_RD_ENABLE_IRQ2_SRC(0x04);
 static const uint32_t IRQCTL_RD_ENABLE_IRQ1_SRC(0x02);
 static const uint32_t IRQCTL_RD_ENABLE_IRQ0_SRC(0x01);
 
-+
+// The Arbitration CSR. \
+// For the most part this is done straightforwardly however
+// a read of the KILL always gives a zero.
 
+static const uint32_t ARB_KILL_REQ      (0x80000000);
+static const uint32_t ARB_RD_OTHER_GRANT(0x00200000);
+static const uint32_t ARB_RD_OWN_GRANT  (0x00100000);
+static const uint32_t ARB_RD_OTHER_REQ  (0x00020000);
+static const uint32_t ARB_RD_OWN_REQ    (0x00010000);
+static const uint32_t ARB_REQUEST       (0x00000001);
+
+// Bits in the broad cast setup register
+// For a pleasant change, the read an write bits mean
+// the same thing and are present for both
+
+
+static const uint32_t BCST_ADDR_MASK(0xff000000);
+static const uint32_t BCST_ADDR_SHIFT(24);
+static const uint32_t BCST_ENA_MASTER(0X20);
+static const uint32_t BCST_ENA_BCST(0X10);
 
 
 #pragma pack (pop)
