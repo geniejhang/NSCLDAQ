@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <io.h>
+#include <new>
 
 static const int BUFFERSIZE=1024*1024;  // Hard coded for now.
 /*------------------------------------------------------------------------
@@ -97,12 +98,23 @@ COrdererOutput::operator()(const EvbFragments& event)
   int maxWrite = m_nMaxWrite;
   
   // Minimize dynamic memory management:
+  // If we don't have enough iov elements, free the ones we have and
+  // allocate more (yeah could use realloc here).
+  // The one in effect at destruction time (which actually never happens)
+  // is freed by the destructor.
   
   int nIovs = event.size()*2;
   if (nIovs > m_nVectors) {
     free(m_pVectors);
     m_pVectors = static_cast<iovec*>(malloc(nIovs * sizeof(iovec)));
     m_nVectors = nIovs;
+
+    // If the allocation failed, throw std::bad_alloc:
+    if (! m_pVectors) {
+      throw std::bad_alloc();
+    }
+
+
   }
   
   iovec*  iovs = m_pVectors;

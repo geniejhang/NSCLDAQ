@@ -41,7 +41,7 @@ CBarrierStatsCommand::CBarrierStatsCommand(CTCLInterpreter& interp, std::string 
   m_pCompleteStats(0),
   m_pIncompleteStats(0)
 {
-  // This try/catch block ensures that failures in construction dont' lead memory:
+  // This try/catch block ensures that failures in construction dont' leak memory:
   try {
     m_pCompleteStats   = new CBarrierStats;
     m_pIncompleteStats = new CIncompleteBarrierStats;
@@ -90,15 +90,15 @@ CBarrierStatsCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObject
   int         status = TCL_OK;
 
   try {
-    CTCLObject* pComplete    = completeStats(interp);
-    CTCLObject* pIncomplete  = incompleteStats(interp);
+    pComplete    = completeStats(interp);
+    pIncomplete  = incompleteStats(interp);
     
     CTCLObject result;
     result.Bind(interp);
     result += *pComplete;
     result += *pIncomplete;
 
-
+  
     interp.setResult(result);
   }
   // the catch blocks are most known error
@@ -118,9 +118,13 @@ CBarrierStatsCommand::operator()(CTCLInterpreter& interp, std::vector<CTCLObject
   }
   catch (...) {
     std::string msg("barrierstats - caught an unanticipated exception.");
-
+    interp.setResult(msg);
+    status= TCL_ERROR;
   }
- 
+  // Delete the dynamically created objects:
+
+  delete pComplete;
+  delete pIncomplete;
   // if we did not catch:
 
   return status;

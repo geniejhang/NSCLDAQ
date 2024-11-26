@@ -315,6 +315,8 @@ CEVBFrameworkApp::EVBConnect(const char* host, const char* port, const char* des
     portNum = LookupService(port);
   }
 
+  // Note this new is not a leak as the object is a singleton so there will
+  // only be one m_pBuilder and it will last for the life of the program.
   m_pBuilder = new CEventOrderClient(std::string(host), portNum);
   m_pBuilder->Connect(std::string(description), sources);
 }
