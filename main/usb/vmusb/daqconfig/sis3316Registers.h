@@ -334,6 +334,21 @@ static const uint32_t BCST_ADDR_SHIFT(24);
 static const uint32_t BCST_ENA_MASTER(0X20);
 static const uint32_t BCST_ENA_BCST(0X10);
 
+// Hardware version register:
+
+static const uint32_t HWVERS_IS_2(0x80);
+static const uint32_t HWVERS_VERSION_MASK(0xf);
+static const uint32_t HWVERS_VERSION_SHIFT(0);
+
+// inline. to convert the temp registe value to Centigrade
+
+static inline TEMP_TO_C(uint32_t value) {
+    int16_t v(value & 0xffff);
+    float result = v;
+    result = result / 4.0;
+    return result;
+}
+
 
 #pragma pack (pop)
 
