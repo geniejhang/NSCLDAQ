@@ -48,7 +48,7 @@ struct FpgaRegisters {
     uint32_t  s_hwversion;
     
     uint32_t  s_temperature;
-    uint32_t  s_wire1eepromcsr;
+    uint32_t  s_wire1eepromcsr;   // i2c for 3316-2 variant.
     uint32_t  s_serialno;
     uint32_t  s_internalxfrspeed;
     
@@ -348,7 +348,155 @@ static inline TEMP_TO_C(uint32_t value) {
     result = result / 4.0;
     return result;
 }
+// Definitions for the one wire EEPROM. Among other things has
+// the module serial number.
 
+static const uint32_t WIRE1CSR_BUSY         (0x80000000);
+static const uint32_t WIRE1CSR_SERIALVALID  (0x01000000);
+static const uint32_t WIRE1CSR_SERIALNO_MASK(0x00ffff00);
+static const uint32_t WIRE1CSR_SERIALNO_SHIFT(8);
+static const uint32_t WIRE1CSR_REST_BUS(0x00000400);
+static const uint32_t WIRE1CSR_WRITE   (0x00000200);
+static const uint32_t WIRE1CSR_READ    (0x00000100);
+static const uint32_t WIRE1CSR_DATA_MASK(0x000000ff);
+static const uint32_t WIRE1CSR_DATA_SHIFT(0);
+
+// Offsets to  data in the one wire eeeprom:
+
+static const uint32_t WIRE1_SERIAL_LOW_OFFSET(0);
+static const uint32_t WIRE1_SERIAL_HIGH_OFFSET(1);
+static const uint32_t WIRE1_DHCPOPTION_OFFSET(2);
+
+// To make things cofusing, foir the -2 variant, the
+// onewire register is actually a n I2C control register.
+// with a completely different bit layout:
+// TO distinguish we'll prefix this as  I2C_ rather than WIRE1.
+//
+static const uint32_t I2C_BUSY(0X80000000);   //read
+static const uint32_t I2C_DISABLE_TEMPAUTOREAD(0X02000000); // Write.
+static const uint32_t I2C_TEMPAUTOREAD(0x02000000);         // Read.
+static const uint32_t I2C_ENABLE_TEMPAUTOREAD(0x01000000);  // Write.
+static const uint32_t I2C_READBYTE(0X00002000);             // WRITE
+static const uint32_t I2C_WRITEBYTE(0X00001000);            // WRITE.
+static const uint32_t I2C_STOP     (0X00000800);            // wRITE
+static const uint32_t I2C_REPEAT_START(0X00000400);         // WRITE.
+static const uint32_t I2C_START(0X00000200);                // WRITE.
+static const uint32_t I2C_ACK_ON_READ(0X00000100);          // WRITE.
+static const uint32_t I2C_ACK_RECEIVED(0X00000100);         // READ (*)
+static const uint32_t I2C_DATA_MASK(0XF);
+static const uint32_t I2C_DATA_SHIFT(0);
+
+// * - The ack received bit is only valid fi the BUSY bit is not set.
+//     further more it's documented as "Received Ack on write cycle"
+//     so it may not be valid if AC_ON_READ was set with a READBYTE operation.
+
+
+// yeah, yeah I know, there's all this crap about getting the serialn number
+// and DHCP option from the EEPROM and, in fact, that's the only way to set that, however,
+// this register allows those to be read without any of that rigmarole.
+// There's also a note there that the MAC address for the module is 
+// based on the serial number as:  00-00-56-31-6n-nn where n-nn is the serial
+// number which can be 0-65535 -- but wait what is it if the serial number is
+// 4096 or bigger when it will spill over into the top nybble of the 6n byte?
+// Better hope they don't sell more than 4095 boards _sigh_
+//
+// The serialno register is readonly.
+//
+static const uint32_t SERNO_DHCP_MASK(0xff000000); // No docs here for what these bites
+static const uint32_t SERNO_DHCP_SHIFT(24);        // are; maybe in the Ethernet manual.
+static const uint32_t SERNO_512MBYTE(0x00800000);  // If set have 512 Mbytes memory.
+static const uint32_t SERNO_INVALID(0x00010000);   // If set don't believe the serial #.
+static const uint32_t SERNO_SERIAL_MASK(0x0000ffff);
+static const uint32_t SERNO_SERIAL_SHIFT(0);
+
+// The text around the internalxfrspeed has too many conditions on
+// which modules can be set to what so I'm not going to document
+// it and leave the module with whatever the hell power up does.
+
+
+// Adc fpga boot control register.  There are only 2 write bits and
+// status bits for each of the four FPGA.  Note the manual has a clear
+// error labeling the error on boot bits.  I'm assuming these are in the
+// same order as all the other status bits.
+
+static const uint32_t ADCFPGABOOT_REBOOT(1);      // Write
+static const  uint32_t ADCFPGABOOT_HALTBOOT(2);    // write.
+                                            // rest are read
+static const  uint32_t ADCFPGABOOT_FINISHED(0X01000000);
+static const  uint32_t ADCFPGABOOT_DONE_4(0X00800000);
+static const  uint32_t ADCFPGABOOT_DONE_3(0X00400000);
+static const  uint32_t ADCFPGABOOT_DONE_2(0X00200000);
+static const  uint32_t ADCFPGABOOT_DONE_1(0X00100000);
+
+static const  uint32_t ADCFPGABOOT_ERROR_4(0X00080000); // misdocumented
+static const  uint32_t ADCFPGABOOT_ERROR_3(0X00040000); // misdocumented
+static const  uint32_t ADCFPGABOOT_ERROR_2(0X00020000); // misdocumented
+static const  uint32_t ADCFPGABOOT_ERROR_1(0X00010000); // misdocumented
+
+static const  uint32_t ADCFPGABOOT_BOOTING_4(0x00008000);
+static const  uint32_t ADCFPGABOOT_BOOTING_3(0x00004000);
+static const  uint32_t ADCFPGABOOT_BOOTING_2(0x00002000);
+static const  uint32_t ADCFPGABOOT_BOOTING_1(0x00001000);
+
+// Not going to document the SPI Flash control/data registers they're only
+// used for firmware updates.
+
+// The external veto/gate-delay register. Note that even though there
+// are 16 bits for the gate/delay value.  Documentation says that values
+// greater than 2044 are treated as 2044
+
+static const uint32_t VETOGDG_ENABLE_FPBUS(0x80000000);
+static const uint32_t VETOGDG_ENABLE_INTERNAL(0x40000000);
+static const uint32_t VETOGDG_EXT_TRG_DEADTIME_MASK(0x3fff0000);
+static const uint32_t VETOGDG_EXT_TRG_DEADTIME_SHIFT(16);
+static const uint32_t VETOGDG_VETO_DELAY_MASK(0xffff);
+static const uint32_t VETOGDG_VETO_DELAY_SHIFT(0);
+
+// All of the clock i2c registers have the same layout.
+// I hope to use the SIS library rather than having to figure
+// the i2c crap out.  Below, however are the bytes for each
+// of the clock speeds:
+
+static const uint32_t CLOCK_250MHZ[6] = {
+    0x20, 0xc2, 0xbc, 0x33, 0xe4, 0xf2
+};
+static const uint32_t CLOCK_125MHZ[6] = {
+    0x21, 0xc2, 0xbc, 0x33, 0xe4, 0xf2
+};
+
+static const uint32_t CLOCK_I2C_BUSY(0X80000000);
+static const uint32_t CLOCK_I2C_READ_PUTACK(0X2000);
+static const uint32_t CLOCK_I2C_WRITE_GETACK(0X1000)
+static const uint32_t CLOCK_I2C_STOP(0X0800);
+static const uint32_t CLOCK_I2C_REPEAT_START(0X0400);
+static const uint32_t CLOCK_I2C_START(0X0200);
+static const uint32_t CLOCK_I2C_READ_ACK(0X100);
+static const uint32_t CLOCK_I2C_DATA_MASK(0X00FF);
+static const uint32_t CLOCK_I2C_DATA_SHIFT(0);
+
+// The only thing the adcclockdistcontrol does is to enable/diable
+// the clock distributiuon multiplexer.
+
+static const uint32_t DISTCTCL_MUX_ENABLE_MASK(0x3);
+static const uint32_t DISTCTCL_MUX_ENABLE_SHIFT(0);
+
+// Values for the mux control bits:
+
+static const uint32_t DISTCTCL_MUX_OSC(0);
+static const uint32_t DISTCTCL_MUX_VXS(1);
+static const uint32_t DISTCTCL_MUX_EXTFP(2);
+static const uint32_t DISTCTCL_MUX_EXTNIM(3);
+
+// The NIM clock multiplier is an SI 5325 chip its registers
+// can be manipulated via the nimclockmult register which provides
+// an SPI control register.  See well below for the 
+// SI5325 register definitions.  Sure would be nice
+// if the SIS library had some convenient functions for
+// common apps but..
+
+
+
+// Si5325 clock mulitplier chip definitions.
 
 #pragma pack (pop)
 
