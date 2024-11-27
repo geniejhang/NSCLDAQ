@@ -494,9 +494,66 @@ static const uint32_t DISTCTCL_MUX_EXTNIM(3);
 // if the SIS library had some convenient functions for
 // common apps but..
 
+static const uint32_t NIMCLK_MULT_CMD_MASK(0xc0000000);
+static const uint32_t NIMCLK_MULT_CMD_SHIFT(30);
+static const uint32_t NIMCLK_MULT_RWBUSY(0x80000000);  // READ
+static const uint32_t NIMCLK_MULT_RSTBUSY(0x40000000);  // READ
+static const uint32_t NIMCLK_MULT_INT_C1B_STATUS(0X00010000); // READ.
+static const uint32_t NIMCLK_MULT_INSTRUCTION_MASK(0X0000FF00);
+static const uint32_t NIMCLK_MULT_INSTRUCTION_SHIFT(8);
+static const uint32_t NIMCLK_MULT_ADR_DATA_MASK(0X000000FF);
+static const uint32_t NIMCLK_MULT_ADR_DATA_SHIFT(0);
+
+
+// FP Bus control register.
+// All bits are read/write.
+
+static const uint32_t FPCTL_CLK_OUT_NIM(0x20);  // if set sample out from NIM.
+static const uint32_t FPCTL_CLK_OUT_ENA(0x10);  // If set output sample clock -> FP bus.
+static const uint32_t FPCTL_STATUS_OUTENA(0x02);  // Enable status out -> FP
+static const uint32_t FPCTL_CTL_OUTENA(0x01);    // Enable CTCL out -> FP.
+
+// Nim input control status register.
+
+static const uint32_t NIMICSR_UI(0x02000000);
+static const uint32_t NIMICSR_EXTUI(0x01000000);
+static const uint32_t NIMICSR_TI(0x00200000);
+static const uint32_t NIMICSR_EXTTI(0x00100000);
+static const uint32_t NIMICSR_CI(0x00020000);
+static const uint32_t NIMICSR_EXTCI(0x00010000);
+static const uint32_t NIMICSR_TIUI_COUNTER_ENA(0x00008000);
+static const uint32_t NIMICSR_EXTTRG_DTLOGIC_ENA(0X00004000);
+static const uint32_t NIMICSR_UI_PPS_ENA(0X00002000);
+static const uint32_t NIMICSR_UI_VETO_ENA(0X00001000);
+static const uint32_t NIMICSR_UI_FUNCTION(0X00000800);
+static const uint32_t NIMICSR_UI_LEVEL(0X00000400);
+static const uint32_t NIMICSR_UI_INVERT(0X00000200);
+static const uint32_t NIMICSR_UI_TSCLEAR(0X0000100);
+static const uint32_t NIMICSR_TI_FUNCTION(0X80);
+static const uint32_t NIMICSR_TI_LEVEL(0X40);
+static const uint32_t NIMICSR_TI_INVERT(0X20);
+static const uint32_t NIMICSR_TI_TRGENA(0X10);
+static const uint32_t NIMICSR_CI_FUNCTION(0X8);
+static const uint32_t NIMICSR_CI_LEVEL(4);
+static const uint32_t NIMICSR_CI_INVERT(2);
+static const uint32_t NIMICSR_CI_ENABLE(1);
+
+
+
 
 
 // Si5325 clock mulitplier chip definitions.
+
+// Here are the SPI instructions recognized by the 5325 from
+// https://www.skyworksinc.com/-/media/Skyworks/SL/documents/public/reference-manuals/si53xx-reference-manual.pdf
+// They are defined as 32 bit integers to support masking and shifting
+// into SIS3316 registers without casting.
+static const uint32_t SI5325_SPI_SET_ADDR(0X0);  // addr/data are the rdwr address.
+static const uint32_t SI5325_SPI_WRITE(0X40);    // Write addr/data are te data.
+static const uint32_t SI5325_SPI_WRADDR_INCR(0xc0);  // increment the write address by the data.
+static const uint32_t SI5325_SPI_READ(0X80);     // read from the read address.
+static const uint32_t SI5325_SPI_RDADDR_INCR(0xa0); // Increment the read address by the data.
+
 
 #pragma pack (pop)
 
