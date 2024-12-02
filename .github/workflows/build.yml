@@ -73,6 +73,7 @@ jobs:
         working-directory: ./main/oot
         shell: bash
         run: |
+          ls -la ../
           ../configure --prefix=/usr/opt/nscldaq/$GITHUB_REF_NAME \
                        --enable-usb=yes \
                        --enable-caen-digitizer-support \
