@@ -539,6 +539,210 @@ static const uint32_t NIMICSR_CI_INVERT(2);
 static const uint32_t NIMICSR_CI_ENABLE(1);
 
 
+// Acquistiohn contro and status register. The
+// top 16 bits of this register are read-onliy 
+// the bottom 16 are read-write.
+
+static const uint32_t ACQCSR_ADDR_THRESHOLD_13_16(0X80000000);
+static const uint32_t ACQCSR_SAMPLE_BUSY_13_16(0X40000000);
+static const uint32_t ACQCSR_ADDR_THRESHOLD_9_12(0X20000000);
+static const uint32_t ACQCSR_SAMPLE_BUSY_9_12(0X10000000);
+static const uint32_t ACQCSR_ADDR_THRESHOLD_5_8(0X08000000);
+static const uint32_t ACQCSR_SAMPLE_BUSY_5_8(0X040000000);
+static const uint32_t ACQCSR_ADDR_THRESHOLD_1_4(0X02000000);
+static const uint32_t ACQCSR_SAMPLE_BUSY_1_4(0X01000000);
+
+static const uint32_t ACQCSR_PPS_LATCH(0X00800000);
+static const uint32_t ACQCSR_BSWA_NIM(0X00400000);
+static const uint32_t ACQCSR_FPBUS_ADDDR_THRESHOLD(0X00200000);
+static const uint32_t ACQCSR_FPBUS_SAMPLING(0X00100000);
+
+static const uint32_t ACQCSR_ADDDR_THRESHOLD_OR(0X00080000);
+static const uint32_t ACQCSR_SAMPLE_BUSY_OR(0X00040000);
+static const uint32_t ACQCSR_BANK2_ARMED(0X00020000);
+static const uint32_t ACQCSR_ARMED(0X00010000);
+
+static const uint32_t ACQCSR_EXTTRG_DISABLE(0X00008000);
+static const uint32_t ACQCSR_INTERNALTRG_TO_EXTTRG(0X00004000);
+static const uint32_t ACQCSR_NIMUI_ISBANKSWAP(0X00002000);
+static const uint32_t ACQCSR_NIMTI_ISBANKSWAP(0X00001000);
+
+static const uint32_t ACQCSR_LOCALVETO_ISVETO(0X00000800);
+static const uint32_t ACQCSR_EXT_TSTAMPCLR_ENA(0X00000400);
+static const uint32_t ACQCSR_EXTTRG_IS_VETO(0X0000200);
+static const uint32_t ACQCSR_EXTTRG_IS_TRG(0X00000100);
+
+static const uint32_t ACQCSR_FPIN_SAMPLECONTROL_ENABLE(0X00000080);
+static const uint32_t ACQCSR_FPIN_CTRL2_ENABLE(0X00000040);
+static const uint32_t ACQCSR_FPIN_CTRL1_ISVETO(0X00000020);
+static const uint32_t ACQCSR_FPIN_CTRL1_ISTRG(0X00000010);
+
+static const uint32_t ACQCSR_SINGLE_BANK_MODE(0X00000001);  // Not implemented yet?
+
+
+// Control/status of the coincidence lookup table. The coincidence lengths
+// are (value+1)*sample_period.
+// note that setting the clear bit will require a 525usec delay to complete.
+
+static const uint32_t LUTCSR_CLEAR(0X80000000);  // NOTE DELAY 525usec after this.
+static const uint32_t LUTCSR_COINC2_LENGTH_MASK(0XFF00);
+static const uint32_t LUTCSR_COINC2_LENGTH_SHIFT(8);
+static const uint32_t LUTCSR_COINC1_LENGTH_MASK(0X00FF);
+static const uint32_t LUTCSR_COINC1_LENGTH_SHIFT(0);
+
+//  The lookup table address register actually has two things:
+// The masks of triggers we care about for the trigger pattern
+// the address of a trigger pattern within the table.
+// the address is actually a trigger pattern.
+// One writes this register then writes the s_coinclutdata to load
+// that address.  There are 65536 LUT entries, one for each possible
+// trigger pattern.
+
+static const uint32_t LUTADDR_CHANMASK_MASK(0XFFFF0000);
+static const uint32_t LUTADDR_CHANMASK_SHIFT(16);
+static const uint32_t LUTADDR_ADDR_MASK(0XFFFF);
+static const uint32_t LUTADDR_ADDR_SHIFT(0);
+
+// The data register provides, for each trigger, which edge we care about,
+// The validation bits for each of the two triggers.
+// Note that after a write to the s_coinclutdata register the address in the
+// s_coinclutaddr register is incremented without changing the mask.
+
+static const uint32_t LUTDATA_FALLING_MASK(0XFFFF0000);   // bits set are falling edge.
+static const uint32_t LUTDATA_FALLING_SHIFT(16);
+static const uint32_t LUTDATA_VALID2(0X2);
+static const uint32_t LUTDATA_VALID1(0X2);
+
+// s_lemocoselect:
+// The CO NIMOUT function is selectable.  One can select CO_SAMPLE_CLK in which
+// case, if I understand correctly, regardless of the other bits in this registrer,
+// The sample clock is routed to CO, if that bit is not set, the OR of the other
+// selectec conditions is routed to CO:
+
+static const uint32_t CO_SET(0X04000000);      // always asserted.
+static const uint32_t CO_SAMPLEBANK2(0X00400000);
+static const uint32_t CO_SAMPLING_ARMED(0X00200000);
+static const uint32_t CO_SWAP_WITH_NIM(0X00100000);
+static const uint32_t CO_HETRG_13_16(0X00080000);
+static const uint32_t CO_HETRG_9_12(0X00040000);
+static const uint32_t CO_HEGTRG5_8(0X00020000);
+static const uint32_t CO_HETRG_1_4(0X00010000);
+static const uint32_t CO_SAMPLE_CLK(0X00000001);
+
+// s_lemotoselect:
+//   The or of the selected conditions is presented at the
+// TO nim output.
+//
+
+static const uint32_t TO_PULSE(0x80000000); 
+static const uint32_t TO_SET(0x40000000);
+static const uint32_t TO_EXTTSCLEAR(0x10000000);
+
+static const uint32_t TO_EXTVETO(0x08000000);
+static const uint32_t TO_EXTTRG(0x04000000);
+static const uint32_t TO_EXTTRG_STRETCHED(0X02000000);
+static const uint32_t TO_LUT1_STRETCHED_COINC(0X01000000);
+
+static const uint32_t TO_SAMPLE_BANK2(0x00400000);
+static const uint32_t TO_SAMPLE_ARMED(0X00200000);
+static const uint32_t TO_NIM_SWAPCTL(0X00100000);
+
+static const uint32_t TO_SUM_TRG_13_16(0x00080000);
+static const uint32_t TO_SUM_TRG_9_12(0X00040000);
+static const uint32_t TO_SUM_TRG_5_8(0X00020000);
+static const uint32_t TO_SUM_TRG_1_4(0X00010000);
+
+   // Channel trigger bits -> TO
+
+static const uint32_t TO_TRG_16(0X00008000);
+static const uint32_t TO_TRG_15(0X00004000);
+static const uint32_t TO_TRG_14(0X00002000);
+static const uint32_t TO_TRG_13(0X00001000);
+static const uint32_t TO_TRG_12(0X00000800);
+static const uint32_t TO_TRG_11(0X00000400);
+static const uint32_t TO_TRG_10(0X00000200);
+static const uint32_t TO_TRG_9(0X00000100);
+static const uint32_t TO_TRG_8(0X000080);
+static const uint32_t TO_TRG_7(0X000040);
+static const uint32_t TO_TRG_6(0X000020);
+static const uint32_t TO_TRG_5(0X000010;);
+static const uint32_t TO_TRG_4(0X00008);
+static const uint32_t TO_TRG_3(0X00004);
+static const uint32_t TO_TRG_2(0X00002);
+static const uint32_t TO_TRG_1(0X00001);
+
+//s_lemouoselect
+//   Bits that define the output of UO.  The output is the OR of the
+// conditions described in the register.
+
+static const uint32_t UO_PULSE_3(0X80000000);
+static const uint32_t UO_SET(0X40000000);
+static const uint32_t UO_EXTTS_CLEAR(0x10000000);
+
+static const uint32_t UO_EXT_VETO(0X08000000);
+static const uint32_t UO_EXT_TRG(0X04000000);
+static const uint32_t UO_PRESCALER(0X02000000);
+static const uint32_t UO_LUT2_STRETCHED_COINC(0X01000000);
+
+static const uint32_t UO_SAMPLE_BANK2(0X00400000);
+static const uint32_t UO_SAMPLE_ARMED(0X00200000);
+static const uint32_t UO_NIMSWAPCTL(0X00100000);
+
+static const uint32_t UO_HETRG_13_16(0X00080000);
+static const uint32_t UO_HETRG_9_12(0X00040000);
+static const uint32_t UO_HETRG_5_8(0X00020000);
+static const uint32_t UO_HETRG_1_4(0X00010000);
+
+static const uint32_t UO_PULSE_12(0X00004000);
+static const uint32_t UO_PULSE_8(0X00002000);
+static const uint32_t UO_PULSE_4(0X00001000);
+
+
+static const uint32_t UO_VETOED(0X00000200);
+static const uint32_t UO_GATE(0x00000100);
+
+static const uint32_t UO_EXT_TS_CLR_ASSERTED(0X00000080);
+static const uint32_t UO_SAMPLING(0X00000010);
+
+static const uint32_t UO_ADDR_THRESHOLD(0X8);
+static const uint32_t UO_SAMPLE_BUSY(0X4);
+static const uint32_t UO_LOGIC_DBL_ARMED(0X2);
+static const uint32_t UO_LOGIC_SNGL_ARMED(0X1);
+
+
+// s_trfeedbackselect
+// Conditions with bits set are ORd and fed back to the
+// trigger logic as the trigger feedback which can be used
+// as an external trigger.
+
+
+static const uint32_t TRFEEDBACK_LUT1(0x01000000); 
+
+static const uint32_t TRFEEDBACK_SUM_STRETCHED_13_16(0x00080000);
+static const uint32_t TRFEEDBACK_SUM_STRETCHED_9_12(0x00040000);
+static const uint32_t TRFEEDBACK_SUM_STRETCHED_5_8(0x00020000);
+static const uint32_t TRFEEDBACK_SUM_STRETCHED_1_4(0x00010000);
+
+static const uint32_t TRFEEDBACK_INTERNAL_16(0X00008000);
+static const uint32_t TRFEEDBACK_INTERNAL_15(0X00004000);
+static const uint32_t TRFEEDBACK_INTERNAL_14(0X00002000);
+static const uint32_t TRFEEDBACK_INTERNAL_13(0X00001000);
+
+static const uint32_t TRFEEDBACK_INTERNAL_12(0X00000800);
+static const uint32_t TRFEEDBACK_INTERNAL_11(0X00000400);
+static const uint32_t TRFEEDBACK_INTERNAL_10(0X00000200);
+static const uint32_t TRFEEDBACK_INTERNAL_9(0X00000100);
+
+static const uint32_t TRFEEDBACK_INTERNAL_8(0X00000080);
+static const uint32_t TRFEEDBACK_INTERNAL_7(0X00000040);
+static const uint32_t TRFEEDBACK_INTERNAL_6(0X00000020);
+static const uint32_t TRFEEDBACK_INTERNAL_5(0X00000010);
+
+static const uint32_t TRFEEDBACK_INTERNAL_4(0X00000008);
+static const uint32_t TRFEEDBACK_INTERNAL_3(0X00000004);
+static const uint32_t TRFEEDBACK_INTERNAL_2(0X00000002);
+static const uint32_t TRFEEDBACK_INTERNAL_1(0X00000001);
+
 
 
 
