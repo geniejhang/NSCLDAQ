@@ -27,14 +27,12 @@ jobs:
         run: |
           autoupdate
           autoreconf -if
-          mkdir libtcl
       - name: Configure libtcl++
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
-        working-directory: ./main/libtcl
+        working-directory: ./main
         shell: bash
         run: |
-          cd ..
           ./tcl++incorp
       - name: Incorporate unified format
         env:

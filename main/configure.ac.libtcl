@@ -1,0 +1,76 @@
+AC_PREREQ([2.71])
+AC_INIT([libtclplus],[3.0-011],[fox@nscl.msu.edu])
+
+AC_CONFIG_AUX_DIR([.])
+AC_CONFIG_SRCDIR([tclplus/TCLInterpreter.cpp])
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
+
+AM_INIT_AUTOMAKE([1.11 subdir-objects])
+
+
+# Checks for programs.
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LIBTOOL
+
+LT_INIT
+AC_SUBST([LIBTOOL_DEPS])
+
+# Makefile exports:
+SOVERSION="2:0:0"
+AC_SUBST(SOVERSION)
+
+# We want this to be compiled with the C++-11 standard:
+
+AX_CXX_COMPILE_STDCXX_11([noext])
+
+# specfic checks
+m4_warn([obsolete],
+[The preprocessor macro `STDC_HEADERS' is obsolete.
+  Except in unusual embedded environments, you can safely include all
+  ISO C90 headers unconditionally.])dnl
+# Autoupdate added the next two lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
+
+
+##
+# C++ unit test framework, defines:
+#   CPPUNIT_CFLAGS - Compilation flags.
+#   CPPUNIT_LIBS   - ld flags.
+#
+
+AM_PATH_CPPUNIT
+
+##
+#  Tcl this defines
+#  TCL_DEFS - flags used to compile Tcl (don't need these usually).
+#  TCL_LIBS - ld flags for building with Tcl libraries.
+#  TCL_CPPFLAGS - Compilation flags for C/C++
+#  tclsh    - tclsh.
+
+AX_TCL
+
+##
+#  Define pThread stuff.. (we want to build the libs threadable):
+#
+# PTHREAD_LIBS    - linker flags.
+# PTHREAD_CLFAGS - compilation flags.
+# PTHREAD_CC      - C compiler required (not sure how to replace that for autotools makefiles now.
+#                   besides we compile C++ code....
+#
+AX_PTHREAD
+
+
+# what to generate
+AC_CONFIG_FILES([Makefile
+                 exception/Makefile
+                 tclplus/Makefile])
+
+# do it
+AC_OUTPUT

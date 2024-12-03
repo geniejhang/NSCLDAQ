@@ -15,6 +15,7 @@ fi
 
 rm -rf $TARGET
 git clone $REPOSITORY $TARGET
+cp -f configure.ac.libtcl libtcl
 cd $TARGET
 git checkout $TAG
 pwd
