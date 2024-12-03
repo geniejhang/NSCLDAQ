@@ -34,7 +34,6 @@ jobs:
         shell: bash
         run: |
           ./tcl++incorp
-          ls -la libtcl
       - name: Incorporate unified format
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
