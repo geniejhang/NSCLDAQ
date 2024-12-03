@@ -16,5 +16,6 @@ fi
 rm -rf $TARGET
 git clone $REPOSITORY $TARGET
 (cd $TARGET; git checkout $TAG)
+(cd $TARGET; pwd)
 (cd $TARGET; autoupdate)
 (cd $TARGET; autoreconf -if)
