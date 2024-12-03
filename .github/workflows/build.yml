@@ -27,6 +27,7 @@ jobs:
         run: |
           autoupdate
           autoreconf -if
+          mkdir libtcl
       - name: Configure libtcl++
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
