@@ -40,7 +40,7 @@ jobs:
         working-directory: ./main
         shell: bash
         run: |
-          
+          ls -la libtcl
           ./unifiedfmt-incorp.sh
       - name: Incorporate DDAS format
         env:
