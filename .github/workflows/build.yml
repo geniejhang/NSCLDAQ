@@ -33,7 +33,7 @@ jobs:
         working-directory: ./main
         shell: bash
         run: |
-          ./tcl++incorp
+          ./tcl++incorp -
       - name: Incorporate unified format
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
